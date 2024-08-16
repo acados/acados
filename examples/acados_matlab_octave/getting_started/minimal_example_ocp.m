@@ -98,7 +98,6 @@ ocp_model.set('constr_lh', -U_max);
 ocp_model.set('constr_uh', U_max);
 
 ocp_model.set('constr_x0', x0);  % set the initial state
-% ... see ocp_model.model_struct to see what other fields can be set
 
 %% acados ocp options
 ocp_opts = acados_ocp_opts();
@@ -108,8 +107,7 @@ ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('qp_solver', qp_solver);
 ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
 ocp_opts.set('ext_fun_compile_flags', ''); % '-O2'
-ocp_opts.set('globalization', 'merit_backtracking') % turns on globalization
-% ... see ocp_opts.opts_struct to see what other fields can be set
+ocp_opts.set('globalization', 'merit_backtracking'); % turns on globalization
 
 %% create ocp solver
 ocp_solver = acados_ocp(ocp_model, ocp_opts, simulink_opts);

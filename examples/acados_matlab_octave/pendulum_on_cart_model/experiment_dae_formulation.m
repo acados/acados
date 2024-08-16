@@ -126,7 +126,7 @@ for i = 1:3
     ocp_model = acados_ocp_model();
     ocp_model.set('name', model_name);
     ocp_model.set('T', T);
-    
+
     % symbolics
     ocp_model.set('sym_x', model.sym_x);
     if isfield(model, 'sym_u')
@@ -153,10 +153,10 @@ for i = 1:3
         ocp_model.set('dyn_type', 'implicit');
         ocp_model.set('dyn_expr_f', model.dyn_expr_f_impl);
     end
-  
+
     % constraints
     ocp_model.set('constr_x0', x0);
-    
+
     nh = length(model.expr_h);
     ocp_model.set('constr_expr_h', model.constr_expr_h);
     ocp_model.set('constr_lh', lh);
@@ -165,9 +165,6 @@ for i = 1:3
     ocp_model.set('constr_Jbu', Jbu);
     ocp_model.set('constr_lbu', lbu);
     ocp_model.set('constr_ubu', ubu);
-%     disp('ocp_model.model_struct')
-%     disp(ocp_model.model_struct)
-
 
     %% acados ocp opts
     ocp_opts = acados_ocp_opts();
@@ -196,15 +193,11 @@ for i = 1:3
     ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
     ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
     ocp_opts.set('sim_method_exact_z_output', sim_method_exact_z_output);
-    
-    
+
+
     if (strcmp(sim_method, 'irk_gnsf'))
         ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
     end
-
-    disp('ocp_opts');
-    disp(ocp_opts.opts_struct);
-
 
     %% acados ocp
     ocp_solver = acados_ocp(ocp_model, ocp_opts);
@@ -245,7 +238,7 @@ for i = 1:3
         err_x(i) = norm(x - xref)
         err_u(i) = norm(u - uref)
     end
-    
+
     % compare z accuracy to respective value obtained from x
     thetas = xref(2,:);
     omegas = xref(4,:);
@@ -254,7 +247,7 @@ for i = 1:3
         z = ocp_solver.get('z');
         err_z_zfromx(i) = norm( z - z_fromx(1:end-1) );
     end
-    
+
     % check constraint violation
     theta = model.sym_x(2);
     omega = model.sym_x(4);

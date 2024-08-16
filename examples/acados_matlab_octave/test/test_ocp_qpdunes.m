@@ -110,7 +110,6 @@ ocp_model.set('constr_lh', -U_max);
 ocp_model.set('constr_uh', U_max);
 
 ocp_model.set('constr_x0', x0);
-% ... see ocp_model.model_struct to see what other fields can be set
 
 %% acados ocp set opts
 ocp_opts = acados_ocp_opts();
@@ -121,8 +120,6 @@ ocp_opts.set('qp_solver', qp_solver);
 ocp_opts.set('qp_solver_iter_max', 2000);
 ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
 ocp_opts.set('ext_fun_compile_flags', '');
-
-% ... see ocp_opts.opts_struct to see what other fields can be set
 
 %% create ocp solver
 ocp_solver = acados_ocp(ocp_model, ocp_opts);

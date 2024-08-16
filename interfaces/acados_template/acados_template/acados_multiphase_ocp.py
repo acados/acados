@@ -258,9 +258,8 @@ class AcadosMultiphaseOcp:
             model_name_list = [self.model[i].name for i in range(self.n_phases)]
             print(f"new model names are {model_name_list}")
 
+        # make phase OCPs consistent, warn about unused fields
         for i in range(self.n_phases):
-
-            # create dummy ocp
             ocp = AcadosOcp()
             ocp.dims = self.phases_dims[i]
             ocp.dims.N = self.N_horizon # NOTE: to not change options when making ocp consistent
@@ -295,13 +294,14 @@ class AcadosMultiphaseOcp:
 
             self.dummy_ocp_list.append(ocp)
 
+        # check for transition consistency
         nx_list = [self.phases_dims[i].nx for i in range(self.n_phases)]
         if len(set(nx_list)) != 1:
             for i in range(1, self.n_phases):
                 if nx_list[i] != nx_list[i-1]:
                     print(f"nx differs between phases {i-1} and {i}: {nx_list[i-1]} != {nx_list[i]}")
-                    if self.N_list[i-1] != 1:
-                        raise Exception("nx must be the same for all phases if N_list[i] != 1.")
+                    if self.N_list[i-1] != 1 or self.mocp_opts.integrator_type[i-1] != 'DISCRETE':
+                        raise Exception(f"detected stage transition with different nx from phase {i-1} to {i}, which is only supported for integrator_type='DISCRETE' and N_list[i] == 1.")
         return
 
 

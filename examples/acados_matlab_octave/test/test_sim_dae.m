@@ -58,21 +58,21 @@ for integrator = {'irk_gnsf', 'irk'}
     x0 = [ xp0; yp0; alpha0; 0; 0; 0];
 
     u = 3.5;
-    
+
     %% model
     model = pendulum_dae_model();
     % disp('state')
     % disp(model.sym_x)
-    
+
     nx = length(model.sym_x);
     nu = length(model.sym_u);
     nz = length(model.sym_z);
-    
+
     %% acados sim model
     sim_model = acados_sim_model();
     sim_model.set('name', model_name);
     sim_model.set('T', 0.1); % simulation time
-    
+
     sim_model.set('sym_x', model.sym_x);
     if isfield(model, 'sym_u')
         sim_model.set('sym_u', model.sym_u);
@@ -80,7 +80,7 @@ for integrator = {'irk_gnsf', 'irk'}
     if isfield(model, 'sym_p')
         sim_model.set('sym_p', model.sym_p);
     end
-    
+
     % Note: DAEs can only be used with implicit integrator
     sim_model.set('dyn_type', 'implicit');
     sim_model.set('dyn_expr_f', model.expr_f_impl);
@@ -88,7 +88,7 @@ for integrator = {'irk_gnsf', 'irk'}
     if isfield(model, 'sym_z')
         sim_model.set('sym_z', model.sym_z);
     end
-    
+
     %% acados sim opts
     sim_opts = acados_sim_opts();
     sim_opts.set('compile_interface', compile_interface);
@@ -106,8 +106,8 @@ for integrator = {'irk_gnsf', 'irk'}
     if (strcmp(method, 'irk_gnsf'))
         sim_opts.set('gnsf_detect_struct', gnsf_detect_struct);
     end
-    
-    
+
+
     %% acados sim
     % create integrator
     sim_solver = acados_sim(sim_model, sim_opts);
@@ -119,10 +119,10 @@ for integrator = {'irk_gnsf', 'irk'}
 
     x_sim = zeros(nx, N_sim+1);
     x_sim(:,1) = x0;
-    
+
     tic
     for ii=1:N_sim
-        
+
         % set initial state
         sim_solver.set('x', x_sim(:,ii));
         sim_solver.set('u', u);
@@ -135,10 +135,10 @@ for integrator = {'irk_gnsf', 'irk'}
             sim_solver.set('xdot', zeros(nx,1));
             sim_solver.set('z', zeros(nz,1));
         elseif (strcmp(method, 'irk_gnsf'))
-            n_out = sim_solver.model_struct.dim_gnsf_nout;
+            n_out = sim_solver.sim.dims.gnsf_nout;
             sim_solver.set('phi_guess', zeros(n_out,1));
         end
-    
+
         % solve
         sim_solver.solve();
     

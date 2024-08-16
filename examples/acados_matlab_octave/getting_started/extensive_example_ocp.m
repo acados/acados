@@ -250,7 +250,6 @@ ocp_solver.set('print_level', print_level)
 
 %% call ocp solver in loop
 for i=1:n_executions
-    
     % initial state
     ocp_solver.set('constr_x0', x0);
 
@@ -316,7 +315,6 @@ qp_Q = ocp_solver.get('qp_Q');
 
 %
 cond_H = ocp_solver.get('qp_solver_cond_H');
-
 
 %% Plot trajectories
 figure; hold on;

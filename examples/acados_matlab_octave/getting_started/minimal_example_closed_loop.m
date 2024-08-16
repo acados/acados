@@ -128,7 +128,6 @@ ocp_opts.set('sim_method_num_steps', model_sim_method_num_steps);
 ocp_opts.set('qp_solver', qp_solver);
 ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
 ocp_opts.set('globalization', 'merit_backtracking') % turns on globalization
-% ... see ocp_opts.opts_struct to see what other fields can be set
 
 %% create ocp solver
 ocp_solver = acados_ocp(ocp_model, ocp_opts);

@@ -37,7 +37,7 @@
 // acados
 #include "acados/utils/print.h"
 #include "acados_c/ocp_nlp_interface.h"
-#include "acados_solver_{{ model.name }}.h"
+#include "acados_solver_{{ name }}.h"
 
 // mex
 #include "mex.h"
@@ -49,25 +49,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int status = 0;
 
     // create solver
-    {{ model.name }}_solver_capsule *acados_ocp_capsule = {{ model.name }}_acados_create_capsule();
+    {{ name }}_solver_capsule *acados_ocp_capsule = {{ name }}_acados_create_capsule();
 
-    status = {{ model.name }}_acados_create(acados_ocp_capsule);
+    status = {{ name }}_acados_create(acados_ocp_capsule);
 
     if (status)
     {
-        mexPrintf("{{ model.name }}_acados_create() returned status %d.\n", status);
+        mexPrintf("{{ name }}_acados_create() returned status %d.\n", status);
     }
-    mexPrintf("{{ model.name }}_acados_create() -> success!\n");
+    mexPrintf("{{ name }}_acados_create() -> success!\n");
 
     // get pointers to nlp solver related objects
-    ocp_nlp_plan_t *nlp_plan = {{ model.name }}_acados_get_nlp_plan(acados_ocp_capsule);
-    ocp_nlp_config *nlp_config = {{ model.name }}_acados_get_nlp_config(acados_ocp_capsule);
-    ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(acados_ocp_capsule);
-    ocp_nlp_in *nlp_in = {{ model.name }}_acados_get_nlp_in(acados_ocp_capsule);
-    ocp_nlp_out *nlp_out = {{ model.name }}_acados_get_nlp_out(acados_ocp_capsule);
-    ocp_nlp_out *sens_out = {{ model.name }}_acados_get_sens_out(acados_ocp_capsule);
-    ocp_nlp_solver *nlp_solver = {{ model.name }}_acados_get_nlp_solver(acados_ocp_capsule);
-    void *nlp_opts = {{ model.name }}_acados_get_nlp_opts(acados_ocp_capsule);
+    ocp_nlp_plan_t *nlp_plan = {{ name }}_acados_get_nlp_plan(acados_ocp_capsule);
+    ocp_nlp_config *nlp_config = {{ name }}_acados_get_nlp_config(acados_ocp_capsule);
+    ocp_nlp_dims *nlp_dims = {{ name }}_acados_get_nlp_dims(acados_ocp_capsule);
+    ocp_nlp_in *nlp_in = {{ name }}_acados_get_nlp_in(acados_ocp_capsule);
+    ocp_nlp_out *nlp_out = {{ name }}_acados_get_nlp_out(acados_ocp_capsule);
+    ocp_nlp_out *sens_out = {{ name }}_acados_get_sens_out(acados_ocp_capsule);
+    ocp_nlp_solver *nlp_solver = {{ name }}_acados_get_nlp_solver(acados_ocp_capsule);
+    void *nlp_opts = {{ name }}_acados_get_nlp_opts(acados_ocp_capsule);
 
     // mexPrintf("acados: got pointer to objectes!\n");
 
@@ -93,7 +93,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     memcpy(fieldnames[8],"capsule",sizeof("capsule"));
 
     // create output struct - C_ocp
-    plhs[0] = mxCreateStructMatrix(1, 1, 9, (const char **) fieldnames);
+    plhs[0] = mxCreateStructMatrix(1, 1, FIELDS_OCP, (const char **) fieldnames);
 
     // MEX: config, dims, opts, in, out, solver, sens_out, plan
     // plan

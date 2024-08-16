@@ -31,6 +31,14 @@
 
 # OCTAVE
 if(ACADOS_OCTAVE)
+    # new minimal examples
+    add_test(NAME octave_new_ocp
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/getting_started
+        octave --no-gui --no-window-system ./new_minimal_example_ocp.m)
+    add_test(NAME octave_new_sim
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/getting_started
+        octave --no-gui --no-window-system ./new_minimal_example_sim.m)
+    # dim check test
     add_test(NAME octave_test_dim_check
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./run_test_dim_check.m)
@@ -89,6 +97,8 @@ if(ACADOS_OCTAVE)
 
     # Force serial execution for tests in the same directory
     # Directory test
+    set_tests_properties(octave_new_ocp PROPERTIES DEPENDS octave_new_sim)
+
     set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_generic_ext_cost_disc_dyn)
     set_tests_properties(octave_test_generic_ext_cost_disc_dyn PROPERTIES DEPENDS octave_test_dim_check)
     set_tests_properties(octave_test_dim_check PROPERTIES DEPENDS octave_test_sim_forw)

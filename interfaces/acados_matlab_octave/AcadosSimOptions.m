@@ -28,37 +28,45 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 
 
-% TODO this class is not used yet!
-classdef AcadosSimDims < handle
+
+classdef AcadosSimOptions < handle
     properties
-
-        nx     % number of states
-        nu     % number of inputs
-        nz     % number of algebraic variables
-        np     % number of parameters
-
-        % gnsf
-        % TODO these dimensions are not part of the corresponding python class (?)
-        gnsf_nx1
-        gnsf_nz1
-        gnsf_nout
-        gnsf_ny
-        gnsf_nuhat
+        integrator_type
+        collocation_type
+        Tsim
+        num_stages
+        num_steps
+        newton_iter
+        newton_tol
+        jac_reuse
+        sens_forw
+        sens_adj
+        sens_algebraic
+        sens_hess
+        output_z
+        ext_fun_compile_flags
+        num_threads_in_batch_solve
+        compile_interface
     end
 
     methods
-        function obj = AcadosSimDims()
-
-            obj.nx    = [];
-            obj.nu    = [];
-            obj.nz    = 0;
-            obj.np    = 0;
-
-            obj.gnsf_nx1 = 0;
-            obj.gnsf_nz1 = 0;
-            obj.gnsf_nout = 0;
-            obj.gnsf_ny = 0;
-            obj.gnsf_nuhat = 0;
+        function obj = AcadosSimOptions()
+            obj.integrator_type = 'ERK';
+            obj.collocation_type = 'GAUSS_LEGENDRE';
+            obj.Tsim = [];
+            obj.num_stages = 4;
+            obj.num_steps = 1;
+            obj.newton_iter = 3;
+            obj.newton_tol = 0.;
+            obj.sens_forw = true;
+            obj.sens_adj = false;
+            obj.sens_algebraic = false;
+            obj.sens_hess = false;
+            obj.output_z = true;
+            obj.jac_reuse = 0;
+            obj.ext_fun_compile_flags = '-O2';
+            obj.num_threads_in_batch_solve = 1;
+            obj.compile_interface = []; % corresponds to automatic detection, possible values: true, false, []
         end
 
         function s = struct(self)
@@ -69,9 +77,15 @@ classdef AcadosSimDims < handle
             end
             s = struct();
             for fi = 1:numel(publicProperties)
-                s.(publicProperties{fi}) = self.(publicProperties{fi});
+                property_name = publicProperties{fi};
+                if strcmp(property_name, 'num_stages') || strcmp(property_name, 'num_steps') || strcmp(property_name, 'newton_iter') || ...
+                     strcmp(property_name, 'jac_reuse') || strcmp(property_name, 'newton_tol')
+                    out_name = strcat('sim_method_', property_name);
+                    s.(out_name) = self.(property_name);
+                else
+                    s.(property_name) = self.(property_name);
+                end
             end
         end
     end
 end
-

@@ -27,23 +27,32 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
 
-% TODO delete!?
+function render_file( in_file, out_file, json_fullfile, t_renderer_location )
 
-function generate_get_gnsf_structure(model, output_dir)
+    acados_root_dir = getenv('ACADOS_INSTALL_DIR');
+    acados_template_folder = fullfile(acados_root_dir,...
+                          'interfaces', 'acados_template', 'acados_template', 'c_templates_tera');
+    [path, name, ext] = fileparts(in_file);
 
-    fileID = fopen(fullfile(output_dir, 'get_gnsf_structure.m'), 'w');
+    template_glob = fullfile(acados_template_folder, path, '**', '*');
+    in_file = [name, ext];
 
-    fprintf(fileID, 'function model = get_gnsf_structure(model)\n');
-    fprintf(fileID, 'model.dim_gnsf_nx1 = %d;\n', model.dim_gnsf_nx1);
-    %fprintf(fileID, 'model.dim_gnsf_nx2 = %d;\n', model.dim_gnsf_nx2);
-    fprintf(fileID, 'model.dim_gnsf_nz1 = %d;\n', model.dim_gnsf_nz1);
-    %fprintf(fileID, 'model.dim_gnsf_nz2 = %d;\n', model.dim_gnsf_nz2);
-    fprintf(fileID, 'model.dim_gnsf_nuhat = %d;\n', model.dim_gnsf_nuhat);
-    fprintf(fileID, 'model.dim_gnsf_ny = %d;\n', model.dim_gnsf_ny);
-    fprintf(fileID, 'model.dim_gnsf_nout = %d;\n', model.dim_gnsf_nout);
+    os_cmd = [t_renderer_location, ' "',...
+        template_glob, '"', ' ', '"', in_file, '"', ' ', '"',...
+        json_fullfile, '"', ' ', '"', out_file, '"'];
 
-    fclose(fileID);
-
+    [ status, result ] = system(os_cmd);
+    if status
+        cd ..
+        error('rendering %s failed.\n command: %s\n returned status %d, got result:\n%s\n\n',...
+            in_file, os_cmd, status, result);
+    end
+    % NOTE: this should return status != 0, maybe fix in tera renderer?
+    if ~isempty(strfind( result, 'Error' )) % contains not implemented in Octave
+        cd ..
+        error('rendering %s failed.\n command: %s\n returned status %d, got result: %s',...
+            in_file, os_cmd, status, result);
+    end
 end
+

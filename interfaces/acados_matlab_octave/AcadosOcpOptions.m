@@ -52,6 +52,7 @@ classdef AcadosOcpOptions < handle
         sim_method_newton_iter
         sim_method_newton_tol
         sim_method_jac_reuse
+        sim_method_detect_gnsf
         time_steps
         Tsim
         qp_solver              %  qp solver to be used in the NLP solver
@@ -70,6 +71,7 @@ classdef AcadosOcpOptions < handle
         cost_discretization
         regularize_method
         reg_epsilon
+        shooting_nodes
         exact_hess_cost
         exact_hess_dyn
         exact_hess_constr
@@ -101,6 +103,8 @@ classdef AcadosOcpOptions < handle
         custom_templates
         custom_update_copy
         num_threads_in_batch_solve
+
+        compile_interface
 
     end
     methods
@@ -143,6 +147,7 @@ classdef AcadosOcpOptions < handle
             obj.cost_discretization = 'EULER';
             obj.regularize_method = 'NO_REGULARIZE';
             obj.reg_epsilon = 1e-4;
+            obj.shooting_nodes = [];
             obj.exact_hess_cost = 1;
             obj.exact_hess_dyn = 1;
             obj.exact_hess_constr = 1;
@@ -174,6 +179,8 @@ classdef AcadosOcpOptions < handle
             obj.custom_templates = [];
             obj.custom_update_copy = true;
             obj.num_threads_in_batch_solve = 1;
+
+            obj.compile_interface = []; % corresponds to automatic detection, possible values: true, false, []
         end
 
         function s = struct(self)
@@ -186,6 +193,14 @@ classdef AcadosOcpOptions < handle
             for fi = 1:numel(publicProperties)
                 s.(publicProperties{fi}) = self.(publicProperties{fi});
             end
+        end
+
+        function s = convert_to_struct_for_json_dump(self, N)
+            s = struct(self);
+            s.time_steps = reshape(num2cell(s.time_steps), [1, N]);
+            s.sim_method_num_stages = reshape(num2cell(s.sim_method_num_stages), [1, N]);
+            s.sim_method_num_steps = reshape(num2cell(s.sim_method_num_steps), [1, N]);
+            s.sim_method_jac_reuse = reshape(num2cell(s.sim_method_jac_reuse), [1, N]);
         end
     end
 end

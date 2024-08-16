@@ -36,57 +36,55 @@
 % nsg;  // number of softened general linear constraints
 % nsh;  // number of softened nonlinear constraints
 
-function model = detect_constr(model, is_e, is_init)
-
-    if ~exist('is_init','var')
-        is_init = false;
-    end
-   
+function model = detect_constr(model, constraints, stage_type)
 
     import casadi.*
 
-    x = model.sym_x;
-    u = model.sym_u;
-
-    % check type
-    if strcmp(class(x(1)), 'casadi.SX')
-        isSX = true;
-    else
-        disp('constraint detection only works for SX CasADi type!!!');
-        keyboard;
-    end
-
-    if isfield(model, 'sym_z')
-        z = model.sym_z;
-    else
-        z = SX.sym('z', 0, 0);
-    end
+    x = model.x;
+    u = model.u;
+    z = model.z;
 
     nx = length(x);
     nu = length(u);
     nz = length(z);
 
-    % z = model.sym_z;
-    if is_e
-        expr_constr = model.constr_expr_h_e;
-        LB = model.constr_lh_e;
-        UB = model.constr_uh_e;
-        fprintf('\nConstraint detection for terminal constraints.\n');
-    elseif is_init
-        expr_constr = model.constr_expr_h_0;
-        LB = model.constr_lh_0;
-        UB = model.constr_uh_0;
-        fprintf('\nConstraint detection for initial constraints.\n');
+    if isa(x, 'casadi.SX')
+        isSX = true;
     else
-        expr_constr = model.constr_expr_h;
-        LB = model.constr_lh;
-        UB = model.constr_uh;
-        fprintf('\nConstraint detection for path constraints.\n');
+        error('constraint detection only works for casadi.SX!');
     end
-    constr_fun = Function('constr_fun', {x, u, z}, {expr_constr});
+
+    if strcmp(stage_type, 'initial')
+        expr_constr = model.con_h_expr_0;
+        LB = constraints.lh_0;
+        UB = constraints.uh_0;
+        fprintf('\nConstraint detection for initial constraints.\n');
+    elseif strcmp(stage_type, 'path')
+        expr_constr = model.con_h_expr;
+        LB = constraints.lh;
+        UB = constraints.uh;
+        fprintf('\nConstraint detection for path constraints.\n');
+    elseif strcmp(stage_type, 'terminal')
+        expr_constr = model.con_h_expr_e;
+        LB = constraints.lh_e;
+        UB = constraints.uh_e;
+        fprintf('\nConstraint detection for terminal constraints.\n');
+    else
+        error('Constraint detection: Wrong stage_type.')
+    end
+
+    if isempty(expr_constr)
+        expr_constr = SX.sym('con_h_expr', 0, 0);
+    end
+
+    if ~(isa(expr_constr, 'casadi.SX') || isa(expr_constr, 'casadi.SX'))
+        disp('expr_constr =')
+        disp(expr_constr)
+        error("Constraint type detection require definition of constraints as CasADi SX or MX.")
+    end
 
     % initialize
-    constr_expr_h = SX.sym('constr_expr_h', 0, 0);
+    constr_expr_h = SX.sym('con_h_expr', 0, 0);
     lh = [];
     uh = [];
 
@@ -94,7 +92,7 @@ function model = detect_constr(model, is_e, is_init)
     D = zeros(0, nu);
     lg = [];
     ug = [];
-    
+
     Jbx = zeros(0, nx);
     lbx = [];
     ubx = [];
@@ -106,7 +104,7 @@ function model = detect_constr(model, is_e, is_init)
     % loop over CasADi formulated constraints
     for ii = 1:length(expr_constr)
         c = expr_constr(ii);
-        if any(c.which_depends(z)) || ~c.is_linear([ x; u ]) || any(c.which_depends(model.sym_p))
+        if any(c.which_depends(z)) || ~c.is_linear([ x; u ]) || any(c.which_depends(model.p))
             % external constraint
             constr_expr_h = vertcat(constr_expr_h, c);
             lh = [ lh; LB(ii)];
@@ -131,7 +129,6 @@ function model = detect_constr(model, is_e, is_init)
                           ' is reformulated as bound on x.']);
                     disp(c);
                     disp(' ')
-
                 else
                     % bound on u;
                     Jbu = [Jbu; zeros(1,nu)];
@@ -142,7 +139,6 @@ function model = detect_constr(model, is_e, is_init)
                           ' is reformulated as bound on u.']);
                     disp(c);
                     disp(' ')
-
                 end
             else
                 % c is general linear constraint
@@ -154,117 +150,108 @@ function model = detect_constr(model, is_e, is_init)
                       ' is reformulated as general linear constraint.']);
                 disp(c);
                 disp(' ')
-                
             end
         end
     end
 
-    
-    if is_e
+
+    if strcmp(stage_type, 'terminal')
         % checks
         if any(expr_constr.which_depends(u)) || ~isempty(lbu) || (~isempty(D) && any(D))
             error('terminal constraint may not depend on control input.');
         end
         % h
-        model.constr_type_e = 'bgh';
-        model.dim_nh_e = length(lh);
+        constraints.constr_type_e = 'BGH';
         if ~isempty(lh)
-            model.constr_expr_h_e = constr_expr_h;
-            model.constr_lh_e = lh;
-            model.constr_uh_e = uh;
+            model.con_h_expr_e = constr_expr_h;
+            constraints.lh_e = lh;
+            constraints.uh_e = uh;
         else
-            model = rmfield(model, 'constr_expr_h_e');
-            model = rmfield(model, 'constr_lh_e');
-            model = rmfield(model, 'constr_uh_e');
+            model.con_h_expr_e = [];
+            constraints.lh_e = [];
+            constraints.uh_e = [];
         end
         % g
         if ~isempty(lg)
-            model.constr_C_e = C;
-            model.constr_lg_e = lg;
-            model.constr_ug_e = ug;
-            model.dim_ng_e = length(lg);
+            constraints.C_e = C;
+            constraints.lg_e = lg;
+            constraints.ug_e = ug;
         end
         % bounds x
         if ~isempty(lbx)
-            model.constr_Jbx_e = Jbx;
-            model.constr_lbx_e = lbx;
-            model.constr_ubx_e = ubx;
-            model.dim_nbx_e = length(lbx);
+            constraints.idxbx_e = J_to_idx(Jbx);
+            constraints.lbx_e = lbx;
+            constraints.ubx_e = ubx;
         end
 
-    elseif is_init
-        model.constr_type = 'bgh';
+    elseif strcmp(stage_type, 'initial')
+        warning("At initial stage, only h constraints are detected.")
+        constraints.constr_type_0 = 'BGH';
         % h
-        model.dim_nh_0 = length(constr_lh_0);
         if ~isempty(lh)
-            model.constr_expr_h_0 = constr_expr_h;
-            model.constr_lh_0 = lh;
-            model.constr_uh_0 = uh;
+            model.con_h_expr_0 = constr_expr_h;
+            constraints.lh_0 = lh;
+            constraints.uh_0 = uh;
         else
-            model = rmfield(model, 'constr_expr_h_0');
-            model = rmfield(model, 'constr_lh_0');
-            model = rmfield(model, 'constr_uh_0');
+            model.con_h_expr_0 = [];
+            constraints.lh_0 = [];
+            constraints.uh_0 = [];
+        end
+    else % path
+        constraints.constr_type = 'BGH';
+        % h
+        if ~isempty(lh)
+            model.con_h_expr = constr_expr_h;
+            constraints.lh = lh;
+            constraints.uh = uh;
+        else
+            model.con_h_expr = [];
+            constraints.lh = [];
+            constraints.uh = [];
         end
         % g
-        model.dim_ng = length(lg);
         if ~isempty(lg)
-            model.constr_C = C;
-            model.constr_D = D;
-            model.constr_lg = lg;
-            model.constr_ug = ug;
+            constraints.C = C;
+            constraints.D = D;
+            constraints.lg = lg;
+            constraints.ug = ug;
         end
         % bounds x
         if ~isempty(lbx)
-            model.constr_Jbx = Jbx;
-            model.constr_lbx = lbx;
-            model.constr_ubx = ubx;
-            model.dim_nbx = length(lbx);
+            constraints.idxbx = J_to_idx(Jbx);
+            constraints.lbx = lbx;
+            constraints.ubx = ubx;
         end
         % bounds u
         if ~isempty(lbu)
-            model.constr_Jbu = Jbu;
-            model.constr_lbu = lbu;
-            model.constr_ubu = ubu;
-            model.dim_nbu = length(lbu);
-        end
-        
-    else
-        model.constr_type = 'bgh';
-        % h
-        model.dim_nh = length(lh);
-        if ~isempty(lh)
-            model.constr_expr_h = constr_expr_h;
-            model.constr_lh = lh;
-            model.constr_uh = uh;
-        else
-            model = rmfield(model, 'constr_expr_h');
-            model = rmfield(model, 'constr_lh');
-            model = rmfield(model, 'constr_uh');
+            constraints.idxbu = J_to_idx(Jbu);
+            constraints.lbu = lbu;
+            constraints.ubu = ubu;
         end
         % g
-        model.dim_ng = length(lg);
         if ~isempty(lg)
             model.constr_C = C;
             model.constr_D = D;
-            model.constr_lg = lg;
-            model.constr_ug = ug;
+            constraints.lg = lg;
+            constraints.ug = ug;
         end
-        % bounds x
-        if ~isempty(lbx)
-            model.constr_Jbx = Jbx;
-            model.constr_lbx = lbx;
-            model.constr_ubx = ubx;
-            model.dim_nbx = length(lbx);
-        end
-        % bounds u
-        if ~isempty(lbu)
-            model.constr_Jbu = Jbu;
-            model.constr_lbu = lbu;
-            model.constr_ubu = ubu;
-            model.dim_nbu = length(lbu);
-        end
-        
     end
-%     model
+end
 
+% TODO directly detect idxbx, etc. instead of Jbx, etc.
+
+function idx = J_to_idx(J)
+    size_J = size(J);
+    nrows = size_J(1);
+    idx = zeros(nrows,1);
+    for i = 1:nrows
+        this_idx = find(J(i,:));
+        if length(this_idx) ~= 1
+            error(['J_to_idx: Invalid J matrix. Exiting. Found more than one nonzero in row ' num2str(i)]);
+        end
+        if J(i,this_idx) ~= 1
+            error(['J_to_idx: J matrices can only contain 1s, got J(' num2str(i) ', ' num2str(this_idx) ') = ' num2str(J(i,this_idx)) ]);
+        end
+        idx(i) = this_idx - 1; % store 0-based index
+    end
 end

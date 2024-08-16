@@ -190,15 +190,10 @@ if (ng>0)
     ocp_model.set('constr_lg_e', lg_e);
     ocp_model.set('constr_ug_e', ug_e);
 else
-%    ocp_model.set('constr_Jbx', Jbx);
-%    ocp_model.set('constr_lbx', lbx);
-%    ocp_model.set('constr_ubx', ubx);
-    ocp_model.set('constr_Jbu', Jbu);
-    ocp_model.set('constr_lbu', lbu);
-    ocp_model.set('constr_ubu', ubu);
+	ocp_model.set('constr_Jbu', Jbu);
+	ocp_model.set('constr_lbu', lbu);
+	ocp_model.set('constr_ubu', ubu);
 end
-
-ocp_model.model_struct
 
 
 %% acados ocp opts
@@ -224,14 +219,10 @@ ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
 ocp_opts.set('sim_method_newton_iter', ocp_sim_method_newton_iter);
 
-ocp_opts.opts_struct
-
-
 %% acados ocp
 ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 ocp_model.set('name', model_name);
-
 
 %% acados sim model
 sim_model = acados_sim_model();
@@ -314,13 +305,13 @@ for ii=1:N_sim
     end
 
     ocp_solver.solve();
-    ocp_solver.print('stat');
 
     status = ocp_solver.get('status');
     sqp_iter(ii) = ocp_solver.get('sqp_iter');
     sqp_time(ii) = ocp_solver.get('time_tot');
     if status ~= 0
-        keyboard
+        ocp.print('stat');
+        error('solver returned nonzero exit status.')
     end
 
     % get solution for initialization of next NLP
@@ -342,19 +333,19 @@ for ii=1:N_sim
         sim_solver.set('z', z0);
     elseif (strcmp(sim_method, 'irk_gnsf'))
         import casadi.*
-        x01_gnsf = x0(sim_solver.model_struct.dyn_gnsf_idx_perm_x(1:sim_solver.model_struct.dim_gnsf_nx1));
-        x01_dot_gnsf = xdot0(sim_solver.model_struct.dyn_gnsf_idx_perm_x(1:sim_solver.model_struct.dim_gnsf_nx1));
-        z0_gnsf = z0(sim_solver.model_struct.dyn_gnsf_idx_perm_z( 1:sim_solver.model_struct.dim_gnsf_nz1 ));
-        y_in = sim_solver.model_struct.dyn_gnsf_L_x * x01_gnsf ...
-                + sim_solver.model_struct.dyn_gnsf_L_xdot * x01_dot_gnsf ...
-                + sim_solver.model_struct.dyn_gnsf_L_z * z0_gnsf;
-        u_hat = sim_solver.model_struct.dyn_gnsf_L_u * u_sim(:,ii);
+        x01_gnsf = x0(sim_solver.sim.model.dyn_gnsf_idx_perm_x(1:sim_solver.sim.dims.gnsf_nx1));
+        x01_dot_gnsf = xdot0(sim_solver.sim.model.dyn_gnsf_idx_perm_x(1:sim_solver.sim.dims.gnsf_nx1));
+        z0_gnsf = z0(sim_solver.sim.model.dyn_gnsf_idx_perm_z( 1:sim_solver.sim.dims.gnsf_nz1 ));
+        y_in = sim_solver.sim.model.dyn_gnsf_L_x * x01_gnsf ...
+                + sim_solver.sim.model.dyn_gnsf_L_xdot * x01_dot_gnsf ...
+                + sim_solver.sim.model.dyn_gnsf_L_z * z0_gnsf;
+        u_hat = sim_solver.sim.model.dyn_gnsf_L_u * u_sim(:,ii);
         phi_fun = Function([model_name,'_gnsf_phi_fun'],...
-                        {sim_solver.model_struct.sym_gnsf_y, sim_solver.model_struct.sym_gnsf_uhat},...
-                            {sim_solver.model_struct.dyn_gnsf_expr_phi(:)}); % sim_solver.model_struct.sym_p
+                        {sim_solver.sim.model.sym_gnsf_y, sim_solver.sim.model.sym_gnsf_uhat},...
+                            {sim_solver.sim.model.dyn_gnsf_expr_phi(:)});
 
         phi_guess = full( phi_fun( y_in, u_hat ) );
-        n_out = sim_solver.model_struct.dim_gnsf_nout;
+        n_out = sim_solver.sim.dims.gnsf_nout;
         sim_solver.set('phi_guess', zeros(n_out,1));
     end
 

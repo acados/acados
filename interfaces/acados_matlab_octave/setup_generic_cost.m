@@ -27,23 +27,17 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
+function setup_generic_cost(cost, target_dir, stage_type)
+    if strcmp(stage_type, 'initial')
+        cost_source_ext_cost = cost.cost_source_ext_cost_0;
+    elseif strcmp(stage_type, 'path')
+        cost_source_ext_cost = cost.cost_source_ext_cost;
+    elseif strcmp(stage_type, 'terminal')
+        cost_source_ext_cost = cost.cost_source_ext_cost_e;
+    else
+        error('Unknown stage_type.')
+    end
 
-% TODO delete!?
-
-function generate_get_gnsf_structure(model, output_dir)
-
-    fileID = fopen(fullfile(output_dir, 'get_gnsf_structure.m'), 'w');
-
-    fprintf(fileID, 'function model = get_gnsf_structure(model)\n');
-    fprintf(fileID, 'model.dim_gnsf_nx1 = %d;\n', model.dim_gnsf_nx1);
-    %fprintf(fileID, 'model.dim_gnsf_nx2 = %d;\n', model.dim_gnsf_nx2);
-    fprintf(fileID, 'model.dim_gnsf_nz1 = %d;\n', model.dim_gnsf_nz1);
-    %fprintf(fileID, 'model.dim_gnsf_nz2 = %d;\n', model.dim_gnsf_nz2);
-    fprintf(fileID, 'model.dim_gnsf_nuhat = %d;\n', model.dim_gnsf_nuhat);
-    fprintf(fileID, 'model.dim_gnsf_ny = %d;\n', model.dim_gnsf_ny);
-    fprintf(fileID, 'model.dim_gnsf_nout = %d;\n', model.dim_gnsf_nout);
-
-    fclose(fileID);
-
+    check_dir_and_create(target_dir);
+    copyfile(fullfile(pwd, cost_source_ext_cost), target_dir);
 end

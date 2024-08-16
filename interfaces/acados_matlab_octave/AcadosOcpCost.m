@@ -43,6 +43,7 @@ classdef AcadosOcpCost < handle
         Zu_0        % Hessian wrt upper slack
         zl_0        % gradient wrt lower slack
         zu_0        % gradient wrt upper slack
+
         cost_ext_fun_type_0 % casadi or generic
         cost_source_ext_cost_0 % C-source file of cost function
         cost_function_ext_cost_0 % C-function name
@@ -78,7 +79,7 @@ classdef AcadosOcpCost < handle
     methods
         function obj = AcadosOcpCost()
             % initial
-            obj.cost_type_0   = 'LINEAR_LS';
+            obj.cost_type_0   = []; % if empty then copy path cost
             obj.W_0           = [];
             obj.Vx_0         = [];
             obj.Vu_0        = [];
@@ -92,7 +93,7 @@ classdef AcadosOcpCost < handle
             obj.cost_source_ext_cost_0 = [];
             obj.cost_function_ext_cost_0 = [];
             % intermediate
-            obj.cost_type   = 'LINEAR_LS';
+            obj.cost_type   = 'AUTO';
             obj.W           = [];
             obj.Vx          = [];
             obj.Vu          = [];
@@ -106,7 +107,7 @@ classdef AcadosOcpCost < handle
             obj.cost_source_ext_cost = [];
             obj.cost_function_ext_cost = [];
             % terminal
-            obj.cost_type_e = 'LINEAR_LS';
+            obj.cost_type_e = 'AUTO';
             obj.W_e         = [];
             obj.Vx_e        = [];
             obj.yref_e      = [];
@@ -129,6 +130,13 @@ classdef AcadosOcpCost < handle
             for fi = 1:numel(publicProperties)
                 s.(publicProperties{fi}) = self.(publicProperties{fi});
             end
+        end
+
+        function out = convert_to_struct_for_json_dump(self)
+            out = self.struct();
+            vector_properties = {'yref_0', 'Zl_0', 'Zu_0', 'zl_0', 'zu_0', 'yref', 'Zl', 'Zu', 'zl', 'zu', 'yref_e', 'Zl_e', 'Zu_e', 'zl_e', 'zu_e'};
+            matrix_properties = {'W_0', 'Vx_0', 'Vu_0', 'Vz_0', 'W', 'Vx', 'Vu', 'Vz', 'W_e', 'Vx_e'};
+            out = prepare_struct_for_json_dump(out, vector_properties, matrix_properties);
         end
     end
 end

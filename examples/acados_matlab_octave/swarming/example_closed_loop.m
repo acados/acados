@@ -160,10 +160,7 @@ ocp_model.set('constr_uh', uh);
 % ocp_model.set('constr_lh_e', lh_e);
 % ocp_model.set('constr_uh_e', uh_e);
 
-ocp_model.model_struct
-
 %% Acados ocp options
-
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
@@ -196,9 +193,6 @@ if (strcmp(ocp_sim_method, 'irk_gnsf'))
 	ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
 
-ocp_opts.opts_struct
-
-%% Acados ocp
 
 % Create ocp
 ocp_solver = acados_ocp(ocp_model, ocp_opts);
@@ -225,10 +219,6 @@ else % irk
 	sim_model.set('dyn_expr_f', model.expr_f_impl);
 end
 
-%sim_model.model_struct
-
-
-
 %% Acados simulation options
 sim_opts = acados_sim_opts();
 sim_opts.set('compile_interface', compile_interface);
@@ -240,10 +230,6 @@ sim_opts.set('sens_forw', sim_sens_forw);
 if (strcmp(sim_method, 'irk_gnsf'))
 	sim_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
-
-%sim_opts.opts_struct
-
-
 
 %% Acados simulation
 
@@ -301,10 +287,9 @@ for k = 1:nb_steps_sim
 	% Get solution for initialization of next NLP
 	x_traj = ocp_solver.get('x');
 	u_traj = ocp_solver.get('u');
-    
+
 	% Shift trajectory for initialization
 	x_traj_init = [x_traj(:,2:end), x_traj(:,end)];
-	u_traj_init = [u_traj(:,2:end), u_traj(:,end)];
 
 	% Get solution for simulation
 	u_history(:,k) = ocp_solver.get('u', 0);
@@ -335,7 +320,7 @@ u_history = u_history';
 pos_history = x_history(:,1:3*N);
 vel_history = x_history(:,(3*N+1):end);
 
-%% Plots 
+%% Plots
 
 % Plot trajectories of the agents
 figure;

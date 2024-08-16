@@ -112,7 +112,7 @@ for i = 1 : nsim
     ocp_solver.set('constr_x0', x0);
 
     % set the reference
-    if strcmp(ocp_solver.model_struct.cost_type,'linear_ls')
+    if strcmp(ocp_solver.ocp.cost.cost_type,'LINEAR_LS')
         ocp_solver.set('cost_y_ref', [zeros(nu,1); xr]);  % for the stage cost (y=[u;x])
         ocp_solver.set('cost_y_ref_e', xr);  % for the terminal cost (y=x)
     else

@@ -35,16 +35,7 @@ function render_acados_sim_templates(acados_sim_json_file)
     acados_template_folder = fullfile(acados_root_dir,...
                           'interfaces', 'acados_template', 'acados_template');
 
-    %% check if t_renderer is available -> download if not
-    if ispc()
-        t_renderer_location = fullfile(acados_root_dir,'bin','t_renderer.exe');
-    else
-        t_renderer_location = fullfile(acados_root_dir,'bin','t_renderer');
-    end
-
-    if ~exist( t_renderer_location, 'file' )
-        acados_template_mex.set_up_t_renderer( t_renderer_location )
-    end
+    t_renderer_location = get_tera();
 
     %% load json data
     acados_sim = loadjson(fileread(acados_sim_json_file));
@@ -86,11 +77,6 @@ function render_acados_sim_templates(acados_sim_json_file)
     template_file = 'acados_sim_set.in.c';
     out_file = ['acados_sim_set_', model_name, '.c'];
     render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
-    % % MEX solve
-    % template_file = 'acados_mex_solve.in.c';
-    % out_file = ['acados_mex_solve_', model_name, '.c'];
-    % render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
 
     % sim_solver
     template_file = 'acados_sim_solver.in.c';

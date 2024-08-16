@@ -191,9 +191,6 @@ else
 	ocp_model.set('constr_lbu', lbu);
 	ocp_model.set('constr_ubu', ubu);
 end
-disp('ocp_model.model_struct')
-disp(ocp_model.model_struct)
-
 
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
@@ -228,14 +225,17 @@ if (strcmp(sim_method, 'irk_gnsf'))
 	ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
 
-disp('ocp_opts');
-disp(ocp_opts.opts_struct);
+%% create acados OCP solver
+solver_creation = 'transcribe_explicit'
 
-
-%% acados ocp
-% create ocp
-ocp_solver = acados_ocp(ocp_model, ocp_opts);
-%ocp_solver.model_struct
+if strcmp(solver_creation, 'legacy')
+    % legacy interface
+    ocp_solver = acados_ocp(ocp_model, ocp_opts);
+elseif strcmp(solver_creation, 'transcribe_explicit')
+    % test translation to new OCP formulation object
+    ocp = setup_AcadosOcp_from_legacy_ocp_description(ocp_model, ocp_opts)
+    ocp_solver = AcadosOcpSolver(ocp);
+end
 
 
 % set trajectory initialization

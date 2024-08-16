@@ -29,12 +29,10 @@
 
 %
 
-classdef {{ model.name }}_mex_solver < handle
+classdef {{ name }}_mex_solver < handle
 
     properties
         C_ocp
-        cost_ext_fun_type
-        cost_ext_fun_type_e
         N
         name
         code_gen_dir
@@ -45,15 +43,13 @@ classdef {{ model.name }}_mex_solver < handle
     methods
 
         % constructor
-        function obj = {{ model.name }}_mex_solver()
-            make_mex_{{ model.name }}();
-            obj.C_ocp = acados_mex_create_{{ model.name }}();
+        function obj = {{ name }}_mex_solver()
+            make_mex_{{ name }}();
+            obj.C_ocp = acados_mex_create_{{ name }}();
             % to have path to destructor when changing directory
             addpath('.')
-            obj.cost_ext_fun_type = '{{ cost.cost_ext_fun_type }}';
-            obj.cost_ext_fun_type_e = '{{ cost.cost_ext_fun_type_e }}';
             obj.N = {{ dims.N }};
-            obj.name = '{{ model.name }}';
+            obj.name = '{{ name }}';
             obj.code_gen_dir = pwd();
         end
 
@@ -63,14 +59,14 @@ classdef {{ model.name }}_mex_solver < handle
             return_dir = pwd();
             cd(obj.code_gen_dir);
             if ~isempty(obj.C_ocp)
-                acados_mex_free_{{ model.name }}(obj.C_ocp);
+                acados_mex_free_{{ name }}(obj.C_ocp);
             end
             cd(return_dir);
             disp("done.");
         end
 
         function solve(obj)
-            acados_mex_solve_{{ model.name }}(obj.C_ocp);
+            acados_mex_solve_{{ name }}(obj.C_ocp);
         end
 
         function set(varargin)
@@ -81,10 +77,10 @@ classdef {{ model.name }}_mex_solver < handle
                 error('field must be a char vector, use '' ''');
             end
             if nargin==3
-                acados_mex_set_{{ model.name }}(obj.cost_ext_fun_type, obj.cost_ext_fun_type_e, obj.C_ocp, field, value);
+                acados_mex_set_{{ name }}(obj.C_ocp, field, value);
             elseif nargin==4
                 stage = varargin{4};
-                acados_mex_set_{{ model.name }}(obj.cost_ext_fun_type, obj.cost_ext_fun_type_e, obj.C_ocp, field, value, stage);
+                acados_mex_set_{{ name }}(obj.C_ocp, field, value, stage);
             else
                 disp('acados_ocp.set: wrong number of input arguments (2 or 3 allowed)');
             end
@@ -106,10 +102,10 @@ classdef {{ model.name }}_mex_solver < handle
                 error('field must be a char vector, use '' ''');
             end
             if nargin==3
-                acados_mex_set_{{ model.name }}(obj.cost_ext_fun_type, obj.cost_ext_fun_type_e, obj.C_ocp, field, value);
+                acados_mex_set_{{ name }}(obj.C_ocp, field, value);
             elseif nargin==4
                 stage = varargin{4};
-                acados_mex_set_{{ model.name }}(obj.cost_ext_fun_type, obj.cost_ext_fun_type_e, obj.C_ocp, field, value, stage);
+                acados_mex_set_{{ name }}(obj.C_ocp, field, value, stage);
             else
                 disp('acados_ocp.set_params_sparse: wrong number of input arguments (3 or 4 allowed)');
             end
@@ -257,7 +253,7 @@ classdef {{ model.name }}_mex_solver < handle
         end
 
         function [] = reset(obj)
-            acados_mex_reset_{{ model.name }}(obj.C_ocp);
+            acados_mex_reset_{{ name }}(obj.C_ocp);
         end
 
 

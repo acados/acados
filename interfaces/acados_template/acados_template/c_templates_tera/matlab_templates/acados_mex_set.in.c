@@ -37,7 +37,7 @@
 // acados
 #include "acados/utils/print.h"
 #include "acados_c/ocp_nlp_interface.h"
-#include "acados_solver_{{ model.name }}.h"
+#include "acados_solver_{{ name }}.h"
 
 // mex
 #include "mex.h"
@@ -54,13 +54,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     char buffer [500]; // for error messages
 
     /* RHS */
-    int min_nrhs = 5;
+    int min_nrhs = 3;
 
     // C ocp
-    const mxArray *C_ocp = prhs[2];
+    const mxArray *C_ocp = prhs[0];
     // capsule
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "capsule" ) );
-    {{ model.name }}_solver_capsule *capsule = ({{ model.name }}_solver_capsule *) ptr[0];
+    {{ name }}_solver_capsule *capsule = ({{ name }}_solver_capsule *) ptr[0];
     // plan
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "plan" ) );
     ocp_nlp_plan_t *plan = (ocp_nlp_plan_t *) ptr[0];
@@ -84,16 +84,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     ocp_nlp_solver *solver = (ocp_nlp_solver *) ptr[0];
 
     // field
-    char *field = mxArrayToString( prhs[3] );
+    char *field = mxArrayToString( prhs[1] );
     // value
-    double *value = mxGetPr( prhs[4] );
+    double *value = mxGetPr( prhs[2] );
 
     // for checks
-    int matlab_size = (int) mxGetNumberOfElements( prhs[4] );
-    int nrow = (int) mxGetM( prhs[4] );
-    int ncol = (int) mxGetN( prhs[4] );
+    int matlab_size = (int) mxGetNumberOfElements( prhs[2] );
+    int nrow = (int) mxGetM( prhs[2] );
+    int ncol = (int) mxGetN( prhs[2] );
 
     int N = dims->N;
+    /* TODO: MOCP fix dims!!!!!!!!! */
     int nu = dims->nu[0];
     int nx = dims->nx[0];
 
@@ -106,7 +107,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (nrhs==min_nrhs+1)
     {
-        s0 = mxGetScalar( prhs[5] );
+        s0 = mxGetScalar( prhs[3] );
         if (s0 > N)
         {
             sprintf(buffer, "ocp_set: N < specified stage = %d\n", s0);
@@ -359,17 +360,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ocp_nlp_cost_model_set(config, dims, in, ii, "zu", value);
         }
     }
-    // constraints TODO
-    // // NOTE(oj): how is it with Jbx, Jbu, idxb can they be changed?!
-    // else if (!strcmp(field, "constr_lbx"))
-    // {
-    //     // bounds at 0 are a special case.
-    //     if (s0==0)
-    //     {
-    //         sprintf(buffer, "%s cannot set %s for stage 0", fun_name, field);
-    //         mexErrMsgTxt(buffer);
-    //     }
-    // }
     // initializations
     else if (!strcmp(field, "init_x") || !strcmp(field, "x"))
     {
@@ -551,18 +541,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "p"))
     {
-        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, {{ dims.np }})
         if (nrhs==min_nrhs) // all stages
         {
             for (int ii=0; ii<=N; ii++)
             {
-                {{ model.name }}_acados_update_params(capsule, ii, value, matlab_size);
+                acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "p");
+                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size)
+                {{ name }}_acados_update_params(capsule, ii, value, matlab_size);
             }
         }
         else if (nrhs==min_nrhs+1) // one stage
         {
-            int stage = mxGetScalar( prhs[5] );
-            {{ model.name }}_acados_update_params(capsule, stage, value, matlab_size);
+            int stage = mxGetScalar( prhs[3] );
+            {{ name }}_acados_update_params(capsule, stage, value, matlab_size);
         }
     }
     else if (!strcmp(field, "params_sparse"))
@@ -570,6 +561,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {% if dims.np > 0 %}
         MEX_DIM_CHECK_MAT(fun_name, field, nrow, ncol, nrow, 2);
         // create int index vector
+        // TODO: MOCP get max np!
         int idx_tmp[{{ dims.np }}];
         for (int ip = 0; ip<nrow; ip++)
             idx_tmp[ip] = (int) value[ip];
@@ -578,13 +570,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             for (int ii=0; ii<=N; ii++)
             {
-                {{ model.name }}_acados_update_params_sparse(capsule, ii, idx_tmp, value+nrow, nrow);
+                {{ name }}_acados_update_params_sparse(capsule, ii, idx_tmp, value+nrow, nrow);
             }
         }
         else if (nrhs==min_nrhs+1) // one stage
         {
-            int stage = mxGetScalar( prhs[5] );
-                {{ model.name }}_acados_update_params_sparse(capsule, stage, idx_tmp, value+nrow, nrow);
+            int stage = mxGetScalar( prhs[3] );
+                {{ name }}_acados_update_params_sparse(capsule, stage, idx_tmp, value+nrow, nrow);
         }
 {% endif %}
     }

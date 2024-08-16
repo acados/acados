@@ -289,7 +289,7 @@ for ii=1:N_sim
 	% use ocp_solver.set to modify numerical data for a certain stage
 	some_stages = 1:10:ocp_N-1;
 	for i = some_stages
-        if strcmp(ocp_solver.ocp_solver.cost.cost_type, 'LINEAR_LS')
+        if strcmp(ocp_solver.ocp.cost.cost_type, 'LINEAR_LS')
             ocp_solver.set('cost_Vx', Vx, i);
         end
 	end

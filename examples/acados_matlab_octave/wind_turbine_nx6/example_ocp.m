@@ -276,10 +276,6 @@ ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
 
-ocp_opts.opts_struct
-
-
-
 %% acados ocp
 % create ocp
 ocp_solver = acados_ocp(ocp_model, ocp_opts);

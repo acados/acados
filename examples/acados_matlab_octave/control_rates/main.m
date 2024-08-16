@@ -153,9 +153,6 @@ ocp_model.set('constr_Jbu', Jbu);
 ocp_model.set('constr_lbu', lbu);
 ocp_model.set('constr_ubu', ubu);
 
-disp('ocp_model.model_struct: ')
-disp(ocp_model.model_struct)
-
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
 
@@ -203,9 +200,6 @@ ocp_opts.set('levenberg_marquardt', levenberg_marquardt);
 
 % Other
 ocp_opts.set('print_level', print_level);
-
-disp('ocp_opts.opts_struct: ');
-disp(ocp_opts.opts_struct);
 
 %% create ocp solver
 ocp_solver = acados_ocp(ocp_model, ocp_opts);
@@ -278,8 +272,8 @@ xlabel('time [s]')
 
 figure; hold on; grid on;
 plot(t, u_sim)
-yline(lbu,'k--')
-yline(ubu,'k--')
+plot(t, lbu, 'k--')
+plot(t, ubu, 'k--')
 legend({'udot'})
 ylabel('control input rate')
 xlabel('time [s]')

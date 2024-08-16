@@ -197,9 +197,6 @@ else
     ocp_model.set('constr_lbu', lbu);
     ocp_model.set('constr_ubu', ubu);
 end
-% disp('ocp_model.model_struct')
-% disp(ocp_model.model_struct)
-
 
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
@@ -233,18 +230,10 @@ if (strcmp(sim_method, 'irk_gnsf'))
     ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
 
-% disp('ocp_opts');
-% disp(ocp_opts.opts_struct);
-
 
 %% acados ocp
 % create ocp
 ocp_solver = acados_ocp(ocp_model, ocp_opts);
-% ocp
-% disp('ocp_solver.C_ocp');
-% disp(ocp_solver.C_ocp);
-%ocp_solver.model_struct
-
 
 % set trajectory initialization
 %x_traj_init = zeros(nx, N+1);

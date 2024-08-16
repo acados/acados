@@ -129,7 +129,7 @@ z0 = zeros(nz, 1);
 
 tic
 for ii=1:N_sim
-	
+
 	% set initial state
 	sim_solver.set('x', x_sim(:,ii));
 	sim_solver.set('u', u);
@@ -142,16 +142,16 @@ for ii=1:N_sim
         sim_solver.set('xdot', xdot0);
         sim_solver.set('z', z0);
     elseif (strcmp(method, 'irk_gnsf'))
-        y_in = sim_solver.model_struct.dyn_gnsf_L_x * x0 ...
-                + sim_solver.model_struct.dyn_gnsf_L_xdot * xdot0 ...
-                + sim_solver.model_struct.dyn_gnsf_L_z * z0;
-        u_hat = sim_solver.model_struct.dyn_gnsf_L_u * u;
+        y_in = sim_solver.sim.model.dyn_gnsf_L_x * x0 ...
+                + sim_solver.sim.model.dyn_gnsf_L_xdot * xdot0 ...
+                + sim_solver.sim.model.dyn_gnsf_L_z * z0;
+        u_hat = sim_solver.sim.model.dyn_gnsf_L_u * u;
         phi_fun = Function([model_name,'_gnsf_phi_fun'],...
-                        {sim_solver.model_struct.sym_gnsf_y, sim_solver.model_struct.sym_gnsf_uhat},...
-                            {sim_solver.model_struct.dyn_gnsf_expr_phi(:)}); % sim_solver.model_struct.sym_p
+                        {sim_solver.sim.model.sym_gnsf_y, sim_solver.sim.model.sym_gnsf_uhat},...
+                            {sim_solver.sim.model.dyn_gnsf_expr_phi(:)});
 
         phi_guess = full( phi_fun( y_in, u_hat ) );
-        n_out = sim_solver.model_struct.dim_gnsf_nout;
+        n_out = sim_solver.sim.dims.gnsf_nout;
         sim_solver.set('phi_guess', zeros(n_out,1));
     end
 

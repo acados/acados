@@ -87,6 +87,8 @@ class AcadosOcpCost:
         self.__Zu          = np.array([])
         self.__zl          = np.array([])
         self.__zu          = np.array([])
+
+        # TODO: check how generic works in templates ?!
         self.__cost_ext_fun_type = 'casadi'
         self.__cost_source_ext_cost = None # TODO add property, only required for generic
         self.__cost_function_ext_cost = None # TODO add property, only required for generic

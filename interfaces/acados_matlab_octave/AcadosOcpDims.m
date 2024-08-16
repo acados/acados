@@ -85,33 +85,35 @@ classdef AcadosOcpDims < handle
         % gnsf
         % TODO these dimensions are not part of the corresponding python class (?)
         gnsf_nx1
+        gnsf_nx2
         gnsf_nz1
-        gnsf_nout
+        gnsf_nz2
         gnsf_ny
         gnsf_nuhat
+        gnsf_nout
     end
 
     methods
         function obj = AcadosOcpDims()
-            obj.N     = [];
+            obj.N = [];
 
-            obj.nx    = [];
-            obj.nu    = [];
-            obj.nz    = 0;
-            obj.np    = 0;
+            obj.nx = [];
+            obj.nu = 0;
+            obj.nz = 0;
+            obj.np = 0;
 
-            obj.ny    = [];
-            obj.ny_0 = [];
-            obj.ny_e   = [];
+            obj.ny = 0;
+            obj.ny_0 = 0;
+            obj.ny_e = 0;
 
-            obj.nbu   = 0;
-            obj.nbx   = 0;
-            obj.nbx_0  = 0;
-            obj.nbx_e  = 0;
+            obj.nbu = 0;
+            obj.nbx = 0;
+            obj.nbx_0 = 0;
+            obj.nbx_e = 0;
 
-            obj.nh    = 0;
-            obj.nh_0   = 0;
-            obj.nh_e   = 0;
+            obj.nh = 0;
+            obj.nh_0 = 0;
+            obj.nh_e = 0;
 
             obj.nr = 0;
             obj.nr_0 = 0;
@@ -119,31 +121,33 @@ classdef AcadosOcpDims < handle
             obj.nphi = 0;
             obj.nphi_0 = 0;
             obj.nphi_e = 0;
-            obj.ng    = 0;
-            obj.ng_e   = 0;
+            obj.ng = 0;
+            obj.ng_e = 0;
 
-            obj.nsbx  = 0;
+            obj.nsbx = 0;
             obj.nsbx_e = 0;
-            obj.nsbu  = 0;
-            obj.nsh   = 0;
-            obj.nsh_0  = 0;
-            obj.nsh_e  = 0;
+            obj.nsbu = 0;
+            obj.nsh = 0;
+            obj.nsh_0 = 0;
+            obj.nsh_e = 0;
             obj.nsphi = 0;
             obj.nsphi_0 = 0;
             obj.nsphi_e = 0;
-            obj.ns    = 0;
+            obj.ns = 0;
             obj.ns_0 = 0;
-            obj.ns_e   = 0;
-            obj.nsg   = 0;
-            obj.nsg_e  = 0;
+            obj.ns_e = 0;
+            obj.nsg = 0;
+            obj.nsg_e = 0;
 
             obj.nbxe_0 = 0;
 
             obj.gnsf_nx1 = 0;
+            obj.gnsf_nx2 = 0;
             obj.gnsf_nz1 = 0;
-            obj.gnsf_nout = 0;
+            obj.gnsf_nz2 = 0;
             obj.gnsf_ny = 0;
             obj.gnsf_nuhat = 0;
+            obj.gnsf_nout = 0;
         end
 
         function s = struct(self)

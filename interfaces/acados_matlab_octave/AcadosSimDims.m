@@ -27,31 +27,55 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
 
-function model = create_consistent_empty_fields(model)
+% TODO this class is not used yet!
+classdef AcadosSimDims < handle
+    properties
 
-    % xdot, u, p, z might not exist in model
-    % this function empty fields of consistent types
-    import casadi.*
-    x = model.sym_x;
-    if isa(x(1), 'casadi.SX')
-        empty_var = SX.sym('empty_var', 0, 0);
-    else
-        empty_var = MX.sym('empty_var', 0, 0);
-    end
+        nx     % number of states
+        nu     % number of inputs
+        nz     % number of algebraic variables
+        np     % number of parameters
 
-    if ~isfield(model, 'sym_p')
-        model.sym_p = empty_var;
-    end
-    if ~isfield(model, 'sym_xdot')
-        model.sym_xdot = empty_var;
-    end
-    if ~isfield(model, 'sym_z')
-        model.sym_z = empty_var;
-    end
-    if ~isfield(model, 'sym_u')
-        model.sym_u = empty_var;
+        % gnsf
+        % TODO these dimensions are not part of the corresponding python class (?)
+        gnsf_nx1
+        gnsf_nx2
+        gnsf_nz1
+        gnsf_nz2
+        gnsf_ny
+        gnsf_nuhat
+        gnsf_nout
     end
 
+    methods
+        function obj = AcadosSimDims()
+
+            obj.nx    = [];
+            obj.nu    = [];
+            obj.nz    = 0;
+            obj.np    = 0;
+
+            obj.gnsf_nx1 = 0;
+            obj.gnsf_nx2 = 0;
+            obj.gnsf_nz1 = 0;
+            obj.gnsf_nz2 = 0;
+            obj.gnsf_ny = 0;
+            obj.gnsf_nuhat = 0;
+            obj.gnsf_nout = 0;
+        end
+
+        function s = struct(self)
+            if exist('properties')
+                publicProperties = eval('properties(self)');
+            else
+                publicProperties = fieldnames(self);
+            end
+            s = struct();
+            for fi = 1:numel(publicProperties)
+                s.(publicProperties{fi}) = self.(publicProperties{fi});
+            end
+        end
+    end
 end
+

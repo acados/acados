@@ -34,7 +34,7 @@
 
 %% Example of the frc_racecars in simulation without obstacle avoidance:
 %% This example is for the optimal racing of the frc race cars. The model is a simple bicycle model and the lateral acceleration is constraint in order to validate the model assumptions.
-%% The simulation starts at s=-2m until one round is completed(s=8.71m). The beginning is cut in the final plots to simulate a 'warm start'. 
+%% The simulation starts at s=-2m until one round is completed(s=8.71m). The beginning is cut in the final plots to simulate a 'warm start'.
 
 clear all
 import casadi.*
@@ -49,7 +49,7 @@ codgen_model = 'true';
 nlp_solver = 'sqp'; % sqp, sqp_rti
 qp_solver = 'partial_condensing_hpipm';
     % full_condensing_hpipm, partial_condensing_hpipm, full_condensing_qpoases
-nlp_solver_exact_hessian = 'false'; % false=gauss_newton, true=exact    
+nlp_solver_exact_hessian = 'false'; % false=gauss_newton, true=exact
 qp_solver_cond_N = 50; % for partial condensing
 regularize_method = 'no_regularize';
 %regularize_method = 'project';
@@ -123,8 +123,8 @@ ocp_model.set('constr_uh', [...
                                 model.n_max,...
                                 model.throttle_max,...
                                 model.delta_max,...
-                            ]);    
-%ocp_model.set('constr_expr_h_e', constraint.expr);     
+                            ]);
+%ocp_model.set('constr_expr_h_e', constraint.expr);
 %ocp_model.set('constr_lh_e', 0);
 %ocp_model.set('constr_uh_e', 0);
 
@@ -186,15 +186,13 @@ y_ref(1) = 1; % set reference on 's' to 1 to push the car forward (progress)
 ocp_model.set('cost_y_ref', y_ref);
 ocp_model.set('cost_y_ref_e', y_ref_e);
 
-% ... see ocp_model.model_struct to see what other fields can be set
-
 %% acados ocp set opts
 ocp_opts = acados_ocp_opts();
 %ocp_opts.set('compile_interface', compile_interface);
 %ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
-ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian); 
+ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
 ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('sim_method_num_stages', 4);
 ocp_opts.set('sim_method_num_steps', 3);
@@ -205,7 +203,6 @@ ocp_opts.set('nlp_solver_tol_stat', 1e-4);
 ocp_opts.set('nlp_solver_tol_eq', 1e-4);
 ocp_opts.set('nlp_solver_tol_ineq', 1e-4);
 ocp_opts.set('nlp_solver_tol_comp', 1e-4);
-% ... see ocp_opts.opts_struct to see what other fields can be set
 
 %% create ocp solver
 ocp_solver = acados_ocp(ocp_model, ocp_opts);
@@ -239,10 +236,10 @@ for i = 1:Nsim
     for j = 0:(N-1)
         yref = [s0 + (sref - s0) * j / N, 0, 0, 0, 0, 0, 0, 0];
         % yref=[1,0,0,1,0,0,0,0]
-        ocp_solver.set('cost_y_ref', yref, j);   
+        ocp_solver.set('cost_y_ref', yref, j);
     end
     yref_N = [sref, 0, 0, 0, 0, 0];
-    % yref_N=np.array([0,0,0,0,0,0])    
+    % yref_N=np.array([0,0,0,0,0,0])
     ocp_solver.set('cost_y_ref_e', yref_N);
 
     % solve ocp
@@ -284,7 +281,7 @@ for i = 1:Nsim
     % update initial condition
     x0 = ocp_solver.get('x', 1);
     % update initial state
-    ocp_solver.set('constr_x0', x0);    
+    ocp_solver.set('constr_x0', x0);
     ocp_solver.set('constr_lbx', x0, 0);
     ocp_solver.set('constr_ubx', x0, 0);
     s0 = x0(1);

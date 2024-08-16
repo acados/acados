@@ -106,7 +106,7 @@ function acados_install_windows(varargin)
     t_renderer_location = fullfile(acados_root_dir, 'bin', 't_renderer.exe');
 
     if ~exist( t_renderer_location, 'file' )
-        acados_template_mex.set_up_t_renderer( t_renderer_location )
+        set_up_t_renderer( t_renderer_location )
     end
 
 end

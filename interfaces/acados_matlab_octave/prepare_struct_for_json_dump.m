@@ -27,43 +27,23 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
-
-function model  = detect_dims_sim(model, opts)
-
-    %% general
-    model.dim_nx = length(model.sym_x);
-
-    if isfield(model, 'sym_u')
-        model.dim_nu = length(model.sym_u);
-    else
-        model.dim_nu = 0;
-    end
-
-    if isfield(model, 'sym_z')
-        model.dim_nz = length(model.sym_z);
-    else
-        model.dim_nz = 0;
-    end
-
-    if isfield(model, 'sym_p')
-        model.dim_np = length(model.sym_p);
-    else
-        model.dim_np = 0;
-    end
-
-    if isfield(model, 'sym_xdot')
-        if numel(model.sym_xdot) ~= model.dim_nx
-            warning('sym_xdot is not of shape nx');
+function out = prepare_struct_for_json_dump(out, vector_properties, matrix_properties)
+    for i = 1:length(vector_properties)
+        prop = vector_properties{i};
+        if ~isempty(out.(prop))
+            if ~iscell(out.(prop))
+                out.(prop) = num2cell(out.(prop));
+            end
+            out.(prop) = reshape(out.(prop), [1, length(out.(prop))]);
         end
     end
-
-    if ~isempty(opts.num_stages)
-        if(strcmp(opts.method,"erk"))
-            if(opts.num_stages == 1 || opts.num_stages == 2 || ...
-                opts.num_stages == 3 || opts.num_stages == 4)
-            else
-                error(['ERK: num_stages = ', num2str(opts.num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
+    for i = 1:length(matrix_properties)
+        prop = matrix_properties{i};
+        if ~isempty(out.(prop))
+            out.(prop) = num2cell(out.(prop));
+            prop_size = size(out.(prop));
+            if prop_size(1) == 1
+                out.(prop) = {out.(prop)};
             end
         end
     end

@@ -1,5 +1,5 @@
 %
-% This file allows the control of a swarm of robots. The swarm is composed 
+% This file allows the control of a swarm of robots. The swarm is composed
 % by N agents with decoupled, linear dynamics. The goal is to achieve
 % coordinated motion from random position and velocities.
 %
@@ -167,8 +167,6 @@ ocp_model.set('constr_uh', uh);
 % ocp_model.set('constr_lh_e', lh_e);
 % ocp_model.set('constr_uh_e', uh_e);
 
-ocp_model.model_struct
-
 %% Acados ocp options
 
 ocp_opts = acados_ocp_opts();
@@ -205,9 +203,6 @@ if (strcmp(sim_method, 'irk_gnsf'))
 	ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
 
-ocp_opts.opts_struct
-
-%% Acados ocp
 
 % Create ocp
 ocp_solver = acados_ocp(ocp_model, ocp_opts);

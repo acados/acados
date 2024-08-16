@@ -3,7 +3,7 @@
 In order to use `acados` from Octave or Matlab, you need to create the `acados` shared libraries using either the `CMake` or `Make` build system, as described [on the installation page](../installation/index.md).
 
 ## Getting started
-Check out the examples in [`<acados_root>/examples/acados_matlab_octave/getting_started`](https://github.com/acados/acados/tree/master/examples/acados_matlab_octave/getting_started) to get started with this interface.
+Check out the examples [`new_minimal_example_ocp.m`](https://github.com/acados/acados/tree/master/examples/acados_matlab_octave/getting_started/new_minimal_example_sim.m) and [`new_minimal_example_sim.m`](https://github.com/acados/acados/tree/master/examples/acados_matlab_octave/getting_started/new_minimal_example_sim.m) to get started with the MATLAB interface of `acados`.
 
 The examples require an installation of `CasADi` to generate the model functions.
 The `getting_started` example offers the option to attempt to automatically download the correct version in the recommended folder.

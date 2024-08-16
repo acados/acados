@@ -454,8 +454,8 @@ def set_up_imported_gnsf_model(acados_ocp):
     #  {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO, B_LO,...
     #   nontrivial_f_LO, purely_linear, ipiv_x, ipiv_z, c_LO});
     get_matrices_out = get_matrices_fun(0)
-    acados_ocp.model.gnsf['nontrivial_f_LO'] = int(get_matrices_out[12])
-    acados_ocp.model.gnsf['purely_linear'] = int(get_matrices_out[13])
+    acados_ocp.model.gnsf_nontrivial_f_LO = int(get_matrices_out[12])
+    acados_ocp.model.gnsf_purely_linear = int(get_matrices_out[13])
 
     if "f_lo_fun_jac_x1k1uz" in gnsf:
         f_lo_fun_jac_x1k1uz = Function.deserialize(gnsf['f_lo_fun_jac_x1k1uz'])
