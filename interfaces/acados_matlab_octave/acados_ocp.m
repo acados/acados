@@ -204,6 +204,13 @@ classdef acados_ocp < handle
             obj.ocp = setup_ocp(obj, simulink_opts);
             ocp_generate_c_code(obj.ocp);
 
+            % TODO move this somewhere else in new interface ?
+            if ~(strcmp(obj.ocp.solver_options.qp_solver, "FULL_CONDENSING_HPIPM") || ...
+                strcmp(obj.ocp.solver_options.qp_solver, "PARTIAL_CONDENSING_HPIPM") || ...
+                strcmp(obj.ocp.solver_options.qp_solver, "FULL_CONDENSING_DAQP"))
+                disp(['NOTE: The selected QP solver ', obj.ocp.solver_options.qp_solver, ' does not support one-sided constraints yet.']);
+            end
+
             % templated MEX
             return_dir = pwd();
             obj.code_gen_dir = obj.ocp.code_export_directory;
