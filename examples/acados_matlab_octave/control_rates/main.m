@@ -34,8 +34,8 @@ check_acados_requirements()
 
 % discretization
 h = 0.01;
-param_scheme_N = 100;
-T = param_scheme_N*h;
+N_horizon = 100;
+T = N_horizon*h;
 
 % initial state
 x0 = [0.1; 0; 0; 0];
@@ -54,7 +54,6 @@ nbu = nu;                      % number of input bounds
 ocp = AcadosOcp();
 ocp.model = model;
 
-ocp.dims.N = param_scheme_N;
 
 % integrator
 ocp.solver_options.integrator_type = 'ERK';
@@ -62,6 +61,7 @@ ocp.solver_options.sim_method_num_stages = 4;
 ocp.solver_options.sim_method_num_steps = 1;
 
 ocp.solver_options.tf = T;
+ocp.solver_options.N_horizon = N_horizon;
 
 % NLP solver
 ocp.solver_options.nlp_solver_type = 'SQP_RTI';
@@ -122,8 +122,8 @@ u_sim(:, 1) = zeros(nu, 1);
 cost_sim(1, 1) = 0;
 
 % set trajectory initialization
-ocp_solver.set('init_x', x0 * ones(1,param_scheme_N+1));
-ocp_solver.set('init_u', zeros(nu, param_scheme_N));
+ocp_solver.set('init_x', x0 * ones(1,N_horizon+1));
+ocp_solver.set('init_u', zeros(nu, N_horizon));
 
 % time-varying reference trajectory
 x1ref_FUN = @(t) 0.4.*(-(0.5./(1+exp(t./0.1-0.8))) + (1./(1+exp(t./0.1-30))) - 0.4);
@@ -136,14 +136,14 @@ tic;
 for i = 1:N_sim
 
     % update reference (full preview)
-    t_ref = (i-1:i+param_scheme_N).*h;
+    t_ref = (i-1:i+N_horizon).*h;
     x1_ref = x1ref_FUN(t_ref);
-    for j = 0:param_scheme_N-1
+    for j = 0:N_horizon-1
         yref(1) = x1_ref(j+1);
         ocp_solver.set('cost_y_ref', yref, j);
     end
-    yref_e(1) = x1_ref(param_scheme_N+1);
-    ocp_solver.set('cost_y_ref_e', yref_e, param_scheme_N);
+    yref_e(1) = x1_ref(N_horizon+1);
+    ocp_solver.set('cost_y_ref_e', yref_e, N_horizon);
 
     % solve ocp
     ocp_solver.solve();
