@@ -71,7 +71,7 @@ def main(discretization='shooting_nodes'):
     N = 15
 
     # discretization
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
     # shooting_nodes = np.linspace(0, Tf, N+1)
 
     time_steps = np.linspace(0, 1, N+1)[1:]

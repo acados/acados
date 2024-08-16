@@ -91,7 +91,7 @@ def setup_solver_and_integrator(x0: np.ndarray, xf: np.ndarray, N: int, use_cyth
 
     ocp = AcadosOcp()
     ocp.model = model
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
     ocp.solver_options.tf = N
 
     ocp.cost.cost_type = 'EXTERNAL'

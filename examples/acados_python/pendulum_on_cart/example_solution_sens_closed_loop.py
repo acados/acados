@@ -58,7 +58,7 @@ def create_ocp_solver():
     ny_e = nx
 
     # set dimensions
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
     # NOTE: all dimensions but N are now detected automatically in the Python
     #  interface, all other dimensions will be overwritten by the detection.
 

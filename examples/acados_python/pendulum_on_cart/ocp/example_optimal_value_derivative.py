@@ -46,7 +46,7 @@ def setup_solver(N: int, dt: float, u_max: float = 60):
     ocp.model = model
 
     Tf = N*dt
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
 
     nx = model.x.rows()
     nu = model.u.rows()

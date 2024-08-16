@@ -197,7 +197,7 @@ def main():
     ocp.constraints.uh_e = uh_e
 
     # acados ocp opts
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
     ocp.solver_options.shooting_nodes = shooting_nodes
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.regularize_method = regularize_method

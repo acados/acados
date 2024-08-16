@@ -62,7 +62,7 @@ def main(regularize_method: str):
     N = 1
 
     # set dimensions
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
 
     # set cost
     Q_mat = np.array([[8.332636379960917, -0.2025707437550449, 65.20466910278751, 0],

@@ -123,7 +123,7 @@ def export_parameter_augmented_ocp(
     ocp.model, nx_original = export_parameter_augmented_pendulum_ode_model(param_M_as_state=param_M_as_state)
 
     # set dimensions
-    ocp.dims.N = N_horizon
+    ocp.solver_options.N_horizon = N_horizon
     nu = ocp.model.u.rows()
     nx = ocp.model.x.rows()
 

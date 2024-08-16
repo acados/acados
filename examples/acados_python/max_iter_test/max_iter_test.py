@@ -59,7 +59,7 @@ def create_acados_solver_and_solve_problem(globalization='FIXED_STEP', solver_ty
     ocp.model = model
 
     # set dimensions
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
 
     # set cost
     ocp.cost.cost_type = "LINEAR_LS"

@@ -55,7 +55,7 @@ def main():
     N_horizon = 20
 
     # set dimensions
-    ocp.dims.N = N_horizon
+    ocp.solver_options.N_horizon = N_horizon
     # NOTE: all dimensions but N are now detected automatically in the Python
     #  interface, all other dimensions will be overwritten by the detection.
 

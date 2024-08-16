@@ -52,7 +52,7 @@ def main():
     N = 2
 
     # set dimensions
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
 
     if not SOLVE_FEASIBILITY_PROBLEM:
         # set cost

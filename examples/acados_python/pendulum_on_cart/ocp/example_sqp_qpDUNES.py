@@ -52,7 +52,7 @@ ny_e = nx
 N = 20
 
 # set dimensions
-ocp.dims.N = N
+ocp.solver_options.N_horizon = N
 
 # set cost
 # NOTE: qpDUNES requires very similar values on diag of hessian.

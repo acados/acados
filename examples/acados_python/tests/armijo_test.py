@@ -83,7 +83,7 @@ def solve_armijo_problem_with_setting(setting):
     # discretization
     Tf = 1
     N = 1
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
     ocp.solver_options.tf = Tf
 
     # cost

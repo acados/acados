@@ -47,10 +47,8 @@ def main():
     nu = model.u.rows()
     N = 20
 
-    # set number of shooting intervals
-    ocp.dims.N = N
-
     # set prediction horizon
+    ocp.solver_options.N_horizon = N
     ocp.solver_options.tf = Tf
 
     # cost matrices

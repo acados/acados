@@ -62,7 +62,7 @@ def main():
 
     ocp = AcadosOcp()
     ocp.model = acados_model
-    ocp.dims.N = N_list[phase_idx]
+    ocp.solver_options.N_horizon = N_list[phase_idx]
 
     ocp.cost.cost_type = 'EXTERNAL'
     ocp.cost.cost_type_e = 'EXTERNAL'
@@ -98,7 +98,7 @@ def main():
 
     ocp = AcadosOcp()
     ocp.model = acados_model
-    ocp.dims.N = N_list[phase_idx]
+    ocp.solver_options.N_horizon = N_list[phase_idx]
 
     ocp.cost.cost_type = 'EXTERNAL'
     ocp.cost.cost_type_e = 'EXTERNAL'

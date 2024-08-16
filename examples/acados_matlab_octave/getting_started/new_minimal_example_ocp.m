@@ -84,7 +84,7 @@ ocp.constraints.uh_0 = U_max;
 ocp.constraints.x0 = x0;
 
 % define solver options
-ocp.dims.N = N;
+ocp.solver_options.N_horizon = N;
 ocp.solver_options.tf = 1.0;
 ocp.solver_options.nlp_solver_type = 'SQP';
 ocp.solver_options.integrator_type = 'ERK';

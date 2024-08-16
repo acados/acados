@@ -124,7 +124,7 @@ def formulate_double_integrator_ocp() -> AcadosOcp:
 
     ocp.model = get_double_integrator_model()
 
-    ocp.dims.N = N_HORIZON
+    ocp.solver_options.N_horizon = N_HORIZON
 
     ocp.cost.cost_type = 'NONLINEAR_LS'
     ocp.cost.cost_type_e = 'NONLINEAR_LS'
@@ -151,7 +151,7 @@ def formulate_single_integrator_ocp() -> AcadosOcp:
 
     ocp.model = get_single_integrator_model()
 
-    ocp.dims.N = N_HORIZON
+    ocp.solver_options.N_horizon = N_HORIZON
 
     ocp.cost.cost_type = 'NONLINEAR_LS'
     ocp.cost.cost_type_e = 'NONLINEAR_LS'
@@ -277,8 +277,8 @@ def main_standard_ocp():
     status = acados_ocp_solver.solve_for_x0(X0)
     acados_ocp_solver.print_statistics()
 
-    x_traj = [acados_ocp_solver.get(i, 'x') for i in range(ocp.dims.N+1)]
-    u_traj = [acados_ocp_solver.get(i, 'u') for i in range(ocp.dims.N)]
+    x_traj = [acados_ocp_solver.get(i, 'x') for i in range(ocp.solver_options.N_horizon+1)]
+    u_traj = [acados_ocp_solver.get(i, 'u') for i in range(ocp.solver_options.N_horizon)]
 
     t_grid = ocp.solver_options.shooting_nodes
 

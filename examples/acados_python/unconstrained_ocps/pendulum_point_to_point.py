@@ -50,7 +50,7 @@ def main():
     N = 20
 
     # set dimensions
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
 
     # set constraints
     Fmax = 80

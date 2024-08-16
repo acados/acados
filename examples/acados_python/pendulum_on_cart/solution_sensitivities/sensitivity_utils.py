@@ -81,7 +81,7 @@ def export_parametric_ocp(
     dt = T_horizon/N_horizon
     ocp.model = export_pendulum_ode_model_with_mass_as_param(dt=dt)
 
-    ocp.dims.N = N_horizon
+    ocp.solver_options.N_horizon = N_horizon
 
     Q_mat = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2])
     R_mat = 2 * np.diag([1e-1])

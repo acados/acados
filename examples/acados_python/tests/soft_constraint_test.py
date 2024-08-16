@@ -69,7 +69,7 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='
 
     # set dimensions
     # NOTE: all dimensions but N ar detected
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
 
     # set cost module
     ocp.cost.cost_type = 'LINEAR_LS'

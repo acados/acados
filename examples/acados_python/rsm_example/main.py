@@ -179,7 +179,7 @@ def create_ocp_solver(tol = 1e-3):
     Tf = N*Ts
 
     # set number of shooting intervals
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
 
     # set cost
     Q = np.diag([5e2, 5e2])
@@ -299,7 +299,7 @@ def main():
     ocp = acados_solver.acados_ocp
     nx = ocp.dims.nx
     nu = ocp.dims.nu
-    N = ocp.dims.N
+    N = ocp.solver_options.N_horizon
     Nsim = 100
 
     if USE_PLANT:

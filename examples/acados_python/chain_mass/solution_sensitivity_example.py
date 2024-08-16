@@ -245,7 +245,7 @@ def export_parametric_ocp(
 ) -> Tuple[AcadosOcp, DMStruct]:
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
-    ocp.dims.N = chain_params_["N"]
+    ocp.solver_options.N_horizon = chain_params_["N"]
 
     # export model
     ocp.model, p = export_chain_mass_model(n_mass=chain_params_["n_mass"], Ts=chain_params_["Ts"], disturbance=True)
@@ -340,15 +340,15 @@ def export_parametric_ocp(
         ocp.solver_options.qp_solver_iter_max = 200
         ocp.solver_options.tol = 1e-10
         ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg
-        ocp.solver_options.qp_solver_cond_N = ocp.dims.N
+        ocp.solver_options.qp_solver_cond_N = ocp.solver_options.N_horizon
         ocp.solver_options.with_solution_sens_wrt_params = True
     else:
         ocp.solver_options.nlp_solver_max_iter = nlp_iter
-        ocp.solver_options.qp_solver_cond_N = ocp.dims.N
+        ocp.solver_options.qp_solver_cond_N = ocp.solver_options.N_horizon
         ocp.solver_options.qp_tol = nlp_tol
         ocp.solver_options.tol = nlp_tol
 
-    ocp.solver_options.tf = ocp.dims.N * chain_params_["Ts"]
+    ocp.solver_options.tf = ocp.solver_options.N_horizon * chain_params_["Ts"]
 
     return ocp, p
 
@@ -412,7 +412,7 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
         parameter_values.cat[p_idx] = p_var[i]
 
         p_val = parameter_values.cat.full().flatten()
-        for stage in range(ocp.dims.N + 1):
+        for stage in range(ocp.solver_options.N_horizon + 1):
             ocp_solver.set(stage, "p", p_val)
             sensitivity_solver.set(stage, "p", p_val)
 
