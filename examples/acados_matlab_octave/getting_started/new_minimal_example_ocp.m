@@ -38,8 +38,6 @@ N = 20; % number of discretization steps
 T = 1; % [s] prediction horizon length
 x0 = [0; pi; 0; 0]; % initial state
 
-sim_method = 'erk'; % erk, irk, irk_gnsf
-
 %% model dynamics
 model = get_pendulum_on_cart_AcadosModel();
 nx = length(model.x); % state size
