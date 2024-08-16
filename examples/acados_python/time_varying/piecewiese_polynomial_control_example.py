@@ -111,7 +111,7 @@ def create_ocp_solver(cost_type, N_horizon, degree_u_polynom,
     ocp: AcadosOcp
     ocp, evaluate_polynomial_u_fun = create_ocp_formulation_without_opts(cost_type, degree_u_polynom, explicit_symmetric_penalties=explicit_symmetric_penalties, penalty_type=penalty_type)
 
-    ocp.dims.N = N_horizon
+    ocp.solver_options.N_horizon = N_horizon
 
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES

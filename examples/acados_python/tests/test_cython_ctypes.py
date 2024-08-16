@@ -58,7 +58,7 @@ def main(interface_type='ctypes'):
     Tf = 1.0
 
     # set dimensions
-    ocp.dims.N = N_horizon
+    ocp.solver_options.N_horizon = N_horizon
 
     # set cost
     Q = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2])
@@ -110,7 +110,7 @@ def main(interface_type='ctypes'):
         ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json')
     elif interface_type == 'cython_prebuilt':
         from c_generated_code.acados_ocp_solver_pyx import AcadosOcpSolverCython
-        ocp_solver = AcadosOcpSolverCython(ocp.model.name, ocp.solver_options.nlp_solver_type, ocp.dims.N)
+        ocp_solver = AcadosOcpSolverCython(ocp.model.name, ocp.solver_options.nlp_solver_type, ocp.solver_options.N_horizon)
 
 
     # test setting HPIPM options

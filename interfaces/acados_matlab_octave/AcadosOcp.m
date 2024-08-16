@@ -88,14 +88,13 @@ classdef AcadosOcp < handle
         function make_consistent(self)
             self.model.make_consistent(self.dims);
 
-            N = self.dims.N;
-
             model = self.model;
             dims = self.dims;
             cost = self.cost;
             constraints = self.constraints;
             opts = self.solver_options;
 
+            N = opts.N_horizon;
             self.detect_cost_and_constraints();
 
             % detect GNSF structure
@@ -536,7 +535,22 @@ classdef AcadosOcp < handle
             dims.nsphi_e = nsphi_e;
 
             % shooting nodes -> time_steps
-            N = self.dims.N;
+            % discretization
+            if isempty(opts.N_horizon) && isempty(dims.N)
+                error('N_horizon not provided.');
+            elseif isempty(opts.N_horizon) && ~isempty(dims.N)
+                opts.N_horizon = dims.N;
+                disp(['field AcadosOcpDims.N has been migrated to AcadosOcpOptions.N_horizon.',...
+                      ' setting AcadosOcpOptions.N_horizon = N.',...
+                      ' For future comppatibility, please use AcadosOcpOptions.N_horizon directly.']);
+            elseif ~isempty(opts.N_horizon) && ~isempty(dims.N) && opts.N_horizon ~= dims.N
+                error(['Inconsistent dimension N, regarding N = ', num2str(dims.N),...
+                       ', N_horizon = ', num2str(opts.N_horizon), '.']);
+            else
+                dims.N = opts.N_horizon;
+            end
+            N = opts.N_horizon;
+
             if length(opts.tf) ~= 1 || opts.tf < 0
                 error('time horizon tf should be a nonnegative number');
             end
@@ -643,7 +657,7 @@ classdef AcadosOcp < handle
 
             if ~isempty(opts.qp_solver_cond_block_size)
                 if sum(opts.qp_solver_cond_block_size) ~= N
-                    error(['sum(qp_solver_cond_block_size) =', num2str(sum(opts.qp_solver_cond_block_size)), ' != N = {dims.N}.']);
+                    error(['sum(qp_solver_cond_block_size) =', num2str(sum(opts.qp_solver_cond_block_size)), ' != N = {opts.N_horizon}.']);
                 end
                 if length(opts.qp_solver_cond_block_size) ~= opts.qp_solver_cond_N+1
                     error('qp_solver_cond_block_size should have length qp_solver_cond_N+1.');
@@ -651,7 +665,7 @@ classdef AcadosOcp < handle
             end
 
             if strcmp(opts.nlp_solver_type, "DDP")
-                if ~strcmp(opts.qp_solver, "PARTIAL_CONDENSING_HPIPM") || (opts.qp_solver_cond_N ~= dims.N)
+                if ~strcmp(opts.qp_solver, "PARTIAL_CONDENSING_HPIPM") || (opts.qp_solver_cond_N ~= opts.N_horizon)
                     error('DDP solver only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N.');
                 end
                 if any([dims.nbu, dims.nbx, dims.ng, dims.nh, dims.nphi])
@@ -937,7 +951,7 @@ classdef AcadosOcp < handle
             out_struct.dims = orderfields(out_struct.dims.struct());
             out_struct.cost = orderfields(out_struct.cost.convert_to_struct_for_json_dump());
             out_struct.constraints = orderfields(out_struct.constraints.convert_to_struct_for_json_dump());
-            out_struct.solver_options = orderfields(out_struct.solver_options.convert_to_struct_for_json_dump(self.dims.N));
+            out_struct.solver_options = orderfields(out_struct.solver_options.convert_to_struct_for_json_dump(self.solver_options.N_horizon));
 
             % actual json dump
             json_string = savejson('', out_struct, 'ForceRootName', 0);

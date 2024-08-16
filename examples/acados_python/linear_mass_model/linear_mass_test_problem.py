@@ -86,7 +86,7 @@ def solve_maratos_ocp(setting):
     Tf = 2
     N = 20
     shooting_nodes = np.linspace(0, Tf, N+1)
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
 
     # set cost
     Q = 2*np.diag([])

@@ -48,7 +48,7 @@ def setup(x0, umax, dt_0, N_horizon, Tf, RTI=False):
     ny = nx + nu
     ny_e = nx
 
-    ocp.dims.N = N_horizon
+    ocp.solver_options.N_horizon = N_horizon
 
     # set cost module
     ocp.cost.cost_type = 'NONLINEAR_LS'

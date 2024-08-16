@@ -75,7 +75,7 @@ class AcadosCustomOcp:
         ocp.model = model_ac
 
         # set dimensions
-        ocp.dims.N = N
+        ocp.solver_options.N_horizon = N
         self.nx = model_ac.x.size()[0]
         self.nu = model_ac.u.size()[0]
         ny = self.nx + self.nu

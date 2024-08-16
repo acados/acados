@@ -71,7 +71,7 @@ Tf_01 = 1.0  # original final time and for use-case 1
 Tf_2 = Tf_01 * 0.7  # change final time for use-case 2 (but keep N identical)
 
 # set dimensions
-ocp.dims.N = N0
+ocp.solver_options.N_horizon = N0
 
 # set cost
 Q = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2])

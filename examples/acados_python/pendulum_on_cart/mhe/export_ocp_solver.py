@@ -46,7 +46,7 @@ def export_ocp_solver(model, N, h, Q, R, Fmax=80, use_cython=False):
     ny = nx + nu
     ny_e = nx
 
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
 
     # set cost
     ocp.cost.cost_type = 'NONLINEAR_LS'

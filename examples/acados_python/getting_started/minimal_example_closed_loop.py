@@ -49,7 +49,6 @@ def setup(x0, Fmax, N_horizon, Tf, RTI=False):
     ny = nx + nu
     ny_e = nx
 
-    ocp.dims.N = N_horizon
 
     # set cost module
     ocp.cost.cost_type = 'NONLINEAR_LS'
@@ -73,6 +72,10 @@ def setup(x0, Fmax, N_horizon, Tf, RTI=False):
     ocp.constraints.x0 = x0
     ocp.constraints.idxbu = np.array([0])
 
+    # set prediction horizon
+    ocp.solver_options.N_horizon = N_horizon
+    ocp.solver_options.tf = Tf
+
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'IRK'
@@ -87,8 +90,6 @@ def setup(x0, Fmax, N_horizon, Tf, RTI=False):
 
     ocp.solver_options.qp_solver_cond_N = N_horizon
 
-    # set prediction horizon
-    ocp.solver_options.tf = Tf
 
     solver_json = 'acados_ocp_' + model.name + '.json'
     acados_ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)

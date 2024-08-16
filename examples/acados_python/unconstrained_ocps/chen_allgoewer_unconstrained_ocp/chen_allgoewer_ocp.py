@@ -53,7 +53,7 @@ def main(plot_solution = False):
     M = 10 # Needed for integrator
 
     # set dimensions
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
 
     # set cost
     Q_mat = np.array([[0.5, 0], [0, 0.5]])

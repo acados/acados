@@ -63,7 +63,7 @@
 #define {{ model.name | upper }}_NY0    {{ dims.ny_0 }}
 #define {{ model.name | upper }}_NY     {{ dims.ny }}
 #define {{ model.name | upper }}_NYN    {{ dims.ny_e }}
-#define {{ model.name | upper }}_N      {{ dims.N }}
+#define {{ model.name | upper }}_N      {{ solver_options.N_horizon }}
 #define {{ model.name | upper }}_NH     {{ dims.nh }}
 #define {{ model.name | upper }}_NHN    {{ dims.nh_e }}
 #define {{ model.name | upper }}_NH0    {{ dims.nh_0 }}

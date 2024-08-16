@@ -59,7 +59,7 @@ def main(constraint_variant='one_sided',
     Tf = 1.0
 
     # set dimensions
-    ocp.dims.N = N_horizon
+    ocp.solver_options.N_horizon = N_horizon
 
     # set cost
     Q = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2])

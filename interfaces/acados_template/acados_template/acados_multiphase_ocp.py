@@ -228,6 +228,7 @@ class AcadosMultiphaseOcp:
     def make_consistent(self) -> None:
 
         self.N_horizon = sum(self.N_list)
+        self.solver_options.N_horizon = self.N_horizon # NOTE: to not change options when making ocp consistent
 
         # check options
         self.mocp_opts.make_consistent(self.solver_options, n_phases=self.n_phases)
@@ -262,7 +263,6 @@ class AcadosMultiphaseOcp:
         for i in range(self.n_phases):
             ocp = AcadosOcp()
             ocp.dims = self.phases_dims[i]
-            ocp.dims.N = self.N_horizon # NOTE: to not change options when making ocp consistent
             ocp.model = self.model[i]
             ocp.constraints = self.constraints[i]
             ocp.cost = self.cost[i]

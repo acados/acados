@@ -158,7 +158,7 @@ ny_e = nx
 N = 20
 
 # set dimensions
-ocp.dims.N = N
+ocp.solver_options.N_horizon = N
 
 # set cost
 Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])

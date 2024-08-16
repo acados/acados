@@ -96,28 +96,28 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- if dims.ny_0 > 0 and simulink_opts.inputs.y_ref_0 -%}  {#- y_ref_0 -#}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
-  {%- if dims.ny > 0 and dims.N > 1 and simulink_opts.inputs.y_ref -%}  {#- y_ref -#}
+  {%- if dims.ny > 0 and solver_options.N_horizon > 1 and simulink_opts.inputs.y_ref -%}  {#- y_ref -#}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
-  {%- if dims.ny_e > 0 and dims.N > 0 and simulink_opts.inputs.y_ref_e -%}  {#- y_ref_e #}
+  {%- if dims.ny_e > 0 and solver_options.N_horizon > 0 and simulink_opts.inputs.y_ref_e -%}  {#- y_ref_e #}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
-  {%- if dims.nbx > 0 and dims.N > 1 and simulink_opts.inputs.lbx -%}  {#- lbx #}
+  {%- if dims.nbx > 0 and solver_options.N_horizon > 1 and simulink_opts.inputs.lbx -%}  {#- lbx #}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
-  {%- if dims.nbx > 0 and dims.N > 1 and simulink_opts.inputs.ubx -%}  {#- ubx #}
+  {%- if dims.nbx > 0 and solver_options.N_horizon > 1 and simulink_opts.inputs.ubx -%}  {#- ubx #}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
-  {%- if dims.nbx_e > 0 and dims.N > 0 and simulink_opts.inputs.lbx_e -%}  {#- lbx_e #}
+  {%- if dims.nbx_e > 0 and solver_options.N_horizon > 0 and simulink_opts.inputs.lbx_e -%}  {#- lbx_e #}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
-  {%- if dims.nbx_e > 0 and dims.N > 0 and simulink_opts.inputs.ubx_e -%}  {#- ubx_e #}
+  {%- if dims.nbx_e > 0 and solver_options.N_horizon > 0 and simulink_opts.inputs.ubx_e -%}  {#- ubx_e #}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
-  {%- if dims.nbu > 0 and dims.N > 0 and simulink_opts.inputs.lbu -%}  {#- lbu #}
+  {%- if dims.nbu > 0 and solver_options.N_horizon > 0 and simulink_opts.inputs.lbu -%}  {#- lbu #}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
-  {%- if dims.nbu > 0 and dims.N > 0 and simulink_opts.inputs.ubu -%}  {#- ubu #}
+  {%- if dims.nbu > 0 and solver_options.N_horizon > 0 and simulink_opts.inputs.ubu -%}  {#- ubu #}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
   {%- if dims.ng > 0 and simulink_opts.inputs.lg -%}  {#- lg #}
@@ -230,72 +230,72 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.ny_0 }});
   {%- endif %}
 
-  {%- if dims.ny > 0 and dims.N > 1 and simulink_opts.inputs.y_ref %}
+  {%- if dims.ny > 0 and solver_options.N_horizon > 1 and simulink_opts.inputs.y_ref %}
     {%- set i_input = i_input + 1 %}
     // y_ref
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ (dims.N-1) * dims.ny }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ (solver_options.N_horizon-1) * dims.ny }});
   {%- endif %}
 
-  {%- if dims.ny_e > 0 and dims.N > 0 and simulink_opts.inputs.y_ref_e %}
+  {%- if dims.ny_e > 0 and solver_options.N_horizon > 0 and simulink_opts.inputs.y_ref_e %}
     {%- set i_input = i_input + 1 %}
     // y_ref_e
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.ny_e }});
   {%- endif %}
 
-  {%- if dims.nbx > 0 and dims.N > 1 and simulink_opts.inputs.lbx -%}  {#- lbx #}
+  {%- if dims.nbx > 0 and solver_options.N_horizon > 1 and simulink_opts.inputs.lbx -%}  {#- lbx #}
     {%- set i_input = i_input + 1 %}
     // lbx
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ (dims.N-1) * dims.nbx }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ (solver_options.N_horizon-1) * dims.nbx }});
   {%- endif %}
-  {%- if dims.nbx > 0 and dims.N > 1 and simulink_opts.inputs.ubx -%}  {#- ubx #}
+  {%- if dims.nbx > 0 and solver_options.N_horizon > 1 and simulink_opts.inputs.ubx -%}  {#- ubx #}
     {%- set i_input = i_input + 1 %}
     // ubx
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ (dims.N-1) * dims.nbx }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ (solver_options.N_horizon-1) * dims.nbx }});
   {%- endif %}
 
-  {%- if dims.nbx_e > 0 and dims.N > 0 and simulink_opts.inputs.lbx_e -%}  {#- lbx_e #}
+  {%- if dims.nbx_e > 0 and solver_options.N_horizon > 0 and simulink_opts.inputs.lbx_e -%}  {#- lbx_e #}
     {%- set i_input = i_input + 1 %}
     // lbx_e
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nbx_e }});
   {%- endif %}
-  {%- if dims.nbx_e > 0 and dims.N > 0 and simulink_opts.inputs.ubx_e -%}  {#- ubx_e #}
+  {%- if dims.nbx_e > 0 and solver_options.N_horizon > 0 and simulink_opts.inputs.ubx_e -%}  {#- ubx_e #}
     {%- set i_input = i_input + 1 %}
     // ubx_e
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nbx_e }});
   {%- endif %}
 
-  {%- if dims.nbu > 0 and dims.N > 0 and simulink_opts.inputs.lbu -%}  {#- lbu #}
+  {%- if dims.nbu > 0 and solver_options.N_horizon > 0 and simulink_opts.inputs.lbu -%}  {#- lbu #}
     {%- set i_input = i_input + 1 %}
     // lbu
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.N*dims.nbu }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ solver_options.N_horizon*dims.nbu }});
   {%- endif -%}
-  {%- if dims.nbu > 0 and dims.N > 0 and simulink_opts.inputs.ubu -%}  {#- ubu #}
+  {%- if dims.nbu > 0 and solver_options.N_horizon > 0 and simulink_opts.inputs.ubu -%}  {#- ubu #}
     {%- set i_input = i_input + 1 %}
     // ubu
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.N*dims.nbu }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ solver_options.N_horizon*dims.nbu }});
   {%- endif -%}
 
 
   {%- if dims.ng > 0 and simulink_opts.inputs.lg -%}  {#- lg #}
     {%- set i_input = i_input + 1 %}
     // lg
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.N*dims.ng }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ solver_options.N_horizon*dims.ng }});
   {%- endif -%}
   {%- if dims.ng > 0 and simulink_opts.inputs.ug -%}  {#- ug #}
     {%- set i_input = i_input + 1 %}
     // ug
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.N*dims.ng }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ solver_options.N_horizon*dims.ng }});
   {%- endif -%}
 
   {%- if dims.nh > 0 and simulink_opts.inputs.lh -%}  {#- lh #}
     {%- set i_input = i_input + 1 %}
     // lh
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.N*dims.nh }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ solver_options.N_horizon*dims.nh }});
   {%- endif -%}
   {%- if dims.nh > 0 and simulink_opts.inputs.uh -%}  {#- uh #}
     {%- set i_input = i_input + 1 %}
     // uh
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.N*dims.nh }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ solver_options.N_horizon*dims.nh }});
   {%- endif -%}
 
 {%- if dims.nh_0 > 0 and simulink_opts.inputs.lh_0 -%}  {#- lh_0 #}
@@ -353,19 +353,19 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- if simulink_opts.inputs.x_init -%}  {#- x_init #}
     {%- set i_input = i_input + 1 %}
     // x_init
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nx * (dims.N+1) }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nx * (solver_options.N_horizon+1) }});
   {%- endif -%}
 
   {%- if simulink_opts.inputs.u_init -%}  {#- u_init #}
     {%- set i_input = i_input + 1 %}
     // u_init
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nu * (dims.N) }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nu * (solver_options.N_horizon) }});
   {%- endif -%}
 
   {%- if simulink_opts.inputs.pi_init -%}  {#- pi_init #}
     {%- set i_input = i_input + 1 %}
     // pi_init
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nx * (dims.N) }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nx * (solver_options.N_horizon) }});
   {%- endif -%}
 
   {%- if simulink_opts.inputs.rti_phase -%}  {#- rti_phase #}
@@ -402,22 +402,22 @@ static void mdlInitializeSizes (SimStruct *S)
 
   {%- if simulink_opts.outputs.utraj == 1 %}
     {%- set i_output = i_output + 1 %}
-    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nu * dims.N }} );
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nu * solver_options.N_horizon }} );
   {%- endif %}
 
   {%- if simulink_opts.outputs.xtraj == 1 %}
     {%- set i_output = i_output + 1 %}
-    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nx * (dims.N+1) }} );
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nx * (solver_options.N_horizon+1) }} );
   {%- endif %}
 
   {%- if simulink_opts.outputs.ztraj == 1 %}
     {%- set i_output = i_output + 1 %}
-    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nz * dims.N }} );
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nz * solver_options.N_horizon }} );
   {%- endif %}
 
   {%- if simulink_opts.outputs.pi_all == 1 %}
     {%- set i_output = i_output + 1 %}
-    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nx * dims.N }} );
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nx * solver_options.N_horizon }} );
   {%- endif %}
 
   {%- if simulink_opts.outputs.solver_status == 1 %}
@@ -440,7 +440,7 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetOutputPortVectorDimension(S, {{ i_output }}, 4 );
   {%- endif %}
 
-  {%- if dims.N > 0 and simulink_opts.outputs.x1 == 1 %}
+  {%- if solver_options.N_horizon > 0 and simulink_opts.outputs.x1 == 1 %}
     {%- set i_output = i_output + 1 %}
     ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nx }} ); // state at shooting node 1
   {%- endif %}
@@ -471,7 +471,7 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- endif %}
   {%- if simulink_opts.outputs.parameter_traj -%}  {#- parameter_traj #}
     {%- set i_output = i_output + 1 %}
-    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.np * (dims.N + 1) }});
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.np * (solver_options.N_horizon + 1) }});
   {%- endif -%}
 
     // specify the direct feedthrough status
@@ -538,10 +538,10 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {%- if dims.ny_0 > 0 and simulink_opts.inputs.y_ref_0 %}  {# y_ref_0 #}
     {%- set buffer_sizes = buffer_sizes | concat(with=(dims.ny_0)) %}
   {%- endif %}
-  {%- if dims.ny > 0 and dims.N > 1 and simulink_opts.inputs.y_ref %}  {# y_ref #}
+  {%- if dims.ny > 0 and solver_options.N_horizon > 1 and simulink_opts.inputs.y_ref %}  {# y_ref #}
     {%- set buffer_sizes = buffer_sizes | concat(with=(dims.ny)) %}
   {%- endif %}
-  {%- if dims.ny_e > 0 and dims.N > 0 and simulink_opts.inputs.y_ref_e %}  {# y_ref_e #}
+  {%- if dims.ny_e > 0 and solver_options.N_horizon > 0 and simulink_opts.inputs.y_ref_e %}  {# y_ref_e #}
     {%- set buffer_sizes = buffer_sizes | concat(with=(dims.ny_e)) %}
   {%- endif %}
 
@@ -607,7 +607,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "yref", (void *) buffer);
   {%- endif %}
 
-  {% if dims.ny > 0 and dims.N > 1 and simulink_opts.inputs.y_ref %}
+  {% if dims.ny > 0 and solver_options.N_horizon > 1 and simulink_opts.inputs.y_ref %}
     // y_ref - for stages 1 to N-1
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
@@ -620,7 +620,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     }
   {%- endif %}
 
-  {% if dims.ny_e > 0 and dims.N > 0 and simulink_opts.inputs.y_ref_e %}
+  {% if dims.ny_e > 0 and solver_options.N_horizon > 0 and simulink_opts.inputs.y_ref_e %}
     // y_ref_e
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
@@ -631,7 +631,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", (void *) buffer);
   {%- endif %}
 
-  {%- if dims.nbx > 0 and dims.N > 1 and simulink_opts.inputs.lbx -%}  {#- lbx #}
+  {%- if dims.nbx > 0 and solver_options.N_horizon > 1 and simulink_opts.inputs.lbx -%}  {#- lbx #}
     // lbx
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
@@ -642,7 +642,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "lbx", (void *) buffer);
     }
   {%- endif %}
-  {%- if dims.nbx > 0 and dims.N > 1 and simulink_opts.inputs.ubx -%}  {#- ubx #}
+  {%- if dims.nbx > 0 and solver_options.N_horizon > 1 and simulink_opts.inputs.ubx -%}  {#- ubx #}
     // ubx
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
@@ -655,7 +655,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {%- endif %}
 
 
-  {%- if dims.nbx_e > 0 and dims.N > 0 and simulink_opts.inputs.lbx_e -%}  {#- lbx_e #}
+  {%- if dims.nbx_e > 0 and solver_options.N_horizon > 0 and simulink_opts.inputs.lbx_e -%}  {#- lbx_e #}
     // lbx_e
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
@@ -664,7 +664,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lbx", buffer);
   {%- endif %}
-  {%- if dims.nbx_e > 0 and dims.N > 0 and simulink_opts.inputs.ubx_e -%}  {#- ubx_e #}
+  {%- if dims.nbx_e > 0 and solver_options.N_horizon > 0 and simulink_opts.inputs.ubx_e -%}  {#- ubx_e #}
     // ubx_e
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
@@ -675,7 +675,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {%- endif %}
 
 
-  {%- if dims.nbu > 0 and dims.N > 0 and simulink_opts.inputs.lbu -%}  {#- lbu #}
+  {%- if dims.nbu > 0 and solver_options.N_horizon > 0 and simulink_opts.inputs.lbu -%}  {#- lbu #}
     // lbu
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
@@ -686,7 +686,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "lbu", (void *) buffer);
     }
   {%- endif -%}
-  {%- if dims.nbu > 0 and dims.N > 0 and simulink_opts.inputs.ubu -%}  {#- ubu #}
+  {%- if dims.nbu > 0 and solver_options.N_horizon > 0 and simulink_opts.inputs.ubu -%}  {#- ubu #}
     // ubu
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
@@ -839,7 +839,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         // x_init
         {%- set i_input = i_input + 1 %}
         in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
-        for (int ii = 0; ii < {{ dims.N + 1 }}; ii++)
+        for (int ii = 0; ii < {{ solver_options.N_horizon + 1 }}; ii++)
         {
             for (int jj = 0; jj < {{ dims.nx }}; jj++)
                 buffer[jj] = (double)(*in_sign[(ii)*{{ dims.nx }}+jj]);
@@ -991,7 +991,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     {%- set i_output = i_output + 1 %}
 
     out_xtraj = ssGetOutputPortRealSignal(S, {{ i_output }});
-    for (int ii = 0; ii < {{ dims.N + 1 }}; ii++)
+    for (int ii = 0; ii < {{ solver_options.N_horizon + 1 }}; ii++)
         ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii,
                         "x", (void *) (out_xtraj + ii * {{ dims.nx }}));
   {%- endif %}
@@ -1047,7 +1047,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_get(nlp_config, capsule->nlp_solver, "res_comp", (void *) &out_KKT_residuals[3]);
   {%- endif %}
 
-  {%- if dims.N > 0 and simulink_opts.outputs.x1 == 1 %}
+  {%- if solver_options.N_horizon > 0 and simulink_opts.outputs.x1 == 1 %}
     {%- set i_output = i_output + 1 %}
     out_x1 = ssGetOutputPortRealSignal(S, {{ i_output }});
     ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 1, "x", (void *) out_x1);

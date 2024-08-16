@@ -57,7 +57,7 @@ def setup_ocp(num_threads_in_batch_solve=1, tol=1e-7):
     N = 20
 
     # set dimensions
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
 
     Q_mat = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
     R_mat = 2*np.diag([1e-2])
@@ -130,7 +130,7 @@ def main_batch(Xinit, simU, tol, num_threads_in_batch_solve=1):
         batch_solver.ocp_solvers[n].constraints_set(0, "ubx", Xinit[n])
 
         # set initial guess
-        for i in range(ocp.dims.N):
+        for i in range(ocp.solver_options.N_horizon):
             batch_solver.ocp_solvers[n].set(i, "x", Xinit[n])
 
     t0 = time.time()

@@ -45,6 +45,7 @@ class AcadosOcpOptions:
         self.__hessian_approx = 'GAUSS_NEWTON'
         self.__integrator_type = 'ERK'
         self.__tf = None
+        self.__N_horizon = None
         self.__nlp_solver_type = 'SQP_RTI'
         self.__nlp_solver_step_length = 1.0
         self.__nlp_solver_tol_stat = 1e-6
@@ -792,9 +793,18 @@ class AcadosOcpOptions:
         return self.__tf
 
     @property
+    def N_horizon(self):
+        """
+        Number of shooting intervals.
+        Type: int > 0
+        Default: :code:`None`
+        """
+        return self.__N_horizon
+
+    @property
     def Tsim(self):
         """
-        Time horizon for one integrator step. Automatically calculated as :py:attr:`tf`/:py:attr:`N`.
+        Time horizon for one integrator step. Automatically calculated as first time step if not provided.
         Default: :code:`None`
         """
         return self.__Tsim
@@ -1016,6 +1026,13 @@ class AcadosOcpOptions:
     @tf.setter
     def tf(self, tf):
         self.__tf = tf
+
+    @N_horizon.setter
+    def N_horizon(self, N_horizon):
+        if isinstance(N_horizon, int) and N_horizon > 0:
+            self.__N_horizon = N_horizon
+        else:
+            raise Exception('Invalid N_horizon value, expected positive integer.')
 
     @time_steps.setter
     def time_steps(self, time_steps):

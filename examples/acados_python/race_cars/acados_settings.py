@@ -64,7 +64,7 @@ def acados_settings(Tf, N, track_file):
     ny = nx + nu
     ny_e = nx
 
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
     ns = 2
     nsh = 2
 

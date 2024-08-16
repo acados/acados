@@ -366,7 +366,10 @@ class AcadosOcpDims:
 
     @property
     def N(self):
-        """:math:`N` - prediction horizon.
+        """
+        :math:`N` - Number of shooting intervals.
+        DEPRECATED: use ocp.solver_options.N instead.
+
         Type: int; default: None"""
         return self.__N
 

@@ -97,9 +97,6 @@ def solve_acados_ocp(solve_feasibility_problem: bool, acados_opts: AcadosOcpOpti
     N = 20
     M = 2 # Needed for integrator
 
-    # set dimensions
-    ocp.dims.N = N
-
     x0 = 0.0
     y0 = 0.0
     theta0 = np.pi/2
@@ -153,6 +150,7 @@ def solve_acados_ocp(solve_feasibility_problem: bool, acados_opts: AcadosOcpOpti
     # set solver options
     ###########################################################################
     ocp.solver_options = acados_opts
+    ocp.solver_options.N_horizon = N
 
     if SOLVE_FEASIBILITY_PROBLEM:
         ocp.translate_to_feasibility_problem()
