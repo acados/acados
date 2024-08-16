@@ -133,7 +133,7 @@ classdef AcadosOcp < handle
                         self.cost.yref_0 = zeros(ny,1);
                     end
                     if ny ~= size(cost.Vx_0, 1) || ny ~= size(cost.Vu_0, 1) || ny ~= size(cost.yref_0, 1)
-                        error('inconsistent dimension ny, regarding W_0, Vx_0, Vu_0, yref_0.');
+                        error('inconsistent dimension ny_0, regarding W_0, Vx_0, Vu_0, yref_0.');
                     end
                 else
                     error('setting linear least square cost: need W_0, Vx_0, Vu_0, at least one missing.')
@@ -236,10 +236,10 @@ classdef AcadosOcp < handle
             if ~isempty(constraints.idxbx_0) && ~isempty(constraints.lbx_0) && ~isempty(constraints.ubx_0)
                 nbx_0 = length(constraints.lbx_0);
                 if nbx_0 ~= length(constraints.ubx_0) || nbx_0 ~= length(constraints.idxbx_0)
-                    error('inconsistent dimension nbx_0, regarding Jbx_0, lbx_0, ubx_0.');
+                    error('inconsistent dimension nbx_0, regarding idxbx_0, lbx_0, ubx_0.');
                 end
             elseif ~isempty(constraints.idxbx_0) || ~isempty(constraints.lbx_0) || ~isempty(constraints.ubx_0)
-                error('setting bounds on x: need Jbx_0, lbx_0, ubx_0, at least one missing.');
+                error('setting bounds on x: need idxbx_0, lbx_0, ubx_0, at least one missing.');
             else
                 % no initial state constraint
                 disp("OCP without constraints on initial state detected.")
@@ -259,10 +259,10 @@ classdef AcadosOcp < handle
             if ~isempty(constraints.idxbx) && ~isempty(constraints.lbx) && ~isempty(constraints.ubx)
                 nbx = length(constraints.lbx);
                 if nbx ~= length(constraints.ubx) || nbx ~= length(constraints.idxbx)
-                    error('inconsistent dimension nbx, regarding Jbx, lbx, ubx.');
+                    error('inconsistent dimension nbx, regarding idxbx, lbx, ubx.');
                 end
             elseif ~isempty(constraints.idxbx) || ~isempty(constraints.lbx) || ~isempty(constraints.ubx)
-                error('setting bounds on x: need Jbx, lbx, ubx, at least one missing.');
+                error('setting bounds on x: need idxbx, lbx, ubx, at least one missing.');
             else
                 nbx = 0;
             end
@@ -271,10 +271,10 @@ classdef AcadosOcp < handle
             if ~isempty(constraints.idxbu) && ~isempty(constraints.lbu) && ~isempty(constraints.ubu)
                 nbu = length(constraints.lbu);
                 if nbu ~= length(constraints.ubu) || nbu ~= length(constraints.idxbu)
-                    error('inconsistent dimension nbu, regarding Jbu, lbu, ubu.');
+                    error('inconsistent dimension nbu, regarding idxbu, lbu, ubu.');
                 end
             elseif ~isempty(constraints.idxbu) || ~isempty(constraints.lbu) || ~isempty(constraints.ubu)
-                error('setting bounds on u: need Jbu, lbu, ubu, at least one missing.');
+                error('setting bounds on u: need idxbu, lbu, ubu, at least one missing.');
             else
                 nbu = 0;
             end
