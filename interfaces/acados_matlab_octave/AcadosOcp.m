@@ -610,18 +610,18 @@ classdef AcadosOcp < handle
                 error('sim_method_jac_reuse must be a scalar or a vector of length N');
             end
 
-            if strcmp(opts.nlp_solver_type, "PARTIAL_CONDENSING_HPMPC") || ...
-                strcmp(opts.nlp_solver_type, "PARTIAL_CONDENSING_QPDUNES") || ...
-                strcmp(opts.nlp_solver_type, "PARTIAL_CONDENSING_OOQP")
+            if strcmp(opts.qp_solver, "PARTIAL_CONDENSING_HPMPC") || ...
+                strcmp(opts.qp_solver, "PARTIAL_CONDENSING_QPDUNES") || ...
+                strcmp(opts.qp_solver, "PARTIAL_CONDENSING_OOQP")
                 if self.dims.ns > 0 || self.dims.ns_e > 0
-                    error(['selected QP solver ', opts.nlp_solver_type, ' does not support soft constraints (yet).'])
+                    error(['selected QP solver ', opts.qp_solver, ' does not support soft constraints (yet).'])
                 end
             end
 
-            if ~(strcmp(obj.ocp.solver_options.qp_solver, "FULL_CONDENSING_HPIPM") || ...
-                strcmp(obj.ocp.solver_options.qp_solver, "PARTIAL_CONDENSING_HPIPM") || ...
-                strcmp(obj.ocp.solver_options.qp_solver, "FULL_CONDENSING_DAQP"))
-                disp(['NOTE: The selected QP solver ', obj.ocp.solver_options.qp_solver, ' does not support one-sided constraints yet.']);
+            if ~(strcmp(opts.qp_solver, "FULL_CONDENSING_HPIPM") || ...
+                strcmp(opts.qp_solver, "PARTIAL_CONDENSING_HPIPM") || ...
+                strcmp(opts.qp_solver, "FULL_CONDENSING_DAQP"))
+                disp(['NOTE: The selected QP solver ', opts.qp_solver, ' does not support one-sided constraints yet.']);
             end
 
             % fixed hessian
