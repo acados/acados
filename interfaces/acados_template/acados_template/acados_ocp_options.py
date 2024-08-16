@@ -795,7 +795,7 @@ class AcadosOcpOptions:
     @property
     def N_horizon(self):
         """
-        Number of shooting nodes
+        Number of shooting intervals.
         Type: int > 0
         Default: :code:`None`
         """
@@ -804,7 +804,7 @@ class AcadosOcpOptions:
     @property
     def Tsim(self):
         """
-        Time horizon for one integrator step. Automatically calculated as :py:attr:`tf`/:py:attr:`N`.
+        Time horizon for one integrator step. Automatically calculated as first time step if not provided.
         Default: :code:`None`
         """
         return self.__Tsim
