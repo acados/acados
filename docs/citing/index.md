@@ -29,6 +29,25 @@ Additionally it describes the [`casados-integrator`](https://github.com/FreyJo/c
 }
 ```
 
+### Multi-Phase Optimal Control Problems for Efficient Nonlinear Model Predictive Control with acados
+Computationally efficient nonlinear model predictive control relies on elaborate discrete-time optimal control problem (OCP) formulations trading off accuracy with respect to the continuous-time problem and associated computational burden. Such formulations, however, are in general not easy to implement within specialized software frameworks tailored to numerical optimal control. This paper introduces a new multi-phase OCP interface for the open-source software acados allowing to conveniently formulate such problems and generate fast solvers that can be used for nonlinear model predictive control (NMPC). While multi-phase OCP (MOCP) formulations occur naturally in many applications, this paper focuses on MOCP formulations that can be used to efficiently approximate standard continuous-time OCPs in the context of NMPC.
+
+
+This feature can be used via the `AcadosMultiphaseOcp` class.
+
+
+```latex
+@misc{Frey2024MultiPhase,
+      title={Multi-Phase Optimal Control Problems for Efficient Nonlinear Model Predictive Control with acados},
+      author={Jonathan Frey and Katrin Baumgärtner and Gianluca Frison and Moritz Diehl},
+      year={2024},
+      eprint={2408.07382},
+      archivePrefix={arXiv},
+      primaryClass={math.OC},
+      url={https://arxiv.org/abs/2408.07382},
+}
+```
+
 
 ### Advanced-Step Real-Time Iterations (AS-RTI)
 Advanced-step real-time iterations provide an extension to the classic real-time iteration algorithm, which allows to performs additional multi-level iterations in the preparation phase, such as inexact or zero-order SQP iterations on a problem with a predicted state estimate.
