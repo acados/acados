@@ -33,7 +33,20 @@ function compile_ocp_shared_lib(export_dir)
     return_dir = pwd;
     cd(export_dir);
     if isunix
-        [ status, result ] = system('make shared_lib');
+        %% old code for make
+        % [ status, result ] = system('make shared_lib');
+        % if status
+        %     cd(return_dir);
+        %     error('Building templated code as shared library failed.\nGot status %d, result: %s',...
+        %           status, result);
+        % end
+        [ status, result ] = system('cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_OCP_SOLVER_LIB=ON -S . -B .');
+        if status
+            cd(return_dir);
+            error('Generating buildsystem failed.\nGot status %d, result: %s',...
+                  status, result);
+        end
+        [ status, result ] = system('cmake --build . --config Release');
         if status
             cd(return_dir);
             error('Building templated code as shared library failed.\nGot status %d, result: %s',...

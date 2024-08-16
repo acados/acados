@@ -36,22 +36,26 @@ It also provides a higher level interface to `acados`, which is based on the Mat
 - [Mobility-enhanced MPC for Legged Locomotion on Rough Terrain](https://arxiv.org/abs/2105.05998)
     - [Video to Mobility-enhanced MPC for Legged Locomotion on Rough Terrain](https://www.dropbox.com/sh/mkr4pftcug6jlo7/AABNqu1AsGED2WSR8IqvaiUla?dl=0)
 
-- [Continuous Control Set Nonlinear Model Predictive Control of Reluctance Synchronous Machines - IEEE Transactions on Control System Technology -- Andrea Zanelli et al 2021](https://ieeexplore.ieee.org/document/9360312)
+- [Continuous Control Set Nonlinear Model Predictive Control of Reluctance Synchronous Machines - IEEE Transactions on Control System Technology](https://ieeexplore.ieee.org/document/9360312)
 
 - [Steering Action-aware Adaptive Cruise Control for Teleoperated Driving](https://ieeexplore.ieee.org/document/9945081)
   - [with public code on Github which has been applied on an F1TENTH vehicle](https://github.com/TUMFTM/tod_control/tree/2b67e8411e2ba1c5ddeb879d564ed28a989aebce/tod_shared_control)
 
-### other
-- [Contraction Properties of the Advanced Step Real-Time Iteration for NMPC at the IFAC World Congress 2020](https://cdn.syscop.de/publications/Nurkanovic2020b.pdf)
+- [Real-Time Neural MPC: Deep Learning Model Predictive Control for Quadrotors and Agile Robotic Platforms](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=10049101)
 
-- [Real-Time Nonlinear Model Predictive Control for Microgrid Operation at the American Control Conference 2020](https://cdn.syscop.de/publications/Nurkanovic2020a.pdf)
+
+### other
+- [Contraction Properties of the Advanced Step Real-Time Iteration for NMPC — IFAC World Congress 2020](https://cdn.syscop.de/publications/Nurkanovic2020b.pdf)
+
+- [Real-Time Nonlinear Model Predictive Control for Microgrid Operation — American Control Conference 2020](https://cdn.syscop.de/publications/Nurkanovic2020a.pdf)
 
 - [Optimization-based Primary and Secondary Control of Microgrids](https://www.researchgate.net/profile/Armin_Nurkanovic/publication/341622767_Optimization-based_Primary_and_Secondary_Control_of_Microgrids/links/5f10519a299bf1e548ba5e77/Optimization-based-Primary-and-Secondary-Control-of-Microgrids.pdf)
 
-- [TuneMPC—A Tool for Economic Tuning ofTracking (N)MPC Problems](https://cdn.syscop.de/publications/DeSchutter2020.pdf)
+- [TuneMPC — A Tool for Economic Tuning of Tracking (N)MPC Problems](https://cdn.syscop.de/publications/DeSchutter2020.pdf)
 
 <!-- external -->
-- [Model predictive control of wind turbine fatigue via online rainflow-counting on stress history and prediction](https://iopscience.iop.org/article/10.1088/1742-6596/1618/2/022041/pdf)
+- [Model Predictive Control of Wind Turbine Fatigue via Online Rainflow-Counting on Stress History and Prediction](https://iopscience.iop.org/article/10.1088/1742-6596/1618/2/022041/pdf)
 
-- [Embedded Real-Time Nonlinear Model Predictive Control for the Thermal Torque Derating of an Electric Vehicle, Winkler et al, IFAC 2021](https://cdn.syscop.de/publications/Winkler2021.pdf)
+- [Embedded Real-Time Nonlinear Model Predictive Control for the Thermal Torque Derating of an Electric Vehicle — IFAC 2021](https://cdn.syscop.de/publications/Winkler2021.pdf)
 
+- [Nonlinear MPC for Quadrotors in Close-Proximity Flight with Neural Network Downwash Prediction](https://arxiv.org/abs/2304.07794)

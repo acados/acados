@@ -618,6 +618,12 @@ classdef AcadosOcp < handle
                 end
             end
 
+            if ~(strcmp(obj.ocp.solver_options.qp_solver, "FULL_CONDENSING_HPIPM") || ...
+                strcmp(obj.ocp.solver_options.qp_solver, "PARTIAL_CONDENSING_HPIPM") || ...
+                strcmp(obj.ocp.solver_options.qp_solver, "FULL_CONDENSING_DAQP"))
+                disp(['NOTE: The selected QP solver ', obj.ocp.solver_options.qp_solver, ' does not support one-sided constraints yet.']);
+            end
+
             % fixed hessian
             if opts.fixed_hess
                 if opts.hessian_approx == 'EXACT'

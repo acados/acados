@@ -109,6 +109,7 @@ class AcadosOcp:
 
         self.__parameter_values = np.array([])
         self.__problem_class = 'OCP'
+        self.__json_file = "acados_ocp.json"
 
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
@@ -130,6 +131,14 @@ class AcadosOcp:
             raise Exception('Invalid parameter_values value. ' +
                             f'Expected numpy array, got {type(parameter_values)}.')
 
+    @property
+    def json_file(self):
+        """Name of the json file where the problem description is stored."""
+        return self.__json_file
+
+    @json_file.setter
+    def json_file(self, json_file):
+        self.__json_file = json_file
 
     def make_consistent(self) -> None:
         """
@@ -937,10 +946,10 @@ class AcadosOcp:
         return template_list
 
 
-    def render_templates(self, json_file: str, cmake_builder=None):
+    def render_templates(self, cmake_builder=None):
 
         # check json file
-        json_path = os.path.abspath(json_file)
+        json_path = os.path.abspath(self.json_file)
         if not os.path.exists(json_path):
             raise Exception(f'Path "{json_path}" not found!')
 
@@ -959,8 +968,8 @@ class AcadosOcp:
         return
 
 
-    def dump_to_json(self, json_file: str) -> None:
-        with open(json_file, 'w') as f:
+    def dump_to_json(self) -> None:
+        with open(self.json_file, 'w') as f:
             json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         return
 
