@@ -47,7 +47,7 @@ from .acados_ocp_options import AcadosOcpOptions
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
                     get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square,
-                    check_casadi_version)
+                    check_casadi_version, GenerateContext)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
 from .zoro_description import ZoroDescription, process_zoro_description
@@ -995,6 +995,8 @@ class AcadosOcp:
         code_gen_opts['with_value_sens_wrt_params'] = self.solver_options.with_value_sens_wrt_params
         code_gen_opts['code_export_directory'] = self.code_export_directory
 
+        context = GenerateContext(model,code_gen_opts)
+
         # create code_export_dir, model_dir
         model_dir = os.path.join(code_gen_opts['code_export_directory'], model.name + '_model')
         if not os.path.exists(model_dir):
@@ -1003,17 +1005,17 @@ class AcadosOcp:
         check_casadi_version()
         if self.model.dyn_ext_fun_type == 'casadi':
             if self.solver_options.integrator_type == 'ERK':
-                generate_c_code_explicit_ode(model, code_gen_opts)
+                generate_c_code_explicit_ode(context, code_gen_opts)
             elif self.solver_options.integrator_type == 'IRK':
-                generate_c_code_implicit_ode(model, code_gen_opts)
+                generate_c_code_implicit_ode(context, code_gen_opts)
             elif self.solver_options.integrator_type == 'LIFTED_IRK':
                 if model.t != []:
                     raise NotImplementedError("LIFTED_IRK with time-varying dynamics not implemented yet.")
-                generate_c_code_implicit_ode(model, code_gen_opts)
+                generate_c_code_implicit_ode(context, code_gen_opts)
             elif self.solver_options.integrator_type == 'GNSF':
-                generate_c_code_gnsf(model, code_gen_opts)
+                generate_c_code_gnsf(context, code_gen_opts)
             elif self.solver_options.integrator_type == 'DISCRETE':
-                generate_c_code_discrete_dynamics(model, code_gen_opts)
+                generate_c_code_discrete_dynamics(context, code_gen_opts)
             else:
                 raise Exception("ocp_generate_external_functions: unknown integrator type.")
         else:
@@ -1024,16 +1026,18 @@ class AcadosOcp:
 
         for attr_nh, attr_nphi, stage_type in zip(['nh_0', 'nh', 'nh_e'], ['nphi_0', 'nphi', 'nphi_e'], stage_types):
             if getattr(self.dims, attr_nh) > 0 or getattr(self.dims, attr_nphi) > 0:
-                generate_c_code_constraint(model, constraints, stage_type, code_gen_opts)
+                generate_c_code_constraint(context, constraints, stage_type, code_gen_opts)
 
         for attr, stage_type in zip(['cost_type_0', 'cost_type', 'cost_type_e'], stage_types):
             if getattr(self.cost, attr) == 'NONLINEAR_LS':
-                generate_c_code_nls_cost(model, stage_type, code_gen_opts)
+                generate_c_code_nls_cost(context, stage_type, code_gen_opts)
             elif getattr(self.cost, attr) == 'CONVEX_OVER_NONLINEAR':
-                generate_c_code_conl_cost(model, stage_type, code_gen_opts)
+                generate_c_code_conl_cost(context, stage_type, code_gen_opts)
             elif getattr(self.cost, attr) == 'EXTERNAL':
-                generate_c_code_external_cost(model, stage_type, code_gen_opts)
+                generate_c_code_external_cost(context, stage_type, code_gen_opts)
             # TODO: generic
+        
+        return context
 
     def remove_x0_elimination(self) -> None:
         self.constraints.idxbxe_0 = np.zeros((0,))

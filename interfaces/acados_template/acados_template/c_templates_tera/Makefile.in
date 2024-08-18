@@ -305,6 +305,7 @@ OCP_SRC+= {{ solver_options.custom_update_filename }}
 {%- endif %}
 
 OCP_SRC+= acados_solver_{{ model.name }}.c
+OCP_SRC+= helpers_{{ model.name }}.c
 OCP_OBJ := $(OCP_SRC:.c=.o)
 
 # for sim solver

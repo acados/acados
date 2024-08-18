@@ -30,7 +30,7 @@
 
 import os
 import casadi as ca
-from .utils import is_empty, casadi_length
+from .utils import is_empty, casadi_length, GenerateContext
 from .acados_model import AcadosModel
 from .acados_ocp_constraints import AcadosOcpConstraints
 
@@ -53,7 +53,8 @@ def is_casadi_SX(x):
 # Dynamics
 ################
 
-def generate_c_code_discrete_dynamics(model: AcadosModel, opts):
+def generate_c_code_discrete_dynamics(context: GenerateContext, opts):
+    model = context.model
 
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
@@ -89,15 +90,15 @@ def generate_c_code_discrete_dynamics(model: AcadosModel, opts):
     # set up & generate ca.Functions
     fun_name = model_name + '_dyn_disc_phi_fun'
     phi_fun = ca.Function(fun_name, [x, u, p], [phi])
-    phi_fun.generate(fun_name, casadi_codegen_opts)
+    context.add(phi_fun, fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_dyn_disc_phi_fun_jac'
     phi_fun_jac_ut_xt = ca.Function(fun_name, [x, u, p], [phi, jac_ux.T])
-    phi_fun_jac_ut_xt.generate(fun_name, casadi_codegen_opts)
+    context.add(phi_fun_jac_ut_xt, fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_dyn_disc_phi_fun_jac_hess'
     phi_fun_jac_ut_xt_hess = ca.Function(fun_name, [x, u, lam, p], [phi, jac_ux.T, hess_ux])
-    phi_fun_jac_ut_xt_hess.generate(fun_name, casadi_codegen_opts)
+    context.add(phi_fun_jac_ut_xt_hess, fun_name, casadi_codegen_opts)
 
     if opts["with_solution_sens_wrt_params"]:
         # generate jacobian of lagrange gradient wrt p
@@ -106,20 +107,21 @@ def generate_c_code_discrete_dynamics(model: AcadosModel, opts):
         hess_xu_p = ca.jacobian(adj_ux, p) # using adjoint
         fun_name = model_name + '_dyn_disc_phi_jac_p_hess_xu_p'
         phi_jac_p_hess_xu_p = ca.Function(fun_name, [x, u, lam, p], [jac_p, hess_xu_p])
-        phi_jac_p_hess_xu_p.generate(fun_name, casadi_codegen_opts)
+        context.add(phi_jac_p_hess_xu_p, fun_name, casadi_codegen_opts)
 
     if opts["with_value_sens_wrt_params"]:
         adj_p = ca.jtimes(phi, p, lam, True)
         fun_name = model_name + '_dyn_disc_phi_adj_p'
         phi_adj_p = ca.Function(fun_name, [x, u, lam, p], [adj_p])
-        phi_adj_p.generate(fun_name, casadi_codegen_opts)
+        context.add(phi_adj_p, fun_name, casadi_codegen_opts)
 
     os.chdir(cwd)
     return
 
 
 
-def generate_c_code_explicit_ode(model: AcadosModel, opts):
+def generate_c_code_explicit_ode(context: GenerateContext, opts):
+    model = context.model
 
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
@@ -178,23 +180,24 @@ def generate_c_code_explicit_ode(model: AcadosModel, opts):
 
     # generate C code
     fun_name = model_name + '_expl_ode_fun'
-    expl_ode_fun.generate(fun_name, casadi_codegen_opts)
+    context.add(expl_ode_fun, fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_expl_vde_forw'
-    expl_vde_forw.generate(fun_name, casadi_codegen_opts)
+    context.add(expl_vde_forw, fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_expl_vde_adj'
-    expl_vde_adj.generate(fun_name, casadi_codegen_opts)
+    context.add(expl_vde_adj, fun_name, casadi_codegen_opts)
 
     if generate_hess:
         fun_name = model_name + '_expl_ode_hess'
-        expl_ode_hess.generate(fun_name, casadi_codegen_opts)
+        context.add(expl_ode_hess, fun_name, casadi_codegen_opts)
     os.chdir(cwd)
 
     return
 
 
-def generate_c_code_implicit_ode(model: AcadosModel, opts):
+def generate_c_code_implicit_ode(context: GenerateContext, opts):
+    model = context.model
 
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
@@ -251,30 +254,30 @@ def generate_c_code_implicit_ode(model: AcadosModel, opts):
 
     # generate C code
     fun_name = model_name + '_impl_dae_fun'
-    impl_dae_fun.generate(fun_name, casadi_codegen_opts)
+    context.add(impl_dae_fun, fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
-    impl_dae_fun_jac_x_xdot_z.generate(fun_name, casadi_codegen_opts)
+    context.add(impl_dae_fun_jac_x_xdot_z, fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
-    impl_dae_jac_x_xdot_u_z.generate(fun_name, casadi_codegen_opts)
+    context.add(impl_dae_jac_x_xdot_u_z, fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
-    impl_dae_fun_jac_x_xdot_u_z.generate(fun_name, casadi_codegen_opts)
+    context.add(impl_dae_fun_jac_x_xdot_u_z, fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u'
-    impl_dae_fun_jac_x_xdot_u.generate(fun_name, casadi_codegen_opts)
+    context.add(impl_dae_fun_jac_x_xdot_u, fun_name, casadi_codegen_opts)
 
     if opts["generate_hess"]:
         fun_name = model_name + '_impl_dae_hess'
-        impl_dae_hess.generate(fun_name, casadi_codegen_opts)
+        context.add(impl_dae_hess, fun_name, casadi_codegen_opts)
 
     os.chdir(cwd)
     return
 
 
-def generate_c_code_gnsf(model: AcadosModel, opts):
-
+def generate_c_code_gnsf(context: GenerateContext, opts):
+    model = context.model
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     model_name = model.name
@@ -313,17 +316,17 @@ def generate_c_code_gnsf(model: AcadosModel, opts):
     ## generate C code
     fun_name = model_name + '_gnsf_phi_fun'
     phi_fun_ = ca.Function(fun_name, [y, uhat, p], [phi_fun(y, uhat, p)])
-    phi_fun_.generate(fun_name, casadi_codegen_opts)
+    context.add(phi_fun_, fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_gnsf_phi_fun_jac_y'
     phi_fun_jac_y = model.phi_fun_jac_y
     phi_fun_jac_y_ = ca.Function(fun_name, [y, uhat, p], phi_fun_jac_y(y, uhat, p))
-    phi_fun_jac_y_.generate(fun_name, casadi_codegen_opts)
+    context.add(phi_fun_jac_y_, fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_gnsf_phi_jac_y_uhat'
     phi_jac_y_uhat = model.phi_jac_y_uhat
     phi_jac_y_uhat_ = ca.Function(fun_name, [y, uhat, p], phi_jac_y_uhat(y, uhat, p))
-    phi_jac_y_uhat_.generate(fun_name, casadi_codegen_opts)
+    context.add(phi_jac_y_uhat_, fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_gnsf_f_lo_fun_jac_x1k1uz'
     f_lo_fun_jac_x1k1uz = model.f_lo_fun_jac_x1k1uz
@@ -335,11 +338,11 @@ def generate_c_code_gnsf(model: AcadosModel, opts):
 
     f_lo_fun_jac_x1k1uz_ = ca.Function(fun_name, [x1, x1dot, z1, u, p],
                  f_lo_fun_jac_x1k1uz_eval)
-    f_lo_fun_jac_x1k1uz_.generate(fun_name, casadi_codegen_opts)
+    context.add(f_lo_fun_jac_x1k1uz_, fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_gnsf_get_matrices_fun'
     get_matrices_fun_ = ca.Function(fun_name, [dummy], get_matrices_fun(1))
-    get_matrices_fun_.generate(fun_name, casadi_codegen_opts)
+    context.add(get_matrices_fun_, fun_name, casadi_codegen_opts)
 
     # remove fields for json dump
     del model.phi_fun
@@ -357,7 +360,8 @@ def generate_c_code_gnsf(model: AcadosModel, opts):
 # Cost
 ################
 
-def generate_c_code_external_cost(model: AcadosModel, stage_type, opts):
+def generate_c_code_external_cost(context: GenerateContext, stage_type, opts):
+    model = context.model
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     x = model.x
@@ -431,25 +435,26 @@ def generate_c_code_external_cost(model: AcadosModel, stage_type, opts):
         os.makedirs(cost_dir)
     os.chdir(cost_dir)
 
-    ext_cost_fun.generate(fun_name, casadi_codegen_opts)
-    ext_cost_fun_jac_hess.generate(fun_name_hess, casadi_codegen_opts)
-    ext_cost_fun_jac.generate(fun_name_jac, casadi_codegen_opts)
+    context.add(ext_cost_fun, fun_name, casadi_codegen_opts)
+    context.add(ext_cost_fun_jac_hess, fun_name_hess, casadi_codegen_opts)
+    context.add(ext_cost_fun_jac, fun_name_jac, casadi_codegen_opts)
 
     if opts["with_solution_sens_wrt_params"]:
         hess_xu_p = ca.jacobian(grad_uxz, p)
         ext_cost_hess_xu_p = ca.Function(fun_name_param, [x, u, z, p], [hess_xu_p])
-        ext_cost_hess_xu_p.generate(fun_name_param, casadi_codegen_opts)
+        context.add(ext_cost_hess_xu_p, fun_name_param, casadi_codegen_opts)
 
     if opts["with_value_sens_wrt_params"]:
         grad_p = ca.jacobian(ext_cost, p)
         ext_cost_grad_p = ca.Function(fun_name_value_sens, [x, u, z, p], [grad_p])
-        ext_cost_grad_p.generate(fun_name_value_sens, casadi_codegen_opts)
+        context.add(ext_cost_grad_p, fun_name_value_sens, casadi_codegen_opts)
 
     os.chdir(cwd)
     return
 
 
-def generate_c_code_nls_cost(model: AcadosModel, stage_type, opts):
+def generate_c_code_nls_cost(context: GenerateContext, stage_type, opts):
+    model = context.model
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     x = model.x
@@ -498,17 +503,17 @@ def generate_c_code_nls_cost(model: AcadosModel, stage_type, opts):
     suffix_name = '_fun'
     fun_name = model.name + middle_name + suffix_name
     y_fun = ca.Function( fun_name, [x, u, z, t, p], [ y_expr ])
-    y_fun.generate( fun_name, casadi_codegen_opts )
+    context.add(y_fun, fun_name, casadi_codegen_opts)
 
     suffix_name = '_fun_jac_ut_xt'
     fun_name = model.name + middle_name + suffix_name
     y_fun_jac_ut_xt = ca.Function(fun_name, [x, u, z, t, p], [ y_expr, cost_jac_expr, dy_dz ])
-    y_fun_jac_ut_xt.generate( fun_name, casadi_codegen_opts )
+    context.add(y_fun_jac_ut_xt, fun_name, casadi_codegen_opts)
 
     suffix_name = '_hess'
     fun_name = model.name + middle_name + suffix_name
     y_hess = ca.Function(fun_name, [x, u, z, y, t, p], [ y_hess ])
-    y_hess.generate( fun_name, casadi_codegen_opts )
+    context.add(y_hess, fun_name, casadi_codegen_opts)
 
     os.chdir(cwd)
 
@@ -516,8 +521,8 @@ def generate_c_code_nls_cost(model: AcadosModel, stage_type, opts):
 
 
 
-def generate_c_code_conl_cost(model: AcadosModel, stage_type: str, opts):
-
+def generate_c_code_conl_cost(context: GenerateContext, stage_type: str, opts):
+    model = context.model
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     x = model.x
@@ -609,8 +614,8 @@ def generate_c_code_conl_cost(model: AcadosModel, stage_type: str, opts):
     os.chdir(cost_dir)
 
     # generate C code
-    cost_fun.generate(fun_name_cost_fun, casadi_codegen_opts)
-    cost_fun_jac_hess.generate(fun_name_cost_fun_jac_hess, casadi_codegen_opts)
+    context.add(cost_fun, fun_name_cost_fun, casadi_codegen_opts)
+    context.add(cost_fun_jac_hess, fun_name_cost_fun_jac_hess, casadi_codegen_opts)
 
     os.chdir(cwd)
 
@@ -620,8 +625,8 @@ def generate_c_code_conl_cost(model: AcadosModel, stage_type: str, opts):
 ################
 # Constraints
 ################
-def generate_c_code_constraint(model: AcadosModel, constraints: AcadosOcpConstraints, stage_type: str, opts: dict):
-
+def generate_c_code_constraint(context: GenerateContext, constraints: AcadosOcpConstraints, stage_type: str, opts: dict):
+    model = context.model
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     # load constraint variables and expression
@@ -687,7 +692,7 @@ def generate_c_code_constraint(model: AcadosModel, constraints: AcadosOcpConstra
         constraint_fun_jac_tran = ca.Function(fun_name, [x, u, z, p], \
                 [con_h_expr, jac_ux_t, jac_z_t])
 
-        constraint_fun_jac_tran.generate(fun_name, casadi_codegen_opts)
+        context.add(constraint_fun_jac_tran, fun_name, casadi_codegen_opts)
         if opts['generate_hess']:
 
             if stage_type == 'terminal':
@@ -711,7 +716,7 @@ def generate_c_code_constraint(model: AcadosModel, constraints: AcadosOcpConstra
                     [con_h_expr, jac_ux_t, hess_ux, jac_z_t, hess_z])
 
             # generate C code
-            constraint_fun_jac_tran_hess.generate(fun_name, casadi_codegen_opts)
+            context.add(constraint_fun_jac_tran_hess, fun_name, casadi_codegen_opts)
 
         if stage_type == 'terminal':
             fun_name = model.name + '_constr_h_e_fun'
@@ -720,7 +725,7 @@ def generate_c_code_constraint(model: AcadosModel, constraints: AcadosOcpConstra
         else:
             fun_name = model.name + '_constr_h_fun'
         h_fun = ca.Function(fun_name, [x, u, z, p], [con_h_expr])
-        h_fun.generate(fun_name, casadi_codegen_opts)
+        context.add(h_fun, fun_name, casadi_codegen_opts)
 
     else: # BGP constraint
         if stage_type == 'terminal':
@@ -758,11 +763,11 @@ def generate_c_code_constraint(model: AcadosModel, constraints: AcadosOcpConstra
                 hess,
                 ca.vertcat(ca.transpose(r_jac_u), ca.transpose(r_jac_x))])
 
-        constraint_phi_fun_jac_hess.generate(fun_jac_hess_name, casadi_codegen_opts)
+        context.add(constraint_phi_fun_jac_hess, fun_jac_hess_name, casadi_codegen_opts)
 
         fun_name = fun_name_prefix + '_fun'
         constraint_phi_fun = ca.Function(fun_name, [x, u, z, p], [con_phi_expr_x_u_z])
-        constraint_phi_fun.generate(fun_name, casadi_codegen_opts)
+        context.add(constraint_phi_fun, fun_name, casadi_codegen_opts)
 
     # change directory back
     os.chdir(cwd)

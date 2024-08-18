@@ -58,7 +58,7 @@ from .utils import (check_casadi_version, format_class_dict,
                     make_object_json_dumpable,
                     render_template, set_up_imported_gnsf_model,
                     verbose_system_call, acados_lib_is_compiled_with_openmp,
-                    get_shared_lib)
+                    get_shared_lib, GenerateContext)
 
 
 def sim_formulation_json_dump(acados_sim: AcadosSim, json_file='acados_sim.json'):
@@ -136,14 +136,16 @@ def sim_generate_external_functions(acados_sim: AcadosSim):
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
+    context = GenerateContext(model)
+
     # generate external functions
     check_casadi_version()
     if integrator_type == 'ERK':
-        generate_c_code_explicit_ode(model, opts)
+        generate_c_code_explicit_ode(context, opts)
     elif integrator_type == 'IRK':
-        generate_c_code_implicit_ode(model, opts)
+        generate_c_code_implicit_ode(context, opts)
     elif integrator_type == 'GNSF':
-        generate_c_code_gnsf(model, opts)
+        generate_c_code_gnsf(context, opts)
 
 
 class AcadosSimSolver:

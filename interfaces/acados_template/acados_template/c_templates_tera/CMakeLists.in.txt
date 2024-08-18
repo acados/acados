@@ -344,6 +344,7 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
 	{%- endif %}
 {%- endif %}
         acados_solver_{{ model.name }}.c)
+    helpers_{{ model.name }}.c
     add_library(${OCP_OBJ} OBJECT ${OCP_SRC})
 endif()
 
