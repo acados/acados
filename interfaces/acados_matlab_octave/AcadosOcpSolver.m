@@ -160,6 +160,10 @@ classdef AcadosOcpSolver < handle
         end
 
         function [] = store_iterate(obj, varargin)
+            %%%  Stores the current iterate of the ocp solver in a json file.
+            %%% param1: filename: if not set, use model_name + timestamp + '.json'
+            %%% param2: overwrite: if false and filename exists add timestamp to filename
+
             obj.t_ocp.store_iterate(varargin{:});
         end
 
