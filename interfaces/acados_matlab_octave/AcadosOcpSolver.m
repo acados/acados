@@ -125,6 +125,20 @@ classdef AcadosOcpSolver < handle
                     end
                     return;
                 end
+            elseif strcmp('pc_hess_block', field)
+
+                if ~strncmp(obj.ocp.solver_options.qp_solver, 'PARTIAL_CONDENSING', length('PARTIAL_CONDENSING'))
+                    error("Getting hessian block of partially condensed QP only works for PARTIAL_CONDENSING QP solvers");
+                end
+                if length(varargin) > 0
+                    n = varargin{1};
+                    all_blocks = obj.get('qp_solver_cond_H');
+                    value = all_blocks{n+1};
+                    return;
+                else
+                    value = obj.get('qp_solver_cond_H');
+                    return;
+                end
             else
                 value = obj.t_ocp.get(field, varargin{:});
             end
@@ -146,6 +160,10 @@ classdef AcadosOcpSolver < handle
         end
 
         function [] = store_iterate(obj, varargin)
+            %%%  Stores the current iterate of the ocp solver in a json file.
+            %%% param1: filename: if not set, use model_name + timestamp + '.json'
+            %%% param2: overwrite: if false and filename exists add timestamp to filename
+
             obj.t_ocp.store_iterate(varargin{:});
         end
 
@@ -165,32 +183,44 @@ classdef AcadosOcpSolver < handle
         end
 
 
-        function result = qp_diagnostics(obj)
+        function result = qp_diagnostics(obj, varargin)
             % Compute some diagnostic values for the last QP.
-            % min_ev: minimum eigenvalue for each Hessian block.
-            % max_ev: maximum eigenvalue for each Hessian block.
-            % condition_number: condition number for each Hessian block.
+            % result = ocp_solver.qp_diagnostics([partially_condensed_qp=false])
 
-            result = struct();
-            result.min_ev = zeros(obj.ocp.solver_options.N_horizon+1, 1);
-            result.max_ev = zeros(obj.ocp.solver_options.N_horizon+1, 1);
-            result.condition_number = zeros(obj.ocp.solver_options.N_horizon+1, 1);
+            % returns a struct with the following fields:
+            % - min_ev: minimum eigenvalue for each Hessian block.
+            % - max_ev: maximum eigenvalue for each Hessian block.
+            % - condition_number: condition number for each Hessian block.
+            % - condition_number_global: condition number for the full Hessian.
 
-            for n=0:obj.ocp.solver_options.N_horizon
-                if n < obj.ocp.solver_options.N_horizon
-                    Q = obj.get('qp_Q', n);
-                    R = obj.get('qp_R', n);
-                    S = obj.get('qp_S', n);
-                    hess_block = [R, S; S', Q];
-                else
-                    hess_block = Q;
-                end
-
-                eigvals = eig(hess_block);
-                result.min_ev(n+1) = min(eigvals);
-                result.max_ev(n+1) = max(eigvals);
-                result.condition_number(n+1) = max(eigvals) / min(eigvals);
+            if length(varargin) > 0
+                partially_condensed_qp = varargin{1};
+            else
+                partially_condensed_qp = false;
             end
+
+            if partially_condensed_qp
+                num_blocks = obj.ocp.solver_options.qp_solver_cond_N + 1;
+            else
+                num_blocks = obj.ocp.dims.N + 1;
+            end
+            result = struct();
+            result.min_ev = zeros(num_blocks, 1);
+            result.max_ev = zeros(num_blocks, 1);
+            result.condition_number = zeros(num_blocks, 1);
+
+            for n=1:num_blocks
+                if partially_condensed_qp
+                    hess_block = obj.get('pc_hess_block', n-1);
+                else
+                    hess_block = obj.get('hess_block', n-1);
+                end
+                eigvals = eig(hess_block);
+                result.min_ev(n) = min(eigvals);
+                result.max_ev(n) = max(eigvals);
+                result.condition_number_blockwise(n) = max(eigvals) / min(eigvals);
+            end
+            result.condition_number_global = max(result.max_ev) / min(result.min_ev);
         end
 
 
