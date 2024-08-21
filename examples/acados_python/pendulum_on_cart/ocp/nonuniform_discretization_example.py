@@ -133,6 +133,8 @@ def main(discretization='shooting_nodes'):
     qp_solver_cond_N = 8
     ocp.solver_options.qp_solver_cond_N = qp_solver_cond_N
     ocp.solver_options.qp_solver_cond_block_size = (qp_solver_cond_N) * [1] + [N-((qp_solver_cond_N))]
+    # HPIPM settings
+    ocp.solver_options.qp_solver_mu0 = 1e3
 
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = integrator_type
