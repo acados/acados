@@ -77,6 +77,7 @@ class AcadosOcpOptions:
         self.__qp_solver_warm_start = 0
         self.__qp_solver_cond_ric_alg = 1
         self.__qp_solver_ric_alg = 1
+        self.__qp_solver_mu0 = 0.0
         self.__rti_log_residuals = 0
         self.__print_level = 0
         self.__cost_discretization = 'EULER'
@@ -436,6 +437,16 @@ class AcadosOcpOptions:
         Default: 1
         """
         return self.__qp_solver_ric_alg
+
+    @property
+    def qp_solver_mu0(self):
+        """
+        For HPIPM QP solver: Initial value for the barrier parameter.
+        If 0, the default value according to hpipm_mode is used.
+
+        Default: 0
+        """
+        return self.__qp_solver_mu0
 
     @property
     def qp_solver_iter_max(self):
@@ -1222,6 +1233,13 @@ class AcadosOcpOptions:
             self.__levenberg_marquardt = levenberg_marquardt
         else:
             raise Exception('Invalid levenberg_marquardt value. levenberg_marquardt must be a positive float.')
+
+    @qp_solver_mu0.setter
+    def qp_solver_mu0(self, qp_solver_mu0):
+        if isinstance(qp_solver_mu0, float) and qp_solver_mu0 >= 0:
+            self.__qp_solver_mu0 = qp_solver_mu0
+        else:
+            raise Exception('Invalid qp_solver_mu0 value. qp_solver_mu0 must be a positive float.')
 
     @qp_solver_iter_max.setter
     def qp_solver_iter_max(self, qp_solver_iter_max):

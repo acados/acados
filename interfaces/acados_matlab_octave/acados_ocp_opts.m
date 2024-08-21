@@ -73,6 +73,8 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.eps_sufficient_descent = 1e-4;
 
             obj.opts_struct.qp_solver_iter_max = 50;
+            obj.opts_struct.qp_solver_mu0 = 0;
+
             % obj.opts_struct.qp_solver_cond_N = 5; % New horizon after partial condensing
             obj.opts_struct.qp_solver_cond_ric_alg = 1; % 0: dont factorize hessian in the condensing; 1: factorize
             obj.opts_struct.qp_solver_ric_alg = 1; % HPIPM specific
@@ -173,6 +175,8 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.qp_solver_cond_ric_alg = value;
             elseif (strcmp(field, 'qp_solver_ric_alg'))
                 obj.opts_struct.qp_solver_ric_alg = value;
+            elseif (strcmp(field, 'qp_solver_mu0'))
+                obj.opts_struct.qp_solver_mu0 = value;
             elseif (strcmp(field, 'qp_solver_warm_start'))
                 obj.opts_struct.qp_solver_warm_start = value;
             elseif (strcmp(field, 'sim_method'))
