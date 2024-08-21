@@ -618,7 +618,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "qp_print_level"))
     {
-        if !(plan->ocp_qp_solver_plan == FULL_CONDENSING_HPIPM || plan->ocp_qp_solver_plan == PARTIAL_CONDENSING_HPIPM)
+        if (!(plan->ocp_qp_solver_plan.qp_solver == FULL_CONDENSING_HPIPM || plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM))
         {
             MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, "qp_print_level", "HPIPM")
         }
