@@ -2244,6 +2244,11 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
 {%- if solver_options.qp_solver is containing("HPIPM") %}
     // set HPIPM mode: should be done before setting other QP solver options
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_hpipm_mode", "{{ solver_options.hpipm_mode }}");
+
+{% if solver_options.qp_solver_mu0 > 0 %}
+    double qp_solver_mu0 = {{ solver_options.qp_solver_mu0 }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_mu0", &qp_solver_mu0);
+{%- endif %}
 {%- endif %}
 
 {% if solver_options.nlp_solver_type == "SQP" or solver_options.nlp_solver_type == "DDP" %}
