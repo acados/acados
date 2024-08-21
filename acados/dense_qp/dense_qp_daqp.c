@@ -706,6 +706,9 @@ int dense_qp_daqp(void* config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     qp_info *info = (qp_info *) qp_out->misc;
     acados_timer tot_timer, qp_timer, interface_timer;
 
+    // Uncomment to print dense QPs to file for solution with matlab;
+    // d_dense_qp_codegen_matlab("dense_qp_for_matlab.m", "a", qp_in->dim, qp_in);
+
     acados_tic(&tot_timer);
     acados_tic(&interface_timer);
 
