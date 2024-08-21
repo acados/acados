@@ -71,6 +71,7 @@ qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
 qp_solver_warm_start = 1; % 0: cold, 1: warm, 2: hot
 qp_solver_iter_max = 1000; % default is 50; OSQP needs a lot sometimes.
+qp_solver_mu0 = 1e4;
 
 % can vary for integrators
 sim_method_num_stages = 1 * ones(N,1);
@@ -222,6 +223,7 @@ ocp_opts.set('qp_solver_ric_alg', qp_solver_ric_alg);
 ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
 ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
 ocp_opts.set('qp_solver_iter_max', qp_solver_iter_max);
+ocp_opts.set('qp_solver_mu0', qp_solver_mu0);
 ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
