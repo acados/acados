@@ -616,6 +616,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double qp_mu0 = (double) value[0];
         ocp_nlp_solver_opts_set(config, opts, "qp_mu0", &qp_mu0);
     }
+    else if (!strcmp(field, "qp_print_level"))
+    {
+        if (!(plan->ocp_qp_solver_plan.qp_solver == FULL_CONDENSING_HPIPM || plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM))
+        {
+            MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, "qp_print_level", "HPIPM")
+        }
+        acados_size = 1;
+        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+        int qp_print_level = (int) value[0];
+        ocp_nlp_solver_opts_set(config, opts, "qp_print_level", &qp_print_level);
+    }
     else if (!strcmp(field, "warm_start_first_qp"))
     {
         acados_size = 1;
@@ -637,7 +648,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
  constr_lbu, constr_ubu, cost_y_ref[_e], sl, su, x, xdot, u, pi, lam, z, \
  cost_Vu, cost_Vx, cost_Vz, cost_W, cost_Z, cost_Zl, cost_Zu, cost_z,\
  cost_zl, cost_zu, init_x, init_u, init_z, init_xdot, init_gnsf_phi,\
- init_pi, nlp_solver_max_iter, qp_warm_start, qp_solver_mu0, warm_start_first_qp, print_level");
+ init_pi, nlp_solver_max_iter, qp_warm_start, qp_solver_mu0, qp_print_level, warm_start_first_qp, print_level");
     }
 
     return;

@@ -129,7 +129,7 @@ void dense_qp_daqp_opts_set(void *config_, void *opts_, const char *field, void 
     else if (!strcmp(field, "tol_comp"))
     {
         // Complementary slackness is implicitly
-        // handled by the worlking set
+        // handled by the working set
     }
     else if (!strcmp(field, "iter_max"))
     {
