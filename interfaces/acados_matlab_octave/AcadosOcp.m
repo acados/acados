@@ -854,7 +854,7 @@ classdef AcadosOcp < handle
             elseif (strcmp(solver_opts.integrator_type, 'GNSF'))
                 generate_c_code_gnsf(ocp.model, code_gen_opts, model_dir);
             elseif (strcmp(solver_opts.integrator_type, 'DISCRETE')) && strcmp(ocp.model.dyn_ext_fun_type, 'casadi')
-                generate_c_code_disc_dyn(ocp.model, code_gen_opts, model_dir);
+                generate_c_code_discrete_dynamics(ocp.model, code_gen_opts, model_dir);
             end
             if strcmp(ocp.model.dyn_ext_fun_type, 'generic')
                 copyfile( fullfile(pwd, ocp.model.dyn_generic_source), model_dir);

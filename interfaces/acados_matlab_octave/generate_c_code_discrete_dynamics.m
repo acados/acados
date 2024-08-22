@@ -30,7 +30,7 @@
 
 
 
-function generate_c_code_disc_dyn( model, opts, model_dir )
+function generate_c_code_discrete_dynamics( model, opts, model_dir )
 
 import casadi.*
 
