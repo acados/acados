@@ -730,6 +730,54 @@ classdef AcadosOcp < handle
                     opts.nlp_solver_tol_min_step_norm = 0.0;
                 end
             end
+
+            % Set default parameters for globalization
+            if isempty(opts.alpha_min)
+                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                    opts.alpha_min = 1e-17;
+                else
+                    opts.alpha_min = 0.05;
+                end
+            end
+
+            if isempty(opts.alpha_reduction)
+                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                    opts.alpha_reduction = 0.5;
+                else
+                    opts.alpha_reduction = 0.7;
+                end
+            end
+
+            if isempty(opts.eps_sufficient_descent)
+                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                    opts.eps_sufficient_descent = 1e-6;
+                else
+                    opts.eps_sufficient_descent = 1e-4;
+                end
+            end
+
+            if isempty(opts.eval_residual_at_max_iter)
+                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                    opts.eval_residual_at_max_iter = true;
+                else
+                    opts.eval_residual_at_max_iter = false;
+                end
+            end
+
+            if isempty(opts.full_step_dual)
+                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                    opts.full_step_dual = 1;
+                else
+                    opts.full_step_dual = 0;
+                end
+            end
+
+            % sanity check for Funnel globalization and SQP
+            if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH') strcmp(opts.nlp_solver_type, 'SQP')
+                error('FUNNEL_L1PEN_LINESEARCH only supports SQP.')
+            end
+
+            % TODO: implement zoRO description processing here!
         end
 
         function [] = detect_cost_and_constraints(self)
