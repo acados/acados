@@ -82,11 +82,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // mexPrintf("\nin ocp_get: field%s\n", field);
 
     int N = dims->N;
-    /* TODO: MOCP fix dims!!!!!!!!! */
-    int nu = dims->nu[0];
-    int nx = dims->nx[0];
-    int nz = dims->nz[0];
-
     int stage;
 
     if (nrhs==3)
@@ -106,17 +101,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     if (!strcmp(field, "x"))
     {
+        int nx;
         if (nrhs==2)
         {
-            plhs[0] = mxCreateNumericMatrix(nx, N+1, mxDOUBLE_CLASS, mxREAL);
+            int nx0 = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "x");
+            plhs[0] = mxCreateNumericMatrix(nx0, N+1, mxDOUBLE_CLASS, mxREAL);
             double *x = mxGetPr( plhs[0] );
             for (ii=0; ii<=N; ii++)
             {
-                ocp_nlp_out_get(config, dims, out, ii, "x", x+ii*nx);
+                nx = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "x");
+                if (nx != nx0)
+                {
+                    sprintf(buffer, "\nocp_get: cannot get multiple %s values at once due to varying dimension", field);
+                    mexErrMsgTxt(buffer);
+                }
+                ocp_nlp_out_get(config, dims, out, ii, "x", x+ii*nx0);
             }
         }
         else if (nrhs==3)
         {
+            nx = ocp_nlp_dims_get_from_attr(config, dims, out, stage, "x");
             plhs[0] = mxCreateNumericMatrix(nx, 1, mxDOUBLE_CLASS, mxREAL);
             double *x = mxGetPr( plhs[0] );
             ocp_nlp_out_get(config, dims, out, stage, "x", x);
@@ -129,17 +133,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "u"))
     {
+        int nu;
         if (nrhs==2)
         {
-            plhs[0] = mxCreateNumericMatrix(nu, N, mxDOUBLE_CLASS, mxREAL);
+            int nu0 = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "u");
+            plhs[0] = mxCreateNumericMatrix(nu0, N, mxDOUBLE_CLASS, mxREAL);
             double *u = mxGetPr( plhs[0] );
             for (ii=0; ii<N; ii++)
             {
-                ocp_nlp_out_get(config, dims, out, ii, "u", u+ii*nu);
+                nu = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "u");
+                if (nu != nu0)
+                {
+                    sprintf(buffer, "\nocp_get: cannot get multiple %s values at once due to varying dimension", field);
+                    mexErrMsgTxt(buffer);
+                }
+                ocp_nlp_out_get(config, dims, out, ii, "u", u+ii*nu0);
             }
         }
         else if (nrhs==3)
         {
+            nu = ocp_nlp_dims_get_from_attr(config, dims, out, stage, "u");
             plhs[0] = mxCreateNumericMatrix(nu, 1, mxDOUBLE_CLASS, mxREAL);
             double *u = mxGetPr( plhs[0] );
             ocp_nlp_out_get(config, dims, out, stage, "u", u);
@@ -172,17 +185,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "z"))
     {
+        int nz;
         if (nrhs==2)
         {
-            plhs[0] = mxCreateNumericMatrix(nz, N, mxDOUBLE_CLASS, mxREAL);
+            int nz0 = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "z");
+            plhs[0] = mxCreateNumericMatrix(nz0, N, mxDOUBLE_CLASS, mxREAL);
             double *z = mxGetPr( plhs[0] );
             for (ii=0; ii<N; ii++)
             {
+                nz = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "z");
+                if (nz != nz0)
+                {
+                    sprintf(buffer, "\nocp_get: cannot get multiple %s values at once due to varying dimension", field);
+                    mexErrMsgTxt(buffer);
+                }
                 ocp_nlp_out_get(config, dims, out, ii, "z", z+ii*nz);
             }
         }
         else if (nrhs==3)
         {
+            nz = ocp_nlp_dims_get_from_attr(config, dims, out, stage, "z");
             plhs[0] = mxCreateNumericMatrix(nz, 1, mxDOUBLE_CLASS, mxREAL);
             double *z = mxGetPr( plhs[0] );
             ocp_nlp_out_get(config, dims, out, stage, "z", z);
@@ -195,18 +217,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "pi"))
     {
+        int npi;
+
         if (nrhs==2)
         {
-            plhs[0] = mxCreateNumericMatrix(nx, N, mxDOUBLE_CLASS, mxREAL);
+            int npi0 = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "pi");
+            plhs[0] = mxCreateNumericMatrix(npi0, N, mxDOUBLE_CLASS, mxREAL);
             double *pi = mxGetPr( plhs[0] );
             for (ii=0; ii<N; ii++)
             {
-                ocp_nlp_out_get(config, dims, out, ii, "pi", pi+ii*nx);
+                npi = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "pi");
+                if (npi != npi0)
+                {
+                    sprintf(buffer, "\nocp_get: cannot get multiple %s values at once due to varying dimension", field);
+                    mexErrMsgTxt(buffer);
+                }
+                ocp_nlp_out_get(config, dims, out, ii, "pi", pi+ii*npi);
             }
         }
         else if (nrhs==3)
         {
-            plhs[0] = mxCreateNumericMatrix(nx, 1, mxDOUBLE_CLASS, mxREAL);
+            npi = ocp_nlp_dims_get_from_attr(config, dims, out, stage, "pi");
+            plhs[0] = mxCreateNumericMatrix(npi, 1, mxDOUBLE_CLASS, mxREAL);
             double *pi = mxGetPr( plhs[0] );
             ocp_nlp_out_get(config, dims, out, stage, "pi", pi);
         }
@@ -258,8 +290,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "sens_x"))
     {
+        int nx;
         if (nrhs==2)
         {
+            int nx0 = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "x");
+            for (ii=0; ii<=N; ii++)
+            {
+                nx = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "x");
+                if (nx != nx0)
+                {
+                    sprintf(buffer, "\nocp_get: cannot get multiple %s values at once due to varying dimension", field);
+                    mexErrMsgTxt(buffer);
+                }
+            }
+
             plhs[0] = mxCreateNumericMatrix(nx, N+1, mxDOUBLE_CLASS, mxREAL);
             double *x = mxGetPr( plhs[0] );
             for (ii=0; ii<=N; ii++)
@@ -269,6 +313,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
         else if (nrhs==3)
         {
+            nx = ocp_nlp_dims_get_from_attr(config, dims, out, stage, "x");
             plhs[0] = mxCreateNumericMatrix(nx, 1, mxDOUBLE_CLASS, mxREAL);
             double *x = mxGetPr( plhs[0] );
             ocp_nlp_out_get(config, dims, sens_out, stage, "x", x);
@@ -281,8 +326,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "sens_u"))
     {
+        // TODO: fix for MOCP
+        int nu;
         if (nrhs==2)
         {
+            int nu0 = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "u");
+            for (ii=0; ii<N; ii++)
+            {
+                nu = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "u");
+                if (nu0 != nu)
+                {
+                    sprintf(buffer, "\nocp_get: cannot get multiple %s values at once due to varying dimension", field);
+                    mexErrMsgTxt(buffer);
+                }
+            }
             plhs[0] = mxCreateNumericMatrix(nu, N, mxDOUBLE_CLASS, mxREAL);
             double *u = mxGetPr( plhs[0] );
             for (ii=0; ii<N; ii++)
@@ -292,6 +349,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
         else if (nrhs==3)
         {
+            nu = ocp_nlp_dims_get_from_attr(config, dims, out, stage, "u");
             plhs[0] = mxCreateNumericMatrix(nu, 1, mxDOUBLE_CLASS, mxREAL);
             double *u = mxGetPr( plhs[0] );
             ocp_nlp_out_get(config, dims, sens_out, stage, "u", u);
@@ -304,18 +362,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "sens_pi"))
     {
+        int npi;
         if (nrhs==2)
         {
-            plhs[0] = mxCreateNumericMatrix(nx, N, mxDOUBLE_CLASS, mxREAL);
+            int npi0 = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "pi");
+            plhs[0] = mxCreateNumericMatrix(npi0, N, mxDOUBLE_CLASS, mxREAL);
+
             double *pi = mxGetPr( plhs[0] );
             for (ii=0; ii<N; ii++)
             {
-                ocp_nlp_out_get(config, dims, sens_out, ii, "pi", pi+ii*nx);
+                if (npi0 != npi)
+                {
+                    sprintf(buffer, "\nocp_get: cannot get multiple %s values at once due to varying dimension", field);
+                    mexErrMsgTxt(buffer);
+                }
+                npi = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "pi");
+                ocp_nlp_out_get(config, dims, sens_out, ii, "pi", pi+ii*npi);
             }
         }
         else if (nrhs==3)
         {
-            plhs[0] = mxCreateNumericMatrix(nx, 1, mxDOUBLE_CLASS, mxREAL);
+            npi = ocp_nlp_dims_get_from_attr(config, dims, out, stage, "pi");
+            plhs[0] = mxCreateNumericMatrix(npi, 1, mxDOUBLE_CLASS, mxREAL);
             double *pi = mxGetPr( plhs[0] );
             ocp_nlp_out_get(config, dims, sens_out, stage, "pi", pi);
         }
@@ -403,7 +471,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             solver_type=2;
 #endif
         // ocp solver (not dense)
-        if(solver_type==1)
+        if (solver_type==1)
         {
             ocp_qp_in *qp_in = qp_in_;
             int *nu = qp_in->dim->nu;
@@ -425,7 +493,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             }
         }
         // dense solver
-        else if(solver_type==2)
+        else if (solver_type==2)
         {
             dense_qp_in *qp_in = qp_in_;
             int nv = qp_in->dim->nv;
@@ -477,6 +545,4 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
 
     return;
-
 }
-
