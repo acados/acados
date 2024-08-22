@@ -89,7 +89,7 @@ classdef AcadosMultiphaseOcp < handle
             obj.mocp_opts = AcadosMultiphaseOptions();
 
             obj.parameter_values = cell(n_phases, 1);
-            obj.problem_class = 'OCP';
+            obj.problem_class = 'MOCP';
             obj.simulink_opts = [];
             obj.cython_include_dirs = [];
             obj.json_file = 'mocp.json';

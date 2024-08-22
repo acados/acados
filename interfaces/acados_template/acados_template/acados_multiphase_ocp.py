@@ -165,7 +165,7 @@ class AcadosMultiphaseOcp:
         self.cython_include_dirs = [np.get_include(), get_paths()['include']]
 
         self.__parameter_values = [np.array([]) for _ in range(n_phases)]
-
+        self.__problem_class = "MOCP"
         self.__json_file = 'mocp.json'
 
         self.code_export_directory = 'c_generated_code'
