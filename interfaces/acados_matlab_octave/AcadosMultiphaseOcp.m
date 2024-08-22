@@ -109,7 +109,8 @@ classdef AcadosMultiphaseOcp < handle
         end
 
 
-        function set_phase(self, phase_idx, ocp)
+        function set_phase(self, ocp, phase_idx)
+            % Note: phase_idx is 1-indexed in contrast to Python!
             if phase_idx > self.n_phases
                 error('phase_idx must be less than or equal to the number of phases');
             end
