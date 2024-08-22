@@ -93,7 +93,7 @@ classdef AcadosOcpCost < handle
             obj.cost_source_ext_cost_0 = [];
             obj.cost_function_ext_cost_0 = [];
             % intermediate
-            obj.cost_type   = 'AUTO';
+            obj.cost_type = 'LINEAR_LS';
             obj.W           = [];
             obj.Vx          = [];
             obj.Vu          = [];
@@ -107,7 +107,7 @@ classdef AcadosOcpCost < handle
             obj.cost_source_ext_cost = [];
             obj.cost_function_ext_cost = [];
             % terminal
-            obj.cost_type_e = 'AUTO';
+            obj.cost_type_e = 'LINEAR_LS';
             obj.W_e         = [];
             obj.Vx_e        = [];
             obj.yref_e      = [];
