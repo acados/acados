@@ -86,6 +86,8 @@ classdef AcadosMultiphaseOcp < handle
             self.dummy_ocp_list = cell(n_phases, 1);
 
             obj.solver_options = AcadosOcpOptions();
+            obj.solver_options.N_horizon = obj.N_horizon; % NOTE: to not change options when making ocp consistent
+
             obj.mocp_opts = AcadosMultiphaseOptions();
 
             obj.parameter_values = cell(n_phases, 1);
@@ -175,7 +177,6 @@ classdef AcadosMultiphaseOcp < handle
             for i=1:self.n_phases
                 ocp = AcadosOcp();
                 ocp.dims = self.phases_dims{i};
-                ocp.opts.N_horizon = self.N_horizon; % NOTE: to not change options when making ocp consistent
                 ocp.model = self.model{i};
                 ocp.constraints = self.constraints{i};
                 ocp.cost = self.cost{i};
