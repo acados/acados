@@ -123,7 +123,7 @@ classdef AcadosOcpOptions < handle
             obj.nlp_solver_tol_ineq = 1e-6;
             obj.nlp_solver_tol_comp = 1e-6;
             obj.nlp_solver_tol_min_step_norm = 1e-12;
-            obj.nlp_solver_max_iter = 50;
+            obj.nlp_solver_max_iter = 100;
             obj.nlp_solver_ext_qp_res = 0;
             obj.nlp_solver_warm_start_first_qp = false;
             obj.globalization = 'FIXED_STEP';
@@ -144,8 +144,8 @@ classdef AcadosOcpOptions < handle
             obj.qp_solver_iter_max = 50;
             obj.qp_solver_cond_N = [];
             obj.qp_solver_cond_block_size = [];
-            obj.qp_solver_cond_ric_alg = 0;
-            obj.qp_solver_ric_alg = 0;
+            obj.qp_solver_cond_ric_alg = 1;
+            obj.qp_solver_ric_alg = 1;
             obj.qp_solver_mu0 = 0;
             obj.rti_log_residuals = 0;
             obj.print_level = 0;
