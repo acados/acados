@@ -214,7 +214,7 @@ def projFrenSerretBasis(s: Union[ca.MX, float]):
     etBar_MX = d2Gamma_ds2
     enBar_MX = (1/ kap**3) * (kap**2 * d3Gamma_ds3 - d2Gamma_ds2 @ d3Gamma_ds3.T @ d2Gamma_ds2)
     ebBar_MX = (1/ kap) * ca.cross(dGamma_ds, d3Gamma_ds3)
-    tau_MX =  ca.dot(enBar_MX, ca.cross(et_MX, eb_MX))
+    tau_MX =  ca.dot(en_MX, ebBar_MX) 
     tauBar_MX =  ca.jacobian(tau_MX, s)
 
     return kap, tau_MX, et_MX, en_MX, eb_MX, kapBar_MX, tauBar_MX, etBar_MX, enBar_MX, ebBar_MX
