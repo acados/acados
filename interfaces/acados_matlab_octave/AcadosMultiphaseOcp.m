@@ -223,7 +223,7 @@ classdef AcadosMultiphaseOcp < handle
                 for i=2:self.n_phases
                     if nx_list(i) ~= nx_list(i-1)
                         disp(['nx differs between phases ', num2str(i-1), ' and ', num2str(i), ': ', num2str(nx_list(i-1)), ' != ', num2str(nx_list(i))]);
-                        if self.N_list(i-1) ~= 1 || self.mocp_opts.integrator_type{i-1} ~= 'DISCRETE'
+                        if self.N_list(i-1) ~= 1 || ~strcmp(self.mocp_opts.integrator_type{i-1}, 'DISCRETE')
                             error(['detected stage transition with different nx from phase ', num2str(i-1), ' to ', num2, ', which is only supported for integrator_type=''DISCRETE'' and N_list[i] == 1.']);
                         end
                     end
@@ -242,6 +242,7 @@ classdef AcadosMultiphaseOcp < handle
             template_list{end+1} = {'acados_multi_solver.in.h', ['acados_solver_', self.name, '.h']};
             template_list{end+1} = {'acados_multi_solver.in.c', ['acados_solver_', self.name, '.c']};
             template_list{end+1} = {'multi_CMakeLists.in.txt', 'CMakeLists.txt'};
+            template_list{end+1} = {'multi_Makefile.in', 'Makefile'};
 
             % MEX files
             matlab_template_path = 'matlab_templates';
@@ -259,6 +260,7 @@ classdef AcadosMultiphaseOcp < handle
         function generate_external_functions(self)
             % generate external functions
             for i=1:self.n_phases
+                disp(['generating external functions for phase ', num2str(i)]);
                 % this is the only option that can vary and influence external functions to be generated
                 self.dummy_ocp_list{i}.solver_options.integrator_type = self.mocp_opts.integrator_type{i};
                 self.dummy_ocp_list{i}.generate_external_functions();
