@@ -115,7 +115,14 @@ classdef AcadosMultiphaseOcp < handle
                 error('phase_idx must be less than or equal to the number of phases');
             end
 
-            % TODO: check options, see python
+            % Check solver options
+            non_default_opts = find_non_default_fields_of_obj(ocp.solver_options);
+
+            if ~isempty(non_default_opts)
+                fprintf('WARNING: set_phase: Phase %d contains non-default solver options: %s, which will be ignored.\n', ...
+                        phase_idx, strjoin(non_default_opts, ', '));
+                fprintf('Solver options need to be set via AcadosMultiphaseOcp.solver_options or mocp_opts instead.\n');
+            end
 
             % set phase
             self.model{phase_idx} = ocp.model;
@@ -127,6 +134,10 @@ classdef AcadosMultiphaseOcp < handle
         function make_consistent(self)
             % check options
             self.mocp_opts.make_consistent(self.solver_options, self.n_phases)
+
+            if ~isempty(self.simulink_opts)
+                error('Simulink options are not supported yet');
+            end
 
             % check phases formulation objects are distinct
             if ~is_octave() % octave does not support object comparison
@@ -189,24 +200,28 @@ classdef AcadosMultiphaseOcp < handle
                 ocp.solver_options.collocation_type = self.mocp_opts.collocation_type{i};
                 ocp.solver_options.cost_discretization = self.mocp_opts.cost_discretization{i};
 
-                % TODO: implement some check like this
-                % if i ~= self.n_phases - 1
-                %     nondefault_fields = [];
-                %     nondefault_fields += find_non_default_fields_of_obj(ocp.cost, stage_type='terminal');
-                %     nondefault_fields += find_non_default_fields_of_obj(ocp.constraints, stage_type='terminal');
-                %     nondefault_fields += find_non_default_fields_of_obj(ocp.model, stage_type='terminal');
-                %     if length(nondefault_fields) > 0
-                %         disp(['Phase ', num2str(i), ' contains non-default terminal fields: ', num2str(nondefault_fields), ', which will be ignored.']);
-                %     end
-                % elseif i ~= 0
-                %     nondefault_fields = [];
-                %     nondefault_fields += find_non_default_fields_of_obj(ocp.cost, stage_type='initial');
-                %     nondefault_fields += find_non_default_fields_of_obj(ocp.constraints, stage_type='initial');
-                %     nondefault_fields += find_non_default_fields_of_obj(ocp.model, stage_type='initial');
-                %     if length(nondefault_fields) > 0
-                %         disp(['Phase ', num2str(i), ' contains non-default initial fields: ', num2str(nondefault_fields), ', which will be ignored.']);
-                %     end
-                % end
+                % check for non-default fields in terminal/initial phase that are not used
+                if i ~= self.n_phases % not terminal phase
+                    nondefault_fields = {};
+
+                    nondefault_fields = [nondefault_fields, find_non_default_fields_of_obj(ocp.cost, 'terminal')];
+                    nondefault_fields = [nondefault_fields, find_non_default_fields_of_obj(ocp.constraints, 'terminal')];
+                    nondefault_fields = [nondefault_fields, find_non_default_fields_of_obj(ocp.model, 'terminal')];
+
+                    if ~isempty(nondefault_fields)
+                        disp(['Phase ', num2str(i), ' contains non-default terminal fields: ', strjoin(nondefault_fields, ', '), ', which will be ignored.']);
+                    end
+                elseif i ~= 1 % not initial phase
+                    nondefault_fields = {};
+
+                    nondefault_fields = [nondefault_fields, find_non_default_fields_of_obj(ocp.cost, 'initial')];
+                    nondefault_fields = [nondefault_fields, find_non_default_fields_of_obj(ocp.constraints, 'initial')];
+                    nondefault_fields = [nondefault_fields, find_non_default_fields_of_obj(ocp.model, 'initial')];
+
+                    if ~isempty(nondefault_fields)
+                        disp(['Phase ', num2str(i), ' contains non-default initial fields: ', strjoin(nondefault_fields, ', '), ', which will be ignored.']);
+                    end
+                end
 
                 disp(['Calling make_consistent for phase ', num2str(i), '.']);
                 ocp.make_consistent();
