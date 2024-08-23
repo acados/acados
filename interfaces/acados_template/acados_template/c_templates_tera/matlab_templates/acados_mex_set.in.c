@@ -609,7 +609,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {% if np_max > 0 %}
         MEX_DIM_CHECK_MAT(fun_name, field, nrow, ncol, nrow, 2);
         // create int index vector
-        // TODO: MOCP get max np!
         int idx_tmp[{{ np_max }}];
         for (int ip = 0; ip<nrow; ip++)
             idx_tmp[ip] = (int) value[ip];
