@@ -52,6 +52,7 @@ targets = {
     '../simple_dae_model/example_ocp.m';
     '../swarming/example_ocp.m';
     '../wind_turbine_nx6/example_ocp.m';
+    '../mocp_transition_example/main_multiphase_ocp.m';
 };
 
 

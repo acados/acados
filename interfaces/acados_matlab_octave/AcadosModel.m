@@ -235,6 +235,19 @@ classdef AcadosModel < handle
             end
         end
 
+
+        function s = struct(self)
+            if exist('properties')
+                publicProperties = eval('properties(self)');
+            else
+                publicProperties = fieldnames(self);
+            end
+            s = struct();
+            for fi = 1:numel(publicProperties)
+                s.(publicProperties{fi}) = self.(publicProperties{fi});
+            end
+        end
+
         function out = convert_to_struct_for_json_dump(self)
             out = struct();
             % all but casadi expressions / variables

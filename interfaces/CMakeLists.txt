@@ -95,6 +95,11 @@ if(ACADOS_OCTAVE)
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/generic_dyn_disc
         octave --no-gui --no-window-system ./run_generic_disc_dyn_example.m)
 
+    # MOCP
+    add_test(NAME octave_mocp_transition_test
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/mocp_transition_example
+        octave --no-gui --no-window-system ./main_multiphase_ocp.m)
+
     # Force serial execution for tests in the same directory
     # Directory test
     set_tests_properties(octave_new_ocp PROPERTIES DEPENDS octave_new_sim)

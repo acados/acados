@@ -30,7 +30,7 @@
 
 
 
-function generate_c_code_disc_dyn( model, opts, model_dir )
+function generate_c_code_discrete_dynamics( model, opts, model_dir )
 
 import casadi.*
 
@@ -42,6 +42,16 @@ x = model.x;
 u = model.u;
 p = model.p;
 nx = length(x);
+
+if isempty(model.disc_dyn_expr)
+    error('Field `disc_dyn_expr` is required for discrete dynamics.')
+end
+phi = model.disc_dyn_expr;
+nx1 = length(phi);
+
+if nx ~= nx1
+    disp('Warning: generate_c_code_discrete_dynamics: got nx ~= nx1, this only works for a single shooting interval.');
+end
 
 % check type
 if isa(x(1), 'casadi.SX')
@@ -55,17 +65,11 @@ model_name = model.name;
 return_dir = pwd;
 cd(model_dir)
 
-if isempty(model.disc_dyn_expr)
-    error('Field `disc_dyn_expr` is required for discrete dynamics.')
-end
-phi = model.disc_dyn_expr;
-
-% assume nx1 = nx !!!
 % multipliers for hessian
 if isSX
-    lam = SX.sym('lam', nx, 1);
+    lam = SX.sym('lam', nx1, 1);
 else
-    lam = MX.sym('lam', nx, 1);
+    lam = MX.sym('lam', nx1, 1);
 end
 % generate jacobians
 jac_ux = jacobian(phi, [u; x]);

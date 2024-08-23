@@ -46,7 +46,7 @@ function sim_generate_c_code(sim)
     elseif (strcmp(sim.solver_options.integrator_type, 'GNSF'))
         generate_c_code_gnsf(sim.model, code_gen_opts, model_dir);
     elseif (strcmp(sim.solver_options.integrator_type, 'DISCRETE'))
-        generate_c_code_disc_dyn(sim.model, code_gen_opts, model_dir);
+        generate_c_code_discrete_dynamics(sim.model, code_gen_opts, model_dir);
     end
     if strcmp(sim.model.dyn_ext_fun_type, 'generic')
         copyfile(fullfile(pwd, sim.model.dyn_generic_source), model_dir);
