@@ -63,8 +63,8 @@ def main():
     v_stds_plant = .8 * np.array([0.1, 0.1, .5, 0.3])
     w_stds_plant = np.zeros((4,))
 
-    V = np.diag(v_stds_plant)
-    W = np.diag(w_stds_plant)
+    V_mat = np.diag(v_stds_plant)
+    W_mat = np.diag(w_stds_plant)
 
     # ocp model and solver
     model = export_pendulum_ode_model()
@@ -118,10 +118,10 @@ def main():
     for i in range(N_mhe):
 
         # measurement
-        simY[i,:] = simX[i,:] + (V @ np.random.standard_normal((nx,1))).T
+        simY[i,:] = simX[i,:] + (V_mat @ np.random.standard_normal((nx,1))).T
 
         # simulate one step
-        w = W @ np.random.standard_normal((nx,))
+        w = W_mat @ np.random.standard_normal((nx,))
         plant.set("u", w)
         plant.set("p", u0)
         plant.set("x", simX[i,:])
@@ -183,9 +183,9 @@ def main():
 
         ### simulation ###
         # measurement
-        simY[i,:] = simX[i, :] + (V @ np.random.standard_normal((nx,1))).T
+        simY[i,:] = simX[i, :] + (V_mat @ np.random.standard_normal((nx,1))).T
 
-        w = W @ np.random.standard_normal((nx,))
+        w = W_mat @ np.random.standard_normal((nx,))
         plant.set("u", w)
         plant.set("p", simU[i,:])
         plant.set("x", simX[i,:])
