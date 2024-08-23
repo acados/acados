@@ -80,9 +80,6 @@ def main():
     # mhe model and solver
     model_mhe = export_mhe_ode_model()
 
-    nw = model_mhe.u.rows()
-    ny = nx
-
     # inverse covariances, R_mhe has to be scaled with h
     Q_mhe = np.diag(1/w_stds_mhe)
     R_mhe = 1/Ts*np.diag(1/v_stds_mhe)
@@ -103,7 +100,6 @@ def main():
     simY = np.zeros((Nsim+1, nx))
 
     simXest = np.zeros((Nsim+1, nx))
-    simWest = np.zeros((Nsim+1, nx))
 
     # arrival cost mean & initial state
     x0_plant = np.array([0.1, np.pi + 0.5, -0.05, 0.05])
@@ -138,7 +134,6 @@ def main():
 
         # get solution
         simX[i+1,:] = plant.get("x")
-
 
     # reference for mhe
     yref = np.zeros((2*nx, ))
