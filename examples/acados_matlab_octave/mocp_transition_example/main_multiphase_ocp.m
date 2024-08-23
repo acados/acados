@@ -136,6 +136,7 @@ ylabel('acceleration');
 xlabel('t [s]');
 xlim([0, settings.T_HORIZON]);
 
-if is_octave()
-    waitforbuttonpress;
-end
+% to show plot in octave, commented to run example on CI
+% if is_octave()
+%     waitforbuttonpress;
+% end
