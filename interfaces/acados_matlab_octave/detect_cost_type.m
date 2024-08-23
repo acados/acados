@@ -62,7 +62,7 @@ function detect_cost_type(model, cost, dims, stage_type)
         disp('Structure detection for initial cost term');
     end
 
-    if ~(isa(expr_cost, 'casadi.SX') || isa(expr_cost, 'casadi.SX'))
+    if ~(isa(expr_cost, 'casadi.SX') || isa(expr_cost, 'casadi.MX'))
         disp('expr_cost =')
         disp(expr_cost)
         error("Cost type detection require definition of cost term as CasADi SX or MX.")

@@ -122,8 +122,8 @@ classdef AcadosOcpOptions < handle
             obj.nlp_solver_tol_eq = 1e-6;
             obj.nlp_solver_tol_ineq = 1e-6;
             obj.nlp_solver_tol_comp = 1e-6;
-            obj.nlp_solver_tol_min_step_norm = 1e-12;
-            obj.nlp_solver_max_iter = 50;
+            obj.nlp_solver_tol_min_step_norm = [];
+            obj.nlp_solver_max_iter = 100;
             obj.nlp_solver_ext_qp_res = 0;
             obj.nlp_solver_warm_start_first_qp = false;
             obj.globalization = 'FIXED_STEP';
@@ -144,8 +144,8 @@ classdef AcadosOcpOptions < handle
             obj.qp_solver_iter_max = 50;
             obj.qp_solver_cond_N = [];
             obj.qp_solver_cond_block_size = [];
-            obj.qp_solver_cond_ric_alg = 0;
-            obj.qp_solver_ric_alg = 0;
+            obj.qp_solver_cond_ric_alg = 1;
+            obj.qp_solver_ric_alg = 1;
             obj.qp_solver_mu0 = 0;
             obj.rti_log_residuals = 0;
             obj.print_level = 0;
@@ -158,12 +158,12 @@ classdef AcadosOcpOptions < handle
             obj.exact_hess_constr = 1;
             obj.fixed_hess = 0;
             obj.ext_cost_num_hess = 0;
-            obj.alpha_min = 0.05;
-            obj.alpha_reduction = 0.7;
+            obj.alpha_min = [];
+            obj.alpha_reduction = [];
             obj.line_search_use_sufficient_descent = 0;
             obj.globalization_use_SOC = 0;
-            obj.full_step_dual = 0;
-            obj.eps_sufficient_descent = 1e-4;
+            obj.full_step_dual = [];
+            obj.eps_sufficient_descent = [];
             obj.hpipm_mode = 'BALANCE';
             obj.with_solution_sens_wrt_params = 0;
             obj.with_value_sens_wrt_params = 0;
@@ -174,7 +174,7 @@ classdef AcadosOcpOptions < handle
             obj.adaptive_levenberg_marquardt_mu_min = 1e-16;
             obj.adaptive_levenberg_marquardt_mu0 = 1e-3;
             obj.log_primal_step_norm = 0;
-            obj.eval_residual_at_max_iter = 0;
+            obj.eval_residual_at_max_iter = [];
 
             obj.ext_fun_compile_flags = '-O2';
             obj.model_external_shared_lib_dir = [];
