@@ -130,7 +130,7 @@ def main():
         status = plant.solve()
 
         if status != 0:
-            raise Exception('integrator returned status {} in step {}. Exiting.'.format(status, i))
+            raise Exception(f'integrator returned status {status} in step {i}.')
 
         # get solution
         simX[i+1,:] = plant.get("x")
@@ -163,7 +163,7 @@ def main():
         status = acados_solver_mhe.solve()
 
         if status != 0:
-            raise Exception('estimator returned status {} in step {}. Exiting.'.format(status, i))
+            raise Exception(f'estimator returned status {status} in step {i}.')
         simXest[i,:] = acados_solver_mhe.get(N_mhe, "x")
 
         # update arrival cost
@@ -177,7 +177,7 @@ def main():
         status = acados_solver_ocp.solve()
         # acados_solver_ocp.print_statistics()
         if status != 0:
-            raise Exception('controller returned status {} in step {}. Exiting.'.format(status, i))
+            raise Exception(f'controller returned status {status} in step {i}.')
 
         simU[i:, ] = acados_solver_ocp.get(0, "u")
 
@@ -192,7 +192,7 @@ def main():
 
         status = plant.solve()
         if status != 0:
-            raise Exception('integrator returned status {} in step {}. Exiting.'.format(status, i))
+            raise Exception(f'integrator returned status {status} in step {i}.')
 
         simX[i+1,:] = plant.get("x")
 
