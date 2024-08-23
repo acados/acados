@@ -44,7 +44,7 @@ classdef AcadosMultiphaseOptions < handle
 
         function make_consistent(self, opts, n_phases)
             % check if all fields are lists of length n_phases
-            INTEGRATOR_TYPE_VALUES = {'ERK', 'IRK', 'GNSF', "DISCRETE", 'LIFTED_IRK'};
+            INTEGRATOR_TYPE_VALUES = {'ERK', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK'};
             COLLOCATION_TYPE_VALUES = {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA'};
             COST_DISCRETIZATION_VALUES = {'EULER', 'INTEGRATOR'};
 
@@ -54,7 +54,7 @@ classdef AcadosMultiphaseOptions < handle
                 if ~iscell(self.(prop))
                     error('AcadosMultiphaseOptions.%s must be a cell array, got %s.', prop, class(self.(prop)));
                 end
-                if length(self.(prop)) == 0
+                if isempty(self.(prop))
                     % non varying field, use value from ocp opts
                     for i = 1:n_phases
                         self.(prop){i} = opts.(prop);
