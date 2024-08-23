@@ -75,19 +75,19 @@ def main():
     Q_ocp = np.diag([1e3, 1e3, 1e-2, 1e-2])
     R_ocp = 1 * np.eye(1)
 
-    acados_solver_ocp = export_ocp_solver(model, N_ocp, Ts, Q_ocp, R_ocp, Fmax=u_max)
+    acados_ocp_solver = export_ocp_solver(model, N_ocp, Ts, Q_ocp, R_ocp, Fmax=u_max)
 
     # mhe model and solver
     model_mhe = export_mhe_ode_model()
 
-    # inverse covariances, R_mhe has to be scaled with h
+    # inverse covariances, R_mhe has to be scaled with time step
     Q_mhe = np.diag(1/w_stds_mhe)
     R_mhe = 1/Ts*np.diag(1/v_stds_mhe)
 
     # arrival cost weighting
     Q0_mhe = 0.01*Q_mhe
 
-    acados_solver_mhe = export_mhe_solver(model_mhe, N_mhe, Ts, Q_mhe, Q0_mhe, R_mhe)
+    acados_mhe_solver = export_mhe_solver(model_mhe, N_mhe, Ts, Q_mhe, Q0_mhe, R_mhe)
 
     # integrator/plant
     plant = export_ode_mhe_integrator(model_mhe, Ts)
@@ -110,9 +110,9 @@ def main():
     # initial state
     simX[0,:] = x0_plant
 
-    # init solvers
+    # initialize MHE solver
     for i in range(N_mhe):
-        acados_solver_mhe.set(i, "x", x0_bar)
+        acados_mhe_solver.set(i, "x", x0_bar)
 
     # simulate for N_mhe steps with zero input
     for i in range(N_mhe):
@@ -120,20 +120,9 @@ def main():
         # measurement
         simY[i,:] = simX[i,:] + (V_mat @ np.random.standard_normal((nx,1))).T
 
-        # simulate one step
+        # simulate
         w = W_mat @ np.random.standard_normal((nx,))
-        plant.set("u", w)
-        plant.set("p", u0)
-        plant.set("x", simX[i,:])
-
-        # solve
-        status = plant.solve()
-
-        if status != 0:
-            raise Exception(f'integrator returned status {status} in step {i}.')
-
-        # get solution
-        simX[i+1,:] = plant.get("x")
+        simX[i+1,:] = plant.simulate(x=simX[i,:], u=w, p=u0)
 
     # reference for mhe
     yref = np.zeros((2*nx, ))
@@ -149,52 +138,34 @@ def main():
         yref_0[:nx] = simY[k, :]
         yref_0[2*nx:] = x0_bar
 
-        acados_solver_mhe.set(0, "yref", yref_0)
+        acados_mhe_solver.set(0, "yref", yref_0)
         # set controls
-        acados_solver_mhe.set(0, "p", simU[k,:])
+        acados_mhe_solver.set(0, "p", simU[k,:])
 
         for j in range(1, N_mhe):
             # set measurements
             yref[:nx] = simY[k+j, :]
-            acados_solver_mhe.set(j, "yref", yref)
+            acados_mhe_solver.set(j, "yref", yref)
             # set controls
-            acados_solver_mhe.set(j, "p", simU[k+j,:])
+            acados_mhe_solver.set(j, "p", simU[k+j,:])
 
-        status = acados_solver_mhe.solve()
+        status = acados_mhe_solver.solve()
 
         if status != 0:
             raise Exception(f'estimator returned status {status} in step {i}.')
-        simXest[i,:] = acados_solver_mhe.get(N_mhe, "x")
+        simXest[i,:] = acados_mhe_solver.get(N_mhe, "x")
 
         # update arrival cost
-        x0_bar = acados_solver_mhe.get(1, "x")
+        x0_bar = acados_mhe_solver.get(1, "x")
 
         ### control ###
-        # update initial condition of ocp solver
-        acados_solver_ocp.set(0, "lbx", simXest[i, :])
-        acados_solver_ocp.set(0, "ubx", simXest[i, :])
-
-        status = acados_solver_ocp.solve()
-        # acados_solver_ocp.print_statistics()
-        if status != 0:
-            raise Exception(f'controller returned status {status} in step {i}.')
-
-        simU[i:, ] = acados_solver_ocp.get(0, "u")
+        simU[i:, ] = acados_ocp_solver.solve_for_x0(simXest[i, :])
 
         ### simulation ###
         # measurement
         simY[i,:] = simX[i, :] + (V_mat @ np.random.standard_normal((nx,1))).T
-
         w = W_mat @ np.random.standard_normal((nx,))
-        plant.set("u", w)
-        plant.set("p", simU[i,:])
-        plant.set("x", simX[i,:])
-
-        status = plant.solve()
-        if status != 0:
-            raise Exception(f'integrator returned status {status} in step {i}.')
-
-        simX[i+1,:] = plant.get("x")
+        simX[i+1,:] = plant.simulate(x=simX[i,:], u=w, p=simU[i,:])
 
     # plot
     print('estimation error p', np.linalg.norm(simX[:, 0] - simXest[:, 0]))
