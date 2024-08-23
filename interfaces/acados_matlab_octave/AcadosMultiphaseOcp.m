@@ -121,7 +121,7 @@ classdef AcadosMultiphaseOcp < handle
             if ~isempty(non_default_opts)
                 fprintf('WARNING: set_phase: Phase %d contains non-default solver options: %s, which will be ignored.\n', ...
                         phase_idx, strjoin(non_default_opts, ', '));
-                fprintf('Solver options need to be set via AcadosMultiphaseOcp.solver_options or mocp_opts instead.\n');
+                fprintf('Solver options need to be set via AcadosMultiphaseOcp.solver_options and via AcadosMultiphaseOcp.mocp_opts for options that can only vary in MOCP.\n');
             end
 
             % set phase
