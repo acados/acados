@@ -44,9 +44,9 @@ classdef AcadosMultiphaseOptions < handle
 
         function make_consistent(self, opts, n_phases)
             % check if all fields are lists of length n_phases
-            INTEGRATOR_TYPES = {'ERK', 'IRK', 'GNSF'};
-            COLLOCATION_TYPES = {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA'};
-            COST_DISCRETIZATION_TYPES = {'EULER', 'INTEGRATOR'};
+            INTEGRATOR_TYPE_VALUES = {'ERK', 'IRK', 'GNSF', "DISCRETE", 'LIFTED_IRK'};
+            COLLOCATION_TYPE_VALUES = {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA'};
+            COST_DISCRETIZATION_VALUES = {'EULER', 'INTEGRATOR'};
 
             prop_names = {'integrator_type', 'collocation_type', 'cost_discretization'};
             for prop = prop_names
@@ -61,6 +61,11 @@ classdef AcadosMultiphaseOptions < handle
                     end
                 elseif length(self.(prop)) ~= n_phases
                     error('AcadosMultiphaseOptions.%s must be a cell array of length n_phases, got %d.', prop, length(self.(prop)));
+                end
+                for i = 1:n_phases
+                    if ~any(strcmp(self.(prop){i}, eval([upper(prop), '_VALUES'])))
+                        error('AcadosMultiphaseOptions.%s{%d} must be one of %s, got %s.', prop, i, strjoin(eval([upper(prop), '_VALUES']), ', '), self.(prop){i});
+                    end
                 end
             end
         end
