@@ -41,6 +41,7 @@ from .acados_ocp_cost import AcadosOcpCost
 from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_ocp_options import AcadosOcpOptions, INTEGRATOR_TYPES, COLLOCATION_TYPES, COST_DISCRETIZATION_TYPES
 from .acados_ocp import AcadosOcp
+from .casadi_function_generation import GenerateContext
 from .utils import make_object_json_dumpable, get_acados_path, format_class_dict, get_shared_lib_ext, render_template
 
 
@@ -405,8 +406,14 @@ class AcadosMultiphaseOcp:
         return
 
 
-    def generate_external_functions(self):
+    def generate_external_functions(self) -> GenerateContext:
+        # options for code generation
+        context_list = []
+
         for i in range(self.n_phases):
             # this is the only option that can vary and influence external functions to be generated
             self.dummy_ocp_list[i].solver_options.integrator_type = self.mocp_opts.integrator_type[i]
-            self.dummy_ocp_list[i].generate_external_functions()
+            context = self.dummy_ocp_list[i].generate_external_functions()
+            context_list.append(context)
+
+        return context_list

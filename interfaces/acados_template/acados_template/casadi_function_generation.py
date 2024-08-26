@@ -103,6 +103,8 @@ class GenerateContext:
         print(f"self.pool_names: {self.pool_names}")
 
         # TODO: split p and p slow and don't allow variables to be in both?!
+        # TODO: add model name to function
+        # TODO: generalize for multiphase OCP
         fun = ca.Function('helpers', [self.model.p], y, ['p'], self.pool_names)
 
         # change directory
@@ -117,6 +119,7 @@ class GenerateContext:
 
         os.chdir(cwd)
 
+        # TODO: generalize for multiphase OCP
         with open("custom_update_function.c", "w") as out:
             out.write("""
             #include <stdlib.h>

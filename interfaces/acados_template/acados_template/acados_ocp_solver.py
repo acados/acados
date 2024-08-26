@@ -114,7 +114,12 @@ class AcadosOcpSolver:
 
         # generate code (external functions and templated code)
         context = acados_ocp.generate_external_functions()
-        context.finalize()
+        if isinstance(acados_ocp, AcadosMultiphaseOcp):
+            # TODO: fix this for multi-phase
+            for c in context:
+                c.finalize()
+        else:
+            context.finalize()
         acados_ocp.dump_to_json()
         acados_ocp.render_templates(cmake_builder=cmake_builder)
 

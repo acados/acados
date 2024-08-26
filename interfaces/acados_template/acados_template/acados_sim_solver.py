@@ -139,7 +139,7 @@ def sim_generate_external_functions(acados_sim: AcadosSim):
         os.makedirs(model_dir)
 
     # TODO: dont allow p_slow for sim solver?
-    context = GenerateContext(model)
+    context = GenerateContext(model, opts)
 
     # generate external functions
     check_casadi_version()
