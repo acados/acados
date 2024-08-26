@@ -102,9 +102,8 @@ class GenerateContext:
         print("finalize called")
         print(f"self.pool_names: {self.pool_names}")
 
+        # TODO: split p and p slow and don't allow variables to be in both?!
         fun = ca.Function('helpers', [self.model.p], y, ['p'], self.pool_names)
-        # print(fun)
-        # fun.disp(True)
 
         # change directory
         cwd = os.getcwd()

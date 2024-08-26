@@ -138,6 +138,7 @@ def sim_generate_external_functions(acados_sim: AcadosSim):
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
+    # TODO: dont allow p_slow for sim solver?
     context = GenerateContext(model)
 
     # generate external functions
