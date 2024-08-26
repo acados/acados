@@ -50,20 +50,20 @@ def is_casadi_SX(x):
 
 
 class GenerateContext:
-    def __init__(self, model, opts=None):
-        self.model: AcadosModel = model
+    def __init__(self, model: AcadosModel, opts=None):
+        self.model = model
         if hasattr(self.model, 'p_slow'):
             self.p_slow = self.model.p_slow
         else:
             self.p_slow = None
 
-        self.names = []
+        self.pool_names = []
         self.params = []
         self.opts = opts
         if opts is None:
             self.opts = {}
 
-    def add(self, fun, name, opts):
+    def add(self, fun: ca.Function, name: str, opts: dict):
 
         if self.p_slow is None:
             # normal behaviour (p_slow is empty)
@@ -79,10 +79,10 @@ class GenerateContext:
 
             # Substitute these symbols with double memory pools
             pools = []
-            for i,e in enumerate(symbols):
+            for i, e in enumerate(symbols):
                 name_e = name + "|" + str(i)
                 pools.append(ca.MX(ca.DM.zeros(e.sparsity()), name_e))
-                self.names.append(name_e)
+                self.pool_names.append(name_e)
 
             expr_ret = ca.substitute(expr_ret,symbols,pools)
             self.params += param.primitives()
@@ -100,9 +100,9 @@ class GenerateContext:
             y = []
 
         print("finalize called")
-        print(self.names)
+        print(f"self.pool_names: {self.pool_names}")
 
-        fun = ca.Function('helpers', [self.model.p], y, ['p'], self.names)
+        fun = ca.Function('helpers', [self.model.p], y, ['p'], self.pool_names)
         # print(fun)
         # fun.disp(True)
 
