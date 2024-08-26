@@ -52,11 +52,10 @@ def is_casadi_SX(x):
 class GenerateContext:
     def __init__(self, model, opts=None):
         self.model: AcadosModel = model
-        p_slow = ca.MX(0, 1)
         if hasattr(self.model, 'p_slow'):
-            p_slow = self.model.p_slow
-        self.p_slow = p_slow
-
+            self.p_slow = self.model.p_slow
+        else:
+            self.p_slow = None
 
         self.names = []
         self.params = []
@@ -66,7 +65,7 @@ class GenerateContext:
 
     def add(self, fun, name, opts):
 
-        if is_empty(self.p_slow):
+        if self.p_slow is None:
             # normal behaviour (p_slow is empty)
             fun.generate(name, opts)
         else:
@@ -100,8 +99,8 @@ class GenerateContext:
         if not self.params:
             y = []
 
-        # print("finalize called")
-        # print(self.names)
+        print("finalize called")
+        print(self.names)
 
         fun = ca.Function('helpers', [self.model.p], y, ['p'], self.names)
         # print(fun)
