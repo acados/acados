@@ -41,8 +41,7 @@ if os.name == 'nt':
 else:
     from ctypes import CDLL as DllLoader
 import numpy as np
-from casadi import DM, MX, SX, CasadiMeta, Function, substitute, cse
-import casadi as ca
+from casadi import DM, MX, SX, CasadiMeta, Function
 
 ALLOWED_CASADI_VERSIONS = (
     '3.4.0'
