@@ -49,16 +49,18 @@ from .acados_ocp import AcadosOcp
 from .acados_sim import AcadosSim, AcadosSimDims, AcadosSimOptions
 
 from .builders import CMakeBuilder
-from .casadi_function_generation import (generate_c_code_explicit_ode,
-                                         generate_c_code_gnsf,
-                                         generate_c_code_implicit_ode)
+from .casadi_function_generation import (
+                    GenerateContext,
+                    generate_c_code_explicit_ode,
+                    generate_c_code_gnsf,
+                    generate_c_code_implicit_ode)
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (check_casadi_version, format_class_dict,
                     get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
                     make_object_json_dumpable,
                     render_template, set_up_imported_gnsf_model,
                     verbose_system_call, acados_lib_is_compiled_with_openmp,
-                    get_shared_lib, GenerateContext)
+                    get_shared_lib)
 
 
 def sim_formulation_json_dump(acados_sim: AcadosSim, json_file='acados_sim.json'):

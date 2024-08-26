@@ -47,11 +47,12 @@ from .acados_ocp_options import AcadosOcpOptions
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
                     get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square,
-                    check_casadi_version, GenerateContext)
+                    check_casadi_version)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
 from .zoro_description import ZoroDescription, process_zoro_description
 from .casadi_function_generation import (
+    GenerateContext,
     generate_c_code_conl_cost, generate_c_code_nls_cost, generate_c_code_external_cost,
     generate_c_code_explicit_ode, generate_c_code_implicit_ode, generate_c_code_discrete_dynamics, generate_c_code_gnsf,
     generate_c_code_constraint

@@ -30,7 +30,7 @@
 
 import os
 import casadi as ca
-from .utils import is_empty, casadi_length, GenerateContext
+from .utils import is_empty, casadi_length
 from .acados_model import AcadosModel
 from .acados_ocp_constraints import AcadosOcpConstraints
 
@@ -47,6 +47,154 @@ def is_casadi_SX(x):
     if isinstance(x, ca.SX):
         return True
     return False
+
+
+class GenerateContext:
+    def __init__(self, model, opts=None):
+        self.model: AcadosModel = model
+        p_slow = ca.MX(0, 1)
+        if hasattr(self.model, 'p_slow'):
+            p_slow = self.model.p_slow
+        self.p_slow = p_slow
+
+
+        self.names = []
+        self.params = []
+        self.opts = opts
+        if opts is None:
+            self.opts = {}
+
+    def add(self, fun, name, opts):
+
+        if is_empty(self.p_slow):
+            # normal behaviour (p_slow is empty)
+            fun.generate(name, opts)
+        else:
+            # interesting behaviour
+            args = fun.mx_in()
+            expr = fun.call(args, True, False)
+
+            # This introduces novel symbols into the graph (extracted1, extracted2,...)
+            [expr_ret, symbols, param] = ca.extract_parametric(expr, self.p_slow)
+            symbols = symbols.primitives()
+
+            # Substitute these symbols with double memory pools
+            pools = []
+            for i,e in enumerate(symbols):
+                name_e = name + "|" + str(i)
+                pools.append(ca.MX(ca.DM.zeros(e.sparsity()), name_e))
+                self.names.append(name_e)
+
+            expr_ret = ca.substitute(expr_ret,symbols,pools)
+            self.params += param.primitives()
+
+            fun_mod = ca.Function(fun.name(), args, expr_ret)
+            fun_mod.generate(name, opts)
+
+    def finalize(self):
+
+        for e in self.params:
+            print(e.shape, e)
+
+        y = ca.cse(self.params)
+        if not self.params:
+            y = []
+
+        # print("finalize called")
+        # print(self.names)
+
+        fun = ca.Function('helpers', [self.model.p], y, ['p'], self.names)
+        # print(fun)
+        # fun.disp(True)
+
+        # change directory
+        cwd = os.getcwd()
+        model_dir = os.path.abspath(self.opts["code_export_directory"])
+        os.chdir(model_dir)
+
+        casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
+        casadi_codegen_opts["with_header"] = True
+
+        fun.generate("helpers_" + self.model.name, casadi_codegen_opts)
+
+        os.chdir(cwd)
+
+        with open("custom_update_function.c", "w") as out:
+            out.write("""
+            #include <stdlib.h>
+            #include <stdio.h>
+
+            #include "acados_solver_pendulum.h"
+            #include "acados_c/ocp_nlp_interface.h"
+            #include "acados/utils/mem.h"
+
+            #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+
+            #include "helpers_pendulum.h"
+            #include "pendulum_model/pendulum_model.h"
+
+            typedef struct custom_memory
+            {
+                external_function_casadi* ext_helpers;
+                void *raw_memory; // Pointer to allocated memory, to be used for freeing
+            } custom_memory;
+
+            static void *example_custom_memory_create(pendulum_solver_capsule* capsule)
+            {
+                static external_function_casadi ext_helpers;
+                ext_helpers.casadi_fun = &helpers;
+                ext_helpers.casadi_work = &helpers_work;
+                ext_helpers.casadi_sparsity_in = &helpers_sparsity_in;
+                ext_helpers.casadi_sparsity_out = &helpers_sparsity_out;
+                ext_helpers.casadi_n_in = &helpers_n_in;
+                ext_helpers.casadi_n_out = &helpers_n_out;
+
+                acados_size_t bytes = sizeof(custom_memory);
+                bytes += external_function_casadi_calculate_size(&ext_helpers);
+
+                void *ptr = acados_calloc(1, bytes);
+                char *c_ptr = (char *) ptr;
+                custom_memory *custom_mem = (custom_memory *) c_ptr;
+                custom_mem->ext_helpers = &ext_helpers;
+
+                c_ptr += sizeof(custom_memory);
+                external_function_casadi_assign(custom_mem->ext_helpers, c_ptr);
+                c_ptr += external_function_casadi_calculate_size(&ext_helpers);
+
+                custom_mem->raw_memory = ptr;
+
+                return custom_mem;
+            }
+
+
+            int custom_update_init_function(pendulum_solver_capsule* capsule)
+            {
+                capsule->custom_update_memory = example_custom_memory_create(capsule);
+                return 1;
+            }
+
+
+            int custom_update_function(pendulum_solver_capsule* capsule, double* data, int data_len)
+            {
+                custom_memory *custom_mem = (custom_memory *) capsule->custom_update_memory;
+                external_function_casadi* fun = custom_mem->ext_helpers;
+                fun->args[0] = data;
+            \n""")
+
+            for i in range(fun.n_out()):
+                out.write(f"""                fun->res[{i}] = {fun.name_out(i).split('|')[0]}_get_pool_double("{fun.name_out(i)}");\n""")
+            out.write("""
+                fun->casadi_fun((const double **) fun->args, fun->res, fun->iw, fun->w, NULL);
+                return 1;
+            }
+
+            int custom_update_terminate_function(pendulum_solver_capsule* capsule)
+            {
+                custom_memory *mem = capsule->custom_update_memory;
+                free(mem->raw_memory);
+                return 1;
+            }
+            """)
 
 
 ################
