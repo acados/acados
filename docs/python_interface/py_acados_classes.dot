@@ -45,8 +45,8 @@ digraph ocp {
          href="../python_interface/index.html#acados_template.acados_sim.AcadosSim", target="_top"];
     simdims [label="AcadosSimDims"
              href="../python_interface/index.html#acados_template.acados_dims.AcadosSimDims", target="_top"];
-    simopts [label="AcadosSimOpts"
-             href="../python_interface/index.html#acados_template.acados_sim.AcadosSimOpts", target="_top"];
+    simopts [label="AcadosSimOptions"
+             href="../python_interface/index.html#acados_template.acados_sim.AcadosSimOptions", target="_top"];
     simsolver [label="AcadosSimSolver"
              href="../python_interface/index.html#acados_template.acados_sim_solver.AcadosSimSolver", target="_top"];
 

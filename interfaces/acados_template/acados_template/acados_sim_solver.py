@@ -46,7 +46,7 @@ import numpy as np
 
 from .acados_model import AcadosModel
 from .acados_ocp import AcadosOcp
-from .acados_sim import AcadosSim, AcadosSimDims, AcadosSimOpts
+from .acados_sim import AcadosSim, AcadosSimDims, AcadosSimOptions
 
 from .builders import CMakeBuilder
 from .casadi_function_generation import (generate_c_code_explicit_ode,
@@ -69,7 +69,7 @@ def sim_formulation_json_dump(acados_sim: AcadosSim, json_file='acados_sim.json'
     # convert acados classes to dicts
     for key, v in sim_dict.items():
         # skip non dict attributes
-        if isinstance(v, (AcadosSim, AcadosSimDims, AcadosSimOpts, AcadosModel)):
+        if isinstance(v, (AcadosSim, AcadosSimDims, AcadosSimOptions, AcadosModel)):
             sim_dict[key]=dict(getattr(acados_sim, key).__dict__)
 
     sim_json = format_class_dict(sim_dict)
