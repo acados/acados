@@ -20,6 +20,11 @@
 \usepackage[rmdefault]{mathcomp}
 \usepackage{babel}
 
+\usepackage[square,numbers]{natbib}
+\bibliographystyle{abbrvnat}
+
+
+
 %% if required this can be used to make landscape pages, e.g., for wide tables
 % \usepackage{afterpage}
 % \usepackage{ifpdf}
@@ -31,8 +36,8 @@
 % \usepackage{lscape}
 % \fi
 
-\usepackage{tabulary}
 \usepackage{multirow}
+
 
 \newcommand{\code}[1]{\texttt{#1}}
 \newcommand{\str}[1]{\texttt{'#1'}}
@@ -73,6 +78,13 @@
 \newcommand{\mandatory}{yes}
 \newcommand{\optional}{no}
 
+
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+
 \begin{document}
 %
 \section{Problem Formulation}\label{sec:problem}
@@ -85,12 +97,12 @@
     &\underset{\begin{subarray}{c}
         x(\cdot),\,u(\cdot), \, z(\cdot), \, s(\cdot), \, s\terminal
         \end{subarray}}{\min}
-    &&\int_0^T l(x(\tau), u(\tau), z(\tau), p)
+    &&\int_0^T l(x(\tau), u(\tau), z(\tau), t, p)
      + \frac{1}{2} \matr{s\Lower(\tau) \\ s\upper(\tau) \\ 1} \tran
       \matr{ Z\Lower & 0 & z\Lower \\
       0 & Z\upper & z\upper \\
         {z\Lower}\tran & {z\upper}\tran & 0}
-    \matr{s\Lower(\tau) \\ s\upper(\tau) \\ 1} \mathrm{d}\tau \; + \nonumber\\
+    \matr{s\Lower(\tau) \\ s\upper(\tau) \\ 1} \mathrm{d}t \; + \nonumber\\
      &&& \quad \quad m(x(T), z(T), p) +
       \frac{1}{2} \matr{s\Lower\terminal \\ s\upper\terminal \\ 1} \tran
      \matr{ Z\Lower\terminal & 0 & z\Lower\terminal \\
@@ -106,7 +118,7 @@
     &&& h\initial(x(0), u(0),  z(0), p) - J\ind{sh}\initial\, s\ind{u,h}\initial \leq \bar{h}\initial, &&\label{eq:constraints:path:upper_bounds:start}\\
     &&&\mathComment{Dynamics, see section \ref{sec:dynamics}}\nonumber\\
     %% dynamics
-    &&& f\ind{impl}(x(t), \dot{x}(t), u(t), z(t), p) = 0, &&\quad t \in [0,\,T), \label{eq:dynamics}\\[1ex]
+    &&& f\ind{impl}(x(t), \dot{x}(t), u(t), z(t), t, p) = 0, &&\quad t \in [0,\,T), \label{eq:dynamics}\\[1ex]
     &&&\mathComment{Path constraints with lower bounds, see section \ref{sec:constraints:path}}\nonumber\\
     %% path constraints with lower slack
     &&&\underline{h} \leq h(x(t), u(t), z(t), p) + J_{\textrm{sh}} \, s\lowerh(t), &&\quad t \in (0,\,T),\\
@@ -156,13 +168,12 @@ Thus, there are no algebraic variables available at the terminal node.
 
 %
 \paragraph{Document Purpose.}
-This document describes the \matlab{} interface of \acados.
-Here, the focus is to give a mathematical overview of the problem formulation and possible options to model it within \acados.
-The problem formulation and the possibilities of \acados{} are similar in the \python{} interface, however, some of the string identifiers are different.
-The documentation is not exhaustive and does not contain a full description for the \matlab{} interface.
+This document describes the class of optimal control problems that can be implemented in \acados{} via its \matlab{} and \python{} interfaces.
+%Here, the focus is to give a mathematical overview of the problem formulation and possible options to model it within \acados.
+This documentation is (most likely) not exhaustive and does not contain a full description of all options provided by the \python{} and \matlab{} interfaces.
 
-You can find examples in the directory \code{<acados>/examples/acados\_matlab\_octave}.
-The source code of the \acados{} \matlab{} interface is found in: \code{<acados>/interfaces/acados\_matlab\_octave} and should serve as a more extensive, complete and up-to-date documentation about the possibilities.
+%You can find examples in the directory \code{<acados>/examples/acados\_matlab\_octave}.
+%The source code of the \acados{} \matlab{} interface is found in: \code{<acados>/interfaces/acados\_matlab\_octave} and should serve as a more extensive, complete and up-to-date documentation about the possibilities.
 
 \paragraph{Abbreviations.}
 Some of the following restrictions may apply to matrices in the formulation:
@@ -177,7 +188,7 @@ Some of the following restrictions may apply to matrices in the formulation:
 
 \section{Dynamics}\label{sec:dynamics}
 %
-The system dynamics term is used to connect state trajectories from adjacent shooting nodes by means of equality constraints.
+% The system dynamics term is used to connect state trajectories from adjacent shooting nodes by means of equality constraints.
 %
 The system dynamics equation~\eqref{eq:dynamics} is replaced with a discrete-time dynamic system.
 The dynamics can be formulated in different ways in \acados:
@@ -186,47 +197,69 @@ This section and Table~\ref{tab:dynamics} summarize these options.
 %
 \subsection{Implicit Dynamics}\label{sec:dynamics:implicit}
 %
-The most general way to provide a continuous-time ODE in \acados\ is to define the function $ f\ind{impl}: \mathbb{R}^{\nx}\times\mathbb{R}^{\nx}\times\mathbb{R}^{\nuu}\times\mathbb{R}^{\nz}\times\mathbb{R}^{\np} \rightarrow \mathbb{R}^{\nx+\nz}$ which is fully implicit DAE formulation describing the system as:
+The most general way to provide a continuous-time ODE in \acados\ is to define the function $ f\ind{impl}: \mathbb{R}^{\nx}\times\mathbb{R}^{\nx}\times\mathbb{R}^{\nuu}\times\mathbb{R}^{\nz}\times\mathbb{R} \times \mathbb{R}^{\np} \rightarrow \mathbb{R}^{\nx+\nz}$ which is fully implicit DAE formulation describing the system as:
 \begin{equation}
-    f\ind{impl}(x, \dot{x}, u, z, p) = 0.\label{eq:dynamics:implicit}
+    f\ind{impl}(x, \dot{x}, u, z, t, p) = 0.\label{eq:dynamics:implicit}
 \end{equation}
-\acados{} can discretize $ f\ind{impl} $ with a classical implicit Runge-Kutta (\code{irk}) or a structure exploiting implicit Runge-Kutta method (\code{irk\_gnsf}). Both discretization methods are set using the \code{'sim\_method'} identifier in a \code{acados\_ocp\_opts} class instance.
+\acados{} can discretize $ f\ind{impl} $ with a classical implicit Runge-Kutta (\code{'IRK'}), a structure exploiting implicit Runge-Kutta method (\code{'GNSF'}) \cite{Frey2019}, or a lifted-Newton direct collocation method (\code{'LIFTED\_IRK'}) \cite{Quirynen2015a}.
+These discretization methods are set via \code{AcadosOcpOptions.integrator\_type}.
+The implicit dynamics $f\ind{impl}$ need to be provided as a \casadi{} expression and set as \code{AcadosModel.f\_impl\_expr}.
+
+\textbf{Note.} Time-varying dynamics are at the moment only available via the \python{} interface and only in combination with the classical implicit Runge-Kutta (\code{'IRK'}) integrator.
 %
 \subsection{Explicit Dynamics}\label{sec:dynamics:explicit}
 %
-Alternatively, \acados{} offers an explicit Runge-Kutta integrator (\code{erk}), which can be used with explicit ODE models, i.e., models of the form
+Alternatively, \acados{} offers an explicit Runge-Kutta integrator (\code{'ERK'}), which can be used with explicit ODE models, i.e., models of the form
 \begin{align}
-f\ind{expl}(x,u,p) &= \dot{x}.\label{eq:dynamics:explicit}
+f\ind{expl}(x,u,t,p) &= \dot{x}.\label{eq:dynamics:explicit}
 \end{align}
+The explicit dynamics $f\ind{expl}$ need to be provided as a \casadi{} expression and set as \code{AcadosModel.f\_expl\_expr}.
+The explicit integrator is used if \code{AcadosOcpOptions.integrator\_type} is set to \code{'ERK'}.
+
+\textbf{Note.} Time-varying dynamics are at the moment only available via the \python{} interface and only in combination with the classical implicit Runge-Kutta (\code{'IRK'}) integrator.
+
 %
 \subsection{Discrete Dynamics}\label{sec:dynamics:discrete}
 %
 Another option is to provide a discrete function that maps state $x_i$, control $u_i$ and parameters $p_i$ from shooting node~$i$ to the state $x_{i+1}$ of the next shooting node $i+1$, i.e., a function
 \begin{align}
-x_{i+1} &= f\ind{disc}(x_i,u_i,p_i).\label{eq:dynamics:discrete}
+x_{i+1} &= f\ind{discrete}(x_i,u_i,p_i).\label{eq:dynamics:discrete}
 \end{align}
+The explicit dynamics $f\ind{discrete}$ need to be provided as a \casadi{} expression and set as \code{AcadosModel.disc\_dyn\_expr}.
+The discrete dynamics are used if \code{AcadosOcpOptions.integrator\_type} is set to \code{'DISCRETE'}.
+
 %
 \begin{table}[ht!]
-    \centering
-    \caption{Dynamics definitions} \label{tab:dynamics}
-    \begin{tabular}{cccc}
-        \toprule
-        Term & String identifier & Data type & Required \\ \midrule
-        $ f\ind{impl} $ respectively $ f\ind{expl} $ & \code{dyn\_expr\_f}    & \casadi~expression & \mandatory \\
-        $f\ind{disc}$ & \code{dyn\_expr\_phi} & \casadi~expression & \mandatory \\
-        - & \code{dyn\_type}    & string (\str{explicit}, \str{implicit} or \str{discrete}) & \mandatory \\
-        \bottomrule
-    \end{tabular}
+\centering
+\begin{tabular}{c@{}C{6.7cm}@{}C{5cm}@{}C{3.4cm}}
+\toprule
+Term & Attribute/Property & Data type & Required \\ \midrule
+$x$ & \code{AcadosModel.x} & \casadi~expression & \mandatory \\[3pt]
+$\dot{x}$ & \code{AcadosModel.xdot} & \casadi~expression & \mandatory{} for \code{'IRK'}, \code{'LIFTED\_IRK'}, \code{'GNSF'}  \\[3pt]
+$u$ & \code{AcadosModel.u} & \casadi~expression & \optional \\[3pt]
+$z$ & \code{AcadosModel.z} & \casadi~expression & \optional \\[3pt]
+$p$ & \code{AcadosModel.p} & \casadi~expression & \optional \\[3pt]
+$t$ & \code{AcadosModel.t} & \casadi~expression & \optional \\[3pt]
+\midrule
+integrator type & \code{AcadosOcpOptions.integrator\_type},  \code{AcadosSimOptions.integrator\_type} & str in [\code{'ERK'}, \code{'IRK'}, \code{'DISCRETE'}, \code{'LIFTED\_IRK'}, \code{'GNSF'}] & \mandatory \\[3pt]
+\midrule
+$ f\ind{impl}$ & \code{AcadosModel.f\_impl\_expr} & \casadi~expression & \mandatory{} for \code{'IRK'}, \code{'LIFTED\_IRK'}, \code{'GNSF'} \\[3pt]
+$ f\ind{expl}$ & \code{AcadosModel.f\_expl\_expr} & \casadi~expression & \mandatory{} for \code{'ERK'} \\[3pt]
+$f\ind{disc}$ & \code{AcadosModel.disc\_dyn\_expr} & \casadi~expression & \mandatory{} for \code{'DISCRETE'}\\[3pt]
+\bottomrule
+\end{tabular}
+\caption{Dynamics definitions.} \label{tab:dynamics}
 \end{table}
 %
 \section{Cost}\label{sec:cost}
 %
-There are different \acados~modules to model the cost functions in equation~\eqref{eq:cost}.
+The objective in~\eqref{eq:cost} comprises
 \begin{itemize}
-\item $ l: \mathbb{R}^{\nx}\times\mathbb{R}^{\nuu}\times\mathbb{R}^{\nz} \rightarrow \mathbb{R}$ is the Lagrange objective term.
-\item $ m: \mathbb{R}^{\nx}\times\mathbb{R}^{\nz} \rightarrow \mathbb{R} $ is the Mayer objective term.
+\item $ l: \mathbb{R}^{\nx}\times\mathbb{R}^{\nuu}\times\mathbb{R}^{\nz}\times\mathbb{R}\times\mathbb{R}^{\np} \rightarrow \mathbb{R}$, which is the Lagrange cost term, and
+\item $ m: \mathbb{R}^{\nx}\times\mathbb{R}^{\nz}\times\mathbb{R}^{\np} \rightarrow \mathbb{R}$, which is the Mayer cost term.
 \end{itemize}
-to define which one is used set \code{cost\_type} for $l$, \code{cost\_type\_e} for $m$.
+There are different \acados~modules that provide different possibilities to describe these cost terms.
+The cost module used for $l$ and $m$ is determined from \code{cost\_type} and \code{cost\_type\_e}, respectively.
 
 Setting the slack penalties in equation~\eqref{eq:cost} is done in the same way for all cost modules, see Table~\ref{tab:cost:slack} for an overview.
 
@@ -234,24 +267,24 @@ Slack penalties for the initial node can be set through the appropriate fields \
 %
 \begin{table}[ht!]
     \centering
-    \caption{Cost module slack variable options} \label{tab:cost:slack}
     \begin{tabular}{cccc}
         \toprule
-        Term  & String id & Data type & Required \\ \midrule
-        $ Z\Lower\initial $ & \code{cost\_Zl\_0} & double, \textbf{DIAG} & \optional   \\
-        $ Z\upper\initial $ & \code{cost\_Zu\_0} & double, \textbf{DIAG} & \optional   \\
-        $ z\Lower\initial $ & \code{cost\_zl\_0} & double  & \optional   \\
-        $ z\upper\initial $ & \code{cost\_zu\_0} & double  & \optional   \\ [1em]
-        $ Z\Lower $          & \code{cost\_Zl}    & double, \textbf{DIAG}  & \optional \\
-        $ Z\upper $          & \code{cost\_Zu}    & double, \textbf{DIAG}  & \optional   \\
-        $ z\Lower $          & \code{cost\_zl}    & double  & \optional   \\
-        $ z\upper $          & \code{cost\_zu}    & double  & \optional   \\ [1em]
-        $ Z\Lower\terminal $ & \code{cost\_Zl\_e} & double, \textbf{DIAG} & \optional   \\
-        $ Z\upper\terminal $ & \code{cost\_Zu\_e} & double, \textbf{DIAG} & \optional   \\
-        $ z\Lower\terminal $ & \code{cost\_zl\_e} & double  & \optional   \\
-        $ z\upper\terminal $ & \code{cost\_zu\_e} & double  & \optional   \\
+        Term  & Attribute/Property & Data type & Required \\ \midrule
+        $ Z\Lower\initial $ & \code{AcadosOcpCost.Zl\_0} & double, \textbf{DIAG} & \optional   \\[3pt]
+        $ Z\upper\initial $ & \code{AcadosOcpCost.Zu\_0} & double, \textbf{DIAG} & \optional   \\[3pt]
+        $ z\Lower\initial $ & \code{AcadosOcpCost.zl\_0} & double  & \optional   \\[3pt]
+        $ z\upper\initial $ & \code{AcadosOcpCost.zu\_0} & double  & \optional   \\[10pt]
+        $ Z\Lower $          & \code{AcadosOcpCost.Zl}    & double, \textbf{DIAG}  & \optional \\[3pt]
+        $ Z\upper $          & \code{AcadosOcpCost.Zu}    & double, \textbf{DIAG}  & \optional   \\[3pt]
+        $ z\Lower $          & \code{AcadosOcpCost.zl}    & double  & \optional   \\[3pt]
+        $ z\upper $          & \code{AcadosOcpCost.zu}    & double  & \optional   \\[10pt]
+        $ Z\Lower\terminal $ & \code{AcadosOcpCost.Zl\_e} & double, \textbf{DIAG} & \optional   \\[3pt]
+        $ Z\upper\terminal $ & \code{AcadosOcpCost.Zu\_e} & double, \textbf{DIAG} & \optional   \\[3pt]
+        $ z\Lower\terminal $ & \code{AcadosOcpCost.zl\_e} & double  & \optional   \\[3pt]
+        $ z\upper\terminal $ & \code{AcadosOcpCost.zu\_e} & double  & \optional   \\[3pt]
         \bottomrule
     \end{tabular}
+    \caption{Penalties on slack variable} \label{tab:cost:slack}
 \end{table}
 
 Moreover, you can specify \code{cost\_Z}, to set $ Z\Lower$, $Z\upper$ to the same values, i.e., use a symmetric L2 slack penalty.
@@ -259,11 +292,15 @@ Similarly, \code{cost\_z}, \code{cost\_Z\_e}, \code{cost\_z\_e} can be used to s
 
 Note that the dimensions of the slack variables $s\Lower(t)$, $s\Lower\terminal(t)$, $s\upper(t)$ and $s\upper\terminal(t)$ are determined by \acados{} from the associated matrices ($Z\Lower$, $Z\upper$,  $J\ind{sh}$, $J\ind{sg}$, $J\ind{sbu}$, $J\ind{sbx}$ etc.).
 
-Note that all cost terms, except for the terminal one, are weighted with the corresponding time step.
+
+By default, the Lagrange cost term provided in continuous time is internally integrated using the explicit Euler method, \code{AcadosOcpOptions.cost\_discretization = 'EULER'}, which allows for a seamless OCP discretization with a nonuniform time grid.
+This means that all cost terms, except for the terminal one, are weighted with the corresponding time step.
 If the time steps are $\Delta t_0,\dots, \Delta t_{N-1}$, the total cost is given by $c_\text{total} = \Delta t_0 \cdot l(x_0, u_0, p_0, z_0) + \dots + \Delta t_{N-1} \cdot l(x_{N-1}, u_{N-1}, p_{N-1}, z_{N-1}) + m(x_N, p_N)$.
-This means the Lagrange cost term is given in continuous time and then integrated using the explicit Euler method, which allows for a seamless OCP discretization with a nonuniform time grid.
-%
-\subsection{Cost module: \code{auto}}\label{sec:cost:auto}
+
+If a nonlinear least-squares or convex-over-nonlinear cost is used, the cost can also be integrated using the same integration scheme, which is used for the dynamics.
+This is obtained for \code{AcadosOcpOptions.cost\_discretization = 'INTEGRATOR'}.
+
+\subsection{Cost module \code{AUTO}}\label{sec:cost:auto}
 %
 Set \code{cost\_type} to \code{auto} (default).
 In this case \acados{} detects if the cost function specified is a linear least squares term and transcribes it in the corresponding form.
@@ -277,13 +314,13 @@ Table~\ref{tab:cost:auto} shows the available options.
     \begin{tabular}{cccc}
         \toprule
         Term & String identifier & Data type & Required \\ \midrule
-        $ l $ & \code{cost\_expr\_ext\_cost}    & \casadi~expression   & \mandatory  \\ 
+        $ l $ & \code{cost\_expr\_ext\_cost}    & \casadi~expression   & \mandatory  \\
 %        $ m $ & \code{cost\_expr\_ext\_cost\_e}    & \casadi~expression  & \mandatory \\
         \bottomrule
     \end{tabular}
 \end{table}
 %
-\subsection{Cost module: \code{external}}\label{sec:cost:external}
+\subsection{Cost module \code{EXTERNAL}: External cost/Economic cost}\label{sec:cost:external}
 %
 Set \code{cost\_type} to \code{ext\_cost}. % TODO: rename to 'external'?!
 See Table~\ref{tab:cost:external} for the available options.
@@ -299,7 +336,7 @@ See Table~\ref{tab:cost:external} for the available options.
     \end{tabular}
 \end{table}
 %
-\subsection{Cost module: \code{linear least squares}}\label{sec:cost:linear_ls}
+\subsection{Cost module\ code{LINEAR\_LS}: Linear least-squares cost}\label{sec:cost:linear_ls}
 %
 In order to activate the \code{linear least squares} cost module, set \code{cost\_type} to \code{linear\_ls}.\\
 The Lagrange cost term has the form
@@ -343,7 +380,7 @@ See Table~\ref{tab:cost:linear_ls} for the available options of this cost module
     \end{tabular}
 \end{table}
 %
-\subsection{Cost module: \code{nonlinear least squares}}\label{sec:cost:nonlinear_ls}
+\subsection{Cost module \code{NONLINEAR\_LS}: Nonlinear least-squares cost}\label{sec:cost:nonlinear_ls}
 %
 In order to activate the \code{nonlinear least squares} cost module, set \code{cost\_type} to \code{nonlinear\_ls}.
 
@@ -370,7 +407,16 @@ See Table~\ref{tab:cost:nonlinear_ls} for the available options of this cost mod
         \bottomrule
     \end{tabular}
 \end{table}
-%
+
+
+\subsection{Cost module \code{CONVEX\_OVER\_NONLINEAR}:  Convex-over-nonlinear cost}\label{sec:cost:nonlinear_ls}
+
+If the cost takes the form
+\begin{align}
+l(x, u, t, p) = \psi(r(x, u, z, t, p) - y_\mathrm{ref}, t, p), \qquad m(x, p) = \psi\terminal(r\terminal(x, t, p) - y_\mathrm{ref}\terminal, p),
+\end{align}
+with $\psi$ and $\psi\terminal$ convex, we say the cost has convex-over-nonlinear structure.
+In this case, a Generalized Gauss-Newton Hessian might be used for the SQP subproblems \cite{Messerer2021a}, set \code{AcadosOcpOptions.hessian\_approx = 'GAUSS\_NEWTON'}.
 %\newpage
 \section{Constraints}\label{sec:constraints}
 %
@@ -437,7 +483,7 @@ The options for the extended syntax are found in Table~\ref{tab:constraints:exte
 \subsection{Path Constraints}\label{sec:constraints:path}
 %
 Table~\ref{tab:constraints:path} shows the options for defining the path constraints equations~(\ref{eq:constraints:path:lower_bounds:start} ~-~\ref{eq:constraints:path:upper_bounds:end}).
-The matrices $ J_{\star} $ are translated into arrays of integers \texttt{idx}$\star$, see Python documentation.
+The matrices $ J_{\star} $ are translated into arrays of integers \texttt{idx}$\star$, see \python documentation.
 These matrices are described as follows:
 \begin{itemize}
     \item $J\ind{sh}$ maps lower slack vectors $s\ind{l,h}(t)$ and upper slack vectors $s\ind{u,h}(t)$ onto the nonlinear constraint expressions $h(x,u,p)$.
@@ -567,7 +613,7 @@ Some options can only be set before the solver is created, especially options th
     \centering
     \small
     \caption{Solver options}\label{tab:solver_options}
-    \begin{tabulary}{\textwidth}{p{4cm}@{}C@{}C@{}p{10cm}}
+    \begin{tabular}{L{4cm}@{}c@{}c@{}C{10cm}}
         \toprule
         {String identifier} & Type & Default & {Description} \\ \midrule
         \multicolumn{4}{l}{\emph{Code generation}} \\
@@ -603,7 +649,7 @@ Some options can only be set before the solver is created, especially options th
         \code{nlp\_solver\_step\_length} & double & $1.0$ & fixed step length in SQP algorithm \\
         \code{rti\_phase} & int & $0$ & RTI phase: ($1$) preparation, ($2$) feedback, ($0$) both \\
         \midrule
-        
+
         \multicolumn{4}{l}{\emph{QP solver}} \\
         \code{qp\_solver} & string & $\longrightarrow$ & Defines the quadratic programming solver and condensing strategy. See Table~\ref{tab:solver_options:qp_solver_option}\\
 
@@ -631,7 +677,7 @@ Some options can only be set before the solver is created, especially options th
         \multicolumn{4}{l}{\emph{Other}} \\
         \code{print\_level} & int $\geq 0$ & $0$ & verbosity of the solver: ($0$) silent, ($>0$) print first QP problems and solution during SQP\\
         \bottomrule
-    \end{tabulary}
+    \end{tabular}
 \end{table}
 %
 \begin{table}
@@ -674,4 +720,8 @@ Some options can only be set before the solver is created, especially options th
 \end{table}
 %\end{landscape}
 
+
+\section{References}
+
+\bibliography{syscop.bib}
 \end{document}
