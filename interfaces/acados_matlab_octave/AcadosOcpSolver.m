@@ -101,6 +101,10 @@ classdef AcadosOcpSolver < handle
             obj.t_ocp.set(field, value, varargin{:});
         end
 
+        function status = custom_update(obj, data)
+            status = obj.t_ocp.custom_update(data);
+        end
+
         function value = get(obj, field, varargin)
 
             if strcmp('hess_block', field)
