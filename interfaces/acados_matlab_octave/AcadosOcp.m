@@ -900,7 +900,6 @@ classdef AcadosOcp < handle
         end
 
         function render_templates(self)
-            t_renderer_location = get_tera();
 
             %% render templates
             json_fullfile = fullfile(pwd, self.json_file);
@@ -918,7 +917,7 @@ classdef AcadosOcp < handle
                     end
                     out_file = fullfile(out_dir, out_file);
                 end
-                render_file( in_file, out_file, json_fullfile, t_renderer_location )
+                render_file( in_file, out_file, json_fullfile )
             end
 
             fprintf('Successfully rendered acados templates!\n');

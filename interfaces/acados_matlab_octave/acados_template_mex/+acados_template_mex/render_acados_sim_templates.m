@@ -48,6 +48,7 @@ function render_acados_sim_templates(acados_sim_json_file)
     main_dir = pwd;
     chdir('c_generated_code');
 
+    %%% TODO: clean this up and use render_file function and loop!
     % main_sim
     template_file = 'main_sim.in.c';
     out_file = ['main_sim_', model_name, '.c'];
