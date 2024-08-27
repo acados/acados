@@ -338,6 +338,11 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model.name }}_cost/{{ cost.cost_source_ext_cost_e }}
     {%- endif %}
 {%- endif %}
+{%- if solver_options.custom_update_filename %}
+	{%- if solver_options.custom_update_filename != "" %}
+        {{ solver_options.custom_update_filename }}
+	{%- endif %}
+{%- endif %}
         acados_solver_{{ model.name }}.c)
     add_library(${OCP_OBJ} OBJECT ${OCP_SRC})
 endif()
