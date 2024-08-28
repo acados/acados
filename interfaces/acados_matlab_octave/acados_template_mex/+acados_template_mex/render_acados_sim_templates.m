@@ -48,71 +48,31 @@ function render_acados_sim_templates(acados_sim_json_file)
     main_dir = pwd;
     chdir('c_generated_code');
 
-    %%% TODO: clean this up and use render_file function and loop!
-    % main_sim
-    template_file = 'main_sim.in.c';
-    out_file = ['main_sim_', model_name, '.c'];
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    % cell array with entries (template_dir, template_file, output file)
+    template_dir_file_and_output = { ...
+        {template_dir, 'main_sim.in.c', ['main_sim_', model_name, '.c']}, ...
+        {matlab_template_dir, 'mex_sim_solver.in.m', [model_name, '_mex_sim_solver.m']}, ...
+        {matlab_template_dir, 'make_mex_sim.in.m', ['make_mex_sim_', model_name, '.m']}, ...
+        {matlab_template_dir, 'acados_sim_create.in.c', ['acados_sim_create_', model_name, '.c']}, ...
+        {matlab_template_dir, 'acados_sim_free.in.c', ['acados_sim_free_', model_name, '.c']}, ...
+        {matlab_template_dir, 'acados_sim_set.in.c', ['acados_sim_set_', model_name, '.c']}, ...
+        {template_dir, 'acados_sim_solver.in.c', ['acados_sim_solver_', model_name, '.c']}, ...
+        {template_dir, 'acados_sim_solver.in.h', ['acados_sim_solver_', model_name, '.h']}, ...
+        {matlab_template_dir, 'acados_sim_solver_sfun.in.c', ['acados_sim_solver_sfunction_', model_name, '.c']}, ...
+        {matlab_template_dir, 'make_sfun_sim.in.m', ['make_sfun_sim_', model_name, '.m']}, ...
+        {template_dir, 'Makefile.in','Makefile'}, ...
+        {template_dir, 'CMakeLists.in.txt','CMakeLists.txt'}};
 
-    % MEX class
-    template_file = 'mex_sim_solver.in.m';
-    out_file = [ model_name, '_mex_sim_solver.m'];
-    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
+    num_entries = length(template_dir_file_and_output);
+    for n=1:num_entries
+        entry = template_dir_file_and_output{n};
+        render_file(json_fullfile, entry{1}, entry{2}, entry{3}, t_renderer_location);
+    end
 
-    % method to make mexFunctions
-    template_file = 'make_mex_sim.in.m';
-    out_file = ['make_mex_sim_', model_name, '.m'];
-    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
-    % MEX constructor
-    template_file = 'acados_sim_create.in.c';
-    out_file = ['acados_sim_create_', model_name, '.c'];
-    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
-    % MEX destructor
-    template_file = 'acados_sim_free.in.c';
-    out_file = ['acados_sim_free_', model_name, '.c'];
-    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
-    % MEX set
-    template_file = 'acados_sim_set.in.c';
-    out_file = ['acados_sim_set_', model_name, '.c'];
-    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
-    % sim_solver
-    template_file = 'acados_sim_solver.in.c';
-    out_file = ['acados_sim_solver_', model_name, '.c'];
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-
-    template_file = 'acados_sim_solver.in.h';
-    out_file = ['acados_sim_solver_', model_name, '.h'];
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-
-    template_file = 'acados_sim_solver_sfun.in.c';
-    out_file = ['acados_sim_solver_sfunction_', model_name, '.c'];
-    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
-    template_file = 'make_sfun_sim.in.m';
-    out_file = ['make_sfun_sim_', model_name, '.m'];
-    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
-    % headers and custom C-code files
     c_dir = pwd;
     chdir([model_name, '_model']);
-    template_file = 'model.in.h';
-    out_file = [model_name, '_model.h'];
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    render_file(json_fullfile, template_dir, 'model.in.h', [model_name, '_model.h'], t_renderer_location);
     cd(c_dir);
-
-    % Makefile
-    template_file = 'Makefile.in';
-    out_file = 'Makefile';
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-
-    % CMake
-    template_file = 'CMakeLists.in.txt';
-    out_file = 'CMakeLists.txt';
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
 
     fprintf('Successfully rendered acados templates!\n');
     cd(main_dir)
