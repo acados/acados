@@ -69,6 +69,10 @@ classdef {{ name }}_mex_solver < handle
             acados_mex_solve_{{ name }}(obj.C_ocp);
         end
 
+        function status = custom_update(obj, data)
+            status = acados_mex_custom_update_{{ name }}(obj.C_ocp, data);
+        end
+
         function set(varargin)
             obj = varargin{1};
             field = varargin{2};

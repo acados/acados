@@ -100,8 +100,8 @@ def main():
     ocp.constraints.idxbx_e = np.array([1])
 
     # initial state
-    x_init = np.array([0.0, 0.15*np.pi, 0.0, 0.0])
-    ocp.constraints.x0 = x_init
+    x0 = np.array([0.0, 0.15*np.pi, 0.0, 0.0])
+    ocp.constraints.x0 = x0
 
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
@@ -147,7 +147,7 @@ def main():
     Nsim = 100
     simX = np.zeros((Nsim+1, nx))
     simU = np.zeros((Nsim, nu))
-    simX[0,:] = x_init
+    simX[0,:] = x0
 
     # zoro parameters
     max_zoro_iter = 100

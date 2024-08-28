@@ -48,6 +48,7 @@ targets = {
     '../pendulum_dae/example_closed_loop.m';
     '../pendulum_dae/example_sim.m';
     '../pendulum_on_cart_model/example_ocp.m';
+    '../pendulum_on_cart_model/zoro_example.m';
     '../race_cars/main.m';
     '../simple_dae_model/example_ocp.m';
     '../swarming/example_ocp.m';

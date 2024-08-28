@@ -28,15 +28,18 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 
 
-function render_file( in_file, out_file, json_fullfile, t_renderer_location )
+function render_file( in_file, out_file, json_fullfile, template_glob )
+
+    t_renderer_location = get_tera();
 
     acados_root_dir = getenv('ACADOS_INSTALL_DIR');
-    acados_template_folder = fullfile(acados_root_dir,...
-                          'interfaces', 'acados_template', 'acados_template', 'c_templates_tera');
-    [path, name, ext] = fileparts(in_file);
-
-    template_glob = fullfile(acados_template_folder, path, '**', '*');
-    in_file = [name, ext];
+    if nargin < 4
+        acados_template_folder = fullfile(acados_root_dir,...
+                            'interfaces', 'acados_template', 'acados_template', 'c_templates_tera');
+        [path, name, ext] = fileparts(in_file);
+        template_glob = fullfile(acados_template_folder, path, '**', '*');
+        in_file = [name, ext];
+    end
 
     os_cmd = [t_renderer_location, ' "',...
         template_glob, '"', ' ', '"', in_file, '"', ' ', '"',...

@@ -342,7 +342,6 @@ classdef AcadosMultiphaseOcp < handle
 
         function render_templates(self)
 
-            t_renderer_location = get_tera();
             main_dir = pwd;
             chdir(self.code_export_directory);
 
@@ -367,7 +366,7 @@ classdef AcadosMultiphaseOcp < handle
                         end
                         out_file = fullfile(out_dir, out_file);
                     end
-                    render_file( in_file, out_file, tmp_json_path, t_renderer_location )
+                    render_file( in_file, out_file, tmp_json_path )
                 end
             end
             disp('rendered model templates successfully');
@@ -391,7 +390,7 @@ classdef AcadosMultiphaseOcp < handle
                     end
                     out_file = fullfile(out_dir, out_file);
                 end
-                render_file( in_file, out_file, self.json_file, t_renderer_location )
+                render_file( in_file, out_file, self.json_file )
             end
 
             disp('rendered solver templates successfully!');

@@ -46,6 +46,7 @@ classdef AcadosOcp < handle
         json_file
         shared_lib_ext
         name
+        zoro_description
     end
     methods
         function obj = AcadosOcp()
@@ -71,6 +72,7 @@ classdef AcadosOcp < handle
             acados_folder = getenv('ACADOS_INSTALL_DIR');
             obj.acados_include_path = [acados_folder, '/include'];
             obj.acados_lib_path = [acados_folder, '/lib'];
+            obj.zoro_description = [];
         end
 
         function s = struct(self)
@@ -777,7 +779,9 @@ classdef AcadosOcp < handle
                 error('FUNNEL_L1PEN_LINESEARCH only supports SQP.')
             end
 
-            % TODO: implement zoRO description processing here!
+            if isa(self.zoro_description, 'ZoroDescription')
+                self.zoro_description.process();
+            end
         end
 
         function [] = detect_cost_and_constraints(self)
@@ -900,7 +904,6 @@ classdef AcadosOcp < handle
         end
 
         function render_templates(self)
-            t_renderer_location = get_tera();
 
             %% render templates
             json_fullfile = fullfile(pwd, self.json_file);
@@ -918,10 +921,30 @@ classdef AcadosOcp < handle
                     end
                     out_file = fullfile(out_dir, out_file);
                 end
-                render_file( in_file, out_file, json_fullfile, t_renderer_location )
+                render_file( in_file, out_file, json_fullfile )
             end
 
             fprintf('Successfully rendered acados templates!\n');
+
+
+            % Custom templates
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
+            custom_template_glob = fullfile(acados_folder, 'interfaces', 'acados_template', 'acados_template', 'custom_update_templates', '*');
+
+            template_list = self.solver_options.custom_templates;
+            for i = 1:length(self.solver_options.custom_templates)
+                in_file = template_list{i}{1};
+                out_file = template_list{i}{2};
+                if length(template_list{i}) == 3
+                    out_dir = template_list{i}{3};
+                    if ~(exist(out_dir, 'dir'))
+                        mkdir(out_dir);
+                    end
+                    out_file = fullfile(out_dir, out_file);
+                end
+                render_file( in_file, out_file, json_fullfile, custom_template_glob )
+            end
+
             cd(main_dir)
         end
 
@@ -952,6 +975,10 @@ classdef AcadosOcp < handle
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_solve.in.c'), ['acados_mex_solve_', self.name, '.c']};
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_set.in.c'), ['acados_mex_set_', self.name, '.c']};
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_reset.in.c'), ['acados_mex_reset_', self.name, '.c']};
+
+            if ~isempty(self.solver_options.custom_update_filename)
+                template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_custom_update.in.c'), ['acados_mex_custom_update_', self.name, '.c']};
+            end
 
             % append headers
             template_list = [template_list, self.get_external_function_header_templates()];
@@ -1000,6 +1027,10 @@ classdef AcadosOcp < handle
             out_struct.cost = orderfields(out_struct.cost.convert_to_struct_for_json_dump());
             out_struct.constraints = orderfields(out_struct.constraints.convert_to_struct_for_json_dump());
             out_struct.solver_options = orderfields(out_struct.solver_options.convert_to_struct_for_json_dump(self.solver_options.N_horizon));
+
+            if ~isempty(self.zoro_description)
+                out_struct.zoro_description = orderfields(self.zoro_description.convert_to_struct_for_json_dump());
+            end
 
             % actual json dump
             json_string = savejson('', out_struct, 'ForceRootName', 0);
