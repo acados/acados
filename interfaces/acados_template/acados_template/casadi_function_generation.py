@@ -52,10 +52,7 @@ def is_casadi_SX(x):
 class GenerateContext:
     def __init__(self, model: AcadosModel, opts=None):
         self.model = model
-        if hasattr(self.model, 'p_slow'):
-            self.p_slow = self.model.p_slow
-        else:
-            self.p_slow = None
+        self.p_slow = self.model.p_slow
 
         self.pool_names = []
         self.params = []

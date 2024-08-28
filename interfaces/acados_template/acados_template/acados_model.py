@@ -71,6 +71,14 @@ class AcadosModel():
         The time dependency can be used within cost formulations and is relevant when cost integration is used.
         Start times of shooting intervals can be added using parameters.
         """
+        self.p_slow = None
+        """
+        CasADi variable containing parameters that change rarely;
+        This feature can be used to precompute expensive terms which only depend on these parameters.
+        Only supported for OCP solvers.
+        The update of these parameters has to be done via the custom update function.
+        Default: :code:`None`
+        """
 
         ## dynamics
         self.f_impl_expr = None
@@ -314,6 +322,16 @@ class AcadosModel():
             self.z = casadi_symbol('z', 0, 0)
         else:
             dims.nz = casadi_length(self.z)
+
+        # sanity checks
+        for symbol, name in [(self.x, 'x'), (self.xdot, 'xdot'), (self.u, 'u'), (self.z, 'z'), (self.p, 'p'), (self.p_slow, 'p_slow')]:
+            if symbol is not None and not symbol.is_valid_input():
+                raise Exception(f"model.{name} must be valid CasADi symbol, got {symbol}")
+        if self.p_slow is not None:
+            if isinstance(dims, AcadosSimDims):
+                raise Exception("model.p_slow is only supported for OCPs")
+            if any(ca.which_depends(self.p_slow, self.p)):
+                raise Exception(f"model.p_slow must not depend on model.p, got p_slow ={self.p_slow}, p = {self.p}")
 
         return
 
