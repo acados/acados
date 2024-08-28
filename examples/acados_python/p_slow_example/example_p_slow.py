@@ -185,18 +185,19 @@ def main(use_cython=False, lut=True, use_p_slow=True):
     ocp.solver_options.print_level = 0
     ocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP_RTI, SQP
 
-    ocp.solver_options.custom_update_filename = 'custom_update_function.c'
-    ocp.solver_options.custom_update_header_filename = 'custom_update_function.h'
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
     ocp.solver_options.N_horizon = N_horizon
 
-    ocp.solver_options.custom_update_copy = False
-    ocp.solver_options.custom_templates = [
-        ('custom_update_p_slow_template.in.c', 'custom_update_function.c'),
-        ('custom_update_function_zoro_template.in.h', 'custom_update_function.h'),
-    ]
+    if use_p_slow:
+        ocp.solver_options.custom_update_filename = 'custom_update_function.c'
+        ocp.solver_options.custom_update_header_filename = 'custom_update_function.h'
+        ocp.solver_options.custom_update_copy = False
+        ocp.solver_options.custom_templates = [
+            ('custom_update_p_slow_template.in.c', 'custom_update_function.c'),
+            ('custom_update_function_zoro_template.in.h', 'custom_update_function.h'),
+        ]
 
     # create ocp solver
     print(f"Creating ocp solver with p_slow = {model.p_slow}, p = {model.p}")
