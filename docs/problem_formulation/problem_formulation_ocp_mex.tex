@@ -234,12 +234,12 @@ The discrete dynamics are used if \code{AcadosOcpOptions.integrator\_type} is se
 \begin{tabular}{c@{}C{6.7cm}@{}C{5cm}@{}C{3.4cm}}
 \toprule
 Term & Attribute/Property & Data type & Required \\ \midrule
-$x$ & \code{AcadosModel.x} & \casadi~expression & \mandatory \\[3pt]
-$\dot{x}$ & \code{AcadosModel.xdot} & \casadi~expression & \mandatory{} for \code{'IRK'}, \code{'LIFTED\_IRK'}, \code{'GNSF'}  \\[3pt]
-$u$ & \code{AcadosModel.u} & \casadi~expression & \optional \\[3pt]
-$z$ & \code{AcadosModel.z} & \casadi~expression & \optional \\[3pt]
-$p$ & \code{AcadosModel.p} & \casadi~expression & \optional \\[3pt]
-$t$ & \code{AcadosModel.t} & \casadi~expression & \optional \\[3pt]
+$x$ & \code{AcadosModel.x} & \casadi~synmbolic & \mandatory \\[3pt]
+$\dot{x}$ & \code{AcadosModel.xdot} & \casadi~synmbolic & \mandatory{} for \code{'IRK'}, \code{'LIFTED\_IRK'}, \code{'GNSF'}  \\[3pt]
+$u$ & \code{AcadosModel.u} & \casadi~synmbolic & \optional \\[3pt]
+$z$ & \code{AcadosModel.z} & \casadi~synmbolic & \optional \\[3pt]
+$p$ & \code{AcadosModel.p} & \casadi~synmbolic & \optional \\[3pt]
+$t$ & \code{AcadosModel.t} & \casadi~synmbolic & \optional \\[3pt]
 \midrule
 integrator type & \code{AcadosOcpOptions.integrator\_type},  \code{AcadosSimOptions.integrator\_type} & str in [\code{'ERK'}, \code{'IRK'}, \code{'DISCRETE'}, \code{'LIFTED\_IRK'}, \code{'GNSF'}] & \mandatory \\[3pt]
 \midrule
@@ -301,18 +301,19 @@ If the time steps are $\Delta t_0,\dots, \Delta t_{N-1}$, the total cost is give
 If a nonlinear least-squares or convex-over-nonlinear cost is used, the cost can also be integrated using the same integration scheme, which is used for the dynamics.
 This is obtained for \code{AcadosOcpOptions.cost\_discretization = 'INTEGRATOR'}.
 
-\subsection{Cost module \code{AUTO} \label{sec:cost:auto}}
+\subsection{Cost module \code{'AUTO'} \label{sec:cost:auto}}
 %
-Set \code{AcadosOcpCost.cost\_type\_0}, \code{AcadosOcpCost.cost\_type}, \code{AcadosOcpCost.cost\_type\_e} to \code{AUTO}.
+Set \code{AcadosOcpCost.cost\_type\_0}, \code{AcadosOcpCost.cost\_type}, \code{AcadosOcpCost.cost\_type\_e} to \code{'AUTO'} in order to use this cost module.
 In this case \acados{} detects if the cost function specified is a linear least squares term and transcribes it in the corresponding form.
 Otherwise, it is formulated using the external cost module.
 Note: slack penalties are optional and we plan to detected them from the expressions in future versions.
 Table~\ref{tab:cost:auto} shows the available options.
 
+\textbf{Note.} The cost type \code{'AUTO'} is only available from the \matlab{} interface.
+
 %
 \begin{table}[ht!]
     \centering
-    \caption{Cost module \code{auto} options} \label{tab:cost:auto}
     \begin{tabular}{cccc}
         \toprule
         Term & Attribute/Property & Data type & Required \\ \midrule
@@ -321,6 +322,7 @@ Table~\ref{tab:cost:auto} shows the available options.
         $ m $ & \code{AcadosModel.cost\_expr\_ext\_cost\_e}    & \casadi~expression  & \optional \\
         \bottomrule
     \end{tabular}
+    \caption{Cost module \code{'AUTO'} options} \label{tab:cost:auto}
 \end{table}
 %
 
@@ -331,7 +333,6 @@ Set \code{AcadosOcpCost.cost\_type\_0}, \code{AcadosOcpCost.cost\_type}, \code{A
 See Table~\ref{tab:cost:external} for the available options.
 \begin{table}[ht!]
     \centering
-    \caption{Cost module \code{external} options} \label{tab:cost:external}
     \begin{tabular}{cccc}
         \toprule
         Term & Attribute/Property & Data type & Required \\ \midrule
@@ -339,11 +340,13 @@ See Table~\ref{tab:cost:external} for the available options.
         $ m $ & \code{AcadosModel.cost\_expr\_ext\_cost\_e}    & \casadi~expression  & \mandatory \\
         \bottomrule
     \end{tabular}
+    \caption{Cost module \code{external} options} \label{tab:cost:external}
 \end{table}
 %
-\subsection{Cost module\ code{LINEAR\_LS}: Linear least-squares cost}\label{sec:cost:linear_ls}
+\subsection{Cost module \code{'LINEAR\_LS'}: Linear least-squares cost}\label{sec:cost:linear_ls}
 %
-In order to activate the \code{linear least squares} cost module, set \code{AcadosOcpCost.cost\_type\_0}, \code{AcadosOcpCost.cost\_type}, \code{AcadosOcpCost.cost\_type\_e} to \code{linear\_ls}.\\
+In order to activate the \code{linear least squares} cost module, set \code{AcadosOcpCost.cost\_type\_0}, \code{AcadosOcpCost.cost\_type}, \code{AcadosOcpCost.cost\_type\_e} to \code{'LINEAR\_LS'}.
+
 The Lagrange cost term has the form
 \begin{align}
 l(x, u, z) &= \frac{1}{2} \norm{ \underbrace{V_x\, x + V_u\, u + V_z\, z}_{\displaystyle y} - y\ind{ref}}_W^2 \label{eq:cost:linear_ls:l}
@@ -358,59 +361,59 @@ m(x, u, z) &= \frac{1}{2} \norm{ \underbrace{V_x\terminal x}_{\displaystyle y\te
 where matrix $ V\terminal_x \in \mathbb{R}^{n_{y\terminal} \times n_x}$ maps $x$ onto $y\terminal$ and $W\terminal \in \mathbb{R}^{n_{y\terminal} \times n_{y\terminal}}$ is the weighting matrix.
 The vector $y\terminal_\textrm{ref} \in \mathbb{R}^{n_{y\terminal}}$ is the reference.
 
-Additionally, a different cost for the initial node can be set using the same form as \eqref{eq:cost:linear_ls:l} and the appropriate fields \code{cost\_(...)\_0}.
-
+Additionally, a different cost for the initial node can be set using the same form as \eqref{eq:cost:linear_ls:l} and the appropriate fields.
 See Table~\ref{tab:cost:linear_ls} for the available options of this cost module.
 %
 \begin{table}[ht!]
     \centering
-    \caption{Cost module \code{linear\_ls} options} \label{tab:cost:linear_ls}
     \begin{tabular}{cccc}
         \toprule
         Term & Attribute/Property & Data type & Required \\ \midrule
         $ V_x\initial $ & \code{AcadosOcpCost.Vx\_0}    & double & \optional   \\
         $ V_u\initial $ & \code{AcadosOcpCost.Vu\_0}    & double & \optional   \\
         $ V_z\initial $ & \code{AcadosOcpCost.Vz\_0}    & double & \optional  \\
-        $ W\initial $ & \code{AcadosOcpCost.cost\_W\_0}    & double & \optional  \\
+        $ W\initial $ & \code{AcadosOcpCost.W\_0}    & double & \optional  \\
         $ y\ind{ref}\initial $ & \code{AcadosOcpCost.yref\_0}    & double & \optional   \\ [1em]
         $ V_x $ & \code{AcadosOcpCost.Vx}    & double & \mandatory   \\
         $ V_u $ & \code{AcadosOcpCost.Vu}    & double & \mandatory   \\
         $ V_z $ & \code{AcadosOcpCost.Vz}    & double & \mandatory  \\
-        $ W $ & \code{AcadosOcpCost.cost\_W}    & double & \mandatory  \\
+        $ W $ & \code{AcadosOcpCost.W}    & double & \mandatory  \\
         $ y\ind{ref} $ & \code{AcadosOcpCost.yref}    & double & \mandatory   \\ [1em]
         $ V_x\terminal $ & \code{AcadosOcpCost.Vx\_e}    & double  & \mandatory  \\
-        $ W\terminal $ & \code{AcadosOcpCost.cost\_W\_e}    & double & \mandatory   \\
+        $ W\terminal $ & \code{AcadosOcpCost.W\_e}    & double & \mandatory   \\
         $ y\ind{ref}\terminal $ & \code{AcadosOcpCost.yref\_e}   & double & \mandatory   \\
         \bottomrule
     \end{tabular}
+\caption{Cost module \code{'LINEAR\_LS'} options} \label{tab:cost:linear_ls}
 \end{table}
 %
-\subsection{Cost module \code{NONLINEAR\_LS}: Nonlinear least-squares cost}\label{sec:cost:nonlinear_ls}
+\subsection{Cost module \code{'NONLINEAR\_LS'}: Nonlinear least-squares cost}\label{sec:cost:nonlinear_ls}
 %
-In order to activate the \code{nonlinear least squares} cost module, set \code{AcadosOcpCost.cost\_type\_0}, \code{AcadosOcpCost.cost\_type}, \code{AcadosOcpCost.cost\_type\_e} to \code{nonlinear\_ls}.
+In order to activate the \code{nonlinear least squares} cost module, set \code{AcadosOcpCost.cost\_type\_0}, \code{AcadosOcpCost.cost\_type}, \code{AcadosOcpCost.cost\_type\_e} to \code{'NONLINEAR\_LS'}.
 
-The \code{nonlinear least squares} cost function has the same basic form as eqns.~(\ref{eq:cost:linear_ls:l}~-~\ref{eq:cost:linear_ls:m}) of the \code{linear least squares} cost module.
-The only difference is that $ y $ and $ y\terminal $ are defined by means of \casadi{} expressions, instead of via matrices $ V_x $, $ V_u $, $ V_z $ and $ V_x\terminal $. The same note about the initial node applies to this cost module as well.
+The nonlinear least-squares cost has the same basic form as eqns.~(\ref{eq:cost:linear_ls:l}~-~\ref{eq:cost:linear_ls:m}) of the \code{'LINEAR\_LS'} cost module.
+The only difference is that $ y $ and $ y\terminal $ are defined in terms of \casadi{} expressions, instead of via matrices $ V_x $, $ V_u $, $ V_z $ and $ V_x\terminal $.
+The same note about the initial node applies to this cost module as well.
 %
 See Table~\ref{tab:cost:nonlinear_ls} for the available options of this cost module.
 %
-\begin{table}[ht!]
+\begin{table}[h!]
     \centering
-    \caption{Cost module \code{nonlinear\_ls} options} \label{tab:cost:nonlinear_ls}
     \begin{tabular}{cccc}
         \toprule
         Term & Attribute/Property & Data type & Required \\ \midrule
         $ y\initial $ & \code{AcadosModel.cost\_y\_expr\_0}    & \casadi~expression  & \optional   \\
-        $ W\initial $ & \code{AcadosOcpCost.cost\_W\_0}    & double  & \optional   \\
+        $ W\initial $ & \code{AcadosOcpCost.W\_0}    & double  & \optional   \\
         $ y\ind{ref}\initial $ & \code{AcadosOcpCost.yref\_0}    & double & \optional    \\ [1em]
         $ y $ & \code{AcadosModel.cost\_y\_expr}    & \casadi~expression  & \mandatory   \\
-        $ W $ & \code{AcadosOcpCost.cost\_W}    & double  & \mandatory   \\
+        $ W $ & \code{AcadosOcpCost.W}    & double  & \mandatory   \\
         $ y\ind{ref} $ & \code{AcadosOcpCost.yref}    & double & \mandatory    \\ [1em]
         $ y\terminal $ & \code{AcadosModel.cost\_y\_expr\_e}    & \casadi~expression  & \mandatory   \\
-        $ W\terminal $ & \code{AcadosOcpCost.cost\_W\_e}    & double & \mandatory   \\
+        $ W\terminal $ & \code{AcadosOcpCost.W\_e}    & double & \mandatory   \\
         $ y\ind{ref}\terminal $ & \code{AcadosOcpCost.yref\_e}    & double  & \mandatory   \\
         \bottomrule
     \end{tabular}
+    \caption{Cost module \code{'NONLINEAR\_LS'} options} \label{tab:cost:nonlinear_ls}
 \end{table}
 
 
@@ -423,14 +426,48 @@ l(x, u, t, p) = \psi(r(x, u, z, t, p) - y_\mathrm{ref}, t, p), \qquad m(x, p) = 
 with $\psi$ and $\psi\terminal$ convex, we say the cost has convex-over-nonlinear structure.
 In this case, a Generalized Gauss-Newton Hessian might be used for the SQP subproblems \cite{Messerer2021a}, set \code{AcadosOcpOptions.hessian\_approx = 'GAUSS\_NEWTON'}.
 
+See Table~\ref{tab:cost:conl} for the available options of this cost module.
+
 \textbf{Note.} Convex-over-nonlinear costs are at the moment only available via the \python{} interface.
-%\newpage
+
+
+\begin{table}[h!]
+	\centering
+	\begin{tabular}{cccc}
+		\toprule
+		Term & Attribute/Property & Data type & Required \\ \midrule
+		$ y\initial $ & \code{AcadosModel.cost\_y\_expr\_0}    & \casadi~expression  & \optional   \\[4pt]
+		$ y\ind{ref}\initial $ & \code{AcadosOcpCost.yref\_0}    & double & \optional    \\[4pt] 
+		$ r\initial $ & \code{AcadosModel.cost\_r\_in\_psi\_expr\_0}    & \casadi~symbolic & \optional
+		\\[4pt]
+		$\psi\initial$ & \code{AcadosModel.cost\_psi\_expr\_0}   & \casadi~expression & \optional
+		\\[4pt]
+		\midrule
+		$ y $ & \code{AcadosModel.cost\_y\_expr}    & \casadi~expression  & \mandatory   \\[4pt]
+		$ y\ind{ref} $ & \code{AcadosOcpCost.yref}    & double & \mandatory    \\[4pt]
+		$ r$ & \code{AcadosModel.cost\_r\_in\_psi\_expr}    & \casadi~symbolic & \optional
+		\\[4pt]
+		$\psi$ & \code{AcadosModel.cost\_psi\_expr}   & \casadi~expression & \optional
+		\\[4pt]
+		\midrule
+		$ y\terminal $ & \code{AcadosModel.cost\_y\_expr\_e}    & \casadi~expression  & \mandatory   \\[4pt]
+
+		$ y\ind{ref}\terminal $ & \code{AcadosOcpCost.yref\_e}    & double  & \mandatory   \\[4pt]
+		$ r\terminal $ & \code{AcadosModel.cost\_r\_in\_psi\_expr\_e}    & \casadi~symbolic & \mandatory
+\\[4pt]
+$\psi\terminal$ & \code{AcadosModel.cost\_psi\_expr\_e}   & \casadi~expression & \mandatory
+\\[4pt]
+		\bottomrule
+	\end{tabular}
+	\caption{Cost module \code{'CONVEX\_OVER\_NONLINEAR'} options} \label{tab:cost:conl}
+\end{table}
+
 \section{Constraints}\label{sec:constraints}
 %
 This section is about how to define the constraints equations (\ref{eq:constraints:initial} - \ref{eq:constraints:terminal:upper_bounds:end}).
 
-The \matlab{} interface supports the constraint module \code{bgh}, which is able to handle simple \textbf{b}ounds (on $ x $ and $ u $), \textbf{g}eneral linear constraints and general nonlinear constraints.
-Meanwhile, the \python{} interface also supports the \acados{} constraint module \code{bgp}, which can handle convex-over-nonlinear constraints in a dedicated fashion.
+The \matlab{} interface supports the constraint module \code{BGH}, which is able to handle simple \textbf{b}ounds (on $ x $ and $ u $), \textbf{g}eneral linear constraints and general nonlinear constraints.
+Meanwhile, the \python{} interface also supports the \acados{} constraint module \code{BGP}, which can handle convex-over-nonlinear constraints in a dedicated fashion.
 
 Additionally, bounds on $u$ and general linear constraints are also enforced on the initial node by default. On the other hand, bounds on $x$ and nonlinear constraints are fully split and have to be explicitly stated with \code{\_0} correspondence to be enforced on the initial node.
 
@@ -452,7 +489,7 @@ Additionally, bounds on $u$ and general linear constraints are also enforced on 
 %
 \subsection{Initial State}\label{sec:constraints:initial}
 %
-Note: An initial state constraint is not required.
+\textbf{Note.} An initial state constraint is not required.
 For example, for moving horizon estimation (MHE) problems it should not be set.
 
 Two possibilities exist to define the initial state constraint~\eqref{eq:constraints:initial}: a simple syntax and an extended syntax.
@@ -567,51 +604,15 @@ Here, matrices
         \bottomrule
     \end{tabular}
 \end{table}
-%
-% \section{External links}\label{sec:external_links}
-% % outdated and removed
-% A Table sheet with additional info is found here:\newline
-% \url{https://docs.google.com/spreadsheets/d/1rVRycLnCyaWJLwnV47u30Vokp7vRu68og3OhlDbSjDU/edit?usp=sharing}
-%
-\section{Model}\label{sec:model}
-%
-A model instance is created using \code{ocp\_model = acados\_ocp\_model()}. It contains all model definitions for simulation and for usage in the OCP solver.
-See Table~\ref{tab:model:options} for the available options.
-Furthermore, see \code{ocp\_model.model\_struct} or \href{https://github.com/acados/acados/blob/master/interfaces/acados_matlab_octave/acados_ocp_model.m}{\code{acados\_ocp\_model.m}} to see what other fields can be set via direct access.
-%
-\begin{table}
-    \centering
-    \caption{Model \code{set(id, data)} options}
-    \label{tab:model:options}
-    \begin{tabular}{cccc}
-        \toprule
-        String id & Data type & Description & Required\\
-        \midrule
-        \code{name} & string & model name, used for code generation, default: \str{ocp\_model} & \optional \\
-        \code{T} & double & end time & \mandatory \\
-        \code{sym\_x} & \casadi{} expr. & state vector $x$ in problem formulation in sec.~\ref{sec:problem} & \mandatory \\
-        \code{sym\_u} & \casadi{} expr. & control vector $u$ in problem formulation in sec.~\ref{sec:problem} & only in OCP \\
-        \code{sym\_xdot} & \casadi{} expr. & derivative of the state $\dot{x}$ in implicit dynamics eq.~\eqref{eq:dynamics} & if IRK is used \\
-        \code{sym\_z} & \casadi{} expr. & algebraic state $z$ in implicit dynamics eq.~\eqref{eq:dynamics} & \optional, only with IRK \\
-        \code{sym\_p} & \casadi{} expr. & parameters $p$ of the problem formulation in sec.~\ref{sec:problem} & \optional \\
-        \multicolumn{4}{c}{$\vdots$}\\
-        \multicolumn{4}{c}{Additionally, options from Tables \ref{tab:dynamics}, \ref{tab:cost:slack}, \ref{tab:cost:auto}, \ref{tab:cost:external}, \ref{tab:cost:linear_ls}, \ref{tab:cost:nonlinear_ls}, %\ref{tab:constr_type},
-        \ref{tab:constraints:simplesyntax}, \ref{tab:constraints:extendedsyntax}, \ref{tab:constraints:path} and \ref{tab:constraints:terminal}, apply here.}\\
-        \multicolumn{4}{c}{$\vdots$}\\
-        \bottomrule
-    \end{tabular}%
-\end{table}%
-%
+
+
 \section{Solver \& Options}\label{sec:solver}
-%
-An instance of the solver options class is created by using: \code{ocp\_opts = acados\_ocp\_opts()}.
-Together with the model these options are used when instancing the solver interface class: \code{ocp = acados\_ocp(ocp\_model, ocp\_opts)}.\\
+
+
 Tables \ref{tab:solver_options}, \ref{tab:solver_options:qp_solver_option} and \ref{tab:solver_options:regularize_method} show (almost) all available options.
-These options are set in \matlab{} via \code{ocp\_opts.set(<stringid>, <value>)}.
-% Some options are not (yet) implemented in the \code{.set(*)}-interface and can be accessed via a struct by using \code{ocp\_opts.opts\_struct.(<stringid>) = <value>}.
-Furthermore, the struct \code{ocp\_opts.opts\_struct} and \href{https://github.com/acados/acados/blob/master/interfaces/acados_matlab_octave/acados_ocp_opts.m}{\code{acados\_ocp\_opts.m}} can be used as a reference for what other fields are available.
-\\
-Note that some options of the solver can be modified after creation using the routine: \code{set(<stringid>, <value>)}.
+A full list of the available options is given on the \href{https://docs.acados.org/python_interface/index.html#acados-ocp-solver-interface-acadosocp-and-acadosocpsolver}{docs page}.
+
+Note that some options of the solver can be modified after creation using the routine.
 Some options can only be set before the solver is created, especially options that influence the memory requirements of the OCP solver, such as the modules used in the formulation, the QP solver, etc.
 
 %
@@ -619,7 +620,7 @@ Some options can only be set before the solver is created, especially options th
 \begin{table}
     \centering
     \small
-    \caption{Solver options}\label{tab:solver_options}
+
     \begin{tabular}{L{4cm}@{}c@{}c@{}C{10cm}}
         \toprule
         {Attribute/Property} & Type & Default & {Description} \\ \midrule
@@ -685,6 +686,7 @@ Some options can only be set before the solver is created, especially options th
         \code{print\_level} & int $\geq 0$ & $0$ & verbosity of the solver: ($0$) silent, ($>0$) print first QP problems and solution during SQP\\
         \bottomrule
     \end{tabular}
+    \caption{Solver options}\label{tab:solver_options}
 \end{table}
 %
 \begin{table}
