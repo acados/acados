@@ -67,11 +67,11 @@ class GenerateContext:
             fun.generate(name, opts)
         else:
             # interesting behaviour
-            args = fun.mx_in()
-            expr = fun.call(args, True, False)
+            inputs = fun.mx_in()
+            outputs = fun.call(inputs, True, False) # always_inline=True, never_inline=False
 
             # This introduces novel symbols into the graph (extracted1, extracted2,...)
-            [expr_ret, symbols, param] = ca.extract_parametric(expr, self.p_slow)
+            [outputs_ret, symbols, param] = ca.extract_parametric(outputs, self.p_slow)
             symbols = symbols.primitives()
 
             # Substitute these symbols with double memory pools
@@ -81,10 +81,10 @@ class GenerateContext:
                 pools.append(ca.MX(ca.DM.zeros(e.sparsity()), name_e))
                 self.pool_names.append(name_e)
 
-            expr_ret = ca.substitute(expr_ret,symbols,pools)
+            outputs_ret = ca.substitute(outputs_ret, symbols,pools)
             self.params += param.primitives()
 
-            fun_mod = ca.Function(fun.name(), args, expr_ret)
+            fun_mod = ca.Function(fun.name(), inputs, outputs_ret)
             fun_mod.generate(name, opts)
 
     def finalize(self):
