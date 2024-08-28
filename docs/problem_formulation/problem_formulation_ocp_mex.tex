@@ -259,13 +259,14 @@ The objective in~\eqref{eq:cost} comprises
 \item $ m: \mathbb{R}^{\nx}\times\mathbb{R}^{\nz}\times\mathbb{R}^{\np} \rightarrow \mathbb{R}$, which is the Mayer cost term.
 \end{itemize}
 There are different \acados~modules that provide different possibilities to describe these cost terms.
-The cost module used for $l$ and $m$ is determined from \code{cost\_type} and \code{cost\_type\_e}, respectively.
+The cost module used for $l$ and $m$ is determined from \code{AcadosOcpCost.cost\_type\_0}, \code{AcadosOcpCost.cost\_type} and \code{AcadosOcpCost.cost\_type\_e}, respectively.
+
 
 Setting the slack penalties in equation~\eqref{eq:cost} is done in the same way for all cost modules, see Table~\ref{tab:cost:slack} for an overview.
 
 Slack penalties for the initial node can be set through the appropriate fields \code{cost\_xx\_0}.
 %
-\begin{table}[ht!]
+\begin{table}[h!]
     \centering
     \begin{tabular}{cccc}
         \toprule
@@ -300,45 +301,49 @@ If the time steps are $\Delta t_0,\dots, \Delta t_{N-1}$, the total cost is give
 If a nonlinear least-squares or convex-over-nonlinear cost is used, the cost can also be integrated using the same integration scheme, which is used for the dynamics.
 This is obtained for \code{AcadosOcpOptions.cost\_discretization = 'INTEGRATOR'}.
 
-\subsection{Cost module \code{AUTO}}\label{sec:cost:auto}
+\subsection{Cost module \code{AUTO} \label{sec:cost:auto}}
 %
-Set \code{cost\_type} to \code{auto} (default).
+Set \code{AcadosOcpCost.cost\_type\_0}, \code{AcadosOcpCost.cost\_type}, \code{AcadosOcpCost.cost\_type\_e} to \code{AUTO}.
 In this case \acados{} detects if the cost function specified is a linear least squares term and transcribes it in the corresponding form.
 Otherwise, it is formulated using the external cost module.
 Note: slack penalties are optional and we plan to detected them from the expressions in future versions.
 Table~\ref{tab:cost:auto} shows the available options.
+
 %
 \begin{table}[ht!]
     \centering
     \caption{Cost module \code{auto} options} \label{tab:cost:auto}
     \begin{tabular}{cccc}
         \toprule
-        Term & String identifier & Data type & Required \\ \midrule
-        $ l $ & \code{cost\_expr\_ext\_cost}    & \casadi~expression   & \mandatory  \\
-%        $ m $ & \code{cost\_expr\_ext\_cost\_e}    & \casadi~expression  & \mandatory \\
+        Term & Attribute/Property & Data type & Required \\ \midrule
+        $ l $ & \code{AcadosModel.cost\_expr\_ext\_cost\_0}    & \casadi~expression   & \optional  \\
+        $ l $ & \code{AcadosModel.cost\_expr\_ext\_cost}    & \casadi~expression   & \mandatory  \\
+        $ m $ & \code{AcadosModel.cost\_expr\_ext\_cost\_e}    & \casadi~expression  & \optional \\
         \bottomrule
     \end{tabular}
 \end{table}
 %
+
+
 \subsection{Cost module \code{EXTERNAL}: External cost/Economic cost}\label{sec:cost:external}
 %
-Set \code{cost\_type} to \code{ext\_cost}. % TODO: rename to 'external'?!
+Set \code{AcadosOcpCost.cost\_type\_0}, \code{AcadosOcpCost.cost\_type}, \code{AcadosOcpCost.cost\_type\_e} to \code{ext\_cost}.
 See Table~\ref{tab:cost:external} for the available options.
 \begin{table}[ht!]
     \centering
     \caption{Cost module \code{external} options} \label{tab:cost:external}
     \begin{tabular}{cccc}
         \toprule
-        Term & String identifier & Data type & Required \\ \midrule
-        $ l $ & \code{cost\_expr\_ext\_cost}    & \casadi~expression   & \mandatory  \\
-        $ m $ & \code{cost\_expr\_ext\_cost\_e}    & \casadi~expression  & \mandatory \\
+        Term & Attribute/Property & Data type & Required \\ \midrule
+        $ l $ & \code{AcadosModel.cost\_expr\_ext\_cost}    & \casadi~expression   & \mandatory  \\
+        $ m $ & \code{AcadosModel.cost\_expr\_ext\_cost\_e}    & \casadi~expression  & \mandatory \\
         \bottomrule
     \end{tabular}
 \end{table}
 %
 \subsection{Cost module\ code{LINEAR\_LS}: Linear least-squares cost}\label{sec:cost:linear_ls}
 %
-In order to activate the \code{linear least squares} cost module, set \code{cost\_type} to \code{linear\_ls}.\\
+In order to activate the \code{linear least squares} cost module, set \code{AcadosOcpCost.cost\_type\_0}, \code{AcadosOcpCost.cost\_type}, \code{AcadosOcpCost.cost\_type\_e} to \code{linear\_ls}.\\
 The Lagrange cost term has the form
 \begin{align}
 l(x, u, z) &= \frac{1}{2} \norm{ \underbrace{V_x\, x + V_u\, u + V_z\, z}_{\displaystyle y} - y\ind{ref}}_W^2 \label{eq:cost:linear_ls:l}
@@ -362,27 +367,27 @@ See Table~\ref{tab:cost:linear_ls} for the available options of this cost module
     \caption{Cost module \code{linear\_ls} options} \label{tab:cost:linear_ls}
     \begin{tabular}{cccc}
         \toprule
-        Term & String identifier & Data type & Required \\ \midrule
-        $ V_x\initial $ & \code{cost\_Vx\_0}    & double & \optional   \\
-        $ V_u\initial $ & \code{cost\_Vu\_0}    & double & \optional   \\
-        $ V_z\initial $ & \code{cost\_Vz\_0}    & double & \optional  \\
-        $ W\initial $ & \code{cost\_W\_0}    & double & \optional  \\
-        $ y\ind{ref}\initial $ & \code{cost\_y\_ref\_0}    & double & \optional   \\ [1em]
-        $ V_x $ & \code{cost\_Vx}    & double & \mandatory   \\
-        $ V_u $ & \code{cost\_Vu}    & double & \mandatory   \\
-        $ V_z $ & \code{cost\_Vz}    & double & \mandatory  \\
-        $ W $ & \code{cost\_W}    & double & \mandatory  \\
-        $ y\ind{ref} $ & \code{cost\_y\_ref}    & double & \mandatory   \\ [1em]
-        $ V_x\terminal $ & \code{cost\_Vx\_e}    & double  & \mandatory  \\
-        $ W\terminal $ & \code{cost\_W\_e}    & double & \mandatory   \\
-        $ y\ind{ref}\terminal $ & \code{cost\_y\_ref\_e}   & double & \mandatory   \\
+        Term & Attribute/Property & Data type & Required \\ \midrule
+        $ V_x\initial $ & \code{AcadosOcpCost.Vx\_0}    & double & \optional   \\
+        $ V_u\initial $ & \code{AcadosOcpCost.Vu\_0}    & double & \optional   \\
+        $ V_z\initial $ & \code{AcadosOcpCost.Vz\_0}    & double & \optional  \\
+        $ W\initial $ & \code{AcadosOcpCost.cost\_W\_0}    & double & \optional  \\
+        $ y\ind{ref}\initial $ & \code{AcadosOcpCost.yref\_0}    & double & \optional   \\ [1em]
+        $ V_x $ & \code{AcadosOcpCost.Vx}    & double & \mandatory   \\
+        $ V_u $ & \code{AcadosOcpCost.Vu}    & double & \mandatory   \\
+        $ V_z $ & \code{AcadosOcpCost.Vz}    & double & \mandatory  \\
+        $ W $ & \code{AcadosOcpCost.cost\_W}    & double & \mandatory  \\
+        $ y\ind{ref} $ & \code{AcadosOcpCost.yref}    & double & \mandatory   \\ [1em]
+        $ V_x\terminal $ & \code{AcadosOcpCost.Vx\_e}    & double  & \mandatory  \\
+        $ W\terminal $ & \code{AcadosOcpCost.cost\_W\_e}    & double & \mandatory   \\
+        $ y\ind{ref}\terminal $ & \code{AcadosOcpCost.yref\_e}   & double & \mandatory   \\
         \bottomrule
     \end{tabular}
 \end{table}
 %
 \subsection{Cost module \code{NONLINEAR\_LS}: Nonlinear least-squares cost}\label{sec:cost:nonlinear_ls}
 %
-In order to activate the \code{nonlinear least squares} cost module, set \code{cost\_type} to \code{nonlinear\_ls}.
+In order to activate the \code{nonlinear least squares} cost module, set \code{AcadosOcpCost.cost\_type\_0}, \code{AcadosOcpCost.cost\_type}, \code{AcadosOcpCost.cost\_type\_e} to \code{nonlinear\_ls}.
 
 The \code{nonlinear least squares} cost function has the same basic form as eqns.~(\ref{eq:cost:linear_ls:l}~-~\ref{eq:cost:linear_ls:m}) of the \code{linear least squares} cost module.
 The only difference is that $ y $ and $ y\terminal $ are defined by means of \casadi{} expressions, instead of via matrices $ V_x $, $ V_u $, $ V_z $ and $ V_x\terminal $. The same note about the initial node applies to this cost module as well.
@@ -394,16 +399,16 @@ See Table~\ref{tab:cost:nonlinear_ls} for the available options of this cost mod
     \caption{Cost module \code{nonlinear\_ls} options} \label{tab:cost:nonlinear_ls}
     \begin{tabular}{cccc}
         \toprule
-        Term & String identifier & Data type & Required \\ \midrule
-        $ y\initial $ & \code{cost\_expr\_y\_0}    & \casadi~expression  & \optional   \\
-        $ W\initial $ & \code{cost\_W\_0}    & double  & \optional   \\
-        $ y\ind{ref}\initial $ & \code{cost\_y\_ref\_0}    & double & \optional    \\ [1em]
-        $ y $ & \code{cost\_expr\_y}    & \casadi~expression  & \mandatory   \\
-        $ W $ & \code{cost\_W}    & double  & \mandatory   \\
-        $ y\ind{ref} $ & \code{cost\_y\_ref}    & double & \mandatory    \\ [1em]
-        $ y\terminal $ & \code{cost\_expr\_y\_e}    & \casadi~expression  & \mandatory   \\
-        $ W\terminal $ & \code{cost\_W\_e}    & double & \mandatory   \\
-        $ y\ind{ref}\terminal $ & \code{cost\_y\_ref\_e}    & double  & \mandatory   \\
+        Term & Attribute/Property & Data type & Required \\ \midrule
+        $ y\initial $ & \code{AcadosModel.cost\_y\_expr\_0}    & \casadi~expression  & \optional   \\
+        $ W\initial $ & \code{AcadosOcpCost.cost\_W\_0}    & double  & \optional   \\
+        $ y\ind{ref}\initial $ & \code{AcadosOcpCost.yref\_0}    & double & \optional    \\ [1em]
+        $ y $ & \code{AcadosModel.cost\_y\_expr}    & \casadi~expression  & \mandatory   \\
+        $ W $ & \code{AcadosOcpCost.cost\_W}    & double  & \mandatory   \\
+        $ y\ind{ref} $ & \code{AcadosOcpCost.yref}    & double & \mandatory    \\ [1em]
+        $ y\terminal $ & \code{AcadosModel.cost\_y\_expr\_e}    & \casadi~expression  & \mandatory   \\
+        $ W\terminal $ & \code{AcadosOcpCost.cost\_W\_e}    & double & \mandatory   \\
+        $ y\ind{ref}\terminal $ & \code{AcadosOcpCost.yref\_e}    & double  & \mandatory   \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -417,6 +422,8 @@ l(x, u, t, p) = \psi(r(x, u, z, t, p) - y_\mathrm{ref}, t, p), \qquad m(x, p) = 
 \end{align}
 with $\psi$ and $\psi\terminal$ convex, we say the cost has convex-over-nonlinear structure.
 In this case, a Generalized Gauss-Newton Hessian might be used for the SQP subproblems \cite{Messerer2021a}, set \code{AcadosOcpOptions.hessian\_approx = 'GAUSS\_NEWTON'}.
+
+\textbf{Note.} Convex-over-nonlinear costs are at the moment only available via the \python{} interface.
 %\newpage
 \section{Constraints}\label{sec:constraints}
 %
@@ -458,7 +465,7 @@ The corresponding options are found in Table~\ref{tab:constraints:simplesyntax}.
     \caption{Simple syntax for setting the initial state} \label{tab:constraints:simplesyntax}
     \begin{tabular}{cccc}
         \toprule
-        Term & String identifier & Data type & Required \\ \midrule
+        Term & Attribute/Property & Data type & Required \\ \midrule
         $ \bar{x}_0 $ & \code{constr\_x0} & double & \optional \\
         \bottomrule
     \end{tabular}
@@ -472,7 +479,7 @@ The options for the extended syntax are found in Table~\ref{tab:constraints:exte
     \caption{Extended syntax for setting the initial state} \label{tab:constraints:extendedsyntax}
     \begin{tabular}{cccc}
         \toprule
-        Term & String identifier & Data type & Required \\ \midrule
+        Term & Attribute/Property & Data type & Required \\ \midrule
         $ \underline{x}_0 $ & \code{constr\_lbx\_0} & double & \optional \\
         $ \bar{x}_0 $ & \code{constr\_ubx\_0} & double & \optional \\
         $ J_{\textrm{bx},0} $ & \code{constr\_Jbx\_0} & double & \optional \\
@@ -499,7 +506,7 @@ These matrices are described as follows:
     \caption{Path constraints options} \label{tab:constraints:path}
     \begin{tabular}{cccc}
         \toprule
-        Term & String identifier & Data type & Required \\ \midrule
+        Term & Attribute/Property & Data type & Required \\ \midrule
         $J\ind{bx}$ & \code{constr\_Jbx}    & double, \textbf{SPUM} & \optional  \\
         $\underline{x} $    & \code{constr\_lbx}     & double  & \optional  \\
         $\bar{x} $  & \code{constr\_ubx}     & double  & \optional   \\ [1em]
@@ -544,7 +551,7 @@ Here, matrices
     \caption{Terminal constraints options} \label{tab:constraints:terminal}
     \begin{tabular}{cccc}
         \toprule
-        Term & String identifier & Data type & Required \\ \midrule
+        Term & Attribute/Property & Data type & Required \\ \midrule
         $J\ind{bx}\terminal$ & \code{constr\_Jbx\_e}    & double, \textbf{SPUM}   & \optional   \\
         $\underline{x}\terminal $    & \code{constr\_lbx\_e}     & double  & \optional   \\
         $\bar{x}\terminal $         & \code{constr\_ubx\_e}     & double   & \optional  \\ [1em]
@@ -615,7 +622,7 @@ Some options can only be set before the solver is created, especially options th
     \caption{Solver options}\label{tab:solver_options}
     \begin{tabular}{L{4cm}@{}c@{}c@{}C{10cm}}
         \toprule
-        {String identifier} & Type & Default & {Description} \\ \midrule
+        {Attribute/Property} & Type & Default & {Description} \\ \midrule
         \multicolumn{4}{l}{\emph{Code generation}} \\
         \code{compile\_interface} & string & \str{auto} & in (\str{auto}, \str{true}, \str{false}) \\
         \code{codgen\_model} & string & \str{true} & in (\str{true}, \str{false}) \\
@@ -661,7 +668,7 @@ Some options can only be set before the solver is created, especially options th
         \code{warm\_start\_first\_qp} & int & $0$ & warm start even in first SQP iteration: ($0$)~no, ($1$)~yes \\
         \midrule
                 % globalization
-        \multicolumn{4}{l}{\emph{globalization}} \\
+        \multicolumn{4}{l}{\emph{Globalization}} \\
         \code{globalization} & string & \scriptsize\str{fixed\_step} & globalization strategy in (\str{fixed\_step}, \str{merit\_backtracking}), note \code{merit\_backtracking} is a preliminary implementation.\\
         \code{alpha\_min} & double & $0.05$ & minimum step-size, relevant for globalization  \\
         \code{alpha\_reduction} & double & $0.7$ &  step-size reduction factor, relevant for globalization  \\
@@ -682,46 +689,48 @@ Some options can only be set before the solver is created, especially options th
 %
 \begin{table}
     \centering
-    \caption{Solver \code{set(\str{qp\_solver}, <stringid>)} options. The availability depends on for which solver interfaces \acados{} was linked to.}\label{tab:solver_options:qp_solver_option}
-    \begin{tabular}{c@{ }c@{}c}
+      \begin{tabular}{cccc}
         \toprule
-        Solver lib & Condensing & {String identifier} \\ \midrule
-        \multirow{2}{1.2cm}{\centering HPIPM} & partial & \code{partial\_condensing\_hpipm}*\\
-         & full & \code{full\_condensing\_hpipm} \\%[1ex]
-        HPMPC & partial & \code{partial\_condensing\_hpmpc} \\%[1ex]
-        % \multirow{2}{2cm}{\centering OOQP} & partial & \code{partial\_condensing\_ooqp} \\
+        Solver lib & Condensing & {Attribute/Property} & Reference \\ \midrule
+        \multirow{2}{1.2cm}{\centering HPIPM} & partial & \code{PARTIAL\_CONDENSING\_HPIPM}* & \cite{Frison2020a}\\
+         & full & \code{full\_condensing\_HPIPM} & \cite{Frison2020a}\\%[1ex]
+        HPMPC & partial & \code{PARTIAL\_CONDENSING\_HPMPC} & \cite{TODO}\\%[1ex]
+        % \multirow{2}{2cm}{\centering OOQP} & partial & \code{PARTIAL\_CONDENSING\_ooqp} \\
          % & full & \code{full\_condensing\_ooqp} \\[1ex]
-        OSQP & partial & \code{partial\_condensing\_osqp} \\
+        OSQP & partial & \code{PARTIAL\_CONDENSING\_OSQP} & \cite{Stellato2020} \\
         % QORE & full & \code{full\_condensing\_qore} \\
-        qpDUNES & partial & \code{partial\_condensing\_qpdunes} \\
-        qpOASES & full & \code{full\_condensing\_qpoases} \\
-        DAQP & full & \code{full\_condensing\_daqp} \\
+        qpDUNES & partial & \code{PARTIAL\_CONDENSING\_QPDUNES} & \cite{Frasch2015}\\
+        qpOASES & full & \code{full\_condensing\_QPOASES} & \cite{Ferreau2014}\\
+        DAQP & full & \code{full\_condensing\_DAQP} & \cite{Arnstrom2022} \\
         \bottomrule
         \multicolumn{3}{r}{\footnotesize * default}
     \end{tabular}
+\caption{QP solver options. Note that you might need to recompile \acados{} wit the corresponding flags in order to use the above QP solvers.}\label{tab:solver_options:qp_solver_option}
+
 \end{table}
 %
 \begin{table}
     \centering
-    \caption{Solver \code{set(\str{regularize\_method}, <stringid>)} options}
     \label{tab:solver_options:regularize_method}
     \begin{tabular}{cc}
         \toprule
-        String identifier & Description \\\midrule
+        Attribute/Property & Description \\\midrule
         \code{no\_regularize}* & don't regularize \\
-        \code{mirror} & \href{https://cdn.syscop.de/publications/Verschueren2017.pdf}{see Verschueren2017} \\
-        \code{project} & \href{https://cdn.syscop.de/publications/Verschueren2017.pdf}{see Verschueren2017} \\
+        \code{mirror} & compare \cite{Verschueren2017}
+%        \href{https://cdn.syscop.de/publications/Verschueren2017.pdf}{see Verschueren2017}
+        \\
+        \code{project} & compare \cite{Verschueren2017} \\
         \code{project\_reduc\_hess} & preliminary \\
-        \code{convexify} & \href{https://cdn.syscop.de/publications/Verschueren2017.pdf}{see Verschueren2017}, preliminary \\
-        &does not work in combination with nonlinear constraints \\
+        \code{convexify} & compare \cite{Verschueren2017}, does not work in combination with nonlinear constraints \\
         \bottomrule
         \multicolumn{2}{r}{\footnotesize * default}
     \end{tabular}
+    \caption{Regularization options.}
 \end{table}
 %\end{landscape}
 
 
-\section{References}
+\cleardoublepage
 
 \bibliography{syscop.bib}
 \end{document}
