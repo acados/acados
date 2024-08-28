@@ -52,10 +52,13 @@ def export_pendulum_ode_model(lut=True) -> AcadosModel:
     # constants
     m_cart = 1. # mass of the cart [kg]
 
+    # parameters
     g = MX.sym("g")
+    p = g
+
     m = MX.sym("m")
     l = MX.sym("l")
-
+    p_slow = [m, l]
 
     # set up states & controls
     x1      = MX.sym('x1')
@@ -69,21 +72,14 @@ def export_pendulum_ode_model(lut=True) -> AcadosModel:
     u = vertcat(F)
 
     # xdot
-    x1_dot      = MX.sym('x1_dot')
-    theta_dot   = MX.sym('theta_dot')
-    v1_dot      = MX.sym('v1_dot')
-    dtheta_dot  = MX.sym('dtheta_dot')
-
-    xdot = vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
+    nx = x.shape[0]
+    xdot = MX.sym('xdot', nx)
 
     # parameters
-    p = [g, m, l]
     if lut:
         # Coefficient of B-spline
         C = MX.sym("C",data.shape[0],1)
-
-        #
-        p += [C]
+        p_slow += [C]
 
     # dynamics
     cos_theta = cos(theta)
@@ -111,27 +107,39 @@ def export_pendulum_ode_model(lut=True) -> AcadosModel:
     model.xdot = xdot
     model.u = u
     # model.z = z
-    model.p = ca.vcat(p)
-    if lut:
-        model.p_slow = vertcat(m,C,g)
-    else:
-        model.p_slow = vertcat(m,g)
+    model.p = p
+    model.p_slow = ca.vcat(p_slow)
     model.name = model_name
 
     return model
 
 
-
 def main(use_cython=False, lut=True, use_p_slow=True):
+
+    print(f"\n\nRunning example with lut={lut}, use_p_slow={use_p_slow}")
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
     # set model
     model = export_pendulum_ode_model(lut=lut)
-    if not use_p_slow:
-        del model.p_slow
-
     ocp.model = model
+
+    # parameter values
+    p_values = np.array([9.81])
+    p_slow_values = np.array([0.1, 0.8])
+    if lut:
+        p_slow_values = np.concatenate([p_slow_values, data])
+    if not use_p_slow:
+        model.p = vertcat(model.p, model.p_slow)
+        model.p_slow = None
+        p_values = np.concatenate([p_values, p_slow_values])
+        p_slow_values = np.array([])
+
+    # tmp hack
+    # model.p = vertcat(model.p, model.p_slow)
+    # p_values = np.concatenate([p_values, p_slow_values])
+
+    ocp.parameter_values = p_values
 
     Tf = 1.0
     nx = model.x.rows()
@@ -184,16 +192,14 @@ def main(use_cython=False, lut=True, use_p_slow=True):
     ocp.solver_options.tf = Tf
     ocp.solver_options.N_horizon = N_horizon
 
-    if lut:
-        ocp.parameter_values = np.concatenate([np.array([9.81, 0.1, 0.8]), data])
-    else:
-        ocp.parameter_values = np.array([9.81, 0.1, 0.8])
-
     ocp.solver_options.custom_update_copy = False
     ocp.solver_options.custom_templates = [
         ('custom_update_p_slow_template.in.c', 'custom_update_function.c'),
         ('custom_update_function_zoro_template.in.h', 'custom_update_function.h'),
     ]
+
+    # create ocp solver
+    print(f"Creating ocp solver with p_slow = {model.p_slow}, p = {model.p}")
 
     solver_json = 'acados_ocp_' + model.name + '.json'
     if use_cython:
@@ -206,8 +212,9 @@ def main(use_cython=False, lut=True, use_p_slow=True):
     # call SQP_RTI solver in the loop:
     residuals = []
 
+    if use_p_slow:
+        ocp_solver.custom_update(p_slow_values)
     for i in range(20):
-        ocp_solver.custom_update(ocp.parameter_values)
         status = ocp_solver.solve()
         # ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
         residuals+= list(ocp_solver.get_residuals())
@@ -228,4 +235,4 @@ if __name__ == "__main__":
     with np.testing.assert_raises(Exception):
         np.testing.assert_almost_equal(ref_lut, ref_nolut)
 
-    #main(use_cython=True)
+    # main(use_cython=True)
