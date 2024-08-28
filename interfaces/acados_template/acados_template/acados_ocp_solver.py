@@ -118,9 +118,10 @@ class AcadosOcpSolver:
             # TODO: fix this for multi-phase
             for c in context:
                 c.finalize()
+            acados_ocp.casadi_pool_names = context[0].pool_names
         else:
             context.finalize()
-        acados_ocp.casadi_pool_names = context.pool_names
+            acados_ocp.casadi_pool_names = context.pool_names
         acados_ocp.dump_to_json()
         acados_ocp.render_templates(cmake_builder=cmake_builder)
 
