@@ -997,46 +997,48 @@ class AcadosOcp:
             code_gen_opts['with_value_sens_wrt_params'] = self.solver_options.with_value_sens_wrt_params
             code_gen_opts['code_export_directory'] = self.code_export_directory
 
-            context = GenerateContext(model, code_gen_opts)
+            context = GenerateContext(model.p_slow, code_gen_opts)
+        else:
+            code_gen_opts = context.opts
 
         # create code_export_dir, model_dir
-        model_dir = os.path.join(context.opts['code_export_directory'], model.name + '_model')
+        model_dir = os.path.join(code_gen_opts['code_export_directory'], model.name + '_model')
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
 
         check_casadi_version()
         if self.model.dyn_ext_fun_type == 'casadi':
             if self.solver_options.integrator_type == 'ERK':
-                generate_c_code_explicit_ode(context, context.opts)
+                generate_c_code_explicit_ode(context, model)
             elif self.solver_options.integrator_type == 'IRK':
-                generate_c_code_implicit_ode(context, context.opts)
+                generate_c_code_implicit_ode(context, model)
             elif self.solver_options.integrator_type == 'LIFTED_IRK':
                 if model.t != []:
                     raise NotImplementedError("LIFTED_IRK with time-varying dynamics not implemented yet.")
-                generate_c_code_implicit_ode(context, context.opts)
+                generate_c_code_implicit_ode(context, model)
             elif self.solver_options.integrator_type == 'GNSF':
-                generate_c_code_gnsf(context, context.opts)
+                generate_c_code_gnsf(context, model)
             elif self.solver_options.integrator_type == 'DISCRETE':
-                generate_c_code_discrete_dynamics(context, context.opts)
+                generate_c_code_discrete_dynamics(context, model)
             else:
                 raise Exception("ocp_generate_external_functions: unknown integrator type.")
         else:
-            target_location = os.path.join(context.opts['code_export_directory'], model_dir, model.dyn_generic_source)
+            target_location = os.path.join(code_gen_opts['code_export_directory'], model_dir, model.dyn_generic_source)
             shutil.copyfile(model.dyn_generic_source, target_location)
 
         stage_types = ['initial', 'path', 'terminal']
 
         for attr_nh, attr_nphi, stage_type in zip(['nh_0', 'nh', 'nh_e'], ['nphi_0', 'nphi', 'nphi_e'], stage_types):
             if getattr(self.dims, attr_nh) > 0 or getattr(self.dims, attr_nphi) > 0:
-                generate_c_code_constraint(context, constraints, stage_type, context.opts)
+                generate_c_code_constraint(context, model, constraints, stage_type)
 
         for attr, stage_type in zip(['cost_type_0', 'cost_type', 'cost_type_e'], stage_types):
             if getattr(self.cost, attr) == 'NONLINEAR_LS':
-                generate_c_code_nls_cost(context, stage_type, context.opts)
+                generate_c_code_nls_cost(context, model, stage_type)
             elif getattr(self.cost, attr) == 'CONVEX_OVER_NONLINEAR':
-                generate_c_code_conl_cost(context, stage_type, context.opts)
+                generate_c_code_conl_cost(context, model, stage_type)
             elif getattr(self.cost, attr) == 'EXTERNAL':
-                generate_c_code_external_cost(context, stage_type, context.opts)
+                generate_c_code_external_cost(context, model, stage_type)
             # TODO: generic
 
         return context

@@ -52,9 +52,8 @@ def is_casadi_SX(x):
 
 
 class GenerateContext:
-    def __init__(self, model: AcadosModel, opts=None):
-        self.model = model
-        self.p_slow = self.model.p_slow
+    def __init__(self, p_slow, opts=None):
+        self.p_slow = p_slow
 
         self.pool_names = []
         self.params = []
@@ -134,8 +133,8 @@ class GenerateContext:
 # Dynamics
 ################
 
-def generate_c_code_discrete_dynamics(context: GenerateContext, opts):
-    model = context.model
+def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosModel):
+    opts = context.opts
 
     # load model
     x = model.x
@@ -194,9 +193,8 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, opts):
 
 
 
-def generate_c_code_explicit_ode(context: GenerateContext, opts):
-    model = context.model
-
+def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel):
+    opts = context.opts
     generate_hess = opts["generate_hess"]
 
     # load model
@@ -262,8 +260,8 @@ def generate_c_code_explicit_ode(context: GenerateContext, opts):
     return
 
 
-def generate_c_code_implicit_ode(context: GenerateContext, opts):
-    model = context.model
+def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel):
+    opts = context.opts
 
     # load model
     x = model.x
@@ -320,8 +318,8 @@ def generate_c_code_implicit_ode(context: GenerateContext, opts):
     return
 
 
-def generate_c_code_gnsf(context: GenerateContext, opts):
-    model = context.model
+def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel):
+    opts = context.opts
     model_name = model.name
 
     # set up directory
@@ -396,8 +394,8 @@ def generate_c_code_gnsf(context: GenerateContext, opts):
 # Cost
 ################
 
-def generate_c_code_external_cost(context: GenerateContext, stage_type, opts):
-    model = context.model
+def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, stage_type):
+    opts = context.opts
 
     x = model.x
     p = model.p
@@ -477,8 +475,8 @@ def generate_c_code_external_cost(context: GenerateContext, stage_type, opts):
     return
 
 
-def generate_c_code_nls_cost(context: GenerateContext, stage_type, opts):
-    model = context.model
+def generate_c_code_nls_cost(context: GenerateContext, model: AcadosModel, stage_type):
+    opts = context.opts
 
     x = model.x
     z = model.z
@@ -541,9 +539,9 @@ def generate_c_code_nls_cost(context: GenerateContext, stage_type, opts):
 
 
 
-def generate_c_code_conl_cost(context: GenerateContext, stage_type: str, opts):
-    model = context.model
+def generate_c_code_conl_cost(context: GenerateContext, model: AcadosModel, stage_type: str):
 
+    opts = context.opts
     x = model.x
     z = model.z
     p = model.p
@@ -641,8 +639,9 @@ def generate_c_code_conl_cost(context: GenerateContext, stage_type: str, opts):
 ################
 # Constraints
 ################
-def generate_c_code_constraint(context: GenerateContext, constraints: AcadosOcpConstraints, stage_type: str, opts: dict):
-    model = context.model
+def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, constraints: AcadosOcpConstraints, stage_type: str):
+
+    opts = context.opts
 
     # load constraint variables and expression
     x = model.x

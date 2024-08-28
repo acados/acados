@@ -138,17 +138,16 @@ def sim_generate_external_functions(acados_sim: AcadosSim):
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
-    # TODO: dont allow p_slow for sim solver?
-    context = GenerateContext(model, opts)
+    context = GenerateContext(model.p_slow, opts)
 
     # generate external functions
     check_casadi_version()
     if integrator_type == 'ERK':
-        generate_c_code_explicit_ode(context, opts)
+        generate_c_code_explicit_ode(context, model)
     elif integrator_type == 'IRK':
-        generate_c_code_implicit_ode(context, opts)
+        generate_c_code_implicit_ode(context, model)
     elif integrator_type == 'GNSF':
-        generate_c_code_gnsf(context, opts)
+        generate_c_code_gnsf(context, model)
 
 
 class AcadosSimSolver:

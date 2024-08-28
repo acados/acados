@@ -407,13 +407,22 @@ class AcadosMultiphaseOcp:
 
 
     def generate_external_functions(self) -> GenerateContext:
+
+        # TODO:
+        # - sanity check that p_slow is a global parameter.
+
         # options for code generation
-        context_list = []
+        code_gen_opts = dict()
+        code_gen_opts['generate_hess'] = self.solver_options.hessian_approx == 'EXACT'
+        code_gen_opts['with_solution_sens_wrt_params'] = self.solver_options.with_solution_sens_wrt_params
+        code_gen_opts['with_value_sens_wrt_params'] = self.solver_options.with_value_sens_wrt_params
+        code_gen_opts['code_export_directory'] = self.code_export_directory
+
+        context = GenerateContext(self.model[0].p_slow, code_gen_opts)
 
         for i in range(self.n_phases):
             # this is the only option that can vary and influence external functions to be generated
             self.dummy_ocp_list[i].solver_options.integrator_type = self.mocp_opts.integrator_type[i]
-            context = self.dummy_ocp_list[i].generate_external_functions()
-            context_list.append(context)
+            context = self.dummy_ocp_list[i].generate_external_functions(context)
 
-        return context_list
+        return context
