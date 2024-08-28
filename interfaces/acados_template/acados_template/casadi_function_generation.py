@@ -98,8 +98,11 @@ class GenerateContext:
             fun_mod.generate(name, self.casadi_codegen_opts)
 
     def finalize(self):
-        for e in self.params:
-            print(e.shape, e)
+        if self.p_slow is None:
+            return
+
+        # for e in self.params:
+        #     print(e.shape, e)
 
         y = ca.cse(self.params)
         if not self.params:
@@ -112,7 +115,7 @@ class GenerateContext:
             return
         # TODO: add model name to function
         # TODO: generalize for multiphase OCP
-        fun = ca.Function('helpers', [self.p_slow], y, ['p'], self.pool_names)
+        fun = ca.Function('helpers', [self.p_slow], y, ['p_slow'], self.pool_names)
 
         # change directory
         cwd = os.getcwd()
