@@ -332,6 +332,7 @@ class AcadosModel():
                 raise Exception("model.p_slow is only supported for OCPs")
             if any(ca.which_depends(self.p_slow, self.p)):
                 raise Exception(f"model.p_slow must not depend on model.p, got p_slow ={self.p_slow}, p = {self.p}")
+            dims.np_slow = casadi_length(self.p_slow)
 
         return
 

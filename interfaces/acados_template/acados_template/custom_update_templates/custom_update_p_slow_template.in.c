@@ -89,7 +89,13 @@ int custom_update_function({{ name }}_solver_capsule* capsule, double* data, int
     custom_memory *custom_mem = (custom_memory *) capsule->custom_update_memory;
     external_function_casadi* fun = custom_mem->ext_helpers;
     fun->args[0] = data;
-    // TODO! Ensure data_len == len(p_slow)
+    int np_slow = {{ dims.np_slow }};
+
+    if (data_len != np_slow)
+    {
+        printf("custom_update_function: np_slow = %d should match data_len = %d. Exiting.\n", np_slow, data_len);
+        exit(1);
+    }
 
 {% set n_pools = casadi_pool_names | length %}
 {% for ip in range(end=n_pools) %}

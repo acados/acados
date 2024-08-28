@@ -140,6 +140,7 @@ class AcadosOcpDims:
         self.__nsg_e = 0
         # equalities within x bounds
         self.__nbxe_0 = None
+        self.__np_slow = 0
 
 
     @property
@@ -365,6 +366,11 @@ class AcadosOcpDims:
         return self.__ng_e
 
     @property
+    def np_slow(self):
+        """length of p_slow; default: 0"""
+        return self.__np_slow
+
+    @property
     def N(self):
         """
         :math:`N` - Number of shooting intervals.
@@ -400,6 +406,13 @@ class AcadosOcpDims:
             self.__np = np
         else:
             raise Exception('Invalid np value, expected nonnegative integer.')
+
+    @np_slow.setter
+    def np_slow(self, np_slow):
+        if isinstance(np_slow, int) and np_slow > -1:
+            self.__np_slow = np_slow
+        else:
+            raise Exception('Invalid np_slow value, expected nonnegative integer.')
 
     @ny_0.setter
     def ny_0(self, ny_0):
