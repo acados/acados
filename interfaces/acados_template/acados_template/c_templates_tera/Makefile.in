@@ -114,6 +114,13 @@
 {%- else %}
 	{%- set dims_nphi_e = 0 %}
 {%- endif %}
+
+{%- if dims.np_slow %}
+	{%- set dims_np_slow = dims.np_slow %}
+{%- else %}
+	{%- set dims_np_slow = 0 %}
+{%- endif %}
+
 {%- if solver_options.model_external_shared_lib_dir %}
 	{%- set model_external_shared_lib_dir = solver_options.model_external_shared_lib_dir %}
 {%- endif %}
@@ -305,7 +312,9 @@ OCP_SRC+= {{ solver_options.custom_update_filename }}
 {%- endif %}
 
 OCP_SRC+= acados_solver_{{ model.name }}.c
+{%- if dims_np_slow > 0 %}
 OCP_SRC+= helpers_{{ model.name }}.c
+{%- endif %}
 OCP_OBJ := $(OCP_SRC:.c=.o)
 
 # for sim solver
