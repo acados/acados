@@ -44,7 +44,7 @@ import numpy as np
 from casadi import DM, MX, SX, CasadiMeta, Function
 
 ALLOWED_CASADI_VERSIONS = (
-    '3.4.0'
+    '3.4.0',
     '3.4.5',
     '3.5.1',
     '3.5.2',
