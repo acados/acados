@@ -779,7 +779,6 @@ classdef AcadosOcp < handle
                 error('FUNNEL_L1PEN_LINESEARCH only supports SQP.')
             end
 
-            % TODO: implement zoRO description processing here!
             if isa(self.zoro_description, 'ZoroDescription')
                 self.zoro_description.process();
             end
