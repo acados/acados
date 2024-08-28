@@ -189,11 +189,11 @@ def main(use_cython=False, lut=True, use_p_slow=True):
     else:
         ocp.parameter_values = np.array([9.81, 0.1, 0.8])
 
-    # ocp.solver_options.custom_update_copy = False
-    # ocp.solver_options.custom_templates = [
-    #     # ('custom_update_function_zoro_template.in.c', 'custom_update_function.c'),
-    #     ('custom_update_function_zoro_template.in.h', 'custom_update_function.h'),
-    # ]
+    ocp.solver_options.custom_update_copy = False
+    ocp.solver_options.custom_templates = [
+        ('custom_update_p_slow_template.in.c', 'custom_update_function.c'),
+        ('custom_update_function_zoro_template.in.h', 'custom_update_function.h'),
+    ]
 
     solver_json = 'acados_ocp_' + model.name + '.json'
     if use_cython:
