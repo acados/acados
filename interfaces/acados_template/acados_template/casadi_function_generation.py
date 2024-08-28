@@ -91,7 +91,6 @@ class GenerateContext:
             fun_mod.generate(name, opts)
 
     def finalize(self):
-
         for e in self.params:
             print(e.shape, e)
 
@@ -182,8 +181,8 @@ class GenerateContext:
                 fun->args[0] = data;
             \n""")
 
-            for i in range(fun.n_out()):
-                out.write(f"""                fun->res[{i}] = {fun.name_out(i).split('|')[0]}_get_pool_double("{fun.name_out(i)}");\n""")
+            for i, name in enumerate(self.pool_names):
+                out.write(f"""                fun->res[{i}] = {name.split('|')[0]}_get_pool_double("{name}");\n""")
             out.write("""
                 fun->casadi_fun((const double **) fun->args, fun->res, fun->iw, fun->w, NULL);
                 return 1;
