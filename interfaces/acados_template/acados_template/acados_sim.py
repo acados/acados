@@ -35,7 +35,7 @@ from .acados_model import AcadosModel
 from .acados_dims import AcadosSimDims
 from .utils import get_acados_path, get_shared_lib_ext
 
-class AcadosSimOpts:
+class AcadosSimOptions:
     """
     class containing the solver options
     """
@@ -264,7 +264,7 @@ class AcadosSim:
 
     - :py:attr:`dims` of type :py:class:`acados_template.acados_dims.AcadosSimDims` - are automatically detected from model
     - :py:attr:`model` of type :py:class:`acados_template.acados_model.AcadosModel`
-    - :py:attr:`solver_options` of type :py:class:`acados_template.acados_sim.AcadosSimOpts`
+    - :py:attr:`solver_options` of type :py:class:`acados_template.acados_sim.AcadosSimOptions`
 
     - :py:attr:`acados_include_path` (set automatically)
     - :py:attr:`shared_lib_ext` (set automatically)
@@ -279,8 +279,8 @@ class AcadosSim:
         """Dimension definitions, automatically detected from :py:attr:`model`. Type :py:class:`acados_template.acados_dims.AcadosSimDims`"""
         self.model = AcadosModel()
         """Model definitions, type :py:class:`acados_template.acados_model.AcadosModel`"""
-        self.solver_options = AcadosSimOpts()
-        """Solver Options, type :py:class:`acados_template.acados_sim.AcadosSimOpts`"""
+        self.solver_options = AcadosSimOptions()
+        """Solver Options, type :py:class:`acados_template.acados_sim.AcadosSimOptions`"""
 
         self.acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/') # the replace part is important on Windows for CMake
         """Path to acados include directory (set automatically), type: `string`"""

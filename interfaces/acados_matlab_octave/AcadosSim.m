@@ -61,7 +61,6 @@ classdef AcadosSim < handle
             obj.dims = AcadosSimDims();
             obj.model = AcadosModel();
 
-            % TODO move this to class AcadosSimOptions
             obj.solver_options = AcadosSimOptions();
 
             obj.parameter_values = [];
