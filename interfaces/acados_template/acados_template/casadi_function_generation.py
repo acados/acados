@@ -32,7 +32,7 @@ from typing import Union, List
 
 import os
 import casadi as ca
-from .utils import is_empty, casadi_length
+from .utils import is_empty, casadi_length, check_casadi_version_supports_p_slow
 from .acados_model import AcadosModel
 from .acados_ocp_constraints import AcadosOcpConstraints
 
@@ -68,12 +68,12 @@ class GenerateContext:
                                 inputs: List[Union[ca.MX, ca.SX]],
                                 outputs: List[Union[ca.MX, ca.SX]]):
 
-
         if self.p_slow is None:
             # normal behaviour (p_slow is empty)
             fun = ca.Function(name, inputs, outputs)
             fun.generate(name, self.casadi_codegen_opts)
         else:
+            check_casadi_version_supports_p_slow()
             # interesting behaviour
             inputs_augmented = inputs + [self.p_slow]
             fun = ca.Function(name, inputs_augmented, outputs)

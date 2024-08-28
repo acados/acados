@@ -140,6 +140,12 @@ def check_casadi_version():
         msg += 'Version {} currently in use.'.format(casadi_version)
         print(msg)
 
+def check_casadi_version_supports_p_slow():
+    try:
+        from casadi import extract_parametric, cse
+    except:
+        raise Exception("CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se")
+
 
 def get_simulink_default_opts():
     python_interface_path = get_python_interface_path()
