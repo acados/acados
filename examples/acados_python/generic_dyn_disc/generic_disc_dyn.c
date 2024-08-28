@@ -5,7 +5,7 @@ extern "C" {
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/math.h"
 #include "blasfeo_d_blas.h"
-#include "blasfeo_d_aux.h"    
+#include "blasfeo_d_aux.h"
 #include "blasfeo_d_aux_ext_dep.h"
 
 // auxilary function to compute discrete dynamics, see below
