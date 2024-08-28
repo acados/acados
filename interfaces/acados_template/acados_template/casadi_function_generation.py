@@ -52,8 +52,9 @@ def is_casadi_SX(x):
 
 
 class GenerateContext:
-    def __init__(self, p_slow, opts=None):
+    def __init__(self, p_slow: Union[ca.SX, ca.MX], problem_name: str, opts=None):
         self.p_slow = p_slow
+        self.problem_name = problem_name
 
         self.pool_names = []
         self.params = []
@@ -124,7 +125,7 @@ class GenerateContext:
         # generate C code
         casadi_codegen_opts = self.casadi_codegen_opts.copy()
         casadi_codegen_opts["with_header"] = True
-        fun.generate("helpers_" + self.model.name, casadi_codegen_opts)
+        fun.generate("helpers_" + self.problem_name, casadi_codegen_opts)
 
         os.chdir(cwd)
         return

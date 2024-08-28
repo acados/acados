@@ -997,7 +997,7 @@ class AcadosOcp:
             code_gen_opts['with_value_sens_wrt_params'] = self.solver_options.with_value_sens_wrt_params
             code_gen_opts['code_export_directory'] = self.code_export_directory
 
-            context = GenerateContext(model.p_slow, code_gen_opts)
+            context = GenerateContext(model.p_slow, self.name, code_gen_opts)
         else:
             code_gen_opts = context.opts
 

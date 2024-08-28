@@ -138,7 +138,7 @@ def sim_generate_external_functions(acados_sim: AcadosSim):
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
-    context = GenerateContext(model.p_slow, opts)
+    context = GenerateContext(model.p_slow, model.name, opts)
 
     # generate external functions
     check_casadi_version()

@@ -418,7 +418,7 @@ class AcadosMultiphaseOcp:
         code_gen_opts['with_value_sens_wrt_params'] = self.solver_options.with_value_sens_wrt_params
         code_gen_opts['code_export_directory'] = self.code_export_directory
 
-        context = GenerateContext(self.model[0].p_slow, code_gen_opts)
+        context = GenerateContext(self.model[0].p_slow, self.name, code_gen_opts)
 
         for i in range(self.n_phases):
             # this is the only option that can vary and influence external functions to be generated
