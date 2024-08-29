@@ -935,9 +935,10 @@ class AcadosOcp:
             template_list.append(('Makefile.in', 'Makefile'))
 
         # sim
-        template_list.append(('acados_sim_solver.in.c', f'acados_sim_solver_{name}.c'))
-        template_list.append(('acados_sim_solver.in.h', f'acados_sim_solver_{name}.h'))
-        template_list.append(('main_sim.in.c', f'main_sim_{name}.c'))
+        if self.solver_options.integrator_type != 'DISCRETE':
+            template_list.append(('acados_sim_solver.in.c', f'acados_sim_solver_{name}.c'))
+            template_list.append(('acados_sim_solver.in.h', f'acados_sim_solver_{name}.h'))
+            template_list.append(('main_sim.in.c', f'main_sim_{name}.c'))
 
         # model
         template_list += self._get_external_function_header_templates()

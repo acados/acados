@@ -962,10 +962,11 @@ classdef AcadosOcp < handle
             template_list{end+1} = {'Makefile.in', ['Makefile']};
 
             % integrator
-            template_list{end+1} = {'acados_sim_solver.in.c', ['acados_sim_solver_', self.name, '.c']};
-            template_list{end+1} = {'acados_sim_solver.in.h', ['acados_sim_solver_', self.name, '.h']};
-            template_list{end+1} = {'main_sim.in.c', ['main_sim_', self.name, '.c']};
-
+            if ~strcmp(self.solver_options.integrator_type, 'DISCRETE')
+                template_list{end+1} = {'acados_sim_solver.in.c', ['acados_sim_solver_', self.name, '.c']};
+                template_list{end+1} = {'acados_sim_solver.in.h', ['acados_sim_solver_', self.name, '.h']};
+                template_list{end+1} = {'main_sim.in.c', ['main_sim_', self.name, '.c']};
+            end
             % MEX files
             matlab_template_path = 'matlab_templates';
             template_list{end+1} = {fullfile(matlab_template_path, 'mex_solver.in.m'), [self.name, '_mex_solver.m']};
@@ -987,8 +988,10 @@ classdef AcadosOcp < handle
             if ~isempty(self.simulink_opts)
                 template_list{end+1} = {fullfile(matlab_template_path, 'acados_solver_sfun.in.c'), ['acados_solver_sfunction_', self.name, '.c']};
                 template_list{end+1} = {fullfile(matlab_template_path, 'make_sfun.in.m'), ['make_sfun.m']};
-                template_list{end+1} = {fullfile(matlab_template_path, 'acados_sim_solver_sfun.in.c'), ['acados_sim_solver_sfunction_', self.name, '.c']};
-                template_list{end+1} = {fullfile(matlab_template_path, 'make_sfun_sim.in.m'), ['make_sfun_sim.m']};
+                if ~strcmp(self.solver_options.integrator_type, 'DISCRETE')
+                    template_list{end+1} = {fullfile(matlab_template_path, 'acados_sim_solver_sfun.in.c'), ['acados_sim_solver_sfunction_', self.name, '.c']};
+                    template_list{end+1} = {fullfile(matlab_template_path, 'make_sfun_sim.in.m'), ['make_sfun_sim.m']};
+                end
             else
                 disp("not rendering Simulink related templates, as simulink_opts are not specified.")
             end

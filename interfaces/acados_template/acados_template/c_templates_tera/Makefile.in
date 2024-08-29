@@ -307,21 +307,23 @@ OCP_SRC+= {{ solver_options.custom_update_filename }}
 OCP_SRC+= acados_solver_{{ model.name }}.c
 OCP_OBJ := $(OCP_SRC:.c=.o)
 
+{%- if solver_options.integrator_type != "DISCRETE" %}
 # for sim solver
 SIM_SRC= acados_sim_solver_{{ model.name }}.c
 SIM_OBJ := $(SIM_SRC:.c=.o)
+
+# for target example_sim
+EX_SIM_SRC= main_sim_{{ model.name }}.c
+EX_SIM_OBJ := $(EX_SIM_SRC:.c=.o)
+EX_SIM_EXE := $(EX_SIM_SRC:.c=)
+{%- endif %}
 
 # for target example
 EX_SRC= main_{{ model.name }}.c
 EX_OBJ := $(EX_SRC:.c=.o)
 EX_EXE := $(EX_SRC:.c=)
 
-# for target example_sim
-EX_SIM_SRC= main_sim_{{ model.name }}.c
-EX_SIM_OBJ := $(EX_SIM_SRC:.c=.o)
-EX_SIM_EXE := $(EX_SIM_SRC:.c=)
-
-# combine model, sim and ocp object files
+# combine model, (potentially) sim and ocp object files
 OBJ=
 OBJ+= $(MODEL_OBJ)
 {%- if solver_options.integrator_type != "DISCRETE" %}
@@ -389,12 +391,13 @@ LDLIBS+= {{ link_libs }}
 # libraries
 LIBACADOS_SOLVER=libacados_solver_{{ model.name }}{{ shared_lib_ext }}
 LIBACADOS_OCP_SOLVER=libacados_ocp_solver_{{ model.name }}{{ shared_lib_ext }}
+{%- if solver_options.integrator_type != "DISCRETE" %}
 LIBACADOS_SIM_SOLVER=lib$(SIM_SRC:.c={{ shared_lib_ext }})
+{%- endif %}
 
 # virtual targets
 .PHONY : all clean
 
-#all: clean example_sim example shared_lib
 {% if solver_options.integrator_type == "DISCRETE" -%}
 all: clean example
 shared_lib: ocp_shared_lib
@@ -407,20 +410,20 @@ shared_lib: bundled_shared_lib ocp_shared_lib sim_shared_lib
 example: $(EX_OBJ) $(OBJ)
 	$(CC) $^ -o $(EX_EXE) $(LDFLAGS) $(LDLIBS)
 
+{% if solver_options.integrator_type != "DISCRETE" -%}
 example_sim: $(EX_SIM_OBJ) $(MODEL_OBJ) $(SIM_OBJ)
 	$(CC) $^ -o $(EX_SIM_EXE) $(LDFLAGS) $(LDLIBS)
 
-{% if solver_options.integrator_type != "DISCRETE" -%}
 bundled_shared_lib: $(OBJ)
 	$(CC) -shared $^ -o $(LIBACADOS_SOLVER) $(LDFLAGS) $(LDLIBS)
+
+sim_shared_lib: $(SIM_OBJ) $(MODEL_OBJ)
+	$(CC) -shared $^ -o $(LIBACADOS_SIM_SOLVER) $(LDFLAGS) $(LDLIBS)
 {%- endif %}
 
 ocp_shared_lib: $(OCP_OBJ) $(MODEL_OBJ)
 	$(CC) -shared $^ -o $(LIBACADOS_OCP_SOLVER) $(LDFLAGS) $(LDLIBS) \
 	-L$(EXTERNAL_DIR) -l$(EXTERNAL_LIB)
-
-sim_shared_lib: $(SIM_OBJ) $(MODEL_OBJ)
-	$(CC) -shared $^ -o $(LIBACADOS_SIM_SOLVER) $(LDFLAGS) $(LDLIBS)
 
 
 # Cython targets
@@ -451,6 +454,7 @@ ocp_cython: ocp_cython_o
 	$(abspath .)/libacados_ocp_solver_{{ model.name }}{{ shared_lib_ext }} \
 	$(LDFLAGS) $(LDLIBS)
 
+{% if solver_options.integrator_type != "DISCRETE" -%}
 # Sim Cython targets
 sim_cython_c: sim_shared_lib
 	cython \
@@ -478,6 +482,8 @@ sim_cython: sim_cython_o
 	acados_sim_solver_pyx.o \
 	$(abspath .)/libacados_sim_solver_{{ model.name }}{{ shared_lib_ext }} \
 	$(LDFLAGS) $(LDLIBS)
+{%- endif %}
+
 
 {%- if os and os == "pc" %}
 
@@ -496,18 +502,26 @@ clean_ocp_cython:
 	del \Q acados_ocp_solver_pyx{{ shared_lib_ext }} 2>nul
 	del \Q acados_ocp_solver_pyx.o 2>nul
 
+{% if solver_options.integrator_type != "DISCRETE" -%}
 clean_sim_cython:
 	del \Q libacados_sim_solver_{{ model.name }}{{ shared_lib_ext }} 2>nul
 	del \Q acados_sim_solver_{{ model.name }}.o 2>nul
 	del \Q acados_sim_solver_pyx{{ shared_lib_ext }} 2>nul
 	del \Q acados_sim_solver_pyx.o 2>nul
+{%- endif %}
 
 {%- else %}
 
 clean:
+{%- if solver_options.integrator_type != "DISCRETE" %}
 	$(RM) $(OBJ) $(EX_OBJ) $(EX_SIM_OBJ)
 	$(RM) $(LIBACADOS_SOLVER) $(LIBACADOS_OCP_SOLVER) $(LIBACADOS_SIM_SOLVER)
 	$(RM) $(EX_EXE) $(EX_SIM_EXE)
+{%- else %}
+	$(RM) $(OBJ) $(EX_OBJ)
+	$(RM) $(LIBACADOS_SOLVER) $(LIBACADOS_OCP_SOLVER)
+	$(RM) $(EX_EXE)
+{%- endif %}
 
 clean_ocp_shared_lib:
 	$(RM) $(LIBACADOS_OCP_SOLVER)
@@ -519,10 +533,12 @@ clean_ocp_cython:
 	$(RM) acados_ocp_solver_pyx{{ shared_lib_ext }}
 	$(RM) acados_ocp_solver_pyx.o
 
+{% if solver_options.integrator_type != "DISCRETE" -%}
 clean_sim_cython:
 	$(RM) libacados_sim_solver_{{ model.name }}{{ shared_lib_ext }}
 	$(RM) acados_sim_solver_{{ model.name }}.o
 	$(RM) acados_sim_solver_pyx{{ shared_lib_ext }}
 	$(RM) acados_sim_solver_pyx.o
+{%- endif %}
 
 {%- endif %}

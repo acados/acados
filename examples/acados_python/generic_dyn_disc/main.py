@@ -30,7 +30,7 @@
 
 import casadi as ca
 import numpy as np
-from acados_template import AcadosOcp, AcadosOcpSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, ocp_get_default_cmake_builder
 import scipy.linalg
 
 def linear_mass_spring_model(casadi_dynamics, casadi_cost):
@@ -167,12 +167,13 @@ def linear_mass_spring_model(casadi_dynamics, casadi_cost):
 
 
 
-def main(casadi_dynamics, casadi_cost):
+def main(casadi_dynamics, casadi_cost, use_cmake = False):
 
     ocp = linear_mass_spring_model(casadi_dynamics, casadi_cost)
 
     # create ocp solver
-    ocp_solver = AcadosOcpSolver(ocp)
+    cmake_builder = ocp_get_default_cmake_builder() if use_cmake else None
+    ocp_solver = AcadosOcpSolver(ocp, cmake_builder=cmake_builder)
 
     # solve
     status = ocp_solver.solve()
