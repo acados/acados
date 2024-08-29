@@ -70,5 +70,5 @@ function model = get_pendulum_on_cart_AcadosModel()
 
     model.f_expl_expr = f_expl_expr;
     model.f_impl_expr = f_impl_expr;
-    model.name = 'pendulum_on_cart';
+    model.name = 'pendulum';
 end
