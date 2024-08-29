@@ -255,7 +255,6 @@ OCP_SRC+= {{ solver_options.custom_update_filename }}
 {%- endif %}
 
 
-
 OCP_SRC+= acados_solver_{{ name }}.c
 OCP_OBJ := $(OCP_SRC:.c=.o)
 
@@ -328,12 +327,10 @@ LDLIBS+= {{ link_libs }}
 # libraries
 LIBACADOS_SOLVER=libacados_solver_{{ name }}{{ shared_lib_ext }}
 LIBACADOS_OCP_SOLVER=libacados_ocp_solver_{{ name }}{{ shared_lib_ext }}
-LIBACADOS_SIM_SOLVER=lib$(SIM_SRC:.c={{ shared_lib_ext }})
 
 # virtual targets
 .PHONY : all clean
 
-#all: clean example_sim example shared_lib
 all: clean example
 shared_lib: ocp_shared_lib
 
@@ -345,10 +342,6 @@ example: $(EX_OBJ) $(OBJ)
 ocp_shared_lib: $(OCP_OBJ) $(MODEL_OBJ)
 	$(CC) -shared $^ -o $(LIBACADOS_OCP_SOLVER) $(LDFLAGS) $(LDLIBS) \
 	-L$(EXTERNAL_DIR) -l$(EXTERNAL_LIB)
-
-sim_shared_lib: $(SIM_OBJ) $(MODEL_OBJ)
-	$(CC) -shared $^ -o $(LIBACADOS_SIM_SOLVER) $(LDFLAGS) $(LDLIBS)
-
 
 # Cython targets
 ocp_cython_c: ocp_shared_lib
@@ -398,9 +391,9 @@ clean_ocp_cython:
 {%- else %}
 
 clean:
-	$(RM) $(OBJ) $(EX_OBJ) $(EX_SIM_OBJ)
-	$(RM) $(LIBACADOS_SOLVER) $(LIBACADOS_OCP_SOLVER) $(LIBACADOS_SIM_SOLVER)
-	$(RM) $(EX_EXE) $(EX_SIM_EXE)
+	$(RM) $(OBJ) $(EX_OBJ)
+	$(RM) $(LIBACADOS_SOLVER) $(LIBACADOS_OCP_SOLVER)
+	$(RM) $(EX_EXE)
 
 clean_ocp_shared_lib:
 	$(RM) $(LIBACADOS_OCP_SOLVER)
