@@ -391,7 +391,7 @@ LDLIBS+= {{ link_libs }}
 # libraries
 LIBACADOS_SOLVER=libacados_solver_{{ model.name }}{{ shared_lib_ext }}
 LIBACADOS_OCP_SOLVER=libacados_ocp_solver_{{ model.name }}{{ shared_lib_ext }}
-{%- if solver_options.integrator_type != "DISCRETE" -%}
+{%- if solver_options.integrator_type != "DISCRETE" %}
 LIBACADOS_SIM_SOLVER=lib$(SIM_SRC:.c={{ shared_lib_ext }})
 {%- endif %}
 
