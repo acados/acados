@@ -28,6 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+
 {%- if solver_options.qp_solver %}
 	{%- set qp_solver = solver_options.qp_solver %}
 {%- else %}
@@ -42,94 +43,22 @@
 	{%- set hessian_approx = "GAUSS_NEWTON" %}
 {%- endif %}
 
-{%- if constraints.constr_type %}
-	{%- set constr_type = constraints.constr_type %}
-{%- else %}
-	{%- set constr_type = "NONE" %}
-{%- endif %}
-
-{%- if constraints.constr_type_0 %}
-	{%- set constr_type_0 = constraints.constr_type_0 %}
-{%- else %}
-	{%- set constr_type_0 = "NONE" %}
-{%- endif %}
-
-{%- if constraints.constr_type_e %}
-	{%- set constr_type_e = constraints.constr_type_e %}
-{%- else %}
-	{%- set constr_type_e = "NONE" %}
-{%- endif %}
-
-{%- if cost.cost_type %}
-	{%- set cost_type = cost.cost_type %}
-{%- else %}
-	{%- set cost_type = "NONE" %}
-{%- endif %}
-
-{%- if cost.cost_type_e %}
-	{%- set cost_type_e = cost.cost_type_e %}
-{%- else %}
-	{%- set cost_type_e = "NONE" %}
-{%- endif %}
-
-{%- if cost.cost_type_0 %}
-	{%- set cost_type_0 = cost.cost_type_0 %}
-{%- else %}
-	{%- set cost_type_0 = "NONE" %}
-{%- endif %}
-
-{%- if dims.nh %}
-	{%- set dims_nh = dims.nh %}
-{%- else %}
-	{%- set dims_nh = 0 %}
-{%- endif %}
-
-{%- if dims.nphi %}
-	{%- set dims_nphi = dims.nphi %}
-{%- else %}
-	{%- set dims_nphi = 0 %}
-{%- endif %}
-
-{%- if dims.nphi_0 %}
-	{%- set dims_nphi_0 = dims.nphi_0 %}
-{%- else %}
-	{%- set dims_nphi_0 = 0 %}
-{%- endif %}
-
-{%- if dims.nh_0 %}
-	{%- set dims_nh_0 = dims.nh_0 %}
-{%- else %}
-	{%- set dims_nh_0 = 0 %}
-{%- endif %}
-
-
-{%- if dims.nh_e %}
-	{%- set dims_nh_e = dims.nh_e %}
-{%- else %}
-	{%- set dims_nh_e = 0 %}
-{%- endif %}
-
-{%- if dims.nphi_e %}
-	{%- set dims_nphi_e = dims.nphi_e %}
-{%- else %}
-	{%- set dims_nphi_e = 0 %}
-{%- endif %}
 {%- if solver_options.model_external_shared_lib_dir %}
 	{%- set model_external_shared_lib_dir = solver_options.model_external_shared_lib_dir %}
 {%- endif %}
+
 {%- if solver_options.model_external_shared_lib_name %}
 	{%- set model_external_shared_lib_name = solver_options.model_external_shared_lib_name %}
 {%- endif %}
 
-{# control operator #}
+{#- control operator #}
 {%- if os and os == "pc" %}
 	{%- set control = "&" %}
 {%- else %}
 	{%- set control = ";" %}
 {%- endif %}
 
-{# acados linking libraries and flags #}
-{%- if acados_link_libs and os and os == "pc" %}
+{%- if acados_link_libs and os and os == "pc" %}{# acados linking libraries and flags #}
 	{%- set link_libs = acados_link_libs.qpoases ~ " " ~ acados_link_libs.hpmpc ~ " " ~ acados_link_libs.osqp ~ " " ~ acados_link_libs.daqp -%}
 	{%- set openmp_flag = acados_link_libs.openmp %}
 {%- else %}
@@ -169,11 +98,11 @@ MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_impl_dae_fun_jac_x_xdot_u.c
 MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_impl_dae_hess.c
 	{%- endif %}
 {%- elif solver_options.integrator_type == "GNSF" %}
-	{% if model.gnsf_purely_linear != 1 %}
+	{%- if model.gnsf_purely_linear != 1 %}
 MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_gnsf_phi_fun.c
 MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_gnsf_phi_fun_jac_y.c
 MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_gnsf_phi_jac_y_uhat.c
-		{% if model.gnsf_nontrivial_f_LO == 1 %}
+		{%- if model.gnsf_nontrivial_f_LO == 1 %}
 MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz.c
 		{%- endif %}
 	{%- endif %}
@@ -196,50 +125,52 @@ MODEL_SRC+= {{ model.name }}_model/{{ model.dyn_generic_source }}
 	{%- endif %}
 MODEL_OBJ := $(MODEL_SRC:.c=.o)
 
+
+	{%- if problem_class != "SIM" %}
 # optimal control problem - mostly CasADi exports
 OCP_SRC=
 
-{%- if constr_type_0 == "BGH" and dims_nh_0 > 0 %}
+{%- if constraints.constr_type_0 == "BGH" and dims.nh_0 > 0 %}
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_0_fun_jac_uxt_zt.c
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_0_fun.c
 	{%- if hessian_approx == "EXACT" %}
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_0_fun_jac_uxt_zt_hess.c
 	{%- endif %}
-{%- elif constr_type_0 == "BGP" and dims_nphi_0 > 0 %}
+{%- elif constraints.constr_type_0 == "BGP" and dims.nphi_0 > 0 %}
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_phi_0_constraint_fun_jac_hess.c
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_phi_0_constraint_fun.c
 {%- endif %}
 
-{%- if constr_type == "BGH" and dims_nh > 0 %}
+{%- if constraints.constr_type == "BGH" and dims.nh > 0 %}
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_zt.c
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun.c
 	{%- if hessian_approx == "EXACT" %}
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_zt_hess.c
 	{%- endif %}
-{%- elif constr_type == "BGP" and dims_nphi > 0 %}
+{%- elif constraints.constr_type == "BGP" and dims.nphi > 0 %}
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_phi_constraint_fun.c
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_phi_constraint_fun_jac_hess.c
 {%- endif %}
 
-{%- if constr_type_e == "BGH" and dims_nh_e > 0 %}
+{%- if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun_jac_uxt_zt.c
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun.c
 	{%- if hessian_approx == "EXACT" %}
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess.c
 	{%- endif %}
-{%- elif constr_type_e == "BGP" and dims_nphi_e > 0 %}
+{%- elif constraints.constr_type_e == "BGP" and dims.nphi_e > 0 %}
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_phi_e_constraint_fun.c
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_phi_e_constraint_fun_jac_hess.c
 {%- endif %}
 
-{%- if cost_type_0 == "NONLINEAR_LS" %}
+{%- if cost.cost_type_0 == "NONLINEAR_LS" %}
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_y_0_fun.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_y_0_fun_jac_ut_xt.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_y_0_hess.c
-{%- elif cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
+{%- elif cost.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_conl_cost_0_fun.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_conl_cost_0_fun_jac_hess.c
-{%- elif cost_type_0 == "EXTERNAL" %}
+{%- elif cost.cost_type_0 == "EXTERNAL" %}
 	{%- if cost.cost_ext_fun_type_0 == "casadi" %}
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun_jac.c
@@ -254,14 +185,14 @@ OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_grad_p.c
 OCP_SRC+= {{ model.name }}_cost/{{ cost.cost_source_ext_cost_0 }}
 	{%- endif %}
 {%- endif %}
-{%- if cost_type == "NONLINEAR_LS" %}
+{%- if cost.cost_type == "NONLINEAR_LS" %}
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_y_fun.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_y_fun_jac_ut_xt.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_y_hess.c
-{%- elif cost_type == "CONVEX_OVER_NONLINEAR" %}
+{%- elif cost.cost_type == "CONVEX_OVER_NONLINEAR" %}
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_conl_cost_fun.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_conl_cost_fun_jac_hess.c
-{%- elif cost_type == "EXTERNAL" %}
+{%- elif cost.cost_type == "EXTERNAL" %}
 	{%- if cost.cost_ext_fun_type == "casadi" %}
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun_jac.c
@@ -276,14 +207,14 @@ OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_grad_p.c
 OCP_SRC+= {{ model.name }}_cost/{{ cost.cost_source_ext_cost }}
 	{%- endif %}
 {%- endif %}
-{%- if cost_type_e == "NONLINEAR_LS" %}
+{%- if cost.cost_type_e == "NONLINEAR_LS" %}
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_y_e_fun.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_y_e_fun_jac_ut_xt.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_y_e_hess.c
-{%- elif cost_type_e == "CONVEX_OVER_NONLINEAR" %}
+{%- elif cost.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_conl_cost_e_fun.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_conl_cost_e_fun_jac_hess.c
-{%- elif cost_type_e == "EXTERNAL" %}
+{%- elif cost.cost_type_e == "EXTERNAL" %}
 	{%- if cost.cost_ext_fun_type_e == "casadi" %}
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun_jac.c
@@ -306,6 +237,8 @@ OCP_SRC+= {{ solver_options.custom_update_filename }}
 
 OCP_SRC+= acados_solver_{{ model.name }}.c
 OCP_OBJ := $(OCP_SRC:.c=.o)
+	{%- endif %}
+
 
 {%- if solver_options.integrator_type != "DISCRETE" %}
 # for sim solver
@@ -318,10 +251,13 @@ EX_SIM_OBJ := $(EX_SIM_SRC:.c=.o)
 EX_SIM_EXE := $(EX_SIM_SRC:.c=)
 {%- endif %}
 
+	{%- if problem_class != "SIM" %}
 # for target example
 EX_SRC= main_{{ model.name }}.c
 EX_OBJ := $(EX_SRC:.c=.o)
 EX_EXE := $(EX_SRC:.c=)
+	{%- endif %}
+
 
 # combine model, (potentially) sim and ocp object files
 OBJ=
@@ -329,7 +265,10 @@ OBJ+= $(MODEL_OBJ)
 {%- if solver_options.integrator_type != "DISCRETE" %}
 OBJ+= $(SIM_OBJ)
 {%- endif %}
+
+{%- if problem_class != "SIM" %}
 OBJ+= $(OCP_OBJ)
+{%- endif %}
 
 EXTERNAL_DIR=
 EXTERNAL_LIB=
@@ -398,6 +337,7 @@ LIBACADOS_SIM_SOLVER=lib$(SIM_SRC:.c={{ shared_lib_ext }})
 # virtual targets
 .PHONY : all clean
 
+	{%- if problem_class != "SIM" %}
 {% if solver_options.integrator_type == "DISCRETE" -%}
 all: clean example
 shared_lib: ocp_shared_lib
@@ -405,21 +345,29 @@ shared_lib: ocp_shared_lib
 all: clean example_sim example
 shared_lib: bundled_shared_lib ocp_shared_lib sim_shared_lib
 {%- endif %}
+	{%-else %}
+all: clean example_sim
+shared_lib: sim_shared_lib
+	{%- endif %}
 
 # some linker targets
+
+{%- if problem_class != "SIM" %}
 example: $(EX_OBJ) $(OBJ)
 	$(CC) $^ -o $(EX_EXE) $(LDFLAGS) $(LDLIBS)
+{%- endif %}
 
 {% if solver_options.integrator_type != "DISCRETE" -%}
 example_sim: $(EX_SIM_OBJ) $(MODEL_OBJ) $(SIM_OBJ)
 	$(CC) $^ -o $(EX_SIM_EXE) $(LDFLAGS) $(LDLIBS)
 
-bundled_shared_lib: $(OBJ)
-	$(CC) -shared $^ -o $(LIBACADOS_SOLVER) $(LDFLAGS) $(LDLIBS)
-
 sim_shared_lib: $(SIM_OBJ) $(MODEL_OBJ)
 	$(CC) -shared $^ -o $(LIBACADOS_SIM_SOLVER) $(LDFLAGS) $(LDLIBS)
 {%- endif %}
+
+{%- if problem_class != "SIM" %}{# OCP related stuff#}
+bundled_shared_lib: $(OBJ)
+	$(CC) -shared $^ -o $(LIBACADOS_SOLVER) $(LDFLAGS) $(LDLIBS)
 
 ocp_shared_lib: $(OCP_OBJ) $(MODEL_OBJ)
 	$(CC) -shared $^ -o $(LIBACADOS_OCP_SOLVER) $(LDFLAGS) $(LDLIBS) \
@@ -453,6 +401,8 @@ ocp_cython: ocp_cython_o
 	acados_ocp_solver_pyx.o \
 	$(abspath .)/libacados_ocp_solver_{{ model.name }}{{ shared_lib_ext }} \
 	$(LDFLAGS) $(LDLIBS)
+{%- endif %}
+
 
 {% if solver_options.integrator_type != "DISCRETE" -%}
 # Sim Cython targets
@@ -492,6 +442,7 @@ clean:
 	del \Q *{{ shared_lib_ext }} 2>nul
 	del \Q main_{{ model.name }} 2>nul
 
+{%- if problem_class != "SIM" %}{# OCP related stuff#}
 clean_ocp_shared_lib:
 	del \Q libacados_ocp_solver_{{ model.name }}{{ shared_lib_ext }} 2>nul
 	del \Q acados_solver_{{ model.name }}.o 2>nul
@@ -501,6 +452,7 @@ clean_ocp_cython:
 	del \Q acados_solver_{{ model.name }}.o 2>nul
 	del \Q acados_ocp_solver_pyx{{ shared_lib_ext }} 2>nul
 	del \Q acados_ocp_solver_pyx.o 2>nul
+{%- endif %}
 
 {% if solver_options.integrator_type != "DISCRETE" -%}
 clean_sim_cython:
@@ -523,6 +475,7 @@ clean:
 	$(RM) $(EX_EXE)
 {%- endif %}
 
+{%- if problem_class != "SIM" %}{# OCP related stuff#}
 clean_ocp_shared_lib:
 	$(RM) $(LIBACADOS_OCP_SOLVER)
 	$(RM) $(OCP_OBJ)
@@ -532,6 +485,7 @@ clean_ocp_cython:
 	$(RM) acados_solver_{{ model.name }}.o
 	$(RM) acados_ocp_solver_pyx{{ shared_lib_ext }}
 	$(RM) acados_ocp_solver_pyx.o
+{%- endif %}
 
 {% if solver_options.integrator_type != "DISCRETE" -%}
 clean_sim_cython:
