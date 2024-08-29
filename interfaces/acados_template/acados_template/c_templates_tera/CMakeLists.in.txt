@@ -178,7 +178,9 @@ endif()
 # object target names
 set(MODEL_OBJ model_{{ model.name }})
 set(OCP_OBJ ocp_{{ model.name }})
+{%- if solver_options.integrator_type != "DISCRETE" %}
 set(SIM_OBJ sim_{{ model.name }})
+{%- endif %}
 
 # model
 set(MODEL_SRC
@@ -474,5 +476,7 @@ endif(${BUILD_ACADOS_SIM_SOLVER_LIB})
 unset(BUILD_ACADOS_SOLVER_LIB CACHE)
 unset(BUILD_ACADOS_OCP_SOLVER_LIB CACHE)
 unset(BUILD_EXAMPLE CACHE)
+{%- if solver_options.integrator_type != "DISCRETE" %}
 unset(BUILD_SIM_EXAMPLE CACHE)
 unset(BUILD_ACADOS_SIM_SOLVER_LIB CACHE)
+{%- endif %}
