@@ -43,8 +43,25 @@ knots = [[0,0,0,0,0.2,0.5,0.8,1,1,1,1],[0,0,0,0.1,0.5,0.9,1,1,1]]
 np.random.seed(1)
 data = np.random.random((7,6,2)).ravel(order='F')
 
-def export_pendulum_ode_model(lut=True) -> AcadosModel:
+def create_p_slow(lut=True):
+    m = MX.sym("m")
+    l = MX.sym("l")
+    p_slow = [m, l]
+    p_slow_values = np.array([0.1, 0.8])
 
+    if lut:
+        # Coefficient of B-spline
+        C = MX.sym("C", data.shape[0], 1)
+        p_slow += [C]
+        p_slow_values = np.concatenate([p_slow_values, data])
+    else:
+        C = None
+    p_slow = ca.vcat(p_slow)
+
+    return p_slow, m, l, C, p_slow_values
+
+
+def export_pendulum_ode_model(p_slow, m, l, C, lut=True) -> AcadosModel:
     model_name = 'pendulum'
 
     # constants
@@ -53,10 +70,6 @@ def export_pendulum_ode_model(lut=True) -> AcadosModel:
     # parameters
     g = MX.sym("g")
     p = g
-
-    m = MX.sym("m")
-    l = MX.sym("l")
-    p_slow = [m, l]
 
     # set up states & controls
     x1      = MX.sym('x1')
@@ -72,12 +85,6 @@ def export_pendulum_ode_model(lut=True) -> AcadosModel:
     # xdot
     nx = x.shape[0]
     xdot = MX.sym('xdot', nx)
-
-    # parameters
-    if lut:
-        # Coefficient of B-spline
-        C = MX.sym("C",data.shape[0],1)
-        p_slow += [C]
 
     # dynamics
     cos_theta = cos(theta)
@@ -106,45 +113,27 @@ def export_pendulum_ode_model(lut=True) -> AcadosModel:
     model.u = u
     # model.z = z
     model.p = p
-    model.p_slow = ca.vcat(p_slow)
+    model.p_slow = p_slow
     model.name = model_name
 
     return model
 
 
-def main(use_cython=False, lut=True, use_p_slow=True):
+def create_ocp_formulation_without_opts(p_slow, m, l, C, lut=True, use_p_slow=True) -> AcadosOcp:
 
-    print(f"\n\nRunning example with lut={lut}, use_p_slow={use_p_slow}")
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
     # set model
-    model = export_pendulum_ode_model(lut=lut)
+    model = export_pendulum_ode_model(p_slow, m, l, C, lut=lut)
+    model.p_slow = p_slow
     ocp.model = model
 
-    # parameter values
-    p_values = np.array([9.81])
-    p_slow_values = np.array([0.1, 0.8])
-    if lut:
-        p_slow_values = np.concatenate([p_slow_values, data])
-    if not use_p_slow:
-        model.p = vertcat(model.p, model.p_slow)
-        model.p_slow = None
-        p_values = np.concatenate([p_values, p_slow_values])
-        p_slow_values = np.array([])
-
-    # tmp hack
-    # model.p = vertcat(model.p, model.p_slow)
-    # p_values = np.concatenate([p_values, p_slow_values])
-
-    ocp.parameter_values = p_values
-
-    Tf = 1.0
+    # dimensions
     nx = model.x.rows()
     nu = model.u.rows()
     ny = nx + nu
     ny_e = nx
-    N_horizon = 20
 
     # set cost
     Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
@@ -176,6 +165,29 @@ def main(use_cython=False, lut=True, use_p_slow=True):
 
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
+    ocp.parameter_values = np.array([9.81])
+
+    if not use_p_slow:
+        model.p = ca.vertcat(model.p, p_slow)
+        model.p_slow = None
+
+    return ocp
+
+
+def main(use_cython=False, lut=True, use_p_slow=True):
+
+    print(f"\n\nRunning example with lut={lut}, use_p_slow={use_p_slow}")
+    p_slow, m, l, C, p_slow_values = create_p_slow(lut=lut)
+
+    # create ocp
+    ocp = create_ocp_formulation_without_opts(p_slow, m, l, C, lut=lut, use_p_slow=use_p_slow)
+
+    if not use_p_slow:
+        ocp.parameter_values = np.concatenate([ocp.parameter_values, p_slow_values])
+
+    Tf = 1.0
+    N_horizon = 20
+
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
@@ -183,15 +195,14 @@ def main(use_cython=False, lut=True, use_p_slow=True):
     ocp.solver_options.print_level = 0
     ocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP_RTI, SQP
 
-
     # set prediction horizon
     ocp.solver_options.tf = Tf
     ocp.solver_options.N_horizon = N_horizon
 
     # create ocp solver
-    print(f"Creating ocp solver with p_slow = {model.p_slow}, p = {model.p}")
+    print(f"Creating ocp solver with p_slow = {ocp.model.p_slow}, p = {ocp.model.p}")
 
-    solver_json = 'acados_ocp_' + model.name + '.json'
+    solver_json = 'acados_ocp_' + ocp.model.name + '.json'
     if use_cython:
         AcadosOcpSolver.generate(ocp, json_file=solver_json)
         AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
