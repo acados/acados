@@ -44,32 +44,28 @@
 
 typedef struct custom_memory
 {
-    external_function_casadi* ext_helpers;
+    external_function_casadi ext_helpers;
     void *raw_memory; // Pointer to allocated memory, to be used for freeing
 } custom_memory;
 
 
 static void *example_custom_memory_create({{ name }}_solver_capsule* capsule)
 {
-    static external_function_casadi ext_helpers;
-    ext_helpers.casadi_fun = &helpers;
-    ext_helpers.casadi_work = &helpers_work;
-    ext_helpers.casadi_sparsity_in = &helpers_sparsity_in;
-    ext_helpers.casadi_sparsity_out = &helpers_sparsity_out;
-    ext_helpers.casadi_n_in = &helpers_n_in;
-    ext_helpers.casadi_n_out = &helpers_n_out;
-
     acados_size_t bytes = sizeof(custom_memory);
-    bytes += external_function_casadi_calculate_size(&ext_helpers);
 
     void *ptr = acados_calloc(1, bytes);
     char *c_ptr = (char *) ptr;
     custom_memory *custom_mem = (custom_memory *) c_ptr;
-    custom_mem->ext_helpers = &ext_helpers;
 
     c_ptr += sizeof(custom_memory);
-    external_function_casadi_assign(custom_mem->ext_helpers, c_ptr);
-    c_ptr += external_function_casadi_calculate_size(&ext_helpers);
+
+    custom_mem->ext_helpers.casadi_fun = &helpers;
+    custom_mem->ext_helpers.casadi_work = &helpers_work;
+    custom_mem->ext_helpers.casadi_sparsity_in = &helpers_sparsity_in;
+    custom_mem->ext_helpers.casadi_sparsity_out = &helpers_sparsity_out;
+    custom_mem->ext_helpers.casadi_n_in = &helpers_n_in;
+    custom_mem->ext_helpers.casadi_n_out = &helpers_n_out;
+    external_function_casadi_create(&custom_mem->ext_helpers);
 
     custom_mem->raw_memory = ptr;
 
@@ -87,7 +83,7 @@ int custom_update_init_function({{ name }}_solver_capsule* capsule)
 int custom_update_function({{ name }}_solver_capsule* capsule, double* data, int data_len)
 {
     custom_memory *custom_mem = (custom_memory *) capsule->custom_update_memory;
-    external_function_casadi* fun = custom_mem->ext_helpers;
+    external_function_casadi* fun = &custom_mem->ext_helpers;
     fun->args[0] = data;
     int np_slow = {{ dims.np_slow }};
 
