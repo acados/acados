@@ -28,8 +28,6 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-print("use CasADi branch se")
-
 import sys
 sys.path.insert(0, '../common')
 
@@ -38,7 +36,7 @@ import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
 
-from casadi import MX, vertcat, sin, cos, Function
+from casadi import MX, vertcat, sin, cos
 import casadi as ca
 
 knots = [[0,0,0,0,0.2,0.5,0.8,1,1,1,1],[0,0,0,0.1,0.5,0.9,1,1,1]]
@@ -190,15 +188,6 @@ def main(use_cython=False, lut=True, use_p_slow=True):
     ocp.solver_options.tf = Tf
     ocp.solver_options.N_horizon = N_horizon
 
-    if use_p_slow:
-        ocp.solver_options.custom_update_filename = 'custom_update_function.c'
-        ocp.solver_options.custom_update_header_filename = 'custom_update_function.h'
-        ocp.solver_options.custom_update_copy = False
-        ocp.solver_options.custom_templates = [
-            ('custom_update_p_slow_template.in.c', 'custom_update_function.c'),
-            ('custom_update_function_zoro_template.in.h', 'custom_update_function.h'),
-        ]
-
     # create ocp solver
     print(f"Creating ocp solver with p_slow = {model.p_slow}, p = {model.p}")
 
@@ -213,8 +202,8 @@ def main(use_cython=False, lut=True, use_p_slow=True):
     # call SQP_RTI solver in the loop:
     residuals = []
 
-    if use_p_slow:
-        ocp_solver.custom_update(p_slow_values)
+    ocp_solver.set_p_slow(p_slow_values)
+
     for i in range(20):
         status = ocp_solver.solve()
         # ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
