@@ -74,7 +74,7 @@ class AcadosModel():
         self.p_slow = None
         """
         CasADi variable containing parameters that change rarely;
-        This feature can be used to precompute expensive terms which only depend on these parameters.
+        This feature can be used to precompute expensive terms which only depend on these parameters, such as spline coefficients.
         Only supported for OCP solvers.
         The update of these parameters has to be done via the custom update function.
         Default: :code:`None`
@@ -327,11 +327,16 @@ class AcadosModel():
         for symbol, name in [(self.x, 'x'), (self.xdot, 'xdot'), (self.u, 'u'), (self.z, 'z'), (self.p, 'p'), (self.p_slow, 'p_slow')]:
             if symbol is not None and not symbol.is_valid_input():
                 raise Exception(f"model.{name} must be valid CasADi symbol, got {symbol}")
+
+        # p_slow
         if self.p_slow is not None:
             if isinstance(dims, AcadosSimDims):
                 raise Exception("model.p_slow is only supported for OCPs")
             if any(ca.which_depends(self.p_slow, self.p)):
                 raise Exception(f"model.p_slow must not depend on model.p, got p_slow ={self.p_slow}, p = {self.p}")
+            if not isinstance(self.p_slow, (ca.MX)):
+                # otherwise: AttributeError: 'SX' object has no attribute 'primitives'
+                raise Exception(f"model.p_slow must be casadi.MX, got {type(self.p_slow)}")
             dims.np_slow = casadi_length(self.p_slow)
 
         return

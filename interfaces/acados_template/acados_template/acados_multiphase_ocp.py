@@ -31,6 +31,7 @@
 
 from typing import Union, List
 import numpy as np
+import casadi as ca
 from copy import deepcopy
 
 import os, json
@@ -239,6 +240,14 @@ class AcadosMultiphaseOcp:
         for field in ['model', 'cost', 'constraints']:
             if len(set(getattr(self, field))) != self.n_phases:
                 raise Exception(f"AcadosMultiphaseOcp: make_consistent: {field} objects are not distinct.{warning}")
+
+        # p_slow check:
+        p_slow = self.model[0].p_slow
+        for i in range(self.n_phases):
+            if p_slow is None and self.model[i].p_slow is not None:
+                raise Exception(f"p_slow is None for phase 0, but not for phase {i}. Should be the same for all phases.")
+            if p_slow is not None and not ca.isequal(p_slow, self.model[i].p_slow):
+                raise Exception(f"p_slow is different for phase 0 and phase {i}. Should be the same for all phases.")
 
         # compute phase indices
         phase_idx = np.cumsum([0] + self.N_list).tolist()
