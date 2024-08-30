@@ -104,7 +104,7 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_external_param_casadi *forw_vde_casadi;
     external_function_external_param_casadi *expl_ode_fun;
 {% if solver_options.hessian_approx == "EXACT" %}
-    external_function_external_param_casadi *hess_vde_casadi;
+    external_function_external_param_casadi *expl_ode_hess;
 {%- endif %}
 {% elif solver_options.integrator_type == "IRK" %}
     external_function_external_param_{{ model.dyn_ext_fun_type }} *impl_dae_fun;

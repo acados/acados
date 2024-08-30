@@ -504,9 +504,9 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     }
 
     {%- if solver_options.hessian_approx == "EXACT" %}
-    capsule->hess_vde_casadi = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
+    capsule->expl_ode_hess = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
     for (int i = 0; i < N; i++) {
-        MAP_CASADI_FNC(hess_vde_casadi[i], {{ model.name }}_expl_ode_hess);
+        MAP_CASADI_FNC(expl_ode_hess[i], {{ model.name }}_expl_ode_hess);
     }
     {%- endif %}
 
@@ -881,7 +881,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_vde_forw", &capsule->forw_vde_casadi[i]);
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_ode_fun", &capsule->expl_ode_fun[i]);
         {%- if solver_options.hessian_approx == "EXACT" %}
-        ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_ode_hess", &capsule->hess_vde_casadi[i]);
+        ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_ode_hess", &capsule->expl_ode_hess[i]);
         {%- endif %}
     {%- elif solver_options.integrator_type == "IRK" %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "impl_dae_fun", &capsule->impl_dae_fun[i]);
@@ -2654,13 +2654,13 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
         external_function_external_param_casadi_free(&capsule->forw_vde_casadi[i]);
         external_function_external_param_casadi_free(&capsule->expl_ode_fun[i]);
     {%- if solver_options.hessian_approx == "EXACT" %}
-        external_function_external_param_casadi_free(&capsule->hess_vde_casadi[i]);
+        external_function_external_param_casadi_free(&capsule->expl_ode_hess[i]);
     {%- endif %}
     }
     free(capsule->forw_vde_casadi);
     free(capsule->expl_ode_fun);
     {%- if solver_options.hessian_approx == "EXACT" %}
-    free(capsule->hess_vde_casadi);
+    free(capsule->expl_ode_hess);
     {%- endif %}
 
 {%- elif solver_options.integrator_type == "GNSF" %}
