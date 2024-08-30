@@ -522,6 +522,11 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
         MAP_CASADI_FNC(expl_vde_forw_{{ jj }}[i], {{ model[jj].name }}_expl_vde_forw);
     }
 
+    capsule->expl_vde_adj_{{ jj }} = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*n_path);
+    for (int i = 0; i < n_path; i++) {
+        MAP_CASADI_FNC(expl_vde_adj_{{ jj }}[i], {{ model[jj].name }}_expl_vde_adj);
+    }
+
     capsule->expl_ode_fun_{{ jj }} = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*n_path);
     for (int i = 0; i < n_path; i++) {
         MAP_CASADI_FNC(expl_ode_fun_{{ jj }}[i], {{ model[jj].name }}_expl_ode_fun);
@@ -1201,6 +1206,7 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, i
         i_fun = i - {{ start_idx[jj] }};
     {%- if mocp_opts.integrator_type[jj] == "ERK" %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_vde_forw", &capsule->expl_vde_forw_{{ jj }}[i_fun]);
+        ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_vde_adj", &capsule->expl_vde_adj_{{ jj }}[i_fun]);
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_ode_fun", &capsule->expl_ode_fun_{{ jj }}[i_fun]);
         {%- if solver_options.hessian_approx == "EXACT" %}
         ocp_nlp_dynamics_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "expl_ode_hess", &capsule->expl_ode_hess_{{ jj }}[i_fun]);
@@ -2724,12 +2730,14 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     for (int i_fun = 0; i_fun < {{ end_idx[jj] - start_idx[jj] }}; i_fun++)
     {
         external_function_external_param_casadi_free(&capsule->expl_vde_forw_{{ jj }}[i_fun]);
+        external_function_external_param_casadi_free(&capsule->expl_vde_adj_{{ jj }}[i_fun]);
         external_function_external_param_casadi_free(&capsule->expl_ode_fun_{{ jj }}[i_fun]);
     {%- if solver_options.hessian_approx == "EXACT" %}
         external_function_external_param_casadi_free(&capsule->expl_ode_hess_{{ jj }}[i_fun]);
     {%- endif %}
     }
     free(capsule->expl_vde_forw_{{ jj }});
+    free(capsule->expl_vde_adj_{{ jj }});
     free(capsule->expl_ode_fun_{{ jj }});
     {%- if solver_options.hessian_approx == "EXACT" %}
     free(capsule->expl_ode_hess_{{ jj }});

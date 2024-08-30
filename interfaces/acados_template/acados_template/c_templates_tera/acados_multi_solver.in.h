@@ -77,6 +77,7 @@ typedef struct {{ name }}_solver_capsule
     // dynamics
 {% if mocp_opts.integrator_type[jj] == "ERK" %}
     external_function_external_param_casadi *expl_vde_forw_{{ jj }};
+    external_function_external_param_casadi *expl_vde_adj_{{ jj }};
     external_function_external_param_casadi *expl_ode_fun_{{ jj }};
 {% if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi *expl_ode_hess_{{ jj }};
