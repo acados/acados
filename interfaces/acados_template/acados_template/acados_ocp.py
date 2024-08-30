@@ -943,6 +943,9 @@ class AcadosOcp:
         # model
         template_list += self._get_external_function_header_templates()
 
+        if self.dims.np_slow > 0:
+            template_list.append(('p_slow_precompute_fun.in.h', f'{self.name}_p_slow_precompute_fun.h'))
+
         # Simulink
         if self.simulink_opts is not None:
             template_file = os.path.join('matlab_templates', 'acados_solver_sfun.in.c')

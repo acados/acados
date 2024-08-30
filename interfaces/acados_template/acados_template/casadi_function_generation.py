@@ -116,7 +116,6 @@ class GenerateContext:
 
         # generate C code
         casadi_codegen_opts = self.casadi_codegen_opts.copy()
-        casadi_codegen_opts["with_header"] = True
 
         fun_name = f'{self.problem_name}_p_slow_precompute_fun'
         fun = ca.Function(fun_name, [self.p_slow], y, ['p_slow'], self.pool_names)
