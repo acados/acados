@@ -313,7 +313,7 @@ OCP_SRC+= {{ solver_options.custom_update_filename }}
 
 OCP_SRC+= acados_solver_{{ model.name }}.c
 {%- if dims_np_slow > 0 %}
-OCP_SRC+= helpers_{{ model.name }}.c
+OCP_SRC+= {{ model.name }}_p_slow_precompute_fun.c
 {%- endif %}
 OCP_OBJ := $(OCP_SRC:.c=.o)
 

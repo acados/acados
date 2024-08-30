@@ -39,12 +39,12 @@
 
 // #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
-#include "helpers_{{ name }}.h"
+#include "{{ name }}_p_slow_precompute_fun.h"
 #include "{{ name }}_model/{{ name }}_model.h"
 
 typedef struct custom_memory
 {
-    external_function_casadi ext_helpers;
+    external_function_casadi p_slow_precompute_fun;
     void *raw_memory; // Pointer to allocated memory, to be used for freeing
 } custom_memory;
 
@@ -59,13 +59,13 @@ static void *example_custom_memory_create({{ name }}_solver_capsule* capsule)
 
     c_ptr += sizeof(custom_memory);
 
-    custom_mem->ext_helpers.casadi_fun = &helpers;
-    custom_mem->ext_helpers.casadi_work = &helpers_work;
-    custom_mem->ext_helpers.casadi_sparsity_in = &helpers_sparsity_in;
-    custom_mem->ext_helpers.casadi_sparsity_out = &helpers_sparsity_out;
-    custom_mem->ext_helpers.casadi_n_in = &helpers_n_in;
-    custom_mem->ext_helpers.casadi_n_out = &helpers_n_out;
-    external_function_casadi_create(&custom_mem->ext_helpers);
+    custom_mem->p_slow_precompute_fun.casadi_fun = &{{ name }}_p_slow_precompute_fun;
+    custom_mem->p_slow_precompute_fun.casadi_work = &{{ name }}_p_slow_precompute_fun_work;
+    custom_mem->p_slow_precompute_fun.casadi_sparsity_in = &{{ name }}_p_slow_precompute_fun_sparsity_in;
+    custom_mem->p_slow_precompute_fun.casadi_sparsity_out = &{{ name }}_p_slow_precompute_fun_sparsity_out;
+    custom_mem->p_slow_precompute_fun.casadi_n_in = &{{ name }}_p_slow_precompute_fun_n_in;
+    custom_mem->p_slow_precompute_fun.casadi_n_out = &{{ name }}_p_slow_precompute_fun_n_out;
+    external_function_casadi_create(&custom_mem->p_slow_precompute_fun);
 
     custom_mem->raw_memory = ptr;
 
@@ -83,7 +83,7 @@ int custom_update_init_function({{ name }}_solver_capsule* capsule)
 int custom_update_function({{ name }}_solver_capsule* capsule, double* data, int data_len)
 {
     custom_memory *custom_mem = (custom_memory *) capsule->custom_update_memory;
-    external_function_casadi* fun = &custom_mem->ext_helpers;
+    external_function_casadi* fun = &custom_mem->p_slow_precompute_fun;
     fun->args[0] = data;
     int np_slow = {{ dims.np_slow }};
 

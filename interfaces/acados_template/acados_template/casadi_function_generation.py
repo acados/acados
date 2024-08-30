@@ -98,24 +98,16 @@ class GenerateContext:
             fun_mod.generate(name, self.casadi_codegen_opts)
 
     def finalize(self):
+        # TODO: generalize for multiphase OCP
         if self.p_slow is None:
             return
-
-        # for e in self.params:
-        #     print(e.shape, e)
 
         y = ca.cse(self.params)
         if not self.params:
             y = []
 
-        # print("finalize called")
-        # print(f"self.pool_names: {self.pool_names}")
-
         if self.p_slow is None:
             return
-        # TODO: add model name to function
-        # TODO: generalize for multiphase OCP
-        fun = ca.Function('helpers', [self.p_slow], y, ['p_slow'], self.pool_names)
 
         # change directory
         cwd = os.getcwd()
@@ -125,7 +117,10 @@ class GenerateContext:
         # generate C code
         casadi_codegen_opts = self.casadi_codegen_opts.copy()
         casadi_codegen_opts["with_header"] = True
-        fun.generate("helpers_" + self.problem_name, casadi_codegen_opts)
+
+        fun_name = f'{self.problem_name}_p_slow_precompute_fun'
+        fun = ca.Function(fun_name, [self.p_slow], y, ['p_slow'], self.pool_names)
+        fun.generate(fun_name, casadi_codegen_opts)
 
         os.chdir(cwd)
         return
