@@ -101,7 +101,7 @@ typedef struct {{ model.name }}_solver_capsule
     /* external functions */
     // dynamics
 {% if solver_options.integrator_type == "ERK" %}
-    external_function_external_param_casadi *forw_vde_casadi;
+    external_function_external_param_casadi *expl_vde_forw;
     external_function_external_param_casadi *expl_ode_fun;
     external_function_external_param_casadi *expl_vde_adj;
 {% if solver_options.hessian_approx == "EXACT" %}

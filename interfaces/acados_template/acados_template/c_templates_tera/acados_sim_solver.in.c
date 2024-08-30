@@ -139,17 +139,17 @@ int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * cap
 
     {% elif solver_options.integrator_type == "ERK" %}
     // explicit ode
-    capsule->sim_forw_vde_casadi = (external_function_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model.dyn_ext_fun_type }}));
+    capsule->sim_expl_vde_forw = (external_function_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model.dyn_ext_fun_type }}));
     capsule->sim_vde_adj_casadi = (external_function_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model.dyn_ext_fun_type }}));
     capsule->sim_expl_ode_fun_casadi = (external_function_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model.dyn_ext_fun_type }}));
 
-    capsule->sim_forw_vde_casadi->casadi_fun = &{{ model.name }}_expl_vde_forw;
-    capsule->sim_forw_vde_casadi->casadi_n_in = &{{ model.name }}_expl_vde_forw_n_in;
-    capsule->sim_forw_vde_casadi->casadi_n_out = &{{ model.name }}_expl_vde_forw_n_out;
-    capsule->sim_forw_vde_casadi->casadi_sparsity_in = &{{ model.name }}_expl_vde_forw_sparsity_in;
-    capsule->sim_forw_vde_casadi->casadi_sparsity_out = &{{ model.name }}_expl_vde_forw_sparsity_out;
-    capsule->sim_forw_vde_casadi->casadi_work = &{{ model.name }}_expl_vde_forw_work;
-    external_function_param_{{ model.dyn_ext_fun_type }}_create(capsule->sim_forw_vde_casadi, np);
+    capsule->sim_expl_vde_forw->casadi_fun = &{{ model.name }}_expl_vde_forw;
+    capsule->sim_expl_vde_forw->casadi_n_in = &{{ model.name }}_expl_vde_forw_n_in;
+    capsule->sim_expl_vde_forw->casadi_n_out = &{{ model.name }}_expl_vde_forw_n_out;
+    capsule->sim_expl_vde_forw->casadi_sparsity_in = &{{ model.name }}_expl_vde_forw_sparsity_in;
+    capsule->sim_expl_vde_forw->casadi_sparsity_out = &{{ model.name }}_expl_vde_forw_sparsity_out;
+    capsule->sim_expl_vde_forw->casadi_work = &{{ model.name }}_expl_vde_forw_work;
+    external_function_param_{{ model.dyn_ext_fun_type }}_create(capsule->sim_expl_vde_forw, np);
 
     capsule->sim_vde_adj_casadi->casadi_fun = &{{ model.name }}_expl_vde_adj;
     capsule->sim_vde_adj_casadi->casadi_n_in = &{{ model.name }}_expl_vde_adj_n_in;
@@ -325,7 +325,7 @@ int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * cap
 
 {%- elif solver_options.integrator_type == "ERK" %}
     {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
-                 "expl_vde_forw", capsule->sim_forw_vde_casadi);
+                 "expl_vde_forw", capsule->sim_expl_vde_forw);
     {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
                  "expl_vde_adj", capsule->sim_vde_adj_casadi);
     {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
@@ -459,10 +459,10 @@ int {{ model.name }}_acados_sim_free({{ model.name }}_sim_solver_capsule *capsul
     free(capsule->sim_impl_dae_hess);
 {%- endif %}
 {%- elif solver_options.integrator_type == "ERK" %}
-    external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_forw_vde_casadi);
+    external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_expl_vde_forw);
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_vde_adj_casadi);
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_expl_ode_fun_casadi);
-    free(capsule->sim_forw_vde_casadi);
+    free(capsule->sim_expl_vde_forw);
     free(capsule->sim_vde_adj_casadi);
     free(capsule->sim_expl_ode_fun_casadi);
 {%- if hessian_approx == "EXACT" %}
@@ -502,7 +502,7 @@ int {{ model.name }}_acados_sim_update_params({{ model.name }}_sim_solver_capsul
     }
 
 {%- if solver_options.integrator_type == "ERK" %}
-    capsule->sim_forw_vde_casadi[0].set_param(capsule->sim_forw_vde_casadi, p);
+    capsule->sim_expl_vde_forw[0].set_param(capsule->sim_expl_vde_forw, p);
     capsule->sim_vde_adj_casadi[0].set_param(capsule->sim_vde_adj_casadi, p);
     capsule->sim_expl_ode_fun_casadi[0].set_param(capsule->sim_expl_ode_fun_casadi, p);
 {%- if hessian_approx == "EXACT" %}
