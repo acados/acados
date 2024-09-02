@@ -57,10 +57,8 @@ class GenerateContext:
         self.problem_name = problem_name
 
         self.pool_names = []
-        self.params = []
+        self.p_slow_expressions = []
         self.opts = opts
-        if opts is None:
-            self.opts = {}
         self.casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     def add_function_definition(self,
@@ -97,8 +95,8 @@ class GenerateContext:
                 pools.append(ca.MX(ca.DM.zeros(e.sparsity()), name_e))
                 self.pool_names.append(name_e)
 
-            outputs_ret = ca.substitute(outputs_ret, symbols,pools)
-            self.params += param.primitives()
+            outputs_ret = ca.substitute(outputs_ret, symbols, pools)
+            self.p_slow_expressions += param.primitives()
 
             fun_mod = ca.Function(fun.name(), inputs, outputs_ret)
             fun_mod.generate(name, self.casadi_codegen_opts)
@@ -107,28 +105,20 @@ class GenerateContext:
         os.chdir(cwd)
 
     def finalize(self):
-        # TODO: generalize for multiphase OCP
         if self.p_slow is None:
             return
 
-        y = ca.cse(self.params)
-        if not self.params:
-            y = []
-
-        if self.p_slow is None:
-            return
+        y = ca.cse(self.p_slow_expressions)
 
         # change directory
         cwd = os.getcwd()
-        model_dir = os.path.abspath(self.opts["code_export_directory"])
-        os.chdir(model_dir)
+        output_dir = os.path.abspath(self.opts["code_export_directory"])
+        os.chdir(output_dir)
 
         # generate C code
-        casadi_codegen_opts = self.casadi_codegen_opts.copy()
-
         fun_name = f'{self.problem_name}_p_slow_precompute_fun'
         fun = ca.Function(fun_name, [self.p_slow], y, ['p_slow'], self.pool_names)
-        fun.generate(fun_name, casadi_codegen_opts)
+        fun.generate(fun_name, self.casadi_codegen_opts)
 
         os.chdir(cwd)
         return
