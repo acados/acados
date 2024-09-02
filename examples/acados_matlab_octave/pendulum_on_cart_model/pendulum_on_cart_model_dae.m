@@ -27,7 +27,16 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
+
+
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
+
+
 
 function model = pendulum_on_cart_model_dae()
 
@@ -64,7 +73,7 @@ expr_f_impl = vertcat(v, ...
                       (- l*m*sym_z + F*cos(theta) + g*m*sin(theta) + M*g*sin(theta))/(l*(M + m - m*cos(theta).^2)), ...
                       cos(theta)*sin(theta)*omega.^2) ...
                   - [sym_xdot; sym_z];
-               
+
 %% constraints
 expr_h = sym_u;
 

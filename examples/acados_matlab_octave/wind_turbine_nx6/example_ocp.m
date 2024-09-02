@@ -27,12 +27,17 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
 
-%% test of native matlab interface
+
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
+
+
 clear all
-
-
 
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
@@ -123,7 +128,7 @@ W(2, 2) =  0.0180;
 W(3, 3) =  0.01;
 W(4, 4) =  0.001;
 % weight matrix in mayer term
-W_e = zeros(ny_e, ny_e); 
+W_e = zeros(ny_e, ny_e);
 W_e(1, 1) =  1.5114;
 W_e(2, 1) = -0.0649;
 W_e(1, 2) = -0.0649;

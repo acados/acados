@@ -27,9 +27,16 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
 
-%% test of native matlab interface
+
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
+
+
 clear all; clc;
 
 model_path = fullfile(pwd,'..','pendulum_on_cart_model');
@@ -83,10 +90,10 @@ ocp_model.set('sym_xdot', model.sym_xdot);
 % % nonlinear-least squares cost
 % ocp_model.set('cost_type', 'nonlinear_ls');
 % ocp_model.set('cost_type_e', 'nonlinear_ls');
-% 
+%
 % ocp_model.set('cost_expr_y', model.cost_expr_y);
 % ocp_model.set('cost_expr_y_e', model.cost_expr_y_e);
-% 
+%
 % W_x = diag([1e2, 1e2, 1e-2, 1e-2]);
 % W_u = 1e-3;
 % W = blkdiag(W_x, W_u);
@@ -175,7 +182,7 @@ for i=1:N_sim
         status = ocp_solver.get('status'); % 0 - success
         x_lin = xcurrent;
         u_lin = u0;
-        
+
         sens_u = zeros(nx, N);
         % get sensitivities w.r.t. initial state value with index
         field = 'ex'; % equality constraint on states

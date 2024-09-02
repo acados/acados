@@ -28,6 +28,17 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
+
+
+
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
+
+
 % this function implements the quadcopter model from https://osqp.org/docs/examples/mpc.html
 % more infomation can be found here: https://github.com/orgs/osqp/discussions/558
 
@@ -80,7 +91,7 @@ cost_expr_ext_cost_e = (sym_x-xr)'*Q*(sym_x-xr);  % terminal cost (only states)
 cost_expr_ext_cost = cost_expr_ext_cost_e + sym_u'*R*sym_u;  % stage cost (states and inputs)
 cost_expr_ext_cost = 1/h * cost_expr_ext_cost;  % scale the stage cost to match the discrete formulation
 cost_expr_ext_cost_0 = 1/h * sym_u'*R*sym_u;  % penalize only the inputs in the first stage
-% more info on discrete cost scaling: 
+% more info on discrete cost scaling:
 % https://docs.acados.org/python_interface/index.html#acados_template.acados_ocp_cost.AcadosOcpCost
 
 % linear least-squares cost formulation (alternative)

@@ -27,9 +27,16 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
 
-%% test of native matlab interface
+
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
+
+
 clear all; clc;
 check_acados_requirements()
 addpath('../linear_mass_spring_model/');
@@ -121,7 +128,7 @@ if (casadi_cost == 0)
     ocp_model.set('cost_source_ext_cost_0', 'generic_ext_cost.c');
     ocp_model.set('cost_function_ext_cost_0', 'ext_cost');
     % Generic stage cost
-    ocp_model.set('cost_ext_fun_type', 'generic');    
+    ocp_model.set('cost_ext_fun_type', 'generic');
     ocp_model.set('cost_source_ext_cost', 'generic_ext_cost.c');
     ocp_model.set('cost_function_ext_cost', 'ext_cost');
     % Generic terminal cost

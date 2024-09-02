@@ -3,8 +3,10 @@
 clear all; clc;
 
 %% Run minimal example
-%
-minimal_example_ocp;
+% get default simulink_opts
+simulink_opts = get_acados_simulink_opts;
+
+new_minimal_example_ocp;
 
 
 %% Compile Sfunctions

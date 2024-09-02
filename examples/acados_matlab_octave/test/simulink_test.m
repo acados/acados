@@ -29,7 +29,7 @@ simulink_opts.samplingtime = '-1';
 % time step of ocp object
 
 %% run minimal example
-minimal_example_ocp;
+new_minimal_example_ocp;
 
 
 %% Compile Sfunctions
@@ -37,7 +37,6 @@ cd c_generated_code
 
 make_sfun_sim; % integrator
 make_sfun; % ocp solver
-
 
 %% Copy Simulink example blocks into c_generated_code
 source_folder = fullfile(pwd, '..', '..', 'getting_started');
@@ -53,15 +52,14 @@ cd ..
 
 %% reference
 % uncomment to store
-% simulink_u_traj_ref = out_sim.logsout{1}.Values.Data
-% save('simulink_u_traj_ref.mat', 'simulink_u_traj_ref')
+% u_signal = out_sim.logsout.getElement('u');
+% simulink_u_traj_ref = u_signal.Values.Data;
+% save('simulink_u_traj_ref.mat', 'simulink_u_traj_ref');
 load('simulink_u_traj_ref.mat')
-
 
 %% evaluate output
 u_signal = out_sim.logsout.getElement('u');
 uvals = u_signal.Values.Data;
-
 
 fprintf('\nTest results on SIMULINK simulation.\n')
 

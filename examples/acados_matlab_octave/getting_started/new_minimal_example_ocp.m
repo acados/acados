@@ -29,6 +29,13 @@
 
 import casadi.*
 
+% options needed for the Simulink example
+if ~exist('simulink_opts','var')
+    % disp('using acados simulink default options')
+    % simulink_opts = get_acados_simulink_opts;
+    disp('using empty simulink_opts to generate solver without simulink block')
+    simulink_opts = [];
+end
 
 %
 check_acados_requirements()
@@ -52,21 +59,24 @@ W_x = diag([1e3, 1e3, 1e-2, 1e-2]);
 W_u = 1e-2;
 
 % initial cost term
+ny_0 = nu;
 ocp.cost.cost_type_0 = 'NONLINEAR_LS';
 ocp.cost.W_0 = W_u;
-ocp.cost.yref_0 = zeros(nu, 1);
+ocp.cost.yref_0 = zeros(ny_0, 1);
 ocp.model.cost_y_expr_0 = model.u;
 
 % path cost term
+ny = nx + nu;
 ocp.cost.cost_type = 'NONLINEAR_LS';
 ocp.cost.W = blkdiag(W_x, W_u);
-ocp.cost.yref = zeros(nx+nu, 1);
+ocp.cost.yref = zeros(ny, 1);
 ocp.model.cost_y_expr = vertcat(model.x, model.u);
 
 % terminal cost term
+ny_e = nx;
 ocp.cost.cost_type_e = 'NONLINEAR_LS';
 ocp.model.cost_y_expr_e = model.x;
-ocp.cost.yref_e = zeros(nx, 1);
+ocp.cost.yref_e = zeros(ny_e, 1);
 ocp.cost.W_e = W_x;
 
 %% define constraints
@@ -87,11 +97,13 @@ ocp.solver_options.tf = 1.0;
 ocp.solver_options.nlp_solver_type = 'SQP';
 ocp.solver_options.integrator_type = 'ERK';
 ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
+ocp.solver_options.qp_solver_mu0 = 1e3;
 ocp.solver_options.qp_solver_cond_N = 5;
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
 ocp.solver_options.ext_fun_compile_flags = '-O2';
 ocp.solver_options.globalization = 'MERIT_BACKTRACKING';
 % ocp.solver_options.qp_solver_iter_max = 100
+ocp.simulink_opts = simulink_opts;
 
 % create solver
 ocp_solver = AcadosOcpSolver(ocp);

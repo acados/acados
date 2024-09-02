@@ -27,9 +27,15 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
 
-%% test of native matlab interface
+
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
+
 clear all; clc;
 
 addpath('../pendulum_on_cart_model')
@@ -360,9 +366,9 @@ end
 %     time_linearize = sum(time_lin);
 %     time_regulariz = sum(time_reg);
 %     time_qp_solution = sum(time_qp_sol);
-% 
+%
 %     figure;
-% 
+%
 %     bar_vals = 1000 * [time_linearize; time_regulariz; time_qp_solution; ...
 %         time_total - time_linearize - time_regulariz - time_qp_solution] / n_executions;
 %     bar([1; nan], [bar_vals, nan(size(bar_vals))]' ,'stacked')

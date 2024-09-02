@@ -27,9 +27,8 @@ simulink_opts.samplingtime = '-1';
 
 %% Run minimal example
 %
-minimal_example_ocp;
-% extensive_example_ocp;
-
+new_minimal_example_ocp;
+% minimal_example_ocp;
 
 %% Compile Sfunctions
 cd c_generated_code
