@@ -970,7 +970,7 @@ void ocp_nlp_cost_conl_eval_grad_p(void *config_, void *dims, void *model_, void
     exit(1);
 }
 
-void ocp_nlp_cost_conl_config_initialize_default(void *config_)
+void ocp_nlp_cost_conl_config_initialize_default(void *config_, int stage)
 {
     ocp_nlp_cost_config *config = config_;
 
@@ -1008,6 +1008,7 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_)
     config->eval_grad_p = &ocp_nlp_cost_conl_eval_grad_p;
     config->config_initialize_default = &ocp_nlp_cost_conl_config_initialize_default;
     config->precompute = &ocp_nlp_cost_conl_precompute;
+    config->stage = stage;
 
     return;
 }

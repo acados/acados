@@ -234,16 +234,16 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
         switch (plan.nlp_cost[i])
         {
             case LINEAR_LS:
-                ocp_nlp_cost_ls_config_initialize_default(config->cost[i]);
+                ocp_nlp_cost_ls_config_initialize_default(config->cost[i], i);
                 break;
             case NONLINEAR_LS:
-                ocp_nlp_cost_nls_config_initialize_default(config->cost[i]);
+                ocp_nlp_cost_nls_config_initialize_default(config->cost[i], i);
                 break;
             case CONVEX_OVER_NONLINEAR:
-                ocp_nlp_cost_conl_config_initialize_default(config->cost[i]);
+                ocp_nlp_cost_conl_config_initialize_default(config->cost[i], i);
                 break;
             case EXTERNAL:
-                ocp_nlp_cost_external_config_initialize_default(config->cost[i]);
+                ocp_nlp_cost_external_config_initialize_default(config->cost[i], i);
                 break;
             case INVALID_COST:
                 printf("\nerror: ocp_nlp_config_create: forgot to initialize plan->nlp_cost\n");
