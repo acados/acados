@@ -30,7 +30,17 @@
 %
 % Author: Daniel Kloeser
 % Ported by Thomas Jespersen (thomasj@tkjelectronics.dk), TKJ Electronics
-%
+
+
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
+
+
+
 
 %% Example of the frc_racecars in simulation without obstacle avoidance:
 %% This example is for the optimal racing of the frc race cars. The model is a simple bicycle model and the lateral acceleration is constraint in order to validate the model assumptions.

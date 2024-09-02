@@ -1,9 +1,49 @@
+% Copyright (c) The acados authors.
+%
+% This file is part of acados.
+%
+% The 2-Clause BSD License
+%
+% Redistribution and use in source and binary forms, with or without
+% modification, are permitted provided that the following conditions are met:
+%
+% 1. Redistributions of source code must retain the above copyright notice,
+% this list of conditions and the following disclaimer.
+%
+% 2. Redistributions in binary form must reproduce the above copyright notice,
+% this list of conditions and the following disclaimer in the documentation
+% and/or other materials provided with the distribution.
+%
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+% POSSIBILITY OF SUCH DAMAGE.;
+
+% Author: Enrica
+
+
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
+
+
+
 function model = swarming_model(S)
 
 % SWARMING_MODEL - Function that describes the dynamics of the swarm and
 % the cost function for controlling it.
 %
-% Swarming  is the behavior of collective and ordered motion. It can be 
+% Swarming  is the behavior of collective and ordered motion. It can be
 % obtained through the combination of the following rules:
 %
 % Separation rule: drives the agents to a reference inter-agent ...
@@ -54,7 +94,7 @@ expr_h = sym_u; % constraints only on control inputs, for now
 %% Nonlinear least squares
 
 % Weights
-W_sep = 1; 
+W_sep = 1;
 W_dir = 1;
 W_nav = 2;
 W_u = 1e-1; % Penalization of high values of the control input variables
@@ -70,10 +110,10 @@ M = ones(N,N) - eye(N,N);
 
 % For every agent define the nonlinear_ls terms
 for agent = 1:N
-    
+
     % Get the index triplet related to the current agent
     agent_idx = [1,2,3]' + 3*(agent-1)*ones(3,1);
-    
+
     % For every neighbor, compute the distance to the current agent
     for neig = 1:(N-1)
         if neig < agent
