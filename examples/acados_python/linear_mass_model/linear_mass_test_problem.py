@@ -127,7 +127,7 @@ def solve_maratos_ocp(setting):
 
     # add obstacle
     if OBSTACLE:
-        obs_rad = 1.0; obs_x = 0.0; obs_y = 0.0;
+        obs_rad = 1.0; obs_x = 0.0; obs_y = 0.0
         circle = (obs_x, obs_y, obs_rad)
         ocp.constraints.uh = np.array([100.0]) # doenst matter
         ocp.constraints.lh = np.array([obs_rad**2])
