@@ -31,7 +31,7 @@
 import sys
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, AcadosMultiphaseOcp
 import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
@@ -221,17 +221,77 @@ def main(use_cython=False, lut=True, use_p_slow=True):
         residuals+= list(ocp_solver.get_residuals())
 
     print(residuals)
+    return residuals
 
+def main_mocp(lut=True, use_p_slow=True):
+    print(f"\n\nRunning multi-phase example with lut={lut}, use_p_slow={use_p_slow}")
+    p_slow, m, l, C, p_slow_values = create_p_slow(lut=lut)
+
+    Tf = 1.0
+    N_horizon = 20
+
+    # create ocp
+    n_phases = 2
+    mocp = AcadosMultiphaseOcp(N_list=[10, 10])
+
+    ocp_phase_1 = create_ocp_formulation_without_opts(p_slow, m, l, C, lut=lut, use_p_slow=use_p_slow)
+    ocp_phase_2 = create_ocp_formulation_without_opts(p_slow, m, l, C, lut=lut, use_p_slow=use_p_slow)
+
+    mocp.set_phase(ocp_phase_1, 0)
+    mocp.set_phase(ocp_phase_2, 1)
+
+    if not use_p_slow:
+        for ip in range(n_phases):
+            mocp.parameter_values[ip] = np.concatenate([mocp.parameter_values[ip], p_slow_values])
+
+    # set options
+    mocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+    mocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+    mocp.solver_options.integrator_type = 'ERK'
+    mocp.solver_options.print_level = 0
+    mocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP_RTI, SQP
+
+    # set prediction horizon
+    mocp.solver_options.tf = Tf
+    mocp.solver_options.N_horizon = N_horizon
+
+    # create ocp solver
+    print(f"Creating ocp solver with p_slow = {mocp.model[0].p_slow}, p_phase_1 = {mocp.model[0].p}, p_phase_2 = {mocp.model[1].p}")
+
+    ocp_solver = AcadosOcpSolver(mocp)
+
+    # call SQP_RTI solver in the loop:
+    residuals = []
+
+    ocp_solver.set_p_slow(p_slow_values)
+
+    for i in range(20):
+        status = ocp_solver.solve()
+        # ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+        residuals+= list(ocp_solver.get_residuals())
+
+    print(residuals)
     return residuals
 
 
 if __name__ == "__main__":
     ref_nolut = main(use_cython=False, use_p_slow=False, lut=False)
     res_nolut = main(use_cython=False, use_p_slow=True, lut=False)
-    np.testing.assert_almost_equal(ref_nolut,res_nolut)
+    np.testing.assert_almost_equal(ref_nolut, res_nolut)
+
+    res_mocp_nolut_p = main_mocp(use_p_slow=False, lut=False)
+    res_mocp_nolut_p_slow = main_mocp(use_p_slow=True, lut=False)
+    np.testing.assert_almost_equal(ref_nolut, res_mocp_nolut_p)
+    np.testing.assert_almost_equal(ref_nolut, res_mocp_nolut_p_slow)
+
     ref_lut = main(use_cython=False, use_p_slow=False, lut=True)
     res_lut = main(use_cython=False, use_p_slow=True, lut=True)
     np.testing.assert_almost_equal(ref_lut, res_lut)
+    res_mocp_lut_p = main_mocp(use_p_slow=False, lut=True)
+    res_mocp_lut_p_slow = main_mocp(use_p_slow=True, lut=True)
+    np.testing.assert_almost_equal(ref_lut, res_mocp_lut_p)
+    np.testing.assert_almost_equal(ref_lut, res_mocp_lut_p_slow)
+
 
     with np.testing.assert_raises(Exception):
         np.testing.assert_almost_equal(ref_lut, ref_nolut)
