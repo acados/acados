@@ -447,19 +447,19 @@ int main() {
     // external cost
     for (int ii = 0; ii <= N; ii++)
     {
-        ocp_nlp_cost_external_config_initialize_default(config->cost[ii]);
+        ocp_nlp_cost_external_config_initialize_default(config->cost[ii], ii);
     }
 
     // dynamics: discrete model
     for (int ii = 0; ii < N; ii++)
     {
-        ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[ii]);
+        ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[ii], ii);
     }
 
     // constraitns
     for (int ii = 0; ii <= N; ii++)
     {
-        ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[ii]);
+        ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[ii], ii);
     }
 
     // regularization
