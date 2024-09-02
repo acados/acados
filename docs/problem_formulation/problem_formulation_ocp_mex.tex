@@ -529,7 +529,7 @@ Here, $\mathcal{I}_{\textrm{bx},0}$ is a vector of length $n_x$ containing only 
 \subsection{Path Constraints}\label{sec:constraints:path}
 %
 Table~\ref{tab:constraints:path} shows the options for defining the path constraints equations~(\ref{eq:constraints:path:lower_bounds:start} ~-~\ref{eq:constraints:path:upper_bounds:end}).
-The matrices $ J_{\star} $ are translated into arrays of integers \texttt{idx}$\star$, see \python documentation.
+The matrices $ J_{\star} $ are translated into arrays of integers \texttt{idx}$\star$, see \python~documentation.
 These matrices are described as follows:
 \begin{itemize}
     \item $J\ind{sh}$ maps lower slack vectors $s\ind{l,h}(t)$ and upper slack vectors $s\ind{u,h}(t)$ onto the nonlinear constraint expressions $h(x,u,p)$.
@@ -613,7 +613,7 @@ Here, matrices
 
 
 Tables \ref{tab:solver_options}, \ref{tab:solver_options:qp_solver_option} and \ref{tab:solver_options:regularize_method} show some of the available options.
-A full list of the available options is given on the \href{https://docs.acados.org/python_interface/index.html#acados-ocp-solver-interface-acadosocp-and-acadosocpsolver}{docs page}.
+A full list of the available options is given on the \href{https://docs.acados.org/python_interface/index.html#acados_template.acados_ocp_options.AcadosOcpOptions}{docs page generated from the docstrings in~\python}.
 
 Note that some options of the solver can be modified after creation using the routine.
 Some options can only be set before the solver is created, especially options that influence the memory requirements of the OCP solver, such as the modules used in the formulation, the QP solver, etc.
