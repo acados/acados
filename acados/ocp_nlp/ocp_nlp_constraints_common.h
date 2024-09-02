@@ -89,6 +89,8 @@ typedef struct
     // dimension setters
     void (*dims_set)(void *config_, void *dims_, const char *field, const int *value);
     void (*dims_get)(void *config_, void *dims_, const char *field, int* value);
+    // stage information
+    int stage;
 } ocp_nlp_constraints_config;
 
 //

@@ -303,10 +303,10 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
         switch (plan.nlp_constraints[i])
         {
             case BGH:
-                ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[i]);
+                ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[i], i);
                 break;
             case BGP:
-                ocp_nlp_constraints_bgp_config_initialize_default(config->constraints[i]);
+                ocp_nlp_constraints_bgp_config_initialize_default(config->constraints[i], i);
                 break;
             case INVALID_CONSTRAINT:
                 printf(
