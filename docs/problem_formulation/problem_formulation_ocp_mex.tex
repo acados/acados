@@ -112,10 +112,10 @@
      \label{eq:cost}\\
     % constraints
     &&&\mathComment{Initial values, see section \ref{sec:constraints:initial}}\nonumber\\
-    &\,\,\,\quad \text{s.t.}    &&\underline{x}_0 \leq J_{\textrm{bx},0} \, x(0) \leq \bar{x}_0 , && \label{eq:constraints:initial}\\[1ex]
+    &\,\,\,\quad \text{s.t.}    &&\underline{x}_0 \leq J_{\textrm{bx},0} \, x(0) \leq \overline{x}_0 , && \label{eq:constraints:initial}\\[1ex]
     &&&\mathComment{Nonlinear constraints on the initial shooting node} \nonumber\\
     &&&\underline{h}\initial \leq h\initial(x(0), u(0), z(0), p) + J_{\textrm{sh}}\initial \, s\lowerh\initial, &&\label{eq:constraints:path:lower_bounds:start}\\
-    &&& h\initial(x(0), u(0),  z(0), p) - J\ind{sh}\initial\, s\ind{u,h}\initial \leq \bar{h}\initial, &&\label{eq:constraints:path:upper_bounds:start}\\
+    &&& h\initial(x(0), u(0),  z(0), p) - J\ind{sh}\initial\, s\ind{u,h}\initial \leq \overline{h}\initial, &&\label{eq:constraints:path:upper_bounds:start}\\
     &&&\mathComment{Dynamics, see section \ref{sec:dynamics}}\nonumber\\
     %% dynamics
     &&& f\ind{impl}(x(t), \dot{x}(t), u(t), z(t), t, p) = 0, &&\quad t \in [0,\,T), \label{eq:dynamics}\\[1ex]
@@ -129,23 +129,23 @@
     &&& s\lowerh\initial \geq 0, && \label{eq:constraints:path:lower_bounds:end}\\[1ex]
     &&&\mathComment{Path constraints with upper bounds, see section \ref{sec:constraints:path}}\nonumber\\
     %% path constraints with upper slack
-    &&& h(x(t), u(t), z(t), p) - J_{\textrm{sh}} \, s\upperh(t) \leq \bar{h}, &&\quad t \in (0,\,T),\\
-    &&& J_{\textrm{bx}} x(t) - J_{\textrm{sbx}}\, s\upperbx(t) \leq \bar{x}, &&\quad t \in (0,\,T),\\
-    &&& J_{\textrm{bu}} u(t) - J_{\textrm{sbu}}\, s\upperbu(t)\leq \bar{u}, &&\quad t \in [0,\,T),\\
-    &&& Cx(t) + Du(t) - J_{\textrm{sg}}\, s\upperg \leq \bar{g}, &&\quad t \in [0,\,T), \\
+    &&& h(x(t), u(t), z(t), p) - J_{\textrm{sh}} \, s\upperh(t) \leq \overline{h}, &&\quad t \in (0,\,T),\\
+    &&& J_{\textrm{bx}} x(t) - J_{\textrm{sbx}}\, s\upperbx(t) \leq \overline{x}, &&\quad t \in (0,\,T),\\
+    &&& J_{\textrm{bu}} u(t) - J_{\textrm{sbu}}\, s\upperbu(t)\leq \overline{u}, &&\quad t \in [0,\,T),\\
+    &&& Cx(t) + Du(t) - J_{\textrm{sg}}\, s\upperg \leq \overline{g}, &&\quad t \in [0,\,T), \\
     &&& s\upperh(t), s\upperbx(t), s\upperbu(t), s\upperg(t) \geq 0, &&\quad t \in [0,\,T), \\
     &&& s\ind{u,h}\initial \geq 0, && \label{eq:constraints:path:upper_bounds:end}\\[1ex]
     %% lower terminal constraints
     &&&\mathComment{Terminal constraints with lower bounds, see section \ref{sec:constraints:terminal}}\nonumber\\
     &&&\underline{h}\terminal \leq h\terminal(x(T), p) + J\ind{sh}\terminal\, s\lowerh\terminal, &&\label{eq:constraints:terminal:lower_bounds:start}\\
     &&&\underline{x}\terminal \leq J_{\textrm{bx}}\terminal\, x(T) + J\ind{sbx}\terminal\, s\lowerbx\terminal, &&\\ % TODO: add Jsbx_e?!
-    &&&\underline{g}\terminal \leq C\terminal\, x(T) + J\ind{sg}\terminal\, s\lowerg\terminal \leq \bar{g}\terminal, && \\
+    &&&\underline{g}\terminal \leq C\terminal\, x(T) + J\ind{sg}\terminal\, s\lowerg\terminal \leq \overline{g}\terminal, && \\
     &&& s\lowerh\terminal, s\lowerbx\terminal, s\lowerbu\terminal, s\lowerg\terminal \geq 0, \label{eq:constraints:terminal:lower_bounds:end}\\[1ex]
     %% upper terminal constraints
     &&&\mathComment{Terminal constraints with upper bound, see section \ref{sec:constraints:terminal}}\nonumber\\
-    &&& h\terminal(x(T), p) - J\ind{sh}\terminal\, s\ind{u,h}\terminal \leq \bar{h}\terminal, &&\label{eq:constraints:terminal:upper_bounds:start}\\
-    &&& J_{\textrm{bx}}\terminal\, x(T) - J\ind{sbx}\terminal\, s\ind{u,bx}\terminal \leq \bar{x}^{e}, &&\\ % TODO: add Jsbx_e?!
-    &&& C\terminal\, x(T) - J\ind{sg}\terminal\, s\ind{u,g}\terminal \leq \bar{g}\terminal \\
+    &&& h\terminal(x(T), p) - J\ind{sh}\terminal\, s\ind{u,h}\terminal \leq \overline{h}\terminal, &&\label{eq:constraints:terminal:upper_bounds:start}\\
+    &&& J_{\textrm{bx}}\terminal\, x(T) - J\ind{sbx}\terminal\, s\ind{u,bx}\terminal \leq \overline{x}^{e}, &&\\ % TODO: add Jsbx_e?!
+    &&& C\terminal\, x(T) - J\ind{sg}\terminal\, s\ind{u,g}\terminal \leq \overline{g}\terminal \\
     &&& s\upperh\terminal, s\upperbx\terminal, s\upperbu\terminal, s\upperg\terminal \geq 0,\label{eq:constraints:terminal:upper_bounds:end}
 \end{align}
 %
@@ -469,9 +469,10 @@ This section is about how to define the constraints equations (\ref{eq:constrain
 The \matlab{} interface supports the constraint module \code{BGH}, which is able to handle simple \textbf{b}ounds (on $ x $ and $ u $), \textbf{g}eneral linear constraints and general nonlinear constraints.
 Meanwhile, the \python{} interface also supports the \acados{} constraint module \code{BGP}, which can handle convex-over-nonlinear constraints in a dedicated fashion.
 
-Additionally, bounds on $u$ and general linear constraints are also enforced on the initial node by default. On the other hand, bounds on $x$ and nonlinear constraints are fully split and have to be explicitly stated with \code{\_0} correspondence to be enforced on the initial node.
+Additionally, bounds on $u$ and general linear constraints are also enforced on the initial node by default.
+On the other hand, bounds on $x$ and nonlinear constraints are fully split and have to be explicitly stated with \code{\_0} correspondence to be enforced on the initial node.
 
-%The constraint type can be set using the identifier \str{constr\_type} and \str{constr\_type\_e} for the path constraints and terminal constraints, respectively. The string identifier options are found in Table~\ref{tab:constr_type}. The default setting is \str{bgh}.
+%The constraint type can be set using the identifier \str{AcadosConstraints.type} and \str{AcadosConstraints.type\_e} for the path constraints and terminal constraints, respectively. The string identifier options are found in Table~\ref{tab:constr_type}. The default setting is \str{bgh}.
 %\begin{table}[ht!]
 %\centering
 %\caption{Constraint type string identifier}\label{tab:constr_type}
@@ -495,33 +496,34 @@ For example, for moving horizon estimation (MHE) problems it should not be set.
 Two possibilities exist to define the initial state constraint~\eqref{eq:constraints:initial}: a simple syntax and an extended syntax.
 
 \paragraph{Simple syntax.}
-Via the simple syntax the full initial state is defined, $x(0)=\bar{x}_0$.
+Via the simple syntax the full initial state is defined, $x(0)=\overline{x}_0$.
 The corresponding options are found in Table~\ref{tab:constraints:simplesyntax}.
 \begin{table}[ht!]
     \centering
-    \caption{Simple syntax for setting the initial state} \label{tab:constraints:simplesyntax}
     \begin{tabular}{cccc}
         \toprule
         Term & Attribute/Property & Data type & Required \\ \midrule
-        $ \bar{x}_0 $ & \code{constr\_x0} & double & \optional \\
+        $ \overline{x}_0 $ & \code{AcadosConstraints.x0} & double & \optional \\
         \bottomrule
     \end{tabular}
+    \caption{Simple syntax for setting the initial state} \label{tab:constraints:simplesyntax}
 \end{table}
 %
 \paragraph{Extended syntax.}
 The extended syntax allows to define upper and lower bounds on a subset of states.
 The options for the extended syntax are found in Table~\ref{tab:constraints:extendedsyntax}.
+Here, $\mathcal{I}_{\textrm{bx},0}$ is a vector of length $n_x$ containing only zeros and ones.
 \begin{table}[ht!]
     \centering
-    \caption{Extended syntax for setting the initial state} \label{tab:constraints:extendedsyntax}
     \begin{tabular}{cccc}
         \toprule
         Term & Attribute/Property & Data type & Required \\ \midrule
-        $ \underline{x}_0 $ & \code{constr\_lbx\_0} & double & \optional \\
-        $ \bar{x}_0 $ & \code{constr\_ubx\_0} & double & \optional \\
-        $ J_{\textrm{bx},0} $ & \code{constr\_Jbx\_0} & double & \optional \\
+        $ \overline{x}_0 $ & \code{AcadosConstraints.ubx\_0} & double & \optional \\
+        $ \underline{x}_0 $ & \code{AcadosConstraints.lbx\_0} & double & \optional \\
+        $ J_{\textrm{bx},0} = \mathrm{diag}(\mathcal{I}_{\textrm{bx},0})$ & \code{AcadosConstraints.idxbx\_0} & double & \optional \\
         \bottomrule
     \end{tabular}
+    \caption{Extended syntax for setting the initial state} \label{tab:constraints:extendedsyntax}
 \end{table}
 %
 \subsection{Path Constraints}\label{sec:constraints:path}
@@ -531,42 +533,42 @@ The matrices $ J_{\star} $ are translated into arrays of integers \texttt{idx}$\
 These matrices are described as follows:
 \begin{itemize}
     \item $J\ind{sh}$ maps lower slack vectors $s\ind{l,h}(t)$ and upper slack vectors $s\ind{u,h}(t)$ onto the nonlinear constraint expressions $h(x,u,p)$.
-    \item $J\ind{bx}$, $J\ind{bu}$ map $x(t)$ and $u(t)$ onto their bounds vectors $\underline{x}$, $\bar{x}$ and $\underline{u}$, $\bar{u}$, respectively.
+    \item $J\ind{bx}$, $J\ind{bu}$ map $x(t)$ and $u(t)$ onto their bounds vectors $\underline{x}$, $\overline{x}$ and $\underline{u}$, $\overline{u}$, respectively.
     \item $J\ind{sx}$, $J\ind{su}$ map lower slack vectors $s\ind{l,bx}(t)$, $s\ind{l,bu}(t)$ and upper slack vectors $s\ind{u,bx}(t)$, $s\ind{u,bu}(t)$ onto $x(t)$ and $u(t)$, respectively.
-    \item $J\ind{sg}$ maps lower slack vectors $s\ind{l,g}(t)$ and upper slack vectors $s\ind{u,g}(t)$ onto lower and upper equality bounds $\underline{g}$, $\bar{g}$, respectively.
-    \item $C$, $D$ map $x(t)$ and $u(t)$ onto lower and upper inequality bounds $\underline{g}$, $\bar{g}$ (polytopic constraints).
+    \item $J\ind{sg}$ maps lower slack vectors $s\ind{l,g}(t)$ and upper slack vectors $s\ind{u,g}(t)$ onto lower and upper equality bounds $\underline{g}$, $\overline{g}$, respectively.
+    \item $C$, $D$ map $x(t)$ and $u(t)$ onto lower and upper inequality bounds $\underline{g}$, $\overline{g}$ (polytopic constraints).
     \item $J\ind{sh}\initial$ maps lower slack vectors $s\ind{l,h}\initial$ and upper slack vectors $s\ind{u,h}\initial$ onto the nonlinear initial constraint expressions $h\initial(x(0),u(0),p)$.
 \end{itemize}
 %
 \begin{table}[ht!]
     \centering
-    \caption{Path constraints options} \label{tab:constraints:path}
     \begin{tabular}{cccc}
         \toprule
         Term & Attribute/Property & Data type & Required \\ \midrule
-        $J\ind{bx}$ & \code{constr\_Jbx}    & double, \textbf{SPUM} & \optional  \\
-        $\underline{x} $    & \code{constr\_lbx}     & double  & \optional  \\
-        $\bar{x} $  & \code{constr\_ubx}     & double  & \optional   \\ [1em]
-        $J\ind{bu}$ & \code{constr\_Jbu}    & double, \textbf{SPUM}   & \optional    \\
-        $\underline{u} $    & \code{constr\_lbu}     & double   & \optional   \\
-        $\bar{u} $         & \code{constr\_ubu}     & double  & \optional   \\ [1em]
-        $C$ & \code{constr\_C}    & double  & \optional \\
-        $D $    & \code{constr\_D}     & double  & \optional \\
-        $\underline{g} $    & \code{constr\_lg}     & double  & \optional    \\
-        $\bar{g} $         & \code{constr\_ug}     & double  & \optional   \\ [1em]
-        $ h\initial $ & \code{constr\_expr\_h\_0}    & \casadi~expression  & \optional   \\
-        $\underline{h}\initial $    & \code{constr\_lh\_0}     & double   & \optional   \\
-        $\bar{h}\initial $         & \code{constr\_uh\_0}     & double  & \optional   \\ [1em]
-        $ h $ & \code{constr\_expr\_h}    & \casadi~expression  & \optional   \\
-        $\underline{h} $    & \code{constr\_lh}     & double   & \optional   \\
-        $\bar{h} $         & \code{constr\_uh}     & double  & \optional   \\ [1em]
-        $ J\ind{sbx} $ & \code{constr\_Jsbx} & double, \textbf{SPUME} & \optional  \\
-        $ J\ind{sbu} $ & \code{constr\_Jsbu} & double, \textbf{SPUME}  & \optional \\
-        $ J\ind{sg} $ & \code{constr\_Jsg} & double, \textbf{SPUME} & \optional  \\
-        $ J\ind{sh} $ & \code{constr\_Jsh} & double, \textbf{SPUME}  & \optional  \\
-        $ J\ind{sh}\initial $ & \code{constr\_Jsh\_0} & double, \textbf{SPUME}  & \optional  \\
+        $J\ind{bx}$ & \code{AcadosConstraints.idxbx}    & double & \optional  \\
+        $\overline{x} $  & \code{AcadosConstraints.ubx}     & double  & \optional   \\
+        $\underline{x} $    & \code{AcadosConstraints.lbx}     & double  & \optional  \\[1em]
+        $J\ind{bu}$ & \code{AcadosConstraints.idxbu}    & double   & \optional    \\
+        $\overline{u} $         & \code{AcadosConstraints.ubu}     & double  & \optional   \\
+        $\underline{u} $    & \code{AcadosConstraints.lbu}     & double   & \optional   \\ [1em]
+        $C$ & \code{AcadosConstraints.C}    & double  & \optional \\
+        $D $    & \code{AcadosConstraints.D}     & double  & \optional \\
+        $\overline{g} $         & \code{AcadosConstraints.ug}     & double  & \optional   \\
+        $\underline{g} $    & \code{AcadosConstraints.lg}     & double  & \optional    \\ [1em]
+        $ h\initial $ & \code{AcadosModel.con\_h\_expr\_0}    & \casadi~expression  & \optional   \\
+        $\overline{h}\initial $         & \code{AcadosConstraints.uh\_0}     & double  & \optional   \\
+        $\underline{h}\initial $    & \code{AcadosConstraints.lh\_0}     & double   & \optional   \\ [1em]
+        $ h $ & \code{AcadosModel.con\_h\_expr}    & \casadi~expression  & \optional   \\
+        $\overline{h} $         & \code{AcadosConstraints.uh}     & double  & \optional   \\
+        $\underline{h} $    & \code{AcadosConstraints.lh}     & double   & \optional   \\ [1em]
+        $ J\ind{sbx} = \mathrm{diag}(\mathcal{I}\ind{sbx})$ & \code{AcadosConstraints.idxsbx} & double & \optional  \\
+        $ J\ind{sbu} = \mathrm{diag}(\mathcal{I}\ind{sbu})$ & \code{AcadosConstraints.idxsbu} & double  & \optional \\
+        $ J\ind{sg} = \mathrm{diag}(\mathcal{I}\ind{sg})$ & \code{AcadosConstraints.idxsg} & double & \optional  \\
+        $ J\ind{sh} = \mathrm{diag}(\mathcal{I}\ind{sh})$ & \code{AcadosConstraints.idxsh} & double  & \optional  \\
+        $ J\ind{sh}\initial = \mathrm{diag}(\mathcal{I}\ind{sh}\initial)$ & \code{AcadosConstraints.idxsh\_0} & double  & \optional  \\
         \bottomrule
     \end{tabular}
+    \caption{Path constraints options} \label{tab:constraints:path}
 \end{table}
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -577,39 +579,40 @@ Table~\ref{tab:constraints:terminal} shows the options for defining the terminal
 Here, matrices
 \begin{itemize}
     \item $J\ind{sh}\terminal$ maps lower slack vectors $s\ind{l,h}\terminal(t)$ and upper slack vectors $s\ind{u,h}\terminal(t)$ onto nonlinear terminal constraint expressions $h\terminal(x(T), p)$.
-    \item $J\ind{bx}\terminal$ maps $x(T)$ onto its bounds vectors $\underline{x}\terminal$ and $\bar{x}\terminal$.
+    \item $J\ind{bx}\terminal$ maps $x(T)$ onto its bounds vectors $\underline{x}\terminal$ and $\overline{x}\terminal$.
     \item $J\ind{sbx}\terminal$ maps lower slack vectors $s\ind{l,bx}\terminal$ and upper slack vectors $s\ind{u,bx}\terminal$ onto $x(T)$.
-    \item $J\ind{sg}\terminal$ maps lower slack vectors $s\ind{l,g}\terminal(t)$ and upper slack vectors $s\ind{u,g}\terminal(t)$ onto lower and upper equality bounds $\underline{g}\terminal$, $\bar{g}\terminal$, respectively.
-    \item $C\terminal$ maps $x(T)$ onto lower and upper inequality bounds $\underline{g}\terminal$, $\bar{g}\terminal$ (polytopic constraints).
+    \item $J\ind{sg}\terminal$ maps lower slack vectors $s\ind{l,g}\terminal(t)$ and upper slack vectors $s\ind{u,g}\terminal(t)$ onto lower and upper equality bounds $\underline{g}\terminal$, $\overline{g}\terminal$, respectively.
+    \item $C\terminal$ maps $x(T)$ onto lower and upper inequality bounds $\underline{g}\terminal$, $\overline{g}\terminal$ (polytopic constraints).
 \end{itemize}
 %
 \begin{table}[ht!]
     \centering
-    \caption{Terminal constraints options} \label{tab:constraints:terminal}
     \begin{tabular}{cccc}
         \toprule
         Term & Attribute/Property & Data type & Required \\ \midrule
-        $J\ind{bx}\terminal$ & \code{constr\_Jbx\_e}    & double, \textbf{SPUM}   & \optional   \\
-        $\underline{x}\terminal $    & \code{constr\_lbx\_e}     & double  & \optional   \\
-        $\bar{x}\terminal $         & \code{constr\_ubx\_e}     & double   & \optional  \\ [1em]
-        $ C\terminal $ & \code{constr\_C\_e}    & double   & \optional   \\
-        $\underline{g}\terminal $    & \code{constr\_lg\_e}     & double   & \optional   \\
-        $\bar{g}\terminal $         & \code{constr\_ug\_e}     & double   & \optional  \\ [1em]
-        $ h\terminal $ & \code{constr\_expr\_h\_e}    & \casadi~expression   & \optional  \\
-        $\underline{h}\terminal $    & \code{constr\_lh\_e}     & double   & \optional   \\
-        $\bar{h}\terminal $         & \code{constr\_uh\_e}     & double  & \optional   \\ [1em]
-        $ J\ind{sbx}\terminal $ & \code{constr\_Jsbx\_e} & double, \textbf{SPUME}   & \optional \\
-        $ J\ind{sg}\terminal $ & \code{constr\_Jsg\_e} & double, \textbf{SPUME} & \optional  \\
-        $ J\ind{sh}\terminal $ & \code{constr\_Jsh\_e} & double, \textbf{SPUME}  & \optional  \\
+        $J\ind{bx}\terminal  = \mathrm{diag}(\mathcal{I}\ind{bx}\terminal)$ & \code{AcadosConstraints.idxbx\_e}    & double   & \optional   \\
+        $\overline{x}\terminal $         & \code{AcadosConstraints.ubx\_e}     & double   & \optional  \\
+        $\underline{x}\terminal $    & \code{AcadosConstraints.lbx\_e}     & double  & \optional   \\ [1em]
+        $ C\terminal $ & \code{AcadosConstraints.C\_e}    & double   & \optional   \\
+        $\overline{g}\terminal $         & \code{AcadosConstraints.ug\_e}     & double   & \optional  \\
+        $\underline{g}\terminal $    & \code{AcadosConstraints.lg\_e}     & double   & \optional   \\ [1em]
+        $ h\terminal $ & \code{AcadosModel.con\_h\_expr\_e}    & \casadi~expression   & \optional  \\
+        $\overline{h}\terminal $         & \code{AcadosConstraints.uh\_e}     & double  & \optional   \\
+        $\underline{h}\terminal $    & \code{AcadosConstraints.lh\_e}     & double   & \optional   \\ [1em]
+        $ J\ind{sbx}\terminal = \mathrm{diag}(\mathcal{I}\ind{sbx}\terminal)$ & \code{AcadosConstraints.idxsbx\_e} & double   & \optional \\
+        $ J\ind{sg}\terminal = \mathrm{diag}(\mathcal{I}\ind{sg}\terminal)$ & \code{AcadosConstraints.idxsg\_e} & double & \optional  \\
+        $ J\ind{sh}\terminal = \mathrm{diag}(\mathcal{I}\ind{sh}\terminal)$ & \code{AcadosConstraints.idxsh\_e} & double  & \optional  \\
         \bottomrule
     \end{tabular}
+    \caption{Terminal constraints options} \label{tab:constraints:terminal}
+
 \end{table}
 
 
 \section{Solver \& Options}\label{sec:solver}
 
 
-Tables \ref{tab:solver_options}, \ref{tab:solver_options:qp_solver_option} and \ref{tab:solver_options:regularize_method} show (almost) all available options.
+Tables \ref{tab:solver_options}, \ref{tab:solver_options:qp_solver_option} and \ref{tab:solver_options:regularize_method} show some of the available options.
 A full list of the available options is given on the \href{https://docs.acados.org/python_interface/index.html#acados-ocp-solver-interface-acadosocp-and-acadosocpsolver}{docs page}.
 
 Note that some options of the solver can be modified after creation using the routine.
@@ -626,28 +629,26 @@ Some options can only be set before the solver is created, especially options th
         {Attribute/Property} & Type & Default & {Description} \\ \midrule
         \multicolumn{4}{l}{\emph{Code generation}} \\
         \code{compile\_interface} & string & \str{auto} & in (\str{auto}, \str{true}, \str{false}) \\
-        \code{codgen\_model} & string & \str{true} & in (\str{true}, \str{false}) \\
-        \code{compile\_model} & string & \str{true} & in (\str{true}, \str{false}) \\
-        \code{output\_dir} & string & \str{build} & codegen output directory\\
         \midrule
 
 		\multicolumn{4}{l}{\emph{Shooting nodes}} \\
-        \code{param\_scheme\_N} & int $>1$ & $10$ & uniform grid: number of shooting nodes; acts together with end time \code{T} from model. \\
+		\code{tf} & float & & prediction horizon \\
+        \code{N\_horizon} & int $>1$ &  & uniform grid: number of shooting nodes; acts together with end time/length of prediction horizon \code{tf}. \\
         % set one of the following for nonuniform grid
-        {\code{shooting\_nodes} or \code{param\_\-scheme\_shooting\_nodes}} & doubles & \code{[]} & nonuniform grid option 1: direct definition of the shooting node times \\
+        \code{shooting\_nodes}& doubles & \code{[]} & nonuniform grid option 1: direct definition of the shooting node times \\
         \code{time\_steps} & doubles & \code{[]} & {nonuniform grid option 2: definition of deltas between shooting nodes}\\
         \midrule
 
         \multicolumn{4}{l}{\emph{Integrator}} \\
-        \code{sim\_method} & string & \str{irk} & \str{erk}, \str{irk}, \str{irk\_gnsf} \\
+        \code{integrator\_type} & string & \str{ERK} & \str{ERK}, \str{IRK}, \str{LIFTED\_IRK}, \str{GNSF} \\
         \code{sim\_method\_num\_stages} & int & $4$ & Runge-Kutta int.\ stages: ($1$)~RK1, ($2$)~RK2, ($4$)~RK4\\
         \code{sim\_method\_num\_steps} & int & $1$\\
         \code{sim\_method\_newton\_iter} & int & $3$\\
-        \code{gnsf\_detect\_struct} & string & \str{true}\\
+        \code{sim\_method\_detect\_gnsf} & string & \str{true}\\
         \midrule
 
         \multicolumn{4}{l}{\emph{NLP solver}} \\
-        \code{nlp\_solver} & string & \str{sqp} & in (\str{sqp}, \str{sqp\_rti})\\
+        \code{nlp\_solver\_type} & string & \str{SQP} & in (\str{SQP}, \str{SQP\_RTI},, \str{'DDP'})\\
         \code{nlp\_solver\_max\_iter} & int $>1$ & $100$ & maximum number of NLP iterations\\
         \code{nlp\_solver\_tol\_stat} & double & $10^{-6}$ & stopping criterion \\
         \code{nlp\_solver\_tol\_eq}   & double & $10^{-6}$ & stopping criterion \\
@@ -655,7 +656,7 @@ Some options can only be set before the solver is created, especially options th
         \code{nlp\_solver\_tol\_comp} & double & $10^{-6}$ & stopping criterion \\
         \code{nlp\_solver\_ext\_qp\_res} & int & $0$ & compute QP residuals at each NLP iteration \\
         \code{nlp\_solver\_step\_length} & double & $1.0$ & fixed step length in SQP algorithm \\
-        \code{rti\_phase} & int & $0$ & RTI phase: ($1$) preparation, ($2$) feedback, ($0$) both \\
+        \code{nlp\_solver\_warm\_start\_first\_qp} & bool & false & warm start even in first SQP iteration \\
         \midrule
 
         \multicolumn{4}{l}{\emph{QP solver}} \\
@@ -666,16 +667,16 @@ Some options can only be set before the solver is created, especially options th
         \code{qp\_solver\_cond\_ric\_alg} & int & $0$ & factorize hessian in the condensing: ($0$) no, ($1$) yes \\
         \code{qp\_solver\_ric\_alg} & int & $0$ & HPIPM specific \\
         \code{qp\_solver\_warm\_start} & int & $0$ & ($0$)~cold start, ($1$)~warm start primal variables, ($2$)~warm start and dual variables \\
-        \code{warm\_start\_first\_qp} & int & $0$ & warm start even in first SQP iteration: ($0$)~no, ($1$)~yes \\
+
         \midrule
                 % globalization
         \multicolumn{4}{l}{\emph{Globalization}} \\
-        \code{globalization} & string & \scriptsize\str{fixed\_step} & globalization strategy in (\str{fixed\_step}, \str{merit\_backtracking}), note \code{merit\_backtracking} is a preliminary implementation.\\
+        \code{globalization} & string & \scriptsize\str{FIXED\_STEP} & globalization strategy in (\str{FIXED\_STEP}, \str{MERIT\_BACKTRACKING}), note \code{MERIT\_BACKTRACKING} is a preliminary implementation.\\
         \code{alpha\_min} & double & $0.05$ & minimum step-size, relevant for globalization  \\
         \code{alpha\_reduction} & double & $0.7$ &  step-size reduction factor, relevant for globalization  \\
         \midrule
         \multicolumn{4}{l}{\emph{Hessian approximation}} \\
-        {\code{nlp\_solver\_\-exact\_hessian}} & string & \str{false} & use exact hessian calculation: (\str{})in (\str{true}, \str{false}), use exact \\
+        {\code{hessian\_approx}} & string & \str{GAUSS\_NEWTON} & use exact Hessian or Gauss-Newton approximation, (\str{EXACT}, \str{GAUSS\_NEWTON}) \\
         \code{regularize\_method} & string & $\longrightarrow$ & Defines the hessian regularization method. See Table~\ref{tab:solver_options:regularize_method}\\
         \code{levenberg\_marquardt} & double & $0.0$ & in case of a singular hessian, setting this $>0$ can help convergence \\
         \code{exact\_hess\_dyn} & int & $1$ & in ($0$, $1$), compute and use hessian in dynamics, only if \str{nlp\_\-solver\_\-exact\_\-hessian} = \str{true} \\
@@ -686,7 +687,7 @@ Some options can only be set before the solver is created, especially options th
         \code{print\_level} & int $\geq 0$ & $0$ & verbosity of the solver: ($0$) silent, ($>0$) print first QP problems and solution during SQP\\
         \bottomrule
     \end{tabular}
-    \caption{Solver options}\label{tab:solver_options}
+    \caption{Solver options that can be set as attributes/properties of \code{AcadosOcpOptions}.} \label{tab:solver_options}
 \end{table}
 %
 \begin{table}
@@ -717,13 +718,13 @@ Some options can only be set before the solver is created, especially options th
     \begin{tabular}{cc}
         \toprule
         Attribute/Property & Description \\\midrule
-        \code{no\_regularize}* & don't regularize \\
-        \code{mirror} & compare \cite{Verschueren2017}
+        \code{NO\_REGULARIZE}* & don't regularize \\
+        \code{MIRROR} & compare \cite{Verschueren2017}
 %        \href{https://cdn.syscop.de/publications/Verschueren2017.pdf}{see Verschueren2017}
         \\
-        \code{project} & compare \cite{Verschueren2017} \\
-        \code{project\_reduc\_hess} & preliminary \\
-        \code{convexify} & compare \cite{Verschueren2017}, does not work in combination with nonlinear constraints \\
+        \code{PROJECT} & compare \cite{Verschueren2017} \\
+        \code{PROJECT\_REDUC\_HESS} & preliminary \\
+        \code{CONVEXIFY} & compare \cite{Verschueren2017}, does not work in combination with nonlinear constraints \\
         \bottomrule
         \multicolumn{2}{r}{\footnotesize * default}
     \end{tabular}
