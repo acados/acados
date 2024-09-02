@@ -140,7 +140,7 @@ class AcadosOcpDims:
         self.__nsg_e = 0
         # equalities within x bounds
         self.__nbxe_0 = None
-        self.__np_slow = 0
+        self.__np_global = 0
 
 
     @property
@@ -366,9 +366,9 @@ class AcadosOcpDims:
         return self.__ng_e
 
     @property
-    def np_slow(self):
-        """length of p_slow; default: 0"""
-        return self.__np_slow
+    def np_global(self):
+        """length of p_global; default: 0"""
+        return self.__np_global
 
     @property
     def N(self):
@@ -407,12 +407,12 @@ class AcadosOcpDims:
         else:
             raise Exception('Invalid np value, expected nonnegative integer.')
 
-    @np_slow.setter
-    def np_slow(self, np_slow):
-        if isinstance(np_slow, int) and np_slow > -1:
-            self.__np_slow = np_slow
+    @np_global.setter
+    def np_global(self, np_global):
+        if isinstance(np_global, int) and np_global > -1:
+            self.__np_global = np_global
         else:
-            raise Exception('Invalid np_slow value, expected nonnegative integer.')
+            raise Exception('Invalid np_global value, expected nonnegative integer.')
 
     @ny_0.setter
     def ny_0(self, ny_0):

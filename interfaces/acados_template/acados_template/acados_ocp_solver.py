@@ -326,8 +326,8 @@ class AcadosOcpSolver:
         getattr(self.shared_lib, f"{self.name}_acados_update_params").argtypes = [c_void_p, c_int, POINTER(c_double), c_int]
         getattr(self.shared_lib, f"{self.name}_acados_update_params").restype = c_int
 
-        getattr(self.shared_lib, f"{self.name}_acados_set_p_slow").argtypes = [c_void_p, POINTER(c_double), c_int]
-        getattr(self.shared_lib, f"{self.name}_acados_set_p_slow").restype = c_int
+        getattr(self.shared_lib, f"{self.name}_acados_set_p_global").argtypes = [c_void_p, POINTER(c_double), c_int]
+        getattr(self.shared_lib, f"{self.name}_acados_set_p_global").restype = c_int
 
         # these do not work for multi phase OCPs
         if isinstance(self.acados_ocp, AcadosOcp):
@@ -1563,15 +1563,15 @@ class AcadosOcpSolver:
         getattr(self.shared_lib, f"{self.name}_acados_update_params_sparse") \
                                     (self.capsule, stage, idx_data, param_data, n_update)
 
-    def set_p_slow(self, data_: np.ndarray):
+    def set_p_global(self, data_: np.ndarray):
         """
-        Sets values of p_slow and precomputes all parts of the CasADi graphs of all other functions that only depend on p_slow.
+        Sets values of p_global and precomputes all parts of the CasADi graphs of all other functions that only depend on p_global.
         """
         data = np.ascontiguousarray(data_, dtype=np.float64)
         c_data = cast(data.ctypes.data, POINTER(c_double))
         data_len = len(data)
 
-        status = getattr(self.shared_lib, f"{self.name}_acados_set_p_slow")(self.capsule, c_data, data_len)
+        status = getattr(self.shared_lib, f"{self.name}_acados_set_p_global")(self.capsule, c_data, data_len)
 
         return status
 

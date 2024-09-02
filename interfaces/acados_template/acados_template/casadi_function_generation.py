@@ -32,7 +32,7 @@ from typing import Union, List
 
 import os
 import casadi as ca
-from .utils import is_empty, casadi_length, check_casadi_version_supports_p_slow
+from .utils import is_empty, casadi_length, check_casadi_version_supports_p_global
 from .acados_model import AcadosModel
 from .acados_ocp_constraints import AcadosOcpConstraints
 
@@ -52,12 +52,12 @@ def is_casadi_SX(x):
 
 
 class GenerateContext:
-    def __init__(self, p_slow: Union[ca.SX, ca.MX], problem_name: str, opts=None):
-        self.p_slow = p_slow
+    def __init__(self, p_global: Union[ca.SX, ca.MX], problem_name: str, opts=None):
+        self.p_global = p_global
         self.problem_name = problem_name
 
         self.pool_names = []
-        self.p_slow_expressions = []
+        self.p_global_expressions = []
         self.opts = opts
         self.casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
@@ -72,20 +72,20 @@ class GenerateContext:
             os.makedirs(output_dir)
         os.chdir(output_dir)
 
-        if self.p_slow is None:
-            # normal behaviour (p_slow is empty)
+        if self.p_global is None:
+            # normal behaviour (p_global is empty)
             fun = ca.Function(name, inputs, outputs)
             fun.generate(name, self.casadi_codegen_opts)
         else:
-            check_casadi_version_supports_p_slow()
+            check_casadi_version_supports_p_global()
             # interesting behaviour
-            inputs_augmented = inputs + [self.p_slow]
+            inputs_augmented = inputs + [self.p_global]
             fun = ca.Function(name, inputs_augmented, outputs)
 
             outputs = fun.call(inputs_augmented, True, False) # always_inline=True, never_inline=False
 
             # This introduces novel symbols into the graph (extracted1, extracted2,...)
-            [outputs_ret, symbols, param] = ca.extract_parametric(outputs, self.p_slow)
+            [outputs_ret, symbols, param] = ca.extract_parametric(outputs, self.p_global)
             symbols = symbols.primitives()
 
             # Substitute these symbols with double memory pools
@@ -96,7 +96,7 @@ class GenerateContext:
                 self.pool_names.append(name_e)
 
             outputs_ret = ca.substitute(outputs_ret, symbols, pools)
-            self.p_slow_expressions += param.primitives()
+            self.p_global_expressions += param.primitives()
 
             fun_mod = ca.Function(fun.name(), inputs, outputs_ret)
             fun_mod.generate(name, self.casadi_codegen_opts)
@@ -105,10 +105,10 @@ class GenerateContext:
         os.chdir(cwd)
 
     def finalize(self):
-        if self.p_slow is None:
+        if self.p_global is None:
             return
 
-        y = ca.cse(self.p_slow_expressions)
+        y = ca.cse(self.p_global_expressions)
 
         # change directory
         cwd = os.getcwd()
@@ -116,8 +116,8 @@ class GenerateContext:
         os.chdir(output_dir)
 
         # generate C code
-        fun_name = f'{self.problem_name}_p_slow_precompute_fun'
-        fun = ca.Function(fun_name, [self.p_slow], y, ['p_slow'], self.pool_names)
+        fun_name = f'{self.problem_name}_p_global_precompute_fun'
+        fun = ca.Function(fun_name, [self.p_global], y, ['p_global'], self.pool_names)
         fun.generate(fun_name, self.casadi_codegen_opts)
 
         os.chdir(cwd)
@@ -560,7 +560,7 @@ def generate_c_code_conl_cost(context: GenerateContext, model: AcadosModel, stag
     fun_name_cost_fun_jac_hess = model.name + suffix_name_fun_jac_hess
 
     # set up functions to be exported
-    # TODO: fix these for p_slow
+    # TODO: fix these for p_global
     outer_loss_fun = ca.Function('psi', [res_expr, t, p], [outer_expr])
     cost_expr = outer_loss_fun(inner_expr, t, p)
 

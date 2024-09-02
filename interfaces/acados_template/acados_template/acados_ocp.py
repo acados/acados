@@ -944,8 +944,8 @@ class AcadosOcp:
         # model
         template_list += self._get_external_function_header_templates()
 
-        if self.dims.np_slow > 0:
-            template_list.append(('p_slow_precompute_fun.in.h', f'{self.name}_p_slow_precompute_fun.h'))
+        if self.dims.np_global > 0:
+            template_list.append(('p_global_precompute_fun.in.h', f'{self.name}_p_global_precompute_fun.h'))
 
         # Simulink
         if self.simulink_opts is not None:
@@ -1001,7 +1001,7 @@ class AcadosOcp:
             code_gen_opts['with_value_sens_wrt_params'] = self.solver_options.with_value_sens_wrt_params
             code_gen_opts['code_export_directory'] = self.code_export_directory
 
-            context = GenerateContext(model.p_slow, self.name, code_gen_opts)
+            context = GenerateContext(model.p_global, self.name, code_gen_opts)
         else:
             code_gen_opts = context.opts
 

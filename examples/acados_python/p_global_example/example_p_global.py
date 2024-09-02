@@ -43,25 +43,25 @@ knots = [[0,0,0,0,0.2,0.5,0.8,1,1,1,1],[0,0,0,0.1,0.5,0.9,1,1,1]]
 np.random.seed(1)
 data = np.random.random((7,6,2)).ravel(order='F')
 
-def create_p_slow(lut=True):
+def create_p_global(lut=True):
     m = MX.sym("m")
     l = MX.sym("l")
-    p_slow = [m, l]
-    p_slow_values = np.array([0.1, 0.8])
+    p_global = [m, l]
+    p_global_values = np.array([0.1, 0.8])
 
     if lut:
         # Coefficient of B-spline
         C = MX.sym("C", data.shape[0], 1)
-        p_slow += [C]
-        p_slow_values = np.concatenate([p_slow_values, data])
+        p_global += [C]
+        p_global_values = np.concatenate([p_global_values, data])
     else:
         C = None
-    p_slow = ca.vcat(p_slow)
+    p_global = ca.vcat(p_global)
 
-    return p_slow, m, l, C, p_slow_values
+    return p_global, m, l, C, p_global_values
 
 
-def export_pendulum_ode_model(p_slow, m, l, C, lut=True) -> AcadosModel:
+def export_pendulum_ode_model(p_global, m, l, C, lut=True) -> AcadosModel:
     model_name = 'pendulum'
 
     # constants
@@ -113,20 +113,20 @@ def export_pendulum_ode_model(p_slow, m, l, C, lut=True) -> AcadosModel:
     model.u = u
     # model.z = z
     model.p = p
-    model.p_slow = p_slow
+    model.p_global = p_global
     model.name = model_name
 
     return model
 
 
-def create_ocp_formulation_without_opts(p_slow, m, l, C, lut=True, use_p_slow=True) -> AcadosOcp:
+def create_ocp_formulation_without_opts(p_global, m, l, C, lut=True, use_p_global=True) -> AcadosOcp:
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
     # set model
-    model = export_pendulum_ode_model(p_slow, m, l, C, lut=lut)
-    model.p_slow = p_slow
+    model = export_pendulum_ode_model(p_global, m, l, C, lut=lut)
+    model.p_global = p_global
     ocp.model = model
 
     # dimensions
@@ -167,23 +167,23 @@ def create_ocp_formulation_without_opts(p_slow, m, l, C, lut=True, use_p_slow=Tr
 
     ocp.parameter_values = np.array([9.81])
 
-    if not use_p_slow:
-        model.p = ca.vertcat(model.p, p_slow)
-        model.p_slow = None
+    if not use_p_global:
+        model.p = ca.vertcat(model.p, p_global)
+        model.p_global = None
 
     return ocp
 
 
-def main(use_cython=False, lut=True, use_p_slow=True):
+def main(use_cython=False, lut=True, use_p_global=True):
 
-    print(f"\n\nRunning example with lut={lut}, use_p_slow={use_p_slow}")
-    p_slow, m, l, C, p_slow_values = create_p_slow(lut=lut)
+    print(f"\n\nRunning example with lut={lut}, use_p_global={use_p_global}")
+    p_global, m, l, C, p_global_values = create_p_global(lut=lut)
 
     # create ocp
-    ocp = create_ocp_formulation_without_opts(p_slow, m, l, C, lut=lut, use_p_slow=use_p_slow)
+    ocp = create_ocp_formulation_without_opts(p_global, m, l, C, lut=lut, use_p_global=use_p_global)
 
-    if not use_p_slow:
-        ocp.parameter_values = np.concatenate([ocp.parameter_values, p_slow_values])
+    if not use_p_global:
+        ocp.parameter_values = np.concatenate([ocp.parameter_values, p_global_values])
 
     Tf = 1.0
     N_horizon = 20
@@ -200,7 +200,7 @@ def main(use_cython=False, lut=True, use_p_slow=True):
     ocp.solver_options.N_horizon = N_horizon
 
     # create ocp solver
-    print(f"Creating ocp solver with p_slow = {ocp.model.p_slow}, p = {ocp.model.p}")
+    print(f"Creating ocp solver with p_global = {ocp.model.p_global}, p = {ocp.model.p}")
 
     solver_json = 'acados_ocp_' + ocp.model.name + '.json'
     if use_cython:
@@ -213,7 +213,7 @@ def main(use_cython=False, lut=True, use_p_slow=True):
     # call SQP_RTI solver in the loop:
     residuals = []
 
-    ocp_solver.set_p_slow(p_slow_values)
+    ocp_solver.set_p_global(p_global_values)
 
     for i in range(20):
         status = ocp_solver.solve()
@@ -223,9 +223,9 @@ def main(use_cython=False, lut=True, use_p_slow=True):
     print(residuals)
     return residuals
 
-def main_mocp(lut=True, use_p_slow=True):
-    print(f"\n\nRunning multi-phase example with lut={lut}, use_p_slow={use_p_slow}")
-    p_slow, m, l, C, p_slow_values = create_p_slow(lut=lut)
+def main_mocp(lut=True, use_p_global=True):
+    print(f"\n\nRunning multi-phase example with lut={lut}, use_p_global={use_p_global}")
+    p_global, m, l, C, p_global_values = create_p_global(lut=lut)
 
     Tf = 1.0
     N_horizon = 20
@@ -234,15 +234,15 @@ def main_mocp(lut=True, use_p_slow=True):
     n_phases = 2
     mocp = AcadosMultiphaseOcp(N_list=[10, 10])
 
-    ocp_phase_1 = create_ocp_formulation_without_opts(p_slow, m, l, C, lut=lut, use_p_slow=use_p_slow)
-    ocp_phase_2 = create_ocp_formulation_without_opts(p_slow, m, l, C, lut=lut, use_p_slow=use_p_slow)
+    ocp_phase_1 = create_ocp_formulation_without_opts(p_global, m, l, C, lut=lut, use_p_global=use_p_global)
+    ocp_phase_2 = create_ocp_formulation_without_opts(p_global, m, l, C, lut=lut, use_p_global=use_p_global)
 
     mocp.set_phase(ocp_phase_1, 0)
     mocp.set_phase(ocp_phase_2, 1)
 
-    if not use_p_slow:
+    if not use_p_global:
         for ip in range(n_phases):
-            mocp.parameter_values[ip] = np.concatenate([mocp.parameter_values[ip], p_slow_values])
+            mocp.parameter_values[ip] = np.concatenate([mocp.parameter_values[ip], p_global_values])
 
     # set options
     mocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
@@ -256,14 +256,14 @@ def main_mocp(lut=True, use_p_slow=True):
     mocp.solver_options.N_horizon = N_horizon
 
     # create ocp solver
-    print(f"Creating ocp solver with p_slow = {mocp.model[0].p_slow}, p_phase_1 = {mocp.model[0].p}, p_phase_2 = {mocp.model[1].p}")
+    print(f"Creating ocp solver with p_global = {mocp.model[0].p_global}, p_phase_1 = {mocp.model[0].p}, p_phase_2 = {mocp.model[1].p}")
 
     ocp_solver = AcadosOcpSolver(mocp)
 
     # call SQP_RTI solver in the loop:
     residuals = []
 
-    ocp_solver.set_p_slow(p_slow_values)
+    ocp_solver.set_p_global(p_global_values)
 
     for i in range(20):
         status = ocp_solver.solve()
@@ -275,22 +275,22 @@ def main_mocp(lut=True, use_p_slow=True):
 
 
 if __name__ == "__main__":
-    ref_nolut = main(use_cython=False, use_p_slow=False, lut=False)
-    res_nolut = main(use_cython=False, use_p_slow=True, lut=False)
+    ref_nolut = main(use_cython=False, use_p_global=False, lut=False)
+    res_nolut = main(use_cython=False, use_p_global=True, lut=False)
     np.testing.assert_almost_equal(ref_nolut, res_nolut)
 
-    res_mocp_nolut_p = main_mocp(use_p_slow=False, lut=False)
-    res_mocp_nolut_p_slow = main_mocp(use_p_slow=True, lut=False)
+    res_mocp_nolut_p = main_mocp(use_p_global=False, lut=False)
+    res_mocp_nolut_p_global = main_mocp(use_p_global=True, lut=False)
     np.testing.assert_almost_equal(ref_nolut, res_mocp_nolut_p)
-    np.testing.assert_almost_equal(ref_nolut, res_mocp_nolut_p_slow)
+    np.testing.assert_almost_equal(ref_nolut, res_mocp_nolut_p_global)
 
-    ref_lut = main(use_cython=False, use_p_slow=False, lut=True)
-    res_lut = main(use_cython=False, use_p_slow=True, lut=True)
+    ref_lut = main(use_cython=False, use_p_global=False, lut=True)
+    res_lut = main(use_cython=False, use_p_global=True, lut=True)
     np.testing.assert_almost_equal(ref_lut, res_lut)
-    res_mocp_lut_p = main_mocp(use_p_slow=False, lut=True)
-    res_mocp_lut_p_slow = main_mocp(use_p_slow=True, lut=True)
+    res_mocp_lut_p = main_mocp(use_p_global=False, lut=True)
+    res_mocp_lut_p_global = main_mocp(use_p_global=True, lut=True)
     np.testing.assert_almost_equal(ref_lut, res_mocp_lut_p)
-    np.testing.assert_almost_equal(ref_lut, res_mocp_lut_p_slow)
+    np.testing.assert_almost_equal(ref_lut, res_mocp_lut_p_global)
 
 
     with np.testing.assert_raises(Exception):

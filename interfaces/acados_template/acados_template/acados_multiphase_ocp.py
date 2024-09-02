@@ -241,13 +241,13 @@ class AcadosMultiphaseOcp:
             if len(set(getattr(self, field))) != self.n_phases:
                 raise Exception(f"AcadosMultiphaseOcp: make_consistent: {field} objects are not distinct.{warning}")
 
-        # p_slow check:
-        p_slow = self.model[0].p_slow
+        # p_global check:
+        p_global = self.model[0].p_global
         for i in range(self.n_phases):
-            if p_slow is None and self.model[i].p_slow is not None:
-                raise Exception(f"p_slow is None for phase 0, but not for phase {i}. Should be the same for all phases.")
-            if p_slow is not None and not ca.is_equal(p_slow, self.model[i].p_slow):
-                raise Exception(f"p_slow is different for phase 0 and phase {i}. Should be the same for all phases.")
+            if p_global is None and self.model[i].p_global is not None:
+                raise Exception(f"p_global is None for phase 0, but not for phase {i}. Should be the same for all phases.")
+            if p_global is not None and not ca.is_equal(p_global, self.model[i].p_global):
+                raise Exception(f"p_global is different for phase 0 and phase {i}. Should be the same for all phases.")
 
         # compute phase indices
         phase_idx = np.cumsum([0] + self.N_list).tolist()
@@ -365,8 +365,8 @@ class AcadosMultiphaseOcp:
         else:
             template_list.append(('multi_Makefile.in', 'Makefile'))
 
-        if self.phases_dims[0].np_slow > 0:
-            template_list.append(('p_slow_precompute_fun.in.h', f'{self.name}_p_slow_precompute_fun.h'))
+        if self.phases_dims[0].np_global > 0:
+            template_list.append(('p_global_precompute_fun.in.h', f'{self.name}_p_global_precompute_fun.h'))
 
         # Simulink
         if self.simulink_opts is not None:
@@ -427,7 +427,7 @@ class AcadosMultiphaseOcp:
         code_gen_opts['with_value_sens_wrt_params'] = self.solver_options.with_value_sens_wrt_params
         code_gen_opts['code_export_directory'] = self.code_export_directory
 
-        context = GenerateContext(self.model[0].p_slow, self.name, code_gen_opts)
+        context = GenerateContext(self.model[0].p_global, self.name, code_gen_opts)
 
         for i in range(self.n_phases):
             # this is the only option that can vary and influence external functions to be generated

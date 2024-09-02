@@ -72,8 +72,8 @@ typedef struct {{ name }}_solver_capsule
     ocp_nlp_config *nlp_config;
     ocp_nlp_dims *nlp_dims;
 
-{% if phases_dims[0].np_slow > 0 %}
-    external_function_casadi p_slow_precompute_fun;
+{% if phases_dims[0].np_global > 0 %}
+    external_function_casadi p_global_precompute_fun;
 {%- endif %}
 
 	{%- for jj in range(end=n_phases) %}{# phases loop !#}
@@ -216,7 +216,7 @@ ACADOS_SYMBOL_EXPORT int {{ name }}_acados_create_with_discretization({{ name }}
 
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_update_params({{ name }}_solver_capsule * capsule, int stage, double *value, int np);
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_update_params_sparse({{ name }}_solver_capsule * capsule, int stage, int *idx, double *p, int n_update);
-ACADOS_SYMBOL_EXPORT int {{ name }}_acados_set_p_slow({{ name }}_solver_capsule* capsule, double* data, int data_len);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_set_p_global({{ name }}_solver_capsule* capsule, double* data, int data_len);
 
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_solve({{ name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_free({{ name }}_solver_capsule * capsule);

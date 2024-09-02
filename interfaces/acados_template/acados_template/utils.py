@@ -141,7 +141,7 @@ def check_casadi_version():
         msg += 'Version {} currently in use.'.format(casadi_version)
         print(msg)
 
-def check_casadi_version_supports_p_slow():
+def check_casadi_version_supports_p_global():
     try:
         from casadi import extract_parametric, cse
     except:

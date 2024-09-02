@@ -45,8 +45,8 @@
 // example specific
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
 
-{% if dims.np_slow > 0 %}
-#include "{{ name }}_p_slow_precompute_fun.h"
+{% if dims.np_global > 0 %}
+#include "{{ name }}_p_global_precompute_fun.h"
 {%- endif %}
 
 {%- if dims.nh > 0 or dims.nh_e > 0 or dims.nh_0 > 0 or dims.nphi > 0 or dims.nphi_e > 0 or dims.nphi_0 > 0 %}
@@ -407,14 +407,14 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         external_function_external_param_casadi_create(&capsule->__CAPSULE_FNC__ ); \
     } while(false)
 
-{% if dims.np_slow > 0 %}
-    capsule->p_slow_precompute_fun.casadi_fun = &{{ name }}_p_slow_precompute_fun;
-    capsule->p_slow_precompute_fun.casadi_work = &{{ name }}_p_slow_precompute_fun_work;
-    capsule->p_slow_precompute_fun.casadi_sparsity_in = &{{ name }}_p_slow_precompute_fun_sparsity_in;
-    capsule->p_slow_precompute_fun.casadi_sparsity_out = &{{ name }}_p_slow_precompute_fun_sparsity_out;
-    capsule->p_slow_precompute_fun.casadi_n_in = &{{ name }}_p_slow_precompute_fun_n_in;
-    capsule->p_slow_precompute_fun.casadi_n_out = &{{ name }}_p_slow_precompute_fun_n_out;
-    external_function_casadi_create(&capsule->p_slow_precompute_fun);
+{% if dims.np_global > 0 %}
+    capsule->p_global_precompute_fun.casadi_fun = &{{ name }}_p_global_precompute_fun;
+    capsule->p_global_precompute_fun.casadi_work = &{{ name }}_p_global_precompute_fun_work;
+    capsule->p_global_precompute_fun.casadi_sparsity_in = &{{ name }}_p_global_precompute_fun_sparsity_in;
+    capsule->p_global_precompute_fun.casadi_sparsity_out = &{{ name }}_p_global_precompute_fun_sparsity_out;
+    capsule->p_global_precompute_fun.casadi_n_in = &{{ name }}_p_global_precompute_fun_n_in;
+    capsule->p_global_precompute_fun.casadi_n_out = &{{ name }}_p_global_precompute_fun_n_out;
+    external_function_casadi_create(&capsule->p_global_precompute_fun);
 {%- endif %}
 
 
@@ -2595,16 +2595,16 @@ int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule
 }
 
 
-int {{ name }}_acados_set_p_slow({{ name }}_solver_capsule* capsule, double* data, int data_len)
+int {{ name }}_acados_set_p_global({{ name }}_solver_capsule* capsule, double* data, int data_len)
 {
-{% if dims.np_slow > 0 %}
-    external_function_casadi* fun = &capsule->p_slow_precompute_fun;
+{% if dims.np_global > 0 %}
+    external_function_casadi* fun = &capsule->p_global_precompute_fun;
     fun->args[0] = data;
-    int np_slow = {{ dims.np_slow }};
+    int np_global = {{ dims.np_global }};
 
-    if (data_len != np_slow)
+    if (data_len != np_global)
     {
-        printf("{{ name }}_acados_set_p_slow: np_slow = %d should match data_len = %d. Exiting.\n", np_slow, data_len);
+        printf("{{ name }}_acados_set_p_global: np_global = %d should match data_len = %d. Exiting.\n", np_global, data_len);
         exit(1);
     }
 
@@ -2619,7 +2619,7 @@ int {{ name }}_acados_set_p_slow({{ name }}_solver_capsule* capsule, double* dat
     return 1;
 
 {%- else %}
-    printf("p_slow is not defined, {{ name }}_acados_set_p_slow does nothing.\n");
+    printf("p_global is not defined, {{ name }}_acados_set_p_global does nothing.\n");
 {%- endif %}
 }
 
@@ -2895,8 +2895,8 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     external_function_external_param_casadi_free(&capsule->phi_e_constraint_fun_jac_hess);
 {%- endif %}
 
-{% if dims.np_slow > 0 %}
-    external_function_casadi_free(&capsule->p_slow_precompute_fun);
+{% if dims.np_global > 0 %}
+    external_function_casadi_free(&capsule->p_global_precompute_fun);
 {%- endif %}
 
     return 0;

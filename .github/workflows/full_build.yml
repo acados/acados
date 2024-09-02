@@ -139,8 +139,8 @@ jobs:
       shell: bash
       run: |
         source ${{runner.workspace}}/acados/acadosenv/bin/activate
-        cd ${{runner.workspace}}/acados/examples/acados_python/p_slow_example
-        python example_p_slow.py
+        cd ${{runner.workspace}}/acados/examples/acados_python/p_global_example
+        python example_p_global.py
 
   MATLAB_test:
     needs: core_build
