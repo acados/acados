@@ -36,8 +36,8 @@
 /// \addtogroup ocp_nlp_sqp ocp_nlp_sqp
 /// @{
 
-#ifndef ACADOS_OCP_NLP_OCP_NLP_SQP_H_
-#define ACADOS_OCP_NLP_OCP_NLP_SQP_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_SQP_WITH_FEASIBLE_QP_H_
+#define ACADOS_OCP_NLP_OCP_NLP_SQP_WITH_FEASIBLE_QP_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,20 +68,20 @@ typedef struct
     int qp_warm_start;   // qp_warm_start in all but the first sqp iterations
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
     bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
-} ocp_nlp_sqp_opts;
+} ocp_nlp_sqp_wfqp_opts;
 
 //
-acados_size_t ocp_nlp_sqp_opts_calculate_size(void *config, void *dims);
+acados_size_t ocp_nlp_sqp_wfqp_opts_calculate_size(void *config, void *dims);
 //
-void *ocp_nlp_sqp_opts_assign(void *config, void *dims, void *raw_memory);
+void *ocp_nlp_sqp_wfqp_opts_assign(void *config, void *dims, void *raw_memory);
 //
-void ocp_nlp_sqp_opts_initialize_default(void *config, void *dims, void *opts);
+void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config, void *dims, void *opts);
 //
-void ocp_nlp_sqp_opts_update(void *config, void *dims, void *opts);
+void ocp_nlp_sqp_wfqp_opts_update(void *config, void *dims, void *opts);
 //
-void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* value);
+void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, void* value);
 //
-void ocp_nlp_sqp_opts_set_at_stage(void *config_, void *opts_, size_t stage, const char *field, void* value);
+void ocp_nlp_sqp_wfqp_opts_set_at_stage(void *config_, void *opts_, size_t stage, const char *field, void* value);
 
 
 
@@ -97,6 +97,9 @@ typedef struct
     double alpha;
     double *primal_step_norm;
 
+    // indices of non-slacked constraints in NLP
+    int **idxns;
+
     // statistics
     double *stat;
     int stat_m;
@@ -104,14 +107,14 @@ typedef struct
 
     double step_norm;
 
-} ocp_nlp_sqp_memory;
+} ocp_nlp_sqp_wfqp_memory;
 
 //
-acados_size_t ocp_nlp_sqp_memory_calculate_size(void *config, void *dims, void *opts_);
+acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config, void *dims, void *opts_);
 //
-void *ocp_nlp_sqp_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
+void *ocp_nlp_sqp_wfqp_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
 //
-void ocp_nlp_sqp_memory_reset_qp_solver(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
+void ocp_nlp_sqp_wfqp_memory_reset_qp_solver(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     void *opts_, void *mem_, void *work_);
 
 
@@ -122,39 +125,40 @@ void ocp_nlp_sqp_memory_reset_qp_solver(void *config_, void *dims_, void *nlp_in
 typedef struct
 {
     ocp_nlp_workspace *nlp_work;
-} ocp_nlp_sqp_workspace;
+} ocp_nlp_sqp_wfqp_workspace;
 
 //
-acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config, void *dims, void *opts_);
+acados_size_t ocp_nlp_sqp_wfqp_workspace_calculate_size(void *config, void *dims, void *opts_);
 
 
 
 /************************************************
  * functions
  ************************************************/
-
 //
-int ocp_nlp_sqp(void *config, void *dims, void *nlp_in, void *nlp_out,
+int ocp_nlp_sqp_wfqp(void *config, void *dims, void *nlp_in, void *nlp_out,
                 void *args, void *mem, void *work_);
 //
-void ocp_nlp_sqp_config_initialize_default(void *config_);
+void ocp_nlp_sqp_wfqp_config_initialize_default(void *config_);
 //
-void ocp_nlp_sqp_config_initialize_default_feasible_qp(void *config_);
+void ocp_nlp_sqp_wfqp_config_initialize_default_feasible_qp(void *config_);
 //
-int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
+int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_);
 //
-void ocp_nlp_sqp_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_, void *opts_, void *mem_, void *work_,
+void ocp_nlp_sqp_wfqp_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_, void *opts_, void *mem_, void *work_,
                             const char *field, void *grad_p);
 //
-void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_);
+void ocp_nlp_sqp_wfqp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_);
 //
+double ocp_nlp_sqp_wfqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
+                ocp_nlp_workspace *nlp_work);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_OCP_NLP_OCP_NLP_SQP_H_
+#endif  // ACADOS_OCP_NLP_OCP_NLP_SQP_WITH_FEASIBLE_QP_H_
 /// @}
 /// @}
 /// @}

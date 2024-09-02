@@ -105,7 +105,7 @@ def solve_infeasible_linearization(setting):
     if globalization == 'FUNNEL_L1PEN_LINESEARCH':
         ocp.solver_options.print_level = 1
     ocp.solver_options.tol = TOL
-    ocp.solver_options.nlp_solver_type = 'SQP'
+    ocp.solver_options.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'
     ocp.solver_options.globalization = globalization
     ocp.solver_options.alpha_min = 1e-15
     SQP_max_iter = 300

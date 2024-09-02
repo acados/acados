@@ -879,7 +879,7 @@ class AcadosOcp:
                 opts.globalization_full_step_dual = 0
 
         # sanity check for Funnel globalization and SQP
-        if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' and opts.nlp_solver_type != 'SQP':
+        if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' and opts.nlp_solver_type not in ['SQP', 'SQP_WITH_FEASIBLE_QP']:
             raise Exception('FUNNEL_L1PEN_LINESEARCH only supports SQP.')
 
         # termination

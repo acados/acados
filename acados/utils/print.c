@@ -198,12 +198,12 @@ void print_ocp_qp_dims(ocp_qp_dims *dims)
 {
     int N = dims->N;
 
-    printf("k\tnx\tnu\tnb\tnbx\tnbu\tng\tns\n");
+    printf("k\tnx\tnu\tnb\tnbx\tnbu\tng\tnsbu\tnsbx\tnsg\tns\n");
 
     for (int kk = 0; kk < N + 1; kk++)
     {
-        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t\n", kk, dims->nx[kk], dims->nu[kk], dims->nb[kk],
-               dims->nbx[kk], dims->nbu[kk], dims->ng[kk], dims->ns[kk]);
+        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t\n", kk, dims->nx[kk], dims->nu[kk], dims->nb[kk],
+               dims->nbx[kk], dims->nbu[kk], dims->ng[kk], dims->nsbu[kk], dims->nsbx[kk], dims->nsg[kk], dims->ns[kk]);
     }
 }
 
