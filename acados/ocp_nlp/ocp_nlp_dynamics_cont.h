@@ -187,7 +187,7 @@ void ocp_nlp_dynamics_cont_model_set(void *config_, void *dims_, void *model_, c
  ************************************************/
 
 //
-void ocp_nlp_dynamics_cont_config_initialize_default(void *config);
+void ocp_nlp_dynamics_cont_config_initialize_default(void *config, int stage);
 //
 void ocp_nlp_dynamics_cont_initialize(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 //
