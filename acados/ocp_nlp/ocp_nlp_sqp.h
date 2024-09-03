@@ -70,16 +70,16 @@ typedef struct
     int rti_phase;       // only phase 0 at the moment
     bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
 
-    // Funnel globalization related options
-    double funnel_initialization_increase_factor; // for multiplication with initial infeasibility
-    double funnel_initialization_upper_bound; // for initialization of initial funnel width
-    double funnel_sufficient_decrease_factor; // multiplication factor for funnel suff. decrease factor
-    double funnel_kappa; // parameter for reduction of funnel
-    double funnel_fraction_switching_condition; // parameter in switching condition
-    double funnel_initial_penalty_parameter; // initial penalty parameter for penalty phase
-    double funnel_penalty_eta; // fraction in penalty update
-    double funnel_penalty_contraction; // penalty contraction factor
-    bool funnel_type_switching_condition;
+    // // Funnel globalization related options
+    // double funnel_initialization_increase_factor; // for multiplication with initial infeasibility
+    // double funnel_initialization_upper_bound; // for initialization of initial funnel width
+    // double funnel_sufficient_decrease_factor; // multiplication factor for funnel suff. decrease factor
+    // double funnel_kappa; // parameter for reduction of funnel
+    // double funnel_fraction_switching_condition; // parameter in switching condition
+    // double funnel_initial_penalty_parameter; // initial penalty parameter for penalty phase
+    // double funnel_penalty_eta; // fraction in penalty update
+    // double funnel_penalty_contraction; // penalty contraction factor
+    // bool funnel_type_switching_condition;
 
 } ocp_nlp_sqp_opts;
 

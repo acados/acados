@@ -41,18 +41,44 @@
 extern "C" {
 #endif
 
-
-
 // blasfeo
 #include "blasfeo/include/blasfeo_common.h"
 
 // acados
-#include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
-#include "acados/utils/external_function_generic.h"
+#include "acados/ocp_nlp/ocp_nlp_globalization_common.h"
+#include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/utils/types.h"
-#include "acados_c/sim_interface.h"
 
+/************************************************
+ * options
+ ************************************************/
 
+typedef struct
+{
+    ocp_nlp_opts *nlp_opts;
+
+    // Funnel globalization related options
+    double initialization_increase_factor; // for multiplication with initial infeasibility
+    double initialization_upper_bound; // for initialization of initial funnel width
+    double sufficient_decrease_factor; // multiplication factor for funnel suff. decrease factor
+    double kappa; // parameter for reduction of funnel
+    double fraction_switching_condition; // parameter in switching condition
+    double initial_penalty_parameter; // initial penalty parameter for penalty phase
+    double penalty_eta; // fraction in penalty update
+    double penalty_contraction; // penalty contraction factor
+    bool type_switching_condition;
+} ocp_nlp_globalization_funnel_opts;
+
+//
+acados_size_t ocp_nlp_dynamics_cont_opts_calculate_size(void *config, void *dims);
+//
+void *ocp_nlp_dynamics_cont_opts_assign(void *config, void *dims, void *raw_memory);
+//
+void ocp_nlp_dynamics_cont_opts_initialize_default(void *config, void *dims, void *opts);
+//
+void ocp_nlp_dynamics_cont_opts_update(void *config, void *dims, void *opts);
+//
+void ocp_nlp_dynamics_cont_opts_set(void *config, void *opts, const char *field, void* value);
 
 #ifdef __cplusplus
 } /* extern "C" */

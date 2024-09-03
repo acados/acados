@@ -128,16 +128,16 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->rti_phase = 0;
     opts->eval_residual_at_max_iter = false;
 
-    // funnel method opts
-    opts->funnel_initialization_increase_factor = 15.0;
-    opts->funnel_initialization_upper_bound = 1.0;
-    opts->funnel_sufficient_decrease_factor = 0.9;
-    opts->funnel_kappa = 0.9;
-    opts->funnel_fraction_switching_condition = 1e-3;
-    opts->funnel_initial_penalty_parameter = 1.0;
-    opts->funnel_penalty_contraction = 0.5;
-    opts->funnel_penalty_eta = 1e-6;
-    opts->funnel_type_switching_condition = false; // use ipopt/gould type of switching
+    // // funnel method opts
+    // opts->funnel_initialization_increase_factor = 15.0;
+    // opts->funnel_initialization_upper_bound = 1.0;
+    // opts->funnel_sufficient_decrease_factor = 0.9;
+    // opts->funnel_kappa = 0.9;
+    // opts->funnel_fraction_switching_condition = 1e-3;
+    // opts->funnel_initial_penalty_parameter = 1.0;
+    // opts->funnel_penalty_contraction = 0.5;
+    // opts->funnel_penalty_eta = 1e-6;
+    // opts->funnel_type_switching_condition = false; // use ipopt/gould type of switching
 
     // overwrite default submodules opts
     // qp tolerance
@@ -264,66 +264,66 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
             bool* eval_residual_at_max_iter = (bool *) value;
             opts->eval_residual_at_max_iter = *eval_residual_at_max_iter;
         }
-        else if (!strcmp(field, "funnel_initialization_increase_factor"))
-        {
-            double* funnel_initialization_increase_factor = (double *) value;
-            if (*funnel_initialization_increase_factor <= 1.0)
-            {
-                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_initialization_increase_factor field, need double > 1, got %f.", *funnel_initialization_increase_factor);
-                exit(1);
-            }
-            opts->funnel_initialization_increase_factor = *funnel_initialization_increase_factor;
-        }
-        else if (!strcmp(field, "funnel_initialization_upper_bound"))
-        {
-            double* funnel_initialization_upper_bound = (double *) value;
-            if (*funnel_initialization_upper_bound <= 0.0)
-            {
-                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_initialization_upper_bound field, need double > 0, got %f.", *funnel_initialization_upper_bound);
-                exit(1);
-            }
-            opts->funnel_initialization_upper_bound = *funnel_initialization_upper_bound;
-        }
-        else if (!strcmp(field, "funnel_sufficient_decrease_factor"))
-        {
-            double* funnel_sufficient_decrease_factor = (double *) value;
-            if (*funnel_sufficient_decrease_factor <= 0.0 || *funnel_sufficient_decrease_factor >= 1.0)
-            {
-                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_sufficient_decrease_factor field, need double in (0,1), got %f.", *funnel_sufficient_decrease_factor);
-                exit(1);
-            }
-            opts->funnel_sufficient_decrease_factor = *funnel_sufficient_decrease_factor;
-        }
-        else if (!strcmp(field, "funnel_kappa"))
-        {
-            double* funnel_kappa = (double *) value;
-            if (*funnel_kappa <= 0.0 || *funnel_kappa >= 1.0)
-            {
-                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_kappa field, need double in (0,1), got %f.", *funnel_kappa);
-                exit(1);
-            }
-            opts->funnel_kappa = *funnel_kappa;
-        }
-        else if (!strcmp(field, "funnel_fraction_switching_condition"))
-        {
-            double* funnel_fraction_switching_condition = (double *) value;
-            if (*funnel_fraction_switching_condition <= 0.0 || *funnel_fraction_switching_condition >= 1.0)
-            {
-                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_fraction_switching_condition field, need double in (0,1), got %f.", *funnel_fraction_switching_condition);
-                exit(1);
-            }
-            opts->funnel_fraction_switching_condition = *funnel_fraction_switching_condition;
-        }
-        else if (!strcmp(field, "funnel_initial_penalty_parameter"))
-        {
-            double* funnel_initial_penalty_parameter = (double *) value;
-            if (*funnel_initial_penalty_parameter < 0.0 || *funnel_initial_penalty_parameter > 1.0)
-            {
-                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_initial_penalty_parameter field, need double in [0,1], got %f.", *funnel_initial_penalty_parameter);
-                exit(1);
-            }
-            opts->funnel_initial_penalty_parameter = *funnel_initial_penalty_parameter;
-        }
+        // else if (!strcmp(field, "funnel_initialization_increase_factor"))
+        // {
+        //     double* funnel_initialization_increase_factor = (double *) value;
+        //     if (*funnel_initialization_increase_factor <= 1.0)
+        //     {
+        //         printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_initialization_increase_factor field, need double > 1, got %f.", *funnel_initialization_increase_factor);
+        //         exit(1);
+        //     }
+        //     opts->funnel_initialization_increase_factor = *funnel_initialization_increase_factor;
+        // }
+        // else if (!strcmp(field, "funnel_initialization_upper_bound"))
+        // {
+        //     double* funnel_initialization_upper_bound = (double *) value;
+        //     if (*funnel_initialization_upper_bound <= 0.0)
+        //     {
+        //         printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_initialization_upper_bound field, need double > 0, got %f.", *funnel_initialization_upper_bound);
+        //         exit(1);
+        //     }
+        //     opts->funnel_initialization_upper_bound = *funnel_initialization_upper_bound;
+        // }
+        // else if (!strcmp(field, "funnel_sufficient_decrease_factor"))
+        // {
+        //     double* funnel_sufficient_decrease_factor = (double *) value;
+        //     if (*funnel_sufficient_decrease_factor <= 0.0 || *funnel_sufficient_decrease_factor >= 1.0)
+        //     {
+        //         printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_sufficient_decrease_factor field, need double in (0,1), got %f.", *funnel_sufficient_decrease_factor);
+        //         exit(1);
+        //     }
+        //     opts->funnel_sufficient_decrease_factor = *funnel_sufficient_decrease_factor;
+        // }
+        // else if (!strcmp(field, "funnel_kappa"))
+        // {
+        //     double* funnel_kappa = (double *) value;
+        //     if (*funnel_kappa <= 0.0 || *funnel_kappa >= 1.0)
+        //     {
+        //         printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_kappa field, need double in (0,1), got %f.", *funnel_kappa);
+        //         exit(1);
+        //     }
+        //     opts->funnel_kappa = *funnel_kappa;
+        // }
+        // else if (!strcmp(field, "funnel_fraction_switching_condition"))
+        // {
+        //     double* funnel_fraction_switching_condition = (double *) value;
+        //     if (*funnel_fraction_switching_condition <= 0.0 || *funnel_fraction_switching_condition >= 1.0)
+        //     {
+        //         printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_fraction_switching_condition field, need double in (0,1), got %f.", *funnel_fraction_switching_condition);
+        //         exit(1);
+        //     }
+        //     opts->funnel_fraction_switching_condition = *funnel_fraction_switching_condition;
+        // }
+        // else if (!strcmp(field, "funnel_initial_penalty_parameter"))
+        // {
+        //     double* funnel_initial_penalty_parameter = (double *) value;
+        //     if (*funnel_initial_penalty_parameter < 0.0 || *funnel_initial_penalty_parameter > 1.0)
+        //     {
+        //         printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_initial_penalty_parameter field, need double in [0,1], got %f.", *funnel_initial_penalty_parameter);
+        //         exit(1);
+        //     }
+        //     opts->funnel_initial_penalty_parameter = *funnel_initial_penalty_parameter;
+        // }
         else
         {
             ocp_nlp_opts_set(config, nlp_opts, field, value);
@@ -1090,298 +1090,298 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
     return false;
 }
 
-/************************************************
- * funnel functions
- ************************************************/
-static void debug_output(ocp_nlp_opts *opts, char* message, int print_level)
-{
-    if (opts->print_level > print_level)
-    {
-        printf("%s", message); //debugging output
-    }
-}
-static void debug_output_double(ocp_nlp_opts *opts, char* message, double value, int print_level)
-{
-    if (opts->print_level > print_level)
-    {
-        printf("%s: %f\n", message, value); //debugging output
-    }
-}
+// /************************************************
+//  * funnel functions
+//  ************************************************/
+// static void debug_output(ocp_nlp_opts *opts, char* message, int print_level)
+// {
+//     if (opts->print_level > print_level)
+//     {
+//         printf("%s", message); //debugging output
+//     }
+// }
+// static void debug_output_double(ocp_nlp_opts *opts, char* message, double value, int print_level)
+// {
+//     if (opts->print_level > print_level)
+//     {
+//         printf("%s: %f\n", message, value); //debugging output
+//     }
+// }
 
-static void initialize_funnel_width(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double initial_infeasibility)
-{
-    mem->funnel_width = fmax(opts->funnel_initialization_upper_bound,
-                            opts->funnel_initialization_increase_factor*initial_infeasibility);
-}
+// static void initialize_funnel_width(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double initial_infeasibility)
+// {
+//     mem->funnel_width = fmax(opts->funnel_initialization_upper_bound,
+//                             opts->funnel_initialization_increase_factor*initial_infeasibility);
+// }
 
-static void initialize_funnel_penalty_parameter(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts)
-{
-    mem->funnel_penalty_parameter = opts->funnel_initial_penalty_parameter;
-}
+// static void initialize_funnel_penalty_parameter(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts)
+// {
+//     mem->funnel_penalty_parameter = opts->funnel_initial_penalty_parameter;
+// }
 
-static void update_funnel_penalty_parameter(ocp_nlp_sqp_memory *mem,
-                                            ocp_nlp_sqp_opts *opts,
-                                            double pred_f, double pred_h)
-{
-    if (mem->funnel_penalty_parameter * pred_f + pred_h < opts->funnel_penalty_eta * pred_h)
-    {
-        mem->funnel_penalty_parameter = fmin(opts->funnel_penalty_contraction * mem->funnel_penalty_parameter,
-                                             ((1-opts->funnel_penalty_eta) * pred_h) / (-pred_f));
-    }
-    // else: do not decrease penalty parameter
-}
+// static void update_funnel_penalty_parameter(ocp_nlp_sqp_memory *mem,
+//                                             ocp_nlp_sqp_opts *opts,
+//                                             double pred_f, double pred_h)
+// {
+//     if (mem->funnel_penalty_parameter * pred_f + pred_h < opts->funnel_penalty_eta * pred_h)
+//     {
+//         mem->funnel_penalty_parameter = fmin(opts->funnel_penalty_contraction * mem->funnel_penalty_parameter,
+//                                              ((1-opts->funnel_penalty_eta) * pred_h) / (-pred_f));
+//     }
+//     // else: do not decrease penalty parameter
+// }
 
-static void decrease_funnel(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double trial_infeasibility, double current_infeasibility)
-{
-    mem->funnel_width = (1-opts->funnel_kappa) * trial_infeasibility + opts->funnel_kappa * mem->funnel_width;
-}
+// static void decrease_funnel(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double trial_infeasibility, double current_infeasibility)
+// {
+//     mem->funnel_width = (1-opts->funnel_kappa) * trial_infeasibility + opts->funnel_kappa * mem->funnel_width;
+// }
 
-static bool is_iterate_inside_of_funnel(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double infeasibility)
-{
-    if (infeasibility <= mem->funnel_width)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
+// static bool is_iterate_inside_of_funnel(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double infeasibility)
+// {
+//     if (infeasibility <= mem->funnel_width)
+//     {
+//         return true;
+//     }
+//     else
+//     {
+//         return false;
+//     }
+// }
 
-static bool is_funnel_sufficient_decrease_satisfied(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double infeasibility)
-{
-    if (infeasibility <= opts->funnel_sufficient_decrease_factor* mem->funnel_width)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
+// static bool is_funnel_sufficient_decrease_satisfied(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double infeasibility)
+// {
+//     if (infeasibility <= opts->funnel_sufficient_decrease_factor* mem->funnel_width)
+//     {
+//         return true;
+//     }
+//     else
+//     {
+//         return false;
+//     }
+// }
 
-static bool is_switching_condition_satisfied(ocp_nlp_sqp_opts *opts, double pred_optimality, double step_size, double pred_infeasibility)
-{
-    // if (step_size * pred_optimality >= opts->funnel_fraction_switching_condition * pred_infeasibility * pred_infeasibility)
-    if (step_size * pred_optimality >= opts->funnel_fraction_switching_condition * pred_infeasibility)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
+// static bool is_switching_condition_satisfied(ocp_nlp_sqp_opts *opts, double pred_optimality, double step_size, double pred_infeasibility)
+// {
+//     // if (step_size * pred_optimality >= opts->funnel_fraction_switching_condition * pred_infeasibility * pred_infeasibility)
+//     if (step_size * pred_optimality >= opts->funnel_fraction_switching_condition * pred_infeasibility)
+//     {
+//         return true;
+//     }
+//     else
+//     {
+//         return false;
+//     }
+// }
 
-static bool is_f_type_armijo_condition_satisfied(ocp_nlp_sqp_opts *opts,
-                                                    double negative_ared,
-                                                    double pred,
-                                                    double alpha)
-{
-    if (negative_ared <= fmin(-opts->nlp_opts->eps_sufficient_descent * alpha * fmax(pred, 0) + 1e-18, 0))
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
+// static bool is_f_type_armijo_condition_satisfied(ocp_nlp_sqp_opts *opts,
+//                                                     double negative_ared,
+//                                                     double pred,
+//                                                     double alpha)
+// {
+//     if (negative_ared <= fmin(-opts->nlp_opts->eps_sufficient_descent * alpha * fmax(pred, 0) + 1e-18, 0))
+//     {
+//         return true;
+//     }
+//     else
+//     {
+//         return false;
+//     }
+// }
 
-static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
-                                                  ocp_nlp_sqp_opts *opts,
-                                                  double pred, double ared, double alpha,
-                                                  double current_infeasibility,
-                                                  double trial_infeasibility,
-                                                  double current_objective,
-                                                  double trial_objective,
-                                                  double current_merit,
-                                                  double trial_merit,
-                                                  double pred_merit)
-{
-    bool accept_step = false;
-    debug_output_double(opts->nlp_opts, "current objective", current_objective, 2);
-    debug_output_double(opts->nlp_opts, "current infeasibility", current_infeasibility, 2);
-    debug_output_double(opts->nlp_opts, "trial objective", trial_objective, 2);
-    debug_output_double(opts->nlp_opts, "trial infeasibility", trial_infeasibility, 2);
-    debug_output_double(opts->nlp_opts, "pred", pred, 2);
+// static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
+//                                                   ocp_nlp_sqp_opts *opts,
+//                                                   double pred, double ared, double alpha,
+//                                                   double current_infeasibility,
+//                                                   double trial_infeasibility,
+//                                                   double current_objective,
+//                                                   double trial_objective,
+//                                                   double current_merit,
+//                                                   double trial_merit,
+//                                                   double pred_merit)
+// {
+//     bool accept_step = false;
+//     debug_output_double(opts->nlp_opts, "current objective", current_objective, 2);
+//     debug_output_double(opts->nlp_opts, "current infeasibility", current_infeasibility, 2);
+//     debug_output_double(opts->nlp_opts, "trial objective", trial_objective, 2);
+//     debug_output_double(opts->nlp_opts, "trial infeasibility", trial_infeasibility, 2);
+//     debug_output_double(opts->nlp_opts, "pred", pred, 2);
 
-    if(is_iterate_inside_of_funnel(mem, opts, trial_infeasibility))
-    {
-        debug_output(opts->nlp_opts, "Trial iterate is INSIDE of funnel\n", 1);
-        if (!mem->funnel_penalty_mode)
-        {
-            debug_output(opts->nlp_opts, "Penalty Mode not active!\n", 1);
-            if (is_switching_condition_satisfied(opts, pred, alpha, current_infeasibility))
-            {
-                debug_output(opts->nlp_opts, "Switching condition IS satisfied!\n", 1);
-                if (is_f_type_armijo_condition_satisfied(opts, -ared, pred, alpha))
-                {
-                    debug_output(opts->nlp_opts, "f-type step: Armijo condition satisfied\n", 1);
-                    accept_step = true;
-                    mem->funnel_iter_type = 'f';
-                }
-                else
-                {
-                    debug_output(opts->nlp_opts, "f-type step: Armijo condition NOT satisfied\n", 1);
-                }
+//     if(is_iterate_inside_of_funnel(mem, opts, trial_infeasibility))
+//     {
+//         debug_output(opts->nlp_opts, "Trial iterate is INSIDE of funnel\n", 1);
+//         if (!mem->funnel_penalty_mode)
+//         {
+//             debug_output(opts->nlp_opts, "Penalty Mode not active!\n", 1);
+//             if (is_switching_condition_satisfied(opts, pred, alpha, current_infeasibility))
+//             {
+//                 debug_output(opts->nlp_opts, "Switching condition IS satisfied!\n", 1);
+//                 if (is_f_type_armijo_condition_satisfied(opts, -ared, pred, alpha))
+//                 {
+//                     debug_output(opts->nlp_opts, "f-type step: Armijo condition satisfied\n", 1);
+//                     accept_step = true;
+//                     mem->funnel_iter_type = 'f';
+//                 }
+//                 else
+//                 {
+//                     debug_output(opts->nlp_opts, "f-type step: Armijo condition NOT satisfied\n", 1);
+//                 }
 
-            }
-            else if (is_funnel_sufficient_decrease_satisfied(mem, opts, trial_infeasibility))
-            {
-                debug_output(opts->nlp_opts, "Switching condition is NOT satisfied!\n", 1);
-                debug_output(opts->nlp_opts, "h-type step: funnel suff. decrease satisfied!\n", 1);
-                accept_step = true;
-                mem->funnel_iter_type = 'h';
-                decrease_funnel(mem, opts, trial_infeasibility, current_infeasibility);
-            }
-            else
-            {
-                debug_output(opts->nlp_opts, "Switching condition is NOT satisfied!\n", 1);
-                debug_output(opts->nlp_opts, "Entered penalty check!\n", 1);
-                //TODO move to function and test more
-                if (trial_merit <= current_merit + opts->nlp_opts->eps_sufficient_descent * alpha * pred_merit)
-                {
-                    debug_output(opts->nlp_opts, "Penalty Function accepted\n", 1);
-                    accept_step = true;
-                    mem->funnel_iter_type = 'b';
-                    mem->funnel_penalty_mode = true;
-                }
-            }
-        }
-        else
-        {
-            debug_output(opts->nlp_opts, "Penalty mode active\n", 1);
-            if (trial_merit <= current_merit + opts->nlp_opts->eps_sufficient_descent * alpha * pred_merit)
-            {
-                debug_output(opts->nlp_opts, "p-type step: accepted iterate\n", 1);
-                accept_step = true;
-                mem->funnel_iter_type = 'p';
+//             }
+//             else if (is_funnel_sufficient_decrease_satisfied(mem, opts, trial_infeasibility))
+//             {
+//                 debug_output(opts->nlp_opts, "Switching condition is NOT satisfied!\n", 1);
+//                 debug_output(opts->nlp_opts, "h-type step: funnel suff. decrease satisfied!\n", 1);
+//                 accept_step = true;
+//                 mem->funnel_iter_type = 'h';
+//                 decrease_funnel(mem, opts, trial_infeasibility, current_infeasibility);
+//             }
+//             else
+//             {
+//                 debug_output(opts->nlp_opts, "Switching condition is NOT satisfied!\n", 1);
+//                 debug_output(opts->nlp_opts, "Entered penalty check!\n", 1);
+//                 //TODO move to function and test more
+//                 if (trial_merit <= current_merit + opts->nlp_opts->eps_sufficient_descent * alpha * pred_merit)
+//                 {
+//                     debug_output(opts->nlp_opts, "Penalty Function accepted\n", 1);
+//                     accept_step = true;
+//                     mem->funnel_iter_type = 'b';
+//                     mem->funnel_penalty_mode = true;
+//                 }
+//             }
+//         }
+//         else
+//         {
+//             debug_output(opts->nlp_opts, "Penalty mode active\n", 1);
+//             if (trial_merit <= current_merit + opts->nlp_opts->eps_sufficient_descent * alpha * pred_merit)
+//             {
+//                 debug_output(opts->nlp_opts, "p-type step: accepted iterate\n", 1);
+//                 accept_step = true;
+//                 mem->funnel_iter_type = 'p';
 
-                if (is_funnel_sufficient_decrease_satisfied(mem, opts, trial_infeasibility))
-                {
-                    decrease_funnel(mem, opts, trial_infeasibility, current_infeasibility);
-                    mem->funnel_penalty_mode = false;
-                }
-            }
-        }
-    }
-    else
-    {
-        debug_output(opts->nlp_opts, "Trial iterate is NOT INSIDE of funnel\n", 1);
-    }
-    return accept_step;
-}
+//                 if (is_funnel_sufficient_decrease_satisfied(mem, opts, trial_infeasibility))
+//                 {
+//                     decrease_funnel(mem, opts, trial_infeasibility, current_infeasibility);
+//                     mem->funnel_penalty_mode = false;
+//                 }
+//             }
+//         }
+//     }
+//     else
+//     {
+//         debug_output(opts->nlp_opts, "Trial iterate is NOT INSIDE of funnel\n", 1);
+//     }
+//     return accept_step;
+// }
 
-static int ocp_nlp_sqp_funnel_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
-                ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_workspace *work, ocp_nlp_sqp_opts *opts)
-{
-    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
-    ocp_nlp_workspace *nlp_work = work->nlp_work;
-    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+// static int ocp_nlp_sqp_funnel_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
+//                 ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_workspace *work, ocp_nlp_sqp_opts *opts)
+// {
+//     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
+//     ocp_nlp_workspace *nlp_work = work->nlp_work;
+//     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
-    int N = dims->N;
-    double pred = -nlp_mem->qp_cost_value;
-    double pred_merit = 0.0; // Calculate this here
-    double alpha = 1.0;
-    double trial_cost;
-    double trial_infeasibility = 0.0;
-    double ared;
-    bool accept_step;
-    double current_infeasibility = mem->l1_infeasibility;
-    double current_cost = nlp_mem->cost_value;
-    double current_merit = mem->funnel_penalty_parameter*current_cost + current_infeasibility;
+//     int N = dims->N;
+//     double pred = -nlp_mem->qp_cost_value;
+//     double pred_merit = 0.0; // Calculate this here
+//     double alpha = 1.0;
+//     double trial_cost;
+//     double trial_infeasibility = 0.0;
+//     double ared;
+//     bool accept_step;
+//     double current_infeasibility = mem->l1_infeasibility;
+//     double current_cost = nlp_mem->cost_value;
+//     double current_merit = mem->funnel_penalty_parameter*current_cost + current_infeasibility;
 
-    // do the penalty parameter update here .... might be changed later
-    update_funnel_penalty_parameter(mem, opts, pred, mem->l1_infeasibility);
+//     // do the penalty parameter update here .... might be changed later
+//     update_funnel_penalty_parameter(mem, opts, pred, mem->l1_infeasibility);
 
-    int i;
+//     int i;
 
-    while (true)
-    {
-        // Calculate trial iterate: trial_iterate = current_iterate + alpha * direction
-        ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem,
-                                     nlp_work, nlp_work->tmp_nlp_out, alpha);
+//     while (true)
+//     {
+//         // Calculate trial iterate: trial_iterate = current_iterate + alpha * direction
+//         ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem,
+//                                      nlp_work, nlp_work->tmp_nlp_out, alpha);
 
-        ///////////////////////////////////////////////////////////////////////
-        // Evaluate cost function at trial iterate
-        // set evaluation point to tmp_nlp_out
-        ocp_nlp_set_primal_variable_pointers_in_submodules(config, dims, nlp_in, nlp_work->tmp_nlp_out, nlp_mem);
-        // compute trial dynamics value
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
-        for (i=0; i<N; i++)
-        {
-            // dynamics: Note has to be first, because cost_integration might be used.
-            config->dynamics[i]->compute_fun(config->dynamics[i], dims->dynamics[i], nlp_in->dynamics[i],
-                                            nlp_opts->dynamics[i], nlp_mem->dynamics[i], nlp_work->dynamics[i]);
-        }
-        // compute trial objective function value
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
-        for (i=0; i<=N; i++)
-        {
-            // cost
-            config->cost[i]->compute_fun(config->cost[i], dims->cost[i], nlp_in->cost[i], nlp_opts->cost[i],
-                                        nlp_mem->cost[i], nlp_work->cost[i]);
-        }
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
-        for (i=0; i<=N; i++)
-        {
-            // constr
-            config->constraints[i]->compute_fun(config->constraints[i], dims->constraints[i],
-                                                nlp_in->constraints[i], nlp_opts->constraints[i],
-                                                nlp_mem->constraints[i], nlp_work->constraints[i]);
-        }
-        // reset evaluation point to SQP iterate
-        ocp_nlp_set_primal_variable_pointers_in_submodules(config, dims, nlp_in, nlp_out, nlp_mem);
+//         ///////////////////////////////////////////////////////////////////////
+//         // Evaluate cost function at trial iterate
+//         // set evaluation point to tmp_nlp_out
+//         ocp_nlp_set_primal_variable_pointers_in_submodules(config, dims, nlp_in, nlp_work->tmp_nlp_out, nlp_mem);
+//         // compute trial dynamics value
+// #if defined(ACADOS_WITH_OPENMP)
+//     #pragma omp parallel for
+// #endif
+//         for (i=0; i<N; i++)
+//         {
+//             // dynamics: Note has to be first, because cost_integration might be used.
+//             config->dynamics[i]->compute_fun(config->dynamics[i], dims->dynamics[i], nlp_in->dynamics[i],
+//                                             nlp_opts->dynamics[i], nlp_mem->dynamics[i], nlp_work->dynamics[i]);
+//         }
+//         // compute trial objective function value
+// #if defined(ACADOS_WITH_OPENMP)
+//     #pragma omp parallel for
+// #endif
+//         for (i=0; i<=N; i++)
+//         {
+//             // cost
+//             config->cost[i]->compute_fun(config->cost[i], dims->cost[i], nlp_in->cost[i], nlp_opts->cost[i],
+//                                         nlp_mem->cost[i], nlp_work->cost[i]);
+//         }
+// #if defined(ACADOS_WITH_OPENMP)
+//     #pragma omp parallel for
+// #endif
+//         for (i=0; i<=N; i++)
+//         {
+//             // constr
+//             config->constraints[i]->compute_fun(config->constraints[i], dims->constraints[i],
+//                                                 nlp_in->constraints[i], nlp_opts->constraints[i],
+//                                                 nlp_mem->constraints[i], nlp_work->constraints[i]);
+//         }
+//         // reset evaluation point to SQP iterate
+//         ocp_nlp_set_primal_variable_pointers_in_submodules(config, dims, nlp_in, nlp_out, nlp_mem);
 
-        double *tmp_fun;
-        // Calculate the trial objective and constraint violation
-        trial_cost = 0.0;
-        for(i=0; i<=N; i++)
-        {
-            tmp_fun = config->cost[i]->memory_get_fun_ptr(nlp_mem->cost[i]);
-            trial_cost += *tmp_fun;
-        }
-        trial_infeasibility = get_l1_infeasibility(config, dims, mem);
+//         double *tmp_fun;
+//         // Calculate the trial objective and constraint violation
+//         trial_cost = 0.0;
+//         for(i=0; i<=N; i++)
+//         {
+//             tmp_fun = config->cost[i]->memory_get_fun_ptr(nlp_mem->cost[i]);
+//             trial_cost += *tmp_fun;
+//         }
+//         trial_infeasibility = get_l1_infeasibility(config, dims, mem);
 
-        ///////////////////////////////////////////////////////////////////////
-        // Evaluate merit function at trial point
-        double trial_merit = mem->funnel_penalty_parameter*trial_cost + trial_infeasibility;
-        pred_merit = mem->funnel_penalty_parameter * pred + current_infeasibility;
-        ared = nlp_mem->cost_value - trial_cost;
+//         ///////////////////////////////////////////////////////////////////////
+//         // Evaluate merit function at trial point
+//         double trial_merit = mem->funnel_penalty_parameter*trial_cost + trial_infeasibility;
+//         pred_merit = mem->funnel_penalty_parameter * pred + current_infeasibility;
+//         ared = nlp_mem->cost_value - trial_cost;
 
-        // Funnel globalization
-        accept_step = is_trial_iterate_acceptable_to_funnel(mem, opts,
-                                                            pred, ared,
-                                                            alpha, current_infeasibility,
-                                                            trial_infeasibility, current_cost,
-                                                            trial_cost, current_merit, trial_merit,
-                                                            pred_merit);
+//         // Funnel globalization
+//         accept_step = is_trial_iterate_acceptable_to_funnel(mem, opts,
+//                                                             pred, ared,
+//                                                             alpha, current_infeasibility,
+//                                                             trial_infeasibility, current_cost,
+//                                                             trial_cost, current_merit, trial_merit,
+//                                                             pred_merit);
 
-        if (accept_step)
-        {
-            mem->alpha = alpha;
-            nlp_mem->cost_value = trial_cost;
-            mem->l1_infeasibility = trial_infeasibility;
-            return 1;
-        }
+//         if (accept_step)
+//         {
+//             mem->alpha = alpha;
+//             nlp_mem->cost_value = trial_cost;
+//             mem->l1_infeasibility = trial_infeasibility;
+//             return 1;
+//         }
 
-        if (alpha < opts->nlp_opts->alpha_min)
-        {
-            printf("Linesearch: Step size gets too small. alpha = %e < alpha_min = %e Should enter penalty phase. \n", alpha, opts->nlp_opts->alpha_min);
-            exit(1);
-        }
+//         if (alpha < opts->nlp_opts->alpha_min)
+//         {
+//             printf("Linesearch: Step size gets too small. alpha = %e < alpha_min = %e Should enter penalty phase. \n", alpha, opts->nlp_opts->alpha_min);
+//             exit(1);
+//         }
 
-        alpha *= opts->nlp_opts->alpha_reduction;
+//         alpha *= opts->nlp_opts->alpha_reduction;
 
-    }
-}
+//     }
+// }
 
 /************************************************
  * functions
