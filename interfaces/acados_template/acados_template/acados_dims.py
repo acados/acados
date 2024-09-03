@@ -367,7 +367,7 @@ class AcadosOcpDims:
 
     @property
     def np_global(self):
-        """length of p_global; default: 0"""
+        """number of global parameters p_global; default: 0"""
         return self.__np_global
 
     @property
