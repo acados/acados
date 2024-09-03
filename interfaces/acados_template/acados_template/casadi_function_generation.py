@@ -512,9 +512,12 @@ def generate_c_code_conl_cost(context: GenerateContext, model: AcadosModel, stag
     x = model.x
     z = model.z
     p = model.p
+    p_global = model.p_global
     t = model.t
 
     symbol = get_casadi_symbol(x)
+    if p_global is None:
+        p_global = symbol('p_global', 0, 0)
 
     if stage_type == 'terminal':
         u = symbol('u', 0, 0)
@@ -560,19 +563,18 @@ def generate_c_code_conl_cost(context: GenerateContext, model: AcadosModel, stag
     fun_name_cost_fun_jac_hess = model.name + suffix_name_fun_jac_hess
 
     # set up functions to be exported
-    # TODO: fix these for p_global
-    outer_loss_fun = ca.Function('psi', [res_expr, t, p], [outer_expr])
-    cost_expr = outer_loss_fun(inner_expr, t, p)
+    outer_loss_fun = ca.Function('psi', [res_expr, t, p, p_global], [outer_expr])
+    cost_expr = outer_loss_fun(inner_expr, t, p, p_global)
 
-    outer_loss_grad_fun = ca.Function('outer_loss_grad', [res_expr, t, p], [ca.jacobian(outer_expr, res_expr).T])
+    outer_loss_grad_fun = ca.Function('outer_loss_grad', [res_expr, t, p, p_global], [ca.jacobian(outer_expr, res_expr).T])
 
     if custom_hess is None:
-        hess = ca.hessian(outer_loss_fun(res_expr, t, p), res_expr)[0]
+        hess = ca.hessian(outer_loss_fun(res_expr, t, p, p_global), res_expr)[0]
     else:
         hess = custom_hess
 
-    outer_hess_fun = ca.Function('outer_hess', [res_expr, t, p], [hess])
-    outer_hess_expr = outer_hess_fun(inner_expr, t, p)
+    outer_hess_fun = ca.Function('outer_hess', [res_expr, t, p, p_global], [hess])
+    outer_hess_expr = outer_hess_fun(inner_expr, t, p, p_global)
     outer_hess_is_diag = outer_hess_expr.sparsity().is_diag()
     if casadi_length(res_expr) <= 4:
         outer_hess_is_diag = 0
@@ -591,7 +593,7 @@ def generate_c_code_conl_cost(context: GenerateContext, model: AcadosModel, stag
     context.add_function_definition(
         fun_name_cost_fun_jac_hess,
         [x, u, z, yref, t, p],
-        [cost_expr, outer_loss_grad_fun(inner_expr, t, p), Jt_ux_expr, Jt_z_expr, outer_hess_expr, outer_hess_is_diag],
+        [cost_expr, outer_loss_grad_fun(inner_expr, t, p, p_global), Jt_ux_expr, Jt_z_expr, outer_hess_expr, outer_hess_is_diag],
         cost_dir
     )
 
