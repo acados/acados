@@ -28,9 +28,6 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import sys
-sys.path.insert(0, '../common')
-
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, AcadosMultiphaseOcp
 import numpy as np
 import scipy.linalg
@@ -38,6 +35,8 @@ from utils import plot_pendulum
 
 from casadi import MX, vertcat, sin, cos
 import casadi as ca
+
+PLOT = False
 
 knots = [[0,0,0,0,0.2,0.5,0.8,1,1,1,1],[0,0,0,0.1,0.5,0.9,1,1,1]]
 np.random.seed(1)
@@ -115,6 +114,11 @@ def export_pendulum_ode_model(p_global, m, l, C, lut=True) -> AcadosModel:
     model.p = p
     model.p_global = p_global
     model.name = model_name
+
+    # store meta information
+    model.x_labels = ['$x$ [m]', r'$\theta$ [rad]', '$v$ [m]', r'$\dot{\theta}$ [rad/s]']
+    model.u_labels = ['$F$']
+    model.t_label = '$t$ [s]'
 
     return model
 
@@ -221,6 +225,13 @@ def main(use_cython=False, lut=True, use_p_global=True):
         residuals+= list(ocp_solver.get_residuals())
 
     print(residuals)
+
+    # plot results
+    if PLOT:
+        u_traj = np.array([ocp_solver.get(i, "u") for i in range(N_horizon)])
+        x_traj = np.array([ocp_solver.get(i, "x") for i in range(N_horizon+1)])
+        plot_pendulum(ocp.solver_options.shooting_nodes, ocp.constraints.ubu[0], u_traj, x_traj, x_labels=ocp.model.x_labels, u_labels=ocp.model.u_labels)
+
     return residuals
 
 def main_mocp(lut=True, use_p_global=True):
