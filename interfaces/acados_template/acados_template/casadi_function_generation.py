@@ -60,22 +60,42 @@ class GenerateContext:
         self.p_global_expressions = []
         self.opts = opts
         self.casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
+        self.list_funname_dir_pairs = []  # list of (function_name, output_dir), NOTE: this can be used to simplify template based code generation!
+        self.functions_to_generate: List[ca.Function] = []
+
+    def __add_function(self, name: str, output_dir: str, fun: ca.Function):
+        self.list_funname_dir_pairs.append((name, output_dir))
+        self.functions_to_generate.append(fun)
+
+    def __generate_functions(self):
+        for (name, output_dir), fun in zip(self.list_funname_dir_pairs, self.functions_to_generate):
+            # setup and change directory
+            cwd = os.getcwd()
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir)
+            os.chdir(output_dir)
+
+            # generate function
+            try:
+                fun.generate(name, self.casadi_codegen_opts)
+            except Exception as e:
+                print(f"Error while generating function {name} in directory {output_dir}")
+                print(e)
+                raise e
+
+            # change back to original directory
+            os.chdir(cwd)
 
     def add_function_definition(self,
                                 name: str,
                                 inputs: List[Union[ca.MX, ca.SX]],
                                 outputs: List[Union[ca.MX, ca.SX]],
                                 output_dir: str):
-        # setup and change directory
-        cwd = os.getcwd()
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-        os.chdir(output_dir)
 
         if self.p_global is None:
             # normal behaviour (p_global is empty)
             fun = ca.Function(name, inputs, outputs)
-            fun.generate(name, self.casadi_codegen_opts)
+            self.__add_function(name, output_dir, fun)
         else:
             check_casadi_version_supports_p_global()
             # interesting behaviour
@@ -99,28 +119,19 @@ class GenerateContext:
             self.p_global_expressions += param.primitives()
 
             fun_mod = ca.Function(fun.name(), inputs, outputs_ret)
-            fun_mod.generate(name, self.casadi_codegen_opts)
-
-        # cd back
-        os.chdir(cwd)
+            self.__add_function(name, output_dir, fun_mod)
 
     def finalize(self):
-        if self.p_global is None:
-            return
+        # setup p_global_precompute_fun
+        if self.p_global is not None:
+            y = ca.cse(self.p_global_expressions)
+            output_dir = os.path.abspath(self.opts["code_export_directory"])
+            fun_name = f'{self.problem_name}_p_global_precompute_fun'
+            fun = ca.Function(fun_name, [self.p_global], y, ['p_global'], self.pool_names)
+            self.__add_function(fun_name, output_dir, fun)
 
-        y = ca.cse(self.p_global_expressions)
-
-        # change directory
-        cwd = os.getcwd()
-        output_dir = os.path.abspath(self.opts["code_export_directory"])
-        os.chdir(output_dir)
-
-        # generate C code
-        fun_name = f'{self.problem_name}_p_global_precompute_fun'
-        fun = ca.Function(fun_name, [self.p_global], y, ['p_global'], self.pool_names)
-        fun.generate(fun_name, self.casadi_codegen_opts)
-
-        os.chdir(cwd)
+        # generate all functions
+        self.__generate_functions()
         return
 
 ################
