@@ -234,16 +234,16 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
         switch (plan.nlp_cost[i])
         {
             case LINEAR_LS:
-                ocp_nlp_cost_ls_config_initialize_default(config->cost[i]);
+                ocp_nlp_cost_ls_config_initialize_default(config->cost[i], i);
                 break;
             case NONLINEAR_LS:
-                ocp_nlp_cost_nls_config_initialize_default(config->cost[i]);
+                ocp_nlp_cost_nls_config_initialize_default(config->cost[i], i);
                 break;
             case CONVEX_OVER_NONLINEAR:
-                ocp_nlp_cost_conl_config_initialize_default(config->cost[i]);
+                ocp_nlp_cost_conl_config_initialize_default(config->cost[i], i);
                 break;
             case EXTERNAL:
-                ocp_nlp_cost_external_config_initialize_default(config->cost[i]);
+                ocp_nlp_cost_external_config_initialize_default(config->cost[i], i);
                 break;
             case INVALID_COST:
                 printf("\nerror: ocp_nlp_config_create: forgot to initialize plan->nlp_cost\n");
@@ -260,7 +260,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
         switch (plan.nlp_dynamics[i])
         {
             case CONTINUOUS_MODEL:
-                ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[i]);
+                ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[i], i);
                 //                config->dynamics[i]->sim_solver =
                 //                sim_config_create(plan.sim_solver[i]);
                 sim_solver_t solver_name = plan.sim_solver_plan[i].sim_solver;
@@ -286,7 +286,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
 
                 break;
             case DISCRETE_MODEL:
-                ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[i]);
+                ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[i], i);
                 break;
             case INVALID_DYNAMICS:
                 printf("\nerror: ocp_nlp_config_create: forgot to initialize plan->nlp_dynamics\n");
@@ -303,10 +303,10 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
         switch (plan.nlp_constraints[i])
         {
             case BGH:
-                ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[i]);
+                ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[i], i);
                 break;
             case BGP:
-                ocp_nlp_constraints_bgp_config_initialize_default(config->constraints[i]);
+                ocp_nlp_constraints_bgp_config_initialize_default(config->constraints[i], i);
                 break;
             case INVALID_CONSTRAINT:
                 printf(

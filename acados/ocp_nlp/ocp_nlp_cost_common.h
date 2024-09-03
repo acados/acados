@@ -94,9 +94,10 @@ typedef struct
     void (*compute_jac_p)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*eval_grad_p)(void *config_, void *dim, void* model, void *opts, void *mem, void *work, struct blasfeo_dvec *out);
     void (*compute_gradient)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
-    void (*config_initialize_default)(void *config);
+    void (*config_initialize_default)(void *config, int stage);
     void (*precompute)(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_);
-
+    // stage information
+    int stage;
 } ocp_nlp_cost_config;
 
 //
