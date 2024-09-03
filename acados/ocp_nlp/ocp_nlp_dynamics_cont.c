@@ -1079,7 +1079,7 @@ void ocp_nlp_dynamics_cont_compute_adj_p(void* config_, void *dims_, void *model
 }
 
 
-void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
+void ocp_nlp_dynamics_cont_config_initialize_default(void *config_, int stage)
 {
     ocp_nlp_dynamics_config *config = config_;
 
@@ -1121,6 +1121,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->precompute = &ocp_nlp_dynamics_cont_precompute;
     config->config_initialize_default = &ocp_nlp_dynamics_cont_config_initialize_default;
     config->compute_jac_hess_p = &ocp_nlp_dynamics_cont_compute_jac_hess_p;
+    config->stage = stage;
 
     return;
 }

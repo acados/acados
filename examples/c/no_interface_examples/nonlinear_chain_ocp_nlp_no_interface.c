@@ -1228,29 +1228,29 @@ int main() {
     for (int ii = 0; ii <= NN; ii++)
     {
 		// linear ls
-		ocp_nlp_cost_ls_config_initialize_default(config->cost[ii]);
+		ocp_nlp_cost_ls_config_initialize_default(config->cost[ii], ii);
     }
 #elif COST==1
     for (int ii = 0; ii <= NN; ii++)
     {
 		// nonlinear ls
-		ocp_nlp_cost_nls_config_initialize_default(config->cost[ii]);
+		ocp_nlp_cost_nls_config_initialize_default(config->cost[ii], ii);
     }
 #else
     for (int ii = 0; ii < NN; ii++)
     {
 		// external cost
-		ocp_nlp_cost_external_config_initialize_default(config->cost[ii]);
+		ocp_nlp_cost_external_config_initialize_default(config->cost[ii], ii);
     }
 	// linear ls
-	ocp_nlp_cost_ls_config_initialize_default(config->cost[NN]);
+	ocp_nlp_cost_ls_config_initialize_default(config->cost[NN], NN);
 #endif
 
 #if DYNAMICS==0
 	// dynamics: ERK
     for (int ii = 0; ii < NN; ii++)
     {
-		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
+		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii], ii);
 		sim_erk_config_initialize_default(config->dynamics[ii]->sim_solver);
     }
 
@@ -1258,27 +1258,27 @@ int main() {
 	// dynamics: lifted IRK
     for (int ii = 0; ii < NN; ii++)
     {
-		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
+		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii], ii);
 		sim_lifted_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
     }
 #elif DYNAMICS==2
 	// dynamics: IRK
     for (int ii = 0; ii < NN; ii++)
     {
-		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
+		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii], ii);
 		sim_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
     }
 #elif DYNAMICS==3
 	// dynamics: discrete model
     for (int ii = 0; ii < NN; ii++)
     {
-		ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[ii]);
+		ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[ii], ii);
     }
 #elif DYNAMICS==4
 	// dynamics: lifted IRK
     for (int ii = 0; ii < NN; ii++)
     {
-		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
+		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii], ii);
 		sim_lifted_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
     }
 #endif
@@ -1286,7 +1286,7 @@ int main() {
 	// constraitns
     for (int ii = 0; ii <= NN; ii++)
     {
-		ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[ii]);
+		ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[ii], ii);
     }
 
     /************************************************

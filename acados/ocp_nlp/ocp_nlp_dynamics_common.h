@@ -60,7 +60,7 @@ extern "C" {
 
 typedef struct
 {
-    void (*config_initialize_default)(void *config);
+    void (*config_initialize_default)(void *config, int stage);
     sim_config *sim_solver;
     /* dims */
     acados_size_t (*dims_calculate_size)(void *config);
@@ -106,6 +106,7 @@ typedef struct
     void (*compute_adj_p)(void *config, void *dims, void *model, void *opts, void *memory, struct blasfeo_dvec *out);
     void (*compute_fun_and_adj)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     int (*precompute)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+    int stage;
 } ocp_nlp_dynamics_config;
 
 //

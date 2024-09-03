@@ -173,7 +173,7 @@ acados_size_t ocp_nlp_cost_external_workspace_calculate_size(void *config, void 
 //
 void ocp_nlp_cost_external_precompute(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_);
 //
-void ocp_nlp_cost_external_config_initialize_default(void *config);
+void ocp_nlp_cost_external_config_initialize_default(void *config, int stage);
 //
 void ocp_nlp_cost_external_initialize(void *config_, void *dims, void *model_,
                                       void *opts_, void *mem_, void *work_);

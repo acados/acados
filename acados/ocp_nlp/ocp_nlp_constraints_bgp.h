@@ -191,7 +191,7 @@ acados_size_t ocp_nlp_constraints_bgp_workspace_calculate_size(void *config, voi
 /* functions */
 
 //
-void ocp_nlp_constraints_bgp_config_initialize_default(void *config);
+void ocp_nlp_constraints_bgp_config_initialize_default(void *config, int stage);
 //
 void ocp_nlp_constraints_bgp_initialize(void *config, void *dims, void *model,
         void *opts, void *mem, void *work);
