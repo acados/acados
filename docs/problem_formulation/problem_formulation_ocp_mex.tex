@@ -172,18 +172,20 @@ This document describes the class of optimal control problems that can be formul
 %Here, the focus is to give a mathematical overview of the problem formulation and possible options to model it within \acados.
 This documentation is (most likely) not exhaustive and does not contain a full description of all options provided by the \python{} and \matlab{} interfaces.
 
+In particular, this document does not cover the \acados{} problem formulation and interface for multi-phase OCP \cite{frey2024multi}.
+
 %You can find examples in the directory \code{<acados>/examples/acados\_matlab\_octave}.
 %The source code of the \acados{} \matlab{} interface is found in: \code{<acados>/interfaces/acados\_matlab\_octave} and should serve as a more extensive, complete and up-to-date documentation about the possibilities.
 
-\paragraph{Abbreviations.}
-Some of the following restrictions may apply to matrices in the formulation:
-\begin{center}
-	\begin{tabular}{ll}
-		\textbf{DIAG} & diagonal\\
-		\textbf{SPUM} & horizontal slice of a permuted unit matrix\\
-		\textbf{SPUME} & like \textbf{SPUM}, but with empty rows intertwined
-	\end{tabular}
-\end{center}
+%\paragraph{Abbreviations.}
+%Some of the following restrictions may apply to matrices in the formulation:
+%\begin{center}
+%	\begin{tabular}{ll}
+%		\textbf{DIAG} & diagonal\\
+%		\textbf{SPUM} & horizontal slice of a permuted unit matrix\\
+%		\textbf{SPUME} & like \textbf{SPUM}, but with empty rows intertwined
+%	\end{tabular}
+%\end{center}
 
 
 \section{Dynamics}\label{sec:dynamics}
@@ -263,33 +265,32 @@ The cost module used for $l$ and $m$ is determined from \code{AcadosOcpCost.cost
 
 
 Setting the slack penalties in equation~\eqref{eq:cost} is done in the same way for all cost modules, see Table~\ref{tab:cost:slack} for an overview.
+Note that the matrices $Z\Lower^*$, $Z\upper^*$ are diagonal matrices and provided to \acados{} by only specifying their diagonal values.
 
-Slack penalties for the initial node can be set through the appropriate fields \code{cost\_xx\_0}.
 %
 \begin{table}[h!]
     \centering
     \begin{tabular}{cccc}
         \toprule
         Term  & Attribute/Property & Data type & Required \\ \midrule
-        $ Z\Lower\initial $ & \code{AcadosOcpCost.Zl\_0} & double, \textbf{DIAG} & \optional   \\[3pt]
-        $ Z\upper\initial $ & \code{AcadosOcpCost.Zu\_0} & double, \textbf{DIAG} & \optional   \\[3pt]
-        $ z\Lower\initial $ & \code{AcadosOcpCost.zl\_0} & double  & \optional   \\[3pt]
-        $ z\upper\initial $ & \code{AcadosOcpCost.zu\_0} & double  & \optional   \\[10pt]
-        $ Z\Lower $          & \code{AcadosOcpCost.Zl}    & double, \textbf{DIAG}  & \optional \\[3pt]
-        $ Z\upper $          & \code{AcadosOcpCost.Zu}    & double, \textbf{DIAG}  & \optional   \\[3pt]
-        $ z\Lower $          & \code{AcadosOcpCost.zl}    & double  & \optional   \\[3pt]
-        $ z\upper $          & \code{AcadosOcpCost.zu}    & double  & \optional   \\[10pt]
-        $ Z\Lower\terminal $ & \code{AcadosOcpCost.Zl\_e} & double, \textbf{DIAG} & \optional   \\[3pt]
-        $ Z\upper\terminal $ & \code{AcadosOcpCost.Zu\_e} & double, \textbf{DIAG} & \optional   \\[3pt]
-        $ z\Lower\terminal $ & \code{AcadosOcpCost.zl\_e} & double  & \optional   \\[3pt]
-        $ z\upper\terminal $ & \code{AcadosOcpCost.zu\_e} & double  & \optional   \\[3pt]
+        $ Z\Lower\initial $ & \code{AcadosOcpCost.Zl\_0} & double vector & \optional   \\[3pt]
+        $ Z\upper\initial $ & \code{AcadosOcpCost.Zu\_0} & double vector & \optional   \\[3pt]
+        $ z\Lower\initial $ & \code{AcadosOcpCost.zl\_0} & double vector  & \optional   \\[3pt]
+        $ z\upper\initial $ & \code{AcadosOcpCost.zu\_0} & double vector  & \optional   \\[10pt]
+        $ Z\Lower $          & \code{AcadosOcpCost.Zl}    & double vector  & \optional \\[3pt]
+        $ Z\upper $          & \code{AcadosOcpCost.Zu}    & double vector  & \optional   \\[3pt]
+        $ z\Lower $          & \code{AcadosOcpCost.zl}    & double vector  & \optional   \\[3pt]
+        $ z\upper $          & \code{AcadosOcpCost.zu}    & double vector  & \optional   \\[10pt]
+        $ Z\Lower\terminal $ & \code{AcadosOcpCost.Zl\_e} & double vector & \optional   \\[3pt]
+        $ Z\upper\terminal $ & \code{AcadosOcpCost.Zu\_e} & double vector & \optional   \\[3pt]
+        $ z\Lower\terminal $ & \code{AcadosOcpCost.zl\_e} & double vector  & \optional   \\[3pt]
+        $ z\upper\terminal $ & \code{AcadosOcpCost.zu\_e} & double vector  & \optional   \\[3pt]
         \bottomrule
     \end{tabular}
-    \caption{Penalties on slack variable} \label{tab:cost:slack}
+    \caption{Penalties on slack variable.
+    Note that the matrices $Z\Lower^*$, $Z\upper^*$ are diagonal matrices and provided to \acados{} by only specifying their diagonal values.} \label{tab:cost:slack}
 \end{table}
 
-Moreover, you can specify \code{cost\_Z}, to set $ Z\Lower$, $Z\upper$ to the same values, i.e., use a symmetric L2 slack penalty.
-Similarly, \code{cost\_z}, \code{cost\_Z\_e}, \code{cost\_z\_e} can be used to set symmetric slack L1 penalties, respectively penalties for the terminal slack variables.
 
 Note that the dimensions of the slack variables $s\Lower(t)$, $s\Lower\terminal(t)$, $s\upper(t)$ and $s\upper\terminal(t)$ are determined by \acados{} from the associated matrices ($Z\Lower$, $Z\upper$,  $J\ind{sh}$, $J\ind{sg}$, $J\ind{sbu}$, $J\ind{sbx}$ etc.).
 
@@ -526,11 +527,17 @@ Here, $\mathcal{I}_{\textrm{bx},0}$ is a vector of length $n_x$ containing only 
     \caption{Extended syntax for setting the initial state} \label{tab:constraints:extendedsyntax}
 \end{table}
 %
-\subsection{Path Constraints}\label{sec:constraints:path}
+\subsection{Path Constraints and Terminal Constraints}\label{sec:constraints:path}
 %
-Table~\ref{tab:constraints:path} shows the options for defining the path constraints equations~(\ref{eq:constraints:path:lower_bounds:start} ~-~\ref{eq:constraints:path:upper_bounds:end}).
-The matrices $ J_{\star} $ are translated into arrays of integers \texttt{idx}$\star$, see \python~documentation.
-These matrices are described as follows:
+Table~\ref{tab:constraints:path} and ~\ref{tab:constraints:terminal} show the options for defining path constraints, equations~(\ref{eq:constraints:path:lower_bounds:start} ~-~\ref{eq:constraints:path:upper_bounds:end}), and terminal constraints, equations~(\ref{eq:constraints:terminal:lower_bounds:start} ~-~\ref{eq:constraints:terminal:upper_bounds:end}), respectively.
+
+Note that the matrices $J_{\star}$ are all zeros except for a single entry with the value one in each row.
+The matrices are computed from vectors of integers, provided to \acados{} via the attributes/properties \texttt{idx}$\star$, containing only values zero and one.
+
+As an example, consider $\texttt{idxbx} = [0, 1, 1]$ which would define the matrix $J\ind{bx} = \begin{bmatrix} 0 & 1 & 0 \\ 0 & 0 & 1 \end{bmatrix}$.
+
+
+The matrices are described as follows:
 \begin{itemize}
     \item $J\ind{sh}$ maps lower slack vectors $s\ind{l,h}(t)$ and upper slack vectors $s\ind{u,h}(t)$ onto the nonlinear constraint expressions $h(x,u,p)$.
     \item $J\ind{bx}$, $J\ind{bu}$ map $x(t)$ and $u(t)$ onto their bounds vectors $\underline{x}$, $\overline{x}$ and $\underline{u}$, $\overline{u}$, respectively.
@@ -539,72 +546,69 @@ These matrices are described as follows:
     \item $C$, $D$ map $x(t)$ and $u(t)$ onto lower and upper inequality bounds $\underline{g}$, $\overline{g}$ (polytopic constraints).
     \item $J\ind{sh}\initial$ maps lower slack vectors $s\ind{l,h}\initial$ and upper slack vectors $s\ind{u,h}\initial$ onto the nonlinear initial constraint expressions $h\initial(x(0),u(0),p)$.
 \end{itemize}
-%
-\begin{table}[ht!]
-    \centering
-    \begin{tabular}{cccc}
-        \toprule
-        Term & Attribute/Property & Data type & Required \\ \midrule
-        $J\ind{bx}$ & \code{AcadosConstraints.idxbx}    & double & \optional  \\
-        $\overline{x} $  & \code{AcadosConstraints.ubx}     & double  & \optional   \\
-        $\underline{x} $    & \code{AcadosConstraints.lbx}     & double  & \optional  \\[1em]
-        $J\ind{bu}$ & \code{AcadosConstraints.idxbu}    & double   & \optional    \\
-        $\overline{u} $         & \code{AcadosConstraints.ubu}     & double  & \optional   \\
-        $\underline{u} $    & \code{AcadosConstraints.lbu}     & double   & \optional   \\ [1em]
-        $C$ & \code{AcadosConstraints.C}    & double  & \optional \\
-        $D $    & \code{AcadosConstraints.D}     & double  & \optional \\
-        $\overline{g} $         & \code{AcadosConstraints.ug}     & double  & \optional   \\
-        $\underline{g} $    & \code{AcadosConstraints.lg}     & double  & \optional    \\ [1em]
-        $ h\initial $ & \code{AcadosModel.con\_h\_expr\_0}    & \casadi~expression  & \optional   \\
-        $\overline{h}\initial $         & \code{AcadosConstraints.uh\_0}     & double  & \optional   \\
-        $\underline{h}\initial $    & \code{AcadosConstraints.lh\_0}     & double   & \optional   \\ [1em]
-        $ h $ & \code{AcadosModel.con\_h\_expr}    & \casadi~expression  & \optional   \\
-        $\overline{h} $         & \code{AcadosConstraints.uh}     & double  & \optional   \\
-        $\underline{h} $    & \code{AcadosConstraints.lh}     & double   & \optional   \\ [1em]
-        $ J\ind{sbx} = \mathrm{diag}(\mathcal{I}\ind{sbx})$ & \code{AcadosConstraints.idxsbx} & double & \optional  \\
-        $ J\ind{sbu} = \mathrm{diag}(\mathcal{I}\ind{sbu})$ & \code{AcadosConstraints.idxsbu} & double  & \optional \\
-        $ J\ind{sg} = \mathrm{diag}(\mathcal{I}\ind{sg})$ & \code{AcadosConstraints.idxsg} & double & \optional  \\
-        $ J\ind{sh} = \mathrm{diag}(\mathcal{I}\ind{sh})$ & \code{AcadosConstraints.idxsh} & double  & \optional  \\
-        $ J\ind{sh}\initial = \mathrm{diag}(\mathcal{I}\ind{sh}\initial)$ & \code{AcadosConstraints.idxsh\_0} & double  & \optional  \\
-        \bottomrule
-    \end{tabular}
-    \caption{Path constraints options} \label{tab:constraints:path}
-\end{table}
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\newpage
-\subsection{Terminal Constraints}\label{sec:constraints:terminal}
-%
-Table~\ref{tab:constraints:terminal} shows the options for defining the terminal constraints equations~(\ref{eq:constraints:terminal:lower_bounds:start} ~-~\ref{eq:constraints:terminal:upper_bounds:end}).
-Here, matrices
+
+Similarly for the terminal constraints:
 \begin{itemize}
-    \item $J\ind{sh}\terminal$ maps lower slack vectors $s\ind{l,h}\terminal(t)$ and upper slack vectors $s\ind{u,h}\terminal(t)$ onto nonlinear terminal constraint expressions $h\terminal(x(T), p)$.
-    \item $J\ind{bx}\terminal$ maps $x(T)$ onto its bounds vectors $\underline{x}\terminal$ and $\overline{x}\terminal$.
-    \item $J\ind{sbx}\terminal$ maps lower slack vectors $s\ind{l,bx}\terminal$ and upper slack vectors $s\ind{u,bx}\terminal$ onto $x(T)$.
-    \item $J\ind{sg}\terminal$ maps lower slack vectors $s\ind{l,g}\terminal(t)$ and upper slack vectors $s\ind{u,g}\terminal(t)$ onto lower and upper equality bounds $\underline{g}\terminal$, $\overline{g}\terminal$, respectively.
-    \item $C\terminal$ maps $x(T)$ onto lower and upper inequality bounds $\underline{g}\terminal$, $\overline{g}\terminal$ (polytopic constraints).
+	\item $J\ind{sh}\terminal$ maps lower slack vectors $s\ind{l,h}\terminal(t)$ and upper slack vectors $s\ind{u,h}\terminal(t)$ onto nonlinear terminal constraint expressions $h\terminal(x(T), p)$.
+	\item $J\ind{bx}\terminal$ maps $x(T)$ onto its bounds vectors $\underline{x}\terminal$ and $\overline{x}\terminal$.
+	\item $J\ind{sbx}\terminal$ maps lower slack vectors $s\ind{l,bx}\terminal$ and upper slack vectors $s\ind{u,bx}\terminal$ onto $x(T)$.
+	\item $J\ind{sg}\terminal$ maps lower slack vectors $s\ind{l,g}\terminal(t)$ and upper slack vectors $s\ind{u,g}\terminal(t)$ onto lower and upper equality bounds $\underline{g}\terminal$, $\overline{g}\terminal$, respectively.
+	\item $C\terminal$ maps $x(T)$ onto lower and upper inequality bounds $\underline{g}\terminal$, $\overline{g}\terminal$ (polytopic constraints).
 \end{itemize}
 %
+%
 \begin{table}[ht!]
     \centering
     \begin{tabular}{cccc}
         \toprule
         Term & Attribute/Property & Data type & Required \\ \midrule
-        $J\ind{bx}\terminal  = \mathrm{diag}(\mathcal{I}\ind{bx}\terminal)$ & \code{AcadosConstraints.idxbx\_e}    & double   & \optional   \\
-        $\overline{x}\terminal $         & \code{AcadosConstraints.ubx\_e}     & double   & \optional  \\
-        $\underline{x}\terminal $    & \code{AcadosConstraints.lbx\_e}     & double  & \optional   \\ [1em]
-        $ C\terminal $ & \code{AcadosConstraints.C\_e}    & double   & \optional   \\
-        $\overline{g}\terminal $         & \code{AcadosConstraints.ug\_e}     & double   & \optional  \\
-        $\underline{g}\terminal $    & \code{AcadosConstraints.lg\_e}     & double   & \optional   \\ [1em]
-        $ h\terminal $ & \code{AcadosModel.con\_h\_expr\_e}    & \casadi~expression   & \optional  \\
-        $\overline{h}\terminal $         & \code{AcadosConstraints.uh\_e}     & double  & \optional   \\
-        $\underline{h}\terminal $    & \code{AcadosConstraints.lh\_e}     & double   & \optional   \\ [1em]
-        $ J\ind{sbx}\terminal = \mathrm{diag}(\mathcal{I}\ind{sbx}\terminal)$ & \code{AcadosConstraints.idxsbx\_e} & double   & \optional \\
-        $ J\ind{sg}\terminal = \mathrm{diag}(\mathcal{I}\ind{sg}\terminal)$ & \code{AcadosConstraints.idxsg\_e} & double & \optional  \\
-        $ J\ind{sh}\terminal = \mathrm{diag}(\mathcal{I}\ind{sh}\terminal)$ & \code{AcadosConstraints.idxsh\_e} & double  & \optional  \\
+        $J\ind{bx}$ & \code{AcadosConstraints.idxbx}    & double vector & \optional  \\
+        $\overline{x} $  & \code{AcadosConstraints.ubx}     & double vector  & \optional   \\
+        $\underline{x} $    & \code{AcadosConstraints.lbx}     & double vector  & \optional  \\[1em]
+        $J\ind{bu}$ & \code{AcadosConstraints.idxbu}    & double vector   & \optional    \\
+        $\overline{u} $         & \code{AcadosConstraints.ubu}     & double vector  & \optional   \\
+        $\underline{u} $    & \code{AcadosConstraints.lbu}     & double vector   & \optional   \\ [1em]
+        $C$ & \code{AcadosConstraints.C}    & double matrix & \optional \\
+        $D $    & \code{AcadosConstraints.D}     & double matrix & \optional \\
+        $\overline{g} $         & \code{AcadosConstraints.ug}     & double  vector & \optional   \\
+        $\underline{g} $    & \code{AcadosConstraints.lg}     & double  vector & \optional    \\ [1em]
+        $ h\initial $ & \code{AcadosModel.con\_h\_expr\_0}    & \casadi~expression  & \optional   \\
+        $\overline{h}\initial $         & \code{AcadosConstraints.uh\_0}     & double  vector & \optional   \\
+        $\underline{h}\initial $    & \code{AcadosConstraints.lh\_0}     & double  vector  & \optional   \\ [1em]
+        $ h $ & \code{AcadosModel.con\_h\_expr}    & \casadi~expression  & \optional   \\
+        $\overline{h} $         & \code{AcadosConstraints.uh}     & double  vector & \optional   \\
+        $\underline{h} $    & \code{AcadosConstraints.lh}     & double  vector  & \optional   \\ [1em]
+        $ J\ind{sbx} $ & \code{AcadosConstraints.idxsbx} & double vector& \optional  \\
+        $ J\ind{sbu}$ & \code{AcadosConstraints.idxsbu} & double  vector& \optional \\
+        $ J\ind{sg} $ & \code{AcadosConstraints.idxsg} & double vector& \optional  \\
+        $ J\ind{sh} $ & \code{AcadosConstraints.idxsh} & double vector& \optional  \\
+        $ J\ind{sh}\initial$ & \code{AcadosConstraints.idxsh\_0}  & double vector & \optional  \\
         \bottomrule
     \end{tabular}
-    \caption{Terminal constraints options} \label{tab:constraints:terminal}
+    \caption{Path constraints options.} \label{tab:constraints:path}
+\end{table}
+
+
+\begin{table}[ht!]
+    \centering
+    \begin{tabular}{cccc}
+        \toprule
+        Term & Attribute/Property & Data type & Required \\ \midrule
+        $J\ind{bx}\terminal$ & \code{AcadosConstraints.idxbx\_e}    & double vector   & \optional   \\
+        $\overline{x}\terminal $         & \code{AcadosConstraints.ubx\_e}     & double  vector  & \optional  \\
+        $\underline{x}\terminal $    & \code{AcadosConstraints.lbx\_e}     & double  vector  & \optional   \\ [1em]
+        $ C\terminal $ & \code{AcadosConstraints.C\_e}    & double matrix  & \optional   \\
+        $\overline{g}\terminal $         & \code{AcadosConstraints.ug\_e}     & double vector   & \optional  \\
+        $\underline{g}\terminal $    & \code{AcadosConstraints.lg\_e}     & double vector   & \optional   \\ [1em]
+        $ h\terminal $ & \code{AcadosModel.con\_h\_expr\_e}    & \casadi~expression   & \optional  \\
+        $\overline{h}\terminal $         & \code{AcadosConstraints.uh\_e}     & double vector  & \optional   \\
+        $\underline{h}\terminal $    & \code{AcadosConstraints.lh\_e}     & double vector   & \optional   \\ [1em]
+        $ J\ind{sbx}\terminal$ & \code{AcadosConstraints.idxsbx\_e} & double vector   & \optional \\
+        $ J\ind{sg}\terminal$ & \code{AcadosConstraints.idxsg\_e} & double vector & \optional  \\
+        $ J\ind{sh}\terminal$ & \code{AcadosConstraints.idxsh\_e} & double vector  & \optional  \\
+        \bottomrule
+    \end{tabular}
+    \caption{Terminal constraints options.} \label{tab:constraints:terminal}
 
 \end{table}
 
@@ -613,7 +617,9 @@ Here, matrices
 
 
 Tables \ref{tab:solver_options}, \ref{tab:solver_options:qp_solver_option} and \ref{tab:solver_options:regularize_method} show some of the available options.
-A full list of the available options is given on the \href{https://docs.acados.org/python_interface/index.html#acados_template.acados_ocp_options.AcadosOcpOptions}{docs page generated from the docstrings in~\python}.
+This list is however not up to date.
+We recommend to check the \href{https://docs.acados.org/python_interface/index.html#acados_template.acados_ocp_options.AcadosOcpOptions}{docs page} generated from the docstrings in~\python, as well as the definition of the class \code{AcadosOcpOptions} available both in \matlab{} and \python{}, for a full list of the available options.
+
 
 Note that some options of the solver can be modified after creation using the routine.
 Some options can only be set before the solver is created, especially options that influence the memory requirements of the OCP solver, such as the modules used in the formulation, the QP solver, etc.
@@ -628,7 +634,7 @@ Some options can only be set before the solver is created, especially options th
         \toprule
         {Attribute/Property} & Type & Default & {Description} \\ \midrule
         \multicolumn{4}{l}{\emph{Code generation}} \\
-        \code{compile\_interface} & string & \str{auto} & in (\str{auto}, \str{true}, \str{false}) \\
+        \code{compile\_interface} & string & \str{auto} & in (\str{auto}, \str{true}, \str{false}), \matlab{} only! \\
         \midrule
 
 		\multicolumn{4}{l}{\emph{Shooting nodes}} \\
@@ -696,15 +702,15 @@ Some options can only be set before the solver is created, especially options th
         \toprule
         Solver lib & Condensing & {Attribute/Property} & Reference \\ \midrule
         \multirow{2}{1.2cm}{\centering HPIPM} & partial & \code{PARTIAL\_CONDENSING\_HPIPM}* & \cite{Frison2020a}\\
-         & full & \code{full\_condensing\_HPIPM} & \cite{Frison2020a}\\%[1ex]
+         & full & \code{FULL\_CONDENSING\_HPIPM} & \cite{Frison2020a}\\%[1ex]
         HPMPC & partial & \code{PARTIAL\_CONDENSING\_HPMPC} & \cite{Frison2015a}\\%[1ex]
         % \multirow{2}{2cm}{\centering OOQP} & partial & \code{PARTIAL\_CONDENSING\_ooqp} \\
-         % & full & \code{full\_condensing\_ooqp} \\[1ex]
+         % & full & \code{FULL\_CONDENSING\_ooqp} \\[1ex]
         OSQP & partial & \code{PARTIAL\_CONDENSING\_OSQP} & \cite{Stellato2020} \\
-        % QORE & full & \code{full\_condensing\_qore} \\
+        % QORE & full & \code{FULL\_CONDENSING\_qore} \\
         qpDUNES & partial & \code{PARTIAL\_CONDENSING\_QPDUNES} & \cite{Frasch2015}\\
-        qpOASES & full & \code{full\_condensing\_QPOASES} & \cite{Ferreau2014}\\
-        DAQP & full & \code{full\_condensing\_DAQP} & \cite{Arnstrom2022} \\
+        qpOASES & full & \code{FULL\_CONDENSING\_QPOASES} & \cite{Ferreau2014}\\
+        DAQP & full & \code{FULL\_CONDENSING\_DAQP} & \cite{Arnstrom2022} \\
         \bottomrule
         \multicolumn{3}{r}{\footnotesize * default}
     \end{tabular}
