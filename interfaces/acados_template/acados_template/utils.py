@@ -44,7 +44,7 @@ import numpy as np
 from casadi import DM, MX, SX, CasadiMeta, Function
 
 ALLOWED_CASADI_VERSIONS = (
-    '3.4.0'
+    '3.4.0',
     '3.4.5',
     '3.5.1',
     '3.5.2',
@@ -58,6 +58,7 @@ ALLOWED_CASADI_VERSIONS = (
     '3.6.3',
     '3.6.4',
     '3.6.5',
+    '3.6.6',
 )
 
 TERA_VERSION = "0.0.34"
@@ -139,6 +140,12 @@ def check_casadi_version():
         msg += 'please consider changing your CasADi version.\n'
         msg += 'Version {} currently in use.'.format(casadi_version)
         print(msg)
+
+def check_casadi_version_supports_p_global():
+    try:
+        from casadi import extract_parametric, cse
+    except:
+        raise Exception("CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se")
 
 
 def get_simulink_default_opts():

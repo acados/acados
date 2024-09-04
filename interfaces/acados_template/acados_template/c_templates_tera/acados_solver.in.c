@@ -45,6 +45,10 @@
 // example specific
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
 
+{% if dims.np_global > 0 %}
+#include "{{ name }}_p_global_precompute_fun.h"
+{%- endif %}
+
 {%- if dims.nh > 0 or dims.nh_e > 0 or dims.nh_0 > 0 or dims.nphi > 0 or dims.nphi_e > 0 or dims.nphi_0 > 0 %}
 #include "{{ model.name }}_constraints/{{ model.name }}_constraints.h"
 {%- endif %}
@@ -402,6 +406,17 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         capsule->__CAPSULE_FNC__.casadi_work = & __MODEL_BASE_FNC__ ## _work; \
         external_function_external_param_casadi_create(&capsule->__CAPSULE_FNC__ ); \
     } while(false)
+
+{% if dims.np_global > 0 %}
+    capsule->p_global_precompute_fun.casadi_fun = &{{ name }}_p_global_precompute_fun;
+    capsule->p_global_precompute_fun.casadi_work = &{{ name }}_p_global_precompute_fun_work;
+    capsule->p_global_precompute_fun.casadi_sparsity_in = &{{ name }}_p_global_precompute_fun_sparsity_in;
+    capsule->p_global_precompute_fun.casadi_sparsity_out = &{{ name }}_p_global_precompute_fun_sparsity_out;
+    capsule->p_global_precompute_fun.casadi_n_in = &{{ name }}_p_global_precompute_fun_n_in;
+    capsule->p_global_precompute_fun.casadi_n_out = &{{ name }}_p_global_precompute_fun_n_out;
+    external_function_casadi_create(&capsule->p_global_precompute_fun);
+{%- endif %}
+
 
 {%- if constraints.constr_type_0 == "BGH" and dims.nh_0 > 0 %}
     MAP_CASADI_FNC(nl_constr_h_0_fun_jac, {{ model.name }}_constr_h_0_fun_jac_uxt_zt);
@@ -2580,6 +2595,37 @@ int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule
 }
 
 
+int {{ name }}_acados_set_p_global({{ name }}_solver_capsule* capsule, double* data, int data_len)
+{
+{% if dims.np_global > 0 %}
+    external_function_casadi* fun = &capsule->p_global_precompute_fun;
+    fun->args[0] = data;
+    int np_global = {{ dims.np_global }};
+
+    if (data_len != np_global)
+    {
+        printf("{{ name }}_acados_set_p_global: np_global = %d should match data_len = %d. Exiting.\n", np_global, data_len);
+        exit(1);
+    }
+
+{% set n_pools = casadi_pool_names | length %}
+{% for ip in range(end=n_pools) %}
+{% set pool_name = casadi_pool_names[ip] %}
+{% set fun_name_split = pool_name | split(pat='|') %}
+    fun->res[{{ ip }}] = {{ fun_name_split[0] }}_get_pool_double("{{ pool_name }}");
+{%- endfor %}
+
+    fun->casadi_fun((const double **) fun->args, fun->res, fun->iw, fun->w, NULL);
+    return 1;
+
+{%- else %}
+    printf("p_global is not defined, {{ name }}_acados_set_p_global does nothing.\n");
+{%- endif %}
+}
+
+
+
+
 int {{ model.name }}_acados_solve({{ model.name }}_solver_capsule* capsule)
 {
     // solve NLP
@@ -2847,6 +2893,10 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
 {%- elif constraints.constr_type_e == "BGP" and dims.nphi_e > 0 %}
     external_function_external_param_casadi_free(&capsule->phi_e_constraint_fun);
     external_function_external_param_casadi_free(&capsule->phi_e_constraint_fun_jac_hess);
+{%- endif %}
+
+{% if dims.np_global > 0 %}
+    external_function_casadi_free(&capsule->p_global_precompute_fun);
 {%- endif %}
 
     return 0;

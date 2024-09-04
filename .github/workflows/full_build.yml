@@ -105,6 +105,43 @@ jobs:
         source ${{runner.workspace}}/acados/acadosenv/bin/activate
         ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
 
+  python_interface_new_casadi:
+    needs: core_build
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - uses: actions/download-artifact@v4
+      with:
+        path: ${{runner.workspace}}/acados
+
+    - name: Export Paths
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: |
+        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+
+    - name: Install Python interface
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: ${{runner.workspace}}/acados/.github/linux/install_python.sh''
+
+    - name: Install new CasADi Python
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: ${{runner.workspace}}/acados/.github/linux/install_new_casadi_python.sh''
+
+    - name: Run CMake python tests (ctest)
+      working-directory: ${{runner.workspace}}/acados/build
+      shell: bash
+      run: |
+        source ${{runner.workspace}}/acados/acadosenv/bin/activate
+        cd ${{runner.workspace}}/acados/examples/acados_python/p_global_example
+        python example_p_global.py
+
   MATLAB_test:
     needs: core_build
     runs-on: ubuntu-22.04

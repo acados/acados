@@ -140,6 +140,7 @@ class AcadosOcpDims:
         self.__nsg_e = 0
         # equalities within x bounds
         self.__nbxe_0 = None
+        self.__np_global = 0
 
 
     @property
@@ -365,6 +366,11 @@ class AcadosOcpDims:
         return self.__ng_e
 
     @property
+    def np_global(self):
+        """number of global parameters p_global; default: 0"""
+        return self.__np_global
+
+    @property
     def N(self):
         """
         :math:`N` - Number of shooting intervals.
@@ -400,6 +406,13 @@ class AcadosOcpDims:
             self.__np = np
         else:
             raise Exception('Invalid np value, expected nonnegative integer.')
+
+    @np_global.setter
+    def np_global(self, np_global):
+        if isinstance(np_global, int) and np_global > -1:
+            self.__np_global = np_global
+        else:
+            raise Exception('Invalid np_global value, expected nonnegative integer.')
 
     @ny_0.setter
     def ny_0(self, ny_0):

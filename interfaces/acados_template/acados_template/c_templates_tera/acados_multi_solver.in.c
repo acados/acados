@@ -80,6 +80,9 @@
 {%- endif %}
     {%- endfor %}{# for jj in range(end=n_phases) #}
 
+{% if phases_dims[0].np_global > 0 %}
+#include "{{ name }}_p_global_precompute_fun.h"
+{%- endif %}
 
 {%- if not solver_options.custom_update_filename %}
     {%- set custom_update_filename = "" %}
@@ -427,6 +430,16 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
         capsule->__CAPSULE_FNC__.casadi_work = & __MODEL_BASE_FNC__ ## _work; \
         external_function_external_param_casadi_create(&capsule->__CAPSULE_FNC__); \
     } while(false)
+
+{% if phases_dims[0].np_global > 0 %}
+    capsule->p_global_precompute_fun.casadi_fun = &{{ name }}_p_global_precompute_fun;
+    capsule->p_global_precompute_fun.casadi_work = &{{ name }}_p_global_precompute_fun_work;
+    capsule->p_global_precompute_fun.casadi_sparsity_in = &{{ name }}_p_global_precompute_fun_sparsity_in;
+    capsule->p_global_precompute_fun.casadi_sparsity_out = &{{ name }}_p_global_precompute_fun_sparsity_out;
+    capsule->p_global_precompute_fun.casadi_n_in = &{{ name }}_p_global_precompute_fun_n_in;
+    capsule->p_global_precompute_fun.casadi_n_out = &{{ name }}_p_global_precompute_fun_n_out;
+    external_function_casadi_create(&capsule->p_global_precompute_fun);
+{%- endif %}
 
 
 {# INITIAL #}
@@ -2585,6 +2598,34 @@ int {{ name }}_acados_update_params_sparse({{ name }}_solver_capsule * capsule, 
 }
 
 
+int {{ name }}_acados_set_p_global({{ name }}_solver_capsule* capsule, double* data, int data_len)
+{
+{% if phases_dims[0].np_global > 0 %}
+    external_function_casadi* fun = &capsule->p_global_precompute_fun;
+    fun->args[0] = data;
+    int np_global = {{ phases_dims[0].np_global }};
+
+    if (data_len != np_global)
+    {
+        printf("{{ name }}_acados_set_p_global: np_global = %d should match data_len = %d. Exiting.\n", np_global, data_len);
+        exit(1);
+    }
+
+{% set n_pools = casadi_pool_names | length %}
+{% for ip in range(end=n_pools) %}
+{% set pool_name = casadi_pool_names[ip] %}
+{% set fun_name_split = pool_name | split(pat='|') %}
+    fun->res[{{ ip }}] = {{ fun_name_split[0] }}_get_pool_double("{{ pool_name }}");
+{%- endfor %}
+
+    fun->casadi_fun((const double **) fun->args, fun->res, fun->iw, fun->w, NULL);
+    return 1;
+
+{%- else %}
+    printf("p_global is not defined, {{ name }}_acados_set_p_global does nothing.\n");
+{%- endif %}
+}
+
 
 
 int {{ name }}_acados_solve({{ name }}_solver_capsule* capsule)
@@ -2863,6 +2904,10 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     external_function_external_param_{{ cost_e.cost_ext_fun_type_e }}_free(&capsule->ext_cost_e_fun);
     external_function_external_param_{{ cost_e.cost_ext_fun_type_e }}_free(&capsule->ext_cost_e_fun_jac);
     external_function_external_param_{{ cost_e.cost_ext_fun_type_e }}_free(&capsule->ext_cost_e_fun_jac_hess);
+{%- endif %}
+
+{% if phases_dims[0].np_global > 0 %}
+    external_function_casadi_free(&capsule->p_global_precompute_fun);
 {%- endif %}
 
     return 0;

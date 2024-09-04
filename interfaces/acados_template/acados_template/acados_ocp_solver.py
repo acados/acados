@@ -113,7 +113,10 @@ class AcadosOcpSolver:
             print(f"NOTE: The selected QP solver {acados_ocp.solver_options.qp_solver} does not support one-sided constraints yet.")
 
         # generate code (external functions and templated code)
-        acados_ocp.generate_external_functions()
+        context = acados_ocp.generate_external_functions()
+        context.finalize()
+        acados_ocp.casadi_pool_names = context.pool_names
+
         acados_ocp.dump_to_json()
         acados_ocp.render_templates(cmake_builder=cmake_builder)
 
@@ -322,6 +325,9 @@ class AcadosOcpSolver:
 
         getattr(self.shared_lib, f"{self.name}_acados_update_params").argtypes = [c_void_p, c_int, POINTER(c_double), c_int]
         getattr(self.shared_lib, f"{self.name}_acados_update_params").restype = c_int
+
+        getattr(self.shared_lib, f"{self.name}_acados_set_p_global").argtypes = [c_void_p, POINTER(c_double), c_int]
+        getattr(self.shared_lib, f"{self.name}_acados_set_p_global").restype = c_int
 
         # these do not work for multi phase OCPs
         if isinstance(self.acados_ocp, AcadosOcp):
@@ -1556,6 +1562,19 @@ class AcadosOcpSolver:
 
         getattr(self.shared_lib, f"{self.name}_acados_update_params_sparse") \
                                     (self.capsule, stage, idx_data, param_data, n_update)
+
+    def set_p_global(self, data_: np.ndarray):
+        """
+        Sets values of p_global and precomputes all parts of the CasADi graphs of all other functions that only depend on p_global.
+        """
+        data = np.ascontiguousarray(data_, dtype=np.float64)
+        c_data = cast(data.ctypes.data, POINTER(c_double))
+        data_len = len(data)
+
+        status = getattr(self.shared_lib, f"{self.name}_acados_set_p_global")(self.capsule, c_data, data_len)
+
+        return status
+
 
     def __del__(self):
         if self.solver_created:

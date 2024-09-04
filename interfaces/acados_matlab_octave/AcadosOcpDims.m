@@ -37,6 +37,7 @@ classdef AcadosOcpDims < handle
         nu     % number of inputs
         nz     % number of algebraic variables
         np     % number of parameters
+        np_global
 
         % cost
         ny     % number of residuals in Lagrange term
@@ -101,6 +102,7 @@ classdef AcadosOcpDims < handle
             obj.nu = 0;
             obj.nz = 0;
             obj.np = 0;
+            obj.np_global = 0;
 
             obj.ny = 0;
             obj.ny_0 = 0;

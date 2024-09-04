@@ -31,6 +31,7 @@
 
 from typing import Union, List
 import numpy as np
+import casadi as ca
 from copy import deepcopy
 
 import os, json
@@ -41,6 +42,7 @@ from .acados_ocp_cost import AcadosOcpCost
 from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_ocp_options import AcadosOcpOptions, INTEGRATOR_TYPES, COLLOCATION_TYPES, COST_DISCRETIZATION_TYPES
 from .acados_ocp import AcadosOcp
+from .casadi_function_generation import GenerateContext
 from .utils import make_object_json_dumpable, get_acados_path, format_class_dict, get_shared_lib_ext, render_template
 
 
@@ -239,6 +241,14 @@ class AcadosMultiphaseOcp:
             if len(set(getattr(self, field))) != self.n_phases:
                 raise Exception(f"AcadosMultiphaseOcp: make_consistent: {field} objects are not distinct.{warning}")
 
+        # p_global check:
+        p_global = self.model[0].p_global
+        for i in range(self.n_phases):
+            if p_global is None and self.model[i].p_global is not None:
+                raise Exception(f"p_global is None for phase 0, but not for phase {i}. Should be the same for all phases.")
+            if p_global is not None and not ca.is_equal(p_global, self.model[i].p_global):
+                raise Exception(f"p_global is different for phase 0 and phase {i}. Should be the same for all phases.")
+
         # compute phase indices
         phase_idx = np.cumsum([0] + self.N_list).tolist()
 
@@ -355,6 +365,9 @@ class AcadosMultiphaseOcp:
         else:
             template_list.append(('multi_Makefile.in', 'Makefile'))
 
+        if self.phases_dims[0].np_global > 0:
+            template_list.append(('p_global_precompute_fun.in.h', f'{self.name}_p_global_precompute_fun.h'))
+
         # Simulink
         if self.simulink_opts is not None:
             raise NotImplementedError('Simulink not yet supported for multiphase OCPs.')
@@ -405,8 +418,20 @@ class AcadosMultiphaseOcp:
         return
 
 
-    def generate_external_functions(self):
+    def generate_external_functions(self) -> GenerateContext:
+
+        # options for code generation
+        code_gen_opts = dict()
+        code_gen_opts['generate_hess'] = self.solver_options.hessian_approx == 'EXACT'
+        code_gen_opts['with_solution_sens_wrt_params'] = self.solver_options.with_solution_sens_wrt_params
+        code_gen_opts['with_value_sens_wrt_params'] = self.solver_options.with_value_sens_wrt_params
+        code_gen_opts['code_export_directory'] = self.code_export_directory
+
+        context = GenerateContext(self.model[0].p_global, self.name, code_gen_opts)
+
         for i in range(self.n_phases):
             # this is the only option that can vary and influence external functions to be generated
             self.dummy_ocp_list[i].solver_options.integrator_type = self.mocp_opts.integrator_type[i]
-            self.dummy_ocp_list[i].generate_external_functions()
+            context = self.dummy_ocp_list[i].generate_external_functions(context)
+
+        return context
