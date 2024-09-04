@@ -547,7 +547,7 @@ J\ind{bx}\initial =
 %
 \subsection{Path Constraints and Terminal Constraints}\label{sec:constraints:path}
 %
-Table~\ref{tab:constraints:path} and ~\ref{tab:constraints:terminal} show the options for defining path constraints, equations~(\ref{eq:constraints:path:lower_bounds:start} ~-~\ref{eq:constraints:path:upper_bounds:end}), and terminal constraints, equations~(\ref{eq:constraints:terminal:lower_bounds:start} ~-~\ref{eq:constraints:terminal:upper_bounds:end}), respectively.
+Table~\ref{tab:constraints:path} and ~\ref{tab:constraints:terminal} show the options for defining path constraints, equations~(\ref{eq:constraints:path:lower_bounds:start}) ~-~(\ref{eq:constraints:path:upper_bounds:end}), and terminal constraints, equations~(\ref{eq:constraints:terminal:lower_bounds:start}) ~-~(\ref{eq:constraints:terminal:upper_bounds:end}), respectively.
 
 Note that the matrices $J_{\star}$ are all zeros except for a single entry with the value one in each row.
 The matrices are computed from vectors of integers, provided to \acados{} via the attributes/properties \texttt{idx}$\star$, specifying the 0-based column indices of the 1 entries in $J_{\star}$.
@@ -558,7 +558,7 @@ The matrices are described as follows:
 \begin{itemize}
     \item $J\ind{sh}$ maps lower slack vectors $s\ind{l,h}(t)$ and upper slack vectors $s\ind{u,h}(t)$ onto the nonlinear constraint expressions $h(x,u,p)$.
     \item $J\ind{bx}$, $J\ind{bu}$ map $x(t)$ and $u(t)$ onto their bounds vectors $\underline{x}$, $\overline{x}$ and $\underline{u}$, $\overline{u}$, respectively.
-    \item $J\ind{sx}$, $J\ind{su}$ map lower slack vectors $s\ind{l,bx}(t)$, $s\ind{l,bu}(t)$ and upper slack vectors $s\ind{u,bx}(t)$, $s\ind{u,bu}(t)$ onto $x(t)$ and $u(t)$, respectively.
+    \item $J\ind{sbx}$, $J\ind{sbu}$ map lower slack vectors $s\ind{l,bx}(t)$, $s\ind{l,bu}(t)$ and upper slack vectors $s\ind{u,bx}(t)$, $s\ind{u,bu}(t)$ onto $x(t)$ and $u(t)$, respectively.
     \item $J\ind{sg}$ maps lower slack vectors $s\ind{l,g}(t)$ and upper slack vectors $s\ind{u,g}(t)$ onto lower and upper equality bounds $\underline{g}$, $\overline{g}$, respectively.
     \item $C$, $D$ map $x(t)$ and $u(t)$ onto lower and upper inequality bounds $\underline{g}$, $\overline{g}$ (polytopic constraints).
     \item $J\ind{sh}\initial$ maps lower slack vectors $s\ind{l,h}\initial$ and upper slack vectors $s\ind{u,h}\initial$ onto the nonlinear initial constraint expressions $h\initial(x(0),u(0),p)$.
