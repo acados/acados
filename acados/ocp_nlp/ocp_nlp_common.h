@@ -492,6 +492,8 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
 void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
     ocp_nlp_workspace *work, double alpha, int iter);
+//
+double ocp_nlp_get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_memory *nlp_mem);
 
 #ifdef __cplusplus
 } /* extern "C" */

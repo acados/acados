@@ -34,18 +34,34 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
 // blasfeo
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
-// hpipm
-#include "hpipm/include/hpipm_d_ocp_qp_dim.h"
 // acados
 #include "acados/utils/mem.h"
-#include "acados/utils/print.h"
-// openmp
-#if defined(ACADOS_WITH_OPENMP)
-#include <omp.h>
-#endif
 
+/************************************************
+ * config
+ ************************************************/
+
+acados_size_t ocp_nlp_globalization_config_calculate_size()
+{
+    acados_size_t size = 0;
+
+    size += sizeof(ocp_nlp_globalization_config);
+
+    return size;
+}
+
+
+
+ocp_nlp_globalization_config *ocp_nlp_globalization_config_assign(void *raw_memory)
+{
+    char *c_ptr = raw_memory;
+
+    ocp_nlp_globalization_config *config = (ocp_nlp_globalization_config *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_globalization_config);
+
+    return config;
+}

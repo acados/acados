@@ -132,11 +132,11 @@ typedef struct
 
     double step_norm;
 
-    double funnel_width;
-    char funnel_iter_type;
-    bool funnel_penalty_mode;
-    double l1_infeasibility;
-    double funnel_penalty_parameter;
+    // double funnel_width;
+    // char funnel_iter_type;
+    // bool funnel_penalty_mode;
+    // double l1_infeasibility;
+    // double funnel_penalty_parameter;
 
 } ocp_nlp_sqp_memory;
 

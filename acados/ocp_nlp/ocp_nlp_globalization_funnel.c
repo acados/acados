@@ -149,17 +149,86 @@ void ocp_nlp_globalization_funnel_opts_set(void *config_, void *opts_, const cha
 }
 
 
+acados_size_t ocp_nlp_globalization_funnel_memory_calculate_size(void *config_, void *dims_, void *opts_)
+{
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_opts *opts = opts_;
+    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
+
+    acados_size_t size = 0;
+
+    size += sizeof(ocp_nlp_sqp_memory);
+
+    // nlp mem
+    size += ocp_nlp_memory_calculate_size(config, dims, nlp_opts);
+
+    // primal step norm
+    if (opts->nlp_opts->log_primal_step_norm)
+    {
+        size += opts->max_iter*sizeof(double);
+    }
+    // stat
+    int stat_m = opts->max_iter+1;
+    int stat_n = 7;
+    if (opts->ext_qp_res)
+        stat_n += 4;
+    size += stat_n*stat_m*sizeof(double);
+
+    size += 3*8;  // align
+
+    make_int_multiple_of(8, &size);
+
+    return size;
+}
+
+void *ocp_nlp_globalization_funnel_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
+{
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_opts *opts = opts_;
+    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
+
+
+    char *c_ptr = (char *) raw_memory;
+
+    // initial align
+    align_char_to(8, &c_ptr);
+
+    ocp_nlp_sqp_memory *mem = (ocp_nlp_sqp_memory *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_sqp_memory);
+
+    align_char_to(8, &c_ptr);
+
+    // nlp mem
+    mem->nlp_mem = ocp_nlp_memory_assign(config, dims, nlp_opts, c_ptr);
+    c_ptr += ocp_nlp_memory_calculate_size(config, dims, nlp_opts);
+
+    // primal step norm
+    if (opts->nlp_opts->log_primal_step_norm)
+    {
+        mem->primal_step_norm = (double *) c_ptr;
+        c_ptr += opts->max_iter*sizeof(double);
+    }
+
+    align_char_to(8, &c_ptr);
+
+    assert((char *) raw_memory + ocp_nlp_globalization_funnel_memory_calculate_size(config, dims, opts) >= c_ptr);
+
+    return mem;
+}
+
 /************************************************
  * funnel functions
  ************************************************/
-static void debug_output(ocp_nlp_opts *opts, char* message, int print_level)
+void debug_output(ocp_nlp_opts *opts, char* message, int print_level)
 {
     if (opts->print_level > print_level)
     {
         printf("%s", message); //debugging output
     }
 }
-static void debug_output_double(ocp_nlp_opts *opts, char* message, double value, int print_level)
+void debug_output_double(ocp_nlp_opts *opts, char* message, double value, int print_level)
 {
     if (opts->print_level > print_level)
     {
@@ -167,18 +236,18 @@ static void debug_output_double(ocp_nlp_opts *opts, char* message, double value,
     }
 }
 
-static void initialize_funnel_width(ocp_nlp_sqp_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double initial_infeasibility)
+void initialize_funnel_width(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double initial_infeasibility)
 {
     mem->funnel_width = fmax(opts->initialization_upper_bound,
                             opts->initialization_increase_factor*initial_infeasibility);
 }
 
-static void initialize_funnel_penalty_parameter(ocp_nlp_sqp_memory *mem, ocp_nlp_globalization_funnel_opts *opts)
+void initialize_funnel_penalty_parameter(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts)
 {
     mem->funnel_penalty_parameter = opts->initial_penalty_parameter;
 }
 
-static void update_funnel_penalty_parameter(ocp_nlp_sqp_memory *mem,
+void update_funnel_penalty_parameter(ocp_nlp_globalization_funnel_memory *mem,
                                             ocp_nlp_globalization_funnel_opts *opts,
                                             double pred_f, double pred_h)
 {
@@ -190,12 +259,12 @@ static void update_funnel_penalty_parameter(ocp_nlp_sqp_memory *mem,
     // else: do not decrease penalty parameter
 }
 
-static void decrease_funnel(ocp_nlp_sqp_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double trial_infeasibility, double current_infeasibility)
+void decrease_funnel(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double trial_infeasibility, double current_infeasibility)
 {
     mem->funnel_width = (1-opts->kappa) * trial_infeasibility + opts->kappa * mem->funnel_width;
 }
 
-static bool is_iterate_inside_of_funnel(ocp_nlp_sqp_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double infeasibility)
+bool is_iterate_inside_of_funnel(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double infeasibility)
 {
     if (infeasibility <= mem->funnel_width)
     {
@@ -207,7 +276,7 @@ static bool is_iterate_inside_of_funnel(ocp_nlp_sqp_memory *mem, ocp_nlp_globali
     }
 }
 
-static bool is_funnel_sufficient_decrease_satisfied(ocp_nlp_sqp_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double infeasibility)
+bool is_funnel_sufficient_decrease_satisfied(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double infeasibility)
 {
     if (infeasibility <= opts->sufficient_decrease_factor* mem->funnel_width)
     {
@@ -219,7 +288,7 @@ static bool is_funnel_sufficient_decrease_satisfied(ocp_nlp_sqp_memory *mem, ocp
     }
 }
 
-static bool is_switching_condition_satisfied(ocp_nlp_globalization_funnel_opts *opts, double pred_optimality, double step_size, double pred_infeasibility)
+bool is_switching_condition_satisfied(ocp_nlp_globalization_funnel_opts *opts, double pred_optimality, double step_size, double pred_infeasibility)
 {
     // if (step_size * pred_optimality >= opts->fraction_switching_condition * pred_infeasibility * pred_infeasibility)
     if (step_size * pred_optimality >= opts->fraction_switching_condition * pred_infeasibility)
@@ -232,7 +301,7 @@ static bool is_switching_condition_satisfied(ocp_nlp_globalization_funnel_opts *
     }
 }
 
-static bool is_f_type_armijo_condition_satisfied(ocp_nlp_globalization_funnel_opts *opts,
+bool is_f_type_armijo_condition_satisfied(ocp_nlp_globalization_funnel_opts *opts,
                                                     double negative_ared,
                                                     double pred,
                                                     double alpha)
@@ -247,7 +316,7 @@ static bool is_f_type_armijo_condition_satisfied(ocp_nlp_globalization_funnel_op
     }
 }
 
-static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
+bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *mem,
                                                   ocp_nlp_globalization_funnel_opts *opts,
                                                   double pred, double ared, double alpha,
                                                   double current_infeasibility,
@@ -332,8 +401,8 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
     return accept_step;
 }
 
-static int ocp_nlp_sqp_funnel_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
-                ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_workspace *work, ocp_nlp_sqp_opts *opts)
+int ocp_nlp_sqp_funnel_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
+                ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_workspace *work, ocp_nlp_globalization_funnel_opts *opts)
 {
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
     ocp_nlp_workspace *nlp_work = work->nlp_work;
@@ -407,7 +476,7 @@ static int ocp_nlp_sqp_funnel_backtracking_line_search(ocp_nlp_config *config, o
             tmp_fun = config->cost[i]->memory_get_fun_ptr(nlp_mem->cost[i]);
             trial_cost += *tmp_fun;
         }
-        trial_infeasibility = get_l1_infeasibility(config, dims, mem);
+        trial_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
 
         ///////////////////////////////////////////////////////////////////////
         // Evaluate merit function at trial point

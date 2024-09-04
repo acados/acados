@@ -888,45 +888,45 @@ static void ocp_nlp_sqp_reset_timers(ocp_nlp_sqp_memory *mem)
     mem->time_sim_ad = 0.0;
 }
 
-static double get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_sqp_memory *mem)
-{
-    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+// static double get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_sqp_memory *mem)
+// {
+//     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
-    int N = dims->N;
-    int *nx = dims->nx;
-    int *ni = dims->ni;
-    int i;
-    int j;
+//     int N = dims->N;
+//     int *nx = dims->nx;
+//     int *ni = dims->ni;
+//     int i;
+//     int j;
 
-    // compute current l1 infeasibility
-    double tmp;
-    struct blasfeo_dvec *tmp_fun_vec;
-    double dyn_l1_infeasibility = 0.0;
-    for(i=0; i<N; i++)
-    {
-        tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(nlp_mem->dynamics[i]);
-        for(j=0; j<nx[i+1]; j++)
-        {
-            dyn_l1_infeasibility += fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
-        }
-    }
+//     // compute current l1 infeasibility
+//     double tmp;
+//     struct blasfeo_dvec *tmp_fun_vec;
+//     double dyn_l1_infeasibility = 0.0;
+//     for(i=0; i<N; i++)
+//     {
+//         tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(nlp_mem->dynamics[i]);
+//         for(j=0; j<nx[i+1]; j++)
+//         {
+//             dyn_l1_infeasibility += fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
+//         }
+//     }
 
-    double constraint_l1_infeasibility = 0.0;
-    for(i=0; i<=N; i++)
-    {
-        tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
-        // tmp_fun_vec = out->t+i;
-        for (j=0; j<2*ni[i]; j++)
-        {
-            tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
-            if (tmp > 0.0)
-            {
-                constraint_l1_infeasibility += tmp;
-            }
-        }
-    }
-    return dyn_l1_infeasibility + constraint_l1_infeasibility;
-}
+//     double constraint_l1_infeasibility = 0.0;
+//     for(i=0; i<=N; i++)
+//     {
+//         tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
+//         // tmp_fun_vec = out->t+i;
+//         for (j=0; j<2*ni[i]; j++)
+//         {
+//             tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
+//             if (tmp > 0.0)
+//             {
+//                 constraint_l1_infeasibility += tmp;
+//             }
+//         }
+//     }
+//     return dyn_l1_infeasibility + constraint_l1_infeasibility;
+// }
 
 /************************************************
  * output functions
@@ -1421,7 +1421,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     int qp_status = 0;
     int qp_iter = 0;
     mem->alpha = 0.0;
-    mem->funnel_iter_type = '-';
+    // mem->funnel_iter_type = '-';
     mem->status = ACADOS_SUCCESS;
 
 #if defined(ACADOS_WITH_OPENMP)
@@ -1512,7 +1512,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                             nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_stat,
                             nlp_res->inf_norm_res_comp, mem->alpha, mem->step_norm,
                             reg_param_memory, funnel_width_memory, funnel_penalty_param_memory, qp_status,
-                            qp_iter, mem->funnel_iter_type);
+                            qp_iter, "-");
         }
         reg_param_memory = nlp_opts->levenberg_marquardt;
 

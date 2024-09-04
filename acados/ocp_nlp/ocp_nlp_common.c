@@ -2013,6 +2013,44 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
  * functions
  ************************************************/
 
+double ocp_nlp_get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_memory *nlp_mem)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+    int i;
+    int j;
+
+    // compute current l1 infeasibility
+    double tmp;
+    struct blasfeo_dvec *tmp_fun_vec;
+    double dyn_l1_infeasibility = 0.0;
+    for(i=0; i<N; i++)
+    {
+        tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(nlp_mem->dynamics[i]);
+        for(j=0; j<nx[i+1]; j++)
+        {
+            dyn_l1_infeasibility += fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
+        }
+    }
+
+    double constraint_l1_infeasibility = 0.0;
+    for(i=0; i<=N; i++)
+    {
+        tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
+        // tmp_fun_vec = out->t+i;
+        for (j=0; j<2*ni[i]; j++)
+        {
+            tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
+            if (tmp > 0.0)
+            {
+                constraint_l1_infeasibility += tmp;
+            }
+        }
+    }
+    return dyn_l1_infeasibility + constraint_l1_infeasibility;
+}
+
 void ocp_nlp_set_primal_variable_pointers_in_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
                                                        ocp_nlp_out *nlp_out, ocp_nlp_memory *nlp_mem)
 {

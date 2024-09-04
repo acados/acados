@@ -66,24 +66,114 @@ typedef struct
     double initial_penalty_parameter; // initial penalty parameter for penalty phase
     double penalty_eta; // fraction in penalty update
     double penalty_contraction; // penalty contraction factor
-    bool type_switching_condition;
+    bool type_switching_condition; // which type of switching condition do we use?
 } ocp_nlp_globalization_funnel_opts;
 
 //
-acados_size_t ocp_nlp_dynamics_cont_opts_calculate_size(void *config, void *dims);
+acados_size_t ocp_nlp_globalization_funnel_opts_calculate_size(void *config, void *dims);
 //
-void *ocp_nlp_dynamics_cont_opts_assign(void *config, void *dims, void *raw_memory);
+void *ocp_nlp_globalization_funnel_opts_assign(void *config, void *dims, void *raw_memory);
 //
-void ocp_nlp_dynamics_cont_opts_initialize_default(void *config, void *dims, void *opts);
+void ocp_nlp_globalization_funnel_opts_initialize_default(void *config, void *dims, void *opts);
 //
-void ocp_nlp_dynamics_cont_opts_update(void *config, void *dims, void *opts);
+void ocp_nlp_globalization_funnel_opts_update(void *config, void *dims, void *opts);
 //
-void ocp_nlp_dynamics_cont_opts_set(void *config, void *opts, const char *field, void* value);
+void ocp_nlp_globalization_funnel_opts_set(void *config, void *opts, const char *field, void* value);
+
+
+/************************************************
+ * memory
+ ************************************************/
+
+typedef struct
+{
+    // nlp memory
+    ocp_nlp_memory *nlp_mem;
+
+    double step_norm;
+
+    double funnel_width;
+    char funnel_iter_type;
+    bool funnel_penalty_mode;
+    double l1_infeasibility;
+    double funnel_penalty_parameter;
+    double alpha;
+
+} ocp_nlp_globalization_funnel_memory;
+
+//
+acados_size_t ocp_nlp_globalization_funnel_memory_calculate_size(void *config, void *dims, void *opts_);
+//
+void *ocp_nlp_globalization_funnel_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
+//
+
+/************************************************
+ * workspace
+ ************************************************/
+
+typedef struct
+{
+    ocp_nlp_workspace *nlp_work;
+
+} ocp_nlp_globalization_funnel_workspace;
+
+//
+acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config, void *dims, void *opts_);
+
+
+
+
+/************************************************
+ * functions
+ ************************************************/
+
+void debug_output(ocp_nlp_opts *opts, char* message, int print_level);
+//
+void debug_output_double(ocp_nlp_opts *opts, char* message, double value, int print_level);
+//
+void initialize_funnel_width(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double initial_infeasibility);
+//
+void update_funnel_penalty_parameter(ocp_nlp_globalization_funnel_memory *mem,
+                                            ocp_nlp_globalization_funnel_opts *opts,
+                                            double pred_f, double pred_h);
+//
+void decrease_funnel(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double trial_infeasibility, double current_infeasibility);                                          
+//
+bool is_iterate_inside_of_funnel(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double infeasibility);
+//
+bool is_funnel_sufficient_decrease_satisfied(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double infeasibility);
+//
+bool is_switching_condition_satisfied(ocp_nlp_globalization_funnel_opts *opts, double pred_optimality, double step_size, double pred_infeasibility);
+//
+bool is_f_type_armijo_condition_satisfied(ocp_nlp_globalization_funnel_opts *opts,
+                                                    double negative_ared,
+                                                    double pred,
+                                                    double alpha);
+//
+bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *mem,
+                                            ocp_nlp_globalization_funnel_opts *opts,
+                                            double pred, double ared, double alpha,
+                                            double current_infeasibility,
+                                            double trial_infeasibility,
+                                            double current_objective,
+                                            double trial_objective,
+                                            double current_merit,
+                                            double trial_merit,
+                                            double pred_merit);                                                   
+//
+int ocp_nlp_sqp_funnel_backtracking_line_search(ocp_nlp_config *config,
+                                                ocp_nlp_dims *dims,
+                                                ocp_nlp_in *nlp_in,
+                                                ocp_nlp_out *nlp_out,
+                                                ocp_nlp_globalization_funnel_memory *mem,
+                                                ocp_nlp_globalization_funnel_workspace *work,
+                                                ocp_nlp_globalization_funnel_opts *opts);
+                
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_CONT_H_
+#endif  // ACADOS_OCP_NLP_OCP_NLP_GLOBALIZATION_FUNNEL_H_
 /// @}
 /// @}
