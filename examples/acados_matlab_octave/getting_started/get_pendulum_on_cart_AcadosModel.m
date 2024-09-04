@@ -36,7 +36,14 @@ function model = get_pendulum_on_cart_AcadosModel(varargin)
     nu = 1;
 
     %% system parameters
-    M = 1;    % mass of the cart [kg]
+    if nargin > 1 && varargin{2} % parametric model
+        M = SX.sym('M');  % mass of the cart [kg]
+        param = M;
+    else
+        M = 1;    % mass of the cart [kg]
+        param = [];
+    end
+
     m = 0.1;  % mass of the ball [kg]
     l = 0.8;  % length of the rod [m]
     g = 9.81; % gravity constant [m/s^2]
@@ -75,6 +82,7 @@ function model = get_pendulum_on_cart_AcadosModel(varargin)
     model.x = x;
     model.xdot = xdot;
     model.u = u;
+    model.p = param;
 
     model.f_expl_expr = f_expl_expr;
     model.f_impl_expr = f_impl_expr;
