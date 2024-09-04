@@ -320,8 +320,6 @@ ocp_solver.get(field, stage)
 
 % or for all stages
 qp_Q = ocp_solver.get('qp_Q');
-
-%
 cond_H = ocp_solver.get('qp_solver_cond_H');
 
 disp('QP diagnostics of last QP before condensing')
