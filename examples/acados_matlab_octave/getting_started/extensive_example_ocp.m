@@ -218,8 +218,6 @@ time_lin = zeros(n_executions,1);
 time_reg = zeros(n_executions,1);
 time_qp_sol = zeros(n_executions,1);
 
-ocp_solver.set('print_level', print_level)
-
 %% call ocp solver in loop
 for i=1:n_executions
     % initial state
