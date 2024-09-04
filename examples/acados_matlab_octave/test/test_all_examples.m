@@ -54,6 +54,7 @@ targets = {
     '../swarming/example_ocp.m';
     '../wind_turbine_nx6/example_ocp.m';
     '../mocp_transition_example/main_multiphase_ocp.m';
+    '../legacy_interface/getting_started/extensive_example_ocp.m';
 };
 
 
