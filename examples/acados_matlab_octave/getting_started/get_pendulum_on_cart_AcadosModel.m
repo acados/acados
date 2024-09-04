@@ -27,7 +27,7 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-function model = get_pendulum_on_cart_AcadosModel()
+function model = get_pendulum_on_cart_AcadosModel(varargin)
 
     import casadi.*
 
@@ -62,6 +62,14 @@ function model = get_pendulum_on_cart_AcadosModel()
                              (- l*m*cos_theta*sin_theta*dtheta.^2 + F*cos_theta + g*m*sin_theta + M*g*sin_theta)/(l*denominator));
     f_impl_expr = f_expl_expr - xdot;
 
+    % discrete dynamics
+    if nargin > 0
+        delta_t = varargin{1};
+        disc_dyn_expr = x + delta_t * f_expl_expr; % explicit Euler
+    else
+        disc_dyn_expr = [];
+    end
+
     % populate
     model = AcadosModel();
     model.x = x;
@@ -70,5 +78,6 @@ function model = get_pendulum_on_cart_AcadosModel()
 
     model.f_expl_expr = f_expl_expr;
     model.f_impl_expr = f_impl_expr;
+    model.disc_dyn_expr = disc_dyn_expr;
     model.name = 'pendulum';
 end
