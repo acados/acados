@@ -30,8 +30,6 @@
 
 clear all; clc;
 
-addpath('../pendulum_on_cart_model')
-
 check_acados_requirements()
 
 print_level = 1;
