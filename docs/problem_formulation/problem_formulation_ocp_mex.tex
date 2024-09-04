@@ -112,7 +112,7 @@ In \acados{}, one can formulate continuous-time optimal control problems (OCP) o
      \label{eq:cost}\\
     % constraints
     &&&\mathComment{Initial values, see section \ref{sec:constraints:initial}}\nonumber\\
-    &\,\,\,\quad \text{s.t.}    &&\underline{x}_0 \leq J_{\textrm{bx},0} \, x(0) \leq \overline{x}_0 , && \label{eq:constraints:initial}\\[1ex]
+    &\,\,\,\quad \text{s.t.}    &&\underline{x}_0 \leq J\ind{bx}\initial \, x(0) \leq \overline{x}_0 , && \label{eq:constraints:initial}\\[1ex]
     &&&\mathComment{Nonlinear constraints on the initial shooting node} \nonumber\\
     &&&\underline{h}\initial \leq h\initial(x(0), u(0), z(0), p) + J_{\textrm{sh}}\initial \, s\lowerh\initial, &&\label{eq:constraints:path:lower_bounds:start}\\
     &&& h\initial(x(0), u(0),  z(0), p) - J\ind{sh}\initial\, s\ind{u,h}\initial \leq \overline{h}\initial, &&\label{eq:constraints:path:upper_bounds:start}\\
@@ -144,7 +144,7 @@ In \acados{}, one can formulate continuous-time optimal control problems (OCP) o
     %% upper terminal constraints
     &&&\mathComment{Terminal constraints with upper bound, see section \ref{sec:constraints:terminal}}\nonumber\\
     &&& h\terminal(x(T), p) - J\ind{sh}\terminal\, s\ind{u,h}\terminal \leq \overline{h}\terminal, &&\label{eq:constraints:terminal:upper_bounds:start}\\
-    &&& J_{\textrm{bx}}\terminal\, x(T) - J\ind{sbx}\terminal\, s\ind{u,bx}\terminal \leq \overline{x}^{e}, &&\\ % TODO: add Jsbx_e?!
+    &&& J_{\textrm{bx}}\terminal\, x(T) - J\ind{sbx}\terminal\, s\ind{u,bx}\terminal \leq \overline{x}^{e}, &&\\
     &&& C\terminal\, x(T) - J\ind{sg}\terminal\, s\ind{u,g}\terminal \leq \overline{g}\terminal \\
     &&& s\upperh\terminal, s\upperbx\terminal, s\upperbu\terminal, s\upperg\terminal \geq 0,\label{eq:constraints:terminal:upper_bounds:end}
 \end{align}
@@ -158,6 +158,8 @@ with
 \item slacks for initial constraints $s\ind{u,h}\initial \in \R^{\ns\initial}$ and $s\ind{l,h}\initial \in \R^{\ns\initial}$
 \item slacks for path constraints $ s\Lower(t) = (s\lowerbu, s\lowerbx, s\lowerg, s\lowerh) \in \R^{\ns} $ and $ s\upper(t) = (s\upperbu, s\upperbx, s\upperg, s\upperh) \in \R^{\ns} $
 \item slacks for terminal constraints $ s\Lower\terminal(t) = (s\lowerbx\terminal, s\lowerg\terminal, s\lowerh\terminal) \in \R^{\ns\terminal} $ and $ s\upper\terminal(t) = (s\upperbx\terminal, s\upperg\terminal, s\upperh\terminal) \in \R^{\ns\terminal} $
+\item selection matrices $J_{\star}$, $J_{\mathrm{s}\star}$, i.e. they are all zeros except for a single one entry in each row.
+\item diagonal matrices $Z\ind{l}, Z\ind{u}$, $Z\ind{l}\terminal, Z\ind{u}\terminal$
 \end{itemize}
 
 While the user specifies the OCP in continuous time, the problem is internally discretized using the \textbf{multiple shooting} approach and a piecewise constant control parametrization.
@@ -192,9 +194,9 @@ In particular, this document does not cover the \acados{} problem formulation an
 %
 % The system dynamics term is used to connect state trajectories from adjacent shooting nodes by means of equality constraints.
 %
-The system dynamics equation~\eqref{eq:dynamics} is replaced with a discrete-time dynamic system.
+The system dynamics equation~\eqref{eq:dynamics} is internally replaced with a discrete-time dynamic system.
 The dynamics can be formulated in different ways in \acados:
-As implicit equations in continuous time~\eqref{eq:dynamics:implicit}, or as explicit equations in continuous time~\eqref{eq:dynamics:explicit} or directly as discrete-time dynamics \eqref{eq:dynamics:discrete}.
+As implicit equations in continuous time~\eqref{eq:dynamics:implicit}, as explicit equations in continuous time~\eqref{eq:dynamics:explicit}, or directly as discrete-time dynamics \eqref{eq:dynamics:discrete}.
 This section and Table~\ref{tab:dynamics} summarize these options.
 %
 \subsection{Implicit Dynamics}\label{sec:dynamics:implicit}
@@ -292,7 +294,7 @@ Note that the matrices $Z\Lower^*$, $Z\upper^*$ are diagonal matrices and provid
 \end{table}
 
 
-Note that the dimensions of the slack variables $s\Lower(t)$, $s\Lower\terminal(t)$, $s\upper(t)$ and $s\upper\terminal(t)$ are determined by \acados{} from the associated matrices ($Z\Lower$, $Z\upper$,  $J\ind{sh}$, $J\ind{sg}$, $J\ind{sbu}$, $J\ind{sbx}$ etc.).
+Note that the dimensions of the slack variables $s\Lower(t)$, $s\Lower\terminal(t)$, $s\upper(t)$ and $s\upper\terminal(t)$ are determined by \acados{} from the associated matrices $Z\Lower$, $Z\upper$,  $J\ind{sh}$, $J\ind{sg}$, $J\ind{sbu}$, $J\ind{sbx}$ etc.
 
 
 By default, the Lagrange cost term provided in continuous time is internally integrated using the explicit Euler method, \code{AcadosOcpOptions.cost\_discretization = 'EULER'}, which allows for a seamless OCP discretization with a nonuniform time grid.
@@ -323,7 +325,7 @@ Table~\ref{tab:cost:auto} shows the available options.
         $ m $ & \code{AcadosModel.cost\_expr\_ext\_cost\_e}    & \casadi~expression  & \optional \\
         \bottomrule
     \end{tabular}
-    \caption{Cost module \code{'AUTO'} options} \label{tab:cost:auto}
+    \caption{Cost module \code{'AUTO'} options. The cost type \code{'AUTO'} is only available from the \matlab{} interface.} \label{tab:cost:auto}
 \end{table}
 %
 
@@ -346,7 +348,7 @@ See Table~\ref{tab:cost:external} for the available options.
 %
 \subsection{Cost module \code{'LINEAR\_LS'}: Linear least-squares cost}\label{sec:cost:linear_ls}
 %
-In order to activate the \code{linear least squares} cost module, set \code{AcadosOcpCost.cost\_type\_0}, \code{AcadosOcpCost.cost\_type}, \code{AcadosOcpCost.cost\_type\_e} to \code{'LINEAR\_LS'}.
+In order to activate the linear least-squares cost module, set \code{AcadosOcpCost.cost\_type\_0}, \code{AcadosOcpCost.cost\_type}, \code{AcadosOcpCost.cost\_type\_e} to \code{'LINEAR\_LS'}.
 
 The Lagrange cost term has the form
 \begin{align}
@@ -370,22 +372,22 @@ See Table~\ref{tab:cost:linear_ls} for the available options of this cost module
     \begin{tabular}{cccc}
         \toprule
         Term & Attribute/Property & Data type & Required \\ \midrule
-        $ V_x\initial $ & \code{AcadosOcpCost.Vx\_0}    & double & \optional   \\
-        $ V_u\initial $ & \code{AcadosOcpCost.Vu\_0}    & double & \optional   \\
-        $ V_z\initial $ & \code{AcadosOcpCost.Vz\_0}    & double & \optional  \\
-        $ W\initial $ & \code{AcadosOcpCost.W\_0}    & double & \optional  \\
-        $ y\ind{ref}\initial $ & \code{AcadosOcpCost.yref\_0}    & double & \optional   \\ [1em]
-        $ V_x $ & \code{AcadosOcpCost.Vx}    & double & \mandatory   \\
-        $ V_u $ & \code{AcadosOcpCost.Vu}    & double & \mandatory   \\
-        $ V_z $ & \code{AcadosOcpCost.Vz}    & double & \mandatory  \\
-        $ W $ & \code{AcadosOcpCost.W}    & double & \mandatory  \\
-        $ y\ind{ref} $ & \code{AcadosOcpCost.yref}    & double & \mandatory   \\ [1em]
-        $ V_x\terminal $ & \code{AcadosOcpCost.Vx\_e}    & double  & \mandatory  \\
-        $ W\terminal $ & \code{AcadosOcpCost.W\_e}    & double & \mandatory   \\
-        $ y\ind{ref}\terminal $ & \code{AcadosOcpCost.yref\_e}   & double & \mandatory   \\
+        $ V_x\initial $ & \code{AcadosOcpCost.Vx\_0}    & double matrix & \optional   \\
+        $ V_u\initial $ & \code{AcadosOcpCost.Vu\_0}    & double matrix & \optional   \\
+        $ V_z\initial $ & \code{AcadosOcpCost.Vz\_0}    & double matrix & \optional  \\
+        $ W\initial $ & \code{AcadosOcpCost.W\_0}    & double matrix, positive semidefinite & \optional  \\
+        $ y\ind{ref}\initial $ & \code{AcadosOcpCost.yref\_0}    & double vector & \optional   \\ [1em]
+        $ V_x $ & \code{AcadosOcpCost.Vx}    & double matrix& \mandatory   \\
+        $ V_u $ & \code{AcadosOcpCost.Vu}    & double matrix & \mandatory   \\
+        $ V_z $ & \code{AcadosOcpCost.Vz}    & double matrix & \mandatory  \\
+        $ W $ & \code{AcadosOcpCost.W}    & double matrix, positive semidefinite & \mandatory  \\
+        $ y\ind{ref} $ & \code{AcadosOcpCost.yref}    & double vector & \mandatory   \\ [1em]
+        $ V_x\terminal $ & \code{AcadosOcpCost.Vx\_e}    & double matrix & \mandatory  \\
+        $ W\terminal $ & \code{AcadosOcpCost.W\_e}    & double matrix, positive semidefinite & \mandatory   \\
+        $ y\ind{ref}\terminal $ & \code{AcadosOcpCost.yref\_e}   & double vector & \mandatory   \\
         \bottomrule
     \end{tabular}
-\caption{Cost module \code{'LINEAR\_LS'} options} \label{tab:cost:linear_ls}
+\caption{Cost module \code{'LINEAR\_LS'} options.} \label{tab:cost:linear_ls}
 \end{table}
 %
 \subsection{Cost module \code{'NONLINEAR\_LS'}: Nonlinear least-squares cost}\label{sec:cost:nonlinear_ls}
@@ -404,17 +406,17 @@ See Table~\ref{tab:cost:nonlinear_ls} for the available options of this cost mod
         \toprule
         Term & Attribute/Property & Data type & Required \\ \midrule
         $ y\initial $ & \code{AcadosModel.cost\_y\_expr\_0}    & \casadi~expression  & \optional   \\
-        $ W\initial $ & \code{AcadosOcpCost.W\_0}    & double  & \optional   \\
-        $ y\ind{ref}\initial $ & \code{AcadosOcpCost.yref\_0}    & double & \optional    \\ [1em]
+        $ W\initial $ & \code{AcadosOcpCost.W\_0}    & double matrix, positive semidefinite  & \optional   \\
+        $ y\ind{ref}\initial $ & \code{AcadosOcpCost.yref\_0}    & double vector & \optional    \\ [1em]
         $ y $ & \code{AcadosModel.cost\_y\_expr}    & \casadi~expression  & \mandatory   \\
-        $ W $ & \code{AcadosOcpCost.W}    & double  & \mandatory   \\
-        $ y\ind{ref} $ & \code{AcadosOcpCost.yref}    & double & \mandatory    \\ [1em]
+        $ W $ & \code{AcadosOcpCost.W}    & double matrix, positive semidefinite & \mandatory   \\
+        $ y\ind{ref} $ & \code{AcadosOcpCost.yref}    & double vector & \mandatory    \\ [1em]
         $ y\terminal $ & \code{AcadosModel.cost\_y\_expr\_e}    & \casadi~expression  & \mandatory   \\
-        $ W\terminal $ & \code{AcadosOcpCost.W\_e}    & double & \mandatory   \\
-        $ y\ind{ref}\terminal $ & \code{AcadosOcpCost.yref\_e}    & double  & \mandatory   \\
+        $ W\terminal $ & \code{AcadosOcpCost.W\_e}    & double matrix, positive semidefinite & \mandatory   \\
+        $ y\ind{ref}\terminal $ & \code{AcadosOcpCost.yref\_e}    & double vector  & \mandatory   \\
         \bottomrule
     \end{tabular}
-    \caption{Cost module \code{'NONLINEAR\_LS'} options} \label{tab:cost:nonlinear_ls}
+    \caption{Cost module \code{'NONLINEAR\_LS'} options.} \label{tab:cost:nonlinear_ls}
 \end{table}
 
 
@@ -425,8 +427,7 @@ If the cost takes the form
 l(x, u, t, p) = \psi(r(x, u, z, t, p) - y_\mathrm{ref}, t, p), \qquad m(x, p) = \psi\terminal(r\terminal(x, t, p) - y_\mathrm{ref}\terminal, p),
 \end{align}
 with $\psi$ and $\psi\terminal$ convex, we say the cost has convex-over-nonlinear structure.
-In this case, a Generalized Gauss-Newton Hessian might be used for the SQP subproblems \cite{Messerer2021a}, set \code{AcadosOcpOptions.hessian\_approx = 'GAUSS\_NEWTON'}.
-
+In this case, a Generalized Gauss-Newton Hessian might be used for the SQP subproblems \cite{Messerer2021a}, which is used whenever \code{AcadosOcpOptions.hessian\_approx = 'GAUSS\_NEWTON'}.
 See Table~\ref{tab:cost:conl} for the available options of this cost module.
 
 \textbf{Note.} Convex-over-nonlinear costs are at the moment only available via the \python{} interface.
@@ -438,14 +439,14 @@ See Table~\ref{tab:cost:conl} for the available options of this cost module.
 		\toprule
 		Term & Attribute/Property & Data type & Required \\ \midrule
 		$ y\initial $ & \code{AcadosModel.cost\_y\_expr\_0}    & \casadi~expression  & \optional   \\[4pt]
-		$ y\ind{ref}\initial $ & \code{AcadosOcpCost.yref\_0}    & double & \optional    \\[4pt] 
+		$ y\ind{ref}\initial $ & \code{AcadosOcpCost.yref\_0}    & double vector & \optional    \\[4pt] 
 		$ r\initial $ & \code{AcadosModel.cost\_r\_in\_psi\_expr\_0}    & \casadi~symbolic & \optional
 		\\[4pt]
 		$\psi\initial$ & \code{AcadosModel.cost\_psi\_expr\_0}   & \casadi~expression & \optional
 		\\[4pt]
 		\midrule
 		$ y $ & \code{AcadosModel.cost\_y\_expr}    & \casadi~expression  & \mandatory   \\[4pt]
-		$ y\ind{ref} $ & \code{AcadosOcpCost.yref}    & double & \mandatory    \\[4pt]
+		$ y\ind{ref} $ & \code{AcadosOcpCost.yref}    & double vector & \mandatory    \\[4pt]
 		$ r$ & \code{AcadosModel.cost\_r\_in\_psi\_expr}    & \casadi~symbolic & \optional
 		\\[4pt]
 		$\psi$ & \code{AcadosModel.cost\_psi\_expr}   & \casadi~expression & \optional
@@ -453,14 +454,14 @@ See Table~\ref{tab:cost:conl} for the available options of this cost module.
 		\midrule
 		$ y\terminal $ & \code{AcadosModel.cost\_y\_expr\_e}    & \casadi~expression  & \mandatory   \\[4pt]
 
-		$ y\ind{ref}\terminal $ & \code{AcadosOcpCost.yref\_e}    & double  & \mandatory   \\[4pt]
+		$ y\ind{ref}\terminal $ & \code{AcadosOcpCost.yref\_e}    & double vector  & \mandatory   \\[4pt]
 		$ r\terminal $ & \code{AcadosModel.cost\_r\_in\_psi\_expr\_e}    & \casadi~symbolic & \mandatory
 \\[4pt]
 $\psi\terminal$ & \code{AcadosModel.cost\_psi\_expr\_e}   & \casadi~expression & \mandatory
 \\[4pt]
 		\bottomrule
 	\end{tabular}
-	\caption{Cost module \code{'CONVEX\_OVER\_NONLINEAR'} options} \label{tab:cost:conl}
+	\caption{Cost module \code{'CONVEX\_OVER\_NONLINEAR'} options. Convex-over-nonlinear costs are at the moment only available via the \python{} interface.} \label{tab:cost:conl}
 \end{table}
 
 \section{Constraints}\label{sec:constraints}
@@ -472,6 +473,9 @@ Meanwhile, the \python{} interface also supports the \acados{} constraint module
 
 Additionally, bounds on $u$ and general linear constraints are also enforced on the initial node by default.
 On the other hand, bounds on $x$ and nonlinear constraints are fully split and have to be explicitly stated with \code{\_0} correspondence to be enforced on the initial node.
+
+There is \href{https://github.com/acados/acados/issues/650}{preliminary support} for one-sided constraints for the QP solvers \code{HPIPM} and \code{DAQP} by setting lower/upper bounds to \code{ACADOS\_INFTY}.
+
 
 %The constraint type can be set using the identifier \str{AcadosConstraints.type} and \str{AcadosConstraints.type\_e} for the path constraints and terminal constraints, respectively. The string identifier options are found in Table~\ref{tab:constr_type}. The default setting is \str{bgh}.
 %\begin{table}[ht!]
@@ -489,7 +493,7 @@ On the other hand, bounds on $x$ and nonlinear constraints are fully split and h
 %\end{tabular}
 %\end{table}
 %
-\subsection{Initial State}\label{sec:constraints:initial}
+\subsection{Initial State Constraint}\label{sec:constraints:initial}
 %
 \textbf{Note.} An initial state constraint is not required.
 For example, for moving horizon estimation (MHE) problems it should not be set.
@@ -504,16 +508,30 @@ The corresponding options are found in Table~\ref{tab:constraints:simplesyntax}.
     \begin{tabular}{cccc}
         \toprule
         Term & Attribute/Property & Data type & Required \\ \midrule
-        $ \overline{x}_0 $ & \code{AcadosConstraints.x0} & double & \optional \\
+        $ \overline{x}_0 $ & \code{AcadosConstraints.x0} & double vector & \optional \\
         \bottomrule
     \end{tabular}
-    \caption{Simple syntax for setting the initial state} \label{tab:constraints:simplesyntax}
+    \caption{Simple syntax for setting the initial state.} \label{tab:constraints:simplesyntax}
 \end{table}
 %
 \paragraph{Extended syntax.}
 The extended syntax allows to define upper and lower bounds on a subset of states.
 The options for the extended syntax are found in Table~\ref{tab:constraints:extendedsyntax}.
-Here, $\mathcal{I}_{\textrm{bx},0}$ is a vector of length $n_x$ containing only zeros and ones.
+Note that the matrix $J\ind{bx}\initial$ is all zeros except for a single entry with the value one in each row.
+The matrix is internally computed from a vector of integers specifying the 0-based column indices of the 1 entries in $J\ind{bx}\initial$.
+This vector is provided to \acados{} via the attribute/property \texttt{idxbx\_0}.
+
+As an example, consider $\texttt{idxbx\_0} = [0, 1, 3]$ and assume $n_x = 5$, i.e. the zeroth, first and third component of $x_0 \in \R^5$ are constrained.
+In this case, the corresponding matrix $J\ind{bx}\initial$ would be given by
+\begin{align}
+J\ind{bx}\initial = 
+\begin{bmatrix}
+1 & 0 & 0 & 0 & 0\\
+0 & 1 & 0 & 0 & 0\\
+0 & 0 & 0 & 3 & 0\\
+\end{bmatrix}.
+\end{align}
+
 \begin{table}[ht!]
     \centering
     \begin{tabular}{cccc}
@@ -521,10 +539,10 @@ Here, $\mathcal{I}_{\textrm{bx},0}$ is a vector of length $n_x$ containing only 
         Term & Attribute/Property & Data type & Required \\ \midrule
         $ \overline{x}_0 $ & \code{AcadosConstraints.ubx\_0} & double & \optional \\
         $ \underline{x}_0 $ & \code{AcadosConstraints.lbx\_0} & double & \optional \\
-        $ J_{\textrm{bx},0} = \mathrm{diag}(\mathcal{I}_{\textrm{bx},0})$ & \code{AcadosConstraints.idxbx\_0} & double & \optional \\
+        $ J\ind{bx}\initial$ & \code{AcadosConstraints.idxbx\_0} & integer vector & \optional \\
         \bottomrule
     \end{tabular}
-    \caption{Extended syntax for setting the initial state} \label{tab:constraints:extendedsyntax}
+    \caption{Extended syntax for setting the initial state.} \label{tab:constraints:extendedsyntax}
 \end{table}
 %
 \subsection{Path Constraints and Terminal Constraints}\label{sec:constraints:path}
@@ -532,9 +550,8 @@ Here, $\mathcal{I}_{\textrm{bx},0}$ is a vector of length $n_x$ containing only 
 Table~\ref{tab:constraints:path} and ~\ref{tab:constraints:terminal} show the options for defining path constraints, equations~(\ref{eq:constraints:path:lower_bounds:start} ~-~\ref{eq:constraints:path:upper_bounds:end}), and terminal constraints, equations~(\ref{eq:constraints:terminal:lower_bounds:start} ~-~\ref{eq:constraints:terminal:upper_bounds:end}), respectively.
 
 Note that the matrices $J_{\star}$ are all zeros except for a single entry with the value one in each row.
-The matrices are computed from vectors of integers, provided to \acados{} via the attributes/properties \texttt{idx}$\star$, containing only values zero and one.
-
-As an example, consider $\texttt{idxbx} = [0, 1, 1]$ which would define the matrix $J\ind{bx} = \begin{bmatrix} 0 & 1 & 0 \\ 0 & 0 & 1 \end{bmatrix}$.
+The matrices are computed from vectors of integers, provided to \acados{} via the attributes/properties \texttt{idx}$\star$, specifying the 0-based column indices of the 1 entries in $J_{\star}$.
+We refer to Section~\ref{sec:constraints:initial} for an example.
 
 
 The matrices are described as follows:
@@ -562,10 +579,10 @@ Similarly for the terminal constraints:
     \begin{tabular}{cccc}
         \toprule
         Term & Attribute/Property & Data type & Required \\ \midrule
-        $J\ind{bx}$ & \code{AcadosConstraints.idxbx}    & double vector & \optional  \\
+        $J\ind{bx}$ & \code{AcadosConstraints.idxbx}    & integer vector & \optional  \\
         $\overline{x} $  & \code{AcadosConstraints.ubx}     & double vector  & \optional   \\
         $\underline{x} $    & \code{AcadosConstraints.lbx}     & double vector  & \optional  \\[1em]
-        $J\ind{bu}$ & \code{AcadosConstraints.idxbu}    & double vector   & \optional    \\
+        $J\ind{bu}$ & \code{AcadosConstraints.idxbu}    & integer vector   & \optional    \\
         $\overline{u} $         & \code{AcadosConstraints.ubu}     & double vector  & \optional   \\
         $\underline{u} $    & \code{AcadosConstraints.lbu}     & double vector   & \optional   \\ [1em]
         $C$ & \code{AcadosConstraints.C}    & double matrix & \optional \\
@@ -578,14 +595,16 @@ Similarly for the terminal constraints:
         $ h $ & \code{AcadosModel.con\_h\_expr}    & \casadi~expression  & \optional   \\
         $\overline{h} $         & \code{AcadosConstraints.uh}     & double  vector & \optional   \\
         $\underline{h} $    & \code{AcadosConstraints.lh}     & double  vector  & \optional   \\ [1em]
-        $ J\ind{sbx} $ & \code{AcadosConstraints.idxsbx} & double vector& \optional  \\
-        $ J\ind{sbu}$ & \code{AcadosConstraints.idxsbu} & double  vector& \optional \\
-        $ J\ind{sg} $ & \code{AcadosConstraints.idxsg} & double vector& \optional  \\
-        $ J\ind{sh} $ & \code{AcadosConstraints.idxsh} & double vector& \optional  \\
-        $ J\ind{sh}\initial$ & \code{AcadosConstraints.idxsh\_0}  & double vector & \optional  \\
+        $ J\ind{sbx} $ & \code{AcadosConstraints.idxsbx} & integer vector& \optional  \\
+        $ J\ind{sbu}$ & \code{AcadosConstraints.idxsbu} & integer  vector& \optional \\
+        $ J\ind{sg} $ & \code{AcadosConstraints.idxsg} & integer vector& \optional  \\
+        $ J\ind{sh} $ & \code{AcadosConstraints.idxsh} & integer vector& \optional  \\
+        $ J\ind{sh}\initial$ & \code{AcadosConstraints.idxsh\_0}  & integer vector & \optional  \\
         \bottomrule
     \end{tabular}
-    \caption{Path constraints options.} \label{tab:constraints:path}
+    \caption{Path constraints options.
+    Note that bounds on $u$ and general linear constraints are also enforced on the initial node by default.
+    On the other hand, bounds on $x$ and nonlinear constraints are fully split and have to be explicitly stated with \code{\_0} correspondence to be enforced on the initial node.} \label{tab:constraints:path}
 \end{table}
 
 
@@ -594,7 +613,7 @@ Similarly for the terminal constraints:
     \begin{tabular}{cccc}
         \toprule
         Term & Attribute/Property & Data type & Required \\ \midrule
-        $J\ind{bx}\terminal$ & \code{AcadosConstraints.idxbx\_e}    & double vector   & \optional   \\
+        $J\ind{bx}\terminal$ & \code{AcadosConstraints.idxbx\_e}    & integer vector   & \optional   \\
         $\overline{x}\terminal $         & \code{AcadosConstraints.ubx\_e}     & double  vector  & \optional  \\
         $\underline{x}\terminal $    & \code{AcadosConstraints.lbx\_e}     & double  vector  & \optional   \\ [1em]
         $ C\terminal $ & \code{AcadosConstraints.C\_e}    & double matrix  & \optional   \\
@@ -603,9 +622,9 @@ Similarly for the terminal constraints:
         $ h\terminal $ & \code{AcadosModel.con\_h\_expr\_e}    & \casadi~expression   & \optional  \\
         $\overline{h}\terminal $         & \code{AcadosConstraints.uh\_e}     & double vector  & \optional   \\
         $\underline{h}\terminal $    & \code{AcadosConstraints.lh\_e}     & double vector   & \optional   \\ [1em]
-        $ J\ind{sbx}\terminal$ & \code{AcadosConstraints.idxsbx\_e} & double vector   & \optional \\
-        $ J\ind{sg}\terminal$ & \code{AcadosConstraints.idxsg\_e} & double vector & \optional  \\
-        $ J\ind{sh}\terminal$ & \code{AcadosConstraints.idxsh\_e} & double vector  & \optional  \\
+        $ J\ind{sbx}\terminal$ & \code{AcadosConstraints.idxsbx\_e} & integer vector   & \optional \\
+        $ J\ind{sg}\terminal$ & \code{AcadosConstraints.idxsg\_e} & integer vector & \optional  \\
+        $ J\ind{sh}\terminal$ & \code{AcadosConstraints.idxsh\_e} & integer vector  & \optional  \\
         \bottomrule
     \end{tabular}
     \caption{Terminal constraints options.} \label{tab:constraints:terminal}
@@ -630,7 +649,7 @@ Some options can only be set before the solver is created, especially options th
     \centering
     \small
 
-    \begin{tabular}{L{4cm}@{}c@{}c@{}C{10cm}}
+    \begin{tabular}{L{4.8cm}@{}c@{}c@{}C{9.5cm}}
         \toprule
         {Attribute/Property} & Type & Default & {Description} \\ \midrule
         \multicolumn{4}{l}{\emph{Code generation}} \\
@@ -638,7 +657,7 @@ Some options can only be set before the solver is created, especially options th
         \midrule
 
 		\multicolumn{4}{l}{\emph{Shooting nodes}} \\
-		\code{tf} & float & & prediction horizon \\
+		\code{tf} & double & & prediction horizon \\
         \code{N\_horizon} & int $>1$ &  & uniform grid: number of shooting nodes; acts together with end time/length of prediction horizon \code{tf}. \\
         % set one of the following for nonuniform grid
         \code{shooting\_nodes}& doubles & \code{[]} & nonuniform grid option 1: direct definition of the shooting node times \\
