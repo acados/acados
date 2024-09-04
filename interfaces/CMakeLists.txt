@@ -34,10 +34,10 @@ if(ACADOS_OCTAVE)
     # new minimal examples
     add_test(NAME octave_new_ocp
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/getting_started
-        octave --no-gui --no-window-system ./new_minimal_example_ocp.m)
+        octave --no-gui --no-window-system ./minimal_example_ocp.m)
     add_test(NAME octave_new_sim
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/getting_started
-        octave --no-gui --no-window-system ./new_minimal_example_sim.m)
+        octave --no-gui --no-window-system ./minimal_example_sim.m)
     # dim check test
     add_test(NAME octave_test_dim_check
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test

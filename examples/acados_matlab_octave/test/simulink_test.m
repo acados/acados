@@ -29,7 +29,7 @@ simulink_opts.samplingtime = '-1';
 % time step of ocp object
 
 %% run minimal example
-new_minimal_example_ocp;
+minimal_example_ocp;
 
 
 %% Compile Sfunctions
