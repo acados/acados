@@ -103,7 +103,7 @@ otherwise
 end
 
 %% MODEL
-model = get_pendulum_on_cart_AcadosModel(T/N);
+model = get_pendulum_on_cart_model(T/N);
 
 % dimensions
 nx = model.x.rows();

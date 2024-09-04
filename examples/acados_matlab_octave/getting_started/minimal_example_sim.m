@@ -43,7 +43,7 @@ x0 = [0; 1e-1; 0; 0]; % initial state
 u0 = 0; % control input
 
 %% define model dynamics
-model = get_pendulum_on_cart_AcadosModel();
+model = get_pendulum_on_cart_model();
 nx = length(model.x);
 
 sim = AcadosSim();

@@ -79,7 +79,7 @@ sim_solver_options.Tsim = h;
 sim_solver_options.integrator_type = plant_integrator_type;
 
 %% MODEL with mass as parameter
-model = get_pendulum_on_cart_AcadosModel(h, true);
+model = get_pendulum_on_cart_model(h, true);
 
 % dimensions
 nx = model.x.rows();

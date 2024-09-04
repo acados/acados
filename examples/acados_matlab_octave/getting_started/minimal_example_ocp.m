@@ -46,7 +46,7 @@ T = 1; % [s] prediction horizon length
 x0 = [0; pi; 0; 0]; % initial state
 
 %% model dynamics
-model = get_pendulum_on_cart_AcadosModel();
+model = get_pendulum_on_cart_model();
 nx = length(model.x); % state size
 nu = length(model.u); % input size
 

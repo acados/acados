@@ -27,7 +27,11 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-function model = get_pendulum_on_cart_AcadosModel(varargin)
+function model = get_pendulum_on_cart_model(varargin)
+    % GET_PENDULUM_ON_CART_MODEL returns AcadosModel describing the pendulum on cart dynamics.
+    % MODEL = GET_PENDULUM_ON_CART_MODEL() returns AcadosModel with implicit and explicit continuous dynamics defined.
+    % MODEL = GET_PENDULUM_ON_CART_MODEL(DELTA_T) returns AcadosModel with implicit and explicit continuous dynamics and discrete dynamics defined.
+    % MODEL = GET_PENDULUM_ON_CART_MODEL(DELTA_T, WITH_PARAM) returns AcadosModel with implicit and explicit continuous dynamics and discrete dynamics defined. Also the mass M is modeled as a parameter.
 
     import casadi.*
 
