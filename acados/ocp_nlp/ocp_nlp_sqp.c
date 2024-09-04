@@ -932,7 +932,8 @@ static void ocp_nlp_sqp_reset_timers(ocp_nlp_sqp_memory *mem)
  * output functions
  ************************************************/
 static void print_iteration_header(ocp_nlp_opts* opts){
-    if(opts->globalization == FUNNEL_L1PEN_LINESEARCH)
+    ocp_nlp_globalization_opts *globalization_opts = opts->globalization;
+    if(globalization_opts->globalization == FUNNEL_L1PEN_LINESEARCH)
     {
         printf("%6s | %11s | %10s | %10s | %10s | %10s | %10s | %10s | %10s | %12s | %10s | %10s | %10s | %10s\n",
         "iter.",
@@ -972,10 +973,11 @@ static void print_iteration(ocp_nlp_opts* opts,
                     int qp_iter,
                     char iter_type)
 {
+    ocp_nlp_globalization_opts *globalization_opts = opts->globalization;
     if ((iter_count % 10 == 0)){
         print_iteration_header(opts);
     }
-    if (opts->globalization == FUNNEL_L1PEN_LINESEARCH)
+    if (globalization_opts->globalization == FUNNEL_L1PEN_LINESEARCH)
     {
         printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %12.4e | %10.4e | %10i | %10i | %10c\n",
         iter_count,
@@ -1662,51 +1664,55 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // NOTE on timings: currently all within globalization is accounted for within time_glob.
         //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
         acados_tic(&timer1);
-        if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH)
-        {
-            // bool linesearch_success = 1;
-            // linesearch_success = ocp_nlp_sqp_funnel_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);
-            // // Copy new iterate to nlp_out
-            // if (linesearch_success)
-            // {
-            //     // in case line search fails, we do not want to copy trial iterates!
-            //     copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
-            // }
-            // mem->time_glob += acados_toc(&timer1);
-        }
-        else
-        {
-            bool do_line_search = true;
-            if (nlp_opts->globalization_use_SOC && nlp_opts->globalization == MERIT_BACKTRACKING)
-            {
-                do_line_search = ocp_nlp_soc_line_search(config, dims, nlp_in, nlp_out, opts, mem, work, sqp_iter);
-                if (mem->status == ACADOS_QP_FAILURE)
-                {
-#if defined(ACADOS_WITH_OPENMP)
-                    // restore number of threads
-                    omp_set_num_threads(num_threads_bkp);
-#endif
-                    mem->time_tot = acados_toc(&timer0);
-                    return mem->status;
-                }
-            }
 
-            if (do_line_search)
-            {
-                int line_search_status;
-                line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter, &mem->alpha);
-                if (line_search_status == ACADOS_NAN_DETECTED)
-                {
-                    mem->status = ACADOS_NAN_DETECTED;
-                    return mem->status;
-                }
-            }
-            mem->time_glob += acados_toc(&timer1);
-            mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
+        int globalization_success = 1;
+        globalization_success = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, nlp_work, nlp_opts);
+//         if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH)
+//         {
+//             bool linesearch_success = 1;
+//             linesearch_success = ocp_nlp_globalization_funnel_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);
+//             // Copy new iterate to nlp_out
+//             if (linesearch_success)
+//             {
+//                 // in case line search fails, we do not want to copy trial iterates!
+//                 copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
+//             }
+//             mem->time_glob += acados_toc(&timer1);
+//         }
+//         else
+//         {
+//             bool do_line_search = true;
+//             if (nlp_opts->globalization->globalization_use_SOC && nlp_opts->globalization->globalization == MERIT_BACKTRACKING)
+//             {
+//                 do_line_search = ocp_nlp_soc_line_search(config, dims, nlp_in, nlp_out, opts, mem, work, sqp_iter);
+//                 if (mem->status == ACADOS_QP_FAILURE)
+//                 {
+// #if defined(ACADOS_WITH_OPENMP)
+//                     // restore number of threads
+//                     omp_set_num_threads(num_threads_bkp);
+// #endif
+//                     mem->time_tot = acados_toc(&timer0);
+//                     return mem->status;
+//                 }
+//             }
 
-            // update variables
-            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, mem->alpha);
-        }
+//             if (do_line_search)
+//             {
+//                 int line_search_status;
+//                 line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter, &mem->alpha);
+//                 if (line_search_status == ACADOS_NAN_DETECTED)
+//                 {
+//                     mem->status = ACADOS_NAN_DETECTED;
+//                     return mem->status;
+//                 }
+//             }
+//             mem->time_glob += acados_toc(&timer1);
+//             mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
+
+//             // update variables
+//             ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, mem->alpha);
+//         }
+        mem->time_glob += acados_toc(&timer1);
 
     }  // end SQP loop
 

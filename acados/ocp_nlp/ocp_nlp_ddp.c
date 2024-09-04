@@ -485,6 +485,7 @@ static void ocp_nlp_ddp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_di
     int *nz = dims->nz;
 
     ocp_nlp_memory *mem = ddp_mem->nlp_mem;
+    ocp_nlp_globalization_opts *globalization_opts = opts->globalization;
 
     struct blasfeo_dvec *tmp_vec;
     ocp_nlp_out *tmp_nlp_out = work->tmp_nlp_out;
@@ -531,7 +532,7 @@ static void ocp_nlp_ddp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_di
     for (i = 0; i < N+1; i++)
     {
         // update dual variables
-        if (opts->full_step_dual)
+        if (globalization_opts->full_step_dual)
         {
             blasfeo_dveccp(2*ni[i], mem->qp_out->lam+i, 0, tmp_nlp_out->lam+i, 0);
             if (i < N)
@@ -692,6 +693,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_nlp_config *config = config_;
     ocp_nlp_ddp_opts *opts = opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
+    ocp_nlp_globalization_opts *globalization_opts = nlp_opts->globalization;
     ocp_nlp_ddp_memory *mem = mem_;
     ocp_nlp_in *nlp_in = nlp_in_;
     ocp_nlp_out *nlp_out = nlp_out_;
@@ -958,7 +960,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 // update variables
                 ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->alpha);
             }
-            else if (nlp_opts->globalization == MERIT_BACKTRACKING)
+            else if (globalization_opts->globalization == MERIT_BACKTRACKING)
             {
                 // do backtracking line search on objective function
                 linesearch_success = ocp_nlp_ddp_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);

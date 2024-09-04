@@ -58,6 +58,7 @@ extern "C" {
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
+#include "acados/ocp_nlp/ocp_nlp_globalization_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_xcond_solver.h"
 #include "acados/sim/sim_common.h"
@@ -107,6 +108,7 @@ typedef struct ocp_nlp_config
     ocp_nlp_cost_config **cost;
     ocp_nlp_constraints_config **constraints;
     ocp_nlp_reg_config *regularize;
+    ocp_nlp_globalization_config *globalization;
 
 } ocp_nlp_config;
 
@@ -253,18 +255,19 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims,
  * options
  ************************************************/
 
-/// Globalization types
-typedef enum
-{
-    FIXED_STEP,
-    MERIT_BACKTRACKING,
-    FUNNEL_L1PEN_LINESEARCH
-} ocp_nlp_globalization_t;
+// /// Globalization types
+// typedef enum
+// {
+//     FIXED_STEP,
+//     MERIT_BACKTRACKING,
+//     FUNNEL_L1PEN_LINESEARCH
+// } ocp_nlp_globalization_t;
 
 typedef struct ocp_nlp_opts
 {
     ocp_qp_xcond_solver_opts *qp_solver_opts; // xcond solver opts instead ???
     void *regularize;
+    void *globalization;  // globalization_opts
     void **dynamics;     // dynamics_opts
     void **cost;         // cost_opts
     void **constraints;  // constraints_opts
@@ -283,13 +286,13 @@ typedef struct ocp_nlp_opts
     double adaptive_levenberg_marquardt_mu0;
 
     // TODO: move to separate struct?
-    ocp_nlp_globalization_t globalization;
-    int full_step_dual;
-    int line_search_use_sufficient_descent;
-    int globalization_use_SOC;
-    double alpha_min;
-    double alpha_reduction;
-    double eps_sufficient_descent;
+    // ocp_nlp_globalization_t globalization;
+    // int full_step_dual;
+    // int line_search_use_sufficient_descent;
+    // int globalization_use_SOC;
+    // double alpha_min;
+    // double alpha_reduction;
+    // double eps_sufficient_descent;
     int with_solution_sens_wrt_params;
     int with_value_sens_wrt_params;
 
@@ -343,6 +346,7 @@ typedef struct ocp_nlp_memory
 //    void *qp_solver_mem; // xcond solver mem instead ???
     ocp_qp_xcond_solver_memory *qp_solver_mem; // xcond solver mem instead ???
     void *regularize_mem;
+    void *globalization;
     void **dynamics;     // dynamics memory
     void **cost;         // cost memory
     void **constraints;  // constraints memory

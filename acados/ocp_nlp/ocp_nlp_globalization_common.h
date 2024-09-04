@@ -43,6 +43,7 @@
 extern "C" {
 #endif
 
+// #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_common.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
@@ -59,59 +60,55 @@ extern "C" {
 
 typedef struct
 {
-    void (*config_initialize_default)(void *config, int stage);
-    sim_config *sim_solver;
-    /* dims */
-    acados_size_t (*dims_calculate_size)(void *config);
-    void *(*dims_assign)(void *config, void *raw_memory);
-    void (*dims_set)(void *config_, void *dims_, const char *field, int *value);
-    void (*dims_get)(void *config_, void *dims_, const char *field, int* value);
-    /* model */
-    acados_size_t (*model_calculate_size)(void *config, void *dims);
-    void *(*model_assign)(void *config, void *dims, void *raw_memory);
-    void (*model_set)(void *config_, void *dims_, void *model_, const char *field, void *value_);
     /* opts */
-    acados_size_t (*opts_calculate_size)(void *config, void *dims);
-    void *(*opts_assign)(void *config, void *dims, void *raw_memory);
+    acados_size_t (*opts_calculate_size)(void);
+    void *(*opts_assign)(void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *opts);
-    void (*opts_set)(void *config_, void *opts_, const char *field, void *value);
-    void (*opts_get)(void *config_, void *opts_, const char *field, void *value);
-    void (*opts_update)(void *config, void *dims, void *opts);
-    /* memory */
-    acados_size_t (*memory_calculate_size)(void *config, void *dims, void *opts);
-    void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
-    // get shooting node gap x_next(x_n, u_n) - x_{n+1}
-    struct blasfeo_dvec *(*memory_get_fun_ptr)(void *memory_);
-    struct blasfeo_dvec *(*memory_get_adj_ptr)(void *memory_);
-    void (*memory_set_ux_ptr)(struct blasfeo_dvec *ux, void *memory_);
-    void (*memory_set_ux1_ptr)(struct blasfeo_dvec *ux1, void *memory_);
-    void (*memory_set_pi_ptr)(struct blasfeo_dvec *pi, void *memory_);
-    void (*memory_set_BAbt_ptr)(struct blasfeo_dmat *BAbt, void *memory_);
-    void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory_);
-    void (*memory_set_dzduxt_ptr)(struct blasfeo_dmat *mat, void *memory_);
-    void (*memory_set_sim_guess_ptr)(struct blasfeo_dvec *vec, bool *bool_ptr, void *memory_);
-    void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *vec, void *memory_);
-    void (*memory_get)(void *config, void *dims, void *mem, const char *field, void* value);
-    void (*memory_set)(void *config, void *dims, void *mem, const char *field, void* value);
-    void (*memory_get_params_grad)(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
-    void (*memory_get_params_lag_grad)(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
-    /* workspace */
-    acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
-    void (*initialize)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
-    void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
-    void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
-    void (*compute_jac_hess_p)(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
-
-    void (*compute_adj_p)(void *config, void *dims, void *model, void *opts, void *memory, struct blasfeo_dvec *out);
-    void (*compute_fun_and_adj)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
-    int (*precompute)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
-    int stage;
+    void (*opts_set)(void *config, void *opts, const char *field, void* value);
+    /* functions */
+    int (*find_acceptable_iterate)(void *nlp_config, void *nlp_dims, void *nlp_in, void *nlp_out, void *nlp_mem, void *nlp_work, void *nlp_opts);
 } ocp_nlp_globalization_config;
 
 //
 acados_size_t ocp_nlp_globalization_config_calculate_size();
 //
 ocp_nlp_globalization_config *ocp_nlp_globalization_config_assign(void *raw_memory);
+
+
+/************************************************
+ * options
+ ************************************************/
+
+/// Globalization types
+typedef enum
+{
+    FIXED_STEP,
+    MERIT_BACKTRACKING,
+    FUNNEL_L1PEN_LINESEARCH
+} ocp_nlp_globalization_t;
+
+typedef struct ocp_nlp_globalization_opts
+{
+    ocp_nlp_globalization_t globalization;
+    int globalization_use_SOC;
+    int line_search_use_sufficient_descent;
+    int full_step_dual;
+    double alpha_min;
+    double alpha_reduction;
+    double eps_sufficient_descent;
+} ocp_nlp_globalization_opts;
+
+//
+// acados_size_t ocp_nlp_globalization_opts_calculate_size(void *config, void *dims);
+//
+// void *ocp_nlp_globalization_opts_assign(void *config, void *dims, void *raw_memory);
+//
+void ocp_nlp_globalization_opts_initialize_default(void *config, void *dims, void *opts);
+//
+// void ocp_nlp_globalization_opts_update(void *config, void *dims, void *opts);
+//
+void ocp_nlp_globalization_opts_set(void *config_, void *opts_, const char *field, void* value);
+
 
 
 #ifdef __cplusplus

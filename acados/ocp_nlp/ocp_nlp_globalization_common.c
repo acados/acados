@@ -47,21 +47,119 @@
 
 acados_size_t ocp_nlp_globalization_config_calculate_size()
 {
-    acados_size_t size = 0;
-
-    size += sizeof(ocp_nlp_globalization_config);
-
-    return size;
+    return sizeof(ocp_nlp_globalization_config);
 }
 
 
 
 ocp_nlp_globalization_config *ocp_nlp_globalization_config_assign(void *raw_memory)
 {
-    char *c_ptr = raw_memory;
+    return raw_memory;
+}
 
-    ocp_nlp_globalization_config *config = (ocp_nlp_globalization_config *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_globalization_config);
+/************************************************
+ * dims
+ ************************************************/
+// WE DON'T NEED DIMS????
 
-    return config;
+/************************************************
+ * options
+ ************************************************/
+void ocp_nlp_globalization_opts_initialize_default(void *config_, void *dims_, void *opts_)
+{
+    ocp_nlp_globalization_opts *opts = opts_;
+
+    opts->globalization = FIXED_STEP;
+    opts->alpha_min = 0.05;
+    opts->alpha_reduction = 0.7;
+    opts->full_step_dual = 0;
+    opts->line_search_use_sufficient_descent = 0;
+    opts->globalization_use_SOC = 0;
+    opts->eps_sufficient_descent = 1e-4; // Leineweber1999: MUSCOD-I eps_T = 1e-4 (p.89); Note: eps_T = 0.1 originally proposed by Powell 1978 (Leineweber 1999, p. 53)
+
+    return;
+}
+
+
+void ocp_nlp_globalization_opts_set(void *config_, void *opts_, const char *field, void* value)
+{
+    ocp_nlp_globalization_opts *opts = (ocp_nlp_globalization_opts *) opts_;
+    ocp_nlp_globalization_config *config = config_;
+
+    char module[MAX_STR_LEN];
+    char *ptr_module = NULL;
+    int module_length = 0;
+
+    // extract module name, i.e. substring in field before '_'
+    char *char_ = strchr(field, '_');
+    if (char_!=NULL)
+    {
+        module_length = char_-field;
+        for (int i=0; i<module_length; i++)
+            module[i] = field[i];
+        module[module_length] = '\0'; // add end of string
+        ptr_module = module;
+    }
+
+    // nlp_globalization_opts
+    if (!strcmp(field, "alpha_reduction"))
+    {
+        double* alpha_reduction = (double *) value;
+        opts->alpha_reduction = *alpha_reduction;
+    }
+    else if (!strcmp(field, "alpha_min"))
+    {
+        double* alpha_min = (double *) value;
+        opts->alpha_min = *alpha_min;
+    }
+    else if (!strcmp(field, "eps_sufficient_descent"))
+    {
+        double* eps_sufficient_descent = (double *) value;
+        opts->eps_sufficient_descent = *eps_sufficient_descent;
+    }
+    else if (!strcmp(field, "full_step_dual"))
+    {
+        int* full_step_dual = (int *) value;
+        opts->full_step_dual = *full_step_dual;
+    }
+    else if (!strcmp(field, "line_search_use_sufficient_descent"))
+    {
+        int* line_search_use_sufficient_descent = (int *) value;
+        opts->line_search_use_sufficient_descent = *line_search_use_sufficient_descent;
+    }
+    else if (!strcmp(field, "globalization_use_SOC"))
+    {
+        int* globalization_use_SOC = (int *) value;
+        opts->globalization_use_SOC = *globalization_use_SOC;
+    }
+    else if (!strcmp(field, "globalization"))
+    {
+        char* globalization = (char *) value;
+        if (!strcmp(globalization, "fixed_step"))
+        {
+            opts->globalization = FIXED_STEP;
+        }
+        else if (!strcmp(globalization, "merit_backtracking"))
+        {
+            opts->globalization = MERIT_BACKTRACKING;
+        }
+        else if (!strcmp(globalization, "funnel_l1pen_linesearch"))
+        {
+            opts->globalization = FUNNEL_L1PEN_LINESEARCH;
+        }
+        else
+        {
+            printf("\nerror: ocp_nlp_opts_set: not supported value for globalization, got: %s\n",
+                    globalization);
+            exit(1);
+        }
+    }
+    else
+    {
+        printf("\nerror: ocp_nlp_opts_set: wrong field: %s\n", field);
+        exit(1);
+    }
+
+    return;
+
 }

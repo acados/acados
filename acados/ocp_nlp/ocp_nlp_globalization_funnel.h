@@ -55,7 +55,7 @@ extern "C" {
 
 typedef struct
 {
-    ocp_nlp_opts *nlp_opts;
+    ocp_nlp_globalization_opts *globalization_opts;
 
     // Funnel globalization related options
     double initialization_increase_factor; // for multiplication with initial infeasibility
@@ -87,18 +87,13 @@ void ocp_nlp_globalization_funnel_opts_set(void *config, void *opts, const char 
 
 typedef struct
 {
-    // nlp memory
-    ocp_nlp_memory *nlp_mem;
-
     double step_norm;
-
     double funnel_width;
     char funnel_iter_type;
     bool funnel_penalty_mode;
     double l1_infeasibility;
     double funnel_penalty_parameter;
     double alpha;
-
 } ocp_nlp_globalization_funnel_memory;
 
 //
@@ -110,15 +105,15 @@ void *ocp_nlp_globalization_funnel_memory_assign(void *config, void *dims, void 
 /************************************************
  * workspace
  ************************************************/
+// WE DON'T NEED THAT!!
+// typedef struct
+// {
+//     ocp_nlp_workspace *nlp_work;
 
-typedef struct
-{
-    ocp_nlp_workspace *nlp_work;
+// } ocp_nlp_globalization_funnel_workspace;
 
-} ocp_nlp_globalization_funnel_workspace;
-
-//
-acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config, void *dims, void *opts_);
+// //
+// acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config, void *dims, void *opts_);
 
 
 
@@ -145,13 +140,13 @@ bool is_funnel_sufficient_decrease_satisfied(ocp_nlp_globalization_funnel_memory
 //
 bool is_switching_condition_satisfied(ocp_nlp_globalization_funnel_opts *opts, double pred_optimality, double step_size, double pred_infeasibility);
 //
-bool is_f_type_armijo_condition_satisfied(ocp_nlp_globalization_funnel_opts *opts,
-                                                    double negative_ared,
-                                                    double pred,
-                                                    double alpha);
+bool is_f_type_armijo_condition_satisfied(ocp_nlp_globalization_opts *globalization_opts,
+                                        double negative_ared,
+                                        double pred,
+                                        double alpha);
 //
 bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *mem,
-                                            ocp_nlp_globalization_funnel_opts *opts,
+                                            ocp_nlp_opts *nlp_opts,
                                             double pred, double ared, double alpha,
                                             double current_infeasibility,
                                             double trial_infeasibility,
@@ -161,14 +156,21 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
                                             double trial_merit,
                                             double pred_merit);                                                   
 //
-int ocp_nlp_sqp_funnel_backtracking_line_search(ocp_nlp_config *config,
-                                                ocp_nlp_dims *dims,
-                                                ocp_nlp_in *nlp_in,
-                                                ocp_nlp_out *nlp_out,
-                                                ocp_nlp_globalization_funnel_memory *mem,
-                                                ocp_nlp_globalization_funnel_workspace *work,
-                                                ocp_nlp_globalization_funnel_opts *opts);
-                
+int backtracking_line_search(ocp_nlp_config *config,
+                            ocp_nlp_dims *dims,
+                            ocp_nlp_in *nlp_in,
+                            ocp_nlp_out *nlp_out,
+                            ocp_nlp_memory *nlp_mem,
+                            ocp_nlp_workspace *nlp_work,
+                            ocp_nlp_opts *nlp_opts);
+//
+int find_acceptable_iterate(ocp_nlp_config *nlp_config,
+                            ocp_nlp_dims *nlp_dims,
+                            ocp_nlp_in *nlp_in,
+                            ocp_nlp_out *nlp_out,
+                            ocp_nlp_memory *nlp_mem,
+                            ocp_nlp_workspace *nlp_work,
+                            ocp_nlp_opts *nlp_opts);
 
 #ifdef __cplusplus
 } /* extern "C" */

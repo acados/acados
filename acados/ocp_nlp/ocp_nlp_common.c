@@ -67,6 +67,8 @@ acados_size_t ocp_nlp_config_calculate_size(int N)
     // regularization
     size += ocp_nlp_reg_config_calculate_size();
 
+    // globalization
+    size += ocp_nlp_globalization_config_calculate_size();
 
     // dynamics
     size += N * sizeof(ocp_nlp_dynamics_config *);
@@ -104,6 +106,10 @@ ocp_nlp_config *ocp_nlp_config_assign(int N, void *raw_memory)
     // regularization
     config->regularize = ocp_nlp_reg_config_assign(c_ptr);
     c_ptr += ocp_nlp_reg_config_calculate_size();
+
+    // globalization
+    config->globalization = ocp_nlp_globalization_config_assign(c_ptr);
+    c_ptr += ocp_nlp_globalization_config_calculate_size();
 
     // dynamics
     config->dynamics = (ocp_nlp_dynamics_config **) c_ptr;
@@ -993,6 +999,9 @@ void *ocp_nlp_opts_assign(void *config_, void *dims_, void *raw_memory)
     opts->regularize = config->regularize->opts_assign(c_ptr);
     c_ptr += config->regularize->opts_calculate_size();
 
+    opts->globalization = config->globalization->opts_assign(c_ptr);
+    c_ptr += config->globalization->opts_calculate_size();
+
     // dynamics
     for (int i = 0; i < N; i++)
     {
@@ -1046,7 +1055,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
 #endif
     // printf("\nocp_nlp: openmp threads = %d\n", opts->num_threads);
 
-    opts->globalization = FIXED_STEP;
+    // opts->globalization = FIXED_STEP;
     opts->print_level = 0;
     opts->step_length = 1.0;
     opts->levenberg_marquardt = 0.0;
@@ -1078,12 +1087,12 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     }
 
     // globalization
-    opts->alpha_min = 0.05;
-    opts->alpha_reduction = 0.7;
-    opts->full_step_dual = 0;
-    opts->line_search_use_sufficient_descent = 0;
-    opts->globalization_use_SOC = 0;
-    opts->eps_sufficient_descent = 1e-4; // Leineweber1999: MUSCOD-I eps_T = 1e-4 (p.89); Note: eps_T = 0.1 originally proposed by Powell 1978 (Leineweber 1999, p. 53)
+    // opts->alpha_min = 0.05;
+    // opts->alpha_reduction = 0.7;
+    // opts->full_step_dual = 0;
+    // opts->line_search_use_sufficient_descent = 0;
+    // opts->globalization_use_SOC = 0;
+    // opts->eps_sufficient_descent = 1e-4; // Leineweber1999: MUSCOD-I eps_T = 1e-4 (p.89); Note: eps_T = 0.1 originally proposed by Powell 1978 (Leineweber 1999, p. 53)
 
     opts->with_solution_sens_wrt_params = 0;
     opts->with_value_sens_wrt_params = 0;
@@ -1184,58 +1193,58 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             double* step_length = (double *) value;
             opts->step_length = *step_length;
         }
-        else if (!strcmp(field, "alpha_reduction"))
-        {
-            double* alpha_reduction = (double *) value;
-            opts->alpha_reduction = *alpha_reduction;
-        }
-        else if (!strcmp(field, "alpha_min"))
-        {
-            double* alpha_min = (double *) value;
-            opts->alpha_min = *alpha_min;
-        }
-        else if (!strcmp(field, "eps_sufficient_descent"))
-        {
-            double* eps_sufficient_descent = (double *) value;
-            opts->eps_sufficient_descent = *eps_sufficient_descent;
-        }
-        else if (!strcmp(field, "full_step_dual"))
-        {
-            int* full_step_dual = (int *) value;
-            opts->full_step_dual = *full_step_dual;
-        }
-        else if (!strcmp(field, "line_search_use_sufficient_descent"))
-        {
-            int* line_search_use_sufficient_descent = (int *) value;
-            opts->line_search_use_sufficient_descent = *line_search_use_sufficient_descent;
-        }
-        else if (!strcmp(field, "globalization_use_SOC"))
-        {
-            int* globalization_use_SOC = (int *) value;
-            opts->globalization_use_SOC = *globalization_use_SOC;
-        }
-        else if (!strcmp(field, "globalization"))
-        {
-            char* globalization = (char *) value;
-            if (!strcmp(globalization, "fixed_step"))
-            {
-                opts->globalization = FIXED_STEP;
-            }
-            else if (!strcmp(globalization, "merit_backtracking"))
-            {
-                opts->globalization = MERIT_BACKTRACKING;
-            }
-            else if (!strcmp(globalization, "funnel_l1pen_linesearch"))
-            {
-                opts->globalization = FUNNEL_L1PEN_LINESEARCH;
-            }
-            else
-            {
-                printf("\nerror: ocp_nlp_opts_set: not supported value for globalization, got: %s\n",
-                       globalization);
-                exit(1);
-            }
-        }
+        // else if (!strcmp(field, "alpha_reduction"))
+        // {
+        //     double* alpha_reduction = (double *) value;
+        //     opts->alpha_reduction = *alpha_reduction;
+        // }
+        // else if (!strcmp(field, "alpha_min"))
+        // {
+        //     double* alpha_min = (double *) value;
+        //     opts->alpha_min = *alpha_min;
+        // }
+        // else if (!strcmp(field, "eps_sufficient_descent"))
+        // {
+        //     double* eps_sufficient_descent = (double *) value;
+        //     opts->eps_sufficient_descent = *eps_sufficient_descent;
+        // }
+        // else if (!strcmp(field, "full_step_dual"))
+        // {
+        //     int* full_step_dual = (int *) value;
+        //     opts->full_step_dual = *full_step_dual;
+        // }
+        // else if (!strcmp(field, "line_search_use_sufficient_descent"))
+        // {
+        //     int* line_search_use_sufficient_descent = (int *) value;
+        //     opts->line_search_use_sufficient_descent = *line_search_use_sufficient_descent;
+        // }
+        // else if (!strcmp(field, "globalization_use_SOC"))
+        // {
+        //     int* globalization_use_SOC = (int *) value;
+        //     opts->globalization_use_SOC = *globalization_use_SOC;
+        // }
+        // else if (!strcmp(field, "globalization"))
+        // {
+        //     char* globalization = (char *) value;
+        //     if (!strcmp(globalization, "fixed_step"))
+        //     {
+        //         opts->globalization = FIXED_STEP;
+        //     }
+        //     else if (!strcmp(globalization, "merit_backtracking"))
+        //     {
+        //         opts->globalization = MERIT_BACKTRACKING;
+        //     }
+        //     else if (!strcmp(globalization, "funnel_l1pen_linesearch"))
+        //     {
+        //         opts->globalization = FUNNEL_L1PEN_LINESEARCH;
+        //     }
+        //     else
+        //     {
+        //         printf("\nerror: ocp_nlp_opts_set: not supported value for globalization, got: %s\n",
+        //                globalization);
+        //         exit(1);
+        //     }
+        // }
         else if (!strcmp(field, "levenberg_marquardt"))
         {
             double* levenberg_marquardt = (double *) value;
@@ -2828,6 +2837,7 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
             int sqp_iter, double *alpha_reference)
 {
+    ocp_nlp_globalization_opts *globalization_opts = opts->globalization;
     int i, j;
 
     int N = dims->N;
@@ -2836,12 +2846,12 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
     double merit_fun1;
     ocp_qp_out *qp_out = mem->qp_out;
 
-    if (opts->globalization == FIXED_STEP)
+    if (globalization_opts->globalization == FIXED_STEP)
     {
         *alpha_reference = opts->step_length;
         return ACADOS_SUCCESS;
     }
-    else if (opts->globalization != MERIT_BACKTRACKING)
+    else if (globalization_opts->globalization != MERIT_BACKTRACKING)
     {
         printf("ocp_nlp_line_search: should only be called with globalization FIXED_STEP or MERIT_BACKTRACKING");
         exit(1);
@@ -2880,14 +2890,14 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
 
     double merit_fun0 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
 
-    double reduction_factor = opts->alpha_reduction;
+    double reduction_factor = globalization_opts->alpha_reduction;
     double max_next_merit_fun_val = merit_fun0;
-    double eps_sufficient_descent = opts->eps_sufficient_descent;
+    double eps_sufficient_descent = globalization_opts->eps_sufficient_descent;
     double dmerit_dy = 0.0;
     double alpha = 1.0;
 
     /* actual Line Search*/
-    if (opts->line_search_use_sufficient_descent)
+    if (globalization_opts->line_search_use_sufficient_descent)
     {
         // check Armijo-type sufficient descent condition Leinweber1999 (2.35);
         dmerit_dy = ocp_nlp_compute_merit_gradient(config, dims, in, out, opts, mem, work);
@@ -2916,7 +2926,7 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
     //     break;
     // }
 
-    for (j=0; alpha*reduction_factor > opts->alpha_min; j++)
+    for (j=0; alpha*reduction_factor > globalization_opts->alpha_min; j++)
     {
         // tmp_nlp_out = out + alpha * qp_out
         for (i = 0; i <= N; i++)
@@ -2964,6 +2974,7 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
             ocp_nlp_out *out_start, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
             ocp_nlp_out *out_destination, double alpha)
 {
+    ocp_nlp_globalization_opts *globalization_opts = opts->globalization;
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
@@ -2981,7 +2992,7 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
         blasfeo_daxpy(nv[i], alpha, mem->qp_out->ux + i, 0, out_start->ux + i, 0, out_destination->ux + i, 0);
 
         // update dual variables
-        if (opts->full_step_dual)
+        if (globalization_opts->full_step_dual)
         {
             blasfeo_dveccp(2*ni[i], mem->qp_out->lam+i, 0, out_destination->lam+i, 0);
             if (i < N)

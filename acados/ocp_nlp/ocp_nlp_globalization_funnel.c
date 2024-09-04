@@ -301,12 +301,12 @@ bool is_switching_condition_satisfied(ocp_nlp_globalization_funnel_opts *opts, d
     }
 }
 
-bool is_f_type_armijo_condition_satisfied(ocp_nlp_globalization_funnel_opts *opts,
+bool is_f_type_armijo_condition_satisfied(ocp_nlp_globalization_opts *globalization_opts,
                                                     double negative_ared,
                                                     double pred,
                                                     double alpha)
 {
-    if (negative_ared <= fmin(-opts->nlp_opts->eps_sufficient_descent * alpha * fmax(pred, 0) + 1e-18, 0))
+    if (negative_ared <= fmin(globalization_opts->eps_sufficient_descent * alpha * fmax(pred, 0) + 1e-18, 0))
     {
         return true;
     }
@@ -317,7 +317,7 @@ bool is_f_type_armijo_condition_satisfied(ocp_nlp_globalization_funnel_opts *opt
 }
 
 bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *mem,
-                                                  ocp_nlp_globalization_funnel_opts *opts,
+                                           ocp_nlp_opts *nlp_opts,
                                                   double pred, double ared, double alpha,
                                                   double current_infeasibility,
                                                   double trial_infeasibility,
@@ -327,50 +327,52 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
                                                   double trial_merit,
                                                   double pred_merit)
 {
+    ocp_nlp_globalization_funnel_opts *opts = nlp_opts->globalization;
+    ocp_nlp_globalization_opts *globalization_opts = opts->globalization_opts;
     bool accept_step = false;
-    debug_output_double(opts->nlp_opts, "current objective", current_objective, 2);
-    debug_output_double(opts->nlp_opts, "current infeasibility", current_infeasibility, 2);
-    debug_output_double(opts->nlp_opts, "trial objective", trial_objective, 2);
-    debug_output_double(opts->nlp_opts, "trial infeasibility", trial_infeasibility, 2);
-    debug_output_double(opts->nlp_opts, "pred", pred, 2);
+    debug_output_double(nlp_opts, "current objective", current_objective, 2);
+    debug_output_double(nlp_opts, "current infeasibility", current_infeasibility, 2);
+    debug_output_double(nlp_opts, "trial objective", trial_objective, 2);
+    debug_output_double(nlp_opts, "trial infeasibility", trial_infeasibility, 2);
+    debug_output_double(nlp_opts, "pred", pred, 2);
 
     if(is_iterate_inside_of_funnel(mem, opts, trial_infeasibility))
     {
-        debug_output(opts->nlp_opts, "Trial iterate is INSIDE of funnel\n", 1);
+        debug_output(nlp_opts, "Trial iterate is INSIDE of funnel\n", 1);
         if (!mem->funnel_penalty_mode)
         {
-            debug_output(opts->nlp_opts, "Penalty Mode not active!\n", 1);
+            debug_output(nlp_opts, "Penalty Mode not active!\n", 1);
             if (is_switching_condition_satisfied(opts, pred, alpha, current_infeasibility))
             {
-                debug_output(opts->nlp_opts, "Switching condition IS satisfied!\n", 1);
-                if (is_f_type_armijo_condition_satisfied(opts, -ared, pred, alpha))
+                debug_output(nlp_opts, "Switching condition IS satisfied!\n", 1);
+                if (is_f_type_armijo_condition_satisfied(globalization_opts, -ared, pred, alpha))
                 {
-                    debug_output(opts->nlp_opts, "f-type step: Armijo condition satisfied\n", 1);
+                    debug_output(nlp_opts, "f-type step: Armijo condition satisfied\n", 1);
                     accept_step = true;
                     mem->funnel_iter_type = 'f';
                 }
                 else
                 {
-                    debug_output(opts->nlp_opts, "f-type step: Armijo condition NOT satisfied\n", 1);
+                    debug_output(nlp_opts, "f-type step: Armijo condition NOT satisfied\n", 1);
                 }
 
             }
             else if (is_funnel_sufficient_decrease_satisfied(mem, opts, trial_infeasibility))
             {
-                debug_output(opts->nlp_opts, "Switching condition is NOT satisfied!\n", 1);
-                debug_output(opts->nlp_opts, "h-type step: funnel suff. decrease satisfied!\n", 1);
+                debug_output(nlp_opts, "Switching condition is NOT satisfied!\n", 1);
+                debug_output(nlp_opts, "h-type step: funnel suff. decrease satisfied!\n", 1);
                 accept_step = true;
                 mem->funnel_iter_type = 'h';
                 decrease_funnel(mem, opts, trial_infeasibility, current_infeasibility);
             }
             else
             {
-                debug_output(opts->nlp_opts, "Switching condition is NOT satisfied!\n", 1);
-                debug_output(opts->nlp_opts, "Entered penalty check!\n", 1);
+                debug_output(nlp_opts, "Switching condition is NOT satisfied!\n", 1);
+                debug_output(nlp_opts, "Entered penalty check!\n", 1);
                 //TODO move to function and test more
-                if (trial_merit <= current_merit + opts->nlp_opts->eps_sufficient_descent * alpha * pred_merit)
+                if (trial_merit <= current_merit + globalization_opts->eps_sufficient_descent * alpha * pred_merit)
                 {
-                    debug_output(opts->nlp_opts, "Penalty Function accepted\n", 1);
+                    debug_output(nlp_opts, "Penalty Function accepted\n", 1);
                     accept_step = true;
                     mem->funnel_iter_type = 'b';
                     mem->funnel_penalty_mode = true;
@@ -379,10 +381,10 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
         }
         else
         {
-            debug_output(opts->nlp_opts, "Penalty mode active\n", 1);
-            if (trial_merit <= current_merit + opts->nlp_opts->eps_sufficient_descent * alpha * pred_merit)
+            debug_output(nlp_opts, "Penalty mode active\n", 1);
+            if (trial_merit <= current_merit + globalization_opts->eps_sufficient_descent * alpha * pred_merit)
             {
-                debug_output(opts->nlp_opts, "p-type step: accepted iterate\n", 1);
+                debug_output(nlp_opts, "p-type step: accepted iterate\n", 1);
                 accept_step = true;
                 mem->funnel_iter_type = 'p';
 
@@ -396,17 +398,22 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
     }
     else
     {
-        debug_output(opts->nlp_opts, "Trial iterate is NOT INSIDE of funnel\n", 1);
+        debug_output(nlp_opts, "Trial iterate is NOT INSIDE of funnel\n", 1);
     }
     return accept_step;
 }
 
-int ocp_nlp_sqp_funnel_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
-                ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_workspace *work, ocp_nlp_globalization_funnel_opts *opts)
+int backtracking_line_search(ocp_nlp_config *config,
+                            ocp_nlp_dims *dims,
+                            ocp_nlp_in *nlp_in,
+                            ocp_nlp_out *nlp_out,
+                            ocp_nlp_memory *nlp_mem,
+                            ocp_nlp_workspace *nlp_work,
+                            ocp_nlp_opts *nlp_opts)
 {
-    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
-    ocp_nlp_workspace *nlp_work = work->nlp_work;
-    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_nlp_globalization_funnel_opts *opts = nlp_opts->globalization;
+    ocp_nlp_globalization_opts *globalization_opts = opts->globalization_opts;
+    ocp_nlp_globalization_funnel_memory *mem = nlp_mem->globalization;
 
     int N = dims->N;
     double pred = -nlp_mem->qp_cost_value;
@@ -485,7 +492,7 @@ int ocp_nlp_sqp_funnel_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_
         ared = nlp_mem->cost_value - trial_cost;
 
         // Funnel globalization
-        accept_step = is_trial_iterate_acceptable_to_funnel(mem, opts,
+        accept_step = is_trial_iterate_acceptable_to_funnel(mem, nlp_opts,
                                                             pred, ared,
                                                             alpha, current_infeasibility,
                                                             trial_infeasibility, current_cost,
@@ -500,13 +507,32 @@ int ocp_nlp_sqp_funnel_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_
             return 1;
         }
 
-        if (alpha < opts->nlp_opts->alpha_min)
+        if (alpha < globalization_opts->alpha_min)
         {
-            printf("Linesearch: Step size gets too small. alpha = %e < alpha_min = %e Should enter penalty phase. \n", alpha, opts->nlp_opts->alpha_min);
+            printf("Linesearch: Step size gets too small. alpha = %e < alpha_min = %e Should enter penalty phase. \n", alpha, globalization_opts->alpha_min);
             exit(1);
         }
 
-        alpha *= opts->nlp_opts->alpha_reduction;
+        alpha *= globalization_opts->alpha_reduction;
 
     }
 }
+
+int find_acceptable_iterate(ocp_nlp_config *nlp_config,
+                            ocp_nlp_dims *nlp_dims,
+                            ocp_nlp_in *nlp_in,
+                            ocp_nlp_out *nlp_out,
+                            ocp_nlp_memory *nlp_mem,
+                            ocp_nlp_workspace *nlp_work,
+                            ocp_nlp_opts *nlp_opts)
+{
+    ocp_nlp_globalization_funnel_memory *mem = nlp_mem->globalization;
+    bool linesearch_success = 1;
+    linesearch_success = backtracking_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, mem, nlp_work, nlp_opts);
+    // Copy new iterate to nlp_out
+    if (linesearch_success)
+    {
+        // in case line search fails, we do not want to copy trial iterates!
+        copy_ocp_nlp_out(nlp_dims, nlp_work->tmp_nlp_out, nlp_out);
+    }
+}              
