@@ -149,6 +149,8 @@ def sim_generate_external_functions(acados_sim: AcadosSim):
     elif integrator_type == 'GNSF':
         generate_c_code_gnsf(context, model)
 
+    context.finalize()
+
 
 class AcadosSimSolver:
     """
