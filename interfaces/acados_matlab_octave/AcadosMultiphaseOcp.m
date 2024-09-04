@@ -295,6 +295,7 @@ classdef AcadosMultiphaseOcp < handle
                 disp(['generating external functions for phase ', num2str(i)]);
                 % this is the only option that can vary and influence external functions to be generated
                 self.dummy_ocp_list{i}.solver_options.integrator_type = self.mocp_opts.integrator_type{i};
+                self.dummy_ocp_list{i}.code_export_directory = self.code_export_directory;
                 self.dummy_ocp_list{i}.generate_external_functions(context);
             end
         end
