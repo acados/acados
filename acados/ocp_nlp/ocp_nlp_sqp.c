@@ -49,6 +49,7 @@
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
+#include "acados/ocp_nlp/ocp_nlp_globalization_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
@@ -1438,13 +1439,13 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     int sqp_iter = 0;
     double reg_param_memory = 0.0;
     double funnel_width_memory = 0.0;
-    double funnel_penalty_param_memory = opts->funnel_initial_penalty_parameter;
-    initialize_funnel_penalty_parameter(mem, opts);
-    if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH)
-    {
-        printf("Note: The funnel globalization is still under development.\n");
-        printf("If you encouter problems or bugs, please report to the acados developers!\n");
-    }
+    double funnel_penalty_param_memory = 1.0;//opts->funnel_initial_penalty_parameter;
+    // initialize_funnel_penalty_parameter(mem, opts);
+    // if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH)
+    // {
+    //     printf("Note: The funnel globalization is still under development.\n");
+    //     printf("If you encouter problems or bugs, please report to the acados developers!\n");
+    // }
 
     for (; sqp_iter <= opts->max_iter; sqp_iter++) // <= needed such that after last iteration KKT residuals are checked before max_iter is thrown.
     {
@@ -1482,18 +1483,18 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
             ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
 
-            if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH && sqp_iter == 0)
-            {
-                mem->l1_infeasibility = get_l1_infeasibility(config, dims, mem);
-            }
+            // if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH && sqp_iter == 0)
+            // {
+            //     mem->l1_infeasibility = get_l1_infeasibility(config, dims, mem);
+            // }
         }
 
-        // initialize funnel if FUNNEL_L1PEN_LINESEARCH used
-        if (sqp_iter == 0 && nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH){
-            initialize_funnel_width(mem, opts, mem->l1_infeasibility);
-        }
-        funnel_width_memory = mem->funnel_width;
-        funnel_penalty_param_memory = mem->funnel_penalty_parameter;
+        // // initialize funnel if FUNNEL_L1PEN_LINESEARCH used
+        // if (sqp_iter == 0 && nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH){
+        //     initialize_funnel_width(mem, opts, mem->l1_infeasibility);
+        // }
+        // funnel_width_memory = mem->funnel_width;
+        // funnel_penalty_param_memory = mem->funnel_penalty_parameter;
 
         // save statistics
         if (sqp_iter < mem->stat_m)
@@ -1643,10 +1644,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // Calculate optimal QP objective (needed for globalization)
-        if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH)
-        {
-            nlp_mem->qp_cost_value = ocp_nlp_sqp_compute_qp_objective_value(dims, qp_in, qp_out, nlp_work, nlp_mem, opts);
-        }
+        // if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH)
+        // {
+        //     nlp_mem->qp_cost_value = ocp_nlp_sqp_compute_qp_objective_value(dims, qp_in, qp_out, nlp_work, nlp_mem, opts);
+        // }
 
         // Compute the step norm
         if (opts->tol_min_step_norm > 0.0 || nlp_opts->log_primal_step_norm)
@@ -1663,15 +1664,15 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         acados_tic(&timer1);
         if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH)
         {
-            bool linesearch_success = 1;
-            linesearch_success = ocp_nlp_sqp_funnel_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);
-            // Copy new iterate to nlp_out
-            if (linesearch_success)
-            {
-                // in case line search fails, we do not want to copy trial iterates!
-                copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
-            }
-            mem->time_glob += acados_toc(&timer1);
+            // bool linesearch_success = 1;
+            // linesearch_success = ocp_nlp_sqp_funnel_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);
+            // // Copy new iterate to nlp_out
+            // if (linesearch_success)
+            // {
+            //     // in case line search fails, we do not want to copy trial iterates!
+            //     copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
+            // }
+            // mem->time_glob += acados_toc(&timer1);
         }
         else
         {
@@ -1716,40 +1717,40 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     return mem->status;
 }
 
-double ocp_nlp_sqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-                ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem, ocp_nlp_sqp_opts *opts)
-{
-    // Compute the QP objective function value
-    double qp_cost = 0.0;
-    int i, nux, ns;
-    int N = dims->N;
-    // Sum over stages 0 to N
-    for (i = 0; i <= N; i++)
-    {
-        nux = dims->nx[i] + dims->nu[i];
-        ns = dims->ns[i];
-        if (opts->funnel_type_switching_condition)
-        {
-            // Calculate 0.5 * d.T H d
-            blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0,
-                            0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
-            qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
+// double ocp_nlp_sqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
+//                 ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem, ocp_nlp_sqp_opts *opts)
+// {
+//     // Compute the QP objective function value
+//     double qp_cost = 0.0;
+//     int i, nux, ns;
+//     int N = dims->N;
+//     // Sum over stages 0 to N
+//     for (i = 0; i <= N; i++)
+//     {
+//         nux = dims->nx[i] + dims->nu[i];
+//         ns = dims->ns[i];
+//         if (opts->funnel_type_switching_condition)
+//         {
+//             // Calculate 0.5 * d.T H d
+//             blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0,
+//                             0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
+//             qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
 
-            // slack QP objective value, compare to computation in cost modules;
-            // tmp_nv = 2 * z + Z .* slack;
-            blasfeo_dveccpsc(2*ns, 2.0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
-            blasfeo_dvecmulacc(2*ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
-            // qp_cost += .5 * (tmp_nv .* slack)
-            qp_cost += 0.5 * blasfeo_ddot(2*ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux);
-        }
-        // Calculate g.T d
-        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
+//             // slack QP objective value, compare to computation in cost modules;
+//             // tmp_nv = 2 * z + Z .* slack;
+//             blasfeo_dveccpsc(2*ns, 2.0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
+//             blasfeo_dvecmulacc(2*ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
+//             // qp_cost += .5 * (tmp_nv .* slack)
+//             qp_cost += 0.5 * blasfeo_ddot(2*ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux);
+//         }
+//         // Calculate g.T d
+//         qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
 
-        // Calculate gradient of slacks
-        qp_cost += blasfeo_ddot(2 * ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
-    }
-    return qp_cost;
-}
+//         // Calculate gradient of slacks
+//         qp_cost += blasfeo_ddot(2 * ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
+//     }
+//     return qp_cost;
+// }
 
 void ocp_nlp_sqp_memory_reset_qp_solver(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     void *opts_, void *mem_, void *work_)
