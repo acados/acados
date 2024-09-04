@@ -86,7 +86,6 @@ solver_options.exact_hess_constr = 1;
 % can vary for integrators
 sim_method_num_stages = 1 * ones(N,1);
 sim_method_num_stages(3:end) = 2;
-
 solver_options.sim_method_num_stages = sim_method_num_stages;
 solver_options.sim_method_num_steps = ones(N,1);
 
@@ -176,6 +175,11 @@ constraints = AcadosOcpConstraints();
 constraint_formulation_nonlinear = 0;
 lbu = -80*ones(nu, 1);
 ubu =  80*ones(nu, 1);
+
+constraints.constr_type = 'AUTO';
+constraints.constr_type_0 = 'AUTO';
+constraints.constr_type_e = 'AUTO';
+
 if constraint_formulation_nonlinear % formulate constraint via h
     model.con_h_expr_0 = model.u;
     constraints.lh_0 = lbu;
@@ -193,7 +197,6 @@ end
 x0 = [0; pi; 0; 0];
 constraints.x0 = x0;
 
-
 %% OCP DESCRIPTION
 ocp = AcadosOcp();
 ocp.model = model;
@@ -204,13 +207,14 @@ ocp.solver_options = solver_options;
 %% SOLVER
 ocp_solver = AcadosOcpSolver(ocp);
 
-% state and input initial guess
+%% INITIALIZATION
 x_traj_init = zeros(nx, N+1);
 x_traj_init(2, :) = linspace(pi, 0, N+1); % initialize theta
 
 u_traj_init = zeros(nu, N);
 
-%% prepare evaluation
+%% SOLVE
+% prepare evaluation
 n_executions = 1;
 time_tot = zeros(n_executions,1);
 time_lin = zeros(n_executions,1);
@@ -258,7 +262,6 @@ su = ocp_solver.get('su', N);
 
 % get cost value
 cost_val_ocp = ocp_solver.get_cost();
-
 
 %% get QP matrices:
 % See https://docs.acados.org/problem_formulation
