@@ -188,8 +188,7 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
 
 
 def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, model_dir: str):
-    opts = context.opts
-    generate_hess = opts["generate_hess"]
+    generate_hess = context.opts["generate_hess"]
 
     # load model
     x = model.x
@@ -198,28 +197,19 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, m
     f_expl = model.f_expl_expr
     model_name = model.name
 
-    ## get model dimensions
     nx = x.size()[0]
     nu = u.size()[0]
 
     symbol = get_casadi_symbol(x)
 
-    ## set up functions to be exported
+    # set up expressions
     Sx = symbol('Sx', nx, nx)
     Sp = symbol('Sp', nx, nu)
     lambdaX = symbol('lambdaX', nx, 1)
 
-    fun_name = model_name + '_expl_ode_fun'
-
-    ## Set up functions
     vdeX = ca.jtimes(f_expl, x, Sx)
     vdeP = ca.jacobian(f_expl, u) + ca.jtimes(f_expl, x, Sp)
-
-    fun_name = model_name + '_expl_vde_forw'
-
     adj = ca.jtimes(f_expl, ca.vertcat(x, u), lambdaX, True)
-
-    fun_name = model_name + '_expl_vde_adj'
 
     if generate_hess:
         S_forw = ca.vertcat(ca.horzcat(Sx, Sp), ca.horzcat(ca.DM.zeros(nu,nx), ca.DM.eye(nu)))
@@ -229,9 +219,7 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, m
             for i in range(j,nx+nu):
                 hess2 = ca.vertcat(hess2, hess[i,j])
 
-        fun_name = model_name + '_expl_ode_hess'
-
-    # generate C code
+    # add to context
     fun_name = model_name + '_expl_ode_fun'
     context.add_function_definition(fun_name, [x, u, p], [f_expl], model_dir)
 
@@ -249,7 +237,6 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, m
 
 
 def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel, model_dir: str):
-    opts = context.opts
 
     # load model
     x = model.x
@@ -288,7 +275,7 @@ def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel, m
     fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
     context.add_function_definition(fun_name, [x, xdot, u, z, t, p], [jac_x, jac_xdot, jac_u, jac_z], model_dir)
 
-    if opts["generate_hess"]:
+    if context.opts["generate_hess"]:
         x_xdot_z_u = ca.vertcat(x, xdot, z, u)
         symbol = get_casadi_symbol(x)
         multiplier = symbol('multiplier', nx + nz)
