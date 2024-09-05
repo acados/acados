@@ -526,7 +526,71 @@ int ocp_nlp_globalization_funnel_find_acceptable_iterate(ocp_nlp_config *nlp_con
         // in case line search fails, we do not want to copy trial iterates!
         copy_ocp_nlp_out(nlp_dims, nlp_work->tmp_nlp_out, nlp_out);
     }
-}       
+}
+
+
+void ocp_nlp_globalization_funnel_print_iteration_header()
+{
+    printf("%6s | %11s | %10s | %10s | %10s | %10s | %10s | %10s | %10s | %12s | %10s | %10s | %10s | %10s\n",
+    "iter.",
+    "objective",
+    "res_eq",
+    "res_ineq",
+    "res_stat",
+    "res_comp",
+    "alpha",
+    "step_norm",
+    "LM_reg.",
+    "funnel width",
+    "penalty",
+    "qp_status",
+    "qp_iter",
+    "iter. type");
+}
+
+
+// TODO: unified signature:
+// -> move everything around.
+// 1. residual_iter
+// 2. int iter count
+// 3. alpha etc. move to glob_memory. (void *)
+void ocp_nlp_globalization_funnel_print_iteration(ocp_nlp_opts* opts,
+                    double obj,
+                    int iter_count,
+                    double infeas_eq,
+                    double infeas_ineq,
+                    double stationarity,
+                    double complementarity,
+                    double alpha,
+                    double step_norm,
+                    double reg_param,
+                    double funnel_width,
+                    double penalty_parameter,
+                    int qp_status,
+                    int qp_iter,
+                    char iter_type)
+{
+    ocp_nlp_globalization_opts *globalization_opts = opts->globalization;
+    if ((iter_count % 10 == 0)){
+        print_iteration_header(opts);
+    }
+    printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %12.4e | %10.4e | %10i | %10i | %10c\n",
+        iter_count,
+        obj,
+        infeas_eq,
+        infeas_ineq,
+        stationarity,
+        complementarity,
+        alpha,
+        step_norm,
+        reg_param,
+        funnel_width,
+        penalty_parameter,
+        qp_status,
+        qp_iter,
+        iter_type);
+}
+
 
 
 void ocp_nlp_globalization_funnel_config_initialize_default(ocp_nlp_globalization_config *config)
@@ -538,4 +602,6 @@ void ocp_nlp_globalization_funnel_config_initialize_default(ocp_nlp_globalizatio
     config->opts_set = &ocp_nlp_globalization_funnel_opts_set;
     // functions
     config->find_acceptable_iterate = &ocp_nlp_globalization_funnel_find_acceptable_iterate;
+    config->print_iteration_header = &ocp_nlp_globalization_funnel_print_iteration_header;
+    config->print_iteration = &ocp_nlp_globalization_funnel_print_iteration;
 }

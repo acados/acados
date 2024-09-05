@@ -79,7 +79,6 @@ void ocp_nlp_globalization_opts_initialize_default(void *config_, void *dims_, v
 {
     ocp_nlp_globalization_opts *opts = opts_;
 
-    opts->globalization = FIXED_STEP;
     opts->alpha_min = 0.05;
     opts->alpha_reduction = 0.7;
     opts->full_step_dual = 0;
@@ -139,28 +138,6 @@ void ocp_nlp_globalization_opts_set(void *config_, void *opts_, const char *fiel
     {
         int* globalization_use_SOC = (int *) value;
         opts->globalization_use_SOC = *globalization_use_SOC;
-    }
-    else if (!strcmp(field, "globalization"))
-    {
-        char* globalization = (char *) value;
-        if (!strcmp(globalization, "fixed_step"))
-        {
-            opts->globalization = FIXED_STEP;
-        }
-        else if (!strcmp(globalization, "merit_backtracking"))
-        {
-            opts->globalization = MERIT_BACKTRACKING;
-        }
-        else if (!strcmp(globalization, "funnel_l1pen_linesearch"))
-        {
-            opts->globalization = FUNNEL_L1PEN_LINESEARCH;
-        }
-        else
-        {
-            printf("\nerror: ocp_nlp_opts_set: not supported value for globalization, got: %s\n",
-                    globalization);
-            exit(1);
-        }
     }
     else
     {
