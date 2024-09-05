@@ -832,7 +832,7 @@ classdef AcadosOcp < handle
             end
         end
 
-        function generate_external_functions(ocp)
+        function generate_external_functions(ocp, context)
 
             %% generate C code for CasADi functions / copy external functions
             cost = ocp.cost;
@@ -840,29 +840,50 @@ classdef AcadosOcp < handle
             constraints = ocp.constraints;
             dims = ocp.dims;
 
-            % options for code generation
-            code_gen_opts = struct();
-            code_gen_opts.generate_hess = strcmp(solver_opts.hessian_approx, 'EXACT');
-            code_gen_opts.with_solution_sens_wrt_params = solver_opts.with_solution_sens_wrt_params;
-            code_gen_opts.with_value_sens_wrt_params = solver_opts.with_value_sens_wrt_params;
+            if nargin < 2
+                % options for code generation
+                code_gen_opts = struct();
+                code_gen_opts.generate_hess = strcmp(solver_opts.hessian_approx, 'EXACT');
+                code_gen_opts.with_solution_sens_wrt_params = solver_opts.with_solution_sens_wrt_params;
+                code_gen_opts.with_value_sens_wrt_params = solver_opts.with_value_sens_wrt_params;
+                code_gen_opts.code_export_directory = ocp.code_export_directory;
+                context = GenerateContext(ocp.model.p_global, ocp.name, code_gen_opts);
+            else
+                code_gen_opts = context.code_gen_opts;
+            end
 
             % dynamics
             % model dir is always needed, other dirs are  only created if necessary
-            model_dir = fullfile(pwd, ocp.code_export_directory, [ocp.name '_model']);
+            model_dir = fullfile(pwd, code_gen_opts.code_export_directory, [ocp.name '_model']);
             check_dir_and_create(model_dir);
 
-            if (strcmp(solver_opts.integrator_type, 'ERK'))
-                generate_c_code_explicit_ode(ocp.model, code_gen_opts, model_dir);
-            elseif (strcmp(solver_opts.integrator_type, 'IRK')) && strcmp(ocp.model.dyn_ext_fun_type, 'casadi')
-                generate_c_code_implicit_ode(ocp.model, code_gen_opts, model_dir);
-            elseif (strcmp(solver_opts.integrator_type, 'GNSF'))
-                generate_c_code_gnsf(ocp.model, code_gen_opts, model_dir);
-            elseif (strcmp(solver_opts.integrator_type, 'DISCRETE')) && strcmp(ocp.model.dyn_ext_fun_type, 'casadi')
-                generate_c_code_discrete_dynamics(ocp.model, code_gen_opts, model_dir);
-            end
             if strcmp(ocp.model.dyn_ext_fun_type, 'generic')
-                copyfile( fullfile(pwd, ocp.model.dyn_generic_source), model_dir);
+                copyfile(fullfile(pwd, ocp.model.dyn_generic_source), model_dir);
+            elseif strcmp(ocp.model.dyn_ext_fun_type, 'casadi')
+                import casadi.*
+                check_casadi_version();
+                switch solver_opts.integrator_type
+                    case 'ERK'
+                        generate_c_code_explicit_ode(context, ocp.model, model_dir);
+                    case 'IRK'
+                        generate_c_code_implicit_ode(context, ocp.model, model_dir);
+                    case 'LIFTED_IRK'
+                        if ~(isempty(ocp.model.t) || length(ocp.model.t) == 0)
+                            error('NOT LIFTED_IRK with time-varying dynamics not implemented yet.')
+                        end
+                        generate_c_code_implicit_ode(context, ocp.model, model_dir);
+                    case 'GNSF'
+                        generate_c_code_gnsf(context, ocp.model, model_dir);
+                    case 'DISCRETE'
+                        generate_c_code_discrete_dynamics(context, ocp.model, model_dir);
+                    otherwise
+                        error('Unknown integrator type.')
+                end
+            else
+                error('Unknown dyn_ext_fun_type.')
             end
+
+            context.finalize();
 
             stage_types = {'initial', 'path', 'terminal'};
 

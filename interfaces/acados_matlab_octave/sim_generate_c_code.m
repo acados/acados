@@ -29,29 +29,43 @@
 
 %
 
-function sim_generate_c_code(sim)
-    %% create folders
-    check_dir_and_create(fullfile(pwd,'c_generated_code'));
+function sim_generate_c_code(sim, context)
 
-    model_dir = fullfile(pwd, 'c_generated_code', [sim.model.name '_model']);
+    if nargin < 2
+        % options for code generation
+        code_gen_opts = struct();
+        code_gen_opts.generate_hess = sim.solver_options.sens_hess;
+        code_gen_opts.code_export_directory = 'c_generated_code'; % TODO: for OCP this is part of OCP class
+        context = GenerateContext(sim.model.p_global, sim.model.name, code_gen_opts);
+    else
+        code_gen_opts = context.code_gen_opts;
+    end
+
+    model_dir = fullfile(pwd, code_gen_opts.code_export_directory, [sim.model.name '_model']);
     check_dir_and_create(model_dir);
 
-    code_gen_opts = struct('generate_hess', sim.solver_options.sens_hess);
-    %% generate C code for CasADi functions / copy external functions
-    % dynamics
-    if (strcmp(sim.solver_options.integrator_type, 'ERK'))
-        generate_c_code_explicit_ode(sim.model, code_gen_opts, model_dir);
-    elseif (strcmp(sim.solver_options.integrator_type, 'IRK'))
-        generate_c_code_implicit_ode(sim.model, code_gen_opts, model_dir);
-    elseif (strcmp(sim.solver_options.integrator_type, 'GNSF'))
-        generate_c_code_gnsf(sim.model, code_gen_opts, model_dir);
-    elseif (strcmp(sim.solver_options.integrator_type, 'DISCRETE'))
-        generate_c_code_discrete_dynamics(sim.model, code_gen_opts, model_dir);
-    end
     if strcmp(sim.model.dyn_ext_fun_type, 'generic')
         copyfile(fullfile(pwd, sim.model.dyn_generic_source), model_dir);
+    elseif strcmp(sim.model.dyn_ext_fun_type, 'casadi')
+        import casadi.*
+        check_casadi_version();
+        switch sim.solver_options.integrator_type
+            case 'ERK'
+                generate_c_code_explicit_ode(context, sim.model, model_dir);
+            case 'IRK'
+                generate_c_code_implicit_ode(context, sim.model, model_dir);
+            case 'GNSF'
+                generate_c_code_gnsf(context, sim.model, model_dir);
+            case 'DISCRETE'
+                generate_c_code_discrete_dynamics(context, sim.model, model_dir);
+            otherwise
+                error('Unknown integrator type.')
+        end
+    else
+        error('Unknown dyn_ext_fun_type.')
     end
 
+    context.finalize();
 
     %% remove CasADi objects from model
     model.name = sim.model.name;

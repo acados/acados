@@ -30,12 +30,9 @@
 %
 
 
-function generate_c_code_gnsf(model, opts, model_dir)
+function generate_c_code_gnsf(context, model, model_dir)
 
     import casadi.*
-
-    casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
-    check_casadi_version();
 
     A = model.dyn_gnsf_A;
     B = model.dyn_gnsf_B;
@@ -88,36 +85,25 @@ function generate_c_code_gnsf(model, opts, model_dir)
     x1dot = xdot(idx_perm_x(1:nx1));
     z1 = z(idx_perm_z(1:nz1));
 
-    return_dir = pwd;
-    cd(model_dir)
-
     %% generate functions
     if ~purely_linear
         jac_phi_y = jacobian(phi,y);
         jac_phi_uhat = jacobian(phi,uhat);
 
-        phi_fun = Function([model_name,'_gnsf_phi_fun'], {y, uhat, p}, {phi});
-        phi_fun_jac_y = Function([model_name,'_gnsf_phi_fun_jac_y'], {y, uhat, p}, {phi, jac_phi_y});
-        phi_jac_y_uhat = Function([model_name,'_gnsf_phi_jac_y_uhat'], {y, uhat, p}, {jac_phi_y, jac_phi_uhat});
+        context.add_function_definition([model_name,'_gnsf_phi_fun'], {y, uhat, p}, {phi}, model_dir);
+        context.add_function_definition([model_name,'_gnsf_phi_fun_jac_y'], {y, uhat, p}, {phi, jac_phi_y}, model_dir);
+        context.add_function_definition([model_name,'_gnsf_phi_jac_y_uhat'], {y, uhat, p}, {jac_phi_y, jac_phi_uhat}, model_dir);
 
-        phi_fun.generate([model_name,'_gnsf_phi_fun'], casadi_opts);
-        phi_fun_jac_y.generate([model_name,'_gnsf_phi_fun_jac_y'], casadi_opts);
-        phi_jac_y_uhat.generate([model_name,'_gnsf_phi_jac_y_uhat'], casadi_opts);
 
         if nontrivial_f_LO
-            f_lo_fun_jac_x1k1uz = Function([model_name,'_gnsf_f_lo_fun_jac_x1k1uz'], {x1, x1dot, z1, u, p}, ...
-                {f_lo, [jacobian(f_lo,x1), jacobian(f_lo,x1dot), jacobian(f_lo,u), jacobian(f_lo,z1)]});
-            f_lo_fun_jac_x1k1uz.generate([model_name,'_gnsf_f_lo_fun_jac_x1k1uz'], casadi_opts);
+            context.add_function_definition([model_name,'_gnsf_f_lo_fun_jac_x1k1uz'], {x1, x1dot, z1, u, p}, ...
+                {f_lo, [jacobian(f_lo,x1), jacobian(f_lo,x1dot), jacobian(f_lo,u), jacobian(f_lo,z1)]}, model_dir);
         end
     end
 
     % get_matrices function
     dummy = x(1);
-    get_matrices_fun = Function([model_name,'_gnsf_get_matrices_fun'], {dummy},...
+    context.add_function_definition([model_name,'_gnsf_get_matrices_fun'], {dummy},...
         {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO, B_LO,...
-        nontrivial_f_LO, purely_linear, ipiv_x, ipiv_z, c_LO});
-    get_matrices_fun.generate([model_name,'_gnsf_get_matrices_fun'], casadi_opts);
-
-    cd(return_dir)
-
+        nontrivial_f_LO, purely_linear, ipiv_x, ipiv_z, c_LO}, model_dir);
 end
