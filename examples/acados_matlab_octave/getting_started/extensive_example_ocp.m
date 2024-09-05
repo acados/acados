@@ -32,8 +32,11 @@ clear all; clc;
 
 check_acados_requirements()
 
+
+%% OCP DESCRIPTION
+ocp = AcadosOcp();
+
 %% SOLVER OPTIONS
-solver_options = AcadosOcpOptions();
 
 %% discretization
 N = 40;
@@ -54,60 +57,62 @@ for i = 1:N
     shooting_nodes(i+1) = sum(time_steps(1:i));
 end
 
-solver_options.tf = T;
-solver_options.N_horizon = N;
-solver_options.time_steps = time_steps;
-solver_options.nlp_solver_type = 'SQP'; % 'SQP_RTI'
-solver_options.hessian_approx = 'GAUSS_NEWTON'; % 'EXACT'
-solver_options.regularize_method = 'CONVEXIFY';
+ocp.solver_options.tf = T;
+ocp.solver_options.N_horizon = N;
+ocp.solver_options.time_steps = time_steps;
+ocp.solver_options.nlp_solver_type = 'SQP'; % 'SQP_RTI'
+ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'; % 'EXACT'
+ocp.solver_options.regularize_method = 'CONVEXIFY';
 % NO_REGULARIZE, PROJECT, PROOJECT_REDUC_HESS, MIRROR, CONVEXIFY
-solver_options.nlp_solver_max_iter = 50;
-solver_options.nlp_solver_tol_stat = 1e-8;
-solver_options.nlp_solver_tol_eq = 1e-8;
-solver_options.nlp_solver_tol_ineq = 1e-8;
-solver_options.nlp_solver_tol_comp = 1e-8;
-solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
+ocp.solver_options.nlp_solver_max_iter = 50;
+ocp.solver_options.nlp_solver_tol_stat = 1e-8;
+ocp.solver_options.nlp_solver_tol_eq = 1e-8;
+ocp.solver_options.nlp_solver_tol_ineq = 1e-8;
+ocp.solver_options.nlp_solver_tol_comp = 1e-8;
+ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
 % FULL_CONDENSING_HPIPM, PARTIAL_CONDENSING_HPIPM
 % FULL_CONDENSING_QPOASES, PARTIAL_CONDENSING_OSQP
-solver_options.qp_solver_cond_N = 5; % for partial condensing
-solver_options.qp_solver_cond_ric_alg = 0;
-solver_options.qp_solver_ric_alg = 0;
-solver_options.qp_solver_warm_start = 1; % 0: cold, 1: warm, 2: hot
-solver_options.qp_solver_iter_max = 1000; % default is 50; OSQP needs a lot sometimes.
-solver_options.qp_solver_mu0 = 1e4;
-solver_options.exact_hess_dyn = 1;
-solver_options.exact_hess_cost = 1;
-solver_options.exact_hess_constr = 1;
-solver_options.print_level = 1;
+ocp.solver_options.qp_solver_cond_N = 5; % for partial condensing
+ocp.solver_options.qp_solver_cond_ric_alg = 0;
+ocp.solver_options.qp_solver_ric_alg = 0;
+ocp.solver_options.qp_solver_warm_start = 1; % 0: cold, 1: warm, 2: hot
+ocp.solver_options.qp_solver_iter_max = 1000; % default is 50; OSQP needs a lot sometimes.
+ocp.solver_options.qp_solver_mu0 = 1e4;
+ocp.solver_options.exact_hess_dyn = 1;
+ocp.solver_options.exact_hess_cost = 1;
+ocp.solver_options.exact_hess_constr = 1;
+ocp.solver_options.print_level = 1;
 
 % can vary for integrators
 sim_method_num_stages = 1 * ones(N,1);
 sim_method_num_stages(3:end) = 2;
-solver_options.sim_method_num_stages = sim_method_num_stages;
-solver_options.sim_method_num_steps = ones(N,1);
+ocp.solver_options.sim_method_num_stages = sim_method_num_stages;
+ocp.solver_options.sim_method_num_steps = ones(N,1);
 
 % integrator type
 integrator = 1;
 switch integrator
 case 1
-    solver_options.integrator_type = 'ERK';
+    ocp.solver_options.integrator_type = 'ERK';
 case 2
-    solver_options.integrator_type = 'IRK';
+    ocp.solver_options.integrator_type = 'IRK';
 case 3
     if ~all(time_steps == T/N)
         error('nonuniform time discretization with discrete dynamics should not be used');
     end
-    solver_options.integrator_type = 'DISCRETE';
+    ocp.solver_options.integrator_type = 'DISCRETE';
 otherwise
-    solver_options.integrator_type = 'GNSF';
+    ocp.solver_options.integrator_type = 'GNSF';
 end
 
 %% MODEL
 model = get_pendulum_on_cart_model(T/N);
+ocp.model = model;
 
 % dimensions
 nx = model.x.rows();
 nu = model.u.rows();
+
 
 %% COST
 cost_formulation = 1;
@@ -120,11 +125,9 @@ otherwise
     cost_type = 'AUTO';
 end
 
-cost = AcadosOcpCost();
-
-cost.cost_type_0 = cost_type;
-cost.cost_type = cost_type;
-cost.cost_type_e = cost_type;
+ocp.cost.cost_type_0 = cost_type;
+ocp.cost.cost_type = cost_type;
+ocp.cost.cost_type_e = cost_type;
 
 W_x = diag([1e3, 1e3, 1e-2, 1e-2]);
 W_u = 1e-2;
@@ -148,58 +151,50 @@ Vx_e = eye(ny_e, nx);
 y_ref_e = zeros(ny_e, 1);
 
 if strcmp(cost_type, 'LINEAR_LS')
-    cost.Vu_0 = Vu_0;
-    cost.Vx_0 = Vx_0;
-    cost.W_0 = W_u;
-    cost.yref_0 = y_ref_0;
+    ocp.cost.Vu_0 = Vu_0;
+    ocp.cost.Vx_0 = Vx_0;
+    ocp.cost.W_0 = W_u;
+    ocp.cost.yref_0 = y_ref_0;
 
-    cost.Vu = Vu;
-    cost.Vx = Vx;
-    cost.W = blkdiag(W_x, W_u);
-    cost.yref = y_ref;
+    ocp.cost.Vu = Vu;
+    ocp.cost.Vx = Vx;
+    ocp.cost.W = blkdiag(W_x, W_u);
+    ocp.cost.yref = y_ref;
 
-    cost.Vx_e = Vx_e;
-    cost.W_e = W_x;
-    cost.yref_e = y_ref_e;
+    ocp.cost.Vx_e = Vx_e;
+    ocp.cost.W_e = W_x;
+    ocp.cost.yref_e = y_ref_e;
 else % EXTERNAL, AUTO
-    cost.cost_expr_ext_cost_0 = cost_expr_ext_cost_0;
-    cost.cost_expr_ext_cost = cost_expr_ext_cost;
-    cost.cost_expr_ext_cost_e = cost_expr_ext_cost_e;
+    ocp.cost.cost_expr_ext_cost_0 = cost_expr_ext_cost_0;
+    ocp.cost.cost_expr_ext_cost = cost_expr_ext_cost;
+    ocp.cost.cost_expr_ext_cost_e = cost_expr_ext_cost_e;
 end
 
 %% CONSTRAINTS
-constraints = AcadosOcpConstraints();
 constraint_formulation_nonlinear = 0;
 lbu = -80*ones(nu, 1);
 ubu =  80*ones(nu, 1);
 
-constraints.constr_type = 'AUTO';
-constraints.constr_type_0 = 'AUTO';
-constraints.constr_type_e = 'AUTO';
+ocp.constraints.constr_type = 'AUTO';
+ocp.constraints.constr_type_0 = 'AUTO';
+ocp.constraints.constr_type_e = 'AUTO';
 
 if constraint_formulation_nonlinear % formulate constraint via h
     model.con_h_expr_0 = model.u;
-    constraints.lh_0 = lbu;
-    constraints.uh_0 = ubu;
-    constraints.con_h_expr = model.u;
-    constraints.lh = lbu;
-    constraints.uh = ubu;
+    ocp.constraints.lh_0 = lbu;
+    ocp.constraints.uh_0 = ubu;
+    ocp.constraints.con_h_expr = model.u;
+    ocp.constraints.lh = lbu;
+    ocp.constraints.uh = ubu;
 else % formulate constraint as bound on u
-    constraints.idxbu = [0];
-    constraints.lbu = lbu;
-    constraints.ubu = ubu;
+    ocp.constraints.idxbu = [0];
+    ocp.constraints.lbu = lbu;
+    ocp.constraints.ubu = ubu;
 end
 
 % initial state
 x0 = [0; pi; 0; 0];
-constraints.x0 = x0;
-
-%% OCP DESCRIPTION
-ocp = AcadosOcp();
-ocp.model = model;
-ocp.constraints = constraints;
-ocp.cost = cost;
-ocp.solver_options = solver_options;
+ocp.constraints.x0 = x0;
 
 %% SOLVER
 ocp_solver = AcadosOcpSolver(ocp);

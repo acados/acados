@@ -237,6 +237,7 @@ ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
 ocp_opts.set('exact_hess_dyn', 1);
 ocp_opts.set('exact_hess_cost', 1);
 ocp_opts.set('exact_hess_constr', 1);
+ocp_opts.set('print_level', print_level);
 
 %% create ocp solver
 ocp_solver = acados_ocp(ocp_model, ocp_opts);
@@ -253,8 +254,6 @@ time_tot = zeros(n_executions,1);
 time_lin = zeros(n_executions,1);
 time_reg = zeros(n_executions,1);
 time_qp_sol = zeros(n_executions,1);
-
-ocp_solver.set('print_level', print_level)
 
 %% call ocp solver in loop
 for i=1:n_executions

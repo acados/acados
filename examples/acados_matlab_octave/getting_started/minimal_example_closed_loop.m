@@ -35,8 +35,13 @@ check_acados_requirements()
 % initial state
 x0 = [0; 0; 0; 0];  % start at stable position
 
+%% OCP DESCRIPTION
+ocp = AcadosOcp();
+
+%% IVP DESCRIPTION
+sim = AcadosSim();
+
 %% SOLVER OPTIONS
-solver_options = AcadosOcpOptions();
 
 %% discretization
 h = 0.01; % sampling time = length of first shooting interval
@@ -45,15 +50,15 @@ N = 20; % number of shooting intervals
 shooting_nodes = [0.0 0.01, 0.05*(1:N-1)];
 T = shooting_nodes(end);
 
-solver_options.tf = T;
-solver_options.N_horizon = N;
-solver_options.shooting_nodes = shooting_nodes;
-solver_options.nlp_solver_type = 'SQP';
-solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
+ocp.solver_options.tf = T;
+ocp.solver_options.N_horizon = N;
+ocp.solver_options.shooting_nodes = shooting_nodes;
+ocp.solver_options.nlp_solver_type = 'SQP';
+ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
 % FULL_CONDENSING_HPIPM, PARTIAL_CONDENSING_HPIPM
 % FULL_CONDENSING_QPOASES, PARTIAL_CONDENSING_OSQP
-solver_options.qp_solver_cond_N = 5; % for partial condensing
-solver_options.globalization = 'MERIT_BACKTRACKING'; % turns on globalization
+ocp.solver_options.qp_solver_cond_N = 5; % for partial condensing
+ocp.solver_options.globalization = 'MERIT_BACKTRACKING'; % turns on globalization
 
 % we add some model-plant mismatch by choosing different integration
 % methods for model (within the OCP) and plant:
@@ -63,34 +68,33 @@ model_integrator_type = 'ERK';
 model_sim_method_num_stages = 1;
 model_sim_method_num_steps = 2;
 
-solver_options.sim_method_num_stages = model_sim_method_num_stages;
-solver_options.sim_method_num_steps = model_sim_method_num_steps;
-solver_options.integrator_type = model_integrator_type;
+ocp.solver_options.sim_method_num_stages = model_sim_method_num_stages;
+ocp.solver_options.sim_method_num_steps = model_sim_method_num_steps;
+ocp.solver_options.integrator_type = model_integrator_type;
 
 % integrator plant
 plant_integrator_type = 'IRK';
 plant_sim_method_num_stages = 3;
 plant_sim_method_num_steps = 3;
 
-sim_solver_options = AcadosSimOptions();
-sim_solver_options.num_stages = plant_sim_method_num_stages;
-sim_solver_options.num_steps = plant_sim_method_num_steps;
-sim_solver_options.Tsim = h;
-sim_solver_options.integrator_type = plant_integrator_type;
+sim.solver_options.num_stages = plant_sim_method_num_stages;
+sim.solver_options.num_steps = plant_sim_method_num_steps;
+sim.solver_options.Tsim = h;
+sim.solver_options.integrator_type = plant_integrator_type;
 
 %% MODEL with mass as parameter
 model = get_pendulum_on_cart_model(h, true);
+ocp.model = model;
+sim.model = model;
 
 % dimensions
 nx = model.x.rows();
 nu = model.u.rows();
 
 %% COST: nonlinear-least squares cost
-cost = AcadosOcpCost();
-
-cost.cost_type_0 = 'NONLINEAR_LS';
-cost.cost_type = 'NONLINEAR_LS';
-cost.cost_type_e = 'NONLINEAR_LS';
+ocp.cost.cost_type_0 = 'NONLINEAR_LS';
+ocp.cost.cost_type = 'NONLINEAR_LS';
+ocp.cost.cost_type_e = 'NONLINEAR_LS';
 
 W_x = diag([1e3, 1e3, 1e-2, 1e-2]);
 W_u = 1e-2;
@@ -99,38 +103,30 @@ model.cost_y_expr_0 = model.u;
 model.cost_y_expr = vertcat(model.x, model.u);
 model.cost_y_expr_e = model.x;
 
-cost.W_0 = W_u;
-cost.W = blkdiag(W_x, W_u);
-cost.W_e = W_x;
+ocp.cost.W_0 = W_u;
+ocp.cost.W = blkdiag(W_x, W_u);
+ocp.cost.W_e = W_x;
 
 % initialize reference to zero, can be changed after solver creation
-cost.yref_0 = zeros(size(model.cost_y_expr_0));
-cost.yref = zeros(size(model.cost_y_expr));
-cost.yref_e = zeros(size(model.cost_y_expr_e));
+ocp.cost.yref_0 = zeros(size(model.cost_y_expr_0));
+ocp.cost.yref = zeros(size(model.cost_y_expr));
+ocp.cost.yref_e = zeros(size(model.cost_y_expr_e));
 
 %% CONSTRAINTS
-constraints = AcadosOcpConstraints();
 
 U_max = 80;
-constraints.constr_type = 'AUTO';
-constraints.constr_type_0 = 'AUTO';
+ocp.constraints.constr_type = 'AUTO';
+ocp.constraints.constr_type_0 = 'AUTO';
 
 model.con_h_expr_0 = model.u;
-constraints.lh_0 = -U_max;
-constraints.uh_0 = U_max;
+ocp.constraints.lh_0 = -U_max;
+ocp.constraints.uh_0 = U_max;
 
 model.con_h_expr = model.u;
-constraints.lh = -U_max;
-constraints.uh = U_max;
+ocp.constraints.lh = -U_max;
+ocp.constraints.uh = U_max;
 
-constraints.x0 = x0;
-
-%% OCP DESCRIPTION
-ocp = AcadosOcp();
-ocp.model = model;
-ocp.constraints = constraints;
-ocp.cost = cost;
-ocp.solver_options = solver_options;
+ocp.constraints.x0 = x0;
 
 %% OCP SOLVER
 ocp_solver = AcadosOcpSolver(ocp);
@@ -139,11 +135,6 @@ ocp_solver = AcadosOcpSolver(ocp);
 for i = 0:N
     ocp_solver.set('p', 1.);
 end
-
-%% IVP DESCRIPTION
-sim = AcadosSim();
-sim.model = model;
-sim.solver_options = sim_solver_options;
 
 %% SIM SOLVER/INTEGRATOR
 sim_solver = AcadosSimSolver(sim);
