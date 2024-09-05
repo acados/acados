@@ -93,7 +93,6 @@ void ocp_nlp_globalization_opts_initialize_default(void *config_, void *dims_, v
 void ocp_nlp_globalization_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
     ocp_nlp_globalization_opts *opts = (ocp_nlp_globalization_opts *) opts_;
-    ocp_nlp_globalization_config *config = config_;
 
     char module[MAX_STR_LEN];
     char *ptr_module = NULL;

@@ -164,13 +164,16 @@ int backtracking_line_search(ocp_nlp_config *config,
                             ocp_nlp_workspace *nlp_work,
                             ocp_nlp_opts *nlp_opts);
 //
-int find_acceptable_iterate(ocp_nlp_config *nlp_config,
+int ocp_nlp_globalization_funnel_find_acceptable_iterate(ocp_nlp_config *nlp_config,
                             ocp_nlp_dims *nlp_dims,
                             ocp_nlp_in *nlp_in,
                             ocp_nlp_out *nlp_out,
                             ocp_nlp_memory *nlp_mem,
                             ocp_nlp_workspace *nlp_work,
                             ocp_nlp_opts *nlp_opts);
+
+
+void ocp_nlp_globalization_funnel_config_initialize_default(ocp_nlp_globalization_config *config);
 
 #ifdef __cplusplus
 } /* extern "C" */

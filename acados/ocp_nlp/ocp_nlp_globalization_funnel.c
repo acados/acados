@@ -509,7 +509,7 @@ int backtracking_line_search(ocp_nlp_config *config,
     }
 }
 
-int find_acceptable_iterate(ocp_nlp_config *nlp_config,
+int ocp_nlp_globalization_funnel_find_acceptable_iterate(ocp_nlp_config *nlp_config,
                             ocp_nlp_dims *nlp_dims,
                             ocp_nlp_in *nlp_in,
                             ocp_nlp_out *nlp_out,
@@ -526,4 +526,16 @@ int find_acceptable_iterate(ocp_nlp_config *nlp_config,
         // in case line search fails, we do not want to copy trial iterates!
         copy_ocp_nlp_out(nlp_dims, nlp_work->tmp_nlp_out, nlp_out);
     }
-}              
+}       
+
+
+void ocp_nlp_globalization_funnel_config_initialize_default(ocp_nlp_globalization_config *config)
+{
+    // opts
+    config->opts_calculate_size = &ocp_nlp_globalization_funnel_opts_calculate_size;
+    config->opts_assign = &ocp_nlp_globalization_funnel_opts_assign;
+    config->opts_initialize_default = &ocp_nlp_globalization_funnel_opts_initialize_default;
+    config->opts_set = &ocp_nlp_globalization_funnel_opts_set;
+    // functions
+    config->find_acceptable_iterate = &ocp_nlp_globalization_funnel_find_acceptable_iterate;
+}

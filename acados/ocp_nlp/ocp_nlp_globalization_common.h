@@ -78,18 +78,8 @@ ocp_nlp_globalization_config *ocp_nlp_globalization_config_assign(void *raw_memo
 /************************************************
  * options
  ************************************************/
-
-/// Globalization types
-typedef enum
-{
-    FIXED_STEP,
-    MERIT_BACKTRACKING,
-    FUNNEL_L1PEN_LINESEARCH
-} ocp_nlp_globalization_t;
-
 typedef struct ocp_nlp_globalization_opts
 {
-    ocp_nlp_globalization_t globalization;
     int globalization_use_SOC;
     int line_search_use_sufficient_descent;
     int full_step_dual;
