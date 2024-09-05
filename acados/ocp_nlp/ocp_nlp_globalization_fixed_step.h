@@ -52,23 +52,22 @@ extern "C" {
 /************************************************
  * options
  ************************************************/
-// TODO: remove stufF!
 typedef struct
 {
     ocp_nlp_globalization_opts *globalization_opts;
 
-} ocp_nlp_globalization_merit_backtracking_opts;
+} ocp_nlp_globalization_fixed_step_opts;
 
 //
-acados_size_t ocp_nlp_globalization_merit_backtracking_opts_calculate_size(void *config, void *dims);
+acados_size_t ocp_nlp_globalization_fixed_step_opts_calculate_size(void *config, void *dims);
 //
-void *ocp_nlp_globalization_merit_backtracking_opts_assign(void *config, void *dims, void *raw_memory);
+void *ocp_nlp_globalization_fixed_step_opts_assign(void *config, void *dims, void *raw_memory);
 //
-void ocp_nlp_globalization_merit_backtracking_opts_initialize_default(void *config, void *dims, void *opts);
+void ocp_nlp_globalization_fixed_step_opts_initialize_default(void *config, void *dims, void *opts);
 //
-void ocp_nlp_globalization_merit_backtracking_opts_update(void *config, void *dims, void *opts);
+void ocp_nlp_globalization_fixed_step_opts_update(void *config, void *dims, void *opts);
 //
-void ocp_nlp_globalization_merit_backtracking_opts_set(void *config, void *opts, const char *field, void* value);
+void ocp_nlp_globalization_fixed_step_opts_set(void *config, void *opts, const char *field, void* value);
 
 
 /************************************************
@@ -79,83 +78,20 @@ void ocp_nlp_globalization_merit_backtracking_opts_set(void *config, void *opts,
 typedef struct
 {
     double step_norm;
-    double merit_backtracking_width;
-    char merit_backtracking_iter_type;
-    bool merit_backtracking_penalty_mode;
-    double l1_infeasibility;
-    double merit_backtracking_penalty_parameter;
     double alpha;
-} ocp_nlp_globalization_merit_backtracking_memory;
+} ocp_nlp_globalization_fixed_step_memory;
 
 //
-acados_size_t ocp_nlp_globalization_merit_backtracking_memory_calculate_size(void *config, void *dims, void *opts_);
+acados_size_t ocp_nlp_globalization_fixed_step_memory_calculate_size(void *config, void *dims, void *opts_);
 //
-void *ocp_nlp_globalization_merit_backtracking_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
+void *ocp_nlp_globalization_fixed_step_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
 //
-
-/************************************************
- * workspace
- ************************************************/
-// WE DON'T NEED THAT!!
-// typedef struct
-// {
-//     ocp_nlp_workspace *nlp_work;
-
-// } ocp_nlp_globalization_merit_backtracking_workspace;
-
-// //
-// acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config, void *dims, void *opts_);
-
-
-
 
 /************************************************
  * functions
  ************************************************/
 
-void debug_output(ocp_nlp_opts *opts, char* message, int print_level);
-//
-void debug_output_double(ocp_nlp_opts *opts, char* message, double value, int print_level);
-//
-void initialize_merit_backtracking_width(ocp_nlp_globalization_merit_backtracking_memory *mem, ocp_nlp_globalization_merit_backtracking_opts *opts, double initial_infeasibility);
-//
-void update_merit_backtracking_penalty_parameter(ocp_nlp_globalization_merit_backtracking_memory *mem,
-                                            ocp_nlp_globalization_merit_backtracking_opts *opts,
-                                            double pred_f, double pred_h);
-//
-void decrease_merit_backtracking(ocp_nlp_globalization_merit_backtracking_memory *mem, ocp_nlp_globalization_merit_backtracking_opts *opts, double trial_infeasibility, double current_infeasibility);
-//
-bool is_iterate_inside_of_merit_backtracking(ocp_nlp_globalization_merit_backtracking_memory *mem, ocp_nlp_globalization_merit_backtracking_opts *opts, double infeasibility);
-//
-bool is_merit_backtracking_sufficient_decrease_satisfied(ocp_nlp_globalization_merit_backtracking_memory *mem, ocp_nlp_globalization_merit_backtracking_opts *opts, double infeasibility);
-//
-bool is_switching_condition_satisfied(ocp_nlp_globalization_merit_backtracking_opts *opts, double pred_optimality, double step_size, double pred_infeasibility);
-//
-bool is_f_type_armijo_condition_satisfied(ocp_nlp_globalization_opts *globalization_opts,
-                                        double negative_ared,
-                                        double pred,
-                                        double alpha);
-//
-bool is_trial_iterate_acceptable_to_merit_backtracking(ocp_nlp_globalization_merit_backtracking_memory *mem,
-                                            ocp_nlp_opts *nlp_opts,
-                                            double pred, double ared, double alpha,
-                                            double current_infeasibility,
-                                            double trial_infeasibility,
-                                            double current_objective,
-                                            double trial_objective,
-                                            double current_merit,
-                                            double trial_merit,
-                                            double pred_merit);
-//
-int backtracking_line_search(ocp_nlp_config *config,
-                            ocp_nlp_dims *dims,
-                            ocp_nlp_in *nlp_in,
-                            ocp_nlp_out *nlp_out,
-                            ocp_nlp_memory *nlp_mem,
-                            ocp_nlp_workspace *nlp_work,
-                            ocp_nlp_opts *nlp_opts);
-//
-int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(ocp_nlp_config *nlp_config,
+int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(ocp_nlp_config *nlp_config,
                             ocp_nlp_dims *nlp_dims,
                             ocp_nlp_in *nlp_in,
                             ocp_nlp_out *nlp_out,
@@ -164,7 +100,7 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(ocp_nlp_con
                             ocp_nlp_opts *nlp_opts);
 
 
-void ocp_nlp_globalization_merit_backtracking_config_initialize_default(ocp_nlp_globalization_config *config);
+void ocp_nlp_globalization_fixed_step_config_initialize_default(ocp_nlp_globalization_config *config);
 
 #ifdef __cplusplus
 } /* extern "C" */

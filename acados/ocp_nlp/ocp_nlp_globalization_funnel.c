@@ -71,6 +71,8 @@ acados_size_t ocp_nlp_globalization_funnel_opts_calculate_size(void *config_, vo
 
 void ocp_nlp_globalization_funnel_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
+    ocp_nlp_globalization_opts_initialize_default(config_, dims_, opts_);
+    
     ocp_nlp_globalization_funnel_opts *opts = opts_;
 
     // funnel method opts
@@ -517,15 +519,15 @@ int ocp_nlp_globalization_funnel_find_acceptable_iterate(ocp_nlp_config *nlp_con
                             ocp_nlp_workspace *nlp_work,
                             ocp_nlp_opts *nlp_opts)
 {
-    ocp_nlp_globalization_funnel_memory *mem = nlp_mem->globalization;
     bool linesearch_success = 1;
-    linesearch_success = backtracking_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, mem, nlp_work, nlp_opts);
+    linesearch_success = backtracking_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_mem, nlp_work, nlp_opts);
     // Copy new iterate to nlp_out
     if (linesearch_success)
     {
         // in case line search fails, we do not want to copy trial iterates!
         copy_ocp_nlp_out(nlp_dims, nlp_work->tmp_nlp_out, nlp_out);
     }
+    return linesearch_success;
 }
 
 
@@ -570,7 +572,6 @@ void ocp_nlp_globalization_funnel_print_iteration(ocp_nlp_opts* opts,
                     int qp_iter,
                     char iter_type)
 {
-    ocp_nlp_globalization_opts *globalization_opts = opts->globalization;
     if ((iter_count % 10 == 0)){
         ocp_nlp_globalization_funnel_print_iteration_header();
     }

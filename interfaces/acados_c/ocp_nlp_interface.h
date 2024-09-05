@@ -117,7 +117,7 @@ typedef struct ocp_nlp_plan_t
     /// Regularization type, defaults to no regularization.
     ocp_nlp_reg_t regularization;
 
-    /// Regularization type, defaults to no regularization.
+    /// Globalization type, defaults to fixed step.
     ocp_nlp_reg_t globalization;
 
     /// Cost type for each stage.

@@ -53,6 +53,8 @@
 #include "acados/ocp_nlp/ocp_nlp_reg_project_reduc_hess.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_noreg.h"
 #include "acados/ocp_nlp/ocp_nlp_globalization_funnel.h"
+#include "acados/ocp_nlp/ocp_nlp_globalization_fixed_step.h"
+#include "acados/ocp_nlp/ocp_nlp_globalization_merit_backtracking.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
 #include "acados/ocp_nlp/ocp_nlp_ddp.h"
@@ -235,12 +237,10 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
     switch (plan.globalization)
     {
         case FIXED_STEP:
-            printf("Files for FIXED_STEP currently not implemented! Use funnel file atm!");
-            ocp_nlp_globalization_funnel_config_initialize_default(config->globalization);
+            ocp_nlp_globalization_fixed_step_config_initialize_default(config->globalization);
             break;
         case MERIT_BACKTRACKING:
-            printf("Files for MERIT_BACKTRACKING currently not implemented! Use funnel file atm!");
-            ocp_nlp_globalization_funnel_config_initialize_default(config->globalization);
+            ocp_nlp_globalization_merit_backtracking_config_initialize_default(config->globalization);
             break;
         case FUNNEL_L1PEN_LINESEARCH:
             ocp_nlp_globalization_funnel_config_initialize_default(config->globalization);

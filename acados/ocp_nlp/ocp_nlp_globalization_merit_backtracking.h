@@ -113,39 +113,17 @@ void *ocp_nlp_globalization_merit_backtracking_memory_assign(void *config, void 
  * functions
  ************************************************/
 
-void debug_output(ocp_nlp_opts *opts, char* message, int print_level);
 //
-void debug_output_double(ocp_nlp_opts *opts, char* message, double value, int print_level);
+int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
+            int sqp_iter, double *alpha_ref);
 //
-void initialize_merit_backtracking_width(ocp_nlp_globalization_merit_backtracking_memory *mem, ocp_nlp_globalization_merit_backtracking_opts *opts, double initial_infeasibility);
+double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+          ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
 //
-void update_merit_backtracking_penalty_parameter(ocp_nlp_globalization_merit_backtracking_memory *mem,
-                                            ocp_nlp_globalization_merit_backtracking_opts *opts,
-                                            double pred_f, double pred_h);
+void merit_backtracking_initialize_weights(ocp_nlp_dims *dims, ocp_nlp_out *weight_merit_fun, ocp_qp_out *qp_out);
 //
-void decrease_merit_backtracking(ocp_nlp_globalization_merit_backtracking_memory *mem, ocp_nlp_globalization_merit_backtracking_opts *opts, double trial_infeasibility, double current_infeasibility);
-//
-bool is_iterate_inside_of_merit_backtracking(ocp_nlp_globalization_merit_backtracking_memory *mem, ocp_nlp_globalization_merit_backtracking_opts *opts, double infeasibility);
-//
-bool is_merit_backtracking_sufficient_decrease_satisfied(ocp_nlp_globalization_merit_backtracking_memory *mem, ocp_nlp_globalization_merit_backtracking_opts *opts, double infeasibility);
-//
-bool is_switching_condition_satisfied(ocp_nlp_globalization_merit_backtracking_opts *opts, double pred_optimality, double step_size, double pred_infeasibility);
-//
-bool is_f_type_armijo_condition_satisfied(ocp_nlp_globalization_opts *globalization_opts,
-                                        double negative_ared,
-                                        double pred,
-                                        double alpha);
-//
-bool is_trial_iterate_acceptable_to_merit_backtracking(ocp_nlp_globalization_merit_backtracking_memory *mem,
-                                            ocp_nlp_opts *nlp_opts,
-                                            double pred, double ared, double alpha,
-                                            double current_infeasibility,
-                                            double trial_infeasibility,
-                                            double current_objective,
-                                            double trial_objective,
-                                            double current_merit,
-                                            double trial_merit,
-                                            double pred_merit);
+void merit_backtracking_update_weights(ocp_nlp_dims *dims, ocp_nlp_out *weight_merit_fun, ocp_qp_out *qp_out);
 //
 int backtracking_line_search(ocp_nlp_config *config,
                             ocp_nlp_dims *dims,
