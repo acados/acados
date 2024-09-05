@@ -60,7 +60,7 @@ classdef GenerateContext < handle
             if isempty(obj.p_global) || length(obj.p_global) == 0
                 % normal behavior (p_global is empty)
                 fun = Function(name, inputs, outputs);
-                obj = obj.__add_function(name, output_dir, fun);
+                obj = obj.add_function(name, output_dir, fun);
             else
                 % interesting behavior
                 check_casadi_version_supports_p_global();
@@ -83,7 +83,7 @@ classdef GenerateContext < handle
                 obj.p_global_expressions = [obj.p_global_expressions, param.primitives()];
 
                 fun_mod = Function(fun.name(), inputs, outputs_ret);
-                obj = obj.__add_function(name, output_dir, fun_mod);
+                obj = obj.add_function(name, output_dir, fun_mod);
             end
         end
 
@@ -94,20 +94,20 @@ classdef GenerateContext < handle
                 output_dir = obj.opts.code_export_directory;
                 fun_name = [obj.problem_name, '_p_global_precompute_fun'];
                 fun = Function(fun_name, {obj.p_global}, y, {'p_global'}, obj.pool_names);
-                obj = obj.__add_function(fun_name, output_dir, fun);
+                obj = obj.add_function(fun_name, output_dir, fun);
             end
 
-            obj = obj.__generate_functions();
+            obj = obj.generate_functions();
         end
     end
 
     methods (Access = private)
-        function obj = __add_function(obj, name, output_dir, fun)
+        function obj = add_function(obj, name, output_dir, fun)
             obj.list_funname_dir_pairs{end+1} = {name, output_dir};
             obj.functions_to_generate{end+1} = fun;
         end
 
-        function obj = __generate_functions(obj)
+        function obj = generate_functions(obj)
 
             for i = 1:numel(obj.list_funname_dir_pairs)
                 name = obj.list_funname_dir_pairs{i}{1};
@@ -121,7 +121,7 @@ classdef GenerateContext < handle
                 end
                 cd(output_dir);
 
-                % Generate function
+                % generate function
                 try
                     fun.generate(name, obj.casadi_codegen_opts);
                 catch e
