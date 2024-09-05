@@ -54,7 +54,12 @@ acados_size_t ocp_nlp_globalization_config_calculate_size()
 
 ocp_nlp_globalization_config *ocp_nlp_globalization_config_assign(void *raw_memory)
 {
-    return raw_memory;
+    char *c_ptr = raw_memory;
+
+    ocp_nlp_globalization_config *config = (ocp_nlp_globalization_config *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_globalization_config);
+
+    return config;
 }
 
 /************************************************
@@ -65,6 +70,11 @@ ocp_nlp_globalization_config *ocp_nlp_globalization_config_assign(void *raw_memo
 /************************************************
  * options
  ************************************************/
+acados_size_t ocp_nlp_globalization_opts_calculate_size(void *config, void *dims)
+{
+    return sizeof(ocp_nlp_globalization_opts);
+}
+
 void ocp_nlp_globalization_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     ocp_nlp_globalization_opts *opts = opts_;
@@ -79,7 +89,6 @@ void ocp_nlp_globalization_opts_initialize_default(void *config_, void *dims_, v
 
     return;
 }
-
 
 void ocp_nlp_globalization_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
