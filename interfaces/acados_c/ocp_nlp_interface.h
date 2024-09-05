@@ -94,6 +94,13 @@ typedef enum
     INVALID_REGULARIZE,
 } ocp_nlp_reg_t;
 
+/// Globalization types
+typedef enum
+{
+    FIXED_STEP,
+    MERIT_BACKTRACKING,
+    FUNNEL_L1PEN_LINESEARCH
+} ocp_nlp_globalization_t;
 
 /// Structure to store the configuration of a non-linear program
 typedef struct ocp_nlp_plan_t
@@ -109,6 +116,9 @@ typedef struct ocp_nlp_plan_t
 
     /// Regularization type, defaults to no regularization.
     ocp_nlp_reg_t regularization;
+
+    /// Regularization type, defaults to no regularization.
+    ocp_nlp_reg_t globalization;
 
     /// Cost type for each stage.
     ocp_nlp_cost_t *nlp_cost;

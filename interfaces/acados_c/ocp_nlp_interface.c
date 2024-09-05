@@ -52,6 +52,7 @@
 #include "acados/ocp_nlp/ocp_nlp_reg_project.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_project_reduc_hess.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_noreg.h"
+#include "acados/ocp_nlp/ocp_nlp_globalization_funnel.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
 #include "acados/ocp_nlp/ocp_nlp_ddp.h"
@@ -136,6 +137,8 @@ static void ocp_nlp_plan_initialize_default(ocp_nlp_plan_t *plan)
     // regularization: no reg by default
     plan->regularization = NO_REGULARIZE;
 
+    // globalization: fixed step by default
+    plan->globalization = FIXED_STEP;
 
     return;
 }
@@ -225,6 +228,25 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
             break;
         default:
             printf("\nerror: ocp_nlp_config_create: unsupported plan->regularization\n");
+            exit(1);
+    }
+
+    // globalization
+    switch (plan.globalization)
+    {
+        case FIXED_STEP:
+            printf("Files for FIXED_STEP currently not implemented! Use funnel file atm!");
+            ocp_nlp_globalization_funnel_config_initialize_default(config->globalization);
+            break;
+        case MERIT_BACKTRACKING:
+            printf("Files for MERIT_BACKTRACKING currently not implemented! Use funnel file atm!");
+            ocp_nlp_globalization_funnel_config_initialize_default(config->globalization);
+            break;
+        case FUNNEL_L1PEN_LINESEARCH:
+            ocp_nlp_globalization_funnel_config_initialize_default(config->globalization);
+            break;
+        default:
+            printf("\nerror: ocp_nlp_config_create: unsupported plan->globalization\n");
             exit(1);
     }
 
