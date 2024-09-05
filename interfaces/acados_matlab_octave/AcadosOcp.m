@@ -257,13 +257,6 @@ classdef AcadosOcp < handle
                 dims.nbxe_0 = 0;
             end
 
-            % check if has_x0 is true
-            % if true ineqaulities are set to equalities
-            if dims.nx == dims.nbx_0 && all(sort(reshape(constraints.idxbx_0, 1, [])) == 0:(dims.nx-1)) && all(constraints.lbx_0 == constraints.ubx_0)
-                constraints.has_x0 = true;
-                dims.nbxe_0 = dims.nx;
-            end
-
             % path
             if ~isempty(constraints.idxbx) && ~isempty(constraints.lbx) && ~isempty(constraints.ubx)
                 nbx = length(constraints.lbx);
