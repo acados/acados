@@ -379,19 +379,9 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, 
     end
 
     % check if has_x0 is true. If true inequalities are set to equalities
-    % NOTE: This duplicates some code from make_consistent, but is needed to check for has_x0
-    if ~isempty(ocp.constraints.idxbx_0) && ~isempty(ocp.constraints.lbx_0) && ~isempty(ocp.constraints.ubx_0)
-        nbx_0 = length(ocp.constraints.lbx_0);
-        if nbx_0 ~= length(ocp.constraints.ubx_0) || nbx_0 ~= length(ocp.constraints.idxbx_0)
-            error('inconsistent dimension nbx_0, regarding idxbx_0, lbx_0, ubx_0.');
-        end
-    elseif ~isempty(ocp.constraints.idxbx_0) || ~isempty(ocp.constraints.lbx_0) || ~isempty(ocp.constraints.ubx_0)
-        error('setting bounds on x: need idxbx_0, lbx_0, ubx_0, at least one missing.');
-    else
-        nbx_0 = 0;
-    end
-    ocp.dims.nbx_0 = nbx_0;
-
+    % NOTE: This adds an additional call to make_consistent, but is
+    % necessary for the check for has_x0
+    ocp.model.make_consistent(ocp.dims);
     if ocp.dims.nx == ocp.dims.nbx_0 && all(sort(reshape(ocp.constraints.idxbx_0, 1, [])) == 0:(ocp.dims.nx-1)) && all(ocp.constraints.lbx_0 == ocp.constraints.ubx_0)
         ocp.constraints.x0 = ocp.constraints.lbx_0; % this will set has_x0 to true and set additional fields
     end
