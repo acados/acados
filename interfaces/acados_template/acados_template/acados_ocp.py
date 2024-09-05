@@ -1021,7 +1021,7 @@ class AcadosOcp:
                     raise NotImplementedError("LIFTED_IRK with time-varying dynamics not implemented yet.")
                 generate_c_code_implicit_ode(context, model, model_dir)
             elif self.solver_options.integrator_type == 'GNSF':
-                generate_c_code_gnsf(context, model)
+                generate_c_code_gnsf(context, model, model_dir)
             elif self.solver_options.integrator_type == 'DISCRETE':
                 generate_c_code_discrete_dynamics(context, model, model_dir)
             else:
