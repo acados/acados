@@ -32,12 +32,12 @@ classdef GenerateContext < handle
     properties
         p_global
         problem_name
-        pool_names = {};
-        p_global_expressions = {};
+        pool_names
+        p_global_expressions
         opts
-        casadi_codegen_opts = struct();
-        list_funname_dir_pairs = cell();  % list of (function_name, output_dir), NOTE: this can be used to simplify template based code generation!
-        functions_to_generate = cell();
+        casadi_codegen_opts
+        list_funname_dir_pairs  % list of (function_name, output_dir), NOTE: this can be used to simplify template based code generation!
+        functions_to_generate
     end
 
     methods
@@ -47,11 +47,19 @@ classdef GenerateContext < handle
             end
             obj.p_global = p_global;
             obj.problem_name = problem_name;
-            obj.opts = opts;
 
+            obj.pool_names = {};
+            obj.p_global_expressions = [];
+
+            obj.opts = opts;
+            obj.casadi_codegen_opts = struct();
             obj.casadi_codegen_opts.mex = false;
             obj.casadi_codegen_opts.casadi_int = 'int';
             obj.casadi_codegen_opts.casadi_real = 'double';
+
+            obj.list_funname_dir_pairs = {};
+            obj.functions_to_generate = {};
+
         end
 
         function obj = add_function_definition(obj, name, inputs, outputs, output_dir)
