@@ -36,11 +36,13 @@ class AcadosOcpCost:
     """
     Class containing the numerical data of the cost:
 
-    NOTE: all cost terms, except for the terminal one, are weighted with the corresponding time step.
-    This means given the time steps are :math:`\Delta t_0,..., \Delta t_N`, the total cost is given by:
-    :math:`c_\\text{total} = \Delta t_0 \cdot c_0(x_0, u_0, p_0, z_0) + ... + \Delta t_{N-1} \cdot c_{N-1}(x_0, u_0, p_0, z_0) + c_N(x_N, p_N)`.
+    NOTE: By default, the Lagrange cost term provided in continuous time is internally integrated using the explicit Euler method, cost_discretization = 'EULER',
+    which allows for a seamless OCP discretization with a nonuniform time grid.
+    This means that all cost terms, except for the terminal one, are weighted with the corresponding time step.
+    :math:`c_\\text{total} = \Delta t_0 \cdot l_0(x_0, u_0, z_0, p_0) + ... + \Delta t_{N-1} \cdot l_{N-1}(x_{N-1}, u_{N-1}, z_{N-1}, p_{N-1}) + l_N(x_N, p_N)`.
 
-    This means the Lagrange cost term is given in continuous time, which allows for a seamless OCP discretization with a nonuniform time grid.
+    If a nonlinear least-squares or convex-over-nonlinear cost is used, the cost can also be integrated using the same integration scheme,
+    which is used for the dynamics, cost_discretization = 'INTEGRATOR'.
 
     In case of LINEAR_LS:
     stage cost is
@@ -50,13 +52,13 @@ class AcadosOcpCost:
 
     In case of NONLINEAR_LS:
     stage cost is
-    :math:`l(x,u,z,p) = 0.5 \cdot || y(x,u,z,p) - y_\\text{ref}||^2_W`,
+    :math:`l(x,u,z,t,p) = 0.5 \cdot || y(x,u,z,t,p) - y_\\text{ref}||^2_W`,
     terminal cost is
     :math:`m(x,p) = 0.5 \cdot || y^e(x,p) - y_\\text{ref}^e||^2_{W^e}`
 
     In case of CONVEX_OVER_NONLINEAR:
     stage cost is
-    :math:`l(x,u,p) = \psi(y(x,u,p) - y_\\text{ref}, p)`,
+    :math:`l(x,u,z,t,p) = \psi(y(x,u,z,t,p) - y_\\text{ref}, t, p)`,
     terminal cost is
     :math:`m(x, p) = \psi^e (y^e(x,p) - y_\\text{ref}^e, p)`
     """

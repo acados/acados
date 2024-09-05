@@ -189,27 +189,27 @@ class AcadosModel():
         ## CONVEX_OVER_NONLINEAR convex-over-nonlinear cost: psi(y(x, u, p) - y_ref; p)
         self.cost_psi_expr_0 = None
         """
-        CasADi expression for the outer loss function :math:`\psi(r, p)`, initial; Default: :code:`None`
+        CasADi expression for the outer loss function :math:`\psi(r - yref, t, p)`, initial; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type_0` is 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_psi_expr = None
         """
-        CasADi expression for the outer loss function :math:`\psi(r, p)`; Default: :code:`None`
+        CasADi expression for the outer loss function :math:`\psi(r - yref, t, p)`; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type` is 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_psi_expr_e = None
         """
-        CasADi expression for the outer loss function :math:`\psi(r, p)`, terminal; Default: :code:`None`
+        CasADi expression for the outer loss function :math:`\psi(r - yref, p)`, terminal; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type_e` is 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_r_in_psi_expr_0 = None
         """
-        CasADi symbolic input variable for the argument :math:`r` to the outer loss function :math:`\psi(r, p)`, initial; Default: :code:`None`
+        CasADi symbolic input variable for the argument :math:`r` to the outer loss function :math:`\psi(r, t, p)`, initial; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type_0` is 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_r_in_psi_expr = None
         """
-        CasADi symbolic input variable for the argument :math:`r` to the outer loss function :math:`\psi(r, p)`; Default: :code:`None`
+        CasADi symbolic input variable for the argument :math:`r` to the outer loss function :math:`\psi(r, t, p)`; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type` is 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_r_in_psi_expr_e = None
