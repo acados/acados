@@ -133,7 +133,7 @@ class GenerateContext:
 # Dynamics
 ################
 
-def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosModel):
+def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosModel, model_dir: str):
     opts = context.opts
 
     # load model
@@ -159,9 +159,6 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
     adj_ux = ca.jtimes(phi, ux, lam, True)
     # generate hessian
     hess_ux = ca.jacobian(adj_ux, ux, {"symmetric": is_casadi_SX(x)})
-
-    # change directory
-    model_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model_name}_model'))
 
     # set up & generate ca.Functions
     fun_name = model_name + '_dyn_disc_phi_fun'
@@ -190,7 +187,7 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
 
 
 
-def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel):
+def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, model_dir: str):
     opts = context.opts
     generate_hess = opts["generate_hess"]
 
@@ -234,9 +231,6 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel):
 
         fun_name = model_name + '_expl_ode_hess'
 
-    # directory
-    model_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model_name}_model'))
-
     # generate C code
     fun_name = model_name + '_expl_ode_fun'
     context.add_function_definition(fun_name, [x, u, p], [f_expl], model_dir)
@@ -254,7 +248,7 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel):
     return
 
 
-def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel):
+def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel, model_dir: str):
     opts = context.opts
 
     # load model
@@ -276,8 +270,6 @@ def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel):
     jac_xdot = ca.jacobian(f_impl, xdot)
     jac_u = ca.jacobian(f_impl, u)
     jac_z = ca.jacobian(f_impl, z)
-
-    model_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model_name}_model'))
 
     # Set up functions
     p = model.p
@@ -308,12 +300,8 @@ def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel):
     return
 
 
-def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel):
-    opts = context.opts
+def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir: str):
     model_name = model.name
-
-    # set up directory
-    model_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model_name}_model'))
 
     # obtain gnsf dimensions
     get_matrices_fun = model.get_matrices_fun
