@@ -215,7 +215,7 @@ classdef AcadosModel < handle
 
             if isempty(obj.xdot)
                 obj.xdot = empty_var;
-            elseif ~iscolumn(obj.xdot) || size(obj.xdot, 1) ~= dims.nx
+            elseif ~(isa(obj.z, 'casadi.SX') == isSX && length(obj.z) == 0) && (~iscolumn(obj.xdot) || size(obj.xdot, 1) ~= dims.nx)
                 error('model.xdot should be a column vector of size nx.');
             end
 
