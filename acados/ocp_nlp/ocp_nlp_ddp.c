@@ -751,7 +751,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // linearize NLP, update QP matrices, and add Levenberg-Marquardt term
             acados_tic(&timer1);
             ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-            if (nlp_opts->with_adaptive_levenberg_marquardt || nlp_opts->globalization != FIXED_STEP)
+            if (nlp_opts->with_adaptive_levenberg_marquardt || config->globalization->needs_objective_value() == 1)
             {
                 ocp_nlp_get_cost_value_from_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
             }
@@ -947,33 +947,36 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
         else
         {
-            int linesearch_success = 1;
-            // Do the globalization here: Either fixed step or Armijo line search
-            acados_tic(&timer1);
-            // NOTE on timings: currently all within globalization is accounted for within time_glob.
-            //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
-            if (nlp_opts->globalization == FIXED_STEP)
-            {
-                // Set the given step length
-                mem->alpha = nlp_opts->step_length;
+            int globalization_success = 1;
+            globalization_success = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, nlp_work, nlp_opts);
+            // int linesearch_success = 1;
+            // // Do the globalization here: Either fixed step or Armijo line search
+            // acados_tic(&timer1);
+            // // NOTE on timings: currently all within globalization is accounted for within time_glob.
+            // //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
+            // // config->globalization->find_acceptable_iterate()
+            // if (nlp_opts->globalization == FIXED_STEP)
+            // {
+            //     // Set the given step length
+            //     mem->alpha = nlp_opts->step_length;
 
-                // update variables
-                ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->alpha);
-            }
-            else if (globalization_opts->globalization == MERIT_BACKTRACKING)
-            {
-                // do backtracking line search on objective function
-                linesearch_success = ocp_nlp_ddp_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);
-                // evaluate_cost = false; // since the cost was already evaluated in the line search
-            }
+            //     // update variables
+            //     ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->alpha);
+            // }
+            // else if (globalization_opts->globalization == MERIT_BACKTRACKING)
+            // {
+            //     // do backtracking line search on objective function
+            //     linesearch_success = ocp_nlp_ddp_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);
+            //     // evaluate_cost = false; // since the cost was already evaluated in the line search
+            // }
 
-            mem->stat[mem->stat_n*(ddp_iter+1)+6] = mem->alpha;
-            // Copy new iterate to nlp_out
-            if (linesearch_success == 1)
-            {
-                // in case line search fails, we do not want to copy trial iterates!
-                copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
-            }
+            // mem->stat[mem->stat_n*(ddp_iter+1)+6] = mem->alpha;
+            // // Copy new iterate to nlp_out
+            // if (linesearch_success == 1)
+            // {
+            //     // in case line search fails, we do not want to copy trial iterates!
+            //     copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
+            // }
             mem->time_glob += acados_toc(&timer1);
         }
     }  // end DDP loop

@@ -572,7 +572,7 @@ void ocp_nlp_globalization_funnel_print_iteration(ocp_nlp_opts* opts,
 {
     ocp_nlp_globalization_opts *globalization_opts = opts->globalization;
     if ((iter_count % 10 == 0)){
-        print_iteration_header(opts);
+        ocp_nlp_globalization_funnel_print_iteration_header();
     }
     printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %12.4e | %10.4e | %10i | %10i | %10c\n",
         iter_count,
@@ -591,7 +591,10 @@ void ocp_nlp_globalization_funnel_print_iteration(ocp_nlp_opts* opts,
         iter_type);
 }
 
-
+int ocp_nlp_globalization_funnel_needs_objective_value()
+{
+    return 1;
+}
 
 void ocp_nlp_globalization_funnel_config_initialize_default(ocp_nlp_globalization_config *config)
 {
@@ -604,4 +607,5 @@ void ocp_nlp_globalization_funnel_config_initialize_default(ocp_nlp_globalizatio
     config->find_acceptable_iterate = &ocp_nlp_globalization_funnel_find_acceptable_iterate;
     config->print_iteration_header = &ocp_nlp_globalization_funnel_print_iteration_header;
     config->print_iteration = &ocp_nlp_globalization_funnel_print_iteration;
+    config->needs_objective_value = &ocp_nlp_globalization_funnel_needs_objective_value;
 }

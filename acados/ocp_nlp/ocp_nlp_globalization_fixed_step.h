@@ -34,8 +34,8 @@
 /// \addtogroup ocp_nlp_globalization
 /// @{
 
-#ifndef ACADOS_OCP_NLP_OCP_NLP_GLOBALIZATION_FUNNEL_H_
-#define ACADOS_OCP_NLP_OCP_NLP_GLOBALIZATION_FUNNEL_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_GLOBALIZATION_FIXED_STEP_H_
+#define ACADOS_OCP_NLP_OCP_NLP_GLOBALIZATION_FIXED_STEP_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,54 +52,45 @@ extern "C" {
 /************************************************
  * options
  ************************************************/
-
+// TODO: remove stufF!
 typedef struct
 {
     ocp_nlp_globalization_opts *globalization_opts;
 
-    // Funnel globalization related options
-    double initialization_increase_factor; // for multiplication with initial infeasibility
-    double initialization_upper_bound; // for initialization of initial funnel width
-    double sufficient_decrease_factor; // multiplication factor for funnel suff. decrease factor
-    double kappa; // parameter for reduction of funnel
-    double fraction_switching_condition; // parameter in switching condition
-    double initial_penalty_parameter; // initial penalty parameter for penalty phase
-    double penalty_eta; // fraction in penalty update
-    double penalty_contraction; // penalty contraction factor
-    bool type_switching_condition; // which type of switching condition do we use?
-} ocp_nlp_globalization_funnel_opts;
+} ocp_nlp_globalization_merit_backtracking_opts;
 
 //
-acados_size_t ocp_nlp_globalization_funnel_opts_calculate_size(void *config, void *dims);
+acados_size_t ocp_nlp_globalization_merit_backtracking_opts_calculate_size(void *config, void *dims);
 //
-void *ocp_nlp_globalization_funnel_opts_assign(void *config, void *dims, void *raw_memory);
+void *ocp_nlp_globalization_merit_backtracking_opts_assign(void *config, void *dims, void *raw_memory);
 //
-void ocp_nlp_globalization_funnel_opts_initialize_default(void *config, void *dims, void *opts);
+void ocp_nlp_globalization_merit_backtracking_opts_initialize_default(void *config, void *dims, void *opts);
 //
-void ocp_nlp_globalization_funnel_opts_update(void *config, void *dims, void *opts);
+void ocp_nlp_globalization_merit_backtracking_opts_update(void *config, void *dims, void *opts);
 //
-void ocp_nlp_globalization_funnel_opts_set(void *config, void *opts, const char *field, void* value);
+void ocp_nlp_globalization_merit_backtracking_opts_set(void *config, void *opts, const char *field, void* value);
 
 
 /************************************************
  * memory
  ************************************************/
 
+// TODO: remove stufF!
 typedef struct
 {
     double step_norm;
-    double funnel_width;
-    char funnel_iter_type;
-    bool funnel_penalty_mode;
+    double merit_backtracking_width;
+    char merit_backtracking_iter_type;
+    bool merit_backtracking_penalty_mode;
     double l1_infeasibility;
-    double funnel_penalty_parameter;
+    double merit_backtracking_penalty_parameter;
     double alpha;
-} ocp_nlp_globalization_funnel_memory;
+} ocp_nlp_globalization_merit_backtracking_memory;
 
 //
-acados_size_t ocp_nlp_globalization_funnel_memory_calculate_size(void *config, void *dims, void *opts_);
+acados_size_t ocp_nlp_globalization_merit_backtracking_memory_calculate_size(void *config, void *dims, void *opts_);
 //
-void *ocp_nlp_globalization_funnel_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
+void *ocp_nlp_globalization_merit_backtracking_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
 //
 
 /************************************************
@@ -110,7 +101,7 @@ void *ocp_nlp_globalization_funnel_memory_assign(void *config, void *dims, void 
 // {
 //     ocp_nlp_workspace *nlp_work;
 
-// } ocp_nlp_globalization_funnel_workspace;
+// } ocp_nlp_globalization_merit_backtracking_workspace;
 
 // //
 // acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config, void *dims, void *opts_);
@@ -126,26 +117,26 @@ void debug_output(ocp_nlp_opts *opts, char* message, int print_level);
 //
 void debug_output_double(ocp_nlp_opts *opts, char* message, double value, int print_level);
 //
-void initialize_funnel_width(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double initial_infeasibility);
+void initialize_merit_backtracking_width(ocp_nlp_globalization_merit_backtracking_memory *mem, ocp_nlp_globalization_merit_backtracking_opts *opts, double initial_infeasibility);
 //
-void update_funnel_penalty_parameter(ocp_nlp_globalization_funnel_memory *mem,
-                                            ocp_nlp_globalization_funnel_opts *opts,
+void update_merit_backtracking_penalty_parameter(ocp_nlp_globalization_merit_backtracking_memory *mem,
+                                            ocp_nlp_globalization_merit_backtracking_opts *opts,
                                             double pred_f, double pred_h);
 //
-void decrease_funnel(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double trial_infeasibility, double current_infeasibility);                                          
+void decrease_merit_backtracking(ocp_nlp_globalization_merit_backtracking_memory *mem, ocp_nlp_globalization_merit_backtracking_opts *opts, double trial_infeasibility, double current_infeasibility);
 //
-bool is_iterate_inside_of_funnel(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double infeasibility);
+bool is_iterate_inside_of_merit_backtracking(ocp_nlp_globalization_merit_backtracking_memory *mem, ocp_nlp_globalization_merit_backtracking_opts *opts, double infeasibility);
 //
-bool is_funnel_sufficient_decrease_satisfied(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double infeasibility);
+bool is_merit_backtracking_sufficient_decrease_satisfied(ocp_nlp_globalization_merit_backtracking_memory *mem, ocp_nlp_globalization_merit_backtracking_opts *opts, double infeasibility);
 //
-bool is_switching_condition_satisfied(ocp_nlp_globalization_funnel_opts *opts, double pred_optimality, double step_size, double pred_infeasibility);
+bool is_switching_condition_satisfied(ocp_nlp_globalization_merit_backtracking_opts *opts, double pred_optimality, double step_size, double pred_infeasibility);
 //
 bool is_f_type_armijo_condition_satisfied(ocp_nlp_globalization_opts *globalization_opts,
                                         double negative_ared,
                                         double pred,
                                         double alpha);
 //
-bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *mem,
+bool is_trial_iterate_acceptable_to_merit_backtracking(ocp_nlp_globalization_merit_backtracking_memory *mem,
                                             ocp_nlp_opts *nlp_opts,
                                             double pred, double ared, double alpha,
                                             double current_infeasibility,
@@ -154,7 +145,7 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
                                             double trial_objective,
                                             double current_merit,
                                             double trial_merit,
-                                            double pred_merit);                                                   
+                                            double pred_merit);
 //
 int backtracking_line_search(ocp_nlp_config *config,
                             ocp_nlp_dims *dims,
@@ -164,39 +155,21 @@ int backtracking_line_search(ocp_nlp_config *config,
                             ocp_nlp_workspace *nlp_work,
                             ocp_nlp_opts *nlp_opts);
 //
-int ocp_nlp_globalization_funnel_find_acceptable_iterate(ocp_nlp_config *nlp_config,
+int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(ocp_nlp_config *nlp_config,
                             ocp_nlp_dims *nlp_dims,
                             ocp_nlp_in *nlp_in,
                             ocp_nlp_out *nlp_out,
                             ocp_nlp_memory *nlp_mem,
                             ocp_nlp_workspace *nlp_work,
                             ocp_nlp_opts *nlp_opts);
-//
-void ocp_nlp_globalization_funnel_print_iteration_header();
-//
-void ocp_nlp_globalization_funnel_print_iteration(ocp_nlp_opts* opts,
-                                                double obj,
-                                                int iter_count,
-                                                double infeas_eq,
-                                                double infeas_ineq,
-                                                double stationarity,
-                                                double complementarity,
-                                                double alpha,
-                                                double step_norm,
-                                                double reg_param,
-                                                double funnel_width,
-                                                double penalty_parameter,
-                                                int qp_status,
-                                                int qp_iter,
-                                                char iter_type);
 
 
-void ocp_nlp_globalization_funnel_config_initialize_default(ocp_nlp_globalization_config *config);
+void ocp_nlp_globalization_merit_backtracking_config_initialize_default(ocp_nlp_globalization_config *config);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_OCP_NLP_OCP_NLP_GLOBALIZATION_FUNNEL_H_
+#endif  // ACADOS_OCP_NLP_OCP_NLP_GLOBALIZATION_FIXED_STEP_H_
 /// @}
 /// @}

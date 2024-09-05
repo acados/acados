@@ -34,8 +34,8 @@
 /// \addtogroup ocp_nlp_globalization
 /// @{
 
-#ifndef ACADOS_OCP_NLP_OCP_NLP_GLOBALIZATION_FUNNEL_H_
-#define ACADOS_OCP_NLP_OCP_NLP_GLOBALIZATION_FUNNEL_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_GLOBALIZATION_MERIT_BACKTRACKING_H_
+#define ACADOS_OCP_NLP_OCP_NLP_GLOBALIZATION_MERIT_BACKTRACKING_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -170,6 +170,6 @@ void ocp_nlp_globalization_merit_backtracking_config_initialize_default(ocp_nlp_
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_OCP_NLP_OCP_NLP_GLOBALIZATION_FUNNEL_H_
+#endif  // ACADOS_OCP_NLP_OCP_NLP_GLOBALIZATION_MERIT_BACKTRACKING_H_
 /// @}
 /// @}

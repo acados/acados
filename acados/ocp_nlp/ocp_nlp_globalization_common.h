@@ -67,6 +67,10 @@ typedef struct
     void (*opts_set)(void *config, void *opts, const char *field, void* value);
     /* functions */
     int (*find_acceptable_iterate)(void *nlp_config, void *nlp_dims, void *nlp_in, void *nlp_out, void *nlp_mem, void *nlp_work, void *nlp_opts);
+    // TODO: specify inputs below!
+    void (*print_iteration_header)(void *globalization_opts);
+    void (*print_iteration)(void *globalization_opts);
+    int (*needs_objective_value)();
 } ocp_nlp_globalization_config;
 
 //

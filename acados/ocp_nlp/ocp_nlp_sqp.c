@@ -1383,7 +1383,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // linearize NLP and update QP matrices
             acados_tic(&timer1);
             ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-            if (nlp_opts->with_adaptive_levenberg_marquardt || nlp_opts->globalization != FIXED_STEP)
+            if (nlp_opts->with_adaptive_levenberg_marquardt || config->globalization->needs_objective_value() == 1)
             {
                 ocp_nlp_get_cost_value_from_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
             }
@@ -1590,18 +1590,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         int globalization_success = 1;
         globalization_success = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, nlp_work, nlp_opts);
-//         if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH)
-//         {
-//             bool linesearch_success = 1;
-//             linesearch_success = ocp_nlp_globalization_funnel_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);
-//             // Copy new iterate to nlp_out
-//             if (linesearch_success)
-//             {
-//                 // in case line search fails, we do not want to copy trial iterates!
-//                 copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
-//             }
-//             mem->time_glob += acados_toc(&timer1);
-//         }
 //         else
 //         {
 //             bool do_line_search = true;
