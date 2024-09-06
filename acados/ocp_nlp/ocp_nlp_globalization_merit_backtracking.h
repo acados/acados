@@ -112,7 +112,6 @@ void *ocp_nlp_globalization_merit_backtracking_memory_assign(void *config, void 
 /************************************************
  * functions
  ************************************************/
-
 //
 int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
@@ -140,8 +139,27 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(ocp_nlp_con
                             ocp_nlp_memory *nlp_mem,
                             ocp_nlp_workspace *nlp_work,
                             ocp_nlp_opts *nlp_opts);
-
-
+//
+void ocp_nlp_globalization_merit_backtracking_print_iteration_header();
+//
+void ocp_nlp_globalization_merit_backtracking_print_iteration(ocp_nlp_opts* opts,
+                    double obj,
+                    int iter_count,
+                    double infeas_eq,
+                    double infeas_ineq,
+                    double stationarity,
+                    double complementarity,
+                    double alpha,
+                    double step_norm,
+                    double reg_param,
+                    double funnel_width,
+                    double penalty_parameter,
+                    int qp_status,
+                    int qp_iter,
+                    char iter_type);
+//
+int ocp_nlp_globalization_merit_backtracking_needs_objective_value();
+//
 void ocp_nlp_globalization_merit_backtracking_config_initialize_default(ocp_nlp_globalization_config *config);
 
 #ifdef __cplusplus

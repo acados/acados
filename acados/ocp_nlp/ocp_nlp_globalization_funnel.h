@@ -189,8 +189,9 @@ void ocp_nlp_globalization_funnel_print_iteration(ocp_nlp_opts* opts,
                                                 int qp_status,
                                                 int qp_iter,
                                                 char iter_type);
-
-
+//
+int ocp_nlp_globalization_funnel_needs_objective_value();
+//
 void ocp_nlp_globalization_funnel_config_initialize_default(ocp_nlp_globalization_config *config);
 
 #ifdef __cplusplus
