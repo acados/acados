@@ -61,7 +61,7 @@ extern "C" {
 typedef struct
 {
     /* opts */
-    acados_size_t (*opts_calculate_size)(void);
+    acados_size_t (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *opts);
     void (*opts_set)(void *config, void *opts, const char *field, void* value);

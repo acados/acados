@@ -291,9 +291,8 @@ void ocp_nlp_globalization_merit_backtracking_print_iteration(ocp_nlp_opts* opts
                     int qp_iter,
                     char iter_type)
 {
-    ocp_nlp_globalization_opts *globalization_opts = opts->globalization;
     if ((iter_count % 10 == 0)){
-        print_iteration_header(opts);
+        ocp_nlp_globalization_merit_backtracking_print_iteration_header();
     }
     printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n",
         iter_count,
@@ -306,12 +305,317 @@ void ocp_nlp_globalization_merit_backtracking_print_iteration(ocp_nlp_opts* opts
         alpha);
 }
 
+static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
+            ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_workspace *work, int sqp_iter)
+{
+    int ii;
+    int N = dims->N;
+
+    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+
+    ocp_nlp_workspace *nlp_work = work->nlp_work;
+
+    ocp_qp_in *qp_in = nlp_mem->qp_in;
+    ocp_qp_out *qp_out = nlp_mem->qp_out;
+    qp_info *qp_info_;
+    // NOTE: following Waechter2006:
+    // Do SOC
+    // 1. if "the first trial step size alpha_k,0 has been rejected and
+    // 2. if the infeasibility would have increased when accepting the previous step
+    // NOTE: the "and" is interpreted as an "or" in the current implementation
+
+    // preliminary line search
+    int line_search_status = ocp_nlp_line_search_merit_check_full_step(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter);
+
+    // return bool do_line_search;
+    if (line_search_status == ACADOS_NAN_DETECTED)
+    {
+        // do line search but no SOC.
+        return true;
+    }
+    else if (line_search_status == ACADOS_SUCCESS)
+    {
+        mem->alpha = 1.0;
+        return false;
+    }
+    // else perform SOC (below)
+
+    // Second Order Correction (SOC): following Nocedal2006: p.557, eq. (18.51) -- (18.56)
+    // Paragraph: APPROACH III: S l1 QP (SEQUENTIAL l1 QUADRATIC PROGRAMMING),
+    // Section 18.8 TRUST-REGION SQP METHODS
+    //   - just no trust region radius here.
+    if (nlp_opts->print_level > 0)
+        printf("ocp_nlp_sqp: performing SOC, since prelim. line search returned %d\n\n", line_search_status);
+    int *nb = qp_in->dim->nb;
+    int *ng = qp_in->dim->ng;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    // int *nv = dims->nv;
+    // int *ni = dims->ni;
+
+    /* evaluate constraints & dynamics at new step */
+    // NOTE: setting up the new iterate and evaluating is not needed here,
+    //   since this evaluation was perfomed just before this call in the early terminated line search.
+
+    // NOTE: similar to ocp_nlp_evaluate_merit_fun
+    // update QP rhs
+    // d_i = c_i(x_k + p_k) - \nabla c_i(x_k)^T * p_k
+    struct blasfeo_dvec *tmp_fun_vec;
+
+    for (ii = 0; ii <= N; ii++)
+    {
+        if (ii < N)
+        {
+            // b -- dynamics
+            tmp_fun_vec = config->dynamics[ii]->memory_get_fun_ptr(nlp_mem->dynamics[ii]);
+            // add - \nabla c_i(x_k)^T * p_k
+            // c_i = f(x_k, u_k) - x_{k+1} (see dynamics module)
+            blasfeo_dgemv_t(nx[ii]+nu[ii], nx[ii+1], -1.0, qp_in->BAbt+ii, 0, 0,
+                            qp_out->ux+ii, 0, -1.0, tmp_fun_vec, 0, qp_in->b+ii, 0);
+            // NOTE: not sure why it is - tmp_fun_vec here!
+            blasfeo_dvecad(nx[ii+1], 1.0, qp_out->ux+ii+1, nu[ii+1], qp_in->b+ii, 0);
+        }
+
+        /* INEQUALITIES */
+        // d -- constraints
+        tmp_fun_vec = config->constraints[ii]->memory_get_fun_ptr(nlp_mem->constraints[ii]);
+        /* SOC for bounds can be skipped (because linear) */
+        // NOTE: SOC can also be skipped for truely linear constraint, i.e. ng of nlp,
+        //      now using ng of QP = (nh+ng)
+
+        // upper & lower
+        blasfeo_dveccp(ng[ii], tmp_fun_vec, nb[ii], qp_in->d+ii, nb[ii]); // lg
+        blasfeo_dveccp(ng[ii], tmp_fun_vec, 2*nb[ii]+ng[ii], qp_in->d+ii, 2*nb[ii]+ng[ii]); // ug
+        // general linear / linearized!
+        // tmp_ni = D * u + C * x
+        blasfeo_dgemv_t(nu[ii]+nx[ii], ng[ii], 1.0, qp_in->DCt+ii, 0, 0, qp_out->ux+ii, 0,
+                        0.0, &work->nlp_work->tmp_ni, 0, &work->nlp_work->tmp_ni, 0);
+        // d[nb:nb+ng] += tmp_ni (lower)
+        blasfeo_dvecad(ng[ii], 1.0, &work->nlp_work->tmp_ni, 0, qp_in->d+ii, nb[ii]);
+        // d[nb:nb+ng] -= tmp_ni
+        blasfeo_dvecad(ng[ii], -1.0, &work->nlp_work->tmp_ni, 0, qp_in->d+ii, 2*nb[ii]+ng[ii]);
+
+        // add slack contributions
+        // d[nb:nb+ng] += slack[idx]
+        // qp_in->idxs_rev
+        for (int j = 0; j < nb[ii]+ng[ii]; j++)
+        {
+            int slack_index = qp_in->idxs_rev[ii][j];
+            if (slack_index >= 0)
+            {
+                // add slack contribution for lower and upper constraint
+                // lower
+                BLASFEO_DVECEL(qp_in->d+ii, j) -=
+                        BLASFEO_DVECEL(qp_out->ux+ii, slack_index+nx[ii]+nu[ii]);
+                // upper
+                BLASFEO_DVECEL(qp_in->d+ii, j+nb[ii]+ng[ii]) -=
+                        BLASFEO_DVECEL(qp_out->ux+ii, slack_index+nx[ii]+nu[ii]+ns[ii]);
+            }
+        }
+
+        // NOTE: bounds on slacks can be skipped, since they are linear.
+        // blasfeo_daxpy(2*ns[ii], -1.0, qp_out->ux+ii, nx[ii]+nu[ii], qp_in->d+ii, 2*nb[ii]+2*ng[ii], qp_in->d+ii, 2*nb[ii]+2*ng[ii]);
+
+        // printf("SOC: qp_in->d final value\n");
+        // blasfeo_print_exp_dvec(2*nb[ii]+2*ng[ii], qp_in->d+ii, 0);
+    }
+
+    if (nlp_opts->print_level > 3)
+    {
+        printf("\n\nSQP: SOC ocp_qp_in at iteration %d\n", sqp_iter);
+        print_ocp_qp_in(qp_in);
+    }
+
+#if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
+    ocp_nlp_sqp_dump_qp_in_to_file(qp_in, sqp_iter, 1);
+#endif
+
+    // solve QP
+    // acados_tic(&timer1);
+    int qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
+                                    opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
+    // NOTE: QP is not timed, since this computation time is attributed to globalization.
+
+    // compute correct dual solution in case of Hessian regularization
+    config->regularize->correct_dual_sol(config->regularize, dims->regularize,
+                                        opts->nlp_opts->regularize, nlp_mem->regularize_mem);
+
+    ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
+    int qp_iter = qp_info_->num_iter;
+
+    // save statistics of last qp solver call
+    // TODO: SOC QP solver call should be warm / hot started!
+    if (sqp_iter+1 < mem->stat_m)
+    {
+        // mem->stat[mem->stat_n*(sqp_iter+1)+4] = qp_status;
+        // add qp_iter; should maybe be in a seperate statistic
+        mem->stat[mem->stat_n*(sqp_iter+1)+5] += qp_iter;
+    }
+
+    // compute external QP residuals (for debugging)
+    if (opts->ext_qp_res)
+    {
+        ocp_qp_res_compute(qp_in, qp_out, work->qp_res, work->qp_res_ws);
+        if (sqp_iter+1 < mem->stat_m)
+            ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+7));
+    }
+
+    if (nlp_opts->print_level > 3)
+    {
+        printf("\n\nSQP: SOC ocp_qp_out at iteration %d\n", sqp_iter);
+        print_ocp_qp_out(qp_out);
+    }
+
+#if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
+        ocp_nlp_sqp_dump_qp_out_to_file(qp_out, sqp_iter, 1);
+#endif
+
+    // exit conditions on QP status
+    if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
+    {
+#ifndef ACADOS_SILENT
+        printf("\nQP solver returned error status %d in SQP iteration %d for SOC QP in QP iteration %d.\n",
+            qp_status, sqp_iter, qp_iter);
+#endif
+        if (nlp_opts->print_level > 1)
+        {
+            printf("\nFailed to solve the following QP:\n");
+            if (nlp_opts->print_level > 3)
+                print_ocp_qp_in(qp_in);
+        }
+
+        mem->status = ACADOS_QP_FAILURE;
+        mem->sqp_iter = sqp_iter;
+
+        return ACADOS_QP_FAILURE;
+    }
+    return true;
+}
+
+static int ocp_nlp_line_search_merit_check_full_step(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work, int sqp_iter)
+{
+    int N = dims->N;
+    int *nv = dims->nv;
+
+    ocp_qp_out *qp_out = mem->qp_out;
+
+    double merit_fun1;
+
+    // copy out (current iterate) to work->tmp_nlp_out
+    for (int i = 0; i <= N; i++)
+        blasfeo_dveccp(nv[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
+    // NOTE: copying duals not needed, as they dont enter the merit function, see ocp_nlp_line_search
+
+
+    /* modify/initialize merit function weights (Leineweber1999 M5.1, p.89) */
+    if (sqp_iter==0)
+    {
+        merit_backtracking_initialize_weights(dims, work->weight_merit_fun, qp_out);
+    }
+    else
+    {
+        // backup weights
+        copy_multipliers_nlp_to_qp(dims, work->weight_merit_fun, work->tmp_qp_out);
+        // update weights
+        merit_backtracking_update_weights(dims, work->weight_merit_fun, qp_out);
+    }
+
+    double merit_fun0 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
+    double alpha = 1.0;
+
+    // TODO(oj): should the merit weight update be undone in case of early termination?
+    double violation_current = ocp_nlp_get_violation_inf_norm(config, dims, in, out, opts, mem, work);
+
+    // tmp_nlp_out = out + alpha * qp_out
+    for (int i = 0; i <= N; i++)
+        blasfeo_daxpy(nv[i], alpha, qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
+    merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
+
+    double violation_step = ocp_nlp_get_violation_inf_norm(config, dims, in, out, opts, mem, work);
+    if (opts->print_level > 0)
+    {
+        printf("\npreliminary line_search: merit0 %e, merit1 %e; viol_current %e, viol_step %e\n", merit_fun0, merit_fun1, violation_current, violation_step);
+    }
+
+    if (isnan(merit_fun1) || isinf(merit_fun1))
+    {
+        // do nothing and continue with normal line search, i.e. step reduction
+        if (sqp_iter != 0)
+        {
+            // reset merit function weights;
+            copy_multipliers_qp_to_nlp(dims, work->tmp_qp_out, work->weight_merit_fun);
+        }
+        return ACADOS_NAN_DETECTED;
+    }
+    if (merit_fun1 < merit_fun0 && violation_step < violation_current)
+    {
+        // full step if merit and constraint violation improves
+        // TODO: check armijo in this case?
+        return ACADOS_SUCCESS;
+    }
+    else
+    {
+        // trigger SOC
+        if (sqp_iter != 0)
+        {
+            // reset merit function weights;
+            copy_multipliers_qp_to_nlp(dims, work->tmp_qp_out, work->weight_merit_fun);
+        }
+        return ACADOS_MINSTEP;
+    }
+}
+
+int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(ocp_nlp_config *nlp_config,
+                            ocp_nlp_dims *nlp_dims,
+                            ocp_nlp_in *nlp_in,
+                            ocp_nlp_out *nlp_out,
+                            ocp_nlp_memory *nlp_mem,
+                            ocp_nlp_workspace *nlp_work,
+                            ocp_nlp_opts *nlp_opts)
+{
+    int sqp_iter = 1;
+    bool do_line_search = true;
+//     if (nlp_opts->globalization->globalization_use_SOC)
+//     {
+//         do_line_search = ocp_nlp_soc_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter);
+// //         if (nlp_mem->status == ACADOS_QP_FAILURE)
+// //         {
+// // #if defined(ACADOS_WITH_OPENMP)
+// //             // restore number of threads
+// //             omp_set_num_threads(num_threads_bkp);
+// // #endif
+// //             // mem->time_tot = acados_toc(&timer0);
+// //             return mem->status;
+// //         }
+//     }
+
+    if (do_line_search)
+    {
+        int line_search_status;
+        line_search_status = ocp_nlp_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter, &mem->alpha);
+        if (line_search_status == ACADOS_NAN_DETECTED)
+        {
+            mem->status = ACADOS_NAN_DETECTED;
+            return mem->status;
+        }
+    }
+    // mem->time_glob += acados_toc(&timer1);
+    // nlp_mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
+
+    // update variables
+    ocp_nlp_update_variables_sqp(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, mem->alpha);
+}
+
 int ocp_nlp_globalization_merit_backtracking_needs_objective_value()
 {
     return 1;
 }
 
-void ocp_nlp_globalization_funnel_config_initialize_default(ocp_nlp_globalization_config *config)
+void ocp_nlp_globalization_merit_backtracking_config_initialize_default(ocp_nlp_globalization_config *config)
 {
     // opts
     config->opts_calculate_size = &ocp_nlp_globalization_merit_backtracking_opts_calculate_size;

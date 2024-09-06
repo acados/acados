@@ -165,9 +165,8 @@ void ocp_nlp_globalization_fixed_step_print_iteration(ocp_nlp_opts* opts,
                     int qp_iter,
                     char iter_type)
 {
-    ocp_nlp_globalization_opts *globalization_opts = opts->globalization;
     if ((iter_count % 10 == 0)){
-        print_iteration_header(opts);
+        ocp_nlp_globalization_fixed_step_print_iteration_header(opts);
     }
     printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n",
         iter_count,
@@ -182,6 +181,47 @@ void ocp_nlp_globalization_fixed_step_print_iteration(ocp_nlp_opts* opts,
 int ocp_nlp_globalization_fixed_step_needs_objective_value()
 {
     return 0;
+}
+
+int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(ocp_nlp_config *nlp_config,
+                            ocp_nlp_dims *nlp_dims,
+                            ocp_nlp_in *nlp_in,
+                            ocp_nlp_out *nlp_out,
+                            ocp_nlp_memory *nlp_mem,
+                            ocp_nlp_workspace *nlp_work,
+                            ocp_nlp_opts *nlp_opts)
+{
+    int sqp_iter = 1;
+    bool do_line_search = true;
+//     if (nlp_opts->globalization->globalization_use_SOC)
+//     {
+//         do_line_search = ocp_nlp_soc_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter);
+// //         if (nlp_mem->status == ACADOS_QP_FAILURE)
+// //         {
+// // #if defined(ACADOS_WITH_OPENMP)
+// //             // restore number of threads
+// //             omp_set_num_threads(num_threads_bkp);
+// // #endif
+// //             // mem->time_tot = acados_toc(&timer0);
+// //             return mem->status;
+// //         }
+//     }
+
+    if (do_line_search)
+    {
+        int line_search_status;
+        line_search_status = ocp_nlp_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter, &mem->alpha);
+        if (line_search_status == ACADOS_NAN_DETECTED)
+        {
+            mem->status = ACADOS_NAN_DETECTED;
+            return mem->status;
+        }
+    }
+    // mem->time_glob += acados_toc(&timer1);
+    // nlp_mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
+
+    // update variables
+    ocp_nlp_update_variables_sqp(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, mem->alpha);
 }
 
 void ocp_nlp_globalization_fixed_step_config_initialize_default(ocp_nlp_globalization_config *config)
