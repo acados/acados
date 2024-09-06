@@ -999,7 +999,7 @@ void *ocp_nlp_opts_assign(void *config_, void *dims_, void *raw_memory)
     opts->regularize = config->regularize->opts_assign(c_ptr);
     c_ptr += config->regularize->opts_calculate_size();
 
-    opts->globalization = config->globalization->opts_assign(c_ptr);
+    opts->globalization = config->globalization->opts_assign(config, dims, c_ptr);
     c_ptr += config->globalization->opts_calculate_size(config, dims);
 
     // dynamics

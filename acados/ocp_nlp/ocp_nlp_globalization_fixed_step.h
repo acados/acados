@@ -65,8 +65,6 @@ void *ocp_nlp_globalization_fixed_step_opts_assign(void *config, void *dims, voi
 //
 void ocp_nlp_globalization_fixed_step_opts_initialize_default(void *config, void *dims, void *opts);
 //
-void ocp_nlp_globalization_fixed_step_opts_update(void *config, void *dims, void *opts);
-//
 void ocp_nlp_globalization_fixed_step_opts_set(void *config, void *opts, const char *field, void* value);
 
 
@@ -109,13 +107,7 @@ void ocp_nlp_globalization_fixed_step_print_iteration(ocp_nlp_opts* opts,
                                                 int qp_iter,
                                                 char iter_type);
 //
-int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(ocp_nlp_config *nlp_config,
-                            ocp_nlp_dims *nlp_dims,
-                            ocp_nlp_in *nlp_in,
-                            ocp_nlp_out *nlp_out,
-                            ocp_nlp_memory *nlp_mem,
-                            ocp_nlp_workspace *nlp_work,
-                            ocp_nlp_opts *nlp_opts);
+int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *nlp_work_, void *nlp_opts_);
 //
 int ocp_nlp_globalization_fixed_step_needs_objective_value();
 //

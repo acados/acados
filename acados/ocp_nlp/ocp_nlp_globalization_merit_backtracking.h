@@ -66,8 +66,6 @@ void *ocp_nlp_globalization_merit_backtracking_opts_assign(void *config, void *d
 //
 void ocp_nlp_globalization_merit_backtracking_opts_initialize_default(void *config, void *dims, void *opts);
 //
-void ocp_nlp_globalization_merit_backtracking_opts_update(void *config, void *dims, void *opts);
-//
 void ocp_nlp_globalization_merit_backtracking_opts_set(void *config, void *opts, const char *field, void* value);
 
 
@@ -79,11 +77,6 @@ void ocp_nlp_globalization_merit_backtracking_opts_set(void *config, void *opts,
 typedef struct
 {
     double step_norm;
-    double merit_backtracking_width;
-    char merit_backtracking_iter_type;
-    bool merit_backtracking_penalty_mode;
-    double l1_infeasibility;
-    double merit_backtracking_penalty_parameter;
     double alpha;
 } ocp_nlp_globalization_merit_backtracking_memory;
 
@@ -132,13 +125,7 @@ int backtracking_line_search(ocp_nlp_config *config,
                             ocp_nlp_workspace *nlp_work,
                             ocp_nlp_opts *nlp_opts);
 //
-int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(ocp_nlp_config *nlp_config,
-                            ocp_nlp_dims *nlp_dims,
-                            ocp_nlp_in *nlp_in,
-                            ocp_nlp_out *nlp_out,
-                            ocp_nlp_memory *nlp_mem,
-                            ocp_nlp_workspace *nlp_work,
-                            ocp_nlp_opts *nlp_opts);
+int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *nlp_work_, void *nlp_opts_);
 //
 void ocp_nlp_globalization_merit_backtracking_print_iteration_header();
 //

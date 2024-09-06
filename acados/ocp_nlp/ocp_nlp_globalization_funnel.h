@@ -76,8 +76,6 @@ void *ocp_nlp_globalization_funnel_opts_assign(void *config, void *dims, void *r
 //
 void ocp_nlp_globalization_funnel_opts_initialize_default(void *config, void *dims, void *opts);
 //
-void ocp_nlp_globalization_funnel_opts_update(void *config, void *dims, void *opts);
-//
 void ocp_nlp_globalization_funnel_opts_set(void *config, void *opts, const char *field, void* value);
 
 
@@ -164,13 +162,7 @@ int backtracking_line_search(ocp_nlp_config *config,
                             ocp_nlp_workspace *nlp_work,
                             ocp_nlp_opts *nlp_opts);
 //
-int ocp_nlp_globalization_funnel_find_acceptable_iterate(ocp_nlp_config *nlp_config,
-                            ocp_nlp_dims *nlp_dims,
-                            ocp_nlp_in *nlp_in,
-                            ocp_nlp_out *nlp_out,
-                            ocp_nlp_memory *nlp_mem,
-                            ocp_nlp_workspace *nlp_work,
-                            ocp_nlp_opts *nlp_opts);
+int ocp_nlp_globalization_funnel_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *nlp_work_, void *nlp_opts_);
 //
 void ocp_nlp_globalization_funnel_print_iteration_header();
 //

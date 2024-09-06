@@ -511,14 +511,16 @@ int backtracking_line_search(ocp_nlp_config *config,
     }
 }
 
-int ocp_nlp_globalization_funnel_find_acceptable_iterate(ocp_nlp_config *nlp_config,
-                            ocp_nlp_dims *nlp_dims,
-                            ocp_nlp_in *nlp_in,
-                            ocp_nlp_out *nlp_out,
-                            ocp_nlp_memory *nlp_mem,
-                            ocp_nlp_workspace *nlp_work,
-                            ocp_nlp_opts *nlp_opts)
+int ocp_nlp_globalization_funnel_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *nlp_work_, void *nlp_opts_)
 {
+    ocp_nlp_config *nlp_config = nlp_config_;
+    ocp_nlp_dims *nlp_dims = nlp_dims_;
+    ocp_nlp_in *nlp_in = nlp_in_;
+    ocp_nlp_out *nlp_out = nlp_out_;
+    ocp_nlp_memory *nlp_mem = nlp_mem_;
+    ocp_nlp_workspace *nlp_work = nlp_work_;
+    ocp_nlp_opts *nlp_opts = nlp_opts_;
+
     bool linesearch_success = 1;
     linesearch_success = backtracking_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_mem, nlp_work, nlp_opts);
     // Copy new iterate to nlp_out
