@@ -856,6 +856,7 @@ classdef AcadosOcp < handle
             model_dir = fullfile(pwd, code_gen_opts.code_export_directory, [ocp.name '_model']);
 
             if strcmp(ocp.model.dyn_ext_fun_type, 'generic')
+                check_dir_and_create(model_dir);
                 copyfile(fullfile(pwd, ocp.model.dyn_generic_source), model_dir);
             elseif strcmp(ocp.model.dyn_ext_fun_type, 'casadi')
                 check_casadi_version();

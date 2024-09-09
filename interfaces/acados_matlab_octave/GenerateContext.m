@@ -124,9 +124,7 @@ classdef GenerateContext < handle
 
                 % setup and change directory
                 cwd = pwd;
-                if ~exist(output_dir, 'dir')
-                    mkdir(output_dir);
-                end
+                check_dir_and_create(output_dir);
                 cd(output_dir);
 
                 % generate function
