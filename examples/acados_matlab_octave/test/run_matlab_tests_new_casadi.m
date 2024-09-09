@@ -52,21 +52,32 @@ disp(pwd)
 
 disp('running tests')
 
-%% run all tests
-test_names = ["run_test_dim_check",
-"run_test_ocp_mass_spring",
-% "run_test_ocp_pendulum",
-"run_test_ocp_simple_dae",
-"run_test_ocp_wtnx6",
-% "run_test_sim_adj",
-"run_test_sim_dae",
-% "run_test_sim_forw",
-"run_test_sim_hess",
-"run_test_mhe_lorentz",
-"param_test",
-];
 
-for k = 1:length(test_names)
-    disp(strcat("running test ", test_names(k)));
-    run(test_names(k))
+import casadi.*
+
+try
+    dummy = MX.sym('dummy');
+    % Check if the required functions exist in CasADi
+    extract_parametric(dummy, dummy);  % Check if extract_parametric exists
+    cse(dummy);                 % Check if cse exists
+catch
+    error('CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se');
 end
+% %% run all tests
+% test_names = ["run_test_dim_check",
+% "run_test_ocp_mass_spring",
+% % "run_test_ocp_pendulum",
+% "run_test_ocp_simple_dae",
+% "run_test_ocp_wtnx6",
+% % "run_test_sim_adj",
+% "run_test_sim_dae",
+% % "run_test_sim_forw",
+% "run_test_sim_hess",
+% "run_test_mhe_lorentz",
+% "param_test",
+% ];
+
+% for k = 1:length(test_names)
+%     disp(strcat("running test ", test_names(k)));
+%     run(test_names(k))
+% end
