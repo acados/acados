@@ -190,8 +190,10 @@ classdef AcadosModel < handle
             import casadi.*
             if isa(obj.x, 'casadi.SX')
                 empty_var = SX.sym('empty_var', 0, 0);
+                isSX = true;
             elseif isa(obj.x, 'casadi.MX')
                 empty_var = MX.sym('empty_var', 0, 0);
+                isSX = false;
             else
                 error('Unsupported type: model.x must be casadi.SX or casadi.MX');
             end
@@ -199,13 +201,13 @@ classdef AcadosModel < handle
             if iscolumn(obj.x)
                 dims.nx = size(obj.x, 1);
             else
-                error('model.x should be column vector.');
+                error('model.x should be column vector of dimension > 0.');
             end
 
             if isempty(obj.p)
                 dims.np = 0;
                 obj.p = empty_var;
-            elseif iscolumn(obj.p)
+            elseif iscolumn(obj.p) || (isa(obj.p, 'casadi.SX') == isSX && length(obj.p) == 0)
                 dims.np = size(obj.p, 1);
             else
                 error('model.p should be column vector.');
@@ -213,14 +215,14 @@ classdef AcadosModel < handle
 
             if isempty(obj.xdot)
                 obj.xdot = empty_var;
-            elseif ~iscolumn(obj.xdot) || size(obj.xdot, 1) ~= dims.nx
+            elseif ~(isa(obj.xdot, 'casadi.SX') == isSX && length(obj.xdot) == 0) && (~iscolumn(obj.xdot) || size(obj.xdot, 1) ~= dims.nx)
                 error('model.xdot should be a column vector of size nx.');
             end
 
             if isempty(obj.z)
                 dims.nz = 0;
                 obj.z = empty_var;
-            elseif iscolumn(obj.z)
+            elseif iscolumn(obj.z) || (isa(obj.z, 'casadi.SX') == isSX && length(obj.z) == 0)
                 dims.nz = size(obj.z, 1);
             else
                 error('model.z should be column vector.');
@@ -228,7 +230,7 @@ classdef AcadosModel < handle
             if isempty(obj.u)
                 dims.nu = 0;
                 obj.u = empty_var;
-            elseif iscolumn(obj.u)
+            elseif iscolumn(obj.u) || (isa(obj.u, 'casadi.SX') == isSX && length(obj.u) == 0)
                 dims.nu = size(obj.u, 1);
             else
                 error('model.u should be column vector.');

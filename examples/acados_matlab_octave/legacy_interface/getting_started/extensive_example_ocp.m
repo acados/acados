@@ -28,15 +28,21 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 
 
+
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
+
 clear all; clc;
+
+addpath('../pendulum_on_cart_model')
 
 check_acados_requirements()
 
-
-%% OCP DESCRIPTION
-ocp = AcadosOcp();
-
-%% SOLVER OPTIONS
+print_level = 1;
 
 %% discretization
 N = 40;
@@ -57,156 +63,192 @@ for i = 1:N
     shooting_nodes(i+1) = sum(time_steps(1:i));
 end
 
-ocp.solver_options.tf = T;
-ocp.solver_options.N_horizon = N;
-ocp.solver_options.time_steps = time_steps;
-ocp.solver_options.nlp_solver_type = 'SQP'; % 'SQP_RTI'
-ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'; % 'EXACT'
-ocp.solver_options.regularize_method = 'CONVEXIFY';
-% NO_REGULARIZE, PROJECT, PROOJECT_REDUC_HESS, MIRROR, CONVEXIFY
-ocp.solver_options.nlp_solver_max_iter = 50;
-ocp.solver_options.nlp_solver_tol_stat = 1e-8;
-ocp.solver_options.nlp_solver_tol_eq = 1e-8;
-ocp.solver_options.nlp_solver_tol_ineq = 1e-8;
-ocp.solver_options.nlp_solver_tol_comp = 1e-8;
-ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
-% FULL_CONDENSING_HPIPM, PARTIAL_CONDENSING_HPIPM
-% FULL_CONDENSING_QPOASES, PARTIAL_CONDENSING_OSQP
-ocp.solver_options.qp_solver_cond_N = 5; % for partial condensing
-ocp.solver_options.qp_solver_cond_ric_alg = 0;
-ocp.solver_options.qp_solver_ric_alg = 0;
-ocp.solver_options.qp_solver_warm_start = 1; % 0: cold, 1: warm, 2: hot
-ocp.solver_options.qp_solver_iter_max = 1000; % default is 50; OSQP needs a lot sometimes.
-ocp.solver_options.qp_solver_mu0 = 1e4;
-ocp.solver_options.exact_hess_dyn = 1;
-ocp.solver_options.exact_hess_cost = 1;
-ocp.solver_options.exact_hess_constr = 1;
-ocp.solver_options.print_level = 1;
+nlp_solver = 'sqp'; % sqp, sqp_rti
+nlp_solver_exact_hessian = 'false';
+regularize_method = 'convexify';
+     % no_regularize, project, project_reduc_hess, mirror, convexify
+nlp_solver_max_iter = 50;
+tol = 1e-8;
+qp_solver = 'partial_condensing_hpipm';
+    % full_condensing_hpipm, partial_condensing_hpipm
+    % full_condensing_qpoases, partial_condensing_osqp
+qp_solver_cond_N = 5; % for partial condensing
+qp_solver_cond_ric_alg = 0;
+qp_solver_ric_alg = 0;
+qp_solver_warm_start = 1; % 0: cold, 1: warm, 2: hot
+qp_solver_iter_max = 1000; % default is 50; OSQP needs a lot sometimes.
+qp_solver_mu0 = 1e4;
 
 % can vary for integrators
 sim_method_num_stages = 1 * ones(N,1);
+sim_method_num_steps = ones(N,1);
 sim_method_num_stages(3:end) = 2;
-ocp.solver_options.sim_method_num_stages = sim_method_num_stages;
-ocp.solver_options.sim_method_num_steps = ones(N,1);
 
-% integrator type
-integrator = 1;
-switch integrator
-case 1
-    ocp.solver_options.integrator_type = 'ERK';
-case 2
-    ocp.solver_options.integrator_type = 'IRK';
-case 3
-    if ~all(time_steps == T/N)
-        error('nonuniform time discretization with discrete dynamics should not be used');
-    end
-    ocp.solver_options.integrator_type = 'DISCRETE';
-otherwise
-    ocp.solver_options.integrator_type = 'GNSF';
-end
+%% model dynamics
+model = pendulum_on_cart_model();
 
-%% MODEL
-model = get_pendulum_on_cart_model(T/N);
-ocp.model = model;
+%% model to create the solver
+ocp_model = acados_ocp_model();
 
-% dimensions
-nx = model.x.rows();
-nu = model.u.rows();
+%% dimensions
+nx = model.nx;
+nu = model.nu;
 
+model_name = 'pendulum';
 
-%% COST
+%% cost formulation
 cost_formulation = 1;
 switch cost_formulation
-case 1
-    cost_type = 'LINEAR_LS';
-case 2
-    cost_type = 'EXTERNAL';
-otherwise
-    cost_type = 'AUTO';
+    case 1
+        cost_type = 'linear_ls';
+    case 2
+        cost_type = 'ext_cost';
+    otherwise
+        cost_type = 'auto';
 end
 
-ocp.cost.cost_type_0 = cost_type;
-ocp.cost.cost_type = cost_type;
-ocp.cost.cost_type_e = cost_type;
-
-W_x = diag([1e3, 1e3, 1e-2, 1e-2]);
-W_u = 1e-2;
-
-cost_expr_ext_cost_e = 0.5 * model.x'* W_x * model.x;
-cost_expr_ext_cost = cost_expr_ext_cost_e + 0.5 * model.u' * W_u * model.u;
-cost_expr_ext_cost_0 = 0.5 * model.u' * W_u * model.u;
-
-ny_0 = nu; % number of outputs in initial cost term
-Vx_0 = zeros(ny_0,nx);
-Vu_0 = eye(nu);
-y_ref_0 = zeros(ny_0, 1);
-
-ny = nx+nu; % number of outputs in lagrange term
-Vx = [eye(nx); zeros(nu,nx)]; % state-to-output matrix in lagrange term
-Vu = [zeros(nx, nu); eye(nu)]; % input-to-output matrix in lagrange term
-y_ref = zeros(ny, 1); % output reference in lagrange term
-
-ny_e = nx; % number of outputs in terminal cost term
-Vx_e = eye(ny_e, nx);
-y_ref_e = zeros(ny_e, 1);
-
-if strcmp(cost_type, 'LINEAR_LS')
-    ocp.cost.Vu_0 = Vu_0;
-    ocp.cost.Vx_0 = Vx_0;
-    ocp.cost.W_0 = W_u;
-    ocp.cost.yref_0 = y_ref_0;
-
-    ocp.cost.Vu = Vu;
-    ocp.cost.Vx = Vx;
-    ocp.cost.W = blkdiag(W_x, W_u);
-    ocp.cost.yref = y_ref;
-
-    ocp.cost.Vx_e = Vx_e;
-    ocp.cost.W_e = W_x;
-    ocp.cost.yref_e = y_ref_e;
-else % EXTERNAL, AUTO
-    ocp.cost.cost_expr_ext_cost_0 = cost_expr_ext_cost_0;
-    ocp.cost.cost_expr_ext_cost = cost_expr_ext_cost;
-    ocp.cost.cost_expr_ext_cost_e = cost_expr_ext_cost_e;
+%% integrator type
+integrator = 1;
+switch integrator
+    case 1
+        sim_method = 'erk';
+    case 2
+        sim_method = 'irk';
+    case 3
+        sim_method = 'discrete';
+    otherwise
+        sim_method = 'irk_gnsf';
 end
 
-%% CONSTRAINTS
+%% cost
+ocp_model.set('cost_type_0', cost_type);
+ocp_model.set('cost_type', cost_type);
+ocp_model.set('cost_type_e', cost_type);
+if strcmp( cost_type, 'linear_ls' )
+    ocp_model.set('cost_Vu_0', model.cost_Vu_0);
+    ocp_model.set('cost_Vx_0', model.cost_Vx_0);
+    ocp_model.set('cost_W_0', model.cost_W_0);
+    ocp_model.set('cost_y_ref_0', model.cost_y_ref_0);
+
+    ocp_model.set('cost_Vu', model.cost_Vu);
+    ocp_model.set('cost_Vx', model.cost_Vx);
+    ocp_model.set('cost_W', model.cost_W);
+    ocp_model.set('cost_y_ref', model.cost_y_ref);
+
+    ocp_model.set('cost_Vx_e', model.cost_Vx_e);
+    ocp_model.set('cost_W_e', model.cost_W_e);
+    ocp_model.set('cost_y_ref_e', model.cost_y_ref_e);
+else % external, auto
+    ocp_model.set('cost_expr_ext_cost_0', model.cost_expr_ext_cost_0);
+    ocp_model.set('cost_expr_ext_cost', model.cost_expr_ext_cost);
+    ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);
+end
+
+%% constraints
 constraint_formulation_nonlinear = 0;
 lbu = -80*ones(nu, 1);
 ubu =  80*ones(nu, 1);
-
-ocp.constraints.constr_type = 'AUTO';
-ocp.constraints.constr_type_0 = 'AUTO';
-ocp.constraints.constr_type_e = 'AUTO';
-
 if constraint_formulation_nonlinear % formulate constraint via h
-    model.con_h_expr_0 = model.u;
-    ocp.constraints.lh_0 = lbu;
-    ocp.constraints.uh_0 = ubu;
-    ocp.constraints.con_h_expr = model.u;
-    ocp.constraints.lh = lbu;
-    ocp.constraints.uh = ubu;
+    ocp_model.set('constr_expr_h_0', model.expr_h_0);
+    ocp_model.set('constr_lh_0', lbu);
+    ocp_model.set('constr_uh_0', ubu);
+    ocp_model.set('constr_expr_h', model.expr_h);
+    ocp_model.set('constr_lh', lbu);
+    ocp_model.set('constr_uh', ubu);
 else % formulate constraint as bound on u
-    ocp.constraints.idxbu = [0];
-    ocp.constraints.lbu = lbu;
-    ocp.constraints.ubu = ubu;
+    Jbu = eye(nu);
+    ocp_model.set('constr_Jbu', Jbu);
+    ocp_model.set('constr_lbu', lbu);
+    ocp_model.set('constr_ubu', ubu);
+end
+
+%% acados ocp model
+ocp_model.set('name', model_name);
+ocp_model.set('T', T);
+
+% symbolics
+ocp_model.set('sym_x', model.sym_x);
+if isfield(model, 'sym_u')
+    ocp_model.set('sym_u', model.sym_u);
+end
+if isfield(model, 'sym_xdot')
+    ocp_model.set('sym_xdot', model.sym_xdot);
+end
+if isfield(model, 'sym_z') % algebraic variables
+    ocp_model.set('sym_z', model.sym_z);
+end
+if isfield(model, 'sym_p') % parameters
+    ocp_model.set('sym_p', model.sym_p);
+end
+
+% dynamics
+if (strcmp(sim_method, 'erk'))
+    ocp_model.set('dyn_type', 'explicit');
+    ocp_model.set('dyn_expr_f', model.dyn_expr_f_expl);
+elseif (strcmp(sim_method, 'irk') || strcmp(sim_method, 'irk_gnsf'))
+    ocp_model.set('dyn_type', 'implicit');
+    ocp_model.set('dyn_expr_f', model.dyn_expr_f_impl);
+elseif strcmp(sim_method, 'discrete')
+    ocp_model.set('dyn_type', 'discrete');
+    % build explicit euler discrete integrator
+    import casadi.*
+    expl_ode_fun = Function([model_name,'_expl_ode_fun'], ...
+            {model.sym_x, model.sym_u}, {model.dyn_expr_f_expl});
+    dyn_expr_phi = model.sym_x + T/N * expl_ode_fun(model.sym_x, model.sym_u);
+    ocp_model.set('dyn_expr_phi', dyn_expr_phi)
+    if ~all(time_steps == T/N)
+        disp('nonuniform time discretization with discrete dynamics should not be used');
+        keyboard
+    end
 end
 
 % initial state
 x0 = [0; pi; 0; 0];
-ocp.constraints.x0 = x0;
+ocp_model.set('constr_x0', x0);
 
-%% SOLVER
-ocp_solver = AcadosOcpSolver(ocp);
+%% acados ocp set opts
+ocp_opts = acados_ocp_opts();
+ocp_opts.set('param_scheme_N', N);
+if (exist('time_steps', 'var'))
+	ocp_opts.set('time_steps', time_steps);
+end
 
-%% INITIALIZATION
+ocp_opts.set('nlp_solver', nlp_solver);
+ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
+ocp_opts.set('regularize_method', regularize_method);
+if (strcmp(nlp_solver, 'sqp')) % not available for sqp_rti
+    ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
+    ocp_opts.set('nlp_solver_tol_stat', tol);
+    ocp_opts.set('nlp_solver_tol_eq', tol);
+    ocp_opts.set('nlp_solver_tol_ineq', tol);
+    ocp_opts.set('nlp_solver_tol_comp', tol);
+end
+ocp_opts.set('qp_solver', qp_solver);
+ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
+ocp_opts.set('qp_solver_ric_alg', qp_solver_ric_alg);
+ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
+ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
+ocp_opts.set('qp_solver_iter_max', qp_solver_iter_max);
+ocp_opts.set('qp_solver_mu0', qp_solver_mu0);
+ocp_opts.set('sim_method', sim_method);
+ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
+ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
+
+ocp_opts.set('exact_hess_dyn', 1);
+ocp_opts.set('exact_hess_cost', 1);
+ocp_opts.set('exact_hess_constr', 1);
+ocp_opts.set('print_level', print_level);
+
+%% create ocp solver
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
+
+% state and input initial guess
 x_traj_init = zeros(nx, N+1);
 x_traj_init(2, :) = linspace(pi, 0, N+1); % initialize theta
 
 u_traj_init = zeros(nu, N);
 
-%% SOLVE
-% prepare evaluation
+%% prepare evaluation
 n_executions = 1;
 time_tot = zeros(n_executions,1);
 time_lin = zeros(n_executions,1);
@@ -253,12 +295,12 @@ su = ocp_solver.get('su', N);
 % get cost value
 cost_val_ocp = ocp_solver.get_cost();
 
+
 %% get QP matrices:
 % See https://docs.acados.org/problem_formulation
 %        |----- dynamics -----|------ cost --------|---------------------------- constraints ------------------------|
 fields = {'qp_A','qp_B','qp_b','qp_R','qp_Q','qp_r','qp_C','qp_D','qp_lg','qp_ug','qp_lbx','qp_ubx','qp_lbu','qp_ubu'};
-
-% eiter stage-wise ...
+% either stage wise
 for stage = [0,N-1]
     for k = 1:length(fields)
         field = fields{k};
@@ -275,7 +317,7 @@ field = 'qp_R';
 disp(strcat(field, " at stage ", num2str(stage), " = "));
 ocp_solver.get(field, stage)
 
-... or for all stages.
+% or for all stages
 qp_Q = ocp_solver.get('qp_Q');
 cond_H = ocp_solver.get('qp_solver_cond_H');
 

@@ -377,6 +377,15 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, 
     else
         error(['integrator ', opts_struct.sim_method, ' not support for templating backend.'])
     end
+
+    % check if has_x0 is true. If true inequalities are set to equalities.
+    % NOTE: This adds an additional call to make_consistent, but is
+    % necessary for the check for has_x0 as we need nx and nbx_0 available,
+    % as well as consistent dimensions for lbx_0 and ubx_0.
+    ocp.model.make_consistent(ocp.dims);
+    if ocp.dims.nx == ocp.dims.nbx_0 && all(sort(reshape(ocp.constraints.idxbx_0, 1, [])) == 0:(ocp.dims.nx-1)) && all(ocp.constraints.lbx_0 == ocp.constraints.ubx_0)
+        ocp.constraints.x0 = ocp.constraints.lbx_0; % this will set has_x0 to true and set additional fields
+    end
 end
 
 

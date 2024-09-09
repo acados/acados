@@ -38,9 +38,8 @@ targets = {
     '../generic_dyn_disc/disc_dyn_example_ocp.m';
     '../generic_external_cost/external_cost_example_ocp.m';
     '../getting_started/extensive_example_ocp.m';
-    '../getting_started/new_minimal_example_sim.m';
-    '../getting_started/new_minimal_example_ocp.m';
     '../getting_started/minimal_example_sim.m';
+    '../getting_started/minimal_example_ocp.m';
     '../linear_mass_spring_model/example_ocp.m';
     '../linear_mpc/example_closed_loop.m';
     '../lorentz/example_mhe.m';
@@ -54,6 +53,7 @@ targets = {
     '../swarming/example_ocp.m';
     '../wind_turbine_nx6/example_ocp.m';
     '../mocp_transition_example/main_multiphase_ocp.m';
+    '../legacy_interface/getting_started/extensive_example_ocp.m';
 };
 
 
