@@ -853,14 +853,11 @@ classdef AcadosOcp < handle
             end
 
             % dynamics
-            % model dir is always needed, other dirs are  only created if necessary
             model_dir = fullfile(pwd, code_gen_opts.code_export_directory, [ocp.name '_model']);
-            check_dir_and_create(model_dir);
 
             if strcmp(ocp.model.dyn_ext_fun_type, 'generic')
                 copyfile(fullfile(pwd, ocp.model.dyn_generic_source), model_dir);
             elseif strcmp(ocp.model.dyn_ext_fun_type, 'casadi')
-                import casadi.*
                 check_casadi_version();
                 switch solver_opts.integrator_type
                     case 'ERK'
@@ -883,8 +880,6 @@ classdef AcadosOcp < handle
                 error('Unknown dyn_ext_fun_type.')
             end
 
-            context.finalize();
-
             stage_types = {'initial', 'path', 'terminal'};
 
             % cost
@@ -893,24 +888,31 @@ classdef AcadosOcp < handle
             cost_dir = fullfile(pwd, ocp.code_export_directory, [ocp.name '_cost']);
 
             for i = 1:3
-                if strcmp(cost_types{i}, 'NONLINEAR_LS')
-                    generate_c_code_nonlinear_least_squares( ocp.model, cost_dir, stage_types{i} );
-
-                elseif strcmp(cost_types{i}, 'CONVEX_OVER_NONLINEAR')
-                    % TODO
-                    error("Convex-over-nonlinear cost is not implemented yet.")
-
-                elseif strcmp(cost_types{i}, 'EXTERNAL')
-                    if strcmp(cost_ext_fun_types{i}, 'casadi')
-                        generate_c_code_ext_cost(ocp.model, cost_dir, stage_types{i});
-                    elseif strcmp(cost_ext_fun_types{i}, 'generic')
+                if strcmp(cost_ext_fun_types{i}, 'generic')
+                    if strcmp(cost_types{i}, 'EXTERNAL')
                         setup_generic_cost(cost, cost_dir, stage_types{i})
                     else
-                        error('Unknown value for cost_ext_fun_types %s', cost_ext_fun_types{i});
+                        error('Unknown cost_type for cost_ext_fun_types generic: got %s', cost_types{i});
+                    end
+
+                else
+                    check_casadi_version();
+                    switch cost_types{i}
+                        case 'LINEAR_LS'
+                            continue
+                        case 'NONLINEAR_LS'
+                            generate_c_code_nonlinear_least_squares(context, ocp.model, cost_dir, stage_types{i});
+
+                        case 'CONVEX_OVER_NONLINEAR'
+                            error("Convex-over-nonlinear cost is not implemented yet.")
+
+                        case 'EXTERNAL'
+                            generate_c_code_ext_cost(context, ocp.model, cost_dir, stage_types{i});
+                        otherwise
+                            error('Unknown value for cost_ext_fun_types %s', cost_ext_fun_types{i});
                     end
                 end
             end
-
 
             % constraints
             constraints_types = {constraints.constr_type_0, constraints.constr_type, constraints.constr_type_e};
@@ -919,9 +921,12 @@ classdef AcadosOcp < handle
 
             for i = 1:3
                 if strcmp(constraints_types{i}, 'BGH') && constraints_dims{i} > 0
-                    generate_c_code_nonlinear_constr( ocp.model, constraints_dir, stage_types{i} );
+                    generate_c_code_nonlinear_constr(context, ocp.model, constraints_dir, stage_types{i});
                 end
             end
+
+            context.finalize();
+
         end
 
         function render_templates(self)
