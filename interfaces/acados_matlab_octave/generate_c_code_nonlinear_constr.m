@@ -30,7 +30,7 @@
 %
 
 
-function generate_c_code_nonlinear_constr(contxt, model, target_dir, stage_type)
+function generate_c_code_nonlinear_constr(context, model, target_dir, stage_type)
 
     import casadi.*
 
