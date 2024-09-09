@@ -50,7 +50,7 @@ function generate_c_code_ext_cost(context, model, target_dir, stage_type)
         % add functions to context
         context.add_function_definition([model.name,'_cost_ext_cost_0_fun'], {x, u, z, p}, {ext_cost_0}, target_dir);
         context.add_function_definition([model.name,'_cost_ext_cost_0_fun_jac'], {x, u, z, p}, {ext_cost_0, grad}, target_dir);
-        if ~isempty(model, 'cost_expr_ext_cost_custom_hess_0')
+        if ~isempty(model.cost_expr_ext_cost_custom_hess_0)
             context.add_function_definition([model.name,'_cost_ext_cost_0_fun_jac_hess'], {x, u, z, p},...
                                         {ext_cost_0, grad, model.cost_expr_ext_cost_custom_hess_0}, target_dir);
         else
@@ -67,7 +67,7 @@ function generate_c_code_ext_cost(context, model, target_dir, stage_type)
         % add functions to context
         context.add_function_definition([model.name,'_cost_ext_cost_fun'], {x, u, z, p}, {ext_cost}, target_dir);
         context.add_function_definition([model.name,'_cost_ext_cost_fun_jac'], {x, u, z, p}, {ext_cost, grad}, target_dir);
-        if ~isempty(model, 'cost_expr_ext_cost_custom_hess')
+        if ~isempty(model.cost_expr_ext_cost_custom_hess)
             context.add_function_definition([model.name,'_cost_ext_cost_fun_jac_hess'], {x, u, z, p}, ...
                                         {ext_cost, grad, model.cost_expr_ext_cost_custom_hess}, target_dir);
         else
@@ -87,7 +87,7 @@ function generate_c_code_ext_cost(context, model, target_dir, stage_type)
         % add functions to context
         context.add_function_definition([model.name,'_cost_ext_cost_e_fun'], {x, p}, {ext_cost_e}, target_dir);
         context.add_function_definition([model.name,'_cost_ext_cost_e_fun_jac'], {x, p}, {ext_cost_e, jac_x_e'}, target_dir);
-        if ~isempty(model, 'cost_expr_ext_cost_custom_hess_e')
+        if ~isempty(model.cost_expr_ext_cost_custom_hess_e)
             context.add_function_definition([model.name,'_cost_ext_cost_e_fun_jac_hess'], {x, p},...
                                         {ext_cost_e, jac_x_e', model.cost_expr_ext_cost_custom_hess_e}, target_dir);
         else
