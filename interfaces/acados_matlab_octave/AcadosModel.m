@@ -215,12 +215,10 @@ classdef AcadosModel < handle
                 error('model.p should be column vector.');
             end
 
-
-            % TODO allow empty symbolic
             if isempty(obj.p_global)
                 dims.np_global = 0;
                 obj.p_global = empty_var;
-            elseif iscolumn(obj.p_global)
+            elseif iscolumn(obj.p_global) || (isa(obj.p_global, 'casadi.SX') == isSX && length(obj.p_global) == 0)
                 dims.np_global = size(obj.p_global, 1);
             else
                 error('model.p_global should be column vector.');
