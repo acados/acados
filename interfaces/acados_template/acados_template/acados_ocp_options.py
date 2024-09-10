@@ -96,12 +96,12 @@ class AcadosOcpOptions:
         self.__funnel_fraction_switching_condition = 1e-3
         self.__funnel_initial_penalty_parameter = 1.0
         self.__ext_cost_num_hess = 0
-        self.__alpha_min = None
-        self.__alpha_reduction = None
-        self.__line_search_use_sufficient_descent = 0
+        self.__globalization_alpha_min = None
+        self.__globalization_alpha_reduction = None
+        self.__globalization_line_search_use_sufficient_descent = 0
         self.__globalization_use_SOC = 0
-        self.__full_step_dual = None
-        self.__eps_sufficient_descent = None
+        self.__globalization_full_step_dual = None
+        self.__globalization_eps_sufficient_descent = None
         self.__hpipm_mode = 'BALANCE'
         self.__with_solution_sens_wrt_params = False
         self.__with_value_sens_wrt_params = False
@@ -585,7 +585,7 @@ class AcadosOcpOptions:
         return self.__nlp_solver_tol_min_step_norm
 
     @property
-    def alpha_min(self):
+    def globalization_alpha_min(self):
         """Minimal step size for globalization.
 
         default: None.
@@ -594,7 +594,7 @@ class AcadosOcpOptions:
         - in case of FUNNEL_L1PEN_LINESEARCH, value is set to 1e-17.
         - in case of MERIT_BACKTRACKING, value is set to 0.05.
         """
-        return self.__alpha_min
+        return self.__globalization_alpha_min
 
     @property
     def reg_epsilon(self):
@@ -602,7 +602,7 @@ class AcadosOcpOptions:
         return self.__reg_epsilon
 
     @property
-    def alpha_reduction(self):
+    def globalization_alpha_reduction(self):
         """Step size reduction factor for globalization MERIT_BACKTRACKING,
 
         Type: float
@@ -613,21 +613,21 @@ class AcadosOcpOptions:
         - in case of MERIT_BACKTRACKING, value is set to 0.7.
         default: 0.7.
         """
-        return self.__alpha_reduction
+        return self.__globalization_alpha_reduction
 
     @property
-    def line_search_use_sufficient_descent(self):
+    def globalization_line_search_use_sufficient_descent(self):
         """
         Determines if sufficient descent (Armijo) condition is used in line search.
         Type: int; 0 or 1;
         default: 0.
         """
-        return self.__line_search_use_sufficient_descent
+        return self.__globalization_line_search_use_sufficient_descent
 
     @property
-    def eps_sufficient_descent(self):
+    def globalization_eps_sufficient_descent(self):
         """
-        Factor for sufficient descent (Armijo) conditon, see also line_search_use_sufficient_descent.
+        Factor for sufficient descent (Armijo) conditon, see also globalization_line_search_use_sufficient_descent.
 
         Type: float,
         Default: None.
@@ -636,7 +636,7 @@ class AcadosOcpOptions:
         - in case of FUNNEL_L1PEN_LINESEARCH, value is set to 1e-6.
         - in case of MERIT_BACKTRACKING, value is set to 1e-4.
         """
-        return self.__eps_sufficient_descent
+        return self.__globalization_eps_sufficient_descent
 
     @property
     def globalization_use_SOC(self):
@@ -649,7 +649,7 @@ class AcadosOcpOptions:
         return self.__globalization_use_SOC
 
     @property
-    def full_step_dual(self):
+    def globalization_full_step_dual(self):
         """
         Determines if dual variables are updated with full steps (alpha=1.0) when primal variables are updated with smaller step.
 
@@ -657,7 +657,7 @@ class AcadosOcpOptions:
         default for funnel globalization: 1
         default else: 0.
         """
-        return self.__full_step_dual
+        return self.__globalization_full_step_dual
 
     @property
     def funnel_initialization_increase_factor(self):
@@ -1072,20 +1072,20 @@ class AcadosOcpOptions:
     def reg_epsilon(self, reg_epsilon):
         self.__reg_epsilon = reg_epsilon
 
-    @alpha_min.setter
-    def alpha_min(self, alpha_min):
-        self.__alpha_min = alpha_min
+    @globalization_alpha_min.setter
+    def globalization_alpha_min(self, globalization_alpha_min):
+        self.__globalization_alpha_min = globalization_alpha_min
 
-    @alpha_reduction.setter
-    def alpha_reduction(self, alpha_reduction):
-        self.__alpha_reduction = alpha_reduction
+    @globalization_alpha_reduction.setter
+    def globalization_alpha_reduction(self, globalization_alpha_reduction):
+        self.__globalization_alpha_reduction = globalization_alpha_reduction
 
-    @line_search_use_sufficient_descent.setter
-    def line_search_use_sufficient_descent(self, line_search_use_sufficient_descent):
-        if line_search_use_sufficient_descent in [0, 1]:
-            self.__line_search_use_sufficient_descent = line_search_use_sufficient_descent
+    @globalization_line_search_use_sufficient_descent.setter
+    def globalization_line_search_use_sufficient_descent(self, globalization_line_search_use_sufficient_descent):
+        if globalization_line_search_use_sufficient_descent in [0, 1]:
+            self.__globalization_line_search_use_sufficient_descent = globalization_line_search_use_sufficient_descent
         else:
-            raise Exception(f'Invalid value for line_search_use_sufficient_descent. Possible values are 0, 1, got {line_search_use_sufficient_descent}')
+            raise Exception(f'Invalid value for globalization_line_search_use_sufficient_descent. Possible values are 0, 1, got {globalization_line_search_use_sufficient_descent}')
 
     @globalization_use_SOC.setter
     def globalization_use_SOC(self, globalization_use_SOC):
@@ -1094,12 +1094,12 @@ class AcadosOcpOptions:
         else:
             raise Exception(f'Invalid value for globalization_use_SOC. Possible values are 0, 1, got {globalization_use_SOC}')
 
-    @full_step_dual.setter
-    def full_step_dual(self, full_step_dual):
-        if full_step_dual in [0, 1]:
-            self.__full_step_dual = full_step_dual
+    @globalization_full_step_dual.setter
+    def globalization_full_step_dual(self, globalization_full_step_dual):
+        if globalization_full_step_dual in [0, 1]:
+            self.__globalization_full_step_dual = globalization_full_step_dual
         else:
-            raise Exception(f'Invalid value for full_step_dual. Possible values are 0, 1, got {full_step_dual}')
+            raise Exception(f'Invalid value for globalization_full_step_dual. Possible values are 0, 1, got {globalization_full_step_dual}')
 
     @funnel_initialization_increase_factor.setter
     def funnel_initialization_increase_factor(self, funnel_initialization_increase_factor):
@@ -1150,12 +1150,12 @@ class AcadosOcpOptions:
         else:
             raise Exception(f'Invalid datatype for eval_residual_at_max_iter. Should be bool, got {type(eval_residual_at_max_iter)}')
 
-    @eps_sufficient_descent.setter
-    def eps_sufficient_descent(self, eps_sufficient_descent):
-        if isinstance(eps_sufficient_descent, float) and eps_sufficient_descent > 0:
-            self.__eps_sufficient_descent = eps_sufficient_descent
+    @globalization_eps_sufficient_descent.setter
+    def globalization_eps_sufficient_descent(self, globalization_eps_sufficient_descent):
+        if isinstance(globalization_eps_sufficient_descent, float) and globalization_eps_sufficient_descent > 0:
+            self.__globalization_eps_sufficient_descent = globalization_eps_sufficient_descent
         else:
-            raise Exception('Invalid eps_sufficient_descent value. eps_sufficient_descent must be a positive float.')
+            raise Exception('Invalid globalization_eps_sufficient_descent value. globalization_eps_sufficient_descent must be a positive float.')
 
     @sim_method_num_stages.setter
     def sim_method_num_stages(self, sim_method_num_stages):
