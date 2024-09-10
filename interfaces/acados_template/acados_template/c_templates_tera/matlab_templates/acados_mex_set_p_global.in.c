@@ -38,8 +38,13 @@
 #include "acados/utils/print.h"
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_solver_{{ name }}.h"
-{% if dims.np_global > 0 %}
+{% if problem_class == 'OCP' and dims.np_global > 0 %}
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
+#include "{{ name }}_p_global_precompute_fun.h"
+{% elif problem_class == 'MOCP' and phases_dims[0].np_global > 0 %}
+{%- for jj in range(end=n_phases) %}
+#include "{{ model[jj].name }}_model/{{ model[jj].name }}_model.h"
+{% endfor %}
 #include "{{ name }}_p_global_precompute_fun.h"
 {% endif %}
 // mex
@@ -76,11 +81,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     if (nrhs == nrhs_ref)
     {
-    {% if dims.np_global > 0 %}
+    {% if problem_class == 'OCP' and dims.np_global > 0 or problem_class == 'MOCP' and phases_dims[0].np_global > 0 %}
         external_function_casadi* fun = &capsule->p_global_precompute_fun;
         fun->args[0] = value;
+    {% if problem_class == 'OCP' and dims.np_global > 0 %}
         int np_global = {{ dims.np_global }};
-
+    {% elif problem_class == 'MOCP' and phases_dims[0].np_global > 0 %}
+        int np_global = {{ phases_dims[0].np_global }};
+    {%- endif %}
         if (matlab_size != np_global)
         {
             sprintf(buffer, "acados_mex_set_p_global: np_global = %d should match data_len = %d. Exiting.\n", np_global, matlab_size);
@@ -97,7 +105,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         fun->casadi_fun((const double **) fun->args, fun->res, fun->iw, fun->w, NULL);
 
     {%- else %}
-        sprintf(buffer, "acados_mex_set_p_global: p_global is not defined, {{ name }}_acados_set_p_global does nothing.\n");
+        sprintf(buffer, "acados_mex_set_p_global: p_global is not defined, acados_mex_set_p_global does nothing.\n");
         mexWarnMsgTxt(buffer);
     {%- endif %}
     }

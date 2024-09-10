@@ -74,7 +74,6 @@ classdef AcadosOcp < handle
             obj.acados_include_path = [acados_folder, '/include'];
             obj.acados_lib_path = [acados_folder, '/lib'];
             obj.zoro_description = [];
-            obj.casadi_pool_names = [];
         end
 
         function s = struct(self)
@@ -834,7 +833,7 @@ classdef AcadosOcp < handle
             end
         end
 
-        function generate_external_functions(ocp, context)
+        function context = generate_external_functions(ocp, context)
 
             %% generate C code for CasADi functions / copy external functions
             cost = ocp.cost;
@@ -851,7 +850,7 @@ classdef AcadosOcp < handle
                 code_gen_opts.code_export_directory = ocp.code_export_directory;
                 context = GenerateContext(ocp.model.p_global, ocp.name, code_gen_opts);
             else
-                code_gen_opts = context.code_gen_opts;
+                code_gen_opts = context.opts;
             end
 
             % dynamics
@@ -927,10 +926,6 @@ classdef AcadosOcp < handle
                     generate_c_code_nonlinear_constr(context, ocp.model, constraints_dir, stage_types{i});
                 end
             end
-
-            context.finalize();
-            ocp.casadi_pool_names = context.pool_names;
-
         end
 
         function render_templates(self)
