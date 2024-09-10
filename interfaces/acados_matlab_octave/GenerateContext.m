@@ -72,11 +72,12 @@ classdef GenerateContext < handle
             else
                 % interesting behavior
                 check_casadi_version_supports_p_global();
-                inputs_augmented = [inputs, obj.p_global];
+                inputs_augmented = [inputs, {obj.p_global}];
                 fun = Function(name, inputs_augmented, outputs);
 
-                outputs_call = fun.call(inputs_augmented, struct('always_inline', true, 'never_inline', false));
+                outputs_call = fun.call(inputs_augmented, true, false); % always_inline=True, never_inline=False
 
+                % This introduces novel symbols into the graph (extracted1, extracted2,...)
                 [outputs_ret, symbols, param] = extract_parametric(outputs_call, obj.p_global);
                 symbols = symbols.primitives();
 
@@ -98,9 +99,13 @@ classdef GenerateContext < handle
         function obj = finalize(obj)
             import casadi.*
             if ~(isempty(obj.p_global) || length(obj.p_global) == 0)
-                y = cse(obj.p_global_expressions);
+                y = {};
+                for i=1:length(obj.p_global_expressions)
+                    y{end+1} = cse(obj.p_global_expressions{i});
+                end
                 output_dir = obj.opts.code_export_directory;
                 fun_name = [obj.problem_name, '_p_global_precompute_fun'];
+
                 fun = Function(fun_name, {obj.p_global}, y, {'p_global'}, obj.pool_names);
                 obj = obj.add_function(fun_name, output_dir, fun);
             end
@@ -146,9 +151,10 @@ end
 function check_casadi_version_supports_p_global()
     import casadi.*
     try
+        dummy = MX.sym('dummy');
         % Check if the required functions exist in CasADi
-        extract_parametric;  % Check if extract_parametric exists
-        cse;                 % Check if cse exists
+        extract_parametric(dummy, dummy);  % Check if extract_parametric exists
+        cse(dummy); % Check if cse exists
     catch
         error('CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se');
     end

@@ -47,6 +47,7 @@ classdef AcadosOcp < handle
         shared_lib_ext
         name
         zoro_description
+        casadi_pool_names
     end
     methods
         function obj = AcadosOcp()
@@ -73,6 +74,7 @@ classdef AcadosOcp < handle
             obj.acados_include_path = [acados_folder, '/include'];
             obj.acados_lib_path = [acados_folder, '/lib'];
             obj.zoro_description = [];
+            obj.casadi_pool_names = [];
         end
 
         function s = struct(self)
@@ -927,6 +929,7 @@ classdef AcadosOcp < handle
             end
 
             context.finalize();
+            ocp.casadi_pool_names = context.pool_names;
 
         end
 
@@ -1002,6 +1005,7 @@ classdef AcadosOcp < handle
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_free.in.c'), ['acados_mex_free_', self.name, '.c']};
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_solve.in.c'), ['acados_mex_solve_', self.name, '.c']};
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_set.in.c'), ['acados_mex_set_', self.name, '.c']};
+            template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_set_p_global.in.c'), ['acados_mex_set_p_global_', self.name, '.c']};
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_reset.in.c'), ['acados_mex_reset_', self.name, '.c']};
 
             if ~isempty(self.solver_options.custom_update_filename)
@@ -1010,6 +1014,10 @@ classdef AcadosOcp < handle
 
             % append headers
             template_list = [template_list, self.get_external_function_header_templates()];
+
+            if self.dims.np_global > 0
+                template_list{end+1} = {'p_global_precompute_fun.in.h',  [self.model.name, '_p_global_precompute_fun.h']};
+            end
 
             % Simulink
             if ~isempty(self.simulink_opts)

@@ -115,6 +115,23 @@ classdef {{ name }}_mex_solver < handle
             end
         end
 
+
+        function set_p_global(varargin)
+            % usage:
+            % ocp.set_p_global(val)
+            % Sets p_global to val and precomputes all parts of the CasADi graphs of all other functions that only depend on p_global.
+            obj = varargin{1};
+            val = varargin{2};
+
+            if nargin == 2
+                acados_mex_set_p_global_{{ name }}(obj.C_ocp, val);
+            else
+                disp('acados_ocp.set_p_global: wrong number of input arguments (2 allowed)');
+            end
+
+            acados_mex_set_p_global_{{ name }}(obj.C_ocp, val);
+        end
+
         function value = get_cost(obj)
             value = ocp_get_cost(obj.C_ocp);
         end
