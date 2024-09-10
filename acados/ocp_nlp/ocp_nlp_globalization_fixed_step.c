@@ -29,10 +29,7 @@
  */
 
 
-#include "acados/ocp_nlp/ocp_nlp_globalization_common.h"
 #include "acados/ocp_nlp/ocp_nlp_globalization_fixed_step.h"
-#include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/ocp_nlp/ocp_nlp_sqp.h"
 
 // TODO: copy boilerblate..
 // fix imports
@@ -47,11 +44,15 @@
 #include <omp.h>
 #endif
 
+// acados
+#include "acados/ocp_nlp/ocp_nlp_globalization_common.h"
+#include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados/ocp_nlp/ocp_nlp_sqp.h"
+#include "acados/utils/mem.h"
+
 // blasfeo
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
-// acados
-#include "acados/utils/mem.h"
 
 
 /************************************************

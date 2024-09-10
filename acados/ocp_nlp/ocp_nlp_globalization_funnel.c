@@ -71,9 +71,12 @@ acados_size_t ocp_nlp_globalization_funnel_opts_calculate_size(void *config_, vo
 
 void ocp_nlp_globalization_funnel_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
-    ocp_nlp_globalization_opts_initialize_default(config_, dims_, opts_);
-    
+    ocp_nlp_dims *dims = dims_;
     ocp_nlp_globalization_funnel_opts *opts = opts_;
+    ocp_nlp_globalization_opts *globalization_opts = opts->globalization_opts;
+    ocp_nlp_globalization_config *config = config_;
+
+    ocp_nlp_globalization_opts_initialize_default(config, dims, globalization_opts);
 
     // funnel method opts
     opts->initialization_increase_factor = 15.0;
@@ -86,12 +89,13 @@ void ocp_nlp_globalization_funnel_opts_initialize_default(void *config_, void *d
     opts->penalty_eta = 1e-6;
     opts->type_switching_condition = false; // use ipopt/gould type of switching
 
+    
     return;
 }
 
 
 void ocp_nlp_globalization_funnel_opts_set(void *config_, void *opts_, const char *field, void* value)
-{
+{    
     ocp_nlp_globalization_funnel_opts *opts = opts_;
     ocp_nlp_globalization_config *config = config_;
 
@@ -157,19 +161,23 @@ void ocp_nlp_globalization_funnel_opts_set(void *config_, void *opts_, const cha
     }
     else
     {
-        config->opts_set(config, opts->globalization_opts, field, value);
+        ocp_nlp_globalization_opts_set(config, opts->globalization_opts, field, value);
     }
-
     return;
-
 }
 
 void *ocp_nlp_globalization_funnel_opts_assign(void *config_, void *dims_, void *raw_memory)
 {
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_globalization_config *config = config_;
+
     char *c_ptr = (char *) raw_memory;
 
     ocp_nlp_globalization_funnel_opts *opts = (ocp_nlp_globalization_funnel_opts *) c_ptr;
     c_ptr += sizeof(ocp_nlp_globalization_funnel_opts);
+
+    opts->globalization_opts = ocp_nlp_globalization_opts_assign(config, dims, c_ptr);
+    c_ptr += ocp_nlp_globalization_opts_calculate_size(config, dims);
 
     assert((char *) raw_memory + ocp_nlp_globalization_funnel_opts_calculate_size(config_, dims_) >=
            c_ptr);

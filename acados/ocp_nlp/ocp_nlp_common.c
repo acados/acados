@@ -934,6 +934,8 @@ acados_size_t ocp_nlp_opts_calculate_size(void *config_, void *dims_)
 
     size += config->regularize->opts_calculate_size();
 
+    size += config->globalization->opts_calculate_size(config, dims);
+
     // dynamics
     size += N * sizeof(void *);
     for (int i = 0; i < N; i++)
@@ -959,8 +961,6 @@ acados_size_t ocp_nlp_opts_calculate_size(void *config_, void *dims_)
 
     return size;
 }
-
-
 
 void *ocp_nlp_opts_assign(void *config_, void *dims_, void *raw_memory)
 {
@@ -1040,6 +1040,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     ocp_nlp_cost_config **cost = config->cost;
     ocp_nlp_constraints_config **constraints = config->constraints;
     ocp_nlp_reg_config *regularize = config->regularize;
+    ocp_nlp_globalization_config *globalization = config->globalization;
 
     int N = dims->N;
 
@@ -1067,6 +1068,9 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
 
     // regularization
     regularize->opts_initialize_default(regularize, dims->regularize, opts->regularize);
+
+    // globalization
+    globalization->opts_initialize_default(globalization, dims, opts->globalization);
 
     // dynamics
     for (int i = 0; i < N; i++)
@@ -1165,6 +1169,7 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         ptr_module = module;
     }
 
+    printf("Field: %s\n", field);
     // pass options to QP module
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
     {
@@ -1174,6 +1179,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
     else if ( ptr_module!=NULL && (!strcmp(ptr_module, "reg")) )
     {
         config->regularize->opts_set(config->regularize, opts->regularize,
+                                    field+module_length+1, value);
+    }
+    else if ( ptr_module!=NULL && (!strcmp(ptr_module, "globalization")) )
+    {   
+        config->globalization->opts_set(config->globalization, opts->globalization,
                                     field+module_length+1, value);
     }
     else // nlp opts

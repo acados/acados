@@ -97,7 +97,7 @@ ocp_nlp_globalization_config *ocp_nlp_globalization_config_assign(void *raw_memo
  ************************************************/
 typedef struct ocp_nlp_globalization_opts
 {
-    int globalization_use_SOC;
+    int use_SOC;
     int line_search_use_sufficient_descent;
     int full_step_dual;
     double alpha_min;
@@ -108,7 +108,7 @@ typedef struct ocp_nlp_globalization_opts
 //
 acados_size_t ocp_nlp_globalization_opts_calculate_size(void *config, void *dims);
 //
-// void *ocp_nlp_globalization_opts_assign(void *config, void *dims, void *raw_memory);
+void *ocp_nlp_globalization_opts_assign(void *config, void *dims, void *raw_memory);
 //
 void ocp_nlp_globalization_opts_initialize_default(void *config, void *dims, void *opts);
 //

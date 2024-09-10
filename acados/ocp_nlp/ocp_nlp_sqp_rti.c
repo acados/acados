@@ -850,6 +850,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
     qp_info *qp_info_;
     int qp_iter, qp_status, line_search_status;
     double alpha, tmp_time;
+    alpha = 1.0;
 
     // prepare submodules
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);

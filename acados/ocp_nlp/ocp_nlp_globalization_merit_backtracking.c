@@ -29,10 +29,7 @@
  */
 
 
-#include "acados/ocp_nlp/ocp_nlp_globalization_common.h"
 #include "acados/ocp_nlp/ocp_nlp_globalization_merit_backtracking.h"
-#include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/ocp_nlp/ocp_nlp_sqp.h"
 
 // TODO: copy boilerblate..
 // fix imports
@@ -46,12 +43,15 @@
 #if defined(ACADOS_WITH_OPENMP)
 #include <omp.h>
 #endif
+// acados
+#include "acados/ocp_nlp/ocp_nlp_globalization_common.h"
+#include "acados/ocp_nlp/ocp_nlp_common.h"
+// #include "acados/ocp_nlp/ocp_nlp_sqp.h"
+#include "acados/utils/mem.h"
 
 // blasfeo
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
-// acados
-#include "acados/utils/mem.h"
 
 
 /************************************************
@@ -139,7 +139,6 @@ void *ocp_nlp_globalization_merit_backtracking_memory_assign(void *config_, void
 /************************************************
  * functions
  ************************************************/
-
 
 int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
@@ -651,8 +650,10 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_c
     ocp_nlp_workspace *nlp_work = nlp_work_;
     ocp_nlp_opts *nlp_opts = nlp_opts_;
     
-    int sqp_iter = 1;
-    bool do_line_search = true;
+    printf("Merit backtracking line search\n");
+
+    // int sqp_iter = 1;
+    // bool do_line_search = true;
 //     if (nlp_opts->globalization->globalization_use_SOC)
 //     {
 //         do_line_search = ocp_nlp_soc_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter);
@@ -667,21 +668,21 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_c
 // //         }
 //     }
 
-    if (do_line_search)
-    {
-        int line_search_status;
-        line_search_status = ocp_nlp_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter, &mem->alpha);
-        if (line_search_status == ACADOS_NAN_DETECTED)
-        {
-            mem->status = ACADOS_NAN_DETECTED;
-            return mem->status;
-        }
-    }
-    // mem->time_glob += acados_toc(&timer1);
-    // nlp_mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
+    // if (do_line_search)
+    // {
+    //     int line_search_status;
+    //     line_search_status = ocp_nlp_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter, &mem->alpha);
+    //     if (line_search_status == ACADOS_NAN_DETECTED)
+    //     {
+    //         mem->status = ACADOS_NAN_DETECTED;
+    //         return mem->status;
+    //     }
+    // }
+    // // mem->time_glob += acados_toc(&timer1);
+    // // nlp_mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
 
-    // update variables
-    ocp_nlp_update_variables_sqp(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, mem->alpha);
+    // // update variables
+    // ocp_nlp_update_variables_sqp(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, mem->alpha);
 }
 
 int ocp_nlp_globalization_merit_backtracking_needs_objective_value()
