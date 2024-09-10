@@ -124,12 +124,10 @@ classdef {{ name }}_mex_solver < handle
             val = varargin{2};
 
             if nargin == 2
-                acados_mex_set_p_global_{{ name }}(obj.C_ocp, val);
+                acados_mex_set_{{ name }}(obj.C_ocp, 'p_global', val);
             else
                 disp('acados_ocp.set_p_global: wrong number of input arguments (2 allowed)');
             end
-
-            acados_mex_set_p_global_{{ name }}(obj.C_ocp, val);
         end
 
         function value = get_cost(obj)

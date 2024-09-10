@@ -1000,7 +1000,6 @@ classdef AcadosOcp < handle
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_free.in.c'), ['acados_mex_free_', self.name, '.c']};
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_solve.in.c'), ['acados_mex_solve_', self.name, '.c']};
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_set.in.c'), ['acados_mex_set_', self.name, '.c']};
-            template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_set_p_global.in.c'), ['acados_mex_set_p_global_', self.name, '.c']};
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_reset.in.c'), ['acados_mex_reset_', self.name, '.c']};
 
             if ~isempty(self.solver_options.custom_update_filename)
