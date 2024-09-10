@@ -100,13 +100,13 @@ In \acados{}, one can formulate continuous-time optimal control problems (OCP) o
     &\underset{\begin{subarray}{c}
         x(\cdot),\,u(\cdot), \, z(\cdot), \, s(\cdot), \, s\terminal
         \end{subarray}}{\min}
-    &&\int_0^T l(x(\tau), u(\tau), z(\tau), t, p)
-     + \frac{1}{2} \matr{s\Lower(\tau) \\ s\upper(\tau) \\ 1} \tran
+    &&\int_0^T l(x(t), u(t), z(t), t, p(t))
+     + \frac{1}{2} \matr{s\Lower(t) \\ s\upper(t) \\ 1} \tran
       \matr{ Z\Lower & 0 & z\Lower \\
       0 & Z\upper & z\upper \\
         {z\Lower}\tran & {z\upper}\tran & 0}
-    \matr{s\Lower(\tau) \\ s\upper(\tau) \\ 1} \mathrm{d}t \; + \nonumber\\
-     &&& \quad \quad m(x(T), z(T), p) +
+    \matr{s\Lower(t) \\ s\upper(t) \\ 1} \mathrm{d}t \; + \nonumber\\
+     &&& \quad \quad m(x(T), z(T), p(T)) +
       \frac{1}{2} \matr{s\Lower\terminal \\ s\upper\terminal \\ 1} \tran
      \matr{ Z\Lower\terminal & 0 & z\Lower\terminal \\
          0 & Z\upper\terminal & z\upper\terminal \\
@@ -117,14 +117,14 @@ In \acados{}, one can formulate continuous-time optimal control problems (OCP) o
     &&&\mathComment{Initial values, see section \ref{sec:constraints:initial}}\nonumber\\
     &\,\,\,\quad \text{s.t.}    &&\underline{x}_0 \leq J\ind{bx}\initial \, x(0) \leq \overline{x}_0 , && \label{eq:constraints:initial}\\[1ex]
     &&&\mathComment{Nonlinear constraints on the initial shooting node} \nonumber\\
-    &&&\underline{h}\initial \leq h\initial(x(0), u(0), z(0), p) + J_{\textrm{sh}}\initial \, s\lowerh\initial, &&\label{eq:constraints:path:lower_bounds:start}\\
-    &&& h\initial(x(0), u(0),  z(0), p) - J\ind{sh}\initial\, s\ind{u,h}\initial \leq \overline{h}\initial, &&\label{eq:constraints:path:upper_bounds:start}\\
+    &&&\underline{h}\initial \leq h\initial(x(0), u(0), z(0), p(0)) + J_{\textrm{sh}}\initial \, s\lowerh\initial, &&\label{eq:constraints:path:lower_bounds:start}\\
+    &&& h\initial(x(0), u(0),  z(0), p(0)) - J\ind{sh}\initial\, s\ind{u,h}\initial \leq \overline{h}\initial, &&\label{eq:constraints:path:upper_bounds:start}\\
     &&&\mathComment{Dynamics, see section \ref{sec:dynamics}}\nonumber\\
     %% dynamics
-    &&& f\ind{impl}(x(t), \dot{x}(t), u(t), z(t), t, p) = 0, &&\quad t \in [0,\,T), \label{eq:dynamics}\\[1ex]
+    &&& f\ind{impl}(x(t), \dot{x}(t), u(t), z(t), t, p(t)) = 0, &&\quad t \in [0,\,T), \label{eq:dynamics}\\[1ex]
     &&&\mathComment{Path constraints with lower bounds, see section \ref{sec:constraints:path}}\nonumber\\
     %% path constraints with lower slack
-    &&&\underline{h} \leq h(x(t), u(t), z(t), p) + J_{\textrm{sh}} \, s\lowerh(t), &&\quad t \in (0,\,T),\\
+    &&&\underline{h} \leq h(x(t), u(t), z(t), p(t)) + J_{\textrm{sh}} \, s\lowerh(t), &&\quad t \in (0,\,T),\\
     &&&\underline{x} \leq J_{\textrm{bx}} \, x(t) + J_{\textrm{sbx}} \,s\lowerbx(t), &&\quad t \in (0,\,T),\\
     &&&\underline{u} \leq J_{\textrm{bu}} \,u(t) + J_{\textrm{sbu}} \,s\lowerbu(t), &&\quad t \in [0,\,T),\\
     &&&\underline{g} \leq C\,x(t) + D\,u(t) + J_{\textrm{sg}} \,s\lowerg(t), &&\quad t \in [0,\,T), \\
@@ -132,7 +132,7 @@ In \acados{}, one can formulate continuous-time optimal control problems (OCP) o
     &&& s\lowerh\initial \geq 0, && \label{eq:constraints:path:lower_bounds:end}\\[1ex]
     &&&\mathComment{Path constraints with upper bounds, see section \ref{sec:constraints:path}}\nonumber\\
     %% path constraints with upper slack
-    &&& h(x(t), u(t), z(t), p) - J_{\textrm{sh}} \, s\upperh(t) \leq \overline{h}, &&\quad t \in (0,\,T),\\
+    &&& h(x(t), u(t), z(t), p(t)) - J_{\textrm{sh}} \, s\upperh(t) \leq \overline{h}, &&\quad t \in (0,\,T),\\
     &&& J_{\textrm{bx}} x(t) - J_{\textrm{sbx}}\, s\upperbx(t) \leq \overline{x}, &&\quad t \in (0,\,T),\\
     &&& J_{\textrm{bu}} u(t) - J_{\textrm{sbu}}\, s\upperbu(t)\leq \overline{u}, &&\quad t \in [0,\,T),\\
     &&& Cx(t) + Du(t) - J_{\textrm{sg}}\, s\upperg \leq \overline{g}, &&\quad t \in [0,\,T), \\
@@ -140,13 +140,13 @@ In \acados{}, one can formulate continuous-time optimal control problems (OCP) o
     &&& s\ind{u,h}\initial \geq 0, && \label{eq:constraints:path:upper_bounds:end}\\[1ex]
     %% lower terminal constraints
     &&&\mathComment{Terminal constraints with lower bounds, see section \ref{sec:constraints:path}}\nonumber\\
-    &&&\underline{h}\terminal \leq h\terminal(x(T), p) + J\ind{sh}\terminal\, s\lowerh\terminal, &&\label{eq:constraints:terminal:lower_bounds:start}\\
+    &&&\underline{h}\terminal \leq h\terminal(x(T), p(T)) + J\ind{sh}\terminal\, s\lowerh\terminal, &&\label{eq:constraints:terminal:lower_bounds:start}\\
     &&&\underline{x}\terminal \leq J_{\textrm{bx}}\terminal\, x(T) + J\ind{sbx}\terminal\, s\lowerbx\terminal, &&\\ % TODO: add Jsbx_e?!
     &&&\underline{g}\terminal \leq C\terminal\, x(T) + J\ind{sg}\terminal\, s\lowerg\terminal \leq \overline{g}\terminal, && \\
     &&& s\lowerh\terminal, s\lowerbx\terminal, s\lowerbu\terminal, s\lowerg\terminal \geq 0, \label{eq:constraints:terminal:lower_bounds:end}\\[1ex]
     %% upper terminal constraints
     &&&\mathComment{Terminal constraints with upper bounds, see section \ref{sec:constraints:path}}\nonumber\\
-    &&& h\terminal(x(T), p) - J\ind{sh}\terminal\, s\ind{u,h}\terminal \leq \overline{h}\terminal, &&\label{eq:constraints:terminal:upper_bounds:start}\\
+    &&& h\terminal(x(T), p(T)) - J\ind{sh}\terminal\, s\ind{u,h}\terminal \leq \overline{h}\terminal, &&\label{eq:constraints:terminal:upper_bounds:start}\\
     &&& J_{\textrm{bx}}\terminal\, x(T) - J\ind{sbx}\terminal\, s\ind{u,bx}\terminal \leq \overline{x}^{e}, &&\\
     &&& C\terminal\, x(T) - J\ind{sg}\terminal\, s\ind{u,g}\terminal \leq \overline{g}\terminal \\
     &&& s\upperh\terminal, s\upperbx\terminal, s\upperbu\terminal, s\upperg\terminal \geq 0,\label{eq:constraints:terminal:upper_bounds:end}
@@ -157,7 +157,7 @@ with
 \item state vector $ x: \R \rightarrow \R^{\nx} $
 \item control vector $ u: \R \rightarrow \R^{\nuu} $
 \item algebraic state vector $ z: \R \rightarrow \R^{\nz} $
-\item model parameters $ p \in \R^{\np} $
+\item model parameters $ p: \R \rightarrow \in \R^{\np} $
 \item slacks for initial constraints $s\ind{u,h}\initial \in \R^{\ns\initial}$ and $s\ind{l,h}\initial \in \R^{\ns\initial}$
 \item slacks for path constraints $ s\Lower(t) = (s\lowerbu, s\lowerbx, s\lowerg, s\lowerh) \in \R^{\ns} $ and $ s\upper(t) = (s\upperbu, s\upperbx, s\upperg, s\upperh) \in \R^{\ns} $
 \item slacks for terminal constraints $ s\Lower\terminal(t) = (s\lowerbx\terminal, s\lowerg\terminal, s\lowerh\terminal) \in \R^{\ns\terminal} $ and $ s\upper\terminal(t) = (s\upperbx\terminal, s\upperg\terminal, s\upperh\terminal) \in \R^{\ns\terminal} $
@@ -165,7 +165,7 @@ with
 \item diagonal matrices $Z\ind{l}, Z\ind{u}$, $Z\ind{l}\terminal, Z\ind{u}\terminal$
 \end{itemize}
 
-While the user specifies the OCP in continuous time, the problem is internally discretized using the \textbf{multiple shooting} approach and a piecewise constant control parametrization.
+While the user specifies the OCP in continuous time, the problem is internally discretized using the \textbf{multiple shooting} approach and a piecewise constant parametrization for the control and parameter trajectory.
 In particular, the algebraic variables returned by \acados{} are associated with the beginning of a shooting interval.
 Thus, there are no algebraic variables available at the terminal node.
 
@@ -426,9 +426,9 @@ See Table~\ref{tab:cost:nonlinear_ls} for the available options of this cost mod
 
 If the cost takes the form
 \begin{align}
-l(x, u, t, p) = \psi(r(x, u, z, t, p) - y_\mathrm{ref}, t, p), \qquad m(x, p) = \psi\terminal(r\terminal(x, t, p) - y_\mathrm{ref}\terminal, p),
+l(x, u, t, p) = \psi(y(x, u, z, t, p) - y_\mathrm{ref}, t, p), \qquad m(x, p) = \psi\terminal(y\terminal(x, t, p) - y_\mathrm{ref}\terminal, p),
 \end{align}
-with $\psi$ and $\psi\terminal$ convex, we say the cost has convex-over-nonlinear structure.
+with $\psi(r)$ and $\psi\terminal(r\terminal)$ convex, we say the cost has convex-over-nonlinear structure.
 In this case, a Generalized Gauss-Newton Hessian might be used for the SQP subproblems \cite{Messerer2021a}, which is used whenever \code{AcadosOcpOptions.hessian\_approx = 'GAUSS\_NEWTON'}.
 See Table~\ref{tab:cost:conl} for the available options of this cost module.
 
