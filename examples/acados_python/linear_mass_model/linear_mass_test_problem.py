@@ -49,7 +49,7 @@ def main():
 
     # all setting
     params = {'globalization': ['FIXED_STEP', 'MERIT_BACKTRACKING'], # MERIT_BACKTRACKING, FIXED_STEP
-              'line_search_use_sufficient_descent' : [0, 1],
+              'globalization_line_search_use_sufficient_descent' : [0, 1],
               'qp_solver' : ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES'],
               'globalization_use_SOC' : [0, 1] }
 
@@ -57,7 +57,7 @@ def main():
     for combination in product(*values):
         setting = dict(zip(keys, combination))
         if setting['globalization'] == 'FIXED_STEP' and \
-          (setting['globalization_use_SOC'] or setting['line_search_use_sufficient_descent']):
+          (setting['globalization_use_SOC'] or setting['globalization_line_search_use_sufficient_descent']):
             # skip some equivalent settings
             pass
         else:
@@ -67,7 +67,7 @@ def main():
 def solve_maratos_ocp(setting):
 
     globalization = setting['globalization']
-    line_search_use_sufficient_descent = setting['line_search_use_sufficient_descent']
+    globalization_line_search_use_sufficient_descent = setting['globalization_line_search_use_sufficient_descent']
     globalization_use_SOC = setting['globalization_use_SOC']
     qp_solver = setting['qp_solver']
 
@@ -183,7 +183,7 @@ def solve_maratos_ocp(setting):
     ocp.solver_options.tf = Tf
 
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_ocp.json')
-    ocp_solver.options_set('line_search_use_sufficient_descent', line_search_use_sufficient_descent)
+    ocp_solver.options_set('globalization_line_search_use_sufficient_descent', globalization_line_search_use_sufficient_descent)
     ocp_solver.options_set('globalization_use_SOC', globalization_use_SOC)
     ocp_solver.options_set('full_step_dual', 1)
 

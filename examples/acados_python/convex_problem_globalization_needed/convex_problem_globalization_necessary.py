@@ -13,7 +13,8 @@ TOL = 1e-6
 
 def main():
     # run test cases
-    params = {'globalization': ['FIXED_STEP', 'FUNNEL_L1PEN_LINESEARCH', 'MERIT_BACKTRACKING']}
+    # params = {'globalization': ['FIXED_STEP', 'FUNNEL_L1PEN_LINESEARCH', 'MERIT_BACKTRACKING']}
+    params = {'globalization': ['FIXED_STEP']}#, 'FUNNEL_L1PEN_LINESEARCH', 'MERIT_BACKTRACKING']}
 
     keys, values = zip(*params.items())
     for combination in product(*values):
