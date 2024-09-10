@@ -118,7 +118,7 @@ typedef struct ocp_nlp_plan_t
     ocp_nlp_reg_t regularization;
 
     /// Globalization type, defaults to fixed step.
-    ocp_nlp_reg_t globalization;
+    ocp_nlp_globalization_t globalization;
 
     /// Cost type for each stage.
     ocp_nlp_cost_t *nlp_cost;
