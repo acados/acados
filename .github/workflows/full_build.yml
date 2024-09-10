@@ -193,7 +193,7 @@ jobs:
         command: |
             cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; run_matlab_tests
 
-  MATLAB_test_new_casadi:
+  MATLAB_examples_new_casadi:
     needs: core_build
     runs-on: ubuntu-22.04
     steps:
