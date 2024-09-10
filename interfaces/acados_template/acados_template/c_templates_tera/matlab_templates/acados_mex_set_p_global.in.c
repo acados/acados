@@ -51,8 +51,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
 
     long long *ptr;
-    int acados_size;
-    mxArray *mex_field;
     char fun_name[20] = "ocp_set_p_global";
     char buffer [500]; // for error messages
 
@@ -64,27 +62,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // capsule
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "capsule" ) );
     {{ name }}_solver_capsule *capsule = ({{ name }}_solver_capsule *) ptr[0];
-    // plan
-    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "plan" ) );
-    ocp_nlp_plan_t *plan = (ocp_nlp_plan_t *) ptr[0];
-    // config
-    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "config" ) );
-    ocp_nlp_config *config = (ocp_nlp_config *) ptr[0];
     // dims
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "dims" ) );
     ocp_nlp_dims *dims = (ocp_nlp_dims *) ptr[0];
-    // opts
-    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "opts" ) );
-    void *opts = (void *) ptr[0];
-    // in
-    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "in" ) );
-    ocp_nlp_in *in = (ocp_nlp_in *) ptr[0];
-    // out
-    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "out" ) );
-    ocp_nlp_out *out = (ocp_nlp_out *) ptr[0];
-    // solver
-    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "solver" ) );
-    ocp_nlp_solver *solver = (ocp_nlp_solver *) ptr[0];
 
     // value
     double *value = mxGetPr( prhs[1] );
