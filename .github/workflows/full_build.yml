@@ -242,7 +242,7 @@ jobs:
       if: always()
       with:
         command: |
-            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; run_matlab_tests_new_casadi
+            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; run_matlab_examples_new_casadi
 
   # run selected matlab examples
   MATLAB_examples:
