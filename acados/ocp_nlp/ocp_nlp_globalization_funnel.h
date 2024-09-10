@@ -167,20 +167,21 @@ int ocp_nlp_globalization_funnel_find_acceptable_iterate(void *nlp_config_, void
 void ocp_nlp_globalization_funnel_print_iteration_header();
 //
 void ocp_nlp_globalization_funnel_print_iteration(ocp_nlp_opts* opts,
-                                                double obj,
-                                                int iter_count,
-                                                double infeas_eq,
-                                                double infeas_ineq,
-                                                double stationarity,
-                                                double complementarity,
-                                                double alpha,
-                                                double step_norm,
-                                                double reg_param,
-                                                double funnel_width,
-                                                double penalty_parameter,
-                                                int qp_status,
-                                                int qp_iter,
-                                                char iter_type);
+                                                ocp_nlp_globalization_funnel_memory* mem);
+                                                // double obj,
+                                                // int iter_count,
+                                                // double infeas_eq,
+                                                // double infeas_ineq,
+                                                // double stationarity,
+                                                // double complementarity,
+                                                // double alpha,
+                                                // double step_norm,
+                                                // double reg_param,
+                                                // double funnel_width,
+                                                // double penalty_parameter,
+                                                // int qp_status,
+                                                // int qp_iter,
+                                                // char iter_type);
 //
 int ocp_nlp_globalization_funnel_needs_objective_value();
 //

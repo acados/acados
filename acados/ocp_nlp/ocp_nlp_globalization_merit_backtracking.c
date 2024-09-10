@@ -276,33 +276,34 @@ void ocp_nlp_globalization_merit_backtracking_print_iteration_header()
 // 2. int iter count
 // 3. alpha etc. move to glob_memory. (void *)
 void ocp_nlp_globalization_merit_backtracking_print_iteration(ocp_nlp_opts* opts,
-                    double obj,
-                    int iter_count,
-                    double infeas_eq,
-                    double infeas_ineq,
-                    double stationarity,
-                    double complementarity,
-                    double alpha,
-                    double step_norm,
-                    double reg_param,
-                    double funnel_width,
-                    double penalty_parameter,
-                    int qp_status,
-                    int qp_iter,
-                    char iter_type)
+                                        ocp_nlp_globalization_merit_backtracking_memory* mem)
+                    // double obj,
+                    // int iter_count,
+                    // double infeas_eq,
+                    // double infeas_ineq,
+                    // double stationarity,
+                    // double complementarity,
+                    // double alpha,
+                    // double step_norm,
+                    // double reg_param,
+                    // double funnel_width,
+                    // double penalty_parameter,
+                    // int qp_status,
+                    // int qp_iter,
+                    // char iter_type)
 {
-    if ((iter_count % 10 == 0)){
-        ocp_nlp_globalization_merit_backtracking_print_iteration_header();
-    }
-    printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n",
-        iter_count,
-        stationarity,
-        infeas_eq,
-        infeas_ineq,
-        complementarity,
-        qp_status,
-        qp_iter,
-        alpha);
+    // if ((iter_count % 10 == 0)){
+    //     ocp_nlp_globalization_merit_backtracking_print_iteration_header();
+    // }
+    // printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n",
+    //     iter_count,
+    //     stationarity,
+    //     infeas_eq,
+    //     infeas_ineq,
+    //     complementarity,
+    //     qp_status,
+    //     qp_iter,
+    //     alpha);
 }
 
 static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
@@ -567,6 +568,77 @@ static int ocp_nlp_line_search_merit_check_full_step(ocp_nlp_config *config, ocp
         }
         return ACADOS_MINSTEP;
     }
+}
+
+static double ocp_nlp_get_violation_inf_norm(ocp_nlp_config *config, ocp_nlp_dims *dims,
+                                  ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+                                  ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    // computes constraint violation infinity norm
+    // assumes constraint functions are evaluated before, e.g. done in ocp_nlp_evaluate_merit_fun
+    int i, j;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+    struct blasfeo_dvec *tmp_fun_vec;
+    double violation = 0.0;
+    double tmp;
+    for (i=0; i<N; i++)
+    {
+        tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
+        for (j=0; j<nx[i+1]; j++)
+        {
+            tmp = fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
+            violation = tmp > violation ? tmp : violation;
+        }
+    }
+
+    for (i=0; i<=N; i++)
+    {
+        tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
+        for (j=0; j<2*ni[i]; j++)
+        {
+            // Note constraint violation corresponds to > 0
+            tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
+            violation = tmp > violation ? tmp : violation;
+        }
+    }
+
+    return violation;
+}
+
+
+static void copy_multipliers_nlp_to_qp(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_qp_out *to)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+    for (int i = 0; i <= N; i++)
+    {
+        blasfeo_dveccp(2*ni[i], from->lam+i, 0, to->lam+i, 0);
+    }
+    for (int i = 0; i < N; i++)
+    {
+        blasfeo_dveccp(nx[i+1], from->pi+i, 0, to->pi+i, 0);
+    }
+    return;
+}
+
+
+static void copy_multipliers_qp_to_nlp(ocp_nlp_dims *dims, ocp_qp_out *from, ocp_nlp_out *to)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+    for (int i = 0; i <= N; i++)
+    {
+        blasfeo_dveccp(2*ni[i], from->lam+i, 0, to->lam+i, 0);
+    }
+    for (int i = 0; i < N; i++)
+    {
+        blasfeo_dveccp(nx[i+1], from->pi+i, 0, to->pi+i, 0);
+    }
+    return;
 }
 
 int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *nlp_work_, void *nlp_opts_)

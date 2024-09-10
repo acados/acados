@@ -559,39 +559,40 @@ void ocp_nlp_globalization_funnel_print_iteration_header()
 // 2. int iter count
 // 3. alpha etc. move to glob_memory. (void *)
 void ocp_nlp_globalization_funnel_print_iteration(ocp_nlp_opts* opts,
-                    double obj,
-                    int iter_count,
-                    double infeas_eq,
-                    double infeas_ineq,
-                    double stationarity,
-                    double complementarity,
-                    double alpha,
-                    double step_norm,
-                    double reg_param,
-                    double funnel_width,
-                    double penalty_parameter,
-                    int qp_status,
-                    int qp_iter,
-                    char iter_type)
+                                                ocp_nlp_globalization_funnel_memory* mem)
+                    // double obj,
+                    // int iter_count,
+                    // double infeas_eq,
+                    // double infeas_ineq,
+                    // double stationarity,
+                    // double complementarity,
+                    // double alpha,
+                    // double step_norm,
+                    // double reg_param,
+                    // double funnel_width,
+                    // double penalty_parameter,
+                    // int qp_status,
+                    // int qp_iter,
+                    // char iter_type)
 {
-    if ((iter_count % 10 == 0)){
-        ocp_nlp_globalization_funnel_print_iteration_header();
-    }
-    printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %12.4e | %10.4e | %10i | %10i | %10c\n",
-        iter_count,
-        obj,
-        infeas_eq,
-        infeas_ineq,
-        stationarity,
-        complementarity,
-        alpha,
-        step_norm,
-        reg_param,
-        funnel_width,
-        penalty_parameter,
-        qp_status,
-        qp_iter,
-        iter_type);
+    // if ((iter_count % 10 == 0)){
+    //     ocp_nlp_globalization_funnel_print_iteration_header();
+    // }
+    // printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %12.4e | %10.4e | %10i | %10i | %10c\n",
+    //     iter_count,
+    //     obj,
+    //     infeas_eq,
+    //     infeas_ineq,
+    //     stationarity,
+    //     complementarity,
+    //     alpha,
+    //     step_norm,
+    //     reg_param,
+    //     funnel_width,
+    //     penalty_parameter,
+    //     qp_status,
+    //     qp_iter,
+    //     iter_type);
 }
 
 int ocp_nlp_globalization_funnel_needs_objective_value()

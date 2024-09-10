@@ -1167,10 +1167,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Output
         if (nlp_opts->print_level > 0)
         {
-            config->globalization->print_iteration(nlp_opts->globalization);
+            config->globalization->print_iteration(nlp_opts->globalization, nlp_mem->globalization);
         }
         // reg_param_memory = nlp_opts->levenberg_marquardt;
-
 
         // regularize Hessian
         // NOTE: this is done before termination, such that we can get the QP at the stationary point that is actually solved, if we exit with success.

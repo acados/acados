@@ -92,20 +92,21 @@ void *ocp_nlp_globalization_fixed_step_memory_assign(void *config, void *dims, v
 void ocp_nlp_globalization_fixed_step_print_iteration_header();
 //
 void ocp_nlp_globalization_fixed_step_print_iteration(ocp_nlp_opts* opts,
-                                                double obj,
-                                                int iter_count,
-                                                double infeas_eq,
-                                                double infeas_ineq,
-                                                double stationarity,
-                                                double complementarity,
-                                                double alpha,
-                                                double step_norm,
-                                                double reg_param,
-                                                double funnel_width,
-                                                double penalty_parameter,
-                                                int qp_status,
-                                                int qp_iter,
-                                                char iter_type);
+                                                ocp_nlp_globalization_fixed_step_memory* mem);
+                                                // double obj,
+                                                // int iter_count,
+                                                // double infeas_eq,
+                                                // double infeas_ineq,
+                                                // double stationarity,
+                                                // double complementarity,
+                                                // double alpha,
+                                                // double step_norm,
+                                                // double reg_param,
+                                                // double funnel_width,
+                                                // double penalty_parameter,
+                                                // int qp_status,
+                                                // int qp_iter,
+                                                // char iter_type);
 //
 int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *nlp_work_, void *nlp_opts_);
 //
