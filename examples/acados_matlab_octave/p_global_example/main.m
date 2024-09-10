@@ -45,6 +45,20 @@ function main()
     if ~all(abs(residuals_with_lut_ref - residuals_with_lut) < 1e-10)
         error("Residuals with lut=true do not match.");
     end
+
+    residuals_no_lut_ref = run_example_mocp(false, false);
+    residuals_no_lut = run_example_mocp(false, true);
+
+    if ~all(abs(residuals_no_lut_ref - residuals_no_lut) < 1e-10)
+        error("Residuals with lut=false do not match.");
+    end
+
+    residuals_with_lut_ref = run_example_mocp(true, false);
+    residuals_with_lut = run_example_mocp(true, true);
+
+    if ~all(abs(residuals_with_lut_ref - residuals_with_lut) < 1e-10)
+        error("Residuals with lut=true do not match.");
+    end
 end
 
 
@@ -92,10 +106,72 @@ function residuals = run_example_ocp(lut, use_p_global)
 end
 
 function residuals = run_example_mocp(lut, use_p_global)
-    % TODO
-    residuals = 0;
+    import casadi.*
+
+    fprintf('\n\nRunning example with lut=%d, use_p_global=%d\n', lut, use_p_global);
+
+    % Create p_global parameters
+    [p_global, m, l, C, p_global_values] = create_p_global(lut);
+
+    % OCP formulation
+    mocp = create_mocp_formulation(p_global, m, l, C, lut, use_p_global, p_global_values);
+
+    % OCP solver
+    mocp_solver = AcadosOcpSolver(mocp);
+
+    % Solve
+    residuals = [];
+
+    if use_p_global
+        mocp_solver.set_p_global(p_global_values);
+    end
+
+    for i = 1:20
+        mocp_solver.solve();
+        % TODO implement get_residuals()
+        % residuals = [residuals; mocp_solver.get_residuals()];
+        residuals = [residuals; mocp_solver.get('x')];
+    end
+
+    % % Plot results
+    % PLOT = false;
+
+    % if PLOT
+    %     utraj = ocp_solver.get('u');
+    %     xtraj = ocp_solver.get('x');
+    %     plot_pendulum(ocp.solver_options.shooting_nodes, xtraj, utraj);
+
+    %     if is_octave()
+    %         waitforbuttonpress;
+    %     end
+    % end
 end
 
+function mocp = create_mocp_formulation(p_global, m, l, C, lut, use_p_global, p_global_values)
+
+    Tf = 1.0;
+    N_horizon_1 = 10;
+    N_horizon_2 = 10;
+    N_horizon = N_horizon_1 + N_horizon_2;
+    mocp = AcadosMultiphaseOcp([N_horizon_1, N_horizon_2]);
+    ocp_phase_1 = create_ocp_formulation(p_global, m, l, C, lut, use_p_global, p_global_values);
+    ocp_phase_2 = create_ocp_formulation(p_global, m, l, C, lut, use_p_global, p_global_values);
+
+    mocp.set_phase(ocp_phase_1, 1);
+    mocp.set_phase(ocp_phase_2, 2);
+
+    %  set options
+    mocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
+    mocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
+    mocp.solver_options.integrator_type = 'ERK';
+    mocp.solver_options.print_level = 0;
+    mocp.solver_options.nlp_solver_type = 'SQP_RTI';
+
+    % set prediction horizon
+    mocp.solver_options.tf = Tf;
+    mocp.solver_options.N_horizon = N_horizon;
+
+end
 function [p_global, m, l, C, p_global_values] = create_p_global(lut)
 
     import casadi.*
