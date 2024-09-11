@@ -46,7 +46,7 @@
 // acados
 #include "acados/ocp_nlp/ocp_nlp_globalization_common.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
-// #include "acados/ocp_nlp/ocp_nlp_sqp.h"
+#include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/utils/mem.h"
 
 // blasfeo
@@ -305,6 +305,150 @@ void ocp_nlp_globalization_merit_backtracking_print_iteration(ocp_nlp_opts* opts
     //     alpha);
 }
 
+static double ocp_nlp_get_violation_inf_norm(ocp_nlp_config *config, ocp_nlp_dims *dims,
+                                  ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+                                  ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    // computes constraint violation infinity norm
+    // assumes constraint functions are evaluated before, e.g. done in ocp_nlp_evaluate_merit_fun
+    int i, j;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+    struct blasfeo_dvec *tmp_fun_vec;
+    double violation = 0.0;
+    double tmp;
+    for (i=0; i<N; i++)
+    {
+        tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
+        for (j=0; j<nx[i+1]; j++)
+        {
+            tmp = fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
+            violation = tmp > violation ? tmp : violation;
+        }
+    }
+
+    for (i=0; i<=N; i++)
+    {
+        tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
+        for (j=0; j<2*ni[i]; j++)
+        {
+            // Note constraint violation corresponds to > 0
+            tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
+            violation = tmp > violation ? tmp : violation;
+        }
+    }
+
+    return violation;
+}
+
+static void copy_multipliers_nlp_to_qp(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_qp_out *to)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+    for (int i = 0; i <= N; i++)
+    {
+        blasfeo_dveccp(2*ni[i], from->lam+i, 0, to->lam+i, 0);
+    }
+    for (int i = 0; i < N; i++)
+    {
+        blasfeo_dveccp(nx[i+1], from->pi+i, 0, to->pi+i, 0);
+    }
+    return;
+}
+
+static void copy_multipliers_qp_to_nlp(ocp_nlp_dims *dims, ocp_qp_out *from, ocp_nlp_out *to)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+    for (int i = 0; i <= N; i++)
+    {
+        blasfeo_dveccp(2*ni[i], from->lam+i, 0, to->lam+i, 0);
+    }
+    for (int i = 0; i < N; i++)
+    {
+        blasfeo_dveccp(nx[i+1], from->pi+i, 0, to->pi+i, 0);
+    }
+    return;
+}
+
+
+static int ocp_nlp_line_search_merit_check_full_step(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work, int sqp_iter)
+{
+    int N = dims->N;
+    int *nv = dims->nv;
+
+    ocp_qp_out *qp_out = mem->qp_out;
+
+    double merit_fun1;
+
+    // copy out (current iterate) to work->tmp_nlp_out
+    for (int i = 0; i <= N; i++)
+        blasfeo_dveccp(nv[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
+    // NOTE: copying duals not needed, as they dont enter the merit function, see ocp_nlp_line_search
+
+
+    /* modify/initialize merit function weights (Leineweber1999 M5.1, p.89) */
+    if (sqp_iter==0)
+    {
+        merit_backtracking_initialize_weights(dims, work->weight_merit_fun, qp_out);
+    }
+    else
+    {
+        // backup weights
+        copy_multipliers_nlp_to_qp(dims, work->weight_merit_fun, work->tmp_qp_out);
+        // update weights
+        merit_backtracking_update_weights(dims, work->weight_merit_fun, qp_out);
+    }
+
+    double merit_fun0 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
+    double alpha = 1.0;
+
+    // TODO(oj): should the merit weight update be undone in case of early termination?
+    double violation_current = ocp_nlp_get_violation_inf_norm(config, dims, in, out, opts, mem, work);
+
+    // tmp_nlp_out = out + alpha * qp_out
+    for (int i = 0; i <= N; i++)
+        blasfeo_daxpy(nv[i], alpha, qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
+    merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
+
+    double violation_step = ocp_nlp_get_violation_inf_norm(config, dims, in, out, opts, mem, work);
+    if (opts->print_level > 0)
+    {
+        printf("\npreliminary line_search: merit0 %e, merit1 %e; viol_current %e, viol_step %e\n", merit_fun0, merit_fun1, violation_current, violation_step);
+    }
+
+    if (isnan(merit_fun1) || isinf(merit_fun1))
+    {
+        // do nothing and continue with normal line search, i.e. step reduction
+        if (sqp_iter != 0)
+        {
+            // reset merit function weights;
+            copy_multipliers_qp_to_nlp(dims, work->tmp_qp_out, work->weight_merit_fun);
+        }
+        return ACADOS_NAN_DETECTED;
+    }
+    if (merit_fun1 < merit_fun0 && violation_step < violation_current)
+    {
+        // full step if merit and constraint violation improves
+        // TODO: check armijo in this case?
+        return ACADOS_SUCCESS;
+    }
+    else
+    {
+        // trigger SOC
+        if (sqp_iter != 0)
+        {
+            // reset merit function weights;
+            copy_multipliers_qp_to_nlp(dims, work->tmp_qp_out, work->weight_merit_fun);
+        }
+        return ACADOS_MINSTEP;
+    }
+}
+
 static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
             ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_workspace *work, int sqp_iter)
 {
@@ -493,151 +637,6 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
         return ACADOS_QP_FAILURE;
     }
     return true;
-}
-
-static int ocp_nlp_line_search_merit_check_full_step(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work, int sqp_iter)
-{
-    int N = dims->N;
-    int *nv = dims->nv;
-
-    ocp_qp_out *qp_out = mem->qp_out;
-
-    double merit_fun1;
-
-    // copy out (current iterate) to work->tmp_nlp_out
-    for (int i = 0; i <= N; i++)
-        blasfeo_dveccp(nv[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
-    // NOTE: copying duals not needed, as they dont enter the merit function, see ocp_nlp_line_search
-
-
-    /* modify/initialize merit function weights (Leineweber1999 M5.1, p.89) */
-    if (sqp_iter==0)
-    {
-        merit_backtracking_initialize_weights(dims, work->weight_merit_fun, qp_out);
-    }
-    else
-    {
-        // backup weights
-        copy_multipliers_nlp_to_qp(dims, work->weight_merit_fun, work->tmp_qp_out);
-        // update weights
-        merit_backtracking_update_weights(dims, work->weight_merit_fun, qp_out);
-    }
-
-    double merit_fun0 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
-    double alpha = 1.0;
-
-    // TODO(oj): should the merit weight update be undone in case of early termination?
-    double violation_current = ocp_nlp_get_violation_inf_norm(config, dims, in, out, opts, mem, work);
-
-    // tmp_nlp_out = out + alpha * qp_out
-    for (int i = 0; i <= N; i++)
-        blasfeo_daxpy(nv[i], alpha, qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
-    merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
-
-    double violation_step = ocp_nlp_get_violation_inf_norm(config, dims, in, out, opts, mem, work);
-    if (opts->print_level > 0)
-    {
-        printf("\npreliminary line_search: merit0 %e, merit1 %e; viol_current %e, viol_step %e\n", merit_fun0, merit_fun1, violation_current, violation_step);
-    }
-
-    if (isnan(merit_fun1) || isinf(merit_fun1))
-    {
-        // do nothing and continue with normal line search, i.e. step reduction
-        if (sqp_iter != 0)
-        {
-            // reset merit function weights;
-            copy_multipliers_qp_to_nlp(dims, work->tmp_qp_out, work->weight_merit_fun);
-        }
-        return ACADOS_NAN_DETECTED;
-    }
-    if (merit_fun1 < merit_fun0 && violation_step < violation_current)
-    {
-        // full step if merit and constraint violation improves
-        // TODO: check armijo in this case?
-        return ACADOS_SUCCESS;
-    }
-    else
-    {
-        // trigger SOC
-        if (sqp_iter != 0)
-        {
-            // reset merit function weights;
-            copy_multipliers_qp_to_nlp(dims, work->tmp_qp_out, work->weight_merit_fun);
-        }
-        return ACADOS_MINSTEP;
-    }
-}
-
-static double ocp_nlp_get_violation_inf_norm(ocp_nlp_config *config, ocp_nlp_dims *dims,
-                                  ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
-                                  ocp_nlp_memory *mem, ocp_nlp_workspace *work)
-{
-    // computes constraint violation infinity norm
-    // assumes constraint functions are evaluated before, e.g. done in ocp_nlp_evaluate_merit_fun
-    int i, j;
-    int N = dims->N;
-    int *nx = dims->nx;
-    int *ni = dims->ni;
-    struct blasfeo_dvec *tmp_fun_vec;
-    double violation = 0.0;
-    double tmp;
-    for (i=0; i<N; i++)
-    {
-        tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
-        for (j=0; j<nx[i+1]; j++)
-        {
-            tmp = fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
-            violation = tmp > violation ? tmp : violation;
-        }
-    }
-
-    for (i=0; i<=N; i++)
-    {
-        tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
-        for (j=0; j<2*ni[i]; j++)
-        {
-            // Note constraint violation corresponds to > 0
-            tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
-            violation = tmp > violation ? tmp : violation;
-        }
-    }
-
-    return violation;
-}
-
-
-static void copy_multipliers_nlp_to_qp(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_qp_out *to)
-{
-    int N = dims->N;
-    int *nx = dims->nx;
-    int *ni = dims->ni;
-    for (int i = 0; i <= N; i++)
-    {
-        blasfeo_dveccp(2*ni[i], from->lam+i, 0, to->lam+i, 0);
-    }
-    for (int i = 0; i < N; i++)
-    {
-        blasfeo_dveccp(nx[i+1], from->pi+i, 0, to->pi+i, 0);
-    }
-    return;
-}
-
-
-static void copy_multipliers_qp_to_nlp(ocp_nlp_dims *dims, ocp_qp_out *from, ocp_nlp_out *to)
-{
-    int N = dims->N;
-    int *nx = dims->nx;
-    int *ni = dims->ni;
-    for (int i = 0; i <= N; i++)
-    {
-        blasfeo_dveccp(2*ni[i], from->lam+i, 0, to->lam+i, 0);
-    }
-    for (int i = 0; i < N; i++)
-    {
-        blasfeo_dveccp(nx[i+1], from->pi+i, 0, to->pi+i, 0);
-    }
-    return;
 }
 
 int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *nlp_work_, void *nlp_opts_)
