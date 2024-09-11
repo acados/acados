@@ -32,32 +32,34 @@ function main()
 
     import casadi.*
 
+    % Standard OCP
     state_trajectories_no_lut_ref = run_example_ocp(false, false);
     state_trajectories_no_lut = run_example_ocp(false, true);
 
     if ~all(abs(state_trajectories_no_lut_ref - state_trajectories_no_lut) < 1e-10)
-        error("state_trajectories with lut=false do not match.");
+        error("State trajectories with lut=false do not match.");
     end
 
     state_trajectories_with_lut_ref = run_example_ocp(true, false);
     state_trajectories_with_lut = run_example_ocp(true, true);
 
     if ~all(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut) < 1e-10)
-        error("state_trajectories with lut=true do not match.");
+        error("State trajectories with lut=true do not match.");
     end
 
+    % Multi-phase OCP
     state_trajectories_no_lut_ref = run_example_mocp(false, false);
     state_trajectories_no_lut = run_example_mocp(false, true);
 
     if ~all(abs(state_trajectories_no_lut_ref - state_trajectories_no_lut) < 1e-10)
-        error("state_trajectories with lut=false do not match.");
+        error("State trajectories with lut=false do not match.");
     end
 
     state_trajectories_with_lut_ref = run_example_mocp(true, false);
     state_trajectories_with_lut = run_example_mocp(true, true);
 
     if ~all(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut) < 1e-10)
-        error("state_trajectories with lut=true do not match.");
+        error("State trajectories with lut=true do not match.");
     end
 end
 
@@ -159,6 +161,8 @@ function mocp = create_mocp_formulation(p_global, m, l, C, lut, use_p_global, p_
     mocp.solver_options.N_horizon = N_horizon;
 
 end
+
+
 function [p_global, m, l, C, p_global_values] = create_p_global(lut)
 
     import casadi.*
