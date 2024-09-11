@@ -603,7 +603,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         else if (nrhs > min_nrhs)
         {
             sprintf(buffer, "ocp_set: p_global cannot be set stage-wise.");
-            mexErrMsgTxt(buffer);        }
+            mexErrMsgTxt(buffer);
+        }
     }
     else if (!strcmp(field, "params_sparse"))
     {
