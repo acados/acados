@@ -71,8 +71,8 @@ if(ACADOS_OCTAVE)
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./run_test_ocp_mass_spring.m)
     add_test(NAME octave_test_ocp_simple_dae
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-        octave --no-gui --no-window-system ./run_test_ocp_simple_dae.m)
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/simple_dae_model
+        octave --no-gui --no-window-system ./example_ocp.m)
 
     # OSQP
     if(ACADOS_WITH_OSQP)

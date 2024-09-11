@@ -85,7 +85,6 @@ other_targets = {
     './test_ocp_pendulum_dae.m';
     './test_ocp_pendulum_on_cart.m';
     './test_ocp_qpdunes.m';
-    './test_ocp_simple_dae.m';
     './test_ocp_wtnx6.m';
     './test_sens_adj.m';
     './test_sens_forw.m';
