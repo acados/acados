@@ -98,11 +98,6 @@ class GenerateContext:
             self.__add_function(name, output_dir, fun)
         else:
             check_casadi_version_supports_p_global()
-            # interesting behaviour
-            inputs_augmented = inputs + [self.p_global]
-            fun = ca.Function(name, inputs_augmented, outputs)
-
-            outputs = fun.call(inputs_augmented, True, False) # always_inline=True, never_inline=False
 
             # This introduces novel symbols into the graph (extracted1, extracted2,...)
             [outputs_ret, symbols, param] = ca.extract_parametric(outputs, self.p_global)
@@ -118,7 +113,7 @@ class GenerateContext:
             outputs_ret = ca.substitute(outputs_ret, symbols, pools)
             self.p_global_expressions += param.primitives()
 
-            fun_mod = ca.Function(fun.name(), inputs, outputs_ret)
+            fun_mod = ca.Function(name, inputs, outputs_ret)
             self.__add_function(name, output_dir, fun_mod)
 
     def finalize(self):
