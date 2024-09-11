@@ -68,6 +68,8 @@ classdef GenerateContext < handle
                 dummy = MX.sym('dummy');
                 cse(dummy); % Check if cse exists
                 obj.casadi_fun_opts.cse = true;
+            catch
+                disp("NOTE: Please consider updating to CasADi 3.6.6 which supports common subexpression elimination. \nThis might speed up external function evaluation.");
             end
         end
 

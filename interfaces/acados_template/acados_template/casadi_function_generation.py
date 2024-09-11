@@ -68,6 +68,7 @@ class GenerateContext:
             from casadi import cse
             casadi_fun_opts = {"cse": True}
         except:
+            print("NOTE: Please consider updating to CasADi 3.6.6 which supports common subexpression elimination. \nThis might speed up external function evaluation.")
             casadi_fun_opts = {}
 
         self.__casadi_fun_opts = casadi_fun_opts
