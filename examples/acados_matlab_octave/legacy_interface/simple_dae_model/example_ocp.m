@@ -225,6 +225,11 @@ u_traj = ocp_solver.get('u');
 pi_traj = ocp_solver.get('pi');
 z_traj = ocp_solver.get('z');
 
-diff_x_z = x_traj(:,1:N) - z_traj
 
+diff_x_z = x_traj(:,1:N) - z_traj;
 
+max_diff_x_z = max(max(abs(diff_x_z)));
+test_tol = 1e-14;
+if max_diff_x_z > test_tol
+    error(['test_ocp_simple_dae: diff_x_z > ' num2str(test_tol), ' is ' num2str(max_diff_x_z)]);
+end
