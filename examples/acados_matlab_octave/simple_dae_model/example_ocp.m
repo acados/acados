@@ -28,8 +28,6 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 
 
-clear all; clc;
-
 check_acados_requirements()
 
 %% solver settings
@@ -44,8 +42,7 @@ model = simple_dae_model();
 nx = length(model.x);
 nu = length(model.u);
 nz = length(model.z);
-ny = nx+nu;
-ny_e = nx;
+ny = nx + nu;
 
 %% OCP formulation object
 ocp = AcadosOcp();
