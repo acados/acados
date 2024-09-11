@@ -1460,9 +1460,9 @@ class AcadosOcpSolver:
             - rti_phase: 0: PREPARATION_AND_FEEDBACK, 1: PREPARATION, 2: FEEDBACK
         """
         int_fields = ['print_level', 'rti_phase', 'qp_warm_start',
-                      'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC', 'warm_start_first_qp', "as_rti_level", "max_iter", "qp_print_level"]
-        double_fields = ['step_length', 'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp', 'alpha_min', 'alpha_reduction',
-                         'eps_sufficient_descent', 'qp_tol_stat', 'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min', 'qp_mu0']
+                      'globalization_line_search_use_sufficient_descent', 'globalization_full_step_dual', 'globalization_use_SOC', 'warm_start_first_qp', "as_rti_level", "max_iter", "qp_print_level"]
+        double_fields = ['step_length', 'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp', 'globalization_alpha_min', 'globalization_alpha_reduction',
+                         'globalization_eps_sufficient_descent', 'qp_tol_stat', 'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min', 'qp_mu0']
         string_fields = ['globalization']
 
         # check field availability and type
