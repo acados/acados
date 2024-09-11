@@ -185,7 +185,7 @@ def solve_maratos_ocp(setting):
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_ocp.json')
     ocp_solver.options_set('globalization_line_search_use_sufficient_descent', globalization_line_search_use_sufficient_descent)
     ocp_solver.options_set('globalization_use_SOC', globalization_use_SOC)
-    ocp_solver.options_set('full_step_dual', 1)
+    ocp_solver.options_set('globalization_full_step_dual', 1)
 
     if INITIALIZE:# initialize solver
         # [ocp_solver.set(i, "x", x0 + (i/N) * (x_goal-x0)) for i in range(N+1)]
