@@ -1025,7 +1025,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
      * main sqp loop
      ************************************************/
     int sqp_iter = 0;
-    // double reg_param_memory = 0.0;
+    double reg_param_memory = 0.0;
     // double funnel_width_memory = 0.0;
     // double funnel_penalty_param_memory = 1.0;//opts->funnel_initial_penalty_parameter;
     // initialize_funnel_penalty_parameter(mem, opts);
@@ -1096,11 +1096,13 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Output
         if (nlp_opts->print_level > 0)
         {
-            config->globalization->print_iteration(sqp_iter,
+            config->globalization->print_iteration(nlp_mem->cost_value,
+                                                   sqp_iter,
                                                    nlp_res->inf_norm_res_eq,
                                                    nlp_res->inf_norm_res_ineq,
                                                    nlp_res->inf_norm_res_stat,
                                                    nlp_res->inf_norm_res_comp,
+                                                   reg_param_memory,
                                                    qp_status,
                                                    qp_iter,
                                                    nlp_opts,

@@ -245,16 +245,16 @@ void initialize_funnel_width(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_g
 
 void initialize_funnel_penalty_parameter(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts)
 {
-    mem->funnel_penalty_parameter = opts->initial_penalty_parameter;
+    mem->penalty_parameter = opts->initial_penalty_parameter;
 }
 
 void update_funnel_penalty_parameter(ocp_nlp_globalization_funnel_memory *mem,
                                             ocp_nlp_globalization_funnel_opts *opts,
                                             double pred_f, double pred_h)
 {
-    if (mem->funnel_penalty_parameter * pred_f + pred_h < opts->penalty_eta * pred_h)
+    if (mem->penalty_parameter * pred_f + pred_h < opts->penalty_eta * pred_h)
     {
-        mem->funnel_penalty_parameter = fmin(opts->penalty_contraction * mem->funnel_penalty_parameter,
+        mem->penalty_parameter = fmin(opts->penalty_contraction * mem->penalty_parameter,
                                              ((1-opts->penalty_eta) * pred_h) / (-pred_f));
     }
     // else: do not decrease penalty parameter
@@ -426,7 +426,7 @@ int backtracking_line_search(ocp_nlp_config *config,
     bool accept_step;
     double current_infeasibility = mem->l1_infeasibility;
     double current_cost = nlp_mem->cost_value;
-    double current_merit = mem->funnel_penalty_parameter*current_cost + current_infeasibility;
+    double current_merit = mem->penalty_parameter*current_cost + current_infeasibility;
 
     // do the penalty parameter update here .... might be changed later
     update_funnel_penalty_parameter(mem, opts, pred, mem->l1_infeasibility);
@@ -488,8 +488,8 @@ int backtracking_line_search(ocp_nlp_config *config,
 
         ///////////////////////////////////////////////////////////////////////
         // Evaluate merit function at trial point
-        double trial_merit = mem->funnel_penalty_parameter*trial_cost + trial_infeasibility;
-        pred_merit = mem->funnel_penalty_parameter * pred + current_infeasibility;
+        double trial_merit = mem->penalty_parameter*trial_cost + trial_infeasibility;
+        pred_merit = mem->penalty_parameter * pred + current_infeasibility;
         ared = nlp_mem->cost_value - trial_cost;
 
         // Funnel globalization
@@ -566,32 +566,35 @@ void ocp_nlp_globalization_funnel_print_iteration_header()
 // 1. residual_iter
 // 2. int iter count
 // 3. alpha etc. move to glob_memory. (void *)
-void ocp_nlp_globalization_funnel_print_iteration(int iter_count, double infeas_eq,
-                            double infeas_ineq,
-                            double stationarity,
-                            double complementarity,
-                            int qp_status,
-                            int qp_iter,ocp_nlp_opts* opts,
+void ocp_nlp_globalization_funnel_print_iteration(double objective_value,
+                                                int iter_count,
+                                                double infeas_eq,
+                                                double infeas_ineq,
+                                                double stationarity,
+                                                double complementarity,
+                                                double reg_param,
+                                                int qp_status,
+                                                int qp_iter,ocp_nlp_opts* opts,
                                                 ocp_nlp_globalization_funnel_memory* mem)
 {
-    // if ((iter_count % 10 == 0)){
-    //     ocp_nlp_globalization_funnel_print_iteration_header();
-    // }
-    // printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %12.4e | %10.4e | %10i | %10i | %10c\n",
-    //     iter_count,
-    //     obj,
-    //     infeas_eq,
-    //     infeas_ineq,
-    //     stationarity,
-    //     complementarity,
-    //     alpha,
-    //     step_norm,
-    //     reg_param,
-    //     funnel_width,
-    //     penalty_parameter,
-    //     qp_status,
-    //     qp_iter,
-    //     iter_type);
+    if ((iter_count % 10 == 0)){
+        ocp_nlp_globalization_funnel_print_iteration_header();
+    }
+    printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %12.4e | %10.4e | %10i | %10i | %10c\n",
+        iter_count,
+        objective_value,
+        infeas_eq,
+        infeas_ineq,
+        stationarity,
+        complementarity,
+        mem->alpha,
+        mem->step_norm,
+        reg_param,
+        mem->funnel_width,
+        mem->penalty_parameter,
+        qp_status,
+        qp_iter,
+        mem->funnel_iter_type);
 }
 
 int ocp_nlp_globalization_funnel_needs_objective_value()

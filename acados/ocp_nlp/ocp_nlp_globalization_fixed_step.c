@@ -197,28 +197,17 @@ void ocp_nlp_globalization_fixed_step_print_iteration_header()
 // 1. residual_iter
 // 2. int iter count
 // 3. alpha etc. move to glob_memory. (void *)
-void ocp_nlp_globalization_fixed_step_print_iteration(  int iter_count,
-                                                        double infeas_eq,
-                                                        double infeas_ineq,
-                                                        double stationarity,
-                                                        double complementarity,
-                                                        int qp_status,
-                                                        int qp_iter,
-    ocp_nlp_opts* opts, ocp_nlp_globalization_fixed_step_memory* mem)
-                    // double obj,
-                    // int iter_count,
-                    // double infeas_eq,
-                    // double infeas_ineq,
-                    // double stationarity,
-                    // double complementarity,
-                    // double alpha,
-                    // double step_norm,
-                    // double reg_param,
-                    // double funnel_width,
-                    // double penalty_parameter,
-                    // int qp_status,
-                    // int qp_iter,
-                    // char iter_type)
+void ocp_nlp_globalization_fixed_step_print_iteration(double objective_value,
+                                                int iter_count,
+                                                double infeas_eq,
+                                                double infeas_ineq,
+                                                double stationarity,
+                                                double complementarity,
+                                                double reg_param,
+                                                int qp_status,
+                                                int qp_iter,
+                                                ocp_nlp_opts* opts,
+                                                ocp_nlp_globalization_fixed_step_memory* mem)
 {
     if ((iter_count % 10 == 0)){
         ocp_nlp_globalization_fixed_step_print_iteration_header(opts);
