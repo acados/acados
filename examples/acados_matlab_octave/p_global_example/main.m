@@ -32,37 +32,37 @@ function main()
 
     import casadi.*
 
-    residuals_no_lut_ref = run_example_ocp(false, false);
-    residuals_no_lut = run_example_ocp(false, true);
+    state_trajectories_no_lut_ref = run_example_ocp(false, false);
+    state_trajectories_no_lut = run_example_ocp(false, true);
 
-    if ~all(abs(residuals_no_lut_ref - residuals_no_lut) < 1e-10)
-        error("Residuals with lut=false do not match.");
+    if ~all(abs(state_trajectories_no_lut_ref - state_trajectories_no_lut) < 1e-10)
+        error("state_trajectories with lut=false do not match.");
     end
 
-    residuals_with_lut_ref = run_example_ocp(true, false);
-    residuals_with_lut = run_example_ocp(true, true);
+    state_trajectories_with_lut_ref = run_example_ocp(true, false);
+    state_trajectories_with_lut = run_example_ocp(true, true);
 
-    if ~all(abs(residuals_with_lut_ref - residuals_with_lut) < 1e-10)
-        error("Residuals with lut=true do not match.");
+    if ~all(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut) < 1e-10)
+        error("state_trajectories with lut=true do not match.");
     end
 
-    residuals_no_lut_ref = run_example_mocp(false, false);
-    residuals_no_lut = run_example_mocp(false, true);
+    state_trajectories_no_lut_ref = run_example_mocp(false, false);
+    state_trajectories_no_lut = run_example_mocp(false, true);
 
-    if ~all(abs(residuals_no_lut_ref - residuals_no_lut) < 1e-10)
-        error("Residuals with lut=false do not match.");
+    if ~all(abs(state_trajectories_no_lut_ref - state_trajectories_no_lut) < 1e-10)
+        error("state_trajectories with lut=false do not match.");
     end
 
-    residuals_with_lut_ref = run_example_mocp(true, false);
-    residuals_with_lut = run_example_mocp(true, true);
+    state_trajectories_with_lut_ref = run_example_mocp(true, false);
+    state_trajectories_with_lut = run_example_mocp(true, true);
 
-    if ~all(abs(residuals_with_lut_ref - residuals_with_lut) < 1e-10)
-        error("Residuals with lut=true do not match.");
+    if ~all(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut) < 1e-10)
+        error("state_trajectories with lut=true do not match.");
     end
 end
 
 
-function residuals = run_example_ocp(lut, use_p_global)
+function state_trajectories = run_example_ocp(lut, use_p_global)
 
     import casadi.*
 
@@ -77,8 +77,7 @@ function residuals = run_example_ocp(lut, use_p_global)
     % OCP solver
     ocp_solver = AcadosOcpSolver(ocp);
 
-    % Solve
-    residuals = [];
+    state_trajectories = [];  % only for testing purposes
 
     if use_p_global
         ocp_solver.set_p_global(p_global_values);
@@ -86,9 +85,7 @@ function residuals = run_example_ocp(lut, use_p_global)
 
     for i = 1:20
         ocp_solver.solve();
-        % TODO implement get_residuals()
-        % residuals = [residuals; ocp_solver.get_residuals()];
-        residuals = [residuals; ocp_solver.get('x')];
+        state_trajectories = [state_trajectories; ocp_solver.get('x')];
     end
 
     % Plot results
@@ -98,14 +95,10 @@ function residuals = run_example_ocp(lut, use_p_global)
         utraj = ocp_solver.get('u');
         xtraj = ocp_solver.get('x');
         plot_pendulum(ocp.solver_options.shooting_nodes, xtraj, utraj);
-
-        if is_octave()
-            waitforbuttonpress;
-        end
     end
 end
 
-function residuals = run_example_mocp(lut, use_p_global)
+function state_trajectories = run_example_mocp(lut, use_p_global)
     import casadi.*
 
     fprintf('\n\nRunning example with lut=%d, use_p_global=%d\n', lut, use_p_global);
@@ -119,8 +112,7 @@ function residuals = run_example_mocp(lut, use_p_global)
     % OCP solver
     mocp_solver = AcadosOcpSolver(mocp);
 
-    % Solve
-    residuals = [];
+    state_trajectories = []; % only for testing purposes
 
     if use_p_global
         mocp_solver.set_p_global(p_global_values);
@@ -128,24 +120,19 @@ function residuals = run_example_mocp(lut, use_p_global)
 
     for i = 1:20
         mocp_solver.solve();
-        % TODO implement get_residuals()
-        % residuals = [residuals; mocp_solver.get_residuals()];
-        residuals = [residuals; mocp_solver.get('x')];
+        state_trajectories = [state_trajectories; mocp_solver.get('x')];
     end
 
-    % % Plot results
-    % PLOT = false;
+    % Plot results
+    PLOT = false;
 
-    % if PLOT
-    %     utraj = ocp_solver.get('u');
-    %     xtraj = ocp_solver.get('x');
-    %     plot_pendulum(ocp.solver_options.shooting_nodes, xtraj, utraj);
-
-    %     if is_octave()
-    %         waitforbuttonpress;
-    %     end
-    % end
+    if PLOT
+        utraj = ocp_solver.get('u');
+        xtraj = ocp_solver.get('x');
+        plot_pendulum(ocp.solver_options.shooting_nodes, xtraj, utraj);
+    end
 end
+
 
 function mocp = create_mocp_formulation(p_global, m, l, C, lut, use_p_global, p_global_values)
 
@@ -209,4 +196,7 @@ function plot_pendulum(shooting_nodes, xtraj, utraj)
     xlabel('t [s]')
     grid on
 
+    if is_octave()
+        waitforbuttonpress;
+    end
 end
