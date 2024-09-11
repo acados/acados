@@ -28,12 +28,6 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-
-#include "acados/ocp_nlp/ocp_nlp_globalization_fixed_step.h"
-
-// TODO: copy boilerblate..
-// fix imports
-
 // external
 #include <assert.h>
 #include <math.h>
@@ -44,16 +38,16 @@
 #include <omp.h>
 #endif
 
-// acados
-#include "acados/ocp_nlp/ocp_nlp_globalization_common.h"
-#include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/ocp_nlp/ocp_nlp_sqp.h"
-#include "acados/utils/mem.h"
-
 // blasfeo
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
+// acados
+#include "acados/utils/mem.h"
 
+#include "acados/ocp_nlp/ocp_nlp_globalization_common.h"
+#include "acados/ocp_nlp/ocp_nlp_globalization_fixed_step.h"
+#include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados/ocp_nlp/ocp_nlp_sqp.h"
 
 /************************************************
  * options
@@ -75,8 +69,12 @@ acados_size_t ocp_nlp_globalization_fixed_step_opts_calculate_size(void *config_
 
 void ocp_nlp_globalization_fixed_step_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
-    ocp_nlp_globalization_opts_initialize_default(config_, dims_, opts_);
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_globalization_fixed_step_opts *opts = opts_;
+    ocp_nlp_globalization_opts *globalization_opts = opts->globalization_opts;
+    ocp_nlp_globalization_config *config = config_;
 
+    ocp_nlp_globalization_opts_initialize_default(config, dims, globalization_opts);
     return;
 }
 
@@ -85,18 +83,22 @@ void ocp_nlp_globalization_fixed_step_opts_set(void *config_, void *opts_, const
 {
     ocp_nlp_globalization_fixed_step_opts *opts = opts_;
     ocp_nlp_globalization_config *config = config_;
-
-    config->opts_set(config, opts->globalization_opts, field, value);
-
+    ocp_nlp_globalization_opts_set(config, opts->globalization_opts, field, value);
     return;
 }
 
 void *ocp_nlp_globalization_fixed_step_opts_assign(void *config_, void *dims_, void *raw_memory)
 {
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_globalization_config *config = config_;
+
     char *c_ptr = (char *) raw_memory;
 
     ocp_nlp_globalization_fixed_step_opts *opts = (ocp_nlp_globalization_fixed_step_opts *) c_ptr;
     c_ptr += sizeof(ocp_nlp_globalization_fixed_step_opts);
+
+    opts->globalization_opts = ocp_nlp_globalization_opts_assign(config, dims, c_ptr);
+    c_ptr += ocp_nlp_globalization_opts_calculate_size(config, dims);
 
     assert((char *) raw_memory + ocp_nlp_globalization_fixed_step_opts_calculate_size(config_, dims_) >=
            c_ptr);
@@ -139,52 +141,9 @@ void *ocp_nlp_globalization_fixed_step_memory_assign(void *config_, void *dims_,
 }
 
 
-
-void ocp_nlp_globalization_fixed_step_print_iteration_header()
-{
-    printf("# it\tstat\t\teq\t\tineq\t\tcomp\t\tqp_stat\tqp_iter\talpha\n");
-}
-
-// TODO: unified signature:
-// -> move everything around.
-// 1. residual_iter
-// 2. int iter count
-// 3. alpha etc. move to glob_memory. (void *)
-void ocp_nlp_globalization_fixed_step_print_iteration(ocp_nlp_opts* opts,
-                                                    ocp_nlp_globalization_fixed_step_memory* mem);
-                    // double obj,
-                    // int iter_count,
-                    // double infeas_eq,
-                    // double infeas_ineq,
-                    // double stationarity,
-                    // double complementarity,
-                    // double alpha,
-                    // double step_norm,
-                    // double reg_param,
-                    // double funnel_width,
-                    // double penalty_parameter,
-                    // int qp_status,
-                    // int qp_iter,
-                    // char iter_type)
-{
-    if ((iter_count % 10 == 0)){
-        ocp_nlp_globalization_fixed_step_print_iteration_header(opts);
-    }
-    printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n",
-        iter_count,
-        stationarity,
-        infeas_eq,        infeas_ineq,
-        complementarity,
-        qp_status,
-        qp_iter,
-        alpha);
-}
-
-int ocp_nlp_globalization_fixed_step_needs_objective_value()
-{
-    return 0;
-}
-
+/************************************************
+ * fixed step functions
+ ************************************************/
 int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *nlp_work_, void *nlp_opts_)
 {
     ocp_nlp_config *nlp_config = nlp_config_;
@@ -211,21 +170,66 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
 // //         }
 //     }
 
-    if (do_line_search)
-    {
-        int line_search_status;
-        line_search_status = ocp_nlp_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter, &mem->alpha);
-        if (line_search_status == ACADOS_NAN_DETECTED)
-        {
-            mem->status = ACADOS_NAN_DETECTED;
-            return mem->status;
-        }
-    }
+    // if (do_line_search)
+    // {
+    //     int line_search_status;
+    //     line_search_status = ocp_nlp_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter, &mem->alpha);
+    //     if (line_search_status == ACADOS_NAN_DETECTED)
+    //     {
+    //         mem->status = ACADOS_NAN_DETECTED;
+    //         return mem->status;
+    //     }
+    // }
     // mem->time_glob += acados_toc(&timer1);
     // nlp_mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
 
     // update variables
-    ocp_nlp_update_variables_sqp(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, mem->alpha);
+    // ocp_nlp_update_variables_sqp(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, mem->alpha);
+}
+
+void ocp_nlp_globalization_fixed_step_print_iteration_header()
+{
+    printf("# it\tstat\t\teq\t\tineq\t\tcomp\t\tqp_stat\tqp_iter\talpha\n");
+}
+
+// TODO: unified signature:
+// -> move everything around.
+// 1. residual_iter
+// 2. int iter count
+// 3. alpha etc. move to glob_memory. (void *)
+void ocp_nlp_globalization_fixed_step_print_iteration(ocp_nlp_opts* opts, ocp_nlp_globalization_fixed_step_memory* mem)
+                    // double obj,
+                    // int iter_count,
+                    // double infeas_eq,
+                    // double infeas_ineq,
+                    // double stationarity,
+                    // double complementarity,
+                    // double alpha,
+                    // double step_norm,
+                    // double reg_param,
+                    // double funnel_width,
+                    // double penalty_parameter,
+                    // int qp_status,
+                    // int qp_iter,
+                    // char iter_type)
+{
+    printf("Lol!\n");
+    // if ((iter_count % 10 == 0)){
+    //     ocp_nlp_globalization_fixed_step_print_iteration_header(opts);
+    // }
+    // printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n",
+    //     iter_count,
+    //     stationarity,
+    //     infeas_eq,        infeas_ineq,
+    //     complementarity,
+    //     qp_status,
+    //     qp_iter,
+    //     alpha);
+}
+
+int ocp_nlp_globalization_fixed_step_needs_objective_value()
+{
+    return 0;
 }
 
 void ocp_nlp_globalization_fixed_step_config_initialize_default(ocp_nlp_globalization_config *config)
@@ -241,4 +245,3 @@ void ocp_nlp_globalization_fixed_step_config_initialize_default(ocp_nlp_globaliz
     config->print_iteration = &ocp_nlp_globalization_fixed_step_print_iteration;
     config->needs_objective_value = &ocp_nlp_globalization_fixed_step_needs_objective_value;
 }
-

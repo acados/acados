@@ -67,12 +67,9 @@ void ocp_nlp_globalization_fixed_step_opts_initialize_default(void *config, void
 //
 void ocp_nlp_globalization_fixed_step_opts_set(void *config, void *opts, const char *field, void* value);
 
-
 /************************************************
  * memory
  ************************************************/
-
-// TODO: remove stufF!
 typedef struct
 {
     double step_norm;
@@ -89,26 +86,11 @@ void *ocp_nlp_globalization_fixed_step_memory_assign(void *config, void *dims, v
  * functions
  ************************************************/
 //
+int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *nlp_work_, void *nlp_opts_);
+//
 void ocp_nlp_globalization_fixed_step_print_iteration_header();
 //
-void ocp_nlp_globalization_fixed_step_print_iteration(ocp_nlp_opts* opts,
-                                                ocp_nlp_globalization_fixed_step_memory* mem);
-                                                // double obj,
-                                                // int iter_count,
-                                                // double infeas_eq,
-                                                // double infeas_ineq,
-                                                // double stationarity,
-                                                // double complementarity,
-                                                // double alpha,
-                                                // double step_norm,
-                                                // double reg_param,
-                                                // double funnel_width,
-                                                // double penalty_parameter,
-                                                // int qp_status,
-                                                // int qp_iter,
-                                                // char iter_type);
-//
-int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *nlp_work_, void *nlp_opts_);
+void ocp_nlp_globalization_fixed_step_print_iteration(ocp_nlp_opts* opts, ocp_nlp_globalization_fixed_step_memory* mem);
 //
 int ocp_nlp_globalization_fixed_step_needs_objective_value();
 //

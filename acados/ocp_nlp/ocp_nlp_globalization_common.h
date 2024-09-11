@@ -45,13 +45,13 @@ extern "C" {
 
 // #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_common.h"
-#include "acados/ocp_nlp/ocp_nlp_cost_common.h"
-#include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
-#include "acados/ocp_nlp/ocp_nlp_reg_common.h"
-#include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_xcond_solver.h"
-#include "acados/sim/sim_common.h"
-#include "acados/utils/external_function_generic.h"
+// #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
+// #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
+// #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
+// #include "acados/ocp_qp/ocp_qp_common.h"
+// #include "acados/ocp_qp/ocp_qp_xcond_solver.h"
+// #include "acados/sim/sim_common.h"
+// #include "acados/utils/external_function_generic.h"
 #include "acados/utils/types.h"
 
 /************************************************

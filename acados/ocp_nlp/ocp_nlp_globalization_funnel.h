@@ -100,21 +100,6 @@ acados_size_t ocp_nlp_globalization_funnel_memory_calculate_size(void *config, v
 void *ocp_nlp_globalization_funnel_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
 //
 
-/************************************************
- * workspace
- ************************************************/
-// WE DON'T NEED THAT!!
-// typedef struct
-// {
-//     ocp_nlp_workspace *nlp_work;
-
-// } ocp_nlp_globalization_funnel_workspace;
-
-// //
-// acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config, void *dims, void *opts_);
-
-
-
 
 /************************************************
  * functions
