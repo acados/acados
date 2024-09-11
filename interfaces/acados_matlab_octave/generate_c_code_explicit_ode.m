@@ -30,85 +30,75 @@
 %
 
 
-function generate_c_code_explicit_ode( model, opts, model_dir )
+function generate_c_code_explicit_ode(context, model, model_dir)
 
-import casadi.*
+    import casadi.*
 
-casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
-check_casadi_version();
+    %% load model
+    x = model.x;
+    u = model.u;
+    p = model.p;
+    nx = length(x);
+    nu = length(u);
 
-%% load model
-x = model.x;
-u = model.u;
-p = model.p;
-nx = length(x);
-nu = length(u);
-
-% check type
-if isa(x(1), 'casadi.SX')
-    isSX = true;
-else
-    isSX = false;
-end
-
-model_name = model.name;
-
-if isempty(model.f_expl_expr)
-    error("Field `f_expl_expr` is required for integrator type ERK.")
-end
-
-f_expl = model.f_expl_expr;
-
-%% set up functions to be exported
-if isSX
-    Sx = SX.sym('Sx', nx, nx);
-    Su = SX.sym('Su', nx, nu);
-    lambdaX = SX.sym('lambdaX', nx, 1);
-    vdeX = SX.zeros(nx, nx);
-    vdeU = SX.zeros(nx, nu) + jacobian(f_expl, u);
-else
-    Sx = MX.sym('Sx', nx, nx);
-    Su = MX.sym('Su', nx, nu);
-    lambdaX = MX.sym('lambdaX', nx, 1);
-    vdeX = MX.zeros(nx, nx);
-    vdeU = MX.zeros(nx, nu) + jacobian(f_expl, u);
-end
-
-expl_ode_fun = Function([model_name,'_expl_ode_fun'], {x, u, p}, {f_expl});
-
-vdeX = vdeX + jtimes(f_expl, x, Sx);
-vdeU = vdeU + jtimes(f_expl, x, Su);
-
-expl_vde_for = Function([model_name,'_expl_vde_forw'], {x, Sx, Su, u, p}, {f_expl, vdeX, vdeU});
-
-% 'true' at the end tells to transpose the jacobian before multiplication => reverse mode
-adj = jtimes(f_expl, [x;u], lambdaX, true);
-
-expl_vde_adj = Function([model_name,'_expl_vde_adj'], {x, lambdaX, u, p}, {adj});
-
-S_forw = vertcat(horzcat(Sx, Su), horzcat(zeros(nu,nx), eye(nu)));
-hess = S_forw.'*jtimes(adj, [x;u], S_forw);
-% TODO uncompress it ?????
-hess2 = [];
-for j = 1:nx+nu
-    for i = j:nx+nu
-        hess2 = [hess2; hess(i,j)];
+    % check type
+    if isa(x(1), 'casadi.SX')
+        isSX = true;
+    else
+        isSX = false;
     end
-end
 
-expl_ode_hes = Function([model_name,'_expl_ode_hess'], {x, Sx, Su, lambdaX, u, p}, {adj, hess2});
+    if isempty(model.f_expl_expr)
+        error("Field `f_expl_expr` is required for integrator type ERK.")
+    end
 
-%% generate C code in model_dir
-return_dir = pwd;
-cd(model_dir)
+    f_expl = model.f_expl_expr;
 
-expl_ode_fun.generate([model_name,'_expl_ode_fun'], casadi_opts);
-expl_vde_for.generate([model_name,'_expl_vde_forw'], casadi_opts);
-expl_vde_adj.generate([model_name,'_expl_vde_adj'], casadi_opts);
-if opts.generate_hess
-    expl_ode_hes.generate([model_name,'_expl_ode_hess'], casadi_opts);
-end
+    % setup expressions
+    if isSX
+        Sx = SX.sym('Sx', nx, nx);
+        Su = SX.sym('Su', nx, nu);
+        lambdaX = SX.sym('lambdaX', nx, 1);
+        vdeX = SX.zeros(nx, nx);
+        vdeU = SX.zeros(nx, nu) + jacobian(f_expl, u);
+    else
+        Sx = MX.sym('Sx', nx, nx);
+        Su = MX.sym('Su', nx, nu);
+        lambdaX = MX.sym('lambdaX', nx, 1);
+        vdeX = MX.zeros(nx, nx);
+        vdeU = MX.zeros(nx, nu) + jacobian(f_expl, u);
+    end
 
-cd(return_dir);
+    vdeX = vdeX + jtimes(f_expl, x, Sx);
+    vdeU = vdeU + jtimes(f_expl, x, Su);
+
+    % 'true' at the end tells to transpose the jacobian before multiplication => reverse mode
+    adj = jtimes(f_expl, [x;u], lambdaX, true);
+
+    if context.opts.generate_hess
+        S_forw = vertcat(horzcat(Sx, Su), horzcat(zeros(nu,nx), eye(nu)));
+        hess = S_forw.'*jtimes(adj, [x;u], S_forw);
+        % TODO uncompress it ?????
+        hess2 = [];
+        for j = 1:nx+nu
+            for i = j:nx+nu
+                hess2 = [hess2; hess(i,j)];
+            end
+        end
+    end
+
+    fun_name = [model.name,'_expl_ode_fun'];
+    context.add_function_definition(fun_name, {x, u, p}, {f_expl}, model_dir);
+
+    fun_name = [model.name,'_expl_vde_forw'];
+    context.add_function_definition(fun_name, {x, Sx, Su, u, p}, {f_expl, vdeX, vdeU}, model_dir);
+
+    fun_name = [model.name,'_expl_vde_adj'];
+    context.add_function_definition(fun_name, {x, lambdaX, u, p}, {adj}, model_dir);
+
+    if context.opts.generate_hess
+        fun_name = [model.name,'_expl_ode_hess']
+        context.add_function_definition(fun_name, {x, Sx, Su, lambdaX, u, p}, {adj, hess2}, model_dir);
+    end
 
 end

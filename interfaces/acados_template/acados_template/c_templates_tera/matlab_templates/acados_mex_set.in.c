@@ -594,6 +594,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             {{ name }}_acados_update_params(capsule, stage, value, matlab_size);
         }
     }
+    else if (!strcmp(field, "p_global"))
+    {
+        if (nrhs == min_nrhs)
+        {
+            {{ name }}_acados_set_p_global(capsule, value, matlab_size);
+        }
+        else if (nrhs > min_nrhs)
+        {
+            sprintf(buffer, "ocp_set: p_global cannot be set stage-wise.");
+            mexErrMsgTxt(buffer);
+        }
+    }
     else if (!strcmp(field, "params_sparse"))
     {
 {%- if problem_class == "MOCP" %}

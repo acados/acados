@@ -112,6 +112,8 @@ class AcadosOcp:
         self.__problem_class = 'OCP'
         self.__json_file = "acados_ocp.json"
 
+        self.__casadi_pool_names = None
+
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
 
@@ -988,10 +990,7 @@ class AcadosOcp:
             json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         return
 
-
     def generate_external_functions(self, context: Optional[GenerateContext] = None) -> GenerateContext:
-        model = self.model
-        constraints = self.constraints
 
         if context is None:
             # options for code generation
@@ -1001,9 +1000,21 @@ class AcadosOcp:
             code_gen_opts['with_value_sens_wrt_params'] = self.solver_options.with_value_sens_wrt_params
             code_gen_opts['code_export_directory'] = self.code_export_directory
 
-            context = GenerateContext(model.p_global, self.name, code_gen_opts)
-        else:
-            code_gen_opts = context.opts
+            context = GenerateContext(self.model.p_global, self.name, code_gen_opts)
+
+        context = self._setup_code_generation_context(context)
+        context.finalize()
+        self.__casadi_pool_names = context.pool_names
+
+        return context
+
+
+    def _setup_code_generation_context(self, context: GenerateContext) -> GenerateContext:
+
+        model = self.model
+        constraints = self.constraints
+
+        code_gen_opts = context.opts
 
         # create code_export_dir, model_dir
         model_dir = os.path.join(code_gen_opts['code_export_directory'], model.name + '_model')
@@ -1013,17 +1024,17 @@ class AcadosOcp:
         check_casadi_version()
         if self.model.dyn_ext_fun_type == 'casadi':
             if self.solver_options.integrator_type == 'ERK':
-                generate_c_code_explicit_ode(context, model)
+                generate_c_code_explicit_ode(context, model, model_dir)
             elif self.solver_options.integrator_type == 'IRK':
-                generate_c_code_implicit_ode(context, model)
+                generate_c_code_implicit_ode(context, model, model_dir)
             elif self.solver_options.integrator_type == 'LIFTED_IRK':
                 if model.t != []:
                     raise NotImplementedError("LIFTED_IRK with time-varying dynamics not implemented yet.")
-                generate_c_code_implicit_ode(context, model)
+                generate_c_code_implicit_ode(context, model, model_dir)
             elif self.solver_options.integrator_type == 'GNSF':
-                generate_c_code_gnsf(context, model)
+                generate_c_code_gnsf(context, model, model_dir)
             elif self.solver_options.integrator_type == 'DISCRETE':
-                generate_c_code_discrete_dynamics(context, model)
+                generate_c_code_discrete_dynamics(context, model, model_dir)
             else:
                 raise Exception("ocp_generate_external_functions: unknown integrator type.")
         else:

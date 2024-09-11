@@ -29,7 +29,7 @@
 #
 #   Author: Jonathan Frey: jonathanpaulfrey(at)gmail.com
 
-from casadi import Function, jacobian, SX, vertcat, horzcat
+from casadi import Function, jacobian, SX, horzcat, depends_on
 
 from .determine_trivial_gnsf_transcription import determine_trivial_gnsf_transcription
 from .detect_affine_terms_reduce_nonlinearity import (
@@ -39,6 +39,7 @@ from .reformulate_with_LOS import reformulate_with_LOS
 from .reformulate_with_invertible_E_mat import reformulate_with_invertible_E_mat
 from .structure_detection_print_summary import structure_detection_print_summary
 from .check_reformulation import check_reformulation
+from ..utils import is_empty
 
 
 def detect_gnsf_structure(acados_ocp, transcribe_opts=None):
@@ -70,6 +71,9 @@ def detect_gnsf_structure(acados_ocp, transcribe_opts=None):
     #       with a different model, such that the assumption holds.
 
     # acados_root_dir = getenv('ACADOS_INSTALL_DIR')
+
+    if not is_empty(acados_ocp.model.p_global) and depends_on(acados_ocp.model.f_impl_expr, acados_ocp.model.p_global):
+        Exception("GNSF does not support global parameters")
 
     ## load transcribe_opts
     if transcribe_opts is None:

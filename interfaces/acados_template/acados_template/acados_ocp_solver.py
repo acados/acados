@@ -113,10 +113,7 @@ class AcadosOcpSolver:
             print(f"NOTE: The selected QP solver {acados_ocp.solver_options.qp_solver} does not support one-sided constraints yet.")
 
         # generate code (external functions and templated code)
-        context = acados_ocp.generate_external_functions()
-        context.finalize()
-        acados_ocp.casadi_pool_names = context.pool_names
-
+        acados_ocp.generate_external_functions()
         acados_ocp.dump_to_json()
         acados_ocp.render_templates(cmake_builder=cmake_builder)
 

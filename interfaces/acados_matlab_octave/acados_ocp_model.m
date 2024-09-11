@@ -77,6 +77,8 @@ classdef acados_ocp_model < handle
                     obj.model_struct.sym_z = value;
                 elseif (strcmp(field, 'sym_p'))
                     obj.model_struct.sym_p = value;
+                elseif (strcmp(field, 'sym_p_global'))
+                    obj.model_struct.sym_p_global = value;
                 else
                     disp(['acados_ocp_model: set: wrong field: ', field]);
                     keyboard;

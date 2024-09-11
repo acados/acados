@@ -36,6 +36,7 @@ classdef AcadosSimDims < handle
         nu     % number of inputs
         nz     % number of algebraic variables
         np     % number of parameters
+        np_global % number of global parameters, always zero for sim
 
         % gnsf
         % TODO these dimensions are not part of the corresponding python class (?)
@@ -51,10 +52,11 @@ classdef AcadosSimDims < handle
     methods
         function obj = AcadosSimDims()
 
-            obj.nx    = [];
-            obj.nu    = [];
-            obj.nz    = 0;
-            obj.np    = 0;
+            obj.nx = [];
+            obj.nu = [];
+            obj.nz = 0;
+            obj.np = 0;
+            obj.np_global = 0;
 
             obj.gnsf_nx1 = 0;
             obj.gnsf_nx2 = 0;

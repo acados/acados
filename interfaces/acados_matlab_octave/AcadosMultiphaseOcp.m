@@ -60,6 +60,8 @@ classdef AcadosMultiphaseOcp < handle
         end_idx
         cost_start_idx
 
+        casadi_pool_names
+
     end
     methods
         function obj = AcadosMultiphaseOcp(N_list)
@@ -106,6 +108,9 @@ classdef AcadosMultiphaseOcp < handle
             acados_folder = getenv('ACADOS_INSTALL_DIR');
             obj.acados_include_path = [acados_folder, '/include'];
             obj.acados_lib_path = [acados_folder, '/lib'];
+
+            obj.casadi_pool_names = [];
+
         end
 
 
@@ -269,17 +274,28 @@ classdef AcadosMultiphaseOcp < handle
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_solve.in.c'), ['acados_mex_solve_', self.name, '.c']};
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_set.in.c'), ['acados_mex_set_', self.name, '.c']};
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_reset.in.c'), ['acados_mex_reset_', self.name, '.c']};
-
+            if self.phases_dims{1}.np_global > 0
+                template_list{end+1} = {'p_global_precompute_fun.in.h',  [self.name, '_p_global_precompute_fun.h']};
+            end
             % TODO: simulink!
         end
 
-        function generate_external_functions(self)
+        function context  = generate_external_functions(self)
             % generate external functions
+
+            code_gen_opts = struct();
+            code_gen_opts.generate_hess = strcmp(self.solver_options.hessian_approx, 'EXACT');
+            code_gen_opts.with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params;
+            code_gen_opts.with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params;
+            code_gen_opts.code_export_directory = self.code_export_directory;
+
+            context = GenerateContext(self.model{1}.p_global, self.name, code_gen_opts);
+
             for i=1:self.n_phases
                 disp(['generating external functions for phase ', num2str(i)]);
                 % this is the only option that can vary and influence external functions to be generated
                 self.dummy_ocp_list{i}.solver_options.integrator_type = self.mocp_opts.integrator_type{i};
-                self.dummy_ocp_list{i}.generate_external_functions();
+                self.dummy_ocp_list{i}.generate_external_functions(context);
             end
         end
 

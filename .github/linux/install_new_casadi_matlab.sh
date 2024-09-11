@@ -29,17 +29,9 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-# CASADI_VERSION='3.5.3'; # Latest version with Octave 4.2.2 binaries
-CASADI_VERSION='3.6.5';
-OCTAVE_VERSION='7.3.0';
 
-_CASADI_GITHUB_RELEASES="https://github.com/casadi/casadi/releases/download/${CASADI_VERSION}";
+CASADI_MATLAB_URL="https://github.com/casadi/casadi/releases/download/nightly-se/casadi-se-linux64-matlab2018b.zip";
 
-CASADI_OCTAVE_URL="${_CASADI_GITHUB_RELEASES}/casadi-${CASADI_VERSION}-linux64-octave${OCTAVE_VERSION}.zip";
-
-# URL for Octave new CasADi
-# CASADI_OCTAVE_URL="https://github.com/casadi/casadi/releases/download/nightly-se/casadi-se-linux64-octave7.3.0.zip"
-
-wget -O casadi-linux-octave.zip "${CASADI_OCTAVE_URL}";
-mkdir -p casadi-octave;
-unzip casadi-linux-octave.zip -d ./casadi-octave;
+wget -O casadi-linux-matlab.zip "${CASADI_MATLAB_URL}";
+mkdir -p casadi-matlab;
+unzip casadi-linux-matlab.zip -d ./casadi-matlab;

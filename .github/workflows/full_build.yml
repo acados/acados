@@ -193,6 +193,57 @@ jobs:
         command: |
             cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; run_matlab_tests
 
+  MATLAB_examples_new_casadi:
+    needs: core_build
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - uses: actions/download-artifact@v4
+      with:
+        path: ${{runner.workspace}}/acados
+
+    - name: Install Casadi MATLAB
+      working-directory: ${{runner.workspace}}/acados/external
+      shell: bash
+      run: |
+        ${{runner.workspace}}/acados/.github/linux/install_new_casadi_matlab.sh
+
+    - name: Export Paths
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: |
+        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+
+    - name: Install MATLAB
+      uses: matlab-actions/setup-matlab@v2
+      if: always()
+      with:
+          release: R2021a
+          cache: true
+
+    # just needed for blasfeo_target.h
+    - name: Configure CMake
+      shell: bash
+      working-directory: ${{runner.workspace}}/acados/build
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
+
+    - name: Configure MATLAB workspace
+      shell: bash
+      working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
+      run: |
+        cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
+        source env.sh
+
+    - name: Run Matlab tests
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: |
+            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; run_matlab_examples_new_casadi
+
   # run selected matlab examples
   MATLAB_examples:
     needs: core_build

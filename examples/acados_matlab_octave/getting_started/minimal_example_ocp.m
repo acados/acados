@@ -136,11 +136,11 @@ ocp_solver.print('stat')
 %% plots
 ts = linspace(0, T, N+1);
 figure; hold on;
-States = {'p', 'theta', 'v', 'dtheta'};
-for i=1:length(States)
-    subplot(length(States), 1, i);
+states = {'p', 'theta', 'v', 'dtheta'};
+for i=1:length(states)
+    subplot(length(states), 1, i);
     plot(ts, xtraj(i,:)); grid on;
-    ylabel(States{i});
+    ylabel(states{i});
     xlabel('t [s]')
 end
 

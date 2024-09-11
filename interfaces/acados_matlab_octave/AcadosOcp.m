@@ -47,6 +47,7 @@ classdef AcadosOcp < handle
         shared_lib_ext
         name
         zoro_description
+        casadi_pool_names
     end
     methods
         function obj = AcadosOcp()
@@ -832,7 +833,7 @@ classdef AcadosOcp < handle
             end
         end
 
-        function generate_external_functions(ocp)
+        function context = generate_external_functions(ocp, context)
 
             %% generate C code for CasADi functions / copy external functions
             cost = ocp.cost;
@@ -840,28 +841,45 @@ classdef AcadosOcp < handle
             constraints = ocp.constraints;
             dims = ocp.dims;
 
-            % options for code generation
-            code_gen_opts = struct();
-            code_gen_opts.generate_hess = strcmp(solver_opts.hessian_approx, 'EXACT');
-            code_gen_opts.with_solution_sens_wrt_params = solver_opts.with_solution_sens_wrt_params;
-            code_gen_opts.with_value_sens_wrt_params = solver_opts.with_value_sens_wrt_params;
+            if nargin < 2
+                % options for code generation
+                code_gen_opts = struct();
+                code_gen_opts.generate_hess = strcmp(solver_opts.hessian_approx, 'EXACT');
+                code_gen_opts.with_solution_sens_wrt_params = solver_opts.with_solution_sens_wrt_params;
+                code_gen_opts.with_value_sens_wrt_params = solver_opts.with_value_sens_wrt_params;
+                code_gen_opts.code_export_directory = ocp.code_export_directory;
+                context = GenerateContext(ocp.model.p_global, ocp.name, code_gen_opts);
+            else
+                code_gen_opts = context.opts;
+            end
 
             % dynamics
-            % model dir is always needed, other dirs are  only created if necessary
-            model_dir = fullfile(pwd, ocp.code_export_directory, [ocp.name '_model']);
-            check_dir_and_create(model_dir);
+            model_dir = fullfile(pwd, code_gen_opts.code_export_directory, [ocp.name '_model']);
 
-            if (strcmp(solver_opts.integrator_type, 'ERK'))
-                generate_c_code_explicit_ode(ocp.model, code_gen_opts, model_dir);
-            elseif (strcmp(solver_opts.integrator_type, 'IRK')) && strcmp(ocp.model.dyn_ext_fun_type, 'casadi')
-                generate_c_code_implicit_ode(ocp.model, code_gen_opts, model_dir);
-            elseif (strcmp(solver_opts.integrator_type, 'GNSF'))
-                generate_c_code_gnsf(ocp.model, code_gen_opts, model_dir);
-            elseif (strcmp(solver_opts.integrator_type, 'DISCRETE')) && strcmp(ocp.model.dyn_ext_fun_type, 'casadi')
-                generate_c_code_discrete_dynamics(ocp.model, code_gen_opts, model_dir);
-            end
             if strcmp(ocp.model.dyn_ext_fun_type, 'generic')
-                copyfile( fullfile(pwd, ocp.model.dyn_generic_source), model_dir);
+                check_dir_and_create(model_dir);
+                copyfile(fullfile(pwd, ocp.model.dyn_generic_source), model_dir);
+            elseif strcmp(ocp.model.dyn_ext_fun_type, 'casadi')
+                check_casadi_version();
+                switch solver_opts.integrator_type
+                    case 'ERK'
+                        generate_c_code_explicit_ode(context, ocp.model, model_dir);
+                    case 'IRK'
+                        generate_c_code_implicit_ode(context, ocp.model, model_dir);
+                    case 'LIFTED_IRK'
+                        if ~(isempty(ocp.model.t) || length(ocp.model.t) == 0)
+                            error('NOT LIFTED_IRK with time-varying dynamics not implemented yet.')
+                        end
+                        generate_c_code_implicit_ode(context, ocp.model, model_dir);
+                    case 'GNSF'
+                        generate_c_code_gnsf(context, ocp.model, model_dir);
+                    case 'DISCRETE'
+                        generate_c_code_discrete_dynamics(context, ocp.model, model_dir);
+                    otherwise
+                        error('Unknown integrator type.')
+                end
+            else
+                error('Unknown dyn_ext_fun_type.')
             end
 
             stage_types = {'initial', 'path', 'terminal'};
@@ -872,24 +890,31 @@ classdef AcadosOcp < handle
             cost_dir = fullfile(pwd, ocp.code_export_directory, [ocp.name '_cost']);
 
             for i = 1:3
-                if strcmp(cost_types{i}, 'NONLINEAR_LS')
-                    generate_c_code_nonlinear_least_squares( ocp.model, cost_dir, stage_types{i} );
-
-                elseif strcmp(cost_types{i}, 'CONVEX_OVER_NONLINEAR')
-                    % TODO
-                    error("Convex-over-nonlinear cost is not implemented yet.")
-
-                elseif strcmp(cost_types{i}, 'EXTERNAL')
-                    if strcmp(cost_ext_fun_types{i}, 'casadi')
-                        generate_c_code_ext_cost(ocp.model, cost_dir, stage_types{i});
-                    elseif strcmp(cost_ext_fun_types{i}, 'generic')
+                if strcmp(cost_ext_fun_types{i}, 'generic')
+                    if strcmp(cost_types{i}, 'EXTERNAL')
                         setup_generic_cost(cost, cost_dir, stage_types{i})
                     else
-                        error('Unknown value for cost_ext_fun_types %s', cost_ext_fun_types{i});
+                        error('Unknown cost_type for cost_ext_fun_types generic: got %s', cost_types{i});
+                    end
+
+                else
+                    check_casadi_version();
+                    switch cost_types{i}
+                        case 'LINEAR_LS'
+                            continue
+                        case 'NONLINEAR_LS'
+                            generate_c_code_nonlinear_least_squares(context, ocp.model, cost_dir, stage_types{i});
+
+                        case 'CONVEX_OVER_NONLINEAR'
+                            error("Convex-over-nonlinear cost is not implemented yet.")
+
+                        case 'EXTERNAL'
+                            generate_c_code_ext_cost(context, ocp.model, cost_dir, stage_types{i});
+                        otherwise
+                            error('Unknown value for cost_ext_fun_types %s', cost_ext_fun_types{i});
                     end
                 end
             end
-
 
             % constraints
             constraints_types = {constraints.constr_type_0, constraints.constr_type, constraints.constr_type_e};
@@ -898,7 +923,7 @@ classdef AcadosOcp < handle
 
             for i = 1:3
                 if strcmp(constraints_types{i}, 'BGH') && constraints_dims{i} > 0
-                    generate_c_code_nonlinear_constr( ocp.model, constraints_dir, stage_types{i} );
+                    generate_c_code_nonlinear_constr(context, ocp.model, constraints_dir, stage_types{i});
                 end
             end
         end
@@ -983,6 +1008,10 @@ classdef AcadosOcp < handle
 
             % append headers
             template_list = [template_list, self.get_external_function_header_templates()];
+
+            if self.dims.np_global > 0
+                template_list{end+1} = {'p_global_precompute_fun.in.h',  [self.model.name, '_p_global_precompute_fun.h']};
+            end
 
             % Simulink
             if ~isempty(self.simulink_opts)

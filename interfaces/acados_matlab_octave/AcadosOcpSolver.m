@@ -55,7 +55,10 @@ classdef AcadosOcpSolver < handle
 
             % generate
             check_dir_and_create(fullfile(pwd, ocp.code_export_directory));
-            ocp.generate_external_functions();
+            context = ocp.generate_external_functions();
+            context.finalize();
+            obj.ocp.casadi_pool_names = context.pool_names;
+
             ocp.dump_to_json()
             ocp.render_templates()
 
@@ -267,6 +270,13 @@ classdef AcadosOcpSolver < handle
             % updates the parameters with indices idx_values (0 based) at stage with the new values new_p_values.
             % if stage is not provided, sparse parameter update is performed for all stages.
             obj.t_ocp.set_params_sparse(varargin{:});
+        end
+
+        function set_p_global(obj, val)
+            % usage:
+            % ocp.set_p_global(val)
+            % Sets p_global to val and precomputes all parts of the CasADi graphs of all other functions that only depend on p_global.
+            obj.t_ocp.set('p_global', val);
         end
 
 
