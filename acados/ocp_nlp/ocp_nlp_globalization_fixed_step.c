@@ -154,8 +154,8 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
     ocp_nlp_workspace *nlp_work = nlp_work_;
     ocp_nlp_opts *nlp_opts = nlp_opts_;
     
-    int sqp_iter = 1;
-    bool do_line_search = true;
+    // int sqp_iter = 1;
+    // bool do_line_search = true;
 //     if (nlp_opts->globalization->globalization_use_SOC)
 //     {
 //         do_line_search = ocp_nlp_soc_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter);
@@ -184,7 +184,7 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
     // nlp_mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
 
     // update variables
-    // ocp_nlp_update_variables_sqp(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, mem->alpha);
+    ocp_nlp_update_variables_sqp(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, nlp_opts->step_length);
 }
 
 void ocp_nlp_globalization_fixed_step_print_iteration_header()
