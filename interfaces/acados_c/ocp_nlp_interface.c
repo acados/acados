@@ -237,12 +237,10 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
     switch (plan.globalization)
     {
         case FIXED_STEP:
-            // ocp_nlp_globalization_funnel_config_initialize_default(config->globalization);
             ocp_nlp_globalization_fixed_step_config_initialize_default(config->globalization);
             break;
         case MERIT_BACKTRACKING:
-            ocp_nlp_globalization_funnel_config_initialize_default(config->globalization);
-            // ocp_nlp_globalization_merit_backtracking_config_initialize_default(config->globalization);
+            ocp_nlp_globalization_merit_backtracking_config_initialize_default(config->globalization);
             break;
         case FUNNEL_L1PEN_LINESEARCH:
             ocp_nlp_globalization_funnel_config_initialize_default(config->globalization);
