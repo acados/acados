@@ -70,13 +70,7 @@ classdef GenerateContext < handle
                 fun = Function(name, inputs, outputs);
                 obj = obj.add_function(name, output_dir, fun);
             else
-                % interesting behavior
                 check_casadi_version_supports_p_global();
-                inputs_augmented = [inputs, {obj.p_global}];
-                fun = Function(name, inputs_augmented, outputs);
-
-                outputs_call = fun.call(inputs_augmented, true, false); % always_inline=True, never_inline=False
-
                 % This introduces novel symbols into the graph (extracted1, extracted2,...)
                 [outputs_ret, symbols, param] = extract_parametric(outputs_call, obj.p_global);
                 symbols = symbols.primitives();
@@ -91,7 +85,7 @@ classdef GenerateContext < handle
                 outputs_ret = substitute(outputs_ret, symbols, pools);
                 obj.p_global_expressions = [obj.p_global_expressions, param.primitives()];
 
-                fun_mod = Function(fun.name(), inputs, outputs_ret);
+                fun_mod = Function(name, inputs, outputs_ret);
                 obj = obj.add_function(name, output_dir, fun_mod);
             end
         end
