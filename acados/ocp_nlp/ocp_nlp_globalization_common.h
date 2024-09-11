@@ -68,21 +68,16 @@ typedef struct
     /* functions */
     int (*find_acceptable_iterate)(void *nlp_config, void *nlp_dims, void *nlp_in, void *nlp_out, void *nlp_mem, void *nlp_work, void *nlp_opts);
     // TODO: specify inputs below!
-    void (*print_iteration_header)(void *globalization_opts);
-    void (*print_iteration)(void *globalization_opts, void* globalization_mem);
-                    // double obj,
-                    // int iter_count,
-                    // double infeas_eq,
-                    // double infeas_ineq,
-                    // double stationarity,
-                    // double complementarity,
-                    // double reg_param,
-                    // double alpha,
-                    // double step_norm,
-                    // double funnel_width,
-                    // double penalty_parameter,
-                    // int qp_status,
-                    // int qp_iter,char iter_type);
+    void (*print_iteration_header)();
+    void (*print_iteration)(int iter_count,
+                            double infeas_eq,
+                            double infeas_ineq,
+                            double stationarity,
+                            double complementarity,
+                            int qp_status,
+                            int qp_iter,
+                            void *globalization_opts,
+                            void* globalization_mem);
     int (*needs_objective_value)();
 } ocp_nlp_globalization_config;
 

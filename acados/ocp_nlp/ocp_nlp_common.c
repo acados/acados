@@ -1056,7 +1056,6 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
 #endif
     // printf("\nocp_nlp: openmp threads = %d\n", opts->num_threads);
 
-    // opts->globalization = FIXED_STEP;
     opts->print_level = 0;
     opts->step_length = 1.0;
     opts->levenberg_marquardt = 0.0;

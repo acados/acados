@@ -90,7 +90,12 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
 //
 void ocp_nlp_globalization_fixed_step_print_iteration_header();
 //
-void ocp_nlp_globalization_fixed_step_print_iteration(ocp_nlp_opts* opts, ocp_nlp_globalization_fixed_step_memory* mem);
+void ocp_nlp_globalization_fixed_step_print_iteration(int iter_count, double infeas_eq,
+                            double infeas_ineq,
+                            double stationarity,
+                            double complementarity,
+                            int qp_status,
+                            int qp_iter, ocp_nlp_opts* opts, ocp_nlp_globalization_fixed_step_memory* mem);
 //
 int ocp_nlp_globalization_fixed_step_needs_objective_value();
 //

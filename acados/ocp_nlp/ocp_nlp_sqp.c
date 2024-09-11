@@ -1096,7 +1096,15 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Output
         if (nlp_opts->print_level > 0)
         {
-            config->globalization->print_iteration(nlp_opts->globalization, nlp_mem->globalization);
+            config->globalization->print_iteration(sqp_iter,
+                                                   nlp_res->inf_norm_res_eq,
+                                                   nlp_res->inf_norm_res_ineq,
+                                                   nlp_res->inf_norm_res_stat,
+                                                   nlp_res->inf_norm_res_comp,
+                                                   qp_status,
+                                                   qp_iter,
+                                                   nlp_opts,
+                                                   nlp_mem->globalization);
         }
         // reg_param_memory = nlp_opts->levenberg_marquardt;
 
