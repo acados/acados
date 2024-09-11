@@ -54,6 +54,7 @@ targets = {
     '../wind_turbine_nx6/example_ocp.m';
     '../mocp_transition_example/main_multiphase_ocp.m';
     '../legacy_interface/getting_started/extensive_example_ocp.m';
+    '../legacy_interface/simple_dae_model/example_ocp.m';
 };
 
 
@@ -84,7 +85,6 @@ other_targets = {
     './test_ocp_pendulum_dae.m';
     './test_ocp_pendulum_on_cart.m';
     './test_ocp_qpdunes.m';
-    './test_ocp_simple_dae.m';
     './test_ocp_wtnx6.m';
     './test_sens_adj.m';
     './test_sens_forw.m';

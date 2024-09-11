@@ -27,12 +27,24 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
 
-addpath('../simple_dae_model');
-%% test of native matlab interface
+
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
+
+clear all; clc;
 
 model_name = 'simple_dae';
+
+% check that env.sh has been run
+env_run = getenv('ENV_RUN');
+if (~strcmp(env_run, 'true'))
+    error('env.sh has not been sourced! Before executing this example, run: source env.sh');
+end
 
 %% options
 compile_interface = 'auto'; % true, false
@@ -188,13 +200,11 @@ ocp_opts.set('exact_hess_dyn', 1);
 ocp_opts.set('exact_hess_cost', 1);
 ocp_opts.set('exact_hess_constr', 1);
 
-ocp_opts.set('ext_fun_compile_flags', '');
 
 
 %% acados ocp
 ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
-ocp_solver.reset();
 ocp_solver.solve();
 
 stat = ocp_solver.get('stat');
@@ -215,7 +225,9 @@ u_traj = ocp_solver.get('u');
 pi_traj = ocp_solver.get('pi');
 z_traj = ocp_solver.get('z');
 
+
 diff_x_z = x_traj(:,1:N) - z_traj;
+
 max_diff_x_z = max(max(abs(diff_x_z)));
 test_tol = 1e-14;
 if max_diff_x_z > test_tol
