@@ -72,7 +72,7 @@ classdef GenerateContext < handle
             else
                 check_casadi_version_supports_p_global();
                 % This introduces novel symbols into the graph (extracted1, extracted2,...)
-                [outputs_ret, symbols, param] = extract_parametric(outputs_call, obj.p_global);
+                [outputs_ret, symbols, param] = extract_parametric(outputs, obj.p_global);
                 symbols = symbols.primitives();
 
                 pools = {};
