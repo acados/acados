@@ -38,6 +38,7 @@ classdef GenerateContext < handle
         casadi_codegen_opts
         list_funname_dir_pairs  % list of (function_name, output_dir), NOTE: this can be used to simplify template based code generation!
         functions_to_generate
+        casadi_fun_opts
     end
 
     methods
@@ -60,6 +61,14 @@ classdef GenerateContext < handle
             obj.list_funname_dir_pairs = {};
             obj.functions_to_generate = {};
 
+            obj.casadi_fun_opts = struct();
+
+            import casadi.*
+            try
+                dummy = MX.sym('dummy');
+                cse(dummy); % Check if cse exists
+                obj.casadi_fun_opts.cse = true;
+            end
         end
 
         function obj = add_function_definition(obj, name, inputs, outputs, output_dir)
@@ -67,7 +76,7 @@ classdef GenerateContext < handle
 
             if isempty(obj.p_global) || length(obj.p_global) == 0
                 % normal behavior (p_global is empty)
-                fun = Function(name, inputs, outputs);
+                fun = Function(name, inputs, outputs, obj.casadi_fun_opts);
                 obj = obj.add_function(name, output_dir, fun);
             else
                 check_casadi_version_supports_p_global();
@@ -85,7 +94,7 @@ classdef GenerateContext < handle
                 outputs_ret = substitute(outputs_ret, symbols, pools);
                 obj.p_global_expressions = [obj.p_global_expressions, param.primitives()];
 
-                fun_mod = Function(name, inputs, outputs_ret);
+                fun_mod = Function(name, inputs, outputs_ret, obj.casadi_fun_opts);
                 obj = obj.add_function(name, output_dir, fun_mod);
             end
         end

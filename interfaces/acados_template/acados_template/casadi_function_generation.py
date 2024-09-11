@@ -63,6 +63,16 @@ class GenerateContext:
         self.list_funname_dir_pairs = []  # list of (function_name, output_dir), NOTE: this can be used to simplify template based code generation!
         self.functions_to_generate: List[ca.Function] = []
 
+        # check if CasADi version supports cse
+        try:
+            from casadi import cse
+            casadi_fun_opts = {"cse": True}
+        except:
+            casadi_fun_opts = {}
+
+        self.__casadi_fun_opts = casadi_fun_opts
+
+
     def __add_function(self, name: str, output_dir: str, fun: ca.Function):
         self.list_funname_dir_pairs.append((name, output_dir))
         self.functions_to_generate.append(fun)
@@ -94,7 +104,7 @@ class GenerateContext:
 
         if self.p_global is None:
             # normal behaviour (p_global is empty)
-            fun = ca.Function(name, inputs, outputs)
+            fun = ca.Function(name, inputs, outputs, self.__casadi_fun_opts)
             self.__add_function(name, output_dir, fun)
         else:
             check_casadi_version_supports_p_global()
@@ -113,7 +123,7 @@ class GenerateContext:
             outputs_ret = ca.substitute(outputs_ret, symbols, pools)
             self.p_global_expressions += param.primitives()
 
-            fun_mod = ca.Function(name, inputs, outputs_ret)
+            fun_mod = ca.Function(name, inputs, outputs_ret, self.__casadi_fun_opts)
             self.__add_function(name, output_dir, fun_mod)
 
     def finalize(self):
