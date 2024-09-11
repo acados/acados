@@ -53,8 +53,8 @@ function detect_gnsf_structure(model, dims, transcribe_opts)
     %       with a different model, such that the assumption holds.
 
     import casadi.*
-    if length(model.p_global) > 0 and depends_on(model.f_impl_expr, model.p_global)
-        error("GNSF detection does not support global parameters.")
+    if length(model.p_global) > 0 && depends_on(model.f_impl_expr, model.p_global)
+        error("GNSF detection does not support global parameters.");
     end
 
     acados_root_dir = getenv('ACADOS_INSTALL_DIR');
