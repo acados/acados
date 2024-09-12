@@ -78,11 +78,9 @@ max_a = S.max_a;
 
 if 1
 	compile_interface = 'auto';
-	codgen_model = 'true';
 	gnsf_detect_struct = 'true';
 else
 	compile_interface = 'auto';
-	codgen_model = 'false';
 	gnsf_detect_struct = 'false';
 end
 
@@ -211,7 +209,6 @@ ocp_model.set('constr_uh', uh);
 
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
-ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme_N', nb_steps);
 if (exist('shooting_nodes', 'var'))
 	ocp_opts.set('shooting_nodes', shooting_nodes);

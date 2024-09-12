@@ -37,7 +37,6 @@ addpath('../pendulum_on_cart_model/');
 for integrator = {'erk', 'irk'} %, 'irk_gnsf'}
 	%% arguments
 	compile_interface = 'auto';
-	codgen_model = 'true';
 	method = integrator{1}; %'irk'; 'irk_gnsf'; 'erk';
 	sens_forw = 'true';
 	sens_adj = 'true';
@@ -86,7 +85,6 @@ for integrator = {'erk', 'irk'} %, 'irk_gnsf'}
 	%% acados sim opts
 	sim_opts = acados_sim_opts();
 	sim_opts.set('compile_interface', compile_interface);
-	sim_opts.set('codgen_model', codgen_model);
 	sim_opts.set('num_stages', num_stages);
 	sim_opts.set('num_steps', num_steps);
 	sim_opts.set('method', method);

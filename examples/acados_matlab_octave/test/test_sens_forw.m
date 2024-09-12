@@ -39,7 +39,6 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
 
     %% arguments
     compile_interface = 'auto';
-    codgen_model = 'true';
     sens_forw = 'true';
     jac_reuse = 'true';
     num_stages = 3;
@@ -49,10 +48,10 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
 
     Ts = 0.1;
     FD_epsilon = 1e-6;
-    
+
     %% model
     model = linear_mass_spring_model();
-    
+
     model_name = ['lin_mass_' method];
     nx = model.nx;
     nu = model.nu;
@@ -92,7 +91,6 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
     %% acados sim opts
     sim_opts = acados_sim_opts();
     sim_opts.set('compile_interface', compile_interface);
-    sim_opts.set('codgen_model', codgen_model);
     sim_opts.set('num_stages', num_stages);
     sim_opts.set('num_steps', num_steps);
     sim_opts.set('newton_iter', newton_iter);
