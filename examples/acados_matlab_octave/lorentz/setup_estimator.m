@@ -90,8 +90,8 @@ function [estimator] = setup_estimator(model, h, N)
 
     %% options
     ocp.solver_options.N_horizon = N;
-    ocp.solver_options.nlp_solver_type = "SQP";
-    ocp.solver_options.integrator_type = "ERK";
+    ocp.solver_options.nlp_solver_type = 'SQP';
+    ocp.solver_options.integrator_type = 'ERK';
 
     ocp.solver_options.sim_method_num_stages = 2;
     ocp.solver_options.sim_method_num_steps = 5;
