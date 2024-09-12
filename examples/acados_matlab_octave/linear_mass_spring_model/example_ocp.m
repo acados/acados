@@ -42,7 +42,6 @@ check_acados_requirements()
 
 %% arguments
 compile_interface = 'auto';
-codgen_model = 'true';
 %shooting_nodes = [0 0.1 0.2 0.3 0.5 1];
 N = 20;
 model_name = 'lin_mass';
@@ -226,7 +225,6 @@ end
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
-ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme_N', N);
 if (exist('shooting_nodes', 'var'))
 	ocp_opts.set('param_scheme_shooting_nodes', shooting_nodes);

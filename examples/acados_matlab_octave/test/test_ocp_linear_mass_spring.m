@@ -36,7 +36,6 @@ addpath('../linear_mass_spring_model/');
 
 %% arguments
 compile_interface = 'auto';
-codgen_model = 'true';
 N = 20;
 shooting_nodes = [ linspace(0,1,N/2) linspace(1.1,5,N/2+1) ];
 
@@ -200,7 +199,6 @@ end
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
-ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('ext_fun_compile_flags', '');
 if (exist('shooting_nodes', 'var'))

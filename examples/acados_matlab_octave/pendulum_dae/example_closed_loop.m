@@ -46,7 +46,6 @@ end
 
 %% options
 compile_interface = 'auto'; % true, false
-codgen_model = 'true'; % true, false
 % simulation
 gnsf_detect_struct = 'true'; % true, false
 sim_method = 'irk'; % irk, irk_gnsf, [erk]
@@ -205,7 +204,6 @@ end
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
-ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme_N', ocp_N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
@@ -254,7 +252,6 @@ end
 %% acados sim opts
 sim_opts = acados_sim_opts();
 sim_opts.set('compile_interface', compile_interface);
-sim_opts.set('codgen_model', codgen_model);
 sim_opts.set('num_stages', sim_num_stages);
 sim_opts.set('num_steps', sim_num_steps);
 sim_opts.set('newton_iter', sim_newton_iter);
