@@ -75,7 +75,7 @@ if(ACADOS_OCTAVE)
         octave --no-gui --no-window-system ./example_ocp.m)
 
     add_test(NAME octave_test_mhe_lorentz
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/examples/lorentz
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/lorentz
         octave --no-gui --no-window-system ./example_mhe.m)
 
     # OSQP
