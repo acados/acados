@@ -202,6 +202,8 @@ void ocp_nlp_globalization_fixed_step_initialize_memory(ocp_nlp_config *config_,
                                                     ocp_nlp_memory *nlp_mem_,
                                                     ocp_nlp_opts *nlp_opts_)
 {
+    printf("In here!");
+    return;
 }
 
 void ocp_nlp_globalization_fixed_step_config_initialize_default(ocp_nlp_globalization_config *config)
@@ -219,4 +221,5 @@ void ocp_nlp_globalization_fixed_step_config_initialize_default(ocp_nlp_globaliz
     config->print_iteration_header = &ocp_nlp_globalization_fixed_step_print_iteration_header;
     config->print_iteration = &ocp_nlp_globalization_fixed_step_print_iteration;
     config->needs_objective_value = &ocp_nlp_globalization_fixed_step_needs_objective_value;
+    config->initialize_memory = &ocp_nlp_globalization_fixed_step_initialize_memory;
 }

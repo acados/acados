@@ -280,6 +280,24 @@ void ocp_nlp_sqp_opts_set_at_stage(void *config_, void *opts_, size_t stage, con
 
 }
 
+void ocp_nlp_sqp_opts_get(void *config_, void *dims_, void *opts_,
+                          const char *field, void *return_value_)
+{
+    // ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_opts *opts = opts_;
+
+    if (!strcmp("nlp_opts", field))
+    {
+        void **value = return_value_;
+        *value = opts->nlp_opts;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_sqp_opts_get\n", field);
+        exit(1);
+    }
+}
+
 /************************************************
  * memory
  ************************************************/
@@ -435,6 +453,23 @@ static void ocp_nlp_sqp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dim
     return;
 }
 
+void ocp_nlp_sqp_work_get(void *config_, void *dims_, void *work_,
+                          const char *field, void *return_value_)
+{
+    // ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_workspace *work = work_;
+
+    if (!strcmp("nlp_work", field))
+    {
+        void **value = return_value_;
+        *value = work->nlp_work;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_sqp_work_get\n", field);
+        exit(1);
+    }
+}
 
 /************************************************
  * Helper functions
@@ -622,7 +657,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     double reg_param_memory = 0.0;
     // double funnel_width_memory = 0.0;
     // double funnel_penalty_param_memory = 1.0;//opts->funnel_initial_penalty_parameter;
-
     for (; sqp_iter <= opts->max_iter; sqp_iter++) // <= needed such that after last iteration KKT residuals are checked before max_iter is thrown.
     {
         // We always evaluate the residuals until the last iteration
@@ -665,6 +699,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             config->globalization->initialize_memory(config, dims, nlp_mem, nlp_opts);
         }
+        printf("Before loop\n");
         // funnel_width_memory = mem->funnel_width;
         // funnel_penalty_param_memory = mem->funnel_penalty_parameter;
 
@@ -1178,46 +1213,6 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
         exit(1);
     }
 }
-
-
-
-void ocp_nlp_sqp_opts_get(void *config_, void *dims_, void *opts_,
-                          const char *field, void *return_value_)
-{
-    // ocp_nlp_config *config = config_;
-    ocp_nlp_sqp_opts *opts = opts_;
-
-    if (!strcmp("nlp_opts", field))
-    {
-        void **value = return_value_;
-        *value = opts->nlp_opts;
-    }
-    else
-    {
-        printf("\nerror: field %s not available in ocp_nlp_sqp_opts_get\n", field);
-        exit(1);
-    }
-}
-
-
-void ocp_nlp_sqp_work_get(void *config_, void *dims_, void *work_,
-                          const char *field, void *return_value_)
-{
-    // ocp_nlp_config *config = config_;
-    ocp_nlp_sqp_workspace *work = work_;
-
-    if (!strcmp("nlp_work", field))
-    {
-        void **value = return_value_;
-        *value = work->nlp_work;
-    }
-    else
-    {
-        printf("\nerror: field %s not available in ocp_nlp_sqp_work_get\n", field);
-        exit(1);
-    }
-}
-
 
 
 void ocp_nlp_sqp_terminate(void *config_, void *mem_, void *work_)
