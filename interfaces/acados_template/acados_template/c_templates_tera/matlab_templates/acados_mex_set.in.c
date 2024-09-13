@@ -598,7 +598,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         if (nrhs == min_nrhs)
         {
-            {{ name }}_acados_set_p_global(capsule, value, matlab_size);
+            {{ name }}_acados_set_p_global_and_precompute_dependencies(capsule, value, matlab_size);
         }
         else if (nrhs > min_nrhs)
         {

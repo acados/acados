@@ -216,7 +216,7 @@ ACADOS_SYMBOL_EXPORT int {{ name }}_acados_create_with_discretization({{ name }}
 
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_update_params({{ name }}_solver_capsule * capsule, int stage, double *value, int np);
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_update_params_sparse({{ name }}_solver_capsule * capsule, int stage, int *idx, double *p, int n_update);
-ACADOS_SYMBOL_EXPORT int {{ name }}_acados_set_p_global({{ name }}_solver_capsule* capsule, double* data, int data_len);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver_capsule* capsule, double* data, int data_len);
 
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_solve({{ name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_free({{ name }}_solver_capsule * capsule);
