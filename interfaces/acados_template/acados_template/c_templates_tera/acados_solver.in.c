@@ -2058,7 +2058,7 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     int globalization_use_SOC = {{ solver_options.globalization_use_SOC }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_use_SOC", &globalization_use_SOC);
 
-    double eps_sufficient_descent = {{ solver_options.eps_sufficient_descent }};
+    double eps_sufficient_descent = {{ solver_options.globalization_eps_sufficient_descent }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "eps_sufficient_descent", &eps_sufficient_descent);
 {%- elif solver_options.globalization == "FUNNEL_L1PEN_LINESEARCH" %}
 
