@@ -321,6 +321,7 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
     mem->iter = mem->hpipm_workspace->iter;
 
     // print HPIPM statistics:
+#ifndef BLASFEO_EXT_DEP_OFF
     if (opts->print_level > 0)
     {
         double *stat; d_ocp_qp_ipm_get_stat(mem->hpipm_workspace, &stat);
@@ -328,7 +329,7 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
         printf("\nalpha_aff\tmu_aff\t\tsigma\t\talpha_prim\talpha_dual\tmu\t\tres_stat\tres_eq\t\tres_ineq\tres_comp\tobj\t\tlq fact\t\titref pred\titref corr\tlin res stat\tlin res eq\tlin res ineq\tlin res comp\n");
         d_print_exp_tran_mat(stat_m, mem->iter+1, stat, stat_m);
     }
-
+#endif
 
     // check exit conditions
     int acados_status = mem->status;

@@ -98,6 +98,11 @@ jobs:
       shell: bash
       run: ${{runner.workspace}}/acados/.github/linux/install_python.sh''
 
+    - name: Install Tera
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: ${{runner.workspace}}/acados/.github/linux/install_tera.sh
+
     - name: Run CMake python tests (ctest)
       working-directory: ${{runner.workspace}}/acados/build
       shell: bash
@@ -128,6 +133,11 @@ jobs:
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: ${{runner.workspace}}/acados/.github/linux/install_python.sh''
+
+    - name: Install Tera
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: ${{runner.workspace}}/acados/.github/linux/install_tera.sh
 
     - name: Install new CasADi Python
       working-directory: ${{runner.workspace}}/acados
@@ -389,6 +399,11 @@ jobs:
         sudo apt-get install liboctave-dev -y --fix-missing
         octave --version
         ${{runner.workspace}}/acados/.github/linux/install_casadi_octave.sh
+
+    - name: Install Tera
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: ${{runner.workspace}}/acados/.github/linux/install_tera.sh''
 
     - name: Export Paths
       working-directory: ${{runner.workspace}}/acados
