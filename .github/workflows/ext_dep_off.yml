@@ -60,9 +60,10 @@ jobs:
         echo "ACADOS_INSTALL_DIR=$(pwd)" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib" >> $GITHUB_ENV
 
-    # - name: Run minimal example
-    #   working-directory: ${{runner.workspace}}/examples/c_
-    #   shell: bash
-    #   run: |
-    #     echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-    #     ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
+    - name: Run minimal example
+      working-directory: ${{runner.workspace}}/examples/c_ext_dep_off/pendulum
+      shell: bash
+      run: |
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+        make example
+        ./main_pendulum_ode
