@@ -48,13 +48,20 @@
 
 int main()
 {
+    printf("TEEEEEEEEEEEST");
 
     pendulum_ode_solver_capsule *acados_ocp_capsule = pendulum_ode_acados_create_capsule();
+    printf("after capsule create");
+
     // there is an opportunity to change the number of shooting intervals in C without new code generation
     int N = PENDULUM_ODE_N;
     // allocate the array and fill it accordingly
     double* new_time_steps = NULL;
+    printf("before pendulum_ode_acados_create_with_discretization");
+
     int status = pendulum_ode_acados_create_with_discretization(acados_ocp_capsule, N, new_time_steps);
+    printf("after pendulum_ode_acados_create_with_discretization");
+
 
     if (status)
     {
@@ -74,8 +81,8 @@ int main()
     double ubx0[NBX0];
     lbx0[0] = 0;
     ubx0[0] = 0;
-    lbx0[1] = 3.141592653589793;
-    ubx0[1] = 3.141592653589793;
+    lbx0[1] = 0.1 * 3.141592653589793;
+    ubx0[1] = 0.1 * 3.141592653589793;
     lbx0[2] = 0;
     ubx0[2] = 0;
     lbx0[3] = 0;

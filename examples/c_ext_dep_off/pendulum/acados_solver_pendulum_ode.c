@@ -327,9 +327,6 @@ void pendulum_ode_acados_create_setup_functions(pendulum_ode_solver_capsule* cap
     MAP_CASADI_FNC(cost_y_0_fun_jac_ut_xt, pendulum_ode_cost_y_0_fun_jac_ut_xt);
     MAP_CASADI_FNC(cost_y_0_hess, pendulum_ode_cost_y_0_hess);
 
-
-
-
     // implicit dae
     capsule->impl_dae_fun = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
     for (int i = 0; i < N; i++) {
@@ -523,13 +520,6 @@ void pendulum_ode_acados_setup_nlp_in(pendulum_ode_solver_capsule* capsule, cons
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbxe", idxbxe_0);
     free(idxbxe_0);
 
-
-
-
-
-
-
-
     /* constraints that are the same for initial and intermediate */
     // u
     int* idxbu = malloc(NBU * sizeof(int));
@@ -550,34 +540,6 @@ void pendulum_ode_acados_setup_nlp_in(pendulum_ode_solver_capsule* capsule, cons
     }
     free(idxbu);
     free(lubu);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /* terminal constraints */
-
-
-
-
-
-
-
-
-
-
-
-
 
 }
 
@@ -643,77 +605,13 @@ int fixed_hess = 0;
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_jac_reuse", &tmp_bool);
 
-    double nlp_solver_step_length = 1;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "step_length", &nlp_solver_step_length);
-
-    double levenberg_marquardt = 0;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "levenberg_marquardt", &levenberg_marquardt);
-
-    /* options QP solver */
-    int qp_solver_cond_N;const int qp_solver_cond_N_ori = 20;
-    qp_solver_cond_N = N < qp_solver_cond_N_ori ? N : qp_solver_cond_N_ori; // use the minimum value here
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_cond_N", &qp_solver_cond_N);
-
-    int nlp_solver_ext_qp_res = 0;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "ext_qp_res", &nlp_solver_ext_qp_res);
-    int log_primal_step_norm = false;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "log_primal_step_norm", &log_primal_step_norm);
-
     double nlp_solver_tol_min_step_norm = 0;
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_min_step_norm", &nlp_solver_tol_min_step_norm);
     // set HPIPM mode: should be done before setting other QP solver options
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_hpipm_mode", "BALANCE");
 
-
-
-
-    // set SQP specific options
-    double nlp_solver_tol_stat = 0.000001;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_stat", &nlp_solver_tol_stat);
-
-    double nlp_solver_tol_eq = 0.000001;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_eq", &nlp_solver_tol_eq);
-
-    double nlp_solver_tol_ineq = 0.000001;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_ineq", &nlp_solver_tol_ineq);
-
-    double nlp_solver_tol_comp = 0.000001;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_comp", &nlp_solver_tol_comp);
-
-    int nlp_solver_max_iter = 100;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "max_iter", &nlp_solver_max_iter);
-
-    // set options for adaptive Levenberg-Marquardt Update
-    bool with_adaptive_levenberg_marquardt = false;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "with_adaptive_levenberg_marquardt", &with_adaptive_levenberg_marquardt);
-
-    double adaptive_levenberg_marquardt_lam = 5;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "adaptive_levenberg_marquardt_lam", &adaptive_levenberg_marquardt_lam);
-
-    double adaptive_levenberg_marquardt_mu_min = 0.0000000000000001;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "adaptive_levenberg_marquardt_mu_min", &adaptive_levenberg_marquardt_mu_min);
-
-    double adaptive_levenberg_marquardt_mu0 = 0.001;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "adaptive_levenberg_marquardt_mu0", &adaptive_levenberg_marquardt_mu0);
-
-    bool eval_residual_at_max_iter = false;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "eval_residual_at_max_iter", &eval_residual_at_max_iter);
-
     int qp_solver_iter_max = 50;
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_iter_max", &qp_solver_iter_max);
-
-
-
-    int print_level = 0;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "print_level", &print_level);
-    int qp_solver_cond_ric_alg = 1;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_cond_ric_alg", &qp_solver_cond_ric_alg);
-
-    int qp_solver_ric_alg = 1;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_ric_alg", &qp_solver_ric_alg);
-
-
-    int ext_cost_num_hess = 0;
 }
 
 
@@ -732,8 +630,7 @@ void pendulum_ode_acados_set_nlp_out(pendulum_ode_solver_capsule* capsule)
     double* x0 = xu0;
 
     // initialize with x0
-    
-    x0[1] = 3.141592653589793;
+    x0[1] = 0.1*3.141592653589793;
 
 
     double* u0 = xu0 + NX;
@@ -748,15 +645,6 @@ void pendulum_ode_acados_set_nlp_out(pendulum_ode_solver_capsule* capsule)
     ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, N, "x", x0);
     free(xu0);
 }
-
-
-/**
- * Internal function for pendulum_ode_acados_create: step 8
- */
-//void pendulum_ode_acados_create_8_create_solver(pendulum_ode_solver_capsule* capsule)
-//{
-//    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts);
-//}
 
 /**
  * Internal function for pendulum_ode_acados_create: step 9
@@ -792,12 +680,20 @@ int pendulum_ode_acados_create_with_discretization(pendulum_ode_solver_capsule* 
     pendulum_ode_acados_create_set_plan(capsule->nlp_solver_plan, N);
     capsule->nlp_config = ocp_nlp_config_create(*capsule->nlp_solver_plan);
 
+    printf("\nbefore create dims");
+
     // 2) create and set dimensions
     capsule->nlp_dims = pendulum_ode_acados_create_setup_dimensions(capsule);
+
+    printf("\nafter create dims");
+
+    printf("\nbefore create opts");
 
     // 3) create and set nlp_opts
     capsule->nlp_opts = ocp_nlp_solver_opts_create(capsule->nlp_config, capsule->nlp_dims);
     pendulum_ode_acados_create_set_opts(capsule);
+
+    printf("\nbefore create in");
 
     // 4) create nlp_in
     capsule->nlp_in = ocp_nlp_in_create(capsule->nlp_config, capsule->nlp_dims);
@@ -807,6 +703,7 @@ int pendulum_ode_acados_create_with_discretization(pendulum_ode_solver_capsule* 
     pendulum_ode_acados_setup_nlp_in(capsule, N, new_time_steps);
     pendulum_ode_acados_create_set_default_parameters(capsule);
 
+    printf("\nbefore create solver");
     // 6) create solver
     capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts);
 
@@ -994,7 +891,6 @@ void pendulum_ode_acados_print_stats(pendulum_ode_solver_capsule* capsule)
     ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "stat_n", &stat_n);
     ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "stat_m", &stat_m);
 
-    
     double stat[1200];
     ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "statistics", stat);
 
