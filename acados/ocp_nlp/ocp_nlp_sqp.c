@@ -128,17 +128,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->warm_start_first_qp = false;
     opts->rti_phase = 0;
     opts->eval_residual_at_max_iter = false;
-
-    // // funnel method opts
-    // opts->funnel_initialization_increase_factor = 15.0;
-    // opts->funnel_initialization_upper_bound = 1.0;
-    // opts->funnel_sufficient_decrease_factor = 0.9;
-    // opts->funnel_kappa = 0.9;
-    // opts->funnel_fraction_switching_condition = 1e-3;
-    // opts->funnel_initial_penalty_parameter = 1.0;
-    // opts->funnel_penalty_contraction = 0.5;
-    // opts->funnel_penalty_eta = 1e-6;
-    // opts->funnel_type_switching_condition = false; // use ipopt/gould type of switching
+    opts->eval_qp_objective = false;
 
     // overwrite default submodules opts
     // qp tolerance
@@ -265,77 +255,18 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
             bool* eval_residual_at_max_iter = (bool *) value;
             opts->eval_residual_at_max_iter = *eval_residual_at_max_iter;
         }
-        // else if (!strcmp(field, "funnel_initialization_increase_factor"))
-        // {
-        //     double* funnel_initialization_increase_factor = (double *) value;
-        //     if (*funnel_initialization_increase_factor <= 1.0)
-        //     {
-        //         printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_initialization_increase_factor field, need double > 1, got %f.", *funnel_initialization_increase_factor);
-        //         exit(1);
-        //     }
-        //     opts->funnel_initialization_increase_factor = *funnel_initialization_increase_factor;
-        // }
-        // else if (!strcmp(field, "funnel_initialization_upper_bound"))
-        // {
-        //     double* funnel_initialization_upper_bound = (double *) value;
-        //     if (*funnel_initialization_upper_bound <= 0.0)
-        //     {
-        //         printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_initialization_upper_bound field, need double > 0, got %f.", *funnel_initialization_upper_bound);
-        //         exit(1);
-        //     }
-        //     opts->funnel_initialization_upper_bound = *funnel_initialization_upper_bound;
-        // }
-        // else if (!strcmp(field, "funnel_sufficient_decrease_factor"))
-        // {
-        //     double* funnel_sufficient_decrease_factor = (double *) value;
-        //     if (*funnel_sufficient_decrease_factor <= 0.0 || *funnel_sufficient_decrease_factor >= 1.0)
-        //     {
-        //         printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_sufficient_decrease_factor field, need double in (0,1), got %f.", *funnel_sufficient_decrease_factor);
-        //         exit(1);
-        //     }
-        //     opts->funnel_sufficient_decrease_factor = *funnel_sufficient_decrease_factor;
-        // }
-        // else if (!strcmp(field, "funnel_kappa"))
-        // {
-        //     double* funnel_kappa = (double *) value;
-        //     if (*funnel_kappa <= 0.0 || *funnel_kappa >= 1.0)
-        //     {
-        //         printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_kappa field, need double in (0,1), got %f.", *funnel_kappa);
-        //         exit(1);
-        //     }
-        //     opts->funnel_kappa = *funnel_kappa;
-        // }
-        // else if (!strcmp(field, "funnel_fraction_switching_condition"))
-        // {
-        //     double* funnel_fraction_switching_condition = (double *) value;
-        //     if (*funnel_fraction_switching_condition <= 0.0 || *funnel_fraction_switching_condition >= 1.0)
-        //     {
-        //         printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_fraction_switching_condition field, need double in (0,1), got %f.", *funnel_fraction_switching_condition);
-        //         exit(1);
-        //     }
-        //     opts->funnel_fraction_switching_condition = *funnel_fraction_switching_condition;
-        // }
-        // else if (!strcmp(field, "funnel_initial_penalty_parameter"))
-        // {
-        //     double* funnel_initial_penalty_parameter = (double *) value;
-        //     if (*funnel_initial_penalty_parameter < 0.0 || *funnel_initial_penalty_parameter > 1.0)
-        //     {
-        //         printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_initial_penalty_parameter field, need double in [0,1], got %f.", *funnel_initial_penalty_parameter);
-        //         exit(1);
-        //     }
-        //     opts->funnel_initial_penalty_parameter = *funnel_initial_penalty_parameter;
-        // }
+        else if (!strcmp(field, "eval_qp_objective"))
+        {
+            bool* eval_qp_objective = (bool *) value;
+            opts->eval_qp_objective = *eval_qp_objective;
+        }
         else
         {
             ocp_nlp_opts_set(config, nlp_opts, field, value);
         }
     }
-
     return;
-
 }
-
-
 
 void ocp_nlp_sqp_opts_set_at_stage(void *config_, void *opts_, size_t stage, const char *field, void* value)
 {
@@ -348,8 +279,6 @@ void ocp_nlp_sqp_opts_set_at_stage(void *config_, void *opts_, size_t stage, con
     return;
 
 }
-
-
 
 /************************************************
  * memory
@@ -507,8 +436,9 @@ static void ocp_nlp_sqp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dim
 }
 
 
-/* Helper functions */
-
+/************************************************
+ * Helper functions
+ ************************************************/
 
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
 static void ocp_nlp_sqp_dump_qp_in_to_file(ocp_qp_in *qp_in, int sqp_iter, int soc)
@@ -550,50 +480,6 @@ static void ocp_nlp_sqp_reset_timers(ocp_nlp_sqp_memory *mem)
     mem->time_sim_la = 0.0;
     mem->time_sim_ad = 0.0;
 }
-
-// static double get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_sqp_memory *mem)
-// {
-//     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-
-//     int N = dims->N;
-//     int *nx = dims->nx;
-//     int *ni = dims->ni;
-//     int i;
-//     int j;
-
-//     // compute current l1 infeasibility
-//     double tmp;
-//     struct blasfeo_dvec *tmp_fun_vec;
-//     double dyn_l1_infeasibility = 0.0;
-//     for(i=0; i<N; i++)
-//     {
-//         tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(nlp_mem->dynamics[i]);
-//         for(j=0; j<nx[i+1]; j++)
-//         {
-//             dyn_l1_infeasibility += fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
-//         }
-//     }
-
-//     double constraint_l1_infeasibility = 0.0;
-//     for(i=0; i<=N; i++)
-//     {
-//         tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
-//         // tmp_fun_vec = out->t+i;
-//         for (j=0; j<2*ni[i]; j++)
-//         {
-//             tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
-//             if (tmp > 0.0)
-//             {
-//                 constraint_l1_infeasibility += tmp;
-//             }
-//         }
-//     }
-//     return dyn_l1_infeasibility + constraint_l1_infeasibility;
-// }
-
-/************************************************
- * output functions
- ************************************************/
 
 /************************************************
  * termination criterion
@@ -679,298 +565,6 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
     return false;
 }
 
-// /************************************************
-//  * funnel functions
-//  ************************************************/
-// static void debug_output(ocp_nlp_opts *opts, char* message, int print_level)
-// {
-//     if (opts->print_level > print_level)
-//     {
-//         printf("%s", message); //debugging output
-//     }
-// }
-// static void debug_output_double(ocp_nlp_opts *opts, char* message, double value, int print_level)
-// {
-//     if (opts->print_level > print_level)
-//     {
-//         printf("%s: %f\n", message, value); //debugging output
-//     }
-// }
-
-// static void initialize_funnel_width(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double initial_infeasibility)
-// {
-//     mem->funnel_width = fmax(opts->funnel_initialization_upper_bound,
-//                             opts->funnel_initialization_increase_factor*initial_infeasibility);
-// }
-
-// static void initialize_funnel_penalty_parameter(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts)
-// {
-//     mem->funnel_penalty_parameter = opts->funnel_initial_penalty_parameter;
-// }
-
-// static void update_funnel_penalty_parameter(ocp_nlp_sqp_memory *mem,
-//                                             ocp_nlp_sqp_opts *opts,
-//                                             double pred_f, double pred_h)
-// {
-//     if (mem->funnel_penalty_parameter * pred_f + pred_h < opts->funnel_penalty_eta * pred_h)
-//     {
-//         mem->funnel_penalty_parameter = fmin(opts->funnel_penalty_contraction * mem->funnel_penalty_parameter,
-//                                              ((1-opts->funnel_penalty_eta) * pred_h) / (-pred_f));
-//     }
-//     // else: do not decrease penalty parameter
-// }
-
-// static void decrease_funnel(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double trial_infeasibility, double current_infeasibility)
-// {
-//     mem->funnel_width = (1-opts->funnel_kappa) * trial_infeasibility + opts->funnel_kappa * mem->funnel_width;
-// }
-
-// static bool is_iterate_inside_of_funnel(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double infeasibility)
-// {
-//     if (infeasibility <= mem->funnel_width)
-//     {
-//         return true;
-//     }
-//     else
-//     {
-//         return false;
-//     }
-// }
-
-// static bool is_funnel_sufficient_decrease_satisfied(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double infeasibility)
-// {
-//     if (infeasibility <= opts->funnel_sufficient_decrease_factor* mem->funnel_width)
-//     {
-//         return true;
-//     }
-//     else
-//     {
-//         return false;
-//     }
-// }
-
-// static bool is_switching_condition_satisfied(ocp_nlp_sqp_opts *opts, double pred_optimality, double step_size, double pred_infeasibility)
-// {
-//     // if (step_size * pred_optimality >= opts->funnel_fraction_switching_condition * pred_infeasibility * pred_infeasibility)
-//     if (step_size * pred_optimality >= opts->funnel_fraction_switching_condition * pred_infeasibility)
-//     {
-//         return true;
-//     }
-//     else
-//     {
-//         return false;
-//     }
-// }
-
-// static bool is_f_type_armijo_condition_satisfied(ocp_nlp_sqp_opts *opts,
-//                                                     double negative_ared,
-//                                                     double pred,
-//                                                     double alpha)
-// {
-//     if (negative_ared <= fmin(-opts->nlp_opts->eps_sufficient_descent * alpha * fmax(pred, 0) + 1e-18, 0))
-//     {
-//         return true;
-//     }
-//     else
-//     {
-//         return false;
-//     }
-// }
-
-// static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
-//                                                   ocp_nlp_sqp_opts *opts,
-//                                                   double pred, double ared, double alpha,
-//                                                   double current_infeasibility,
-//                                                   double trial_infeasibility,
-//                                                   double current_objective,
-//                                                   double trial_objective,
-//                                                   double current_merit,
-//                                                   double trial_merit,
-//                                                   double pred_merit)
-// {
-//     bool accept_step = false;
-//     debug_output_double(opts->nlp_opts, "current objective", current_objective, 2);
-//     debug_output_double(opts->nlp_opts, "current infeasibility", current_infeasibility, 2);
-//     debug_output_double(opts->nlp_opts, "trial objective", trial_objective, 2);
-//     debug_output_double(opts->nlp_opts, "trial infeasibility", trial_infeasibility, 2);
-//     debug_output_double(opts->nlp_opts, "pred", pred, 2);
-
-//     if(is_iterate_inside_of_funnel(mem, opts, trial_infeasibility))
-//     {
-//         debug_output(opts->nlp_opts, "Trial iterate is INSIDE of funnel\n", 1);
-//         if (!mem->funnel_penalty_mode)
-//         {
-//             debug_output(opts->nlp_opts, "Penalty Mode not active!\n", 1);
-//             if (is_switching_condition_satisfied(opts, pred, alpha, current_infeasibility))
-//             {
-//                 debug_output(opts->nlp_opts, "Switching condition IS satisfied!\n", 1);
-//                 if (is_f_type_armijo_condition_satisfied(opts, -ared, pred, alpha))
-//                 {
-//                     debug_output(opts->nlp_opts, "f-type step: Armijo condition satisfied\n", 1);
-//                     accept_step = true;
-//                     mem->funnel_iter_type = 'f';
-//                 }
-//                 else
-//                 {
-//                     debug_output(opts->nlp_opts, "f-type step: Armijo condition NOT satisfied\n", 1);
-//                 }
-
-//             }
-//             else if (is_funnel_sufficient_decrease_satisfied(mem, opts, trial_infeasibility))
-//             {
-//                 debug_output(opts->nlp_opts, "Switching condition is NOT satisfied!\n", 1);
-//                 debug_output(opts->nlp_opts, "h-type step: funnel suff. decrease satisfied!\n", 1);
-//                 accept_step = true;
-//                 mem->funnel_iter_type = 'h';
-//                 decrease_funnel(mem, opts, trial_infeasibility, current_infeasibility);
-//             }
-//             else
-//             {
-//                 debug_output(opts->nlp_opts, "Switching condition is NOT satisfied!\n", 1);
-//                 debug_output(opts->nlp_opts, "Entered penalty check!\n", 1);
-//                 //TODO move to function and test more
-//                 if (trial_merit <= current_merit + opts->nlp_opts->eps_sufficient_descent * alpha * pred_merit)
-//                 {
-//                     debug_output(opts->nlp_opts, "Penalty Function accepted\n", 1);
-//                     accept_step = true;
-//                     mem->funnel_iter_type = 'b';
-//                     mem->funnel_penalty_mode = true;
-//                 }
-//             }
-//         }
-//         else
-//         {
-//             debug_output(opts->nlp_opts, "Penalty mode active\n", 1);
-//             if (trial_merit <= current_merit + opts->nlp_opts->eps_sufficient_descent * alpha * pred_merit)
-//             {
-//                 debug_output(opts->nlp_opts, "p-type step: accepted iterate\n", 1);
-//                 accept_step = true;
-//                 mem->funnel_iter_type = 'p';
-
-//                 if (is_funnel_sufficient_decrease_satisfied(mem, opts, trial_infeasibility))
-//                 {
-//                     decrease_funnel(mem, opts, trial_infeasibility, current_infeasibility);
-//                     mem->funnel_penalty_mode = false;
-//                 }
-//             }
-//         }
-//     }
-//     else
-//     {
-//         debug_output(opts->nlp_opts, "Trial iterate is NOT INSIDE of funnel\n", 1);
-//     }
-//     return accept_step;
-// }
-
-// static int ocp_nlp_sqp_funnel_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
-//                 ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_workspace *work, ocp_nlp_sqp_opts *opts)
-// {
-//     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
-//     ocp_nlp_workspace *nlp_work = work->nlp_work;
-//     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-
-//     int N = dims->N;
-//     double pred = -nlp_mem->qp_cost_value;
-//     double pred_merit = 0.0; // Calculate this here
-//     double alpha = 1.0;
-//     double trial_cost;
-//     double trial_infeasibility = 0.0;
-//     double ared;
-//     bool accept_step;
-//     double current_infeasibility = mem->l1_infeasibility;
-//     double current_cost = nlp_mem->cost_value;
-//     double current_merit = mem->funnel_penalty_parameter*current_cost + current_infeasibility;
-
-//     // do the penalty parameter update here .... might be changed later
-//     update_funnel_penalty_parameter(mem, opts, pred, mem->l1_infeasibility);
-
-//     int i;
-
-//     while (true)
-//     {
-//         // Calculate trial iterate: trial_iterate = current_iterate + alpha * direction
-//         ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem,
-//                                      nlp_work, nlp_work->tmp_nlp_out, alpha);
-
-//         ///////////////////////////////////////////////////////////////////////
-//         // Evaluate cost function at trial iterate
-//         // set evaluation point to tmp_nlp_out
-//         ocp_nlp_set_primal_variable_pointers_in_submodules(config, dims, nlp_in, nlp_work->tmp_nlp_out, nlp_mem);
-//         // compute trial dynamics value
-// #if defined(ACADOS_WITH_OPENMP)
-//     #pragma omp parallel for
-// #endif
-//         for (i=0; i<N; i++)
-//         {
-//             // dynamics: Note has to be first, because cost_integration might be used.
-//             config->dynamics[i]->compute_fun(config->dynamics[i], dims->dynamics[i], nlp_in->dynamics[i],
-//                                             nlp_opts->dynamics[i], nlp_mem->dynamics[i], nlp_work->dynamics[i]);
-//         }
-//         // compute trial objective function value
-// #if defined(ACADOS_WITH_OPENMP)
-//     #pragma omp parallel for
-// #endif
-//         for (i=0; i<=N; i++)
-//         {
-//             // cost
-//             config->cost[i]->compute_fun(config->cost[i], dims->cost[i], nlp_in->cost[i], nlp_opts->cost[i],
-//                                         nlp_mem->cost[i], nlp_work->cost[i]);
-//         }
-// #if defined(ACADOS_WITH_OPENMP)
-//     #pragma omp parallel for
-// #endif
-//         for (i=0; i<=N; i++)
-//         {
-//             // constr
-//             config->constraints[i]->compute_fun(config->constraints[i], dims->constraints[i],
-//                                                 nlp_in->constraints[i], nlp_opts->constraints[i],
-//                                                 nlp_mem->constraints[i], nlp_work->constraints[i]);
-//         }
-//         // reset evaluation point to SQP iterate
-//         ocp_nlp_set_primal_variable_pointers_in_submodules(config, dims, nlp_in, nlp_out, nlp_mem);
-
-//         double *tmp_fun;
-//         // Calculate the trial objective and constraint violation
-//         trial_cost = 0.0;
-//         for(i=0; i<=N; i++)
-//         {
-//             tmp_fun = config->cost[i]->memory_get_fun_ptr(nlp_mem->cost[i]);
-//             trial_cost += *tmp_fun;
-//         }
-//         trial_infeasibility = get_l1_infeasibility(config, dims, mem);
-
-//         ///////////////////////////////////////////////////////////////////////
-//         // Evaluate merit function at trial point
-//         double trial_merit = mem->funnel_penalty_parameter*trial_cost + trial_infeasibility;
-//         pred_merit = mem->funnel_penalty_parameter * pred + current_infeasibility;
-//         ared = nlp_mem->cost_value - trial_cost;
-
-//         // Funnel globalization
-//         accept_step = is_trial_iterate_acceptable_to_funnel(mem, opts,
-//                                                             pred, ared,
-//                                                             alpha, current_infeasibility,
-//                                                             trial_infeasibility, current_cost,
-//                                                             trial_cost, current_merit, trial_merit,
-//                                                             pred_merit);
-
-//         if (accept_step)
-//         {
-//             mem->alpha = alpha;
-//             nlp_mem->cost_value = trial_cost;
-//             mem->l1_infeasibility = trial_infeasibility;
-//             return 1;
-//         }
-
-//         if (alpha < opts->nlp_opts->alpha_min)
-//         {
-//             printf("Linesearch: Step size gets too small. alpha = %e < alpha_min = %e Should enter penalty phase. \n", alpha, opts->nlp_opts->alpha_min);
-//             exit(1);
-//         }
-
-//         alpha *= opts->nlp_opts->alpha_reduction;
-
-//     }
-// }
 
 /************************************************
  * functions
@@ -1028,12 +622,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     double reg_param_memory = 0.0;
     // double funnel_width_memory = 0.0;
     // double funnel_penalty_param_memory = 1.0;//opts->funnel_initial_penalty_parameter;
-    // initialize_funnel_penalty_parameter(mem, opts);
-    // if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH)
-    // {
-    //     printf("Note: The funnel globalization is still under development.\n");
-    //     printf("If you encouter problems or bugs, please report to the acados developers!\n");
-    // }
 
     for (; sqp_iter <= opts->max_iter; sqp_iter++) // <= needed such that after last iteration KKT residuals are checked before max_iter is thrown.
     {
@@ -1233,17 +821,17 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // Calculate optimal QP objective (needed for globalization)
-        // if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH)
-        // {
-        //     nlp_mem->qp_cost_value = ocp_nlp_sqp_compute_qp_objective_value(dims, qp_in, qp_out, nlp_work, nlp_mem, opts);
-        // }
+        if (opts->eval_qp_objective)
+        {
+            nlp_mem->qp_cost_value = ocp_nlp_sqp_compute_qp_objective_value(dims, qp_in, qp_out, nlp_work, nlp_mem, opts);
+        }
 
         // Compute the step norm
         if (opts->tol_min_step_norm > 0.0 || nlp_opts->log_primal_step_norm)
         {
             mem->step_norm = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->qp_out);
             if (nlp_opts->log_primal_step_norm)
-                mem->primal_step_norm[sqp_iter] = nlp_mem->qp_cost_value;
+                mem->primal_step_norm[sqp_iter] = mem->step_norm;
         }
         /* end solve QP */
 
@@ -1254,39 +842,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         int globalization_success = 1;
         globalization_success = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, nlp_work, nlp_opts);
-//         else
-//         {
-//             bool do_line_search = true;
-//             if (nlp_opts->globalization->globalization_use_SOC && nlp_opts->globalization->globalization == MERIT_BACKTRACKING)
-//             {
-//                 do_line_search = ocp_nlp_soc_line_search(config, dims, nlp_in, nlp_out, opts, mem, work, sqp_iter);
-//                 if (mem->status == ACADOS_QP_FAILURE)
-//                 {
-// #if defined(ACADOS_WITH_OPENMP)
-//                     // restore number of threads
-//                     omp_set_num_threads(num_threads_bkp);
-// #endif
-//                     mem->time_tot = acados_toc(&timer0);
-//                     return mem->status;
-//                 }
-//             }
 
-//             if (do_line_search)
-//             {
-//                 int line_search_status;
-//                 line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter, &mem->alpha);
-//                 if (line_search_status == ACADOS_NAN_DETECTED)
-//                 {
-//                     mem->status = ACADOS_NAN_DETECTED;
-//                     return mem->status;
-//                 }
-//             }
-//             mem->time_glob += acados_toc(&timer1);
-//             mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
-
-//             // update variables
-//             ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, mem->alpha);
-//         }
         mem->time_glob += acados_toc(&timer1);
 
     }  // end SQP loop
@@ -1298,40 +854,40 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     return mem->status;
 }
 
-// double ocp_nlp_sqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-//                 ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem, ocp_nlp_sqp_opts *opts)
-// {
-//     // Compute the QP objective function value
-//     double qp_cost = 0.0;
-//     int i, nux, ns;
-//     int N = dims->N;
-//     // Sum over stages 0 to N
-//     for (i = 0; i <= N; i++)
-//     {
-//         nux = dims->nx[i] + dims->nu[i];
-//         ns = dims->ns[i];
-//         if (opts->funnel_type_switching_condition)
-//         {
-//             // Calculate 0.5 * d.T H d
-//             blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0,
-//                             0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
-//             qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
+double ocp_nlp_sqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
+                ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem, ocp_nlp_sqp_opts *opts)
+{
+    // Compute the QP objective function value
+    double qp_cost = 0.0;
+    int i, nux, ns;
+    int N = dims->N;
+    // Sum over stages 0 to N
+    for (i = 0; i <= N; i++)
+    {
+        nux = dims->nx[i] + dims->nu[i];
+        ns = dims->ns[i];
+        // if (opts->funnel_type_switching_condition)
+        // {
+        //     // Calculate 0.5 * d.T H d
+        //     blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0,
+        //                     0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
+        //     qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
 
-//             // slack QP objective value, compare to computation in cost modules;
-//             // tmp_nv = 2 * z + Z .* slack;
-//             blasfeo_dveccpsc(2*ns, 2.0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
-//             blasfeo_dvecmulacc(2*ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
-//             // qp_cost += .5 * (tmp_nv .* slack)
-//             qp_cost += 0.5 * blasfeo_ddot(2*ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux);
-//         }
-//         // Calculate g.T d
-//         qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
+        //     // slack QP objective value, compare to computation in cost modules;
+        //     // tmp_nv = 2 * z + Z .* slack;
+        //     blasfeo_dveccpsc(2*ns, 2.0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
+        //     blasfeo_dvecmulacc(2*ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
+        //     // qp_cost += .5 * (tmp_nv .* slack)
+        //     qp_cost += 0.5 * blasfeo_ddot(2*ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux);
+        // }
+        // Calculate g.T d
+        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
 
-//         // Calculate gradient of slacks
-//         qp_cost += blasfeo_ddot(2 * ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
-//     }
-//     return qp_cost;
-// }
+        // Calculate gradient of slacks
+        qp_cost += blasfeo_ddot(2 * ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
+    }
+    return qp_cost;
+}
 
 void ocp_nlp_sqp_memory_reset_qp_solver(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     void *opts_, void *mem_, void *work_)

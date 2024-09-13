@@ -607,6 +607,8 @@ void ocp_nlp_globalization_funnel_initialize_memory(ocp_nlp_config *config_,
                                                     ocp_nlp_memory *nlp_mem_,
                                                     ocp_nlp_opts *nlp_opts_)
 {
+    printf("Note: The funnel globalization is still under development.\n");
+    printf("If you encouter problems or bugs, please report to the acados developers!\n");
     ocp_nlp_globalization_funnel_opts *opts = nlp_opts_->globalization;
     ocp_nlp_globalization_funnel_memory *mem = nlp_mem_->globalization;
     mem->l1_infeasibility = ocp_nlp_get_l1_infeasibility(config_, dims_, nlp_mem_);
