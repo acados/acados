@@ -93,14 +93,11 @@ typedef struct
     double penalty_parameter;
     double alpha;
 } ocp_nlp_globalization_funnel_memory;
-
 //
-acados_size_t ocp_nlp_globalization_funnel_memory_calculate_size(void *config, void *dims, void *opts_);
+acados_size_t ocp_nlp_globalization_funnel_memory_calculate_size(void *config, void *dims);
 //
-void *ocp_nlp_globalization_funnel_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
+void *ocp_nlp_globalization_funnel_memory_assign(void *config, void *dims, void *raw_memory);
 //
-
-
 /************************************************
  * functions
  ************************************************/
@@ -159,10 +156,16 @@ void ocp_nlp_globalization_funnel_print_iteration(double objective_value,
                                                 double complementarity,
                                                 double reg_param,
                                                 int qp_status,
-                                                int qp_iter,ocp_nlp_opts* opts,
+                                                int qp_iter,
+                                                ocp_nlp_opts* opts,
                                                 ocp_nlp_globalization_funnel_memory* mem);
 //
 int ocp_nlp_globalization_funnel_needs_objective_value();
+//
+void ocp_nlp_globalization_funnel_initialize_memory(ocp_nlp_config *config_,
+                                                    ocp_nlp_dims *dims_,
+                                                    ocp_nlp_memory *nlp_mem_,
+                                                    ocp_nlp_opts *nlp_opts_);
 //
 void ocp_nlp_globalization_funnel_config_initialize_default(ocp_nlp_globalization_config *config);
 

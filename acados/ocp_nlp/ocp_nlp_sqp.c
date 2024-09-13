@@ -1009,7 +1009,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     int qp_status = 0;
     int qp_iter = 0;
     mem->alpha = 0.0;
-    // mem->funnel_iter_type = '-';
     mem->status = ACADOS_SUCCESS;
 
 #if defined(ACADOS_WITH_OPENMP)
@@ -1070,17 +1069,13 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // compute nlp residuals
             ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
             ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
-
-            // if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH && sqp_iter == 0)
-            // {
-            //     mem->l1_infeasibility = get_l1_infeasibility(config, dims, mem);
-            // }
         }
 
-        // // initialize funnel if FUNNEL_L1PEN_LINESEARCH used
-        // if (sqp_iter == 0 && nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH){
-        //     initialize_funnel_width(mem, opts, mem->l1_infeasibility);
-        // }
+        // Initialize the memory for different globalization strategies
+        if (sqp_iter == 0)
+        {
+            config->globalization->initialize_memory(config, dims, nlp_mem, nlp_opts);
+        }
         // funnel_width_memory = mem->funnel_width;
         // funnel_penalty_param_memory = mem->funnel_penalty_parameter;
 
@@ -1108,7 +1103,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                                    nlp_opts,
                                                    nlp_mem->globalization);
         }
-        // reg_param_memory = nlp_opts->levenberg_marquardt;
+        reg_param_memory = nlp_opts->levenberg_marquardt;
 
         // regularize Hessian
         // NOTE: this is done before termination, such that we can get the QP at the stationary point that is actually solved, if we exit with success.

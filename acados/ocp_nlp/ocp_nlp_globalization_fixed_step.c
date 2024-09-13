@@ -110,7 +110,7 @@ void *ocp_nlp_globalization_fixed_step_opts_assign(void *config_, void *dims_, v
  * memory
  ************************************************/
 
-acados_size_t ocp_nlp_globalization_fixed_step_memory_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_nlp_globalization_fixed_step_memory_calculate_size(void *config_, void *dims_)
 {
     acados_size_t size = 0;
 
@@ -119,11 +119,10 @@ acados_size_t ocp_nlp_globalization_fixed_step_memory_calculate_size(void *confi
     return size;
 }
 
-void *ocp_nlp_globalization_fixed_step_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
+void *ocp_nlp_globalization_fixed_step_memory_assign(void *config_, void *dims_, void *raw_memory)
 {
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
-    ocp_nlp_globalization_fixed_step_opts *opts = opts_;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -135,7 +134,7 @@ void *ocp_nlp_globalization_fixed_step_memory_assign(void *config_, void *dims_,
 
     align_char_to(8, &c_ptr);
 
-    assert((char *) raw_memory + ocp_nlp_globalization_fixed_step_memory_calculate_size(config, dims, opts) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_globalization_fixed_step_memory_calculate_size(config, dims) >= c_ptr);
 
     return mem;
 }
@@ -227,6 +226,13 @@ int ocp_nlp_globalization_fixed_step_needs_objective_value()
     return 0;
 }
 
+void ocp_nlp_globalization_fixed_step_initialize_memory(ocp_nlp_config *config_,
+                                                    ocp_nlp_dims *dims_,
+                                                    ocp_nlp_memory *nlp_mem_,
+                                                    ocp_nlp_opts *nlp_opts_)
+{
+}
+
 void ocp_nlp_globalization_fixed_step_config_initialize_default(ocp_nlp_globalization_config *config)
 {
     // opts
@@ -234,6 +240,9 @@ void ocp_nlp_globalization_fixed_step_config_initialize_default(ocp_nlp_globaliz
     config->opts_assign = &ocp_nlp_globalization_fixed_step_opts_assign;
     config->opts_initialize_default = &ocp_nlp_globalization_fixed_step_opts_initialize_default;
     config->opts_set = &ocp_nlp_globalization_fixed_step_opts_set;
+    // memory
+    config->memory_calculate_size = &ocp_nlp_globalization_fixed_step_memory_calculate_size;
+    config->memory_assign = &ocp_nlp_globalization_fixed_step_memory_assign;
     // functions
     config->find_acceptable_iterate = &ocp_nlp_globalization_fixed_step_find_acceptable_iterate;
     config->print_iteration_header = &ocp_nlp_globalization_fixed_step_print_iteration_header;

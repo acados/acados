@@ -1573,6 +1573,11 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     c_ptr += config->regularize->memory_calculate_size(config->regularize, dims->regularize,
                                                        opts->regularize);
 
+    // globalization
+    mem->globalization = config->globalization->memory_assign(config->globalization, dims, c_ptr);
+    c_ptr += config->globalization->memory_calculate_size(config->globalization, dims);
+    // ->memory_calculate_size(config->globalization, dims);
+
     // dynamics
     for (int i = 0; i < N; i++)
     {

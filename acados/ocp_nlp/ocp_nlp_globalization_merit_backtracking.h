@@ -81,9 +81,9 @@ typedef struct
 } ocp_nlp_globalization_merit_backtracking_memory;
 
 //
-acados_size_t ocp_nlp_globalization_merit_backtracking_memory_calculate_size(void *config, void *dims, void *opts_);
+acados_size_t ocp_nlp_globalization_merit_backtracking_memory_calculate_size(void *config, void *dims);
 //
-void *ocp_nlp_globalization_merit_backtracking_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
+void *ocp_nlp_globalization_merit_backtracking_memory_assign(void *config, void *dims, void *raw_memory);
 //
 
 /************************************************
@@ -142,6 +142,11 @@ void ocp_nlp_globalization_merit_backtracking_print_iteration(double objective_v
                                                             ocp_nlp_globalization_merit_backtracking_memory* mem);
 //
 int ocp_nlp_globalization_merit_backtracking_needs_objective_value();
+//
+void ocp_nlp_globalization_merit_backtracking_initialize_memory(ocp_nlp_config *config_,
+                                                    ocp_nlp_dims *dims_,
+                                                    ocp_nlp_memory *nlp_mem_,
+                                                    ocp_nlp_opts *nlp_opts_);
 //
 void ocp_nlp_globalization_merit_backtracking_config_initialize_default(ocp_nlp_globalization_config *config);
 

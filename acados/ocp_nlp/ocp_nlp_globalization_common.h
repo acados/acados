@@ -65,6 +65,9 @@ typedef struct
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *opts);
     void (*opts_set)(void *config, void *opts, const char *field, void* value);
+    /* memory */
+    acados_size_t (*memory_calculate_size)(void *config, void *dims);
+    void *(*memory_assign)(void *config, void *dims, void *raw_memory);
     /* functions */
     int (*find_acceptable_iterate)(void *nlp_config, void *nlp_dims, void *nlp_in, void *nlp_out, void *nlp_mem, void *nlp_work, void *nlp_opts);
     // TODO: specify inputs below!
@@ -81,6 +84,11 @@ typedef struct
                             void *globalization_opts,
                             void* globalization_mem);
     int (*needs_objective_value)();
+    void (*initialize_memory)(void *config_,
+                            void *dims_,
+                            void *nlp_mem_,
+                            void *nlp_opts_);
+                
 } ocp_nlp_globalization_config;
 
 //

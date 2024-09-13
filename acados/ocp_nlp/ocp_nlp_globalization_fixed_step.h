@@ -77,9 +77,9 @@ typedef struct
 } ocp_nlp_globalization_fixed_step_memory;
 
 //
-acados_size_t ocp_nlp_globalization_fixed_step_memory_calculate_size(void *config, void *dims, void *opts_);
+acados_size_t ocp_nlp_globalization_fixed_step_memory_calculate_size(void *config, void *dims);
 //
-void *ocp_nlp_globalization_fixed_step_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
+void *ocp_nlp_globalization_fixed_step_memory_assign(void *config, void *dims, void *raw_memory);
 //
 
 /************************************************
@@ -103,6 +103,11 @@ void ocp_nlp_globalization_fixed_step_print_iteration(double objective_value,
                                                 ocp_nlp_globalization_fixed_step_memory* mem);
 //
 int ocp_nlp_globalization_fixed_step_needs_objective_value();
+//
+void ocp_nlp_globalization_fixed_step_initialize_memory(ocp_nlp_config *config_,
+                                                    ocp_nlp_dims *dims_,
+                                                    ocp_nlp_memory *nlp_mem_,
+                                                    ocp_nlp_opts *nlp_opts_);
 //
 void ocp_nlp_globalization_fixed_step_config_initialize_default(ocp_nlp_globalization_config *config);
 

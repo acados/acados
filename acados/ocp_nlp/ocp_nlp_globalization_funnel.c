@@ -189,7 +189,7 @@ void *ocp_nlp_globalization_funnel_opts_assign(void *config_, void *dims_, void 
  * memory
  ************************************************/
 
-acados_size_t ocp_nlp_globalization_funnel_memory_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_nlp_globalization_funnel_memory_calculate_size(void *config_, void *dims_)
 {
     acados_size_t size = 0;
 
@@ -198,11 +198,10 @@ acados_size_t ocp_nlp_globalization_funnel_memory_calculate_size(void *config_, 
     return size;
 }
 
-void *ocp_nlp_globalization_funnel_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
+void *ocp_nlp_globalization_funnel_memory_assign(void *config_, void *dims_, void *raw_memory)
 {
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
-    ocp_nlp_globalization_funnel_opts *opts = opts_;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -214,7 +213,7 @@ void *ocp_nlp_globalization_funnel_memory_assign(void *config_, void *dims_, voi
 
     align_char_to(8, &c_ptr);
 
-    assert((char *) raw_memory + ocp_nlp_globalization_funnel_memory_calculate_size(config, dims, opts) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_globalization_funnel_memory_calculate_size(config, dims) >= c_ptr);
 
     return mem;
 }
@@ -602,6 +601,21 @@ int ocp_nlp_globalization_funnel_needs_objective_value()
     return 1;
 }
 
+void ocp_nlp_globalization_funnel_initialize_memory(ocp_nlp_config *config_,
+                                                    ocp_nlp_dims *dims_,
+                                                    ocp_nlp_memory *nlp_mem_,
+                                                    ocp_nlp_opts *nlp_opts_)
+{
+    ocp_nlp_globalization_funnel_opts *opts = nlp_opts_->globalization;
+    ocp_nlp_globalization_funnel_memory *mem = nlp_mem_->globalization;
+    mem->step_norm = 1.0;
+    mem->l1_infeasibility = ocp_nlp_get_l1_infeasibility(config_, dims_, nlp_mem_);
+    initialize_funnel_width(mem, opts, mem->l1_infeasibility);
+    mem->funnel_iter_type = '-';
+    initialize_funnel_penalty_parameter(mem, opts);
+    mem->alpha = 1.0;
+}
+
 void ocp_nlp_globalization_funnel_config_initialize_default(ocp_nlp_globalization_config *config)
 {
     // opts
@@ -609,9 +623,13 @@ void ocp_nlp_globalization_funnel_config_initialize_default(ocp_nlp_globalizatio
     config->opts_assign = &ocp_nlp_globalization_funnel_opts_assign;
     config->opts_initialize_default = &ocp_nlp_globalization_funnel_opts_initialize_default;
     config->opts_set = &ocp_nlp_globalization_funnel_opts_set;
+    // memory
+    config->memory_calculate_size = &ocp_nlp_globalization_funnel_memory_calculate_size;
+    config->memory_assign = &ocp_nlp_globalization_funnel_memory_assign;
     // functions
     config->find_acceptable_iterate = &ocp_nlp_globalization_funnel_find_acceptable_iterate;
     config->print_iteration_header = &ocp_nlp_globalization_funnel_print_iteration_header;
     config->print_iteration = &ocp_nlp_globalization_funnel_print_iteration;
     config->needs_objective_value = &ocp_nlp_globalization_funnel_needs_objective_value;
+    config->initialize_memory = &ocp_nlp_globalization_funnel_initialize_memory;
 }
