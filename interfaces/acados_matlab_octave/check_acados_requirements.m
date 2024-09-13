@@ -36,7 +36,9 @@ function check_acados_requirements(varargin)
             error('Please set up CasADi yourself and try again.');
         end
         % download CasADi
-        CasADi_version = '3.5.5'; % TODO: update automatic download to later CasADi version.
+        CasADi_version = '3.6.6'; % TODO: update automatic download to later CasADi version.
+        CasADi_version_numeric = str2num(replace(CasADi_version, '.', ''));
+
         url = strcat('https://github.com/casadi/casadi/releases/download/',...
                 CasADi_version, '/');
         external_folder = fullfile(acados_dir, 'external');
@@ -51,27 +53,46 @@ function check_acados_requirements(varargin)
         end
 
         if ismac
-            if ~verLessThan('matlab', '8.5')
-                filename = strcat('casadi-osx-matlabR2015a-v', CasADi_version, '.tar.gz');
-            elseif ~verLessThan('matlab', '8.4')
-                filename = strcat('casadi-osx-matlabR2014b-v', CasADi_version, '.tar.gz');
-            elseif ~verLessThan('matlab', '8.3')
-                filename = strcat('casadi-osx-matlabR2014a-v', CasADi_version, '.tar.gz');
+        CasADi_version = '3.5.5'; % TODO: update automatic download to later CasADi version.
+            if CasADi_version_numeric < 366
+                if ~verLessThan('matlab', '8.5')
+                    filename = strcat('casadi-osx-matlabR2015a-v', CasADi_version, '.tar.gz');
+                elseif ~verLessThan('matlab', '8.4')
+                    filename = strcat('casadi-osx-matlabR2014b-v', CasADi_version, '.tar.gz');
+                elseif ~verLessThan('matlab', '8.3')
+                    filename = strcat('casadi-osx-matlabR2014a-v', CasADi_version, '.tar.gz');
+                end
+            else
+                if ~verLessThan('matlab', '9.5')
+                    filename = strcat('casadi-', CasADi_version, '-osx64-matlab2018b.zip');
+                end
             end
         elseif isunix
-            if verLessThan('matlab', '8.4')
-                filename = strcat('casadi-linux-matlabR2014a-v', CasADi_version, '.tar.gz');
-            else % R2014b or later
-                filename = strcat('casadi-linux-matlabR2014b-v', CasADi_version, '.tar.gz');
+            if CasADi_version_numeric < 366
+                if verLessThan('matlab', '8.4')
+                    filename = strcat('casadi-linux-matlabR2014a-v', CasADi_version, '.tar.gz');
+                else % R2014b or later
+                    filename = strcat('casadi-linux-matlabR2014b-v', CasADi_version, '.tar.gz');
+                end
+            else
+                if ~verLessThan('matlab', '9.5')
+                    filename = strcat('casadi-', CasADi_version, '-linux64-matlab2018b.zip');
+                end
             end
-
         elseif ispc
-            if ~verLessThan('matlab', '9.0')
-                filename = strcat('casadi-windows-matlabR2016a-v', CasADi_version,'.zip');
-            elseif ~verLessThan('matlab', '8.4')
-                filename = strcat('casadi-windows-matlabR2014b-v', CasADi_version,'.zip');
-            elseif ~verLessThan('matlab', '8.3')
-                filename = strcat('casadi-windows-matlabR2014a-v', CasADi_version,'.zip');
+            if CasADi_version_numeric < 366
+
+                if ~verLessThan('matlab', '9.0')
+                    filename = strcat('casadi-windows-matlabR2016a-v', CasADi_version,'.zip');
+                elseif ~verLessThan('matlab', '8.4')
+                    filename = strcat('casadi-windows-matlabR2014b-v', CasADi_version,'.zip');
+                elseif ~verLessThan('matlab', '8.3')
+                    filename = strcat('casadi-windows-matlabR2014a-v', CasADi_version,'.zip');
+                end
+            else
+                if ~verLessThan('matlab', '9.5')
+                    filename = strcat('casadi-', CasADi_version, '-windows64-matlab2018b.zip');
+                end
             end
 
         end
