@@ -82,7 +82,7 @@ function state_trajectories = run_example_ocp(lut, use_p_global)
     state_trajectories = [];  % only for testing purposes
 
     if use_p_global
-        ocp_solver.set_p_global(p_global_values);
+        ocp_solver.set_p_global_and_precompute_dependencies(p_global_values);
     end
 
     for i = 1:20
@@ -117,7 +117,7 @@ function state_trajectories = run_example_mocp(lut, use_p_global)
     state_trajectories = []; % only for testing purposes
 
     if use_p_global
-        mocp_solver.set_p_global(p_global_values);
+        mocp_solver.set_p_global_and_precompute_dependencies(p_global_values);
     end
 
     for i = 1:20

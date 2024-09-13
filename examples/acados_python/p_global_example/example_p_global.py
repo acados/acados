@@ -217,7 +217,7 @@ def main(use_cython=False, lut=True, use_p_global=True):
     # call SQP_RTI solver in the loop:
     residuals = []
 
-    ocp_solver.set_p_global(p_global_values)
+    ocp_solver.set_p_global_and_precompute_dependencies(p_global_values)
 
     for i in range(20):
         status = ocp_solver.solve()
@@ -274,7 +274,7 @@ def main_mocp(lut=True, use_p_global=True):
     # call SQP_RTI solver in the loop:
     residuals = []
 
-    ocp_solver.set_p_global(p_global_values)
+    ocp_solver.set_p_global_and_precompute_dependencies(p_global_values)
 
     for i in range(20):
         status = ocp_solver.solve()

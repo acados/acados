@@ -272,9 +272,9 @@ classdef AcadosOcpSolver < handle
             obj.t_ocp.set_params_sparse(varargin{:});
         end
 
-        function set_p_global(obj, val)
+        function set_p_global_and_precompute_dependencies(obj, val)
             % usage:
-            % ocp.set_p_global(val)
+            % ocp.set_p_global_and_precompute_dependencies(val)
             % Sets p_global to val and precomputes all parts of the CasADi graphs of all other functions that only depend on p_global.
             obj.t_ocp.set('p_global', val);
         end
