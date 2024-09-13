@@ -36,12 +36,14 @@ function check_acados_requirements(varargin)
             error('Please set up CasADi yourself and try again.');
         end
         % download CasADi
-        CasADi_version = '3.6.6'; % TODO: update automatic download to later CasADi version.
-        CasADi_version_numeric = str2num(replace(CasADi_version, '.', ''));
+        CasADi_version = '3.6.6'; % NOTE: this needs to be set/updated manually
+        later_than_36 = true; % NOTE: this needs to be set/updated manually
 
         url = strcat('https://github.com/casadi/casadi/releases/download/',...
                 CasADi_version, '/');
         external_folder = fullfile(acados_dir, 'external');
+        filename = [];
+
         if ~is_octave
             destination = fullfile(external_folder, 'casadi-matlab');
         else
@@ -53,8 +55,7 @@ function check_acados_requirements(varargin)
         end
 
         if ismac
-        CasADi_version = '3.5.5'; % TODO: update automatic download to later CasADi version.
-            if CasADi_version_numeric < 366
+            if ~later_than_36
                 if ~verLessThan('matlab', '8.5')
                     filename = strcat('casadi-osx-matlabR2015a-v', CasADi_version, '.tar.gz');
                 elseif ~verLessThan('matlab', '8.4')
@@ -68,7 +69,7 @@ function check_acados_requirements(varargin)
                 end
             end
         elseif isunix
-            if CasADi_version_numeric < 366
+            if ~later_than_36
                 if verLessThan('matlab', '8.4')
                     filename = strcat('casadi-linux-matlabR2014a-v', CasADi_version, '.tar.gz');
                 else % R2014b or later
@@ -80,8 +81,7 @@ function check_acados_requirements(varargin)
                 end
             end
         elseif ispc
-            if CasADi_version_numeric < 366
-
+            if ~later_than_36
                 if ~verLessThan('matlab', '9.0')
                     filename = strcat('casadi-windows-matlabR2016a-v', CasADi_version,'.zip');
                 elseif ~verLessThan('matlab', '8.4')
@@ -95,6 +95,11 @@ function check_acados_requirements(varargin)
                 end
             end
 
+        end
+
+        if isempty(filename)
+            error(['Sorry, we could not find a compatible version of CasADi', CasADi_version, ' for your system, please try manually.\n',...
+                   'Instructions can be found on https://web.casadi.org/get/\n']);
         end
 
         try
@@ -111,12 +116,12 @@ function check_acados_requirements(varargin)
 
             addpath(destination)
         catch
-            error(['Sorry, we could not set up CasADi for your system, please try manually\n.',...
+            error(['Sorry, we could not set up CasADi for your system, please try manually.\n',...
                 'Instructions can be found on https://web.casadi.org/get/\n',...
                 'We recommend using CasADi version', CasADi_version]);
         end
         if ~is_casadi_available
-                error(['Sorry, we could not set up CasADi for your system, please try manually\n.',...
+                error(['Sorry, we could not set up CasADi for your system, please try manually.\n',...
                     'Instructions can be found on https://web.casadi.org/get/\n',...
                     'We recommend using CasADi version', CasADi_version]);
         end
