@@ -1009,6 +1009,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     int qp_status = 0;
     int qp_iter = 0;
     mem->alpha = 0.0;
+    mem->step_norm = 0.0;
     mem->status = ACADOS_SUCCESS;
 
 #if defined(ACADOS_WITH_OPENMP)
@@ -1097,6 +1098,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                                    nlp_res->inf_norm_res_ineq,
                                                    nlp_res->inf_norm_res_stat,
                                                    nlp_res->inf_norm_res_comp,
+                                                   mem->step_norm,
                                                    reg_param_memory,
                                                    qp_status,
                                                    qp_iter,
@@ -1123,7 +1125,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->time_tot = acados_toc(&timer0);
             return mem->status;
         }
-
 
         /* solve QP */
         // (typically) no warm start at first iteration

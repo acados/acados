@@ -571,6 +571,7 @@ void ocp_nlp_globalization_funnel_print_iteration(double objective_value,
                                                 double infeas_ineq,
                                                 double stationarity,
                                                 double complementarity,
+                                                double step_norm,
                                                 double reg_param,
                                                 int qp_status,
                                                 int qp_iter,ocp_nlp_opts* opts,
@@ -587,7 +588,7 @@ void ocp_nlp_globalization_funnel_print_iteration(double objective_value,
         stationarity,
         complementarity,
         mem->alpha,
-        mem->step_norm,
+        step_norm,
         reg_param,
         mem->funnel_width,
         mem->penalty_parameter,
@@ -608,7 +609,6 @@ void ocp_nlp_globalization_funnel_initialize_memory(ocp_nlp_config *config_,
 {
     ocp_nlp_globalization_funnel_opts *opts = nlp_opts_->globalization;
     ocp_nlp_globalization_funnel_memory *mem = nlp_mem_->globalization;
-    mem->step_norm = 1.0;
     mem->l1_infeasibility = ocp_nlp_get_l1_infeasibility(config_, dims_, nlp_mem_);
     initialize_funnel_width(mem, opts, mem->l1_infeasibility);
     mem->funnel_iter_type = '-';

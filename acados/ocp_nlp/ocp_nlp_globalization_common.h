@@ -78,6 +78,7 @@ typedef struct
                             double infeas_ineq,
                             double stationarity,
                             double complementarity,
+                            double step_norm,
                             double reg_param,
                             int qp_status,
                             int qp_iter,

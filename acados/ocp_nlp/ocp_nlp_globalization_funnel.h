@@ -85,13 +85,13 @@ void ocp_nlp_globalization_funnel_opts_set(void *config, void *opts, const char 
 
 typedef struct
 {
-    double step_norm;
     double funnel_width;
     char funnel_iter_type;
     bool funnel_penalty_mode;
     double l1_infeasibility;
     double penalty_parameter;
     double alpha;
+
 } ocp_nlp_globalization_funnel_memory;
 //
 acados_size_t ocp_nlp_globalization_funnel_memory_calculate_size(void *config, void *dims);
@@ -154,6 +154,7 @@ void ocp_nlp_globalization_funnel_print_iteration(double objective_value,
                                                 double infeas_ineq,
                                                 double stationarity,
                                                 double complementarity,
+                                                double step_norm,
                                                 double reg_param,
                                                 int qp_status,
                                                 int qp_iter,

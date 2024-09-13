@@ -135,6 +135,7 @@ void ocp_nlp_globalization_merit_backtracking_print_iteration(double objective_v
                                                             double infeas_ineq,
                                                             double stationarity,
                                                             double complementarity,
+                                                            double step_norm,
                                                             double reg_param,
                                                             int qp_status,
                                                             int qp_iter,

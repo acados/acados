@@ -153,36 +153,6 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
     ocp_nlp_workspace *nlp_work = nlp_work_;
     ocp_nlp_opts *nlp_opts = nlp_opts_;
     
-    // int sqp_iter = 1;
-    // bool do_line_search = true;
-//     if (nlp_opts->globalization->globalization_use_SOC)
-//     {
-//         do_line_search = ocp_nlp_soc_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter);
-// //         if (nlp_mem->status == ACADOS_QP_FAILURE)
-// //         {
-// // #if defined(ACADOS_WITH_OPENMP)
-// //             // restore number of threads
-// //             omp_set_num_threads(num_threads_bkp);
-// // #endif
-// //             // mem->time_tot = acados_toc(&timer0);
-// //             return mem->status;
-// //         }
-//     }
-
-    // if (do_line_search)
-    // {
-    //     int line_search_status;
-    //     line_search_status = ocp_nlp_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter, &mem->alpha);
-    //     if (line_search_status == ACADOS_NAN_DETECTED)
-    //     {
-    //         mem->status = ACADOS_NAN_DETECTED;
-    //         return mem->status;
-    //     }
-    // }
-    // mem->time_glob += acados_toc(&timer1);
-    // nlp_mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
-
-    // update variables
     ocp_nlp_update_variables_sqp(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, nlp_opts->step_length);
 }
 
@@ -202,6 +172,7 @@ void ocp_nlp_globalization_fixed_step_print_iteration(double objective_value,
                                                 double infeas_ineq,
                                                 double stationarity,
                                                 double complementarity,
+                                                double step_norm,
                                                 double reg_param,
                                                 int qp_status,
                                                 int qp_iter,
