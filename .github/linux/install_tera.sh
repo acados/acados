@@ -29,14 +29,13 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-python3 --version;
+# install tera
+TERA_RENDERER_VERSION='0.0.34';
+_TERA_RENDERER_GITHUB_RELEASES="https://github.com/acados/tera_renderer/releases/download/v${TERA_RENDERER_VERSION}/";
+TERA_RENDERER_URL="${_TERA_RENDERER_GITHUB_RELEASES}/t_renderer-v${TERA_RENDERER_VERSION}-linux";
 
-# install virtualenv
-sudo pip3 install virtualenv;
-# create virtualenv
-virtualenv --python=python3 acadosenv;
-# source virtualenv
-source acadosenv/bin/activate;
-which python;
-
-pip install interfaces/acados_template
+mkdir -p bin;
+pushd bin;
+	wget -O t_renderer "${TERA_RENDERER_URL}";
+	chmod +x t_renderer
+popd;

@@ -22,7 +22,7 @@ env:
   ACADOS_WITH_OPENMP: ON
 
 jobs:
-  full_build:
+  ext_dep_off_test:
     runs-on: ubuntu-20.04
 
     steps:
