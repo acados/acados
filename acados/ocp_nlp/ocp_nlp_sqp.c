@@ -655,8 +655,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
      ************************************************/
     int sqp_iter = 0;
     double reg_param_memory = 0.0;
-    // double funnel_width_memory = 0.0;
-    // double funnel_penalty_param_memory = 1.0;//opts->funnel_initial_penalty_parameter;
     for (; sqp_iter <= opts->max_iter; sqp_iter++) // <= needed such that after last iteration KKT residuals are checked before max_iter is thrown.
     {
         // We always evaluate the residuals until the last iteration
@@ -699,9 +697,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             config->globalization->initialize_memory(config, dims, nlp_mem, nlp_opts);
         }
-        printf("Before loop\n");
-        // funnel_width_memory = mem->funnel_width;
-        // funnel_penalty_param_memory = mem->funnel_penalty_parameter;
 
         // save statistics
         if (sqp_iter < mem->stat_m)
