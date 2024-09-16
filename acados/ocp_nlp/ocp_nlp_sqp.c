@@ -122,8 +122,6 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->tol_unbounded = -1e10;
     opts->tol_min_step_norm = 1e-12;
 
-    opts->ext_qp_res = 0;
-
     opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
     opts->rti_phase = 0;
@@ -230,11 +228,11 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
             double* tol_min_step_norm = (double *) value;
             opts->tol_min_step_norm = *tol_min_step_norm;
         }
-        else if (!strcmp(field, "ext_qp_res"))
-        {
-            int* ext_qp_res = (int *) value;
-            opts->ext_qp_res = *ext_qp_res;
-        }
+        // else if (!strcmp(field, "ext_qp_res"))
+        // {
+        //     int* ext_qp_res = (int *) value;
+        //     opts->ext_qp_res = *ext_qp_res;
+        // }
         else if (!strcmp(field, "warm_start_first_qp"))
         {
             bool* warm_start_first_qp = (bool *) value;
@@ -324,7 +322,7 @@ acados_size_t ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void
     // stat
     int stat_m = opts->max_iter+1;
     int stat_n = 7;
-    if (opts->ext_qp_res)
+    if (nlp_opts->ext_qp_res)
         stat_n += 4;
     size += stat_n*stat_m*sizeof(double);
 
@@ -377,7 +375,7 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     mem->stat = (double *) c_ptr;
     mem->stat_m = opts->max_iter+1;
     mem->stat_n = 7;
-    if (opts->ext_qp_res)
+    if (nlp_opts->ext_qp_res)
         mem->stat_n += 4;
     c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
 
@@ -409,7 +407,7 @@ acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, v
     // nlp
     size += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts);
 
-    if (opts->ext_qp_res)
+    if (nlp_opts->ext_qp_res)
     {
         // qp res
         size += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
@@ -437,14 +435,14 @@ static void ocp_nlp_sqp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dim
     work->nlp_work = ocp_nlp_workspace_assign(config, dims, nlp_opts, nlp_mem, c_ptr);
     c_ptr += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts);
 
-    if (opts->ext_qp_res)
+    if (nlp_opts->ext_qp_res)
     {
         // qp res
-        work->qp_res = ocp_qp_res_assign(dims->qp_solver->orig_dims, c_ptr);
+        work->nlp_work->qp_res = ocp_qp_res_assign(dims->qp_solver->orig_dims, c_ptr);
         c_ptr += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
 
         // qp res ws
-        work->qp_res_ws = ocp_qp_res_workspace_assign(dims->qp_solver->orig_dims, c_ptr);
+        work->nlp_work->qp_res_ws = ocp_qp_res_workspace_assign(dims->qp_solver->orig_dims, c_ptr);
         c_ptr += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
     }
 
@@ -739,7 +737,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
 #endif
-            mem->sqp_iter = sqp_iter;
+            nlp_mem->iter = sqp_iter;
             mem->time_tot = acados_toc(&timer0);
             return mem->nlp_mem->status;
         }
@@ -808,11 +806,11 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // compute external QP residuals (for debugging)
-        if (opts->ext_qp_res)
+        if (nlp_opts->ext_qp_res)
         {
-            ocp_qp_res_compute(qp_in, qp_out, work->qp_res, work->qp_res_ws);
+            ocp_qp_res_compute(qp_in, qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
             if (sqp_iter+1 < mem->stat_m)
-                ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+7));
+                ocp_qp_res_compute_nrm_inf(nlp_work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+7));
         }
 
         // exit conditions on QP status
@@ -844,7 +842,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             }
 
             mem->nlp_mem->status = ACADOS_QP_FAILURE;
-            mem->sqp_iter = sqp_iter;
+            nlp_mem->iter = sqp_iter;
             mem->time_tot = acados_toc(&timer0);
 
             return mem->nlp_mem->status;
@@ -1017,7 +1015,7 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
     if (!strcmp("sqp_iter", field) || !strcmp("nlp_iter", field))
     {
         int *value = return_value_;
-        *value = mem->sqp_iter;
+        *value = mem->nlp_mem->iter;
     }
     else if (!strcmp("status", field))
     {
@@ -1104,7 +1102,7 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
         else
         {
             double *value = return_value_;
-            for (int ii=0; ii<mem->sqp_iter; ii++)
+            for (int ii=0; ii<mem->nlp_mem->iter; ii++)
             {
                 value[ii] = mem->primal_step_norm[ii];
             }
@@ -1113,7 +1111,7 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
 
     else if (!strcmp("statistics", field))
     {
-        int n_row = mem->stat_m<mem->sqp_iter+1 ? mem->stat_m : mem->sqp_iter+1;
+        int n_row = mem->stat_m<mem->nlp_mem->iter+1 ? mem->stat_m : mem->nlp_mem->iter+1;
         double *value = return_value_;
         for (int ii=0; ii<n_row; ii++)
         {

@@ -285,16 +285,10 @@ typedef struct ocp_nlp_opts
     double adaptive_levenberg_marquardt_mu_min;
     double adaptive_levenberg_marquardt_mu0;
 
-    // TODO: move to separate struct?
-    // ocp_nlp_globalization_t globalization;
-    // int full_step_dual;
-    // int line_search_use_sufficient_descent;
-    // int globalization_use_SOC;
-    // double alpha_min;
-    // double alpha_reduction;
-    // double eps_sufficient_descent;
     int with_solution_sens_wrt_params;
     int with_value_sens_wrt_params;
+
+    int ext_qp_res;
 
 } ocp_nlp_opts;
 
@@ -372,6 +366,7 @@ typedef struct ocp_nlp_memory
     int compute_hess;
 
     int status;
+    int iter;
 
     double adaptive_levenberg_marquardt_mu;
     double adaptive_levenberg_marquardt_mu_bar;
@@ -406,12 +401,17 @@ typedef struct ocp_nlp_workspace
     ocp_qp_in *tmp_qp_in;
     ocp_qp_out *tmp_qp_out;
 
+    // qp residuals
+    ocp_qp_res *qp_res;
+    ocp_qp_res_ws *qp_res_ws;
+
     // for globalization: -> move to module?!
     ocp_nlp_out *tmp_nlp_out;
     ocp_nlp_out *weight_merit_fun;
     struct blasfeo_dvec tmp_nv;
     struct blasfeo_dvec tmp_ni;
     struct blasfeo_dvec dxnext_dy;
+
     // optimal value gradient wrt params
     struct blasfeo_dvec tmp_np;
     struct blasfeo_dvec out_np;

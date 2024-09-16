@@ -116,8 +116,6 @@ typedef struct
     int stat_m;
     int stat_n;
 
-    int sqp_iter;
-
     double step_norm;
 
 } ocp_nlp_sqp_memory;
@@ -138,11 +136,6 @@ void ocp_nlp_sqp_memory_reset_qp_solver(void *config_, void *dims_, void *nlp_in
 typedef struct
 {
     ocp_nlp_workspace *nlp_work;
-
-    // qp residuals
-    ocp_qp_res *qp_res;
-    ocp_qp_res_ws *qp_res_ws;
-
 } ocp_nlp_sqp_workspace;
 
 //

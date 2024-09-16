@@ -822,7 +822,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
 #endif
-            mem->ddp_iter = ddp_iter;
+            nlp_mem->iter = ddp_iter;
             mem->time_tot = acados_toc(&timer0);
             return mem->nlp_mem->status;
         }
@@ -915,7 +915,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             }
 
             mem->nlp_mem->status = ACADOS_QP_FAILURE;
-            mem->ddp_iter = ddp_iter;
+            nlp_mem->iter = ddp_iter;
             mem->time_tot = acados_toc(&timer0);
 
             return mem->nlp_mem->status;
@@ -1208,7 +1208,7 @@ void ocp_nlp_ddp_get(void *config_, void *dims_, void *mem_, const char *field, 
     if (!strcmp("ddp_iter", field) || !strcmp("nlp_iter", field))
     {
         int *value = return_value_;
-        *value = mem->ddp_iter;
+        *value = mem->nlp_mem->iter;
     }
     else if (!strcmp("status", field))
     {
@@ -1287,7 +1287,7 @@ void ocp_nlp_ddp_get(void *config_, void *dims_, void *mem_, const char *field, 
     }
     else if (!strcmp("statistics", field))
     {
-        int n_row = mem->stat_m<mem->ddp_iter+1 ? mem->stat_m : mem->ddp_iter+1;
+        int n_row = mem->stat_m<mem->nlp_mem->iter+1 ? mem->stat_m : mem->nlp_mem->iter+1;
         double *value = return_value_;
         for (int ii=0; ii<n_row; ii++)
         {

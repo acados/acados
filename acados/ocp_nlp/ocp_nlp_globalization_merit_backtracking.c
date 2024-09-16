@@ -449,19 +449,15 @@ static int ocp_nlp_line_search_merit_check_full_step(ocp_nlp_config *config, ocp
 }
 
 static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
-            ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_workspace *work, int sqp_iter)
+            ocp_nlp_out *nlp_out, ocp_nlp_opts *nlp_opts, ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work, int sqp_iter)
 {
     int ii;
     int N = dims->N;
 
-    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
-    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
-
-    ocp_nlp_workspace *nlp_work = work->nlp_work;
-
     ocp_qp_in *qp_in = nlp_mem->qp_in;
     ocp_qp_out *qp_out = nlp_mem->qp_out;
+    ocp_nlp_globalization_merit_backtracking_memory *merit_mem = nlp_mem->globalization;
     qp_info *qp_info_;
     // NOTE: following Waechter2006:
     // Do SOC
@@ -480,7 +476,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     }
     else if (line_search_status == ACADOS_SUCCESS)
     {
-        mem->alpha = 1.0;
+        merit_mem->alpha = 1.0;
         return false;
     }
     // else perform SOC (below)
@@ -579,32 +575,32 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     // solve QP
     // acados_tic(&timer1);
     int qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
-                                    opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
+                                    nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
     // NOTE: QP is not timed, since this computation time is attributed to globalization.
 
     // compute correct dual solution in case of Hessian regularization
     config->regularize->correct_dual_sol(config->regularize, dims->regularize,
-                                        opts->nlp_opts->regularize, nlp_mem->regularize_mem);
+                                        nlp_opts->regularize, nlp_mem->regularize_mem);
 
     ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
     int qp_iter = qp_info_->num_iter;
 
     // save statistics of last qp solver call
     // TODO: SOC QP solver call should be warm / hot started!
-    if (sqp_iter+1 < mem->stat_m)
-    {
-        // mem->stat[mem->stat_n*(sqp_iter+1)+4] = qp_status;
-        // add qp_iter; should maybe be in a seperate statistic
-        mem->stat[mem->stat_n*(sqp_iter+1)+5] += qp_iter;
-    }
+    // if (sqp_iter+1 < nlp_mem->stat_m)
+    // {
+    //     // mem->stat[mem->stat_n*(sqp_iter+1)+4] = qp_status;
+    //     // add qp_iter; should maybe be in a seperate statistic
+    //     nlp_mem->stat[nlp_mem->stat_n*(sqp_iter+1)+5] += qp_iter;
+    // }
 
     // compute external QP residuals (for debugging)
-    if (opts->ext_qp_res)
-    {
-        ocp_qp_res_compute(qp_in, qp_out, work->qp_res, work->qp_res_ws);
-        if (sqp_iter+1 < mem->stat_m)
-            ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+7));
-    }
+    // if (nlp_opts->ext_qp_res)
+    // {
+    //     ocp_qp_res_compute(qp_in, qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
+    //     if (sqp_iter+1 < nlp_mem->stat_m)
+    //         ocp_qp_res_compute_nrm_inf(nlp_work->qp_res, nlp_mem->stat+(nlp_mem->stat_n*(sqp_iter+1)+7));
+    // }
 
     if (nlp_opts->print_level > 3)
     {
@@ -631,7 +627,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
         }
 
         nlp_mem->status = ACADOS_QP_FAILURE;
-        mem->sqp_iter = sqp_iter;
+        nlp_mem->iter = sqp_iter;
 
         return ACADOS_QP_FAILURE;
     }
@@ -650,7 +646,7 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_c
     ocp_nlp_opts *nlp_opts = nlp_opts_;
     ocp_nlp_globalization_merit_backtracking_opts *merit_opts = nlp_opts->globalization;
     
-    int sqp_iter = 1;
+    int sqp_iter = 1; // NEEDS TO BE CHANGED HERE
     bool do_line_search = true;
 
     if (merit_opts->globalization_opts->use_SOC)

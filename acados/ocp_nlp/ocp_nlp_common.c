@@ -1089,14 +1089,6 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
         constraints[i]->opts_initialize_default(constraints[i], dims->constraints[i], opts->constraints[i]);
     }
 
-    // globalization
-    // opts->alpha_min = 0.05;
-    // opts->alpha_reduction = 0.7;
-    // opts->full_step_dual = 0;
-    // opts->line_search_use_sufficient_descent = 0;
-    // opts->globalization_use_SOC = 0;
-    // opts->eps_sufficient_descent = 1e-4; // Leineweber1999: MUSCOD-I eps_T = 1e-4 (p.89); Note: eps_T = 0.1 originally proposed by Powell 1978 (Leineweber 1999, p. 53)
-
     opts->with_solution_sens_wrt_params = 0;
     opts->with_value_sens_wrt_params = 0;
 
@@ -1104,6 +1096,8 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->adaptive_levenberg_marquardt_mu_min = 1e-16;
     opts->adaptive_levenberg_marquardt_lam = 5.0;
     opts->with_adaptive_levenberg_marquardt = false;
+
+    opts->ext_qp_res = 0;
 
     return;
 }
@@ -1201,58 +1195,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             double* step_length = (double *) value;
             opts->step_length = *step_length;
         }
-        // else if (!strcmp(field, "alpha_reduction"))
-        // {
-        //     double* alpha_reduction = (double *) value;
-        //     opts->alpha_reduction = *alpha_reduction;
-        // }
-        // else if (!strcmp(field, "alpha_min"))
-        // {
-        //     double* alpha_min = (double *) value;
-        //     opts->alpha_min = *alpha_min;
-        // }
-        // else if (!strcmp(field, "eps_sufficient_descent"))
-        // {
-        //     double* eps_sufficient_descent = (double *) value;
-        //     opts->eps_sufficient_descent = *eps_sufficient_descent;
-        // }
-        // else if (!strcmp(field, "full_step_dual"))
-        // {
-        //     int* full_step_dual = (int *) value;
-        //     opts->full_step_dual = *full_step_dual;
-        // }
-        // else if (!strcmp(field, "line_search_use_sufficient_descent"))
-        // {
-        //     int* line_search_use_sufficient_descent = (int *) value;
-        //     opts->line_search_use_sufficient_descent = *line_search_use_sufficient_descent;
-        // }
-        // else if (!strcmp(field, "globalization_use_SOC"))
-        // {
-        //     int* globalization_use_SOC = (int *) value;
-        //     opts->globalization_use_SOC = *globalization_use_SOC;
-        // }
-        // else if (!strcmp(field, "globalization"))
-        // {
-        //     char* globalization = (char *) value;
-        //     if (!strcmp(globalization, "fixed_step"))
-        //     {
-        //         opts->globalization = FIXED_STEP;
-        //     }
-        //     else if (!strcmp(globalization, "merit_backtracking"))
-        //     {
-        //         opts->globalization = MERIT_BACKTRACKING;
-        //     }
-        //     else if (!strcmp(globalization, "funnel_l1pen_linesearch"))
-        //     {
-        //         opts->globalization = FUNNEL_L1PEN_LINESEARCH;
-        //     }
-        //     else
-        //     {
-        //         printf("\nerror: ocp_nlp_opts_set: not supported value for globalization, got: %s\n",
-        //                globalization);
-        //         exit(1);
-        //     }
-        // }
+        else if (!strcmp(field, "ext_qp_res"))
+        {
+            int* ext_qp_res = (int *) value;
+            opts->ext_qp_res = *ext_qp_res;
+        }
         else if (!strcmp(field, "levenberg_marquardt"))
         {
             double* levenberg_marquardt = (double *) value;

@@ -132,7 +132,6 @@ typedef struct
     double *stat;
     int stat_m;
     int stat_n;
-    int sqp_iter;
 
     bool is_first_call;
 

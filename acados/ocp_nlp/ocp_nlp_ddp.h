@@ -116,8 +116,6 @@ typedef struct
     int stat_m;
     int stat_n;
 
-    int ddp_iter;
-
     // ddp specific memory
     double *tmp_nu_times_nx;
     struct blasfeo_dmat K_mat;
