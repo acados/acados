@@ -124,6 +124,7 @@ void ocp_nlp_ddp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->warm_start_first_qp = false;
     opts->rti_phase = 0;
     opts->eval_residual_at_max_iter = false;
+    opts->eval_qp_objective = false;
 
     opts->linesearch_eta = 1e-6;
     opts->linesearch_minimum_step_size = 1e-17;
@@ -250,6 +251,11 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
         {
             bool* eval_residual_at_max_iter = (bool *) value;
             opts->eval_residual_at_max_iter = *eval_residual_at_max_iter;
+        }
+        else if (!strcmp(field, "eval_qp_objective"))
+        {
+            bool* eval_qp_objective = (bool *) value;
+            opts->eval_qp_objective = *eval_qp_objective;
         }
         else
         {
@@ -922,7 +928,10 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // Compute the optimal QP objective function value
-        nlp_mem->qp_cost_value = ocp_nlp_ddp_compute_qp_objective_value(dims, qp_in, qp_out,nlp_work, nlp_mem);
+        if (opts->eval_qp_objective)
+        {
+            nlp_mem->qp_cost_value = ocp_nlp_ddp_compute_qp_objective_value(dims, qp_in, qp_out,nlp_work, nlp_mem);
+        }
 
         // Calculate step norm
         // res_comp

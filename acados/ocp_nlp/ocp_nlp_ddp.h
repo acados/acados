@@ -73,6 +73,8 @@ typedef struct
     double linesearch_minimum_step_size;
     double linesearch_step_size_reduction_factor;
 
+    bool eval_qp_objective;
+
 } ocp_nlp_ddp_opts;
 
 //
