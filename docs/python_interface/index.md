@@ -167,7 +167,7 @@ The cython based wrapper is called [`AcadosOcpSolverCython`](#acados_template.ac
 ### `AcadosModel`
 ``` eval_rst
 .. automodule:: acados_template.acados_model
-    :members:
+    :members: AcadosModel
     :private-members:
     :exclude-members:
 ```
@@ -183,7 +183,7 @@ The interface to interact with the acados integrator in C is based on ctypes.
 ### `AcadosSim`
 ``` eval_rst
 .. automodule:: acados_template.acados_sim
-    :members:
+    :members: AcadosSim
     :private-members:
     :exclude-members:
 ```
