@@ -85,6 +85,6 @@ Documentation latest build: |today|
     interfaces/index
     python_interface/index
     matlab_octave_interface/index
-    c_interface/index
+    <!-- c_interface/index -->
     embedded_workflow/index
 ```
