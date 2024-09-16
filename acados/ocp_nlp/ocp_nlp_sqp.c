@@ -228,11 +228,6 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
             double* tol_min_step_norm = (double *) value;
             opts->tol_min_step_norm = *tol_min_step_norm;
         }
-        // else if (!strcmp(field, "ext_qp_res"))
-        // {
-        //     int* ext_qp_res = (int *) value;
-        //     opts->ext_qp_res = *ext_qp_res;
-        // }
         else if (!strcmp(field, "warm_start_first_qp"))
         {
             bool* warm_start_first_qp = (bool *) value;
@@ -871,6 +866,17 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         int globalization_success = 1;
         globalization_success = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, nlp_work, nlp_opts);
 
+        if (globalization_success != 1)
+        {
+            if (nlp_opts->print_level > 1)
+            {
+                printf("\n Failure in globalization!\n");
+            }
+            mem->nlp_mem->status = ACADOS_QP_FAILURE;
+            nlp_mem->iter = sqp_iter;
+            mem->time_tot = acados_toc(&timer0);
+            return mem->nlp_mem->status;
+        }
         mem->time_glob += acados_toc(&timer1);
 
     }  // end SQP loop

@@ -461,17 +461,6 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 //
 int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
-// //
-// int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-//             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
-//             int sqp_iter, double *alpha_ref);
-// //
-// double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-//           ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
-// //
-// void merit_backtracking_initialize_weights(ocp_nlp_dims *dims, ocp_nlp_out *weight_merit_fun, ocp_qp_out *qp_out);
-// //
-// void merit_backtracking_update_weights(ocp_nlp_dims *dims, ocp_nlp_out *weight_merit_fun, ocp_qp_out *qp_out);
 //
 void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out,
                          ocp_nlp_res *res, ocp_nlp_memory *mem);

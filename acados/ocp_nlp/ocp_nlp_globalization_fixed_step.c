@@ -154,6 +154,8 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
     ocp_nlp_opts *nlp_opts = nlp_opts_;
     
     ocp_nlp_update_variables_sqp(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, nlp_opts->step_length);
+
+    return 1;
 }
 
 void ocp_nlp_globalization_fixed_step_print_iteration_header()
