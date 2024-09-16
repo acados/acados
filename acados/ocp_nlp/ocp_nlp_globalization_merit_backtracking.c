@@ -535,11 +535,11 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
         // general linear / linearized!
         // tmp_ni = D * u + C * x
         blasfeo_dgemv_t(nu[ii]+nx[ii], ng[ii], 1.0, qp_in->DCt+ii, 0, 0, qp_out->ux+ii, 0,
-                        0.0, &work->nlp_work->tmp_ni, 0, &work->nlp_work->tmp_ni, 0);
+                        0.0, &nlp_work->tmp_ni, 0, &nlp_work->tmp_ni, 0);
         // d[nb:nb+ng] += tmp_ni (lower)
-        blasfeo_dvecad(ng[ii], 1.0, &work->nlp_work->tmp_ni, 0, qp_in->d+ii, nb[ii]);
+        blasfeo_dvecad(ng[ii], 1.0, &nlp_work->tmp_ni, 0, qp_in->d+ii, nb[ii]);
         // d[nb:nb+ng] -= tmp_ni
-        blasfeo_dvecad(ng[ii], -1.0, &work->nlp_work->tmp_ni, 0, qp_in->d+ii, 2*nb[ii]+ng[ii]);
+        blasfeo_dvecad(ng[ii], -1.0, &nlp_work->tmp_ni, 0, qp_in->d+ii, 2*nb[ii]+ng[ii]);
 
         // add slack contributions
         // d[nb:nb+ng] += slack[idx]
