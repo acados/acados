@@ -555,8 +555,9 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
 
     int qp_iter = 0;
-    int qp_status, line_search_status;
+    int qp_status;
     double tmp_time;
+    int globalization_status = 1;
 
     // update QP rhs for SQP (step prim var, abs dual var)
     acados_tic(&timer1);
@@ -665,20 +666,15 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
         return;
     }
 
-    double alpha;
-    // globalization
-    acados_tic(&timer1);
-    // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-    // line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, &alpha);
-    // mem->time_glob += acados_toc(&timer1);
-    // if (line_search_status == ACADOS_NAN_DETECTED)
-    // {
-    //     mem->status = line_search_status;
-    //     return;
-    // }
-
-    // update variables
-    ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
+    // Update variables
+    globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, nlp_work, nlp_out);
+    if (globalization_status != 1)
+    {
+        if (nlp_opts->print_level > 1)
+        {
+            printf("\n Failure in step update!\n");
+        }
+    }
     mem->nlp_mem->status = ACADOS_SUCCESS;
 
     if (opts->rti_log_residuals)
@@ -848,9 +844,10 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
 
     // printf("AS_RTI preparation\n");
     qp_info *qp_info_;
-    int qp_iter, qp_status, line_search_status;
-    double alpha, tmp_time;
-    alpha = 1.0;
+    int qp_iter, qp_status, globalization_status;
+    double tmp_time;
+    // alpha = 1.0;
+    globalization_status = 1;
 
     // prepare submodules
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
@@ -928,19 +925,15 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             print_ocp_qp_out(nlp_mem->qp_out);
         }
 
-        // globalization
-        acados_tic(&timer1);
-        // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-        // line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, &alpha);
-        // mem->time_glob += acados_toc(&timer1);
-        // if (line_search_status == ACADOS_NAN_DETECTED)
-        // {
-        //     mem->status = line_search_status;
-        //     return;
-        // }
-
         // update variables
-        ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
+        globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, nlp_work, nlp_out);
+        if (globalization_status != 1)
+        {
+            if (nlp_opts->print_level > 1)
+            {
+                printf("\n Failure in step update!\n");
+            }
+        }
     }
     else if (opts->as_rti_level == LEVEL_B && !mem->is_first_call)
     {
@@ -1008,19 +1001,15 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
                 print_ocp_qp_out(nlp_mem->qp_out);
             }
 
-            // globalization
-            acados_tic(&timer1);
-            // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-            // line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, &alpha);
-            // mem->time_glob += acados_toc(&timer1);
-            // if (line_search_status == ACADOS_NAN_DETECTED)
-            // {
-            //     mem->status = line_search_status;
-            //     return;
-            // }
-
             // update variables
-            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
+            globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, nlp_work, nlp_out);
+            if (globalization_status != 1)
+            {
+                if (nlp_opts->print_level > 1)
+                {
+                    printf("\n Failure in step update!\n");
+                }
+            }
         }
     }
     else if (opts->as_rti_level == LEVEL_C && !mem->is_first_call)
@@ -1091,20 +1080,15 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
                 print_ocp_qp_out(nlp_mem->qp_out);
             }
 
-            // globalization
-            acados_tic(&timer1);
-            // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-            // line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, &alpha);
-            // mem->time_glob += acados_toc(&timer1);
-            // if (line_search_status == ACADOS_NAN_DETECTED)
-            // {
-            //     mem->status = line_search_status;
-            //     return;
-            // }
-
             // update variables
-            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
-
+            globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, nlp_work, nlp_out);
+            if (globalization_status != 1)
+            {
+                if (nlp_opts->print_level > 1)
+                {
+                    printf("\n Failure in step update!\n");
+                }
+            }
             // norm = 0.0;
             // for (int kk = 0; kk < dims->N; kk++)
             // {
@@ -1175,19 +1159,15 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
                 return;
             }
 
-            // globalization
-            acados_tic(&timer1);
-            // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-            // line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, &alpha);
-            // mem->time_glob += acados_toc(&timer1);
-            // if (line_search_status == ACADOS_NAN_DETECTED)
-            // {
-            //     mem->status = line_search_status;
-            //     return;
-            // }
-
             // update variables
-            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
+            globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, nlp_work, nlp_out);
+            if (globalization_status != 1)
+            {
+                if (nlp_opts->print_level > 1)
+                {
+                    printf("\n Failure in step update!\n");
+                }
+            }
         }
     }
 
