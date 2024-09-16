@@ -381,7 +381,7 @@ void *ocp_nlp_ddp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     mem->tmp_nu_times_nx = (double *) c_ptr;
     c_ptr += nu_max*nx_max*sizeof(double);
 
-    mem->status = ACADOS_READY;
+    mem->nlp_mem->status = ACADOS_READY;
 
     align_char_to(8, &c_ptr);
 
@@ -612,7 +612,7 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
     if (isnan(nlp_res->inf_norm_res_stat) || isnan(nlp_res->inf_norm_res_eq) ||
             isnan(nlp_res->inf_norm_res_ineq))
     {
-        mem->status = ACADOS_NAN_DETECTED;
+        mem->nlp_mem->status = ACADOS_NAN_DETECTED;
         if (opts->nlp_opts->print_level > 0)
         {
             printf("Stopped: NaN detected in iterate.\n");
@@ -626,7 +626,7 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
     { // Check that iterate must be dynamically feasible
         if (nlp_res->inf_norm_res_stat < opts->tol_stat)
         {// Check Stationarity
-            mem->status = ACADOS_SUCCESS;
+            mem->nlp_mem->status = ACADOS_SUCCESS;
             if (opts->nlp_opts->print_level > 0)
             {
                 printf("Optimal Solution found! Converged to KKT point.\n");
@@ -637,7 +637,7 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
         // Check for zero-residual solution of a least-squares problem
         if (opts->nlp_opts->with_adaptive_levenberg_marquardt && (mem->nlp_mem->cost_value < opts->tol_zero_res))
         {
-            mem->status = ACADOS_SUCCESS;
+            mem->nlp_mem->status = ACADOS_SUCCESS;
             if (opts->nlp_opts->print_level > 0)
             {
                 printf("Optimal Solution found! Converged To Zero Residual Solution.\n");
@@ -660,14 +660,14 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
                 printf("Stopped: Converged To Infeasible Point. Step size is < tol_eq.\n");
             }
         }
-        mem->status = ACADOS_MINSTEP;
+        mem->nlp_mem->status = ACADOS_MINSTEP;
         return true;
     }
 
     // Check for maximum iterations
     if (ddp_iter >= opts->max_iter)
     {
-        mem->status = ACADOS_MAXITER;
+        mem->nlp_mem->status = ACADOS_MAXITER;
         if (opts->nlp_opts->print_level > 0){
             printf("Stopped: Maximum Iterations Reached.\n");
         }
@@ -824,7 +824,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #endif
             mem->ddp_iter = ddp_iter;
             mem->time_tot = acados_toc(&timer0);
-            return mem->status;
+            return mem->nlp_mem->status;
         }
 
         /* solve QP */
@@ -914,11 +914,11 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                     print_ocp_qp_in(qp_in);
             }
 
-            mem->status = ACADOS_QP_FAILURE;
+            mem->nlp_mem->status = ACADOS_QP_FAILURE;
             mem->ddp_iter = ddp_iter;
             mem->time_tot = acados_toc(&timer0);
 
-            return mem->status;
+            return mem->nlp_mem->status;
         }
 
         // Compute the optimal QP objective function value
@@ -985,7 +985,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     {
         printf("Warning: The solver should never reach this part of the function!\n");
     }
-    return mem->status;
+    return mem->nlp_mem->status;
 }
 
 double ocp_nlp_ddp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
@@ -1213,7 +1213,7 @@ void ocp_nlp_ddp_get(void *config_, void *dims_, void *mem_, const char *field, 
     else if (!strcmp("status", field))
     {
         int *value = return_value_;
-        *value = mem->status;
+        *value = mem->nlp_mem->status;
     }
     else if (!strcmp("time_tot", field) || !strcmp("tot_time", field))
     {

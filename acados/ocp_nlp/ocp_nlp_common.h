@@ -371,6 +371,8 @@ typedef struct ocp_nlp_memory
     double qp_cost_value;
     int compute_hess;
 
+    int status;
+
     double adaptive_levenberg_marquardt_mu;
     double adaptive_levenberg_marquardt_mu_bar;
 

@@ -116,7 +116,6 @@ typedef struct
     int stat_m;
     int stat_n;
 
-    int status;
     int ddp_iter;
 
     // ddp specific memory

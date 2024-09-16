@@ -313,7 +313,7 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_,
         mem->stat[i] = 0.0;
     }
 
-    mem->status = ACADOS_READY;
+    mem->nlp_mem->status = ACADOS_READY;
     mem->is_first_call = true;
 
     assert((char *) raw_memory+ocp_nlp_sqp_rti_memory_calculate_size(
@@ -661,7 +661,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
             printf("\n Failed to solve the following QP:\n");
             print_ocp_qp_in(nlp_mem->qp_in);
         }
-        mem->status = ACADOS_QP_FAILURE;
+        mem->nlp_mem->status = ACADOS_QP_FAILURE;
         return;
     }
 
@@ -679,7 +679,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
 
     // update variables
     ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
-    mem->status = ACADOS_SUCCESS;
+    mem->nlp_mem->status = ACADOS_SUCCESS;
 
     if (opts->rti_log_residuals)
     {
@@ -997,7 +997,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
                 printf("\nSQP_RTI: QP solver returned error status %d QP iteration %d.\n",
                     qp_status, qp_iter);
 #endif
-                mem->status = ACADOS_QP_FAILURE;
+                mem->nlp_mem->status = ACADOS_QP_FAILURE;
                 return;
             }
 
@@ -1080,7 +1080,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
                 printf("\nSQP_RTI: QP solver returned error status %d QP iteration %d.\n",
                     qp_status, qp_iter);
 #endif
-                mem->status = ACADOS_QP_FAILURE;
+                mem->nlp_mem->status = ACADOS_QP_FAILURE;
                 return;
             }
 
@@ -1171,7 +1171,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
                 printf("\nSQP_RTI: QP solver returned error status %d QP iteration %d.\n",
                     qp_status, qp_iter);
 #endif
-                mem->status = ACADOS_QP_FAILURE;
+                mem->nlp_mem->status = ACADOS_QP_FAILURE;
                 return;
             }
 
@@ -1277,7 +1277,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     }
     mem->time_tot = acados_toc(&timer);
 
-    return mem->status;
+    return mem->nlp_mem->status;
 
 }
 
@@ -1386,7 +1386,7 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
     else if (!strcmp("status", field))
     {
         int *value = return_value_;
-        *value = mem->status;
+        *value = mem->nlp_mem->status;
     }
     else if (!strcmp("time_tot", field) || !strcmp("tot_time", field))
     {

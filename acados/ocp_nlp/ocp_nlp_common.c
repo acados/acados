@@ -1168,7 +1168,6 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         ptr_module = module;
     }
 
-    printf("Field: %s\n", field);
     // pass options to QP module
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
     {

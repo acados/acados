@@ -630,7 +630,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
                 print_ocp_qp_in(qp_in);
         }
 
-        mem->status = ACADOS_QP_FAILURE;
+        nlp_mem->status = ACADOS_QP_FAILURE;
         mem->sqp_iter = sqp_iter;
 
         return ACADOS_QP_FAILURE;
@@ -648,21 +648,23 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_c
     ocp_nlp_globalization_merit_backtracking_memory *mem = nlp_mem->globalization;
     ocp_nlp_workspace *nlp_work = nlp_work_;
     ocp_nlp_opts *nlp_opts = nlp_opts_;
+    ocp_nlp_globalization_merit_backtracking_opts *merit_opts = nlp_opts->globalization;
     
     int sqp_iter = 1;
     bool do_line_search = true;
-    if (nlp_opts->globalization->globalization_opts->use_SOC)
+
+    if (merit_opts->globalization_opts->use_SOC)
     {
         do_line_search = ocp_nlp_soc_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter);
-//         if (nlp_mem->status == ACADOS_QP_FAILURE)
-//         {
-// #if defined(ACADOS_WITH_OPENMP)
-//             // restore number of threads
-//             omp_set_num_threads(num_threads_bkp);
-// #endif
-//             // mem->time_tot = acados_toc(&timer0);
-//             return mem->status;
-//         }
+        if (nlp_mem->status == ACADOS_QP_FAILURE)
+        {
+#if defined(ACADOS_WITH_OPENMP)
+            // restore number of threads
+            omp_set_num_threads(num_threads_bkp);
+#endif
+            // mem->time_tot = acados_toc(&timer0);
+            return nlp_mem->status;
+        }
     }
 
     if (do_line_search)

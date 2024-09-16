@@ -116,7 +116,6 @@ typedef struct
     int stat_m;
     int stat_n;
 
-    int status;
     int sqp_iter;
 
     double step_norm;
