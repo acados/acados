@@ -74,7 +74,12 @@ acados_size_t ocp_nlp_globalization_merit_backtracking_opts_calculate_size(void 
 
 void ocp_nlp_globalization_merit_backtracking_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
-    ocp_nlp_globalization_opts_initialize_default(config_, dims_, opts_);
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_globalization_merit_backtracking_opts *opts = opts_;
+    ocp_nlp_globalization_opts *globalization_opts = opts->globalization_opts;
+    ocp_nlp_globalization_config *config = config_;
+
+    ocp_nlp_globalization_opts_initialize_default(config, dims, globalization_opts);
     return;
 }
 
@@ -84,17 +89,23 @@ void ocp_nlp_globalization_merit_backtracking_opts_set(void *config_, void *opts
     ocp_nlp_globalization_merit_backtracking_opts *opts = opts_;
     ocp_nlp_globalization_config *config = config_;
 
-    config->opts_set(config, opts->globalization_opts, field, value);
+    ocp_nlp_globalization_opts_set(config, opts->globalization_opts, field, value);
 
     return;
 }
 
 void *ocp_nlp_globalization_merit_backtracking_opts_assign(void *config_, void *dims_, void *raw_memory)
 {
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_globalization_config *config = config_;
+
     char *c_ptr = (char *) raw_memory;
 
     ocp_nlp_globalization_merit_backtracking_opts *opts = (ocp_nlp_globalization_merit_backtracking_opts *) c_ptr;
     c_ptr += sizeof(ocp_nlp_globalization_merit_backtracking_opts);
+
+    opts->globalization_opts = ocp_nlp_globalization_opts_assign(config, dims, c_ptr);
+    c_ptr += ocp_nlp_globalization_opts_calculate_size(config, dims);
 
     assert((char *) raw_memory + ocp_nlp_globalization_merit_backtracking_opts_calculate_size(config_, dims_) >=
            c_ptr);
@@ -362,7 +373,6 @@ static void copy_multipliers_qp_to_nlp(ocp_nlp_dims *dims, ocp_qp_out *from, ocp
     }
     return;
 }
-
 
 static int ocp_nlp_line_search_merit_check_full_step(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work, int sqp_iter)
@@ -635,42 +645,41 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_c
     ocp_nlp_in *nlp_in = nlp_in_;
     ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_memory *nlp_mem = nlp_mem_;
+    ocp_nlp_globalization_merit_backtracking_memory *mem = nlp_mem->globalization;
     ocp_nlp_workspace *nlp_work = nlp_work_;
     ocp_nlp_opts *nlp_opts = nlp_opts_;
     
-    printf("Merit backtracking line search\n");
+    int sqp_iter = 1;
+    bool do_line_search = true;
+    if (nlp_opts->globalization->globalization_opts->use_SOC)
+    {
+        do_line_search = ocp_nlp_soc_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter);
+//         if (nlp_mem->status == ACADOS_QP_FAILURE)
+//         {
+// #if defined(ACADOS_WITH_OPENMP)
+//             // restore number of threads
+//             omp_set_num_threads(num_threads_bkp);
+// #endif
+//             // mem->time_tot = acados_toc(&timer0);
+//             return mem->status;
+//         }
+    }
 
-    // int sqp_iter = 1;
-    // bool do_line_search = true;
-//     if (nlp_opts->globalization->globalization_use_SOC)
-//     {
-//         do_line_search = ocp_nlp_soc_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter);
-// //         if (nlp_mem->status == ACADOS_QP_FAILURE)
-// //         {
-// // #if defined(ACADOS_WITH_OPENMP)
-// //             // restore number of threads
-// //             omp_set_num_threads(num_threads_bkp);
-// // #endif
-// //             // mem->time_tot = acados_toc(&timer0);
-// //             return mem->status;
-// //         }
-//     }
+    if (do_line_search)
+    {
+        int line_search_status;
+        line_search_status = ocp_nlp_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter, &mem->alpha);
+        if (line_search_status == ACADOS_NAN_DETECTED)
+        {
+            nlp_mem->status = ACADOS_NAN_DETECTED;
+            return nlp_mem->status;
+        }
+    }
+    // mem->time_glob += acados_toc(&timer1);
+    // nlp_mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
 
-    // if (do_line_search)
-    // {
-    //     int line_search_status;
-    //     line_search_status = ocp_nlp_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter, &mem->alpha);
-    //     if (line_search_status == ACADOS_NAN_DETECTED)
-    //     {
-    //         mem->status = ACADOS_NAN_DETECTED;
-    //         return mem->status;
-    //     }
-    // }
-    // // mem->time_glob += acados_toc(&timer1);
-    // // nlp_mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
-
-    // // update variables
-    // ocp_nlp_update_variables_sqp(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, mem->alpha);
+    // update variables
+    ocp_nlp_update_variables_sqp(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, mem->alpha);
 }
 
 int ocp_nlp_globalization_merit_backtracking_needs_objective_value()
@@ -683,6 +692,7 @@ void ocp_nlp_globalization_merit_backtracking_initialize_memory(ocp_nlp_config *
                                                     ocp_nlp_memory *nlp_mem_,
                                                     ocp_nlp_opts *nlp_opts_)
 {
+    return;
 }
 
 void ocp_nlp_globalization_merit_backtracking_config_initialize_default(ocp_nlp_globalization_config *config)
@@ -701,4 +711,5 @@ void ocp_nlp_globalization_merit_backtracking_config_initialize_default(ocp_nlp_
     config->print_iteration_header = &ocp_nlp_globalization_merit_backtracking_print_iteration_header;
     config->print_iteration = &ocp_nlp_globalization_merit_backtracking_print_iteration;
     config->needs_objective_value = &ocp_nlp_globalization_merit_backtracking_needs_objective_value;
+    config->initialize_memory = &ocp_nlp_globalization_merit_backtracking_initialize_memory;
 }
