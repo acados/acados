@@ -2503,6 +2503,7 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
             ocp_nlp_out *out_start, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
             ocp_nlp_out *out_destination, void* solver_mem, double alpha)
 {
+    // solver_mem is not used
     ocp_nlp_globalization_opts *globalization_opts = opts->globalization;
     int N = dims->N;
     int *nv = dims->nv;
@@ -2510,7 +2511,6 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
     int *nu = dims->nu;
     int *ni = dims->ni;
     int *nz = dims->nz;
-
 
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for

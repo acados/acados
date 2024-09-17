@@ -864,7 +864,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         acados_tic(&timer1);
 
         int globalization_success = 1;
-        globalization_success = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, mem, nlp_mem, nlp_work, nlp_opts);
+        globalization_success = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts);
 
         if (globalization_success != 1)
         {
