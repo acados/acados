@@ -931,7 +931,7 @@ void merit_backtracking_update_weights(ocp_nlp_dims *dims, ocp_nlp_out *weight_m
 
 
 
-int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *nlp_work_, void *nlp_opts_)
+int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_)
 {
     ocp_nlp_config *nlp_config = nlp_config_;
     ocp_nlp_dims *nlp_dims = nlp_dims_;
@@ -974,7 +974,7 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_c
     // nlp_mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
 
     // update variables
-    ocp_nlp_update_variables_sqp(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, mem->alpha);
+    ocp_nlp_update_variables_sqp(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, mem->alpha);
     return 1;
 }
 

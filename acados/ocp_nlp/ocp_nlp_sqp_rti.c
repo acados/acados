@@ -667,7 +667,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     }
 
     // Update variables
-    globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, nlp_work, nlp_out);
+    globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_out);
     if (globalization_status != 1)
     {
         if (nlp_opts->print_level > 1)
@@ -926,7 +926,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         }
 
         // update variables
-        globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, nlp_work, nlp_out);
+        globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_out);
         if (globalization_status != 1)
         {
             if (nlp_opts->print_level > 1)
@@ -1002,7 +1002,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             }
 
             // update variables
-            globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, nlp_work, nlp_out);
+            globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_out);
             if (globalization_status != 1)
             {
                 if (nlp_opts->print_level > 1)
@@ -1081,7 +1081,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             }
 
             // update variables
-            globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, nlp_work, nlp_out);
+            globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_out);
             if (globalization_status != 1)
             {
                 if (nlp_opts->print_level > 1)
@@ -1160,7 +1160,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             }
 
             // update variables
-            globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, nlp_work, nlp_out);
+            globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_out);
             if (globalization_status != 1)
             {
                 if (nlp_opts->print_level > 1)

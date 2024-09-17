@@ -122,7 +122,6 @@ void ocp_nlp_ddp_opts_initialize_default(void *config_, void *dims_, void *opts_
 
     opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
-    opts->rti_phase = 0;
     opts->eval_residual_at_max_iter = false;
     opts->eval_qp_objective = false;
 
@@ -235,17 +234,6 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
         {
             bool* warm_start_first_qp = (bool *) value;
             opts->warm_start_first_qp = *warm_start_first_qp;
-        }
-        else if (!strcmp(field, "rti_phase"))
-        {
-            int* rti_phase = (int *) value;
-            if (*rti_phase < 0 || *rti_phase > 0)
-            {
-                printf("\nerror: ocp_nlp_ddp_opts_set: invalid value for rti_phase field.");
-                printf("possible values are: 0\n");
-                exit(1);
-            }
-            opts->rti_phase = *rti_phase;
         }
         else if (!strcmp(field, "eval_residual_at_max_iter"))
         {
@@ -478,10 +466,11 @@ static void ocp_nlp_ddp_reset_timers(ocp_nlp_ddp_memory *mem)
     mem->time_sim_ad = 0.0;
 }
 
-static void ocp_nlp_ddp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_dims *dims,
-            ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_ddp_memory *ddp_mem,
-            ocp_nlp_workspace *work, double alpha)
+void ocp_nlp_ddp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_dims *dims,
+            ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
+            ocp_nlp_workspace *work, ocp_nlp_ddp_memory *solver_mem, double alpha)
 {
+    ocp_nlp_ddp_memory *ddp_mem = solver_mem;
     /* computes trial iterate in tmp_nlp_out */
     int N = dims->N;
     // int *nv = dims->nv;
@@ -490,7 +479,6 @@ static void ocp_nlp_ddp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_di
     int *ni = dims->ni;
     int *nz = dims->nz;
 
-    ocp_nlp_memory *mem = ddp_mem->nlp_mem;
     ocp_nlp_globalization_opts *globalization_opts = opts->globalization;
 
     struct blasfeo_dvec *tmp_vec;
@@ -950,14 +938,14 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             // Accept the forward simulation to get feasible initial guess
             mem->alpha = 1.0;  // full step to obtain feasible initial gues
-            ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->alpha);
+            ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem, mem->alpha);
             copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
             infeasible_initial_guess = false;
         }
         else
         {
             int globalization_success = 1;
-            globalization_success = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, nlp_work, nlp_opts);
+            globalization_success = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, mem, nlp_mem, nlp_work, nlp_opts);
             // int linesearch_success = 1;
             // // Do the globalization here: Either fixed step or Armijo line search
             // acados_tic(&timer1);
@@ -1050,7 +1038,7 @@ int ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_i
     while (true)
     {
         // Do the DDP forward sweep to get the trial iterate
-        ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, alpha);
+        ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem, alpha);
 
         ///////////////////////////////////////////////////////////////////////
         // Evaluate cost function at trial iterate

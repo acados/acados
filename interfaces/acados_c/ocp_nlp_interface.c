@@ -249,6 +249,27 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
             printf("\nerror: ocp_nlp_config_create: unsupported plan->globalization\n");
             exit(1);
     }
+    
+    // globalization step update
+    // NLP solver
+    switch (plan.nlp_solver)
+    {
+        case SQP:
+            config->globalization->step_update = &ocp_nlp_update_variables_sqp;
+            break;
+        case SQP_RTI:
+            config->globalization->step_update = &ocp_nlp_update_variables_sqp;
+            break;
+        case DDP:
+            config->globalization->step_update = &ocp_nlp_ddp_compute_trial_iterate;
+            break;
+        case INVALID_NLP_SOLVER:
+            printf("\nerror: ocp_nlp_config_create: forgot to initialize plan->nlp_solver\n");
+            exit(1);
+        default:
+            printf("\nerror: ocp_nlp_config_create: unsupported plan->nlp_solver\n");
+            exit(1);
+    }
 
     // cost
     for (int i = 0; i <= N; ++i)

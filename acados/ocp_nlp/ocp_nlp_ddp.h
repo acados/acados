@@ -65,15 +65,13 @@ typedef struct
     int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
     int qp_warm_start;   // qp_warm_start in all but the first ddp iterations
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
-    int rti_phase;       // only phase 0 at the moment
     bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
+    bool eval_qp_objective;
 
     // Line search
     double linesearch_eta;
     double linesearch_minimum_step_size;
     double linesearch_step_size_reduction_factor;
-
-    bool eval_qp_objective;
 
 } ocp_nlp_ddp_opts;
 
@@ -158,7 +156,6 @@ acados_size_t ocp_nlp_ddp_workspace_calculate_size(void *config, void *dims, voi
 /************************************************
  * functions
  ************************************************/
-
 //
 int ocp_nlp_ddp(void *config, void *dims, void *nlp_in, void *nlp_out,
                 void *args, void *mem, void *work_);
@@ -175,6 +172,10 @@ void ocp_nlp_ddp_get(void *config_, void *dims_, void *mem_, const char *field, 
 
 int ocp_nlp_ddp_backtracking_line_search(void *config, void *dims, void *nlp_in, void *nlp_out,
                 void *args, void *mem, void *work_);
+
+void ocp_nlp_ddp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_dims *dims,
+            ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
+            ocp_nlp_workspace *work, ocp_nlp_ddp_memory *solver_mem, double alpha);
 
 double ocp_nlp_ddp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
                 ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem);

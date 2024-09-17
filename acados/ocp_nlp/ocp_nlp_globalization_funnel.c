@@ -408,6 +408,7 @@ int backtracking_line_search(ocp_nlp_config *config,
                             ocp_nlp_in *nlp_in,
                             ocp_nlp_out *nlp_out,
                             ocp_nlp_memory *nlp_mem,
+                            void *solver_mem,
                             ocp_nlp_workspace *nlp_work,
                             ocp_nlp_opts *nlp_opts)
 {
@@ -436,7 +437,7 @@ int backtracking_line_search(ocp_nlp_config *config,
     {
         // Calculate trial iterate: trial_iterate = current_iterate + alpha * direction
         ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem,
-                                     nlp_work, nlp_work->tmp_nlp_out, alpha);
+                                     nlp_work, nlp_work->tmp_nlp_out, solver_mem, alpha);
 
         ///////////////////////////////////////////////////////////////////////
         // Evaluate cost function at trial iterate
@@ -518,7 +519,7 @@ int backtracking_line_search(ocp_nlp_config *config,
     }
 }
 
-int ocp_nlp_globalization_funnel_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *nlp_work_, void *nlp_opts_)
+int ocp_nlp_globalization_funnel_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_)
 {
     ocp_nlp_config *nlp_config = nlp_config_;
     ocp_nlp_dims *nlp_dims = nlp_dims_;
@@ -529,7 +530,7 @@ int ocp_nlp_globalization_funnel_find_acceptable_iterate(void *nlp_config_, void
     ocp_nlp_opts *nlp_opts = nlp_opts_;
 
     bool linesearch_success = 1;
-    linesearch_success = backtracking_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_mem, nlp_work, nlp_opts);
+    linesearch_success = backtracking_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_mem, solver_mem, nlp_work, nlp_opts);
     // Copy new iterate to nlp_out
     if (linesearch_success)
     {

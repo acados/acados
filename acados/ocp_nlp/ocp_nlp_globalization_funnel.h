@@ -141,10 +141,11 @@ int backtracking_line_search(ocp_nlp_config *config,
                             ocp_nlp_in *nlp_in,
                             ocp_nlp_out *nlp_out,
                             ocp_nlp_memory *nlp_mem,
+                            void *solver_mem,
                             ocp_nlp_workspace *nlp_work,
                             ocp_nlp_opts *nlp_opts);
 //
-int ocp_nlp_globalization_funnel_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *nlp_work_, void *nlp_opts_);
+int ocp_nlp_globalization_funnel_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_);
 //
 void ocp_nlp_globalization_funnel_print_iteration_header();
 //
