@@ -90,7 +90,7 @@ def main(globalization_options: GlobalizationOptions):
 
     # set options
     ocp.solver_options.globalization = globalization_options.globalization
-    ocp.solver_options.alpha_min = globalization_options.alpha_min
+    ocp.solver_options.globalization_alpha_min = globalization_options.alpha_min
     ocp.solver_options.globalization_use_SOC = globalization_options.use_SOC
     ocp.solver_options.print_level = 0
 
