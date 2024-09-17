@@ -930,6 +930,103 @@ void merit_backtracking_update_weights(ocp_nlp_dims *dims, ocp_nlp_out *weight_m
 }
 
 
+static int ocp_nlp_ddp_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
+                ocp_nlp_memory *nlp_mem, void* solver_mem, ocp_nlp_workspace *nlp_work, ocp_nlp_opts *nlp_opts)
+{
+    // evaluate the objective of the QP (as predicted reduction)
+    ocp_nlp_globalization_opts *opts = nlp_opts->globalization;
+    ocp_nlp_globalization_merit_backtracking_memory *mem = nlp_mem->globalization;
+    int N = dims->N;
+    double pred = -nlp_mem->qp_cost_value;
+    double alpha = 1.0;
+    double trial_cost;
+    double negative_ared;
+    double *tmp_fun;
+
+    int i;
+
+    while (true)
+    {
+        // Do the DDP forward sweep to get the trial iterate
+        config->globalization->step_update(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem,
+                                     nlp_work, nlp_work->tmp_nlp_out, solver_mem, alpha);
+
+        ///////////////////////////////////////////////////////////////////////
+        // Evaluate cost function at trial iterate
+        // set evaluation point to tmp_nlp_out
+        ocp_nlp_set_primal_variable_pointers_in_submodules(config, dims, nlp_in, nlp_work->tmp_nlp_out, nlp_mem);
+        // compute fun value
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+        for (i=0; i<=N; i++)
+        {
+            // cost
+            config->cost[i]->compute_fun(config->cost[i], dims->cost[i], nlp_in->cost[i], nlp_opts->cost[i],
+                                        nlp_mem->cost[i], nlp_work->cost[i]);
+        }
+        ocp_nlp_set_primal_variable_pointers_in_submodules(config, dims, nlp_in, nlp_out, nlp_mem);
+        trial_cost = 0.0;
+        for(i=0; i<=N; i++)
+        {
+            tmp_fun = config->cost[i]->memory_get_fun_ptr(nlp_mem->cost[i]);
+            trial_cost += *tmp_fun;
+        }
+
+        negative_ared = trial_cost - nlp_mem->cost_value;
+        // Check Armijo sufficient decrease condition
+        if (negative_ared <= fmin(-opts->eps_sufficient_descent*alpha* fmax(pred, 0) + 1e-18, 0))
+        {
+            // IF step accepted: update x
+            // reset evaluation point to SQP iterate
+            mem->alpha = alpha;
+            nlp_mem->cost_value = trial_cost;
+            return 1;
+        }
+        else
+        {
+            // Reduce step size
+            alpha *= opts->alpha_reduction;
+        }
+
+        if (alpha < opts->alpha_min)
+        {
+            printf("Linesearch: Step size gets too small. Increasing regularization.\n");
+            mem->alpha = 0.0; // set to zero such that regularization is increased
+            return 0;
+        }
+    }
+}
+
+int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate_for_ddp(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_)
+{
+    ocp_nlp_config *nlp_config = nlp_config_;
+    ocp_nlp_dims *nlp_dims = nlp_dims_;
+    ocp_nlp_in *nlp_in = nlp_in_;
+    ocp_nlp_out *nlp_out = nlp_out_;
+    ocp_nlp_memory *nlp_mem = nlp_mem_;
+    ocp_nlp_globalization_merit_backtracking_memory *mem = nlp_mem->globalization;
+    ocp_nlp_workspace *nlp_work = nlp_work_;
+    ocp_nlp_opts *nlp_opts = nlp_opts_;
+
+    int linesearch_success = 1;
+    // Do the globalization here: Either fixed step or Armijo line search
+    // NOTE on timings: currently all within globalization is accounted for within time_glob.
+    //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
+    // do backtracking line search on objective function
+    linesearch_success = ocp_nlp_ddp_backtracking_line_search(nlp_config, nlp_dims, nlp_in, nlp_out,
+                nlp_mem, solver_mem, nlp_work, nlp_opts);
+
+    // Copy new iterate to nlp_out
+    if (linesearch_success == 1)
+    {
+        // in case line search fails, we do not want to copy trial iterates!
+        copy_ocp_nlp_out(nlp_dims, nlp_work->tmp_nlp_out, nlp_out);
+        return 1;
+    }
+    return 0;
+}
+
 
 int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_)
 {

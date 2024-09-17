@@ -123,6 +123,8 @@ void merit_backtracking_update_weights(ocp_nlp_dims *dims, ocp_nlp_out *weight_m
 //
 int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_);
 //
+int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate_for_ddp(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_);
+//
 void ocp_nlp_globalization_merit_backtracking_print_iteration_header();
 //
 void ocp_nlp_globalization_merit_backtracking_print_iteration(double objective_value,

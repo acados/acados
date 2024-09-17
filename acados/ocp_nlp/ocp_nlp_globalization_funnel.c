@@ -438,8 +438,6 @@ int backtracking_line_search(ocp_nlp_config *config,
         // Calculate trial iterate: trial_iterate = current_iterate + alpha * direction
         config->globalization->step_update(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem,
                                      nlp_work, nlp_work->tmp_nlp_out, solver_mem, alpha);
-        // ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem,
-        //                              nlp_work, nlp_work->tmp_nlp_out, solver_mem, alpha);
 
         ///////////////////////////////////////////////////////////////////////
         // Evaluate cost function at trial iterate

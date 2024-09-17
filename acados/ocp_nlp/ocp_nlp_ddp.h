@@ -68,11 +68,7 @@ typedef struct
     bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
     bool eval_qp_objective;
 
-    // Line search
-    double linesearch_eta;
-    double linesearch_minimum_step_size;
-    double linesearch_step_size_reduction_factor;
-
+    int rti_phase; // only phase 0 at the moment
 } ocp_nlp_ddp_opts;
 
 //
@@ -169,14 +165,14 @@ void ocp_nlp_ddp_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_, voi
                             const char *field, void *lagr_grad_wrt_params);
 //
 void ocp_nlp_ddp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_);
-
-int ocp_nlp_ddp_backtracking_line_search(void *config, void *dims, void *nlp_in, void *nlp_out,
-                void *args, void *mem, void *work_);
-
+//
+int ocp_nlp_ddp_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
+                ocp_nlp_memory *nlp_mem, void* solver_mem, ocp_nlp_workspace *nlp_work, ocp_nlp_opts *nlp_opts);
+//
 void ocp_nlp_ddp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_dims *dims,
             ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
             ocp_nlp_workspace *work, ocp_nlp_ddp_memory *solver_mem, double alpha);
-
+//
 double ocp_nlp_ddp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
                 ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem);
 

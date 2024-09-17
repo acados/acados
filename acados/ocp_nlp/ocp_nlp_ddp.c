@@ -124,13 +124,9 @@ void ocp_nlp_ddp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->warm_start_first_qp = false;
     opts->eval_residual_at_max_iter = false;
     opts->eval_qp_objective = false;
-
-    opts->linesearch_eta = 1e-6;
-    opts->linesearch_minimum_step_size = 1e-17;
-    opts->linesearch_step_size_reduction_factor = 0.5;
+    opts->rti_phase = 0;
 
     // overwrite default submodules opts
-
     // qp tolerance
     qp_solver->opts_set(qp_solver, opts->nlp_opts->qp_solver_opts, "tol_stat", &opts->tol_stat);
     qp_solver->opts_set(qp_solver, opts->nlp_opts->qp_solver_opts, "tol_eq", &opts->tol_eq);
@@ -244,6 +240,16 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
         {
             bool* eval_qp_objective = (bool *) value;
             opts->eval_qp_objective = *eval_qp_objective;
+        }
+        else if (!strcmp(field, "rti_phase"))
+        {
+            int* rti_phase = (int *) value;
+            if (*rti_phase < 0 || *rti_phase > 0) {
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for rti_phase field.");
+                printf("possible values are: 0\n");
+                exit(1);
+            }
+            opts->rti_phase = *rti_phase;
         }
         else
         {
@@ -945,35 +951,19 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         else
         {
             int globalization_success = 1;
+            acados_tic(&timer1);
             globalization_success = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts);
-            // int linesearch_success = 1;
-            // // Do the globalization here: Either fixed step or Armijo line search
-            // acados_tic(&timer1);
-            // // NOTE on timings: currently all within globalization is accounted for within time_glob.
-            // //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
-            // // config->globalization->find_acceptable_iterate()
-            // if (nlp_opts->globalization == FIXED_STEP)
-            // {
-            //     // Set the given step length
-            //     mem->alpha = nlp_opts->step_length;
-
-            //     // update variables
-            //     ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->alpha);
-            // }
-            // else if (globalization_opts->globalization == MERIT_BACKTRACKING)
-            // {
-            //     // do backtracking line search on objective function
-            //     linesearch_success = ocp_nlp_ddp_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);
-            //     // evaluate_cost = false; // since the cost was already evaluated in the line search
-            // }
-
-            // mem->stat[mem->stat_n*(ddp_iter+1)+6] = mem->alpha;
-            // // Copy new iterate to nlp_out
-            // if (linesearch_success == 1)
-            // {
-            //     // in case line search fails, we do not want to copy trial iterates!
-            //     copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
-            // }
+            if (globalization_success != 1)
+            {
+                if (nlp_opts->print_level > 1)
+                {
+                    printf("\n Failure in globalization!\n");
+                }
+                mem->nlp_mem->status = ACADOS_QP_FAILURE;
+                nlp_mem->iter = ddp_iter;
+                mem->time_tot = acados_toc(&timer0);
+                return mem->nlp_mem->status;
+            }
             mem->time_glob += acados_toc(&timer1);
         }
     }  // end DDP loop
@@ -1003,89 +993,6 @@ double ocp_nlp_ddp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_
         qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
     }
     return qp_cost;
-}
-
-
-int ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
-                void *mem_, void *work_, void *opts_)
-{
-    ocp_nlp_dims *dims = dims_;
-    ocp_nlp_config *config = config_;
-
-    ocp_nlp_ddp_opts *opts = opts_;
-    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
-
-    ocp_nlp_ddp_workspace *work = work_;
-    ocp_nlp_workspace *nlp_work = work->nlp_work;
-
-    ocp_nlp_ddp_memory *mem = mem_;
-    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-
-    ocp_nlp_in *nlp_in = nlp_in_;
-    ocp_nlp_out *nlp_out = nlp_out_;
-
-    // evaluate the objective of the QP (as predicted reduction)
-    // double qp_cost = compute_qp_cost
-    int N = dims->N;
-    double pred = -nlp_mem->qp_cost_value;
-    double alpha = 1.0;
-    double trial_cost;
-    double negative_ared;
-    double *tmp_fun;
-
-    int i;
-
-    while (true)
-    {
-        // Do the DDP forward sweep to get the trial iterate
-        ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem, alpha);
-
-        ///////////////////////////////////////////////////////////////////////
-        // Evaluate cost function at trial iterate
-        // set evaluation point to tmp_nlp_out
-        ocp_nlp_set_primal_variable_pointers_in_submodules(config, dims, nlp_in, nlp_work->tmp_nlp_out, nlp_mem);
-        // compute fun value
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
-        for (i=0; i<=N; i++)
-        {
-            // cost
-            config->cost[i]->compute_fun(config->cost[i], dims->cost[i], nlp_in->cost[i], nlp_opts->cost[i],
-                                        nlp_mem->cost[i], nlp_work->cost[i]);
-        }
-        ocp_nlp_set_primal_variable_pointers_in_submodules(config, dims, nlp_in, nlp_out, nlp_mem);
-        trial_cost = 0.0;
-        for(i=0; i<=N; i++)
-        {
-            tmp_fun = config->cost[i]->memory_get_fun_ptr(nlp_mem->cost[i]);
-            trial_cost += *tmp_fun;
-        }
-
-        negative_ared = trial_cost - nlp_mem->cost_value;
-        // Check Armijo sufficient decrease condition
-        if (negative_ared <= fmin(-opts->linesearch_eta*alpha* fmax(pred, 0) + 1e-18, 0))
-        {
-            // IF step accepted: update x
-            // reset evaluation point to SQP iterate
-            // copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
-            mem->alpha = alpha;
-            nlp_mem->cost_value = trial_cost;
-            return 1;
-        }
-        else
-        {
-            // Reduce step size
-            alpha *= opts->linesearch_step_size_reduction_factor;
-        }
-
-        if (alpha < opts->linesearch_minimum_step_size)
-        {
-            printf("Linesearch: Step size gets too small. Increasing regularization.\n");
-            mem->alpha = 0.0; // set to zero such that regularization is increased
-            return 0;
-        }
-    }
 }
 
 void ocp_nlp_ddp_memory_reset_qp_solver(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
