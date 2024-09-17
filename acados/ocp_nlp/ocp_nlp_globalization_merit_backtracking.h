@@ -100,8 +100,6 @@ void *ocp_nlp_globalization_merit_backtracking_memory_assign(void *config, void 
 // acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config, void *dims, void *opts_);
 
 
-
-
 /************************************************
  * functions
  ************************************************/
