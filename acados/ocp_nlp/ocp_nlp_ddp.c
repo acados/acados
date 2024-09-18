@@ -474,8 +474,8 @@ static void ocp_nlp_ddp_reset_timers(ocp_nlp_ddp_memory *mem)
 
 void ocp_nlp_ddp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_dims *dims,
             ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
-            ocp_nlp_workspace *work,
-            ocp_nlp_out *out_destination, ocp_nlp_ddp_memory *solver_mem, double alpha)
+            ocp_nlp_workspace *work, ocp_nlp_out *out_destination,
+            ocp_nlp_ddp_memory *solver_mem, double alpha, bool full_step_dual)
 {
     ocp_nlp_ddp_memory *ddp_mem = solver_mem;
     /* computes trial iterate in tmp_nlp_out */
@@ -652,7 +652,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_nlp_config *config = config_;
     ocp_nlp_ddp_opts *opts = opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
-    ocp_nlp_globalization_opts *globalization_opts = nlp_opts->globalization;
+    // ocp_nlp_globalization_opts *globalization_opts = nlp_opts->globalization;
     ocp_nlp_ddp_memory *mem = mem_;
     ocp_nlp_in *nlp_in = nlp_in_;
     ocp_nlp_out *nlp_out = nlp_out_;
@@ -913,8 +913,8 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         if (infeasible_initial_guess)
         {
             // Accept the forward simulation to get feasible initial guess
-            mem->alpha = 1.0;  // full step to obtain feasible initial gues
-            ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_work->tmp_nlp_out, mem, mem->alpha);
+            mem->alpha = 1.0;  // full step to obtain feasible initial guess
+            ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_work->tmp_nlp_out, mem, mem->alpha, 1.0);
             copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
             infeasible_initial_guess = false;
         }

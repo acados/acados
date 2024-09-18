@@ -69,7 +69,7 @@ typedef struct
     acados_size_t (*memory_calculate_size)(void *config, void *dims);
     void *(*memory_assign)(void *config, void *dims, void *raw_memory);
     /* functions */
-    int (*find_acceptable_iterate)(void *nlp_config, void *nlp_dims, void *nlp_in, void *nlp_out, void *solver_mem, void *nlp_mem, void *nlp_work, void *nlp_opts, double *alpha);
+    int (*find_acceptable_iterate)(void *nlp_config, void *nlp_dims, void *nlp_in, void *nlp_out, void *solver_mem, void *nlp_mem, void *nlp_work, void *nlp_opts, double *step_size);
     // TODO: specify inputs below!
     void (*print_iteration_header)();
     void (*print_iteration)(double objective_value,
@@ -91,7 +91,7 @@ typedef struct
                             void *nlp_opts_);
     void (*step_update)(void *config, void *dims, void *in,
             void *out_start, void *opts, void *mem, void *work,
-            void *out_destination, void* solver_mem, double alpha);
+            void *out_destination, void* solver_mem, double alpha, bool full_step_dual);
                 
 } ocp_nlp_globalization_config;
 

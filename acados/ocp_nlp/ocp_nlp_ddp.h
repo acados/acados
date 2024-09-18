@@ -172,7 +172,7 @@ int ocp_nlp_ddp_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_dims *d
 void ocp_nlp_ddp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_dims *dims,
             ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
             ocp_nlp_workspace *work, ocp_nlp_out *out_destination, ocp_nlp_ddp_memory *solver_mem,
-            double alpha);
+            double alpha, bool full_step_dual);
 //
 double ocp_nlp_ddp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
                 ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem);

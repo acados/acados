@@ -1069,7 +1069,6 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     regularize->opts_initialize_default(regularize, dims->regularize, opts->regularize);
 
     // globalization
-    printf("Juhu we initialize our stuff!!\n");
     globalization->opts_initialize_default(globalization, dims, opts->globalization);
 
     // dynamics
@@ -2502,7 +2501,7 @@ step size 'alpha', and current iterate 'out_start'.
  */
 void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out_start, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
-            ocp_nlp_out *out_destination, void* solver_mem, double alpha)
+            ocp_nlp_out *out_destination, void* solver_mem, double alpha, bool full_step_dual)
 {
     // solver_mem is not used
     ocp_nlp_globalization_opts *globalization_opts = opts->globalization;
@@ -2522,7 +2521,7 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
         blasfeo_daxpy(nv[i], alpha, mem->qp_out->ux + i, 0, out_start->ux + i, 0, out_destination->ux + i, 0);
 
         // update dual variables
-        if (globalization_opts->full_step_dual)
+        if (full_step_dual)
         {
             blasfeo_dveccp(2*ni[i], mem->qp_out->lam+i, 0, out_destination->lam+i, 0);
             if (i < N)
