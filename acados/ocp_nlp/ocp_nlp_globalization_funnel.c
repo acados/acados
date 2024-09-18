@@ -410,7 +410,8 @@ int backtracking_line_search(ocp_nlp_config *config,
                             ocp_nlp_memory *nlp_mem,
                             void *solver_mem,
                             ocp_nlp_workspace *nlp_work,
-                            ocp_nlp_opts *nlp_opts)
+                            ocp_nlp_opts *nlp_opts,
+                            double *step_size)
 {
     ocp_nlp_globalization_funnel_opts *opts = nlp_opts->globalization;
     ocp_nlp_globalization_opts *globalization_opts = opts->globalization_opts;
@@ -503,6 +504,7 @@ int backtracking_line_search(ocp_nlp_config *config,
         if (accept_step)
         {
             mem->alpha = alpha;
+            *step_size = alpha;
             nlp_mem->cost_value = trial_cost;
             mem->l1_infeasibility = trial_infeasibility;
             return 1;
@@ -519,7 +521,7 @@ int backtracking_line_search(ocp_nlp_config *config,
     }
 }
 
-int ocp_nlp_globalization_funnel_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_)
+int ocp_nlp_globalization_funnel_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_, double *step_size)
 {
     ocp_nlp_config *nlp_config = nlp_config_;
     ocp_nlp_dims *nlp_dims = nlp_dims_;
@@ -530,7 +532,7 @@ int ocp_nlp_globalization_funnel_find_acceptable_iterate(void *nlp_config_, void
     ocp_nlp_opts *nlp_opts = nlp_opts_;
 
     bool linesearch_success = 1;
-    linesearch_success = backtracking_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_mem, solver_mem, nlp_work, nlp_opts);
+    linesearch_success = backtracking_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_mem, solver_mem, nlp_work, nlp_opts, step_size);
     // Copy new iterate to nlp_out
     if (linesearch_success)
     {

@@ -922,7 +922,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             int globalization_success = 1;
             acados_tic(&timer1);
-            globalization_success = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts);
+            globalization_success = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts, &mem->alpha);
             if (globalization_success != 1)
             {
                 if (nlp_opts->print_level > 1)

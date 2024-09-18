@@ -119,9 +119,9 @@ void merit_backtracking_initialize_weights(ocp_nlp_dims *dims, ocp_nlp_out *weig
 //
 void merit_backtracking_update_weights(ocp_nlp_dims *dims, ocp_nlp_out *weight_merit_fun, ocp_qp_out *qp_out);
 //
-int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_);
+int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_, double *step_size);
 //
-int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate_for_ddp(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_);
+int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate_for_ddp(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_, double *step_size);
 //
 void ocp_nlp_globalization_merit_backtracking_print_iteration_header();
 //

@@ -143,7 +143,7 @@ void *ocp_nlp_globalization_fixed_step_memory_assign(void *config_, void *dims_,
 /************************************************
  * fixed step functions
  ************************************************/
-int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_)
+int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_, double *step_size)
 {
     ocp_nlp_config *nlp_config = nlp_config_;
     ocp_nlp_dims *nlp_dims = nlp_dims_;
@@ -154,6 +154,7 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
     ocp_nlp_opts *nlp_opts = nlp_opts_;
     
     nlp_config->globalization->step_update(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, nlp_opts->step_length);
+    *step_size = nlp_opts->step_length;
     // ocp_nlp_update_variables_sqp(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, nlp_opts->step_length);
 
     return 1;

@@ -565,7 +565,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     if (nlp_opts->print_level > 3)
     {
         printf("\n\nSQP: SOC ocp_qp_in at iteration %d\n", sqp_iter);
-        print_ocp_qp_in(qp_in);
+        // print_ocp_qp_in(qp_in);
     }
 
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
@@ -582,7 +582,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     config->regularize->correct_dual_sol(config->regularize, dims->regularize,
                                         nlp_opts->regularize, nlp_mem->regularize_mem);
 
-    ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
+    // ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
     int qp_iter = qp_info_->num_iter;
 
     // save statistics of last qp solver call
@@ -939,7 +939,6 @@ static int ocp_nlp_ddp_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_
     ocp_nlp_globalization_merit_backtracking_memory *mem = nlp_mem->globalization;
     int N = dims->N;
     double pred = -nlp_mem->qp_cost_value;
-    printf("Current pred: %f\n", pred);
     double alpha = 1.0;
     double trial_cost;
     double negative_ared;
@@ -976,7 +975,6 @@ static int ocp_nlp_ddp_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_
         }
 
         negative_ared = trial_cost - nlp_mem->cost_value;
-        printf("negative ared: %f\n", negative_ared);
         // Check Armijo sufficient decrease condition
         if (negative_ared <= fmin(-opts->eps_sufficient_descent*alpha* fmax(pred, 0) + 1e-18, 0))
         {
@@ -1001,7 +999,7 @@ static int ocp_nlp_ddp_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_
     }
 }
 
-int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate_for_ddp(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_)
+int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate_for_ddp(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_, double *step_size)
 {
     ocp_nlp_config *nlp_config = nlp_config_;
     ocp_nlp_dims *nlp_dims = nlp_dims_;
@@ -1024,6 +1022,7 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate_for_ddp(voi
     if (linesearch_success == 1)
     {
         // in case line search fails, we do not want to copy trial iterates!
+        *step_size = mem->alpha;
         copy_ocp_nlp_out(nlp_dims, nlp_work->tmp_nlp_out, nlp_out);
         return 1;
     }
@@ -1031,7 +1030,7 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate_for_ddp(voi
 }
 
 
-int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_)
+int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_, double *step_size)
 {
     ocp_nlp_config *nlp_config = nlp_config_;
     ocp_nlp_dims *nlp_dims = nlp_dims_;
@@ -1076,6 +1075,7 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_c
     // update variables
     nlp_config->globalization->step_update(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, mem->alpha);
     // ocp_nlp_update_variables_sqp(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, mem->alpha);
+    *step_size = mem->alpha;
     return 1;
 }
 
