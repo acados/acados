@@ -43,168 +43,137 @@ from export_mhe_solver import export_mhe_solver
 from export_ode_mhe_integrator import export_ode_mhe_integrator
 from utils import plot_pendulum
 import numpy as np
-from scipy.linalg import block_diag
 
 
-Tf_ocp = 1.0
-N_ocp = 20
+def main():
+    Tf_ocp = 1.0
+    N_ocp = 20
 
-Ts = Tf_ocp/N_ocp # time step
+    Ts = Tf_ocp/N_ocp # time step
 
-Tf_mhe = 0.5*Tf_ocp
-N_mhe = int(Tf_mhe/Ts)
+    Tf_mhe = 0.5*Tf_ocp
+    N_mhe = int(Tf_mhe/Ts)
 
-u_max = 80
+    u_max = 80
 
-# state and measurement noise
-v_stds_mhe = np.array([0.1, 0.1, .5, 0.3]) # measurement noise stds
-w_stds_mhe = np.array([0.01, 0.001, 0.001, 0.001]) # state noise stds
+    # state and measurement noise
+    v_stds_mhe = np.array([0.1, 0.1, .5, 0.3]) # measurement noise stds
+    w_stds_mhe = np.array([0.01, 0.001, 0.001, 0.001]) # state noise stds
 
-v_stds_plant = .8 * np.array([0.1, 0.1, .5, 0.3])
-w_stds_plant = np.zeros((4,))
+    v_stds_plant = .8 * np.array([0.1, 0.1, .5, 0.3])
+    w_stds_plant = np.zeros((4,))
 
-V = np.diag(v_stds_plant)
-W = np.diag(w_stds_plant)
+    V_mat = np.diag(v_stds_plant)
+    W_mat = np.diag(w_stds_plant)
 
-# ocp model and solver
-model = export_pendulum_ode_model()
+    # ocp model and solver
+    model = export_pendulum_ode_model()
 
-nx = model.x.rows()
-nu = model.u.rows()
+    nx = model.x.rows()
+    nu = model.u.rows()
 
-Q_ocp = np.diag([1e3, 1e3, 1e-2, 1e-2])
-R_ocp = 1 * np.eye(1)
+    Q_ocp = np.diag([1e3, 1e3, 1e-2, 1e-2])
+    R_ocp = 1 * np.eye(1)
 
-acados_solver_ocp = export_ocp_solver(model, N_ocp, Ts, Q_ocp, R_ocp, Fmax=u_max)
+    acados_ocp_solver = export_ocp_solver(model, N_ocp, Ts, Q_ocp, R_ocp, Fmax=u_max)
 
-# mhe model and solver
-model_mhe = export_mhe_ode_model()
+    # mhe model and solver
+    model_mhe = export_mhe_ode_model()
 
-nw = model_mhe.u.rows()
-ny = nx
+    # inverse covariances, R_mhe has to be scaled with time step
+    Q_mhe = np.diag(1/w_stds_mhe)
+    R_mhe = 1/Ts*np.diag(1/v_stds_mhe)
 
-# inverse covariances, R_mhe has to be scaled with h
-Q_mhe = np.diag(1/w_stds_mhe)
-R_mhe = 1/Ts*np.diag(1/v_stds_mhe)
+    # arrival cost weighting
+    Q0_mhe = 0.01*Q_mhe
 
-# arrival cost weighting
-Q0_mhe = 0.01*Q_mhe
+    acados_mhe_solver = export_mhe_solver(model_mhe, N_mhe, Ts, Q_mhe, Q0_mhe, R_mhe)
 
-acados_solver_mhe = export_mhe_solver(model_mhe, N_mhe, Ts, Q_mhe, Q0_mhe, R_mhe)
+    # integrator/plant
+    plant = export_ode_mhe_integrator(model_mhe, Ts)
 
-# integrator/plant
-plant = export_ode_mhe_integrator(model_mhe, Ts)
+    # simulation
+    Nsim = 100
 
-# simulation
-Nsim = 100
+    simX = np.zeros((Nsim+1, nx))
+    simU = np.zeros((Nsim, nu))
+    simY = np.zeros((Nsim+1, nx))
 
-simX = np.zeros((Nsim+1, nx))
-simU = np.zeros((Nsim, nu))
-simY = np.zeros((Nsim+1, nx))
+    simXest = np.zeros((Nsim+1, nx))
 
-simXest = np.zeros((Nsim+1, nx))
-simWest = np.zeros((Nsim+1, nx))
+    # arrival cost mean & initial state
+    x0_plant = np.array([0.1, np.pi + 0.5, -0.05, 0.05])
+    x0_bar = np.array([0.0, np.pi, 0.0, 0.0])
 
-# arrival cost mean & initial state
-x0_plant = np.array([0.1, np.pi + 0.5, -0.05, 0.05])
-x0_bar = np.array([0.0, np.pi, 0.0, 0.0])
+    u0 = np.zeros((nu,))
 
-u0 = np.zeros((nu,))
+    # initial state
+    simX[0,:] = x0_plant
 
-# initial state
-simX[0,:] = x0_plant
+    # initialize MHE solver
+    for i in range(N_mhe):
+        acados_mhe_solver.set(i, "x", x0_bar)
 
-# init solvers
-for i in range(N_mhe):
-    acados_solver_mhe.set(i, "x", x0_bar)
+    # simulate for N_mhe steps with zero input
+    for i in range(N_mhe):
 
-# simulate for N_mhe steps with zero input
-for i in range(N_mhe):
-    
-    # measurement
-    simY[i,:] = simX[i,:] + (V @ np.random.standard_normal((nx,1))).T
+        # measurement
+        simY[i,:] = simX[i,:] + (V_mat @ np.random.standard_normal((nx,1))).T
 
-    # simulate one step 
-    w = W @ np.random.standard_normal((nx,))
-    plant.set("u", w)
-    plant.set("p", u0)
-    plant.set("x", simX[i,:])
+        # simulate
+        w = W_mat @ np.random.standard_normal((nx,))
+        simX[i+1,:] = plant.simulate(x=simX[i,:], u=w, p=u0)
 
-    # solve
-    status = plant.solve()
+    # reference for mhe
+    yref = np.zeros((2*nx, ))
+    yref_0 = np.zeros((3*nx, ))
 
-    if status != 0:
-        raise Exception('integrator returned status {} in step {}. Exiting.'.format(status, i))
+    # closed loop
+    for i in range(N_mhe, Nsim):
 
-    # get solution
-    simX[i+1,:] = plant.get("x")
-   
+        ### estimation ###
+        k = i - N_mhe
 
-# reference for mhe
-yref = np.zeros((2*nx, ))
-yref_0 = np.zeros((3*nx, ))
-
-# closed loop
-for i in range(N_mhe, Nsim):
-
-    ### estimation ###
-    k = i - N_mhe
-    
-    # set measurements
-    yref_0[:nx] = simY[k, :]
-    yref_0[2*nx:] = x0_bar
-
-    acados_solver_mhe.set(0, "yref", yref_0)
-    # set controls
-    acados_solver_mhe.set(0, "p", simU[k,:])
-
-    for j in range(1, N_mhe):
         # set measurements
-        yref[:nx] = simY[k+j, :]
-        acados_solver_mhe.set(j, "yref", yref)
+        yref_0[:nx] = simY[k, :]
+        yref_0[2*nx:] = x0_bar
+
+        acados_mhe_solver.set(0, "yref", yref_0)
         # set controls
-        acados_solver_mhe.set(j, "p", simU[k+j,:])
+        acados_mhe_solver.set(0, "p", simU[k,:])
 
-    status = acados_solver_mhe.solve()
+        for j in range(1, N_mhe):
+            # set measurements
+            yref[:nx] = simY[k+j, :]
+            acados_mhe_solver.set(j, "yref", yref)
+            # set controls
+            acados_mhe_solver.set(j, "p", simU[k+j,:])
 
-    if status != 0:
-        raise Exception('estimator returned status {} in step {}. Exiting.'.format(status, i))
-    simXest[i,:] = acados_solver_mhe.get(N_mhe, "x")
+        status = acados_mhe_solver.solve()
 
-    # update arrival cost
-    x0_bar = acados_solver_mhe.get(1, "x")
+        if status != 0:
+            raise Exception(f'estimator returned status {status} in step {i}.')
+        simXest[i,:] = acados_mhe_solver.get(N_mhe, "x")
 
-    ### control ###
-    # update initial condition of ocp solver
-    acados_solver_ocp.set(0, "lbx", simXest[i, :])
-    acados_solver_ocp.set(0, "ubx", simXest[i, :])
+        # update arrival cost
+        x0_bar = acados_mhe_solver.get(1, "x")
 
-    status = acados_solver_ocp.solve()
-    # acados_solver_ocp.print_statistics()
-    if status != 0:
-        raise Exception('controller returned status {} in step {}. Exiting.'.format(status, i))
+        ### control ###
+        simU[i:, ] = acados_ocp_solver.solve_for_x0(simXest[i, :])
 
-    simU[i:, ] = acados_solver_ocp.get(0, "u")
+        ### simulation ###
+        # measurement
+        simY[i,:] = simX[i, :] + (V_mat @ np.random.standard_normal((nx,1))).T
+        w = W_mat @ np.random.standard_normal((nx,))
+        simX[i+1,:] = plant.simulate(x=simX[i,:], u=w, p=simU[i,:])
 
-    ### simulation ###
-    # measurement
-    simY[i,:] = simX[i, :] + (V @ np.random.standard_normal((nx,1))).T
+    # plot
+    print('estimation error p', np.linalg.norm(simX[:, 0] - simXest[:, 0]))
+    print('estimation error theta', np.linalg.norm(simX[:, 1] - simXest[:, 1]))
+    print('estimation error v', np.linalg.norm(simX[:, 2] - simXest[:, 2]))
+    print('estimation error dtheta', np.linalg.norm(simX[:, 3] - simXest[:, 3]))
 
-    w = W @ np.random.standard_normal((nx,))
-    plant.set("u", w)
-    plant.set("p", simU[i,:])
-    plant.set("x", simX[i,:])
+    plot_pendulum(np.linspace(0, Ts*Nsim, Nsim+1), u_max, simU, simX, simXest[N_mhe:, :], simY)
 
-    status = plant.solve()
-    if status != 0:
-        raise Exception('integrator returned status {} in step {}. Exiting.'.format(status, i))
-
-    simX[i+1,:] = plant.get("x")
-
-# plot
-print('estimation error p', np.linalg.norm(simX[:, 0] - simXest[:, 0]))
-print('estimation error theta', np.linalg.norm(simX[:, 1] - simXest[:, 1]))
-print('estimation error v', np.linalg.norm(simX[:, 2] - simXest[:, 2]))
-print('estimation error dtheta', np.linalg.norm(simX[:, 3] - simXest[:, 3]))
-
-plot_pendulum(np.linspace(0, Ts*Nsim, Nsim+1), u_max, simU, simX, simXest[N_mhe:, :], simY)
+if __name__ == '__main__':
+    main()

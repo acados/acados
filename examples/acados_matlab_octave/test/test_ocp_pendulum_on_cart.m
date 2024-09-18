@@ -37,7 +37,6 @@ addpath('../pendulum_on_cart_model/');
 for itest = 1:3
     %% arguments
     compile_interface = 'auto';
-    codgen_model = 'true';
     gnsf_detect_struct = 'true';
 
     % discretization
@@ -195,7 +194,6 @@ for itest = 1:3
     %% acados ocp opts
     ocp_opts = acados_ocp_opts();
     ocp_opts.set('compile_interface', compile_interface);
-    ocp_opts.set('codgen_model', codgen_model);
     ocp_opts.set('param_scheme_N', N);
     ocp_opts.set('nlp_solver', nlp_solver);
     ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);

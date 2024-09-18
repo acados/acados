@@ -53,6 +53,7 @@
 \newcommand{\initial}{^{\textrm{0}}}
 \newcommand{\matr}[1]{\begin{bmatrix}#1\end{bmatrix}}
 \newcommand{\upind}[1]{\ensuremath{{^{\textrm{#1}}}}}
+\newcommand{\glob}{_{\textrm{global}}}
 % slack indices
 \newcommand{\Lower}{\ind{l}}
 \newcommand{\lowerh}{\ind{l,h}}
@@ -100,13 +101,13 @@ In \acados{}, one can formulate continuous-time optimal control problems (OCP) o
     &\underset{\begin{subarray}{c}
         x(\cdot),\,u(\cdot), \, z(\cdot), \, s(\cdot), \, s\terminal
         \end{subarray}}{\min}
-    &&\int_0^T l(x(\tau), u(\tau), z(\tau), t, p)
-     + \frac{1}{2} \matr{s\Lower(\tau) \\ s\upper(\tau) \\ 1} \tran
+    &&\int_0^T l(x(t), u(t), z(t), t, p(t), p\glob)
+     + \frac{1}{2} \matr{s\Lower(t) \\ s\upper(t) \\ 1} \tran
       \matr{ Z\Lower & 0 & z\Lower \\
       0 & Z\upper & z\upper \\
         {z\Lower}\tran & {z\upper}\tran & 0}
-    \matr{s\Lower(\tau) \\ s\upper(\tau) \\ 1} \mathrm{d}t \; + \nonumber\\
-     &&& \quad \quad m(x(T), z(T), p) +
+    \matr{s\Lower(t) \\ s\upper(t) \\ 1} \mathrm{d}t \; + \nonumber\\
+     &&& \quad \quad m(x(T), z(T), p(T), p\glob) +
       \frac{1}{2} \matr{s\Lower\terminal \\ s\upper\terminal \\ 1} \tran
      \matr{ Z\Lower\terminal & 0 & z\Lower\terminal \\
          0 & Z\upper\terminal & z\upper\terminal \\
@@ -117,14 +118,14 @@ In \acados{}, one can formulate continuous-time optimal control problems (OCP) o
     &&&\mathComment{Initial values, see section \ref{sec:constraints:initial}}\nonumber\\
     &\,\,\,\quad \text{s.t.}    &&\underline{x}_0 \leq J\ind{bx}\initial \, x(0) \leq \overline{x}_0 , && \label{eq:constraints:initial}\\[1ex]
     &&&\mathComment{Nonlinear constraints on the initial shooting node} \nonumber\\
-    &&&\underline{h}\initial \leq h\initial(x(0), u(0), z(0), p) + J_{\textrm{sh}}\initial \, s\lowerh\initial, &&\label{eq:constraints:path:lower_bounds:start}\\
-    &&& h\initial(x(0), u(0),  z(0), p) - J\ind{sh}\initial\, s\ind{u,h}\initial \leq \overline{h}\initial, &&\label{eq:constraints:path:upper_bounds:start}\\
+    &&&\underline{h}\initial \leq h\initial(x(0), u(0), z(0), p(0), p\glob) + J_{\textrm{sh}}\initial \, s\lowerh\initial, &&\label{eq:constraints:path:lower_bounds:start}\\
+    &&& h\initial(x(0), u(0),  z(0), p(0), p\glob) - J\ind{sh}\initial\, s\ind{u,h}\initial \leq \overline{h}\initial, &&\label{eq:constraints:path:upper_bounds:start}\\
     &&&\mathComment{Dynamics, see section \ref{sec:dynamics}}\nonumber\\
     %% dynamics
-    &&& f\ind{impl}(x(t), \dot{x}(t), u(t), z(t), t, p) = 0, &&\quad t \in [0,\,T), \label{eq:dynamics}\\[1ex]
+    &&& f\ind{impl}(x(t), \dot{x}(t), u(t), z(t), t, p(t), p\glob) = 0, &&\quad t \in [0,\,T), \label{eq:dynamics}\\[1ex]
     &&&\mathComment{Path constraints with lower bounds, see section \ref{sec:constraints:path}}\nonumber\\
     %% path constraints with lower slack
-    &&&\underline{h} \leq h(x(t), u(t), z(t), p) + J_{\textrm{sh}} \, s\lowerh(t), &&\quad t \in (0,\,T),\\
+    &&&\underline{h} \leq h(x(t), u(t), z(t), p(t), p\glob) + J_{\textrm{sh}} \, s\lowerh(t), &&\quad t \in (0,\,T),\\
     &&&\underline{x} \leq J_{\textrm{bx}} \, x(t) + J_{\textrm{sbx}} \,s\lowerbx(t), &&\quad t \in (0,\,T),\\
     &&&\underline{u} \leq J_{\textrm{bu}} \,u(t) + J_{\textrm{sbu}} \,s\lowerbu(t), &&\quad t \in [0,\,T),\\
     &&&\underline{g} \leq C\,x(t) + D\,u(t) + J_{\textrm{sg}} \,s\lowerg(t), &&\quad t \in [0,\,T), \\
@@ -132,7 +133,7 @@ In \acados{}, one can formulate continuous-time optimal control problems (OCP) o
     &&& s\lowerh\initial \geq 0, && \label{eq:constraints:path:lower_bounds:end}\\[1ex]
     &&&\mathComment{Path constraints with upper bounds, see section \ref{sec:constraints:path}}\nonumber\\
     %% path constraints with upper slack
-    &&& h(x(t), u(t), z(t), p) - J_{\textrm{sh}} \, s\upperh(t) \leq \overline{h}, &&\quad t \in (0,\,T),\\
+    &&& h(x(t), u(t), z(t), p(t), p\glob) - J_{\textrm{sh}} \, s\upperh(t) \leq \overline{h}, &&\quad t \in (0,\,T),\\
     &&& J_{\textrm{bx}} x(t) - J_{\textrm{sbx}}\, s\upperbx(t) \leq \overline{x}, &&\quad t \in (0,\,T),\\
     &&& J_{\textrm{bu}} u(t) - J_{\textrm{sbu}}\, s\upperbu(t)\leq \overline{u}, &&\quad t \in [0,\,T),\\
     &&& Cx(t) + Du(t) - J_{\textrm{sg}}\, s\upperg \leq \overline{g}, &&\quad t \in [0,\,T), \\
@@ -140,13 +141,13 @@ In \acados{}, one can formulate continuous-time optimal control problems (OCP) o
     &&& s\ind{u,h}\initial \geq 0, && \label{eq:constraints:path:upper_bounds:end}\\[1ex]
     %% lower terminal constraints
     &&&\mathComment{Terminal constraints with lower bounds, see section \ref{sec:constraints:path}}\nonumber\\
-    &&&\underline{h}\terminal \leq h\terminal(x(T), p) + J\ind{sh}\terminal\, s\lowerh\terminal, &&\label{eq:constraints:terminal:lower_bounds:start}\\
+    &&&\underline{h}\terminal \leq h\terminal(x(T), p(T), p\glob) + J\ind{sh}\terminal\, s\lowerh\terminal, &&\label{eq:constraints:terminal:lower_bounds:start}\\
     &&&\underline{x}\terminal \leq J_{\textrm{bx}}\terminal\, x(T) + J\ind{sbx}\terminal\, s\lowerbx\terminal, &&\\ % TODO: add Jsbx_e?!
     &&&\underline{g}\terminal \leq C\terminal\, x(T) + J\ind{sg}\terminal\, s\lowerg\terminal \leq \overline{g}\terminal, && \\
     &&& s\lowerh\terminal, s\lowerbx\terminal, s\lowerbu\terminal, s\lowerg\terminal \geq 0, \label{eq:constraints:terminal:lower_bounds:end}\\[1ex]
     %% upper terminal constraints
     &&&\mathComment{Terminal constraints with upper bounds, see section \ref{sec:constraints:path}}\nonumber\\
-    &&& h\terminal(x(T), p) - J\ind{sh}\terminal\, s\ind{u,h}\terminal \leq \overline{h}\terminal, &&\label{eq:constraints:terminal:upper_bounds:start}\\
+    &&& h\terminal(x(T), p(T), p\glob) - J\ind{sh}\terminal\, s\ind{u,h}\terminal \leq \overline{h}\terminal, &&\label{eq:constraints:terminal:upper_bounds:start}\\
     &&& J_{\textrm{bx}}\terminal\, x(T) - J\ind{sbx}\terminal\, s\ind{u,bx}\terminal \leq \overline{x}^{e}, &&\\
     &&& C\terminal\, x(T) - J\ind{sg}\terminal\, s\ind{u,g}\terminal \leq \overline{g}\terminal \\
     &&& s\upperh\terminal, s\upperbx\terminal, s\upperbu\terminal, s\upperg\terminal \geq 0,\label{eq:constraints:terminal:upper_bounds:end}
@@ -157,7 +158,8 @@ with
 \item state vector $ x: \R \rightarrow \R^{\nx} $
 \item control vector $ u: \R \rightarrow \R^{\nuu} $
 \item algebraic state vector $ z: \R \rightarrow \R^{\nz} $
-\item model parameters $ p \in \R^{\np} $
+\item time-varying problem parameters $ p: \R \rightarrow \in \R^{\np}$
+\item global problem parameters $p\glob  \in \R^{n_{p\glob}}$
 \item slacks for initial constraints $s\ind{u,h}\initial \in \R^{\ns\initial}$ and $s\ind{l,h}\initial \in \R^{\ns\initial}$
 \item slacks for path constraints $ s\Lower(t) = (s\lowerbu, s\lowerbx, s\lowerg, s\lowerh) \in \R^{\ns} $ and $ s\upper(t) = (s\upperbu, s\upperbx, s\upperg, s\upperh) \in \R^{\ns} $
 \item slacks for terminal constraints $ s\Lower\terminal(t) = (s\lowerbx\terminal, s\lowerg\terminal, s\lowerh\terminal) \in \R^{\ns\terminal} $ and $ s\upper\terminal(t) = (s\upperbx\terminal, s\upperg\terminal, s\upperh\terminal) \in \R^{\ns\terminal} $
@@ -165,7 +167,7 @@ with
 \item diagonal matrices $Z\ind{l}, Z\ind{u}$, $Z\ind{l}\terminal, Z\ind{u}\terminal$
 \end{itemize}
 
-While the user specifies the OCP in continuous time, the problem is internally discretized using the \textbf{multiple shooting} approach and a piecewise constant control parametrization.
+While the user specifies the OCP in continuous time, the problem is internally discretized using the \textbf{multiple shooting} approach and a piecewise constant parametrization for the control and parameter trajectory.
 In particular, the algebraic variables returned by \acados{} are associated with the beginning of a shooting interval.
 Thus, there are no algebraic variables available at the terminal node.
 
@@ -206,7 +208,7 @@ This section and Table~\ref{tab:dynamics} summarize these options.
 %
 The most general way to provide a continuous-time ODE in \acados\ is to define the function $ f\ind{impl}: \mathbb{R}^{\nx}\times\mathbb{R}^{\nx}\times\mathbb{R}^{\nuu}\times\mathbb{R}^{\nz}\times\mathbb{R} \times \mathbb{R}^{\np} \rightarrow \mathbb{R}^{\nx+\nz}$ which is fully implicit DAE formulation describing the system as:
 \begin{equation}
-    f\ind{impl}(x, \dot{x}, u, z, t, p) = 0.\label{eq:dynamics:implicit}
+    f\ind{impl}(x, \dot{x}, u, z, t, p, p\glob) = 0.\label{eq:dynamics:implicit}
 \end{equation}
 \acados{} can discretize $ f\ind{impl} $ with a classical implicit Runge-Kutta (\code{'IRK'}), a structure exploiting implicit Runge-Kutta method (\code{'GNSF'}) \cite{Frey2019}, or a lifted-Newton direct collocation method (\code{'LIFTED\_IRK'}) \cite{Quirynen2015a}.
 These discretization methods are set via \code{AcadosOcpOptions.integrator\_type}.
@@ -218,7 +220,7 @@ The implicit dynamics $f\ind{impl}$ need to be provided as a \casadi{} expressio
 %
 Alternatively, \acados{} offers an explicit Runge-Kutta integrator (\code{'ERK'}), which can be used with explicit ODE models, i.e., models of the form
 \begin{align}
-f\ind{expl}(x,u,t,p) &= \dot{x}.\label{eq:dynamics:explicit}
+f\ind{expl}(x,u,t,p, p\glob) &= \dot{x}.\label{eq:dynamics:explicit}
 \end{align}
 The explicit dynamics $f\ind{expl}$ need to be provided as a \casadi{} expression and set as \code{AcadosModel.f\_expl\_expr}.
 The explicit integrator is used if \code{AcadosOcpOptions.integrator\_type} is set to \code{'ERK'}.
@@ -242,11 +244,12 @@ The discrete dynamics are used if \code{AcadosOcpOptions.integrator\_type} is se
 \toprule
 Term & Attribute/Property & Data type & Required \\ \midrule
 $x$ & \code{AcadosModel.x} & \casadi~synmbolic & \mandatory \\[3pt]
-$\dot{x}$ & \code{AcadosModel.xdot} & \casadi~synmbolic & \mandatory{} for \code{'IRK'}, \code{'LIFTED\_IRK'}, \code{'GNSF'}  \\[3pt]
-$u$ & \code{AcadosModel.u} & \casadi~synmbolic & \optional \\[3pt]
-$z$ & \code{AcadosModel.z} & \casadi~synmbolic & \optional \\[3pt]
-$p$ & \code{AcadosModel.p} & \casadi~synmbolic & \optional \\[3pt]
-$t$ & \code{AcadosModel.t} & \casadi~synmbolic & \optional \\[3pt]
+$\dot{x}$ & \code{AcadosModel.xdot} & \casadi~symbolic & \mandatory{} for \code{'IRK'}, \code{'LIFTED\_IRK'}, \code{'GNSF'}  \\[3pt]
+$u$ & \code{AcadosModel.u} & \casadi~symbolic & \optional \\[3pt]
+$z$ & \code{AcadosModel.z} & \casadi~symbolic & \optional \\[3pt]
+$p$ & \code{AcadosModel.p} & \casadi~symbolic & \optional \\[3pt]
+$p\glob$ & \code{AcadosModel.p\_global} & \casadi~symbolic & \optional \\[3pt]
+$t$ & \code{AcadosModel.t} & \casadi~symbolic & \optional \\[3pt]
 \midrule
 integrator type & \code{AcadosOcpOptions.integrator\_type},  \code{AcadosSimOptions.integrator\_type} & str in [\code{'ERK'}, \code{'IRK'}, \code{'DISCRETE'}, \code{'LIFTED\_IRK'}, \code{'GNSF'}] & \mandatory \\[3pt]
 \midrule
@@ -426,9 +429,9 @@ See Table~\ref{tab:cost:nonlinear_ls} for the available options of this cost mod
 
 If the cost takes the form
 \begin{align}
-l(x, u, t, p) = \psi(r(x, u, z, t, p) - y_\mathrm{ref}, t, p), \qquad m(x, p) = \psi\terminal(r\terminal(x, t, p) - y_\mathrm{ref}\terminal, p),
+l(x, u, t, p, p\glob) = \psi(y(x, u, z, t, p, p\glob) - y_\mathrm{ref}, t, p, p\glob), \qquad m(x, p, p\glob) = \psi\terminal(y\terminal(x, t, p, p\glob) - y_\mathrm{ref}\terminal, p, p\glob),
 \end{align}
-with $\psi$ and $\psi\terminal$ convex, we say the cost has convex-over-nonlinear structure.
+with $\psi(r)$ and $\psi\terminal(r\terminal)$ convex, we say the cost has convex-over-nonlinear structure.
 In this case, a Generalized Gauss-Newton Hessian might be used for the SQP subproblems \cite{Messerer2021a}, which is used whenever \code{AcadosOcpOptions.hessian\_approx = 'GAUSS\_NEWTON'}.
 See Table~\ref{tab:cost:conl} for the available options of this cost module.
 
@@ -558,17 +561,17 @@ We refer to Section~\ref{sec:constraints:initial} for an example.
 
 The matrices are described as follows:
 \begin{itemize}
-    \item $J\ind{sh}$ maps lower slack vectors $s\ind{l,h}(t)$ and upper slack vectors $s\ind{u,h}(t)$ onto the nonlinear constraint expressions $h(x,u,p)$.
+    \item $J\ind{sh}$ maps lower slack vectors $s\ind{l,h}(t)$ and upper slack vectors $s\ind{u,h}(t)$ onto the nonlinear constraint expressions $h(x,u,p, p\glob)$.
     \item $J\ind{bx}$, $J\ind{bu}$ map $x(t)$ and $u(t)$ onto their bounds vectors $\underline{x}$, $\overline{x}$ and $\underline{u}$, $\overline{u}$, respectively.
     \item $J\ind{sbx}$, $J\ind{sbu}$ map lower slack vectors $s\ind{l,bx}(t)$, $s\ind{l,bu}(t)$ and upper slack vectors $s\ind{u,bx}(t)$, $s\ind{u,bu}(t)$ onto $x(t)$ and $u(t)$, respectively.
     \item $J\ind{sg}$ maps lower slack vectors $s\ind{l,g}(t)$ and upper slack vectors $s\ind{u,g}(t)$ onto lower and upper equality bounds $\underline{g}$, $\overline{g}$, respectively.
     \item $C$, $D$ map $x(t)$ and $u(t)$ onto lower and upper inequality bounds $\underline{g}$, $\overline{g}$ (polytopic constraints).
-    \item $J\ind{sh}\initial$ maps lower slack vectors $s\ind{l,h}\initial$ and upper slack vectors $s\ind{u,h}\initial$ onto the nonlinear initial constraint expressions $h\initial(x(0),u(0),p)$.
+    \item $J\ind{sh}\initial$ maps lower slack vectors $s\ind{l,h}\initial$ and upper slack vectors $s\ind{u,h}\initial$ onto the nonlinear initial constraint expressions $h\initial(x(0),u(0),p, p\glob)$.
 \end{itemize}
 
 Similarly for the terminal constraints:
 \begin{itemize}
-	\item $J\ind{sh}\terminal$ maps lower slack vectors $s\ind{l,h}\terminal(t)$ and upper slack vectors $s\ind{u,h}\terminal(t)$ onto nonlinear terminal constraint expressions $h\terminal(x(T), p)$.
+	\item $J\ind{sh}\terminal$ maps lower slack vectors $s\ind{l,h}\terminal(t)$ and upper slack vectors $s\ind{u,h}\terminal(t)$ onto nonlinear terminal constraint expressions $h\terminal(x(T), p, p\glob)$.
 	\item $J\ind{bx}\terminal$ maps $x(T)$ onto its bounds vectors $\underline{x}\terminal$ and $\overline{x}\terminal$.
 	\item $J\ind{sbx}\terminal$ maps lower slack vectors $s\ind{l,bx}\terminal$ and upper slack vectors $s\ind{u,bx}\terminal$ onto $x(T)$.
 	\item $J\ind{sg}\terminal$ maps lower slack vectors $s\ind{l,g}\terminal(t)$ and upper slack vectors $s\ind{u,g}\terminal(t)$ onto lower and upper equality bounds $\underline{g}\terminal$, $\overline{g}\terminal$, respectively.

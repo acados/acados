@@ -34,10 +34,10 @@ if(ACADOS_OCTAVE)
     # new minimal examples
     add_test(NAME octave_new_ocp
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/getting_started
-        octave --no-gui --no-window-system ./new_minimal_example_ocp.m)
+        octave --no-gui --no-window-system ./minimal_example_ocp.m)
     add_test(NAME octave_new_sim
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/getting_started
-        octave --no-gui --no-window-system ./new_minimal_example_sim.m)
+        octave --no-gui --no-window-system ./minimal_example_sim.m)
     # dim check test
     add_test(NAME octave_test_dim_check
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
@@ -71,8 +71,12 @@ if(ACADOS_OCTAVE)
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./run_test_ocp_mass_spring.m)
     add_test(NAME octave_test_ocp_simple_dae
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-        octave --no-gui --no-window-system ./run_test_ocp_simple_dae.m)
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/simple_dae_model
+        octave --no-gui --no-window-system ./example_ocp.m)
+
+    add_test(NAME octave_test_mhe_lorentz
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/lorentz
+        octave --no-gui --no-window-system ./example_mhe.m)
 
     # OSQP
     if(ACADOS_WITH_OSQP)

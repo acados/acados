@@ -63,6 +63,17 @@ class GenerateContext:
         self.list_funname_dir_pairs = []  # list of (function_name, output_dir), NOTE: this can be used to simplify template based code generation!
         self.functions_to_generate: List[ca.Function] = []
 
+        # check if CasADi version supports cse
+        try:
+            from casadi import cse
+            casadi_fun_opts = {"cse": True}
+        except:
+            print("NOTE: Please consider updating to CasADi 3.6.6 which supports common subexpression elimination. \nThis might speed up external function evaluation.")
+            casadi_fun_opts = {}
+
+        self.__casadi_fun_opts = casadi_fun_opts
+
+
     def __add_function(self, name: str, output_dir: str, fun: ca.Function):
         self.list_funname_dir_pairs.append((name, output_dir))
         self.functions_to_generate.append(fun)
@@ -94,15 +105,10 @@ class GenerateContext:
 
         if self.p_global is None:
             # normal behaviour (p_global is empty)
-            fun = ca.Function(name, inputs, outputs)
+            fun = ca.Function(name, inputs, outputs, self.__casadi_fun_opts)
             self.__add_function(name, output_dir, fun)
         else:
             check_casadi_version_supports_p_global()
-            # interesting behaviour
-            inputs_augmented = inputs + [self.p_global]
-            fun = ca.Function(name, inputs_augmented, outputs)
-
-            outputs = fun.call(inputs_augmented, True, False) # always_inline=True, never_inline=False
 
             # This introduces novel symbols into the graph (extracted1, extracted2,...)
             [outputs_ret, symbols, param] = ca.extract_parametric(outputs, self.p_global)
@@ -118,7 +124,7 @@ class GenerateContext:
             outputs_ret = ca.substitute(outputs_ret, symbols, pools)
             self.p_global_expressions += param.primitives()
 
-            fun_mod = ca.Function(fun.name(), inputs, outputs_ret)
+            fun_mod = ca.Function(name, inputs, outputs_ret, self.__casadi_fun_opts)
             self.__add_function(name, output_dir, fun_mod)
 
     def finalize(self):
@@ -138,7 +144,7 @@ class GenerateContext:
 # Dynamics
 ################
 
-def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosModel):
+def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosModel, model_dir: str):
     opts = context.opts
 
     # load model
@@ -164,9 +170,6 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
     adj_ux = ca.jtimes(phi, ux, lam, True)
     # generate hessian
     hess_ux = ca.jacobian(adj_ux, ux, {"symmetric": is_casadi_SX(x)})
-
-    # change directory
-    model_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model_name}_model'))
 
     # set up & generate ca.Functions
     fun_name = model_name + '_dyn_disc_phi_fun'
@@ -195,9 +198,8 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
 
 
 
-def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel):
-    opts = context.opts
-    generate_hess = opts["generate_hess"]
+def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, model_dir: str):
+    generate_hess = context.opts["generate_hess"]
 
     # load model
     x = model.x
@@ -206,28 +208,19 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel):
     f_expl = model.f_expl_expr
     model_name = model.name
 
-    ## get model dimensions
     nx = x.size()[0]
     nu = u.size()[0]
 
     symbol = get_casadi_symbol(x)
 
-    ## set up functions to be exported
+    # set up expressions
     Sx = symbol('Sx', nx, nx)
     Sp = symbol('Sp', nx, nu)
     lambdaX = symbol('lambdaX', nx, 1)
 
-    fun_name = model_name + '_expl_ode_fun'
-
-    ## Set up functions
     vdeX = ca.jtimes(f_expl, x, Sx)
     vdeP = ca.jacobian(f_expl, u) + ca.jtimes(f_expl, x, Sp)
-
-    fun_name = model_name + '_expl_vde_forw'
-
     adj = ca.jtimes(f_expl, ca.vertcat(x, u), lambdaX, True)
-
-    fun_name = model_name + '_expl_vde_adj'
 
     if generate_hess:
         S_forw = ca.vertcat(ca.horzcat(Sx, Sp), ca.horzcat(ca.DM.zeros(nu,nx), ca.DM.eye(nu)))
@@ -237,12 +230,7 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel):
             for i in range(j,nx+nu):
                 hess2 = ca.vertcat(hess2, hess[i,j])
 
-        fun_name = model_name + '_expl_ode_hess'
-
-    # directory
-    model_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model_name}_model'))
-
-    # generate C code
+    # add to context
     fun_name = model_name + '_expl_ode_fun'
     context.add_function_definition(fun_name, [x, u, p], [f_expl], model_dir)
 
@@ -259,8 +247,7 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel):
     return
 
 
-def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel):
-    opts = context.opts
+def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel, model_dir: str):
 
     # load model
     x = model.x
@@ -282,8 +269,6 @@ def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel):
     jac_u = ca.jacobian(f_impl, u)
     jac_z = ca.jacobian(f_impl, z)
 
-    model_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model_name}_model'))
-
     # Set up functions
     p = model.p
     fun_name = model_name + '_impl_dae_fun'
@@ -301,7 +286,7 @@ def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel):
     fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
     context.add_function_definition(fun_name, [x, xdot, u, z, t, p], [jac_x, jac_xdot, jac_u, jac_z], model_dir)
 
-    if opts["generate_hess"]:
+    if context.opts["generate_hess"]:
         x_xdot_z_u = ca.vertcat(x, xdot, z, u)
         symbol = get_casadi_symbol(x)
         multiplier = symbol('multiplier', nx + nz)
@@ -313,12 +298,8 @@ def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel):
     return
 
 
-def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel):
-    opts = context.opts
+def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir: str):
     model_name = model.name
-
-    # set up directory
-    model_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model_name}_model'))
 
     # obtain gnsf dimensions
     get_matrices_fun = model.get_matrices_fun

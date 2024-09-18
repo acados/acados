@@ -76,7 +76,7 @@ class AcadosModel():
         CasADi variable containing global parameters.
         This feature can be used to precompute expensive terms which only depend on these parameters, e.g. spline coefficients, when p_global are underlying data points.
         Only supported for OCP solvers.
-        Updating these parameters can be done using :py:attr:`acados_template.acados_ocp_solver.AcadosOcpSolver.set_p_global(values)`.
+        Updating these parameters can be done using :py:attr:`acados_template.acados_ocp_solver.AcadosOcpSolver.set_p_global_and_precompute_dependencies(values)`.
         NOTE: this is only supported with CasADi beta release https://github.com/casadi/casadi/releases/tag/nightly-se
         Default: :code:`None`
         """

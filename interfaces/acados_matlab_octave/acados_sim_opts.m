@@ -44,7 +44,6 @@ classdef acados_sim_opts < handle
         function obj = acados_sim_opts()
             obj.opts_struct = struct;
             obj.opts_struct.compile_interface = 'auto'; % auto, true, false
-            obj.opts_struct.codgen_model = 'true';
             obj.opts_struct.compile_model = 'true';
             obj.opts_struct.method = 'irk';
             obj.opts_struct.collocation_type = 'gauss_legendre';
@@ -76,7 +75,7 @@ classdef acados_sim_opts < handle
             elseif (strcmp(field, 'ext_fun_compile_flags'))
                 obj.opts_struct.ext_fun_compile_flags = value;
             elseif (strcmp(field, 'codgen_model'))
-                obj.opts_struct.codgen_model = value;
+                warning('codgen_model is deprecated and has no effect.');
             elseif (strcmp(field, 'compile_model'))
                 obj.opts_struct.compile_model = value;
             elseif (strcmp(field, 'num_stages'))

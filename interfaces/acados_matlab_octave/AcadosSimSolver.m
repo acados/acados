@@ -46,7 +46,6 @@ classdef AcadosSimSolver < handle
                 output_dir = fullfile(pwd, 'build');
             end
 
-
             % check model consistency
             obj.sim = sim;
             sim.make_consistent();

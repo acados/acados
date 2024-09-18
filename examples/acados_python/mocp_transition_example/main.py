@@ -203,6 +203,8 @@ def create_multiphase_ocp_solver(N_list, t_horizon_1, name=None, use_cmake=False
     if name is not None:
         ocp.name = name
 
+    ocp.code_export_directory = 'tmp'
+
     cmake_builder = ocp_get_default_cmake_builder() if use_cmake else None
     acados_ocp_solver = AcadosOcpSolver(ocp, verbose=False, cmake_builder=cmake_builder)
     return acados_ocp_solver, ocp

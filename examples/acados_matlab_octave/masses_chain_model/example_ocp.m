@@ -49,7 +49,6 @@ end
 
 %% arguments
 compile_interface = 'auto';
-codgen_model = 'true';
 gnsf_detect_struct = 'true';
 model_name = 'masses_chain';
 
@@ -193,7 +192,6 @@ end
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
-ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);

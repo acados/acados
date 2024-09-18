@@ -45,7 +45,6 @@ classdef acados_ocp_opts < handle
             obj.opts_struct = struct;
             % default values
             obj.opts_struct.compile_interface = 'auto'; % auto, true, false
-            obj.opts_struct.codgen_model = 'true';
             obj.opts_struct.compile_model = 'true';
             obj.opts_struct.param_scheme_N = 10;
             % set one of the following for nonuniform grid
@@ -116,7 +115,7 @@ classdef acados_ocp_opts < handle
             if (strcmp(field, 'compile_interface'))
                 obj.opts_struct.compile_interface = value;
             elseif (strcmp(field, 'codgen_model'))
-                obj.opts_struct.codgen_model = value;
+                warning('codgen_model is deprecated and has no effect.');
             elseif (strcmp(field, 'compile_model'))
                 obj.opts_struct.compile_model = value;
             elseif (strcmp(field, 'param_scheme'))

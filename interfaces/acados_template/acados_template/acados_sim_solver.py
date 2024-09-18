@@ -143,11 +143,11 @@ def sim_generate_external_functions(acados_sim: AcadosSim):
     # generate external functions
     check_casadi_version()
     if integrator_type == 'ERK':
-        generate_c_code_explicit_ode(context, model)
+        generate_c_code_explicit_ode(context, model, model_dir)
     elif integrator_type == 'IRK':
-        generate_c_code_implicit_ode(context, model)
+        generate_c_code_implicit_ode(context, model, model_dir)
     elif integrator_type == 'GNSF':
-        generate_c_code_gnsf(context, model)
+        generate_c_code_gnsf(context, model, model_dir)
 
     context.finalize()
 

@@ -9,9 +9,9 @@ function acados_install_windows(varargin)
             cmakeConfigString='-DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=OFF';
         case 1
             cmakeConfigString=varargin{1};
-        otherwise 
+        otherwise
             error('function called with %d parameters, was expecting max 1',nargin);
-    end    
+    end
 
     % Derive the path for the acados root
     fullPath = mfilename('fullpath');

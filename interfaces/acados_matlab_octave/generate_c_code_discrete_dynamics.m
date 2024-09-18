@@ -30,66 +30,50 @@
 
 
 
-function generate_c_code_discrete_dynamics( model, opts, model_dir )
+function generate_c_code_discrete_dynamics(context, model, model_dir)
 
-import casadi.*
+    import casadi.*
 
-casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
-check_casadi_version();
+    %% load model
+    x = model.x;
+    u = model.u;
+    p = model.p;
+    nx = length(x);
 
-%% load model
-x = model.x;
-u = model.u;
-p = model.p;
-nx = length(x);
+    if isempty(model.disc_dyn_expr)
+        error('Field `disc_dyn_expr` is required for discrete dynamics.')
+    end
+    phi = model.disc_dyn_expr;
+    nx1 = length(phi);
 
-if isempty(model.disc_dyn_expr)
-    error('Field `disc_dyn_expr` is required for discrete dynamics.')
-end
-phi = model.disc_dyn_expr;
-nx1 = length(phi);
+    if nx ~= nx1
+        disp('Warning: generate_c_code_discrete_dynamics: got nx ~= nx1, this only works for a single shooting interval.');
+    end
 
-if nx ~= nx1
-    disp('Warning: generate_c_code_discrete_dynamics: got nx ~= nx1, this only works for a single shooting interval.');
-end
+    % check type
+    if isa(x(1), 'casadi.SX')
+        isSX = true;
+    else
+        isSX = false;
+    end
 
-% check type
-if isa(x(1), 'casadi.SX')
-    isSX = true;
-else
-    isSX = false;
-end
+    % multipliers for hessian
+    if isSX
+        lam = SX.sym('lam', nx1, 1);
+    else
+        lam = MX.sym('lam', nx1, 1);
+    end
+    % generate jacobians
+    jac_ux = jacobian(phi, [u; x]);
+    % generate adjoint
+    adj_ux = jtimes(phi, [u; x], lam, true);
+    % generate hessian
+    hess_ux = jacobian(adj_ux, [u; x], struct('symmetric', isSX));
 
-model_name = model.name;
-
-return_dir = pwd;
-cd(model_dir)
-
-% multipliers for hessian
-if isSX
-    lam = SX.sym('lam', nx1, 1);
-else
-    lam = MX.sym('lam', nx1, 1);
-end
-% generate jacobians
-jac_ux = jacobian(phi, [u; x]);
-% generate adjoint
-adj_ux = jtimes(phi, [u; x], lam, true);
-% generate hessian
-hess_ux = jacobian(adj_ux, [u; x], struct('symmetric', isSX));
-% Set up functions
-phi_fun = Function([model_name,'_dyn_disc_phi_fun'], {x, u, p}, {phi});
-phi_fun_jac_ut_xt = Function([model_name,'_dyn_disc_phi_fun_jac'], {x, u, p}, {phi, jac_ux'});
-phi_fun_jac_ut_xt_hess = Function([model_name,'_dyn_disc_phi_fun_jac_hess'], {x, u, lam, p}, {phi, jac_ux', hess_ux});
-
-% generate C code
-phi_fun.generate([model_name,'_dyn_disc_phi_fun'], casadi_opts);
-phi_fun_jac_ut_xt.generate([model_name,'_dyn_disc_phi_fun_jac'], casadi_opts);
-
-if opts.generate_hess
-    phi_fun_jac_ut_xt_hess.generate([model_name,'_dyn_disc_phi_fun_jac_hess'], casadi_opts);
-end
-
-cd(return_dir);
+    context.add_function_definition([model.name,'_dyn_disc_phi_fun'], {x, u, p}, {phi}, model_dir);
+    context.add_function_definition([model.name,'_dyn_disc_phi_fun_jac'], {x, u, p}, {phi, jac_ux'}, model_dir);
+    if context.opts.generate_hess
+        context.add_function_definition([model.name,'_dyn_disc_phi_fun_jac_hess'], {x, u, lam, p}, {phi, jac_ux', hess_ux}, model_dir);
+    end
 
 end

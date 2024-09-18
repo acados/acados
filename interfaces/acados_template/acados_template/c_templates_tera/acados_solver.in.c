@@ -2595,7 +2595,7 @@ int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule
 }
 
 
-int {{ name }}_acados_set_p_global({{ name }}_solver_capsule* capsule, double* data, int data_len)
+int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver_capsule* capsule, double* data, int data_len)
 {
 {% if dims.np_global > 0 %}
     external_function_casadi* fun = &capsule->p_global_precompute_fun;
@@ -2604,7 +2604,7 @@ int {{ name }}_acados_set_p_global({{ name }}_solver_capsule* capsule, double* d
 
     if (data_len != np_global)
     {
-        printf("{{ name }}_acados_set_p_global: np_global = %d should match data_len = %d. Exiting.\n", np_global, data_len);
+        printf("{{ name }}_acados_set_p_global_and_precompute_dependencies: np_global = %d should match data_len = %d. Exiting.\n", np_global, data_len);
         exit(1);
     }
 
@@ -2619,7 +2619,7 @@ int {{ name }}_acados_set_p_global({{ name }}_solver_capsule* capsule, double* d
     return 1;
 
 {%- else %}
-    printf("p_global is not defined, {{ name }}_acados_set_p_global does nothing.\n");
+    printf("p_global is not defined, {{ name }}_acados_set_p_global_and_precompute_dependencies does nothing.\n");
 {%- endif %}
 }
 

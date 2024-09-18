@@ -32,11 +32,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from acados_template import latexify_plot
 
-import matplotlib.pyplot as plt
-import numpy as np
-from acados_template import latexify_plot
-
-
 def plot_pendulum(t, u_max, U, X_true, latexify=False, plt_show=True, time_label='$t$', x_labels=None, u_labels=None):
     """
     Params:
