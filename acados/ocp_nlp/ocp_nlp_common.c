@@ -1069,6 +1069,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     regularize->opts_initialize_default(regularize, dims->regularize, opts->regularize);
 
     // globalization
+    printf("Juhu we initialize our stuff!!\n");
     globalization->opts_initialize_default(globalization, dims, opts->globalization);
 
     // dynamics

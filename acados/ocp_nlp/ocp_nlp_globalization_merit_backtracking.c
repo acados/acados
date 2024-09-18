@@ -934,10 +934,12 @@ static int ocp_nlp_ddp_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_
                 ocp_nlp_memory *nlp_mem, void* solver_mem, ocp_nlp_workspace *nlp_work, ocp_nlp_opts *nlp_opts)
 {
     // evaluate the objective of the QP (as predicted reduction)
-    ocp_nlp_globalization_opts *opts = nlp_opts->globalization;
+    ocp_nlp_globalization_merit_backtracking_opts *merit_opts = nlp_opts->globalization;
+    ocp_nlp_globalization_opts *opts = merit_opts->globalization_opts;
     ocp_nlp_globalization_merit_backtracking_memory *mem = nlp_mem->globalization;
     int N = dims->N;
     double pred = -nlp_mem->qp_cost_value;
+    printf("Current pred: %f\n", pred);
     double alpha = 1.0;
     double trial_cost;
     double negative_ared;
@@ -974,6 +976,7 @@ static int ocp_nlp_ddp_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_
         }
 
         negative_ared = trial_cost - nlp_mem->cost_value;
+        printf("negative ared: %f\n", negative_ared);
         // Check Armijo sufficient decrease condition
         if (negative_ared <= fmin(-opts->eps_sufficient_descent*alpha* fmax(pred, 0) + 1e-18, 0))
         {

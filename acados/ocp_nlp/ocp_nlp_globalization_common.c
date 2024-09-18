@@ -122,20 +122,26 @@ void ocp_nlp_globalization_opts_set(void *config_, void *opts_, const char *fiel
         ptr_module = module;
     }
 
+    printf("Field: %s\n", field);
+
     // nlp_globalization_opts
     if (!strcmp(field, "alpha_reduction"))
     {
         double* alpha_reduction = (double *) value;
+        printf("Alpha reduction set to: %f\n", *alpha_reduction);
         opts->alpha_reduction = *alpha_reduction;
+        printf("Alpha reduction set to: %f\n", opts->alpha_reduction);
     }
     else if (!strcmp(field, "alpha_min"))
     {
         double* alpha_min = (double *) value;
+        printf("Alpha min set to: %2.10e\n", *alpha_min);
         opts->alpha_min = *alpha_min;
     }
     else if (!strcmp(field, "eps_sufficient_descent"))
     {
         double* eps_sufficient_descent = (double *) value;
+        printf("Eps sufficient descent: %2.10e\n", *eps_sufficient_descent);
         opts->eps_sufficient_descent = *eps_sufficient_descent;
     }
     else if (!strcmp(field, "full_step_dual"))
