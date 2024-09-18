@@ -122,15 +122,11 @@ void ocp_nlp_globalization_opts_set(void *config_, void *opts_, const char *fiel
         ptr_module = module;
     }
 
-    printf("Field: %s\n", field);
-
     // nlp_globalization_opts
     if (!strcmp(field, "alpha_reduction"))
     {
         double* alpha_reduction = (double *) value;
-        printf("Alpha reduction set to: %f\n", *alpha_reduction);
         opts->alpha_reduction = *alpha_reduction;
-        printf("Alpha reduction set to: %f\n", opts->alpha_reduction);
     }
     else if (!strcmp(field, "alpha_min"))
     {
