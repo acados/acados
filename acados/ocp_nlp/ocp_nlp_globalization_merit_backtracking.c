@@ -1051,8 +1051,10 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_c
         if (nlp_mem->status == ACADOS_QP_FAILURE)
         {
 #if defined(ACADOS_WITH_OPENMP)
-            // restore number of threads
-            omp_set_num_threads(num_threads_bkp);
+        // backup number of threads
+        int num_threads_bkp = omp_get_num_threads();
+        // restore number of threads
+        omp_set_num_threads(num_threads_bkp);
 #endif
             // mem->time_tot = acados_toc(&timer0);
             return nlp_mem->status;
