@@ -563,47 +563,6 @@ void ocp_nlp_ddp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_dims *dim
 }
 
 /************************************************
- * output functions
- ************************************************/
-static void print_iteration_header(){
-    printf("%6s | %11s | %10s | %10s | %10s | %10s | %10s | %10s | %10s\n",
-    "iter.",
-    "objective",
-    "res_eq",
-    "res_stat",
-    "alpha",
-    "step_norm",
-    "LM_reg.",
-    "qp_status",
-    "qp_iter");
-}
-
-static void print_iteration(double obj,
-                     int iter_count,
-                     double infeas,
-                     double stationarity,
-                     double alpha,
-                     double step_norm,
-                     double reg_param,
-                     int qp_status,
-                     int qp_iter)
-{
-    if ((iter_count % 10 == 0)){
-        print_iteration_header();
-    }
-    printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10i | %10i\n",
-    iter_count,
-    obj,
-    infeas,
-    stationarity,
-    alpha,
-    step_norm,
-    reg_param,
-    qp_status,
-    qp_iter);
-}
-
-/************************************************
  * termination criterion
  ************************************************/
 static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_memory *mem, ocp_nlp_ddp_opts *opts)
@@ -804,7 +763,18 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Output
         if (nlp_opts->print_level > 0)
         {
-            print_iteration(nlp_mem->cost_value, ddp_iter, nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_stat, mem->alpha, mem->step_norm, reg_param_memory, qp_status, qp_iter);
+            config->globalization->print_iteration(nlp_mem->cost_value,
+                                                   ddp_iter,
+                                                   nlp_res->inf_norm_res_eq,
+                                                   nlp_res->inf_norm_res_ineq,
+                                                   nlp_res->inf_norm_res_stat,
+                                                   nlp_res->inf_norm_res_comp,
+                                                   mem->step_norm,
+                                                   reg_param_memory,
+                                                   qp_status,
+                                                   qp_iter,
+                                                   nlp_opts,
+                                                   nlp_mem->globalization);
         }
         reg_param_memory = nlp_opts->levenberg_marquardt;
 

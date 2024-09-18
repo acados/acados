@@ -205,7 +205,6 @@ void ocp_nlp_globalization_fixed_step_initialize_memory(ocp_nlp_config *config_,
                                                     ocp_nlp_memory *nlp_mem_,
                                                     ocp_nlp_opts *nlp_opts_)
 {
-    printf("In here!\n");
     return;
 }
 
