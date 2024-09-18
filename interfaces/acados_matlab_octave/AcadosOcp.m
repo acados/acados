@@ -679,27 +679,27 @@ classdef AcadosOcp < handle
             end
 
             % Set default parameters for globalization
-            if isempty(opts.alpha_min)
+            if isempty(opts.globalization_alpha_min)
                 if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                    opts.alpha_min = 1e-17;
+                    opts.globalization_alpha_min = 1e-17;
                 else
-                    opts.alpha_min = 0.05;
+                    opts.globalization_alpha_min = 0.05;
                 end
             end
 
-            if isempty(opts.alpha_reduction)
+            if isempty(opts.globalization_alpha_reduction)
                 if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                    opts.alpha_reduction = 0.5;
+                    opts.globalization_alpha_reduction = 0.5;
                 else
-                    opts.alpha_reduction = 0.7;
+                    opts.globalization_alpha_reduction = 0.7;
                 end
             end
 
-            if isempty(opts.eps_sufficient_descent)
+            if isempty(opts.globalization_eps_sufficient_descent)
                 if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                    opts.eps_sufficient_descent = 1e-6;
+                    opts.globalization_eps_sufficient_descent = 1e-6;
                 else
-                    opts.eps_sufficient_descent = 1e-4;
+                    opts.globalization_eps_sufficient_descent = 1e-4;
                 end
             end
 
@@ -711,11 +711,11 @@ classdef AcadosOcp < handle
                 end
             end
 
-            if isempty(opts.full_step_dual)
+            if isempty(opts.globalization_full_step_dual)
                 if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                    opts.full_step_dual = 1;
+                    opts.globalization_full_step_dual = 1;
                 else
-                    opts.full_step_dual = 0;
+                    opts.globalization_full_step_dual = 0;
                 end
             end
 
@@ -734,27 +734,27 @@ classdef AcadosOcp < handle
             end
 
             % Set default parameters for globalization
-            if isempty(opts.alpha_min)
+            if isempty(opts.globalization_alpha_min)
                 if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                    opts.alpha_min = 1e-17;
+                    opts.globalization_alpha_min = 1e-17;
                 else
-                    opts.alpha_min = 0.05;
+                    opts.globalization_alpha_min = 0.05;
                 end
             end
 
-            if isempty(opts.alpha_reduction)
+            if isempty(opts.globalization_alpha_reduction)
                 if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                    opts.alpha_reduction = 0.5;
+                    opts.globalization_alpha_reduction = 0.5;
                 else
-                    opts.alpha_reduction = 0.7;
+                    opts.globalization_alpha_reduction = 0.7;
                 end
             end
 
-            if isempty(opts.eps_sufficient_descent)
+            if isempty(opts.globalization_eps_sufficient_descent)
                 if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                    opts.eps_sufficient_descent = 1e-6;
+                    opts.globalization_eps_sufficient_descent = 1e-6;
                 else
-                    opts.eps_sufficient_descent = 1e-4;
+                    opts.globalization_eps_sufficient_descent = 1e-4;
                 end
             end
 
@@ -766,11 +766,11 @@ classdef AcadosOcp < handle
                 end
             end
 
-            if isempty(opts.full_step_dual)
+            if isempty(opts.globalization_full_step_dual)
                 if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                    opts.full_step_dual = 1;
+                    opts.globalization_full_step_dual = 1;
                 else
-                    opts.full_step_dual = 0;
+                    opts.globalization_full_step_dual = 0;
                 end
             end
 
