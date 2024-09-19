@@ -182,7 +182,7 @@ void ocp_nlp_globalization_fixed_step_print_iteration(double objective_value,
                                                 ocp_nlp_globalization_fixed_step_memory* mem)
 {
     if ((iter_count % 10 == 0)){
-        ocp_nlp_globalization_fixed_step_print_iteration_header(opts);
+        ocp_nlp_globalization_fixed_step_print_iteration_header();
     }
     printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n",
         iter_count,
