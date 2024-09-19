@@ -456,7 +456,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     ocp_qp_in *qp_in = nlp_mem->qp_in;
     ocp_qp_out *qp_out = nlp_mem->qp_out;
     ocp_nlp_globalization_merit_backtracking_memory *merit_mem = nlp_mem->globalization;
-    qp_info *qp_info_;
+    // qp_info *qp_info_;
     // NOTE: following Waechter2006:
     // Do SOC
     // 1. if "the first trial step size alpha_k,0 has been rejected and
