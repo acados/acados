@@ -106,7 +106,7 @@ def main(regularize_method: str):
     ocp.solver_options.integrator_type = 'DISCRETE'
     ocp.solver_options.nlp_solver_type = 'SQP'
     ocp.solver_options.nlp_solver_max_iter = 1000
-    ocp.solver_options.full_step_dual = 0
+    ocp.solver_options.globalization_full_step_dual = 0
     ocp.solver_options.qp_solver_iter_max = 2000
     ocp.solver_options.tol = 1e-4
     ocp.solver_options.qp_tol = 1e-6
