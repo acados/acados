@@ -200,9 +200,6 @@ acados_size_t ocp_nlp_globalization_funnel_memory_calculate_size(void *config_, 
 
 void *ocp_nlp_globalization_funnel_memory_assign(void *config_, void *dims_, void *raw_memory)
 {
-    ocp_nlp_dims *dims = dims_;
-    ocp_nlp_config *config = config_;
-
     char *c_ptr = (char *) raw_memory;
 
     // initial align
@@ -213,7 +210,7 @@ void *ocp_nlp_globalization_funnel_memory_assign(void *config_, void *dims_, voi
 
     align_char_to(8, &c_ptr);
 
-    assert((char *) raw_memory + ocp_nlp_globalization_funnel_memory_calculate_size(config, dims) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_globalization_funnel_memory_calculate_size(config_, dims_) >= c_ptr);
 
     return mem;
 }
