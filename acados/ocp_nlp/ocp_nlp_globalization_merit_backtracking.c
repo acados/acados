@@ -581,7 +581,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
                                         nlp_opts->regularize, nlp_mem->regularize_mem);
 
     // ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
-    int qp_iter = qp_info_->num_iter;
+    // int qp_iter = qp_info_->num_iter;
 
     // save statistics of last qp solver call
     // TODO: SOC QP solver call should be warm / hot started!
