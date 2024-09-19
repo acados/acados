@@ -49,7 +49,6 @@ end
 
 %% handy arguments
 compile_interface = 'auto';
-codgen_model = 'true';
 % simulation
 sim_method = 'irk';
 sim_sens_forw = 'false';
@@ -185,7 +184,6 @@ end
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
-ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme_N', ocp_N);
 ocp_opts.set('nlp_solver', ocp_nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', ocp_nlp_solver_exact_hessian);
@@ -240,7 +238,6 @@ end
 %% acados sim opts
 sim_opts = acados_sim_opts();
 sim_opts.set('compile_interface', compile_interface);
-sim_opts.set('codgen_model', codgen_model);
 sim_opts.set('num_stages', sim_num_stages);
 sim_opts.set('num_steps', sim_num_steps);
 sim_opts.set('method', sim_method);

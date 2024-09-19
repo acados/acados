@@ -279,7 +279,11 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ solver_options.custom_update_filename }}
 	{%- endif %}
 {%- endif %}
-        acados_solver_{{ model.name }}.c)
+        acados_solver_{{ model.name }}.c
+{%- if dims.np_global > 0 %}
+        {{ model.name }}_p_global_precompute_fun.c
+{%- endif %}
+    )
     add_library(${OCP_OBJ} OBJECT ${OCP_SRC})
 endif()
 {%- endif %}

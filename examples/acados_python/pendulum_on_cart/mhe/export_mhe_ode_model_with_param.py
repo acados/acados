@@ -31,7 +31,7 @@
 from acados_template import AcadosModel
 from casadi import SX, vertcat, sin, cos
 
-def export_mhe_ode_model_with_param():
+def export_mhe_ode_model_with_param() -> AcadosModel:
     '''
     Export ode model augmented with an additional state corresponding to the
     parameter l, which is identified online

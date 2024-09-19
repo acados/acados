@@ -52,6 +52,11 @@ function detect_gnsf_structure(model, dims, transcribe_opts)
     %       holds. If not, the method will try to reformulate the gnsf model
     %       with a different model, such that the assumption holds.
 
+    import casadi.*
+    if length(model.p_global) > 0 && depends_on(model.f_impl_expr, model.p_global)
+        error("GNSF detection does not support global parameters.");
+    end
+
     acados_root_dir = getenv('ACADOS_INSTALL_DIR');
     addpath(fullfile(acados_root_dir, 'interfaces', 'acados_matlab_octave', 'gnsf'));
 
@@ -62,6 +67,7 @@ function detect_gnsf_structure(model, dims, transcribe_opts)
         disp('');
         transcribe_opts = struct;
     end
+
 
     if isfield(transcribe_opts, 'print_info')
         print_info = transcribe_opts.print_info;

@@ -49,9 +49,11 @@ from .acados_ocp import AcadosOcp
 from .acados_sim import AcadosSim, AcadosSimDims, AcadosSimOptions
 
 from .builders import CMakeBuilder
-from .casadi_function_generation import (generate_c_code_explicit_ode,
-                                         generate_c_code_gnsf,
-                                         generate_c_code_implicit_ode)
+from .casadi_function_generation import (
+                    GenerateContext,
+                    generate_c_code_explicit_ode,
+                    generate_c_code_gnsf,
+                    generate_c_code_implicit_ode)
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (check_casadi_version, format_class_dict,
                     get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
@@ -136,14 +138,18 @@ def sim_generate_external_functions(acados_sim: AcadosSim):
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
+    context = GenerateContext(model.p_global, model.name, opts)
+
     # generate external functions
     check_casadi_version()
     if integrator_type == 'ERK':
-        generate_c_code_explicit_ode(model, opts)
+        generate_c_code_explicit_ode(context, model, model_dir)
     elif integrator_type == 'IRK':
-        generate_c_code_implicit_ode(model, opts)
+        generate_c_code_implicit_ode(context, model, model_dir)
     elif integrator_type == 'GNSF':
-        generate_c_code_gnsf(model, opts)
+        generate_c_code_gnsf(context, model, model_dir)
+
+    context.finalize()
 
 
 class AcadosSimSolver:
