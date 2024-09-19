@@ -668,7 +668,8 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
 
     // Update variables
     double step_size;
-    globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_out, &step_size);
+    // (void *nlp_config, void *nlp_dims, void *nlp_in, void *nlp_out, void *nlp_mem, void *solver_mem, void *nlp_work, void *nlp_opts, double *step_size);
+    globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts, &step_size);
     if (globalization_status != 1)
     {
         if (nlp_opts->print_level > 1)
