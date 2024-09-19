@@ -82,7 +82,7 @@ classdef AcadosOcpOptions < handle
         ext_cost_num_hess
         globalization_alpha_min
         globalization_alpha_reduction
-        line_search_use_sufficient_descent
+        globalization_line_search_use_sufficient_descent
         globalization_use_SOC
         globalization_full_step_dual
         globalization_eps_sufficient_descent
@@ -160,7 +160,7 @@ classdef AcadosOcpOptions < handle
             obj.ext_cost_num_hess = 0;
             obj.globalization_alpha_min = [];
             obj.globalization_alpha_reduction = [];
-            obj.line_search_use_sufficient_descent = 0;
+            obj.globalization_line_search_use_sufficient_descent = 0;
             obj.globalization_use_SOC = 0;
             obj.globalization_full_step_dual = [];
             obj.globalization_eps_sufficient_descent = [];
