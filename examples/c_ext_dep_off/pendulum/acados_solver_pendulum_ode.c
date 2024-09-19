@@ -171,6 +171,8 @@ void pendulum_ode_acados_create_set_plan(ocp_nlp_plan_t* nlp_solver_plan, const 
     nlp_solver_plan->nlp_constraints[N] = BGH;
 
     nlp_solver_plan->regularization = NO_REGULARIZE;
+
+    nlp_solver_plan->globalization = MERIT_BACKTRACKING;
 }
 
 
@@ -558,7 +560,6 @@ static void pendulum_ode_acados_create_set_opts(pendulum_ode_solver_capsule* cap
 
     double globalization_alpha_reduction = 0.7;
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_alpha_reduction", &globalization_alpha_reduction);
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "merit_backtracking");
 
     int globalization_line_search_use_sufficient_descent = 0;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_line_search_use_sufficient_descent", &globalization_line_search_use_sufficient_descent);
