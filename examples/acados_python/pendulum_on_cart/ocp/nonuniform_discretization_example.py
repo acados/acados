@@ -143,6 +143,8 @@ def main(discretization='shooting_nodes'):
     ocp.solver_options.nlp_solver_ext_qp_res = 1
     ocp.solver_options.hpipm_mode = "ROBUST"
 
+    ocp.solver_options.globalization = 'FIXED_STEP'
+
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
@@ -155,7 +157,6 @@ def main(discretization='shooting_nodes'):
 
     # change options after creating ocp_solver
     ocp_solver.options_set("step_length", 0.99999)
-    ocp_solver.options_set("globalization", "fixed_step") # fixed_step, merit_backtracking
     ocp_solver.options_set("tol_eq", TOL)
     ocp_solver.options_set("tol_stat", TOL)
     ocp_solver.options_set("tol_ineq", TOL)
