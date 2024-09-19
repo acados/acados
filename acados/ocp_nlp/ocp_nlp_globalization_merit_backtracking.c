@@ -600,11 +600,11 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     //         ocp_qp_res_compute_nrm_inf(nlp_work->qp_res, nlp_mem->stat+(nlp_mem->stat_n*(sqp_iter+1)+7));
     // }
 
-    if (nlp_opts->print_level > 3)
-    {
-        printf("\n\nSQP: SOC ocp_qp_out at iteration %d\n", sqp_iter);
-        print_ocp_qp_out(qp_out);
-    }
+    // if (nlp_opts->print_level > 3)
+    // {
+    //     printf("\n\nSQP: SOC ocp_qp_out at iteration %d\n", sqp_iter);
+    //     print_ocp_qp_out(qp_out);
+    // }
 
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
         ocp_nlp_sqp_dump_qp_out_to_file(qp_out, sqp_iter, 1);
@@ -614,15 +614,15 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
     {
 #ifndef ACADOS_SILENT
-        printf("\nQP solver returned error status %d in SQP iteration %d for SOC QP in QP iteration %d.\n",
-            qp_status, sqp_iter, qp_iter);
+        printf("\nQP solver returned error status %d in SQP iteration %d for SOC QP.\n",
+            qp_status, sqp_iter);
 #endif
-        if (nlp_opts->print_level > 1)
-        {
-            printf("\nFailed to solve the following QP:\n");
-            if (nlp_opts->print_level > 3)
-                print_ocp_qp_in(qp_in);
-        }
+        // if (nlp_opts->print_level > 1)
+        // {
+        //     printf("\nFailed to solve the following QP:\n");
+        //     if (nlp_opts->print_level > 3)
+        //         print_ocp_qp_in(qp_in);
+        // }
 
         nlp_mem->status = ACADOS_QP_FAILURE;
         nlp_mem->iter = sqp_iter;
