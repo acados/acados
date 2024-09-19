@@ -87,20 +87,6 @@ void *ocp_nlp_globalization_merit_backtracking_memory_assign(void *config, void 
 //
 
 /************************************************
- * workspace
- ************************************************/
-// WE DON'T NEED THAT!!
-// typedef struct
-// {
-//     ocp_nlp_workspace *nlp_work;
-
-// } ocp_nlp_globalization_merit_backtracking_workspace;
-
-// //
-// acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config, void *dims, void *opts_);
-
-
-/************************************************
  * functions
  ************************************************/
 //
