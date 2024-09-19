@@ -3,11 +3,11 @@
 # Reserved.
 #
 # --- begin cisst license - do not edit ---
-# 
+#
 # This software is provided "as is" under an open source license, with
 # no warranty.  The complete license can be found in license.txt and
 # http://www.cisst.org/cisst/license.txt.
-# 
+#
 # --- end cisst license ---
 
 SET(CMAKE_SYSTEM_NAME QNX)
@@ -35,7 +35,7 @@ FIND_PATH(QNX_HOST
   NO_CMAKE_PATH
   NO_CMAKE_ENVIRONMENT_PATH
 )
-  
+
 FIND_PATH(QNX_TARGET
   NAME usr/include/qnx_errno.h
   #PATHS $ENV{QNX_TARGET} C:/QNX650/target/qnx6/
@@ -54,7 +54,7 @@ SET(CMAKE_RANLIB       "${QNX_HOST}/usr/bin/nto${CMAKE_SYSTEM_PROCESSOR}-ranlib$
 SET(CMAKE_NM           "${QNX_HOST}/usr/bin/nto${CMAKE_SYSTEM_PROCESSOR}-nm${HOST_EXECUTABLE_SUFFIX}"      CACHE PATH "QNX nm Program")
 SET(CMAKE_OBJCOPY      "${QNX_HOST}/usr/bin/nto${CMAKE_SYSTEM_PROCESSOR}-objcopy${HOST_EXECUTABLE_SUFFIX}" CACHE PATH "QNX objcopy Program")
 SET(CMAKE_OBJDUMP      "${QNX_HOST}/usr/bin/nto${CMAKE_SYSTEM_PROCESSOR}-objdump${HOST_EXECUTABLE_SUFFIX}" CACHE PATH "QNX objdump Program")
-SET(CMAKE_LINKER       "${QNX_HOST}/usr/bin/nto${CMAKE_SYSTEM_PROCESSOR}-ld"     CACHE PATH "QNX Linker Program") #warum hier keinene hoste executalbe suffix? 
+SET(CMAKE_LINKER       "${QNX_HOST}/usr/bin/nto${CMAKE_SYSTEM_PROCESSOR}-ld"     CACHE PATH "QNX Linker Program") #warum hier keinene hoste executalbe suffix?
 SET(CMAKE_STRIP        "${QNX_HOST}/usr/bin/nto${CMAKE_SYSTEM_PROCESSOR}-strip${HOST_EXECUTABLE_SUFFIX}"   CACHE PATH "QNX Strip Program")
 #SET( CMAKE_LINKER       "${QNX_HOST}/usr/bin/qcc
 #${HOST_EXECUTABLE_SUFFIX}"     CACHE PATH "QNX Linker Program" )
@@ -71,7 +71,7 @@ SET(CMAKE_CXX_FLAGS_MINSIZEREL "-Os -DNDEBUG")
 SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 
-SET(CMAKE_FIND_ROOT_PATH ${QNX_TARGET}) 
+SET(CMAKE_FIND_ROOT_PATH ${QNX_TARGET})
 SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)

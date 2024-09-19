@@ -71,6 +71,15 @@ class AcadosModel():
         The time dependency can be used within cost formulations and is relevant when cost integration is used.
         Start times of shooting intervals can be added using parameters.
         """
+        self.p_global = None
+        """
+        CasADi variable containing global parameters.
+        This feature can be used to precompute expensive terms which only depend on these parameters, e.g. spline coefficients, when p_global are underlying data points.
+        Only supported for OCP solvers.
+        Updating these parameters can be done using :py:attr:`acados_template.acados_ocp_solver.AcadosOcpSolver.set_p_global_and_precompute_dependencies(values)`.
+        NOTE: this is only supported with CasADi beta release https://github.com/casadi/casadi/releases/tag/nightly-se
+        Default: :code:`None`
+        """
 
         ## dynamics
         self.f_impl_expr = None
@@ -180,27 +189,27 @@ class AcadosModel():
         ## CONVEX_OVER_NONLINEAR convex-over-nonlinear cost: psi(y(x, u, p) - y_ref; p)
         self.cost_psi_expr_0 = None
         """
-        CasADi expression for the outer loss function :math:`\psi(r, p)`, initial; Default: :code:`None`
+        CasADi expression for the outer loss function :math:`\psi(r - yref, t, p)`, initial; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type_0` is 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_psi_expr = None
         """
-        CasADi expression for the outer loss function :math:`\psi(r, p)`; Default: :code:`None`
+        CasADi expression for the outer loss function :math:`\psi(r - yref, t, p)`; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type` is 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_psi_expr_e = None
         """
-        CasADi expression for the outer loss function :math:`\psi(r, p)`, terminal; Default: :code:`None`
+        CasADi expression for the outer loss function :math:`\psi(r - yref, p)`, terminal; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type_e` is 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_r_in_psi_expr_0 = None
         """
-        CasADi symbolic input variable for the argument :math:`r` to the outer loss function :math:`\psi(r, p)`, initial; Default: :code:`None`
+        CasADi symbolic input variable for the argument :math:`r` to the outer loss function :math:`\psi(r, t, p)`, initial; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type_0` is 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_r_in_psi_expr = None
         """
-        CasADi symbolic input variable for the argument :math:`r` to the outer loss function :math:`\psi(r, p)`; Default: :code:`None`
+        CasADi symbolic input variable for the argument :math:`r` to the outer loss function :math:`\psi(r, t, p)`; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type` is 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_r_in_psi_expr_e = None
@@ -314,6 +323,22 @@ class AcadosModel():
             self.z = casadi_symbol('z', 0, 0)
         else:
             dims.nz = casadi_length(self.z)
+
+        # sanity checks
+        for symbol, name in [(self.x, 'x'), (self.xdot, 'xdot'), (self.u, 'u'), (self.z, 'z'), (self.p, 'p'), (self.p_global, 'p_global')]:
+            if symbol is not None and not symbol.is_valid_input():
+                raise Exception(f"model.{name} must be valid CasADi symbol, got {symbol}")
+
+        # p_global
+        if self.p_global is not None:
+            if isinstance(dims, AcadosSimDims):
+                raise Exception("model.p_global is only supported for OCPs")
+            if any(ca.which_depends(self.p_global, self.p)):
+                raise Exception(f"model.p_global must not depend on model.p, got p_global ={self.p_global}, p = {self.p}")
+            if not isinstance(self.p_global, (ca.MX)):
+                # otherwise: AttributeError: 'SX' object has no attribute 'primitives'
+                raise Exception(f"model.p_global must be casadi.MX, got {type(self.p_global)}")
+            dims.np_global = casadi_length(self.p_global)
 
         return
 

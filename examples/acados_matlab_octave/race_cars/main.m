@@ -55,7 +55,6 @@ track_file = 'LMS_Track.txt';
 
 %% Solver parameters
 compile_interface = 'auto';
-codgen_model = 'true';
 nlp_solver = 'sqp'; % sqp, sqp_rti
 qp_solver = 'partial_condensing_hpipm';
     % full_condensing_hpipm, partial_condensing_hpipm, full_condensing_qpoases
@@ -199,7 +198,6 @@ ocp_model.set('cost_y_ref_e', y_ref_e);
 %% acados ocp set opts
 ocp_opts = acados_ocp_opts();
 %ocp_opts.set('compile_interface', compile_interface);
-%ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);

@@ -47,7 +47,6 @@ end
 
 %% arguments
 compile_interface = 'auto';
-codgen_model = 'true';
 gnsf_detect_struct = 'true';
 %method = 'erk';
 % method = 'irk';
@@ -98,7 +97,6 @@ end
 %% acados sim opts
 sim_opts = acados_sim_opts();
 sim_opts.set('compile_interface', compile_interface);
-sim_opts.set('codgen_model', codgen_model);
 sim_opts.set('num_stages', num_stages);
 sim_opts.set('num_steps', num_steps);
 sim_opts.set('newton_iter', newton_iter);

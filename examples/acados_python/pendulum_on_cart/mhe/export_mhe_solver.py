@@ -31,11 +31,11 @@
 
 import numpy as np
 from scipy.linalg import block_diag
-from acados_template import AcadosOcp, AcadosOcpSolver
+from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
 from casadi import vertcat
 
 
-def export_mhe_solver(model, N, h, Q, Q0, R):
+def export_mhe_solver(model: AcadosModel, N: int, h, Q, Q0, R) -> AcadosOcpSolver:
 
     ocp_mhe = AcadosOcp()
 
@@ -50,7 +50,6 @@ def export_mhe_solver(model, N, h, Q, Q0, R):
 
     ny_0 = 3*nx     # h(x), w and arrival cost
     ny = 2*nx     # h(x), w
-    ny_e = 0
 
     ocp_mhe.dims.N = N
 

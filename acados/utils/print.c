@@ -560,6 +560,7 @@ void print_ocp_qp_res(ocp_qp_res *qp_res)
 }
 
 
+#ifndef BLASFEO_EXT_DEP_OFF
 static void int_print_mat_to_file(FILE *file, int row, int col, int *A, int lda)
 {
     int i, j;
@@ -573,7 +574,7 @@ static void int_print_mat_to_file(FILE *file, int row, int col, int *A, int lda)
     }
     fprintf(file, "\n");
 }
-
+#endif
 
 
 void print_ocp_qp_in_to_file(FILE *file, ocp_qp_in *qp_in)

@@ -30,30 +30,22 @@
 %
 % author: Katrin Baumgaertner
 
-
-
-
-% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
-% as well as a new interface (>= v0.4.0).
-
-% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
-% with the examples that have been ported to the new interface already.
-% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
-
 clear all
+
+h = 0.05;   % time step
+N_mhe = 15;     % MHE horizon
 
 %% model
 model = lorentz_model();
 
-nx = model.nx;
-nu = model.nu;
-ny = model.ny;
+sim_solver = setup_integrator(model, h);
+estimator = setup_estimator(model, h, N_mhe);
 
-sim_solver = setup_integrator(model);
-estimator = setup_estimator(model);
+nx = estimator.ocp.dims.nx;
+nu = estimator.ocp.dims.nu;
+ny = estimator.ocp.dims.ny - estimator.ocp.dims.nu; % cost ny = dimension of measurement y + noise w
 
 %% Simulation
-
 N_sim = 120;
 
 iter_step = 50;
@@ -90,13 +82,12 @@ for n=1:N_sim
 end
 
 %% Estimation
-
-x_est = zeros(nx, N_sim-model.N);
+x_est = zeros(nx, N_sim-N_mhe);
 
 yref_0 = zeros(ny + nu + nx, 1);
 yref = zeros(ny + nu, 1);
 
-for n=1:N_sim-model.N
+for n=1:N_sim-N_mhe
 
     % set measurements
     yref_0(1:ny) = y_sim(:, n);
@@ -104,31 +95,30 @@ for n=1:N_sim-model.N
 
     estimator.set('cost_y_ref', yref_0, 0);
 
-    for i=1:model.N-1
+    for i=1:N_mhe-1
         yref(1:ny) = y_sim(:, n+i);
         estimator.set('cost_y_ref', yref, i);
     end
 
-    %estimator.set('init_x', x_sim(:, n:n+model.N))
-
+    %estimator.set('init_x', x_sim(:, n:n+N_mhe))
     % solve
     estimator.solve()
 
-    x_est(:, n) = estimator.get('x', model.N);
+    x_est(:, n) = estimator.get('x', N_mhe);
 
     % update arrival cost (TODO: update P0 as well)
     x0_bar = estimator.get('x', 1);
 end
 
 %% Plot
-ts = model.h*(0:N_sim);
+ts = h*(0:N_sim);
 
 figure;
 States = {'x_1', 'x_2', 'x_3', 'p'};
 for i=1:length(States)
     subplot(length(States), 1, i); hold on;
     plot(ts, x_sim(i,:));
-    plot(ts(model.N+1:end-1), x_est(i,:));
+    plot(ts(N_mhe+1:end-1), x_est(i,:));
 
     if i == 1
         plot(ts(1:end-1), y_sim, 'x');
@@ -144,7 +134,7 @@ States = {'abs. error x_1', 'abs. error x_2', 'abs. error x_3', 'abs. error p'};
 for i=1:length(States)
     subplot(length(States), 1, i); hold on; grid on;
 
-    plot(ts(model.N+1:end-1), abs(x_est(i,:) - x_sim(i, model.N+1:end-1)));
+    plot(ts(N_mhe+1:end-1), abs(x_est(i,:) - x_sim(i, N_mhe+1:end-1)));
 
     ylabel(States{i});
     xlabel('t [s]');

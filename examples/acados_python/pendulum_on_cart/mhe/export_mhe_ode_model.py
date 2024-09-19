@@ -31,7 +31,7 @@
 from acados_template import AcadosModel
 from casadi import SX, vertcat, cos, sin
 
-def export_mhe_ode_model():
+def export_mhe_ode_model() -> AcadosModel:
 
     model_name = 'mhe_pendulum_ode'
 
