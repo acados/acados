@@ -154,7 +154,8 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
             int sqp_iter, double *alpha_reference)
 {
-    ocp_nlp_globalization_opts *globalization_opts = opts->globalization;
+    ocp_nlp_globalization_merit_backtracking_opts *merit_opts = opts->globalization;
+    ocp_nlp_globalization_opts *globalization_opts = merit_opts->globalization_opts;
     int i, j;
 
     int N = dims->N;
@@ -935,7 +936,7 @@ static int ocp_nlp_ddp_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_
 {
     // evaluate the objective of the QP (as predicted reduction)
     ocp_nlp_globalization_merit_backtracking_opts *merit_opts = nlp_opts->globalization;
-    ocp_nlp_globalization_opts *opts = merit_opts->globalization_opts;
+    ocp_nlp_globalization_opts *globalization_opts = merit_opts->globalization_opts;
     ocp_nlp_globalization_merit_backtracking_memory *mem = nlp_mem->globalization;
     int N = dims->N;
     double pred = -nlp_mem->qp_cost_value;
@@ -950,7 +951,7 @@ static int ocp_nlp_ddp_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_
     {
         // Do the DDP forward sweep to get the trial iterate
         config->globalization->step_update(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem,
-                                     nlp_work, nlp_work->tmp_nlp_out, solver_mem, alpha, opts->full_step_dual);
+                                     nlp_work, nlp_work->tmp_nlp_out, solver_mem, alpha, globalization_opts->full_step_dual);
 
         ///////////////////////////////////////////////////////////////////////
         // Evaluate cost function at trial iterate
@@ -976,7 +977,7 @@ static int ocp_nlp_ddp_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_
 
         negative_ared = trial_cost - nlp_mem->cost_value;
         // Check Armijo sufficient decrease condition
-        if (negative_ared <= fmin(-opts->eps_sufficient_descent*alpha* fmax(pred, 0) + 1e-18, 0))
+        if (negative_ared <= fmin(-globalization_opts->eps_sufficient_descent*alpha* fmax(pred, 0) + 1e-18, 0))
         {
             // IF step accepted: update x
             // reset evaluation point to SQP iterate
@@ -987,10 +988,10 @@ static int ocp_nlp_ddp_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_
         else
         {
             // Reduce step size
-            alpha *= opts->alpha_reduction;
+            alpha *= globalization_opts->alpha_reduction;
         }
 
-        if (alpha < opts->alpha_min)
+        if (alpha < globalization_opts->alpha_min)
         {
             printf("Linesearch: Step size gets too small. Increasing regularization.\n");
             mem->alpha = 0.0; // set to zero such that regularization is increased
@@ -1041,6 +1042,7 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_c
     ocp_nlp_workspace *nlp_work = nlp_work_;
     ocp_nlp_opts *nlp_opts = nlp_opts_;
     ocp_nlp_globalization_merit_backtracking_opts *merit_opts = nlp_opts->globalization;
+    ocp_nlp_globalization_opts *globalization_opts = merit_opts->globalization_opts;
     
     int sqp_iter = 1; // NEEDS TO BE CHANGED HERE
     bool do_line_search = true;
@@ -1075,7 +1077,7 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_c
     // nlp_mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
 
     // update variables
-    nlp_config->globalization->step_update(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, mem->alpha, merit_opts->globalization_opts->full_step_dual);
+    nlp_config->globalization->step_update(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, mem->alpha, globalization_opts->full_step_dual);
     *step_size = mem->alpha;
     return 1;
 }
