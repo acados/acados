@@ -567,11 +567,12 @@ void ocp_nlp_ddp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_dims *dim
  ************************************************/
 static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_memory *mem, ocp_nlp_ddp_opts *opts)
 {
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
     // check for nans
     if (isnan(nlp_res->inf_norm_res_stat) || isnan(nlp_res->inf_norm_res_eq) ||
             isnan(nlp_res->inf_norm_res_ineq))
     {
-        mem->nlp_mem->status = ACADOS_NAN_DETECTED;
+        nlp_mem->status = ACADOS_NAN_DETECTED;
         if (opts->nlp_opts->print_level > 0)
         {
             printf("Stopped: NaN detected in iterate.\n");
@@ -585,7 +586,7 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
     { // Check that iterate must be dynamically feasible
         if (nlp_res->inf_norm_res_stat < opts->tol_stat)
         {// Check Stationarity
-            mem->nlp_mem->status = ACADOS_SUCCESS;
+            nlp_mem->status = ACADOS_SUCCESS;
             if (opts->nlp_opts->print_level > 0)
             {
                 printf("Optimal Solution found! Converged to KKT point.\n");
@@ -594,9 +595,9 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
         }
 
         // Check for zero-residual solution of a least-squares problem
-        if (opts->nlp_opts->with_adaptive_levenberg_marquardt && (mem->nlp_mem->cost_value < opts->tol_zero_res))
+        if (opts->nlp_opts->with_adaptive_levenberg_marquardt && (nlp_mem->cost_value < opts->tol_zero_res))
         {
-            mem->nlp_mem->status = ACADOS_SUCCESS;
+            nlp_mem->status = ACADOS_SUCCESS;
             if (opts->nlp_opts->print_level > 0)
             {
                 printf("Optimal Solution found! Converged To Zero Residual Solution.\n");
@@ -619,14 +620,14 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
                 printf("Stopped: Converged To Infeasible Point. Step size is < tol_eq.\n");
             }
         }
-        mem->nlp_mem->status = ACADOS_MINSTEP;
+        nlp_mem->status = ACADOS_MINSTEP;
         return true;
     }
 
     // Check for maximum iterations
     if (ddp_iter >= opts->max_iter)
     {
-        mem->nlp_mem->status = ACADOS_MAXITER;
+        nlp_mem->status = ACADOS_MAXITER;
         if (opts->nlp_opts->print_level > 0){
             printf("Stopped: Maximum Iterations Reached.\n");
         }
