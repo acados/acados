@@ -254,15 +254,6 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims,
 /************************************************
  * options
  ************************************************/
-
-// /// Globalization types
-// typedef enum
-// {
-//     FIXED_STEP,
-//     MERIT_BACKTRACKING,
-//     FUNNEL_L1PEN_LINESEARCH
-// } ocp_nlp_globalization_t;
-
 typedef struct ocp_nlp_opts
 {
     ocp_qp_xcond_solver_opts *qp_solver_opts; // xcond solver opts instead ???
