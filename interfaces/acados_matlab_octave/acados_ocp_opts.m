@@ -70,6 +70,12 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.globalization_use_SOC = 0;
             obj.opts_struct.globalization_full_step_dual = 0;
             obj.opts_struct.globalization_eps_sufficient_descent = 1e-4;
+            % for completeness and for keeping old interface stuff working
+            obj.opts_struct.alpha_min = 0.05;
+            obj.opts_struct.alpha_reduction = 0.7;
+            obj.opts_struct.line_search_use_sufficient_descent = 0;
+            obj.opts_struct.full_step_dual = 0;
+            obj.opts_struct.eps_sufficient_descent = 1e-4;
 
             obj.opts_struct.qp_solver_iter_max = 50;
             obj.opts_struct.qp_solver_mu0 = 0;
