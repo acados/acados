@@ -2503,7 +2503,8 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
             ocp_nlp_out *out_start, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
             ocp_nlp_out *out_destination, void* solver_mem, double alpha, bool full_step_dual)
 {
-    // solver_mem is not used
+    // solver_mem is not used in this function, but needed for DDP
+    // the function is used in the config->globalization->step_update
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
