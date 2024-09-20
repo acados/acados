@@ -1994,10 +1994,10 @@ double ocp_nlp_get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     double tmp;
     struct blasfeo_dvec *tmp_fun_vec;
     double dyn_l1_infeasibility = 0.0;
-    for(i=0; i<N; i++)
+    for (i=0; i<N; i++)
     {
         tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(nlp_mem->dynamics[i]);
-        for(j=0; j<nx[i+1]; j++)
+        for (j=0; j<nx[i+1]; j++)
         {
             dyn_l1_infeasibility += fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
         }

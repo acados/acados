@@ -45,13 +45,6 @@ extern "C" {
 
 // #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_common.h"
-// #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
-// #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
-// #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
-// #include "acados/ocp_qp/ocp_qp_common.h"
-// #include "acados/ocp_qp/ocp_qp_xcond_solver.h"
-// #include "acados/sim/sim_common.h"
-// #include "acados/utils/external_function_generic.h"
 #include "acados/utils/types.h"
 
 /************************************************
@@ -70,7 +63,6 @@ typedef struct
     void *(*memory_assign)(void *config, void *dims, void *raw_memory);
     /* functions */
     int (*find_acceptable_iterate)(void *nlp_config, void *nlp_dims, void *nlp_in, void *nlp_out, void *nlp_mem, void *solver_mem, void *nlp_work, void *nlp_opts, double *step_size);
-    // TODO: specify inputs below!
     void (*print_iteration_header)();
     void (*print_iteration)(double objective_value,
                             int iter_count,
@@ -92,7 +84,6 @@ typedef struct
     void (*step_update)(void *config, void *dims, void *in,
             void *out_start, void *opts, void *mem, void *work,
             void *out_destination, void* solver_mem, double alpha, bool full_step_dual);
-                
 } ocp_nlp_globalization_config;
 
 //

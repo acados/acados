@@ -51,7 +51,6 @@ acados_size_t ocp_nlp_globalization_config_calculate_size()
 }
 
 
-
 ocp_nlp_globalization_config *ocp_nlp_globalization_config_assign(void *raw_memory)
 {
     char *c_ptr = raw_memory;
@@ -65,7 +64,7 @@ ocp_nlp_globalization_config *ocp_nlp_globalization_config_assign(void *raw_memo
 /************************************************
  * dims
  ************************************************/
-// WE DON'T NEED DIMS????
+// NOTE: we use ocp_nlp_dims for the globalization module.
 
 /************************************************
  * options
@@ -102,6 +101,7 @@ void *ocp_nlp_globalization_opts_assign(void *config_, void *dims_, void *raw_me
     // return opts;
     return raw_memory;
 }
+
 
 void ocp_nlp_globalization_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
@@ -160,5 +160,4 @@ void ocp_nlp_globalization_opts_set(void *config_, void *opts_, const char *fiel
     }
 
     return;
-
 }

@@ -249,7 +249,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
             printf("\nerror: ocp_nlp_config_create: unsupported plan->globalization\n");
             exit(1);
     }
-    
+
     // globalization step update
     // NLP solver
     switch (plan.nlp_solver)
