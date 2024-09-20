@@ -97,25 +97,25 @@ void ocp_nlp_globalization_funnel_opts_set(void *config_, void *opts_, const cha
     ocp_nlp_globalization_funnel_opts *opts = opts_;
     ocp_nlp_globalization_config *config = config_;
 
-    if (!strcmp(field, "funnel_initialization_increase_factor"))
+    if (!strcmp(field, "funnel_init_increase_factor"))
     {
-        double* funnel_initialization_increase_factor = (double *) value;
-        if (*funnel_initialization_increase_factor <= 1.0)
+        double* funnel_init_increase_factor = (double *) value;
+        if (*funnel_init_increase_factor <= 1.0)
         {
-            printf("\nerror: ocp_nlp_globalization_funnel_opts_set: invalid value for funnel_initialization_increase_factor field, need double > 1, got %f.", *funnel_initialization_increase_factor);
+            printf("\nerror: ocp_nlp_globalization_funnel_opts_set: invalid value for funnel_init_increase_factor field, need double > 1, got %f.", *funnel_init_increase_factor);
             exit(1);
         }
-        opts->initialization_increase_factor = *funnel_initialization_increase_factor;
+        opts->initialization_increase_factor = *funnel_init_increase_factor;
     }
-    else if (!strcmp(field, "funnel_initialization_upper_bound"))
+    else if (!strcmp(field, "funnel_init_upper_bound"))
     {
-        double* funnel_initialization_upper_bound = (double *) value;
-        if (*funnel_initialization_upper_bound <= 0.0)
+        double* funnel_init_upper_bound = (double *) value;
+        if (*funnel_init_upper_bound <= 0.0)
         {
-            printf("\nerror: ocp_nlp_globalization_funnel_opts_set: invalid value for funnel_initialization_upper_bound field, need double > 0, got %f.", *funnel_initialization_upper_bound);
+            printf("\nerror: ocp_nlp_globalization_funnel_opts_set: invalid value for funnel_init_upper_bound field, need double > 0, got %f.", *funnel_init_upper_bound);
             exit(1);
         }
-        opts->initialization_upper_bound = *funnel_initialization_upper_bound;
+        opts->initialization_upper_bound = *funnel_init_upper_bound;
     }
     else if (!strcmp(field, "funnel_sufficient_decrease_factor"))
     {

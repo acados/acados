@@ -89,8 +89,8 @@ class AcadosOcpOptions:
         self.__exact_hess_constr = 1
         self.__eval_residual_at_max_iter = None
         self.__fixed_hess = 0
-        self.__globalization_funnel_initialization_increase_factor = 15.0
-        self.__globalization_funnel_initialization_upper_bound = 1.0
+        self.__globalization_funnel_init_increase_factor = 15.0
+        self.__globalization_funnel_init_upper_bound = 1.0
         self.__globalization_funnel_sufficient_decrease_factor = 0.9
         self.__globalization_funnel_kappa = 0.9
         self.__globalization_funnel_fraction_switching_condition = 1e-3
@@ -660,26 +660,26 @@ class AcadosOcpOptions:
         return self.__globalization_full_step_dual
 
     @property
-    def globalization_funnel_initialization_increase_factor(self):
+    def globalization_funnel_init_increase_factor(self):
         """
         Increase factor for initialization of funnel width.
-        Initial funnel is max(globalization_funnel_initialization_upper_bound, globalization_funnel_initialization_increase_factor * initial_infeasibility)
+        Initial funnel is max(globalization_funnel_init_upper_bound, globalization_funnel_init_increase_factor * initial_infeasibility)
 
         Type: float
         Default: 15.0
         """
-        return self.__globalization_funnel_initialization_increase_factor
+        return self.__globalization_funnel_init_increase_factor
 
     @property
-    def globalization_funnel_initialization_upper_bound(self):
+    def globalization_funnel_init_upper_bound(self):
         """
         Initial upper bound for funnel width.
-        Initial funnel is max(globalization_funnel_initialization_upper_bound, globalization_funnel_initialization_increase_factor * initial_infeasibility)
+        Initial funnel is max(globalization_funnel_init_upper_bound, globalization_funnel_init_increase_factor * initial_infeasibility)
 
         Type: float
         Default: 1.0
         """
-        return self.__globalization_funnel_initialization_upper_bound
+        return self.__globalization_funnel_init_upper_bound
 
     @property
     def globalization_funnel_sufficient_decrease_factor(self):
@@ -1101,19 +1101,19 @@ class AcadosOcpOptions:
         else:
             raise Exception(f'Invalid value for globalization_full_step_dual. Possible values are 0, 1, got {globalization_full_step_dual}')
 
-    @globalization_funnel_initialization_increase_factor.setter
-    def globalization_funnel_initialization_increase_factor(self, globalization_funnel_initialization_increase_factor):
-        if globalization_funnel_initialization_increase_factor > 1.0:
-            self.__globalization_funnel_initialization_increase_factor = globalization_funnel_initialization_increase_factor
+    @globalization_funnel_init_increase_factor.setter
+    def globalization_funnel_init_increase_factor(self, globalization_funnel_init_increase_factor):
+        if globalization_funnel_init_increase_factor > 1.0:
+            self.__globalization_funnel_init_increase_factor = globalization_funnel_init_increase_factor
         else:
-            raise Exception(f'Invalid value for globalization_funnel_initialization_increase_factor. Should be > 1, got {globalization_funnel_initialization_increase_factor}')
+            raise Exception(f'Invalid value for globalization_funnel_init_increase_factor. Should be > 1, got {globalization_funnel_init_increase_factor}')
 
-    @globalization_funnel_initialization_upper_bound.setter
-    def globalization_funnel_initialization_upper_bound(self, globalization_funnel_initialization_upper_bound):
-        if globalization_funnel_initialization_upper_bound > 0.0:
-            self.__globalization_funnel_initialization_upper_bound = globalization_funnel_initialization_upper_bound
+    @globalization_funnel_init_upper_bound.setter
+    def globalization_funnel_init_upper_bound(self, globalization_funnel_init_upper_bound):
+        if globalization_funnel_init_upper_bound > 0.0:
+            self.__globalization_funnel_init_upper_bound = globalization_funnel_init_upper_bound
         else:
-             raise Exception(f'Invalid value for globalization_funnel_initialization_upper_bound. Should be > 0, got {globalization_funnel_initialization_upper_bound}')
+             raise Exception(f'Invalid value for globalization_funnel_init_upper_bound. Should be > 0, got {globalization_funnel_init_upper_bound}')
 
     @globalization_funnel_sufficient_decrease_factor.setter
     def globalization_funnel_sufficient_decrease_factor(self, globalization_funnel_sufficient_decrease_factor):

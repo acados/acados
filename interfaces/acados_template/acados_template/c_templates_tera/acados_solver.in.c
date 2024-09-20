@@ -2077,11 +2077,11 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_eps_sufficient_descent", &globalization_eps_sufficient_descent);
 {%- elif solver_options.globalization == "FUNNEL_L1PEN_LINESEARCH" %}
 
-    double globalization_funnel_initialization_increase_factor = {{ solver_options.globalization_funnel_initialization_increase_factor }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_initialization_increase_factor", &globalization_funnel_initialization_increase_factor);
+    double globalization_funnel_init_increase_factor = {{ solver_options.globalization_funnel_init_increase_factor }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_init_increase_factor", &globalization_funnel_init_increase_factor);
 
-    double globalization_funnel_initialization_upper_bound = {{ solver_options.globalization_funnel_initialization_upper_bound }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_initialization_upper_bound", &globalization_funnel_initialization_upper_bound);
+    double globalization_funnel_init_upper_bound = {{ solver_options.globalization_funnel_init_upper_bound }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_init_upper_bound", &globalization_funnel_init_upper_bound);
 
     double globalization_funnel_sufficient_decrease_factor = {{ solver_options.globalization_funnel_sufficient_decrease_factor }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_sufficient_decrease_factor", &globalization_funnel_sufficient_decrease_factor);
