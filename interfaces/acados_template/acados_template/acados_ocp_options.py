@@ -96,10 +96,10 @@ class AcadosOcpOptions:
         self.__globalization_funnel_fraction_switching_condition = 1e-3
         self.__globalization_funnel_initial_penalty_parameter = 1.0
         self.__ext_cost_num_hess = 0
+        self.__globalization_use_SOC = 0
         self.__globalization_alpha_min = None
         self.__globalization_alpha_reduction = None
         self.__globalization_line_search_use_sufficient_descent = 0
-        self.__globalization_use_SOC = 0
         self.__globalization_full_step_dual = None
         self.__globalization_eps_sufficient_descent = None
         self.__hpipm_mode = 'BALANCE'
@@ -595,6 +595,19 @@ class AcadosOcpOptions:
         - in case of MERIT_BACKTRACKING, value is set to 0.05.
         """
         return self.__globalization_alpha_min
+    
+    @property
+    def alpha_min(self):
+        """Minimal step size for globalization.
+
+        default: None.
+
+        If None is given:
+        - in case of FUNNEL_L1PEN_LINESEARCH, value is set to 1e-17.
+        - in case of MERIT_BACKTRACKING, value is set to 0.05.
+        """
+        print("This option is deprecated and has new name: globalization_alpha_min")
+        return self.__globalization_alpha_min
 
     @property
     def reg_epsilon(self):
@@ -614,6 +627,21 @@ class AcadosOcpOptions:
         default: 0.7.
         """
         return self.__globalization_alpha_reduction
+    
+    @property
+    def alpha_reduction(self):
+        """Step size reduction factor for globalization MERIT_BACKTRACKING,
+
+        Type: float
+        Default: None.
+
+        If None is given:
+        - in case of FUNNEL_L1PEN_LINESEARCH, value is set to 0.5.
+        - in case of MERIT_BACKTRACKING, value is set to 0.7.
+        default: 0.7.
+        """
+        print("This option is deprecated and has new name: globalization_alpha_reduction")
+        return self.__globalization_alpha_reduction
 
     @property
     def globalization_line_search_use_sufficient_descent(self):
@@ -622,6 +650,16 @@ class AcadosOcpOptions:
         Type: int; 0 or 1;
         default: 0.
         """
+        return self.__globalization_line_search_use_sufficient_descent
+    
+    @property
+    def line_search_use_sufficient_descent(self):
+        """
+        Determines if sufficient descent (Armijo) condition is used in line search.
+        Type: int; 0 or 1;
+        default: 0.
+        """
+        print("This option is deprecated and has new name: globalization_line_search_use_sufficient_descent")
         return self.__globalization_line_search_use_sufficient_descent
 
     @property
@@ -637,6 +675,21 @@ class AcadosOcpOptions:
         - in case of MERIT_BACKTRACKING, value is set to 1e-4.
         """
         return self.__globalization_eps_sufficient_descent
+    
+    @property
+    def eps_sufficient_descent(self):
+        """
+        Factor for sufficient descent (Armijo) conditon, see also globalization_line_search_use_sufficient_descent.
+
+        Type: float,
+        Default: None.
+
+        If None is given:
+        - in case of FUNNEL_L1PEN_LINESEARCH, value is set to 1e-6.
+        - in case of MERIT_BACKTRACKING, value is set to 1e-4.
+        """
+        print("This option is deprecated and has new name: globalization_line_search_use_sufficient_descent")
+        return self.__globalization_eps_sufficient_descent
 
     @property
     def globalization_use_SOC(self):
@@ -650,6 +703,17 @@ class AcadosOcpOptions:
 
     @property
     def globalization_full_step_dual(self):
+        """
+        Determines if dual variables are updated with full steps (alpha=1.0) when primal variables are updated with smaller step.
+
+        Type: int; 0 or 1;
+        default for funnel globalization: 1
+        default else: 0.
+        """
+        return self.__globalization_full_step_dual
+    
+    @property
+    def full_step_dual(self):
         """
         Determines if dual variables are updated with full steps (alpha=1.0) when primal variables are updated with smaller step.
 
@@ -1076,12 +1140,30 @@ class AcadosOcpOptions:
     def globalization_alpha_min(self, globalization_alpha_min):
         self.__globalization_alpha_min = globalization_alpha_min
 
+    @alpha_min.setter
+    def alpha_min(self, globalization_alpha_min):
+        print("This option is deprecated and has new name: globalization_alpha_min")
+        self.__globalization_alpha_min = globalization_alpha_min
+
     @globalization_alpha_reduction.setter
     def globalization_alpha_reduction(self, globalization_alpha_reduction):
         self.__globalization_alpha_reduction = globalization_alpha_reduction
 
+    @alpha_reduction.setter
+    def alpha_reduction(self, globalization_alpha_reduction):
+        print("This option is deprecated and has new name: globalization_alpha_reduction")
+        self.__globalization_alpha_reduction = globalization_alpha_reduction
+
     @globalization_line_search_use_sufficient_descent.setter
     def globalization_line_search_use_sufficient_descent(self, globalization_line_search_use_sufficient_descent):
+        if globalization_line_search_use_sufficient_descent in [0, 1]:
+            self.__globalization_line_search_use_sufficient_descent = globalization_line_search_use_sufficient_descent
+        else:
+            raise Exception(f'Invalid value for globalization_line_search_use_sufficient_descent. Possible values are 0, 1, got {globalization_line_search_use_sufficient_descent}')
+
+    @line_search_use_sufficient_descent.setter
+    def line_search_use_sufficient_descent(self, globalization_line_search_use_sufficient_descent):
+        print("This option is deprecated and has new name: globalization_line_search_use_sufficient_descent")
         if globalization_line_search_use_sufficient_descent in [0, 1]:
             self.__globalization_line_search_use_sufficient_descent = globalization_line_search_use_sufficient_descent
         else:
@@ -1096,6 +1178,14 @@ class AcadosOcpOptions:
 
     @globalization_full_step_dual.setter
     def globalization_full_step_dual(self, globalization_full_step_dual):
+        if globalization_full_step_dual in [0, 1]:
+            self.__globalization_full_step_dual = globalization_full_step_dual
+        else:
+            raise Exception(f'Invalid value for globalization_full_step_dual. Possible values are 0, 1, got {globalization_full_step_dual}')
+    
+    @full_step_dual.setter
+    def full_step_dual(self, globalization_full_step_dual):
+        print("This option is deprecated and has new name: globalization_full_step_dual")
         if globalization_full_step_dual in [0, 1]:
             self.__globalization_full_step_dual = globalization_full_step_dual
         else:
@@ -1152,6 +1242,14 @@ class AcadosOcpOptions:
 
     @globalization_eps_sufficient_descent.setter
     def globalization_eps_sufficient_descent(self, globalization_eps_sufficient_descent):
+        if isinstance(globalization_eps_sufficient_descent, float) and globalization_eps_sufficient_descent > 0:
+            self.__globalization_eps_sufficient_descent = globalization_eps_sufficient_descent
+        else:
+            raise Exception('Invalid globalization_eps_sufficient_descent value. globalization_eps_sufficient_descent must be a positive float.')
+        
+    @eps_sufficient_descent.setter
+    def eps_sufficient_descent(self, globalization_eps_sufficient_descent):
+        print("This option is deprecated and has new name: globalization_eps_sufficient_descent")
         if isinstance(globalization_eps_sufficient_descent, float) and globalization_eps_sufficient_descent > 0:
             self.__globalization_eps_sufficient_descent = globalization_eps_sufficient_descent
         else:

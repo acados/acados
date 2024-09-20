@@ -63,8 +63,16 @@ def main():
         else:
             solve_maratos_ocp(setting)
 
+    setting = {}
+    setting['globalization'] = 'MERIT_BACKTRACKING'
+    setting['globalization_use_SOC'] = 0
+    setting['qp_solver'] = 'PARTIAL_CONDENSING_HPIPM'
+    setting['globalization_line_search_use_sufficient_descent'] = 1
+    print("Use deprecated options!")
+    solve_maratos_ocp(setting, use_deprecated_options=True)
 
-def solve_maratos_ocp(setting):
+
+def solve_maratos_ocp(setting, use_deprecated_options=False):
 
     globalization = setting['globalization']
     globalization_line_search_use_sufficient_descent = setting['globalization_line_search_use_sufficient_descent']
@@ -164,7 +172,14 @@ def solve_maratos_ocp(setting):
     # ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
     ocp.solver_options.globalization = globalization
-    ocp.solver_options.globalization_alpha_min = 0.01
+    if use_deprecated_options:
+        ocp.solver_options.alpha_min = 0.01
+        ocp.solver_options.globalization_use_SOC = setting['globalization_use_SOC']
+        ocp.solver_options.full_step_dual = 1
+        ocp.solver_options.eps_sufficient_descent = 1e-4
+        ocp.solver_options.line_search_use_sufficient_descent = setting['globalization_line_search_use_sufficient_descent']
+    else:
+        ocp.solver_options.globalization_alpha_min = 0.01
     # ocp.solver_options.levenberg_marquardt = 1e-2
     ocp.solver_options.qp_solver_cond_N = 0
     ocp.solver_options.print_level = 1
@@ -183,9 +198,12 @@ def solve_maratos_ocp(setting):
     ocp.solver_options.tf = Tf
 
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_ocp.json')
-    ocp_solver.options_set('globalization_line_search_use_sufficient_descent', globalization_line_search_use_sufficient_descent)
-    ocp_solver.options_set('globalization_use_SOC', globalization_use_SOC)
-    ocp_solver.options_set('globalization_full_step_dual', 1)
+    if not use_deprecated_options:
+        ocp_solver.options_set('globalization_line_search_use_sufficient_descent', globalization_line_search_use_sufficient_descent)
+        ocp_solver.options_set('globalization_use_SOC', globalization_use_SOC)
+        ocp_solver.options_set('globalization_full_step_dual', 1)
+    else:
+        ocp
 
     if INITIALIZE:# initialize solver
         # [ocp_solver.set(i, "x", x0 + (i/N) * (x_goal-x0)) for i in range(N+1)]
@@ -221,7 +239,7 @@ def solve_maratos_ocp(setting):
     if globalization == "FIXED_STEP":
         if sqp_iter != 18:
             raise Exception(f"acados solver took {sqp_iter} iterations, expected 18.")
-    elif globalization == "MERIT_BACKTRACKING":
+    elif globalization == "MERIT_BACKTRACKING" and not use_deprecated_options:
         if sqp_iter not in range(17, 23):
             raise Exception(f"acados solver took {sqp_iter} iterations, expected range(17, 23).")
 
