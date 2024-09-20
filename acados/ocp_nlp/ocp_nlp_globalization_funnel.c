@@ -32,7 +32,6 @@
 #include "acados/ocp_nlp/ocp_nlp_globalization_common.h"
 #include "acados/ocp_nlp/ocp_nlp_globalization_funnel.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/ocp_nlp/ocp_nlp_sqp.h"
 
 // external
 #include <assert.h>
@@ -89,13 +88,12 @@ void ocp_nlp_globalization_funnel_opts_initialize_default(void *config_, void *d
     opts->penalty_eta = 1e-6;
     opts->type_switching_condition = false; // use ipopt/gould type of switching
 
-    
     return;
 }
 
 
 void ocp_nlp_globalization_funnel_opts_set(void *config_, void *opts_, const char *field, void* value)
-{    
+{
     ocp_nlp_globalization_funnel_opts *opts = opts_;
     ocp_nlp_globalization_config *config = config_;
 
@@ -104,7 +102,7 @@ void ocp_nlp_globalization_funnel_opts_set(void *config_, void *opts_, const cha
         double* funnel_initialization_increase_factor = (double *) value;
         if (*funnel_initialization_increase_factor <= 1.0)
         {
-            printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_initialization_increase_factor field, need double > 1, got %f.", *funnel_initialization_increase_factor);
+            printf("\nerror: ocp_nlp_globalization_funnel_opts_set: invalid value for funnel_initialization_increase_factor field, need double > 1, got %f.", *funnel_initialization_increase_factor);
             exit(1);
         }
         opts->initialization_increase_factor = *funnel_initialization_increase_factor;
@@ -114,7 +112,7 @@ void ocp_nlp_globalization_funnel_opts_set(void *config_, void *opts_, const cha
         double* funnel_initialization_upper_bound = (double *) value;
         if (*funnel_initialization_upper_bound <= 0.0)
         {
-            printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_initialization_upper_bound field, need double > 0, got %f.", *funnel_initialization_upper_bound);
+            printf("\nerror: ocp_nlp_globalization_funnel_opts_set: invalid value for funnel_initialization_upper_bound field, need double > 0, got %f.", *funnel_initialization_upper_bound);
             exit(1);
         }
         opts->initialization_upper_bound = *funnel_initialization_upper_bound;
@@ -124,7 +122,7 @@ void ocp_nlp_globalization_funnel_opts_set(void *config_, void *opts_, const cha
         double* funnel_sufficient_decrease_factor = (double *) value;
         if (*funnel_sufficient_decrease_factor <= 0.0 || *funnel_sufficient_decrease_factor >= 1.0)
         {
-            printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_sufficient_decrease_factor field, need double in (0,1), got %f.", *funnel_sufficient_decrease_factor);
+            printf("\nerror: ocp_nlp_globalization_funnel_opts_set: invalid value for funnel_sufficient_decrease_factor field, need double in (0,1), got %f.", *funnel_sufficient_decrease_factor);
             exit(1);
         }
         opts->sufficient_decrease_factor = *funnel_sufficient_decrease_factor;
@@ -134,7 +132,7 @@ void ocp_nlp_globalization_funnel_opts_set(void *config_, void *opts_, const cha
         double* funnel_kappa = (double *) value;
         if (*funnel_kappa <= 0.0 || *funnel_kappa >= 1.0)
         {
-            printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_kappa field, need double in (0,1), got %f.", *funnel_kappa);
+            printf("\nerror: ocp_nlp_globalization_funnel_opts_set: invalid value for funnel_kappa field, need double in (0,1), got %f.", *funnel_kappa);
             exit(1);
         }
         opts->kappa = *funnel_kappa;
@@ -144,7 +142,7 @@ void ocp_nlp_globalization_funnel_opts_set(void *config_, void *opts_, const cha
         double* funnel_fraction_switching_condition = (double *) value;
         if (*funnel_fraction_switching_condition <= 0.0 || *funnel_fraction_switching_condition >= 1.0)
         {
-            printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_fraction_switching_condition field, need double in (0,1), got %f.", *funnel_fraction_switching_condition);
+            printf("\nerror: ocp_nlp_globalization_funnel_opts_set: invalid value for funnel_fraction_switching_condition field, need double in (0,1), got %f.", *funnel_fraction_switching_condition);
             exit(1);
         }
         opts->fraction_switching_condition = *funnel_fraction_switching_condition;
@@ -154,7 +152,7 @@ void ocp_nlp_globalization_funnel_opts_set(void *config_, void *opts_, const cha
         double* funnel_initial_penalty_parameter = (double *) value;
         if (*funnel_initial_penalty_parameter < 0.0 || *funnel_initial_penalty_parameter > 1.0)
         {
-            printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_initial_penalty_parameter field, need double in [0,1], got %f.", *funnel_initial_penalty_parameter);
+            printf("\nerror: ocp_nlp_globalization_funnel_opts_set: invalid value for funnel_initial_penalty_parameter field, need double in [0,1], got %f.", *funnel_initial_penalty_parameter);
             exit(1);
         }
         opts->initial_penalty_parameter = *funnel_initial_penalty_parameter;
@@ -514,9 +512,9 @@ int backtracking_line_search(ocp_nlp_config *config,
         }
 
         alpha *= globalization_opts->alpha_reduction;
-
     }
 }
+
 
 int ocp_nlp_globalization_funnel_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_, double *step_size)
 {
@@ -560,11 +558,6 @@ void ocp_nlp_globalization_funnel_print_iteration_header()
 }
 
 
-// TODO: unified signature:
-// -> move everything around.
-// 1. residual_iter
-// 2. int iter count
-// 3. alpha etc. move to glob_memory. (void *)
 void ocp_nlp_globalization_funnel_print_iteration(double objective_value,
                                                 int iter_count,
                                                 double infeas_eq,
@@ -577,7 +570,8 @@ void ocp_nlp_globalization_funnel_print_iteration(double objective_value,
                                                 int qp_iter,ocp_nlp_opts* opts,
                                                 ocp_nlp_globalization_funnel_memory* mem)
 {
-    if ((iter_count % 10 == 0)){
+    if ((iter_count % 10 == 0))
+    {
         ocp_nlp_globalization_funnel_print_iteration_header();
     }
     printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %12.4e | %10.4e | %10i | %10i | %10c\n",
