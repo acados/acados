@@ -840,7 +840,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Calculate optimal QP objective (needed for globalization)
         if (config->globalization->needs_qp_objective_value == 1)
         {
-            nlp_mem->qp_cost_value = ocp_nlp_sqp_compute_qp_objective_value(dims, qp_in, qp_out, nlp_work, nlp_mem, opts);
+            nlp_mem->qp_cost_value = ocp_nlp_sqp_compute_qp_objective_value(dims, qp_in, qp_out, nlp_work);
         }
 
         // Compute the step norm
@@ -883,8 +883,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     return mem->nlp_mem->status;
 }
 
-double ocp_nlp_sqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-                ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem, ocp_nlp_sqp_opts *opts)
+double ocp_nlp_sqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_nlp_workspace *nlp_work)
 {
     // Compute the QP objective function value
     double qp_cost = 0.0;
@@ -895,20 +894,17 @@ double ocp_nlp_sqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_
     {
         nux = dims->nx[i] + dims->nu[i];
         ns = dims->ns[i];
-        // if (opts->funnel_type_switching_condition)
-        // {
-        //     // Calculate 0.5 * d.T H d
-        //     blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0,
-        //                     0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
-        //     qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
+        // Calculate 0.5 * d.T H d
+        blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0,
+                        0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
+        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
 
-        //     // slack QP objective value, compare to computation in cost modules;
-        //     // tmp_nv = 2 * z + Z .* slack;
-        //     blasfeo_dveccpsc(2*ns, 2.0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
-        //     blasfeo_dvecmulacc(2*ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
-        //     // qp_cost += .5 * (tmp_nv .* slack)
-        //     qp_cost += 0.5 * blasfeo_ddot(2*ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux);
-        // }
+        // slack QP objective value, compare to computation in cost modules;
+        // tmp_nv = 2 * z + Z .* slack;
+        blasfeo_dveccpsc(2*ns, 2.0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
+        blasfeo_dvecmulacc(2*ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
+        // qp_cost += .5 * (tmp_nv .* slack)
+        qp_cost += 0.5 * blasfeo_ddot(2*ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux);
         // Calculate g.T d
         qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
 

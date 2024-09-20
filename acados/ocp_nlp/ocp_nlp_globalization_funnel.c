@@ -216,6 +216,26 @@ void *ocp_nlp_globalization_funnel_memory_assign(void *config_, void *dims_, voi
 /************************************************
  * funnel functions
  ************************************************/
+static double compute_gradient_directional_derivative(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
+{
+    // Compute the QP objective function value
+    double dir_der = 0.0;
+    int i, nux, ns;
+    int N = dims->N;
+    // Sum over stages 0 to N
+    for (i = 0; i <= N; i++)
+    {
+        nux = dims->nx[i] + dims->nu[i];
+        ns = dims->ns[i];
+        // Calculate g.T d
+        dir_der += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
+
+        // Calculate gradient of slacks
+        dir_der += blasfeo_ddot(2 * ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
+    }
+    return dir_der;
+}
+
 void debug_output(ocp_nlp_opts *opts, char* message, int print_level)
 {
     if (opts->print_level > print_level)
@@ -413,7 +433,15 @@ int backtracking_line_search(ocp_nlp_config *config,
     ocp_nlp_globalization_funnel_memory *mem = nlp_mem->globalization;
 
     int N = dims->N;
-    double pred = -nlp_mem->qp_cost_value;
+    double pred;
+    if (opts->type_switching_condition)
+    {
+        pred = -nlp_mem->qp_cost_value;
+    }
+    else
+    {
+        pred = -compute_gradient_directional_derivative(dims, nlp_mem->qp_in, nlp_mem->qp_out);
+    }
     double pred_merit = 0.0; // Calculate this here
     double alpha = 1.0;
     double trial_cost;
@@ -514,7 +542,6 @@ int backtracking_line_search(ocp_nlp_config *config,
         alpha *= globalization_opts->alpha_reduction;
     }
 }
-
 
 int ocp_nlp_globalization_funnel_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_, double *step_size)
 {
