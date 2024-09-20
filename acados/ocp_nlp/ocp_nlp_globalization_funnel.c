@@ -596,6 +596,11 @@ int ocp_nlp_globalization_funnel_needs_objective_value()
     return 1;
 }
 
+int ocp_nlp_globalization_funnel_needs_qp_objective_value()
+{
+    return 1;
+}
+
 void ocp_nlp_globalization_funnel_initialize_memory(ocp_nlp_config *config_,
                                                     ocp_nlp_dims *dims_,
                                                     ocp_nlp_memory *nlp_mem_,
@@ -627,5 +632,6 @@ void ocp_nlp_globalization_funnel_config_initialize_default(ocp_nlp_globalizatio
     config->print_iteration_header = &ocp_nlp_globalization_funnel_print_iteration_header;
     config->print_iteration = &ocp_nlp_globalization_funnel_print_iteration;
     config->needs_objective_value = &ocp_nlp_globalization_funnel_needs_objective_value;
+    config->needs_qp_objective_value = &ocp_nlp_globalization_funnel_needs_qp_objective_value;
     config->initialize_memory = &ocp_nlp_globalization_funnel_initialize_memory;
 }

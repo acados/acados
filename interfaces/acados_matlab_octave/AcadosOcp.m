@@ -718,15 +718,6 @@ classdef AcadosOcp < handle
                 end
             end
 
-            if isempty(opts.eval_qp_objective)
-                % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                if ddp_with_merit_or_funnel
-                    opts.eval_qp_objective = true;
-                else
-                    opts.eval_qp_objective = false;
-                end
-            end
-
             if isempty(opts.globalization_full_step_dual)
                 % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
                 if ddp_with_merit_or_funnel

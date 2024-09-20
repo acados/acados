@@ -77,6 +77,7 @@ typedef struct
                             void *globalization_opts,
                             void* globalization_mem);
     int (*needs_objective_value)();
+    int (*needs_qp_objective_value)();
     void (*initialize_memory)(void *config_,
                             void *dims_,
                             void *nlp_mem_,

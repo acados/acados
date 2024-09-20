@@ -88,7 +88,6 @@ class AcadosOcpOptions:
         self.__exact_hess_dyn = 1
         self.__exact_hess_constr = 1
         self.__eval_residual_at_max_iter = None
-        self.__eval_qp_objective = None
         self.__fixed_hess = 0
         self.__globalization_funnel_initialization_increase_factor = 15.0
         self.__globalization_funnel_initialization_upper_bound = 1.0
@@ -732,22 +731,6 @@ class AcadosOcpOptions:
         return self.__eval_residual_at_max_iter
 
     @property
-    def eval_qp_objective(self):
-        """
-        Determines, if the QP objective function value should be evaluated.
-        If True, the QP objective is evaluated
-        Otherwise NOT
-
-        Type: bool
-        Default: None
-
-        If None is given:
-        if globalization == FUNNEL_L1PEN_LINESEARCH: true
-        else: false
-        """
-        return self.__eval_qp_objective
-
-    @property
     def globalization_funnel_initial_penalty_parameter(self):
         """
         Initialization.
@@ -1166,13 +1149,6 @@ class AcadosOcpOptions:
             self.__eval_residual_at_max_iter = eval_residual_at_max_iter
         else:
             raise Exception(f'Invalid datatype for eval_residual_at_max_iter. Should be bool, got {type(eval_residual_at_max_iter)}')
-
-    @eval_qp_objective.setter
-    def eval_qp_objective(self, eval_qp_objective):
-        if isinstance(eval_qp_objective, bool):
-            self.__eval_qp_objective = eval_qp_objective
-        else:
-            raise Exception(f'Invalid datatype for eval_qp_objective. Should be bool, got {type(eval_qp_objective)}')
 
     @globalization_eps_sufficient_descent.setter
     def globalization_eps_sufficient_descent(self, globalization_eps_sufficient_descent):

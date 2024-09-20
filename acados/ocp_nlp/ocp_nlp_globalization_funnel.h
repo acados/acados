@@ -165,6 +165,8 @@ void ocp_nlp_globalization_funnel_print_iteration(double objective_value,
 //
 int ocp_nlp_globalization_funnel_needs_objective_value();
 //
+int ocp_nlp_globalization_funnel_needs_qp_objective_value();
+//
 void ocp_nlp_globalization_funnel_initialize_memory(ocp_nlp_config *config_,
                                                     ocp_nlp_dims *dims_,
                                                     ocp_nlp_memory *nlp_mem_,

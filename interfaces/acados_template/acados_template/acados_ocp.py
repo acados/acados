@@ -872,12 +872,6 @@ class AcadosOcp:
             else:
                 opts.eval_residual_at_max_iter = False
 
-        if opts.eval_qp_objective is None:
-            if ddp_with_merit_or_funnel:
-                opts.eval_qp_objective = True
-            else:
-                opts.eval_qp_objective = False
-
         if opts.globalization_full_step_dual is None:
             if ddp_with_merit_or_funnel:
                 opts.globalization_full_step_dual = 1

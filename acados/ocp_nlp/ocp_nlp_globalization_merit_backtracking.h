@@ -126,6 +126,10 @@ void ocp_nlp_globalization_merit_backtracking_print_iteration(double objective_v
 //
 int ocp_nlp_globalization_merit_backtracking_needs_objective_value();
 //
+int ocp_nlp_globalization_merit_backtracking_needs_qp_objective_value();
+//
+int ocp_nlp_globalization_merit_backtracking_ddp_needs_qp_objective_value();
+//
 void ocp_nlp_globalization_merit_backtracking_initialize_memory(ocp_nlp_config *config_,
                                                     ocp_nlp_dims *dims_,
                                                     ocp_nlp_memory *nlp_mem_,

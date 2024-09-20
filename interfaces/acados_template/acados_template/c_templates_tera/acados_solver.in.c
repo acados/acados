@@ -2306,9 +2306,6 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     bool eval_residual_at_max_iter = {{ solver_options.eval_residual_at_max_iter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "eval_residual_at_max_iter", &eval_residual_at_max_iter);
 
-    bool eval_qp_objective = {{ solver_options.eval_qp_objective }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "eval_qp_objective", &eval_qp_objective);
-
 {%- elif solver_options.nlp_solver_type == "SQP_RTI" %}
     int as_rti_iter = {{ solver_options.as_rti_iter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "as_rti_iter", &as_rti_iter);
