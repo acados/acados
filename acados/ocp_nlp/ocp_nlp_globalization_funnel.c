@@ -530,7 +530,7 @@ int backtracking_line_search(ocp_nlp_config *config,
             *step_size = alpha;
             nlp_mem->cost_value = trial_cost;
             mem->l1_infeasibility = trial_infeasibility;
-            return 1;
+            return ACADOS_SUCCESS;
         }
 
         if (alpha < globalization_opts->alpha_min)
@@ -553,10 +553,10 @@ int ocp_nlp_globalization_funnel_find_acceptable_iterate(void *nlp_config_, void
     ocp_nlp_workspace *nlp_work = nlp_work_;
     ocp_nlp_opts *nlp_opts = nlp_opts_;
 
-    bool linesearch_success = 1;
+    int linesearch_success;
     linesearch_success = backtracking_line_search(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_mem, solver_mem, nlp_work, nlp_opts, step_size);
     // Copy new iterate to nlp_out
-    if (linesearch_success)
+    if (linesearch_success == ACADOS_SUCCESS)
     {
         // in case line search fails, we do not want to copy trial iterates!
         copy_ocp_nlp_out(nlp_dims, nlp_work->tmp_nlp_out, nlp_out);

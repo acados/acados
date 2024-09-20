@@ -857,10 +857,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
         acados_tic(&timer1);
 
-        int globalization_success = 1;
-        globalization_success = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts, &mem->alpha);
+        int globalization_status;
+        globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts, &mem->alpha);
 
-        if (globalization_success != 1)
+        if (globalization_status != ACADOS_SUCCESS)
         {
             if (nlp_opts->print_level > 1)
             {

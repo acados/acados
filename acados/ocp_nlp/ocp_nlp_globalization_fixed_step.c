@@ -151,11 +151,10 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
     ocp_nlp_opts *nlp_opts = nlp_opts_;
     ocp_nlp_globalization_fixed_step_opts *opts = nlp_opts->globalization;
     
-
     nlp_config->globalization->step_update(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, nlp_opts->step_length, opts->globalization_opts->full_step_dual);
     *step_size = nlp_opts->step_length;
 
-    return 1;
+    return ACADOS_SUCCESS;
 }
 
 void ocp_nlp_globalization_fixed_step_print_iteration_header()

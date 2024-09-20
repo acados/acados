@@ -1022,7 +1022,7 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate_for_ddp(voi
         // in case line search fails, we do not want to copy trial iterates!
         *step_size = mem->alpha;
         copy_ocp_nlp_out(nlp_dims, nlp_work->tmp_nlp_out, nlp_out);
-        return 1;
+        return ACADOS_SUCCESS;
     }
     return 0;
 }
@@ -1076,7 +1076,7 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_c
     // update variables
     nlp_config->globalization->step_update(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, mem->alpha, globalization_opts->full_step_dual);
     *step_size = mem->alpha;
-    return 1;
+    return ACADOS_SUCCESS;
 }
 
 int ocp_nlp_globalization_merit_backtracking_needs_objective_value()
