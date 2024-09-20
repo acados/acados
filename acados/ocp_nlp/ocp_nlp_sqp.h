@@ -69,7 +69,6 @@ typedef struct
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
     int rti_phase;       // only phase 0 at the moment
     bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
-    bool eval_qp_objective; // evaluates the QP objective value for globalization
 } ocp_nlp_sqp_opts;
 
 //
