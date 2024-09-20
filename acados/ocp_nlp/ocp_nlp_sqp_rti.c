@@ -411,15 +411,15 @@ static void rti_store_residuals_in_stats(ocp_nlp_sqp_rti_opts *opts, ocp_nlp_sqp
 {
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
     ocp_nlp_res *nlp_res = nlp_mem->nlp_res;
-    if (mem->nlp_mem->iter < mem->stat_m)
+    if (nlp_mem->iter < mem->stat_m)
     {
         int m_offset = 2 + 4 * opts->ext_qp_res;
         // printf("storing residuals AS RTI, m_offset %d\n", m_offset);
         // printf("%e\t%e\t%e\t%e\n", nlp_res->inf_norm_res_stat, nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_comp);
-        mem->stat[mem->stat_n * mem->nlp_mem->iter+0+m_offset] = nlp_res->inf_norm_res_stat;
-        mem->stat[mem->stat_n * mem->nlp_mem->iter+1+m_offset] = nlp_res->inf_norm_res_eq;
-        mem->stat[mem->stat_n * mem->nlp_mem->iter+2+m_offset] = nlp_res->inf_norm_res_ineq;
-        mem->stat[mem->stat_n * mem->nlp_mem->iter+3+m_offset] = nlp_res->inf_norm_res_comp;
+        mem->stat[mem->stat_n * nlp_mem->iter+0+m_offset] = nlp_res->inf_norm_res_stat;
+        mem->stat[mem->stat_n * nlp_mem->iter+1+m_offset] = nlp_res->inf_norm_res_eq;
+        mem->stat[mem->stat_n * nlp_mem->iter+2+m_offset] = nlp_res->inf_norm_res_ineq;
+        mem->stat[mem->stat_n * nlp_mem->iter+3+m_offset] = nlp_res->inf_norm_res_comp;
     }
     // printf("storting residuals in line %d\n", mem->sqp_iter);
 }
@@ -668,7 +668,6 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
 
     // Update variables
     double step_size;
-    // (void *nlp_config, void *nlp_dims, void *nlp_in, void *nlp_out, void *nlp_mem, void *solver_mem, void *nlp_work, void *nlp_opts, double *step_size);
     globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts, &step_size);
     if (globalization_status != 1)
     {
@@ -776,7 +775,6 @@ static void level_c_prepare_residual_computation(ocp_nlp_config *config,
     int *nx = dims->nx;
     int *nu = dims->nu;
     // int *ni = dims->ni;
-
 
     // evaluate constraint adjoint
     for (int i=0; i <= N; i++)
@@ -910,8 +908,8 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         // save statistics
         ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
         qp_iter = qp_info_->num_iter;
-        mem->stat[mem->stat_n * mem->nlp_mem->iter+0] = qp_status;
-        mem->stat[mem->stat_n * mem->nlp_mem->iter+1] = qp_iter;
+        mem->stat[mem->stat_n * nlp_mem->iter+0] = qp_status;
+        mem->stat[mem->stat_n * nlp_mem->iter+1] = qp_iter;
 
         // compute correct dual solution in case of Hessian regularization
         acados_tic(&timer1);
@@ -1059,8 +1057,8 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             qp_iter = qp_info_->num_iter;
 
             // save statistics
-            mem->stat[mem->stat_n * mem->nlp_mem->iter+0] = qp_status;
-            mem->stat[mem->stat_n * mem->nlp_mem->iter+1] = qp_iter;
+            mem->stat[mem->stat_n * nlp_mem->iter+0] = qp_status;
+            mem->stat[mem->stat_n * nlp_mem->iter+1] = qp_iter;
 
             // compute correct dual solution in case of Hessian regularization
             acados_tic(&timer1);
