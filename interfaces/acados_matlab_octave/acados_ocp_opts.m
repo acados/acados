@@ -216,6 +216,16 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.globalization_full_step_dual = value;
             elseif (strcmp(field, 'globalization_eps_sufficient_descent'))
                 obj.opts_struct.globalization_eps_sufficient_descent = value;
+            elseif (strcmp(field, 'alpha_min'))
+                obj.opts_struct.globalization_alpha_min = value;
+            elseif (strcmp(field, 'alpha_reduction'))
+                obj.opts_struct.alpha_reduction = value;
+            elseif (strcmp(field, 'line_search_use_sufficient_descent'))
+                obj.opts_struct.globalization_line_search_use_sufficient_descent = value;
+            elseif (strcmp(field, 'full_step_dual'))
+                obj.opts_struct.globalization_full_step_dual = value;
+            elseif (strcmp(field, 'eps_sufficient_descent'))
+                obj.opts_struct.globalization_eps_sufficient_descent = value;
             elseif (strcmp(field, 'globalization'))
                 obj.opts_struct.globalization = value;
             elseif (strcmp(field, 'parameter_values'))
