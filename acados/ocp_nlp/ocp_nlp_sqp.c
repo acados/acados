@@ -838,7 +838,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // Calculate optimal QP objective (needed for globalization)
-        if (config->globalization->needs_qp_objective_value == 1)
+        if (config->globalization->needs_qp_objective_value() == 1)
         {
             nlp_mem->qp_cost_value = ocp_nlp_sqp_compute_qp_objective_value(dims, qp_in, qp_out, nlp_work);
         }

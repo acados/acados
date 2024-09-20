@@ -887,7 +887,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // Compute the optimal QP objective function value
-        if (config->globalization->needs_qp_objective_value == 1)
+        if (config->globalization->needs_qp_objective_value() == 1)
         {
             nlp_mem->qp_cost_value = ocp_nlp_ddp_compute_qp_objective_value(dims, qp_in, qp_out,nlp_work, nlp_mem);
         }
