@@ -2994,3 +2994,30 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
         exit(1);
     }
 }
+
+
+
+void ocp_nlp_dump_qp_in_to_file(ocp_qp_in *qp_in, int sqp_iter, int soc)
+{
+    char filename[100];
+    if (soc > 0)
+        sprintf(filename, "soc_qp_in_%d.txt", sqp_iter);
+    else
+        sprintf(filename, "qp_in_%d.txt", sqp_iter);
+    FILE *out_file = fopen(filename, "w");
+    print_ocp_qp_in_to_file(out_file, qp_in);
+    fclose(out_file);
+}
+
+
+void ocp_nlp_dump_qp_out_to_file(ocp_qp_out *qp_out, int sqp_iter, int soc)
+{
+    char filename[100];
+    if (soc > 0)
+        sprintf(filename, "soc_qp_out_%d.txt", sqp_iter);
+    else
+        sprintf(filename, "qp_out_%d.txt", sqp_iter);
+    FILE *out_file = fopen(filename, "w");
+    print_ocp_qp_out_to_file(out_file, qp_out);
+    fclose(out_file);
+}

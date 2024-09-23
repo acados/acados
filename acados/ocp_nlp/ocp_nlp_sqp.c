@@ -462,34 +462,6 @@ void ocp_nlp_sqp_work_get(void *config_, void *dims_, void *work_,
  * Helper functions
  ************************************************/
 
-#if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
-static void ocp_nlp_sqp_dump_qp_in_to_file(ocp_qp_in *qp_in, int sqp_iter, int soc)
-{
-    char filename[100];
-    if (soc > 0)
-        sprintf(filename, "soc_qp_in_%d.txt", sqp_iter);
-    else
-        sprintf(filename, "qp_in_%d.txt", sqp_iter);
-    FILE *out_file = fopen(filename, "w");
-    print_ocp_qp_in_to_file(out_file, qp_in);
-    fclose(out_file);
-}
-
-
-static void ocp_nlp_sqp_dump_qp_out_to_file(ocp_qp_out *qp_out, int sqp_iter, int soc)
-{
-    char filename[100];
-    if (soc > 0)
-        sprintf(filename, "soc_qp_out_%d.txt", sqp_iter);
-    else
-        sprintf(filename, "qp_out_%d.txt", sqp_iter);
-    FILE *out_file = fopen(filename, "w");
-    print_ocp_qp_out_to_file(out_file, qp_out);
-    fclose(out_file);
-}
-#endif
-
-
 static void ocp_nlp_sqp_reset_timers(ocp_nlp_sqp_memory *mem)
 {
     mem->time_qp_sol = 0.0;
@@ -747,7 +719,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
-        ocp_nlp_sqp_dump_qp_in_to_file(qp_in, sqp_iter, 0);
+        ocp_nlp_dump_qp_in_to_file(qp_in, sqp_iter, 0);
 #endif
         // solve qp
         acados_tic(&timer1);
@@ -780,7 +752,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
-        ocp_nlp_sqp_dump_qp_out_to_file(qp_out, sqp_iter, 0);
+        ocp_nlp_dump_qp_out_to_file(qp_out, sqp_iter, 0);
 #endif
 
         qp_info *qp_info_;

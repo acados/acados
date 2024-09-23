@@ -567,7 +567,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     }
 
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
-    ocp_nlp_sqp_dump_qp_in_to_file(qp_in, sqp_iter, 1);
+    ocp_nlp_dump_qp_in_to_file(qp_in, sqp_iter, 1);
 #endif
 
     // solve QP
@@ -607,7 +607,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     // }
 
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
-        ocp_nlp_sqp_dump_qp_out_to_file(qp_out, sqp_iter, 1);
+        ocp_nlp_dump_qp_out_to_file(qp_out, sqp_iter, 1);
 #endif
 
     // exit conditions on QP status
@@ -1040,7 +1040,7 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_c
     ocp_nlp_opts *nlp_opts = nlp_opts_;
     ocp_nlp_globalization_merit_backtracking_opts *merit_opts = nlp_opts->globalization;
     ocp_nlp_globalization_opts *globalization_opts = merit_opts->globalization_opts;
-    
+
     int sqp_iter = 1; // NEEDS TO BE CHANGED HERE
     bool do_line_search = true;
 
