@@ -250,18 +250,11 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
             exit(1);
     }
 
-    // globalization step update
+    // globalization
     // NLP solver
     switch (plan.nlp_solver)
     {
-        case SQP:
-            config->globalization->step_update = &ocp_nlp_update_variables_sqp;
-            break;
-        case SQP_RTI:
-            config->globalization->step_update = &ocp_nlp_update_variables_sqp;
-            break;
         case DDP:
-            config->globalization->step_update = &ocp_nlp_ddp_compute_trial_iterate;
             if (plan.globalization == MERIT_BACKTRACKING)
             {
                 config->globalization->find_acceptable_iterate = &ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate_for_ddp;

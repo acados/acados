@@ -91,6 +91,9 @@ typedef struct ocp_nlp_config
                             char *field, int stage, int index, void *sens_nlp_out);
     void (*eval_lagr_grad_p)(void *config, void *dims, void *nlp_in, void *opts_, void *mem, void *work,
                             const char *field, void *grad_p);
+    void (*step_update)(void *config, void *dims, void *in,
+            void *out_start, void *opts, void *mem, void *work,
+            void *out_destination, void* solver_mem, double alpha, bool full_step_dual);
     // prepare memory
     int (*precompute)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
     void (*memory_reset_qp_solver)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);

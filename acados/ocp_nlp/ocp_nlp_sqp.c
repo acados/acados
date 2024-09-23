@@ -1210,6 +1210,7 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->opts_get = &ocp_nlp_sqp_opts_get;
     config->work_get = &ocp_nlp_sqp_work_get;
     config->terminate = &ocp_nlp_sqp_terminate;
+    config->step_update = &ocp_nlp_update_variables_sqp;
 
     return;
 }

@@ -1323,6 +1323,7 @@ void ocp_nlp_ddp_config_initialize_default(void *config_)
     config->opts_get = &ocp_nlp_ddp_opts_get;
     config->work_get = &ocp_nlp_ddp_work_get;
     config->terminate = &ocp_nlp_ddp_terminate;
+    config->step_update = &ocp_nlp_ddp_compute_trial_iterate;
 
     return;
 }

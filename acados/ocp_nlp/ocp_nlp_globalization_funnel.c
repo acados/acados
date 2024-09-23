@@ -460,7 +460,7 @@ int backtracking_line_search(ocp_nlp_config *config,
     while (true)
     {
         // Calculate trial iterate: trial_iterate = current_iterate + alpha * direction
-        config->globalization->step_update(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem,
+        config->step_update(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem,
                                      nlp_work, nlp_work->tmp_nlp_out, solver_mem, alpha, globalization_opts->full_step_dual);
 
         ///////////////////////////////////////////////////////////////////////

@@ -43,7 +43,8 @@
 extern "C" {
 #endif
 
-// This would cause cyclic include
+// This would cause cyclic include is not possible due to cycle
+// #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/utils/types.h"
 
 /************************************************
@@ -81,9 +82,6 @@ typedef struct
                             void *dims_,
                             void *nlp_mem_,
                             void *nlp_opts_);
-    void (*step_update)(void *config, void *dims, void *in,
-            void *out_start, void *opts, void *mem, void *work,
-            void *out_destination, void* solver_mem, double alpha, bool full_step_dual);
 } ocp_nlp_globalization_config;
 
 //
