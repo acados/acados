@@ -107,21 +107,6 @@ void ocp_nlp_globalization_opts_set(void *config_, void *opts_, const char *fiel
 {
     ocp_nlp_globalization_opts *opts = (ocp_nlp_globalization_opts *) opts_;
 
-    char module[MAX_STR_LEN];
-    char *ptr_module = NULL;
-    int module_length = 0;
-
-    // extract module name, i.e. substring in field before '_'
-    char *char_ = strchr(field, '_');
-    if (char_!=NULL)
-    {
-        module_length = char_-field;
-        for (int i=0; i<module_length; i++)
-            module[i] = field[i];
-        module[module_length] = '\0'; // add end of string
-        ptr_module = module;
-    }
-
     // nlp_globalization_opts
     if (!strcmp(field, "alpha_reduction"))
     {
