@@ -82,9 +82,11 @@ classdef GenerateContext < handle
                 obj = obj.add_function(name, output_dir, fun);
             else
                 check_casadi_version_supports_p_global();
+ 
+                outputs = cse(outputs);
+                
                 % This introduces novel symbols into the graph (extracted1, extracted2,...)
                 [outputs_ret, symbols, param] = extract_parametric(outputs, obj.p_global);
-                symbols = symbols.primitives();
 
                 pools = {};
                 for i = 1:numel(symbols)
@@ -94,7 +96,7 @@ classdef GenerateContext < handle
                 end
 
                 outputs_ret = substitute(outputs_ret, symbols, pools);
-                obj.p_global_expressions = [obj.p_global_expressions, param.primitives()];
+                obj.p_global_expressions = [obj.p_global_expressions, param];
 
                 fun_mod = Function(name, inputs, outputs_ret, obj.casadi_fun_opts);
                 obj = obj.add_function(name, output_dir, fun_mod);
