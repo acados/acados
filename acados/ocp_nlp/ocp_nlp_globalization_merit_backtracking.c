@@ -31,9 +31,6 @@
 
 #include "acados/ocp_nlp/ocp_nlp_globalization_merit_backtracking.h"
 
-// TODO: copy boilerblate..
-// fix imports
-
 // external
 #include <assert.h>
 #include <math.h>
@@ -46,7 +43,6 @@
 // acados
 #include "acados/ocp_nlp/ocp_nlp_globalization_common.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/utils/mem.h"
 
 // blasfeo

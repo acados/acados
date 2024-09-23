@@ -44,7 +44,6 @@ extern "C" {
 #endif
 
 // #include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/ocp_nlp/ocp_nlp_constraints_common.h"
 #include "acados/utils/types.h"
 
 /************************************************
