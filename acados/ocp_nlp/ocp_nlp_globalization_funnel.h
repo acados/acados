@@ -112,7 +112,7 @@ void update_funnel_penalty_parameter(ocp_nlp_globalization_funnel_memory *mem,
                                             ocp_nlp_globalization_funnel_opts *opts,
                                             double pred_f, double pred_h);
 //
-void decrease_funnel(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double trial_infeasibility, double current_infeasibility);                                          
+void decrease_funnel(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double trial_infeasibility, double current_infeasibility);
 //
 bool is_iterate_inside_of_funnel(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double infeasibility);
 //
@@ -134,7 +134,7 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
                                             double trial_objective,
                                             double current_merit,
                                             double trial_merit,
-                                            double pred_merit);                                                   
+                                            double pred_merit);
 //
 int backtracking_line_search(ocp_nlp_config *config,
                             ocp_nlp_dims *dims,
@@ -160,17 +160,14 @@ void ocp_nlp_globalization_funnel_print_iteration(double objective_value,
                                                 double reg_param,
                                                 int qp_status,
                                                 int qp_iter,
-                                                ocp_nlp_opts* opts,
-                                                ocp_nlp_globalization_funnel_memory* mem);
+                                                void* nlp_opts,
+                                                void* mem);
 //
 int ocp_nlp_globalization_funnel_needs_objective_value();
 //
 int ocp_nlp_globalization_funnel_needs_qp_objective_value();
 //
-void ocp_nlp_globalization_funnel_initialize_memory(ocp_nlp_config *config_,
-                                                    ocp_nlp_dims *dims_,
-                                                    ocp_nlp_memory *nlp_mem_,
-                                                    ocp_nlp_opts *nlp_opts_);
+void ocp_nlp_globalization_funnel_initialize_memory(void *config_, void *dims_, void *nlp_mem_, void *nlp_opts_);
 //
 void ocp_nlp_globalization_funnel_config_initialize_default(ocp_nlp_globalization_config *config);
 

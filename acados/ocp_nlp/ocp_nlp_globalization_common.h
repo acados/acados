@@ -43,7 +43,7 @@
 extern "C" {
 #endif
 
-// #include "acados/ocp_nlp/ocp_nlp_common.h"
+// This would cause cyclic include
 #include "acados/utils/types.h"
 
 /************************************************

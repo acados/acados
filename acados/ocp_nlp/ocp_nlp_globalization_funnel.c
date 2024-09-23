@@ -594,9 +594,12 @@ void ocp_nlp_globalization_funnel_print_iteration(double objective_value,
                                                 double step_norm,
                                                 double reg_param,
                                                 int qp_status,
-                                                int qp_iter,ocp_nlp_opts* opts,
-                                                ocp_nlp_globalization_funnel_memory* mem)
+                                                int qp_iter,
+                                                void *opts_,
+                                                void *mem_)
 {
+    // ocp_nlp_opts *opts = (ocp_nlp_opts *) opts_;
+    ocp_nlp_globalization_funnel_memory* mem = (ocp_nlp_globalization_funnel_memory*) mem_;
     if ((iter_count % 10 == 0))
     {
         ocp_nlp_globalization_funnel_print_iteration_header();
@@ -628,15 +631,14 @@ int ocp_nlp_globalization_funnel_needs_qp_objective_value()
     return 1;
 }
 
-void ocp_nlp_globalization_funnel_initialize_memory(ocp_nlp_config *config_,
-                                                    ocp_nlp_dims *dims_,
-                                                    ocp_nlp_memory *nlp_mem_,
-                                                    ocp_nlp_opts *nlp_opts_)
+void ocp_nlp_globalization_funnel_initialize_memory(void *config_, void *dims_, void *nlp_mem_, void *nlp_opts_)
 {
+    ocp_nlp_memory *nlp_mem = (ocp_nlp_memory *) nlp_mem_;
+    ocp_nlp_opts *nlp_opts = (ocp_nlp_opts *) nlp_opts_;
     printf("Note: The funnel globalization is still under development.\n");
     printf("If you encouter problems or bugs, please report to the acados developers!\n");
-    ocp_nlp_globalization_funnel_opts *opts = nlp_opts_->globalization;
-    ocp_nlp_globalization_funnel_memory *mem = nlp_mem_->globalization;
+    ocp_nlp_globalization_funnel_opts *opts = nlp_opts->globalization;
+    ocp_nlp_globalization_funnel_memory *mem = nlp_mem->globalization;
     mem->l1_infeasibility = ocp_nlp_get_l1_infeasibility(config_, dims_, nlp_mem_);
     initialize_funnel_width(mem, opts, mem->l1_infeasibility);
     mem->funnel_iter_type = '-';

@@ -1090,10 +1090,8 @@ int ocp_nlp_globalization_merit_backtracking_ddp_needs_qp_objective_value()
     return 1;
 }
 
-void ocp_nlp_globalization_merit_backtracking_initialize_memory(ocp_nlp_config *config_,
-                                                    ocp_nlp_dims *dims_,
-                                                    ocp_nlp_memory *nlp_mem_,
-                                                    ocp_nlp_opts *nlp_opts_)
+void ocp_nlp_globalization_merit_backtracking_initialize_memory(void *config_,
+    void *dims_, void *nlp_mem_, void *nlp_opts_)
 {
     return;
 }

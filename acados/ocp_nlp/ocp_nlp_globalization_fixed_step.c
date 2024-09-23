@@ -150,7 +150,7 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
     ocp_nlp_workspace *nlp_work = nlp_work_;
     ocp_nlp_opts *nlp_opts = nlp_opts_;
     ocp_nlp_globalization_fixed_step_opts *opts = nlp_opts->globalization;
-    
+
     nlp_config->globalization->step_update(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, nlp_opts->step_length, opts->globalization_opts->full_step_dual);
     *step_size = nlp_opts->step_length;
 
@@ -162,11 +162,6 @@ void ocp_nlp_globalization_fixed_step_print_iteration_header()
     printf("# it\tstat\t\teq\t\tineq\t\tcomp\t\tqp_stat\tqp_iter\talpha\n");
 }
 
-// TODO: unified signature:
-// -> move everything around.
-// 1. residual_iter
-// 2. int iter count
-// 3. alpha etc. move to glob_memory. (void *)
 void ocp_nlp_globalization_fixed_step_print_iteration(double objective_value,
                                                 int iter_count,
                                                 double infeas_eq,
@@ -177,20 +172,24 @@ void ocp_nlp_globalization_fixed_step_print_iteration(double objective_value,
                                                 double reg_param,
                                                 int qp_status,
                                                 int qp_iter,
-                                                ocp_nlp_opts* opts,
-                                                ocp_nlp_globalization_fixed_step_memory* mem)
+                                                void* nlp_opts_,
+                                                void* mem_)
 {
+    ocp_nlp_opts *nlp_opts = nlp_opts_;
+    // ocp_nlp_globalization_fixed_step_memory* mem = mem_;
+
     if ((iter_count % 10 == 0)){
         ocp_nlp_globalization_fixed_step_print_iteration_header();
     }
     printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n",
         iter_count,
         stationarity,
-        infeas_eq,        infeas_ineq,
+        infeas_eq,
+        infeas_ineq,
         complementarity,
         qp_status,
         qp_iter,
-        opts->step_length);
+        nlp_opts->step_length);
 }
 
 int ocp_nlp_globalization_fixed_step_needs_objective_value()
@@ -203,10 +202,7 @@ int ocp_nlp_globalization_fixed_step_needs_qp_objective_value()
     return 0;
 }
 
-void ocp_nlp_globalization_fixed_step_initialize_memory(ocp_nlp_config *config_,
-                                                    ocp_nlp_dims *dims_,
-                                                    ocp_nlp_memory *nlp_mem_,
-                                                    ocp_nlp_opts *nlp_opts_)
+void ocp_nlp_globalization_fixed_step_initialize_memory(void *config_, void *dims_, void *nlp_mem_, void *nlp_opts_)
 {
     return;
 }
