@@ -977,8 +977,8 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             qp_iter = qp_info_->num_iter;
 
             // save statistics
-            mem->stat[mem->stat_n * mem->nlp_mem->iter+0] = qp_status;
-            mem->stat[mem->stat_n * mem->nlp_mem->iter+1] = qp_iter;
+            mem->stat[mem->stat_n * nlp_mem->iter+0] = qp_status;
+            mem->stat[mem->stat_n * nlp_mem->iter+1] = qp_iter;
 
             // compute correct dual solution in case of Hessian regularization
             acados_tic(&timer1);
@@ -991,7 +991,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
                 printf("\nSQP_RTI: QP solver returned error status %d QP iteration %d.\n",
                     qp_status, qp_iter);
 #endif
-                mem->nlp_mem->status = ACADOS_QP_FAILURE;
+                nlp_mem->status = ACADOS_QP_FAILURE;
                 return;
             }
 
@@ -1017,7 +1017,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
     else if (opts->as_rti_level == LEVEL_C && !mem->is_first_call)
     {
         // perform iterations
-        for (; mem->nlp_mem->iter < opts->as_rti_iter; mem->nlp_mem->iter++)
+        for (; nlp_mem->iter < opts->as_rti_iter; nlp_mem->iter++)
         {
             // double norm, tmp_norm = 0.0;
             acados_tic(&timer1);
@@ -1071,7 +1071,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
                 printf("\nSQP_RTI: QP solver returned error status %d QP iteration %d.\n",
                     qp_status, qp_iter);
 #endif
-                mem->nlp_mem->status = ACADOS_QP_FAILURE;
+                nlp_mem->status = ACADOS_QP_FAILURE;
                 return;
             }
 

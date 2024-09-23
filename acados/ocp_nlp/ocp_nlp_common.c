@@ -1174,7 +1174,7 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
                                     field+module_length+1, value);
     }
     else if ( ptr_module!=NULL && (!strcmp(ptr_module, "globalization")) )
-    {   
+    {
         config->globalization->opts_set(config->globalization, opts->globalization,
                                     field+module_length+1, value);
     }
