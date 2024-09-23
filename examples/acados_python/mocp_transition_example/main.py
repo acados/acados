@@ -232,7 +232,7 @@ def main_multiphase_ocp(use_cmake=False):
     # plot solution
     t_grid_2_plot = t_grid_phases[2] - 1.0
 
-    fig, ax = plt.subplots(3, 1, sharex=True, figsize=(7, 5.2))
+    fig, ax = plt.subplots(3, 1, sharex=True, figsize=(7, 5))
 
     p_traj_0 = [x[0] for x in x_traj_phases[0]]
     ax[0].plot(t_grid_phases[0], p_traj_0, color='C0', label='phase 1')
@@ -249,13 +249,13 @@ def main_multiphase_ocp(use_cmake=False):
     a_traj = [u_traj_phases[0][0][0]] + [x[0] for x in u_traj_phases[0]]
     ax[2].step(t_grid_phases[0], a_traj, color='C0')
 
-    for i, l in enumerate(['$p$', '$v$', '$a$']):
+    for i, l in enumerate([r'$p$ [m]', r'$s$ [m/s]', r'$a$ [m/s$^2$]']):
         ax[i].grid()
         ax[i].set_ylabel(l)
 
     ax[0].set_xlim([0, T_HORIZON])
     ax[0].legend()
-    ax[-1].set_xlabel("time $t$")
+    ax[-1].set_xlabel("time $t$ [s]")
 
     fig.align_ylabels()
     plt.tight_layout()
@@ -337,11 +337,11 @@ def cost_to_go_experiment():
             cost_vals[i, j] = solver.get_cost()
 
     # plot cost values
-    fig, ax = plt.subplots(1, 1, figsize=(6, 5.2))
+    fig, ax = plt.subplots(1, 1, figsize=(6.3, 5))
     linestyles = ['-', '-.',  '-.',  '-.']
     for i, label in enumerate(solver_labels):
         ax.plot(p0_vals, cost_vals[i, :], label=label, color=f'C{i+2}', linestyle=linestyles[i])
-    ax.set_xlabel('$p_0$')
+    ax.set_xlabel('$p_0$ [m]')
     ax.set_ylabel('cost-to-go $V([p_0, 0])$')
     ax.grid()
     ax.set_xlim([p0_vals[0], p0_vals[-1]])
