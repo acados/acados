@@ -262,9 +262,9 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
             break;
         case DDP:
             config->globalization->step_update = &ocp_nlp_ddp_compute_trial_iterate;
-            config->globalization->find_acceptable_iterate = &ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate_for_ddp;
             if (plan.globalization == MERIT_BACKTRACKING)
             {
+                config->globalization->find_acceptable_iterate = &ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate_for_ddp;
                 config->globalization->needs_qp_objective_value = &ocp_nlp_globalization_merit_backtracking_ddp_needs_qp_objective_value;
             }
             break;
