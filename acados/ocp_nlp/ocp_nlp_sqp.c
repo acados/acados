@@ -108,8 +108,6 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
 
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
 
-    // int ii;
-
     // this first !!!
     ocp_nlp_opts_initialize_default(config, dims, nlp_opts);
 
@@ -329,11 +327,6 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     ocp_nlp_sqp_opts *opts = opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
 
-    // ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
-    // ocp_nlp_dynamics_config **dynamics = config->dynamics;
-    // ocp_nlp_cost_config **cost = config->cost;
-    // ocp_nlp_constraints_config **constraints = config->constraints;
-
     char *c_ptr = (char *) raw_memory;
 
     // int N = dims->N;
@@ -484,7 +477,7 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
 
     // check for nans
     if (isnan(nlp_res->inf_norm_res_stat) || isnan(nlp_res->inf_norm_res_eq) ||
-            isnan(nlp_res->inf_norm_res_ineq) || isnan(nlp_res->inf_norm_res_comp))
+        isnan(nlp_res->inf_norm_res_ineq) || isnan(nlp_res->inf_norm_res_comp))
     {
         mem->nlp_mem->status = ACADOS_NAN_DETECTED;
         if (opts->nlp_opts->print_level > 0)
@@ -498,7 +491,8 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
     if (!opts->eval_residual_at_max_iter && n_iter >= opts->max_iter)
     {
         mem->nlp_mem->status = ACADOS_MAXITER;
-        if (opts->nlp_opts->print_level > 0){
+        if (opts->nlp_opts->print_level > 0)
+        {
             printf("Stopped: Maximum Iterations Reached.\n");
         }
         return true;
@@ -525,11 +519,11 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         {
             if (nlp_res->inf_norm_res_eq < opts->tol_eq && nlp_res->inf_norm_res_ineq < opts->tol_ineq)
             {
-                printf("Stopped: Converged To Feasible Point. Step size is < tol_eq.\n");
+                printf("Stopped: Converged to Feasible Point. Step size is < tol_eq.\n");
             }
             else
             {
-                printf("Stopped: Converged To Infeasible Point. Step size is < tol_eq.\n");
+                printf("Stopped: Converged to Infeasible Point. Step size is < tol_eq.\n");
             }
         }
         mem->nlp_mem->status = ACADOS_MINSTEP;
@@ -540,7 +534,8 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
     if (mem->nlp_mem->cost_value <= opts->tol_unbounded)
     {
         mem->nlp_mem->status = ACADOS_UNBOUNDED;
-        if (opts->nlp_opts->print_level > 0){
+        if (opts->nlp_opts->print_level > 0)
+        {
             printf("Stopped: Problem seems to be unbounded.\n");
         }
         return true;
@@ -550,7 +545,8 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
     if (n_iter >= opts->max_iter)
     {
         mem->nlp_mem->status = ACADOS_MAXITER;
-        if (opts->nlp_opts->print_level > 0){
+        if (opts->nlp_opts->print_level > 0)
+        {
             printf("Stopped: Maximum Iterations Reached.\n");
         }
         return true;
@@ -921,8 +917,6 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
 
     return ocp_nlp_precompute_common(config, dims, nlp_in, nlp_out, opts->nlp_opts, nlp_mem, nlp_work);
 }
-
-
 
 
 void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *mem_, void *work_,
