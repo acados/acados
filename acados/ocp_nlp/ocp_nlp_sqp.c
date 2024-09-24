@@ -609,7 +609,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
      * main sqp loop
      ************************************************/
     int sqp_iter = 0;
-    double reg_param_memory = 0.0;
+    double prev_levenberg_marquardt = 0.0;
     for (; sqp_iter <= opts->max_iter; sqp_iter++) // <= needed such that after last iteration KKT residuals are checked before max_iter is thrown.
     {
         // We always evaluate the residuals until the last iteration
@@ -669,13 +669,13 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                                    sqp_iter,
                                                    nlp_res,
                                                    mem->step_norm,
-                                                   reg_param_memory,
+                                                   prev_levenberg_marquardt,
                                                    qp_status,
                                                    qp_iter,
                                                    nlp_opts,
                                                    nlp_mem->globalization);
         }
-        reg_param_memory = nlp_opts->levenberg_marquardt;
+        prev_levenberg_marquardt = nlp_opts->levenberg_marquardt;
 
         // regularize Hessian
         // NOTE: this is done before termination, such that we can get the QP at the stationary point that is actually solved, if we exit with success.
