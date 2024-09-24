@@ -156,7 +156,7 @@ def main(discretization='shooting_nodes'):
     simU = np.zeros((N, nu))
 
     # change options after creating ocp_solver
-    ocp_solver.options_set("step_length", 0.99999)
+    ocp_solver.options_set("globalization_fixed_step_length", 0.99999)
     ocp_solver.options_set("tol_eq", TOL)
     ocp_solver.options_set("tol_stat", TOL)
     ocp_solver.options_set("tol_ineq", TOL)

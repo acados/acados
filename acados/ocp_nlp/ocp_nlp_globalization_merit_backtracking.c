@@ -976,7 +976,7 @@ static int ocp_nlp_ddp_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_
             // reset evaluation point to SQP iterate
             mem->alpha = alpha;
             nlp_mem->cost_value = trial_cost;
-            return 1;
+            return ACADOS_SUCCESS;
         }
         else
         {
@@ -988,7 +988,7 @@ static int ocp_nlp_ddp_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_
         {
             printf("Linesearch: Step size gets too small. Increasing regularization.\n");
             mem->alpha = 0.0; // set to zero such that regularization is increased
-            return 0;
+            return ACADOS_MINSTEP;
         }
     }
 }
