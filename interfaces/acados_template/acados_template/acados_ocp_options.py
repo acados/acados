@@ -47,7 +47,6 @@ class AcadosOcpOptions:
         self.__tf = None
         self.__N_horizon = None
         self.__nlp_solver_type = 'SQP_RTI'
-        self.__nlp_solver_step_length = 1.0
         self.__nlp_solver_tol_stat = 1e-6
         self.__nlp_solver_tol_eq = 1e-6
         self.__nlp_solver_tol_ineq = 1e-6
@@ -95,6 +94,7 @@ class AcadosOcpOptions:
         self.__globalization_funnel_kappa = 0.9
         self.__globalization_funnel_fraction_switching_condition = 1e-3
         self.__globalization_funnel_initial_penalty_parameter = 1.0
+        self.__globalization_fixed_step_step_length = 1.0
         self.__ext_cost_num_hess = 0
         self.__globalization_use_SOC = 0
         self.__globalization_alpha_min = None
@@ -281,13 +281,23 @@ class AcadosOcpOptions:
         return self.__regularize_method
 
     @property
+    def globalization_fixed_step_step_length(self):
+        """
+        Fixed Newton step length.
+        Type: float >= 0.
+        Default: 1.0.
+        """
+        return self.__globalization_fixed_step_step_length
+    
+    @property
     def nlp_solver_step_length(self):
         """
         Fixed Newton step length.
         Type: float >= 0.
         Default: 1.0.
         """
-        return self.__nlp_solver_step_length
+        print("This option is deprecated and has new name: globalization_fixed_step_step_length")
+        return self.__globalization_fixed_step_step_length
 
     @property
     def nlp_solver_warm_start_first_qp(self):
@@ -1311,8 +1321,16 @@ class AcadosOcpOptions:
             raise Exception('Invalid cost_discretization value. Possible values are:\n\n' \
                     + ',\n'.join(COST_DISCRETIZATION_TYPES) + '.\n\nYou have: ' + cost_discretization + '.')
 
+    @globalization_fixed_step_step_length.setter
+    def globalization_fixed_step_step_length(self, globalization_fixed_step_step_length):
+        if isinstance(globalization_fixed_step_step_length, float) and globalization_fixed_step_step_length >= 0.:
+            self.__globalization_fixed_step_step_length = globalization_fixed_step_step_length
+        else:
+            raise Exception('Invalid globalization_fixed_step_step_length value. globalization_fixed_step_step_length must be a positive float.')
+
     @nlp_solver_step_length.setter
     def nlp_solver_step_length(self, nlp_solver_step_length):
+
         if isinstance(nlp_solver_step_length, float) and nlp_solver_step_length >= 0.:
             self.__nlp_solver_step_length = nlp_solver_step_length
         else:

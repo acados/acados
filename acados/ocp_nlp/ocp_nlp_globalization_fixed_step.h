@@ -54,10 +54,10 @@ extern "C" {
  ************************************************/
 typedef struct
 {
+    double step_length;
     ocp_nlp_globalization_opts *globalization_opts;
 
 } ocp_nlp_globalization_fixed_step_opts;
-
 //
 acados_size_t ocp_nlp_globalization_fixed_step_opts_calculate_size(void *config, void *dims);
 //

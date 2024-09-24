@@ -74,6 +74,7 @@ void ocp_nlp_globalization_fixed_step_opts_initialize_default(void *config_, voi
     ocp_nlp_globalization_opts *globalization_opts = opts->globalization_opts;
     ocp_nlp_globalization_config *config = config_;
 
+    opts->step_length = 1.0;
     ocp_nlp_globalization_opts_initialize_default(config, dims, globalization_opts);
     return;
 }
@@ -83,7 +84,21 @@ void ocp_nlp_globalization_fixed_step_opts_set(void *config_, void *opts_, const
 {
     ocp_nlp_globalization_fixed_step_opts *opts = opts_;
     ocp_nlp_globalization_config *config = config_;
-    ocp_nlp_globalization_opts_set(config, opts->globalization_opts, field, value);
+
+    if (!strcmp(field, "fixed_step_step_length"))
+    {
+        double* step_step = (double *) value;
+        if (*step_step < 0.0 || *step_step > 1.0)
+        {
+            printf("\nerror: ocp_nlp_globalization_fixed_step_opts_set: invalid value for step_step field, need double in [0,1], got %f.", *step_step);
+            exit(1);
+        }
+        opts->step_length = *step_step;
+    }
+    else
+    {
+        ocp_nlp_globalization_opts_set(config, opts->globalization_opts, field, value);
+    }
     return;
 }
 
@@ -151,8 +166,8 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
     ocp_nlp_opts *nlp_opts = nlp_opts_;
     ocp_nlp_globalization_fixed_step_opts *opts = nlp_opts->globalization;
 
-    nlp_config->step_update(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, nlp_opts->step_length, opts->globalization_opts->full_step_dual);
-    *step_size = nlp_opts->step_length;
+    nlp_config->step_update(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, opts->step_length, opts->globalization_opts->full_step_dual);
+    *step_size = opts->step_length;
 
     return ACADOS_SUCCESS;
 }
@@ -176,6 +191,7 @@ void ocp_nlp_globalization_fixed_step_print_iteration(double objective_value,
                                                 void* mem_)
 {
     ocp_nlp_opts *nlp_opts = nlp_opts_;
+    ocp_nlp_globalization_fixed_step_opts *opts = nlp_opts->globalization;
     // ocp_nlp_globalization_fixed_step_memory* mem = mem_;
 
     if ((iter_count % 10 == 0)){
@@ -189,7 +205,7 @@ void ocp_nlp_globalization_fixed_step_print_iteration(double objective_value,
         complementarity,
         qp_status,
         qp_iter,
-        nlp_opts->step_length);
+        opts->step_length);
 }
 
 int ocp_nlp_globalization_fixed_step_needs_objective_value()

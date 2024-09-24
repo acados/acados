@@ -202,6 +202,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
             printf("\nerror: ocp_nlp_config_create: forgot to initialize plan->nlp_solver\n");
             exit(1);
         default:
+            printf("plan is: lol\n");
             printf("\nerror: ocp_nlp_config_create: unsupported plan->nlp_solver\n");
             exit(1);
     }
