@@ -561,7 +561,7 @@ int ocp_nlp_globalization_funnel_find_acceptable_iterate(void *nlp_config_, void
         // in case line search fails, we do not want to copy trial iterates!
         copy_ocp_nlp_out(nlp_dims, nlp_work->tmp_nlp_out, nlp_out);
     }
-    return ACADOS_MINSTEP;
+    return linesearch_success;
 }
 
 

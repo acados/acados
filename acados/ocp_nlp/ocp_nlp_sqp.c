@@ -838,7 +838,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             {
                 printf("\nFailure in globalization!\n");
             }
-            mem->nlp_mem->status = ACADOS_QP_FAILURE;
+            mem->nlp_mem->status = globalization_status;
             nlp_mem->iter = sqp_iter;
             mem->time_tot = acados_toc(&timer0);
             return mem->nlp_mem->status;
