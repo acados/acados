@@ -2493,10 +2493,15 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
 calculates new iterate or trial iterate in 'out_destination' with step 'mem->qp_out',
 step size 'alpha', and current iterate 'out_start'.
  */
-void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-            ocp_nlp_out *out_start, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
-            ocp_nlp_out *out_destination, void* solver_mem, double alpha, bool full_step_dual)
+void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
+            void *in_, void *out_, void *opts_, void *mem_,
+            void *work_, void *out_destination_,
+            void *solver_mem, double alpha, bool full_step_dual)
 {
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_out *out_start = out_;
+    ocp_nlp_memory *mem = mem_;
+    ocp_nlp_out *out_destination = out_destination_;
     // solver_mem is not used in this function, but needed for DDP
     // the function is used in the config->globalization->step_update
     int N = dims->N;

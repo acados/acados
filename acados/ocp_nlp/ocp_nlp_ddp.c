@@ -466,11 +466,19 @@ static void ocp_nlp_ddp_reset_timers(ocp_nlp_ddp_memory *mem)
     mem->time_sim_ad = 0.0;
 }
 
-void ocp_nlp_ddp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_dims *dims,
-            ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
-            ocp_nlp_workspace *work, ocp_nlp_out *out_destination,
-            ocp_nlp_ddp_memory *solver_mem, double alpha, bool full_step_dual)
+void ocp_nlp_ddp_compute_trial_iterate(void *config_, void *dims_,
+            void *in_, void *out_, void *opts_, void *mem_,
+            void *work_, void *out_destination_,
+            void *solver_mem, double alpha, bool full_step_dual)
 {
+    ocp_nlp_config *config = config_;
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_in *in = in_;
+    ocp_nlp_out *out = out_;
+    ocp_nlp_opts *opts = opts_;
+    ocp_nlp_memory *mem = mem_;
+    ocp_nlp_workspace *work = work_;
+    ocp_nlp_out *out_destination = out_destination_;
     ocp_nlp_ddp_memory *ddp_mem = solver_mem;
     /* computes trial iterate in tmp_nlp_out */
     int N = dims->N;

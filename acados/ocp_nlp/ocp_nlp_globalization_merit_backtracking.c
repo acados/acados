@@ -283,7 +283,6 @@ void ocp_nlp_globalization_merit_backtracking_print_iteration(double objective_v
                                                             void* mem_)
 {
     ocp_nlp_res *nlp_res = nlp_res_;
-    ocp_nlp_opts* nlp_opts = nlp_opts_;
     ocp_nlp_globalization_merit_backtracking_memory* mem = mem_;
 
     if ((iter_count % 10 == 0)){

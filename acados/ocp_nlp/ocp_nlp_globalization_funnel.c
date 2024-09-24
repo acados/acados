@@ -596,7 +596,6 @@ void ocp_nlp_globalization_funnel_print_iteration(double objective_value,
                                                 void *mem_)
 {
     ocp_nlp_res *nlp_res = nlp_res_;
-    ocp_nlp_opts *nlp_opts = nlp_opts_;
     ocp_nlp_globalization_funnel_memory* mem = (ocp_nlp_globalization_funnel_memory*) mem_;
     if ((iter_count % 10 == 0))
     {
