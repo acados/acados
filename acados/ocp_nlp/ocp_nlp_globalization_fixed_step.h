@@ -90,10 +90,7 @@ void ocp_nlp_globalization_fixed_step_print_iteration_header();
 //
 void ocp_nlp_globalization_fixed_step_print_iteration(double objective_value,
                                                 int iter_count,
-                                                double infeas_eq,
-                                                double infeas_ineq,
-                                                double stationarity,
-                                                double complementarity,
+                                                void* nlp_res_,
                                                 double step_norm,
                                                 double reg_param,
                                                 int qp_status,

@@ -587,18 +587,16 @@ void ocp_nlp_globalization_funnel_print_iteration_header()
 
 void ocp_nlp_globalization_funnel_print_iteration(double objective_value,
                                                 int iter_count,
-                                                double infeas_eq,
-                                                double infeas_ineq,
-                                                double stationarity,
-                                                double complementarity,
+                                                void* nlp_res_,
                                                 double step_norm,
                                                 double reg_param,
                                                 int qp_status,
                                                 int qp_iter,
-                                                void *opts_,
+                                                void *nlp_opts_,
                                                 void *mem_)
 {
-    // ocp_nlp_opts *opts = (ocp_nlp_opts *) opts_;
+    ocp_nlp_res *nlp_res = nlp_res_;
+    ocp_nlp_opts *nlp_opts = nlp_opts_;
     ocp_nlp_globalization_funnel_memory* mem = (ocp_nlp_globalization_funnel_memory*) mem_;
     if ((iter_count % 10 == 0))
     {
@@ -607,10 +605,10 @@ void ocp_nlp_globalization_funnel_print_iteration(double objective_value,
     printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %12.4e | %10.4e | %10i | %10i | %10c\n",
         iter_count,
         objective_value,
-        infeas_eq,
-        infeas_ineq,
-        stationarity,
-        complementarity,
+        nlp_res->inf_norm_res_eq,
+        nlp_res->inf_norm_res_ineq,
+        nlp_res->inf_norm_res_stat,
+        nlp_res->inf_norm_res_comp,
         mem->alpha,
         step_norm,
         reg_param,

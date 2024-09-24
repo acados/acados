@@ -152,16 +152,13 @@ void ocp_nlp_globalization_funnel_print_iteration_header();
 //
 void ocp_nlp_globalization_funnel_print_iteration(double objective_value,
                                                 int iter_count,
-                                                double infeas_eq,
-                                                double infeas_ineq,
-                                                double stationarity,
-                                                double complementarity,
+                                                void* nlp_res_,
                                                 double step_norm,
                                                 double reg_param,
                                                 int qp_status,
                                                 int qp_iter,
-                                                void* nlp_opts,
-                                                void* mem);
+                                                void* nlp_opts_,
+                                                void* mem_);
 //
 int ocp_nlp_globalization_funnel_needs_objective_value();
 //
