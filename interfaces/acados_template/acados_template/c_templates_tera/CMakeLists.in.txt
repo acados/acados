@@ -211,7 +211,9 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
 {%- if cost.cost_type_0 == "NONLINEAR_LS" %}
         {{ model.name }}_cost/{{ model.name }}_cost_y_0_fun.c
         {{ model.name }}_cost/{{ model.name }}_cost_y_0_fun_jac_ut_xt.c
+    {%- if hessian_approx == "EXACT" %}
         {{ model.name }}_cost/{{ model.name }}_cost_y_0_hess.c
+    {%- endif %}
 {%- elif cost.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
         {{ model.name }}_cost/{{ model.name }}_conl_cost_0_fun.c
         {{ model.name }}_cost/{{ model.name }}_conl_cost_0_fun_jac_hess.c
@@ -233,7 +235,9 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
 {%- if cost.cost_type == "NONLINEAR_LS" %}
         {{ model.name }}_cost/{{ model.name }}_cost_y_fun.c
         {{ model.name }}_cost/{{ model.name }}_cost_y_fun_jac_ut_xt.c
+    {%- if hessian_approx == "EXACT" %}
         {{ model.name }}_cost/{{ model.name }}_cost_y_hess.c
+    {%- endif %}
 {%- elif cost.cost_type == "CONVEX_OVER_NONLINEAR" %}
         {{ model.name }}_cost/{{ model.name }}_conl_cost_fun.c
         {{ model.name }}_cost/{{ model.name }}_conl_cost_fun_jac_hess.c
@@ -255,7 +259,9 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
         {{ model.name }}_cost/{{ model.name }}_cost_y_e_fun.c
         {{ model.name }}_cost/{{ model.name }}_cost_y_e_fun_jac_ut_xt.c
+    {%- if hessian_approx == "EXACT" %}
         {{ model.name }}_cost/{{ model.name }}_cost_y_e_hess.c
+    {%- endif %}
 {%- elif cost.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
         {{ model.name }}_cost/{{ model.name }}_conl_cost_e_fun.c
         {{ model.name }}_cost/{{ model.name }}_conl_cost_e_fun_jac_hess.c

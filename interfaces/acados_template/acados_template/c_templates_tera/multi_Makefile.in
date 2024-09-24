@@ -149,7 +149,9 @@ OCP_SRC=
 {%- if cost[jj].cost_type == "NONLINEAR_LS" %}
 OCP_SRC+= {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_y_fun.c
 OCP_SRC+= {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_y_fun_jac_ut_xt.c
+{%- if hessian_approx == "EXACT" %}
 OCP_SRC+= {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_y_hess.c
+{%- endif %}
 {%- elif cost[jj].cost_type == "CONVEX_OVER_NONLINEAR" %}
 OCP_SRC+= {{ model[jj].name }}_cost/{{ model[jj].name }}_conl_cost_fun.c
 OCP_SRC+= {{ model[jj].name }}_cost/{{ model[jj].name }}_conl_cost_fun_jac_hess.c
@@ -186,7 +188,9 @@ OCP_SRC+= {{ model[jj].name }}_constraints/{{ model[jj].name }}_phi_constraint_f
 {%- if cost_0.cost_type_0 == "NONLINEAR_LS" %}
 OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_cost_y_0_fun.c
 OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_cost_y_0_fun_jac_ut_xt.c
+{%- if hessian_approx == "EXACT" %}
 OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_cost_y_0_hess.c
+[%- endif %]
 {%- elif cost_0.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
 OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_conl_cost_0_fun.c
 OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_conl_cost_0_fun_jac_hess.c
@@ -232,7 +236,9 @@ OCP_SRC+= {{ model_e.name }}_constraints/{{ model_e.name }}_phi_e_constraint_fun
 {%- if cost_e.cost_type_e == "NONLINEAR_LS" %}
 OCP_SRC+= {{ model_e.name }}_cost/{{ model_e.name }}_cost_y_e_fun.c
 OCP_SRC+= {{ model_e.name }}_cost/{{ model_e.name }}_cost_y_e_fun_jac_ut_xt.c
+{%- if hessian_approx == "EXACT" %}
 OCP_SRC+= {{ model_e.name }}_cost/{{ model_e.name }}_cost_y_e_hess.c
+{%- endif %}
 {%- elif cost_e.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
 OCP_SRC+= {{ model_e.name }}_cost/{{ model_e.name }}_conl_cost_e_fun.c
 OCP_SRC+= {{ model_e.name }}_cost/{{ model_e.name }}_conl_cost_e_fun_jac_hess.c
