@@ -85,7 +85,7 @@ void ocp_nlp_globalization_fixed_step_opts_set(void *config_, void *opts_, const
     ocp_nlp_globalization_fixed_step_opts *opts = opts_;
     ocp_nlp_globalization_config *config = config_;
 
-    if (!strcmp(field, "fixed_step_step_length"))
+    if (!strcmp(field, "fixed_step_length"))
     {
         double* step_step = (double *) value;
         if (*step_step < 0.0 || *step_step > 1.0)

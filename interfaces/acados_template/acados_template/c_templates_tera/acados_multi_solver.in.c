@@ -2102,8 +2102,8 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "fixed_hess", &fixed_hess);
 
 {%- if solver_options.globalization == "FIXED_STEP" %}
-    double globalization_fixed_step_step_length = {{ solver_options.globalization_fixed_step_step_length }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_fixed_step_step_length", &globalization_fixed_step_step_length);
+    double globalization_fixed_step_length = {{ solver_options.globalization_fixed_step_length }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_fixed_step_length", &globalization_fixed_step_length);
 {% else %}
     double globalization_alpha_min = {{ solver_options.globalization_alpha_min }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_alpha_min", &globalization_alpha_min);
