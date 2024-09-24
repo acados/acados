@@ -100,6 +100,7 @@ def export_pendulum_ode_model(p_global, m, l, C, lut=True) -> AcadosModel:
 
         # Disturb the dynamics by a sprinkle of bspline
         f_expl[2:4] += 0.01*ca.bspline(x_in,C,knots,[3,2],2)
+        # f_expl[2:4] += 0.01*ca.blazing_spline(x_in,C,knots,[3,2],2)
 
     f_impl = xdot - f_expl
 

@@ -101,7 +101,8 @@ function model = export_pendulum_ode_model(p_global, m, l, C, lut)
     if lut
         knots = {[0,0,0,0,0.2,0.5,0.8,1,1,1,1],[0,0,0,0.1,0.5,0.9,1,1,1]};
         x_in = vertcat(u/100 + 0.5, theta/pi + 0.5);
-        f_expl(3:4) = f_expl(3:4) + 0.01*bspline(x_in, C, knots, [3, 2], 2);
+        % f_expl(3:4) = f_expl(3:4) + 0.01*bspline(x_in, C, knots, [3, 2], 2);
+        f_expl(3:4) = f_expl(3:4) + 0.01*blazing_spline(x_in, C, knots, [3, 2], 2);
     end
 
     model = AcadosModel();
