@@ -53,12 +53,14 @@ const int *{{ model.name }}_cost_y_0_fun_jac_ut_xt_sparsity_out(int);
 int {{ model.name }}_cost_y_0_fun_jac_ut_xt_n_in(void);
 int {{ model.name }}_cost_y_0_fun_jac_ut_xt_n_out(void);
 
+{%- if solver_options.hessian_approx == "EXACT" %}
 int {{ model.name }}_cost_y_0_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_cost_y_0_hess_work(int *, int *, int *, int *);
 const int *{{ model.name }}_cost_y_0_hess_sparsity_in(int);
 const int *{{ model.name }}_cost_y_0_hess_sparsity_out(int);
 int {{ model.name }}_cost_y_0_hess_n_in(void);
 int {{ model.name }}_cost_y_0_hess_n_out(void);
+{%- endif %}
 {% elif cost.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
 
 int {{ model.name }}_conl_cost_0_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
@@ -138,12 +140,14 @@ const int *{{ model.name }}_cost_y_fun_jac_ut_xt_sparsity_out(int);
 int {{ model.name }}_cost_y_fun_jac_ut_xt_n_in(void);
 int {{ model.name }}_cost_y_fun_jac_ut_xt_n_out(void);
 
+{%- if solver_options.hessian_approx == "EXACT" %}
 int {{ model.name }}_cost_y_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_cost_y_hess_work(int *, int *, int *, int *);
 const int *{{ model.name }}_cost_y_hess_sparsity_in(int);
 const int *{{ model.name }}_cost_y_hess_sparsity_out(int);
 int {{ model.name }}_cost_y_hess_n_in(void);
 int {{ model.name }}_cost_y_hess_n_out(void);
+{%- endif %}
 
 {% elif cost.cost_type == "CONVEX_OVER_NONLINEAR" %}
 int {{ model.name }}_conl_cost_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
@@ -221,12 +225,15 @@ const int *{{ model.name }}_cost_y_e_fun_jac_ut_xt_sparsity_out(int);
 int {{ model.name }}_cost_y_e_fun_jac_ut_xt_n_in(void);
 int {{ model.name }}_cost_y_e_fun_jac_ut_xt_n_out(void);
 
+{%- if solver_options.hessian_approx == "EXACT" %}
 int {{ model.name }}_cost_y_e_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_cost_y_e_hess_work(int *, int *, int *, int *);
 const int *{{ model.name }}_cost_y_e_hess_sparsity_in(int);
 const int *{{ model.name }}_cost_y_e_hess_sparsity_out(int);
 int {{ model.name }}_cost_y_e_hess_n_in(void);
 int {{ model.name }}_cost_y_e_hess_n_out(void);
+{%- endif %}
+
 {% elif cost.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
 int {{ model.name }}_conl_cost_e_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_conl_cost_e_fun_work(int *, int *, int *, int *);

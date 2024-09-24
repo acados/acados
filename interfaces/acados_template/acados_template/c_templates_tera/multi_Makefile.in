@@ -190,7 +190,7 @@ OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_cost_y_0_fun.c
 OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_cost_y_0_fun_jac_ut_xt.c
 {%- if hessian_approx == "EXACT" %}
 OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_cost_y_0_hess.c
-[%- endif %]
+{%- endif %}
 {%- elif cost_0.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
 OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_conl_cost_0_fun.c
 OCP_SRC+= {{ model_0.name }}_cost/{{ model_0.name }}_conl_cost_0_fun_jac_hess.c
