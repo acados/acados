@@ -623,7 +623,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
         nlp_mem->status = ACADOS_QP_FAILURE;
         nlp_mem->iter = sqp_iter;
 
-        return ACADOS_QP_FAILURE;
+        return true;
     }
     return true;
 }
@@ -1020,7 +1020,7 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate_for_ddp(voi
         copy_ocp_nlp_out(nlp_dims, nlp_work->tmp_nlp_out, nlp_out);
         return ACADOS_SUCCESS;
     }
-    return 0;
+    return ACADOS_MINSTEP;
 }
 
 
@@ -1063,6 +1063,11 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_c
         if (line_search_status == ACADOS_NAN_DETECTED)
         {
             nlp_mem->status = ACADOS_NAN_DETECTED;
+            return nlp_mem->status;
+        }
+        else if (line_search_status == ACADOS_MINSTEP)
+        {
+            nlp_mem->status = ACADOS_MINSTEP;
             return nlp_mem->status;
         }
     }

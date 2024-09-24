@@ -535,8 +535,8 @@ int backtracking_line_search(ocp_nlp_config *config,
 
         if (alpha < globalization_opts->alpha_min)
         {
-            printf("Linesearch: Step size gets too small. alpha = %e < alpha_min = %e Should enter penalty phase. \n", alpha, globalization_opts->alpha_min);
-            exit(1);
+            printf("Funnel Linesearch: Step size gets too small. alpha = %e < alpha_min = %e Should enter penalty phase. \n", alpha, globalization_opts->alpha_min);
+            return ACADOS_MINSTEP;
         }
 
         alpha *= globalization_opts->alpha_reduction;
@@ -561,7 +561,7 @@ int ocp_nlp_globalization_funnel_find_acceptable_iterate(void *nlp_config_, void
         // in case line search fails, we do not want to copy trial iterates!
         copy_ocp_nlp_out(nlp_dims, nlp_work->tmp_nlp_out, nlp_out);
     }
-    return linesearch_success;
+    return ACADOS_MINSTEP;
 }
 
 
