@@ -262,12 +262,8 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
                 config->globalization->needs_qp_objective_value = &ocp_nlp_globalization_merit_backtracking_ddp_needs_qp_objective_value;
             }
             break;
-        case INVALID_NLP_SOLVER:
-            printf("\nerror: ocp_nlp_config_create: forgot to initialize plan->nlp_solver\n");
-            exit(1);
         default:
-            printf("\nerror: ocp_nlp_config_create: unsupported plan->nlp_solver\n");
-            exit(1);
+            ;
     }
 
     // cost
