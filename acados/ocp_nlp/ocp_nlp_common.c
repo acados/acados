@@ -1057,7 +1057,6 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     // printf("\nocp_nlp: openmp threads = %d\n", opts->num_threads);
 
     opts->print_level = 0;
-    opts->step_length = 1.0;
     opts->levenberg_marquardt = 0.0;
     opts->log_primal_step_norm = 0;
 
@@ -1189,11 +1188,6 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             int* num_threads = (int *) value;
             opts->num_threads = *num_threads;
-        }
-        else if (!strcmp(field, "step_length"))
-        {
-            double* step_length = (double *) value;
-            opts->step_length = *step_length;
         }
         else if (!strcmp(field, "ext_qp_res"))
         {
