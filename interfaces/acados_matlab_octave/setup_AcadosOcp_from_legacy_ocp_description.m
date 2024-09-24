@@ -72,8 +72,8 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, 
     ocp.solver_options.nlp_solver_tol_ineq = opts_struct.nlp_solver_tol_ineq;
     ocp.solver_options.nlp_solver_tol_comp = opts_struct.nlp_solver_tol_comp;
     ocp.solver_options.nlp_solver_ext_qp_res = opts_struct.nlp_solver_ext_qp_res;
-    ocp.solver_options.nlp_solver_step_length = opts_struct.nlp_solver_step_length;
     ocp.solver_options.globalization = upper(opts_struct.globalization);
+    ocp.solver_options.globalization_fixed_step_length = opts_struct.nlp_solver_step_length;
     ocp.solver_options.globalization_alpha_min = opts_struct.alpha_min;
     ocp.solver_options.globalization_alpha_reduction = opts_struct.alpha_reduction;
     ocp.solver_options.globalization_line_search_use_sufficient_descent = opts_struct.line_search_use_sufficient_descent;
@@ -83,7 +83,7 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, 
     ocp.solver_options.qp_solver_ric_alg = opts_struct.qp_solver_ric_alg;
     ocp.solver_options.qp_solver_cond_ric_alg = opts_struct.qp_solver_cond_ric_alg;
     ocp.solver_options.qp_solver_mu0 = opts_struct.qp_solver_mu0;
-    if isfield(opts_struct, 'qp_solver_cond_N') 
+    if isfield(opts_struct, 'qp_solver_cond_N')
         ocp.solver_options.qp_solver_cond_N = opts_struct.qp_solver_cond_N;
     else
         ocp.solver_options.qp_solver_cond_N = opts_struct.param_scheme_N;

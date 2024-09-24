@@ -742,6 +742,15 @@ classdef AcadosOcp < handle
                 end
             end
 
+            %% Deprecated / migrated options
+            if ~isempty(nlp_solver_step_length)
+                warning('nlp_solver_step_length is deprecated, use globalization_fixed_step_length instead.');
+                if opts.globalization_fixed_step_length ~= 1.0
+                    error('nlp_solver_step_length and globalization_fixed_step_length are both set, please use only globalization_fixed_step_length.');
+                end
+                opts.globalization_fixed_step_length = nlp_solver_step_length;
+            end
+
             % Set default parameters for globalization
             if isempty(opts.globalization_alpha_min)
                 % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')

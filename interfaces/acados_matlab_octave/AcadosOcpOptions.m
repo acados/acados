@@ -80,6 +80,7 @@ classdef AcadosOcpOptions < handle
         exact_hess_constr
         fixed_hess
         ext_cost_num_hess
+        globalization_fixed_step_length
         globalization_alpha_min
         globalization_alpha_reduction
         globalization_line_search_use_sufficient_descent
@@ -117,7 +118,8 @@ classdef AcadosOcpOptions < handle
             obj.tf = [];
             obj.N_horizon = [];
             obj.nlp_solver_type = 'SQP_RTI';
-            obj.nlp_solver_step_length = 1.0;
+            obj.globalization_fixed_step_length = 1.0;
+            obj.nlp_solver_step_length = [];
             obj.nlp_solver_tol_stat = 1e-6;
             obj.nlp_solver_tol_eq = 1e-6;
             obj.nlp_solver_tol_ineq = 1e-6;
