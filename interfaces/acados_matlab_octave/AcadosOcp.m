@@ -680,7 +680,7 @@ classdef AcadosOcp < handle
             end
 
             % Set default parameters for globalization
-            ddp_with_merit_or_funnel = strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH') || (strcmp(opts.globalization, 'MERIT_BACKTRACKING') && strcmp(opts.nlp_solver_type, 'DDP'))
+            ddp_with_merit_or_funnel = strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH') || (strcmp(opts.globalization, 'MERIT_BACKTRACKING') && strcmp(opts.nlp_solver_type, 'DDP'));
 
             if isempty(opts.globalization_alpha_min)
                 % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
@@ -743,7 +743,7 @@ classdef AcadosOcp < handle
             end
 
             %% Deprecated / migrated options
-            if ~isempty(nlp_solver_step_length)
+            if ~isempty(opts.nlp_solver_step_length)
                 warning('nlp_solver_step_length is deprecated, use globalization_fixed_step_length instead.');
                 if opts.globalization_fixed_step_length ~= 1.0
                     error('nlp_solver_step_length and globalization_fixed_step_length are both set, please use only globalization_fixed_step_length.');
