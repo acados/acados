@@ -748,7 +748,7 @@ classdef AcadosOcp < handle
                 if opts.globalization_fixed_step_length ~= 1.0
                     error('nlp_solver_step_length and globalization_fixed_step_length are both set, please use only globalization_fixed_step_length.');
                 end
-                opts.globalization_fixed_step_length = nlp_solver_step_length;
+                opts.globalization_fixed_step_length = opts.nlp_solver_step_length;
             end
 
             % Set default parameters for globalization
