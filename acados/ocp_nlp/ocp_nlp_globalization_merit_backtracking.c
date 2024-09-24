@@ -1013,7 +1013,7 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate_for_ddp(voi
                 nlp_mem, solver_mem, nlp_work, nlp_opts);
 
     // Copy new iterate to nlp_out
-    if (linesearch_success == 1)
+    if (linesearch_success == ACADOS_SUCCESS)
     {
         // in case line search fails, we do not want to copy trial iterates!
         *step_size = mem->alpha;
@@ -1063,11 +1063,6 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_c
         if (line_search_status == ACADOS_NAN_DETECTED)
         {
             nlp_mem->status = ACADOS_NAN_DETECTED;
-            return nlp_mem->status;
-        }
-        else if (line_search_status == ACADOS_MINSTEP)
-        {
-            nlp_mem->status = ACADOS_MINSTEP;
             return nlp_mem->status;
         }
     }
