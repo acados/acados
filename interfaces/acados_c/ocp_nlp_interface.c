@@ -252,17 +252,10 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
 
     // globalization
     // NLP solver
-    switch (plan.nlp_solver)
+    if (plan.nlp_solver == DDP && plan.globalization == MERIT_BACKTRACKING)
     {
-        case DDP:
-            if (plan.globalization == MERIT_BACKTRACKING)
-            {
-                config->globalization->find_acceptable_iterate = &ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate_for_ddp;
-                config->globalization->needs_qp_objective_value = &ocp_nlp_globalization_merit_backtracking_ddp_needs_qp_objective_value;
-            }
-            break;
-        default:
-            ;
+        config->globalization->find_acceptable_iterate = &ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate_for_ddp;
+        config->globalization->needs_qp_objective_value = &ocp_nlp_globalization_merit_backtracking_ddp_needs_qp_objective_value;
     }
 
     // cost
