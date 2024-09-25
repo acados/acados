@@ -1419,6 +1419,9 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
     // nlp res
     size += ocp_nlp_res_calculate_size(dims);
 
+    // timings
+    size += sizeof(struct ocp_nlp_timings);
+
     size += (N+1)*sizeof(bool); // set_sim_guess
 
     size += (N+1)*sizeof(struct blasfeo_dmat); // dzduxt
@@ -1544,6 +1547,10 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     // nlp res
     mem->nlp_res = ocp_nlp_res_assign(dims, c_ptr);
     c_ptr += mem->nlp_res->memsize;
+
+    // timings
+    mem->nlp_timings = (ocp_nlp_timings*) c_ptr;
+    c_ptr += sizeof(ocp_nlp_timings);
 
     // blasfeo_struct align
     align_char_to(8, &c_ptr);
@@ -3019,4 +3026,92 @@ void ocp_nlp_dump_qp_out_to_file(ocp_qp_out *qp_out, int sqp_iter, int soc)
     FILE *out_file = fopen(filename, "w");
     print_ocp_qp_out_to_file(out_file, qp_out);
     fclose(out_file);
+}
+
+
+void ocp_nlp_timings_get(ocp_nlp_timings *timings, const char *field, void *return_value_)
+{
+    if (!strcmp("time_tot", field))
+    {
+        double *value = return_value_;
+        *value = timings->time_tot;
+    }
+    else if (!strcmp("time_qp_sol", field) || !strcmp("time_qp", field))
+    {
+        double *value = return_value_;
+        *value = timings->time_qp_sol;
+    }
+    else if (!strcmp("time_qp_solver", field) || !strcmp("time_qp_solver_call", field))
+    {
+        double *value = return_value_;
+        *value = timings->time_qp_solver_call;
+    }
+    else if (!strcmp("time_qp_xcond", field))
+    {
+        double *value = return_value_;
+        *value = timings->time_qp_xcond;
+    }
+    else if (!strcmp("time_lin", field))
+    {
+        double *value = return_value_;
+        *value = timings->time_lin;
+    }
+    else if (!strcmp("time_reg", field))
+    {
+        double *value = return_value_;
+        *value = timings->time_reg;
+    }
+    else if (!strcmp("time_glob", field))
+    {
+        double *value = return_value_;
+        *value = timings->time_glob;
+    }
+    else if (!strcmp("time_solution_sensitivities", field))
+    {
+        double *value = return_value_;
+        *value = timings->time_solution_sensitivities;
+    }
+    else if (!strcmp("time_sim", field))
+    {
+        double *value = return_value_;
+        *value = timings->time_sim;
+    }
+    else if (!strcmp("time_sim_la", field))
+    {
+        double *value = return_value_;
+        *value = timings->time_sim_la;
+    }
+    else if (!strcmp("time_sim_ad", field))
+    {
+        double *value = return_value_;
+        *value = timings->time_sim_ad;
+    }
+    else if (!strcmp("time_preparation", field))
+    {
+        double *value = return_value_;
+        *value = 0.0;
+    }
+    else if (!strcmp("time_feedback", field))
+    {
+        double *value = return_value_;
+        *value = timings->time_tot;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_timings_get\n", field);
+        exit(1);
+    }
+}
+
+void ocp_nlp_timings_reset(ocp_nlp_timings *timings)
+{
+    timings->time_qp_sol = 0.0;
+    timings->time_qp_solver_call = 0.0;
+    timings->time_qp_xcond = 0.0;
+    timings->time_lin = 0.0;
+    timings->time_reg = 0.0;
+    timings->time_glob = 0.0;
+    timings->time_sim = 0.0;
+    timings->time_sim_la = 0.0;
+    timings->time_sim_ad = 0.0;
 }

@@ -396,12 +396,12 @@ static void ocp_nlp_sqp_rti_cast_workspace(
 // utility functions
 static void reset_stats_and_sub_timers(ocp_nlp_sqp_rti_memory *mem)
 {
-    mem->time_lin = 0.0;
-    mem->time_reg = 0.0;
-    mem->time_qp_sol = 0.0;
-    mem->time_qp_solver_call = 0.0;
-    mem->time_qp_xcond = 0.0;
-    mem->time_glob = 0.0;
+    mem->nlp_mem->nlp_timings->time_lin = 0.0;
+    mem->nlp_mem->nlp_timings->time_reg = 0.0;
+    mem->nlp_mem->nlp_timings->time_qp_sol = 0.0;
+    mem->nlp_mem->nlp_timings->time_qp_solver_call = 0.0;
+    mem->nlp_mem->nlp_timings->time_qp_xcond = 0.0;
+    mem->nlp_mem->nlp_timings->time_glob = 0.0;
     mem->nlp_mem->iter = 0;
 }
 
@@ -501,6 +501,7 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
 
     ocp_nlp_workspace *nlp_work = work->nlp_work;
+    ocp_nlp_timings *timings = nlp_mem->nlp_timings;
 
     reset_stats_and_sub_timers(mem);
 #if defined(ACADOS_WITH_OPENMP)
@@ -519,7 +520,7 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
         nlp_out, nlp_opts, nlp_mem, nlp_work);
     ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1.0, 0);
 
-    mem->time_lin += acados_toc(&timer1);
+    timings->time_lin += acados_toc(&timer1);
 
     if (opts->rti_phase == PREPARATION)
     {
@@ -527,13 +528,13 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
         acados_tic(&timer1);
         config->regularize->regularize_lhs(config->regularize,
             dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
-        mem->time_reg += acados_toc(&timer1);
+        timings->time_reg += acados_toc(&timer1);
         // condense lhs
         acados_tic(&timer1);
         qp_solver->condense_lhs(qp_solver, dims->qp_solver,
             nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
             nlp_mem->qp_solver_mem, nlp_work->qp_work);
-        mem->time_qp_sol += acados_toc(&timer1);
+        timings->time_qp_sol += acados_toc(&timer1);
     }
 #if defined(ACADOS_WITH_OPENMP)
     // restore number of threads
@@ -553,6 +554,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    ocp_nlp_timings *timings = nlp_mem->nlp_timings;
 
     int qp_iter = 0;
     int qp_status;
@@ -563,7 +565,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     acados_tic(&timer1);
     ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
-    mem->time_lin += acados_toc(&timer1);
+    timings->time_lin += acados_toc(&timer1);
 
     if (opts->rti_log_residuals)
     {
@@ -590,7 +592,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     {
         printf("ocp_nlp_sqp_rti_feedback_step: rti_phase must be FEEDBACK or PREPARATION_AND_FEEDBACK\n");
     }
-    mem->time_reg += acados_toc(&timer1);
+    timings->time_reg += acados_toc(&timer1);
 
     if (nlp_opts->print_level > 0) {
         printf("\n------- qp_in --------\n");
@@ -619,18 +621,18 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
             nlp_mem->qp_solver_mem, nlp_work->qp_work);
     }
     // add qp timings
-    mem->time_qp_sol += acados_toc(&timer1);
+    timings->time_qp_sol += acados_toc(&timer1);
     // NOTE: timings within qp solver are added internally (lhs+rhs)
     qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
-    mem->time_qp_solver_call += tmp_time;
+    timings->time_qp_solver_call += tmp_time;
     qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
-    mem->time_qp_xcond += tmp_time;
+    timings->time_qp_xcond += tmp_time;
 
     // compute correct dual solution in case of Hessian regularization
     acados_tic(&timer1);
     config->regularize->correct_dual_sol(config->regularize,
         dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
-    mem->time_reg += acados_toc(&timer1);
+    timings->time_reg += acados_toc(&timer1);
 
     qp_info *qp_info_;
     ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
@@ -879,7 +881,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         acados_tic(&timer1);
         ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in,
             nlp_out, nlp_opts, nlp_mem, nlp_work);
-        mem->time_lin += acados_toc(&timer1);
+        timings->time_lin += acados_toc(&timer1);
 
         if (opts->rti_log_residuals)
         {
@@ -898,12 +900,12 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         qp_status = qp_solver->condense_rhs_and_solve(qp_solver, dims->qp_solver,
             nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
             nlp_mem->qp_solver_mem, nlp_work->qp_work);
-        mem->time_qp_sol += acados_toc(&timer1);
+        timings->time_qp_sol += acados_toc(&timer1);
         // NOTE: timings within qp solver are added internally (lhs+rhs)
         qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
-        mem->time_qp_solver_call += tmp_time;
+        timings->time_qp_solver_call += tmp_time;
         qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
-        mem->time_qp_xcond += tmp_time;
+        timings->time_qp_xcond += tmp_time;
 
         // save statistics
         ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
@@ -915,7 +917,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         acados_tic(&timer1);
         config->regularize->correct_dual_sol(config->regularize,
             dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
-        mem->time_reg += acados_toc(&timer1);
+        timings->time_reg += acados_toc(&timer1);
 
         if (nlp_opts->print_level > 0)
         {
@@ -944,7 +946,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             acados_tic(&timer1);
             // zero order QP update
             ocp_nlp_zero_order_qp_update(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-            mem->time_lin += acados_toc(&timer1);
+            timings->time_lin += acados_toc(&timer1);
 
             if (opts->rti_log_residuals)
             {
@@ -958,7 +960,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             acados_tic(&timer1);
             config->regularize->regularize_rhs(config->regularize,
                 dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
-            mem->time_reg += acados_toc(&timer1);
+            timings->time_reg += acados_toc(&timer1);
             // QP solve
             acados_tic(&timer1);
             qp_status = qp_solver->condense_rhs_and_solve(qp_solver, dims->qp_solver,
@@ -966,12 +968,12 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
                     nlp_mem->qp_solver_mem, nlp_work->qp_work);
 
             // add qp timings
-            mem->time_qp_sol += acados_toc(&timer1);
+            timings->time_qp_sol += acados_toc(&timer1);
             // NOTE: timings within qp solver are added internally (lhs+rhs)
             qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
-            mem->time_qp_solver_call += tmp_time;
+            timings->time_qp_solver_call += tmp_time;
             qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
-            mem->time_qp_xcond += tmp_time;
+            timings->time_qp_xcond += tmp_time;
 
             ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
             qp_iter = qp_info_->num_iter;
@@ -984,7 +986,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             acados_tic(&timer1);
             config->regularize->correct_dual_sol(config->regularize,
                 dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
-            mem->time_reg += acados_toc(&timer1);
+            timings->time_reg += acados_toc(&timer1);
             if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
             {
 #ifndef ACADOS_SILENT
@@ -1023,7 +1025,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             acados_tic(&timer1);
             // QP update
             ocp_nlp_level_c_update(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-            mem->time_lin += acados_toc(&timer1);
+            timings->time_lin += acados_toc(&timer1);
 
             if (opts->rti_log_residuals)
             {
@@ -1038,7 +1040,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             acados_tic(&timer1);
             config->regularize->regularize_rhs(config->regularize,
                 dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
-            mem->time_reg += acados_toc(&timer1);
+            timings->time_reg += acados_toc(&timer1);
             // QP solve
             acados_tic(&timer1);
             qp_status = qp_solver->condense_rhs_and_solve(qp_solver, dims->qp_solver,
@@ -1046,12 +1048,12 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
                     nlp_mem->qp_solver_mem, nlp_work->qp_work);
 
             // add qp timings
-            mem->time_qp_sol += acados_toc(&timer1);
+            timings->time_qp_sol += acados_toc(&timer1);
             // NOTE: timings within qp solver are added internally (lhs+rhs)
             qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
-            mem->time_qp_solver_call += tmp_time;
+            timings->time_qp_solver_call += tmp_time;
             qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
-            mem->time_qp_xcond += tmp_time;
+            timings->time_qp_xcond += tmp_time;
 
             ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
             qp_iter = qp_info_->num_iter;
@@ -1064,7 +1066,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             acados_tic(&timer1);
             config->regularize->correct_dual_sol(config->regularize,
                 dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
-            mem->time_reg += acados_toc(&timer1);
+            timings->time_reg += acados_toc(&timer1);
             if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
             {
 #ifndef ACADOS_SILENT
@@ -1113,7 +1115,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1.0, 0);
             ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in,
                 nlp_out, nlp_opts, nlp_mem, nlp_work);
-            mem->time_lin += acados_toc(&timer1);
+            timings->time_lin += acados_toc(&timer1);
 
             if (opts->rti_log_residuals)
             {
@@ -1125,7 +1127,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             acados_tic(&timer1);
             config->regularize->regularize(config->regularize,
                 dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
-            mem->time_reg += acados_toc(&timer1);
+            timings->time_reg += acados_toc(&timer1);
             // QP solve
             acados_tic(&timer1);
             qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver,
@@ -1133,12 +1135,12 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
                     nlp_mem->qp_solver_mem, nlp_work->qp_work);
 
             // add qp timings
-            mem->time_qp_sol += acados_toc(&timer1);
+            timings->time_qp_sol += acados_toc(&timer1);
             // NOTE: timings within qp solver are added internally (lhs+rhs)
             qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
-            mem->time_qp_solver_call += tmp_time;
+            timings->time_qp_solver_call += tmp_time;
             qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
-            mem->time_qp_xcond += tmp_time;
+            timings->time_qp_xcond += tmp_time;
 
             ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
             qp_iter = qp_info_->num_iter;
@@ -1151,7 +1153,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             acados_tic(&timer1);
             config->regularize->correct_dual_sol(config->regularize,
                 dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
-            mem->time_reg += acados_toc(&timer1);
+            timings->time_reg += acados_toc(&timer1);
             if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
             {
 #ifndef ACADOS_SILENT
@@ -1181,13 +1183,13 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
     ocp_nlp_approximate_qp_matrices(config, dims, nlp_in,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
     ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1.0, 0);
-    mem->time_lin += acados_toc(&timer1);
+    timings->time_lin += acados_toc(&timer1);
 
     // regularize Hessian
     acados_tic(&timer1);
     config->regularize->regularize_lhs(config->regularize,
         dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
-    mem->time_reg += acados_toc(&timer1);
+    timings->time_reg += acados_toc(&timer1);
     // condense lhs
     qp_solver->condense_lhs(qp_solver, dims->qp_solver,
         nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
@@ -1224,6 +1226,8 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_nlp_in *nlp_in = nlp_in_;
     ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_sqp_rti_workspace *work = work_;
+    ocp_nlp_timings *timings = nlp_mem->nlp_timings;
+
     // ocp_nlp_sqp_rti_cast_workspace(config, dims, opts, mem, work);
 
     int rti_phase = opts->rti_phase;
@@ -1231,17 +1235,17 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     if (rti_phase == FEEDBACK)
     {
         ocp_nlp_sqp_rti_feedback_step(config, dims, nlp_in, nlp_out, opts, mem, work);
-        mem->time_feedback = acados_toc(&timer);
+        timings->time_feedback = acados_toc(&timer);
     }
     else if (rti_phase == PREPARATION && opts->as_rti_level == STANDARD_RTI)
     {
         ocp_nlp_sqp_rti_preparation_step(config, dims, nlp_in, nlp_out, opts, mem, work);
-        mem->time_preparation = acados_toc(&timer);
+        timings->time_preparation = acados_toc(&timer);
     }
     else if (rti_phase == PREPARATION)
     {
         ocp_nlp_sqp_rti_preparation_advanced_step(config, dims, nlp_in, nlp_out, opts, mem, work);
-        mem->time_preparation = acados_toc(&timer);
+        timings->time_preparation = acados_toc(&timer);
     }
     else if (rti_phase == PREPARATION_AND_FEEDBACK && opts->as_rti_level != STANDARD_RTI)
     {
@@ -1252,14 +1256,14 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     {
         // rti_phase == PREPARATION_AND_FEEDBACK
         ocp_nlp_sqp_rti_preparation_step(config, dims, nlp_in, nlp_out, opts, mem, work);
-        mem->time_preparation = acados_toc(&timer);
+        timings->time_preparation = acados_toc(&timer);
 
         acados_timer timer_feedback;
         acados_tic(&timer_feedback);
         ocp_nlp_sqp_rti_feedback_step(config, dims, nlp_in, nlp_out, opts, mem, work);
-        mem->time_feedback = acados_toc(&timer_feedback);
+        timings->time_feedback = acados_toc(&timer_feedback);
     }
-    mem->time_tot = acados_toc(&timer);
+    timings->time_tot = acados_toc(&timer);
 
     return mem->nlp_mem->status;
 
@@ -1329,7 +1333,7 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_,
     ocp_nlp_common_eval_param_sens(config, dims, opts->nlp_opts, nlp_mem, nlp_work,
                                  field, stage, index, sens_nlp_out);
 
-    mem->time_solution_sensitivities = acados_toc(&timer0);
+    mem->nlp_mem->nlp_timings->time_solution_sensitivities = acados_toc(&timer0);
 
     return;
 }
@@ -1371,69 +1375,6 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
     {
         int *value = return_value_;
         *value = mem->nlp_mem->status;
-    }
-    else if (!strcmp("time_tot", field) || !strcmp("tot_time", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_tot;
-    }
-    else if (!strcmp("time_qp_sol", field) || !strcmp("time_qp", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_qp_sol;
-    }
-    else if (!strcmp("time_qp_solver", field) || !strcmp("time_qp_solver_call", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_qp_solver_call;
-    }
-    else if (!strcmp("time_qp_xcond", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_qp_xcond;
-    }
-    else if (!strcmp("time_lin", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_lin;
-    }
-    else if (!strcmp("time_reg", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_reg;
-    }
-    else if (!strcmp("time_glob", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_glob;
-    }
-    else if (!strcmp("time_sim", field) || !strcmp("time_sim_ad", field) || !strcmp("time_sim_la", field))
-    {
-        double tmp = 0.0;
-        double *ptr = return_value_;
-        int N = dims->N;
-        int ii;
-        *ptr = 0.0;
-        for (ii=0; ii<N; ii++)
-        {
-            config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], field, &tmp);
-            *ptr += tmp;
-        }
-    }
-    else if (!strcmp("time_preparation", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_preparation;
-    }
-    else if (!strcmp("time_feedback", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_feedback;
-    }
-    else if (!strcmp("time_solution_sensitivities", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_solution_sensitivities;
     }
     else if (!strcmp("stat", field))
     {

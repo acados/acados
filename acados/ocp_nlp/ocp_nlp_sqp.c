@@ -451,22 +451,6 @@ void ocp_nlp_sqp_work_get(void *config_, void *dims_, void *work_,
     }
 }
 
-/************************************************
- * Helper functions
- ************************************************/
-
-static void ocp_nlp_sqp_reset_timers(ocp_nlp_sqp_memory *mem)
-{
-    mem->time_qp_sol = 0.0;
-    mem->time_qp_solver_call = 0.0;
-    mem->time_qp_xcond = 0.0;
-    mem->time_lin = 0.0;
-    mem->time_reg = 0.0;
-    mem->time_glob = 0.0;
-    mem->time_sim = 0.0;
-    mem->time_sim_la = 0.0;
-    mem->time_sim_ad = 0.0;
-}
 
 /************************************************
  * termination criterion
@@ -577,6 +561,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_res *nlp_res = nlp_mem->nlp_res;
+    ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
 
     ocp_nlp_sqp_workspace *work = work_;
     ocp_nlp_workspace *nlp_work = work->nlp_work;
@@ -586,7 +571,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     // zero timers
     double tmp_time;
-    ocp_nlp_sqp_reset_timers(mem);
+    ocp_nlp_timings_reset(nlp_timings);
 
     int N = dims->N;
     int ii;
@@ -631,15 +616,15 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
             // get timings for linearization & integrator
-            mem->time_lin += acados_toc(&timer1);
+            nlp_timings->time_lin += acados_toc(&timer1);
             for (ii=0; ii<N; ii++)
             {
                 config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim", &tmp_time);
-                mem->time_sim += tmp_time;
+                nlp_timings->time_sim += tmp_time;
                 config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_la", &tmp_time);
-                mem->time_sim_la += tmp_time;
+                nlp_timings->time_sim_la += tmp_time;
                 config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_ad", &tmp_time);
-                mem->time_sim_ad += tmp_time;
+                nlp_timings->time_sim_ad += tmp_time;
             }
 
             // compute nlp residuals
@@ -682,7 +667,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         acados_tic(&timer1);
         config->regularize->regularize(config->regularize, dims->regularize,
                                                nlp_opts->regularize, nlp_mem->regularize_mem);
-        mem->time_reg += acados_toc(&timer1);
+        nlp_timings->time_reg += acados_toc(&timer1);
 
         // Termination
         if (check_termination(sqp_iter, dims, nlp_res, mem, opts))
@@ -692,7 +677,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             omp_set_num_threads(num_threads_bkp);
 #endif
             nlp_mem->iter = sqp_iter;
-            mem->time_tot = acados_toc(&timer0);
+            nlp_timings->time_tot = acados_toc(&timer0);
             return mem->nlp_mem->status;
         }
 
@@ -718,18 +703,18 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         acados_tic(&timer1);
         qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
                                         nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
-        mem->time_qp_sol += acados_toc(&timer1);
+        nlp_timings->time_qp_sol += acados_toc(&timer1);
 
         qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
-        mem->time_qp_solver_call += tmp_time;
+        nlp_timings->time_qp_solver_call += tmp_time;
         qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
-        mem->time_qp_xcond += tmp_time;
+        nlp_timings->time_qp_xcond += tmp_time;
 
         // compute correct dual solution in case of Hessian regularization
         acados_tic(&timer1);
         config->regularize->correct_dual_sol(config->regularize, dims->regularize,
                                              nlp_opts->regularize, nlp_mem->regularize_mem);
-        mem->time_reg += acados_toc(&timer1);
+        nlp_timings->time_reg += acados_toc(&timer1);
 
         // restore default warm start
         if (sqp_iter==0)
@@ -797,7 +782,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             mem->nlp_mem->status = ACADOS_QP_FAILURE;
             nlp_mem->iter = sqp_iter;
-            mem->time_tot = acados_toc(&timer0);
+            nlp_timings->time_tot = acados_toc(&timer0);
 
             return mem->nlp_mem->status;
         }
@@ -833,7 +818,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             }
             mem->nlp_mem->status = globalization_status;
             nlp_mem->iter = sqp_iter;
-            mem->time_tot = acados_toc(&timer0);
+            nlp_timings->time_tot = acados_toc(&timer0);
 #if defined(ACADOS_WITH_OPENMP)
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
@@ -841,7 +826,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return mem->nlp_mem->status;
         }
         mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
-        mem->time_glob += acados_toc(&timer1);
+        nlp_timings->time_glob += acados_toc(&timer1);
 
     }  // end SQP loop
 
@@ -946,7 +931,7 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
     ocp_nlp_common_eval_param_sens(config, dims, opts->nlp_opts, nlp_mem, nlp_work,
                                  field, stage, index, sens_nlp_out);
 
-    mem->time_solution_sensitivities = acados_toc(&timer0);
+    nlp_mem->nlp_timings->time_solution_sensitivities = acados_toc(&timer0);
 
     return;
 }
@@ -980,7 +965,27 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
     ocp_nlp_sqp_memory *mem = mem_;
 
 
-    if (!strcmp("sqp_iter", field) || !strcmp("nlp_iter", field))
+    char module[MAX_STR_LEN];
+    char *ptr_module = NULL;
+    int module_length = 0;
+
+    // extract module name
+    char *char_ = strchr(field, '_');
+    if (char_!=NULL)
+    {
+        module_length = char_-field;
+        for (int ii=0; ii<module_length; ii++)
+            module[ii] = field[ii];
+        module[module_length] = '\0'; // add end of string
+        ptr_module = module;
+    }
+
+    if ( ptr_module!=NULL && (!strcmp(ptr_module, "time")) )
+    {
+        // call timings getter
+        ocp_nlp_timings_get(mem->nlp_mem->nlp_timings, field, return_value_);
+    }
+    else if (!strcmp("sqp_iter", field) || !strcmp("nlp_iter", field))
     {
         int *value = return_value_;
         *value = mem->nlp_mem->iter;
@@ -989,71 +994,6 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
     {
         int *value = return_value_;
         *value = mem->nlp_mem->status;
-    }
-    else if (!strcmp("time_tot", field) || !strcmp("tot_time", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_tot;
-    }
-    else if (!strcmp("time_qp_sol", field) || !strcmp("time_qp", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_qp_sol;
-    }
-    else if (!strcmp("time_qp_solver", field) || !strcmp("time_qp_solver_call", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_qp_solver_call;
-    }
-    else if (!strcmp("time_qp_xcond", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_qp_xcond;
-    }
-    else if (!strcmp("time_lin", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_lin;
-    }
-    else if (!strcmp("time_reg", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_reg;
-    }
-    else if (!strcmp("time_glob", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_glob;
-    }
-    else if (!strcmp("time_solution_sensitivities", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_solution_sensitivities;
-    }
-    else if (!strcmp("time_sim", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_sim;
-    }
-    else if (!strcmp("time_sim_la", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_sim_la;
-    }
-    else if (!strcmp("time_sim_ad", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_sim_ad;
-    }
-    else if (!strcmp("time_preparation", field))
-    {
-        double *value = return_value_;
-        *value = 0.0;
-    }
-    else if (!strcmp("time_feedback", field))
-    {
-        double *value = return_value_;
-        *value = mem->time_tot;
     }
     else if (!strcmp("stat", field))
     {

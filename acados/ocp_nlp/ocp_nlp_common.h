@@ -325,6 +325,31 @@ ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory);
 void ocp_nlp_res_get_inf_norm(ocp_nlp_res *res, double *out);
 
 /************************************************
+ * timings
+ ************************************************/
+
+typedef struct ocp_nlp_timings
+{
+    double time_qp_sol;
+    double time_qp_solver_call;
+    double time_qp_xcond;
+    double time_lin;
+    double time_reg;
+    double time_tot;
+    double time_glob;
+    double time_sim;
+    double time_sim_la;
+    double time_sim_ad;
+    double time_solution_sensitivities;
+} ocp_nlp_timings;
+
+
+void ocp_nlp_timings_get(ocp_nlp_timings *timings, const char *field, void *return_value_);
+
+void ocp_nlp_timings_reset(ocp_nlp_timings *timings);
+
+
+/************************************************
  * memory
  ************************************************/
 
@@ -340,6 +365,9 @@ typedef struct ocp_nlp_memory
 
     // residuals
     ocp_nlp_res *nlp_res;
+
+    // timings
+    ocp_nlp_timings *nlp_timings;
 
     // qp in & out
     ocp_qp_in *qp_in;
