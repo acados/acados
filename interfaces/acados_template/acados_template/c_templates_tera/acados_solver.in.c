@@ -465,7 +465,9 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     // nonlinear least squares function
     MAP_CASADI_FNC(cost_y_0_fun, {{ model.name }}_cost_y_0_fun);
     MAP_CASADI_FNC(cost_y_0_fun_jac_ut_xt, {{ model.name }}_cost_y_0_fun_jac_ut_xt);
+    {%- if solver_options.hessian_approx == "EXACT" %}
     MAP_CASADI_FNC(cost_y_0_hess, {{ model.name }}_cost_y_0_hess);
+    {%- endif %}
 
 {%- elif cost.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
     // convex-over-nonlinear cost
@@ -683,11 +685,13 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         MAP_CASADI_FNC(cost_y_fun_jac_ut_xt[i], {{ model.name }}_cost_y_fun_jac_ut_xt);
     }
 
+    {%- if solver_options.hessian_approx == "EXACT" %}
     capsule->cost_y_hess = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*(N-1));
     for (int i = 0; i < N-1; i++)
     {
         MAP_CASADI_FNC(cost_y_hess[i], {{ model.name }}_cost_y_hess);
     }
+    {%- endif %}
 
 {%- elif cost.cost_type == "CONVEX_OVER_NONLINEAR" %}
     // convex-over-nonlinear cost
@@ -773,7 +777,9 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     // nonlinear least square function
     MAP_CASADI_FNC(cost_y_e_fun, {{ model.name }}_cost_y_e_fun);
     MAP_CASADI_FNC(cost_y_e_fun_jac_ut_xt, {{ model.name }}_cost_y_e_fun_jac_ut_xt);
+    {%- if solver_options.hessian_approx == "EXACT" %}
     MAP_CASADI_FNC(cost_y_e_hess, {{ model.name }}_cost_y_e_hess);
+    {%- endif %}
 
 {%- elif cost.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
     // convex-over-nonlinear cost
@@ -1173,7 +1179,9 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 {%- if cost.cost_type_0 == "NONLINEAR_LS" %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun", &capsule->cost_y_0_fun);
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun_jac", &capsule->cost_y_0_fun_jac_ut_xt);
+    {%- if solver_options.hessian_approx == "EXACT" %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "nls_y_hess", &capsule->cost_y_0_hess);
+    {%- endif %}
 {%- elif cost.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun", &capsule->conl_cost_0_fun);
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun_jac_hess", &capsule->conl_cost_0_fun_jac_hess);
@@ -1194,7 +1202,9 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     {
         ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun", &capsule->cost_y_fun[i-1]);
         ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun_jac", &capsule->cost_y_fun_jac_ut_xt[i-1]);
+        {%- if solver_options.hessian_approx == "EXACT" %}
         ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "nls_y_hess", &capsule->cost_y_hess[i-1]);
+        {%- endif %}
     }
 {%- elif cost.cost_type == "CONVEX_OVER_NONLINEAR" %}
     for (int i = 1; i < N; i++)
@@ -1220,7 +1230,9 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nls_y_fun", &capsule->cost_y_e_fun);
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nls_y_fun_jac", &capsule->cost_y_e_fun_jac_ut_xt);
+    {%- if solver_options.hessian_approx == "EXACT" %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nls_y_hess", &capsule->cost_y_e_hess);
+    {%- endif %}
 
 {%- elif cost.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "conl_cost_fun", &capsule->conl_cost_e_fun);
@@ -2771,7 +2783,9 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
 {%- if cost.cost_type_0 == "NONLINEAR_LS" %}
     external_function_external_param_casadi_free(&capsule->cost_y_0_fun);
     external_function_external_param_casadi_free(&capsule->cost_y_0_fun_jac_ut_xt);
+    {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi_free(&capsule->cost_y_0_hess);
+    {%- endif %}
 {%- elif cost.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
     external_function_external_param_casadi_free(&capsule->conl_cost_0_fun);
     external_function_external_param_casadi_free(&capsule->conl_cost_0_fun_jac_hess);
@@ -2791,11 +2805,15 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     {
         external_function_external_param_casadi_free(&capsule->cost_y_fun[i]);
         external_function_external_param_casadi_free(&capsule->cost_y_fun_jac_ut_xt[i]);
+        {%- if solver_options.hessian_approx == "EXACT" %}
         external_function_external_param_casadi_free(&capsule->cost_y_hess[i]);
+        {%- endif %}
     }
     free(capsule->cost_y_fun);
     free(capsule->cost_y_fun_jac_ut_xt);
+    {%- if solver_options.hessian_approx == "EXACT" %}
     free(capsule->cost_y_hess);
+    {%- endif %}
 {%- elif cost.cost_type == "CONVEX_OVER_NONLINEAR" %}
     for (int i = 0; i < N - 1; i++)
     {
@@ -2831,7 +2849,9 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
     external_function_external_param_casadi_free(&capsule->cost_y_e_fun);
     external_function_external_param_casadi_free(&capsule->cost_y_e_fun_jac_ut_xt);
+    {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi_free(&capsule->cost_y_e_hess);
+    {%- endif %}
 {%- elif cost.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
     external_function_external_param_casadi_free(&capsule->conl_cost_e_fun);
     external_function_external_param_casadi_free(&capsule->conl_cost_e_fun_jac_hess);

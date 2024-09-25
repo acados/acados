@@ -40,22 +40,6 @@
 {% set model_e = model | last %}
 
 
-{%- if solver_options.qp_solver %}
-	{%- set qp_solver = solver_options.qp_solver %}
-{%- else %}
-	{%- set qp_solver = "FULL_CONDENSING_HPIPM" %}
-{%- endif %}
-
-{%- if solver_options.hessian_approx %}
-	{%- set hessian_approx = solver_options.hessian_approx %}
-{%- elif solver_options.sens_hess %}
-	{%- set hessian_approx = "EXACT" %}
-{%- else %}
-	{%- set hessian_approx = "GAUSS_NEWTON" %}
-{%- endif %}
-
-
-
 {%- if solver_options.model_external_shared_lib_dir %}
 	{%- set model_external_shared_lib_dir = solver_options.model_external_shared_lib_dir %}
 {%- endif %}
@@ -76,9 +60,9 @@
 	{%- set openmp_flag = acados_link_libs.openmp %}
 {%- else %}
 	{%- set openmp_flag = " " %}
-	{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
+	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
 		{%- set link_libs = "-lqpOASES_e" %}
-	{%- elif qp_solver == "FULL_CONDENSING_DAQP" %}
+	{%- elif solver_options.qp_solver == "FULL_CONDENSING_DAQP" %}
 		{%- set link_libs = "-ldaqp" %}
 	{%- else %}
 		{%- set link_libs = "" %}
@@ -126,20 +110,20 @@ set(MODEL_SRC
     {{ model[jj].name }}_model/{{ model[jj].name }}_expl_ode_fun.c
     {{ model[jj].name }}_model/{{ model[jj].name }}_expl_vde_forw.c
     {{ model[jj].name }}_model/{{ model[jj].name }}_expl_vde_adj.c
-	{%- if hessian_approx == "EXACT" %}
+	{%- if solver_options.hessian_approx == "EXACT" %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_expl_ode_hess.c
 	{%- endif %}
 {%- elif mocp_opts.integrator_type[jj] == "IRK" %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_fun.c
     {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_fun_jac_x_xdot_z.c
     {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_jac_x_xdot_u_z.c
-	{%- if hessian_approx == "EXACT" %}
+	{%- if solver_options.hessian_approx == "EXACT" %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_hess.c
 	{%- endif %}
 {%- elif mocp_opts.integrator_type[jj] == "LIFTED_IRK" %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_fun.c
     {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_fun_jac_x_xdot_u.c
-	{%- if hessian_approx == "EXACT" %}
+	{%- if solver_options.hessian_approx == "EXACT" %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_hess.c
 	{%- endif %}
 {%- elif mocp_opts.integrator_type[jj] == "GNSF" %}
@@ -161,7 +145,7 @@ set(MODEL_SRC
     {%- if solver_options.with_value_sens_wrt_params %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_dyn_disc_phi_adj_p.c
     {%- endif %}
-		{%- if hessian_approx == "EXACT" %}
+		{%- if solver_options.hessian_approx == "EXACT" %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_dyn_disc_phi_fun_jac_hess.c
 		{%- endif %}
 {%- endif -%}
@@ -183,7 +167,7 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
 {%- if constraints[jj].constr_type == "BGH" and phases_dims[jj].nh > 0 %}
         {{ model[jj].name }}_constraints/{{ model[jj].name }}_constr_h_fun_jac_uxt_zt.c
         {{ model[jj].name }}_constraints/{{ model[jj].name }}_constr_h_fun.c
-    {%- if hessian_approx == "EXACT" %}
+    {%- if solver_options.hessian_approx == "EXACT" %}
         {{ model[jj].name }}_constraints/{{ model[jj].name }}_constr_h_fun_jac_uxt_zt_hess.c
     {%- endif %}
 {%- endif %}
@@ -191,7 +175,9 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
 {%- if cost[jj].cost_type == "NONLINEAR_LS" %}
         {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_y_fun.c
         {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_y_fun_jac_ut_xt.c
+    {%- if solver_options.hessian_approx == "EXACT" %}
         {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_y_hess.c
+    {%- endif %}
 {%- elif cost[jj].cost_type == "CONVEX_OVER_NONLINEAR" %}
         {{ model[jj].name }}_cost/{{ model[jj].name }}_conl_cost_fun.c
         {{ model[jj].name }}_cost/{{ model[jj].name }}_conl_cost_fun_jac_hess.c
@@ -217,7 +203,7 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
 {%- if constraints_0.constr_type_0 == "BGH" and dims_0.nh_0 > 0 %}
         {{ model_0.name }}_constraints/{{ model_0.name }}_constr_h_0_fun_jac_uxt_zt.c
         {{ model_0.name }}_constraints/{{ model_0.name }}_constr_h_0_fun.c
-    {%- if hessian_approx == "EXACT" %}
+    {%- if solver_options.hessian_approx == "EXACT" %}
         {{ model_0.name }}_constraints/{{ model_0.name }}_constr_h_0_fun_jac_uxt_zt_hess.c
     {%- endif %}
 {%- endif %}
@@ -228,7 +214,7 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
 {%- if constraints_e.constr_type_e == "BGH" and dims_e.nh_e > 0 %}
         {{ model_e.name }}_constraints/{{ model_e.name }}_constr_h_e_fun_jac_uxt_zt.c
         {{ model_e.name }}_constraints/{{ model_e.name }}_constr_h_e_fun.c
-    {%- if hessian_approx == "EXACT" %}
+    {%- if solver_options.hessian_approx == "EXACT" %}
         {{ model_e.name }}_constraints/{{ model_e.name }}_constr_h_e_fun_jac_uxt_zt_hess.c
     {%- endif %}
 {%- endif %}
@@ -236,7 +222,9 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
 {%- if cost_0.cost_type_0 == "NONLINEAR_LS" %}
         {{ model_0.name }}_cost/{{ model_0.name }}_cost_y_0_fun.c
         {{ model_0.name }}_cost/{{ model_0.name }}_cost_y_0_fun_jac_ut_xt.c
+    {%- if solver_options.hessian_approx == "EXACT" %}
         {{ model_0.name }}_cost/{{ model_0.name }}_cost_y_0_hess.c
+    {%- endif %}
 {%- elif cost_0.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
         {{ model_0.name }}_cost/{{ model_0.name }}_conl_cost_0_fun.c
         {{ model_0.name }}_cost/{{ model_0.name }}_conl_cost_0_fun_jac_hess.c
@@ -258,7 +246,9 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
 {%- if cost_e.cost_type_e == "NONLINEAR_LS" %}
         {{ model_e.name }}_cost/{{ model_e.name }}_cost_y_e_fun.c
         {{ model_e.name }}_cost/{{ model_e.name }}_cost_y_e_fun_jac_ut_xt.c
+    {%- if solver_options.hessian_approx == "EXACT" %}
         {{ model_e.name }}_cost/{{ model_e.name }}_cost_y_e_hess.c
+    {%- endif %}
 {%- elif cost_e.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
         {{ model_e.name }}_cost/{{ model_e.name }}_conl_cost_e_fun.c
         {{ model_e.name }}_cost/{{ model_e.name }}_conl_cost_e_fun_jac_hess.c
@@ -305,16 +295,16 @@ set(ACADOS_LIB_PATH {{ acados_lib_path | replace(from="\", to="/") }} CACHE PATH
 set(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb")
 
 set(CMAKE_C_FLAGS "-fPIC -std=c99 {{ openmp_flag }}
-{%- if qp_solver == "FULL_CONDENSING_QPOASES" -%}
+{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" -%}
     -DACADOS_WITH_QPOASES
 {%- endif -%}
-{%- if qp_solver == "FULL_CONDENSING_DAQP" -%}
+{%- if solver_options.qp_solver == "FULL_CONDENSING_DAQP" -%}
     -DACADOS_WITH_DAQP
 {%- endif -%}
-{%- if qp_solver == "PARTIAL_CONDENSING_OSQP" -%}
+{%- if solver_options.qp_solver == "PARTIAL_CONDENSING_OSQP" -%}
     -DACADOS_WITH_OSQP
 {%- endif -%}
-{%- if qp_solver == "PARTIAL_CONDENSING_QPDUNES" -%}
+{%- if solver_options.qp_solver == "PARTIAL_CONDENSING_QPDUNES" -%}
     -DACADOS_WITH_QPDUNES
 {%- endif -%}
 ")
@@ -325,10 +315,10 @@ include_directories(
    ${ACADOS_INCLUDE_PATH}/acados
    ${ACADOS_INCLUDE_PATH}/blasfeo/include
    ${ACADOS_INCLUDE_PATH}/hpipm/include
-{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
+{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
    ${ACADOS_INCLUDE_PATH}/qpOASES_e/
 {%- endif %}
-{%- if qp_solver == "FULL_CONDENSING_DAQP" %}
+{%- if solver_options.qp_solver == "FULL_CONDENSING_DAQP" %}
    ${ACADOS_INCLUDE_PATH}/daqp/include
 {%- endif %}
 )
