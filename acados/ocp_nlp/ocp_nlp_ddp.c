@@ -662,8 +662,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     double tmp_time;
     ocp_nlp_timings_reset(nlp_mem->nlp_timings);
 
-    int N = dims->N;
-    int ii;
     int qp_status = 0;
     int qp_iter = 0;
     mem->alpha = 0.0;
@@ -876,15 +874,8 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // Calculate step norm
-        // res_comp
-        mem->step_norm = 0.0;
-        double tmp_norm = 0.0;
-        for (int i = 0; i <= N; i++)
-        {
-            int sum = dims->nx[i]+dims->nu[i];
-            blasfeo_dvecnrm_inf(sum, &qp_out->ux[i], 0, &tmp_norm);
-            mem->step_norm = tmp_norm > mem->step_norm ? tmp_norm : mem->step_norm;
-        }
+        mem->step_norm = ocp_qp_out_compute_primal_nrm_inf(qp_out);
+
         /* end solve QP */
 
         /* globalization */
