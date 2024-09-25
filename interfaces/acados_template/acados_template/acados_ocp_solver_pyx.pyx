@@ -909,7 +909,7 @@ cdef class AcadosOcpSolverCython:
                 if value_ < 0 or value_ > 2:
                     raise Exception('AcadosOcpSolverCython.solve(): argument \'rti_phase\' can '
                         'take only values 0, 1, 2 for SQP-RTI-type solvers')
-                if self.nlp_solver_type != 'SQP_RTI' and value_ > 0:
+                if self.nlp_solver_type != 'SQP_RTI':
                     raise Exception('AcadosOcpSolverCython.solve(): argument \'rti_phase\' can '
                         'take only value 0 for SQP-type solvers')
 
