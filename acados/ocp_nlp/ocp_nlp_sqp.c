@@ -834,6 +834,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->nlp_mem->status = globalization_status;
             nlp_mem->iter = sqp_iter;
             mem->time_tot = acados_toc(&timer0);
+#if defined(ACADOS_WITH_OPENMP)
+            // restore number of threads
+            omp_set_num_threads(num_threads_bkp);
+#endif
             return mem->nlp_mem->status;
         }
         mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
@@ -845,6 +849,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     {
         printf("Warning: The solver should never reach this part of the function!\n");
     }
+#if defined(ACADOS_WITH_OPENMP)
+    // restore number of threads
+    omp_set_num_threads(num_threads_bkp);
+#endif
     return mem->nlp_mem->status;
 }
 
