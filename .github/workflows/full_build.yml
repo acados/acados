@@ -139,6 +139,11 @@ jobs:
       shell: bash
       run: ${{runner.workspace}}/acados/.github/linux/install_tera.sh
 
+    - name: Install simde
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: ${{runner.workspace}}/acados/.github/linux/install_simde.sh''
+
     - name: Install new CasADi Python
       working-directory: ${{runner.workspace}}/acados
       shell: bash
@@ -220,6 +225,11 @@ jobs:
       shell: bash
       run: |
         ${{runner.workspace}}/acados/.github/linux/install_new_casadi_matlab.sh
+
+    - name: Install simde
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: ${{runner.workspace}}/acados/.github/linux/install_simde.sh''
 
     - name: Export Paths
       working-directory: ${{runner.workspace}}/acados
