@@ -1034,6 +1034,9 @@ classdef AcadosOcp < handle
                     template_list{end+1} = {fullfile(matlab_template_path, 'acados_sim_solver_sfun.in.c'), ['acados_sim_solver_sfunction_', self.name, '.c']};
                     template_list{end+1} = {fullfile(matlab_template_path, 'make_sfun_sim.in.m'), ['make_sfun_sim.m']};
                 end
+                if self.simulink_opts.inputs.rti_phase && self.solver_options.nlp_solver_type ~= 'SQP_RTI'
+                    error('rti_phase is only supported for SQP_RTI');
+                end
             else
                 disp("not rendering Simulink related templates, as simulink_opts are not specified.")
             end

@@ -369,10 +369,6 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- endif -%}
 
   {%- if simulink_opts.inputs.rti_phase -%}  {#- rti_phase #}
-      {% if solver_options.nlp_solver_type != "SQP_RTI" %}
-    rti_phase input only supported for nlp_solver_type == "SQP_RTI"!
-      {%- endif -%}
-
     {%- set i_input = i_input + 1 %}
     // rti_phase
     ssSetInputPortVectorDimension(S, {{ i_input }}, 1);
