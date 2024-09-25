@@ -163,6 +163,6 @@ function check_casadi_version_supports_p_global()
         extract_parametric(dummy, dummy);  % Check if extract_parametric exists
         cse(dummy); % Check if cse exists
     catch
-        error('CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se');
+        error('CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se2 release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se2');
     end
 end

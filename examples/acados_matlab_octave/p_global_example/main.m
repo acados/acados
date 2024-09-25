@@ -28,6 +28,11 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 
 
+% NOTE: This example requires CasADi version nightly-se2 or later,
+% as well as an installation of simde.
+% Furthermore, this example requires additional flags for the CasADi code generation,
+% cf. the solver option `ext_fun_compile_flags`
+
 function main()
 
     import casadi.*

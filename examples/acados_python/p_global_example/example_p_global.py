@@ -36,6 +36,11 @@ from utils import plot_pendulum
 from casadi import MX, vertcat, sin, cos
 import casadi as ca
 
+# NOTE: This example requires CasADi version nightly-se2 or later,
+# as well as an installation of simde.
+# Furthermore, this example requires additional flags for the CasADi code generation,
+# cf. the solver option ext_fun_compile_flags
+
 PLOT = False
 
 knots = [[0,0,0,0,0.2,0.5,0.8,1,1,1,1],[0,0,0,0.1,0.5,0.9,1,1,1]]
