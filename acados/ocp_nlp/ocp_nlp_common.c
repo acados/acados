@@ -1419,6 +1419,9 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
     // nlp res
     size += ocp_nlp_res_calculate_size(dims);
 
+    // timings
+    size += sizeof(struct ocp_nlp_timings);
+
     size += (N+1)*sizeof(bool); // set_sim_guess
 
     size += (N+1)*sizeof(struct blasfeo_dmat); // dzduxt
@@ -1544,6 +1547,16 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     // nlp res
     mem->nlp_res = ocp_nlp_res_assign(dims, c_ptr);
     c_ptr += mem->nlp_res->memsize;
+
+    // timings
+    mem->nlp_timings = (ocp_nlp_timings*) c_ptr;
+    c_ptr += sizeof(ocp_nlp_timings);
+
+    // zero timings
+    ocp_nlp_timings_reset(mem->nlp_timings);
+    mem->nlp_timings->time_feedback = 0;
+    mem->nlp_timings->time_preparation = 0;
+    mem->nlp_timings->time_solution_sensitivities = 0;
 
     // blasfeo_struct align
     align_char_to(8, &c_ptr);
@@ -2238,6 +2251,24 @@ void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *
     } // else: do nothing
 }
 
+
+
+static void collect_integrator_timings(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_memory *mem)
+{
+    /* collect stage-wise timings */
+    ocp_nlp_timings *nlp_timings = mem->nlp_timings;
+    for (int ii=0; ii < dims->N; ii++)
+    {
+        double tmp_time;
+        config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->dynamics[ii], "time_sim", &tmp_time);
+        nlp_timings->time_sim += tmp_time;
+        config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->dynamics[ii], "time_sim_la", &tmp_time);
+        nlp_timings->time_sim_la += tmp_time;
+        config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->dynamics[ii], "time_sim_ad", &tmp_time);
+        nlp_timings->time_sim_ad += tmp_time;
+    }
+}
+
 void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
     ocp_nlp_workspace *work)
@@ -2317,8 +2348,9 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
         struct blasfeo_dvec *ineq_adj =
             config->constraints[i]->memory_get_adj_ptr(mem->constraints[i]);
         blasfeo_dveccp(nv[i], ineq_adj, 0, mem->ineq_adj + i, 0);
-
     }
+
+    collect_integrator_timings(config, dims, mem);
 }
 
 
@@ -3019,4 +3051,87 @@ void ocp_nlp_dump_qp_out_to_file(ocp_qp_out *qp_out, int sqp_iter, int soc)
     FILE *out_file = fopen(filename, "w");
     print_ocp_qp_out_to_file(out_file, qp_out);
     fclose(out_file);
+}
+
+
+void ocp_nlp_timings_get(ocp_nlp_config *config, ocp_nlp_timings *timings, const char *field, void *return_value_)
+{
+    double *value = return_value_;
+    if (!strcmp("time_tot", field))
+    {
+        *value = timings->time_tot;
+    }
+    else if (!strcmp("time_qp_sol", field) || !strcmp("time_qp", field))
+    {
+        *value = timings->time_qp_sol;
+    }
+    else if (!strcmp("time_qp_solver", field) || !strcmp("time_qp_solver_call", field))
+    {
+        *value = timings->time_qp_solver_call;
+    }
+    else if (!strcmp("time_qp_xcond", field))
+    {
+        *value = timings->time_qp_xcond;
+    }
+    else if (!strcmp("time_lin", field))
+    {
+        *value = timings->time_lin;
+    }
+    else if (!strcmp("time_reg", field))
+    {
+        *value = timings->time_reg;
+    }
+    else if (!strcmp("time_glob", field))
+    {
+        *value = timings->time_glob;
+    }
+    else if (!strcmp("time_solution_sensitivities", field))
+    {
+        *value = timings->time_solution_sensitivities;
+    }
+    else if (!strcmp("time_sim", field))
+    {
+        *value = timings->time_sim;
+    }
+    else if (!strcmp("time_sim_la", field))
+    {
+        *value = timings->time_sim_la;
+    }
+    else if (!strcmp("time_sim_ad", field))
+    {
+        *value = timings->time_sim_ad;
+    }
+    else if (!strcmp("time_preparation", field))
+    {
+        *value = timings->time_preparation;
+    }
+    else if (!strcmp("time_feedback", field))
+    {
+        if (config->is_real_time_algorithm())
+        {
+            *value = timings->time_feedback;
+        }
+        else
+        {
+            *value = timings->time_tot;
+        }
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_timings_get\n", field);
+        exit(1);
+    }
+}
+
+void ocp_nlp_timings_reset(ocp_nlp_timings *timings)
+{
+    timings->time_qp_sol = 0.0;
+    timings->time_qp_solver_call = 0.0;
+    timings->time_qp_xcond = 0.0;
+    timings->time_lin = 0.0;
+    timings->time_reg = 0.0;
+    timings->time_glob = 0.0;
+    timings->time_sim = 0.0;
+    timings->time_sim_la = 0.0;
+    timings->time_sim_ad = 0.0;
 }
