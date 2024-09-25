@@ -29,12 +29,4 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-# source virtualenv
-source acadosenv/bin/activate;
-which python;
-
-curl -L --remote-name https://github.com/casadi/casadi/releases/download/nightly-se2/casadi-3.6.6.dev+se2-cp310-none-manylinux2014_x86_64.whl;
-pip install casadi-3.6.6.dev+se2-cp310-none-manylinux2014_x86_64.whl;
-
-
-
+sudo apt install libsimde-dev

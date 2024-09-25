@@ -110,9 +110,10 @@ class GenerateContext:
         else:
             check_casadi_version_supports_p_global()
 
+            outputs = ca.cse(outputs)
+
             # This introduces novel symbols into the graph (extracted1, extracted2,...)
             [outputs_ret, symbols, param] = ca.extract_parametric(outputs, self.p_global)
-            symbols = symbols.primitives()
 
             # Substitute these symbols with double memory pools
             pools = []
@@ -122,7 +123,7 @@ class GenerateContext:
                 self.pool_names.append(name_e)
 
             outputs_ret = ca.substitute(outputs_ret, symbols, pools)
-            self.p_global_expressions += param.primitives()
+            self.p_global_expressions += param
 
             fun_mod = ca.Function(name, inputs, outputs_ret, self.__casadi_fun_opts)
             self.__add_function(name, output_dir, fun_mod)

@@ -143,9 +143,9 @@ def check_casadi_version():
 
 def check_casadi_version_supports_p_global():
     try:
-        from casadi import extract_parametric, cse
+        from casadi import extract_parametric, cse, blazing_spline
     except:
-        raise Exception("CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se")
+        raise Exception("CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se2 release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se2")
 
 
 def get_simulink_default_opts():

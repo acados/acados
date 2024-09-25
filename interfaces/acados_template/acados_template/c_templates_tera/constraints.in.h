@@ -42,6 +42,7 @@ const int *{{ model.name }}_phi_constraint_fun_sparsity_in(int);
 const int *{{ model.name }}_phi_constraint_fun_sparsity_out(int);
 int {{ model.name }}_phi_constraint_fun_n_in(void);
 int {{ model.name }}_phi_constraint_fun_n_out(void);
+real_t* {{ model.name }}_phi_constraint_fun_get_pool_double(const char*);
 
 int {{ model.name }}_phi_constraint_fun_jac_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_phi_constraint_fun_jac_hess_work(int *, int *, int *, int *);
@@ -49,6 +50,7 @@ const int *{{ model.name }}_phi_constraint_fun_jac_hess_sparsity_in(int);
 const int *{{ model.name }}_phi_constraint_fun_jac_hess_sparsity_out(int);
 int {{ model.name }}_phi_constraint_fun_jac_hess_n_in(void);
 int {{ model.name }}_phi_constraint_fun_jac_hess_n_out(void);
+real_t* {{ model.name }}_phi_constraint_fun_jac_hess_get_pool_double(const char*);
 {% endif %}
 
 {% if dims.nphi_e > 0 %}
@@ -58,6 +60,7 @@ const int *{{ model.name }}_phi_e_constraint_fun_sparsity_in(int);
 const int *{{ model.name }}_phi_e_constraint_fun_sparsity_out(int);
 int {{ model.name }}_phi_e_constraint_fun_n_in(void);
 int {{ model.name }}_phi_e_constraint_fun_n_out(void);
+real_t* {{ model.name }}_phi_e_constraint_fun_get_pool_double(const char*);
 
 int {{ model.name }}_phi_e_constraint_fun_jac_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_phi_e_constraint_fun_jac_hess_work(int *, int *, int *, int *);
@@ -65,6 +68,7 @@ const int *{{ model.name }}_phi_e_constraint_fun_jac_hess_sparsity_in(int);
 const int *{{ model.name }}_phi_e_constraint_fun_jac_hess_sparsity_out(int);
 int {{ model.name }}_phi_e_constraint_fun_jac_hess_n_in(void);
 int {{ model.name }}_phi_e_constraint_fun_jac_hess_n_out(void);
+real_t* {{ model.name }}_phi_e_constraint_fun_jac_hess_get_pool_double(const char*);
 {% endif %}
 
 {% if dims.nphi_0 > 0 %}
@@ -74,6 +78,7 @@ const int *{{ model.name }}_phi_0_constraint_fun_sparsity_in(int);
 const int *{{ model.name }}_phi_0_constraint_fun_sparsity_out(int);
 int {{ model.name }}_phi_0_constraint_fun_n_in(void);
 int {{ model.name }}_phi_0_constraint_fun_n_out(void);
+real_t* {{ model.name }}_phi_0_constraint_fun_get_pool_double(const char*);
 
 int {{ model.name }}_phi_0_constraint_fun_jac_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_phi_0_constraint_fun_jac_hess_work(int *, int *, int *, int *);
@@ -81,6 +86,7 @@ const int *{{ model.name }}_phi_0_constraint_fun_jac_hess_sparsity_in(int);
 const int *{{ model.name }}_phi_0_constraint_fun_jac_hess_sparsity_out(int);
 int {{ model.name }}_phi_0_constraint_fun_jac_hess_n_in(void);
 int {{ model.name }}_phi_0_constraint_fun_jac_hess_n_out(void);
+real_t* {{ model.name }}_phi_0_constraint_fun_jac_hess_get_pool_double(const char*);
 {% endif %}
 
 
@@ -91,6 +97,7 @@ const int *{{ model.name }}_constr_h_fun_jac_uxt_zt_sparsity_in(int);
 const int *{{ model.name }}_constr_h_fun_jac_uxt_zt_sparsity_out(int);
 int {{ model.name }}_constr_h_fun_jac_uxt_zt_n_in(void);
 int {{ model.name }}_constr_h_fun_jac_uxt_zt_n_out(void);
+real_t* {{ model.name }}_constr_h_fun_jac_uxt_zt_get_pool_double(const char*);
 
 int {{ model.name }}_constr_h_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_constr_h_fun_work(int *, int *, int *, int *);
@@ -98,6 +105,7 @@ const int *{{ model.name }}_constr_h_fun_sparsity_in(int);
 const int *{{ model.name }}_constr_h_fun_sparsity_out(int);
 int {{ model.name }}_constr_h_fun_n_in(void);
 int {{ model.name }}_constr_h_fun_n_out(void);
+real_t* {{ model.name }}_constr_h_fun_get_pool_double(const char*);
 
 {% if solver_options.hessian_approx == "EXACT" -%}
 int {{ model.name }}_constr_h_fun_jac_uxt_zt_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
@@ -106,6 +114,7 @@ const int *{{ model.name }}_constr_h_fun_jac_uxt_zt_hess_sparsity_in(int);
 const int *{{ model.name }}_constr_h_fun_jac_uxt_zt_hess_sparsity_out(int);
 int {{ model.name }}_constr_h_fun_jac_uxt_zt_hess_n_in(void);
 int {{ model.name }}_constr_h_fun_jac_uxt_zt_hess_n_out(void);
+real_t* {{ model.name }}_constr_h_fun_jac_uxt_zt_hess_get_pool_double(const char*);
 {% endif %}
 {% endif %}
 
@@ -116,6 +125,7 @@ const int *{{ model.name }}_constr_h_0_fun_jac_uxt_zt_sparsity_in(int);
 const int *{{ model.name }}_constr_h_0_fun_jac_uxt_zt_sparsity_out(int);
 int {{ model.name }}_constr_h_0_fun_jac_uxt_zt_n_in(void);
 int {{ model.name }}_constr_h_0_fun_jac_uxt_zt_n_out(void);
+real_t* {{ model.name }}_constr_h_0_fun_jac_uxt_zt_get_pool_double(const char*);
 
 int {{ model.name }}_constr_h_0_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_constr_h_0_fun_work(int *, int *, int *, int *);
@@ -123,6 +133,7 @@ const int *{{ model.name }}_constr_h_0_fun_sparsity_in(int);
 const int *{{ model.name }}_constr_h_0_fun_sparsity_out(int);
 int {{ model.name }}_constr_h_0_fun_n_in(void);
 int {{ model.name }}_constr_h_0_fun_n_out(void);
+real_t* {{ model.name }}_constr_h_0_fun_get_pool_double(const char*);
 
 {% if solver_options.hessian_approx == "EXACT" -%}
 int {{ model.name }}_constr_h_0_fun_jac_uxt_zt_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
@@ -131,6 +142,7 @@ const int *{{ model.name }}_constr_h_0_fun_jac_uxt_zt_hess_sparsity_in(int);
 const int *{{ model.name }}_constr_h_0_fun_jac_uxt_zt_hess_sparsity_out(int);
 int {{ model.name }}_constr_h_0_fun_jac_uxt_zt_hess_n_in(void);
 int {{ model.name }}_constr_h_0_fun_jac_uxt_zt_hess_n_out(void);
+real_t* {{ model.name }}_constr_h_0_fun_jac_uxt_zt_hess_get_pool_double(const char*);
 {% endif %}
 {% endif %}
 
@@ -142,6 +154,7 @@ const int *{{ model.name }}_constr_h_e_fun_jac_uxt_zt_sparsity_in(int);
 const int *{{ model.name }}_constr_h_e_fun_jac_uxt_zt_sparsity_out(int);
 int {{ model.name }}_constr_h_e_fun_jac_uxt_zt_n_in(void);
 int {{ model.name }}_constr_h_e_fun_jac_uxt_zt_n_out(void);
+real_t* {{ model.name }}_phi_constraint_fun_jac_hess_get_pool_double(const char*);
 
 int {{ model.name }}_constr_h_e_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_constr_h_e_fun_work(int *, int *, int *, int *);
@@ -149,6 +162,7 @@ const int *{{ model.name }}_constr_h_e_fun_sparsity_in(int);
 const int *{{ model.name }}_constr_h_e_fun_sparsity_out(int);
 int {{ model.name }}_constr_h_e_fun_n_in(void);
 int {{ model.name }}_constr_h_e_fun_n_out(void);
+real_t* {{ model.name }}_constr_h_e_fun_get_pool_double(const char*);
 
 {% if solver_options.hessian_approx == "EXACT" -%}
 int {{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
@@ -157,6 +171,7 @@ const int *{{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess_sparsity_in(int);
 const int *{{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess_sparsity_out(int);
 int {{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess_n_in(void);
 int {{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess_n_out(void);
+real_t* {{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess_get_pool_double(const char*);
 {% endif %}
 {% endif %}
 

@@ -30,7 +30,7 @@
 #
 
 
-CASADI_MATLAB_URL="https://github.com/casadi/casadi/releases/download/nightly-se/casadi-se-linux64-matlab2018b.zip";
+CASADI_MATLAB_URL="https://github.com/casadi/casadi/releases/download/nightly-se2/casadi-se2-linux64-matlab2018b.zip";
 
 wget -O casadi-linux-matlab.zip "${CASADI_MATLAB_URL}";
 mkdir -p casadi-matlab;
