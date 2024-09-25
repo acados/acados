@@ -1075,7 +1075,7 @@ void ocp_nlp_ddp_get(void *config_, void *dims_, void *mem_, const char *field, 
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "time")) )
     {
         // call timings getter
-        ocp_nlp_timings_get(mem->nlp_mem->nlp_timings, field, return_value_);
+        ocp_nlp_timings_get(config, mem->nlp_mem->nlp_timings, field, return_value_);
     }
     else if (!strcmp("ddp_iter", field) || !strcmp("nlp_iter", field))
     {
@@ -1238,6 +1238,11 @@ void ocp_nlp_ddp_terminate(void *config_, void *mem_, void *work_)
 }
 
 
+bool ocp_nlp_ddp_is_real_time_algorithm()
+{
+    return false;
+}
+
 void ocp_nlp_ddp_config_initialize_default(void *config_)
 {
     ocp_nlp_config *config = (ocp_nlp_config *) config_;
@@ -1262,6 +1267,7 @@ void ocp_nlp_ddp_config_initialize_default(void *config_)
     config->work_get = &ocp_nlp_ddp_work_get;
     config->terminate = &ocp_nlp_ddp_terminate;
     config->step_update = &ocp_nlp_ddp_compute_trial_iterate;
+    config->is_real_time_algorithm = &ocp_nlp_ddp_is_real_time_algorithm;
 
     return;
 }

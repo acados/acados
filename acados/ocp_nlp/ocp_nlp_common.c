@@ -1552,6 +1552,12 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     mem->nlp_timings = (ocp_nlp_timings*) c_ptr;
     c_ptr += sizeof(ocp_nlp_timings);
 
+    // zero timings
+    ocp_nlp_timings_reset(mem->nlp_timings);
+    mem->nlp_timings->time_feedback = 0;
+    mem->nlp_timings->time_preparation = 0;
+    mem->nlp_timings->time_solution_sensitivities = 0;
+
     // blasfeo_struct align
     align_char_to(8, &c_ptr);
 
@@ -2344,18 +2350,7 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
         blasfeo_dveccp(nv[i], ineq_adj, 0, mem->ineq_adj + i, 0);
     }
 
-    /* collect stage-wise timings */
-    ocp_nlp_timings *nlp_timings = mem->nlp_timings;
-    for (int ii=0; ii <= N; ii++)
-    {
-        double tmp_time;
-        config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim", &tmp_time);
-        nlp_timings->time_sim += tmp_time;
-        config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_la", &tmp_time);
-        nlp_timings->time_sim_la += tmp_time;
-        config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_ad", &tmp_time);
-        nlp_timings->time_sim_ad += tmp_time;
-    }
+    collect_integrator_timings(config, dims, mem);
 }
 
 
@@ -3059,72 +3054,67 @@ void ocp_nlp_dump_qp_out_to_file(ocp_qp_out *qp_out, int sqp_iter, int soc)
 }
 
 
-void ocp_nlp_timings_get(ocp_nlp_timings *timings, const char *field, void *return_value_)
+void ocp_nlp_timings_get(ocp_nlp_config *config, ocp_nlp_timings *timings, const char *field, void *return_value_)
 {
+    double *value = return_value_;
     if (!strcmp("time_tot", field))
     {
-        double *value = return_value_;
         *value = timings->time_tot;
     }
     else if (!strcmp("time_qp_sol", field) || !strcmp("time_qp", field))
     {
-        double *value = return_value_;
         *value = timings->time_qp_sol;
     }
     else if (!strcmp("time_qp_solver", field) || !strcmp("time_qp_solver_call", field))
     {
-        double *value = return_value_;
         *value = timings->time_qp_solver_call;
     }
     else if (!strcmp("time_qp_xcond", field))
     {
-        double *value = return_value_;
         *value = timings->time_qp_xcond;
     }
     else if (!strcmp("time_lin", field))
     {
-        double *value = return_value_;
         *value = timings->time_lin;
     }
     else if (!strcmp("time_reg", field))
     {
-        double *value = return_value_;
         *value = timings->time_reg;
     }
     else if (!strcmp("time_glob", field))
     {
-        double *value = return_value_;
         *value = timings->time_glob;
     }
     else if (!strcmp("time_solution_sensitivities", field))
     {
-        double *value = return_value_;
         *value = timings->time_solution_sensitivities;
     }
     else if (!strcmp("time_sim", field))
     {
-        double *value = return_value_;
         *value = timings->time_sim;
     }
     else if (!strcmp("time_sim_la", field))
     {
-        double *value = return_value_;
         *value = timings->time_sim_la;
     }
     else if (!strcmp("time_sim_ad", field))
     {
-        double *value = return_value_;
         *value = timings->time_sim_ad;
     }
     else if (!strcmp("time_preparation", field))
     {
-        double *value = return_value_;
-        *value = 0.0;
+        *value = timings->time_preparation;
     }
     else if (!strcmp("time_feedback", field))
     {
-        double *value = return_value_;
-        *value = timings->time_tot;
+        if (config->is_real_time_algorithm())
+        {
+            *value = timings->time_feedback;
+        }
+        else
+        {
+            *value = timings->time_tot;
+        }
     }
     else
     {

@@ -573,8 +573,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     double tmp_time;
     ocp_nlp_timings_reset(nlp_timings);
 
-    int N = dims->N;
-    int ii;
     int qp_status = 0;
     int qp_iter = 0;
     mem->alpha = 0.0;
@@ -972,7 +970,7 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "time")) )
     {
         // call timings getter
-        ocp_nlp_timings_get(mem->nlp_mem->nlp_timings, field, return_value_);
+        ocp_nlp_timings_get(config, mem->nlp_mem->nlp_timings, field, return_value_);
     }
     else if (!strcmp("sqp_iter", field) || !strcmp("nlp_iter", field))
     {
@@ -1114,6 +1112,10 @@ void ocp_nlp_sqp_terminate(void *config_, void *mem_, void *work_)
     config->qp_solver->terminate(config->qp_solver, mem->nlp_mem->qp_solver_mem, work->nlp_work->qp_work);
 }
 
+bool ocp_nlp_sqp_is_real_time_algorithm()
+{
+    return false;
+}
 
 void ocp_nlp_sqp_config_initialize_default(void *config_)
 {
@@ -1139,6 +1141,7 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->work_get = &ocp_nlp_sqp_work_get;
     config->terminate = &ocp_nlp_sqp_terminate;
     config->step_update = &ocp_nlp_update_variables_sqp;
+    config->is_real_time_algorithm = &ocp_nlp_sqp_is_real_time_algorithm;
 
     return;
 }

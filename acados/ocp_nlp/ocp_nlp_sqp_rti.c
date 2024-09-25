@@ -794,7 +794,6 @@ static void level_c_prepare_residual_computation(ocp_nlp_config *config,
 #endif
     for (int i=0; i <= N; i++)
     {
-
         // nlp mem: cost_grad
         config->cost[i]->compute_gradient(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
         struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
@@ -829,6 +828,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
 {
     acados_timer timer1;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_nlp_timings *timings = nlp_mem->nlp_timings;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
 
@@ -1226,7 +1226,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_nlp_in *nlp_in = nlp_in_;
     ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_sqp_rti_workspace *work = work_;
-    ocp_nlp_timings *timings = nlp_mem->nlp_timings;
+    ocp_nlp_timings *timings = mem->nlp_mem->nlp_timings;
 
     // ocp_nlp_sqp_rti_cast_workspace(config, dims, opts, mem, work);
 
@@ -1529,6 +1529,11 @@ void ocp_nlp_sqp_rti_terminate(void *config_, void *mem_, void *work_)
 }
 
 
+bool ocp_nlp_sqp_rti_is_real_time_algorithm()
+{
+    return true;
+}
+
 void ocp_nlp_sqp_rti_config_initialize_default(void *config_)
 {
     ocp_nlp_config *config = (ocp_nlp_config *) config_;
@@ -1553,6 +1558,7 @@ void ocp_nlp_sqp_rti_config_initialize_default(void *config_)
     config->work_get = &ocp_nlp_sqp_rti_work_get;
     config->terminate = &ocp_nlp_sqp_rti_terminate;
     config->step_update = &ocp_nlp_update_variables_sqp;
+    config->is_real_time_algorithm = &ocp_nlp_sqp_rti_is_real_time_algorithm;
 
     return;
 }

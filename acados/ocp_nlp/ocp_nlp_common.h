@@ -105,6 +105,10 @@ typedef struct ocp_nlp_config
     void (*work_get)(void *config_, void *dims, void *work_, const char *field, void *return_value_);
     //
     void (*terminate)(void *config, void *mem, void *work);
+
+    bool (*is_real_time_algorithm)();
+
+
     // config structs of submodules
     ocp_qp_xcond_solver_config *qp_solver; // TODO rename xcond_solver
     ocp_nlp_dynamics_config **dynamics;
@@ -330,6 +334,7 @@ void ocp_nlp_res_get_inf_norm(ocp_nlp_res *res, double *out);
 
 typedef struct ocp_nlp_timings
 {
+    // these timers are reset at every solver call
     double time_qp_sol;
     double time_qp_solver_call;
     double time_qp_xcond;
@@ -340,11 +345,14 @@ typedef struct ocp_nlp_timings
     double time_sim;
     double time_sim_la;
     double time_sim_ad;
+    // these are not
     double time_solution_sensitivities;
+    double time_feedback;
+    double time_preparation;
 } ocp_nlp_timings;
 
 
-void ocp_nlp_timings_get(ocp_nlp_timings *timings, const char *field, void *return_value_);
+void ocp_nlp_timings_get(ocp_nlp_config *config, ocp_nlp_timings *timings, const char *field, void *return_value_);
 
 void ocp_nlp_timings_reset(ocp_nlp_timings *timings);
 
