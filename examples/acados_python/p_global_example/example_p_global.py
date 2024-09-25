@@ -271,6 +271,10 @@ def main_mocp(lut=True, use_p_global=True):
     mocp.solver_options.print_level = 0
     mocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP_RTI, SQP
 
+    if lut:
+        # NOTE: these additional flags are required for code generation of CasADi functions using ca.blazing_spline
+        mocp.solver_options.ext_fun_compile_flags = '-I' + ca.GlobalOptions.getCasadiIncludePath() + ' -ffast-math -march=native'
+
     # set prediction horizon
     mocp.solver_options.tf = Tf
     mocp.solver_options.N_horizon = N_horizon
