@@ -1366,7 +1366,27 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_sqp_rti_memory *mem = mem_;
 
-    if (!strcmp("sqp_iter", field) || !strcmp("nlp_iter", field))
+    char module[MAX_STR_LEN];
+    char *ptr_module = NULL;
+    int module_length = 0;
+
+    // extract module name
+    char *char_ = strchr(field, '_');
+    if (char_!=NULL)
+    {
+        module_length = char_-field;
+        for (int ii=0; ii<module_length; ii++)
+            module[ii] = field[ii];
+        module[module_length] = '\0'; // add end of string
+        ptr_module = module;
+    }
+
+    if ( ptr_module!=NULL && (!strcmp(ptr_module, "time")) )
+    {
+        // call timings getter
+        ocp_nlp_timings_get(config, mem->nlp_mem->nlp_timings, field, return_value_);
+    }
+    else if (!strcmp("sqp_iter", field) || !strcmp("nlp_iter", field))
     {
         int *value = return_value_;
         *value = mem->nlp_mem->iter;
