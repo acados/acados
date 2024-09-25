@@ -251,7 +251,11 @@ class AcadosOcpOptions:
         String in ('FIXED_STEP', 'MERIT_BACKTRACKING', 'FUNNEL_L1PEN_LINESEARCH').
         Default: 'FIXED_STEP'.
 
-        .. note:: preliminary implementation.
+        - FIXED_STEP: performs steps with a given step length, see option globalization_fixed_step_length
+        - MERIT_BACKTRACKING: performs a merit function based backtracking line search following Following Leineweber1999, Section "3.5.1 Line Search Globalization"
+        - FUNNEL_L1PEN_LINESEARCH: following "A Unified Funnel Restoration SQP Algorithm" by Kiessling et al.
+            https://arxiv.org/pdf/2409.09208
+            NOTE: preliminary implementation
         """
         return self.__globalization
 
