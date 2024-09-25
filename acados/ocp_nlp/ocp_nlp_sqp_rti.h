@@ -116,18 +116,6 @@ typedef struct
     // nlp memory
     ocp_nlp_memory *nlp_mem;
 
-    // timers
-    double time_qp_sol;
-    double time_qp_solver_call;
-    double time_qp_xcond;
-    double time_lin;
-    double time_reg;
-    double time_tot;
-    double time_glob;
-    double time_preparation;
-    double time_feedback;
-    double time_solution_sensitivities;
-
     // statistics
     double *stat;
     int stat_m;
