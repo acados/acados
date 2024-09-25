@@ -680,43 +680,50 @@ classdef AcadosOcp < handle
             end
 
             % Set default parameters for globalization
-            if isempty(opts.alpha_min)
-                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                    opts.alpha_min = 1e-17;
+            ddp_with_merit_or_funnel = strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH') || (strcmp(opts.globalization, 'MERIT_BACKTRACKING') && strcmp(opts.nlp_solver_type, 'DDP'));
+
+            if isempty(opts.globalization_alpha_min)
+                % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                if ddp_with_merit_or_funnel
+                    opts.globalization_alpha_min = 1e-17;
                 else
-                    opts.alpha_min = 0.05;
+                    opts.globalization_alpha_min = 0.05;
                 end
             end
 
-            if isempty(opts.alpha_reduction)
-                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                    opts.alpha_reduction = 0.5;
+            if isempty(opts.globalization_alpha_reduction)
+                % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                if ddp_with_merit_or_funnel
+                    opts.globalization_alpha_reduction = 0.5;
                 else
-                    opts.alpha_reduction = 0.7;
+                    opts.globalization_alpha_reduction = 0.7;
                 end
             end
 
-            if isempty(opts.eps_sufficient_descent)
-                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                    opts.eps_sufficient_descent = 1e-6;
+            if isempty(opts.globalization_eps_sufficient_descent)
+                % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                if ddp_with_merit_or_funnel
+                    opts.globalization_eps_sufficient_descent = 1e-6;
                 else
-                    opts.eps_sufficient_descent = 1e-4;
+                    opts.globalization_eps_sufficient_descent = 1e-4;
                 end
             end
 
             if isempty(opts.eval_residual_at_max_iter)
-                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                if ddp_with_merit_or_funnel
                     opts.eval_residual_at_max_iter = true;
                 else
                     opts.eval_residual_at_max_iter = false;
                 end
             end
 
-            if isempty(opts.full_step_dual)
-                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                    opts.full_step_dual = 1;
+            if isempty(opts.globalization_full_step_dual)
+                % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                if ddp_with_merit_or_funnel
+                    opts.globalization_full_step_dual = 1;
                 else
-                    opts.full_step_dual = 0;
+                    opts.globalization_full_step_dual = 0;
                 end
             end
 
@@ -727,51 +734,57 @@ classdef AcadosOcp < handle
 
             % termination
             if isempty(opts.nlp_solver_tol_min_step_norm)
-                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                if ddp_with_merit_or_funnel
                     opts.nlp_solver_tol_min_step_norm = 1e-12;
                 else
                     opts.nlp_solver_tol_min_step_norm = 0.0;
                 end
             end
 
+            %% Deprecated / migrated options
+            if ~isempty(opts.nlp_solver_step_length)
+                warning('nlp_solver_step_length is deprecated, use globalization_fixed_step_length instead.');
+                if opts.globalization_fixed_step_length ~= 1.0
+                    error('nlp_solver_step_length and globalization_fixed_step_length are both set, please use only globalization_fixed_step_length.');
+                end
+                opts.globalization_fixed_step_length = opts.nlp_solver_step_length;
+            end
+
             % Set default parameters for globalization
-            if isempty(opts.alpha_min)
-                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                    opts.alpha_min = 1e-17;
+            if isempty(opts.globalization_alpha_min)
+                % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                if ddp_with_merit_or_funnel
+                    opts.globalization_alpha_min = 1e-17;
                 else
-                    opts.alpha_min = 0.05;
+                    opts.globalization_alpha_min = 0.05;
                 end
             end
 
-            if isempty(opts.alpha_reduction)
-                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                    opts.alpha_reduction = 0.5;
+            if isempty(opts.globalization_alpha_reduction)
+                % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                if ddp_with_merit_or_funnel
+                    opts.globalization_alpha_reduction = 0.5;
                 else
-                    opts.alpha_reduction = 0.7;
+                    opts.globalization_alpha_reduction = 0.7;
                 end
             end
 
-            if isempty(opts.eps_sufficient_descent)
-                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                    opts.eps_sufficient_descent = 1e-6;
+            if isempty(opts.globalization_eps_sufficient_descent)
+                % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                if ddp_with_merit_or_funnel
+                    opts.globalization_eps_sufficient_descent = 1e-6;
                 else
-                    opts.eps_sufficient_descent = 1e-4;
+                    opts.globalization_eps_sufficient_descent = 1e-4;
                 end
             end
 
-            if isempty(opts.eval_residual_at_max_iter)
-                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                    opts.eval_residual_at_max_iter = true;
+            if isempty(opts.globalization_full_step_dual)
+                % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                if ddp_with_merit_or_funnel
+                    opts.globalization_full_step_dual = 1;
                 else
-                    opts.eval_residual_at_max_iter = false;
-                end
-            end
-
-            if isempty(opts.full_step_dual)
-                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                    opts.full_step_dual = 1;
-                else
-                    opts.full_step_dual = 0;
+                    opts.globalization_full_step_dual = 0;
                 end
             end
 

@@ -204,6 +204,8 @@ void {{ model.name }}_acados_create_set_plan(ocp_nlp_plan_t* nlp_solver_plan, co
     nlp_solver_plan->nlp_constraints[N] = {{ constraints.constr_type_e }};
 
     nlp_solver_plan->regularization = {{ solver_options.regularize_method }};
+
+    nlp_solver_plan->globalization = {{ solver_options.globalization }};
 }
 
 
@@ -2064,44 +2066,45 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "fixed_hess", &fixed_hess);
 
 {%- if solver_options.globalization == "FIXED_STEP" %}
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "fixed_step");
-{% else %}
-    double alpha_min = {{ solver_options.alpha_min }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "alpha_min", &alpha_min);
 
-    double alpha_reduction = {{ solver_options.alpha_reduction }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "alpha_reduction", &alpha_reduction);
+    double globalization_fixed_step_length = {{ solver_options.globalization_fixed_step_length }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_fixed_step_length", &globalization_fixed_step_length);
+{% else %}
+    double globalization_alpha_min = {{ solver_options.globalization_alpha_min }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_alpha_min", &globalization_alpha_min);
+
+    double globalization_alpha_reduction = {{ solver_options.globalization_alpha_reduction }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_alpha_reduction", &globalization_alpha_reduction);
 {%- endif -%}
 
 {# globalization specific options #}
 {%- if solver_options.globalization == "MERIT_BACKTRACKING" %}
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "merit_backtracking");
+    // ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "merit_backtracking");
 
-    int line_search_use_sufficient_descent = {{ solver_options.line_search_use_sufficient_descent }};
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "line_search_use_sufficient_descent", &line_search_use_sufficient_descent);
+    int globalization_line_search_use_sufficient_descent = {{ solver_options.globalization_line_search_use_sufficient_descent }};
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_line_search_use_sufficient_descent", &globalization_line_search_use_sufficient_descent);
 
     int globalization_use_SOC = {{ solver_options.globalization_use_SOC }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_use_SOC", &globalization_use_SOC);
 
-    double eps_sufficient_descent = {{ solver_options.eps_sufficient_descent }};
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "eps_sufficient_descent", &eps_sufficient_descent);
+    double globalization_eps_sufficient_descent = {{ solver_options.globalization_eps_sufficient_descent }};
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_eps_sufficient_descent", &globalization_eps_sufficient_descent);
 {%- elif solver_options.globalization == "FUNNEL_L1PEN_LINESEARCH" %}
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "funnel_l1pen_linesearch");
 
-    double funnel_initialization_increase_factor = {{ solver_options.funnel_initialization_increase_factor }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_initialization_increase_factor", &funnel_initialization_increase_factor);
+    double globalization_funnel_init_increase_factor = {{ solver_options.globalization_funnel_init_increase_factor }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_init_increase_factor", &globalization_funnel_init_increase_factor);
 
-    double funnel_initialization_upper_bound = {{ solver_options.funnel_initialization_upper_bound }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_initialization_upper_bound", &funnel_initialization_upper_bound);
+    double globalization_funnel_init_upper_bound = {{ solver_options.globalization_funnel_init_upper_bound }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_init_upper_bound", &globalization_funnel_init_upper_bound);
 
-    double funnel_sufficient_decrease_factor = {{ solver_options.funnel_sufficient_decrease_factor }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_sufficient_decrease_factor", &funnel_sufficient_decrease_factor);
+    double globalization_funnel_sufficient_decrease_factor = {{ solver_options.globalization_funnel_sufficient_decrease_factor }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_sufficient_decrease_factor", &globalization_funnel_sufficient_decrease_factor);
 
-    double funnel_kappa = {{ solver_options.funnel_kappa }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_kappa", &funnel_kappa);
+    double globalization_funnel_kappa = {{ solver_options.globalization_funnel_kappa }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_kappa", &globalization_funnel_kappa);
 
-    double funnel_initial_penalty_parameter = {{ solver_options.funnel_initial_penalty_parameter }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_initial_penalty_parameter", &funnel_initial_penalty_parameter);
+    double globalization_funnel_initial_penalty_parameter = {{ solver_options.globalization_funnel_initial_penalty_parameter }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_initial_penalty_parameter", &globalization_funnel_initial_penalty_parameter);
 {%- endif -%}
 
     int with_solution_sens_wrt_params = {{ solver_options.with_solution_sens_wrt_params }};
@@ -2110,8 +2113,8 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     int with_value_sens_wrt_params = {{ solver_options.with_value_sens_wrt_params }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "with_value_sens_wrt_params", &with_value_sens_wrt_params);
 
-    int full_step_dual = {{ solver_options.full_step_dual }};
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "full_step_dual", &full_step_dual);
+    int globalization_full_step_dual = {{ solver_options.globalization_full_step_dual }};
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_full_step_dual", &globalization_full_step_dual);
 
 {%- if dims.nz > 0 %}
     // TODO: these options are lower level -> should be encapsulated! maybe through hessian approx option.
@@ -2223,9 +2226,6 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     }
 {%- endif %}
 {%- endif %}{# solver_options.integrator_type != "DISCRETE" #}
-
-    double nlp_solver_step_length = {{ solver_options.nlp_solver_step_length }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "step_length", &nlp_solver_step_length);
 
     {%- if solver_options.nlp_solver_warm_start_first_qp %}
     int nlp_solver_warm_start_first_qp = {{ solver_options.nlp_solver_warm_start_first_qp }};

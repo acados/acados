@@ -112,8 +112,8 @@ ocp.solver_options.nlp_solver_max_iter = 500
 ocp.solver_options.tf = Tf
 
 ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
-ocp_solver.options_set("line_search_use_sufficient_descent", 0)
-ocp_solver.options_set("full_step_dual", 1)
+ocp_solver.options_set("globalization_line_search_use_sufficient_descent", 0)
+ocp_solver.options_set("globalization_full_step_dual", 1)
 
 simX = np.zeros((N+1, nx))
 simU = np.zeros((N, nu))
