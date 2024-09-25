@@ -313,7 +313,7 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_,
         mem->stat[i] = 0.0;
     }
 
-    mem->status = ACADOS_READY;
+    mem->nlp_mem->status = ACADOS_READY;
     mem->is_first_call = true;
 
     assert((char *) raw_memory+ocp_nlp_sqp_rti_memory_calculate_size(
@@ -376,11 +376,11 @@ static void ocp_nlp_sqp_rti_cast_workspace(
     if (opts->ext_qp_res)
     {
         // qp res
-        work->qp_res = ocp_qp_res_assign(dims->qp_solver->orig_dims, c_ptr);
+        work->nlp_work->qp_res = ocp_qp_res_assign(dims->qp_solver->orig_dims, c_ptr);
         c_ptr += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
 
         // qp res ws
-        work->qp_res_ws = ocp_qp_res_workspace_assign(
+        work->nlp_work->qp_res_ws = ocp_qp_res_workspace_assign(
             dims->qp_solver->orig_dims, c_ptr);
         c_ptr += ocp_qp_res_workspace_calculate_size(
             dims->qp_solver->orig_dims);
@@ -402,7 +402,7 @@ static void reset_stats_and_sub_timers(ocp_nlp_sqp_rti_memory *mem)
     mem->time_qp_solver_call = 0.0;
     mem->time_qp_xcond = 0.0;
     mem->time_glob = 0.0;
-    mem->sqp_iter = 0;
+    mem->nlp_mem->iter = 0;
 }
 
 
@@ -411,15 +411,15 @@ static void rti_store_residuals_in_stats(ocp_nlp_sqp_rti_opts *opts, ocp_nlp_sqp
 {
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
     ocp_nlp_res *nlp_res = nlp_mem->nlp_res;
-    if (mem->sqp_iter < mem->stat_m)
+    if (nlp_mem->iter < mem->stat_m)
     {
         int m_offset = 2 + 4 * opts->ext_qp_res;
         // printf("storing residuals AS RTI, m_offset %d\n", m_offset);
         // printf("%e\t%e\t%e\t%e\n", nlp_res->inf_norm_res_stat, nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_comp);
-        mem->stat[mem->stat_n * mem->sqp_iter+0+m_offset] = nlp_res->inf_norm_res_stat;
-        mem->stat[mem->stat_n * mem->sqp_iter+1+m_offset] = nlp_res->inf_norm_res_eq;
-        mem->stat[mem->stat_n * mem->sqp_iter+2+m_offset] = nlp_res->inf_norm_res_ineq;
-        mem->stat[mem->stat_n * mem->sqp_iter+3+m_offset] = nlp_res->inf_norm_res_comp;
+        mem->stat[mem->stat_n * nlp_mem->iter+0+m_offset] = nlp_res->inf_norm_res_stat;
+        mem->stat[mem->stat_n * nlp_mem->iter+1+m_offset] = nlp_res->inf_norm_res_eq;
+        mem->stat[mem->stat_n * nlp_mem->iter+2+m_offset] = nlp_res->inf_norm_res_ineq;
+        mem->stat[mem->stat_n * nlp_mem->iter+3+m_offset] = nlp_res->inf_norm_res_comp;
     }
     // printf("storting residuals in line %d\n", mem->sqp_iter);
 }
@@ -555,8 +555,9 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
 
     int qp_iter = 0;
-    int qp_status, line_search_status;
+    int qp_status;
     double tmp_time;
+    int globalization_status = 1;
 
     // update QP rhs for SQP (step prim var, abs dual var)
     acados_tic(&timer1);
@@ -569,7 +570,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
         ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem);
         rti_store_residuals_in_stats(opts, mem);
     }
-    mem->sqp_iter += 1;
+    nlp_mem->iter += 1;
 
     // regularization
     acados_tic(&timer1);
@@ -647,8 +648,8 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     }
 
     // save statistics
-    mem->stat[mem->stat_n * mem->sqp_iter+0] = qp_status;
-    mem->stat[mem->stat_n * mem->sqp_iter+1] = qp_iter;
+    mem->stat[mem->stat_n * nlp_mem->iter+0] = qp_status;
+    mem->stat[mem->stat_n * nlp_mem->iter+1] = qp_iter;
 
     if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
     {
@@ -661,25 +662,21 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
             printf("\n Failed to solve the following QP:\n");
             print_ocp_qp_in(nlp_mem->qp_in);
         }
-        mem->status = ACADOS_QP_FAILURE;
+        mem->nlp_mem->status = ACADOS_QP_FAILURE;
         return;
     }
 
-    double alpha;
-    // globalization
-    acados_tic(&timer1);
-    // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-    line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, &alpha);
-    mem->time_glob += acados_toc(&timer1);
-    if (line_search_status == ACADOS_NAN_DETECTED)
+    // Update variables
+    double step_size;
+    globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts, &step_size);
+    if (globalization_status != 1)
     {
-        mem->status = line_search_status;
-        return;
+        if (nlp_opts->print_level > 1)
+        {
+            printf("\n Failure in step update!\n");
+        }
     }
-
-    // update variables
-    ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
-    mem->status = ACADOS_SUCCESS;
+    mem->nlp_mem->status = ACADOS_SUCCESS;
 
     if (opts->rti_log_residuals)
     {
@@ -779,7 +776,6 @@ static void level_c_prepare_residual_computation(ocp_nlp_config *config,
     int *nu = dims->nu;
     // int *ni = dims->ni;
 
-
     // evaluate constraint adjoint
     for (int i=0; i <= N; i++)
     {
@@ -848,8 +844,10 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
 
     // printf("AS_RTI preparation\n");
     qp_info *qp_info_;
-    int qp_iter, qp_status, line_search_status;
-    double alpha, tmp_time;
+    int qp_iter, qp_status, globalization_status;
+    double tmp_time;
+    // alpha = 1.0;
+    globalization_status = 1;
 
     // prepare submodules
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
@@ -888,7 +886,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem);
             rti_store_residuals_in_stats(opts, mem);
         }
-        mem->sqp_iter += 1;
+        nlp_mem->iter += 1;
 
         // regularization rhs
         acados_tic(&timer1);
@@ -910,8 +908,8 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         // save statistics
         ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
         qp_iter = qp_info_->num_iter;
-        mem->stat[mem->stat_n * mem->sqp_iter+0] = qp_status;
-        mem->stat[mem->stat_n * mem->sqp_iter+1] = qp_iter;
+        mem->stat[mem->stat_n * nlp_mem->iter+0] = qp_status;
+        mem->stat[mem->stat_n * nlp_mem->iter+1] = qp_iter;
 
         // compute correct dual solution in case of Hessian regularization
         acados_tic(&timer1);
@@ -927,24 +925,21 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             print_ocp_qp_out(nlp_mem->qp_out);
         }
 
-        // globalization
-        acados_tic(&timer1);
-        // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-        line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, &alpha);
-        mem->time_glob += acados_toc(&timer1);
-        if (line_search_status == ACADOS_NAN_DETECTED)
-        {
-            mem->status = line_search_status;
-            return;
-        }
-
         // update variables
-        ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
+        double step_size;
+        globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_out, &step_size);
+        if (globalization_status != 1)
+        {
+            if (nlp_opts->print_level > 1)
+            {
+                printf("\n Failure in step update!\n");
+            }
+        }
     }
     else if (opts->as_rti_level == LEVEL_B && !mem->is_first_call)
     {
         // perform zero-order iterations
-        for (; mem->sqp_iter < opts->as_rti_iter; mem->sqp_iter++)
+        for (; nlp_mem->iter < opts->as_rti_iter; nlp_mem->iter++)
         {
             acados_tic(&timer1);
             // zero order QP update
@@ -982,8 +977,8 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             qp_iter = qp_info_->num_iter;
 
             // save statistics
-            mem->stat[mem->stat_n * mem->sqp_iter+0] = qp_status;
-            mem->stat[mem->stat_n * mem->sqp_iter+1] = qp_iter;
+            mem->stat[mem->stat_n * nlp_mem->iter+0] = qp_status;
+            mem->stat[mem->stat_n * nlp_mem->iter+1] = qp_iter;
 
             // compute correct dual solution in case of Hessian regularization
             acados_tic(&timer1);
@@ -996,36 +991,33 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
                 printf("\nSQP_RTI: QP solver returned error status %d QP iteration %d.\n",
                     qp_status, qp_iter);
 #endif
-                mem->status = ACADOS_QP_FAILURE;
+                nlp_mem->status = ACADOS_QP_FAILURE;
                 return;
             }
 
             if (nlp_opts->print_level > 0) {
-                printf("\n------- qp_in B-iter %d --------\n", mem->sqp_iter);
+                printf("\n------- qp_in B-iter %d --------\n", nlp_mem->iter);
                 print_ocp_qp_in(nlp_mem->qp_in);
-                printf("\n------- qp_out B-iter %d --------\n", mem->sqp_iter);
+                printf("\n------- qp_out B-iter %d --------\n", nlp_mem->iter);
                 print_ocp_qp_out(nlp_mem->qp_out);
             }
 
-            // globalization
-            acados_tic(&timer1);
-            // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-            line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, &alpha);
-            mem->time_glob += acados_toc(&timer1);
-            if (line_search_status == ACADOS_NAN_DETECTED)
-            {
-                mem->status = line_search_status;
-                return;
-            }
-
             // update variables
-            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
+            double step_size;
+            globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_out, &step_size);
+            if (globalization_status != 1)
+            {
+                if (nlp_opts->print_level > 1)
+                {
+                    printf("\n Failure in step update!\n");
+                }
+            }
         }
     }
     else if (opts->as_rti_level == LEVEL_C && !mem->is_first_call)
     {
         // perform iterations
-        for (; mem->sqp_iter < opts->as_rti_iter; mem->sqp_iter++)
+        for (; nlp_mem->iter < opts->as_rti_iter; nlp_mem->iter++)
         {
             // double norm, tmp_norm = 0.0;
             acados_tic(&timer1);
@@ -1065,8 +1057,8 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             qp_iter = qp_info_->num_iter;
 
             // save statistics
-            mem->stat[mem->stat_n * mem->sqp_iter+0] = qp_status;
-            mem->stat[mem->stat_n * mem->sqp_iter+1] = qp_iter;
+            mem->stat[mem->stat_n * nlp_mem->iter+0] = qp_status;
+            mem->stat[mem->stat_n * nlp_mem->iter+1] = qp_iter;
 
             // compute correct dual solution in case of Hessian regularization
             acados_tic(&timer1);
@@ -1079,31 +1071,27 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
                 printf("\nSQP_RTI: QP solver returned error status %d QP iteration %d.\n",
                     qp_status, qp_iter);
 #endif
-                mem->status = ACADOS_QP_FAILURE;
+                nlp_mem->status = ACADOS_QP_FAILURE;
                 return;
             }
 
             if (nlp_opts->print_level > 0) {
-                printf("\n------- qp_in B-iter %d --------\n", mem->sqp_iter);
+                printf("\n------- qp_in B-iter %d --------\n", nlp_mem->iter);
                 print_ocp_qp_in(nlp_mem->qp_in);
-                printf("\n------- qp_out B-iter %d --------\n", mem->sqp_iter);
+                printf("\n------- qp_out B-iter %d --------\n", nlp_mem->iter);
                 print_ocp_qp_out(nlp_mem->qp_out);
             }
 
-            // globalization
-            acados_tic(&timer1);
-            // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-            line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, &alpha);
-            mem->time_glob += acados_toc(&timer1);
-            if (line_search_status == ACADOS_NAN_DETECTED)
-            {
-                mem->status = line_search_status;
-                return;
-            }
-
             // update variables
-            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
-
+            double step_size;
+            globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_out, &step_size);
+            if (globalization_status != 1)
+            {
+                if (nlp_opts->print_level > 1)
+                {
+                    printf("\n Failure in step update!\n");
+                }
+            }
             // norm = 0.0;
             // for (int kk = 0; kk < dims->N; kk++)
             // {
@@ -1116,7 +1104,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
     else if (opts->as_rti_level == LEVEL_D)
     {
         // perform k full SQP iterations
-        for (; mem->sqp_iter < opts->as_rti_iter; mem->sqp_iter++)
+        for (; nlp_mem->iter < opts->as_rti_iter; nlp_mem->iter++)
         {
             acados_tic(&timer1);
             // linearize NLP
@@ -1156,8 +1144,8 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             qp_iter = qp_info_->num_iter;
 
             // save statistics
-            mem->stat[mem->stat_n * mem->sqp_iter+0] = qp_status;
-            mem->stat[mem->stat_n * mem->sqp_iter+1] = qp_iter;
+            mem->stat[mem->stat_n * nlp_mem->iter+0] = qp_status;
+            mem->stat[mem->stat_n * nlp_mem->iter+1] = qp_iter;
 
             // compute correct dual solution in case of Hessian regularization
             acados_tic(&timer1);
@@ -1170,23 +1158,20 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
                 printf("\nSQP_RTI: QP solver returned error status %d QP iteration %d.\n",
                     qp_status, qp_iter);
 #endif
-                mem->status = ACADOS_QP_FAILURE;
-                return;
-            }
-
-            // globalization
-            acados_tic(&timer1);
-            // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-            line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, &alpha);
-            mem->time_glob += acados_toc(&timer1);
-            if (line_search_status == ACADOS_NAN_DETECTED)
-            {
-                mem->status = line_search_status;
+                mem->nlp_mem->status = ACADOS_QP_FAILURE;
                 return;
             }
 
             // update variables
-            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
+            double step_size;
+            globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_out, &step_size);
+            if (globalization_status != 1)
+            {
+                if (nlp_opts->print_level > 1)
+                {
+                    printf("\n Failure in step update!\n");
+                }
+            }
         }
     }
 
@@ -1276,7 +1261,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     }
     mem->time_tot = acados_toc(&timer);
 
-    return mem->status;
+    return mem->nlp_mem->status;
 
 }
 
@@ -1380,12 +1365,12 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
     if (!strcmp("sqp_iter", field) || !strcmp("nlp_iter", field))
     {
         int *value = return_value_;
-        *value = mem->sqp_iter;
+        *value = mem->nlp_mem->iter;
     }
     else if (!strcmp("status", field))
     {
         int *value = return_value_;
-        *value = mem->status;
+        *value = mem->nlp_mem->status;
     }
     else if (!strcmp("time_tot", field) || !strcmp("tot_time", field))
     {
@@ -1457,7 +1442,7 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
     }
     else if (!strcmp("statistics", field))
     {
-        int n_row = mem->stat_m<mem->sqp_iter+1 ? mem->stat_m : mem->sqp_iter+1;
+        int n_row = mem->stat_m<mem->nlp_mem->iter+1 ? mem->stat_m : mem->nlp_mem->iter+1;
         double *value = return_value_;
         for (int ii=0; ii<n_row; ii++)
         {
@@ -1626,6 +1611,7 @@ void ocp_nlp_sqp_rti_config_initialize_default(void *config_)
     config->opts_get = &ocp_nlp_sqp_rti_opts_get;
     config->work_get = &ocp_nlp_sqp_rti_work_get;
     config->terminate = &ocp_nlp_sqp_rti_terminate;
+    config->step_update = &ocp_nlp_update_variables_sqp;
 
     return;
 }

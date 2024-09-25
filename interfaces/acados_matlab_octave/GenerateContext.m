@@ -82,9 +82,11 @@ classdef GenerateContext < handle
                 obj = obj.add_function(name, output_dir, fun);
             else
                 check_casadi_version_supports_p_global();
+
+                outputs = cse(outputs);
+
                 % This introduces novel symbols into the graph (extracted1, extracted2,...)
                 [outputs_ret, symbols, param] = extract_parametric(outputs, obj.p_global);
-                symbols = symbols.primitives();
 
                 pools = {};
                 for i = 1:numel(symbols)
@@ -94,7 +96,7 @@ classdef GenerateContext < handle
                 end
 
                 outputs_ret = substitute(outputs_ret, symbols, pools);
-                obj.p_global_expressions = [obj.p_global_expressions, param.primitives()];
+                obj.p_global_expressions = [obj.p_global_expressions, param];
 
                 fun_mod = Function(name, inputs, outputs_ret, obj.casadi_fun_opts);
                 obj = obj.add_function(name, output_dir, fun_mod);
@@ -160,7 +162,8 @@ function check_casadi_version_supports_p_global()
         % Check if the required functions exist in CasADi
         extract_parametric(dummy, dummy);  % Check if extract_parametric exists
         cse(dummy); % Check if cse exists
+        blazing_spline('blazing_spline', {[1, 2, 3], [1, 2, 3]})
     catch
-        error('CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se');
+        error('CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se2 release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se2');
     end
 end

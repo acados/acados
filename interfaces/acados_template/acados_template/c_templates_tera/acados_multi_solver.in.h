@@ -127,7 +127,9 @@ typedef struct {{ name }}_solver_capsule
 {% if cost[jj].cost_type == "NONLINEAR_LS" %}
     external_function_external_param_casadi *cost_y_fun_{{ jj }};
     external_function_external_param_casadi *cost_y_fun_jac_ut_xt_{{ jj }};
+{%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi *cost_y_hess_{{ jj }};
+{%- endif %}
 {% elif cost[jj].cost_type == "CONVEX_OVER_NONLINEAR" %}
     external_function_external_param_casadi *conl_cost_fun_{{ jj }};
     external_function_external_param_casadi *conl_cost_fun_jac_hess_{{ jj }};
@@ -145,7 +147,9 @@ typedef struct {{ name }}_solver_capsule
 {% if cost_0.cost_type_0 == "NONLINEAR_LS" %}
     external_function_external_param_casadi cost_y_0_fun;
     external_function_external_param_casadi cost_y_0_fun_jac_ut_xt;
+    {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi cost_y_0_hess;
+    {%- endif %}
 {% elif cost_0.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
     external_function_external_param_casadi conl_cost_0_fun;
     external_function_external_param_casadi conl_cost_0_fun_jac_hess;
@@ -173,7 +177,9 @@ typedef struct {{ name }}_solver_capsule
 {% if cost_e.cost_type_e == "NONLINEAR_LS" %}
     external_function_external_param_casadi cost_y_e_fun;
     external_function_external_param_casadi cost_y_e_fun_jac_ut_xt;
+    {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi cost_y_e_hess;
+    {%- endif %}
 {% elif cost_e.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
     external_function_external_param_casadi conl_cost_e_fun;
     external_function_external_param_casadi conl_cost_e_fun_jac_hess;

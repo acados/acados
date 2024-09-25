@@ -36,11 +36,16 @@ from utils import plot_pendulum
 from casadi import MX, vertcat, sin, cos
 import casadi as ca
 
+# NOTE: This example requires CasADi version nightly-se2 or later,
+# as well as an installation of simde.
+# Furthermore, this example requires additional flags for the CasADi code generation,
+# cf. the solver option ext_fun_compile_flags
+
 PLOT = False
 
 knots = [[0,0,0,0,0.2,0.5,0.8,1,1,1,1],[0,0,0,0.1,0.5,0.9,1,1,1]]
 np.random.seed(1)
-data = np.random.random((7,6,2)).ravel(order='F')
+data = np.random.random((7,5)).ravel(order='F')
 
 def create_p_global(lut=True):
     m = MX.sym("m")
@@ -60,7 +65,7 @@ def create_p_global(lut=True):
     return p_global, m, l, C, p_global_values
 
 
-def export_pendulum_ode_model(p_global, m, l, C, lut=True) -> AcadosModel:
+def export_pendulum_ode_model(p_global, m, l, C, lut=True, blazing=True) -> AcadosModel:
     model_name = 'pendulum'
 
     # constants
@@ -98,8 +103,15 @@ def export_pendulum_ode_model(p_global, m, l, C, lut=True) -> AcadosModel:
     if lut:
         x_in = ca.vertcat(u/100+0.5,theta/np.pi+0.5)
 
-        # Disturb the dynamics by a sprinkle of bspline
-        f_expl[2:4] += 0.01*ca.bspline(x_in,C,knots,[3,2],2)
+        if blazing:
+            # Disturb the dynamics by a sprinkle of bspline
+            # NOTE: blazing_spline requires an installation of simde as well as
+            # additional flags for the CasADi code generation, cf. the solver
+            # option ext_fun_compile_flags
+            spline_fun = ca.blazing_spline('blazing_spline', knots)
+            f_expl[3] += 0.01*spline_fun(x_in, C)
+        else:
+            f_expl[3] += 0.01*ca.bspline(x_in, C, knots, [3, 3], 1)
 
     f_impl = xdot - f_expl
 
@@ -123,13 +135,13 @@ def export_pendulum_ode_model(p_global, m, l, C, lut=True) -> AcadosModel:
     return model
 
 
-def create_ocp_formulation_without_opts(p_global, m, l, C, lut=True, use_p_global=True) -> AcadosOcp:
+def create_ocp_formulation_without_opts(p_global, m, l, C, lut=True, use_p_global=True, blazing=True) -> AcadosOcp:
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
     # set model
-    model = export_pendulum_ode_model(p_global, m, l, C, lut=lut)
+    model = export_pendulum_ode_model(p_global, m, l, C, lut=lut, blazing=blazing)
     model.p_global = p_global
     ocp.model = model
 
@@ -178,13 +190,13 @@ def create_ocp_formulation_without_opts(p_global, m, l, C, lut=True, use_p_globa
     return ocp
 
 
-def main(use_cython=False, lut=True, use_p_global=True):
+def main(use_cython=False, lut=True, use_p_global=True, blazing=True):
 
-    print(f"\n\nRunning example with lut={lut}, use_p_global={use_p_global}")
+    print(f"\n\nRunning example with lut={lut}, use_p_global={use_p_global}, {blazing=}")
     p_global, m, l, C, p_global_values = create_p_global(lut=lut)
 
     # create ocp
-    ocp = create_ocp_formulation_without_opts(p_global, m, l, C, lut=lut, use_p_global=use_p_global)
+    ocp = create_ocp_formulation_without_opts(p_global, m, l, C, lut=lut, use_p_global=use_p_global, blazing=blazing)
 
     if not use_p_global:
         ocp.parameter_values = np.concatenate([ocp.parameter_values, p_global_values])
@@ -199,6 +211,11 @@ def main(use_cython=False, lut=True, use_p_global=True):
     ocp.solver_options.print_level = 0
     ocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP_RTI, SQP
 
+    if lut and blazing:
+    # if lut:
+        # NOTE: these additional flags are required for code generation of CasADi functions using ca.blazing_spline
+        ocp.solver_options.ext_fun_compile_flags = '-I' + ca.GlobalOptions.getCasadiIncludePath() + ' -ffast-math -march=native'
+
     # set prediction horizon
     ocp.solver_options.tf = Tf
     ocp.solver_options.N_horizon = N_horizon
@@ -212,7 +229,7 @@ def main(use_cython=False, lut=True, use_p_global=True):
         AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
         ocp_solver = AcadosOcpSolver.create_cython_solver(solver_json)
     else:
-        ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)
+        ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json, generate=True, build=True)
 
     # call SQP_RTI solver in the loop:
     residuals = []
@@ -262,6 +279,10 @@ def main_mocp(lut=True, use_p_global=True):
     mocp.solver_options.print_level = 0
     mocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP_RTI, SQP
 
+    if lut:
+        # NOTE: these additional flags are required for code generation of CasADi functions using ca.blazing_spline
+        mocp.solver_options.ext_fun_compile_flags = '-I' + ca.GlobalOptions.getCasadiIncludePath() + ' -ffast-math -march=native'
+
     # set prediction horizon
     mocp.solver_options.tf = Tf
     mocp.solver_options.N_horizon = N_horizon
@@ -269,7 +290,7 @@ def main_mocp(lut=True, use_p_global=True):
     # create ocp solver
     print(f"Creating ocp solver with p_global = {mocp.model[0].p_global}, p_phase_1 = {mocp.model[0].p}, p_phase_2 = {mocp.model[1].p}")
 
-    ocp_solver = AcadosOcpSolver(mocp)
+    ocp_solver = AcadosOcpSolver(mocp, generate=True, build=True)
 
     # call SQP_RTI solver in the loop:
     residuals = []
@@ -286,6 +307,7 @@ def main_mocp(lut=True, use_p_global=True):
 
 
 if __name__ == "__main__":
+
     ref_nolut = main(use_cython=False, use_p_global=False, lut=False)
     res_nolut = main(use_cython=False, use_p_global=True, lut=False)
     np.testing.assert_almost_equal(ref_nolut, res_nolut)
@@ -297,7 +319,10 @@ if __name__ == "__main__":
 
     ref_lut = main(use_cython=False, use_p_global=False, lut=True)
     res_lut = main(use_cython=False, use_p_global=True, lut=True)
+    res_lut_no_blazing = main(use_cython=False, use_p_global=True, lut=True, blazing=False)
     np.testing.assert_almost_equal(ref_lut, res_lut)
+    np.testing.assert_almost_equal(ref_lut, res_lut_no_blazing)
+
     res_mocp_lut_p = main_mocp(use_p_global=False, lut=True)
     res_mocp_lut_p_global = main_mocp(use_p_global=True, lut=True)
     np.testing.assert_almost_equal(ref_lut, res_mocp_lut_p)
@@ -307,4 +332,4 @@ if __name__ == "__main__":
     with np.testing.assert_raises(Exception):
         np.testing.assert_almost_equal(ref_lut, ref_nolut)
 
-    # main(use_cython=True)
+    # main(use_cython=True) TODO: fix cython

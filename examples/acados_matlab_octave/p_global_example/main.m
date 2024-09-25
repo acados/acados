@@ -28,6 +28,11 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 
 
+% NOTE: This example requires CasADi version nightly-se2 or later,
+% as well as an installation of simde.
+% Furthermore, this example requires additional flags for the CasADi code generation,
+% cf. the solver option `ext_fun_compile_flags`
+
 function main()
 
     import casadi.*
@@ -172,7 +177,7 @@ function [p_global, m, l, C, p_global_values] = create_p_global(lut)
     p_global_values = [0.1; 0.8];
 
     if lut
-        data = rand(7, 6, 2); % Example data, replace with actual data
+        data = rand(7, 5); % Example data, replace with actual data
         C = MX.sym('C', numel(data), 1);
         p_global{end+1} = C;
         p_global_values = [p_global_values; data(:)];

@@ -80,12 +80,13 @@ classdef AcadosOcpOptions < handle
         exact_hess_constr
         fixed_hess
         ext_cost_num_hess
-        alpha_min
-        alpha_reduction
-        line_search_use_sufficient_descent
+        globalization_fixed_step_length
+        globalization_alpha_min
+        globalization_alpha_reduction
+        globalization_line_search_use_sufficient_descent
         globalization_use_SOC
-        full_step_dual
-        eps_sufficient_descent
+        globalization_full_step_dual
+        globalization_eps_sufficient_descent
         hpipm_mode
         with_solution_sens_wrt_params
         with_value_sens_wrt_params
@@ -117,7 +118,8 @@ classdef AcadosOcpOptions < handle
             obj.tf = [];
             obj.N_horizon = [];
             obj.nlp_solver_type = 'SQP_RTI';
-            obj.nlp_solver_step_length = 1.0;
+            obj.globalization_fixed_step_length = 1.0;
+            obj.nlp_solver_step_length = [];
             obj.nlp_solver_tol_stat = 1e-6;
             obj.nlp_solver_tol_eq = 1e-6;
             obj.nlp_solver_tol_ineq = 1e-6;
@@ -158,12 +160,12 @@ classdef AcadosOcpOptions < handle
             obj.exact_hess_constr = 1;
             obj.fixed_hess = 0;
             obj.ext_cost_num_hess = 0;
-            obj.alpha_min = [];
-            obj.alpha_reduction = [];
-            obj.line_search_use_sufficient_descent = 0;
+            obj.globalization_alpha_min = [];
+            obj.globalization_alpha_reduction = [];
+            obj.globalization_line_search_use_sufficient_descent = 0;
             obj.globalization_use_SOC = 0;
-            obj.full_step_dual = [];
-            obj.eps_sufficient_descent = [];
+            obj.globalization_full_step_dual = [];
+            obj.globalization_eps_sufficient_descent = [];
             obj.hpipm_mode = 'BALANCE';
             obj.with_solution_sens_wrt_params = 0;
             obj.with_value_sens_wrt_params = 0;

@@ -65,14 +65,8 @@ typedef struct
     int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
     int qp_warm_start;   // qp_warm_start in all but the first ddp iterations
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
-    int rti_phase;       // only phase 0 at the moment
     bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
-
-    // Line search
-    double linesearch_eta;
-    double linesearch_minimum_step_size;
-    double linesearch_step_size_reduction_factor;
-
+    int rti_phase; // only phase 0 at the moment
 } ocp_nlp_ddp_opts;
 
 //
@@ -116,9 +110,6 @@ typedef struct
     int stat_m;
     int stat_n;
 
-    int status;
-    int ddp_iter;
-
     // ddp specific memory
     double *tmp_nu_times_nx;
     struct blasfeo_dmat K_mat;
@@ -159,7 +150,6 @@ acados_size_t ocp_nlp_ddp_workspace_calculate_size(void *config, void *dims, voi
 /************************************************
  * functions
  ************************************************/
-
 //
 int ocp_nlp_ddp(void *config, void *dims, void *nlp_in, void *nlp_out,
                 void *args, void *mem, void *work_);
@@ -173,10 +163,12 @@ void ocp_nlp_ddp_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_, voi
                             const char *field, void *lagr_grad_wrt_params);
 //
 void ocp_nlp_ddp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_);
-
-int ocp_nlp_ddp_backtracking_line_search(void *config, void *dims, void *nlp_in, void *nlp_out,
-                void *args, void *mem, void *work_);
-
+//
+void ocp_nlp_ddp_compute_trial_iterate(void *config_, void *dims_,
+            void *in_, void *out_, void *opts_, void *mem_,
+            void *work_, void *out_destination_, void *solver_mem,
+            double alpha, bool full_step_dual);
+//
 double ocp_nlp_ddp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
                 ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem);
 

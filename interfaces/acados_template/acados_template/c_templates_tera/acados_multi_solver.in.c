@@ -171,6 +171,7 @@ void {{ name }}_acados_create_set_plan(ocp_nlp_plan_t* nlp_solver_plan, const in
 
     nlp_solver_plan->ocp_qp_solver_plan.qp_solver = {{ solver_options.qp_solver }};
     nlp_solver_plan->regularization = {{ solver_options.regularize_method }};
+    nlp_solver_plan->globalization = {{ solver_options.globalization }};
 
     nlp_solver_plan->nlp_cost[0] = {{ cost[0].cost_type_0 }};
     nlp_solver_plan->nlp_constraints[0] = {{ constraints[0].constr_type_0 }};
@@ -461,7 +462,9 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
     // nonlinear least squares function
     MAP_CASADI_FNC(cost_y_0_fun, {{ model[0].name }}_cost_y_0_fun);
     MAP_CASADI_FNC(cost_y_0_fun_jac_ut_xt, {{ model[0].name }}_cost_y_0_fun_jac_ut_xt);
+    {%- if solver_options.hessian_approx == "EXACT" %}
     MAP_CASADI_FNC(cost_y_0_hess, {{ model[0].name }}_cost_y_0_hess);
+    {%- endif %}
 
 {%- elif cost[0].cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
     // convex-over-nonlinear cost
@@ -684,11 +687,14 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
         MAP_CASADI_FNC(cost_y_fun_jac_ut_xt_{{ jj }}[i], {{ model[jj].name }}_cost_y_fun_jac_ut_xt);
     }
 
+    {%- if solver_options.hessian_approx == "EXACT" %}
     capsule->cost_y_hess_{{ jj }} = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*n_cost_path);
     for (int i = 0; i < n_cost_path; i++)
     {
         MAP_CASADI_FNC(cost_y_hess_{{ jj }}[i], {{ model[jj].name }}_cost_y_hess);
     }
+    {%- endif %}
+
 
 {%- elif cost[jj].cost_type == "CONVEX_OVER_NONLINEAR" %}
     // convex-over-nonlinear cost
@@ -760,8 +766,9 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
     // nonlinear least square function
     MAP_CASADI_FNC(cost_y_e_fun, {{ model_e.name }}_cost_y_e_fun);
     MAP_CASADI_FNC(cost_y_e_fun_jac_ut_xt, {{ model_e.name }}_cost_y_e_fun_jac_ut_xt);
+    {%- if solver_options.hessian_approx == "EXACT" %}
     MAP_CASADI_FNC(cost_y_e_hess, {{ model_e.name }}_cost_y_e_hess);
-
+    {%- endif %}
 {%- elif cost_e.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
     // convex-over-nonlinear cost
     MAP_CASADI_FNC(conl_cost_e_fun, {{ model_e.name }}_conl_cost_e_fun);
@@ -938,7 +945,9 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, i
 {%- if cost[0].cost_type_0 == "NONLINEAR_LS" %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun", &capsule->cost_y_0_fun);
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun_jac", &capsule->cost_y_0_fun_jac_ut_xt);
+    {%- if solver_options.hessian_approx == "EXACT" %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "nls_y_hess", &capsule->cost_y_0_hess);
+    {%- endif %}
 {%- elif cost[0].cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun", &capsule->conl_cost_0_fun);
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun_jac_hess", &capsule->conl_cost_0_fun_jac_hess);
@@ -1268,7 +1277,9 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, i
 
         ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun", &capsule->cost_y_fun_{{ jj }}[i_fun]);
         ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun_jac", &capsule->cost_y_fun_jac_ut_xt_{{ jj }}[i_fun]);
+        {%- if solver_options.hessian_approx == "EXACT" %}
         ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, i, "nls_y_hess", &capsule->cost_y_hess_{{ jj }}[i_fun]);
+        {%- endif %}
     }
 {%- elif cost[jj].cost_type == "CONVEX_OVER_NONLINEAR" %}
     for (int i = {{ cost_start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
@@ -1802,7 +1813,9 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, i
 {%- if cost_e.cost_type_e == "NONLINEAR_LS" %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nls_y_fun", &capsule->cost_y_e_fun);
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nls_y_fun_jac", &capsule->cost_y_e_fun_jac_ut_xt);
+    {%- if solver_options.hessian_approx == "EXACT" %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nls_y_hess", &capsule->cost_y_e_hess);
+    {%- endif %}
 
 {%- elif cost_e.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "conl_cost_fun", &capsule->conl_cost_e_fun);
@@ -2101,45 +2114,46 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "fixed_hess", &fixed_hess);
 
 {%- if solver_options.globalization == "FIXED_STEP" %}
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "fixed_step");
+    double globalization_fixed_step_length = {{ solver_options.globalization_fixed_step_length }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_fixed_step_length", &globalization_fixed_step_length);
 {% else %}
-    double alpha_min = {{ solver_options.alpha_min }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "alpha_min", &alpha_min);
+    double globalization_alpha_min = {{ solver_options.globalization_alpha_min }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_alpha_min", &globalization_alpha_min);
 
-    double alpha_reduction = {{ solver_options.alpha_reduction }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "alpha_reduction", &alpha_reduction);
+    double globalization_alpha_reduction = {{ solver_options.globalization_alpha_reduction }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_alpha_reduction", &globalization_alpha_reduction);
 {%- endif -%}
 
 
 {# globalization specific options #}
 {%- if solver_options.globalization == "MERIT_BACKTRACKING" %}
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "merit_backtracking");
+    // ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "merit_backtracking");
 
-    int line_search_use_sufficient_descent = {{ solver_options.line_search_use_sufficient_descent }};
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "line_search_use_sufficient_descent", &line_search_use_sufficient_descent);
+    int globalization_line_search_use_sufficient_descent = {{ solver_options.globalization_line_search_use_sufficient_descent }};
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_line_search_use_sufficient_descent", &globalization_line_search_use_sufficient_descent);
 
     int globalization_use_SOC = {{ solver_options.globalization_use_SOC }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_use_SOC", &globalization_use_SOC);
 
-    double eps_sufficient_descent = {{ solver_options.eps_sufficient_descent }};
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "eps_sufficient_descent", &eps_sufficient_descent);
+    double globalization_eps_sufficient_descent = {{ solver_options.globalization_eps_sufficient_descent }};
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_eps_sufficient_descent", &globalization_eps_sufficient_descent);
 {%- elif solver_options.globalization == "FUNNEL_L1PEN_LINESEARCH" %}
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "funnel_l1pen_linesearch");
+    // ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "funnel_l1pen_linesearch");
 
-    double funnel_initialization_increase_factor = {{ solver_options.funnel_initialization_increase_factor }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_initialization_increase_factor", &funnel_initialization_increase_factor);
+    double globalization_funnel_init_increase_factor = {{ solver_options.globalization_funnel_init_increase_factor }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_init_increase_factor", &globalization_funnel_init_increase_factor);
 
-    double funnel_initialization_upper_bound = {{ solver_options.funnel_initialization_upper_bound }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_initialization_upper_bound", &funnel_initialization_upper_bound);
+    double globalization_funnel_init_upper_bound = {{ solver_options.globalization_funnel_init_upper_bound }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_init_upper_bound", &globalization_funnel_init_upper_bound);
 
-    double funnel_sufficient_decrease_factor = {{ solver_options.funnel_sufficient_decrease_factor }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_sufficient_decrease_factor", &funnel_sufficient_decrease_factor);
+    double globalization_funnel_sufficient_decrease_factor = {{ solver_options.globalization_funnel_sufficient_decrease_factor }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_sufficient_decrease_factor", &globalization_funnel_sufficient_decrease_factor);
 
-    double funnel_kappa = {{ solver_options.funnel_kappa }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_kappa", &funnel_kappa);
+    double globalization_funnel_kappa = {{ solver_options.globalization_funnel_kappa }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_kappa", &globalization_funnel_kappa);
 
-    double funnel_initial_penalty_parameter = {{ solver_options.funnel_initial_penalty_parameter }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_initial_penalty_parameter", &funnel_initial_penalty_parameter);
+    double globalization_funnel_initial_penalty_parameter = {{ solver_options.globalization_funnel_initial_penalty_parameter }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_initial_penalty_parameter", &globalization_funnel_initial_penalty_parameter);
 {%- endif -%}
 
     int with_solution_sens_wrt_params = {{ solver_options.with_solution_sens_wrt_params }};
@@ -2148,11 +2162,8 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
     int with_value_sens_wrt_params = {{ solver_options.with_value_sens_wrt_params }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "with_value_sens_wrt_params", &with_value_sens_wrt_params);
 
-    int full_step_dual = {{ solver_options.full_step_dual }};
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "full_step_dual", &full_step_dual);
-
-    double nlp_solver_step_length = {{ solver_options.nlp_solver_step_length }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "step_length", &nlp_solver_step_length);
+    int globalization_full_step_dual = {{ solver_options.globalization_full_step_dual }};
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_full_step_dual", &globalization_full_step_dual);
 
     {%- if solver_options.nlp_solver_warm_start_first_qp %}
     int nlp_solver_warm_start_first_qp = {{ solver_options.nlp_solver_warm_start_first_qp }};
@@ -2714,7 +2725,9 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
 {%- if cost[0].cost_type_0 == "NONLINEAR_LS" %}
     external_function_external_param_casadi_free(&capsule->cost_y_0_fun);
     external_function_external_param_casadi_free(&capsule->cost_y_0_fun_jac_ut_xt);
+    {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi_free(&capsule->cost_y_0_hess);
+    {%- endif %}
 {%- elif cost[0].cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
     external_function_external_param_casadi_free(&capsule->conl_cost_0_fun);
     external_function_external_param_casadi_free(&capsule->conl_cost_0_fun_jac_hess);
@@ -2828,11 +2841,16 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     {
         external_function_external_param_casadi_free(&capsule->cost_y_fun_{{ jj }}[i_fun]);
         external_function_external_param_casadi_free(&capsule->cost_y_fun_jac_ut_xt_{{ jj }}[i_fun]);
+        {%- if solver_options.hessian_approx == "EXACT" %}
         external_function_external_param_casadi_free(&capsule->cost_y_hess_{{ jj }}[i_fun]);
+        {%- endif %}
     }
     free(capsule->cost_y_fun_{{ jj }});
     free(capsule->cost_y_fun_jac_ut_xt_{{ jj }});
+    {%- if solver_options.hessian_approx == "EXACT" %}
     free(capsule->cost_y_hess_{{ jj }});
+    {%- endif %}
+
 {%- elif cost[jj].cost_type == "CONVEX_OVER_NONLINEAR" %}
     for (int i_fun = 0; i_fun < {{ end_idx[jj] - cost_start_idx[jj] }}; i_fun++)
     {
@@ -2896,7 +2914,9 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
 {%- if cost_e.cost_type_e == "NONLINEAR_LS" %}
     external_function_external_param_casadi_free(&capsule->cost_y_e_fun);
     external_function_external_param_casadi_free(&capsule->cost_y_e_fun_jac_ut_xt);
+    {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi_free(&capsule->cost_y_e_hess);
+    {%- endif %}
 {%- elif cost_e.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
     external_function_external_param_casadi_free(&capsule->conl_cost_e_fun);
     external_function_external_param_casadi_free(&capsule->conl_cost_e_fun_jac_hess);

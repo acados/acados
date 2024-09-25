@@ -132,9 +132,7 @@ typedef struct
     double *stat;
     int stat_m;
     int stat_n;
-    int sqp_iter;
 
-    int status;
     bool is_first_call;
 
 } ocp_nlp_sqp_rti_memory;

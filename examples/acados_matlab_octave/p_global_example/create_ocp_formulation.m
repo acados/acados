@@ -55,6 +55,8 @@ function ocp = create_ocp_formulation(p_global, m, l, C, lut, use_p_global, p_gl
 
     ocp.solver_options.tf = Tf;
     ocp.solver_options.N_horizon = N_horizon;
+    % NOTE: these additional flags are required for code generation of CasADi functions using casadi.blazing_spline
+    ocp.solver_options.ext_fun_compile_flags = ['-I' casadi.GlobalOptions.getCasadiIncludePath ' -ffast-math -march=native '];
 
     % Parameters
     ocp.parameter_values = 9.81;
@@ -101,7 +103,12 @@ function model = export_pendulum_ode_model(p_global, m, l, C, lut)
     if lut
         knots = {[0,0,0,0,0.2,0.5,0.8,1,1,1,1],[0,0,0,0.1,0.5,0.9,1,1,1]};
         x_in = vertcat(u/100 + 0.5, theta/pi + 0.5);
-        f_expl(3:4) = f_expl(3:4) + 0.01*bspline(x_in, C, knots, [3, 2], 2);
+
+        % NOTE: blazing_spline requires an installation of simde as well as
+        % additional flags for the CasADi code generation, cf. the solver
+        % option ext_fun_compile_flags
+        spline_fun = blazing_spline('blazing_spline', knots);
+        f_expl(4) = f_expl(4) + 0.01*spline_fun(x_in, C);
     end
 
     model = AcadosModel();

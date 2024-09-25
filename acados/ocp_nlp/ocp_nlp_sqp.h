@@ -69,18 +69,6 @@ typedef struct
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
     int rti_phase;       // only phase 0 at the moment
     bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
-
-    // Funnel globalization related options
-    double funnel_initialization_increase_factor; // for multiplication with initial infeasibility
-    double funnel_initialization_upper_bound; // for initialization of initial funnel width
-    double funnel_sufficient_decrease_factor; // multiplication factor for funnel suff. decrease factor
-    double funnel_kappa; // parameter for reduction of funnel
-    double funnel_fraction_switching_condition; // parameter in switching condition
-    double funnel_initial_penalty_parameter; // initial penalty parameter for penalty phase
-    double funnel_penalty_eta; // fraction in penalty update
-    double funnel_penalty_contraction; // penalty contraction factor
-    bool funnel_type_switching_condition;
-
 } ocp_nlp_sqp_opts;
 
 //
@@ -127,16 +115,7 @@ typedef struct
     int stat_m;
     int stat_n;
 
-    int status;
-    int sqp_iter;
-
     double step_norm;
-
-    double funnel_width;
-    char funnel_iter_type;
-    bool funnel_penalty_mode;
-    double l1_infeasibility;
-    double funnel_penalty_parameter;
 
 } ocp_nlp_sqp_memory;
 
@@ -156,11 +135,6 @@ void ocp_nlp_sqp_memory_reset_qp_solver(void *config_, void *dims_, void *nlp_in
 typedef struct
 {
     ocp_nlp_workspace *nlp_work;
-
-    // qp residuals
-    ocp_qp_res *qp_res;
-    ocp_qp_res_ws *qp_res_ws;
-
 } ocp_nlp_sqp_workspace;
 
 //
@@ -187,7 +161,7 @@ void ocp_nlp_sqp_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_, voi
 void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_);
 //
 double ocp_nlp_sqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-                ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem, ocp_nlp_sqp_opts *opts);
+                ocp_nlp_workspace *nlp_work);
 
 #ifdef __cplusplus
 } /* extern "C" */
