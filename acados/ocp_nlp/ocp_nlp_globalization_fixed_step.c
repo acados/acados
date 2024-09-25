@@ -90,7 +90,7 @@ void ocp_nlp_globalization_fixed_step_opts_set(void *config_, void *opts_, const
         double* step_step = (double *) value;
         if (*step_step < 0.0 || *step_step > 1.0)
         {
-            printf("\nerror: ocp_nlp_globalization_fixed_step_opts_set: invalid value for step_step field, need double in [0,1], got %f.", *step_step);
+            printf("\nerror: ocp_nlp_globalization_fixed_step_opts_set: invalid value for field fixed_step_length, need double in [0,1], got %f.", *step_step);
             exit(1);
         }
         opts->step_length = *step_step;
