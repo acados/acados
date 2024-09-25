@@ -123,7 +123,6 @@ void ocp_nlp_ddp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
     opts->eval_residual_at_max_iter = false;
-    opts->rti_phase = 0;
 
     // overwrite default submodules opts
     // qp tolerance
@@ -234,16 +233,6 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
         {
             bool* eval_residual_at_max_iter = (bool *) value;
             opts->eval_residual_at_max_iter = *eval_residual_at_max_iter;
-        }
-        else if (!strcmp(field, "rti_phase"))
-        {
-            int* rti_phase = (int *) value;
-            if (*rti_phase < 0 || *rti_phase > 0) {
-                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for rti_phase field.");
-                printf("possible values are: 0\n");
-                exit(1);
-            }
-            opts->rti_phase = *rti_phase;
         }
         else
         {
