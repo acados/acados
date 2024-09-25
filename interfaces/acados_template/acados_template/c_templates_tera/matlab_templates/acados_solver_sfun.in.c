@@ -922,8 +922,6 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     /* call solver */
   {%- if custom_update_filename == "" and not simulink_opts.inputs.rti_phase %}
-    int rti_phase = 0;
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
     int acados_status = {{ name }}_acados_solve(capsule);
     // get time
     ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) buffer);
