@@ -2245,6 +2245,24 @@ void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *
     } // else: do nothing
 }
 
+
+
+static void collect_integrator_timings(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_memory *mem)
+{
+    /* collect stage-wise timings */
+    ocp_nlp_timings *nlp_timings = mem->nlp_timings;
+    for (int ii=0; ii < dims->N; ii++)
+    {
+        double tmp_time;
+        config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->dynamics[ii], "time_sim", &tmp_time);
+        nlp_timings->time_sim += tmp_time;
+        config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->dynamics[ii], "time_sim_la", &tmp_time);
+        nlp_timings->time_sim_la += tmp_time;
+        config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->dynamics[ii], "time_sim_ad", &tmp_time);
+        nlp_timings->time_sim_ad += tmp_time;
+    }
+}
+
 void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
     ocp_nlp_workspace *work)
@@ -2324,7 +2342,19 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
         struct blasfeo_dvec *ineq_adj =
             config->constraints[i]->memory_get_adj_ptr(mem->constraints[i]);
         blasfeo_dveccp(nv[i], ineq_adj, 0, mem->ineq_adj + i, 0);
+    }
 
+    /* collect stage-wise timings */
+    ocp_nlp_timings *nlp_timings = mem->nlp_timings;
+    for (int ii=0; ii <= N; ii++)
+    {
+        double tmp_time;
+        config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim", &tmp_time);
+        nlp_timings->time_sim += tmp_time;
+        config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_la", &tmp_time);
+        nlp_timings->time_sim_la += tmp_time;
+        config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_ad", &tmp_time);
+        nlp_timings->time_sim_ad += tmp_time;
     }
 }
 

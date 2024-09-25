@@ -710,17 +710,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             timings->time_lin += acados_toc(&timer1);
 
-            // get timings from integrator
-            for (ii=0; ii<N; ii++)
-            {
-                config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim", &tmp_time);
-                timings->time_sim += tmp_time;
-                config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_la", &tmp_time);
-                timings->time_sim_la += tmp_time;
-                config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_ad", &tmp_time);
-                timings->time_sim_ad += tmp_time;
-            }
-
             // update QP rhs for DDP (step prim var, abs dual var)
             // NOTE: The ddp version of approximate does not exist!
             ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
