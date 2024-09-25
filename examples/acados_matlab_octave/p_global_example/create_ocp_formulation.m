@@ -55,6 +55,7 @@ function ocp = create_ocp_formulation(p_global, m, l, C, lut, use_p_global, p_gl
 
     ocp.solver_options.tf = Tf;
     ocp.solver_options.N_horizon = N_horizon;
+    % NOTE: these additional flags are required for code generation of CasADi functions using casadi.blazing_spline
     ocp.solver_options.ext_fun_compile_flags = ['-I' casadi.GlobalOptions.getCasadiIncludePath ' -ffast-math -march=native '];
 
     % Parameters

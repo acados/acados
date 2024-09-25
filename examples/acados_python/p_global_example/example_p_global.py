@@ -40,7 +40,7 @@ PLOT = False
 
 knots = [[0,0,0,0,0.2,0.5,0.8,1,1,1,1],[0,0,0,0.1,0.5,0.9,1,1,1]]
 np.random.seed(1)
-data = np.random.random((7,6,2)).ravel(order='F')
+data = np.random.random((7,5)).ravel(order='F')
 
 def create_p_global(lut=True):
     m = MX.sym("m")
@@ -99,8 +99,12 @@ def export_pendulum_ode_model(p_global, m, l, C, lut=True) -> AcadosModel:
         x_in = ca.vertcat(u/100+0.5,theta/np.pi+0.5)
 
         # Disturb the dynamics by a sprinkle of bspline
-        f_expl[2:4] += 0.01*ca.bspline(x_in,C,knots,[3,2],2)
-        # f_expl[2:4] += 0.01*ca.blazing_spline(x_in,C,knots,[3,2],2)
+        # NOTE: blazing_spline requires an installation of simde as well as
+        # additional flags for the CasADi code generation, cf. the solver
+        # option ext_fun_compile_flags
+
+        spline_fun = ca.blazing_spline('blazing_spline', knots)
+        f_expl[3] += 0.01*spline_fun(x_in, C)
 
     f_impl = xdot - f_expl
 
@@ -200,6 +204,10 @@ def main(use_cython=False, lut=True, use_p_global=True):
     ocp.solver_options.print_level = 0
     ocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP_RTI, SQP
 
+    if lut:
+        # NOTE: these additional flags are required for code generation of CasADi functions using ca.blazing_spline
+        ocp.solver_options.ext_fun_compile_flags = '-I' + ca.GlobalOptions.getCasadiIncludePath() + ' -ffast-math -march=native'
+
     # set prediction horizon
     ocp.solver_options.tf = Tf
     ocp.solver_options.N_horizon = N_horizon
@@ -213,7 +221,7 @@ def main(use_cython=False, lut=True, use_p_global=True):
         AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
         ocp_solver = AcadosOcpSolver.create_cython_solver(solver_json)
     else:
-        ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)
+        ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json, generate=True, build=True)
 
     # call SQP_RTI solver in the loop:
     residuals = []
@@ -270,7 +278,7 @@ def main_mocp(lut=True, use_p_global=True):
     # create ocp solver
     print(f"Creating ocp solver with p_global = {mocp.model[0].p_global}, p_phase_1 = {mocp.model[0].p}, p_phase_2 = {mocp.model[1].p}")
 
-    ocp_solver = AcadosOcpSolver(mocp)
+    ocp_solver = AcadosOcpSolver(mocp, generate=True, build=True)
 
     # call SQP_RTI solver in the loop:
     residuals = []
@@ -287,6 +295,7 @@ def main_mocp(lut=True, use_p_global=True):
 
 
 if __name__ == "__main__":
+
     ref_nolut = main(use_cython=False, use_p_global=False, lut=False)
     res_nolut = main(use_cython=False, use_p_global=True, lut=False)
     np.testing.assert_almost_equal(ref_nolut, res_nolut)
@@ -299,6 +308,7 @@ if __name__ == "__main__":
     ref_lut = main(use_cython=False, use_p_global=False, lut=True)
     res_lut = main(use_cython=False, use_p_global=True, lut=True)
     np.testing.assert_almost_equal(ref_lut, res_lut)
+
     res_mocp_lut_p = main_mocp(use_p_global=False, lut=True)
     res_mocp_lut_p_global = main_mocp(use_p_global=True, lut=True)
     np.testing.assert_almost_equal(ref_lut, res_mocp_lut_p)
