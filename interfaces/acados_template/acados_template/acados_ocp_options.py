@@ -283,20 +283,18 @@ class AcadosOcpOptions:
     @property
     def globalization_fixed_step_length(self):
         """
-        Fixed Newton step length.
+        Fixed Newton step length, used if globalization == "FIXED_STEP"
         Type: float >= 0.
         Default: 1.0.
         """
         return self.__globalization_fixed_step_length
-    
+
     @property
     def nlp_solver_step_length(self):
         """
-        Fixed Newton step length.
-        Type: float >= 0.
-        Default: 1.0.
+        This option is deprecated and has new name: globalization_fixed_step_length
         """
-        print("This option is deprecated and has new name: globalization_fixed_step_length")
+        print("The option nlp_solver_step_length is deprecated and has new name: globalization_fixed_step_length")
         return self.__globalization_fixed_step_length
 
     @property
@@ -584,7 +582,7 @@ class AcadosOcpOptions:
         NLP solver tolerance for minimal step norm. Solver terminates if
         step norm is below given value. If value is 0.0, then the solver does not
         test for the small step.
-         
+
         Type: float
         Default: None
 
@@ -605,19 +603,14 @@ class AcadosOcpOptions:
         - in case of MERIT_BACKTRACKING, value is set to 0.05.
         """
         return self.__globalization_alpha_min
-    
+
     @property
     def alpha_min(self):
-        """Minimal step size for globalization.
-
-        default: None.
-
-        If None is given:
-        - in case of FUNNEL_L1PEN_LINESEARCH, value is set to 1e-17.
-        - in case of MERIT_BACKTRACKING, value is set to 0.05.
         """
-        print("This option is deprecated and has new name: globalization_alpha_min")
-        return self.__globalization_alpha_min
+        The option alpha_min is deprecated and has new name: globalization_alpha_min
+        """
+        print("The option alpha_min is deprecated and has new name: globalization_alpha_min")
+        return self.globalization_alpha_min
 
     @property
     def reg_epsilon(self):
@@ -637,21 +630,14 @@ class AcadosOcpOptions:
         default: 0.7.
         """
         return self.__globalization_alpha_reduction
-    
+
     @property
     def alpha_reduction(self):
-        """Step size reduction factor for globalization MERIT_BACKTRACKING,
-
-        Type: float
-        Default: None.
-
-        If None is given:
-        - in case of FUNNEL_L1PEN_LINESEARCH, value is set to 0.5.
-        - in case of MERIT_BACKTRACKING, value is set to 0.7.
-        default: 0.7.
         """
-        print("This option is deprecated and has new name: globalization_alpha_reduction")
-        return self.__globalization_alpha_reduction
+        The option alpha_reduction is deprecated and has new name: globalization_alpha_reduction
+        """
+        print("The option alpha_reduction is deprecated and has new name: globalization_alpha_reduction")
+        return self.globalization_alpha_reduction
 
     @property
     def globalization_line_search_use_sufficient_descent(self):
@@ -661,16 +647,14 @@ class AcadosOcpOptions:
         default: 0.
         """
         return self.__globalization_line_search_use_sufficient_descent
-    
+
     @property
     def line_search_use_sufficient_descent(self):
         """
-        Determines if sufficient descent (Armijo) condition is used in line search.
-        Type: int; 0 or 1;
-        default: 0.
+        The option line_search_use_sufficient_descent is deprecated and has new name: globalization_line_search_use_sufficient_descent
         """
-        print("This option is deprecated and has new name: globalization_line_search_use_sufficient_descent")
-        return self.__globalization_line_search_use_sufficient_descent
+        print("The option line_search_use_sufficient_descent is deprecated and has new name: globalization_line_search_use_sufficient_descent")
+        return self.globalization_line_search_use_sufficient_descent
 
     @property
     def globalization_eps_sufficient_descent(self):
@@ -685,21 +669,14 @@ class AcadosOcpOptions:
         - in case of MERIT_BACKTRACKING, value is set to 1e-4.
         """
         return self.__globalization_eps_sufficient_descent
-    
+
     @property
     def eps_sufficient_descent(self):
         """
-        Factor for sufficient descent (Armijo) conditon, see also globalization_line_search_use_sufficient_descent.
-
-        Type: float,
-        Default: None.
-
-        If None is given:
-        - in case of FUNNEL_L1PEN_LINESEARCH, value is set to 1e-6.
-        - in case of MERIT_BACKTRACKING, value is set to 1e-4.
+        The option eps_sufficient_descent is deprecated and has new name: globalization_line_search_use_sufficient_descent
         """
-        print("This option is deprecated and has new name: globalization_line_search_use_sufficient_descent")
-        return self.__globalization_eps_sufficient_descent
+        print("The option eps_sufficient_descent is deprecated and has new name: globalization_line_search_use_sufficient_descent")
+        return self.globalization_line_search_use_sufficient_descent
 
     @property
     def globalization_use_SOC(self):
@@ -721,17 +698,14 @@ class AcadosOcpOptions:
         default else: 0.
         """
         return self.__globalization_full_step_dual
-    
+
     @property
     def full_step_dual(self):
         """
-        Determines if dual variables are updated with full steps (alpha=1.0) when primal variables are updated with smaller step.
-
-        Type: int; 0 or 1;
-        default for funnel globalization: 1
-        default else: 0.
+        The option full_step_dual is deprecated and has new name: globalization_full_step_dual
         """
-        return self.__globalization_full_step_dual
+        print("The option full_step_dual is deprecated and has new name: globalization_full_step_dual")
+        return self.globalization_full_step_dual
 
     @property
     def globalization_funnel_init_increase_factor(self):
@@ -1151,9 +1125,9 @@ class AcadosOcpOptions:
         self.__globalization_alpha_min = globalization_alpha_min
 
     @alpha_min.setter
-    def alpha_min(self, globalization_alpha_min):
+    def alpha_min(self, alpha_min):
         print("This option is deprecated and has new name: globalization_alpha_min")
-        self.__globalization_alpha_min = globalization_alpha_min
+        self.globalization_alpha_min = alpha_min
 
     @globalization_alpha_reduction.setter
     def globalization_alpha_reduction(self, globalization_alpha_reduction):
@@ -1162,7 +1136,7 @@ class AcadosOcpOptions:
     @alpha_reduction.setter
     def alpha_reduction(self, globalization_alpha_reduction):
         print("This option is deprecated and has new name: globalization_alpha_reduction")
-        self.__globalization_alpha_reduction = globalization_alpha_reduction
+        self.globalization_alpha_reduction = globalization_alpha_reduction
 
     @globalization_line_search_use_sufficient_descent.setter
     def globalization_line_search_use_sufficient_descent(self, globalization_line_search_use_sufficient_descent):
@@ -1192,14 +1166,12 @@ class AcadosOcpOptions:
             self.__globalization_full_step_dual = globalization_full_step_dual
         else:
             raise Exception(f'Invalid value for globalization_full_step_dual. Possible values are 0, 1, got {globalization_full_step_dual}')
-    
+
     @full_step_dual.setter
     def full_step_dual(self, globalization_full_step_dual):
         print("This option is deprecated and has new name: globalization_full_step_dual")
-        if globalization_full_step_dual in [0, 1]:
-            self.__globalization_full_step_dual = globalization_full_step_dual
-        else:
-            raise Exception(f'Invalid value for globalization_full_step_dual. Possible values are 0, 1, got {globalization_full_step_dual}')
+        self.globalization_full_step_dual = globalization_full_step_dual
+
 
     @globalization_funnel_init_increase_factor.setter
     def globalization_funnel_init_increase_factor(self, globalization_funnel_init_increase_factor):
@@ -1256,14 +1228,11 @@ class AcadosOcpOptions:
             self.__globalization_eps_sufficient_descent = globalization_eps_sufficient_descent
         else:
             raise Exception('Invalid globalization_eps_sufficient_descent value. globalization_eps_sufficient_descent must be a positive float.')
-        
+
     @eps_sufficient_descent.setter
     def eps_sufficient_descent(self, globalization_eps_sufficient_descent):
         print("This option is deprecated and has new name: globalization_eps_sufficient_descent")
-        if isinstance(globalization_eps_sufficient_descent, float) and globalization_eps_sufficient_descent > 0:
-            self.__globalization_eps_sufficient_descent = globalization_eps_sufficient_descent
-        else:
-            raise Exception('Invalid globalization_eps_sufficient_descent value. globalization_eps_sufficient_descent must be a positive float.')
+        self.globalization_eps_sufficient_descent = globalization_eps_sufficient_descent
 
     @sim_method_num_stages.setter
     def sim_method_num_stages(self, sim_method_num_stages):
@@ -1330,11 +1299,8 @@ class AcadosOcpOptions:
 
     @nlp_solver_step_length.setter
     def nlp_solver_step_length(self, nlp_solver_step_length):
-
-        if isinstance(nlp_solver_step_length, float) and nlp_solver_step_length >= 0.:
-            self.__nlp_solver_step_length = nlp_solver_step_length
-        else:
-            raise Exception('Invalid nlp_solver_step_length value. nlp_solver_step_length must be a positive float.')
+        print("The option nlp_solver_step_length is deprecated and has new name: globalization_fixed_step_length")
+        self.globalization_fixed_step_length = nlp_solver_step_length
 
     @nlp_solver_warm_start_first_qp.setter
     def nlp_solver_warm_start_first_qp(self, nlp_solver_warm_start_first_qp):
