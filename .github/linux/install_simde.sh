@@ -29,4 +29,4 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-apt install libsimde-dev
+sudo apt install libsimde-dev
