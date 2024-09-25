@@ -927,7 +927,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             {
                 if (nlp_opts->print_level > 1)
                 {
-                    printf("\nFailure in globalization!\n");
+                    printf("\nFailure in globalization, got status %d!\n", globalization_status);
                 }
                 mem->nlp_mem->status = ACADOS_QP_FAILURE;
                 nlp_mem->iter = ddp_iter;
