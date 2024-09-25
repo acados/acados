@@ -650,7 +650,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_res *nlp_res = nlp_mem->nlp_res;
-    ocp_nlp_timings *timings = nlp_mem->nlp_timings;
+    ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
 
     ocp_nlp_ddp_workspace *work = work_;
     ocp_nlp_workspace *nlp_work = work->nlp_work;
@@ -660,7 +660,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     // zero timers
     double tmp_time;
-    ocp_nlp_timings_reset(nlp_mem->nlp_timings);
+    ocp_nlp_timings_reset(nlp_timings);
 
     int qp_status = 0;
     int qp_iter = 0;
@@ -706,7 +706,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             }
             ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, ddp_iter);
 
-            timings->time_lin += acados_toc(&timer1);
+            nlp_timings->time_lin += acados_toc(&timer1);
 
             // update QP rhs for DDP (step prim var, abs dual var)
             // NOTE: The ddp version of approximate does not exist!
@@ -759,7 +759,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         acados_tic(&timer1);
         config->regularize->regularize(config->regularize, dims->regularize,
                                                nlp_opts->regularize, nlp_mem->regularize_mem);
-        timings->time_reg += acados_toc(&timer1);
+        nlp_timings->time_reg += acados_toc(&timer1);
 
         // Termination
         if (check_termination(ddp_iter, nlp_res, mem, opts))
@@ -769,7 +769,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             omp_set_num_threads(num_threads_bkp);
 #endif
             nlp_mem->iter = ddp_iter;
-            timings->time_tot = acados_toc(&timer0);
+            nlp_timings->time_tot = acados_toc(&timer0);
             return mem->nlp_mem->status;
         }
 
@@ -793,18 +793,18 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         acados_tic(&timer1);
         qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
                                         nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
-        timings->time_qp_sol += acados_toc(&timer1);
+        nlp_timings->time_qp_sol += acados_toc(&timer1);
 
         qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
-        timings->time_qp_solver_call += tmp_time;
+        nlp_timings->time_qp_solver_call += tmp_time;
         qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
-        timings->time_qp_xcond += tmp_time;
+        nlp_timings->time_qp_xcond += tmp_time;
 
         // compute correct dual solution in case of Hessian regularization
         acados_tic(&timer1);
         config->regularize->correct_dual_sol(config->regularize, dims->regularize,
                                              nlp_opts->regularize, nlp_mem->regularize_mem);
-        timings->time_reg += acados_toc(&timer1);
+        nlp_timings->time_reg += acados_toc(&timer1);
 
         // restore default warm start
         if (ddp_iter==0)
@@ -862,7 +862,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             mem->nlp_mem->status = ACADOS_QP_FAILURE;
             nlp_mem->iter = ddp_iter;
-            timings->time_tot = acados_toc(&timer0);
+            nlp_timings->time_tot = acados_toc(&timer0);
 
             return mem->nlp_mem->status;
         }
@@ -900,10 +900,10 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 }
                 mem->nlp_mem->status = ACADOS_QP_FAILURE;
                 nlp_mem->iter = ddp_iter;
-                timings->time_tot = acados_toc(&timer0);
+                nlp_timings->time_tot = acados_toc(&timer0);
                 return mem->nlp_mem->status;
             }
-            timings->time_glob += acados_toc(&timer1);
+            nlp_timings->time_glob += acados_toc(&timer1);
         }
     }  // end DDP loop
 
