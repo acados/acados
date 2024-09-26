@@ -42,22 +42,18 @@ namespace std
 #define STD(x) x
 #endif
 
-char* strsep_acados(char** stringp, const char* delim)
+void extract_module_name(const char *field, char *module, int *module_length)
 {
-    char* result;
-
-    if ((stringp == NULL) || (*stringp == NULL)) return NULL;
-
-    result = *stringp;
-
-    while (**stringp && !STD(strchr)(delim, **stringp)) ++*stringp;
-
-    if (**stringp)
-        *(*stringp)++ = '\0';
-    else
-        *stringp = NULL;
-
-    return result;
+    int ii;
+    // extract module name
+    char *char_ = strchr(field, '_');
+    if (char_!=NULL)
+    {
+        *module_length = char_-field;
+        for (ii=0; ii<*module_length; ii++)
+            module[ii] = field[ii];
+        module[*module_length] = '\0'; // add end of string
+    }
 }
 
 #ifdef __cplusplus

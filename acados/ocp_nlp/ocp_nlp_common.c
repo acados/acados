@@ -44,6 +44,7 @@
 // acados
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
+#include "acados/utils/strsep.h"
 // openmp
 #if defined(ACADOS_WITH_OPENMP)
 #include <omp.h>
@@ -1146,20 +1147,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
     ocp_nlp_opts *opts = (ocp_nlp_opts *) opts_;
     ocp_nlp_config *config = config_;
 
-    char module[MAX_STR_LEN];
     char *ptr_module = NULL;
     int module_length = 0;
-
-    // extract module name, i.e. substring in field before '_'
-    char *char_ = strchr(field, '_');
-    if (char_!=NULL)
-    {
-        module_length = char_-field;
-        for (int i=0; i<module_length; i++)
-            module[i] = field[i];
-        module[module_length] = '\0'; // add end of string
-        ptr_module = module;
-    }
+    char module[MAX_STR_LEN];
+    extract_module_name(field, module, &module_length);
+    ptr_module = module;
 
     // pass options to QP module
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
@@ -1317,20 +1309,11 @@ void ocp_nlp_opts_set_at_stage(void *config_, void *opts_, int stage, const char
     ocp_nlp_opts *opts = (ocp_nlp_opts *) opts_;
     ocp_nlp_config *config = config_;
 
-    char module[MAX_STR_LEN];
     char *ptr_module = NULL;
     int module_length = 0;
-
-    // extract module name
-    char *char_ = strchr(field, '_');
-    if (char_!=NULL)
-    {
-        module_length = char_-field;
-        for (int i=0; i<module_length; i++)
-            module[i] = field[i];
-        module[module_length] = '\0'; // add end of string
-        ptr_module = module;
-    }
+    char module[MAX_STR_LEN];
+    extract_module_name(field, module, &module_length);
+    ptr_module = module;
 
     // pass options to dynamics module
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "dynamics")) )
@@ -1357,7 +1340,6 @@ void ocp_nlp_opts_set_at_stage(void *config_, void *opts_, int stage, const char
     }
 
     return;
-
 }
 
 
@@ -1988,7 +1970,6 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
 /************************************************
  * functions
  ************************************************/
-// TODO: move to common and use in DDP.
 double ocp_nlp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_nlp_workspace *nlp_work)
 {
     // Compute the QP objective function value
