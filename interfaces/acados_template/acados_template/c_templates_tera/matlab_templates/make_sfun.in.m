@@ -350,6 +350,30 @@ sfun_input_names = [sfun_input_names; 'cost_W_e [{{ dims.ny_e * dims.ny_e }}]'];
 i_in = i_in + 1;
 {%- endif %}
 
+{%- if ns_total > 0 and simulink_opts.inputs.cost_zl %}  {#- cost_zl #}
+input_note = strcat(input_note, num2str(i_in), ') cost_zl for all nodes 0 to N, size [{{ ns_total }}]\n ');
+sfun_input_names = [sfun_input_names; 'cost_zl [{{ ns_total }}]'];
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if ns_total > 0 and simulink_opts.inputs.cost_zu %}  {#- cost_zu #}
+input_note = strcat(input_note, num2str(i_in), ') cost_zu for all nodes 0 to N, size [{{ ns_total }}]\n ');
+sfun_input_names = [sfun_input_names; 'cost_zu [{{ ns_total }}]'];
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if ns_total > 0 and simulink_opts.inputs.cost_Zl %}  {#- cost_Zl #}
+input_note = strcat(input_note, num2str(i_in), ') cost_Zl for all nodes 0 to N, size [{{ ns_total }}]\n ');
+sfun_input_names = [sfun_input_names; 'cost_Zl [{{ ns_total }}]'];
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if ns_total > 0 and simulink_opts.inputs.cost_Zu %}  {#- cost_Zu #}
+input_note = strcat(input_note, num2str(i_in), ') cost_Zu for all nodes 0 to N, size [{{ ns_total }}]\n ');
+sfun_input_names = [sfun_input_names; 'cost_Zu [{{ ns_total }}]'];
+i_in = i_in + 1;
+{%- endif %}
+
 {%- if simulink_opts.inputs.reset_solver %}  {#- reset_solver #}
 input_note = strcat(input_note, num2str(i_in), ') reset_solver - determines if iterate is set to all zeros before other initializations (x_init, u_init, pi_init) are set and before solver is called, size [1]\n ');
 sfun_input_names = [sfun_input_names; 'reset_solver [1]'];

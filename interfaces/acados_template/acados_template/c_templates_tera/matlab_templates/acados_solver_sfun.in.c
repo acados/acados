@@ -156,6 +156,19 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
 
+  {%- if ns_total > 0 and simulink_opts.inputs.cost_zl %}  {#- cost_zl #}
+    {%- set n_inputs = n_inputs + 1 -%}
+  {%- endif -%}
+  {%- if ns_total > 0 and simulink_opts.inputs.cost_zu %}  {#- cost_zu #}
+    {%- set n_inputs = n_inputs + 1 -%}
+  {%- endif -%}
+  {%- if ns_total > 0 and simulink_opts.inputs.cost_Zl %}  {#- cost_Zl #}
+    {%- set n_inputs = n_inputs + 1 -%}
+  {%- endif -%}
+  {%- if ns_total > 0 and simulink_opts.inputs.cost_Zu %}  {#- cost_Zu #}
+    {%- set n_inputs = n_inputs + 1 -%}
+  {%- endif -%}
+
   {%- if simulink_opts.inputs.reset_solver -%}  {#- reset_solver #}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
@@ -342,6 +355,27 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set i_input = i_input + 1 %}
     // cost_W_e
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.ny_e * dims.ny_e }});
+  {%- endif %}
+
+  {%- if ns_total > 0 and simulink_opts.inputs.cost_zl %}  {#- cost_zl #}
+    {%- set i_input = i_input + 1 %}
+    // cost_zl
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ ns_total }});
+  {%- endif %}
+  {%- if ns_total > 0 and simulink_opts.inputs.cost_zu %}  {#- cost_zu #}
+    {%- set i_input = i_input + 1 %}
+    // cost_zu
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ ns_total }});
+  {%- endif %}
+  {%- if ns_total > 0 and simulink_opts.inputs.cost_Zl %}  {#- cost_Zl #}
+    {%- set i_input = i_input + 1 %}
+    // cost_Zl
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ ns_total }});
+  {%- endif %}
+  {%- if ns_total > 0 and simulink_opts.inputs.cost_Zu %}  {#- cost_Zu #}
+    {%- set i_input = i_input + 1 %}
+    // cost_Zu
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ ns_total }});
   {%- endif %}
 
   {%- if simulink_opts.inputs.reset_solver -%}  {#- reset_solver #}
@@ -829,6 +863,64 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", buffer);
+  {%- endif %}
+
+  {%- if ns_total > 0 and simulink_opts.inputs.cost_zl %}  {#- cost_zl #}
+    // cost_zl
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    tmp_offset = 0;
+    for (int stage = 0; stage <= N; stage++)
+    {
+        tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "zl");
+        for (int i = 0; i < tmp_int; i++)
+            buffer[i] = (double)(*in_sign[tmp_offset+i]);
+        tmp_offset += tmp_int;
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, stage, "zl", buffer);
+    }
+  {%- endif %}
+  {%- if ns_total > 0 and simulink_opts.inputs.cost_zl %}  {#- cost_zu #}
+    // cost_zu
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    tmp_offset = 0;
+    for (int stage = 0; stage <= N; stage++)
+    {
+        tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "zu");
+        for (int i = 0; i < tmp_int; i++)
+            buffer[i] = (double)(*in_sign[tmp_offset+i]);
+        tmp_offset += tmp_int;
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, stage, "zu", buffer);
+    }
+  {%- endif %}
+
+  {%- if ns_total > 0 and simulink_opts.inputs.cost_Zl %}  {#- cost_Zl #}
+    // cost_Zl
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    tmp_offset = 0;
+    for (int stage = 0; stage <= N; stage++)
+    {
+        tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "Zl");
+        for (int i = 0; i < tmp_int; i++)
+            buffer[i] = (double)(*in_sign[tmp_offset+i]);
+        tmp_offset += tmp_int;
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, stage, "Zl", buffer);
+    }
+  {%- endif %}
+  {%- if ns_total > 0 and simulink_opts.inputs.cost_Zl %}  {#- cost_Zu #}
+    // cost_Zu
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    tmp_offset = 0;
+    for (int stage = 0; stage <= N; stage++)
+    {
+        tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "Zu");
+        for (int i = 0; i < tmp_int; i++)
+            buffer[i] = (double)(*in_sign[tmp_offset+i]);
+        tmp_offset += tmp_int;
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, stage, "Zu", buffer);
+    }
   {%- endif %}
 
   {%- if simulink_opts.inputs.reset_solver %}  {#- reset_solver #}
