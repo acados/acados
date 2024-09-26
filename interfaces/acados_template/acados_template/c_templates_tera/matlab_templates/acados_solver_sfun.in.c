@@ -68,6 +68,8 @@
   {{ throw(message = "simulink_opts.samplingtime must be '-1' or 't0', got val") }}
 {%- endif %}
 
+{%- set ns_total = dims.ns_0 + dims.ns_e + (solver_options.N_horizon - 1) * dims.ns %}
+
 static void mdlInitializeSizes (SimStruct *S)
 {
     // specify the number of continuous and discrete states
@@ -375,7 +377,7 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- if simulink_opts.inputs.slacks_init -%}  {#- slacks_init #}
     {%- set i_input = i_input + 1 %}
     // slacks_init
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ 2 * (dims.ns_0 + dims.ns_e + (solver_options.N_horizon - 1) * dims.ns )}});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, 2*{{ ns_total }});
   {%- endif -%}
 
 
@@ -433,7 +435,7 @@ static void mdlInitializeSizes (SimStruct *S)
 
   {%- if simulink_opts.outputs.slack_values == 1 %}
     {%- set i_output = i_output + 1 %}
-    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ 2 * (dims.ns_0 + dims.ns_e + (solver_options.N_horizon - 1) * dims.ns )}} );
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, 2*{{ ns_total }} );
   {%- endif %}
 
   {%- if simulink_opts.outputs.solver_status == 1 %}

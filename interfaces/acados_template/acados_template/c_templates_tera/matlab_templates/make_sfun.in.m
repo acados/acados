@@ -34,6 +34,10 @@
     {%- set custom_update_filename = solver_options.custom_update_filename %}
 {%- endif %}
 
+{%- set ns_total = dims.ns_0 + dims.ns_e + (solver_options.N_horizon - 1) * dims.ns %}
+{# two brackets in math expression are not allowed by currently used tera #}
+{%- set two_ns_total = 2 * ns_total %}
+
 SOURCES = { ...
         {%- if solver_options.integrator_type == 'ERK' %}
             '{{ model.name }}_model/{{ model.name }}_expl_ode_fun.c', ...
@@ -377,8 +381,8 @@ i_in = i_in + 1;
 {%- endif %}
 
 {%- if simulink_opts.inputs.slacks_init %}  {#- slacks_init #}
-input_note = strcat(input_note, num2str(i_in), ') slacks_init - initialization of slack values for all shooting nodes (0 to N), size [{{ 2 * (dims.ns_0 + dims.ns_e + (solver_options.N_horizon - 1) * dims.ns )}}]');
-sfun_input_names = [sfun_input_names; 'slacks_init [{{ 2 * (dims.ns_0 + dims.ns_e + (solver_options.N_horizon - 1) * dims.ns )}}]'];
+input_note = strcat(input_note, num2str(i_in), ') slacks_init - initialization of slack values for all shooting nodes (0 to N), size [{{ two_ns_total }}]');
+sfun_input_names = [sfun_input_names; 'slacks_init [{{ two_ns_total }}]'];
 i_in = i_in + 1;
 {%- endif %}
 
@@ -449,7 +453,7 @@ sfun_output_names = [sfun_output_names; 'pi_all [{{ dims.nx * solver_options.N_h
 {%- if simulink_opts.outputs.slack_values == 1 %}
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') slack values concatenated in order [sl_0, su_0, ..., sl_N, su_N] \n ');
-sfun_output_names = [sfun_output_names; 'slack_values [{{ 2 * (dims.ns_0 + dims.ns_e + (solver_options.N_horizon - 1) * dims.ns )}}]'];
+sfun_output_names = [sfun_output_names; 'slack_values [{{ two_ns_total }}]'];
 {%- endif %}
 
 {%- if simulink_opts.outputs.solver_status == 1 %}
