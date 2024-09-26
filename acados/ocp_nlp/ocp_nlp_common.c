@@ -1988,6 +1988,38 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
 /************************************************
  * functions
  ************************************************/
+// TODO: move to common and use in DDP.
+double ocp_nlp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_nlp_workspace *nlp_work)
+{
+    // Compute the QP objective function value
+    double qp_cost = 0.0;
+    int i, nux, ns;
+    int N = dims->N;
+    // Sum over stages 0 to N
+    for (i = 0; i <= N; i++)
+    {
+        nux = dims->nx[i] + dims->nu[i];
+        ns = dims->ns[i];
+        // Calculate 0.5 * d.T H d
+        blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0,
+                        0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
+        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
+
+        // slack QP objective value, compare to computation in cost modules;
+        // tmp_nv = 2 * z + Z .* slack;
+        blasfeo_dveccpsc(2*ns, 2.0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
+        blasfeo_dvecmulacc(2*ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
+        // qp_cost += .5 * (tmp_nv .* slack)
+        qp_cost += 0.5 * blasfeo_ddot(2*ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux);
+        // Calculate g.T d
+        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
+
+        // Calculate gradient of slacks
+        qp_cost += blasfeo_ddot(2 * ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
+    }
+    return qp_cost;
+}
+
 
 double ocp_nlp_get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_memory *nlp_mem)
 {
