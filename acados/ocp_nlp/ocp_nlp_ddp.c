@@ -54,9 +54,8 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+#include "acados/utils/strsep.h"
 #include "acados_c/ocp_qp_interface.h"
-
-
 
 /************************************************
  * options
@@ -156,22 +155,11 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
     ocp_nlp_ddp_opts *opts = (ocp_nlp_ddp_opts *) opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
 
-    int ii;
-
-    char module[MAX_STR_LEN];
     char *ptr_module = NULL;
     int module_length = 0;
-
-    // extract module name
-    char *char_ = strchr(field, '_');
-    if (char_!=NULL)
-    {
-        module_length = char_-field;
-        for (ii=0; ii<module_length; ii++)
-            module[ii] = field[ii];
-        module[module_length] = '\0'; // add end of string
-        ptr_module = module;
-    }
+    char module[MAX_STR_LEN];
+    extract_module_name(field, module, &module_length);
+    ptr_module = module;
 
     // pass options to QP module
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
@@ -839,7 +827,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Compute the optimal QP objective function value
         if (config->globalization->needs_qp_objective_value() == 1)
         {
-            nlp_mem->qp_cost_value = ocp_nlp_ddp_compute_qp_objective_value(dims, qp_in, qp_out,nlp_work, nlp_mem);
+            nlp_mem->qp_cost_value = ocp_nlp_compute_qp_objective_value(dims, qp_in, qp_out,nlp_work);
         }
 
         // Calculate step norm
@@ -881,26 +869,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         printf("Warning: The solver should never reach this part of the function!\n");
     }
     return mem->nlp_mem->status;
-}
-
-double ocp_nlp_ddp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-                ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem){
-
-    // Compute the QP objective function value
-    double qp_cost = 0.0;
-    int i, nux;
-    int N = dims->N;
-    // Sum over stages 0 to N
-    for (i = 0; i <= N; i++)
-    {
-        nux = dims->nx[i] + dims->nu[i];
-        // Calculate 0.5* d.T H d
-        blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0, 0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i], 0);
-        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i], 0);
-        // Calculate g.T d
-        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
-    }
-    return qp_cost;
 }
 
 void ocp_nlp_ddp_memory_reset_qp_solver(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
@@ -1017,20 +985,11 @@ void ocp_nlp_ddp_get(void *config_, void *dims_, void *mem_, const char *field, 
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_ddp_memory *mem = mem_;
 
-    char module[MAX_STR_LEN];
     char *ptr_module = NULL;
     int module_length = 0;
-
-    // extract module name
-    char *char_ = strchr(field, '_');
-    if (char_!=NULL)
-    {
-        module_length = char_-field;
-        for (int ii=0; ii<module_length; ii++)
-            module[ii] = field[ii];
-        module[module_length] = '\0'; // add end of string
-        ptr_module = module;
-    }
+    char module[MAX_STR_LEN];
+    extract_module_name(field, module, &module_length);
+    ptr_module = module;
 
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "time")) )
     {

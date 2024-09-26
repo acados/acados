@@ -155,9 +155,6 @@ void ocp_nlp_ddp_compute_trial_iterate(void *config_, void *dims_,
             void *in_, void *out_, void *opts_, void *mem_,
             void *work_, void *out_destination_, void *solver_mem,
             double alpha, bool full_step_dual);
-//
-double ocp_nlp_ddp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-                ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem);
 
 #ifdef __cplusplus
 } /* extern "C" */
