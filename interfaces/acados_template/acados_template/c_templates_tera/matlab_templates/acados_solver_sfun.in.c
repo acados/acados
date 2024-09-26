@@ -559,7 +559,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     {%- set buffer_size = buffer_sizes | sort | last %}
     real_t buffer[{{ buffer_size }}];
     double tmp_double;
-    int buffer_offset;
+    int tmp_offset, tmp_int;
 
     /* go through inputs */
     {%- set i_input = -1 %}
@@ -907,11 +907,11 @@ static void mdlOutputs(SimStruct *S, int_T tid)
             // update for stages
             for (int ii = {{ stage_idx_0 }}; ii < {{ stage_idx_e }}+1; ii++)
             {
-                buffer_offset = 1 + (ii - {{ stage_idx_0 }}) * {{ param_length }};
+                tmp_offset = 1 + (ii - {{ stage_idx_0 }}) * {{ param_length }};
                 // copy new parameter values to buffer
                 for (int jj = 0; jj < {{ param_length }}; jj++)
                 {
-                    buffer[jj] = (double)(*in_sign[jj + buffer_offset]);
+                    buffer[jj] = (double)(*in_sign[jj + tmp_offset]);
                 }
                 {{ name }}_acados_update_params_sparse(capsule, ii, idx, buffer, {{ param_length }});
             }
