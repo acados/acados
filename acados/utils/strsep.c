@@ -28,20 +28,18 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
+#include "acados/utils/strsep.h"
 
-#ifndef ACADOS_UTILS_STRSEP_H_
-#define ACADOS_UTILS_STRSEP_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <string.h>
-
-void extract_module_name(const char *field, char *module, int *module_length);
-
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
-
-#endif  // ACADOS_UTILS_STRSEP_H_
+void extract_module_name(const char *field, char *module, int *module_length)
+{
+    int ii;
+    // extract module name
+    char *char_ = strchr(field, '_');
+    if (char_!=NULL)
+    {
+        *module_length = char_-field;
+        for (ii=0; ii<*module_length; ii++)
+            module[ii] = field[ii];
+        module[*module_length] = '\0'; // add end of string
+    }
+}
