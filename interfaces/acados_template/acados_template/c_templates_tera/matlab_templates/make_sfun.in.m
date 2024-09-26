@@ -501,14 +501,11 @@ output_note = strcat(output_note, num2str(i_out), ') SQP iterations\n ');
 sfun_output_names = [sfun_output_names; 'sqp_iter'];
 {%- endif %}
 
-
 {%- if simulink_opts.outputs.parameter_traj == 1 %}
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') parameter trajectory\n ');
-sfun_output_names = [sfun_output_names; 'parameter_traj [{{ (solver_options.N_horizon + 1) * dims.np}}]'];
+sfun_output_names = [sfun_output_names; 'parameter_traj [{{ (solver_options.N_horizon + 1) * dims.np }}]'];
 {%- endif %}
-
-
 
 fprintf(output_note)
 
