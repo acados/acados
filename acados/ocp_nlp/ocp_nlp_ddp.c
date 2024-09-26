@@ -769,7 +769,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
         }
         // Show input to QP
-        // if (nlp_opts->print_level > ddp_iter + 1)
         if (nlp_opts->print_level > 1)
         {
             printf("\n\nDDP: ocp_qp_in at iteration %d\n", ddp_iter + 1);
@@ -784,7 +783,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &opts->qp_warm_start);
         }
 
-        // if (nlp_opts->print_level > ddp_iter + 1)
         if (nlp_opts->print_level > 1)
         {
             printf("\n\nDDP: ocp_qp_out at iteration %d\n", ddp_iter + 1);
