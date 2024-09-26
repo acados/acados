@@ -1060,6 +1060,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->print_level = 0;
     opts->levenberg_marquardt = 0.0;
     opts->log_primal_step_norm = 0;
+    opts->max_iter = 1;
 
     /* submodules opts */
     // qp solver
@@ -1252,6 +1253,19 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             int* log_primal_step_norm = (int *) value;
             opts->log_primal_step_norm = *log_primal_step_norm;
+        }
+        else if (!strcmp(field, "max_iter"))
+        {
+            int* max_iter = (int *) value;
+
+            if (*max_iter > 0 && config->is_real_time_algorithm())
+            {
+                printf("Warning: can not set max_iter > 1 for real-time solvers.");
+            }
+            else
+            {
+                opts->max_iter = *max_iter;
+            }
         }
         else if (!strcmp(field, "print_level"))
         {
