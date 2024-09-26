@@ -1517,8 +1517,11 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     c_ptr += (N+1)*sizeof(void *);
 
     // intermediate iterates
-    mem->iterates = (struct ocp_nlp_out **) c_ptr;
-    c_ptr += (opts->max_iter + 1)*sizeof(struct ocp_nlp_out *);
+    if (opts->store_iterates)
+    {
+        mem->iterates = (struct ocp_nlp_out **) c_ptr;
+        c_ptr += (opts->max_iter + 1)*sizeof(struct ocp_nlp_out *);
+    }
 
     // middle align
     align_char_to(8, &c_ptr);
