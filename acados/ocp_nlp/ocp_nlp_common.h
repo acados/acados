@@ -485,7 +485,7 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
     ocp_nlp_memory *mem, ocp_nlp_workspace *work);
 //
 void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
-            void *in_, void *out_, void *opts_, void *mem_, void *work_, 
+            void *in_, void *out_, void *opts_, void *mem_, void *work_,
             void *out_destination_, void *solver_mem, double alpha, bool full_step_dual);
 //
 int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
@@ -518,6 +518,9 @@ void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *
     ocp_nlp_workspace *work, double alpha, int iter);
 //
 double ocp_nlp_get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_memory *nlp_mem);
+
+int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *nlp_opts,
+                     ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work, bool precondensed_lhs);
 
 // print / debug functionality
 void ocp_nlp_dump_qp_out_to_file(ocp_qp_out *qp_out, int sqp_iter, int soc);
