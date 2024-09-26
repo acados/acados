@@ -420,6 +420,11 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nx * solver_options.N_horizon }} );
   {%- endif %}
 
+  {%- if simulink_opts.outputs.slack_values == 1 %}
+    {%- set i_output = i_output + 1 %}
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ 2 * (dims.ns_0 + dims.ns_e + (solver_options.N_horizon - 1) * dims.ns )}} );
+  {%- endif %}
+
   {%- if simulink_opts.outputs.solver_status == 1 %}
     {%- set i_output = i_output + 1 %}
     ssSetOutputPortVectorDimension(S, {{ i_output }}, 1 );
@@ -967,8 +972,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     /* set outputs */
     // assign pointers to output signals
-    real_t *out_u0, *out_utraj, *out_xtraj, *out_ztraj, *out_pi_all, *out_status, *out_sqp_iter, *out_KKT_res, *out_KKT_residuals, *out_x1, *out_cpu_time, *out_cpu_time_sim, *out_cpu_time_qp, *out_cpu_time_lin, *out_cost_value, *out_parameter_traj;
-    int tmp_int;
+    real_t *out_u0, *out_utraj, *out_xtraj, *out_ztraj, *out_pi_all, *out_status, *out_sqp_iter, *out_KKT_res, *out_KKT_residuals, *out_x1, *out_cpu_time, *out_cpu_time_sim, *out_cpu_time_qp, *out_cpu_time_lin, *out_cost_value, *out_parameter_traj, *out_slack_values;
 
     {%- set i_output = -1 -%}{# note here i_output is 0-based #}
   {%- if dims.nu > 0 and simulink_opts.outputs.u0 == 1 %}
@@ -1012,6 +1016,19 @@ static void mdlOutputs(SimStruct *S, int_T tid)
                         "pi", (void *) (out_pi_all + ii * {{ dims.nx }}));
   {%- endif %}
 
+  {% if simulink_opts.outputs.slack_values == 1 %}
+    {%- set i_output = i_output + 1 %}
+    out_slack_values = ssGetOutputPortRealSignal(S, {{ i_output }});
+    tmp_offset = 0;
+    for (int ii = 0; ii <= N; ii++)
+    {
+        tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, ii, "sl");
+        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii, "sl", (void *) (out_slack_values + tmp_offset));
+        tmp_offset += tmp_int;
+        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii, "su", (void *) (out_slack_values + tmp_offset));
+        tmp_offset += tmp_int;
+    }
+  {%- endif %}
 
   {%- if simulink_opts.outputs.solver_status == 1 %}
     {%- set i_output = i_output + 1 %}

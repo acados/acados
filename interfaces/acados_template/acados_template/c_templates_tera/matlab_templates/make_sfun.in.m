@@ -440,6 +440,12 @@ output_note = strcat(output_note, num2str(i_out), ') pi_all, equality Lagrange m
 sfun_output_names = [sfun_output_names; 'pi_all [{{ dims.nx * solver_options.N_horizon }}]'];
 {%- endif %}
 
+{%- if simulink_opts.outputs.slack_values == 1 %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') slack values concatenated in order [sl_0, su_0, ..., sl_N, su_N] \n ');
+sfun_output_names = [sfun_output_names; 'slack_values [{{ 2 * (dims.ns_0 + dims.ns_e + (solver_options.N_horizon - 1) * dims.ns )}}]'];
+{%- endif %}
+
 {%- if simulink_opts.outputs.solver_status == 1 %}
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') acados solver status (0 = SUCCESS)\n ');
