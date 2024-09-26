@@ -376,6 +376,12 @@ sfun_input_names = [sfun_input_names; 'pi_init [{{ dims.nx * (solver_options.N_h
 i_in = i_in + 1;
 {%- endif %}
 
+{%- if simulink_opts.inputs.slacks_init %}  {#- slacks_init #}
+input_note = strcat(input_note, num2str(i_in), ') slacks_init - initialization of slack values for all shooting nodes (0 to N), size [{{ 2 * (dims.ns_0 + dims.ns_e + (solver_options.N_horizon - 1) * dims.ns )}}]');
+sfun_input_names = [sfun_input_names; 'slacks_init [{{ 2 * (dims.ns_0 + dims.ns_e + (solver_options.N_horizon - 1) * dims.ns )}}]'];
+i_in = i_in + 1;
+{%- endif %}
+
 {%- if simulink_opts.inputs.rti_phase %}  {#- rti_phase #}
 input_note = strcat(input_note, num2str(i_in), ') rti_phase, size [1]\n ');
 sfun_input_names = [sfun_input_names; 'rti_phase [1]'];

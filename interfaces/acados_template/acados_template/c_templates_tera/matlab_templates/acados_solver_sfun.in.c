@@ -174,6 +174,10 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
 
+  {%- if simulink_opts.inputs.slacks_init -%}  {#- slacks_init #}
+    {%- set n_inputs = n_inputs + 1 -%}
+  {%- endif -%}
+
   {%- if simulink_opts.inputs.rti_phase -%}  {#- rti_phase #}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
@@ -368,6 +372,13 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nx * (solver_options.N_horizon) }});
   {%- endif -%}
 
+  {%- if simulink_opts.inputs.slacks_init -%}  {#- slacks_init #}
+    {%- set i_input = i_input + 1 %}
+    // slacks_init
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ 2 * (dims.ns_0 + dims.ns_e + (solver_options.N_horizon - 1) * dims.ns )}});
+  {%- endif -%}
+
+
   {%- if simulink_opts.inputs.rti_phase -%}  {#- rti_phase #}
     {%- set i_input = i_input + 1 %}
     // rti_phase
@@ -538,7 +549,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     int N = {{ model.name | upper }}_N;
 
-    {%- set buffer_sizes = [dims.nx, dims.nu, dims.nbx_0, dims.np, dims.nbx, dims.nbx_e, dims.nbu, dims.ng, dims.nh, dims.nh_0, dims.ng_e, dims.nh_e] -%}
+    {%- set buffer_sizes = [dims.nx, dims.nu, dims.nbx_0, dims.np, dims.nbx, dims.nbx_e, dims.nbu, dims.ng, dims.nh, dims.nh_0, dims.ng_e, dims.nh_e, dims.ns, dims.ns_0, dims.ns_e] -%}
 
   {%- if dims.ny_0 > 0 and simulink_opts.inputs.y_ref_0 %}  {# y_ref_0 #}
     {%- set buffer_sizes = buffer_sizes | concat(with=(dims.ny_0)) %}
@@ -873,6 +884,27 @@ static void mdlOutputs(SimStruct *S, int_T tid)
             for (int jj = 0; jj < {{ dims.nx }}; jj++)
                 buffer[jj] = (double)(*in_sign[(ii)*{{ dims.nx }}+jj]);
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, ii, "pi", (void *) buffer);
+        }
+      {%- endif %}
+
+      {%- if simulink_opts.inputs.slacks_init %}  {#- slacks_init #}
+        // slacks_init
+        {%- set i_input = i_input + 1 %}
+        in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+        tmp_offset = 0;
+        for (int ii = 0; ii <= N; ii++)
+        {
+            tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, ii, "sl");
+            // set sl
+            for (int jj = 0; jj < tmp_int; jj++)
+                buffer[jj] = (double)(*in_sign[tmp_offset+jj]);
+            tmp_offset += tmp_int;
+            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, ii, "sl", (void *) buffer);
+            // set su
+            for (int jj = 0; jj < tmp_int; jj++)
+                buffer[jj] = (double)(*in_sign[tmp_offset+jj]);
+            tmp_offset += tmp_int;
+            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, ii, "su", (void *) buffer);
         }
       {%- endif %}
     }
