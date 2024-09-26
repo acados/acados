@@ -665,7 +665,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // store current iterate
         if (nlp_opts->store_iterates)
         {
-            copy_ocp_nlp_out(dims, nlp_out, nlp_mem->iterates[sqp_iter]);
+            copy_ocp_nlp_out(dims, nlp_out, nlp_mem->iterates[ddp_iter]);
         }
         // We always evaluate the residuals until the last iteration
         // If the option "eval_residual_at_max_iter" is set, then we will also

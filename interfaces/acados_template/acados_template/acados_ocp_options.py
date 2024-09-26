@@ -111,7 +111,8 @@ class AcadosOcpOptions:
         self.__adaptive_levenberg_marquardt_lam = 5.0
         self.__adaptive_levenberg_marquardt_mu_min = 1e-16
         self.__adaptive_levenberg_marquardt_mu0 = 1e-3
-        self.__log_primal_step_norm : bool = False
+        self.__log_primal_step_norm: bool = False
+        self.__store_iterates: bool = False
         # TODO: move those out? they are more about generation than about the acados OCP solver.
         self.__ext_fun_compile_flags = '-O2'
         self.__model_external_shared_lib_dir = None
@@ -543,6 +544,15 @@ class AcadosOcpOptions:
         Default: False
         """
         return self.__log_primal_step_norm
+
+    @property
+    def store_iterates(self,):
+        """
+        Flag indicating whether the intermediate primal-dual iterates should be stored.
+        This is implemented only for solver type `SQP` and `DDP`.
+        Default: False
+        """
+        return self.__store_iterates
 
     @property
     def tol(self):
@@ -1368,6 +1378,13 @@ class AcadosOcpOptions:
             self.__log_primal_step_norm = val
         else:
             raise Exception('Invalid log_primal_step_norm value. Expected bool.')
+
+    @store_iterates.setter
+    def store_iterates(self, val):
+        if isinstance(val, bool):
+            self.__store_iterates = val
+        else:
+            raise Exception('Invalid store_iterates value. Expected bool.')
 
     @as_rti_iter.setter
     def as_rti_iter(self, as_rti_iter):
