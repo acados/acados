@@ -39,7 +39,7 @@ extern "C" {
 #include <string.h>
 
 // Inline function definition
-inline void extract_module_name(const char *field, char *module, int *module_length)
+static inline void extract_module_name(const char *field, char *module, int *module_length)
 {
     // extract module name
     char *char_ = strchr(field, '_');
