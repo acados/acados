@@ -38,7 +38,20 @@ extern "C" {
 
 #include <string.h>
 
-void extract_module_name(const char *field, char *module, int *module_length);
+// Inline function definition
+inline void extract_module_name(const char *field, char *module, int *module_length)
+{
+    int ii;
+    // extract module name
+    char *char_ = strchr(field, '_');
+    if (char_ != NULL)
+    {
+        *module_length = char_ - field;
+        for (ii = 0; ii < *module_length; ii++)
+            module[ii] = field[ii];
+        module[*module_length] = '\0'; // add end of string
+    }
+}
 
 #ifdef __cplusplus
 } /* extern "C" */
