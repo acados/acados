@@ -648,7 +648,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_qp_out *qp_out = nlp_mem->qp_out;
 
     // zero timers
-    double tmp_time;
     ocp_nlp_timings_reset(nlp_timings);
 
     int qp_status = 0;
@@ -767,42 +766,23 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         if (ddp_iter == 0 && !opts->warm_start_first_qp)
         {
             int tmp_int = 0;
-            config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts,
-                                         "warm_start", &tmp_int);
+            qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
         }
         // Show input to QP
-        // if (nlp_opts->print_level > ddp_iter + 1)
         if (nlp_opts->print_level > 1)
         {
             printf("\n\nDDP: ocp_qp_in at iteration %d\n", ddp_iter + 1);
             print_ocp_qp_in(qp_in);
         }
 
-        // solve qp
-        acados_tic(&timer1);
-        qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
-                                        nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
-        nlp_timings->time_qp_sol += acados_toc(&timer1);
-
-        qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
-        nlp_timings->time_qp_solver_call += tmp_time;
-        qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
-        nlp_timings->time_qp_xcond += tmp_time;
-
-        // compute correct dual solution in case of Hessian regularization
-        acados_tic(&timer1);
-        config->regularize->correct_dual_sol(config->regularize, dims->regularize,
-                                             nlp_opts->regularize, nlp_mem->regularize_mem);
-        nlp_timings->time_reg += acados_toc(&timer1);
+        qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false);
 
         // restore default warm start
         if (ddp_iter==0)
         {
-            config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts,
-                                        "warm_start", &opts->qp_warm_start);
+            qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &opts->qp_warm_start);
         }
 
-        // if (nlp_opts->print_level > ddp_iter + 1)
         if (nlp_opts->print_level > 1)
         {
             printf("\n\nDDP: ocp_qp_out at iteration %d\n", ddp_iter + 1);

@@ -558,7 +558,6 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
 
     int qp_iter = 0;
     int qp_status;
-    double tmp_time;
     int globalization_status = 1;
 
     // update QP rhs for SQP (step prim var, abs dual var)
@@ -607,32 +606,12 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     }
 
     // solve QP
-    acados_tic(&timer1);
-    if (opts->rti_phase == FEEDBACK)
+    bool precondensed_lhs = true;
+    if (opts->rti_phase == PREPARATION_AND_FEEDBACK)
     {
-        qp_status = qp_solver->condense_rhs_and_solve(qp_solver, dims->qp_solver,
-            nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
-            nlp_mem->qp_solver_mem, nlp_work->qp_work);
+        precondensed_lhs = false;
     }
-    else if (opts->rti_phase == PREPARATION_AND_FEEDBACK)
-    {
-        qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver,
-            nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
-            nlp_mem->qp_solver_mem, nlp_work->qp_work);
-    }
-    // add qp timings
-    timings->time_qp_sol += acados_toc(&timer1);
-    // NOTE: timings within qp solver are added internally (lhs+rhs)
-    qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
-    timings->time_qp_solver_call += tmp_time;
-    qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
-    timings->time_qp_xcond += tmp_time;
-
-    // compute correct dual solution in case of Hessian regularization
-    acados_tic(&timer1);
-    config->regularize->correct_dual_sol(config->regularize,
-        dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
-    timings->time_reg += acados_toc(&timer1);
+    qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, precondensed_lhs);
 
     qp_info *qp_info_;
     ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
@@ -896,28 +875,13 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
 
         // solve QP
-        acados_tic(&timer1);
-        qp_status = qp_solver->condense_rhs_and_solve(qp_solver, dims->qp_solver,
-            nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
-            nlp_mem->qp_solver_mem, nlp_work->qp_work);
-        timings->time_qp_sol += acados_toc(&timer1);
-        // NOTE: timings within qp solver are added internally (lhs+rhs)
-        qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
-        timings->time_qp_solver_call += tmp_time;
-        qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
-        timings->time_qp_xcond += tmp_time;
+        qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, true);
 
         // save statistics
         ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
         qp_iter = qp_info_->num_iter;
         mem->stat[mem->stat_n * nlp_mem->iter+0] = qp_status;
         mem->stat[mem->stat_n * nlp_mem->iter+1] = qp_iter;
-
-        // compute correct dual solution in case of Hessian regularization
-        acados_tic(&timer1);
-        config->regularize->correct_dual_sol(config->regularize,
-            dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
-        timings->time_reg += acados_toc(&timer1);
 
         if (nlp_opts->print_level > 0)
         {
@@ -961,19 +925,9 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             config->regularize->regularize_rhs(config->regularize,
                 dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
             timings->time_reg += acados_toc(&timer1);
-            // QP solve
-            acados_tic(&timer1);
-            qp_status = qp_solver->condense_rhs_and_solve(qp_solver, dims->qp_solver,
-                    nlp_mem->qp_in, nlp_mem->qp_out, nlp_opts->qp_solver_opts,
-                    nlp_mem->qp_solver_mem, nlp_work->qp_work);
 
-            // add qp timings
-            timings->time_qp_sol += acados_toc(&timer1);
-            // NOTE: timings within qp solver are added internally (lhs+rhs)
-            qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
-            timings->time_qp_solver_call += tmp_time;
-            qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
-            timings->time_qp_xcond += tmp_time;
+            // QP solve
+            qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, true);
 
             ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
             qp_iter = qp_info_->num_iter;
@@ -1035,25 +989,14 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
                 rti_store_residuals_in_stats(opts, mem);
             }
 
-
             // rhs regularization
             acados_tic(&timer1);
             config->regularize->regularize_rhs(config->regularize,
                 dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
             timings->time_reg += acados_toc(&timer1);
-            // QP solve
-            acados_tic(&timer1);
-            qp_status = qp_solver->condense_rhs_and_solve(qp_solver, dims->qp_solver,
-                    nlp_mem->qp_in, nlp_mem->qp_out, nlp_opts->qp_solver_opts,
-                    nlp_mem->qp_solver_mem, nlp_work->qp_work);
 
-            // add qp timings
-            timings->time_qp_sol += acados_toc(&timer1);
-            // NOTE: timings within qp solver are added internally (lhs+rhs)
-            qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
-            timings->time_qp_solver_call += tmp_time;
-            qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
-            timings->time_qp_xcond += tmp_time;
+            // QP solve
+            qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, true);
 
             ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
             qp_iter = qp_info_->num_iter;
@@ -1061,12 +1004,6 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // save statistics
             mem->stat[mem->stat_n * nlp_mem->iter+0] = qp_status;
             mem->stat[mem->stat_n * nlp_mem->iter+1] = qp_iter;
-
-            // compute correct dual solution in case of Hessian regularization
-            acados_tic(&timer1);
-            config->regularize->correct_dual_sol(config->regularize,
-                dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
-            timings->time_reg += acados_toc(&timer1);
             if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
             {
 #ifndef ACADOS_SILENT
@@ -1128,19 +1065,9 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             config->regularize->regularize(config->regularize,
                 dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
             timings->time_reg += acados_toc(&timer1);
-            // QP solve
-            acados_tic(&timer1);
-            qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver,
-                    nlp_mem->qp_in, nlp_mem->qp_out, nlp_opts->qp_solver_opts,
-                    nlp_mem->qp_solver_mem, nlp_work->qp_work);
 
-            // add qp timings
-            timings->time_qp_sol += acados_toc(&timer1);
-            // NOTE: timings within qp solver are added internally (lhs+rhs)
-            qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
-            timings->time_qp_solver_call += tmp_time;
-            qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
-            timings->time_qp_xcond += tmp_time;
+            // QP solve
+            qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false);
 
             ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
             qp_iter = qp_info_->num_iter;
@@ -1149,11 +1076,6 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             mem->stat[mem->stat_n * nlp_mem->iter+0] = qp_status;
             mem->stat[mem->stat_n * nlp_mem->iter+1] = qp_iter;
 
-            // compute correct dual solution in case of Hessian regularization
-            acados_tic(&timer1);
-            config->regularize->correct_dual_sol(config->regularize,
-                dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
-            timings->time_reg += acados_toc(&timer1);
             if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
             {
 #ifndef ACADOS_SILENT
