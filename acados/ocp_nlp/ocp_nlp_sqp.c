@@ -158,6 +158,7 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
 
     int ii;
 
+    // TODO: move to function
     char module[MAX_STR_LEN];
     char *ptr_module = NULL;
     int module_length = 0;
@@ -799,6 +800,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     return mem->nlp_mem->status;
 }
 
+// TODO: move to common and use in DDP.
 double ocp_nlp_sqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_nlp_workspace *nlp_work)
 {
     // Compute the QP objective function value
@@ -916,6 +918,7 @@ void ocp_nlp_sqp_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_, voi
 }
 
 
+// TODO: write getter for things in nlp_mem
 void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_)
 {
     ocp_nlp_config *config = config_;
