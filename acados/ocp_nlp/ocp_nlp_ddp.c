@@ -1057,16 +1057,6 @@ void ocp_nlp_ddp_get(void *config_, void *dims_, void *mem_, const char *field, 
         // call timings getter
         ocp_nlp_timings_get(config, mem->nlp_mem->nlp_timings, field, return_value_);
     }
-    else if (!strcmp("ddp_iter", field) || !strcmp("nlp_iter", field))
-    {
-        int *value = return_value_;
-        *value = mem->nlp_mem->iter;
-    }
-    else if (!strcmp("status", field))
-    {
-        int *value = return_value_;
-        *value = mem->nlp_mem->status;
-    }
     else if (!strcmp("stat", field))
     {
         double **value = return_value_;
@@ -1093,83 +1083,16 @@ void ocp_nlp_ddp_get(void *config_, void *dims_, void *mem_, const char *field, 
         int *value = return_value_;
         *value = mem->stat_n;
     }
-    else if (!strcmp("nlp_mem", field))
-    {
-        void **value = return_value_;
-        *value = mem->nlp_mem;
-    }
     else if (!strcmp("qp_xcond_dims", field))
     {
         void **value = return_value_;
         *value = dims->qp_solver->xcond_dims;
     }
-    else if (!strcmp("nlp_res", field))
-    {
-        ocp_nlp_res **value = return_value_;
-        *value = mem->nlp_mem->nlp_res;
-    }
-    else if (!strcmp("qp_xcond_in", field))
-    {
-        void **value = return_value_;
-        *value = mem->nlp_mem->qp_solver_mem->xcond_qp_in;
-    }
-    else if (!strcmp("qp_xcond_out", field))
-    {
-        void **value = return_value_;
-        *value = mem->nlp_mem->qp_solver_mem->xcond_qp_out;
-    }
-    else if (!strcmp("qp_in", field))
-    {
-        void **value = return_value_;
-        *value = mem->nlp_mem->qp_in;
-    }
-    else if (!strcmp("qp_out", field))
-    {
-        void **value = return_value_;
-        *value = mem->nlp_mem->qp_out;
-    }
-    else if (!strcmp("qp_iter", field))
-    {
-        config->qp_solver->memory_get(config->qp_solver,
-            mem->nlp_mem->qp_solver_mem, "iter", return_value_);
-    }
-    else if (!strcmp("qp_status", field))
-    {
-        config->qp_solver->memory_get(config->qp_solver,
-            mem->nlp_mem->qp_solver_mem, "status", return_value_);
-    }
-    else if (!strcmp("res_stat", field))
-    {
-        double *value = return_value_;
-        *value = mem->nlp_mem->nlp_res->inf_norm_res_stat;
-    }
-    else if (!strcmp("res_eq", field))
-    {
-        double *value = return_value_;
-        *value = mem->nlp_mem->nlp_res->inf_norm_res_eq;
-    }
-    else if (!strcmp("res_ineq", field))
-    {
-        double *value = return_value_;
-        *value = mem->nlp_mem->nlp_res->inf_norm_res_ineq;
-    }
-    else if (!strcmp("res_comp", field))
-    {
-        double *value = return_value_;
-        *value = mem->nlp_mem->nlp_res->inf_norm_res_comp;
-    }
-    else if (!strcmp("cost_value", field))
-    {
-        double *value = return_value_;
-        *value = mem->nlp_mem->cost_value;
-    }
     else
     {
-        printf("\nerror: field %s not available in ocp_nlp_ddp_get\n", field);
-        exit(1);
+        ocp_nlp_memory_get(config, mem->nlp_mem, field, return_value_);
     }
 }
-
 
 
 void ocp_nlp_ddp_opts_get(void *config_, void *dims_, void *opts_,
