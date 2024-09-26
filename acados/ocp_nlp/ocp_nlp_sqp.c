@@ -573,6 +573,12 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // evaluate the residuals after the last iteration.
         if (sqp_iter != opts->nlp_opts->max_iter || opts->eval_residual_at_max_iter)
         {
+            // store current iterate
+            if (nlp_opts->store_iterates)
+            {
+                printf("storing iterate i =  %d\n", sqp_iter);
+                copy_ocp_nlp_out(dims, nlp_out, nlp_mem->iterates[sqp_iter]);
+            }
             /* Prepare the QP data */
             // linearize NLP and update QP matrices
             acados_tic(&timer1);

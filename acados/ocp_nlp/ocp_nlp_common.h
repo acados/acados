@@ -288,6 +288,9 @@ typedef struct ocp_nlp_opts
 
     int ext_qp_res;
 
+    bool store_iterates; // flag indicating whether intermediate iterates should be stored
+
+
 } ocp_nlp_opts;
 
 //
@@ -371,6 +374,9 @@ typedef struct ocp_nlp_memory
     void **dynamics;     // dynamics memory
     void **cost;         // cost memory
     void **constraints;  // constraints memory
+
+    // intermediate iterates
+    struct ocp_nlp_out ** iterates;
 
     // residuals
     ocp_nlp_res *nlp_res;
