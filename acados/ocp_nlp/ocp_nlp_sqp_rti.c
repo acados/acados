@@ -557,8 +557,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     ocp_nlp_timings *timings = nlp_mem->nlp_timings;
 
     int qp_iter = 0;
-    int qp_status;
-    int globalization_status = 1;
+    int qp_status, globalization_status;
 
     // update QP rhs for SQP (step prim var, abs dual var)
     acados_tic(&timer1);
@@ -650,11 +649,11 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     // Update variables
     double step_size;
     globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts, &step_size);
-    if (globalization_status != 1)
+    if (globalization_status != ACADOS_SUCCESS)
     {
         if (nlp_opts->print_level > 1)
         {
-            printf("\n Failure in step update!\n");
+            printf("\nFailure in globalization, got status %d!\n", globalization_status);
         }
     }
     mem->nlp_mem->status = ACADOS_SUCCESS;
@@ -827,8 +826,6 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
     qp_info *qp_info_;
     int qp_iter, qp_status, globalization_status;
     double tmp_time;
-    // alpha = 1.0;
-    globalization_status = 1;
 
     // prepare submodules
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
@@ -894,12 +891,13 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         // update variables
         double step_size;
         globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_out, &step_size);
-        if (globalization_status != 1)
+        if (globalization_status != ACADOS_SUCCESS)
         {
             if (nlp_opts->print_level > 1)
             {
-                printf("\n Failure in step update!\n");
+                printf("\n Failure in globalization, got status %d!\n", globalization_status);
             }
+            return;
         }
     }
     else if (opts->as_rti_level == LEVEL_B && !mem->is_first_call)
@@ -961,12 +959,13 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // update variables
             double step_size;
             globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_out, &step_size);
-            if (globalization_status != 1)
+            if (globalization_status != ACADOS_SUCCESS)
             {
                 if (nlp_opts->print_level > 1)
                 {
-                    printf("\n Failure in step update!\n");
+                    printf("\nFailure in globalization, got status %d!\n", globalization_status);
                 }
+                return;
             }
         }
     }
@@ -1028,8 +1027,9 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             {
                 if (nlp_opts->print_level > 1)
                 {
-                    printf("\n Failure in step update!\n");
+                    printf("\nFailure in globalization, got status %d!\n", globalization_status);
                 }
+                return;
             }
             // norm = 0.0;
             // for (int kk = 0; kk < dims->N; kk++)
@@ -1089,12 +1089,13 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // update variables
             double step_size;
             globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_out, &step_size);
-            if (globalization_status != 1)
+            if (globalization_status != ACADOS_SUCCESS)
             {
                 if (nlp_opts->print_level > 1)
                 {
-                    printf("\n Failure in step update!\n");
+                    printf("\nFailure in globalization, got status %d!\n", globalization_status);
                 }
+                return;
             }
         }
     }
