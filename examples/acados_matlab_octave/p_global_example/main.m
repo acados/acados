@@ -163,6 +163,10 @@ function ocp = set_solver_options(ocp)
     ocp.solver_options.print_level = 0;
     ocp.solver_options.nlp_solver_type = 'SQP_RTI';
 
+    % partial condensing
+    ocp.solver_options.qp_solver_cond_N = 5;
+    ocp.solver_options.qp_solver_cond_block_size = [3, 3, 3, 3, 7, 1];
+
     % NOTE: these additional flags are required for code generation of CasADi functions using casadi.blazing_spline
     ocp.solver_options.ext_fun_compile_flags = ['-I' casadi.GlobalOptions.getCasadiIncludePath ' -ffast-math -march=native '];
 end
