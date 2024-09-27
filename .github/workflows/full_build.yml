@@ -374,6 +374,12 @@ jobs:
       with:
         command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_qp_test
 
+    - name: Run Simulink slack test
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_slack_test
+
     - name: Run Simulink parameter test
       uses: matlab-actions/run-command@v2
       if: always()
