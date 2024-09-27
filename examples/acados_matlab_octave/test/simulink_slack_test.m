@@ -77,7 +77,7 @@ cd ..;
 
 %% test
 n_sim = 1;
-out_sim = sim('slack_test_simulink', 'SaveOutput', 'on');
+out_sim = sim('block_simulink_slacks', 'SaveOutput', 'on');
 element_names = out_sim.logsout.getElementNames();
 
 status_signal = out_sim.logsout.getElement('status');
