@@ -949,6 +949,19 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
         printf("\n");
     }
 
+
+    // set idxs_rev of QP:
+    for (int stage = 0; stage <= dims->N; stage++)
+    {
+        config->constraints[stage]->model_get(config->constraints[stage], dims->constraints[stage], nlp_in->constraints[stage], "idxs", idxs);
+        int *idxs_rev = nlp_mem->qp_in->idxs_rev[stage];
+        int *idxns = mem->idxns[stage];
+        for (int i=0; i<nns; i++)
+        {
+            idxs_rev[idxns[i]] = i+dims->ns[stage];
+        }
+    }
+
     return ocp_nlp_precompute_common(config, dims, nlp_in, nlp_out, opts->nlp_opts, nlp_mem, nlp_work);
 }
 
