@@ -609,7 +609,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     // local buffer
     {%- set buffer_size = buffer_sizes | sort | last %}
-    real_t buffer[{{ buffer_size }}];
+    double buffer[{{ buffer_size }}];
     double tmp_double;
     int tmp_offset, tmp_int;
 
@@ -1097,141 +1097,139 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {%- endif %}
 
     /* set outputs */
-    // assign pointers to output signals
-    real_t *out_u0, *out_utraj, *out_xtraj, *out_ztraj, *out_pi_all, *out_status, *out_sqp_iter, *out_KKT_res, *out_KKT_residuals, *out_x1, *out_cpu_time, *out_cpu_time_sim, *out_cpu_time_qp, *out_cpu_time_lin, *out_cost_value, *out_parameter_traj, *out_slack_values;
-
+    double *out_ptr;
     {%- set i_output = -1 -%}{# note here i_output is 0-based #}
   {%- if dims.nu > 0 and simulink_opts.outputs.u0 == 1 %}
     {%- set i_output = i_output + 1 %}
-    out_u0 = ssGetOutputPortRealSignal(S, {{ i_output }});
-    ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "u", (void *) out_u0);
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
+    ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "u", (void *) out_ptr);
   {%- endif %}
 
   {%- if simulink_opts.outputs.utraj == 1 %}
     {%- set i_output = i_output + 1 %}
-    out_utraj = ssGetOutputPortRealSignal(S, {{ i_output }});
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
     for (int ii = 0; ii < N; ii++)
         ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii,
-                        "u", (void *) (out_utraj + ii * {{ dims.nu }}));
+                        "u", (void *) (out_ptr + ii * {{ dims.nu }}));
   {%- endif %}
 
   {% if simulink_opts.outputs.xtraj == 1 %}
     {%- set i_output = i_output + 1 %}
 
-    out_xtraj = ssGetOutputPortRealSignal(S, {{ i_output }});
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
     for (int ii = 0; ii < {{ solver_options.N_horizon + 1 }}; ii++)
         ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii,
-                        "x", (void *) (out_xtraj + ii * {{ dims.nx }}));
+                        "x", (void *) (out_ptr + ii * {{ dims.nx }}));
   {%- endif %}
 
   {% if simulink_opts.outputs.ztraj == 1 %}
     {%- set i_output = i_output + 1 %}
 
-    out_ztraj = ssGetOutputPortRealSignal(S, {{ i_output }});
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
     for (int ii = 0; ii < N; ii++)
         ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii,
-                        "z", (void *) (out_ztraj + ii * {{ dims.nz }}));
+                        "z", (void *) (out_ptr + ii * {{ dims.nz }}));
   {%- endif %}
 
   {% if simulink_opts.outputs.pi_all == 1 %}
     {%- set i_output = i_output + 1 %}
 
-    out_pi_all = ssGetOutputPortRealSignal(S, {{ i_output }});
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
     for (int ii = 0; ii < N; ii++)
         ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii,
-                        "pi", (void *) (out_pi_all + ii * {{ dims.nx }}));
+                        "pi", (void *) (out_ptr + ii * {{ dims.nx }}));
   {%- endif %}
 
   {% if simulink_opts.outputs.slack_values == 1 %}
     {%- set i_output = i_output + 1 %}
-    out_slack_values = ssGetOutputPortRealSignal(S, {{ i_output }});
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
     tmp_offset = 0;
     for (int ii = 0; ii <= N; ii++)
     {
         tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, ii, "sl");
-        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii, "sl", (void *) (out_slack_values + tmp_offset));
+        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii, "sl", (void *) (out_ptr + tmp_offset));
         tmp_offset += tmp_int;
-        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii, "su", (void *) (out_slack_values + tmp_offset));
+        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii, "su", (void *) (out_ptr + tmp_offset));
         tmp_offset += tmp_int;
     }
   {%- endif %}
 
   {%- if simulink_opts.outputs.solver_status == 1 %}
     {%- set i_output = i_output + 1 %}
-    out_status = ssGetOutputPortRealSignal(S, {{ i_output }});
-    *out_status = (real_t) acados_status;
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
+    *out_ptr = (double) acados_status;
   {%- endif %}
 
   {%- if simulink_opts.outputs.cost_value == 1 %}
     {%- set i_output = i_output + 1 %}
-    out_cost_value = ssGetOutputPortRealSignal(S, {{ i_output }});
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
     ocp_nlp_eval_cost(capsule->nlp_solver, nlp_in, nlp_out);
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "cost_value", (void *) out_cost_value);
+    ocp_nlp_get(nlp_config, capsule->nlp_solver, "cost_value", (void *) out_ptr);
   {%- endif %}
 
   {%- if simulink_opts.outputs.KKT_residual == 1 %}
     {%- set i_output = i_output + 1 %}
-    out_KKT_res = ssGetOutputPortRealSignal(S, {{ i_output }});
-    *out_KKT_res = (real_t) nlp_out->inf_norm_res;
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
+    *out_ptr = (double) nlp_out->inf_norm_res;
   {%- endif %}
 
   {%- if simulink_opts.outputs.KKT_residuals == 1 %}
     {%- set i_output = i_output + 1 %}
-    out_KKT_residuals = ssGetOutputPortRealSignal(S, {{ i_output }});
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
 
     {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
     ocp_nlp_eval_residuals(capsule->nlp_solver, nlp_in, nlp_out);
     {%- endif %}
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "res_stat", (void *) &out_KKT_residuals[0]);
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "res_eq", (void *) &out_KKT_residuals[1]);
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "res_ineq", (void *) &out_KKT_residuals[2]);
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "res_comp", (void *) &out_KKT_residuals[3]);
+    ocp_nlp_get(nlp_config, capsule->nlp_solver, "res_stat", (void *) &out_ptr[0]);
+    ocp_nlp_get(nlp_config, capsule->nlp_solver, "res_eq", (void *) &out_ptr[1]);
+    ocp_nlp_get(nlp_config, capsule->nlp_solver, "res_ineq", (void *) &out_ptr[2]);
+    ocp_nlp_get(nlp_config, capsule->nlp_solver, "res_comp", (void *) &out_ptr[3]);
   {%- endif %}
 
   {%- if solver_options.N_horizon > 0 and simulink_opts.outputs.x1 == 1 %}
     {%- set i_output = i_output + 1 %}
-    out_x1 = ssGetOutputPortRealSignal(S, {{ i_output }});
-    ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 1, "x", (void *) out_x1);
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
+    ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 1, "x", (void *) out_ptr);
   {%- endif %}
 
   {%- if simulink_opts.outputs.CPU_time == 1 %}
     {%- set i_output = i_output + 1 %}
-    out_cpu_time = ssGetOutputPortRealSignal(S, {{ i_output }});
-    out_cpu_time[0] = tmp_double;
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
+    out_ptr[0] = tmp_double;
   {%- endif -%}
 
   {%- if simulink_opts.outputs.CPU_time_sim == 1 %}
     {%- set i_output = i_output + 1 %}
-    out_cpu_time_sim = ssGetOutputPortRealSignal(S, {{ i_output }});
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_sim", (void *) out_cpu_time_sim);
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
+    ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_sim", (void *) out_ptr);
   {%- endif -%}
 
   {%- if simulink_opts.outputs.CPU_time_qp == 1 %}
     {%- set i_output = i_output + 1 %}
-    out_cpu_time_qp = ssGetOutputPortRealSignal(S, {{ i_output }});
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_qp", (void *) out_cpu_time_qp);
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
+    ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_qp", (void *) out_ptr);
   {%- endif -%}
 
   {%- if simulink_opts.outputs.CPU_time_lin == 1 %}
     {%- set i_output = i_output + 1 %}
-    out_cpu_time_lin = ssGetOutputPortRealSignal(S, {{ i_output }});
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_lin", (void *) out_cpu_time_lin);
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
+    ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_lin", (void *) out_ptr);
   {%- endif -%}
 
   {%- if simulink_opts.outputs.sqp_iter == 1 %}
     {%- set i_output = i_output + 1 %}
-    out_sqp_iter = ssGetOutputPortRealSignal(S, {{ i_output }});
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
     // get sqp iter
     ocp_nlp_get(nlp_config, capsule->nlp_solver, "sqp_iter", (void *) &tmp_int);
-    *out_sqp_iter = (real_t) tmp_int;
+    *out_ptr = (double) tmp_int;
   {%- endif %}
 
   {% if simulink_opts.outputs.parameter_traj == 1 %}
     {%- set i_output = i_output + 1 %}
-    out_parameter_traj = ssGetOutputPortRealSignal(S, {{ i_output }});
+    out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
     for (int ii = 0; ii < N+1; ii++)
         ocp_nlp_in_get(nlp_config, nlp_dims, nlp_in, ii,
-                        "p", (void *) (out_parameter_traj + ii * {{ dims.np }}));
+                        "p", (void *) (out_ptr + ii * {{ dims.np }}));
   {%- endif %}
 
 }
