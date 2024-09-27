@@ -2201,6 +2201,9 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "reg_epsilon", &reg_epsilon);
 {%- endif %}
 
+    bool store_iterates = {{ solver_options.store_iterates }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "store_iterates", &store_iterates);
+
     int nlp_solver_ext_qp_res = {{ solver_options.nlp_solver_ext_qp_res }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "ext_qp_res", &nlp_solver_ext_qp_res);
 
