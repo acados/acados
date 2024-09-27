@@ -250,13 +250,7 @@ classdef AcadosOcp < handle
             end
             dims.nbx_0 = nbx_0;
 
-            if ~isempty(constraints.idxbxe_0)
-                dims.nbxe_0 = length(constraints.idxbxe_0);
-            else
-                % no equalities on initial state.
-                constraints.idxbxe_0 = [];
-                dims.nbxe_0 = 0;
-            end
+            dims.nbxe_0 = length(constraints.idxbxe_0);
 
             % path
             if ~isempty(constraints.idxbx) && ~isempty(constraints.lbx) && ~isempty(constraints.ubx)
@@ -367,46 +361,31 @@ classdef AcadosOcp < handle
             dims.nh_e = nh_e;
 
             %% slack dimensions
-            if ~isempty(constraints.idxsbx)
-                nsbx = length(constraints.idxsbx);
-            else
-                nsbx = 0;
-            end
-
-            if ~isempty(constraints.idxsbu)
-                nsbu = length(constraints.idxsbu);
-            else
-                nsbu = 0;
-            end
-
-            if ~isempty(constraints.idxsg)
-                nsg = length(constraints.idxsg);
-            else
-                nsg = 0;
-            end
-            if ~isempty(constraints.idxsh)
-                nsh = length(constraints.idxsh);
-            else
-                nsh = 0;
-            end
-            if ~isempty(constraints.idxsphi)
-                nsphi = length(constraints.idxsphi);
-            else
-                nsphi = 0;
-            end
+            nsbx = length(constraints.idxsbx);
+            nsbu = length(constraints.idxsbu);
+            nsg = length(constraints.idxsg);
+            nsh = length(constraints.idxsh);
+            nsphi = length(constraints.idxsphi);
 
             ns = nsbx + nsbu + nsg + nsh + nsphi;
             wrong_field = '';
-            if ~isempty(cost.Zl) && ~all(size(cost.Zl) == [ns, 1])
+
+            if ns == 0
+                expected_shape = [0, 0];
+            else
+                expected_shape = [ns, 1];
+            end
+
+            if ~all(size(cost.Zl) == expected_shape)
                 wrong_field = 'Zl';
                 dim = size(cost.Zl);
-            elseif ~isempty(cost.Zu) && ~all(size(cost.Zu) == [ns, 1])
+            elseif ~all(size(cost.Zu) == expected_shape)
                 wrong_field = 'Zu';
                 dim = size(cost.Zu);
-            elseif ~isempty(cost.zl) && ~all(size(cost.zl) == [ns, 1])
+            elseif ~all(size(cost.zl) == expected_shape)
                 wrong_field = 'zl';
                 dim = size(cost.zl);
-            elseif ~isempty(cost.zu) && ~all(size(cost.zu) == [ns, 1])
+            elseif ~all(size(cost.zu) == expected_shape)
                 wrong_field = 'zu';
                 dim = size(cost.zu);
             end
@@ -435,29 +414,27 @@ classdef AcadosOcp < handle
             dims.nsphi = nsphi;
 
             % slacks at initial stage
-            if ~isempty(constraints.idxsh_0)
-                nsh_0 = length(constraints.idxsh_0);
-            else
-                nsh_0 = 0;
-            end
-            if ~isempty(constraints.idxsphi_0)
-                nsphi_0 = length(constraints.idxsphi_0);
-            else
-                nsphi_0 = 0;
-            end
+            nsh_0 = length(constraints.idxsh_0);
+            nsphi_0 = length(constraints.idxsphi_0);
 
             ns_0 = nsbu + nsg + nsh_0 + nsphi_0;
             wrong_field = '';
-            if ~isempty(cost.Zl_0) && ~all(size(cost.Zl_0) == [ns_0, 1])
+            if ns_0 == 0
+                expected_shape = [0, 0];
+            else
+                expected_shape = [ns_0, 1];
+            end
+
+            if ~all(size(cost.Zl_0) == expected_shape)
                 wrong_field = 'Zl_0';
                 dim = size(cost.Zl_0);
-            elseif ~isempty(cost.Zu_0) && ~all(size(cost.Zu_0) == [ns_0, 1])
+            elseif ~all(size(cost.Zu_0) == expected_shape)
                 wrong_field = 'Zu_0';
                 dim = size(cost.Zu_0);
-            elseif ~isempty(cost.zl_0) && ~all(size(cost.zl_0) == [ns_0, 1])
+            elseif ~all(size(cost.zl_0) == expected_shape)
                 wrong_field = 'zl_0';
                 dim = size(cost.zl_0);
-            elseif ~isempty(cost.zu_0) && ~all(size(cost.zu_0) == [ns_0, 1])
+            elseif ~all(size(cost.zu_0) == expected_shape)
                 wrong_field = 'zu_0';
                 dim = size(cost.zu_0);
             end
@@ -478,40 +455,29 @@ classdef AcadosOcp < handle
             dims.nsphi_0 = nsphi_0;
 
             %% terminal slack dimensions
-            if ~isempty(constraints.idxsbx_e)
-                nsbx_e = length(constraints.idxsbx_e);
-            else
-                nsbx_e = 0;
-            end
-
-            if ~isempty(constraints.idxsg_e)
-                nsg_e = length(constraints.idxsg_e);
-            else
-                nsg_e = 0;
-            end
-            if ~isempty(constraints.idxsh_e)
-                nsh_e = length(constraints.idxsh_e);
-            else
-                nsh_e = 0;
-            end
-            if ~isempty(constraints.idxsphi_e)
-                nsphi_e = length(constraints.idxsphi_e);
-            else
-                nsphi_e = 0;
-            end
+            nsbx_e = length(constraints.idxsbx_e);
+            nsg_e = length(constraints.idxsg_e);
+            nsh_e = length(constraints.idxsh_e);
+            nsphi_e = length(constraints.idxsphi_e);
 
             ns_e = nsbx_e + nsg_e + nsh_e + nsphi_e;
             wrong_field = '';
-            if ~isempty(cost.Zl_e) && ~all(size(cost.Zl_e) == [ns_e, 1])
+            if ns_e == 0
+                expected_shape = [0, 0];
+            else
+                expected_shape = [ns_e, 1];
+            end
+
+            if ~all(size(cost.Zl_e) == expected_shape)
                 wrong_field = 'Zl_e';
                 dim = size(cost.Zl_e);
-            elseif ~isempty(cost.Zu_e) && ~all(size(cost.Zu_e) == [ns_e, 1])
+            elseif ~all(size(cost.Zu_e) == expected_shape)
                 wrong_field = 'Zu_e';
                 dim = size(cost.Zu_e);
-            elseif ~isempty(cost.zl_e) && ~all(size(cost.zl_e) == [ns_e, 1])
+            elseif ~all(size(cost.zl_e) == expected_shape)
                 wrong_field = 'zl_e';
                 dim = size(cost.zl_e);
-            elseif ~isempty(cost.zu_e) && ~all(size(cost.zu_e) == [ns_e, 1])
+            elseif ~all(size(cost.zu_e) == expected_shape)
                 wrong_field = 'zu_e';
                 dim = size(cost.zu_e);
             end
