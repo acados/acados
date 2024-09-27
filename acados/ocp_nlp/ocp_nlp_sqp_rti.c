@@ -54,6 +54,7 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+#include "acados/utils/strsep.h"
 // acados_c
 #include "acados_c/ocp_qp_interface.h"
 #include "acados_c/ocp_nlp_interface.h"
@@ -146,22 +147,11 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_,
     ocp_nlp_config *config = config_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
 
-    int ii;
-
-    char module[MAX_STR_LEN];
     char *ptr_module = NULL;
     int module_length = 0;
-
-    // extract module name
-    char *char_ = strchr(field, '_');
-    if (char_!=NULL)
-    {
-        module_length = char_-field;
-        for (ii=0; ii<module_length; ii++)
-            module[ii] = field[ii];
-        module[module_length] = '\0'; // add end of string
-        ptr_module = module;
-    }
+    char module[MAX_STR_LEN];
+    extract_module_name(field, module, &module_length);
+    ptr_module = module;
 
     // pass options to QP module
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
@@ -553,7 +543,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     ocp_nlp_workspace *nlp_work = work->nlp_work;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
-    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    // ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_timings *timings = nlp_mem->nlp_timings;
 
     int qp_iter = 0;
@@ -664,7 +654,6 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
         ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem);
         rti_store_residuals_in_stats(opts, mem);
     }
-
 }
 
 
@@ -822,14 +811,11 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
     omp_set_num_threads(opts->nlp_opts->num_threads);
 #endif
 
-    // printf("AS_RTI preparation\n");
     qp_info *qp_info_;
     int qp_iter, qp_status, globalization_status;
-    double tmp_time;
 
     // prepare submodules
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-
 
     if (!mem->is_first_call)
     {
@@ -1289,20 +1275,11 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_sqp_rti_memory *mem = mem_;
 
-    char module[MAX_STR_LEN];
     char *ptr_module = NULL;
     int module_length = 0;
-
-    // extract module name
-    char *char_ = strchr(field, '_');
-    if (char_!=NULL)
-    {
-        module_length = char_-field;
-        for (int ii=0; ii<module_length; ii++)
-            module[ii] = field[ii];
-        module[module_length] = '\0'; // add end of string
-        ptr_module = module;
-    }
+    char module[MAX_STR_LEN];
+    extract_module_name(field, module, &module_length);
+    ptr_module = module;
 
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "time")) )
     {

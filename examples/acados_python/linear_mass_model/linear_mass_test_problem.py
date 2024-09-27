@@ -48,7 +48,7 @@ def main():
     # run test cases
 
     # all setting
-    params = {'globalization': ['FIXED_STEP', 'MERIT_BACKTRACKING'], # MERIT_BACKTRACKING, FIXED_STEP
+    params = {'globalization': ['FIXED_STEP', 'MERIT_BACKTRACKING', 'FUNNEL_L1PEN_LINESEARCH'], # MERIT_BACKTRACKING, FIXED_STEP
               'globalization_line_search_use_sufficient_descent' : [0, 1],
               'qp_solver' : ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES'],
               'globalization_use_SOC' : [0, 1] }
@@ -56,7 +56,7 @@ def main():
     keys, values = zip(*params.items())
     for combination in product(*values):
         setting = dict(zip(keys, combination))
-        if setting['globalization'] == 'FIXED_STEP' and \
+        if (setting['globalization'] == 'FIXED_STEP' or setting['globalization'] == 'FUNNEL_L1PEN_LINESEARCH') and \
           (setting['globalization_use_SOC'] or setting['globalization_line_search_use_sufficient_descent']):
             # skip some equivalent settings
             pass
@@ -198,6 +198,15 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
     ocp.solver_options.tf = Tf
 
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_ocp.json')
+
+    if globalization == "FUNNEL_L1PEN_LINESEARCH":
+        # Test the options setters
+        ocp_solver.options_set('globalization_funnel_init_increase_factor', 15.0)
+        ocp_solver.options_set('globalization_funnel_init_upper_bound', 1.0)
+        ocp_solver.options_set('globalization_funnel_sufficient_decrease_factor', 0.9)
+        ocp_solver.options_set('globalization_funnel_kappa', 0.9)
+        ocp_solver.options_set('globalization_funnel_fraction_switching_condition', 1e-3)
+        ocp_solver.options_set('globalization_funnel_initial_penalty_parameter', 1.0)
     if not use_deprecated_options:
         ocp_solver.options_set('globalization_line_search_use_sufficient_descent', globalization_line_search_use_sufficient_descent)
         ocp_solver.options_set('globalization_use_SOC', globalization_use_SOC)
