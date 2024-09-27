@@ -1411,7 +1411,7 @@ void ocp_nlp_get_from_iterate(ocp_nlp_dims *dims, ocp_nlp_solver *solver,
     config->get(config, solver->dims, solver->mem, "nlp_mem", &nlp_mem);
 
     ocp_nlp_opts *nlp_opts;
-    config->get(config, solver->dims, solver->mem, "nlp_opts", &nlp_opts);
+    config->opts_get(config, solver->dims, solver->opts, "nlp_opts", &nlp_opts);
 
     if (!nlp_opts->store_iterates)
     {
