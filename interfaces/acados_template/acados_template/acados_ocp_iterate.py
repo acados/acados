@@ -30,16 +30,21 @@
 
 
 from dataclasses import dataclass
-from typing import Tuple
+from typing import List
 import numpy as np
 
-@dataclass(frozen=True)
-class Iterate:
+@dataclass
+class AcadosOcpIterate:
 
-    x_traj: Tuple[np.ndarray]
-    u_traj: Tuple[np.ndarray]
-    z_traj: Tuple[np.ndarray]
-    sl_traj: Tuple[np.ndarray]
-    su_traj: Tuple[np.ndarray]
-    pi_traj: Tuple[np.ndarray]
-    lam_traj: Tuple[np.ndarray]
+    x_traj: List[np.ndarray]
+    u_traj: List[np.ndarray]
+    z_traj: List[np.ndarray]
+    sl_traj: List[np.ndarray]
+    su_traj: List[np.ndarray]
+    pi_traj: List[np.ndarray]
+    lam_traj: List[np.ndarray]
+
+@dataclass
+class AcadosOcpIterates:
+
+    iterate_traj: List[AcadosOcpIterate]

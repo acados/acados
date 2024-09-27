@@ -55,7 +55,7 @@ from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
                     acados_lib_is_compiled_with_openmp)
-from .acados_ocp_iterate import Iterate
+from .acados_ocp_iterate import AcadosOcpIterate
 
 
 class AcadosOcpSolver:
@@ -1461,7 +1461,7 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_get_from_iterate(self.nlp_dims, self.nlp_solver, iteration, stage, field, out_data_p)
         return out
 
-    def get_iterate(self, iteration: int):
+    def get_iterate(self, iteration: int) -> AcadosOcpIterate:
 
         x_traj = []
         u_traj = []
@@ -1486,13 +1486,13 @@ class AcadosOcpSolver:
         su_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "su"))
         lam_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "lam"))
 
-        iterate = Iterate(x_traj=tuple(x_traj),
-                          u_traj=tuple(u_traj),
-                          z_traj=tuple(z_traj),
-                          sl_traj=tuple(sl_traj),
-                          su_traj=tuple(su_traj),
-                          pi_traj=tuple(pi_traj),
-                          lam_traj=tuple(lam_traj))
+        iterate = AcadosOcpIterate(x_traj=tuple(x_traj),
+                                   u_traj=tuple(u_traj),
+                                   z_traj=tuple(z_traj),
+                                   sl_traj=tuple(sl_traj),
+                                   su_traj=tuple(su_traj),
+                                   pi_traj=tuple(pi_traj),
+                                   lam_traj=tuple(lam_traj))
 
         return iterate
 
