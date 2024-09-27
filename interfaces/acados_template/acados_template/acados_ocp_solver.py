@@ -1466,6 +1466,9 @@ class AcadosOcpSolver:
         if iteration < 0 or iteration > self.get_stats('sqp_iter'):
             raise Exception("get_iterate: iteration needs to be nonnegative and <= sqp_iter.")
 
+        if not self.acados_ocp.solver_options.store_iterates:
+            raise Exception("get_iterate: the solver option store_iterates needs to be true in order to get iterates.")
+
         x_traj = []
         u_traj = []
         z_traj = []

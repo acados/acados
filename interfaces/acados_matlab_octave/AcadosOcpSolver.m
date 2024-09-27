@@ -181,7 +181,11 @@ classdef AcadosOcpSolver < handle
 
         function iterate = get_iterate(obj, iteration)
             if iteration > obj.get("sqp_iter")
-                error("iteration needs to be nonnegative and <= sqp_iter.")
+                error("iteration needs to be nonnegative and <= sqp_iter.");
+            end
+
+            if !obj.ocp.solver_options.store_iterates
+                error("get_iterate: the solver option store_iterates needs to be true in order to get iterates.");
             end
 
             N_horizon = obj.ocp.solver_options.N_horizon;
