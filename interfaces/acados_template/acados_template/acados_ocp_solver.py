@@ -55,7 +55,7 @@ from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
                     acados_lib_is_compiled_with_openmp)
-from .acados_ocp_iterate import AcadosOcpIterate
+from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates
 
 
 class AcadosOcpSolver:
@@ -1463,6 +1463,9 @@ class AcadosOcpSolver:
 
     def get_iterate(self, iteration: int) -> AcadosOcpIterate:
 
+        if iteration < 0 or iteration > self.get_stats('sqp_iter'):
+            raise Exception("get_iterate: iteration needs to be nonnegative and <= sqp_iter.")
+
         x_traj = []
         u_traj = []
         z_traj = []
@@ -1495,6 +1498,10 @@ class AcadosOcpSolver:
                                    lam_traj=tuple(lam_traj))
 
         return iterate
+
+
+    def get_iterates(self) -> AcadosOcpIterates:
+        return AcadosOcpIterates(iterate_traj=[self.get_iterate(n) for n in range(self.get_stats('sqp_iter')+1)])
 
 
     def dims_get(self, field_, stage_):

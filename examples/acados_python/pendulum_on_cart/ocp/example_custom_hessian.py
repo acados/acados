@@ -137,6 +137,8 @@ iteration = 2
 print(f"primal iterate at iteration {iteration}:")
 iterate = ocp_solver.get_iterate(iteration)
 print(iterate.x_traj)
-# print(iterate.u_traj)
+# get all iterates
+iterates = ocp_solver.get_iterates()
+# print(iterates.iterate_traj[-1])
 
 plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
