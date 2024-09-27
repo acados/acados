@@ -369,16 +369,23 @@ classdef AcadosOcp < handle
 
             ns = nsbx + nsbu + nsg + nsh + nsphi;
             wrong_field = '';
-            if ~all(size(cost.Zl) == [ns, 1])
+
+            if ns == 0
+                expected_shape = [0, 0];
+            else
+                expected_shape = [ns, 1];
+            end
+
+            if ~all(size(cost.Zl) == expected_shape)
                 wrong_field = 'Zl';
                 dim = size(cost.Zl);
-            elseif ~all(size(cost.Zu) == [ns, 1])
+            elseif ~all(size(cost.Zu) == expected_shape)
                 wrong_field = 'Zu';
                 dim = size(cost.Zu);
-            elseif ~all(size(cost.zl) == [ns, 1])
+            elseif ~all(size(cost.zl) == expected_shape)
                 wrong_field = 'zl';
                 dim = size(cost.zl);
-            elseif ~all(size(cost.zu) == [ns, 1])
+            elseif ~all(size(cost.zu) == expected_shape)
                 wrong_field = 'zu';
                 dim = size(cost.zu);
             end
@@ -412,16 +419,22 @@ classdef AcadosOcp < handle
 
             ns_0 = nsbu + nsg + nsh_0 + nsphi_0;
             wrong_field = '';
-            if ~all(size(cost.Zl_0) == [ns_0, 1])
+            if ns_0 == 0
+                expected_shape = [0, 0];
+            else
+                expected_shape = [ns_0, 1];
+            end
+
+            if ~all(size(cost.Zl_0) == expected_shape)
                 wrong_field = 'Zl_0';
                 dim = size(cost.Zl_0);
-            elseif ~all(size(cost.Zu_0) == [ns_0, 1])
+            elseif ~all(size(cost.Zu_0) == expected_shape)
                 wrong_field = 'Zu_0';
                 dim = size(cost.Zu_0);
-            elseif ~all(size(cost.zl_0) == [ns_0, 1])
+            elseif ~all(size(cost.zl_0) == expected_shape)
                 wrong_field = 'zl_0';
                 dim = size(cost.zl_0);
-            elseif ~all(size(cost.zu_0) == [ns_0, 1])
+            elseif ~all(size(cost.zu_0) == expected_shape)
                 wrong_field = 'zu_0';
                 dim = size(cost.zu_0);
             end
@@ -449,16 +462,22 @@ classdef AcadosOcp < handle
 
             ns_e = nsbx_e + nsg_e + nsh_e + nsphi_e;
             wrong_field = '';
-            if ~all(size(cost.Zl_e) == [ns_e, 1])
+            if ns_e == 0
+                expected_shape = [0, 0];
+            else
+                expected_shape = [ns_e, 1];
+            end
+
+            if ~all(size(cost.Zl_e) == expected_shape)
                 wrong_field = 'Zl_e';
                 dim = size(cost.Zl_e);
-            elseif ~all(size(cost.Zu_e) == [ns_e, 1])
+            elseif ~all(size(cost.Zu_e) == expected_shape)
                 wrong_field = 'Zu_e';
                 dim = size(cost.Zu_e);
-            elseif ~all(size(cost.zl_e) == [ns_e, 1])
+            elseif ~all(size(cost.zl_e) == expected_shape)
                 wrong_field = 'zl_e';
                 dim = size(cost.zl_e);
-            elseif ~all(size(cost.zu_e) == [ns_e, 1])
+            elseif ~all(size(cost.zu_e) == expected_shape)
                 wrong_field = 'zu_e';
                 dim = size(cost.zu_e);
             end
