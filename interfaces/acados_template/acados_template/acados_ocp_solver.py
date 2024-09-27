@@ -55,6 +55,7 @@ from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
                     acados_lib_is_compiled_with_openmp)
+from .acados_ocp_iterate import Iterate
 
 
 class AcadosOcpSolver:
@@ -295,6 +296,8 @@ class AcadosOcpSolver:
 
         self.__acados_lib.ocp_nlp_get_at_stage.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
 
+        self.__acados_lib.ocp_nlp_get_from_iterate.argtypes = [c_void_p, c_void_p, c_int, c_int, c_char_p, c_void_p]
+        self.__acados_lib.ocp_nlp_get_from_iterate.restypes = c_void_p
 
         getattr(self.shared_lib, f"{self.name}_acados_solve").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{self.name}_acados_solve").restype = c_int
@@ -1443,6 +1446,60 @@ class AcadosOcpSolver:
             out = np.tril(out) + np.tril(out, -1).T
 
         return out
+
+
+    def __ocp_nlp_get_from_iterate(self, iteration_, stage_, field_):
+        stage = c_int(stage_)
+        field = field_.encode('utf-8')
+        iteration = c_int(iteration_)
+        dim = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out,
+                    stage, field)
+
+        out = np.ascontiguousarray(np.zeros((dim,)), dtype=np.float64)
+        out_data = cast(out.ctypes.data, POINTER(c_double))
+        out_data_p = cast((out_data), c_void_p)
+        self.__acados_lib.ocp_nlp_get_from_iterate(self.nlp_dims, self.nlp_solver, iteration, stage, field, out_data_p)
+        return out
+
+    def get_iterate(self, iteration: int):
+
+        x_traj = []
+        u_traj = []
+        z_traj = []
+        sl_traj = []
+        su_traj = []
+        pi_traj = []
+        lam_traj = []
+
+        for n in range(self.acados_ocp.solver_options.N_horizon):
+            x_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "x"))
+            u_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "u"))
+            z_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "z"))
+            sl_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "sl"))
+            su_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "su"))
+            pi_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "pi"))
+            lam_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "lam"))
+
+        n = self.acados_ocp.solver_options.N_horizon
+        x_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "x"))
+        sl_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "sl"))
+        su_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "su"))
+        lam_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "lam"))
+
+        iterate = Iterate(x_traj=tuple(x_traj),
+                          u_traj=tuple(u_traj),
+                          z_traj=tuple(z_traj),
+                          sl_traj=tuple(sl_traj),
+                          su_traj=tuple(su_traj),
+                          pi_traj=tuple(pi_traj),
+                          lam_traj=tuple(lam_traj))
+
+        return iterate
+
+
+    def dims_get(self, field_, stage_):
+        return self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out,
+                    c_int(stage_), field_.encode('utf-8'))
 
 
     def options_set(self, field_, value_):
