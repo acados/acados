@@ -1292,7 +1292,6 @@ void ocp_nlp_constraints_bgh_initialize(void *config_, void *dims_, void *model_
     // initialize idxs_rev
     for (j = 0; j < ns; j++)
     {
-//        memory->idxs[j] = model->idxs[j];
         memory->idxs_rev[model->idxs[j]] = j;
     }
 
