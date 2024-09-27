@@ -1449,9 +1449,18 @@ class AcadosOcpSolver:
         """
         Set options of the solver.
 
-            :param field: string, e.g. 'print_level', 'rti_phase', 'step_length', 'alpha_min', 'alpha_reduction', 'qp_warm_start', 'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC', 'qp_tol_stat', 'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min', 'qp_mu0', 'qp_print_level'
+            :param field: string, e.g. 'print_level', 'rti_phase', 'globalization_fixed_step_length', 'globalization_alpha_min', 'globalization_alpha_reduction',
+                                        'qp_warm_start', 'globalization_line_search_use_sufficient_descent',
+                                        'globalization_full_step_dual', 'globalization_use_SOC', 'qp_tol_stat',
+                                        'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min',
+                                        'qp_mu0', 'qp_print_level', 'globalization_funnel_init_increase_factor',
+                                        'globalization_funnel_init_upper_bound', 'globalization_funnel_sufficient_decrease_factor',
+                                        'globalization_funnel_kappa', 'globalization_funnel_fraction_switching_condition',
+                                        'globalization_funnel_initial_penalty_parameter', 'levenberg_marquardt',
+                                        'adaptive_levenberg_marquardt_lam', 'adaptive_levenberg_marquardt_mu_min',
+                                        'adaptive_levenberg_marquardt_mu0',
 
-            :param value: of type int, float, string
+            :param value: of type int, float, string, bool
 
             - qp_tol_stat: QP solver tolerance stationarity
             - qp_tol_eq: QP solver tolerance equalities
