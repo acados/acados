@@ -51,7 +51,7 @@ zl = (1:ns*N);
 zu = 2*zl;
 Zl = 4*zl;
 Zu = 8*zl;
-
+slacks_init = [9e4 * zl(:); 3e2*zl(:)];
 % use some initial state such that upper and lower bounds are active
 x0 = [1, -3, 2];
 ocp_solver.set('constr_x0', x0)
@@ -60,6 +60,8 @@ for stage=0:N-1
     ocp_solver.set('cost_zu', zu((1+stage*ns:(stage+1)*ns)), stage);
     ocp_solver.set('cost_Zl', Zl((1+stage*ns:(stage+1)*ns)), stage);
     ocp_solver.set('cost_Zu', Zu((1+stage*ns:(stage+1)*ns)), stage);
+    ocp_solver.set('sl', slacks_init((1+2*(stage*ns):2*(stage*ns)+ns)), stage);
+    ocp_solver.set('su', slacks_init((1+ns+2*(stage*ns):2*(stage*ns)+2*ns)), stage);
 end
 
 ocp_solver.solve();

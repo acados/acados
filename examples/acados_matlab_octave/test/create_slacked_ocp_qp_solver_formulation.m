@@ -91,6 +91,9 @@ simulink_opts.inputs.cost_zu = 1;
 simulink_opts.inputs.cost_Zl = 1;
 simulink_opts.inputs.cost_Zu = 1;
 
+simulink_opts.inputs.slacks_init = 1;
+
+
 simulink_opts.outputs.slack_values = 1;
 
 % outputs
