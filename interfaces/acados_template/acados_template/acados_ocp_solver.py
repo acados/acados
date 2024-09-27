@@ -36,7 +36,7 @@ import shutil
 import sys
 import time
 
-from ctypes import (POINTER, byref, c_char_p, c_double, c_int,
+from ctypes import (POINTER, byref, c_char_p, c_double, c_int, c_bool,
                     c_void_p, cast)
 if os.name == 'nt':
     from ctypes import wintypes
@@ -1462,11 +1462,42 @@ class AcadosOcpSolver:
             - warm_start_first_qp: indicates if first QP in SQP is warm_started
             - rti_phase: 0: PREPARATION_AND_FEEDBACK, 1: PREPARATION, 2: FEEDBACK; only support for nlp_solver = 'SQP_RTI'
         """
-        int_fields = ['print_level', 'rti_phase', 'qp_warm_start',
-                      'globalization_line_search_use_sufficient_descent', 'globalization_full_step_dual', 'globalization_use_SOC', 'warm_start_first_qp', "as_rti_level", "max_iter", "qp_print_level"]
-        double_fields = ['globalization_fixed_step_length', 'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp', 'globalization_alpha_min', 'globalization_alpha_reduction',
-                         'globalization_eps_sufficient_descent', 'qp_tol_stat', 'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min', 'qp_mu0']
+        int_fields = ['print_level',
+                      'rti_phase',
+                      'globalization_line_search_use_sufficient_descent',
+                      'globalization_full_step_dual',
+                      'globalization_use_SOC',
+                      'warm_start_first_qp',
+                      'as_rti_level',
+                      'max_iter',
+                      'qp_warm_start',
+                      'qp_print_level']
+        double_fields = ['globalization_fixed_step_length',
+                         'globalization_alpha_min',
+                         'globalization_alpha_reduction',
+                         'globalization_eps_sufficient_descent',
+                         'globalization_funnel_init_increase_factor',
+                         'globalization_funnel_init_upper_bound',
+                         'globalization_funnel_sufficient_decrease_factor',
+                         'globalization_funnel_kappa',
+                         'globalization_funnel_fraction_switching_condition',
+                         'globalization_funnel_initial_penalty_parameter',
+                         'levenberg_marquardt',
+                         'adaptive_levenberg_marquardt_lam',
+                         'adaptive_levenberg_marquardt_mu_min',
+                         'adaptive_levenberg_marquardt_mu0',
+                         'tol_eq',
+                         'tol_stat',
+                         'tol_ineq',
+                         'tol_comp',
+                         'qp_tol_stat',
+                         'qp_tol_eq',
+                         'qp_tol_ineq',
+                         'qp_tol_comp',
+                         'qp_tau_min',
+                         'qp_mu0']
         string_fields = []
+        bool_fields = ['with_adaptive_levenberg_marquardt']
 
         # check field availability and type
         if field_ in int_fields:
@@ -1474,13 +1505,16 @@ class AcadosOcpSolver:
                 raise Exception(f'solver option \'{field_}\' must be of type int. You have {type(value_)}.')
             else:
                 value_ctypes = c_int(value_)
-
         elif field_ in double_fields:
             if not isinstance(value_, float):
                 raise Exception(f'solver option \'{field_}\' must be of type float. You have {type(value_)}.')
             else:
                 value_ctypes = c_double(value_)
-
+        elif field_ in bool_fields:
+            if not isinstance(value_, bool):
+                raise Exception(f'solver option \'{field_}\' must be of type bool. You have {type(value_)}.')
+            else:
+                value_ctypes = c_bool(value_)
         elif field_ in string_fields:
             if not isinstance(value_, str):
                 raise Exception(f'solver option \'{field_}\' must be of type str. You have {type(value_)}.')
