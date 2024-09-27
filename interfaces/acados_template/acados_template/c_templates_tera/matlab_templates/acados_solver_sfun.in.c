@@ -411,7 +411,7 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- if simulink_opts.inputs.slacks_init -%}  {#- slacks_init #}
     {%- set i_input = i_input + 1 %}
     // slacks_init
-    ssSetInputPortVectorDimension(S, {{ i_input }}, 2*{{ ns_total }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ 2* ns_total }});
   {%- endif -%}
 
 
