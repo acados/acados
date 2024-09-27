@@ -93,7 +93,7 @@ ocp.constraints.x0 = x0;
 
 % define solver options
 ocp.solver_options.N_horizon = N;
-ocp.solver_options.tf = 1.0;
+ocp.solver_options.tf = T;
 ocp.solver_options.nlp_solver_type = 'SQP';
 ocp.solver_options.integrator_type = 'ERK';
 ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
