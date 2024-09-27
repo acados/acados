@@ -792,12 +792,10 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
 void ocp_nlp_constraints_bgp_model_get(void *config_, void *dims_,
                          void *model_, const char *field, void *value)
 {
-    // NOTE(oj): this is adapted from the bgh module, maybe something has to be changed here.
     ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
     ocp_nlp_constraints_bgp_model *model = (ocp_nlp_constraints_bgp_model *) model_;
 
-    // int ii;
-    // int *ptr_i;
+    int *ptr_i;
 
     if (!dims || !model || !field || !value)
     {
@@ -825,6 +823,13 @@ void ocp_nlp_constraints_bgp_model_get(void *config_, void *dims_,
     if (!strcmp(field, "lbx"))
     {
         blasfeo_unpack_dvec(nbx, &model->d, nbu, value, 0);
+    }
+    else if (!strcmp(field, "idxs"))
+    {
+        int ns = dims->ns;
+        ptr_i = (int *) value;
+        for (int ii=0; ii < ns; ii++)
+            ptr_i[ii] = model->idxs[ii];
     }
     else
     {

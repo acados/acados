@@ -819,7 +819,6 @@ void ocp_nlp_constraints_bgh_model_get(void *config_, void *dims_,
     int nb = dims->nb;
     int ng = dims->ng;
     int nh = dims->nh;
-    // int ns = dims->ns;
     // int nsbu = dims->nsbu;
     // int nsbx = dims->nsbx;
     // int nsg = dims->nsg;
@@ -891,6 +890,13 @@ void ocp_nlp_constraints_bgh_model_get(void *config_, void *dims_,
     else if (!strcmp(field, "Dt"))
     {
         blasfeo_unpack_dmat(nu, ng, &model->DCt, 0, 0, value, nu);
+    }
+    else if (!strcmp(field, "idxs"))
+    {
+        int ns = dims->ns;
+        ptr_i = (int *) value;
+        for (ii=0; ii < ns; ii++)
+            ptr_i[ii] = model->idxs[ii];
     }
     else
     {
