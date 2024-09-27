@@ -327,7 +327,7 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
 
     char *c_ptr = (char *) raw_memory;
 
-    // int N = dims->N;
+    int N = dims->N;
     // int *nx = dims->nx;
     // int *nu = dims->nu;
     // int *nz = dims->nz;
@@ -362,13 +362,16 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     assign_and_advance_double(mem->stat_m*mem->stat_n, &mem->stat, &c_ptr);
 
     align_char_to(8, &c_ptr);
+
     // ptrs
-    assign_and_advance_int_ptrs(dims->N+1, &mem->idxns, &c_ptr);
-    int nns;
-    for (int stage = 0; stage <= dims->N; stage++)
+    assign_and_advance_int_ptrs(N+1, &mem->idxns, &c_ptr);
+
+    // integers
+    assign_and_advance_int(N+1, &mem->nns, &c_ptr);
+    for (int stage = 0; stage <= N; stage++)
     {
-        nns = dims->ni[stage] - dims->ns[stage];
-        assign_and_advance_int(nns, &mem->idxns[stage], &c_ptr);
+        mem->nns[stage] = dims->ni[stage] - dims->ns[stage];
+        assign_and_advance_int(mem->nns[stage], &mem->idxns[stage], &c_ptr);
     }
 
     mem->nlp_mem->status = ACADOS_READY;
@@ -553,20 +556,28 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
 /************************************************
  * functions
  ************************************************/
-static void ocp_nlp_sqp_wfqp_set_qp_slack_penalties(ocp_nlp_config *config, ocp_nlp_dims *dims,
-    ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
+static void set_non_slacked_l1_penalties(ocp_nlp_config *config, ocp_nlp_dims *dims,
+    ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_sqp_wfqp_memory *mem,
     ocp_nlp_workspace *work)
 {
-    // int N = dims->N;
+    int N = dims->N;
     // int *nv = dims->nv;
-    // int *nx = dims->nx;
-    // int *nu = dims->nu;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    int *nns = mem->nns;
+    ocp_qp_in *qp_in = mem->nlp_mem->qp_in;
 
     // TODO:
     // - loop over originally not softened constraints
     // - set Z (L2) penalties to 0.0 (once at start)
     // - set z (l1) according to penalty parameter.
-
+    // TODO: set this in constraint module:
+    // be aware of rqz_QP = [r, q, zl_NLP, zl_QP, zu_NLP, zu_QP]
+    for (int stage = 0; stage <= dims->N; stage++)
+    {
+        blasfeo_dvecse(nns[stage], mem->penalty_parameter, qp_in->rqz, nu[stage]+nx[stage]+ns[stage]);
+    }
 }
 
 
@@ -641,7 +652,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             nlp_timings->time_lin += acados_toc(&timer1);
 
             // Set the penalties in slacked problem
-            ocp_nlp_sqp_wfqp_set_qp_slack_penalties(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+            set_non_slacked_l1_penalties(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
             // compute nlp residuals
             ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
             ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
@@ -908,12 +919,13 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
 
     // create indices
     int ni, ns, nns;
-    int *idxs = work->nlp_work->tmp_qp_in->idxs_rev;
+    // TODO: proper memory for idxs.
+    int *idxs = nlp_work->tmp_qp_in->idxs_rev[0];
     for (int stage = 0; stage <= dims->N; stage++)
     {
         ns = dims->ns[stage];
         ni = dims->ni[stage];
-        nns = ni - ns;
+        nns = mem->nns[stage];
         config->constraints[stage]->model_get(config->constraints[stage], dims->constraints[stage], nlp_in->constraints[stage], "idxs", idxs);
 
         // DEBUG:

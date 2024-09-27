@@ -97,8 +97,10 @@ typedef struct
     double alpha;
     double *primal_step_norm;
 
-    // indices of non-slacked constraints in NLP
-    int **idxns;
+    int *nns;  // number of non-slacked constraints in NLP
+    int **idxns;  // indices of non-slacked constraints in NLP
+
+    double penalty_parameter;  // TODO: use in globalization?
 
     // statistics
     double *stat;
