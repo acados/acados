@@ -301,7 +301,7 @@ disp(['condition_number_global: ', num2str(result.condition_number_global)])
 iteration = 2;
 iterate = ocp_solver.get_iterate(iteration);
 disp(["x iterate at iteration = " num2str(iteration)]);
-disp(iterate.x_traj);
+disp(cell2mat(iterate.x_traj)');
 
 %% Plot trajectories
 figure; hold on;

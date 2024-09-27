@@ -180,11 +180,11 @@ classdef AcadosOcpSolver < handle
         end
 
         function iterate = get_iterate(obj, iteration)
-            if iteration > obj.get("sqp_iter")
+            if iteration > obj.get('sqp_iter')
                 error("iteration needs to be nonnegative and <= sqp_iter.");
             end
 
-            if !obj.ocp.solver_options.store_iterates
+            if ~obj.ocp.solver_options.store_iterates
                 error("get_iterate: the solver option store_iterates needs to be true in order to get iterates.");
             end
 
@@ -199,19 +199,19 @@ classdef AcadosOcpSolver < handle
             lam_traj = cell(N_horizon + 1, 1);
 
             for n=1:N_horizon
-                x_traj{n, 1} = obj.t_ocp.get("x", n-1, iteration);
-                u_traj{n, 1} = obj.t_ocp.get("u", n-1, iteration);
-                z_traj{n, 1} = obj.t_ocp.get("z", n-1, iteration);
-                sl_traj{n, 1} = obj.t_ocp.get("sl", n-1, iteration);
-                su_traj{n, 1} = obj.t_ocp.get("su", n-1, iteration);
-                pi_traj{n, 1} = obj.t_ocp.get("pi", n-1, iteration);
-                lam_traj{n, 1} = obj.t_ocp.get("lam", n-1, iteration);
+                x_traj{n, 1} = obj.t_ocp.get('x', n-1, iteration);
+                u_traj{n, 1} = obj.t_ocp.get('u', n-1, iteration);
+                z_traj{n, 1} = obj.t_ocp.get('z', n-1, iteration);
+                sl_traj{n, 1} = obj.t_ocp.get('sl', n-1, iteration);
+                su_traj{n, 1} = obj.t_ocp.get('su', n-1, iteration);
+                pi_traj{n, 1} = obj.t_ocp.get('pi', n-1, iteration);
+                lam_traj{n, 1} = obj.t_ocp.get('lam', n-1, iteration);
             end
 
-            x_traj{N_horizon+1, 1} = obj.t_ocp.get("x", N_horizon, iteration);
-            sl_traj{N_horizon+1, 1} = obj.t_ocp.get("sl", N_horizon, iteration);
-            su_traj{N_horizon+1, 1} = obj.t_ocp.get("su", N_horizon, iteration);
-            lam_traj{N_horizon+1, 1} = obj.t_ocp.get("lam", N_horizon, iteration);
+            x_traj{N_horizon+1, 1} = obj.t_ocp.get('x', N_horizon, iteration);
+            sl_traj{N_horizon+1, 1} = obj.t_ocp.get('sl', N_horizon, iteration);
+            su_traj{N_horizon+1, 1} = obj.t_ocp.get('su', N_horizon, iteration);
+            lam_traj{N_horizon+1, 1} = obj.t_ocp.get('lam', N_horizon, iteration);
 
             iterate = AcadosOcpIterate(x_traj, u_traj, z_traj, ...
                     sl_traj, su_traj, pi_traj, lam_traj);
