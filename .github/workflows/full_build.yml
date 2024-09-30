@@ -242,6 +242,7 @@ jobs:
       if: always()
       with:
           release: R2021a
+          products: Simulink Simulink_Test
           cache: true
 
     # just needed for blasfeo_target.h
