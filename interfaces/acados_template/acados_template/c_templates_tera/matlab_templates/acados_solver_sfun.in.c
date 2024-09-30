@@ -635,7 +635,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {%- endif %}
 
   {%- if dims.np > 0 and simulink_opts.inputs.parameter_traj -%}  {#- parameter_traj #}
-    // parameters - stage-variant !!!
+    // parameter_traj
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
     // update value of parameters
@@ -1119,29 +1119,38 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
   {% if simulink_opts.outputs.xtraj == 1 %}
     {%- set i_output = i_output + 1 %}
-
     out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
+    tmp_offset = 0;
     for (int stage = 0; stage < {{ solver_options.N_horizon + 1 }}; stage++)
-        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, stage,
-                        "x", (void *) (out_ptr + stage * {{ dims.nx }}));
+    {
+        tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "x");
+        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, stage, "x", (void *) (out_ptr + tmp_offset));
+        tmp_offset += tmp_int;
+    }
   {%- endif %}
 
   {% if simulink_opts.outputs.ztraj == 1 %}
     {%- set i_output = i_output + 1 %}
-
     out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
+    tmp_offset = 0;
     for (int stage = 0; stage < N; stage++)
-        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, stage,
-                        "z", (void *) (out_ptr + stage * {{ dims.nz }}));
+    {
+        tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "z");
+        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, stage, "z", (void *) (out_ptr + tmp_offset));
+        tmp_offset += tmp_int;
+    }
   {%- endif %}
 
   {% if simulink_opts.outputs.pi_all == 1 %}
     {%- set i_output = i_output + 1 %}
-
     out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
+    tmp_offset = 0;
     for (int stage = 0; stage < N; stage++)
-        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, stage,
-                        "pi", (void *) (out_ptr + stage * {{ dims.nx }}));
+    {
+        tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "pi");
+        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, stage, "pi", (void *) (out_ptr + stage * {{ dims.nx }}));
+        tmp_offset += tmp_int;
+    }
   {%- endif %}
 
   {% if simulink_opts.outputs.slack_values == 1 %}
@@ -1231,8 +1240,13 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {% if simulink_opts.outputs.parameter_traj == 1 %}
     {%- set i_output = i_output + 1 %}
     out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
+    tmp_offset = 0;
     for (int stage = 0; stage < N+1; stage++)
-        ocp_nlp_in_get(nlp_config, nlp_dims, nlp_in, stage, "p", (void *) (out_ptr + stage * {{ dims.np }}));
+    {
+        tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "p");
+        ocp_nlp_in_get(nlp_config, nlp_dims, nlp_in, stage, "p", (void *) (out_ptr + tmp_offset));
+        tmp_offset += tmp_int;
+    }
   {%- endif %}
 
 }
