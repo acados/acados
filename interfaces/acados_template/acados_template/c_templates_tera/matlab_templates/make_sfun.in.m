@@ -39,10 +39,10 @@
 {%- set two_ns_total = 2 * ns_total %}
 
 SOURCES = { ...
-{% for filename in external_function_files_model %}
+{%- for filename in external_function_files_model %}
             '{{ filename }}', ...
 {%- endfor %}
-{% for filename in external_function_files_ocp %}
+{%- for filename in external_function_files_ocp %}
             '{{ filename }}', ...
 {%- endfor %}
         {%- if custom_update_filename != "" %}
