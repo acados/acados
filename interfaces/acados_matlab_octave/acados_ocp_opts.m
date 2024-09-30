@@ -79,6 +79,7 @@ classdef acados_ocp_opts < handle
 
             obj.opts_struct.qp_solver_iter_max = 50;
             obj.opts_struct.qp_solver_mu0 = 0;
+            obj.opts_struct.store_iterates = false;
 
             % obj.opts_struct.qp_solver_cond_N = 5; % New horizon after partial condensing
             obj.opts_struct.qp_solver_cond_ric_alg = 1; % 0: dont factorize hessian in the condensing; 1: factorize
