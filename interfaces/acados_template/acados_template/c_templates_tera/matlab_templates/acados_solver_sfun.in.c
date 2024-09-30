@@ -953,11 +953,14 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         // x_init
         {%- set i_input = i_input + 1 %}
         in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+        tmp_offset = 0;
         for (int stage = 0; stage < {{ solver_options.N_horizon + 1 }}; stage++)
         {
-            for (int jj = 0; jj < {{ dims.nx }}; jj++)
-                buffer[jj] = (double)(*in_sign[(stage)*{{ dims.nx }}+jj]);
+            tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "x");
+            for (int jj = 0; jj < tmp_int; jj++)
+                buffer[jj] = (double)(*in_sign[tmp_offset+jj]);
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, stage, "x", (void *) buffer);
+            tmp_offset += tmp_int;
         }
       {%- endif %}
 
@@ -965,11 +968,14 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         // u_init
         {%- set i_input = i_input + 1 %}
         in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+        tmp_offset = 0;
         for (int stage = 0; stage < N; stage++)
         {
+            tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "u");
             for (int jj = 0; jj < {{ dims.nu }}; jj++)
-                buffer[jj] = (double)(*in_sign[(stage)*{{ dims.nu }}+jj]);
+                buffer[jj] = (double)(*in_sign[tmp_offset+jj]);
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, stage, "u", (void *) buffer);
+            tmp_offset += tmp_int;
         }
       {%- endif %}
 
@@ -977,11 +983,14 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         // pi_init
         {%- set i_input = i_input + 1 %}
         in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+        tmp_offset = 0;
         for (int stage = 0; stage < N; stage++)
         {
-            for (int jj = 0; jj < {{ dims.nx }}; jj++)
-                buffer[jj] = (double)(*in_sign[(stage)*{{ dims.nx }}+jj]);
+            tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "pi");
+            for (int jj = 0; jj < tmp_int; jj++)
+                buffer[jj] = (double)(*in_sign[tmp_offset+jj]);
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, stage, "pi", (void *) buffer);
+            tmp_offset += tmp_int;
         }
       {%- endif %}
 
