@@ -180,8 +180,8 @@ classdef AcadosOcpSolver < handle
         end
 
         function iterate = get_iterate(obj, iteration)
-            if iteration > obj.get('sqp_iter')
-                error("iteration needs to be nonnegative and <= sqp_iter.");
+            if iteration > obj.get('nlp_iter')
+                error("iteration needs to be nonnegative and <= nlp_iter.");
             end
 
             if ~obj.ocp.solver_options.store_iterates

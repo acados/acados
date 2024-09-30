@@ -47,4 +47,5 @@ class AcadosOcpIterate:
 @dataclass
 class AcadosOcpIterates:
 
-    iterate_traj: List[AcadosOcpIterate]
+    iterate_list: List[AcadosOcpIterate]
+

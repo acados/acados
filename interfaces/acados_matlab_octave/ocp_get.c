@@ -103,9 +103,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (nrhs == 4)
     {
         iteration = mxGetScalar(prhs[3]);
-        int sqp_iter;
-        ocp_nlp_get(config, solver, "sqp_iter", &sqp_iter);
-        if (iteration < 0 || iteration > sqp_iter)
+        int nlp_iter;
+        ocp_nlp_get(config, solver, "nlp_iter", &nlp_iter);
+        if (iteration < 0 || iteration > nlp_iter)
         {
             sprintf(buffer, "\nocp_get: invalid iteration index, got stage = %d, should be nonnegative and <= sqp_iter = %d\n", iteration, sqp_iter);
             mexErrMsgTxt(buffer);
