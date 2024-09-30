@@ -237,6 +237,8 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.globalization = value;
             elseif (strcmp(field, 'parameter_values'))
                 obj.opts_struct.parameter_values = value;
+            elseif (strcmp(field, 'store_iterates'))
+                obj.opts_struct.store_iterates = value;
             elseif (strcmp(field, 'ext_fun_compile_flags'))
                 obj.opts_struct.ext_fun_compile_flags = value;
             elseif (strcmp(field, 'compile_mex'))
