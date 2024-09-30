@@ -61,7 +61,8 @@ classdef AcadosMultiphaseOcp < handle
         cost_start_idx
 
         casadi_pool_names
-
+        external_function_files_ocp
+        external_function_files_model
     end
     methods
         function obj = AcadosMultiphaseOcp(N_list)

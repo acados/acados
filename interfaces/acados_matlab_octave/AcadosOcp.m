@@ -48,6 +48,8 @@ classdef AcadosOcp < handle
         name
         zoro_description
         casadi_pool_names
+        external_function_files_ocp
+        external_function_files_model
     end
     methods
         function obj = AcadosOcp()
