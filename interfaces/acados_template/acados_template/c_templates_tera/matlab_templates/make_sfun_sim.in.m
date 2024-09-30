@@ -40,10 +40,10 @@
 
 SOURCES = [ 'acados_sim_solver_sfunction_{{ model.name }}.c ', ...
             'acados_sim_solver_{{ model.name }}.c ', ...
-{% for filename in external_function_files_model %}
-            '{{ filename }}', ...
+{%- for filename in external_function_files_model %}
+            '{{ filename }} ', ...
 {%- endfor %}
-          ];
+];
 
 INC_PATH = '{{ acados_include_path }}';
 
@@ -63,8 +63,9 @@ try
         CFLAGS, INCS, ' ', SOURCES, ' -L', LIB_PATH, ' ', LIBS ]);
 
 catch exception
-    disp('make_sfun failed with the following exception:')
+    disp('make_sfun_sim failed with the following exception:')
     disp(exception);
+    disp(exception.message);
     disp('Try adding -v to the mex command above to get more information.')
     keyboard
 end
