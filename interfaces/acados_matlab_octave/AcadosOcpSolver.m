@@ -217,6 +217,16 @@ classdef AcadosOcpSolver < handle
                     sl_traj, su_traj, pi_traj, lam_traj);
         end
 
+        function iterates = get_iterates(obj)
+            nlp_iter = obj.get('nlp_iter');
+            iterates_cell = cell(nlp_iter+1, 1);
+
+            for n=1:(nlp_iter+1)
+                iterates_cell{n} = obj.get_iterate(n-1);
+            end
+
+            iterates = AcadosOcpIterates(iterates_cell);
+        end
 
         function print(obj, varargin)
             obj.t_ocp.print(varargin{:});
