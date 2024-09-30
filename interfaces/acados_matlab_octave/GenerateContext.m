@@ -36,7 +36,8 @@ classdef GenerateContext < handle
         p_global_expressions
         opts
         casadi_codegen_opts
-        list_funname_dir_pairs  % list of (function_name, output_dir), NOTE: this can be used to simplify template based code generation!
+        list_funname_dir_pairs  % list of (function_name, output_dir) pairs, files that are generated
+        generic_funname_dir_pairs % list of (function_name, output_dir) pairs, files that are not generated
         functions_to_generate
         casadi_fun_opts
     end
@@ -60,6 +61,7 @@ classdef GenerateContext < handle
 
             obj.list_funname_dir_pairs = {};
             obj.functions_to_generate = {};
+            obj.generic_funname_dir_pairs = {};
 
             obj.casadi_fun_opts = struct();
 
@@ -118,6 +120,39 @@ classdef GenerateContext < handle
             end
 
             obj = obj.generate_functions();
+        end
+
+
+        function obj = add_external_function_file(obj, fun_name, output_dir)
+            % remove trailing .c if present
+            if endsWith(fun_name, ".c")
+                fun_name = fun_name(1:end-2);
+            end
+            obj.generic_funname_dir_pairs{end+1} = {fun_name, output_dir};
+        end
+
+        function out = get_external_function_file_list(obj, ocp_specific)
+            out = {};
+            for i = 1:numel(obj.generic_funname_dir_pairs)
+                fun_name = obj.generic_funname_dir_pairs{i}{1};
+                fun_dir = obj.generic_funname_dir_pairs{i}{2};
+                rel_fun_dir = relative_path(fun_dir, obj.opts.code_export_directory);
+                is_ocp_specific = ~endsWith(rel_fun_dir, "model");
+                if ocp_specific ~= is_ocp_specific
+                    continue;
+                end
+                out{end+1} = fullfile(rel_fun_dir, [fun_name, '.c']);
+            end
+            for i = 1:numel(obj.list_funname_dir_pairs)
+                fun_name = obj.list_funname_dir_pairs{i}{1};
+                fun_dir = obj.list_funname_dir_pairs{i}{2};
+                rel_fun_dir = relative_path(fun_dir, obj.opts.code_export_directory);
+                is_ocp_specific = ~endsWith(rel_fun_dir, "model");
+                if ocp_specific ~= is_ocp_specific
+                    continue;
+                end
+                out{end+1} = fullfile(rel_fun_dir, [fun_name, '.c']);
+            end
         end
     end
 

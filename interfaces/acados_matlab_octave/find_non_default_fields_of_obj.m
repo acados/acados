@@ -83,18 +83,3 @@ function nondefault_fields = find_non_default_fields_of_obj(obj, stage_type)
         end
     end
 end
-
-function result = endsWith(strArray, suffix)
-    % Initialize the result array
-    result = false(size(strArray));
-
-    % Iterate over each string in the array
-    for i = 1:numel(strArray)
-        str = strArray{i};
-
-        % Check if the string ends with the suffix
-        if length(str) >= length(suffix) && strcmp(str(end-length(suffix)+1:end), suffix)
-            result(i) = true;
-        end
-    end
-end
