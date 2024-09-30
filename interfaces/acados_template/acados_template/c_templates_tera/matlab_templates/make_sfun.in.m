@@ -154,6 +154,13 @@ sfun_input_names = [sfun_input_names; 'parameter_traj [{{ (solver_options.N_hori
 i_in = i_in + 1;
 {%- endif %}
 
+{%- if dims.np_global > 0 and simulink_opts.inputs.p_global -%}  {#- p_global #}
+input_note = strcat(input_note, num2str(i_in), ') global parameters - first value indicates if update should be performed (0 means no update)\n');
+input_note = strcat(input_note, '\tafterwards: new numerical values of p_global, size [1 + {{ dims.np_global }}]\n');
+sfun_input_names = [sfun_input_names; 'p_global [1 + {{ dims.np_global }}]'];
+i_in = i_in + 1;
+{%- endif %}
+
 {%- if dims.ny_0 > 0 and simulink_opts.inputs.y_ref_0 %}
 input_note = strcat(input_note, num2str(i_in), ') y_ref_0 - size [{{ dims.ny_0 }}]\n ');
 sfun_input_names = [sfun_input_names; 'y_ref_0 [{{ dims.ny_0 }}]'];

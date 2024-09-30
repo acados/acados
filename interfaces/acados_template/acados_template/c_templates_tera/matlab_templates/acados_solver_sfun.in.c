@@ -95,6 +95,9 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- if dims.np > 0 and simulink_opts.inputs.parameter_traj -%}  {#- parameter_traj #}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
+  {%- if dims.np_global > 0 and simulink_opts.inputs.p_global -%}  {#- p_global #}
+    {%- set n_inputs = n_inputs + 1 -%}
+  {%- endif -%}
   {%- if dims.ny_0 > 0 and simulink_opts.inputs.y_ref_0 -%}  {#- y_ref_0 -#}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
@@ -241,6 +244,12 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set i_input = i_input + 1 %}
     // parameters
     ssSetInputPortVectorDimension(S, {{ i_input }}, (N+1) * {{ dims.np }});
+  {%- endif %}
+
+  {%- if dims.np_global > 0 and simulink_opts.inputs.p_global -%}  {#- p_global #}
+    {%- set i_input = i_input + 1 %}
+    // parameters
+    ssSetInputPortVectorDimension(S, {{ i_input }}, 1 + {{ dims.np_global }});
   {%- endif %}
 
   {%- if dims.ny > 0 and simulink_opts.inputs.y_ref_0 %}
@@ -606,6 +615,9 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {%- if dims.ny_e > 0 and simulink_opts.inputs.cost_W_e %}  {#- cost_W_e #}
     {%- set buffer_sizes = buffer_sizes | concat(with=(dims.ny_e * dims.ny_e)) %}
   {%- endif %}
+  {%- if dims.np_global > 0 and simulink_opts.inputs.p_global %}  {#- p_global #}
+    {%- set buffer_sizes = buffer_sizes | concat(with=(dims.np_global)) %}
+  {%- endif %}
 
     // local buffer
     {%- set buffer_size = buffer_sizes | sort | last %}
@@ -632,6 +644,18 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     for (int i = 0; i < {{ dims.nbx_0 }}; i++)
         buffer[i] = (double)(*in_sign[i]);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", buffer);
+  {%- endif %}
+
+  {%- if dims.np_global > 0 and simulink_opts.inputs.p_global -%}  {#- p_global #}
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    buffer[0] = (double)(*in_sign[0]);
+    if (buffer[0] != 0)
+    {
+        for (int i = 0; i < {{ dims.np_global }}; i++)
+            buffer[i] = (double)(*in_sign[i+1]);
+        {{ name }}_acados_set_p_global_and_precompute_dependencies(capsule, buffer, {{ dims.np_global }});
+    }
   {%- endif %}
 
   {%- if dims.np > 0 and simulink_opts.inputs.parameter_traj -%}  {#- parameter_traj #}
