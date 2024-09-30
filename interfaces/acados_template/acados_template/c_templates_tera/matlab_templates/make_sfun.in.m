@@ -34,6 +34,10 @@
     {%- set custom_update_filename = solver_options.custom_update_filename %}
 {%- endif %}
 
+{%- set ns_total = dims.ns_0 + dims.ns_e + (solver_options.N_horizon - 1) * dims.ns %}
+{# two brackets in math expression are not allowed by currently used tera #}
+{%- set two_ns_total = 2 * ns_total %}
+
 SOURCES = { ...
         {%- if solver_options.integrator_type == 'ERK' %}
             '{{ model.name }}_model/{{ model.name }}_expl_ode_fun.c', ...
@@ -346,6 +350,30 @@ sfun_input_names = [sfun_input_names; 'cost_W_e [{{ dims.ny_e * dims.ny_e }}]'];
 i_in = i_in + 1;
 {%- endif %}
 
+{%- if ns_total > 0 and simulink_opts.inputs.cost_zl %}  {#- cost_zl #}
+input_note = strcat(input_note, num2str(i_in), ') cost_zl for all nodes 0 to N, size [{{ ns_total }}]\n ');
+sfun_input_names = [sfun_input_names; 'cost_zl [{{ ns_total }}]'];
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if ns_total > 0 and simulink_opts.inputs.cost_zu %}  {#- cost_zu #}
+input_note = strcat(input_note, num2str(i_in), ') cost_zu for all nodes 0 to N, size [{{ ns_total }}]\n ');
+sfun_input_names = [sfun_input_names; 'cost_zu [{{ ns_total }}]'];
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if ns_total > 0 and simulink_opts.inputs.cost_Zl %}  {#- cost_Zl #}
+input_note = strcat(input_note, num2str(i_in), ') cost_Zl for all nodes 0 to N, size [{{ ns_total }}]\n ');
+sfun_input_names = [sfun_input_names; 'cost_Zl [{{ ns_total }}]'];
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if ns_total > 0 and simulink_opts.inputs.cost_Zu %}  {#- cost_Zu #}
+input_note = strcat(input_note, num2str(i_in), ') cost_Zu for all nodes 0 to N, size [{{ ns_total }}]\n ');
+sfun_input_names = [sfun_input_names; 'cost_Zu [{{ ns_total }}]'];
+i_in = i_in + 1;
+{%- endif %}
+
 {%- if simulink_opts.inputs.reset_solver %}  {#- reset_solver #}
 input_note = strcat(input_note, num2str(i_in), ') reset_solver - determines if iterate is set to all zeros before other initializations (x_init, u_init, pi_init) are set and before solver is called, size [1]\n ');
 sfun_input_names = [sfun_input_names; 'reset_solver [1]'];
@@ -353,7 +381,7 @@ i_in = i_in + 1;
 {%- endif %}
 
 {%- if simulink_opts.inputs.ignore_inits %}  {#- ignore_inits #}
-input_note = strcat(input_note, num2str(i_in), ') ignore_inits - determines if initialization (x_init, u_init) are set (ignore_inits == 0) or ignored (otherwise), ignoring corresponds to internal warm start, size [1]\n ');
+input_note = strcat(input_note, num2str(i_in), ') ignore_inits - determines if initialization (x_init, u_init, pi_init, slacks_init) are set (ignore_inits == 0) or ignored (otherwise), ignoring corresponds to internal warm start, size [1]\n ');
 sfun_input_names = [sfun_input_names; 'ignore_inits [1]'];
 i_in = i_in + 1;
 {%- endif %}
@@ -373,6 +401,12 @@ i_in = i_in + 1;
 {%- if simulink_opts.inputs.pi_init %}  {#- pi_init #}
 input_note = strcat(input_note, num2str(i_in), ') pi_init - initialization of pi for shooting nodes 0 to N-1, size [{{ dims.nx * (solver_options.N_horizon) }}]\n ');
 sfun_input_names = [sfun_input_names; 'pi_init [{{ dims.nx * (solver_options.N_horizon) }}]'];
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if simulink_opts.inputs.slacks_init %}  {#- slacks_init #}
+input_note = strcat(input_note, num2str(i_in), ') slacks_init - initialization of slack values for all shooting nodes (0 to N), size [{{ two_ns_total }}]');
+sfun_input_names = [sfun_input_names; 'slacks_init [{{ two_ns_total }}]'];
 i_in = i_in + 1;
 {%- endif %}
 
@@ -440,6 +474,12 @@ output_note = strcat(output_note, num2str(i_out), ') pi_all, equality Lagrange m
 sfun_output_names = [sfun_output_names; 'pi_all [{{ dims.nx * solver_options.N_horizon }}]'];
 {%- endif %}
 
+{%- if simulink_opts.outputs.slack_values == 1 %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') slack values concatenated in order [sl_0, su_0, ..., sl_N, su_N] \n ');
+sfun_output_names = [sfun_output_names; 'slack_values [{{ two_ns_total }}]'];
+{%- endif %}
+
 {%- if simulink_opts.outputs.solver_status == 1 %}
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') acados solver status (0 = SUCCESS)\n ');
@@ -501,14 +541,11 @@ output_note = strcat(output_note, num2str(i_out), ') SQP iterations\n ');
 sfun_output_names = [sfun_output_names; 'sqp_iter'];
 {%- endif %}
 
-
 {%- if simulink_opts.outputs.parameter_traj == 1 %}
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') parameter trajectory\n ');
-sfun_output_names = [sfun_output_names; 'parameter_traj [{{ (solver_options.N_horizon + 1) * dims.np}}]'];
+sfun_output_names = [sfun_output_names; 'parameter_traj [{{ (solver_options.N_horizon + 1) * dims.np }}]'];
 {%- endif %}
-
-
 
 fprintf(output_note)
 
