@@ -840,6 +840,7 @@ classdef AcadosOcp < handle
             if strcmp(ocp.model.dyn_ext_fun_type, 'generic')
                 check_dir_and_create(model_dir);
                 copyfile(fullfile(pwd, ocp.model.dyn_generic_source), model_dir);
+                context.add_external_function_file(ocp.model.dyn_generic_source, model_dir);
             elseif strcmp(ocp.model.dyn_ext_fun_type, 'casadi')
                 check_casadi_version();
                 switch solver_opts.integrator_type
@@ -873,7 +874,7 @@ classdef AcadosOcp < handle
             for i = 1:3
                 if strcmp(cost_ext_fun_types{i}, 'generic')
                     if strcmp(cost_types{i}, 'EXTERNAL')
-                        setup_generic_cost(cost, cost_dir, stage_types{i})
+                        setup_generic_cost(context, cost, cost_dir, stage_types{i})
                     else
                         error('Unknown cost_type for cost_ext_fun_types generic: got %s', cost_types{i});
                     end
