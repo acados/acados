@@ -79,7 +79,8 @@ function state_trajectories = run_example_ocp(lut, use_p_global)
     [p_global, m, l, C, p_global_values] = create_p_global(lut);
 
     % OCP formulation
-    ocp = create_ocp_formulation(p_global, m, l, C, lut, use_p_global, p_global_values);
+    ocp = create_ocp_formulation_without_opts(p_global, m, l, C, lut, use_p_global, p_global_values);
+    ocp = set_solver_options(ocp);
 
     % OCP solver
     ocp_solver = AcadosOcpSolver(ocp);
@@ -141,29 +142,48 @@ function state_trajectories = run_example_mocp(lut, use_p_global)
 end
 
 
+function ocp = set_solver_options(ocp)
+    % set options
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
+    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
+    ocp.solver_options.integrator_type = 'ERK';
+    ocp.solver_options.print_level = 0;
+    ocp.solver_options.nlp_solver_type = 'SQP_RTI';
+
+    % set prediction horizon
+    Tf = 1.0;
+    N_horizon = 20;
+    ocp.solver_options.tf = Tf;
+    ocp.solver_options.N_horizon = N_horizon;
+
+    % Set options
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
+    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
+    ocp.solver_options.integrator_type = 'ERK';
+    ocp.solver_options.print_level = 0;
+    ocp.solver_options.nlp_solver_type = 'SQP_RTI';
+
+    % partial condensing
+    ocp.solver_options.qp_solver_cond_N = 5;
+    ocp.solver_options.qp_solver_cond_block_size = [3, 3, 3, 3, 7, 1];
+
+    % NOTE: these additional flags are required for code generation of CasADi functions using casadi.blazing_spline
+    ocp.solver_options.ext_fun_compile_flags = ['-I' casadi.GlobalOptions.getCasadiIncludePath ' -ffast-math -march=native '];
+end
+
 function mocp = create_mocp_formulation(p_global, m, l, C, lut, use_p_global, p_global_values)
 
-    Tf = 1.0;
     N_horizon_1 = 10;
     N_horizon_2 = 10;
     N_horizon = N_horizon_1 + N_horizon_2;
     mocp = AcadosMultiphaseOcp([N_horizon_1, N_horizon_2]);
-    ocp_phase_1 = create_ocp_formulation(p_global, m, l, C, lut, use_p_global, p_global_values);
-    ocp_phase_2 = create_ocp_formulation(p_global, m, l, C, lut, use_p_global, p_global_values);
+    ocp_phase_1 = create_ocp_formulation_without_opts(p_global, m, l, C, lut, use_p_global, p_global_values);
+    ocp_phase_2 = create_ocp_formulation_without_opts(p_global, m, l, C, lut, use_p_global, p_global_values);
+
+    mocp = set_solver_options(mocp);
 
     mocp.set_phase(ocp_phase_1, 1);
     mocp.set_phase(ocp_phase_2, 2);
-
-    %  set options
-    mocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
-    mocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
-    mocp.solver_options.integrator_type = 'ERK';
-    mocp.solver_options.print_level = 0;
-    mocp.solver_options.nlp_solver_type = 'SQP_RTI';
-
-    % set prediction horizon
-    mocp.solver_options.tf = Tf;
-    mocp.solver_options.N_horizon = N_horizon;
 
 end
 
