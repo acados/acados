@@ -971,7 +971,7 @@ class AcadosOcpSolver:
         """
         Get the information of the last solver call.
 
-            :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter', 'sqp_iter', 'residuals', 'qp_iter', 'alpha']
+            :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'nlp_iter', 'sqp_iter', 'residuals', 'qp_iter', 'alpha']
 
         Available fileds:
             - time_tot: total CPU time previous call
