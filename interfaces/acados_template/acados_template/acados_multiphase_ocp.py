@@ -440,5 +440,7 @@ class AcadosMultiphaseOcp:
 
         context.finalize()
         self.__casadi_pool_names = context.pool_names
+        self.__external_function_files_model = context.get_external_function_file_list(ocp_specific=False)
+        self.__external_function_files_ocp = context.get_external_function_file_list(ocp_specific=True)
 
         return context
