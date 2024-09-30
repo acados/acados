@@ -456,13 +456,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ocp_nlp_get(config, solver, "status", &status);
         *mat_ptr = (double) status;
     }
-    else if (!strcmp(field, "sqp_iter"))
+    else if (!strcmp(field, "sqp_iter") || !strcmp(field, "nlp_iter"))
     {
         plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
         double *mat_ptr = mxGetPr( plhs[0] );
-        int sqp_iter;
-        ocp_nlp_get(config, solver, "sqp_iter", &sqp_iter);
-        *mat_ptr = (double) sqp_iter;
+        int nlp_iter;
+        ocp_nlp_get(config, solver, "nlp_iter", &nlp_iter);
+        *mat_ptr = (double) nlp_iter;
     }
     else if (!strcmp(field, "time_tot") || !strcmp(field, "time_lin") || !strcmp(field, "time_glob") || !strcmp(field, "time_reg") || !strcmp(field, "time_qp_sol") || !strcmp(field, "time_qp_solver_call") || !strcmp(field, "time_qp_solver") || !strcmp(field, "time_qp_xcond") || !strcmp(field, "time_sim") || !strcmp(field, "time_sim_la") || !strcmp(field, "time_sim_ad"))
     {
@@ -480,14 +480,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "stat"))
     {
-        int sqp_iter;
+        int nlp_iter;
         int stat_m, stat_n;
         double *stat;
-        ocp_nlp_get(config, solver, "sqp_iter", &sqp_iter);
+        ocp_nlp_get(config, solver, "nlp_iter", &nlp_iter);
         ocp_nlp_get(config, solver, "stat_m", &stat_m);
         ocp_nlp_get(config, solver, "stat_n", &stat_n);
         ocp_nlp_get(config, solver, "stat", &stat);
-        int min_size = stat_m<sqp_iter+1 ? stat_m : sqp_iter+1;
+        int min_size = stat_m<nlp_iter+1 ? stat_m : nlp_iter+1;
         plhs[0] = mxCreateNumericMatrix(min_size, stat_n+1, mxDOUBLE_CLASS, mxREAL);
         double *mat_ptr = mxGetPr( plhs[0] );
         for (ii=0; ii<min_size; ii++)
@@ -596,7 +596,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else
     {
         MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field,
-             "x, u, z, pi, lam, sl, su, t, sens_x, sens_u, sens_pi, status, sqp_iter, time_tot, time_lin, time_reg, time_qp_sol, stat, qp_solver_cond_H, qp_A, qp_B, qp_Q, qp_R, qp_S, qp_b, qp_q, qp_r");
+             "x, u, z, pi, lam, sl, su, t, sens_x, sens_u, sens_pi, status, sqp_iter, nlp_iter, time_tot, time_lin, time_reg, time_qp_sol, stat, qp_solver_cond_H, qp_A, qp_B, qp_Q, qp_R, qp_S, qp_b, qp_q, qp_r");
     }
 
     return;
