@@ -1121,9 +1121,13 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {%- if simulink_opts.outputs.utraj == 1 %}
     {%- set i_output = i_output + 1 %}
     out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
+    tmp_offset = 0;
     for (int stage = 0; stage < N; stage++)
-        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, stage,
-                        "u", (void *) (out_ptr + stage * {{ dims.nu }}));
+    {
+        tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "u");
+        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, stage, "u", (void *) (out_ptr + tmp_offset));
+        tmp_offset += tmp_int;
+    }
   {%- endif %}
 
   {% if simulink_opts.outputs.xtraj == 1 %}
