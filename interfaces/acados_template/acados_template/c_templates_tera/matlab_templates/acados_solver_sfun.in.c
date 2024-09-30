@@ -638,13 +638,17 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // parameters - stage-variant !!!
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
-
     // update value of parameters
-    for (int ii = 0; ii <= N; ii++)
+    tmp_offset = 0;
+    for (int stage = 0; stage <= N; stage++)
     {
-        for (int jj = 0; jj < {{ dims.np }}; jj++)
-            buffer[jj] = (double)(*in_sign[ii*{{dims.np}}+jj]);
-        {{ name }}_acados_update_params(capsule, ii, buffer, {{ dims.np }});
+        tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "p");
+        for (int jj = 0; jj < tmp_int; jj++)
+        {
+            buffer[jj] = (double)(*in_sign[tmp_offset+jj]);
+        }
+        {{ name }}_acados_update_params(capsule, stage, buffer, tmp_int);
+        tmp_offset += tmp_int;
     }
   {%- endif %}
 
