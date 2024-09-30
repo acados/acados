@@ -24,7 +24,11 @@ function rel_path = relative_path(target_path, base_path)
     rel_parts = [repmat({'..'}, 1, up_steps), target_parts(i:end)];
 
     % Join the parts into the final relative path
-    rel_path = fullfile(rel_parts{:});
+    if isempty(rel_parts)
+        rel_path = '';
+    else
+        rel_path = fullfile(rel_parts{:});
+    end
 end
 
 
