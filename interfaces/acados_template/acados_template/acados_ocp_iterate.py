@@ -48,4 +48,20 @@ class AcadosOcpIterate:
 class AcadosOcpIterates:
 
     iterate_list: List[AcadosOcpIterate]
+    __iterate_fields = ["x", "u", "z", "sl", "su", "pi", "lam"]
 
+    def as_array(self, field: str, ) -> np.ndarray:
+        "Returns the iterate given by field as a numpy array of shape (nlp_iter, N_horizon, n_field)."
+
+        if field not in self.__iterate_fields:
+            raise Exception(f"Invalid field: got {field}, expected value in {self.__iterate_fields}")
+
+        attr = f"{field}_traj"
+        traj_ = [getattr(iterate, attr) for iterate in self.iterate_list]
+
+        try:
+            traj = np.array(traj_, dtype=float)
+        except ValueError:
+            raise Exception(f"Stage-wise dimensions are not the same for {field} trajectory.")
+
+        return traj

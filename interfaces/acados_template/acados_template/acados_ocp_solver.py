@@ -1504,7 +1504,7 @@ class AcadosOcpSolver:
 
 
     def get_iterates(self) -> AcadosOcpIterates:
-        return AcadosOcpIterates(iterate_traj=[self.get_iterate(n) for n in range(self.get_stats('sqp_iter')+1)])
+        return AcadosOcpIterates(iterate_list=[self.get_iterate(n) for n in range(self.get_stats('nlp_iter')+1)])
 
 
     def dims_get(self, field_, stage_):
