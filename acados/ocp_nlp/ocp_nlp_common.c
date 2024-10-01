@@ -1788,6 +1788,7 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
     int nx_max = 0;
     int ni_max = 0;
     int np_max = 0;
+    int ns_max = 0;
 
     for (int i = 0; i <= N; i++)
     {
@@ -1795,6 +1796,7 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
         nv_max = nv_max > nv[i] ? nv_max : nv[i];
         ni_max = ni_max > ni[i] ? ni_max : ni[i];
         np_max = np_max > np[i] ? np_max : np[i];
+        ns_max = ns_max > ns[i] ? ns_max : ns[i];
     }
     size += 1 * blasfeo_memsize_dvec(nx_max);
     size += 1 * blasfeo_memsize_dvec(nv_max);
@@ -1874,7 +1876,6 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
         size += size_tmp;
 
 #endif
-
     }
     else
     {
@@ -1900,8 +1901,9 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
         {
             size += constraints[i]->workspace_calculate_size(constraints[i], dims->constraints[i], opts->constraints[i]);
         }
-
     }
+
+    size += (ni_max + ns_max) * sizeof(int);
 
     size += 8; // struct align
     size += 64; // blasfeo align
@@ -1930,6 +1932,7 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     int nx_max = 0;
     int ni_max = 0;
     int np_max = 0;
+    int ns_max = 0;
 
     for (int i = 0; i <= N; i++)
     {
@@ -1937,6 +1940,7 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
         nv_max = nv_max > nv[i] ? nv_max : nv[i];
         ni_max = ni_max > ni[i] ? ni_max : ni[i];
         np_max = np_max > np[i] ? np_max : np[i];
+        ns_max = ns_max > ns[i] ? ns_max : ns[i];
     }
 
     char *c_ptr = (char *) raw_memory;
@@ -1975,6 +1979,8 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     c_ptr += ocp_nlp_out_calculate_size(config, dims);
 
     assign_and_advance_double(nv_max, &work->tmp_nv_double, &c_ptr);
+
+    assign_and_advance_int(ni_max+ns_max, &work->tmp_nins, &c_ptr);
     // align for blasfeo mem
     align_char_to(64, &c_ptr);
 
@@ -2081,7 +2087,6 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
             work->constraints[i] = c_ptr;
             c_ptr += constraints[i]->workspace_calculate_size(constraints[i], dims->constraints[i], opts->constraints[i]);
         }
-
     }
 
     assert((char *) work + mem->workspace_size >= c_ptr);

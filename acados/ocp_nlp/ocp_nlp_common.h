@@ -449,6 +449,8 @@ typedef struct ocp_nlp_workspace
     // AS-RTI
     double *tmp_nv_double;
 
+    int *tmp_nins;
+
 } ocp_nlp_workspace;
 
 //
