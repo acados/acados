@@ -105,6 +105,8 @@ LIBS{end+1} = '-ldaqp';
     {% endif %}
 {%- endif %}
 
+COMPFLAGS = [COMPFLAGS ' {{ solver_options.ext_fun_compile_flags }}'];
+CFLAGS = [CFLAGS ' {{ solver_options.ext_fun_compile_flags }}'];
 
 try
     %     mex('-v', '-O', CFLAGS, LDFLAGS, COMPFLAGS, COMPDEFINES, INCS{:}, ...
@@ -149,6 +151,13 @@ i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') parameters - concatenated for all shooting nodes 0 to N,',...
                     ' size [{{ (solver_options.N_horizon+1)*dims.np }}]\n ');
 sfun_input_names = [sfun_input_names; 'parameter_traj [{{ (solver_options.N_horizon+1)*dims.np }}]'];
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if dims.np_global > 0 and simulink_opts.inputs.p_global -%}  {#- p_global #}
+input_note = strcat(input_note, num2str(i_in), ') global parameters - first value indicates if update should be performed (0 means no update)\n');
+input_note = strcat(input_note, '\tafterwards: new numerical values of p_global, size [1 + {{ dims.np_global }}]\n');
+sfun_input_names = [sfun_input_names; 'p_global [1 + {{ dims.np_global }}]'];
 i_in = i_in + 1;
 {%- endif %}
 

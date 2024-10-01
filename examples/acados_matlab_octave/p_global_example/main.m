@@ -36,7 +36,6 @@
 function main()
 
     import casadi.*
-
     % Standard OCP
     state_trajectories_no_lut_ref = run_example_ocp(false, false);
     state_trajectories_no_lut = run_example_ocp(false, true);
@@ -66,6 +65,91 @@ function main()
     if ~all(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut) < 1e-10)
         error("State trajectories with lut=true do not match.");
     end
+    %% Simulink test
+    if ~is_octave()
+        run_example_ocp_simulink_p_global();
+    end
+
+end
+
+
+
+function run_example_ocp_simulink_p_global()
+
+    import casadi.*
+    lut = true;
+    use_p_global = true;
+    fprintf('\n\nRunning example with lut=%d, use_p_global=%d\n', lut, use_p_global);
+
+    % Create p_global parameters
+    [p_global, m, l, C, p_global_values] = create_p_global(lut);
+
+    % OCP formulation
+    ocp = create_ocp_formulation_without_opts(p_global, m, l, C, lut, use_p_global, p_global_values);
+    ocp = set_solver_options(ocp);
+
+    % Simulink options
+    simulink_opts = get_acados_simulink_opts();
+    simulink_opts.inputs.p_global = 1;
+    possible_inputs = fieldnames(simulink_opts.inputs);
+    for i = 1:length(possible_inputs)
+        simulink_opts.inputs.(possible_inputs{i}) = 0;
+    end
+    simulink_opts.inputs.lbx_0 = 1;
+    simulink_opts.inputs.ubx_0 = 1;
+    simulink_opts.inputs.p_global = 1;
+
+    simulink_opts.outputs.xtraj = 1;
+    simulink_opts.outputs.utraj = 1;
+    simulink_opts.outputs.u0 = 0;
+    simulink_opts.outputs.x1 = 0;
+
+    ocp.simulink_opts = simulink_opts;
+
+    % OCP solver
+    ocp_solver = AcadosOcpSolver(ocp);
+
+    %% Matlab test solve
+    % test with ones such that update is necessary
+    p_global_values_test = ones(size(p_global_values));
+    if use_p_global
+        ocp_solver.set_p_global_and_precompute_dependencies(p_global_values_test);
+    end
+
+    ocp_solver.solve();
+    xtraj = ocp_solver.get('x');
+    xtraj = xtraj(:)';
+    utraj = ocp_solver.get('u');
+    utraj = utraj(:)';
+
+
+    %% build s funtion
+    cd c_generated_code;
+    make_sfun;
+    cd ..;
+
+    %% run simulink block
+    out_sim = sim('p_global_simulink_test_block', 'SaveOutput', 'on');
+    fprintf('\nSuccessfully ran simulink block');
+
+    %% Evaluation
+    fprintf('\nTest results on SIMULINK simulation.\n')
+
+    disp('checking KKT residual')
+    % kkt_signal = out_sim.logsout.getElement('KKT_residual');
+    xtraj_signal = out_sim.logsout.getElement('xtraj');
+    xtraj_val = xtraj_signal.Values.Data(1, :);
+    utraj_signal = out_sim.logsout.getElement('utraj');
+    utraj_val = utraj_signal.Values.Data(1, :);
+    if norm(xtraj_val - xtraj) > 1e-8
+        disp('error: xtraj values in SIMULINK and MATLAB should match.')
+        quit(1);
+    end
+    if norm(utraj_val - utraj) > 1e-8
+        disp('error: utraj values in SIMULINK and MATLAB should match.')
+        quit(1);
+    end
+    disp('Simulink p_global test: got matching trajectories in Matlab and Simulink!')
 end
 
 

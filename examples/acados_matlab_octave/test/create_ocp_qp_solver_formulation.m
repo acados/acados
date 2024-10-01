@@ -67,7 +67,7 @@ ocp_opts.set('sim_method', sim_method);
 
 
 %% Simulink opts
-simulink_opts = get_acados_simulink_opts;
+simulink_opts = get_acados_simulink_opts();
 
 % inputs
 simulink_opts.inputs.y_ref = 0;

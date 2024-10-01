@@ -22,6 +22,7 @@
         "lbx_0": 1,
         "ubx_0": 1,
         "parameter_traj": 1,
+        "p_global": 0,
         "y_ref_0": 1,
         "y_ref": 1,
         "y_ref_e": 1,
