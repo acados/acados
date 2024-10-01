@@ -77,9 +77,11 @@
   {% set_global nu_total = dims.nu * (solver_options.N_horizon) %}
   {% set_global nbu_total = dims.nbu * (solver_options.N_horizon) %}
   {% set np_total = dims.np * (solver_options.N_horizon+1) %}
+  {% set npi_total = dims.nx * (solver_options.N_horizon) %}
   {% set np_max = dims.np %}
   {% set nx_max = dims.nx %}
   {% set nu_max = dims.nu %}
+  {%- set ns_max = [dims.ns_0, dims.ns, dims.ns_e] | sort | last %}
 {% else %}
   {% set dims_0 = phases_dims | first %}
   {% set cost_0 = cost | first %}
@@ -97,6 +99,7 @@
   {% set nbu_total = 0 %}
   {% set nz_total = 0 %}
   {% set np_total = 0 %}
+  {% set npi_total = 0 %}
   {% for jj in range(end=n_phases) %}{# phases loop !#}
     {% set_global ns_total = ns_total + (end_idx[jj] - cost_start_idx[jj]) * phases_dims[jj].ns %}
     {% set_global nx_total = nx_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nx %}
@@ -104,6 +107,7 @@
     {% set_global nbu_total = nbu_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nbu %}
     {% set_global nz_total = nz_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nz %}
     {% set_global np_total = np_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].np %}
+    {% set_global npi_total = npi_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nx %}
   {% endfor %}{# phases loop !#}
 
   {% set_global nx_total = nx_total + dims_e.nx %}
@@ -127,6 +131,14 @@
       {%- set_global np_values = np_values | concat(with=(phases_dims[jj].np)) %}
   {%- endfor %}
   {%- set np_max = np_values | sort | last %}
+
+  {%- set ns_values = [] -%}
+  {%- for jj in range(end=n_phases) %}
+      {%- set_global ns_values = ns_values | concat(with=(phases_dims[jj].ns)) %}
+      {%- set_global ns_values = ns_values | concat(with=(phases_dims[jj].ns_0)) %}
+      {%- set_global ns_values = ns_values | concat(with=(phases_dims[jj].ns_e)) %}
+  {%- endfor %}
+  {%- set ns_max = ns_values | sort | last %}
 {%- endif %}
 
 
@@ -490,7 +502,7 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- if simulink_opts.inputs.pi_init -%}  {#- pi_init #}
     {%- set i_input = i_input + 1 %}
     // pi_init
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nx * (solver_options.N_horizon) }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ npi_total }});
   {%- endif -%}
 
   {%- if simulink_opts.inputs.slacks_init -%}  {#- slacks_init #}
@@ -529,12 +541,12 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set i_output = -1 %}{# note here i_output is 0-based #}
   {%- if dims.nu > 0 and simulink_opts.outputs.u0 == 1 %}
     {%- set i_output = i_output + 1 %}
-    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nu }} );
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims_0.nu }} );
   {%- endif %}
 
   {%- if simulink_opts.outputs.utraj == 1 %}
     {%- set i_output = i_output + 1 %}
-    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nu * solver_options.N_horizon }} );
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ nu_total }} );
   {%- endif %}
 
   {%- if simulink_opts.outputs.xtraj == 1 %}
@@ -544,12 +556,12 @@ static void mdlInitializeSizes (SimStruct *S)
 
   {%- if simulink_opts.outputs.ztraj == 1 %}
     {%- set i_output = i_output + 1 %}
-    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nz * solver_options.N_horizon }} );
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ nz_total }} );
   {%- endif %}
 
   {%- if simulink_opts.outputs.pi_all == 1 %}
     {%- set i_output = i_output + 1 %}
-    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nx * solver_options.N_horizon }} );
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ npi_total }} );
   {%- endif %}
 
   {%- if simulink_opts.outputs.slack_values == 1 %}
@@ -579,7 +591,7 @@ static void mdlInitializeSizes (SimStruct *S)
 
   {%- if solver_options.N_horizon > 0 and simulink_opts.outputs.x1 == 1 %}
     {%- set i_output = i_output + 1 %}
-    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nx }} ); // state at shooting node 1
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims_0.nx }} ); // state at shooting node 1
   {%- endif %}
 
   {%- if simulink_opts.outputs.CPU_time == 1 %}
@@ -670,11 +682,13 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     int N = {{ model.name | upper }}_N;
 
-    {%- set buffer_sizes = [nx_max, nu_max, dims_0.nbx_0, np_max, dims.nbx, dims_e.nbx_e, dims.nbu, dims.ng, dims.nh, dims_0.nh_0, dims.ng_e, dims_e.nh_e, dims.ns, dims.ns_0, dims.ns_e] -%}
+    {%- set buffer_sizes = [nx_max, nu_max, dims_0.nbx_0, np_max, dims_0.nbx, dims_e.nbx_e, dims_0.nbu, dims_0.ng, dims_0.nh, dims_0.nh_0, dims_e.ng_e, dims_e.nh_e, ns_max] -%}
 
   {%- if dims_0.ny_0 > 0 and simulink_opts.inputs.y_ref_0 %}  {# y_ref_0 #}
     {%- set buffer_sizes = buffer_sizes | concat(with=(dims_0.ny_0)) %}
   {%- endif %}
+
+{% if problem_class == "OCP" %}
   {%- if dims.ny > 0 and solver_options.N_horizon > 1 and simulink_opts.inputs.y_ref %}  {# y_ref #}
     {%- set buffer_sizes = buffer_sizes | concat(with=(dims.ny)) %}
   {%- endif %}
@@ -691,6 +705,8 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {%- if dims_e.ny_e > 0 and simulink_opts.inputs.cost_W_e %}  {#- cost_W_e #}
     {%- set buffer_sizes = buffer_sizes | concat(with=(dims_e.ny_e * dims_e.ny_e)) %}
   {%- endif %}
+{%- endif %}
+
   {%- if dims_0.np_global > 0 and simulink_opts.inputs.p_global %}  {#- p_global #}
     {%- set buffer_sizes = buffer_sizes | concat(with=(dims_0.np_global)) %}
   {%- endif %}
@@ -1080,7 +1096,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         for (int stage = 0; stage < N; stage++)
         {
             tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "u");
-            for (int jj = 0; jj < {{ dims.nu }}; jj++)
+            for (int jj = 0; jj < tmp_int; jj++)
                 buffer[jj] = (double)(*in_sign[tmp_offset+jj]);
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, stage, "u", (void *) buffer);
             tmp_offset += tmp_int;
@@ -1220,7 +1236,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     /* set outputs */
     double *out_ptr;
     {%- set i_output = -1 -%}{# note here i_output is 0-based #}
-  {%- if dims.nu > 0 and simulink_opts.outputs.u0 == 1 %}
+  {%- if dims_0.nu > 0 and simulink_opts.outputs.u0 == 1 %}
     {%- set i_output = i_output + 1 %}
     out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
     ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "u", (void *) out_ptr);
@@ -1269,7 +1285,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     for (int stage = 0; stage < N; stage++)
     {
         tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "pi");
-        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, stage, "pi", (void *) (out_ptr + stage * {{ dims.nx }}));
+        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, stage, "pi", (void *) (out_ptr + tmp_offset));
         tmp_offset += tmp_int;
     }
   {%- endif %}
