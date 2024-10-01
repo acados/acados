@@ -103,9 +103,11 @@
     {% set_global nu_total = nu_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nu %}
     {% set_global nbu_total = nbu_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nbu %}
     {% set_global nz_total = nz_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nz %}
+    {% set_global np_total = np_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].np %}
   {% endfor %}{# phases loop !#}
 
   {% set_global nx_total = nx_total + dims_e.nx %}
+  {% set_global np_total = np_total + dims_e.np %}
   {% set_global ns_total = ns_total + dims_e.ns_e %}
 
   {%- set nx_values = [] -%}
@@ -590,7 +592,7 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- endif %}
   {%- if simulink_opts.outputs.parameter_traj -%}  {#- parameter_traj #}
     {%- set i_output = i_output + 1 %}
-    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.np_total }});
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ np_total }});
   {%- endif -%}
 
     // specify the direct feedthrough status
