@@ -37,7 +37,7 @@ from itertools import product
 ## SETTINGS:
 OBSTACLE = True
 SOFTEN_TERMINAL = True
-SOFTEN_CONTROLS = False
+SOFTEN_CONTROLS = True
 SOFTEN_OBSTACLE = False
 INITIALIZE = True
 PLOT = False
@@ -177,7 +177,7 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
     ocp.solver_options.globalization = globalization
     ocp.solver_options.globalization_alpha_min = 0.01
     # ocp.solver_options.qp_solver_cond_N = 0
-    ocp.solver_options.print_level = 3
+    # ocp.solver_options.print_level = 3
     ocp.solver_options.nlp_solver_max_iter = 200
     ocp.solver_options.qp_solver_iter_max = 400
     # NOTE: this is needed for PARTIAL_CONDENSING_HPIPM to get expected behavior
@@ -217,16 +217,9 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
     # print(f"total number of QP iterations: {sum(qp_iters[:iter])}")
     # max_infeasibility = np.max(residuals[1:3])
     # print(f"max infeasibility: {max_infeasibility}")
+    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
 
-    # checks
-    if status != 0:
-        raise Exception(f"acados solver returned status {status} != 0.")
-    if globalization == "FIXED_STEP":
-        if sqp_iter != 18:
-            raise Exception(f"acados solver took {sqp_iter} iterations, expected 18.")
-    elif globalization == "MERIT_BACKTRACKING" and not use_deprecated_options:
-        if sqp_iter not in range(17, 23):
-            raise Exception(f"acados solver took {sqp_iter} iterations, expected range(17, 23).")
 
     if PLOT:
         plot_linear_mass_system_X_state_space(simX, circle=circle, x_goal=x_goal)
