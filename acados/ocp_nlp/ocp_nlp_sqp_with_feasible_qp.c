@@ -600,9 +600,38 @@ static void set_non_slacked_l1_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
     // be aware of rqz_QP = [r, q, zl_NLP, zl_QP, zu_NLP, zu_QP]
     for (int stage = 0; stage <= dims->N; stage++)
     {
+        // zl_QP
         blasfeo_dvecse(nns[stage], mem->penalty_parameter, qp_in->rqz, nu[stage]+nx[stage]+ns[stage]);
+        // zu_QP
+        blasfeo_dvecse(nns[stage], mem->penalty_parameter, qp_in->rqz, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
     }
 }
+
+
+static void set_non_slacked_l2_penalties(ocp_nlp_config *config, ocp_nlp_dims *dims,
+    ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_sqp_wfqp_memory *mem,
+    ocp_nlp_workspace *work)
+{
+    int N = dims->N;
+    // int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    int *nns = mem->nns;
+    ocp_qp_in *qp_in = mem->nlp_mem->qp_in;
+
+    // be aware of rqz_QP = [r, q, zl_NLP, zl_QP, zu_NLP, zu_QP]
+    for (int stage = 0; stage <= dims->N; stage++)
+    {
+        // zl_QP
+        blasfeo_dvecse(nns[stage], 0.0, qp_in->Z, ns[stage]);
+        // zu_QP
+        blasfeo_dvecse(nns[stage], 0.0, qp_in->Z, 2*ns[stage]+nns[stage]);
+    }
+    print_ocp_qp_in(qp_in);
+}
+
+
 
 
 // MAIN OPTIMIZATION ROUTINE
@@ -645,6 +674,14 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // set number of threads
     omp_set_num_threads(opts->nlp_opts->num_threads);
 #endif
+
+    set_non_slacked_l2_penalties(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
+    // set nns in cost module!
+    // TODO: cleanup
+    for (int stage = 0; stage <= dims->N; stage++)
+    {
+        config->cost[stage]->model_set(config->cost[stage], dims->cost[stage], nlp_in->cost[stage], "nns", &mem->nns[stage]);
+    }
 
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
