@@ -114,7 +114,6 @@ typedef struct
     double outer_hess_is_diag;
     int W_changed;                      ///< flag indicating whether W has changed and needs to be refactorized
     int Cyt_or_scaling_changed;         ///< flag indicating whether Cyt or scaling has changed and Hessian needs to be recomputed
-    int nns;  // number of constraints that are slacked in QP subproblem, but not slacked in NLP.
 } ocp_nlp_cost_ls_model;
 
 //

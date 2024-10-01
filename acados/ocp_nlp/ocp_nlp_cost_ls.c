@@ -81,29 +81,73 @@ void *ocp_nlp_cost_ls_dims_assign(void *config_, void *raw_memory)
 }
 
 
-void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, const char *field, int* value)
+
+static void ocp_nlp_cost_ls_set_nx(void *config_, void *dims_, int *nx)
+{
+    ///  Initialize the dimensions struct of the
+    ///  ocp_nlp_cost_ls module
+    ///
+    ///  \param[in] config_ structure containing configuration of ocp_nlp_cost module
+    ///  \param[in] nx number of states
+    ///  \param[out] dims_
+    ///  \return []
+
+    ocp_nlp_cost_ls_dims *dims = (ocp_nlp_cost_ls_dims *) dims_;
+    dims->nx = *nx;
+}
+
+
+static void ocp_nlp_cost_ls_set_nz(void *config_, void *dims_, int *nz)
 {
     ocp_nlp_cost_ls_dims *dims = (ocp_nlp_cost_ls_dims *) dims_;
+    dims->nz = *nz;
+}
 
+static void ocp_nlp_cost_ls_set_nu(void *config_, void *dims_, int *nu)
+{
+    ocp_nlp_cost_ls_dims *dims = (ocp_nlp_cost_ls_dims *) dims_;
+    dims->nu = *nu;
+}
+
+
+
+static void ocp_nlp_cost_ls_set_ny(void *config_, void *dims_, int *ny)
+{
+    ocp_nlp_cost_ls_dims *dims = (ocp_nlp_cost_ls_dims *) dims_;
+    dims->ny = *ny;
+}
+
+
+
+static void ocp_nlp_cost_ls_set_ns(void *config_, void *dims_, int *ns)
+{
+    ocp_nlp_cost_ls_dims *dims = (ocp_nlp_cost_ls_dims *) dims_;
+    dims->ns = *ns;
+}
+
+
+
+void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, const char *field, int* value)
+{
     if (!strcmp(field, "nx"))
     {
-        dims->nx = *value;
+        ocp_nlp_cost_ls_set_nx(config_, dims_, value);
     }
     else if (!strcmp(field, "nz"))
     {
-        dims->nz = *value;
+        ocp_nlp_cost_ls_set_nz(config_, dims_, value);
     }
     else if (!strcmp(field, "nu"))
     {
-        dims->nu = *value;
+        ocp_nlp_cost_ls_set_nu(config_, dims_, value);
     }
     else if (!strcmp(field, "ny"))
     {
-        dims->ny = *value;
+        ocp_nlp_cost_ls_set_ny(config_, dims_, value);
     }
     else if (!strcmp(field, "ns"))
     {
-        dims->ns = *value;
+        ocp_nlp_cost_ls_set_ns(config_, dims_, value);
     }
     else if (!strcmp(field, "np"))
     {
@@ -352,12 +396,6 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
         double *scaling_ptr = (double *) value_;
         model->scaling = *scaling_ptr;
         model->Cyt_or_scaling_changed = 1;
-    }
-    else if (!strcmp(field, "nns"))
-    {
-        int *nns = (int *) value_;
-        model->nns = *nns;
-        printf("setting nns = %d\n", model->nns);
     }
     else
     {
@@ -762,15 +800,7 @@ void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_,
 
     int ns = dims->ns;
     // mem->Z = scaling * model->Z
-    if (model->nns == 0)
-    {
-        blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
-    }
-    else
-    {
-        blasfeo_dveccpsc(ns, model->scaling, &model->Z, 0, memory->Z, 0);
-        blasfeo_dveccpsc(ns, model->scaling, &model->Z, ns, memory->Z, ns+model->nns);
-    }
+    blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
 
     return;
 }
@@ -865,22 +895,8 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &memory->res, 0);
 
     // slack update gradient
-    if (model->nns == 0)
-    {
-        // copy l1
-        blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
-        // gradient from l2
-        blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
-    }
-    else
-    {
-        blasfeo_dveccp(ns, &model->z, 0, &memory->grad, nu+nx);
-        blasfeo_dveccp(ns, &model->z, ns, &memory->grad, nu+nx+ns+model->nns);
-
-        blasfeo_dvecmulacc(ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
-        // NOTE: this assumes ux is of NLP dimensions!
-        blasfeo_dvecmulacc(ns, &model->Z, ns, memory->ux, nu+nx+ns, &memory->grad, nu+nx+ns+model->nns);
-    }
+    blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
+    blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
 
     // slack update function value
     // tmp_2ns = 2 * z + Z .* slack
