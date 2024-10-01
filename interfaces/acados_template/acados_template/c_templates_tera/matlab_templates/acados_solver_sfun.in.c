@@ -81,7 +81,8 @@
   {% set np_max = dims.np %}
   {% set nx_max = dims.nx %}
   {% set nu_max = dims.nu %}
-  {%- set ns_max = [dims.ns_0, dims.ns, dims.ns_e] | sort | last %}
+  {% set ns_values = [dims.ns_0, dims.ns, dims.ns_e] %}
+  {%- set ns_max = ns_values | sort | last %}
 {% else %}
   {% set dims_0 = phases_dims | first %}
   {% set cost_0 = cost | first %}
