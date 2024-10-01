@@ -1403,6 +1403,23 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
 }
 
 
+void ocp_nlp_get_from_iterate(ocp_nlp_dims *dims, ocp_nlp_solver *solver,
+        int iter, int stage, const char *field, void *value)
+{
+    ocp_nlp_config *config = solver->config;
+    ocp_nlp_memory *nlp_mem;
+    config->get(config, solver->dims, solver->mem, "nlp_mem", &nlp_mem);
+
+    ocp_nlp_opts *nlp_opts;
+    config->opts_get(config, solver->dims, solver->opts, "nlp_opts", &nlp_opts);
+
+    if (!nlp_opts->store_iterates)
+    {
+        printf("\nerror: ocp_nlp_get_from_iterate: store_iterates needs to be set to true in order to get iterates.\n");
+        exit(1);
+    }
+    ocp_nlp_out_get(config, dims, nlp_mem->iterates[iter], stage, field, value);
+}
 
 void ocp_nlp_set(ocp_nlp_config *config, ocp_nlp_solver *solver,
         int stage, const char *field, void *value)

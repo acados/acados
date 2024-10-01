@@ -1060,6 +1060,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->print_level = 0;
     opts->levenberg_marquardt = 0.0;
     opts->log_primal_step_norm = 0;
+    opts->max_iter = 1;
 
     /* submodules opts */
     // qp solver
@@ -1098,6 +1099,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->with_adaptive_levenberg_marquardt = false;
 
     opts->ext_qp_res = 0;
+    opts->store_iterates = false;
 
     return;
 }
@@ -1186,6 +1188,19 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             int* ext_qp_res = (int *) value;
             opts->ext_qp_res = *ext_qp_res;
         }
+        else if (!strcmp(field, "store_iterates"))
+        {
+            bool* store_iterates = (bool *) value;
+
+            if (*store_iterates && config->is_real_time_algorithm())
+            {
+                printf("Warning: Can not store intermediate iterates for real-time solvers.\n");
+            }
+            else
+            {
+                opts->store_iterates = *store_iterates;
+            }
+        }
         else if (!strcmp(field, "levenberg_marquardt"))
         {
             double* levenberg_marquardt = (double *) value;
@@ -1252,6 +1267,19 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             int* log_primal_step_norm = (int *) value;
             opts->log_primal_step_norm = *log_primal_step_norm;
+        }
+        else if (!strcmp(field, "max_iter"))
+        {
+            int* max_iter = (int *) value;
+
+            if (*max_iter > 0 && config->is_real_time_algorithm())
+            {
+                printf("Warning: can not set max_iter > 1 for real-time solvers.");
+            }
+            else
+            {
+                opts->max_iter = *max_iter;
+            }
         }
         else if (!strcmp(field, "print_level"))
         {
@@ -1398,11 +1426,23 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
         size += constraints[i]->memory_calculate_size(constraints[i], dims->constraints[i], opts->constraints[i]);
     }
 
+    // intermediate iterates
+    if (opts->store_iterates)
+    {
+        size += (opts->max_iter + 1) * sizeof(struct ocp_nlp_out *);
+
+        for (int i = 0; i <= opts->max_iter; i++)
+        {
+            size += ocp_nlp_out_calculate_size(config, dims);
+        }
+    }
+
     // nlp res
     size += ocp_nlp_res_calculate_size(dims);
 
     // timings
     size += sizeof(struct ocp_nlp_timings);
+
 
     size += (N+1)*sizeof(bool); // set_sim_guess
 
@@ -1476,6 +1516,13 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     mem->constraints = (void **) c_ptr;
     c_ptr += (N+1)*sizeof(void *);
 
+    // intermediate iterates
+    if (opts->store_iterates)
+    {
+        mem->iterates = (struct ocp_nlp_out **) c_ptr;
+        c_ptr += (opts->max_iter + 1)*sizeof(struct ocp_nlp_out *);
+    }
+
     // middle align
     align_char_to(8, &c_ptr);
 
@@ -1503,27 +1550,38 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     c_ptr += config->globalization->memory_calculate_size(config->globalization, dims);
     // ->memory_calculate_size(config->globalization, dims);
 
+    int i;
     // dynamics
-    for (int i = 0; i < N; i++)
+    for (i = 0; i < N; i++)
     {
         mem->dynamics[i] = dynamics[i]->memory_assign(dynamics[i], dims->dynamics[i], opts->dynamics[i], c_ptr);
         c_ptr += dynamics[i]->memory_calculate_size(dynamics[i], dims->dynamics[i], opts->dynamics[i]);
     }
 
     // cost
-    for (int i = 0; i <= N; i++)
+    for (i = 0; i <= N; i++)
     {
         mem->cost[i] = cost[i]->memory_assign(cost[i], dims->cost[i], opts->cost[i], c_ptr);
         c_ptr += cost[i]->memory_calculate_size(cost[i], dims->cost[i], opts->cost[i]);
     }
 
     // constraints
-    for (int i = 0; i <= N; i++)
+    for (i = 0; i <= N; i++)
     {
         mem->constraints[i] = constraints[i]->memory_assign(constraints[i],
                                             dims->constraints[i], opts->constraints[i], c_ptr);
         c_ptr += constraints[i]->memory_calculate_size( constraints[i], dims->constraints[i],
                                                                  opts->constraints[i]);
+    }
+
+    // intermediate iterates
+    if (opts->store_iterates)
+    {
+        for (i = 0; i <= opts->max_iter; i++)
+        {
+            mem->iterates[i] = ocp_nlp_out_assign(config, dims, c_ptr);
+            c_ptr += ocp_nlp_out_calculate_size(config, dims);
+        }
     }
 
     // nlp res
@@ -1533,6 +1591,7 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     // timings
     mem->nlp_timings = (ocp_nlp_timings*) c_ptr;
     c_ptr += sizeof(ocp_nlp_timings);
+
 
     // zero timings
     ocp_nlp_timings_reset(mem->nlp_timings);
@@ -1563,7 +1622,7 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
 
     // set_sim_guess
     assign_and_advance_bool(N+1, &mem->set_sim_guess, &c_ptr);
-    for (int i = 0; i <= N; ++i)
+    for (i = 0; i <= N; ++i)
     {
         mem->set_sim_guess[i] = false;
     }
@@ -1572,42 +1631,42 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     align_char_to(64, &c_ptr);
 
     // dzduxt
-    for (int i=0; i<=N; i++)
+    for (i=0; i<=N; i++)
     {
         assign_and_advance_blasfeo_dmat_mem(nu[i]+nx[i], nz[i], mem->dzduxt+i, &c_ptr);
     }
     // z_alg
-    for (int i=0; i<=N; i++)
+    for (i=0; i<=N; i++)
     {
         assign_and_advance_blasfeo_dvec_mem(nz[i], mem->z_alg + i, &c_ptr);
     }
     // cost_grad
-    for (int i = 0; i <= N; i++)
+    for (i = 0; i <= N; i++)
     {
         assign_and_advance_blasfeo_dvec_mem(nv[i], mem->cost_grad + i, &c_ptr);
     }
     // ineq_fun
-    for (int i = 0; i <= N; i++)
+    for (i = 0; i <= N; i++)
     {
         assign_and_advance_blasfeo_dvec_mem(2 * ni[i], mem->ineq_fun + i, &c_ptr);
     }
     // ineq_adj
-    for (int i = 0; i <= N; i++)
+    for (i = 0; i <= N; i++)
     {
         assign_and_advance_blasfeo_dvec_mem(nv[i], mem->ineq_adj + i, &c_ptr);
     }
     // dyn_fun
-    for (int i = 0; i < N; i++)
+    for (i = 0; i < N; i++)
     {
         assign_and_advance_blasfeo_dvec_mem(nx[i + 1], mem->dyn_fun + i, &c_ptr);
     }
     // dyn_adj
-    for (int i = 0; i <= N; i++)
+    for (i = 0; i <= N; i++)
     {
         assign_and_advance_blasfeo_dvec_mem(nu[i] + nx[i], mem->dyn_adj + i, &c_ptr);
     }
     // sim_guess
-    for (int i = 0; i <= N; i++)
+    for (i = 0; i <= N; i++)
     {
         assign_and_advance_blasfeo_dvec_mem(nx[i] + nz[i], mem->sim_guess + i, &c_ptr);
         // set to 0;

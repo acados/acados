@@ -110,7 +110,7 @@ void ocp_nlp_ddp_opts_initialize_default(void *config_, void *dims_, void *opts_
     ocp_nlp_opts_initialize_default(config, dims, nlp_opts);
 
     // DDP opts
-    opts->max_iter = 20;
+    opts->nlp_opts->max_iter = 20;
     opts->tol_stat = 1e-8;
     opts->tol_eq   = 1e-8;
     opts->tol_ineq = 1e-8;
@@ -174,12 +174,7 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
     }
     else // nlp opts
     {
-        if (!strcmp(field, "max_iter"))
-        {
-            int* max_iter = (int *) value;
-            opts->max_iter = *max_iter;
-        }
-        else if (!strcmp(field, "tol_stat"))
+        if (!strcmp(field, "tol_stat"))
         {
             double* tol_stat = (double *) value;
             opts->tol_stat = *tol_stat;
@@ -269,7 +264,7 @@ acados_size_t ocp_nlp_ddp_memory_calculate_size(void *config_, void *dims_, void
     size += ocp_nlp_memory_calculate_size(config, dims, nlp_opts);
 
     // stat
-    int stat_m = opts->max_iter+1;
+    int stat_m = opts->nlp_opts->max_iter+1;
     int stat_n = 7;
     if (opts->ext_qp_res)
         stat_n += 4;
@@ -342,7 +337,7 @@ void *ocp_nlp_ddp_memory_assign(void *config_, void *dims_, void *opts_, void *r
 
     // stat
     mem->stat = (double *) c_ptr;
-    mem->stat_m = opts->max_iter+1;
+    mem->stat_m = opts->nlp_opts->max_iter+1;
     mem->stat_n = 7;
     if (opts->ext_qp_res)
         mem->stat_n += 4;
@@ -592,7 +587,7 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
     }
 
     // Check for maximum iterations
-    if (ddp_iter >= opts->max_iter)
+    if (ddp_iter >= opts->nlp_opts->max_iter)
     {
         nlp_mem->status = ACADOS_MAXITER;
         if (opts->nlp_opts->print_level > 0){
@@ -665,12 +660,17 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         printf("'with_adaptive_levenberg_marquardt' option is set to: %s\n", opts->nlp_opts->with_adaptive_levenberg_marquardt?"true":"false");
     }
 
-    for (; ddp_iter <= opts->max_iter; ddp_iter++)
+    for (; ddp_iter <= opts->nlp_opts->max_iter; ddp_iter++)
     {
+        // store current iterate
+        if (nlp_opts->store_iterates)
+        {
+            copy_ocp_nlp_out(dims, nlp_out, nlp_mem->iterates[ddp_iter]);
+        }
         // We always evaluate the residuals until the last iteration
         // If the option "eval_residual_at_max_iter" is set, then we will also
         // evaluate the data after the last iteration was performed
-        if (ddp_iter != opts->max_iter || opts->eval_residual_at_max_iter)
+        if (ddp_iter != opts->nlp_opts->max_iter || opts->eval_residual_at_max_iter)
         {
             /* Prepare the QP data */
             // linearize NLP, update QP matrices, and add Levenberg-Marquardt term

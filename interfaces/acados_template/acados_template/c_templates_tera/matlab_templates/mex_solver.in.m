@@ -141,8 +141,12 @@ classdef {{ name }}_mex_solver < handle
             elseif nargin==3
                 stage = varargin{3};
                 value = ocp_get(obj.C_ocp, field, stage);
+            elseif nargin==4
+                stage = varargin{3};
+                iteration = varargin{4};
+                value = ocp_get(obj.C_ocp, field, stage, iteration);
             else
-                disp('acados_ocp.get: wrong number of input arguments (1 or 2 allowed)');
+                disp('acados_ocp.get: wrong number of input arguments (1, 2 or 3 allowed)');
             end
 
 

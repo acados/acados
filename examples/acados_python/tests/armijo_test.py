@@ -109,7 +109,7 @@ def solve_armijo_problem_with_setting(setting):
     ocp.solver_options.globalization_line_search_use_sufficient_descent = line_search_use_sufficient_descent
     ocp.solver_options.globalization_use_SOC = globalization_use_SOC
     ocp.solver_options.globalization_eps_sufficient_descent = 5e-1
-    
+
     SQP_max_iter = 200
     ocp.solver_options.qp_solver_iter_max = 400
     ocp.solver_options.nlp_solver_max_iter = SQP_max_iter

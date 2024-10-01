@@ -305,6 +305,9 @@ ACADOS_SYMBOL_EXPORT void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *
 ACADOS_SYMBOL_EXPORT void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_solver *solver,
         int stage, const char *field, void *value);
 
+ACADOS_SYMBOL_EXPORT void ocp_nlp_get_from_iterate(ocp_nlp_dims *dims, ocp_nlp_solver *solver,
+        int iter, int stage, const char *field, void *value);
+
 // TODO(andrea): remove this once/if the MATLAB interface uses the new setters below?
 ACADOS_SYMBOL_EXPORT int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
         int stage, const char *field);

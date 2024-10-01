@@ -82,6 +82,7 @@ ocp.solver_options.exact_hess_dyn = 1;
 ocp.solver_options.exact_hess_cost = 1;
 ocp.solver_options.exact_hess_constr = 1;
 ocp.solver_options.print_level = 1;
+ocp.solver_options.store_iterates = true;
 
 % can vary for integrators
 sim_method_num_stages = 1 * ones(N,1);
@@ -294,6 +295,20 @@ disp(['max eigenvalues of blocks are in [', num2str(min(result.max_ev)), ', ', n
 disp(['condition_number_blockwise: '])
 disp(result.condition_number_blockwise)
 disp(['condition_number_global: ', num2str(result.condition_number_global)])
+
+% get second SQP iterate
+% iteration index is 0-based with iterate 0 corresponding to the initial guess
+iteration = 0;
+iterate = ocp_solver.get_iterate(iteration);
+iterates = ocp_solver.get_iterates();
+x_traj = iterates.as_array('x');
+
+if ~(all(reshape(x_traj(iteration+1, end-1, :), 1, []) == reshape(iterate.x_traj{end-1}, 1, [])))
+    error("iterates don't match");
+end
+
+disp(['u iterate at iteration = ' num2str(iteration)]);
+disp(cell2mat(iterate.u_traj)');
 
 %% Plot trajectories
 figure; hold on;

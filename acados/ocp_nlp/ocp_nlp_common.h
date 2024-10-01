@@ -275,6 +275,7 @@ typedef struct ocp_nlp_opts
     int print_level;
     int fixed_hess;
     int log_primal_step_norm; // compute and log the max norm of the primal steps
+    int max_iter; // maximum number of (SQP/DDP) iterations
 
     // Flag for usage of adaptive levenberg marquardt strategy
     bool with_adaptive_levenberg_marquardt;
@@ -286,6 +287,9 @@ typedef struct ocp_nlp_opts
     int with_value_sens_wrt_params;
 
     int ext_qp_res;
+
+    bool store_iterates; // flag indicating whether intermediate iterates should be stored
+
 
 } ocp_nlp_opts;
 
@@ -370,6 +374,9 @@ typedef struct ocp_nlp_memory
     void **dynamics;     // dynamics memory
     void **cost;         // cost memory
     void **constraints;  // constraints memory
+
+    // intermediate iterates
+    struct ocp_nlp_out ** iterates;
 
     // residuals
     ocp_nlp_res *nlp_res;
