@@ -596,26 +596,15 @@ static void set_non_slacked_l1_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
     int *nns = mem->nns;
     ocp_qp_in *qp_in = mem->nlp_mem->qp_in;
 
-    // TODO:
-    // - loop over originally not softened constraints
-    // - set Z (L2) penalties to 0.0 (once at start)
-    // - set z (l1) according to penalty parameter.
-    // TODO: set this in constraint module:
     // be aware of rqz_QP = [r, q, zl_NLP, zl_QP, zu_NLP, zu_QP]
     for (int stage = 0; stage <= dims->N; stage++)
     {
-
-        printf("set_non_slacked_l1_penalties %d\n", stage);
-        printf("qp_in->rqz %d before update\n", stage);
-        blasfeo_print_exp_tran_dvec(nu[stage] +nx[stage] + 2*(nns[stage]+ns[stage]), qp_in->rqz+stage, 0);
-
         // zl_QP
         blasfeo_dvecse(nns[stage], mem->penalty_parameter, qp_in->rqz+stage, nu[stage]+nx[stage]+ns[stage]);
         // zu_QP
         blasfeo_dvecse(nns[stage], mem->penalty_parameter, qp_in->rqz+stage, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
-
-        printf("qp_in->rqz %d\n", stage);
-        blasfeo_print_exp_tran_dvec(nu[stage] +nx[stage] + 2*(nns[stage]+ns[stage]), qp_in->rqz+stage, 0);
+        // printf("qp_in->rqz %d\n", stage);
+        // blasfeo_print_exp_tran_dvec(nu[stage] +nx[stage] + 2*(nns[stage]+ns[stage]), qp_in->rqz+stage, 0);
     }
 }
 
@@ -642,8 +631,8 @@ static void set_non_slacked_l2_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
         // zu_QP
         blasfeo_dvecse(nns[stage], 0.0, qp_in->Z+stage, 2*ns[stage]+nns[stage]);
 
-        printf("qp_in->Z %d\n", stage);
-        blasfeo_print_exp_tran_dvec(2*(nns[stage]+ns[stage]), qp_in->Z+stage, 0);
+        // printf("qp_in->Z %d\n", stage);
+        // blasfeo_print_exp_tran_dvec(2*(nns[stage]+ns[stage]), qp_in->Z+stage, 0);
     }
     // print_ocp_qp_in(qp_in);
 }
@@ -746,7 +735,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->nlp_mem->status = ACADOS_SUCCESS;
 
     // TODO(@david):
-    mem->penalty_parameter = 33.0;
+    mem->penalty_parameter = 42*1e5;
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -858,6 +847,12 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
         ocp_nlp_dump_qp_in_to_file(qp_in, sqp_iter, 0);
 #endif
+
+        // printf("QP in before solve\n");
+        // print_ocp_qp_in(qp_in);
+        // print_indices(dims, mem);
+        // exit(1);
+
         qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false);
 
         // restore default warm start
