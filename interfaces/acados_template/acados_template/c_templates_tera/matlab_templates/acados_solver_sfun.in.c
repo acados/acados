@@ -540,7 +540,7 @@ static void mdlInitializeSizes (SimStruct *S)
 
     /* specify dimension information for the OUTPUT ports */
     {%- set i_output = -1 %}{# note here i_output is 0-based #}
-  {%- if dims.nu > 0 and simulink_opts.outputs.u0 == 1 %}
+  {%- if dims_0.nu > 0 and simulink_opts.outputs.u0 == 1 %}
     {%- set i_output = i_output + 1 %}
     ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims_0.nu }} );
   {%- endif %}
