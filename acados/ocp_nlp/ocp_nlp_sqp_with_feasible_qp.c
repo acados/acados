@@ -304,10 +304,21 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
 
     // idxns
     size += (dims->N + 1) * sizeof(int *);
-    int nns;
+    int nns, nsbu, nbu, nsbx, nbx;
     for (int stage = 0; stage <= dims->N; stage++)
     {
-        nns = dims->ni[stage] - dims->ns[stage];
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nsbu", &nsbu);
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nbu", &nbu);
+        if (stage == 0)
+        {
+            config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nsbx", &nsbx);
+            config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nbx", &nbx);
+            nns = dims->ni[stage] - nbu - nbx - (dims->ns[stage] - nsbu - nsbx);
+        }
+        else
+        {
+            nns = dims->ni[stage] - nbu - (dims->ns[stage] - nsbu);
+        }
         size += nns * sizeof(int);
     }
 
@@ -368,9 +379,22 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
 
     // integers
     assign_and_advance_int(N+1, &mem->nns, &c_ptr);
-    for (int stage = 0; stage <= N; stage++)
+
+    int nns, nsbu, nbu, nsbx, nbx;
+    for (int stage = 0; stage <= dims->N; stage++)
     {
-        mem->nns[stage] = dims->ni[stage] - dims->ns[stage];
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nsbu", &nsbu);
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nbu", &nbu);
+        if (stage == 0)
+        {
+            config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nsbx", &nsbx);
+            config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nbx", &nbx);
+            mem->nns[stage] = dims->ni[stage] - nbu - nbx - (dims->ns[stage] - nsbu - nsbx);
+        }
+        else
+        {
+            mem->nns[stage] = dims->ni[stage] - nbu - (dims->ns[stage] - nsbu);
+        }
         assign_and_advance_int(mem->nns[stage], &mem->idxns[stage], &c_ptr);
     }
 
@@ -918,11 +942,12 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
     // create indices
-    int ni, ns, nns;
-    // TODO: proper memory for idxs.
-    int *idxs = nlp_work->tmp_qp_in->idxs_rev[0];
+    int ni, ns, nns, nbu, nbx;
+    int *idxs = nlp_work->tmp_nins;
     for (int stage = 0; stage <= dims->N; stage++)
     {
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nbu", &nbu);
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nbx", &nbx);
         ns = dims->ns[stage];
         ni = dims->ni[stage];
         nns = mem->nns[stage];
@@ -948,7 +973,8 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
                     break;
                 }
             }
-            if (!i_slacked)
+            // slack constraints that are not slacked yet and not u-bounds
+            if (!i_slacked && ((stage>0 && i >= nbu) || (stage==0 && i >= nbu+nbx)))
             {
                 mem->idxns[stage][ins] = i;
                 ins++;
@@ -958,6 +984,10 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
         printf("got idxns at stage %d\n", stage);
         for (int i=0; i<nns; i++)
             printf("%d ", mem->idxns[stage][i]);
+        if (ins != nns)
+        {
+            printf("ins %d != nns %d", ins, nns);
+        }
         printf("\n");
     }
 
