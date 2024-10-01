@@ -304,20 +304,23 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
 
     // idxns
     size += (dims->N + 1) * sizeof(int *);
-    int nns, nsbu, nbu, nsbx, nbx;
+    int nns, nsbu, nbu, nsbx, nbx, n_nominal_ineq_nlp;
     for (int stage = 0; stage <= dims->N; stage++)
     {
         config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nsbu", &nsbu);
         config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nbu", &nbu);
+        n_nominal_ineq_nlp = dims->ni[stage] - dims->ns[stage];
         if (stage == 0)
         {
             config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nsbx", &nsbx);
             config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nbx", &nbx);
-            nns = dims->ni[stage] - nbu - nbx - (dims->ns[stage] - nsbu - nsbx);
+            nns = n_nominal_ineq_nlp - dims->ns[stage] - nbu + nsbu - nbx + nsbx;
         }
         else
         {
-            nns = dims->ni[stage] - nbu - (dims->ns[stage] - nsbu);
+            // We want number of constraints minus number slacked constraints, i.e, ni - ns
+            // Then we do not want to slack the control bounds, and we want to avoid the slacked bounds
+            nns = n_nominal_ineq_nlp - dims->ns[stage] - nbu + nsbu;
         }
         size += nns * sizeof(int);
     }
@@ -380,20 +383,21 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     // integers
     assign_and_advance_int(N+1, &mem->nns, &c_ptr);
 
-    int nns, nsbu, nbu, nsbx, nbx;
+    int nns, nsbu, nbu, nsbx, nbx, n_nominal_ineq_nlp;
     for (int stage = 0; stage <= dims->N; stage++)
     {
+        n_nominal_ineq_nlp = dims->ni[stage] - dims->ns[stage];
         config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nsbu", &nsbu);
         config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nbu", &nbu);
         if (stage == 0)
         {
             config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nsbx", &nsbx);
             config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nbx", &nbx);
-            mem->nns[stage] = dims->ni[stage] - nbu - nbx - (dims->ns[stage] - nsbu - nsbx);
+            mem->nns[stage] = n_nominal_ineq_nlp - dims->ns[stage] - nbu + nsbu - nbx + nsbx;
         }
         else
         {
-            mem->nns[stage] = dims->ni[stage] - nbu - (dims->ns[stage] - nsbu);
+            mem->nns[stage] = n_nominal_ineq_nlp - dims->ns[stage] - nbu + nsbu;
         }
         assign_and_advance_int(mem->nns[stage], &mem->idxns[stage], &c_ptr);
     }
@@ -600,10 +604,18 @@ static void set_non_slacked_l1_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
     // be aware of rqz_QP = [r, q, zl_NLP, zl_QP, zu_NLP, zu_QP]
     for (int stage = 0; stage <= dims->N; stage++)
     {
+
+        printf("set_non_slacked_l1_penalties %d\n", stage);
+        printf("qp_in->rqz %d before update\n", stage);
+        blasfeo_print_exp_tran_dvec(nu[stage] +nx[stage] + 2*(nns[stage]+ns[stage]), qp_in->rqz+stage, 0);
+
         // zl_QP
-        blasfeo_dvecse(nns[stage], mem->penalty_parameter, qp_in->rqz, nu[stage]+nx[stage]+ns[stage]);
+        blasfeo_dvecse(nns[stage], mem->penalty_parameter, qp_in->rqz+stage, nu[stage]+nx[stage]+ns[stage]);
         // zu_QP
-        blasfeo_dvecse(nns[stage], mem->penalty_parameter, qp_in->rqz, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
+        blasfeo_dvecse(nns[stage], mem->penalty_parameter, qp_in->rqz+stage, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
+
+        printf("qp_in->rqz %d\n", stage);
+        blasfeo_print_exp_tran_dvec(nu[stage] +nx[stage] + 2*(nns[stage]+ns[stage]), qp_in->rqz+stage, 0);
     }
 }
 
@@ -623,15 +635,80 @@ static void set_non_slacked_l2_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
     // be aware of rqz_QP = [r, q, zl_NLP, zl_QP, zu_NLP, zu_QP]
     for (int stage = 0; stage <= dims->N; stage++)
     {
+        // zu_NLP shift back
+        blasfeo_dveccp(ns[stage], qp_in->Z+stage, ns[stage], qp_in->Z+stage, ns[stage]+nns[stage]);
         // zl_QP
-        blasfeo_dvecse(nns[stage], 0.0, qp_in->Z, ns[stage]);
+        blasfeo_dvecse(nns[stage], 0.0, qp_in->Z+stage, ns[stage]);
         // zu_QP
-        blasfeo_dvecse(nns[stage], 0.0, qp_in->Z, 2*ns[stage]+nns[stage]);
+        blasfeo_dvecse(nns[stage], 0.0, qp_in->Z+stage, 2*ns[stage]+nns[stage]);
+
+        printf("qp_in->Z %d\n", stage);
+        blasfeo_print_exp_tran_dvec(2*(nns[stage]+ns[stage]), qp_in->Z+stage, 0);
     }
-    print_ocp_qp_in(qp_in);
+    // print_ocp_qp_in(qp_in);
 }
 
 
+
+static void print_indices(
+    ocp_nlp_dims *dims,
+    ocp_nlp_sqp_wfqp_memory *mem
+)
+{
+    // DEBUG:
+    for (int stage = 0; stage <= dims->N; stage++)
+    {
+        int nns = mem->nns[stage];
+        printf("got idxns at stage %d\n", stage);
+        for (int i=0; i<nns; i++)
+            printf("%d ", mem->idxns[stage][i]);
+        printf("\n");
+    }
+}
+
+
+void ocp_nlp_approximate_qp_vectors_sqp_wfqp(ocp_nlp_config *config,
+    ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+    ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
+{
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    int *ni = dims->ni;
+    int *nns = mem->nns;
+
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        // g
+        // standard
+        // blasfeo_dveccp(nv[i], nlp_mem->cost_grad + i, 0, nlp_mem->qp_in->rqz + i, 0);
+        blasfeo_dveccp(nx[i]+nu[i]+ns[i], nlp_mem->cost_grad + i, 0, nlp_mem->qp_in->rqz + i, 0);
+        blasfeo_dveccp(ns[i], nlp_mem->cost_grad + i, nx[i]+nu[i]+ns[i], nlp_mem->qp_in->rqz + i, nx[i]+nu[i]+ns[i]+nns[i]);
+
+        // b
+        if (i < N)
+            blasfeo_dveccp(nx[i + 1], nlp_mem->dyn_fun + i, 0, nlp_mem->qp_in->b + i, 0);
+
+        // evaluate constraint residuals
+        config->constraints[i]->update_qp_vectors(config->constraints[i], dims->constraints[i],
+            in->constraints[i], opts->constraints[i], nlp_mem->constraints[i], work->constraints[i]);
+
+        // TODO: ni!
+        // copy ineq function value into nlp mem, then into QP
+        struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
+        blasfeo_dveccp(2 * ni[i], ineq_fun, 0, nlp_mem->ineq_fun + i, 0);
+
+        // d
+        blasfeo_dveccp(2 * ni[i], nlp_mem->ineq_fun + i, 0, nlp_mem->qp_in->d + i, 0);
+    }
+}
 
 
 // MAIN OPTIMIZATION ROUTINE
@@ -668,6 +745,9 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->step_norm = 0.0;
     mem->nlp_mem->status = ACADOS_SUCCESS;
 
+    // TODO(@david):
+    mem->penalty_parameter = 33.0;
+
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
     int num_threads_bkp = omp_get_num_threads();
@@ -675,15 +755,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     omp_set_num_threads(opts->nlp_opts->num_threads);
 #endif
 
-    set_non_slacked_l2_penalties(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
-    // set nns in cost module!
-    // TODO: cleanup
-    for (int stage = 0; stage <= dims->N; stage++)
-    {
-        config->cost[stage]->model_set(config->cost[stage], dims->cost[stage], nlp_in->cost[stage], "nns", &mem->nns[stage]);
-    }
-
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+    set_non_slacked_l2_penalties(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
 
     /************************************************
      * main sqp loop
@@ -709,7 +782,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter);
 
             // update QP rhs for SQP (step prim var, abs dual var)
-            ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+            ocp_nlp_approximate_qp_vectors_sqp_wfqp(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
             nlp_timings->time_lin += acados_toc(&timer1);
 
             // Set the penalties in slacked problem
@@ -991,6 +1064,7 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
         config->constraints[stage]->model_get(config->constraints[stage], dims->constraints[stage], nlp_in->constraints[stage], "idxs", idxs);
 
         // DEBUG:
+        printf("stage %d: ni %d ns %d nns %d\n", stage, ni, ns, nns);
         printf("got idxs at stage %d\n", stage);
         for (int i=0; i<ns; i++)
             printf("%d ", idxs[i]);
@@ -999,7 +1073,7 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
         int ins = 0;
         bool i_slacked;
         // create idxns
-        for (int i=0; i<ni; i++)
+        for (int i=0; i<ni-ns; i++)
         {
             i_slacked = false;
             for (int j=0; j<ns; j++)
@@ -1043,6 +1117,7 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
 
     return ocp_nlp_precompute_common(config, dims, nlp_in, nlp_out, opts->nlp_opts, nlp_mem, nlp_work);
 }
+
 
 
 void ocp_nlp_sqp_wfqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *mem_, void *work_,
