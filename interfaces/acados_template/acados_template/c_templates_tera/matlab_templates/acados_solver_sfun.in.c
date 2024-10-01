@@ -69,13 +69,62 @@
 {%- endif %}
 
 {% if problem_class == "OCP" %}
-  {% set dims_0 = dims %}
   {% set dims_e = dims %}
+  {% set dims_0 = dims %}
 
   {%- set ns_total = dims.ns_0 + dims.ns_e + (solver_options.N_horizon - 1) * dims.ns %}
   {% set_global nx_total = dims.nx * (solver_options.N_horizon+1) %}
   {% set_global nu_total = dims.nu * (solver_options.N_horizon) %}
   {% set_global nbu_total = dims.nbu * (solver_options.N_horizon) %}
+  {% set np_total = dims.np * (solver_options.N_horizon+1) %}
+  {% set np_max = dims.np %}
+  {% set nx_max = dims.nx %}
+  {% set nu_max = dims.nu %}
+{% else %}
+  {% set dims_0 = phases_dims | first %}
+  {% set cost_0 = cost | first %}
+  {% set constraints_0 = constraints | first %}
+  {% set model_0 = model | first %}
+
+  {% set cost_e = cost | last %}
+  {% set constraints_e = constraints | last %}
+  {% set dims_e = phases_dims | last %}
+  {% set model_e = model | last %}
+
+  {% set ns_total = dims_0.ns_0 %}
+  {% set nx_total = 0 %}
+  {% set nu_total = 0 %}
+  {% set nbu_total = 0 %}
+  {% set nz_total = 0 %}
+  {% set np_total = 0 %}
+  {% for jj in range(end=n_phases) %}{# phases loop !#}
+    {% set_global ns_total = ns_total + (end_idx[jj] - cost_start_idx[jj]) * phases_dims[jj].ns %}
+    {% set_global nx_total = nx_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nx %}
+    {% set_global nu_total = nu_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nu %}
+    {% set_global nbu_total = nbu_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nbu %}
+    {% set_global nz_total = nz_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nz %}
+  {% endfor %}{# phases loop !#}
+
+  {% set_global nx_total = nx_total + dims_e.nx %}
+  {% set_global ns_total = ns_total + dims_e.ns_e %}
+
+  {%- set nx_values = [] -%}
+  {%- for jj in range(end=n_phases) %}
+      {%- set_global nx_values = nx_values | concat(with=(phases_dims[jj].nx)) %}
+  {%- endfor %}
+  {%- set nx_max = nx_values | sort | last %}
+
+  {%- set nu_values = [] -%}
+  {%- for jj in range(end=n_phases) %}
+      {%- set_global nu_values = nu_values | concat(with=(phases_dims[jj].nu)) %}
+  {%- endfor %}
+  {%- set nu_max = nu_values | sort | last %}
+
+  {%- set np_values = [] -%}
+  {%- for jj in range(end=n_phases) %}
+      {%- set_global np_values = np_values | concat(with=(phases_dims[jj].np)) %}
+  {%- endfor %}
+  {%- set np_max = np_values | sort | last %}
 {%- endif %}
 
 
@@ -101,7 +150,7 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- if dims_0.nbx_0 > 0 and simulink_opts.inputs.ubx_0 -%}  {#- ubx_0 #}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
-  {%- if dims.np > 0 and simulink_opts.inputs.parameter_traj -%}  {#- parameter_traj #}
+  {%- if np_total > 0 and simulink_opts.inputs.parameter_traj -%}  {#- parameter_traj #}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
   {%- if dims_0.np_global > 0 and simulink_opts.inputs.p_global -%}  {#- p_global #}
@@ -249,10 +298,10 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims_0.nbx_0 }});
   {%- endif %}
 
-  {%- if dims.np > 0 and simulink_opts.inputs.parameter_traj -%}  {#- parameter_traj #}
+  {%- if np_total > 0 and simulink_opts.inputs.parameter_traj -%}  {#- parameter_traj #}
     {%- set i_input = i_input + 1 %}
     // parameters
-    ssSetInputPortVectorDimension(S, {{ i_input }}, (N+1) * {{ dims.np }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ np_total }});
   {%- endif %}
 
   {%- if dims_0.np_global > 0 and simulink_opts.inputs.p_global -%}  {#- p_global #}
@@ -541,7 +590,7 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- endif %}
   {%- if simulink_opts.outputs.parameter_traj -%}  {#- parameter_traj #}
     {%- set i_output = i_output + 1 %}
-    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.np * (solver_options.N_horizon + 1) }});
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.np_total }});
   {%- endif -%}
 
     // specify the direct feedthrough status
@@ -603,7 +652,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     int N = {{ model.name | upper }}_N;
 
-    {%- set buffer_sizes = [dims.nx, dims.nu, dims_0.nbx_0, dims.np, dims.nbx, dims_e.nbx_e, dims.nbu, dims.ng, dims.nh, dims_0.nh_0, dims.ng_e, dims_e.nh_e, dims.ns, dims.ns_0, dims.ns_e] -%}
+    {%- set buffer_sizes = [nx_max, nu_max, dims_0.nbx_0, np_max, dims.nbx, dims_e.nbx_e, dims.nbu, dims.ng, dims.nh, dims_0.nh_0, dims.ng_e, dims_e.nh_e, dims.ns, dims.ns_0, dims.ns_e] -%}
 
   {%- if dims_0.ny_0 > 0 and simulink_opts.inputs.y_ref_0 %}  {# y_ref_0 #}
     {%- set buffer_sizes = buffer_sizes | concat(with=(dims_0.ny_0)) %}
@@ -667,7 +716,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     }
   {%- endif %}
 
-  {%- if dims.np > 0 and simulink_opts.inputs.parameter_traj -%}  {#- parameter_traj #}
+  {%- if np_total > 0 and simulink_opts.inputs.parameter_traj -%}  {#- parameter_traj #}
     // parameter_traj
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
