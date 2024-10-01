@@ -639,6 +639,75 @@ static void set_non_slacked_l2_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
 
 
 
+// TODO: work this out!
+// signature: need solver specific memory
+/*
+calculates new iterate or trial iterate in 'out_destination' with step 'mem->qp_out',
+step size 'alpha', and current iterate 'out_start'.
+ */
+void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
+            void *in_, void *out_, void *opts_, void *mem_,
+            void *work_, void *out_destination_,
+            void *solver_mem, double alpha, bool full_step_dual)
+{
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_out *out_start = out_;
+    ocp_nlp_memory *mem = mem_;
+    ocp_nlp_out *out_destination = out_destination_;
+    // solver_mem is not used in this function, but needed for DDP
+    // the function is used in the config->globalization->step_update
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ni = dims->ni;
+    int *nz = dims->nz;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        // step in primal variables
+        blasfeo_daxpy(nx[i]+nu[i]+ns[i], alpha, mem->qp_out->ux + i, 0, out_start->ux + i, 0, out_destination->ux + i, 0);
+        blasfeo_daxpy(ns[i], alpha, mem->qp_out->ux + i, nx[i]+nu[i]+ns[i]+nns[i], out_start->ux + i, nx[i]+nu[i]+ns[i], out_destination->ux + i, nx[i]+nu[i]+ns[i]);
+
+        // update dual variables
+        if (full_step_dual)
+        {
+            // TODO: split ni_qp = n_ineq_nominal_nlp + ns_nlp + nns;
+            blasfeo_dveccp(2*ni[i], mem->qp_out->lam+i, 0, out_destination->lam+i, 0);
+            if (i < N)
+            {
+                blasfeo_dveccp(nx[i+1], mem->qp_out->pi+i, 0, out_destination->pi+i, 0);
+            }
+        }
+        else
+        {
+            // TODO: split ni_qp = n_ineq_nominal_nlp + ns_nlp + nns;
+            // update duals with alpha step
+            blasfeo_daxpby(2*ni[i], 1.0-alpha, out_start->lam+i, 0, alpha, mem->qp_out->lam+i, 0, out_destination->lam+i, 0);
+            // blasfeo_dvecsc(2*ni[i], 1.0-alpha, out->lam+i, 0);
+            // blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->lam+i, 0, out->lam+i, 0, out->lam+i, 0);
+            if (i < N)
+            {
+                // blasfeo_dvecsc(nx[i+1], 1.0-alpha, out->pi+i, 0);
+                // blasfeo_daxpy(nx[i+1], alpha, mem->qp_out->pi+i, 0, out->pi+i, 0, out->pi+i, 0);
+                blasfeo_daxpby(nx[i+1], 1.0-alpha, out_start->pi+i, 0, alpha, mem->qp_out->pi+i, 0, out_destination->pi+i, 0);
+            }
+        }
+
+        // linear update of algebraic variables using state and input sensitivity
+        if (i < N)
+        {
+            // out->z = mem->z_alg + alpha * dzdux * qp_out->ux
+            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0,
+                    mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out_destination->z+i, 0);
+        }
+    }
+}
+
+
 static void print_indices(
     ocp_nlp_dims *dims,
     ocp_nlp_sqp_wfqp_memory *mem
@@ -1281,7 +1350,7 @@ void ocp_nlp_sqp_wfqp_config_initialize_default(void *config_)
     config->opts_get = &ocp_nlp_sqp_wfqp_opts_get;
     config->work_get = &ocp_nlp_sqp_wfqp_work_get;
     config->terminate = &ocp_nlp_sqp_wfqp_terminate;
-    config->step_update = &ocp_nlp_update_variables_sqp;
+    config->step_update = &ocp_nlp_update_variables_sqp_wfqp;
     config->is_real_time_algorithm = &ocp_nlp_sqp_wfqp_is_real_time_algorithm;
 
     return;
