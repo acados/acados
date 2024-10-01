@@ -28,7 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, ACADOS_INFTY
 import numpy as np
 import scipy.linalg
 from linear_mass_model import *
@@ -142,7 +142,7 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
     if OBSTACLE:
         obs_rad = 1.0; obs_x = 0.0; obs_y = 0.0
         circle = (obs_x, obs_y, obs_rad)
-        ocp.constraints.uh = np.array([100.0]) # doenst matter
+        ocp.constraints.uh = np.array([ACADOS_INFTY]) # doenst matter
         ocp.constraints.lh = np.array([obs_rad**2])
         x_square = model.x[0] ** OBSTACLE_POWER + model.x[1] ** OBSTACLE_POWER
         ocp.model.con_h_expr = x_square
