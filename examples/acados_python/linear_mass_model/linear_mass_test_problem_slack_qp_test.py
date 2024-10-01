@@ -36,8 +36,9 @@ from itertools import product
 
 ## SETTINGS:
 OBSTACLE = True
-SOFTEN_OBSTACLE = False
 SOFTEN_TERMINAL = True
+SOFTEN_CONTROLS = True
+SOFTEN_OBSTACLE = False
 INITIALIZE = True
 PLOT = False
 OBSTACLE_POWER = 2
@@ -48,7 +49,7 @@ def main():
     # run test cases
 
     # all setting
-    params = {'globalization': ['FIXED_STEP'], # MERIT_BACKTRACKING, FIXED_STEP
+    params = {'globalization': ['FIXED_STEP'],
               'globalization_line_search_use_sufficient_descent' : [0, 1],
               'qp_solver' : ['PARTIAL_CONDENSING_HPIPM'],
               'globalization_use_SOC' : [0, 1] }
@@ -111,7 +112,8 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
     ocp.constraints.idxbu = np.array(range(nu))
 
     # Slack the controls
-    ocp.constraints.idxsbu = np.array(range(nu))
+    if SOFTEN_CONTROLS:
+        ocp.constraints.idxsbu = np.array(range(nu))
 
     x0 = np.array([1e-1, 1.1, 0, 0])
     ocp.constraints.x0 = x0
@@ -130,10 +132,11 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
         ocp.cost.Zu_e = 1e6 * np.ones(nx)
 
     # add cost for slacks
-    ocp.cost.zl = 1e6 * np.ones(nu)
-    ocp.cost.zu = 1e6 * np.ones(nu)
-    ocp.cost.Zl = 1e6 * np.ones(nu)
-    ocp.cost.Zu = 1e6 * np.ones(nu)
+    if SOFTEN_CONTROLS:
+        ocp.cost.zl = 1e6 * np.ones(nu)
+        ocp.cost.zu = 1e6 * np.ones(nu)
+        ocp.cost.Zl = 1e6 * np.ones(nu)
+        ocp.cost.Zu = 1e6 * np.ones(nu)
 
     # add obstacle
     if OBSTACLE:
@@ -151,19 +154,19 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
         circle = None
 
     # # soften
-    # if OBSTACLE and SOFTEN_OBSTACLE:
-    #     ocp.constraints.idxsh = np.array([0])
-    #     ocp.constraints.idxsh_e = np.array([0])
-    #     Zh = 1e6 * np.ones(1)
-    #     zh = 1e4 * np.ones(1)
-    #     ocp.cost.zl = zh
-    #     ocp.cost.zu = zh
-    #     ocp.cost.Zl = Zh
-    #     ocp.cost.Zu = Zh
-    #     ocp.cost.zl_e = np.concatenate((ocp.cost.zl_e, zh))
-    #     ocp.cost.zu_e = np.concatenate((ocp.cost.zu_e, zh))
-    #     ocp.cost.Zl_e = np.concatenate((ocp.cost.Zl_e, Zh))
-    #     ocp.cost.Zu_e = np.concatenate((ocp.cost.Zu_e, Zh))
+    if OBSTACLE and SOFTEN_OBSTACLE:
+        ocp.constraints.idxsh = np.array([0])
+        ocp.constraints.idxsh_e = np.array([0])
+        Zh = 1e6 * np.ones(1)
+        zh = 1e4 * np.ones(1)
+        ocp.cost.zl = zh
+        ocp.cost.zu = zh
+        ocp.cost.Zl = Zh
+        ocp.cost.Zu = Zh
+        ocp.cost.zl_e = np.concatenate((ocp.cost.zl_e, zh))
+        ocp.cost.zu_e = np.concatenate((ocp.cost.zu_e, zh))
+        ocp.cost.Zl_e = np.concatenate((ocp.cost.Zl_e, Zh))
+        ocp.cost.Zu_e = np.concatenate((ocp.cost.Zu_e, Zh))
 
     # set options
     ocp.solver_options.qp_solver = qp_solver
@@ -196,10 +199,7 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
     else:
         ocp
 
-    if INITIALIZE:# initialize solver
-        # [ocp_solver.set(i, "x", x0 + (i/N) * (x_goal-x0)) for i in range(N+1)]
-        [ocp_solver.set(i, "x", x0) for i in range(N+1)]
-        # [ocp_solver.set(i, "u", 2*(np.random.rand(2) - 0.5)) for i in range(N)]
+    [ocp_solver.set(i, "x", x0) for i in range(N+1)]
 
     # solve
     status = ocp_solver.solve()
