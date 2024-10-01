@@ -44,6 +44,7 @@
 // acados
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
+#include "acados/utils/strsep.h"
 // openmp
 #if defined(ACADOS_WITH_OPENMP)
 #include <omp.h>
@@ -1146,20 +1147,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
     ocp_nlp_opts *opts = (ocp_nlp_opts *) opts_;
     ocp_nlp_config *config = config_;
 
-    char module[MAX_STR_LEN];
     char *ptr_module = NULL;
     int module_length = 0;
-
-    // extract module name, i.e. substring in field before '_'
-    char *char_ = strchr(field, '_');
-    if (char_!=NULL)
-    {
-        module_length = char_-field;
-        for (int i=0; i<module_length; i++)
-            module[i] = field[i];
-        module[module_length] = '\0'; // add end of string
-        ptr_module = module;
-    }
+    char module[MAX_STR_LEN];
+    extract_module_name(field, module, &module_length);
+    ptr_module = module;
 
     // pass options to QP module
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
@@ -1317,20 +1309,11 @@ void ocp_nlp_opts_set_at_stage(void *config_, void *opts_, int stage, const char
     ocp_nlp_opts *opts = (ocp_nlp_opts *) opts_;
     ocp_nlp_config *config = config_;
 
-    char module[MAX_STR_LEN];
     char *ptr_module = NULL;
     int module_length = 0;
-
-    // extract module name
-    char *char_ = strchr(field, '_');
-    if (char_!=NULL)
-    {
-        module_length = char_-field;
-        for (int i=0; i<module_length; i++)
-            module[i] = field[i];
-        module[module_length] = '\0'; // add end of string
-        ptr_module = module;
-    }
+    char module[MAX_STR_LEN];
+    extract_module_name(field, module, &module_length);
+    ptr_module = module;
 
     // pass options to dynamics module
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "dynamics")) )
@@ -1357,7 +1340,6 @@ void ocp_nlp_opts_set_at_stage(void *config_, void *opts_, int stage, const char
     }
 
     return;
-
 }
 
 
@@ -1988,6 +1970,37 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
 /************************************************
  * functions
  ************************************************/
+double ocp_nlp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_nlp_workspace *nlp_work)
+{
+    // Compute the QP objective function value
+    double qp_cost = 0.0;
+    int i, nux, ns;
+    int N = dims->N;
+    // Sum over stages 0 to N
+    for (i = 0; i <= N; i++)
+    {
+        nux = dims->nx[i] + dims->nu[i];
+        ns = dims->ns[i];
+        // Calculate 0.5 * d.T H d
+        blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0,
+                        0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
+        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
+
+        // slack QP objective value, compare to computation in cost modules;
+        // tmp_nv = 2 * z + Z .* slack;
+        blasfeo_dveccpsc(2*ns, 2.0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
+        blasfeo_dvecmulacc(2*ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
+        // qp_cost += .5 * (tmp_nv .* slack)
+        qp_cost += 0.5 * blasfeo_ddot(2*ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux);
+        // Calculate g.T d
+        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
+
+        // Calculate gradient of slacks
+        qp_cost += blasfeo_ddot(2 * ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
+    }
+    return qp_cost;
+}
+
 
 double ocp_nlp_get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_memory *nlp_mem)
 {
@@ -3027,6 +3040,49 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
 }
 
 
+int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *nlp_opts,
+                     ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work, bool precondensed_lhs)
+{
+    acados_timer timer;
+    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+
+    ocp_qp_in *qp_in = nlp_mem->qp_in;
+    ocp_qp_out *qp_out = nlp_mem->qp_out;
+    ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
+
+    double tmp_time;
+    int qp_status;
+
+    // solve qp
+    acados_tic(&timer);
+    if (precondensed_lhs)
+    {
+        qp_status = qp_solver->condense_rhs_and_solve(qp_solver, dims->qp_solver,
+            nlp_mem->qp_in, nlp_mem->qp_out, nlp_opts->qp_solver_opts,
+            nlp_mem->qp_solver_mem, nlp_work->qp_work);
+    }
+    else
+    {
+        qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
+                                    nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
+    }
+    // add qp timings
+    nlp_timings->time_qp_sol += acados_toc(&timer);
+    // NOTE: timings within qp solver are added internally (lhs+rhs)
+    qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
+    nlp_timings->time_qp_solver_call += tmp_time;
+    qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
+    nlp_timings->time_qp_xcond += tmp_time;
+
+    // compute correct dual solution in case of Hessian regularization
+    acados_tic(&timer);
+    config->regularize->correct_dual_sol(config->regularize, dims->regularize,
+                                            nlp_opts->regularize, nlp_mem->regularize_mem);
+    nlp_timings->time_reg += acados_toc(&timer);
+
+    return qp_status;
+}
+
 
 void ocp_nlp_dump_qp_in_to_file(ocp_qp_in *qp_in, int sqp_iter, int soc)
 {
@@ -3122,6 +3178,91 @@ void ocp_nlp_timings_get(ocp_nlp_config *config, ocp_nlp_timings *timings, const
         exit(1);
     }
 }
+
+void ocp_nlp_memory_get(ocp_nlp_config *config, ocp_nlp_memory *nlp_mem, const char *field, void *return_value_)
+{
+    if (!strcmp("sqp_iter", field) || !strcmp("nlp_iter", field) || !strcmp("ddp_iter", field))
+    {
+        int *value = return_value_;
+        *value = nlp_mem->iter;
+    }
+    else if (!strcmp("status", field))
+    {
+        int *value = return_value_;
+        *value = nlp_mem->status;
+    }
+    else if (!strcmp("nlp_mem", field))
+    {
+        void **value = return_value_;
+        *value = nlp_mem;
+    }
+    else if (!strcmp("nlp_res", field))
+    {
+        ocp_nlp_res **value = return_value_;
+        *value = nlp_mem->nlp_res;
+    }
+    else if (!strcmp("qp_xcond_in", field))
+    {
+        void **value = return_value_;
+        *value = nlp_mem->qp_solver_mem->xcond_qp_in;
+    }
+    else if (!strcmp("qp_xcond_out", field))
+    {
+        void **value = return_value_;
+        *value = nlp_mem->qp_solver_mem->xcond_qp_out;
+    }
+    else if (!strcmp("qp_in", field))
+    {
+        void **value = return_value_;
+        *value = nlp_mem->qp_in;
+    }
+    else if (!strcmp("qp_out", field))
+    {
+        void **value = return_value_;
+        *value = nlp_mem->qp_out;
+    }
+    else if (!strcmp("qp_iter", field))
+    {
+        config->qp_solver->memory_get(config->qp_solver,
+            nlp_mem->qp_solver_mem, "iter", return_value_);
+    }
+    else if (!strcmp("qp_status", field))
+    {
+        config->qp_solver->memory_get(config->qp_solver,
+            nlp_mem->qp_solver_mem, "status", return_value_);
+    }
+    else if (!strcmp("res_stat", field))
+    {
+        double *value = return_value_;
+        *value = nlp_mem->nlp_res->inf_norm_res_stat;
+    }
+    else if (!strcmp("res_eq", field))
+    {
+        double *value = return_value_;
+        *value = nlp_mem->nlp_res->inf_norm_res_eq;
+    }
+    else if (!strcmp("res_ineq", field))
+    {
+        double *value = return_value_;
+        *value = nlp_mem->nlp_res->inf_norm_res_ineq;
+    }
+    else if (!strcmp("res_comp", field))
+    {
+        double *value = return_value_;
+        *value = nlp_mem->nlp_res->inf_norm_res_comp;
+    }
+    else if (!strcmp("cost_value", field))
+    {
+        double *value = return_value_;
+        *value = nlp_mem->cost_value;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_memory_get\n", field);
+        exit(1);
+    }
+}
+
 
 void ocp_nlp_timings_reset(ocp_nlp_timings *timings)
 {

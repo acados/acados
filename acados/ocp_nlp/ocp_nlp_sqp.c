@@ -55,6 +55,7 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+#include "acados/utils/strsep.h"
 #include "acados_c/ocp_qp_interface.h"
 
 
@@ -156,22 +157,11 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
     ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
 
-    int ii;
-
-    char module[MAX_STR_LEN];
     char *ptr_module = NULL;
     int module_length = 0;
-
-    // extract module name
-    char *char_ = strchr(field, '_');
-    if (char_!=NULL)
-    {
-        module_length = char_-field;
-        for (ii=0; ii<module_length; ii++)
-            module[ii] = field[ii];
-        module[module_length] = '\0'; // add end of string
-        ptr_module = module;
-    }
+    char module[MAX_STR_LEN];
+    extract_module_name(field, module, &module_length);
+    ptr_module = module;
 
     // pass options to QP module
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
@@ -559,7 +549,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_qp_out *qp_out = nlp_mem->qp_out;
 
     // zero timers
-    double tmp_time;
     ocp_nlp_timings_reset(nlp_timings);
 
     int qp_status = 0;
@@ -662,8 +651,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         if (sqp_iter == 0 && !opts->warm_start_first_qp)
         {
             int tmp_int = 0;
-            config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts,
-                                         "warm_start", &tmp_int);
+            qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
         }
         // Show input to QP
         if (nlp_opts->print_level > 3)
@@ -675,28 +663,12 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
         ocp_nlp_dump_qp_in_to_file(qp_in, sqp_iter, 0);
 #endif
-        // solve qp
-        acados_tic(&timer1);
-        qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
-                                        nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
-        nlp_timings->time_qp_sol += acados_toc(&timer1);
-
-        qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
-        nlp_timings->time_qp_solver_call += tmp_time;
-        qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
-        nlp_timings->time_qp_xcond += tmp_time;
-
-        // compute correct dual solution in case of Hessian regularization
-        acados_tic(&timer1);
-        config->regularize->correct_dual_sol(config->regularize, dims->regularize,
-                                             nlp_opts->regularize, nlp_mem->regularize_mem);
-        nlp_timings->time_reg += acados_toc(&timer1);
+        qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false);
 
         // restore default warm start
         if (sqp_iter==0)
         {
-            config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts,
-                                        "warm_start", &opts->qp_warm_start);
+            qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &opts->qp_warm_start);
         }
 
         if (nlp_opts->print_level > 3)
@@ -766,7 +738,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Calculate optimal QP objective (needed for globalization)
         if (config->globalization->needs_qp_objective_value() == 1)
         {
-            nlp_mem->qp_cost_value = ocp_nlp_sqp_compute_qp_objective_value(dims, qp_in, qp_out, nlp_work);
+            nlp_mem->qp_cost_value = ocp_nlp_compute_qp_objective_value(dims, qp_in, qp_out, nlp_work);
         }
 
         // Compute the step norm
@@ -815,37 +787,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     omp_set_num_threads(num_threads_bkp);
 #endif
     return mem->nlp_mem->status;
-}
-
-double ocp_nlp_sqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_nlp_workspace *nlp_work)
-{
-    // Compute the QP objective function value
-    double qp_cost = 0.0;
-    int i, nux, ns;
-    int N = dims->N;
-    // Sum over stages 0 to N
-    for (i = 0; i <= N; i++)
-    {
-        nux = dims->nx[i] + dims->nu[i];
-        ns = dims->ns[i];
-        // Calculate 0.5 * d.T H d
-        blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0,
-                        0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
-        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
-
-        // slack QP objective value, compare to computation in cost modules;
-        // tmp_nv = 2 * z + Z .* slack;
-        blasfeo_dveccpsc(2*ns, 2.0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
-        blasfeo_dvecmulacc(2*ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
-        // qp_cost += .5 * (tmp_nv .* slack)
-        qp_cost += 0.5 * blasfeo_ddot(2*ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux);
-        // Calculate g.T d
-        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
-
-        // Calculate gradient of slacks
-        qp_cost += blasfeo_ddot(2 * ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
-    }
-    return qp_cost;
 }
 
 void ocp_nlp_sqp_memory_reset_qp_solver(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
@@ -934,42 +875,23 @@ void ocp_nlp_sqp_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_, voi
 }
 
 
+// TODO: write getter for things in nlp_mem
 void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_)
 {
     ocp_nlp_config *config = config_;
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_sqp_memory *mem = mem_;
 
-
-    char module[MAX_STR_LEN];
     char *ptr_module = NULL;
     int module_length = 0;
-
-    // extract module name
-    char *char_ = strchr(field, '_');
-    if (char_!=NULL)
-    {
-        module_length = char_-field;
-        for (int ii=0; ii<module_length; ii++)
-            module[ii] = field[ii];
-        module[module_length] = '\0'; // add end of string
-        ptr_module = module;
-    }
+    char module[MAX_STR_LEN];
+    extract_module_name(field, module, &module_length);
+    ptr_module = module;
 
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "time")) )
     {
         // call timings getter
         ocp_nlp_timings_get(config, mem->nlp_mem->nlp_timings, field, return_value_);
-    }
-    else if (!strcmp("sqp_iter", field) || !strcmp("nlp_iter", field))
-    {
-        int *value = return_value_;
-        *value = mem->nlp_mem->iter;
-    }
-    else if (!strcmp("status", field))
-    {
-        int *value = return_value_;
-        *value = mem->nlp_mem->status;
     }
     else if (!strcmp("stat", field))
     {
@@ -992,7 +914,6 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
             }
         }
     }
-
     else if (!strcmp("statistics", field))
     {
         int n_row = mem->stat_m<mem->nlp_mem->iter+1 ? mem->stat_m : mem->nlp_mem->iter+1;
@@ -1014,80 +935,14 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
         int *value = return_value_;
         *value = mem->stat_n;
     }
-    else if (!strcmp("nlp_mem", field))
-    {
-        void **value = return_value_;
-        *value = mem->nlp_mem;
-    }
     else if (!strcmp("qp_xcond_dims", field))
     {
         void **value = return_value_;
         *value = dims->qp_solver->xcond_dims;
     }
-    else if (!strcmp("nlp_res", field))
-    {
-        ocp_nlp_res **value = return_value_;
-        *value = mem->nlp_mem->nlp_res;
-    }
-    else if (!strcmp("qp_xcond_in", field))
-    {
-        void **value = return_value_;
-        *value = mem->nlp_mem->qp_solver_mem->xcond_qp_in;
-    }
-    else if (!strcmp("qp_xcond_out", field))
-    {
-        void **value = return_value_;
-        *value = mem->nlp_mem->qp_solver_mem->xcond_qp_out;
-    }
-    else if (!strcmp("qp_in", field))
-    {
-        void **value = return_value_;
-        *value = mem->nlp_mem->qp_in;
-    }
-    else if (!strcmp("qp_out", field))
-    {
-        void **value = return_value_;
-        *value = mem->nlp_mem->qp_out;
-    }
-    else if (!strcmp("qp_iter", field))
-    {
-        config->qp_solver->memory_get(config->qp_solver,
-            mem->nlp_mem->qp_solver_mem, "iter", return_value_);
-    }
-    else if (!strcmp("qp_status", field))
-    {
-        config->qp_solver->memory_get(config->qp_solver,
-            mem->nlp_mem->qp_solver_mem, "status", return_value_);
-    }
-    else if (!strcmp("res_stat", field))
-    {
-        double *value = return_value_;
-        *value = mem->nlp_mem->nlp_res->inf_norm_res_stat;
-    }
-    else if (!strcmp("res_eq", field))
-    {
-        double *value = return_value_;
-        *value = mem->nlp_mem->nlp_res->inf_norm_res_eq;
-    }
-    else if (!strcmp("res_ineq", field))
-    {
-        double *value = return_value_;
-        *value = mem->nlp_mem->nlp_res->inf_norm_res_ineq;
-    }
-    else if (!strcmp("res_comp", field))
-    {
-        double *value = return_value_;
-        *value = mem->nlp_mem->nlp_res->inf_norm_res_comp;
-    }
-    else if (!strcmp("cost_value", field))
-    {
-        double *value = return_value_;
-        *value = mem->nlp_mem->cost_value;
-    }
     else
     {
-        printf("\nerror: field %s not available in ocp_nlp_sqp_get\n", field);
-        exit(1);
+        ocp_nlp_memory_get(config, mem->nlp_mem, field, return_value_);
     }
 }
 

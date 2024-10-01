@@ -27,7 +27,7 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-function setup_generic_cost(cost, target_dir, stage_type)
+function setup_generic_cost(context, cost, target_dir, stage_type)
     if strcmp(stage_type, 'initial')
         cost_source_ext_cost = cost.cost_source_ext_cost_0;
     elseif strcmp(stage_type, 'path')
@@ -40,4 +40,6 @@ function setup_generic_cost(cost, target_dir, stage_type)
 
     check_dir_and_create(target_dir);
     copyfile(fullfile(pwd, cost_source_ext_cost), target_dir);
+    context.add_external_function_file(cost_source_ext_cost, target_dir);
+
 end

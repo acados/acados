@@ -46,6 +46,7 @@ classdef AcadosSim < handle
         % plain data
         parameter_values
         problem_class
+        external_function_files_model
     end
 
     methods

@@ -290,9 +290,9 @@ void ocp_nlp_globalization_merit_backtracking_print_iteration(double objective_v
     }
     printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n",
         iter_count,
+        nlp_res->inf_norm_res_stat,
         nlp_res->inf_norm_res_eq,
         nlp_res->inf_norm_res_ineq,
-        nlp_res->inf_norm_res_stat,
         nlp_res->inf_norm_res_comp,
         qp_status,
         qp_iter,

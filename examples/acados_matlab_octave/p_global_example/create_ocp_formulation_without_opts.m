@@ -1,5 +1,5 @@
 
-function ocp = create_ocp_formulation(p_global, m, l, C, lut, use_p_global, p_global_values)
+function ocp = create_ocp_formulation_without_opts(p_global, m, l, C, lut, use_p_global, p_global_values)
     ocp = AcadosOcp();
 
     % Set model
@@ -42,21 +42,6 @@ function ocp = create_ocp_formulation(p_global, m, l, C, lut, use_p_global, p_gl
     ocp.constraints.idxbu = 0;
 
     ocp.constraints.x0 = [0.0; pi; 0.0; 0.0];
-
-    % Set options
-    Tf = 1.0;
-    N_horizon = 20;
-
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
-    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
-    ocp.solver_options.integrator_type = 'ERK';
-    ocp.solver_options.print_level = 0;
-    ocp.solver_options.nlp_solver_type = 'SQP_RTI';
-
-    ocp.solver_options.tf = Tf;
-    ocp.solver_options.N_horizon = N_horizon;
-    % NOTE: these additional flags are required for code generation of CasADi functions using casadi.blazing_spline
-    ocp.solver_options.ext_fun_compile_flags = ['-I' casadi.GlobalOptions.getCasadiIncludePath ' -ffast-math -march=native '];
 
     % Parameters
     ocp.parameter_values = 9.81;
