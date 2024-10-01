@@ -353,6 +353,12 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
         model->scaling = *scaling_ptr;
         model->Cyt_or_scaling_changed = 1;
     }
+    else if (!strcmp(field, "nns"))
+    {
+        int *nns = (int *) value_;
+        model->nns = *nns;
+        printf("setting nns = %d\n", model->nns);
+    }
     else
     {
         printf("\nerror: field %s not available in ocp_nlp_cost_ls_model_set\n", field);
@@ -756,7 +762,15 @@ void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_,
 
     int ns = dims->ns;
     // mem->Z = scaling * model->Z
-    blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
+    if (model->nns == 0)
+    {
+        blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
+    }
+    else
+    {
+        blasfeo_dveccpsc(ns, model->scaling, &model->Z, 0, memory->Z, 0);
+        blasfeo_dveccpsc(ns, model->scaling, &model->Z, ns, memory->Z, ns+model->nns);
+    }
 
     return;
 }
@@ -851,21 +865,22 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &memory->res, 0);
 
     // slack update gradient
-    // if (nns == 0)
-    // {
-    // copy l1
-    blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
-    // gradient from l2
-    blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
-    // }
-    // {
-    // blasfeo_dveccp(ns, &model->z, 0, &memory->grad, nu+nx);
-    // blasfeo_dveccp(ns, &model->z, ns, &memory->grad, nu+nx+ns+nns);
+    if (model->nns == 0)
+    {
+        // copy l1
+        blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
+        // gradient from l2
+        blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
+    }
+    else
+    {
+        blasfeo_dveccp(ns, &model->z, 0, &memory->grad, nu+nx);
+        blasfeo_dveccp(ns, &model->z, ns, &memory->grad, nu+nx+ns+model->nns);
 
-    // blasfeo_dvecmulacc(ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
-    // // NOTE: this assumes ux is of NLP dimensions!
-    // blasfeo_dvecmulacc(ns, &model->Z, ns, memory->ux, nu+nx+ns, &memory->grad, nu+nx+ns+nss);
-    // }
+        blasfeo_dvecmulacc(ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
+        // NOTE: this assumes ux is of NLP dimensions!
+        blasfeo_dvecmulacc(ns, &model->Z, ns, memory->ux, nu+nx+ns, &memory->grad, nu+nx+ns+model->nns);
+    }
 
     // slack update function value
     // tmp_2ns = 2 * z + Z .* slack
