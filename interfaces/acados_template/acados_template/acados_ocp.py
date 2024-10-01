@@ -1006,6 +1006,8 @@ class AcadosOcp:
         context = self._setup_code_generation_context(context)
         context.finalize()
         self.__casadi_pool_names = context.pool_names
+        self.__external_function_files_model = context.get_external_function_file_list(ocp_specific=False)
+        self.__external_function_files_ocp = context.get_external_function_file_list(ocp_specific=True)
 
         return context
 
@@ -1039,8 +1041,10 @@ class AcadosOcp:
             else:
                 raise Exception("ocp_generate_external_functions: unknown integrator type.")
         else:
-            target_location = os.path.join(code_gen_opts['code_export_directory'], model_dir, model.dyn_generic_source)
+            target_dir = os.path.join(code_gen_opts['code_export_directory'], model_dir)
+            target_location = os.path.join(target_dir, model.dyn_generic_source)
             shutil.copyfile(model.dyn_generic_source, target_location)
+            context.add_external_function_file(model.dyn_generic_source, target_dir)
 
         stage_types = ['initial', 'path', 'terminal']
 

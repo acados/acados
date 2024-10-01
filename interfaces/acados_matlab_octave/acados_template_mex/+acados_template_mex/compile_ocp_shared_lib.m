@@ -36,7 +36,7 @@ function compile_ocp_shared_lib(export_dir)
         %% old code for make
         if ~is_octave()
             % use Make build system
-            [ status, result ] = system('make shared_lib');
+            [ status, result ] = system('make ocp_shared_lib');
             if status
                 cd(return_dir);
                 error('Building templated code as shared library failed.\nGot status %d, result: %s',...

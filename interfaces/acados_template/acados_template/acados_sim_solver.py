@@ -150,6 +150,7 @@ def sim_generate_external_functions(acados_sim: AcadosSim):
         generate_c_code_gnsf(context, model, model_dir)
 
     context.finalize()
+    acados_sim.__external_function_files_model = context.get_external_function_file_list(ocp_specific=False)
 
 
 class AcadosSimSolver:

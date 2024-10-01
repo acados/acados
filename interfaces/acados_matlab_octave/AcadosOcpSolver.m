@@ -57,7 +57,9 @@ classdef AcadosOcpSolver < handle
             check_dir_and_create(fullfile(pwd, ocp.code_export_directory));
             context = ocp.generate_external_functions();
             context.finalize();
-            obj.ocp.casadi_pool_names = context.pool_names;
+            ocp.casadi_pool_names = context.pool_names;
+            ocp.external_function_files_model = context.get_external_function_file_list(false);
+            ocp.external_function_files_ocp = context.get_external_function_file_list(true);
 
             ocp.dump_to_json()
             ocp.render_templates()

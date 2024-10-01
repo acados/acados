@@ -34,96 +34,17 @@
     {%- set custom_update_filename = solver_options.custom_update_filename %}
 {%- endif %}
 
+{%- set ns_total = dims.ns_0 + dims.ns_e + (solver_options.N_horizon - 1) * dims.ns %}
+{# two brackets in math expression are not allowed by currently used tera #}
+{%- set two_ns_total = 2 * ns_total %}
+
 SOURCES = { ...
-        {%- if solver_options.integrator_type == 'ERK' %}
-            '{{ model.name }}_model/{{ model.name }}_expl_ode_fun.c', ...
-            '{{ model.name }}_model/{{ model.name }}_expl_vde_forw.c',...
-            '{{ model.name }}_model/{{ model.name }}_expl_vde_adj.c',...
-            {%- if solver_options.hessian_approx == 'EXACT' %}
-            '{{ model.name }}_model/{{ model.name }}_expl_ode_hess.c',...
-            {%- endif %}
-        {%- elif solver_options.integrator_type == "IRK" %}
-            '{{ model.name }}_model/{{ model.name }}_impl_dae_fun.c', ...
-            '{{ model.name }}_model/{{ model.name }}_impl_dae_fun_jac_x_xdot_z.c', ...
-            '{{ model.name }}_model/{{ model.name }}_impl_dae_jac_x_xdot_u_z.c', ...
-            {%- if solver_options.hessian_approx == 'EXACT' %}
-            '{{ model.name }}_model/{{ model.name }}_impl_dae_hess.c',...
-            {%- endif %}
-        {%- elif solver_options.integrator_type == "GNSF" %}
-            {% if model.gnsf_purely_linear != 1 %}
-            '{{ model.name }}_model/{{ model.name }}_gnsf_phi_fun.c',...
-            '{{ model.name }}_model/{{ model.name }}_gnsf_phi_fun_jac_y.c',...
-            '{{ model.name }}_model/{{ model.name }}_gnsf_phi_jac_y_uhat.c',...
-            {% if model.gnsf_nontrivial_f_LO == 1 %}
-            '{{ model.name }}_model/{{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz.c',...
-            {%- endif %}
-            {%- endif %}
-            '{{ model.name }}_model/{{ model.name }}_gnsf_get_matrices_fun.c',...
-        {%- elif solver_options.integrator_type == "DISCRETE" %}
-            '{{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun.c',...
-            '{{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac.c',...
-        {%- if solver_options.hessian_approx == "EXACT" %}
-            '{{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac_hess.c',...
-        {%- endif %}
-        {%- endif %}
-        {%- if cost.cost_type_0 == "NONLINEAR_LS" %}
-            '{{ model.name }}_cost/{{ model.name }}_cost_y_0_fun.c',...
-            '{{ model.name }}_cost/{{ model.name }}_cost_y_0_fun_jac_ut_xt.c',...
-        {%- if solver_options.hessian_approx == "EXACT" %}
-            '{{ model.name }}_cost/{{ model.name }}_cost_y_0_hess.c',...
-        {%- endif %}
-        {%- elif cost.cost_type_0 == "EXTERNAL" %}
-            '{{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun.c',...
-            '{{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun_jac.c',...
-            '{{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun_jac_hess.c',...
-        {%- endif %}
-        {%- if cost.cost_type == "NONLINEAR_LS" %}
-            '{{ model.name }}_cost/{{ model.name }}_cost_y_fun.c',...
-            '{{ model.name }}_cost/{{ model.name }}_cost_y_fun_jac_ut_xt.c',...
-            {%- if solver_options.hessian_approx == "EXACT" %}
-            '{{ model.name }}_cost/{{ model.name }}_cost_y_hess.c',...
-            {%- endif %}
-        {%- elif cost.cost_type == "EXTERNAL" %}
-            '{{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun.c',...
-            '{{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun_jac.c',...
-            '{{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun_jac_hess.c',...
-        {%- endif %}
-        {%- if cost.cost_type_e == "NONLINEAR_LS" %}
-            '{{ model.name }}_cost/{{ model.name }}_cost_y_e_fun.c',...
-            '{{ model.name }}_cost/{{ model.name }}_cost_y_e_fun_jac_ut_xt.c',...
-        {%- if solver_options.hessian_approx == "EXACT" %}
-            '{{ model.name }}_cost/{{ model.name }}_cost_y_e_hess.c',...
-        {%- endif %}
-        {%- elif cost.cost_type_e == "EXTERNAL" %}
-            '{{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun.c',...
-            '{{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun_jac.c',...
-            '{{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun_jac_hess.c',...
-        {%- endif %}
-        {%- if constraints.constr_type == "BGH"  and dims.nh > 0 %}
-            '{{ model.name }}_constraints/{{ model.name }}_constr_h_fun.c', ...
-            '{{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_zt.c', ...
-            {%- if solver_options.hessian_approx == 'EXACT' %}
-            '{{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_zt_hess.c', ...
-            {%- endif %}
-        {%- elif constraints.constr_type == "BGP" and dims.nphi > 0 %}
-            '{{ model.name }}_constraints/{{ model.name }}_phi_constraint.c', ...
-        {%- endif %}
-        {%- if constraints.constr_type_0 == "BGH"  and dims.nh_0 > 0 %}
-        '{{ model.name }}_constraints/{{ model.name }}_constr_h_0_fun.c', ...
-            {%- if solver_options.hessian_approx == 'EXACT' %}
-            '{{ model.name }}_constraints/{{ model.name }}_constr_h_0_fun_jac_uxt_zt_hess.c', ...
-            {%- endif %}
-            '{{ model.name }}_constraints/{{ model.name }}_constr_h_0_fun_jac_uxt_zt.c', ...
-        {%- endif %}
-        {%- if constraints.constr_type_e == "BGH"  and dims.nh_e > 0 %}
-            '{{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun.c', ...
-            '{{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun_jac_uxt_zt.c', ...
-            {%- if solver_options.hessian_approx == 'EXACT' %}
-            '{{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess.c', ...
-            {%- endif %}
-        {%- elif constraints.constr_type_e == "BGP" and dims.nphi_e > 0 %}
-            '{{ model.name }}_constraints/{{ model.name }}_phi_e_constraint.c', ...
-        {%- endif %}
+{%- for filename in external_function_files_model %}
+            '{{ filename }}', ...
+{%- endfor %}
+{%- for filename in external_function_files_ocp %}
+            '{{ filename }}', ...
+{%- endfor %}
         {%- if custom_update_filename != "" %}
             '{{ custom_update_filename }}', ...
         {%- endif %}
@@ -184,6 +105,8 @@ LIBS{end+1} = '-ldaqp';
     {% endif %}
 {%- endif %}
 
+COMPFLAGS = [COMPFLAGS ' {{ solver_options.ext_fun_compile_flags }}'];
+CFLAGS = [CFLAGS ' {{ solver_options.ext_fun_compile_flags }}'];
 
 try
     %     mex('-v', '-O', CFLAGS, LDFLAGS, COMPFLAGS, COMPDEFINES, INCS{:}, ...
@@ -228,6 +151,13 @@ i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') parameters - concatenated for all shooting nodes 0 to N,',...
                     ' size [{{ (solver_options.N_horizon+1)*dims.np }}]\n ');
 sfun_input_names = [sfun_input_names; 'parameter_traj [{{ (solver_options.N_horizon+1)*dims.np }}]'];
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if dims.np_global > 0 and simulink_opts.inputs.p_global -%}  {#- p_global #}
+input_note = strcat(input_note, num2str(i_in), ') global parameters - first value indicates if update should be performed (0 means no update)\n');
+input_note = strcat(input_note, '\tafterwards: new numerical values of p_global, size [1 + {{ dims.np_global }}]\n');
+sfun_input_names = [sfun_input_names; 'p_global [1 + {{ dims.np_global }}]'];
 i_in = i_in + 1;
 {%- endif %}
 
@@ -346,6 +276,30 @@ sfun_input_names = [sfun_input_names; 'cost_W_e [{{ dims.ny_e * dims.ny_e }}]'];
 i_in = i_in + 1;
 {%- endif %}
 
+{%- if ns_total > 0 and simulink_opts.inputs.cost_zl %}  {#- cost_zl #}
+input_note = strcat(input_note, num2str(i_in), ') cost_zl for all nodes 0 to N, size [{{ ns_total }}]\n ');
+sfun_input_names = [sfun_input_names; 'cost_zl [{{ ns_total }}]'];
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if ns_total > 0 and simulink_opts.inputs.cost_zu %}  {#- cost_zu #}
+input_note = strcat(input_note, num2str(i_in), ') cost_zu for all nodes 0 to N, size [{{ ns_total }}]\n ');
+sfun_input_names = [sfun_input_names; 'cost_zu [{{ ns_total }}]'];
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if ns_total > 0 and simulink_opts.inputs.cost_Zl %}  {#- cost_Zl #}
+input_note = strcat(input_note, num2str(i_in), ') cost_Zl for all nodes 0 to N, size [{{ ns_total }}]\n ');
+sfun_input_names = [sfun_input_names; 'cost_Zl [{{ ns_total }}]'];
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if ns_total > 0 and simulink_opts.inputs.cost_Zu %}  {#- cost_Zu #}
+input_note = strcat(input_note, num2str(i_in), ') cost_Zu for all nodes 0 to N, size [{{ ns_total }}]\n ');
+sfun_input_names = [sfun_input_names; 'cost_Zu [{{ ns_total }}]'];
+i_in = i_in + 1;
+{%- endif %}
+
 {%- if simulink_opts.inputs.reset_solver %}  {#- reset_solver #}
 input_note = strcat(input_note, num2str(i_in), ') reset_solver - determines if iterate is set to all zeros before other initializations (x_init, u_init, pi_init) are set and before solver is called, size [1]\n ');
 sfun_input_names = [sfun_input_names; 'reset_solver [1]'];
@@ -353,7 +307,7 @@ i_in = i_in + 1;
 {%- endif %}
 
 {%- if simulink_opts.inputs.ignore_inits %}  {#- ignore_inits #}
-input_note = strcat(input_note, num2str(i_in), ') ignore_inits - determines if initialization (x_init, u_init) are set (ignore_inits == 0) or ignored (otherwise), ignoring corresponds to internal warm start, size [1]\n ');
+input_note = strcat(input_note, num2str(i_in), ') ignore_inits - determines if initialization (x_init, u_init, pi_init, slacks_init) are set (ignore_inits == 0) or ignored (otherwise), ignoring corresponds to internal warm start, size [1]\n ');
 sfun_input_names = [sfun_input_names; 'ignore_inits [1]'];
 i_in = i_in + 1;
 {%- endif %}
@@ -373,6 +327,12 @@ i_in = i_in + 1;
 {%- if simulink_opts.inputs.pi_init %}  {#- pi_init #}
 input_note = strcat(input_note, num2str(i_in), ') pi_init - initialization of pi for shooting nodes 0 to N-1, size [{{ dims.nx * (solver_options.N_horizon) }}]\n ');
 sfun_input_names = [sfun_input_names; 'pi_init [{{ dims.nx * (solver_options.N_horizon) }}]'];
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if simulink_opts.inputs.slacks_init %}  {#- slacks_init #}
+input_note = strcat(input_note, num2str(i_in), ') slacks_init - initialization of slack values for all shooting nodes (0 to N), size [{{ two_ns_total }}]');
+sfun_input_names = [sfun_input_names; 'slacks_init [{{ two_ns_total }}]'];
 i_in = i_in + 1;
 {%- endif %}
 
@@ -440,6 +400,12 @@ output_note = strcat(output_note, num2str(i_out), ') pi_all, equality Lagrange m
 sfun_output_names = [sfun_output_names; 'pi_all [{{ dims.nx * solver_options.N_horizon }}]'];
 {%- endif %}
 
+{%- if simulink_opts.outputs.slack_values == 1 %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') slack values concatenated in order [sl_0, su_0, ..., sl_N, su_N] \n ');
+sfun_output_names = [sfun_output_names; 'slack_values [{{ two_ns_total }}]'];
+{%- endif %}
+
 {%- if simulink_opts.outputs.solver_status == 1 %}
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') acados solver status (0 = SUCCESS)\n ');
@@ -501,14 +467,11 @@ output_note = strcat(output_note, num2str(i_out), ') SQP iterations\n ');
 sfun_output_names = [sfun_output_names; 'sqp_iter'];
 {%- endif %}
 
-
 {%- if simulink_opts.outputs.parameter_traj == 1 %}
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') parameter trajectory\n ');
-sfun_output_names = [sfun_output_names; 'parameter_traj [{{ (solver_options.N_horizon + 1) * dims.np}}]'];
+sfun_output_names = [sfun_output_names; 'parameter_traj [{{ (solver_options.N_horizon + 1) * dims.np }}]'];
 {%- endif %}
-
-
 
 fprintf(output_note)
 
