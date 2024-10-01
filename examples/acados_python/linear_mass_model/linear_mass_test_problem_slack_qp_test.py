@@ -37,7 +37,7 @@ from itertools import product
 ## SETTINGS:
 OBSTACLE = True
 SOFTEN_TERMINAL = True
-SOFTEN_CONTROLS = True
+SOFTEN_CONTROLS = False
 SOFTEN_OBSTACLE = False
 INITIALIZE = True
 PLOT = False
@@ -85,7 +85,7 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
 
     # discretization
     Tf = 2
-    N = 5
+    N = 3
     shooting_nodes = np.linspace(0, Tf, N+1)
     ocp.solver_options.N_horizon = N
 
@@ -176,8 +176,8 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
     ocp.solver_options.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'
     ocp.solver_options.globalization = globalization
     ocp.solver_options.globalization_alpha_min = 0.01
-    ocp.solver_options.qp_solver_cond_N = 0
-    ocp.solver_options.print_level = 1
+    # ocp.solver_options.qp_solver_cond_N = 0
+    ocp.solver_options.print_level = 3
     ocp.solver_options.nlp_solver_max_iter = 200
     ocp.solver_options.qp_solver_iter_max = 400
     # NOTE: this is needed for PARTIAL_CONDENSING_HPIPM to get expected behavior
@@ -187,19 +187,13 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
     ocp.solver_options.qp_solver_tol_ineq = qp_tol
     ocp.solver_options.qp_solver_tol_comp = qp_tol
     ocp.solver_options.qp_solver_ric_alg = 1
+    ocp.solver_options.qp_solver_mu0 = 1e4
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
+    # create ocp solver
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_ocp.json')
-    if not use_deprecated_options:
-        ocp_solver.options_set('globalization_line_search_use_sufficient_descent', globalization_line_search_use_sufficient_descent)
-        ocp_solver.options_set('globalization_use_SOC', globalization_use_SOC)
-        ocp_solver.options_set('globalization_full_step_dual', 1)
-    else:
-        ocp
-
-    [ocp_solver.set(i, "x", x0) for i in range(N+1)]
 
     # solve
     status = ocp_solver.solve()
