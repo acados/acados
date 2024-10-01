@@ -51,7 +51,10 @@ class AcadosOcpIterates:
     __iterate_fields = ["x", "u", "z", "sl", "su", "pi", "lam"]
 
     def as_array(self, field: str, ) -> np.ndarray:
-        "Returns the iterate given by field as a numpy array of shape (nlp_iter+1, N_horizon, n_field)."
+        """
+        Returns the iterate given by field as a numpy array of shape (nlp_iter+1, N_horizon (+ 1), n_field).
+        This will fail if the dimension of value `field` is varying stagewise.
+        """
 
         if field not in self.__iterate_fields:
             raise Exception(f"Invalid field: got {field}, expected value in {self.__iterate_fields}")
