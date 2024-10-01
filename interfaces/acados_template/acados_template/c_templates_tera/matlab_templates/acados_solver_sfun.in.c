@@ -856,22 +856,28 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // lbu
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    tmp_offset = 0;
     for (int stage = 0; stage < N; stage++)
     {
-        for (int jj = 0; jj < {{ dims.nbu }}; jj++)
-            buffer[jj] = (double)(*in_sign[stage*{{ dims.nbu }}+jj]);
+        tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "lbu");
+        for (int jj = 0; jj < tmp_int; jj++)
+            buffer[jj] = (double)(*in_sign[tmp_offset+jj]);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, stage, "lbu", (void *) buffer);
+        tmp_offset += tmp_int;
     }
   {%- endif -%}
   {%- if nbu_total > 0 and simulink_opts.inputs.ubu -%}  {#- ubu #}
     // ubu
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    tmp_offset = 0;
     for (int stage = 0; stage < N; stage++)
     {
-        for (int jj = 0; jj < {{ dims.nbu }}; jj++)
-            buffer[jj] = (double)(*in_sign[stage*{{ dims.nbu }}+jj]);
+        tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "ubu");
+        for (int jj = 0; jj < tmp_int; jj++)
+            buffer[jj] = (double)(*in_sign[tmp_offset+jj]);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, stage, "ubu", (void *) buffer);
+        tmp_offset += tmp_int;
     }
   {%- endif -%}
 
