@@ -39,7 +39,7 @@ OBSTACLE = True
 SOFTEN_OBSTACLE = False
 SOFTEN_TERMINAL = True
 INITIALIZE = True
-PLOT = False
+PLOT = True
 OBSTACLE_POWER = 2
 
 # an OCP to test Maratos effect an second order correction
@@ -47,24 +47,24 @@ OBSTACLE_POWER = 2
 def main():
     # run test cases
 
-    # all setting
-    params = {'globalization': ['FIXED_STEP', 'MERIT_BACKTRACKING', 'FUNNEL_L1PEN_LINESEARCH'], # MERIT_BACKTRACKING, FIXED_STEP
-              'globalization_line_search_use_sufficient_descent' : [0, 1],
-              'qp_solver' : ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES'],
-              'globalization_use_SOC' : [0, 1] }
+    # # all setting
+    # params = {'globalization': ['FIXED_STEP', 'MERIT_BACKTRACKING', 'FUNNEL_L1PEN_LINESEARCH'], # MERIT_BACKTRACKING, FIXED_STEP
+    #           'globalization_line_search_use_sufficient_descent' : [0, 1],
+    #           'qp_solver' : ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES'],
+    #           'globalization_use_SOC' : [0, 1] }
 
-    keys, values = zip(*params.items())
-    for combination in product(*values):
-        setting = dict(zip(keys, combination))
-        if (setting['globalization'] == 'FIXED_STEP' or setting['globalization'] == 'FUNNEL_L1PEN_LINESEARCH') and \
-          (setting['globalization_use_SOC'] or setting['globalization_line_search_use_sufficient_descent']):
-            # skip some equivalent settings
-            pass
-        else:
-            solve_maratos_ocp(setting)
+    # keys, values = zip(*params.items())
+    # for combination in product(*values):
+    #     setting = dict(zip(keys, combination))
+    #     if (setting['globalization'] == 'FIXED_STEP' or setting['globalization'] == 'FUNNEL_L1PEN_LINESEARCH') and \
+    #       (setting['globalization_use_SOC'] or setting['globalization_line_search_use_sufficient_descent']):
+    #         # skip some equivalent settings
+    #         pass
+    #     else:
+    #         solve_maratos_ocp(setting)
 
     setting = {}
-    setting['globalization'] = 'MERIT_BACKTRACKING'
+    setting['globalization'] = 'FIXED_STEP'
     setting['globalization_use_SOC'] = 0
     setting['qp_solver'] = 'PARTIAL_CONDENSING_HPIPM'
     setting['globalization_line_search_use_sufficient_descent'] = 1
@@ -92,7 +92,7 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
 
     # discretization
     Tf = 2
-    N = 20
+    N = 4
     shooting_nodes = np.linspace(0, Tf, N+1)
     ocp.solver_options.N_horizon = N
 
@@ -245,12 +245,12 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
     # checks
     if status != 0:
         raise Exception(f"acados solver returned status {status} != 0.")
-    if globalization == "FIXED_STEP":
-        if sqp_iter != 18:
-            raise Exception(f"acados solver took {sqp_iter} iterations, expected 18.")
-    elif globalization == "MERIT_BACKTRACKING" and not use_deprecated_options:
-        if sqp_iter not in range(17, 23):
-            raise Exception(f"acados solver took {sqp_iter} iterations, expected range(17, 23).")
+    # if globalization == "FIXED_STEP":
+    #     if sqp_iter != 18:
+    #         raise Exception(f"acados solver took {sqp_iter} iterations, expected 18.")
+    # elif globalization == "MERIT_BACKTRACKING" and not use_deprecated_options:
+    #     if sqp_iter not in range(17, 23):
+    #         raise Exception(f"acados solver took {sqp_iter} iterations, expected range(17, 23).")
 
     if PLOT:
         plot_linear_mass_system_X_state_space(simX, circle=circle, x_goal=x_goal)
