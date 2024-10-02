@@ -36,8 +36,8 @@ from itertools import product
 
 ## SETTINGS:
 OBSTACLE = True
-SOFTEN_TERMINAL = True
-SOFTEN_CONTROLS = True
+SOFTEN_TERMINAL = False
+SOFTEN_CONTROLS = False
 SOFTEN_OBSTACLE = False
 INITIALIZE = True
 PLOT = False
@@ -176,9 +176,10 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
     ocp.solver_options.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'
     ocp.solver_options.globalization = globalization
     ocp.solver_options.globalization_alpha_min = 0.01
+    ocp.solver_options.globalization_full_step_dual = True
     # ocp.solver_options.qp_solver_cond_N = 0
     # ocp.solver_options.print_level = 3
-    ocp.solver_options.nlp_solver_max_iter = 200
+    ocp.solver_options.nlp_solver_max_iter = 20
     ocp.solver_options.qp_solver_iter_max = 400
     # NOTE: this is needed for PARTIAL_CONDENSING_HPIPM to get expected behavior
     qp_tol = 5e-7

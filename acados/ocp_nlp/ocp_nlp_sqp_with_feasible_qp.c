@@ -673,6 +673,11 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
 #endif
     for (int i = 0; i <= N; i++)
     {
+        // Assuming the variable order
+        // [u x lb_slack ub_slack]
+        // Assuming the variable order for QP direction
+        // [u x lb_slack lb_relaxation_slack ub_slack ub_relaxation_slack]
+        
         // step in primal variables
         blasfeo_daxpy(nx[i]+nu[i]+ns[i], alpha, nlp_mem->qp_out->ux + i, 0, out_start->ux + i, 0, out_destination->ux + i, 0);
         blasfeo_daxpy(ns[i], alpha, nlp_mem->qp_out->ux + i, nx[i]+nu[i]+ns[i]+nns[i], out_start->ux + i, nx[i]+nu[i]+ns[i], out_destination->ux + i, nx[i]+nu[i]+ns[i]);
