@@ -323,12 +323,20 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
             // Then we do not want to slack the control bounds, and we want to avoid the slacked bounds
             nns = n_nominal_ineq_nlp - dims->ns[stage] - nbu + nsbu;
         }
+        // idxns
         size += nns * sizeof(int);
+        // s_ns
+        size += blasfeo_memsize_dvec(2*nns);
     }
     // nns
     size += (N+1) * sizeof(int);
 
+    // s_ns
+    size += (N + 1) * sizeof(struct blasfeo_dvec);
+
+
     size += 3*8;  // align
+    size += 64;  // blasfeo_mem align
 
     make_int_multiple_of(8, &size);
 
@@ -356,12 +364,14 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     c_ptr += sizeof(ocp_nlp_sqp_wfqp_memory);
 
     // assign pointers
-
     align_char_to(8, &c_ptr);
 
     // nlp mem
     mem->nlp_mem = ocp_nlp_memory_assign(config, dims, nlp_opts, c_ptr);
     c_ptr += ocp_nlp_memory_calculate_size(config, dims, nlp_opts);
+
+    // s_ns
+    assign_and_advance_blasfeo_dvec_structs(N + 1, &out->s_ns, &c_ptr);
 
     // primal step norm
     if (opts->nlp_opts->log_primal_step_norm)
@@ -407,7 +417,15 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
 
     mem->nlp_mem->status = ACADOS_READY;
 
-    align_char_to(8, &c_ptr);
+    // blasfeo_mem align
+    align_char_to(64, &c_ptr);
+
+    // blasfeo_dvec
+    // s_ns
+    for (int i = 0; i <= N; ++i)
+    {
+        assign_and_advance_blasfeo_dvec_mem(2*mem->nns[i], out->s_ns + i, &c_ptr);
+    }
 
     assert((char *) raw_memory + ocp_nlp_sqp_wfqp_memory_calculate_size(config, dims, opts) >= c_ptr);
 
@@ -769,7 +787,6 @@ void ocp_nlp_approximate_qp_vectors_sqp_wfqp(ocp_nlp_config *config,
         struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
         blasfeo_dveccp(2 * ni[i], ineq_fun, 0, nlp_mem->ineq_fun + i, 0);
 
-        // TODO: ni!
         // d
         int n_nominal_ineq_nlp = ni[i] - ns[i];
 

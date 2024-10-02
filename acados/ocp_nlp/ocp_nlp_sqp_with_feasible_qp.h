@@ -109,6 +109,8 @@ typedef struct
 
     double step_norm;
 
+    struct blasfeo_dvec *s_ns;  // slack values of slacks that are not part of NLP
+
 } ocp_nlp_sqp_wfqp_memory;
 
 //
