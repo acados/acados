@@ -167,6 +167,7 @@ class AcadosMultiphaseOcp:
         self.cython_include_dirs = [np.get_include(), get_paths()['include']]
 
         self.__parameter_values = [np.array([]) for _ in range(n_phases)]
+        self.__p_global_values = [np.array([]) for _ in range(n_phases)]
         self.__problem_class = "MOCP"
         self.__json_file = 'mocp.json'
 
@@ -194,6 +195,23 @@ class AcadosMultiphaseOcp:
             raise Exception('parameter_values must be a list of length n_phases.')
         self.__parameter_values = parameter_values
 
+
+    @property
+    def p_global_values(self):
+        """:math:`p` - list of initial values for p_global vector.
+        Type: `list` of `numpy.ndarray` of shape `(np_global_i, )`.
+        - can be updated stagewise."""
+        return self.__p_global_values
+
+    @p_global_values.setter
+    def p_global_values(self, p_global_values):
+        if not isinstance(p_global_values, list):
+            raise Exception('p_global_values must be a list of numpy.ndarrays.')
+        elif len(p_global_values) != self.n_phases:
+            raise Exception('p_global_values must be a list of length n_phases.')
+        self.__p_global_values = p_global_values
+
+
     @property
     def json_file(self):
         """Name of the json file where the problem description is stored."""
@@ -207,7 +225,7 @@ class AcadosMultiphaseOcp:
         """
         Set phase of the multiphase OCP to match the given OCP.
 
-        NOTE: model, cost, constraints and parameter_values are taken from phase OCP,
+        NOTE: model, cost, constraints and parameter_values, p_global_values are taken from phase OCP,
               all other fields, especially options are ignored.
 
         :param ocp: OCP to be set as phase
@@ -227,6 +245,7 @@ class AcadosMultiphaseOcp:
         self.cost[phase_idx] = ocp.cost
         self.constraints[phase_idx] = ocp.constraints
         self.parameter_values[phase_idx] = ocp.parameter_values
+        self.p_global_values[phase_idx] = ocp.p_global_values
         return
 
     def make_consistent(self) -> None:
@@ -279,6 +298,7 @@ class AcadosMultiphaseOcp:
             ocp.constraints = self.constraints[i]
             ocp.cost = self.cost[i]
             ocp.parameter_values = self.parameter_values[i]
+            ocp.p_global_values = self.p_global_values[i]
             ocp.solver_options = self.solver_options
 
             # set phase dependent options

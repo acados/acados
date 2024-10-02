@@ -75,6 +75,7 @@ class AcadosOcp:
         - :py:attr:`shared_lib_ext` (set automatically)
         - :py:attr:`acados_lib_path` (set automatically)
         - :py:attr:`parameter_values` - used to initialize the parameters (can be changed)
+        - :py:attr:`p_global_values` - used to initialize the global parameters (can be changed)
     """
     def __init__(self, acados_path=''):
         """
@@ -109,6 +110,7 @@ class AcadosOcp:
         self.cython_include_dirs = [np.get_include(), get_paths()['include']]
 
         self.__parameter_values = np.array([])
+        self.__p_global_values = np.array([])
         self.__problem_class = 'OCP'
         self.__json_file = "acados_ocp.json"
 
@@ -133,6 +135,19 @@ class AcadosOcp:
         else:
             raise Exception('Invalid parameter_values value. ' +
                             f'Expected numpy array, got {type(parameter_values)}.')
+
+    @property
+    def p_global_values(self):
+        """:math:`p` - initial values for global parameter vector - can be updated stagewise"""
+        return self.__p_global_values
+
+    @p_global_values.setter
+    def p_global_values(self, p_global_values):
+        if isinstance(p_global_values, np.ndarray):
+            self.__p_global_values = p_global_values
+        else:
+            raise Exception('Invalid p_global_values value. ' +
+                            f'Expected numpy array, got {type(p_global_values)}.')
 
     @property
     def json_file(self):
@@ -160,6 +175,11 @@ class AcadosOcp:
         if self.parameter_values.shape[0] != dims.np:
             raise Exception('inconsistent dimension np, regarding model.p and parameter_values.' + \
                 f'\nGot np = {dims.np}, self.parameter_values.shape = {self.parameter_values.shape[0]}\n')
+
+        # p_global_vlaue
+        if self.p_global_values.shape[0] != dims.np_global:
+            raise Exception('inconsistent dimension np_global, regarding model.p_global and p_global_values.' + \
+                f'\nGot np_global = {dims.np_global}, self.p_global_values.shape = {self.p_global_values.shape[0]}\n')
 
         ## cost
         # initial stage - if not set, copy fields from path constraints
@@ -1429,6 +1449,7 @@ class AcadosOcp:
             new_params = constraints.lbx_0
             model.p = ca.vertcat(model.p, param_x0)
             self.parameter_values = np.concatenate((self.parameter_values, new_params))
+            self.p_global_values = np.concatenate((self.p_global_values, new_params))
             expr_bound_list_0.append((model.x[constraints.idxbx_0], param_x0, param_x0))
         else:
             expr_bound_list_0.append((model.x[constraints.idxbx_0], constraints.lbx_0, constraints.ubx_0))
@@ -1459,4 +1480,5 @@ class AcadosOcp:
         self.model.t0 = ca.SX.sym("t0")
         self.model.p = ca.vertcat(self.model.p, self.model.t0)
         self.parameter_values = np.append(self.parameter_values, [0.0])
+        self.p_global_values = np.append(self.p_global_values, [0.0])
         return

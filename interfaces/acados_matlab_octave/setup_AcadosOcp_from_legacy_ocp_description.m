@@ -165,6 +165,7 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, 
 
     % parameters
     ocp.parameter_values = opts_struct.parameter_values;
+    ocp.p_global_values = opts_struct.p_global_values;
 
     %% constraints
     constraints_fields_map = struct(...
