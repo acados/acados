@@ -210,6 +210,10 @@ add_test(NAME py_ddp_rockit_hello_world
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/unconstrained_ocps/rockit_hello_world
         python rockit_hello_world_ocp.py)
 
+# Tests for SQP_WITH_FEASIBLE_QP
+add_test(NAME py_sqp_wfqp_linear_problem_slack_terminal_constraint
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/linear_mass_model
+        python sqp_wfqp_test.py)
 
 # CMake test
 add_test(NAME python_pendulum_ocp_example_cmake
