@@ -58,12 +58,6 @@
 {%- endfor %}
 {%- set np_max = np_values | sort | last %}
 
-{%- set np_global_values = [] -%}
-{%- for jj in range(end=n_phases) %}
-    {%- set_global np_global_values = np_global_values | concat(with=(phases_dims[jj].np_global)) %}
-{%- endfor %}
-{%- set np_global_max = np_global_values | sort | last %}
-
 
 // standard
 #include <stdio.h>
@@ -220,7 +214,7 @@ ocp_nlp_dims* {{ name }}_acados_create_setup_dimensions({{ name }}_solver_capsul
     /************************************************
     *  dimensions
     ************************************************/
-    #define NINTNP1MEMS 19
+    #define NINTNP1MEMS 18
     int* intNp1mem = (int*)malloc( (N+1)*sizeof(int)*NINTNP1MEMS );
 
     int* nx    = intNp1mem + (N+1)*0;
@@ -241,7 +235,6 @@ ocp_nlp_dims* {{ name }}_acados_create_setup_dimensions({{ name }}_solver_capsul
     int* nr    = intNp1mem + (N+1)*15;
     int* nbxe  = intNp1mem + (N+1)*16;
     int* np    = intNp1mem + (N+1)*17;
-    int* np_global = intNp1mem + (N+1)*18;
 
 {% for jj in range(end=n_phases) %}{# phases loop !#}
     for (i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
@@ -252,7 +245,6 @@ ocp_nlp_dims* {{ name }}_acados_create_setup_dimensions({{ name }}_solver_capsul
         nz[i] = {{ phases_dims[jj].nz }};
         ns[i] = {{ phases_dims[jj].ns }};
         np[i] = {{ phases_dims[jj].np }};
-        np_global[i] = {{ phases_dims[jj].np_global }};
         // cost
         ny[i] = {{ phases_dims[jj].ny }};
         // constraints
@@ -833,19 +825,17 @@ void {{ name }}_acados_create_set_default_parameters({{ name }}_solver_capsule* 
 {%- endfor %}
     free(p);
 
-{%- if np_global_max > 0 %}
-    double* p_global = calloc({{ np_global_max }}, sizeof(double));
+{%- if phases_dims[0].np_global > 0 %}
+    double* p_global = calloc({{ phases_dims[0].np_global }}, sizeof(double));
     // initialize global parameters to nominal value
-{%- for jj in range(end=n_phases) %}{# phases loop !#}
-    {%- for item in p_global_values[jj] %}
+    {%- for item in p_global_values %}
         {%- if item != 0 %}
     p_global[{{ loop.index0 }}] = {{ item }};
         {%- endif %}
     {%- endfor %}
 
-    {{ name }}_acados_set_p_global_and_precompute_dependencies(capsule, p_global, {{ phases_dims[jj].np_global }});
+    {{ name }}_acados_set_p_global_and_precompute_dependencies(capsule, p_global, {{ phases_dims[0].np_global }});
 
-{%- endfor %}
     free(p_global);
 {%- endif %}
 }
