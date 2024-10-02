@@ -245,10 +245,10 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
         blasfeo_print_dmat(nu[ii] + nx[ii] + 1, nu[ii] + nx[ii], &qp_in->RSQrq[ii], 0, 0);
     }
 
-    printf("rq =\n");
+    printf("rqz =\n");
     for (int ii = 0; ii < N + 1; ii++)
     {
-        blasfeo_print_tran_dvec(nu[ii] + nx[ii], &qp_in->rqz[ii], 0);
+        blasfeo_print_tran_dvec(nu[ii] + nx[ii] + 2 * ns[ii], &qp_in->rqz[ii], 0);
     }
 
     printf("d =\n");
