@@ -274,8 +274,7 @@ def main_mocp(lut=True, use_p_global=True):
         for ip in range(n_phases):
             mocp.parameter_values[ip] = np.concatenate([mocp.parameter_values[ip], p_global_values])
     else:
-        for ip in range(n_phases):
-            mocp.p_global_values[ip] = p_global_values
+        mocp.p_global_values = p_global_values
 
     # set options
     mocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
