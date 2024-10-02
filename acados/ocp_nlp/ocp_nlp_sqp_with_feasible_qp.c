@@ -666,6 +666,7 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
     int *nz = dims->nz;
     int *ns = dims->ns;
     int *nns = mem->nns;
+    int n_nominal_ineq_nlp;
 
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
@@ -677,10 +678,16 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
         blasfeo_daxpy(ns[i], alpha, nlp_mem->qp_out->ux + i, nx[i]+nu[i]+ns[i]+nns[i], out_start->ux + i, nx[i]+nu[i]+ns[i], out_destination->ux + i, nx[i]+nu[i]+ns[i]);
 
         // update dual variables
+        n_nominal_ineq_nlp = 2*dims->ni[i] -2*ns[i]; //additional slacks are not counted in dims->ni[i]
+        // Assuming a constraint order
+        // [lbu, ubu, lbx, ubx, lbg, ubg, lbh, ubh, lbs, ubs]
+        // n_nominal_ineq_nlp = [lbu, ubu, lbx, ubx, lbg, ubg, lbh, ubh]
         if (full_step_dual)
         {
+            // printf("at stage: %d, ni[i]= %d, ns[i]=%d, nns[i]= %d\n", i, dims->ni[i], ns[i], mem->nns[i]);
             // TODO: split ni_qp = n_ineq_nominal_nlp + ns_nlp + nns;
-            blasfeo_dveccp(2*ni[i], nlp_mem->qp_out->lam+i, 0, out_destination->lam+i, 0);
+            blasfeo_dveccp(n_nominal_ineq_nlp+ns[i], nlp_mem->qp_out->lam+i, 0, out_destination->lam+i, 0);
+            blasfeo_dveccp(ns[i], nlp_mem->qp_out->lam+i, n_nominal_ineq_nlp+ns[i]+mem->nns[i], out_destination->lam+i, n_nominal_ineq_nlp+ns[i]+mem->nns[i]);
             if (i < N)
             {
                 blasfeo_dveccp(nx[i+1], nlp_mem->qp_out->pi+i, 0, out_destination->pi+i, 0);
@@ -690,7 +697,9 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
         {
             // TODO: split ni_qp = n_ineq_nominal_nlp + ns_nlp + nns;
             // update duals with alpha step
-            blasfeo_daxpby(2*ni[i], 1.0-alpha, out_start->lam+i, 0, alpha, nlp_mem->qp_out->lam+i, 0, out_destination->lam+i, 0);
+            blasfeo_daxpby(n_nominal_ineq_nlp+ns[i], 1.0-alpha, out_start->lam+i, 0, alpha, nlp_mem->qp_out->lam+i, 0, out_destination->lam+i, 0);
+            blasfeo_daxpby(ns[i], 1.0-alpha, out_start->lam+i, n_nominal_ineq_nlp+ns[i]+mem->nns[i], alpha, nlp_mem->qp_out->lam+i, n_nominal_ineq_nlp+ns[i]+mem->nns[i], out_destination->lam+i, n_nominal_ineq_nlp+ns[i]+mem->nns[i]);
+            
             // blasfeo_dvecsc(2*ni[i], 1.0-alpha, out->lam+i, 0);
             // blasfeo_daxpy(2*ni[i], alpha, nlp_mem->qp_out->lam+i, 0, out->lam+i, 0, out->lam+i, 0);
             if (i < N)
