@@ -197,7 +197,7 @@ function check_casadi_version_supports_p_global()
         % Check if the required functions exist in CasADi
         extract_parametric(dummy, dummy);  % Check if extract_parametric exists
         cse(dummy); % Check if cse exists
-        blazing_spline('blazing_spline', {[1, 2, 3], [1, 2, 3]})
+        blazing_spline('blazing_spline', {[1, 2, 3], [1, 2, 3]});
     catch
         error('CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se2 release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se2');
     end
