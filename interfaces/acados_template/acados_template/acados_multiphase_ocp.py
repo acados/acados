@@ -198,9 +198,9 @@ class AcadosMultiphaseOcp:
 
     @property
     def p_global_values(self):
-        """:math:`p` - list of initial values for p_global vector.
-        Type: `list` of `numpy.ndarray` of shape `(np_global_i, )`.
-        - can be updated stagewise."""
+        """:math:`p` - initial values for p_global vector.
+        Type: `numpy.ndarray` of shape `(np_global_i, )`.
+        """
         return self.__p_global_values
 
     @p_global_values.setter
