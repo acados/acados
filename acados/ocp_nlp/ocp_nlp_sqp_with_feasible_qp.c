@@ -386,7 +386,7 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     // integers
     assign_and_advance_int(N+1, &mem->nns, &c_ptr);
 
-    int nns, nsbu, nbu, nsbx, nbx, n_nominal_ineq_nlp;
+    int nsbu, nbu, nsbx, nbx, n_nominal_ineq_nlp;
     for (int stage = 0; stage <= dims->N; stage++)
     {
         n_nominal_ineq_nlp = dims->ni[stage] - dims->ns[stage];
@@ -591,8 +591,6 @@ static void set_non_slacked_l1_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_sqp_wfqp_memory *mem,
     ocp_nlp_workspace *work)
 {
-    int N = dims->N;
-    // int *nv = dims->nv;
     int *nx = dims->nx;
     int *nu = dims->nu;
     int *ns = dims->ns;
@@ -616,10 +614,6 @@ static void set_non_slacked_l2_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_sqp_wfqp_memory *mem,
     ocp_nlp_workspace *work)
 {
-    int N = dims->N;
-    // int *nv = dims->nv;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
     int *ns = dims->ns;
     int *nns = mem->nns;
     ocp_qp_in *qp_in = mem->nlp_mem->qp_in;
@@ -660,10 +654,8 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
     // solver_mem is not used in this function, but needed for DDP
     // the function is used in the config->globalization->step_update
     int N = dims->N;
-    int *nv = dims->nv;
     int *nx = dims->nx;
     int *nu = dims->nu;
-    int *ni = dims->ni;
     int *nz = dims->nz;
     int *ns = dims->ns;
     int *nns = mem->nns;
@@ -747,7 +739,6 @@ void ocp_nlp_approximate_qp_vectors_sqp_wfqp(ocp_nlp_config *config,
 {
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
     int N = dims->N;
-    int *nv = dims->nv;
     int *nx = dims->nx;
     int *nu = dims->nu;
     int *ns = dims->ns;
