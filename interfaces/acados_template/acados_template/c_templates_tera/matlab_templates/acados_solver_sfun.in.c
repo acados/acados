@@ -39,7 +39,6 @@
 #include "acados_c/external_function_interface.h"
 
 // example specific
-#include "{{ name }}_model/{{ name }}_model.h"
 #include "acados_solver_{{ name }}.h"
 
 
@@ -149,7 +148,7 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetNumContStates(S, 0);
     ssSetNumDiscStates(S, 0);
 
-    int N = {{ name | upper }}_N;
+    int N = {{ solver_options.N_horizon }};
 
   {%- for key, val in simulink_opts.inputs -%}
     {%- if val != 0 and val != 1 -%}
@@ -681,7 +680,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     InputRealPtrsType in_sign;
 
-    int N = {{ name | upper }}_N;
+    int N = {{ solver_options.N_horizon }};
 
     {%- set buffer_sizes = [nx_max, nu_max, dims_0.nbx_0, np_max, dims_0.nbx, dims_e.nbx_e, dims_0.nbu, dims_0.ng, dims_0.nh, dims_0.nh_0, dims_e.ng_e, dims_e.nh_e, ns_max] -%}
 
