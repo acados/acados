@@ -1,4 +1,4 @@
-function [ocp, simulink_opts, x0] = create_slacked_ocp_qp_solver_formulation(N)
+function [ocp, simulink_opts] = create_slacked_ocp_qp_solver_formulation(N)
 import casadi.*
 
 %% solver settings
