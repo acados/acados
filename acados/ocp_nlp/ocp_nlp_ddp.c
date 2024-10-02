@@ -158,8 +158,7 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
     char *ptr_module = NULL;
     int module_length = 0;
     char module[MAX_STR_LEN];
-    extract_module_name(field, module, &module_length);
-    ptr_module = module;
+    extract_module_name(field, module, &module_length, &ptr_module);
 
     // pass options to QP module
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
@@ -988,8 +987,7 @@ void ocp_nlp_ddp_get(void *config_, void *dims_, void *mem_, const char *field, 
     char *ptr_module = NULL;
     int module_length = 0;
     char module[MAX_STR_LEN];
-    extract_module_name(field, module, &module_length);
-    ptr_module = module;
+    extract_module_name(field, module, &module_length, &ptr_module);
 
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "time")) )
     {

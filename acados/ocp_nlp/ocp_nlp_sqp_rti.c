@@ -150,8 +150,7 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_,
     char *ptr_module = NULL;
     int module_length = 0;
     char module[MAX_STR_LEN];
-    extract_module_name(field, module, &module_length);
-    ptr_module = module;
+    extract_module_name(field, module, &module_length, &ptr_module);
 
     // pass options to QP module
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
@@ -1278,8 +1277,7 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
     char *ptr_module = NULL;
     int module_length = 0;
     char module[MAX_STR_LEN];
-    extract_module_name(field, module, &module_length);
-    ptr_module = module;
+    extract_module_name(field, module, &module_length, &ptr_module);
 
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "time")) )
     {
