@@ -1449,7 +1449,6 @@ class AcadosOcp:
             new_params = constraints.lbx_0
             model.p = ca.vertcat(model.p, param_x0)
             self.parameter_values = np.concatenate((self.parameter_values, new_params))
-            self.p_global_values = np.concatenate((self.p_global_values, new_params))
             expr_bound_list_0.append((model.x[constraints.idxbx_0], param_x0, param_x0))
         else:
             expr_bound_list_0.append((model.x[constraints.idxbx_0], constraints.lbx_0, constraints.ubx_0))
