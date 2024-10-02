@@ -284,6 +284,7 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
 
     acados_size_t size = 0;
+    int N = dims->N;
 
     size += sizeof(ocp_nlp_sqp_wfqp_memory);
 
@@ -303,9 +304,9 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
     size += stat_n*stat_m*sizeof(double);
 
     // idxns
-    size += (dims->N + 1) * sizeof(int *);
+    size += (N + 1) * sizeof(int *);
     int nns, nsbu, nbu, nsbx, nbx, n_nominal_ineq_nlp;
-    for (int stage = 0; stage <= dims->N; stage++)
+    for (int stage = 0; stage <= N; stage++)
     {
         config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nsbu", &nsbu);
         config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage], "nbu", &nbu);
@@ -324,6 +325,8 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
         }
         size += nns * sizeof(int);
     }
+    // nns
+    size += (N+1) * sizeof(int);
 
     size += 3*8;  // align
 
