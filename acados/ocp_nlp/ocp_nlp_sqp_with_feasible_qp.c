@@ -371,7 +371,7 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     c_ptr += ocp_nlp_memory_calculate_size(config, dims, nlp_opts);
 
     // s_ns
-    assign_and_advance_blasfeo_dvec_structs(N + 1, &out->s_ns, &c_ptr);
+    assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->s_ns, &c_ptr);
 
     // primal step norm
     if (opts->nlp_opts->log_primal_step_norm)
@@ -424,7 +424,7 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     // s_ns
     for (int i = 0; i <= N; ++i)
     {
-        assign_and_advance_blasfeo_dvec_mem(2*mem->nns[i], out->s_ns + i, &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(2*mem->nns[i], mem->s_ns + i, &c_ptr);
     }
 
     assert((char *) raw_memory + ocp_nlp_sqp_wfqp_memory_calculate_size(config, dims, opts) >= c_ptr);
@@ -1076,6 +1076,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     return mem->nlp_mem->status;
 }
 
+
+// TODO(david): use common?
 double ocp_nlp_sqp_wfqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_nlp_workspace *nlp_work)
 {
     // Compute the QP objective function value
@@ -1106,6 +1108,7 @@ double ocp_nlp_sqp_wfqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in
     }
     return qp_cost;
 }
+
 
 void ocp_nlp_sqp_wfqp_memory_reset_qp_solver(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     void *opts_, void *mem_, void *work_)
