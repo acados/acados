@@ -641,9 +641,6 @@ static void set_non_slacked_l2_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
 }
 
 
-
-// TODO: work this out!
-// signature: need solver specific memory
 /*
 calculates new iterate or trial iterate in 'out_destination' with step 'mem->qp_out',
 step size 'alpha', and current iterate 'out_start'.
@@ -659,6 +656,7 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
     ocp_nlp_sqp_wfqp_memory *mem = solver_mem;
 
     ocp_nlp_out *out_destination = out_destination_;
+    ocp_qp_out *qp_out = nlp_mem->qp_out;
     // solver_mem is not used in this function, but needed for DDP
     // the function is used in the config->globalization->step_update
     int N = dims->N;
@@ -669,7 +667,7 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
     int *nz = dims->nz;
     int *ns = dims->ns;
     int *nns = mem->nns;
-    int n_nominal_ineq_nlp;
+    int n_nominal_ineq_nlp, two_n_nominal_ineq_nlp;
 
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
@@ -682,39 +680,34 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
         // [u x lb_slack lb_relaxation_slack ub_slack ub_relaxation_slack]
 
         // step in primal variables
-        blasfeo_daxpy(nx[i]+nu[i]+ns[i], alpha, nlp_mem->qp_out->ux + i, 0, out_start->ux + i, 0, out_destination->ux + i, 0);
-        blasfeo_daxpy(ns[i], alpha, nlp_mem->qp_out->ux + i, nx[i]+nu[i]+ns[i]+nns[i], out_start->ux + i, nx[i]+nu[i]+ns[i], out_destination->ux + i, nx[i]+nu[i]+ns[i]);
+        blasfeo_daxpy(nx[i]+nu[i]+ns[i], alpha, qp_out->ux + i, 0, out_start->ux + i, 0, out_destination->ux + i, 0);
+        blasfeo_daxpy(ns[i], alpha, qp_out->ux + i, nx[i]+nu[i]+ns[i]+nns[i], out_start->ux + i, nx[i]+nu[i]+ns[i], out_destination->ux + i, nx[i]+nu[i]+ns[i]);
 
         // update dual variables
-        n_nominal_ineq_nlp = 2*dims->ni[i] - 2*ns[i]; //additional slacks are not counted in dims->ni[i]
-        // Assuming a constraint order
-        // [lbu, ubu, lbx, ubx, lbg, ubg, lbh, ubh, lbs, ubs]
-        // n_nominal_ineq_nlp = [lbu, ubu, lbx, ubx, lbg, ubg, lbh, ubh]
+        n_nominal_ineq_nlp = dims->ni[i] - ns[i];
+        two_n_nominal_ineq_nlp = 2*n_nominal_ineq_nlp;
+        // qp_out->lam = [lbu, ubu, lbx, ubx, lbg, ubg, lbh, ubh, lbs_NLP, lbs_QP, ubs_NLP, ubs_QP]
+        // nlp_out->lam = [lbu, ubu, lbx, ubx, lbg, ubg, lbh, ubh, lbs_NLP, ----, ubs_NLP, ---]
         if (full_step_dual)
         {
-            // printf("at stage: %d, ni[i]= %d, ns[i]=%d, nns[i]= %d\n", i, dims->ni[i], ns[i], mem->nns[i]);
-            // TODO: split ni_qp = n_ineq_nominal_nlp + ns_nlp + nns;
-            blasfeo_dveccp(n_nominal_ineq_nlp+ns[i], nlp_mem->qp_out->lam+i, 0, out_destination->lam+i, 0);
-            blasfeo_dveccp(ns[i], nlp_mem->qp_out->lam+i, n_nominal_ineq_nlp+ns[i]+mem->nns[i], out_destination->lam+i, n_nominal_ineq_nlp+ns[i]+mem->nns[i]);
+            blasfeo_dveccp(two_n_nominal_ineq_nlp+ns[i], qp_out->lam+i, 0, out_destination->lam+i, 0);
+            blasfeo_dveccp(ns[i], qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]+mem->nns[i],
+                           out_destination->lam+i, two_n_nominal_ineq_nlp+ns[i]);
             if (i < N)
             {
-                blasfeo_dveccp(nx[i+1], nlp_mem->qp_out->pi+i, 0, out_destination->pi+i, 0);
+                blasfeo_dveccp(nx[i+1], qp_out->pi+i, 0, out_destination->pi+i, 0);
             }
         }
         else
         {
-            // TODO: split ni_qp = n_ineq_nominal_nlp + ns_nlp + nns;
             // update duals with alpha step
-            blasfeo_daxpby(n_nominal_ineq_nlp+ns[i], 1.0-alpha, out_start->lam+i, 0, alpha, nlp_mem->qp_out->lam+i, 0, out_destination->lam+i, 0);
-            blasfeo_daxpby(ns[i], 1.0-alpha, out_start->lam+i, n_nominal_ineq_nlp+ns[i]+mem->nns[i], alpha, nlp_mem->qp_out->lam+i, n_nominal_ineq_nlp+ns[i]+mem->nns[i], out_destination->lam+i, n_nominal_ineq_nlp+ns[i]+mem->nns[i]);
+            blasfeo_daxpby(two_n_nominal_ineq_nlp+ns[i], 1.0-alpha, out_start->lam+i, 0, alpha, qp_out->lam+i, 0, out_destination->lam+i, 0);
+            blasfeo_daxpby(ns[i], 1.0-alpha, out_start->lam+i, two_n_nominal_ineq_nlp+ns[i]+mem->nns[i], alpha,
+                           qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]+mem->nns[i], out_destination->lam+i, two_n_nominal_ineq_nlp+ns[i]);
 
-            // blasfeo_dvecsc(2*ni[i], 1.0-alpha, out->lam+i, 0);
-            // blasfeo_daxpy(2*ni[i], alpha, nlp_mem->qp_out->lam+i, 0, out->lam+i, 0, out->lam+i, 0);
             if (i < N)
             {
-                // blasfeo_dvecsc(nx[i+1], 1.0-alpha, out->pi+i, 0);
-                // blasfeo_daxpy(nx[i+1], alpha, nlp_mem->qp_out->pi+i, 0, out->pi+i, 0, out->pi+i, 0);
-                blasfeo_daxpby(nx[i+1], 1.0-alpha, out_start->pi+i, 0, alpha, nlp_mem->qp_out->pi+i, 0, out_destination->pi+i, 0);
+                blasfeo_daxpby(nx[i+1], 1.0-alpha, out_start->pi+i, 0, alpha, qp_out->pi+i, 0, out_destination->pi+i, 0);
             }
         }
 
@@ -723,7 +716,7 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
         {
             // out->z = nlp_mem->z_alg + alpha * dzdux * qp_out->ux
             blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, nlp_mem->dzduxt+i, 0, 0,
-                    nlp_mem->qp_out->ux+i, 0, 1.0, nlp_mem->z_alg+i, 0, out_destination->z+i, 0);
+                    qp_out->ux+i, 0, 1.0, nlp_mem->z_alg+i, 0, out_destination->z+i, 0);
         }
     }
 }
