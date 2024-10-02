@@ -34,41 +34,28 @@ import scipy.linalg
 from linear_mass_model import *
 from itertools import product
 
-## SETTINGS:
-OBSTACLE = True
-SOFTEN_OBSTACLE = False
-SOFTEN_TERMINAL = True
-SOFTEN_CONTROLS = False
-INITIALIZE = True
-PLOT = True
-OBSTACLE_POWER = 2
 
 # an OCP to test Maratos effect an second order correction
 
 def main():
-    # run test cases
 
-    # all setting
-    params = {'globalization': ['FIXED_STEP'],
-              'globalization_line_search_use_sufficient_descent' : [0, 1],
-              'qp_solver' : ['PARTIAL_CONDENSING_HPIPM'],
-              'globalization_use_SOC' : [0, 1] }
+    ## SETTINGS:
+    SOFTEN_OBSTACLE = False
+    SOFTEN_TERMINAL = True
+    SOFTEN_CONTROLS = False
+    PLOT = True
+    solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT)
 
-    keys, values = zip(*params.items())
-    for combination in product(*values):
-        setting = dict(zip(keys, combination))
-        if setting['globalization'] == 'FIXED_STEP' and \
-          (setting['globalization_use_SOC'] or setting['globalization_line_search_use_sufficient_descent']):
-            # skip some equivalent settings
-            pass
-        else:
-            solve_maratos_ocp(setting)
+    SOFTEN_OBSTACLE = False
+    SOFTEN_TERMINAL = False
+    SOFTEN_CONTROLS = False
+    PLOT = True
+    solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT)
 
+def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT):
 
-def solve_maratos_ocp(setting):
-
-    globalization = setting['globalization']
-    qp_solver = setting['qp_solver']
+    globalization = 'FIXED_STEP'
+    qp_solver = 'PARTIAL_CONDENSING_HPIPM'
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -137,22 +124,19 @@ def solve_maratos_ocp(setting):
         ocp.cost.Zu = 1e1 * np.ones(nu)
 
     # add obstacle
-    if OBSTACLE:
-        obs_rad = 1.0; obs_x = 0.0; obs_y = 0.0
-        circle = (obs_x, obs_y, obs_rad)
-        ocp.constraints.uh = np.array([ACADOS_INFTY]) # doenst matter
-        ocp.constraints.lh = np.array([obs_rad**2])
-        x_square = model.x[0] ** OBSTACLE_POWER + model.x[1] ** OBSTACLE_POWER
-        ocp.model.con_h_expr = x_square
-        # copy for terminal
-        ocp.constraints.uh_e = ocp.constraints.uh
-        ocp.constraints.lh_e = ocp.constraints.lh
-        ocp.model.con_h_expr_e = ocp.model.con_h_expr
-    else:
-        circle = None
+    obs_rad = 1.0; obs_x = 0.0; obs_y = 0.0
+    circle = (obs_x, obs_y, obs_rad)
+    ocp.constraints.uh = np.array([ACADOS_INFTY])
+    ocp.constraints.lh = np.array([obs_rad**2])
+    x_square = model.x[0] ** 2 + model.x[1] ** 2
+    ocp.model.con_h_expr = x_square
+    # copy for terminal
+    ocp.constraints.uh_e = ocp.constraints.uh
+    ocp.constraints.lh_e = ocp.constraints.lh
+    ocp.model.con_h_expr_e = ocp.model.con_h_expr
 
     # # soften
-    if OBSTACLE and SOFTEN_OBSTACLE:
+    if SOFTEN_OBSTACLE:
         ocp.constraints.idxsh = np.array([0])
         ocp.constraints.idxsh_e = np.array([0])
         Zh = 1e6 * np.ones(1)
@@ -170,13 +154,12 @@ def solve_maratos_ocp(setting):
     ocp.solver_options.qp_solver = qp_solver
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'ERK'
-    # ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'
     ocp.solver_options.globalization = globalization
     ocp.solver_options.globalization_alpha_min = 0.01
     ocp.solver_options.globalization_full_step_dual = True
     # ocp.solver_options.qp_solver_cond_N = 0
-    # ocp.solver_options.print_level = 3
+    # ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_max_iter = 200
     ocp.solver_options.qp_solver_iter_max = 400
     # NOTE: this is needed for PARTIAL_CONDENSING_HPIPM to get expected behavior
@@ -196,29 +179,22 @@ def solve_maratos_ocp(setting):
 
     # solve
     status = ocp_solver.solve()
-    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+    ocp_solver.print_statistics()
     sqp_iter = ocp_solver.get_stats('sqp_iter')
     print(f'acados returned status {status}.')
-
-    # ocp_solver.store_iterate(f'it{ocp.solver_options.nlp_solver_max_iter}_{model.name}.json')
 
     # get solution
     simX = np.array([ocp_solver.get(i,"x") for i in range(N+1)])
     simU = np.array([ocp_solver.get(i,"u") for i in range(N)])
     pi_multiplier = [ocp_solver.get(i, "pi") for i in range(N)]
-    print(f"cost function value = {ocp_solver.get_cost()}")
 
+    if not SOFTEN_OBSTACLE and not SOFTEN_CONTROLS and SOFTEN_TERMINAL:
+        assert status == 0, "Solver did not converge, but should converge!"
+        assert sqp_iter == 16, "Relaxed QP solver should converge within 16 iterations"
 
     # print summary
-    print(f"solved Maratos test problem with settings {setting}")
     print(f"cost function value = {ocp_solver.get_cost()} after {sqp_iter} SQP iterations")
-    # print(f"alphas: {alphas[:iter]}")
-    # print(f"total number of QP iterations: {sum(qp_iters[:iter])}")
-    # max_infeasibility = np.max(residuals[1:3])
-    # print(f"max infeasibility: {max_infeasibility}")
-    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
-    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
-
+    print(f"solved sqp_wfqp problem with settings SOFTEN_OBSTACLE = {SOFTEN_OBSTACLE}, SOFTEN_TERMINAL = {SOFTEN_TERMINAL}, SOFTEN_CONTROL = {SOFTEN_CONTROLS}")
 
     if PLOT:
         plot_linear_mass_system_X_state_space(simX, circle=circle, x_goal=x_goal)
