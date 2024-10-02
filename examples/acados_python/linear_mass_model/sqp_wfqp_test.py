@@ -36,11 +36,11 @@ from itertools import product
 
 ## SETTINGS:
 OBSTACLE = True
-SOFTEN_TERMINAL = False
-SOFTEN_CONTROLS = False
 SOFTEN_OBSTACLE = False
+SOFTEN_TERMINAL = True
+SOFTEN_CONTROLS = False
 INITIALIZE = True
-PLOT = False
+PLOT = True
 OBSTACLE_POWER = 2
 
 # an OCP to test Maratos effect an second order correction
@@ -65,11 +65,9 @@ def main():
             solve_maratos_ocp(setting)
 
 
-def solve_maratos_ocp(setting, use_deprecated_options=False):
+def solve_maratos_ocp(setting):
 
     globalization = setting['globalization']
-    globalization_line_search_use_sufficient_descent = setting['globalization_line_search_use_sufficient_descent']
-    globalization_use_SOC = setting['globalization_use_SOC']
     qp_solver = setting['qp_solver']
 
     # create ocp object to formulate the OCP
@@ -85,7 +83,7 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
 
     # discretization
     Tf = 2
-    N = 3
+    N = 4
     shooting_nodes = np.linspace(0, Tf, N+1)
     ocp.solver_options.N_horizon = N
 
@@ -133,10 +131,10 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
 
     # add cost for slacks
     if SOFTEN_CONTROLS:
-        ocp.cost.zl = 1e6 * np.ones(nu)
-        ocp.cost.zu = 1e6 * np.ones(nu)
-        ocp.cost.Zl = 1e6 * np.ones(nu)
-        ocp.cost.Zu = 1e6 * np.ones(nu)
+        ocp.cost.zl = 1e1 * np.ones(nu)
+        ocp.cost.zu = 1e1 * np.ones(nu)
+        ocp.cost.Zl = 1e1 * np.ones(nu)
+        ocp.cost.Zu = 1e1 * np.ones(nu)
 
     # add obstacle
     if OBSTACLE:
@@ -179,7 +177,7 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
     ocp.solver_options.globalization_full_step_dual = True
     # ocp.solver_options.qp_solver_cond_N = 0
     # ocp.solver_options.print_level = 3
-    ocp.solver_options.nlp_solver_max_iter = 20
+    ocp.solver_options.nlp_solver_max_iter = 200
     ocp.solver_options.qp_solver_iter_max = 400
     # NOTE: this is needed for PARTIAL_CONDENSING_HPIPM to get expected behavior
     qp_tol = 5e-7
@@ -227,7 +225,6 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
         plot_linear_mass_system_U(shooting_nodes, simU)
         # plot_linear_mass_system_X(shooting_nodes, simX)
 
-    # import pdb; pdb.set_trace()
     print(f"\n\n----------------------\n")
 
 if __name__ == '__main__':
