@@ -657,7 +657,7 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
     ocp_nlp_out *out_start = out_;
     ocp_nlp_memory *nlp_mem = mem_;
     ocp_nlp_sqp_wfqp_memory *mem = solver_mem;
-    
+
     ocp_nlp_out *out_destination = out_destination_;
     // solver_mem is not used in this function, but needed for DDP
     // the function is used in the config->globalization->step_update
@@ -680,13 +680,13 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
         // [u x lb_slack ub_slack]
         // Assuming the variable order for QP direction
         // [u x lb_slack lb_relaxation_slack ub_slack ub_relaxation_slack]
-        
+
         // step in primal variables
         blasfeo_daxpy(nx[i]+nu[i]+ns[i], alpha, nlp_mem->qp_out->ux + i, 0, out_start->ux + i, 0, out_destination->ux + i, 0);
         blasfeo_daxpy(ns[i], alpha, nlp_mem->qp_out->ux + i, nx[i]+nu[i]+ns[i]+nns[i], out_start->ux + i, nx[i]+nu[i]+ns[i], out_destination->ux + i, nx[i]+nu[i]+ns[i]);
 
         // update dual variables
-        n_nominal_ineq_nlp = 2*dims->ni[i] -2*ns[i]; //additional slacks are not counted in dims->ni[i]
+        n_nominal_ineq_nlp = 2*dims->ni[i] - 2*ns[i]; //additional slacks are not counted in dims->ni[i]
         // Assuming a constraint order
         // [lbu, ubu, lbx, ubx, lbg, ubg, lbh, ubh, lbs, ubs]
         // n_nominal_ineq_nlp = [lbu, ubu, lbx, ubx, lbg, ubg, lbh, ubh]
@@ -707,7 +707,7 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
             // update duals with alpha step
             blasfeo_daxpby(n_nominal_ineq_nlp+ns[i], 1.0-alpha, out_start->lam+i, 0, alpha, nlp_mem->qp_out->lam+i, 0, out_destination->lam+i, 0);
             blasfeo_daxpby(ns[i], 1.0-alpha, out_start->lam+i, n_nominal_ineq_nlp+ns[i]+mem->nns[i], alpha, nlp_mem->qp_out->lam+i, n_nominal_ineq_nlp+ns[i]+mem->nns[i], out_destination->lam+i, n_nominal_ineq_nlp+ns[i]+mem->nns[i]);
-            
+
             // blasfeo_dvecsc(2*ni[i], 1.0-alpha, out->lam+i, 0);
             // blasfeo_daxpy(2*ni[i], alpha, nlp_mem->qp_out->lam+i, 0, out->lam+i, 0, out->lam+i, 0);
             if (i < N)
