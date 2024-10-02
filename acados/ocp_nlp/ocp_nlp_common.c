@@ -1152,8 +1152,7 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
     char *ptr_module = NULL;
     int module_length = 0;
     char module[MAX_STR_LEN];
-    extract_module_name(field, module, &module_length);
-    ptr_module = module;
+    extract_module_name(field, module, &module_length, &ptr_module);
 
     // pass options to QP module
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
@@ -1340,8 +1339,7 @@ void ocp_nlp_opts_set_at_stage(void *config_, void *opts_, int stage, const char
     char *ptr_module = NULL;
     int module_length = 0;
     char module[MAX_STR_LEN];
-    extract_module_name(field, module, &module_length);
-    ptr_module = module;
+    extract_module_name(field, module, &module_length, &ptr_module);
 
     // pass options to dynamics module
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "dynamics")) )

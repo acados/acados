@@ -147,8 +147,7 @@ void ocp_qp_xcond_solver_dims_get_(void *config_, ocp_qp_xcond_solver_dims *dims
     char *ptr_module = NULL;
     int module_length = 0;
     char module[MAX_STR_LEN];
-    extract_module_name(field, module, &module_length);
-    ptr_module = module;
+    extract_module_name(field, module, &module_length, &ptr_module);
 
     // pass options to QP module
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "pcond")) )
@@ -276,8 +275,7 @@ void ocp_qp_xcond_solver_opts_set_(void *config_, void *opts_, const char *field
     char *ptr_module = NULL;
     int module_length = 0;
     char module[MAX_STR_LEN];
-    extract_module_name(field, module, &module_length);
-    ptr_module = module;
+    extract_module_name(field, module, &module_length, &ptr_module);
 
     if( ptr_module!=NULL && (!strcmp(ptr_module, "cond")) ) // pass options to condensing module // TODO rename xcond ???
     {
