@@ -774,13 +774,17 @@ void ocp_nlp_approximate_qp_vectors_sqp_wfqp(ocp_nlp_config *config,
         config->constraints[i]->update_qp_vectors(config->constraints[i], dims->constraints[i],
             in->constraints[i], opts->constraints[i], nlp_mem->constraints[i], work->constraints[i]);
 
-        // TODO: ni!
         // copy ineq function value into nlp mem, then into QP
         struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
         blasfeo_dveccp(2 * ni[i], ineq_fun, 0, nlp_mem->ineq_fun + i, 0);
 
+        // TODO: ni!
         // d
-        blasfeo_dveccp(2 * ni[i], nlp_mem->ineq_fun + i, 0, nlp_mem->qp_in->d + i, 0);
+        int n_nominal_ineq_nlp = ni[i] - ns[i];
+
+        // blasfeo_dveccp(2 * ni[i], nlp_mem->ineq_fun + i, 0, nlp_mem->qp_in->d + i, 0);
+        blasfeo_dveccp(2*n_nominal_ineq_nlp+ns[i], nlp_mem->ineq_fun + i, 0, nlp_mem->qp_in->d + i, 0);
+        blasfeo_dveccp(ns[i], nlp_mem->ineq_fun + i, 2*n_nominal_ineq_nlp+ns[i], nlp_mem->qp_in->d + i, 2*n_nominal_ineq_nlp+ns[i]+nns[i]);
     }
 }
 
