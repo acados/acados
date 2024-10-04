@@ -156,6 +156,10 @@ class AcadosOcp:
         model.make_consistent(dims)
         self.name = model.name
 
+        # check if nx != nx_next
+        if dims.nx != dims.nx_next and opts.N_horizon > 1:
+            raise Exception('nx_next should be equal to nx if more than one shooting interval is used.')
+
         # parameters
         if self.parameter_values.shape[0] != dims.np:
             raise Exception('inconsistent dimension np, regarding model.p and parameter_values.' + \

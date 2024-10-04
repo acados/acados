@@ -46,10 +46,6 @@ function generate_c_code_discrete_dynamics(context, model, model_dir)
     phi = model.disc_dyn_expr;
     nx1 = length(phi);
 
-    if nx ~= nx1
-        disp('Warning: generate_c_code_discrete_dynamics: got nx ~= nx1, this only works for a single shooting interval.');
-    end
-
     % check type
     if isa(x(1), 'casadi.SX')
         isSX = true;

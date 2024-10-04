@@ -176,9 +176,6 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
     symbol = get_casadi_symbol(x)
     nx1 = casadi_length(phi)
 
-    if nx != nx1:
-        print('Warning: generate_c_code_discrete_dynamics: got nx != nx1, this only works for a single shooting interval.')
-
     lam = symbol('lam', nx1, 1)
     ux = ca.vertcat(u, x)
 
