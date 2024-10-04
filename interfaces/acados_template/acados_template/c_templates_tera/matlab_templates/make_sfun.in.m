@@ -519,7 +519,7 @@ sfun_output_names = [sfun_output_names; 'KKT_residuals [4]'];
 {%- if solver_options.N_horizon > 0 and simulink_opts.outputs.x1 == 1 %}
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') x1, state at node 1\n ');
-sfun_output_names = [sfun_output_names; 'x1 [{{ dims.nx_next }}]'];
+sfun_output_names = [sfun_output_names; 'x1 [{{ dims_0.nx_next }}]'];
 {%- endif %}
 
 {%- if simulink_opts.outputs.CPU_time == 1 %}

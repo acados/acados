@@ -287,8 +287,8 @@ classdef AcadosMultiphaseOcp < handle
                     error('rti_phase is only supported for SQP_RTI');
                 end
                 inputs = self.simulink_opts.inputs;
-                nonsupported_mocp_inputs = {'y_ref_0', 'y_ref', 'y_ref_e', 'lbx', 'ubx', ...
-                    'lbx_e', 'ubx_e', 'lg', 'ug', 'lh', 'uh', 'cost_W_0', 'cost_W', 'cost_W_e'};
+                nonsupported_mocp_inputs = {'y_ref', 'lbx', 'ubx', ...
+                'lbx_e', 'ubx_e', 'lg', 'ug', 'lh', 'uh', 'cost_W_0', 'cost_W', 'cost_W_e'};
                 for i=1:length(nonsupported_mocp_inputs)
                     if inputs.(nonsupported_mocp_inputs{i})
                         error(['Simulink inputs ', nonsupported_mocp_inputs{i}, ' are not supported for MOCP.']);
