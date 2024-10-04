@@ -107,7 +107,7 @@
     {% set_global nbu_total = nbu_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nbu %}
     {% set_global nz_total = nz_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nz %}
     {% set_global np_total = np_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].np %}
-    {% set_global npi_total = npi_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nx %}
+    {% set_global npi_total = npi_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nx_next %}
   {% endfor %}{# phases loop !#}
 
   {% set_global nx_total = nx_total + dims_e.nx %}
