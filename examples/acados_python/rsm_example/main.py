@@ -134,7 +134,6 @@ def export_rsm_model():
     model = AcadosModel()
 
     model.f_impl_expr = f_impl
-    model.f_expl_expr = []
     model.x = x
     model.xdot = xdot
     model.u = u
