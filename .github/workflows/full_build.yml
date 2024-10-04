@@ -265,6 +265,12 @@ jobs:
         command: |
             cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; run_matlab_examples_new_casadi
 
+    - name: Run Simulink MOCP test
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/mocp_transition_example; main_mocp_simulink
+
   # run selected matlab examples
   MATLAB_examples:
     needs: core_build
