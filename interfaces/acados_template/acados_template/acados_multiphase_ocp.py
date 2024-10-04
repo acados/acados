@@ -198,8 +198,9 @@ class AcadosMultiphaseOcp:
 
     @property
     def p_global_values(self):
-        """:math:`p` - initial values for p_global vector.
-        Type: `numpy.ndarray` of shape `(np_global_i, )`.
+        """initial values for :math:`p_\\text{global}` vector, see `AcadosModel.p_global` - can be updated.
+        NOTE: `p_global` is shared between all phases.
+        Type: `numpy.ndarray` of shape `(np_global, )`.
         """
         return self.__p_global_values
 
@@ -223,7 +224,7 @@ class AcadosMultiphaseOcp:
         """
         Set phase of the multiphase OCP to match the given OCP.
 
-        NOTE: model, cost, constraints and parameter_values, p_global_values are taken from phase OCP,
+        NOTE: model, cost, constraints and parameter_values are taken from phase OCP,
               all other fields, especially options are ignored.
 
         :param ocp: OCP to be set as phase

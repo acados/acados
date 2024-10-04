@@ -138,7 +138,9 @@ class AcadosOcp:
 
     @property
     def p_global_values(self):
-        """:math:`p` - initial values for global parameter vector - can be updated stagewise"""
+        """initial values for :math:`p_\\text{global}` vector, see `AcadosModel.p_global` - can be updated.
+        Type: `numpy.ndarray` of shape `(np_global, )`.
+        """
         return self.__p_global_values
 
     @p_global_values.setter
