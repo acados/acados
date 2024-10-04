@@ -143,7 +143,7 @@ class AcadosOcp:
     def json_file(self, json_file):
         self.__json_file = json_file
 
-    def make_consistent(self) -> None:
+    def make_consistent(self, is_mocp_phase=False) -> None:
         """
         Detect dimensions, perform sanity checks
         """
@@ -157,7 +157,7 @@ class AcadosOcp:
         self.name = model.name
 
         # check if nx != nx_next
-        if dims.nx != dims.nx_next and opts.N_horizon > 1:
+        if not is_mocp_phase and dims.nx != dims.nx_next and opts.N_horizon > 1:
             raise Exception('nx_next should be equal to nx if more than one shooting interval is used.')
 
         # parameters
