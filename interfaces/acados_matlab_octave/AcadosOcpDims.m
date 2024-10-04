@@ -38,6 +38,7 @@ classdef AcadosOcpDims < handle
         nz     % number of algebraic variables
         np     % number of parameters
         np_global % number of global parameters
+        nx_next % number of states at next time step
 
         % cost
         ny     % number of residuals in Lagrange term
@@ -103,6 +104,7 @@ classdef AcadosOcpDims < handle
             obj.nz = 0;
             obj.np = 0;
             obj.np_global = 0;
+            obj.nx_next = [];
 
             obj.ny = 0;
             obj.ny_0 = 0;
