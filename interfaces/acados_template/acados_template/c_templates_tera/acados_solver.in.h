@@ -40,6 +40,7 @@
 #define {{ model.name | upper }}_NZ     {{ dims.nz }}
 #define {{ model.name | upper }}_NU     {{ dims.nu }}
 #define {{ model.name | upper }}_NP     {{ dims.np }}
+#define {{ model.name | upper }}_NP_GLOBAL     {{ dims.np_global }}
 #define {{ model.name | upper }}_NBX    {{ dims.nbx }}
 #define {{ model.name | upper }}_NBX0   {{ dims.nbx_0 }}
 #define {{ model.name | upper }}_NBU    {{ dims.nbu }}

@@ -44,6 +44,7 @@ classdef AcadosMultiphaseOcp < handle
 
         model
         parameter_values % initial value of the parameter
+        p_global_values % initial value of global parameters
         problem_class
         simulink_opts
         name
@@ -86,7 +87,7 @@ classdef AcadosMultiphaseOcp < handle
                 obj.model{i} = AcadosModel();
             end
 
-            self.dummy_ocp_list = cell(n_phases, 1);
+            obj.dummy_ocp_list = cell(n_phases, 1);
 
             obj.solver_options = AcadosOcpOptions();
             obj.solver_options.N_horizon = obj.N_horizon; % NOTE: to not change options when making ocp consistent
@@ -94,6 +95,7 @@ classdef AcadosMultiphaseOcp < handle
             obj.mocp_opts = AcadosMultiphaseOptions();
 
             obj.parameter_values = cell(n_phases, 1);
+            obj.p_global_values = [];
             obj.problem_class = 'MOCP';
             obj.simulink_opts = [];
             obj.cython_include_dirs = [];
@@ -135,6 +137,10 @@ classdef AcadosMultiphaseOcp < handle
             self.cost{phase_idx} = ocp.cost;
             self.constraints{phase_idx} = ocp.constraints;
             self.parameter_values{phase_idx} = ocp.parameter_values;
+
+            if ~isempty(self.p_global_values)
+                fprintf('WARNING: set_phase: Phase %d contains p_global values which will be ignored.\n', phase_idx);
+            end
         end
 
         function make_consistent(self)
@@ -199,6 +205,7 @@ classdef AcadosMultiphaseOcp < handle
                 ocp.constraints = self.constraints{i};
                 ocp.cost = self.cost{i};
                 ocp.parameter_values = self.parameter_values{i};
+                ocp.p_global_values = self.p_global_values;
                 ocp.solver_options = self.solver_options;
 
                 % set phase dependent options
@@ -335,6 +342,7 @@ classdef AcadosMultiphaseOcp < handle
             end
 
             % prepare struct for json dump
+            out_struct.p_global_values = reshape(num2cell(self.p_global_values), [1, self.phases_dims{1}.np_global]);
             for i=1:self.n_phases
                 out_struct.parameter_values{i} = reshape(num2cell(self.parameter_values{i}), [1, self.phases_dims{i}.np]);
                 out_struct.model{i} = orderfields(self.model{i}.convert_to_struct_for_json_dump());
@@ -345,7 +353,7 @@ classdef AcadosMultiphaseOcp < handle
             out_struct.solver_options = orderfields(self.solver_options.convert_to_struct_for_json_dump(self.N_horizon));
             out_struct.mocp_opts = orderfields(self.mocp_opts.struct());
 
-            vector_fields = {'model', 'phases_dims', 'cost', 'constraints', 'parameter_values'};
+            vector_fields = {'model', 'phases_dims', 'cost', 'constraints', 'parameter_values', 'p_global_values'};
             out_struct = prepare_struct_for_json_dump(out_struct, vector_fields, {});
 
             % add full path to json file

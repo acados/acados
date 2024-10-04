@@ -219,11 +219,17 @@ classdef AcadosModel < handle
                 dims.np_global = 0;
                 obj.p_global = empty_var;
             elseif iscolumn(obj.p_global) || (isa(obj.p_global, 'casadi.SX') == isSX && length(obj.p_global) == 0)
+                if any(which_depends(obj.p_global, obj.p))
+                    error('model.p_global must not depend on model.p')
+                end
                 dims.np_global = size(obj.p_global, 1);
             else
                 error('model.p_global should be column vector.');
             end
 
+            if dims.np_global > 0 && ~isa(obj.p_global, 'casadi.MX')
+                error('model.p_global needs to be casadi.MX')
+            end
             if isempty(obj.xdot)
                 obj.xdot = empty_var;
             elseif ~(isa(obj.xdot, 'casadi.SX') == isSX && length(obj.xdot) == 0) && (~iscolumn(obj.xdot) || size(obj.xdot, 1) ~= dims.nx)

@@ -37,6 +37,7 @@ classdef AcadosOcp < handle
         solver_options
         model
         parameter_values % initial value of the parameter
+        p_global_values % initial value of the parameter
         acados_include_path
         acados_lib_path
         problem_class
@@ -60,6 +61,7 @@ classdef AcadosOcp < handle
             obj.model = AcadosModel();
 
             obj.parameter_values = [];
+            obj.p_global_values = [];
             obj.problem_class = 'OCP';
             obj.simulink_opts = [];
             obj.cython_include_dirs = [];
@@ -124,7 +126,19 @@ classdef AcadosOcp < handle
                 end
                 self.parameter_values = zeros(self.dims.np,1);
             elseif length(self.parameter_values) ~= self.dims.np
-                error(['parameters_values has the wrong shape. Expected: ' num2str(self.dims.np)])
+                error(['parameter_values has the wrong shape. Expected: ' num2str(self.dims.np)])
+            end
+
+
+            % parameters
+            if isempty(self.p_global_values)
+                if dims.np_global > 0
+                    warning(['self.p_global_values are not set.', ...
+                            10 'Using zeros(np_global,1) by default.' 10 'You can update them later using set().']);
+                end
+                self.p_global_values = zeros(self.dims.np_global,1);
+            elseif length(self.p_global_values) ~= self.dims.np_global
+                error(['p_global_values has the wrong shape. Expected: ' num2str(self.dims.np_global)])
             end
 
             %% cost
@@ -1039,6 +1053,7 @@ classdef AcadosOcp < handle
 
             % prepare struct for json dump
             out_struct.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);
+            out_struct.p_global_values = reshape(num2cell(self.p_global_values), [1, self.dims.np_global]);
             out_struct.model = orderfields(self.model.convert_to_struct_for_json_dump());
             out_struct.dims = orderfields(out_struct.dims.struct());
             out_struct.cost = orderfields(out_struct.cost.convert_to_struct_for_json_dump());

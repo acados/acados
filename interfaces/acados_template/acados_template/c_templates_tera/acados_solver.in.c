@@ -76,6 +76,7 @@
 #define NZ     {{ model.name | upper }}_NZ
 #define NU     {{ model.name | upper }}_NU
 #define NP     {{ model.name | upper }}_NP
+#define NP_GLOBAL     {{ model.name | upper }}_NP_GLOBAL
 #define NY0    {{ model.name | upper }}_NY0
 #define NY     {{ model.name | upper }}_NY
 #define NYN    {{ model.name | upper }}_NYN
@@ -848,6 +849,22 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
 {%- else %}
     // no parameters defined
 {%- endif %}{# if dims.np #}
+
+{%- if dims.np_global > 0 %}
+    // initialize global parameters to nominal value
+    double* p_global = calloc(NP_GLOBAL, sizeof(double));
+    {%- for item in p_global_values %}
+        {%- if item != 0 %}
+    p_global[{{ loop.index0 }}] = {{ item }};
+        {%- endif %}
+    {%- endfor %}
+
+    {{ name }}_acados_set_p_global_and_precompute_dependencies(capsule, p_global, NP_GLOBAL);
+
+    free(p_global);
+{%- else %}
+    // no global parameters defined
+{%- endif %}{# if dims.np_global #}
 }
 
 
