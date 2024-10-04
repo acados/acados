@@ -226,7 +226,7 @@ classdef AcadosMultiphaseOcp < handle
                 end
 
                 disp(['Calling make_consistent for phase ', num2str(i), '.']);
-                ocp.make_consistent();
+                ocp.make_consistent(true);
 
                 self.dummy_ocp_list{i} = ocp;
             end

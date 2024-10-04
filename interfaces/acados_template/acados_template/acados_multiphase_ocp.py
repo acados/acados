@@ -302,7 +302,7 @@ class AcadosMultiphaseOcp:
                     print(f"Phase {i} contains non-default initial fields: {nondefault_fields}, which will be ignored.")
 
             print(f"Calling make_consistent for phase {i}.")
-            ocp.make_consistent()
+            ocp.make_consistent(is_mocp_phase=True)
 
             self.dummy_ocp_list.append(ocp)
 
