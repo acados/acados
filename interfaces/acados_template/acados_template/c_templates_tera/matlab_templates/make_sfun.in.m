@@ -222,7 +222,7 @@ i_in = i_in + 1;
 {%- endif %}
 
 {%- if np_total > 0 and simulink_opts.inputs.parameter_traj -%}  {#- parameter_traj #}
-input_note = strcat(input_note, num2str(i_in), ') parameters - concatenated for all shooting nodes 0 to N,',...
+input_note = strcat(input_note, num2str(i_in), ') parameters - concatenated for all stages 0 to N,',...
                     ' size [{{ np_total }}]\n ');
 sfun_input_names = [sfun_input_names; 'parameter_traj [{{ np_total }}]'];
 i_in = i_in + 1;
@@ -244,7 +244,7 @@ i_in = i_in + 1;
 
 {% if problem_class == "OCP" %}
 {%- if dims.ny > 0 and solver_options.N_horizon > 1 and simulink_opts.inputs.y_ref %}
-input_note = strcat(input_note, num2str(i_in), ') y_ref - concatenated for shooting nodes 1 to N-1,',...
+input_note = strcat(input_note, num2str(i_in), ') y_ref - concatenated for stages 1 to N-1,',...
                     ' size [{{ (solver_options.N_horizon-1) * dims.ny }}]\n ');
 sfun_input_names = [sfun_input_names; 'y_ref [{{ (solver_options.N_horizon-1) * dims.ny }}]'];
 i_in = i_in + 1;
@@ -259,12 +259,12 @@ i_in = i_in + 1;
 
 {% if problem_class == "OCP" %}
 {%- if dims.nbx > 0 and solver_options.N_horizon > 1 and simulink_opts.inputs.lbx -%}  {#- lbx #}
-input_note = strcat(input_note, num2str(i_in), ') lbx for shooting nodes 1 to N-1, size [{{ (solver_options.N_horizon-1) * dims.nbx }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') lbx values concatenated for stages 1 to N-1, size [{{ (solver_options.N_horizon-1) * dims.nbx }}]\n ');
 sfun_input_names = [sfun_input_names; 'lbx [{{ (solver_options.N_horizon-1) * dims.nbx }}]'];
 i_in = i_in + 1;
 {%- endif %}
 {%- if dims.nbx > 0 and solver_options.N_horizon > 1 and simulink_opts.inputs.ubx -%}  {#- ubx #}
-input_note = strcat(input_note, num2str(i_in), ') ubx for shooting nodes 1 to N-1, size [{{ (solver_options.N_horizon-1) * dims.nbx }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') ubx values concatenated for stages 1 to N-1, size [{{ (solver_options.N_horizon-1) * dims.nbx }}]\n ');
 sfun_input_names = [sfun_input_names; 'ubx [{{ (solver_options.N_horizon-1) * dims.nbx }}]'];
 i_in = i_in + 1;
 {%- endif %}
@@ -282,35 +282,35 @@ i_in = i_in + 1;
 {%- endif %}
 
 {%- if nbu_total and simulink_opts.inputs.lbu -%}  {#- lbu #}
-input_note = strcat(input_note, num2str(i_in), ') lbu for shooting nodes 0 to N-1, size [{{ nbu_total }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') lbu for stages 0 to N-1, size [{{ nbu_total }}]\n ');
 sfun_input_names = [sfun_input_names; 'lbu [{{ nbu_total }}]'];
 i_in = i_in + 1;
 {%- endif -%}
 {%- if nbu_total and simulink_opts.inputs.ubu -%}  {#- ubu #}
-input_note = strcat(input_note, num2str(i_in), ') ubu for shooting nodes 0 to N-1, size [{{ nbu_total }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') ubu for stages 0 to N-1, size [{{ nbu_total }}]\n ');
 sfun_input_names = [sfun_input_names; 'ubu [{{ nbu_total }}]'];
 i_in = i_in + 1;
 {%- endif -%}
 
 {% if problem_class == "OCP" %}
 {%- if dims.ng > 0 and simulink_opts.inputs.lg -%}  {#- lg #}
-input_note = strcat(input_note, num2str(i_in), ') lg for shooting nodes 0 to N-1, size [{{ solver_options.N_horizon*dims.ng }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') lg for stages 0 to N-1, size [{{ solver_options.N_horizon*dims.ng }}]\n ');
 sfun_input_names = [sfun_input_names; 'lg [{{ solver_options.N_horizon*dims.ng }}]'];
 i_in = i_in + 1;
 {%- endif %}
 {%- if dims.ng > 0 and simulink_opts.inputs.ug -%}  {#- ug #}
-input_note = strcat(input_note, num2str(i_in), ') ug for shooting nodes 0 to N-1, size [{{ solver_options.N_horizon*dims.ng }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') ug for stages 0 to N-1, size [{{ solver_options.N_horizon*dims.ng }}]\n ');
 sfun_input_names = [sfun_input_names; 'ug [{{ solver_options.N_horizon*dims.ng }}]'];
 i_in = i_in + 1;
 {%- endif %}
 
 {%- if dims.nh > 0 and simulink_opts.inputs.lh -%}  {#- lh #}
-input_note = strcat(input_note, num2str(i_in), ') lh for shooting nodes 0 to N-1, size [{{ solver_options.N_horizon*dims.nh }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') lh for stages 0 to N-1, size [{{ solver_options.N_horizon*dims.nh }}]\n ');
 sfun_input_names = [sfun_input_names; 'lh [{{ solver_options.N_horizon*dims.nh }}]'];
 i_in = i_in + 1;
 {%- endif %}
 {%- if dims.nh > 0 and simulink_opts.inputs.uh -%}  {#- uh #}
-input_note = strcat(input_note, num2str(i_in), ') uh for shooting nodes 0 to N-1, size [{{ solver_options.N_horizon*dims.nh }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') uh for stages 0 to N-1, size [{{ solver_options.N_horizon*dims.nh }}]\n ');
 sfun_input_names = [sfun_input_names; 'uh [{{ solver_options.N_horizon*dims.nh }}]'];
 i_in = i_in + 1;
 {%- endif %}
@@ -348,7 +348,7 @@ i_in = i_in + 1;
 {%- endif %}
 
 {%- if dims.ny > 0 and simulink_opts.inputs.cost_W %}  {#- cost_W #}
-input_note = strcat(input_note, num2str(i_in), ') cost_W in column-major format, that is set for all intermediate shooting nodes: 1 to N-1, size [{{ dims.ny * dims.ny }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') cost_W in column-major format, that is set for all intermediate stages: 1 to N-1, size [{{ dims.ny * dims.ny }}]\n ');
 sfun_input_names = [sfun_input_names; 'cost_W [{{ dims.ny * dims.ny }}]'];
 i_in = i_in + 1;
 {%- endif %}
@@ -398,25 +398,25 @@ i_in = i_in + 1;
 {%- endif %}
 
 {%- if simulink_opts.inputs.x_init %}  {#- x_init #}
-input_note = strcat(input_note, num2str(i_in), ') x_init - initialization of x for all shooting nodes, size [{{ nx_total }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') x_init - initialization of x for all stages, size [{{ nx_total }}]\n ');
 sfun_input_names = [sfun_input_names; 'x_init [{{ nx_total }}]'];
 i_in = i_in + 1;
 {%- endif %}
 
 {%- if simulink_opts.inputs.u_init %}  {#- u_init #}
-input_note = strcat(input_note, num2str(i_in), ') u_init - initialization of u for shooting nodes 0 to N-1, size [{{ nu_total }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') u_init - initialization of u for stages 0 to N-1, size [{{ nu_total }}]\n ');
 sfun_input_names = [sfun_input_names; 'u_init [{{ nu_total }}]'];
 i_in = i_in + 1;
 {%- endif %}
 
 {%- if simulink_opts.inputs.pi_init %}  {#- pi_init #}
-input_note = strcat(input_note, num2str(i_in), ') pi_init - initialization of pi for shooting nodes 0 to N-1, size [{{ npi_total }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') pi_init - initialization of pi for stages 0 to N-1, size [{{ npi_total }}]\n ');
 sfun_input_names = [sfun_input_names; 'pi_init [{{ npi_total }}]'];
 i_in = i_in + 1;
 {%- endif %}
 
 {%- if simulink_opts.inputs.slacks_init %}  {#- slacks_init #}
-input_note = strcat(input_note, num2str(i_in), ') slacks_init - initialization of slack values for all shooting nodes (0 to N), size [{{ two_ns_total }}]');
+input_note = strcat(input_note, num2str(i_in), ') slacks_init - initialization of slack values for all stages (0 to N), size [{{ two_ns_total }}]');
 sfun_input_names = [sfun_input_names; 'slacks_init [{{ two_ns_total }}]'];
 i_in = i_in + 1;
 {%- endif %}
@@ -519,7 +519,7 @@ sfun_output_names = [sfun_output_names; 'KKT_residuals [4]'];
 {%- if solver_options.N_horizon > 0 and simulink_opts.outputs.x1 == 1 %}
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') x1, state at node 1\n ');
-sfun_output_names = [sfun_output_names; 'x1'];
+sfun_output_names = [sfun_output_names; 'x1 [{{ dims.nx_next }}]'];
 {%- endif %}
 
 {%- if simulink_opts.outputs.CPU_time == 1 %}
