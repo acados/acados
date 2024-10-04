@@ -349,8 +349,8 @@ class AcadosModel():
                 dims.nx_next = casadi_length(self.x)
 
         if self.f_impl_expr is not None:
-            if casadi_length(self.f_impl_expr) != dims.nx:
-                raise Exception(f"model.f_impl_expr must have length nx = {dims.nx}, got {casadi_length(self.f_impl_expr)}")
+            if casadi_length(self.f_impl_expr) != (dims.nx + dims.nz):
+                raise Exception(f"model.f_impl_expr must have length nx + nz = {dims.nx} + {dims.nz}, got {casadi_length(self.f_impl_expr)}")
         if self.f_expl_expr is not None:
             if casadi_length(self.f_expl_expr) != dims.nx:
                 raise Exception(f"model.f_expl_expr must have length nx = {dims.nx}, got {casadi_length(self.f_expl_expr)}")

@@ -257,8 +257,8 @@ classdef AcadosModel < handle
             end
 
             if ~isempty(obj.f_impl_expr)
-                if length(obj.f_impl_expr) ~= dims.nx
-                    error(sprintf('model.f_impl_expr must have length nx = %d, got %d', dims.nx, length(obj.f_impl_expr)));
+                if length(obj.f_impl_expr) ~= (dims.nx + dims.nz)
+                    error(sprintf('model.f_impl_expr must have length nx + nz = %d + %d, got %d', dims.nx, dims.nz, length(obj.f_impl_expr)));
                 end
             end
 
