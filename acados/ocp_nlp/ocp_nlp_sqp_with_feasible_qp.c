@@ -327,12 +327,17 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
         size += nns * sizeof(int);
         // s_ns
         size += blasfeo_memsize_dvec(2*nns);
+
+        // RSQ_cost, RSQ_constr
+        size += 2*blasfeo_memsize_dmat(dims->nx[stage]+dims->nu[stage], dims->nx[stage]+dims->nu[stage]);
     }
     // nns
     size += (N+1) * sizeof(int);
 
     // s_ns
     size += (N + 1) * sizeof(struct blasfeo_dvec);
+    // RSQ_cost, RSQ_constr
+    size += 2*(N + 1) * sizeof(struct blasfeo_dmat);
 
 
     size += 3*8;  // align
@@ -372,6 +377,11 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
 
     // s_ns
     assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->s_ns, &c_ptr);
+
+    // RSQ_cost
+    assign_and_advance_blasfeo_dmat_structs(N + 1, &mem->RSQ_cost, &c_ptr);
+    // RSQ_constr
+    assign_and_advance_blasfeo_dmat_structs(N + 1, &mem->RSQ_constr, &c_ptr);
 
     // primal step norm
     if (opts->nlp_opts->log_primal_step_norm)
@@ -419,7 +429,12 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
-
+    // matrices first: RSQ
+    for (int i = 0; i <= N; ++i)
+    {
+        assign_and_advance_blasfeo_dmat_mem(dims->nx[i]+dims->nu[i], dims->nx[i]+dims->nu[i], mem->RSQ_cost + i, &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(dims->nx[i]+dims->nu[i], dims->nx[i]+dims->nu[i], mem->RSQ_constr + i, &c_ptr);
+    }
     // blasfeo_dvec
     // s_ns
     for (int i = 0; i <= N; ++i)
