@@ -154,7 +154,7 @@ const int *{{ model.name }}_constr_h_e_fun_jac_uxt_zt_sparsity_in(int);
 const int *{{ model.name }}_constr_h_e_fun_jac_uxt_zt_sparsity_out(int);
 int {{ model.name }}_constr_h_e_fun_jac_uxt_zt_n_in(void);
 int {{ model.name }}_constr_h_e_fun_jac_uxt_zt_n_out(void);
-real_t* {{ model.name }}_phi_constraint_fun_jac_hess_get_pool_double(const char*);
+real_t* {{ model.name }}_constr_h_e_fun_jac_uxt_zt_get_pool_double(const char*);
 
 int {{ model.name }}_constr_h_e_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_constr_h_e_fun_work(int *, int *, int *, int *);
