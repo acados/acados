@@ -709,7 +709,6 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
-    printf("Current direction:\n");
     for (int i = 0; i <= N; i++)
     {
         // Assuming the variable order
