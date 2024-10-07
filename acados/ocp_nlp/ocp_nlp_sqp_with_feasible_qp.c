@@ -634,9 +634,9 @@ static void set_non_slacked_l1_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
     for (int stage = 0; stage <= dims->N; stage++)
     {
         // zl_QP
-        blasfeo_dvecse(nns[stage], mem->penalty_parameter, qp_in->rqz+stage, nu[stage]+nx[stage]+ns[stage]);
+        blasfeo_dvecse(nns[stage], 1.0, qp_in->rqz+stage, nu[stage]+nx[stage]+ns[stage]);
         // zu_QP
-        blasfeo_dvecse(nns[stage], mem->penalty_parameter, qp_in->rqz+stage, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
+        blasfeo_dvecse(nns[stage], 1.0, qp_in->rqz+stage, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
         // printf("qp_in->rqz %d\n", stage);
         // blasfeo_print_exp_tran_dvec(nu[stage] +nx[stage] + 2*(nns[stage]+ns[stage]), qp_in->rqz+stage, 0);
     }
@@ -816,8 +816,12 @@ void ocp_nlp_approximate_qp_vectors_sqp_wfqp(ocp_nlp_config *config,
         // g
         // standard
         // blasfeo_dveccp(nv[i], nlp_mem->cost_grad + i, 0, nlp_mem->qp_in->rqz + i, 0);
-        blasfeo_dveccp(nx[i]+nu[i]+ns[i], nlp_mem->cost_grad + i, 0, nlp_mem->qp_in->rqz + i, 0);
-        blasfeo_dveccp(ns[i], nlp_mem->cost_grad + i, nx[i]+nu[i]+ns[i], nlp_mem->qp_in->rqz + i, nx[i]+nu[i]+ns[i]+nns[i]);
+
+        //
+        // blasfeo_dveccp(nx[i]+nu[i]+ns[i], nlp_mem->cost_grad + i, 0, nlp_mem->qp_in->rqz + i, 0);
+        // blasfeo_dveccp(ns[i], nlp_mem->cost_grad + i, nx[i]+nu[i]+ns[i], nlp_mem->qp_in->rqz + i, nx[i]+nu[i]+ns[i]+nns[i]);
+        blasfeo_dveccpsc(nx[i]+nu[i]+ns[i], mem->penalty_parameter, nlp_mem->cost_grad + i, 0, nlp_mem->qp_in->rqz + i, 0);
+        blasfeo_dveccpsc(ns[i], mem->penalty_parameter, nlp_mem->cost_grad + i, nx[i]+nu[i]+ns[i], nlp_mem->qp_in->rqz + i, nx[i]+nu[i]+ns[i]+nns[i]);
 
         // b
         if (i < N)
@@ -839,6 +843,74 @@ void ocp_nlp_approximate_qp_vectors_sqp_wfqp(ocp_nlp_config *config,
         blasfeo_dveccp(ns[i], nlp_mem->ineq_fun + i, 2*n_nominal_ineq_nlp+ns[i], nlp_mem->qp_in->d + i, 2*n_nominal_ineq_nlp+ns[i]+nns[i]);
     }
 }
+
+static void ocp_nlp_sqp_wfqp_prepare_hessian_evaluation(ocp_nlp_config *config,
+    ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+    ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
+{
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+
+    int N = dims->N;
+
+    // int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+
+    if (!nlp_mem->compute_hess)
+    {
+        printf("ocp_nlp_sqp_wfqp_prepare_hessian_evaluation: constant hessian not supported!\n\n");
+        exit(1);
+    }
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        // TODO: first compute cost hessian (without adding) and avoid setting everything to zero?
+        // init Hessians to 0
+
+        // TODO: avoid setting qp_in->RSQ to zero in ocp_nlp_approximate_qp_matrices?
+        blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->RSQ_constr+i, 0, 0);
+        blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->RSQ_cost+i, 0, 0);
+    }
+
+    for (int i = 0; i < N; i++)
+    {
+        config->dynamics[i]->memory_set_RSQrq_ptr(mem->RSQ_constr+i, nlp_mem->dynamics[i]);
+    }
+    for (int i = 0; i <= N; i++)
+    {
+        config->cost[i]->memory_set_RSQrq_ptr(mem->RSQ_cost+i, nlp_mem->cost[i]);
+        config->constraints[i]->memory_set_RSQrq_ptr(mem->RSQ_constr+i, nlp_mem->constraints[i]);
+    }
+    return;
+}
+
+
+static void ocp_nlp_sqp_wfqp_setup_QP_hessian(ocp_nlp_config *config,
+    ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+    ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work, bool with_cost_term)
+{
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    int N = dims->N;
+
+    // int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int nxu;
+    // hess_QP = rho * hess_cost + hess_constraints
+    for (int i = 0; i <= N; i++)
+    {
+        nxu = nx[i]+nu[i];
+        // TODO: axpby for matrices?
+        blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
+        //
+        blasfeo_dgead(nxu, nxu, mem->penalty_parameter, mem->RSQ_cost+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
+    }
+}
+
+
 
 
 // MAIN OPTIMIZATION ROUTINE
@@ -876,7 +948,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->nlp_mem->status = ACADOS_SUCCESS;
 
     // TODO(@david):
-    mem->penalty_parameter = 42*1e8;
+    mem->penalty_parameter = 1/(42*1e8);
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -902,8 +974,13 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             /* Prepare the QP data */
             // linearize NLP and update QP matrices
+            ocp_nlp_sqp_wfqp_prepare_hessian_evaluation(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
             acados_tic(&timer1);
             ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+
+            //
+            ocp_nlp_sqp_wfqp_setup_QP_hessian(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, true);
+
 
             if (nlp_opts->with_adaptive_levenberg_marquardt || config->globalization->needs_objective_value() == 1)
             {

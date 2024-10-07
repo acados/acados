@@ -2424,6 +2424,7 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
 #endif
     for (int i = 0; i <= N; i++)
     {
+        // TODO: first compute cost hessian (without adding) and avoid setting everything to zero?
         // init Hessian to 0
         if (mem->compute_hess)
         {
