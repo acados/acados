@@ -324,18 +324,18 @@ class AcadosMultiphaseOcp:
                     print(f"Phase {i} contains non-default initial fields: {nondefault_fields}, which will be ignored.")
 
             print(f"Calling make_consistent for phase {i}.")
-            ocp.make_consistent()
+            ocp.make_consistent(is_mocp_phase=True)
 
             self.dummy_ocp_list.append(ocp)
 
         # check for transition consistency
         nx_list = [self.phases_dims[i].nx for i in range(self.n_phases)]
-        if len(set(nx_list)) != 1:
-            for i in range(1, self.n_phases):
-                if nx_list[i] != nx_list[i-1]:
-                    print(f"nx differs between phases {i-1} and {i}: {nx_list[i-1]} != {nx_list[i]}")
-                    if self.N_list[i-1] != 1 or self.mocp_opts.integrator_type[i-1] != 'DISCRETE':
-                        raise Exception(f"detected stage transition with different nx from phase {i-1} to {i}, which is only supported for integrator_type='DISCRETE' and N_list[i] == 1.")
+        for i in range(1, self.n_phases):
+            if nx_list[i] != nx_list[i-1]:
+                if self.phases_dims[i].nx != self.phases_dims[i-1].nx_next:
+                    raise Exception(f"detected stage transition with different nx from phase {i-1} to {i}, nx_next at phase {i-1} = {self.phases_dims[i-1].nx_next} should match nx at phase {i} = {nx_list[i]}.")
+                if self.N_list[i-1] != 1 or self.mocp_opts.integrator_type[i-1] != 'DISCRETE':
+                    raise Exception(f"detected stage transition with different nx from phase {i-1} to {i}, which is only supported for integrator_type='DISCRETE' and N_list[i] == 1.")
         return
 
 

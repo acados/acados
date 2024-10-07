@@ -293,6 +293,7 @@ class AcadosModel():
         else:
             raise Exception(f"model.x must be casadi.SX or casadi.MX, got {type(self.x)}")
 
+
     def make_consistent(self, dims: Union[AcadosOcpDims, AcadosSimDims]) -> None:
 
         casadi_symbol = self.get_casadi_symbol()
@@ -339,6 +340,20 @@ class AcadosModel():
                 # otherwise: AttributeError: 'SX' object has no attribute 'primitives'
                 raise Exception(f"model.p_global must be casadi.MX, got {type(self.p_global)}")
             dims.np_global = casadi_length(self.p_global)
+
+        # model output dimension nx_next: dimension of the next state
+        if isinstance(dims, AcadosOcpDims):
+            if self.disc_dyn_expr is not None:
+                dims.nx_next = casadi_length(self.disc_dyn_expr)
+            else:
+                dims.nx_next = casadi_length(self.x)
+
+        if self.f_impl_expr is not None:
+            if casadi_length(self.f_impl_expr) != (dims.nx + dims.nz):
+                raise Exception(f"model.f_impl_expr must have length nx + nz = {dims.nx} + {dims.nz}, got {casadi_length(self.f_impl_expr)}")
+        if self.f_expl_expr is not None:
+            if casadi_length(self.f_expl_expr) != dims.nx:
+                raise Exception(f"model.f_expl_expr must have length nx = {dims.nx}, got {casadi_length(self.f_expl_expr)}")
 
         return
 

@@ -92,7 +92,10 @@ classdef AcadosOcp < handle
             end
         end
 
-        function make_consistent(self)
+        function make_consistent(self, is_mocp_phase)
+            if nargin < 2
+                is_mocp_phase = false;
+            end
             self.model.make_consistent(self.dims);
 
             model = self.model;
@@ -103,6 +106,11 @@ classdef AcadosOcp < handle
 
             N = opts.N_horizon;
             self.detect_cost_and_constraints();
+
+            % check if nx != nx_next
+            if ~is_mocp_phase && dims.nx ~= dims.nx_next && opts.N_horizon > 1
+                error(['nx_next = ', num2str(dims.nx_next), ' must be equal to nx = ', num2str(dims.nx), ' if more than one shooting interval is used.']);
+            end
 
             % detect GNSF structure
             if strcmp(opts.integrator_type, 'GNSF')

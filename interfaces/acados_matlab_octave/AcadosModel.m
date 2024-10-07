@@ -252,6 +252,27 @@ classdef AcadosModel < handle
             else
                 error('model.u should be column vector.');
             end
+
+            % model output dimension nx_next: dimension of the next state
+            if isa(dims, 'AcadosOcpDims')
+                if ~isempty(obj.disc_dyn_expr)
+                    dims.nx_next = length(obj.disc_dyn_expr);
+                else
+                    dims.nx_next = length(obj.x);
+                end
+            end
+
+            if ~isempty(obj.f_impl_expr)
+                if length(obj.f_impl_expr) ~= (dims.nx + dims.nz)
+                    error(sprintf('model.f_impl_expr must have length nx + nz = %d + %d, got %d', dims.nx, dims.nz, length(obj.f_impl_expr)));
+                end
+            end
+
+            if ~isempty(obj.f_expl_expr)
+                if length(obj.f_expl_expr) ~= dims.nx
+                    error(sprintf('model.f_expl_expr must have length nx = %d, got %d', dims.nx, length(obj.f_expl_expr)));
+                end
+            end
         end
 
 

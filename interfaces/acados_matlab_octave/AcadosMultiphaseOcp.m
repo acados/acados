@@ -237,7 +237,7 @@ classdef AcadosMultiphaseOcp < handle
                 end
 
                 disp(['Calling make_consistent for phase ', num2str(i), '.']);
-                ocp.make_consistent();
+                ocp.make_consistent(true);
 
                 self.dummy_ocp_list{i} = ocp;
             end
@@ -248,13 +248,13 @@ classdef AcadosMultiphaseOcp < handle
             for i=1:self.n_phases
                 nx_list(i) = self.phases_dims{i}.nx;
             end
-            if length(unique(nx_list)) ~= 1
-                for i=2:self.n_phases
-                    if nx_list(i) ~= nx_list(i-1)
-                        disp(['nx differs between phases ', num2str(i-1), ' and ', num2str(i), ': ', num2str(nx_list(i-1)), ' != ', num2str(nx_list(i))]);
-                        if self.N_list(i-1) ~= 1 || ~strcmp(self.mocp_opts.integrator_type{i-1}, 'DISCRETE')
-                            error(['detected stage transition with different nx from phase ', num2str(i-1), ' to ', num2, ', which is only supported for integrator_type=''DISCRETE'' and N_list[i] == 1.']);
-                        end
+            for i=2:self.n_phases
+                if nx_list(i) ~= nx_list(i-1)
+                    if self.phases_dims{i-1}.nx_next ~= self.phases_dims{i}.nx
+                        error(['detected stage transition with different nx from phase ', num2str(i-1), ' to ', num2str(i), ', which is only supported for nx_next = nx, got nx_next = ', num2str(self.phases_dims{i-1}.nx_next), ' and nx = ', num2str(self.phases_dims{i}.nx), '.']);
+                    end
+                    if self.N_list(i-1) ~= 1 || ~strcmp(self.mocp_opts.integrator_type{i-1}, 'DISCRETE')
+                        error(['detected stage transition with different nx from phase ', num2str(i-1), ' to ', num2, ', which is only supported for integrator_type=''DISCRETE'' and N_list[i] == 1.']);
                     end
                 end
             end
