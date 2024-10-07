@@ -49,7 +49,7 @@ TOL = 1e-6
 
 def main():
     # run test cases
-    params = {'globalization': ['FUNNEL_L1PEN_LINESEARCH']}
+    params = {'globalization': ['FIXED_STEP']}
 
     keys, values = zip(*params.items())
     for combination in product(*values):
@@ -84,7 +84,7 @@ def solve_infeasible_linearization(setting):
 
     # cost
     ocp.cost.cost_type_e = 'EXTERNAL'
-    ocp.model.cost_expr_ext_cost_e = -x
+    ocp.model.cost_expr_ext_cost_e = -model.x[0]
 
     # constraints
     ocp.model.con_h_expr_0 = x**2
@@ -102,25 +102,27 @@ def solve_infeasible_linearization(setting):
     ocp.solver_options.qp_solver_cond_N = N
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.integrator_type = 'DISCRETE'
-    if globalization == 'FUNNEL_L1PEN_LINESEARCH':
-        ocp.solver_options.print_level = 1
+    ocp.solver_options.print_level = 1
     ocp.solver_options.tol = TOL
     ocp.solver_options.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'
     ocp.solver_options.globalization = globalization
     ocp.solver_options.alpha_min = 1e-15
-    SQP_max_iter = 300
+    SQP_max_iter = 20
     ocp.solver_options.qp_solver_iter_max = 400
-    ocp.solver_options.regularize_method = 'MIRROR'
+    ocp.solver_options.regularize_method = 'PROJECT'
     ocp.solver_options.qp_tol = 5e-7
+    ocp.solver_options.qp_solver_mu0 = 1e4
 
     ocp.solver_options.nlp_solver_max_iter = SQP_max_iter
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
 
     # initialize solver
-    xinit = np.array([1.0])
+    xinit = np.array([-0.001])
+    # xinit = np.array([1.0])
     [ocp_solver.set(i, "x", xinit) for i in range(N+1)]
 
     # solve
+    ocp_solver.get
     status = ocp_solver.solve()
     if status != 0:
         raise RuntimeError("Solve failed, since QP infeasible!")
