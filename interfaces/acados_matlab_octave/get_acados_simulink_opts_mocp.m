@@ -37,8 +37,6 @@ function simulink_opts = get_acados_simulink_opts_mocp()
     simulink_opts = loadjson(fileread(simulink_opts_default_filename));
 
     % turn off non supported options
-    nonsupported_mocp_inputs = {'y_ref_0', 'y_ref', 'y_ref_e', 'lbx', 'ubx', ...
-    'lbx_e', 'ubx_e', 'lg', 'ug', 'lh', 'uh', 'cost_W_0', 'cost_W', 'cost_W_e'};
     nonsupported_mocp_inputs = {'y_ref', 'lbx', 'ubx', ...
     'lbx_e', 'ubx_e', 'lg', 'ug', 'lh', 'uh', 'cost_W_0', 'cost_W', 'cost_W_e'};
 
