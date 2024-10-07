@@ -141,7 +141,7 @@ classdef GenerateContext < handle
                 if ocp_specific ~= is_ocp_specific
                     continue;
                 end
-                out{end+1} = fullfile(rel_fun_dir, [fun_name, '.c']);
+                out{end+1} = [rel_fun_dir, '/', fun_name, '.c'];
             end
             for i = 1:numel(obj.list_funname_dir_pairs)
                 fun_name = obj.list_funname_dir_pairs{i}{1};
@@ -151,7 +151,7 @@ classdef GenerateContext < handle
                 if ocp_specific ~= is_ocp_specific
                     continue;
                 end
-                out{end+1} = fullfile(rel_fun_dir, [fun_name, '.c']);
+                out{end+1} = [rel_fun_dir, '/', fun_name, '.c'];
             end
         end
     end
