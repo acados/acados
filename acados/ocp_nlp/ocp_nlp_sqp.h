@@ -62,7 +62,6 @@ typedef struct
     double tol_comp;     // exit tolerance on complementarity condition
     double tol_unbounded; // exit threshold when objective function seems to be unbounded
     double tol_min_step_norm; // exit tolerance for small step
-    int max_iter;
     int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
     int log_primal_step_norm; // compute and log the max norm of the primal steps
     int qp_warm_start;   // qp_warm_start in all but the first sqp iterations
