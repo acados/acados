@@ -652,6 +652,32 @@ static void set_non_slacked_l2_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
     // print_ocp_qp_in(qp_in);
 }
 
+/*
+Calculates the norm of the search direction, but the additional slack directions are removed.
+If the problem is infeasibe, or the algorithm converges towards an infeasible point,
+then the step size would not converge to 0 for our additional slack variables (since we do not do a delta 
+update in the master problem).
+*/
+static double slacked_qp_out_compute_primal_nrm_inf(ocp_qp_out* qp_out, ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory* mem)
+{
+    double res = 0;
+    double res_stage = 0;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    int *nns = mem->nns;
+
+    for (int i = 0; i <= N; i++)
+    {
+        blasfeo_dvecnrm_inf(nx[i]+nu[i]+ns[i], qp_out->ux+i, 0, &res_stage);
+        res += res_stage;
+        blasfeo_dvecnrm_inf(ns[i], qp_out->ux+i, nx[i]+nu[i]+ns[i]+nns[i], &res_stage);
+        res += res_stage;
+    }
+    return res;
+}
+
 
 /*
 calculates new iterate or trial iterate in 'out_destination' with step 'mem->qp_out',
@@ -676,12 +702,14 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
     int *nu = dims->nu;
     int *nz = dims->nz;
     int *ns = dims->ns;
+    printf("Number of not slacked variables: %d\n", ns[0]);
     int *nns = mem->nns;
     int n_nominal_ineq_nlp, two_n_nominal_ineq_nlp;
 
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
+    printf("Current direction:\n");
     for (int i = 0; i <= N; i++)
     {
         // Assuming the variable order
@@ -694,6 +722,8 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
         blasfeo_daxpy(ns[i], alpha, qp_out->ux + i, nx[i]+nu[i]+ns[i]+nns[i],
                       out_start->ux + i, nx[i]+nu[i]+ns[i],
                       out_destination->ux + i, nx[i]+nu[i]+ns[i]);
+
+        blasfeo_print_dvec(nx[i]+nu[i]+2*ns[i]+2*nns[i], qp_out->ux + i, 0);
 
         // update dual variables
         n_nominal_ineq_nlp = dims->ni[i] - ns[i];
@@ -832,7 +862,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->nlp_mem->status = ACADOS_SUCCESS;
 
     // TODO(@david):
-    mem->penalty_parameter = 42*1e5;
+    mem->penalty_parameter = 42*1e8;
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -892,6 +922,13 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->stat[mem->stat_n*sqp_iter+2] = nlp_res->inf_norm_res_ineq;
             mem->stat[mem->stat_n*sqp_iter+3] = nlp_res->inf_norm_res_comp;
         }
+
+        printf("Current iterate: \n");
+    	for (int jj=0; jj<=dims->N;++jj)
+        {
+            blasfeo_print_dvec(dims->nx[jj]+dims->nu[jj], nlp_out->ux + jj, 0);
+        }
+
 
         // Output
         if (nlp_opts->print_level > 0)
@@ -1031,7 +1068,11 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Compute the step norm
         if (opts->tol_min_step_norm > 0.0 || nlp_opts->log_primal_step_norm)
         {
-            mem->step_norm = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->qp_out);
+            // For the moment we do not care about the artificial slack variables to keep problem
+            // feasible
+            // mem->step_norm = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->qp_out);
+            mem->step_norm = slacked_qp_out_compute_primal_nrm_inf(nlp_mem->qp_out, dims, mem);
+            printf("Step norm: %.4e\n", mem->step_norm);
             if (nlp_opts->log_primal_step_norm)
                 mem->primal_step_norm[sqp_iter] = mem->step_norm;
         }
