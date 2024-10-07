@@ -811,8 +811,8 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
 void {{ name }}_acados_create_set_default_parameters({{ name }}_solver_capsule* capsule) {
 
     double* p = calloc({{ np_max }}, sizeof(double));
-{%- for jj in range(end=n_phases) %}{# phases loop !#}
     // initialize parameters to nominal value
+{%- for jj in range(end=n_phases) %}{# phases loop !#}
     {%- for item in parameter_values[jj] %}
         {%- if item != 0 %}
     p[{{ loop.index0 }}] = {{ item }};
@@ -824,6 +824,20 @@ void {{ name }}_acados_create_set_default_parameters({{ name }}_solver_capsule* 
     }
 {%- endfor %}
     free(p);
+
+{%- if phases_dims[0].np_global > 0 %}
+    double* p_global = calloc({{ phases_dims[0].np_global }}, sizeof(double));
+    // initialize global parameters to nominal value
+    {%- for item in p_global_values %}
+        {%- if item != 0 %}
+    p_global[{{ loop.index0 }}] = {{ item }};
+        {%- endif %}
+    {%- endfor %}
+
+    {{ name }}_acados_set_p_global_and_precompute_dependencies(capsule, p_global, {{ phases_dims[0].np_global }});
+
+    free(p_global);
+{%- endif %}
 }
 
 

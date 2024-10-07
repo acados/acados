@@ -202,7 +202,7 @@ const int *{{ model.name }}_cost_ext_cost_fun_jac_sparsity_in(int);
 const int *{{ model.name }}_cost_ext_cost_fun_jac_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_fun_jac_n_in(void);
 int {{ model.name }}_cost_ext_cost_fun_jac_n_out(void);
-real_t* {{ model.name }}_ost_ext_cost_fun_jac_get_pool_double(const char*);
+real_t* {{ model.name }}_cost_ext_cost_fun_jac_get_pool_double(const char*);
 
 {% if solver_options.with_solution_sens_wrt_params %}
 int {{ model.name }}_cost_ext_cost_hess_xu_p(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);

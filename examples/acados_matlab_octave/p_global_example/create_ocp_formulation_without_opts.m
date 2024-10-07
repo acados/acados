@@ -50,6 +50,8 @@ function ocp = create_ocp_formulation_without_opts(p_global, m, l, C, lut, use_p
         model.p = vertcat(model.p, p_global);
         model.p_global = [];
         ocp.parameter_values = [ocp.parameter_values; p_global_values];
+    else
+        ocp.p_global_values = p_global_values;
     end
 end
 

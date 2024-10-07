@@ -252,7 +252,6 @@ function mocp = create_mocp_formulation(p_global, m, l, C, lut, use_p_global, p_
 
     N_horizon_1 = 10;
     N_horizon_2 = 10;
-    N_horizon = N_horizon_1 + N_horizon_2;
     mocp = AcadosMultiphaseOcp([N_horizon_1, N_horizon_2]);
     ocp_phase_1 = create_ocp_formulation_without_opts(p_global, m, l, C, lut, use_p_global, p_global_values);
     ocp_phase_2 = create_ocp_formulation_without_opts(p_global, m, l, C, lut, use_p_global, p_global_values);
@@ -262,6 +261,9 @@ function mocp = create_mocp_formulation(p_global, m, l, C, lut, use_p_global, p_
     mocp.set_phase(ocp_phase_1, 1);
     mocp.set_phase(ocp_phase_2, 2);
 
+    if use_p_global
+        mocp.p_global_values = p_global_values;
+    end
 end
 
 

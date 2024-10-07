@@ -167,6 +167,7 @@ class AcadosMultiphaseOcp:
         self.cython_include_dirs = [np.get_include(), get_paths()['include']]
 
         self.__parameter_values = [np.array([]) for _ in range(n_phases)]
+        self.__p_global_values = np.array([])
         self.__problem_class = "MOCP"
         self.__json_file = 'mocp.json'
 
@@ -193,6 +194,22 @@ class AcadosMultiphaseOcp:
         elif len(parameter_values) != self.n_phases:
             raise Exception('parameter_values must be a list of length n_phases.')
         self.__parameter_values = parameter_values
+
+
+    @property
+    def p_global_values(self):
+        """initial values for :math:`p_\\text{global}` vector, see `AcadosModel.p_global` - can be updated.
+        NOTE: `p_global` is shared between all phases.
+        Type: `numpy.ndarray` of shape `(np_global, )`.
+        """
+        return self.__p_global_values
+
+    @p_global_values.setter
+    def p_global_values(self, p_global_values):
+        if not isinstance(p_global_values, np.ndarray):
+            raise Exception('p_global_values must be a single numpy.ndarrays.')
+        self.__p_global_values = p_global_values
+
 
     @property
     def json_file(self):
@@ -227,6 +244,10 @@ class AcadosMultiphaseOcp:
         self.cost[phase_idx] = ocp.cost
         self.constraints[phase_idx] = ocp.constraints
         self.parameter_values[phase_idx] = ocp.parameter_values
+
+        if ocp.p_global_values.size > 0:
+            print(f"WARNING: set_phase: Phase {phase_idx} contains p_global_values which will be ignored.")
+
         return
 
     def make_consistent(self) -> None:
@@ -279,6 +300,7 @@ class AcadosMultiphaseOcp:
             ocp.constraints = self.constraints[i]
             ocp.cost = self.cost[i]
             ocp.parameter_values = self.parameter_values[i]
+            ocp.p_global_values = self.p_global_values
             ocp.solver_options = self.solver_options
 
             # set phase dependent options
@@ -308,12 +330,12 @@ class AcadosMultiphaseOcp:
 
         # check for transition consistency
         nx_list = [self.phases_dims[i].nx for i in range(self.n_phases)]
-        if len(set(nx_list)) != 1:
-            for i in range(1, self.n_phases):
-                if nx_list[i] != nx_list[i-1]:
-                    print(f"nx differs between phases {i-1} and {i}: {nx_list[i-1]} != {nx_list[i]}")
-                    if self.N_list[i-1] != 1 or self.mocp_opts.integrator_type[i-1] != 'DISCRETE':
-                        raise Exception(f"detected stage transition with different nx from phase {i-1} to {i}, which is only supported for integrator_type='DISCRETE' and N_list[i] == 1.")
+        for i in range(1, self.n_phases):
+            if nx_list[i] != nx_list[i-1]:
+                if self.phases_dims[i].nx != self.phases_dims[i-1].nx_next:
+                    raise Exception(f"detected stage transition with different nx from phase {i-1} to {i}, nx_next at phase {i-1} = {self.phases_dims[i-1].nx_next} should match nx at phase {i} = {nx_list[i]}.")
+                if self.N_list[i-1] != 1 or self.mocp_opts.integrator_type[i-1] != 'DISCRETE':
+                    raise Exception(f"detected stage transition with different nx from phase {i-1} to {i}, which is only supported for integrator_type='DISCRETE' and N_list[i] == 1.")
         return
 
 

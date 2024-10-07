@@ -200,6 +200,8 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True):
 
     if not use_p_global:
         ocp.parameter_values = np.concatenate([ocp.parameter_values, p_global_values])
+    else:
+        ocp.p_global_values = p_global_values
 
     Tf = 1.0
     N_horizon = 20
@@ -271,6 +273,8 @@ def main_mocp(lut=True, use_p_global=True):
     if not use_p_global:
         for ip in range(n_phases):
             mocp.parameter_values[ip] = np.concatenate([mocp.parameter_values[ip], p_global_values])
+    else:
+        mocp.p_global_values = p_global_values
 
     # set options
     mocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
