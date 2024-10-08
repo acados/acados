@@ -922,7 +922,7 @@ static void ocp_nlp_sqp_wfqp_setup_QP_hessian(ocp_nlp_config *config,
         blasfeo_dgead(nxu, nxu, mem->penalty_parameter, mem->RSQ_cost+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
         // Z
         blasfeo_dveccpsc(ns[i], mem->penalty_parameter, mem->Z_cost_module+i, 0, nlp_mem->qp_in->Z+i, 0);
-        blasfeo_dveccpsc(ns[i], mem->penalty_parameter, mem->Z_cost_module+i, 0, nlp_mem->qp_in->Z+i, ns[i]+nns[i]);
+        blasfeo_dveccpsc(ns[i], mem->penalty_parameter, mem->Z_cost_module+i, 0, nlp_mem->qp_in->Z+i, ns[i]+mem->nns[i]);
     }
 }
 
