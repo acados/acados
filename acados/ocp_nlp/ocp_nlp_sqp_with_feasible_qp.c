@@ -906,7 +906,7 @@ static void ocp_nlp_sqp_wfqp_setup_QP_hessian(ocp_nlp_config *config,
     for (int i = 0; i <= N; i++)
     {
         nxu = nx[i]+nu[i];
-        // TODO: axpby for matrices?
+        // TODO: axpby for matrices? Do we need to take slacks here into account as well? I.e., scale slack Hessian?
         blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
         //
         blasfeo_dgead(nxu, nxu, mem->penalty_parameter, mem->RSQ_cost+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
@@ -955,7 +955,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     if (use_classic_penalties)
     {
         mem->penalty_parameter = 1.0;
-        mem->classic_penalty_parameter = 1e8;
+        mem->classic_penalty_parameter = 42*1e8;
     }
     else
     {
