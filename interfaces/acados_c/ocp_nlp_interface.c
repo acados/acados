@@ -910,7 +910,7 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         dims_out[0] = 1;
         dims_out[1] = dims->nx[stage];
     }
-    else if (!strcmp(field, "zl") || !strcmp(field, "zu") || !strcmp(field, "Zl") || !strcmp(field, "Zu"))
+    else if (!strcmp(field, "zl") || !strcmp(field, "zu") || !strcmp(field, "Zl") || !strcmp(field, "Zu")  || !strcmp(field, "idxs"))
     {
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ns", &dims_out[0]);
         dims_out[1] = 1;
@@ -1374,6 +1374,11 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
     {
         double *double_values = value;
         d_ocp_qp_get_Zu(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "idxs"))
+    {
+        int *int_values = value;
+        d_ocp_qp_get_idxs(stage, nlp_mem->qp_in, int_values);
     }
     else if (!strcmp(field, "P") || !strcmp(field, "K") || !strcmp(field, "Lr") || !strcmp(field, "p"))
     {

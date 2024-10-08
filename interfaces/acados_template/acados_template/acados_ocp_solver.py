@@ -259,6 +259,7 @@ class AcadosOcpSolver:
         self.__qp_dynamics_fields = ['A', 'B', 'b']
         self.__qp_cost_fields = ['Q', 'R', 'S', 'q', 'r', 'zl', 'zu', 'Zl', 'Zu']
         self.__qp_constraint_fields = ['C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
+        self.__qp_constraint_int_fields = ['idxs']
         self.__qp_pc_hpipm_fields = ['P', 'K', 'Lr', 'p']
         self.__qp_pc_fields = ['pcond_Q', 'pcond_R', 'pcond_S']
 
@@ -914,7 +915,7 @@ class AcadosOcpSolver:
             for i in range(self.N):
                 qp_data[f'{field}_{i:0{lN}d}'] = self.get_from_qp_in(i,field)
 
-        for field in self.__qp_constraint_fields + self.__qp_cost_fields:
+        for field in self.__qp_constraint_fields + self.__qp_cost_fields + self.__qp_constraint_int_fields:
             for i in range(self.N+1):
                 qp_data[f'{field}_{i:0{lN}d}'] = self.get_from_qp_in(i,field)
 
@@ -1407,7 +1408,7 @@ class AcadosOcpSolver:
             raise Exception("stage should be <= self.N")
         if field_ in self.__qp_dynamics_fields and stage_ >= self.N:
             raise ValueError(f"dynamics field {field_} not available at terminal stage")
-        if field_ not in self.__qp_dynamics_fields + self.__qp_cost_fields + self.__qp_constraint_fields + self.__qp_pc_hpipm_fields + self.__qp_pc_fields:
+        if field_ not in self.__qp_dynamics_fields + self.__qp_cost_fields + self.__qp_constraint_fields + self.__qp_pc_hpipm_fields + self.__qp_pc_fields + self.__qp_constraint_int_fields:
             raise Exception(f"field {field_} not supported.")
         if field_ in self.__qp_pc_hpipm_fields:
             if self.acados_ocp.solver_options.qp_solver != "PARTIAL_CONDENSING_HPIPM" or self.acados_ocp.solver_options.qp_solver_cond_N != self.acados_ocp.solver_options.N_horizon:
@@ -1428,7 +1429,10 @@ class AcadosOcpSolver:
             self.nlp_dims, self.nlp_out, stage_, field, dims_data)
 
         # create output data
-        out = np.ascontiguousarray(np.zeros((np.prod(dims),)), dtype=np.float64)
+        if field_ in self.__qp_constraint_int_fields:
+            out = np.ascontiguousarray(np.zeros((np.prod(dims),)), dtype=np.int32)
+        else:
+            out = np.ascontiguousarray(np.zeros((np.prod(dims),)), dtype=np.float64)
         out = out.reshape(dims[0], dims[1], order='F')
 
         out_data = cast(out.ctypes.data, POINTER(c_double))
