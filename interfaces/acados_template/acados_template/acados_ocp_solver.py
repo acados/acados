@@ -259,7 +259,7 @@ class AcadosOcpSolver:
         self.__qp_dynamics_fields = ['A', 'B', 'b']
         self.__qp_cost_fields = ['Q', 'R', 'S', 'q', 'r', 'zl', 'zu', 'Zl', 'Zu']
         self.__qp_constraint_fields = ['C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
-        self.__qp_constraint_int_fields = ['idxs']
+        self.__qp_constraint_int_fields = ['idxs', 'idxb']
         self.__qp_pc_hpipm_fields = ['P', 'K', 'Lr', 'p']
         self.__qp_pc_fields = ['pcond_Q', 'pcond_R', 'pcond_S']
 
