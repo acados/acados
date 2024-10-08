@@ -56,40 +56,33 @@ def feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, 
     """
     The dynamics has four state variables and two control variables
     """
-    assert N == 4, "This test is made for N==4!"
+    dims = ocp_solver.acados_ocp.dims
 
     for i in range(N+1):
         idxs = ocp_solver.get_from_qp_in(i,"idxs")
         idxb = ocp_solver.get_from_qp_in(i,"idxb")
 
-        print("idxs: ", idxs)
-        print("idxb: ", len(idxb))        
-
         # Initial stage
         if i == 0:
-            # We have 4 bounds on x and 2 bounds on u --> 6
-            assert len(idxb) == 6, f"We should have 6 indices for bounds on x and u, but got {len(idxb)}"
+            assert len(idxb) == dims.nbu + dims.nbx_0, f"We should have {dims.nbu+dims.nbx} indices for bounds on x and u, but got {len(idxb)}"
 
             if not SOFTEN_CONTROLS:
                 assert len(idxs) == 0, f"i=0, NOT SOFTEN_CONTROLS: The initial condition should have 0 slacks, got {len(idxs)}!"
             else:
-                assert len(idxs) == 2, f"i=0, SOFTEN_CONTROLS: The initial condition should have 2 slacks, got {len(idxs)}!"
+                assert len(idxs) == dims.nbu, f"i=0, SOFTEN_CONTROLS: The initial condition should have {dims.nbu} slacks, got {len(idxs)}!"
 
-        # if i > 0 and i < N+1:
-        #     # We have 2 bounds on u --> 6
-        #     assert len(idxb) == 2, f"We should have 2 indices for bounds on u, but got {len(idxb)}"
+        if i > 0 and i < N:
+            assert len(idxb) == dims.nbu, f"We should have {dims.nbu} indices for bounds on u, but got {len(idxb)}"
 
-        #     if not SOFTEN_CONTROLS:
-        #         assert len(idxs) == 0, f"i=0, NOT SOFTEN_CONTROLS: The initial condition should have 0 slacks, got {len(idxs)}!"
-        #     else:
-        #         assert len(idxs) == 2, f"i=0, SOFTEN_CONTROLS: The initial condition should have 2 slacks, got {len(idxs)}!"
-
-
+            if not SOFTEN_CONTROLS:
+                assert len(idxs) == dims.nh, f"i=0, NOT SOFTEN_CONTROLS: The initial condition should have {dims.nh} slacks, got {len(idxs)}!"
+            else:
+                assert len(idxs) == dims.nh + dims.nbu, f"i=0: SOFTEN_CONTROLS: The initial condition should have {dims.nh + dims.nbu} slacks, got {len(idxs)}!"
 
         # if not SOFTEN_CONTROLS and not SOFTEN_OBSTACLE and SOFTEN_TERMINAL:
-
-
-        # if not SOFTEN_CONTROLS and not SOFTEN_OBSTACLE and SOFTEN_TERMINAL:
+        if i == N:
+            # We slack the obstacle constraint and the terminal constraints
+            assert len(idxs) == dims.nh_e + dims.nbx_e, f"i=N+1: Everything should be slacked, but got only {len(idxs)} slacks"
 
 
 def create_solver_opts(N=4, Tf=2):
