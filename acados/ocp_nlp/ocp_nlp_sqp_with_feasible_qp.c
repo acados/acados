@@ -631,7 +631,7 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
  ************************************************/
 static void set_non_slacked_l1_penalties(ocp_nlp_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_sqp_wfqp_memory *mem,
-    ocp_nlp_workspace *work, double penalty_parameter)
+    ocp_nlp_workspace *work)
 {
     int *nx = dims->nx;
     int *nu = dims->nu;
@@ -643,9 +643,9 @@ static void set_non_slacked_l1_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
     for (int stage = 0; stage <= dims->N; stage++)
     {
         // zl_QP
-        blasfeo_dvecse(nns[stage], penalty_parameter, qp_in->rqz+stage, nu[stage]+nx[stage]+ns[stage]);
+        blasfeo_dvecse(nns[stage], 1.0, qp_in->rqz+stage, nu[stage]+nx[stage]+ns[stage]);
         // zu_QP
-        blasfeo_dvecse(nns[stage], penalty_parameter, qp_in->rqz+stage, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
+        blasfeo_dvecse(nns[stage], 1.0, qp_in->rqz+stage, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
         // printf("qp_in->rqz %d\n", stage);
         // blasfeo_print_exp_tran_dvec(nu[stage] +nx[stage] + 2*(nns[stage]+ns[stage]), qp_in->rqz+stage, 0);
     }
@@ -755,11 +755,8 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
         // nlp_out->lam = [lbu, ubu, lbx, ubx, lbg, ubg, lbh, ubh, lbs_NLP, ----, ubs_NLP, ---]
         if (full_step_dual)
         {
-            blasfeo_dveccpsc(two_n_nominal_ineq_nlp+ns[i], 1/mem->penalty_parameter, qp_out->lam+i, 0, out_destination->lam+i, 0);
-            // blasfeo_dveccp(two_n_nominal_ineq_nlp+ns[i], qp_out->lam+i, 0, out_destination->lam+i, 0);
-            // blasfeo_dveccp(ns[i], qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]+mem->nns[i],
-            //                out_destination->lam+i, two_n_nominal_ineq_nlp+ns[i]);
-            blasfeo_dveccpsc(ns[i], 1/mem->penalty_parameter, qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]+mem->nns[i],
+            blasfeo_dveccp(two_n_nominal_ineq_nlp+ns[i], qp_out->lam+i, 0, out_destination->lam+i, 0);
+            blasfeo_dveccp(ns[i], qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]+mem->nns[i],
                            out_destination->lam+i, two_n_nominal_ineq_nlp+ns[i]);
             if (i < N)
             {
@@ -964,18 +961,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->nlp_mem->status = ACADOS_SUCCESS;
 
     // TODO(@david):
-    bool use_classic_penalties = true;
-    if (use_classic_penalties)
-    {
-        mem->penalty_parameter = 1.0;
-        mem->classic_penalty_parameter = 42*1e8;
-    }
-    else
-    {
-        mem->penalty_parameter = 1e-8;
-        mem->classic_penalty_parameter = 1.0;
-    }
-
+    mem->penalty_parameter = 1/(42*1e8);
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -1001,19 +987,13 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             /* Prepare the QP data */
             // linearize NLP and update QP matrices
-            if (!use_classic_penalties)
-            {
-                ocp_nlp_sqp_wfqp_prepare_hessian_evaluation(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
-                acados_tic(&timer1);
-                ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-                //
-                ocp_nlp_sqp_wfqp_setup_QP_hessian(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, true);
-            }
-            else
-            {
-                acados_tic(&timer1);
-                ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-            }
+            ocp_nlp_sqp_wfqp_prepare_hessian_evaluation(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
+            acados_tic(&timer1);
+            ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+
+            //
+            ocp_nlp_sqp_wfqp_setup_QP_hessian(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, true);
+
 
             if (nlp_opts->with_adaptive_levenberg_marquardt || config->globalization->needs_objective_value() == 1)
             {
@@ -1026,7 +1006,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             nlp_timings->time_lin += acados_toc(&timer1);
 
             // Set the penalties in slacked problem
-            set_non_slacked_l1_penalties(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->classic_penalty_parameter);
+            set_non_slacked_l1_penalties(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
             // compute nlp residuals
             ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
             ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);

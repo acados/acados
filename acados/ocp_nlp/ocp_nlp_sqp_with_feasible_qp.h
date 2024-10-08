@@ -101,7 +101,6 @@ typedef struct
     int **idxns;  // indices of non-slacked constraints in NLP
 
     double penalty_parameter;  // TODO: use in globalization?
-    double classic_penalty_parameter;
 
     // statistics
     double *stat;
