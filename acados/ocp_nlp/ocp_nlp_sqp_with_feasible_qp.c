@@ -327,6 +327,8 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
         size += nns * sizeof(int);
         // s_ns
         size += blasfeo_memsize_dvec(2*nns);
+        // Z_cost_module
+        size += blasfeo_memsize_dvec(2*dims->ns[stage]);
 
         // RSQ_cost, RSQ_constr
         size += 2*blasfeo_memsize_dmat(dims->nx[stage]+dims->nu[stage], dims->nx[stage]+dims->nu[stage]);
@@ -336,9 +338,10 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
 
     // s_ns
     size += (N + 1) * sizeof(struct blasfeo_dvec);
+    // Z_cost_module
+    size += (N + 1) * sizeof(struct blasfeo_dvec);
     // RSQ_cost, RSQ_constr
     size += 2*(N + 1) * sizeof(struct blasfeo_dmat);
-
 
     size += 3*8;  // align
     size += 64;  // blasfeo_mem align
@@ -377,6 +380,8 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
 
     // s_ns
     assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->s_ns, &c_ptr);
+    // Z_cost_module
+    assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->Z_cost_module, &c_ptr);
 
     // RSQ_cost
     assign_and_advance_blasfeo_dmat_structs(N + 1, &mem->RSQ_cost, &c_ptr);
@@ -441,7 +446,11 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     {
         assign_and_advance_blasfeo_dvec_mem(2*mem->nns[i], mem->s_ns + i, &c_ptr);
     }
-
+    // Z_cost_module
+    for (int i = 0; i <= N; ++i)
+    {
+        assign_and_advance_blasfeo_dvec_mem(2*dims->ns[i], mem->Z_cost_module + i, &c_ptr);
+    }
     assert((char *) raw_memory + ocp_nlp_sqp_wfqp_memory_calculate_size(config, dims, opts) >= c_ptr);
 
     return mem;
@@ -901,6 +910,7 @@ static void ocp_nlp_sqp_wfqp_setup_QP_hessian(ocp_nlp_config *config,
     // int *nv = dims->nv;
     int *nx = dims->nx;
     int *nu = dims->nu;
+    int *ns = dims->ns;
     int nxu;
     // hess_QP = rho * hess_cost + hess_constraints
     for (int i = 0; i <= N; i++)
@@ -910,6 +920,9 @@ static void ocp_nlp_sqp_wfqp_setup_QP_hessian(ocp_nlp_config *config,
         blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
         //
         blasfeo_dgead(nxu, nxu, mem->penalty_parameter, mem->RSQ_cost+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
+        // Z
+        blasfeo_dveccpsc(ns[i], mem->penalty_parameter, mem->Z_cost_module+i, 0, nlp_mem->qp_in->Z+i, 0);
+        blasfeo_dveccpsc(ns[i], mem->penalty_parameter, mem->Z_cost_module+i, 0, nlp_mem->qp_in->Z+i, ns[i]+nns[i]);
     }
 }
 
@@ -1367,7 +1380,15 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
         // printf("\n");
     }
 
-    return ocp_nlp_precompute_common(config, dims, nlp_in, nlp_out, opts->nlp_opts, nlp_mem, nlp_work);
+    ocp_nlp_precompute_common(config, dims, nlp_in, nlp_out, opts->nlp_opts, nlp_mem, nlp_work);
+
+    // overwrite output pointers normally set in ocp_nlp_alias_memory_to_submodules
+    for (int stage = 0; stage <= dims->N; stage++)
+    {
+        config->cost[stage]->memory_set_Z_ptr(mem->Z_cost_module+stage, nlp_mem->cost[stage]);
+    }
+
+    return ACADOS_SUCCESS;
 }
 
 

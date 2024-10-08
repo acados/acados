@@ -111,6 +111,7 @@ typedef struct
     double step_norm;
 
     struct blasfeo_dvec *s_ns;  // slack values of slacks that are not part of NLP
+    struct blasfeo_dvec *Z_cost_module;  // Z values from cost module
     struct blasfeo_dmat *RSQ_cost;
     struct blasfeo_dmat *RSQ_constr;
 
