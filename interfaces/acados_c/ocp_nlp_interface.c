@@ -906,6 +906,11 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         dims_out[0] = 1;
         dims_out[1] = dims->nx[stage];
     }
+    else if (!strcmp(field, "zl") || !strcmp(field, "zu") || !strcmp(field, "Zl") || !strcmp(field, "Zu"))
+    {
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ns", &dims_out[0]);
+        dims_out[1] = 1;
+    }
     else if (!strcmp(field, "p"))
     {
         dims_out[0] = dims->nx[stage];
@@ -1345,6 +1350,26 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
     {
         double *double_values = value;
         d_ocp_qp_get_ug(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "zl"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_zl(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "zu"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_zu(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "Zl"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_Zl(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "Zu"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_Zu(stage, nlp_mem->qp_in, double_values);
     }
     else if (!strcmp(field, "P") || !strcmp(field, "K") || !strcmp(field, "Lr") || !strcmp(field, "p"))
     {
