@@ -908,6 +908,18 @@ class AcadosOcpSolver:
                 filename += datetime.now().strftime('%Y-%m-%d-%H:%M:%S.%f') + '.json'
 
         # get QP data:
+        qp_data = self.get_last_qp()
+
+        # save
+        with open(filename, 'w') as f:
+            json.dump(qp_data, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
+        print("stored qp from solver memory in ", os.path.join(os.getcwd(), filename))
+
+    def get_last_qp(self):
+        """
+        Returns the latest QP data as a dict
+        """
+        # get QP data:
         qp_data = dict()
 
         lN = len(str(self.N+1))
@@ -915,7 +927,7 @@ class AcadosOcpSolver:
             for i in range(self.N):
                 qp_data[f'{field}_{i:0{lN}d}'] = self.get_from_qp_in(i,field)
 
-        for field in self.__qp_constraint_fields + self.__qp_cost_fields + self.__qp_constraint_int_fields:
+        for field in self.__qp_constraint_fields + self.__qp_cost_fields:
             for i in range(self.N+1):
                 qp_data[f'{field}_{i:0{lN}d}'] = self.get_from_qp_in(i,field)
 
@@ -923,13 +935,8 @@ class AcadosOcpSolver:
         for k in list(qp_data.keys()):
             if len(qp_data[k]) == 0:
                 del qp_data[k]
-
-        # save
-        with open(filename, 'w') as f:
-            json.dump(qp_data, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
-        print("stored qp from solver memory in ", os.path.join(os.getcwd(), filename))
-
-
+        
+        return qp_data
 
     def load_iterate(self, filename:str, verbose: bool=True):
         """
