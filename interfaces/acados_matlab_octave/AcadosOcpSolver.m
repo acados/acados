@@ -34,7 +34,7 @@ classdef AcadosOcpSolver < handle
     properties
         t_ocp % templated solver
         ocp % Matlab class AcadosOcp describing the OCP formulation
-        qp_gettable_fields = {'qp_Q', 'qp_R', 'qp_S', 'qp_q', 'qp_r', 'qp_A', 'qp_B', 'qp_b', 'qp_C', 'qp_D', 'qp_lg', 'qp_ug', 'qp_lbx', 'qp_ubx', 'qp_lbu', 'qp_ubu'}
+        qp_gettable_fields = {'qp_Q', 'qp_R', 'qp_S', 'qp_q', 'qp_r', 'qp_A', 'qp_B', 'qp_b', 'qp_C', 'qp_D', 'qp_lg', 'qp_ug', 'qp_lbx', 'qp_ubx', 'qp_lbu', 'qp_ubu', 'qp_zl', 'qp_zu', 'qp_Zl', 'qp_Zu'}
     end % properties
 
 
@@ -296,7 +296,7 @@ classdef AcadosOcpSolver < handle
                     qp_data = setfield(qp_data, key, val);
                 end
 
-                if strcmp(field, 'qp_Q') || strcmp(field, 'qp_q')
+                if strcmp(field, 'qp_Q') || strcmp(field, 'qp_q') || strcmp(field, 'qp_zl') || strcmp(field, 'qp_zu') || strcmp(field, 'qp_Zl') || strcmp(field, 'qp_Zu')
                     s_indx = sprintf(strcat('%0', num2str(lN), 'd'), obj.ocp.solver_options.N_horizon);
                     key = strcat(field, '_', s_indx);
                     val = obj.get(field, obj.ocp.solver_options.N_horizon);
