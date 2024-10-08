@@ -40,22 +40,49 @@ from itertools import product
 def main():
 
     ## SETTINGS:
+    SOFTEN_CONTROLS = False
     SOFTEN_OBSTACLE = False
     SOFTEN_TERMINAL = True
-    SOFTEN_CONTROLS = False
     PLOT = True
     solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT)
 
+    SOFTEN_CONTROLS = False
     SOFTEN_OBSTACLE = False
     SOFTEN_TERMINAL = False
-    SOFTEN_CONTROLS = False
     PLOT = True
     solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT)
 
-def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT):
+def create_solver_opts(N=4, Tf=2):
 
-    globalization = 'FIXED_STEP'
-    qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    solver_options = AcadosOcp().solver_options
+
+    # set options
+    solver_options.N_horizon = N
+    solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    solver_options.hessian_approx = 'GAUSS_NEWTON'
+    solver_options.integrator_type = 'ERK'
+    solver_options.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'
+    solver_options.globalization = 'FIXED_STEP'
+    solver_options.globalization_alpha_min = 0.01
+    solver_options.globalization_full_step_dual = True
+    solver_options.print_level = 1
+    solver_options.nlp_solver_max_iter = 200
+    solver_options.qp_solver_iter_max = 400
+    qp_tol = 5e-7
+    solver_options.qp_solver_tol_stat = qp_tol
+    solver_options.qp_solver_tol_eq = qp_tol
+    solver_options.qp_solver_tol_ineq = qp_tol
+    solver_options.qp_solver_tol_comp = qp_tol
+    solver_options.qp_solver_ric_alg = 1
+    solver_options.qp_solver_mu0 = 1e4
+    solver_options.qp_solver_warm_start = 1
+
+    # set prediction horizon
+    solver_options.tf = Tf
+
+    return solver_options
+
+def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT):
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -72,7 +99,6 @@ def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT):
     Tf = 2
     N = 4
     shooting_nodes = np.linspace(0, Tf, N+1)
-    ocp.solver_options.N_horizon = N
 
     # set cost
     Q = 2*np.diag([])
@@ -150,42 +176,19 @@ def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT):
         ocp.cost.Zl_e = np.concatenate((ocp.cost.Zl_e, Zh))
         ocp.cost.Zu_e = np.concatenate((ocp.cost.Zu_e, Zh))
 
-    # set options
-    ocp.solver_options.qp_solver = qp_solver
-    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
-    ocp.solver_options.integrator_type = 'ERK'
-    ocp.solver_options.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'
-    ocp.solver_options.globalization = globalization
-    ocp.solver_options.globalization_alpha_min = 0.01
-    ocp.solver_options.globalization_full_step_dual = True
-    # ocp.solver_options.qp_solver_cond_N = 0
-    # ocp.solver_options.print_level = 1
-    ocp.solver_options.nlp_solver_max_iter = 200
-    ocp.solver_options.qp_solver_iter_max = 400
-    # NOTE: this is needed for PARTIAL_CONDENSING_HPIPM to get expected behavior
-    qp_tol = 5e-7
-    ocp.solver_options.qp_solver_tol_stat = qp_tol
-    ocp.solver_options.qp_solver_tol_eq = qp_tol
-    ocp.solver_options.qp_solver_tol_ineq = qp_tol
-    ocp.solver_options.qp_solver_tol_comp = qp_tol
-    ocp.solver_options.qp_solver_ric_alg = 1
-    ocp.solver_options.qp_solver_mu0 = 1e4
-    ocp.solver_options.qp_solver_warm_start = 1
-
-    # set prediction horizon
-    ocp.solver_options.tf = Tf
-
+    
+    ocp.solver_options = create_solver_opts(N, Tf)
     # create ocp solver
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_ocp.json', verbose=False)
 
     # # initialize
-    # for i in range(N+1):
-    #     ocp_solver.set(i, "x", (N+1-i)/(N+1) * x0 + i/(N+1) * x_goal)
+    for i in range(N+1):
+        ocp_solver.set(i, "x", (N+1-i)/(N+1) * x0 + i/(N+1) * x_goal)
 
     # solve
     status = ocp_solver.solve()
     # ocp_solver.dump_last_qp_to_json()
-    ocp_solver.print_statistics()
+    # ocp_solver.print_statistics()
     sqp_iter = ocp_solver.get_stats('sqp_iter')
     print(f'acados returned status {status}.')
 
@@ -194,18 +197,12 @@ def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT):
     simU = np.array([ocp_solver.get(i,"u") for i in range(N)])
     pi_multiplier = [ocp_solver.get(i, "pi") for i in range(N)]
 
-    # if not SOFTEN_OBSTACLE and not SOFTEN_CONTROLS and SOFTEN_TERMINAL:
-    #     assert status == 0, "Solver did not converge, but should converge!"
-    #     assert sqp_iter == 16, "Relaxed QP solver should converge within 16 iterations"
-
     # print summary
     print(f"cost function value = {ocp_solver.get_cost()} after {sqp_iter} SQP iterations")
     print(f"solved sqp_wfqp problem with settings SOFTEN_OBSTACLE = {SOFTEN_OBSTACLE}, SOFTEN_TERMINAL = {SOFTEN_TERMINAL}, SOFTEN_CONTROL = {SOFTEN_CONTROLS}")
 
     if PLOT:
         plot_linear_mass_system_X_state_space(simX, circle=circle, x_goal=x_goal)
-        plot_linear_mass_system_U(shooting_nodes, simU)
-        # plot_linear_mass_system_X(shooting_nodes, simX)
 
     print(f"\n\n----------------------\n")
 
