@@ -629,6 +629,52 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
 /************************************************
  * functions
  ************************************************/
+/*
+Given the current iterate and the value of the constraints at the current 
+iterate, this function calculates the minimal l1-slack variables such for the
+slack variables introduced in the subproblem
+*/
+static void set_slack_variable_values(ocp_nlp_config *config, ocp_nlp_dims *dims,
+    ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_sqp_wfqp_memory *mem,
+    ocp_nlp_workspace *work)
+{
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    int *ni = dims->ni;
+    int *nns = mem->nns;
+    int n_nominal_ineq_nlp, two_n_nominal_ineq_nlp;
+    int stage;
+
+    double tmp;
+    struct blasfeo_dvec *tmp_fun_vec;
+
+    for (stage = 0; stage <= dims->N; stage++)
+    {
+        int n_nominal_ineq_nlp = ni[stage] - ns[stage];
+        tmp_fun_vec = config->constraints[stage]->memory_get_fun_ptr(nlp_mem->constraints[stage]);
+        // nlp_mem->ineq_fun should do the same here.
+
+        // WE need to extract the correct elements from the constraints
+        // We know how many slacks we need, but we have to figure out where we
+        // should extract the function values
+
+        // maybe we use a blasfeo copy operation
+        for (int j=0; j<2*nns[stage]; j++)
+        {
+            // blasfeo_dveccp(2 * ni[i], nlp_mem->ineq_fun + i, 0, nlp_mem->qp_in->d + i, 0);
+            // blasfeo_dveccp(2*n_nominal_ineq_nlp+ns[stage], nlp_mem->ineq_fun + stage, 0, nlp_mem->qp_in->d + stage, 0);
+            // blasfeo_dveccp(ns[stage], nlp_mem->ineq_fun + stage, 2*n_nominal_ineq_nlp+ns[stage], nlp_mem->qp_in->d + stage, 2*n_nominal_ineq_nlp+ns[stage]+nns[stage]);
+            // tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
+
+            // Assign the correct value to s_ns value
+            // mem->s_ns[j] = max(0.0, tmp);
+        }
+    }
+}
+
 static void set_non_slacked_l1_penalties(ocp_nlp_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_sqp_wfqp_memory *mem,
     ocp_nlp_workspace *work)
