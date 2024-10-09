@@ -926,6 +926,72 @@ static void ocp_nlp_sqp_wfqp_setup_QP_hessian(ocp_nlp_config *config,
 
 
 
+void ocp_nlp_sqp_wfqp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res,
+                         ocp_nlp_sqp_wfqp_memory *mem)
+{
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+
+    // extract dims
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ni = dims->ni;
+
+    double tmp_res;
+    double tmp;
+
+    // only difference to ocp_nlp_res_compute
+    double inverse_penalty_param = 1.0 / mem->penalty_parameter;
+
+    // res_stat
+    for (int i = 0; i <= N; i++)
+    {
+        blasfeo_daxpy(nv[i], -inverse_penalty_param, nlp_mem->ineq_adj + i, 0, nlp_mem->cost_grad + i, 0,
+                      res->res_stat + i, 0);
+        blasfeo_daxpy(nu[i] + nx[i], -inverse_penalty_param, nlp_mem->dyn_adj + i, 0, res->res_stat + i, 0,
+                      res->res_stat + i, 0);
+        blasfeo_dvecnrm_inf(nv[i], res->res_stat + i, 0, &tmp_res);
+        blasfeo_dvecse(1, tmp_res, &res->tmp, i);
+    }
+    blasfeo_dvecnrm_inf(N+1, &res->tmp, 0, &res->inf_norm_res_stat);
+
+    // res_eq
+    for (int i = 0; i < N; i++)
+    {
+        blasfeo_dveccp(nx[i + 1], nlp_mem->dyn_fun + i, 0, res->res_eq + i, 0);
+        blasfeo_dvecnrm_inf(nx[i + 1], res->res_eq + i, 0, &tmp_res);
+        blasfeo_dvecse(1, tmp_res, &res->tmp, i);
+    }
+    blasfeo_dvecnrm_inf(N, &res->tmp, 0, &res->inf_norm_res_eq);
+
+    // res_ineq
+    res->inf_norm_res_ineq = 0.0;
+    for (int i = 0; i <= N; i++)
+    {
+        for (int j=0; j<2*ni[i]; j++)
+        {
+            tmp = BLASFEO_DVECEL(nlp_mem->ineq_fun+i, j);
+            if (tmp > res->inf_norm_res_ineq)
+            {
+                res->inf_norm_res_ineq = tmp;
+            }
+        }
+    }
+
+    // res_comp
+    res->inf_norm_res_comp = 0.0;
+    for (int i = 0; i <= N; i++)
+    {
+        blasfeo_dvecmul(2 * ni[i], out->lam + i, 0, nlp_mem->ineq_fun+i, 0, res->res_comp + i, 0);
+        blasfeo_dvecnrm_inf(2 * ni[i], res->res_comp + i, 0, &tmp_res);
+        blasfeo_dvecse(1, tmp_res, &res->tmp, i);
+    }
+    blasfeo_dvecnrm_inf(N+1, &res->tmp, 0, &res->inf_norm_res_comp);
+}
+
+
+
 // MAIN OPTIMIZATION ROUTINE
 int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
@@ -1008,7 +1074,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // Set the penalties in slacked problem
             set_non_slacked_l1_penalties(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
             // compute nlp residuals
-            ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
+            ocp_nlp_sqp_wfqp_res_compute(dims, nlp_in, nlp_out, nlp_res, mem);
             ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
         }
 
