@@ -941,15 +941,12 @@ void ocp_nlp_sqp_wfqp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_ou
     double tmp_res;
     double tmp;
 
-    // only difference to ocp_nlp_res_compute
-    double inverse_penalty_param = 1.0 / mem->penalty_parameter;
-
     // res_stat
     for (int i = 0; i <= N; i++)
     {
-        blasfeo_daxpy(nv[i], -inverse_penalty_param, nlp_mem->ineq_adj + i, 0, nlp_mem->cost_grad + i, 0,
+        blasfeo_daxpy(nv[i], -mem->penalty_parameter, nlp_mem->cost_grad + i, 0, nlp_mem->ineq_adj + i, 0,
                       res->res_stat + i, 0);
-        blasfeo_daxpy(nu[i] + nx[i], -inverse_penalty_param, nlp_mem->dyn_adj + i, 0, res->res_stat + i, 0,
+        blasfeo_daxpy(nu[i] + nx[i], 1.0, nlp_mem->dyn_adj + i, 0, res->res_stat + i, 0,
                       res->res_stat + i, 0);
         blasfeo_dvecnrm_inf(nv[i], res->res_stat + i, 0, &tmp_res);
         blasfeo_dvecse(1, tmp_res, &res->tmp, i);
