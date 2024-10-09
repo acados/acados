@@ -61,6 +61,8 @@ def feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, 
     for i in range(N+1):
         idxs = ocp_solver.get_from_qp_in(i,"idxs")
         idxb = ocp_solver.get_from_qp_in(i,"idxb")
+        print("idxs: ", idxs)
+        print("idxb: ", idxb)
 
         # Initial stage
         if i == 0:
@@ -84,6 +86,39 @@ def feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, 
             # We slack the obstacle constraint and the terminal constraints
             assert len(idxs) == dims.nh_e + dims.nbx_e, f"i=N+1: Everything should be slacked, but got only {len(idxs)} slacks"
 
+def feasible_qp_index_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver: AcadosOcpSolver):
+    """
+    The dynamics has four state variables and two control variables
+    """
+    dims = ocp_solver.acados_ocp.dims
+
+    for i in range(N+1):
+        idxs = ocp_solver.get_from_qp_in(i,"idxs").squeeze()
+        idxb = ocp_solver.get_from_qp_in(i,"idxb").squeeze()
+        print("idxs: ", idxs)
+
+        # Initial stage
+        if i == 0:
+            print("idxb: ", idxb)
+            assert np.allclose(idxb, np.arange(dims.nbx_0 + dims.nbu)) , f"We should have {dims.nbx} bounds on x and u, but got {len(idxb)}"
+
+            if not SOFTEN_CONTROLS:
+                assert np.allclose(idxs,np.arange(0)), f"i=0, NOT SOFTEN_CONTROLS: The initial condition should have 0 slacks, got {len(idxs)}!"
+            else:
+                assert np.allclose(idxs, np.arange(dims.nbu)), f"i=0, SOFTEN_CONTROLS: The initial condition should have {dims.nbu} slacks, got {len(idxs)}!"
+
+        if i > 0 and i < N:
+            assert np.allclose(idxb, np.arange(dims.nbu)), f"We should have {dims.nbu} indices for bounds on u, but got {len(idxb)}"
+
+            if not SOFTEN_CONTROLS:
+                assert np.allclose(idxs, np.arange(dims.nbx + dims.nbu, dims.nbx + dims.nbu + dims.nh)), f"i=0, NOT SOFTEN_CONTROLS: The initial condition should have {dims.nh} slacks, got {len(idxs)}!"
+            else:
+                assert np.allclose(idxs, np.arange(dims.nbx + dims.nbu + dims.nh)), f"i=0: SOFTEN_CONTROLS: The initial condition should have {dims.nh + dims.nbu} slacks, got {len(idxs)}!"
+
+        # if not SOFTEN_CONTROLS and not SOFTEN_OBSTACLE and SOFTEN_TERMINAL:
+        if i == N:
+            # We slack the obstacle constraint and the terminal constraints
+            assert np.allclose(idxs, np.arange(dims.nh_e + dims.nbx_e)), f"i=N+1: Everything should be slacked"
 
 def create_solver_opts(N=4, Tf=2):
 
@@ -226,6 +261,7 @@ def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT):
     print(f'acados returned status {status}.')
 
     feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver)
+    feasible_qp_index_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver)
 
     # get solution
     simX = np.array([ocp_solver.get(i,"x") for i in range(N+1)])
