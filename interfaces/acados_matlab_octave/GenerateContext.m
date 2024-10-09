@@ -71,7 +71,7 @@ classdef GenerateContext < handle
                 cse(dummy); % Check if cse exists
                 obj.casadi_fun_opts.cse = true;
             catch
-                disp("NOTE: Please consider updating to CasADi 3.6.6 which supports common subexpression elimination. \nThis might speed up external function evaluation.");
+                disp('NOTE: Please consider updating to CasADi 3.6.6 which supports common subexpression elimination. \nThis might speed up external function evaluation.');
             end
         end
 
@@ -125,7 +125,7 @@ classdef GenerateContext < handle
 
         function obj = add_external_function_file(obj, fun_name, output_dir)
             % remove trailing .c if present
-            if endsWith(fun_name, ".c")
+            if endsWith_custom(fun_name, '.c')
                 fun_name = fun_name(1:end-2);
             end
             obj.generic_funname_dir_pairs{end+1} = {fun_name, output_dir};
@@ -137,7 +137,7 @@ classdef GenerateContext < handle
                 fun_name = obj.generic_funname_dir_pairs{i}{1};
                 fun_dir = obj.generic_funname_dir_pairs{i}{2};
                 rel_fun_dir = relative_path(fun_dir, obj.opts.code_export_directory);
-                is_ocp_specific = ~endsWith(rel_fun_dir, "model");
+                is_ocp_specific = ~endsWith_custom(rel_fun_dir, 'model');
                 if ocp_specific ~= is_ocp_specific
                     continue;
                 end
@@ -147,7 +147,7 @@ classdef GenerateContext < handle
                 fun_name = obj.list_funname_dir_pairs{i}{1};
                 fun_dir = obj.list_funname_dir_pairs{i}{2};
                 rel_fun_dir = relative_path(fun_dir, obj.opts.code_export_directory);
-                is_ocp_specific = ~endsWith(rel_fun_dir, "model");
+                is_ocp_specific = ~endsWith_custom(rel_fun_dir, 'model');
                 if ocp_specific ~= is_ocp_specific
                     continue;
                 end
