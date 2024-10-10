@@ -100,7 +100,7 @@ typedef struct
     int *nns;  // number of non-slacked constraints in NLP
     int **idxns;  // indices of non-slacked constraints in NLP
 
-    double penalty_parameter;  // TODO: use in globalization?
+    double objective_multiplier;  // TODO: use in globalization?
 
     // statistics
     double *stat;
@@ -109,7 +109,7 @@ typedef struct
 
     double step_norm;
 
-    struct blasfeo_dvec *s_ns;  // slack values of slacks that are not part of NLP
+    struct blasfeo_dvec *slacks_not_in_original_nlp;  // slack values of slacks that are not part of NLP
     struct blasfeo_dvec *Z_cost_module;  // Z values from cost module
     struct blasfeo_dmat *RSQ_cost;
     struct blasfeo_dmat *RSQ_constr;

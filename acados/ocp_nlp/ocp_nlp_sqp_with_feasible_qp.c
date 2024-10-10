@@ -325,7 +325,7 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
         }
         // idxns
         size += nns * sizeof(int);
-        // s_ns
+        // slacks_not_in_original_nlp
         size += blasfeo_memsize_dvec(2*nns);
         // Z_cost_module
         size += blasfeo_memsize_dvec(2*dims->ns[stage]);
@@ -336,7 +336,7 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
     // nns
     size += (N+1) * sizeof(int);
 
-    // s_ns
+    // slacks_not_in_original_nlp
     size += (N + 1) * sizeof(struct blasfeo_dvec);
     // Z_cost_module
     size += (N + 1) * sizeof(struct blasfeo_dvec);
@@ -378,8 +378,8 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     mem->nlp_mem = ocp_nlp_memory_assign(config, dims, nlp_opts, c_ptr);
     c_ptr += ocp_nlp_memory_calculate_size(config, dims, nlp_opts);
 
-    // s_ns
-    assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->s_ns, &c_ptr);
+    // slacks_not_in_original_nlp
+    assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->slacks_not_in_original_nlp, &c_ptr);
     // Z_cost_module
     assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->Z_cost_module, &c_ptr);
 
@@ -441,10 +441,10 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
         assign_and_advance_blasfeo_dmat_mem(dims->nx[i]+dims->nu[i], dims->nx[i]+dims->nu[i], mem->RSQ_constr + i, &c_ptr);
     }
     // blasfeo_dvec
-    // s_ns
+    // slacks_not_in_original_nlp
     for (int i = 0; i <= N; ++i)
     {
-        assign_and_advance_blasfeo_dvec_mem(2*mem->nns[i], mem->s_ns + i, &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(2*mem->nns[i], mem->slacks_not_in_original_nlp + i, &c_ptr);
     }
     // Z_cost_module
     for (int i = 0; i <= N; ++i)
@@ -631,46 +631,22 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
  ************************************************/
 /*
 Given the current iterate and the value of the constraints at the current 
-iterate, this function calculates the minimal l1-slack variables such for the
-slack variables introduced in the subproblem
+iterate, this function calculates the minimal l1-slack variables which are not
+included in the original NLP
 */
-static void set_slack_variable_values(ocp_nlp_config *config, ocp_nlp_dims *dims,
-    ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_sqp_wfqp_memory *mem,
-    ocp_nlp_workspace *work)
+static void set_slack_variable_values(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *mem)
 {
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-    int N = dims->N;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *ns = dims->ns;
-    int *ni = dims->ni;
-    int *nns = mem->nns;
-    int n_nominal_ineq_nlp, two_n_nominal_ineq_nlp;
-    int stage;
-
+    int stage, nns, i;
     double tmp;
-    struct blasfeo_dvec *tmp_fun_vec;
 
     for (stage = 0; stage <= dims->N; stage++)
     {
-        int n_nominal_ineq_nlp = ni[stage] - ns[stage];
-        tmp_fun_vec = config->constraints[stage]->memory_get_fun_ptr(nlp_mem->constraints[stage]);
-        // nlp_mem->ineq_fun should do the same here.
-
-        // WE need to extract the correct elements from the constraints
-        // We know how many slacks we need, but we have to figure out where we
-        // should extract the function values
-
-        // maybe we use a blasfeo copy operation
-        for (int j=0; j<2*nns[stage]; j++)
+        nns = mem->nns[stage];
+        for (i=0; i<nns; i++)
         {
-            // blasfeo_dveccp(2 * ni[i], nlp_mem->ineq_fun + i, 0, nlp_mem->qp_in->d + i, 0);
-            // blasfeo_dveccp(2*n_nominal_ineq_nlp+ns[stage], nlp_mem->ineq_fun + stage, 0, nlp_mem->qp_in->d + stage, 0);
-            // blasfeo_dveccp(ns[stage], nlp_mem->ineq_fun + stage, 2*n_nominal_ineq_nlp+ns[stage], nlp_mem->qp_in->d + stage, 2*n_nominal_ineq_nlp+ns[stage]+nns[stage]);
-            // tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
-
-            // Assign the correct value to s_ns value
-            // mem->s_ns[j] = max(0.0, tmp);
+            tmp = BLASFEO_DVECEL(nlp_mem->ineq_fun+stage, mem->idxns[stage][i]);
+            blasfeo_dvecin1(fmax(0.0, tmp), &mem->slacks_not_in_original_nlp[stage], i);
         }
     }
 }
@@ -772,13 +748,13 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
     int *nu = dims->nu;
     int *nz = dims->nz;
     int *ns = dims->ns;
-    printf("Number of not slacked variables: %d\n", ns[0]);
     int *nns = mem->nns;
     int n_nominal_ineq_nlp, two_n_nominal_ineq_nlp;
 
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
+    // printf("Primal step\n");
     for (int i = 0; i <= N; i++)
     {
         // Assuming the variable order
@@ -792,7 +768,7 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
                       out_start->ux + i, nx[i]+nu[i]+ns[i],
                       out_destination->ux + i, nx[i]+nu[i]+ns[i]);
 
-        blasfeo_print_dvec(nx[i]+nu[i]+2*ns[i]+2*nns[i], qp_out->ux + i, 0);
+        // blasfeo_print_dvec(nx[i]+nu[i]+2*ns[i]+2*nns[i], qp_out->ux + i, 0);
 
         // update dual variables
         n_nominal_ineq_nlp = dims->ni[i] - ns[i];
@@ -875,8 +851,8 @@ void ocp_nlp_approximate_qp_vectors_sqp_wfqp(ocp_nlp_config *config,
         //
         // blasfeo_dveccp(nx[i]+nu[i]+ns[i], nlp_mem->cost_grad + i, 0, nlp_mem->qp_in->rqz + i, 0);
         // blasfeo_dveccp(ns[i], nlp_mem->cost_grad + i, nx[i]+nu[i]+ns[i], nlp_mem->qp_in->rqz + i, nx[i]+nu[i]+ns[i]+nns[i]);
-        blasfeo_dveccpsc(nx[i]+nu[i]+ns[i], mem->penalty_parameter, nlp_mem->cost_grad + i, 0, nlp_mem->qp_in->rqz + i, 0);
-        blasfeo_dveccpsc(ns[i], mem->penalty_parameter, nlp_mem->cost_grad + i, nx[i]+nu[i]+ns[i], nlp_mem->qp_in->rqz + i, nx[i]+nu[i]+ns[i]+nns[i]);
+        blasfeo_dveccpsc(nx[i]+nu[i]+ns[i], mem->objective_multiplier, nlp_mem->cost_grad + i, 0, nlp_mem->qp_in->rqz + i, 0);
+        blasfeo_dveccpsc(ns[i], mem->objective_multiplier, nlp_mem->cost_grad + i, nx[i]+nu[i]+ns[i], nlp_mem->qp_in->rqz + i, nx[i]+nu[i]+ns[i]+nns[i]);
 
         // b
         if (i < N)
@@ -962,10 +938,10 @@ static void ocp_nlp_sqp_wfqp_setup_QP_hessian(ocp_nlp_config *config,
         // TODO: axpby for matrices? Do we need to take slacks here into account as well? I.e., scale slack Hessian?
         blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
         //
-        blasfeo_dgead(nxu, nxu, mem->penalty_parameter, mem->RSQ_cost+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
+        blasfeo_dgead(nxu, nxu, mem->objective_multiplier, mem->RSQ_cost+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
         // Z
-        blasfeo_dveccpsc(ns[i], mem->penalty_parameter, mem->Z_cost_module+i, 0, nlp_mem->qp_in->Z+i, 0);
-        blasfeo_dveccpsc(ns[i], mem->penalty_parameter, mem->Z_cost_module+i, 0, nlp_mem->qp_in->Z+i, ns[i]+mem->nns[i]);
+        blasfeo_dveccpsc(ns[i], mem->objective_multiplier, mem->Z_cost_module+i, 0, nlp_mem->qp_in->Z+i, 0);
+        blasfeo_dveccpsc(ns[i], mem->objective_multiplier, mem->Z_cost_module+i, 0, nlp_mem->qp_in->Z+i, ns[i]+mem->nns[i]);
     }
 }
 
@@ -990,7 +966,7 @@ void ocp_nlp_sqp_wfqp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_ou
     // res_stat
     for (int i = 0; i <= N; i++)
     {
-        blasfeo_daxpy(nv[i], -mem->penalty_parameter, nlp_mem->cost_grad + i, 0, nlp_mem->ineq_adj + i, 0,
+        blasfeo_daxpy(nv[i], -mem->objective_multiplier, nlp_mem->cost_grad + i, 0, nlp_mem->ineq_adj + i, 0,
                       res->res_stat + i, 0);
         blasfeo_daxpy(nu[i] + nx[i], 1.0, nlp_mem->dyn_adj + i, 0, res->res_stat + i, 0,
                       res->res_stat + i, 0);
@@ -1070,7 +1046,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->nlp_mem->status = ACADOS_SUCCESS;
 
     // TODO(@david):
-    mem->penalty_parameter = 1/(42*1e8);
+    mem->objective_multiplier = 1e-4;//1/(42*1e8);
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -1099,7 +1075,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             ocp_nlp_sqp_wfqp_prepare_hessian_evaluation(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
             acados_tic(&timer1);
             ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-
             //
             ocp_nlp_sqp_wfqp_setup_QP_hessian(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, true);
 
@@ -1112,6 +1087,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             // update QP rhs for SQP (step prim var, abs dual var)
             ocp_nlp_approximate_qp_vectors_sqp_wfqp(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
+            set_slack_variable_values(config, dims, mem);
             nlp_timings->time_lin += acados_toc(&timer1);
 
             // Set the penalties in slacked problem
@@ -1120,6 +1096,13 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             ocp_nlp_sqp_wfqp_res_compute(dims, nlp_in, nlp_out, nlp_res, mem);
             ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
         }
+
+        // printf("Current slack values of non-original NLP slacks:\n");
+        // for (int jj=0; jj<=dims->N;++jj)
+        // {
+        //     blasfeo_print_dvec(mem->nns[jj], mem->slacks_not_in_original_nlp + jj, 0);
+        // }
+
 
         // Initialize the memory for different globalization strategies
         if (sqp_iter == 0)
@@ -1136,11 +1119,11 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->stat[mem->stat_n*sqp_iter+3] = nlp_res->inf_norm_res_comp;
         }
 
-        printf("Current iterate: \n");
-    	for (int jj=0; jj<=dims->N;++jj)
-        {
-            blasfeo_print_dvec(dims->nx[jj]+dims->nu[jj], nlp_out->ux + jj, 0);
-        }
+        // printf("Current iterate: \n");
+    	// for (int jj=0; jj<=dims->N;++jj)
+        // {
+        //     blasfeo_print_dvec(dims->nx[jj]+dims->nu[jj], nlp_out->ux + jj, 0);
+        // }
 
 
         // Output
@@ -1285,7 +1268,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // feasible
             // mem->step_norm = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->qp_out);
             mem->step_norm = slacked_qp_out_compute_primal_nrm_inf(nlp_mem->qp_out, dims, mem);
-            printf("Step norm: %.4e\n", mem->step_norm);
+            // printf("Step norm: %.4e\n", mem->step_norm);
             if (nlp_opts->log_primal_step_norm)
                 mem->primal_step_norm[sqp_iter] = mem->step_norm;
         }
