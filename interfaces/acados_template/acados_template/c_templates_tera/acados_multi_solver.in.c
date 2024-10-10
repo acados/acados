@@ -2106,6 +2106,7 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
     // declare
     bool tmp_bool;
     int newton_iter_val;
+    double newton_tol_val;
     /************************************************
     *  opts
     ************************************************/
@@ -2348,6 +2349,11 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
     newton_iter_val = {{ solver_options.sim_method_newton_iter }};
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_newton_iter", &newton_iter_val);
+
+    // sim_method_newton_tol
+    newton_tol_val = {{ solver_options.sim_method_newton_tol }};
+    for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_newton_tol", &newton_tol_val);
 
     // possibly varying: sim_method_num_steps, sim_method_num_stages, sim_method_jac_reuse
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
