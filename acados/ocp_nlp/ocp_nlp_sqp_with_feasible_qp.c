@@ -870,6 +870,8 @@ static void ocp_nlp_sqp_wfqp_prepare_hessian_evaluation(ocp_nlp_config *config,
 }
 
 
+// TODO: @david: First use as it is and write tests.
+// Then make two functions 1) setup_costless_qp 2) setup_qp_based_on_costless with minimal operations.
 static void ocp_nlp_sqp_wfqp_setup_qp(ocp_nlp_config *config,
     ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
     ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work, double objective_multiplier)
@@ -885,12 +887,12 @@ static void ocp_nlp_sqp_wfqp_setup_qp(ocp_nlp_config *config,
     int *nns = mem->nns;
 
     int nxu;
-    // hess_QP = rho * hess_cost + hess_constraints
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
     for (int i = 0; i <= N; i++)
     {
+        // hess_QP = objective_multiplier * hess_cost + hess_constraints
         nxu = nx[i]+nu[i];
         // TODO: axpby for matrices? Do we need to take slacks here into account as well? I.e., scale slack Hessian?
         blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
@@ -899,13 +901,8 @@ static void ocp_nlp_sqp_wfqp_setup_qp(ocp_nlp_config *config,
         // Z
         blasfeo_dveccpsc(ns[i], objective_multiplier, mem->Z_cost_module+i, 0, nlp_mem->qp_in->Z+i, 0);
         blasfeo_dveccpsc(ns[i], objective_multiplier, mem->Z_cost_module+i, 0, nlp_mem->qp_in->Z+i, ns[i]+mem->nns[i]);
-    }
 
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
-    for (int i = 0; i <= N; i++)
-    {
+        /* vectors */
         // g
         blasfeo_dveccpsc(nx[i]+nu[i]+ns[i], objective_multiplier, nlp_mem->cost_grad + i, 0, nlp_mem->qp_in->rqz + i, 0);
         blasfeo_dveccpsc(ns[i], objective_multiplier, nlp_mem->cost_grad + i, nx[i]+nu[i]+ns[i], nlp_mem->qp_in->rqz + i, nx[i]+nu[i]+ns[i]+nns[i]);
@@ -1063,7 +1060,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             acados_tic(&timer1);
             ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
             //
-            ocp_nlp_sqp_wfqp_setup_qp(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->objective_multiplier);
+            ocp_nlp_sqp_wfqp_setup_qp(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, 0.0);
 
             if (nlp_opts->with_adaptive_levenberg_marquardt || config->globalization->needs_objective_value() == 1)
             {
@@ -1126,6 +1123,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         // regularize Hessian
         // NOTE: this is done before termination, such that we can get the QP at the stationary point that is actually solved, if we exit with success.
+        // TODO: @david: is the note above true for this method? otherwise remove and check termination earlier?
         acados_tic(&timer1);
         config->regularize->regularize(config->regularize, dims->regularize,
                                                nlp_opts->regularize, nlp_mem->regularize_mem);
@@ -1166,7 +1164,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // print_indices(dims, mem);
         // exit(1);
 
-        qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, NULL);
+        qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, nlp_work->tmp_qp_out);
 
         // restore default warm start
         if (sqp_iter==0)
@@ -1177,15 +1175,15 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         if (nlp_opts->print_level > 3)
         {
             printf("\n\nSQP: ocp_qp_out at iteration %d\n", sqp_iter);
-            print_ocp_qp_out(qp_out);
+            print_ocp_qp_out(nlp_work->tmp_qp_out);
         }
 
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
-        ocp_nlp_dump_qp_out_to_file(qp_out, sqp_iter, 0);
+        ocp_nlp_dump_qp_out_to_file(nlp_work->tmp_qp_out, sqp_iter, 0);
 #endif
 
         qp_info *qp_info_;
-        ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
+        ocp_qp_out_get(nlp_work->tmp_qp_out, "qp_info", &qp_info_);
         qp_iter = qp_info_->num_iter;
 
         // save statistics of last qp solver call
@@ -1198,7 +1196,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // compute external QP residuals (for debugging)
         if (nlp_opts->ext_qp_res)
         {
-            ocp_qp_res_compute(qp_in, qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
+            ocp_qp_res_compute(qp_in, nlp_work->tmp_qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
             if (sqp_iter+1 < mem->stat_m)
                 ocp_qp_res_compute_nrm_inf(nlp_work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+7));
         }
@@ -1237,6 +1235,27 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             return mem->nlp_mem->status;
         }
+
+        // TODO: @david: How to log statistics?
+        // We solve 2 QPs -> need 2 times qp_iter and qp_status?
+        // Or do we make one row for one QP solve?
+
+        // Solve second QP with actual objective_multiplier
+        {
+            ocp_nlp_sqp_wfqp_setup_qp(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->objective_multiplier);
+            ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter);
+            acados_tic(&timer1);
+            config->regularize->regularize(config->regularize, dims->regularize,
+                                                nlp_opts->regularize, nlp_mem->regularize_mem);
+            nlp_timings->time_reg += acados_toc(&timer1);
+            qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, NULL);
+            // TODO: @david do all the logging of QP solver stats again here? Write into extra row of stat?
+            // TODO: @david check status etc.
+        }
+
+        // @david: now you have two directions: nlp_work->tmp_qp_out = d without cost;
+        // nlp_mem->qp_out = d with objective_multiplier
+
 
         // Calculate optimal QP objective (needed for globalization)
         if (config->globalization->needs_qp_objective_value() == 1)
