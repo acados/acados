@@ -651,6 +651,33 @@ static void set_slack_variable_values(ocp_nlp_config *config, ocp_nlp_dims *dims
     }
 }
 
+static double get_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *mem, ocp_qp_out *qp_out)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    int *nns = mem->nns;
+
+    double l1_inf = 0.0;
+    int i, j, tmp;
+
+    for (i = 0; i <= N; i++)
+    {
+        for (j=0; j<nns[i]; i++)
+        {
+            // Add lb slack
+            tmp = BLASFEO_DVECEL(qp_out->ux + i, nx[i]+nu[i]+ns[i] + j);
+            l1_inf += fmax(0.0, tmp);
+            // Add ub slack
+            tmp = BLASFEO_DVECEL(qp_out->ux + i, nx[i]+nu[i]+2*ns[i]+nns[i] + j);
+            l1_inf += fmax(0.0, tmp);
+        }
+    }
+
+    return l1_inf;
+}
+
 static void set_non_slacked_l1_penalties(ocp_nlp_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_sqp_wfqp_memory *mem,
     ocp_nlp_workspace *work)
@@ -927,8 +954,6 @@ static void ocp_nlp_sqp_wfqp_setup_qp(ocp_nlp_config *config,
         blasfeo_dveccp(ns[i], nlp_mem->ineq_fun + i, 2*n_nominal_ineq_nlp+ns[i], nlp_mem->qp_in->d + i, 2*n_nominal_ineq_nlp+ns[i]+nns[i]);
     }
 }
-
-
 
 
 void ocp_nlp_sqp_wfqp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res,
@@ -1253,9 +1278,11 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // TODO: @david check status etc.
         }
 
-        // @david: now you have two directions: nlp_work->tmp_qp_out = d without cost;
+        // @david: now you have two directions:
+        // nlp_work->tmp_qp_out = d without cost;
         // nlp_mem->qp_out = d with objective_multiplier
-
+        double l1_inf_QP_feasibility = get_slacked_qp_l1_infeasibility(dims, mem, nlp_work->tmp_qp_out);
+        double l1_inf_QP_optimality = get_slacked_qp_l1_infeasibility(dims, mem, nlp_mem->qp_out);
 
         // Calculate optimal QP objective (needed for globalization)
         if (config->globalization->needs_qp_objective_value() == 1)
