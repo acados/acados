@@ -831,8 +831,9 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
 /**
  * Internal function for {{ model.name }}_acados_create: step 4
  */
-void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solver_capsule* capsule) {
-{%- if dims.np > 0 %}
+void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solver_capsule* capsule)
+{
+{% if dims.np > 0 %}
     const int N = capsule->nlp_solver_plan->N;
     // initialize parameters to nominal value
     double* p = calloc(NP, sizeof(double));
@@ -850,7 +851,7 @@ void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solv
     // no parameters defined
 {%- endif %}{# if dims.np #}
 
-{%- if dims.np_global > 0 %}
+{% if dims.np_global > 0 %}
     // initialize global parameters to nominal value
     double* p_global = calloc(NP_GLOBAL, sizeof(double));
     {%- for item in p_global_values %}
@@ -1052,7 +1053,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     {%- if dims.nz > 0 %}
     double* Vz_0 = calloc(NY0*NZ, sizeof(double));
     // change only the non-zero elements:
-    {% for j in range(end=dims.ny_0) %}
+    {%- for j in range(end=dims.ny_0) %}
         {%- for k in range(end=dims.nz) %}
             {%- if cost.Vz_0[j][k] != 0 %}
     Vz_0[{{ j }}+(NY0) * {{ k }}] = {{ cost.Vz_0[j][k] }};
@@ -1117,7 +1118,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     {% if dims.nu > 0 %}
     double* Vu = calloc(NY*NU, sizeof(double));
     // change only the non-zero elements:
-    {% for j in range(end=dims.ny) %}
+    {%- for j in range(end=dims.ny) %}
         {%- for k in range(end=dims.nu) %}
             {%- if cost.Vu[j][k] != 0 %}
     Vu[{{ j }}+(NY) * {{ k }}] = {{ cost.Vu[j][k] }};
@@ -1135,7 +1136,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     {%- if dims.nz > 0 %}
     double* Vz = calloc(NY*NZ, sizeof(double));
     // change only the non-zero elements:
-    {% for j in range(end=dims.ny) %}
+    {%- for j in range(end=dims.ny) %}
         {%- for k in range(end=dims.nz) %}
             {%- if cost.Vz[j][k] != 0 %}
     Vz[{{ j }}+(NY) * {{ k }}] = {{ cost.Vz[j][k] }};
@@ -1183,7 +1184,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
   {%- if cost.cost_type_e == "LINEAR_LS" %}
     double* Vx_e = calloc(NYN*NX, sizeof(double));
     // change only the non-zero elements:
-    {% for j in range(end=dims.ny_e) %}
+    {%- for j in range(end=dims.ny_e) %}
         {%- for k in range(end=dims.nx) %}
             {%- if cost.Vx_e[j][k] != 0 %}
     Vx_e[{{ j }}+(NYN) * {{ k }}] = {{ cost.Vx_e[j][k] }};
@@ -1279,25 +1280,25 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     double* zu_0 = zlu0_mem+NS0*3;
 
     // change only the non-zero elements:
-    {% for j in range(end=dims.ns_0) %}
+    {%- for j in range(end=dims.ns_0) %}
         {%- if cost.Zl_0[j] != 0 %}
     Zl_0[{{ j }}] = {{ cost.Zl_0[j] }};
         {%- endif %}
     {%- endfor %}
 
-    {% for j in range(end=dims.ns_0) %}
+    {%- for j in range(end=dims.ns_0) %}
         {%- if cost.Zu_0[j] != 0 %}
     Zu_0[{{ j }}] = {{ cost.Zu_0[j] }};
         {%- endif %}
     {%- endfor %}
 
-    {% for j in range(end=dims.ns_0) %}
+    {%- for j in range(end=dims.ns_0) %}
         {%- if cost.zl_0[j] != 0 %}
     zl_0[{{ j }}] = {{ cost.zl_0[j] }};
         {%- endif %}
     {%- endfor %}
 
-    {% for j in range(end=dims.ns_0) %}
+    {%- for j in range(end=dims.ns_0) %}
         {%- if cost.zu_0[j] != 0 %}
     zu_0[{{ j }}] = {{ cost.zu_0[j] }};
         {%- endif %}
@@ -1362,25 +1363,25 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     double* zu_e = zluemem+NSN*3;
 
     // change only the non-zero elements:
-    {% for j in range(end=dims.ns_e) %}
+    {%- for j in range(end=dims.ns_e) %}
         {%- if cost.Zl_e[j] != 0 %}
     Zl_e[{{ j }}] = {{ cost.Zl_e[j] }};
         {%- endif %}
     {%- endfor %}
 
-    {% for j in range(end=dims.ns_e) %}
+    {%- for j in range(end=dims.ns_e) %}
         {%- if cost.Zu_e[j] != 0 %}
     Zu_e[{{ j }}] = {{ cost.Zu_e[j] }};
         {%- endif %}
     {%- endfor %}
 
-    {% for j in range(end=dims.ns_e) %}
+    {%- for j in range(end=dims.ns_e) %}
         {%- if cost.zl_e[j] != 0 %}
     zl_e[{{ j }}] = {{ cost.zl_e[j] }};
         {%- endif %}
     {%- endfor %}
 
-    {% for j in range(end=dims.ns_e) %}
+    {%- for j in range(end=dims.ns_e) %}
         {%- if cost.zu_e[j] != 0 %}
     zu_e[{{ j }}] = {{ cost.zu_e[j] }};
         {%- endif %}
@@ -1426,7 +1427,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 {%- if dims.nbxe_0 > 0 %}
     // idxbxe_0
     int* idxbxe_0 = malloc({{ dims.nbxe_0 }} * sizeof(int));
-    {% for i in range(end=dims.nbxe_0) %}
+    {%- for i in range(end=dims.nbxe_0) %}
     idxbxe_0[{{ i }}] = {{ constraints.idxbxe_0[i] }};
     {%- endfor %}
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbxe", idxbxe_0);
@@ -1439,13 +1440,13 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     double* luh_0 = calloc(2*NH0, sizeof(double));
     double* lh_0 = luh_0;
     double* uh_0 = luh_0 + NH0;
-    {% for i in range(end=dims.nh_0) %}
+    {%- for i in range(end=dims.nh_0) %}
         {%- if constraints.lh_0[i] != 0 %}
     lh_0[{{ i }}] = {{ constraints.lh_0[i] }};
         {%- endif %}
     {%- endfor %}
 
-    {% for i in range(end=dims.nh_0) %}
+    {%- for i in range(end=dims.nh_0) %}
         {%- if constraints.uh_0[i] != 0 %}
     uh_0[{{ i }}] = {{ constraints.uh_0[i] }};
         {%- endif %}
@@ -1465,7 +1466,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     double* luphi_0 = calloc(2*NPHI0, sizeof(double));
     double* lphi_0 = luphi_0;
     double* uphi_0 = luphi_0 + NPHI0;
-    {% for i in range(end=dims.nphi_0) %}
+    {%- for i in range(end=dims.nphi_0) %}
         {%- if constraints.lphi_0[i] != 0 %}
     lphi_0[{{ i }}] = {{ constraints.lphi_0[i] }};
         {%- endif %}
@@ -1486,13 +1487,13 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 {% if dims.nsh_0 > 0 %}
     // set up soft bounds for nonlinear constraints
     int* idxsh_0 = malloc(NSH0 * sizeof(int));
-    {% for i in range(end=dims.nsh_0) %}
+    {%- for i in range(end=dims.nsh_0) %}
     idxsh_0[{{ i }}] = {{ constraints.idxsh_0[i] }};
     {%- endfor %}
     double* lush_0 = calloc(2*NSH0, sizeof(double));
     double* lsh_0 = lush_0;
     double* ush_0 = lush_0 + NSH0;
-    {% for i in range(end=dims.nsh_0) %}
+    {%- for i in range(end=dims.nsh_0) %}
         {%- if constraints.lsh_0[i] != 0 %}
     lsh_0[{{ i }}] = {{ constraints.lsh_0[i] }};
         {%- endif %}
@@ -1511,13 +1512,13 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 {% if dims.nsphi_0 > 0 %}
     // set up soft bounds for convex-over-nonlinear constraints
     int* idxsphi_0 = malloc(NSPHI0 * sizeof(int));
-    {% for i in range(end=dims.nsphi_0) %}
+    {%- for i in range(end=dims.nsphi_0) %}
     idxsphi_0[{{ i }}] = {{ constraints.idxsphi_0[i] }};
     {%- endfor %}
     double* lusphi_0 = calloc(2*NSPHI0, sizeof(double));
     double* lsphi_0 = lusphi_0;
     double* usphi_0 = lusphi_0 + NSPHI0;
-    {% for i in range(end=dims.nsphi_0) %}
+    {%- for i in range(end=dims.nsphi_0) %}
         {%- if constraints.lsphi_0[i] != 0 %}
     lsphi_0[{{ i }}] = {{ constraints.lsphi_0[i] }};
         {%- endif %}
@@ -1572,13 +1573,13 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 {%- if dims.nbu > 0 %}
     // u
     int* idxbu = malloc(NBU * sizeof(int));
-    {% for i in range(end=dims.nbu) %}
+    {%- for i in range(end=dims.nbu) %}
     idxbu[{{ i }}] = {{ constraints.idxbu[i] }};
     {%- endfor %}
     double* lubu = calloc(2*NBU, sizeof(double));
     double* lbu = lubu;
     double* ubu = lubu + NBU;
-    {% for i in range(end=dims.nbu) %}
+    {%- for i in range(end=dims.nbu) %}
         {%- if constraints.lbu[i] != 0 %}
     lbu[{{ i }}] = {{ constraints.lbu[i] }};
         {%- endif %}
@@ -1600,13 +1601,13 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 {%- if dims.nsbu > 0 %}
     // set up soft bounds for u
     int* idxsbu = malloc(NSBU * sizeof(int));
-    {% for i in range(end=dims.nsbu) %}
+    {%- for i in range(end=dims.nsbu) %}
     idxsbu[{{ i }}] = {{ constraints.idxsbu[i] }};
     {%- endfor %}
     double* lusbu = calloc(2*NSBU, sizeof(double));
     double* lsbu = lusbu;
     double* usbu = lusbu + NSBU;
-    {% for i in range(end=dims.nsbu) %}
+    {%- for i in range(end=dims.nsbu) %}
         {%- if constraints.lsbu[i] != 0 %}
     lsbu[{{ i }}] = {{ constraints.lsbu[i] }};
         {%- endif %}
@@ -1627,13 +1628,13 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 {% if dims.nsg > 0 %}
     // set up soft bounds for general linear constraints
     int* idxsg = malloc(NSG * sizeof(int));
-    {% for i in range(end=dims.nsg) %}
+    {%- for i in range(end=dims.nsg) %}
     idxsg[{{ i }}] = {{ constraints.idxsg[i] }};
     {%- endfor %}
     double* lusg = calloc(2*NSG, sizeof(double));
     double* lsg = lusg;
     double* usg = lusg + NSG;
-    {% for i in range(end=dims.nsg) %}
+    {%- for i in range(end=dims.nsg) %}
         {%- if constraints.lsg[i] != 0 %}
     lsg[{{ i }}] = {{ constraints.lsg[i] }};
         {%- endif %}
@@ -1655,13 +1656,13 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 {% if dims.nsh > 0 %}
     // set up soft bounds for nonlinear constraints
     int* idxsh = malloc(NSH * sizeof(int));
-    {% for i in range(end=dims.nsh) %}
+    {%- for i in range(end=dims.nsh) %}
     idxsh[{{ i }}] = {{ constraints.idxsh[i] }};
     {%- endfor %}
     double* lush = calloc(2*NSH, sizeof(double));
     double* lsh = lush;
     double* ush = lush + NSH;
-    {% for i in range(end=dims.nsh) %}
+    {%- for i in range(end=dims.nsh) %}
         {%- if constraints.lsh[i] != 0 %}
     lsh[{{ i }}] = {{ constraints.lsh[i] }};
         {%- endif %}
@@ -1683,13 +1684,13 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 {% if dims.nsphi > 0 %}
     // set up soft bounds for convex-over-nonlinear constraints
     int* idxsphi = malloc(NSPHI * sizeof(int));
-    {% for i in range(end=dims.nsphi) %}
+    {%- for i in range(end=dims.nsphi) %}
     idxsphi[{{ i }}] = {{ constraints.idxsphi[i] }};
     {%- endfor %}
     double* lusphi = calloc(2*NSPHI, sizeof(double));
     double* lsphi = lusphi;
     double* usphi = lusphi + NSPHI;
-    {% for i in range(end=dims.nsphi) %}
+    {%- for i in range(end=dims.nsphi) %}
         {%- if constraints.lsphi[i] != 0 %}
     lsphi[{{ i }}] = {{ constraints.lsphi[i] }};
         {%- endif %}
@@ -1711,13 +1712,13 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 {% if dims.nbx > 0 %}
     // x
     int* idxbx = malloc(NBX * sizeof(int));
-    {% for i in range(end=dims.nbx) %}
+    {%- for i in range(end=dims.nbx) %}
     idxbx[{{ i }}] = {{ constraints.idxbx[i] }};
     {%- endfor %}
     double* lubx = calloc(2*NBX, sizeof(double));
     double* lbx = lubx;
     double* ubx = lubx + NBX;
-    {% for i in range(end=dims.nbx) %}
+    {%- for i in range(end=dims.nbx) %}
         {%- if constraints.lbx[i] != 0 %}
     lbx[{{ i }}] = {{ constraints.lbx[i] }};
         {%- endif %}
@@ -1744,7 +1745,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     double* lg = lug;
     double* ug = lug + NG;
 
-    {% for j in range(end=dims.ng) -%}
+    {%- for j in range(end=dims.ng) -%}
         {% for k in range(end=dims.nu) %}
             {%- if constraints.D[j][k] != 0 %}
     D[{{ j }}+NG * {{ k }}] = {{ constraints.D[j][k] }};
@@ -1752,7 +1753,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
         {%- endfor %}
     {%- endfor %}
 
-    {% for j in range(end=dims.ng) -%}
+    {%- for j in range(end=dims.ng) -%}
         {% for k in range(end=dims.nx) %}
             {%- if constraints.C[j][k] != 0 %}
     C[{{ j }}+NG * {{ k }}] = {{ constraints.C[j][k] }};
@@ -1760,13 +1761,13 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
         {%- endfor %}
     {%- endfor %}
 
-    {% for i in range(end=dims.ng) %}
+    {%- for i in range(end=dims.ng) %}
         {%- if constraints.lg[i] != 0 %}
     lg[{{ i }}] = {{ constraints.lg[i] }};
         {%- endif %}
     {%- endfor %}
 
-    {% for i in range(end=dims.ng) %}
+    {%- for i in range(end=dims.ng) %}
         {%- if constraints.ug[i] != 0 %}
     ug[{{ i }}] = {{ constraints.ug[i] }};
         {%- endif %}
@@ -1790,13 +1791,13 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     double* lh = luh;
     double* uh = luh + NH;
 
-    {% for i in range(end=dims.nh) %}
+    {%- for i in range(end=dims.nh) %}
         {%- if constraints.lh[i] != 0 %}
     lh[{{ i }}] = {{ constraints.lh[i] }};
         {%- endif %}
     {%- endfor %}
 
-    {% for i in range(end=dims.nh) %}
+    {%- for i in range(end=dims.nh) %}
         {%- if constraints.uh[i] != 0 %}
     uh[{{ i }}] = {{ constraints.uh[i] }};
         {%- endif %}
@@ -1823,13 +1824,13 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     double* luphi = calloc(2*NPHI, sizeof(double));
     double* lphi = luphi;
     double* uphi = luphi + NPHI;
-    {% for i in range(end=dims.nphi) %}
+    {%- for i in range(end=dims.nphi) %}
         {%- if constraints.lphi[i] != 0 %}
     lphi[{{ i }}] = {{ constraints.lphi[i] }};
         {%- endif %}
     {%- endfor %}
 
-    {% for i in range(end=dims.nphi) %}
+    {%- for i in range(end=dims.nphi) %}
         {%- if constraints.uphi[i] != 0 %}
     uphi[{{ i }}] = {{ constraints.uphi[i] }};
         {%- endif %}
@@ -1852,13 +1853,13 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     // set up bounds for last stage
     // x
     int* idxbx_e = malloc(NBXN * sizeof(int));
-    {% for i in range(end=dims.nbx_e) %}
+    {%- for i in range(end=dims.nbx_e) %}
     idxbx_e[{{ i }}] = {{ constraints.idxbx_e[i] }};
     {%- endfor %}
     double* lubx_e = calloc(2*NBXN, sizeof(double));
     double* lbx_e = lubx_e;
     double* ubx_e = lubx_e + NBXN;
-    {% for i in range(end=dims.nbx_e) %}
+    {%- for i in range(end=dims.nbx_e) %}
         {%- if constraints.lbx_e[i] != 0 %}
     lbx_e[{{ i }}] = {{ constraints.lbx_e[i] }};
         {%- endif %}
@@ -1876,13 +1877,13 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 {% if dims.nsg_e > 0 %}
     // set up soft bounds for general linear constraints
     int* idxsg_e = calloc(NSGN, sizeof(int));
-    {% for i in range(end=dims.nsg_e) %}
+    {%- for i in range(end=dims.nsg_e) %}
     idxsg_e[{{ i }}] = {{ constraints.idxsg_e[i] }};
     {%- endfor %}
     double* lusg_e = calloc(2*NSGN, sizeof(double));
     double* lsg_e = lusg_e;
     double* usg_e = lusg_e + NSGN;
-    {% for i in range(end=dims.nsg_e) %}
+    {%- for i in range(end=dims.nsg_e) %}
         {%- if constraints.lsg_e[i] != 0 %}
     lsg_e[{{ i }}] = {{ constraints.lsg_e[i] }};
         {%- endif %}
@@ -1901,13 +1902,13 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 {% if dims.nsh_e > 0 %}
     // set up soft bounds for nonlinear constraints
     int* idxsh_e = malloc(NSHN * sizeof(int));
-    {% for i in range(end=dims.nsh_e) %}
+    {%- for i in range(end=dims.nsh_e) %}
     idxsh_e[{{ i }}] = {{ constraints.idxsh_e[i] }};
     {%- endfor %}
     double* lush_e = calloc(2*NSHN, sizeof(double));
     double* lsh_e = lush_e;
     double* ush_e = lush_e + NSHN;
-    {% for i in range(end=dims.nsh_e) %}
+    {%- for i in range(end=dims.nsh_e) %}
         {%- if constraints.lsh_e[i] != 0 %}
     lsh_e[{{ i }}] = {{ constraints.lsh_e[i] }};
         {%- endif %}
@@ -1926,13 +1927,13 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 {% if dims.nsphi_e > 0 %}
     // set up soft bounds for convex-over-nonlinear constraints
     int* idxsphi_e = malloc(NSPHIN * sizeof(int));
-    {% for i in range(end=dims.nsphi_e) %}
+    {%- for i in range(end=dims.nsphi_e) %}
     idxsphi_e[{{ i }}] = {{ constraints.idxsphi_e[i] }};
     {%- endfor %}
     double* lusphi_e = calloc(2*NSPHIN, sizeof(double));
     double* lsphi_e = lusphi_e;
     double* usphi_e = lusphi_e + NSPHIN;
-    {% for i in range(end=dims.nsphi_e) %}
+    {%- for i in range(end=dims.nsphi_e) %}
         {%- if constraints.lsphi_e[i] != 0 %}
     lsphi_e[{{ i }}] = {{ constraints.lsphi_e[i] }};
         {%- endif %}
@@ -1951,13 +1952,13 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 {% if dims.nsbx_e > 0 %}
     // soft bounds on x
     int* idxsbx_e = malloc(NSBXN * sizeof(int));
-    {% for i in range(end=dims.nsbx_e) %}
+    {%- for i in range(end=dims.nsbx_e) %}
     idxsbx_e[{{ i }}] = {{ constraints.idxsbx_e[i] }};
     {%- endfor %}
     double* lusbx_e = calloc(2*NSBXN, sizeof(double));
     double* lsbx_e = lusbx_e;
     double* usbx_e = lusbx_e + NSBXN;
-    {% for i in range(end=dims.nsbx_e) %}
+    {%- for i in range(end=dims.nsbx_e) %}
         {%- if constraints.lsbx_e[i] != 0 %}
     lsbx_e[{{ i }}] = {{ constraints.lsbx_e[i] }};
         {%- endif %}
@@ -1980,7 +1981,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     double* lg_e = lug_e;
     double* ug_e = lug_e + NGN;
 
-    {% for j in range(end=dims.ng_e) %}
+    {%- for j in range(end=dims.ng_e) %}
         {%- for k in range(end=dims.nx) %}
             {%- if constraints.C_e[j][k] != 0 %}
     C_e[{{ j }}+NGN * {{ k }}] = {{ constraints.C_e[j][k] }};
@@ -1988,7 +1989,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
         {%- endfor %}
     {%- endfor %}
 
-    {% for i in range(end=dims.ng_e) %}
+    {%- for i in range(end=dims.ng_e) %}
         {%- if constraints.lg_e[i] != 0 %}
     lg_e[{{ i }}] = {{ constraints.lg_e[i] }};
         {%- endif %}
@@ -2009,13 +2010,13 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     double* luh_e = calloc(2*NHN, sizeof(double));
     double* lh_e = luh_e;
     double* uh_e = luh_e + NHN;
-    {% for i in range(end=dims.nh_e) %}
+    {%- for i in range(end=dims.nh_e) %}
         {%- if constraints.lh_e[i] != 0 %}
     lh_e[{{ i }}] = {{ constraints.lh_e[i] }};
         {%- endif %}
     {%- endfor %}
 
-    {% for i in range(end=dims.nh_e) %}
+    {%- for i in range(end=dims.nh_e) %}
         {%- if constraints.uh_e[i] != 0 %}
     uh_e[{{ i }}] = {{ constraints.uh_e[i] }};
         {%- endif %}
@@ -2035,7 +2036,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     double* luphi_e = calloc(2*NPHIN, sizeof(double));
     double* lphi_e = luphi_e;
     double* uphi_e = luphi_e + NPHIN;
-    {% for i in range(end=dims.nphi_e) %}
+    {%- for i in range(end=dims.nphi_e) %}
         {%- if constraints.lphi_e[i] != 0 %}
     lphi_e[{{ i }}] = {{ constraints.lphi_e[i] }};
         {%- endif %}
@@ -2077,7 +2078,7 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
 
     int exact_hess_constr = {{ solver_options.exact_hess_constr }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "exact_hess_constr", &exact_hess_constr);
-{%- endif -%}
+{%- endif %}
 
     int fixed_hess = {{ solver_options.fixed_hess }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "fixed_hess", &fixed_hess);
@@ -2092,7 +2093,7 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
 
     double globalization_alpha_reduction = {{ solver_options.globalization_alpha_reduction }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_alpha_reduction", &globalization_alpha_reduction);
-{%- endif -%}
+{%- endif %}
 
 {# globalization specific options #}
 {%- if solver_options.globalization == "MERIT_BACKTRACKING" %}
@@ -2122,7 +2123,7 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
 
     double globalization_funnel_initial_penalty_parameter = {{ solver_options.globalization_funnel_initial_penalty_parameter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_initial_penalty_parameter", &globalization_funnel_initial_penalty_parameter);
-{%- endif -%}
+{%- endif %}
 
     int with_solution_sens_wrt_params = {{ solver_options.with_solution_sens_wrt_params }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "with_solution_sens_wrt_params", &with_solution_sens_wrt_params);
@@ -2359,22 +2360,22 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     {%- if solver_options.qp_solver_tol_stat %}
     double qp_solver_tol_stat = {{ solver_options.qp_solver_tol_stat }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_tol_stat", &qp_solver_tol_stat);
-    {%- endif -%}
+    {%- endif %}
 
     {%- if solver_options.qp_solver_tol_eq %}
     double qp_solver_tol_eq = {{ solver_options.qp_solver_tol_eq }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_tol_eq", &qp_solver_tol_eq);
-    {%- endif -%}
+    {%- endif %}
 
     {%- if solver_options.qp_solver_tol_ineq %}
     double qp_solver_tol_ineq = {{ solver_options.qp_solver_tol_ineq }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_tol_ineq", &qp_solver_tol_ineq);
-    {%- endif -%}
+    {%- endif %}
 
     {%- if solver_options.qp_solver_tol_comp %}
     double qp_solver_tol_comp = {{ solver_options.qp_solver_tol_comp }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_tol_comp", &qp_solver_tol_comp);
-    {%- endif -%}
+    {%- endif %}
 
     {%- if solver_options.qp_solver_warm_start %}
     int qp_solver_warm_start = {{ solver_options.qp_solver_warm_start }};
@@ -2422,7 +2423,7 @@ void {{ model.name }}_acados_set_nlp_out({{ model.name }}_solver_capsule* capsul
     double* x0 = xu0;
 {% if dims.nbx_0 == dims.nx %}
     // initialize with x0
-    {% for item in constraints.lbx_0 %}
+    {%- for item in constraints.lbx_0 %}
         {%- if item != 0 %}
     x0[{{ loop.index0 }}] = {{ item }};
         {%- endif %}
@@ -2644,10 +2645,10 @@ int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver
         exit(1);
     }
 
-{% set n_pools = casadi_pool_names | length %}
-{% for ip in range(end=n_pools) %}
-{% set pool_name = casadi_pool_names[ip] %}
-{% set fun_name_split = pool_name | split(pat='|') %}
+{%- set n_pools = casadi_pool_names | length %}
+{%- for ip in range(end=n_pools) %}
+{%- set pool_name = casadi_pool_names[ip] %}
+{%- set fun_name_split = pool_name | split(pat='|') %}
     fun->res[{{ ip }}] = {{ fun_name_split[0] }}_get_pool_double("{{ pool_name }}");
 {%- endfor %}
 
@@ -2954,7 +2955,7 @@ void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule* capsul
     ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "stat_n", &stat_n);
     ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "stat_m", &stat_m);
 
-    {% set stat_n_max = 12 %}
+{% set stat_n_max = 12 %}
     double stat[{{ solver_options.nlp_solver_max_iter * stat_n_max }}];
     ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "statistics", stat);
 
