@@ -2640,10 +2640,10 @@ int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver
         exit(1);
     }
 
-{% set n_pools = casadi_pool_names | length %}
-{% for ip in range(end=n_pools) %}
-{% set pool_name = casadi_pool_names[ip] %}
-{% set fun_name_split = pool_name | split(pat='|') %}
+{%- set n_pools = casadi_pool_names | length %}
+{%- for ip in range(end=n_pools) %}
+{%- set pool_name = casadi_pool_names[ip] %}
+{%- set fun_name_split = pool_name | split(pat='|') %}
     fun->res[{{ ip }}] = {{ fun_name_split[0] }}_get_pool_double("{{ pool_name }}");
 {%- endfor %}
 
