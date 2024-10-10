@@ -2719,19 +2719,21 @@ acados_size_t ocp_nlp_res_calculate_size(ocp_nlp_dims *dims)
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
+    int *nz = dims->nz;
     // int *nu = dims->nu;
     int *ni = dims->ni;
 
     acados_size_t size = sizeof(ocp_nlp_res);
 
     size += 3 * (N + 1) * sizeof(struct blasfeo_dvec);  // res_stat res_ineq res_comp
-    size += 1 * N * sizeof(struct blasfeo_dvec);        // res_eq
+    size += 2 * N * sizeof(struct blasfeo_dvec);        // res_eq res_integrator
 
     for (int i = 0; i < N; i++)
     {
         size += 1 * blasfeo_memsize_dvec(nv[i]);      // res_stat
         size += 1 * blasfeo_memsize_dvec(nx[i + 1]);  // res_eq
         size += 2 * blasfeo_memsize_dvec(2 * ni[i]);  // res_ineq res_comp
+        size += 1 * blasfeo_memsize_dvec(nx[i + 1] + nz[i]);  // res_integrator
     }
     size += 1 * blasfeo_memsize_dvec(nv[N]);      // res_stat
     size += 2 * blasfeo_memsize_dvec(2 * ni[N]);  // res_ineq res_comp
@@ -2756,6 +2758,7 @@ ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory)
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
+    int *nz = dims->nz;
     // int *nu = dims->nu;
     int *ni = dims->ni;
 
@@ -2777,6 +2780,8 @@ ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory)
     assign_and_advance_blasfeo_dvec_structs(N + 1, &res->res_ineq, &c_ptr);
     // res_comp
     assign_and_advance_blasfeo_dvec_structs(N + 1, &res->res_comp, &c_ptr);
+    // res_integrator
+    assign_and_advance_blasfeo_dvec_structs(N, &res->res_integrator, &c_ptr);
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
@@ -2801,6 +2806,11 @@ ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory)
     {
         assign_and_advance_blasfeo_dvec_mem(2 * ni[i], res->res_comp + i, &c_ptr);
     }
+    // res_integrator
+    for (int i = 0; i < N; i++)
+    {
+        assign_and_advance_blasfeo_dvec_mem(nx[i + 1] + nz[i], res->res_integrator + i, &c_ptr);
+    }
 
     assign_and_advance_blasfeo_dvec_mem(N, &res->tmp, &c_ptr);
 
@@ -2820,14 +2830,17 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
+    int *nz = dims->nz;
     int *nu = dims->nu;
     int *ni = dims->ni;
 
     double tmp_res;
     double tmp;
 
+    int i;
+
     // res_stat
-    for (int i = 0; i <= N; i++)
+    for (i = 0; i <= N; i++)
     {
         blasfeo_daxpy(nv[i], -1.0, mem->ineq_adj + i, 0, mem->cost_grad + i, 0,
                       res->res_stat + i, 0);
@@ -2839,7 +2852,7 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
     blasfeo_dvecnrm_inf(N+1, &res->tmp, 0, &res->inf_norm_res_stat);
 
     // res_eq
-    for (int i = 0; i < N; i++)
+    for (i = 0; i < N; i++)
     {
         blasfeo_dveccp(nx[i + 1], mem->dyn_fun + i, 0, res->res_eq + i, 0);
         blasfeo_dvecnrm_inf(nx[i + 1], res->res_eq + i, 0, &tmp_res);
@@ -2849,7 +2862,7 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
 
     // res_ineq
     res->inf_norm_res_ineq = 0.0;
-    for (int i = 0; i <= N; i++)
+    for (i = 0; i <= N; i++)
     {
         for (int j=0; j<2*ni[i]; j++)
         {
@@ -2863,13 +2876,23 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
 
     // res_comp
     res->inf_norm_res_comp = 0.0;
-    for (int i = 0; i <= N; i++)
+    for (i = 0; i <= N; i++)
     {
         blasfeo_dvecmul(2 * ni[i], out->lam + i, 0, mem->ineq_fun+i, 0, res->res_comp + i, 0);
         blasfeo_dvecnrm_inf(2 * ni[i], res->res_comp + i, 0, &tmp_res);
         blasfeo_dvecse(1, tmp_res, &res->tmp, i);
     }
     blasfeo_dvecnrm_inf(N+1, &res->tmp, 0, &res->inf_norm_res_comp);
+
+    // res_integrator
+    res->inf_norm_res_integrator = 0.0;
+    for (i = 0; i < N; i++)
+    {
+        // TODO(res_integrator): call get_residuum in integrator and store in res->res_integrator + i
+        blasfeo_dvecnrm_inf(nx[i+1] + nz[i], res->res_integrator + i, 0, &tmp_res);
+        blasfeo_dvecse(1, tmp_res, &res->tmp, i);
+    }
+    blasfeo_dvecnrm_inf(N, &res->tmp, 0, &res->inf_norm_res_integrator);
 }
 
 void ocp_nlp_res_get_inf_norm(ocp_nlp_res *res, double *out)
@@ -2878,6 +2901,7 @@ void ocp_nlp_res_get_inf_norm(ocp_nlp_res *res, double *out)
     norm = (res->inf_norm_res_eq > norm) ? res->inf_norm_res_eq : norm;
     norm = (res->inf_norm_res_ineq > norm) ? res->inf_norm_res_ineq : norm;
     norm = (res->inf_norm_res_comp > norm) ? res->inf_norm_res_comp : norm;
+    norm = (res->inf_norm_res_integrator > norm) ? res->inf_norm_res_integrator : norm;
     *out = norm;
     return;
 }
@@ -3307,6 +3331,11 @@ void ocp_nlp_memory_get(ocp_nlp_config *config, ocp_nlp_memory *nlp_mem, const c
     {
         double *value = return_value_;
         *value = nlp_mem->nlp_res->inf_norm_res_comp;
+    }
+    else if (!strcmp("res_integrator", field))
+    {
+        double *value = return_value_;
+        *value = nlp_mem->nlp_res->inf_norm_res_integrator;
     }
     else if (!strcmp("cost_value", field))
     {
