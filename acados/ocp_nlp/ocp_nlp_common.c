@@ -2185,6 +2185,23 @@ void ocp_nlp_set_primal_variable_pointers_in_submodules(ocp_nlp_config *config, 
 }
 
 
+static void ocp_nlp_regularize_set_qp_in_ptrs(ocp_nlp_reg_config *reg_config, ocp_nlp_reg_dims *reg_dims, void *reg_mem, ocp_qp_in *qp_in)
+{
+    reg_config->memory_set_RSQrq_ptr(reg_dims, qp_in->RSQrq, reg_mem);
+    reg_config->memory_set_rq_ptr(reg_dims, qp_in->rqz, reg_mem);
+    reg_config->memory_set_BAbt_ptr(reg_dims, qp_in->BAbt, reg_mem);
+    reg_config->memory_set_b_ptr(reg_dims, qp_in->b, reg_mem);
+    reg_config->memory_set_idxb_ptr(reg_dims, qp_in->idxb, reg_mem);
+    reg_config->memory_set_DCt_ptr(reg_dims, qp_in->DCt, reg_mem);
+}
+
+static void ocp_nlp_regularize_set_qp_out_ptrs(ocp_nlp_reg_config *reg_config, ocp_nlp_reg_dims *reg_dims, void *reg_mem, ocp_qp_out *qp_out)
+{
+    reg_config->memory_set_ux_ptr(reg_dims, qp_out->ux, reg_mem);
+    reg_config->memory_set_pi_ptr(reg_dims, qp_out->pi, reg_mem);
+    reg_config->memory_set_lam_ptr(reg_dims, qp_out->lam, reg_mem);
+}
+
 
 void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
          ocp_nlp_out *nlp_out, ocp_nlp_opts *opts, ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work)
@@ -2272,15 +2289,8 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
     }
 
     // alias to regularize memory
-    config->regularize->memory_set_RSQrq_ptr(dims->regularize, nlp_mem->qp_in->RSQrq, nlp_mem->regularize_mem);
-    config->regularize->memory_set_rq_ptr(dims->regularize, nlp_mem->qp_in->rqz, nlp_mem->regularize_mem);
-    config->regularize->memory_set_BAbt_ptr(dims->regularize, nlp_mem->qp_in->BAbt, nlp_mem->regularize_mem);
-    config->regularize->memory_set_b_ptr(dims->regularize, nlp_mem->qp_in->b, nlp_mem->regularize_mem);
-    config->regularize->memory_set_idxb_ptr(dims->regularize, nlp_mem->qp_in->idxb, nlp_mem->regularize_mem);
-    config->regularize->memory_set_DCt_ptr(dims->regularize, nlp_mem->qp_in->DCt, nlp_mem->regularize_mem);
-    config->regularize->memory_set_ux_ptr(dims->regularize, nlp_mem->qp_out->ux, nlp_mem->regularize_mem);
-    config->regularize->memory_set_pi_ptr(dims->regularize, nlp_mem->qp_out->pi, nlp_mem->regularize_mem);
-    config->regularize->memory_set_lam_ptr(dims->regularize, nlp_mem->qp_out->lam, nlp_mem->regularize_mem);
+    ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, nlp_mem->qp_in);
+    ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, nlp_mem->qp_out);
 
     // copy sampling times into dynamics model
 #if defined(ACADOS_WITH_OPENMP)
