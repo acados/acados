@@ -527,7 +527,8 @@ void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *
 double ocp_nlp_get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_memory *nlp_mem);
 
 int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *nlp_opts,
-                     ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work, bool precondensed_lhs);
+                     ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work,
+                     bool precondensed_lhs, ocp_qp_in *qp_in_, ocp_qp_out *qp_out_);
 //
 double ocp_nlp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_nlp_workspace *nlp_work);
 
