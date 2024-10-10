@@ -3108,13 +3108,35 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 
 int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *nlp_opts,
-                     ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work, bool precondensed_lhs)
+                     ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work,
+                     bool precondensed_lhs, ocp_qp_in *qp_in_, ocp_qp_out *qp_out_)
 {
     acados_timer timer;
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
 
-    ocp_qp_in *qp_in = nlp_mem->qp_in;
+    // qp_in_, qp_out_ are "optional", if NULL is given use nlp_mem->qp_in, nlp_mem->qp_out
+    ocp_qp_in *qp_in;
+    if (qp_in_ == NULL)
+    {
+        qp_in = nlp_mem->qp_in;
+    }
+    else
+    {
+        qp_in = qp_in_;
+        ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, qp_in);
+    }
+
     ocp_qp_out *qp_out = nlp_mem->qp_out;
+    if (qp_out_ == NULL)
+    {
+        qp_out = nlp_mem->qp_out;
+    }
+    else
+    {
+        qp_out = qp_out_;
+        ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, qp_out);
+    }
+
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
 
     double tmp_time;
@@ -3146,6 +3168,16 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
     config->regularize->correct_dual_sol(config->regularize, dims->regularize,
                                             nlp_opts->regularize, nlp_mem->regularize_mem);
     nlp_timings->time_reg += acados_toc(&timer);
+
+    // reset regularize pointers if necessary
+    if (qp_in_ != NULL)
+    {
+        ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, nlp_mem->qp_in);
+    }
+    if (qp_out_ != NULL)
+    {
+        ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, nlp_mem->qp_out);
+    }
 
     return qp_status;
 }
