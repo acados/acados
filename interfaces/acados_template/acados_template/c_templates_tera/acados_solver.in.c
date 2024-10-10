@@ -2209,6 +2209,10 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_newton_iter", &newton_iter_val);
 
+    int newton_tol_val = {{ solver_options.sim_method_newton_tol }};
+    for (int i = 0; i < N; i++)
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_newton_tol", &newton_tol_val);
+
     // set up sim_method_jac_reuse
     {%- set all_equal = true %}
     {%- set val = solver_options.sim_method_jac_reuse[0] %}

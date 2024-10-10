@@ -66,6 +66,7 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, 
     ocp.solver_options.sim_method_jac_reuse = opts_struct.sim_method_jac_reuse;
 
     ocp.solver_options.sim_method_newton_iter = opts_struct.sim_method_newton_iter;
+    ocp.solver_options.sim_method_newton_tol = opts_struct.sim_method_newton_tol;
     ocp.solver_options.nlp_solver_max_iter = opts_struct.nlp_solver_max_iter;
     ocp.solver_options.nlp_solver_tol_stat = opts_struct.nlp_solver_tol_stat;
     ocp.solver_options.nlp_solver_tol_eq = opts_struct.nlp_solver_tol_eq;

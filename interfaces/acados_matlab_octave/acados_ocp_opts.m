@@ -196,6 +196,8 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.sim_method_num_steps = value;
             elseif (strcmp(field, 'sim_method_newton_iter'))
                 obj.opts_struct.sim_method_newton_iter = value;
+            elseif (strcmp(field, 'sim_method_newton_tol'))
+                obj.opts_struct.sim_method_newton_tol = value;
             elseif (strcmp(field, 'sim_method_exact_z_output'))
                 obj.opts_struct.sim_method_exact_z_output = value;
             elseif (strcmp(field, 'sim_method_jac_reuse'))
