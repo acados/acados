@@ -3186,7 +3186,7 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
     if (precondensed_lhs)
     {
         qp_status = qp_solver->condense_rhs_and_solve(qp_solver, dims->qp_solver,
-            nlp_mem->qp_in, nlp_mem->qp_out, nlp_opts->qp_solver_opts,
+            qp_in, qp_out, nlp_opts->qp_solver_opts,
             nlp_mem->qp_solver_mem, nlp_work->qp_work);
     }
     else
