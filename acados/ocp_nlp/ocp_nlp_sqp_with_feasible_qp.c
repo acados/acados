@@ -1281,8 +1281,28 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // @david: now you have two directions:
         // nlp_work->tmp_qp_out = d without cost;
         // nlp_mem->qp_out = d with objective_multiplier
+        double current_l1_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
         double l1_inf_QP_feasibility = get_slacked_qp_l1_infeasibility(dims, mem, nlp_work->tmp_qp_out);
         double l1_inf_QP_optimality = get_slacked_qp_l1_infeasibility(dims, mem, nlp_mem->qp_out);
+        double pred_l1_inf_feasibility = current_l1_infeasibility - l1_inf_QP_feasibility;
+        double kappa;
+        
+        if (l1_inf_QP_optimality <= l1_inf_QP_feasibility)
+        {
+            kappa = 1.0;
+        }
+        else
+        {
+            kappa = fmin(1.0, ((1-1e-3)*pred_l1_inf_feasibility)/(l1_inf_QP_optimality - l1_inf_QP_feasibility));
+        }
+        printf("Kappa: %.4e\n", kappa);
+        // Calculate search direction
+        for (int i = 0; i <= dims->N; i++)
+        {
+            int dim = dims->nx[i]+dims->nu[i]+2*dims->ns[i]+2*mem->nns[i];
+            blasfeo_daxpby(dim, kappa, nlp_mem->qp_out, 0, 1-kappa, nlp_work->tmp_qp_out, 0, nlp_mem->qp_out, 0);
+        }
+        //---------------------------------------------------------------------
 
         // Calculate optimal QP objective (needed for globalization)
         if (config->globalization->needs_qp_objective_value() == 1)
