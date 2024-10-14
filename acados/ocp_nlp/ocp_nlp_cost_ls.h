@@ -213,6 +213,10 @@ typedef struct
 
 //
 acados_size_t ocp_nlp_cost_ls_workspace_calculate_size(void *config, void *dims, void *opts);
+//
+size_t ocp_nlp_cost_ls_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_);
+//
+void ocp_nlp_cost_ls_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_);
 
 
 
