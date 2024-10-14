@@ -56,6 +56,7 @@
 #include "acados/ocp_nlp/ocp_nlp_globalization_merit_backtracking.h"
 #include "acados/ocp_nlp/ocp_nlp_globalization_funnel.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
+#include "acados/ocp_nlp/ocp_nlp_sqp_with_feasible_qp.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
 #include "acados/ocp_nlp/ocp_nlp_ddp.h"
 #include "acados/utils/mem.h"
@@ -191,6 +192,9 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
     {
         case SQP:
             ocp_nlp_sqp_config_initialize_default(config);
+            break;
+        case SQP_WITH_FEASIBLE_QP:
+            ocp_nlp_sqp_wfqp_config_initialize_default(config);
             break;
         case SQP_RTI:
             ocp_nlp_sqp_rti_config_initialize_default(config);

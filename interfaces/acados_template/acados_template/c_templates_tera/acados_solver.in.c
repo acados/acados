@@ -177,6 +177,7 @@ void {{ model.name }}_acados_create_set_plan(ocp_nlp_plan_t* nlp_solver_plan, co
     nlp_solver_plan->nlp_solver = {{ solver_options.nlp_solver_type }};
 
     nlp_solver_plan->ocp_qp_solver_plan.qp_solver = {{ solver_options.qp_solver }};
+    nlp_solver_plan->relaxed_ocp_qp_solver_plan.qp_solver = {{ solver_options.qp_solver }}; {# TODO: add option? #}
 
     nlp_solver_plan->nlp_cost[0] = {{ cost.cost_type_0 }};
     for (int i = 1; i < N; i++)
@@ -2309,7 +2310,7 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
 {%- endif %}
 {%- endif %}
 
-{% if solver_options.nlp_solver_type == "SQP" or solver_options.nlp_solver_type == "DDP" %}
+{% if solver_options.nlp_solver_type == "SQP" or solver_options.nlp_solver_type == "DDP" or solver_options.nlp_solver_type == "SQP_WITH_FEASIBLE_QP"%}
     // set SQP specific options
     double nlp_solver_tol_stat = {{ solver_options.nlp_solver_tol_stat }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_stat", &nlp_solver_tol_stat);
