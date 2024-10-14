@@ -71,6 +71,8 @@ acados_size_t external_function_param_generic_calculate_size(external_function_p
 {
     // wrapper as evaluate function
     fun->evaluate = &external_function_param_generic_wrapper;
+    fun->get_external_workspace_requirement = external_function_param_generic_get_external_workspace_requirement;
+    fun->set_external_workspace = external_function_param_generic_set_external_workspace;
 
     // set param function
     fun->get_nparam = &external_function_param_generic_get_nparam;
@@ -154,6 +156,18 @@ void external_function_param_generic_set_param(void *self, double *p)
     }
 
     return;
+}
+
+
+size_t external_function_param_generic_get_external_workspace_requirement(void *self)
+{
+    // external_function_param_generic *fun = self;
+    return 0;
+}
+
+void external_function_param_generic_set_external_workspace(void *self, void *workspace)
+{
+    // do nothing
 }
 
 
@@ -785,6 +799,8 @@ acados_size_t external_function_casadi_calculate_size(external_function_casadi *
 {
     // casadi wrapper as evaluate
     fun->evaluate = &external_function_casadi_wrapper;
+    fun->get_external_workspace_requirement = external_function_casadi_get_external_workspace_requirement;
+    fun->set_external_workspace = external_function_casadi_set_external_workspace;
 
     int ii;
 
@@ -820,7 +836,11 @@ acados_size_t external_function_casadi_calculate_size(external_function_casadi *
     // doubles
     size += fun->args_size_tot * sizeof(double);  // args
     size += fun->res_size_tot * sizeof(double);   // res
-    size += fun->float_work_size * sizeof(double);         // float_work
+    // float_work
+    if (!fun->opts.external_workspace)
+    {
+        size += fun->float_work_size * sizeof(double);
+    }
 
     size += 8;  // initial align
     size += 8;  // align to double
@@ -881,7 +901,10 @@ void external_function_casadi_assign(external_function_casadi *fun, void *raw_me
     for (ii = 0; ii < fun->res_num; ii++)
         assign_and_advance_double(fun->res_size[ii], &fun->res[ii], &c_ptr);
     // float_work
-    assign_and_advance_double(fun->float_work_size, &fun->float_work, &c_ptr);
+    if (!fun->opts.external_workspace)
+    {
+        assign_and_advance_double(fun->float_work_size, &fun->float_work, &c_ptr);
+    }
 
     assert((char *) raw_memory + external_function_casadi_calculate_size(fun, &fun->opts) >= c_ptr);
 
@@ -926,6 +949,24 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
 
     return;
 }
+
+
+size_t external_function_casadi_get_external_workspace_requirement(void *self)
+{
+    external_function_casadi *fun = self;
+    if (fun->opts.external_workspace)
+        return fun->float_work_size * sizeof(double);
+    else
+        return 0;
+}
+
+void external_function_casadi_set_external_workspace(void *self, void *workspace)
+{
+    external_function_casadi *fun = self;
+    if (fun->opts.external_workspace)
+        fun->float_work = workspace;
+}
+
 
 /************************************************
  * casadi external parametric function
@@ -981,6 +1022,8 @@ acados_size_t external_function_param_casadi_calculate_size(external_function_pa
 
     // casadi wrapper as evaluate function
     fun->evaluate = &external_function_param_casadi_wrapper;
+    fun->get_external_workspace_requirement = external_function_param_casadi_get_external_workspace_requirement;
+    fun->set_external_workspace = external_function_param_casadi_set_external_workspace;
 
     // set param function
     fun->get_nparam = &external_function_param_casadi_get_nparam;
@@ -1022,7 +1065,11 @@ acados_size_t external_function_param_casadi_calculate_size(external_function_pa
     // doubles
     size += fun->args_size_tot * sizeof(double);  // args
     size += fun->res_size_tot * sizeof(double);   // res
-    size += fun->float_work_size * sizeof(double);         // float_work
+    // float_work
+    if (!fun->opts.external_workspace)
+    {
+        size += fun->float_work_size * sizeof(double);
+    }
 
     size += 8;  // initial align
     size += 8;  // align to double
@@ -1083,7 +1130,10 @@ void external_function_param_casadi_assign(external_function_param_casadi *fun, 
     for (ii = 0; ii < fun->res_num; ii++)
         assign_and_advance_double(fun->res_size[ii], &fun->res[ii], &c_ptr);
     // float_work
-    assign_and_advance_double(fun->float_work_size, &fun->float_work, &c_ptr);
+    if (!fun->opts.external_workspace)
+    {
+        assign_and_advance_double(fun->float_work_size, &fun->float_work, &c_ptr);
+    }
 
     assert((char *) raw_memory + external_function_param_casadi_calculate_size(fun, fun->np, &fun->opts) >=
            c_ptr);
@@ -1134,7 +1184,6 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
 
 void external_function_param_casadi_get_nparam(void *self, int *np)
 {
-    // cast into external casadi function
     external_function_param_casadi *fun = self;
 
     *np = fun->np;
@@ -1142,6 +1191,23 @@ void external_function_param_casadi_get_nparam(void *self, int *np)
     return;
 }
 
+
+
+size_t external_function_param_casadi_get_external_workspace_requirement(void *self)
+{
+    external_function_param_casadi *fun = self;
+    if (fun->opts.external_workspace)
+        return fun->float_work_size;
+    else
+        return 0;
+}
+
+void external_function_param_casadi_set_external_workspace(void *self, void *workspace)
+{
+    external_function_param_casadi *fun = self;
+    if (fun->opts.external_workspace)
+        fun->float_work = workspace;
+}
 
 
 
@@ -1171,6 +1237,8 @@ acados_size_t external_function_external_param_generic_calculate_size(external_f
 {
     // wrapper as evaluate function
     fun->evaluate = &external_function_external_param_generic_wrapper;
+    fun->get_external_workspace_requirement = external_function_external_param_generic_get_external_workspace_requirement;
+    fun->set_external_workspace = external_function_external_param_generic_set_external_workspace;
 
     // set param function
     fun->set_param_pointer = &external_function_external_param_generic_set_param_pointer;
@@ -1217,6 +1285,19 @@ void external_function_external_param_generic_wrapper(void *self, ext_fun_arg_t 
 
 
 
+size_t external_function_external_param_generic_get_external_workspace_requirement(void *self)
+{
+    // external_function_external_param_generic *fun = self;
+    return 0;
+}
+
+void external_function_external_param_generic_set_external_workspace(void *self, void *workspace)
+{
+    // do nothing
+}
+
+
+
 /************************************************
  * external_function_external_param_casadi
  ************************************************/
@@ -1250,6 +1331,8 @@ acados_size_t external_function_external_param_casadi_calculate_size(external_fu
 
     // casadi wrapper as evaluate function
     fun->evaluate = &external_function_external_param_casadi_wrapper;
+    fun->get_external_workspace_requirement = external_function_external_param_casadi_get_external_workspace_requirement;
+    fun->set_external_workspace = external_function_external_param_casadi_set_external_workspace;
 
     // set param function
     fun->set_param_pointer = &external_function_external_param_casadi_set_param_pointer;
@@ -1291,7 +1374,11 @@ acados_size_t external_function_external_param_casadi_calculate_size(external_fu
     // doubles
     size += fun->args_size_tot * sizeof(double);  // args
     size += fun->res_size_tot * sizeof(double);   // res
-    size += fun->float_work_size * sizeof(double);         // float_work
+    // float_work
+    if (!fun->opts.external_workspace)
+    {
+        size += fun->float_work_size * sizeof(double);
+    }
 
     size += 8;  // initial align
     size += 8;  // align to double
@@ -1358,7 +1445,10 @@ void external_function_external_param_casadi_assign(external_function_external_p
     for (ii = 0; ii < fun->res_num; ii++)
         assign_and_advance_double(fun->res_size[ii], &fun->res[ii], &c_ptr);
     // float_work
-    assign_and_advance_double(fun->float_work_size, &fun->float_work, &c_ptr);
+    if (!fun->opts.external_workspace)
+    {
+        assign_and_advance_double(fun->float_work_size, &fun->float_work, &c_ptr);
+    }
 
     fun->param_mem_is_set = false;
 
@@ -1367,6 +1457,22 @@ void external_function_external_param_casadi_assign(external_function_external_p
     return;
 }
 
+
+size_t external_function_external_param_casadi_get_external_workspace_requirement(void *self)
+{
+    external_function_external_param_casadi *fun = self;
+    if (fun->opts.external_workspace)
+        return fun->float_work_size * sizeof(double);
+    else
+        return 0;
+}
+
+void external_function_external_param_casadi_set_external_workspace(void *self, void *workspace)
+{
+    external_function_external_param_casadi *fun = self;
+    if (fun->opts.external_workspace)
+        fun->float_work = workspace;
+}
 
 
 void external_function_external_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void **in,
