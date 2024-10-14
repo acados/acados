@@ -70,7 +70,7 @@ extern "C" {
 /************************************************
  * config
  ************************************************/
-
+// NOTE: in here only void* arguments, as ocp_nlp_in etc are defined based on config.
 typedef struct ocp_nlp_config
 {
     int N;  // number of stages
@@ -80,9 +80,9 @@ typedef struct ocp_nlp_config
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *opts_);
     void (*opts_update)(void *config, void *dims, void *opts_);
-    acados_size_t (*memory_calculate_size)(void *config, void *dims, void *opts_);
-    void *(*memory_assign)(void *config, void *dims, void *opts_, void *raw_memory);
-    acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts_);
+    acados_size_t (*memory_calculate_size)(void *config, void *dims, void *opts_, void *in);
+    void *(*memory_assign)(void *config, void *dims, void *opts_, void *in, void *raw_memory);
+    acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts_, void *in);
     void (*opts_set)(void *config_, void *opts_, const char *field, void* value);
     void (*opts_set_at_stage)(void *config_, void *opts_, size_t stage, const char *field, void* value);
     // evaluate solver // TODO rename into solve
@@ -414,10 +414,10 @@ typedef struct ocp_nlp_memory
 } ocp_nlp_memory;
 
 //
-acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts);
+acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_in *in);
 //
 ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims,
-                                      ocp_nlp_opts *opts, void *raw_memory);
+                                      ocp_nlp_opts *opts, ocp_nlp_in *in, void *raw_memory);
 //
 void ocp_nlp_memory_get(ocp_nlp_config *config, ocp_nlp_memory *nlp_mem, const char *field, void *return_value_);
 
@@ -457,10 +457,10 @@ typedef struct ocp_nlp_workspace
 } ocp_nlp_workspace;
 
 //
-acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts);
+acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_in *nlp_in);
 //
 ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims *dims,
-                                ocp_nlp_opts *opts, ocp_nlp_memory *mem, void *raw_memory);
+                                ocp_nlp_opts *opts, ocp_nlp_in *nlp_in, ocp_nlp_memory *mem, void *raw_memory);
 
 
 

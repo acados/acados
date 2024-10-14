@@ -260,10 +260,11 @@ void ocp_nlp_sqp_opts_get(void *config_, void *dims_, void *opts_,
  * memory
  ************************************************/
 
-acados_size_t ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void *opts_, void *in_)
 {
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
+    ocp_nlp_in *in = in_;
     ocp_nlp_sqp_opts *opts = opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
 
@@ -272,7 +273,7 @@ acados_size_t ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void
     size += sizeof(ocp_nlp_sqp_memory);
 
     // nlp mem
-    size += ocp_nlp_memory_calculate_size(config, dims, nlp_opts);
+    size += ocp_nlp_memory_calculate_size(config, dims, nlp_opts, in);
 
     // primal step norm
     if (opts->nlp_opts->log_primal_step_norm)
@@ -293,10 +294,11 @@ acados_size_t ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void
     return size;
 }
 
-void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
+void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *in_, void *raw_memory)
 {
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
+    ocp_nlp_in *in = in_;
     ocp_nlp_sqp_opts *opts = opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
 
@@ -316,8 +318,8 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     align_char_to(8, &c_ptr);
 
     // nlp mem
-    mem->nlp_mem = ocp_nlp_memory_assign(config, dims, nlp_opts, c_ptr);
-    c_ptr += ocp_nlp_memory_calculate_size(config, dims, nlp_opts);
+    mem->nlp_mem = ocp_nlp_memory_assign(config, dims, nlp_opts, in, c_ptr);
+    c_ptr += ocp_nlp_memory_calculate_size(config, dims, nlp_opts, in);
 
     // primal step norm
     if (opts->nlp_opts->log_primal_step_norm)
@@ -338,7 +340,7 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
 
     align_char_to(8, &c_ptr);
 
-    assert((char *) raw_memory + ocp_nlp_sqp_memory_calculate_size(config, dims, opts) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_sqp_memory_calculate_size(config, dims, opts, in) >= c_ptr);
 
     return mem;
 }
@@ -347,10 +349,11 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
  * workspace
  ************************************************/
 
-acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, void *opts_, void *in_)
 {
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
+    ocp_nlp_in *in = in_;
     ocp_nlp_sqp_opts *opts = opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
 
@@ -360,7 +363,7 @@ acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, v
     size += sizeof(ocp_nlp_sqp_workspace);
 
     // nlp
-    size += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts);
+    size += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts, in);
 
     if (nlp_opts->ext_qp_res)
     {
@@ -377,7 +380,7 @@ acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, v
 
 
 static void ocp_nlp_sqp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dims,
-         ocp_nlp_sqp_opts *opts, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_workspace *work)
+         ocp_nlp_sqp_opts *opts, ocp_nlp_in *in, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_workspace *work)
 {
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
@@ -387,8 +390,8 @@ static void ocp_nlp_sqp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dim
     c_ptr += sizeof(ocp_nlp_sqp_workspace);
 
     // nlp
-    work->nlp_work = ocp_nlp_workspace_assign(config, dims, nlp_opts, nlp_mem, c_ptr);
-    c_ptr += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts);
+    work->nlp_work = ocp_nlp_workspace_assign(config, dims, nlp_opts, in, nlp_mem, c_ptr);
+    c_ptr += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts, in);
 
     if (nlp_opts->ext_qp_res)
     {
@@ -401,7 +404,7 @@ static void ocp_nlp_sqp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dim
         c_ptr += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
     }
 
-    assert((char *) work + ocp_nlp_sqp_workspace_calculate_size(config, dims, opts) >= c_ptr);
+    assert((char *) work + ocp_nlp_sqp_workspace_calculate_size(config, dims, opts, in) >= c_ptr);
 
     return;
 }
@@ -818,10 +821,10 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
     ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
-    nlp_mem->workspace_size = ocp_nlp_workspace_calculate_size(config, dims, opts->nlp_opts);
+    nlp_mem->workspace_size = ocp_nlp_workspace_calculate_size(config, dims, opts->nlp_opts, nlp_in);
 
     ocp_nlp_sqp_workspace *work = work_;
-    ocp_nlp_sqp_cast_workspace(config, dims, opts, mem, work);
+    ocp_nlp_sqp_cast_workspace(config, dims, opts, nlp_in, mem, work);
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
     return ocp_nlp_precompute_common(config, dims, nlp_in, nlp_out, opts->nlp_opts, nlp_mem, nlp_work);
