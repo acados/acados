@@ -36,6 +36,12 @@
 #include "acados/utils/mem.h"
 
 
+
+void external_function_opts_copy(external_function_opts *from, external_function_opts* to)
+{
+    to->external_workspace = from->external_workspace;
+}
+
 /************************************************
  * generic external parametric function
  ************************************************/
@@ -73,6 +79,9 @@ acados_size_t external_function_param_generic_calculate_size(external_function_p
 
     // set number of parameters
     fun->np = np;
+
+    // copy options
+    external_function_opts_copy(opts_, fun->opts);
 
     acados_size_t size = 0;
 
@@ -794,6 +803,9 @@ acados_size_t external_function_casadi_calculate_size(external_function_casadi *
     for (ii = 0; ii < fun->res_num; ii++)
         fun->res_size_tot += casadi_nnz(fun->casadi_sparsity_out(ii));
 
+    // copy options
+    external_function_opts_copy(opts_, fun->opts);
+
     acados_size_t size = 0;
 
     // double pointers
@@ -993,8 +1005,10 @@ acados_size_t external_function_param_casadi_calculate_size(external_function_pa
     for (ii = 0; ii < fun->res_num; ii++)
         fun->res_size_tot += casadi_nnz(fun->casadi_sparsity_out(ii));
 
-    acados_size_t size = 0;
+    // copy options
+    external_function_opts_copy(opts_, fun->opts);
 
+    acados_size_t size = 0;
 
     // double pointers
     size += fun->args_num * sizeof(double *);  // args
@@ -1164,6 +1178,9 @@ acados_size_t external_function_external_param_generic_calculate_size(external_f
     // set number of parameters
     fun->param_mem_is_set = false;
 
+    // copy options
+    external_function_opts_copy(opts_, fun->opts);
+
     acados_size_t size = 0;
 
     make_int_multiple_of(8, &size);
@@ -1256,6 +1273,9 @@ acados_size_t external_function_external_param_casadi_calculate_size(external_fu
     fun->res_size_tot = 0;
     for (ii = 0; ii < fun->res_num; ii++)
         fun->res_size_tot += casadi_nnz(fun->casadi_sparsity_out(ii));
+
+    // copy options
+    external_function_opts_copy(opts_, fun->opts);
 
     acados_size_t size = 0;
 
