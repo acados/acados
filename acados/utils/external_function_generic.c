@@ -61,7 +61,7 @@ static void external_function_param_generic_set_param_sparse(void *self, int n_u
 }
 
 
-acados_size_t external_function_param_generic_calculate_size(external_function_param_generic *fun, int np)
+acados_size_t external_function_param_generic_calculate_size(external_function_param_generic *fun, int np, external_function_opts *opts_)
 {
     // wrapper as evaluate function
     fun->evaluate = &external_function_param_generic_wrapper;
@@ -777,7 +777,7 @@ acados_size_t external_function_casadi_struct_size()
 }
 
 
-acados_size_t external_function_casadi_calculate_size(external_function_casadi *fun)
+acados_size_t external_function_casadi_calculate_size(external_function_casadi *fun, external_function_opts *opts_)
 {
     // casadi wrapper as evaluate
     fun->evaluate = &external_function_casadi_wrapper;
@@ -974,7 +974,7 @@ static void external_function_param_casadi_set_param_sparse(void *self, int n_up
 }
 
 
-acados_size_t external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np)
+acados_size_t external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np, external_function_opts *opts_)
 {
     int ii;
 
@@ -1169,7 +1169,7 @@ static void external_function_external_param_generic_set_param_pointer(void *sel
 }
 
 
-acados_size_t external_function_external_param_generic_calculate_size(external_function_external_param_generic *fun)
+acados_size_t external_function_external_param_generic_calculate_size(external_function_external_param_generic *fun, external_function_opts *opts_)
 {
     // wrapper as evaluate function
     fun->evaluate = &external_function_external_param_generic_wrapper;
@@ -1248,7 +1248,7 @@ static void external_function_external_param_casadi_set_param_pointer(void *self
 }
 
 
-acados_size_t external_function_external_param_casadi_calculate_size(external_function_external_param_casadi *fun)
+acados_size_t external_function_external_param_casadi_calculate_size(external_function_external_param_casadi *fun, external_function_opts *opts_)
 {
     int ii;
 
