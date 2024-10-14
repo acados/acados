@@ -47,12 +47,6 @@ acados_size_t external_function_param_generic_struct_size()
 
 
 
-void external_function_param_generic_set_fun(external_function_param_generic *fun, void *value)
-{
-    fun->fun = value;
-    return;
-}
-
 static void external_function_param_generic_set_param_sparse(void *self, int n_update,
                                                              int *idx, double *p)
 {
@@ -778,55 +772,6 @@ acados_size_t external_function_casadi_struct_size()
 }
 
 
-
-void external_function_casadi_set_fun(external_function_casadi *fun, void *value)
-{
-    fun->casadi_fun = value;
-    return;
-}
-
-
-
-void external_function_casadi_set_work(external_function_casadi *fun, void *value)
-{
-    fun->casadi_work = value;
-    return;
-}
-
-
-
-void external_function_casadi_set_sparsity_in(external_function_casadi *fun, void *value)
-{
-    fun->casadi_sparsity_in = value;
-    return;
-}
-
-
-
-void external_function_casadi_set_sparsity_out(external_function_casadi *fun, void *value)
-{
-    fun->casadi_sparsity_out = value;
-    return;
-}
-
-
-
-void external_function_casadi_set_n_in(external_function_casadi *fun, void *value)
-{
-    fun->casadi_n_in = value;
-    return;
-}
-
-
-
-void external_function_casadi_set_n_out(external_function_casadi *fun, void *value)
-{
-    fun->casadi_n_out = value;
-    return;
-}
-
-
-
 acados_size_t external_function_casadi_calculate_size(external_function_casadi *fun)
 {
     // casadi wrapper as evaluate
@@ -977,54 +922,6 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
 acados_size_t external_function_param_casadi_struct_size()
 {
     return sizeof(external_function_param_casadi);
-}
-
-
-
-void external_function_param_casadi_set_fun(external_function_param_casadi *fun, void *value)
-{
-    fun->casadi_fun = value;
-    return;
-}
-
-
-
-void external_function_param_casadi_set_work(external_function_param_casadi *fun, void *value)
-{
-    fun->casadi_work = value;
-    return;
-}
-
-
-
-void external_function_param_casadi_set_sparsity_in(external_function_param_casadi *fun, void *value)
-{
-    fun->casadi_sparsity_in = value;
-    return;
-}
-
-
-
-void external_function_param_casadi_set_sparsity_out(external_function_param_casadi *fun, void *value)
-{
-    fun->casadi_sparsity_out = value;
-    return;
-}
-
-
-
-void external_function_param_casadi_set_n_in(external_function_param_casadi *fun, void *value)
-{
-    fun->casadi_n_in = value;
-    return;
-}
-
-
-
-void external_function_param_casadi_set_n_out(external_function_param_casadi *fun, void *value)
-{
-    fun->casadi_n_out = value;
-    return;
 }
 
 
@@ -1244,14 +1141,6 @@ acados_size_t external_function_external_param_generic_struct_size()
 }
 
 
-
-void external_function_external_param_generic_set_fun(external_function_external_param_generic *fun, void *value)
-{
-    fun->fun = value;
-    return;
-}
-
-
 static void external_function_external_param_generic_set_param_pointer(void *self, double *p)
 {
     external_function_external_param_generic *fun = self;
@@ -1316,48 +1205,6 @@ void external_function_external_param_generic_wrapper(void *self, ext_fun_arg_t 
 acados_size_t external_function_external_param_casadi_struct_size()
 {
     return sizeof(external_function_external_param_casadi);
-}
-
-
-void external_function_external_param_casadi_set_fun(external_function_external_param_casadi *fun, void *value)
-{
-    fun->casadi_fun = value;
-    return;
-}
-
-
-void external_function_external_param_casadi_set_work(external_function_external_param_casadi *fun, void *value)
-{
-    fun->casadi_work = value;
-    return;
-}
-
-
-void external_function_external_param_casadi_set_sparsity_in(external_function_external_param_casadi *fun, void *value)
-{
-    fun->casadi_sparsity_in = value;
-    return;
-}
-
-
-void external_function_external_param_casadi_set_sparsity_out(external_function_external_param_casadi *fun, void *value)
-{
-    fun->casadi_sparsity_out = value;
-    return;
-}
-
-
-void external_function_external_param_casadi_set_n_in(external_function_external_param_casadi *fun, void *value)
-{
-    fun->casadi_n_in = value;
-    return;
-}
-
-
-void external_function_external_param_casadi_set_n_out(external_function_external_param_casadi *fun, void *value)
-{
-    fun->casadi_n_out = value;
-    return;
 }
 
 
