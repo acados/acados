@@ -109,14 +109,14 @@ typedef struct
     int (*fun)(void **, void **, void *);
     double *p;  // parameters
     int np;     // number of parameters
-    external_function_opts *opts;
+    external_function_opts opts;
     // .....
 } external_function_param_generic;
 
 //
 acados_size_t external_function_param_generic_struct_size();
 //
-acados_size_t external_function_param_generic_calculate_size(external_function_param_generic *fun, int np);
+acados_size_t external_function_param_generic_calculate_size(external_function_param_generic *fun, int np, external_function_opts *opts_);
 //
 void external_function_param_generic_assign(external_function_param_generic *fun, void *mem);
 //
@@ -159,13 +159,13 @@ typedef struct
     int out_num;        // number of output arrays
     int int_work_size;        // number of ints for worksapce
     int float_work_size;         // number of doubles for workspace
-    external_function_opts *opts;
+    external_function_opts opts;
 } external_function_casadi;
 
 //
 acados_size_t external_function_casadi_struct_size();
 //
-acados_size_t external_function_casadi_calculate_size(external_function_casadi *fun);
+acados_size_t external_function_casadi_calculate_size(external_function_casadi *fun, external_function_opts *opts_);
 //
 void external_function_casadi_assign(external_function_casadi *fun, void *mem);
 //
@@ -209,13 +209,13 @@ typedef struct
     int int_work_size;        // number of ints for worksapce
     int float_work_size;         // number of doubles for workspace
     int np;             // number of parameters
-    external_function_opts *opts;
+    external_function_opts opts;
 } external_function_param_casadi;
 
 //
 acados_size_t external_function_param_casadi_struct_size();
 //
-acados_size_t external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np);
+acados_size_t external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np, external_function_opts *opts_);
 //
 void external_function_param_casadi_assign(external_function_param_casadi *fun, void *mem);
 //
@@ -261,13 +261,13 @@ typedef struct
     int float_work_size;         // number of doubles for workspace
 
     bool param_mem_is_set;  // indicates if param memory is set;
-    external_function_opts *opts;
+    external_function_opts opts;
 } external_function_external_param_casadi;
 
 //
 acados_size_t external_function_external_param_casadi_struct_size();
 //
-acados_size_t external_function_external_param_casadi_calculate_size(external_function_external_param_casadi *fun);
+acados_size_t external_function_external_param_casadi_calculate_size(external_function_external_param_casadi *fun, external_function_opts *opts_);
 //
 void external_function_external_param_casadi_assign(external_function_external_param_casadi *fun, void *mem);
 //
@@ -293,14 +293,14 @@ typedef struct
     int (*fun)(void **, void **, void *);
     double *p;  // parameters
     bool param_mem_is_set;
-    external_function_opts *opts;
+    external_function_opts opts;
 
 } external_function_external_param_generic;
 
 //
 acados_size_t external_function_external_param_generic_struct_size();
 //
-acados_size_t external_function_external_param_generic_calculate_size(external_function_external_param_generic *fun);
+acados_size_t external_function_external_param_generic_calculate_size(external_function_external_param_generic *fun, external_function_opts *opts_);
 //
 void external_function_external_param_generic_assign(external_function_external_param_generic *fun, void *mem);
 //
