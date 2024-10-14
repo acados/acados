@@ -2452,14 +2452,6 @@ void {{ model.name }}_acados_set_nlp_out({{ model.name }}_solver_capsule* capsul
 
 
 /**
- * Internal function for {{ model.name }}_acados_create: step 8
- */
-//void {{ model.name }}_acados_create_8_create_solver({{ model.name }}_solver_capsule* capsule)
-//{
-//    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts);
-//}
-
-/**
  * Internal function for {{ model.name }}_acados_create: step 9
  */
 int {{ model.name }}_acados_create_precompute({{ model.name }}_solver_capsule* capsule) {
@@ -2509,7 +2501,7 @@ int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_c
     {{ model.name }}_acados_create_set_default_parameters(capsule);
 
     // 6) create solver
-    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts);
+    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts, capsule->nlp_in);
 
     // 7) create and set nlp_out
     // 7.1) nlp_out
@@ -2546,7 +2538,7 @@ int {{ model.name }}_acados_update_qp_solver_cond_N({{ model.name }}_solver_caps
 
     // 3) continue with the remaining steps from {{ model.name }}_acados_create_with_discretization(...):
     // -> 8) create solver
-    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts);
+    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts, capsule->nlp_in);
 
     // -> 9) do precomputations
     int status = {{ model.name }}_acados_create_precompute(capsule);

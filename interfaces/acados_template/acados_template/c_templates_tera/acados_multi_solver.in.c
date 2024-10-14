@@ -2441,13 +2441,6 @@ void {{ name }}_acados_create_set_nlp_out({{ name }}_solver_capsule* capsule)
 }
 
 
-/**
- * Internal function for {{ name }}_acados_create: step 8
- */
-//void {{ name }}_acados_create_8_create_solver({{ name }}_solver_capsule* capsule)
-//{
-//    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts);
-//}
 
 /**
  * Internal function for {{ name }}_acados_create: step 9
@@ -2500,7 +2493,7 @@ int {{ name }}_acados_create_with_discretization({{ name }}_solver_capsule* caps
     {{ name }}_acados_create_set_default_parameters(capsule);
 
     // 6) create solver
-    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts);
+    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts, capsule->nlp_in);
 
     // 7) create and set nlp_out
     // 7.1) nlp_out
