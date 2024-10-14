@@ -72,6 +72,15 @@ struct blasfeo_dvec_args
     int xi;
 };
 
+
+// external_function_opts
+typedef struct
+{
+    bool external_workspace;
+} external_function_opts;
+
+
+
 // prototype of an external function
 typedef struct
 {
@@ -100,6 +109,7 @@ typedef struct
     int (*fun)(void **, void **, void *);
     double *p;  // parameters
     int np;     // number of parameters
+    external_function_opts *opts;
     // .....
 } external_function_param_generic;
 
@@ -149,6 +159,7 @@ typedef struct
     int out_num;        // number of output arrays
     int int_work_size;        // number of ints for worksapce
     int float_work_size;         // number of doubles for workspace
+    external_function_opts *opts;
 } external_function_casadi;
 
 //
@@ -198,6 +209,7 @@ typedef struct
     int int_work_size;        // number of ints for worksapce
     int float_work_size;         // number of doubles for workspace
     int np;             // number of parameters
+    external_function_opts *opts;
 } external_function_param_casadi;
 
 //
@@ -249,6 +261,7 @@ typedef struct
     int float_work_size;         // number of doubles for workspace
 
     bool param_mem_is_set;  // indicates if param memory is set;
+    external_function_opts *opts;
 } external_function_external_param_casadi;
 
 //
@@ -280,6 +293,7 @@ typedef struct
     int (*fun)(void **, void **, void *);
     double *p;  // parameters
     bool param_mem_is_set;
+    external_function_opts *opts;
 
 } external_function_external_param_generic;
 

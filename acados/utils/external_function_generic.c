@@ -75,6 +75,7 @@ acados_size_t external_function_param_generic_calculate_size(external_function_p
     fun->np = np;
 
     acados_size_t size = 0;
+    size += sizeof(external_function_opts);
 
     // doubles
     size += fun->np * sizeof(double); // p
@@ -95,6 +96,10 @@ void external_function_param_generic_assign(external_function_param_generic *fun
 
     // char pointer for byte advances
     char *c_ptr = raw_memory;
+
+    // external_function_opts
+    fun->opts = (external_function_opts) c_ptr;
+    c_ptr += sizeof(external_function_opts);
 
     // align to double
     align_char_to(8, &c_ptr);
@@ -796,6 +801,8 @@ acados_size_t external_function_casadi_calculate_size(external_function_casadi *
 
     acados_size_t size = 0;
 
+    size += sizeof(external_function_opts);
+
     // double pointers
     size += fun->args_num * sizeof(double *);  // args
     size += fun->res_num * sizeof(double *);   // res
@@ -829,6 +836,10 @@ void external_function_casadi_assign(external_function_casadi *fun, void *raw_me
 
     // char pointer for byte advances
     char *c_ptr = raw_memory;
+
+    // external_function_opts
+    fun->opts = (external_function_opts) c_ptr;
+    c_ptr += sizeof(external_function_opts);
 
     // double pointers
 
@@ -994,6 +1005,8 @@ acados_size_t external_function_param_casadi_calculate_size(external_function_pa
         fun->res_size_tot += casadi_nnz(fun->casadi_sparsity_out(ii));
 
     acados_size_t size = 0;
+    size += sizeof(external_function_opts);
+
 
     // double pointers
     size += fun->args_num * sizeof(double *);  // args
@@ -1028,6 +1041,10 @@ void external_function_param_casadi_assign(external_function_param_casadi *fun, 
 
     // char pointer for byte advances
     char *c_ptr = raw_memory;
+
+    // external_function_opts
+    fun->opts = (external_function_opts) c_ptr;
+    c_ptr += sizeof(external_function_opts);
 
     // double pointers
 
@@ -1164,6 +1181,7 @@ acados_size_t external_function_external_param_generic_calculate_size(external_f
     fun->param_mem_is_set = false;
 
     acados_size_t size = 0;
+    size += sizeof(external_function_opts);
 
     make_int_multiple_of(8, &size);
 
@@ -1178,8 +1196,13 @@ void external_function_external_param_generic_assign(external_function_external_
     fun->ptr_ext_mem = raw_memory;
 
     // char pointer for byte advances
-    // char *c_ptr = raw_memory;
-    // assert((char *) raw_memory + external_function_external_param_generic_calculate_size(fun, fun->np) >= c_ptr);
+    char *c_ptr = raw_memory;
+
+    // external_function_opts
+    fun->opts = (external_function_opts) c_ptr;
+    c_ptr += sizeof(external_function_opts);
+
+    assert((char *) raw_memory + external_function_external_param_generic_calculate_size(fun, fun->np) >= c_ptr);
 
     return;
 }
@@ -1256,6 +1279,7 @@ acados_size_t external_function_external_param_casadi_calculate_size(external_fu
         fun->res_size_tot += casadi_nnz(fun->casadi_sparsity_out(ii));
 
     acados_size_t size = 0;
+    size += sizeof(external_function_opts);
 
     // double pointers
     size += fun->args_num * sizeof(double *);  // args
@@ -1290,6 +1314,10 @@ void external_function_external_param_casadi_assign(external_function_external_p
 
     // char pointer for byte advances
     char *c_ptr = raw_memory;
+
+    // external_function_opts
+    fun->opts = (external_function_opts) c_ptr;
+    c_ptr += sizeof(external_function_opts);
 
     // double pointers
 
