@@ -779,7 +779,7 @@ acados_size_t external_function_casadi_calculate_size(external_function_casadi *
 
     int ii;
 
-    fun->casadi_work(&fun->args_num, &fun->res_num, &fun->int_work_size, &fun->w_size);
+    fun->casadi_work(&fun->args_num, &fun->res_num, &fun->int_work_size, &fun->float_work_size);
 
     fun->in_num = fun->casadi_n_in();
     fun->out_num = fun->casadi_n_out();
@@ -808,7 +808,7 @@ acados_size_t external_function_casadi_calculate_size(external_function_casadi *
     // doubles
     size += fun->args_size_tot * sizeof(double);  // args
     size += fun->res_size_tot * sizeof(double);   // res
-    size += fun->w_size * sizeof(double);         // w
+    size += fun->float_work_size * sizeof(double);         // w
 
     size += 8;  // initial align
     size += 8;  // align to double
@@ -857,7 +857,7 @@ void external_function_casadi_assign(external_function_casadi *fun, void *raw_me
         fun->res_dense[ii] = casadi_is_dense(fun->casadi_sparsity_out(ii));
     }
     // iw
-    assign_and_advance_int(fun->int_work_size, &fun->iw, &c_ptr);
+    assign_and_advance_int(fun->int_work_size, &fun->int_work, &c_ptr);
 
     // align to double
     align_char_to(8, &c_ptr);
@@ -869,7 +869,7 @@ void external_function_casadi_assign(external_function_casadi *fun, void *raw_me
     for (ii = 0; ii < fun->res_num; ii++)
         assign_and_advance_double(fun->res_size[ii], &fun->res[ii], &c_ptr);
     // w
-    assign_and_advance_double(fun->w_size, &fun->w, &c_ptr);
+    assign_and_advance_double(fun->float_work_size, &fun->float_work, &c_ptr);
 
     assert((char *) raw_memory + external_function_casadi_calculate_size(fun) >= c_ptr);
 
@@ -899,7 +899,7 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
     }
 
     // call casadi function
-    fun->casadi_fun((const double **) fun->args, fun->res, fun->iw, fun->w, NULL);
+    fun->casadi_fun((const double **) fun->args, fun->res, fun->int_work, fun->float_work, NULL);
 
     for (ii = 0; ii < fun->out_num; ii++)
     {
@@ -978,7 +978,7 @@ acados_size_t external_function_param_casadi_calculate_size(external_function_pa
     // set number of parameters
     fun->np = np;
 
-    fun->casadi_work(&fun->args_num, &fun->res_num, &fun->int_work_size, &fun->w_size);
+    fun->casadi_work(&fun->args_num, &fun->res_num, &fun->int_work_size, &fun->float_work_size);
 
     fun->in_num = fun->casadi_n_in();
     fun->out_num = fun->casadi_n_out();
@@ -1007,7 +1007,7 @@ acados_size_t external_function_param_casadi_calculate_size(external_function_pa
     // doubles
     size += fun->args_size_tot * sizeof(double);  // args
     size += fun->res_size_tot * sizeof(double);   // res
-    size += fun->w_size * sizeof(double);         // w
+    size += fun->float_work_size * sizeof(double);         // w
 
     size += 8;  // initial align
     size += 8;  // align to double
@@ -1056,7 +1056,7 @@ void external_function_param_casadi_assign(external_function_param_casadi *fun, 
         fun->res_dense[ii] = casadi_is_dense(fun->casadi_sparsity_out(ii));
     }
     // iw
-    assign_and_advance_int(fun->int_work_size, &fun->iw, &c_ptr);
+    assign_and_advance_int(fun->int_work_size, &fun->int_work, &c_ptr);
 
     // align to double
     align_char_to(8, &c_ptr);
@@ -1068,7 +1068,7 @@ void external_function_param_casadi_assign(external_function_param_casadi *fun, 
     for (ii = 0; ii < fun->res_num; ii++)
         assign_and_advance_double(fun->res_size[ii], &fun->res[ii], &c_ptr);
     // w
-    assign_and_advance_double(fun->w_size, &fun->w, &c_ptr);
+    assign_and_advance_double(fun->float_work_size, &fun->float_work, &c_ptr);
 
     assert((char *) raw_memory + external_function_param_casadi_calculate_size(fun, fun->np) >=
            c_ptr);
@@ -1099,7 +1099,7 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
     // parameters are last argument and set via external_function_param_casadi_set_param
 
     // call casadi function
-    fun->casadi_fun((const double **) fun->args, fun->res, fun->iw, fun->w, NULL);
+    fun->casadi_fun((const double **) fun->args, fun->res, fun->int_work, fun->float_work, NULL);
 
     for (ii = 0; ii < fun->out_num; ii++)
     {
@@ -1235,7 +1235,7 @@ acados_size_t external_function_external_param_casadi_calculate_size(external_fu
     // set param function
     fun->set_param_pointer = &external_function_external_param_casadi_set_param_pointer;
 
-    fun->casadi_work(&fun->args_num, &fun->res_num, &fun->int_work_size, &fun->w_size);
+    fun->casadi_work(&fun->args_num, &fun->res_num, &fun->int_work_size, &fun->float_work_size);
 
     fun->in_num = fun->casadi_n_in();
     fun->out_num = fun->casadi_n_out();
@@ -1269,7 +1269,7 @@ acados_size_t external_function_external_param_casadi_calculate_size(external_fu
     // doubles
     size += fun->args_size_tot * sizeof(double);  // args
     size += fun->res_size_tot * sizeof(double);   // res
-    size += fun->w_size * sizeof(double);         // w
+    size += fun->float_work_size * sizeof(double);         // w
 
     size += 8;  // initial align
     size += 8;  // align to double
@@ -1318,7 +1318,7 @@ void external_function_external_param_casadi_assign(external_function_external_p
         fun->res_dense[ii] = casadi_is_dense(fun->casadi_sparsity_out(ii));
     }
     // iw
-    assign_and_advance_int(fun->int_work_size, &fun->iw, &c_ptr);
+    assign_and_advance_int(fun->int_work_size, &fun->int_work, &c_ptr);
 
     // align to double
     align_char_to(8, &c_ptr);
@@ -1336,7 +1336,7 @@ void external_function_external_param_casadi_assign(external_function_external_p
     for (ii = 0; ii < fun->res_num; ii++)
         assign_and_advance_double(fun->res_size[ii], &fun->res[ii], &c_ptr);
     // w
-    assign_and_advance_double(fun->w_size, &fun->w, &c_ptr);
+    assign_and_advance_double(fun->float_work_size, &fun->float_work, &c_ptr);
 
     fun->param_mem_is_set = false;
 
@@ -1374,7 +1374,7 @@ void external_function_external_param_casadi_wrapper(void *self, ext_fun_arg_t *
     // parameters are last argument
 
     // call casadi function
-    fun->casadi_fun((const double **) fun->args, fun->res, fun->iw, fun->w, NULL);
+    fun->casadi_fun((const double **) fun->args, fun->res, fun->int_work, fun->float_work, NULL);
 
     for (ii = 0; ii < fun->out_num; ii++)
     {
