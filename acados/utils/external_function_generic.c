@@ -36,11 +36,29 @@
 #include "acados/utils/mem.h"
 
 
+/* general utilities for all external_function_* */
 
 void external_function_opts_copy(external_function_opts *from, external_function_opts* to)
 {
     to->external_workspace = from->external_workspace;
 }
+
+size_t external_function_get_workspace_requirement_if_defined(external_function_generic *fun)
+{
+    if (fun == NULL)
+        return 0;
+    else
+        return fun->get_external_workspace_requirement(fun);
+}
+
+void external_function_set_fun_workspace_if_defined(external_function_generic *fun, void *work_)
+{
+    if (fun != NULL)
+        fun->set_external_workspace(fun, work_);
+}
+
+
+
 
 /************************************************
  * generic external parametric function
@@ -1197,7 +1215,7 @@ size_t external_function_param_casadi_get_external_workspace_requirement(void *s
 {
     external_function_param_casadi *fun = self;
     if (fun->opts.external_workspace)
-        return fun->float_work_size;
+        return fun->float_work_size * sizeof(double);
     else
         return 0;
 }

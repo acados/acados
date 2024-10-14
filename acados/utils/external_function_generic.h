@@ -93,6 +93,13 @@ typedef struct
 } external_function_generic;
 
 
+size_t external_function_get_workspace_requirement_if_defined(external_function_generic *fun);
+
+void external_function_set_fun_workspace_if_defined(external_function_generic *fun, void *work_);
+
+
+
+
 /************************************************
  * generic external parametric function
  ************************************************/
