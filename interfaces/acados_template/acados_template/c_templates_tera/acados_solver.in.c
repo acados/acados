@@ -2652,7 +2652,7 @@ int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver
     fun->res[{{ ip }}] = {{ fun_name_split[0] }}_get_pool_double("{{ pool_name }}");
 {%- endfor %}
 
-    fun->casadi_fun((const double **) fun->args, fun->res, fun->iw, fun->w, NULL);
+    fun->casadi_fun((const double **) fun->args, fun->res, fun->int_work, fun->float_work, NULL);
     return 1;
 
 {%- else %}
