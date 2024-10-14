@@ -82,7 +82,6 @@ typedef struct
 } external_function_generic;
 
 
-
 /************************************************
  * generic external parametric function
  ************************************************/
@@ -106,8 +105,6 @@ typedef struct
 
 //
 acados_size_t external_function_param_generic_struct_size();
-//
-void external_function_param_generic_set_fun(external_function_param_generic *fun, void *value);
 //
 acados_size_t external_function_param_generic_calculate_size(external_function_param_generic *fun, int np);
 //
@@ -138,8 +135,8 @@ typedef struct
     int (*casadi_n_out)(void);
     double **args;
     double **res;
-    double *w;
-    int *iw;
+    double *float_work;
+    int *int_work;
     int *args_size;     // size of args[i]
     int *res_size;      // size of res[i]
     int *args_dense;    // indicates if args[i] is dense
@@ -150,24 +147,12 @@ typedef struct
     int res_size_tot;   // total size of res arrays
     int in_num;         // number of input arrays
     int out_num;        // number of output arrays
-    int iw_size;        // number of ints for worksapce
-    int w_size;         // number of doubles for workspace
+    int int_work_size;        // number of ints for worksapce
+    int float_work_size;         // number of doubles for workspace
 } external_function_casadi;
 
 //
 acados_size_t external_function_casadi_struct_size();
-//
-void external_function_casadi_set_fun(external_function_casadi *fun, void *value);
-//
-void external_function_casadi_set_work(external_function_casadi *fun, void *value);
-//
-void external_function_casadi_set_sparsity_in(external_function_casadi *fun, void *value);
-//
-void external_function_casadi_set_sparsity_out(external_function_casadi *fun, void *value);
-//
-void external_function_casadi_set_n_in(external_function_casadi *fun, void *value);
-//
-void external_function_casadi_set_n_out(external_function_casadi *fun, void *value);
 //
 acados_size_t external_function_casadi_calculate_size(external_function_casadi *fun);
 //
@@ -198,8 +183,8 @@ typedef struct
     int (*casadi_n_out)(void);
     double **args;
     double **res;
-    double *w;
-    int *iw;
+    double *float_work;
+    int *int_work;
     int *args_size;     // size of args[i]
     int *res_size;      // size of res[i]
     int *args_dense;    // indicates if args[i] is dense
@@ -210,25 +195,13 @@ typedef struct
     int res_size_tot;   // total size of res arrays
     int in_num;         // number of input arrays
     int out_num;        // number of output arrays
-    int iw_size;        // number of ints for worksapce
-    int w_size;         // number of doubles for workspace
+    int int_work_size;        // number of ints for worksapce
+    int float_work_size;         // number of doubles for workspace
     int np;             // number of parameters
 } external_function_param_casadi;
 
 //
 acados_size_t external_function_param_casadi_struct_size();
-//
-void external_function_param_casadi_set_fun(external_function_param_casadi *fun, void *value);
-//
-void external_function_param_casadi_set_work(external_function_param_casadi *fun, void *value);
-//
-void external_function_param_casadi_set_sparsity_in(external_function_param_casadi *fun, void *value);
-//
-void external_function_param_casadi_set_sparsity_out(external_function_param_casadi *fun, void *value);
-//
-void external_function_param_casadi_set_n_in(external_function_param_casadi *fun, void *value);
-//
-void external_function_param_casadi_set_n_out(external_function_param_casadi *fun, void *value);
 //
 acados_size_t external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np);
 //
@@ -260,8 +233,8 @@ typedef struct
     int (*casadi_n_out)(void);
     double **args;
     double **res;
-    double *w;
-    int *iw;
+    double *float_work;
+    int *int_work;
     int *args_size;     // size of args[i]
     int *res_size;      // size of res[i]
     int *args_dense;    // indicates if args[i] is dense
@@ -272,26 +245,14 @@ typedef struct
     int res_size_tot;   // total size of res arrays
     int in_num;         // number of input arrays
     int out_num;        // number of output arrays
-    int iw_size;        // number of ints for worksapce
-    int w_size;         // number of doubles for workspace
+    int int_work_size;        // number of ints for worksapce
+    int float_work_size;         // number of doubles for workspace
 
     bool param_mem_is_set;  // indicates if param memory is set;
 } external_function_external_param_casadi;
 
 //
 acados_size_t external_function_external_param_casadi_struct_size();
-//
-void external_function_external_param_casadi_set_fun(external_function_external_param_casadi *fun, void *value);
-//
-void external_function_external_param_casadi_set_work(external_function_external_param_casadi *fun, void *value);
-//
-void external_function_external_param_casadi_set_sparsity_in(external_function_external_param_casadi *fun, void *value);
-//
-void external_function_external_param_casadi_set_sparsity_out(external_function_external_param_casadi *fun, void *value);
-//
-void external_function_external_param_casadi_set_n_in(external_function_external_param_casadi *fun, void *value);
-//
-void external_function_external_param_casadi_set_n_out(external_function_external_param_casadi *fun, void *value);
 //
 acados_size_t external_function_external_param_casadi_calculate_size(external_function_external_param_casadi *fun);
 //
@@ -324,8 +285,6 @@ typedef struct
 
 //
 acados_size_t external_function_external_param_generic_struct_size();
-//
-void external_function_external_param_generic_set_fun(external_function_external_param_generic *fun, void *value);
 //
 acados_size_t external_function_external_param_generic_calculate_size(external_function_external_param_generic *fun);
 //
