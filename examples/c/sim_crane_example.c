@@ -271,6 +271,7 @@ int main()
         ************************************************/
 
         sim_solver *sim_solver = sim_solver_create(config, dims, opts, in);
+        sim_precompute(sim_solver, in, out);
 
         int acados_return;
 
