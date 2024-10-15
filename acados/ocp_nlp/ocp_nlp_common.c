@@ -1750,9 +1750,7 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
     // module workspace
     if (opts->reuse_workspace)
     {
-
 #if defined(ACADOS_WITH_OPENMP)
-
         // qp solver
         size += qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver,
             opts->qp_solver_opts);
@@ -1805,13 +1803,10 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
         }
 
         size += size_tmp;
-
 #endif
-
     }
     else
     {
-
         // qp solver
         size += qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver,
             opts->qp_solver_opts);
@@ -1920,9 +1915,7 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
 
     if (opts->reuse_workspace)
     {
-
 #if defined(ACADOS_WITH_OPENMP)
-
         // qp solver
         work->qp_work = (void *) c_ptr;
         c_ptr += qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
@@ -1947,9 +1940,7 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
             work->constraints[i] = c_ptr;
             c_ptr += constraints[i]->workspace_calculate_size(constraints[i], dims->constraints[i], opts->constraints[i]);
         }
-
 #else
-
         acados_size_t size_tmp = 0;
         int tmp;
 
@@ -1981,18 +1972,14 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
             tmp = constraints[i]->workspace_calculate_size(constraints[i], dims->constraints[i], opts->constraints[i]);
             size_tmp = tmp > size_tmp ? tmp : size_tmp;
         }
-
         c_ptr += size_tmp;
-
 #endif
-
     }
     else
     {
         // qp solver
         work->qp_work = (void *) c_ptr;
-        c_ptr += qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver,
-            opts->qp_solver_opts);
+        c_ptr += qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
         // dynamics
         for (int i = 0; i < N; i++)
