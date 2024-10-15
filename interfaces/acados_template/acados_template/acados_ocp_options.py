@@ -341,7 +341,7 @@ class AcadosOcpOptions:
     @property
     def sim_method_newton_iter(self):
         """
-        Number of Newton iterations in simulation method.
+        Number of Newton iterations in implicit integrators.
         Type: int > 0
         Default: 3
         """
@@ -350,7 +350,8 @@ class AcadosOcpOptions:
     @property
     def sim_method_newton_tol(self):
         """
-        Tolerance of Newton system in simulation method.
+        Tolerance of Newton system in implicit integrators.
+        This option is not implemented for LIFTED_IRK
         Type: float: 0.0 means not used
         Default: 0.0
         """
