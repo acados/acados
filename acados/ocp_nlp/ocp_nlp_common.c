@@ -1828,8 +1828,69 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
         {
             size += constraints[i]->workspace_calculate_size(constraints[i], dims->constraints[i], opts->constraints[i]);
         }
-
     }
+
+    size_t ext_fun_workspace_size = 0;
+    if (opts->reuse_workspace)
+    {
+#if defined(ACADOS_WITH_OPENMP)
+        // constraints
+        for (int i = 0; i <= N; i++)
+        {
+            ext_fun_workspace_size += constraints[i]->get_external_fun_workspace_requirement(constraints[i], dims->constraints[i], opts->constraints[i], in->constraints[i]);
+        }
+        // cost
+        for (int i = 0; i <= N; i++)
+        {
+            ext_fun_workspace_size += cost[i]->get_external_fun_workspace_requirement(cost[i], dims->cost[i], opts->cost[i], in->cost[i]);
+        }
+        // dynamics
+        for (int i = 0; i < N; i++)
+        {
+            ext_fun_workspace_size += dynamics[i]->get_external_fun_workspace_requirement(dynamics[i], dims->dynamics[i], opts->dynamics[i], in->dynamics[i]);
+        }
+#else
+        size_t tmp_size;
+        // constraints
+        for (int i = 0; i <= N; i++)
+        {
+            tmp_size = constraints[i]->get_external_fun_workspace_requirement(constraints[i], dims->constraints[i], opts->constraints[i], in->constraints[i]);
+            ext_fun_workspace_size = tmp_size > ext_fun_workspace_size ? tmp_size : ext_fun_workspace_size;
+        }
+        // cost
+        for (int i = 0; i <= N; i++)
+        {
+            tmp_size = cost[i]->get_external_fun_workspace_requirement(cost[i], dims->cost[i], opts->cost[i], in->cost[i]);
+            ext_fun_workspace_size = tmp_size > ext_fun_workspace_size ? tmp_size : ext_fun_workspace_size;
+        }
+        // dynamics
+        for (int i = 0; i < N; i++)
+        {
+            tmp_size = dynamics[i]->get_external_fun_workspace_requirement(dynamics[i], dims->dynamics[i], opts->dynamics[i], in->dynamics[i]);
+            ext_fun_workspace_size = tmp_size > ext_fun_workspace_size ? tmp_size : ext_fun_workspace_size;
+        }
+#endif
+    }
+    else
+    {
+        // constraints
+        for (int i = 0; i <= N; i++)
+        {
+            ext_fun_workspace_size += constraints[i]->get_external_fun_workspace_requirement(constraints[i], dims->constraints[i], opts->constraints[i], in->constraints[i]);
+        }
+        // cost
+        for (int i = 0; i <= N; i++)
+        {
+            ext_fun_workspace_size += cost[i]->get_external_fun_workspace_requirement(cost[i], dims->cost[i], opts->cost[i], in->cost[i]);
+        }
+        // dynamics
+        for (int i = 0; i < N; i++)
+        {
+            ext_fun_workspace_size += dynamics[i]->get_external_fun_workspace_requirement(dynamics[i], dims->dynamics[i], opts->dynamics[i], in->dynamics[i]);
+        }
+    }
+    size += 64; // ext_fun_workspace_size align
+    size += ext_fun_workspace_size;
 
     size += 8; // struct align
     size += 64; // blasfeo align
@@ -2001,7 +2062,73 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
             work->constraints[i] = c_ptr;
             c_ptr += constraints[i]->workspace_calculate_size(constraints[i], dims->constraints[i], opts->constraints[i]);
         }
+    }
 
+    // align for external_function workspace
+    align_char_to(64, &c_ptr);
+
+    if (opts->reuse_workspace)
+    {
+#if defined(ACADOS_WITH_OPENMP)
+        /* dont reuse workspace */
+        // constraints
+        for (int i = 0; i <= N; i++)
+        {
+            constraints[i]->set_external_fun_workspaces(constraints[i], dims->constraints[i], opts->constraints[i], nlp_in->constraints[i], c_ptr);
+            c_ptr += constraints[i]->get_external_fun_workspace_requirement(constraints[i], dims->constraints[i], opts->constraints[i], nlp_in->constraints[i]);
+        }
+        // cost
+        for (int i = 0; i <= N; i++)
+        {
+            cost[i]->set_external_fun_workspaces(cost[i], dims->cost[i], opts->cost[i], nlp_in->cost[i], c_ptr);
+            c_ptr += cost[i]->get_external_fun_workspace_requirement(cost[i], dims->cost[i], opts->cost[i], nlp_in->cost[i]);
+        }
+        // dynamics
+        for (int i = 0; i < N; i++)
+        {
+            dynamics[i]->set_external_fun_workspaces(dynamics[i], dims->dynamics[i], opts->dynamics[i], nlp_in->dynamics[i], c_ptr);
+            c_ptr += dynamics[i]->get_external_fun_workspace_requirement(dynamics[i], dims->dynamics[i], opts->dynamics[i], nlp_in->dynamics[i]);
+        }
+#else
+        /* Reuse workspace */
+        // constraints
+        for (int i = 0; i <= N; i++)
+        {
+            constraints[i]->set_external_fun_workspaces(constraints[i], dims->constraints[i], opts->constraints[i], nlp_in->constraints[i], c_ptr);
+        }
+        // cost
+        for (int i = 0; i <= N; i++)
+        {
+            cost[i]->set_external_fun_workspaces(cost[i], dims->cost[i], opts->cost[i], nlp_in->cost[i], c_ptr);
+        }
+        // dynamics
+        for (int i = 0; i < N; i++)
+        {
+            dynamics[i]->set_external_fun_workspaces(dynamics[i], dims->dynamics[i], opts->dynamics[i], nlp_in->dynamics[i], c_ptr);
+        }
+#endif
+    }
+    else
+    {
+        /* dont reuse workspace */
+        // constraints
+        for (int i = 0; i <= N; i++)
+        {
+            constraints[i]->set_external_fun_workspaces(constraints[i], dims->constraints[i], opts->constraints[i], nlp_in->constraints[i], c_ptr);
+            c_ptr += constraints[i]->get_external_fun_workspace_requirement(constraints[i], dims->constraints[i], opts->constraints[i], nlp_in->constraints[i]);
+        }
+        // cost
+        for (int i = 0; i <= N; i++)
+        {
+            cost[i]->set_external_fun_workspaces(cost[i], dims->cost[i], opts->cost[i], nlp_in->cost[i], c_ptr);
+            c_ptr += cost[i]->get_external_fun_workspace_requirement(cost[i], dims->cost[i], opts->cost[i], nlp_in->cost[i]);
+        }
+        // dynamics
+        for (int i = 0; i < N; i++)
+        {
+            dynamics[i]->set_external_fun_workspaces(dynamics[i], dims->dynamics[i], opts->dynamics[i], nlp_in->dynamics[i], c_ptr);
+            c_ptr += dynamics[i]->get_external_fun_workspace_requirement(dynamics[i], dims->dynamics[i], opts->dynamics[i], nlp_in->dynamics[i]);
+        }
     }
 
     assert((char *) work + mem->workspace_size >= c_ptr);
