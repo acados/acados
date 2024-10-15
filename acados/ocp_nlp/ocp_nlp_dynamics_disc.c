@@ -966,6 +966,43 @@ void ocp_nlp_dynamics_disc_compute_adj_p(void* config_, void *dims_, void *model
 
 
 
+size_t ocp_nlp_dynamics_disc_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_)
+{
+    ocp_nlp_dynamics_disc_model *model = model_;
+    // ocp_nlp_dynamics_config *config = config_;
+    // ocp_nlp_dynamics_disc_opts *opts = opts_;
+    // ocp_nlp_dynamics_disc_dims *dims = dims_;
+
+    size_t size = 0;
+    size_t tmp_size;
+
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->disc_dyn_fun);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->disc_dyn_adj_p);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->disc_dyn_fun_jac);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->disc_dyn_fun_jac_hess);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->disc_dyn_phi_jac_p_hess_xu_p);
+    size = size > tmp_size ? size : tmp_size;
+
+    return size;
+}
+
+
+void ocp_nlp_dynamics_disc_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_)
+{
+    ocp_nlp_dynamics_disc_model *model = model_;
+
+    external_function_set_fun_workspace_if_defined(model->disc_dyn_fun, workspace_);
+    external_function_set_fun_workspace_if_defined(model->disc_dyn_adj_p, workspace_);
+    external_function_set_fun_workspace_if_defined(model->disc_dyn_fun_jac, workspace_);
+    external_function_set_fun_workspace_if_defined(model->disc_dyn_fun_jac_hess, workspace_);
+    external_function_set_fun_workspace_if_defined(model->disc_dyn_phi_jac_p_hess_xu_p, workspace_);
+}
+
+
 void ocp_nlp_dynamics_disc_config_initialize_default(void *config_, int stage)
 {
     ocp_nlp_dynamics_config *config = config_;
@@ -999,6 +1036,8 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_, int stage)
     config->memory_get_params_grad = &ocp_nlp_dynamics_disc_memory_get_params_grad;
     config->memory_get_params_lag_grad = &ocp_nlp_dynamics_disc_memory_get_params_lag_grad;
     config->workspace_calculate_size = &ocp_nlp_dynamics_disc_workspace_calculate_size;
+    config->get_external_fun_workspace_requirement = &ocp_nlp_dynamics_disc_get_external_fun_workspace_requirement;
+    config->set_external_fun_workspaces = &ocp_nlp_dynamics_disc_set_external_fun_workspaces;
     config->initialize = &ocp_nlp_dynamics_disc_initialize;
     config->update_qp_matrices = &ocp_nlp_dynamics_disc_update_qp_matrices;
     config->compute_fun = &ocp_nlp_dynamics_disc_compute_fun;

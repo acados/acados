@@ -1079,6 +1079,28 @@ void ocp_nlp_dynamics_cont_compute_adj_p(void* config_, void *dims_, void *model
 }
 
 
+size_t ocp_nlp_dynamics_cont_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_)
+{
+    ocp_nlp_dynamics_cont_model *model = model_;
+    ocp_nlp_dynamics_config *config = config_;
+    ocp_nlp_dynamics_cont_opts *opts = opts_;
+    ocp_nlp_dynamics_cont_dims *dims = dims_;
+
+    return config->sim_solver->get_external_fun_workspace_requirement(config->sim_solver, dims->sim, opts->sim_solver, model->sim_model);
+}
+
+
+void ocp_nlp_dynamics_cont_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_)
+{
+    ocp_nlp_dynamics_cont_model *model = model_;
+    ocp_nlp_dynamics_config *config = config_;
+    ocp_nlp_dynamics_cont_opts *opts = opts_;
+    ocp_nlp_dynamics_cont_dims *dims = dims_;
+
+    config->sim_solver->set_external_fun_workspaces(config->sim_solver, dims->sim, opts->sim_solver, model->sim_model, workspace_);
+}
+
+
 void ocp_nlp_dynamics_cont_config_initialize_default(void *config_, int stage)
 {
     ocp_nlp_dynamics_config *config = config_;
@@ -1113,6 +1135,8 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_, int stage)
     config->memory_get_params_grad = &ocp_nlp_dynamics_cont_memory_get_params_grad;
     config->memory_get_params_lag_grad = &ocp_nlp_dynamics_cont_memory_get_params_lag_grad;
     config->workspace_calculate_size = &ocp_nlp_dynamics_cont_workspace_calculate_size;
+    config->get_external_fun_workspace_requirement = &ocp_nlp_dynamics_cont_get_external_fun_workspace_requirement;
+    config->set_external_fun_workspaces = &ocp_nlp_dynamics_cont_set_external_fun_workspaces;
     config->initialize = &ocp_nlp_dynamics_cont_initialize;
     config->update_qp_matrices = &ocp_nlp_dynamics_cont_update_qp_matrices;
     config->compute_fun = &ocp_nlp_dynamics_cont_compute_fun;
