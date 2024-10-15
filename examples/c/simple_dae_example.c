@@ -394,7 +394,7 @@ int main() {
 		blasfeo_dvecse(2, 0.0, nlp_out->ux+i, 0);
     }
 
-	ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
+	ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts, nlp_in);
     ocp_nlp_precompute(solver, nlp_in, nlp_out);
 
 	// NLP solution

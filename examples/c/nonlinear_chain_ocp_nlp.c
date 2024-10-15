@@ -1354,7 +1354,7 @@ int main()
 
 	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 
-	ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
+	ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts, nlp_in);
 	int status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
 
     /************************************************
