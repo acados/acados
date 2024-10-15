@@ -298,7 +298,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     * sim solver
     ************************************************/
 
-    sim_solver *sim_solver = sim_solver_create(config, dims, opts);
+    sim_solver *sim_solver = sim_solver_create(config, dims, opts, in);
 
     int acados_return;
 
@@ -492,7 +492,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                         << ", jac_reuse = " << opts->jac_reuse << ", newton_iter = "
                         << opts->newton_iter << ")\n";
 
-                sim_solver = sim_solver_create(config, dims, opts);
+                sim_solver = sim_solver_create(config, dims, opts, in);
 
                 int acados_return;
 

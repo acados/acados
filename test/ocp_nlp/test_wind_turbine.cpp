@@ -713,7 +713,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     get_matrices_fun.casadi_sparsity_out   = &wt_nx6p2_get_matrices_fun_sparsity_out;
     get_matrices_fun.casadi_n_in           = &wt_nx6p2_get_matrices_fun_n_in;
     get_matrices_fun.casadi_n_out          = &wt_nx6p2_get_matrices_fun_n_out;
-    external_function_casadi_create(&get_matrices_fun);
+    external_function_casadi_create(&get_matrices_fun, &ext_fun_opts);
 
     /* initialize additional gnsf dimensions */
     int gnsf_nx1 = 8;

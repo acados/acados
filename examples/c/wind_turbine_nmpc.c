@@ -627,7 +627,7 @@ int main()
     get_matrices_fun.casadi_sparsity_out   = &wt_nx6p2_get_matrices_fun_sparsity_out;
     get_matrices_fun.casadi_n_in           = &wt_nx6p2_get_matrices_fun_n_in;
     get_matrices_fun.casadi_n_out          = &wt_nx6p2_get_matrices_fun_n_out;
-    external_function_casadi_create(&get_matrices_fun);
+    external_function_casadi_create(&get_matrices_fun, &ext_fun_opts);
 
     // external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
 

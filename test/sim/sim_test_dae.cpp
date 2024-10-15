@@ -337,7 +337,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     * sim solver
     ************************************************/
 
-    sim_solver *sim_solver = sim_solver_create(config, dims, opts);
+    sim_solver *sim_solver = sim_solver_create(config, dims, opts, in);
     sim_precompute(sim_solver, in, out);
 
     int acados_return;
@@ -530,7 +530,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                     in->S_adj[ii] = 0.0;
 
             /* sim solver  */
-                sim_solver = sim_solver_create(config, dims, opts);
+                sim_solver = sim_solver_create(config, dims, opts, in);
                 int acados_return;
                 sim_precompute(sim_solver, in, out);
 
