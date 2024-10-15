@@ -353,7 +353,7 @@ int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * cap
 
     // sim solver
     sim_solver *{{ model.name }}_sim_solver = sim_solver_create({{ model.name }}_sim_config,
-                                               {{ model.name }}_sim_dims, {{ model.name }}_sim_opts);
+                                               {{ model.name }}_sim_dims, {{ model.name }}_sim_opts, {{ model.name }}_sim_in->model);
     capsule->acados_sim_solver = {{ model.name }}_sim_solver;
 
 {% if dims.np > 0 %}
