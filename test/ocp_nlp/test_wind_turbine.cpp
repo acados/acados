@@ -482,6 +482,8 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     if (nh[1] > 0)
     {
         h1.evaluate = &ext_fun_h1;
+        h1.set_external_workspace = &external_function_param_generic_set_external_workspace;
+        h1.get_external_workspace_requirement = &external_function_param_generic_get_external_workspace_requirement;
 
         // electric power
         lh1[0] = Pel_min;
