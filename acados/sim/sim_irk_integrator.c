@@ -845,10 +845,9 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
 }
 
 
-size_t sim_irk_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *in_)
+size_t sim_irk_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_)
 {
-    sim_in *in = in_;
-    irk_model *model = in->model;
+    irk_model *model = model_;
 
     size_t size = 0;
     size_t tmp_size;
@@ -866,10 +865,9 @@ size_t sim_irk_get_external_fun_workspace_requirement(void *config_, void *dims_
 }
 
 
-void sim_irk_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *in_, void *workspace_)
+void sim_irk_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_)
 {
-    sim_in *in = in_;
-    irk_model *model = in->model;
+    irk_model *model = model_;
 
     external_function_set_fun_workspace_if_defined(model->impl_ode_fun, workspace_);
     external_function_set_fun_workspace_if_defined(model->impl_ode_fun_jac_x_xdot_z, workspace_);

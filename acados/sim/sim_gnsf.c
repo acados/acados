@@ -2127,10 +2127,9 @@ void sim_gnsf_compute_z_and_algebraic_sens(sim_gnsf_dims *dims, sim_opts *opts, 
 }
 
 
-size_t sim_gnsf_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *in_)
+size_t sim_gnsf_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_)
 {
-    sim_in *in = in_;
-    gnsf_model *model = in->model;
+    gnsf_model *model = model_;
 
     size_t size = 0;
     size_t tmp_size;
@@ -2150,10 +2149,9 @@ size_t sim_gnsf_get_external_fun_workspace_requirement(void *config_, void *dims
 }
 
 
-void sim_gnsf_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *in_, void *workspace_)
+void sim_gnsf_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_)
 {
-    sim_in *in = in_;
-    gnsf_model *model = in->model;
+    gnsf_model *model = model_;
 
     external_function_set_fun_workspace_if_defined(model->get_gnsf_matrices, workspace_);
     external_function_set_fun_workspace_if_defined(model->f_lo_fun_jac_x1_x1dot_u_z, workspace_);

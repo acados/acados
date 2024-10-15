@@ -526,10 +526,9 @@ static void *sim_erk_cast_workspace(void *config_, sim_erk_dims *dims, sim_opts 
 
 
 
-size_t sim_erk_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *in_)
+size_t sim_erk_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_)
 {
-    sim_in *in = in_;
-    erk_model *model = in->model;
+    erk_model *model = model_;
 
     size_t size = 0;
     size_t tmp_size;
@@ -547,10 +546,9 @@ size_t sim_erk_get_external_fun_workspace_requirement(void *config_, void *dims_
 }
 
 
-void sim_erk_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *in_, void *workspace_)
+void sim_erk_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_)
 {
-    sim_in *in = in_;
-    erk_model *model = in->model;
+    erk_model *model = model_;
 
     external_function_set_fun_workspace_if_defined(model->expl_ode_fun, workspace_);
     external_function_set_fun_workspace_if_defined(model->expl_vde_for, workspace_);
