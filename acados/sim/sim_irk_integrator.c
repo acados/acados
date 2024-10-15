@@ -861,10 +861,10 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
     int nu = dims->nu;
     int ns = opts->ns;
 
+    acados_timer timer_ad, timer_la;
+
     double timing_ad = 0.0;
     double timing_la = 0.0;
-
-    acados_timer timer_ad, timer_la;
 
     double *u = in->u;
     double t0 = in->t0;
@@ -891,14 +891,13 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
 
     if (opts->sens_hess){
         dK_dxu_ss = &dK_dxu[0];
-
     }
     else
     {
         dK_dxu_ss = dK_dxu;
     }
 
-    if (opts->sens_algebraic && !opts->exact_z_output)  // generate S_algebraic
+    if (opts->sens_algebraic && !opts->exact_z_output)
     {
         double interpolated_value;
         for (int jj = 0; jj < nx+nu; jj++)
@@ -914,9 +913,8 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
                 S_algebraic[ii+jj*nz] = -interpolated_value;
             }
         }
-    }  // end if sens_algebraic
+    }
 
-    // generate z output
     if (opts->output_z || opts->sens_algebraic)
     {
         for (int ii = 0; ii < nz; ii++)
@@ -985,17 +983,16 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
                 double interpolated_value;
                 for (int jj = 0; jj < ns; jj++)
                 {
+                    // copy values of k_ii in first step, into Z_work
                     Z_work[jj] = blasfeo_dvecex1(K, nx * jj + ii);
-                        // copy values of k_ii in first step, into Z_work
                 }
                 neville_algorithm(0.0, ns - 1, opts->c_vec, Z_work, &interpolated_value);
-                            // eval polynomial through (c_jj, k_jj) at 0.
+                // eval polynomial through (c_jj, k_jj) at 0.
                 blasfeo_pack_dvec(1, &interpolated_value, 1, xtdot, ii);
             }
             // perform extra newton iterations to get xdot0, z0 more precisely.
             for (int ii = 0; ii < opts->newton_iter; ii++)
             {
-
                 if (ii == 0 || !opts->jac_reuse)
                 {
                     // eval jacobians at interpolated values
@@ -1063,6 +1060,8 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
             blasfeo_unpack_dmat(nz, nx + nu, dk0_dxu, nx, 0, S_algebraic, nz);
         } // if sens_algebraic
     } // if exact_z_output
+    out->info->LAtime += timing_la;
+    out->info->ADtime += timing_ad;
 }
 
 
@@ -1074,6 +1073,11 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 {
     acados_timer timer, timer_ad, timer_la;
     acados_tic(&timer);
+
+    out->info->LAtime = 0.0;
+    out->info->ADtime = 0.0;
+    double timing_ad = 0.0;
+    double timing_la = 0.0;
 
     // Get variables from workspace, etc;
     // cast pointers
@@ -1256,8 +1260,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     /* Initialize & Pack */
     // initialize
-    double timing_ad = 0.0;
-    double timing_la = 0.0;
     blasfeo_dvecse(nK, 0.0, lambdaK, 0);
     if (opts->sens_hess){
         blasfeo_dgese(nx + nu, nx + nu, 0.0, Hess, 0, 0);
@@ -2074,8 +2076,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     out->info->CPUtime = acados_toc(&timer);
     // note: this is the time for factorization and solving the linear systems
-    out->info->LAtime = timing_la;
-    out->info->ADtime = timing_ad;
+    out->info->LAtime += timing_la;
+    out->info->ADtime += timing_ad;
 
     mem->time_sim = out->info->CPUtime;
     mem->time_ad = out->info->ADtime;
