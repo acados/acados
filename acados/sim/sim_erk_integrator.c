@@ -152,6 +152,11 @@ void *sim_erk_model_assign(void *config, void *dims, void *raw_memory)
     erk_model *model = (erk_model *) c_ptr;
     c_ptr += sizeof(erk_model);
 
+    model->expl_ode_fun = NULL;
+    model->expl_vde_for = NULL;
+    model->expl_vde_adj = NULL;
+    model->expl_ode_hes = NULL;
+
     return model;
 }
 

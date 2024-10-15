@@ -157,12 +157,17 @@ void *sim_irk_model_assign(void *config, void *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
-    irk_model *data = (irk_model *) c_ptr;
+    irk_model *model = (irk_model *) c_ptr;
     c_ptr += sizeof(irk_model);
+
+    model->impl_ode_fun = NULL;
+    model->impl_ode_fun_jac_x_xdot_z = NULL;
+    model->impl_ode_jac_x_xdot_u_z = NULL;
+    model->impl_ode_hess = NULL;
 
     assert((char *) raw_memory + sim_irk_model_calculate_size(config, dims) >= c_ptr);
 
-    return data;
+    return model;
 }
 
 
