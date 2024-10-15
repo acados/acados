@@ -535,7 +535,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 sim_precompute(sim_solver, in, out);
 
             /* print */
-                std::cout << "\n---> testing integrator " << solver;
+                std::cout << "\n---> sim_test_dae " << solver;
                 std::cout << " OPTS: num_steps = " << opts->num_steps;
                 std::cout << ", num_stages = " << opts->ns;
                 std::cout << ", jac_reuse = " << opts->jac_reuse;

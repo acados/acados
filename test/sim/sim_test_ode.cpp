@@ -487,7 +487,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 /************************************************
                 * sim solver
                 ************************************************/
-                std::cout << "\n---> testing integrator " << solver <<
+                std::cout << "\n---> sim_test_ode: " << solver <<
                         " (num_steps = " << opts->num_steps << ", num_stages = " << opts->ns
                         << ", jac_reuse = " << opts->jac_reuse << ", newton_iter = "
                         << opts->newton_iter << ")\n";

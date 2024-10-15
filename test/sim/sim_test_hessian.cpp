@@ -505,7 +505,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
                 sim_solver = sim_solver_create(config, dims, opts, in);
 
             /* print */
-                std::cout << "\n---> testing integrator " << solver;
+                std::cout << "\n---> sim_test_hessian " << solver;
                 std::cout << " OPTS: num_steps = " << opts->num_steps;
                 std::cout << ", num_stages = " << opts->ns;
                 std::cout << ", jac_reuse = " << opts->jac_reuse;
@@ -844,7 +844,7 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
     norm_error_hess = onenorm(nx + nu, nx + nu, error_S_hess);
     rel_error_hess = norm_error_hess / norm_S_hess_ref;
 
-    printf("relative errror hessian (Finite differences vs IRK internal) = %e\n", rel_error_hess);
+    printf("relative error hessian (Finite differences vs IRK internal) = %e\n", rel_error_hess);
 
     REQUIRE(rel_error_hess < 1e-4);
 
