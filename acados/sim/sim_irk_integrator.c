@@ -845,6 +845,38 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
 }
 
 
+size_t sim_irk_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *in_)
+{
+    sim_in *in = in_;
+    irk_model *model = in->model;
+
+    size_t size = 0;
+    size_t tmp_size;
+
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->impl_ode_fun);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->impl_ode_fun_jac_x_xdot_z);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->impl_ode_hess);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->impl_ode_jac_x_xdot_u_z);
+    size = size > tmp_size ? size : tmp_size;
+
+    return size;
+}
+
+
+void sim_irk_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *in_, void *workspace_)
+{
+    sim_in *in = in_;
+    irk_model *model = in->model;
+
+    external_function_set_fun_workspace_if_defined(model->impl_ode_fun, workspace_);
+    external_function_set_fun_workspace_if_defined(model->impl_ode_fun_jac_x_xdot_z, workspace_);
+    external_function_set_fun_workspace_if_defined(model->impl_ode_hess, workspace_);
+    external_function_set_fun_workspace_if_defined(model->impl_ode_jac_x_xdot_u_z, workspace_);
+}
+
 
 int sim_irk_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,
                        void *work_)
@@ -2106,6 +2138,8 @@ void sim_irk_config_initialize_default(void *config_)
     config->memory_set_to_zero = &sim_irk_memory_set_to_zero;
     config->memory_get = &sim_irk_memory_get;
     config->workspace_calculate_size = &sim_irk_workspace_calculate_size;
+    config->get_external_fun_workspace_requirement = &sim_irk_get_external_fun_workspace_requirement;
+    config->set_external_fun_workspaces = &sim_irk_set_external_fun_workspaces;
     config->model_calculate_size = &sim_irk_model_calculate_size;
     config->model_assign = &sim_irk_model_assign;
     config->model_set = &sim_irk_model_set;

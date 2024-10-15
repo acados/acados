@@ -2126,6 +2126,43 @@ void sim_gnsf_compute_z_and_algebraic_sens(sim_gnsf_dims *dims, sim_opts *opts, 
     //        }
 }
 
+
+size_t sim_gnsf_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *in_)
+{
+    sim_in *in = in_;
+    gnsf_model *model = in->model;
+
+    size_t size = 0;
+    size_t tmp_size;
+
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->get_gnsf_matrices);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->f_lo_fun_jac_x1_x1dot_u_z);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->phi_fun);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->phi_fun_jac_y);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->phi_jac_y_uhat);
+    size = size > tmp_size ? size : tmp_size;
+
+    return size;
+}
+
+
+void sim_gnsf_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *in_, void *workspace_)
+{
+    sim_in *in = in_;
+    gnsf_model *model = in->model;
+
+    external_function_set_fun_workspace_if_defined(model->get_gnsf_matrices, workspace_);
+    external_function_set_fun_workspace_if_defined(model->f_lo_fun_jac_x1_x1dot_u_z, workspace_);
+    external_function_set_fun_workspace_if_defined(model->phi_fun, workspace_);
+    external_function_set_fun_workspace_if_defined(model->phi_fun_jac_y, workspace_);
+    external_function_set_fun_workspace_if_defined(model->phi_jac_y_uhat, workspace_);
+}
+
+
 int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, void *work_)
 {
     acados_timer tot_timer, casadi_timer, la_timer;
@@ -3037,6 +3074,8 @@ void sim_gnsf_config_initialize_default(void *config_)
     config->memory_set_to_zero = &sim_gnsf_memory_set_to_zero;
     config->memory_get = &sim_gnsf_memory_get;
     config->workspace_calculate_size = &sim_gnsf_workspace_calculate_size;
+    config->get_external_fun_workspace_requirement = &sim_gnsf_get_external_fun_workspace_requirement;
+    config->set_external_fun_workspaces = &sim_gnsf_set_external_fun_workspaces;
     // model
     config->model_calculate_size = &sim_gnsf_model_calculate_size;
     config->model_assign = &sim_gnsf_model_assign;
