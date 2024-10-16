@@ -182,7 +182,7 @@ class AcadosOcp:
             raise Exception('inconsistent dimension np, regarding model.p and parameter_values.' + \
                 f'\nGot np = {dims.np}, self.parameter_values.shape = {self.parameter_values.shape[0]}\n')
 
-        # p_global_vlaue
+        # p_global_values
         if self.p_global_values.shape[0] != dims.np_global:
             raise Exception('inconsistent dimension np_global, regarding model.p_global and p_global_values.' + \
                 f'\nGot np_global = {dims.np_global}, self.p_global_values.shape = {self.p_global_values.shape[0]}\n')
