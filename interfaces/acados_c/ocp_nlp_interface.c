@@ -1105,12 +1105,12 @@ void ocp_nlp_solver_opts_destroy(void *opts)
 * solver
 ************************************************/
 
-static acados_size_t ocp_nlp_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_)
+static acados_size_t ocp_nlp_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_, ocp_nlp_in *nlp_in)
 {
     acados_size_t bytes = sizeof(ocp_nlp_solver);
 
-    bytes += config->memory_calculate_size(config, dims, opts_);
-    bytes += config->workspace_calculate_size(config, dims, opts_);
+    bytes += config->memory_calculate_size(config, dims, opts_, nlp_in);
+    bytes += config->workspace_calculate_size(config, dims, opts_, nlp_in);
 
     return bytes;
 }
@@ -1118,7 +1118,7 @@ static acados_size_t ocp_nlp_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
 
 
 static ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_config *config, ocp_nlp_dims *dims,
-                                      void *opts_, void *raw_memory)
+                                      void *opts_, ocp_nlp_in *nlp_in, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -1129,30 +1129,30 @@ static ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     solver->dims = dims;
     solver->opts = opts_;
 
-    solver->mem = config->memory_assign(config, dims, opts_, c_ptr);
+    solver->mem = config->memory_assign(config, dims, opts_, nlp_in, c_ptr);
     // printf("\nsolver->mem %p", solver->mem);
-    c_ptr += config->memory_calculate_size(config, dims, opts_);
+    c_ptr += config->memory_calculate_size(config, dims, opts_, nlp_in);
 
     solver->work = (void *) c_ptr;
-    c_ptr += config->workspace_calculate_size(config, dims, opts_);
+    c_ptr += config->workspace_calculate_size(config, dims, opts_, nlp_in);
 
-    assert((char *) raw_memory + ocp_nlp_calculate_size(config, dims, opts_) == c_ptr);
+    assert((char *) raw_memory + ocp_nlp_calculate_size(config, dims, opts_, nlp_in) == c_ptr);
 
     return solver;
 }
 
 
 
-ocp_nlp_solver *ocp_nlp_solver_create(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_)
+ocp_nlp_solver *ocp_nlp_solver_create(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_, ocp_nlp_in *nlp_in)
 {
     config->opts_update(config, dims, opts_);
 
-    acados_size_t bytes = ocp_nlp_calculate_size(config, dims, opts_);
+    acados_size_t bytes = ocp_nlp_calculate_size(config, dims, opts_, nlp_in);
 
     void *ptr = acados_calloc(1, bytes);
     assert(ptr != 0);
 
-    ocp_nlp_solver *solver = ocp_nlp_assign(config, dims, opts_, ptr);
+    ocp_nlp_solver *solver = ocp_nlp_assign(config, dims, opts_, nlp_in, ptr);
 
     return solver;
 }

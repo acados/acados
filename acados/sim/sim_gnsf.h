@@ -344,6 +344,8 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
 acados_size_t sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *args);
 acados_size_t sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_);
 void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_memory);
+size_t sim_gnsf_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_);
+void sim_gnsf_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_);
 
 // interface
 void sim_gnsf_config_initialize_default(void *config_);

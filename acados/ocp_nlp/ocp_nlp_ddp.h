@@ -106,9 +106,9 @@ typedef struct
 } ocp_nlp_ddp_memory;
 
 //
-acados_size_t ocp_nlp_ddp_memory_calculate_size(void *config, void *dims, void *opts_);
+acados_size_t ocp_nlp_ddp_memory_calculate_size(void *config, void *dims, void *opts_, void *in_);
 //
-void *ocp_nlp_ddp_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
+void *ocp_nlp_ddp_memory_assign(void *config, void *dims, void *opts_, void *in_, void *raw_memory);
 //
 void ocp_nlp_ddp_memory_reset_qp_solver(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     void *opts_, void *mem_, void *work_);
@@ -129,7 +129,7 @@ typedef struct
 } ocp_nlp_ddp_workspace;
 
 //
-acados_size_t ocp_nlp_ddp_workspace_calculate_size(void *config, void *dims, void *opts_);
+acados_size_t ocp_nlp_ddp_workspace_calculate_size(void *config, void *dims, void *opts_, void *in_);
 
 
 

@@ -478,6 +478,8 @@ int main()
     if (nh[1]>0)
     {
         h1.evaluate = &ext_fun_h1;
+        h1.get_external_workspace_requirement = &external_function_param_generic_get_external_workspace_requirement;
+        h1.set_external_workspace = &external_function_param_generic_set_external_workspace;
 
         // electric power
         lh1[0] = Pel_min;
@@ -670,8 +672,6 @@ int main()
     get_matrices_fun.casadi_n_in           = &wt_nx6p2_get_matrices_fun_n_in;
     get_matrices_fun.casadi_n_out          = &wt_nx6p2_get_matrices_fun_n_out;
     external_function_casadi_create(&get_matrices_fun);
-
-    // external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
 
     /* initialize additional gnsf dimensions */            
     int gnsf_nx1 = 8;
@@ -953,7 +953,7 @@ int main()
 
     ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 
-    ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
+    ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts, nlp_in);
 
     /************************************************
     *     precomputation (after all options are set)

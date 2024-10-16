@@ -126,9 +126,9 @@ typedef struct
 } ocp_nlp_sqp_rti_memory;
 
 //
-acados_size_t ocp_nlp_sqp_rti_memory_calculate_size(void *config_, void *dims_, void *opts_);
+acados_size_t ocp_nlp_sqp_rti_memory_calculate_size(void *config_, void *dims_, void *opts_, void *in);
 //
-void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_, void *opts_,
+void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_, void *opts_, void *in_,
     void *raw_memory);
 
 
@@ -148,7 +148,7 @@ typedef struct
 } ocp_nlp_sqp_rti_workspace;
 
 //
-acados_size_t ocp_nlp_sqp_rti_workspace_calculate_size(void *config_, void *dims_, void *opts_);
+acados_size_t ocp_nlp_sqp_rti_workspace_calculate_size(void *config_, void *dims_, void *opts_, void *nlp_in);
 
 
 

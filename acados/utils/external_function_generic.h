@@ -72,14 +72,32 @@ struct blasfeo_dvec_args
     int xi;
 };
 
+
+// external_function_opts
+typedef struct
+{
+    bool external_workspace;
+} external_function_opts;
+
+
+
 // prototype of an external function
 typedef struct
 {
     // public members (have to be before private ones)
     void (*evaluate)(void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
+    size_t (*get_external_workspace_requirement)(void *);
+    void (*set_external_workspace)(void *, void *);
     // private members
     // .....
 } external_function_generic;
+
+
+size_t external_function_get_workspace_requirement_if_defined(external_function_generic *fun);
+
+void external_function_set_fun_workspace_if_defined(external_function_generic *fun, void *work_);
+
+
 
 
 /************************************************
@@ -91,6 +109,8 @@ typedef struct
 {
     // public members for core (have to be before private ones)
     void (*evaluate)(void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
+    size_t (*get_external_workspace_requirement)(void *);
+    void (*set_external_workspace)(void *, void *);
     // public members for interfaces
     void (*get_nparam)(void *, int *);
     void (*set_param)(void *, double *);
@@ -100,13 +120,14 @@ typedef struct
     int (*fun)(void **, void **, void *);
     double *p;  // parameters
     int np;     // number of parameters
+    external_function_opts opts;
     // .....
 } external_function_param_generic;
 
 //
 acados_size_t external_function_param_generic_struct_size();
 //
-acados_size_t external_function_param_generic_calculate_size(external_function_param_generic *fun, int np);
+acados_size_t external_function_param_generic_calculate_size(external_function_param_generic *fun, int np, external_function_opts *opts_);
 //
 void external_function_param_generic_assign(external_function_param_generic *fun, void *mem);
 //
@@ -115,7 +136,10 @@ void external_function_param_generic_wrapper(void *self, ext_fun_arg_t *type_in,
 void external_function_param_generic_get_nparam(void *self, int *np);
 //
 void external_function_param_generic_set_param(void *self, double *p);
-
+//
+size_t external_function_param_generic_get_external_workspace_requirement(void *self);
+//
+void external_function_param_generic_set_external_workspace(void *self, void *workspace);
 
 /************************************************
  * casadi external function
@@ -125,6 +149,8 @@ typedef struct
 {
     // public members (have to be the same as in the prototype, and before the private ones)
     void (*evaluate)(void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
+    size_t (*get_external_workspace_requirement)(void *);
+    void (*set_external_workspace)(void *, void *);
     // private members
     void *ptr_ext_mem;  // pointer to external memory
     int (*casadi_fun)(const double **, double **, int *, double *, void *);
@@ -149,17 +175,22 @@ typedef struct
     int out_num;        // number of output arrays
     int int_work_size;        // number of ints for worksapce
     int float_work_size;         // number of doubles for workspace
+    external_function_opts opts;
 } external_function_casadi;
 
 //
 acados_size_t external_function_casadi_struct_size();
 //
-acados_size_t external_function_casadi_calculate_size(external_function_casadi *fun);
+acados_size_t external_function_casadi_calculate_size(external_function_casadi *fun, external_function_opts *opts_);
 //
 void external_function_casadi_assign(external_function_casadi *fun, void *mem);
 //
 void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void **in,
                                       ext_fun_arg_t *type_out, void **out);
+//
+size_t external_function_casadi_get_external_workspace_requirement(void *self);
+//
+void external_function_casadi_set_external_workspace(void *self, void *workspace);
 
 /************************************************
  * casadi external parametric function
@@ -169,6 +200,8 @@ typedef struct
 {
     // public members for core (have to be the same as in the prototype, and before the private ones)
     void (*evaluate)(void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
+    size_t (*get_external_workspace_requirement)(void *);
+    void (*set_external_workspace)(void *, void *);
     // public members for interfaces
     void (*get_nparam)(void *, int *);
     void (*set_param)(void *, double *);
@@ -198,12 +231,13 @@ typedef struct
     int int_work_size;        // number of ints for worksapce
     int float_work_size;         // number of doubles for workspace
     int np;             // number of parameters
+    external_function_opts opts;
 } external_function_param_casadi;
 
 //
 acados_size_t external_function_param_casadi_struct_size();
 //
-acados_size_t external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np);
+acados_size_t external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np, external_function_opts *opts_);
 //
 void external_function_param_casadi_assign(external_function_param_casadi *fun, void *mem);
 //
@@ -211,6 +245,10 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
                                             ext_fun_arg_t *type_out, void **out);
 //
 void external_function_param_casadi_get_nparam(void *self, int *np);
+//
+size_t external_function_param_casadi_get_external_workspace_requirement(void *self);
+//
+void external_function_param_casadi_set_external_workspace(void *self, void *workspace);
 
 
 /************************************************
@@ -221,6 +259,8 @@ typedef struct
 {
     // public members for core (have to be the same as in the prototype, and before the private ones)
     void (*evaluate)(void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
+    size_t (*get_external_workspace_requirement)(void *);
+    void (*set_external_workspace)(void *, void *);
     // public members for interfaces
     void (*set_param_pointer)(void *, double *);
     // private members
@@ -249,18 +289,22 @@ typedef struct
     int float_work_size;         // number of doubles for workspace
 
     bool param_mem_is_set;  // indicates if param memory is set;
+    external_function_opts opts;
 } external_function_external_param_casadi;
 
 //
 acados_size_t external_function_external_param_casadi_struct_size();
 //
-acados_size_t external_function_external_param_casadi_calculate_size(external_function_external_param_casadi *fun);
+acados_size_t external_function_external_param_casadi_calculate_size(external_function_external_param_casadi *fun, external_function_opts *opts_);
 //
 void external_function_external_param_casadi_assign(external_function_external_param_casadi *fun, void *mem);
 //
 void external_function_external_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void **in,
                                             ext_fun_arg_t *type_out, void **out);
-
+//
+size_t external_function_external_param_casadi_get_external_workspace_requirement(void *self);
+//
+void external_function_external_param_casadi_set_external_workspace(void *self, void *workspace);
 
 
 /************************************************
@@ -272,6 +316,8 @@ typedef struct
 {
     // public members for core (have to be before private ones)
     void (*evaluate)(void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
+    size_t (*get_external_workspace_requirement)(void *);
+    void (*set_external_workspace)(void *, void *);
     // public members for interfaces
     void (*set_param_pointer)(void *, double *);
 
@@ -280,19 +326,25 @@ typedef struct
     int (*fun)(void **, void **, void *);
     double *p;  // parameters
     bool param_mem_is_set;
+    external_function_opts opts;
 
 } external_function_external_param_generic;
 
 //
 acados_size_t external_function_external_param_generic_struct_size();
 //
-acados_size_t external_function_external_param_generic_calculate_size(external_function_external_param_generic *fun);
+acados_size_t external_function_external_param_generic_calculate_size(external_function_external_param_generic *fun, external_function_opts *opts_);
 //
 void external_function_external_param_generic_assign(external_function_external_param_generic *fun, void *mem);
 //
 void external_function_external_param_generic_wrapper(void *self, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out);
 //
 void external_function_external_param_generic_set_param_ptr(void *self, double *p);
+//
+size_t external_function_external_param_generic_get_external_workspace_requirement(void *self);
+//
+void external_function_external_param_generic_set_external_workspace(void *self, void *workspace);
+
 
 
 #ifdef __cplusplus

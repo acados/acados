@@ -366,7 +366,7 @@ ACADOS_SYMBOL_EXPORT void ocp_nlp_solver_opts_update(ocp_nlp_config *config, ocp
 /// \param dims The dimension struct.
 /// \param opts_ The options struct.
 /// \return The solver.
-ACADOS_SYMBOL_EXPORT ocp_nlp_solver *ocp_nlp_solver_create(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_);
+ACADOS_SYMBOL_EXPORT ocp_nlp_solver *ocp_nlp_solver_create(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_, ocp_nlp_in *nlp_in);
 
 /// Destructor of the solver.
 ///

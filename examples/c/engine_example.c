@@ -128,6 +128,9 @@ int main()
     double ubx[] = {100, 100, 1.757, 2.125};
 	int idxbx[] = {0, 1, 2, 3};
 
+    external_function_opts ext_fun_opts;
+    ext_fun_opts.external_workspace = false;
+
     // implicit dae
     external_function_casadi impl_dae_fun;
     impl_dae_fun.casadi_fun = &engine_impl_dae_fun;
@@ -136,7 +139,7 @@ int main()
     impl_dae_fun.casadi_sparsity_out = &engine_impl_dae_fun_sparsity_out;
     impl_dae_fun.casadi_n_in = &engine_impl_dae_fun_n_in;
     impl_dae_fun.casadi_n_out = &engine_impl_dae_fun_n_out;
-    external_function_casadi_create(&impl_dae_fun);
+    external_function_casadi_create(&impl_dae_fun, &ext_fun_opts);
 
     external_function_casadi impl_dae_fun_jac_x_xdot_z;
     impl_dae_fun_jac_x_xdot_z.casadi_fun = &engine_impl_dae_fun_jac_x_xdot_z;
@@ -145,7 +148,7 @@ int main()
     impl_dae_fun_jac_x_xdot_z.casadi_sparsity_out = &engine_impl_dae_fun_jac_x_xdot_z_sparsity_out;
     impl_dae_fun_jac_x_xdot_z.casadi_n_in = &engine_impl_dae_fun_jac_x_xdot_z_n_in;
     impl_dae_fun_jac_x_xdot_z.casadi_n_out = &engine_impl_dae_fun_jac_x_xdot_z_n_out;
-    external_function_casadi_create(&impl_dae_fun_jac_x_xdot_z);
+    external_function_casadi_create(&impl_dae_fun_jac_x_xdot_z, &ext_fun_opts);
 
     external_function_casadi impl_dae_jac_x_xdot_u_z;
     impl_dae_jac_x_xdot_u_z.casadi_fun = &engine_impl_dae_jac_x_xdot_u_z;
@@ -154,7 +157,7 @@ int main()
     impl_dae_jac_x_xdot_u_z.casadi_sparsity_out = &engine_impl_dae_jac_x_xdot_u_z_sparsity_out;
     impl_dae_jac_x_xdot_u_z.casadi_n_in = &engine_impl_dae_jac_x_xdot_u_z_n_in;
     impl_dae_jac_x_xdot_u_z.casadi_n_out = &engine_impl_dae_jac_x_xdot_u_z_n_out;
-    external_function_casadi_create(&impl_dae_jac_x_xdot_u_z);
+    external_function_casadi_create(&impl_dae_jac_x_xdot_u_z, &ext_fun_opts);
 
     // Only needed for lifted IRK:
 
@@ -165,7 +168,7 @@ int main()
     // engine_impl_dae_fun_jac_x_xdot_u_z.casadi_sparsity_out = &engine_impl_dae_fun_jac_x_xdot_u_z_sparsity_out;
     // engine_impl_dae_fun_jac_x_xdot_u_z.casadi_n_in = &engine_impl_dae_fun_jac_x_xdot_u_z_n_in;
     // engine_impl_dae_fun_jac_x_xdot_u_z.casadi_n_out = &engine_impl_dae_fun_jac_x_xdot_u_z_n_out;
-    // external_function_casadi_create(&engine_impl_dae_fun_jac_x_xdot_u_z);
+    // external_function_casadi_create(&engine_impl_dae_fun_jac_x_xdot_u_z, &ext_fun_opts);
 
     external_function_casadi nls_cost_residual;
     nls_cost_residual.casadi_fun = &engine_ls_cost;
@@ -174,7 +177,7 @@ int main()
     nls_cost_residual.casadi_sparsity_out = &engine_ls_cost_sparsity_out;
     nls_cost_residual.casadi_n_in = &engine_ls_cost_n_in;
     nls_cost_residual.casadi_n_out = &engine_ls_cost_n_out;
-    external_function_casadi_create(&nls_cost_residual);
+    external_function_casadi_create(&nls_cost_residual, &ext_fun_opts);
 
     external_function_casadi nls_cost_N_residual;
     nls_cost_N_residual.casadi_fun = &engine_ls_cost_N;
@@ -183,7 +186,7 @@ int main()
     nls_cost_N_residual.casadi_sparsity_out = &engine_ls_cost_N_sparsity_out;
     nls_cost_N_residual.casadi_n_in = &engine_ls_cost_N_n_in;
     nls_cost_N_residual.casadi_n_out = &engine_ls_cost_N_n_out;
-    external_function_casadi_create(&nls_cost_N_residual);
+    external_function_casadi_create(&nls_cost_N_residual, &ext_fun_opts);
 
 	ocp_nlp_plan_t *plan = ocp_nlp_plan_create(N);
 
@@ -289,7 +292,7 @@ int main()
     ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 
     // solver
-	ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
+	ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts, nlp_in);
 
     // initialize
     for (int i = 0; i < N; ++i)

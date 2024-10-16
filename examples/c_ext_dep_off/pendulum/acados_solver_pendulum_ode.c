@@ -322,8 +322,12 @@ void pendulum_ode_acados_create_setup_functions(pendulum_ode_solver_capsule* cap
         capsule->__CAPSULE_FNC__.casadi_sparsity_in = & __MODEL_BASE_FNC__ ## _sparsity_in; \
         capsule->__CAPSULE_FNC__.casadi_sparsity_out = & __MODEL_BASE_FNC__ ## _sparsity_out; \
         capsule->__CAPSULE_FNC__.casadi_work = & __MODEL_BASE_FNC__ ## _work; \
-        external_function_external_param_casadi_create(&capsule->__CAPSULE_FNC__ ); \
+        external_function_external_param_casadi_create(&capsule->__CAPSULE_FNC__, &ext_fun_opts); \
     } while(false)
+
+    external_function_opts ext_fun_opts;
+    ext_fun_opts.external_workspace = false;
+
     // nonlinear least squares function
     MAP_CASADI_FNC(cost_y_0_fun, pendulum_ode_cost_y_0_fun);
     MAP_CASADI_FNC(cost_y_0_fun_jac_ut_xt, pendulum_ode_cost_y_0_fun_jac_ut_xt);
@@ -712,7 +716,7 @@ int pendulum_ode_acados_create_with_discretization(pendulum_ode_solver_capsule* 
     pendulum_ode_acados_create_set_default_parameters(capsule);
 
     // 6) create solver
-    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts);
+    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts, capsule->nlp_in);
 
     // 7) create and set nlp_out
     // 7.1) nlp_out
@@ -743,7 +747,7 @@ int pendulum_ode_acados_update_qp_solver_cond_N(pendulum_ode_solver_capsule* cap
 
     // 3) continue with the remaining steps from pendulum_ode_acados_create_with_discretization(...):
     // -> 8) create solver
-    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts);
+    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts, capsule->nlp_in);
 
     // -> 9) do precomputations
     int status = pendulum_ode_acados_create_precompute(capsule);

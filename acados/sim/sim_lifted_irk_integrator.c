@@ -621,6 +621,30 @@ static void *sim_lifted_irk_cast_workspace(void *config_, void *dims_, void *opt
 }
 
 
+size_t sim_lifted_irk_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_)
+{
+    lifted_irk_model *model = model_;
+
+    size_t size = 0;
+    size_t tmp_size;
+
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->impl_ode_fun);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->impl_ode_fun_jac_x_xdot_u);
+    size = size > tmp_size ? size : tmp_size;
+
+    return size;
+}
+
+
+void sim_lifted_irk_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_)
+{
+    lifted_irk_model *model = model_;
+
+    external_function_set_fun_workspace_if_defined(model->impl_ode_fun, workspace_);
+    external_function_set_fun_workspace_if_defined(model->impl_ode_fun_jac_x_xdot_u, workspace_);
+}
+
 
 int sim_lifted_irk_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,
                        void *work_)
@@ -987,6 +1011,8 @@ void sim_lifted_irk_config_initialize_default(void *config_)
     config->memory_set_to_zero = &sim_lifted_irk_memory_set_to_zero;
     config->memory_get = &sim_lifted_irk_memory_get;
     config->workspace_calculate_size = &sim_lifted_irk_workspace_calculate_size;
+    config->get_external_fun_workspace_requirement = &sim_lifted_irk_get_external_fun_workspace_requirement;
+    config->set_external_fun_workspaces = &sim_lifted_irk_set_external_fun_workspaces;
     config->model_calculate_size = &sim_lifted_irk_model_calculate_size;
     config->model_assign = &sim_lifted_irk_model_assign;
     config->model_set = &sim_lifted_irk_model_set;

@@ -1011,6 +1011,9 @@ int main()
     * dynamics
     ************************************************/
 
+    external_function_opts ext_fun_opts;
+    ext_fun_opts.external_workspace = false;
+
 	#if 0
 	// NOTE(dimitris): temp code to test casadi integrator
 	int integrator_nx = 12;
@@ -1028,7 +1031,7 @@ int main()
 	casadi_integrator.casadi_sparsity_out = &casadi_erk4_chain_nm3_sparsity_out;
 	casadi_integrator.casadi_n_in = &casadi_erk4_chain_nm3_n_in;
 	casadi_integrator.casadi_n_out = &casadi_erk4_chain_nm3_n_out;
-	external_function_casadi_create(&casadi_integrator);
+	external_function_casadi_create(&casadi_integrator, &ext_fun_opts);
 
 	d_print_mat(1, integrator_nx+integrator_nu, integrator_in, 1);
 
@@ -1059,21 +1062,21 @@ int main()
 	                       impl_ode_fun_jac_x_xdot_u, impl_ode_jac_x_xdot_u, erk4_casadi);
 
 	// forw_vde
-	external_function_casadi_create_array(NN, expl_vde_for);
+	external_function_casadi_create_array(NN, expl_vde_for, &ext_fun_opts);
 
 	// impl_ode
-	external_function_casadi_create_array(NN, impl_ode_fun);
+	external_function_casadi_create_array(NN, impl_ode_fun, &ext_fun_opts);
 	//
-	external_function_casadi_create_array(NN, impl_ode_fun_jac_x_xdot);
+	external_function_casadi_create_array(NN, impl_ode_fun_jac_x_xdot, &ext_fun_opts);
 	//
-	external_function_casadi_create_array(NN, impl_ode_fun_jac_x_xdot_u);
+	external_function_casadi_create_array(NN, impl_ode_fun_jac_x_xdot_u, &ext_fun_opts);
 	//
-	external_function_casadi_create_array(NN, impl_ode_jac_x_xdot_u);
+	external_function_casadi_create_array(NN, impl_ode_jac_x_xdot_u, &ext_fun_opts);
 
 	if (NMF<4)
 	{
 		// discrete model supported
-		external_function_casadi_create_array(NN, erk4_casadi);
+		external_function_casadi_create_array(NN, erk4_casadi, &ext_fun_opts);
 	}
 	else
 	{
@@ -1099,12 +1102,12 @@ int main()
 
 			case NONLINEAR_LS:
 				select_ls_stage_cost_jac_casadi(i, NN, NMF, &ls_cost_jac_casadi[i]);
-				external_function_casadi_create(&ls_cost_jac_casadi[i]);
+				external_function_casadi_create(&ls_cost_jac_casadi[i], &ext_fun_opts);
 				break;
 
 			case EXTERNAL:
 				select_external_stage_cost_casadi(i, NN, NMF, &external_cost[i]);
-				external_function_casadi_create(&external_cost[i]);
+				external_function_casadi_create(&external_cost[i], &ext_fun_opts);
 				break;
 
 			default:
@@ -1354,7 +1357,7 @@ int main()
 
 	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 
-	ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
+	ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts, nlp_in);
 	int status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
 
     /************************************************

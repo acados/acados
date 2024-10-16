@@ -1102,19 +1102,22 @@ void setup_and_solve_nlp(int NN,
     select_dynamics_casadi(NN, NMF, expl_vde_for, impl_ode_fun,
             impl_ode_fun_jac_x_xdot, impl_ode_fun_jac_x_xdot_u, impl_ode_jac_x_xdot_u, erk4_casadi);
 
+    external_function_opts ext_fun_opts;
+    ext_fun_opts.external_workspace = true;
+
     // forw_vde
-    external_function_casadi_create_array(NN, expl_vde_for);
+    external_function_casadi_create_array(NN, expl_vde_for, &ext_fun_opts);
     // impl_ode
-    external_function_casadi_create_array(NN, impl_ode_fun);
+    external_function_casadi_create_array(NN, impl_ode_fun, &ext_fun_opts);
     //
-    external_function_casadi_create_array(NN, impl_ode_fun_jac_x_xdot);
+    external_function_casadi_create_array(NN, impl_ode_fun_jac_x_xdot, &ext_fun_opts);
     //
-    external_function_casadi_create_array(NN, impl_ode_fun_jac_x_xdot_u);
+    external_function_casadi_create_array(NN, impl_ode_fun_jac_x_xdot_u, &ext_fun_opts);
     //
-    external_function_casadi_create_array(NN, impl_ode_jac_x_xdot_u);
+    external_function_casadi_create_array(NN, impl_ode_jac_x_xdot_u, &ext_fun_opts);
 
     if (erk4_casadi != NULL)
-        external_function_casadi_create_array(NN, erk4_casadi);
+        external_function_casadi_create_array(NN, erk4_casadi, &ext_fun_opts);
 
     /************************************************
     * nonlinear least squares
@@ -1135,12 +1138,12 @@ void setup_and_solve_nlp(int NN,
 
             case NONLINEAR_LS:
                 select_ls_stage_cost_jac_casadi(i, NN, NMF, &ls_cost_jac_casadi[i]);
-                external_function_casadi_create(&ls_cost_jac_casadi[i]);
+                external_function_casadi_create(&ls_cost_jac_casadi[i], &ext_fun_opts);
                 break;
 
 			case EXTERNAL:
 				select_external_stage_cost_casadi(i, NN, NMF, &external_cost[i]);
-				external_function_casadi_create(&external_cost[i]);
+				external_function_casadi_create(&external_cost[i], &ext_fun_opts);
 				break;
 
 			default:
@@ -1414,7 +1417,7 @@ void setup_and_solve_nlp(int NN,
 
     ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 
-    ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
+    ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts, nlp_in);
     int status;
     status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
 
