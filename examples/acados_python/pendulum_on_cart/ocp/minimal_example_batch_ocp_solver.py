@@ -40,7 +40,7 @@ import scipy
 import casadi as ca
 
 """
-This example shows how the AcadosOcpBatchSolver can be used to parallelize mulitple OCP solves.
+This example shows how the AcadosOcpBatchSolver can be used to parallelize multiple OCP solves.
 
 If you want to use the batch solver, make sure to compile acados with openmp and num_threads set to 1,
 i.e. with the flags -DACADOS_WITH_OPENMP=ON -DACADOS_NUM_THREADS=1
