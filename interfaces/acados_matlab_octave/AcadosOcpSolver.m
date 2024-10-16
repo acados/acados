@@ -190,6 +190,10 @@ classdef AcadosOcpSolver < handle
                 error("get_iterate: the solver option store_iterates needs to be true in order to get iterates.");
             end
 
+            if strcmp(obj.ocp.solver_options.nlp_solver_type, 'SQP_RTI')
+                error("get_iterate: SQP_RTI not supported.");
+            end
+
             N_horizon = obj.ocp.solver_options.N_horizon;
 
             x_traj = cell(N_horizon + 1, 1);

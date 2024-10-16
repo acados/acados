@@ -1473,6 +1473,9 @@ class AcadosOcpSolver:
         if not self.acados_ocp.solver_options.store_iterates:
             raise Exception("get_iterate: the solver option store_iterates needs to be true in order to get iterates.")
 
+        if self.acados_ocp.solver_options.nlp_solver_type == "SQP_RTI":
+            raise Exception("get_iterate: SQP_RTI not supported.")
+
         x_traj = []
         u_traj = []
         z_traj = []
