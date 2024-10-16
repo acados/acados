@@ -134,7 +134,8 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
                                             double trial_objective,
                                             double current_merit,
                                             double trial_merit,
-                                            double pred_merit);
+                                            double pred_merit,
+                                            double pred_infeasibility);
 //
 int backtracking_line_search(ocp_nlp_config *config,
                             ocp_nlp_dims *dims,

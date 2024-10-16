@@ -394,6 +394,8 @@ typedef struct ocp_nlp_memory
 
     double cost_value;
     double qp_cost_value;
+    double predicted_infeasibility_reduction;
+    double objective_multiplier;
     int compute_hess;
 
     int status;

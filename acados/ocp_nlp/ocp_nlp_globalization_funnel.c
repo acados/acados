@@ -340,7 +340,8 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
                                                   double trial_objective,
                                                   double current_merit,
                                                   double trial_merit,
-                                                  double pred_merit)
+                                                  double pred_merit,
+                                                  double pred_infeasibility)
 {
     ocp_nlp_globalization_funnel_opts *opts = nlp_opts->globalization;
     ocp_nlp_globalization_opts *globalization_opts = opts->globalization_opts;
@@ -357,7 +358,8 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
         if (!mem->funnel_penalty_mode)
         {
             debug_output(nlp_opts, "Penalty Mode not active!\n", 1);
-            if (is_switching_condition_satisfied(opts, pred, alpha, current_infeasibility))
+            // if (is_switching_condition_satisfied(opts, pred, alpha, current_infeasibility))
+            if (is_switching_condition_satisfied(opts, pred, alpha, pred_infeasibility))
             {
                 debug_output(nlp_opts, "Switching condition IS satisfied!\n", 1);
                 if (is_f_type_armijo_condition_satisfied(globalization_opts, -ared, pred, alpha))
@@ -434,15 +436,16 @@ int backtracking_line_search(ocp_nlp_config *config,
 
     int N = dims->N;
     double pred;
-    if (opts->type_switching_condition)
-    {
-        pred = -nlp_mem->qp_cost_value;
-    }
-    else
-    {
-        pred = -compute_gradient_directional_derivative(dims, nlp_mem->qp_in, nlp_mem->qp_out);
-    }
+    // if (opts->type_switching_condition)
+    // {
+    //     pred = -nlp_mem->qp_cost_value;
+    // }
+    // else
+    // {
+    // }
+    pred = -compute_gradient_directional_derivative(dims, nlp_mem->qp_in, nlp_mem->qp_out);
     double pred_merit = 0.0; // Calculate this here
+    double pred_infeasibility = nlp_mem->predicted_infeasibility_reduction;
     double alpha = 1.0;
     double trial_cost;
     double trial_infeasibility = 0.0;
@@ -450,10 +453,12 @@ int backtracking_line_search(ocp_nlp_config *config,
     bool accept_step;
     double current_infeasibility = mem->l1_infeasibility;
     double current_cost = nlp_mem->cost_value;
-    double current_merit = mem->penalty_parameter*current_cost + current_infeasibility;
 
     // do the penalty parameter update here .... might be changed later
+    mem->penalty_parameter = nlp_mem->objective_multiplier;
     update_funnel_penalty_parameter(mem, opts, pred, mem->l1_infeasibility);
+    double current_merit = mem->penalty_parameter*current_cost + current_infeasibility; // Shouldn't this be the update below??
+    nlp_mem->objective_multiplier = mem->penalty_parameter;
 
     int i;
 
@@ -522,7 +527,7 @@ int backtracking_line_search(ocp_nlp_config *config,
                                                             alpha, current_infeasibility,
                                                             trial_infeasibility, current_cost,
                                                             trial_cost, current_merit, trial_merit,
-                                                            pred_merit);
+                                                            pred_merit, pred_infeasibility);
 
         if (accept_step)
         {
