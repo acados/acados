@@ -433,9 +433,10 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
     } while(false)
 
     external_function_opts ext_fun_opts;
-    ext_fun_opts.external_workspace = false;
 
 {% if phases_dims[0].np_global > 0 %}
+    // NOTE: p_global_precompute_fun cannot use external_workspace!!!
+    ext_fun_opts.external_workspace = false;
     capsule->p_global_precompute_fun.casadi_fun = &{{ name }}_p_global_precompute_fun;
     capsule->p_global_precompute_fun.casadi_work = &{{ name }}_p_global_precompute_fun_work;
     capsule->p_global_precompute_fun.casadi_sparsity_in = &{{ name }}_p_global_precompute_fun_sparsity_in;
@@ -445,8 +446,7 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
     external_function_casadi_create(&capsule->p_global_precompute_fun, &ext_fun_opts);
 {%- endif %}
 
-    // TODO: this put to true
-    ext_fun_opts.external_workspace = false;
+    ext_fun_opts.external_workspace = true;
 
 {# INITIAL #}
 {%- if constraints[0].constr_type_0 == "BGH" and phases_dims[0].nh_0 > 0 %}

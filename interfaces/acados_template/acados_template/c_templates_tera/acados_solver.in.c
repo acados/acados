@@ -411,9 +411,10 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     } while(false)
 
     external_function_opts ext_fun_opts;
-    ext_fun_opts.external_workspace = false;
 
 {% if dims.np_global > 0 %}
+    // NOTE: p_global_precompute_fun cannot use external_workspace!!!
+    ext_fun_opts.external_workspace = false;
     capsule->p_global_precompute_fun.casadi_fun = &{{ name }}_p_global_precompute_fun;
     capsule->p_global_precompute_fun.casadi_work = &{{ name }}_p_global_precompute_fun_work;
     capsule->p_global_precompute_fun.casadi_sparsity_in = &{{ name }}_p_global_precompute_fun_sparsity_in;
@@ -423,8 +424,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     external_function_casadi_create(&capsule->p_global_precompute_fun, &ext_fun_opts);
 {%- endif %}
 
-    // TODO: this put to true
-    ext_fun_opts.external_workspace = false;
+    ext_fun_opts.external_workspace = true;
 
 {%- if constraints.constr_type_0 == "BGH" and dims.nh_0 > 0 %}
     MAP_CASADI_FNC(nl_constr_h_0_fun_jac, {{ model.name }}_constr_h_0_fun_jac_uxt_zt);
