@@ -100,11 +100,7 @@ typedef struct pendulum_ode_solver_capsule
     external_function_external_param_casadi *impl_dae_fun_jac_x_xdot_z;
     external_function_external_param_casadi *impl_dae_jac_x_xdot_u_z;
 
-
-
-
     // cost
-
     external_function_external_param_casadi *cost_y_fun;
     external_function_external_param_casadi *cost_y_fun_jac_ut_xt;
     external_function_external_param_casadi *cost_y_hess;
@@ -115,20 +111,9 @@ typedef struct pendulum_ode_solver_capsule
     external_function_external_param_casadi cost_y_0_fun_jac_ut_xt;
     external_function_external_param_casadi cost_y_0_hess;
 
-
-
     external_function_external_param_casadi cost_y_e_fun;
     external_function_external_param_casadi cost_y_e_fun_jac_ut_xt;
     external_function_external_param_casadi cost_y_e_hess;
-
-
-    // constraints
-
-
-
-
-
-
 
 } pendulum_ode_solver_capsule;
 
@@ -150,10 +135,6 @@ ACADOS_SYMBOL_EXPORT int pendulum_ode_acados_create_with_discretization(pendulum
  * nlp_solver_plan. Returns 0 if no error occurred and a otherwise a value other than 0.
  */
 ACADOS_SYMBOL_EXPORT int pendulum_ode_acados_update_time_steps(pendulum_ode_solver_capsule * capsule, int N, double* new_time_steps);
-/**
- * This function is used for updating an already initialized solver with a different number of qp_cond_N.
- */
-ACADOS_SYMBOL_EXPORT int pendulum_ode_acados_update_qp_solver_cond_N(pendulum_ode_solver_capsule * capsule, int qp_solver_cond_N);
 ACADOS_SYMBOL_EXPORT int pendulum_ode_acados_update_params(pendulum_ode_solver_capsule * capsule, int stage, double *value, int np);
 ACADOS_SYMBOL_EXPORT int pendulum_ode_acados_update_params_sparse(pendulum_ode_solver_capsule * capsule, int stage, int *idx, double *p, int n_update);
 
