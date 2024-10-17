@@ -161,7 +161,7 @@ function run_example_ocp_simulink_p_global()
 end
 
 
-function [state_trajectories, t_tot] = run_example_ocp(lut, use_p_global, blazing)
+function [state_trajectories, timing] = run_example_ocp(lut, use_p_global, blazing)
 
     import casadi.*
 
@@ -183,12 +183,13 @@ function [state_trajectories, t_tot] = run_example_ocp(lut, use_p_global, blazin
         ocp_solver.set_p_global_and_precompute_dependencies(p_global_values);
     end
 
+    timing = 0;
     for i = 1:20
         ocp_solver.solve();
         state_trajectories = [state_trajectories; ocp_solver.get('x')];
+        timing = timing + ocp_solver.get('time_tot');
     end
 
-    t_tot = ocp_solver.get('time_tot');
 
     % Plot results
     PLOT = false;
@@ -200,7 +201,7 @@ function [state_trajectories, t_tot] = run_example_ocp(lut, use_p_global, blazin
     end
 end
 
-function [state_trajectories, t_tot] = run_example_mocp(lut, use_p_global, blazing)
+function [state_trajectories, timing] = run_example_mocp(lut, use_p_global, blazing)
     import casadi.*
 
     fprintf('\n\nRunning example with lut=%d, use_p_global=%d, blazing=%d\n', lut, use_p_global, blazing);
@@ -220,12 +221,13 @@ function [state_trajectories, t_tot] = run_example_mocp(lut, use_p_global, blazi
         mocp_solver.set_p_global_and_precompute_dependencies(p_global_values);
     end
 
+    timing = 0;
     for i = 1:20
         mocp_solver.solve();
         state_trajectories = [state_trajectories; mocp_solver.get('x')];
+        timing = timing + mocp_solver.get('time_tot');
     end
 
-    t_tot = mocp_solver.get('time_tot');
 
     % Plot results
     PLOT = false;
