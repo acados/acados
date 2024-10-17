@@ -187,7 +187,7 @@ function [state_trajectories, timing] = run_example_ocp(lut, use_p_global, blazi
     for i = 1:20
         ocp_solver.solve();
         state_trajectories = [state_trajectories; ocp_solver.get('x')];
-        timing = timing + ocp_solver.get('time_tot');
+        timing = timing + ocp_solver.get('time_lin');
     end
 
 
@@ -225,7 +225,7 @@ function [state_trajectories, timing] = run_example_mocp(lut, use_p_global, blaz
     for i = 1:20
         mocp_solver.solve();
         state_trajectories = [state_trajectories; mocp_solver.get('x')];
-        timing = timing + mocp_solver.get('time_tot');
+        timing = timing + mocp_solver.get('time_lin');
     end
 
 
