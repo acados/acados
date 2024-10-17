@@ -1169,7 +1169,7 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
     int ii, status;
     // in as args
     // skip last argument (that is the parameters vector)
-    for (ii = 0; ii < fun->in_num - 1; ii++)
+    for (ii = 0; ii < fun->in_num-1; ii++)
     {
         status = d_cvt_ext_fun_arg_to_casadi(type_in[ii], in[ii], (double *) fun->args[ii],
                                     (int *) fun->casadi_sparsity_in(ii), fun->args_dense[ii]);
@@ -1364,7 +1364,7 @@ acados_size_t external_function_external_param_casadi_calculate_size(external_fu
     fun->args_size_tot = 0;
     for (ii = 0; ii < fun->args_num; ii++)
     {
-        if (ii != fun->in_num - 1)  // skip last input argument
+        if (ii != fun->in_num-1)  // skip last input argument
         {
             fun->args_size_tot += casadi_nnz(fun->casadi_sparsity_in(ii));
         }
@@ -1453,7 +1453,7 @@ void external_function_external_param_casadi_assign(external_function_external_p
     // args
     for (ii = 0; ii < fun->args_num; ii++)
     {
-        if (ii != fun->in_num - 1)  // skip last input argument
+        if (ii != fun->in_num-1)  // skip last input argument
         {
             assign_and_advance_double(fun->args_size[ii], &fun->args[ii], &c_ptr);
         }
@@ -1507,7 +1507,7 @@ void external_function_external_param_casadi_wrapper(void *self, ext_fun_arg_t *
     }
     // in as args
     // skip last argument (that is the parameters vector)
-    for (ii = 0; ii < fun->in_num - 1; ii++)
+    for (ii = 0; ii < fun->in_num-1; ii++)
     {
         status = d_cvt_ext_fun_arg_to_casadi(type_in[ii], in[ii], (double *) fun->args[ii],
                                     (int *) fun->casadi_sparsity_in(ii), fun->args_dense[ii]);
