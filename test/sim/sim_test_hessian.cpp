@@ -137,6 +137,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 * external functions
 ************************************************/
     external_function_opts ext_fun_opts;
+    external_function_opts_set_to_default(&ext_fun_opts);
     ext_fun_opts.external_workspace = true;
 
     /* IMPLICIT MODEL */
@@ -660,6 +661,7 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
 * external functions
 ************************************************/
     external_function_opts ext_fun_opts;
+    external_function_opts_set_to_default(&ext_fun_opts);
     ext_fun_opts.external_workspace = true;
 
     /* IMPLICIT MODEL */

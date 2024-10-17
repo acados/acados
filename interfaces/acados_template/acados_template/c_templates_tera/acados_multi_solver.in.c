@@ -433,6 +433,7 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
     } while(false)
 
     external_function_opts ext_fun_opts;
+    external_function_opts_set_to_default(&ext_fun_opts);
 
 {% if phases_dims[0].np_global > 0 %}
     // NOTE: p_global_precompute_fun cannot use external_workspace!!!

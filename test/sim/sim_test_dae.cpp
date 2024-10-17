@@ -147,6 +147,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
 * external functions
 ************************************************/
     external_function_opts ext_fun_opts;
+    external_function_opts_set_to_default(&ext_fun_opts);
     ext_fun_opts.external_workspace = false;
 
     // impl_ode_fun

@@ -1103,6 +1103,7 @@ void setup_and_solve_nlp(int NN,
             impl_ode_fun_jac_x_xdot, impl_ode_fun_jac_x_xdot_u, impl_ode_jac_x_xdot_u, erk4_casadi);
 
     external_function_opts ext_fun_opts;
+    external_function_opts_set_to_default(&ext_fun_opts);
     ext_fun_opts.external_workspace = true;
 
     // forw_vde
