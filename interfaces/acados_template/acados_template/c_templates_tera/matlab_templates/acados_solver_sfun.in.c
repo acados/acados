@@ -75,6 +75,7 @@
   {% set_global nx_total = dims.nx * (solver_options.N_horizon+1) %}
   {% set_global nu_total = dims.nu * (solver_options.N_horizon) %}
   {% set_global nbu_total = dims.nbu * (solver_options.N_horizon) %}
+  {% set nz_total = dims.nz * solver_options.N_horizon %}
   {% set np_total = dims.np * (solver_options.N_horizon+1) %}
   {% set npi_total = dims.nx * (solver_options.N_horizon) %}
   {% set np_max = dims.np %}
