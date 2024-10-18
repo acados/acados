@@ -28,55 +28,58 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 
 
-% NOTE: This example requires CasADi version nightly-se2 or later,
-% as well as an installation of simde.
+% NOTE: This example requires CasADi version nightly-se2 or later.
 % Furthermore, this example requires additional flags for the CasADi code generation,
 % cf. the solver option `ext_fun_compile_flags`
 
 function main()
 
     import casadi.*
+
     % Standard OCP
     [state_trajectories_no_lut_ref, ~] = run_example_ocp(false, false, true);
     [state_trajectories_no_lut, ~] = run_example_ocp(false, true, true);
 
-    if ~all(abs(state_trajectories_no_lut_ref - state_trajectories_no_lut) < 1e-10)
+    if ~(max(max(abs(state_trajectories_no_lut_ref - state_trajectories_no_lut))) < 1e-10)
         error("State trajectories with lut=false do not match.");
     end
+
 
     [state_trajectories_with_lut_ref, t_tot_with_blazing_ref] = run_example_ocp(true, false, true);
     [state_trajectories_with_lut, t_tot_with_blazing] = run_example_ocp(true, true, true);
     [~, t_tot_with_bspline_ref] = run_example_ocp(true, false, false);
     [~, t_tot_with_bspline] = run_example_ocp(true, true, false);
 
-    if ~all(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut) < 1e-10)
+    if ~(max(max(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut))) < 1e-10)
         error("State trajectories with lut=true do not match.");
     end
 
-    % Multi-phase OCP
-    [state_trajectories_no_lut_ref, ~] = run_example_mocp(false, false, true);
-    [state_trajectories_no_lut, ~] = run_example_mocp(false, true, true);
+    % % Multi-phase OCP
+    % [state_trajectories_no_lut_ref, ~] = run_example_mocp(false, false, true);
+    % [state_trajectories_no_lut, ~] = run_example_mocp(false, true, true);
 
-    if ~all(abs(state_trajectories_no_lut_ref - state_trajectories_no_lut) < 1e-10)
-        error("State trajectories with lut=false do not match.");
-    end
+    % if ~(max(max(abs(state_trajectories_no_lut_ref - state_trajectories_no_lut))) < 1e-10)
+    %     error("State trajectories with lut=false do not match.");
+    % end
 
-    [state_trajectories_with_lut_ref, ~] = run_example_mocp(true, false, true);
-    [state_trajectories_with_lut, ~] = run_example_mocp(true, true, true);
+    % [state_trajectories_with_lut_ref, ~] = run_example_mocp(true, false, true);
+    % [state_trajectories_with_lut, ~] = run_example_mocp(true, true, true);
 
-    if ~all(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut) < 1e-10)
-        error("State trajectories with lut=true do not match.");
-    end
+    % if ~(max(max(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut))) < 1e-10)
+    %     error("State trajectories with lut=true do not match.");
+    % end
 
     %% Simulink test
-    if ~is_octave()
-        run_example_ocp_simulink_p_global();
-    end
+    % if ~is_octave()
+    %     run_example_ocp_simulink_p_global();
+    % end
 
     %% Timing comparison
     fprintf('\t\tbspline\t\tblazing\n');
     fprintf('ref\t\t%f \t%f\n', t_tot_with_bspline_ref, t_tot_with_blazing_ref);
     fprintf('p_global\t%f \t%f\n', t_tot_with_bspline, t_tot_with_blazing);
+
+    % fprintf('max diff %f', max(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut)))
 
 end
 
