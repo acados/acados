@@ -88,6 +88,7 @@ typedef struct
     as_rti_advancement_strategy_t as_rti_advancement_strategy;
     int as_rti_iter;
     int rti_log_residuals;
+    int rti_log_only_available_residuals;
 
 } ocp_nlp_sqp_rti_opts;
 

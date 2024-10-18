@@ -120,6 +120,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_,
     opts->as_rti_advancement_strategy = SIMULATE_ADVANCE;
     opts->as_rti_iter = 0;
     opts->rti_log_residuals = 0;
+    opts->rti_log_only_available_residuals = 0;
 
     return;
 }
@@ -195,6 +196,11 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_,
         {
             int* rti_log_residuals = (int *) value;
             opts->rti_log_residuals = *rti_log_residuals;
+        }
+        else if (!strcmp(field, "rti_log_only_available_residuals"))
+        {
+            int* rti_log_only_available_residuals = (int *) value;
+            opts->rti_log_only_available_residuals = *rti_log_only_available_residuals;
         }
         else if (!strcmp(field, "as_rti_level"))
         {
@@ -650,7 +656,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     }
     mem->nlp_mem->status = ACADOS_SUCCESS;
 
-    if (opts->rti_log_residuals)
+    if (opts->rti_log_residuals && !opts->rti_log_only_available_residuals)
     {
         prepare_full_residual_computation(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
         ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem);
@@ -834,8 +840,8 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         // load iterate from tmp
         copy_ocp_nlp_out(dims, tmp_nlp_out, nlp_out);
         // perform QP solve (implemented as feedback)
-        // similar to  ocp_nlp_sqp_rti_feedback_step
-        if (opts->rti_log_residuals)
+        // similar to ocp_nlp_sqp_rti_feedback_step
+        if (opts->rti_log_residuals && !opts->rti_log_only_available_residuals)
         {
             // NOTE: redo all residual computations after loading iterate from tmp to undo changes to memory in modules
             prepare_full_residual_computation(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
@@ -898,7 +904,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             ocp_nlp_zero_order_qp_update(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
             timings->time_lin += acados_toc(&timer1);
 
-            if (opts->rti_log_residuals)
+            if (opts->rti_log_residuals && !opts->rti_log_only_available_residuals)
             {
                 // evaluate additional functions and compute residuals
                 prepare_full_residual_computation(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
@@ -968,7 +974,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             ocp_nlp_level_c_update(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
             timings->time_lin += acados_toc(&timer1);
 
-            if (opts->rti_log_residuals)
+            if (opts->rti_log_residuals && !opts->rti_log_only_available_residuals)
             {
                 // evaluate additional functions and compute residuals
                 level_c_prepare_residual_computation(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);

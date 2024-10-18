@@ -70,6 +70,7 @@ classdef AcadosOcpOptions < handle
         qp_solver_ric_alg
         qp_solver_mu0
         rti_log_residuals
+        rti_log_only_available_residuals
         print_level
         cost_discretization
         regularize_method
@@ -151,6 +152,7 @@ classdef AcadosOcpOptions < handle
             obj.qp_solver_ric_alg = 1;
             obj.qp_solver_mu0 = 0;
             obj.rti_log_residuals = 0;
+            obj.rti_log_only_available_residuals = 0;
             obj.print_level = 0;
             obj.cost_discretization = 'EULER';
             obj.regularize_method = 'NO_REGULARIZE';

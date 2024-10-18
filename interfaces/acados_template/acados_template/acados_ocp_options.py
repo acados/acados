@@ -78,6 +78,7 @@ class AcadosOcpOptions:
         self.__qp_solver_ric_alg = 1
         self.__qp_solver_mu0 = 0.0
         self.__rti_log_residuals = 0
+        self.__rti_log_only_available_residuals = 0
         self.__print_level = 0
         self.__cost_discretization = 'EULER'
         self.__regularize_method = 'NO_REGULARIZE'
@@ -826,6 +827,16 @@ class AcadosOcpOptions:
         """
         return self.__rti_log_residuals
 
+    @property
+    def rti_log_only_available_residuals(self):
+        """
+        Relevant if rti_log_residuals is set to 1.
+        If rti_log_only_available_residuals is set to 1, only residuals that do not require additional function evaluations are logged.
+
+        Type: int; 0 or 1;
+        Default: 0.
+        """
+        return self.__rti_log_only_available_residuals
 
     @property
     def nlp_solver_tol_comp(self):
@@ -1529,6 +1540,13 @@ class AcadosOcpOptions:
             self.__rti_log_residuals = rti_log_residuals
         else:
             raise Exception('Invalid rti_log_residuals value. rti_log_residuals must be in [0, 1].')
+
+    @rti_log_only_available_residuals.setter
+    def rti_log_only_available_residuals(self, rti_log_only_available_residuals):
+        if rti_log_only_available_residuals in [0, 1]:
+            self.__rti_log_only_available_residuals = rti_log_only_available_residuals
+        else:
+            raise Exception('Invalid rti_log_only_available_residuals value. rti_log_only_available_residuals must be in [0, 1].')
 
     @nlp_solver_tol_comp.setter
     def nlp_solver_tol_comp(self, nlp_solver_tol_comp):

@@ -805,7 +805,7 @@ class AcadosOcpSolver:
             if self.__solver_options['nlp_solver_ext_qp_res'] == 1:
                 header += '\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp'
             if self.__solver_options['rti_log_residuals'] == 1:
-                header += '\tres_stat\tres_eq\tres_ineq\tres_comp'
+                header += '\tres_stat\tres_eq\t\tres_ineq\tres_comp'
             print(header)
             for jj in range(stat.shape[1]):
                 line = '{:d}\t{:d}\t{:d}'.format( int(stat[0][jj]), int(stat[1][jj]), int(stat[2][jj]))
@@ -1096,6 +1096,8 @@ class AcadosOcpSolver:
                     return full_stats[4, :]
                 else:
                     raise Exception("res_eq_all is not available for SQP_RTI if rti_log_residuals is not enabled.")
+            else:
+                raise Exception(f"res_eq_all is not available for nlp_solver_type {self.__solver_options['nlp_solver_type']}.")
 
         elif field_ == 'res_stat_all':
             full_stats = self.get_stats('statistics')
@@ -1106,6 +1108,32 @@ class AcadosOcpSolver:
                     return full_stats[3, :]
                 else:
                     raise Exception("res_stat_all is not available for SQP_RTI if rti_log_residuals is not enabled.")
+            else:
+                raise Exception(f"res_stat_all is not available for nlp_solver_type {self.__solver_options['nlp_solver_type']}.")
+
+        elif field_ == 'res_ineq_all':
+            full_stats = self.get_stats('statistics')
+            if self.__solver_options['nlp_solver_type'] == 'SQP':
+                return full_stats[3, :]
+            elif self.__solver_options['nlp_solver_type'] == 'SQP_RTI':
+                if self.__solver_options['rti_log_residuals'] == 1:
+                    return full_stats[5, :]
+                else:
+                    raise Exception("res_ineq_all is not available for SQP_RTI if rti_log_residuals is not enabled.")
+            else:
+                raise Exception(f"res_ineq_all is not available for nlp_solver_type {self.__solver_options['nlp_solver_type']}.")
+
+        elif field_ == 'res_comp_all':
+            full_stats = self.get_stats('statistics')
+            if self.__solver_options['nlp_solver_type'] == 'SQP':
+                return full_stats[4, :]
+            elif self.__solver_options['nlp_solver_type'] == 'SQP_RTI':
+                if self.__solver_options['rti_log_residuals'] == 1:
+                    return full_stats[6, :]
+                else:
+                    raise Exception("res_comp_all is not available for SQP_RTI if rti_log_residuals is not enabled.")
+            else:
+                raise Exception(f"res_comp_all is not available for nlp_solver_type {self.__solver_options['nlp_solver_type']}.")
 
         else:
             raise Exception(f'AcadosOcpSolver.get_stats(): \'{field}\' is not a valid argument.'

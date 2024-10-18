@@ -2356,6 +2356,9 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
 
     int rti_log_residuals = {{ solver_options.rti_log_residuals }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "rti_log_residuals", &rti_log_residuals);
+
+    int rti_log_only_available_residuals = {{ solver_options.rti_log_only_available_residuals }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "rti_log_only_available_residuals", &rti_log_only_available_residuals);
 {%- endif %}
 
     int qp_solver_iter_max = {{ solver_options.qp_solver_iter_max }};
