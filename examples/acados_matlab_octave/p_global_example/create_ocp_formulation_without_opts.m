@@ -1,9 +1,9 @@
 
-function ocp = create_ocp_formulation_without_opts(p_global, m, l, C, lut, use_p_global, p_global_values, blazing)
+function ocp = create_ocp_formulation_without_opts(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing)
     ocp = AcadosOcp();
 
     % Set model
-    model = export_pendulum_ode_model(p_global, m, l, C, lut, blazing);
+    model = export_pendulum_ode_model(p_global, m, l, coefficients, knots, lut, blazing);
     model.p_global = p_global;
     ocp.model = model;
 
@@ -56,7 +56,7 @@ function ocp = create_ocp_formulation_without_opts(p_global, m, l, C, lut, use_p
 end
 
 
-function model = export_pendulum_ode_model(p_global, m, l, C, lut, blazing)
+function model = export_pendulum_ode_model(p_global, m, l, coefficients, knots, lut, blazing)
     import casadi.*
     model_name = 'pendulum';
 
@@ -88,18 +88,15 @@ function model = export_pendulum_ode_model(p_global, m, l, C, lut, blazing)
                      (-m*l*cos_theta*sin_theta*dtheta^2 + F*cos_theta + (m_cart + m)*g*sin_theta) / (l*denominator));
 
     if lut
-        knots = {[0,0,0,0,0.2,0.5,0.8,1,1,1,1],[0,0,0,0.1,0.5,0.9,1,1,1]};
         x_in = vertcat(u/100 + 0.5, theta/pi + 0.5);
         if blazing
-
-
             % NOTE: blazing_spline requires an installation of simde as well as
             % additional flags for the CasADi code generation, cf. the solver
             % option ext_fun_compile_flags
             spline_fun = blazing_spline('blazing_spline', knots);
-            f_expl(4) = f_expl(4) + 0.01*spline_fun(x_in, C);
+            f_expl(4) = f_expl(4) + 0.01*spline_fun(x_in, coefficients);
         else
-            f_expl(4) = f_expl(4) + 0.01*bspline(x_in, C, knots, [3, 3], 1);
+            f_expl(4) = f_expl(4) + 0.01*bspline(x_in, coefficients, knots, [3, 3], 1);
         end
     end
 
