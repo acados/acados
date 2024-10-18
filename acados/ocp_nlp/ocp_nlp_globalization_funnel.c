@@ -266,10 +266,13 @@ void update_funnel_penalty_parameter(ocp_nlp_globalization_funnel_memory *mem,
                                             ocp_nlp_globalization_funnel_opts *opts,
                                             double pred_f, double pred_h)
 {
+    printf("update penalty, lhs: %.6e\n", mem->penalty_parameter * pred_f + pred_h);
+    printf("update penalty, rhs: %.6e\n", opts->penalty_eta * pred_h);
     if (mem->penalty_parameter * pred_f + pred_h < opts->penalty_eta * pred_h)
     {
-        mem->penalty_parameter = fmin(opts->penalty_contraction * mem->penalty_parameter,
-                                             ((1-opts->penalty_eta) * pred_h) / (-pred_f));
+
+        mem->penalty_parameter = fmax(fmin(opts->penalty_contraction * mem->penalty_parameter,
+                                             ((1-opts->penalty_eta) * pred_h) / (fmax(-pred_f, 1e-7))), 1e-5);
     }
     // else: do not decrease penalty parameter
 }
@@ -346,6 +349,7 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
     ocp_nlp_globalization_funnel_opts *opts = nlp_opts->globalization;
     ocp_nlp_globalization_opts *globalization_opts = opts->globalization_opts;
     bool accept_step = false;
+    debug_output(nlp_opts, "-- ENTERING FUNNEL GLOBALIZATION -- \n", 1);
     debug_output_double(nlp_opts, "current objective", current_objective, 2);
     debug_output_double(nlp_opts, "current infeasibility", current_infeasibility, 2);
     debug_output_double(nlp_opts, "trial objective", trial_objective, 2);
@@ -435,7 +439,7 @@ int backtracking_line_search(ocp_nlp_config *config,
     ocp_nlp_globalization_funnel_memory *mem = nlp_mem->globalization;
 
     int N = dims->N;
-    double pred;
+    double pred_optimality;
     // if (opts->type_switching_condition)
     // {
     //     pred = -nlp_mem->qp_cost_value;
@@ -443,7 +447,14 @@ int backtracking_line_search(ocp_nlp_config *config,
     // else
     // {
     // }
-    pred = -compute_gradient_directional_derivative(dims, nlp_mem->qp_in, nlp_mem->qp_out);
+    pred_optimality = -compute_gradient_directional_derivative(dims, nlp_mem->qp_in, nlp_mem->qp_out);
+    if (pred_optimality < 0)
+    {
+        if (fabs(pred_optimality) < 1e-6)
+        {
+            pred_optimality = fabs(pred_optimality);
+        }
+    }
     double pred_merit = 0.0; // Calculate this here
     double pred_infeasibility = nlp_mem->predicted_infeasibility_reduction;
     double alpha = 1.0;
@@ -456,7 +467,10 @@ int backtracking_line_search(ocp_nlp_config *config,
 
     // do the penalty parameter update here .... might be changed later
     mem->penalty_parameter = nlp_mem->objective_multiplier;
-    update_funnel_penalty_parameter(mem, opts, pred, mem->l1_infeasibility);
+    debug_output_double(nlp_opts, "-pred_optimality", pred_optimality, 2);
+    debug_output_double(nlp_opts, "pred_infeasibility", pred_infeasibility, 2);
+    update_funnel_penalty_parameter(mem, opts, pred_optimality, pred_infeasibility);
+    // update_funnel_penalty_parameter(mem, opts, pred, mem->l1_infeasibility);
     double current_merit = mem->penalty_parameter*current_cost + current_infeasibility; // Shouldn't this be the update below??
     nlp_mem->objective_multiplier = mem->penalty_parameter;
 
@@ -518,12 +532,12 @@ int backtracking_line_search(ocp_nlp_config *config,
         ///////////////////////////////////////////////////////////////////////
         // Evaluate merit function at trial point
         double trial_merit = mem->penalty_parameter*trial_cost + trial_infeasibility;
-        pred_merit = mem->penalty_parameter * pred + current_infeasibility;
+        pred_merit = mem->penalty_parameter * pred_optimality + current_infeasibility;
         ared = nlp_mem->cost_value - trial_cost;
 
         // Funnel globalization
         accept_step = is_trial_iterate_acceptable_to_funnel(mem, nlp_opts,
-                                                            pred, ared,
+                                                            pred_optimality, ared,
                                                             alpha, current_infeasibility,
                                                             trial_infeasibility, current_cost,
                                                             trial_cost, current_merit, trial_merit,

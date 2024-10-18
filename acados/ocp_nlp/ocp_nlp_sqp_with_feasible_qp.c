@@ -487,6 +487,39 @@ acados_size_t ocp_nlp_sqp_wfqp_workspace_calculate_size(void *config_, void *dim
     return size;
 }
 
+static double get_multiplier_norm_inf(ocp_nlp_dims *dims, ocp_qp_out *qp_out)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+    int *ns = dims->ns;
+    double tmp0 = 0.0;
+
+    for (int i = 0; i < N; i++)
+    {
+        for (int j=0; j<nx[i+1]; j++)
+        {
+            // abs(lambda) (LW)
+            tmp0 = fmax(tmp0, fabs(BLASFEO_DVECEL(qp_out->pi+i, j)));
+        }
+    }
+    for (int i = 0; i <= N; i++)
+    {
+        int n_nominal_ineq_nlp = dims->ni[i] - ns[i];
+        int two_n_nominal_ineq_nlp = 2*n_nominal_ineq_nlp;
+        for (int j=0; j<two_n_nominal_ineq_nlp+ns[i]; j++)
+        {
+            // mu (LW)
+            tmp0 = fmax(tmp0, BLASFEO_DVECEL(qp_out->lam+i, j));
+        }
+        for (int j=0; j<ns[i]; j++)
+        {
+            // mu (LW)
+            tmp0 = fmax(tmp0, BLASFEO_DVECEL(qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]+j));
+        }
+    }
+    return tmp0;
+}
 
 
 static void ocp_nlp_sqp_wfqp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dims,
@@ -552,7 +585,7 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         mem->nlp_mem->status = ACADOS_NAN_DETECTED;
         if (opts->nlp_opts->print_level > 0)
         {
-            printf("Stopped: NaN detected in iterate.\n");
+        printf("Stopped: NaN detected in iterate.\n");
         }
         return true;
     }
@@ -1001,7 +1034,6 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
                       out_start->ux + i, nx[i]+nu[i]+ns[i],
                       out_destination->ux + i, nx[i]+nu[i]+ns[i]);
 
-
         // update dual variables
         n_nominal_ineq_nlp = dims->ni[i] - ns[i];
         two_n_nominal_ineq_nlp = 2*n_nominal_ineq_nlp;
@@ -1222,8 +1254,6 @@ void ocp_nlp_sqp_wfqp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_ou
     blasfeo_dvecnrm_inf(N+1, &res->tmp, 0, &res->inf_norm_res_comp);
 }
 
-
-
 // MAIN OPTIMIZATION ROUTINE
 int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
@@ -1359,6 +1389,9 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                                nlp_opts->regularize, nlp_mem->regularize_mem);
         nlp_timings->time_reg += acados_toc(&timer1);
 
+        double multiplier_norm_inf = get_multiplier_norm_inf(dims, qp_out);
+        printf("Multiplier norm inf is: %.4e\n", multiplier_norm_inf);
+
         // Termination
         if (check_termination(sqp_iter, dims, nlp_res, mem, opts))
         {
@@ -1487,6 +1520,11 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // @david: now you have two directions:
         // nlp_work->tmp_qp_out = d without cost;
         // nlp_mem->qp_out = d with objective_multiplier
+        multiplier_norm_inf = get_multiplier_norm_inf(dims, nlp_work->tmp_qp_out);
+        printf("Feasibility Multiplier norm inf is: %.4e\n", multiplier_norm_inf);
+        multiplier_norm_inf = get_multiplier_norm_inf(dims, qp_out);
+        printf("Optimality Multiplier norm inf is: %.4e\n", multiplier_norm_inf);
+
         double current_l1_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
         printf("Current l1 infeasibility: %.4e\n", current_l1_infeasibility);
 
@@ -1507,22 +1545,20 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // predicted infeasibility reduction of feasibility QP should always be non-negative
         double pred_l1_inf_feasibility_direction = current_l1_infeasibility - l1_inf_QP_feasibility;
         double pred_l1_inf_optimality_direction = current_l1_infeasibility - l1_inf_QP_optimality;
+        // pred should always be positive, but numerically some weird stuff can occur.
+        if (pred_l1_inf_feasibility_direction < 0.0 && fabs(pred_l1_inf_feasibility_direction) < 1e-6)
+        {
+            pred_l1_inf_feasibility_direction = 0.0;
+        }
+        if (pred_l1_inf_optimality_direction < 0.0 && fabs(pred_l1_inf_optimality_direction) < 1e-6)
+        {
+            pred_l1_inf_optimality_direction = 0.0;
+        }
         printf("pred_l1_inf_feasibility_direction: %.4e\n", pred_l1_inf_feasibility_direction);
         printf("pred_l1_inf_optimality_direction: %.4e\n", pred_l1_inf_optimality_direction);
-        // pred should always be positive, but numerically some weird stuff can occur.
-        if (fabs(pred_l1_inf_feasibility_direction)<1e-8)
-        {
-            printf("lol\n");
-            pred_l1_inf_feasibility_direction = fabs(pred_l1_inf_feasibility_direction);
-        }
-        if (fabs(pred_l1_inf_optimality_direction) < 1e-8)
-        {
-            printf("lol\n");
-            pred_l1_inf_optimality_direction = fabs(pred_l1_inf_optimality_direction);
-        }
-        printf("pred_l1_inf_feasibility_direction: %.4e\n", pred_l1_inf_feasibility_direction);
 
         double kappa;
+
         if (pred_l1_inf_optimality_direction >= 1e-3 * pred_l1_inf_feasibility_direction)
         {
             printf("Juhuuuuuuuuuuuuuuuuuuuu!\n");
@@ -1562,7 +1598,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         if (current_l1_infeasibility > 1e-8 && mem->step_norm < 1e-8)
         {
             printf("Problems seems to be converged to an infeasible stationary point!\n");
-            exit(1);
+            nlp_mem->status = ACADOS_INFEASIBLE;
+            return nlp_mem->status;
         }
 
         /* globalization */
