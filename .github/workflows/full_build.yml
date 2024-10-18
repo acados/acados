@@ -149,13 +149,21 @@ jobs:
       shell: bash
       run: ${{runner.workspace}}/acados/.github/linux/install_new_casadi_python.sh''
 
-    - name: Run CMake python tests (ctest)
+    - name: Run Python tests that need new CasADi
       working-directory: ${{runner.workspace}}/acados/build
       shell: bash
       run: |
         source ${{runner.workspace}}/acados/acadosenv/bin/activate
         cd ${{runner.workspace}}/acados/examples/acados_python/p_global_example
         python example_p_global.py
+
+    - name: Run more Python tests
+      working-directory: ${{runner.workspace}}/acados/build
+      shell: bash
+      run: |
+        source ${{runner.workspace}}/acados/acadosenv/bin/activate
+        cd ${{runner.workspace}}/acados/examples/acados_python/tests
+        python test_rti_sqp_residuals.py
 
   MATLAB_test:
     needs: core_build
