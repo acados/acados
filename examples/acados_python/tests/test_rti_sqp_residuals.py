@@ -130,6 +130,9 @@ def main(nlp_solver_type="SQP"):
             res_eq_all.append(solver.get_stats("res_eq_all")[0])
             res_ineq_all.append(solver.get_stats("res_ineq_all")[0])
             res_comp_all.append(solver.get_stats("res_comp_all")[0])
+            #
+            # quick way to get all residuals
+            # res_all = solver.get_stats('statistics')[3:,0]
 
             if max([res_stat_all[-1], res_eq_all[-1], res_ineq_all[-1], res_comp_all[-1]]) < TOL:
                 break
