@@ -805,7 +805,7 @@ class AcadosOcpSolver:
             if self.__solver_options['nlp_solver_ext_qp_res'] == 1:
                 header += '\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp'
             if self.__solver_options['rti_log_residuals'] == 1:
-                header += '\tres_stat\tres_eq\tres_ineq\tres_comp'
+                header += '\tres_stat\tres_eq\t\tres_ineq\tres_comp'
             print(header)
             for jj in range(stat.shape[1]):
                 line = '{:d}\t{:d}\t{:d}'.format( int(stat[0][jj]), int(stat[1][jj]), int(stat[2][jj]))
