@@ -28,10 +28,14 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 
 
+% NOTE: This example requires CasADi version nightly-se2 or later,
+% as well as an installation of simde.
+% Furthermore, this example requires additional flags for the CasADi code generation,
+% cf. the solver option `ext_fun_compile_flags`
+
 function main()
 
     import casadi.*
-
     % Standard OCP
     state_trajectories_no_lut_ref = run_example_ocp(false, false);
     state_trajectories_no_lut = run_example_ocp(false, true);
@@ -61,6 +65,91 @@ function main()
     if ~all(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut) < 1e-10)
         error("State trajectories with lut=true do not match.");
     end
+    %% Simulink test
+    if ~is_octave()
+        run_example_ocp_simulink_p_global();
+    end
+
+end
+
+
+
+function run_example_ocp_simulink_p_global()
+
+    import casadi.*
+    lut = true;
+    use_p_global = true;
+    fprintf('\n\nRunning example with lut=%d, use_p_global=%d\n', lut, use_p_global);
+
+    % Create p_global parameters
+    [p_global, m, l, C, p_global_values] = create_p_global(lut);
+
+    % OCP formulation
+    ocp = create_ocp_formulation_without_opts(p_global, m, l, C, lut, use_p_global, p_global_values);
+    ocp = set_solver_options(ocp);
+
+    % Simulink options
+    simulink_opts = get_acados_simulink_opts();
+    simulink_opts.inputs.p_global = 1;
+    possible_inputs = fieldnames(simulink_opts.inputs);
+    for i = 1:length(possible_inputs)
+        simulink_opts.inputs.(possible_inputs{i}) = 0;
+    end
+    simulink_opts.inputs.lbx_0 = 1;
+    simulink_opts.inputs.ubx_0 = 1;
+    simulink_opts.inputs.p_global = 1;
+
+    simulink_opts.outputs.xtraj = 1;
+    simulink_opts.outputs.utraj = 1;
+    simulink_opts.outputs.u0 = 0;
+    simulink_opts.outputs.x1 = 0;
+
+    ocp.simulink_opts = simulink_opts;
+
+    % OCP solver
+    ocp_solver = AcadosOcpSolver(ocp);
+
+    %% Matlab test solve
+    % test with ones such that update is necessary
+    p_global_values_test = ones(size(p_global_values));
+    if use_p_global
+        ocp_solver.set_p_global_and_precompute_dependencies(p_global_values_test);
+    end
+
+    ocp_solver.solve();
+    xtraj = ocp_solver.get('x');
+    xtraj = xtraj(:)';
+    utraj = ocp_solver.get('u');
+    utraj = utraj(:)';
+
+
+    %% build s funtion
+    cd c_generated_code;
+    make_sfun;
+    cd ..;
+
+    %% run simulink block
+    out_sim = sim('p_global_simulink_test_block', 'SaveOutput', 'on');
+    fprintf('\nSuccessfully ran simulink block');
+
+    %% Evaluation
+    fprintf('\nTest results on SIMULINK simulation.\n')
+
+    disp('checking KKT residual')
+    % kkt_signal = out_sim.logsout.getElement('KKT_residual');
+    xtraj_signal = out_sim.logsout.getElement('xtraj');
+    xtraj_val = xtraj_signal.Values.Data(1, :);
+    utraj_signal = out_sim.logsout.getElement('utraj');
+    utraj_val = utraj_signal.Values.Data(1, :);
+    if norm(xtraj_val - xtraj) > 1e-8
+        disp('error: xtraj values in SIMULINK and MATLAB should match.')
+        quit(1);
+    end
+    if norm(utraj_val - utraj) > 1e-8
+        disp('error: utraj values in SIMULINK and MATLAB should match.')
+        quit(1);
+    end
+    disp('Simulink p_global test: got matching trajectories in Matlab and Simulink!')
 end
 
 
@@ -74,7 +163,8 @@ function state_trajectories = run_example_ocp(lut, use_p_global)
     [p_global, m, l, C, p_global_values] = create_p_global(lut);
 
     % OCP formulation
-    ocp = create_ocp_formulation(p_global, m, l, C, lut, use_p_global, p_global_values);
+    ocp = create_ocp_formulation_without_opts(p_global, m, l, C, lut, use_p_global, p_global_values);
+    ocp = set_solver_options(ocp);
 
     % OCP solver
     ocp_solver = AcadosOcpSolver(ocp);
@@ -136,30 +226,44 @@ function state_trajectories = run_example_mocp(lut, use_p_global)
 end
 
 
+function ocp = set_solver_options(ocp)
+    % set options
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
+    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
+    ocp.solver_options.integrator_type = 'ERK';
+    ocp.solver_options.print_level = 0;
+    ocp.solver_options.nlp_solver_type = 'SQP_RTI';
+
+    % set prediction horizon
+    Tf = 1.0;
+    N_horizon = 20;
+    ocp.solver_options.tf = Tf;
+    ocp.solver_options.N_horizon = N_horizon;
+
+    % partial condensing
+    ocp.solver_options.qp_solver_cond_N = 5;
+    ocp.solver_options.qp_solver_cond_block_size = [3, 3, 3, 3, 7, 1];
+
+    % NOTE: these additional flags are required for code generation of CasADi functions using casadi.blazing_spline
+    ocp.solver_options.ext_fun_compile_flags = ['-I' casadi.GlobalOptions.getCasadiIncludePath ' -ffast-math -march=native '];
+end
+
 function mocp = create_mocp_formulation(p_global, m, l, C, lut, use_p_global, p_global_values)
 
-    Tf = 1.0;
     N_horizon_1 = 10;
     N_horizon_2 = 10;
-    N_horizon = N_horizon_1 + N_horizon_2;
     mocp = AcadosMultiphaseOcp([N_horizon_1, N_horizon_2]);
-    ocp_phase_1 = create_ocp_formulation(p_global, m, l, C, lut, use_p_global, p_global_values);
-    ocp_phase_2 = create_ocp_formulation(p_global, m, l, C, lut, use_p_global, p_global_values);
+    ocp_phase_1 = create_ocp_formulation_without_opts(p_global, m, l, C, lut, use_p_global, p_global_values);
+    ocp_phase_2 = create_ocp_formulation_without_opts(p_global, m, l, C, lut, use_p_global, p_global_values);
+
+    mocp = set_solver_options(mocp);
 
     mocp.set_phase(ocp_phase_1, 1);
     mocp.set_phase(ocp_phase_2, 2);
 
-    %  set options
-    mocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
-    mocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
-    mocp.solver_options.integrator_type = 'ERK';
-    mocp.solver_options.print_level = 0;
-    mocp.solver_options.nlp_solver_type = 'SQP_RTI';
-
-    % set prediction horizon
-    mocp.solver_options.tf = Tf;
-    mocp.solver_options.N_horizon = N_horizon;
-
+    if use_p_global
+        mocp.p_global_values = p_global_values;
+    end
 end
 
 
@@ -172,7 +276,7 @@ function [p_global, m, l, C, p_global_values] = create_p_global(lut)
     p_global_values = [0.1; 0.8];
 
     if lut
-        data = rand(7, 6, 2); % Example data, replace with actual data
+        data = rand(7, 5); % Example data, replace with actual data
         C = MX.sym('C', numel(data), 1);
         p_global{end+1} = C;
         p_global_values = [p_global_values; data(:)];

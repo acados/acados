@@ -177,6 +177,9 @@ typedef struct
     void (*memory_get)(void *config, void *dims, void *mem, const char *field, void *value);
     // work
     acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
+    acados_size_t (*get_external_fun_workspace_requirement)(void *config, void *dims, void *opts_, void *model_);
+    void (*set_external_fun_workspaces)(void *config, void *dims, void *opts_, void *model_, void *work_);
+
     // model
     acados_size_t (*model_calculate_size)(void *config, void *dims);
     void *(*model_assign)(void *config, void *dims, void *raw_memory);

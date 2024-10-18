@@ -36,7 +36,7 @@ import shutil
 import sys
 import time
 
-from ctypes import (POINTER, byref, c_char_p, c_double, c_int,
+from ctypes import (POINTER, byref, c_char_p, c_double, c_int, c_bool,
                     c_void_p, cast)
 if os.name == 'nt':
     from ctypes import wintypes
@@ -55,6 +55,7 @@ from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
                     acados_lib_is_compiled_with_openmp)
+from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates
 
 
 class AcadosOcpSolver:
@@ -257,8 +258,9 @@ class AcadosOcpSolver:
 
         # gettable fields
         self.__qp_dynamics_fields = ['A', 'B', 'b']
-        self.__qp_cost_fields = ['Q', 'R', 'S', 'q', 'r']
+        self.__qp_cost_fields = ['Q', 'R', 'S', 'q', 'r', 'zl', 'zu', 'Zl', 'Zu']
         self.__qp_constraint_fields = ['C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
+        self.__qp_constraint_int_fields = ['idxs', 'idxb']
         self.__qp_pc_hpipm_fields = ['P', 'K', 'Lr', 'p']
         self.__qp_pc_fields = ['pcond_Q', 'pcond_R', 'pcond_S']
 
@@ -295,6 +297,8 @@ class AcadosOcpSolver:
 
         self.__acados_lib.ocp_nlp_get_at_stage.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
 
+        self.__acados_lib.ocp_nlp_get_from_iterate.argtypes = [c_void_p, c_void_p, c_int, c_int, c_char_p, c_void_p]
+        self.__acados_lib.ocp_nlp_get_from_iterate.restypes = c_void_p
 
         getattr(self.shared_lib, f"{self.name}_acados_solve").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{self.name}_acados_solve").restype = c_int
@@ -801,7 +805,7 @@ class AcadosOcpSolver:
             if self.__solver_options['nlp_solver_ext_qp_res'] == 1:
                 header += '\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp'
             if self.__solver_options['rti_log_residuals'] == 1:
-                header += '\tres_stat\tres_eq\tres_ineq\tres_comp'
+                header += '\tres_stat\tres_eq\t\tres_ineq\tres_comp'
             print(header)
             for jj in range(stat.shape[1]):
                 line = '{:d}\t{:d}\t{:d}'.format( int(stat[0][jj]), int(stat[1][jj]), int(stat[2][jj]))
@@ -914,7 +918,7 @@ class AcadosOcpSolver:
             for i in range(self.N):
                 qp_data[f'{field}_{i:0{lN}d}'] = self.get_from_qp_in(i,field)
 
-        for field in self.__qp_constraint_fields + self.__qp_cost_fields:
+        for field in self.__qp_constraint_fields + self.__qp_cost_fields + self.__qp_constraint_int_fields:
             for i in range(self.N+1):
                 qp_data[f'{field}_{i:0{lN}d}'] = self.get_from_qp_in(i,field)
 
@@ -968,7 +972,7 @@ class AcadosOcpSolver:
         """
         Get the information of the last solver call.
 
-            :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter', 'sqp_iter', 'residuals', 'qp_iter', 'alpha']
+            :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'nlp_iter', 'sqp_iter', 'residuals', 'qp_iter', 'alpha']
 
         Available fileds:
             - time_tot: total CPU time previous call
@@ -1092,6 +1096,8 @@ class AcadosOcpSolver:
                     return full_stats[4, :]
                 else:
                     raise Exception("res_eq_all is not available for SQP_RTI if rti_log_residuals is not enabled.")
+            else:
+                raise Exception(f"res_eq_all is not available for nlp_solver_type {self.__solver_options['nlp_solver_type']}.")
 
         elif field_ == 'res_stat_all':
             full_stats = self.get_stats('statistics')
@@ -1102,6 +1108,32 @@ class AcadosOcpSolver:
                     return full_stats[3, :]
                 else:
                     raise Exception("res_stat_all is not available for SQP_RTI if rti_log_residuals is not enabled.")
+            else:
+                raise Exception(f"res_stat_all is not available for nlp_solver_type {self.__solver_options['nlp_solver_type']}.")
+
+        elif field_ == 'res_ineq_all':
+            full_stats = self.get_stats('statistics')
+            if self.__solver_options['nlp_solver_type'] == 'SQP':
+                return full_stats[3, :]
+            elif self.__solver_options['nlp_solver_type'] == 'SQP_RTI':
+                if self.__solver_options['rti_log_residuals'] == 1:
+                    return full_stats[5, :]
+                else:
+                    raise Exception("res_ineq_all is not available for SQP_RTI if rti_log_residuals is not enabled.")
+            else:
+                raise Exception(f"res_ineq_all is not available for nlp_solver_type {self.__solver_options['nlp_solver_type']}.")
+
+        elif field_ == 'res_comp_all':
+            full_stats = self.get_stats('statistics')
+            if self.__solver_options['nlp_solver_type'] == 'SQP':
+                return full_stats[4, :]
+            elif self.__solver_options['nlp_solver_type'] == 'SQP_RTI':
+                if self.__solver_options['rti_log_residuals'] == 1:
+                    return full_stats[6, :]
+                else:
+                    raise Exception("res_comp_all is not available for SQP_RTI if rti_log_residuals is not enabled.")
+            else:
+                raise Exception(f"res_comp_all is not available for nlp_solver_type {self.__solver_options['nlp_solver_type']}.")
 
         else:
             raise Exception(f'AcadosOcpSolver.get_stats(): \'{field}\' is not a valid argument.'
@@ -1407,7 +1439,7 @@ class AcadosOcpSolver:
             raise Exception("stage should be <= self.N")
         if field_ in self.__qp_dynamics_fields and stage_ >= self.N:
             raise ValueError(f"dynamics field {field_} not available at terminal stage")
-        if field_ not in self.__qp_dynamics_fields + self.__qp_cost_fields + self.__qp_constraint_fields + self.__qp_pc_hpipm_fields + self.__qp_pc_fields:
+        if field_ not in self.__qp_dynamics_fields + self.__qp_cost_fields + self.__qp_constraint_fields + self.__qp_pc_hpipm_fields + self.__qp_pc_fields + self.__qp_constraint_int_fields:
             raise Exception(f"field {field_} not supported.")
         if field_ in self.__qp_pc_hpipm_fields:
             if self.acados_ocp.solver_options.qp_solver != "PARTIAL_CONDENSING_HPIPM" or self.acados_ocp.solver_options.qp_solver_cond_N != self.acados_ocp.solver_options.N_horizon:
@@ -1428,7 +1460,10 @@ class AcadosOcpSolver:
             self.nlp_dims, self.nlp_out, stage_, field, dims_data)
 
         # create output data
-        out = np.ascontiguousarray(np.zeros((np.prod(dims),)), dtype=np.float64)
+        if field_ in self.__qp_constraint_int_fields:
+            out = np.ascontiguousarray(np.zeros((np.prod(dims),)), dtype=np.int32)
+        else:
+            out = np.ascontiguousarray(np.zeros((np.prod(dims),)), dtype=np.float64)
         out = out.reshape(dims[0], dims[1], order='F')
 
         out_data = cast(out.ctypes.data, POINTER(c_double))
@@ -1445,13 +1480,89 @@ class AcadosOcpSolver:
         return out
 
 
+    def __ocp_nlp_get_from_iterate(self, iteration_, stage_, field_):
+        stage = c_int(stage_)
+        field = field_.encode('utf-8')
+        iteration = c_int(iteration_)
+        dim = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out,
+                    stage, field)
+
+        out = np.ascontiguousarray(np.zeros((dim,)), dtype=np.float64)
+        out_data = cast(out.ctypes.data, POINTER(c_double))
+        out_data_p = cast((out_data), c_void_p)
+        self.__acados_lib.ocp_nlp_get_from_iterate(self.nlp_dims, self.nlp_solver, iteration, stage, field, out_data_p)
+        return out
+
+    def get_iterate(self, iteration: int) -> AcadosOcpIterate:
+
+        if iteration < 0 or iteration > self.get_stats('sqp_iter'):
+            raise Exception("get_iterate: iteration needs to be nonnegative and <= sqp_iter.")
+
+        if not self.acados_ocp.solver_options.store_iterates:
+            raise Exception("get_iterate: the solver option store_iterates needs to be true in order to get iterates.")
+
+        if self.acados_ocp.solver_options.nlp_solver_type == "SQP_RTI":
+            raise Exception("get_iterate: SQP_RTI not supported.")
+
+        x_traj = []
+        u_traj = []
+        z_traj = []
+        sl_traj = []
+        su_traj = []
+        pi_traj = []
+        lam_traj = []
+
+        for n in range(self.acados_ocp.solver_options.N_horizon):
+            x_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "x"))
+            u_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "u"))
+            z_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "z"))
+            sl_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "sl"))
+            su_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "su"))
+            pi_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "pi"))
+            lam_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "lam"))
+
+        n = self.acados_ocp.solver_options.N_horizon
+        x_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "x"))
+        sl_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "sl"))
+        su_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "su"))
+        lam_traj.append(self.__ocp_nlp_get_from_iterate(iteration, n, "lam"))
+
+        iterate = AcadosOcpIterate(x_traj=tuple(x_traj),
+                                   u_traj=tuple(u_traj),
+                                   z_traj=tuple(z_traj),
+                                   sl_traj=tuple(sl_traj),
+                                   su_traj=tuple(su_traj),
+                                   pi_traj=tuple(pi_traj),
+                                   lam_traj=tuple(lam_traj))
+
+        return iterate
+
+
+    def get_iterates(self) -> AcadosOcpIterates:
+        return AcadosOcpIterates(iterate_list=[self.get_iterate(n) for n in range(self.get_stats('nlp_iter')+1)])
+
+
+    def dims_get(self, field_, stage_):
+        return self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out,
+                    c_int(stage_), field_.encode('utf-8'))
+
+
     def options_set(self, field_, value_):
         """
         Set options of the solver.
 
-            :param field: string, e.g. 'print_level', 'rti_phase', 'step_length', 'alpha_min', 'alpha_reduction', 'qp_warm_start', 'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC', 'qp_tol_stat', 'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min', 'qp_mu0', 'qp_print_level'
+            :param field: string, e.g. 'print_level', 'rti_phase', 'globalization_fixed_step_length', 'globalization_alpha_min', 'globalization_alpha_reduction',
+                                        'qp_warm_start', 'globalization_line_search_use_sufficient_descent',
+                                        'globalization_full_step_dual', 'globalization_use_SOC', 'qp_tol_stat',
+                                        'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min',
+                                        'qp_mu0', 'qp_print_level', 'globalization_funnel_init_increase_factor',
+                                        'globalization_funnel_init_upper_bound', 'globalization_funnel_sufficient_decrease_factor',
+                                        'globalization_funnel_kappa', 'globalization_funnel_fraction_switching_condition',
+                                        'globalization_funnel_initial_penalty_parameter', 'levenberg_marquardt',
+                                        'adaptive_levenberg_marquardt_lam', 'adaptive_levenberg_marquardt_mu_min',
+                                        'adaptive_levenberg_marquardt_mu0',
 
-            :param value: of type int, float, string
+            :param value: of type int, float, string, bool
 
             - qp_tol_stat: QP solver tolerance stationarity
             - qp_tol_eq: QP solver tolerance equalities
@@ -1460,13 +1571,44 @@ class AcadosOcpSolver:
             - qp_tau_min: for HPIPM QP solvers: minimum value of barrier parameter in HPIPM
             - qp_mu0: for HPIPM QP solvers: initial value for complementarity slackness
             - warm_start_first_qp: indicates if first QP in SQP is warm_started
-            - rti_phase: 0: PREPARATION_AND_FEEDBACK, 1: PREPARATION, 2: FEEDBACK
+            - rti_phase: 0: PREPARATION_AND_FEEDBACK, 1: PREPARATION, 2: FEEDBACK; only support for nlp_solver = 'SQP_RTI'
         """
-        int_fields = ['print_level', 'rti_phase', 'qp_warm_start',
-                      'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC', 'warm_start_first_qp', "as_rti_level", "max_iter", "qp_print_level"]
-        double_fields = ['step_length', 'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp', 'alpha_min', 'alpha_reduction',
-                         'eps_sufficient_descent', 'qp_tol_stat', 'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min', 'qp_mu0']
-        string_fields = ['globalization']
+        int_fields = ['print_level',
+                      'rti_phase',
+                      'globalization_line_search_use_sufficient_descent',
+                      'globalization_full_step_dual',
+                      'globalization_use_SOC',
+                      'warm_start_first_qp',
+                      'as_rti_level',
+                      'max_iter',
+                      'qp_warm_start',
+                      'qp_print_level']
+        double_fields = ['globalization_fixed_step_length',
+                         'globalization_alpha_min',
+                         'globalization_alpha_reduction',
+                         'globalization_eps_sufficient_descent',
+                         'globalization_funnel_init_increase_factor',
+                         'globalization_funnel_init_upper_bound',
+                         'globalization_funnel_sufficient_decrease_factor',
+                         'globalization_funnel_kappa',
+                         'globalization_funnel_fraction_switching_condition',
+                         'globalization_funnel_initial_penalty_parameter',
+                         'levenberg_marquardt',
+                         'adaptive_levenberg_marquardt_lam',
+                         'adaptive_levenberg_marquardt_mu_min',
+                         'adaptive_levenberg_marquardt_mu0',
+                         'tol_eq',
+                         'tol_stat',
+                         'tol_ineq',
+                         'tol_comp',
+                         'qp_tol_stat',
+                         'qp_tol_eq',
+                         'qp_tol_ineq',
+                         'qp_tol_comp',
+                         'qp_tau_min',
+                         'qp_mu0']
+        string_fields = []
+        bool_fields = ['with_adaptive_levenberg_marquardt']
 
         # check field availability and type
         if field_ in int_fields:
@@ -1474,13 +1616,16 @@ class AcadosOcpSolver:
                 raise Exception(f'solver option \'{field_}\' must be of type int. You have {type(value_)}.')
             else:
                 value_ctypes = c_int(value_)
-
         elif field_ in double_fields:
             if not isinstance(value_, float):
                 raise Exception(f'solver option \'{field_}\' must be of type float. You have {type(value_)}.')
             else:
                 value_ctypes = c_double(value_)
-
+        elif field_ in bool_fields:
+            if not isinstance(value_, bool):
+                raise Exception(f'solver option \'{field_}\' must be of type bool. You have {type(value_)}.')
+            else:
+                value_ctypes = c_bool(value_)
         elif field_ in string_fields:
             if not isinstance(value_, str):
                 raise Exception(f'solver option \'{field_}\' must be of type str. You have {type(value_)}.')

@@ -139,18 +139,31 @@ jobs:
       shell: bash
       run: ${{runner.workspace}}/acados/.github/linux/install_tera.sh
 
+    - name: Install simde
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: ${{runner.workspace}}/acados/.github/linux/install_simde.sh''
+
     - name: Install new CasADi Python
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: ${{runner.workspace}}/acados/.github/linux/install_new_casadi_python.sh''
 
-    - name: Run CMake python tests (ctest)
+    - name: Run Python tests that need new CasADi
       working-directory: ${{runner.workspace}}/acados/build
       shell: bash
       run: |
         source ${{runner.workspace}}/acados/acadosenv/bin/activate
         cd ${{runner.workspace}}/acados/examples/acados_python/p_global_example
         python example_p_global.py
+
+    - name: Run more Python tests
+      working-directory: ${{runner.workspace}}/acados/build
+      shell: bash
+      run: |
+        source ${{runner.workspace}}/acados/acadosenv/bin/activate
+        cd ${{runner.workspace}}/acados/examples/acados_python/tests
+        python test_rti_sqp_residuals.py
 
   MATLAB_test:
     needs: core_build
@@ -221,6 +234,11 @@ jobs:
       run: |
         ${{runner.workspace}}/acados/.github/linux/install_new_casadi_matlab.sh
 
+    - name: Install simde
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: ${{runner.workspace}}/acados/.github/linux/install_simde.sh''
+
     - name: Export Paths
       working-directory: ${{runner.workspace}}/acados
       shell: bash
@@ -232,6 +250,7 @@ jobs:
       if: always()
       with:
           release: R2021a
+          products: Simulink Simulink_Test
           cache: true
 
     # just needed for blasfeo_target.h
@@ -253,6 +272,12 @@ jobs:
       with:
         command: |
             cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; run_matlab_examples_new_casadi
+
+    - name: Run Simulink MOCP test
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/mocp_transition_example; main_mocp_simulink
 
   # run selected matlab examples
   MATLAB_examples:
@@ -363,6 +388,12 @@ jobs:
       if: always()
       with:
         command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_qp_test
+
+    - name: Run Simulink slack test
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_slack_test
 
     - name: Run Simulink parameter test
       uses: matlab-actions/run-command@v2

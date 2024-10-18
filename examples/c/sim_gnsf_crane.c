@@ -54,6 +54,8 @@ int main() {
 /************************************************
 *   external functions
 ************************************************/
+    external_function_opts ext_fun_opts;
+    ext_fun_opts.external_workspace = false;
 
     // phi_fun
     external_function_casadi phi_fun;
@@ -63,7 +65,7 @@ int main() {
     phi_fun.casadi_sparsity_out   = &crane_nx9_phi_fun_sparsity_out;
     phi_fun.casadi_n_in           = &crane_nx9_phi_fun_n_in;
     phi_fun.casadi_n_out          = &crane_nx9_phi_fun_n_out;
-	external_function_casadi_create(&phi_fun);
+	external_function_casadi_create(&phi_fun, &ext_fun_opts);
 
     // phi_fun_jac_y
     external_function_casadi phi_fun_jac_y;
@@ -73,7 +75,7 @@ int main() {
     phi_fun_jac_y.casadi_sparsity_out   = &crane_nx9_phi_fun_jac_y_sparsity_out;
     phi_fun_jac_y.casadi_n_in           = &crane_nx9_phi_fun_jac_y_n_in;
     phi_fun_jac_y.casadi_n_out          = &crane_nx9_phi_fun_jac_y_n_out;
-	external_function_casadi_create(&phi_fun_jac_y);
+	external_function_casadi_create(&phi_fun_jac_y, &ext_fun_opts);
 
     // phi_jac_y_uhat
     external_function_casadi phi_jac_y_uhat;
@@ -84,7 +86,7 @@ int main() {
     phi_jac_y_uhat.casadi_n_in               = &crane_nx9_phi_jac_y_uhat_n_in;
     phi_jac_y_uhat.casadi_n_out              = &crane_nx9_phi_jac_y_uhat_n_out;
 
-	external_function_casadi_create(&phi_jac_y_uhat);
+	external_function_casadi_create(&phi_jac_y_uhat, &ext_fun_opts);
 
     // f_lo_fun_jac_x1k1uz
     external_function_casadi f_lo_fun_jac_x1k1uz;
@@ -94,7 +96,7 @@ int main() {
     f_lo_fun_jac_x1k1uz.casadi_sparsity_out   = &crane_nx9_f_lo_fun_jac_x1k1uz_sparsity_out;
     f_lo_fun_jac_x1k1uz.casadi_n_in           = &crane_nx9_f_lo_fun_jac_x1k1uz_n_in;
     f_lo_fun_jac_x1k1uz.casadi_n_out          = &crane_nx9_f_lo_fun_jac_x1k1uz_n_out;
-	external_function_casadi_create(&f_lo_fun_jac_x1k1uz);
+	external_function_casadi_create(&f_lo_fun_jac_x1k1uz, &ext_fun_opts);
 
     // get_matrices_fun
     external_function_casadi get_matrices_fun;
@@ -104,7 +106,7 @@ int main() {
     get_matrices_fun.casadi_sparsity_out   = &crane_nx9_get_matrices_fun_sparsity_out;
     get_matrices_fun.casadi_n_in           = &crane_nx9_get_matrices_fun_n_in;
     get_matrices_fun.casadi_n_out          = &crane_nx9_get_matrices_fun_n_out;
-	external_function_casadi_create(&get_matrices_fun);
+	external_function_casadi_create(&get_matrices_fun, &ext_fun_opts);
 
 /************************************************
 * Set up sim_gnsf structs
@@ -198,7 +200,7 @@ int main() {
     model->phi_jac_y_uhat = (external_function_generic *) &phi_jac_y_uhat;
     model->get_gnsf_matrices = (external_function_generic *) &get_matrices_fun;
 
-    sim_solver *sim_solver = sim_solver_create(config, dims, opts);
+    sim_solver *sim_solver = sim_solver_create(config, dims, opts, in);
 
     // set up sim_out
     sim_out *out = sim_out_create(config, dims);

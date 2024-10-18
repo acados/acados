@@ -101,6 +101,7 @@ class AcadosOcpDims:
         self.__nu = None
         self.__nz = 0
         self.__np = 0
+        self.__nx_next = None
         # cost
         self.__ny = 0
         self.__ny_0 = 0
@@ -166,6 +167,12 @@ class AcadosOcpDims:
         """:math:`n_p` - number of parameters.
         Type: int; default: 0"""
         return self.__np
+
+    @property
+    def nx_next(self):
+        """:math:`n_{x, \\text{next}}` - state dimension of next state.
+        Type: int; default: None"""
+        return self.__nx_next
 
     @property
     def ny(self):
@@ -406,6 +413,13 @@ class AcadosOcpDims:
             self.__np = np
         else:
             raise Exception('Invalid np value, expected nonnegative integer.')
+
+    @nx_next.setter
+    def nx_next(self, nx_next):
+        if isinstance(nx_next, int) and nx_next > 0:
+            self.__nx_next = nx_next
+        else:
+            raise Exception('Invalid nx_next value, expected positive integer.')
 
     @np_global.setter
     def np_global(self, np_global):

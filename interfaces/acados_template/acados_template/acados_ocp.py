@@ -75,6 +75,7 @@ class AcadosOcp:
         - :py:attr:`shared_lib_ext` (set automatically)
         - :py:attr:`acados_lib_path` (set automatically)
         - :py:attr:`parameter_values` - used to initialize the parameters (can be changed)
+        - :py:attr:`p_global_values` - used to initialize the global parameters (can be changed)
     """
     def __init__(self, acados_path=''):
         """
@@ -109,6 +110,7 @@ class AcadosOcp:
         self.cython_include_dirs = [np.get_include(), get_paths()['include']]
 
         self.__parameter_values = np.array([])
+        self.__p_global_values = np.array([])
         self.__problem_class = 'OCP'
         self.__json_file = "acados_ocp.json"
 
@@ -135,6 +137,21 @@ class AcadosOcp:
                             f'Expected numpy array, got {type(parameter_values)}.')
 
     @property
+    def p_global_values(self):
+        """initial values for :math:`p_\\text{global}` vector, see `AcadosModel.p_global` - can be updated.
+        Type: `numpy.ndarray` of shape `(np_global, )`.
+        """
+        return self.__p_global_values
+
+    @p_global_values.setter
+    def p_global_values(self, p_global_values):
+        if isinstance(p_global_values, np.ndarray):
+            self.__p_global_values = p_global_values
+        else:
+            raise Exception('Invalid p_global_values value. ' +
+                            f'Expected numpy array, got {type(p_global_values)}.')
+
+    @property
     def json_file(self):
         """Name of the json file where the problem description is stored."""
         return self.__json_file
@@ -143,7 +160,7 @@ class AcadosOcp:
     def json_file(self, json_file):
         self.__json_file = json_file
 
-    def make_consistent(self) -> None:
+    def make_consistent(self, is_mocp_phase=False) -> None:
         """
         Detect dimensions, perform sanity checks
         """
@@ -156,10 +173,19 @@ class AcadosOcp:
         model.make_consistent(dims)
         self.name = model.name
 
+        # check if nx != nx_next
+        if not is_mocp_phase and dims.nx != dims.nx_next and opts.N_horizon > 1:
+            raise Exception('nx_next should be equal to nx if more than one shooting interval is used.')
+
         # parameters
         if self.parameter_values.shape[0] != dims.np:
             raise Exception('inconsistent dimension np, regarding model.p and parameter_values.' + \
                 f'\nGot np = {dims.np}, self.parameter_values.shape = {self.parameter_values.shape[0]}\n')
+
+        # p_global_values
+        if self.p_global_values.shape[0] != dims.np_global:
+            raise Exception('inconsistent dimension np_global, regarding model.p_global and p_global_values.' + \
+                f'\nGot np_global = {dims.np_global}, self.p_global_values.shape = {self.p_global_values.shape[0]}\n')
 
         ## cost
         # initial stage - if not set, copy fields from path constraints
@@ -842,40 +868,41 @@ class AcadosOcp:
             if opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon:
                 raise Exception(f'DDP solver only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N, got qp solver {opts.qp_solver} and qp_solver_cond_N {opts.qp_solver_cond_N}, N {opts.N_horizon}.')
             if any([dims.nbu, dims.nbx, dims.ng, dims.nh, dims.nphi]):
-                raise Exception('DDP only supports initial state constraints, got path constraints.')
+                raise Exception(f'DDP only supports initial state constraints, got path constraints. Dimensions: dims.nbu = {dims.nbu}, dims.nbx = {dims.nbx}, dims.ng = {dims.ng}, dims.nh = {dims.nh}, dims.nphi = {dims.nphi}')
             if any([dims.ng_e, dims.nphi_e, dims.nh_e]):
                 raise Exception('DDP only supports initial state constraints, got terminal constraints.')
 
+        ddp_with_merit_or_funnel = opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' or (opts.nlp_solver_type == "DDP" and opts.globalization == 'MERIT_BACKTRACKING')
         # Set default parameters for globalization
-        if opts.alpha_min is None:
-            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
-                opts.alpha_min = 1e-17
+        if opts.globalization_alpha_min is None:
+            if ddp_with_merit_or_funnel:
+                opts.globalization_alpha_min = 1e-17
             else:
-                opts.alpha_min = 0.05
+                opts.globalization_alpha_min = 0.05
 
-        if opts.alpha_reduction is None:
-            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
-                opts.alpha_reduction = 0.5
+        if opts.globalization_alpha_reduction is None:
+            if ddp_with_merit_or_funnel:
+                opts.globalization_alpha_reduction = 0.5
             else:
-                opts.alpha_reduction = 0.7
+                opts.globalization_alpha_reduction = 0.7
 
-        if opts.eps_sufficient_descent is None:
-            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
-                opts.eps_sufficient_descent = 1e-6
+        if opts.globalization_eps_sufficient_descent is None:
+            if ddp_with_merit_or_funnel:
+                opts.globalization_eps_sufficient_descent = 1e-6
             else:
-                opts.eps_sufficient_descent = 1e-4
+                opts.globalization_eps_sufficient_descent = 1e-4
 
         if opts.eval_residual_at_max_iter is None:
-            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
+            if ddp_with_merit_or_funnel:
                 opts.eval_residual_at_max_iter = True
             else:
                 opts.eval_residual_at_max_iter = False
 
-        if opts.full_step_dual is None:
-            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
-                opts.full_step_dual = 1
+        if opts.globalization_full_step_dual is None:
+            if ddp_with_merit_or_funnel:
+                opts.globalization_full_step_dual = 1
             else:
-                opts.full_step_dual = 0
+                opts.globalization_full_step_dual = 0
 
         # sanity check for Funnel globalization and SQP
         if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' and opts.nlp_solver_type != 'SQP':
@@ -883,7 +910,7 @@ class AcadosOcp:
 
         # termination
         if opts.nlp_solver_tol_min_step_norm == None:
-            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
+            if ddp_with_merit_or_funnel:
                 opts.nlp_solver_tol_min_step_norm = 1e-12
             else:
                 opts.nlp_solver_tol_min_step_norm = 0.0
@@ -1005,6 +1032,8 @@ class AcadosOcp:
         context = self._setup_code_generation_context(context)
         context.finalize()
         self.__casadi_pool_names = context.pool_names
+        self.__external_function_files_model = context.get_external_function_file_list(ocp_specific=False)
+        self.__external_function_files_ocp = context.get_external_function_file_list(ocp_specific=True)
 
         return context
 
@@ -1038,8 +1067,10 @@ class AcadosOcp:
             else:
                 raise Exception("ocp_generate_external_functions: unknown integrator type.")
         else:
-            target_location = os.path.join(code_gen_opts['code_export_directory'], model_dir, model.dyn_generic_source)
+            target_dir = os.path.join(code_gen_opts['code_export_directory'], model_dir)
+            target_location = os.path.join(target_dir, model.dyn_generic_source)
             shutil.copyfile(model.dyn_generic_source, target_location)
+            context.add_external_function_file(model.dyn_generic_source, target_dir)
 
         stage_types = ['initial', 'path', 'terminal']
 
@@ -1454,4 +1485,5 @@ class AcadosOcp:
         self.model.t0 = ca.SX.sym("t0")
         self.model.p = ca.vertcat(self.model.p, self.model.t0)
         self.parameter_values = np.append(self.parameter_values, [0.0])
+        self.p_global_values = np.append(self.p_global_values, [0.0])
         return

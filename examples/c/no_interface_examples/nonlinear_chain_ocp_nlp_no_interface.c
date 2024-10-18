@@ -1931,16 +1931,16 @@ int main() {
     * sqp memory
     ************************************************/
 
-	tmp_size = ocp_nlp_sqp_memory_calculate_size(config, dims, nlp_opts);
+	tmp_size = ocp_nlp_sqp_memory_calculate_size(config, dims, nlp_opts, nlp_in);
 	void *nlp_mem_mem = malloc(tmp_size);
-	ocp_nlp_sqp_memory *nlp_mem = ocp_nlp_sqp_memory_assign(config, dims, nlp_opts, nlp_mem_mem);
+	ocp_nlp_sqp_memory *nlp_mem = ocp_nlp_sqp_memory_assign(config, dims, nlp_opts, nlp_in, nlp_mem_mem);
 
 
     /************************************************
     * sqp workspace
     ************************************************/
 
-    int workspace_size = ocp_nlp_sqp_workspace_calculate_size(config, dims, nlp_opts);
+    int workspace_size = ocp_nlp_sqp_workspace_calculate_size(config, dims, nlp_opts, nlp_in);
     void *nlp_work = acados_malloc(workspace_size, 1);
 
     /************************************************

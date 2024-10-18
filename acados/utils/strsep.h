@@ -33,37 +33,28 @@
 #define ACADOS_UTILS_STRSEP_H_
 
 #ifdef __cplusplus
-#include <string>
-#define STD(x) std::x
-namespace std
-{
-#else
-#include <string.h>
-#define STD(x) x
+extern "C" {
 #endif
 
-char* strsep_acados(char** stringp, const char* delim)
+#include <string.h>
+
+// Inline function definition
+static inline void extract_module_name(const char *field, char *module, int *module_length, char **ptr_module)
 {
-    char* result;
-
-    if ((stringp == NULL) || (*stringp == NULL)) return NULL;
-
-    result = *stringp;
-
-    while (**stringp && !STD(strchr)(delim, **stringp)) ++*stringp;
-
-    if (**stringp)
-        *(*stringp)++ = '\0';
-    else
-        *stringp = NULL;
-
-    return result;
+    // extract module name
+    char *char_ = strchr(field, '_');
+    if (char_ != NULL)
+    {
+        *module_length = char_ - field;
+        // Copy the module name into the module array
+        strncpy(module, field, *module_length);
+        module[*module_length] = '\0'; // add end of string
+        *ptr_module = module;
+    }
 }
 
 #ifdef __cplusplus
-}  // namespace std
+} /* extern "C" */
 #endif
-
-#undef STD
 
 #endif  // ACADOS_UTILS_STRSEP_H_

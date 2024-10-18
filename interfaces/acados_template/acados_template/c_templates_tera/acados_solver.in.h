@@ -40,6 +40,7 @@
 #define {{ model.name | upper }}_NZ     {{ dims.nz }}
 #define {{ model.name | upper }}_NU     {{ dims.nu }}
 #define {{ model.name | upper }}_NP     {{ dims.np }}
+#define {{ model.name | upper }}_NP_GLOBAL     {{ dims.np_global }}
 #define {{ model.name | upper }}_NBX    {{ dims.nbx }}
 #define {{ model.name | upper }}_NBX0   {{ dims.nbx_0 }}
 #define {{ model.name | upper }}_NBU    {{ dims.nbu }}
@@ -145,7 +146,9 @@ typedef struct {{ model.name }}_solver_capsule
 {% if cost.cost_type == "NONLINEAR_LS" %}
     external_function_external_param_casadi *cost_y_fun;
     external_function_external_param_casadi *cost_y_fun_jac_ut_xt;
+    {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi *cost_y_hess;
+    {%- endif %}
 {% elif cost.cost_type == "CONVEX_OVER_NONLINEAR" %}
     external_function_external_param_casadi *conl_cost_fun;
     external_function_external_param_casadi *conl_cost_fun_jac_hess;
@@ -164,7 +167,9 @@ typedef struct {{ model.name }}_solver_capsule
 {% if cost.cost_type_0 == "NONLINEAR_LS" %}
     external_function_external_param_casadi cost_y_0_fun;
     external_function_external_param_casadi cost_y_0_fun_jac_ut_xt;
+    {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi cost_y_0_hess;
+    {%- endif %}
 {% elif cost.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
     external_function_external_param_casadi conl_cost_0_fun;
     external_function_external_param_casadi conl_cost_0_fun_jac_hess;
@@ -183,7 +188,9 @@ typedef struct {{ model.name }}_solver_capsule
 {% if cost.cost_type_e == "NONLINEAR_LS" %}
     external_function_external_param_casadi cost_y_e_fun;
     external_function_external_param_casadi cost_y_e_fun_jac_ut_xt;
+    {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi cost_y_e_hess;
+    {%- endif %}
 {% elif cost.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
     external_function_external_param_casadi conl_cost_e_fun;
     external_function_external_param_casadi conl_cost_e_fun_jac_hess;

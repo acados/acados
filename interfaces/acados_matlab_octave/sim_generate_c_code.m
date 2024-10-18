@@ -46,6 +46,8 @@ function sim_generate_c_code(sim, context)
 
     if strcmp(sim.model.dyn_ext_fun_type, 'generic')
         copyfile(fullfile(pwd, sim.model.dyn_generic_source), model_dir);
+        context.add_external_function_file(ocp.model.dyn_generic_source, model_dir);
+
     elseif strcmp(sim.model.dyn_ext_fun_type, 'casadi')
         import casadi.*
         check_casadi_version();
@@ -66,6 +68,7 @@ function sim_generate_c_code(sim, context)
     end
 
     context.finalize();
+    sim.external_function_files_model = context.get_external_function_file_list(false);
 
     %% remove CasADi objects from model
     model.name = sim.model.name;

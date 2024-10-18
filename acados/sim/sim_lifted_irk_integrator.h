@@ -140,6 +140,9 @@ void *sim_lifted_irk_memory_assign(void *config, void *dims, void *opts_, void *
 /* workspace */
 //
 acados_size_t sim_lifted_irk_workspace_calculate_size(void *config, void *dims, void *opts_);
+size_t sim_irk_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_);
+void sim_irk_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_);
+
 //
 void sim_lifted_irk_config_initialize_default(void *config);
 

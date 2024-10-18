@@ -46,6 +46,7 @@ classdef AcadosSim < handle
         % plain data
         parameter_values
         problem_class
+        external_function_files_model
     end
 
     methods
@@ -87,6 +88,10 @@ classdef AcadosSim < handle
 
             % model
             self.model.make_consistent(self.dims);
+
+            if self.dims.np_global > 0
+                error('p_global is not supported for AcadosSim.')
+            end
 
             % detect GNSF structure
             if strcmp(self.solver_options.integrator_type, 'GNSF')

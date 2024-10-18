@@ -94,6 +94,13 @@ typedef enum
     INVALID_REGULARIZE,
 } ocp_nlp_reg_t;
 
+/// Globalization types
+typedef enum
+{
+    FIXED_STEP,
+    MERIT_BACKTRACKING,
+    FUNNEL_L1PEN_LINESEARCH
+} ocp_nlp_globalization_t;
 
 /// Structure to store the configuration of a non-linear program
 typedef struct ocp_nlp_plan_t
@@ -109,6 +116,9 @@ typedef struct ocp_nlp_plan_t
 
     /// Regularization type, defaults to no regularization.
     ocp_nlp_reg_t regularization;
+
+    /// Globalization type, defaults to fixed step.
+    ocp_nlp_globalization_t globalization;
 
     /// Cost type for each stage.
     ocp_nlp_cost_t *nlp_cost;
@@ -295,6 +305,9 @@ ACADOS_SYMBOL_EXPORT void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *
 ACADOS_SYMBOL_EXPORT void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_solver *solver,
         int stage, const char *field, void *value);
 
+ACADOS_SYMBOL_EXPORT void ocp_nlp_get_from_iterate(ocp_nlp_dims *dims, ocp_nlp_solver *solver,
+        int iter, int stage, const char *field, void *value);
+
 // TODO(andrea): remove this once/if the MATLAB interface uses the new setters below?
 ACADOS_SYMBOL_EXPORT int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
         int stage, const char *field);
@@ -353,7 +366,7 @@ ACADOS_SYMBOL_EXPORT void ocp_nlp_solver_opts_update(ocp_nlp_config *config, ocp
 /// \param dims The dimension struct.
 /// \param opts_ The options struct.
 /// \return The solver.
-ACADOS_SYMBOL_EXPORT ocp_nlp_solver *ocp_nlp_solver_create(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_);
+ACADOS_SYMBOL_EXPORT ocp_nlp_solver *ocp_nlp_solver_create(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_, ocp_nlp_in *nlp_in);
 
 /// Destructor of the solver.
 ///

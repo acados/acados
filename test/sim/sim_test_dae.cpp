@@ -146,6 +146,8 @@ TEST_CASE("crane_dae_example", "[integrators]")
 /************************************************
 * external functions
 ************************************************/
+    external_function_opts ext_fun_opts;
+    ext_fun_opts.external_workspace = false;
 
     // impl_ode_fun
     external_function_casadi impl_ode_fun;
@@ -155,7 +157,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     impl_ode_fun.casadi_sparsity_out = &crane_dae_impl_ode_fun_sparsity_out;
     impl_ode_fun.casadi_n_in = &crane_dae_impl_ode_fun_n_in;
     impl_ode_fun.casadi_n_out = &crane_dae_impl_ode_fun_n_out;
-    external_function_casadi_create(&impl_ode_fun);
+    external_function_casadi_create(&impl_ode_fun, &ext_fun_opts);
 
     // impl_ode_fun_jac_x_xdot
     external_function_casadi impl_ode_fun_jac_x_xdot;
@@ -165,7 +167,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     impl_ode_fun_jac_x_xdot.casadi_sparsity_out = &crane_dae_impl_ode_fun_jac_x_xdot_sparsity_out;
     impl_ode_fun_jac_x_xdot.casadi_n_in = &crane_dae_impl_ode_fun_jac_x_xdot_n_in;
     impl_ode_fun_jac_x_xdot.casadi_n_out = &crane_dae_impl_ode_fun_jac_x_xdot_n_out;
-    external_function_casadi_create(&impl_ode_fun_jac_x_xdot);
+    external_function_casadi_create(&impl_ode_fun_jac_x_xdot, &ext_fun_opts);
 
     // impl_ode_jac_x_xdot_u
     external_function_casadi impl_ode_jac_x_xdot_u;
@@ -175,7 +177,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     impl_ode_jac_x_xdot_u.casadi_sparsity_out = &crane_dae_impl_ode_jac_x_xdot_u_sparsity_out;
     impl_ode_jac_x_xdot_u.casadi_n_in = &crane_dae_impl_ode_jac_x_xdot_u_n_in;
     impl_ode_jac_x_xdot_u.casadi_n_out = &crane_dae_impl_ode_jac_x_xdot_u_n_out;
-    external_function_casadi_create(&impl_ode_jac_x_xdot_u);
+    external_function_casadi_create(&impl_ode_jac_x_xdot_u, &ext_fun_opts);
 
     // impl_ode_jac_x_xdot_u
     external_function_casadi impl_ode_fun_jac_x_xdot_u;
@@ -187,7 +189,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                             &crane_dae_impl_ode_fun_jac_x_xdot_u_sparsity_out;
     impl_ode_fun_jac_x_xdot_u.casadi_n_in = &crane_dae_impl_ode_fun_jac_x_xdot_u_n_in;
     impl_ode_fun_jac_x_xdot_u.casadi_n_out = &crane_dae_impl_ode_fun_jac_x_xdot_u_n_out;
-    external_function_casadi_create(&impl_ode_fun_jac_x_xdot_u);
+    external_function_casadi_create(&impl_ode_fun_jac_x_xdot_u, &ext_fun_opts);
 
     /************************************************
     * external functions (Generalized Nonlinear Static Feedback (GNSF) model)
@@ -200,7 +202,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     phi_fun.casadi_sparsity_out   = &crane_dae_phi_fun_sparsity_out;
     phi_fun.casadi_n_in           = &crane_dae_phi_fun_n_in;
     phi_fun.casadi_n_out          = &crane_dae_phi_fun_n_out;
-    external_function_casadi_create(&phi_fun);
+    external_function_casadi_create(&phi_fun, &ext_fun_opts);
 
     // phi_fun_jac_y
     external_function_casadi phi_fun_jac_y;
@@ -210,7 +212,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     phi_fun_jac_y.casadi_sparsity_out   = &crane_dae_phi_fun_jac_y_sparsity_out;
     phi_fun_jac_y.casadi_n_in           = &crane_dae_phi_fun_jac_y_n_in;
     phi_fun_jac_y.casadi_n_out          = &crane_dae_phi_fun_jac_y_n_out;
-    external_function_casadi_create(&phi_fun_jac_y);
+    external_function_casadi_create(&phi_fun_jac_y, &ext_fun_opts);
 
     // phi_jac_y_uhat
     external_function_casadi phi_jac_y_uhat;
@@ -220,7 +222,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     phi_jac_y_uhat.casadi_sparsity_out       = &crane_dae_phi_jac_y_uhat_sparsity_out;
     phi_jac_y_uhat.casadi_n_in               = &crane_dae_phi_jac_y_uhat_n_in;
     phi_jac_y_uhat.casadi_n_out              = &crane_dae_phi_jac_y_uhat_n_out;
-    external_function_casadi_create(&phi_jac_y_uhat);
+    external_function_casadi_create(&phi_jac_y_uhat, &ext_fun_opts);
 
     // f_lo_fun_jac_x1k1uz
     external_function_casadi f_lo_fun_jac_x1k1uz;
@@ -230,7 +232,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     f_lo_fun_jac_x1k1uz.casadi_sparsity_out   = &crane_dae_f_lo_fun_jac_x1k1uz_sparsity_out;
     f_lo_fun_jac_x1k1uz.casadi_n_in           = &crane_dae_f_lo_fun_jac_x1k1uz_n_in;
     f_lo_fun_jac_x1k1uz.casadi_n_out          = &crane_dae_f_lo_fun_jac_x1k1uz_n_out;
-    external_function_casadi_create(&f_lo_fun_jac_x1k1uz);
+    external_function_casadi_create(&f_lo_fun_jac_x1k1uz, &ext_fun_opts);
 
     // get_matrices_fun
     external_function_casadi get_matrices_fun;
@@ -240,7 +242,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     get_matrices_fun.casadi_sparsity_out   = &crane_dae_get_matrices_fun_sparsity_out;
     get_matrices_fun.casadi_n_in           = &crane_dae_get_matrices_fun_n_in;
     get_matrices_fun.casadi_n_out          = &crane_dae_get_matrices_fun_n_out;
-    external_function_casadi_create(&get_matrices_fun);
+    external_function_casadi_create(&get_matrices_fun, &ext_fun_opts);
 
 
 /************************************************
@@ -335,7 +337,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     * sim solver
     ************************************************/
 
-    sim_solver *sim_solver = sim_solver_create(config, dims, opts);
+    sim_solver *sim_solver = sim_solver_create(config, dims, opts, in);
     sim_precompute(sim_solver, in, out);
 
     int acados_return;
@@ -528,12 +530,12 @@ TEST_CASE("crane_dae_example", "[integrators]")
                     in->S_adj[ii] = 0.0;
 
             /* sim solver  */
-                sim_solver = sim_solver_create(config, dims, opts);
+                sim_solver = sim_solver_create(config, dims, opts, in);
                 int acados_return;
                 sim_precompute(sim_solver, in, out);
 
             /* print */
-                std::cout << "\n---> testing integrator " << solver;
+                std::cout << "\n---> sim_test_dae " << solver;
                 std::cout << " OPTS: num_steps = " << opts->num_steps;
                 std::cout << ", num_stages = " << opts->ns;
                 std::cout << ", jac_reuse = " << opts->jac_reuse;

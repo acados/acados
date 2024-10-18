@@ -987,6 +987,40 @@ void ocp_nlp_cost_external_eval_grad_p(void *config_, void *dims_, void *model_,
 }
 
 
+size_t ocp_nlp_cost_external_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_)
+{
+    ocp_nlp_cost_external_model *model = model_;
+
+    size_t size = 0;
+    size_t tmp_size;
+
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->ext_cost_fun);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->ext_cost_fun_jac);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->ext_cost_fun_jac_hess);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->ext_cost_grad_p);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->ext_cost_hess_xu_p);
+    size = size > tmp_size ? size : tmp_size;
+
+    return size;
+}
+
+
+void ocp_nlp_cost_external_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_)
+{
+    ocp_nlp_cost_external_model *model = model_;
+    external_function_set_fun_workspace_if_defined(model->ext_cost_fun, workspace_);
+    external_function_set_fun_workspace_if_defined(model->ext_cost_fun_jac, workspace_);
+    external_function_set_fun_workspace_if_defined(model->ext_cost_fun_jac_hess, workspace_);
+    external_function_set_fun_workspace_if_defined(model->ext_cost_grad_p, workspace_);
+    external_function_set_fun_workspace_if_defined(model->ext_cost_hess_xu_p, workspace_);
+}
+
+
+
 /* config */
 
 void ocp_nlp_cost_external_config_initialize_default(void *config_, int stage)
@@ -1016,6 +1050,8 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_, int stage)
     config->memory_set_Z_ptr = &ocp_nlp_cost_external_memory_set_Z_ptr;
     config->memory_get_params_grad = &ocp_nlp_cost_external_memory_get_params_grad;
     config->workspace_calculate_size = &ocp_nlp_cost_external_workspace_calculate_size;
+    config->get_external_fun_workspace_requirement = &ocp_nlp_cost_external_get_external_fun_workspace_requirement;
+    config->set_external_fun_workspaces = &ocp_nlp_cost_external_set_external_fun_workspaces;
     config->initialize = &ocp_nlp_cost_external_initialize;
     config->update_qp_matrices = &ocp_nlp_cost_external_update_qp_matrices;
     config->compute_fun = &ocp_nlp_cost_external_compute_fun;

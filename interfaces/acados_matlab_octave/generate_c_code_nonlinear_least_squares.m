@@ -75,8 +75,9 @@ function generate_c_code_nonlinear_least_squares(context, model, target_dir, sta
         % add functions to context
         context.add_function_definition([model.name,'_cost_y_0_fun'], {x, u, z, p}, {fun}, target_dir);
         context.add_function_definition([model.name,'_cost_y_0_fun_jac_ut_xt'], {x, u, z, p}, {fun, [jac_u'; jac_x'], dy_dz}, target_dir);
-        context.add_function_definition([model.name,'_cost_y_0_hess'], {x, u, z, y_0, p}, {y_0_hess}, target_dir);
-
+        if context.opts.generate_hess
+            context.add_function_definition([model.name,'_cost_y_0_hess'], {x, u, z, y_0, p}, {y_0_hess}, target_dir);
+        end
     elseif strcmp(stage_type, 'path')
         fun = model.cost_y_expr;
         if isempty(fun)
@@ -101,7 +102,10 @@ function generate_c_code_nonlinear_least_squares(context, model, target_dir, sta
         context.add_function_definition([model.name,'_cost_y_fun'], {x, u, z, p}, {fun}, target_dir);
         context.add_function_definition([model.name,'_cost_y_fun_jac_ut_xt'], ...
                                 {x, u, z, p}, {fun, [jac_u'; jac_x'], dy_dz}, target_dir);
-        context.add_function_definition([model.name,'_cost_y_hess'], {x, u, z, y, p}, {y_hess}, target_dir);
+
+        if context.opts.generate_hess
+            context.add_function_definition([model.name,'_cost_y_hess'], {x, u, z, y, p}, {y_hess}, target_dir);
+        end
 
     elseif strcmp(stage_type, 'terminal')
         fun = model.cost_y_expr_e;
@@ -127,8 +131,10 @@ function generate_c_code_nonlinear_least_squares(context, model, target_dir, sta
         % add functions to context
         context.add_function_definition([model.name,'_cost_y_e_fun'], {x, u, z, p}, {fun}, target_dir);
         context.add_function_definition([model.name,'_cost_y_e_fun_jac_ut_xt'], {x, u, z, p}, {fun, jac_x', dy_dz}, target_dir);
-        context.add_function_definition([model.name,'_cost_y_e_hess'], {x, u, z, y_e, p}, {y_e_hess}, target_dir);
 
+        if context.opts.generate_hess
+            context.add_function_definition([model.name,'_cost_y_e_hess'], {x, u, z, y_e, p}, {y_e_hess}, target_dir);
+        end
     end
 
 end

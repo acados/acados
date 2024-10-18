@@ -1023,6 +1023,22 @@ void ocp_nlp_cost_ls_eval_grad_p(void *config_, void *dims, void *model_, void *
 }
 
 
+size_t ocp_nlp_cost_ls_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_)
+{
+    // ocp_nlp_cost_ls_model *model = model_;
+
+    size_t size = 0;
+    return size;
+}
+
+
+void ocp_nlp_cost_ls_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_)
+{
+    // ocp_nlp_cost_ls_model *model = model_;
+}
+
+
+
 void ocp_nlp_cost_ls_config_initialize_default(void *config_, int stage)
 {
     ocp_nlp_cost_config *config = config_;
@@ -1049,6 +1065,8 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_, int stage)
     config->memory_set_RSQrq_ptr = &ocp_nlp_cost_ls_memory_set_RSQrq_ptr;
     config->memory_set_Z_ptr = &ocp_nlp_cost_ls_memory_set_Z_ptr;
     config->workspace_calculate_size = &ocp_nlp_cost_ls_workspace_calculate_size;
+    config->get_external_fun_workspace_requirement = &ocp_nlp_cost_ls_get_external_fun_workspace_requirement;
+    config->set_external_fun_workspaces = &ocp_nlp_cost_ls_set_external_fun_workspaces;
     config->initialize = &ocp_nlp_cost_ls_initialize;
     config->update_qp_matrices = &ocp_nlp_cost_ls_update_qp_matrices;
     config->compute_fun = &ocp_nlp_cost_ls_compute_fun;

@@ -36,7 +36,8 @@ classdef GenerateContext < handle
         p_global_expressions
         opts
         casadi_codegen_opts
-        list_funname_dir_pairs  % list of (function_name, output_dir), NOTE: this can be used to simplify template based code generation!
+        list_funname_dir_pairs  % list of (function_name, output_dir) pairs, files that are generated
+        generic_funname_dir_pairs % list of (function_name, output_dir) pairs, files that are not generated
         functions_to_generate
         casadi_fun_opts
     end
@@ -60,6 +61,7 @@ classdef GenerateContext < handle
 
             obj.list_funname_dir_pairs = {};
             obj.functions_to_generate = {};
+            obj.generic_funname_dir_pairs = {};
 
             obj.casadi_fun_opts = struct();
 
@@ -69,7 +71,7 @@ classdef GenerateContext < handle
                 cse(dummy); % Check if cse exists
                 obj.casadi_fun_opts.cse = true;
             catch
-                disp("NOTE: Please consider updating to CasADi 3.6.6 which supports common subexpression elimination. \nThis might speed up external function evaluation.");
+                disp('NOTE: Please consider updating to CasADi 3.6.6 which supports common subexpression elimination. \nThis might speed up external function evaluation.');
             end
         end
 
@@ -82,9 +84,11 @@ classdef GenerateContext < handle
                 obj = obj.add_function(name, output_dir, fun);
             else
                 check_casadi_version_supports_p_global();
+
+                outputs = cse(outputs);
+
                 % This introduces novel symbols into the graph (extracted1, extracted2,...)
                 [outputs_ret, symbols, param] = extract_parametric(outputs, obj.p_global);
-                symbols = symbols.primitives();
 
                 pools = {};
                 for i = 1:numel(symbols)
@@ -94,7 +98,7 @@ classdef GenerateContext < handle
                 end
 
                 outputs_ret = substitute(outputs_ret, symbols, pools);
-                obj.p_global_expressions = [obj.p_global_expressions, param.primitives()];
+                obj.p_global_expressions = [obj.p_global_expressions, param];
 
                 fun_mod = Function(name, inputs, outputs_ret, obj.casadi_fun_opts);
                 obj = obj.add_function(name, output_dir, fun_mod);
@@ -116,6 +120,39 @@ classdef GenerateContext < handle
             end
 
             obj = obj.generate_functions();
+        end
+
+
+        function obj = add_external_function_file(obj, fun_name, output_dir)
+            % remove trailing .c if present
+            if endsWith_custom(fun_name, '.c')
+                fun_name = fun_name(1:end-2);
+            end
+            obj.generic_funname_dir_pairs{end+1} = {fun_name, output_dir};
+        end
+
+        function out = get_external_function_file_list(obj, ocp_specific)
+            out = {};
+            for i = 1:numel(obj.generic_funname_dir_pairs)
+                fun_name = obj.generic_funname_dir_pairs{i}{1};
+                fun_dir = obj.generic_funname_dir_pairs{i}{2};
+                rel_fun_dir = relative_path(fun_dir, obj.opts.code_export_directory);
+                is_ocp_specific = ~endsWith_custom(rel_fun_dir, 'model');
+                if ocp_specific ~= is_ocp_specific
+                    continue;
+                end
+                out{end+1} = [rel_fun_dir, '/', fun_name, '.c'];
+            end
+            for i = 1:numel(obj.list_funname_dir_pairs)
+                fun_name = obj.list_funname_dir_pairs{i}{1};
+                fun_dir = obj.list_funname_dir_pairs{i}{2};
+                rel_fun_dir = relative_path(fun_dir, obj.opts.code_export_directory);
+                is_ocp_specific = ~endsWith_custom(rel_fun_dir, 'model');
+                if ocp_specific ~= is_ocp_specific
+                    continue;
+                end
+                out{end+1} = [rel_fun_dir, '/', fun_name, '.c'];
+            end
         end
     end
 
@@ -160,7 +197,8 @@ function check_casadi_version_supports_p_global()
         % Check if the required functions exist in CasADi
         extract_parametric(dummy, dummy);  % Check if extract_parametric exists
         cse(dummy); % Check if cse exists
+        blazing_spline('blazing_spline', {[1, 2, 3], [1, 2, 3]});
     catch
-        error('CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se');
+        error('CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se2 release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se2');
     end
 end

@@ -53,13 +53,81 @@ These templates can be found in [`<acados_root>/interfaces/acados_template/acado
 For the template based part of the `Matlab` interface, we refer to [the docstring based documentation of the Python interface](../python_interface/index.md).
 
 ## Simulink
-The templates mentioned [above](#templates) also contain templated S-functions and corresponding make functions for Matlab for both the OCP solver and the acados integrator.
+The templates mentioned [above](#templates) also contain templated S-functions and corresponding make functions for both the OCP solver and the acados integrator.
 
 A basic Simulink example can be found in [`<acados_root>/examples/acados_python/getting_started/simulink_example.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started/simulink_example.m)
 
-A more advanced Simulink example which showcases how to customize the inputs and outputs of the Simulink block corrsponding to the solver can be found in [`<acados_root>/examples/acados_python/getting_started/simulink_example.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started/simulink_example_advanced.m)
+A more advanced Simulink example which showcases how to customize the inputs and outputs of the Simulink block corresponding to the solver can be found in [`<acados_root>/examples/acados_python/getting_started/simulink_example.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started/simulink_example_advanced.m)
 
-If you want a more advanced interaction with the `acados` solver via Simulink, feel free to edit the corresponding templates in [`<acados_root>/interfaces/acados_template/acados_template/c_templates_tera`](https://github.com/acados/acados/tree/master/interfaces/acados_template/acados_template/c_templates_tera) to add more inputs or outputs.
+### List of possible inputs
+This is a list of possible inputs to the Simulink block of an OCP solver which can be activated by setting the corresponding values in the acados Simulink options.
+
+| Port Name         | Description                                                                                       | Shape                 | MOCP Support |
+|-------------------|-----------------------------------------------------------------------------------------------|-----------------------|--------------|
+| `lbx_0`           | Lower bound on x for stage 0                                                                  | `nbx_0`               | Yes          |
+| `ubx_0`           | Upper bound on x for stage 0                                                                  | `nbx_0`               | Yes          |
+| `parameter_traj`  | Parameters - concatenated for all stages 0 to N                                               | `sum(np_i), i=0,..., N`            | Yes          |
+| `p_global`        | Global parameters - first value indicates if update should be performed (0 = no update), followed by new numerical values of `p_global` | `1 + np_global`        | Yes          |
+| `y_ref_0`         | Reference `y_ref` at stage 0                                                                  | `ny_0`                | Yes          |
+| `y_ref`           | `y_ref` concatenated for stages 1 to N-1                                                      | `(N-1) * ny`          | No           |
+| `y_ref_e`         | Reference `y_ref` at stage N                                                                  | `ny_e`                | Yes          |
+| `lbx`             | Lower bound x values concatenated for stages 1 to N-1                                         | `(N-1) * nbx`         | No           |
+| `ubx`             | Upper bound x values concatenated for stages 1 to N-1                                         | `(N-1) * nbx`         | No           |
+| `lbx_e`           | Lower bound x at shooting node N                                                              | `nbx_e`               | Yes          |
+| `ubx_e`           | Upper bound x at shooting node N                                                              | `nbx_e`               | Yes          |
+| `lbu`             | Lower bound u values concatenated for stages 0 to N-1                                         | `sum(nbu_i), for i = 0,..., N-1` | Yes          |
+| `ubu`             | Upper bound u values concatenated for stages 0 to N-1                                         | `sum(nbu_i), for i = 0,..., N-1` | Yes          |
+| `lg`              | Lower bound g values concatenated for stages 0 to N-1                                         | `sum(ng_i), for i = 0,..., N-1`  | No           |
+| `ug`              | Upper bound g values concatenated for stages 0 to N-1                                         | `sum(ng_i), for i = 0,..., N-1`  | No           |
+| `lh`              | Lower bound h values concatenated for stages 0 to N-1                                         | `sum(nh_i), for i = 0,..., N-1`  | No           |
+| `uh`              | Upper bound h values concatenated for stages 0 to N-1                                         | `sum(nh_i), for i = 0,..., N-1`  | No           |
+| `lh_0`            | Lower bound h at stage 0                                                                      | `nh_0`                | Yes          |
+| `uh_0`            | Upper bound h at stage 0                                                                      | `nh_0`                | Yes          |
+| `lh_e`            | Lower bound h at stage N                                                                      | `nh_e`                | Yes          |
+| `uh_e`            | Upper bound h at stage N                                                                      | `nh_e`                | Yes          |
+| `cost_W_0`        | Cost matrix `W_0` in column-major format                                                      | `ny_0 * ny_0`         | No           |
+| `cost_W`          | Cost matrix `W` in column-major format                                                        | `ny * ny`             | No           |
+| `cost_W_e`        | Cost matrix `W_e` in column-major format                                                      | `ny_e * ny_e`         | No           |
+| `cost_zl`         | Cost `zl` for all nodes 0 to N                                                                | `sum(ns_i) for i = 0,..., N`     | Yes          |
+| `cost_zu`         | Cost `zu` for all nodes 0 to N                                                                | `sum(ns_i) for i = 0,..., N`     | Yes          |
+| `cost_Zl`         | Cost `Zl` for all nodes 0 to N                                                                | `sum(ns_i) for i = 0,..., N`     | Yes          |
+| `cost_Zu`         | Cost `Zu` for all nodes 0 to N                                                                | `sum(ns_i) for i = 0,..., N`     | Yes          |
+| `reset_solver`    | Determines if the solver's iterate is set to all zeros before other initializations            | `1`                   | Yes          |
+| `ignore_inits`    | Determines if initialization (`x_init`, `u_init`, `pi_init`, `slacks_init`) is set (0) or ignored (1) | `1`                   | Yes          |
+| `x_init`          | Initialization of x for all stages                                                            | `sum(nx_i), i=0,..., N`            | Yes          |
+| `u_init`          | Initialization of u for stages 0 to N-1                                                       | `sum(nu_i), i=0,..., N-1`            | Yes          |
+| `pi_init`         | Initialization of pi for stages 0 to N-1                                                      | `sum(npi_i), i=0,..., N-1`           | Yes          |
+| `slacks_init`     | Initialization of slack values for all stages (0 to N)                                        | `2 * ns_total`        | Yes          |
+| `rti_phase`       | Real-time iteration phase                                                                     | `1`                   | Yes          |
+
+
+### List of possible outputs
+This is a list of possible outputs of the Simulink block of an OCP solver which can be activated by setting the corresponding values in the acados Simulink options.
+
+| Port Name        | Description                                                                                 | Shape                           | MOCP Support |
+|------------------|---------------------------------------------------------------------------------------------|----------------------------------|--------------|
+| `u0`             | Control input at node 0                                                                     | `nu_0`                          | Yes          |
+| `utraj`          | Control input concatenated for nodes 0 to N-1                                                | `sum(nu_i), i=0,..., N-1`        | Yes          |
+| `xtraj`          | State concatenated for nodes 0 to N                                                         | `sum(nx_i), i=0,..., N`          | Yes          |
+| `ztraj`          | Algebraic states concatenated for nodes 0 to N-1                                             | `sum(nz_i), i=0,..., N-1`        | Yes          |
+| `pi_all`         | Equality Lagrange multipliers concatenated for nodes 0 to N-1                                | `sum(npi_i), i=0,..., N-1`       | Yes          |
+| `slack_values`   | Slack values concatenated in order [sl_0, su_0, ..., sl_N, su_N]                             | `2 * ns_total`                   | Yes          |
+| `solver_status`  | Acados solver status (0 = SUCCESS)                                                          | `1`                              | Yes          |
+| `cost_value`     | Cost function value                                                                         | `1`                              | Yes          |
+| `KKT_residual`   | KKT residual                                                                                | `1`                              | Yes          |
+| `KKT_residuals`  | KKT residuals, size [4] (stat, eq, ineq, comp)                                               | `4`                              | Yes          |
+| `x1`             | State at node 1                                                                             | `nx_1`                           | Yes          |
+| `CPU_time`       | CPU time                                                                                    | `1`                              | Yes          |
+| `CPU_time_sim`   | CPU time for integrator                                                                     | `1`                              | Yes          |
+| `CPU_time_qp`    | CPU time for QP solution                                                                    | `1`                              | Yes          |
+| `CPU_time_lin`   | CPU time for linearization (including integrator)                                            | `1`                              | Yes          |
+| `sqp_iter`       | NLP solver iterations                                                                       | `1`                              | Yes          |
+| `parameter_traj` | Parameter trajectory                                                                        | `sum(np_i), i=0,..., N`          | Yes          |
+
+
+
+### Developing extensions
+If you want a more advanced interaction with the `acados` solver via Simulink, feel free to edit the corresponding templates in [`<acados_root>/interfaces/acados_template/acados_template/c_templates_tera/matlab_templates`](https://github.com/acados/acados/tree/master/interfaces/acados_template/acados_template/c_templates_tera/matlab_templates) to add more inputs or outputs.
 
 ### S-function Mask
 The Simulink S-functions interface can be improved using the following mask commands, which shows the names of input and output ports, facilitating debugging operations.

@@ -1055,6 +1055,33 @@ void ocp_nlp_cost_nls_eval_grad_p(void *config_, void *dims, void *model_, void 
 }
 
 
+size_t ocp_nlp_cost_nls_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_)
+{
+    ocp_nlp_cost_nls_model *model = model_;
+
+    size_t size = 0;
+    size_t tmp_size;
+
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->nls_y_fun);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->nls_y_fun_jac);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->nls_y_hess);
+    size = size > tmp_size ? size : tmp_size;
+
+    return size;
+}
+
+
+void ocp_nlp_cost_nls_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_)
+{
+    ocp_nlp_cost_nls_model *model = model_;
+    external_function_set_fun_workspace_if_defined(model->nls_y_fun, workspace_);
+    external_function_set_fun_workspace_if_defined(model->nls_y_fun_jac, workspace_);
+    external_function_set_fun_workspace_if_defined(model->nls_y_hess, workspace_);
+}
+
+
 void ocp_nlp_cost_nls_config_initialize_default(void *config_, int stage)
 {
     ocp_nlp_cost_config *config = config_;
@@ -1085,6 +1112,8 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_, int stage)
     config->memory_set_RSQrq_ptr = &ocp_nlp_cost_nls_memory_set_RSQrq_ptr;
     config->memory_set_Z_ptr = &ocp_nlp_cost_nls_memory_set_Z_ptr;
     config->workspace_calculate_size = &ocp_nlp_cost_nls_workspace_calculate_size;
+    config->get_external_fun_workspace_requirement = &ocp_nlp_cost_nls_get_external_fun_workspace_requirement;
+    config->set_external_fun_workspaces = &ocp_nlp_cost_nls_set_external_fun_workspaces;
     config->initialize = &ocp_nlp_cost_nls_initialize;
     config->update_qp_matrices = &ocp_nlp_cost_nls_update_qp_matrices;
     config->compute_fun = &ocp_nlp_cost_nls_compute_fun;

@@ -44,6 +44,7 @@ classdef AcadosMultiphaseOcp < handle
 
         model
         parameter_values % initial value of the parameter
+        p_global_values % initial value of global parameters
         problem_class
         simulink_opts
         name
@@ -61,7 +62,8 @@ classdef AcadosMultiphaseOcp < handle
         cost_start_idx
 
         casadi_pool_names
-
+        external_function_files_ocp
+        external_function_files_model
     end
     methods
         function obj = AcadosMultiphaseOcp(N_list)
@@ -85,7 +87,7 @@ classdef AcadosMultiphaseOcp < handle
                 obj.model{i} = AcadosModel();
             end
 
-            self.dummy_ocp_list = cell(n_phases, 1);
+            obj.dummy_ocp_list = cell(n_phases, 1);
 
             obj.solver_options = AcadosOcpOptions();
             obj.solver_options.N_horizon = obj.N_horizon; % NOTE: to not change options when making ocp consistent
@@ -93,6 +95,7 @@ classdef AcadosMultiphaseOcp < handle
             obj.mocp_opts = AcadosMultiphaseOptions();
 
             obj.parameter_values = cell(n_phases, 1);
+            obj.p_global_values = [];
             obj.problem_class = 'MOCP';
             obj.simulink_opts = [];
             obj.cython_include_dirs = [];
@@ -134,15 +137,15 @@ classdef AcadosMultiphaseOcp < handle
             self.cost{phase_idx} = ocp.cost;
             self.constraints{phase_idx} = ocp.constraints;
             self.parameter_values{phase_idx} = ocp.parameter_values;
+
+            if ~isempty(self.p_global_values)
+                fprintf('WARNING: set_phase: Phase %d contains p_global values which will be ignored.\n', phase_idx);
+            end
         end
 
         function make_consistent(self)
             % check options
             self.mocp_opts.make_consistent(self.solver_options, self.n_phases)
-
-            if ~isempty(self.simulink_opts)
-                error('Simulink options are not supported yet');
-            end
 
             % check phases formulation objects are distinct
             if ~is_octave() % octave does not support object comparison
@@ -198,6 +201,7 @@ classdef AcadosMultiphaseOcp < handle
                 ocp.constraints = self.constraints{i};
                 ocp.cost = self.cost{i};
                 ocp.parameter_values = self.parameter_values{i};
+                ocp.p_global_values = self.p_global_values;
                 ocp.solver_options = self.solver_options;
 
                 % set phase dependent options
@@ -229,7 +233,7 @@ classdef AcadosMultiphaseOcp < handle
                 end
 
                 disp(['Calling make_consistent for phase ', num2str(i), '.']);
-                ocp.make_consistent();
+                ocp.make_consistent(true);
 
                 self.dummy_ocp_list{i} = ocp;
             end
@@ -240,13 +244,13 @@ classdef AcadosMultiphaseOcp < handle
             for i=1:self.n_phases
                 nx_list(i) = self.phases_dims{i}.nx;
             end
-            if length(unique(nx_list)) ~= 1
-                for i=2:self.n_phases
-                    if nx_list(i) ~= nx_list(i-1)
-                        disp(['nx differs between phases ', num2str(i-1), ' and ', num2str(i), ': ', num2str(nx_list(i-1)), ' != ', num2str(nx_list(i))]);
-                        if self.N_list(i-1) ~= 1 || ~strcmp(self.mocp_opts.integrator_type{i-1}, 'DISCRETE')
-                            error(['detected stage transition with different nx from phase ', num2str(i-1), ' to ', num2, ', which is only supported for integrator_type=''DISCRETE'' and N_list[i] == 1.']);
-                        end
+            for i=2:self.n_phases
+                if nx_list(i) ~= nx_list(i-1)
+                    if self.phases_dims{i-1}.nx_next ~= self.phases_dims{i}.nx
+                        error(['detected stage transition with different nx from phase ', num2str(i-1), ' to ', num2str(i), ', which is only supported for nx_next = nx, got nx_next = ', num2str(self.phases_dims{i-1}.nx_next), ' and nx = ', num2str(self.phases_dims{i}.nx), '.']);
+                    end
+                    if self.N_list(i-1) ~= 1 || ~strcmp(self.mocp_opts.integrator_type{i-1}, 'DISCRETE')
+                        error(['detected stage transition with different nx from phase ', num2str(i-1), ' to ', num2, ', which is only supported for integrator_type=''DISCRETE'' and N_list[i] == 1.']);
                     end
                 end
             end
@@ -277,7 +281,29 @@ classdef AcadosMultiphaseOcp < handle
             if self.phases_dims{1}.np_global > 0
                 template_list{end+1} = {'p_global_precompute_fun.in.h',  [self.name, '_p_global_precompute_fun.h']};
             end
-            % TODO: simulink!
+            % Simulink
+            if ~isempty(self.simulink_opts)
+                template_list{end+1} = {fullfile(matlab_template_path, 'acados_solver_sfun.in.c'), ['acados_solver_sfunction_', self.name, '.c']};
+                template_list{end+1} = {fullfile(matlab_template_path, 'make_sfun.in.m'), ['make_sfun.m']};
+                % TODO: do we want to generate simulink sfun for sim solver?
+                % if ~strcmp(self.solver_options.integrator_type, 'DISCRETE')
+                %     template_list{end+1} = {fullfile(matlab_template_path, 'acados_sim_solver_sfun.in.c'), ['acados_sim_solver_sfunction_', self.name, '.c']};
+                %     template_list{end+1} = {fullfile(matlab_template_path, 'make_sfun_sim.in.m'), ['make_sfun_sim.m']};
+                % end
+                if self.simulink_opts.inputs.rti_phase && self.solver_options.nlp_solver_type ~= 'SQP_RTI'
+                    error('rti_phase is only supported for SQP_RTI');
+                end
+                inputs = self.simulink_opts.inputs;
+                nonsupported_mocp_inputs = {'y_ref', 'lbx', 'ubx', ...
+                'lbx_e', 'ubx_e', 'lg', 'ug', 'lh', 'uh', 'cost_W_0', 'cost_W', 'cost_W_e'};
+                for i=1:length(nonsupported_mocp_inputs)
+                    if inputs.(nonsupported_mocp_inputs{i})
+                        error(['Simulink inputs ', nonsupported_mocp_inputs{i}, ' are not supported for MOCP.']);
+                    end
+                end
+            else
+                disp("not rendering Simulink related templates, as simulink_opts are not specified.")
+            end
         end
 
         function context  = generate_external_functions(self)
@@ -334,6 +360,7 @@ classdef AcadosMultiphaseOcp < handle
             end
 
             % prepare struct for json dump
+            out_struct.p_global_values = reshape(num2cell(self.p_global_values), [1, self.phases_dims{1}.np_global]);
             for i=1:self.n_phases
                 out_struct.parameter_values{i} = reshape(num2cell(self.parameter_values{i}), [1, self.phases_dims{i}.np]);
                 out_struct.model{i} = orderfields(self.model{i}.convert_to_struct_for_json_dump());
@@ -344,7 +371,7 @@ classdef AcadosMultiphaseOcp < handle
             out_struct.solver_options = orderfields(self.solver_options.convert_to_struct_for_json_dump(self.N_horizon));
             out_struct.mocp_opts = orderfields(self.mocp_opts.struct());
 
-            vector_fields = {'model', 'phases_dims', 'cost', 'constraints', 'parameter_values'};
+            vector_fields = {'model', 'phases_dims', 'cost', 'constraints', 'parameter_values', 'p_global_values'};
             out_struct = prepare_struct_for_json_dump(out_struct, vector_fields, {});
 
             % add full path to json file

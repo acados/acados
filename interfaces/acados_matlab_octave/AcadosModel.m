@@ -219,11 +219,17 @@ classdef AcadosModel < handle
                 dims.np_global = 0;
                 obj.p_global = empty_var;
             elseif iscolumn(obj.p_global) || (isa(obj.p_global, 'casadi.SX') == isSX && length(obj.p_global) == 0)
+                if any(which_depends(obj.p_global, obj.p))
+                    error('model.p_global must not depend on model.p')
+                end
                 dims.np_global = size(obj.p_global, 1);
             else
                 error('model.p_global should be column vector.');
             end
 
+            if dims.np_global > 0 && ~isa(obj.p_global, 'casadi.MX')
+                error('model.p_global needs to be casadi.MX')
+            end
             if isempty(obj.xdot)
                 obj.xdot = empty_var;
             elseif ~(isa(obj.xdot, 'casadi.SX') == isSX && length(obj.xdot) == 0) && (~iscolumn(obj.xdot) || size(obj.xdot, 1) ~= dims.nx)
@@ -245,6 +251,27 @@ classdef AcadosModel < handle
                 dims.nu = size(obj.u, 1);
             else
                 error('model.u should be column vector.');
+            end
+
+            % model output dimension nx_next: dimension of the next state
+            if isa(dims, 'AcadosOcpDims')
+                if ~isempty(obj.disc_dyn_expr)
+                    dims.nx_next = length(obj.disc_dyn_expr);
+                else
+                    dims.nx_next = length(obj.x);
+                end
+            end
+
+            if ~isempty(obj.f_impl_expr)
+                if length(obj.f_impl_expr) ~= (dims.nx + dims.nz)
+                    error(sprintf('model.f_impl_expr must have length nx + nz = %d + %d, got %d', dims.nx, dims.nz, length(obj.f_impl_expr)));
+                end
+            end
+
+            if ~isempty(obj.f_expl_expr)
+                if length(obj.f_expl_expr) ~= dims.nx
+                    error(sprintf('model.f_expl_expr must have length nx = %d, got %d', dims.nx, length(obj.f_expl_expr)));
+                end
             end
         end
 

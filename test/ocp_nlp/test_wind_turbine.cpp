@@ -482,6 +482,8 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     if (nh[1] > 0)
     {
         h1.evaluate = &ext_fun_h1;
+        h1.set_external_workspace = &external_function_param_generic_set_external_workspace;
+        h1.get_external_workspace_requirement = &external_function_param_generic_get_external_workspace_requirement;
 
         // electric power
         lh1[0] = Pel_min;
@@ -662,6 +664,9 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     /************************************************
     * dynamics
     ************************************************/
+    // impl_ode_fun
+    external_function_opts ext_fun_opts;
+    ext_fun_opts.external_workspace = true;
 
     // explicit model
     external_function_param_casadi *expl_vde_for =
@@ -690,17 +695,17 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
         f_lo_jac_x1_x1dot_u_z);
 
     // explicit model
-    external_function_param_casadi_create_array(NN, expl_vde_for, np);
+    external_function_param_casadi_create_array(NN, expl_vde_for, np, &ext_fun_opts);
     // implicit model
-    external_function_param_casadi_create_array(NN, impl_ode_fun, np);
-    external_function_param_casadi_create_array(NN, impl_ode_fun_jac_x_xdot, np);
-    external_function_param_casadi_create_array(NN, impl_ode_jac_x_xdot_u, np);
-    external_function_param_casadi_create_array(NN, impl_ode_fun_jac_x_xdot_u, np);
+    external_function_param_casadi_create_array(NN, impl_ode_fun, np, &ext_fun_opts);
+    external_function_param_casadi_create_array(NN, impl_ode_fun_jac_x_xdot, np, &ext_fun_opts);
+    external_function_param_casadi_create_array(NN, impl_ode_jac_x_xdot_u, np, &ext_fun_opts);
+    external_function_param_casadi_create_array(NN, impl_ode_fun_jac_x_xdot_u, np, &ext_fun_opts);
     // gnsf model
-    external_function_param_casadi_create_array(NN, phi_fun, np);
-    external_function_param_casadi_create_array(NN, phi_fun_jac_y, np);
-    external_function_param_casadi_create_array(NN, phi_jac_y_uhat, np);
-    external_function_param_casadi_create_array(NN, f_lo_jac_x1_x1dot_u_z, np);
+    external_function_param_casadi_create_array(NN, phi_fun, np, &ext_fun_opts);
+    external_function_param_casadi_create_array(NN, phi_fun_jac_y, np, &ext_fun_opts);
+    external_function_param_casadi_create_array(NN, phi_jac_y_uhat, np, &ext_fun_opts);
+    external_function_param_casadi_create_array(NN, f_lo_jac_x1_x1dot_u_z, np, &ext_fun_opts);
 
     // GNSF import matrices function
     external_function_casadi get_matrices_fun;
@@ -710,7 +715,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     get_matrices_fun.casadi_sparsity_out   = &wt_nx6p2_get_matrices_fun_sparsity_out;
     get_matrices_fun.casadi_n_in           = &wt_nx6p2_get_matrices_fun_n_in;
     get_matrices_fun.casadi_n_out          = &wt_nx6p2_get_matrices_fun_n_out;
-    external_function_casadi_create(&get_matrices_fun);
+    external_function_casadi_create(&get_matrices_fun, &ext_fun_opts);
 
     /* initialize additional gnsf dimensions */
     int gnsf_nx1 = 8;
@@ -975,7 +980,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
 
     ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 
-    ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
+    ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts, nlp_in);
 
     /************************************************
     *     precomputation (after all options are set)

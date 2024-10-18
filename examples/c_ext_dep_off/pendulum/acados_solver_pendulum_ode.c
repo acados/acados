@@ -171,6 +171,8 @@ void pendulum_ode_acados_create_set_plan(ocp_nlp_plan_t* nlp_solver_plan, const 
     nlp_solver_plan->nlp_constraints[N] = BGH;
 
     nlp_solver_plan->regularization = NO_REGULARIZE;
+
+    nlp_solver_plan->globalization = MERIT_BACKTRACKING;
 }
 
 
@@ -320,8 +322,12 @@ void pendulum_ode_acados_create_setup_functions(pendulum_ode_solver_capsule* cap
         capsule->__CAPSULE_FNC__.casadi_sparsity_in = & __MODEL_BASE_FNC__ ## _sparsity_in; \
         capsule->__CAPSULE_FNC__.casadi_sparsity_out = & __MODEL_BASE_FNC__ ## _sparsity_out; \
         capsule->__CAPSULE_FNC__.casadi_work = & __MODEL_BASE_FNC__ ## _work; \
-        external_function_external_param_casadi_create(&capsule->__CAPSULE_FNC__ ); \
+        external_function_external_param_casadi_create(&capsule->__CAPSULE_FNC__, &ext_fun_opts); \
     } while(false)
+
+    external_function_opts ext_fun_opts;
+    ext_fun_opts.external_workspace = false;
+
     // nonlinear least squares function
     MAP_CASADI_FNC(cost_y_0_fun, pendulum_ode_cost_y_0_fun);
     MAP_CASADI_FNC(cost_y_0_fun_jac_ut_xt, pendulum_ode_cost_y_0_fun_jac_ut_xt);
@@ -553,28 +559,28 @@ static void pendulum_ode_acados_create_set_opts(pendulum_ode_solver_capsule* cap
     /************************************************
     *  opts
     ************************************************/
-    double alpha_min = 0.05;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "alpha_min", &alpha_min);
+    double globalization_alpha_min = 0.05;
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_alpha_min", &globalization_alpha_min);
 
-    double alpha_reduction = 0.7;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "alpha_reduction", &alpha_reduction);
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "merit_backtracking");
+    double globalization_alpha_reduction = 0.7;
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_alpha_reduction", &globalization_alpha_reduction);
 
-    int line_search_use_sufficient_descent = 0;
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "line_search_use_sufficient_descent", &line_search_use_sufficient_descent);
+    int globalization_line_search_use_sufficient_descent = 0;
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_line_search_use_sufficient_descent", &globalization_line_search_use_sufficient_descent);
 
     int globalization_use_SOC = 0;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_use_SOC", &globalization_use_SOC);
 
-    double eps_sufficient_descent = 0.0001;
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "eps_sufficient_descent", &eps_sufficient_descent);int with_solution_sens_wrt_params = false;
+    double globalization_eps_sufficient_descent = 0.0001;
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_eps_sufficient_descent", &globalization_eps_sufficient_descent);
+    int with_solution_sens_wrt_params = false;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "with_solution_sens_wrt_params", &with_solution_sens_wrt_params);
 
     int with_value_sens_wrt_params = false;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "with_value_sens_wrt_params", &with_value_sens_wrt_params);
 
-    int full_step_dual = 0;
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "full_step_dual", &full_step_dual);
+    int globalization_full_step_dual = 0;
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_full_step_dual", &globalization_full_step_dual);
 
     // set collocation type (relevant for implicit integrators)
     sim_collocation_type collocation_type = GAUSS_LEGENDRE;
@@ -710,7 +716,7 @@ int pendulum_ode_acados_create_with_discretization(pendulum_ode_solver_capsule* 
     pendulum_ode_acados_create_set_default_parameters(capsule);
 
     // 6) create solver
-    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts);
+    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts, capsule->nlp_in);
 
     // 7) create and set nlp_out
     // 7.1) nlp_out
@@ -722,29 +728,6 @@ int pendulum_ode_acados_create_with_discretization(pendulum_ode_solver_capsule* 
     // 8) do precomputations
     int status = pendulum_ode_acados_create_precompute(capsule);
 
-    return status;
-}
-
-/**
- * This function is for updating an already initialized solver with a different number of qp_cond_N. It is useful for code reuse after code export.
- */
-int pendulum_ode_acados_update_qp_solver_cond_N(pendulum_ode_solver_capsule* capsule, int qp_solver_cond_N)
-{
-    // 1) destroy solver
-    ocp_nlp_solver_destroy(capsule->nlp_solver);
-
-    // 2) set new value for "qp_cond_N"
-    const int N = capsule->nlp_solver_plan->N;
-    if(qp_solver_cond_N > N)
-        printf("Warning: qp_solver_cond_N = %d > N = %d\n", qp_solver_cond_N, N);
-    ocp_nlp_solver_opts_set(capsule->nlp_config, capsule->nlp_opts, "qp_cond_N", &qp_solver_cond_N);
-
-    // 3) continue with the remaining steps from pendulum_ode_acados_create_with_discretization(...):
-    // -> 8) create solver
-    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts);
-
-    // -> 9) do precomputations
-    int status = pendulum_ode_acados_create_precompute(capsule);
     return status;
 }
 

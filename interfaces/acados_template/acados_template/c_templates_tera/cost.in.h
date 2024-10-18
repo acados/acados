@@ -45,6 +45,7 @@ const int *{{ model.name }}_cost_y_0_fun_sparsity_in(int);
 const int *{{ model.name }}_cost_y_0_fun_sparsity_out(int);
 int {{ model.name }}_cost_y_0_fun_n_in(void);
 int {{ model.name }}_cost_y_0_fun_n_out(void);
+real_t* {{ model.name }}_cost_y_0_fun_get_pool_double(const char*);
 
 int {{ model.name }}_cost_y_0_fun_jac_ut_xt(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_cost_y_0_fun_jac_ut_xt_work(int *, int *, int *, int *);
@@ -52,13 +53,17 @@ const int *{{ model.name }}_cost_y_0_fun_jac_ut_xt_sparsity_in(int);
 const int *{{ model.name }}_cost_y_0_fun_jac_ut_xt_sparsity_out(int);
 int {{ model.name }}_cost_y_0_fun_jac_ut_xt_n_in(void);
 int {{ model.name }}_cost_y_0_fun_jac_ut_xt_n_out(void);
+real_t* {{ model.name }}_cost_y_0_fun_jac_ut_xt_get_pool_double(const char*);
 
+{%- if solver_options.hessian_approx == "EXACT" %}
 int {{ model.name }}_cost_y_0_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_cost_y_0_hess_work(int *, int *, int *, int *);
 const int *{{ model.name }}_cost_y_0_hess_sparsity_in(int);
 const int *{{ model.name }}_cost_y_0_hess_sparsity_out(int);
 int {{ model.name }}_cost_y_0_hess_n_in(void);
 int {{ model.name }}_cost_y_0_hess_n_out(void);
+real_t* {{ model.name }}_cost_y_0_hess_get_pool_double(const char*);
+{%- endif %}
 {% elif cost.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
 
 int {{ model.name }}_conl_cost_0_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
@@ -67,6 +72,7 @@ const int *{{ model.name }}_conl_cost_0_fun_sparsity_in(int);
 const int *{{ model.name }}_conl_cost_0_fun_sparsity_out(int);
 int {{ model.name }}_conl_cost_0_fun_n_in(void);
 int {{ model.name }}_conl_cost_0_fun_n_out(void);
+real_t* {{ model.name }}_conl_cost_0_fun_get_pool_double(const char*);
 
 int {{ model.name }}_conl_cost_0_fun_jac_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_conl_cost_0_fun_jac_hess_work(int *, int *, int *, int *);
@@ -74,6 +80,7 @@ const int *{{ model.name }}_conl_cost_0_fun_jac_hess_sparsity_in(int);
 const int *{{ model.name }}_conl_cost_0_fun_jac_hess_sparsity_out(int);
 int {{ model.name }}_conl_cost_0_fun_jac_hess_n_in(void);
 int {{ model.name }}_conl_cost_0_fun_jac_hess_n_out(void);
+real_t* {{ model.name }}_conl_cost_0_fun_jac_hess_get_pool_double(const char*);
 
 {% elif cost.cost_type_0 == "EXTERNAL" %}
     {%- if cost.cost_ext_fun_type_0 == "casadi" %}
@@ -83,6 +90,7 @@ const int *{{ model.name }}_cost_ext_cost_0_fun_sparsity_in(int);
 const int *{{ model.name }}_cost_ext_cost_0_fun_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_0_fun_n_in(void);
 int {{ model.name }}_cost_ext_cost_0_fun_n_out(void);
+real_t* {{ model.name }}_cost_ext_cost_0_fun_get_pool_double(const char*);
 
 int {{ model.name }}_cost_ext_cost_0_fun_jac_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_cost_ext_cost_0_fun_jac_hess_work(int *, int *, int *, int *);
@@ -90,6 +98,7 @@ const int *{{ model.name }}_cost_ext_cost_0_fun_jac_hess_sparsity_in(int);
 const int *{{ model.name }}_cost_ext_cost_0_fun_jac_hess_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_0_fun_jac_hess_n_in(void);
 int {{ model.name }}_cost_ext_cost_0_fun_jac_hess_n_out(void);
+real_t* {{ model.name }}_cost_ext_cost_0_fun_jac_hess_get_pool_double(const char*);
 
 int {{ model.name }}_cost_ext_cost_0_fun_jac(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_cost_ext_cost_0_fun_jac_work(int *, int *, int *, int *);
@@ -97,6 +106,7 @@ const int *{{ model.name }}_cost_ext_cost_0_fun_jac_sparsity_in(int);
 const int *{{ model.name }}_cost_ext_cost_0_fun_jac_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_0_fun_jac_n_in(void);
 int {{ model.name }}_cost_ext_cost_0_fun_jac_n_out(void);
+real_t* {{ model.name }}_cost_ext_cost_0_fun_jac_get_pool_double(const char*);
 
 {% if solver_options.with_solution_sens_wrt_params %}
 int {{ model.name }}_cost_ext_cost_0_hess_xu_p(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
@@ -105,6 +115,7 @@ const int *{{ model.name }}_cost_ext_cost_0_hess_xu_p_sparsity_in(int);
 const int *{{ model.name }}_cost_ext_cost_0_hess_xu_p_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_0_hess_xu_p_n_in(void);
 int {{ model.name }}_cost_ext_cost_0_hess_xu_p_n_out(void);
+real_t* {{ model.name }}_cost_ext_cost_0_hess_xu_p_get_pool_double(const char*);
 {% endif %}
 
 {% if solver_options.with_value_sens_wrt_params %}
@@ -114,6 +125,7 @@ const int *{{ model.name }}_cost_ext_cost_0_grad_p_sparsity_in(int);
 const int *{{ model.name }}_cost_ext_cost_0_grad_p_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_0_grad_p_n_in(void);
 int {{ model.name }}_cost_ext_cost_0_grad_p_n_out(void);
+real_t* {{ model.name }}_cost_ext_cost_0_grad_p_get_pool_double(const char*);
 {% endif %}
 
     {%- else %}
@@ -130,6 +142,7 @@ const int *{{ model.name }}_cost_y_fun_sparsity_in(int);
 const int *{{ model.name }}_cost_y_fun_sparsity_out(int);
 int {{ model.name }}_cost_y_fun_n_in(void);
 int {{ model.name }}_cost_y_fun_n_out(void);
+real_t* {{ model.name }}_cost_y_fun_get_pool_double(const char*);
 
 int {{ model.name }}_cost_y_fun_jac_ut_xt(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_cost_y_fun_jac_ut_xt_work(int *, int *, int *, int *);
@@ -137,13 +150,17 @@ const int *{{ model.name }}_cost_y_fun_jac_ut_xt_sparsity_in(int);
 const int *{{ model.name }}_cost_y_fun_jac_ut_xt_sparsity_out(int);
 int {{ model.name }}_cost_y_fun_jac_ut_xt_n_in(void);
 int {{ model.name }}_cost_y_fun_jac_ut_xt_n_out(void);
+real_t* {{ model.name }}_cost_y_fun_jac_ut_xt_get_pool_double(const char*);
 
+{%- if solver_options.hessian_approx == "EXACT" %}
 int {{ model.name }}_cost_y_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_cost_y_hess_work(int *, int *, int *, int *);
 const int *{{ model.name }}_cost_y_hess_sparsity_in(int);
 const int *{{ model.name }}_cost_y_hess_sparsity_out(int);
 int {{ model.name }}_cost_y_hess_n_in(void);
 int {{ model.name }}_cost_y_hess_n_out(void);
+real_t* {{ model.name }}_cost_y_hess_get_pool_double(const char*);
+{%- endif %}
 
 {% elif cost.cost_type == "CONVEX_OVER_NONLINEAR" %}
 int {{ model.name }}_conl_cost_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
@@ -152,6 +169,7 @@ const int *{{ model.name }}_conl_cost_fun_sparsity_in(int);
 const int *{{ model.name }}_conl_cost_fun_sparsity_out(int);
 int {{ model.name }}_conl_cost_fun_n_in(void);
 int {{ model.name }}_conl_cost_fun_n_out(void);
+real_t* {{ model.name }}_conl_cost_fun_get_pool_double(const char*);
 
 int {{ model.name }}_conl_cost_fun_jac_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_conl_cost_fun_jac_hess_work(int *, int *, int *, int *);
@@ -159,6 +177,7 @@ const int *{{ model.name }}_conl_cost_fun_jac_hess_sparsity_in(int);
 const int *{{ model.name }}_conl_cost_fun_jac_hess_sparsity_out(int);
 int {{ model.name }}_conl_cost_fun_jac_hess_n_in(void);
 int {{ model.name }}_conl_cost_fun_jac_hess_n_out(void);
+real_t* {{ model.name }}_onl_cost_fun_jac_hess_get_pool_double(const char*);
 {% elif cost.cost_type == "EXTERNAL" %}
     {%- if cost.cost_ext_fun_type == "casadi" %}
 int {{ model.name }}_cost_ext_cost_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
@@ -167,6 +186,7 @@ const int *{{ model.name }}_cost_ext_cost_fun_sparsity_in(int);
 const int *{{ model.name }}_cost_ext_cost_fun_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_fun_n_in(void);
 int {{ model.name }}_cost_ext_cost_fun_n_out(void);
+real_t* {{ model.name }}_cost_ext_cost_fun_get_pool_double(const char*);
 
 int {{ model.name }}_cost_ext_cost_fun_jac_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_cost_ext_cost_fun_jac_hess_work(int *, int *, int *, int *);
@@ -174,6 +194,7 @@ const int *{{ model.name }}_cost_ext_cost_fun_jac_hess_sparsity_in(int);
 const int *{{ model.name }}_cost_ext_cost_fun_jac_hess_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_fun_jac_hess_n_in(void);
 int {{ model.name }}_cost_ext_cost_fun_jac_hess_n_out(void);
+real_t* {{ model.name }}_cost_ext_cost_fun_jac_hess_get_pool_double(const char*);
 
 int {{ model.name }}_cost_ext_cost_fun_jac(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_cost_ext_cost_fun_jac_work(int *, int *, int *, int *);
@@ -181,6 +202,7 @@ const int *{{ model.name }}_cost_ext_cost_fun_jac_sparsity_in(int);
 const int *{{ model.name }}_cost_ext_cost_fun_jac_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_fun_jac_n_in(void);
 int {{ model.name }}_cost_ext_cost_fun_jac_n_out(void);
+real_t* {{ model.name }}_cost_ext_cost_fun_jac_get_pool_double(const char*);
 
 {% if solver_options.with_solution_sens_wrt_params %}
 int {{ model.name }}_cost_ext_cost_hess_xu_p(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
@@ -189,6 +211,7 @@ const int *{{ model.name }}_cost_ext_cost_hess_xu_p_sparsity_in(int);
 const int *{{ model.name }}_cost_ext_cost_hess_xu_p_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_hess_xu_p_n_in(void);
 int {{ model.name }}_cost_ext_cost_hess_xu_p_n_out(void);
+real_t* {{ model.name }}_cost_ext_cost_hess_xu_p_get_pool_double(const char*);
 {% endif %}
 
 {% if solver_options.with_value_sens_wrt_params %}
@@ -198,6 +221,7 @@ const int *{{ model.name }}_cost_ext_cost_grad_p_sparsity_in(int);
 const int *{{ model.name }}_cost_ext_cost_grad_p_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_grad_p_n_in(void);
 int {{ model.name }}_cost_ext_cost_grad_p_n_out(void);
+real_t* {{ model.name }}_cost_ext_cost_grad_p_get_pool_double(const char*);
 {% endif %}
 
     {%- else %}
@@ -213,6 +237,7 @@ const int *{{ model.name }}_cost_y_e_fun_sparsity_in(int);
 const int *{{ model.name }}_cost_y_e_fun_sparsity_out(int);
 int {{ model.name }}_cost_y_e_fun_n_in(void);
 int {{ model.name }}_cost_y_e_fun_n_out(void);
+real_t* {{ model.name }}_cost_y_e_fun_get_pool_double(const char*);
 
 int {{ model.name }}_cost_y_e_fun_jac_ut_xt(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_cost_y_e_fun_jac_ut_xt_work(int *, int *, int *, int *);
@@ -220,13 +245,18 @@ const int *{{ model.name }}_cost_y_e_fun_jac_ut_xt_sparsity_in(int);
 const int *{{ model.name }}_cost_y_e_fun_jac_ut_xt_sparsity_out(int);
 int {{ model.name }}_cost_y_e_fun_jac_ut_xt_n_in(void);
 int {{ model.name }}_cost_y_e_fun_jac_ut_xt_n_out(void);
+real_t* {{ model.name }}_cost_y_e_fun_jac_ut_xt_get_pool_double(const char*);
 
+{%- if solver_options.hessian_approx == "EXACT" %}
 int {{ model.name }}_cost_y_e_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_cost_y_e_hess_work(int *, int *, int *, int *);
 const int *{{ model.name }}_cost_y_e_hess_sparsity_in(int);
 const int *{{ model.name }}_cost_y_e_hess_sparsity_out(int);
 int {{ model.name }}_cost_y_e_hess_n_in(void);
 int {{ model.name }}_cost_y_e_hess_n_out(void);
+real_t* {{ model.name }}_cost_y_e_hess_get_pool_double(const char*);
+{%- endif %}
+
 {% elif cost.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
 int {{ model.name }}_conl_cost_e_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_conl_cost_e_fun_work(int *, int *, int *, int *);
@@ -234,6 +264,7 @@ const int *{{ model.name }}_conl_cost_e_fun_sparsity_in(int);
 const int *{{ model.name }}_conl_cost_e_fun_sparsity_out(int);
 int {{ model.name }}_conl_cost_e_fun_n_in(void);
 int {{ model.name }}_conl_cost_e_fun_n_out(void);
+real_t* {{ model.name }}_conl_cost_e_fun_get_pool_double(const char*);
 
 int {{ model.name }}_conl_cost_e_fun_jac_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_conl_cost_e_fun_jac_hess_work(int *, int *, int *, int *);
@@ -241,6 +272,7 @@ const int *{{ model.name }}_conl_cost_e_fun_jac_hess_sparsity_in(int);
 const int *{{ model.name }}_conl_cost_e_fun_jac_hess_sparsity_out(int);
 int {{ model.name }}_conl_cost_e_fun_jac_hess_n_in(void);
 int {{ model.name }}_conl_cost_e_fun_jac_hess_n_out(void);
+real_t* {{ model.name }}_conl_cost_e_fun_jac_hess_get_pool_double(const char*);
 {% elif cost.cost_type_e == "EXTERNAL" %}
     {%- if cost.cost_ext_fun_type_e == "casadi" %}
 int {{ model.name }}_cost_ext_cost_e_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
@@ -249,6 +281,7 @@ const int *{{ model.name }}_cost_ext_cost_e_fun_sparsity_in(int);
 const int *{{ model.name }}_cost_ext_cost_e_fun_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_e_fun_n_in(void);
 int {{ model.name }}_cost_ext_cost_e_fun_n_out(void);
+real_t* {{ model.name }}_cost_ext_cost_e_fun_get_pool_double(const char*);
 
 int {{ model.name }}_cost_ext_cost_e_fun_jac_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_cost_ext_cost_e_fun_jac_hess_work(int *, int *, int *, int *);
@@ -256,6 +289,7 @@ const int *{{ model.name }}_cost_ext_cost_e_fun_jac_hess_sparsity_in(int);
 const int *{{ model.name }}_cost_ext_cost_e_fun_jac_hess_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_e_fun_jac_hess_n_in(void);
 int {{ model.name }}_cost_ext_cost_e_fun_jac_hess_n_out(void);
+real_t* {{ model.name }}_cost_ext_cost_e_fun_jac_hess_get_pool_double(const char*);
 
 int {{ model.name }}_cost_ext_cost_e_fun_jac(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_cost_ext_cost_e_fun_jac_work(int *, int *, int *, int *);
@@ -263,6 +297,7 @@ const int *{{ model.name }}_cost_ext_cost_e_fun_jac_sparsity_in(int);
 const int *{{ model.name }}_cost_ext_cost_e_fun_jac_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_e_fun_jac_n_in(void);
 int {{ model.name }}_cost_ext_cost_e_fun_jac_n_out(void);
+real_t* {{ model.name }}_cost_ext_cost_e_fun_jac_get_pool_double(const char*);
 
 {% if solver_options.with_solution_sens_wrt_params %}
 int {{ model.name }}_cost_ext_cost_e_hess_xu_p(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
@@ -271,6 +306,7 @@ const int *{{ model.name }}_cost_ext_cost_e_hess_xu_p_sparsity_in(int);
 const int *{{ model.name }}_cost_ext_cost_e_hess_xu_p_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_e_hess_xu_p_n_in(void);
 int {{ model.name }}_cost_ext_cost_e_hess_xu_p_n_out(void);
+real_t* {{ model.name }}_cost_ext_cost_e_hess_xu_p_get_pool_double(const char*);
 {% endif %}
 
 {% if solver_options.with_value_sens_wrt_params %}
@@ -280,6 +316,7 @@ const int *{{ model.name }}_cost_ext_cost_e_grad_p_sparsity_in(int);
 const int *{{ model.name }}_cost_ext_cost_e_grad_p_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_e_grad_p_n_in(void);
 int {{ model.name }}_cost_ext_cost_e_grad_p_n_out(void);
+real_t* {{ model.name }}_cost_ext_cost_e_grad_p_get_pool_double(const char*);
 {% endif %}
 
     {%- else %}

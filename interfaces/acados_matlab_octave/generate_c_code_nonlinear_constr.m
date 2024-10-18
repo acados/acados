@@ -71,8 +71,9 @@ function generate_c_code_nonlinear_constr(context, model, target_dir, stage_type
         % add functions to context
         context.add_function_definition([model.name,'_constr_h_0_fun'], {x, u, z, p}, {h_0}, target_dir);
         context.add_function_definition([model.name,'_constr_h_0_fun_jac_uxt_zt'], {x, u, z, p}, {h_0, jac_ux_0', jac_z_0'}, target_dir);
-        context.add_function_definition([model.name,'_constr_h_0_fun_jac_uxt_zt_hess'], {x, u, lam_h_0, z, p}, {h_0, jac_ux_0', hess_ux_0, jac_z_0', hess_z_0}, target_dir);
-
+        if context.opts.generate_hess
+            context.add_function_definition([model.name,'_constr_h_0_fun_jac_uxt_zt_hess'], {x, u, lam_h_0, z, p}, {h_0, jac_ux_0', hess_ux_0, jac_z_0', hess_z_0}, target_dir);
+        end
 
     elseif strcmp(stage_type, 'path')
 
@@ -100,8 +101,11 @@ function generate_c_code_nonlinear_constr(context, model, target_dir, stage_type
         % add functions to context
         context.add_function_definition([model.name,'_constr_h_fun'], {x, u, z, p}, {h}, target_dir);
         context.add_function_definition([model.name,'_constr_h_fun_jac_uxt_zt'], {x, u, z, p}, {h, jac_ux', jac_z'}, target_dir);
-        context.add_function_definition([model.name,'_constr_h_fun_jac_uxt_zt_hess'],...
+
+        if context.opts.generate_hess
+            context.add_function_definition([model.name,'_constr_h_fun_jac_uxt_zt_hess'],...
                                     {x, u, lam_h, z, p}, {h, jac_ux', hess_ux, jac_z', hess_z}, target_dir);
+        end
 
     elseif strcmp(stage_type, 'terminal')
         % NOTE: terminal node has no u, z
@@ -122,6 +126,9 @@ function generate_c_code_nonlinear_constr(context, model, target_dir, stage_type
         % add functions to context
         context.add_function_definition([model.name,'_constr_h_e_fun'], {x, p}, {h_e}, target_dir);
         context.add_function_definition([model.name,'_constr_h_e_fun_jac_uxt_zt'], {x, p}, {h_e, jac_x_e'}, target_dir);
-        context.add_function_definition([model.name,'_constr_h_e_fun_jac_uxt_zt_hess'], {x, lam_h_e, p}, {h_e, jac_x_e', hess_ux_e}, target_dir);
+
+        if context.opts.generate_hess
+            context.add_function_definition([model.name,'_constr_h_e_fun_jac_uxt_zt_hess'], {x, lam_h_e, p}, {h_e, jac_x_e', hess_ux_e}, target_dir);
+        end
     end
 end

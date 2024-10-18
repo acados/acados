@@ -64,11 +64,14 @@ ocp.solver_options.time_steps = [T_HORIZON_1 / N_list(1) * ones(1, N_list(1)), .
                                 1.0, ...  % transition stage
                                 T_HORIZON_2 / N_list(3) * ones(1, N_list(3))];
 
+ocp.solver_options.store_iterates = true;
+
 ocp_solver = AcadosOcpSolver(ocp);
 
 ocp_solver.solve();
 ocp_solver.print()
 
+iterate = ocp_solver.get_iterate(ocp_solver.get('sqp_iter'));
 
 %% extract solution
 x_traj = cell(N_horizon+1, 1);
@@ -78,6 +81,10 @@ for i=0:N_horizon
 end
 for i=0:N_horizon-1
     u_traj{i+1, 1} = ocp_solver.get('u', i);
+end
+
+if iterate.x_traj{end} ~= x_traj{end}
+    error("x and last iterate for x should be the same.")
 end
 
 t_grid = ocp.solver_options.shooting_nodes;

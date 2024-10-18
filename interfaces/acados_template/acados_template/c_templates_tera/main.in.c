@@ -110,8 +110,6 @@ int main()
     double utraj[NU * N];
 
     // solve ocp in loop
-    int rti_phase = 0;
-
     for (int ii = 0; ii < NTIMINGS; ii++)
     {
         // initialize solution
@@ -121,7 +119,6 @@ int main()
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "u", u0);
         }
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, N, "x", x_init);
-        ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "rti_phase", &rti_phase);
         status = {{ name }}_acados_solve(acados_ocp_capsule);
         ocp_nlp_get(nlp_config, nlp_solver, "time_tot", &elapsed_time);
         min_time = MIN(elapsed_time, min_time);

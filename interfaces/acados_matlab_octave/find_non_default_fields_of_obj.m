@@ -56,9 +56,9 @@ function nondefault_fields = find_non_default_fields_of_obj(obj, stage_type)
         case 'all'
             % Do nothing
         case 'initial'
-            all_fields = all_fields(endsWith(all_fields, '_0'));
+            all_fields = all_fields(endsWith_custom(all_fields, '_0'));
         case 'terminal'
-            all_fields = all_fields(endsWith(all_fields, '_e'));
+            all_fields = all_fields(endsWith_custom(all_fields, '_e'));
         otherwise
             error('stage_type %s not supported.', stage_type);
     end
@@ -80,21 +80,6 @@ function nondefault_fields = find_non_default_fields_of_obj(obj, stage_type)
             if ~isequal(val, default_val)
                 nondefault_fields{end+1} = field;
             end
-        end
-    end
-end
-
-function result = endsWith(strArray, suffix)
-    % Initialize the result array
-    result = false(size(strArray));
-
-    % Iterate over each string in the array
-    for i = 1:numel(strArray)
-        str = strArray{i};
-
-        % Check if the string ends with the suffix
-        if length(str) >= length(suffix) && strcmp(str(end-length(suffix)+1:end), suffix)
-            result(i) = true;
         end
     end
 end

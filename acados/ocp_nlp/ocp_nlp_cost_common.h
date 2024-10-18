@@ -84,6 +84,8 @@ typedef struct
     void (*memory_get_params_grad)(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
+    acados_size_t (*get_external_fun_workspace_requirement)(void *config, void *dims, void *opts_, void *in);
+    void (*set_external_fun_workspaces)(void *config, void *dims, void *opts_, void *in, void *work_);
     void (*initialize)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
 
     // computes the function value, gradient and hessian (approximation) of the cost function
