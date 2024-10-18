@@ -500,13 +500,8 @@ acados_size_t ocp_nlp_dynamics_disc_workspace_calculate_size(void *config_, void
 
     size += sizeof(ocp_nlp_dynamics_disc_workspace);
 
-    if (opts->compute_hess!=0)
-    {
-        size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);   // tmp_nv_nv
-
-        size += 1*64;  // blasfeo_mem align
-
-    }
+    size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);   // tmp_nv_nv
+    size += 1*64;  // blasfeo_mem align
 
     return size;
 }
@@ -528,15 +523,11 @@ static void ocp_nlp_dynamics_disc_cast_workspace(void *config_, void *dims_, voi
     char *c_ptr = (char *) work_;
     c_ptr += sizeof(ocp_nlp_dynamics_disc_workspace);
 
-    if (opts->compute_hess!=0)
-    {
-        // blasfeo_mem align
-        align_char_to(64, &c_ptr);
+    // blasfeo_mem align
+    align_char_to(64, &c_ptr);
 
-        // tmp_nv_nv
-        assign_and_advance_blasfeo_dmat_mem(nu+nx, nu+nx, &work->tmp_nv_nv, &c_ptr);
-
-    }
+    // tmp_nv_nv
+    assign_and_advance_blasfeo_dmat_mem(nu+nx, nu+nx, &work->tmp_nv_nv, &c_ptr);
 
     assert((char *) work + ocp_nlp_dynamics_disc_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
 
@@ -673,7 +664,6 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
 
     if (opts->compute_hess)
     {
-
         struct blasfeo_dvec_args pi_in;  // input u of external fun;
         pi_in.x = memory->pi;
         pi_in.xi = 0;
@@ -706,7 +696,6 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
     }
     else
     {
-
         ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
         ext_fun_in[0] = &x_in;
         ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
@@ -719,7 +708,6 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
 
         // call external function
         model->disc_dyn_fun_jac->evaluate(model->disc_dyn_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
-
     }
 
     // fun
@@ -844,6 +832,7 @@ void ocp_nlp_dynamics_disc_compute_fun_and_adj(void *config_, void *dims_, void 
                                               void *mem_, void *work_)
 {
     /* TODO: this is inefficient! Generate a separate function for discrete dynamics to compute fun and adj! */
+    // when this is done tmp_nv_nv can be removed from work if compute_hess is false.
     ocp_nlp_dynamics_disc_cast_workspace(config_, dims_, opts_, work_);
 
     // ocp_nlp_dynamics_config *config = config_;
@@ -880,7 +869,6 @@ void ocp_nlp_dynamics_disc_compute_fun_and_adj(void *config_, void *dims_, void 
     jac_out.A = &work->tmp_nv_nv;
     jac_out.ai = 0;
     jac_out.aj = 0;
-
 
     ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
     ext_fun_in[0] = &x_in;
