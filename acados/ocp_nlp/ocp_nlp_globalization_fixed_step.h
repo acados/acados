@@ -72,6 +72,7 @@ void ocp_nlp_globalization_fixed_step_opts_set(void *config, void *opts, const c
  ************************************************/
 typedef struct
 {
+    double alpha;  // dummy value, not used, just to have non-empty struct
 } ocp_nlp_globalization_fixed_step_memory;
 
 //
