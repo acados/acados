@@ -99,11 +99,11 @@ def export_pendulum_ode_model(p_global, m, l, C, lut=True, blazing=True) -> Acad
     # dynamics
     cos_theta = cos(theta)
     sin_theta = sin(theta)
-    denominator = m_cart + m - m*cos_theta*cos_theta
+    denominator = m_cart + m - m*cos_theta**2
     f_expl = vertcat(v1,
                      dtheta,
-                     (-m*l*sin_theta*dtheta*dtheta + m*g*cos_theta*sin_theta+F)/denominator,
-                     (-m*l*cos_theta*sin_theta*dtheta*dtheta + F*cos_theta+(m_cart+m)*g*sin_theta)/(l*denominator)
+                     (-m*l*sin_theta*dtheta**2 + m*g*cos_theta*sin_theta+F)/denominator,
+                     (-m*l*cos_theta*sin_theta*dtheta**2 + F*cos_theta+(m_cart+m)*g*sin_theta)/(l*denominator)
                      )
 
     if lut:
@@ -149,6 +149,7 @@ def create_ocp_formulation_without_opts(p_global, m, l, C, lut=True, use_p_globa
     # set model
     model = export_pendulum_ode_model(p_global, m, l, C, lut=lut, blazing=blazing)
     model.p_global = p_global
+    model.name += f'_p_global_{use_p_global}'
     ocp.model = model
 
     # dimensions
@@ -323,35 +324,16 @@ def main_mocp(lut=True, use_p_global=True):
 
 if __name__ == "__main__":
 
+    # OCP with lookuptable, comparing blazing, bspline, g_global
+    ref_lut, t_lin_lut_ref = main(use_cython=False, use_p_global=False, lut=True)
     res_lut, t_lin_lut = main(use_cython=False, use_p_global=True, lut=True)
 
+    ref_lut_no_blazing, t_lin_lut_no_blazing_ref = main(use_cython=False, use_p_global=False, lut=True, blazing=False)
+    res_lut_no_blazing, t_lin_lut_no_blazing = main(use_cython=False, use_p_global=True, lut=True, blazing=False)
 
-    # # no lookup table
-    # ref_nolut, _ = main(use_cython=False, use_p_global=False, lut=False)
-    # res_nolut, _ = main(use_cython=False, use_p_global=True, lut=False)
-
-    # np.testing.assert_almost_equal(ref_nolut, res_nolut)
-
-    # # MOCP with and without lookup table
-    # res_mocp_nolut_p, _ = main_mocp(use_p_global=False, lut=False)
-    # res_mocp_nolut_p_global, _ = main_mocp(use_p_global=True, lut=False)
-
-    # res_mocp_lut_p, _ = main_mocp(use_p_global=False, lut=True)
-    # res_mocp_lut_p_global, _ = main_mocp(use_p_global=True, lut=True)
-
-    # np.testing.assert_almost_equal(ref_nolut, res_mocp_nolut_p)
-    # np.testing.assert_almost_equal(ref_nolut, res_mocp_nolut_p_global)
-
-    # # OCP with lookuptable, comparing blazing, bspline, g_global
-    # ref_lut, t_lin_lut_ref = main(use_cython=False, use_p_global=False, lut=True)
-    # res_lut, t_lin_lut = main(use_cython=False, use_p_global=True, lut=True)
-
-    # ref_lut_no_blazing, t_lin_lut_no_blazing_ref = main(use_cython=False, use_p_global=False, lut=True, blazing=False)
-    # res_lut_no_blazing, t_lin_lut_no_blazing = main(use_cython=False, use_p_global=True, lut=True, blazing=False)
-
-    # print(f"\t\t bspline \t blazing")
-    # print(f"ref\t\t {t_lin_lut_no_blazing_ref:.5f} \t {t_lin_lut_ref:.5f}")
-    # print(f"p_global\t {t_lin_lut_no_blazing:.5f} \t {t_lin_lut:.5f}")
+    print(f"\t\t bspline \t blazing")
+    print(f"ref\t\t {t_lin_lut_no_blazing_ref:.5f} \t {t_lin_lut_ref:.5f}")
+    print(f"p_global\t {t_lin_lut_no_blazing:.5f} \t {t_lin_lut:.5f}")
 
     # np.testing.assert_almost_equal(ref_lut, res_lut)
     # np.testing.assert_almost_equal(ref_lut_no_blazing, res_lut_no_blazing)
@@ -362,7 +344,3 @@ if __name__ == "__main__":
     # np.testing.assert_almost_equal(ref_lut, ref_lut_no_blazing)
     # np.testing.assert_almost_equal(res_lut, res_lut_no_blazing)
 
-    # with np.testing.assert_raises(Exception):
-    #     np.testing.assert_almost_equal(ref_lut, ref_nolut)
-
-    # # main(use_cython=True) TODO: fix cython
