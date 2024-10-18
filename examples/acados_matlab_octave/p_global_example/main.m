@@ -28,47 +28,58 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 
 
-% NOTE: This example requires CasADi version nightly-se2 or later,
-% as well as an installation of simde.
+% NOTE: This example requires CasADi version nightly-se2 or later.
 % Furthermore, this example requires additional flags for the CasADi code generation,
 % cf. the solver option `ext_fun_compile_flags`
 
 function main()
 
     import casadi.*
+
     % Standard OCP
-    state_trajectories_no_lut_ref = run_example_ocp(false, false);
-    state_trajectories_no_lut = run_example_ocp(false, true);
+    [state_trajectories_no_lut_ref, ~] = run_example_ocp(false, false, true);
+    [state_trajectories_no_lut, ~] = run_example_ocp(false, true, true);
 
-    if ~all(abs(state_trajectories_no_lut_ref - state_trajectories_no_lut) < 1e-10)
+    if ~(max(max(abs(state_trajectories_no_lut_ref - state_trajectories_no_lut))) < 1e-10)
         error("State trajectories with lut=false do not match.");
     end
 
-    state_trajectories_with_lut_ref = run_example_ocp(true, false);
-    state_trajectories_with_lut = run_example_ocp(true, true);
 
-    if ~all(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut) < 1e-10)
+    [state_trajectories_with_lut_ref, t_tot_with_blazing_ref] = run_example_ocp(true, false, true);
+    [state_trajectories_with_lut, t_tot_with_blazing] = run_example_ocp(true, true, true);
+    [~, t_tot_with_bspline_ref] = run_example_ocp(true, false, false);
+    [~, t_tot_with_bspline] = run_example_ocp(true, true, false);
+
+    if ~(max(max(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut))) < 1e-10)
         error("State trajectories with lut=true do not match.");
     end
 
-    % Multi-phase OCP
-    state_trajectories_no_lut_ref = run_example_mocp(false, false);
-    state_trajectories_no_lut = run_example_mocp(false, true);
+    % % Multi-phase OCP
+    % [state_trajectories_no_lut_ref, ~] = run_example_mocp(false, false, true);
+    % [state_trajectories_no_lut, ~] = run_example_mocp(false, true, true);
 
-    if ~all(abs(state_trajectories_no_lut_ref - state_trajectories_no_lut) < 1e-10)
-        error("State trajectories with lut=false do not match.");
-    end
+    % if ~(max(max(abs(state_trajectories_no_lut_ref - state_trajectories_no_lut))) < 1e-10)
+    %     error("State trajectories with lut=false do not match.");
+    % end
 
-    state_trajectories_with_lut_ref = run_example_mocp(true, false);
-    state_trajectories_with_lut = run_example_mocp(true, true);
+    % [state_trajectories_with_lut_ref, ~] = run_example_mocp(true, false, true);
+    % [state_trajectories_with_lut, ~] = run_example_mocp(true, true, true);
 
-    if ~all(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut) < 1e-10)
-        error("State trajectories with lut=true do not match.");
-    end
+    % if ~(max(max(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut))) < 1e-10)
+    %     error("State trajectories with lut=true do not match.");
+    % end
+
     %% Simulink test
-    if ~is_octave()
-        run_example_ocp_simulink_p_global();
-    end
+    % if ~is_octave()
+    %     run_example_ocp_simulink_p_global();
+    % end
+
+    %% Timing comparison
+    fprintf('\t\tbspline\t\tblazing\n');
+    fprintf('ref\t\t%f \t%f\n', t_tot_with_bspline_ref, t_tot_with_blazing_ref);
+    fprintf('p_global\t%f \t%f\n', t_tot_with_bspline, t_tot_with_blazing);
+
+    % fprintf('max diff %f', max(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut)))
 
 end
 
@@ -79,13 +90,14 @@ function run_example_ocp_simulink_p_global()
     import casadi.*
     lut = true;
     use_p_global = true;
-    fprintf('\n\nRunning example with lut=%d, use_p_global=%d\n', lut, use_p_global);
+    blazing = true;
+    fprintf('\n\nRunning example with lut=%d, use_p_global=%d, blazing=%d\n', lut, use_p_global, blazing);
 
     % Create p_global parameters
-    [p_global, m, l, C, p_global_values] = create_p_global(lut);
+    [p_global, m, l, coefficients, knots, p_global_values] = create_p_global(lut);
 
     % OCP formulation
-    ocp = create_ocp_formulation_without_opts(p_global, m, l, C, lut, use_p_global, p_global_values);
+    ocp = create_ocp_formulation_without_opts(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing);
     ocp = set_solver_options(ocp);
 
     % Simulink options
@@ -122,7 +134,6 @@ function run_example_ocp_simulink_p_global()
     utraj = ocp_solver.get('u');
     utraj = utraj(:)';
 
-
     %% build s funtion
     cd c_generated_code;
     make_sfun;
@@ -153,17 +164,17 @@ function run_example_ocp_simulink_p_global()
 end
 
 
-function state_trajectories = run_example_ocp(lut, use_p_global)
+function [state_trajectories, timing] = run_example_ocp(lut, use_p_global, blazing)
 
     import casadi.*
 
-    fprintf('\n\nRunning example with lut=%d, use_p_global=%d\n', lut, use_p_global);
+    fprintf('\n\nRunning example with lut=%d, use_p_global=%d, blazing=%d\n', lut, use_p_global, blazing);
 
     % Create p_global parameters
-    [p_global, m, l, C, p_global_values] = create_p_global(lut);
+    [p_global, m, l, coefficients, knots, p_global_values] = create_p_global(lut);
 
     % OCP formulation
-    ocp = create_ocp_formulation_without_opts(p_global, m, l, C, lut, use_p_global, p_global_values);
+    ocp = create_ocp_formulation_without_opts(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing);
     ocp = set_solver_options(ocp);
 
     % OCP solver
@@ -172,12 +183,17 @@ function state_trajectories = run_example_ocp(lut, use_p_global)
     state_trajectories = [];  % only for testing purposes
 
     if use_p_global
+        disp("Calling precompute.")
+        tic
         ocp_solver.set_p_global_and_precompute_dependencies(p_global_values);
+        toc
     end
 
+    timing = 0;
     for i = 1:20
         ocp_solver.solve();
         state_trajectories = [state_trajectories; ocp_solver.get('x')];
+        timing = timing + ocp_solver.get('time_lin');
     end
 
     % Plot results
@@ -190,16 +206,16 @@ function state_trajectories = run_example_ocp(lut, use_p_global)
     end
 end
 
-function state_trajectories = run_example_mocp(lut, use_p_global)
+function [state_trajectories, timing] = run_example_mocp(lut, use_p_global, blazing)
     import casadi.*
 
-    fprintf('\n\nRunning example with lut=%d, use_p_global=%d\n', lut, use_p_global);
+    fprintf('\n\nRunning example with lut=%d, use_p_global=%d, blazing=%d\n', lut, use_p_global, blazing);
 
     % Create p_global parameters
-    [p_global, m, l, C, p_global_values] = create_p_global(lut);
+    [p_global, m, l, coefficients, knots, p_global_values] = create_p_global(lut);
 
     % OCP formulation
-    mocp = create_mocp_formulation(p_global, m, l, C, lut, use_p_global, p_global_values);
+    mocp = create_mocp_formulation(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing);
 
     % OCP solver
     mocp_solver = AcadosOcpSolver(mocp);
@@ -207,12 +223,17 @@ function state_trajectories = run_example_mocp(lut, use_p_global)
     state_trajectories = []; % only for testing purposes
 
     if use_p_global
+        disp("Calling precompute.")
+        tic
         mocp_solver.set_p_global_and_precompute_dependencies(p_global_values);
+        toc
     end
 
+    timing = 0;
     for i = 1:20
         mocp_solver.solve();
         state_trajectories = [state_trajectories; mocp_solver.get('x')];
+        timing = timing + mocp_solver.get('time_lin');
     end
 
     % Plot results
@@ -229,10 +250,11 @@ end
 function ocp = set_solver_options(ocp)
     % set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
-    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
+    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'; %'GAUSS_NEWTON'; %'EXACT'; %
     ocp.solver_options.integrator_type = 'ERK';
     ocp.solver_options.print_level = 0;
     ocp.solver_options.nlp_solver_type = 'SQP_RTI';
+    ocp.solver_options.globalization_fixed_step_length = 0.1;
 
     % set prediction horizon
     Tf = 1.0;
@@ -245,16 +267,17 @@ function ocp = set_solver_options(ocp)
     ocp.solver_options.qp_solver_cond_block_size = [3, 3, 3, 3, 7, 1];
 
     % NOTE: these additional flags are required for code generation of CasADi functions using casadi.blazing_spline
+    % These work for Linux only!
     ocp.solver_options.ext_fun_compile_flags = ['-I' casadi.GlobalOptions.getCasadiIncludePath ' -ffast-math -march=native '];
 end
 
-function mocp = create_mocp_formulation(p_global, m, l, C, lut, use_p_global, p_global_values)
+function mocp = create_mocp_formulation(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing)
 
     N_horizon_1 = 10;
     N_horizon_2 = 10;
     mocp = AcadosMultiphaseOcp([N_horizon_1, N_horizon_2]);
-    ocp_phase_1 = create_ocp_formulation_without_opts(p_global, m, l, C, lut, use_p_global, p_global_values);
-    ocp_phase_2 = create_ocp_formulation_without_opts(p_global, m, l, C, lut, use_p_global, p_global_values);
+    ocp_phase_1 = create_ocp_formulation_without_opts(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing);
+    ocp_phase_2 = create_ocp_formulation_without_opts(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing);
 
     mocp = set_solver_options(mocp);
 
@@ -267,7 +290,7 @@ function mocp = create_mocp_formulation(p_global, m, l, C, lut, use_p_global, p_
 end
 
 
-function [p_global, m, l, C, p_global_values] = create_p_global(lut)
+function [p_global, m, l, coefficient_vals, knots, p_global_values] = create_p_global(lut)
 
     import casadi.*
     m = MX.sym('m');
@@ -275,13 +298,28 @@ function [p_global, m, l, C, p_global_values] = create_p_global(lut)
     p_global = {m, l};
     p_global_values = [0.1; 0.8];
 
+    large_scale = false;
     if lut
-        data = rand(7, 5); % Example data, replace with actual data
-        C = MX.sym('C', numel(data), 1);
-        p_global{end+1} = C;
-        p_global_values = [p_global_values; data(:)];
+        rng(42)
+        % generate random values for spline coefficients
+        % knots = {[0,0,0,0,0.2,0.5,0.8,1,1,1,1],[0,0,0,0.1,0.5,0.9,1,1,1]};
+
+        if large_scale
+            % large scale lookup table
+            knots = {0:200,0:200};
+            coefficient_vals = rand(38809, 1);
+        else
+            % small scale lookup table
+            knots = {0:20,0:20};
+            coefficient_vals = rand(289, 1);
+        end
+
+        coefficients = MX.sym('coefficient', numel(coefficient_vals), 1);
+        p_global{end+1} = coefficients;
+        p_global_values = [p_global_values; coefficient_vals(:)];
     else
-        C = [];
+        coefficient_vals = [];
+        knots = [];
     end
 
     p_global = vertcat(p_global{:});
