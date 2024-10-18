@@ -335,12 +335,9 @@ if __name__ == "__main__":
     print(f"ref\t\t {t_lin_lut_no_blazing_ref:.5f} \t {t_lin_lut_ref:.5f}")
     print(f"p_global\t {t_lin_lut_no_blazing:.5f} \t {t_lin_lut:.5f}")
 
-    # np.testing.assert_almost_equal(ref_lut, res_lut)
-    # np.testing.assert_almost_equal(ref_lut_no_blazing, res_lut_no_blazing)
+    np.testing.assert_almost_equal(ref_lut, res_lut)
+    np.testing.assert_almost_equal(ref_lut_no_blazing, res_lut_no_blazing)
 
-    # np.testing.assert_almost_equal(ref_lut, res_mocp_lut_p)
-    # np.testing.assert_almost_equal(ref_lut, res_mocp_lut_p_global)
-
-    # np.testing.assert_almost_equal(ref_lut, ref_lut_no_blazing)
-    # np.testing.assert_almost_equal(res_lut, res_lut_no_blazing)
+    np.testing.assert_almost_equal(ref_lut, ref_lut_no_blazing)
+    np.testing.assert_almost_equal(res_lut, res_lut_no_blazing)
 

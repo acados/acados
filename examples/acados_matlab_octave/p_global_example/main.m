@@ -41,7 +41,7 @@ function main()
     [state_trajectories_with_blazing_ref, t_tot_with_blazing_ref] = run_example_ocp(true, false, true);
     [state_trajectories_with_blazing, t_tot_with_blazing] = run_example_ocp(true, true, true);
     [state_trajectories_without_blazing_ref, t_tot_with_bspline_ref] = run_example_ocp(true, false, false);
-    [state_trajectories_without_blazing_ref, t_tot_with_bspline] = run_example_ocp(true, true, false);
+    [state_trajectories_without_blazing, t_tot_with_bspline] = run_example_ocp(true, true, false);
 
     %% Timing comparison
     fprintf('\t\tbspline\t\tblazing\n');
@@ -49,7 +49,9 @@ function main()
     fprintf('p_global\t%f \t%f\n', t_tot_with_bspline, t_tot_with_blazing);
 
     %%
-    fprintf('max diff %f\n', max(max(abs(state_trajectories_with_blazing_ref - state_trajectories_with_blazing))))
+    fprintf('max diff blazing with/without p_global %f\n', max(max(abs(state_trajectories_with_blazing_ref - state_trajectories_with_blazing))))
+    fprintf('max diff blazing vs. bspline %f\n', max(max(abs(state_trajectories_with_blazing_ref - state_trajectories_without_blazing_ref))))
+
 
 end
 
