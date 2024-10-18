@@ -109,6 +109,7 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.ext_fun_compile_flags = '-O2';
 
             obj.opts_struct.output_dir = fullfile(pwd, 'build');
+            obj.opts_struct.json_file = 'acados_ocp_nlp.json';
             % if ismac()
             %     obj.opts_struct.output_dir = '/usr/local/lib';
             % end
@@ -247,6 +248,8 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.store_iterates = value;
             elseif (strcmp(field, 'ext_fun_compile_flags'))
                 obj.opts_struct.ext_fun_compile_flags = value;
+            elseif (strcmp(field, 'json_file'))
+                obj.opts_struct.json_file = value;
             elseif (strcmp(field, 'compile_mex'))
                 disp(['Option compile_mex is not supported anymore,'...
                     'please use compile_interface instead or dont set the option.', ...
