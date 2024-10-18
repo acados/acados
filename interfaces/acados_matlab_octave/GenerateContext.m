@@ -92,7 +92,7 @@ classdef GenerateContext < handle
 
                 pools = {};
                 for i = 1:numel(symbols)
-                    name_e = [name, '|', num2str(i)];
+                    name_e = [name, '|', num2str(i-1)];
                     pools{end+1} = MX(DM.zeros(symbols{i}.sparsity()), name_e);
                     obj.pool_names{end+1} = name_e;
                 end

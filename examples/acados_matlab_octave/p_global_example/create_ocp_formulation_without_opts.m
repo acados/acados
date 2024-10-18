@@ -58,7 +58,7 @@ end
 
 function model = export_pendulum_ode_model(p_global, m, l, coefficients, knots, lut, blazing)
     import casadi.*
-    model_name = 'pendulum';
+    model_name = ['pendulum_blazing_' mat2str(blazing)];
 
     % Constants
     m_cart = 1.0; % mass of the cart [kg]

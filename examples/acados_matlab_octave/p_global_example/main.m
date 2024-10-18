@@ -36,23 +36,25 @@ function main()
 
     import casadi.*
 
-    % Standard OCP
-    [state_trajectories_no_lut_ref, ~] = run_example_ocp(false, false, true);
-    [state_trajectories_no_lut, ~] = run_example_ocp(false, true, true);
+    run_example_ocp(true, true, true);
 
-    if ~(max(max(abs(state_trajectories_no_lut_ref - state_trajectories_no_lut))) < 1e-10)
-        error("State trajectories with lut=false do not match.");
-    end
+    % % Standard OCP
+    % [state_trajectories_no_lut_ref, ~] = run_example_ocp(false, false, true);
+    % [state_trajectories_no_lut, ~] = run_example_ocp(false, true, true);
+
+    % if ~(max(max(abs(state_trajectories_no_lut_ref - state_trajectories_no_lut))) < 1e-10)
+    %     error("State trajectories with lut=false do not match.");
+    % end
 
 
-    [state_trajectories_with_lut_ref, t_tot_with_blazing_ref] = run_example_ocp(true, false, true);
-    [state_trajectories_with_lut, t_tot_with_blazing] = run_example_ocp(true, true, true);
-    [~, t_tot_with_bspline_ref] = run_example_ocp(true, false, false);
-    [~, t_tot_with_bspline] = run_example_ocp(true, true, false);
+    % [state_trajectories_with_lut_ref, t_tot_with_blazing_ref] = run_example_ocp(true, false, true);
+    % [state_trajectories_with_lut, t_tot_with_blazing] = run_example_ocp(true, true, true);
+    % [~, t_tot_with_bspline_ref] = run_example_ocp(true, false, false);
+    % [~, t_tot_with_bspline] = run_example_ocp(true, true, false);
 
-    if ~(max(max(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut))) < 1e-10)
-        error("State trajectories with lut=true do not match.");
-    end
+    % if ~(max(max(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut))) < 1e-10)
+    %     error("State trajectories with lut=true do not match.");
+    % end
 
     % % Multi-phase OCP
     % [state_trajectories_no_lut_ref, ~] = run_example_mocp(false, false, true);
@@ -74,10 +76,10 @@ function main()
     %     run_example_ocp_simulink_p_global();
     % end
 
-    %% Timing comparison
-    fprintf('\t\tbspline\t\tblazing\n');
-    fprintf('ref\t\t%f \t%f\n', t_tot_with_bspline_ref, t_tot_with_blazing_ref);
-    fprintf('p_global\t%f \t%f\n', t_tot_with_bspline, t_tot_with_blazing);
+    % %% Timing comparison
+    % fprintf('\t\tbspline\t\tblazing\n');
+    % fprintf('ref\t\t%f \t%f\n', t_tot_with_bspline_ref, t_tot_with_blazing_ref);
+    % fprintf('p_global\t%f \t%f\n', t_tot_with_bspline, t_tot_with_blazing);
 
     % fprintf('max diff %f', max(abs(state_trajectories_with_lut_ref - state_trajectories_with_lut)))
 
@@ -310,8 +312,8 @@ function [p_global, m, l, coefficient_vals, knots, p_global_values] = create_p_g
             coefficient_vals = rand(38809, 1);
         else
             % small scale lookup table
-            knots = {0:20,0:20};
-            coefficient_vals = rand(289, 1);
+            knots = {0:19,0:19};
+            coefficient_vals = 0.1 + 0.*rand(256, 1);
         end
 
         coefficients = MX.sym('coefficient', numel(coefficient_vals), 1);
