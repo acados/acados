@@ -98,7 +98,8 @@ ocp_solver.solve();
 total_time = toc;
 
 % check status
-if ocp_solver.get('status') ~= 0
+status = ocp_solver.get('status');
+if status ~= 0
     warning(['solver failed with status ',num2str(status)]);
 end
 
