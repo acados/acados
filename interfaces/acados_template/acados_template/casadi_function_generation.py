@@ -55,6 +55,7 @@ class GenerateContext:
     def __init__(self, p_global: Union[ca.SX, ca.MX], problem_name: str, opts=None):
         self.p_global = p_global
         self.problem_name = problem_name
+        self.global_data_sym = []
 
         self.pool_names = []
         self.p_global_expressions = []
