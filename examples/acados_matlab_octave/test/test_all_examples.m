@@ -41,7 +41,7 @@ targets = {
     '../getting_started/minimal_example_sim.m';
     '../getting_started/minimal_example_ocp.m';
     '../linear_mass_spring_model/example_ocp.m';
-    '../linear_mpc/example_closed_loop.m';
+    '../linear_mpc/main.m';
     '../lorentz/example_mhe.m';
     '../masses_chain_model/example_ocp.m';
     '../pendulum_dae/example_closed_loop.m';
