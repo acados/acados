@@ -849,9 +849,9 @@ class AcadosOcpSolver:
         return
 
 
-    def store_iterate(self, filename: str = '', overwrite=False, verbose=True):
+    def store_iterate(self, filename: str = '', overwrite: bool = False, verbose: bool = True):
         """
-        Stores the current iterate of the ocp solver in a json file.
+        Stores the current iterate of the OCP solver in a json file.
         Note: This does not contain the iterate of the integrators, and the parameters.
 
             :param filename: if not set, use f'{self.name}_iterate.json'
@@ -891,7 +891,6 @@ class AcadosOcpSolver:
 
         if verbose:
             print("stored current iterate in ", os.path.join(os.getcwd(), filename))
-
 
 
     def dump_last_qp_to_json(self, filename: str = '', overwrite=False):
@@ -934,7 +933,7 @@ class AcadosOcpSolver:
 
 
 
-    def load_iterate(self, filename:str, verbose: bool=True):
+    def load_iterate(self, filename:str, verbose: bool = True):
         """
         Loads the iterate stored in json file with filename into the ocp solver.
         Note: This does not contain the iterate of the integrators, and the parameters.
@@ -950,6 +949,36 @@ class AcadosOcpSolver:
         for key in solution.keys():
             (field, stage) = key.split('_')
             self.set(int(stage), field, np.array(solution[key]))
+
+
+    def store_iterate_to_obj(self) -> AcadosOcpIterate:
+        """
+        Returns the current iterate of the OCP solver as an AcadosOcpIterate.
+        """
+        d = {}
+        for field in ["x", "u", "z", "sl", "su", "pi", "lam"]:
+            traj = []
+            for n in range(self.N+1):
+                if n < self.N or not (field in ["u", "pi", "z"]):
+                    traj.append(self.get(n, field))
+
+            d[f"{field}_traj"] = traj
+
+        return AcadosOcpIterate(**d)
+
+
+    def load_iterate_from_obj(self, iterate: AcadosOcpIterate):
+        """
+        Loads the provided iterate into the OCP solver.
+        Note: The iterate object does not contain the the parameters.
+        """
+
+        for key, traj in iterate.__dict__.items():
+            field = key.replace('_traj', '')
+
+            for n, val in enumerate(traj):
+                self.set(n, field, val)
+
 
     def get_status(self) -> int:
         """
