@@ -455,9 +455,9 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
         "store \& load": timings_store_load,
     }
 
-    print("Median timings [ms]")
+    print("\nMedian timings [ms]")
     for key, value in timing_results.items():
-        print(f"{key}: \t {1000*np.median(value)}")
+        print(f"{key}: {1000*np.median(value):.3f}")
 
     u_opt = np.vstack(u_opt)
     sens_u = np.vstack(sens_u)
