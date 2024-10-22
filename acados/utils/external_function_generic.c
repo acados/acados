@@ -66,7 +66,6 @@ void external_function_set_fun_workspace_if_defined(external_function_generic *f
 
 
 
-
 /************************************************
  * generic external parametric function
  ************************************************/
@@ -109,6 +108,12 @@ acados_size_t external_function_param_generic_calculate_size(external_function_p
 
     // copy options
     external_function_opts_copy(opts_, &fun->opts);
+
+    if (opts_->with_global_data)
+    {
+        printf("\nexternal_function_param_generic: option with_global_data not implemented!!!\n");
+        exit(1);
+    }
 
     acados_size_t size = 0;
 
@@ -847,6 +852,12 @@ acados_size_t external_function_casadi_calculate_size(external_function_casadi *
     // copy options
     external_function_opts_copy(opts_, &fun->opts);
 
+    if (opts_->with_global_data)
+    {
+        printf("\nexternal_function_casadi: option with_global_data not implemented!!!\n");
+        exit(1);
+    }
+
     acados_size_t size = 0;
 
     // double pointers
@@ -1056,16 +1067,16 @@ acados_size_t external_function_param_casadi_calculate_size(external_function_pa
     // copy options
     external_function_opts_copy(opts_, &fun->opts);
 
+    if (opts_->with_global_data)
+    {
+        printf("\nexternal_function_param_casadi: option with_global_data not implemented!!!\n");
+        exit(1);
+    }
+
     // set number of parameters
     fun->np = np;
-    // parameter indices
+    // parameter is last input
     fun->idx_in_p = fun->in_num-1;
-    fun->idx_in_p_global = -1;
-    if (fun->opts.with_global_data)
-    {
-        fun->idx_in_p = fun->in_num-1;
-        fun->idx_in_p_global = fun->in_num-2;
-    }
 
     // compute workspace sizes
     fun->casadi_work(&fun->args_num, &fun->res_num, &fun->int_work_size, &fun->float_work_size);
@@ -1267,6 +1278,15 @@ static void external_function_external_param_generic_set_param_pointer(void *sel
     return;
 }
 
+static void external_function_external_param_generic_set_global_data_pointer(void *self, double *global_data)
+{
+    // external_function_external_param_generic *fun = self;
+    printf("external_function_external_param_generic_set_global_data_pointer: not implemented\n");
+    exit(1);
+
+    return;
+}
+
 
 acados_size_t external_function_external_param_generic_calculate_size(external_function_external_param_generic *fun, external_function_opts *opts_)
 {
@@ -1277,9 +1297,11 @@ acados_size_t external_function_external_param_generic_calculate_size(external_f
 
     // set param function
     fun->set_param_pointer = &external_function_external_param_generic_set_param_pointer;
+    fun->set_global_data_pointer = &external_function_external_param_generic_set_global_data_pointer;
 
-    // set number of parameters
+    // set flags
     fun->param_mem_is_set = false;
+    // fun->global_data_ptr_is_set = false;
 
     // copy options
     external_function_opts_copy(opts_, &fun->opts);
@@ -1349,7 +1371,7 @@ static void external_function_external_param_casadi_set_param_pointer(void *self
 
     if (!fun->args_dense[fun->idx_in_p])
     {
-        printf("\external_function_external_param_casadi_set_param_pointer: sparse parameter not supported!\n");
+        printf("\nexternal_function_external_param_casadi_set_param_pointer: sparse parameter not supported!\n");
         exit(1);
     }
     fun->args[fun->idx_in_p] = p;
@@ -1357,6 +1379,27 @@ static void external_function_external_param_casadi_set_param_pointer(void *self
 
     return;
 }
+
+static void external_function_external_param_casadi_set_global_data_pointer(void *self, double *global_data)
+{
+    external_function_external_param_casadi *fun = self;
+
+    if (!fun->args_dense[fun->idx_in_global_data])
+    {
+        printf("\nexternal_function_external_param_casadi_set_global_data_pointer: sparse global_data not supported!\n");
+        exit(1);
+    }
+    if (!fun->opts.with_global_data)
+    {
+        printf("\nexternal_function_external_param_casadi_set_global_data_pointer: not supported, as option opts.with_global_data is false.\n");
+        exit(1);
+    }
+    fun->args[fun->idx_in_global_data] = global_data;
+    fun->global_data_ptr_is_set = true;
+
+    return;
+}
+
 
 
 acados_size_t external_function_external_param_casadi_calculate_size(external_function_external_param_casadi *fun, external_function_opts *opts_)
@@ -1370,6 +1413,7 @@ acados_size_t external_function_external_param_casadi_calculate_size(external_fu
 
     // set param function
     fun->set_param_pointer = &external_function_external_param_casadi_set_param_pointer;
+    fun->set_global_data_pointer = &external_function_external_param_casadi_set_global_data_pointer;
 
     fun->casadi_work(&fun->args_num, &fun->res_num, &fun->int_work_size, &fun->float_work_size);
 
@@ -1379,24 +1423,23 @@ acados_size_t external_function_external_param_casadi_calculate_size(external_fu
     // copy options
     external_function_opts_copy(opts_, &fun->opts);
 
-    // idx_in_p_global
+    // parameter indices
     if (fun->opts.with_global_data)
     {
-        fun->idx_in_p = fun->in_num-1;
-        fun->idx_in_p_global = fun->in_num-2;
+        fun->idx_in_p = fun->in_num-2;
+        fun->idx_in_global_data = fun->in_num-1;
     }
     else
     {
         fun->idx_in_p = fun->in_num-1;
-        fun->idx_in_p_global = -1;
+        fun->idx_in_global_data = -1;
     }
-
 
     // args
     fun->args_size_tot = 0;
     for (ii = 0; ii < fun->args_num; ii++)
     {
-        if (ii != fun->idx_in_p && ii != fun->idx_in_p_global)  // skip parameter argument
+        if (ii != fun->idx_in_p && ii != fun->idx_in_global_data)  // skip parameter argument
         {
             fun->args_size_tot += casadi_nnz(fun->casadi_sparsity_in(ii));
         }
@@ -1482,7 +1525,7 @@ void external_function_external_param_casadi_assign(external_function_external_p
     // args
     for (ii = 0; ii < fun->args_num; ii++)
     {
-        if (ii != fun->idx_in_p && ii != fun->idx_in_p_global)  // skip parameter argument
+        if (ii != fun->idx_in_p && ii != fun->idx_in_global_data)  // skip parameter argument
         {
             assign_and_advance_double(fun->args_size[ii], &fun->args[ii], &c_ptr);
         }
@@ -1498,6 +1541,7 @@ void external_function_external_param_casadi_assign(external_function_external_p
     }
 
     fun->param_mem_is_set = false;
+    fun->global_data_ptr_is_set = false;
 
     assert((char *) raw_memory + external_function_external_param_casadi_calculate_size(fun, &fun->opts) >= c_ptr);
 
@@ -1534,11 +1578,16 @@ void external_function_external_param_casadi_wrapper(void *self, ext_fun_arg_t *
         printf("external_function_external_param_casadi_wrapper: attempting to evaluate before parameter memory is set. Exiting.\n");
         exit(1);
     }
+    if (!fun->global_data_ptr_is_set && fun->opts.with_global_data)
+    {
+        printf("external_function_external_param_casadi_wrapper: attempting to evaluate before global data pointer is set. Exiting.\n");
+        exit(1);
+    }
     // in as args
     for (ii = 0; ii < fun->in_num; ii++)
     {
         // skip parameter arguments
-        if (ii != fun->idx_in_p && ii != fun->idx_in_p_global)
+        if (ii != fun->idx_in_p && ii != fun->idx_in_global_data)
             status = d_cvt_ext_fun_arg_to_casadi(type_in[ii], in[ii], (double *) fun->args[ii],
                                     (int *) fun->casadi_sparsity_in(ii), fun->args_dense[ii]);
         if (status)
