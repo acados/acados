@@ -131,6 +131,7 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, 
     ocp.solver_options.ext_fun_compile_flags = opts_struct.ext_fun_compile_flags;
 
     ocp.solver_options.time_steps = opts_struct.time_steps;
+    ocp.solver_options.shooting_nodes = opts_struct.shooting_nodes;
     ocp.solver_options.print_level = opts_struct.print_level;
 
     % compile mex interface (without model dependency)
