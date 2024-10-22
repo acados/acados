@@ -2,7 +2,9 @@
 
 This example solves a generic nonlinear program of the form:
 ```math
-\min_x\quad f(x, p)\\
+\min_x\quad f(x, p)
+```
+```math
 \hspace{1.7cm}\text{s.t.}\quad g_{lb} \leq g(x, p) \leq g_{ub}
 ```
 where $p$ is a vector of parameters. This can be done with the following:
@@ -17,7 +19,9 @@ Note that you might need a more careful initialization compared to, e.g., CasADi
 
 The NLP solved in this example is:
 ```math
-\hspace{1.7cm}\min_{x}\quad p_1(100(x_2-x_1^2)^2+(x_1-1)^2)\\
+\hspace{1.7cm}\min_{x}\quad p_1(100(x_2-x_1^2)^2+(x_1-1)^2)
+```
+```math
 \text{s.t.}\quad x_1^2+x_2^2-2p_2=0
 ```
 More details and the original code can be found in [this forum post](https://discourse.acados.org/t/solving-simple-nlp-problem-exploit-blasfeo-performance/271).
