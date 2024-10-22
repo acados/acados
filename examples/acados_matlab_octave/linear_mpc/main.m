@@ -88,7 +88,7 @@ ocp.constraints.x0 = zeros(nx,1);
 % state constraints on the first, second and sixth state
 % (not applied to the initial state)
 ocp.constraints.idxbx = [0 1 5];                % zero-based indices
-infty = 1e6;                                    % to approximate one-sided constraints
+infty = get_acados_infty();                     % to approximate one-sided constraints
 ocp.constraints.lbx = [-pi/6; -pi/6; -1];       % state lower bounds
 ocp.constraints.ubx = [ pi/6;  pi/6; infty];    % state upper bounds
 
