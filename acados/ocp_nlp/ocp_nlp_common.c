@@ -296,6 +296,9 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
         dims->np[i] = 0;
     // TODO initialize dims to zero by default also in modules !!!!!!!
 
+    dims->nglobal_data = 0;
+    dims->np_global = 0;
+
     // assert
     assert((char *) raw_memory + ocp_nlp_dims_calculate_size_self(N) >= c_ptr);
 
