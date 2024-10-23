@@ -59,7 +59,6 @@ class GenerateContext:
 
         self.problem_name = problem_name
 
-        self.pool_names = []
         self.opts = opts
         self.casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
         self.list_funname_dir_pairs = []  # list of (function_name, output_dir)
@@ -97,7 +96,6 @@ class GenerateContext:
             except Exception as e:
                 print(f"\nError while creating function {name} with inputs {inputs} and outputs {outputs}")
                 print(e)
-                breakpoint()
                 raise e
 
             # setup and change directory
@@ -105,7 +103,6 @@ class GenerateContext:
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
             os.chdir(output_dir)
-
 
             # generate function
             try:
@@ -137,43 +134,40 @@ class GenerateContext:
             outputs = ca.cse(outputs)
             self.__store_function_definition(name, inputs, outputs, output_dir)
 
+    def __setup_p_global_precompute_fun(self):
+        precompute_pairs = []
+        for i in range(len(self.function_input_output_pairs)):
+            outputs = self.function_input_output_pairs[i][1]
+            # TODO: try to replace compare to extract_parametric expressions in previously detected param_expr
+            [outputs_ret, symbols, param_expr] = ca.extract_parametric(outputs, self.p_global)
+            # replace output expression with ones that use extracted expressions
+            self.function_input_output_pairs[i][1] = outputs_ret
+            # store (new input symbols, extracted expressions)
+            for j in range(len(symbols)):
+                precompute_pairs.append([symbols[j], param_expr[j]])
+
+        global_data_sym_list = [input for input, _ in precompute_pairs]
+        self.global_data_sym = ca.vertcat(*global_data_sym_list)
+        self.global_data_expr = ca.cse(ca.vertcat(*[output for _, output in precompute_pairs]))
+
+        # add global data as input to all functions
+        for i in range(len(self.function_input_output_pairs)):
+            self.function_input_output_pairs[i][0].append(self.global_data_sym)
+
+        output_dir = os.path.abspath(self.opts["code_export_directory"])
+        fun_name = f'{self.problem_name}_p_global_precompute_fun'
+        self.__store_function_definition(fun_name, [self.p_global], [self.global_data_expr], output_dir)
+
+        assert casadi_length(self.global_data_expr) == casadi_length(self.global_data_sym), f"Length mismatch: {casadi_length(self.global_data_expr)} != {casadi_length(self.global_data_sym)}"
+
     def finalize(self):
-        # setup p_global_precompute_fun
         if self.p_global is not None:
-            precompute_pairs = []
-            for i in range(len(self.function_input_output_pairs)):
-                outputs = self.function_input_output_pairs[i][1]
-                # TODO: try to replace compare to extract_parametric expressions in previously detected param_expr
-                [outputs_ret, symbols, param_expr] = ca.extract_parametric(outputs, self.p_global)
-                # replace output expression with ones that use extracted expressions
-                self.function_input_output_pairs[i][1] = outputs_ret
-                # store (new input symbols, extracted expressions)
-                for j in range(len(symbols)):
-                    precompute_pairs.append([symbols[j], param_expr[j]])
-
-            global_data_sym_list = [input for input, _ in precompute_pairs]
-            self.global_data_sym = ca.vertcat(*global_data_sym_list)
-            self.global_data_expr = ca.cse(ca.vertcat(*[output for _, output in precompute_pairs]))
-
-            # add global data as input to all functions
-            for i in range(len(self.function_input_output_pairs)):
-                self.function_input_output_pairs[i][0].append(self.global_data_sym)
-
-            output_dir = os.path.abspath(self.opts["code_export_directory"])
-            fun_name = f'{self.problem_name}_p_global_precompute_fun'
-            # fun = ca.Function(fun_name, [self.p_global], y, ['p_global'], self.pool_names)
-            self.__store_function_definition(fun_name, [self.p_global], [self.global_data_expr], output_dir)
-
-            assert casadi_length(self.global_data_expr) == casadi_length(self.global_data_sym), f"Length mismatch: {casadi_length(self.global_data_expr)} != {casadi_length(self.global_data_sym)}"
-            print(f"{self.global_data_expr =}")
-
-        else:
-            # TODO: make sure empty stuff is properly handled
-            self.n_p_global = 0
+            self.__setup_p_global_precompute_fun()
 
         # generate all functions
         self.__generate_functions()
         return
+
     def get_n_global_data(self):
         return casadi_length(self.global_data_sym)
 
