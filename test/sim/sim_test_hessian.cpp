@@ -505,6 +505,8 @@ TEST_CASE("pendulum_hessians", "[integrators]")
             /* sim solver  */
                 sim_solver = sim_solver_create(config, dims, opts, in);
 
+                sim_precompute(sim_solver, in, out);
+
             /* print */
                 std::cout << "\n---> sim_test_hessian " << solver;
                 std::cout << " OPTS: num_steps = " << opts->num_steps;
