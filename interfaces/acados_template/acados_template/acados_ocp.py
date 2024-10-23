@@ -114,8 +114,6 @@ class AcadosOcp:
         self.__problem_class = 'OCP'
         self.__json_file = "acados_ocp.json"
 
-        self.__casadi_pool_names = None
-
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
 
@@ -1031,10 +1029,9 @@ class AcadosOcp:
 
         context = self._setup_code_generation_context(context)
         context.finalize()
-        self.__casadi_pool_names = context.pool_names
         self.__external_function_files_model = context.get_external_function_file_list(ocp_specific=False)
         self.__external_function_files_ocp = context.get_external_function_file_list(ocp_specific=True)
-        self.dims.n_global_data = casadi_length(context.global_data_sym)
+        self.dims.n_global_data = context.get_n_global_data()
 
         return context
 
