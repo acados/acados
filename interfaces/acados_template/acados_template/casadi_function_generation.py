@@ -80,13 +80,6 @@ class GenerateContext:
         self.__casadi_fun_opts = casadi_fun_opts
 
 
-    def __store_function_definition(self, name: str,
-                                    inputs: List[Union[ca.MX, ca.SX]],
-                                    outputs: List[Union[ca.MX, ca.SX]],
-                                    output_dir: str):
-        self.list_funname_dir_pairs.append((name, output_dir))
-        self.function_input_output_pairs.append([inputs, outputs])
-
     def __generate_functions(self):
         for (name, output_dir), (inputs, outputs) in zip(self.list_funname_dir_pairs, self.function_input_output_pairs):
             # create function
@@ -126,18 +119,13 @@ class GenerateContext:
                                 inputs: List[Union[ca.MX, ca.SX]],
                                 outputs: List[Union[ca.MX, ca.SX]],
                                 output_dir: str):
-
-        if self.p_global is None:
-            # normal behaviour (p_global is empty)
-            self.__store_function_definition(name, inputs, outputs, output_dir)
-        else:
-            outputs = ca.cse(outputs)
-            self.__store_function_definition(name, inputs, outputs, output_dir)
+        self.list_funname_dir_pairs.append((name, output_dir))
+        self.function_input_output_pairs.append([inputs, outputs])
 
     def __setup_p_global_precompute_fun(self):
         precompute_pairs = []
         for i in range(len(self.function_input_output_pairs)):
-            outputs = self.function_input_output_pairs[i][1]
+            outputs = ca.cse(self.function_input_output_pairs[i][1])
             # TODO: try to replace compare to extract_parametric expressions in previously detected param_expr
             [outputs_ret, symbols, param_expr] = ca.extract_parametric(outputs, self.p_global)
             # replace output expression with ones that use extracted expressions
@@ -156,7 +144,7 @@ class GenerateContext:
 
         output_dir = os.path.abspath(self.opts["code_export_directory"])
         fun_name = f'{self.problem_name}_p_global_precompute_fun'
-        self.__store_function_definition(fun_name, [self.p_global], [self.global_data_expr], output_dir)
+        self.add_function_definition(fun_name, [self.p_global], [self.global_data_expr], output_dir)
 
         assert casadi_length(self.global_data_expr) == casadi_length(self.global_data_sym), f"Length mismatch: {casadi_length(self.global_data_expr)} != {casadi_length(self.global_data_sym)}"
 
