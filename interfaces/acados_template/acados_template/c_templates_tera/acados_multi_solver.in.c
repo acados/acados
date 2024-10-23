@@ -323,6 +323,9 @@ ocp_nlp_dims* {{ name }}_acados_create_setup_dimensions({{ name }}_solver_capsul
     ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "ns", ns);
     ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "np", np);
 
+    ocp_nlp_dims_set_global(nlp_config, nlp_dims, "np_global", {{ dims_0.np_global }});
+    ocp_nlp_dims_set_global(nlp_config, nlp_dims, "n_global_data", {{ dims_0.n_global_data }});
+
     for (int i = 0; i <= N; i++)
     {
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nbx", &nbx[i]);
@@ -445,6 +448,8 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
     capsule->p_global_precompute_fun.casadi_n_in = &{{ name }}_p_global_precompute_fun_n_in;
     capsule->p_global_precompute_fun.casadi_n_out = &{{ name }}_p_global_precompute_fun_n_out;
     external_function_casadi_create(&capsule->p_global_precompute_fun, &ext_fun_opts);
+
+    ext_fun_opts.with_global_data = true;
 {%- endif %}
 
     ext_fun_opts.external_workspace = true;
@@ -2636,10 +2641,10 @@ int {{ name }}_acados_update_params_sparse({{ name }}_solver_capsule * capsule, 
 
 int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver_capsule* capsule, double* data, int data_len)
 {
-{% if phases_dims[0].np_global > 0 %}
+{% if dims_0.np_global > 0 %}
     external_function_casadi* fun = &capsule->p_global_precompute_fun;
     fun->args[0] = data;
-    int np_global = {{ phases_dims[0].np_global }};
+    int np_global = {{ dims_0.np_global }};
 
     if (data_len != np_global)
     {
@@ -2647,12 +2652,8 @@ int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver
         exit(1);
     }
 
-{%- set n_pools = casadi_pool_names | length %}
-{%- for ip in range(end=n_pools) %}
-{%- set pool_name = casadi_pool_names[ip] %}
-{%- set fun_name_split = pool_name | split(pat='|') %}
-    fun->res[{{ ip }}] = {{ fun_name_split[0] }}_get_pool_double("{{ pool_name }}");
-{%- endfor %}
+    ocp_nlp_in *in = {{ name }}_acados_get_nlp_in(capsule);
+    fun->res[0] = in->global_data;
 
     fun->casadi_fun((const double **) fun->args, fun->res, fun->int_work, fun->float_work, NULL);
     return 1;
