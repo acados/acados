@@ -1205,7 +1205,7 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
         }
         if (status)
         {
-            printf("\nexternal_function_casadi_wrapper: Unknown external function argument type %d for output %d\n\n", type_out[ii], ii);
+            printf("\nexternal_function_param_casadi_wrapper: Unknown external function argument type %d for output %d\n\n", type_out[ii], ii);
             exit(1);
         }
     }
@@ -1595,7 +1595,7 @@ void external_function_external_param_casadi_wrapper(void *self, ext_fun_arg_t *
                                     (int *) fun->casadi_sparsity_in(ii), fun->args_dense[ii]);
         if (status)
         {
-            printf("\nexternal_function_casadi_wrapper: Unknown external function argument type %d for output %d\n\n", type_out[ii], ii);
+            printf("\nexternal_function_external_param_casadi_wrapper: Unknown external function argument type %d for output %d\n\n", type_out[ii], ii);
             exit(1);
         }
     }
