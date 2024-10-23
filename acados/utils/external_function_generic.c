@@ -955,7 +955,8 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
     // cast into external casadi function
     external_function_casadi *fun = self;
 
-    int ii, status;
+    int ii;
+    int status = 0;
 
     // in as args
     for (ii = 0; ii < fun->in_num; ii++)
@@ -1191,7 +1192,8 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
 {
     // cast into external casadi function
     external_function_param_casadi *fun = self;
-    int ii, status;
+    int ii;
+    int status = 0;
     // in as args
     for (ii = 0; ii < fun->in_num; ii++)
     {
@@ -1571,7 +1573,8 @@ void external_function_external_param_casadi_wrapper(void *self, ext_fun_arg_t *
 {
     // cast into external casadi function
     external_function_external_param_casadi *fun = self;
-    int ii, status;
+    int ii;
+    int status = 0;
 
     if (!fun->param_mem_is_set)
     {
