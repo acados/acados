@@ -142,7 +142,7 @@ classdef AcadosMultiphaseOcp < handle
 
         function make_consistent(self)
             % check options
-            self.mocp_opts.make_consistent(self.solver_options, self.n_phases)
+            self.mocp_opts.make_consistent(self.solver_options, self.n_phases);
 
             % check phases formulation objects are distinct
             if ~is_octave() % octave does not support object comparison
@@ -322,11 +322,11 @@ classdef AcadosMultiphaseOcp < handle
             end
 
             context.finalize();
-            ocp.external_function_files_model = context.get_external_function_file_list(false);
-            ocp.external_function_files_ocp = context.get_external_function_file_list(true);
+            self.external_function_files_model = context.get_external_function_file_list(false);
+            self.external_function_files_ocp = context.get_external_function_file_list(true);
 
             for i=1:self.n_phases
-                self.phases_dims{i}.n_global_data = context.get_n_global_data()
+                self.phases_dims{i}.n_global_data = context.get_n_global_data();
             end
         end
 
