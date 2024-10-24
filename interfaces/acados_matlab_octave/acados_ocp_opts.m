@@ -106,7 +106,14 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.exact_hess_cost = 1;
             obj.opts_struct.exact_hess_constr = 1;
             obj.opts_struct.fixed_hess = 0;
-            obj.opts_struct.ext_fun_compile_flags = '-O2';
+
+            % check whether flags are provided by environment variable
+            env_var = getenv("ACADOS_EXT_FUN_COMPILE_FLAGS");
+            if isempty(env_var)
+                obj.opts_struct.ext_fun_compile_flags = '-O2';
+            else
+                obj.opts_struct.ext_fun_compile_flags = env_var;
+            end
 
             obj.opts_struct.output_dir = fullfile(pwd, 'build');
             obj.opts_struct.json_file = 'acados_ocp_nlp.json';

@@ -56,7 +56,8 @@ class AcadosSimOptions:
         self.__sens_hess = False
         self.__output_z = True
         self.__sim_method_jac_reuse = 0
-        self.__ext_fun_compile_flags = '-O2'
+        env = os.environ
+        self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
         self.__num_threads_in_batch_solve: int = 1
 
     @property
@@ -136,7 +137,7 @@ class AcadosSimOptions:
     def ext_fun_compile_flags(self):
         """
         String with compiler flags for external function compilation.
-        Default: '-O2'.
+        Default: '-O2' if environment variable ACADOS_EXT_FUN_COMPILE_FLAGS is not set, else ACADOS_EXT_FUN_COMPILE_FLAGS is used as default.
         """
         return self.__ext_fun_compile_flags
 
