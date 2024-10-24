@@ -37,10 +37,10 @@ from casadi import MX, vertcat, sin, cos
 import casadi as ca
 import time
 
-# NOTE: This example requires CasADi version nightly-se2 or later,
-# as well as an installation of simde.
-# Furthermore, this example requires additional flags for the CasADi code generation,
-# cf. the solver option ext_fun_compile_flags
+# NOTE: This example requires CasADi version nightly-se2 or later.
+# Furthermore, this example uses additional flags for the CasADi code generation,
+# cf. the solver option ext_fun_compile_flags, which you might need to adapt based
+# on your compiler and operating system.
 
 LARGE_SCALE = False
 PLOT = False
@@ -111,9 +111,6 @@ def export_pendulum_ode_model(p_global, m, l, C, lut=True, blazing=True) -> Acad
 
         if blazing:
             # Disturb the dynamics by a sprinkle of bspline
-            # NOTE: blazing_spline requires an installation of simde as well as
-            # additional flags for the CasADi code generation, cf. the solver
-            # option ext_fun_compile_flags
             spline_fun = ca.blazing_spline('blazing_spline', knots)
             f_expl[3] += 0.01*spline_fun(x_in, C)
         else:
@@ -219,11 +216,7 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True):
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.print_level = 0
     ocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP_RTI, SQP
-
-    if lut and blazing:
-    # if lut:
-        # NOTE: these additional flags are required for code generation of CasADi functions using ca.blazing_spline
-        ocp.solver_options.ext_fun_compile_flags = '-I' + ca.GlobalOptions.getCasadiIncludePath() + ' -ffast-math -march=native'
+    ocp.solver_options.ext_fun_compile_flags += ' -I' + ca.GlobalOptions.getCasadiIncludePath() + ' -ffast-math -march=native'
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -263,6 +256,7 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True):
         plot_pendulum(ocp.solver_options.shooting_nodes, ocp.constraints.ubu[0], u_traj, x_traj, x_labels=ocp.model.x_labels, u_labels=ocp.model.u_labels)
 
     return residuals, timing
+
 
 def main_mocp(lut=True, use_p_global=True):
     print(f"\n\nRunning multi-phase example with lut={lut}, use_p_global={use_p_global}")
