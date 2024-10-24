@@ -187,6 +187,12 @@ classdef GenerateContext < handle
                 output_dir = obj.list_funname_dir_pairs{i}{2};
                 inputs = obj.function_input_output_pairs{i}{1};
                 outputs = obj.function_input_output_pairs{i}{2};
+
+                % fprintf('Generating function %s in directory %s\n', name, output_dir);
+                % disp('Inputs:');
+                % disp(inputs);
+                % disp('Outputs:');
+                % disp(outputs);
                 try
                     fun = Function(name, inputs, outputs, obj.casadi_fun_opts);
                 catch e

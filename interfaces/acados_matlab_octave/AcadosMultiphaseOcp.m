@@ -303,9 +303,8 @@ classdef AcadosMultiphaseOcp < handle
             end
         end
 
-        function context  = generate_external_functions(self)
+        function context = generate_external_functions(self)
             % generate external functions
-
             code_gen_opts = struct();
             code_gen_opts.generate_hess = strcmp(self.solver_options.hessian_approx, 'EXACT');
             code_gen_opts.with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params;
@@ -319,7 +318,7 @@ classdef AcadosMultiphaseOcp < handle
                 % this is the only option that can vary and influence external functions to be generated
                 self.dummy_ocp_list{i}.solver_options.integrator_type = self.mocp_opts.integrator_type{i};
                 self.dummy_ocp_list{i}.code_export_directory = self.code_export_directory;
-                self.dummy_ocp_list{i}.generate_external_functions(context);
+                context = self.dummy_ocp_list{i}.setup_code_generation_context(context);
             end
 
             context.finalize();
@@ -405,17 +404,17 @@ classdef AcadosMultiphaseOcp < handle
                 self.dummy_ocp_list{i}.dump_to_json(tmp_json_file);
                 tmp_json_path = fullfile(pwd, tmp_json_file);
 
-                for i = 1:length(template_list)
-                    in_file = template_list{i}{1};
-                    out_file = template_list{i}{2};
-                    if length(template_list{i}) == 3
-                        out_dir = template_list{i}{3};
+                for j = 1:length(template_list)
+                    in_file = template_list{j}{1};
+                    out_file = template_list{j}{2};
+                    if length(template_list{j}) == 3
+                        out_dir = template_list{j}{3};
                         if ~(exist(out_dir, 'dir'))
                             mkdir(out_dir);
                         end
                         out_file = fullfile(out_dir, out_file);
                     end
-                    render_file( in_file, out_file, tmp_json_path )
+                    render_file( in_file, out_file, tmp_json_path );
                 end
             end
             disp('rendered model templates successfully');
@@ -439,11 +438,11 @@ classdef AcadosMultiphaseOcp < handle
                     end
                     out_file = fullfile(out_dir, out_file);
                 end
-                render_file( in_file, out_file, self.json_file )
+                render_file( in_file, out_file, self.json_file );
             end
 
             disp('rendered solver templates successfully!');
-            cd(main_dir)
+            cd(main_dir);
         end
     end % methods
 end
