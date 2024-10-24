@@ -189,6 +189,7 @@ classdef AcadosOcpOptions < handle
             else
                 obj.ext_fun_compile_flags = env_var;
             end
+
             obj.model_external_shared_lib_dir = [];
             obj.model_external_shared_lib_name = [];
             obj.custom_update_filename = '';

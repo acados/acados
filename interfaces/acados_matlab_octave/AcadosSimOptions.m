@@ -70,7 +70,8 @@ classdef AcadosSimOptions < handle
                 obj.opts_struct.ext_fun_compile_flags = '-O2';
             else
                 obj.opts_struct.ext_fun_compile_flags = env_var;
-            end            obj.num_threads_in_batch_solve = 1;
+            end
+            obj.num_threads_in_batch_solve = 1;
             obj.compile_interface = []; % corresponds to automatic detection, possible values: true, false, []
         end
 
