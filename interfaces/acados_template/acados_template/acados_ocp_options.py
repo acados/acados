@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import numpy as np
+import os
 from .utils import check_if_nparray_and_flatten
 
 
@@ -115,7 +115,9 @@ class AcadosOcpOptions:
         self.__log_primal_step_norm: bool = False
         self.__store_iterates: bool = False
         # TODO: move those out? they are more about generation than about the acados OCP solver.
-        self.__ext_fun_compile_flags = '-O2'
+
+        env = os.environ
+        self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
         self.__model_external_shared_lib_dir = None
         self.__model_external_shared_lib_name = None
         self.__custom_update_filename = ''
@@ -136,7 +138,7 @@ class AcadosOcpOptions:
     def ext_fun_compile_flags(self):
         """
         String with compiler flags for external function compilation.
-        Default: '-O2'.
+        Default: '-O2' if environment variable ACADOS_EXT_FUN_COMPILE_FLAGS is not set, else ACADOS_EXT_FUN_COMPILE_FLAGS is used as default.
         """
         return self.__ext_fun_compile_flags
 

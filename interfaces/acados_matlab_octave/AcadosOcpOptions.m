@@ -182,7 +182,13 @@ classdef AcadosOcpOptions < handle
             obj.store_iterates = false;
             obj.eval_residual_at_max_iter = [];
 
-            obj.ext_fun_compile_flags = '-O2';
+            % check whether flags are provided by environment variable
+            env_var = getenv("ACADOS_EXT_FUN_COMPILE_FLAGS");
+            if isempty(env_var)
+                obj.ext_fun_compile_flags = '-O2';
+            else
+                obj.ext_fun_compile_flags = env_var;
+            end
             obj.model_external_shared_lib_dir = [];
             obj.model_external_shared_lib_name = [];
             obj.custom_update_filename = '';
