@@ -44,6 +44,7 @@ from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
 from utils import get_chain_params
 from typing import Tuple
 from plot_utils import plot_timings
+import time
 
 
 def export_discrete_erk4_integrator_step(f_expl: SX, x: SX, u: SX, p: struct_symSX, h: float, n_stages: int = 2) -> ca.SX:
@@ -335,7 +336,7 @@ def export_parametric_ocp(
     ocp.solver_options.nlp_solver_max_iter = nlp_iter
 
     if hessian_approx == "EXACT":
-        ocp.solver_options.nlp_solver_step_length = 0.0
+        ocp.solver_options.globalization_fixed_step_length = 0.0
         ocp.solver_options.nlp_solver_max_iter = 1
         ocp.solver_options.qp_solver_iter_max = 200
         ocp.solver_options.tol = 1e-10
@@ -407,6 +408,7 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
     timings_lin_and_factorize = np.zeros((np_test))
     timings_lin_params = np.zeros((np_test))
     timings_solve_params = np.zeros((np_test))
+    timings_store_load = np.zeros((np_test))
 
     for i in range(np_test):
         parameter_values.cat[p_idx] = p_var[i]
@@ -421,8 +423,18 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
 
         timings_solve_ocp_solver[i] = ocp_solver.get_stats("time_tot")
 
-        ocp_solver.store_iterate(filename="iterate.json", overwrite=True, verbose=False)
-        sensitivity_solver.load_iterate(filename="iterate.json", verbose=False)
+        t_start = time.time()
+
+        # Store/Load to file
+        # ocp_solver.store_iterate(filename="iterate.json", overwrite=True, verbose=False)
+        # sensitivity_solver.load_iterate(filename="iterate.json", verbose=False)
+
+        # Store/Load to AcadosOcpIterate
+        iterate = ocp_solver.store_iterate_to_obj()
+        sensitivity_solver.load_iterate_from_obj(iterate)
+
+        timings_store_load[i] = time.time() - t_start
+
         sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
 
         timings_lin_and_factorize[i] = sensitivity_solver.get_stats("time_tot")
@@ -440,7 +452,12 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
         "prepare \& factorize exact Hessian QP": timings_lin_and_factorize,
         "eval rhs": timings_lin_params,
         "solve": timings_solve_params,
+        "store \& load": timings_store_load,
     }
+
+    print("\nMedian timings [ms]")
+    for key, value in timing_results.items():
+        print(f"{key}: {1000*np.median(value):.3f}")
 
     u_opt = np.vstack(u_opt)
     sens_u = np.vstack(sens_u)
