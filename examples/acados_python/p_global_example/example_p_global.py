@@ -35,17 +35,23 @@ from utils import plot_pendulum
 
 from casadi import MX, vertcat, sin, cos
 import casadi as ca
+import time
 
-# NOTE: This example requires CasADi version nightly-se2 or later,
-# as well as an installation of simde.
-# Furthermore, this example requires additional flags for the CasADi code generation,
-# cf. the solver option ext_fun_compile_flags
+# NOTE: This example requires CasADi version nightly-se2 or later.
+# Furthermore, this example uses additional flags for the CasADi code generation,
+# cf. the solver option ext_fun_compile_flags, which you might need to adapt based
+# on your compiler and operating system.
 
+LARGE_SCALE = False
 PLOT = False
-
-knots = [[0,0,0,0,0.2,0.5,0.8,1,1,1,1],[0,0,0,0.1,0.5,0.9,1,1,1]]
 np.random.seed(1)
-data = np.random.random((7,5)).ravel(order='F')
+
+if LARGE_SCALE:
+    knots = [np.arange(200),np.arange(200)]
+    data = np.random.random((38416,)).ravel(order='F')
+else:
+    knots = [np.arange(20),np.arange(20)]
+    data = 0.1 + 0.*np.random.random((256,)).ravel(order='F')
 
 def create_p_global(lut=True):
     m = MX.sym("m")
@@ -66,7 +72,7 @@ def create_p_global(lut=True):
 
 
 def export_pendulum_ode_model(p_global, m, l, C, lut=True, blazing=True) -> AcadosModel:
-    model_name = 'pendulum'
+    model_name = f'pendulum_blazing_{blazing}'
 
     # constants
     m_cart = 1. # mass of the cart [kg]
@@ -93,11 +99,11 @@ def export_pendulum_ode_model(p_global, m, l, C, lut=True, blazing=True) -> Acad
     # dynamics
     cos_theta = cos(theta)
     sin_theta = sin(theta)
-    denominator = m_cart + m - m*cos_theta*cos_theta
+    denominator = m_cart + m - m*cos_theta**2
     f_expl = vertcat(v1,
                      dtheta,
-                     (-m*l*sin_theta*dtheta*dtheta + m*g*cos_theta*sin_theta+F)/denominator,
-                     (-m*l*cos_theta*sin_theta*dtheta*dtheta + F*cos_theta+(m_cart+m)*g*sin_theta)/(l*denominator)
+                     (-m*l*sin_theta*dtheta**2 + m*g*cos_theta*sin_theta+F)/denominator,
+                     (-m*l*cos_theta*sin_theta*dtheta**2 + F*cos_theta+(m_cart+m)*g*sin_theta)/(l*denominator)
                      )
 
     if lut:
@@ -105,9 +111,6 @@ def export_pendulum_ode_model(p_global, m, l, C, lut=True, blazing=True) -> Acad
 
         if blazing:
             # Disturb the dynamics by a sprinkle of bspline
-            # NOTE: blazing_spline requires an installation of simde as well as
-            # additional flags for the CasADi code generation, cf. the solver
-            # option ext_fun_compile_flags
             spline_fun = ca.blazing_spline('blazing_spline', knots)
             f_expl[3] += 0.01*spline_fun(x_in, C)
         else:
@@ -143,6 +146,7 @@ def create_ocp_formulation_without_opts(p_global, m, l, C, lut=True, use_p_globa
     # set model
     model = export_pendulum_ode_model(p_global, m, l, C, lut=lut, blazing=blazing)
     model.p_global = p_global
+    model.name += f'_p_global_{use_p_global}'
     ocp.model = model
 
     # dimensions
@@ -152,8 +156,8 @@ def create_ocp_formulation_without_opts(p_global, m, l, C, lut=True, use_p_globa
     ny_e = nx
 
     # set cost
-    Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
-    R = 2*np.diag([1e-2])
+    Q = np.diag([1e3, 1e3, 1e-2, 1e-2])
+    R = np.diag([1e-2])
 
     ocp.cost.W_e = Q
     ocp.cost.W = scipy.linalg.block_diag(Q, R)
@@ -212,11 +216,7 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True):
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.print_level = 0
     ocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP_RTI, SQP
-
-    if lut and blazing:
-    # if lut:
-        # NOTE: these additional flags are required for code generation of CasADi functions using ca.blazing_spline
-        ocp.solver_options.ext_fun_compile_flags = '-I' + ca.GlobalOptions.getCasadiIncludePath() + ' -ffast-math -march=native'
+    ocp.solver_options.ext_fun_compile_flags += ' -I' + ca.GlobalOptions.getCasadiIncludePath() + ' -ffast-math -march=native'
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -236,14 +236,18 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True):
     # call SQP_RTI solver in the loop:
     residuals = []
 
+    t_start = time.time()
     ocp_solver.set_p_global_and_precompute_dependencies(p_global_values)
+    t_elapsed = time.time() - t_start
 
+    print(f"Precompute {t_elapsed}.")
+
+    timing = 0
     for i in range(20):
         status = ocp_solver.solve()
         # ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
         residuals+= list(ocp_solver.get_residuals())
-
-    print(residuals)
+        timing += ocp_solver.get_stats("time_lin")
 
     # plot results
     if PLOT:
@@ -251,7 +255,8 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True):
         x_traj = np.array([ocp_solver.get(i, "x") for i in range(N_horizon+1)])
         plot_pendulum(ocp.solver_options.shooting_nodes, ocp.constraints.ubu[0], u_traj, x_traj, x_labels=ocp.model.x_labels, u_labels=ocp.model.u_labels)
 
-    return residuals
+    return residuals, timing
+
 
 def main_mocp(lut=True, use_p_global=True):
     print(f"\n\nRunning multi-phase example with lut={lut}, use_p_global={use_p_global}")
@@ -301,34 +306,49 @@ def main_mocp(lut=True, use_p_global=True):
 
     ocp_solver.set_p_global_and_precompute_dependencies(p_global_values)
 
+    timing = 0
     for i in range(20):
         status = ocp_solver.solve()
         # ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
         residuals+= list(ocp_solver.get_residuals())
+        timing += ocp_solver.get_stats('time_lin')
 
-    print(residuals)
-    return residuals
+    return residuals, timing
 
 
 if __name__ == "__main__":
 
-    ref_nolut = main(use_cython=False, use_p_global=False, lut=False)
-    res_nolut = main(use_cython=False, use_p_global=True, lut=False)
+    # OCP with lookuptable, comparing blazing, bspline, p_global
+    ref_lut, t_lin_lut_ref = main(use_cython=False, use_p_global=False, lut=True)
+    res_lut, t_lin_lut = main(use_cython=False, use_p_global=True, lut=True)
+
+    ref_lut_no_blazing, t_lin_lut_no_blazing_ref = main(use_cython=False, use_p_global=False, lut=True, blazing=False)
+    res_lut_no_blazing, t_lin_lut_no_blazing = main(use_cython=False, use_p_global=True, lut=True, blazing=False)
+
+    print(f"\t\t bspline \t blazing")
+    print(f"ref\t\t {t_lin_lut_no_blazing_ref:.5f} \t {t_lin_lut_ref:.5f}")
+    print(f"p_global\t {t_lin_lut_no_blazing:.5f} \t {t_lin_lut:.5f}")
+
+    np.testing.assert_almost_equal(ref_lut, res_lut)
+    np.testing.assert_almost_equal(ref_lut_no_blazing, res_lut_no_blazing)
+
+    np.testing.assert_almost_equal(ref_lut, ref_lut_no_blazing)
+    np.testing.assert_almost_equal(res_lut, res_lut_no_blazing)
+    np.testing.assert_almost_equal(ref_lut, res_lut_no_blazing)
+
+
+    ref_nolut, _ = main(use_cython=False, use_p_global=False, lut=False)
+    res_nolut, _ = main(use_cython=False, use_p_global=True, lut=False)
     np.testing.assert_almost_equal(ref_nolut, res_nolut)
 
-    res_mocp_nolut_p = main_mocp(use_p_global=False, lut=False)
-    res_mocp_nolut_p_global = main_mocp(use_p_global=True, lut=False)
+    # MOCP tests
+    res_mocp_nolut_p, _ = main_mocp(use_p_global=False, lut=False)
+    res_mocp_nolut_p_global, _ = main_mocp(use_p_global=True, lut=False)
     np.testing.assert_almost_equal(ref_nolut, res_mocp_nolut_p)
     np.testing.assert_almost_equal(ref_nolut, res_mocp_nolut_p_global)
 
-    ref_lut = main(use_cython=False, use_p_global=False, lut=True)
-    res_lut = main(use_cython=False, use_p_global=True, lut=True)
-    res_lut_no_blazing = main(use_cython=False, use_p_global=True, lut=True, blazing=False)
-    np.testing.assert_almost_equal(ref_lut, res_lut)
-    np.testing.assert_almost_equal(ref_lut, res_lut_no_blazing)
-
-    res_mocp_lut_p = main_mocp(use_p_global=False, lut=True)
-    res_mocp_lut_p_global = main_mocp(use_p_global=True, lut=True)
+    res_mocp_lut_p, _ = main_mocp(use_p_global=False, lut=True)
+    res_mocp_lut_p_global, _ = main_mocp(use_p_global=True, lut=True)
     np.testing.assert_almost_equal(ref_lut, res_mocp_lut_p)
     np.testing.assert_almost_equal(ref_lut, res_mocp_lut_p_global)
 
