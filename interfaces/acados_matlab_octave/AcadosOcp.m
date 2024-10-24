@@ -48,7 +48,6 @@ classdef AcadosOcp < handle
         shared_lib_ext
         name
         zoro_description
-        casadi_pool_names
         external_function_files_ocp
         external_function_files_model
     end
@@ -930,6 +929,11 @@ classdef AcadosOcp < handle
                     generate_c_code_nonlinear_constr(context, ocp.model, constraints_dir, stage_types{i});
                 end
             end
+
+            context.finalize();
+            ocp.external_function_files_model = context.get_external_function_file_list(false);
+            ocp.external_function_files_ocp = context.get_external_function_file_list(true);
+            ocp.dims.n_global_data = context.get_n_global_data();
         end
 
         function render_templates(self)

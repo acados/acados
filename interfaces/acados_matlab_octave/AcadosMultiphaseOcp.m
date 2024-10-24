@@ -61,7 +61,6 @@ classdef AcadosMultiphaseOcp < handle
         end_idx
         cost_start_idx
 
-        casadi_pool_names
         external_function_files_ocp
         external_function_files_model
     end
@@ -111,8 +110,6 @@ classdef AcadosMultiphaseOcp < handle
             acados_folder = getenv('ACADOS_INSTALL_DIR');
             obj.acados_include_path = [acados_folder, '/include'];
             obj.acados_lib_path = [acados_folder, '/lib'];
-
-            obj.casadi_pool_names = [];
 
         end
 
@@ -323,6 +320,14 @@ classdef AcadosMultiphaseOcp < handle
                 self.dummy_ocp_list{i}.solver_options.integrator_type = self.mocp_opts.integrator_type{i};
                 self.dummy_ocp_list{i}.code_export_directory = self.code_export_directory;
                 self.dummy_ocp_list{i}.generate_external_functions(context);
+            end
+
+            context.finalize();
+            ocp.external_function_files_model = context.get_external_function_file_list(false);
+            ocp.external_function_files_ocp = context.get_external_function_file_list(true);
+
+            for i=1:self.n_phases
+                self.phases_dims{i}.n_global_data = context.get_n_global_data()
             end
         end
 
