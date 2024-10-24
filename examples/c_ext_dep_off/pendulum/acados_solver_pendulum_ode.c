@@ -326,6 +326,7 @@ void pendulum_ode_acados_create_setup_functions(pendulum_ode_solver_capsule* cap
     } while(false)
 
     external_function_opts ext_fun_opts;
+    external_function_opts_set_to_default(&ext_fun_opts);
     ext_fun_opts.external_workspace = false;
 
     // nonlinear least squares function

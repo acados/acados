@@ -48,7 +48,6 @@ classdef AcadosOcp < handle
         shared_lib_ext
         name
         zoro_description
-        casadi_pool_names
         external_function_files_ocp
         external_function_files_model
     end
@@ -839,10 +838,7 @@ classdef AcadosOcp < handle
         function context = generate_external_functions(ocp, context)
 
             %% generate C code for CasADi functions / copy external functions
-            cost = ocp.cost;
             solver_opts = ocp.solver_options;
-            constraints = ocp.constraints;
-            dims = ocp.dims;
 
             if nargin < 2
                 % options for code generation
@@ -855,6 +851,19 @@ classdef AcadosOcp < handle
             else
                 code_gen_opts = context.opts;
             end
+            context = setup_code_generation_context(ocp, context);
+            context.finalize();
+            ocp.external_function_files_model = context.get_external_function_file_list(false);
+            ocp.external_function_files_ocp = context.get_external_function_file_list(true);
+            ocp.dims.n_global_data = context.get_n_global_data();
+        end
+
+        function context = setup_code_generation_context(ocp, context)
+            code_gen_opts = context.opts;
+            solver_opts = ocp.solver_options;
+            constraints = ocp.constraints;
+            cost = ocp.cost;
+            dims = ocp.dims;
 
             % dynamics
             model_dir = fullfile(pwd, code_gen_opts.code_export_directory, [ocp.name '_model']);

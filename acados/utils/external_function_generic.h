@@ -77,6 +77,7 @@ struct blasfeo_dvec_args
 typedef struct
 {
     bool external_workspace;
+    bool with_global_data;
 } external_function_opts;
 
 
@@ -96,6 +97,8 @@ typedef struct
 size_t external_function_get_workspace_requirement_if_defined(external_function_generic *fun);
 
 void external_function_set_fun_workspace_if_defined(external_function_generic *fun, void *work_);
+
+void external_function_opts_set_to_default(external_function_opts *opts);
 
 
 
@@ -231,6 +234,7 @@ typedef struct
     int int_work_size;        // number of ints for worksapce
     int float_work_size;         // number of doubles for workspace
     int np;             // number of parameters
+    int idx_in_p;
     external_function_opts opts;
 } external_function_param_casadi;
 
@@ -261,6 +265,7 @@ typedef struct
     void (*evaluate)(void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
     size_t (*get_external_workspace_requirement)(void *);
     void (*set_external_workspace)(void *, void *);
+    void (*set_global_data_pointer)(void *, double *);
     // public members for interfaces
     void (*set_param_pointer)(void *, double *);
     // private members
@@ -289,6 +294,10 @@ typedef struct
     int float_work_size;         // number of doubles for workspace
 
     bool param_mem_is_set;  // indicates if param memory is set;
+    bool global_data_ptr_is_set;  // indicates if global data pointer is set;
+    int idx_in_p;
+    int idx_in_global_data;
+
     external_function_opts opts;
 } external_function_external_param_casadi;
 
@@ -318,6 +327,7 @@ typedef struct
     void (*evaluate)(void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
     size_t (*get_external_workspace_requirement)(void *);
     void (*set_external_workspace)(void *, void *);
+    void (*set_global_data_pointer)(void *, double *);
     // public members for interfaces
     void (*set_param_pointer)(void *, double *);
 

@@ -118,6 +118,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     * external functions (explicit model)
     ************************************************/
     external_function_opts ext_fun_opts;
+    external_function_opts_set_to_default(&ext_fun_opts);
     ext_fun_opts.external_workspace = true;
 
     // expl_ode_fun

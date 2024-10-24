@@ -80,7 +80,8 @@ int main()
 	* external functions (explicit model)
 	************************************************/
     external_function_opts ext_fun_opts;
-    ext_fun_opts.external_workspace = false;
+    external_function_opts_set_to_default(&ext_fun_opts);
+    ext_fun_opts.external_workspace = true;
 
 	// expl_ode_fun
 	external_function_casadi expl_ode_fun;

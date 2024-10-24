@@ -227,7 +227,8 @@ int main() {
 	external_function_param_casadi impl_ode_jac_x_xdot_u_z[N];
 
     external_function_opts ext_fun_opts;
-    ext_fun_opts.external_workspace = false;
+    external_function_opts_set_to_default(&ext_fun_opts);
+    ext_fun_opts.external_workspace = true;
 
 	for (int ii = 0; ii < N; ++ii) {
         impl_ode_fun[ii].casadi_fun = &simple_dae_impl_ode_fun;

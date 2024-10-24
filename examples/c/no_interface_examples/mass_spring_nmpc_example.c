@@ -456,7 +456,7 @@ int main() {
         ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[ii], ii);
     }
 
-    // constraitns
+    // constraints
     for (int ii = 0; ii <= N; ii++)
     {
         ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[ii], ii);
@@ -464,6 +464,9 @@ int main() {
 
     // regularization
     ocp_nlp_reg_noreg_config_initialize_default(config->regularize);
+
+    ocp_nlp_globalization_fixed_step_config_initialize_default(config->globalization);
+
 
     /************************************************
     * ocp_nlp_dims
