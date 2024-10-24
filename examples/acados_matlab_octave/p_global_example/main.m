@@ -48,13 +48,10 @@ function main()
     fprintf('ref\t\t%f \t%f\n', t_tot_with_bspline_ref, t_tot_with_blazing_ref);
     fprintf('p_global\t%f \t%f\n', t_tot_with_bspline, t_tot_with_blazing);
 
-    %%
+    %% Compare trajectories
     fprintf('max diff blazing with/without p_global %f\n', max(max(abs(state_trajectories_with_blazing_ref - state_trajectories_with_blazing))))
     fprintf('max diff blazing vs. bspline %f\n', max(max(abs(state_trajectories_with_blazing_ref - state_trajectories_without_blazing_ref))))
-
-
 end
-
 
 
 function run_example_ocp_simulink_p_global()
@@ -66,7 +63,7 @@ function run_example_ocp_simulink_p_global()
     fprintf('\n\nRunning example with lut=%d, use_p_global=%d, blazing=%d\n', lut, use_p_global, blazing);
 
     % Create p_global parameters
-    [p_global, m, l, coefficients, knots, p_global_values] = create_p_global(lut);
+    [p_global, m, l, coefficients, ~, knots, p_global_values] = create_p_global(lut);
 
     % OCP formulation
     ocp = create_ocp_formulation_without_opts(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing);
@@ -143,7 +140,7 @@ function [state_trajectories, timing] = run_example_ocp(lut, use_p_global, blazi
     fprintf('\n\nRunning example with lut=%d, use_p_global=%d, blazing=%d\n', lut, use_p_global, blazing);
 
     % Create p_global parameters
-    [p_global, m, l, coefficients, knots, p_global_values] = create_p_global(lut);
+    [p_global, m, l, coefficients, ~, knots, p_global_values] = create_p_global(lut);
 
     % OCP formulation
     ocp = create_ocp_formulation_without_opts(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing);
@@ -186,7 +183,7 @@ function [state_trajectories, timing] = run_example_mocp(lut, use_p_global, blaz
     fprintf('\n\nRunning example with lut=%d, use_p_global=%d, blazing=%d\n', lut, use_p_global, blazing);
 
     % Create p_global parameters
-    [p_global, m, l, coefficients, knots, p_global_values] = create_p_global(lut);
+    [p_global, m, l, coefficients, ~, knots, p_global_values] = create_p_global(lut);
 
     % OCP formulation
     mocp = create_mocp_formulation(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing);
@@ -228,7 +225,6 @@ function ocp = set_solver_options(ocp)
     ocp.solver_options.integrator_type = 'ERK';
     ocp.solver_options.print_level = 0;
     ocp.solver_options.nlp_solver_type = 'SQP_RTI';
-    ocp.solver_options.globalization_fixed_step_length = 0.1;
 
     % set prediction horizon
     Tf = 1.0;
@@ -241,8 +237,8 @@ function ocp = set_solver_options(ocp)
     ocp.solver_options.qp_solver_cond_block_size = [3, 3, 3, 3, 7, 1];
 
     % NOTE: these additional flags are required for code generation of CasADi functions using casadi.blazing_spline
-    % These work for Linux only!
-    ocp.solver_options.ext_fun_compile_flags = ['-I' casadi.GlobalOptions.getCasadiIncludePath ' -ffast-math -march=native '];
+    % These might be different depending on your compiler and oerating system.
+    ocp.solver_options.ext_fun_compile_flags = [ocp.solver_options.ext_fun_compile_flags ' -I' casadi.GlobalOptions.getCasadiIncludePath ' -ffast-math -march=native '];
 end
 
 function mocp = create_mocp_formulation(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing)
@@ -264,7 +260,7 @@ function mocp = create_mocp_formulation(p_global, m, l, coefficients, knots, lut
 end
 
 
-function [p_global, m, l, coefficient_vals, knots, p_global_values] = create_p_global(lut)
+function [p_global, m, l, coefficients, coefficient_vals, knots, p_global_values] = create_p_global(lut)
 
     import casadi.*
     m = MX.sym('m');
