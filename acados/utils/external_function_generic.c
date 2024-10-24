@@ -1033,7 +1033,6 @@ static void external_function_param_casadi_set_param_sparse(void *self, int n_up
 {
     external_function_param_casadi *fun = self;
 
-
     if (fun->args_dense[fun->idx_in_p])
     {
         for (int ii = 0; ii < n_update; ii++)
@@ -1076,14 +1075,15 @@ acados_size_t external_function_param_casadi_calculate_size(external_function_pa
 
     // set number of parameters
     fun->np = np;
-    // parameter is last input
-    fun->idx_in_p = fun->in_num-1;
 
     // compute workspace sizes
     fun->casadi_work(&fun->args_num, &fun->res_num, &fun->int_work_size, &fun->float_work_size);
 
     fun->in_num = fun->casadi_n_in();
     fun->out_num = fun->casadi_n_out();
+
+    // parameter is last input
+    fun->idx_in_p = fun->in_num-1;
 
     // args
     fun->args_size_tot = 0;
