@@ -67,9 +67,9 @@ classdef AcadosSimOptions < handle
             % check whether flags are provided by environment variable
             env_var = getenv("ACADOS_EXT_FUN_COMPILE_FLAGS");
             if isempty(env_var)
-                obj.opts_struct.ext_fun_compile_flags = '-O2';
+                obj.ext_fun_compile_flags = '-O2';
             else
-                obj.opts_struct.ext_fun_compile_flags = env_var;
+                obj.ext_fun_compile_flags = env_var;
             end
             obj.num_threads_in_batch_solve = 1;
             obj.compile_interface = []; % corresponds to automatic detection, possible values: true, false, []

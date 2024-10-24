@@ -109,7 +109,6 @@ classdef acados_ocp_opts < handle
 
             % check whether flags are provided by environment variable
             env_var = getenv("ACADOS_EXT_FUN_COMPILE_FLAGS");
-
             if isempty(env_var)
                 obj.opts_struct.ext_fun_compile_flags = '-O2';
             else
