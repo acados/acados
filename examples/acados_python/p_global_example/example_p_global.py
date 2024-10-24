@@ -318,7 +318,7 @@ def main_mocp(lut=True, use_p_global=True):
 
 if __name__ == "__main__":
 
-    # OCP with lookuptable, comparing blazing, bspline, g_global
+    # OCP with lookuptable, comparing blazing, bspline, p_global
     ref_lut, t_lin_lut_ref = main(use_cython=False, use_p_global=False, lut=True)
     res_lut, t_lin_lut = main(use_cython=False, use_p_global=True, lut=True)
 
@@ -334,4 +334,26 @@ if __name__ == "__main__":
 
     np.testing.assert_almost_equal(ref_lut, ref_lut_no_blazing)
     np.testing.assert_almost_equal(res_lut, res_lut_no_blazing)
+    np.testing.assert_almost_equal(ref_lut, res_lut_no_blazing)
 
+
+    ref_nolut, _ = main(use_cython=False, use_p_global=False, lut=False)
+    res_nolut, _ = main(use_cython=False, use_p_global=True, lut=False)
+    np.testing.assert_almost_equal(ref_nolut, res_nolut)
+
+    # MOCP tests
+    res_mocp_nolut_p, _ = main_mocp(use_p_global=False, lut=False)
+    res_mocp_nolut_p_global, _ = main_mocp(use_p_global=True, lut=False)
+    np.testing.assert_almost_equal(ref_nolut, res_mocp_nolut_p)
+    np.testing.assert_almost_equal(ref_nolut, res_mocp_nolut_p_global)
+
+    res_mocp_lut_p, _ = main_mocp(use_p_global=False, lut=True)
+    res_mocp_lut_p_global, _ = main_mocp(use_p_global=True, lut=True)
+    np.testing.assert_almost_equal(ref_lut, res_mocp_lut_p)
+    np.testing.assert_almost_equal(ref_lut, res_mocp_lut_p_global)
+
+
+    with np.testing.assert_raises(Exception):
+        np.testing.assert_almost_equal(ref_lut, ref_nolut)
+
+    # main(use_cython=True) TODO: fix cython
