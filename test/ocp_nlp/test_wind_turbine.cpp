@@ -667,7 +667,6 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     // impl_ode_fun
     external_function_opts ext_fun_opts;
     external_function_opts_set_to_default(&ext_fun_opts);
-    ext_fun_opts.external_workspace = true;
 
     // explicit model
     external_function_param_casadi *expl_vde_for =
