@@ -525,7 +525,7 @@ int ocp_nlp_dynamics_model_set_external_param_fun(ocp_nlp_config *config, ocp_nl
 
     ext_fun->set_param_pointer(ext_fun, in->parameter_values[stage]);
 
-    if (dims->nglobal_data > 0)
+    if (dims->n_global_data > 0)
         ext_fun->set_global_data_pointer(ext_fun, in->global_data);
 
     dynamics_config->model_set(dynamics_config, dims->dynamics[stage], in->dynamics[stage], field, ext_fun);
@@ -543,7 +543,7 @@ int ocp_nlp_cost_model_set_external_param_fun(ocp_nlp_config *config, ocp_nlp_di
 
     ext_fun->set_param_pointer(ext_fun, in->parameter_values[stage]);
 
-    if (dims->nglobal_data > 0)
+    if (dims->n_global_data > 0)
         ext_fun->set_global_data_pointer(ext_fun, in->global_data);
 
     return cost_config->model_set(cost_config, dims->cost[stage], in->cost[stage], field, ext_fun);
@@ -560,7 +560,7 @@ int ocp_nlp_constraints_model_set_external_param_fun(ocp_nlp_config *config, ocp
 
     ext_fun->set_param_pointer(ext_fun, in->parameter_values[stage]);
 
-    if (dims->nglobal_data > 0)
+    if (dims->n_global_data > 0)
         ext_fun->set_global_data_pointer(ext_fun, in->global_data);
 
     return constr_config->model_set(constr_config, dims->constraints[stage],

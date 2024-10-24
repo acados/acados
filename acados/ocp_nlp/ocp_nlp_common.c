@@ -296,7 +296,7 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
         dims->np[i] = 0;
     // TODO initialize dims to zero by default also in modules !!!!!!!
 
-    dims->nglobal_data = 0;
+    dims->n_global_data = 0;
     dims->np_global = 0;
 
     // assert
@@ -365,7 +365,7 @@ void ocp_nlp_dims_set_global(void *config_, void *dims_, const char *field, int 
     }
     else if (!strcmp(field, "n_global_data"))
     {
-        dims->nglobal_data = value_field;
+        dims->n_global_data = value_field;
     }
     else
     {
@@ -679,7 +679,7 @@ static acados_size_t ocp_nlp_in_calculate_size_self(ocp_nlp_dims *dims)
         size += dims->np[i] * sizeof(double);
     }
     // global_data
-    size += dims->nglobal_data * sizeof(double);
+    size += dims->n_global_data * sizeof(double);
 
     size += (N + 1) * sizeof(double *);
 
@@ -761,7 +761,7 @@ static ocp_nlp_in *ocp_nlp_in_assign_self(ocp_nlp_dims *dims, void *raw_memory)
             in->parameter_values[i][ip] = 0.0;
         }
     }
-    assign_and_advance_double(dims->nglobal_data, &in->global_data, &c_ptr);
+    assign_and_advance_double(dims->n_global_data, &in->global_data, &c_ptr);
 
 
     // dynamics

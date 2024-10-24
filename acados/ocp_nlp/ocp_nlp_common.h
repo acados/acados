@@ -148,7 +148,7 @@ typedef struct ocp_nlp_dims
     int *np;  // number of parameters
 
     int np_global;
-    int nglobal_data;
+    int n_global_data;
     int N;    // number of shooting nodes
 
     void *raw_memory; // Pointer to allocated memory, to be used for freeing
