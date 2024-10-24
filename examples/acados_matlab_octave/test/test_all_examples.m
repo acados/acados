@@ -37,6 +37,7 @@ clearvars; clc; close all;
 targets = {
     '../generic_dyn_disc/disc_dyn_example_ocp.m';
     '../generic_external_cost/external_cost_example_ocp.m';
+    '../generic_nlp/main.m';
     '../getting_started/extensive_example_ocp.m';
     '../getting_started/minimal_example_sim.m';
     '../getting_started/minimal_example_ocp.m';
