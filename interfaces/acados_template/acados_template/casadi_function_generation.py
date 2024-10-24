@@ -85,7 +85,7 @@ class GenerateContext:
             # create function
             try:
                 fun = ca.Function(name, inputs, outputs, self.__casadi_fun_opts)
-                print(f"Generating function {name} with inputs {inputs}")
+                # print(f"Generating function {name} with inputs {inputs}")
             except Exception as e:
                 print(f"\nError while creating function {name} with inputs {inputs} and outputs {outputs}")
                 print(e)
@@ -127,6 +127,8 @@ class GenerateContext:
         for i in range(len(self.function_input_output_pairs)):
             outputs = ca.cse(self.function_input_output_pairs[i][1])
             # TODO: try to replace compare to extract_parametric expressions in previously detected param_expr
+
+            # detect parametric expressions in p_global
             [outputs_ret, symbols, param_expr] = ca.extract_parametric(outputs, self.p_global)
             # replace output expression with ones that use extracted expressions
             self.function_input_output_pairs[i][1] = outputs_ret
@@ -152,7 +154,6 @@ class GenerateContext:
         if self.p_global is not None:
             self.__setup_p_global_precompute_fun()
 
-        # generate all functions
         self.__generate_functions()
         return
 
