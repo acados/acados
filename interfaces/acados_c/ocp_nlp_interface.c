@@ -1095,14 +1095,6 @@ void ocp_nlp_solver_opts_set_at_stage(ocp_nlp_config *config, void *opts_, int s
 }
 
 
-
-void ocp_nlp_solver_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_)
-{
-    config->opts_update(config, dims, opts_);
-}
-
-
-
 void ocp_nlp_solver_opts_destroy(void *opts)
 {
     free(opts);
@@ -1254,17 +1246,17 @@ void ocp_nlp_eval_params_jac(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp
 
 
 
-void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver,
-                 const char *field, void *return_value_)
+void ocp_nlp_get(ocp_nlp_solver *solver, const char *field, void *return_value_)
 {
     solver->config->get(solver->config, solver->dims, solver->mem, field, return_value_);
 }
 
 
 
-void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_solver *solver,
-        int stage, const char *field, void *value)
+void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, void *value)
 {
+    ocp_nlp_dims *dims = solver->dims;
+    ocp_nlp_config *config = solver->config;
     ocp_nlp_memory *nlp_mem;
     config->get(config, dims, solver->mem, "nlp_mem", &nlp_mem);
 
@@ -1327,16 +1319,6 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
     {
         double *double_values = value;
         d_ocp_qp_get_ubu(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "lb"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_lb(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "ub"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_ub(stage, nlp_mem->qp_in, double_values);
     }
     else if (!strcmp(field, "C"))
     {
@@ -1422,19 +1404,19 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
     else if (!strcmp(field, "pcond_Q"))
     {
         ocp_qp_in *pcond_qp_in;
-        ocp_nlp_get(config, solver, "qp_xcond_in", &pcond_qp_in);
+        ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
         d_ocp_qp_get_Q(stage, pcond_qp_in, value);
     }
     else if (!strcmp(field, "pcond_R"))
     {
         ocp_qp_in *pcond_qp_in;
-        ocp_nlp_get(config, solver, "qp_xcond_in", &pcond_qp_in);
+        ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
         d_ocp_qp_get_R(stage, pcond_qp_in, value);
     }
     else if (!strcmp(field, "pcond_S"))
     {
         ocp_qp_in *pcond_qp_in;
-        ocp_nlp_get(config, solver, "qp_xcond_in", &pcond_qp_in);
+        ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
         d_ocp_qp_get_S(stage, pcond_qp_in, value);
     }
     else
@@ -1445,11 +1427,12 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
 }
 
 
-void ocp_nlp_get_from_iterate(ocp_nlp_dims *dims, ocp_nlp_solver *solver,
-        int iter, int stage, const char *field, void *value)
+void ocp_nlp_get_from_iterate(ocp_nlp_solver *solver, int iter, int stage, const char *field, void *value)
 {
     ocp_nlp_config *config = solver->config;
     ocp_nlp_memory *nlp_mem;
+    ocp_nlp_dims *dims = solver->dims;
+
     config->get(config, solver->dims, solver->mem, "nlp_mem", &nlp_mem);
 
     ocp_nlp_opts *nlp_opts;
@@ -1463,10 +1446,10 @@ void ocp_nlp_get_from_iterate(ocp_nlp_dims *dims, ocp_nlp_solver *solver,
     ocp_nlp_out_get(config, dims, nlp_mem->iterates[iter], stage, field, value);
 }
 
-void ocp_nlp_set(ocp_nlp_config *config, ocp_nlp_solver *solver,
-        int stage, const char *field, void *value)
+void ocp_nlp_set(ocp_nlp_solver *solver, int stage, const char *field, void *value)
 {
     ocp_nlp_memory *mem;
+    ocp_nlp_config *config = solver->config;
     config->get(config, solver->dims, solver->mem, "nlp_mem", &mem);
     // printf("called getter: nlp_mem %p\n", mem);
 

@@ -1199,7 +1199,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {%- if custom_update_filename == "" and not simulink_opts.inputs.rti_phase %}
     int acados_status = {{ name }}_acados_solve(capsule);
     // get time
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) buffer);
+    ocp_nlp_get(capsule->nlp_solver, "time_tot", (void *) buffer);
     tmp_double = buffer[0];
 
   {%- elif simulink_opts.inputs.rti_phase %}{# SPLIT RTI PHASE#}
@@ -1211,7 +1211,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
     int acados_status = {{ name }}_acados_solve(capsule);
     // get time
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) buffer);
+    ocp_nlp_get(capsule->nlp_solver, "time_tot", (void *) buffer);
     tmp_double = buffer[0];
     {%- endif %}
   {%- elif solver_options.nlp_solver_type == "SQP_RTI" %}{# if custom_update_filename != "" #}
@@ -1221,7 +1221,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     int acados_status = {{ name }}_acados_solve(capsule);
 
     // preparation time
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) buffer);
+    ocp_nlp_get(capsule->nlp_solver, "time_tot", (void *) buffer);
     tmp_double = buffer[0];
 
     // call custom update function
@@ -1234,7 +1234,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
     acados_status = {{ name }}_acados_solve(capsule);
     // feedback time
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) buffer);
+    ocp_nlp_get(capsule->nlp_solver, "time_tot", (void *) buffer);
     tmp_double += buffer[0];
   {%- else -%}
     Simulink block with custom solver template only works with SQP_RTI!
@@ -1321,7 +1321,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     {%- set i_output = i_output + 1 %}
     out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
     ocp_nlp_eval_cost(capsule->nlp_solver, nlp_in, nlp_out);
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "cost_value", (void *) out_ptr);
+    ocp_nlp_get(capsule->nlp_solver, "cost_value", (void *) out_ptr);
   {%- endif %}
 
   {%- if simulink_opts.outputs.KKT_residual == 1 %}
@@ -1337,10 +1337,10 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
     ocp_nlp_eval_residuals(capsule->nlp_solver, nlp_in, nlp_out);
     {%- endif %}
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "res_stat", (void *) &out_ptr[0]);
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "res_eq", (void *) &out_ptr[1]);
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "res_ineq", (void *) &out_ptr[2]);
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "res_comp", (void *) &out_ptr[3]);
+    ocp_nlp_get(capsule->nlp_solver, "res_stat", (void *) &out_ptr[0]);
+    ocp_nlp_get(capsule->nlp_solver, "res_eq", (void *) &out_ptr[1]);
+    ocp_nlp_get(capsule->nlp_solver, "res_ineq", (void *) &out_ptr[2]);
+    ocp_nlp_get(capsule->nlp_solver, "res_comp", (void *) &out_ptr[3]);
   {%- endif %}
 
   {%- if solver_options.N_horizon > 0 and simulink_opts.outputs.x1 == 1 %}
@@ -1358,26 +1358,26 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {%- if simulink_opts.outputs.CPU_time_sim == 1 %}
     {%- set i_output = i_output + 1 %}
     out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_sim", (void *) out_ptr);
+    ocp_nlp_get(capsule->nlp_solver, "time_sim", (void *) out_ptr);
   {%- endif -%}
 
   {%- if simulink_opts.outputs.CPU_time_qp == 1 %}
     {%- set i_output = i_output + 1 %}
     out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_qp", (void *) out_ptr);
+    ocp_nlp_get(capsule->nlp_solver, "time_qp", (void *) out_ptr);
   {%- endif -%}
 
   {%- if simulink_opts.outputs.CPU_time_lin == 1 %}
     {%- set i_output = i_output + 1 %}
     out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_lin", (void *) out_ptr);
+    ocp_nlp_get(capsule->nlp_solver, "time_lin", (void *) out_ptr);
   {%- endif -%}
 
   {%- if simulink_opts.outputs.sqp_iter == 1 %}
     {%- set i_output = i_output + 1 %}
     out_ptr = ssGetOutputPortRealSignal(S, {{ i_output }});
     // get sqp iter
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "sqp_iter", (void *) &tmp_int);
+    ocp_nlp_get(capsule->nlp_solver, "sqp_iter", (void *) &tmp_int);
     *out_ptr = (double) tmp_int;
   {%- endif %}
 

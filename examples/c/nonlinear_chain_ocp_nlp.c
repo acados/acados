@@ -1113,7 +1113,7 @@ int main()
 
 			default:
 				printf("\ninvalid cost module\n\n");
-				exit(1);	
+				exit(1);
 		}
 	}
 
@@ -1206,7 +1206,7 @@ int main()
 
 			default:
 				printf("\ninvalid cost module\n\n");
-				exit(1);	
+				exit(1);
 		}
 	}
 
@@ -1259,9 +1259,11 @@ int main()
 
 	// fist stage
 #if CONSTRAINTS==0 // box constraints
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lb", lb0);
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ub", ub0);
-    constraints[0]->idxb = idxb0;
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbu", lb0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", lb0+NU);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubu", ub0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", ub0+NU);
+	constraints[0]->idxb = idxb0;
 #elif CONSTRAINTS==1 // general constraints
 	double *Cu0; d_zeros(&Cu0, ng[0], nu[0]);
 	for (int ii=0; ii<nu[0]; ii++)
@@ -1295,12 +1297,14 @@ int main()
 	// other stages
     for (int i = 1; i < NN; i++)
 	{
-		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lb", lb1);
-		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ub", ub1);
+		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lbu", lb1);
+		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lbx", lb1+NU);
+		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ubu", ub1);
+		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ubx", ub1+NU);
         constraints[i]->idxb = idxb1;
     }
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "lb", lbN);
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "ub", ubN);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "lbx", lbN);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "ubx", ubN);
 
     constraints[NN]->idxb = idxbN;
 
@@ -1384,7 +1388,7 @@ int main()
     double time = acados_toc(&timer)/NREP;
 
     ocp_nlp_res *residual;
-    ocp_nlp_get(config, solver, "nlp_res", &residual);
+    ocp_nlp_get(solver, "nlp_res", &residual);
     printf("\nresiduals\n");
     ocp_nlp_res_print(dims, residual);
 
@@ -1394,10 +1398,10 @@ int main()
 	int sqp_iter;
     double time_lin, time_qp_sol, time_tot;
 
-    ocp_nlp_get(config, solver, "sqp_iter", &sqp_iter);
-    ocp_nlp_get(config, solver, "time_tot", &time_tot);
-    ocp_nlp_get(config, solver, "time_qp_sol", &time_qp_sol);
-    ocp_nlp_get(config, solver, "time_lin", &time_lin);
+    ocp_nlp_get(solver, "sqp_iter", &sqp_iter);
+    ocp_nlp_get(solver, "time_tot", &time_tot);
+    ocp_nlp_get(solver, "time_qp_sol", &time_qp_sol);
+    ocp_nlp_get(solver, "time_lin", &time_lin);
 
     printf("\n\nstatus = %i, iterations (max %d) = %d, total time = %f ms\n", status, MAX_SQP_ITERS, sqp_iter, time*1e3);
 	printf("\nlinearization time = %f ms\n", time_lin*1e3);

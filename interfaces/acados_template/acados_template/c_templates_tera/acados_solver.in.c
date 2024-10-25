@@ -2607,12 +2607,12 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
         {
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "pi", buffer);
         {%- if solver_options.integrator_type == "IRK" %}
-            ocp_nlp_set(nlp_config, nlp_solver, i, "xdot_guess", buffer);
-            ocp_nlp_set(nlp_config, nlp_solver, i, "z_guess", buffer);
+            ocp_nlp_set(nlp_solver, i, "xdot_guess", buffer);
+            ocp_nlp_set(nlp_solver, i, "z_guess", buffer);
         {%- elif solver_options.integrator_type == "LIFTED_IRK" %}
-            ocp_nlp_set(nlp_config, nlp_solver, i, "xdot_guess", buffer);
+            ocp_nlp_set(nlp_solver, i, "xdot_guess", buffer);
         {%- elif solver_options.integrator_type == "GNSF" %}
-            ocp_nlp_set(nlp_config, nlp_solver, i, "gnsf_phi_guess", buffer);
+            ocp_nlp_set(nlp_solver, i, "gnsf_phi_guess", buffer);
         {%- endif %}
         }
     }
@@ -2620,7 +2620,7 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
 {%- if solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM' %}
     // get qp_status: if NaN -> reset memory
     int qp_status;
-    ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "qp_status", &qp_status);
+    ocp_nlp_get(capsule->nlp_solver, "qp_status", &qp_status);
     if (reset_qp_solver_mem || (qp_status == 3))
     {
         // printf("\nin reset qp_status %d -> resetting QP memory\n", qp_status);
@@ -2974,13 +2974,13 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
 void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule* capsule)
 {
     int nlp_iter, stat_m, stat_n, tmp_int;
-    ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "nlp_iter", &nlp_iter);
-    ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "stat_n", &stat_n);
-    ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "stat_m", &stat_m);
+    ocp_nlp_get(capsule->nlp_solver, "nlp_iter", &nlp_iter);
+    ocp_nlp_get(capsule->nlp_solver, "stat_n", &stat_n);
+    ocp_nlp_get(capsule->nlp_solver, "stat_m", &stat_m);
 
 {% set stat_n_max = 12 %}
     double stat[{{ solver_options.nlp_solver_max_iter * stat_n_max }}];
-    ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "statistics", stat);
+    ocp_nlp_get(capsule->nlp_solver, "statistics", stat);
 
     int nrow = nlp_iter+1 < stat_m ? nlp_iter+1 : stat_m;
 

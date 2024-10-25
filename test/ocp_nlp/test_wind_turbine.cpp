@@ -1053,7 +1053,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
         status = ocp_nlp_solve(solver, nlp_in, nlp_out);
 
         ocp_nlp_res *residual;
-        ocp_nlp_get(config, solver, "nlp_res", &residual);
+        ocp_nlp_get(solver, "nlp_res", &residual);
 
         double max_res = 0.0;
         double inf_norm_res_stat = residual->inf_norm_res_stat;
@@ -1074,10 +1074,10 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
         int sqp_iter;
         double time_lin, time_qp_sol, time_tot;
 
-        ocp_nlp_get(config, solver, "sqp_iter", &sqp_iter);
-        ocp_nlp_get(config, solver, "time_tot", &time_tot);
-        ocp_nlp_get(config, solver, "time_qp_sol", &time_qp_sol);
-        ocp_nlp_get(config, solver, "time_lin", &time_lin);
+        ocp_nlp_get(solver, "sqp_iter", &sqp_iter);
+        ocp_nlp_get(solver, "time_tot", &time_tot);
+        ocp_nlp_get(solver, "time_qp_sol", &time_qp_sol);
+        ocp_nlp_get(solver, "time_lin", &time_lin);
 
         printf("\nproblem #%d, status %d, iters %d, time (total %f, lin %f, qp_sol %f) ms\n",
             idx, status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);

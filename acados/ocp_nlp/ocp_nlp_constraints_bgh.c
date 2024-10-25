@@ -636,15 +636,7 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     int nge = dims->nge;
     int nhe = dims->nhe;
 
-    if (!strcmp(field, "lb")) // NOTE: should not be used, but is still in C examplex, remove.
-    {
-        blasfeo_pack_dvec(nb, value, 1, &model->d, 0);
-    }
-    else if (!strcmp(field, "ub")) // NOTE: should not be used, but is still in C examplex, remove.
-    {
-        blasfeo_pack_dvec(nb, value, 1, &model->d, nb+ng+nh);
-    }
-    else if (!strcmp(field, "idxbx"))
+    if (!strcmp(field, "idxbx"))
     {
         ptr_i = (int *) value;
         for (ii=0; ii < nbx; ii++)

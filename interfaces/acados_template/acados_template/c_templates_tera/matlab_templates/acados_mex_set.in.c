@@ -441,14 +441,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
                 for (int ii=0; ii<N; ii++)
                 {
-                    ocp_nlp_set(config, solver, ii, "z_guess", value+ii*nz);
+                    ocp_nlp_set(solver, ii, "z_guess", value+ii*nz);
                 }
             }
             else // (nrhs == min_nrhs+1)
             {
                 acados_size = nz;
                 MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-                ocp_nlp_set(config, solver, s0, "z_guess", value);
+                ocp_nlp_set(solver, s0, "z_guess", value);
             }
         }
         else
@@ -473,14 +473,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
                 for (int ii=0; ii<N; ii++)
                 {
-                    ocp_nlp_set(config, solver, ii, "xdot_guess", value+ii*nx);
+                    ocp_nlp_set(solver, ii, "xdot_guess", value+ii*nx);
                 }
             }
             else // nrhs == min_nrhs+1)
             {
                 acados_size = nx;
                 MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-                ocp_nlp_set(config, solver, s0, "xdot_guess", value);
+                ocp_nlp_set(solver, s0, "xdot_guess", value);
             }
         }
         else
@@ -507,14 +507,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
                 for (int ii=0; ii<N; ii++)
                 {
-                    ocp_nlp_set(config, solver, ii, "gnsf_phi_guess", value+ii*nout);
+                    ocp_nlp_set(solver, ii, "gnsf_phi_guess", value+ii*nout);
                 }
             }
             else // (nrhs == min_nrhs+1)
             {
                 acados_size = nout;
                 MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-                ocp_nlp_set(config, solver, s0, "gnsf_phi_guess", value);
+                ocp_nlp_set(solver, s0, "gnsf_phi_guess", value);
             }
         }
         else
