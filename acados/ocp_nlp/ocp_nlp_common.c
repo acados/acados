@@ -354,7 +354,7 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
 
 void ocp_nlp_dims_set_global(void *config_, void *dims_, const char *field, int value_field)
 {
-    ocp_nlp_config *config = config_;
+    // ocp_nlp_config *config = config_;
     ocp_nlp_dims *dims = dims_;
 
     if (!strcmp(field, "np_global"))
