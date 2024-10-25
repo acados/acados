@@ -143,7 +143,7 @@ def check_casadi_version():
 
 def check_casadi_version_supports_p_global():
     try:
-        from casadi import extract_parametric, cse, blazing_spline
+        from casadi import extract_parametric, cse
     except:
         raise Exception("CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se2 release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se2")
 
