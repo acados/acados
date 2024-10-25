@@ -181,9 +181,9 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
     x = model.x
     u = model.u
     p = model.p
+    p_global = model.p_global
     phi = model.disc_dyn_expr
     model_name = model.name
-    nx = casadi_length(x)
 
     symbol = get_casadi_symbol(x)
     nx1 = casadi_length(phi)
@@ -210,14 +210,14 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
 
     if opts["with_solution_sens_wrt_params"]:
         # generate jacobian of lagrange gradient wrt p
-        jac_p = ca.jacobian(phi, p)
+        jac_p = ca.jacobian(phi, p_global)
         # hess_xu_p_old = ca.jacobian((lam.T @ jac_ux).T, p)
-        hess_xu_p = ca.jacobian(adj_ux, p) # using adjoint
+        hess_xu_p = ca.jacobian(adj_ux, p_global) # using adjoint
         fun_name = model_name + '_dyn_disc_phi_jac_p_hess_xu_p'
         context.add_function_definition(fun_name, [x, u, lam, p], [jac_p, hess_xu_p], model_dir)
 
     if opts["with_value_sens_wrt_params"]:
-        adj_p = ca.jtimes(phi, p, lam, True)
+        adj_p = ca.jtimes(phi, p_global, lam, True)
         fun_name = model_name + '_dyn_disc_phi_adj_p'
         context.add_function_definition(fun_name, [x, u, lam, p], [adj_p], model_dir)
 
@@ -400,6 +400,7 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
     p = model.p
     u = model.u
     z = model.z
+    p_global = model.p_global
     symbol = get_casadi_symbol(x)
 
     if stage_type == 'terminal':
@@ -458,11 +459,11 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
     context.add_function_definition(fun_name_jac, [x, u, z, p], [ext_cost, grad_uxz], cost_dir)
 
     if opts["with_solution_sens_wrt_params"]:
-        hess_xu_p = ca.jacobian(grad_uxz, p)
+        hess_xu_p = ca.jacobian(grad_uxz, p_global)
         context.add_function_definition(fun_name_param, [x, u, z, p], [hess_xu_p], cost_dir)
 
     if opts["with_value_sens_wrt_params"]:
-        grad_p = ca.jacobian(ext_cost, p)
+        grad_p = ca.jacobian(ext_cost, p_global)
         context.add_function_definition(fun_name_value_sens, [x, u, z, p], [grad_p], cost_dir)
 
     return

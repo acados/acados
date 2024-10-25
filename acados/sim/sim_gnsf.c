@@ -109,6 +109,10 @@ void sim_gnsf_dims_set(void *config_, void *dims_, const char *field, const int 
     {
         // np dimension not needed
     }
+    else if (!strcmp(field, "np_global"))
+    {
+        // np_global dimension not needed
+    }
     else if (!strcmp(field, "nx1") || !strcmp(field, "gnsf_nx1"))
     {
         dims->nx1 = *value;

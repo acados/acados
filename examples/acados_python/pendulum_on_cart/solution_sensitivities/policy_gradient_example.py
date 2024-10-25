@@ -85,9 +85,8 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     for i, p in enumerate(p_test):
         p_val = np.array([p])
 
-        for n in range(N_horizon+1):
-            acados_ocp_solver.set(n, 'p', p_val)
-            sensitivity_solver.set(n, 'p', p_val)
+        acados_ocp_solver.set_p_global_and_precompute_dependencies(p_val)
+        sensitivity_solver.set_p_global_and_precompute_dependencies(p_val)
         u_opt[i] = acados_ocp_solver.solve_for_x0(x0)[0]
 
         acados_ocp_solver.store_iterate(filename='iterate.json', overwrite=True, verbose=False)
@@ -104,7 +103,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
             min_eig_full[i], min_abs_eig_full[i], min_abs_eig_proj_hess[i], min_eig_proj_hess[i], min_eig_P[i], min_abs_eig_P[i] = evaluate_hessian_eigenvalues(sensitivity_solver, N_horizon)
 
         # Calculate the policy gradient
-        _, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "params_global")
+        _, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "p_global")
         sens_u[i] = sens_u_.item()
 
     # Compare to numerical gradients
@@ -120,8 +119,11 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
                  min_abs_eig_full, min_abs_eig_proj_hess, min_abs_eig_P,
                  eigen_analysis, qp_solver_ric_alg, parameter_name="mass")
 
+    test_tol = 1e-2
+    median_diff = np.median(np.abs(sens_u - sens_u_fd))
+    print(f"Median difference between policy gradient obtained by acados and via FD is {median_diff} should be < {test_tol}.")
     # test: check median since derivative cannot be compared at active set changes
-    assert np.median(np.abs(sens_u - sens_u_fd)) <= 1e-2
+    assert median_diff <= test_tol
 
 
 if __name__ == "__main__":

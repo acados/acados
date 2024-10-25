@@ -5,7 +5,7 @@ from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver, latexify_pl
 
 latexify_plot()
 
-def export_pendulum_ode_model_with_mass_as_param(dt) -> AcadosModel:
+def export_pendulum_ode_model_with_mass_as_p_global(dt) -> AcadosModel:
 
     model_name = 'pendulum_parametric'
 
@@ -66,7 +66,7 @@ def export_pendulum_ode_model_with_mass_as_param(dt) -> AcadosModel:
     model.x = x
     model.xdot = xdot
     model.u = u
-    model.p = p
+    model.p_global = p
     model.name = model_name
 
     return model
@@ -79,7 +79,7 @@ def export_parametric_ocp(
 
     ocp = AcadosOcp()
     dt = T_horizon/N_horizon
-    ocp.model = export_pendulum_ode_model_with_mass_as_param(dt=dt)
+    ocp.model = export_pendulum_ode_model_with_mass_as_p_global(dt=dt)
 
     ocp.solver_options.N_horizon = N_horizon
 
@@ -90,8 +90,8 @@ def export_parametric_ocp(
     ocp.cost.cost_type_e = "EXTERNAL"
 
     # NOTE here we make the cost parametric
-    ocp.model.cost_expr_ext_cost = ca.exp(ocp.model.p) * ocp.model.x.T @ Q_mat @ ocp.model.x + ocp.model.u.T @ R_mat @ ocp.model.u
-    ocp.model.cost_expr_ext_cost_e = ca.exp(ocp.model.p) * ocp.model.x.T @ Q_mat @ ocp.model.x
+    ocp.model.cost_expr_ext_cost = ca.exp(ocp.model.p_global) * ocp.model.x.T @ Q_mat @ ocp.model.x + ocp.model.u.T @ R_mat @ ocp.model.u
+    ocp.model.cost_expr_ext_cost_e = ca.exp(ocp.model.p_global) * ocp.model.x.T @ Q_mat @ ocp.model.x
 
     ocp.constraints.lbu = np.array([-Fmax])
     ocp.constraints.ubu = np.array([+Fmax])
@@ -100,7 +100,7 @@ def export_parametric_ocp(
     ocp.constraints.x0 = x0
 
     # set mass to one
-    ocp.parameter_values = np.ones((1,))
+    ocp.p_global_values = np.ones((1,))
 
     ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"
     ocp.solver_options.integrator_type = "DISCRETE"

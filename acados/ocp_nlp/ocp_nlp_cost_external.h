@@ -55,6 +55,7 @@ typedef struct
     int nu;  // number of inputs
     int ns;  // number of slacks
     int np; // number of parameters
+    int np_global; // number of global parameters
 } ocp_nlp_cost_external_dims;
 
 //

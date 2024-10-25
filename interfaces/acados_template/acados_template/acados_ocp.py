@@ -836,22 +836,26 @@ class AcadosOcp:
                                  ("path", model.con_r_expr), ("initial", model.con_r_expr_0), ("terminal", model.con_r_expr_e)]
 
         if opts.with_solution_sens_wrt_params:
+            if dims.np_global == 0:
+                raise Exception('with_solution_sens_wrt_params is only compatible if global parameters `p_global` are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got emty p_global.')
             if cost.cost_type != "EXTERNAL" or cost.cost_type_0 != "EXTERNAL" or cost.cost_type_e != "EXTERNAL":
                 raise Exception('with_solution_sens_wrt_params is only compatible with EXTERNAL cost_type.')
             if opts.integrator_type != "DISCRETE":
                 raise Exception('with_solution_sens_wrt_params is only compatible with DISCRETE dynamics.')
             for horizon_type, constraint in type_constraint_pairs:
                 if constraint is not None and any(ca.which_depends(constraint, model.p)):
-                    raise Exception(f'with_solution_sens_wrt_params is only implemented if constraints depend not on parameters. Got parameter dependency for {horizon_type} constraint.')
+                    raise Exception(f"with_solution_sens_wrt_params is only implemented if don't constraints depend on parameters. Got parameter dependency for {horizon_type} constraint.")
 
         if opts.with_value_sens_wrt_params:
+            if dims.np_global == 0:
+                raise Exception('with_value_sens_wrt_params is only compatible if global parameters `p_global` are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got emty p_global.')
             if cost.cost_type != "EXTERNAL" or cost.cost_type_0 != "EXTERNAL" or cost.cost_type_e != "EXTERNAL":
                 raise Exception('with_value_sens_wrt_params is only compatible with EXTERNAL cost_type.')
             if opts.integrator_type != "DISCRETE":
                 raise Exception('with_value_sens_wrt_params is only compatible with DISCRETE dynamics.')
             for horizon_type, constraint in type_constraint_pairs:
                 if constraint is not None and any(ca.which_depends(constraint, model.p)):
-                    raise Exception(f'with_value_sens_wrt_params is only implemented if constraints depend not on parameters. Got parameter dependency for {horizon_type} constraint.')
+                    raise Exception(f"with_value_sens_wrt_params is only implemented if don't constraints depend on parameters. Got parameter dependency for {horizon_type} constraint.")
 
         if opts.qp_solver_cond_N is None:
             opts.qp_solver_cond_N = opts.N_horizon

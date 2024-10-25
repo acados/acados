@@ -100,6 +100,10 @@ void ocp_nlp_cost_conl_dims_set(void *config_, void *dims_, const char *field, i
     {
         // np dimension not needed
     }
+    else if (!strcmp(field, "np_global"))
+    {
+        // np dimension not needed
+    }
     else
     {
         printf("\nerror: dimension type: %s not available in module\n", field);

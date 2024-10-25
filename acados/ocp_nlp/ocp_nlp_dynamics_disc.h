@@ -60,6 +60,7 @@ typedef struct
     int nx1;  // number of states at the next stage
     int nu1;  // number of inputes at the next stage
     int np;   // number of parameters
+    int np_global;   // number of global parameters
 
 } ocp_nlp_dynamics_disc_dims;
 
