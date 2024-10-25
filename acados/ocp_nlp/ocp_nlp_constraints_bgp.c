@@ -629,15 +629,7 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     int nge = dims->nge;
     int nphie = dims->nphie;
 
-    if (!strcmp(field, "lb"))
-    {
-        blasfeo_pack_dvec(nb, value, 1, &model->d, 0);
-    }
-    else if (!strcmp(field, "ub"))
-    {
-        blasfeo_pack_dvec(nb, value, 1, &model->d, nb+ng+nphi);
-    }
-    else if (!strcmp(field, "idxbx"))
+    if (!strcmp(field, "idxbx"))
     {
         ptr_i = (int *) value;
         for (ii=0; ii < nbx; ii++)

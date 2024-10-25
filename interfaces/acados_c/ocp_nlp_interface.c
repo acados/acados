@@ -1320,16 +1320,6 @@ void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, 
         double *double_values = value;
         d_ocp_qp_get_ubu(stage, nlp_mem->qp_in, double_values);
     }
-    else if (!strcmp(field, "lb"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_lb(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "ub"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_ub(stage, nlp_mem->qp_in, double_values);
-    }
     else if (!strcmp(field, "C"))
     {
         double *double_values = value;
