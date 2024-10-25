@@ -297,7 +297,7 @@ class AcadosOcpSolver:
 
         self.__acados_lib.ocp_nlp_get_at_stage.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
 
-        self.__acados_lib.ocp_nlp_get_from_iterate.argtypes = [c_void_p, c_void_p, c_int, c_int, c_char_p, c_void_p]
+        self.__acados_lib.ocp_nlp_get_from_iterate.argtypes = [c_void_p, c_int, c_int, c_char_p, c_void_p]
         self.__acados_lib.ocp_nlp_get_from_iterate.restypes = c_void_p
 
         getattr(self.shared_lib, f"{self.name}_acados_solve").argtypes = [c_void_p]
@@ -1519,7 +1519,7 @@ class AcadosOcpSolver:
         out = np.ascontiguousarray(np.zeros((dim,)), dtype=np.float64)
         out_data = cast(out.ctypes.data, POINTER(c_double))
         out_data_p = cast((out_data), c_void_p)
-        self.__acados_lib.ocp_nlp_get_from_iterate(self.nlp_dims, self.nlp_solver, iteration, stage, field, out_data_p)
+        self.__acados_lib.ocp_nlp_get_from_iterate(self.nlp_solver, iteration, stage, field, out_data_p)
         return out
 
     def get_iterate(self, iteration: int) -> AcadosOcpIterate:

@@ -1437,11 +1437,12 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
 }
 
 
-void ocp_nlp_get_from_iterate(ocp_nlp_dims *dims, ocp_nlp_solver *solver,
-        int iter, int stage, const char *field, void *value)
+void ocp_nlp_get_from_iterate(ocp_nlp_solver *solver, int iter, int stage, const char *field, void *value)
 {
     ocp_nlp_config *config = solver->config;
     ocp_nlp_memory *nlp_mem;
+    ocp_nlp_dims *dims = solver->dims;
+
     config->get(config, solver->dims, solver->mem, "nlp_mem", &nlp_mem);
 
     ocp_nlp_opts *nlp_opts;
@@ -1458,6 +1459,7 @@ void ocp_nlp_get_from_iterate(ocp_nlp_dims *dims, ocp_nlp_solver *solver,
 void ocp_nlp_set(ocp_nlp_config *config, ocp_nlp_solver *solver,
         int stage, const char *field, void *value)
 {
+    // TODO only solver, no config
     ocp_nlp_memory *mem;
     config->get(config, solver->dims, solver->mem, "nlp_mem", &mem);
     // printf("called getter: nlp_mem %p\n", mem);
