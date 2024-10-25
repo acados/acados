@@ -10,7 +10,7 @@ on:
       - '*'
 
 env:
-  BUILD_TYPE: Release
+  BUILD_TYPE: Debug
   ACADOS_UNIT_TESTS: OFF
   ACADOS_PYTHON: OFF
   ACADOS_OCTAVE: OFF
