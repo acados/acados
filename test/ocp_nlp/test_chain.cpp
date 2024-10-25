@@ -1047,8 +1047,6 @@ void setup_and_solve_nlp(int NN,
     if (NMF > 3 && model_type != CONTINUOUS_MODEL)
         return;
 
-    // TODO(dimitris): fix minor memory leak
-    // here
     ocp_nlp_config *config = ocp_nlp_config_create(*plan);
 
     /************************************************
@@ -1072,7 +1070,6 @@ void setup_and_solve_nlp(int NN,
         ocp_nlp_dims_set_constraints(config, dims, i, "nbu", &nbu[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "ng", &ng[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "nh", &nh[i]);
-        // ocp_nlp_dims_set_constraints(config, dims, i, "np", &nq[i]);
     }
 
     /************************************************
@@ -1157,32 +1154,6 @@ void setup_and_solve_nlp(int NN,
     * nonlinear constraints
     ************************************************/
     external_function_generic nonlin_constr_generic;
-
-    // if (con_type == GENERAL_NONLINEAR)
-    // {
-    //     switch (NMF)
-    //     {
-    //         case 1:
-    //             nonlin_constr_generic.evaluate = &nonlin_constr_nm2;
-    //             break;
-    //         case 2:
-    //             nonlin_constr_generic.evaluate = &nonlin_constr_nm3;
-    //             break;
-    //         case 3:
-    //             nonlin_constr_generic.evaluate = &nonlin_constr_nm4;
-    //             break;
-    //         case 4:
-    //             nonlin_constr_generic.evaluate = &nonlin_constr_nm5;
-    //             break;
-    //         case 5:
-    //             nonlin_constr_generic.evaluate = &nonlin_constr_nm6;
-    //             break;
-    //         default:
-    //             printf("\nnonlin constr not implemented for this number of masses\n\n");
-    //             exit(1);
-    //     }
-    // }
-
 
     /************************************************
     * nlp_in
