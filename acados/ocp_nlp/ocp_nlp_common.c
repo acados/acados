@@ -3180,7 +3180,7 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
         exit(1);
 
     }
-    else if (!strcmp("params_global", field))
+    else if (!strcmp("p_global", field))
     {
         for (i = 0; i < N; i++)
         {
@@ -3236,7 +3236,7 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
         printf("\nerror: field %s not available in ocp_nlp_common_eval_lagr_grad_p\n", field);
         exit(1);
     }
-    else if (!strcmp("params_global", field))
+    else if (!strcmp("p_global", field))
     {
         // initialize to zero
         blasfeo_dvecse(np_global, 0., &work->out_np_global, 0);

@@ -514,8 +514,12 @@ class AcadosOcpSolver:
 
         - for field `params_global`, the gradient of the Lagrange function w.r.t. the global parameters is computed in acados.
 
-        :param with_respect_to: string in ["initial_state", "params_global"]
+        :param with_respect_to: string in ["initial_state", "p_global"]
         """
+
+        if with_respect_to == "params_global":
+            print("Deprecation warning: 'params_global' is deprecated and has been renamed to 'p_global'.")
+            with_respect_to = "p_global"
 
         if with_respect_to == "initial_state":
             if not self.acados_ocp.constraints.has_x0:
@@ -528,10 +532,10 @@ class AcadosOcpSolver:
             nlam_non_slack = lam.shape[0]//2 - self.acados_ocp.dims.ns_0
             grad = lam[nbu:nbu+nx] - lam[nlam_non_slack+nbu : nlam_non_slack+nbu+nx]
 
-        elif with_respect_to == "params_global":
+        elif with_respect_to == "p_global":
             np_global = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p_global".encode('utf-8'))
 
-            field = "params_global".encode('utf-8')
+            field = "p_global".encode('utf-8')
             t0 = time.time()
             grad = np.zeros((np_global,))
             grad_p = np.ascontiguousarray(grad, dtype=np.float64)
@@ -555,7 +559,7 @@ class AcadosOcpSolver:
         Evaluate the sensitivity of the current solution x_i, u_i with respect to the initial state or the parameters for all stages i in `stages`.
 
             :param stages: stages for which the sensitivities are returned, int or list of int
-            :param with_respect_to: string in ["initial_state", "params_global"]
+            :param with_respect_to: string in ["initial_state", "p_global"]
             :returns: a tuple (sens_x, sens_u) with the solution sensitivities.
                     If stages is a list, sens_x is a list of the same length.
                     For sens_u, the list has length len(stages) or len(stages)-1 depending on whether N is included or not.
@@ -576,6 +580,10 @@ class AcadosOcpSolver:
         .. note:: Solution sensitivities with respect to parameters are currently implemented assuming the parameter vector p is global within the OCP, i.e. p=p_i with i=0, ..., N.
         .. note:: Solution sensitivities with respect to parameters are currently implemented only for parametric discrete dynamics and parametric external costs (in particular, parametric constraints are not covered).
         """
+
+        if with_respect_to == "params_global":
+            print("Deprecation warning: 'params_global' is deprecated and has been renamed to 'p_global'.")
+            with_respect_to = "p_global"
 
         if not (self.acados_ocp.solver_options.qp_solver == 'FULL_CONDENSING_HPIPM' or
                 self.acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM'):
@@ -612,10 +620,10 @@ class AcadosOcpSolver:
             ngrad = nx
             field = "ex"
 
-        elif with_respect_to == "params_global":
+        elif with_respect_to == "p_global":
             np_global = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p_global".encode('utf-8'))
             ngrad = np_global
-            field = "params_global"
+            field = "p_global"
 
             # compute jacobians wrt params in all modules
             t0 = time.time()
@@ -705,7 +713,7 @@ class AcadosOcpSolver:
             if index < 0 or index > nx:
                 raise Exception(f'AcadosOcpSolver.eval_param_sens(): index must be in [0, nx-1], got: {index}.')
 
-        elif field == "params_global":
+        elif field == "p_global":
             nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p".encode('utf-8'))
 
             if index < 0 or index > nparam:

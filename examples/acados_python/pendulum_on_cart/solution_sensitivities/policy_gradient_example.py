@@ -103,7 +103,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
             min_eig_full[i], min_abs_eig_full[i], min_abs_eig_proj_hess[i], min_eig_proj_hess[i], min_eig_P[i], min_abs_eig_P[i] = evaluate_hessian_eigenvalues(sensitivity_solver, N_horizon)
 
         # Calculate the policy gradient
-        _, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "params_global")
+        _, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "p_global")
         sens_u[i] = sens_u_.item()
 
     # Compare to numerical gradients

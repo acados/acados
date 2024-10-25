@@ -246,7 +246,6 @@ cdef class AcadosOcpSolverCython:
 
 
 
-    # TODO: rename to get_and_eval_? since we now perform computations in this function.
     def eval_and_get_optimal_value_gradient(self, with_respect_to: str = "initial_state") -> np.ndarray:
         """
         Returns the gradient of the optimal value function w.r.t. what is specified in `with_respect_to`.
@@ -259,9 +258,12 @@ cdef class AcadosOcpSolverCython:
 
         - for field `params_global`, the gradient of the Lagrange function w.r.t. the global parameters is computed in acados.
 
-        :param with_respect_to: string in ["initial_state", "params_global"]
+        :param with_respect_to: string in ["initial_state", "p_global"]
 
         """
+        if with_respect_to == "params_global":
+            print("Deprecation warning: 'params_global' is deprecated and has been renamed to 'p_global'.")
+            with_respect_to = "p_global"
 
         cdef int nx
         cdef int nbu
@@ -281,10 +283,10 @@ cdef class AcadosOcpSolverCython:
             nlam_non_slack = lam.shape[0]//2 - self.acados_ocp.dims.ns_0
             grad = lam[nbu:nbu+nx] - lam[nlam_non_slack+nbu : nlam_non_slack+nbu+nx]
 
-        elif with_respect_to == "params_global":
+        elif with_respect_to == "p_global":
             np_global = acados_solver_common.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p_global".encode('utf-8'))
 
-            field = "params_global".encode('utf-8')
+            field = "p_global".encode('utf-8')
             t0 = time.time()
             grad = np.ascontiguousarray(np.zeros((np_global,)), dtype=np.float64)
             acados_solver_common.ocp_nlp_eval_lagrange_grad_p(self.nlp_solver, self.nlp_in, field, <void *> grad.data)
@@ -302,7 +304,7 @@ cdef class AcadosOcpSolverCython:
         Evaluate the sensitivity of the current solution x_i, u_i with respect to the initial state or the parameters for all stages i in `stages`.
 
             :param stages: stages for which the sensitivities are returned, int or list of int
-            :param with_respect_to: string in ["initial_state", "params_global"]
+            :param with_respect_to: string in ["initial_state", "p_global"]
             :returns: a tuple (sens_x, sens_u) with the solution sensitivities.
                     If stages is a list, sens_x is a list of the same length. For sens_u, the list has length len(stages) or len(stages)-1 depending on whether N is included or not.
                     If stages is a scalar, sens_x and sens_u are np.ndarrays of shape (nx[stages], ngrad) and (nu[stages], ngrad).
@@ -320,6 +322,9 @@ cdef class AcadosOcpSolverCython:
 
         .. note:: Timing of the sensitivities computation consists of time_solution_sens_lin, time_solution_sens_solve.
         """
+        if with_respect_to == "params_global":
+            print("Deprecation warning: 'params_global' is deprecated and has been renamed to 'p_global'.")
+            with_respect_to = "p_global"
 
         # if not (self.acados_ocp.solver_options.qp_solver == 'FULL_CONDENSING_HPIPM' or
         #         self.acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM'):
@@ -356,11 +361,11 @@ cdef class AcadosOcpSolverCython:
             ngrad = nx
             field = "ex"
 
-        elif with_respect_to == "params_global":
+        elif with_respect_to == "p_global":
             np_global = acados_solver_common.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p_global".encode('utf-8'))
 
             ngrad = np_global
-            field = "params_global"
+            field = "p_global"
 
             # compute jacobians wrt params in all modules
             t0 = time.time()

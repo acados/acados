@@ -441,7 +441,7 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
         print(f"sensitivity_solver status {sensitivity_solver.status}")
 
         # Calculate the policy gradient
-        _, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "params_global")
+        _, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "p_global")
         timings_lin_params[i] = sensitivity_solver.get_stats("time_solution_sens_lin")
         timings_solve_params[i] = sensitivity_solver.get_stats("time_solution_sens_solve")
 
