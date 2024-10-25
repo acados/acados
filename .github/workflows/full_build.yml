@@ -165,6 +165,16 @@ jobs:
         cd ${{runner.workspace}}/acados/examples/acados_python/tests
         python test_rti_sqp_residuals.py
 
+    - name: Python sensitivity examples
+      working-directory: ${{runner.workspace}}/acados/build
+      shell: bash
+      run: |
+        source ${{runner.workspace}}/acados/acadosenv/bin/activate
+        cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/solution_sensitivities
+        python value_gradient_example.py
+        python policy_gradient_example.py
+        python test_solution_sens_and_exact_hess.py
+
   MATLAB_test:
     needs: core_build
     runs-on: ubuntu-22.04
