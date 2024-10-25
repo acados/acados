@@ -66,6 +66,7 @@ void *ocp_nlp_dynamics_disc_dims_assign(void *config_, void *raw_memory)
     c_ptr += sizeof(ocp_nlp_dynamics_disc_dims);
 
     dims->np = 0;
+    dims->np_global = 0;
 
     assert((char *) raw_memory + ocp_nlp_dynamics_disc_dims_calculate_size(config_) >= c_ptr);
 
@@ -106,6 +107,10 @@ void ocp_nlp_dynamics_disc_dims_set(void *config_, void *dims_, const char *dim,
     {
         dims->np = *value;
     }
+    else if (!strcmp(dim, "np_global"))
+    {
+        dims->np_global = *value;
+    }
     else
     {
         printf("\ndimension type %s not available in module ocp_nlp_dynamics_disc\n", dim);
@@ -144,6 +149,10 @@ void ocp_nlp_dynamics_disc_dims_get(void *config_, void *dims_, const char *dim,
     else if (!strcmp(dim, "np"))
     {
         *value = dims->np;
+    }
+    else if (!strcmp(dim, "np_global"))
+    {
+        *value = dims->np_global;
     }
     else
     {
@@ -282,7 +291,7 @@ acados_size_t ocp_nlp_dynamics_disc_memory_calculate_size(void *config_, void *d
     int nx = dims->nx;
     int nu = dims->nu;
     int nx1 = dims->nx1;
-    int np = dims->np;
+    int np_global = dims->np_global;
 
     acados_size_t size = 0;
 
@@ -290,8 +299,8 @@ acados_size_t ocp_nlp_dynamics_disc_memory_calculate_size(void *config_, void *d
 
     if (opts->with_solution_sens_wrt_params)
     {
-        size += 1 * blasfeo_memsize_dmat(nx1, np);        // params_jac
-        size += 1 * blasfeo_memsize_dmat(nu + nx, np);    // params_lag_jac
+        size += 1 * blasfeo_memsize_dmat(nx1, np_global);        // params_jac
+        size += 1 * blasfeo_memsize_dmat(nu + nx, np_global);    // params_lag_jac
     }
     size += 1 * blasfeo_memsize_dvec(nu + nx + nx1);  // adj
     size += 1 * blasfeo_memsize_dvec(nx1);            // fun
@@ -315,7 +324,7 @@ void *ocp_nlp_dynamics_disc_memory_assign(void *config_, void *dims_, void *opts
     int nx = dims->nx;
     int nu = dims->nu;
     int nx1 = dims->nx1;
-    int np = dims->np;
+    int np_global = dims->np_global;
 
     // struct
     ocp_nlp_dynamics_disc_memory *memory = (ocp_nlp_dynamics_disc_memory *) c_ptr;
@@ -327,9 +336,9 @@ void *ocp_nlp_dynamics_disc_memory_assign(void *config_, void *dims_, void *opts
     if (opts->with_solution_sens_wrt_params)
     {
         // params_jac
-        assign_and_advance_blasfeo_dmat_mem(nx1, np, &memory->params_jac, &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(nx1, np_global, &memory->params_jac, &c_ptr);
         // params_lag_jac
-        assign_and_advance_blasfeo_dmat_mem(nx + nu, np, &memory->params_lag_jac, &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(nx + nu, np_global, &memory->params_lag_jac, &c_ptr);
     }
     // adj
     assign_and_advance_blasfeo_dvec_mem(nu + nx + nx1, &memory->adj, &c_ptr);
@@ -490,7 +499,7 @@ acados_size_t ocp_nlp_dynamics_disc_workspace_calculate_size(void *config_, void
 {
     // ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_disc_dims *dims = dims_;
-    ocp_nlp_dynamics_disc_opts *opts = opts_;
+    // ocp_nlp_dynamics_disc_opts *opts = opts_;
 
     int nx = dims->nx;
     int nu = dims->nu;
@@ -513,7 +522,7 @@ static void ocp_nlp_dynamics_disc_cast_workspace(void *config_, void *dims_, voi
 {
     // ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_disc_dims *dims = dims_;
-    ocp_nlp_dynamics_disc_opts *opts = opts_;
+    // ocp_nlp_dynamics_disc_opts *opts = opts_;
     ocp_nlp_dynamics_disc_workspace *work = work_;
 
     int nx = dims->nx;
@@ -816,10 +825,10 @@ void ocp_nlp_dynamics_disc_compute_jac_hess_p(void *config_, void *dims_, void *
 	ext_fun_in[2] = &pi_in;
 
 	ext_fun_type_out[0] = BLASFEO_DMAT;
-	ext_fun_out[0] = &memory->params_jac;  // jac: nx1 x np
+	ext_fun_out[0] = &memory->params_jac;  // jac: nx1 x np_global
 
 	ext_fun_type_out[1] = BLASFEO_DMAT;
-	ext_fun_out[1] = &memory->params_lag_jac;  // jac: nxnu x np
+	ext_fun_out[1] = &memory->params_lag_jac;  // jac: nxnu x np_global
 
 	// call external function
 	model->disc_dyn_phi_jac_p_hess_xu_p->evaluate(model->disc_dyn_phi_jac_p_hess_xu_p, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);

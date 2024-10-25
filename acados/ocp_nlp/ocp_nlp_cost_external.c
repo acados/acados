@@ -101,6 +101,10 @@ void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *fiel
     {
         dims->np = *value;
     }
+    else if (!strcmp(field, "np_global"))
+    {
+        dims->np_global = *value;
+    }
     else
     {
         printf("\nerror: ocp_nlp_cost_external_dims_set: dimension type %s not available.\n", field);
@@ -886,7 +890,7 @@ void ocp_nlp_cost_external_compute_jac_p(void *config_, void *dims_, void *model
     int nu = dims->nu;
     int nx = dims->nx;
     int nz = dims->nz;
-    int np = dims->np;
+    int np_global = dims->np_global;
 
     /* specify input types and pointers for external cost function */
     ext_fun_arg_t ext_fun_type_in[3];
@@ -926,7 +930,7 @@ void ocp_nlp_cost_external_compute_jac_p(void *config_, void *dims_, void *model
     // scale
     if(model->scaling != 1.0)
     {
-        blasfeo_dgesc(nu + nx + nz, np, model->scaling, &memory->cost_grad_params_jac, 0, 0);
+        blasfeo_dgesc(nu + nx + nz, np_global, model->scaling, &memory->cost_grad_params_jac, 0, 0);
     }
 
     return;
@@ -945,7 +949,7 @@ void ocp_nlp_cost_external_eval_grad_p(void *config_, void *dims_, void *model_,
     int nu = dims->nu;
     // int nx = dims->nx;
     // int nz = dims->nz;
-    int np = dims->np;
+    int np_global = dims->np_global;
 
     /* specify input types and pointers for external cost function */
     ext_fun_arg_t ext_fun_type_in[3];
@@ -980,7 +984,7 @@ void ocp_nlp_cost_external_eval_grad_p(void *config_, void *dims_, void *model_,
     // scale
     if(model->scaling != 1.0)
     {
-        blasfeo_dvecsc(np, model->scaling, out, 0);
+        blasfeo_dvecsc(np_global, model->scaling, out, 0);
     }
 
     return;

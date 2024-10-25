@@ -738,6 +738,10 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
     {
         return dims->np[stage];
     }
+    else if (!strcmp(field, "p_global") || !strcmp(field, "np_global"))
+    {
+        return dims->np_global;
+    }
     else if (!strcmp(field, "lam"))
     {
         return 2*dims->ni[stage];
