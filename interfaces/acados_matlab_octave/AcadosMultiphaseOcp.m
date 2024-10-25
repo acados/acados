@@ -61,7 +61,6 @@ classdef AcadosMultiphaseOcp < handle
         end_idx
         cost_start_idx
 
-        casadi_pool_names
         external_function_files_ocp
         external_function_files_model
     end
@@ -112,8 +111,6 @@ classdef AcadosMultiphaseOcp < handle
             obj.acados_include_path = [acados_folder, '/include'];
             obj.acados_lib_path = [acados_folder, '/lib'];
 
-            obj.casadi_pool_names = [];
-
         end
 
 
@@ -145,7 +142,7 @@ classdef AcadosMultiphaseOcp < handle
 
         function make_consistent(self)
             % check options
-            self.mocp_opts.make_consistent(self.solver_options, self.n_phases)
+            self.mocp_opts.make_consistent(self.solver_options, self.n_phases);
 
             % check phases formulation objects are distinct
             if ~is_octave() % octave does not support object comparison
@@ -306,9 +303,8 @@ classdef AcadosMultiphaseOcp < handle
             end
         end
 
-        function context  = generate_external_functions(self)
+        function context = generate_external_functions(self)
             % generate external functions
-
             code_gen_opts = struct();
             code_gen_opts.generate_hess = strcmp(self.solver_options.hessian_approx, 'EXACT');
             code_gen_opts.with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params;
@@ -322,7 +318,15 @@ classdef AcadosMultiphaseOcp < handle
                 % this is the only option that can vary and influence external functions to be generated
                 self.dummy_ocp_list{i}.solver_options.integrator_type = self.mocp_opts.integrator_type{i};
                 self.dummy_ocp_list{i}.code_export_directory = self.code_export_directory;
-                self.dummy_ocp_list{i}.generate_external_functions(context);
+                context = self.dummy_ocp_list{i}.setup_code_generation_context(context);
+            end
+
+            context.finalize();
+            self.external_function_files_model = context.get_external_function_file_list(false);
+            self.external_function_files_ocp = context.get_external_function_file_list(true);
+
+            for i=1:self.n_phases
+                self.phases_dims{i}.n_global_data = context.get_n_global_data();
             end
         end
 
@@ -400,17 +404,17 @@ classdef AcadosMultiphaseOcp < handle
                 self.dummy_ocp_list{i}.dump_to_json(tmp_json_file);
                 tmp_json_path = fullfile(pwd, tmp_json_file);
 
-                for i = 1:length(template_list)
-                    in_file = template_list{i}{1};
-                    out_file = template_list{i}{2};
-                    if length(template_list{i}) == 3
-                        out_dir = template_list{i}{3};
+                for j = 1:length(template_list)
+                    in_file = template_list{j}{1};
+                    out_file = template_list{j}{2};
+                    if length(template_list{j}) == 3
+                        out_dir = template_list{j}{3};
                         if ~(exist(out_dir, 'dir'))
                             mkdir(out_dir);
                         end
                         out_file = fullfile(out_dir, out_file);
                     end
-                    render_file( in_file, out_file, tmp_json_path )
+                    render_file( in_file, out_file, tmp_json_path );
                 end
             end
             disp('rendered model templates successfully');
@@ -434,11 +438,11 @@ classdef AcadosMultiphaseOcp < handle
                     end
                     out_file = fullfile(out_dir, out_file);
                 end
-                render_file( in_file, out_file, self.json_file )
+                render_file( in_file, out_file, self.json_file );
             end
 
             disp('rendered solver templates successfully!');
-            cd(main_dir)
+            cd(main_dir);
         end
     end % methods
 end

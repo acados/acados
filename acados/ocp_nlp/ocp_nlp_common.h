@@ -146,6 +146,9 @@ typedef struct ocp_nlp_dims
     int *nz;  // number of algebraic variables
     int *ns;  // number of slack variables
     int *np;  // number of parameters
+
+    int np_global;  // number of global parameters
+    int n_global_data;  // size of global_data; expressions that only depend on p_global; detected automatically during code generation
     int N;    // number of shooting nodes
 
     void *raw_memory; // Pointer to allocated memory, to be used for freeing
@@ -198,6 +201,9 @@ void ocp_nlp_dims_set_cost(void *config_, void *dims_, int stage, const char *fi
 void ocp_nlp_dims_set_dynamics(void *config_, void *dims_, int stage, const char *field,
                                const void* value);
 
+void ocp_nlp_dims_set_global(void *config_, void *dims_, const char *field, int value_field);
+
+
 /************************************************
  * Inputs
  ************************************************/
@@ -210,6 +216,9 @@ typedef struct ocp_nlp_in
 
     /// Parameter values.
     double **parameter_values;
+
+    /// Global data
+    double *global_data;
 
     /// Pointers to cost functions (TBC).
     void **cost;

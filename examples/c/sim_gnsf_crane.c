@@ -55,7 +55,7 @@ int main() {
 *   external functions
 ************************************************/
     external_function_opts ext_fun_opts;
-    ext_fun_opts.external_workspace = false;
+    external_function_opts_set_to_default(&ext_fun_opts);
 
     // phi_fun
     external_function_casadi phi_fun;

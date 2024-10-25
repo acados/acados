@@ -129,7 +129,7 @@ int main()
 	int idxbx[] = {0, 1, 2, 3};
 
     external_function_opts ext_fun_opts;
-    ext_fun_opts.external_workspace = false;
+    external_function_opts_set_to_default(&ext_fun_opts);
 
     // implicit dae
     external_function_casadi impl_dae_fun;

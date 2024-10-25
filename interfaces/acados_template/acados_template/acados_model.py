@@ -336,9 +336,8 @@ class AcadosModel():
                 raise Exception("model.p_global is only supported for OCPs")
             if any(ca.which_depends(self.p_global, self.p)):
                 raise Exception(f"model.p_global must not depend on model.p, got p_global ={self.p_global}, p = {self.p}")
-            if not isinstance(self.p_global, (ca.MX)):
-                # otherwise: AttributeError: 'SX' object has no attribute 'primitives'
-                raise Exception(f"model.p_global must be casadi.MX, got {type(self.p_global)}")
+            if not isinstance(self.p_global, (ca.MX, ca.SX)):
+                raise Exception(f"model.p_global must be casadi.MX, casadi.SX got {type(self.p_global)}")
             dims.np_global = casadi_length(self.p_global)
 
         # model output dimension nx_next: dimension of the next state

@@ -296,6 +296,9 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
         dims->np[i] = 0;
     // TODO initialize dims to zero by default also in modules !!!!!!!
 
+    dims->n_global_data = 0;
+    dims->np_global = 0;
+
     // assert
     assert((char *) raw_memory + ocp_nlp_dims_calculate_size_self(N) >= c_ptr);
 
@@ -348,6 +351,28 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
     return dims;
 }
 
+
+void ocp_nlp_dims_set_global(void *config_, void *dims_, const char *field, int value_field)
+{
+    // ocp_nlp_config *config = config_;
+    ocp_nlp_dims *dims = dims_;
+
+    if (!strcmp(field, "np_global"))
+    {
+        dims->np_global = value_field;
+    }
+    else if (!strcmp(field, "n_global_data"))
+    {
+        dims->n_global_data = value_field;
+    }
+    else
+    {
+        printf("ocp_nlp_dims_set_global: field %s not supported.\n", field);
+        exit(1);
+    }
+
+    // TOOD: propagate to modules
+}
 
 
 void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
@@ -651,6 +676,9 @@ static acados_size_t ocp_nlp_in_calculate_size_self(ocp_nlp_dims *dims)
     {
         size += dims->np[i] * sizeof(double);
     }
+    // global_data
+    size += dims->n_global_data * sizeof(double);
+
     size += (N + 1) * sizeof(double *);
 
     size += N * sizeof(void *);  // dynamics
@@ -731,6 +759,8 @@ static ocp_nlp_in *ocp_nlp_in_assign_self(ocp_nlp_dims *dims, void *raw_memory)
             in->parameter_values[i][ip] = 0.0;
         }
     }
+    assign_and_advance_double(dims->n_global_data, &in->global_data, &c_ptr);
+
 
     // dynamics
     in->dynamics = (void **) c_ptr;

@@ -307,6 +307,9 @@ static ocp_nlp_dims* {{ model.name }}_acados_create_setup_dimensions({{ model.na
     ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "ns", ns);
     ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "np", np);
 
+    ocp_nlp_dims_set_global(nlp_config, nlp_dims, "np_global", {{ dims.np_global }});
+    ocp_nlp_dims_set_global(nlp_config, nlp_dims, "n_global_data", {{ dims.n_global_data }});
+
     for (int i = 0; i <= N; i++)
     {
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nbx", &nbx[i]);
@@ -411,6 +414,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     } while(false)
 
     external_function_opts ext_fun_opts;
+    external_function_opts_set_to_default(&ext_fun_opts);
 
 {% if dims.np_global > 0 %}
     // NOTE: p_global_precompute_fun cannot use external_workspace!!!
@@ -422,9 +426,32 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     capsule->p_global_precompute_fun.casadi_n_in = &{{ name }}_p_global_precompute_fun_n_in;
     capsule->p_global_precompute_fun.casadi_n_out = &{{ name }}_p_global_precompute_fun_n_out;
     external_function_casadi_create(&capsule->p_global_precompute_fun, &ext_fun_opts);
-{%- endif %}
+    // asserts
+    if (capsule->p_global_precompute_fun.in_num != 1)
+    {
+        printf("input dimension of p_global_precompute_fun should have 1 input, got %d\n", capsule->p_global_precompute_fun.in_num);
+        exit(1);
+    }
+    if (capsule->p_global_precompute_fun.out_num != 1)
+    {
+        printf("input dimension of p_global_precompute_fun should have 1 output, got %d\n", capsule->p_global_precompute_fun.out_num);
+        exit(1);
+    }
+    if (capsule->p_global_precompute_fun.args_size[0] != {{ dims.np_global }})
+    {
+        printf("input dimension of p_global_precompute_fun should be np_global = {{ dims.np_global }}, got %d\n", capsule->p_global_precompute_fun.args_size[0]);
+        exit(1);
+    }
+    if (capsule->p_global_precompute_fun.res_size[0] != {{ dims.n_global_data }})
+    {
+        printf("output dimension of p_global_precompute_fun should be n_global_data = {{ dims.n_global_data }}, got %d\n", capsule->p_global_precompute_fun.res_size[0]);
+        exit(1);
+    }
 
+    ext_fun_opts.with_global_data = true;
+{%- endif %}
     ext_fun_opts.external_workspace = true;
+
 
 {%- if constraints.constr_type_0 == "BGH" and dims.nh_0 > 0 %}
     MAP_CASADI_FNC(nl_constr_h_0_fun_jac, {{ model.name }}_constr_h_0_fun_jac_uxt_zt);
@@ -2645,12 +2672,8 @@ int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver
         exit(1);
     }
 
-{%- set n_pools = casadi_pool_names | length %}
-{%- for ip in range(end=n_pools) %}
-{%- set pool_name = casadi_pool_names[ip] %}
-{%- set fun_name_split = pool_name | split(pat='|') %}
-    fun->res[{{ ip }}] = {{ fun_name_split[0] }}_get_pool_double("{{ pool_name }}");
-{%- endfor %}
+    ocp_nlp_in *in = {{ model.name }}_acados_get_nlp_in(capsule);
+    fun->res[0] = in->global_data;
 
     fun->casadi_fun((const double **) fun->args, fun->res, fun->int_work, fun->float_work, NULL);
     return 1;

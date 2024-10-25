@@ -1283,11 +1283,13 @@ int main() {
     }
 #endif
 
-	// constraitns
+	// constraints
     for (int ii = 0; ii <= NN; ii++)
     {
 		ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[ii], ii);
     }
+
+	ocp_nlp_globalization_fixed_step_config_initialize_default(config->globalization);
 
     /************************************************
     * ocp_nlp_dims

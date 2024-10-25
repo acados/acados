@@ -171,8 +171,6 @@ class AcadosMultiphaseOcp:
         self.__problem_class = "MOCP"
         self.__json_file = 'mocp.json'
 
-        self.__casadi_pool_names = None
-
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
 
@@ -442,7 +440,6 @@ class AcadosMultiphaseOcp:
         return
 
 
-
     def generate_external_functions(self) -> GenerateContext:
 
         # options for code generation
@@ -461,8 +458,9 @@ class AcadosMultiphaseOcp:
             self.dummy_ocp_list[i].code_export_directory = self.code_export_directory
 
         context.finalize()
-        self.__casadi_pool_names = context.pool_names
         self.__external_function_files_model = context.get_external_function_file_list(ocp_specific=False)
         self.__external_function_files_ocp = context.get_external_function_file_list(ocp_specific=True)
+        for i in range(self.n_phases):
+            self.phases_dims[i].n_global_data = context.get_n_global_data()
 
         return context

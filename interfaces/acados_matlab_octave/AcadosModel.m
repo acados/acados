@@ -227,8 +227,8 @@ classdef AcadosModel < handle
                 error('model.p_global should be column vector.');
             end
 
-            if dims.np_global > 0 && ~isa(obj.p_global, 'casadi.MX')
-                error('model.p_global needs to be casadi.MX')
+            if dims.np_global > 0 && ~(isa(obj.p_global, 'casadi.MX') || isa(obj.p_global, 'casadi.SX'))
+                error('model.p_global needs to be casadi.MX or casadi.SX')
             end
             if isempty(obj.xdot)
                 obj.xdot = empty_var;

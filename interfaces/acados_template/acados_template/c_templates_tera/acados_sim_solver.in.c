@@ -89,6 +89,7 @@ int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * cap
     double Tsim = {{ solver_options.Tsim }};
 
     external_function_opts ext_fun_opts;
+    external_function_opts_set_to_default(&ext_fun_opts);
     ext_fun_opts.external_workspace = false;
 
     {% if solver_options.integrator_type == "IRK" %}
