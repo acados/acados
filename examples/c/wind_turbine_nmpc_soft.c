@@ -238,24 +238,24 @@ int main()
     // int nh[NN+1] = {}; // nonlinear constraints
     // int nsh[NN+1] = {}; // softed nonlinear constraints
 
-	
-	int *nx = malloc(sizeof(int)*(NN+1));
-	int *nu = malloc(sizeof(int)*(NN+1));
-	int *nz = malloc(sizeof(int)*(NN+1));
-	int *ns = malloc(sizeof(int)*(NN+1));
-	int *ny = malloc(sizeof(int)*(NN+1));
-	int *nbx = malloc(sizeof(int)*(NN+1));
-	int *nsbx = malloc(sizeof(int)*(NN+1)); // Added for testing soft constraints
-	int *nbu = malloc(sizeof(int)*(NN+1));
-	int *ng = malloc(sizeof(int)*(NN+1));
-	int *nh = malloc(sizeof(int)*(NN+1));
-	int *nsh = malloc(sizeof(int)*(NN+1));
+
+    int *nx = malloc(sizeof(int)*(NN+1));
+    int *nu = malloc(sizeof(int)*(NN+1));
+    int *nz = malloc(sizeof(int)*(NN+1));
+    int *ns = malloc(sizeof(int)*(NN+1));
+    int *ny = malloc(sizeof(int)*(NN+1));
+    int *nbx = malloc(sizeof(int)*(NN+1));
+    int *nsbx = malloc(sizeof(int)*(NN+1)); // Added for testing soft constraints
+    int *nbu = malloc(sizeof(int)*(NN+1));
+    int *ng = malloc(sizeof(int)*(NN+1));
+    int *nh = malloc(sizeof(int)*(NN+1));
+    int *nsh = malloc(sizeof(int)*(NN+1));
 
     // TODO(dimitris): setup bounds on states and controls based on ACADO controller
     nx[0] = nx_;
     nu[0] = nu_;
     nbx[0] = nx_;
-	nsbx[0] = 0; // Added for testing soft constraints
+    nsbx[0] = 0; // Added for testing soft constraints
     nbu[0] = nu_;
     ng[0] = 0;
     // TODO(dimitris): add bilinear constraints later
@@ -270,7 +270,7 @@ int main()
         nx[i] = nx_;
         nu[i] = nu_;
         nbx[i] = 3;
-		nsbx[i] = 1; // Added for testing soft constraints
+        nsbx[i] = 1; // Added for testing soft constraints
         nbu[i] = nu_;
         ng[i] = 0;
         nh[i] = 1;
@@ -283,7 +283,7 @@ int main()
     nx[NN] = nx_;
     nu[NN] = 0;
     nbx[NN] = 3;
-	nsbx[NN] = 0; // Added for testing soft constraints
+    nsbx[NN] = 0; // Added for testing soft constraints
     nbu[NN] = 0;
     ng[NN] = 0;
     nh[NN] = 0;
@@ -392,10 +392,10 @@ int main()
     int *idxbx1 = malloc(nbx[1]*sizeof(int));
     double *lbx1 = malloc((nbx[1])*sizeof(double));
     double *ubx1 = malloc((nbx[1])*sizeof(double));
-		
-	int *idxsbx1 = malloc(nsbx[1]*sizeof(int));; // Added for testing soft constraints
-	double *lsbx1 = malloc((nsbx[1])*sizeof(double)); // Added for testing soft constraints
-	double *usbx1 = malloc((nsbx[1])*sizeof(double)); // Added for testing soft constraints
+
+    int *idxsbx1 = malloc(nsbx[1]*sizeof(int));; // Added for testing soft constraints
+    double *lsbx1 = malloc((nsbx[1])*sizeof(double)); // Added for testing soft constraints
+    double *usbx1 = malloc((nsbx[1])*sizeof(double)); // Added for testing soft constraints
 
     // generator angular velocity
     idxbx1[0] = 0;
@@ -411,11 +411,11 @@ int main()
     idxbx1[2] = 7;
     lbx1[2] = M_gen_min;
     ubx1[2] = M_gen_max;
-	
-	// soft state 
-	idxsbx1[0] = 0; // Added for testing soft constraints
-	lsbx1[0] = 0.0; // Added for testing soft constraints
-	usbx1[0] = 0.0; // Added for testing soft constraints
+
+    // soft state
+    idxsbx1[0] = 0; // Added for testing soft constraints
+    lsbx1[0] = 0.0; // Added for testing soft constraints
+    usbx1[0] = 0.0; // Added for testing soft constraints
 
     // last stage
 
@@ -423,10 +423,10 @@ int main()
     int *idxbxN = malloc(nbx[NN]*sizeof(int));
     double *lbxN = malloc((nbx[NN])*sizeof(double));
     double *ubxN = malloc((nbx[NN])*sizeof(double));
-	
-	// int *idxsbxN = malloc(nsbx[NN]*sizeof(int));; // Added for testing soft constraints
-	// double *lsbxN = malloc((nsbx[NN])*sizeof(double)); // Added for testing soft constraints
-	// double *usbxN = malloc((nsbx[NN])*sizeof(double)); // Added for testing soft constraints
+
+    // int *idxsbxN = malloc(nsbx[NN]*sizeof(int));; // Added for testing soft constraints
+    // double *lsbxN = malloc((nsbx[NN])*sizeof(double)); // Added for testing soft constraints
+    // double *usbxN = malloc((nsbx[NN])*sizeof(double)); // Added for testing soft constraints
 
     // generator angular velocity
     idxbxN[0] = 0;
@@ -442,11 +442,11 @@ int main()
     idxbxN[2] = 7;
     lbxN[2] = M_gen_min;
     ubxN[2] = M_gen_max;
-	
-	// // soft state 
-	// idxsbxN[0] = 0; // Added for testing soft constraints
-	// lsbxN[0] = 0.0; // Added for testing soft constraints
-	// usbxN[0] = 0.0; // Added for testing soft constraints
+
+    // // soft state
+    // idxsbxN[0] = 0; // Added for testing soft constraints
+    // lsbxN[0] = 0.0; // Added for testing soft constraints
+    // usbxN[0] = 0.0; // Added for testing soft constraints
 
     // to shift
     //double *specific_u = malloc(nu_*sizeof(double));
@@ -553,8 +553,8 @@ int main()
     uZ1[0] = 1e2;
     lz1[0] = 0e1;
     uz1[0] = 0e1;
-	
-	lZ1[1] = 1e2; // Added for testing soft constraints
+
+    lZ1[1] = 1e2; // Added for testing soft constraints
     uZ1[1] = 1e2; // Added for testing soft constraints
     lz1[1] = 0e1; // Added for testing soft constraints
     uz1[1] = 0e1; // Added for testing soft constraints
@@ -564,8 +564,8 @@ int main()
     // double *uZN = malloc(ns[NN]*sizeof(double));
     // double *lzN = malloc(ns[NN]*sizeof(double));
     // double *uzN = malloc(ns[NN]*sizeof(double));
-	
-	// lZN[1] = 1e-2; // Added for testing soft constraints
+
+    // lZN[1] = 1e-2; // Added for testing soft constraints
     // uZN[1] = 1e-2; // Added for testing soft constraints
     // lzN[1] = 0e1; // Added for testing soft constraints
     // uzN[1] = 0e1; // Added for testing soft constraints
@@ -624,7 +624,7 @@ int main()
         ocp_nlp_dims_set_cost(config, dims, i, "ny", &ny[i]);
 
         ocp_nlp_dims_set_constraints(config, dims, i, "nbx", &nbx[i]);
-		ocp_nlp_dims_set_constraints(config, dims, i, "nsbx", &nsbx[i]); // Added for testing soft constraints
+        ocp_nlp_dims_set_constraints(config, dims, i, "nsbx", &nsbx[i]); // Added for testing soft constraints
         ocp_nlp_dims_set_constraints(config, dims, i, "nbu", &nbu[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "ng", &ng[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "nh", &nh[i]);
@@ -673,7 +673,7 @@ int main()
     get_matrices_fun.casadi_n_out          = &wt_nx6p2_get_matrices_fun_n_out;
     external_function_casadi_create(&get_matrices_fun);
 
-    /* initialize additional gnsf dimensions */            
+    /* initialize additional gnsf dimensions */
     int gnsf_nx1 = 8;
     int gnsf_nz1 = 0;
     int gnsf_nout = 1;
@@ -736,10 +736,10 @@ int main()
         ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "zl", lz1);
         ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "zu", uz1);
     }
-	// ocp_nlp_cost_model_set(config, dims, nlp_in, NN, "Zl", lZN); // Added for testing soft constraints
-	// ocp_nlp_cost_model_set(config, dims, nlp_in, NN, "Zu", uZN); // Added for testing soft constraints
-	// ocp_nlp_cost_model_set(config, dims, nlp_in, NN, "zl", lzN); // Added for testing soft constraints
-	// ocp_nlp_cost_model_set(config, dims, nlp_in, NN, "zu", uzN); // Added for testing soft constraints
+    // ocp_nlp_cost_model_set(config, dims, nlp_in, NN, "Zl", lZN); // Added for testing soft constraints
+    // ocp_nlp_cost_model_set(config, dims, nlp_in, NN, "Zu", uZN); // Added for testing soft constraints
+    // ocp_nlp_cost_model_set(config, dims, nlp_in, NN, "zl", lzN); // Added for testing soft constraints
+    // ocp_nlp_cost_model_set(config, dims, nlp_in, NN, "zu", uzN); // Added for testing soft constraints
 
     /* dynamics */
 
@@ -839,15 +839,15 @@ int main()
             ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ush", ush1);
             ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "idxsh", idxsh1);
         }
-		
-		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "idxsbx", idxsbx1); // Added for testing soft constraints
-		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lsbx", lsbx1); // Added for testing soft constraints
-		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "usbx", usbx1); // Added for testing soft constraints
+
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "idxsbx", idxsbx1); // Added for testing soft constraints
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lsbx", lsbx1); // Added for testing soft constraints
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "usbx", usbx1); // Added for testing soft constraints
     }
-	
-	// ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "idxsbx", idxsbxN); // Added for testing soft constraints
-	// ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "lsbx", lsbxN); // Added for testing soft constraints
-	// ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "usbx", usbxN); // Added for testing soft constraints
+
+    // ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "idxsbx", idxsbxN); // Added for testing soft constraints
+    // ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "lsbx", lsbxN); // Added for testing soft constraints
+    // ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "usbx", usbxN); // Added for testing soft constraints
 
 
     /************************************************
@@ -861,17 +861,17 @@ int main()
     if (plan->nlp_solver == SQP)
     {
 
-		int max_iter = MAX_SQP_ITERS;
-		double tol_stat = 1e-6;
-		double tol_eq   = 1e-8;
-		double tol_ineq = 1e-8;
-		double tol_comp = 1e-8;
+        int max_iter = MAX_SQP_ITERS;
+        double tol_stat = 1e-6;
+        double tol_eq   = 1e-8;
+        double tol_ineq = 1e-8;
+        double tol_comp = 1e-8;
 
-		ocp_nlp_solver_opts_set(config, nlp_opts, "max_iter", &max_iter);
-		ocp_nlp_solver_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
-		ocp_nlp_solver_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
-		ocp_nlp_solver_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
-		ocp_nlp_solver_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
+        ocp_nlp_solver_opts_set(config, nlp_opts, "max_iter", &max_iter);
+        ocp_nlp_solver_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
+        ocp_nlp_solver_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
+        ocp_nlp_solver_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
+        ocp_nlp_solver_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
     }
     else if (plan->nlp_solver == SQP_RTI)
     {
@@ -964,8 +964,8 @@ int main()
 
     int n_sim = 40;
 
-	double *x_sim = malloc(nx_*(n_sim+1)*sizeof(double));
-	double *u_sim = malloc(nu_*(n_sim+0)*sizeof(double));
+    double *x_sim = malloc(nx_*(n_sim+1)*sizeof(double));
+    double *u_sim = malloc(nu_*(n_sim+0)*sizeof(double));
 
     acados_timer timer;
     acados_tic(&timer);
@@ -984,8 +984,8 @@ int main()
         ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", x0_ref);
         ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", x0_ref);
 
-		// store x0
-		for(int ii=0; ii<nx_; ii++) x_sim[ii] = x0_ref[ii];
+        // store x0
+        for(int ii=0; ii<nx_; ii++) x_sim[ii] = x0_ref[ii];
 
         for (int idx = 0; idx < n_sim; idx++)
         {
@@ -1023,15 +1023,15 @@ int main()
             }
 
             // solve NLP
-            status = ocp_nlp_solve(solver, nlp_in, nlp_out);		
-			
+            status = ocp_nlp_solve(solver, nlp_in, nlp_out);
+
             // update initial condition
             // TODO(dimitris): maybe simulate system instead of passing x[1] as next state
             ocp_nlp_out_get(config, dims, nlp_out, 1, "x", specific_x);
             ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", specific_x);
             ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", specific_x);
 
-			// store trajectory
+            // store trajectory
             ocp_nlp_out_get(config, dims, nlp_out, 1, "x", x_sim+(idx+1)*nx_);
             ocp_nlp_out_get(config, dims, nlp_out, 0, "u", u_sim+idx*nu_);
 
@@ -1040,18 +1040,18 @@ int main()
             {
                 int sqp_iter;
                 double time_lin, time_qp_sol, time_tot;
-				double kkt_norm_inf;
+                double kkt_norm_inf;
 
                 ocp_nlp_get(config, solver, "sqp_iter", &sqp_iter);
                 ocp_nlp_get(config, solver, "time_tot", &time_tot);
                 ocp_nlp_get(config, solver, "time_qp_sol", &time_qp_sol);
                 ocp_nlp_get(config, solver, "time_lin", &time_lin);
-				kkt_norm_inf = nlp_out->inf_norm_res;
+                kkt_norm_inf = nlp_out->inf_norm_res;
 
                 // printf("\nproblem #%d, status %d, iters %d, time (total %f, lin %f, qp_sol %f) ms\n",
                     // idx, status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
-					
-				printf("\nproblem #%d, status %d, iters %d, kkt_value %.4e, time (total %f, lin %f, qp_sol %f) ms\n",
+
+                printf("\nproblem #%d, status %d, iters %d, kkt_value %.4e, time (total %f, lin %f, qp_sol %f) ms\n",
                     idx, status, sqp_iter, kkt_norm_inf, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
 
                 printf("xsim = \n");
@@ -1088,8 +1088,8 @@ int main()
     printf("\n\ntotal time (including printing) = %f ms (time per SQP = %f)\n\n", time*1e3, time*1e3/n_sim);
 
 #if 0
-	d_print_mat(nx_, n_sim+1, x_sim, nx_);
-	d_print_mat(nu_, n_sim, u_sim, nu_);
+    d_print_mat(nx_, n_sim+1, x_sim, nx_);
+    d_print_mat(nu_, n_sim, u_sim, nu_);
 #endif
 
     /************************************************
@@ -1129,8 +1129,8 @@ int main()
     free(specific_x);
     //free(specific_u);
 
-	free(x_sim);
-	free(u_sim);
+    free(x_sim);
+    free(u_sim);
 
     // free(lZ0);
     // free(uZ0);
@@ -1177,18 +1177,18 @@ int main()
 
     free(x_end);
     free(u_end);
-	
-	free(nx);
-	free(nu);
-	free(nz);
-	free(ns);
-	free(ny);
-	free(nbx);
-	free(nbu);
-	free(ng);
-	free(nh);
-	free(nsh);
-	
+
+    free(nx);
+    free(nu);
+    free(nz);
+    free(ns);
+    free(ny);
+    free(nbx);
+    free(nbu);
+    free(ng);
+    free(nh);
+    free(nsh);
+
 
     /************************************************
     * return
