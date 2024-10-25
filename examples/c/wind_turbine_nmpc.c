@@ -893,9 +893,6 @@ int main()
         ocp_nlp_solver_opts_set(config, nlp_opts, "qp_cond_N", &cond_N);
     }
 
-    // update opts after manual changes
-    ocp_nlp_solver_opts_update(config, dims, nlp_opts);
-
     /************************************************
     * ocp_nlp_out & solver
     ************************************************/

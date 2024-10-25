@@ -1095,14 +1095,6 @@ void ocp_nlp_solver_opts_set_at_stage(ocp_nlp_config *config, void *opts_, int s
 }
 
 
-
-void ocp_nlp_solver_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_)
-{
-    config->opts_update(config, dims, opts_);
-}
-
-
-
 void ocp_nlp_solver_opts_destroy(void *opts)
 {
     free(opts);

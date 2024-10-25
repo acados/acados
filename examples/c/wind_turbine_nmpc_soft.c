@@ -944,9 +944,6 @@ int main()
         ocp_nlp_solver_opts_set(config, nlp_opts, "qp_cond_N", &cond_N);
     }
 
-    // update opts after manual changes
-    ocp_nlp_solver_opts_update(config, dims, nlp_opts);
-
     /************************************************
     * ocp_nlp out
     ************************************************/
@@ -969,9 +966,7 @@ int main()
 
 	double *x_sim = malloc(nx_*(n_sim+1)*sizeof(double));
 	double *u_sim = malloc(nu_*(n_sim+0)*sizeof(double));
-	
-	
-	
+
     acados_timer timer;
     acados_tic(&timer);
 

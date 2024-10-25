@@ -349,15 +349,6 @@ ACADOS_SYMBOL_EXPORT void ocp_nlp_solver_opts_set(ocp_nlp_config *config, void *
 ACADOS_SYMBOL_EXPORT void ocp_nlp_solver_opts_set_at_stage(ocp_nlp_config *config, void *opts_, int stage, const char *field, void* value);
 
 
-/// TBC
-/// Updates the options.
-///
-/// \param config The configuration struct.
-/// \param dims The dimension struct.
-/// \param opts_ The options struct.
-ACADOS_SYMBOL_EXPORT void ocp_nlp_solver_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_);
-
-
 /* solver */
 
 /// Creates an ocp solver.
