@@ -49,9 +49,9 @@
 #include "simple_dae_model/simple_dae_model.h"
 #include "simple_dae_model/simple_dae_constr.h"
 
-#define FORMULATION 1 
-// 0: without Vz*z term 
-// 1: with Vz*z and without Vx*x 
+#define FORMULATION 1
+// 0: without Vz*z term
+// 1: with Vz*z and without Vx*x
 // 2: same as (1) + nonlinear constraint on z: h(x,u,z(x,u)) = [2, -2] \leq [z_1, z_2] \leq [4, 2]
 
 int main() {
@@ -82,8 +82,8 @@ int main() {
 	int idxb[2] = {2, 3};
 	double x0[num_states];
 
-    x0[0] =  3;  
-    x0[1] =  -1.8;  
+    x0[0] =  3;
+    x0[1] =  -1.8;
 
 	int max_num_sqp_iterations = 100;
 
@@ -310,10 +310,10 @@ int main() {
 
     ocp_nlp_cost_model_set(config, dims, nlp_in, N, "Vx", VxN);
     // ocp_nlp_cost_model_set(config, dims, nlp_in, N, "Vz", Vz);
-    
+
 	// W
 	for (int i = 0; i < N; ++i) ocp_nlp_cost_model_set(config, dims, nlp_in, i, "W", W);
-    
+
 	// WN
     ocp_nlp_cost_model_set(config, dims, nlp_in, N, "W", WN);
 
@@ -327,7 +327,7 @@ int main() {
 		irk_model *model = dynamics->sim_model;
 		model->impl_ode_fun = (external_function_generic *) &impl_ode_fun[i];
 		model->impl_ode_fun_jac_x_xdot_z = (external_function_generic *) &impl_ode_fun_jac_x_xdot_z[i];
-		model->impl_ode_jac_x_xdot_u_z = (external_function_generic *) &impl_ode_jac_x_xdot_u_z[i]; 
+		model->impl_ode_jac_x_xdot_u_z = (external_function_generic *) &impl_ode_jac_x_xdot_u_z[i];
 	}
 
 	// bounds
@@ -353,7 +353,7 @@ int main() {
             ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "uh", uh);
 			ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "nl_constr_h_fun_jac", &nl_constr_h_fun_jac[ii]);
         }
-    } else { 
+    } else {
 		for (int ii = 1; ii < N; ++ii) {
 			ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "ubx", uh);
 			ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "lbx", lh);
@@ -363,11 +363,11 @@ int main() {
 
 
 	void *nlp_opts = ocp_nlp_solver_opts_create(config, dims);
-   
-    bool output_z_val = true; 
-    bool sens_algebraic_val = true; 
-    bool reuse_val = true; 
-    int num_steps_val = 5; 
+
+    bool output_z_val = true;
+    bool sens_algebraic_val = true;
+    bool reuse_val = true;
+    int num_steps_val = 5;
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_output_z", &output_z_val);
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_sens_algebraic", &sens_algebraic_val);
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_jac_reuse", &reuse_val);
@@ -413,7 +413,7 @@ int main() {
 	ocp_nlp_out_print(dims, nlp_out);
 
     int sqp_iter;
-    ocp_nlp_get(config, solver, "sqp_iter", &sqp_iter);
+    ocp_nlp_get(solver, "sqp_iter", &sqp_iter);
     printf("\n\nstatus = %i, avg time = %f ms, iters = %d\n\n", solver_status, elapsed_time, sqp_iter);
 
     free(Vx);

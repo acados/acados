@@ -1413,10 +1413,10 @@ void setup_and_solve_nlp(int NN,
     double max_res = 0.0;
 
     double inf_norm_res_stat, inf_norm_res_eq, inf_norm_res_ineq, inf_norm_res_comp;
-    ocp_nlp_get(config, solver, "res_stat", &inf_norm_res_stat);
-    ocp_nlp_get(config, solver, "res_eq", &inf_norm_res_eq);
-    ocp_nlp_get(config, solver, "res_ineq", &inf_norm_res_ineq);
-    ocp_nlp_get(config, solver, "res_comp", &inf_norm_res_comp);
+    ocp_nlp_get(solver, "res_stat", &inf_norm_res_stat);
+    ocp_nlp_get(solver, "res_eq", &inf_norm_res_eq);
+    ocp_nlp_get(solver, "res_ineq", &inf_norm_res_ineq);
+    ocp_nlp_get(solver, "res_comp", &inf_norm_res_comp);
 
     max_res = (inf_norm_res_stat > max_res) ? inf_norm_res_stat : max_res;
     max_res = (inf_norm_res_eq > max_res) ? inf_norm_res_eq : max_res;

@@ -1384,7 +1384,7 @@ int main()
     double time = acados_toc(&timer)/NREP;
 
     ocp_nlp_res *residual;
-    ocp_nlp_get(config, solver, "nlp_res", &residual);
+    ocp_nlp_get(solver, "nlp_res", &residual);
     printf("\nresiduals\n");
     ocp_nlp_res_print(dims, residual);
 
@@ -1394,10 +1394,10 @@ int main()
 	int sqp_iter;
     double time_lin, time_qp_sol, time_tot;
 
-    ocp_nlp_get(config, solver, "sqp_iter", &sqp_iter);
-    ocp_nlp_get(config, solver, "time_tot", &time_tot);
-    ocp_nlp_get(config, solver, "time_qp_sol", &time_qp_sol);
-    ocp_nlp_get(config, solver, "time_lin", &time_lin);
+    ocp_nlp_get(solver, "sqp_iter", &sqp_iter);
+    ocp_nlp_get(solver, "time_tot", &time_tot);
+    ocp_nlp_get(solver, "time_qp_sol", &time_qp_sol);
+    ocp_nlp_get(solver, "time_lin", &time_lin);
 
     printf("\n\nstatus = %i, iterations (max %d) = %d, total time = %f ms\n", status, MAX_SQP_ITERS, sqp_iter, time*1e3);
 	printf("\nlinearization time = %f ms\n", time_lin*1e3);

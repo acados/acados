@@ -55,7 +55,7 @@
 #define MAX_SQP_ITERS 10
 #define NREP 1
 
-
+// TODO This example is broken.
 
 static void shift_states(ocp_nlp_dims *dims, ocp_nlp_out *out, double *x_end)
 {
@@ -1042,10 +1042,10 @@ int main()
                 double time_lin, time_qp_sol, time_tot;
                 double kkt_norm_inf;
 
-                ocp_nlp_get(config, solver, "sqp_iter", &sqp_iter);
-                ocp_nlp_get(config, solver, "time_tot", &time_tot);
-                ocp_nlp_get(config, solver, "time_qp_sol", &time_qp_sol);
-                ocp_nlp_get(config, solver, "time_lin", &time_lin);
+                ocp_nlp_get(solver, "sqp_iter", &sqp_iter);
+                ocp_nlp_get(solver, "time_tot", &time_tot);
+                ocp_nlp_get(solver, "time_qp_sol", &time_qp_sol);
+                ocp_nlp_get(solver, "time_lin", &time_lin);
                 kkt_norm_inf = nlp_out->inf_norm_res;
 
                 // printf("\nproblem #%d, status %d, iters %d, time (total %f, lin %f, qp_sol %f) ms\n",
@@ -1064,7 +1064,7 @@ int main()
                 // if (plan->nlp_solver == SQP)  // RTI has no residual
                 // {
                     // ocp_nlp_res *residual;
-                    // ocp_nlp_get(config, solver, "nlp_res", &residual);
+                    // ocp_nlp_get(solver, "nlp_res", &residual);
                     // printf("\nresiduals\n");
                     // ocp_nlp_res_print(dims, residual);
                     // exit(1);
