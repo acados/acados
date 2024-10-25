@@ -3174,12 +3174,6 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
         d_ocp_qp_set_el("lbx", stage, index, &one, tmp_qp_in);
         d_ocp_qp_set_el("ubx", stage, index, &one, tmp_qp_in);
     }
-    else if (!strcmp("params_stage", field))
-    {
-        printf("\nerror: field %s at stage %d not available in ocp_nlp_sqp_eval_param_sens\n", field, stage);
-        exit(1);
-
-    }
     else if (!strcmp("p_global", field))
     {
         for (i = 0; i < N; i++)
@@ -3199,7 +3193,7 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
     }
     else
     {
-        printf("\nerror: field %s at stage %d not available in ocp_nlp_sqp_eval_param_sens\n", field, stage);
+        printf("\nerror: field %s at stage %d not available in ocp_nlp_common_eval_param_sens\n", field, stage);
         exit(1);
     }
 
@@ -3231,12 +3225,7 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
     // int *nx = dims->nx;
     int np_global = dims->np_global;
 
-    if (!strcmp("params_stage", field))
-    {
-        printf("\nerror: field %s not available in ocp_nlp_common_eval_lagr_grad_p\n", field);
-        exit(1);
-    }
-    else if (!strcmp("p_global", field))
+    if (!strcmp("p_global", field))
     {
         // initialize to zero
         blasfeo_dvecse(np_global, 0., &work->out_np_global, 0);
@@ -3265,7 +3254,7 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
     }
     else
     {
-        printf("\nerror: field %s not available in ocp_nlp_sqp_eval_param_sens\n", field);
+        printf("\nerror: field %s not available in ocp_nlp_common_eval_lagr_grad_p\n", field);
         exit(1);
     }
 }
