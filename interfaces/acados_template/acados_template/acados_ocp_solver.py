@@ -510,7 +510,7 @@ class AcadosOcpSolver:
 
         Notes:
         - for field `initial_state`, the gradient is the Lagrange multiplier of the initial state constraint.
-        The gradient computation consist of adding the Lagrange multipliers corresponding to the upper and lower bound of the initial state.
+        The gradient computation consists of adding the Lagrange multipliers corresponding to the upper and lower bound of the initial state.
 
         - for field `params_global`, the gradient of the Lagrange function w.r.t. the global parameters is computed in acados.
 
