@@ -68,7 +68,12 @@ def main():
     cost_reconstructed_np_grad = np.cumsum(optimal_value_grad_via_fd) * delta_p + optimal_value[0]
 
     plot_cost_gradient_results(p_test, optimal_value, optimal_value_grad, optimal_value_grad_via_fd, cost_reconstructed_np_grad)
-    assert np.median(np.abs(optimal_value_grad - optimal_value_grad_via_fd)) <= 1e-1
+
+    # checks
+    test_tol = 1e-1
+    median_diff = np.median(np.abs(optimal_value_grad - optimal_value_grad_via_fd))
+    print(f"Median difference between value function gradient obtained by acados and via FD is {median_diff} should be < {test_tol}.")
+    assert median_diff <= test_tol
 
 
 

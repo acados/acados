@@ -119,8 +119,11 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
                  min_abs_eig_full, min_abs_eig_proj_hess, min_abs_eig_P,
                  eigen_analysis, qp_solver_ric_alg, parameter_name="mass")
 
+    test_tol = 1e-2
+    median_diff = np.median(np.abs(sens_u - sens_u_fd))
+    print(f"Median difference between policy gradient obtained by acados and via FD is {median_diff} should be < {test_tol}.")
     # test: check median since derivative cannot be compared at active set changes
-    assert np.median(np.abs(sens_u - sens_u_fd)) <= 1e-2
+    assert median_diff <= test_tol
 
 
 if __name__ == "__main__":
