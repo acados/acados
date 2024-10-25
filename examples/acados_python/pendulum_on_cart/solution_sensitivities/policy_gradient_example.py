@@ -85,9 +85,8 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     for i, p in enumerate(p_test):
         p_val = np.array([p])
 
-        for n in range(N_horizon+1):
-            acados_ocp_solver.set(n, 'p', p_val)
-            sensitivity_solver.set(n, 'p', p_val)
+        acados_ocp_solver.set_p_global_and_precompute_dependencies(p_val)
+        sensitivity_solver.set_p_global_and_precompute_dependencies(p_val)
         u_opt[i] = acados_ocp_solver.solve_for_x0(x0)[0]
 
         acados_ocp_solver.store_iterate(filename='iterate.json', overwrite=True, verbose=False)

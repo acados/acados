@@ -58,9 +58,7 @@ def main():
 
     pi = np.zeros(np_test)
     for i, p in enumerate(p_test):
-
-        for n in range(N_horizon+1):
-            acados_ocp_solver.set(n, 'p', p)
+        acados_ocp_solver.set_p_global_and_precompute_dependencies(p)
         pi[i] = acados_ocp_solver.solve_for_x0(x0)[0]
         optimal_value[i] = acados_ocp_solver.get_cost()
         optimal_value_grad[i] = acados_ocp_solver.eval_and_get_optimal_value_gradient("params_global").item()
