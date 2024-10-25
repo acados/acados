@@ -276,7 +276,7 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_eval_param_sens.restype = None
 
         self.__acados_lib.ocp_nlp_solver_opts_set.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
-        self.__acados_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
+        self.__acados_lib.ocp_nlp_get.argtypes = [c_void_p, c_char_p, c_void_p]
 
         self.__acados_lib.ocp_nlp_eval_cost.argtypes = [c_void_p, c_void_p, c_void_p]
         self.__acados_lib.ocp_nlp_eval_residuals.argtypes = [c_void_p, c_void_p, c_void_p]
@@ -284,7 +284,7 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_cost_model_set.argtypes =  [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
 
         self.__acados_lib.ocp_nlp_out_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-        self.__acados_lib.ocp_nlp_set.argtypes = [c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        self.__acados_lib.ocp_nlp_set.argtypes = [c_void_p, c_int, c_char_p, c_void_p]
 
         self.__acados_lib.ocp_nlp_cost_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_int)]
         self.__acados_lib.ocp_nlp_cost_dims_get_from_attr.restype = c_int
@@ -1067,12 +1067,12 @@ class AcadosOcpSolver:
 
         if field_ in ['ddp_iter', 'sqp_iter', 'nlp_iter', 'stat_m', 'stat_n']:
             out = c_int(0)
-            self.__acados_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, byref(out))
+            self.__acados_lib.ocp_nlp_get(self.nlp_solver, field, byref(out))
             return out.value
 
         elif field_ in double_fields:
             out = c_double(0)
-            self.__acados_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, byref(out))
+            self.__acados_lib.ocp_nlp_get(self.nlp_solver, field, byref(out))
             return out.value
 
         elif field_ == 'statistics':
@@ -1082,14 +1082,14 @@ class AcadosOcpSolver:
             min_size = min([stat_m, nlp_iter+1])
             out = np.ascontiguousarray(np.zeros((stat_n+1, min_size)), dtype=np.float64)
             out_data = cast(out.ctypes.data, POINTER(c_double))
-            self.__acados_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
+            self.__acados_lib.ocp_nlp_get(self.nlp_solver, field, out_data)
             return out
 
         elif field_ == 'primal_step_norm':
             nlp_iter = self.get_stats("nlp_iter")
             out = np.ascontiguousarray(np.zeros((nlp_iter,)), dtype=np.float64)
             out_data = cast(out.ctypes.data, POINTER(c_double))
-            self.__acados_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
+            self.__acados_lib.ocp_nlp_get(self.nlp_solver, field, out_data)
             return out
 
         elif field_ == 'qp_stat':
@@ -1182,7 +1182,7 @@ class AcadosOcpSolver:
 
         # call getter
         field = "cost_value".encode('utf-8')
-        self.__acados_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
+        self.__acados_lib.ocp_nlp_get(self.nlp_solver, field, out_data)
 
         return out[0]
 
@@ -1207,19 +1207,19 @@ class AcadosOcpSolver:
 
         # call getters
         field = "res_stat".encode('utf-8')
-        self.__acados_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
+        self.__acados_lib.ocp_nlp_get(self.nlp_solver, field, out_data)
 
         out_data = cast(out[1].ctypes.data, POINTER(c_double))
         field = "res_eq".encode('utf-8')
-        self.__acados_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
+        self.__acados_lib.ocp_nlp_get(self.nlp_solver, field, out_data)
 
         out_data = cast(out[2].ctypes.data, POINTER(c_double))
         field = "res_ineq".encode('utf-8')
-        self.__acados_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
+        self.__acados_lib.ocp_nlp_get(self.nlp_solver, field, out_data)
 
         out_data = cast(out[3].ctypes.data, POINTER(c_double))
         field = "res_comp".encode('utf-8')
-        self.__acados_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
+        self.__acados_lib.ocp_nlp_get(self.nlp_solver, field, out_data)
         return out.flatten()
 
 

@@ -421,12 +421,10 @@ ACADOS_SYMBOL_EXPORT void ocp_nlp_eval_param_sens(ocp_nlp_solver *solver, char *
 ACADOS_SYMBOL_EXPORT void ocp_nlp_eval_lagrange_grad_p(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, const char *field, double *out);
 
 /* get */
-/// \param config The configuration struct.
 /// \param solver The solver struct.
 /// \param field Supports "sqp_iter", "status", "nlp_res", "time_tot", ...
 /// \param return_value_ Pointer to the output memory.
-ACADOS_SYMBOL_EXPORT void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver,
-        const char *field, void *return_value_);
+ACADOS_SYMBOL_EXPORT void ocp_nlp_get(ocp_nlp_solver *solver, const char *field, void *return_value_);
 
 /* set */
 /// Sets the initial guesses for the integrator for the given stage.

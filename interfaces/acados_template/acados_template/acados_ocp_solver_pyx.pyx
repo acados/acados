@@ -650,17 +650,17 @@ cdef class AcadosOcpSolverCython:
 
     def __get_stat_int(self, field):
         cdef int out
-        acados_solver_common.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, <void *> &out)
+        acados_solver_common.ocp_nlp_get(self.nlp_solver, field, <void *> &out)
         return out
 
     def __get_stat_double(self, field):
         cdef double out
-        acados_solver_common.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, <void *> &out)
+        acados_solver_common.ocp_nlp_get(self.nlp_solver, field, <void *> &out)
         return out
 
     def __get_stat_matrix(self, field, n, m):
         cdef cnp.ndarray[cnp.float64_t, ndim=2] out_mat = np.ascontiguousarray(np.zeros((n, m)), dtype=np.float64)
-        acados_solver_common.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, <void *> out_mat.data)
+        acados_solver_common.ocp_nlp_get(self.nlp_solver, field, <void *> out_mat.data)
         return out_mat
 
 
@@ -675,7 +675,7 @@ cdef class AcadosOcpSolverCython:
         cdef double out
 
         # call getter
-        acados_solver_common.ocp_nlp_get(self.nlp_config, self.nlp_solver, "cost_value", <void *> &out)
+        acados_solver_common.ocp_nlp_get(self.nlp_solver, "cost_value", <void *> &out)
 
         return out
 
@@ -693,19 +693,19 @@ cdef class AcadosOcpSolverCython:
         cdef double double_value
 
         field = "res_stat".encode('utf-8')
-        acados_solver_common.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, <void *> &double_value)
+        acados_solver_common.ocp_nlp_get(self.nlp_solver, field, <void *> &double_value)
         out[0] = double_value
 
         field = "res_eq".encode('utf-8')
-        acados_solver_common.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, <void *> &double_value)
+        acados_solver_common.ocp_nlp_get(self.nlp_solver, field, <void *> &double_value)
         out[1] = double_value
 
         field = "res_ineq".encode('utf-8')
-        acados_solver_common.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, <void *> &double_value)
+        acados_solver_common.ocp_nlp_get(self.nlp_solver, field, <void *> &double_value)
         out[2] = double_value
 
         field = "res_comp".encode('utf-8')
-        acados_solver_common.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, <void *> &double_value)
+        acados_solver_common.ocp_nlp_get(self.nlp_solver, field, <void *> &double_value)
         out[3] = double_value
 
         return out

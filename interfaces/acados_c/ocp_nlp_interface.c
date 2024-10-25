@@ -1246,8 +1246,7 @@ void ocp_nlp_eval_params_jac(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp
 
 
 
-void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver,
-                 const char *field, void *return_value_)
+void ocp_nlp_get(ocp_nlp_solver *solver, const char *field, void *return_value_)
 {
     solver->config->get(solver->config, solver->dims, solver->mem, field, return_value_);
 }
@@ -1414,19 +1413,19 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
     else if (!strcmp(field, "pcond_Q"))
     {
         ocp_qp_in *pcond_qp_in;
-        ocp_nlp_get(config, solver, "qp_xcond_in", &pcond_qp_in);
+        ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
         d_ocp_qp_get_Q(stage, pcond_qp_in, value);
     }
     else if (!strcmp(field, "pcond_R"))
     {
         ocp_qp_in *pcond_qp_in;
-        ocp_nlp_get(config, solver, "qp_xcond_in", &pcond_qp_in);
+        ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
         d_ocp_qp_get_R(stage, pcond_qp_in, value);
     }
     else if (!strcmp(field, "pcond_S"))
     {
         ocp_qp_in *pcond_qp_in;
-        ocp_nlp_get(config, solver, "qp_xcond_in", &pcond_qp_in);
+        ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
         d_ocp_qp_get_S(stage, pcond_qp_in, value);
     }
     else
