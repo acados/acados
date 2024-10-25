@@ -104,4 +104,4 @@ cdef extern from "acados_c/ocp_nlp_interface.h":
     void ocp_nlp_eval_lagrange_grad_p(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in_, const char *field, void* value)
     # get/set
     void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver, const char *field, void *return_value_)
-    void ocp_nlp_set(ocp_nlp_config *config, ocp_nlp_solver *solver, int stage, const char *field, void *value)
+    void ocp_nlp_set(ocp_nlp_solver *solver, int stage, const char *field, void *value)

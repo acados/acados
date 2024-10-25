@@ -2607,12 +2607,12 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
         {
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "pi", buffer);
         {%- if solver_options.integrator_type == "IRK" %}
-            ocp_nlp_set(nlp_config, nlp_solver, i, "xdot_guess", buffer);
-            ocp_nlp_set(nlp_config, nlp_solver, i, "z_guess", buffer);
+            ocp_nlp_set(nlp_solver, i, "xdot_guess", buffer);
+            ocp_nlp_set(nlp_solver, i, "z_guess", buffer);
         {%- elif solver_options.integrator_type == "LIFTED_IRK" %}
-            ocp_nlp_set(nlp_config, nlp_solver, i, "xdot_guess", buffer);
+            ocp_nlp_set(nlp_solver, i, "xdot_guess", buffer);
         {%- elif solver_options.integrator_type == "GNSF" %}
-            ocp_nlp_set(nlp_config, nlp_solver, i, "gnsf_phi_guess", buffer);
+            ocp_nlp_set(nlp_solver, i, "gnsf_phi_guess", buffer);
         {%- endif %}
         }
     }

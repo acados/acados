@@ -2581,12 +2581,12 @@ int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_sol
         {
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "pi", buffer);
         {%- if mocp_opts.integrator_type[jj] == "IRK" %}
-            ocp_nlp_set(nlp_config, nlp_solver, i, "xdot_guess", buffer);
-            ocp_nlp_set(nlp_config, nlp_solver, i, "z_guess", buffer);
+            ocp_nlp_set(nlp_solver, i, "xdot_guess", buffer);
+            ocp_nlp_set(nlp_solver, i, "z_guess", buffer);
         {%- elif mocp_opts.integrator_type[jj] == "LIFTED_IRK" %}
-            ocp_nlp_set(nlp_config, nlp_solver, i, "xdot_guess", buffer);
+            ocp_nlp_set(nlp_solver, i, "xdot_guess", buffer);
         {%- elif mocp_opts.integrator_type[jj] == "GNSF" %}
-            ocp_nlp_set(nlp_config, nlp_solver, i, "gnsf_phi_guess", buffer);
+            ocp_nlp_set(nlp_solver, i, "gnsf_phi_guess", buffer);
         {%- endif %}
         }
     }

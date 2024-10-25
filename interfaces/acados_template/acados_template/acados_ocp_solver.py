@@ -1289,13 +1289,11 @@ class AcadosOcpSolver:
                 self.__acados_lib.ocp_nlp_out_set(self.nlp_config, \
                     self.nlp_dims, self.nlp_out, stage, field, value_data_p)
             elif field_ in mem_fields:
-                self.__acados_lib.ocp_nlp_set(self.nlp_config, \
-                    self.nlp_solver, stage, field, value_data_p)
+                self.__acados_lib.ocp_nlp_set(self.nlp_solver, stage, field, value_data_p)
             # also set z_guess, when setting z.
             if field_ == 'z':
                 field = 'z_guess'.encode('utf-8')
-                self.__acados_lib.ocp_nlp_set(self.nlp_config, \
-                    self.nlp_solver, stage, field, value_data_p)
+                self.__acados_lib.ocp_nlp_set(self.nlp_solver, stage, field, value_data_p)
         return
 
 
