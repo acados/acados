@@ -126,15 +126,29 @@ class GenerateContext:
         precompute_pairs = []
         for i in range(len(self.function_input_output_pairs)):
             outputs = ca.cse(self.function_input_output_pairs[i][1])
-            # TODO: try to replace compare to extract_parametric expressions in previously detected param_expr
 
             # detect parametric expressions in p_global
             [outputs_ret, symbols, param_expr] = ca.extract_parametric(outputs, self.p_global)
+
+            # substitute previously detected param_expr in outputs
+            symbols_to_add = []
+            param_expr_to_add = []
+            for sym_new, expr_new in zip(symbols, param_expr):
+                add = True
+                for sym, expr in precompute_pairs:
+                    if ca.is_equal(expr, expr_new):
+                        outputs_ret = [ca.substitute(output, sym_new, sym) for output in outputs_ret]
+                        add = False
+                        break
+                if add:
+                    symbols_to_add.append(sym_new)
+                    param_expr_to_add.append(expr_new)
+
             # replace output expression with ones that use extracted expressions
             self.function_input_output_pairs[i][1] = outputs_ret
             # store (new input symbols, extracted expressions)
-            for j in range(len(symbols)):
-                precompute_pairs.append([symbols[j], param_expr[j]])
+            for sym, expr in zip(symbols_to_add, param_expr_to_add):
+                precompute_pairs.append([sym, expr])
 
         global_data_sym_list = [input for input, _ in precompute_pairs]
         self.global_data_sym = ca.vertcat(*global_data_sym_list)

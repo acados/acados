@@ -141,16 +141,40 @@ classdef GenerateContext < handle
             for i = 1:length(self.function_input_output_pairs)
                 outputs = cse(self.function_input_output_pairs{i}{2});
 
-                % # TODO: try to replace compare to extract_parametric expressions in previously detected param_expr
                 % detect parametric expressions in p_global
                 [outputs_ret, symbols, param_expr] = extract_parametric(outputs, self.p_global);
+
+                % substitute previously detected param_expr in outputs
+                symbols_to_add = {};
+                param_expr_to_add = {};
+                for jj = 1:length(symbols)
+                    add = true;
+                    sym_new = symbols{jj};
+                    expr_new = param_expr{jj};
+                    for k = 1:length(precompute_pairs)
+                        sym = precompute_pairs{k}{1};
+                        expr = precompute_pairs{k}{2};
+                        if is_equal(expr, expr_new)
+                            for kkk = 1:length(outputs_ret)
+                                outputs_ret{kkk} = substitute(outputs_ret{kkk}, sym_new, sym);
+                            end
+                            add = false;
+                            break
+                        end
+                    end
+                    if add
+                        symbols_to_add{end+1} = sym_new;
+                        param_expr_to_add{end+1} = expr_new;
+                    end
+                end
+
 
                 % Update output expressions with the ones that use the extracted expressions
                 self.function_input_output_pairs{i}{2} = outputs_ret;
 
                 % Store the new input symbols and extracted expressions
-                for j = 1:length(symbols)
-                    precompute_pairs{end+1} = {symbols{j}, param_expr{j}};
+                for j = 1:length(symbols_to_add)
+                    precompute_pairs{end+1} = {symbols_to_add{j}, param_expr_to_add{j}};
                 end
             end
 
