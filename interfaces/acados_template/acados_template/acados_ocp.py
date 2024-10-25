@@ -844,7 +844,7 @@ class AcadosOcp:
                 raise Exception('with_solution_sens_wrt_params is only compatible with DISCRETE dynamics.')
             for horizon_type, constraint in type_constraint_pairs:
                 if constraint is not None and any(ca.which_depends(constraint, model.p)):
-                    raise Exception(f'with_solution_sens_wrt_params is only implemented if constraints depend not on parameters. Got parameter dependency for {horizon_type} constraint.')
+                    raise Exception(f"with_solution_sens_wrt_params is only implemented if don't constraints depend on parameters. Got parameter dependency for {horizon_type} constraint.")
 
         if opts.with_value_sens_wrt_params:
             if dims.np_global == 0:
@@ -855,7 +855,7 @@ class AcadosOcp:
                 raise Exception('with_value_sens_wrt_params is only compatible with DISCRETE dynamics.')
             for horizon_type, constraint in type_constraint_pairs:
                 if constraint is not None and any(ca.which_depends(constraint, model.p)):
-                    raise Exception(f'with_value_sens_wrt_params is only implemented if constraints depend not on parameters. Got parameter dependency for {horizon_type} constraint.')
+                    raise Exception(f"with_value_sens_wrt_params is only implemented if don't constraints depend on parameters. Got parameter dependency for {horizon_type} constraint.")
 
         if opts.qp_solver_cond_N is None:
             opts.qp_solver_cond_N = opts.N_horizon
