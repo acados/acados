@@ -302,8 +302,7 @@ ACADOS_SYMBOL_EXPORT void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *
         int stage, const char *field, void *value);
 
 //
-ACADOS_SYMBOL_EXPORT void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_solver *solver,
-        int stage, const char *field, void *value);
+ACADOS_SYMBOL_EXPORT void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, void *value);
 
 ACADOS_SYMBOL_EXPORT void ocp_nlp_get_from_iterate(ocp_nlp_solver *solver, int iter, int stage, const char *field, void *value);
 

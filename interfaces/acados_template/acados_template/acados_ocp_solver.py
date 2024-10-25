@@ -295,7 +295,7 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_qp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_int)]
         self.__acados_lib.ocp_nlp_qp_dims_get_from_attr.restype = c_int
 
-        self.__acados_lib.ocp_nlp_get_at_stage.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        self.__acados_lib.ocp_nlp_get_at_stage.argtypes = [c_void_p, c_int, c_char_p, c_void_p]
 
         self.__acados_lib.ocp_nlp_get_from_iterate.argtypes = [c_void_p, c_int, c_int, c_char_p, c_void_p]
         self.__acados_lib.ocp_nlp_get_from_iterate.restypes = c_void_p
@@ -1497,8 +1497,7 @@ class AcadosOcpSolver:
         out_data_p = cast((out_data), c_void_p)
 
         # call getter
-        self.__acados_lib.ocp_nlp_get_at_stage(self.nlp_config, \
-            self.nlp_dims, self.nlp_solver, stage, field, out_data_p)
+        self.__acados_lib.ocp_nlp_get_at_stage(self.nlp_solver, stage, field, out_data_p)
 
         if field_ in ["Q", "R"]:
             # make symmetric: copy lower triangular part to upper triangular part

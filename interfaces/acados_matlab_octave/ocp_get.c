@@ -582,7 +582,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 ocp_nlp_qp_dims_get_from_attr(config, dims, out, ii, &field[3], out_dims);
                 tmp_mat = mxCreateNumericMatrix(out_dims[0], out_dims[1], mxDOUBLE_CLASS, mxREAL);
                 double *mat_ptr = mxGetPr( tmp_mat );
-                ocp_nlp_get_at_stage(config, dims, solver, ii, &field[3], mat_ptr);
+                ocp_nlp_get_at_stage(solver, ii, &field[3], mat_ptr);
                 mxSetCell(cell_array, ii, tmp_mat);
             }
         }
@@ -591,7 +591,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ocp_nlp_qp_dims_get_from_attr(config, dims, out, stage, &field[3], out_dims);
             plhs[0] = mxCreateNumericMatrix(out_dims[0], out_dims[1], mxDOUBLE_CLASS, mxREAL);
             double *mat_ptr = mxGetPr( plhs[0] );
-            ocp_nlp_get_at_stage(config, dims, solver, stage, &field[3], mat_ptr);
+            ocp_nlp_get_at_stage(solver, stage, &field[3], mat_ptr);
         }
     }
     else
