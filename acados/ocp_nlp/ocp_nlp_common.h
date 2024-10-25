@@ -147,8 +147,8 @@ typedef struct ocp_nlp_dims
     int *ns;  // number of slack variables
     int *np;  // number of parameters
 
-    int np_global;
-    int n_global_data;
+    int np_global;  // number of global parameters
+    int n_global_data;  // size of global_data; expressions that only depend on p_global; detected automatically during code generation
     int N;    // number of shooting nodes
 
     void *raw_memory; // Pointer to allocated memory, to be used for freeing
