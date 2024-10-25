@@ -1742,7 +1742,7 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
     int *nx = dims->nx;
     // int *nu = dims->nu;
     int *ni = dims->ni;
-    int *np = dims->np;
+    // int *np = dims->np;
     // int *ns = dims->ns;
     int *nv = dims->nv;
 
@@ -1964,7 +1964,7 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     // int *nu = dims->nu;
     int *ni = dims->ni;
     // int *nz = dims->nz;
-    int *np = dims->np;
+    // int *np = dims->np;
     int nv_max = 0;
     int nx_max = 0;
     int ni_max = 0;
