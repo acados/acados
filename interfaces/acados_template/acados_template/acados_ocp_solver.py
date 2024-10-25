@@ -510,7 +510,7 @@ class AcadosOcpSolver:
 
         Notes:
         - for field `initial_state`, the gradient is the Lagrange multiplier of the initial state constraint.
-        The gradient computation consist of adding the Lagrange multipliers correspondin to the upper and lower bound of the initial state.
+        The gradient computation consist of adding the Lagrange multipliers corresponding to the upper and lower bound of the initial state.
 
         - for field `params_global`, the gradient of the Lagrange function w.r.t. the global parameters is computed in acados.
 
@@ -529,11 +529,11 @@ class AcadosOcpSolver:
             grad = lam[nbu:nbu+nx] - lam[nlam_non_slack+nbu : nlam_non_slack+nbu+nx]
 
         elif with_respect_to == "params_global":
-            nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p".encode('utf-8'))
+            np_global = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p_global".encode('utf-8'))
 
             field = "params_global".encode('utf-8')
             t0 = time.time()
-            grad = np.zeros((nparam,))
+            grad = np.zeros((np_global,))
             grad_p = np.ascontiguousarray(grad, dtype=np.float64)
             c_grad_p = cast(grad_p.ctypes.data, POINTER(c_double))
             self.__acados_lib.ocp_nlp_eval_lagrange_grad_p(self.nlp_solver, self.nlp_in, field, c_grad_p)
@@ -613,8 +613,8 @@ class AcadosOcpSolver:
             field = "ex"
 
         elif with_respect_to == "params_global":
-            nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p".encode('utf-8'))
-            ngrad = nparam
+            np_global = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p_global".encode('utf-8'))
+            ngrad = np_global
             field = "params_global"
 
             # compute jacobians wrt params in all modules

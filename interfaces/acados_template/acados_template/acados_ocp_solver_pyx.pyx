@@ -255,7 +255,7 @@ cdef class AcadosOcpSolverCython:
 
         Notes:
         - for field `initial_state`, the gradient is the Lagrange multiplier of the initial state constraint.
-        The gradient computation consist of adding the Lagrange multipliers correspondin to the upper and lower bound of the initial state.
+        The gradient computation consist of adding the Lagrange multipliers corresponding to the upper and lower bound of the initial state.
 
         - for field `params_global`, the gradient of the Lagrange function w.r.t. the global parameters is computed in acados.
 
@@ -265,7 +265,7 @@ cdef class AcadosOcpSolverCython:
 
         cdef int nx
         cdef int nbu
-        cdef int nparam
+        cdef int np_global
         cdef int ns_0
 
         cdef cnp.ndarray[cnp.float64_t, ndim=1] grad
@@ -282,11 +282,11 @@ cdef class AcadosOcpSolverCython:
             grad = lam[nbu:nbu+nx] - lam[nlam_non_slack+nbu : nlam_non_slack+nbu+nx]
 
         elif with_respect_to == "params_global":
-            nparam = acados_solver_common.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p".encode('utf-8'))
+            np_global = acados_solver_common.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p_global".encode('utf-8'))
 
             field = "params_global".encode('utf-8')
             t0 = time.time()
-            grad = np.ascontiguousarray(np.zeros((nparam,)), dtype=np.float64)
+            grad = np.ascontiguousarray(np.zeros((np_global,)), dtype=np.float64)
             acados_solver_common.ocp_nlp_eval_lagrange_grad_p(self.nlp_solver, self.nlp_in, field, <void *> grad.data)
             self.time_value_grad = time.time() - t0
 
@@ -344,7 +344,7 @@ cdef class AcadosOcpSolverCython:
 
         cdef int nx
         cdef int nu
-        cdef int nparam
+        cdef int np_global
 
         # for s in stages_:
         #     if not isinstance(s, int) or s < 0 or s > N:
@@ -357,9 +357,9 @@ cdef class AcadosOcpSolverCython:
             field = "ex"
 
         elif with_respect_to == "params_global":
-            nparam = acados_solver_common.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p".encode('utf-8'))
+            np_global = acados_solver_common.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p_global".encode('utf-8'))
 
-            ngrad = nparam
+            ngrad = np_global
             field = "params_global"
 
             # compute jacobians wrt params in all modules
