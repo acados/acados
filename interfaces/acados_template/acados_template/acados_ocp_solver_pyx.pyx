@@ -979,6 +979,19 @@ cdef class AcadosOcpSolverCython:
         return
 
 
+    def set_p_global_and_precompute_dependencies(self, data_):
+        """
+        Sets values of p_global and precomputes all parts of the CasADi graphs of all other functions that only depend on p_global.
+        """
+        cdef cnp.ndarray[cnp.float64_t, ndim=1] value = np.ascontiguousarray(data_, dtype=np.float64)
+
+        cdef int data_len = value.shape[0]
+
+        cdef int status = acados_solver.acados_set_p_global_and_precompute_dependencies(self.capsule, <double *> value.data, data_len)
+
+        return status
+
+
     def __del__(self):
         if self.solver_created:
             acados_solver.acados_free(self.capsule)
