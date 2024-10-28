@@ -80,6 +80,7 @@ enum return_values
     ACADOS_QP_FAILURE,
     ACADOS_READY,
     ACADOS_UNBOUNDED,
+    ACADOS_TIMEOUT,
 };
 
 
@@ -94,6 +95,14 @@ typedef enum
 } ocp_nlp_cost_t;
 
 
+
+/// Types of the timeout heuristic.
+typedef enum
+{
+  MAX,
+  LAST,
+  AVERAGE,
+} ocp_nlp_timeout_heuristic_t;
 
 #ifdef __cplusplus
 } /* extern "C" */

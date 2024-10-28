@@ -67,6 +67,8 @@ typedef struct
     int qp_warm_start;   // qp_warm_start in all but the first sqp iterations
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
     bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
+    double timeout_max_time; // maximum time the solve may require before timeout is triggered. No timeout if 0.
+    ocp_nlp_timeout_heuristic_t timeout_heuristic; // type of heuristic used to predict solve time of next QP
 } ocp_nlp_sqp_opts;
 
 //
@@ -102,6 +104,7 @@ typedef struct
     int stat_n;
 
     double step_norm;
+    double timeout_mem;
 
 } ocp_nlp_sqp_memory;
 

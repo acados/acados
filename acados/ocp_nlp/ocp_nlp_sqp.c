@@ -125,6 +125,9 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->warm_start_first_qp = false;
     opts->eval_residual_at_max_iter = false;
 
+    opts->timeout_heuristic = LAST;
+    opts->timeout_max_time = 0; // corresponds to no timeout
+
     // overwrite default submodules opts
     // qp tolerance
     qp_solver->opts_set(qp_solver, opts->nlp_opts->qp_solver_opts, "tol_stat", &opts->tol_stat);
@@ -336,6 +339,9 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *i
         mem->stat_n += 4;
     c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
 
+    // timeout memory
+    mem->timeout_mem = 0;
+
     mem->nlp_mem->status = ACADOS_READY;
 
     align_char_to(8, &c_ptr);
@@ -512,6 +518,15 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         return true;
     }
 
+    // Check timeout
+    if (opts->timeout_max_time > 0)
+    {
+        if (opts->timeout_max_time <= (mem->nlp_mem->nlp_timings->time_tot + mem->timeout_mem))
+        {
+            mem->nlp_mem->status = ACADOS_TIMEOUT;
+            return mem->nlp_mem->status;;
+        }
+    }
     return false;
 }
 
@@ -554,6 +569,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->step_norm = 0.0;
     mem->nlp_mem->status = ACADOS_SUCCESS;
 
+    mem->timeout_mem = 0;
+
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
     int num_threads_bkp = omp_get_num_threads();
@@ -568,13 +585,20 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
      ************************************************/
     int sqp_iter = 0;
     double prev_levenberg_marquardt = 0.0;
-
-
     int globalization_status;
     qp_info *qp_info_;
 
+    double timeout_previous_time_tot = 0.;
+    double timeout_time_prev_iter = 0.;
+
     // Initialize the memory for different globalization strategies
     config->globalization->initialize_memory(config, dims, nlp_mem, nlp_opts);
+
+    // Update time_tot which is used to time each sqp iteration when timeout is used
+    if (opts->timeout_max_time > 0.)
+    {
+        nlp_timings->time_tot = acados_toc(&timer0);
+    }
 
     for (; sqp_iter <= opts->nlp_opts->max_iter; sqp_iter++) // <= needed such that after last iteration KKT residuals are checked before max_iter is thrown.
     {
@@ -637,6 +661,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         config->regularize->regularize(config->regularize, dims->regularize,
                                                nlp_opts->regularize, nlp_mem->regularize_mem);
         nlp_timings->time_reg += acados_toc(&timer1);
+
+        // store current time_tot, required for timeout
+        if (opts->timeout_max_time > 0)
+            mem->nlp_mem->nlp_timings->time_tot = acados_toc(&timer0);
 
         // Termination
         if (check_termination(sqp_iter, dims, nlp_res, mem, opts))
@@ -777,6 +805,25 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
         mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
         nlp_timings->time_glob += acados_toc(&timer1);
+
+        // Update timeout memory based on chosen heuristic
+        if (opts->timeout_max_time > 0.)
+        {
+            nlp_timings->time_tot = acados_toc(&timer0);
+            timeout_time_prev_iter = nlp_timings->time_tot - timeout_previous_time_tot;
+
+            if (opts->timeout_heuristic == LAST)
+                mem->timeout_mem = timeout_time_prev_iter;
+            if (opts->timeout_max_time == MAX)
+                mem->timeout_mem = timeout_time_prev_iter > mem->timeout_mem ? timeout_time_prev_iter : mem->timeout_mem;
+            if (opts->timeout_heuristic == AVERAGE)
+                {
+                    if (sqp_iter == 0)
+                        mem->timeout_mem = timeout_time_prev_iter;
+                    else
+                        mem->timeout_mem = 0.5*timeout_time_prev_iter + 0.5*mem->timeout_mem; // TODO make weighting a parameter
+                }
+        }
 
     }  // end SQP loop
 
