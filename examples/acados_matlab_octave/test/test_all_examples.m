@@ -35,7 +35,7 @@ clearvars; clc; close all;
 % list the examples you would like to test
 
 targets = {
-	'../control_rates/main.m';
+    '../control_rates/main.m';
     '../generic_dyn_disc/disc_dyn_example_ocp.m';
     '../generic_external_cost/external_cost_example_ocp.m';
     '../generic_nlp/main.m';
