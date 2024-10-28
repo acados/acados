@@ -30,14 +30,14 @@
 #
 
 from acados_template import AcadosOcp, AcadosOcpSolver
-from utils import plot_furuta_pendulum
+from utils import plot_furuta_pendulum, plot_time_per_solve
 from furuta_model import get_furuta_model
 from integrator_experiment import setup_acados_integrator, IntegratorSetting
 import numpy as np
 import scipy.linalg
 from casadi import vertcat
 
-def setup(x0, umax, dt_0, N_horizon, Tf, RTI=False):
+def setup(x0, umax, dt_0, N_horizon, Tf, RTI=False, timeout_max_time=0, heuristic="ZERO"):
     ocp = AcadosOcp()
 
     model = get_furuta_model()
@@ -87,6 +87,10 @@ def setup(x0, umax, dt_0, N_horizon, Tf, RTI=False):
 
     ocp.solver_options.tf = Tf
 
+    # timeout
+    ocp.solver_options.timeout_max_time = timeout_max_time
+    ocp.solver_options.timeout_heuristic = heuristic
+
     solver_json = 'acados_ocp_' + model.name + '.json'
     ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)
 
@@ -102,7 +106,7 @@ def setup(x0, umax, dt_0, N_horizon, Tf, RTI=False):
     return ocp_solver, integrator
 
 
-def main(use_RTI=False):
+def main(use_RTI=False, timeout_max_time=0., heuristic="ZERO"):
 
     x0 = np.array([0.0, np.pi, 0.0, 0.0])
     umax = .45
@@ -111,7 +115,7 @@ def main(use_RTI=False):
     N_horizon = 8   # number of shooting intervals
     dt_0 = 0.025    # sampling time = length of first shooting interval
 
-    ocp_solver, integrator = setup(x0, umax, dt_0, N_horizon, Tf, use_RTI)
+    ocp_solver, integrator = setup(x0, umax, dt_0, N_horizon, Tf, use_RTI, timeout_max_time, heuristic)
 
     nx = ocp_solver.acados_ocp.dims.nx
     nu = ocp_solver.acados_ocp.dims.nu
@@ -175,6 +179,7 @@ def main(use_RTI=False):
     else:
         # scale to milliseconds
         t *= 1000
+        plot_time_per_solve(t, timeout_max_time*1000, heuristic, plt_show=False)
         print(f'Computation time in ms: min {np.min(t):.3f} median {np.median(t):.3f} max {np.max(t):.3f}')
 
     # plot results
@@ -184,6 +189,9 @@ def main(use_RTI=False):
 
 
 if __name__ == '__main__':
-    main(use_RTI=False)
-    main(use_RTI=True)
+    main(use_RTI=False, timeout_max_time=0.)
+    main(use_RTI=False, timeout_max_time=2*1e-3, heuristic="ZERO")
+    main(use_RTI=False, timeout_max_time=2*1e-3, heuristic="LAST")
+
+    main(use_RTI=True) # timeout not implemented for RTI
 

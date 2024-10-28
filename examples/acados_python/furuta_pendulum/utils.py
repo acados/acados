@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from acados_template import latexify_plot
-
+import numpy as np
 latexify_plot()
 
 def plot_furuta_pendulum(t_sim, X_sim, U_sim, u_max, plt_show=True):
@@ -24,5 +24,24 @@ def plot_furuta_pendulum(t_sim, X_sim, U_sim, u_max, plt_show=True):
     axes[-1].grid()
     axes[-1].set_xlabel(r'$t$')
 
+    if plt_show:
+        plt.show()
+
+
+def plot_time_per_solve(times, timeout_max_time: float = 0, heuristic='ZERO', plt_show=True):
+    fig, axes = plt.subplots(nrows=1, ncols=1)
+
+    num_solves = times.shape[0]
+    if timeout_max_time > 0:
+        axes.axhline(timeout_max_time, label='maximum time', color='k', linestyle='dashed', alpha=0.8)
+        axes.legend()
+        title = f"With timeout using heuristic {heuristic}"
+    else:
+        title = "No timeout"
+
+    axes.set_title(title)
+    axes.bar(np.arange(num_solves), height=times, width=0.5*np.ones((num_solves, )))
+    axes.set_xlabel('iteration $k$')
+    axes.set_ylabel('total time in ms')
     if plt_show:
         plt.show()
