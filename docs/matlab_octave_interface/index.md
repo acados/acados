@@ -180,7 +180,7 @@ mkdir -p casadi-octave
 tar -xf casadi-linux-octave-4.4.1-v3.4.5.tar.gz -C casadi-octave
 ```
 
-### **Octave version 4.2 or earliear**
+### **Octave version 4.2 or earlier**
 Download and extract the `CasADi` binaries into `<acados_root_folder>/external/casadi-octave`:
 ```
 cd external
