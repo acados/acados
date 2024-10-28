@@ -28,7 +28,7 @@ def plot_furuta_pendulum(t_sim, X_sim, U_sim, u_max, plt_show=True):
         plt.show()
 
 
-def plot_time_per_solve(times, timeout_max_time: float = 0, heuristic='ZERO', plt_show=True, store_figure=False):
+def plot_time_per_solve(times, timeout_max_time: float = 0, heuristic='', plt_show=True, store_figure=False):
     fig, axes = plt.subplots(nrows=1, ncols=1)
 
     num_solves = times.shape[0]
@@ -47,4 +47,4 @@ def plot_time_per_solve(times, timeout_max_time: float = 0, heuristic='ZERO', pl
     if plt_show:
         plt.show()
     if store_figure:
-        fig.savefig(f"computation_time_{heuristic}.png")
+        fig.savefig(f"computation_time_{heuristic if timeout_max_time > 0 else 'NO_TIMEOUT'}.png")
