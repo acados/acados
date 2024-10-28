@@ -1747,9 +1747,22 @@ class AcadosOcpSolver:
         """
         Sets values of p_global and precomputes all parts of the CasADi graphs of all other functions that only depend on p_global.
         """
+
+        # checks
+        np_global = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, \
+                self.nlp_dims, self.nlp_out, 0, "p_global".encode('utf-8'))
+        if not isinstance(data_, np.ndarray):
+            raise Exception('data must be np.array.')
+        if np.float64 != data_.dtype:
+            raise TypeError('data must be np.array of float64.')
+        if data_.ndim != 1:
+            raise Exception('data must be one-dimensional np array.')
+
         data = np.ascontiguousarray(data_, dtype=np.float64)
         c_data = cast(data.ctypes.data, POINTER(c_double))
         data_len = len(data)
+        if data_len != np_global:
+            raise Exception(f'data must have length {np_global}, got {data_len}.')
 
         status = getattr(self.shared_lib, f"{self.name}_acados_set_p_global_and_precompute_dependencies")(self.capsule, c_data, data_len)
 
