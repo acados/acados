@@ -680,24 +680,28 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
                 switch (opts->timeout_heuristic)
                 {
-                case LAST:
-                    mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter;
-                    break;
-                case MAX:
-                    mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter > mem->timeout_estimated_per_iteration_time ? timeout_time_prev_iter : mem->timeout_estimated_per_iteration_time;
-                    break;
-                case AVERAGE:
-                    if (sqp_iter == 0)
+                    case LAST:
                         mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter;
-                    else
-                        // TODO make weighting a parameter?
-                        mem->timeout_estimated_per_iteration_time = 0.5*timeout_time_prev_iter + 0.5*mem->timeout_estimated_per_iteration_time;
-                    break;
-                case ZERO: // predicted per iteration time is zero
-                    break;
-                default:
-                    printf("Unknown timeout heuristic.\n");
-                    exit(1);
+                        break;
+                    case MAX:
+                        mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter > mem->timeout_estimated_per_iteration_time ? timeout_time_prev_iter : mem->timeout_estimated_per_iteration_time;
+                        break;
+                    case AVERAGE:
+                        if (sqp_iter == 0)
+                        {
+                            mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter;
+                        }
+                        else
+                        {
+                            // TODO make weighting a parameter?
+                            mem->timeout_estimated_per_iteration_time = 0.5*timeout_time_prev_iter + 0.5*mem->timeout_estimated_per_iteration_time;
+                        }
+                        break;
+                    case ZERO: // predicted per iteration time is zero as initialized
+                        break;
+                    default:
+                        printf("Unknown timeout heuristic.\n");
+                        exit(1);
                 }
             }
 
