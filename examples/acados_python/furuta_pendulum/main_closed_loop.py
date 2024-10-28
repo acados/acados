@@ -80,7 +80,7 @@ def setup(x0, umax, dt_0, N_horizon, Tf, RTI=False, timeout_max_time=0, heuristi
     ocp.solver_options.time_steps = np.array([dt_0] + [(Tf-dt_0)/(N_horizon-1)]*(N_horizon-1))
     ocp.solver_options.sim_method_num_steps = np.array([1] + [2]*(N_horizon-1))
     ocp.solver_options.levenberg_marquardt = 1e-6
-    ocp.solver_options.nlp_solver_max_iter = 10
+    ocp.solver_options.nlp_solver_max_iter = 20
 
     ocp.solver_options.nlp_solver_type = 'SQP_RTI' if RTI else 'SQP'
     ocp.solver_options.qp_solver_cond_N = N_horizon
@@ -190,8 +190,8 @@ def main(use_RTI=False, timeout_max_time=0., heuristic="ZERO"):
 
 if __name__ == '__main__':
     main(use_RTI=False, timeout_max_time=0.)
-    main(use_RTI=False, timeout_max_time=2*1e-3, heuristic="ZERO")
-    main(use_RTI=False, timeout_max_time=2*1e-3, heuristic="LAST")
+    main(use_RTI=False, timeout_max_time=1*1e-3, heuristic="ZERO")
+    main(use_RTI=False, timeout_max_time=1*1e-3, heuristic="LAST")
 
     main(use_RTI=True) # timeout not implemented for RTI
 
