@@ -381,7 +381,7 @@ acados_size_t ocp_nlp_cost_external_memory_calculate_size(void *config_, void *d
     int nx = dims->nx;
     int nu = dims->nu;
     int ns = dims->ns;
-    int np = dims->np;
+    int np_global = dims->np_global;
     int nz = dims->nz;
 
     acados_size_t size = 0;
@@ -390,7 +390,7 @@ acados_size_t ocp_nlp_cost_external_memory_calculate_size(void *config_, void *d
 
     if (opts->with_solution_sens_wrt_params)
     {
-        size += 1 * blasfeo_memsize_dmat(nu + nx + nz, np);  // cost_grad_params_jac
+        size += 1 * blasfeo_memsize_dmat(nu + nx + nz, np_global);  // cost_grad_params_jac
     }
     size += 1 * blasfeo_memsize_dvec(nu + nx + 2 * ns);  // grad
 
@@ -413,7 +413,7 @@ void *ocp_nlp_cost_external_memory_assign(void *config_, void *dims_, void *opts
     int nx = dims->nx;
     int nu = dims->nu;
     int ns = dims->ns;
-    int np = dims->np;
+    int np_global = dims->np_global;
 
     // struct
     ocp_nlp_cost_external_memory *memory = (ocp_nlp_cost_external_memory *) c_ptr;
@@ -424,7 +424,7 @@ void *ocp_nlp_cost_external_memory_assign(void *config_, void *dims_, void *opts
 
     if (opts->with_solution_sens_wrt_params)
     {
-        assign_and_advance_blasfeo_dmat_mem(nu + nx, np, &memory->cost_grad_params_jac, &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(nu + nx, np_global, &memory->cost_grad_params_jac, &c_ptr);
     }
     // grad
     assign_and_advance_blasfeo_dvec_mem(nu + nx + 2 * ns, &memory->grad, &c_ptr);
