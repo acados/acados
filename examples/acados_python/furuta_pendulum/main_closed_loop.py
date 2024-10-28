@@ -32,7 +32,7 @@
 from acados_template import AcadosOcp, AcadosOcpSolver
 from utils import plot_furuta_pendulum
 from furuta_model import get_furuta_model
-from integrator_experiment import setup_acados_integrator
+from integrator_experiment import setup_acados_integrator, IntegratorSetting
 import numpy as np
 import scipy.linalg
 from casadi import vertcat
@@ -91,8 +91,13 @@ def setup(x0, umax, dt_0, N_horizon, Tf, RTI=False):
     ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)
 
     # setup plant simulator
-    integrator = setup_acados_integrator(model, dt_0, num_stages=2, num_steps=2, integrator_type="IRK",
-                            newton_iter=20, newton_tol=1e-10)
+    integrator_settings = IntegratorSetting(integrator_type="IRK",
+                                            num_stages=2,
+                                            num_steps=2,
+                                            newton_iter=20,
+                                            newton_tol=1e-10,
+                                            )
+    integrator = setup_acados_integrator(model, dt_0, integrator_settings)
 
     return ocp_solver, integrator
 
