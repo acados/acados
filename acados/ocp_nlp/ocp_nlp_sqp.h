@@ -104,7 +104,7 @@ typedef struct
     int stat_n;
 
     double step_norm;
-    double timeout_mem;
+    double timeout_estimated_per_iteration_time;
 
 } ocp_nlp_sqp_memory;
 

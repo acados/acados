@@ -221,6 +221,16 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
             bool* eval_residual_at_max_iter = (bool *) value;
             opts->eval_residual_at_max_iter = *eval_residual_at_max_iter;
         }
+        else if (!strcmp(field, "timeout_max_time"))
+        {
+            double* timeout_max_time = (double *) value;
+            opts->timeout_max_time = *timeout_max_time;
+        }
+        else if (!strcmp(field, "timeout_heuristic"))
+        {
+            ocp_nlp_timeout_heuristic_t* timeout_heuristic = (ocp_nlp_timeout_heuristic_t *) value;
+            opts->timeout_heuristic = *timeout_heuristic;
+        }
         else
         {
             ocp_nlp_opts_set(config, nlp_opts, field, value);
@@ -340,7 +350,7 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *i
     c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
 
     // timeout memory
-    mem->timeout_mem = 0;
+    mem->timeout_estimated_per_iteration_time = 0;
 
     mem->nlp_mem->status = ACADOS_READY;
 
@@ -521,7 +531,7 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
     // Check timeout
     if (opts->timeout_max_time > 0)
     {
-        if (opts->timeout_max_time <= (mem->nlp_mem->nlp_timings->time_tot + mem->timeout_mem))
+        if (opts->timeout_max_time <= (mem->nlp_mem->nlp_timings->time_tot + mem->timeout_estimated_per_iteration_time))
         {
             mem->nlp_mem->status = ACADOS_TIMEOUT;
             return mem->nlp_mem->status;;
@@ -569,7 +579,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->step_norm = 0.0;
     mem->nlp_mem->status = ACADOS_SUCCESS;
 
-    mem->timeout_mem = 0;
+    mem->timeout_estimated_per_iteration_time = 0;
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -812,17 +822,25 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             nlp_timings->time_tot = acados_toc(&timer0);
             timeout_time_prev_iter = nlp_timings->time_tot - timeout_previous_time_tot;
 
-            if (opts->timeout_heuristic == LAST)
-                mem->timeout_mem = timeout_time_prev_iter;
-            if (opts->timeout_max_time == MAX)
-                mem->timeout_mem = timeout_time_prev_iter > mem->timeout_mem ? timeout_time_prev_iter : mem->timeout_mem;
-            if (opts->timeout_heuristic == AVERAGE)
-                {
-                    if (sqp_iter == 0)
-                        mem->timeout_mem = timeout_time_prev_iter;
-                    else
-                        mem->timeout_mem = 0.5*timeout_time_prev_iter + 0.5*mem->timeout_mem; // TODO make weighting a parameter
-                }
+
+            switch (opts->timeout_heuristic)
+            {
+            case LAST:
+                mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter;
+                break;
+            case MAX:
+                mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter > mem->timeout_estimated_per_iteration_time ? timeout_time_prev_iter : mem->timeout_estimated_per_iteration_time;
+                break;
+            case AVERAGE:
+                if (sqp_iter == 0)
+                    mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter;
+                else
+                    mem->timeout_estimated_per_iteration_time = 0.5*timeout_time_prev_iter + 0.5*mem->timeout_estimated_per_iteration_time; // TODO make weighting a parameter?
+            case ZERO: // predicted per iteration time is zero
+                break;
+            default:
+                break;
+            }
         }
 
     }  // end SQP loop
