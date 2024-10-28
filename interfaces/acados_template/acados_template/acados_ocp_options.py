@@ -580,7 +580,7 @@ class AcadosOcpOptions:
         Possible values are "MAX", "LAST", "AVERAGE", "ZERO".
         MAX: Use the maximum per iteration time so far as estimate.
         LAST: Use the time required by the last iteration as estimate.
-        AVERAGE: Use a weighted average of the previous per iteration times as estimates (weight is currently fixed at 0.5).
+        AVERAGE: Use an exponential moving average of the previous per iteration times as estimate (weight is currently fixed at 0.5).
         ZERO: Use 0 as estimate.
         Currently implemented for SQP only.
         Default: ZERO.
