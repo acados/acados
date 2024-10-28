@@ -266,8 +266,6 @@ void update_funnel_penalty_parameter(ocp_nlp_globalization_funnel_memory *mem,
                                             ocp_nlp_globalization_funnel_opts *opts,
                                             double pred_f, double pred_h)
 {
-    printf("update penalty, lhs: %.6e\n", mem->penalty_parameter * pred_f + pred_h);
-    printf("update penalty, rhs: %.6e\n", opts->penalty_eta * pred_h);
     if (mem->penalty_parameter * pred_f + pred_h < opts->penalty_eta * pred_h)
     {
 
@@ -448,13 +446,6 @@ int backtracking_line_search(ocp_nlp_config *config,
     // {
     // }
     pred_optimality = -compute_gradient_directional_derivative(dims, nlp_mem->qp_in, nlp_mem->qp_out);
-    if (pred_optimality < 0)
-    {
-        if (fabs(pred_optimality) < 1e-6)
-        {
-            pred_optimality = fabs(pred_optimality);
-        }
-    }
     double pred_merit = 0.0; // Calculate this here
     double pred_infeasibility = nlp_mem->predicted_infeasibility_reduction;
     double alpha = 1.0;

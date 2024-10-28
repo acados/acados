@@ -115,7 +115,6 @@ void ocp_nlp_globalization_opts_set(void *config_, void *opts_, const char *fiel
     }
     else if (!strcmp(field, "alpha_min"))
     {
-        printf("set alpha min!!\n");
         double* alpha_min = (double *) value;
         opts->alpha_min = *alpha_min;
     }

@@ -585,7 +585,7 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         mem->nlp_mem->status = ACADOS_NAN_DETECTED;
         if (opts->nlp_opts->print_level > 0)
         {
-        printf("Stopped: NaN detected in iterate.\n");
+            printf("Stopped: NaN detected in iterate.\n");
         }
         return true;
     }
@@ -1289,8 +1289,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->nlp_mem->status = ACADOS_SUCCESS;
 
     // TODO(@david):
-    // mem->objective_multiplier = 1.0;//1e-4;//1/(42*1e8);
-    nlp_mem->objective_multiplier = 1e-4;
+    nlp_mem->objective_multiplier = 1e0;
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
