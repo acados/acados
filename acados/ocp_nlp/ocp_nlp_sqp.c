@@ -125,7 +125,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->warm_start_first_qp = false;
     opts->eval_residual_at_max_iter = false;
 
-    opts->timeout_heuristic = LAST;
+    opts->timeout_heuristic = ZERO;
     opts->timeout_max_time = 0; // corresponds to no timeout
 
     // overwrite default submodules opts
@@ -531,10 +531,10 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
     // Check timeout
     if (opts->timeout_max_time > 0)
     {
-        if (opts->timeout_max_time <= (mem->nlp_mem->nlp_timings->time_tot + mem->timeout_estimated_per_iteration_time))
+        if (opts->timeout_max_time <= mem->nlp_mem->nlp_timings->time_tot + mem->timeout_estimated_per_iteration_time)
         {
             mem->nlp_mem->status = ACADOS_TIMEOUT;
-            return mem->nlp_mem->status;;
+            return true;
         }
     }
     return false;
@@ -836,6 +836,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                     mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter;
                 else
                     mem->timeout_estimated_per_iteration_time = 0.5*timeout_time_prev_iter + 0.5*mem->timeout_estimated_per_iteration_time; // TODO make weighting a parameter?
+                break;
             case ZERO: // predicted per iteration time is zero
                 break;
             default:
