@@ -158,13 +158,13 @@ class AcadosOcpConstraints:
     # initial bounds on x
     @property
     def lbx_0(self):
-        """:math:`\\underline{x_0}` - lower bounds on x at initial stage 0.
+        r""":math:`\\underline{x_0}` - lower bounds on x at initial stage 0.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`."""
         return self.__lbx_0
 
     @property
     def ubx_0(self):
-        """:math:`\\bar{x_0}` - upper bounds on x at initial stage 0.
+        r""":math:`\\bar{x_0}` - upper bounds on x at initial stage 0.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__ubx_0
 
@@ -192,13 +192,13 @@ class AcadosOcpConstraints:
     # bounds on x
     @property
     def lbx(self):
-        """:math:`\\underline{x}` - lower bounds on x at intermediate shooting nodes (1 to N-1).
+        r""":math:`\\underline{x}` - lower bounds on x at intermediate shooting nodes (1 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__lbx
 
     @property
     def ubx(self):
-        """:math:`\\bar{x}` - upper bounds on x at intermediate shooting nodes (1 to N-1).
+        r""":math:`\\bar{x}` - upper bounds on x at intermediate shooting nodes (1 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__ubx
 
@@ -220,13 +220,13 @@ class AcadosOcpConstraints:
     # bounds on x at shooting node N
     @property
     def lbx_e(self):
-        """:math:`\\underline{x}^e` - lower bounds on x at terminal shooting node N.
+        r""":math:`\\underline{x}^e` - lower bounds on x at terminal shooting node N.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__lbx_e
 
     @property
     def ubx_e(self):
-        """:math:`\\bar{x}^e` - upper bounds on x at terminal shooting node N.
+        r""":math:`\\bar{x}^e` - upper bounds on x at terminal shooting node N.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__ubx_e
 
@@ -247,14 +247,14 @@ class AcadosOcpConstraints:
     # bounds on u
     @property
     def lbu(self):
-        """:math:`\\underline{u}` - lower bounds on u at shooting nodes (0 to N-1).
+        r""":math:`\\underline{u}` - lower bounds on u at shooting nodes (0 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`
         """
         return self.__lbu
 
     @property
     def ubu(self):
-        """:math:`\\bar{u}` - upper bounds on u at shooting nodes (0 to N-1).
+        r""":math:`\\bar{u}` - upper bounds on u at shooting nodes (0 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`
         """
         return self.__ubu
@@ -278,7 +278,7 @@ class AcadosOcpConstraints:
     # polytopic constraints
     @property
     def C(self):
-        """:math:`C` - C matrix in :math:`\\underline{g} \\leq D \, u + C \, x \\leq \\bar{g}`
+        r""":math:`C` - C matrix in :math:`\\underline{g} \\leq D \, u + C \, x \\leq \\bar{g}`
         at shooting nodes (0 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array((0,0))`.
         """
@@ -286,7 +286,7 @@ class AcadosOcpConstraints:
 
     @property
     def D(self):
-        """:math:`D` - D matrix in :math:`\\underline{g} \\leq D \, u + C \, x \\leq \\bar{g}`
+        r""":math:`D` - D matrix in :math:`\\underline{g} \\leq D \, u + C \, x \\leq \\bar{g}`
         at shooting nodes (0 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array((0,0))`
         """
@@ -294,7 +294,7 @@ class AcadosOcpConstraints:
 
     @property
     def lg(self):
-        """:math:`\\underline{g}` - lower bound for general polytopic inequalities
+        r""":math:`\\underline{g}` - lower bound for general polytopic inequalities
         at shooting nodes (0 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`
         """
@@ -302,7 +302,7 @@ class AcadosOcpConstraints:
 
     @property
     def ug(self):
-        """:math:`\\bar{g}` - upper bound for general polytopic inequalities
+        r""":math:`\\bar{g}` - upper bound for general polytopic inequalities
         at shooting nodes (0 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
@@ -318,7 +318,7 @@ class AcadosOcpConstraints:
 
     @property
     def lg_e(self):
-        """:math:`\\underline{g}^e` - lower bound on general polytopic inequalities
+        r""":math:`\\underline{g}^e` - lower bound on general polytopic inequalities
         at terminal shooting node N.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
@@ -326,7 +326,7 @@ class AcadosOcpConstraints:
 
     @property
     def ug_e(self):
-        """:math:`\\bar{g}^e` - upper bound on general polytopic inequalities
+        r""":math:`\\bar{g}^e` - upper bound on general polytopic inequalities
         at terminal shooting node N.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
@@ -336,7 +336,7 @@ class AcadosOcpConstraints:
     # nonlinear constraints
     @property
     def lh(self):
-        """:math:`\\underline{h}` - lower bound for nonlinear inequalities
+        r""":math:`\\underline{h}` - lower bound for nonlinear inequalities
         at intermediate shooting nodes (1 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
@@ -344,7 +344,7 @@ class AcadosOcpConstraints:
 
     @property
     def uh(self):
-        """:math:`\\bar{h}` - upper bound for nonlinear inequalities
+        r""":math:`\\bar{h}` - upper bound for nonlinear inequalities
         at intermediate shooting nodes (1 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
@@ -353,7 +353,7 @@ class AcadosOcpConstraints:
     # nonlinear constraints at initial shooting node
     @property
     def lh_0(self):
-        """:math:`\\underline{h}^0` - lower bound on nonlinear inequalities
+        r""":math:`\\underline{h}^0` - lower bound on nonlinear inequalities
         at initial shooting node (0).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
@@ -361,7 +361,7 @@ class AcadosOcpConstraints:
 
     @property
     def uh_0(self):
-        """:math:`\\bar{h}^0` - upper bound on nonlinear inequalities
+        r""":math:`\\bar{h}^0` - upper bound on nonlinear inequalities
         at initial shooting node (0).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
@@ -370,7 +370,7 @@ class AcadosOcpConstraints:
     # nonlinear constraints at shooting node N
     @property
     def lh_e(self):
-        """:math:`\\underline{h}^e` - lower bound on nonlinear inequalities
+        r""":math:`\\underline{h}^e` - lower bound on nonlinear inequalities
         at terminal shooting node N.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
@@ -378,7 +378,7 @@ class AcadosOcpConstraints:
 
     @property
     def uh_e(self):
-        """:math:`\\bar{h}^e` - upper bound on nonlinear inequalities
+        r""":math:`\\bar{h}^e` - upper bound on nonlinear inequalities
         at terminal shooting node N.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
@@ -387,7 +387,7 @@ class AcadosOcpConstraints:
     # convex-over-nonlinear constraints
     @property
     def lphi(self):
-        """:math:`\\underline{\phi}` - lower bound for convex-over-nonlinear inequalities
+        r""":math:`\\underline{\phi}` - lower bound for convex-over-nonlinear inequalities
         at shooting nodes (0 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
@@ -395,7 +395,7 @@ class AcadosOcpConstraints:
 
     @property
     def uphi(self):
-        """:math:`\\bar{\phi}` - upper bound for convex-over-nonlinear inequalities
+        r""":math:`\\bar{\phi}` - upper bound for convex-over-nonlinear inequalities
         at shooting nodes (0 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
@@ -404,7 +404,7 @@ class AcadosOcpConstraints:
     # convex-over-nonlinear constraints at shooting node N
     @property
     def lphi_e(self):
-        """:math:`\\underline{\phi}^e` - lower bound on convex-over-nonlinear inequalities
+        r""":math:`\\underline{\phi}^e` - lower bound on convex-over-nonlinear inequalities
         at terminal shooting node N.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
@@ -412,7 +412,7 @@ class AcadosOcpConstraints:
 
     @property
     def uphi_e(self):
-        """:math:`\\bar{\phi}^e` - upper bound on convex-over-nonlinear inequalities
+        r""":math:`\\bar{\phi}^e` - upper bound on convex-over-nonlinear inequalities
         at terminal shooting node N.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
@@ -420,7 +420,7 @@ class AcadosOcpConstraints:
 
     @property
     def lphi_0(self):
-        """:math:`\\underline{\phi}^0` - lower bound on convex-over-nonlinear inequalities
+        r""":math:`\\underline{\phi}^0` - lower bound on convex-over-nonlinear inequalities
         at shooting node 0.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
@@ -428,7 +428,7 @@ class AcadosOcpConstraints:
 
     @property
     def uphi_0(self):
-        """:math:`\\bar{\phi}^0` - upper bound on convex-over-nonlinear inequalities
+        r""":math:`\\bar{\phi}^0` - upper bound on convex-over-nonlinear inequalities
         at shooting node 0.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
@@ -603,7 +603,7 @@ class AcadosOcpConstraints:
 
     @property
     def Jsphi(self):
-        """:math:`J_{s, \phi}` - matrix coefficient for soft bounds on convex-over-nonlinear constraints.
+        r""":math:`J_{s, \phi}` - matrix coefficient for soft bounds on convex-over-nonlinear constraints.
         Translated internally into :py:attr:`idxsphi`."""
         print_J_to_idx_note()
         return self.__idxsphi
@@ -743,7 +743,7 @@ class AcadosOcpConstraints:
 
     @property
     def x0(self):
-        """
+        r"""
         :math:`x_0 \\in \mathbb{R}^{n_x}` - initial state --
         Translated internally to :py:attr:`idxbx_0`, :py:attr:`lbx_0`, :py:attr:`ubx_0`, :py:attr:`idxbxe_0`
         """
