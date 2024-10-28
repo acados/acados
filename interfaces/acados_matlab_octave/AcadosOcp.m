@@ -1038,7 +1038,7 @@ classdef AcadosOcp < handle
                     error('rti_phase is only supported for SQP_RTI');
                 end
             else
-                disp("not rendering Simulink related templates, as simulink_opts are not specified.")
+                disp("Not rendering Simulink-related templates, as simulink_opts are not specified.")
             end
         end
 
