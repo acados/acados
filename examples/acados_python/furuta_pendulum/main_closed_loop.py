@@ -179,7 +179,7 @@ def main(use_RTI=False, timeout_max_time=0., heuristic="ZERO"):
     else:
         # scale to milliseconds
         t *= 1000
-        plot_time_per_solve(t, timeout_max_time*1000, heuristic, plt_show=False)
+        plot_time_per_solve(t, timeout_max_time*1000, heuristic, plt_show=False, store_figure=False)
         print(f'Computation time in ms: min {np.min(t):.3f} median {np.median(t):.3f} max {np.max(t):.3f}')
 
     # plot results
