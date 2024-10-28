@@ -669,23 +669,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                                nlp_opts->regularize, nlp_mem->regularize_mem);
         nlp_timings->time_reg += acados_toc(&timer1);
 
-        // store current time_tot, required for timeout
-        if (opts->timeout_max_time > 0)
-            mem->nlp_mem->nlp_timings->time_tot = acados_toc(&timer0);
-
-        // Termination
-        if (check_termination(sqp_iter, dims, nlp_res, mem, opts))
-        {
-#if defined(ACADOS_WITH_OPENMP)
-            // restore number of threads
-            omp_set_num_threads(num_threads_bkp);
-#endif
-            nlp_mem->iter = sqp_iter;
-            nlp_timings->time_tot = acados_toc(&timer0);
-            return mem->nlp_mem->status;
-        }
-
-        // Update timeout memory based on chosen heuristic
+        // update timeout memory based on chosen heuristic
         if (opts->timeout_max_time > 0.)
         {
             nlp_timings->time_tot = acados_toc(&timer0);
@@ -719,6 +703,19 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             timeout_previous_time_tot = nlp_timings->time_tot;
         }
+
+        // Termination
+        if (check_termination(sqp_iter, dims, nlp_res, mem, opts))
+        {
+#if defined(ACADOS_WITH_OPENMP)
+            // restore number of threads
+            omp_set_num_threads(num_threads_bkp);
+#endif
+            nlp_mem->iter = sqp_iter;
+            nlp_timings->time_tot = acados_toc(&timer0);
+            return mem->nlp_mem->status;
+        }
+
 
         /* solve QP */
         // (typically) no warm start at first iteration
