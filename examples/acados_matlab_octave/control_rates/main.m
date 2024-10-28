@@ -63,12 +63,12 @@ function run_simulation(timeout_max_time, timeout_heuristic)
     nu = length(model.u);
     ny = nx + nu;                  % number of outputs in lagrange term
     ny_e = nx;                     % number of outputs in mayer term
-    nbx = nx;                      % number of state bounds
-    nbu = nu;                      % number of input bounds
 
     % setup OCP
     ocp = AcadosOcp();
     ocp.model = model;
+    ocp.model.name = [ocp.model.name '_timeout_' mat2str(timeout_max_time > 0)];
+    ocp.json_file = [ocp.model.name '.json'];
 
     % integrator
     ocp.solver_options.integrator_type = 'ERK';

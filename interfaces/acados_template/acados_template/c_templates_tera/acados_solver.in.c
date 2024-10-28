@@ -2374,14 +2374,14 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     bool eval_residual_at_max_iter = {{ solver_options.eval_residual_at_max_iter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "eval_residual_at_max_iter", &eval_residual_at_max_iter);
 
-    {% if solver_options.nlp_solver_type == "SQP" and solver_options.timeout_max_time > 0 %}
+    {%- if solver_options.nlp_solver_type == "SQP" and solver_options.timeout_max_time > 0 %}
     double timeout_max_time = {{ solver_options.timeout_max_time }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "timeout_max_time", &timeout_max_time);
 
     ocp_nlp_timeout_heuristic_t timeout_heuristic = {{ solver_options.timeout_heuristic }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "timeout_heuristic", &timeout_heuristic);
 
-    {% endif %}
+    {%- endif %}
 {%- elif solver_options.nlp_solver_type == "SQP_RTI" %}
     int as_rti_iter = {{ solver_options.as_rti_iter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "as_rti_iter", &as_rti_iter);
