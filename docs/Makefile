@@ -33,7 +33,7 @@
 # Based on the sphinx-quickstart Makefile template.
 
 SPHINXOPTS    =
-# SPHINXBUILD   = python -msphinx
+SPHINXBUILD   = python -msphinx
 SPHINXBUILD   = sphinx-build
 DOXYBUILD     = doxygen
 SPHINXPROJ    = acados
@@ -53,8 +53,7 @@ html:
 
 doxygen:
 	@$(DOXYBUILD) doxygen/Doxyfile
-
-# @$(DOXYBUILD) c_interface/Doxyfile
+	@$(DOXYBUILD) c_interface/Doxyfile
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
