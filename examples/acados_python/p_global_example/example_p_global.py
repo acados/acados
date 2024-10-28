@@ -235,12 +235,12 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True):
 
     # call SQP_RTI solver in the loop:
     residuals = []
+    if use_p_global:
+        t_start = time.time()
+        ocp_solver.set_p_global_and_precompute_dependencies(p_global_values)
+        t_elapsed = time.time() - t_start
 
-    t_start = time.time()
-    ocp_solver.set_p_global_and_precompute_dependencies(p_global_values)
-    t_elapsed = time.time() - t_start
-
-    print(f"Precompute {t_elapsed}.")
+        print(f"Precompute {t_elapsed}.")
 
     timing = 0
     for i in range(20):
@@ -304,7 +304,8 @@ def main_mocp(lut=True, use_p_global=True):
     # call SQP_RTI solver in the loop:
     residuals = []
 
-    ocp_solver.set_p_global_and_precompute_dependencies(p_global_values)
+    if use_p_global:
+        ocp_solver.set_p_global_and_precompute_dependencies(p_global_values)
 
     timing = 0
     for i in range(20):
