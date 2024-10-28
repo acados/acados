@@ -259,7 +259,7 @@ cost_val_ocp = ocp_solver.get_cost();
 %        |----- dynamics -----|------ cost --------|---------------------------- constraints ------------------------|
 fields = {'qp_A','qp_B','qp_b','qp_R','qp_Q','qp_r','qp_C','qp_D','qp_lg','qp_ug','qp_lbx','qp_ubx','qp_lbu','qp_ubu'};
 
-% eiter stage-wise ...
+% either stage-wise ...
 for stage = [0,N-1]
     for k = 1:length(fields)
         field = fields{k};
