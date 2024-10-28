@@ -114,8 +114,10 @@ class AcadosOcpOptions:
         self.__adaptive_levenberg_marquardt_mu0 = 1e-3
         self.__log_primal_step_norm: bool = False
         self.__store_iterates: bool = False
-        # TODO: move those out? they are more about generation than about the acados OCP solver.
+        self.__timeout_max_time = 0.
+        self.__timeout_heuristic = 'LAST'
 
+        # TODO: move those out? they are more about generation than about the acados OCP solver.
         env = os.environ
         self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
         self.__model_external_shared_lib_dir = None
@@ -557,6 +559,33 @@ class AcadosOcpOptions:
         Default: False
         """
         return self.__store_iterates
+
+    @property
+    def timeout_max_time(self,):
+        """
+        Maximum time before solver timeout. If 0, there is no timeout.
+        A timeout is triggered if the condition
+        `current_time_tot + predicted_per_iteration_time > timeout_max_time`
+        is satisfied at the end of an SQP iteration.
+        The value of `predicted_per_iteration_time` is estimated using `timeout_heuristic`.
+        Currently implemented for SQP only.
+        Default: 0.
+        """
+        return self.__timeout_max_time
+
+    @property
+    def timeout_heuristic(self,):
+        """
+        Heuristic to be used for predicting the runtime of the next SQP iteration, cf. `timeout_max_time`.
+        Possible values are "MAX", "LAST", "AVERAGE", "ZERO".
+        MAX: Use the maximum per iteration time so far as estimate.
+        LAST: Use the time required by the last iteration as estimate.
+        AVERAGE: Use a weighted average of the previous per iteration times as estimates (weight is currently fixed at 0.5).
+        ZERO: Use 0 as estimate.
+        Currently implemented for SQP only.
+        Default: ZERO.
+        """
+        return self.__timeout_heuristic
 
     @property
     def tol(self):
@@ -1399,6 +1428,20 @@ class AcadosOcpOptions:
             self.__store_iterates = val
         else:
             raise Exception('Invalid store_iterates value. Expected bool.')
+
+    @timeout_max_time.setter
+    def timeout_max_time(self, val):
+        if isinstance(val, float) and val >= 0:
+            self.__timeout_max_time = val
+        else:
+            raise Exception('Invalid timeout_max_time value. Expected nonnegative float.')
+
+    @timeout_heuristic.setter
+    def timeout_heuristic(self, val):
+        if val in ["MAX", "LAST", "AVERAGE", "ZERO"]:
+            self.__timeout_heuristic = val
+        else:
+            raise Exception('Invalid timeout_heuristic value. Expected value in ["MAX", "LAST", "AVERAGE", "ZERO"].')
 
     @as_rti_iter.setter
     def as_rti_iter(self, as_rti_iter):
