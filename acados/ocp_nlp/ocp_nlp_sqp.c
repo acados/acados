@@ -601,9 +601,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     double timeout_previous_time_tot = 0.;
     double timeout_time_prev_iter = 0.;
 
-    // // Initialize the memory for different globalization strategies
-    // config->globalization->initialize_memory(config, dims, nlp_mem, nlp_opts);
-
     // Update time_tot which is used to time each sqp iteration when timeout is used
     if (opts->timeout_max_time > 0.)
     {
@@ -841,12 +838,14 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 if (sqp_iter == 0)
                     mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter;
                 else
-                    mem->timeout_estimated_per_iteration_time = 0.5*timeout_time_prev_iter + 0.5*mem->timeout_estimated_per_iteration_time; // TODO make weighting a parameter?
+                    // TODO make weighting a parameter?
+                    mem->timeout_estimated_per_iteration_time = 0.5*timeout_time_prev_iter + 0.5*mem->timeout_estimated_per_iteration_time;
                 break;
             case ZERO: // predicted per iteration time is zero
                 break;
             default:
-                break;
+                printf("Unknown timeout heuristic.\n");
+                exit(1);
             }
         }
 
