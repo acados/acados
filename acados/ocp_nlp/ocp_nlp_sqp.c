@@ -601,8 +601,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     double timeout_previous_time_tot = 0.;
     double timeout_time_prev_iter = 0.;
 
-    // Initialize the memory for different globalization strategies
-    config->globalization->initialize_memory(config, dims, nlp_mem, nlp_opts);
+    // // Initialize the memory for different globalization strategies
+    // config->globalization->initialize_memory(config, dims, nlp_mem, nlp_opts);
 
     // Update time_tot which is used to time each sqp iteration when timeout is used
     if (opts->timeout_max_time > 0.)
@@ -639,6 +639,12 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // compute nlp residuals
             ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
             ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
+        }
+
+        // Initialize globalization strategies (do not move outside the SQP loop)
+        if (sqp_iter == 0)
+        {
+            config->globalization->initialize_memory(config, dims, nlp_mem, nlp_opts);
         }
 
         // save statistics
