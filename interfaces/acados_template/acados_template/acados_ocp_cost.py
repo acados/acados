@@ -33,7 +33,7 @@ import numpy as np
 from .utils import check_if_nparray_and_flatten, check_if_2d_nparray
 
 class AcadosOcpCost:
-    """
+    r"""
     Class containing the numerical data of the cost:
 
     NOTE: By default, the Lagrange cost term provided in continuous time is internally integrated using the explicit Euler method, cost_discretization = 'EULER',
@@ -152,7 +152,7 @@ class AcadosOcpCost:
 
     @property
     def yref_0(self):
-        """:math:`y_\\text{ref}^0` - reference at initial shooting node (0).
+        r""":math:`y_\\text{ref}^0` - reference at initial shooting node (0).
         Default: :code:`None`.
         """
         return self.__yref_0
@@ -239,7 +239,7 @@ class AcadosOcpCost:
 
     @property
     def yref(self):
-        """:math:`y_\\text{ref}` - reference at intermediate shooting nodes (1 to N-1).
+        r""":math:`y_\\text{ref}` - reference at intermediate shooting nodes (1 to N-1).
         Default: :code:`np.array([])`.
         """
         return self.__yref
@@ -383,7 +383,7 @@ class AcadosOcpCost:
 
     @property
     def yref_e(self):
-        """:math:`y_\\text{ref}^e` - cost reference at terminal shooting node (N).
+        r""":math:`y_\\text{ref}^e` - cost reference at terminal shooting node (N).
         Default: :code:`np.array([])`.
         """
         return self.__yref_e
