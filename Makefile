@@ -57,6 +57,7 @@ OBJS += acados/ocp_nlp/ocp_nlp_dynamics_common.o
 OBJS += acados/ocp_nlp/ocp_nlp_dynamics_cont.o
 OBJS += acados/ocp_nlp/ocp_nlp_dynamics_disc.o
 OBJS += acados/ocp_nlp/ocp_nlp_sqp.o
+OBJS += acados/ocp_nlp/ocp_nlp_ddp.o
 OBJS += acados/ocp_nlp/ocp_nlp_sqp_rti.o
 OBJS += acados/ocp_nlp/ocp_nlp_reg_common.o
 OBJS += acados/ocp_nlp/ocp_nlp_reg_convexify.o
@@ -64,6 +65,12 @@ OBJS += acados/ocp_nlp/ocp_nlp_reg_mirror.o
 OBJS += acados/ocp_nlp/ocp_nlp_reg_project.o
 OBJS += acados/ocp_nlp/ocp_nlp_reg_project_reduc_hess.o
 OBJS += acados/ocp_nlp/ocp_nlp_reg_noreg.o
+
+OBJS += acados/ocp_nlp/ocp_nlp_globalization_common.o
+OBJS += acados/ocp_nlp/ocp_nlp_globalization_fixed_step.o
+OBJS += acados/ocp_nlp/ocp_nlp_globalization_funnel.o
+OBJS += acados/ocp_nlp/ocp_nlp_globalization_merit_backtracking.o
+
 
 # dense qp
 OBJS += acados/dense_qp/dense_qp_common.o
@@ -151,7 +158,15 @@ LINK_FLAG_OPENMP = -fopenmp
 endif
 
 
-static_library: $(STATIC_DEPS)
+deprecation_warning:
+	@echo
+	@echo
+	@echo "The Make build system of acados is not as well-tested as CMake."
+	@echo "Please consider using the CMake build system!"
+	@echo
+	@echo
+
+static_library: deprecation_warning $(STATIC_DEPS)
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
 	( cd interfaces/acados_c; $(MAKE) obj CC=$(CC) TOP=$(TOP) )
 	ar rcs libacados.a $(OBJS)
@@ -165,7 +180,7 @@ static_library: $(STATIC_DEPS)
 	@echo " libacados.a static library build complete."
 	@echo
 
-shared_library: link_libs_json $(SHARED_DEPS)
+shared_library: deprecation_warning link_libs_json $(SHARED_DEPS)
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
 	( cd interfaces/acados_c; $(MAKE) obj  CC=$(CC) TOP=$(TOP) )
 	$(CC) -L./lib -shared -o libacados.so $(OBJS) -lblasfeo -lhpipm -lm -fopenmp
@@ -190,28 +205,28 @@ link_libs_json:
 	echo "\t\"ooqp\": \"$(LINK_FLAG_OOQP)\"" >> ./lib/link_libs.json
 	echo "}" >> ./lib/link_libs.json
 
-blasfeo_static:
+blasfeo_static: deprecation_warning
 	( cd $(BLASFEO_PATH); $(MAKE) static_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) MF=PANELMAJ BLAS_API=0 )
 	mkdir -p include/blasfeo/include
 	mkdir -p lib
 	cp $(BLASFEO_PATH)/include/*.h include/blasfeo/include
 	cp $(BLASFEO_PATH)/lib/libblasfeo.a lib
 
-blasfeo_shared:
+blasfeo_shared: deprecation_warning
 	( cd $(BLASFEO_PATH); $(MAKE) shared_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) MF=PANELMAJ BLAS_API=0 )
 	mkdir -p include/blasfeo/include
 	mkdir -p lib
 	cp $(BLASFEO_PATH)/include/*.h include/blasfeo/include
 	cp $(BLASFEO_PATH)/lib/libblasfeo.so lib
 
-hpipm_static: blasfeo_static
+hpipm_static: deprecation_warning blasfeo_static
 	( cd $(HPIPM_PATH); $(MAKE) static_library CC=$(CC) TARGET=$(HPIPM_TARGET) BLASFEO_PATH=$(BLASFEO_PATH) )
 	mkdir -p include/hpipm/include
 	mkdir -p lib
 	cp $(HPIPM_PATH)/include/*.h include/hpipm/include
 	cp $(HPIPM_PATH)/lib/libhpipm.a lib
 
-hpipm_shared: blasfeo_shared
+hpipm_shared: deprecation_warning blasfeo_shared
 	( cd $(HPIPM_PATH); $(MAKE) shared_library CC=$(CC) TARGET=$(HPIPM_TARGET) BLASFEO_PATH=$(BLASFEO_PATH) )
 	mkdir -p include/hpipm/include
 	mkdir -p lib
@@ -276,13 +291,13 @@ osqp_shared: $(OSQP_LIB_SHARED)
 	cp -r $(OSQP_PATH)/include/* include/osqp/include
 	mv libosqp.so lib
 
-examples_c: static_library
+examples_c: deprecation_warning static_library
 	( cd examples/c; $(MAKE) examples TOP=$(TOP) )
 
-run_examples_c: examples_c
+run_examples_c: deprecation_warning examples_c
 	( cd examples/c; $(MAKE) run_examples )
 
-unit_tests: static_library
+unit_tests: deprecation_warning static_library
 	( cd test; $(MAKE) unit_tests TOP=$(TOP) )
 
 run_unit_tests: unit_tests

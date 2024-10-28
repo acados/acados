@@ -31,7 +31,9 @@ NOTE: you can set the `BLASFEO_TARGET` in `<acados_root_folder>/CMakeLists.txt`.
 For a list of supported targets, we refer to https://github.com/giaf/blasfeo/blob/master/README.md .
 The default is `X64_AUTOMATIC`, which attempts to determine the best available target for your machine.
 
-#### **Make**
+#### **Make** (not recommended)
+NOTE: This build system is not actively tested and might be removed in the future! It is strongly recommended to use the `CMake` build system.
+
 Set the `BLASFEO_TARGET` in `<acados_root_folder>/Makefile.rule`.
 Since some of the `C` examples use `qpOASES`, also set `ACADOS_WITH_QPOASES = 1` in  `<acados_root_folder>/Makefile.rule`.
 For a list of supported targets, we refer to https://github.com/giaf/blasfeo/blob/master/README.md .
