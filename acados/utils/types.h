@@ -98,10 +98,10 @@ typedef enum
 /// Types of the timeout heuristic.
 typedef enum
 {
-  MAX,
-  LAST,
-  AVERAGE,
-  ZERO,
+    MAX,
+    LAST,
+    AVERAGE,
+    ZERO,
 } ocp_nlp_timeout_heuristic_t;
 
 
