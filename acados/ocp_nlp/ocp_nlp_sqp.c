@@ -877,6 +877,23 @@ void ocp_nlp_sqp_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_, voi
 }
 
 
+void ocp_nlp_sqp_eval_solution_sens_adj_p(void *config_, void *dims_,
+                        void *opts_, void *mem_, void *work_, void *sens_nlp_out,
+                        const char *field, int stage, void *grad_p)
+{
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_opts *opts = opts_;
+    ocp_nlp_sqp_memory *mem = mem_;
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_nlp_sqp_workspace *work = work_;
+    ocp_nlp_workspace *nlp_work = work->nlp_work;
+    ocp_nlp_common_eval_solution_sens_adj_p(config, dims,
+                        opts->nlp_opts, nlp_mem, nlp_work,
+                        sens_nlp_out, field, stage, grad_p);
+}
+
+
 // TODO: write getter for things in nlp_mem
 void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_)
 {
@@ -979,6 +996,7 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->memory_reset_qp_solver = &ocp_nlp_sqp_memory_reset_qp_solver;
     config->eval_param_sens = &ocp_nlp_sqp_eval_param_sens;
     config->eval_lagr_grad_p = &ocp_nlp_sqp_eval_lagr_grad_p;
+    config->eval_solution_sens_adj_p = &ocp_nlp_sqp_eval_solution_sens_adj_p;
     config->config_initialize_default = &ocp_nlp_sqp_config_initialize_default;
     config->precompute = &ocp_nlp_sqp_precompute;
     config->get = &ocp_nlp_sqp_get;

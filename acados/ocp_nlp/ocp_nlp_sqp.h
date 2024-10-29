@@ -143,6 +143,12 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
 //
 void ocp_nlp_sqp_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_, void *opts_, void *mem_, void *work_,
                             const char *field, void *grad_p);
+
+
+void ocp_nlp_sqp_eval_solution_sens_adj_p(void *config_, void *dims_,
+                        void *opts_, void *mem_, void *work_, void *sens_nlp_out,
+                        const char *field, int stage, void *grad_p);
+
 //
 void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_);
 //
