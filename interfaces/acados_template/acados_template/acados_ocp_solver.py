@@ -673,6 +673,56 @@ class AcadosOcpSolver:
         return sens_x, sens_u
 
 
+    def eval_adjoint_solution_sensitivity(self,
+                                          seed_x: Union[np.ndarray, List[np.ndarray]],
+                                          seed_u: Union[np.ndarray, List[np.ndarray]],
+                                          stages: Union[int, List[int]] = 0,
+                                          with_respect_to: str = "p_global") -> np.ndarray:
+
+        self.sanity_check_parametric_sensitivities()
+
+        stages_is_list = isinstance(stages, list)
+        stages_ = stages if stages_is_list else [stages]
+
+        N_horizon = self.acados_ocp.solver_options.N_horizon
+
+        for s in stages_:
+            if not isinstance(s, int) or s < 0 or s > N_horizon:
+                raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): stages need to be int or list[int] and in [0, N], got stages = {stages_}.")
+
+        t0 = time.time()
+        self.__acados_lib.ocp_nlp_eval_params_jac(self.nlp_solver, self.nlp_in, self.nlp_out)
+        self.time_solution_sens_lin = time.time() - t0
+
+        # set seed:
+        if not stages_is_list:
+            seed_x = [seed_x]
+            seed_u = [seed_u]
+
+        self.reset_sens_out()
+        for stage, x_seed, u_seed in zip(stages_, seed_x, seed_u):
+            self.set(stage, 'sens_x', x_seed.flatten())
+            self.set(stage, 'sens_u', u_seed.flatten())
+
+        if with_respect_to == "p_global":
+            field = "p_global".encode('utf-8')
+
+            nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, field)
+
+            grad = np.zeros((nparam,))
+            grad_p = np.ascontiguousarray(grad, dtype=np.float64)
+            c_grad_p = cast(grad_p.ctypes.data, POINTER(c_double))
+
+            self.time_solution_sens_solve = 0.0
+            self.__acados_lib.ocp_nlp_eval_solution_sens_adj_p(self.nlp_solver, self.nlp_in, self.sens_out, field, 0, c_grad_p)
+            self.time_solution_sens_solve += self.get_stats("time_solution_sensitivities")
+
+            return grad_p
+        else:
+            raise NotImplementedError("")
+
+
+
     def eval_param_sens(self, index: int, stage: int=0, field="ex"):
         """
         Calculate the sensitivity of the current solution with respect to the initial state component of index.
@@ -1311,6 +1361,7 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_out_set_values_to_zero.argtypes = \
                     [c_void_p, c_void_p, c_void_p]
         self.__acados_lib.ocp_nlp_out_set_values_to_zero(self.nlp_config, self.nlp_dims, self.sens_out)
+
 
     def cost_set(self, stage_: int, field_: str, value_, api='warn'):
         """
