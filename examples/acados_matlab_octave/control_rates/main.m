@@ -39,7 +39,7 @@ function main()
 
     % with solver timeout
     timeout_max_time = 4*1e-3;
-    timeout_heuristic = 'MAX';
+    timeout_heuristic = 'MAX_CALL';
     run_simulation(timeout_max_time, timeout_heuristic);
 
     if is_octave()

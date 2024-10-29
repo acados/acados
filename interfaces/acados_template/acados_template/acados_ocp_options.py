@@ -577,8 +577,9 @@ class AcadosOcpOptions:
     def timeout_heuristic(self,):
         """
         Heuristic to be used for predicting the runtime of the next SQP iteration, cf. `timeout_max_time`.
-        Possible values are "MAX", "LAST", "AVERAGE", "ZERO".
-        MAX: Use the maximum per iteration time so far as estimate.
+        Possible values are "MAX_CALL", "MAX_OVERALL", "LAST", "AVERAGE", "ZERO".
+        MAX_CALL: Use the maximum time per iteration for the current solver call as estimate.
+        MAX_OVERALL: Use the maximum time per iteration over all solver calls as estimate.
         LAST: Use the time required by the last iteration as estimate.
         AVERAGE: Use an exponential moving average of the previous per iteration times as estimate (weight is currently fixed at 0.5).
         ZERO: Use 0 as estimate.
@@ -1438,10 +1439,10 @@ class AcadosOcpOptions:
 
     @timeout_heuristic.setter
     def timeout_heuristic(self, val):
-        if val in ["MAX", "LAST", "AVERAGE", "ZERO"]:
+        if val in ["MAX_CALL", "MAX_OVERALL", "LAST", "AVERAGE", "ZERO"]:
             self.__timeout_heuristic = val
         else:
-            raise Exception('Invalid timeout_heuristic value. Expected value in ["MAX", "LAST", "AVERAGE", "ZERO"].')
+            raise Exception('Invalid timeout_heuristic value. Expected value in ["MAX_CALL", "MAX_OVERALL", "LAST", "AVERAGE", "ZERO"].')
 
     @as_rti_iter.setter
     def as_rti_iter(self, as_rti_iter):

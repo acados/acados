@@ -579,7 +579,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->step_norm = 0.0;
     mem->nlp_mem->status = ACADOS_SUCCESS;
 
-    mem->timeout_estimated_per_iteration_time = 0;
+    if (opts->timeout_heuristic != MAX_OVERALL)
+        mem->timeout_estimated_per_iteration_time = 0;
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -683,7 +684,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                     case LAST:
                         mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter;
                         break;
-                    case MAX:
+                    case MAX_CALL:
+                    case MAX_OVERALL:
                         mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter > mem->timeout_estimated_per_iteration_time ? timeout_time_prev_iter : mem->timeout_estimated_per_iteration_time;
                         break;
                     case AVERAGE:

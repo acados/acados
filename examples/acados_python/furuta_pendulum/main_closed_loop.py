@@ -190,9 +190,10 @@ def main(use_RTI=False, timeout_max_time=0., heuristic="ZERO"):
 
 if __name__ == '__main__':
     main(use_RTI=False, timeout_max_time=0.)
-    main(use_RTI=False, timeout_max_time=1*1e-3, heuristic="MAX")
     main(use_RTI=False, timeout_max_time=1*1e-3, heuristic="ZERO")
     main(use_RTI=False, timeout_max_time=1*1e-3, heuristic="LAST")
+    main(use_RTI=False, timeout_max_time=1*1e-3, heuristic="MAX_CALL")
+    main(use_RTI=False, timeout_max_time=1*1e-3, heuristic="MAX_OVERALL")
 
     main(use_RTI=True) # timeout not implemented for RTI
 
