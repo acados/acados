@@ -123,6 +123,7 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
     opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
     opts->eval_residual_at_max_iter = false;
+    opts->initial_objective_multiplier = 1e0;
 
     // overwrite default submodules opts
     // qp tolerance
@@ -233,6 +234,11 @@ void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, vo
         {
             bool* eval_residual_at_max_iter = (bool *) value;
             opts->eval_residual_at_max_iter = *eval_residual_at_max_iter;
+        }
+        else if (!strcmp(field, "initial_objective_multiplier"))
+        {
+            double* initial_objective_multiplier = (double *) value;
+            opts->initial_objective_multiplier = *initial_objective_multiplier;
         }
         else
         {
@@ -1169,13 +1175,27 @@ static void ocp_nlp_sqp_wfqp_setup_qp(ocp_nlp_config *config,
 #endif
     for (int i = 0; i <= N; i++)
     {
+        /* Hessian matrices */
         // hess_QP = objective_multiplier * hess_cost + hess_constraints
         nxu = nx[i]+nu[i];
         // TODO: axpby for matrices? Do we need to take slacks here into account as well? I.e., scale slack Hessian?
-        blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
-        //
-        blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
-        // Z
+        if (objective_multiplier == 0.0)
+        {
+            // Either we use the exact objective Hessian
+            // blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
+            // blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0); I think we do not need this here
+            
+            // We use the identity matrix Hessian
+            blasfeo_dgese(nxu, nxu, 0.0, nlp_mem->qp_in->RSQrq+i, 0, 0);
+            blasfeo_ddiare(nxu, 1e-4, nlp_mem->qp_in->RSQrq+i, 0, 0);  // dPsi_dx is unit now
+        }
+        else
+        {
+            blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
+            //
+            blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
+        }
+        // Z -- slack matrix
         blasfeo_dveccpsc(ns[i], objective_multiplier, mem->Z_cost_module+i, 0, nlp_mem->qp_in->Z+i, 0);
         blasfeo_dveccpsc(ns[i], objective_multiplier, mem->Z_cost_module+i, 0, nlp_mem->qp_in->Z+i, ns[i]+mem->nns[i]);
 
@@ -1418,7 +1438,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->nlp_mem->status = ACADOS_SUCCESS;
 
     // TODO(@david):
-    nlp_mem->objective_multiplier = 1e-8;
+    nlp_mem->objective_multiplier = opts->initial_objective_multiplier;
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -1533,6 +1553,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // @david: now you have two directions:
         // nlp_work->tmp_qp_out = d without cost;
         // nlp_mem->qp_out = d with objective_multiplier
+
         multiplier_norm_inf = get_multiplier_norm_inf(dims, nlp_work->tmp_qp_out);
         printf("Feasibility Multiplier norm inf is: %.4e\n", multiplier_norm_inf);
         multiplier_norm_inf = get_multiplier_norm_inf(dims, qp_out);
@@ -1542,22 +1563,22 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         printf("Current l1 infeasibility: %.4e\n", current_l1_infeasibility);
 
         // Calculate linearized l1-infeasibility for d_steering
-        double l1_inf_QP_feasibility = get_slacked_qp_l1_infeasibility(dims, mem, nlp_work->tmp_qp_out);
-        printf("linearized l1_inf_feas: %.4e\n", l1_inf_QP_feasibility);
+        // double l1_inf_QP_feasibility = get_slacked_qp_l1_infeasibility(dims, mem, nlp_work->tmp_qp_out);
+        // printf("linearized l1_inf_feas: %.4e\n", l1_inf_QP_feasibility);
         double manual_l1_inf_QP_feasibility = manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, nlp_mem->qp_in, nlp_work->tmp_qp_out);
         printf("manual l1_inf_feas: %.4e\n", manual_l1_inf_QP_feasibility);
         // assert(fabs(l1_inf_QP_feasibility-manual_l1_inf_QP_feasibility) < 1e-8);
 
         // Calculate linearized l1-infeasibility for d_predictor
-        double l1_inf_QP_optimality = get_slacked_qp_l1_infeasibility(dims, mem, nlp_mem->qp_out);
-        printf("linearized l1_inf_opt: %.4e\n", l1_inf_QP_optimality);
+        // double l1_inf_QP_optimality = get_slacked_qp_l1_infeasibility(dims, mem, nlp_mem->qp_out);
+        // printf("linearized l1_inf_opt: %.4e\n", l1_inf_QP_optimality);
         double manual_l1_inf_QP_optimality = manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, nlp_mem->qp_in, nlp_mem->qp_out);
         printf("manual l1_inf_opt: %.4e\n", manual_l1_inf_QP_optimality);
         // assert(fabs(l1_inf_QP_optimality-manual_l1_inf_QP_optimality) < 1e-8);
 
         // predicted infeasibility reduction of feasibility QP should always be non-negative
-        double pred_l1_inf_feasibility_direction = current_l1_infeasibility - l1_inf_QP_feasibility;
-        double pred_l1_inf_optimality_direction = current_l1_infeasibility - l1_inf_QP_optimality;
+        double pred_l1_inf_feasibility_direction = current_l1_infeasibility - manual_l1_inf_QP_feasibility;
+        double pred_l1_inf_optimality_direction = current_l1_infeasibility - manual_l1_inf_QP_optimality;
         // pred should always be positive, but numerically some weird stuff can occur.
         if (pred_l1_inf_feasibility_direction < 0.0 && fabs(pred_l1_inf_feasibility_direction) < 1e-6)
         {
@@ -1570,9 +1591,11 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         printf("pred_l1_inf_feasibility_direction: %.4e\n", pred_l1_inf_feasibility_direction);
         printf("pred_l1_inf_optimality_direction: %.4e\n", pred_l1_inf_optimality_direction);
 
+
+        //
         double kappa;
 
-        if (pred_l1_inf_optimality_direction >= 1e-3 * pred_l1_inf_feasibility_direction)
+        if (pred_l1_inf_optimality_direction >= 1e-2 * pred_l1_inf_feasibility_direction)
         {
             printf("Juhuuuuuuuuuuuuuuuuuuuu!\n");
             kappa = 1.0;
@@ -1583,12 +1606,12 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                                                         l1_inf_QP_optimality,
                                                                         l1_inf_QP_feasibility);
         }
-        kappa = 1.0;
+        kappa = 0.7;
 
         // Calculate search direction
         setup_search_direction(mem, dims, nlp_mem->qp_out, nlp_work->tmp_qp_out, nlp_mem->qp_out, kappa);
         //---------------------------------------------------------------------
-        scale_multiplier(dims, nlp_mem, qp_out);
+        // scale_multiplier(dims, nlp_mem, qp_out);
 
         // Calculate optimal QP objective (needed for globalization)
         if (config->globalization->needs_qp_objective_value() == 1)

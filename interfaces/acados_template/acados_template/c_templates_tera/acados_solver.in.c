@@ -2285,6 +2285,11 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
 {%- endif %}
 {%- endif %}
 
+{%- if solver_options.nlp_solver_type == "SQP_WITH_FEASIBLE_QP" %}
+    double initial_objective_multiplier = {{ solver_options.initial_objective_multiplier }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "initial_objective_multiplier", &initial_objective_multiplier);
+{%- endif %}    
+
 {% if solver_options.nlp_solver_type == "SQP" or solver_options.nlp_solver_type == "DDP" or solver_options.nlp_solver_type == "SQP_WITH_FEASIBLE_QP"%}
     // set SQP specific options
     double nlp_solver_tol_stat = {{ solver_options.nlp_solver_tol_stat }};

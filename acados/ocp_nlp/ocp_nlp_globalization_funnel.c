@@ -651,6 +651,7 @@ void ocp_nlp_globalization_funnel_initialize_memory(void *config_, void *dims_, 
     mem->funnel_iter_type = '-';
     initialize_funnel_penalty_parameter(mem, opts);
     mem->alpha = 1.0;
+    mem->penalty_parameter = nlp_mem->objective_multiplier;
 }
 
 void ocp_nlp_globalization_funnel_config_initialize_default(ocp_nlp_globalization_config *config)

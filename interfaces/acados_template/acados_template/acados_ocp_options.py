@@ -87,6 +87,7 @@ class AcadosOcpOptions:
         self.__exact_hess_dyn = 1
         self.__exact_hess_constr = 1
         self.__eval_residual_at_max_iter = None
+        self.__initial_objective_multiplier = 1e0
         self.__fixed_hess = 0
         self.__globalization_funnel_init_increase_factor = 15.0
         self.__globalization_funnel_init_upper_bound = 1.0
@@ -783,6 +784,16 @@ class AcadosOcpOptions:
         return self.__eval_residual_at_max_iter
 
     @property
+    def initial_objective_multiplier(self):
+        """
+        Sets the initial objective multiplier
+
+        Type: double
+        Default: 1e0
+        """
+        return self.__initial_objective_multiplier
+
+    @property
     def globalization_funnel_initial_penalty_parameter(self):
         """
         Initialization.
@@ -1225,6 +1236,13 @@ class AcadosOcpOptions:
             self.__eval_residual_at_max_iter = eval_residual_at_max_iter
         else:
             raise Exception(f'Invalid datatype for eval_residual_at_max_iter. Should be bool, got {type(eval_residual_at_max_iter)}')
+
+    @initial_objective_multiplier.setter
+    def initial_objective_multiplier(self, initial_objective_multiplier):
+        if isinstance(initial_objective_multiplier, float):
+            self.__initial_objective_multiplier = initial_objective_multiplier
+        else:
+            raise Exception(f'Invalid datatype for initial_objective_multiplier. Should be bool, got {type(initial_objective_multiplier)}')
 
     @globalization_eps_sufficient_descent.setter
     def globalization_eps_sufficient_descent(self, globalization_eps_sufficient_descent):
