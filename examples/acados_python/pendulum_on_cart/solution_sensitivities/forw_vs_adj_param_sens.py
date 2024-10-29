@@ -90,7 +90,7 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True):
     seed_ustage[0, 0] = 42
 
     # test different settings forward vs. adjoint
-    for stages, seed_x, seed_u in [
+    for stages, seed_x_list, seed_u_list in [
         ([0, 1], [seed_xstage, seed_xstage], [seed_ustage, seed_ustage]),
         ([0, 3], [seed_xstage, seed_xstage], [seed_ustage, seed_ustage]),
         ([0], [seed_xstage], [seed_ustage]),
@@ -99,12 +99,12 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True):
         # Calculate the policy gradient
         sens_x_forw, sens_u_forw = sensitivity_solver.eval_solution_sensitivity(stages, "params_global")
 
-        adj_p_ref = sum([seed_x[k].T @ sens_x_forw[k] + seed_u[k].T @ sens_u_forw[k] for k in range(len(stages))])
+        adj_p_ref = sum([seed_x_list[k].T @ sens_x_forw[k] + seed_u_list[k].T @ sens_u_forw[k] for k in range(len(stages))])
 
         # compute adjoint solution sensitivity
-        adj_p = sensitivity_solver.eval_adjoint_solution_sensitivity(stages=stages,
-                                                    seed_x=seed_x,
-                                                    seed_u=seed_u)
+        adj_p = sensitivity_solver.eval_adjoint_solution_sensitivity(
+                                                    seed_x=list(zip(stages, seed_x_list)),
+                                                    seed_u=list(zip(stages, seed_u_list)))
 
         print(f"{adj_p=} {adj_p_ref=}")
         if not np.allclose(adj_p, adj_p_ref, atol=1e-7):
@@ -113,29 +113,26 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True):
             print("Success: adj_p and adj_p_ref match!")
 
     # test with list vs. single stage API
-    adj_p_ref = sensitivity_solver.eval_adjoint_solution_sensitivity(stages=[0],
-                                            seed_x=[seed_xstage],
-                                            seed_u=[seed_ustage])
-    adj_p = sensitivity_solver.eval_adjoint_solution_sensitivity(stages=0,
-                                            seed_x=seed_xstage,
-                                            seed_u=seed_ustage)
+    adj_p_ref = sensitivity_solver.eval_adjoint_solution_sensitivity(seed_x=None, seed_u=[(0, seed_ustage)])
+    adj_p = sensitivity_solver.eval_adjoint_solution_sensitivity(seed_x=[], seed_u=[(0, seed_ustage)])
+    adj_p_zero_x_seed = sensitivity_solver.eval_adjoint_solution_sensitivity(seed_x=[(1, 0*seed_xstage)], seed_u=[(0, seed_ustage)])
+
     if not np.allclose(adj_p, adj_p_ref, atol=1e-7):
         raise Exception("adj_p and adj_p_ref should match.")
-    else:
-        print("Success: adj_p and adj_p_ref match! Tested list vs. single stage API.")
+    if not np.allclose(adj_p, adj_p_zero_x_seed, atol=1e-7):
+        raise Exception("adj_p and adj_p_zero_x_seed should match.")
+    print("Success: adj_p and adj_p_ref match! Tested with None and empty list.")
 
     # test multiple adjoint seeds at once
     seed_x_mat = np.eye(nx)
     seed_u_mat = np.zeros((nu, nx))
-    adj_p_mat = sensitivity_solver.eval_adjoint_solution_sensitivity(stages=1,
-                                            seed_x=seed_x_mat,
-                                            seed_u=seed_u_mat)
+    adj_p_mat = sensitivity_solver.eval_adjoint_solution_sensitivity(seed_x=[(1, seed_x_mat)],
+                                            seed_u=[(1, seed_u_mat)])
     print(f"{adj_p_mat=}")
 
     for i in range(nx):
-        adj_p_vec = sensitivity_solver.eval_adjoint_solution_sensitivity(stages=1,
-                                            seed_x=seed_x_mat[:, [i]],
-                                            seed_u=seed_u_mat[:, [i]])
+        adj_p_vec = sensitivity_solver.eval_adjoint_solution_sensitivity(seed_x=[(1, seed_x_mat[:, [i]])],
+                                            seed_u=[(1, seed_u_mat[:, [i]])])
         print(f"{adj_p_vec=} {adj_p_mat[i, :]=}")
         if not np.allclose(adj_p_vec, adj_p_mat[i, :], atol=1e-7):
             raise Exception(f"adj_p_vec and adj_p_mat[{i}, :] should match.")

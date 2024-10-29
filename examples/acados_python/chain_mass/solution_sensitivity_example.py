@@ -453,7 +453,7 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
         seed_x = np.ones((nx, 1))
         seed_u = np.ones((nu, 1))
 
-        sens_adj = sensitivity_solver.eval_adjoint_solution_sensitivity(seed_x=seed_x, seed_u=seed_u, stages=0)
+        sens_adj = sensitivity_solver.eval_adjoint_solution_sensitivity(seed_x=[(0, seed_x)], seed_u=[(0, seed_u)])
         timings_solve_params_adj[i] = sensitivity_solver.get_stats("time_solution_sens_solve")
 
         sens_adj_ref = seed_u.T @ sens_u_ + seed_x.T @ sens_x_
