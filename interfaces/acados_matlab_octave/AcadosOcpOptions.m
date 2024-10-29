@@ -101,6 +101,9 @@ classdef AcadosOcpOptions < handle
         store_iterates
         eval_residual_at_max_iter
 
+        timeout_max_time
+        timeout_heuristic
+
         ext_fun_compile_flags
         model_external_shared_lib_dir
         model_external_shared_lib_name
@@ -181,6 +184,8 @@ classdef AcadosOcpOptions < handle
             obj.log_primal_step_norm = 0;
             obj.store_iterates = false;
             obj.eval_residual_at_max_iter = [];
+            obj.timeout_max_time = 0.;
+            obj.timeout_heuristic = 'ZERO';
 
             % check whether flags are provided by environment variable
             env_var = getenv("ACADOS_EXT_FUN_COMPILE_FLAGS");
