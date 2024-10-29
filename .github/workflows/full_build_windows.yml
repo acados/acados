@@ -63,8 +63,14 @@ jobs:
 
     - name: Setup MATLAB with MinGW Compiler
       run: |
-        "C:\Program Files\MATLAB\R2023b\bin\matlab.exe" -batch "mex -setup:'C Compiler' -v; mex -setup:'C++ Compiler' -v; exit;"
+        "C:\hostedtoolcache\windows\matlab-batch\v1\x64\matlab-batch.exe" -batch "mex -setup:'C Compiler' -v; mex -setup:'C++ Compiler' -v; exit;"
       shell: cmd
+
+    - name: Compile and Run MATLAB Code with MinGW
+      shell: cmd
+      working-directory: ${{runner.workspace}}/acados/interfaces/acados_matlab_octave
+      run: |
+        "C:\hostedtoolcache\windows\matlab-batch\v1\x64\matlab-batch.exe" -batch "acados_install_windows; exit;"
 
     # - name: Create Build Environment
     #   working-directory: ${{runner.workspace}}
