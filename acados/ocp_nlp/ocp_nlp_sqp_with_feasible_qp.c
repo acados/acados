@@ -491,7 +491,6 @@ static double get_multiplier_norm_inf(ocp_nlp_dims *dims, ocp_qp_out *qp_out)
 {
     int N = dims->N;
     int *nx = dims->nx;
-    int *ni = dims->ni;
     int *ns = dims->ns;
     double tmp0 = 0.0;
 
@@ -519,6 +518,25 @@ static double get_multiplier_norm_inf(ocp_nlp_dims *dims, ocp_qp_out *qp_out)
         }
     }
     return tmp0;
+}
+
+static void scale_multiplier(ocp_nlp_dims *dims, ocp_nlp_memory* nlp_mem, ocp_qp_out *qp_out)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ns = dims->ns;
+
+    for (int i = 0; i < N; i++)
+    {
+        blasfeo_dvecsc(nx[i+1], 1.0/nlp_mem->objective_multiplier, &qp_out->pi[i], 0);
+    }
+    for (int i = 0; i <= N; i++)
+    {
+        int n_nominal_ineq_nlp = dims->ni[i] - ns[i];
+        int two_n_nominal_ineq_nlp = 2*n_nominal_ineq_nlp;
+        blasfeo_dvecsc(two_n_nominal_ineq_nlp+ns[i], 1.0/nlp_mem->objective_multiplier, qp_out->lam+i, 0);
+        blasfeo_dvecsc(ns[i], 1.0/nlp_mem->objective_multiplier, qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]);
+    }
 }
 
 
@@ -766,10 +784,7 @@ static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims,
     int N = dims->N;
     int *nx = dims->nx;
     int *nu = dims->nu;
-    int *ns = dims->ns;
     int *nns = mem->nns;
-    int *ni = dims->ni;
-    int *nh = dims->ni;
 
     int *nb = qp_in->dim->nb;
     int *ng = qp_in->dim->ng; //number of general two sided constraints
@@ -777,7 +792,6 @@ static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims,
     double l1_inf = 0.0;
     int i, j;
     double tmp, tmp_bound, mask_value;
-    int nominal_dims;
 
     for (i = 0; i <= N; i++)
     {
@@ -1133,7 +1147,6 @@ static void ocp_nlp_sqp_wfqp_prepare_hessian_evaluation(ocp_nlp_config *config,
     return;
 }
 
-
 // TODO: @david: First use as it is and write tests.
 // Then make two functions 1) setup_costless_qp 2) setup_qp_based_on_costless with minimal operations.
 static void ocp_nlp_sqp_wfqp_setup_qp(ocp_nlp_config *config,
@@ -1190,6 +1203,122 @@ static void ocp_nlp_sqp_wfqp_setup_qp(ocp_nlp_config *config,
         blasfeo_dveccp(2*n_nominal_ineq_nlp+ns[i], nlp_mem->ineq_fun + i, 0, nlp_mem->qp_in->d + i, 0);
         blasfeo_dveccp(ns[i], nlp_mem->ineq_fun + i, 2*n_nominal_ineq_nlp+ns[i], nlp_mem->qp_in->d + i, 2*n_nominal_ineq_nlp+ns[i]+nns[i]);
     }
+}
+
+/*
+Solves the QP. We either solve the feasibility QP or the standard l1-relaxed QP
+*/
+static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* opts, ocp_qp_in* qp_in, ocp_qp_out* qp_out,
+                    ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_in* nlp_in, ocp_nlp_out* nlp_out,
+                    ocp_nlp_memory* nlp_mem, ocp_nlp_workspace* nlp_work, int sqp_iter, bool solve_feasibility_qp,
+                    acados_timer timer0, acados_timer timer1)
+{
+    ocp_nlp_opts* nlp_opts = opts->nlp_opts;
+    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    // ocp_nlp_res *nlp_res = nlp_mem->nlp_res;
+    ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
+
+    // (typically) no warm start at first iteration
+    if (sqp_iter == 0 && !opts->warm_start_first_qp)
+    {
+        int tmp_int = 0;
+        qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
+    }
+    // Load input to QP and regularize Hessian
+    if (solve_feasibility_qp)
+    {
+        ocp_nlp_sqp_wfqp_setup_qp(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, 0.0);
+    }
+    else
+    {
+        ocp_nlp_sqp_wfqp_setup_qp(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, nlp_mem->objective_multiplier);
+    }
+    // TODO: if we solve the feasibility QP, we probably do not need or want the LM term?
+    ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter);
+    // regularize Hessian
+    acados_tic(&timer1);
+    config->regularize->regularize(config->regularize, dims->regularize,
+                                            nlp_opts->regularize, nlp_mem->regularize_mem);
+    nlp_timings->time_reg += acados_toc(&timer1);
+    // Show input to QP
+    if (nlp_opts->print_level > 3)
+    {
+        printf("\n\nSQP: ocp_qp_in at iteration %d\n", sqp_iter);
+        print_ocp_qp_in(qp_in);
+    }
+
+#if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
+    ocp_nlp_dump_qp_in_to_file(qp_in, sqp_iter, 0);
+#endif
+
+    int qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, qp_out);
+
+    // restore default warm start
+    if (sqp_iter==0)
+    {
+        qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &opts->qp_warm_start);
+    }
+
+    if (nlp_opts->print_level > 3)
+    {
+        printf("\n\nSQP: ocp_qp_out at iteration %d\n", sqp_iter);
+        print_ocp_qp_out(qp_out);
+    }
+
+#if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
+    ocp_nlp_dump_qp_out_to_file(qp_out, sqp_iter, 0);
+#endif
+
+    qp_info *qp_info_;
+    ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
+    int qp_iter = qp_info_->num_iter;
+
+    // save statistics of last qp solver call
+    if (sqp_iter+1 < mem->stat_m && !solve_feasibility_qp)
+    {
+        mem->stat[mem->stat_n*(sqp_iter+1)+4] = qp_status;
+        mem->stat[mem->stat_n*(sqp_iter+1)+5] = qp_iter;
+    }
+
+    // compute external QP residuals (for debugging)
+    if (nlp_opts->ext_qp_res)
+    {
+        ocp_qp_res_compute(qp_in, qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
+        if (sqp_iter+1 < mem->stat_m)
+            ocp_qp_res_compute_nrm_inf(nlp_work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+7));
+    }
+
+    // exit conditions on QP status
+    if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
+    {
+        // increment sqp_iter to return full statistics and improve output below.
+        sqp_iter++;
+
+#ifndef ACADOS_SILENT
+        printf("\nQP solver returned error status %d in SQP iteration %d, QP iteration %d.\n",
+                qp_status, sqp_iter, qp_iter);
+#endif
+#if defined(ACADOS_WITH_OPENMP)
+        // restore number of threads
+        omp_set_num_threads(num_threads_bkp);
+#endif
+        if (nlp_opts->print_level > 1)
+        {
+            printf("\n Failed to solve the following QP:\n");
+            if (nlp_opts->print_level)
+                print_ocp_qp_in(qp_in);
+        }
+
+        mem->nlp_mem->status = ACADOS_QP_FAILURE;
+        nlp_mem->iter = sqp_iter;
+        nlp_timings->time_tot = acados_toc(&timer0);
+
+        return mem->nlp_mem->status;
+    }
+    // TODO: @david: How to log statistics?
+    // We solve 2 QPs -> need 2 times qp_iter and qp_status?
+    // Or do we make one row for one QP solve?
+    return qp_status;
 }
 
 
@@ -1269,7 +1398,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_nlp_in *nlp_in = nlp_in_;
     ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    // ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_res *nlp_res = nlp_mem->nlp_res;
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
 
@@ -1289,7 +1418,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->nlp_mem->status = ACADOS_SUCCESS;
 
     // TODO(@david):
-    nlp_mem->objective_multiplier = 1e0;
+    nlp_mem->objective_multiplier = 1e-8;
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -1319,14 +1448,12 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             ocp_nlp_sqp_wfqp_prepare_hessian_evaluation(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
             acados_tic(&timer1);
             ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-            //
-            ocp_nlp_sqp_wfqp_setup_qp(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, 0.0);
 
             if (nlp_opts->with_adaptive_levenberg_marquardt || config->globalization->needs_objective_value() == 1)
             {
                 ocp_nlp_get_cost_value_from_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
             }
-            ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter);
+            //
 
             nlp_timings->time_lin += acados_toc(&timer1);
 
@@ -1379,15 +1506,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                                    nlp_mem->globalization);
         }
         prev_levenberg_marquardt = nlp_opts->levenberg_marquardt;
-
-        // regularize Hessian
-        // NOTE: this is done before termination, such that we can get the QP at the stationary point that is actually solved, if we exit with success.
-        // TODO: @david: is the note above true for this method? otherwise remove and check termination earlier?
-        acados_tic(&timer1);
-        config->regularize->regularize(config->regularize, dims->regularize,
-                                               nlp_opts->regularize, nlp_mem->regularize_mem);
-        nlp_timings->time_reg += acados_toc(&timer1);
-
+        
         double multiplier_norm_inf = get_multiplier_norm_inf(dims, qp_out);
         printf("Multiplier norm inf is: %.4e\n", multiplier_norm_inf);
 
@@ -1403,118 +1522,13 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return mem->nlp_mem->status;
         }
 
-        /* solve QP */
-        // (typically) no warm start at first iteration
-        if (sqp_iter == 0 && !opts->warm_start_first_qp)
-        {
-            int tmp_int = 0;
-            qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
-        }
-        // Show input to QP
-        if (nlp_opts->print_level > 3)
-        {
-            printf("\n\nSQP: ocp_qp_in at iteration %d\n", sqp_iter);
-            print_ocp_qp_in(qp_in);
-        }
+        /* solve 1. QP: We solve without gradient and only with constraint Hessian */
+        qp_status = prepare_and_solve_QP(config, opts, qp_in, nlp_work->tmp_qp_out, dims, mem, nlp_in, nlp_out,
+                    nlp_mem, nlp_work, sqp_iter, true, timer0, timer1);
 
-#if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
-        ocp_nlp_dump_qp_in_to_file(qp_in, sqp_iter, 0);
-#endif
-
-        // printf("QP in before solve\n");
-        // print_ocp_qp_in(qp_in);
-        // print_indices(dims, mem);
-        // exit(1);
-
-        qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, nlp_work->tmp_qp_out);
-
-        // restore default warm start
-        if (sqp_iter==0)
-        {
-            qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &opts->qp_warm_start);
-        }
-
-        if (nlp_opts->print_level > 3)
-        {
-            printf("\n\nSQP: ocp_qp_out at iteration %d\n", sqp_iter);
-            print_ocp_qp_out(nlp_work->tmp_qp_out);
-        }
-
-#if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
-        ocp_nlp_dump_qp_out_to_file(nlp_work->tmp_qp_out, sqp_iter, 0);
-#endif
-
-        qp_info *qp_info_;
-        ocp_qp_out_get(nlp_work->tmp_qp_out, "qp_info", &qp_info_);
-        qp_iter = qp_info_->num_iter;
-
-        // save statistics of last qp solver call
-        if (sqp_iter+1 < mem->stat_m)
-        {
-            mem->stat[mem->stat_n*(sqp_iter+1)+4] = qp_status;
-            mem->stat[mem->stat_n*(sqp_iter+1)+5] = qp_iter;
-        }
-
-        // compute external QP residuals (for debugging)
-        if (nlp_opts->ext_qp_res)
-        {
-            ocp_qp_res_compute(qp_in, nlp_work->tmp_qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
-            if (sqp_iter+1 < mem->stat_m)
-                ocp_qp_res_compute_nrm_inf(nlp_work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+7));
-        }
-
-        // exit conditions on QP status
-        if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
-        {
-            if (nlp_opts->print_level > 0)
-            {
-                printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_res->inf_norm_res_stat,
-                    nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq,
-                    nlp_res->inf_norm_res_comp );
-                printf("\n\n");
-            }
-            // increment sqp_iter to return full statistics and improve output below.
-            sqp_iter++;
-
-#ifndef ACADOS_SILENT
-            printf("\nQP solver returned error status %d in SQP iteration %d, QP iteration %d.\n",
-                   qp_status, sqp_iter, qp_iter);
-#endif
-#if defined(ACADOS_WITH_OPENMP)
-            // restore number of threads
-            omp_set_num_threads(num_threads_bkp);
-#endif
-            if (nlp_opts->print_level > 1)
-            {
-                printf("\n Failed to solve the following QP:\n");
-                if (nlp_opts->print_level)
-                    print_ocp_qp_in(qp_in);
-            }
-
-            mem->nlp_mem->status = ACADOS_QP_FAILURE;
-            nlp_mem->iter = sqp_iter;
-            nlp_timings->time_tot = acados_toc(&timer0);
-
-            return mem->nlp_mem->status;
-        }
-        // print_ocp_qp_in(qp_in);
-        // print_ocp_qp_out(nlp_work->tmp_qp_out);
-        // TODO: @david: How to log statistics?
-        // We solve 2 QPs -> need 2 times qp_iter and qp_status?
-        // Or do we make one row for one QP solve?
-
-        // Solve second QP with actual objective_multiplier
-        {
-            ocp_nlp_sqp_wfqp_setup_qp(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, nlp_mem->objective_multiplier);
-            ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter);
-            acados_tic(&timer1);
-            config->regularize->regularize(config->regularize, dims->regularize,
-                                                nlp_opts->regularize, nlp_mem->regularize_mem);
-            nlp_timings->time_reg += acados_toc(&timer1);
-            qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, NULL);
-            // TODO: @david do all the logging of QP solver stats again here? Write into extra row of stat?
-            // TODO: @david check status etc.
-        }
+        /* solve 2. QP: We solve the standard l1-relaxed QP with gradient */
+        qp_status = prepare_and_solve_QP(config, opts, qp_in, qp_out, dims, mem, nlp_in, nlp_out,
+                    nlp_mem, nlp_work, sqp_iter, false, timer0, timer1);
 
         // @david: now you have two directions:
         // nlp_work->tmp_qp_out = d without cost;
@@ -1569,11 +1583,12 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                                                         l1_inf_QP_optimality,
                                                                         l1_inf_QP_feasibility);
         }
-        
+        kappa = 1.0;
 
         // Calculate search direction
         setup_search_direction(mem, dims, nlp_mem->qp_out, nlp_work->tmp_qp_out, nlp_mem->qp_out, kappa);
         //---------------------------------------------------------------------
+        scale_multiplier(dims, nlp_mem, qp_out);
 
         // Calculate optimal QP objective (needed for globalization)
         if (config->globalization->needs_qp_objective_value() == 1)
