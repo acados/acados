@@ -620,7 +620,7 @@ class AcadosOcpSolver:
 
         for s in stages_:
             if not isinstance(s, int) or s < 0 or s > N:
-                raise Exception("AcadosOcpSolver.eval_solution_sensitivity(): stages need to be int or [int] and in [0, N].")
+                raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): stages need to be int or list[int] and in [0, N], got stages = {stages_}.")
 
         if with_respect_to == "initial_state":
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
