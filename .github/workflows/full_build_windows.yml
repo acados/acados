@@ -48,8 +48,11 @@ jobs:
 
     - name: Check GCC and CMake versions
       run: |
+        which gcc
         gcc --version
         cmake --version
+        $Env:Path
+        $Env:MW_MINGW64_LOC
 
     - name: Install MATLAB
       uses: matlab-actions/setup-matlab@v2
@@ -63,14 +66,20 @@ jobs:
 
     - name: Setup MATLAB with MinGW Compiler
       run: |
-        "C:\hostedtoolcache\windows\matlab-batch\v1\x64\matlab-batch.exe" -batch "mex -setup:'C Compiler' -v; mex -setup:'C++ Compiler' -v; exit;"
+        "C:\hostedtoolcache\windows\matlab-batch\v1\x64\matlab-batch.exe" -batch "setenv('MW_MINGW64_LOC', 'C:\tools\mingw64'); mex -setup C -v; exit;"
       shell: cmd
 
-    - name: Compile and Run MATLAB Code with MinGW
+    - name: Install acados via MATLAB script
       shell: cmd
       working-directory: ${{runner.workspace}}/acados/interfaces/acados_matlab_octave
       run: |
         "C:\hostedtoolcache\windows\matlab-batch\v1\x64\matlab-batch.exe" -batch "acados_install_windows; exit;"
+
+    - name: Run minimal MATLAB example
+      shell: cmd
+      working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/getting_started
+      run: |
+        "C:\hostedtoolcache\windows\matlab-batch\v1\x64\matlab-batch.exe" -batch "minimal_example_ocp; exit;"
 
     # - name: Create Build Environment
     #   working-directory: ${{runner.workspace}}
