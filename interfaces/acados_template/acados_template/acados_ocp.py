@@ -1179,51 +1179,97 @@ class AcadosOcp:
         return
 
 
-    def translate_cost_to_external_cost(self):
+    def translate_cost_to_external_cost(self, parametric_yref: bool = False):
         """
-        Translates cost to a EXTERNAL cost.
+        Translates cost to EXTERNAL cost.
+        parametric_yref: If true, augment with additional parameters for yref_0, yref, yref_e.
         """
-        # TODO remove stuff?
-        # TODO custom hessian conl?
-        # TODO make yref a parameter?
+        # make yref a parameter
+        yref_0 = self.cost.yref_0
+        yref = self.cost.yref
+        yref_e = self.cost.yref_e
+
+        if parametric_yref:
+            symbol = self.model.get_casadi_symbol()
+            if self.cost.yref_0 is not None:
+                param_yref_0 = symbol('param_yref_0', len(self.cost.yref_0))
+                self.model.p = ca.vertcat(self.model.p, param_yref_0)
+                self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref_0))
+                yref_0 = param_yref_0
+
+            if self.cost.yref is not None:
+                param_yref = symbol('param_yref', len(self.cost.yref))
+                self.model.p = ca.vertcat(self.model.p, param_yref)
+                self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref))
+                yref = param_yref
+
+            if self.cost.yref_e is not None:
+                param_yref_e = symbol('param_yref_e', len(self.cost.yref_e))
+                self.model.p = ca.vertcat(self.model.p, param_yref_e)
+                self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref_e))
+                yref_e = param_yref_e
 
         # initial stage
         if self.cost.cost_type_0 == "LINEAR_LS":
             self.model.cost_expr_ext_cost_0 = \
                 self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
                                                           self.cost.Vx_0, self.cost.Vu_0, self.cost.Vz_0,
-                                                          self.cost.yref_0, self.cost.W_0)
+                                                          yref_0, self.cost.W_0)
         elif self.cost.cost_type_0 == "NONLINEAR_LS":
-            self.model.cost_expr_ext_cost_0 = self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_0, self.cost.yref_0, self.cost.W_0)
+            self.model.cost_expr_ext_cost_0 = self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_0, yref_0, self.cost.W_0)
+
         elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost_0 = self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_0, self.model.cost_psi_expr_0,
-                                                                                          self.model.cost_y_expr_0, self.cost.yref_0)
+                                                                                          self.model.cost_y_expr_0, yref_0)
+        # self.cost.Vx_0 = None
+        # self.cost.Vu_0 = None
+        # self.cost.Vz_0 = None
+        # self.model.cost_y_expr_0 = None
+        # self.model.cost_r_in_psi_expr_0 = None
+        # self.model.cost_psi_expr_0 = None
+        # self.cost.yref_0 = None
+        # self.cost.W_0 = None
 
         # intermediate stages
         if self.cost.cost_type == "LINEAR_LS":
             self.model.cost_expr_ext_cost = \
                 self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
                                                           self.cost.Vx, self.cost.Vu, self.cost.Vz,
-                                                          self.cost.yref, self.cost.W)
+                                                          yref, self.cost.W)
         elif self.cost.cost_type == "NONLINEAR_LS":
-                self.model.cost_expr_ext_cost = self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr, self.cost.yref, self.cost.W)
+                self.model.cost_expr_ext_cost = self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr, yref, self.cost.W)
         elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost = self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr, self.model.cost_psi_expr,
-                                                                                          self.model.cost_y_expr, self.cost.yref)
+                                                                                        self.model.cost_y_expr, yref)
+        # self.cost.Vx = None
+        # self.cost.Vu = None
+        # self.cost.Vz = None
+        # self.model.cost_y_expr = None
+        # self.model.cost_r_in_psi_expr = None
+        # self.model.cost_psi_expr = None
+        # self.cost.yref = None
+        # self.cost.W = None
+
         # terminal stages
         if self.cost.cost_type_e == "LINEAR_LS":
             self.model.cost_expr_ext_cost_e = \
                 self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
                                                           self.cost.Vx_e, None, None,
-                                                          self.cost.yref_e, self.cost.W_e)
+                                                          yref_e, self.cost.W_e)
         elif self.cost.cost_type_e == "NONLINEAR_LS":
             self.model.cost_expr_ext_cost_e = \
-                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_e, self.cost.yref_e, self.cost.W_e)
+                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_e, yref_e, self.cost.W_e)
         elif self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost_e = self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_e, self.model.cost_psi_expr_e,
-                                                                                          self.model.cost_y_expr_e, self.cost.yref_e)
-
-        self.cost.cost_type_0 = 'EXTERNAL' if self.cost.cost_type_0 is not None else None
+                                                                                          self.model.cost_y_expr_e, yref_e)
+        # self.cost.Vx_e = None
+        # self.model.cost_y_expr_e = None
+        # self.model.cost_r_in_psi_expr_e = None
+        # self.model.cost_psi_expr_e = None
+        # self.cost.yref_e = None
+        # self.cost.W_e = None
+        if self.cost.cost_type_0 is not None:
+            self.cost.cost_type_0 = 'EXTERNAL'
         self.cost.cost_type = 'EXTERNAL'
         self.cost.cost_type_e = 'EXTERNAL'
 
@@ -1233,9 +1279,9 @@ class AcadosOcp:
         res = 0
         if Vx is not None:
             res += Vx @ x
-        if Vu is not None:
+        if Vu is not None and casadi_length(u) > 0:
             res += Vu @ u
-        if Vz is not None:
+        if Vz is not None and casadi_length(z) > 0:
             res += Vz @ z
         res -= yref
 
