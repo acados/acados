@@ -556,6 +556,26 @@ class AcadosOcpSolver:
         return self.eval_and_get_optimal_value_gradient(with_respect_to)
 
 
+    def sanity_check_parametric_sensitivities(self):
+        if not (self.acados_ocp.solver_options.qp_solver == 'FULL_CONDENSING_HPIPM' or
+                self.acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM'):
+            raise Exception("Parametric sensitivities are only available with HPIPM as QP solver.")
+
+        if not (
+            self.acados_ocp.solver_options.hessian_approx == 'EXACT' and
+            self.acados_ocp.solver_options.regularize_method == 'NO_REGULARIZE' and
+            self.acados_ocp.solver_options.levenberg_marquardt == 0 and
+            self.acados_ocp.solver_options.exact_hess_constr == 1 and
+            self.acados_ocp.solver_options.exact_hess_cost == 1 and
+            self.acados_ocp.solver_options.exact_hess_dyn == 1 and
+            self.acados_ocp.solver_options.fixed_hess == 0 and
+            self.acados_ocp.model.cost_expr_ext_cost_custom_hess_0 is None and
+            self.acados_ocp.model.cost_expr_ext_cost_custom_hess is None and
+            self.acados_ocp.model.cost_expr_ext_cost_custom_hess_e is None
+        ):
+            raise Exception("Parametric sensitivities are only correct if an exact Hessian is used!")
+
+
     def eval_solution_sensitivity(self, stages: Union[int, List[int]], with_respect_to: str) \
                 -> Tuple[Union[List[np.ndarray], np.ndarray], Union[List[np.ndarray], np.ndarray]]:
         """
@@ -588,23 +608,7 @@ class AcadosOcpSolver:
             print("Deprecation warning: 'params_global' is deprecated and has been renamed to 'p_global'.")
             with_respect_to = "p_global"
 
-        if not (self.acados_ocp.solver_options.qp_solver == 'FULL_CONDENSING_HPIPM' or
-                self.acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM'):
-            raise Exception("Parametric sensitivities are only available with HPIPM as QP solver.")
-
-        if not (
-            self.acados_ocp.solver_options.hessian_approx == 'EXACT' and
-            self.acados_ocp.solver_options.regularize_method == 'NO_REGULARIZE' and
-            self.acados_ocp.solver_options.levenberg_marquardt == 0 and
-            self.acados_ocp.solver_options.exact_hess_constr == 1 and
-            self.acados_ocp.solver_options.exact_hess_cost == 1 and
-            self.acados_ocp.solver_options.exact_hess_dyn == 1 and
-            self.acados_ocp.solver_options.fixed_hess == 0 and
-            self.acados_ocp.model.cost_expr_ext_cost_custom_hess_0 is None and
-            self.acados_ocp.model.cost_expr_ext_cost_custom_hess is None and
-            self.acados_ocp.model.cost_expr_ext_cost_custom_hess_e is None
-        ):
-            raise Exception("Parametric sensitivities are only correct if an exact Hessian is used!")
+        self.sanity_check_parametric_sensitivities()
 
         stages_is_list = isinstance(stages, list)
         stages_ = stages if stages_is_list else [stages]
@@ -688,20 +692,7 @@ class AcadosOcpSolver:
 
         print("WARNING: eval_param_sens() is deprecated. Please use eval_solution_sensitivity() instead!")
 
-        if not (self.acados_ocp.solver_options.qp_solver == 'FULL_CONDENSING_HPIPM' or
-                self.acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM'):
-            raise Exception("Parametric sensitivities are only available with HPIPM as QP solver.")
-
-        if not (
-           (self.acados_ocp.solver_options.hessian_approx == 'EXACT' or
-           (self.acados_ocp.cost.cost_type == 'LINEAR_LS' and
-            self.acados_ocp.cost.cost_type_0 == 'LINEAR_LS' and
-            self.acados_ocp.cost.cost_type_e == 'LINEAR_LS'))
-            and
-            self.acados_ocp.solver_options.regularize_method == 'NO_REGULARIZE' and
-            self.acados_ocp.solver_options.levenberg_marquardt == 0
-        ):
-            raise Exception("Parametric sensitivities are only correct if an exact Hessian is used!")
+        self.sanity_check_parametric_sensitivities()
 
         field = field.encode('utf-8')
 
