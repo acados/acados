@@ -70,7 +70,8 @@ jobs:
 
     - name: Setup MATLAB with MinGW Compiler
       run: |
-        "C:\hostedtoolcache\windows\matlab-batch\v1\x64\matlab-batch.exe" -log "mex -setup"
+        "C:\hostedtoolcache\windows\matlab-batch\v1\x64\matlab-batch.exe" "disp("test");"
+        "C:\hostedtoolcache\windows\matlab-batch\v1\x64\matlab-batch.exe" -wait -log "mex -setup"
       shell: cmd
 
     - name: Install acados via MATLAB script
