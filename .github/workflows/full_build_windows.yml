@@ -53,14 +53,18 @@ jobs:
 
     - name: Install MATLAB
       uses: matlab-actions/setup-matlab@v2
-      if: always()
       with:
           release: R2021a
           cache: true
 
+    # - name: Setup MATLAB with MinGW Compiler
+    #   run: |
+    #     "C:\Program Files\MATLAB\R2023b\bin\matlab.exe" -batch "mex -setup:'C Compiler' -v; mex -setup:'C++ Compiler' -v; exit;"
+
     - name: Setup MATLAB with MinGW Compiler
       run: |
         "C:\Program Files\MATLAB\R2023b\bin\matlab.exe" -batch "mex -setup:'C Compiler' -v; mex -setup:'C++ Compiler' -v; exit;"
+      shell: cmd
 
     # - name: Create Build Environment
     #   working-directory: ${{runner.workspace}}
