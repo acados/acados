@@ -37,10 +37,12 @@ jobs:
     - name: Install MinGW using Chocolatey
       run: |
         choco install mingw --yes
+        refreshenv
 
     - name: Add MinGW to PATH
       run: |
-        echo "C:\tools\mingw64\bin" >> $env:GITHUB_PATH
+        echo "C:\tools\mingw64\bin" >> $env:MW_MINGW64_LOC
+
 
     - name: Install CMake
       run: |
@@ -48,11 +50,8 @@ jobs:
 
     - name: Check GCC and CMake versions
       run: |
-        which gcc
         gcc --version
         cmake --version
-        $Env:Path
-        $Env:MW_MINGW64_LOC
 
     - name: Install MATLAB
       uses: matlab-actions/setup-matlab@v2
@@ -66,7 +65,7 @@ jobs:
 
     - name: Setup MATLAB with MinGW Compiler
       run: |
-        "C:\hostedtoolcache\windows\matlab-batch\v1\x64\matlab-batch.exe" -batch "setenv('MW_MINGW64_LOC', 'C:\tools\mingw64'); mex -setup C -v; exit;"
+        "C:\hostedtoolcache\windows\matlab-batch\v1\x64\matlab-batch.exe" -batch "mex -setup C -v; exit;"
       shell: cmd
 
     - name: Install acados via MATLAB script
