@@ -125,6 +125,9 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->warm_start_first_qp = false;
     opts->eval_residual_at_max_iter = false;
 
+    opts->timeout_heuristic = ZERO;
+    opts->timeout_max_time = 0; // corresponds to no timeout
+
     // overwrite default submodules opts
     // qp tolerance
     qp_solver->opts_set(qp_solver, opts->nlp_opts->qp_solver_opts, "tol_stat", &opts->tol_stat);
@@ -217,6 +220,16 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
         {
             bool* eval_residual_at_max_iter = (bool *) value;
             opts->eval_residual_at_max_iter = *eval_residual_at_max_iter;
+        }
+        else if (!strcmp(field, "timeout_max_time"))
+        {
+            double* timeout_max_time = (double *) value;
+            opts->timeout_max_time = *timeout_max_time;
+        }
+        else if (!strcmp(field, "timeout_heuristic"))
+        {
+            ocp_nlp_timeout_heuristic_t* timeout_heuristic = (ocp_nlp_timeout_heuristic_t *) value;
+            opts->timeout_heuristic = *timeout_heuristic;
         }
         else
         {
@@ -335,6 +348,9 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *i
     if (nlp_opts->ext_qp_res)
         mem->stat_n += 4;
     c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
+
+    // timeout memory
+    mem->timeout_estimated_per_iteration_time = 0;
 
     mem->nlp_mem->status = ACADOS_READY;
 
@@ -512,6 +528,15 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         return true;
     }
 
+    // Check timeout
+    if (opts->timeout_max_time > 0)
+    {
+        if (opts->timeout_max_time <= mem->nlp_mem->nlp_timings->time_tot + mem->timeout_estimated_per_iteration_time)
+        {
+            mem->nlp_mem->status = ACADOS_TIMEOUT;
+            return true;
+        }
+    }
     return false;
 }
 
@@ -554,6 +579,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->step_norm = 0.0;
     mem->nlp_mem->status = ACADOS_SUCCESS;
 
+    if (opts->timeout_heuristic != MAX_OVERALL)
+        mem->timeout_estimated_per_iteration_time = 0;
+
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
     int num_threads_bkp = omp_get_num_threads();
@@ -568,6 +596,12 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
      ************************************************/
     int sqp_iter = 0;
     double prev_levenberg_marquardt = 0.0;
+    int globalization_status;
+    qp_info *qp_info_;
+
+    double timeout_previous_time_tot = 0.;
+    double timeout_time_prev_iter = 0.;
+
     for (; sqp_iter <= opts->nlp_opts->max_iter; sqp_iter++) // <= needed such that after last iteration KKT residuals are checked before max_iter is thrown.
     {
         // We always evaluate the residuals until the last iteration
@@ -599,7 +633,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
         }
 
-        // Initialize the memory for different globalization strategies
+        // Initialize globalization strategies (do not move outside the SQP loop)
         if (sqp_iter == 0)
         {
             config->globalization->initialize_memory(config, dims, nlp_mem, nlp_opts);
@@ -636,6 +670,46 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                                nlp_opts->regularize, nlp_mem->regularize_mem);
         nlp_timings->time_reg += acados_toc(&timer1);
 
+        // update timeout memory based on chosen heuristic
+        if (opts->timeout_max_time > 0.)
+        {
+            nlp_timings->time_tot = acados_toc(&timer0);
+
+            if (sqp_iter > 0)
+            {
+                timeout_time_prev_iter = nlp_timings->time_tot - timeout_previous_time_tot;
+
+                switch (opts->timeout_heuristic)
+                {
+                    case LAST:
+                        mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter;
+                        break;
+                    case MAX_CALL:
+                    case MAX_OVERALL:
+                        mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter > mem->timeout_estimated_per_iteration_time ? timeout_time_prev_iter : mem->timeout_estimated_per_iteration_time;
+                        break;
+                    case AVERAGE:
+                        if (sqp_iter == 0)
+                        {
+                            mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter;
+                        }
+                        else
+                        {
+                            // TODO make weighting a parameter?
+                            mem->timeout_estimated_per_iteration_time = 0.5*timeout_time_prev_iter + 0.5*mem->timeout_estimated_per_iteration_time;
+                        }
+                        break;
+                    case ZERO: // predicted per iteration time is zero as initialized
+                        break;
+                    default:
+                        printf("Unknown timeout heuristic.\n");
+                        exit(1);
+                }
+            }
+
+            timeout_previous_time_tot = nlp_timings->time_tot;
+        }
+
         // Termination
         if (check_termination(sqp_iter, dims, nlp_res, mem, opts))
         {
@@ -647,6 +721,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             nlp_timings->time_tot = acados_toc(&timer0);
             return mem->nlp_mem->status;
         }
+
 
         /* solve QP */
         // (typically) no warm start at first iteration
@@ -683,7 +758,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         ocp_nlp_dump_qp_out_to_file(qp_out, sqp_iter, 0);
 #endif
 
-        qp_info *qp_info_;
         ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
         qp_iter = qp_info_->num_iter;
 
@@ -757,7 +831,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
         acados_tic(&timer1);
 
-        int globalization_status;
         globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts, &mem->alpha);
 
         if (globalization_status != ACADOS_SUCCESS)

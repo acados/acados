@@ -32,10 +32,6 @@
 function model = F8_crusader_model()
     import casadi.*
 
-    %% System dimension
-    nx = 4;
-    nu = 1;
-
     %% System parameters
     a1 = -0.877;
     a2 = -0.088;
@@ -67,11 +63,11 @@ function model = F8_crusader_model()
     u = SX.sym('u');  % input rate becomes the input
 
     % state derivatives
-    xdot = SX.sym('xdot', nx, 1);
+    xdot = SX.sym('xdot', length(x), 1);
 
     %% The system dynamics
     % Explicit Dynamics
-    f_expl_expr = vertcat(
+    f_expl_expr = vertcat(...
         a1*x1+x3+a2*x1*x3+a3*x1.^2+a4*x2.^2-x1.^2*x3+a5*x1.^3+a6*x4+a7*x1.^2*x4+a8*x1*x4.^2+a9*x4.^3, ...
         x3, ...
         c1*x1+c2*x3+c3*x1.^2+c4*x1.^3+c5*x4+c6*x1.^2*x4+c7*x1*x4.^2+c8*x4.^3, ...

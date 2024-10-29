@@ -55,7 +55,7 @@ class IntegratorSetting:
     num_steps: int
     newton_iter: int
     newton_tol: float
-    colloaction_type: str = "GAUSS_RADAU_IIA"
+    collocation_type: str = "GAUSS_RADAU_IIA"
     jac_reuse: bool = True
     sens_forw: bool = True
 
@@ -68,9 +68,9 @@ def get_order(setting: IntegratorSetting) -> int:
     if setting.integrator_type == "ERK":
         return setting.num_stages
     elif setting.integrator_type == "IRK":
-        if setting.colloaction_type == "GAUSS_RADAU_IIA":
+        if setting.collocation_type == "GAUSS_RADAU_IIA":
             return 2 * setting.num_stages - 1
-        elif setting.colloaction_type == "GAUSS_LEGENDRE":
+        elif setting.collocation_type == "GAUSS_LEGENDRE":
             return 2 * setting.num_stages
 
 def setup_acados_integrator(model, dt, integrator_setting: IntegratorSetting):
@@ -82,7 +82,7 @@ def setup_acados_integrator(model, dt, integrator_setting: IntegratorSetting):
     sim.solver_options.integrator_type = integrator_setting.integrator_type
     sim.solver_options.newton_iter = integrator_setting.newton_iter
     sim.solver_options.newton_tol = integrator_setting.newton_tol
-    sim.solver_options.collocation_type = integrator_setting.colloaction_type
+    sim.solver_options.collocation_type = integrator_setting.collocation_type
     sim.solver_options.sens_forw = True
     sim.solver_options.sens_adj = False
     sim.solver_options.sens_algebraic = False

@@ -134,6 +134,9 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, 
     ocp.solver_options.shooting_nodes = opts_struct.shooting_nodes;
     ocp.solver_options.print_level = opts_struct.print_level;
 
+    ocp.solver_options.timeout_max_time = opts_struct.timeout_max_time;
+    ocp.solver_options.timeout_heuristic = opts_struct.timeout_heuristic;
+
     % compile mex interface (without model dependency)
     if strcmp(opts_struct.compile_interface, 'true')
         ocp.solver_options.compile_interface = true;

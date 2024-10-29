@@ -107,6 +107,9 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.exact_hess_constr = 1;
             obj.opts_struct.fixed_hess = 0;
 
+            obj.opts_struct.timeout_max_time = 0;
+            obj.opts_struct.timeout_heuristic = 'ZERO';
+
             % check whether flags are provided by environment variable
             env_var = getenv("ACADOS_EXT_FUN_COMPILE_FLAGS");
             if isempty(env_var)
@@ -257,6 +260,10 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.ext_fun_compile_flags = value;
             elseif (strcmp(field, 'json_file'))
                 obj.opts_struct.json_file = value;
+            elseif (strcmp(field, 'timeout_max_time'))
+                obj.opts_struct.timeout_max_time = value;
+            elseif (strcmp(field, 'timeout_heuristic'))
+                obj.opts_struct.timeout_heuristic = value;
             elseif (strcmp(field, 'compile_mex'))
                 disp(['Option compile_mex is not supported anymore,'...
                     'please use compile_interface instead or dont set the option.', ...
