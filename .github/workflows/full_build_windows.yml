@@ -40,7 +40,7 @@ jobs:
 
     - name: Add MinGW to PATH
       run: |
-        echo "::add-path::C:\tools\mingw64\bin"
+        echo "C:\tools\mingw64\bin" >> $env:GITHUB_PATH
 
     - name: Install CMake
       run: |
