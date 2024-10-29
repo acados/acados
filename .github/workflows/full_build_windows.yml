@@ -37,7 +37,7 @@ jobs:
     - name: Install MinGW using Chocolatey
       run: |
         choco install mingw --yes
-        refreshenv
+
 
     - name: Add MinGW to PATH
       run: |
