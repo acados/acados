@@ -172,7 +172,7 @@ class AcadosOcpDims:
 
     @property
     def nx_next(self):
-        """:math:`n_{x, \\text{next}}` - state dimension of next state.
+        r""":math:`n_{x, \text{next}}` - state dimension of next state.
         Type: int; default: None"""
         return self.__nx_next
 
@@ -214,37 +214,37 @@ class AcadosOcpDims:
 
     @property
     def nr(self):
-        """:math:`n_{\pi}` - dimension of the image of the inner nonlinear function in positive definite constraints.
+        r""":math:`n_{\pi}` - dimension of the image of the inner nonlinear function in positive definite constraints.
         Type: int; default: 0"""
         return self.__nr
 
     @property
     def nr_e(self):
-        """:math:`n_{\pi}^e` - dimension of the image of the inner nonlinear function in positive definite constraints.
+        r""":math:`n_{\pi}^e` - dimension of the image of the inner nonlinear function in positive definite constraints.
         Type: int; default: 0"""
         return self.__nr_e
 
     @property
     def nr_0(self):
-        """:math:`n_{\pi}^0` - dimension of the image of the inner nonlinear function in positive definite constraints.
+        r""":math:`n_{\pi}^0` - dimension of the image of the inner nonlinear function in positive definite constraints.
         Type: int; default: 0"""
         return self.__nr_0
 
     @property
     def nphi(self):
-        """:math:`n_{\phi}` - number of convex-over-nonlinear constraints.
+        r""":math:`n_{\phi}` - number of convex-over-nonlinear constraints.
         Type: int; default: 0"""
         return self.__nphi
 
     @property
     def nphi_0(self):
-        """:math:`n_{\phi}^0` - number of convex-over-nonlinear constraints at initial shooting node 0.
+        r""":math:`n_{\phi}^0` - number of convex-over-nonlinear constraints at initial shooting node 0.
         Type: int; default: 0"""
         return self.__nphi_0
 
     @property
     def nphi_e(self):
-        """:math:`n_{\phi}^e` - number of convex-over-nonlinear constraints at terminal shooting node N.
+        r""":math:`n_{\phi}^e` - number of convex-over-nonlinear constraints at terminal shooting node N.
         Type: int; default: 0"""
         return self.__nphi_e
 
@@ -328,19 +328,19 @@ class AcadosOcpDims:
 
     @property
     def nsphi_0(self):
-        """:math:`n_{{s\phi}^0}` - number of soft convex-over-nonlinear constraints at shooting node 0.
+        r""":math:`n_{{s\phi}^0}` - number of soft convex-over-nonlinear constraints at shooting node 0.
         Type: int; default: 0"""
         return self.__nsphi_0
 
     @property
     def nsphi(self):
-        """:math:`n_{{s\phi}}` - number of soft convex-over-nonlinear constraints.
+        r""":math:`n_{{s\phi}}` - number of soft convex-over-nonlinear constraints.
         Type: int; default: 0"""
         return self.__nsphi
 
     @property
     def nsphi_e(self):
-        """:math:`n_{{s\phi}^e}` - number of soft convex-over-nonlinear constraints at terminal shooting node N.
+        r""":math:`n_{{s\phi}^e}` - number of soft convex-over-nonlinear constraints at terminal shooting node N.
         Type: int; default: 0"""
         return self.__nsphi_e
 
