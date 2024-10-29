@@ -59,13 +59,18 @@ jobs:
           release: R2021a
           cache: true
 
+    - name: Matlab dir
+      run: |
+        dir "C:\hostedtoolcache\windows\matlab-batch\v1\x64"
+      shell: cmd
+
     # - name: Setup MATLAB with MinGW Compiler
     #   run: |
     #     "C:\Program Files\MATLAB\R2023b\bin\matlab.exe" -batch "mex -setup:'C Compiler' -v; mex -setup:'C++ Compiler' -v; exit;"
 
     - name: Setup MATLAB with MinGW Compiler
       run: |
-        "C:\hostedtoolcache\windows\matlab-batch\v1\x64\matlab-batch.exe" -batch "mex -setup C -v; exit;"
+        "C:\hostedtoolcache\windows\matlab-batch\v1\x64\matlab-batch.exe" -batch "mex -setup"
       shell: cmd
 
     - name: Install acados via MATLAB script
