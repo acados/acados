@@ -84,19 +84,19 @@ class AcadosModel():
         ## dynamics
         self.f_impl_expr = None
         r"""
-        CasADi expression for the implicit dynamics :math:`f_\\text{impl}(\dot{x}, x, u, z, p) = 0`.
+        CasADi expression for the implicit dynamics :math:`f_\text{impl}(\dot{x}, x, u, z, p) = 0`.
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.integrator_type` == 'IRK'.
         Default: :code:`None`
         """
         self.f_expl_expr = None
         r"""
-        CasADi expression for the explicit dynamics :math:`\dot{x} = f_\\text{expl}(x, u, p)`.
+        CasADi expression for the explicit dynamics :math:`\dot{x} = f_\text{expl}(x, u, p)`.
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.integrator_type` == 'ERK'.
         Default: :code:`None`
         """
         self.disc_dyn_expr = None
         r"""
-        CasADi expression for the discrete dynamics :math:`x_{+} = f_\\text{disc}(x, u, p)`.
+        CasADi expression for the discrete dynamics :math:`x_{+} = f_\text{disc}(x, u, p)`.
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.integrator_type` == 'DISCRETE'.
         Default: :code:`None`
         """
@@ -377,8 +377,8 @@ class AcadosModel():
         r"""
         Augment the model with polynomial control.
 
-        Replace the original control input :math:`u` with a polynomial control input :math:`v_{\\text{poly}} = \\sum_{i=0}^d u_i t^i`
-        New controls are :math:`u_0, \\dots, u_d`.
+        Replace the original control input :math:`u` with a polynomial control input :math:`v_{\text{poly}} = \sum_{i=0}^d u_i t^i`
+        New controls are :math:`u_0, \dots, u_d`.
 
         NOTE: bounds on controls are not changed in this function.
 

@@ -196,7 +196,7 @@ class AcadosMultiphaseOcp:
 
     @property
     def p_global_values(self):
-        r"""initial values for :math:`p_\\text{global}` vector, see `AcadosModel.p_global` - can be updated.
+        r"""initial values for :math:`p_\text{global}` vector, see `AcadosModel.p_global` - can be updated.
         NOTE: `p_global` is shared between all phases.
         Type: `numpy.ndarray` of shape `(np_global, )`.
         """

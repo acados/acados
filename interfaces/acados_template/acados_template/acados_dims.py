@@ -172,7 +172,7 @@ class AcadosOcpDims:
 
     @property
     def nx_next(self):
-        r""":math:`n_{x, \\text{next}}` - state dimension of next state.
+        r""":math:`n_{x, \text{next}}` - state dimension of next state.
         Type: int; default: None"""
         return self.__nx_next
 
