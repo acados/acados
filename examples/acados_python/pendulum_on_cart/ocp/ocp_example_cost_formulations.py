@@ -198,7 +198,7 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
     return ocp
 
 
-def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', plot=False):
+def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', reformulate_to_external=False, plot=False):
 
     if cost_version == 'EXTERNAL':
         ext_cost_use_num_hess = True
@@ -219,6 +219,10 @@ def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', plot=
         ocp.solver_options.sim_method_num_steps = np.array([1] + (N-1)*[5])
     else:
         ocp = formulate_ocp(cost_version)
+
+    if reformulate_to_external:
+        ocp.translate_cost_to_external_cost()
+        ocp.solver_options.fixed_hess = 0
 
 
     # set options
@@ -298,6 +302,9 @@ if __name__ == "__main__":
         for formulation_type in ['ocp', 'mocp']:
             print(f"cost version: {cost_version}, formulation type: {formulation_type}")
             main(cost_version=cost_version, formulation_type=formulation_type, plot=False)
+
+        print(f"cost version: {cost_version} reformulated as EXTERNAL cost")
+        main(cost_version=cost_version, formulation_type='ocp', plot=False, reformulate_to_external=True)
 
 # timings
 # time_tot = 1e8
