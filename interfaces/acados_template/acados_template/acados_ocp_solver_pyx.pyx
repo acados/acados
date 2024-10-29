@@ -41,6 +41,7 @@ cimport acados_solver
 
 cimport numpy as cnp
 
+from typing import Tuple, Union, List
 import os
 import time
 from datetime import datetime
