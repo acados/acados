@@ -101,7 +101,7 @@ def export_parametric_ocp(
         # add nonlinear dependency in cost
         cost_scale_factor = ca.exp(cost_scale_param)
     else:
-        cost_scale_factor = ca.exp(ocp.model.p_global)
+        cost_scale_factor = 1.0
 
     # NOTE here we make the cost parametric
     ocp.model.cost_expr_ext_cost = cost_scale_factor * ocp.model.x.T @ Q_mat @ ocp.model.x + ocp.model.u.T @ R_mat @ ocp.model.u
