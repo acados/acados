@@ -50,6 +50,7 @@ jobs:
 
     - name: Check GCC and CMake versions
       run: |
+        which gcc
         gcc --version
         cmake --version
 
