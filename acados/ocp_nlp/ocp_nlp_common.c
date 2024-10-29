@@ -1430,6 +1430,8 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
 
     // extract dims
     int N = dims->N;
+    int np_global = dims->np_global;
+
     int *nv = dims->nv;
     int *nx = dims->nx;
     int *nz = dims->nz;
@@ -1511,6 +1513,7 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
     size += 1*blasfeo_memsize_dvec(nu[N] + nx[N]);  // dyn_adj
     size += 1*blasfeo_memsize_dvec(2 * ni[N]);      // ineq_fun
     size += 1*blasfeo_memsize_dvec(nx[N] + nz[N]);  // sim_guess
+    size += 1 * blasfeo_memsize_dvec(np_global); //  out_np_global;
 
     size += 8;   // initial align
     size += 8;   // middle align
@@ -1533,6 +1536,8 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
 
     // extract sizes
     int N = dims->N;
+    int np_global = dims->np_global;
+
     int *nv = dims->nv;
     int *nx = dims->nx;
     int *nz = dims->nz;
@@ -1718,6 +1723,8 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
         blasfeo_dvecse(nx[i] + nz[i], 0.0, mem->sim_guess+i, 0);
         // printf("sim_guess i %d: %p\n", i, mem->sim_guess+i);
     }
+    assign_and_advance_blasfeo_dvec_mem(np_global, &mem->out_np_global, &c_ptr);
+
     mem->compute_hess = 1;
 
     return mem;
@@ -1783,7 +1790,6 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
     size += 1 * blasfeo_memsize_dvec(ni_max);
 
     size += 1 * blasfeo_memsize_dvec(np_global); //  tmp_np_global;
-    size += 1 * blasfeo_memsize_dvec(np_global); //  out_np_global;
 
     // array of pointers
     // cost
@@ -2022,7 +2028,6 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     assign_and_advance_blasfeo_dvec_mem(ni_max, &work->tmp_ni, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx_max, &work->dxnext_dy, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(np_global, &work->tmp_np_global, &c_ptr);
-    assign_and_advance_blasfeo_dvec_mem(np_global, &work->out_np_global, &c_ptr);
 
     if (opts->reuse_workspace)
     {
@@ -3228,19 +3233,19 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
     if (!strcmp("p_global", field))
     {
         // initialize to zero
-        blasfeo_dvecse(np_global, 0., &work->out_np_global, 0);
+        blasfeo_dvecse(np_global, 0., &mem->out_np_global, 0);
 
         for (i = 0; i < N; i++)
         {
             // dynamics contribution
             config->dynamics[i]->compute_adj_p(config->dynamics[i], dims->dynamics[i], in->dynamics[i], opts,
                                     mem->dynamics[i], &work->tmp_np_global);
-            blasfeo_dvecad(np_global, 1., &work->tmp_np_global, 0, &work->out_np_global, 0);
+            blasfeo_dvecad(np_global, 1., &work->tmp_np_global, 0, &mem->out_np_global, 0);
 
             // cost contribution
             config->cost[i]->eval_grad_p(config->cost[i], dims->cost[i], in->cost[i], opts,
                                     mem->cost[i], work->cost[i], &work->tmp_np_global);
-            blasfeo_dvecad(np_global, 1., &work->tmp_np_global, 0, &work->out_np_global, 0);
+            blasfeo_dvecad(np_global, 1., &work->tmp_np_global, 0, &mem->out_np_global, 0);
 
             // TODO: add support for inequality constraints
         }
@@ -3248,9 +3253,9 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
         // terminal cost contribution
         config->cost[N]->eval_grad_p(config->cost[N], dims->cost[N], in->cost[N], opts,
                                     mem->cost[N], work->cost[N], &work->tmp_np_global);
-        blasfeo_dvecad(np_global, 1., &work->tmp_np_global, 0, &work->out_np_global, 0);
+        blasfeo_dvecad(np_global, 1., &work->tmp_np_global, 0, &mem->out_np_global, 0);
 
-        blasfeo_unpack_dvec(np_global, &work->out_np_global, 0, grad_p, 1);
+        blasfeo_unpack_dvec(np_global, &mem->out_np_global, 0, grad_p, 1);
     }
     else
     {
