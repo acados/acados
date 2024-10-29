@@ -1179,6 +1179,77 @@ class AcadosOcp:
         return
 
 
+    def translate_cost_to_external_cost(self):
+        """
+        Translates cost to a EXTERNAL cost.
+        """
+        # TODO remove stuff?
+        # TODO custom hessian conl?
+        # TODO make yref a parameter?
+
+        # initial stage
+        if self.cost.cost_type_0 == "LINEAR_LS":
+            self.model.cost_expr_ext_cost_0 = \
+                self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
+                                                          self.cost.Vx_0, self.cost.Vu_0, self.cost.Vz_0,
+                                                          self.cost.yref_0, self.cost.W_0)
+        elif self.cost.cost_type_0 == "NONLINEAR_LS":
+            self.model.cost_expr_ext_cost_0 = self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_0, self.cost.yref_0, self.cost.W_0)
+        elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
+            self.model.cost_expr_ext_cost_0 = self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_0, self.model.cost_psi_expr_0,
+                                                                                          self.model.cost_y_expr_0, self.cost.yref_0)
+
+        # intermediate stages
+        if self.cost.cost_type == "LINEAR_LS":
+            self.model.cost_expr_ext_cost = \
+                self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
+                                                          self.cost.Vx, self.cost.Vu, self.cost.Vz,
+                                                          self.cost.yref, self.cost.W)
+        elif self.cost.cost_type == "NONLINEAR_LS":
+                self.model.cost_expr_ext_cost = self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr, self.cost.yref, self.cost.W)
+        elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+            self.model.cost_expr_ext_cost = self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr, self.model.cost_psi_expr,
+                                                                                          self.model.cost_y_expr, self.cost.yref)
+        # terminal stages
+        if self.cost.cost_type_e == "LINEAR_LS":
+            self.model.cost_expr_ext_cost_e = \
+                self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
+                                                          self.cost.Vx_e, None, None,
+                                                          self.cost.yref_e, self.cost.W_e)
+        elif self.cost.cost_type_e == "NONLINEAR_LS":
+            self.model.cost_expr_ext_cost_e = \
+                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_e, self.cost.yref_e, self.cost.W_e)
+        elif self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
+            self.model.cost_expr_ext_cost_e = self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_e, self.model.cost_psi_expr_e,
+                                                                                          self.model.cost_y_expr_e, self.cost.yref_e)
+
+        self.cost.cost_type_0 = 'EXTERNAL' if self.cost.cost_type_0 is not None else None
+        self.cost.cost_type = 'EXTERNAL'
+        self.cost.cost_type_e = 'EXTERNAL'
+
+
+    @staticmethod
+    def __translate_ls_cost_to_external_cost(x, u, z, Vx, Vu, Vz, yref, W):
+        res = 0
+        if Vx is not None:
+            res += Vx @ x
+        if Vu is not None:
+            res += Vu @ u
+        if Vz is not None:
+            res += Vz @ z
+        res -= yref
+
+        return 0.5 * (res.T @ W @ res)
+
+    @staticmethod
+    def __translate_nls_cost_to_external_cost(y_expr, yref, W):
+        res = y_expr - yref
+        return 0.5 * (res.T @ W @ res)
+
+    @staticmethod
+    def __translate_conl_cost_to_external_cost(r, psi, y_expr, yref):
+        return ca.substitute(psi, r, y_expr - yref)
+
     def formulate_constraint_as_L2_penalty(
         self,
         constr_expr: ca.SX,
