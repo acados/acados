@@ -166,9 +166,9 @@ if strcmp(cost_type, 'LINEAR_LS')
     ocp.cost.W_e = W_x;
     ocp.cost.yref_e = y_ref_e;
 else % EXTERNAL, AUTO
-    ocp.cost.cost_expr_ext_cost_0 = cost_expr_ext_cost_0;
-    ocp.cost.cost_expr_ext_cost = cost_expr_ext_cost;
-    ocp.cost.cost_expr_ext_cost_e = cost_expr_ext_cost_e;
+    ocp.model.cost_expr_ext_cost_0 = cost_expr_ext_cost_0;
+    ocp.model.cost_expr_ext_cost = cost_expr_ext_cost;
+    ocp.model.cost_expr_ext_cost_e = cost_expr_ext_cost_e;
 end
 
 %% CONSTRAINTS
@@ -184,7 +184,7 @@ if constraint_formulation_nonlinear % formulate constraint via h
     model.con_h_expr_0 = model.u;
     ocp.constraints.lh_0 = lbu;
     ocp.constraints.uh_0 = ubu;
-    ocp.constraints.con_h_expr = model.u;
+    ocp.model.con_h_expr = model.u;
     ocp.constraints.lh = lbu;
     ocp.constraints.uh = ubu;
 else % formulate constraint as bound on u
@@ -259,7 +259,7 @@ cost_val_ocp = ocp_solver.get_cost();
 %        |----- dynamics -----|------ cost --------|---------------------------- constraints ------------------------|
 fields = {'qp_A','qp_B','qp_b','qp_R','qp_Q','qp_r','qp_C','qp_D','qp_lg','qp_ug','qp_lbx','qp_ubx','qp_lbu','qp_ubu'};
 
-% eiter stage-wise ...
+% either stage-wise ...
 for stage = [0,N-1]
     for k = 1:length(fields)
         field = fields{k};

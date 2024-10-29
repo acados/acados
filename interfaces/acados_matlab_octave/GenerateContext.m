@@ -74,7 +74,7 @@ classdef GenerateContext < handle
                 cse(dummy); % Check if cse exists
                 obj.casadi_fun_opts.cse = true;
             catch
-                disp('NOTE: Please consider updating to CasADi 3.6.6 which supports common subexpression elimination. \nThis might speed up external function evaluation.');
+                disp('NOTE: Please consider updating to CasADi 3.6.6 which supports common subexpression elimination. This might speed up external function evaluation.');
             end
         end
 
