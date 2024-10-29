@@ -83,16 +83,19 @@ jobs:
             cd ${{runner.workspace}}/acados/.github/windows; setup_mingw
 
     - name: Install acados via MATLAB script
-      shell: cmd
-      working-directory: ${{runner.workspace}}/acados/interfaces/acados_matlab_octave
-      run: |
-        "C:\hostedtoolcache\windows\matlab-batch\v1\x64\matlab-batch.exe" -batch "acados_install_windows; exit;"
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: |
+            cd ${{runner.workspace}}/acados/interfaces/acados_matlab_octave; acados_install_windows
+
 
     - name: Run minimal MATLAB example
-      shell: cmd
-      working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/getting_started
-      run: |
-        "C:\hostedtoolcache\windows\matlab-batch\v1\x64\matlab-batch.exe" -batch "minimal_example_ocp; exit;"
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: |
+            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/getting_started; minimal_example_ocp
 
     # - name: Create Build Environment
     #   working-directory: ${{runner.workspace}}
