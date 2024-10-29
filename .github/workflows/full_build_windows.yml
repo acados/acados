@@ -55,8 +55,10 @@ jobs:
 
     - name: Install MATLAB
       uses: matlab-actions/setup-matlab@v2
+      if: always()
       with:
           release: R2021a
+          products: Simulink Simulink_Test
           cache: true
 
     - name: Matlab dir
@@ -67,12 +69,17 @@ jobs:
     # - name: Setup MATLAB with MinGW Compiler
     #   run: |
     #     "C:\Program Files\MATLAB\R2023b\bin\matlab.exe" -batch "mex -setup:'C Compiler' -v; mex -setup:'C++ Compiler' -v; exit;"
+      # run: |
+      #   "C:\hostedtoolcache\windows\matlab-batch\v1\x64\matlab-batch.exe" "disp("test");"
+      #   "C:\hostedtoolcache\windows\matlab-batch\v1\x64\matlab-batch.exe" -wait -log "mex -setup"
+      # shell: cmd
 
     - name: Setup MATLAB with MinGW Compiler
-      run: |
-        "C:\hostedtoolcache\windows\matlab-batch\v1\x64\matlab-batch.exe" "disp("test");"
-        "C:\hostedtoolcache\windows\matlab-batch\v1\x64\matlab-batch.exe" -wait -log "mex -setup"
-      shell: cmd
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: |
+            cd ${{runner.workspace}}/acados/.github/windows; setup_mingw
 
     - name: Install acados via MATLAB script
       shell: cmd
