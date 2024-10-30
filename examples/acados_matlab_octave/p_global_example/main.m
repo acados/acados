@@ -37,10 +37,10 @@ function main()
     import casadi.*
 
     %% Standard OCP compare blazing vs bspline, p global vs no p_global
-    [state_trajectories_with_blazing_ref, t_tot_with_blazing_ref] = run_example_ocp(true, false, true);
-    [state_trajectories_with_blazing, t_tot_with_blazing] = run_example_ocp(true, true, true);
     [state_trajectories_without_blazing_ref, t_tot_with_bspline_ref] = run_example_ocp(true, false, false);
     [state_trajectories_without_blazing, t_tot_with_bspline] = run_example_ocp(true, true, false);
+    [state_trajectories_with_blazing_ref, t_tot_with_blazing_ref] = run_example_ocp(true, false, true);
+    [state_trajectories_with_blazing, t_tot_with_blazing] = run_example_ocp(true, true, true);
 
     %% Timing comparison
     fprintf('\t\tbspline\t\tblazing\n');
