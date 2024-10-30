@@ -765,8 +765,7 @@ cdef class AcadosOcpSolverCython:
                 raise Exception(msg)
 
             if field_ in constraints_fields:
-                acados_solver_common.ocp_nlp_constraints_model_set(self.nlp_config,
-                    self.nlp_dims, self.nlp_in, stage, field, <void *> value.data)
+                acados_solver_common.ocp_nlp_constraints_model_set(self.nlp_solver, self.nlp_in, stage, field, <void *> value.data)
             elif field_ in cost_fields:
                 acados_solver_common.ocp_nlp_cost_model_set(self.nlp_config,
                     self.nlp_dims, self.nlp_in, stage, field, <void *> value.data)
@@ -848,8 +847,7 @@ cdef class AcadosOcpSolverCython:
             raise Exception(f'AcadosOcpSolverCython.constraints_set(): mismatching dimension' +
                 f' for field "{field_}" at stage {stage} with dimension {tuple(dims)} (you have {value_shape})')
 
-        acados_solver_common.ocp_nlp_constraints_model_set(self.nlp_config, \
-            self.nlp_dims, self.nlp_in, stage, field, <void *> &value[0][0])
+        acados_solver_common.ocp_nlp_constraints_model_set(self.nlp_solver, self.nlp_in, stage, field, <void *> &value[0][0])
 
         return
 
