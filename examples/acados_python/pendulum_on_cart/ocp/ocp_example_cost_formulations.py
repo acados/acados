@@ -221,7 +221,7 @@ def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', refor
         ocp = formulate_ocp(cost_version)
 
     if reformulate_to_external:
-        ocp.translate_cost_to_external_cost()
+        ocp.translate_cost_to_external_cost(parametric_yref=True)
         ocp.solver_options.fixed_hess = 0
 
 
