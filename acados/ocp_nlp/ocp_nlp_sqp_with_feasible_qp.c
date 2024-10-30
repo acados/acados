@@ -1545,10 +1545,41 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         /* solve 1. QP: We solve without gradient and only with constraint Hessian */
         qp_status = prepare_and_solve_QP(config, opts, qp_in, nlp_work->tmp_qp_out, dims, mem, nlp_in, nlp_out,
                     nlp_mem, nlp_work, sqp_iter, true, timer0, timer1);
+        if (qp_status != ACADOS_SUCCESS)
+        {
+            if (nlp_opts->print_level > 1)
+            {
+                printf("\nFailure in QP 1, got status %d!\n", qp_status);
+            }
+            nlp_mem->status = qp_status;
+            nlp_mem->iter = sqp_iter;
+            nlp_timings->time_tot = acados_toc(&timer0);
+#if defined(ACADOS_WITH_OPENMP)
+            // restore number of threads
+            omp_set_num_threads(num_threads_bkp);
+#endif
+            return nlp_mem->status;
+        }
 
         /* solve 2. QP: We solve the standard l1-relaxed QP with gradient */
         qp_status = prepare_and_solve_QP(config, opts, qp_in, qp_out, dims, mem, nlp_in, nlp_out,
                     nlp_mem, nlp_work, sqp_iter, false, timer0, timer1);
+        if (qp_status != ACADOS_SUCCESS)
+        {
+            if (nlp_opts->print_level > 1)
+            {
+                printf("\nFailure in QP 2, got status %d!\n", qp_status);
+            }
+            nlp_mem->status = qp_status;
+            nlp_mem->iter = sqp_iter;
+            nlp_timings->time_tot = acados_toc(&timer0);
+#if defined(ACADOS_WITH_OPENMP)
+            // restore number of threads
+            omp_set_num_threads(num_threads_bkp);
+#endif
+            return nlp_mem->status;
+        }
+        //TODO: We should some day also account for, if the QP was not solved, e.g., max iter was reached
 
         // @david: now you have two directions:
         // nlp_work->tmp_qp_out = d without cost;
@@ -1603,8 +1634,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         else
         {
             kappa = calculate_search_direction_interpolation_factor(pred_l1_inf_feasibility_direction,
-                                                                        l1_inf_QP_optimality,
-                                                                        l1_inf_QP_feasibility);
+                                                                        manual_l1_inf_QP_optimality,
+                                                                        manual_l1_inf_QP_feasibility);
         }
         kappa = 0.7;
 
