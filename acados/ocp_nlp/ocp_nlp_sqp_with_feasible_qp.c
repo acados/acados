@@ -124,6 +124,7 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
     opts->warm_start_first_qp = false;
     opts->eval_residual_at_max_iter = false;
     opts->initial_objective_multiplier = 1e0;
+    opts->sufficient_l1_inf_reduction = 1e-2;
 
     // overwrite default submodules opts
     // qp tolerance
@@ -542,6 +543,18 @@ static void scale_multiplier(ocp_nlp_dims *dims, ocp_nlp_memory* nlp_mem, ocp_qp
         int two_n_nominal_ineq_nlp = 2*n_nominal_ineq_nlp;
         blasfeo_dvecsc(two_n_nominal_ineq_nlp+ns[i], 1.0/nlp_mem->objective_multiplier, qp_out->lam+i, 0);
         blasfeo_dvecsc(ns[i], 1.0/nlp_mem->objective_multiplier, qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]);
+    }
+}
+
+static double calculate_predicted_l1_inf_reduction(ocp_nlp_sqp_wfqp_opts* opts, double current_infeasibility, double qp_infeasibility)
+{
+    if (current_infeasibility < fmin(opts->tol_ineq, opts->tol_eq))
+    {
+        return 0.0;
+    }
+    else
+    {
+        return current_infeasibility - qp_infeasibility;
     }
 }
 
@@ -1606,32 +1619,34 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         printf("manual l1_inf_opt: %.4e\n", manual_l1_inf_QP_optimality);
 
         // predicted infeasibility reduction of feasibility QP should always be non-negative
-        double pred_l1_inf_feasibility_direction, pred_l1_inf_optimality_direction;
-        if (current_l1_infeasibility < opts->tol_ineq) // do this to avoid some weird negative values
+        double pred_l1_inf_QP_feasibility, pred_l1_inf_QP_optimality;
+        if (current_l1_infeasibility < fmin(opts->tol_ineq, opts->tol_eq)) // do this to avoid some weird negative values in pred
         {
-            pred_l1_inf_feasibility_direction = 0.0;
-            pred_l1_inf_optimality_direction = 0.0;
+            pred_l1_inf_QP_feasibility = 0.0;
+            pred_l1_inf_QP_optimality = 0.0;
         }
         else
         {
-            pred_l1_inf_feasibility_direction = current_l1_infeasibility - manual_l1_inf_QP_feasibility;
-            pred_l1_inf_optimality_direction = current_l1_infeasibility - manual_l1_inf_QP_optimality;
+            pred_l1_inf_QP_feasibility = current_l1_infeasibility - manual_l1_inf_QP_feasibility;
+            pred_l1_inf_QP_optimality = current_l1_infeasibility - manual_l1_inf_QP_optimality;
         }
-        printf("pred_l1_inf_feasibility_direction: %.4e\n", pred_l1_inf_feasibility_direction);
-        printf("pred_l1_inf_optimality_direction: %.4e\n", pred_l1_inf_optimality_direction);
+        pred_l1_inf_QP_feasibility = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manual_l1_inf_QP_feasibility);
+        pred_l1_inf_QP_optimality = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manual_l1_inf_QP_optimality);
+        printf("pred_l1_inf_QP_feasibility: %.4e\n", pred_l1_inf_QP_feasibility);
+        printf("pred_l1_inf_QP_optimality: %.4e\n", pred_l1_inf_QP_optimality);
 
 
         //
         double kappa;
 
-        if (pred_l1_inf_optimality_direction >= 1e-2 * pred_l1_inf_feasibility_direction)
+        if (pred_l1_inf_QP_optimality >= opts->sufficient_l1_inf_reduction * pred_l1_inf_QP_feasibility)
         {
             printf("Juhuuuuuuuuuuuuuuuuuuuu!\n");
             kappa = 1.0;
         }
         else
         {
-            kappa = calculate_search_direction_interpolation_factor(pred_l1_inf_feasibility_direction,
+            kappa = calculate_search_direction_interpolation_factor(pred_l1_inf_QP_feasibility,
                                                                         manual_l1_inf_QP_optimality,
                                                                         manual_l1_inf_QP_feasibility);
         }
@@ -1647,7 +1662,14 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             nlp_mem->qp_cost_value = ocp_nlp_compute_qp_objective_value(dims, qp_in, qp_out, nlp_work);
             // is this correct?
-            nlp_mem->predicted_infeasibility_reduction = fmax(0.0, current_l1_infeasibility - manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, nlp_mem->qp_in, nlp_mem->qp_out));
+            if (kappa == 1.0)
+            {
+                nlp_mem->predicted_infeasibility_reduction = pred_l1_inf_QP_optimality;
+            }
+            else
+            {
+                nlp_mem->predicted_infeasibility_reduction = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, nlp_mem->qp_in, nlp_mem->qp_out));
+            }
         }
 
         // Compute the step norm
@@ -1661,7 +1683,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 mem->primal_step_norm[sqp_iter] = mem->step_norm;
         }
         /* end solve QP */
-        if (current_l1_infeasibility > 1e-8 && mem->step_norm < 1e-8)
+        if (current_l1_infeasibility > fmin(opts->tol_eq, opts->tol_ineq) && mem->step_norm < opts->tol_min_step_norm)
         {
             printf("Problems seems to be converged to an infeasible stationary point!\n");
             nlp_mem->status = ACADOS_INFEASIBLE;
