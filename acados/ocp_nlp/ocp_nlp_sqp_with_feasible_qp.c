@@ -1598,26 +1598,24 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // printf("linearized l1_inf_feas: %.4e\n", l1_inf_QP_feasibility);
         double manual_l1_inf_QP_feasibility = manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, nlp_mem->qp_in, nlp_work->tmp_qp_out);
         printf("manual l1_inf_feas: %.4e\n", manual_l1_inf_QP_feasibility);
-        // assert(fabs(l1_inf_QP_feasibility-manual_l1_inf_QP_feasibility) < 1e-8);
 
         // Calculate linearized l1-infeasibility for d_predictor
         // double l1_inf_QP_optimality = get_slacked_qp_l1_infeasibility(dims, mem, nlp_mem->qp_out);
         // printf("linearized l1_inf_opt: %.4e\n", l1_inf_QP_optimality);
         double manual_l1_inf_QP_optimality = manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, nlp_mem->qp_in, nlp_mem->qp_out);
         printf("manual l1_inf_opt: %.4e\n", manual_l1_inf_QP_optimality);
-        // assert(fabs(l1_inf_QP_optimality-manual_l1_inf_QP_optimality) < 1e-8);
 
         // predicted infeasibility reduction of feasibility QP should always be non-negative
-        double pred_l1_inf_feasibility_direction = current_l1_infeasibility - manual_l1_inf_QP_feasibility;
-        double pred_l1_inf_optimality_direction = current_l1_infeasibility - manual_l1_inf_QP_optimality;
-        // pred should always be positive, but numerically some weird stuff can occur.
-        if (pred_l1_inf_feasibility_direction < 0.0 && fabs(pred_l1_inf_feasibility_direction) < 1e-6)
+        double pred_l1_inf_feasibility_direction, pred_l1_inf_optimality_direction;
+        if (current_l1_infeasibility < opts->tol_ineq) // do this to avoid some weird negative values
         {
             pred_l1_inf_feasibility_direction = 0.0;
-        }
-        if (pred_l1_inf_optimality_direction < 0.0 && fabs(pred_l1_inf_optimality_direction) < 1e-6)
-        {
             pred_l1_inf_optimality_direction = 0.0;
+        }
+        else
+        {
+            pred_l1_inf_feasibility_direction = current_l1_infeasibility - manual_l1_inf_QP_feasibility;
+            pred_l1_inf_optimality_direction = current_l1_infeasibility - manual_l1_inf_QP_optimality;
         }
         printf("pred_l1_inf_feasibility_direction: %.4e\n", pred_l1_inf_feasibility_direction);
         printf("pred_l1_inf_optimality_direction: %.4e\n", pred_l1_inf_optimality_direction);
