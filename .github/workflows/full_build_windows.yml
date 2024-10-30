@@ -78,6 +78,8 @@ jobs:
       if: always()
       with:
         command: |
+            cd ${{runner.workspace}}/acados/.github/windows
+            setup_mingw
             cd ${{runner.workspace}}/acados/examples/acados_matlab_octave
             acados_env_variables_windows
             cd getting_started
