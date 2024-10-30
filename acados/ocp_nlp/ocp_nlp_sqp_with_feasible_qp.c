@@ -1669,12 +1669,15 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         printf("pred_l1_inf_QP_feasibility: %.4e\n", pred_l1_inf_QP_feasibility);
         printf("pred_l1_inf_QP_optimality: %.4e\n", pred_l1_inf_QP_optimality);
 
+        // It seems appropriate that the fraction for sufficient improvement
+        // in infeasibility is adaptive. So, if inf is large, and the improvement is small
+        // relative to infeasibility we should have a direction that is closer to 
+        // the feasibility direction??
         double kappa = calculate_search_direction_interpolation_factor(opts,
                                                                 pred_l1_inf_QP_feasibility,
                                                                 pred_l1_inf_QP_optimality,
                                                                 manual_l1_inf_QP_optimality,
                                                                 manual_l1_inf_QP_feasibility);
-        // kappa = 0.7;
 
         // Calculate search direction
         setup_search_direction(mem, dims, qp_out, nlp_work->tmp_qp_out, qp_out, kappa);
