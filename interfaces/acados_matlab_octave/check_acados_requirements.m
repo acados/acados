@@ -103,7 +103,7 @@ function check_acados_requirements(varargin)
         end
 
         try
-            disp(['trying to download and unpack: ', url,filename])
+            disp(['trying to download and unpack: ', url, filename])
             file = websave(destination, [url,filename]);
             [~,~,ending] = fileparts(file);
 
@@ -125,6 +125,8 @@ function check_acados_requirements(varargin)
                     'Instructions can be found on https://web.casadi.org/get/\n',...
                     'We recommend using CasADi version', CasADi_version]);
         end
+
+        disp(['Successfully set up CasADi version ', CasADi_version, ' in ', destination, ' from URL ', url, filename]);
     end
 end
 
