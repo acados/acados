@@ -1184,6 +1184,8 @@ class AcadosOcp:
         Translates cost to EXTERNAL cost.
         parametric_yref: If true, augment with additional parameters for yref_0, yref, yref_e.
         """
+        self.make_consistent(False)
+
         # make yref a parameter
         yref_0 = self.cost.yref_0
         yref = self.cost.yref
