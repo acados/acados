@@ -909,7 +909,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     assert(N == capsule->nlp_solver_plan->N);
     ocp_nlp_config* nlp_config = capsule->nlp_config;
     ocp_nlp_dims* nlp_dims = capsule->nlp_dims;
-    ocp_nlp_solver* nlp_solver = capsule->nlp_solver;
+    ocp_nlp_solver* nlp_solver = capsule->solver;
 
     int tmp_int = 0;
 
