@@ -220,11 +220,6 @@ def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', refor
     else:
         ocp = formulate_ocp(cost_version)
 
-    if reformulate_to_external:
-        ocp.translate_cost_to_external_cost(parametric_yref=True)
-        ocp.solver_options.fixed_hess = 0
-
-
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES, FULL_CONDENSING_DAQP, FULL_CONDENSING_HPIPM
     ocp.solver_options.hessian_approx = HESSIAN_APPROXIMATION
@@ -249,6 +244,10 @@ def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', refor
     #  [00, 00, @2, 00, 00],
     #  [00, 00, 00, @1, 00],
     #  [00, 00, 00, 00, @1]])
+
+    if reformulate_to_external:
+        ocp.solver_options.fixed_hess = 0
+        ocp.translate_cost_to_external_cost(parametric_yref=True)
 
     # create solver
     ocp_solver = AcadosOcpSolver(ocp)
