@@ -1,13 +1,13 @@
 name: Test Full Build Linux
 
 on:
-  push:
-    branches-ignore:
-      - 'doc*'
-      - 'wip*'
-  pull_request:
-    branches:
-      - '*'
+  # push:
+  #   branches-ignore:
+  #     - 'doc*'
+  #     - 'wip*'
+  # pull_request:
+  #   branches:
+  #     - '*'
 
 env:
   BUILD_TYPE: Release
