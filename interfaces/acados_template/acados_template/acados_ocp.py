@@ -1238,7 +1238,7 @@ class AcadosOcp:
             self.model.cost_expr_ext_cost = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr, self.model.cost_psi_expr,
                                                             self.model.cost_y_expr, yref)
-        # terminal stages
+        # terminal stage
         if self.cost.cost_type_e == "LINEAR_LS":
             self.model.cost_expr_ext_cost_e = \
                 self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
