@@ -38,6 +38,10 @@ jobs:
       run: |
         choco install mingw --yes
 
+    - name: Add MinGW to PATH
+      run: |
+        echo "C:\tools\mingw64\bin" >> $env:MW_MINGW64_LOC
+
     - name: Install CMake
       uses: jwlawson/actions-setup-cmake@v2
 
@@ -54,6 +58,13 @@ jobs:
           release: R2021a
           products: Simulink Simulink_Test
           cache: true
+
+    - name: Setup MATLAB with MinGW Compiler
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: |
+            cd ${{runner.workspace}}/acados/.github/windows; setup_mingw
 
     - name: Install acados via MATLAB script
       uses: matlab-actions/run-command@v2
