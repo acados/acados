@@ -41,7 +41,7 @@ function check_acados_requirements(varargin)
         later_than_36 = true; % NOTE: this needs to be set/updated manually
 
         url = strcat('https://github.com/casadi/casadi/releases/download/',...
-                CasADi_version, '/');
+                    CasADi_release, '/');
         external_folder = fullfile(acados_dir, 'external');
         filename = [];
 
@@ -104,7 +104,7 @@ function check_acados_requirements(varargin)
         end
 
         try
-            disp(['trying to download and unpack: ', url, filename])
+            disp(['trying to download and unpack: ', url,filename])
             file = websave(destination, [url,filename]);
             [~,~,ending] = fileparts(file);
 
@@ -126,8 +126,6 @@ function check_acados_requirements(varargin)
                     'Instructions can be found on https://web.casadi.org/get/\n',...
                     'We recommend using CasADi version', CasADi_version]);
         end
-
-        disp(['Successfully set up CasADi version ', CasADi_version, ' in ', destination, ' from URL ', url, filename]);
     end
 end
 
