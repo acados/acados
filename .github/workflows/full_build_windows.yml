@@ -80,3 +80,10 @@ jobs:
         command: |
             cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/getting_started; minimal_example_ocp
 
+    - name: Run CasADi MATLAB example
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: |
+            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/getting_started; minimal_casadi_example
+
