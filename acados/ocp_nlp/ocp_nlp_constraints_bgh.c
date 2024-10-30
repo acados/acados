@@ -603,20 +603,19 @@ void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims_, void *raw_
 }
 
 
+
 int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
-                         void *model_, void *memory_, const char *field, void *value)
+                         void *model_, const char *field, void *value)
 {
     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
     ocp_nlp_constraints_bgh_model *model = (ocp_nlp_constraints_bgh_model *) model_;
-    ocp_nlp_constraints_bgh_memory *memory = memory_;
 
     int ii;
-    int offset;
     int *ptr_i;
 
-    if (!dims || !model || !field || !value || !memory)
+    if (!dims || !model || !field || !value)
     {
-        printf("ocp_nlp_constraints_bgh_model_set: got null pointer \n");
+        printf("ocp_nlp_constraints_bgh_model_set: got Null pointer \n");
         exit(1);
     }
 
@@ -780,38 +779,6 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
         ptr_i = (int *) value;
         for (ii=0; ii < nhe; ii++)
             model->idxe[nbue+nbxe+nge+ii] = nbu+nbx+ng+ptr_i[ii];
-    }
-    else
-    {
-        printf("\nerror: model field not available in module ocp_nlp_constraints_bgh: %s\n", field);
-        exit(1);
-    }
-
-    return ACADOS_SUCCESS;
-}
-
-
-int ocp_nlp_constraints_bgh_model_set_fun(void *config_, void *model_, const char *field, void *value)
-{
-    ocp_nlp_constraints_bgh_model *model = (ocp_nlp_constraints_bgh_model *) model_;
-
-    if (!model || !field || !value)
-    {
-        printf("ocp_nlp_constraints_bgh_model_set: got null pointer \n");
-        exit(1);
-    }
-
-    if (!strcmp(field, "nl_constr_h_fun"))
-    {
-        model->nl_constr_h_fun = value;
-    }
-    else if (!strcmp(field, "nl_constr_h_fun_jac"))
-    {
-        model->nl_constr_h_fun_jac = value;
-    }
-    else if (!strcmp(field, "nl_constr_h_fun_jac_hess"))
-    {
-        model->nl_constr_h_fun_jac_hess = value;
     }
     else
     {
@@ -1750,7 +1717,6 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_, int stage)
     config->model_calculate_size = &ocp_nlp_constraints_bgh_model_calculate_size;
     config->model_assign = &ocp_nlp_constraints_bgh_model_assign;
     config->model_set = &ocp_nlp_constraints_bgh_model_set;
-    config->model_set_fun = &ocp_nlp_constraints_bgh_model_set_fun;
     config->model_get = &ocp_nlp_constraints_bgh_model_get;
     config->opts_calculate_size = &ocp_nlp_constraints_bgh_opts_calculate_size;
     config->opts_assign = &ocp_nlp_constraints_bgh_opts_assign;

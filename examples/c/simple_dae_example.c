@@ -330,6 +330,37 @@ int main() {
 		model->impl_ode_jac_x_xdot_u_z = (external_function_generic *) &impl_ode_jac_x_xdot_u_z[i];
 	}
 
+	// bounds
+	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
+
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", x0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", x0);
+    constraints[0]->idxb = idxb_0;
+
+    if (FORMULATION == 2) {
+        external_function_param_casadi * nl_constr_h_fun_jac;
+		nl_constr_h_fun_jac = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+
+        for (int ii = 0; ii < N; ++ii) {
+            nl_constr_h_fun_jac[ii].casadi_fun          = &simple_dae_constr_h_fun_jac_ut_xt;
+            nl_constr_h_fun_jac[ii].casadi_work         = &simple_dae_constr_h_fun_jac_ut_xt_work;
+            nl_constr_h_fun_jac[ii].casadi_sparsity_in  = &simple_dae_constr_h_fun_jac_ut_xt_sparsity_in;
+            nl_constr_h_fun_jac[ii].casadi_sparsity_out = &simple_dae_constr_h_fun_jac_ut_xt_sparsity_out;
+            nl_constr_h_fun_jac[ii].casadi_n_in         = &simple_dae_constr_h_fun_jac_ut_xt_n_in;
+            nl_constr_h_fun_jac[ii].casadi_n_out        = &simple_dae_constr_h_fun_jac_ut_xt_n_out;
+            external_function_param_casadi_create(&nl_constr_h_fun_jac[ii], 0, &ext_fun_opts);
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "lh", lh);
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "uh", uh);
+			ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "nl_constr_h_fun_jac", &nl_constr_h_fun_jac[ii]);
+        }
+    } else {
+		for (int ii = 1; ii < N; ++ii) {
+			ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "ubx", uh);
+			ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "lbx", lh);
+			constraints[ii]->idxb = idxb;
+		}
+	}
+
 
 	void *nlp_opts = ocp_nlp_solver_opts_create(config, dims);
 
@@ -367,40 +398,7 @@ int main() {
 		blasfeo_dvecse(2, 0.0, nlp_out->ux+i, 0);
     }
 
-    // Create solver
 	ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts, nlp_in);
-
-	// bounds
-	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
-
-	ocp_nlp_constraints_model_set(solver, nlp_in, 0, "ubx", x0);
-	ocp_nlp_constraints_model_set(solver, nlp_in, 0, "lbx", x0);
-    constraints[0]->idxb = idxb_0;
-
-    if (FORMULATION == 2) {
-        external_function_param_casadi * nl_constr_h_fun_jac;
-		nl_constr_h_fun_jac = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
-
-        for (int ii = 0; ii < N; ++ii) {
-            nl_constr_h_fun_jac[ii].casadi_fun          = &simple_dae_constr_h_fun_jac_ut_xt;
-            nl_constr_h_fun_jac[ii].casadi_work         = &simple_dae_constr_h_fun_jac_ut_xt_work;
-            nl_constr_h_fun_jac[ii].casadi_sparsity_in  = &simple_dae_constr_h_fun_jac_ut_xt_sparsity_in;
-            nl_constr_h_fun_jac[ii].casadi_sparsity_out = &simple_dae_constr_h_fun_jac_ut_xt_sparsity_out;
-            nl_constr_h_fun_jac[ii].casadi_n_in         = &simple_dae_constr_h_fun_jac_ut_xt_n_in;
-            nl_constr_h_fun_jac[ii].casadi_n_out        = &simple_dae_constr_h_fun_jac_ut_xt_n_out;
-            external_function_param_casadi_create(&nl_constr_h_fun_jac[ii], 0, &ext_fun_opts);
-            ocp_nlp_constraints_model_set(solver, nlp_in, ii, "lh", lh);
-            ocp_nlp_constraints_model_set(solver, nlp_in, ii, "uh", uh);
-			ocp_nlp_constraints_model_set(solver, nlp_in, ii, "nl_constr_h_fun_jac", &nl_constr_h_fun_jac[ii]);
-        }
-    } else {
-		for (int ii = 1; ii < N; ++ii) {
-			ocp_nlp_constraints_model_set(solver, nlp_in, ii, "ubx", uh);
-			ocp_nlp_constraints_model_set(solver, nlp_in, ii, "lbx", lh);
-			constraints[ii]->idxb = idxb;
-		}
-	}
-
     ocp_nlp_precompute(solver, nlp_in, nlp_out);
 
 	// NLP solution

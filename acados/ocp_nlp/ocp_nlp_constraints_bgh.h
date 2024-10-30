@@ -108,9 +108,7 @@ acados_size_t ocp_nlp_constraints_bgh_model_calculate_size(void *config, void *d
 void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims, void *raw_memory);
 //
 int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
-                         void *model_, void *memory_, const char *field, void *value);
-
-int ocp_nlp_constraints_bgh_model_set_fun(void *config_, void *model_, const char *field, void *value);
+                         void *model_, const char *field, void *value);
 
 //
 void ocp_nlp_constraints_bgh_model_get(void *config_, void *dims_,

@@ -255,6 +255,25 @@ int main()
         if(ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z)) exit(1);
     }
 
+    // constraints
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", x0);
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", x0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "idxbx", idxbx);
+
+    for (int i = 1; i <= N; i++)
+    {
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lbx", lbx);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ubx", ubx);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "idxbx", idxbx);
+    }
+
+    for (int i = 0; i < N; i++)
+    {
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lbu", lbu);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ubu", ubu);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "idxbu", idxbu);
+    }
+
     // options
     void *nlp_opts = ocp_nlp_solver_opts_create(config, dims);
     int max_iter = 20;
@@ -274,25 +293,6 @@ int main()
 
     // solver
 	ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts, nlp_in);
-
-    // constraints
-    ocp_nlp_constraints_model_set(solver, nlp_in, 0, "lbx", x0);
-    ocp_nlp_constraints_model_set(solver, nlp_in, 0, "ubx", x0);
-	ocp_nlp_constraints_model_set(solver, nlp_in, 0, "idxbx", idxbx);
-
-    for (int i = 1; i <= N; i++)
-    {
-        ocp_nlp_constraints_model_set(solver, nlp_in, i, "lbx", lbx);
-        ocp_nlp_constraints_model_set(solver, nlp_in, i, "ubx", ubx);
-        ocp_nlp_constraints_model_set(solver, nlp_in, i, "idxbx", idxbx);
-    }
-
-    for (int i = 0; i < N; i++)
-    {
-        ocp_nlp_constraints_model_set(solver, nlp_in, i, "lbu", lbu);
-        ocp_nlp_constraints_model_set(solver, nlp_in, i, "ubu", ubu);
-        ocp_nlp_constraints_model_set(solver, nlp_in, i, "idxbu", idxbu);
-    }
 
     // initialize
     for (int i = 0; i < N; ++i)
@@ -330,8 +330,8 @@ int main()
 			ocp_nlp_out_get(config, dims, nlp_out, jj, "z", z_sol+jj*nz_);
 
 		// set x0
-        ocp_nlp_constraints_model_set(solver, nlp_in, 0, "lbx", x_sol+1*nx_);
-        ocp_nlp_constraints_model_set(solver, nlp_in, 0, "ubx", x_sol+1*nx_);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", x_sol+1*nx_);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", x_sol+1*nx_);
 
 		// shift guess
 		for(jj=0; jj<N; jj++)

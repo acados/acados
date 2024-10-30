@@ -1254,6 +1254,68 @@ int main()
 	}
 
 
+    /* constraints */
+	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
+
+	// fist stage
+#if CONSTRAINTS==0 // box constraints
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbu", lb0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", lb0+NU);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubu", ub0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", ub0+NU);
+	constraints[0]->idxb = idxb0;
+#elif CONSTRAINTS==1 // general constraints
+	double *Cu0; d_zeros(&Cu0, ng[0], nu[0]);
+	for (int ii=0; ii<nu[0]; ii++)
+		Cu0[ii*(ng[0]+1)] = 1.0;
+
+	double *Cx0; d_zeros(&Cx0, ng[0], nx[0]);
+	for (int ii=0; ii<nx[0]; ii++)
+		Cx0[nu[0]+ii*(ng[0]+1)] = 1.0;
+
+	blasfeo_pack_tran_dmat(ng[0], nu[0], Cu0, ng[0], &constraints[0]->DCt, 0, 0);
+	blasfeo_pack_tran_dmat(ng[0], nx[0], Cx0, ng[0], &constraints[0]->DCt, nu[0], 0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lg", lb0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ug", ub0);
+
+	d_free(Cu0);
+	d_free(Cx0);
+// #else // general + nonlinear constraints
+// 	blasfeo_dgese(nu[0]+nx[0], ng[0], 0.0, &constraints[0]->DCt, 0, 0);
+// 	for (int ii=0; ii<ng[0]; ii++)
+// 		BLASFEO_DMATEL(&constraints[0]->DCt, ii, ii) = 1.0;
+
+//     ocp_nlp_constraints_bgh_model **nl_constr = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
+// 	nl_constr[0]->nl_constr_h_fun_jac = &nonlin_constr_generic;
+
+// 	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lg", lb0);
+// 	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ug", ub0);
+// 	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lh", &lb0[ng[0]]);
+// 	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "uh", &ub0[ng[0]]);
+#endif
+
+	// other stages
+    for (int i = 1; i < NN; i++)
+	{
+		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lbu", lb1);
+		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lbx", lb1+NU);
+		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ubu", ub1);
+		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ubx", ub1+NU);
+        constraints[i]->idxb = idxb1;
+    }
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "lbx", lbN);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "ubx", ubN);
+
+    constraints[NN]->idxb = idxbN;
+
+#if 0
+	for (int ii=0; ii<=NN; ii++)
+	{
+		blasfeo_print_dmat(nu[ii]+nx[ii], ng[ii], &constraints[ii]->DCt, 0, 0);
+		blasfeo_print_tran_dvec(2*nb[ii]+2*ng[ii]+2*nh[ii], &constraints[ii]->d, 0);
+	}
+	exit(1);
+#endif
 
     /************************************************
     * sqp opts
@@ -1295,81 +1357,12 @@ int main()
     ocp_nlp_solver_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
 
     /************************************************
-    * ocp_nlp_out
+    * ocp_nlp out
     ************************************************/
 
 	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 
-    /************************************************
-    * ocp_nlp_solver
-    ************************************************/
-
 	ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts, nlp_in);
-
-
-	/* constraints */
-	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
-
-	// fist stage
-#if CONSTRAINTS==0 // box constraints
-	ocp_nlp_constraints_model_set(solver, nlp_in, 0, "lbu", lb0);
-	ocp_nlp_constraints_model_set(solver, nlp_in, 0, "lbx", lb0+NU);
-	ocp_nlp_constraints_model_set(solver, nlp_in, 0, "ubu", ub0);
-	ocp_nlp_constraints_model_set(solver, nlp_in, 0, "ubx", ub0+NU);
-	constraints[0]->idxb = idxb0;
-#elif CONSTRAINTS==1 // general constraints
-	double *Cu0; d_zeros(&Cu0, ng[0], nu[0]);
-	for (int ii=0; ii<nu[0]; ii++)
-		Cu0[ii*(ng[0]+1)] = 1.0;
-
-	double *Cx0; d_zeros(&Cx0, ng[0], nx[0]);
-	for (int ii=0; ii<nx[0]; ii++)
-		Cx0[nu[0]+ii*(ng[0]+1)] = 1.0;
-
-	blasfeo_pack_tran_dmat(ng[0], nu[0], Cu0, ng[0], &constraints[0]->DCt, 0, 0);
-	blasfeo_pack_tran_dmat(ng[0], nx[0], Cx0, ng[0], &constraints[0]->DCt, nu[0], 0);
-	ocp_nlp_constraints_model_set(solver, nlp_in, 0, "lg", lb0);
-	ocp_nlp_constraints_model_set(solver, nlp_in, 0, "ug", ub0);
-
-	d_free(Cu0);
-	d_free(Cx0);
-// #else // general + nonlinear constraints
-// 	blasfeo_dgese(nu[0]+nx[0], ng[0], 0.0, &constraints[0]->DCt, 0, 0);
-// 	for (int ii=0; ii<ng[0]; ii++)
-// 		BLASFEO_DMATEL(&constraints[0]->DCt, ii, ii) = 1.0;
-
-//     ocp_nlp_constraints_bgh_model **nl_constr = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
-// 	nl_constr[0]->nl_constr_h_fun_jac = &nonlin_constr_generic;
-
-// 	ocp_nlp_constraints_model_set(solver, nlp_in, 0, "lg", lb0);
-// 	ocp_nlp_constraints_model_set(solver, nlp_in, 0, "ug", ub0);
-// 	ocp_nlp_constraints_model_set(solver, nlp_in, 0, "lh", &lb0[ng[0]]);
-// 	ocp_nlp_constraints_model_set(solver, nlp_in, 0, "uh", &ub0[ng[0]]);
-#endif
-
-	// other stages
-    for (int i = 1; i < NN; i++)
-	{
-		ocp_nlp_constraints_model_set(solver, nlp_in, i, "lbu", lb1);
-		ocp_nlp_constraints_model_set(solver, nlp_in, i, "lbx", lb1+NU);
-		ocp_nlp_constraints_model_set(solver, nlp_in, i, "ubu", ub1);
-		ocp_nlp_constraints_model_set(solver, nlp_in, i, "ubx", ub1+NU);
-        constraints[i]->idxb = idxb1;
-    }
-	ocp_nlp_constraints_model_set(solver, nlp_in, NN, "lbx", lbN);
-	ocp_nlp_constraints_model_set(solver, nlp_in, NN, "ubx", ubN);
-
-    constraints[NN]->idxb = idxbN;
-
-#if 0
-	for (int ii=0; ii<=NN; ii++)
-	{
-		blasfeo_print_dmat(nu[ii]+nx[ii], ng[ii], &constraints[ii]->DCt, 0, 0);
-		blasfeo_print_tran_dvec(2*nb[ii]+2*ng[ii]+2*nh[ii], &constraints[ii]->d, 0);
-	}
-	exit(1);
-#endif
-
 	int status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
 
     /************************************************

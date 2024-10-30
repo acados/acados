@@ -59,8 +59,7 @@ typedef struct
     void *(*dims_assign)(void *config, void *raw_memory);
     acados_size_t (*model_calculate_size)(void *config, void *dims);
     void *(*model_assign)(void *config, void *dims, void *raw_memory);
-    int (*model_set)(void *config_, void *dims_, void *model_, void *memory_, const char *field, void *value);
-    int (*model_set_fun)(void *config_, void *model_, const char *field, void *value);
+    int (*model_set)(void *config_, void *dims_, void *model_, const char *field, void *value);
     void (*model_get)(void *config_, void *dims_, void *model_, const char *field, void *value);
     acados_size_t (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);

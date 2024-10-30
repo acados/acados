@@ -507,16 +507,14 @@ int ocp_nlp_cost_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 
 
-int ocp_nlp_constraints_model_set(ocp_nlp_solver *solver, ocp_nlp_in *in, int stage, const char *field, void *value)
+int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
+        ocp_nlp_in *in, int stage, const char *field, void *value)
 {
-    ocp_nlp_config *config = solver->config;
-    ocp_nlp_memory *nlp_mem;
-    config->get(config, solver->dims, solver->mem, "nlp_mem", &nlp_mem);
-
+    // TODO: if bound is updated also update mask AND multipliers
     ocp_nlp_constraints_config *constr_config = config->constraints[stage];
 
-    return constr_config->model_set(constr_config, solver->dims->constraints[stage],
-            in->constraints[stage], nlp_mem, field, value);
+    return constr_config->model_set(constr_config, dims->constraints[stage],
+            in->constraints[stage], field, value);
 }
 
 
@@ -566,7 +564,8 @@ int ocp_nlp_constraints_model_set_external_param_fun(ocp_nlp_config *config, ocp
     if (dims->n_global_data > 0)
         ext_fun->set_global_data_pointer(ext_fun, in->global_data);
 
-    return constr_config->model_set_fun(constr_config, in->constraints[stage], field, ext_fun);
+    return constr_config->model_set(constr_config, dims->constraints[stage],
+            in->constraints[stage], field, ext_fun);
 }
 
 
@@ -643,7 +642,7 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
     }
     else if (!strcmp(field, "lam"))
     {
-        // TODO multiply with mask
+        // TODO update mask
         double *double_values = value;
         blasfeo_pack_dvec(2*dims->ni[stage], double_values, 1, &out->lam[stage], 0);
     }

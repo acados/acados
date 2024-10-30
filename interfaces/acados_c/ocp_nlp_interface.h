@@ -257,7 +257,7 @@ ACADOS_SYMBOL_EXPORT int ocp_nlp_cost_model_set(ocp_nlp_config *config, ocp_nlp_
 /// \param stage Stage number.
 /// \param field The name of the field, either lb, ub (others TBC)
 /// \param value Constraints function or values.
-ACADOS_SYMBOL_EXPORT int ocp_nlp_constraints_model_set(ocp_nlp_solver *solver,
+ACADOS_SYMBOL_EXPORT int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
         ocp_nlp_in *in, int stage, const char *field, void *value);
 
 ///

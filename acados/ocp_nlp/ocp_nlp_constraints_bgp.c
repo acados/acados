@@ -597,7 +597,7 @@ void *ocp_nlp_constraints_bgp_model_assign(void *config, void *dims_, void *raw_
 
 
 int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
-                         void *model_, void *memory_, const char *field, void *value)
+                         void *model_, const char *field, void *value)
 {
     // NOTE(oj): this is adapted from the bgh module, maybe something has to be changed here.
     ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
@@ -672,6 +672,14 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     else if (!strcmp(field, "ug"))
     {
         blasfeo_pack_dvec(ng, value, 1, &model->d, 2*nb+ng+nphi);
+    }
+    else if (!strcmp(field, "nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux"))
+    {
+        model->nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux = value;
+    }
+    else if (!strcmp(field, "nl_constr_phi_o_r_fun"))
+    {
+        model->nl_constr_phi_o_r_fun = value;
     }
     else if (!strcmp(field, "lphi"))
     {
@@ -760,35 +768,6 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
         ptr_i = (int *) value;
         for (ii=0; ii < nphie; ii++)
             model->idxe[nbue+nbxe+nge+ii] = nbu+nbx+ng+ptr_i[ii];
-    }
-    else
-    {
-        printf("\nerror: model field not available in module ocp_nlp_constraints_bgp: %s\n",
-            field);
-        exit(1);
-    }
-
-    return ACADOS_SUCCESS;
-}
-
-
-int ocp_nlp_constraints_bgp_model_set_fun(void *config_, void *model_, const char *field, void *value)
-{
-    ocp_nlp_constraints_bgp_model *model = (ocp_nlp_constraints_bgp_model *) model_;
-
-    if (!model || !field || !value)
-    {
-        printf("ocp_nlp_constraints_bgp_model_set_fun: got null pointer \n");
-        exit(1);
-    }
-
-    if (!strcmp(field, "nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux"))
-    {
-        model->nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux = value;
-    }
-    else if (!strcmp(field, "nl_constr_phi_o_r_fun"))
-    {
-        model->nl_constr_phi_o_r_fun = value;
     }
     else
     {
@@ -1598,7 +1577,6 @@ void ocp_nlp_constraints_bgp_config_initialize_default(void *config_, int stage)
     config->model_calculate_size = &ocp_nlp_constraints_bgp_model_calculate_size;
     config->model_assign = &ocp_nlp_constraints_bgp_model_assign;
     config->model_set = &ocp_nlp_constraints_bgp_model_set;
-    config->model_set_fun = &ocp_nlp_constraints_bgp_model_set_fun;
     config->model_get = &ocp_nlp_constraints_bgp_model_get;
     config->opts_calculate_size = &ocp_nlp_constraints_bgp_opts_calculate_size;
     config->opts_assign = &ocp_nlp_constraints_bgp_opts_assign;
