@@ -458,7 +458,7 @@ int backtracking_line_search(ocp_nlp_config *config,
 
     // do the penalty parameter update here .... might be changed later
     mem->penalty_parameter = nlp_mem->objective_multiplier;
-    debug_output_double(nlp_opts, "-pred_optimality", pred_optimality, 2);
+    debug_output_double(nlp_opts, "pred_optimality", pred_optimality, 2);
     debug_output_double(nlp_opts, "pred_infeasibility", pred_infeasibility, 2);
     update_funnel_penalty_parameter(mem, opts, pred_optimality, pred_infeasibility);
     // update_funnel_penalty_parameter(mem, opts, pred, mem->l1_infeasibility);
@@ -640,13 +640,15 @@ int ocp_nlp_globalization_funnel_needs_qp_objective_value()
 
 void ocp_nlp_globalization_funnel_initialize_memory(void *config_, void *dims_, void *nlp_mem_, void *nlp_opts_)
 {
+    ocp_nlp_config* config = config_;
     ocp_nlp_memory *nlp_mem = (ocp_nlp_memory *) nlp_mem_;
     ocp_nlp_opts *nlp_opts = (ocp_nlp_opts *) nlp_opts_;
+    ocp_nlp_dims* dims = dims_;
     printf("Note: The funnel globalization is still under development.\n");
     printf("If you encouter problems or bugs, please report to the acados developers!\n");
     ocp_nlp_globalization_funnel_opts *opts = nlp_opts->globalization;
     ocp_nlp_globalization_funnel_memory *mem = nlp_mem->globalization;
-    mem->l1_infeasibility = ocp_nlp_get_l1_infeasibility(config_, dims_, nlp_mem_);
+    mem->l1_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
     initialize_funnel_width(mem, opts, mem->l1_infeasibility);
     mem->funnel_iter_type = '-';
     initialize_funnel_penalty_parameter(mem, opts);

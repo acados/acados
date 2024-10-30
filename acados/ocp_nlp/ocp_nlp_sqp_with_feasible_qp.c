@@ -702,7 +702,8 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
 /*
 This function calculates the convex interpolation factor
 */
-static double calculate_search_direction_interpolation_factor(double pred_l1_inf_feasibility_direction,
+static double calculate_search_direction_interpolation_factor(ocp_nlp_sqp_wfqp_opts* opts,
+                                                              double pred_l1_inf_feasibility_direction,
                                                               double l1_inf_QP_optimality,
                                                               double l1_inf_QP_feasibility)
 {
@@ -714,7 +715,7 @@ static double calculate_search_direction_interpolation_factor(double pred_l1_inf
     }
     else
     {
-        kappa = fmin(1.0, ((1-1e-3)*pred_l1_inf_feasibility_direction)/(l1_inf_QP_optimality - l1_inf_QP_feasibility));
+        kappa = fmin(1.0, ((1-opts->sufficient_l1_inf_reduction)*pred_l1_inf_feasibility_direction)/(l1_inf_QP_optimality - l1_inf_QP_feasibility));
     }
     // We have a convex combination, therefore kappe in [0,1]
     // assert(kappa >= 0.0 && kappa <= 1.0);
@@ -1646,9 +1647,10 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
         else
         {
-            kappa = calculate_search_direction_interpolation_factor(pred_l1_inf_QP_feasibility,
-                                                                        manual_l1_inf_QP_optimality,
-                                                                        manual_l1_inf_QP_feasibility);
+            kappa = calculate_search_direction_interpolation_factor(opts,
+                                                                    pred_l1_inf_QP_feasibility,
+                                                                    manual_l1_inf_QP_optimality,
+                                                                    manual_l1_inf_QP_feasibility);
         }
         kappa = 0.7;
 
