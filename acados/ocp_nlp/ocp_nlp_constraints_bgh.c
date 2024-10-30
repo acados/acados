@@ -1645,6 +1645,7 @@ void ocp_nlp_constraints_bgh_update_qp_vectors(void *config_, void *dims_, void 
     // fun[2*ni : 2*(ni+ns)] = - slack + slack_bounds
     blasfeo_daxpy(2*ns, -1.0, memory->ux, nu+nx, &model->d, 2*nb+2*ng+2*nh, &memory->fun, 2*nb+2*ng+2*nh);
 
+    // TODO move this to bound setter
     // Set dmask for QP: 0 means unconstrained.
     for (int i = 0; i < nb+ng+nh; i++)
     {
