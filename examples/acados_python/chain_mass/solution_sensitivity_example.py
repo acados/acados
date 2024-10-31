@@ -414,33 +414,38 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
     timings_store_load = np.zeros((np_test))
     timings_lin_exact_hessian_qp = np.zeros((np_test))
     timings_solve_params_adj = np.zeros((np_test))
+    timings_parameter_update = np.zeros((np_test))
 
     for i in range(np_test):
+
+        # Update parameters
         parameter_values.cat[p_idx] = p_var[i]
 
         p_val = parameter_values.cat.full().flatten()
+        t_start = time.time()
         ocp_solver.set_p_global_and_precompute_dependencies(p_val)
         sensitivity_solver.set_p_global_and_precompute_dependencies(p_val)
+        timings_parameter_update[i] = time.time() - t_start
 
+        # Solve OCP
         u_opt.append(ocp_solver.solve_for_x0(x0))
         print(f"ocp_solver status {ocp_solver.status}")
-
         timings_solve_ocp_solver[i] = ocp_solver.get_stats("time_tot")
 
+        # Store/Load
         t_start = time.time()
-
-        # Store/Load to file
+        # using json files
         # ocp_solver.store_iterate(filename="iterate.json", overwrite=True, verbose=False)
         # sensitivity_solver.load_iterate(filename="iterate.json", verbose=False)
 
-        # Store/Load to AcadosOcpIterate
+        # using AcadosOcpIterate
         iterate = ocp_solver.store_iterate_to_obj()
         sensitivity_solver.load_iterate_from_obj(iterate)
 
         timings_store_load[i] = time.time() - t_start
 
+        # Call sensitivity solver -- factorize exact Hessian QP
         sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
-
         timings_lin_exact_hessian_qp[i] = sensitivity_solver.get_stats("time_lin")
         timings_lin_and_factorize[i] = sensitivity_solver.get_stats("time_tot") - timings_lin_exact_hessian_qp[i]
         print(f"sensitivity_solver status {sensitivity_solver.status}")
@@ -465,19 +470,21 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
 
     timing_results_forward = {
         "NLP solve": timings_solve_ocp_solver * 1e3,
-        'prepare exact Hessian QP': timings_lin_exact_hessian_qp * 1e3,
-        'factorize exact Hessian QP': timings_lin_and_factorize * 1e3,
+        "prepare exact Hessian QP": timings_lin_exact_hessian_qp * 1e3,
+        "factorize exact Hessian QP": timings_lin_and_factorize * 1e3,
         "eval rhs": timings_lin_params * 1e3,
-        "solve": timings_solve_params * 1e3,
+        "backsolve sensitivities with exact Hessian": timings_solve_params * 1e3,
         "store \& load": timings_store_load * 1e3,
+        "parameter update": timings_parameter_update * 1e3,
     }
     timing_results_adjoint = {
-        'NLP solve': timings_solve_ocp_solver * 1e3,
-        'prepare exact Hessian QP': timings_lin_exact_hessian_qp * 1e3,
-        'factorize exact Hessian QP': timings_lin_and_factorize * 1e3,
-        'eval rhs': timings_lin_params * 1e3,
-        'solve': timings_solve_params_adj * 1e3,
+        "NLP solve": timings_solve_ocp_solver * 1e3,
+        "prepare exact Hessian QP": timings_lin_exact_hessian_qp * 1e3,
+        "factorize exact Hessian QP": timings_lin_and_factorize * 1e3,
+        "eval rhs": timings_lin_params * 1e3,
+        "backsolve sensitivities with exact Hessian": timings_solve_params_adj * 1e3,
         "store \& load": timings_store_load * 1e3,
+        "parameter update": timings_parameter_update * 1e3,
     }
 
     print("\nMedian timings [ms]")
