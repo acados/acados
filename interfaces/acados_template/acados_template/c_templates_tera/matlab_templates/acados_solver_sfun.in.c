@@ -718,6 +718,8 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     double buffer[{{ buffer_size }}];
     double tmp_double;
     int tmp_offset, tmp_int;
+    {#- TODO: probably the whole buffer stuff can be avoided! #}
+    {#- TODO: use something like ocp_nlp_set_all(nlp_solver, nlp_in, nlp_out, "x", in_sign); for initializing #}
 
     /* go through inputs */
     {%- set i_input = -1 %}
