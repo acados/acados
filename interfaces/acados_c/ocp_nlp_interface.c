@@ -1613,6 +1613,95 @@ void ocp_nlp_get_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, c
 }
 
 
+void ocp_nlp_set_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, const char *field, void *value)
+{
+    ocp_nlp_dims *dims = solver->dims;
+
+    double *double_values = value;
+    int tmp_offset = 0;
+    int N = dims->N;
+    int tmp_int, stage;
+
+    if (!strcmp(field, "x"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            tmp_int = dims->nx[stage];
+            blasfeo_pack_dvec(tmp_int, double_values + tmp_offset, 1, &out->ux[stage], dims->nu[stage]);
+            tmp_offset += tmp_int;
+        }
+    }
+    else if (!strcmp(field, "u"))
+    {
+        for (stage = 0; stage < N; stage++)
+        {
+            tmp_int = dims->nu[stage];
+            blasfeo_pack_dvec(tmp_int, double_values + tmp_offset, 1, &out->ux[stage], 0);
+            tmp_offset += tmp_int;
+        }
+    }
+    else if (!strcmp(field, "sl"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            tmp_int = dims->ns[stage];
+            blasfeo_pack_dvec(tmp_int, double_values + tmp_offset, 1, &out->ux[stage], dims->nx[stage] + dims->nu[stage]);
+            tmp_offset += tmp_int;
+        }
+    }
+    else if (!strcmp(field, "su"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            tmp_int = dims->ns[stage];
+            blasfeo_pack_dvec(tmp_int, double_values + tmp_offset, 1, &out->ux[stage], dims->nx[stage] + dims->nu[stage] + dims->ns[stage]);
+            tmp_offset += tmp_int;
+        }
+    }
+    else if (!strcmp(field, "s"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            tmp_int = 2*dims->ns[stage];
+            blasfeo_pack_dvec(tmp_int, double_values + tmp_offset, 1, &out->ux[stage], dims->nx[stage] + dims->nu[stage]);
+            tmp_offset += tmp_int;
+        }
+    }
+    else if (!strcmp(field, "z"))
+    {
+        for (stage = 0; stage < N; stage++)
+        {
+            tmp_int = dims->nz[stage];
+            blasfeo_pack_dvec(tmp_int, double_values + tmp_offset, 1, &out->z[stage], 0);
+            tmp_offset += tmp_int;
+        }
+    }
+    else if (!strcmp(field, "pi"))
+    {
+        for (stage = 0; stage < N; stage++)
+        {
+            tmp_int = dims->nx[stage+1];
+            blasfeo_pack_dvec(tmp_int, double_values + tmp_offset, 1, &out->pi[stage], 0);
+            tmp_offset += tmp_int;
+        }
+    }
+    else if (!strcmp(field, "lam"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            tmp_int = 2*dims->ni[stage];
+            blasfeo_pack_dvec(tmp_int, double_values + tmp_offset, 1, &out->lam[stage], 0);
+            tmp_offset += tmp_int;
+        }
+    }
+    else
+    {
+        printf("\nerror: ocp_nlp_set_all: field %s not available\n", field);
+        exit(1);
+    }
+}
+
+
 void ocp_nlp_set(ocp_nlp_solver *solver, int stage, const char *field, void *value)
 {
     ocp_nlp_memory *mem;
