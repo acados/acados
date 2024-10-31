@@ -720,6 +720,18 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
         ocp_nlp_constraints_bgh_update_mask_upper(model, ng, offset);
 
     }
+    else if (!strcmp(field, "nl_constr_h_fun"))
+    {
+        model->nl_constr_h_fun = value;
+    }
+    else if (!strcmp(field, "nl_constr_h_fun_jac"))
+    {
+        model->nl_constr_h_fun_jac = value;
+    }
+    else if (!strcmp(field, "nl_constr_h_fun_jac_hess"))
+    {
+        model->nl_constr_h_fun_jac_hess = value;
+    }
     else if (!strcmp(field, "lh"))
     {
         offset = nb+ng;
