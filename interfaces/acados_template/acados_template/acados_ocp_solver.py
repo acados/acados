@@ -44,7 +44,8 @@ if os.name == 'nt':
 else:
     from ctypes import CDLL as DllLoader
 from datetime import datetime
-from typing import Union, List, Tuple
+from typing import Union, Optional, List, Tuple
+from collections.abc import Sequence
 
 import numpy as np
 import scipy.linalg
@@ -274,6 +275,9 @@ class AcadosOcpSolver:
 
         self.__acados_lib.ocp_nlp_eval_param_sens.argtypes = [c_void_p, c_char_p, c_int, c_int, c_void_p]
         self.__acados_lib.ocp_nlp_eval_param_sens.restype = None
+
+        self.__acados_lib.ocp_nlp_eval_solution_sens_adj_p.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_int, c_void_p]
+        self.__acados_lib.ocp_nlp_eval_solution_sens_adj_p.restype = None
 
         self.__acados_lib.ocp_nlp_solver_opts_set.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
         self.__acados_lib.ocp_nlp_get.argtypes = [c_void_p, c_char_p, c_void_p]
@@ -553,6 +557,26 @@ class AcadosOcpSolver:
         return self.eval_and_get_optimal_value_gradient(with_respect_to)
 
 
+    def sanity_check_parametric_sensitivities(self):
+        if not (self.acados_ocp.solver_options.qp_solver == 'FULL_CONDENSING_HPIPM' or
+                self.acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM'):
+            raise Exception("Parametric sensitivities are only available with HPIPM as QP solver.")
+
+        if not (
+            self.acados_ocp.solver_options.hessian_approx == 'EXACT' and
+            self.acados_ocp.solver_options.regularize_method == 'NO_REGULARIZE' and
+            self.acados_ocp.solver_options.levenberg_marquardt == 0 and
+            self.acados_ocp.solver_options.exact_hess_constr == 1 and
+            self.acados_ocp.solver_options.exact_hess_cost == 1 and
+            self.acados_ocp.solver_options.exact_hess_dyn == 1 and
+            self.acados_ocp.solver_options.fixed_hess == 0 and
+            self.acados_ocp.model.cost_expr_ext_cost_custom_hess_0 is None and
+            self.acados_ocp.model.cost_expr_ext_cost_custom_hess is None and
+            self.acados_ocp.model.cost_expr_ext_cost_custom_hess_e is None
+        ):
+            raise Exception("Parametric sensitivities are only correct if an exact Hessian is used!")
+
+
     def eval_solution_sensitivity(self, stages: Union[int, List[int]], with_respect_to: str) \
                 -> Tuple[Union[List[np.ndarray], np.ndarray], Union[List[np.ndarray], np.ndarray]]:
         """
@@ -585,23 +609,7 @@ class AcadosOcpSolver:
             print("Deprecation warning: 'params_global' is deprecated and has been renamed to 'p_global'.")
             with_respect_to = "p_global"
 
-        if not (self.acados_ocp.solver_options.qp_solver == 'FULL_CONDENSING_HPIPM' or
-                self.acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM'):
-            raise Exception("Parametric sensitivities are only available with HPIPM as QP solver.")
-
-        if not (
-            self.acados_ocp.solver_options.hessian_approx == 'EXACT' and
-            self.acados_ocp.solver_options.regularize_method == 'NO_REGULARIZE' and
-            self.acados_ocp.solver_options.levenberg_marquardt == 0 and
-            self.acados_ocp.solver_options.exact_hess_constr == 1 and
-            self.acados_ocp.solver_options.exact_hess_cost == 1 and
-            self.acados_ocp.solver_options.exact_hess_dyn == 1 and
-            self.acados_ocp.solver_options.fixed_hess == 0 and
-            self.acados_ocp.model.cost_expr_ext_cost_custom_hess_0 is None and
-            self.acados_ocp.model.cost_expr_ext_cost_custom_hess is None and
-            self.acados_ocp.model.cost_expr_ext_cost_custom_hess_e is None
-        ):
-            raise Exception("Parametric sensitivities are only correct if an exact Hessian is used!")
+        self.sanity_check_parametric_sensitivities()
 
         stages_is_list = isinstance(stages, list)
         stages_ = stages if stages_is_list else [stages]
@@ -613,7 +621,7 @@ class AcadosOcpSolver:
 
         for s in stages_:
             if not isinstance(s, int) or s < 0 or s > N:
-                raise Exception("AcadosOcpSolver.eval_solution_sensitivity(): stages need to be int or [int] and in [0, N].")
+                raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): stages need to be int or list[int] and in [0, N], got stages = {stages_}.")
 
         if with_respect_to == "initial_state":
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
@@ -666,6 +674,101 @@ class AcadosOcpSolver:
         return sens_x, sens_u
 
 
+    def eval_adjoint_solution_sensitivity(self,
+                                          seed_x: Union[np.ndarray, List[np.ndarray]],
+                                          seed_u: Union[np.ndarray, List[np.ndarray]],
+                                          stages: Union[int, List[int]] = 0,
+                                          with_respect_to: str = "p_global",
+                                          sanity_checks: bool = True,
+                                          ) -> np.ndarray:
+        """
+        Evaluate the adjoint sensitivity of the solution with respect to the parameters.
+            :param seed_x : np.ndarray or list of np.ndarrays - seed for the states at stage `stages`
+            :param seed_u : np.ndarray or list of np.ndarrays - seed for the controls at stage `stages`
+            :param stages_seed_x : int or list of int - stages corresponding to the seeds_x
+            :param stages_seed_u : int or list of int - stages corresponding to the seeds_u            :param with_respect_to : string in ["p_global"]
+            :param sanity_checks : bool - whether to perform sanity checks, turn off for minimal overhead, default: True
+        """
+
+        # get n_seeds
+        if seed_x is None:
+            seed_x = []
+        if seed_u is None:
+            seed_u = []
+        if len(seed_x) == 0 and len(seed_u) == 0:
+            raise Exception("seed_x and seed_u cannot both be empty.")
+        if len(seed_x) > 0:
+            if not isinstance(seed_x[0], tuple) or len(seed_x[0]) != 2:
+                raise Exception(f"seed_x[0] should be tuple of length 2, got seed_x[0] {seed_x[0]}")
+            s = seed_x[0][1]
+            if not isinstance(s, np.ndarray):
+                raise Exception(f"seed_x[0][1] should be np.ndarray, got {type(s)}")
+            n_seeds = seed_x[0][1].shape[1]
+        if len(seed_u) > 0:
+            if not isinstance(seed_u[0], tuple) or len(seed_u[0]) != 2:
+                raise Exception(f"seed_u[0] should be tuple of length 2, got seed_u[0] {seed_u[0]}")
+            s = seed_u[0][1]
+            if not isinstance(s, np.ndarray):
+                raise Exception(f"seed_u[0][1] should be np.ndarray, got {type(s)}")
+            n_seeds = seed_u[0][1].shape[1]
+
+        if sanity_checks:
+            N_horizon = self.acados_ocp.solver_options.N_horizon
+            self.sanity_check_parametric_sensitivities()
+            nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
+            nu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "u".encode('utf-8'))
+
+            # check seeds
+            for seed, name, dim in [(seed_x, "seed_x", nx), (seed_u, "seed_u", nu)]:
+                if not isinstance(seed, Sequence):
+                    raise Exception(f"{name} should be tuple, got {type(seed)}")
+                for stage, seed_stage in seed:
+                    if not isinstance(stage, int) or stage < 0 or stage > N_horizon:
+                        raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): stage {stage} for {name} is not valid.")
+                    if not isinstance(seed_stage, np.ndarray):
+                        raise Exception(f"{name} for stage {stage} should be np.ndarray, got {type(seed_stage)}")
+                    if seed_stage.shape != (dim, n_seeds):
+                        raise Exception(f"{name} for stage {stage} should have shape (dim, n_seeds) = ({dim}, {n_seeds}), got {seed_stage.shape}.")
+
+        t0 = time.time()
+        self.__acados_lib.ocp_nlp_eval_params_jac(self.nlp_solver, self.nlp_in, self.nlp_out)
+        self.time_solution_sens_lin = time.time() - t0
+
+        if with_respect_to == "p_global":
+            field = "p_global".encode('utf-8')
+
+            nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, field)
+
+            grad = np.zeros((n_seeds, nparam))
+            grad_p = np.ascontiguousarray(grad, dtype=np.float64)
+            c_grad_p = cast(grad_p.ctypes.data, POINTER(c_double))
+
+            # compute jacobian wrt params
+            t0 = time.time()
+            self.__acados_lib.ocp_nlp_eval_params_jac(self.nlp_solver, self.nlp_in, self.nlp_out)
+            self.time_solution_sens_lin = time.time() - t0
+
+            self.time_solution_sens_solve = 0.0
+            for i_seed in range(n_seeds):
+                # set seed:
+                self.reset_sens_out()
+                for (stage, sx) in seed_x:
+                    self.set(stage, 'sens_x', sx[:, i_seed])
+                for (stage, su) in seed_u:
+                    self.set(stage, 'sens_u', su[:, i_seed])
+
+                c_grad_p = cast(grad_p[i_seed, :].ctypes.data, POINTER(c_double))
+
+                # solve adjoint sensitivities
+                self.__acados_lib.ocp_nlp_eval_solution_sens_adj_p(self.nlp_solver, self.nlp_in, self.sens_out, field, 0, c_grad_p)
+                self.time_solution_sens_solve += self.get_stats("time_solution_sensitivities")
+
+            return grad_p
+        else:
+            raise NotImplementedError(f"with_respect_to {with_respect_to} not implemented.")
+
+
+
     def eval_param_sens(self, index: int, stage: int=0, field="ex"):
         """
         Calculate the sensitivity of the current solution with respect to the initial state component of index.
@@ -685,20 +788,7 @@ class AcadosOcpSolver:
 
         print("WARNING: eval_param_sens() is deprecated. Please use eval_solution_sensitivity() instead!")
 
-        if not (self.acados_ocp.solver_options.qp_solver == 'FULL_CONDENSING_HPIPM' or
-                self.acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM'):
-            raise Exception("Parametric sensitivities are only available with HPIPM as QP solver.")
-
-        if not (
-           (self.acados_ocp.solver_options.hessian_approx == 'EXACT' or
-           (self.acados_ocp.cost.cost_type == 'LINEAR_LS' and
-            self.acados_ocp.cost.cost_type_0 == 'LINEAR_LS' and
-            self.acados_ocp.cost.cost_type_e == 'LINEAR_LS'))
-            and
-            self.acados_ocp.solver_options.regularize_method == 'NO_REGULARIZE' and
-            self.acados_ocp.solver_options.levenberg_marquardt == 0
-        ):
-            raise Exception("Parametric sensitivities are only correct if an exact Hessian is used!")
+        self.sanity_check_parametric_sensitivities()
 
         field = field.encode('utf-8')
 
@@ -1237,7 +1327,7 @@ class AcadosOcpSolver:
         Set numerical data inside the solver.
 
             :param stage: integer corresponding to shooting node
-            :param field: string in ['x', 'u', 'pi', 'lam', 'p', 'xdot_guess', 'z_guess']
+            :param field: string in ['x', 'u', 'pi', 'lam', 'p', 'xdot_guess', 'z_guess', 'sens_x', 'sens_u']
 
             .. note:: regarding lam: \n
                     the inequalities are internally organized in the following order: \n
@@ -1254,6 +1344,7 @@ class AcadosOcpSolver:
         constraints_fields = ['lbx', 'ubx', 'lbu', 'ubu']
         out_fields = ['x', 'u', 'pi', 'lam', 'z', 'sl', 'su']
         mem_fields = ['xdot_guess', 'z_guess']
+        sens_fields = ['sens_x', 'sens_u']
 
         if not isinstance(stage_, int):
             raise Exception('stage should be integer.')
@@ -1264,7 +1355,9 @@ class AcadosOcpSolver:
         if isinstance(value_, (float, int)):
             value_ = np.array([value_])
         value_ = value_.astype(float)
-        field = field_.encode('utf-8')
+
+        field = field_.replace("sens_", "").encode('utf-8')
+
         stage = c_int(stage_)
 
         # treat parameters separately
@@ -1272,9 +1365,9 @@ class AcadosOcpSolver:
             value_data = cast(value_.ctypes.data, POINTER(c_double))
             assert getattr(self.shared_lib, f"{self.name}_acados_update_params")(self.capsule, stage, value_data, value_.shape[0])==0
         else:
-            if field_ not in constraints_fields + cost_fields + out_fields + mem_fields:
+            if field_ not in constraints_fields + cost_fields + out_fields + mem_fields + sens_fields:
                 raise Exception(f"AcadosOcpSolver.set(): '{field}' is not a valid argument.\n"
-                    f" Possible values are {constraints_fields + cost_fields + out_fields + mem_fields + ['p']}.")
+                    f" Possible values are {constraints_fields + cost_fields + out_fields + mem_fields + sens_fields + ['p']}.")
 
             dims = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, \
                 self.nlp_dims, self.nlp_out, stage_, field)
@@ -1298,6 +1391,11 @@ class AcadosOcpSolver:
                     self.nlp_dims, self.nlp_out, stage, field, value_data_p)
             elif field_ in mem_fields:
                 self.__acados_lib.ocp_nlp_set(self.nlp_solver, stage, field, value_data_p)
+            elif field_ in sens_fields:
+                self.__acados_lib.ocp_nlp_out_set.argtypes = \
+                    [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+                self.__acados_lib.ocp_nlp_out_set(self.nlp_config, \
+                    self.nlp_dims, self.sens_out, stage, field, value_data_p)
             # also set z_guess, when setting z.
             if field_ == 'z':
                 field = 'z_guess'.encode('utf-8')
@@ -1305,7 +1403,13 @@ class AcadosOcpSolver:
         return
 
 
-    def cost_set(self, stage_: int, field_: str, value_, api='warn') -> None:
+    def reset_sens_out(self):
+        self.__acados_lib.ocp_nlp_out_set_values_to_zero.argtypes = \
+                    [c_void_p, c_void_p, c_void_p]
+        self.__acados_lib.ocp_nlp_out_set_values_to_zero(self.nlp_config, self.nlp_dims, self.sens_out)
+
+
+    def cost_set(self, stage_: int, field_: str, value_, api='warn'):
         """
         Set numerical data in the cost module of the solver.
 

@@ -657,6 +657,18 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
 }
 
 
+void ocp_nlp_out_set_values_to_zero(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out)
+{
+    int N = dims->N;
+    for (int i = 0; i<=N; i++)
+    {
+        blasfeo_dvecse(dims->nv[i], 0.0, &out->ux[i], 0);
+        blasfeo_dvecse(dims->nz[i], 0.0, &out->z[i], 0);
+        blasfeo_dvecse(dims->nx[i+1], 0.0, &out->pi[i], 0);
+        blasfeo_dvecse(2*dims->ni[i], 0.0, &out->lam[i], 0);
+    }
+}
+
 
 void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
         int stage, const char *field, void *value)
@@ -1248,6 +1260,11 @@ void ocp_nlp_eval_params_jac(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp
     ocp_nlp_params_jac_compute(config, dims, nlp_in, nlp_opts, nlp_mem, nlp_work);
 }
 
+
+void ocp_nlp_eval_solution_sens_adj_p(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *sens_nlp_out, const char *field, int stage, double *out)
+{
+    solver->config->eval_solution_sens_adj_p(solver->config, solver->dims, solver->opts, solver->mem, solver->work, sens_nlp_out, field, stage, out);
+}
 
 
 void ocp_nlp_get(ocp_nlp_solver *solver, const char *field, void *return_value_)
