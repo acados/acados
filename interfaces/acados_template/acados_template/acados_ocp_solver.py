@@ -304,6 +304,15 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_get_from_iterate.argtypes = [c_void_p, c_int, c_int, c_char_p, c_void_p]
         self.__acados_lib.ocp_nlp_get_from_iterate.restypes = c_void_p
 
+        self.__acados_lib.ocp_nlp_dims_get_total_from_attr.argtypes = [c_void_p, c_void_p, c_char_p]
+        self.__acados_lib.ocp_nlp_dims_get_total_from_attr.restype = c_int
+
+        self.__acados_lib.ocp_nlp_get_all.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
+        self.__acados_lib.ocp_nlp_get_all.restype = None
+
+        self.__acados_lib.ocp_nlp_set_all.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
+        self.__acados_lib.ocp_nlp_set_all.restype = None
+
         getattr(self.shared_lib, f"{self.name}_acados_solve").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{self.name}_acados_solve").restype = c_int
 
@@ -867,6 +876,47 @@ class AcadosOcpSolver:
             self.__acados_lib.ocp_nlp_out_get(self.nlp_config, self.nlp_dims, out_pointer, stage_, field, out_data)
 
         return out
+
+
+    def get_flat(self, field_: str) -> np.ndarray:
+        """
+        Get concatenation of all stages of last solution of the solver.
+
+            :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su']
+        """
+        if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su']:
+            raise Exception(f'AcadosOcpSolver.get_flat(field={field_}): \'{field_}\' is an invalid argument.')
+
+        field = field_.encode('utf-8')
+
+        dims = self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, field)
+
+        out = np.ascontiguousarray(np.zeros((dims,)), dtype=np.float64)
+        out_data = cast(out.ctypes.data, POINTER(c_double))
+
+        self.__acados_lib.ocp_nlp_get_all(self.nlp_solver, self.nlp_in, self.nlp_out, field, out_data)
+        return out
+
+
+    def set_flat(self, field_: str, value_: np.ndarray) -> None:
+        """
+        Set concatenation solver initialization .
+
+            :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su']
+        """
+        field = field_.encode('utf-8')
+        if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su']:
+            raise Exception(f'AcadosOcpSolver.get_flat(field={field_}): \'{field_}\' is an invalid argument.')
+        dims = self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, field)
+
+        if len(value_) != dims:
+            raise Exception(f'AcadosOcpSolver.set_flat(field={field_}, value): value has wrong length, expected {dims}, got {len(value_)}.')
+
+        value_data = cast(value_.ctypes.data, POINTER(c_double))
+        value_data_p = cast((value_data), c_void_p)
+
+        self.__acados_lib.ocp_nlp_set_all(self.nlp_solver, self.nlp_in, self.nlp_out, field, value_data_p)
+        return
 
 
     def print_statistics(self):
