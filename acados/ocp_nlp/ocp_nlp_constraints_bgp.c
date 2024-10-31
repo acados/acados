@@ -978,6 +978,12 @@ void *ocp_nlp_constraints_bgp_memory_assign(void *config_, void *dims_, void *op
 }
 
 
+void ocp_nlp_constraints_bgp_model_set_dmask_ptr(struct blasfeo_dvec *dmask, void *model_)
+{
+    ocp_nlp_constraints_bgp_model *model = model_;
+    model->dmask = dmask;
+}
+
 
 struct blasfeo_dvec *ocp_nlp_constraints_bgp_memory_get_fun_ptr(void *memory_)
 {
@@ -1020,13 +1026,6 @@ void ocp_nlp_constraints_bgp_memory_set_DCt_ptr(struct blasfeo_dmat *DCt, void *
     ocp_nlp_constraints_bgp_memory *memory = memory_;
 
     memory->DCt = DCt;
-}
-
-
-void ocp_nlp_constraints_bgp_memory_set_dmask_ptr(struct blasfeo_dvec *dmask, void *memory_)
-{
-    ocp_nlp_constraints_bgp_memory *memory = memory_;
-    memory->dmask = dmask;
 }
 
 
@@ -1459,7 +1458,7 @@ void ocp_nlp_constraints_bgp_compute_fun(void *config_, void *dims_, void *model
     blasfeo_daxpy(2*ns, -1.0, ux, nu+nx, &model->d, 2*nb+2*ng+2*nphi, &memory->fun, 2*nb+2*ng+2*nphi);
 
     // fun = fun * mask
-    blasfeo_dvecmul(2*(nb+ng+nphi), memory->dmask, 0, &memory->fun, 0, &memory->fun, 0);
+    blasfeo_dvecmul(2*(nb+ng+nphi), model->dmask, 0, &memory->fun, 0, &memory->fun, 0);
 
     return;
 
@@ -1508,7 +1507,7 @@ void ocp_nlp_constraints_bgp_update_qp_vectors(void *config_, void *dims_, void 
         if (BLASFEO_DVECEL(&model->d, i) <= -ACADOS_INFTY)
         {
             // printf("found upper infinity bound\n");
-            BLASFEO_DVECEL(memory->dmask, i) = 0;
+            BLASFEO_DVECEL(model->dmask, i) = 0;
         }
     }
     for (int i = nb+ng+nphi; i < 2*(nb+ng+nphi); i++)
@@ -1516,7 +1515,7 @@ void ocp_nlp_constraints_bgp_update_qp_vectors(void *config_, void *dims_, void 
         if (BLASFEO_DVECEL(&model->d, i) >= ACADOS_INFTY)
         {
             // printf("found upper infinity bound\n");
-            BLASFEO_DVECEL(memory->dmask, i) = 0;
+            BLASFEO_DVECEL(model->dmask, i) = 0;
         }
     }
     for (int i = 2*(nb+ng+nphi); i < 2*(nb+ng+nphi+ns); i++)
@@ -1524,15 +1523,15 @@ void ocp_nlp_constraints_bgp_update_qp_vectors(void *config_, void *dims_, void 
         if (BLASFEO_DVECEL(&model->d, i) <= -ACADOS_INFTY)
         {
             // printf("found lower infinity bound on slacks\n");
-            BLASFEO_DVECEL(memory->dmask, i) = 0;
+            BLASFEO_DVECEL(model->dmask, i) = 0;
         }
     }
 
     // fun = fun * mask
-    blasfeo_dvecmul(2*(nb+ng+nphi+ns), memory->dmask, 0, &memory->fun, 0, &memory->fun, 0);
+    blasfeo_dvecmul(2*(nb+ng+nphi+ns), model->dmask, 0, &memory->fun, 0, &memory->fun, 0);
 
     // printf("BGH mask\n");
-    // blasfeo_print_tran_dvec(2*(nb+ng+nphi), memory->dmask, 0);
+    // blasfeo_print_tran_dvec(2*(nb+ng+nphi), model->dmask, 0);
     // blasfeo_print_exp_tran_dvec(2*(nb+ng+nphi), &model->d, 0);
 
     return;
@@ -1578,6 +1577,7 @@ void ocp_nlp_constraints_bgp_config_initialize_default(void *config_, int stage)
     config->model_assign = &ocp_nlp_constraints_bgp_model_assign;
     config->model_set = &ocp_nlp_constraints_bgp_model_set;
     config->model_get = &ocp_nlp_constraints_bgp_model_get;
+    config->model_set_dmask_ptr = &ocp_nlp_constraints_bgp_model_set_dmask_ptr;
     config->opts_calculate_size = &ocp_nlp_constraints_bgp_opts_calculate_size;
     config->opts_assign = &ocp_nlp_constraints_bgp_opts_assign;
     config->opts_initialize_default = &ocp_nlp_constraints_bgp_opts_initialize_default;
@@ -1592,7 +1592,6 @@ void ocp_nlp_constraints_bgp_config_initialize_default(void *config_, int stage)
     config->memory_set_DCt_ptr = &ocp_nlp_constraints_bgp_memory_set_DCt_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_constraints_bgp_memory_set_RSQrq_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_constraints_bgp_memory_set_z_alg_ptr;
-    config->memory_set_dmask_ptr = &ocp_nlp_constraints_bgp_memory_set_dmask_ptr;
     config->memory_set_dzdux_tran_ptr = &ocp_nlp_constraints_bgp_memory_set_dzduxt_ptr;
     config->memory_set_idxb_ptr = &ocp_nlp_constraints_bgp_memory_set_idxb_ptr;
     config->memory_set_idxs_rev_ptr = &ocp_nlp_constraints_bgp_memory_set_idxs_rev_ptr;

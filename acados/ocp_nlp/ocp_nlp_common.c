@@ -685,9 +685,11 @@ void ocp_nlp_dims_set_dynamics(void *config_, void *dims_, int stage,
 static acados_size_t ocp_nlp_in_calculate_size_self(ocp_nlp_dims *dims)
 {
     int N = dims->N;
+
     acados_size_t size = sizeof(ocp_nlp_in);
 
     size += N * sizeof(double);  // Ts
+
     // parameter values
     for (int i = 0; i <= N; i++)
     {
@@ -704,7 +706,14 @@ static acados_size_t ocp_nlp_in_calculate_size_self(ocp_nlp_dims *dims)
 
     size += (N + 1) * sizeof(void *);  // constraints
 
-    size += 4*8;  // aligns
+    size += (N + 1) * sizeof(struct blasfeo_dvec); // dmask
+
+    for (int i = 0; i <= N; i++)
+    {
+        size += blasfeo_memsize_dvec(2*dims->ni[i]); // dmask
+    }
+
+    size += 4*8 + 64;  // aligns
     return size;
 }
 
@@ -743,9 +752,10 @@ acados_size_t ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *di
 
 
 
-static ocp_nlp_in *ocp_nlp_in_assign_self(ocp_nlp_dims *dims, void *raw_memory)
+ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *raw_memory)
 {
     int N = dims->N;
+
     char *c_ptr = (char *) raw_memory;
 
     // initial align
@@ -755,30 +765,7 @@ static ocp_nlp_in *ocp_nlp_in_assign_self(ocp_nlp_dims *dims, void *raw_memory)
     ocp_nlp_in *in = (ocp_nlp_in *) c_ptr;
     c_ptr += sizeof(ocp_nlp_in);
 
-    // align
-    align_char_to(8, &c_ptr);
-
-    // double pointers
-    assign_and_advance_double_ptrs(N+1, &in->parameter_values, &c_ptr);
-
-    align_char_to(8, &c_ptr);
-
-    // doubles
-    // Ts
-    assign_and_advance_double(N, &in->Ts, &c_ptr);
-
-    // parameter values
-    for (int i = 0; i <= N; i++)
-    {
-        assign_and_advance_double(dims->np[i], &in->parameter_values[i], &c_ptr);
-        for (int ip = 0; ip < dims->np[i]; ip++)
-        {
-            in->parameter_values[i][ip] = 0.0;
-        }
-    }
-    assign_and_advance_double(dims->n_global_data, &in->global_data, &c_ptr);
-
-
+    // ** pointers to substructures **
     // dynamics
     in->dynamics = (void **) c_ptr;
     c_ptr += N * sizeof(void *);
@@ -791,24 +778,14 @@ static ocp_nlp_in *ocp_nlp_in_assign_self(ocp_nlp_dims *dims, void *raw_memory)
     in->constraints = (void **) c_ptr;
     c_ptr += (N + 1) * sizeof(void *);
 
+
+    // align
     align_char_to(8, &c_ptr);
 
-    assert((char *) raw_memory + ocp_nlp_in_calculate_size_self(dims) >= c_ptr);
+    // substructures
 
-    return in;
-}
-
-
-
-ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *raw_memory)
-{
-    int N = dims->N;
-
-    char *c_ptr = (char *) raw_memory;
-
-    // struct
-    ocp_nlp_in *in = ocp_nlp_in_assign_self(dims, c_ptr);
-    c_ptr += ocp_nlp_in_calculate_size_self(dims);
+    // dmask
+    assign_and_advance_blasfeo_dvec_structs(N + 1, &in->dmask, &c_ptr);
 
     // dynamics
     for (int i = 0; i < N; i++)
@@ -835,7 +812,44 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
                                                                dims->constraints[i]);
     }
 
+    // doubles
+    // Ts
+    assign_and_advance_double(N, &in->Ts, &c_ptr);
+
+    // double pointers
+    assign_and_advance_double_ptrs(N+1, &in->parameter_values, &c_ptr);
+    align_char_to(8, &c_ptr);
+
+    // parameter values
+    for (int i = 0; i <= N; i++)
+    {
+        assign_and_advance_double(dims->np[i], &in->parameter_values[i], &c_ptr);
+        for (int ip = 0; ip < dims->np[i]; ip++)
+        {
+            in->parameter_values[i][ip] = 0.0;
+        }
+    }
+    assign_and_advance_double(dims->n_global_data, &in->global_data, &c_ptr);
+
+
+    // blasfeo_mem align
+    align_char_to(64, &c_ptr);
+
+    // dmask
+    for (int i = 0; i <= N; ++i)
+    {
+        assign_and_advance_blasfeo_dvec_mem(2 * dims->ni[i], in->dmask + i, &c_ptr);
+    }
+
+    align_char_to(8, &c_ptr);
+
     assert((char *) raw_memory + ocp_nlp_in_calculate_size(config, dims) >= c_ptr);
+
+    for (int i = 0; i <= N; i++)
+    {
+        blasfeo_dvecse(2*dims->ni[i], 1.0, &in->dmask[i], 0);
+        config->constraints[i]->model_set_dmask_ptr(&in->dmask[i], in->constraints[i]);
+    }
 
     return in;
 }
@@ -2379,8 +2393,9 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
         config->constraints[i]->memory_set_idxb_ptr(nlp_mem->qp_in->idxb[i], nlp_mem->constraints[i]);
         config->constraints[i]->memory_set_idxs_rev_ptr(nlp_mem->qp_in->idxs_rev[i], nlp_mem->constraints[i]);
         config->constraints[i]->memory_set_idxe_ptr(nlp_mem->qp_in->idxe[i], nlp_mem->constraints[i]);
-        config->constraints[i]->memory_set_dmask_ptr(nlp_mem->qp_in->d_mask+i, nlp_mem->constraints[i]);
     }
+
+    nlp_mem->qp_in->d_mask = nlp_in->dmask;
 
     // alias to regularize memory
     ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, nlp_mem->qp_in);
