@@ -1470,18 +1470,16 @@ void ocp_nlp_get_from_iterate(ocp_nlp_solver *solver, int iter, int stage, const
 
 void ocp_nlp_get_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, const char *field, void *value)
 {
-    ocp_nlp_config *config = solver->config;
-    ocp_nlp_memory *nlp_mem;
     ocp_nlp_dims *dims = solver->dims;
 
     double *double_values = value;
     int tmp_offset = 0;
     int N = dims->N;
-    int tmp_int;
+    int tmp_int, stage;
 
     if (!strcmp(field, "x"))
     {
-        for (int stage = 0; stage < N+1; stage++)
+        for (stage = 0; stage < N+1; stage++)
         {
             tmp_int = dims->nx[stage];
             blasfeo_unpack_dvec(tmp_int, &out->ux[stage], dims->nu[stage], (double_values + tmp_offset), 1);
@@ -1490,7 +1488,7 @@ void ocp_nlp_get_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, c
     }
     else if (!strcmp(field, "u"))
     {
-        for (int stage = 0; stage < N; stage++)
+        for (stage = 0; stage < N; stage++)
         {
             tmp_int = dims->nu[stage];
             blasfeo_unpack_dvec(tmp_int, &out->ux[stage], 0, (double_values + tmp_offset), 1);
@@ -1499,7 +1497,7 @@ void ocp_nlp_get_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, c
     }
     else if (!strcmp(field, "sl"))
     {
-        for (int stage = 0; stage < N+1; stage++)
+        for (stage = 0; stage < N+1; stage++)
         {
             tmp_int = dims->ns[stage];
             blasfeo_unpack_dvec(tmp_int, &out->ux[stage], dims->nu[stage] + dims->nx[stage], (double_values + tmp_offset), 1);
@@ -1508,7 +1506,7 @@ void ocp_nlp_get_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, c
     }
     else if (!strcmp(field, "su"))
     {
-        for (int stage = 0; stage < N+1; stage++)
+        for (stage = 0; stage < N+1; stage++)
         {
             tmp_int = dims->ns[stage];
             blasfeo_unpack_dvec(tmp_int, &out->ux[stage], dims->nu[stage] + dims->nx[stage] + dims->ns[stage],
@@ -1518,7 +1516,7 @@ void ocp_nlp_get_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, c
     }
     else if (!strcmp(field, "s"))
     {
-        for (int stage = 0; stage < N+1; stage++)
+        for (stage = 0; stage < N+1; stage++)
         {
             tmp_int = 2*dims->ns[stage];
             blasfeo_unpack_dvec(tmp_int, &out->ux[stage], dims->nu[stage] + dims->nx[stage],
@@ -1528,7 +1526,7 @@ void ocp_nlp_get_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, c
     }
     else if (!strcmp(field, "z"))
     {
-        for (int stage = 0; stage < N+1; stage++)
+        for (stage = 0; stage < N; stage++)
         {
             tmp_int = dims->nz[stage];
             blasfeo_unpack_dvec(tmp_int, &out->z[stage], 0, (double_values + tmp_offset), 1);
@@ -1537,7 +1535,7 @@ void ocp_nlp_get_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, c
     }
     else if (!strcmp(field, "pi"))
     {
-        for (int stage = 0; stage < N; stage++)
+        for (stage = 0; stage < N; stage++)
         {
             tmp_int = dims->nx[stage+1];
             blasfeo_unpack_dvec(tmp_int, &out->pi[stage], 0, (double_values + tmp_offset), 1);
@@ -1546,7 +1544,7 @@ void ocp_nlp_get_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, c
     }
     else if (!strcmp(field, "lam"))
     {
-        for (int stage = 0; stage < N+1; stage++)
+        for (stage = 0; stage < N+1; stage++)
         {
             tmp_int = 2*dims->ni[stage];
             blasfeo_unpack_dvec(tmp_int, &out->lam[stage], 0, (double_values + tmp_offset), 1);
