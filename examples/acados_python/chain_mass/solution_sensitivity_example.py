@@ -439,8 +439,12 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
         # sensitivity_solver.load_iterate(filename="iterate.json", verbose=False)
 
         # using AcadosOcpIterate
-        iterate = ocp_solver.store_iterate_to_obj()
-        sensitivity_solver.load_iterate_from_obj(iterate)
+        # iterate = ocp_solver.store_iterate_to_obj()
+        # sensitivity_solver.load_iterate_from_obj(iterate)
+
+        # using AcadosOcpFlatIterate
+        iterate = ocp_solver.store_iterate_to_flat_obj()
+        sensitivity_solver.load_iterate_from_flat_obj(iterate)
 
         timings_store_load[i] = time.time() - t_start
 
