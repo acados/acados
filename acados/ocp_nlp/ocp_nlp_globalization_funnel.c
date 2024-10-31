@@ -84,7 +84,7 @@ void ocp_nlp_globalization_funnel_opts_initialize_default(void *config_, void *d
     opts->kappa = 0.9;
     opts->fraction_switching_condition = 1e-3;
     opts->initial_penalty_parameter = 1.0;
-    opts->penalty_contraction = 0.5;
+    opts->penalty_contraction = 5e-1;
     opts->penalty_eta = 1e-6;
     opts->type_switching_condition = false; // use ipopt/gould type of switching
 
@@ -231,6 +231,7 @@ static double compute_gradient_directional_derivative(ocp_nlp_dims *dims, ocp_qp
         dir_der += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
 
         // Calculate gradient of slacks
+        // we need to extract the gradient of the 
         dir_der += blasfeo_ddot(2 * ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
     }
     return dir_der;
@@ -247,7 +248,7 @@ void debug_output_double(ocp_nlp_opts *opts, char* message, double value, int pr
 {
     if (opts->print_level > print_level)
     {
-        printf("%s: %f\n", message, value); //debugging output
+        printf("%s: %.5e\n", message, value); //debugging output
     }
 }
 
@@ -263,14 +264,22 @@ void initialize_funnel_penalty_parameter(ocp_nlp_globalization_funnel_memory *me
 }
 
 void update_funnel_penalty_parameter(ocp_nlp_globalization_funnel_memory *mem,
-                                            ocp_nlp_globalization_funnel_opts *opts,
-                                            double pred_f, double pred_h)
+                                     ocp_nlp_globalization_funnel_opts *opts,
+                                     ocp_nlp_opts *nlp_opts,
+                                     double pred_optimality,
+                                     double pred_infeasibility)
 {
-    if (mem->penalty_parameter * pred_f + pred_h < opts->penalty_eta * pred_h)
+    debug_output(nlp_opts, "-- Objective Multiplier Update: \n",1);
+    debug_output_double(nlp_opts, "left hand side: ", mem->penalty_parameter * pred_optimality + pred_infeasibility, 2);
+    debug_output_double(nlp_opts, "right hand side: ", opts->penalty_eta * pred_infeasibility, 2);
+    //TODO(david): What do we do here to make it correct? We would like to avoid numerical noise
+    if (pred_optimality < 0 && pred_optimality > -1e-4)
     {
-
-        mem->penalty_parameter = fmax(fmin(opts->penalty_contraction * mem->penalty_parameter,
-                                             ((1-opts->penalty_eta) * pred_h) / (fmax(-pred_f, 1e-7))), 1e-5);
+        pred_optimality = 0.0;
+    }
+    if (mem->penalty_parameter * pred_optimality + pred_infeasibility < opts->penalty_eta * pred_infeasibility)
+    {
+        mem->penalty_parameter = fmin(opts->penalty_contraction * mem->penalty_parameter, ((1-opts->penalty_eta) * pred_infeasibility) / (-pred_optimality + 1e-9));
     }
     // else: do not decrease penalty parameter
 }
@@ -347,7 +356,7 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
     ocp_nlp_globalization_funnel_opts *opts = nlp_opts->globalization;
     ocp_nlp_globalization_opts *globalization_opts = opts->globalization_opts;
     bool accept_step = false;
-    debug_output(nlp_opts, "-- ENTERING FUNNEL GLOBALIZATION -- \n", 1);
+    debug_output_double(nlp_opts, "-- FUNNEL TEST with alpha: ", alpha, 2);
     debug_output_double(nlp_opts, "current objective", current_objective, 2);
     debug_output_double(nlp_opts, "current infeasibility", current_infeasibility, 2);
     debug_output_double(nlp_opts, "trial objective", trial_objective, 2);
@@ -432,6 +441,7 @@ int backtracking_line_search(ocp_nlp_config *config,
                             ocp_nlp_opts *nlp_opts,
                             double *step_size)
 {
+    debug_output(nlp_opts, "-- ENTERING FUNNEL GLOBALIZATION -- \n", 1);
     ocp_nlp_globalization_funnel_opts *opts = nlp_opts->globalization;
     ocp_nlp_globalization_opts *globalization_opts = opts->globalization_opts;
     ocp_nlp_globalization_funnel_memory *mem = nlp_mem->globalization;
@@ -445,6 +455,7 @@ int backtracking_line_search(ocp_nlp_config *config,
     // else
     // {
     // }
+    // TODO(david): Could it be that the gradient is already multiplied by the penalty parameter?? 
     pred_optimality = -compute_gradient_directional_derivative(dims, nlp_mem->qp_in, nlp_mem->qp_out);
     double pred_merit = 0.0; // Calculate this here
     double pred_infeasibility = nlp_mem->predicted_infeasibility_reduction;
@@ -460,8 +471,7 @@ int backtracking_line_search(ocp_nlp_config *config,
     mem->penalty_parameter = nlp_mem->objective_multiplier;
     debug_output_double(nlp_opts, "pred_optimality", pred_optimality, 2);
     debug_output_double(nlp_opts, "pred_infeasibility", pred_infeasibility, 2);
-    update_funnel_penalty_parameter(mem, opts, pred_optimality, pred_infeasibility);
-    // update_funnel_penalty_parameter(mem, opts, pred, mem->l1_infeasibility);
+    update_funnel_penalty_parameter(mem, opts, nlp_opts, pred_optimality, pred_infeasibility);
     double current_merit = mem->penalty_parameter*current_cost + current_infeasibility; // Shouldn't this be the update below??
     nlp_mem->objective_multiplier = mem->penalty_parameter;
 

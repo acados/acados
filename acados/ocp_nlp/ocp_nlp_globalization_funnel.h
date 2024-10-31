@@ -109,8 +109,10 @@ void debug_output_double(ocp_nlp_opts *opts, char* message, double value, int pr
 void initialize_funnel_width(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double initial_infeasibility);
 //
 void update_funnel_penalty_parameter(ocp_nlp_globalization_funnel_memory *mem,
-                                            ocp_nlp_globalization_funnel_opts *opts,
-                                            double pred_f, double pred_h);
+                                     ocp_nlp_globalization_funnel_opts *opts,
+                                     ocp_nlp_opts *nlp_opts,
+                                     double pred_optimality,
+                                     double pred_infeasibility);
 //
 void decrease_funnel(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double trial_infeasibility, double current_infeasibility);
 //
