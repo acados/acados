@@ -1516,6 +1516,16 @@ void ocp_nlp_get_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, c
             tmp_offset += tmp_int;
         }
     }
+    else if (!strcmp(field, "s"))
+    {
+        for (int stage = 0; stage < N+1; stage++)
+        {
+            tmp_int = 2*dims->ns[stage];
+            blasfeo_unpack_dvec(tmp_int, &out->ux[stage], dims->nu[stage] + dims->nx[stage],
+                                (double_values + tmp_offset), 1);
+            tmp_offset += tmp_int;
+        }
+    }
     else if (!strcmp(field, "z"))
     {
         for (int stage = 0; stage < N+1; stage++)
