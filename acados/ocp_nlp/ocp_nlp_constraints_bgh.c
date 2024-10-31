@@ -603,6 +603,29 @@ void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims_, void *raw_
 }
 
 
+void ocp_nlp_constraints_bgh_update_mask_lower(ocp_nlp_constraints_bgh_model *model, int size, int offset)
+{
+    for (int ii = 0; ii < size; ii++)
+    {
+        if (BLASFEO_DVECEL(&model->d, offset + ii) <= -ACADOS_INFTY)
+            BLASFEO_DVECEL(model->dmask, offset + ii) = 0;
+        else
+            BLASFEO_DVECEL(model->dmask, offset + ii) = 1;
+    }
+}
+
+
+void ocp_nlp_constraints_bgh_update_mask_upper(ocp_nlp_constraints_bgh_model *model, int size, int offset)
+{
+    for (int ii = 0; ii < size; ii++)
+    {
+        if (BLASFEO_DVECEL(&model->d, offset + ii) >= ACADOS_INFTY)
+            BLASFEO_DVECEL(model->dmask, offset + ii) = 0;
+        else
+            BLASFEO_DVECEL(model->dmask, offset + ii) = 1;
+    }
+}
+
 
 int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
                          void *model_, const char *field, void *value)
@@ -648,21 +671,13 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     {
         offset = nbu;
         blasfeo_pack_dvec(nbx, value, 1, &model->d, offset);
-        for (ii = 0; ii < nbx; ii++)
-        {
-            if (BLASFEO_DVECEL(&model->d, offset + ii) <= -ACADOS_INFTY)
-                BLASFEO_DVECEL(model->dmask, offset + ii) = 0;
-        }
+        ocp_nlp_constraints_bgh_update_mask_lower(model, nbx, offset);
     }
     else if (!strcmp(field, "ubx"))
     {
         offset = nb + ng + nh + nbu;
         blasfeo_pack_dvec(nbx, value, 1, &model->d, offset);
-        for (ii = 0; ii < nbx; ii++)
-        {
-            if (BLASFEO_DVECEL(&model->d, offset + ii) >= ACADOS_INFTY)
-                BLASFEO_DVECEL(model->dmask, offset + ii) = 0;
-        }
+        ocp_nlp_constraints_bgh_update_mask_upper(model, nbx, offset);
     }
     else if (!strcmp(field, "idxbu"))
     {
@@ -672,22 +687,16 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lbu"))
     {
-        blasfeo_pack_dvec(nbu, value, 1, &model->d, 0);
-        for (ii = 0; ii < nbu; ii++)
-        {
-            if (BLASFEO_DVECEL(&model->d, ii) <= -ACADOS_INFTY)
-                BLASFEO_DVECEL(model->dmask, ii) = 0;
-        }
+        offset = 0;
+        blasfeo_pack_dvec(nbu, value, 1, &model->d, offset);
+        ocp_nlp_constraints_bgh_update_mask_lower(model, nbu, offset);
+
     }
     else if (!strcmp(field, "ubu"))
     {
         offset = nb + ng + nh;
         blasfeo_pack_dvec(nbu, value, 1, &model->d, offset);
-        for (ii = 0; ii < nbu; ii++)
-        {
-            if (BLASFEO_DVECEL(&model->d, offset + ii) >= ACADOS_INFTY)
-                BLASFEO_DVECEL(model->dmask, offset + ii) = 0;
-        }
+        ocp_nlp_constraints_bgh_update_mask_upper(model, nbu, offset);
     }
     else if (!strcmp(field, "C"))
     {
@@ -701,41 +710,27 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     {
         offset = nb;
         blasfeo_pack_dvec(ng, value, 1, &model->d, offset);
-        for (ii = 0; ii < ng; ii++)
-        {
-            if (BLASFEO_DVECEL(&model->d, offset + ii) <= -ACADOS_INFTY)
-                BLASFEO_DVECEL(model->dmask, offset + ii) = 0;
-        }
+        ocp_nlp_constraints_bgh_update_mask_lower(model, ng, offset);
+
     }
     else if (!strcmp(field, "ug"))
     {
         offset = 2*nb+ng+nh;
         blasfeo_pack_dvec(ng, value, 1, &model->d, offset);
-        for (ii = 0; ii < ng; ii++)
-        {
-            if (BLASFEO_DVECEL(&model->d, offset + ii) >= ACADOS_INFTY)
-                BLASFEO_DVECEL(model->dmask, offset + ii) = 0;
-        }
+        ocp_nlp_constraints_bgh_update_mask_upper(model, ng, offset);
+
     }
     else if (!strcmp(field, "lh"))
     {
         offset = nb+ng;
         blasfeo_pack_dvec(nh, value, 1, &model->d, offset);
-        for (ii = 0; ii < nh; ii++)
-        {
-            if (BLASFEO_DVECEL(&model->d, offset + ii) <= -ACADOS_INFTY)
-                BLASFEO_DVECEL(model->dmask, offset + ii) = 0;
-        }
+        ocp_nlp_constraints_bgh_update_mask_lower(model, nh, offset);
     }
     else if (!strcmp(field, "uh"))
     {
         offset = 2*nb+2*ng+nh;
         blasfeo_pack_dvec(nh, value, 1, &model->d, offset);
-        for (ii = 0; ii < nh; ii++)
-        {
-            if (BLASFEO_DVECEL(&model->d, offset + ii) >= ACADOS_INFTY)
-                BLASFEO_DVECEL(model->dmask, offset + ii) = 0;
-        }
+        ocp_nlp_constraints_bgh_update_mask_upper(model, nh, offset);
     }
     else if (!strcmp(field, "idxsbu"))
     {
@@ -747,21 +742,13 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     {
         offset = 2*nb+2*ng+2*nh;
         blasfeo_pack_dvec(nsbu, value, 1, &model->d, offset);
-        for (ii = 0; ii < nsbu; ii++)
-        {
-            if (BLASFEO_DVECEL(&model->d, offset + ii) <= -ACADOS_INFTY)
-                BLASFEO_DVECEL(model->dmask, offset + ii) = 0;
-        }
+        ocp_nlp_constraints_bgh_update_mask_lower(model, nsbu, offset);
     }
     else if (!strcmp(field, "usbu"))
     {
         offset = 2*nb+2*ng+2*nh+ns;
         blasfeo_pack_dvec(nsbu, value, 1, &model->d, offset);
-        for (ii = 0; ii < nsbu; ii++)
-        {
-            if (BLASFEO_DVECEL(&model->d, offset + ii) <= -ACADOS_INFTY)
-                BLASFEO_DVECEL(model->dmask, offset + ii) = 0;
-        }
+        ocp_nlp_constraints_bgh_update_mask_lower(model, nsbu, offset);
     }
     else if (!strcmp(field, "idxsbx"))
     {
@@ -773,21 +760,14 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     {
         offset = 2*nb+2*ng+2*nh+nsbu;
         blasfeo_pack_dvec(nsbx, value, 1, &model->d, offset);
-        for (ii = 0; ii < nsbx; ii++)
-        {
-            if (BLASFEO_DVECEL(&model->d, offset + ii) <= -ACADOS_INFTY)
-                BLASFEO_DVECEL(model->dmask, offset + ii) = 0;
-        }
+        ocp_nlp_constraints_bgh_update_mask_lower(model, nsbx, offset);
     }
     else if (!strcmp(field, "usbx"))
     {
         offset = 2*nb+2*ng+2*nh+ns+nsbu;
         blasfeo_pack_dvec(nsbx, value, 1, &model->d, offset);
-        for (ii = 0; ii < nsbx; ii++)
-        {
-            if (BLASFEO_DVECEL(&model->d, offset + ii) <= -ACADOS_INFTY)
-                BLASFEO_DVECEL(model->dmask, offset + ii) = 0;
-        }
+        ocp_nlp_constraints_bgh_update_mask_lower(model, nsbx, offset);
+
     }
     else if (!strcmp(field, "idxsg"))
     {
@@ -799,21 +779,13 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     {
         offset = 2*nb+2*ng+2*nh+nsbu+nsbx;
         blasfeo_pack_dvec(nsg, value, 1, &model->d, offset);
-        for (ii = 0; ii < nsg; ii++)
-        {
-            if (BLASFEO_DVECEL(&model->d, offset + ii) <= -ACADOS_INFTY)
-                BLASFEO_DVECEL(model->dmask, offset + ii) = 0;
-        }
+        ocp_nlp_constraints_bgh_update_mask_lower(model, nsg, offset);
     }
     else if (!strcmp(field, "usg"))
     {
         offset = 2*nb+2*ng+2*nh+ns+nsbu+nsbx;
         blasfeo_pack_dvec(nsg, value, 1, &model->d, offset);
-        for (ii = 0; ii < nsg; ii++)
-        {
-            if (BLASFEO_DVECEL(&model->d, offset + ii) <= -ACADOS_INFTY)
-                BLASFEO_DVECEL(model->dmask, offset + ii) = 0;
-        }
+        ocp_nlp_constraints_bgh_update_mask_lower(model, nsg, offset);
     }
     else if (!strcmp(field, "idxsh"))
     {
@@ -825,21 +797,14 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     {
         offset = 2*nb+2*ng+2*nh+nsbu+nsbx+nsg;
         blasfeo_pack_dvec(nsh, value, 1, &model->d, offset);
-        for (ii = 0; ii < nsh; ii++)
-        {
-            if (BLASFEO_DVECEL(&model->d, offset + ii) <= -ACADOS_INFTY)
-                BLASFEO_DVECEL(model->dmask, offset + ii) = 0;
-        }
+        ocp_nlp_constraints_bgh_update_mask_lower(model, nsh, offset);
+
     }
     else if (!strcmp(field, "ush"))
     {
         offset = 2*nb+2*ng+2*nh+ns+nsbu+nsbx+nsg;
         blasfeo_pack_dvec(nsh, value, 1, &model->d, offset);
-        for (ii = 0; ii < nsh; ii++)
-        {
-            if (BLASFEO_DVECEL(&model->d, offset + ii) <= -ACADOS_INFTY)
-                BLASFEO_DVECEL(model->dmask, offset + ii) = 0;
-        }
+        ocp_nlp_constraints_bgh_update_mask_lower(model, nsh, offset);
     }
     else if (!strcmp(field, "idxbue"))
     {
