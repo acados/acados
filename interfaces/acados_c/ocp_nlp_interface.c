@@ -723,6 +723,65 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
 }
 
 
+int ocp_nlp_dims_get_total_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, const char *field)
+{
+    int N = dims->N;
+
+    int size = 0;
+    int stage;
+    if (!strcmp(field, "x"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            size += dims->nx[stage];
+        }
+    }
+    else if (!strcmp(field, "u"))
+    {
+        for (stage = 0; stage < N; stage++)
+        {
+            size += dims->nu[stage];
+        }
+    }
+    else if (!strcmp(field, "sl") || !strcmp(field, "su"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            size += dims->ns[stage];
+        }
+    }
+    else if (!strcmp(field, "s"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            size += 2*dims->ns[stage];
+        }
+    }
+    else if (!strcmp(field, "z"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            size += dims->nz[stage];
+        }
+    }
+    else if (!strcmp(field, "pi"))
+    {
+        for (stage = 0; stage < N; stage++)
+        {
+            size += dims->nx[stage+1];
+        }
+    }
+    else if (!strcmp(field, "lam"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            size += 2*dims->ni[stage];
+        }
+    }
+    return size;
+}
+
+
 
 int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
         int stage, const char *field)
@@ -1466,6 +1525,7 @@ void ocp_nlp_get_from_iterate(ocp_nlp_solver *solver, int iter, int stage, const
     }
     ocp_nlp_out_get(config, dims, nlp_mem->iterates[iter], stage, field, value);
 }
+
 
 
 void ocp_nlp_get_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, const char *field, void *value)
