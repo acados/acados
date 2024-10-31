@@ -56,7 +56,7 @@ from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
                     acados_lib_is_compiled_with_openmp)
-from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates
+from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
 
 
 class AcadosOcpSolver:
@@ -1126,6 +1126,32 @@ class AcadosOcpSolver:
 
             for n, val in enumerate(traj):
                 self.set(n, field, val)
+
+
+    def store_iterate_to_flat_obj(self) -> AcadosOcpFlattenedIterate:
+        """
+        Returns the current iterate of the OCP solver as an AcadosOcpFlattenedIterate.
+        """
+        return AcadosOcpFlattenedIterate(x = self.get_flat("x"),
+                                        u = self.get_flat("u"),
+                                        z = self.get_flat("z"),
+                                        sl = self.get_flat("sl"),
+                                        su = self.get_flat("su"),
+                                        pi = self.get_flat("pi"),
+                                        lam = self.get_flat("lam"))
+
+    def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedIterate) -> None:
+        """
+        Loads the provided iterate into the OCP solver.
+        Note: The iterate object does not contain the the parameters.
+        """
+        self.set_flat("x", iterate.x)
+        self.set_flat("u", iterate.u)
+        self.set_flat("z", iterate.z)
+        self.set_flat("sl", iterate.sl)
+        self.set_flat("su", iterate.su)
+        self.set_flat("pi", iterate.pi)
+        self.set_flat("lam", iterate.lam)
 
 
     def get_status(self) -> int:
