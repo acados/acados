@@ -682,9 +682,10 @@ void ocp_nlp_dims_set_dynamics(void *config_, void *dims_, int stage,
  * in
  ************************************************/
 
-static acados_size_t ocp_nlp_in_calculate_size_self(ocp_nlp_dims *dims)
+acados_size_t ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
 {
     int N = dims->N;
+    int i;
 
     acados_size_t size = sizeof(ocp_nlp_in);
 
@@ -695,6 +696,7 @@ static acados_size_t ocp_nlp_in_calculate_size_self(ocp_nlp_dims *dims)
     {
         size += dims->np[i] * sizeof(double);
     }
+
     // global_data
     size += dims->n_global_data * sizeof(double);
 
@@ -713,37 +715,26 @@ static acados_size_t ocp_nlp_in_calculate_size_self(ocp_nlp_dims *dims)
         size += blasfeo_memsize_dvec(2*dims->ni[i]); // dmask
     }
 
-    size += 4*8 + 64;  // aligns
-    return size;
-}
-
-
-
-acados_size_t ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
-{
-    int N = dims->N;
-
-    acados_size_t size = ocp_nlp_in_calculate_size_self(dims);
-
     // dynamics
-    for (int i = 0; i < N; i++)
+    for (i = 0; i < N; i++)
     {
-        size +=
-            config->dynamics[i]->model_calculate_size(config->dynamics[i], dims->dynamics[i]);
+        size += config->dynamics[i]->model_calculate_size(config->dynamics[i], dims->dynamics[i]);
     }
 
     // cost
-    for (int i = 0; i <= N; i++)
+    for (i = 0; i <= N; i++)
     {
         size += config->cost[i]->model_calculate_size(config->cost[i], dims->cost[i]);
     }
 
     // constraints
-    for (int i = 0; i <= N; i++)
+    for (i = 0; i <= N; i++)
     {
         size += config->constraints[i]->model_calculate_size(config->constraints[i],
-                                                              dims->constraints[i]);
+                                                             dims->constraints[i]);
     }
+
+    size += 4*8 + 64;  // aligns
 
     make_int_multiple_of(8, &size);
 
@@ -778,11 +769,10 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
     in->constraints = (void **) c_ptr;
     c_ptr += (N + 1) * sizeof(void *);
 
-
     // align
     align_char_to(8, &c_ptr);
 
-    // substructures
+    // ** substructures **
 
     // dmask
     assign_and_advance_blasfeo_dvec_structs(N + 1, &in->dmask, &c_ptr);
@@ -812,7 +802,7 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
                                                                dims->constraints[i]);
     }
 
-    // doubles
+    // ** doubles **
     // Ts
     assign_and_advance_double(N, &in->Ts, &c_ptr);
 
@@ -830,7 +820,6 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
         }
     }
     assign_and_advance_double(dims->n_global_data, &in->global_data, &c_ptr);
-
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
