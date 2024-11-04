@@ -34,7 +34,6 @@ import scipy.linalg
 from linear_mass_model import *
 from itertools import product
 
-
 # an OCP to test Maratos effect an second order correction
 
 def main():
@@ -61,8 +60,6 @@ def feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, 
     for i in range(N+1):
         idxs = ocp_solver.get_from_qp_in(i,"idxs")
         idxb = ocp_solver.get_from_qp_in(i,"idxb")
-        print("idxs: ", idxs)
-        print("idxb: ", idxb)
 
         # Initial stage
         if i == 0:
@@ -95,11 +92,9 @@ def feasible_qp_index_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N,
     for i in range(N+1):
         idxs = ocp_solver.get_from_qp_in(i,"idxs").squeeze()
         idxb = ocp_solver.get_from_qp_in(i,"idxb").squeeze()
-        print("idxs: ", idxs)
 
         # Initial stage
         if i == 0:
-            print("idxb: ", idxb)
             assert np.allclose(idxb, np.arange(dims.nbx_0 + dims.nbu)) , f"We should have {dims.nbx} bounds on x and u, but got {len(idxb)}"
 
             if not SOFTEN_CONTROLS:
@@ -127,14 +122,15 @@ def create_solver_opts(N=4, Tf=2):
     # set options
     solver_options.N_horizon = N
     solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    # solver_options.hessian_approx = 'EXACT'
+    # solver_options.regularize_method = 'MIRROR'
     solver_options.hessian_approx = 'GAUSS_NEWTON'
     solver_options.integrator_type = 'ERK'
     solver_options.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'
-    solver_options.globalization = 'FIXED_STEP'
-    solver_options.globalization_alpha_min = 0.01
+    solver_options.globalization = 'FUNNEL_L1PEN_LINESEARCH'
     solver_options.globalization_full_step_dual = True
-    solver_options.print_level = 1
-    solver_options.nlp_solver_max_iter = 200
+    solver_options.print_level = 3
+    solver_options.nlp_solver_max_iter = 10
     solver_options.qp_solver_iter_max = 400
     qp_tol = 5e-7
     solver_options.qp_solver_tol_stat = qp_tol
@@ -144,6 +140,7 @@ def create_solver_opts(N=4, Tf=2):
     solver_options.qp_solver_ric_alg = 1
     solver_options.qp_solver_mu0 = 1e4
     solver_options.qp_solver_warm_start = 1
+    solver_options.initial_objective_multiplier = 1e1
 
     # set prediction horizon
     solver_options.tf = Tf
@@ -260,8 +257,9 @@ def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT):
     sqp_iter = ocp_solver.get_stats('sqp_iter')
     print(f'acados returned status {status}.')
 
-    feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver)
-    feasible_qp_index_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver)
+    if ocp.solver_options.nlp_solver_type == 'SQP_WITH_FEASIBLE_QP':
+        feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver)
+        feasible_qp_index_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver)
 
     # get solution
     simX = np.array([ocp_solver.get(i,"x") for i in range(N+1)])
