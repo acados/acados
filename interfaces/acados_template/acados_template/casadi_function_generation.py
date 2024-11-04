@@ -32,7 +32,7 @@ from typing import Union, List, Optional
 
 import os
 import casadi as ca
-from .utils import is_empty, casadi_length, check_casadi_version_supports_p_global
+from .utils import is_empty, casadi_length, check_casadi_version_supports_p_global, print_casadi_expression
 from .acados_model import AcadosModel
 from .acados_ocp_constraints import AcadosOcpConstraints
 
@@ -162,6 +162,8 @@ class GenerateContext:
         fun_name = f'{self.problem_name}_p_global_precompute_fun'
         self.add_function_definition(fun_name, [self.p_global], [self.global_data_expr], output_dir)
 
+        # self.print_global_data_summary()
+
         assert casadi_length(self.global_data_expr) == casadi_length(self.global_data_sym), f"Length mismatch: {casadi_length(self.global_data_expr)} != {casadi_length(self.global_data_sym)}"
 
     def finalize(self):
@@ -183,6 +185,13 @@ class GenerateContext:
                 continue
             out.append(f"{rel_fun_dir}/{fun_name}.c")
         return out
+
+    def print_global_data_summary(self) -> None:
+        if casadi_length(self.global_data_expr) == 0:
+            print("\nGenerateContext: detected empty global_data_expr.")
+        else:
+            print("\nGenerateContext: detected global_data_expr:\n")
+            print_casadi_expression(self.global_data_expr)
 
 ################
 # Dynamics
@@ -718,7 +727,6 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
 
             context.add_function_definition(fun_name, [x, u, lam_h, z, p], \
                     [con_h_expr, jac_ux_t, hess_ux, jac_z_t, hess_z], constraints_dir)
-
 
         if stage_type == 'terminal':
             fun_name = model.name + '_constr_h_e_fun'

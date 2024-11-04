@@ -29,6 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+from typing import Union
 import json
 import os
 import shutil
@@ -505,7 +506,7 @@ def idx_perm_to_ipiv(idx_perm):
     return ipiv
 
 
-def print_casadi_expression(f):
+def print_casadi_expression(f: Union[MX, SX, DM]):
     for ii in range(casadi_length(f)):
         print(f[ii,:])
 

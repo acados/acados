@@ -90,6 +90,9 @@ typedef struct ocp_nlp_config
                             char *field, int stage, int index, void *sens_nlp_out);
     void (*eval_lagr_grad_p)(void *config, void *dims, void *nlp_in, void *opts_, void *mem, void *work,
                             const char *field, void *grad_p);
+    void (*eval_solution_sens_adj_p)(void *config_, void *dims_,
+                        void *opts_, void *mem_, void *work_, void *sens_nlp_out,
+                        const char *field, int stage, void *grad_p);
     void (*step_update)(void *config, void *dims, void *in,
             void *out_start, void *opts, void *mem, void *work,
             void *out_destination, void* solver_mem, double alpha, bool full_step_dual);
@@ -408,6 +411,9 @@ typedef struct ocp_nlp_memory
     struct blasfeo_dvec *dyn_fun;
     struct blasfeo_dvec *dyn_adj;
 
+    // optimal value gradient wrt params
+    struct blasfeo_dvec out_np_global;
+
     double cost_value;
     double qp_cost_value;
     int compute_hess;
@@ -460,8 +466,8 @@ typedef struct ocp_nlp_workspace
     struct blasfeo_dvec dxnext_dy;
 
     // optimal value gradient wrt params
+    struct blasfeo_dmat *tmp_nvninx_np_global;
     struct blasfeo_dvec tmp_np_global;
-    struct blasfeo_dvec out_np_global;
     // AS-RTI
     double *tmp_nv_double;
 
@@ -530,6 +536,11 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
 void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
                         ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
                         const char *field, void *grad_p);
+//
+void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
+                        ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
+                        ocp_nlp_out *sens_nlp_out, const char *field, int stage, void *grad_p);
+
 //
 void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,

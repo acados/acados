@@ -42,7 +42,7 @@ def plot_timings(results_list, keys, labels, figure_filename=None):
         raise ValueError("Number of labels and result files do not match")
 
     width = 0.8
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(7.5, 6))
     bottom = np.zeros(num_entries)
 
     for i, k in enumerate(keys):

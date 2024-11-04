@@ -68,3 +68,13 @@ class AcadosOcpIterates:
             raise Exception(f"Stage-wise dimensions are not the same for {field} trajectory.")
 
         return traj
+
+@dataclass
+class AcadosOcpFlattenedIterate:
+    x: np.ndarray
+    u: np.ndarray
+    z: np.ndarray
+    sl: np.ndarray
+    su: np.ndarray
+    pi: np.ndarray
+    lam: np.ndarray

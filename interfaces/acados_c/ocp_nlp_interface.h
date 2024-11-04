@@ -306,6 +306,13 @@ ACADOS_SYMBOL_EXPORT void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage
 
 ACADOS_SYMBOL_EXPORT void ocp_nlp_get_from_iterate(ocp_nlp_solver *solver, int iter, int stage, const char *field, void *value);
 
+
+ACADOS_SYMBOL_EXPORT void ocp_nlp_get_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, const char *field, void *value);
+
+
+ACADOS_SYMBOL_EXPORT void ocp_nlp_set_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, const char *field, void *value);
+
+
 // TODO(andrea): remove this once/if the MATLAB interface uses the new setters below?
 ACADOS_SYMBOL_EXPORT int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
         int stage, const char *field);
@@ -318,6 +325,8 @@ ACADOS_SYMBOL_EXPORT void ocp_nlp_cost_dims_get_from_attr(ocp_nlp_config *config
 
 ACADOS_SYMBOL_EXPORT void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
         int stage, const char *field, int *dims_out);
+
+int ocp_nlp_dims_get_total_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, const char *field);
 
 /* opts */
 
@@ -418,6 +427,9 @@ ACADOS_SYMBOL_EXPORT void ocp_nlp_eval_param_sens(ocp_nlp_solver *solver, char *
 
 // Computes the gradient of the Lagrange function wrt parameters
 ACADOS_SYMBOL_EXPORT void ocp_nlp_eval_lagrange_grad_p(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, const char *field, double *out);
+
+
+void ocp_nlp_eval_solution_sens_adj_p(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *sens_nlp_out, const char *field, int stage, double *out);
 
 /* get */
 /// \param solver The solver struct.
