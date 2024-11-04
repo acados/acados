@@ -184,6 +184,9 @@ function [state_trajectories, timing] = run_example_ocp(lut, use_p_global, blazi
     % OCP solver
     ocp_solver = AcadosOcpSolver(ocp);
 
+    disp('code gen dir')
+    ocp_solver.code_gen_dir
+
     state_trajectories = [];  % only for testing purposes
 
     if use_p_global
@@ -225,6 +228,9 @@ function [state_trajectories, timing] = run_example_mocp(lut, use_p_global, blaz
 
     % MOCP solver
     mocp_solver = AcadosOcpSolver(mocp);
+
+    disp('code gen dir')
+    mocp_solver.code_gen_dir
 
     state_trajectories = []; % only for testing purposes
 
