@@ -89,9 +89,9 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
         sensitivity_solver.set_p_global_and_precompute_dependencies(p_val)
         u_opt[i] = acados_ocp_solver.solve_for_x0(x0)[0]
 
-        acados_ocp_solver.store_iterate(filename='iterate.json', overwrite=True, verbose=False)
+        iterate = acados_ocp_solver.store_iterate_to_flat_obj()
 
-        sensitivity_solver.load_iterate(filename='iterate.json', verbose=False)
+        sensitivity_solver.load_iterate_from_flat_obj(iterate)
         sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
         # residuals = sensitivity_solver.get_stats("residuals")
         # print(f"residuals sensitivity_solver {residuals} status {sensitivity_solver.status}")
