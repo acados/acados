@@ -52,6 +52,7 @@ function main()
     fprintf('max diff blazing vs. bspline %f\n', max(max(abs(state_trajectories_with_blazing_ref - state_trajectories_without_blazing_ref))))
 
     %% Standard OCP without splines
+    disp("Running OCP tests without splines.")
     [state_trajectories_no_lut_ref, ~] = run_example_ocp(false, false, true);
     [state_trajectories_no_lut, ~] = run_example_ocp(false, true, true);
 
@@ -61,6 +62,8 @@ function main()
 
 
     %% Multi-phase OCP
+    disp("Running MOCP tests.")
+
     [state_trajectories_no_lut_ref, ~] = run_example_mocp(false, false, true);
     [state_trajectories_no_lut, ~] = run_example_mocp(false, true, true);
 
@@ -76,14 +79,10 @@ function main()
     end
 
     %% Simulink test
+    disp("Running Simulink test.")
     if ~is_octave()
         run_example_ocp_simulink_p_global();
     end
-
-    %% Timing comparison
-    fprintf('\t\tbspline\t\tblazing\n');
-    fprintf('ref\t\t%f \t%f\n', t_tot_with_bspline_ref, t_tot_with_blazing_ref);
-    fprintf('p_global\t%f \t%f\n', t_tot_with_bspline, t_tot_with_blazing);
 
 end
 
@@ -179,7 +178,7 @@ function [state_trajectories, timing] = run_example_ocp(lut, use_p_global, blazi
     % OCP formulation
     ocp = create_ocp_formulation_without_opts(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing);
     ocp = set_solver_options(ocp);
-    ocp.model.name = ['pendulum_blazing_' mat2str(blazing) '_p_global_' mat2str(use_p_global)];
+    ocp.model.name = ['pendulum_blazing_' mat2str(blazing) '_p_global_' mat2str(use_p_global) '_lut_' mat2str(lut)];
     ocp.json_file = ['acados_ocp_' ocp.model.name '.json'];
 
     % OCP solver
@@ -219,10 +218,12 @@ function [state_trajectories, timing] = run_example_mocp(lut, use_p_global, blaz
     % Create p_global parameters
     [p_global, m, l, coefficients, ~, knots, p_global_values] = create_p_global(lut);
 
-    % OCP formulation
+    % MOCP formulation
     mocp = create_mocp_formulation(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing);
+    mocp.model.name = ['pendulum_mocp_blazing_' mat2str(blazing) '_p_global_' mat2str(use_p_global) '_lut_' mat2str(lut)];
+    mocp.json_file = ['acados_mocp_' ocp.model.name '.json'];
 
-    % OCP solver
+    % MOCP solver
     mocp_solver = AcadosOcpSolver(mocp);
 
     state_trajectories = []; % only for testing purposes
