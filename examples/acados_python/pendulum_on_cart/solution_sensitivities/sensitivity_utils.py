@@ -123,7 +123,7 @@ def export_parametric_ocp(
     ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg
     ocp.solver_options.hessian_approx = hessian_approx
     if hessian_approx == 'EXACT':
-        ocp.solver_options.nlp_solver_step_length = 0.0
+        ocp.solver_options.globalization_fixed_step_length = 0.0
         ocp.solver_options.nlp_solver_max_iter = 1
         ocp.solver_options.qp_solver_iter_max = 200
         ocp.solver_options.tol = 1e-10
