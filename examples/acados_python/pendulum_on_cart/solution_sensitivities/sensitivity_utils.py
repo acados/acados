@@ -100,6 +100,11 @@ def export_pendulum_ode_model_with_mass_as_p_global(dt) -> AcadosModel:
     model.p_global = p
     model.name = model_name
 
+    # store meta information
+    model.x_labels = ['$x$ [m]', r'$\theta$ [rad]', '$v$ [m]', r'$\dot{\theta}$ [rad/s]']
+    model.u_labels = ['$F$']
+    model.t_label = '$t$ [s]'
+
     return model
 
 
