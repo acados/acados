@@ -692,7 +692,7 @@ acados_size_t ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *di
     size += N * sizeof(double);  // Ts
 
     // parameter values
-    for (int i = 0; i <= N; i++)
+    for (i = 0; i <= N; i++)
     {
         size += dims->np[i] * sizeof(double);
     }
@@ -710,7 +710,7 @@ acados_size_t ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *di
 
     size += (N + 1) * sizeof(struct blasfeo_dvec); // dmask
 
-    for (int i = 0; i <= N; i++)
+    for (i = 0; i <= N; i++)
     {
         size += blasfeo_memsize_dvec(2*dims->ni[i]); // dmask
     }
