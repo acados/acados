@@ -97,7 +97,7 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True):
         ([5], [seed_xstage], [seed_ustage]),
     ]:
         # Calculate the policy gradient
-        sens_x_forw, sens_u_forw = sensitivity_solver.eval_solution_sensitivity(stages, "params_global")
+        sens_x_forw, sens_u_forw = sensitivity_solver.eval_solution_sensitivity(stages, "p_global")
 
         adj_p_ref = sum([seed_x_list[k].T @ sens_x_forw[k] + seed_u_list[k].T @ sens_u_forw[k] for k in range(len(stages))])
 
