@@ -1040,16 +1040,24 @@ class AcadosOcpSolver:
         if verbose:
             print("stored current iterate in ", os.path.join(os.getcwd(), filename))
 
-    def qp_diagnostics(self, hessian_type: str):
+    def qp_diagnostics(self, hessian_type: str='FULL_HESSIAN'):
             """
             Compute some diagnostic values for the last QP.
-            result = ocp_solver.qp_diagnostics([partially_condensed_qp=false])
+            result = ocp_solver.qp_diagnostics(hessian_type). Possible values are
+            'FULL_HESSIAN' or 'PROJECTED_HESSIAN'
 
-            returns a tuple with the following fields:
-            - min_ev: dict with minimum eigenvalue for each Hessian block.
-            - max_ev: dict with maximum eigenvalue for each Hessian block.
+            returns a dictionary with the following fields:
+            - min_eigv_stage: dict with minimum eigenvalue for each Hessian block.
+            - max_eigv_stage: dict with maximum eigenvalue for each Hessian block.
             - condition_number: dict with condition number for each Hessian block.
-            - condition_number_global: condition number for the full Hessian.
+            - condition_number_total: condition number for the full Hessian.
+            - min_eigv_total: minimum eigenvalue for the full Hessian.
+            - min_abs_eigv_total: minimum absolute eigenvalue for the full Hessian.
+            - max_eigv_total: maximum eigenvalue for the full Hessian.
+
+            for the 'PROJECTED_HESSIAN' it also includes 
+            - min_eig_P: minimum eigenvalue of P matrices
+            - min_abs_eig_P: minimum absolute eigenvalue of P matrices
             """
             if type(hessian_type) != str:
                 raise TypeError("Input should be string with value FULL_HESSIAN, REDUCED_HESSIAN")
@@ -1073,6 +1081,7 @@ class AcadosOcpSolver:
                     eigv = np.linalg.eigvals(hess_block_acados)
                     min_eigv = np.min(eigv)
                     max_eigv = np.max(eigv)
+
                     min_eigv_total = min(min_eigv, min_eigv_total)
                     max_eigv_total = max(max_eigv, max_eigv_total)
                     min_abs_eigv = min(min_abs_eigv, np.min(np.abs(eigv)))
@@ -1105,6 +1114,7 @@ class AcadosOcpSolver:
                     Lr = self.get_from_qp_in(i-1, 'Lr')
                     R_ric = Lr @ Lr.T
                     proj_hess_block = R_ric + B_mat.T @ P_mat @ B_mat
+
                     eigv = np.linalg.eigvals(proj_hess_block)
                     min_eigv = np.min(eigv)
                     max_eigv = np.max(eigv)
