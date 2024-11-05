@@ -220,7 +220,7 @@ function [state_trajectories, timing] = run_example_mocp(lut, use_p_global, blaz
 
     % MOCP formulation
     mocp = create_mocp_formulation(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing);
-    ocp.model.name = ['blz' mat2str(blazing) '_pglbl_' mat2str(use_p_global) '_lut_' mat2str(lut)];
+    mocp.model.name = ['blz' mat2str(blazing) '_pglbl_' mat2str(use_p_global) '_lut_' mat2str(lut)];
     mocp.json_file = ['mocp_' ocp.model.name '.json'];
 
     % MOCP solver
