@@ -76,6 +76,7 @@ classdef {{ model.name }}_mex_sim_solver < handle
         function delete(obj)
             disp("delete template...");
             return_dir = pwd();
+            disp(['code gen dir: ' obj.code_gen_dir]);
             cd(obj.code_gen_dir);
             if ~isempty(obj.C_sim)
                 acados_sim_free_{{ model.name }}(obj.C_sim);

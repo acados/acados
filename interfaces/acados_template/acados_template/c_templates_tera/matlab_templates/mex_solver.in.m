@@ -57,6 +57,7 @@ classdef {{ name }}_mex_solver < handle
         function delete(obj)
             disp("delete template...");
             return_dir = pwd();
+            disp(['code gen dir: ' obj.code_gen_dir]);
             cd(obj.code_gen_dir);
             if ~isempty(obj.C_ocp)
                 acados_mex_free_{{ name }}(obj.C_ocp);
