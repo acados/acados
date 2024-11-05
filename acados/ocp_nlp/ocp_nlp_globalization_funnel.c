@@ -448,15 +448,7 @@ int backtracking_line_search(ocp_nlp_config *config,
 
     int N = dims->N;
     double pred_optimality;
-    // if (opts->type_switching_condition)
-    // {
-    //     pred = -nlp_mem->qp_cost_value;
-    // }
-    // else
-    // {
-    // }
-    // TODO(david): Could it be that the gradient is already multiplied by the penalty parameter?? 
-    pred_optimality = -compute_gradient_directional_derivative(dims, nlp_mem->qp_in, nlp_mem->qp_out);
+    pred_optimality = nlp_mem->predicted_optimality_reduction;//-compute_gradient_directional_derivative(dims, nlp_mem->qp_in, nlp_mem->qp_out);
     double pred_merit = 0.0; // Calculate this here
     double pred_infeasibility = nlp_mem->predicted_infeasibility_reduction;
     double alpha = 1.0;

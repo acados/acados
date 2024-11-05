@@ -1001,6 +1001,33 @@ static void set_non_slacked_l2_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
     // print_ocp_qp_in(qp_in);
 }
 
+static double compute_gradient_directional_derivative(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
+{
+    // Compute the directional derivative in the direction of the search direction
+    double dir_der = 0.0;
+    int i, nux;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    int *nns = mem->nns;
+    // Sum over stages 0 to N
+    for (i = 0; i <= N; i++)
+    {
+        nux = nx[i] + nu[i];
+        // Calculate g.T d
+        dir_der += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
+
+        // Calculate gradient of slacks.T d_slacks
+        // First part of slacks
+        dir_der += blasfeo_ddot(ns[i], &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
+        // Second part of slacks
+        dir_der += blasfeo_ddot(ns[i], &qp_out->ux[i], nux+ns[i]+nns[i], &qp_in->rqz[i], nux+ns[i]+nns[i]);
+    }
+    return dir_der;
+}
+
+
 /*
 Calculates the norm of the search direction, but the additional slack directions are removed.
 If the problem is infeasibe, or the algorithm converges towards an infeasible point,
@@ -1680,14 +1707,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             nlp_mem->qp_cost_value = ocp_nlp_compute_qp_objective_value(dims, qp_in, qp_out, nlp_work);
             nlp_mem->predicted_infeasibility_reduction = pred_l1_inf_search_direction;
-            // is this correct?
-            if (kappa == 1.0)
-            {
-                nlp_mem->predicted_infeasibility_reduction = pred_l1_inf_QP_optimality;
-            }
-            else
-            {
-            }
+            nlp_mem->predicted_optimality_reduction = -compute_gradient_directional_derivative(mem, dims, qp_in, qp_out);
         }
 
         // Compute the step norm
