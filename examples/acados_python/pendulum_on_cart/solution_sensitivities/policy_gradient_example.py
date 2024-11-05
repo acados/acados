@@ -33,6 +33,7 @@ from acados_template import AcadosOcpSolver
 from sensitivity_utils import plot_results, export_parametric_ocp
 
 
+
 def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=False):
     """
     Evaluate policy and calculate its gradient for the pendulum on a cart with a parametric model.
