@@ -31,11 +31,11 @@
 
 
 {%- if solver_options.hessian_approx %}
-	{%- set hessian_approx = solver_options.hessian_approx %}
+    {%- set hessian_approx = solver_options.hessian_approx %}
 {%- elif solver_options.sens_hess %}
-	{%- set hessian_approx = "EXACT" %}
+    {%- set hessian_approx = "EXACT" %}
 {%- else %}
-	{%- set hessian_approx = "GAUSS_NEWTON" %}
+    {%- set hessian_approx = "GAUSS_NEWTON" %}
 {%- endif %}
 
 SOURCES = [ 'acados_sim_solver_sfunction_{{ model.name }}.c ', ...
@@ -115,10 +115,10 @@ fprintf(output_note)
 % ---
 % global sfun_sim_input_names sfun_sim_output_names
 % for i = 1:length(sfun_sim_input_names)
-% 	port_label('input', i, sfun_sim_input_names{i})
+%     port_label('input', i, sfun_sim_input_names{i})
 % end
 % for i = 1:length(sfun_sim_output_names)
-% 	port_label('output', i, sfun_sim_output_names{i})
+%     port_label('output', i, sfun_sim_output_names{i})
 % end
 % ---
 % It can be used by copying it in sfunction/Mask/Edit mask/Icon drawing commands

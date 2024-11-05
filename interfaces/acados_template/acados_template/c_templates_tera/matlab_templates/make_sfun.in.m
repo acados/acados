@@ -564,10 +564,10 @@ fprintf(output_note)
 % ---
 % global sfun_input_names sfun_output_names
 % for i = 1:length(sfun_input_names)
-% 	port_label('input', i, sfun_input_names{i})
+%     port_label('input', i, sfun_input_names{i})
 % end
 % for i = 1:length(sfun_output_names)
-% 	port_label('output', i, sfun_output_names{i})
+%     port_label('output', i, sfun_output_names{i})
 % end
 % ---
 % It can be used by copying it in sfunction/Mask/Edit mask/Icon drawing commands

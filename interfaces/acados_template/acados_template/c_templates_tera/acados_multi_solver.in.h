@@ -76,7 +76,7 @@ typedef struct {{ name }}_solver_capsule
     external_function_casadi p_global_precompute_fun;
 {%- endif %}
 
-	{%- for jj in range(end=n_phases) %}{# phases loop !#}
+    {%- for jj in range(end=n_phases) %}{# phases loop !#}
     /* external functions phase {{ jj }} */
     // dynamics
 {% if mocp_opts.integrator_type[jj] == "ERK" %}
@@ -141,7 +141,7 @@ typedef struct {{ name }}_solver_capsule
     external_function_external_param_{{ cost[jj].cost_ext_fun_type }} *ext_cost_hess_xu_p_{{ jj }};
     {% endif %}
 {% endif %}
-	{%- endfor %}{# for jj in range(end=n_phases) #}
+    {%- endfor %}{# for jj in range(end=n_phases) #}
 
 
 {% if cost_0.cost_type_0 == "NONLINEAR_LS" %}
