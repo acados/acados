@@ -70,7 +70,7 @@ typedef struct
     void (*opts_update)(void *config, void *dims, void *opts);
     void (*opts_set)(void *config, void *opts, const char *field, void *value);
     acados_size_t (*memory_calculate_size)(void *config, void *dims, void *opts);
-	double *(*memory_get_fun_ptr)(void *memory);
+    double *(*memory_get_fun_ptr)(void *memory);
     struct blasfeo_dvec *(*memory_get_grad_ptr)(void *memory);
     struct blasfeo_dvec *(*model_get_y_ref_ptr)(void *memory);
     struct blasfeo_dmat *(*memory_get_W_chol_ptr)(void *memory_);

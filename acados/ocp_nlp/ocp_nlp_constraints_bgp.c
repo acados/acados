@@ -551,7 +551,7 @@ void *ocp_nlp_constraints_bgp_model_assign(void *config, void *dims_, void *raw_
     int nge = dims->nge;
     int nphie = dims->nphie;
 
-	int ii;
+    int ii;
 
     // struct
     ocp_nlp_constraints_bgp_model *model = (ocp_nlp_constraints_bgp_model *) c_ptr;
@@ -584,9 +584,9 @@ void *ocp_nlp_constraints_bgp_model_assign(void *config, void *dims_, void *raw_
     // h
     //  model->nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux = NULL;
 
-	// default initialization
-	for(ii=0; ii<nbue+nbxe+nge+nphie; ii++)
-		model->idxe[ii] = 0;
+    // default initialization
+    for(ii=0; ii<nbue+nbxe+nge+nphie; ii++)
+        model->idxe[ii] = 0;
 
     // assert
     assert((char *) raw_memory + ocp_nlp_constraints_bgp_model_calculate_size(config, dims) >=
@@ -1404,12 +1404,12 @@ void ocp_nlp_constraints_bgp_compute_fun(void *config_, void *dims_, void *model
     // nonlinear
     if (nphi > 0)
     {
-		if(nz > 0)
-		{
-			// TODO
-			printf("\nerror: ocp_nlp_constraints_bgp_compute_fun: not implemented yet for nz>0\n");
-			exit(1);
-		}
+        if(nz > 0)
+        {
+            // TODO
+            printf("\nerror: ocp_nlp_constraints_bgp_compute_fun: not implemented yet for nz>0\n");
+            exit(1);
+        }
 
         struct blasfeo_dvec_args x_in;  // input x of external fun;
         x_in.x = ux;
@@ -1419,7 +1419,7 @@ void ocp_nlp_constraints_bgp_compute_fun(void *config_, void *dims_, void *model
         u_in.x = ux;
         u_in.xi = 0;
 
-		// TODO tmp_z_alg !!!
+        // TODO tmp_z_alg !!!
         struct blasfeo_dvec_args z_in;  // input z of external fun;
         z_in.x = memory->z_alg;
         z_in.xi = 0;
@@ -1428,23 +1428,23 @@ void ocp_nlp_constraints_bgp_compute_fun(void *config_, void *dims_, void *model
         fun_out.x = &work->tmp_ni;
         fun_out.xi = nb + ng;
 
-		ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
-		ext_fun_in[0] = &x_in;
-		ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
-		ext_fun_in[1] = &u_in;
-		ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
-		ext_fun_in[2] = &z_in;
+        ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[0] = &x_in;
+        ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[1] = &u_in;
+        ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[2] = &z_in;
 
-		ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
-		ext_fun_out[0] = &fun_out;  // fun: nphi
+        ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
+        ext_fun_out[0] = &fun_out;  // fun: nphi
 
         if (model->nl_constr_phi_o_r_fun == 0)
         {
             printf("ocp_nlp_constraints_bgp_compute_fun: nl_constr_phi_o_r_fun is not provided. Exiting.\n");
             exit(1);
         }
-		model->nl_constr_phi_o_r_fun->evaluate(model->nl_constr_phi_o_r_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
-	}
+        model->nl_constr_phi_o_r_fun->evaluate(model->nl_constr_phi_o_r_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+    }
 
     blasfeo_daxpy(nb+ng+nphi, -1.0, &work->tmp_ni, 0, &model->d, 0, &memory->fun, 0);
     blasfeo_daxpy(nb+ng+nphi, -1.0, &model->d, nb+ng+nphi, &work->tmp_ni, 0, &memory->fun, nb+ng+nphi);
