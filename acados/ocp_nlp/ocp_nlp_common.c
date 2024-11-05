@@ -1484,12 +1484,26 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
         }
     }
 
+    if (opts->with_solution_sens_wrt_params)
+    {
+        size += 2*(N+1)*sizeof(struct blasfeo_dmat); // tmp_nv_x_np_global, tmp_2ni_x_np_global
+        size += N * sizeof(struct blasfeo_dmat);  // tmp_nxnext_x_np_global
+        for (int i = 0; i <= N; i++)
+        {
+            size += blasfeo_memsize_dmat(nv[i], np_global);  // tmp_nv_x_np_global
+            size += blasfeo_memsize_dmat(2*ni[i], np_global);  // tmp_2ni_x_np_global
+        }
+        for (int i = 0; i < N; i++)
+        {
+            size += blasfeo_memsize_dmat(nx[i+1], np_global);  // tmp_nxnext_x_np_global
+        }
+    }
+
     // nlp res
     size += ocp_nlp_res_calculate_size(dims);
 
     // timings
     size += sizeof(struct ocp_nlp_timings);
-
 
     size += (N+1)*sizeof(bool); // set_sim_guess
 
@@ -1652,6 +1666,13 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     // blasfeo_struct align
     align_char_to(8, &c_ptr);
 
+    if (opts->with_solution_sens_wrt_params)
+    {
+        assign_and_advance_blasfeo_dmat_structs(N + 1, &mem->tmp_nv_x_np_global, &c_ptr);
+        assign_and_advance_blasfeo_dmat_structs(N + 1, &mem->tmp_2ni_x_np_global, &c_ptr);
+        assign_and_advance_blasfeo_dmat_structs(N, &mem->tmp_nxnext_x_np_global, &c_ptr);
+    }
+
     // dzduxt
     assign_and_advance_blasfeo_dmat_structs(N + 1, &mem->dzduxt, &c_ptr);
 
@@ -1679,6 +1700,20 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
+
+    // blasfeo_dmat
+    if (opts->with_solution_sens_wrt_params)
+    {
+        for (int i = 0; i <= N; i++)
+        {
+            assign_and_advance_blasfeo_dmat_mem(nv[i], np_global, mem->tmp_nv_x_np_global+i, &c_ptr);
+            assign_and_advance_blasfeo_dmat_mem(2*ni[i], np_global, mem->tmp_2ni_x_np_global+i, &c_ptr);
+        }
+        for (int i = 0; i < N; i++)
+        {
+            assign_and_advance_blasfeo_dmat_mem(nx[i+1], np_global, mem->tmp_nxnext_x_np_global+i, &c_ptr);
+        }
+    }
 
     // dzduxt
     for (i=0; i<=N; i++)
@@ -1790,21 +1825,6 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
     size += 1 * blasfeo_memsize_dvec(ni_max);
 
     size += 1 * blasfeo_memsize_dvec(np_global); //  tmp_np_global;
-
-    if (opts->with_solution_sens_wrt_params)
-    {
-        size += 2*(N+1)*sizeof(struct blasfeo_dmat); // tmp_nv_x_np_global, tmp_2ni_x_np_global
-        size += N * sizeof(struct blasfeo_dmat);  // tmp_nxnext_x_np_global
-        for (int i = 0; i <= N; i++)
-        {
-            size += blasfeo_memsize_dmat(nv[i], np_global);  // tmp_nv_x_np_global
-            size += blasfeo_memsize_dmat(2*ni[i], np_global);  // tmp_2ni_x_np_global
-        }
-        for (int i = 0; i < N; i++)
-        {
-            size += blasfeo_memsize_dmat(nx[i+1], np_global);  // tmp_nxnext_x_np_global
-        }
-    }
 
     // array of pointers
     // cost
@@ -2035,29 +2055,9 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     c_ptr += ocp_nlp_out_calculate_size(config, dims);
 
     assign_and_advance_double(nv_max, &work->tmp_nv_double, &c_ptr);
-    if (opts->with_solution_sens_wrt_params)
-    {
-        assign_and_advance_blasfeo_dmat_structs(N + 1, &work->tmp_nv_x_np_global, &c_ptr);
-        assign_and_advance_blasfeo_dmat_structs(N + 1, &work->tmp_2ni_x_np_global, &c_ptr);
-        assign_and_advance_blasfeo_dmat_structs(N, &work->tmp_nxnext_x_np_global, &c_ptr);
-    }
 
     // align for blasfeo mem
     align_char_to(64, &c_ptr);
-
-    // blasfeo_dmat
-    if (opts->with_solution_sens_wrt_params)
-    {
-        for (int i = 0; i <= N; i++)
-        {
-            assign_and_advance_blasfeo_dmat_mem(nv[i], np_global, work->tmp_nv_x_np_global+i, &c_ptr);
-            assign_and_advance_blasfeo_dmat_mem(2*ni[i], np_global, work->tmp_2ni_x_np_global+i, &c_ptr);
-        }
-        for (int i = 0; i < N; i++)
-        {
-            assign_and_advance_blasfeo_dmat_mem(nx[i+1], np_global, work->tmp_nxnext_x_np_global+i, &c_ptr);
-        }
-    }
 
     // blasfeo_dvec
     assign_and_advance_blasfeo_dvec_mem(nv_max, &work->tmp_nv, &c_ptr);
@@ -3184,9 +3184,9 @@ void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_
     int *nx = dims->nx;
 
     ocp_qp_in *tmp_qp_in = work->tmp_qp_in;
-    struct blasfeo_dmat *tmp_nv_x_np_global = work->tmp_nv_x_np_global;
-    struct blasfeo_dmat *tmp_2ni_x_np_global = work->tmp_2ni_x_np_global;
-    struct blasfeo_dmat *tmp_nxnext_x_np_global = work->tmp_nxnext_x_np_global;
+    struct blasfeo_dmat *tmp_nv_x_np_global = mem->tmp_nv_x_np_global;
+    struct blasfeo_dmat *tmp_2ni_x_np_global = mem->tmp_2ni_x_np_global;
+    struct blasfeo_dmat *tmp_nxnext_x_np_global = mem->tmp_nxnext_x_np_global;
 
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
@@ -3242,9 +3242,9 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
     int *ni = dims->ni;
     int *nx = dims->nx;
 
-    struct blasfeo_dmat *tmp_nv_x_np_global = work->tmp_nv_x_np_global;
-    // struct blasfeo_dmat *tmp_2ni_x_np_global = work->tmp_2ni_x_np_global;
-    struct blasfeo_dmat *tmp_nxnext_x_np_global = work->tmp_nxnext_x_np_global;
+    struct blasfeo_dmat *tmp_nv_x_np_global = mem->tmp_nv_x_np_global;
+    // struct blasfeo_dmat *tmp_2ni_x_np_global = mem->tmp_2ni_x_np_global;
+    struct blasfeo_dmat *tmp_nxnext_x_np_global = mem->tmp_nxnext_x_np_global;
 
     ocp_qp_in *tmp_qp_in = work->tmp_qp_in;
     ocp_qp_out *tmp_qp_out = work->tmp_qp_out;
@@ -3304,9 +3304,9 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
     // int *nu = dims->nu;
     int *nx = dims->nx;
 
-    struct blasfeo_dmat *tmp_nv_x_np_global = work->tmp_nv_x_np_global;
-    struct blasfeo_dmat *tmp_2ni_x_np_global = work->tmp_2ni_x_np_global;
-    struct blasfeo_dmat *tmp_nxnext_x_np_global = work->tmp_nxnext_x_np_global;
+    struct blasfeo_dmat *tmp_nv_x_np_global = mem->tmp_nv_x_np_global;
+    struct blasfeo_dmat *tmp_2ni_x_np_global = mem->tmp_2ni_x_np_global;
+    struct blasfeo_dmat *tmp_nxnext_x_np_global = mem->tmp_nxnext_x_np_global;
 
     ocp_qp_in *tmp_qp_in = work->tmp_qp_in;
     ocp_qp_out *tmp_qp_out = work->tmp_qp_out;

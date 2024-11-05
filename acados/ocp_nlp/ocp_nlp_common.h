@@ -410,6 +410,9 @@ typedef struct ocp_nlp_memory
     struct blasfeo_dvec *dyn_adj;
 
     // optimal value gradient wrt params
+    struct blasfeo_dmat *tmp_nv_x_np_global;
+    struct blasfeo_dmat *tmp_2ni_x_np_global;
+    struct blasfeo_dmat *tmp_nxnext_x_np_global;
     struct blasfeo_dvec out_np_global;
 
     double cost_value;
@@ -464,9 +467,6 @@ typedef struct ocp_nlp_workspace
     struct blasfeo_dvec dxnext_dy;
 
     // optimal value gradient wrt params
-    struct blasfeo_dmat *tmp_nv_x_np_global;
-    struct blasfeo_dmat *tmp_2ni_x_np_global;
-    struct blasfeo_dmat *tmp_nxnext_x_np_global;
     struct blasfeo_dvec tmp_np_global;
     // AS-RTI
     double *tmp_nv_double;
