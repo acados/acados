@@ -129,7 +129,7 @@ def detect_constr(model: AcadosModel, constraints: AcadosOcpConstraints, stage_t
     z = model.z
     nx = x.shape[0]
     nu = u.shape[0]
-    # nz = z.shape[0] # TODO
+    nz = z.shape[0]
 
     if isinstance(x, ca.SX):
         isSX = True
@@ -184,7 +184,11 @@ def detect_constr(model: AcadosModel, constraints: AcadosOcpConstraints, stage_t
     for ii in range(expr_constr.shape[0]):
         c = expr_constr[ii]
         # TODO or any(ca.which_depends(c, model.p_global)):
-        if any(ca.which_depends(c, z)) or not ca.is_linear(c, ca.vertcat(x, u)) or any(ca.which_depends(c, model.p)):
+        if any(ca.which_depends(c, z)) or \
+                not ca.is_linear(c, ca.vertcat(x, u)) or \
+                any(ca.which_depends(c, model.p)) or \
+                any(ca.which_depends(c, model.p_global)):
+
             # External constraint
             constr_expr_h = ca.vertcat(constr_expr_h, c)
             lh.append(LB[ii])
