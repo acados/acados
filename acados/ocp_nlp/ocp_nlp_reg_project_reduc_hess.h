@@ -66,7 +66,7 @@ typedef struct
     double thr_eig;
     double min_eig;
     double min_pivot;
-	int pivoting;
+    int pivoting;
 } ocp_nlp_reg_project_reduc_hess_opts;
 
 //

@@ -308,9 +308,9 @@ typedef struct
     // struct blasfeo_dmat *Lxdot;
     // struct blasfeo_dmat *Lz;
 
-	double time_sim;
-	double time_ad;
-	double time_la;
+    double time_sim;
+    double time_ad;
+    double time_la;
 
 } sim_gnsf_memory;
 

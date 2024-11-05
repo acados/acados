@@ -454,13 +454,13 @@ void ocp_nlp_dynamics_disc_memory_get(void *config_, void *dims_, void *mem_, co
 
     if (!strcmp(field, "time_sim") || !strcmp(field, "time_sim_ad") || !strcmp(field, "time_sim_la"))
     {
-		double *ptr = value;
+        double *ptr = value;
         *ptr = 0;
     }
     else
     {
-		printf("\nerror: ocp_nlp_dynamics_disc_memory_get: field %s not available\n", field);
-		exit(1);
+        printf("\nerror: ocp_nlp_dynamics_disc_memory_get: field %s not available\n", field);
+        exit(1);
     }
 
 }
@@ -772,16 +772,16 @@ void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims_, void *model_,
     fun_out.x = &memory->fun;
     fun_out.xi = 0;
 
-	ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
-	ext_fun_in[0] = &x_in;
-	ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
-	ext_fun_in[1] = &u_in;
+    ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[0] = &x_in;
+    ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[1] = &u_in;
 
-	ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
-	ext_fun_out[0] = &fun_out;  // fun: nx1
+    ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
+    ext_fun_out[0] = &fun_out;  // fun: nx1
 
-	// call external function
-	model->disc_dyn_fun->evaluate(model->disc_dyn_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+    // call external function
+    model->disc_dyn_fun->evaluate(model->disc_dyn_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
     // fun
     blasfeo_daxpy(nx1, -1.0, ux1, nu1, &memory->fun, 0, &memory->fun, 0);
@@ -816,22 +816,22 @@ void ocp_nlp_dynamics_disc_compute_jac_hess_p(void *config_, void *dims_, void *
     pi_in.x = memory->pi;
     pi_in.xi = 0;
 
-	ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
-	ext_fun_in[0] = &x_in;
-	ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
-	ext_fun_in[1] = &u_in;
+    ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[0] = &x_in;
+    ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[1] = &u_in;
 
-	ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
-	ext_fun_in[2] = &pi_in;
+    ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[2] = &pi_in;
 
-	ext_fun_type_out[0] = BLASFEO_DMAT;
-	ext_fun_out[0] = &memory->params_jac;  // jac: nx1 x np_global
+    ext_fun_type_out[0] = BLASFEO_DMAT;
+    ext_fun_out[0] = &memory->params_jac;  // jac: nx1 x np_global
 
-	ext_fun_type_out[1] = BLASFEO_DMAT;
-	ext_fun_out[1] = &memory->params_lag_jac;  // jac: nxnu x np_global
+    ext_fun_type_out[1] = BLASFEO_DMAT;
+    ext_fun_out[1] = &memory->params_lag_jac;  // jac: nxnu x np_global
 
-	// call external function
-	model->disc_dyn_phi_jac_p_hess_xu_p->evaluate(model->disc_dyn_phi_jac_p_hess_xu_p, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+    // call external function
+    model->disc_dyn_phi_jac_p_hess_xu_p->evaluate(model->disc_dyn_phi_jac_p_hess_xu_p, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
     return;
 }
@@ -939,24 +939,24 @@ void ocp_nlp_dynamics_disc_compute_adj_p(void* config_, void *dims_, void *model
     pi_in.x = memory->pi;
     pi_in.xi = 0;
 
-	ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
-	ext_fun_in[0] = &x_in;
-	ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
-	ext_fun_in[1] = &u_in;
+    ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[0] = &x_in;
+    ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[1] = &u_in;
 
-	ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
-	ext_fun_in[2] = &pi_in;
+    ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[2] = &pi_in;
 
-	ext_fun_type_out[0] = BLASFEO_DVEC;
-	ext_fun_out[0] = out;
+    ext_fun_type_out[0] = BLASFEO_DVEC;
+    ext_fun_out[0] = out;
 
-	// call external function
+    // call external function
     if (model->disc_dyn_adj_p == NULL)
     {
         printf("ocp_nlp_dynamics_disc_compute_adj_p - model->disc_dyn_adj_p is NULL\n");
         exit(1);
     }
-	model->disc_dyn_adj_p->evaluate(model->disc_dyn_adj_p, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+    model->disc_dyn_adj_p->evaluate(model->disc_dyn_adj_p, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
     return;
 }
