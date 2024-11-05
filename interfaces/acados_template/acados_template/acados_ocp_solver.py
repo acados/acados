@@ -1072,7 +1072,7 @@ class AcadosOcpSolver:
 
                     eigv = np.linalg.eigvals(hess_block_acados)
                     min_eigv = np.min(eigv)
-                    max_eigv = np.min(eigv)
+                    max_eigv = np.max(eigv)
                     min_eigv_total = min(min_eigv, min_eigv_total)
                     max_eigv_total = max(max_eigv, max_eigv_total)
                     min_abs_eigv = min(min_abs_eigv, np.min(np.abs(eigv)))
