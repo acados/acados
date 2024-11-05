@@ -219,8 +219,9 @@ function [state_trajectories, timing] = run_example_mocp(lut, use_p_global, blaz
     [p_global, m, l, coefficients, ~, knots, p_global_values] = create_p_global(lut);
 
     % MOCP formulation
-    mocp = create_mocp_formulation(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing);
-    mocp.name = ['blz' mat2str(blazing) '_pglbl_' mat2str(use_p_global) '_lut_' mat2str(lut)];
+    name = ['blz' mat2str(blazing) '_pglbl_' mat2str(use_p_global) '_lut_' mat2str(lut)];
+    mocp = create_mocp_formulation(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing, name);
+    mocp.name = name;
     mocp.json_file = ['mocp_' mocp.name '.json'];
 
     % MOCP solver
@@ -277,13 +278,15 @@ function ocp = set_solver_options(ocp)
     ocp.solver_options.ext_fun_compile_flags = flags;
 end
 
-function mocp = create_mocp_formulation(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing)
+function mocp = create_mocp_formulation(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing, name)
 
     N_horizon_1 = 10;
     N_horizon_2 = 10;
     mocp = AcadosMultiphaseOcp([N_horizon_1, N_horizon_2]);
     ocp_phase_1 = create_ocp_formulation_without_opts(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing);
+    ocp_phase_1.model.name = name;
     ocp_phase_2 = create_ocp_formulation_without_opts(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing);
+    ocp_phase_2.model.name = name;
 
     mocp = set_solver_options(mocp);
 
