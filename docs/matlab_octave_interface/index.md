@@ -158,7 +158,7 @@ To use the mask command just copy-paste it in the "icon drawing commands" field,
 To create external function for your problem, we suggest to use `CasADi` from the folder `<acados_root_folder>/external`.
 Depending on the environment you want to use to generate `CasADi` functions from, proceed with the corresponding paragraph (Matlab, Octave).
 
-Any CasADi version between 3.4.0 and 3.6.5 should work.
+Any CasADi version between 3.4.0 and 3.6.7 should work.
 If you don't have CasADi yet, you can install it as described below.
 
 ### **Matlab**
