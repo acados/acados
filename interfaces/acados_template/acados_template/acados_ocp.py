@@ -830,10 +830,10 @@ class AcadosOcp:
                 raise Exception('fixed_hess is only compatible LINEAR_LS cost_type_e.')
 
         # solution sensitivities
-        type_constraint_pairs = [("path", model.con_h_expr), ("initial", model.con_h_expr_0),
-                                 ("terminal", model.con_h_expr_e),
-                                 ("path", model.con_phi_expr), ("initial", model.con_phi_expr_0), ("terminal", model.con_phi_expr_e),
-                                 ("path", model.con_r_expr), ("initial", model.con_r_expr_0), ("terminal", model.con_r_expr_e)]
+        unsupported_type_constraint_pairs = [
+            ("path", model.con_phi_expr), ("initial", model.con_phi_expr_0), ("terminal", model.con_phi_expr_e),
+            ("path", model.con_r_expr), ("initial", model.con_r_expr_0), ("terminal", model.con_r_expr_e)
+        ]
 
         if opts.with_solution_sens_wrt_params:
             if dims.np_global == 0:
@@ -842,9 +842,9 @@ class AcadosOcp:
                 raise Exception('with_solution_sens_wrt_params is only compatible with EXTERNAL cost_type.')
             if opts.integrator_type != "DISCRETE":
                 raise Exception('with_solution_sens_wrt_params is only compatible with DISCRETE dynamics.')
-            for horizon_type, constraint in type_constraint_pairs:
+            for horizon_type, constraint in unsupported_type_constraint_pairs:
                 if constraint is not None and any(ca.which_depends(constraint, model.p_global)):
-                    raise Exception(f"with_solution_sens_wrt_params is only implemented if constraints don't depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
+                    raise Exception(f"with_solution_sens_wrt_params is not supported for BGP constraints that depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
 
         if opts.with_value_sens_wrt_params:
             if dims.np_global == 0:
@@ -853,9 +853,9 @@ class AcadosOcp:
                 raise Exception('with_value_sens_wrt_params is only compatible with EXTERNAL cost_type.')
             if opts.integrator_type != "DISCRETE":
                 raise Exception('with_value_sens_wrt_params is only compatible with DISCRETE dynamics.')
-            for horizon_type, constraint in type_constraint_pairs:
+            for horizon_type, constraint in unsupported_type_constraint_pairs:
                 if constraint is not None and any(ca.which_depends(constraint, model.p_global)):
-                    raise Exception(f"with_value_sens_wrt_params is only implemented if constraints don't depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
+                    raise Exception(f"with_value_sens_wrt_params is not supported for BGP constraints that depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
 
         if opts.qp_solver_cond_N is None:
             opts.qp_solver_cond_N = opts.N_horizon
