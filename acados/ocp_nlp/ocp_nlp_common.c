@@ -2370,6 +2370,12 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
         // NOTE: no z at terminal stage, since dynamics modules dont compute it.
         config->dynamics[i]->memory_set_z_alg_ptr(nlp_mem->z_alg+i, nlp_mem->dynamics[i]);
 
+        printf("memory_set_dyn_jac_p_global_ptr %d\n", i);
+        if (opts->with_solution_sens_wrt_params)
+        {
+            config->dynamics[i]->memory_set_dyn_jac_p_global_ptr(nlp_mem->tmp_nxnext_x_np_global+i, nlp_mem->dynamics[i]);
+        }
+
         int cost_integration;
         config->dynamics[i]->opts_get(config->dynamics[i], opts->dynamics[i],
                                     "cost_computation", &cost_integration);
@@ -3181,12 +3187,11 @@ void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_
 
     int *nv = dims->nv;
     int *ni = dims->ni;
-    int *nx = dims->nx;
 
     ocp_qp_in *tmp_qp_in = work->tmp_qp_in;
     struct blasfeo_dmat *tmp_nv_x_np_global = mem->tmp_nv_x_np_global;
     struct blasfeo_dmat *tmp_2ni_x_np_global = mem->tmp_2ni_x_np_global;
-    struct blasfeo_dmat *tmp_nxnext_x_np_global = mem->tmp_nxnext_x_np_global;
+    // struct blasfeo_dmat *tmp_nxnext_x_np_global = mem->tmp_nxnext_x_np_global;
 
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
@@ -3200,18 +3205,14 @@ void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_
         // copy gradients to column in jacobian
         blasfeo_dgese(nv[i], np_global, 0., &tmp_nv_x_np_global[i], 0, 0);
         blasfeo_dgese(2*ni[i], np_global, 0., &tmp_2ni_x_np_global[i], 0, 0);
-        blasfeo_dgese(nx[i+1], np_global, 0., &tmp_nxnext_x_np_global[i], 0, 0);
         for (k = 0; k < np_global; k++)
         {
-            config->dynamics[i]->memory_get_params_grad(config->dynamics[i], dims->dynamics[i], opts,
-                                    mem->dynamics[i], k, &tmp_qp_in->b[i], 0);
             config->dynamics[i]->memory_get_params_lag_grad(config->dynamics[i], dims->dynamics[i], opts,
                         mem->dynamics[i], k, &tmp_qp_in->rqz[i], 0);
             config->cost[i]->memory_get_params_grad(config->cost[i], dims->cost[i], opts,
                         mem->cost[i], k, &work->tmp_nv, 0);
             blasfeo_dvecad(nv[i], 1., &work->tmp_nv, 0, &tmp_qp_in->rqz[i], 0);
             // copy gradient to column in jacobian
-            blasfeo_dcolad(nx[i+1], 1.0, &tmp_qp_in->b[i], 0, &tmp_nxnext_x_np_global[i], 0, k);
             blasfeo_dcolad(nv[i], 1.0, &tmp_qp_in->rqz[i], 0, &tmp_nv_x_np_global[i], 0, k);
         }
     }
