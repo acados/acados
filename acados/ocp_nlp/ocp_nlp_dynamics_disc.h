@@ -103,7 +103,7 @@ int ocp_nlp_dynamics_disc_precompute(void *config_, void *dims, void *model_, vo
 
 typedef struct
 {
-    struct blasfeo_dmat params_jac;  // jacobian of the dynamics wrt the parameters
+    struct blasfeo_dmat *dyn_jac_p_global;  // jacobian of the dynamics wrt the parameters
     struct blasfeo_dmat params_lag_jac;  // jacobian of the lagrange gradient contribution of the dynamics wrt the parameters
     struct blasfeo_dvec fun;
     struct blasfeo_dvec adj;

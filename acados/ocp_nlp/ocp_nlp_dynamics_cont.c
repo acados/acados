@@ -577,10 +577,15 @@ void ocp_nlp_dynamics_cont_memory_get(void *config_, void *dims_, void *mem_, co
 }
 
 
-void ocp_nlp_dynamics_cont_memory_get_params_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset)
+void ocp_nlp_dynamics_cont_memory_set_dyn_jac_p_global_ptr(struct blasfeo_dmat *dyn_jac_p_global, void *memory_)
 {
-    printf("\nerror: ocp_nlp_dynamics_cont_memory_params_grad: not implemented\n");
+    printf("\nerror: ocp_nlp_dynamics_cont_memory_set_dyn_jac_p_global_ptr: not implemented\n");
     exit(1);
+    // ocp_nlp_dynamics_cont_memory *memory = memory_;
+
+    // memory->dyn_jac_p_global = dyn_jac_p_global;
+
+    return;
 }
 
 
@@ -1131,8 +1136,8 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_, int stage)
     config->memory_set_dzduxt_ptr = &ocp_nlp_dynamics_cont_memory_set_dzduxt_ptr;
     config->memory_set_sim_guess_ptr = &ocp_nlp_dynamics_cont_memory_set_sim_guess_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_dynamics_cont_memory_set_z_alg_ptr;
+    config->memory_set_dyn_jac_p_global_ptr = &ocp_nlp_dynamics_cont_memory_set_dyn_jac_p_global_ptr;
     config->memory_get = &ocp_nlp_dynamics_cont_memory_get;
-    config->memory_get_params_grad = &ocp_nlp_dynamics_cont_memory_get_params_grad;
     config->memory_get_params_lag_grad = &ocp_nlp_dynamics_cont_memory_get_params_lag_grad;
     config->workspace_calculate_size = &ocp_nlp_dynamics_cont_workspace_calculate_size;
     config->get_external_fun_workspace_requirement = &ocp_nlp_dynamics_cont_get_external_fun_workspace_requirement;

@@ -2370,7 +2370,6 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
         // NOTE: no z at terminal stage, since dynamics modules dont compute it.
         config->dynamics[i]->memory_set_z_alg_ptr(nlp_mem->z_alg+i, nlp_mem->dynamics[i]);
 
-        printf("memory_set_dyn_jac_p_global_ptr %d\n", i);
         if (opts->with_solution_sens_wrt_params)
         {
             config->dynamics[i]->memory_set_dyn_jac_p_global_ptr(nlp_mem->tmp_nxnext_x_np_global+i, nlp_mem->dynamics[i]);
