@@ -772,6 +772,13 @@ int ocp_nlp_dims_get_total_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
             size += 2*dims->ni[stage];
         }
     }
+    else if (!strcmp(field, "p"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            size += dims->np[stage];
+        }
+    }
     return size;
 }
 
@@ -1605,6 +1612,19 @@ void ocp_nlp_get_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, c
             tmp_offset += tmp_int;
         }
     }
+    else if (!strcmp(field, "p"))
+    {
+        int ii;
+        for (stage = 0; stage < N+1; stage++)
+        {
+            tmp_int = dims->np[stage];
+            for (ii = 0; ii < dims->np[stage]; ii++)
+            {
+                double_values[tmp_offset + ii] = in->parameter_values[stage][ii];
+            }
+            tmp_offset += tmp_int;
+        }
+    }
     else
     {
         printf("\nerror: ocp_nlp_get_all: field %s not available\n", field);
@@ -1692,6 +1712,18 @@ void ocp_nlp_set_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, c
             tmp_int = 2*dims->ni[stage];
             blasfeo_pack_dvec(tmp_int, double_values + tmp_offset, 1, &out->lam[stage], 0);
             tmp_offset += tmp_int;
+        }
+    }
+    else if (!strcmp(field, "p"))
+    {
+        int ii;
+        for (stage = 0; stage < N+1; stage++)
+        {
+            for (ii = 0; ii < dims->np[stage]; ii++)
+            {
+                in->parameter_values[stage][ii] = double_values[tmp_offset + ii];
+            }
+            tmp_offset += dims->np[stage];
         }
     }
     else
