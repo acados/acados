@@ -327,7 +327,7 @@ def main():
         # simulation
         for i in range(Nsim):
 
-            # update params
+            # update params and y_ref
             if i > Nsim / 3 and i < Nsim / 2:
                 p_val = p_val_2
                 y_ref = y_ref_2
@@ -335,13 +335,14 @@ def main():
                 p_val = p_val_1
                 y_ref = y_ref_1
 
-            # set params and y_ref
+            # set y_ref
             for j in range(N):
-                acados_solver.set(j, "p", p_val)
                 acados_solver.cost_set(j, "yref", y_ref)
-
-            acados_solver.set(N, "p", p_val)
             acados_solver.cost_set(N, "yref", y_ref[:nx])
+
+            # set params
+            p_flat = np.tile(p_val, N+1)
+            acados_solver.set_flat("p", p_flat)
 
             # preparation rti_phase
             if USE_RTI:
