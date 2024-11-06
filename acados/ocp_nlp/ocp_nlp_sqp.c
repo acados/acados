@@ -517,6 +517,26 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
     return false;
 }
 
+static double compute_gradient_directional_derivative(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
+{
+    // Compute the QP objective function value
+    double dir_der = 0.0;
+    int i, nux, ns;
+    int N = dims->N;
+    // Sum over stages 0 to N
+    for (i = 0; i <= N; i++)
+    {
+        nux = dims->nx[i] + dims->nu[i];
+        ns = dims->ns[i];
+        // Calculate g.T d
+        dir_der += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
+
+        // Calculate gradient of slacks
+        // we need to extract the gradient of the 
+        dir_der += blasfeo_ddot(2 * ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
+    }
+    return dir_der;
+}
 
 /************************************************
  * functions
@@ -738,6 +758,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         if (config->globalization->needs_qp_objective_value() == 1)
         {
             nlp_mem->qp_cost_value = ocp_nlp_compute_qp_objective_value(dims, qp_in, qp_out, nlp_work);
+            nlp_mem->predicted_infeasibility_reduction = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
+            nlp_mem->predicted_optimality_reduction = -compute_gradient_directional_derivative(dims, qp_in, qp_out);
         }
 
         // Compute the step norm

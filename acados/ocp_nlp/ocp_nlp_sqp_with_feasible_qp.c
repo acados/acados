@@ -1669,13 +1669,12 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         printf("Optimality Multiplier norm inf is: %.4e\n", multiplier_norm_inf);
 
         double current_l1_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
-        printf("\nCurrent l1 infeasibility: %.4e\n", current_l1_infeasibility);
-
+        printf("Current l1 infeasibility: %.4e\n", current_l1_infeasibility);
         // Calculate linearized l1-infeasibility for d_steering
         double l1_inf_QP_feasibility = get_slacked_qp_l1_infeasibility(dims, mem, nlp_work->tmp_qp_out);
         printf("linearized l1_inf_feas: %.4e\n", l1_inf_QP_feasibility);
         double manual_l1_inf_QP_feasibility = manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, nlp_work->tmp_qp_out);
-        printf("manual l1_inf_feas: %.4e\n\n\n", manual_l1_inf_QP_feasibility);
+        printf("manual l1_inf_feas: %.4e\n", manual_l1_inf_QP_feasibility);
 
         // Calculate linearized l1-infeasibility for d_predictor
         double l1_inf_QP_optimality = get_slacked_qp_l1_infeasibility(dims, mem, nlp_mem->qp_out);

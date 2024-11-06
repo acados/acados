@@ -216,27 +216,6 @@ void *ocp_nlp_globalization_funnel_memory_assign(void *config_, void *dims_, voi
 /************************************************
  * funnel functions
  ************************************************/
-static double compute_gradient_directional_derivative(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
-{
-    // Compute the QP objective function value
-    double dir_der = 0.0;
-    int i, nux, ns;
-    int N = dims->N;
-    // Sum over stages 0 to N
-    for (i = 0; i <= N; i++)
-    {
-        nux = dims->nx[i] + dims->nu[i];
-        ns = dims->ns[i];
-        // Calculate g.T d
-        dir_der += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
-
-        // Calculate gradient of slacks
-        // we need to extract the gradient of the 
-        dir_der += blasfeo_ddot(2 * ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
-    }
-    return dir_der;
-}
-
 void debug_output(ocp_nlp_opts *opts, char* message, int print_level)
 {
     if (opts->print_level > print_level)
@@ -447,9 +426,8 @@ int backtracking_line_search(ocp_nlp_config *config,
     ocp_nlp_globalization_funnel_memory *mem = nlp_mem->globalization;
 
     int N = dims->N;
-    double pred_optimality;
-    pred_optimality = nlp_mem->predicted_optimality_reduction;//-compute_gradient_directional_derivative(dims, nlp_mem->qp_in, nlp_mem->qp_out);
     double pred_merit = 0.0; // Calculate this here
+    double pred_optimality = nlp_mem->predicted_optimality_reduction;
     double pred_infeasibility = nlp_mem->predicted_infeasibility_reduction;
     double alpha = 1.0;
     double trial_cost;
