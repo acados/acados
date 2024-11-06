@@ -2373,6 +2373,7 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
         if (opts->with_solution_sens_wrt_params)
         {
             config->dynamics[i]->memory_set_dyn_jac_p_global_ptr(nlp_mem->tmp_nxnext_x_np_global+i, nlp_mem->dynamics[i]);
+            config->dynamics[i]->memory_set_jac_lag_stat_p_global_ptr(nlp_mem->tmp_nv_x_np_global+i, nlp_mem->dynamics[i]);
         }
 
         int cost_integration;
@@ -2403,6 +2404,10 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
 #endif
     for (int i = 0; i <= N; i++)
     {
+        if (opts->with_solution_sens_wrt_params)
+        {
+            config->cost[i]->memory_set_jac_lag_stat_p_global_ptr(nlp_mem->tmp_nv_x_np_global+i, nlp_mem->cost[i]);
+        }
         config->cost[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->cost[i]);
         config->cost[i]->memory_set_z_alg_ptr(nlp_mem->z_alg+i, nlp_mem->cost[i]);
         config->cost[i]->memory_set_dzdux_tran_ptr(nlp_mem->dzduxt+i, nlp_mem->cost[i]);
@@ -3182,12 +3187,11 @@ void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_
 {
     int N = dims->N;
     int np_global = dims->np_global;
-    int i, k;
+    int i;
 
     int *nv = dims->nv;
     int *ni = dims->ni;
 
-    ocp_qp_in *tmp_qp_in = work->tmp_qp_in;
     struct blasfeo_dmat *tmp_nv_x_np_global = mem->tmp_nv_x_np_global;
     struct blasfeo_dmat *tmp_2ni_x_np_global = mem->tmp_2ni_x_np_global;
     // struct blasfeo_dmat *tmp_nxnext_x_np_global = mem->tmp_nxnext_x_np_global;
@@ -3197,37 +3201,18 @@ void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_
 #endif
     for (i = 0; i < N; i++)
     {
+        blasfeo_dgese(nv[i], np_global, 0., &tmp_nv_x_np_global[i], 0, 0);
+        blasfeo_dgese(2*ni[i], np_global, 0., &tmp_2ni_x_np_global[i], 0, 0);
         config->dynamics[i]->compute_jac_hess_p(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
                     opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
         config->cost[i]->compute_jac_p(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
-
-        // copy gradients to column in jacobian
-        blasfeo_dgese(nv[i], np_global, 0., &tmp_nv_x_np_global[i], 0, 0);
-        blasfeo_dgese(2*ni[i], np_global, 0., &tmp_2ni_x_np_global[i], 0, 0);
-        for (k = 0; k < np_global; k++)
-        {
-            config->dynamics[i]->memory_get_params_lag_grad(config->dynamics[i], dims->dynamics[i], opts,
-                        mem->dynamics[i], k, &tmp_qp_in->rqz[i], 0);
-            config->cost[i]->memory_get_params_grad(config->cost[i], dims->cost[i], opts,
-                        mem->cost[i], k, &work->tmp_nv, 0);
-            blasfeo_dvecad(nv[i], 1., &work->tmp_nv, 0, &tmp_qp_in->rqz[i], 0);
-            // copy gradient to column in jacobian
-            blasfeo_dcolad(nv[i], 1.0, &tmp_qp_in->rqz[i], 0, &tmp_nv_x_np_global[i], 0, k);
-        }
     }
 
     // terminal
     i = N;
-    config->cost[i]->compute_jac_p(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
-
     blasfeo_dgese(nv[i], np_global, 0., &tmp_nv_x_np_global[i], 0, 0);
     blasfeo_dgese(2*ni[i], np_global, 0., &tmp_2ni_x_np_global[i], 0, 0);
-    for (k = 0; k < np_global; k++)
-    {
-        config->cost[i]->memory_get_params_grad(config->cost[i], dims->cost[i], opts,
-                        mem->cost[i], k, &tmp_qp_in->rqz[i], 0);
-        blasfeo_dcolad(nv[i], 1., &tmp_qp_in->rqz[i], 0, &tmp_nv_x_np_global[i], 0, k);
-    }
+    config->cost[i]->compute_jac_p(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
 }
 
 

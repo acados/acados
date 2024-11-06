@@ -285,22 +285,16 @@ acados_size_t ocp_nlp_dynamics_disc_memory_calculate_size(void *config_, void *d
 {
     // ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_disc_dims *dims = dims_;
-    ocp_nlp_dynamics_disc_opts *opts = opts_;
 
     // extract dims
     int nx = dims->nx;
     int nu = dims->nu;
     int nx1 = dims->nx1;
-    int np_global = dims->np_global;
 
     acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_dynamics_disc_memory);
 
-    if (opts->with_solution_sens_wrt_params)
-    {
-        size += 1 * blasfeo_memsize_dmat(nu + nx, np_global);    // params_lag_jac
-    }
     size += 1 * blasfeo_memsize_dvec(nu + nx + nx1);  // adj
     size += 1 * blasfeo_memsize_dvec(nx1);            // fun
 
@@ -315,7 +309,6 @@ void *ocp_nlp_dynamics_disc_memory_assign(void *config_, void *dims_, void *opts
 {
     // ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_disc_dims *dims = dims_;
-    ocp_nlp_dynamics_disc_opts *opts = opts_;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -323,7 +316,6 @@ void *ocp_nlp_dynamics_disc_memory_assign(void *config_, void *dims_, void *opts
     int nx = dims->nx;
     int nu = dims->nu;
     int nx1 = dims->nx1;
-    int np_global = dims->np_global;
 
     // struct
     ocp_nlp_dynamics_disc_memory *memory = (ocp_nlp_dynamics_disc_memory *) c_ptr;
@@ -332,11 +324,6 @@ void *ocp_nlp_dynamics_disc_memory_assign(void *config_, void *dims_, void *opts
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
 
-    if (opts->with_solution_sens_wrt_params)
-    {
-        // params_lag_jac
-        assign_and_advance_blasfeo_dmat_mem(nx + nu, np_global, &memory->params_lag_jac, &c_ptr);
-    }
     // adj
     assign_and_advance_blasfeo_dvec_mem(nu + nx + nx1, &memory->adj, &c_ptr);
     // fun
@@ -425,12 +412,14 @@ void ocp_nlp_dynamics_disc_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void
 void ocp_nlp_dynamics_disc_memory_set_dyn_jac_p_global_ptr(struct blasfeo_dmat *dyn_jac_p_global, void *memory_)
 {
     ocp_nlp_dynamics_disc_memory *memory = memory_;
-
     memory->dyn_jac_p_global = dyn_jac_p_global;
-
-    return;
 }
 
+void ocp_nlp_dynamics_disc_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory_)
+{
+    ocp_nlp_dynamics_disc_memory *memory = memory_;
+    memory->jac_lag_stat_p_global = jac_lag_stat_p_global;
+}
 
 
 void ocp_nlp_dynamics_disc_memory_set_dzduxt_ptr(struct blasfeo_dmat *mat, void *memory_)
@@ -470,19 +459,6 @@ void ocp_nlp_dynamics_disc_memory_get(void *config_, void *dims_, void *mem_, co
         exit(1);
     }
 
-}
-
-
-void ocp_nlp_dynamics_disc_memory_get_params_lag_grad(void *config_, void *dims_, void *opts_, void *memory_,
-                                                        int index, struct blasfeo_dvec *out, int offset)
-{
-    ocp_nlp_dynamics_disc_dims *dims = dims_;
-    ocp_nlp_dynamics_disc_memory *memory = memory_;
-
-    int nx = dims->nx;
-    int nu = dims->nu;
-
-    blasfeo_dcolex(nx + nu, &memory->params_lag_jac, 0, index, out, offset);
 }
 
 
@@ -822,8 +798,12 @@ void ocp_nlp_dynamics_disc_compute_jac_hess_p(void *config_, void *dims_, void *
     ext_fun_type_out[0] = BLASFEO_DMAT;
     ext_fun_out[0] = memory->dyn_jac_p_global;  // jac: nx1 x np_global
 
-    ext_fun_type_out[1] = BLASFEO_DMAT;
-    ext_fun_out[1] = &memory->params_lag_jac;  // jac: nxnu x np_global
+    ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
+    struct blasfeo_dmat_args lag_stat_jac_p_global_out; // input pi of external fun;
+    ext_fun_out[1] = &lag_stat_jac_p_global_out;
+    lag_stat_jac_p_global_out.A = memory->jac_lag_stat_p_global;  // jac: nxnu x np_global
+    lag_stat_jac_p_global_out.ai = 0;
+    lag_stat_jac_p_global_out.aj = 0;
 
     // call external function
     model->disc_dyn_phi_jac_p_hess_xu_p->evaluate(model->disc_dyn_phi_jac_p_hess_xu_p, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
@@ -1026,7 +1006,8 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_, int stage)
     config->memory_set_z_alg_ptr = &ocp_nlp_dynamics_disc_memory_set_z_alg_ptr;
     config->memory_set_dyn_jac_p_global_ptr = &ocp_nlp_dynamics_disc_memory_set_dyn_jac_p_global_ptr;
     config->memory_get = &ocp_nlp_dynamics_disc_memory_get;
-    config->memory_get_params_lag_grad = &ocp_nlp_dynamics_disc_memory_get_params_lag_grad;
+    config->memory_set_jac_lag_stat_p_global_ptr = &ocp_nlp_dynamics_disc_memory_set_jac_lag_stat_p_global_ptr;
+    config->memory_set_dyn_jac_p_global_ptr = &ocp_nlp_dynamics_disc_memory_set_dyn_jac_p_global_ptr;
     config->compute_jac_hess_p = &ocp_nlp_dynamics_disc_compute_jac_hess_p;
     config->workspace_calculate_size = &ocp_nlp_dynamics_disc_workspace_calculate_size;
     config->get_external_fun_workspace_requirement = &ocp_nlp_dynamics_disc_get_external_fun_workspace_requirement;
