@@ -410,7 +410,7 @@ typedef struct ocp_nlp_memory
     struct blasfeo_dvec *dyn_adj;
 
     // optimal value gradient wrt params
-    struct blasfeo_dmat *tmp_nv_x_np_global;
+    struct blasfeo_dmat *jac_lag_stat_p_global;
     struct blasfeo_dmat *tmp_2ni_x_np_global;
     struct blasfeo_dmat *tmp_nxnext_x_np_global;
     struct blasfeo_dvec out_np_global;
