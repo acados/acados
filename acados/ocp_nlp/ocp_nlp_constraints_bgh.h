@@ -72,6 +72,7 @@ typedef struct
     int nbxe; // number of state box constraints which are equality
     int nge;  // number of general linear constraints which are equality
     int nhe;  // number of nonlinear path constraints which are equality
+    int np_global;
 } ocp_nlp_constraints_bgh_dims;
 
 //

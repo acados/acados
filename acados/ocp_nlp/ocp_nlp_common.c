@@ -371,12 +371,11 @@ void ocp_nlp_dims_set_global(void *config_, void *dims_, const char *field, int 
         {
             config->dynamics[i]->dims_set(config->dynamics[i], dims->dynamics[i], "np_global", &value_field);
         }
-        // TODO: implement for constraints
-        // // constraints
-        // for (int i = 0; i <= N; i++)
-        // {
-        //     config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i], "np_global", &int_array[i]);
-        // }
+        // constraints
+        for (int i = 0; i <= N; i++)
+        {
+            config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i], "np_global", &value_field);
+        }
     }
     else if (!strcmp(field, "n_global_data"))
     {
@@ -387,8 +386,6 @@ void ocp_nlp_dims_set_global(void *config_, void *dims_, const char *field, int 
         printf("ocp_nlp_dims_set_global: field %s not supported.\n", field);
         exit(1);
     }
-
-    // TOOD: propagate to modules
 }
 
 

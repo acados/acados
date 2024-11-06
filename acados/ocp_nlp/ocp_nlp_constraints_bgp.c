@@ -290,6 +290,10 @@ void ocp_nlp_constraints_bgp_dims_set(void *config_, void *dims_,
     {
         ocp_nlp_constraints_bgp_set_nphie(config_, dims_, value);
     }
+    else if (!strcmp(field, "np_global"))
+    {
+        // do nothing
+    }
     else
     {
         printf("\nerror: dims type not available in module ocp_nlp_constraints_bgp: %s\n", field);
