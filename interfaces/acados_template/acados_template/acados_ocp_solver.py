@@ -1064,10 +1064,10 @@ class AcadosOcpSolver:
             qp_diagnostic = {}
             N_horizon = self.N
             offset = 0
-            min_eigv_total = 1e12
-            max_eigv_total = -1e12
-            min_abs_eigv = 1e12
-            max_abs_eigv = -1e12
+            min_eigv_total = np.inf
+            max_eigv_total = -np.inf
+            min_abs_eigv = np.inf
+            max_abs_eigv = -np.inf
             max_eigv_stage = {}
             min_eigv_stage = {}
             condition_number_stage = {}
@@ -1103,10 +1103,10 @@ class AcadosOcpSolver:
             
             elif hessian_type == "PROJECTED_HESSIAN":
                 # check projected Hessian
-                min_eig_proj_hess = 1e12
-                max_eig_proj_hess = -1e12
-                min_eig_P = 1e12
-                min_abs_eig_P = 1e12
+                min_eig_proj_hess = np.inf
+                max_eig_proj_hess = -np.inf
+                min_eig_P = np.inf
+                min_abs_eig_P = np.inf
                 for i in range(1, N_horizon):
                     P_mat = self.get_from_qp_in(i, 'P')
                     B_mat = self.get_from_qp_in(i-1, 'B')
