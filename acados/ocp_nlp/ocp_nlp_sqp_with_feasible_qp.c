@@ -788,9 +788,13 @@ static double get_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wf
             // Add lb slack
             tmp1 = BLASFEO_DVECEL(qp_out->ux + i, nx[i]+nu[i]+ns[i] + j);
             l1_inf += fmax(0.0, tmp1);
+
             // Add ub slack
             tmp2 = BLASFEO_DVECEL(qp_out->ux + i, nx[i]+nu[i]+2*ns[i]+nns[i] + j);
             l1_inf += fmax(0.0, tmp2);
+
+            // int index = mem->idxns[i][j];
+            // printf("slacks for constraint %d %d: l %e\t u %e\n", i, index, tmp1, tmp2);
         }
     }
 
@@ -814,18 +818,21 @@ static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims,
     double l1_inf = 0.0;
     int i, j;
     double tmp, tmp_bound, mask_value;
+    int constr_index, ux_idx;
 
     for (i = 0; i <= N; i++)
     {
         for (j=0; j<nns[i]; ++j)
         {
-            int index = mem->idxns[i][j];
+            constr_index = mem->idxns[i][j];
 
             // tmp = \nabla c(z) * d
             // simple bounds
-            if (index < nb[i])
+            if (constr_index < nb[i])
             {
-                tmp = BLASFEO_DVECEL(qp_out->ux+i, index);
+                ux_idx = qp_in->idxb[i][constr_index];
+                // printf("evaluating constraint %d, bound on ux[%d]\n", constr_index, ux_idx);
+                tmp = BLASFEO_DVECEL(qp_out->ux+i, ux_idx);
             }
             // linear constraints
             else
@@ -833,28 +840,28 @@ static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims,
                 // general linear / linearized!
                 // tmp_ni = D * u + C * x
                 // Calculate the product
-                blasfeo_dgemv_t(nu[i]+nx[i], 1, 1.0, qp_in->DCt+i, index-nb[i], 0, qp_out->ux+i, 0,
-                        0.0, qp_in->d+i, nb[i], &work->nlp_work->tmp_ni+i, 0);
+                blasfeo_dgemv_t(nu[i]+nx[i], 1, 1.0, qp_in->DCt+i, constr_index-nb[i], 0, qp_out->ux+i, 0,
+                        0.0, qp_in->d+i, 0, &work->nlp_work->tmp_ni+i, 0);
                 tmp = BLASFEO_DVECEL(&work->nlp_work->tmp_ni+i, 0);
             }
 
             // check lower bounds
-            mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, index);
+            mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, constr_index);
             if (mask_value == 1.0)
             {
-                tmp_bound = BLASFEO_DVECEL(qp_in->d+i, index);
+                tmp_bound = BLASFEO_DVECEL(qp_in->d+i, constr_index);
                 // maximum(0, lower_bound - value)
                 l1_inf += fmax(0.0, tmp_bound-tmp);
-                // printf("lower bounds: bound: %.4e, value: %.4e, result: %.4e\n", tmp_bound, tmp, fmax(0.0, tmp_bound-tmp));
+                // printf("lower constraint %d %d: bound: %.4e, value: %.4e, result: %.4e\n", i, constr_index, tmp_bound, tmp, fmax(0.0, tmp_bound-tmp));
             }
             // check upper bound
-            mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, nb[i] + ng[i] + index);
+            mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, nb[i] + ng[i] + constr_index);
             if (mask_value == 1.0)
             {
                 // upper bounds have the wrong sign!
                 // it is lower_bounds <= value <= -upper_bounds, therefore plus below
-                tmp_bound = BLASFEO_DVECEL(qp_in->d+i, nb[i] + ng[i] + index);
-                // printf("upper bounds: bound: %.4e, value: %.4e, result: %.4e\n", tmp_bound, tmp, fmax(0.0, tmp_bound-tmp));
+                tmp_bound = BLASFEO_DVECEL(qp_in->d+i, nb[i] + ng[i] + constr_index);
+                // printf("upper constraint %d %d: bound: %.4e, value: %.4e, result: %.4e\n", i, constr_index, tmp_bound, tmp, fmax(0.0, tmp_bound+tmp));
                 l1_inf += fmax(0.0, tmp_bound+tmp);
             }
         }
