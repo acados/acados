@@ -1385,10 +1385,11 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
         printf("\nQP solver returned error status %d in SQP iteration %d, QP iteration %d.\n",
                 qp_status, sqp_iter, qp_iter);
 #endif
-#if defined(ACADOS_WITH_OPENMP)
-        // restore number of threads
-        omp_set_num_threads(num_threads_bkp);
-#endif
+// TODO: fix openmp
+// #if defined(ACADOS_WITH_OPENMP)
+//         // restore number of threads
+//         omp_set_num_threads(num_threads_bkp);
+// #endif
         if (nlp_opts->print_level > 1)
         {
             printf("\n Failed to solve the following QP:\n");
