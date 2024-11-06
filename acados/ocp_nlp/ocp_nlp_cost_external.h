@@ -55,6 +55,7 @@ typedef struct
     int nu;  // number of inputs
     int ns;  // number of slacks
     int np; // number of parameters
+    int np_global; // number of global parameters
 } ocp_nlp_cost_external_dims;
 
 //
@@ -118,14 +119,14 @@ void ocp_nlp_cost_external_opts_set(void *config, void *opts, const char *field,
 
 typedef struct
 {
-    struct blasfeo_dmat cost_grad_params_jac;    // jacobian of gradient of cost function wrt parameters
+    struct blasfeo_dmat *jac_lag_stat_p_global;    // pointer to jacobian of stationarity condition wrt parameters
     struct blasfeo_dvec grad;    // gradient of cost function
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
     struct blasfeo_dvec *Z;      // pointer to Z in qp_in
     struct blasfeo_dvec *z_alg;         ///< pointer to z in sim_out
     struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
-	double fun;                         ///< value of the cost function
+    double fun;                         ///< value of the cost function
 } ocp_nlp_cost_external_memory;
 
 //
@@ -147,8 +148,7 @@ void ocp_nlp_cost_external_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void
 //
 void ocp_nlp_cost_external_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_tran, void *memory_);
 //
-void ocp_nlp_cost_external_memory_get_params_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
-
+void ocp_nlp_cost_external_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory_);
 
 /************************************************
  * workspace
@@ -156,6 +156,7 @@ void ocp_nlp_cost_external_memory_get_params_grad(void *config, void *dims, void
 
 typedef struct
 {
+    struct blasfeo_dmat cost_grad_params_jac;  // jacobian of gradient of cost function wrt parameters
     struct blasfeo_dmat tmp_nunx_nunx;
     struct blasfeo_dmat tmp_nz_nz;
     struct blasfeo_dmat tmp_nz_nunx;
@@ -165,6 +166,11 @@ typedef struct
 
 //
 acados_size_t ocp_nlp_cost_external_workspace_calculate_size(void *config, void *dims, void *opts);
+//
+size_t ocp_nlp_cost_external_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_);
+//
+void ocp_nlp_cost_external_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_);
+
 
 /************************************************
  * functions

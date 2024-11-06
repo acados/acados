@@ -38,7 +38,7 @@ import casadi.*
 N = 20; % number of discretization steps
 nx = 3;
 nu = 3;
-[ocp, simulink_opts, x0] = create_slacked_ocp_qp_solver_formulation(N);
+[ocp, simulink_opts] = create_slacked_ocp_qp_solver_formulation(N);
 ocp.simulink_opts = simulink_opts;
 
 %% create ocp solver
@@ -67,8 +67,8 @@ end
 ocp_solver.solve();
 ocp_solver.print();
 
-xtraj = ocp_solver.get('x')
-utraj = ocp_solver.get('u')
+xtraj = ocp_solver.get('x');
+utraj = ocp_solver.get('u');
 
 %% compile S-function
 cd c_generated_code

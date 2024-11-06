@@ -82,6 +82,7 @@ ocp.solver_options.exact_hess_dyn = 1;
 ocp.solver_options.exact_hess_cost = 1;
 ocp.solver_options.exact_hess_constr = 1;
 ocp.solver_options.print_level = 1;
+ocp.solver_options.store_iterates = true;
 
 % can vary for integrators
 sim_method_num_stages = 1 * ones(N,1);
@@ -165,9 +166,9 @@ if strcmp(cost_type, 'LINEAR_LS')
     ocp.cost.W_e = W_x;
     ocp.cost.yref_e = y_ref_e;
 else % EXTERNAL, AUTO
-    ocp.cost.cost_expr_ext_cost_0 = cost_expr_ext_cost_0;
-    ocp.cost.cost_expr_ext_cost = cost_expr_ext_cost;
-    ocp.cost.cost_expr_ext_cost_e = cost_expr_ext_cost_e;
+    ocp.model.cost_expr_ext_cost_0 = cost_expr_ext_cost_0;
+    ocp.model.cost_expr_ext_cost = cost_expr_ext_cost;
+    ocp.model.cost_expr_ext_cost_e = cost_expr_ext_cost_e;
 end
 
 %% CONSTRAINTS
@@ -183,7 +184,7 @@ if constraint_formulation_nonlinear % formulate constraint via h
     model.con_h_expr_0 = model.u;
     ocp.constraints.lh_0 = lbu;
     ocp.constraints.uh_0 = ubu;
-    ocp.constraints.con_h_expr = model.u;
+    ocp.model.con_h_expr = model.u;
     ocp.constraints.lh = lbu;
     ocp.constraints.uh = ubu;
 else % formulate constraint as bound on u
@@ -258,7 +259,7 @@ cost_val_ocp = ocp_solver.get_cost();
 %        |----- dynamics -----|------ cost --------|---------------------------- constraints ------------------------|
 fields = {'qp_A','qp_B','qp_b','qp_R','qp_Q','qp_r','qp_C','qp_D','qp_lg','qp_ug','qp_lbx','qp_ubx','qp_lbu','qp_ubu'};
 
-% eiter stage-wise ...
+% either stage-wise ...
 for stage = [0,N-1]
     for k = 1:length(fields)
         field = fields{k};
@@ -294,6 +295,20 @@ disp(['max eigenvalues of blocks are in [', num2str(min(result.max_ev)), ', ', n
 disp(['condition_number_blockwise: '])
 disp(result.condition_number_blockwise)
 disp(['condition_number_global: ', num2str(result.condition_number_global)])
+
+% get second SQP iterate
+% iteration index is 0-based with iterate 0 corresponding to the initial guess
+iteration = 0;
+iterate = ocp_solver.get_iterate(iteration);
+iterates = ocp_solver.get_iterates();
+x_traj = iterates.as_array('x');
+
+if ~(all(reshape(x_traj(iteration+1, end-1, :), 1, []) == reshape(iterate.x_traj{end-1}, 1, [])))
+    error("iterates don't match");
+end
+
+disp(['u iterate at iteration = ' num2str(iteration)]);
+disp(cell2mat(iterate.u_traj)');
 
 %% Plot trajectories
 figure; hold on;

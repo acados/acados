@@ -117,7 +117,7 @@ int main()
         }
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, N, "x", x_init);
         status = pendulum_ode_acados_solve(acados_ocp_capsule);
-        ocp_nlp_get(nlp_config, nlp_solver, "time_tot", &elapsed_time);
+        ocp_nlp_get(nlp_solver, "time_tot", &elapsed_time);
         min_time = MIN(elapsed_time, min_time);
     }
 
@@ -140,7 +140,7 @@ int main()
 
     // get solution
     ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "kkt_norm_inf", &kkt_norm_inf);
-    ocp_nlp_get(nlp_config, nlp_solver, "sqp_iter", &sqp_iter);
+    ocp_nlp_get(nlp_solver, "sqp_iter", &sqp_iter);
 
     pendulum_ode_acados_print_stats(acados_ocp_capsule);
 

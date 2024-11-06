@@ -101,29 +101,14 @@ LIBACADOS_SIM_SOLVER=lib$(SIM_SRC:.c=.so)
 # virtual targets
 .PHONY : all clean
 
-all: clean example_sim example
+all: clean example
 shared_lib: bundled_shared_lib ocp_shared_lib sim_shared_lib
 
 # some linker targets
 example: $(EX_OBJ) $(OBJ)
 	$(CC) $^ -o $(EX_EXE) $(LDFLAGS) $(LDLIBS)
 
-example_sim: $(EX_SIM_OBJ) $(MODEL_OBJ) $(SIM_OBJ)
-	$(CC) $^ -o $(EX_SIM_EXE) $(LDFLAGS) $(LDLIBS)
-
-sim_shared_lib: $(SIM_OBJ) $(MODEL_OBJ)
-	$(CC) -shared $^ -o $(LIBACADOS_SIM_SOLVER) $(LDFLAGS) $(LDLIBS)
-bundled_shared_lib: $(OBJ)
-	$(CC) -shared $^ -o $(LIBACADOS_SOLVER) $(LDFLAGS) $(LDLIBS)
-
-ocp_shared_lib: $(OCP_OBJ) $(MODEL_OBJ)
-	$(CC) -shared $^ -o $(LIBACADOS_OCP_SOLVER) $(LDFLAGS) $(LDLIBS) \
-	-L$(EXTERNAL_DIR) -l$(EXTERNAL_LIB)
-
 clean:
 	$(RM) $(OBJ) $(EX_OBJ) $(EX_SIM_OBJ)
 	$(RM) $(LIBACADOS_SOLVER) $(LIBACADOS_OCP_SOLVER) $(LIBACADOS_SIM_SOLVER)
 	$(RM) $(EX_EXE) $(EX_SIM_EXE)
-clean_ocp_shared_lib:
-	$(RM) $(LIBACADOS_OCP_SOLVER)
-	$(RM) $(OCP_OBJ)

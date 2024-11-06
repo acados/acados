@@ -28,22 +28,10 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-
-
-
-% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
-% as well as a new interface (>= v0.4.0).
-
-% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
-% with the examples that have been ported to the new interface already.
-% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
-
-
 % this function implements the quadcopter model from https://osqp.org/docs/examples/mpc.html
 % more infomation can be found here: https://github.com/orgs/osqp/discussions/558
 
-function model = quadcopter(h)
-% input: sampling time
+function [model,Ad,Bd] = quadcopter_model()
 import casadi.*
 
 % system matrices
@@ -74,105 +62,18 @@ Bd = [0      -0.0726  0       0.0726;
 [nx, nu] = size(Bd);  % state and input dimensions
 
 % (unnamed) symbolic variables
-sym_x = SX.sym('x',nx,1);  % state vector
-sym_u = SX.sym('u',nu,1);  % input vector
-xr = SX.sym('xr',nx,1);  % state reference
-sym_p = xr;  % include the reference as a parameter
+x = SX.sym('x',nx,1);  % state vector
+u = SX.sym('u',nu,1);  % input vector
 
 % discrete system dynamics
-dyn_expr_phi = Ad * sym_x + Bd * sym_u;  % x+ = A*x + B*u
-
-% cost matrices
-Q = diag([0 0 10 10 10 10 0 0 0 5 5 5]);  % state cost
-R = 0.1*eye(nu);  % input cost
-
-% generic cost formulation
-cost_expr_ext_cost_e = (sym_x-xr)'*Q*(sym_x-xr);  % terminal cost (only states)
-cost_expr_ext_cost = cost_expr_ext_cost_e + sym_u'*R*sym_u;  % stage cost (states and inputs)
-cost_expr_ext_cost = 1/h * cost_expr_ext_cost;  % scale the stage cost to match the discrete formulation
-cost_expr_ext_cost_0 = 1/h * sym_u'*R*sym_u;  % penalize only the inputs in the first stage
-% more info on discrete cost scaling:
-% https://docs.acados.org/python_interface/index.html#acados_template.acados_ocp_cost.AcadosOcpCost
-
-% linear least-squares cost formulation (alternative)
-% initial cost
-ny_0 = nu;
-Vu_0 = eye(ny_0);
-Vx_0 = zeros(ny_0,nx);
-W_0 = 1/h * 2 * R;  % scale to match the original cost
-y_ref_0 = zeros(ny_0,1);
-
-% intermediate cost
-ny = nu+nx;
-Vu = [eye(nu); zeros(nx,nu)];
-Vx = [zeros(nu, nx); eye(nx)];
-W = 1/h * 2 * blkdiag(R,Q);  % scale to match the original cost
-y_ref = zeros(ny, 1);
-
-% terminal cost
-ny_e = nx;
-Vx_e = eye(ny_e, nx);
-W_e = 2 * Q;  % terminal cost is not scaled with h later
-y_ref_e = zeros(ny_e, 1);
-
-% input constraints
-u0 = 10.5916;  % steady-state input
-Jbu = eye(nu);  % all inputs are constrained
-lbu = [9.6; 9.6; 9.6; 9.6] - u0;  % input lower bounds
-ubu = [13; 13; 13; 13] - u0;  % input upper bounds
-
-% state constraints on the first, second and sixth state
-% (not applied to the initial state)
-Jbx = zeros(3,nx);
-Jbx(1,1) = 1;
-Jbx(2,2) = 1;
-Jbx(3,6) = 1;
-infty = 1e6;  % to approximate one-sided constraints
-lbx = [-pi/6; -pi/6; -1];  % state lower bounds
-ubx = [ pi/6;  pi/6; infty];  % state upper bounds
-
-% use the same constraints on the terminal state
-Jbx_e = Jbx;
-lbx_e = lbx;
-ubx_e = ubx;
+disc_dyn_expr = Ad * x + Bd * u;  % x+ = A*x + B*u
 
 % populate the output structure
-model.Ad = Ad;
-model.Bd = Bd;
-model.nx = nx;
-model.nu = nu;
+model = AcadosModel();
+model.name = 'quadcopter';
 
-model.sym_x = sym_x;
-model.sym_u = sym_u;
-model.sym_p = sym_p;
+model.x = x;
+model.u = u;
 
-model.dyn_expr_phi = dyn_expr_phi;
-
-model.cost_expr_ext_cost_0 = cost_expr_ext_cost_0;
-model.cost_expr_ext_cost = cost_expr_ext_cost;
-model.cost_expr_ext_cost_e = cost_expr_ext_cost_e;
-
-model.Vu_0 = Vu_0;
-model.Vx_0 = Vx_0;
-model.W_0 = W_0;
-model.y_ref_0 = y_ref_0;
-
-model.Vu = Vu;
-model.Vx = Vx;
-model.W = W;
-model.y_ref = y_ref;
-
-model.Vx_e = Vx_e;
-model.W_e = W_e;
-model.y_ref_e = y_ref_e;
-
-model.Jbu = Jbu;
-model.lbu = lbu;
-model.ubu = ubu;
-model.Jbx = Jbx;
-model.lbx = lbx;
-model.ubx = ubx;
-model.Jbx_e = Jbx_e;
-model.lbx_e = lbx_e;
-model.ubx_e = ubx_e;
+model.disc_dyn_expr = disc_dyn_expr;
 end

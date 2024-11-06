@@ -76,8 +76,7 @@ cdef extern from "acados_c/ocp_nlp_interface.h":
         int stage, const char *field, void *value)
     void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
         int stage, const char *field, void *value)
-    void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_solver *solver,
-        int stage, const char *field, void *value)
+    void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, void *value)
     int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
         int stage, const char *field)
     void ocp_nlp_constraint_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
@@ -103,5 +102,5 @@ cdef extern from "acados_c/ocp_nlp_interface.h":
     void ocp_nlp_eval_params_jac(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in_, ocp_nlp_out *nlp_out)
     void ocp_nlp_eval_lagrange_grad_p(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in_, const char *field, void* value)
     # get/set
-    void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver, const char *field, void *return_value_)
-    void ocp_nlp_set(ocp_nlp_config *config, ocp_nlp_solver *solver, int stage, const char *field, void *value)
+    void ocp_nlp_get(ocp_nlp_solver *solver, const char *field, void *return_value_)
+    void ocp_nlp_set(ocp_nlp_solver *solver, int stage, const char *field, void *value)

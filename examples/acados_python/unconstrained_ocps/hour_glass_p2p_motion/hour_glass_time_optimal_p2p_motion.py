@@ -239,7 +239,7 @@ def plot_trajectory(list_X_sol: list, labels: list):
 
 def main():
     N = 20
-    M = 2 
+    M = 2
     Tf = 1.0
 
     # # Test DDP here

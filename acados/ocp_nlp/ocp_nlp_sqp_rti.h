@@ -88,6 +88,7 @@ typedef struct
     as_rti_advancement_strategy_t as_rti_advancement_strategy;
     int as_rti_iter;
     int rti_log_residuals;
+    int rti_log_only_available_residuals;
 
 } ocp_nlp_sqp_rti_opts;
 
@@ -126,9 +127,9 @@ typedef struct
 } ocp_nlp_sqp_rti_memory;
 
 //
-acados_size_t ocp_nlp_sqp_rti_memory_calculate_size(void *config_, void *dims_, void *opts_);
+acados_size_t ocp_nlp_sqp_rti_memory_calculate_size(void *config_, void *dims_, void *opts_, void *in);
 //
-void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_, void *opts_,
+void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_, void *opts_, void *in_,
     void *raw_memory);
 
 
@@ -148,7 +149,7 @@ typedef struct
 } ocp_nlp_sqp_rti_workspace;
 
 //
-acados_size_t ocp_nlp_sqp_rti_workspace_calculate_size(void *config_, void *dims_, void *opts_);
+acados_size_t ocp_nlp_sqp_rti_workspace_calculate_size(void *config_, void *dims_, void *opts_, void *nlp_in);
 
 
 

@@ -191,6 +191,7 @@ def create_multiphase_ocp_solver(N_list, t_horizon_1, name=None, use_cmake=False
     ocp.set_phase(phase_2, 2)
 
     ocp.solver_options.nlp_solver_type = 'SQP'
+    ocp.solver_options.store_iterates = True
 
     # the transition stage uses discrete dynamics!
     ocp.mocp_opts.integrator_type = ['IRK', 'DISCRETE', 'IRK']
@@ -216,6 +217,9 @@ def main_multiphase_ocp(use_cmake=False):
     acados_ocp_solver.solve_for_x0(X0)
     acados_ocp_solver.print_statistics()
 
+    # get final iterate
+    iterate = acados_ocp_solver.get_iterate(acados_ocp_solver.get_stats('sqp_iter'))
+
     n_phases = len(N_list)
 
     x_traj_phases = n_phases*[None]
@@ -228,6 +232,8 @@ def main_multiphase_ocp(use_cmake=False):
         t_grid_phases[i_phase] = ocp.solver_options.shooting_nodes[ocp.start_idx[i_phase]: ocp.end_idx[i_phase]+1]
         print(f"Phase {i_phase}:\nt grid \n {t_grid_phases[i_phase]} \nx traj\n {x_traj_phases[i_phase]} \nu traj {u_traj_phases[i_phase]}")
         print("-----------------------------------")
+
+    assert np.allclose(x_traj_phases[-1][-1], iterate.x_traj[-1])
 
     # plot solution
     t_grid_2_plot = t_grid_phases[2] - 1.0

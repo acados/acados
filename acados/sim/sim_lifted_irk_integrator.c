@@ -98,6 +98,10 @@ void sim_lifted_irk_dims_set(void *config_, void *dims_, const char *field, cons
     {
         // np dimension not needed
     }
+    else if (!strcmp(field, "np_global"))
+    {
+        // np_global dimension not needed
+    }
     else
     {
         printf("\nerror: sim_lifted_irk_dims_set: field not available: %s\n", field);
@@ -496,24 +500,24 @@ void sim_lifted_irk_memory_get(void *config_, void *dims_, void *mem_, const cha
 
     if (!strcmp(field, "time_sim"))
     {
-		double *ptr = value;
-		*ptr = mem->time_sim;
-	}
+        double *ptr = value;
+        *ptr = mem->time_sim;
+    }
     else if (!strcmp(field, "time_sim_ad"))
     {
-		double *ptr = value;
-		*ptr = mem->time_ad;
-	}
+        double *ptr = value;
+        *ptr = mem->time_ad;
+    }
     else if (!strcmp(field, "time_sim_la"))
     {
-		double *ptr = value;
-		*ptr = mem->time_la;
-	}
-	else
-	{
-		printf("sim_lifted_irk_memory_get field %s is not supported! \n", field);
-		exit(1);
-	}
+        double *ptr = value;
+        *ptr = mem->time_la;
+    }
+    else
+    {
+        printf("sim_lifted_irk_memory_get field %s is not supported! \n", field);
+        exit(1);
+    }
 }
 
 
@@ -620,6 +624,30 @@ static void *sim_lifted_irk_cast_workspace(void *config_, void *dims_, void *opt
     return (void *) workspace;
 }
 
+
+size_t sim_lifted_irk_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_)
+{
+    lifted_irk_model *model = model_;
+
+    size_t size = 0;
+    size_t tmp_size;
+
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->impl_ode_fun);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->impl_ode_fun_jac_x_xdot_u);
+    size = size > tmp_size ? size : tmp_size;
+
+    return size;
+}
+
+
+void sim_lifted_irk_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_)
+{
+    lifted_irk_model *model = model_;
+
+    external_function_set_fun_workspace_if_defined(model->impl_ode_fun, workspace_);
+    external_function_set_fun_workspace_if_defined(model->impl_ode_fun_jac_x_xdot_u, workspace_);
+}
 
 
 int sim_lifted_irk_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,
@@ -960,9 +988,9 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
     out->info->CPUtime = acados_toc(&timer);
     out->info->ADtime = timing_ad;
 
-	mem->time_sim = out->info->CPUtime;
-	mem->time_ad = out->info->ADtime;
-	mem->time_la = out->info->LAtime;
+    mem->time_sim = out->info->CPUtime;
+    mem->time_ad = out->info->ADtime;
+    mem->time_la = out->info->LAtime;
 
     return 0;
 }
@@ -987,6 +1015,8 @@ void sim_lifted_irk_config_initialize_default(void *config_)
     config->memory_set_to_zero = &sim_lifted_irk_memory_set_to_zero;
     config->memory_get = &sim_lifted_irk_memory_get;
     config->workspace_calculate_size = &sim_lifted_irk_workspace_calculate_size;
+    config->get_external_fun_workspace_requirement = &sim_lifted_irk_get_external_fun_workspace_requirement;
+    config->set_external_fun_workspaces = &sim_lifted_irk_set_external_fun_workspaces;
     config->model_calculate_size = &sim_lifted_irk_model_calculate_size;
     config->model_assign = &sim_lifted_irk_model_assign;
     config->model_set = &sim_lifted_irk_model_set;

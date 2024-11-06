@@ -29,6 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+from typing import Union
 import json
 import os
 import shutil
@@ -143,7 +144,7 @@ def check_casadi_version():
 
 def check_casadi_version_supports_p_global():
     try:
-        from casadi import extract_parametric, cse, blazing_spline
+        from casadi import extract_parametric, cse
     except:
         raise Exception("CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se2 release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se2")
 
@@ -505,7 +506,7 @@ def idx_perm_to_ipiv(idx_perm):
     return ipiv
 
 
-def print_casadi_expression(f):
+def print_casadi_expression(f: Union[MX, SX, DM]):
     for ii in range(casadi_length(f)):
         print(f[ii,:])
 

@@ -310,19 +310,20 @@ void sim_opts_get(sim_config *config, void *opts, const char *field, void *value
 * solver
 ************************************************/
 
-acados_size_t sim_calculate_size(sim_config *config, void *dims, void *opts_)
+acados_size_t sim_calculate_size(sim_config *config, void *dims, void *opts_, sim_in *in)
 {
     acados_size_t bytes = sizeof(sim_solver);
 
     bytes += config->memory_calculate_size(config, dims, opts_);
     bytes += config->workspace_calculate_size(config, dims, opts_);
+    bytes += config->get_external_fun_workspace_requirement(config, dims, opts_, in->model);
 
     return bytes;
 }
 
 
 
-sim_solver *sim_assign(sim_config *config, void *dims, void *opts_, void *raw_memory)
+sim_solver *sim_assign(sim_config *config, void *dims, void *opts_, sim_in *in, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -339,22 +340,25 @@ sim_solver *sim_assign(sim_config *config, void *dims, void *opts_, void *raw_me
     solver->work = (void *) c_ptr;
     c_ptr += config->workspace_calculate_size(config, dims, opts_);
 
-    assert((char *) raw_memory + sim_calculate_size(config, dims, opts_) == c_ptr);
+    config->set_external_fun_workspaces(config, dims, opts_, in->model, c_ptr);
+    c_ptr += config->get_external_fun_workspace_requirement(config, dims, opts_, in->model);
+
+    assert((char *) raw_memory + sim_calculate_size(config, dims, opts_, in) == c_ptr);
 
     return solver;
 }
 
 
 
-sim_solver *sim_solver_create(sim_config *config, void *dims, void *opts_)
+sim_solver *sim_solver_create(sim_config *config, void *dims, void *opts_, sim_in *in)
 {
     // update Butcher tableau (needed if the user changed ns)
     config->opts_update(config, dims, opts_);
-    acados_size_t bytes = sim_calculate_size(config, dims, opts_);
+    acados_size_t bytes = sim_calculate_size(config, dims, opts_, in);
 
     void *ptr = calloc(1, bytes);
 
-    sim_solver *solver = sim_assign(config, dims, opts_, ptr);
+    sim_solver *solver = sim_assign(config, dims, opts_, in, ptr);
 
     return solver;
 }

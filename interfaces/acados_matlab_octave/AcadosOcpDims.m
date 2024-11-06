@@ -31,13 +31,15 @@
 classdef AcadosOcpDims < handle
     properties
         N      % prediction horizon
+        n_global_data
+        np_global
 
         % model
         nx     % number of states
         nu     % number of inputs
         nz     % number of algebraic variables
         np     % number of parameters
-        np_global % number of global parameters
+        nx_next % number of states at next time step
 
         % cost
         ny     % number of residuals in Lagrange term
@@ -97,12 +99,14 @@ classdef AcadosOcpDims < handle
     methods
         function obj = AcadosOcpDims()
             obj.N = [];
+            obj.np_global = 0;
+            obj.n_global_data = 0;
 
             obj.nx = [];
             obj.nu = 0;
             obj.nz = 0;
             obj.np = 0;
-            obj.np_global = 0;
+            obj.nx_next = [];
 
             obj.ny = 0;
             obj.ny_0 = 0;

@@ -486,89 +486,89 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 
 static void select_external_stage_cost_casadi(int indx, int N, int num_free_masses, external_function_casadi *external_cost)
 {
-	switch (num_free_masses)
-	{
-		case 1:
-			if (indx < N)
-			{
-				external_cost->casadi_fun = &chain_nm_2_external_cost;
-				external_cost->casadi_work = &chain_nm_2_external_cost_work;
-				external_cost->casadi_sparsity_in = &chain_nm_2_external_cost_sparsity_in;
-				external_cost->casadi_sparsity_out = &chain_nm_2_external_cost_sparsity_out;
-				external_cost->casadi_n_in = &chain_nm_2_external_cost_n_in;
-				external_cost->casadi_n_out = &chain_nm_2_external_cost_n_out;
-			}
-			else
-			{
-				printf("external cost not implemented for final stage");
-				exit(1);
-			}
-			break;
-		case 2:
-			if (indx < N)
-			{
-				external_cost->casadi_fun = &chain_nm_3_external_cost;
-				external_cost->casadi_work = &chain_nm_3_external_cost_work;
-				external_cost->casadi_sparsity_in = &chain_nm_3_external_cost_sparsity_in;
-				external_cost->casadi_sparsity_out = &chain_nm_3_external_cost_sparsity_out;
-				external_cost->casadi_n_in = &chain_nm_3_external_cost_n_in;
-				external_cost->casadi_n_out = &chain_nm_3_external_cost_n_out;
-			}
-			else
-			{
-				printf("external cost not implemented for final stage");
-				exit(1);
-			}
-			break;
-		case 3:
-			if (indx < N)
-			{
-				external_cost->casadi_fun = &chain_nm_4_external_cost;
-				external_cost->casadi_work = &chain_nm_4_external_cost_work;
-				external_cost->casadi_sparsity_in = &chain_nm_4_external_cost_sparsity_in;
-				external_cost->casadi_sparsity_out = &chain_nm_4_external_cost_sparsity_out;
-				external_cost->casadi_n_in = &chain_nm_4_external_cost_n_in;
-				external_cost->casadi_n_out = &chain_nm_4_external_cost_n_out;
-			}
-			else
-			{
-				printf("external cost not implemented for final stage");
-				exit(1);
-			}
-			break;
-		case 4:
-			if (indx < N)
-			{
-				external_cost->casadi_fun = &chain_nm_5_external_cost;
-				external_cost->casadi_work = &chain_nm_5_external_cost_work;
-				external_cost->casadi_sparsity_in = &chain_nm_5_external_cost_sparsity_in;
-				external_cost->casadi_sparsity_out = &chain_nm_5_external_cost_sparsity_out;
-				external_cost->casadi_n_in = &chain_nm_5_external_cost_n_in;
-				external_cost->casadi_n_out = &chain_nm_5_external_cost_n_out;
-			}
-			else
-			{
-				printf("external cost not implemented for final stage");
-				exit(1);
-			}
-			break;
-		// case 5:
-		// 	if (indx < N)
-		// 	{
-		// 		external_cost->casadi_fun = &chain_nm_6_external_cost;
-		// 		external_cost->casadi_work = &chain_nm_6_external_cost_work;
-		// 		external_cost->casadi_sparsity_in = &chain_nm_6_external_cost_sparsity_in;
-		// 		external_cost->casadi_sparsity_out = &chain_nm_6_external_cost_sparsity_out;
-		// 		external_cost->casadi_n_in = &chain_nm_6_external_cost_n_in;
-		// 		external_cost->casadi_n_out = &chain_nm_6_external_cost_n_out;
-		// 	}
-		// 	else
-		// 	{
-		// 		printf("external cost not implemented for final stage");
-		// 		exit(1);
-		// 	}
-			break;
-	}
+    switch (num_free_masses)
+    {
+        case 1:
+            if (indx < N)
+            {
+                external_cost->casadi_fun = &chain_nm_2_external_cost;
+                external_cost->casadi_work = &chain_nm_2_external_cost_work;
+                external_cost->casadi_sparsity_in = &chain_nm_2_external_cost_sparsity_in;
+                external_cost->casadi_sparsity_out = &chain_nm_2_external_cost_sparsity_out;
+                external_cost->casadi_n_in = &chain_nm_2_external_cost_n_in;
+                external_cost->casadi_n_out = &chain_nm_2_external_cost_n_out;
+            }
+            else
+            {
+                printf("external cost not implemented for final stage");
+                exit(1);
+            }
+            break;
+        case 2:
+            if (indx < N)
+            {
+                external_cost->casadi_fun = &chain_nm_3_external_cost;
+                external_cost->casadi_work = &chain_nm_3_external_cost_work;
+                external_cost->casadi_sparsity_in = &chain_nm_3_external_cost_sparsity_in;
+                external_cost->casadi_sparsity_out = &chain_nm_3_external_cost_sparsity_out;
+                external_cost->casadi_n_in = &chain_nm_3_external_cost_n_in;
+                external_cost->casadi_n_out = &chain_nm_3_external_cost_n_out;
+            }
+            else
+            {
+                printf("external cost not implemented for final stage");
+                exit(1);
+            }
+            break;
+        case 3:
+            if (indx < N)
+            {
+                external_cost->casadi_fun = &chain_nm_4_external_cost;
+                external_cost->casadi_work = &chain_nm_4_external_cost_work;
+                external_cost->casadi_sparsity_in = &chain_nm_4_external_cost_sparsity_in;
+                external_cost->casadi_sparsity_out = &chain_nm_4_external_cost_sparsity_out;
+                external_cost->casadi_n_in = &chain_nm_4_external_cost_n_in;
+                external_cost->casadi_n_out = &chain_nm_4_external_cost_n_out;
+            }
+            else
+            {
+                printf("external cost not implemented for final stage");
+                exit(1);
+            }
+            break;
+        case 4:
+            if (indx < N)
+            {
+                external_cost->casadi_fun = &chain_nm_5_external_cost;
+                external_cost->casadi_work = &chain_nm_5_external_cost_work;
+                external_cost->casadi_sparsity_in = &chain_nm_5_external_cost_sparsity_in;
+                external_cost->casadi_sparsity_out = &chain_nm_5_external_cost_sparsity_out;
+                external_cost->casadi_n_in = &chain_nm_5_external_cost_n_in;
+                external_cost->casadi_n_out = &chain_nm_5_external_cost_n_out;
+            }
+            else
+            {
+                printf("external cost not implemented for final stage");
+                exit(1);
+            }
+            break;
+        // case 5:
+        //     if (indx < N)
+        //     {
+        //         external_cost->casadi_fun = &chain_nm_6_external_cost;
+        //         external_cost->casadi_work = &chain_nm_6_external_cost_work;
+        //         external_cost->casadi_sparsity_in = &chain_nm_6_external_cost_sparsity_in;
+        //         external_cost->casadi_sparsity_out = &chain_nm_6_external_cost_sparsity_out;
+        //         external_cost->casadi_n_in = &chain_nm_6_external_cost_n_in;
+        //         external_cost->casadi_n_out = &chain_nm_6_external_cost_n_out;
+        //     }
+        //     else
+        //     {
+        //         printf("external cost not implemented for final stage");
+        //         exit(1);
+        //     }
+            break;
+    }
 }
 
 
@@ -1047,8 +1047,6 @@ void setup_and_solve_nlp(int NN,
     if (NMF > 3 && model_type != CONTINUOUS_MODEL)
         return;
 
-    // TODO(dimitris): fix minor memory leak
-    // here
     ocp_nlp_config *config = ocp_nlp_config_create(*plan);
 
     /************************************************
@@ -1072,7 +1070,6 @@ void setup_and_solve_nlp(int NN,
         ocp_nlp_dims_set_constraints(config, dims, i, "nbu", &nbu[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "ng", &ng[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "nh", &nh[i]);
-        // ocp_nlp_dims_set_constraints(config, dims, i, "np", &nq[i]);
     }
 
     /************************************************
@@ -1102,19 +1099,23 @@ void setup_and_solve_nlp(int NN,
     select_dynamics_casadi(NN, NMF, expl_vde_for, impl_ode_fun,
             impl_ode_fun_jac_x_xdot, impl_ode_fun_jac_x_xdot_u, impl_ode_jac_x_xdot_u, erk4_casadi);
 
+    external_function_opts ext_fun_opts;
+    external_function_opts_set_to_default(&ext_fun_opts);
+    ext_fun_opts.external_workspace = true;
+
     // forw_vde
-    external_function_casadi_create_array(NN, expl_vde_for);
+    external_function_casadi_create_array(NN, expl_vde_for, &ext_fun_opts);
     // impl_ode
-    external_function_casadi_create_array(NN, impl_ode_fun);
+    external_function_casadi_create_array(NN, impl_ode_fun, &ext_fun_opts);
     //
-    external_function_casadi_create_array(NN, impl_ode_fun_jac_x_xdot);
+    external_function_casadi_create_array(NN, impl_ode_fun_jac_x_xdot, &ext_fun_opts);
     //
-    external_function_casadi_create_array(NN, impl_ode_fun_jac_x_xdot_u);
+    external_function_casadi_create_array(NN, impl_ode_fun_jac_x_xdot_u, &ext_fun_opts);
     //
-    external_function_casadi_create_array(NN, impl_ode_jac_x_xdot_u);
+    external_function_casadi_create_array(NN, impl_ode_jac_x_xdot_u, &ext_fun_opts);
 
     if (erk4_casadi != NULL)
-        external_function_casadi_create_array(NN, erk4_casadi);
+        external_function_casadi_create_array(NN, erk4_casadi, &ext_fun_opts);
 
     /************************************************
     * nonlinear least squares
@@ -1122,7 +1123,7 @@ void setup_and_solve_nlp(int NN,
 
     external_function_casadi *ls_cost_jac_casadi = (external_function_casadi *)
                                                     malloc((NN+1)*sizeof(external_function_casadi));
-	external_function_casadi *external_cost = (external_function_casadi *)
+    external_function_casadi *external_cost = (external_function_casadi *)
                                               malloc(NN*sizeof(external_function_casadi));
 
     for (int i = 0; i <= NN; i++)
@@ -1135,15 +1136,15 @@ void setup_and_solve_nlp(int NN,
 
             case NONLINEAR_LS:
                 select_ls_stage_cost_jac_casadi(i, NN, NMF, &ls_cost_jac_casadi[i]);
-                external_function_casadi_create(&ls_cost_jac_casadi[i]);
+                external_function_casadi_create(&ls_cost_jac_casadi[i], &ext_fun_opts);
                 break;
 
-			case EXTERNAL:
-				select_external_stage_cost_casadi(i, NN, NMF, &external_cost[i]);
-				external_function_casadi_create(&external_cost[i]);
-				break;
+            case EXTERNAL:
+                select_external_stage_cost_casadi(i, NN, NMF, &external_cost[i]);
+                external_function_casadi_create(&external_cost[i], &ext_fun_opts);
+                break;
 
-			default:
+            default:
                 printf("\ncost not correctly specified\n\n");
                 exit(1);
         }
@@ -1153,32 +1154,6 @@ void setup_and_solve_nlp(int NN,
     * nonlinear constraints
     ************************************************/
     external_function_generic nonlin_constr_generic;
-
-    // if (con_type == GENERAL_NONLINEAR)
-    // {
-    //     switch (NMF)
-    //     {
-    //         case 1:
-    //             nonlin_constr_generic.evaluate = &nonlin_constr_nm2;
-    //             break;
-    //         case 2:
-    //             nonlin_constr_generic.evaluate = &nonlin_constr_nm3;
-    //             break;
-    //         case 3:
-    //             nonlin_constr_generic.evaluate = &nonlin_constr_nm4;
-    //             break;
-    //         case 4:
-    //             nonlin_constr_generic.evaluate = &nonlin_constr_nm5;
-    //             break;
-    //         case 5:
-    //             nonlin_constr_generic.evaluate = &nonlin_constr_nm6;
-    //             break;
-    //         default:
-    //             printf("\nnonlin constr not implemented for this number of masses\n\n");
-    //             exit(1);
-    //     }
-    // }
-
 
     /************************************************
     * nlp_in
@@ -1244,7 +1219,7 @@ void setup_and_solve_nlp(int NN,
 
             case EXTERNAL:
 
-				ocp_nlp_cost_model_set(config, dims, nlp_in, i, "ext_cost_fun_jac_hes", &external_cost[i]);
+                ocp_nlp_cost_model_set(config, dims, nlp_in, i, "ext_cost_fun_jac_hes", &external_cost[i]);
 
                 assert(i < NN && "externally provided cost not implemented for last stage!");
                 break;
@@ -1414,7 +1389,7 @@ void setup_and_solve_nlp(int NN,
 
     ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 
-    ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
+    ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts, nlp_in);
     int status;
     status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
 
@@ -1438,10 +1413,10 @@ void setup_and_solve_nlp(int NN,
     double max_res = 0.0;
 
     double inf_norm_res_stat, inf_norm_res_eq, inf_norm_res_ineq, inf_norm_res_comp;
-    ocp_nlp_get(config, solver, "res_stat", &inf_norm_res_stat);
-    ocp_nlp_get(config, solver, "res_eq", &inf_norm_res_eq);
-    ocp_nlp_get(config, solver, "res_ineq", &inf_norm_res_ineq);
-    ocp_nlp_get(config, solver, "res_comp", &inf_norm_res_comp);
+    ocp_nlp_get(solver, "res_stat", &inf_norm_res_stat);
+    ocp_nlp_get(solver, "res_eq", &inf_norm_res_eq);
+    ocp_nlp_get(solver, "res_ineq", &inf_norm_res_ineq);
+    ocp_nlp_get(solver, "res_comp", &inf_norm_res_comp);
 
     max_res = (inf_norm_res_stat > max_res) ? inf_norm_res_stat : max_res;
     max_res = (inf_norm_res_eq > max_res) ? inf_norm_res_eq : max_res;
@@ -1495,22 +1470,22 @@ void setup_and_solve_nlp(int NN,
     free(idxb1);
     free(idxbN);
 
-	for (int i = 0; i <= NN; i++)
-	{
-		switch (plan->nlp_cost[i])
-		{
-			case NONLINEAR_LS:
-				external_function_casadi_free(&ls_cost_jac_casadi[i]);
-				break;
-			case EXTERNAL:
-				external_function_casadi_free(&external_cost[i]);
-			default:
-				break;
-		}
-	}
+    for (int i = 0; i <= NN; i++)
+    {
+        switch (plan->nlp_cost[i])
+        {
+            case NONLINEAR_LS:
+                external_function_casadi_free(&ls_cost_jac_casadi[i]);
+                break;
+            case EXTERNAL:
+                external_function_casadi_free(&external_cost[i]);
+            default:
+                break;
+        }
+    }
 
     free(ls_cost_jac_casadi);
-	free(external_cost);
+    free(external_cost);
 
     free(plan);
 

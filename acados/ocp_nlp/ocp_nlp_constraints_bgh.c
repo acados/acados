@@ -636,15 +636,7 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     int nge = dims->nge;
     int nhe = dims->nhe;
 
-    if (!strcmp(field, "lb")) // NOTE: should not be used, but is still in C examplex, remove.
-    {
-        blasfeo_pack_dvec(nb, value, 1, &model->d, 0);
-    }
-    else if (!strcmp(field, "ub")) // NOTE: should not be used, but is still in C examplex, remove.
-    {
-        blasfeo_pack_dvec(nb, value, 1, &model->d, nb+ng+nh);
-    }
-    else if (!strcmp(field, "idxbx"))
+    if (!strcmp(field, "idxbx"))
     {
         ptr_i = (int *) value;
         for (ii=0; ii < nbx; ii++)
@@ -1691,6 +1683,33 @@ void ocp_nlp_constraints_bgh_update_qp_vectors(void *config_, void *dims_, void 
 }
 
 
+size_t ocp_nlp_constraints_bgh_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_)
+{
+    ocp_nlp_constraints_bgh_model *model = model_;
+
+    size_t size = 0;
+    size_t tmp_size;
+
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->nl_constr_h_fun);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->nl_constr_h_fun_jac);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->nl_constr_h_fun_jac_hess);
+    size = size > tmp_size ? size : tmp_size;
+
+    return size;
+}
+
+
+void ocp_nlp_constraints_bgh_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_)
+{
+    ocp_nlp_constraints_bgh_model *model = model_;
+    external_function_set_fun_workspace_if_defined(model->nl_constr_h_fun, workspace_);
+    external_function_set_fun_workspace_if_defined(model->nl_constr_h_fun_jac, workspace_);
+    external_function_set_fun_workspace_if_defined(model->nl_constr_h_fun_jac_hess, workspace_);
+}
+
+
 void ocp_nlp_constraints_bgh_config_initialize_default(void *config_, int stage)
 {
     ocp_nlp_constraints_config *config = config_;
@@ -1723,6 +1742,8 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_, int stage)
     config->memory_set_idxs_rev_ptr = &ocp_nlp_constraints_bgh_memory_set_idxs_rev_ptr;
     config->memory_set_idxe_ptr = &ocp_nlp_constraints_bgh_memory_set_idxe_ptr;
     config->workspace_calculate_size = &ocp_nlp_constraints_bgh_workspace_calculate_size;
+    config->get_external_fun_workspace_requirement = &ocp_nlp_constraints_bgh_get_external_fun_workspace_requirement;
+    config->set_external_fun_workspaces = &ocp_nlp_constraints_bgh_set_external_fun_workspaces;
     config->initialize = &ocp_nlp_constraints_bgh_initialize;
     config->update_qp_matrices = &ocp_nlp_constraints_bgh_update_qp_matrices;
     config->update_qp_vectors = &ocp_nlp_constraints_bgh_update_qp_vectors;

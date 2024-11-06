@@ -33,34 +33,34 @@ import numpy as np
 from .utils import check_if_nparray_and_flatten, check_if_2d_nparray
 
 class AcadosOcpCost:
-    """
+    r"""
     Class containing the numerical data of the cost:
 
     NOTE: By default, the Lagrange cost term provided in continuous time is internally integrated using the explicit Euler method, cost_discretization = 'EULER',
     which allows for a seamless OCP discretization with a nonuniform time grid.
     This means that all cost terms, except for the terminal one, are weighted with the corresponding time step.
-    :math:`c_\\text{total} = \Delta t_0 \cdot l_0(x_0, u_0, z_0, p_0) + ... + \Delta t_{N-1} \cdot l_{N-1}(x_{N-1}, u_{N-1}, z_{N-1}, p_{N-1}) + l_N(x_N, p_N)`.
+    :math:`c_\text{total} = \Delta t_0 \cdot l_0(x_0, u_0, z_0, p_0) + ... + \Delta t_{N-1} \cdot l_{N-1}(x_{N-1}, u_{N-1}, z_{N-1}, p_{N-1}) + l_N(x_N, p_N)`.
 
     If a nonlinear least-squares or convex-over-nonlinear cost is used, the cost can also be integrated using the same integration scheme,
     which is used for the dynamics, cost_discretization = 'INTEGRATOR'.
 
     In case of LINEAR_LS:
     stage cost is
-    :math:`l(x,u,z) = 0.5 \cdot || V_x \, x + V_u \, u + V_z \, z - y_\\text{ref}||^2_W`,
+    :math:`l(x,u,z) = 0.5 \cdot || V_x \, x + V_u \, u + V_z \, z - y_\text{ref}||^2_W`,
     terminal cost is
-    :math:`m(x) = 0.5 \cdot || V^e_x \, x - y_\\text{ref}^e||^2_{W^e}`
+    :math:`m(x) = 0.5 \cdot || V^e_x \, x - y_\text{ref}^e||^2_{W^e}`
 
     In case of NONLINEAR_LS:
     stage cost is
-    :math:`l(x,u,z,t,p) = 0.5 \cdot || y(x,u,z,t,p) - y_\\text{ref}||^2_W`,
+    :math:`l(x,u,z,t,p) = 0.5 \cdot || y(x,u,z,t,p) - y_\text{ref}||^2_W`,
     terminal cost is
-    :math:`m(x,p) = 0.5 \cdot || y^e(x,p) - y_\\text{ref}^e||^2_{W^e}`
+    :math:`m(x,p) = 0.5 \cdot || y^e(x,p) - y_\text{ref}^e||^2_{W^e}`
 
     In case of CONVEX_OVER_NONLINEAR:
     stage cost is
-    :math:`l(x,u,z,t,p) = \psi(y(x,u,z,t,p) - y_\\text{ref}, t, p)`,
+    :math:`l(x,u,z,t,p) = \psi(y(x,u,z,t,p) - y_\text{ref}, t, p)`,
     terminal cost is
-    :math:`m(x, p) = \psi^e (y^e(x,p) - y_\\text{ref}^e, p)`
+    :math:`m(x, p) = \psi^e (y^e(x,p) - y_\text{ref}^e, p)`
     """
     def __init__(self):
         # initial stage
@@ -152,7 +152,7 @@ class AcadosOcpCost:
 
     @property
     def yref_0(self):
-        """:math:`y_\\text{ref}^0` - reference at initial shooting node (0).
+        r""":math:`y_\text{ref}^0` - reference at initial shooting node (0).
         Default: :code:`None`.
         """
         return self.__yref_0
@@ -239,7 +239,7 @@ class AcadosOcpCost:
 
     @property
     def yref(self):
-        """:math:`y_\\text{ref}` - reference at intermediate shooting nodes (1 to N-1).
+        r""":math:`y_\text{ref}` - reference at intermediate shooting nodes (1 to N-1).
         Default: :code:`np.array([])`.
         """
         return self.__yref
@@ -383,7 +383,7 @@ class AcadosOcpCost:
 
     @property
     def yref_e(self):
-        """:math:`y_\\text{ref}^e` - cost reference at terminal shooting node (N).
+        r""":math:`y_\text{ref}^e` - cost reference at terminal shooting node (N).
         Default: :code:`np.array([])`.
         """
         return self.__yref_e

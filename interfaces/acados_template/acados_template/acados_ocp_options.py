@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import numpy as np
+import os
 from .utils import check_if_nparray_and_flatten
 
 
@@ -78,6 +78,7 @@ class AcadosOcpOptions:
         self.__qp_solver_ric_alg = 1
         self.__qp_solver_mu0 = 0.0
         self.__rti_log_residuals = 0
+        self.__rti_log_only_available_residuals = 0
         self.__print_level = 0
         self.__cost_discretization = 'EULER'
         self.__regularize_method = 'NO_REGULARIZE'
@@ -112,9 +113,14 @@ class AcadosOcpOptions:
         self.__adaptive_levenberg_marquardt_lam = 5.0
         self.__adaptive_levenberg_marquardt_mu_min = 1e-16
         self.__adaptive_levenberg_marquardt_mu0 = 1e-3
-        self.__log_primal_step_norm : bool = False
+        self.__log_primal_step_norm: bool = False
+        self.__store_iterates: bool = False
+        self.__timeout_max_time = 0.
+        self.__timeout_heuristic = 'LAST'
+
         # TODO: move those out? they are more about generation than about the acados OCP solver.
-        self.__ext_fun_compile_flags = '-O2'
+        env = os.environ
+        self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
         self.__model_external_shared_lib_dir = None
         self.__model_external_shared_lib_name = None
         self.__custom_update_filename = ''
@@ -135,7 +141,7 @@ class AcadosOcpOptions:
     def ext_fun_compile_flags(self):
         """
         String with compiler flags for external function compilation.
-        Default: '-O2'.
+        Default: '-O2' if environment variable ACADOS_EXT_FUN_COMPILE_FLAGS is not set, else ACADOS_EXT_FUN_COMPILE_FLAGS is used as default.
         """
         return self.__ext_fun_compile_flags
 
@@ -341,7 +347,7 @@ class AcadosOcpOptions:
     @property
     def sim_method_newton_iter(self):
         """
-        Number of Newton iterations in simulation method.
+        Number of Newton iterations in implicit integrators.
         Type: int > 0
         Default: 3
         """
@@ -350,7 +356,8 @@ class AcadosOcpOptions:
     @property
     def sim_method_newton_tol(self):
         """
-        Tolerance of Newton system in simulation method.
+        Tolerance of Newton system in implicit integrators.
+        This option is not implemented for LIFTED_IRK
         Type: float: 0.0 means not used
         Default: 0.0
         """
@@ -544,6 +551,43 @@ class AcadosOcpOptions:
         Default: False
         """
         return self.__log_primal_step_norm
+
+    @property
+    def store_iterates(self,):
+        """
+        Flag indicating whether the intermediate primal-dual iterates should be stored.
+        This is implemented only for solver type `SQP` and `DDP`.
+        Default: False
+        """
+        return self.__store_iterates
+
+    @property
+    def timeout_max_time(self,):
+        """
+        Maximum time before solver timeout. If 0, there is no timeout.
+        A timeout is triggered if the condition
+        `current_time_tot + predicted_per_iteration_time > timeout_max_time`
+        is satisfied at the end of an SQP iteration.
+        The value of `predicted_per_iteration_time` is estimated using `timeout_heuristic`.
+        Currently implemented for SQP only.
+        Default: 0.
+        """
+        return self.__timeout_max_time
+
+    @property
+    def timeout_heuristic(self,):
+        """
+        Heuristic to be used for predicting the runtime of the next SQP iteration, cf. `timeout_max_time`.
+        Possible values are "MAX_CALL", "MAX_OVERALL", "LAST", "AVERAGE", "ZERO".
+        MAX_CALL: Use the maximum time per iteration for the current solver call as estimate.
+        MAX_OVERALL: Use the maximum time per iteration over all solver calls as estimate.
+        LAST: Use the time required by the last iteration as estimate.
+        AVERAGE: Use an exponential moving average of the previous per iteration times as estimate (weight is currently fixed at 0.5).
+        ZERO: Use 0 as estimate.
+        Currently implemented for SQP only.
+        Default: ZERO.
+        """
+        return self.__timeout_heuristic
 
     @property
     def tol(self):
@@ -826,6 +870,16 @@ class AcadosOcpOptions:
         """
         return self.__rti_log_residuals
 
+    @property
+    def rti_log_only_available_residuals(self):
+        """
+        Relevant if rti_log_residuals is set to 1.
+        If rti_log_only_available_residuals is set to 1, only residuals that do not require additional function evaluations are logged.
+
+        Type: int; 0 or 1;
+        Default: 0.
+        """
+        return self.__rti_log_only_available_residuals
 
     @property
     def nlp_solver_tol_comp(self):
@@ -1387,6 +1441,27 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid log_primal_step_norm value. Expected bool.')
 
+    @store_iterates.setter
+    def store_iterates(self, val):
+        if isinstance(val, bool):
+            self.__store_iterates = val
+        else:
+            raise Exception('Invalid store_iterates value. Expected bool.')
+
+    @timeout_max_time.setter
+    def timeout_max_time(self, val):
+        if isinstance(val, float) and val >= 0:
+            self.__timeout_max_time = val
+        else:
+            raise Exception('Invalid timeout_max_time value. Expected nonnegative float.')
+
+    @timeout_heuristic.setter
+    def timeout_heuristic(self, val):
+        if val in ["MAX_CALL", "MAX_OVERALL", "LAST", "AVERAGE", "ZERO"]:
+            self.__timeout_heuristic = val
+        else:
+            raise Exception('Invalid timeout_heuristic value. Expected value in ["MAX_CALL", "MAX_OVERALL", "LAST", "AVERAGE", "ZERO"].')
+
     @as_rti_iter.setter
     def as_rti_iter(self, as_rti_iter):
         if isinstance(as_rti_iter, int) and as_rti_iter >= 0:
@@ -1529,6 +1604,13 @@ class AcadosOcpOptions:
             self.__rti_log_residuals = rti_log_residuals
         else:
             raise Exception('Invalid rti_log_residuals value. rti_log_residuals must be in [0, 1].')
+
+    @rti_log_only_available_residuals.setter
+    def rti_log_only_available_residuals(self, rti_log_only_available_residuals):
+        if rti_log_only_available_residuals in [0, 1]:
+            self.__rti_log_only_available_residuals = rti_log_only_available_residuals
+        else:
+            raise Exception('Invalid rti_log_only_available_residuals value. rti_log_only_available_residuals must be in [0, 1].')
 
     @nlp_solver_tol_comp.setter
     def nlp_solver_tol_comp(self, nlp_solver_tol_comp):

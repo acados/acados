@@ -83,20 +83,20 @@ class AcadosModel():
 
         ## dynamics
         self.f_impl_expr = None
-        """
-        CasADi expression for the implicit dynamics :math:`f_\\text{impl}(\dot{x}, x, u, z, p) = 0`.
+        r"""
+        CasADi expression for the implicit dynamics :math:`f_\text{impl}(\dot{x}, x, u, z, p) = 0`.
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.integrator_type` == 'IRK'.
         Default: :code:`None`
         """
         self.f_expl_expr = None
-        """
-        CasADi expression for the explicit dynamics :math:`\dot{x} = f_\\text{expl}(x, u, p)`.
+        r"""
+        CasADi expression for the explicit dynamics :math:`\dot{x} = f_\text{expl}(x, u, p)`.
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.integrator_type` == 'ERK'.
         Default: :code:`None`
         """
         self.disc_dyn_expr = None
-        """
-        CasADi expression for the discrete dynamics :math:`x_{+} = f_\\text{disc}(x, u, p)`.
+        r"""
+        CasADi expression for the discrete dynamics :math:`x_{+} = f_\text{disc}(x, u, p)`.
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.integrator_type` == 'DISCRETE'.
         Default: :code:`None`
         """
@@ -133,12 +133,12 @@ class AcadosModel():
         self.con_h_expr_0 = None
         """CasADi expression for the initial constraint :math:`h^0`; Default: :code:`None`"""
         self.con_phi_expr_0 = None
-        """CasADi expression for the terminal constraint :math:`\phi_0`; Default: :code:`None`"""
+        r"""CasADi expression for the terminal constraint :math:`\phi_0`; Default: :code:`None`"""
         self.con_r_expr_0 = None
-        """CasADi expression for the terminal constraint :math:`\phi_0(r)`,
+        r"""CasADi expression for the terminal constraint :math:`\phi_0(r)`,
         dummy input for outer function; Default: :code:`None`"""
         self.con_r_in_phi_0 = None
-        """CasADi expression for the terminal constraint :math:`\phi_0(r)`, input for outer function; Default: :code:`None`"""
+        r"""CasADi expression for the terminal constraint :math:`\phi_0(r)`, input for outer function; Default: :code:`None`"""
 
 
         # path constraints
@@ -152,19 +152,19 @@ class AcadosModel():
         """CasADi expression for the constraint phi(r),
         dummy input for outer function; Default: :code:`None`"""
         self.con_r_in_phi = None
-        """CasADi expression for the terminal constraint :math:`\phi(r)`,
+        r"""CasADi expression for the terminal constraint :math:`\phi(r)`,
         input for outer function; Default: :code:`None`"""
 
         # terminal
         self.con_h_expr_e = None
         """CasADi expression for the terminal constraint :math:`h^e`; Default: :code:`None`"""
         self.con_phi_expr_e = None
-        """CasADi expression for the terminal constraint :math:`\phi_e`; Default: :code:`None`"""
+        r"""CasADi expression for the terminal constraint :math:`\phi_e`; Default: :code:`None`"""
         self.con_r_expr_e = None
-        """CasADi expression for the terminal constraint :math:`\phi_e(r)`,
+        r"""CasADi expression for the terminal constraint :math:`\phi_e(r)`,
         dummy input for outer function; Default: :code:`None`"""
         self.con_r_in_phi_e = None
-        """CasADi expression for the terminal constraint :math:`\phi_e(r)`, input for outer function; Default: :code:`None`"""
+        r"""CasADi expression for the terminal constraint :math:`\phi_e(r)`, input for outer function; Default: :code:`None`"""
 
         # cost
         self.cost_y_expr = None
@@ -188,32 +188,32 @@ class AcadosModel():
 
         ## CONVEX_OVER_NONLINEAR convex-over-nonlinear cost: psi(y(x, u, p) - y_ref; p)
         self.cost_psi_expr_0 = None
-        """
+        r"""
         CasADi expression for the outer loss function :math:`\psi(r - yref, t, p)`, initial; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type_0` is 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_psi_expr = None
-        """
+        r"""
         CasADi expression for the outer loss function :math:`\psi(r - yref, t, p)`; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type` is 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_psi_expr_e = None
-        """
+        r"""
         CasADi expression for the outer loss function :math:`\psi(r - yref, p)`, terminal; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type_e` is 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_r_in_psi_expr_0 = None
-        """
+        r"""
         CasADi symbolic input variable for the argument :math:`r` to the outer loss function :math:`\psi(r, t, p)`, initial; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type_0` is 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_r_in_psi_expr = None
-        """
+        r"""
         CasADi symbolic input variable for the argument :math:`r` to the outer loss function :math:`\psi(r, t, p)`; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type` is 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_r_in_psi_expr_e = None
-        """
+        r"""
         CasADi symbolic input variable for the argument :math:`r` to the outer loss function :math:`\psi(r, p)`, terminal; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type_e` is 'CONVEX_OVER_NONLINEAR'.
         """
@@ -293,6 +293,7 @@ class AcadosModel():
         else:
             raise Exception(f"model.x must be casadi.SX or casadi.MX, got {type(self.x)}")
 
+
     def make_consistent(self, dims: Union[AcadosOcpDims, AcadosSimDims]) -> None:
 
         casadi_symbol = self.get_casadi_symbol()
@@ -335,10 +336,23 @@ class AcadosModel():
                 raise Exception("model.p_global is only supported for OCPs")
             if any(ca.which_depends(self.p_global, self.p)):
                 raise Exception(f"model.p_global must not depend on model.p, got p_global ={self.p_global}, p = {self.p}")
-            if not isinstance(self.p_global, (ca.MX)):
-                # otherwise: AttributeError: 'SX' object has no attribute 'primitives'
-                raise Exception(f"model.p_global must be casadi.MX, got {type(self.p_global)}")
+            if not isinstance(self.p_global, (ca.MX, ca.SX)):
+                raise Exception(f"model.p_global must be casadi.MX, casadi.SX got {type(self.p_global)}")
             dims.np_global = casadi_length(self.p_global)
+
+        # model output dimension nx_next: dimension of the next state
+        if isinstance(dims, AcadosOcpDims):
+            if self.disc_dyn_expr is not None:
+                dims.nx_next = casadi_length(self.disc_dyn_expr)
+            else:
+                dims.nx_next = casadi_length(self.x)
+
+        if self.f_impl_expr is not None:
+            if casadi_length(self.f_impl_expr) != (dims.nx + dims.nz):
+                raise Exception(f"model.f_impl_expr must have length nx + nz = {dims.nx} + {dims.nz}, got {casadi_length(self.f_impl_expr)}")
+        if self.f_expl_expr is not None:
+            if casadi_length(self.f_expl_expr) != dims.nx:
+                raise Exception(f"model.f_expl_expr must have length nx = {dims.nx}, got {casadi_length(self.f_expl_expr)}")
 
         return
 
@@ -360,11 +374,11 @@ class AcadosModel():
 
 
     def reformulate_with_polynomial_control(self, degree: int) -> None:
-        """
+        r"""
         Augment the model with polynomial control.
 
-        Replace the original control input :math:`u` with a polynomial control input :math:`v_{\\text{poly}} = \\sum_{i=0}^d u_i t^i`
-        New controls are :math:`u_0, \\dots, u_d`.
+        Replace the original control input :math:`u` with a polynomial control input :math:`v_{\text{poly}} = \sum_{i=0}^d u_i t^i`
+        New controls are :math:`u_0, \dots, u_d`.
 
         NOTE: bounds on controls are not changed in this function.
 

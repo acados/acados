@@ -170,7 +170,7 @@ typedef struct
     struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
     struct blasfeo_dmat *RSQrq;         ///< pointer to RSQrq in qp_in
     struct blasfeo_dvec *Z;             ///< pointer to Z in qp_in
-	double fun;                         ///< value of the cost function
+    double fun;                         ///< value of the cost function
 } ocp_nlp_cost_ls_memory;
 
 //
@@ -213,6 +213,10 @@ typedef struct
 
 //
 acados_size_t ocp_nlp_cost_ls_workspace_calculate_size(void *config, void *dims, void *opts);
+//
+size_t ocp_nlp_cost_ls_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_);
+//
+void ocp_nlp_cost_ls_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_);
 
 
 

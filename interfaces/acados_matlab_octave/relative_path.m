@@ -7,6 +7,12 @@ function rel_path = relative_path(target_path, base_path)
     target_path = absolute_path(target_path);
     base_path = absolute_path(base_path);
 
+    % return '.' if paths match
+    if strcmp(target_path, base_path)
+        rel_path = '.';
+        return;
+    end
+
     % Split the paths into their individual components
     target_parts = strsplit(target_path, filesep);
     base_parts = strsplit(base_path, filesep);

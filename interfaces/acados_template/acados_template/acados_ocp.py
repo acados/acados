@@ -75,6 +75,7 @@ class AcadosOcp:
         - :py:attr:`shared_lib_ext` (set automatically)
         - :py:attr:`acados_lib_path` (set automatically)
         - :py:attr:`parameter_values` - used to initialize the parameters (can be changed)
+        - :py:attr:`p_global_values` - used to initialize the global parameters (can be changed)
     """
     def __init__(self, acados_path=''):
         """
@@ -109,10 +110,9 @@ class AcadosOcp:
         self.cython_include_dirs = [np.get_include(), get_paths()['include']]
 
         self.__parameter_values = np.array([])
+        self.__p_global_values = np.array([])
         self.__problem_class = 'OCP'
         self.__json_file = "acados_ocp.json"
-
-        self.__casadi_pool_names = None
 
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
@@ -135,6 +135,21 @@ class AcadosOcp:
                             f'Expected numpy array, got {type(parameter_values)}.')
 
     @property
+    def p_global_values(self):
+        r"""initial values for :math:`p_\text{global}` vector, see `AcadosModel.p_global` - can be updated.
+        Type: `numpy.ndarray` of shape `(np_global, )`.
+        """
+        return self.__p_global_values
+
+    @p_global_values.setter
+    def p_global_values(self, p_global_values):
+        if isinstance(p_global_values, np.ndarray):
+            self.__p_global_values = p_global_values
+        else:
+            raise Exception('Invalid p_global_values value. ' +
+                            f'Expected numpy array, got {type(p_global_values)}.')
+
+    @property
     def json_file(self):
         """Name of the json file where the problem description is stored."""
         return self.__json_file
@@ -143,7 +158,7 @@ class AcadosOcp:
     def json_file(self, json_file):
         self.__json_file = json_file
 
-    def make_consistent(self) -> None:
+    def make_consistent(self, is_mocp_phase=False) -> None:
         """
         Detect dimensions, perform sanity checks
         """
@@ -156,10 +171,19 @@ class AcadosOcp:
         model.make_consistent(dims)
         self.name = model.name
 
+        # check if nx != nx_next
+        if not is_mocp_phase and dims.nx != dims.nx_next and opts.N_horizon > 1:
+            raise Exception('nx_next should be equal to nx if more than one shooting interval is used.')
+
         # parameters
         if self.parameter_values.shape[0] != dims.np:
             raise Exception('inconsistent dimension np, regarding model.p and parameter_values.' + \
                 f'\nGot np = {dims.np}, self.parameter_values.shape = {self.parameter_values.shape[0]}\n')
+
+        # p_global_values
+        if self.p_global_values.shape[0] != dims.np_global:
+            raise Exception('inconsistent dimension np_global, regarding model.p_global and p_global_values.' + \
+                f'\nGot np_global = {dims.np_global}, self.p_global_values.shape = {self.p_global_values.shape[0]}\n')
 
         ## cost
         # initial stage - if not set, copy fields from path constraints
@@ -812,22 +836,26 @@ class AcadosOcp:
                                  ("path", model.con_r_expr), ("initial", model.con_r_expr_0), ("terminal", model.con_r_expr_e)]
 
         if opts.with_solution_sens_wrt_params:
+            if dims.np_global == 0:
+                raise Exception('with_solution_sens_wrt_params is only compatible if global parameters `p_global` are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got emty p_global.')
             if cost.cost_type != "EXTERNAL" or cost.cost_type_0 != "EXTERNAL" or cost.cost_type_e != "EXTERNAL":
                 raise Exception('with_solution_sens_wrt_params is only compatible with EXTERNAL cost_type.')
             if opts.integrator_type != "DISCRETE":
                 raise Exception('with_solution_sens_wrt_params is only compatible with DISCRETE dynamics.')
             for horizon_type, constraint in type_constraint_pairs:
-                if constraint is not None and any(ca.which_depends(constraint, model.p)):
-                    raise Exception(f'with_solution_sens_wrt_params is only implemented if constraints depend not on parameters. Got parameter dependency for {horizon_type} constraint.')
+                if constraint is not None and any(ca.which_depends(constraint, model.p_global)):
+                    raise Exception(f"with_solution_sens_wrt_params is only implemented if constraints don't depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
 
         if opts.with_value_sens_wrt_params:
+            if dims.np_global == 0:
+                raise Exception('with_value_sens_wrt_params is only compatible if global parameters `p_global` are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got emty p_global.')
             if cost.cost_type != "EXTERNAL" or cost.cost_type_0 != "EXTERNAL" or cost.cost_type_e != "EXTERNAL":
                 raise Exception('with_value_sens_wrt_params is only compatible with EXTERNAL cost_type.')
             if opts.integrator_type != "DISCRETE":
                 raise Exception('with_value_sens_wrt_params is only compatible with DISCRETE dynamics.')
             for horizon_type, constraint in type_constraint_pairs:
-                if constraint is not None and any(ca.which_depends(constraint, model.p)):
-                    raise Exception(f'with_value_sens_wrt_params is only implemented if constraints depend not on parameters. Got parameter dependency for {horizon_type} constraint.')
+                if constraint is not None and any(ca.which_depends(constraint, model.p_global)):
+                    raise Exception(f"with_value_sens_wrt_params is only implemented if constraints don't depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
 
         if opts.qp_solver_cond_N is None:
             opts.qp_solver_cond_N = opts.N_horizon
@@ -1005,9 +1033,9 @@ class AcadosOcp:
 
         context = self._setup_code_generation_context(context)
         context.finalize()
-        self.__casadi_pool_names = context.pool_names
         self.__external_function_files_model = context.get_external_function_file_list(ocp_specific=False)
         self.__external_function_files_ocp = context.get_external_function_file_list(ocp_specific=True)
+        self.dims.n_global_data = context.get_n_global_data()
 
         return context
 
@@ -1150,6 +1178,104 @@ class AcadosOcp:
             raise Exception(f"Initial cost type must be NONLINEAR_LS, got cost_type_e {self.cost.cost_type_e}.")
         return
 
+
+    def translate_cost_to_external_cost(self, parametric_yref: bool = False):
+        """
+        Translates cost to EXTERNAL cost.
+        parametric_yref: If true, augment with additional parameters for yref_0, yref, yref_e.
+        """
+        # make yref a parameter
+        yref_0 = self.cost.yref_0
+        yref = self.cost.yref
+        yref_e = self.cost.yref_e
+
+        if parametric_yref:
+            symbol = self.model.get_casadi_symbol()
+            if self.cost.yref_0 is not None:
+                param_yref_0 = symbol('param_yref_0', len(self.cost.yref_0))
+                self.model.p = ca.vertcat(self.model.p, param_yref_0)
+                self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref_0))
+                yref_0 = param_yref_0
+
+            if self.cost.yref is not None:
+                param_yref = symbol('param_yref', len(self.cost.yref))
+                self.model.p = ca.vertcat(self.model.p, param_yref)
+                self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref))
+                yref = param_yref
+
+            if self.cost.yref_e is not None:
+                param_yref_e = symbol('param_yref_e', len(self.cost.yref_e))
+                self.model.p = ca.vertcat(self.model.p, param_yref_e)
+                self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref_e))
+                yref_e = param_yref_e
+
+        # initial stage
+        if self.cost.cost_type_0 == "LINEAR_LS":
+            self.model.cost_expr_ext_cost_0 = \
+                self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
+                                                          self.cost.Vx_0, self.cost.Vu_0, self.cost.Vz_0,
+                                                          yref_0, self.cost.W_0)
+        elif self.cost.cost_type_0 == "NONLINEAR_LS":
+            self.model.cost_expr_ext_cost_0 = \
+                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_0, yref_0, self.cost.W_0)
+
+        elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
+            self.model.cost_expr_ext_cost_0 = \
+                self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_0, self.model.cost_psi_expr_0,
+                                                            self.model.cost_y_expr_0, yref_0)
+        # intermediate stages
+        if self.cost.cost_type == "LINEAR_LS":
+            self.model.cost_expr_ext_cost = \
+                self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
+                                                          self.cost.Vx, self.cost.Vu, self.cost.Vz,
+                                                          yref, self.cost.W)
+        elif self.cost.cost_type == "NONLINEAR_LS":
+                self.model.cost_expr_ext_cost = \
+                    self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr, yref, self.cost.W)
+        elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+            self.model.cost_expr_ext_cost = \
+                self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr, self.model.cost_psi_expr,
+                                                            self.model.cost_y_expr, yref)
+        # terminal stage
+        if self.cost.cost_type_e == "LINEAR_LS":
+            self.model.cost_expr_ext_cost_e = \
+                self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
+                                                          self.cost.Vx_e, None, None,
+                                                          yref_e, self.cost.W_e)
+        elif self.cost.cost_type_e == "NONLINEAR_LS":
+            self.model.cost_expr_ext_cost_e = \
+                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_e, yref_e, self.cost.W_e)
+        elif self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
+            self.model.cost_expr_ext_cost_e = \
+                self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_e, self.model.cost_psi_expr_e,
+                                                            self.model.cost_y_expr_e, yref_e)
+        if self.cost.cost_type_0 is not None:
+            self.cost.cost_type_0 = 'EXTERNAL'
+        self.cost.cost_type = 'EXTERNAL'
+        self.cost.cost_type_e = 'EXTERNAL'
+
+
+    @staticmethod
+    def __translate_ls_cost_to_external_cost(x, u, z, Vx, Vu, Vz, yref, W):
+        res = 0
+        if Vx is not None:
+            res += Vx @ x
+        if Vu is not None and casadi_length(u) > 0:
+            res += Vu @ u
+        if Vz is not None and casadi_length(z) > 0:
+            res += Vz @ z
+        res -= yref
+
+        return 0.5 * (res.T @ W @ res)
+
+    @staticmethod
+    def __translate_nls_cost_to_external_cost(y_expr, yref, W):
+        res = y_expr - yref
+        return 0.5 * (res.T @ W @ res)
+
+    @staticmethod
+    def __translate_conl_cost_to_external_cost(r, psi, y_expr, yref):
+        return ca.substitute(psi, r, y_expr - yref)
 
     def formulate_constraint_as_L2_penalty(
         self,
@@ -1459,4 +1585,5 @@ class AcadosOcp:
         self.model.t0 = ca.SX.sym("t0")
         self.model.p = ca.vertcat(self.model.p, self.model.t0)
         self.parameter_values = np.append(self.parameter_values, [0.0])
+        self.p_global_values = np.append(self.p_global_values, [0.0])
         return

@@ -37,6 +37,7 @@ classdef AcadosOcp < handle
         solver_options
         model
         parameter_values % initial value of the parameter
+        p_global_values % initial value of the parameter
         acados_include_path
         acados_lib_path
         problem_class
@@ -47,7 +48,6 @@ classdef AcadosOcp < handle
         shared_lib_ext
         name
         zoro_description
-        casadi_pool_names
         external_function_files_ocp
         external_function_files_model
     end
@@ -60,6 +60,7 @@ classdef AcadosOcp < handle
             obj.model = AcadosModel();
 
             obj.parameter_values = [];
+            obj.p_global_values = [];
             obj.problem_class = 'OCP';
             obj.simulink_opts = [];
             obj.cython_include_dirs = [];
@@ -90,7 +91,10 @@ classdef AcadosOcp < handle
             end
         end
 
-        function make_consistent(self)
+        function make_consistent(self, is_mocp_phase)
+            if nargin < 2
+                is_mocp_phase = false;
+            end
             self.model.make_consistent(self.dims);
 
             model = self.model;
@@ -101,6 +105,11 @@ classdef AcadosOcp < handle
 
             N = opts.N_horizon;
             self.detect_cost_and_constraints();
+
+            % check if nx != nx_next
+            if ~is_mocp_phase && dims.nx ~= dims.nx_next && opts.N_horizon > 1
+                error(['nx_next = ', num2str(dims.nx_next), ' must be equal to nx = ', num2str(dims.nx), ' if more than one shooting interval is used.']);
+            end
 
             % detect GNSF structure
             if strcmp(opts.integrator_type, 'GNSF')
@@ -124,7 +133,19 @@ classdef AcadosOcp < handle
                 end
                 self.parameter_values = zeros(self.dims.np,1);
             elseif length(self.parameter_values) ~= self.dims.np
-                error(['parameters_values has the wrong shape. Expected: ' num2str(self.dims.np)])
+                error(['parameter_values has the wrong shape. Expected: ' num2str(self.dims.np)])
+            end
+
+
+            % parameters
+            if isempty(self.p_global_values)
+                if dims.np_global > 0
+                    warning(['self.p_global_values are not set.', ...
+                            10 'Using zeros(np_global,1) by default.' 10 'You can update them later using set().']);
+                end
+                self.p_global_values = zeros(self.dims.np_global,1);
+            elseif length(self.p_global_values) ~= self.dims.np_global
+                error(['p_global_values has the wrong shape. Expected: ' num2str(self.dims.np_global)])
             end
 
             %% cost
@@ -817,10 +838,7 @@ classdef AcadosOcp < handle
         function context = generate_external_functions(ocp, context)
 
             %% generate C code for CasADi functions / copy external functions
-            cost = ocp.cost;
             solver_opts = ocp.solver_options;
-            constraints = ocp.constraints;
-            dims = ocp.dims;
 
             if nargin < 2
                 % options for code generation
@@ -833,6 +851,19 @@ classdef AcadosOcp < handle
             else
                 code_gen_opts = context.opts;
             end
+            context = setup_code_generation_context(ocp, context);
+            context.finalize();
+            ocp.external_function_files_model = context.get_external_function_file_list(false);
+            ocp.external_function_files_ocp = context.get_external_function_file_list(true);
+            ocp.dims.n_global_data = context.get_n_global_data();
+        end
+
+        function context = setup_code_generation_context(ocp, context)
+            code_gen_opts = context.opts;
+            solver_opts = ocp.solver_options;
+            constraints = ocp.constraints;
+            cost = ocp.cost;
+            dims = ocp.dims;
 
             % dynamics
             model_dir = fullfile(pwd, code_gen_opts.code_export_directory, [ocp.name '_model']);
@@ -1007,7 +1038,7 @@ classdef AcadosOcp < handle
                     error('rti_phase is only supported for SQP_RTI');
                 end
             else
-                disp("not rendering Simulink related templates, as simulink_opts are not specified.")
+                disp("Not rendering Simulink-related templates, as simulink_opts are not specified.")
             end
         end
 
@@ -1039,6 +1070,7 @@ classdef AcadosOcp < handle
 
             % prepare struct for json dump
             out_struct.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);
+            out_struct.p_global_values = reshape(num2cell(self.p_global_values), [1, self.dims.np_global]);
             out_struct.model = orderfields(self.model.convert_to_struct_for_json_dump());
             out_struct.dims = orderfields(out_struct.dims.struct());
             out_struct.cost = orderfields(out_struct.cost.convert_to_struct_for_json_dump());

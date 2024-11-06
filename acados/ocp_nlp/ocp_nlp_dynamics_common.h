@@ -92,16 +92,19 @@ typedef struct
     void (*memory_set_dzduxt_ptr)(struct blasfeo_dmat *mat, void *memory_);
     void (*memory_set_sim_guess_ptr)(struct blasfeo_dvec *vec, bool *bool_ptr, void *memory_);
     void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *vec, void *memory_);
+    void (*memory_set_dyn_jac_p_global_ptr)(struct blasfeo_dmat *dyn_jac_p_global, void *memory);
+    void (*memory_set_jac_lag_stat_p_global_ptr)(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory);
     void (*memory_get)(void *config, void *dims, void *mem, const char *field, void* value);
     void (*memory_set)(void *config, void *dims, void *mem, const char *field, void* value);
-    void (*memory_get_params_grad)(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
-    void (*memory_get_params_lag_grad)(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
     /* workspace */
     acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
     void (*initialize)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*compute_jac_hess_p)(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
+
+    acados_size_t (*get_external_fun_workspace_requirement)(void *config, void *dims, void *opts_, void *in);
+    void (*set_external_fun_workspaces)(void *config, void *dims, void *opts_, void *in, void *work_);
 
     void (*compute_adj_p)(void *config, void *dims, void *model, void *opts, void *memory, struct blasfeo_dvec *out);
     void (*compute_fun_and_adj)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);

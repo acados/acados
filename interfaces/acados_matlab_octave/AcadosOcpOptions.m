@@ -70,6 +70,7 @@ classdef AcadosOcpOptions < handle
         qp_solver_ric_alg
         qp_solver_mu0
         rti_log_residuals
+        rti_log_only_available_residuals
         print_level
         cost_discretization
         regularize_method
@@ -97,7 +98,11 @@ classdef AcadosOcpOptions < handle
         adaptive_levenberg_marquardt_mu_min
         adaptive_levenberg_marquardt_mu0
         log_primal_step_norm
+        store_iterates
         eval_residual_at_max_iter
+
+        timeout_max_time
+        timeout_heuristic
 
         ext_fun_compile_flags
         model_external_shared_lib_dir
@@ -150,6 +155,7 @@ classdef AcadosOcpOptions < handle
             obj.qp_solver_ric_alg = 1;
             obj.qp_solver_mu0 = 0;
             obj.rti_log_residuals = 0;
+            obj.rti_log_only_available_residuals = 0;
             obj.print_level = 0;
             obj.cost_discretization = 'EULER';
             obj.regularize_method = 'NO_REGULARIZE';
@@ -176,9 +182,19 @@ classdef AcadosOcpOptions < handle
             obj.adaptive_levenberg_marquardt_mu_min = 1e-16;
             obj.adaptive_levenberg_marquardt_mu0 = 1e-3;
             obj.log_primal_step_norm = 0;
+            obj.store_iterates = false;
             obj.eval_residual_at_max_iter = [];
+            obj.timeout_max_time = 0.;
+            obj.timeout_heuristic = 'ZERO';
 
-            obj.ext_fun_compile_flags = '-O2';
+            % check whether flags are provided by environment variable
+            env_var = getenv("ACADOS_EXT_FUN_COMPILE_FLAGS");
+            if isempty(env_var)
+                obj.ext_fun_compile_flags = '-O2';
+            else
+                obj.ext_fun_compile_flags = env_var;
+            end
+
             obj.model_external_shared_lib_dir = [];
             obj.model_external_shared_lib_name = [];
             obj.custom_update_filename = '';

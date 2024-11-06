@@ -58,19 +58,22 @@ def main():
 
     pi = np.zeros(np_test)
     for i, p in enumerate(p_test):
-
-        for n in range(N_horizon+1):
-            acados_ocp_solver.set(n, 'p', p)
+        acados_ocp_solver.set_p_global_and_precompute_dependencies(np.array([p]))
         pi[i] = acados_ocp_solver.solve_for_x0(x0)[0]
         optimal_value[i] = acados_ocp_solver.get_cost()
-        optimal_value_grad[i] = acados_ocp_solver.eval_and_get_optimal_value_gradient("params_global").item()
+        optimal_value_grad[i] = acados_ocp_solver.eval_and_get_optimal_value_gradient("p_global").item()
 
     # evaluate cost gradient
     optimal_value_grad_via_fd = np.gradient(optimal_value, delta_p)
     cost_reconstructed_np_grad = np.cumsum(optimal_value_grad_via_fd) * delta_p + optimal_value[0]
 
     plot_cost_gradient_results(p_test, optimal_value, optimal_value_grad, optimal_value_grad_via_fd, cost_reconstructed_np_grad)
-    assert np.median(np.abs(optimal_value_grad - optimal_value_grad_via_fd)) <= 1e-1
+
+    # checks
+    test_tol = 1e-1
+    median_diff = np.median(np.abs(optimal_value_grad - optimal_value_grad_via_fd))
+    print(f"Median difference between value function gradient obtained by acados and via FD is {median_diff} should be < {test_tol}.")
+    assert median_diff <= test_tol
 
 
 

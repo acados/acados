@@ -81,6 +81,8 @@ typedef struct
     void (*memory_set_idxe_ptr)(int *idxe, void *memory);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
+    acados_size_t (*get_external_fun_workspace_requirement)(void *config, void *dims, void *opts_, void *in);
+    void (*set_external_fun_workspaces)(void *config, void *dims, void *opts_, void *in, void *work_);
     void (*initialize)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*update_qp_matrices)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*update_qp_vectors)(void *config, void *dims, void *model, void *opts, void *mem, void *work);

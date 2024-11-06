@@ -56,10 +56,6 @@ classdef AcadosOcpSolver < handle
             % generate
             check_dir_and_create(fullfile(pwd, ocp.code_export_directory));
             context = ocp.generate_external_functions();
-            context.finalize();
-            ocp.casadi_pool_names = context.pool_names;
-            ocp.external_function_files_model = context.get_external_function_file_list(false);
-            ocp.external_function_files_ocp = context.get_external_function_file_list(true);
 
             ocp.dump_to_json()
             ocp.render_templates()
@@ -181,6 +177,58 @@ classdef AcadosOcpSolver < handle
             obj.t_ocp.load_iterate(filename);
         end
 
+        function iterate = get_iterate(obj, iteration)
+            if iteration > obj.get('nlp_iter')
+                error("iteration needs to be nonnegative and <= nlp_iter.");
+            end
+
+            if ~obj.ocp.solver_options.store_iterates
+                error("get_iterate: the solver option store_iterates needs to be true in order to get iterates.");
+            end
+
+            if strcmp(obj.ocp.solver_options.nlp_solver_type, 'SQP_RTI')
+                error("get_iterate: SQP_RTI not supported.");
+            end
+
+            N_horizon = obj.ocp.solver_options.N_horizon;
+
+            x_traj = cell(N_horizon + 1, 1);
+            u_traj = cell(N_horizon, 1);
+            z_traj = cell(N_horizon, 1);
+            sl_traj = cell(N_horizon + 1, 1);
+            su_traj = cell(N_horizon + 1, 1);
+            pi_traj = cell(N_horizon, 1);
+            lam_traj = cell(N_horizon + 1, 1);
+
+            for n=1:N_horizon
+                x_traj{n, 1} = obj.t_ocp.get('x', n-1, iteration);
+                u_traj{n, 1} = obj.t_ocp.get('u', n-1, iteration);
+                z_traj{n, 1} = obj.t_ocp.get('z', n-1, iteration);
+                sl_traj{n, 1} = obj.t_ocp.get('sl', n-1, iteration);
+                su_traj{n, 1} = obj.t_ocp.get('su', n-1, iteration);
+                pi_traj{n, 1} = obj.t_ocp.get('pi', n-1, iteration);
+                lam_traj{n, 1} = obj.t_ocp.get('lam', n-1, iteration);
+            end
+
+            x_traj{N_horizon+1, 1} = obj.t_ocp.get('x', N_horizon, iteration);
+            sl_traj{N_horizon+1, 1} = obj.t_ocp.get('sl', N_horizon, iteration);
+            su_traj{N_horizon+1, 1} = obj.t_ocp.get('su', N_horizon, iteration);
+            lam_traj{N_horizon+1, 1} = obj.t_ocp.get('lam', N_horizon, iteration);
+
+            iterate = AcadosOcpIterate(x_traj, u_traj, z_traj, ...
+                    sl_traj, su_traj, pi_traj, lam_traj);
+        end
+
+        function iterates = get_iterates(obj)
+            nlp_iter = obj.get('nlp_iter');
+            iterates_cell = cell(nlp_iter+1, 1);
+
+            for n=1:(nlp_iter+1)
+                iterates_cell{n} = obj.get_iterate(n-1);
+            end
+
+            iterates = AcadosOcpIterates(iterates_cell);
+        end
 
         function print(obj, varargin)
             obj.t_ocp.print(varargin{:});
@@ -217,6 +265,10 @@ classdef AcadosOcpSolver < handle
             result.min_ev = zeros(num_blocks, 1);
             result.max_ev = zeros(num_blocks, 1);
             result.condition_number = zeros(num_blocks, 1);
+            min_abs_val = 1e12
+            max_abs_val = -1e12
+            max_ev = -1e12
+            min_ev = 1e12
 
             for n=1:num_blocks
                 if partially_condensed_qp
@@ -226,10 +278,18 @@ classdef AcadosOcpSolver < handle
                 end
                 eigvals = eig(hess_block);
                 result.min_ev(n) = min(eigvals);
+                max_ev = max(max_ev, max(eigvals));
+                max_abs_val = max(max_abs_val, max(abs(eigvals)));
+                min_ev = min(min_ev, min(eigvals));
+                min_abs_val = min(min_abs_val, min(abs(eigvals)));
                 result.max_ev(n) = max(eigvals);
                 result.condition_number_blockwise(n) = max(eigvals) / min(eigvals);
             end
-            result.condition_number_global = max(result.max_ev) / min(result.min_ev);
+            result.condition_number_global = max_abs_val / min_abs_val;
+            result.max_ev_global = max_ev;
+            result.max_abs_ev_global = max_abs_val;
+            result.min_ev_global = min_ev;
+            result.min_abs_ev_global = min_abs_val;
         end
 
 

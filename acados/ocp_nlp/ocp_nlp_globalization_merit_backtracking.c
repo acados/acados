@@ -865,7 +865,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
     merit_fun = cost_fun + dyn_fun + constr_fun;
 
-	// printf("Merit fun: %e cost: %e dyn: %e constr: %e\n", merit_fun, cost_fun, dyn_fun, constr_fun);
+    // printf("Merit fun: %e cost: %e dyn: %e constr: %e\n", merit_fun, cost_fun, dyn_fun, constr_fun);
 
     return merit_fun;
 }

@@ -322,8 +322,13 @@ void pendulum_ode_acados_create_setup_functions(pendulum_ode_solver_capsule* cap
         capsule->__CAPSULE_FNC__.casadi_sparsity_in = & __MODEL_BASE_FNC__ ## _sparsity_in; \
         capsule->__CAPSULE_FNC__.casadi_sparsity_out = & __MODEL_BASE_FNC__ ## _sparsity_out; \
         capsule->__CAPSULE_FNC__.casadi_work = & __MODEL_BASE_FNC__ ## _work; \
-        external_function_external_param_casadi_create(&capsule->__CAPSULE_FNC__ ); \
+        external_function_external_param_casadi_create(&capsule->__CAPSULE_FNC__, &ext_fun_opts); \
     } while(false)
+
+    external_function_opts ext_fun_opts;
+    external_function_opts_set_to_default(&ext_fun_opts);
+    ext_fun_opts.external_workspace = false;
+
     // nonlinear least squares function
     MAP_CASADI_FNC(cost_y_0_fun, pendulum_ode_cost_y_0_fun);
     MAP_CASADI_FNC(cost_y_0_fun_jac_ut_xt, pendulum_ode_cost_y_0_fun_jac_ut_xt);
@@ -712,7 +717,7 @@ int pendulum_ode_acados_create_with_discretization(pendulum_ode_solver_capsule* 
     pendulum_ode_acados_create_set_default_parameters(capsule);
 
     // 6) create solver
-    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts);
+    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts, capsule->nlp_in);
 
     // 7) create and set nlp_out
     // 7.1) nlp_out
@@ -724,29 +729,6 @@ int pendulum_ode_acados_create_with_discretization(pendulum_ode_solver_capsule* 
     // 8) do precomputations
     int status = pendulum_ode_acados_create_precompute(capsule);
 
-    return status;
-}
-
-/**
- * This function is for updating an already initialized solver with a different number of qp_cond_N. It is useful for code reuse after code export.
- */
-int pendulum_ode_acados_update_qp_solver_cond_N(pendulum_ode_solver_capsule* capsule, int qp_solver_cond_N)
-{
-    // 1) destroy solver
-    ocp_nlp_solver_destroy(capsule->nlp_solver);
-
-    // 2) set new value for "qp_cond_N"
-    const int N = capsule->nlp_solver_plan->N;
-    if(qp_solver_cond_N > N)
-        printf("Warning: qp_solver_cond_N = %d > N = %d\n", qp_solver_cond_N, N);
-    ocp_nlp_solver_opts_set(capsule->nlp_config, capsule->nlp_opts, "qp_cond_N", &qp_solver_cond_N);
-
-    // 3) continue with the remaining steps from pendulum_ode_acados_create_with_discretization(...):
-    // -> 8) create solver
-    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts);
-
-    // -> 9) do precomputations
-    int status = pendulum_ode_acados_create_precompute(capsule);
     return status;
 }
 
@@ -776,13 +758,13 @@ int pendulum_ode_acados_reset(pendulum_ode_solver_capsule* capsule, int reset_qp
         if (i<N)
         {
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "pi", buffer);
-            ocp_nlp_set(nlp_config, nlp_solver, i, "xdot_guess", buffer);
-            ocp_nlp_set(nlp_config, nlp_solver, i, "z_guess", buffer);
+            ocp_nlp_set(nlp_solver, i, "xdot_guess", buffer);
+            ocp_nlp_set(nlp_solver, i, "z_guess", buffer);
         }
     }
     // get qp_status: if NaN -> reset memory
     int qp_status;
-    ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "qp_status", &qp_status);
+    ocp_nlp_get(capsule->nlp_solver, "qp_status", &qp_status);
     if (reset_qp_solver_mem || (qp_status == 3))
     {
         // printf("\nin reset qp_status %d -> resetting QP memory\n", qp_status);
@@ -894,12 +876,12 @@ int pendulum_ode_acados_free(pendulum_ode_solver_capsule* capsule)
 void pendulum_ode_acados_print_stats(pendulum_ode_solver_capsule* capsule)
 {
     int nlp_iter, stat_m, stat_n, tmp_int;
-    ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "nlp_iter", &nlp_iter);
-    ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "stat_n", &stat_n);
-    ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "stat_m", &stat_m);
+    ocp_nlp_get(capsule->nlp_solver, "nlp_iter", &nlp_iter);
+    ocp_nlp_get(capsule->nlp_solver, "stat_n", &stat_n);
+    ocp_nlp_get(capsule->nlp_solver, "stat_m", &stat_m);
 
     double stat[1200];
-    ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "statistics", stat);
+    ocp_nlp_get(capsule->nlp_solver, "statistics", stat);
 
     int nrow = nlp_iter+1 < stat_m ? nlp_iter+1 : stat_m;
 

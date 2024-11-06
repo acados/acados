@@ -66,6 +66,7 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, 
     ocp.solver_options.sim_method_jac_reuse = opts_struct.sim_method_jac_reuse;
 
     ocp.solver_options.sim_method_newton_iter = opts_struct.sim_method_newton_iter;
+    ocp.solver_options.sim_method_newton_tol = opts_struct.sim_method_newton_tol;
     ocp.solver_options.nlp_solver_max_iter = opts_struct.nlp_solver_max_iter;
     ocp.solver_options.nlp_solver_tol_stat = opts_struct.nlp_solver_tol_stat;
     ocp.solver_options.nlp_solver_tol_eq = opts_struct.nlp_solver_tol_eq;
@@ -83,6 +84,8 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, 
     ocp.solver_options.qp_solver_ric_alg = opts_struct.qp_solver_ric_alg;
     ocp.solver_options.qp_solver_cond_ric_alg = opts_struct.qp_solver_cond_ric_alg;
     ocp.solver_options.qp_solver_mu0 = opts_struct.qp_solver_mu0;
+    ocp.solver_options.store_iterates = opts_struct.store_iterates;
+    ocp.json_file = opts_struct.json_file;
     if isfield(opts_struct, 'qp_solver_cond_N')
         ocp.solver_options.qp_solver_cond_N = opts_struct.qp_solver_cond_N;
     else
@@ -128,7 +131,11 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, 
     ocp.solver_options.ext_fun_compile_flags = opts_struct.ext_fun_compile_flags;
 
     ocp.solver_options.time_steps = opts_struct.time_steps;
+    ocp.solver_options.shooting_nodes = opts_struct.shooting_nodes;
     ocp.solver_options.print_level = opts_struct.print_level;
+
+    ocp.solver_options.timeout_max_time = opts_struct.timeout_max_time;
+    ocp.solver_options.timeout_heuristic = opts_struct.timeout_heuristic;
 
     % compile mex interface (without model dependency)
     if strcmp(opts_struct.compile_interface, 'true')
@@ -164,6 +171,7 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, 
 
     % parameters
     ocp.parameter_values = opts_struct.parameter_values;
+    ocp.p_global_values = opts_struct.p_global_values;
 
     %% constraints
     constraints_fields_map = struct(...

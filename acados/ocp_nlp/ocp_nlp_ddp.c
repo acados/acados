@@ -110,7 +110,7 @@ void ocp_nlp_ddp_opts_initialize_default(void *config_, void *dims_, void *opts_
     ocp_nlp_opts_initialize_default(config, dims, nlp_opts);
 
     // DDP opts
-    opts->max_iter = 20;
+    opts->nlp_opts->max_iter = 20;
     opts->tol_stat = 1e-8;
     opts->tol_eq   = 1e-8;
     opts->tol_ineq = 1e-8;
@@ -173,12 +173,7 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
     }
     else // nlp opts
     {
-        if (!strcmp(field, "max_iter"))
-        {
-            int* max_iter = (int *) value;
-            opts->max_iter = *max_iter;
-        }
-        else if (!strcmp(field, "tol_stat"))
+        if (!strcmp(field, "tol_stat"))
         {
             double* tol_stat = (double *) value;
             opts->tol_stat = *tol_stat;
@@ -249,10 +244,11 @@ void ocp_nlp_ddp_opts_set_at_stage(void *config_, void *opts_, size_t stage, con
  * memory
  ************************************************/
 
-acados_size_t ocp_nlp_ddp_memory_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_nlp_ddp_memory_calculate_size(void *config_, void *dims_, void *opts_, void *in_)
 {
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
+    ocp_nlp_in *in = in_;
     ocp_nlp_ddp_opts *opts = opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
 
@@ -265,10 +261,10 @@ acados_size_t ocp_nlp_ddp_memory_calculate_size(void *config_, void *dims_, void
     size += sizeof(ocp_nlp_ddp_memory);
 
     // nlp mem
-    size += ocp_nlp_memory_calculate_size(config, dims, nlp_opts);
+    size += ocp_nlp_memory_calculate_size(config, dims, nlp_opts, in);
 
     // stat
-    int stat_m = opts->max_iter+1;
+    int stat_m = opts->nlp_opts->max_iter+1;
     int stat_n = 7;
     if (opts->ext_qp_res)
         stat_n += 4;
@@ -296,17 +292,13 @@ acados_size_t ocp_nlp_ddp_memory_calculate_size(void *config_, void *dims_, void
 
 
 
-void *ocp_nlp_ddp_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
+void *ocp_nlp_ddp_memory_assign(void *config_, void *dims_, void *opts_, void *in_, void *raw_memory)
 {
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
+    ocp_nlp_in *in = in_;
     ocp_nlp_ddp_opts *opts = opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
-
-    // ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
-    // ocp_nlp_dynamics_config **dynamics = config->dynamics;
-    // ocp_nlp_cost_config **cost = config->cost;
-    // ocp_nlp_constraints_config **constraints = config->constraints;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -323,8 +315,8 @@ void *ocp_nlp_ddp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     align_char_to(8, &c_ptr);
 
     // nlp mem
-    mem->nlp_mem = ocp_nlp_memory_assign(config, dims, nlp_opts, c_ptr);
-    c_ptr += ocp_nlp_memory_calculate_size(config, dims, nlp_opts);
+    mem->nlp_mem = ocp_nlp_memory_assign(config, dims, nlp_opts, in, c_ptr);
+    c_ptr += ocp_nlp_memory_calculate_size(config, dims, nlp_opts, in);
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
@@ -341,7 +333,7 @@ void *ocp_nlp_ddp_memory_assign(void *config_, void *dims_, void *opts_, void *r
 
     // stat
     mem->stat = (double *) c_ptr;
-    mem->stat_m = opts->max_iter+1;
+    mem->stat_m = opts->nlp_opts->max_iter+1;
     mem->stat_n = 7;
     if (opts->ext_qp_res)
         mem->stat_n += 4;
@@ -355,7 +347,7 @@ void *ocp_nlp_ddp_memory_assign(void *config_, void *dims_, void *opts_, void *r
 
     align_char_to(8, &c_ptr);
 
-    assert((char *) raw_memory + ocp_nlp_ddp_memory_calculate_size(config, dims, opts) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_ddp_memory_calculate_size(config, dims, opts, in) >= c_ptr);
 
     return mem;
 }
@@ -366,12 +358,13 @@ void *ocp_nlp_ddp_memory_assign(void *config_, void *dims_, void *opts_, void *r
  * workspace
  ************************************************/
 
-acados_size_t ocp_nlp_ddp_workspace_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_nlp_ddp_workspace_calculate_size(void *config_, void *dims_, void *opts_, void *in_)
 {
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
     ocp_nlp_ddp_opts *opts = opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
+    ocp_nlp_in *nlp_in = in_;
 
     acados_size_t size = 0;
 
@@ -379,7 +372,7 @@ acados_size_t ocp_nlp_ddp_workspace_calculate_size(void *config_, void *dims_, v
     size += sizeof(ocp_nlp_ddp_workspace);
 
     // nlp
-    size += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts);
+    size += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts, nlp_in);
 
     if (opts->ext_qp_res)
     {
@@ -396,7 +389,7 @@ acados_size_t ocp_nlp_ddp_workspace_calculate_size(void *config_, void *dims_, v
 
 
 static void ocp_nlp_ddp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dims,
-         ocp_nlp_ddp_opts *opts, ocp_nlp_ddp_memory *mem, ocp_nlp_ddp_workspace *work)
+         ocp_nlp_ddp_opts *opts, ocp_nlp_in *nlp_in, ocp_nlp_ddp_memory *mem, ocp_nlp_ddp_workspace *work)
 {
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
@@ -406,8 +399,8 @@ static void ocp_nlp_ddp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dim
     c_ptr += sizeof(ocp_nlp_ddp_workspace);
 
     // nlp
-    work->nlp_work = ocp_nlp_workspace_assign(config, dims, nlp_opts, nlp_mem, c_ptr);
-    c_ptr += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts);
+    work->nlp_work = ocp_nlp_workspace_assign(config, dims, nlp_opts, nlp_in, nlp_mem, c_ptr);
+    c_ptr += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts, nlp_in);
 
     if (opts->ext_qp_res)
     {
@@ -420,7 +413,7 @@ static void ocp_nlp_ddp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dim
         c_ptr += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
     }
 
-    assert((char *) work + ocp_nlp_ddp_workspace_calculate_size(config, dims, opts) >= c_ptr);
+    assert((char *) work + ocp_nlp_ddp_workspace_calculate_size(config, dims, opts, nlp_in) >= c_ptr);
 
     return;
 }
@@ -591,7 +584,7 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
     }
 
     // Check for maximum iterations
-    if (ddp_iter >= opts->max_iter)
+    if (ddp_iter >= opts->nlp_opts->max_iter)
     {
         nlp_mem->status = ACADOS_MAXITER;
         if (opts->nlp_opts->print_level > 0){
@@ -664,12 +657,17 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         printf("'with_adaptive_levenberg_marquardt' option is set to: %s\n", opts->nlp_opts->with_adaptive_levenberg_marquardt?"true":"false");
     }
 
-    for (; ddp_iter <= opts->max_iter; ddp_iter++)
+    for (; ddp_iter <= opts->nlp_opts->max_iter; ddp_iter++)
     {
+        // store current iterate
+        if (nlp_opts->store_iterates)
+        {
+            copy_ocp_nlp_out(dims, nlp_out, nlp_mem->iterates[ddp_iter]);
+        }
         // We always evaluate the residuals until the last iteration
         // If the option "eval_residual_at_max_iter" is set, then we will also
         // evaluate the data after the last iteration was performed
-        if (ddp_iter != opts->max_iter || opts->eval_residual_at_max_iter)
+        if (ddp_iter != opts->nlp_opts->max_iter || opts->eval_residual_at_max_iter)
         {
             /* Prepare the QP data */
             // linearize NLP, update QP matrices, and add Levenberg-Marquardt term
@@ -900,10 +898,10 @@ int ocp_nlp_ddp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
     ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
-    nlp_mem->workspace_size = ocp_nlp_workspace_calculate_size(config, dims, opts->nlp_opts);
+    nlp_mem->workspace_size = ocp_nlp_workspace_calculate_size(config, dims, opts->nlp_opts, nlp_in);
 
     ocp_nlp_ddp_workspace *work = work_;
-    ocp_nlp_ddp_cast_workspace(config, dims, opts, mem, work);
+    ocp_nlp_ddp_cast_workspace(config, dims, opts, nlp_in, mem, work);
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
     // sanity checks

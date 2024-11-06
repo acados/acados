@@ -51,6 +51,7 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.shooting_nodes = [];
             obj.opts_struct.time_steps = [];
             obj.opts_struct.parameter_values = [];
+            obj.opts_struct.p_global_values = [];
 
             obj.opts_struct.nlp_solver = 'sqp';
             obj.opts_struct.nlp_solver_exact_hessian = 'false';
@@ -79,6 +80,7 @@ classdef acados_ocp_opts < handle
 
             obj.opts_struct.qp_solver_iter_max = 50;
             obj.opts_struct.qp_solver_mu0 = 0;
+            obj.opts_struct.store_iterates = false;
 
             % obj.opts_struct.qp_solver_cond_N = 5; % New horizon after partial condensing
             obj.opts_struct.qp_solver_cond_ric_alg = 1; % 0: dont factorize hessian in the condensing; 1: factorize
@@ -92,6 +94,7 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.sim_method_num_stages = 4;
             obj.opts_struct.sim_method_num_steps = 1;
             obj.opts_struct.sim_method_newton_iter = 3;
+            obj.opts_struct.sim_method_newton_tol = 0;
             obj.opts_struct.sim_method_jac_reuse = 0;
             obj.opts_struct.gnsf_detect_struct = 'true';
             obj.opts_struct.regularize_method = 'no_regularize';
@@ -103,9 +106,20 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.exact_hess_cost = 1;
             obj.opts_struct.exact_hess_constr = 1;
             obj.opts_struct.fixed_hess = 0;
-            obj.opts_struct.ext_fun_compile_flags = '-O2';
+
+            obj.opts_struct.timeout_max_time = 0;
+            obj.opts_struct.timeout_heuristic = 'ZERO';
+
+            % check whether flags are provided by environment variable
+            env_var = getenv("ACADOS_EXT_FUN_COMPILE_FLAGS");
+            if isempty(env_var)
+                obj.opts_struct.ext_fun_compile_flags = '-O2';
+            else
+                obj.opts_struct.ext_fun_compile_flags = env_var;
+            end
 
             obj.opts_struct.output_dir = fullfile(pwd, 'build');
+            obj.opts_struct.json_file = 'acados_ocp_nlp.json';
             % if ismac()
             %     obj.opts_struct.output_dir = '/usr/local/lib';
             % end
@@ -194,6 +208,8 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.sim_method_num_steps = value;
             elseif (strcmp(field, 'sim_method_newton_iter'))
                 obj.opts_struct.sim_method_newton_iter = value;
+            elseif (strcmp(field, 'sim_method_newton_tol'))
+                obj.opts_struct.sim_method_newton_tol = value;
             elseif (strcmp(field, 'sim_method_exact_z_output'))
                 obj.opts_struct.sim_method_exact_z_output = value;
             elseif (strcmp(field, 'sim_method_jac_reuse'))
@@ -236,8 +252,18 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.globalization = value;
             elseif (strcmp(field, 'parameter_values'))
                 obj.opts_struct.parameter_values = value;
+            elseif (strcmp(field, 'p_global_values'))
+                obj.opts_struct.p_global_values = value;
+            elseif (strcmp(field, 'store_iterates'))
+                obj.opts_struct.store_iterates = value;
             elseif (strcmp(field, 'ext_fun_compile_flags'))
                 obj.opts_struct.ext_fun_compile_flags = value;
+            elseif (strcmp(field, 'json_file'))
+                obj.opts_struct.json_file = value;
+            elseif (strcmp(field, 'timeout_max_time'))
+                obj.opts_struct.timeout_max_time = value;
+            elseif (strcmp(field, 'timeout_heuristic'))
+                obj.opts_struct.timeout_heuristic = value;
             elseif (strcmp(field, 'compile_mex'))
                 disp(['Option compile_mex is not supported anymore,'...
                     'please use compile_interface instead or dont set the option.', ...
