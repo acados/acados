@@ -491,9 +491,8 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
         "parameter update": timings_parameter_update * 1e3,
     }
 
-    print("\nMedian timings [ms]")
-    for key, value in timing_results_forward.items():
-        print(f"{key}: {1000*np.median(value):.3f}")
+    print_timings(timing_results_forward, metric="median")
+    print_timings(timing_results_forward, metric="min")
 
     u_opt = np.vstack(u_opt)
     sens_u = np.vstack(sens_u)
@@ -534,6 +533,20 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
 
     plt.show()
 
+
+def print_timings(timing_results: dict, metric: str = "median"):
+    if metric == "median":
+        timing_func = np.median
+    elif metric == "mean":
+        timing_func = np.mean
+    elif metric == "min":
+        timing_func = np.min
+    else:
+        raise ValueError(f"Unknown metric {metric}")
+
+    print(f"\n{metric} timings [ms]")
+    for key, value in timing_results.items():
+        print(f"{key}: {1e3*timing_func(value):.3f} ms")
 
 if __name__ == "__main__":
     chain_params = get_chain_params()
