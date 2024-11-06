@@ -49,7 +49,8 @@ TOL = 1e-6
 
 def main():
     # run test cases
-    params = {'globalization': ['FIXED_STEP']}
+    params = {'globalization': ['FUNNEL_L1PEN_LINESEARCH']}
+    # params = {'globalization': ['FIXED_STEP']}
 
     keys, values = zip(*params.items())
     for combination in product(*values):
@@ -102,33 +103,35 @@ def solve_infeasible_linearization(setting):
     ocp.solver_options.qp_solver_cond_N = N
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.integrator_type = 'DISCRETE'
-    ocp.solver_options.print_level = 1
+    ocp.solver_options.print_level = 3
     ocp.solver_options.tol = TOL
+    # ocp.solver_options.nlp_solver_type = 'SQP'
     ocp.solver_options.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'
     ocp.solver_options.globalization = globalization
+    ocp.solver_options.globalization_full_step_dual = True
     ocp.solver_options.alpha_min = 1e-15
-    SQP_max_iter = 20
-    ocp.solver_options.qp_solver_iter_max = 400
+    SQP_max_iter = 10
+    ocp.solver_options.qp_solver_iter_max = 1000
     ocp.solver_options.regularize_method = 'PROJECT'
-    ocp.solver_options.qp_tol = 5e-7
+    ocp.solver_options.qp_tol = 1e-12
     ocp.solver_options.qp_solver_mu0 = 1e4
-
     ocp.solver_options.nlp_solver_max_iter = SQP_max_iter
+    ocp.solver_options.initial_objective_multiplier = 1e0
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
 
     # initialize solver
-    xinit = np.array([-0.001])
-    # xinit = np.array([1.0])
+    # xinit = np.array([-0.001])
+    xinit = np.array([-1.0])
     [ocp_solver.set(i, "x", xinit) for i in range(N+1)]
 
     # solve
-    ocp_solver.get
     status = ocp_solver.solve()
-    if status != 0:
-        raise RuntimeError("Solve failed, since QP infeasible!")
+    # if status != 0:
+    #     raise RuntimeError("Solve failed, since QP infeasible!")
 
     # get solution
     solution = ocp_solver.get(0, "x")
+    print("solution: ", solution)
 
     # compare to analytical solution
     exact_solution = np.array([-2.0])

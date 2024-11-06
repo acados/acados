@@ -38,7 +38,7 @@ from itertools import product
 
 def main():
 
-    # # SETTINGS:
+    # SETTINGS:
     # SOFTEN_CONTROLS = True
     # SOFTEN_OBSTACLE = False
     # SOFTEN_TERMINAL = True
@@ -124,15 +124,14 @@ def create_solver_opts(N=4, Tf=2):
     solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     solver_options.hessian_approx = 'EXACT'
     solver_options.regularize_method = 'MIRROR'
-    
     # solver_options.hessian_approx = 'GAUSS_NEWTON'
-    
+    # solver_options.levenberg_marquardt = 1e-2
     solver_options.integrator_type = 'ERK'
     solver_options.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'
     solver_options.globalization = 'FUNNEL_L1PEN_LINESEARCH'
     solver_options.globalization_full_step_dual = True
     solver_options.print_level = 3
-    solver_options.nlp_solver_max_iter = 1
+    solver_options.nlp_solver_max_iter = 10
     solver_options.qp_solver_iter_max = 400
     qp_tol = 5e-7
     solver_options.qp_solver_tol_stat = qp_tol
@@ -142,7 +141,7 @@ def create_solver_opts(N=4, Tf=2):
     solver_options.qp_solver_ric_alg = 1
     solver_options.qp_solver_mu0 = 1e4
     solver_options.qp_solver_warm_start = 1
-    solver_options.initial_objective_multiplier = 1e-1
+    solver_options.initial_objective_multiplier = 1e-5
 
     # set prediction horizon
     solver_options.tf = Tf
@@ -219,10 +218,10 @@ def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT):
     # add obstacle
     obs_rad = 1.0; obs_x = 0.0; obs_y = 0.0
     circle = (obs_x, obs_y, obs_rad)
-    ocp.constraints.uh = np.array([ACADOS_INFTY])
-    ocp.constraints.lh = np.array([obs_rad**2])
+    ocp.constraints.lh = -np.array([ACADOS_INFTY])
+    ocp.constraints.uh = -np.array([obs_rad**2])
     x_square = model.x[0] ** 2 + model.x[1] ** 2
-    ocp.model.con_h_expr = x_square
+    ocp.model.con_h_expr = -x_square
     # copy for terminal
     ocp.constraints.uh_e = ocp.constraints.uh
     ocp.constraints.lh_e = ocp.constraints.lh
@@ -242,7 +241,6 @@ def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT):
         ocp.cost.zu_e = np.concatenate((ocp.cost.zu_e, zh))
         ocp.cost.Zl_e = np.concatenate((ocp.cost.Zl_e, Zh))
         ocp.cost.Zu_e = np.concatenate((ocp.cost.Zu_e, Zh))
-
     
     ocp.solver_options = create_solver_opts(N, Tf)
     # create ocp solver
@@ -254,11 +252,15 @@ def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT):
 
     # solve
     status = ocp_solver.solve()
-    if status in [2,4]:
-        qp_diagnostics = ocp_solver.qp_diagnostics()
-        print("full condition number: ", qp_diagnostics['condition_number_total'])
-        print("min eigval number: ", qp_diagnostics['min_eigv_total'])
-        print("max eigval number: ", qp_diagnostics['max_eigv_total'])
+    if status in [2, 4]:
+        qp_diagnosis = ocp_solver.qp_diagnostics('FULL_HESSIAN')
+        print('Min abs eigval:', qp_diagnosis['min_abs_eigv_total'])
+        print('Max eigval:', qp_diagnosis['max_eigv_total'])
+        print('Condition number:', qp_diagnosis['condition_number_total'])
+        for i in range(N+1):
+            print('Min eigval',i,' :', qp_diagnosis['min_eigv_stage'][str(i)])
+            print('Max eigval',i,' :', qp_diagnosis['max_eigv_stage'][str(i)])
+            print('Condition number at',i,' :', qp_diagnosis['condition_number_stage'][str(i)])
 
     # ocp_solver.dump_last_qp_to_json()
     # ocp_solver.print_statistics()
