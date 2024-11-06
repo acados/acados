@@ -103,8 +103,8 @@ int ocp_nlp_dynamics_disc_precompute(void *config_, void *dims, void *model_, vo
 
 typedef struct
 {
-    struct blasfeo_dmat params_jac;  // jacobian of the dynamics wrt the parameters
-    struct blasfeo_dmat params_lag_jac;  // jacobian of the lagrange gradient contribution of the dynamics wrt the parameters
+    struct blasfeo_dmat *dyn_jac_p_global;  // pointer to jacobian of the dynamics wrt the parameters
+    struct blasfeo_dmat *jac_lag_stat_p_global;    // pointer to jacobian of stationarity condition wrt parameters
     struct blasfeo_dvec fun;
     struct blasfeo_dvec adj;
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out at current stage
@@ -131,9 +131,9 @@ void ocp_nlp_dynamics_disc_memory_set_pi_ptr(struct blasfeo_dvec *pi, void *memo
 //
 void ocp_nlp_dynamics_disc_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *memory);
 //
-void ocp_nlp_dynamics_disc_memory_get_params_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
-//
-void ocp_nlp_dynamics_disc_memory_get_params_lag_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
+void ocp_nlp_dynamics_disc_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory_);
+
+void ocp_nlp_dynamics_disc_memory_set_dyn_jac_p_global_ptr(struct blasfeo_dmat *dyn_jac_p_global, void *memory_);
 
 
 /************************************************

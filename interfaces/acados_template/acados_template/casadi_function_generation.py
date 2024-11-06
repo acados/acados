@@ -482,7 +482,10 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
     context.add_function_definition(fun_name_jac, [x, u, z, p], [ext_cost, grad_uxz], cost_dir)
 
     if opts["with_solution_sens_wrt_params"]:
-        hess_xu_p = ca.jacobian(grad_uxz, p_global)
+        if casadi_length(z) > 0:
+            raise Exception("acados: solution sensitivities wrt parameters not supported with algebraic variables.")
+        grad_ux = ca.jacobian(ext_cost, ca.vertcat(u, x))
+        hess_xu_p = ca.jacobian(grad_ux, p_global)
         context.add_function_definition(fun_name_param, [x, u, z, p], [hess_xu_p], cost_dir)
 
     if opts["with_value_sens_wrt_params"]:

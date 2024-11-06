@@ -81,7 +81,7 @@ typedef struct
     void (*memory_set_dzdux_tran_ptr)(struct blasfeo_dmat *dzdux, void *memory);
     void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory);
     void (*memory_set_Z_ptr)(struct blasfeo_dvec *Z, void *memory);
-    void (*memory_get_params_grad)(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
+    void (*memory_set_jac_lag_stat_p_global_ptr)(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
     acados_size_t (*get_external_fun_workspace_requirement)(void *config, void *dims, void *opts_, void *in);

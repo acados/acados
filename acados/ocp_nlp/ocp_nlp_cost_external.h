@@ -119,7 +119,7 @@ void ocp_nlp_cost_external_opts_set(void *config, void *opts, const char *field,
 
 typedef struct
 {
-    struct blasfeo_dmat cost_grad_params_jac;    // jacobian of gradient of cost function wrt parameters
+    struct blasfeo_dmat *jac_lag_stat_p_global;    // pointer to jacobian of stationarity condition wrt parameters
     struct blasfeo_dvec grad;    // gradient of cost function
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
@@ -148,8 +148,7 @@ void ocp_nlp_cost_external_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void
 //
 void ocp_nlp_cost_external_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_tran, void *memory_);
 //
-void ocp_nlp_cost_external_memory_get_params_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
-
+void ocp_nlp_cost_external_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory_);
 
 /************************************************
  * workspace
@@ -157,6 +156,7 @@ void ocp_nlp_cost_external_memory_get_params_grad(void *config, void *dims, void
 
 typedef struct
 {
+    struct blasfeo_dmat cost_grad_params_jac;  // jacobian of gradient of cost function wrt parameters
     struct blasfeo_dmat tmp_nunx_nunx;
     struct blasfeo_dmat tmp_nz_nz;
     struct blasfeo_dmat tmp_nz_nunx;
