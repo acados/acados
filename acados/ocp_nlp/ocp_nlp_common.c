@@ -1704,12 +1704,12 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     // blasfeo_dmat
     if (opts->with_solution_sens_wrt_params)
     {
-        for (int i = 0; i <= N; i++)
+        for (i = 0; i <= N; i++)
         {
             assign_and_advance_blasfeo_dmat_mem(nv[i], np_global, mem->jac_lag_stat_p_global+i, &c_ptr);
             assign_and_advance_blasfeo_dmat_mem(2*ni[i], np_global, mem->jac_ineq_p_global+i, &c_ptr);
         }
-        for (int i = 0; i < N; i++)
+        for (i = 0; i < N; i++)
         {
             assign_and_advance_blasfeo_dmat_mem(nx[i+1], np_global, mem->jac_dyn_p_global+i, &c_ptr);
         }
