@@ -154,7 +154,7 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
     int N = dims->N;
     int *nv = dims->nv;
 
-    double merit_fun1;
+    double merit_fun1 = 0;
     ocp_qp_out *qp_out = mem->qp_out;
 
     /* MERIT_BACKTRACKING line search */
