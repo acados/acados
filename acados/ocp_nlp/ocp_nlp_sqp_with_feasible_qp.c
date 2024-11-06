@@ -713,7 +713,7 @@ static double calculate_search_direction_interpolation_factor(ocp_nlp_sqp_wfqp_o
     if (pred_l1_inf_QP_optimality >= opts->sufficient_l1_inf_reduction * pred_l1_inf_QP_feasibility)
     {
         kappa = 1.0;
-    }    
+    }
     else
     {
         kappa = fmin(1.0, ((1-opts->sufficient_l1_inf_reduction)*pred_l1_inf_QP_feasibility)/(l1_inf_QP_optimality - l1_inf_QP_feasibility));
@@ -798,7 +798,7 @@ static double get_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wf
 }
 
 /*
-This function calculates the l1 infeasibility by calculating the matrix vector product of the 
+This function calculates the l1 infeasibility by calculating the matrix vector product of the
 constraints
 */
 static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_sqp_wfqp_workspace *work, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
@@ -817,12 +817,11 @@ static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims,
 
     for (i = 0; i <= N; i++)
     {
-        // bounds on states and controls
         for (j=0; j<nns[i]; ++j)
         {
             int index = mem->idxns[i][j];
 
-            // get entry in the middle of inequality equation:
+            // tmp = \nabla c(z) * d
             // simple bounds
             if (index < nb[i])
             {
@@ -838,7 +837,7 @@ static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims,
                         0.0, qp_in->d+i, nb[i], &work->nlp_work->tmp_ni+i, 0);
                 tmp = BLASFEO_DVECEL(&work->nlp_work->tmp_ni+i, 0);
             }
-            
+
             // check lower bounds
             mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, index);
             if (mask_value == 1.0)
@@ -852,7 +851,7 @@ static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims,
             mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, nb[i] + ng[i] + index);
             if (mask_value == 1.0)
             {
-                // upper bounds have the wrong sign! 
+                // upper bounds have the wrong sign!
                 // it is lower_bounds <= value <= -upper_bounds, therefore plus below
                 tmp_bound = BLASFEO_DVECEL(qp_in->d+i, nb[i] + ng[i] + index);
                 // printf("upper bounds: bound: %.4e, value: %.4e, result: %.4e\n", tmp_bound, tmp, fmax(0.0, tmp_bound-tmp));
@@ -860,12 +859,11 @@ static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims,
             }
         }
     }
-
     return l1_inf;
 }
 
 // /*
-// This function calculates the l1 infeasibility by calculating the matrix vector product of the 
+// This function calculates the l1 infeasibility by calculating the matrix vector product of the
 // constraints
 // */
 // static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_sqp_wfqp_workspace *work, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
@@ -902,7 +900,7 @@ static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims,
 //         blasfeo_dgemv_t(nu[i]+nx[i], ng[i], 1.0, qp_in->DCt+i, 0, 0, qp_out->ux+i, 0,
 //                         0.0, qp_in->d+i, nb[i], &work->nlp_work->tmp_ni+i, nb[i]);
 //         blasfeo_dveccp(ng[i], &work->nlp_work->tmp_ni+i, nb[i], &work->nlp_work->tmp_ni+i, 2*nb[i]+ng[i]);
-        
+
 //         // upper bounds (seems to be correct but I do not understand why??)
 //         // the sign of upper bound d is wrong!! We should use -d. Why is that?
 //         // blasfeo_dgemv_t(nu[i]+nx[i], ng[i], 1.0, qp_in->DCt+i, 0, 0, qp_out->ux+i, 0,
@@ -922,7 +920,7 @@ static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims,
 //                 }
 //                 else
 //                 {
-//                     // upper bounds have the wrong sign! 
+//                     // upper bounds have the wrong sign!
 //                     // it is lower_bounds <= value <= -upper_bounds, therefore plus below
 //                     // printf("upper bounds: value: %.4e, value: %.4e, result: %.4e\n", tmp_bound, tmp, fmax(0.0, tmp_bound+tmp));
 //                     l1_inf += fmax(0.0, tmp_bound+tmp);
@@ -1031,7 +1029,7 @@ static double compute_gradient_directional_derivative(ocp_nlp_sqp_wfqp_memory* m
 /*
 Calculates the norm of the search direction, but the additional slack directions are removed.
 If the problem is infeasibe, or the algorithm converges towards an infeasible point,
-then the step size would not converge to 0 for our additional slack variables (since we do not do a delta 
+then the step size would not converge to 0 for our additional slack variables (since we do not do a delta
 update in the master problem).
 */
 static double slacked_qp_out_compute_primal_nrm_inf(ocp_qp_out* qp_out, ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory* mem)
@@ -1270,7 +1268,7 @@ static void ocp_nlp_sqp_wfqp_setup_qp_objective(ocp_nlp_config *config,
             // Either we use the exact objective Hessian
             // blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
             // blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0); I think we do not need this here
-            
+
             // We use the identity matrix Hessian
             blasfeo_dgese(nxu, nxu, 0.0, nlp_mem->qp_in->RSQrq+i, 0, 0);
             blasfeo_ddiare(nxu, 1e-4, nlp_mem->qp_in->RSQrq+i, 0, 0);  // dPsi_dx is unit now
@@ -1599,7 +1597,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                                    nlp_mem->globalization);
         }
         prev_levenberg_marquardt = nlp_opts->levenberg_marquardt;
-        
+
         double multiplier_norm_inf = get_multiplier_norm_inf(dims, qp_out);
         printf("Multiplier norm inf is: %.4e\n", multiplier_norm_inf);
 
@@ -1664,13 +1662,13 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         printf("Optimality Multiplier norm inf is: %.4e\n", multiplier_norm_inf);
 
         double current_l1_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
-        printf("Current l1 infeasibility: %.4e\n", current_l1_infeasibility);
+        printf("\nCurrent l1 infeasibility: %.4e\n", current_l1_infeasibility);
 
         // Calculate linearized l1-infeasibility for d_steering
         double l1_inf_QP_feasibility = get_slacked_qp_l1_infeasibility(dims, mem, nlp_work->tmp_qp_out);
         printf("linearized l1_inf_feas: %.4e\n", l1_inf_QP_feasibility);
         double manual_l1_inf_QP_feasibility = manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, nlp_work->tmp_qp_out);
-        printf("manual l1_inf_feas: %.4e\n", manual_l1_inf_QP_feasibility);
+        printf("manual l1_inf_feas: %.4e\n\n\n", manual_l1_inf_QP_feasibility);
 
         // Calculate linearized l1-infeasibility for d_predictor
         double l1_inf_QP_optimality = get_slacked_qp_l1_infeasibility(dims, mem, nlp_mem->qp_out);
@@ -1687,7 +1685,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         // It seems appropriate that the fraction for sufficient improvement
         // in infeasibility is adaptive. So, if inf is large, and the improvement is small
-        // relative to infeasibility we should have a direction that is closer to 
+        // relative to infeasibility we should have a direction that is closer to
         // the feasibility direction??
         double kappa = calculate_search_direction_interpolation_factor(opts,
                                                                 pred_l1_inf_QP_feasibility,
@@ -1697,7 +1695,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         // Calculate search direction
         setup_search_direction(mem, dims, qp_out, nlp_work->tmp_qp_out, qp_out, kappa);
-        
+
         double pred_l1_inf_search_direction = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, qp_out));
         printf("pred_l1_inf_search_direction: %.4e\n", pred_l1_inf_search_direction);
         //---------------------------------------------------------------------
