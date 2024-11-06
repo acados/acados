@@ -31,7 +31,7 @@
 
 import numpy as np
 from acados_template import AcadosOcpSolver
-from sensitivity_utils import plot_results, export_parametric_ocp, evaluate_hessian_eigenvalues, plot_pendulum
+from sensitivity_utils import plot_results, export_parametric_ocp, plot_pendulum
 
 
 def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=False, plot_trajectory=False):
@@ -101,7 +101,14 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
             breakpoint()
 
         if eigen_analysis:
-            min_eig_full[i], min_abs_eig_full[i], min_abs_eig_proj_hess[i], min_eig_proj_hess[i], min_eig_P[i], min_abs_eig_P[i] = evaluate_hessian_eigenvalues(sensitivity_solver, N_horizon)
+            full_hessian_diagnostics = sensitivity_solver.qp_diagnostics("FULL_HESSIAN")
+            projected_hessian_diagnostics = sensitivity_solver.qp_diagnostics("PROJECTED_HESSIAN")
+            min_eig_full[i] = full_hessian_diagnostics['min_eigv_total']
+            min_abs_eig_full[i] = full_hessian_diagnostics['min_abs_eigv_total']
+            min_abs_eig_proj_hess[i]= projected_hessian_diagnostics['min_abs_eigv_total']
+            min_eig_proj_hess[i] = projected_hessian_diagnostics['min_eigv_total']
+            min_eig_P[i] = projected_hessian_diagnostics['min_eig_P']
+            min_abs_eig_P[i] = projected_hessian_diagnostics['min_abs_eig_P']
 
         # Calculate the policy gradient
         _, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "p_global")
