@@ -3185,6 +3185,10 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 
 void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
+    // This function sets up: jac_lag_stat_p_global, jac_ineq_p_global, jac_dyn_p_global
+    // - jac_dyn_p_global is computed in dynamics module
+    // - jac_ineq_p_global is computed in constraints module (TODO!)
+    // - jac_lag_stat_p_global: first dynamics writes its contribution, then cost and constraints modules add their contribution.
     int N = dims->N;
     int np_global = dims->np_global;
     int i;
@@ -3198,11 +3202,6 @@ void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_
     struct blasfeo_dmat *jac_lag_stat_p_global = mem->jac_lag_stat_p_global;
     struct blasfeo_dmat *jac_ineq_p_global = mem->jac_ineq_p_global;
     // struct blasfeo_dmat *jac_dyn_p_global = mem->jac_dyn_p_global;
-
-    // NOTE: this sets up: jac_lag_stat_p_global, jac_ineq_p_global, jac_dyn_p_global
-    // - jac_dyn_p_global is computed in dynamics module
-    // - jac_ineq_p_global is computed in constraints module (TODO!)
-    // - jac_lag_stat_p_global: first dynamics writes its contribution, then cost and constraints modules add their contribution.
 
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
