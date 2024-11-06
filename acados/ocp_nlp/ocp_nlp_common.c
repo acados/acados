@@ -1486,16 +1486,16 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
 
     if (opts->with_solution_sens_wrt_params)
     {
-        size += 2*(N+1)*sizeof(struct blasfeo_dmat); // jac_lag_stat_p_global, tmp_2ni_x_np_global
-        size += N * sizeof(struct blasfeo_dmat);  // tmp_nxnext_x_np_global
+        size += 2*(N+1)*sizeof(struct blasfeo_dmat); // jac_lag_stat_p_global, jac_ineq_p_global
+        size += N * sizeof(struct blasfeo_dmat);  // jac_dyn_p_global
         for (int i = 0; i <= N; i++)
         {
             size += blasfeo_memsize_dmat(nv[i], np_global);  // jac_lag_stat_p_global
-            size += blasfeo_memsize_dmat(2*ni[i], np_global);  // tmp_2ni_x_np_global
+            size += blasfeo_memsize_dmat(2*ni[i], np_global);  // jac_ineq_p_global
         }
         for (int i = 0; i < N; i++)
         {
-            size += blasfeo_memsize_dmat(nx[i+1], np_global);  // tmp_nxnext_x_np_global
+            size += blasfeo_memsize_dmat(nx[i+1], np_global);  // jac_dyn_p_global
         }
     }
 
@@ -1669,8 +1669,8 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     if (opts->with_solution_sens_wrt_params)
     {
         assign_and_advance_blasfeo_dmat_structs(N + 1, &mem->jac_lag_stat_p_global, &c_ptr);
-        assign_and_advance_blasfeo_dmat_structs(N + 1, &mem->tmp_2ni_x_np_global, &c_ptr);
-        assign_and_advance_blasfeo_dmat_structs(N, &mem->tmp_nxnext_x_np_global, &c_ptr);
+        assign_and_advance_blasfeo_dmat_structs(N + 1, &mem->jac_ineq_p_global, &c_ptr);
+        assign_and_advance_blasfeo_dmat_structs(N, &mem->jac_dyn_p_global, &c_ptr);
     }
 
     // dzduxt
@@ -1707,11 +1707,11 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
         for (int i = 0; i <= N; i++)
         {
             assign_and_advance_blasfeo_dmat_mem(nv[i], np_global, mem->jac_lag_stat_p_global+i, &c_ptr);
-            assign_and_advance_blasfeo_dmat_mem(2*ni[i], np_global, mem->tmp_2ni_x_np_global+i, &c_ptr);
+            assign_and_advance_blasfeo_dmat_mem(2*ni[i], np_global, mem->jac_ineq_p_global+i, &c_ptr);
         }
         for (int i = 0; i < N; i++)
         {
-            assign_and_advance_blasfeo_dmat_mem(nx[i+1], np_global, mem->tmp_nxnext_x_np_global+i, &c_ptr);
+            assign_and_advance_blasfeo_dmat_mem(nx[i+1], np_global, mem->jac_dyn_p_global+i, &c_ptr);
         }
     }
 
@@ -2372,7 +2372,7 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
 
         if (opts->with_solution_sens_wrt_params)
         {
-            config->dynamics[i]->memory_set_dyn_jac_p_global_ptr(nlp_mem->tmp_nxnext_x_np_global+i, nlp_mem->dynamics[i]);
+            config->dynamics[i]->memory_set_dyn_jac_p_global_ptr(nlp_mem->jac_dyn_p_global+i, nlp_mem->dynamics[i]);
             config->dynamics[i]->memory_set_jac_lag_stat_p_global_ptr(nlp_mem->jac_lag_stat_p_global+i, nlp_mem->dynamics[i]);
         }
 
@@ -3191,18 +3191,26 @@ void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_
 
     int *nv = dims->nv;
     int *ni = dims->ni;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
 
     struct blasfeo_dmat *jac_lag_stat_p_global = mem->jac_lag_stat_p_global;
-    struct blasfeo_dmat *tmp_2ni_x_np_global = mem->tmp_2ni_x_np_global;
-    // struct blasfeo_dmat *tmp_nxnext_x_np_global = mem->tmp_nxnext_x_np_global;
+    struct blasfeo_dmat *jac_ineq_p_global = mem->jac_ineq_p_global;
+    // struct blasfeo_dmat *jac_dyn_p_global = mem->jac_dyn_p_global;
+
+    // NOTE: this sets up: jac_lag_stat_p_global, jac_ineq_p_global, jac_dyn_p_global
+    // - jac_dyn_p_global is computed in dynamics module
+    // - jac_ineq_p_global is computed in constraints module (TODO!)
+    // - jac_lag_stat_p_global: first dynamics writes its contribution, then cost and constraints modules add their contribution.
 
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
     for (i = 0; i < N; i++)
     {
-        blasfeo_dgese(nv[i], np_global, 0., &jac_lag_stat_p_global[i], 0, 0);
-        blasfeo_dgese(2*ni[i], np_global, 0., &tmp_2ni_x_np_global[i], 0, 0);
+        blasfeo_dgese(2*ns[i], np_global, 0., &jac_lag_stat_p_global[i], nx[i]+nu[i], 0);  // first nx+nu rows are overwritten by dynamics anyway
+        blasfeo_dgese(2*ni[i], np_global, 0., &jac_ineq_p_global[i], 0, 0);
         config->dynamics[i]->compute_jac_hess_p(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
                     opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
         config->cost[i]->compute_jac_p(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
@@ -3210,8 +3218,8 @@ void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_
 
     // terminal
     i = N;
-    blasfeo_dgese(nv[i], np_global, 0., &jac_lag_stat_p_global[i], 0, 0);
-    blasfeo_dgese(2*ni[i], np_global, 0., &tmp_2ni_x_np_global[i], 0, 0);
+    blasfeo_dgese(nv[i], np_global, 0., &jac_lag_stat_p_global[i], 0, 0);  // only needed here, as dynamics dont contribute
+    blasfeo_dgese(2*ni[i], np_global, 0., &jac_ineq_p_global[i], 0, 0);
     config->cost[i]->compute_jac_p(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
 }
 
@@ -3228,8 +3236,8 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
     int *nx = dims->nx;
 
     struct blasfeo_dmat *jac_lag_stat_p_global = mem->jac_lag_stat_p_global;
-    // struct blasfeo_dmat *tmp_2ni_x_np_global = mem->tmp_2ni_x_np_global;
-    struct blasfeo_dmat *tmp_nxnext_x_np_global = mem->tmp_nxnext_x_np_global;
+    // struct blasfeo_dmat *jac_ineq_p_global = mem->jac_ineq_p_global;
+    struct blasfeo_dmat *jac_dyn_p_global = mem->jac_dyn_p_global;
 
     ocp_qp_in *tmp_qp_in = work->tmp_qp_in;
     ocp_qp_out *tmp_qp_out = work->tmp_qp_out;
@@ -3246,7 +3254,7 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
     {
         for (i = 0; i < N; i++)
         {
-            blasfeo_dcolex(nx[i+1], &tmp_nxnext_x_np_global[i], 0, index, &tmp_qp_in->b[i], 0);
+            blasfeo_dcolex(nx[i+1], &jac_dyn_p_global[i], 0, index, &tmp_qp_in->b[i], 0);
             blasfeo_dcolex(nv[i], &jac_lag_stat_p_global[i], 0, index, &tmp_qp_in->rqz[i], 0);
         }
 
@@ -3290,8 +3298,8 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
     int *nx = dims->nx;
 
     struct blasfeo_dmat *jac_lag_stat_p_global = mem->jac_lag_stat_p_global;
-    struct blasfeo_dmat *tmp_2ni_x_np_global = mem->tmp_2ni_x_np_global;
-    struct blasfeo_dmat *tmp_nxnext_x_np_global = mem->tmp_nxnext_x_np_global;
+    struct blasfeo_dmat *jac_ineq_p_global = mem->jac_ineq_p_global;
+    struct blasfeo_dmat *jac_dyn_p_global = mem->jac_dyn_p_global;
 
     ocp_qp_in *tmp_qp_in = work->tmp_qp_in;
     ocp_qp_out *tmp_qp_out = work->tmp_qp_out;
@@ -3320,15 +3328,15 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
         {
             // multiply J.T with result of backsolve and add to in mem->out_np_global
             blasfeo_dgemv_t(nv[i], np_global, 1.0, &jac_lag_stat_p_global[i], 0, 0, tmp_qp_out->ux+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
-            blasfeo_dgemv_t(ni[i], np_global, 1.0, &tmp_2ni_x_np_global[i], 0, 0, tmp_qp_out->lam+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
-            blasfeo_dgemv_t(nx[i+1], np_global, 1.0, &tmp_nxnext_x_np_global[i], 0, 0, tmp_qp_out->pi+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
+            blasfeo_dgemv_t(ni[i], np_global, 1.0, &jac_ineq_p_global[i], 0, 0, tmp_qp_out->lam+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
+            blasfeo_dgemv_t(nx[i+1], np_global, 1.0, &jac_dyn_p_global[i], 0, 0, tmp_qp_out->pi+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
         }
 
         // terminal
         i = N;
         // multiply J.T with result of backsolve and add to in mem->out_np_global
         blasfeo_dgemv_t(nv[i], np_global, 1.0, &jac_lag_stat_p_global[i], 0, 0, tmp_qp_out->ux+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
-        blasfeo_dgemv_t(ni[i], np_global, 1.0, &tmp_2ni_x_np_global[i], 0, 0, tmp_qp_out->lam+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
+        blasfeo_dgemv_t(ni[i], np_global, 1.0, &jac_ineq_p_global[i], 0, 0, tmp_qp_out->lam+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
 
         // unpack
         blasfeo_unpack_dvec(np_global, &mem->out_np_global, 0, grad_p, 1);
