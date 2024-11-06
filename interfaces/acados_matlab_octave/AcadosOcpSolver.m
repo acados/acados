@@ -265,6 +265,10 @@ classdef AcadosOcpSolver < handle
             result.min_ev = zeros(num_blocks, 1);
             result.max_ev = zeros(num_blocks, 1);
             result.condition_number = zeros(num_blocks, 1);
+            min_abs_val = 1e12
+            max_abs_val = -1e12
+            max_ev = -1e12
+            min_ev = 1e12
 
             for n=1:num_blocks
                 if partially_condensed_qp
@@ -274,10 +278,18 @@ classdef AcadosOcpSolver < handle
                 end
                 eigvals = eig(hess_block);
                 result.min_ev(n) = min(eigvals);
+                max_ev = max(max_ev, max(eigvals));
+                max_abs_val = max(max_abs_val, max(abs(eigvals)));
+                min_ev = min(min_ev, min(eigvals));
+                min_abs_val = min(min_abs_val, min(abs(eigvals)));
                 result.max_ev(n) = max(eigvals);
                 result.condition_number_blockwise(n) = max(eigvals) / min(eigvals);
             end
-            result.condition_number_global = max(result.max_ev) / min(result.min_ev);
+            result.condition_number_global = max_abs_val / min_abs_val;
+            result.max_ev_global = max_ev;
+            result.max_abs_ev_global = max_abs_val;
+            result.min_ev_global = min_ev;
+            result.min_abs_ev_global = min_abs_val;
         end
 
 
