@@ -158,7 +158,7 @@ static acados_size_t ocp_nlp_dims_calculate_size_self(int N)
     size += sizeof(ocp_nlp_dims);
 
     // nlp sizes
-    size += 7 * (N + 1) * sizeof(int);  // nv, nx, nu, ni, nz, ns, np
+    size += 10 * (N + 1) * sizeof(int);  // nv, nx, nu, ni, nz, ns, np, ng, nb, ni_nl
 
     // dynamics
     size += N * sizeof(void *);
@@ -242,14 +242,20 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     assign_and_advance_int(N + 1, &dims->nx, &c_ptr);
     // nu
     assign_and_advance_int(N + 1, &dims->nu, &c_ptr);
-    // ni
-    assign_and_advance_int(N + 1, &dims->ni, &c_ptr);
     // nz
     assign_and_advance_int(N + 1, &dims->nz, &c_ptr);
     // ns
     assign_and_advance_int(N + 1, &dims->ns, &c_ptr);
     // np
     assign_and_advance_int(N + 1, &dims->np, &c_ptr);
+    // ni
+    assign_and_advance_int(N + 1, &dims->ni, &c_ptr);
+    // nb
+    assign_and_advance_int(N + 1, &dims->nb, &c_ptr);
+    // ng
+    assign_and_advance_int(N + 1, &dims->ng, &c_ptr);
+    // ni_nl
+    assign_and_advance_int(N + 1, &dims->ni_nl, &c_ptr);
 
     // intermediate align
     align_char_to(8, &c_ptr);
@@ -282,9 +288,6 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     // nu
     for(int i=0; i<=N; i++)
         dims->nu[i] = 0;
-    // ni
-    for(int i=0; i<=N; i++)
-        dims->ni[i] = 0;
     // nz
     for(int i=0; i<=N; i++)
         dims->nz[i] = 0;
@@ -294,7 +297,18 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     // np
     for(int i=0; i<=N; i++)
         dims->np[i] = 0;
-    // TODO initialize dims to zero by default also in modules !!!!!!!
+    // ni
+    for(int i=0; i<=N; i++)
+        dims->ni[i] = 0;
+    // nb
+    for(int i=0; i<=N; i++)
+        dims->nb[i] = 0;
+    // ng
+    for(int i=0; i<=N; i++)
+        dims->ng[i] = 0;
+    // ni_nl
+    for(int i=0; i<=N; i++)
+        dims->ni_nl[i] = 0;
 
     dims->n_global_data = 0;
     dims->np_global = 0;
@@ -587,9 +601,15 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
     // set in constraint module
     config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i],
                                         field, int_value);
-    // update ni in ocp_nlp dimensions
+    // update ocp_nlp dimensions
     config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i],
                                         "ni", &dims->ni[i]);
+    config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i],
+                                        "nb", &dims->nb[i]);
+    config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i],
+                                        "ng", &dims->ng[i]);
+    config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i],
+                                        "ni_nl", &dims->ni_nl[i]);
 
     // update qp_solver dims
     if ( (!strcmp(field, "nbx")) || (!strcmp(field, "nbu")) )

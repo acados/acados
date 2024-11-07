@@ -189,6 +189,11 @@ void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, const char *fi
     {
         *value = dims->nbx + dims->nbu + dims->ng + dims->nh + dims->ns;
     }
+    else if (!strcmp(field, "ni_nl"))
+    {
+        // nonlinear inequalities
+        *value = dims->nh;
+    }
     else if (!strcmp(field, "nb"))
     {
         *value = dims->nb;
