@@ -88,207 +88,90 @@ void *ocp_nlp_constraints_bgp_dims_assign(void *config_, void *raw_memory)
 }
 
 
-/* dimension setters */
-static void ocp_nlp_constraints_bgp_set_nx(void *config_, void *dims_, const int *nx)
+static void bgp_dims_update_nb(ocp_nlp_constraints_bgp_dims *dims)
 {
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    dims->nx = *nx;
+    dims->nb = dims->nbu + dims->nbx;
 }
 
-
-
-static void ocp_nlp_constraints_bgp_set_nu(void *config_, void *dims_, const int *nu)
+static void bgp_dims_update_ns(ocp_nlp_constraints_bgp_dims *dims)
 {
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    dims->nu = *nu;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_set_nz(void *config_, void *dims_, const int *nz)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    dims->nz = *nz;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_set_nbx(void *config_, void *dims_, const int *nbx)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    dims->nbx = *nbx;
-    dims->nb = *nbx + dims->nbu;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_set_nbu(void *config_, void *dims_, const int *nbu)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    dims->nbu = *nbu;
-    dims->nb = *nbu + dims->nbx;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_set_ng(void *config_, void *dims_, const int *ng)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    dims->ng = *ng;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_set_nphi(void *config_, void *dims_, const int *nphi)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    dims->nphi = *nphi;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_set_nsbu(void *config_, void *dims_, const int *nsbu)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    dims->nsbu = *nsbu;
     dims->ns = dims->nsbu + dims->nsbx + dims->nsg + dims->nsphi;
 }
-
-
-
-static void ocp_nlp_constraints_bgp_set_nsbx(void *config_, void *dims_, const int *nsbx)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    dims->nsbx = *nsbx;
-    dims->ns = dims->nsbu + dims->nsbx + dims->nsg + dims->nsphi;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_set_nsg(void *config_, void *dims_, const int *nsg)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    dims->nsg = *nsg;
-    dims->ns = dims->nsbu + dims->nsbx + dims->nsg + dims->nsphi;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_set_nsphi(void *config_, void *dims_, const int *nsphi)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    dims->nsphi = *nsphi;
-    dims->ns = dims->nsbu + dims->nsbx + dims->nsg + dims->nsphi;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_set_nr(void *config_, void *dims_, const int *nr)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    dims->nr = *nr;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_set_nbxe(void *config_, void *dims_, const int *nbxe)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    dims->nbxe = *nbxe;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_set_nbue(void *config_, void *dims_, const int *nbue)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    dims->nbue = *nbue;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_set_nge(void *config_, void *dims_, const int *nge)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    dims->nge = *nge;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_set_nphie(void *config_, void *dims_, const int *nphie)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    dims->nphie = *nphie;
-}
-
 
 
 void ocp_nlp_constraints_bgp_dims_set(void *config_, void *dims_,
                                        const char *field, const int* value)
 {
+    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
     if (!strcmp(field, "nx"))
     {
-        ocp_nlp_constraints_bgp_set_nx(config_, dims_, value);
+        dims->nx = *value;
     }
     else if (!strcmp(field, "nz"))
     {
-        ocp_nlp_constraints_bgp_set_nz(config_, dims_, value);
+        dims->nz = *value;
     }
     else if (!strcmp(field, "nu"))
     {
-        ocp_nlp_constraints_bgp_set_nu(config_, dims_, value);
+        dims->nu = *value;
     }
     else if (!strcmp(field, "nbx"))
     {
-        ocp_nlp_constraints_bgp_set_nbx(config_, dims_, value);
+        dims->nbx = *value;
+        bgp_dims_update_nb(dims);
     }
     else if (!strcmp(field, "nbu"))
     {
-        ocp_nlp_constraints_bgp_set_nbu(config_, dims_, value);
+        dims->nbu = *value;
+        bgp_dims_update_nb(dims);
     }
     else if (!strcmp(field, "ng"))
     {
-        ocp_nlp_constraints_bgp_set_ng(config_, dims_, value);
+        dims->ng = *value;
     }
     else if (!strcmp(field, "nphi"))
     {
-        ocp_nlp_constraints_bgp_set_nphi(config_, dims_, value);
+        dims->nphi = *value;
     }
     else if (!strcmp(field, "nsbu"))
     {
-        ocp_nlp_constraints_bgp_set_nsbu(config_, dims_, value);
+        dims->nsbu = *value;
+        bgp_dims_update_ns(dims);
     }
     else if (!strcmp(field, "nsbx"))
     {
-        ocp_nlp_constraints_bgp_set_nsbx(config_, dims_, value);
+        dims->nsbx = *value;
+        bgp_dims_update_ns(dims);
     }
     else if (!strcmp(field, "nsg"))
     {
-        ocp_nlp_constraints_bgp_set_nsg(config_, dims_, value);
+        dims->nsg = *value;
+        bgp_dims_update_ns(dims);
     }
     else if (!strcmp(field, "nsphi"))
     {
-        ocp_nlp_constraints_bgp_set_nsphi(config_, dims_, value);
+        dims->nsphi = *value;
+        bgp_dims_update_ns(dims);
     }
     else if (!strcmp(field, "nr"))
     {
-        ocp_nlp_constraints_bgp_set_nr(config_, dims_, value);
+        dims->nr = *value;
     }
     else if (!strcmp(field, "nbxe"))
     {
-        ocp_nlp_constraints_bgp_set_nbxe(config_, dims_, value);
+        dims->nbxe = *value;
     }
     else if (!strcmp(field, "nbue"))
     {
-        ocp_nlp_constraints_bgp_set_nbue(config_, dims_, value);
+        dims->nbue = *value;
     }
     else if (!strcmp(field, "nge"))
     {
-        ocp_nlp_constraints_bgp_set_nge(config_, dims_, value);
+        dims->nge = *value;
     }
     else if (!strcmp(field, "nphie"))
     {
-        ocp_nlp_constraints_bgp_set_nphie(config_, dims_, value);
+        dims->nphie = *value;
     }
     else if (!strcmp(field, "np_global"))
     {
@@ -303,196 +186,77 @@ void ocp_nlp_constraints_bgp_dims_set(void *config_, void *dims_,
 
 
 
-/* dimension getters */
-static void ocp_nlp_constraints_bgp_get_ni(void *config_, void *dims_, int* value)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    *value = dims->nbx + dims->nbu + dims->ng + dims->nphi + dims->ns;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_get_nb(void *config_, void *dims_, int* value)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    *value = dims->nb;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_get_nbx(void *config_, void *dims_, int* value)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    *value = dims->nbx;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_get_nbu(void *config_, void *dims_, int* value)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    *value = dims->nbu;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_get_ng(void *config_, void *dims_, int* value)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    *value = dims->ng;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_get_nphi(void *config_, void *dims_, int* value)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    *value = dims->nphi;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_get_ns(void *config_, void *dims_, int* value)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    *value = dims->ns;
-}
-
-
-static void ocp_nlp_constraints_bgp_get_nsg(void *config_, void *dims_, int* value)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    *value = dims->nsg;
-}
-
-
-static void ocp_nlp_constraints_bgp_get_nr(void *config_, void *dims_, int* value)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    *value = dims->nr;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_get_nsphi(void *config_, void *dims_, int* value)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    *value = dims->nsphi;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_get_nbxe(void *config_, void *dims_, int* value)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    *value = dims->nbxe;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_get_nbue(void *config_, void *dims_, int* value)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    *value = dims->nbue;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_get_nge(void *config_, void *dims_, int* value)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    *value = dims->nge;
-}
-
-
-
-static void ocp_nlp_constraints_bgp_get_nphie(void *config_, void *dims_, int* value)
-{
-    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    *value = dims->nphie;
-}
-
-
-
 void ocp_nlp_constraints_bgp_dims_get(void *config_, void *dims_, const char *field, int* value)
 {
+    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
 
     if (!strcmp(field, "ni"))
     {
-        ocp_nlp_constraints_bgp_get_ni(config_, dims_, value);
+        *value = dims->nbx + dims->nbu + dims->ng + dims->nphi + dims->ns;
     }
     else if (!strcmp(field, "nb"))
     {
-        ocp_nlp_constraints_bgp_get_nb(config_, dims_, value);
+        *value = dims->nb;
     }
     else if (!strcmp(field, "nbx"))
     {
-        ocp_nlp_constraints_bgp_get_nbx(config_, dims_, value);
+        *value = dims->nbx;
     }
     else if (!strcmp(field, "nbu"))
     {
-        ocp_nlp_constraints_bgp_get_nbu(config_, dims_, value);
+        *value = dims->nbu;
     }
     else if (!strcmp(field, "ng"))
     {
-        ocp_nlp_constraints_bgp_get_ng(config_, dims_, value);
+        *value = dims->ng;
     }
     else if (!strcmp(field, "nphi"))
     {
-        ocp_nlp_constraints_bgp_get_nphi(config_, dims_, value);
+        *value = dims->nphi;
     }
     else if (!strcmp(field, "ns"))
     {
-        ocp_nlp_constraints_bgp_get_ns(config_, dims_, value);
+        *value = dims->ns;
     }
     else if (!strcmp(field, "nsphi"))
     {
-        ocp_nlp_constraints_bgp_get_nsphi(config_, dims_, value);
+        *value = dims->nsphi;
     }
     else if (!strcmp(field, "nsg"))
     {
-        ocp_nlp_constraints_bgp_get_nsg(config_, dims_, value);
+        *value = dims->nsg;
     }
     else if (!strcmp(field, "nr"))
     {
-        ocp_nlp_constraints_bgp_get_nr(config_, dims_, value);
-    }
-    else if (!strcmp(field, "ng_qp_solver"))
-    {
-        int ng, nphi;
-        ocp_nlp_constraints_bgp_get_ng(config_, dims_, &ng);
-        ocp_nlp_constraints_bgp_get_nphi(config_, dims_, &nphi);
-        *value = ng + nphi;
-    }
-    else if (!strcmp(field, "nsg_qp_solver"))
-    {
-        int nsg, nsphi;
-        ocp_nlp_constraints_bgp_get_nsg(config_, dims_, &nsg);
-        ocp_nlp_constraints_bgp_get_nsphi(config_, dims_, &nsphi);
-        *value = nsg + nsphi;
+        *value = dims->nr;
     }
     else if (!strcmp(field, "nbxe"))
     {
-        ocp_nlp_constraints_bgp_get_nbxe(config_, dims_, value);
+        *value = dims->nbxe;
     }
     else if (!strcmp(field, "nbue"))
     {
-        ocp_nlp_constraints_bgp_get_nbue(config_, dims_, value);
+        *value = dims->nbue;
     }
     else if (!strcmp(field, "nge"))
     {
-        ocp_nlp_constraints_bgp_get_nge(config_, dims_, value);
+        *value = dims->nge;
     }
     else if (!strcmp(field, "nphie"))
     {
-        ocp_nlp_constraints_bgp_get_nphie(config_, dims_, value);
+        *value = dims->nphie;
+    }
+    else if (!strcmp(field, "ng_qp_solver"))
+    {
+        *value = dims->ng + dims->nphi;
+    }
+    else if (!strcmp(field, "nsg_qp_solver"))
+    {
+        *value = dims->nsg + dims->nsphi;
     }
     else if (!strcmp(field, "nge_qp_solver"))
     {
-        int nge, nphie;
-        ocp_nlp_constraints_bgp_get_nge(config_, dims_, &nge);
-        ocp_nlp_constraints_bgp_get_nphie(config_, dims_, &nphie);
-        *value = nge + nphie;
+        *value = dims->nge + dims->nphie;
     }
     else
     {
