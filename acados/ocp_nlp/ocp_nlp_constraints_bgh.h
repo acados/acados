@@ -203,7 +203,6 @@ void ocp_nlp_constraints_bgh_memory_set_jac_ineq_p_global_ptr(struct blasfeo_dma
 
 typedef struct
 {
-    struct blasfeo_dmat jac_h_p_global;
     struct blasfeo_dmat jac_lag_p_global;
     struct blasfeo_dmat tmp_nv_nv;
     struct blasfeo_dmat tmp_nz_nh;

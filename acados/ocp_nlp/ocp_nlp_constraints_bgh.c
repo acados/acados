@@ -968,7 +968,6 @@ acados_size_t ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, vo
     size += sizeof(ocp_nlp_constraints_bgh_workspace);
     if (opts->with_solution_sens_wrt_params)
     {
-        size += blasfeo_memsize_dmat(nh, np_global);  // jac_h_p_global
         size += blasfeo_memsize_dmat(nx+nu, np_global);  // jac_lag_p_global
     }
     if (nz > 0)
@@ -1017,8 +1016,6 @@ static void ocp_nlp_constraints_bgh_cast_workspace(void *config_, void *dims_, v
     // matrices
     if (opts->with_solution_sens_wrt_params)
     {
-        // jac_h_p_global
-        assign_and_advance_blasfeo_dmat_mem(nh, np_global, &work->jac_h_p_global, &c_ptr);
         // jac_lag_p_global
         assign_and_advance_blasfeo_dmat_mem(nx+nu, np_global, &work->jac_lag_p_global, &c_ptr);
     }
@@ -1588,28 +1585,9 @@ void ocp_nlp_constraints_bgh_compute_jac_hess_p(void *config_, void *dims_, void
         model->nl_constr_h_jac_p_hess_xu_p->evaluate(model->nl_constr_h_jac_p_hess_xu_p,
                     ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
-        // // debug
-        // if (fabs(BLASFEO_DVECEL(&work->tmp_nh, 0)) > 1e-2)
-        // {
-        //     printf("stage %d\tseed: %e\n", config->stage, BLASFEO_DVECEL(&work->tmp_nh, 0));
-        //     // blasfeo_print_exp_tran_dvec(nh, &work->tmp_nh, 0);
-        //     printf("constr: contribution to stat. grad. work->jac_lag_p_global\n");
-        //     blasfeo_print_exp_dmat(nx+nu, np_global, &work->jac_lag_p_global, 0, 0);
-        //     printf("jac_h_p_global\n");
-        //     blasfeo_print_exp_dmat(nh, np_global, &work->jac_h_p_global, 0, 0);
-        // }
-
         // add constraint contribution to stationarity jacobian wrt p_global
         blasfeo_dgead(nx+nu, np_global, -1.0, &work->jac_lag_p_global, 0, 0, memory->jac_lag_stat_p_global, 0, 0);
 
-        // debug
-        // if (fabs(BLASFEO_DVECEL(&work->tmp_nh, 0)) > 1e-2)
-        // {
-        //     int ni;
-        //     ocp_nlp_constraints_bgh_get_ni(config, dims, &ni);
-        //     printf("jac_ineq_p_global\n");
-        //     blasfeo_print_exp_dmat(2*ni, np_global, memory->jac_ineq_p_global, 0, 0);
-        // }
     }
 }
 
