@@ -111,7 +111,8 @@ def export_pendulum_ode_model_with_mass_as_p_global(dt) -> AcadosModel:
 def export_parametric_ocp(
     x0=np.array([0.0, np.pi / 6, 0.0, 0.0]), N_horizon=50, T_horizon=2.0, Fmax=80.0,
     hessian_approx = "GAUSS_NEWTON", qp_solver_ric_alg=1,
-    cost_scale_as_param=False
+    cost_scale_as_param=False,
+    with_parametric_constraint=True
 ) -> AcadosOcp:
 
     ocp = AcadosOcp()
@@ -147,9 +148,10 @@ def export_parametric_ocp(
     ocp.constraints.ubu = np.array([+Fmax])
     ocp.constraints.idxbu = np.array([0])
 
-    ocp.model.con_h_expr = ocp.model.x[0] * ocp.model.p_global
-    ocp.constraints.lh = np.array([-1.5])
-    ocp.constraints.uh = np.array([1.5])
+    if with_parametric_constraint:
+        ocp.model.con_h_expr = -ocp.model.x[0] * ocp.model.p_global[0]
+        ocp.constraints.lh = np.array([-1.5])
+        ocp.constraints.uh = np.array([1.5])
 
     ocp.constraints.x0 = x0
 
