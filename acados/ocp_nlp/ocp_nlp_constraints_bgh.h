@@ -102,6 +102,7 @@ typedef struct
     external_function_generic *nl_constr_h_fun_jac;  // nonlinear: lh <= h(x,u) <= uh
     external_function_generic *nl_constr_h_fun_jac_hess;  // nonlinear: lh <= h(x,u) <= uh
     external_function_generic *nl_constr_h_jac_p_hess_xu_p;
+    external_function_generic *nl_constr_h_adj_p;
 } ocp_nlp_constraints_bgh_model;
 
 //
@@ -240,6 +241,9 @@ void ocp_nlp_constraints_bgh_bounds_update(void *config_, void *dims, void *mode
 //
 void ocp_nlp_constraints_bgh_compute_jac_hess_p(void *config_, void *dims_, void *model_,
                                             void *opts_, void *memory_, void *work_);
+//
+void ocp_nlp_constraints_bgh_compute_adj_p(void* config_, void *dims_, void *model_,
+                                    void *opts_, void *mem_, void *work_, struct blasfeo_dvec *out);
 
 
 #ifdef __cplusplus

@@ -219,6 +219,9 @@ typedef struct {{ model.name }}_solver_capsule
 {% if solver_options.with_solution_sens_wrt_params %}
     external_function_external_param_casadi *nl_constr_h_jac_p_hess_xu_p;
 {%- endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+    external_function_external_param_casadi *nl_constr_h_adj_p;
+{%- endif %}
 {%- endif %}
 
 
@@ -234,6 +237,9 @@ typedef struct {{ model.name }}_solver_capsule
 {% if solver_options.with_solution_sens_wrt_params %}
     external_function_external_param_casadi nl_constr_h_0_jac_p_hess_xu_p;
 {%- endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+    external_function_external_param_casadi nl_constr_h_0_adj_p;
+{%- endif %}
 {%- endif %}
 
 
@@ -248,6 +254,9 @@ typedef struct {{ model.name }}_solver_capsule
 {%- endif %}
 {% if solver_options.with_solution_sens_wrt_params %}
     external_function_external_param_casadi nl_constr_h_e_jac_p_hess_xu_p;
+{%- endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+    external_function_external_param_casadi nl_constr_h_e_adj_p;
 {%- endif %}
 {%- endif %}
 

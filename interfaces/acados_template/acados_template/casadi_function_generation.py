@@ -753,6 +753,17 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
             context.add_function_definition(fun_name, [x, u, lam_h, z, p], \
                     [jac_p, hess_xu_p], constraints_dir)
 
+        if opts["with_value_sens_wrt_params"]:
+            adj_p = ca.jtimes(con_h_expr, model.p_global, lam_h, True)
+            if stage_type == 'terminal':
+                fun_name = model.name + '_constr_h_e_adj_p'
+            elif stage_type == 'initial':
+                fun_name = model.name + '_constr_h_0_adj_p'
+            else:
+                fun_name = model.name + '_constr_h_adj_p'
+
+            context.add_function_definition(fun_name, [x, u, lam_h, p], [adj_p], constraints_dir)
+
     else: # BGP constraint
         if stage_type == 'terminal':
             fun_name_prefix = model.name + '_phi_e_constraint'

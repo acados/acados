@@ -3411,7 +3411,11 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                     mem->cost[i], work->cost[i], &work->tmp_np_global);
             blasfeo_dvecad(np_global, 1., &work->tmp_np_global, 0, &mem->out_np_global, 0);
 
-            // TODO: add support for inequality constraints
+            // constraints contribution
+            config->constraints[i]->compute_adj_p(config->constraints[i], dims->constraints[i], in->constraints[i], opts,
+                                    mem->constraints[i], work->constraints[i], &work->tmp_np_global);
+
+            blasfeo_dvecad(np_global, 1., &work->tmp_np_global, 0, &mem->out_np_global, 0);
         }
 
         // terminal cost contribution

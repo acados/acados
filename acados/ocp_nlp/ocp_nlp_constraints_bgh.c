@@ -465,6 +465,10 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     {
         model->nl_constr_h_jac_p_hess_xu_p = value;
     }
+    else if (!strcmp(field, "nl_constr_h_adj_p"))
+    {
+        model->nl_constr_h_adj_p = value;
+    }
     else if (!strcmp(field, "lh"))
     {
         blasfeo_pack_dvec(nh, value, 1, &model->d, nb+ng);
@@ -1176,7 +1180,7 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
             struct blasfeo_dvec_args mult_in;  // multipliers of external fun;
             mult_in.x = &work->tmp_nh;
             mult_in.xi = 0;
-            // TODO check that it is (upper - lower) and  not the other way around
+            // TODO check that it is (upper - lower) and not the other way around
             blasfeo_daxpy(nh, -1.0, memory->lam, nb+ng, memory->lam, 2*nb+2*ng+nh, &work->tmp_nh, 0);
            // blasfeo_daxpy(nh, -1.0, memory->lam, 2*nb+2*ng+nh, memory->lam, nb+ng, &work->tmp_nh, 0);
 //            blasfeo_daxpy(nh, 1.0, memory->lam, nb+ng, memory->lam, 2*nb+2*ng+nh, &work->tmp_nh, 0);
@@ -1493,6 +1497,8 @@ size_t ocp_nlp_constraints_bgh_get_external_fun_workspace_requirement(void *conf
     size = size > tmp_size ? size : tmp_size;
     tmp_size = external_function_get_workspace_requirement_if_defined(model->nl_constr_h_jac_p_hess_xu_p);
     size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->nl_constr_h_adj_p);
+    size = size > tmp_size ? size : tmp_size;
 
     return size;
 }
@@ -1505,6 +1511,7 @@ void ocp_nlp_constraints_bgh_set_external_fun_workspaces(void *config_, void *di
     external_function_set_fun_workspace_if_defined(model->nl_constr_h_fun_jac, workspace_);
     external_function_set_fun_workspace_if_defined(model->nl_constr_h_fun_jac_hess, workspace_);
     external_function_set_fun_workspace_if_defined(model->nl_constr_h_jac_p_hess_xu_p, workspace_);
+    external_function_set_fun_workspace_if_defined(model->nl_constr_h_adj_p, workspace_);
 }
 
 
@@ -1553,7 +1560,7 @@ void ocp_nlp_constraints_bgh_compute_jac_hess_p(void *config_, void *dims_, void
         z_in.x = memory->z_alg;
         z_in.xi = 0;
 
-        // TODO check that it is (upper - lower) and  not the other way around
+        // TODO check that it is (upper - lower) and not the other way around
         blasfeo_daxpy(nh, -1.0, memory->lam, nb+ng, memory->lam, 2*nb+2*ng+nh, &work->tmp_nh, 0);
 
         ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
@@ -1585,6 +1592,72 @@ void ocp_nlp_constraints_bgh_compute_jac_hess_p(void *config_, void *dims_, void
     }
 }
 
+
+void ocp_nlp_constraints_bgh_compute_adj_p(void* config_, void *dims_, void *model_,
+                                    void *opts_, void *mem_, void *work_, struct blasfeo_dvec *out)
+{
+    ocp_nlp_constraints_config *config = config_;
+    ocp_nlp_constraints_bgh_dims *dims = dims_;
+    ocp_nlp_constraints_bgh_model *model = model_;
+    // ocp_nlp_constraints_bgh_opts *opts = opts_;
+    ocp_nlp_constraints_bgh_memory *memory = mem_;
+    ocp_nlp_constraints_bgh_workspace *work = work_;
+    ocp_nlp_constraints_bgh_cast_workspace(config_, dims, opts_, work_);
+
+    int nu = dims->nu;
+    int nh = dims->nh;
+    int nb = dims->nb;
+    int ng = dims->ng;
+    // int nx = dims->nx;
+    // int nz = dims->nz;
+    // int np_global = dims->np_global;
+    printf("in ocp_nlp_constraints_bgh_compute_jac_hess_p %d, nh %d\n", config->stage, nh);
+
+    if (nh > 0)
+    {
+        /* specify external function inputs */
+        // in: x, u, lam_h, [p, p_global]
+        ext_fun_arg_t ext_fun_type_in[3];
+        void *ext_fun_in[3];
+        // out: jac_p, hess_xu_p
+        ext_fun_arg_t ext_fun_type_out[2];
+        void *ext_fun_out[2];
+
+        struct blasfeo_dvec *ux = memory->ux;
+
+        struct blasfeo_dvec_args x_in;  // input x of external fun;
+        x_in.x = ux;
+        x_in.xi = nu;
+
+        struct blasfeo_dvec_args u_in;  // input u of external fun;
+        u_in.x = ux;
+        u_in.xi = 0;
+
+        blasfeo_daxpy(nh, -1.0, memory->lam, nb+ng, memory->lam, 2*nb+2*ng+nh, &work->tmp_nh, 0);
+        printf("in ocp_nlp_constraints_bgh_compute_jac_hess_p %d, nh %d\n", config->stage, nh);
+
+        ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[0] = &x_in;
+        ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[1] = &u_in;
+        ext_fun_type_in[2] = BLASFEO_DVEC;
+        ext_fun_in[2] = &work->tmp_nh;
+
+        ext_fun_type_out[0] = BLASFEO_DVEC;
+        ext_fun_out[0] = out;
+
+        // evaluate external function
+        if (model->nl_constr_h_adj_p == 0)
+        {
+            printf("ocp_nlp_constraints_bgh_compute_adj_p: nl_constr_h_adj_p is not provided. Exiting.\n");
+            exit(1);
+        }
+        model->nl_constr_h_adj_p->evaluate(model->nl_constr_h_adj_p,
+                    ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+    }
+
+
+}
 
 void ocp_nlp_constraints_bgh_config_initialize_default(void *config_, int stage)
 {
@@ -1627,6 +1700,7 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_, int stage)
     config->update_qp_vectors = &ocp_nlp_constraints_bgh_update_qp_vectors;
     config->compute_fun = &ocp_nlp_constraints_bgh_compute_fun;
     config->compute_jac_hess_p = &ocp_nlp_constraints_bgh_compute_jac_hess_p;
+    config->compute_adj_p = &ocp_nlp_constraints_bgh_compute_adj_p;
     config->config_initialize_default = &ocp_nlp_constraints_bgh_config_initialize_default;
     config->stage = stage;
 

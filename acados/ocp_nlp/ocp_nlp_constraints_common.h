@@ -92,6 +92,7 @@ typedef struct
     void (*update_qp_vectors)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*compute_fun)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*compute_jac_hess_p)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
+    void (*compute_adj_p)(void *config, void *dims, void *model, void *opts, void *memory, void *work, struct blasfeo_dvec *out);
     void (*config_initialize_default)(void *config, int stage);
     // dimension setters
     void (*dims_set)(void *config_, void *dims_, const char *field, const int *value);
