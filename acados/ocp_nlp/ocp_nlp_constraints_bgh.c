@@ -1608,10 +1608,6 @@ void ocp_nlp_constraints_bgh_compute_adj_p(void* config_, void *dims_, void *mod
     int nh = dims->nh;
     int nb = dims->nb;
     int ng = dims->ng;
-    // int nx = dims->nx;
-    // int nz = dims->nz;
-    // int np_global = dims->np_global;
-    printf("in ocp_nlp_constraints_bgh_compute_jac_hess_p %d, nh %d\n", config->stage, nh);
 
     if (nh > 0)
     {
@@ -1634,7 +1630,6 @@ void ocp_nlp_constraints_bgh_compute_adj_p(void* config_, void *dims_, void *mod
         u_in.xi = 0;
 
         blasfeo_daxpy(nh, -1.0, memory->lam, nb+ng, memory->lam, 2*nb+2*ng+nh, &work->tmp_nh, 0);
-        printf("in ocp_nlp_constraints_bgh_compute_jac_hess_p %d, nh %d\n", config->stage, nh);
 
         ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
         ext_fun_in[0] = &x_in;
