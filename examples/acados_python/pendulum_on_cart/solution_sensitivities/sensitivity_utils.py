@@ -147,6 +147,10 @@ def export_parametric_ocp(
     ocp.constraints.ubu = np.array([+Fmax])
     ocp.constraints.idxbu = np.array([0])
 
+    ocp.model.con_h_expr = ocp.model.x[0] * ocp.model.p_global
+    ocp.constraints.lh = np.array([-1.5])
+    ocp.constraints.uh = np.array([1.5])
+
     ocp.constraints.x0 = x0
 
     ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"
