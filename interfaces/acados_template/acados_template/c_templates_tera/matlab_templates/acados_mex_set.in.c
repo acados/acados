@@ -387,7 +387,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             offset = 0;
             for (int ii=0; ii<=N; ii++)
             {
-                ocp_nlp_out_set(config, dims, out, ii, "x", value+offset);
+                ocp_nlp_out_set(config, dims, out, in, ii, "x", value+offset);
                 tmp_int = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "x");
                 offset += tmp_int;
             }
@@ -396,7 +396,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "x");
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-            ocp_nlp_out_set(config, dims, out, s0, "x", value);
+            ocp_nlp_out_set(config, dims, out, in, s0, "x", value);
         }
     }
     else if (!strcmp(field, "init_u") || !strcmp(field, "u"))
@@ -413,7 +413,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             offset = 0;
             for (int ii=0; ii<N; ii++)
             {
-                ocp_nlp_out_set(config, dims, out, ii, "u", value+offset);
+                ocp_nlp_out_set(config, dims, out, in, ii, "u", value+offset);
                 tmp_int = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "u");
                 offset += tmp_int;
             }
@@ -422,7 +422,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "u");
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-            ocp_nlp_out_set(config, dims, out, s0, "u", value);
+            ocp_nlp_out_set(config, dims, out, in, s0, "u", value);
         }
     }
     else if (!strcmp(field, "init_z")||!strcmp(field, "z"))
@@ -537,7 +537,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             offset = 0;
             for (int ii=0; ii<N; ii++)
             {
-                ocp_nlp_out_set(config, dims, out, ii, "pi", value+offset);
+                ocp_nlp_out_set(config, dims, out, in, ii, "pi", value+offset);
                 tmp_int = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "pi");
                 offset += tmp_int;
             }
@@ -546,7 +546,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "pi");
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-            ocp_nlp_out_set(config, dims, out, s0, "pi", value);
+            ocp_nlp_out_set(config, dims, out, in, s0, "pi", value);
         }
     }
     else if (!strcmp(field, "init_lam")||!strcmp(field, "lam"))
@@ -559,7 +559,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "lam");
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-            ocp_nlp_out_set(config, dims, out, s0, "lam", value);
+            ocp_nlp_out_set(config, dims, out, in, s0, "lam", value);
         }
     }
     else if (!strcmp(field, "init_sl")||!strcmp(field, "sl"))
@@ -572,7 +572,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "sl");
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-            ocp_nlp_out_set(config, dims, out, s0, field, value);
+            ocp_nlp_out_set(config, dims, out, in, s0, field, value);
         }
     }
     else if (!strcmp(field, "init_su")||!strcmp(field, "su"))
@@ -585,7 +585,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "su");
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-            ocp_nlp_out_set(config, dims, out, s0, field, value);
+            ocp_nlp_out_set(config, dims, out, in, s0, field, value);
         }
     }
     else if (!strcmp(field, "p"))

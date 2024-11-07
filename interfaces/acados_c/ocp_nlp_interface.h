@@ -286,7 +286,7 @@ ACADOS_SYMBOL_EXPORT void ocp_nlp_out_destroy(void *out);
 /// \param stage Stage number.
 /// \param field The name of the field, either x, u, pi.
 /// \param value Initialization values.
-ACADOS_SYMBOL_EXPORT void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
+ACADOS_SYMBOL_EXPORT void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out, ocp_nlp_in *in,
         int stage, const char *field, void *value);
 
 

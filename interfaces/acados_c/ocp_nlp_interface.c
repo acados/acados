@@ -511,6 +511,7 @@ int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
         ocp_nlp_in *in, int stage, const char *field, void *value)
 {
     // TODO: if bound is updated also update mask AND multipliers
+    // mask is updated in constr_config->model_set
     ocp_nlp_constraints_config *constr_config = config->constraints[stage];
 
     return constr_config->model_set(constr_config, dims->constraints[stage],
@@ -610,7 +611,7 @@ void ocp_nlp_out_destroy(void *out_)
 
 
 
-void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
+void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out, ocp_nlp_in *in,
         int stage, const char *field, void *value)
 {
     double *double_values = value;
@@ -638,8 +639,9 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
     }
     else if (!strcmp(field, "lam"))
     {
-        // TODO update mask
         blasfeo_pack_dvec(2*dims->ni[stage], double_values, 1, &out->lam[stage], 0);
+        // multiply with mask to ensure that multiplier associated with masked constraints are zero
+        blasfeo_dvecmul(2*dims->ni[stage], in->dmask[stage], 0, &out->lam[stage], 0, &out->lam[stage], 0);
     }
     else if (!strcmp(field, "z"))
     {

@@ -2460,6 +2460,7 @@ void {{ model.name }}_acados_set_nlp_out({{ model.name }}_solver_capsule* capsul
     ocp_nlp_config* nlp_config = capsule->nlp_config;
     ocp_nlp_dims* nlp_dims = capsule->nlp_dims;
     ocp_nlp_out* nlp_out = capsule->nlp_out;
+    ocp_nlp_in* nlp_in = capsule->nlp_in;
 
     // initialize primal solution
     double* xu0 = calloc(NX+NU, sizeof(double));
@@ -2480,11 +2481,11 @@ void {{ model.name }}_acados_set_nlp_out({{ model.name }}_solver_capsule* capsul
     for (int i = 0; i < N; i++)
     {
         // x0
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "x", x0);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "x", x0);
         // u0
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "u", u0);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "u", u0);
     }
-    ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, N, "x", x0);
+    ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, N, "x", x0);
     free(xu0);
 }
 
@@ -2605,15 +2606,15 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
 
     for(int i=0; i<N+1; i++)
     {
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "x", buffer);
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "u", buffer);
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "sl", buffer);
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "su", buffer);
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "lam", buffer);
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "z", buffer);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "x", buffer);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "u", buffer);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "sl", buffer);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "su", buffer);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "lam", buffer);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "z", buffer);
         if (i<N)
         {
-            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "pi", buffer);
+            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "pi", buffer);
         {%- if solver_options.integrator_type == "IRK" %}
             ocp_nlp_set(nlp_solver, i, "xdot_guess", buffer);
             ocp_nlp_set(nlp_solver, i, "z_guess", buffer);

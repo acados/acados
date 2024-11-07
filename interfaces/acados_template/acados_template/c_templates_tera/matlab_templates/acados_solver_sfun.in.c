@@ -1093,7 +1093,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
             tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "x");
             for (int jj = 0; jj < tmp_int; jj++)
                 buffer[jj] = (double)(*in_sign[tmp_offset+jj]);
-            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, stage, "x", (void *) buffer);
+            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, stage, "x", (void *) buffer);
             tmp_offset += tmp_int;
         }
       {%- endif %}
@@ -1108,7 +1108,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
             tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "u");
             for (int jj = 0; jj < tmp_int; jj++)
                 buffer[jj] = (double)(*in_sign[tmp_offset+jj]);
-            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, stage, "u", (void *) buffer);
+            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, stage, "u", (void *) buffer);
             tmp_offset += tmp_int;
         }
       {%- endif %}
@@ -1123,7 +1123,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
             tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "pi");
             for (int jj = 0; jj < tmp_int; jj++)
                 buffer[jj] = (double)(*in_sign[tmp_offset+jj]);
-            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, stage, "pi", (void *) buffer);
+            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, stage, "pi", (void *) buffer);
             tmp_offset += tmp_int;
         }
       {%- endif %}
@@ -1140,12 +1140,12 @@ static void mdlOutputs(SimStruct *S, int_T tid)
             for (int jj = 0; jj < tmp_int; jj++)
                 buffer[jj] = (double)(*in_sign[tmp_offset+jj]);
             tmp_offset += tmp_int;
-            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, stage, "sl", (void *) buffer);
+            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, stage, "sl", (void *) buffer);
             // set su
             for (int jj = 0; jj < tmp_int; jj++)
                 buffer[jj] = (double)(*in_sign[tmp_offset+jj]);
             tmp_offset += tmp_int;
-            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, stage, "su", (void *) buffer);
+            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, stage, "su", (void *) buffer);
         }
       {%- endif %}
     }

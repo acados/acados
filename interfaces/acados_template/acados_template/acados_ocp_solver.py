@@ -287,7 +287,7 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
         self.__acados_lib.ocp_nlp_cost_model_set.argtypes =  [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
 
-        self.__acados_lib.ocp_nlp_out_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        self.__acados_lib.ocp_nlp_out_set.argtypes = [c_void_p, c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
         self.__acados_lib.ocp_nlp_set.argtypes = [c_void_p, c_int, c_char_p, c_void_p]
 
         self.__acados_lib.ocp_nlp_cost_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_int)]
@@ -312,6 +312,8 @@ class AcadosOcpSolver:
 
         self.__acados_lib.ocp_nlp_set_all.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
         self.__acados_lib.ocp_nlp_set_all.restype = None
+
+        self.__acados_lib.ocp_nlp_out_set_values_to_zero.argtypes = [c_void_p, c_void_p, c_void_p]
 
         getattr(self.shared_lib, f"{self.name}_acados_solve").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{self.name}_acados_solve").restype = c_int
@@ -1464,14 +1466,12 @@ class AcadosOcpSolver:
                     self.nlp_dims, self.nlp_in, stage, field, value_data_p)
             elif field_ in out_fields:
                 self.__acados_lib.ocp_nlp_out_set(self.nlp_config, \
-                    self.nlp_dims, self.nlp_out, stage, field, value_data_p)
+                    self.nlp_dims, self.nlp_out, self.nlp_in, stage, field, value_data_p)
             elif field_ in mem_fields:
                 self.__acados_lib.ocp_nlp_set(self.nlp_solver, stage, field, value_data_p)
             elif field_ in sens_fields:
-                self.__acados_lib.ocp_nlp_out_set.argtypes = \
-                    [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
                 self.__acados_lib.ocp_nlp_out_set(self.nlp_config, \
-                    self.nlp_dims, self.sens_out, stage, field, value_data_p)
+                    self.nlp_dims, self.sens_out, self.nlp_in, stage, field, value_data_p)
             # also set z_guess, when setting z.
             if field_ == 'z':
                 field = 'z_guess'.encode('utf-8')
@@ -1480,8 +1480,6 @@ class AcadosOcpSolver:
 
 
     def reset_sens_out(self):
-        self.__acados_lib.ocp_nlp_out_set_values_to_zero.argtypes = \
-                    [c_void_p, c_void_p, c_void_p]
         self.__acados_lib.ocp_nlp_out_set_values_to_zero(self.nlp_config, self.nlp_dims, self.sens_out)
 
 

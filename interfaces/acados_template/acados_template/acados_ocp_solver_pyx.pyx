@@ -772,7 +772,7 @@ cdef class AcadosOcpSolverCython:
                     self.nlp_dims, self.nlp_in, stage, field, <void *> value.data)
             elif field_ in out_fields:
                 acados_solver_common.ocp_nlp_out_set(self.nlp_config,
-                    self.nlp_dims, self.nlp_out, stage, field, <void *> value.data)
+                    self.nlp_dims, self.nlp_out, self.nlp_in, stage, field, <void *> value.data)
             elif field_ in mem_fields:
                 acados_solver_common.ocp_nlp_set(self.nlp_solver, stage, field, <void *> value.data)
 

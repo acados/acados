@@ -297,11 +297,11 @@ int main()
     // initialize
     for (int i = 0; i < N; ++i)
     {
-		ocp_nlp_out_set(config, dims, nlp_out, i, "u", u);
-		ocp_nlp_out_set(config, dims, nlp_out, i, "x", x0);
-		ocp_nlp_out_set(config, dims, nlp_out, i, "z", z0);
+		ocp_nlp_out_set(config, dims, nlp_out, nlp_in, i, "u", u);
+		ocp_nlp_out_set(config, dims, nlp_out, nlp_in, i, "x", x0);
+		ocp_nlp_out_set(config, dims, nlp_out, nlp_in, i, "z", z0);
     }
-	ocp_nlp_out_set(config, dims, nlp_out, N, "x", x0);
+	ocp_nlp_out_set(config, dims, nlp_out, nlp_in, N, "x", x0);
 
     status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
 
@@ -335,11 +335,11 @@ int main()
 
 		// shift guess
 		for(jj=0; jj<N; jj++)
-			ocp_nlp_out_set(config, dims, nlp_out, jj, "x", x_sol+(jj+1)*nx_);
+			ocp_nlp_out_set(config, dims, nlp_out, nlp_in, jj, "x", x_sol+(jj+1)*nx_);
 		for(jj=0; jj<N-1; jj++)
-			ocp_nlp_out_set(config, dims, nlp_out, jj, "u", u_sol+(jj+1)*nu_);
+			ocp_nlp_out_set(config, dims, nlp_out, nlp_in, jj, "u", u_sol+(jj+1)*nu_);
 		for(jj=0; jj<N-1; jj++)
-			ocp_nlp_out_set(config, dims, nlp_out, jj, "z", z_sol+(jj+1)*nz_);
+			ocp_nlp_out_set(config, dims, nlp_out, nlp_in, jj, "z", z_sol+(jj+1)*nz_);
 
 		config->get(config, dims, solver->mem, "sqp_iter", &sqp_iter);
 		config->get(config, dims, solver->mem, "time_tot", &time_tot);
