@@ -399,10 +399,8 @@ void pendulum_ode_acados_setup_nlp_in(pendulum_ode_solver_capsule* capsule, cons
     /************************************************
     *  nlp_in
     ************************************************/
-//    ocp_nlp_in * nlp_in = ocp_nlp_in_create(nlp_config, nlp_dims);
-//    capsule->nlp_in = nlp_in;
     ocp_nlp_in * nlp_in = capsule->nlp_in;
-    ocp_nlp_out * nlp_in = capsule->nlp_out;
+    ocp_nlp_out * nlp_out = capsule->nlp_out;
 
     // set up time_steps
 
