@@ -2414,6 +2414,7 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
         config->constraints[i]->memory_set_idxe_ptr(nlp_mem->qp_in->idxe[i], nlp_mem->constraints[i]);
     }
 
+    // set pointer to dmask in qp_in to dmask in nlp_in
     nlp_mem->qp_in->d_mask = nlp_in->dmask;
 
     // alias to regularize memory
