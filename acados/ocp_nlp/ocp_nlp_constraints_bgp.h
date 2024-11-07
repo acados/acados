@@ -208,7 +208,9 @@ void ocp_nlp_constraints_bgp_compute_fun(void *config_, void *dims,
 //
 void ocp_nlp_constraints_bgp_update_qp_vectors(void *config_, void *dims, void *model_,
         void *opts_, void *memory_, void *work_);
-
+//
+void ocp_nlp_constraints_bgp_compute_jac_hess_p(void *config_, void *dims, void *model_,
+        void *opts_, void *memory_, void *work_);
 
 
 #ifdef __cplusplus

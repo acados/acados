@@ -461,6 +461,10 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     {
         model->nl_constr_h_fun_jac_hess = value;
     }
+    else if (!strcmp(field, "nl_constr_h_jac_p_hess_xu_p"))
+    {
+        model->nl_constr_h_jac_p_hess_xu_p = value;
+    }
     else if (!strcmp(field, "lh"))
     {
         blasfeo_pack_dvec(nh, value, 1, &model->d, nb+ng);
@@ -730,9 +734,8 @@ void ocp_nlp_constraints_bgh_opts_set(void *config_, void *opts_, char *field, v
     }
     else if(!strcmp(field, "with_solution_sens_wrt_params"))
     {
-        // do nothing for now
-        // int *with_solution_sens_wrt_params = value;
-        // opts->with_solution_sens_wrt_params = *with_solution_sens_wrt_params;
+        int *with_solution_sens_wrt_params = value;
+        opts->with_solution_sens_wrt_params = *with_solution_sens_wrt_params;
     }
     else
     {
@@ -804,6 +807,7 @@ void *ocp_nlp_constraints_bgh_memory_assign(void *config_, void *dims_, void *op
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
 
+    // vectors
     // fun
     assign_and_advance_blasfeo_dvec_mem(2 * nb + 2 * ng + 2 * nh + 2 * ns, &memory->fun, &c_ptr);
     // adj
@@ -927,6 +931,18 @@ void ocp_nlp_constraints_bgh_memory_set_idxe_ptr(int *idxe, void *memory_)
 }
 
 
+void ocp_nlp_constraints_bgh_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory_)
+{
+    ocp_nlp_constraints_bgh_memory *memory = memory_;
+    memory->jac_lag_stat_p_global = jac_lag_stat_p_global;
+}
+
+void ocp_nlp_constraints_bgh_memory_set_jac_ineq_p_global_ptr(struct blasfeo_dmat *jac_ineq_p_global, void *memory_)
+{
+    ocp_nlp_constraints_bgh_memory *memory = memory_;
+    memory->jac_ineq_p_global = jac_ineq_p_global;
+}
+
 
 /************************************************
  * workspace
@@ -935,6 +951,7 @@ void ocp_nlp_constraints_bgh_memory_set_idxe_ptr(int *idxe, void *memory_)
 acados_size_t ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
     ocp_nlp_constraints_bgh_dims *dims = dims_;
+    ocp_nlp_constraints_bgh_opts *opts = opts_;
 
     // extract dims
     int nx = dims->nx;
@@ -944,11 +961,16 @@ acados_size_t ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, vo
     int ng = dims->ng;
     int nh = dims->nh;
     int ns = dims->ns;
+    int np_global = dims->np_global;
 
     acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_constraints_bgh_workspace);
-
+    if (opts->with_solution_sens_wrt_params)
+    {
+        size += blasfeo_memsize_dmat(nh, np_global);  // jac_h_p_global
+        size += blasfeo_memsize_dmat(nx+nu, np_global);  // jac_lag_p_global
+    }
     if (nz > 0)
     {
         size += 1 * blasfeo_memsize_dmat(nz, nh);       // tmp_nz_nh
@@ -974,6 +996,7 @@ static void ocp_nlp_constraints_bgh_cast_workspace(void *config_, void *dims_, v
 {
     ocp_nlp_constraints_bgh_dims *dims = dims_;
     ocp_nlp_constraints_bgh_workspace *work = work_;
+    ocp_nlp_constraints_bgh_opts *opts = opts_;
 
     // extract dims
     int nx = dims->nx;
@@ -983,12 +1006,23 @@ static void ocp_nlp_constraints_bgh_cast_workspace(void *config_, void *dims_, v
     int ng = dims->ng;
     int nh = dims->nh;
     int ns = dims->ns;
+    int np_global = dims->np_global;
 
     char *c_ptr = (char *) work_;
     c_ptr += sizeof(ocp_nlp_constraints_bgh_workspace);
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
+
+    // matrices
+    if (opts->with_solution_sens_wrt_params)
+    {
+        // jac_h_p_global
+        assign_and_advance_blasfeo_dmat_mem(nh, np_global, &work->jac_h_p_global, &c_ptr);
+        // jac_lag_p_global
+        assign_and_advance_blasfeo_dmat_mem(nx+nu, np_global, &work->jac_lag_p_global, &c_ptr);
+    }
+
 
     if (nz > 0)
     {
@@ -1460,6 +1494,8 @@ size_t ocp_nlp_constraints_bgh_get_external_fun_workspace_requirement(void *conf
     size = size > tmp_size ? size : tmp_size;
     tmp_size = external_function_get_workspace_requirement_if_defined(model->nl_constr_h_fun_jac_hess);
     size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->nl_constr_h_jac_p_hess_xu_p);
+    size = size > tmp_size ? size : tmp_size;
 
     return size;
 }
@@ -1471,6 +1507,114 @@ void ocp_nlp_constraints_bgh_set_external_fun_workspaces(void *config_, void *di
     external_function_set_fun_workspace_if_defined(model->nl_constr_h_fun, workspace_);
     external_function_set_fun_workspace_if_defined(model->nl_constr_h_fun_jac, workspace_);
     external_function_set_fun_workspace_if_defined(model->nl_constr_h_fun_jac_hess, workspace_);
+    external_function_set_fun_workspace_if_defined(model->nl_constr_h_jac_p_hess_xu_p, workspace_);
+}
+
+
+void ocp_nlp_constraints_bgh_compute_jac_hess_p(void *config_, void *dims_, void *model_,
+                                            void *opts_, void *memory_, void *work_)
+{
+    ocp_nlp_constraints_config *config = config_;
+    ocp_nlp_constraints_bgh_dims *dims = dims_;
+    ocp_nlp_constraints_bgh_model *model = model_;
+    // ocp_nlp_constraints_bgh_opts *opts = opts_;
+    ocp_nlp_constraints_bgh_memory *memory = memory_;
+    ocp_nlp_constraints_bgh_workspace *work = work_;
+
+    ocp_nlp_constraints_bgh_cast_workspace(config_, dims, opts_, work_);
+
+    int nu = dims->nu;
+    int nh = dims->nh;
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int nx = dims->nx;
+    // int nz = dims->nz;
+    int np_global = dims->np_global;
+
+    if (nh > 0)
+    {
+        /* specify external function inputs */
+        // in: x, u, lam_h, z, [p, p_global]
+        ext_fun_arg_t ext_fun_type_in[4];
+        void *ext_fun_in[4];
+        // out: jac_p, hess_xu_p
+        ext_fun_arg_t ext_fun_type_out[2];
+        void *ext_fun_out[2];
+
+        struct blasfeo_dvec *ux = memory->ux;
+
+        struct blasfeo_dvec_args x_in;  // input x of external fun;
+        x_in.x = ux;
+        x_in.xi = nu;
+
+        struct blasfeo_dvec_args u_in;  // input u of external fun;
+        u_in.x = ux;
+        u_in.xi = 0;
+
+        // TODO tmp_z_alg !!!
+        struct blasfeo_dvec_args z_in;  // input z of external fun;
+        z_in.x = memory->z_alg;
+        z_in.xi = 0;
+
+        struct blasfeo_dvec_args mult_in;  // multipliers of external fun;
+        mult_in.x = &work->tmp_nh;
+        mult_in.xi = 0;
+
+        // TODO check that it is (upper - lower) and  not the other way around
+        blasfeo_daxpy(nh, -1.0, memory->lam, nb+ng, memory->lam, 2*nb+2*ng+nh, &work->tmp_nh, 0);
+
+        ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[0] = &x_in;
+        ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[1] = &u_in;
+        // ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
+        // ext_fun_in[2] = &mult_in;
+        ext_fun_type_in[2] = BLASFEO_DVEC;
+        ext_fun_in[2] = &work->tmp_nh;
+        ext_fun_type_in[3] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[3] = &z_in;
+
+        ext_fun_type_out[0] = BLASFEO_DMAT;
+        ext_fun_out[0] = &work->jac_h_p_global;  // jac: nh x np_global
+        ext_fun_type_out[1] = BLASFEO_DMAT;
+        ext_fun_out[1] = &work->jac_lag_p_global;  // jac: nxnu x np_global
+
+        // evaluate external function
+        if (model->nl_constr_h_jac_p_hess_xu_p == 0)
+        {
+            printf("ocp_nlp_constraints_bgh_compute_jac_p: nl_constr_h_jac_p_hess_xu_p is not provided. Exiting.\n");
+            exit(1);
+        }
+        model->nl_constr_h_jac_p_hess_xu_p->evaluate(model->nl_constr_h_jac_p_hess_xu_p,
+                    ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+        // // debug
+        // if (fabs(BLASFEO_DVECEL(&work->tmp_nh, 0)) > 1e-2)
+        // {
+        //     printf("stage %d\tseed: %e\n", config->stage, BLASFEO_DVECEL(&work->tmp_nh, 0));
+        //     // blasfeo_print_exp_tran_dvec(nh, &work->tmp_nh, 0);
+        //     printf("constr: contribution to stat. grad. work->jac_lag_p_global\n");
+        //     blasfeo_print_exp_dmat(nx+nu, np_global, &work->jac_lag_p_global, 0, 0);
+        //     printf("jac_h_p_global\n");
+        //     blasfeo_print_exp_dmat(nh, np_global, &work->jac_h_p_global, 0, 0);
+        // }
+
+        // add constraint contribution to stationarity jacobian wrt p_global
+        blasfeo_dgead(nx+nu, np_global, -1.0, &work->jac_lag_p_global, 0, 0, memory->jac_lag_stat_p_global, 0, 0);
+
+        // setup jac_ineq_p_global
+        blasfeo_dgecp(nh, np_global, &work->jac_h_p_global, 0, 0, memory->jac_ineq_p_global, nb+ng, 0);
+        blasfeo_dgecpsc(nh, np_global, -1.0, &work->jac_h_p_global, 0, 0, memory->jac_ineq_p_global, 2*nb+ng+nh, 0);
+
+        // debug
+        // if (fabs(BLASFEO_DVECEL(&work->tmp_nh, 0)) > 1e-2)
+        // {
+        //     int ni;
+        //     ocp_nlp_constraints_bgh_get_ni(config, dims, &ni);
+        //     printf("jac_ineq_p_global\n");
+        //     blasfeo_print_exp_dmat(2*ni, np_global, memory->jac_ineq_p_global, 0, 0);
+        // }
+    }
 }
 
 
@@ -1505,6 +1649,8 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_, int stage)
     config->memory_set_idxb_ptr = &ocp_nlp_constraints_bgh_memory_set_idxb_ptr;
     config->memory_set_idxs_rev_ptr = &ocp_nlp_constraints_bgh_memory_set_idxs_rev_ptr;
     config->memory_set_idxe_ptr = &ocp_nlp_constraints_bgh_memory_set_idxe_ptr;
+    config->memory_set_jac_ineq_p_global_ptr = &ocp_nlp_constraints_bgh_memory_set_jac_ineq_p_global_ptr;
+    config->memory_set_jac_lag_stat_p_global_ptr = &ocp_nlp_constraints_bgh_memory_set_jac_lag_stat_p_global_ptr;
     config->workspace_calculate_size = &ocp_nlp_constraints_bgh_workspace_calculate_size;
     config->get_external_fun_workspace_requirement = &ocp_nlp_constraints_bgh_get_external_fun_workspace_requirement;
     config->set_external_fun_workspaces = &ocp_nlp_constraints_bgh_set_external_fun_workspaces;
@@ -1512,6 +1658,7 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_, int stage)
     config->update_qp_matrices = &ocp_nlp_constraints_bgh_update_qp_matrices;
     config->update_qp_vectors = &ocp_nlp_constraints_bgh_update_qp_vectors;
     config->compute_fun = &ocp_nlp_constraints_bgh_compute_fun;
+    config->compute_jac_hess_p = &ocp_nlp_constraints_bgh_compute_jac_hess_p;
     config->config_initialize_default = &ocp_nlp_constraints_bgh_config_initialize_default;
     config->stage = stage;
 

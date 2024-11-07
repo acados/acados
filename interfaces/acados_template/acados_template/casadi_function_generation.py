@@ -690,10 +690,9 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
     if is_empty(z):
         z = symbol('z', 0, 0)
 
-    if not (is_empty(con_h_expr)) and opts['generate_hess']:
-        # multipliers for hessian
-        nh = casadi_length(con_h_expr)
-        lam_h = symbol('lam_h', nh, 1)
+    # multipliers for hessian
+    nh = casadi_length(con_h_expr)
+    lam_h = symbol('lam_h', nh, 1)
 
     # directory
     constraints_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model.name}_constraints'))
@@ -738,6 +737,21 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
         else:
             fun_name = model.name + '_constr_h_fun'
         context.add_function_definition(fun_name, [x, u, z, p], [con_h_expr], constraints_dir)
+
+        if opts["with_solution_sens_wrt_params"]:
+            jac_p = ca.jacobian(con_h_expr, model.p_global)
+            adj_ux = ca.jtimes(con_h_expr, ca.vertcat(u, x), lam_h, True)
+            hess_xu_p = ca.jacobian(adj_ux, model.p_global)
+
+            if stage_type == 'terminal':
+                fun_name = model.name + '_constr_h_e_jac_p_hess_xu_p'
+            elif stage_type == 'initial':
+                fun_name = model.name + '_constr_h_0_jac_p_hess_xu_p'
+            else:
+                fun_name = model.name + '_constr_h_jac_p_hess_xu_p'
+
+            context.add_function_definition(fun_name, [x, u, lam_h, z, p], \
+                    [jac_p, hess_xu_p], constraints_dir)
 
     else: # BGP constraint
         if stage_type == 'terminal':

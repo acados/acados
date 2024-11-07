@@ -79,14 +79,19 @@ typedef struct
     void (*memory_set_idxb_ptr)(int *idxb, void *memory);
     void (*memory_set_idxs_rev_ptr)(int *idxs_rev, void *memory);
     void (*memory_set_idxe_ptr)(int *idxe, void *memory);
+    void (*memory_set_jac_lag_stat_p_global_ptr)(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory);
+    void (*memory_set_jac_ineq_p_global_ptr)(struct blasfeo_dmat *jac_ineq_p_global, void *memory);
+
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
     acados_size_t (*get_external_fun_workspace_requirement)(void *config, void *dims, void *opts_, void *in);
     void (*set_external_fun_workspaces)(void *config, void *dims, void *opts_, void *in, void *work_);
     void (*initialize)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
+    //
     void (*update_qp_matrices)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*update_qp_vectors)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*compute_fun)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
+    void (*compute_jac_hess_p)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*config_initialize_default)(void *config, int stage);
     // dimension setters
     void (*dims_set)(void *config_, void *dims_, const char *field, const int *value);

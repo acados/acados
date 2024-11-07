@@ -101,6 +101,7 @@ typedef struct
     external_function_generic *nl_constr_h_fun;  // nonlinear: lh <= h(x,u) <= uh
     external_function_generic *nl_constr_h_fun_jac;  // nonlinear: lh <= h(x,u) <= uh
     external_function_generic *nl_constr_h_fun_jac_hess;  // nonlinear: lh <= h(x,u) <= uh
+    external_function_generic *nl_constr_h_jac_p_hess_xu_p;
 } ocp_nlp_constraints_bgh_model;
 
 //
@@ -124,6 +125,7 @@ typedef struct
 {
     int compute_adj;
     int compute_hess;
+    int with_solution_sens_wrt_params;
 } ocp_nlp_constraints_bgh_opts;
 
 //
@@ -147,6 +149,8 @@ typedef struct
 {
     struct blasfeo_dvec fun;
     struct blasfeo_dvec adj;
+    struct blasfeo_dmat *jac_lag_stat_p_global;  // pointer to jacobian of to stationarity condition wrt p_global (nx+nu, np_global)
+    struct blasfeo_dmat *jac_ineq_p_global;  // jacobian of h wrt p_global (nh, np_global)
     struct blasfeo_dvec constr_eval_no_bounds;
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
     struct blasfeo_dvec *lam;    // pointer to lam in nlp_out
@@ -195,6 +199,8 @@ void ocp_nlp_constraints_bgh_memory_set_idxe_ptr(int *idxe, void *memory_);
 
 typedef struct
 {
+    struct blasfeo_dmat jac_h_p_global;
+    struct blasfeo_dmat jac_lag_p_global;
     struct blasfeo_dmat tmp_nv_nv;
     struct blasfeo_dmat tmp_nz_nh;
     struct blasfeo_dmat tmp_nv_nh;

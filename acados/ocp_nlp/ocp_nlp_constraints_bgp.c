@@ -1311,6 +1311,13 @@ void ocp_nlp_constraints_bgp_update_qp_vectors(void *config_, void *dims_, void 
     return;
 }
 
+void ocp_nlp_constraints_bgp_compute_jac_hess_p(void *config_, void *dims_, void *model_,
+                                            void *opts_, void *memory_, void *work_)
+{
+    printf("ocp_nlp_constraints_bgp_compute_jac_hess_p is not implemented!\n\n");
+    exit(1);
+}
+
 
 size_t ocp_nlp_constraints_bgp_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_)
 {
@@ -1377,9 +1384,9 @@ void ocp_nlp_constraints_bgp_config_initialize_default(void *config_, int stage)
     config->update_qp_matrices = &ocp_nlp_constraints_bgp_update_qp_matrices;
     config->compute_fun = &ocp_nlp_constraints_bgp_compute_fun;
     config->update_qp_vectors = &ocp_nlp_constraints_bgp_update_qp_vectors;
+    config->compute_jac_hess_p = &ocp_nlp_constraints_bgp_compute_jac_hess_p;
     config->config_initialize_default = &ocp_nlp_constraints_bgp_config_initialize_default;
     config->stage = stage;
-
 
     return;
 }
