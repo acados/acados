@@ -30,15 +30,15 @@
 #
 import numpy as np
 from acados_template import AcadosOcpSolver
-from sensitivity_utils import export_parametric_ocp
+from sensitivity_utils import export_parametric_ocp, plot_pendulum
 
-def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True):
+def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_trajectory=False):
     """
     Evaluate policy and calculate its gradient for the pendulum on a cart with a parametric model.
     """
     p_nominal = 1.0
     x0 = np.array([0.0, np.pi / 2, 0.0, 0.0])
-    p_test = p_nominal - 0.2
+    p_test = p_nominal + 0.4
 
     nx = len(x0)
     nu = 1
@@ -54,9 +54,9 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True):
         raise NotImplementedError()
         AcadosOcpSolver.generate(ocp, json_file="parameter_augmented_acados_ocp.json")
         AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
-        acados_ocp_solver = AcadosOcpSolver.create_cython_solver("parameter_augmented_acados_ocp.json")
+        ocp_solver = AcadosOcpSolver.create_cython_solver("parameter_augmented_acados_ocp.json")
     else:
-        acados_ocp_solver = AcadosOcpSolver(ocp, json_file="parameter_augmented_acados_ocp.json", generate=generate_solvers, build=generate_solvers)
+        ocp_solver = AcadosOcpSolver(ocp, json_file="parameter_augmented_acados_ocp.json", generate=generate_solvers, build=generate_solvers)
 
     # create sensitivity solver
     ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, hessian_approx='EXACT', qp_solver_ric_alg=qp_solver_ric_alg, cost_scale_as_param=cost_scale_as_param)
@@ -69,13 +69,17 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True):
     else:
         sensitivity_solver = AcadosOcpSolver(ocp, json_file=f"{ocp.model.name}.json", generate=generate_solvers, build=generate_solvers)
 
-    p_val = np.array([p_test, 1.0])
+    # set parameter value
+    if cost_scale_as_param:
+        p_val = np.array([p_test, 1.0])
+    else:
+        p_val = np.array([p_test])
 
-    acados_ocp_solver.set_p_global_and_precompute_dependencies(p_val)
+    ocp_solver.set_p_global_and_precompute_dependencies(p_val)
     sensitivity_solver.set_p_global_and_precompute_dependencies(p_val)
 
-    u_opt = acados_ocp_solver.solve_for_x0(x0)[0]
-    acados_ocp_solver.store_iterate(filename='iterate.json', overwrite=True, verbose=False)
+    u_opt = ocp_solver.solve_for_x0(x0)[0]
+    ocp_solver.store_iterate(filename='iterate.json', overwrite=True, verbose=False)
 
     sensitivity_solver.load_iterate(filename='iterate.json', verbose=False)
     sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
@@ -139,6 +143,21 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True):
         else:
             print(f"Success: adj_p_vec and adj_p_mat[{i}, :] match!")
 
+    #
+    if plot_trajectory:
+        nx = ocp.dims.nx
+        nu = ocp.dims.nu
+        simX = np.zeros((N_horizon+1, nx))
+        simU = np.zeros((N_horizon, nu))
+
+        # get solution
+        for i in range(N_horizon):
+            simX[i,:] = ocp_solver.get(i, "x")
+            simU[i,:] = ocp_solver.get(i, "u")
+        simX[N_horizon,:] = ocp_solver.get(N_horizon, "x")
+
+        plot_pendulum(ocp.solver_options.shooting_nodes, Fmax, simU, simX, latexify=True, time_label=ocp.model.t_label, x_labels=ocp.model.x_labels, u_labels=ocp.model.u_labels)
+
 
 if __name__ == "__main__":
-    main(qp_solver_ric_alg=0, use_cython=False, generate_solvers=True)
+    main(qp_solver_ric_alg=0, use_cython=False, generate_solvers=True, plot_trajectory=False)
