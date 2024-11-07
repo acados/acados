@@ -1575,7 +1575,7 @@ void ocp_nlp_constraints_bgh_compute_jac_hess_p(void *config_, void *dims_, void
         ext_fun_in[3] = &z_in;
 
         ext_fun_type_out[0] = BLASFEO_DMAT;
-        ext_fun_out[0] = &work->jac_h_p_global;  // jac: nh x np_global
+        ext_fun_out[0] = memory->jac_ineq_p_global;  // jac: nh x np_global
         ext_fun_type_out[1] = BLASFEO_DMAT;
         ext_fun_out[1] = &work->jac_lag_p_global;  // jac: nxnu x np_global
 
@@ -1601,10 +1601,6 @@ void ocp_nlp_constraints_bgh_compute_jac_hess_p(void *config_, void *dims_, void
 
         // add constraint contribution to stationarity jacobian wrt p_global
         blasfeo_dgead(nx+nu, np_global, -1.0, &work->jac_lag_p_global, 0, 0, memory->jac_lag_stat_p_global, 0, 0);
-
-        // setup jac_ineq_p_global
-        blasfeo_dgecp(nh, np_global, &work->jac_h_p_global, 0, 0, memory->jac_ineq_p_global, nb+ng, 0);
-        blasfeo_dgecpsc(nh, np_global, -1.0, &work->jac_h_p_global, 0, 0, memory->jac_ineq_p_global, 2*nb+ng+nh, 0);
 
         // debug
         // if (fabs(BLASFEO_DVECEL(&work->tmp_nh, 0)) > 1e-2)
