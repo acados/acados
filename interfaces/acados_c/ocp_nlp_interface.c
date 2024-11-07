@@ -60,6 +60,9 @@
 #include "acados/ocp_nlp/ocp_nlp_ddp.h"
 #include "acados/utils/mem.h"
 
+// blasfeo
+#include "blasfeo/include/blasfeo_d_blas.h"
+
 
 /************************************************
 * plan
@@ -641,7 +644,7 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
     {
         blasfeo_pack_dvec(2*dims->ni[stage], double_values, 1, &out->lam[stage], 0);
         // multiply with mask to ensure that multiplier associated with masked constraints are zero
-        blasfeo_dvecmul(2*dims->ni[stage], in->dmask[stage], 0, &out->lam[stage], 0, &out->lam[stage], 0);
+        blasfeo_dvecmul(2*dims->ni[stage], &in->dmask[stage], 0, &out->lam[stage], 0, &out->lam[stage], 0);
     }
     else if (!strcmp(field, "z"))
     {
