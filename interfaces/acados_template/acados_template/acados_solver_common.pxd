@@ -72,7 +72,7 @@ cdef extern from "acados_c/ocp_nlp_interface.h":
         ocp_nlp_in *in_, ocp_nlp_out *out_, int stage, const char *field, void *value)
 
     # out
-    void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out, ocp_nlp_in *in,
+    void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out, ocp_nlp_in *in_,
         int stage, const char *field, void *value)
     void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
         int stage, const char *field, void *value)
