@@ -1553,10 +1553,6 @@ void ocp_nlp_constraints_bgh_compute_jac_hess_p(void *config_, void *dims_, void
         z_in.x = memory->z_alg;
         z_in.xi = 0;
 
-        struct blasfeo_dvec_args mult_in;  // multipliers of external fun;
-        mult_in.x = &work->tmp_nh;
-        mult_in.xi = 0;
-
         // TODO check that it is (upper - lower) and  not the other way around
         blasfeo_daxpy(nh, -1.0, memory->lam, nb+ng, memory->lam, 2*nb+2*ng+nh, &work->tmp_nh, 0);
 
@@ -1564,8 +1560,6 @@ void ocp_nlp_constraints_bgh_compute_jac_hess_p(void *config_, void *dims_, void
         ext_fun_in[0] = &x_in;
         ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
         ext_fun_in[1] = &u_in;
-        // ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
-        // ext_fun_in[2] = &mult_in;
         ext_fun_type_in[2] = BLASFEO_DVEC;
         ext_fun_in[2] = &work->tmp_nh;
         ext_fun_type_in[3] = BLASFEO_DVEC_ARGS;
