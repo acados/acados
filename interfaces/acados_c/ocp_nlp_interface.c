@@ -511,14 +511,17 @@ int ocp_nlp_cost_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 
 int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
-        ocp_nlp_in *in, int stage, const char *field, void *value)
+        ocp_nlp_in *in, ocp_nlp_out *out, int stage, const char *field, void *value)
 {
-    // TODO: if bound is updated also update mask AND multipliers
-    // mask is updated in constr_config->model_set
     ocp_nlp_constraints_config *constr_config = config->constraints[stage];
 
-    return constr_config->model_set(constr_config, dims->constraints[stage],
+    // this updates both the bounds and the mask
+    int status = constr_config->model_set(constr_config, dims->constraints[stage],
             in->constraints[stage], field, value);
+    // multiply lam with new mask to ensure that multipliers associated with masked constraints are zero.
+    blasfeo_dvecmul(2*dims->ni[stage], &in->dmask[stage], 0, &out->lam[stage], 0, &out->lam[stage], 0);
+
+    return status;
 }
 
 

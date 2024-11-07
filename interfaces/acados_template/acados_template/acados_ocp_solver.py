@@ -284,7 +284,7 @@ class AcadosOcpSolver:
 
         self.__acados_lib.ocp_nlp_eval_cost.argtypes = [c_void_p, c_void_p, c_void_p]
         self.__acados_lib.ocp_nlp_eval_residuals.argtypes = [c_void_p, c_void_p, c_void_p]
-        self.__acados_lib.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        self.__acados_lib.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
         self.__acados_lib.ocp_nlp_cost_model_set.argtypes =  [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
 
         self.__acados_lib.ocp_nlp_out_set.argtypes = [c_void_p, c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
@@ -1460,7 +1460,7 @@ class AcadosOcpSolver:
 
             if field_ in constraints_fields:
                 self.__acados_lib.ocp_nlp_constraints_model_set(self.nlp_config, \
-                    self.nlp_dims, self.nlp_in, stage, field, value_data_p)
+                    self.nlp_dims, self.nlp_in, self.nlp_out, stage, field, value_data_p)
             elif field_ in cost_fields:
                 self.__acados_lib.ocp_nlp_cost_model_set(self.nlp_config, \
                     self.nlp_dims, self.nlp_in, stage, field, value_data_p)
@@ -1614,7 +1614,7 @@ class AcadosOcpSolver:
         value_data_p = cast((value_data), c_void_p)
 
         self.__acados_lib.ocp_nlp_constraints_model_set(self.nlp_config, \
-            self.nlp_dims, self.nlp_in, stage, field, value_data_p)
+            self.nlp_dims, self.nlp_in, self.nlp_out, stage, field, value_data_p)
 
         return
 
