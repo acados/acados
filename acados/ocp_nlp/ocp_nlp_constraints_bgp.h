@@ -171,7 +171,12 @@ void ocp_nlp_constraints_bgp_memory_set_idxb_ptr(int *idxb, void *memory_);
 //
 void ocp_nlp_constraints_bgp_memory_set_idxs_rev_ptr(int *idxs_rev, void *memory_);
 //
-void ocp_nlp_constraints_bgh_memory_set_idxe_ptr(int *idxe, void *memory_);
+void ocp_nlp_constraints_bgp_memory_set_idxe_ptr(int *idxe, void *memory_);
+//
+void ocp_nlp_constraints_bgp_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory_);
+//
+void ocp_nlp_constraints_bgp_memory_set_jac_ineq_p_global_ptr(struct blasfeo_dmat *jac_ineq_p_global, void *memory_);
+
 
 /* workspace */
 
@@ -188,9 +193,9 @@ typedef struct
 //
 acados_size_t ocp_nlp_constraints_bgp_workspace_calculate_size(void *config, void *dims, void *opts);
 //
-size_t ocp_nlp_constraints_bgh_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_);
+size_t ocp_nlp_constraints_bgp_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_);
 //
-void ocp_nlp_constraints_bgh_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_);
+void ocp_nlp_constraints_bgp_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_);
 
 /* functions */
 

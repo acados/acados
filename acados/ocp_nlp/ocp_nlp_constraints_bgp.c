@@ -857,6 +857,18 @@ void ocp_nlp_constraints_bgp_memory_set_idxe_ptr(int *idxe, void *memory_)
 }
 
 
+void ocp_nlp_constraints_bgp_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory_)
+{
+    // ocp_nlp_constraints_bgp_memory *memory = memory_;
+    // memory->jac_lag_stat_p_global = jac_lag_stat_p_global;
+}
+
+void ocp_nlp_constraints_bgp_memory_set_jac_ineq_p_global_ptr(struct blasfeo_dmat *jac_ineq_p_global, void *memory_)
+{
+    // ocp_nlp_constraints_bgp_memory *memory = memory_;
+    // memory->jac_ineq_p_global = jac_ineq_p_global;
+}
+
 
 /* workspace */
 
@@ -1304,7 +1316,7 @@ void ocp_nlp_constraints_bgp_update_qp_vectors(void *config_, void *dims_, void 
     // fun = fun * mask
     blasfeo_dvecmul(2*(nb+ng+nphi+ns), memory->dmask, 0, &memory->fun, 0, &memory->fun, 0);
 
-    // printf("BGH mask\n");
+    // printf("bgp mask\n");
     // blasfeo_print_tran_dvec(2*(nb+ng+nphi), memory->dmask, 0);
     // blasfeo_print_exp_tran_dvec(2*(nb+ng+nphi), &model->d, 0);
 
@@ -1377,6 +1389,8 @@ void ocp_nlp_constraints_bgp_config_initialize_default(void *config_, int stage)
     config->memory_set_idxb_ptr = &ocp_nlp_constraints_bgp_memory_set_idxb_ptr;
     config->memory_set_idxs_rev_ptr = &ocp_nlp_constraints_bgp_memory_set_idxs_rev_ptr;
     config->memory_set_idxe_ptr = &ocp_nlp_constraints_bgp_memory_set_idxe_ptr;
+    config->memory_set_jac_ineq_p_global_ptr = &ocp_nlp_constraints_bgp_memory_set_jac_ineq_p_global_ptr;
+    config->memory_set_jac_lag_stat_p_global_ptr = &ocp_nlp_constraints_bgp_memory_set_jac_lag_stat_p_global_ptr;
     config->workspace_calculate_size = &ocp_nlp_constraints_bgp_workspace_calculate_size;
     config->get_external_fun_workspace_requirement = &ocp_nlp_constraints_bgp_get_external_fun_workspace_requirement;
     config->set_external_fun_workspaces = &ocp_nlp_constraints_bgp_set_external_fun_workspaces;

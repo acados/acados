@@ -190,6 +190,10 @@ void ocp_nlp_constraints_bgh_memory_set_idxb_ptr(int *idxb, void *memory_);
 void ocp_nlp_constraints_bgh_memory_set_idxs_rev_ptr(int *idxs_rev, void *memory_);
 //
 void ocp_nlp_constraints_bgh_memory_set_idxe_ptr(int *idxe, void *memory_);
+//
+void ocp_nlp_constraints_bgh_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory_);
+//
+void ocp_nlp_constraints_bgh_memory_set_jac_ineq_p_global_ptr(struct blasfeo_dmat *jac_ineq_p_global, void *memory_);
 
 
 
@@ -233,6 +237,9 @@ void ocp_nlp_constraints_bgh_compute_fun(void *config_, void *dims, void *model_
                                             void *opts_, void *memory_, void *work_);
 //
 void ocp_nlp_constraints_bgh_bounds_update(void *config_, void *dims, void *model_,
+                                            void *opts_, void *memory_, void *work_);
+//
+void ocp_nlp_constraints_bgh_compute_jac_hess_p(void *config_, void *dims_, void *model_,
                                             void *opts_, void *memory_, void *work_);
 
 
