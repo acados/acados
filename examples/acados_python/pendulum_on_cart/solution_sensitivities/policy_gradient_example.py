@@ -53,12 +53,17 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     Fmax = 80.0
 
     ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, qp_solver_ric_alg=1)
+
+    # solver creation arguments
+    verbose = True
+    build = True
+    generate = True
     if use_cython:
         AcadosOcpSolver.generate(ocp, json_file="parameter_augmented_acados_ocp.json")
         AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
         ocp_solver = AcadosOcpSolver.create_cython_solver("parameter_augmented_acados_ocp.json")
     else:
-        ocp_solver = AcadosOcpSolver(ocp, json_file="parameter_augmented_acados_ocp.json")
+        ocp_solver = AcadosOcpSolver(ocp, build=build, generate=generate, json_file="parameter_augmented_acados_ocp.json", verbose=verbose)
 
     # create sensitivity solver
     ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, hessian_approx='EXACT', qp_solver_ric_alg=qp_solver_ric_alg)
@@ -69,7 +74,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
         AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
         sensitivity_solver = AcadosOcpSolver.create_cython_solver(f"{ocp.model.name}.json")
     else:
-        sensitivity_solver = AcadosOcpSolver(ocp, json_file=f"{ocp.model.name}.json")
+        sensitivity_solver = AcadosOcpSolver(ocp, build=build, generate=generate, json_file=f"{ocp.model.name}.json", verbose=verbose)
 
     if eigen_analysis:
         min_eig_full = np.zeros(np_test)
