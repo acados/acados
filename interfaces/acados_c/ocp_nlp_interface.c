@@ -1283,9 +1283,7 @@ void ocp_nlp_eval_residuals(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_
 {
     ocp_nlp_config *config = solver->config;
     ocp_nlp_memory *nlp_mem;
-    config->get(config, solver->dims, solver->mem, "nlp_mem", &nlp_mem);
-
-    ocp_nlp_res_compute(solver->dims, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem);
+    config->eval_kkt_residual(config, solver->dims, nlp_in, nlp_out, solver->opts, solver->mem, solver->work);
 }
 
 

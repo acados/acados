@@ -1310,7 +1310,7 @@ class AcadosOcpSolver:
             - statistics: table with info about last iteration
             - stat_m: number of rows in statistics matrix
             - stat_n: number of columns in statistics matrix
-            - residuals: residuals of last iterate
+            - residuals: residuals of current iterate
             - alpha: step sizes of SQP iterations
         """
 
@@ -1475,7 +1475,7 @@ class AcadosOcpSolver:
     def get_residuals(self, recompute=False):
         """
         Returns an array of the form [res_stat, res_eq, res_ineq, res_comp].
-        This residual has to be computed for SQP_RTI solver, since it is not available by default.
+        The residuals has to be computed for SQP_RTI solver, since it is not available by default.
 
         - res_stat: stationarity residual
         - res_eq: residual wrt equality constraints (dynamics)
@@ -1507,6 +1507,22 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_get(self.nlp_solver, field, out_data)
         return out.flatten()
 
+
+    def get_initial_residuals(self) -> np.ndarray:
+        """
+        Returns an array of the form [res_stat, res_eq, res_ineq, res_comp].
+        Residuals: residuals of initial iterate in previous solver call
+        """
+        full_stats = self.get_stats('statistics')
+        if self.__solver_options['nlp_solver_type'] == 'SQP':
+            return full_stats[1:5, 0]
+        elif self.__solver_options['nlp_solver_type'] == 'SQP_RTI':
+            if self.__solver_options['rti_log_residuals'] == 1:
+                return full_stats[3:7, 0]
+            else:
+                raise Exception("initial_residuals is only available for SQP_RTI if rti_log_residuals is enabled, for efficiency the rti_log_only_available_residuals option is recommended.")
+        else:
+            raise Exception(f"initial_residuals is not available for nlp_solver_type {self.__solver_options['nlp_solver_type']}.")
 
     # Note: this function should not be used anymore, better use cost_set, constraints_set
     def set(self, stage_: int, field_: str, value_: np.ndarray):
