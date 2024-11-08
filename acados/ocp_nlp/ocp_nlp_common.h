@@ -87,6 +87,7 @@ typedef struct ocp_nlp_config
     void (*opts_set_at_stage)(void *config_, void *opts_, size_t stage, const char *field, void* value);
     // evaluate solver // TODO rename into solve
     int (*evaluate)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
+    void (*eval_kkt_residual)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
     void (*eval_param_sens)(void *config, void *dims, void *opts_, void *mem, void *work,
                             char *field, int stage, int index, void *sens_nlp_out);
     void (*eval_lagr_grad_p)(void *config, void *dims, void *nlp_in, void *opts_, void *mem, void *work,
