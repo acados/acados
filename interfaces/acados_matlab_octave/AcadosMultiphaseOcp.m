@@ -231,6 +231,8 @@ classdef AcadosMultiphaseOcp < handle
 
                 disp(['Calling make_consistent for phase ', num2str(i), '.']);
                 ocp.make_consistent(true);
+                % use the updated objects that are not handles
+                self.parameter_values{i} = ocp.parameter_values;
 
                 self.dummy_ocp_list{i} = ocp;
             end
