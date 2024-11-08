@@ -61,6 +61,7 @@ typedef struct
     void *(*model_assign)(void *config, void *dims, void *raw_memory);
     int (*model_set)(void *config_, void *dims_, void *model_, const char *field, void *value);
     void (*model_get)(void *config_, void *dims_, void *model_, const char *field, void *value);
+    void (*model_set_dmask_ptr)(struct blasfeo_dvec *dmask, void *model_);
     acados_size_t (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *opts);
@@ -74,7 +75,6 @@ typedef struct
     void (*memory_set_DCt_ptr)(struct blasfeo_dmat *DCt, void *memory);
     void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory);
     void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *z_alg, void *memory);
-    void (*memory_set_dmask_ptr)(struct blasfeo_dvec *dmask, void *memory);
     void (*memory_set_dzdux_tran_ptr)(struct blasfeo_dmat *dzduxt, void *memory);
     void (*memory_set_idxb_ptr)(int *idxb, void *memory);
     void (*memory_set_idxs_rev_ptr)(int *idxs_rev, void *memory);

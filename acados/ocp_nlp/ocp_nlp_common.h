@@ -66,7 +66,6 @@ extern "C" {
 #include "acados/utils/types.h"
 
 
-
 /************************************************
  * config
  ************************************************/
@@ -227,6 +226,9 @@ typedef struct ocp_nlp_in
 
     /// Global data
     double *global_data;
+
+    /// Constraint mask
+    struct blasfeo_dvec *dmask;
 
     /// Pointers to cost functions (TBC).
     void **cost;

@@ -369,6 +369,31 @@ void *ocp_nlp_constraints_bgp_model_assign(void *config, void *dims_, void *raw_
 }
 
 
+void ocp_nlp_constraints_bgp_update_mask_lower(ocp_nlp_constraints_bgp_model *model, int size, int offset)
+{
+    for (int ii = 0; ii < size; ii++)
+    {
+        if (BLASFEO_DVECEL(&model->d, offset + ii) <= -ACADOS_INFTY)
+            BLASFEO_DVECEL(model->dmask, offset + ii) = 0;
+        else
+            BLASFEO_DVECEL(model->dmask, offset + ii) = 1;
+    }
+}
+
+
+void ocp_nlp_constraints_bgp_update_mask_upper(ocp_nlp_constraints_bgp_model *model, int size, int offset)
+{
+    for (int ii = 0; ii < size; ii++)
+    {
+        if (BLASFEO_DVECEL(&model->d, offset + ii) >= ACADOS_INFTY)
+            BLASFEO_DVECEL(model->dmask, offset + ii) = 0;
+        else
+            BLASFEO_DVECEL(model->dmask, offset + ii) = 1;
+    }
+}
+
+
+
 int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
                          void *model_, const char *field, void *value)
 {
@@ -378,10 +403,11 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
 
     int ii;
     int *ptr_i;
+    int offset;
 
     if (!dims || !model || !field || !value)
     {
-        printf("ocp_nlp_constraints_bgp_model_set: got Null pointer \n");
+        printf("ocp_nlp_constraints_bgp_model_set: got null pointer \n");
         exit(1);
     }
 
@@ -402,6 +428,7 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     int nge = dims->nge;
     int nphie = dims->nphie;
 
+    // If model->d is updated, we always also update dmask. 0 means unconstrained.
     if (!strcmp(field, "idxbx"))
     {
         ptr_i = (int *) value;
@@ -410,11 +437,15 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lbx"))
     {
-        blasfeo_pack_dvec(nbx, value, 1, &model->d, nbu);
+        offset = nbu;
+        blasfeo_pack_dvec(nbx, value, 1, &model->d, offset);
+        ocp_nlp_constraints_bgp_update_mask_lower(model, nbx, offset);
     }
     else if (!strcmp(field, "ubx"))
     {
-        blasfeo_pack_dvec(nbx, value, 1, &model->d, nb + ng + nphi + nbu);
+        offset = nb + ng + nphi + nbu;
+        blasfeo_pack_dvec(nbx, value, 1, &model->d, offset);
+        ocp_nlp_constraints_bgp_update_mask_upper(model, nbx, offset);
     }
     else if (!strcmp(field, "idxbu"))
     {
@@ -424,11 +455,16 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lbu"))
     {
+        offset = 0;
         blasfeo_pack_dvec(nbu, value, 1, &model->d, 0);
+        ocp_nlp_constraints_bgp_update_mask_lower(model, nbu, offset);
+
     }
     else if (!strcmp(field, "ubu"))
     {
-        blasfeo_pack_dvec(nbu, value, 1, &model->d, nb + ng + nphi);
+        offset = nb + ng + nphi;
+        blasfeo_pack_dvec(nbu, value, 1, &model->d, offset);
+        ocp_nlp_constraints_bgp_update_mask_upper(model, nbu, offset);
     }
     else if (!strcmp(field, "C"))
     {
@@ -440,11 +476,15 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lg"))
     {
-        blasfeo_pack_dvec(ng, value, 1, &model->d, nb);
+        offset = nb;
+        blasfeo_pack_dvec(ng, value, 1, &model->d, offset);
+        ocp_nlp_constraints_bgp_update_mask_lower(model, ng, offset);
     }
     else if (!strcmp(field, "ug"))
     {
-        blasfeo_pack_dvec(ng, value, 1, &model->d, 2*nb+ng+nphi);
+        offset = 2*nb+ng+nphi;
+        blasfeo_pack_dvec(ng, value, 1, &model->d, offset);
+        ocp_nlp_constraints_bgp_update_mask_upper(model, ng, offset);
     }
     else if (!strcmp(field, "nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux"))
     {
@@ -456,11 +496,15 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lphi"))
     {
-        blasfeo_pack_dvec(nphi, value, 1, &model->d, nb+ng);
+        offset = nb + ng;
+        blasfeo_pack_dvec(nphi, value, 1, &model->d, offset);
+        ocp_nlp_constraints_bgp_update_mask_lower(model, nphi, offset);
     }
     else if (!strcmp(field, "uphi"))
     {
-        blasfeo_pack_dvec(nphi, value, 1, &model->d, 2*nb+2*ng+nphi);
+        offset = 2*nb+2*ng+nphi;
+        blasfeo_pack_dvec(nphi, value, 1, &model->d, offset);
+        ocp_nlp_constraints_bgp_update_mask_upper(model, nphi, offset);
     }
     else if (!strcmp(field, "idxsbu"))
     {
@@ -470,11 +514,15 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lsbu"))
     {
-        blasfeo_pack_dvec(nsbu, value, 1, &model->d, 2*nb+2*ng+2*nphi);
+        offset = 2*nb+2*ng+2*nphi;
+        blasfeo_pack_dvec(nsbu, value, 1, &model->d, offset);
+        ocp_nlp_constraints_bgp_update_mask_lower(model, nsbu, offset);
     }
     else if (!strcmp(field, "usbu"))
     {
-        blasfeo_pack_dvec(nsbu, value, 1, &model->d, 2*nb+2*ng+2*nphi+ns);
+        offset = 2*nb+2*ng+2*nphi+ns;
+        blasfeo_pack_dvec(nsbu, value, 1, &model->d, offset);
+        ocp_nlp_constraints_bgp_update_mask_lower(model, nsbu, offset);
     }
     else if (!strcmp(field, "idxsbx"))
     {
@@ -484,11 +532,15 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lsbx"))
     {
-        blasfeo_pack_dvec(nsbx, value, 1, &model->d, 2*nb+2*ng+2*nphi+nsbu);
+        offset = 2*nb+2*ng+2*nphi+nsbu;
+        blasfeo_pack_dvec(nsbx, value, 1, &model->d, offset);
+        ocp_nlp_constraints_bgp_update_mask_lower(model, nsbx, offset);
     }
     else if (!strcmp(field, "usbx"))
     {
-        blasfeo_pack_dvec(nsbx, value, 1, &model->d, 2*nb+2*ng+2*nphi+ns+nsbu);
+        offset = 2*nb+2*ng+2*nphi+ns+nsbu;
+        blasfeo_pack_dvec(nsbx, value, 1, &model->d, offset);
+        ocp_nlp_constraints_bgp_update_mask_lower(model, nsbx, offset);
     }
     else if (!strcmp(field, "idxsg"))
     {
@@ -498,11 +550,15 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lsg"))
     {
-        blasfeo_pack_dvec(nsg, value, 1, &model->d, 2*nb+2*ng+2*nphi+nsbu+nsbx);
+        offset = 2*nb+2*ng+2*nphi+nsbu+nsbx;
+        blasfeo_pack_dvec(nsg, value, 1, &model->d, offset);
+        ocp_nlp_constraints_bgp_update_mask_lower(model, nsg, offset);
     }
     else if (!strcmp(field, "usg"))
     {
-        blasfeo_pack_dvec(nsg, value, 1, &model->d, 2*nb+2*ng+2*nphi+ns+nsbu+nsbx);
+        offset = 2*nb+2*ng+2*nphi+ns+nsbu+nsbx;
+        blasfeo_pack_dvec(nsg, value, 1, &model->d, offset);
+        ocp_nlp_constraints_bgp_update_mask_lower(model, nsg, offset);
     }
     else if (!strcmp(field, "idxsphi"))
     {
@@ -512,11 +568,15 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lsphi"))
     {
-        blasfeo_pack_dvec(nsphi, value, 1, &model->d, 2*nb+2*ng+2*nphi+nsbu+nsbx+nsg);
+        offset = 2*nb+2*ng+2*nphi+nsbu+nsbx+nsg;
+        blasfeo_pack_dvec(nsphi, value, 1, &model->d, offset);
+        ocp_nlp_constraints_bgp_update_mask_lower(model, nsphi, offset);
     }
     else if (!strcmp(field, "usphi"))
     {
-        blasfeo_pack_dvec(nsphi, value, 1, &model->d, 2*nb+2*ng+2*nphi+ns+nsbu+nsbx+nsg);
+        offset = 2*nb+2*ng+2*nphi+ns+nsbu+nsbx+nsg;
+        blasfeo_pack_dvec(nsphi, value, 1, &model->d, offset);
+        ocp_nlp_constraints_bgp_update_mask_lower(model, nsphi, offset);
     }
     else if (!strcmp(field, "idxbue"))
     {
@@ -751,6 +811,12 @@ void *ocp_nlp_constraints_bgp_memory_assign(void *config_, void *dims_, void *op
 }
 
 
+void ocp_nlp_constraints_bgp_model_set_dmask_ptr(struct blasfeo_dvec *dmask, void *model_)
+{
+    ocp_nlp_constraints_bgp_model *model = model_;
+    model->dmask = dmask;
+}
+
 
 struct blasfeo_dvec *ocp_nlp_constraints_bgp_memory_get_fun_ptr(void *memory_)
 {
@@ -793,13 +859,6 @@ void ocp_nlp_constraints_bgp_memory_set_DCt_ptr(struct blasfeo_dmat *DCt, void *
     ocp_nlp_constraints_bgp_memory *memory = memory_;
 
     memory->DCt = DCt;
-}
-
-
-void ocp_nlp_constraints_bgp_memory_set_dmask_ptr(struct blasfeo_dvec *dmask, void *memory_)
-{
-    ocp_nlp_constraints_bgp_memory *memory = memory_;
-    memory->dmask = dmask;
 }
 
 
@@ -1232,7 +1291,7 @@ void ocp_nlp_constraints_bgp_compute_fun(void *config_, void *dims_, void *model
     blasfeo_daxpy(2*ns, -1.0, ux, nu+nx, &model->d, 2*nb+2*ng+2*nphi, &memory->fun, 2*nb+2*ng+2*nphi);
 
     // fun = fun * mask
-    blasfeo_dvecmul(2*(nb+ng+nphi), memory->dmask, 0, &memory->fun, 0, &memory->fun, 0);
+    blasfeo_dvecmul(2*(nb+ng+nphi), model->dmask, 0, &memory->fun, 0, &memory->fun, 0);
 
     return;
 
@@ -1281,7 +1340,7 @@ void ocp_nlp_constraints_bgp_update_qp_vectors(void *config_, void *dims_, void 
         if (BLASFEO_DVECEL(&model->d, i) <= -ACADOS_INFTY)
         {
             // printf("found upper infinity bound\n");
-            BLASFEO_DVECEL(memory->dmask, i) = 0;
+            BLASFEO_DVECEL(model->dmask, i) = 0;
         }
     }
     for (int i = nb+ng+nphi; i < 2*(nb+ng+nphi); i++)
@@ -1289,7 +1348,7 @@ void ocp_nlp_constraints_bgp_update_qp_vectors(void *config_, void *dims_, void 
         if (BLASFEO_DVECEL(&model->d, i) >= ACADOS_INFTY)
         {
             // printf("found upper infinity bound\n");
-            BLASFEO_DVECEL(memory->dmask, i) = 0;
+            BLASFEO_DVECEL(model->dmask, i) = 0;
         }
     }
     for (int i = 2*(nb+ng+nphi); i < 2*(nb+ng+nphi+ns); i++)
@@ -1297,15 +1356,15 @@ void ocp_nlp_constraints_bgp_update_qp_vectors(void *config_, void *dims_, void 
         if (BLASFEO_DVECEL(&model->d, i) <= -ACADOS_INFTY)
         {
             // printf("found lower infinity bound on slacks\n");
-            BLASFEO_DVECEL(memory->dmask, i) = 0;
+            BLASFEO_DVECEL(model->dmask, i) = 0;
         }
     }
 
     // fun = fun * mask
-    blasfeo_dvecmul(2*(nb+ng+nphi+ns), memory->dmask, 0, &memory->fun, 0, &memory->fun, 0);
+    blasfeo_dvecmul(2*(nb+ng+nphi+ns), model->dmask, 0, &memory->fun, 0, &memory->fun, 0);
 
     // printf("BGH mask\n");
-    // blasfeo_print_tran_dvec(2*(nb+ng+nphi), memory->dmask, 0);
+    // blasfeo_print_tran_dvec(2*(nb+ng+nphi), model->dmask, 0);
     // blasfeo_print_exp_tran_dvec(2*(nb+ng+nphi), &model->d, 0);
 
     return;
@@ -1351,6 +1410,7 @@ void ocp_nlp_constraints_bgp_config_initialize_default(void *config_, int stage)
     config->model_assign = &ocp_nlp_constraints_bgp_model_assign;
     config->model_set = &ocp_nlp_constraints_bgp_model_set;
     config->model_get = &ocp_nlp_constraints_bgp_model_get;
+    config->model_set_dmask_ptr = &ocp_nlp_constraints_bgp_model_set_dmask_ptr;
     config->opts_calculate_size = &ocp_nlp_constraints_bgp_opts_calculate_size;
     config->opts_assign = &ocp_nlp_constraints_bgp_opts_assign;
     config->opts_initialize_default = &ocp_nlp_constraints_bgp_opts_initialize_default;
@@ -1365,7 +1425,6 @@ void ocp_nlp_constraints_bgp_config_initialize_default(void *config_, int stage)
     config->memory_set_DCt_ptr = &ocp_nlp_constraints_bgp_memory_set_DCt_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_constraints_bgp_memory_set_RSQrq_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_constraints_bgp_memory_set_z_alg_ptr;
-    config->memory_set_dmask_ptr = &ocp_nlp_constraints_bgp_memory_set_dmask_ptr;
     config->memory_set_dzdux_tran_ptr = &ocp_nlp_constraints_bgp_memory_set_dzduxt_ptr;
     config->memory_set_idxb_ptr = &ocp_nlp_constraints_bgp_memory_set_idxb_ptr;
     config->memory_set_idxs_rev_ptr = &ocp_nlp_constraints_bgp_memory_set_idxs_rev_ptr;
