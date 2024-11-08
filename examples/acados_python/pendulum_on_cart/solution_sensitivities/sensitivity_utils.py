@@ -149,7 +149,7 @@ def export_parametric_ocp(
     ocp.constraints.idxbu = np.array([0])
 
     if with_parametric_constraint:
-        ocp.model.con_h_expr = -ocp.model.x[0] * ocp.model.p_global[0]
+        ocp.model.con_h_expr = -ocp.model.x[0] * ocp.model.p_global[0]**2
         ocp.constraints.lh = np.array([-1.5])
         ocp.constraints.uh = np.array([1.5])
 
