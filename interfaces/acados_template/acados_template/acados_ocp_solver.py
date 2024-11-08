@@ -1520,7 +1520,7 @@ class AcadosOcpSolver:
             if self.__solver_options['rti_log_residuals'] == 1:
                 return full_stats[3:7, 0]
             else:
-                raise Exception("initial_residuals is not available for SQP_RTI if rti_log_residuals is not enabled.")
+                raise Exception("initial_residuals is only available for SQP_RTI if rti_log_residuals is enabled, for efficiency the rti_log_only_available_residuals option is recommended.")
         else:
             raise Exception(f"initial_residuals is not available for nlp_solver_type {self.__solver_options['nlp_solver_type']}.")
 
