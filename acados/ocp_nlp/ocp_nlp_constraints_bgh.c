@@ -1518,7 +1518,7 @@ void ocp_nlp_constraints_bgh_set_external_fun_workspaces(void *config_, void *di
 void ocp_nlp_constraints_bgh_compute_jac_hess_p(void *config_, void *dims_, void *model_,
                                             void *opts_, void *memory_, void *work_)
 {
-    ocp_nlp_constraints_config *config = config_;
+    // ocp_nlp_constraints_config *config = config_;
     ocp_nlp_constraints_bgh_dims *dims = dims_;
     ocp_nlp_constraints_bgh_model *model = model_;
     // ocp_nlp_constraints_bgh_opts *opts = opts_;
@@ -1555,12 +1555,11 @@ void ocp_nlp_constraints_bgh_compute_jac_hess_p(void *config_, void *dims_, void
         u_in.x = ux;
         u_in.xi = 0;
 
-        // TODO tmp_z_alg !!!
+        // NOTE: z is not tested here.
         struct blasfeo_dvec_args z_in;  // input z of external fun;
         z_in.x = memory->z_alg;
         z_in.xi = 0;
 
-        // TODO check that it is (upper - lower) and not the other way around
         blasfeo_daxpy(nh, -1.0, memory->lam, nb+ng, memory->lam, 2*nb+2*ng+nh, &work->tmp_nh, 0);
 
         ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
@@ -1573,7 +1572,7 @@ void ocp_nlp_constraints_bgh_compute_jac_hess_p(void *config_, void *dims_, void
         ext_fun_in[3] = &z_in;
 
         ext_fun_type_out[0] = BLASFEO_DMAT;
-        ext_fun_out[0] = memory->jac_ineq_p_global;  // jac: nh x np_global
+        ext_fun_out[0] = memory->jac_ineq_p_global;  // (nh x np_global) -> write directly to ocp_nlp mem
         ext_fun_type_out[1] = BLASFEO_DMAT;
         ext_fun_out[1] = &work->jac_lag_p_global;  // jac: nxnu x np_global
 
@@ -1588,7 +1587,6 @@ void ocp_nlp_constraints_bgh_compute_jac_hess_p(void *config_, void *dims_, void
 
         // add constraint contribution to stationarity jacobian wrt p_global
         blasfeo_dgead(nx+nu, np_global, -1.0, &work->jac_lag_p_global, 0, 0, memory->jac_lag_stat_p_global, 0, 0);
-
     }
 }
 
@@ -1596,7 +1594,7 @@ void ocp_nlp_constraints_bgh_compute_jac_hess_p(void *config_, void *dims_, void
 void ocp_nlp_constraints_bgh_compute_adj_p(void* config_, void *dims_, void *model_,
                                     void *opts_, void *mem_, void *work_, struct blasfeo_dvec *out)
 {
-    ocp_nlp_constraints_config *config = config_;
+    // ocp_nlp_constraints_config *config = config_;
     ocp_nlp_constraints_bgh_dims *dims = dims_;
     ocp_nlp_constraints_bgh_model *model = model_;
     // ocp_nlp_constraints_bgh_opts *opts = opts_;
@@ -1650,8 +1648,6 @@ void ocp_nlp_constraints_bgh_compute_adj_p(void* config_, void *dims_, void *mod
         model->nl_constr_h_adj_p->evaluate(model->nl_constr_h_adj_p,
                     ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
     }
-
-
 }
 
 void ocp_nlp_constraints_bgh_config_initialize_default(void *config_, int stage)

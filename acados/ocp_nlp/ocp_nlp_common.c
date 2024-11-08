@@ -3210,15 +3210,14 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
     // This function sets up: jac_lag_stat_p_global, jac_ineq_p_global, jac_dyn_p_global
-    // - jac_dyn_p_global is computed in dynamics module
-    // - jac_ineq_p_global is computed in constraints module (TODO!)
     // - jac_lag_stat_p_global: first dynamics writes its contribution, then cost and constraints modules add their contribution.
+    // - jac_dyn_p_global is computed in dynamics module
+    // - jac_ineq_p_global is computed in constraints module
     int N = dims->N;
     int np_global = dims->np_global;
     int i;
 
     int *nv = dims->nv;
-    // int *ni = dims->ni;
     int *nx = dims->nx;
     int *nu = dims->nu;
     int *ns = dims->ns;
@@ -3230,23 +3229,25 @@ void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
-    for (i = 0; i < N; i++)
+    for (i = 0; i <= N; i++)
     {
-        blasfeo_dgese(2*ns[i], np_global, 0., &jac_lag_stat_p_global[i], nx[i]+nu[i], 0);  // first nx+nu rows are overwritten by dynamics anyway
-        config->dynamics[i]->compute_jac_hess_p(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
-                    opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+        if (i < N)
+        {
+            // first nx+nu rows are overwritten by dynamics -> initialize ns part
+            blasfeo_dgese(2*ns[i], np_global, 0., &jac_lag_stat_p_global[i], nx[i]+nu[i], 0);
+            config->dynamics[i]->compute_jac_hess_p(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
+                        opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+        }
+        else
+        {
+            // initialize jac_lag_stat_p_global = 0 as dynamics dont contribute
+            blasfeo_dgese(nv[i], np_global, 0., &jac_lag_stat_p_global[i], 0, 0);
+        }
         config->cost[i]->compute_jac_p(config->cost[i], dims->cost[i], in->cost[i],
                             opts->cost[i], mem->cost[i], work->cost[i]);
-        config->constraints[i]->compute_jac_hess_p(config->constraints[i], dims->constraints[i], in->constraints[i],
-                    opts->constraints[i], mem->constraints[i], work->constraints[i]);
+        config->constraints[i]->compute_jac_hess_p(config->constraints[i], dims->constraints[i],
+                    in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
     }
-
-    // terminal
-    i = N;
-    blasfeo_dgese(nv[i], np_global, 0., &jac_lag_stat_p_global[i], 0, 0);  // only needed here, as dynamics dont contribute
-    config->cost[i]->compute_jac_p(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
-    config->constraints[i]->compute_jac_hess_p(config->constraints[i], dims->constraints[i], in->constraints[i],
-                    opts->constraints[i], mem->constraints[i], work->constraints[i]);
 }
 
 
@@ -3329,7 +3330,6 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
 
     int *nv = dims->nv;
     int *nx = dims->nx;
-    // int *ni = dims->ni;
     int *nb = dims->nb;
     int *ng = dims->ng;
     int *ni_nl = dims->ni_nl;
@@ -3390,8 +3390,6 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
 {
     int i;
     int N = dims->N;
-    // int *nu = dims->nu;
-    // int *nx = dims->nx;
     int np_global = dims->np_global;
 
     if (!strcmp("p_global", field))

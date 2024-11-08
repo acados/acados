@@ -1331,6 +1331,13 @@ void ocp_nlp_constraints_bgp_compute_jac_hess_p(void *config_, void *dims_, void
 }
 
 
+void ocp_nlp_constraints_bgp_compute_adj_p(void* config_, void *dims_, void *model_,
+                                    void *opts_, void *mem_, void *work_, struct blasfeo_dvec *out)
+{
+    printf("ocp_nlp_constraints_bgp_compute_adj_p is not implemented!\n\n");
+    exit(1);
+}
+
 size_t ocp_nlp_constraints_bgp_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_)
 {
     ocp_nlp_constraints_bgp_model *model = model_;
@@ -1399,6 +1406,7 @@ void ocp_nlp_constraints_bgp_config_initialize_default(void *config_, int stage)
     config->compute_fun = &ocp_nlp_constraints_bgp_compute_fun;
     config->update_qp_vectors = &ocp_nlp_constraints_bgp_update_qp_vectors;
     config->compute_jac_hess_p = &ocp_nlp_constraints_bgp_compute_jac_hess_p;
+    config->compute_adj_p = &ocp_nlp_constraints_bgp_compute_adj_p;
     config->config_initialize_default = &ocp_nlp_constraints_bgp_config_initialize_default;
     config->stage = stage;
 
