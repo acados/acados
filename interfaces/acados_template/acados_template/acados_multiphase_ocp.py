@@ -91,6 +91,10 @@ class AcadosMultiphaseOptions:
 
     All of the fields can be either None, then the corresponding value from ocp.solver_options is used,
     or a list of length n_phases describing the value for this option at each phase.
+
+    - integrator_type: list of strings, must be in ["ERK", "IRK", "GNSF", "DISCRETE", "LIFTED_IRK"]
+    - collocation_type: list of strings, must be in ["GAUSS_RADAU_IIA", "GAUSS_LEGENDRE", "EXPLICIT_RUNGE_KUTTA"]
+    - cost_discretization: list of strings, must be in ["EULER", "INTEGRATOR"]
     """
     def __init__(self):
         self.integrator_type = None
@@ -98,7 +102,6 @@ class AcadosMultiphaseOptions:
         self.cost_discretization = None
 
     def make_consistent(self, opts: AcadosOcpOptions, n_phases: int) -> None:
-
         for field, variants in zip(['integrator_type', 'collocation_type', 'cost_discretization'],
                                 [INTEGRATOR_TYPES, COLLOCATION_TYPES, COST_DISCRETIZATION_TYPES]
                                 ):
@@ -120,7 +123,8 @@ class AcadosMultiphaseOcp:
 
     Initial cost and constraints are defined by the first phase, terminal cost and constraints by the last phase.
     All other phases are treated as intermediate phases, where only dynamics and path cost and constraints are used.
-    Solver options are shared between all phases. Options that can vary phase-wise must be set via self.mocp_opts of type AcadosMultiphaseOptions.
+
+    Solver options are shared between all phases. Options that can vary phase-wise must be set via self.mocp_opts of type :py:class:`acados_template.acados_multiphase_ocp.AcadosMultiphaseOptions`.
 
     :param N_list: list containing the number of shooting intervals for each phase
     """

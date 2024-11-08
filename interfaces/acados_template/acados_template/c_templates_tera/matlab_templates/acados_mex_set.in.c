@@ -595,7 +595,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             for (int ii=0; ii<=N; ii++)
             {
                 acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "p");
-                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size)
+                MEX_DIM_CHECK_VEC_STAGE(fun_name, field, ii, matlab_size, acados_size)
                 {{ name }}_acados_update_params(capsule, ii, value, matlab_size);
             }
         }

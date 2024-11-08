@@ -33,8 +33,6 @@ function ocp = formulate_double_integrator_ocp(settings)
 
     ocp.model = get_double_integrator_model();
 
-    ocp.dims.N = settings.N_HORIZON;
-
     ocp.cost.cost_type = 'NONLINEAR_LS';
     ocp.cost.cost_type_e = 'NONLINEAR_LS';
     ocp.cost.W = diag([settings.L2_COST_P, settings.L2_COST_V, settings.L2_COST_A]);

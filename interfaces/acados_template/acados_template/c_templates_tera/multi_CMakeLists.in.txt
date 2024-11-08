@@ -229,7 +229,7 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model_0.name }}_cost/{{ model_0.name }}_conl_cost_0_fun.c
         {{ model_0.name }}_cost/{{ model_0.name }}_conl_cost_0_fun_jac_hess.c
 {%- elif cost_0.cost_type_0 == "EXTERNAL" %}
-    {%- if cost.cost_ext_fun_type_0 == "casadi" %}
+    {%- if cost_0.cost_ext_fun_type_0 == "casadi" %}
         {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_fun.c
         {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_fun_jac.c
         {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_fun_jac_hess.c

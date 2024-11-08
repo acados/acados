@@ -39,6 +39,14 @@
     }\
 }
 
+#define MEX_DIM_CHECK_VEC_STAGE(fun_name, field, stage, matlab_size, acados_size) {\
+    if (acados_size != matlab_size)\
+    {\
+        sprintf(buffer, "%s: error setting %s for stage %d, wrong dimension, got %d, need %d", fun_name, field, stage, matlab_size, acados_size);\
+        mexErrMsgTxt(buffer);\
+    }\
+}
+
 #define MEX_DIM_CHECK_VEC_TWO(fun_name, field, matlab_size, acados_size1, acados_size2) {\
     if ((acados_size1 != matlab_size) && (acados_size2 != matlab_size) )\
     {\
