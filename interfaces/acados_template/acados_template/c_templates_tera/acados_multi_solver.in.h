@@ -120,6 +120,12 @@ typedef struct {{ name }}_solver_capsule
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi *nl_constr_h_fun_jac_hess_{{ jj }};
 {%- endif %}
+{% if solver_options.with_solution_sens_wrt_params %}
+    external_function_external_param_casadi *nl_constr_h_jac_p_hess_xu_p_{{ jj }};
+{%- endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+    external_function_external_param_casadi *nl_constr_h_adj_p_{{ jj }};
+{%- endif %}
 {%- endif %}
 
 
@@ -172,6 +178,12 @@ typedef struct {{ name }}_solver_capsule
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi nl_constr_h_0_fun_jac_hess;
 {%- endif %}
+{% if solver_options.with_solution_sens_wrt_params %}
+    external_function_external_param_casadi nl_constr_h_0_jac_p_hess_xu_p;
+{%- endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+    external_function_external_param_casadi nl_constr_h_0_adj_p;
+{%- endif %}
 {%- endif %}
 
 {% if cost_e.cost_type_e == "NONLINEAR_LS" %}
@@ -201,6 +213,12 @@ typedef struct {{ name }}_solver_capsule
     external_function_external_param_casadi nl_constr_h_e_fun;
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi nl_constr_h_e_fun_jac_hess;
+{%- endif %}
+{% if solver_options.with_solution_sens_wrt_params %}
+    external_function_external_param_casadi nl_constr_h_e_jac_p_hess_xu_p;
+{%- endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+    external_function_external_param_casadi nl_constr_h_e_adj_p;
 {%- endif %}
 {%- endif %}
 
