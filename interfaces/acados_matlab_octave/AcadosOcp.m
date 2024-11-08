@@ -1037,6 +1037,9 @@ classdef AcadosOcp < handle
                 if self.simulink_opts.inputs.rti_phase && self.solver_options.nlp_solver_type ~= 'SQP_RTI'
                     error('rti_phase is only supported for SQP_RTI');
                 end
+                if self.simulink_opts.outputs.KKT_residuals && self.solver_options.nlp_solver_type == 'SQP_RTI'
+                    warning('KKT_residuals now computes the residuals of the output iterate in SQP_RTI, this leads to increased computation time, turn off this port if it is not needed. See https://github.com/acados/acados/pull/1346.');
+                end
             else
                 disp("Not rendering Simulink-related templates, as simulink_opts are not specified.")
             end
