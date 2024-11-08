@@ -822,21 +822,15 @@ static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims,
     int i, j;
     double tmp, tmp_bound, mask_value;
     int constr_index, ux_idx;
-    printf("Inside of manually slacked\n");
     for (i = 0; i <= N; i++)
     {
-        printf("i = %d\n", i);
         for (j=0; j<nns[i]; ++j)
         {
             constr_index = mem->idxns[i][j];
-            printf("constraint_index = %d\n", constr_index);
-
-            printf("1\n");
             // tmp = \nabla c(z) * d
             // simple bounds
             if (constr_index < nb[i])
             {
-                printf("1 nb\n");
                 ux_idx = qp_in->idxb[i][constr_index];
                 // printf("evaluating constraint %d, bound on ux[%d]\n", constr_index, ux_idx);
                 tmp = BLASFEO_DVECEL(qp_out->ux+i, ux_idx);
@@ -844,20 +838,11 @@ static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims,
             // linear constraints
             else
             {
-                printf("1 lin constr\n");
-                printf("nb[i] = %d\n", nb[i]);
                 // general linear / linearized!
                 // tmp_ni = D * u + C * x
                 // Calculate the product
-                printf("offset : %d\n", constr_index-nb[i]);
-                blasfeo_print_exp_tran_dvec(1, qp_in->d+i, 0);
-                printf("print matrix\n");
-                blasfeo_print_exp_dmat(nu[i]+nx[i], 1, qp_in->DCt+i, constr_index-nb[i], 0);
-                blasfeo_print_exp_tran_dvec(nu[i]+nx[i], qp_out->ux+i, 0);
-                blasfeo_print_exp_tran_dvec(1, &work->nlp_work->tmp_ni, 0);
                 blasfeo_dgemv_t(nu[i]+nx[i], 1, 1.0, qp_in->DCt+i, constr_index-nb[i], 0, qp_out->ux+i, 0,
                         0.0, qp_in->d+i, 0, &work->nlp_work->tmp_ni, 0);
-                printf("after\n");
                 tmp = BLASFEO_DVECEL(&work->nlp_work->tmp_ni, 0);
             }
 
