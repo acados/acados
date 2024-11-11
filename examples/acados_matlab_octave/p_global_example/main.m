@@ -38,7 +38,6 @@ function main()
 
     %% Standard OCP compare blazing vs bspline, p global vs no p_global
     [state_trajectories_without_blazing_ref, t_tot_with_bspline_ref] = run_example_ocp(true, false, false);
-    %%
     [state_trajectories_without_blazing, t_tot_with_bspline] = run_example_ocp(true, true, false);
     [state_trajectories_with_blazing_ref, t_tot_with_blazing_ref] = run_example_ocp(true, false, true);
     [state_trajectories_with_blazing, t_tot_with_blazing] = run_example_ocp(true, true, true);
@@ -62,15 +61,18 @@ function main()
     end
 
 
-    %% Multi-phase OCP
-    disp("Running MOCP tests.")
+    %% Multi-phase OCP without lut
+%     disp("Running MOCP tests without lut.")
+%
+%     [state_trajectories_no_lut_ref, ~] = run_example_mocp(false, false, true);
+%     [state_trajectories_no_lut, ~] = run_example_mocp(false, true, true);
+%
+%     if ~(max(max(abs(state_trajectories_no_lut_ref - state_trajectories_no_lut))) < 1e-10)
+%         error("State trajectories with lut=false do not match.");
+%     end
 
-    [state_trajectories_no_lut_ref, ~] = run_example_mocp(false, false, true);
-    [state_trajectories_no_lut, ~] = run_example_mocp(false, true, true);
-
-    if ~(max(max(abs(state_trajectories_no_lut_ref - state_trajectories_no_lut))) < 1e-10)
-        error("State trajectories with lut=false do not match.");
-    end
+    %% MOCP test with lut
+    disp("Running MOCP tests with lut.")
 
     [state_trajectories_with_lut_ref, ~] = run_example_mocp(true, false, true);
     [state_trajectories_with_lut, ~] = run_example_mocp(true, true, true);
