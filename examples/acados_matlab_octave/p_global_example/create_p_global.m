@@ -29,26 +29,37 @@
 
 
 
-function ocp = set_solver_options(ocp)
-    % set options
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
-    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'; %'GAUSS_NEWTON'; %'EXACT'; %
-    ocp.solver_options.integrator_type = 'ERK';
-    ocp.solver_options.print_level = 0;
-    ocp.solver_options.nlp_solver_type = 'SQP_RTI';
+function [p_global, m, l, coefficients, coefficient_vals, knots, p_global_values] = create_p_global(lut)
 
-    % set prediction horizon
-    Tf = 1.0;
-    N_horizon = 20;
-    ocp.solver_options.tf = Tf;
-    ocp.solver_options.N_horizon = N_horizon;
+    import casadi.*
+    m = MX.sym('m');
+    l = MX.sym('l');
+    p_global = {m, l};
+    p_global_values = [0.1; 0.8];
 
-    % partial condensing
-    ocp.solver_options.qp_solver_cond_N = 5;
-    ocp.solver_options.qp_solver_cond_block_size = [3, 3, 3, 3, 7, 1];
+    large_scale = false;
+    if lut
+        % generate random values for spline coefficients
+        % knots = {[0,0,0,0,0.2,0.5,0.8,1,1,1,1],[0,0,0,0.1,0.5,0.9,1,1,1]};
 
-    % NOTE: these additional flags are required for code generation of CasADi functions using casadi.blazing_spline
-    % These might be different depending on your compiler and operating system.
-    flags = ['-I' casadi.GlobalOptions.getCasadiIncludePath ' -O2 -ffast-math -march=native -fno-omit-frame-pointer']
-    ocp.solver_options.ext_fun_compile_flags = flags;
+        if large_scale
+            % large scale lookup table
+            knots = {0:200,0:200};
+            coefficient_vals = 0.1*ones(38809, 1);
+        else
+            % small scale lookup table
+            knots = {0:19,0:19};
+            coefficient_vals = 0.1*ones(256, 1);
+        end
+
+        coefficients = MX.sym('coefficient', numel(coefficient_vals), 1);
+        p_global{end+1} = coefficients;
+        p_global_values = [p_global_values; coefficient_vals(:)];
+    else
+        coefficient_vals = [];
+        knots = [];
+        coefficients = MX.sym('coefficient', 0, 1);
+    end
+
+    p_global = vertcat(p_global{:});
 end

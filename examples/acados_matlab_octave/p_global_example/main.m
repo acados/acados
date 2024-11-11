@@ -195,42 +195,6 @@ function mocp = create_mocp_formulation(p_global, m, l, coefficients, knots, lut
 end
 
 
-function [p_global, m, l, coefficients, coefficient_vals, knots, p_global_values] = create_p_global(lut)
-
-    import casadi.*
-    m = MX.sym('m');
-    l = MX.sym('l');
-    p_global = {m, l};
-    p_global_values = [0.1; 0.8];
-
-    large_scale = false;
-    if lut
-        % generate random values for spline coefficients
-        % knots = {[0,0,0,0,0.2,0.5,0.8,1,1,1,1],[0,0,0,0.1,0.5,0.9,1,1,1]};
-
-        if large_scale
-            % large scale lookup table
-            knots = {0:200,0:200};
-            coefficient_vals = 0.1*ones(38809, 1);
-        else
-            % small scale lookup table
-            knots = {0:19,0:19};
-            coefficient_vals = 0.1*ones(256, 1);
-        end
-
-        coefficients = MX.sym('coefficient', numel(coefficient_vals), 1);
-        p_global{end+1} = coefficients;
-        p_global_values = [p_global_values; coefficient_vals(:)];
-    else
-        coefficient_vals = [];
-        knots = [];
-        coefficients = MX.sym('coefficient', 0, 1);
-    end
-
-    p_global = vertcat(p_global{:});
-end
-
-
 function plot_pendulum(shooting_nodes, xtraj, utraj)
     figure; hold on;
     states = {'p', 'theta', 'v', 'dtheta'};
