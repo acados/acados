@@ -413,6 +413,16 @@ class AcadosOcpSolver:
         return self.status
 
 
+    def get_dim_flat(self, field: str):
+        """
+        Get dimension of flattened iterate.
+        """
+        if field not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']:
+            raise Exception(f'AcadosOcpSolver.get_dim_flat(field={field}): \'{field}\' is an invalid argument.')
+
+        return self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, field.encode('utf-8'))
+
+
     def custom_update(self, data_: np.ndarray):
         """
         A custom function that can be implemented by a user to be called between solver calls.

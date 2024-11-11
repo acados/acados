@@ -32,8 +32,8 @@
 from .acados_ocp_solver import AcadosOcpSolver
 from .acados_ocp import AcadosOcp
 from typing import List
-from ctypes import (POINTER, c_int, c_void_p)
-
+from ctypes import (POINTER, c_int, c_void_p, cast, c_double)
+import numpy as np
 
 class AcadosOcpBatchSolver():
     """
@@ -75,6 +75,18 @@ class AcadosOcpBatchSolver():
         print(msg)
 
 
+    @property
+    def ocp_solvers(self):
+        """List of AcadosOcpSolvers."""
+        return self.__ocp_solvers
+
+
+    @property
+    def N_batch(self):
+        """Batch size."""
+        return self.__N_batch
+
+
     def solve(self):
         """
         Call solve for all `N_batch` solvers.
@@ -82,13 +94,29 @@ class AcadosOcpBatchSolver():
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve")(self.__ocp_solvers_pointer, self.__N_batch)
 
 
-    @property
-    def ocp_solvers(self):
-        """List of AcadosOcpSolvers."""
-        return self.__ocp_solvers
+    def set_flat(self, field_: str, value_: np.ndarray) -> None:
+        """
+        Set concatenation solver initialization for all `N_batch` solvers.
 
-    @property
-    def N_batch(self):
-        """Batch size."""
-        return self.__N_batch
+            :param field_: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']
+            :param value_: np.array of shape (N_batch, n_field)
+        """
+
+        field = field_.encode('utf-8')
+        if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']:
+            raise Exception(f'AcadosOcpSolver.get_flat(field={field_}): \'{field_}\' is an invalid argument.')
+
+        dim = self.ocp_solvers[0].get_dim_flat(field_)
+
+        if value_.shape != (self.N_batch, dim):
+            raise Exception(f'AcadosOcpBatchSolver.set_flat(field={field_}, value): value has wrong shape, expected ({self.N_batch}, {dim}), got {value_.shape}.')
+
+        value_ = value_.reshape((-1,), order='C')
+        N_data = value_.shape[0]
+
+        value_ = value_.astype(float)
+        value_data = cast(value_.ctypes.data, POINTER(c_double))
+        value_data_p = cast((value_data), c_void_p)
+
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_set_flat")(self.__ocp_solvers_pointer, field, value_data_p, N_data, self.__N_batch)
 
