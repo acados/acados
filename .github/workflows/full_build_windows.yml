@@ -85,6 +85,18 @@ jobs:
             cd getting_started
             minimal_example_ocp
 
+    - name: Run minimal Simulink example
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: |
+            cd ${{runner.workspace}}/acados/.github/windows
+            setup_mingw
+            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave
+            acados_env_variables_windows
+            cd test
+            simulink_test
+
     - name: Run MATLAB tests with new CasADi
       uses: matlab-actions/run-command@v2
       if: always()
@@ -94,8 +106,5 @@ jobs:
             setup_mingw
             cd ${{runner.workspace}}/acados/examples/acados_matlab_octave
             acados_env_variables_windows
-            cd getting_started
-            minimal_example_ocp
-            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
-            run_matlab_examples_new_casadi
-
+            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/p_global_example
+            main
