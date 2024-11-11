@@ -47,7 +47,7 @@ jobs:
         echo "C:\tools\mingw64\bin" >> $env:MW_MINGW64_LOC
 
     - name: Cache CMake
-      id: cache-CMake
+      id: cache-cmake
       uses: actions/cache@v4
       with:
         path: C:\Program Files\CMake
@@ -55,9 +55,9 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cmake-
 
-    - name: Install CMake
+    - if: ${{ steps.cache-cmake.outputs.cache-hit != 'true' }}
+      name: Install CMake
       uses: jwlawson/actions-setup-cmake@v2
-      if: steps.cache-CMake.outputs.cache-hit != 'true'  # Install only if not cached
 
     - name: Check GCC and CMake versions
       run: |
