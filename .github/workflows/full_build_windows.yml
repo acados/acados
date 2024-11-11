@@ -37,10 +37,10 @@ jobs:
         [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
         iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 
-    - name: Install MinGW using Chocolatey
+    - if: ${{ steps.cache-minGW.outputs.cache-hit != 'true' }}
+      name: Install MinGW using Chocolatey
       run: |
         choco install mingw --yes
-      if: steps.cache-minGW.outputs.cache-hit != 'true'  # Install only if not cached
 
     - name: Add MinGW to PATH
       run: |
