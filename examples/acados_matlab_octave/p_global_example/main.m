@@ -38,6 +38,7 @@ function main()
 
     %% Standard OCP compare blazing vs bspline, p global vs no p_global
     [state_trajectories_without_blazing_ref, t_tot_with_bspline_ref] = run_example_ocp(true, false, false);
+    %%
     [state_trajectories_without_blazing, t_tot_with_bspline] = run_example_ocp(true, true, false);
     [state_trajectories_with_blazing_ref, t_tot_with_blazing_ref] = run_example_ocp(true, false, true);
     [state_trajectories_with_blazing, t_tot_with_blazing] = run_example_ocp(true, true, true);
@@ -275,7 +276,7 @@ function ocp = set_solver_options(ocp)
 
     % NOTE: these additional flags are required for code generation of CasADi functions using casadi.blazing_spline
     % These might be different depending on your compiler and oerating system.
-    flags = ['-I' casadi.GlobalOptions.getCasadiIncludePath ' -O2 -ffast-math -march=native -fno-omit-frame-pointer']
+    flags = ['-I' casadi.GlobalOptions.getCasadiIncludePath ' -O2 -ffast-math -march=native']
     ocp.solver_options.ext_fun_compile_flags = flags;
 end
 
