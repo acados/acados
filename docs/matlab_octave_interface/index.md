@@ -71,16 +71,16 @@ This is a list of possible inputs to the Simulink block of an OCP solver which c
 | `y_ref_0`         | Reference `y_ref` at stage 0                                                                  | `ny_0`                | Yes          |
 | `y_ref`           | `y_ref` concatenated for stages 1 to N-1                                                      | `(N-1) * ny`          | No           |
 | `y_ref_e`         | Reference `y_ref` at stage N                                                                  | `ny_e`                | Yes          |
-| `lbx`             | Lower bound x values concatenated for stages 1 to N-1                                         | `(N-1) * nbx`         | No           |
-| `ubx`             | Upper bound x values concatenated for stages 1 to N-1                                         | `(N-1) * nbx`         | No           |
+| `lbx`             | Lower bound x values concatenated for stages 1 to N-1                                         | `sum(nbx_i), for i = 1,..., N-1`         | Yes           |
+| `ubx`             | Upper bound x values concatenated for stages 1 to N-1                                         | `sum(nbx_i), for i = 1,..., N-1`         | Yes           |
 | `lbx_e`           | Lower bound x at shooting node N                                                              | `nbx_e`               | Yes          |
 | `ubx_e`           | Upper bound x at shooting node N                                                              | `nbx_e`               | Yes          |
 | `lbu`             | Lower bound u values concatenated for stages 0 to N-1                                         | `sum(nbu_i), for i = 0,..., N-1` | Yes          |
 | `ubu`             | Upper bound u values concatenated for stages 0 to N-1                                         | `sum(nbu_i), for i = 0,..., N-1` | Yes          |
 | `lg`              | Lower bound g values concatenated for stages 0 to N-1                                         | `sum(ng_i), for i = 0,..., N-1`  | No           |
 | `ug`              | Upper bound g values concatenated for stages 0 to N-1                                         | `sum(ng_i), for i = 0,..., N-1`  | No           |
-| `lh`              | Lower bound h values concatenated for stages 0 to N-1                                         | `sum(nh_i), for i = 0,..., N-1`  | No           |
-| `uh`              | Upper bound h values concatenated for stages 0 to N-1                                         | `sum(nh_i), for i = 0,..., N-1`  | No           |
+| `lh`              | Lower bound h values concatenated for stages 1 to N-1                                         | `sum(nh_i), for i = 1,..., N-1`  | Yes           |
+| `uh`              | Upper bound h values concatenated for stages 1 to N-1                                         | `sum(nh_i), for i = 1,..., N-1`  | Yes           |
 | `lh_0`            | Lower bound h at stage 0                                                                      | `nh_0`                | Yes          |
 | `uh_0`            | Upper bound h at stage 0                                                                      | `nh_0`                | Yes          |
 | `lh_e`            | Lower bound h at stage N                                                                      | `nh_e`                | Yes          |
