@@ -35,6 +35,7 @@ clearvars; clc; close all;
 % list the examples you would like to test
 targets = {
     '../p_global_example/main.m';
+    '../p_global_example/simulink_test_p_global.m';
     '../mocp_transition_example/main_parametric_mocp.m';
 };
 

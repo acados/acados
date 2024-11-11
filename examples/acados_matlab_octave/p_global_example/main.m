@@ -81,93 +81,8 @@ function main()
         error("State trajectories with lut=true do not match.");
     end
 
-    %% Simulink test
-    disp("Running Simulink test.")
-    if ~is_octave()
-        run_example_ocp_simulink_p_global();
-    end
-
 end
 
-
-function run_example_ocp_simulink_p_global()
-
-    import casadi.*
-    lut = true;
-    use_p_global = true;
-    blazing = true;
-    fprintf('\n\nRunning example with lut=%d, use_p_global=%d, blazing=%d\n', lut, use_p_global, blazing);
-
-    % Create p_global parameters
-    [p_global, m, l, coefficients, ~, knots, p_global_values] = create_p_global(lut);
-
-    % OCP formulation
-    ocp = create_ocp_formulation_without_opts(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing);
-    ocp = set_solver_options(ocp);
-    ocp.model.name = ['sl_blz_' mat2str(blazing) '_pglbl_' mat2str(use_p_global) '_lut_' mat2str(lut)];
-    ocp.json_file = [ ocp.model.name '.json'];
-    % Simulink options
-    simulink_opts = get_acados_simulink_opts();
-    simulink_opts.inputs.p_global = 1;
-    possible_inputs = fieldnames(simulink_opts.inputs);
-    for i = 1:length(possible_inputs)
-        simulink_opts.inputs.(possible_inputs{i}) = 0;
-    end
-    simulink_opts.inputs.lbx_0 = 1;
-    simulink_opts.inputs.ubx_0 = 1;
-    simulink_opts.inputs.p_global = 1;
-
-    simulink_opts.outputs.xtraj = 1;
-    simulink_opts.outputs.utraj = 1;
-    simulink_opts.outputs.u0 = 0;
-    simulink_opts.outputs.x1 = 0;
-
-    ocp.simulink_opts = simulink_opts;
-
-    % OCP solver
-    ocp_solver = AcadosOcpSolver(ocp);
-
-    %% Matlab test solve
-    % test with ones such that update is necessary
-    p_global_values_test = ones(size(p_global_values));
-    if use_p_global
-        ocp_solver.set_p_global_and_precompute_dependencies(p_global_values_test);
-    end
-
-    ocp_solver.solve();
-    xtraj = ocp_solver.get('x');
-    xtraj = xtraj(:)';
-    utraj = ocp_solver.get('u');
-    utraj = utraj(:)';
-
-    %% build s funtion
-    cd c_generated_code;
-    make_sfun;
-    cd ..;
-
-    %% run simulink block
-    out_sim = sim('p_global_simulink_test_block', 'SaveOutput', 'on');
-    fprintf('\nSuccessfully ran simulink block');
-
-    %% Evaluation
-    fprintf('\nTest results on SIMULINK simulation.\n')
-
-    disp('checking KKT residual')
-    % kkt_signal = out_sim.logsout.getElement('KKT_residual');
-    xtraj_signal = out_sim.logsout.getElement('xtraj');
-    xtraj_val = xtraj_signal.Values.Data(1, :);
-    utraj_signal = out_sim.logsout.getElement('utraj');
-    utraj_val = utraj_signal.Values.Data(1, :);
-    if norm(xtraj_val - xtraj) > 1e-8
-        disp('error: xtraj values in SIMULINK and MATLAB should match.')
-        quit(1);
-    end
-    if norm(utraj_val - utraj) > 1e-8
-        disp('error: utraj values in SIMULINK and MATLAB should match.')
-        quit(1);
-    end
-    disp('Simulink p_global test: got matching trajectories in Matlab and Simulink!')
-end
 
 
 function [state_trajectories, timing] = run_example_ocp(lut, use_p_global, blazing)
@@ -258,29 +173,6 @@ function [state_trajectories, timing] = run_example_mocp(lut, use_p_global, blaz
 end
 
 
-function ocp = set_solver_options(ocp)
-    % set options
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
-    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'; %'GAUSS_NEWTON'; %'EXACT'; %
-    ocp.solver_options.integrator_type = 'ERK';
-    ocp.solver_options.print_level = 0;
-    ocp.solver_options.nlp_solver_type = 'SQP_RTI';
-
-    % set prediction horizon
-    Tf = 1.0;
-    N_horizon = 20;
-    ocp.solver_options.tf = Tf;
-    ocp.solver_options.N_horizon = N_horizon;
-
-    % partial condensing
-    ocp.solver_options.qp_solver_cond_N = 5;
-    ocp.solver_options.qp_solver_cond_block_size = [3, 3, 3, 3, 7, 1];
-
-    % NOTE: these additional flags are required for code generation of CasADi functions using casadi.blazing_spline
-    % These might be different depending on your compiler and oerating system.
-    flags = ['-I' casadi.GlobalOptions.getCasadiIncludePath ' -O2 -ffast-math -march=native -fno-omit-frame-pointer']
-    ocp.solver_options.ext_fun_compile_flags = flags;
-end
 
 function mocp = create_mocp_formulation(p_global, m, l, coefficients, knots, lut, use_p_global, p_global_values, blazing, name)
 
