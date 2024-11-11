@@ -24,6 +24,7 @@ jobs:
 
     - name: Cache MinGW
       uses: actions/cache@v4
+      id: cache-minGW
       with:
         path: C:\tools\mingw64  # This is the default install location for MinGW on Windows.
         key: ${{ runner.os }}-mingw-${{ hashFiles('**/*.yml') }}  # use yml files for cache key
@@ -45,8 +46,18 @@ jobs:
       run: |
         echo "C:\tools\mingw64\bin" >> $env:MW_MINGW64_LOC
 
+    - name: Cache CMake
+      id: cache-CMake
+      uses: actions/cache@v4
+      with:
+        path: C:\Program Files\CMake
+        key: ${{ runner.os }}-cmake-${{ hashFiles('**/*.yml') }}
+        restore-keys: |
+          ${{ runner.os }}-cmake-
+
     - name: Install CMake
       uses: jwlawson/actions-setup-cmake@v2
+      if: steps.cache-CMake.outputs.cache-hit != 'true'  # Install only if not cached
 
     - name: Check GCC and CMake versions
       run: |
