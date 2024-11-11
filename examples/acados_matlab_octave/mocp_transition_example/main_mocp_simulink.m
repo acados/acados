@@ -50,6 +50,22 @@ phase_2.cost.yref = zeros(2, 1);
 ocp.set_phase(phase_2, 2);
 
 phase_3 = formulate_single_integrator_ocp(settings);
+% add dummy constraints to test Simulink
+phase_3.model.con_h_expr = phase_3.model.x;
+phase_3.constraints.lh = -100;
+phase_3.constraints.uh = 100;
+
+phase_3.constraints.idxbx = [0];
+phase_3.constraints.lbx = -200;
+phase_3.constraints.ubx = 200;
+
+% values for Simulink
+N_3 = 15;
+lbx_all = repmat(phase_3.constraints.lbx, N_3);
+ubx_all = repmat(phase_3.constraints.ubx, N_3);
+lh_all = repmat(phase_3.constraints.lh, N_3);
+uh_all = repmat(phase_3.constraints.uh, N_3);
+
 ocp.set_phase(phase_3, 3);
 
 % set mocp specific options
@@ -71,8 +87,10 @@ simulink_opts.inputs.u_init = 1;
 simulink_opts.inputs.pi_init = 1;
 simulink_opts.inputs.ignore_inits = 1;
 simulink_opts.inputs.reset_solver = 1;
-
-
+simulink_opts.inputs.lbx = 1;
+simulink_opts.inputs.ubx = 1;
+simulink_opts.inputs.lh = 1;
+simulink_opts.inputs.uh = 1;
 
 simulink_opts.outputs.xtraj = 1;
 simulink_opts.outputs.utraj = 1;
@@ -124,6 +142,21 @@ for itest = 1:2
                repmat(phase_2.constraints.ubu, N_list(2), 1);
                repmat(phase_3.constraints.ubu, N_list(3), 1)];
 
+    lbx_all = [repmat(phase_1.constraints.lbx, N_list(1)-1, 1);
+               repmat(phase_2.constraints.lbx, N_list(2), 1);
+               repmat(phase_3.constraints.lbx, N_list(3), 1)];
+    ubx_all = [repmat(phase_1.constraints.ubx, N_list(1)-1, 1);
+               repmat(phase_2.constraints.ubx, N_list(2), 1);
+               repmat(phase_3.constraints.ubx, N_list(3), 1)];
+
+    lh_all = [repmat(phase_1.constraints.lh, N_list(1)-1, 1);
+               repmat(phase_2.constraints.lh, N_list(2), 1);
+               repmat(phase_3.constraints.lh, N_list(3), 1)];
+    uh_all = [repmat(phase_1.constraints.uh, N_list(1)-1, 1);
+               repmat(phase_2.constraints.uh, N_list(2), 1);
+               repmat(phase_3.constraints.uh, N_list(3), 1)];
+
+
     bu_fact = 1;
     if itest == 2
         bu_fact = 0.8;
@@ -156,7 +189,7 @@ for itest = 1:2
         u_traj = [u_traj; ocp_solver.get('u', i)];
         pi_traj = [pi_traj; ocp_solver.get('pi', i)];
     end
-    
+
     x_init = 0 * x_traj;
     u_init = 0 * u_traj;
     pi_init = 0 * pi_traj;
@@ -201,7 +234,7 @@ for itest = 1:2
     disp('checking u values.')
     if norm(u_simulink(:) - u_traj(:)) > 1e-8
         disp('failed');
-        % quit(1);
+        quit(1);
     end
 
     xtraj_signal = out_sim.logsout.getElement('xtraj');
@@ -209,7 +242,7 @@ for itest = 1:2
     disp('checking x values, should match solution in MATLAB.')
     if norm(x_simulink(:) - x_traj(:)) > 1e-8
         disp('failed');
-        % quit(1);
+        quit(1);
     end
     % 
     pi_signal = out_sim.logsout.getElement('pi_all');
