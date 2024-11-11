@@ -278,7 +278,7 @@ function ocp = set_solver_options(ocp)
 
     % NOTE: these additional flags are required for code generation of CasADi functions using casadi.blazing_spline
     % These might be different depending on your compiler and oerating system.
-    flags = ['-I' casadi.GlobalOptions.getCasadiIncludePath ' -O2 -ffast-math -march=native']
+    flags = ['-I' casadi.GlobalOptions.getCasadiIncludePath ' -O2 -ffast-math -march=native -fno-omit-frame-pointer']
     ocp.solver_options.ext_fun_compile_flags = flags;
 end
 
