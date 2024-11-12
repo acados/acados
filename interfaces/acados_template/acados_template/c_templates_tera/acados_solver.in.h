@@ -276,6 +276,8 @@ ACADOS_SYMBOL_EXPORT int {{ name }}_acados_set_p_global_and_precompute_dependenc
 
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_solve({{ model.name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** capsules, int N_batch);
+ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_set_flat({{ model.name }}_solver_capsule ** capsules, const char *field, void *value, int N_data, int N_batch);
+
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_free({{ model.name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_custom_update({{ model.name }}_solver_capsule* capsule, double* data, int data_len);
