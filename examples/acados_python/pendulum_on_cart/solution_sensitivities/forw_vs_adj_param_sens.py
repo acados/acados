@@ -112,7 +112,7 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True):
         else:
             print("Success: adj_p and adj_p_ref match!")
 
-    # test with list vs. single stage API
+    # test with list vs. single stage API: varying seed_x
     adj_p_ref = sensitivity_solver.eval_adjoint_solution_sensitivity(seed_x=None, seed_u=[(0, seed_ustage)])
     adj_p = sensitivity_solver.eval_adjoint_solution_sensitivity(seed_x=[], seed_u=[(0, seed_ustage)])
     adj_p_zero_x_seed = sensitivity_solver.eval_adjoint_solution_sensitivity(seed_x=[(1, 0*seed_xstage)], seed_u=[(0, seed_ustage)])
@@ -121,7 +121,18 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True):
         raise Exception("adj_p and adj_p_ref should match.")
     if not np.allclose(adj_p, adj_p_zero_x_seed, atol=1e-7):
         raise Exception("adj_p and adj_p_zero_x_seed should match.")
-    print("Success: adj_p and adj_p_ref match! Tested with None and empty list.")
+    print("Success: adj_p and adj_p_ref match! Tested with None and empty list for seed_x.")
+
+    # test with list vs. single stage API: varying seed_u
+    adj_p_ref = sensitivity_solver.eval_adjoint_solution_sensitivity(seed_x=[(0, seed_xstage)], seed_u=None)
+    adj_p = sensitivity_solver.eval_adjoint_solution_sensitivity(seed_x=[(0, seed_xstage)], seed_u=[])
+    adj_p_zero_x_seed = sensitivity_solver.eval_adjoint_solution_sensitivity(seed_x=[(0, seed_xstage)], seed_u=[(0, 0*seed_ustage)])
+
+    if not np.allclose(adj_p, adj_p_ref, atol=1e-7):
+        raise Exception("adj_p and adj_p_ref should match.")
+    if not np.allclose(adj_p, adj_p_zero_x_seed, atol=1e-7):
+        raise Exception("adj_p and adj_p_zero_x_seed should match.")
+    print("Success: adj_p and adj_p_ref match! Tested with None and empty list for seed_u.")
 
     # test multiple adjoint seeds at once
     seed_x_mat = np.eye(nx)
