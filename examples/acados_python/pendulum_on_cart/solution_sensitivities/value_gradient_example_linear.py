@@ -237,6 +237,8 @@ def main():
     optimal_value_grad = np.zeros((np_test, np_global))
     optimal_value = np.zeros((np_test,))
 
+    dt = ocp.solver_options.tf/ocp.solver_options.N_horizon
+
     pi = np.zeros(np_test)
     for i, p in enumerate(p_test):
 
@@ -251,15 +253,17 @@ def main():
             x = acados_ocp_solver.get(n, 'x')
             grad += x[idx]
 
-        grad = grad*0.5
+        grad = grad*0.5*dt
 
         print(f"acados {optimal_value_grad[i][idx]}, analytic {grad}, iterations {acados_ocp_solver.get_stats('qp_iter')}")
 
     # evaluate cost gradient
     optimal_value_grad_via_fd = np.gradient(optimal_value, delta_p)
     cost_reconstructed_np_grad = np.cumsum(optimal_value_grad_via_fd) * delta_p + optimal_value[0]
+    cost_reconstructed_acados = np.cumsum(optimal_value_grad[:, idx]) * delta_p + optimal_value[0]
 
     plot_cost_gradient_results(p_test, optimal_value, optimal_value_grad[:, idx], optimal_value_grad_via_fd, cost_reconstructed_np_grad, y_scale_log=False)
+    # plot_cost_gradient_results(p_test, optimal_value, optimal_value_grad[:, idx], optimal_value_grad_via_fd, cost_reconstructed_acados, y_scale_log=False)
 
     # checks
     test_tol = 1e-1
