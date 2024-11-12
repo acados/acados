@@ -70,7 +70,8 @@ def create_model_with_cost_state(ocp: AcadosOcp) -> Tuple[AcadosModel, np.ndarra
         cost_dot = model.cost_expr_ext_cost
 
     elif ocp.cost.cost_type == "CONVEX_OVER_NONLINEAR":
-        cost_dot = ca.substitute(model.cost_psi_expr, model.cost_r_in_psi_expr, model.cost_y_expr)
+        cost_dot = ca.substitute(
+            model.cost_psi_expr, model.cost_r_in_psi_expr, model.cost_y_expr)
 
     else:
         raise Exception("create_model_with_cost_state: Unknown cost type.")
@@ -80,37 +81,47 @@ def create_model_with_cost_state(ocp: AcadosOcp) -> Tuple[AcadosModel, np.ndarra
         iu = ocp.constraints.idxbu[ibu]
         lower_violation = ca.fmax(ocp.constraints.lbu[ibu] - model.u[iu], 0)
         upper_violation = ca.fmax(model.u[iu] - ocp.constraints.ubu[ibu], 0)
-        cost_dot += ocp.cost.zl[i_slack] * lower_violation + ocp.cost.Zl[i_slack] * lower_violation ** 2
-        cost_dot += ocp.cost.zu[i_slack] * upper_violation + ocp.cost.Zu[i_slack] * upper_violation ** 2
+        cost_dot += ocp.cost.zl[i_slack] * lower_violation + \
+            ocp.cost.Zl[i_slack] * lower_violation ** 2
+        cost_dot += ocp.cost.zu[i_slack] * upper_violation + \
+            ocp.cost.Zu[i_slack] * upper_violation ** 2
         i_slack += 1
 
     for ibx in ocp.constraints.idxsbx:
         ix = ocp.constraints.idxbx[ibx]
         lower_violation = ca.fmax(ocp.constraints.lbx[ibx] - model.x[ix], 0)
         upper_violation = ca.fmax(model.x[ix] - ocp.constraints.ubx[ibx], 0)
-        cost_dot += ocp.cost.zl[i_slack] * lower_violation + ocp.cost.Zl[i_slack] * lower_violation ** 2
-        cost_dot += ocp.cost.zu[i_slack] * upper_violation + ocp.cost.Zu[i_slack] * upper_violation ** 2
+        cost_dot += ocp.cost.zl[i_slack] * lower_violation + \
+            ocp.cost.Zl[i_slack] * lower_violation ** 2
+        cost_dot += ocp.cost.zu[i_slack] * upper_violation + \
+            ocp.cost.Zu[i_slack] * upper_violation ** 2
         i_slack += 1
-
 
     if not is_empty(ocp.constraints.C):
         g = ocp.constraints.C @ ocp.model.x + ocp.constraints.D @ ocp.model.u
         for ig in ocp.constraints.idxsg:
             lower_violation = ca.fmax(ocp.constraints.lg[ig] - g[ig], 0)
             upper_violation = ca.fmax(g[ig] - ocp.constraints.ug[ig], 0)
-            cost_dot += ocp.cost.zl[i_slack] * lower_violation + ocp.cost.Zl[i_slack] * lower_violation ** 2
-            cost_dot += ocp.cost.zu[i_slack] * upper_violation + ocp.cost.Zu[i_slack] * upper_violation ** 2
+            cost_dot += ocp.cost.zl[i_slack] * lower_violation + \
+                ocp.cost.Zl[i_slack] * lower_violation ** 2
+            cost_dot += ocp.cost.zu[i_slack] * upper_violation + \
+                ocp.cost.Zu[i_slack] * upper_violation ** 2
             i_slack += 1
 
     for ih in ocp.constraints.idxsh:
-        lower_violation = ca.fmax(ocp.constraints.lh[ih] - ocp.model.con_h_expr[ih], 0)
-        upper_violation = ca.fmax(ocp.model.con_h_expr[ih] - ocp.constraints.uh[ih], 0)
-        cost_dot += ocp.cost.zl[i_slack] * lower_violation + ocp.cost.Zl[i_slack] * lower_violation ** 2
-        cost_dot += ocp.cost.zu[i_slack] * upper_violation + ocp.cost.Zu[i_slack] * upper_violation ** 2
+        lower_violation = ca.fmax(
+            ocp.constraints.lh[ih] - ocp.model.con_h_expr[ih], 0)
+        upper_violation = ca.fmax(
+            ocp.model.con_h_expr[ih] - ocp.constraints.uh[ih], 0)
+        cost_dot += ocp.cost.zl[i_slack] * lower_violation + \
+            ocp.cost.Zl[i_slack] * lower_violation ** 2
+        cost_dot += ocp.cost.zu[i_slack] * upper_violation + \
+            ocp.cost.Zu[i_slack] * upper_violation ** 2
         i_slack += 1
 
     if not is_empty(ocp.constraints.idxsphi):
-        raise NotImplementedError(f"Not implemented for nontrivial ocp.constraints.idxsphi = {ocp.constraints.idxsphi}")
+        raise NotImplementedError(
+            f"Not implemented for nontrivial ocp.constraints.idxsphi = {ocp.constraints.idxsphi}")
 
     model.x = ca.vertcat(model.x, cost_state)
     model.xdot = ca.vertcat(model.xdot, cost_state_dot)
@@ -120,7 +131,7 @@ def create_model_with_cost_state(ocp: AcadosOcp) -> Tuple[AcadosModel, np.ndarra
     return model, ocp.parameter_values
 
 
-def detect_constr(model: AcadosModel, constraints: AcadosOcpConstraints, stage_type: str):
+def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstraints, stage_type: str):
     """
     - stage_type: allowed values "initial", "path", "terminal"
     """
@@ -129,12 +140,17 @@ def detect_constr(model: AcadosModel, constraints: AcadosOcpConstraints, stage_t
     z = model.z
     nx = x.shape[0]
     nu = u.shape[0]
-    nz = z.shape[0]
+
+    if model.p_global is None:
+        p_global = []  # to have same structure of model.p
 
     if isinstance(x, ca.SX):
-        isSX = True
+        CASADI_VAR = ca.SX
+    elif isinstance(x, ca.MX):
+        CASADI_VAR = ca.MX
     else:
-        raise ValueError('Constraint detection only works for casadi.SX!')
+        raise TypeError(
+            "Optimization variables 'x' must be of type 'casadi SX' or 'casadi MX'")
 
     if stage_type == 'initial':
         expr_constr = model.con_h_expr_0
@@ -155,39 +171,38 @@ def detect_constr(model: AcadosModel, constraints: AcadosOcpConstraints, stage_t
         raise ValueError('Constraint detection: Wrong stage_type.')
 
     if expr_constr is None:
-        expr_constr = ca.SX.sym('con_h_expr', 0, 0)
+        expr_constr = CASADI_VAR.sym('con_h_expr', 0, 0)
 
-    if not isinstance(expr_constr, ca.SX):
+    if not isinstance(expr_constr, CASADI_VAR):
         print('expr_constr =', expr_constr)
         raise ValueError(
-            "Constraint type detection requires definition of constraints as CasADi SX.")
+            f"Constraint expression h has type {expr_constr}, but optimization variable has type {CASADI_VAR}")
 
     # Initialize
-    constr_expr_h = ca.SX.sym('con_h_expr', 0, 0)
+    constr_expr_h = CASADI_VAR.sym('con_h_expr', 0, 0)
     lh = []
     uh = []
 
-    C = ca.SX.zeros(0, nx)
-    D = ca.SX.zeros(0, nu)
+    C = CASADI_VAR.zeros(0, nx)
+    D = CASADI_VAR.zeros(0, nu)
     lg = []
     ug = []
 
-    Jbx = ca.SX.zeros(0, nx)
+    Jbx = CASADI_VAR.zeros(0, nx)
     lbx = []
     ubx = []
 
-    Jbu = ca.SX.zeros(0, nu)
+    Jbu = CASADI_VAR.zeros(0, nu)
     lbu = []
     ubu = []
 
     # Loop over CasADi formulated constraints
     for ii in range(expr_constr.shape[0]):
         c = expr_constr[ii]
-        # TODO or any(ca.which_depends(c, model.p_global)):
         if any(ca.which_depends(c, z)) or \
                 not ca.is_linear(c, ca.vertcat(x, u)) or \
                 any(ca.which_depends(c, model.p)) or \
-                any(ca.which_depends(c, model.p_global)):
+                any(ca.which_depends(c, p_global)):
 
             # External constraint
             constr_expr_h = ca.vertcat(constr_expr_h, c)
@@ -206,7 +221,7 @@ def detect_constr(model: AcadosModel, constraints: AcadosOcpConstraints, stage_t
                 idb = Jc.nonzero()[0][0]
                 if idb < nx:
                     # Bound on x
-                    Jbx = ca.vertcat(Jbx, ca.SX.zeros(1, nx))
+                    Jbx = ca.vertcat(Jbx, CASADI_VAR.zeros(1, nx))
                     Jbx[-1, idb] = 1
                     lbx.append(LB[ii] / Jc[idb])
                     ubx.append(UB[ii] / Jc[idb])
@@ -215,7 +230,7 @@ def detect_constr(model: AcadosModel, constraints: AcadosOcpConstraints, stage_t
                     print(' ')
                 else:
                     # Bound on u
-                    Jbu = ca.vertcat(Jbu, ca.SX.zeros(1, nu))
+                    Jbu = ca.vertcat(Jbu, CASADI_VAR.zeros(1, nu))
                     Jbu[-1, idb - nx] = 1
                     lbu.append(LB[ii] / Jc[idb])
                     ubu.append(UB[ii] / Jc[idb])
@@ -304,7 +319,7 @@ def J_to_idx(J):
     nrows = J.size()[0]
     idx = []
     for i in range(nrows):
-        this_idx = ca.DM(J[i, :]).full().squeeze().nonzero()[0]
+        this_idx = ca.DM(J[i, :].sparsity()).full().squeeze().nonzero()[0]
         if len(this_idx) != 1:
             raise ValueError(
                 f'J_to_idx: Invalid J matrix. Exiting. Found more than one nonzero in row {i+1}.')
