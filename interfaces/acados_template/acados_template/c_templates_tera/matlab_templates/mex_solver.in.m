@@ -50,18 +50,14 @@ classdef {{ name }}_mex_solver < handle
             addpath('.')
             obj.N = {{ solver_options.N_horizon }};
             obj.name = '{{ name }}';
-            obj.code_gen_dir = pwd();
         end
 
         % destructor
         function delete(obj)
             disp("delete template...");
-            return_dir = pwd();
-            cd(obj.code_gen_dir);
             if ~isempty(obj.C_ocp)
                 acados_mex_free_{{ name }}(obj.C_ocp);
             end
-            cd(return_dir);
             disp("done.");
         end
 

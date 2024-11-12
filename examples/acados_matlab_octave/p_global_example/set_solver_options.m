@@ -27,20 +27,28 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
 
 
-interface_dir = fileparts(which('acados_env_variables_windows'))
+function ocp = set_solver_options(ocp)
+    % set options
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
+    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'; %'GAUSS_NEWTON'; %'EXACT'; %
+    ocp.solver_options.integrator_type = 'ERK';
+    ocp.solver_options.print_level = 0;
+    ocp.solver_options.nlp_solver_type = 'SQP_RTI';
 
-acados_dir = fullfile(interface_dir, '..', '..')
-casadi_dir = fullfile(acados_dir, 'external', 'casadi-matlab')
-matlab_interface_dir = fullfile(acados_dir, 'interfaces', 'acados_matlab_octave')
-mex_template_dir = fullfile(matlab_interface_dir, 'acados_template_mex')
+    % set prediction horizon
+    Tf = 1.0;
+    N_horizon = 20;
+    ocp.solver_options.tf = Tf;
+    ocp.solver_options.N_horizon = N_horizon;
 
-addpath(matlab_interface_dir);
-addpath(mex_template_dir);
-addpath(casadi_dir);
+    % partial condensing
+    ocp.solver_options.qp_solver_cond_N = 5;
+    ocp.solver_options.qp_solver_cond_block_size = [3, 3, 3, 3, 7, 1];
 
-setenv('ACADOS_INSTALL_DIR', acados_dir);
-setenv('ENV_RUN', 'true');
-
+    % NOTE: these additional flags are required for code generation of CasADi functions using casadi.blazing_spline
+    % These might be different depending on your compiler and operating system.
+    flags = ['-I' casadi.GlobalOptions.getCasadiIncludePath ' -O2 -ffast-math -march=native -fno-omit-frame-pointer']
+    ocp.solver_options.ext_fun_compile_flags = flags;
+end

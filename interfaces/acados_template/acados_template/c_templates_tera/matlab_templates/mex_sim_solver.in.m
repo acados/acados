@@ -48,7 +48,6 @@ classdef {{ model.name }}_mex_sim_solver < handle
             % to have path to destructor when changing directory
             addpath('.')
             obj.name = '{{ model.name }}';
-            obj.code_gen_dir = pwd();
         end
 
         % set -- borrowed from MEX interface
@@ -75,12 +74,9 @@ classdef {{ model.name }}_mex_sim_solver < handle
         % destructor
         function delete(obj)
             disp("delete template...");
-            return_dir = pwd();
-            cd(obj.code_gen_dir);
             if ~isempty(obj.C_sim)
                 acados_sim_free_{{ model.name }}(obj.C_sim);
             end
-            cd(return_dir);
             disp("done.");
         end
 

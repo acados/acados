@@ -58,7 +58,7 @@ end
 
 function model = export_pendulum_ode_model(p_global, m, l, coefficients, knots, lut, blazing)
     import casadi.*
-    model_name = ['pendulum_blazing_' mat2str(blazing)];
+    model_name = 'pendulum';
 
     % Constants
     m_cart = 1.0; % mass of the cart [kg]
@@ -90,9 +90,9 @@ function model = export_pendulum_ode_model(p_global, m, l, coefficients, knots, 
     if lut
         x_in = vertcat(u/100 + 0.5, theta/pi + 0.5);
         if blazing
-            % NOTE: blazing_spline requires an installation of simde as well as
-            % additional flags for the CasADi code generation, cf. the solver
-            % option ext_fun_compile_flags
+            % NOTE: blazing_spline requires CasADi version nightly-se2 or later,
+            % as well as additional flags for the CasADi code generation,
+            % cf. the solver option ext_fun_compile_flags
             spline_fun = blazing_spline('blazing_spline', knots);
             f_expl(4) = f_expl(4) + 0.01*spline_fun(x_in, coefficients);
         else

@@ -95,7 +95,7 @@ function acados_install_windows(varargin)
     %% Download external dependencies
     % casadi
     fprintf('Downloading casadi\n');
-    addpath(fullfile(acadosPath,'interfaces', 'acados_matlab_octave'));
+    addpath(fullfile(acadosPath, 'interfaces', 'acados_matlab_octave'));
     run('acados_env_variables_windows');
     check_acados_requirements(true);
 
