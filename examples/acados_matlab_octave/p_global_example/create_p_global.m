@@ -27,20 +27,39 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
 
 
-interface_dir = fileparts(which('acados_env_variables_windows'))
+function [p_global, m, l, coefficients, coefficient_vals, knots, p_global_values] = create_p_global(lut)
 
-acados_dir = fullfile(interface_dir, '..', '..')
-casadi_dir = fullfile(acados_dir, 'external', 'casadi-matlab')
-matlab_interface_dir = fullfile(acados_dir, 'interfaces', 'acados_matlab_octave')
-mex_template_dir = fullfile(matlab_interface_dir, 'acados_template_mex')
+    import casadi.*
+    m = MX.sym('m');
+    l = MX.sym('l');
+    p_global = {m, l};
+    p_global_values = [0.1; 0.8];
 
-addpath(matlab_interface_dir);
-addpath(mex_template_dir);
-addpath(casadi_dir);
+    large_scale = false;
+    if lut
+        % generate random values for spline coefficients
+        % knots = {[0,0,0,0,0.2,0.5,0.8,1,1,1,1],[0,0,0,0.1,0.5,0.9,1,1,1]};
 
-setenv('ACADOS_INSTALL_DIR', acados_dir);
-setenv('ENV_RUN', 'true');
+        if large_scale
+            % large scale lookup table
+            knots = {0:200,0:200};
+            coefficient_vals = 0.1*ones(38809, 1);
+        else
+            % small scale lookup table
+            knots = {0:19,0:19};
+            coefficient_vals = 0.1*ones(256, 1);
+        end
 
+        coefficients = MX.sym('coefficient', numel(coefficient_vals), 1);
+        p_global{end+1} = coefficients;
+        p_global_values = [p_global_values; coefficient_vals(:)];
+    else
+        coefficient_vals = [];
+        knots = [];
+        coefficients = MX.sym('coefficient', 0, 1);
+    end
+
+    p_global = vertcat(p_global{:});
+end

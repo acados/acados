@@ -1,0 +1,140 @@
+name: Test MATLAB on Windows
+
+on:
+  push:
+    branches-ignore:
+      - 'doc*'
+      - 'wip*'
+  pull_request:
+    branches:
+      - '*'
+
+env:
+  BUILD_TYPE: Release
+  ACADOS_ON_CI: ON
+
+jobs:
+  core_build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - name: Cache MinGW
+      uses: actions/cache@v4
+      id: cache-minGW
+      with:
+        path: C:\tools\mingw64  # This is the default install location for MinGW on Windows.
+        key: ${{ runner.os }}-mingw-${{ hashFiles('**/*.yml') }}  # use yml files for cache key
+        restore-keys: |
+          ${{ runner.os }}-mingw-
+
+    - name: Install Chocolatey
+      run: |
+        Set-ExecutionPolicy Bypass -Scope Process -Force;
+        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
+        iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+
+    - if: ${{ steps.cache-minGW.outputs.cache-hit != 'true' }}
+      name: Install MinGW using Chocolatey
+      run: |
+        choco install mingw --yes
+
+    - name: Add MinGW to PATH
+      run: |
+        echo "C:\tools\mingw64\bin" >> $env:MW_MINGW64_LOC
+
+    - name: Cache CMake
+      id: cache-cmake
+      uses: actions/cache@v4
+      with:
+        path: C:\Program Files\CMake
+        key: ${{ runner.os }}-cmake-${{ hashFiles('**/*.yml') }}
+        restore-keys: |
+          ${{ runner.os }}-cmake-
+
+    - if: ${{ steps.cache-cmake.outputs.cache-hit != 'true' }}
+      name: Install CMake
+      uses: jwlawson/actions-setup-cmake@v2
+
+    - name: Check GCC and CMake versions
+      run: |
+        which gcc
+        gcc --version
+        cmake --version
+
+    - name: Install MATLAB
+      uses: matlab-actions/setup-matlab@v2
+      if: always()
+      with:
+          release: R2021a
+          products: Simulink Simulink_Test
+          cache: true
+
+    - name: Setup MATLAB with MinGW Compiler
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: |
+            cd ${{runner.workspace}}/acados/.github/windows; setup_mingw
+
+    - name: Install acados via MATLAB script
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: |
+            cd ${{runner.workspace}}/acados/interfaces/acados_matlab_octave; acados_install_windows
+
+    - name: Run minimal MATLAB example
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: |
+            cd ${{runner.workspace}}/acados/.github/windows
+            setup_mingw
+            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave
+            acados_env_variables_windows
+            cd getting_started
+            minimal_example_ocp
+
+    - name: Run minimal Simulink example
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: |
+            cd ${{runner.workspace}}/acados/.github/windows
+            setup_mingw
+            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave
+            acados_env_variables_windows
+            cd test
+            simulink_test
+
+    - name: Run MATLAB tests with new CasADi
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: |
+            cd ${{runner.workspace}}/acados/.github/windows
+            setup_mingw
+            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave
+            acados_env_variables_windows
+            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/p_global_example
+            main
+
+    # This fails undeterministically on Github actions:
+    # Two actions with the same commit, 1 fail, 1 success.
+    # https://github.com/sandmaennchen/acados/actions/runs/11783596401/job/32821083440
+    # https://github.com/acados/acados/actions/runs/11783597483/job/32821085806
+    # - name: Run Simulink test with blazing splines
+    #   uses: matlab-actions/run-command@v2
+    #   if: always()
+    #   with:
+    #     command: |
+    #         cd ${{runner.workspace}}/acados/.github/windows
+    #         setup_mingw
+    #         cd ${{runner.workspace}}/acados/examples/acados_matlab_octave
+    #         acados_env_variables_windows
+    #         cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/p_global_example
+    #         simulink_test_p_global

@@ -36,11 +36,12 @@ function check_acados_requirements(varargin)
             error('Please set up CasADi yourself and try again.');
         end
         % download CasADi
-        CasADi_version = '3.6.6'; % NOTE: this needs to be set/updated manually
+        CasADi_version = 'se2'; % NOTE: this needs to be set/updated manually
+        CasADi_release = 'nightly-se2'; % NOTE: this needs to be set/updated manually
         later_than_36 = true; % NOTE: this needs to be set/updated manually
 
         url = strcat('https://github.com/casadi/casadi/releases/download/',...
-                CasADi_version, '/');
+                    CasADi_release, '/');
         external_folder = fullfile(acados_dir, 'external');
         filename = [];
 
