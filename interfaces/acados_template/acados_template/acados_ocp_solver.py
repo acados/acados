@@ -712,8 +712,14 @@ class AcadosOcpSolver:
         # get n_seeds
         if seed_x is None:
             seed_x = []
+        elif not isinstance(seed_x, Sequence):
+            raise Exception(f"seed_x should be a Sequence, got {type(seed)}")
+
         if seed_u is None:
             seed_u = []
+        elif not isinstance(seed_u, Sequence):
+            raise Exception(f"seed_u should be a Sequence, got {type(seed)}")
+
         if len(seed_x) == 0 and len(seed_u) == 0:
             raise Exception("seed_x and seed_u cannot both be empty.")
         if len(seed_x) > 0:
@@ -739,8 +745,6 @@ class AcadosOcpSolver:
 
             # check seeds
             for seed, name, dim in [(seed_x, "seed_x", nx), (seed_u, "seed_u", nu)]:
-                if not isinstance(seed, Sequence):
-                    raise Exception(f"{name} should be a Sequence, got {type(seed)}")
                 for stage, seed_stage in seed:
                     if not isinstance(stage, int) or stage < 0 or stage > N_horizon:
                         raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): stage {stage} for {name} is not valid.")
