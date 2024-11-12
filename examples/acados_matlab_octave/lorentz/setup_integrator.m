@@ -27,30 +27,18 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
+function [sim_solver] = setup_integrator(model, h)
+    sim = AcadosSim();
+    sim.model = model;
+    sim.model.name = 'lorentz_model_integrator';
+    sim.solver_options.Tsim = h;
 
-function [sim] = setup_integrator(model)
+    % options
+    sim.solver_options.num_stages = 2;
+    sim.solver_options.num_steps = 5;
+    sim.solver_options.integrator_type = 'ERK';
+    sim.solver_options.sens_forw = true; % generate forward sensitivities
 
-model_name = 'lorentz_model_integrator';
-sim_model = acados_sim_model();
-sim_model.set('name', model_name);
-sim_model.set('T', model.h);
-
-sim_model.set('sym_x', model.sym_x);
-sim_model.set('sym_u', model.sym_u);
-
-% explit integrator (erk) 
-sim_model.set('dyn_type', 'explicit');
-sim_model.set('dyn_expr_f', model.f_expl_expr);
-
-% options
-sim_opts = acados_sim_opts();
-
-sim_opts.set('num_stages', 2);
-sim_opts.set('num_steps', 5);
-sim_opts.set('method', 'erk');
-sim_opts.set('sens_forw', 'true'); % generate forward sensitivities
-
-% create acados integrator
-sim = acados_sim(sim_model, sim_opts);
+    % create acados integrator
+    sim_solver = AcadosSimSolver(sim);
 end
-

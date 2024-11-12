@@ -27,7 +27,14 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
+
+
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
 
 %% example of closed loop simulation
 clear all; clc;
@@ -35,7 +42,6 @@ check_acados_requirements()
 
 %% handy arguments
 compile_interface = 'auto';
-codgen_model = 'true';
 % simulation
 sim_method = 'irk';
 sim_sens_forw = 'false';
@@ -149,12 +155,9 @@ ocp_model.set('constr_Jbu', Jbu);
 ocp_model.set('constr_lbu', lbu);
 ocp_model.set('constr_ubu', ubu);
 
-ocp_model.model_struct
-
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
-ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme_N', ocp_N);
 ocp_opts.set('nlp_solver', ocp_nlp_solver);
 ocp_opts.set('qp_solver', ocp_qp_solver);
@@ -166,11 +169,9 @@ ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
 ocp_opts.set('regularize_method', 'no_regularize');
 
-ocp_opts.opts_struct
-
 %% acados ocp
 % create ocp
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 %% acados sim model
 sim_model = acados_sim_model();
@@ -194,12 +195,9 @@ else % irk
 	sim_model.set('dyn_expr_f', model.dyn_expr_f_impl);
 end
 
-sim_model.model_struct
-
 %% acados sim opts
 sim_opts = acados_sim_opts();
 sim_opts.set('compile_interface', compile_interface);
-sim_opts.set('codgen_model', codgen_model);
 sim_opts.set('num_stages', sim_num_stages);
 sim_opts.set('num_steps', sim_num_steps);
 sim_opts.set('method', sim_method);
@@ -207,7 +205,7 @@ sim_opts.set('sens_forw', sim_sens_forw);
 
 %% acados sim
 % create sim
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 %% closed loop simulation
 n_sim = 100;
@@ -223,30 +221,30 @@ tic;
 for ii=1:n_sim
 
 	% set x0
-	ocp.set('constr_x0', x_sim(:,ii));
+	ocp_solver.set('constr_x0', x_sim(:,ii));
 
 	% set trajectory initialization
-	ocp.set('init_x', x_traj_init);
-	ocp.set('init_u', u_traj_init);
+	ocp_solver.set('init_x', x_traj_init);
+	ocp_solver.set('init_u', u_traj_init);
 
 	% solve OCP
-	ocp.solve();
+	ocp_solver.solve();
 
 	% get solution
-	%x_traj = ocp.get('x');
-	%u_traj = ocp.get('u');
-	u_sim(:,ii) = ocp.get('u', 0);
+	%x_traj = ocp_solver.get('x');
+	%u_traj = ocp_solver.get('u');
+	u_sim(:,ii) = ocp_solver.get('u', 0);
 
 	% set initial state of sim
-	sim.set('x', x_sim(:,ii));
+	sim_solver.set('x', x_sim(:,ii));
 	% set input in sim
-	sim.set('u', u_sim(:,ii));
+	sim_solver.set('u', u_sim(:,ii));
 
 	% simulate state
-	sim.solve();
+	sim_solver.solve();
 
 	% get new state
-	x_sim(:,ii+1) = sim.get('xn');
+	x_sim(:,ii+1) = sim_solver.get('xn');
 end
 
 avg_time_solve = toc/n_sim
@@ -264,7 +262,7 @@ ylabel('u')
 xlabel('sample')
 
 
-status = ocp.get('status');
+status = ocp_solver.get('status');
 
 if status==0
 	fprintf('\nsuccess!\n\n');

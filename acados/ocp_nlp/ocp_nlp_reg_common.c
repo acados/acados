@@ -98,23 +98,23 @@ ocp_nlp_reg_dims *ocp_nlp_reg_dims_assign(int N, void *raw_memory)
 
     dims->N = N;
 
-	// initialize to zero by default
-	int ii;
-	// nx
-	for(ii=0; ii<=N; ii++)
-		dims->nx[ii] = 0;
-	// nu
-	for(ii=0; ii<=N; ii++)
-		dims->nu[ii] = 0;
-	// nbx
-	for(ii=0; ii<=N; ii++)
-		dims->nbx[ii] = 0;
-	// nbu
-	for(ii=0; ii<=N; ii++)
-		dims->nbu[ii] = 0;
-	// ng
-	for(ii=0; ii<=N; ii++)
-		dims->ng[ii] = 0;
+    // initialize to zero by default
+    int ii;
+    // nx
+    for(ii=0; ii<=N; ii++)
+        dims->nx[ii] = 0;
+    // nu
+    for(ii=0; ii<=N; ii++)
+        dims->nu[ii] = 0;
+    // nbx
+    for(ii=0; ii<=N; ii++)
+        dims->nbx[ii] = 0;
+    // nbu
+    for(ii=0; ii<=N; ii++)
+        dims->nbu[ii] = 0;
+    // ng
+    for(ii=0; ii<=N; ii++)
+        dims->ng[ii] = 0;
 
     assert((char *) raw_memory + ocp_nlp_reg_dims_calculate_size(N) >= c_ptr);
 

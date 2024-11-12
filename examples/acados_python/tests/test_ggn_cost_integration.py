@@ -59,7 +59,7 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
 
     Tf = 1.0
     N = 20
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
 
     Q = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2, 0.1, 1e-3])
     R = 2 * np.diag([1e-2])

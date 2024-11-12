@@ -71,7 +71,7 @@ def create_ocp_description(hessian_approx, linearized_dynamics=False, discrete=F
     nu = model.u.rows()
     ny = nx + nu
     ny_e = nx
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
 
     # set cost module
     Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])

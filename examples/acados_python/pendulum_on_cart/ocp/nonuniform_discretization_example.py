@@ -71,7 +71,7 @@ def main(discretization='shooting_nodes'):
     N = 15
 
     # discretization
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
     # shooting_nodes = np.linspace(0, Tf, N+1)
 
     time_steps = np.linspace(0, 1, N+1)[1:]
@@ -133,12 +133,17 @@ def main(discretization='shooting_nodes'):
     qp_solver_cond_N = 8
     ocp.solver_options.qp_solver_cond_N = qp_solver_cond_N
     ocp.solver_options.qp_solver_cond_block_size = (qp_solver_cond_N) * [1] + [N-((qp_solver_cond_N))]
+    # HPIPM settings
+    ocp.solver_options.qp_solver_mu0 = 1e3
 
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = integrator_type
     ocp.solver_options.print_level = 0
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
     ocp.solver_options.nlp_solver_ext_qp_res = 1
+    ocp.solver_options.hpipm_mode = "ROBUST"
+
+    ocp.solver_options.globalization = 'FIXED_STEP'
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -151,8 +156,7 @@ def main(discretization='shooting_nodes'):
     simU = np.zeros((N, nu))
 
     # change options after creating ocp_solver
-    ocp_solver.options_set("step_length", 0.99999)
-    ocp_solver.options_set("globalization", "fixed_step") # fixed_step, merit_backtracking
+    ocp_solver.options_set("globalization_fixed_step_length", 0.99999)
     ocp_solver.options_set("tol_eq", TOL)
     ocp_solver.options_set("tol_stat", TOL)
     ocp_solver.options_set("tol_ineq", TOL)
@@ -162,12 +166,6 @@ def main(discretization='shooting_nodes'):
     for i in range(N):
         ocp_solver.set(i, "x", x0)
     status = ocp_solver.solve()
-
-    if status not in [0, 2]:
-        ocp_solver.store_iterate()
-        ocp_solver.dump_last_qp_to_json()
-        ocp_solver.print_statistics()
-        raise Exception(f'acados returned status {status}.')
 
     # get primal solution
     for i in range(N):
@@ -189,6 +187,8 @@ def main(discretization='shooting_nodes'):
         # copy lower triangular part to upper triangular part
         pcond_RSQ = np.tril(pcond_RSQ) + np.tril(pcond_RSQ, -1).T
         pcond_H.append(pcond_RSQ)
+        eig_values, _ = np.linalg.eig(pcond_RSQ)
+        print(f"eigen values of partially condenesed Hessian block {i}: {eig_values}")
 
     # pcond_H = ocp_solver.get_from_qp_in(ocp.solver_options.qp_solver_cond_N, "pcond_H")
     # print("pcond_H", pcond_H)
@@ -225,6 +225,12 @@ def main(discretization='shooting_nodes'):
     # print("simX", simX)
     iterate_filename = f'final_iterate_{discretization}.json'
     ocp_solver.store_iterate(filename=iterate_filename, overwrite=True)
+
+    if status not in [0, 2]:
+        ocp_solver.store_iterate()
+        ocp_solver.dump_last_qp_to_json()
+        ocp_solver.print_statistics()
+        raise Exception(f'acados returned status {status}.')
 
     plot_pendulum(shooting_nodes, Fmax, simU, simX, latexify=False)
     del ocp_solver

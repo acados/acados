@@ -38,7 +38,7 @@ Problems can be conveniently formulated using the [`CasADi`](https://web.casadi.
 `acados` provides a collection of computationally efficient building blocks tailored to optimal control structured problems, most prominently optimal control problems (OCP) and moving horizon estimation (MHE) problems.
 Among others, `acados` implements:
 - modules for the integration of ordinary differential equations (ODE) and differential-algebraic equations (DAE),
-- interfaces to state-of-the-art QP solvers like [`HPIPM`](https://github.com/giaf/hpipm), `qpOASES`, [`DAQP`](https://github.com/darnstrom/daqp) and [`OSQP`](https://github.com/oxfordcontrol/osqp)
+- interfaces to state-of-the-art QP solvers like [`HPIPM`](https://github.com/giaf/hpipm), `qpOASES`, [`DAQP`](https://github.com/darnstrom/daqp) and [`OSQP`](https://github.com/osqp/osqp)
 - (partial) condensing routines, provided by `HPIPM`
 - nonlinear programming solvers for optimal control structured problems
 - real-time algorithms, such as the real-time iteration (RTI) and advanced-step real-time iteration (AS-RTI) algorithms
@@ -85,6 +85,7 @@ Documentation latest build: |today|
     interfaces/index
     python_interface/index
     matlab_octave_interface/index
-    c_interface/index
     embedded_workflow/index
 ```
+
+<!-- c_interface/index -->

@@ -36,7 +36,7 @@ from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
 import casadi as ca
 import numpy as np
 import scipy.linalg as scipylinalg
-from sensitivity_utils import evaluate_hessian_eigenvalues, plot_results
+from sensitivity_utils import plot_results
 
 """
     This example computes solution sensitivities with respect to parameters using state augmentation.
@@ -123,7 +123,7 @@ def export_parameter_augmented_ocp(
     ocp.model, nx_original = export_parameter_augmented_pendulum_ode_model(param_M_as_state=param_M_as_state)
 
     # set dimensions
-    ocp.dims.N = N_horizon
+    ocp.solver_options.N_horizon = N_horizon
     nu = ocp.model.u.rows()
     nx = ocp.model.x.rows()
 
@@ -248,7 +248,14 @@ def main_augmented(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, ei
             breakpoint()
 
         if eigen_analysis:
-            min_eig_full[i], min_abs_eig_full[i], min_abs_eig_proj_hess[i], min_eig_proj_hess[i], min_eig_P[i], min_abs_eig_P[i] = evaluate_hessian_eigenvalues(sensitivity_solver)
+            full_hessian_diagnostics = sensitivity_solver.qp_diagnostics("FULL_HESSIAN")
+            projected_hessian_diagnostics = sensitivity_solver.qp_diagnostics("PROJECTED_HESSIAN")
+            min_eig_full[i] = full_hessian_diagnostics['min_eigv_total']
+            min_abs_eig_full[i] = full_hessian_diagnostics['min_abs_eigv_total']
+            min_abs_eig_proj_hess[i]= projected_hessian_diagnostics['min_abs_eigv_total']
+            min_eig_proj_hess[i] = projected_hessian_diagnostics['min_eigv_total']
+            min_eig_P[i] = projected_hessian_diagnostics['min_eig_P']
+            min_abs_eig_P[i] = projected_hessian_diagnostics['min_abs_eig_P']
 
         # Calculate the policy gradient
         _, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "initial_state")

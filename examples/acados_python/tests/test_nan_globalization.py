@@ -60,7 +60,7 @@ def main(globalization_options: GlobalizationOptions):
     N = 20
 
     # set dimensions
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
 
     # set cost
     Q_mat = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
@@ -90,7 +90,7 @@ def main(globalization_options: GlobalizationOptions):
 
     # set options
     ocp.solver_options.globalization = globalization_options.globalization
-    ocp.solver_options.alpha_min = globalization_options.alpha_min
+    ocp.solver_options.globalization_alpha_min = globalization_options.alpha_min
     ocp.solver_options.globalization_use_SOC = globalization_options.use_SOC
     ocp.solver_options.print_level = 0
 
@@ -99,7 +99,7 @@ def main(globalization_options: GlobalizationOptions):
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.nlp_solver_type = 'SQP'
     ocp.solver_options.nlp_solver_max_iter = 1000
-    ocp.solver_options.full_step_dual = 0
+    ocp.solver_options.globalization_full_step_dual = 0
     ocp.solver_options.qp_solver_iter_max = 2000
     ocp.solver_options.tol = 1e-4
     ocp.solver_options.qp_tol = 1e-6

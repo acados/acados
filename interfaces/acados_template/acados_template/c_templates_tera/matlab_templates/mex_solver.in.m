@@ -29,12 +29,10 @@
 
 %
 
-classdef {{ model.name }}_mex_solver < handle
+classdef {{ name }}_mex_solver < handle
 
     properties
         C_ocp
-        cost_ext_fun_type
-        cost_ext_fun_type_e
         N
         name
         code_gen_dir
@@ -45,36 +43,32 @@ classdef {{ model.name }}_mex_solver < handle
     methods
 
         % constructor
-        function obj = {{ model.name }}_mex_solver()
-            make_mex_{{ model.name }}();
-            obj.C_ocp = acados_mex_create_{{ model.name }}();
+        function obj = {{ name }}_mex_solver()
+            make_mex_{{ name }}();
+            obj.C_ocp = acados_mex_create_{{ name }}();
             % to have path to destructor when changing directory
             addpath('.')
-            obj.cost_ext_fun_type = '{{ cost.cost_ext_fun_type }}';
-            obj.cost_ext_fun_type_e = '{{ cost.cost_ext_fun_type_e }}';
-            obj.N = {{ dims.N }};
-            obj.name = '{{ model.name }}';
-            obj.code_gen_dir = pwd();
+            obj.N = {{ solver_options.N_horizon }};
+            obj.name = '{{ name }}';
         end
 
         % destructor
         function delete(obj)
             disp("delete template...");
-            return_dir = pwd();
-            cd(obj.code_gen_dir);
             if ~isempty(obj.C_ocp)
-                acados_mex_free_{{ model.name }}(obj.C_ocp);
+                acados_mex_free_{{ name }}(obj.C_ocp);
             end
-            cd(return_dir);
             disp("done.");
         end
 
-        % solve
         function solve(obj)
-            acados_mex_solve_{{ model.name }}(obj.C_ocp);
+            acados_mex_solve_{{ name }}(obj.C_ocp);
         end
 
-        % set
+        function status = custom_update(obj, data)
+            status = acados_mex_custom_update_{{ name }}(obj.C_ocp, data);
+        end
+
         function set(varargin)
             obj = varargin{1};
             field = varargin{2};
@@ -83,12 +77,37 @@ classdef {{ model.name }}_mex_solver < handle
                 error('field must be a char vector, use '' ''');
             end
             if nargin==3
-                acados_mex_set_{{ model.name }}(obj.cost_ext_fun_type, obj.cost_ext_fun_type_e, obj.C_ocp, field, value);
+                acados_mex_set_{{ name }}(obj.C_ocp, field, value);
             elseif nargin==4
                 stage = varargin{4};
-                acados_mex_set_{{ model.name }}(obj.cost_ext_fun_type, obj.cost_ext_fun_type_e, obj.C_ocp, field, value, stage);
+                acados_mex_set_{{ name }}(obj.C_ocp, field, value, stage);
             else
                 disp('acados_ocp.set: wrong number of input arguments (2 or 3 allowed)');
+            end
+        end
+
+
+        function set_params_sparse(varargin)
+            % usage:
+            % ocp.set_params_sparse(idx_values, param_values, Optional[stage])
+            % updates the parameters with indices idx_values (0 based) at stage with the new values new_p_values.
+            % if stage is not provided, sparse parameter update is performed for all stages.
+            obj = varargin{1};
+            idx_values = varargin{2};
+            param_values = varargin{3};
+            value = [idx_values(:), param_values(:)];
+            field = 'params_sparse';
+
+            if ~isa(field, 'char')
+                error('field must be a char vector, use '' ''');
+            end
+            if nargin==3
+                acados_mex_set_{{ name }}(obj.C_ocp, field, value);
+            elseif nargin==4
+                stage = varargin{4};
+                acados_mex_set_{{ name }}(obj.C_ocp, field, value, stage);
+            else
+                disp('acados_ocp.set_params_sparse: wrong number of input arguments (3 or 4 allowed)');
             end
         end
 
@@ -118,8 +137,28 @@ classdef {{ model.name }}_mex_solver < handle
             elseif nargin==3
                 stage = varargin{3};
                 value = ocp_get(obj.C_ocp, field, stage);
+            elseif nargin==4
+                stage = varargin{3};
+                iteration = varargin{4};
+                value = ocp_get(obj.C_ocp, field, stage, iteration);
             else
-                disp('acados_ocp.get: wrong number of input arguments (1 or 2 allowed)');
+                disp('acados_ocp.get: wrong number of input arguments (1, 2 or 3 allowed)');
+            end
+
+
+            % make symmetric (only lower triangular stored internally)
+            if strcmp('qp_Q', field) || strcmp('qp_R', field)
+                if iscell(value)
+                    for i=1:length(value)
+                        if length(value{i}) > 1
+                            value{i} = tril(value{i}) + tril(value{i}, -1)';
+                        end
+                    end
+                else
+                    if length(value) > 1
+                        value = tril(value) + tril(value, -1)';
+                    end
+                end
             end
         end
 
@@ -218,7 +257,7 @@ classdef {{ model.name }}_mex_solver < handle
         end
 
         function [] = reset(obj)
-            acados_mex_reset_{{ model.name }}(obj.C_ocp);
+            acados_mex_reset_{{ name }}(obj.C_ocp);
         end
 
 

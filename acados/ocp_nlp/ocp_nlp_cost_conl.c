@@ -100,6 +100,10 @@ void ocp_nlp_cost_conl_dims_set(void *config_, void *dims_, const char *field, i
     {
         // np dimension not needed
     }
+    else if (!strcmp(field, "np_global"))
+    {
+        // np dimension not needed
+    }
     else
     {
         printf("\nerror: dimension type: %s not available in module\n", field);
@@ -970,7 +974,32 @@ void ocp_nlp_cost_conl_eval_grad_p(void *config_, void *dims, void *model_, void
     exit(1);
 }
 
-void ocp_nlp_cost_conl_config_initialize_default(void *config_)
+
+size_t ocp_nlp_cost_conl_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_)
+{
+    ocp_nlp_cost_conl_model *model = model_;
+
+    size_t size = 0;
+    size_t tmp_size;
+
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->conl_cost_fun);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->conl_cost_fun_jac_hess);
+    size = size > tmp_size ? size : tmp_size;
+
+    return size;
+}
+
+
+void ocp_nlp_cost_conl_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_)
+{
+    ocp_nlp_cost_conl_model *model = model_;
+    external_function_set_fun_workspace_if_defined(model->conl_cost_fun, workspace_);
+    external_function_set_fun_workspace_if_defined(model->conl_cost_fun_jac_hess, workspace_);
+}
+
+
+void ocp_nlp_cost_conl_config_initialize_default(void *config_, int stage)
 {
     ocp_nlp_cost_config *config = config_;
 
@@ -1000,6 +1029,8 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_)
     config->memory_set_RSQrq_ptr = &ocp_nlp_cost_conl_memory_set_RSQrq_ptr;
     config->memory_set_Z_ptr = &ocp_nlp_cost_conl_memory_set_Z_ptr;
     config->workspace_calculate_size = &ocp_nlp_cost_conl_workspace_calculate_size;
+    config->get_external_fun_workspace_requirement = &ocp_nlp_cost_conl_get_external_fun_workspace_requirement;
+    config->set_external_fun_workspaces = &ocp_nlp_cost_conl_set_external_fun_workspaces;
     config->initialize = &ocp_nlp_cost_conl_initialize;
     config->update_qp_matrices = &ocp_nlp_cost_conl_update_qp_matrices;
     config->compute_fun = &ocp_nlp_cost_conl_compute_fun;
@@ -1008,6 +1039,7 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_)
     config->eval_grad_p = &ocp_nlp_cost_conl_eval_grad_p;
     config->config_initialize_default = &ocp_nlp_cost_conl_config_initialize_default;
     config->precompute = &ocp_nlp_cost_conl_precompute;
+    config->stage = stage;
 
     return;
 }

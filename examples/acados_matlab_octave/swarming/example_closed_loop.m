@@ -1,4 +1,43 @@
-%% Test of native matlab interface
+%
+% Copyright (c) The acados authors.
+%
+% This file is part of acados.
+%
+% The 2-Clause BSD License
+%
+% Redistribution and use in source and binary forms, with or without
+% modification, are permitted provided that the following conditions are met:
+%
+% 1. Redistributions of source code must retain the above copyright notice,
+% this list of conditions and the following disclaimer.
+%
+% 2. Redistributions in binary form must reproduce the above copyright notice,
+% this list of conditions and the following disclaimer in the documentation
+% and/or other materials provided with the distribution.
+%
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+% POSSIBILITY OF SUCH DAMAGE.;
+
+% Author: Enrica
+
+
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
+
+
 clear all
 
 % Check that env.sh has been run
@@ -33,11 +72,9 @@ max_a = S.max_a;
 
 if 1
 	compile_interface = 'auto';
-	codgen_model = 'true';
 	gnsf_detect_struct = 'true';
 else
 	compile_interface = 'auto';
-	codgen_model = 'false';
 	gnsf_detect_struct = 'false';
 end
 
@@ -160,13 +197,9 @@ ocp_model.set('constr_uh', uh);
 % ocp_model.set('constr_lh_e', lh_e);
 % ocp_model.set('constr_uh_e', uh_e);
 
-ocp_model.model_struct
-
 %% Acados ocp options
-
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
-ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme_N', nb_steps);
 if (exist('shooting_nodes', 'var'))
 	ocp_opts.set('param_scheme_shooting_nodes', shooting_nodes);
@@ -196,12 +229,9 @@ if (strcmp(ocp_sim_method, 'irk_gnsf'))
 	ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
 
-ocp_opts.opts_struct
-
-%% Acados ocp
 
 % Create ocp
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 %% Acados simulation model
 
@@ -225,14 +255,9 @@ else % irk
 	sim_model.set('dyn_expr_f', model.expr_f_impl);
 end
 
-%sim_model.model_struct
-
-
-
 %% Acados simulation options
 sim_opts = acados_sim_opts();
 sim_opts.set('compile_interface', compile_interface);
-sim_opts.set('codgen_model', codgen_model);
 sim_opts.set('num_stages', sim_num_stages);
 sim_opts.set('num_steps', sim_num_steps);
 sim_opts.set('method', sim_method);
@@ -241,14 +266,10 @@ if (strcmp(sim_method, 'irk_gnsf'))
 	sim_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
 
-%sim_opts.opts_struct
-
-
-
 %% Acados simulation
 
 % Create sim
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 
 %% Closed loop simulation
@@ -278,47 +299,46 @@ tic;
 for k = 1:nb_steps_sim
 
 	% Set initial condition x0
-	ocp.set('constr_x0', x_history(:,k));
-%     ocp.set('constr_expr_h', model.expr_h);
-%     ocp.set('constr_lh', lh);
-%     ocp.set('constr_uh', uh);
+	ocp_solver.set('constr_x0', x_history(:,k));
+%     ocp_solver.set('constr_expr_h', model.expr_h);
+%     ocp_solver.set('constr_lh', lh);
+%     ocp_solver.set('constr_uh', uh);
 
 	% Set trajectory initialization (if not, set internally using previous solution)
-	ocp.set('init_x', x_traj_init);
-	ocp.set('init_u', u_traj_init);
+	ocp_solver.set('init_x', x_traj_init);
+	ocp_solver.set('init_u', u_traj_init);
 
 	% solve OCP
-	ocp.solve();
+	ocp_solver.solve();
 
-    status(k) = ocp.get('status');
-    sqp_iter(k) = ocp.get('sqp_iter');
-    time_tot(k) = ocp.get('time_tot');
-    time_lin(k) = ocp.get('time_lin');
-    time_qp_sol(k) = ocp.get('time_qp_sol');
+    status(k) = ocp_solver.get('status');
+    sqp_iter(k) = ocp_solver.get('sqp_iter');
+    time_tot(k) = ocp_solver.get('time_tot');
+    time_lin(k) = ocp_solver.get('time_lin');
+    time_qp_sol(k) = ocp_solver.get('time_qp_sol');
 
     fprintf('\nstatus = %d, sqp_iter = %d, time_tot = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status(k), sqp_iter(k), time_tot(k)*1e3, time_lin(k)*1e3, time_qp_sol(k)*1e3);
 
 	% Get solution for initialization of next NLP
-	x_traj = ocp.get('x');
-	u_traj = ocp.get('u');
-    
+	x_traj = ocp_solver.get('x');
+	u_traj = ocp_solver.get('u');
+
 	% Shift trajectory for initialization
 	x_traj_init = [x_traj(:,2:end), x_traj(:,end)];
-	u_traj_init = [u_traj(:,2:end), u_traj(:,end)];
 
 	% Get solution for simulation
-	u_history(:,k) = ocp.get('u', 0);
+	u_history(:,k) = ocp_solver.get('u', 0);
 
 	% Set initial state of simulation
-	sim.set('x', x_history(:,k));
+	sim_solver.set('x', x_history(:,k));
 	% set input in sim
-	sim.set('u', u_history(:,k));
+	sim_solver.set('u', u_history(:,k));
 
 	% Simulate state
-	sim.solve();
+	sim_solver.solve();
 
 	% Get new state
-	x_history(:,k+1) = sim.get('xn');
+	x_history(:,k+1) = sim_solver.get('xn');
 
 end
 
@@ -335,7 +355,7 @@ u_history = u_history';
 pos_history = x_history(:,1:3*N);
 vel_history = x_history(:,(3*N+1):end);
 
-%% Plots 
+%% Plots
 
 % Plot trajectories of the agents
 figure;

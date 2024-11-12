@@ -302,21 +302,26 @@ static void mdlStart(SimStruct *S)
 	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 	ocp_nlp_constraints_bgh_dims **constraints_dims = (ocp_nlp_constraints_bgh_dims **) dims->constraints;
 
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lb", lb_0);
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ub", ub_0);
+    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lbu", lb_0);
+    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lbx", lb_0+NUM_CONTROLS);
+    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ubu", ub_0);
+    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ubx", ub_0+NUM_CONTROLS);
+
     for (i = 0; i < nb[0]; ++i)
         constraints[0]->idxb[i] = idxb[i];
 
     for (i = 1; i < NUM_STAGES; ++i)
     {
-        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lb", lb);
-        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ub", ub);
+        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lbu", lb);
+        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lbx", lb+NUM_CONTROLS);
+        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ubu", ub);
+        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ubx", ub+NUM_CONTROLS);
         for (j = 0; j < nb[i]; ++j)
             constraints[i]->idxb[j] = idxb[j];
     }
 
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NUM_STAGES, "lb", lb_N);
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NUM_STAGES, "ub", ub_N);
+    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NUM_STAGES, "lbx", lb_N);
+    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NUM_STAGES, "ubx", ub_N);
 
     for (i = 0; i < nb[NUM_STAGES]; ++i)
         constraints[NUM_STAGES]->idxb[i] = idxb[i];
@@ -370,16 +375,18 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     for (j = 0; j < NUM_STATES; ++j) {
         lb_0[NUM_CONTROLS+j] = x0[j];
         ub_0[NUM_CONTROLS+j] = x0[j];
-    } 
+    }
 
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lb", lb_0);
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ub", ub_0);
-    
+    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lbu", lb_0);
+    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lbx", lb_0+NUM_CONTROLS);
+    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ubu", ub_0);
+    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ubx", ub_0+NUM_CONTROLS);
+
     for (j = 0; j <= NUM_STAGES; ++j)
         BLASFEO_DVECEL(&cost[j]->y_ref, 0) = *reference;
 
     int status = ocp_nlp_solve(nlp_solver, nlp_in, nlp_out);
-    
+
     double *u0_opt = ssGetOutputPortRealSignal(S, 0);
     double *x1 = ssGetOutputPortRealSignal(S, 1);
     double *status_out = ssGetOutputPortRealSignal(S, 2);

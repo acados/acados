@@ -3,7 +3,8 @@
 clear all; clc;
 
 %% Run minimal example
-%
+% get default simulink_opts
+simulink_opts = get_acados_simulink_opts;
 minimal_example_ocp;
 
 

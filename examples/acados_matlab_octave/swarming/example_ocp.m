@@ -1,5 +1,45 @@
 %
-% This file allows the control of a swarm of robots. The swarm is composed 
+% Copyright (c) The acados authors.
+%
+% This file is part of acados.
+%
+% The 2-Clause BSD License
+%
+% Redistribution and use in source and binary forms, with or without
+% modification, are permitted provided that the following conditions are met:
+%
+% 1. Redistributions of source code must retain the above copyright notice,
+% this list of conditions and the following disclaimer.
+%
+% 2. Redistributions in binary form must reproduce the above copyright notice,
+% this list of conditions and the following disclaimer in the documentation
+% and/or other materials provided with the distribution.
+%
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+% POSSIBILITY OF SUCH DAMAGE.;
+
+% Author: Enrica
+
+
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
+
+
+
+% This file allows the control of a swarm of robots. The swarm is composed
 % by N agents with decoupled, linear dynamics. The goal is to achieve
 % coordinated motion from random position and velocities.
 %
@@ -38,11 +78,9 @@ max_a = S.max_a;
 
 if 1
 	compile_interface = 'auto';
-	codgen_model = 'true';
 	gnsf_detect_struct = 'true';
 else
 	compile_interface = 'auto';
-	codgen_model = 'false';
 	gnsf_detect_struct = 'false';
 end
 
@@ -167,13 +205,10 @@ ocp_model.set('constr_uh', uh);
 % ocp_model.set('constr_lh_e', lh_e);
 % ocp_model.set('constr_uh_e', uh_e);
 
-ocp_model.model_struct
-
 %% Acados ocp options
 
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
-ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme_N', nb_steps);
 if (exist('shooting_nodes', 'var'))
 	ocp_opts.set('shooting_nodes', shooting_nodes);
@@ -205,12 +240,9 @@ if (strcmp(sim_method, 'irk_gnsf'))
 	ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
 
-ocp_opts.opts_struct
-
-%% Acados ocp
 
 % Create ocp
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 % Set trajectory initialization
 step_mat = repmat((0:1:nb_steps),3*N,1);
@@ -218,37 +250,37 @@ pos0_traj = repmat(pos0,1,nb_steps+1) + v_ref*dt*repmat(u_ref,N,nb_steps+1).*ste
 x_traj_init = [pos0_traj; ...
     v_ref*repmat(u_ref,N,nb_steps+1)];
 u_traj_init = zeros(nu, nb_steps);
-ocp.set('init_x', x_traj_init);
-ocp.set('init_u', u_traj_init);
+ocp_solver.set('init_x', x_traj_init);
+ocp_solver.set('init_u', u_traj_init);
 
 % Solve
 tic;
-ocp.solve();
+ocp_solver.solve();
 simulation_time = toc;
 disp(strcat('Simulation time: ',num2str(simulation_time)));
 
 %x0(1) = 1.5;
-%ocp.set('constr_x0', x0);
-%ocp.set('cost_y_ref', 1);
+%ocp_solver.set('constr_x0', x0);
+%ocp_solver.set('cost_y_ref', 1);
 % If not set, the trajectory is initialized with the previous solution
 
 % Get solution
-u = ocp.get('u');
-x = ocp.get('x');
+u = ocp_solver.get('u');
+x = ocp_solver.get('x');
 
 %% Statistics
 
-status = ocp.get('status');
-sqp_iter = ocp.get('sqp_iter');
-time_tot = ocp.get('time_tot');
-time_lin = ocp.get('time_lin');
-time_reg = ocp.get('time_reg');
-time_qp_sol = ocp.get('time_qp_sol');
+status = ocp_solver.get('status');
+sqp_iter = ocp_solver.get('sqp_iter');
+time_tot = ocp_solver.get('time_tot');
+time_lin = ocp_solver.get('time_lin');
+time_reg = ocp_solver.get('time_reg');
+time_qp_sol = ocp_solver.get('time_qp_sol');
 
 fprintf('\nstatus = %d, sqp_iter = %d,  time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n', status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3);
 % time_ext = %f [ms], time_ext*1e3,
 
-ocp.print('stat');
+ocp_solver.print('stat');
 
 %% Extract trajectories
 
@@ -287,7 +319,7 @@ ylabel('Control inputs [m/s^2]','fontsize',fontsize);
 
 if (strcmp(nlp_solver, 'sqp'))
 	figure;
-    stat = ocp.get('stat');
+    stat = ocp_solver.get('stat');
 	plot([0: sqp_iter], log10(stat(:,2)), 'r-x');
 	hold on
 	plot([0: sqp_iter], log10(stat(:,3)), 'b-x');

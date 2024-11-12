@@ -9,9 +9,9 @@ function acados_install_windows(varargin)
             cmakeConfigString='-DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=OFF';
         case 1
             cmakeConfigString=varargin{1};
-        otherwise 
+        otherwise
             error('function called with %d parameters, was expecting max 1',nargin);
-    end    
+    end
 
     % Derive the path for the acados root
     fullPath = mfilename('fullpath');
@@ -95,7 +95,7 @@ function acados_install_windows(varargin)
     %% Download external dependencies
     % casadi
     fprintf('Downloading casadi\n');
-    addpath(fullfile(acadosPath,'interfaces', 'acados_matlab_octave'));
+    addpath(fullfile(acadosPath, 'interfaces', 'acados_matlab_octave'));
     run('acados_env_variables_windows');
     check_acados_requirements(true);
 
@@ -106,7 +106,7 @@ function acados_install_windows(varargin)
     t_renderer_location = fullfile(acados_root_dir, 'bin', 't_renderer.exe');
 
     if ~exist( t_renderer_location, 'file' )
-        acados_template_mex.set_up_t_renderer( t_renderer_location )
+        set_up_t_renderer( t_renderer_location )
     end
 
 end

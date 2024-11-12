@@ -27,9 +27,16 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
 
-%% test of native matlab interface
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
+
+
+
 clear all
 
 
@@ -45,7 +52,6 @@ load testSim.mat
 
 %% arguments
 compile_interface = 'auto';
-codgen_model = 'true';
 method = 'irk'; % irk, erk, irk_gnsf
 % method = 'irk_gnsf';
 sens_forw = 'true';
@@ -87,7 +93,6 @@ end
 %% acados sim opts
 sim_opts = acados_sim_opts();
 sim_opts.set('compile_interface', compile_interface);
-sim_opts.set('codgen_model', codgen_model);
 sim_opts.set('num_stages', num_stages);
 sim_opts.set('num_steps', num_steps);
 sim_opts.set('method', method);
@@ -96,7 +101,7 @@ sim_opts.set('sens_forw', sens_forw);
 
 %% acados sim
 % create sim
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 % to avoid unstable behavior introduce a small pi-contorller for rotor speed tracking
 uctrl = 0.0;
@@ -118,14 +123,14 @@ for nn=1:nsim
 	u(2) = max(u(2) - uctrl, 0);
 
 	% update state, input, parameter
-	sim.set('x', x_sim(:,nn));
-	sim.set('u', u);
-	sim.set('p', Usim(nn,3));
+	sim_solver.set('x', x_sim(:,nn));
+	sim_solver.set('u', u);
+	sim_solver.set('p', Usim(nn,3));
 
 	% solve
-	sim.solve();
+	sim_solver.solve();
 
-	x_sim(:,nn+1) = sim.get('xn');
+	x_sim(:,nn+1) = sim_solver.get('xn');
 
 	% update PI contoller
 	ctrlErr = statesFAST(nn+1,1) - x_sim(1,nn+1);
@@ -139,9 +144,9 @@ time_solve = toc/nsim
 %statesFAST(1:nsim+1,:)'
 x_sim(:,1:nsim+1)
 
-%S_forw = sim.get('S_forw');
-%Sx = sim.get('Sx');
-%Su = sim.get('Su');
+%S_forw = sim_solver.get('S_forw');
+%Sx = sim_solver.get('Sx');
+%Su = sim_solver.get('Su');
 
 
 fprintf('\nsuccess!\n\n');

@@ -64,7 +64,7 @@ x0 = np.array([0, 0])
 xT = np.array([1/2, 1])
 
 # set dimensions
-ocp.dims.N = N
+ocp.solver_options.N_horizon = N
 
 # set cost module
 ocp.cost.cost_type = 'LINEAR_LS'

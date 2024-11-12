@@ -27,9 +27,16 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
 
-%% test of native matlab interface
+
+
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
+
 clear all
 
 
@@ -42,7 +49,6 @@ end
 
 %% arguments
 compile_interface = 'auto';
-codgen_model = 'true';
 gnsf_detect_struct = 'true';
 model_name = 'masses_chain';
 
@@ -183,14 +189,9 @@ else
 	ocp_model.set('constr_ubu', ubu);
 end
 
-%ocp_model.model_struct
-
-
-
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
-ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
@@ -222,45 +223,45 @@ end
 
 %% acados ocp
 % create ocp
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 % set trajectory initialization
 x_traj_init = repmat(model.x_ref, 1, N+1);
 u_traj_init = zeros(nu, N);
-ocp.set('init_x', x_traj_init);
-ocp.set('init_u', u_traj_init);
+ocp_solver.set('init_x', x_traj_init);
+ocp_solver.set('init_u', u_traj_init);
 
 % set parameter
-ocp.set('p', T/N);
+ocp_solver.set('p', T/N);
 
 % solve
 nrep = 1;
 tic;
 for rep=1:nrep
-	ocp.set('init_x', x_traj_init);
-	ocp.set('init_u', u_traj_init);
-	ocp.solve();
+	ocp_solver.set('init_x', x_traj_init);
+	ocp_solver.set('init_u', u_traj_init);
+	ocp_solver.solve();
 end
 time_ext = toc/nrep
 
 
 % get solution
-u = ocp.get('u');
-x = ocp.get('x');
+u = ocp_solver.get('u');
+x = ocp_solver.get('x');
 
 
 % statistics
-status = ocp.get('status');
-sqp_iter = ocp.get('sqp_iter');
-time_tot = ocp.get('time_tot');
-time_lin = ocp.get('time_lin');
-time_reg = ocp.get('time_reg');
-time_qp_sol = ocp.get('time_qp_sol');
-time_qp_solver_call = ocp.get('time_qp_solver_call');
+status = ocp_solver.get('status');
+sqp_iter = ocp_solver.get('sqp_iter');
+time_tot = ocp_solver.get('time_tot');
+time_lin = ocp_solver.get('time_lin');
+time_reg = ocp_solver.get('time_reg');
+time_qp_sol = ocp_solver.get('time_qp_sol');
+time_qp_solver_call = ocp_solver.get('time_qp_solver_call');
 
 fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms] (time_qp_solver_call = %f [ms]), time_reg = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_qp_solver_call*1e3, time_reg*1e3);
 
-ocp.print('stat');
+ocp_solver.print('stat');
 
 
 %% figures
@@ -280,7 +281,7 @@ for ii=1:N
 	visualize;
 end
 
-stat = ocp.get('stat');
+stat = ocp_solver.get('stat');
 if (strcmp(nlp_solver, 'sqp'))
 	figure();
 	plot(0: size(stat,1)-1, log10(stat(:,2)), 'r-x');

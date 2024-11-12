@@ -30,6 +30,19 @@
 %
 % author: Katrin Baumgaertner
 
+
+
+
+
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
+
+
+
 function [model] = lorentz_model()
 
 import casadi.*
@@ -39,35 +52,22 @@ nx = 4;               % last state models parameter
 nw = 1;               % state noise on parameter
 ny = 1;
 
-% weighting matrices
-Q = 1*eye(nw);
-R = 1;
-P0 = 0.1*eye(nx);
-P0(nx, nx) = 0.001;
 
 % dynamics
 x_expr = SX.sym('x', nx, 1);
 w_expr = SX.sym('w', nw, 1);
 
-x_dot_expr = [10*(x_expr(2) - x_expr(1)); ...
+f_expl_expr = [10*(x_expr(2) - x_expr(1)); ...
               x_expr(4)*x_expr(1)-x_expr(2)-x_expr(1)*x_expr(3); ...
               -(8/3)*x_expr(3)+x_expr(1)*x_expr(2); ...
               w_expr];
-  
+
 % store eveything in model struct
-model = struct();
-model.nx = nx;
-model.nu = nw;
-model.ny = ny;
+model = AcadosModel();
 
-model.sym_x = x_expr;
-model.sym_u = w_expr;
-model.f_expl_expr = x_dot_expr;
+model.x = x_expr;
+model.u = w_expr;
+model.f_expl_expr = f_expl_expr;
 
-model.W_0 = blkdiag(R, Q, P0);
-model.W = blkdiag(R, Q);
-
-model.h = 0.05;
-model.N = 15;     % MHE horizon
-
+model.name = 'lorentz_model_estimator';
 end

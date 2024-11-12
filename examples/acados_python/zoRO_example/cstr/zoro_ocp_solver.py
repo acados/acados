@@ -90,7 +90,7 @@ def setup_acados_ocp_solver(
     nu = u.shape[0]
 
     # number of shooting intervals
-    ocp.dims.N = mpc_params.N
+    ocp.solver_options.N_horizon = mpc_params.N
 
     # set prediction horizon
     ocp.solver_options.tf = mpc_params.Tf
@@ -147,7 +147,7 @@ def setup_acados_ocp_solver(
 
     ocp.solver_options.levenberg_marquardt = 1e-5
     # ocp.solver_options.tol = 1e-3
-    ocp.solver_options.line_search_use_sufficient_descent
+    ocp.solver_options.globalization_line_search_use_sufficient_descent
 
     if mpc_params.cstr_tightening:
         # custom update: disturbance propagation

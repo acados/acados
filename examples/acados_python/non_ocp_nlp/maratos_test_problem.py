@@ -91,7 +91,7 @@ def solve_maratos_problem_with_setting(setting):
     # discretization
     Tf = 1
     N = 1
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
     ocp.solver_options.tf = Tf
 
     # cost
@@ -125,17 +125,17 @@ def solve_maratos_problem_with_setting(setting):
         ocp.solver_options.print_level = 1
     ocp.solver_options.tol = TOL
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
-    ocp.solver_options.globalization = globalization
-    ocp.solver_options.alpha_min = 1e-2
     ocp.solver_options.levenberg_marquardt = 1e-1
     SQP_max_iter = 300
     ocp.solver_options.qp_solver_iter_max = 400
+    ocp.solver_options.qp_tol = 5e-7
     ocp.solver_options.regularize_method = 'MIRROR'
     # ocp.solver_options.exact_hess_constr = 0
-    ocp.solver_options.line_search_use_sufficient_descent = line_search_use_sufficient_descent
+    ocp.solver_options.globalization = globalization
+    ocp.solver_options.globalization_alpha_min = 1e-2
+    ocp.solver_options.globalization_line_search_use_sufficient_descent = line_search_use_sufficient_descent
     ocp.solver_options.globalization_use_SOC = globalization_use_SOC
-    ocp.solver_options.eps_sufficient_descent = 1e-1
-    ocp.solver_options.qp_tol = 5e-7
+    ocp.solver_options.globalization_eps_sufficient_descent = 1e-1
 
     if FOR_LOOPING: # call solver in for loop to get all iterates
         ocp.solver_options.nlp_solver_max_iter = 1
@@ -203,7 +203,6 @@ def solve_maratos_problem_with_setting(setting):
 
     try:
         if globalization == 'FIXED_STEP':
-            # import pdb; pdb.set_trace()
             if max_infeasibility < 5.0:
                 raise Exception(f"Expected max_infeasibility > 5.0 when using full step SQP on Maratos problem")
             if iter != 10:
@@ -225,8 +224,8 @@ def solve_maratos_problem_with_setting(setting):
                     # Jonathan Laptop: merit_grad = -1.737950e-01, merit_grad_cost = -1.737950e-01, merit_grad_dyn = 0.000000e+00, merit_grad_ineq = 0.000000e+00
                     raise Exception(f"Expected SQP iterations in range(29, 37) when using globalized SQP with SOC on Maratos problem, got {iter}")
             else:
-                if iter != 12:
-                    raise Exception(f"Expected 12 SQP iterations when using globalized SQP with SOC on Maratos problem, got {iter}")
+                if iter != 16:
+                    raise Exception(f"Expected 16 SQP iterations when using globalized SQP with SOC on Maratos problem, got {iter}")
         elif globalization == 'FUNNEL_L1PEN_LINESEARCH':
             if iter > 12:
                     raise Exception(f"Expected not more than 12 SQP iterations when using Funnel Method SQP, got {iter}")

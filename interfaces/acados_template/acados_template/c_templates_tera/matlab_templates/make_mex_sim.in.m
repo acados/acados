@@ -29,7 +29,7 @@
 
 %
 
-function make_mex_{{ model.name }}()
+function make_mex_sim_{{ model.name }}()
 
     opts.output_dir = pwd;
 

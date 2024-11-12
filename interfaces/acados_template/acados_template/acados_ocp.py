@@ -52,6 +52,7 @@ from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
 from .zoro_description import ZoroDescription, process_zoro_description
 from .casadi_function_generation import (
+    GenerateContext,
     generate_c_code_conl_cost, generate_c_code_nls_cost, generate_c_code_external_cost,
     generate_c_code_explicit_ode, generate_c_code_implicit_ode, generate_c_code_discrete_dynamics, generate_c_code_gnsf,
     generate_c_code_constraint
@@ -74,6 +75,7 @@ class AcadosOcp:
         - :py:attr:`shared_lib_ext` (set automatically)
         - :py:attr:`acados_lib_path` (set automatically)
         - :py:attr:`parameter_values` - used to initialize the parameters (can be changed)
+        - :py:attr:`p_global_values` - used to initialize the global parameters (can be changed)
     """
     def __init__(self, acados_path=''):
         """
@@ -108,7 +110,9 @@ class AcadosOcp:
         self.cython_include_dirs = [np.get_include(), get_paths()['include']]
 
         self.__parameter_values = np.array([])
+        self.__p_global_values = np.array([])
         self.__problem_class = 'OCP'
+        self.__json_file = "acados_ocp.json"
 
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
@@ -130,8 +134,31 @@ class AcadosOcp:
             raise Exception('Invalid parameter_values value. ' +
                             f'Expected numpy array, got {type(parameter_values)}.')
 
+    @property
+    def p_global_values(self):
+        r"""initial values for :math:`p_\text{global}` vector, see `AcadosModel.p_global` - can be updated.
+        Type: `numpy.ndarray` of shape `(np_global, )`.
+        """
+        return self.__p_global_values
 
-    def make_consistent(self) -> None:
+    @p_global_values.setter
+    def p_global_values(self, p_global_values):
+        if isinstance(p_global_values, np.ndarray):
+            self.__p_global_values = p_global_values
+        else:
+            raise Exception('Invalid p_global_values value. ' +
+                            f'Expected numpy array, got {type(p_global_values)}.')
+
+    @property
+    def json_file(self):
+        """Name of the json file where the problem description is stored."""
+        return self.__json_file
+
+    @json_file.setter
+    def json_file(self, json_file):
+        self.__json_file = json_file
+
+    def make_consistent(self, is_mocp_phase=False) -> None:
         """
         Detect dimensions, perform sanity checks
         """
@@ -144,10 +171,19 @@ class AcadosOcp:
         model.make_consistent(dims)
         self.name = model.name
 
+        # check if nx != nx_next
+        if not is_mocp_phase and dims.nx != dims.nx_next and opts.N_horizon > 1:
+            raise Exception('nx_next should be equal to nx if more than one shooting interval is used.')
+
         # parameters
         if self.parameter_values.shape[0] != dims.np:
             raise Exception('inconsistent dimension np, regarding model.p and parameter_values.' + \
                 f'\nGot np = {dims.np}, self.parameter_values.shape = {self.parameter_values.shape[0]}\n')
+
+        # p_global_values
+        if self.p_global_values.shape[0] != dims.np_global:
+            raise Exception('inconsistent dimension np_global, regarding model.p_global and p_global_values.' + \
+                f'\nGot np_global = {dims.np_global}, self.p_global_values.shape = {self.p_global_values.shape[0]}\n')
 
         ## cost
         # initial stage - if not set, copy fields from path constraints
@@ -306,9 +342,10 @@ class AcadosOcp:
                 "Note: There is also the option to use the external cost module with a numerical hessian approximation (see `ext_cost_num_hess`).\n"
                 "OR the option to provide a symbolic custom hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n")
 
+        # cost integration
         supports_cost_integration = lambda type : type in ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
         if opts.cost_discretization == 'INTEGRATOR' and \
-            any([not supports_cost_integration(cost) for cost in [cost.cost_type_0, cost.cost_type, cost.cost_type_e]]):
+            any([not supports_cost_integration(cost) for cost in [cost.cost_type_0, cost.cost_type]]):
             raise Exception('cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs.')
 
         ## constraints
@@ -697,16 +734,26 @@ class AcadosOcp:
         dims.ns_e = ns_e
 
         # discretization
+        if opts.N_horizon is None and dims.N is None:
+            raise Exception('N_horizon not provided.')
+        elif opts.N_horizon is None and dims.N is not None:
+            opts.N_horizon = dims.N
+            print("field AcadosOcpDims.N has been migrated to AcadosOcpOptions.N_horizon. setting AcadosOcpOptions.N_horizon = N. For future comppatibility, please use AcadosOcpOptions.N_horizon directly.")
+        elif opts.N_horizon is not None and dims.N is not None and opts.N_horizon != dims.N:
+            raise Exception(f'Inconsistent dimension N, regarding N = {dims.N}, N_horizon = {opts.N_horizon}.')
+        else:
+            dims.N = opts.N_horizon
+
         if not isinstance(opts.tf, (float, int)):
             raise Exception(f'Time horizon tf should be float provided, got tf = {opts.tf}.')
 
         if is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
             # uniform discretization
-            opts.time_steps = opts.tf / dims.N * np.ones((dims.N,))
+            opts.time_steps = opts.tf / opts.N_horizon * np.ones((opts.N_horizon,))
             opts.shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(opts.time_steps)))
 
         elif not is_empty(opts.shooting_nodes):
-            if np.shape(opts.shooting_nodes)[0] != dims.N+1:
+            if np.shape(opts.shooting_nodes)[0] != opts.N_horizon+1:
                 raise Exception('inconsistent dimension N, regarding shooting_nodes.')
 
             time_steps = opts.shooting_nodes[1:] - opts.shooting_nodes[0:-1]
@@ -732,15 +779,18 @@ class AcadosOcp:
             raise Exception(f'Inconsistent discretization: {opts.tf}'\
                 f' = tf != sum(opts.time_steps) = {tf}.')
 
+        # set integrator time automatically
+        opts.Tsim = opts.time_steps[0]
+
         # num_steps
         if isinstance(opts.sim_method_num_steps, np.ndarray) and opts.sim_method_num_steps.size == 1:
             opts.sim_method_num_steps = opts.sim_method_num_steps.item()
 
         if isinstance(opts.sim_method_num_steps, (int, float)) and opts.sim_method_num_steps % 1 == 0:
-            opts.sim_method_num_steps = opts.sim_method_num_steps * np.ones((dims.N,), dtype=np.int64)
-        elif isinstance(opts.sim_method_num_steps, np.ndarray) and opts.sim_method_num_steps.size == dims.N \
+            opts.sim_method_num_steps = opts.sim_method_num_steps * np.ones((opts.N_horizon,), dtype=np.int64)
+        elif isinstance(opts.sim_method_num_steps, np.ndarray) and opts.sim_method_num_steps.size == opts.N_horizon \
             and np.all(np.equal(np.mod(opts.sim_method_num_steps, 1), 0)):
-            opts.sim_method_num_steps = np.reshape(opts.sim_method_num_steps, (dims.N,)).astype(np.int64)
+            opts.sim_method_num_steps = np.reshape(opts.sim_method_num_steps, (opts.N_horizon,)).astype(np.int64)
         else:
             raise Exception("Wrong value for sim_method_num_steps. Should be either int or array of ints of shape (N,).")
 
@@ -749,10 +799,10 @@ class AcadosOcp:
             opts.sim_method_num_stages = opts.sim_method_num_stages.item()
 
         if isinstance(opts.sim_method_num_stages, (int, float)) and opts.sim_method_num_stages % 1 == 0:
-            opts.sim_method_num_stages = opts.sim_method_num_stages * np.ones((dims.N,), dtype=np.int64)
-        elif isinstance(opts.sim_method_num_stages, np.ndarray) and opts.sim_method_num_stages.size == dims.N \
+            opts.sim_method_num_stages = opts.sim_method_num_stages * np.ones((opts.N_horizon,), dtype=np.int64)
+        elif isinstance(opts.sim_method_num_stages, np.ndarray) and opts.sim_method_num_stages.size == opts.N_horizon \
             and np.all(np.equal(np.mod(opts.sim_method_num_stages, 1), 0)):
-            opts.sim_method_num_stages = np.reshape(opts.sim_method_num_stages, (dims.N,)).astype(np.int64)
+            opts.sim_method_num_stages = np.reshape(opts.sim_method_num_stages, (opts.N_horizon,)).astype(np.int64)
         else:
             raise Exception("Wrong value for sim_method_num_stages. Should be either int or array of ints of shape (N,).")
 
@@ -761,10 +811,10 @@ class AcadosOcp:
             opts.sim_method_jac_reuse = opts.sim_method_jac_reuse.item()
 
         if isinstance(opts.sim_method_jac_reuse, (int, float)) and opts.sim_method_jac_reuse % 1 == 0:
-            opts.sim_method_jac_reuse = opts.sim_method_jac_reuse * np.ones((dims.N,), dtype=np.int64)
-        elif isinstance(opts.sim_method_jac_reuse, np.ndarray) and opts.sim_method_jac_reuse.size == dims.N \
+            opts.sim_method_jac_reuse = opts.sim_method_jac_reuse * np.ones((opts.N_horizon,), dtype=np.int64)
+        elif isinstance(opts.sim_method_jac_reuse, np.ndarray) and opts.sim_method_jac_reuse.size == opts.N_horizon \
             and np.all(np.equal(np.mod(opts.sim_method_jac_reuse, 1), 0)):
-            opts.sim_method_jac_reuse = np.reshape(opts.sim_method_jac_reuse, (dims.N,)).astype(np.int64)
+            opts.sim_method_jac_reuse = np.reshape(opts.sim_method_jac_reuse, (opts.N_horizon,)).astype(np.int64)
         else:
             raise Exception("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
 
@@ -786,70 +836,75 @@ class AcadosOcp:
                                  ("path", model.con_r_expr), ("initial", model.con_r_expr_0), ("terminal", model.con_r_expr_e)]
 
         if opts.with_solution_sens_wrt_params:
+            if dims.np_global == 0:
+                raise Exception('with_solution_sens_wrt_params is only compatible if global parameters `p_global` are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got emty p_global.')
             if cost.cost_type != "EXTERNAL" or cost.cost_type_0 != "EXTERNAL" or cost.cost_type_e != "EXTERNAL":
                 raise Exception('with_solution_sens_wrt_params is only compatible with EXTERNAL cost_type.')
             if opts.integrator_type != "DISCRETE":
                 raise Exception('with_solution_sens_wrt_params is only compatible with DISCRETE dynamics.')
             for horizon_type, constraint in type_constraint_pairs:
-                if constraint is not None and any(ca.which_depends(constraint, model.p)):
-                    raise Exception(f'with_solution_sens_wrt_params is only implemented if constraints depend not on parameters. Got parameter dependency for {horizon_type} constraint.')
+                if constraint is not None and any(ca.which_depends(constraint, model.p_global)):
+                    raise Exception(f"with_solution_sens_wrt_params is only implemented if constraints don't depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
 
         if opts.with_value_sens_wrt_params:
+            if dims.np_global == 0:
+                raise Exception('with_value_sens_wrt_params is only compatible if global parameters `p_global` are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got emty p_global.')
             if cost.cost_type != "EXTERNAL" or cost.cost_type_0 != "EXTERNAL" or cost.cost_type_e != "EXTERNAL":
                 raise Exception('with_value_sens_wrt_params is only compatible with EXTERNAL cost_type.')
             if opts.integrator_type != "DISCRETE":
                 raise Exception('with_value_sens_wrt_params is only compatible with DISCRETE dynamics.')
             for horizon_type, constraint in type_constraint_pairs:
-                if constraint is not None and any(ca.which_depends(constraint, model.p)):
-                    raise Exception(f'with_value_sens_wrt_params is only implemented if constraints depend not on parameters. Got parameter dependency for {horizon_type} constraint.')
+                if constraint is not None and any(ca.which_depends(constraint, model.p_global)):
+                    raise Exception(f"with_value_sens_wrt_params is only implemented if constraints don't depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
 
         if opts.qp_solver_cond_N is None:
-            opts.qp_solver_cond_N = dims.N
+            opts.qp_solver_cond_N = opts.N_horizon
 
         if opts.qp_solver_cond_block_size is not None:
-            if sum(opts.qp_solver_cond_block_size) != dims.N:
-                raise Exception(f'sum(qp_solver_cond_block_size) = {sum(opts.qp_solver_cond_block_size)} != N = {dims.N}.')
+            if sum(opts.qp_solver_cond_block_size) != opts.N_horizon:
+                raise Exception(f'sum(qp_solver_cond_block_size) = {sum(opts.qp_solver_cond_block_size)} != N = {opts.N_horizon}.')
             if len(opts.qp_solver_cond_block_size) != opts.qp_solver_cond_N+1:
                 raise Exception(f'qp_solver_cond_block_size = {opts.qp_solver_cond_block_size} should have length qp_solver_cond_N+1 = {opts.qp_solver_cond_N+1}.')
 
         if opts.nlp_solver_type == "DDP":
-            if opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != dims.N:
-                raise Exception(f'DDP solver only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N, got qp solver {opts.qp_solver} and qp_solver_cond_N {opts.qp_solver_cond_N}, N {dims.N}.')
+            if opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon:
+                raise Exception(f'DDP solver only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N, got qp solver {opts.qp_solver} and qp_solver_cond_N {opts.qp_solver_cond_N}, N {opts.N_horizon}.')
             if any([dims.nbu, dims.nbx, dims.ng, dims.nh, dims.nphi]):
-                raise Exception('DDP only supports initial state constraints, got path constraints.')
-            if  any([dims.ng_e, dims.nphi_e, dims.nh_e]):
+                raise Exception(f'DDP only supports initial state constraints, got path constraints. Dimensions: dims.nbu = {dims.nbu}, dims.nbx = {dims.nbx}, dims.ng = {dims.ng}, dims.nh = {dims.nh}, dims.nphi = {dims.nphi}')
+            if any([dims.ng_e, dims.nphi_e, dims.nh_e]):
                 raise Exception('DDP only supports initial state constraints, got terminal constraints.')
 
+        ddp_with_merit_or_funnel = opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' or (opts.nlp_solver_type == "DDP" and opts.globalization == 'MERIT_BACKTRACKING')
         # Set default parameters for globalization
-        if opts.alpha_min == None:
-            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
-                opts.alpha_min = 1e-17
+        if opts.globalization_alpha_min is None:
+            if ddp_with_merit_or_funnel:
+                opts.globalization_alpha_min = 1e-17
             else:
-                opts.alpha_min = 0.05
+                opts.globalization_alpha_min = 0.05
 
-        if opts.alpha_reduction == None:
-            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
-                opts.alpha_reduction = 0.5
+        if opts.globalization_alpha_reduction is None:
+            if ddp_with_merit_or_funnel:
+                opts.globalization_alpha_reduction = 0.5
             else:
-                opts.alpha_reduction = 0.7
+                opts.globalization_alpha_reduction = 0.7
 
-        if opts.eps_sufficient_descent == None:
-            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
-                opts.eps_sufficient_descent = 1e-6
+        if opts.globalization_eps_sufficient_descent is None:
+            if ddp_with_merit_or_funnel:
+                opts.globalization_eps_sufficient_descent = 1e-6
             else:
-                opts.eps_sufficient_descent = 1e-4
+                opts.globalization_eps_sufficient_descent = 1e-4
 
-        if opts.eval_residual_at_max_iter == None:
-            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
+        if opts.eval_residual_at_max_iter is None:
+            if ddp_with_merit_or_funnel:
                 opts.eval_residual_at_max_iter = True
             else:
                 opts.eval_residual_at_max_iter = False
 
-        if opts.full_step_dual == None:
-            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
-                opts.full_step_dual = 1
+        if opts.globalization_full_step_dual is None:
+            if ddp_with_merit_or_funnel:
+                opts.globalization_full_step_dual = 1
             else:
-                opts.full_step_dual = 0
+                opts.globalization_full_step_dual = 0
 
         # sanity check for Funnel globalization and SQP
         if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' and opts.nlp_solver_type != 'SQP':
@@ -857,7 +912,7 @@ class AcadosOcp:
 
         # termination
         if opts.nlp_solver_tol_min_step_norm == None:
-            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
+            if ddp_with_merit_or_funnel:
                 opts.nlp_solver_tol_min_step_norm = 1e-12
             else:
                 opts.nlp_solver_tol_min_step_norm = 0.0
@@ -912,12 +967,16 @@ class AcadosOcp:
             template_list.append(('Makefile.in', 'Makefile'))
 
         # sim
-        template_list.append(('acados_sim_solver.in.c', f'acados_sim_solver_{name}.c'))
-        template_list.append(('acados_sim_solver.in.h', f'acados_sim_solver_{name}.h'))
-        template_list.append(('main_sim.in.c', f'main_sim_{name}.c'))
+        if self.solver_options.integrator_type != 'DISCRETE':
+            template_list.append(('acados_sim_solver.in.c', f'acados_sim_solver_{name}.c'))
+            template_list.append(('acados_sim_solver.in.h', f'acados_sim_solver_{name}.h'))
+            template_list.append(('main_sim.in.c', f'main_sim_{name}.c'))
 
         # model
         template_list += self._get_external_function_header_templates()
+
+        if self.dims.np_global > 0:
+            template_list.append(('p_global_precompute_fun.in.h', f'{self.name}_p_global_precompute_fun.h'))
 
         # Simulink
         if self.simulink_opts is not None:
@@ -933,10 +992,10 @@ class AcadosOcp:
         return template_list
 
 
-    def render_templates(self, json_file: str, cmake_builder=None):
+    def render_templates(self, cmake_builder=None):
 
         # check json file
-        json_path = os.path.abspath(json_file)
+        json_path = os.path.abspath(self.json_file)
         if not os.path.exists(json_path):
             raise Exception(f'Path "{json_path}" not found!')
 
@@ -955,22 +1014,38 @@ class AcadosOcp:
         return
 
 
-    def dump_to_json(self, json_file: str) -> None:
-        with open(json_file, 'w') as f:
+    def dump_to_json(self) -> None:
+        with open(self.json_file, 'w') as f:
             json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         return
 
+    def generate_external_functions(self, context: Optional[GenerateContext] = None) -> GenerateContext:
 
-    def generate_external_functions(self):
+        if context is None:
+            # options for code generation
+            code_gen_opts = dict()
+            code_gen_opts['generate_hess'] = self.solver_options.hessian_approx == 'EXACT'
+            code_gen_opts['with_solution_sens_wrt_params'] = self.solver_options.with_solution_sens_wrt_params
+            code_gen_opts['with_value_sens_wrt_params'] = self.solver_options.with_value_sens_wrt_params
+            code_gen_opts['code_export_directory'] = self.code_export_directory
+
+            context = GenerateContext(self.model.p_global, self.name, code_gen_opts)
+
+        context = self._setup_code_generation_context(context)
+        context.finalize()
+        self.__external_function_files_model = context.get_external_function_file_list(ocp_specific=False)
+        self.__external_function_files_ocp = context.get_external_function_file_list(ocp_specific=True)
+        self.dims.n_global_data = context.get_n_global_data()
+
+        return context
+
+
+    def _setup_code_generation_context(self, context: GenerateContext) -> GenerateContext:
+
         model = self.model
         constraints = self.constraints
 
-        # options for code generation
-        code_gen_opts = dict()
-        code_gen_opts['generate_hess'] = self.solver_options.hessian_approx == 'EXACT'
-        code_gen_opts['with_solution_sens_wrt_params'] = self.solver_options.with_solution_sens_wrt_params
-        code_gen_opts['with_value_sens_wrt_params'] = self.solver_options.with_value_sens_wrt_params
-        code_gen_opts['code_export_directory'] = self.code_export_directory
+        code_gen_opts = context.opts
 
         # create code_export_dir, model_dir
         model_dir = os.path.join(code_gen_opts['code_export_directory'], model.name + '_model')
@@ -980,37 +1055,41 @@ class AcadosOcp:
         check_casadi_version()
         if self.model.dyn_ext_fun_type == 'casadi':
             if self.solver_options.integrator_type == 'ERK':
-                generate_c_code_explicit_ode(model, code_gen_opts)
+                generate_c_code_explicit_ode(context, model, model_dir)
             elif self.solver_options.integrator_type == 'IRK':
-                generate_c_code_implicit_ode(model, code_gen_opts)
+                generate_c_code_implicit_ode(context, model, model_dir)
             elif self.solver_options.integrator_type == 'LIFTED_IRK':
                 if model.t != []:
                     raise NotImplementedError("LIFTED_IRK with time-varying dynamics not implemented yet.")
-                generate_c_code_implicit_ode(model, code_gen_opts)
+                generate_c_code_implicit_ode(context, model, model_dir)
             elif self.solver_options.integrator_type == 'GNSF':
-                generate_c_code_gnsf(model, code_gen_opts)
+                generate_c_code_gnsf(context, model, model_dir)
             elif self.solver_options.integrator_type == 'DISCRETE':
-                generate_c_code_discrete_dynamics(model, code_gen_opts)
+                generate_c_code_discrete_dynamics(context, model, model_dir)
             else:
                 raise Exception("ocp_generate_external_functions: unknown integrator type.")
         else:
-            target_location = os.path.join(code_gen_opts['code_export_directory'], model_dir, model.dyn_generic_source)
+            target_dir = os.path.join(code_gen_opts['code_export_directory'], model_dir)
+            target_location = os.path.join(target_dir, model.dyn_generic_source)
             shutil.copyfile(model.dyn_generic_source, target_location)
+            context.add_external_function_file(model.dyn_generic_source, target_dir)
 
         stage_types = ['initial', 'path', 'terminal']
 
         for attr_nh, attr_nphi, stage_type in zip(['nh_0', 'nh', 'nh_e'], ['nphi_0', 'nphi', 'nphi_e'], stage_types):
             if getattr(self.dims, attr_nh) > 0 or getattr(self.dims, attr_nphi) > 0:
-                generate_c_code_constraint(model, constraints, stage_type, code_gen_opts)
+                generate_c_code_constraint(context, model, constraints, stage_type)
 
         for attr, stage_type in zip(['cost_type_0', 'cost_type', 'cost_type_e'], stage_types):
             if getattr(self.cost, attr) == 'NONLINEAR_LS':
-                generate_c_code_nls_cost(model, stage_type, code_gen_opts)
+                generate_c_code_nls_cost(context, model, stage_type)
             elif getattr(self.cost, attr) == 'CONVEX_OVER_NONLINEAR':
-                generate_c_code_conl_cost(model, stage_type, code_gen_opts)
+                generate_c_code_conl_cost(context, model, stage_type)
             elif getattr(self.cost, attr) == 'EXTERNAL':
-                generate_c_code_external_cost(model, stage_type, code_gen_opts)
+                generate_c_code_external_cost(context, model, stage_type)
+            # TODO: generic
 
+        return context
 
     def remove_x0_elimination(self) -> None:
         self.constraints.idxbxe_0 = np.zeros((0,))
@@ -1099,6 +1178,104 @@ class AcadosOcp:
             raise Exception(f"Initial cost type must be NONLINEAR_LS, got cost_type_e {self.cost.cost_type_e}.")
         return
 
+
+    def translate_cost_to_external_cost(self, parametric_yref: bool = False):
+        """
+        Translates cost to EXTERNAL cost.
+        parametric_yref: If true, augment with additional parameters for yref_0, yref, yref_e.
+        """
+        # make yref a parameter
+        yref_0 = self.cost.yref_0
+        yref = self.cost.yref
+        yref_e = self.cost.yref_e
+
+        if parametric_yref:
+            symbol = self.model.get_casadi_symbol()
+            if self.cost.yref_0 is not None:
+                param_yref_0 = symbol('param_yref_0', len(self.cost.yref_0))
+                self.model.p = ca.vertcat(self.model.p, param_yref_0)
+                self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref_0))
+                yref_0 = param_yref_0
+
+            if self.cost.yref is not None:
+                param_yref = symbol('param_yref', len(self.cost.yref))
+                self.model.p = ca.vertcat(self.model.p, param_yref)
+                self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref))
+                yref = param_yref
+
+            if self.cost.yref_e is not None:
+                param_yref_e = symbol('param_yref_e', len(self.cost.yref_e))
+                self.model.p = ca.vertcat(self.model.p, param_yref_e)
+                self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref_e))
+                yref_e = param_yref_e
+
+        # initial stage
+        if self.cost.cost_type_0 == "LINEAR_LS":
+            self.model.cost_expr_ext_cost_0 = \
+                self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
+                                                          self.cost.Vx_0, self.cost.Vu_0, self.cost.Vz_0,
+                                                          yref_0, self.cost.W_0)
+        elif self.cost.cost_type_0 == "NONLINEAR_LS":
+            self.model.cost_expr_ext_cost_0 = \
+                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_0, yref_0, self.cost.W_0)
+
+        elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
+            self.model.cost_expr_ext_cost_0 = \
+                self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_0, self.model.cost_psi_expr_0,
+                                                            self.model.cost_y_expr_0, yref_0)
+        # intermediate stages
+        if self.cost.cost_type == "LINEAR_LS":
+            self.model.cost_expr_ext_cost = \
+                self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
+                                                          self.cost.Vx, self.cost.Vu, self.cost.Vz,
+                                                          yref, self.cost.W)
+        elif self.cost.cost_type == "NONLINEAR_LS":
+                self.model.cost_expr_ext_cost = \
+                    self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr, yref, self.cost.W)
+        elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+            self.model.cost_expr_ext_cost = \
+                self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr, self.model.cost_psi_expr,
+                                                            self.model.cost_y_expr, yref)
+        # terminal stage
+        if self.cost.cost_type_e == "LINEAR_LS":
+            self.model.cost_expr_ext_cost_e = \
+                self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
+                                                          self.cost.Vx_e, None, None,
+                                                          yref_e, self.cost.W_e)
+        elif self.cost.cost_type_e == "NONLINEAR_LS":
+            self.model.cost_expr_ext_cost_e = \
+                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_e, yref_e, self.cost.W_e)
+        elif self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
+            self.model.cost_expr_ext_cost_e = \
+                self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_e, self.model.cost_psi_expr_e,
+                                                            self.model.cost_y_expr_e, yref_e)
+        if self.cost.cost_type_0 is not None:
+            self.cost.cost_type_0 = 'EXTERNAL'
+        self.cost.cost_type = 'EXTERNAL'
+        self.cost.cost_type_e = 'EXTERNAL'
+
+
+    @staticmethod
+    def __translate_ls_cost_to_external_cost(x, u, z, Vx, Vu, Vz, yref, W):
+        res = 0
+        if Vx is not None:
+            res += Vx @ x
+        if Vu is not None and casadi_length(u) > 0:
+            res += Vu @ u
+        if Vz is not None and casadi_length(z) > 0:
+            res += Vz @ z
+        res -= yref
+
+        return 0.5 * (res.T @ W @ res)
+
+    @staticmethod
+    def __translate_nls_cost_to_external_cost(y_expr, yref, W):
+        res = y_expr - yref
+        return 0.5 * (res.T @ W @ res)
+
+    @staticmethod
+    def __translate_conl_cost_to_external_cost(r, psi, y_expr, yref):
+        return ca.substitute(psi, r, y_expr - yref)
 
     def formulate_constraint_as_L2_penalty(
         self,
@@ -1408,4 +1585,5 @@ class AcadosOcp:
         self.model.t0 = ca.SX.sym("t0")
         self.model.p = ca.vertcat(self.model.p, self.model.t0)
         self.parameter_values = np.append(self.parameter_values, [0.0])
+        self.p_global_values = np.append(self.p_global_values, [0.0])
         return

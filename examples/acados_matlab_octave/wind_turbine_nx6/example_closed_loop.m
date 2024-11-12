@@ -27,9 +27,16 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
 
-%% test of native matlab interface
+
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
+
+
 clear all
 
 
@@ -47,7 +54,6 @@ compute_setup;
 
 %% arguments
 compile_interface = 'auto';
-codgen_model = 'true';
 % simulation
 sim_method = 'irk';
 sim_sens_forw = 'false';
@@ -259,15 +265,9 @@ ocp_model.set('constr_Jsh_e', Jsh_e);
 
 ocp_model.set('constr_x0', x0_ref);
 
-
-ocp_model.model_struct
-
-
-
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
-ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme_N', ocp_N);
 ocp_opts.set('nlp_solver', ocp_nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', ocp_nlp_solver_exact_hessian);
@@ -291,13 +291,9 @@ ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
 
-ocp_opts.opts_struct
-
-
-
 %% acados ocp
 % create ocp
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 %% acados sim model
 sim_model = acados_sim_model();
@@ -327,20 +323,15 @@ end
 %% acados sim opts
 sim_opts = acados_sim_opts();
 sim_opts.set('compile_interface', compile_interface);
-sim_opts.set('codgen_model', codgen_model);
 sim_opts.set('num_stages', sim_num_stages);
 sim_opts.set('num_steps', sim_num_steps);
 sim_opts.set('method', sim_method);
 sim_opts.set('sens_forw', sim_sens_forw);
 ocp_opts.set('regularize_method', 'no_regularize');
 
-%sim_opts.opts_struct
-
-
-
 %% acados sim
 % create sim
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 
 %% closed loop simulation
@@ -367,68 +358,68 @@ for ii=1:n_sim
     tic
 
     % set x0
-    ocp.set('constr_x0', x_sim(:,ii));
+    ocp_solver.set('constr_x0', x_sim(:,ii));
     % set parameter
     for jj=0:ocp_N-1
-        ocp.set('p', wind0_ref(:,ii+jj), jj);
+        ocp_solver.set('p', wind0_ref(:,ii+jj), jj);
     end
 
     % set reference (different at each stage)
     for jj=0:ocp_N-1
-        ocp.set('cost_y_ref', y_ref(:,ii+jj), jj);
+        ocp_solver.set('cost_y_ref', y_ref(:,ii+jj), jj);
     end
-    ocp.set('cost_y_ref_e', y_ref(1:ny_e,ii+ocp_N));
+    ocp_solver.set('cost_y_ref_e', y_ref(1:ny_e,ii+ocp_N));
 
     % set trajectory initialization (if not, set internally using previous solution)
-    ocp.set('init_x', x_traj_init);
-    ocp.set('init_u', u_traj_init);
-    ocp.set('init_pi', pi_traj_init);
+    ocp_solver.set('init_x', x_traj_init);
+    ocp_solver.set('init_u', u_traj_init);
+    ocp_solver.set('init_pi', pi_traj_init);
 
     % solve
-    ocp.solve();
+    ocp_solver.solve();
 
     % get solution
-    x = ocp.get('x');
-    u = ocp.get('u');
-    pi = ocp.get('pi');
+    x = ocp_solver.get('x');
+    u = ocp_solver.get('u');
+    pi = ocp_solver.get('pi');
 
-%ocp.print('stat');
+%ocp_solver.print('stat');
 %return
     % store first input
-    u_sim(:,ii) = ocp.get('u', 0);
+    u_sim(:,ii) = ocp_solver.get('u', 0);
 
     % set initial state of sim
-    sim.set('x', x_sim(:,ii));
+    sim_solver.set('x', x_sim(:,ii));
     % set input in sim
-    sim.set('u', u_sim(:,ii));
+    sim_solver.set('u', u_sim(:,ii));
     % set parameter
-    sim.set('p', wind0_ref(:,ii));
+    sim_solver.set('p', wind0_ref(:,ii));
 
     % simulate state
-    sim.solve();
+    sim_solver.solve();
 
     % get new state
-    x_sim(:,ii+1) = sim.get('xn');
+    x_sim(:,ii+1) = sim_solver.get('xn');
 %    x_sim(:,ii+1) = x(:,2);
 
-%    (x(:,2) - sim.get('xn'))'
+%    (x(:,2) - sim_solver.get('xn'))'
 
     % simulate to initialize last stage
     % set initial state of sim
-%    sim.set('x', x(:,ocp_N+1));
+%    sim_solver.set('x', x(:,ocp_N+1));
     % set input in sim
-%    sim.set('u', zeros(nu, 1));
-%    sim.set('u', u(:,ocp_N));
+%    sim_solver.set('u', zeros(nu, 1));
+%    sim_solver.set('u', u(:,ocp_N));
     % set parameter
-%    sim.set('p', wind0_ref(:,ii+ocp_N));
+%    sim_solver.set('p', wind0_ref(:,ii+ocp_N));
 
     % simulate state
-%    sim.solve();
+%    sim_solver.solve();
 
     % shift trajectory for initialization
 %    x_traj_init = [x(:,2:ocp_N+1), zeros(nx, 1)];
     x_traj_init = [x(:,2:ocp_N+1), x(:,ocp_N+1)];
-%    x_traj_init = [x(:,2:ocp_N+1), sim.get('xn')];
+%    x_traj_init = [x(:,2:ocp_N+1), sim_solver.get('xn')];
 %    u_traj_init = [u(:,2:ocp_N), zeros(nu, 1)];
     u_traj_init = [u(:,2:ocp_N), u(:,ocp_N)];
     pi_traj_init = [pi(:,2:ocp_N), pi(:,ocp_N)];
@@ -440,11 +431,11 @@ for ii=1:n_sim
 
     electrical_power = 0.944*97/100*x(1,1)*x(6,1);
 
-    status = ocp.get('status');
-    sqp_iter = ocp.get('sqp_iter');
-    time_tot = ocp.get('time_tot');
-    time_lin = ocp.get('time_lin');
-    time_qp_sol = ocp.get('time_qp_sol');
+    status = ocp_solver.get('status');
+    sqp_iter = ocp_solver.get('sqp_iter');
+    time_tot = ocp_solver.get('time_tot');
+    time_lin = ocp_solver.get('time_lin');
+    time_qp_sol = ocp_solver.get('time_qp_sol');
 
     sqp_iter_sim(ii) = sqp_iter;
 
@@ -452,7 +443,7 @@ for ii=1:n_sim
              status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, electrical_power);
 
     if 0
-        ocp.print('stat')
+        ocp_solver.print('stat')
     end
 
 end

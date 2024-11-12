@@ -110,7 +110,6 @@ ocp_model.set('constr_lh', -U_max);
 ocp_model.set('constr_uh', U_max);
 
 ocp_model.set('constr_x0', x0);
-% ... see ocp_model.model_struct to see what other fields can be set
 
 %% acados ocp set opts
 ocp_opts = acados_ocp_opts();
@@ -122,36 +121,34 @@ ocp_opts.set('qp_solver_iter_max', 2000);
 ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
 ocp_opts.set('ext_fun_compile_flags', '');
 
-% ... see ocp_opts.opts_struct to see what other fields can be set
-
 %% create ocp solver
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 x_traj_init = zeros(nx, N+1);
 u_traj_init = zeros(nu, N);
 
 %% call ocp solver
 % update initial state
-ocp.set('constr_x0', x0);
+ocp_solver.set('constr_x0', x0);
 
 % set trajectory initialization
-ocp.set('init_x', x_traj_init);
-ocp.set('init_u', u_traj_init);
-ocp.set('init_pi', zeros(nx, N))
+ocp_solver.set('init_x', x_traj_init);
+ocp_solver.set('init_u', u_traj_init);
+ocp_solver.set('init_pi', zeros(nx, N))
 
 % change values for specific shooting node using:
-%   ocp.set('field', value, optional: stage_index)
-ocp.set('constr_lbx', x0, 0)
+%   ocp_solver.set('field', value, optional: stage_index)
+ocp_solver.set('constr_lbx', x0, 0)
 
 % solve
-ocp.solve();
+ocp_solver.solve();
 
 % get solution
-utraj = ocp.get('u');
-xtraj = ocp.get('x');
+utraj = ocp_solver.get('u');
+xtraj = ocp_solver.get('x');
 
-status = ocp.get('status'); % 0 - success
-ocp.print('stat')
+status = ocp_solver.get('status'); % 0 - success
+ocp_solver.print('stat')
 
 if status == 0
     disp('test_ocp_qpDUNES: success!');

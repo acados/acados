@@ -70,7 +70,7 @@ typedef struct
     void (*opts_update)(void *config, void *dims, void *opts);
     void (*opts_set)(void *config, void *opts, const char *field, void *value);
     acados_size_t (*memory_calculate_size)(void *config, void *dims, void *opts);
-	double *(*memory_get_fun_ptr)(void *memory);
+    double *(*memory_get_fun_ptr)(void *memory);
     struct blasfeo_dvec *(*memory_get_grad_ptr)(void *memory);
     struct blasfeo_dvec *(*model_get_y_ref_ptr)(void *memory);
     struct blasfeo_dmat *(*memory_get_W_chol_ptr)(void *memory_);
@@ -81,9 +81,11 @@ typedef struct
     void (*memory_set_dzdux_tran_ptr)(struct blasfeo_dmat *dzdux, void *memory);
     void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory);
     void (*memory_set_Z_ptr)(struct blasfeo_dvec *Z, void *memory);
-    void (*memory_get_params_grad)(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
+    void (*memory_set_jac_lag_stat_p_global_ptr)(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
+    acados_size_t (*get_external_fun_workspace_requirement)(void *config, void *dims, void *opts_, void *in);
+    void (*set_external_fun_workspaces)(void *config, void *dims, void *opts_, void *in, void *work_);
     void (*initialize)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
 
     // computes the function value, gradient and hessian (approximation) of the cost function
@@ -94,9 +96,10 @@ typedef struct
     void (*compute_jac_p)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*eval_grad_p)(void *config_, void *dim, void* model, void *opts, void *mem, void *work, struct blasfeo_dvec *out);
     void (*compute_gradient)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
-    void (*config_initialize_default)(void *config);
+    void (*config_initialize_default)(void *config, int stage);
     void (*precompute)(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_);
-
+    // stage information
+    int stage;
 } ocp_nlp_cost_config;
 
 //

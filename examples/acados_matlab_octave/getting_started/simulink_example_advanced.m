@@ -26,10 +26,7 @@ simulink_opts.samplingtime = '-1';
     % '-1' - inherit sampling time from other parts of simulink model
 
 %% Run minimal example
-%
 minimal_example_ocp;
-% extensive_example_ocp;
-
 
 %% Compile Sfunctions
 cd c_generated_code

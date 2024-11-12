@@ -256,7 +256,7 @@ def run_simulation(qp_solver="FULL_CONDENSING_HPIPM", show_plots=False, verbose=
     Tf = N * Ts
 
     # set ocp_nlp_dimensions
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
     # NOTE: all dimensions but N are now detected by the interface.
 
     # set weighting matrices

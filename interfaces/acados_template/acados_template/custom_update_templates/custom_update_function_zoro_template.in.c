@@ -689,9 +689,9 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     for (int ii = 0; ii < N-1; ii++)
     {
         // get and pack: A, B
-        ocp_nlp_get_at_stage(nlp_config, nlp_dims, solver, ii, "A", custom_mem->d_A_mat);
+        ocp_nlp_get_at_stage(solver, ii, "A", custom_mem->d_A_mat);
         blasfeo_pack_dmat(nx, nx, custom_mem->d_A_mat, nx, &custom_mem->A_mat, 0, 0);
-        ocp_nlp_get_at_stage(nlp_config, nlp_dims, solver, ii, "B", custom_mem->d_B_mat);
+        ocp_nlp_get_at_stage(solver, ii, "B", custom_mem->d_B_mat);
         blasfeo_pack_dmat(nx, nu, custom_mem->d_B_mat, nx, &custom_mem->B_mat, 0, 0);
 
 {% if zoro_description.input_W_add_diag %}
@@ -780,8 +780,8 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
 {%- if zoro_description.nlh_t + zoro_description.nuh_t > 0 %}
         // nonlinear constraints: h
         // Get C_{k+1} and D_{k+1}
-        ocp_nlp_get_at_stage(solver->config, nlp_dims, solver, ii+1, "C", custom_mem->d_Cgh_mat);
-        ocp_nlp_get_at_stage(solver->config, nlp_dims, solver, ii+1, "D", custom_mem->d_Dgh_mat);
+        ocp_nlp_get_at_stage(solver, ii+1, "C", custom_mem->d_Cgh_mat);
+        ocp_nlp_get_at_stage(solver, ii+1, "D", custom_mem->d_Dgh_mat);
         // NOTE: the d_Cgh_mat is column-major, the first ng rows are the Jacobians of the linear constraints
         blasfeo_pack_dmat(nh, nx, custom_mem->d_Cgh_mat+ng, ng+nh, &custom_mem->Ch_mat, 0, 0);
         blasfeo_pack_dmat(nh, nu, custom_mem->d_Dgh_mat+ng, ng+nh, &custom_mem->Dh_mat, 0, 0);
@@ -822,9 +822,9 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
 
     // Last stage
     // get and pack: A, B
-    ocp_nlp_get_at_stage(nlp_config, nlp_dims, solver, N-1, "A", custom_mem->d_A_mat);
+    ocp_nlp_get_at_stage(solver, N-1, "A", custom_mem->d_A_mat);
     blasfeo_pack_dmat(nx, nx, custom_mem->d_A_mat, nx, &custom_mem->A_mat, 0, 0);
-    ocp_nlp_get_at_stage(nlp_config, nlp_dims, solver, N-1, "B", custom_mem->d_B_mat);
+    ocp_nlp_get_at_stage(solver, N-1, "B", custom_mem->d_B_mat);
     blasfeo_pack_dmat(nx, nu, custom_mem->d_B_mat, nx, &custom_mem->B_mat, 0, 0);
 
 {% if zoro_description.input_W_add_diag %}
@@ -890,7 +890,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
 {%- if zoro_description.nlh_e_t + zoro_description.nuh_e_t > 0 %}
     // nonlinear constraints: h
     // Get C_{k+1} and D_{k+1}
-    ocp_nlp_get_at_stage(solver->config, nlp_dims, solver, N, "C", custom_mem->d_Cgh_mat);
+    ocp_nlp_get_at_stage(solver, N, "C", custom_mem->d_Cgh_mat);
     // NOTE: the d_Cgh_mat is column-major, the first ng rows are the Jacobians of the linear constraints
     blasfeo_pack_dmat(nh, nx, custom_mem->d_Cgh_mat+ng, ng+nh, &custom_mem->Ch_mat, 0, 0);
 

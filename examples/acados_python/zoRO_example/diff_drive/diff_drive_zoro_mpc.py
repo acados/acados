@@ -46,7 +46,7 @@ class ZoroMPCSolver:
         self.ocp.model = self.model
 
         # set prediction horizon
-        self.ocp.dims.N = cfg.n_hrzn
+        self.ocp.solver_options.N_horizon = cfg.n_hrzn
         self.ocp.solver_options.tf = cfg.n_hrzn * cfg.delta_t
 
         # set stage cost = ||u(k)-u_r(k)||_R^2 + ||x(k)-x_r(k)||_Q^2

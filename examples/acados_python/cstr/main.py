@@ -78,9 +78,9 @@ def simulate(
                     controller.set_params_sparse(stage, np.array([1]), np.array([t]))
             else:
                 yref = np.concatenate((X_ref[i, :], U_ref[i, :]))
-                for stage in range(controller.acados_ocp.dims.N):
+                for stage in range(controller.acados_ocp.solver_options.N_horizon):
                     controller.set(stage, "yref", yref)
-                controller.set(controller.acados_ocp.dims.N, "yref", X_ref[i, :])
+                controller.set(controller.acados_ocp.solver_options.N_horizon, "yref", X_ref[i, :])
 
             # solve ocp
             U[i, :] = controller.solve_for_x0(xcurrent)

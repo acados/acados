@@ -33,11 +33,29 @@ function compile_ocp_shared_lib(export_dir)
     return_dir = pwd;
     cd(export_dir);
     if isunix
-        [ status, result ] = system('make shared_lib');
-        if status
-            cd(return_dir);
-            error('Building templated code as shared library failed.\nGot status %d, result: %s',...
-                  status, result);
+        %% old code for make
+        if ~is_octave()
+            % use Make build system
+            [ status, result ] = system('make ocp_shared_lib');
+            if status
+                cd(return_dir);
+                error('Building templated code as shared library failed.\nGot status %d, result: %s',...
+                    status, result);
+            end
+        else
+            % use CMake build system, has issues on Linux with Matlab, see https://github.com/acados/acados/issues/1209
+            [ status, result ] = system('cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_OCP_SOLVER_LIB=ON -S . -B .');
+            if status
+                cd(return_dir);
+                error('Generating buildsystem failed.\nGot status %d, result: %s',...
+                    status, result);
+            end
+            [ status, result ] = system('cmake --build . --config Release');
+            if status
+                cd(return_dir);
+                error('Building templated code as shared library failed.\nGot status %d, result: %s',...
+                    status, result);
+            end
         end
     else
         % check compiler

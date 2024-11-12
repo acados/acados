@@ -64,7 +64,7 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     ny_e = nx
     N = 20
 
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
 
     # set cost
     Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])

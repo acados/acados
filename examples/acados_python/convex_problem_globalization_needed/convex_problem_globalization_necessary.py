@@ -13,7 +13,8 @@ TOL = 1e-6
 
 def main():
     # run test cases
-    params = {'globalization': ['FIXED_STEP', 'FUNNEL_L1PEN_LINESEARCH', 'MERIT_BACKTRACKING']}
+    # params = {'globalization': ['FIXED_STEP', 'FUNNEL_L1PEN_LINESEARCH', 'MERIT_BACKTRACKING']}
+    params = {'globalization': ['FIXED_STEP']}#, 'FUNNEL_L1PEN_LINESEARCH', 'MERIT_BACKTRACKING']}
 
     keys, values = zip(*params.items())
     for combination in product(*values):
@@ -43,7 +44,7 @@ def solve_problem_with_setting(setting):
     # discretization
     Tf = 1
     N = 1
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
     ocp.solver_options.tf = Tf
 
     # cost

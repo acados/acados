@@ -31,41 +31,19 @@
 
 
 {%- if solver_options.hessian_approx %}
-	{%- set hessian_approx = solver_options.hessian_approx %}
+    {%- set hessian_approx = solver_options.hessian_approx %}
 {%- elif solver_options.sens_hess %}
-	{%- set hessian_approx = "EXACT" %}
+    {%- set hessian_approx = "EXACT" %}
 {%- else %}
-	{%- set hessian_approx = "GAUSS_NEWTON" %}
+    {%- set hessian_approx = "GAUSS_NEWTON" %}
 {%- endif %}
 
 SOURCES = [ 'acados_sim_solver_sfunction_{{ model.name }}.c ', ...
             'acados_sim_solver_{{ model.name }}.c ', ...
-            {%- if  solver_options.integrator_type == 'ERK' %}
-            '{{ model.name }}_model/{{ model.name }}_expl_ode_fun.c ',...
-            '{{ model.name }}_model/{{ model.name }}_expl_vde_forw.c ',...
-            '{{ model.name }}_model/{{ model.name }}_expl_vde_adj.c ',...
-                {%- if hessian_approx == 'EXACT' %}
-            '{{ model.name }}_model/{{ model.name }}_expl_ode_hess.c ',...
-                {%- endif %}
-            {%- elif solver_options.integrator_type == "IRK" %}
-            '{{ model.name }}_model/{{ model.name }}_impl_dae_fun.c ', ...
-            '{{ model.name }}_model/{{ model.name }}_impl_dae_fun_jac_x_xdot_z.c ', ...
-            '{{ model.name }}_model/{{ model.name }}_impl_dae_jac_x_xdot_u_z.c ', ...
-                {%- if hessian_approx == 'EXACT' %}
-            '{{ model.name }}_model/{{ model.name }}_impl_dae_hess.c ',...
-                {%- endif %}
-            {%- elif solver_options.integrator_type == "GNSF" %}
-                {%- if model.gnsf.purely_linear != 1 %}
-            '{{ model.name }}_model/{{ model.name }}_gnsf_phi_fun.c ',...
-            '{{ model.name }}_model/{{ model.name }}_gnsf_phi_fun_jac_y.c ',...
-            '{{ model.name }}_model/{{ model.name }}_gnsf_phi_jac_y_uhat.c ',...
-                {%- if model.gnsf.nontrivial_f_LO == 1 %}
-            '{{ model.name }}_model/{{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz.c ',...
-                {%- endif %}
-                {%- endif %}
-            '{{ model.name }}_model/{{ model.name }}_gnsf_get_matrices_fun.c ',...
-            {%- endif %}
-          ];
+{%- for filename in external_function_files_model %}
+            '{{ filename }} ', ...
+{%- endfor %}
+];
 
 INC_PATH = '{{ acados_include_path }}';
 
@@ -85,8 +63,9 @@ try
         CFLAGS, INCS, ' ', SOURCES, ' -L', LIB_PATH, ' ', LIBS ]);
 
 catch exception
-    disp('make_sfun failed with the following exception:')
+    disp('make_sfun_sim failed with the following exception:')
     disp(exception);
+    disp(exception.message);
     disp('Try adding -v to the mex command above to get more information.')
     keyboard
 end
@@ -136,10 +115,10 @@ fprintf(output_note)
 % ---
 % global sfun_sim_input_names sfun_sim_output_names
 % for i = 1:length(sfun_sim_input_names)
-% 	port_label('input', i, sfun_sim_input_names{i})
+%     port_label('input', i, sfun_sim_input_names{i})
 % end
 % for i = 1:length(sfun_sim_output_names)
-% 	port_label('output', i, sfun_sim_output_names{i})
+%     port_label('output', i, sfun_sim_output_names{i})
 % end
 % ---
 % It can be used by copying it in sfunction/Mask/Edit mask/Icon drawing commands

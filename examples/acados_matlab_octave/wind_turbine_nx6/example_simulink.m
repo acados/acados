@@ -5,11 +5,6 @@
 %
 example_closed_loop;
 
-
-%% Render templated Code for the model contained in ocp object
-%
-ocp.generate_c_code;
-
 %% Compile Sfunctions
 cd c_generated_code
 

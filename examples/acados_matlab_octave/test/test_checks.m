@@ -36,7 +36,6 @@ addpath('../linear_mass_spring_model/');
 
 %% arguments
 compile_interface = 'auto';
-codgen_model = 'true';
 method = 'irk';
 sens_forw = 'true';
 num_stages = 4;
@@ -78,7 +77,6 @@ end
 %% acados sim opts
 sim_opts = acados_sim_opts();
 sim_opts.set('compile_interface', compile_interface);
-sim_opts.set('codgen_model', codgen_model);
 sim_opts.set('num_stages', num_stages);
 sim_opts.set('num_steps', num_steps);
 sim_opts.set('method', method);
@@ -86,12 +84,12 @@ sim_opts.set('sens_forw', sens_forw);
 
 %% acados sim
 % create sim
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 % Note: this does not work with gnsf, because it needs to be available
 % in the precomputation phase
-% 	sim.set('T', Ts);
+% 	sim_solver.set('T', Ts);
 
 %% test check, this should fail!
 % set initial state
-sim.set('x', zeros(nx+1, 1));
+sim_solver.set('x', zeros(nx+1, 1));

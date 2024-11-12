@@ -116,11 +116,11 @@ ACADOS_SYMBOL_EXPORT void sim_opts_get(sim_config *config, void *opts, const cha
 
 /* solver */
 //
-ACADOS_SYMBOL_EXPORT acados_size_t sim_calculate_size(sim_config *config, void *dims, void *opts_);
+ACADOS_SYMBOL_EXPORT acados_size_t sim_calculate_size(sim_config *config, void *dims, void *opts_, sim_in *in);
 //
-ACADOS_SYMBOL_EXPORT sim_solver *sim_assign(sim_config *config, void *dims, void *opts_, void *raw_memory);
+ACADOS_SYMBOL_EXPORT sim_solver *sim_assign(sim_config *config, void *dims, void *opts_, sim_in *in, void *raw_memory);
 //
-ACADOS_SYMBOL_EXPORT sim_solver *sim_solver_create(sim_config *config, void *dims, void *opts_);
+ACADOS_SYMBOL_EXPORT sim_solver *sim_solver_create(sim_config *config, void *dims, void *opts_, sim_in *in);
 //
 ACADOS_SYMBOL_EXPORT void sim_solver_destroy(void *solver);
 //

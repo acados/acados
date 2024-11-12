@@ -73,7 +73,7 @@ def setup_acados_ocp_solver(
     nu = u.shape[0]
 
     # number of shooting intervals
-    ocp.dims.N = mpc_params.N
+    ocp.solver_options.N_horizon = mpc_params.N
 
     # set prediction horizon
     ocp.solver_options.tf = mpc_params.Tf

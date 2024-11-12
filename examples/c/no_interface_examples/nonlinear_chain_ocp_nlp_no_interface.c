@@ -1228,29 +1228,29 @@ int main() {
     for (int ii = 0; ii <= NN; ii++)
     {
 		// linear ls
-		ocp_nlp_cost_ls_config_initialize_default(config->cost[ii]);
+		ocp_nlp_cost_ls_config_initialize_default(config->cost[ii], ii);
     }
 #elif COST==1
     for (int ii = 0; ii <= NN; ii++)
     {
 		// nonlinear ls
-		ocp_nlp_cost_nls_config_initialize_default(config->cost[ii]);
+		ocp_nlp_cost_nls_config_initialize_default(config->cost[ii], ii);
     }
 #else
     for (int ii = 0; ii < NN; ii++)
     {
 		// external cost
-		ocp_nlp_cost_external_config_initialize_default(config->cost[ii]);
+		ocp_nlp_cost_external_config_initialize_default(config->cost[ii], ii);
     }
 	// linear ls
-	ocp_nlp_cost_ls_config_initialize_default(config->cost[NN]);
+	ocp_nlp_cost_ls_config_initialize_default(config->cost[NN], NN);
 #endif
 
 #if DYNAMICS==0
 	// dynamics: ERK
     for (int ii = 0; ii < NN; ii++)
     {
-		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
+		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii], ii);
 		sim_erk_config_initialize_default(config->dynamics[ii]->sim_solver);
     }
 
@@ -1258,36 +1258,38 @@ int main() {
 	// dynamics: lifted IRK
     for (int ii = 0; ii < NN; ii++)
     {
-		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
+		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii], ii);
 		sim_lifted_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
     }
 #elif DYNAMICS==2
 	// dynamics: IRK
     for (int ii = 0; ii < NN; ii++)
     {
-		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
+		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii], ii);
 		sim_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
     }
 #elif DYNAMICS==3
 	// dynamics: discrete model
     for (int ii = 0; ii < NN; ii++)
     {
-		ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[ii]);
+		ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[ii], ii);
     }
 #elif DYNAMICS==4
 	// dynamics: lifted IRK
     for (int ii = 0; ii < NN; ii++)
     {
-		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
+		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii], ii);
 		sim_lifted_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
     }
 #endif
 
-	// constraitns
+	// constraints
     for (int ii = 0; ii <= NN; ii++)
     {
-		ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[ii]);
+		ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[ii], ii);
     }
+
+	ocp_nlp_globalization_fixed_step_config_initialize_default(config->globalization);
 
     /************************************************
     * ocp_nlp_dims
@@ -1931,16 +1933,16 @@ int main() {
     * sqp memory
     ************************************************/
 
-	tmp_size = ocp_nlp_sqp_memory_calculate_size(config, dims, nlp_opts);
+	tmp_size = ocp_nlp_sqp_memory_calculate_size(config, dims, nlp_opts, nlp_in);
 	void *nlp_mem_mem = malloc(tmp_size);
-	ocp_nlp_sqp_memory *nlp_mem = ocp_nlp_sqp_memory_assign(config, dims, nlp_opts, nlp_mem_mem);
+	ocp_nlp_sqp_memory *nlp_mem = ocp_nlp_sqp_memory_assign(config, dims, nlp_opts, nlp_in, nlp_mem_mem);
 
 
     /************************************************
     * sqp workspace
     ************************************************/
 
-    int workspace_size = ocp_nlp_sqp_workspace_calculate_size(config, dims, nlp_opts);
+    int workspace_size = ocp_nlp_sqp_workspace_calculate_size(config, dims, nlp_opts, nlp_in);
     void *nlp_work = acados_malloc(workspace_size, 1);
 
     /************************************************

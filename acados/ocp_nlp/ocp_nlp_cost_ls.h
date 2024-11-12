@@ -170,7 +170,7 @@ typedef struct
     struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
     struct blasfeo_dmat *RSQrq;         ///< pointer to RSQrq in qp_in
     struct blasfeo_dvec *Z;             ///< pointer to Z in qp_in
-	double fun;                         ///< value of the cost function
+    double fun;                         ///< value of the cost function
 } ocp_nlp_cost_ls_memory;
 
 //
@@ -213,6 +213,10 @@ typedef struct
 
 //
 acados_size_t ocp_nlp_cost_ls_workspace_calculate_size(void *config, void *dims, void *opts);
+//
+size_t ocp_nlp_cost_ls_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_);
+//
+void ocp_nlp_cost_ls_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_);
 
 
 
@@ -224,7 +228,7 @@ acados_size_t ocp_nlp_cost_ls_workspace_calculate_size(void *config, void *dims,
 // computations that are done once when solver is created
 void ocp_nlp_cost_ls_precompute(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_);
 //
-void ocp_nlp_cost_ls_config_initialize_default(void *config);
+void ocp_nlp_cost_ls_config_initialize_default(void *config, int stage);
 //
 void ocp_nlp_cost_ls_initialize(void *config_, void *dims, void *model_, void *opts_,
                                 void *mem_, void *work_);

@@ -1,0 +1,69 @@
+name: Test build with EXT_DEP=OFF
+
+on:
+  push:
+    branches-ignore:
+      - 'doc*'
+      - 'wip*'
+  pull_request:
+    branches:
+      - '*'
+
+env:
+  BUILD_TYPE: Debug
+  ACADOS_UNIT_TESTS: OFF
+  ACADOS_PYTHON: OFF
+  ACADOS_OCTAVE: OFF
+  ACADOS_WITH_OSQP: ON
+  ACADOS_WITH_QPOASES: ON
+  ACADOS_WITH_DAQP: ON
+  ACADOS_WITH_QPDUNES: ON
+  ACADOS_ON_CI: ON
+  ACADOS_WITH_OPENMP: ON
+
+jobs:
+  ext_dep_off_test:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Create Build Environment
+      working-directory: ${{runner.workspace}}
+      run: cmake -E make_directory ${{runner.workspace}}/build
+
+    - name: Install Eigen (C test dependency)
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      # TODO: cache
+      run: ./.github/linux/install_eigen.sh
+
+    - name: Configure CMake
+      shell: bash
+      working-directory: ${{runner.workspace}}/build
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=$ACADOS_PYTHON -DACADOS_UNIT_TESTS=$ACADOS_UNIT_TESTS -DACADOS_OCTAVE=$ACADOS_OCTAVE -DLA=REFERENCE -DACADOS_WITH_OPENMP=$ACADOS_WITH_OPENMP -DEXT_DEP=OFF -DBLASFEO_EXAMPLES=OFF
+
+    - name: Build & Install
+      working-directory: ${{runner.workspace}}/build
+      shell: bash
+      run: |
+        cmake --build . --config $BUILD_TYPE
+        make install -j4
+
+    - name: Export Paths Lib
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: |
+        echo "ACADOS_SOURCE_DIR=$(pwd)" >> $GITHUB_ENV
+        echo "ACADOS_INSTALL_DIR=$(pwd)" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib" >> $GITHUB_ENV
+
+    - name: Run example
+      working-directory: ${{runner.workspace}}/acados/examples/c_ext_dep_off/pendulum
+      shell: bash
+      run: |
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+        make example
+        ./main_pendulum_ode

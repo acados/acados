@@ -577,18 +577,18 @@ void ocp_nlp_dynamics_cont_memory_get(void *config_, void *dims_, void *mem_, co
 }
 
 
-void ocp_nlp_dynamics_cont_memory_get_params_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset)
+void ocp_nlp_dynamics_cont_memory_set_dyn_jac_p_global_ptr(struct blasfeo_dmat *dyn_jac_p_global, void *memory_)
 {
-    printf("\nerror: ocp_nlp_dynamics_cont_memory_params_grad: not implemented\n");
-    exit(1);
+    // ocp_nlp_dynamics_cont_memory *memory = memory_;
+    // memory->dyn_jac_p_global = dyn_jac_p_global;
 }
 
-
-void ocp_nlp_dynamics_cont_memory_get_params_lag_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset)
+void ocp_nlp_dynamics_cont_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory_)
 {
-    printf("\nerror: ocp_nlp_dynamics_cont_memory_params_lag_grad: not implemented\n");
-    exit(1);
+    // ocp_nlp_dynamics_cont_memory *memory = memory_;
+    // memory->jac_lag_stat_p_global = jac_lag_stat_p_global;
 }
+
 
 
 /************************************************
@@ -1079,7 +1079,29 @@ void ocp_nlp_dynamics_cont_compute_adj_p(void* config_, void *dims_, void *model
 }
 
 
-void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
+size_t ocp_nlp_dynamics_cont_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_)
+{
+    ocp_nlp_dynamics_cont_model *model = model_;
+    ocp_nlp_dynamics_config *config = config_;
+    ocp_nlp_dynamics_cont_opts *opts = opts_;
+    ocp_nlp_dynamics_cont_dims *dims = dims_;
+
+    return config->sim_solver->get_external_fun_workspace_requirement(config->sim_solver, dims->sim, opts->sim_solver, model->sim_model);
+}
+
+
+void ocp_nlp_dynamics_cont_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_)
+{
+    ocp_nlp_dynamics_cont_model *model = model_;
+    ocp_nlp_dynamics_config *config = config_;
+    ocp_nlp_dynamics_cont_opts *opts = opts_;
+    ocp_nlp_dynamics_cont_dims *dims = dims_;
+
+    config->sim_solver->set_external_fun_workspaces(config->sim_solver, dims->sim, opts->sim_solver, model->sim_model, workspace_);
+}
+
+
+void ocp_nlp_dynamics_cont_config_initialize_default(void *config_, int stage)
 {
     ocp_nlp_dynamics_config *config = config_;
 
@@ -1109,10 +1131,12 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->memory_set_dzduxt_ptr = &ocp_nlp_dynamics_cont_memory_set_dzduxt_ptr;
     config->memory_set_sim_guess_ptr = &ocp_nlp_dynamics_cont_memory_set_sim_guess_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_dynamics_cont_memory_set_z_alg_ptr;
+    config->memory_set_jac_lag_stat_p_global_ptr = &ocp_nlp_dynamics_cont_memory_set_jac_lag_stat_p_global_ptr;
+    config->memory_set_dyn_jac_p_global_ptr = &ocp_nlp_dynamics_cont_memory_set_dyn_jac_p_global_ptr;
     config->memory_get = &ocp_nlp_dynamics_cont_memory_get;
-    config->memory_get_params_grad = &ocp_nlp_dynamics_cont_memory_get_params_grad;
-    config->memory_get_params_lag_grad = &ocp_nlp_dynamics_cont_memory_get_params_lag_grad;
     config->workspace_calculate_size = &ocp_nlp_dynamics_cont_workspace_calculate_size;
+    config->get_external_fun_workspace_requirement = &ocp_nlp_dynamics_cont_get_external_fun_workspace_requirement;
+    config->set_external_fun_workspaces = &ocp_nlp_dynamics_cont_set_external_fun_workspaces;
     config->initialize = &ocp_nlp_dynamics_cont_initialize;
     config->update_qp_matrices = &ocp_nlp_dynamics_cont_update_qp_matrices;
     config->compute_fun = &ocp_nlp_dynamics_cont_compute_fun;
@@ -1121,6 +1145,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->precompute = &ocp_nlp_dynamics_cont_precompute;
     config->config_initialize_default = &ocp_nlp_dynamics_cont_config_initialize_default;
     config->compute_jac_hess_p = &ocp_nlp_dynamics_cont_compute_jac_hess_p;
+    config->stage = stage;
 
     return;
 }

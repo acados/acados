@@ -40,6 +40,7 @@
 #define {{ model.name | upper }}_NZ     {{ dims.nz }}
 #define {{ model.name | upper }}_NU     {{ dims.nu }}
 #define {{ model.name | upper }}_NP     {{ dims.np }}
+#define {{ model.name | upper }}_NP_GLOBAL     {{ dims.np_global }}
 #define {{ model.name | upper }}_NBX    {{ dims.nbx }}
 #define {{ model.name | upper }}_NBX0   {{ dims.nbx_0 }}
 #define {{ model.name | upper }}_NBU    {{ dims.nbu }}
@@ -63,7 +64,7 @@
 #define {{ model.name | upper }}_NY0    {{ dims.ny_0 }}
 #define {{ model.name | upper }}_NY     {{ dims.ny }}
 #define {{ model.name | upper }}_NYN    {{ dims.ny_e }}
-#define {{ model.name | upper }}_N      {{ dims.N }}
+#define {{ model.name | upper }}_N      {{ solver_options.N_horizon }}
 #define {{ model.name | upper }}_NH     {{ dims.nh }}
 #define {{ model.name | upper }}_NHN    {{ dims.nh_e }}
 #define {{ model.name | upper }}_NH0    {{ dims.nh_0 }}
@@ -99,12 +100,16 @@ typedef struct {{ model.name }}_solver_capsule
     unsigned int nlp_np;
 
     /* external functions */
+{% if dims.np_global > 0 %}
+    external_function_casadi p_global_precompute_fun;
+{%- endif %}
     // dynamics
 {% if solver_options.integrator_type == "ERK" %}
-    external_function_external_param_casadi *forw_vde_casadi;
+    external_function_external_param_casadi *expl_vde_forw;
     external_function_external_param_casadi *expl_ode_fun;
+    external_function_external_param_casadi *expl_vde_adj;
 {% if solver_options.hessian_approx == "EXACT" %}
-    external_function_external_param_casadi *hess_vde_casadi;
+    external_function_external_param_casadi *expl_ode_hess;
 {%- endif %}
 {% elif solver_options.integrator_type == "IRK" %}
     external_function_external_param_{{ model.dyn_ext_fun_type }} *impl_dae_fun;
@@ -141,7 +146,9 @@ typedef struct {{ model.name }}_solver_capsule
 {% if cost.cost_type == "NONLINEAR_LS" %}
     external_function_external_param_casadi *cost_y_fun;
     external_function_external_param_casadi *cost_y_fun_jac_ut_xt;
+    {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi *cost_y_hess;
+    {%- endif %}
 {% elif cost.cost_type == "CONVEX_OVER_NONLINEAR" %}
     external_function_external_param_casadi *conl_cost_fun;
     external_function_external_param_casadi *conl_cost_fun_jac_hess;
@@ -160,7 +167,9 @@ typedef struct {{ model.name }}_solver_capsule
 {% if cost.cost_type_0 == "NONLINEAR_LS" %}
     external_function_external_param_casadi cost_y_0_fun;
     external_function_external_param_casadi cost_y_0_fun_jac_ut_xt;
+    {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi cost_y_0_hess;
+    {%- endif %}
 {% elif cost.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
     external_function_external_param_casadi conl_cost_0_fun;
     external_function_external_param_casadi conl_cost_0_fun_jac_hess;
@@ -179,7 +188,9 @@ typedef struct {{ model.name }}_solver_capsule
 {% if cost.cost_type_e == "NONLINEAR_LS" %}
     external_function_external_param_casadi cost_y_e_fun;
     external_function_external_param_casadi cost_y_e_fun_jac_ut_xt;
+    {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi cost_y_e_hess;
+    {%- endif %}
 {% elif cost.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
     external_function_external_param_casadi conl_cost_e_fun;
     external_function_external_param_casadi conl_cost_e_fun_jac_hess;
@@ -261,9 +272,12 @@ ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_update_time_steps({{ model.name
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_update_qp_solver_cond_N({{ model.name }}_solver_capsule * capsule, int qp_solver_cond_N);
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_update_params({{ model.name }}_solver_capsule * capsule, int stage, double *value, int np);
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule * capsule, int stage, int *idx, double *p, int n_update);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver_capsule* capsule, double* data, int data_len);
 
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_solve({{ model.name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** capsules, int N_batch);
+ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_set_flat({{ model.name }}_solver_capsule ** capsules, const char *field, void *value, int N_data, int N_batch);
+
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_free({{ model.name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_custom_update({{ model.name }}_solver_capsule* capsule, double* data, int data_len);

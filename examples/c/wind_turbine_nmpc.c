@@ -445,6 +445,8 @@ int main()
     if (nh[1]>0)
     {
         h1.evaluate = &ext_fun_h1;
+        h1.set_external_workspace = &external_function_param_generic_set_external_workspace;
+        h1.get_external_workspace_requirement = &external_function_param_generic_get_external_workspace_requirement;
 
         // electric power
         lh1[0] = Pel_min;
@@ -588,6 +590,9 @@ int main()
     /************************************************
     * dynamics
     ************************************************/
+    external_function_opts ext_fun_opts;
+    external_function_opts_set_to_default(&ext_fun_opts);
+    ext_fun_opts.external_workspace = true;
 
     // explicit model
     external_function_param_casadi *expl_vde_for = malloc(NN*sizeof(external_function_param_casadi));
@@ -605,17 +610,17 @@ int main()
     select_dynamics_wt_casadi(NN, expl_vde_for, impl_ode_fun, impl_ode_fun_jac_x_xdot, impl_ode_jac_x_xdot_u, impl_ode_fun_jac_x_xdot_u, phi_fun, phi_fun_jac_y, phi_jac_y_uhat, f_lo_jac_x1_x1dot_u_z);
 
     // explicit model
-    external_function_param_casadi_create_array(NN, expl_vde_for, np);
+    external_function_param_casadi_create_array(NN, expl_vde_for, np, &ext_fun_opts);
     // implicit model
-    external_function_param_casadi_create_array(NN, impl_ode_fun, np);
-    external_function_param_casadi_create_array(NN, impl_ode_fun_jac_x_xdot, np);
-    external_function_param_casadi_create_array(NN, impl_ode_jac_x_xdot_u, np);
-    external_function_param_casadi_create_array(NN, impl_ode_fun_jac_x_xdot_u, np);
+    external_function_param_casadi_create_array(NN, impl_ode_fun, np, &ext_fun_opts);
+    external_function_param_casadi_create_array(NN, impl_ode_fun_jac_x_xdot, np, &ext_fun_opts);
+    external_function_param_casadi_create_array(NN, impl_ode_jac_x_xdot_u, np, &ext_fun_opts);
+    external_function_param_casadi_create_array(NN, impl_ode_fun_jac_x_xdot_u, np, &ext_fun_opts);
     // gnsf model
-    external_function_param_casadi_create_array(NN, phi_fun, np);
-    external_function_param_casadi_create_array(NN, phi_fun_jac_y, np);
-    external_function_param_casadi_create_array(NN, phi_jac_y_uhat, np);
-    external_function_param_casadi_create_array(NN, f_lo_jac_x1_x1dot_u_z, np);
+    external_function_param_casadi_create_array(NN, phi_fun, np, &ext_fun_opts);
+    external_function_param_casadi_create_array(NN, phi_fun_jac_y, np, &ext_fun_opts);
+    external_function_param_casadi_create_array(NN, phi_jac_y_uhat, np, &ext_fun_opts);
+    external_function_param_casadi_create_array(NN, f_lo_jac_x1_x1dot_u_z, np, &ext_fun_opts);
 
     // GNSF import matrices function
     external_function_casadi get_matrices_fun;
@@ -625,11 +630,10 @@ int main()
     get_matrices_fun.casadi_sparsity_out   = &wt_nx6p2_get_matrices_fun_sparsity_out;
     get_matrices_fun.casadi_n_in           = &wt_nx6p2_get_matrices_fun_n_in;
     get_matrices_fun.casadi_n_out          = &wt_nx6p2_get_matrices_fun_n_out;
-    external_function_casadi_create(&get_matrices_fun);
+    external_function_casadi_create(&get_matrices_fun, &ext_fun_opts);
 
-    // external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
 
-    /* initialize additional gnsf dimensions */            
+    /* initialize additional gnsf dimensions */
     int gnsf_nx1 = 8;
     int gnsf_nz1 = 0;
     int gnsf_nout = 1;
@@ -806,17 +810,17 @@ int main()
     if (plan->nlp_solver == SQP)
     {
 
-		int max_iter = MAX_SQP_ITERS;
-		double tol_stat = 1e-6;
-		double tol_eq   = 1e-8;
-		double tol_ineq = 1e-8;
-		double tol_comp = 1e-8;
+        int max_iter = MAX_SQP_ITERS;
+        double tol_stat = 1e-6;
+        double tol_eq   = 1e-8;
+        double tol_ineq = 1e-8;
+        double tol_comp = 1e-8;
 
-		ocp_nlp_solver_opts_set(config, nlp_opts, "max_iter", &max_iter);
-		ocp_nlp_solver_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
-		ocp_nlp_solver_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
-		ocp_nlp_solver_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
-		ocp_nlp_solver_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
+        ocp_nlp_solver_opts_set(config, nlp_opts, "max_iter", &max_iter);
+        ocp_nlp_solver_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
+        ocp_nlp_solver_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
+        ocp_nlp_solver_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
+        ocp_nlp_solver_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
     }
     else if (plan->nlp_solver == SQP_RTI)
     {
@@ -889,9 +893,6 @@ int main()
         ocp_nlp_solver_opts_set(config, nlp_opts, "qp_cond_N", &cond_N);
     }
 
-    // update opts after manual changes
-    ocp_nlp_solver_opts_update(config, dims, nlp_opts);
-
     /************************************************
     * ocp_nlp_out & solver
     ************************************************/
@@ -900,7 +901,7 @@ int main()
 
     ocp_nlp_out *sens_nlp_out = ocp_nlp_out_create(config, dims);
 
-    ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
+    ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts, nlp_in);
 
     /************************************************
     * precomputation (after all options are set)
@@ -914,8 +915,8 @@ int main()
 
     int n_sim = 40;
 
-	double *x_sim = malloc(nx_*(n_sim+1)*sizeof(double));
-	double *u_sim = malloc(nu_*(n_sim+0)*sizeof(double));
+    double *x_sim = malloc(nx_*(n_sim+1)*sizeof(double));
+    double *u_sim = malloc(nu_*(n_sim+0)*sizeof(double));
 
     acados_timer timer;
     acados_tic(&timer);
@@ -934,8 +935,8 @@ int main()
         ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", x0_ref);
         ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", x0_ref);
 
-		// store x0
-		for(int ii=0; ii<nx_; ii++) x_sim[ii] = x0_ref[ii];
+        // store x0
+        for(int ii=0; ii<nx_; ii++) x_sim[ii] = x0_ref[ii];
 
         for (int idx = 0; idx < n_sim; idx++)
         {
@@ -975,10 +976,10 @@ int main()
             // solve NLP
             status = ocp_nlp_solve(solver, nlp_in, nlp_out);
 
-			// evaluate parametric sensitivity of solution
-//			ocp_nlp_out_print(dims, nlp_out);
-			ocp_nlp_eval_param_sens(solver, "ex", 0, 0, sens_nlp_out);
-//			ocp_nlp_out_print(dims, nlp_out);
+            // evaluate parametric sensitivity of solution
+//            ocp_nlp_out_print(dims, nlp_out);
+            ocp_nlp_eval_param_sens(solver, "ex", 0, 0, sens_nlp_out);
+//            ocp_nlp_out_print(dims, nlp_out);
 
             // update initial condition
             // TODO(dimitris): maybe simulate system instead of passing x[1] as next state
@@ -986,7 +987,7 @@ int main()
             ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", specific_x);
             ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", specific_x);
 
-			// store trajectory
+            // store trajectory
             ocp_nlp_out_get(config, dims, nlp_out, 1, "x", x_sim+(idx+1)*nx_);
             ocp_nlp_out_get(config, dims, nlp_out, 0, "u", u_sim+idx*nu_);
 
@@ -996,10 +997,10 @@ int main()
                 int sqp_iter;
                 double time_lin, time_qp_sol, time_tot;
 
-                ocp_nlp_get(config, solver, "sqp_iter", &sqp_iter);
-                ocp_nlp_get(config, solver, "time_tot", &time_tot);
-                ocp_nlp_get(config, solver, "time_qp_sol", &time_qp_sol);
-                ocp_nlp_get(config, solver, "time_lin", &time_lin);
+                ocp_nlp_get(solver, "sqp_iter", &sqp_iter);
+                ocp_nlp_get(solver, "time_tot", &time_tot);
+                ocp_nlp_get(solver, "time_qp_sol", &time_qp_sol);
+                ocp_nlp_get(solver, "time_lin", &time_lin);
 
                 printf("\nproblem #%d, status %d, iters %d, time (total %f, lin %f, qp_sol %f) ms\n",
                     idx, status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
@@ -1014,7 +1015,7 @@ int main()
                 if (plan->nlp_solver == SQP)  // RTI has no residual
                 {
                     ocp_nlp_res *residual;
-                    ocp_nlp_get(config, solver, "nlp_res", &residual);
+                    ocp_nlp_get(solver, "nlp_res", &residual);
                     printf("\nresiduals\n");
                     ocp_nlp_res_print(dims, residual);
                     exit(1);
@@ -1038,8 +1039,8 @@ int main()
     printf("\n\ntotal time (including printing) = %f ms (time per SQP = %f)\n\n", time*1e3, time*1e3/n_sim);
 
 #if 0
-	d_print_mat(nx_, n_sim+1, x_sim, nx_);
-	d_print_mat(nu_, n_sim, u_sim, nu_);
+    d_print_mat(nx_, n_sim+1, x_sim, nx_);
+    d_print_mat(nu_, n_sim, u_sim, nu_);
 #endif
 
     /************************************************
@@ -1048,15 +1049,15 @@ int main()
 
     external_function_casadi_free(&get_matrices_fun);
 
-     external_function_param_casadi_free(expl_vde_for);
-     external_function_param_casadi_free(impl_ode_fun);
-     external_function_param_casadi_free(impl_ode_fun_jac_x_xdot);
-     external_function_param_casadi_free(impl_ode_jac_x_xdot_u);
-     external_function_param_casadi_free(impl_ode_fun_jac_x_xdot_u);
-     external_function_param_casadi_free(phi_fun);
-     external_function_param_casadi_free(phi_fun_jac_y);
-     external_function_param_casadi_free(phi_jac_y_uhat);
-     external_function_param_casadi_free(f_lo_jac_x1_x1dot_u_z);
+    external_function_param_casadi_free(expl_vde_for);
+    external_function_param_casadi_free(impl_ode_fun);
+    external_function_param_casadi_free(impl_ode_fun_jac_x_xdot);
+    external_function_param_casadi_free(impl_ode_jac_x_xdot_u);
+    external_function_param_casadi_free(impl_ode_fun_jac_x_xdot_u);
+    external_function_param_casadi_free(phi_fun);
+    external_function_param_casadi_free(phi_fun_jac_y);
+    external_function_param_casadi_free(phi_jac_y_uhat);
+    external_function_param_casadi_free(f_lo_jac_x1_x1dot_u_z);
 
     free(expl_vde_for);
     free(impl_ode_fun);
@@ -1081,8 +1082,8 @@ int main()
     free(specific_x);
     free(specific_u);
 
-	free(x_sim);
-	free(u_sim);
+    free(x_sim);
+    free(u_sim);
 
     free(lZ0);
     free(uZ0);

@@ -128,6 +128,9 @@ int sim_erk_memory_set(void *config_, void *dims_, void *mem_, const char *field
 // workspace
 acados_size_t sim_erk_workspace_calculate_size(void *config, void *dims, void *opts_);
 
+size_t sim_erk_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_);
+void sim_erk_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_);
+
 //
 int sim_erk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
 //

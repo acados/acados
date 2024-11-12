@@ -35,54 +35,67 @@ clearvars; clc; close all;
 % list the examples you would like to test
 
 targets = {
+    '../control_rates/main.m';
     '../generic_dyn_disc/disc_dyn_example_ocp.m';
     '../generic_external_cost/external_cost_example_ocp.m';
+    '../generic_nlp/main.m';
     '../getting_started/extensive_example_ocp.m';
-%     '../getting_started/minimal_example_closed_loop.m';
     '../getting_started/minimal_example_sim.m';
-%     '../getting_started/simulink_example.m';
-%     '../getting_started/simulink_example_advanced.m';
-%     '../linear_mass_spring_model/example_closed_loop.m';
+    '../getting_started/minimal_example_ocp.m';
     '../linear_mass_spring_model/example_ocp.m';
-%     '../linear_mass_spring_model/example_sim.m';
-    '../linear_mpc/example_closed_loop.m';
+    '../linear_mpc/main.m';
     '../lorentz/example_mhe.m';
-%     '../masses_chain_model/example_closed_loop.m';
     '../masses_chain_model/example_ocp.m';
     '../pendulum_dae/example_closed_loop.m';
     '../pendulum_dae/example_sim.m';
-%     '../pendulum_on_cart_model/example_closed_loop.m';
     '../pendulum_on_cart_model/example_ocp.m';
-%     '../pendulum_on_cart_model/example_ocp_custom_hess.m';
-%     '../pendulum_on_cart_model/example_ocp_param_sens.m';
-%     '../pendulum_on_cart_model/example_ocp_reg.m';
-%     '../pendulum_on_cart_model/example_sim.m';
-%     '../pendulum_on_cart_model/example_solution_sens_closed_loop.m';
-%     '../pendulum_on_cart_model/experiment_dae_formulation.m';
+    '../pendulum_on_cart_model/zoro_example.m';
     '../race_cars/main.m';
     '../simple_dae_model/example_ocp.m';
-%     '../swarming/example_closed_loop.m';
     '../swarming/example_ocp.m';
-%     '../swarming/example_sim.m';
-%     '../wind_turbine_nx6/example_closed_loop.m';
     '../wind_turbine_nx6/example_ocp.m';
-%     '../wind_turbine_nx6/example_sim.m';
-%
-%     './test_checks.m';
-%     './test_mhe_lorentz.m';
-%     './test_ocp_OSQP.m';
-%     './test_ocp_linear_mass_spring.m';
-%     './test_ocp_pendulum_dae.m';
-%     './test_ocp_pendulum_on_cart.m';
-%     './test_ocp_qpdunes.m';
-%     './test_ocp_simple_dae.m';
-%     './test_ocp_wtnx6.m';
-%     './test_sens_adj.m';
-%     './test_sens_forw.m';
-%     './test_sens_hess.m';
-%     './test_sim_dae.m';
-%     './test_target_selector.m'
+    '../mocp_transition_example/main_multiphase_ocp.m';
+    '../legacy_interface/getting_started/extensive_example_ocp.m';
+    '../legacy_interface/simple_dae_model/example_ocp.m';
 };
+
+
+% not tested on CI
+other_targets = {
+    '../getting_started/minimal_example_closed_loop.m';
+    '../getting_started/simulink_example.m';
+    '../getting_started/simulink_example_advanced.m';
+    '../linear_mass_spring_model/example_closed_loop.m';
+    '../linear_mass_spring_model/example_sim.m';
+    '../masses_chain_model/example_closed_loop.m';
+    '../pendulum_on_cart_model/example_closed_loop.m';
+    '../pendulum_on_cart_model/example_ocp_custom_hess.m';
+    '../pendulum_on_cart_model/example_ocp_param_sens.m';
+    '../pendulum_on_cart_model/example_ocp_reg.m';
+    '../pendulum_on_cart_model/example_sim.m';
+    '../pendulum_on_cart_model/example_solution_sens_closed_loop.m';
+    '../pendulum_on_cart_model/experiment_dae_formulation.m';
+    '../swarming/example_closed_loop.m';
+    '../swarming/example_sim.m';
+    '../wind_turbine_nx6/example_closed_loop.m';
+    '../wind_turbine_nx6/example_sim.m';
+
+    './test_checks.m';
+    './test_mhe_lorentz.m';
+    './test_ocp_OSQP.m';
+    './test_ocp_linear_mass_spring.m';
+    './test_ocp_pendulum_dae.m';
+    './test_ocp_pendulum_on_cart.m';
+    './test_ocp_qpdunes.m';
+    './test_ocp_wtnx6.m';
+    './test_sens_adj.m';
+    './test_sens_forw.m';
+    './test_sens_hess.m';
+    './test_sim_dae.m';
+    './test_target_selector.m'
+};
+% targets = other_targets;
+
 
 pass = zeros(1, length(targets));  % keep track of test results
 messages = cell(1, length(targets));  % and error messages
@@ -92,6 +105,9 @@ for idx = 1:length(targets)
     [dir, file, extension] = fileparts(targets{idx});
 
     testpath = getenv("TEST_DIR");
+    % clear variables that might contain CasADi objects to avoid SWIG
+    % warnings
+    clear ocp_solver ocp ocp_model model sim sim_model sim_solver params
     save(strcat(testpath, "/test_workspace.mat"))
     setenv("LD_RUN_PATH", strcat(testpath, "/", dir, "/c_generated_code"))
 
@@ -113,11 +129,15 @@ for idx = 1:length(targets)
     if contains(targets{idx},'simulink'); bdclose('all'); end
     delete(strcat(testpath, "/test_workspace.mat"));
     % delete generated code to avoid failure in examples using similar names
-    rmdir(strcat(testpath, "/", dir, "/c_generated_code"), 's')
-    close all; clc;
+    code_gen_dir = strcat(testpath, "/", dir, "/c_generated_code");
+    if exist(code_gen_dir, 'dir')
+        rmdir(code_gen_dir, 's')
+    end
+    close all;
+    % clc;
 end
 
-clc;
+% clc;
 fail = false;
 disp('Succesful tests: ')
 for idx = 1:length(targets)

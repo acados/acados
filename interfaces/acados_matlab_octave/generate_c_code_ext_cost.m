@@ -27,115 +27,75 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
 
 
-function generate_c_code_ext_cost( model, opts, target_dir )
+function generate_c_code_ext_cost(context, model, target_dir, stage_type)
 
-%% import casadi
-import casadi.*
+    import casadi.*
 
-casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
-check_casadi_version();
+    %% load model
+    x = model.x;
+    u = model.u;
+    z = model.z;
+    p = model.p;
 
-% cd to target folder
-if nargin > 2
-    original_dir = pwd;
-    if ~exist(target_dir, 'dir')
-        mkdir(target_dir);
-    end
-    chdir(target_dir)
-end
+    if strcmp(stage_type, "initial")
+        if isempty(model.cost_expr_ext_cost_0)
+            error('Field `cost_expr_ext_cost_0` is required for cost_type_0 == EXTERNAL.')
+        end
 
-%% load model
-% x
-x = model.sym_x;
-% check type
-if isa(x(1), 'casadi.SX')
-    isSX = true;
-else
-    isSX = false;
-end
-% u
-u = model.sym_u;
-% z
-z = model.sym_z;
-% p
-if isfield(model, 'sym_p')
-    p = model.sym_p;
-else
-    if isSX
-        p = SX.sym('p',0, 0);
+        ext_cost_0 = model.cost_expr_ext_cost_0;
+        % generate jacobian, hessian
+        [full_hess, grad] = hessian(ext_cost_0, vertcat(u, x, z));
+        % add functions to context
+        context.add_function_definition([model.name,'_cost_ext_cost_0_fun'], {x, u, z, p}, {ext_cost_0}, target_dir);
+        context.add_function_definition([model.name,'_cost_ext_cost_0_fun_jac'], {x, u, z, p}, {ext_cost_0, grad}, target_dir);
+        if ~isempty(model.cost_expr_ext_cost_custom_hess_0)
+            context.add_function_definition([model.name,'_cost_ext_cost_0_fun_jac_hess'], {x, u, z, p},...
+                                        {ext_cost_0, grad, model.cost_expr_ext_cost_custom_hess_0}, target_dir);
+        else
+            context.add_function_definition([model.name,'_cost_ext_cost_0_fun_jac_hess'], {x, u, z, p}, {ext_cost_0, grad, full_hess}, target_dir);
+        end
+
+    elseif strcmp(stage_type, "path")
+        if isempty(model.cost_expr_ext_cost)
+            error('Field `cost_expr_ext_cost` is required for cost_type == EXTERNAL.')
+        end
+        ext_cost = model.cost_expr_ext_cost;
+        % generate jacobian, hessian
+        [full_hess, grad] = hessian(ext_cost, vertcat(u, x, z));
+        % add functions to context
+        context.add_function_definition([model.name,'_cost_ext_cost_fun'], {x, u, z, p}, {ext_cost}, target_dir);
+        context.add_function_definition([model.name,'_cost_ext_cost_fun_jac'], {x, u, z, p}, {ext_cost, grad}, target_dir);
+        if ~isempty(model.cost_expr_ext_cost_custom_hess)
+            context.add_function_definition([model.name,'_cost_ext_cost_fun_jac_hess'], {x, u, z, p}, ...
+                                        {ext_cost, grad, model.cost_expr_ext_cost_custom_hess}, target_dir);
+        else
+            context.add_function_definition([model.name,'_cost_ext_cost_fun_jac_hess'], {x, u, z, p}, ...
+                                        {ext_cost, grad, full_hess}, target_dir);
+        end
+
+    elseif strcmp(stage_type, "terminal")
+        if isempty(model.cost_expr_ext_cost_e)
+            error('Field `cost_expr_ext_cost_e` is required for cost_type_e == EXTERNAL.')
+        end
+        ext_cost_e = model.cost_expr_ext_cost_e;
+        % generate jacobians
+        jac_x_e = jacobian(ext_cost_e, x);
+        % generate hessians
+        hes_xx_e = jacobian(jac_x_e', x);
+        % add functions to context
+        context.add_function_definition([model.name,'_cost_ext_cost_e_fun'], {x, p}, {ext_cost_e}, target_dir);
+        context.add_function_definition([model.name,'_cost_ext_cost_e_fun_jac'], {x, p}, {ext_cost_e, jac_x_e'}, target_dir);
+        if ~isempty(model.cost_expr_ext_cost_custom_hess_e)
+            context.add_function_definition([model.name,'_cost_ext_cost_e_fun_jac_hess'], {x, p},...
+                                        {ext_cost_e, jac_x_e', model.cost_expr_ext_cost_custom_hess_e}, target_dir);
+        else
+            context.add_function_definition([model.name, '_cost_ext_cost_e_fun_jac_hess'], {x, p}, {ext_cost_e, jac_x_e', hes_xx_e}, target_dir);
+        end
     else
-        p = MX.sym('p',0, 0);
+        error("Unknown stage type.")
     end
-end
-
-model_name = model.name;
-
-if isfield(model, 'cost_expr_ext_cost') && strcmp(model.cost_ext_fun_type, 'casadi') && strcmp(model.cost_type, 'ext_cost')
-    ext_cost = model.cost_expr_ext_cost;
-    % generate jacobian, hessian
-    [full_hess, grad] = hessian(ext_cost, vertcat(u, x, z));
-    % Set up functions
-    ext_cost_fun = Function([model_name,'_cost_ext_cost_fun'], {x, u, z, p}, {ext_cost});
-    ext_cost_fun_jac = Function([model_name,'_cost_ext_cost_fun_jac'], {x, u, z, p}, {ext_cost, grad});
-    if isfield(model, 'cost_expr_ext_cost_custom_hess')
-        ext_cost_fun_jac_hess = Function([model_name,'_cost_ext_cost_fun_jac_hess'], {x, u, z, p},...
-                                     {ext_cost, grad, model.cost_expr_ext_cost_custom_hess});
-    else
-        ext_cost_fun_jac_hess = Function([model_name,'_cost_ext_cost_fun_jac_hess'], {x, u, z, p},...
-                                     {ext_cost, grad, full_hess});
-    end
-    % generate C code
-    ext_cost_fun.generate([model_name,'_cost_ext_cost_fun'], casadi_opts);
-    ext_cost_fun_jac_hess.generate([model_name,'_cost_ext_cost_fun_jac_hess'], casadi_opts);
-    ext_cost_fun_jac.generate([model_name,'_cost_ext_cost_fun_jac'], casadi_opts);
-end
-
-if isfield(model, 'cost_expr_ext_cost_0') && strcmp(model.cost_ext_fun_type_0, 'casadi') && strcmp(model.cost_type_0, 'ext_cost')
-    ext_cost_0 = model.cost_expr_ext_cost_0;
-    % generate jacobian, hessian
-    [full_hess, grad] = hessian(ext_cost_0, vertcat(u, x, z));
-    % Set up functions
-    ext_cost_0_fun = Function([model_name,'_cost_ext_cost_0_fun'], {x, u, z, p}, {ext_cost_0});
-    ext_cost_0_fun_jac = Function([model_name,'_cost_ext_cost_0_fun_jac'], {x, u, z, p}, {ext_cost_0, grad});
-    if isfield(model, 'cost_expr_ext_cost_custom_hess_0')
-        ext_cost_0_fun_jac_hess = Function([model_name,'_cost_ext_cost_0_fun_jac_hess'], {x, u, z, p},...
-                                     {ext_cost_0, grad, model.cost_expr_ext_cost_custom_hess_0});
-    else
-        ext_cost_0_fun_jac_hess = Function([model_name,'_cost_ext_cost_0_fun_jac_hess'], {x, u, z, p}, {ext_cost_0, grad, full_hess});
-    end
-    % generate C code
-    ext_cost_0_fun.generate([model_name,'_cost_ext_cost_0_fun'], casadi_opts);
-    ext_cost_0_fun_jac.generate([model_name,'_cost_ext_cost_0_fun_jac'], casadi_opts);
-    ext_cost_0_fun_jac_hess.generate([model_name,'_cost_ext_cost_0_fun_jac_hess'], casadi_opts);
-end
-
-if isfield(model, 'cost_expr_ext_cost_e') && strcmp(model.cost_ext_fun_type_e, 'casadi') && strcmp(model.cost_type_e, 'ext_cost')
-    ext_cost_e = model.cost_expr_ext_cost_e;
-    % generate jacobians
-    jac_x_e = jacobian(ext_cost_e, x);
-    % generate hessians
-    hes_xx_e = jacobian(jac_x_e', x);
-    % Set up functions
-    ext_cost_e_fun = Function([model_name,'_cost_ext_cost_e_fun'], {x, p}, {ext_cost_e});
-    ext_cost_e_fun_jac = Function([model_name,'_cost_ext_cost_e_fun_jac'], {x, p}, {ext_cost_e, jac_x_e'});
-    if isfield(model, 'cost_expr_ext_cost_custom_hess_e')
-        ext_cost_e_fun_jac_hess = Function([model_name,'_cost_ext_cost_e_fun_jac_hess'], {x, p},...
-                                     {ext_cost_e, jac_x_e', model.cost_expr_ext_cost_custom_hess_e});
-    else
-        ext_cost_e_fun_jac_hess = Function([model_name,'_cost_ext_cost_e_fun_jac_hess'], {x, p}, {ext_cost_e, jac_x_e', hes_xx_e});
-    end
-    % generate C code
-    ext_cost_e_fun.generate([model_name,'_cost_ext_cost_e_fun'], casadi_opts);
-    ext_cost_e_fun_jac.generate([model_name,'_cost_ext_cost_e_fun_jac'], casadi_opts);
-    ext_cost_e_fun_jac_hess.generate([model_name,'_cost_ext_cost_e_fun_jac_hess'], casadi_opts);
-end
-
-if nargin > 2
-    chdir(original_dir)
-end
 
 end
 

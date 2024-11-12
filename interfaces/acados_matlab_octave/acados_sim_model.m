@@ -30,17 +30,12 @@
 %
 
 classdef acados_sim_model < handle
-    
-
 
     properties
         model_struct
     end %properties
 
-
-
     methods
-        
 
         function obj = acados_sim_model()
             obj.model_struct = struct;

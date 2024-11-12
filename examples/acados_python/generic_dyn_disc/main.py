@@ -30,10 +30,10 @@
 
 import casadi as ca
 import numpy as np
-from acados_template import AcadosOcp, AcadosOcpSolver, casadi_length
+from acados_template import AcadosOcp, AcadosOcpSolver, ocp_get_default_cmake_builder
 import scipy.linalg
 
-def linear_mass_spring_model():
+def linear_mass_spring_model(casadi_dynamics, casadi_cost):
 
     # dims
     num_mass = 4
@@ -42,9 +42,8 @@ def linear_mass_spring_model():
     nu = num_mass-1
 
     # symbolic variables
-    sym_x = ca.SX.sym('x', nx, 1) # states
-    sym_u = ca.SX.sym('u', nu, 1) # controls
-    sym_xdot = ca.SX.sym('xdot', casadi_length(sym_x)) #state derivatives
+    x = ca.SX.sym('x', nx, 1) # states
+    u = ca.SX.sym('u', nu, 1) # controls
 
     # dynamics
     # continuous time
@@ -62,7 +61,6 @@ def linear_mass_spring_model():
     for ii in range(nu):
         Bc[num_mass+ii, ii] = 1.0
 
-
     c_const = np.zeros(nx)
 
     # discrete time
@@ -71,17 +69,12 @@ def linear_mass_spring_model():
     A = M[:nx,:nx]
     B = M[:nx,nx:]
 
-    expr_f_expl = Ac@sym_x + Bc@sym_u + c_const
-    expr_f_impl = expr_f_expl - sym_xdot
-    expr_phi = A@sym_x + B@sym_u
+    expr_f_expl = Ac @ x + Bc @ u + c_const
+    discrete_dynamics_expr = A @ x + B @ u
 
     # constraints
-    expr_h = ca.vertcat(sym_u, sym_x)
-    expr_h_e = sym_x
-
-    # nonlnear least squares
-    expr_y = ca.vertcat(sym_u, sym_x)
-    expr_y_e = sym_x
+    expr_h = ca.vertcat(u, x)
+    expr_h_e = x
 
     # external cost
     yr_u = np.zeros(nu)
@@ -89,56 +82,15 @@ def linear_mass_spring_model():
     dWu = 2*np.ones(nu)
     dWx = np.ones(nx)
 
-    ymyr = ca.vertcat(sym_u, sym_x) - ca.vertcat(yr_u, yr_x)
-    ymyr_e = sym_x - yr_x
+    ymyr = ca.vertcat(u, x) - ca.vertcat(yr_u, yr_x)
+    ymyr_e = x - yr_x
 
-    expr_ext_cost = 0.5 * (ymyr.T @ ( np.concatenate((dWu, dWx)) *  ymyr))
+    expr_ext_cost = 0.5 * ymyr.T @ (np.concatenate((dWu, dWx)) *  ymyr)
     expr_ext_cost_e = 0.5 * ymyr_e.T @ (dWx * ymyr_e)
-
-    # populate structure
-    model = {}
-    model['nx'] = nx
-    model['nu'] = nu
-    model['sym_x'] = sym_x
-    model['sym_xdot'] = sym_xdot
-    model['sym_u'] = sym_u
-    model['expr_f_expl'] = expr_f_expl
-    model['expr_f_impl'] = expr_f_impl
-    model['expr_phi'] = expr_phi
-    model['expr_h'] = expr_h
-    model['expr_h_e'] = expr_h_e
-    model['expr_y'] = expr_y
-    model['expr_y_e'] = expr_y_e
-    model['expr_ext_cost'] = expr_ext_cost
-    model['expr_ext_cost_e'] = expr_ext_cost_e
-
-    return model
-
-
-
-def main():
-    N = 20
-    tol = 1e-10
-    shooting_nodes = np.linspace(0,10,N+1)
-
-    model_name = 'lin_mass'
-    nlp_solver = 'SQP'
-    # nlp_solver_exact_hessian = 'true'
-    regularize_method = 'CONVEXIFY'
-    nlp_solver_max_iter = 100
-    qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-    qp_solver_cond_N = 5
-    cost_type = 'EXTERNAL'
-
-    model = linear_mass_spring_model()
-
-    T = 10.0 # horizon length time
-    nx = model['nx']
-    nu = model['nu']
 
     x0 = np.zeros(nx)
     x0[0] = 2.5
-    x0[1]=2.5
+    x0[1] = 2.5
 
     lh = - np.concatenate(( 0.5 * np.ones(nu), 4.0 * np.ones(nx)))
     uh = + np.concatenate(( 0.5 * np.ones(nu), 4.0 * np.ones(nx)))
@@ -146,23 +98,18 @@ def main():
     uh_e = 4.0 * np.ones(nx)
 
     # acados ocp model
-    casadi_dynamics = 0 # 0=generic, 1=casadi
-    casadi_cost = 1 # 0=generic, 1=casadi # NOTE: generic cost is not implemented in python interface.
-
     ocp = AcadosOcp()
-    ocp.model.name = model_name
-    ocp.solver_options.tf = T
+    ocp.model.name = 'lin_mass'
 
     # symbolics
-    ocp.model.x = model['sym_x']
-    ocp.model.u = model['sym_u']
-    ocp.model.xdot = model['sym_xdot']
+    ocp.model.x = x
+    ocp.model.u = u
 
     # cost
-    ocp.cost.cost_type = cost_type
-    ocp.cost.cost_type_e = cost_type
+    ocp.cost.cost_type = 'EXTERNAL'
+    ocp.cost.cost_type_e = 'EXTERNAL'
 
-    if (casadi_dynamics == 0):
+    if not casadi_dynamics:
         # Generic dynamics
         ocp.model.dyn_ext_fun_type = 'generic'
         ocp.model.dyn_generic_source = 'generic_disc_dyn.c'
@@ -171,9 +118,9 @@ def main():
         ocp.model.dyn_disc_fun_jac_hess = 'disc_dyn_fun_jac_hess' # only needed for exact hessi
     else:
         # dynamics expression
-        ocp.model.disc_dyn_expr = model['expr_phi']
+        ocp.model.disc_dyn_expr = discrete_dynamics_expr
 
-    if (casadi_cost == 0):
+    if not casadi_cost:
         # Generic stage cost
         ocp.model.cost_ext_fun_type = 'generic'
         ocp.model.cost_source_ext_cost = 'generic_ext_cost.c'
@@ -184,53 +131,56 @@ def main():
         ocp.model.cost_function_ext_cost_e = 'ext_costN'
     else:
         # cost expression
-        ocp.model.cost_expr_ext_cost = model['expr_ext_cost']
-        ocp.model.cost_expr_ext_cost_e = model['expr_ext_cost_e']
+        ocp.model.cost_expr_ext_cost = expr_ext_cost
+        ocp.model.cost_expr_ext_cost_e = expr_ext_cost_e
 
     # constraints
     ocp.constraints.x0 = x0
-    ocp.model.con_h_expr = model['expr_h']
+
+    ocp.model.con_h_expr = expr_h
     ocp.constraints.lh = lh
     ocp.constraints.uh = uh
-    ocp.model.con_h_expr_e = model['expr_h_e']
+
+    ocp.model.con_h_expr_e = expr_h_e
     ocp.constraints.lh_e = lh_e
     ocp.constraints.uh_e = uh_e
 
     # acados ocp opts
-    ocp.dims.N = N
+    N = 20
+    shooting_nodes = np.linspace(0,10,N+1)
+    T = 10.0 # horizon length time
+
+    ocp.solver_options.tf = T
+    ocp.solver_options.N_horizon = N
     ocp.solver_options.shooting_nodes = shooting_nodes
     ocp.solver_options.hessian_approx = 'EXACT'
-    ocp.solver_options.regularize_method = regularize_method
     ocp.solver_options.nlp_solver_ext_qp_res = 0
-    ocp.solver_options.nlp_solver_max_iter = nlp_solver_max_iter
-    ocp.solver_options.tol = tol
-    ocp.solver_options.qp_solver = qp_solver
-    ocp.solver_options.qp_solver_cond_N = qp_solver_cond_N
+    ocp.solver_options.nlp_solver_max_iter = 100
+    ocp.solver_options.tol = 1e-10
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    ocp.solver_options.qp_solver_cond_N = 5
     ocp.solver_options.integrator_type = 'DISCRETE'
-    ocp.solver_options.nlp_solver_type = nlp_solver
+    ocp.solver_options.nlp_solver_type = 'SQP'
     ocp.solver_options.print_level = 2
 
+    return ocp
+
+
+
+def main(casadi_dynamics, casadi_cost, use_cmake = False):
+
+    ocp = linear_mass_spring_model(casadi_dynamics, casadi_cost)
+
     # create ocp solver
-    ocp_solver = AcadosOcpSolver(ocp)
-
-    # initial state
-    ocp_solver.set(0, 'lbx', x0)
-    ocp_solver.set(0, 'ubx', x0)
-
-    # initialize
-    for i in range(N):
-        ocp_solver.set(i, 'x', np.zeros(nx))
-        ocp_solver.set(i, 'u', np.zeros(nu))
-    ocp_solver.set(N, 'x', np.zeros(nx))
+    cmake_builder = ocp_get_default_cmake_builder() if use_cmake else None
+    ocp_solver = AcadosOcpSolver(ocp, cmake_builder=cmake_builder)
 
     # solve
-    # tic
     status = ocp_solver.solve()
-    # time_ext = toc
 
     # get solution
-    utraj = ocp_solver.get(0, 'u')
-    xtraj = ocp_solver.get(0, 'x')
+    u0 = ocp_solver.get(0, 'u')
+    x0 = ocp_solver.get(0, 'x')
 
     # get info
     sqp_iter = ocp_solver.get_stats('sqp_iter')
@@ -251,8 +201,12 @@ def main():
     else:
         print(f'test_ocp_linear_mass_spring: success')
 
-    ocp_solver.store_iterate(filename=f'{model_name}_{casadi_dynamics}.json', overwrite=True)
+    ocp_solver.store_iterate(filename=f'{ocp.model.name}_{casadi_dynamics}.json', overwrite=True)
 
 
 if __name__ == '__main__':
-    main()
+
+    casadi_dynamics = False # False = generic, True = casadi
+    casadi_cost = True # False = generic, True = casadi # NOTE: generic cost is not implemented in python interface.
+
+    main(casadi_dynamics, casadi_cost)

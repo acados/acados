@@ -41,7 +41,6 @@ for integrator = {'irk_gnsf', 'irk'}
 
     %% arguments
     compile_interface = 'auto'; % true, false
-    codgen_model = 'true'; % true, false
     gnsf_detect_struct = 'true'; % true, false
     % method = 'irk'; % irk, irk_gnsf, [erk]
     sens_forw = 'true'; % true, false
@@ -58,21 +57,21 @@ for integrator = {'irk_gnsf', 'irk'}
     x0 = [ xp0; yp0; alpha0; 0; 0; 0];
 
     u = 3.5;
-    
+
     %% model
     model = pendulum_dae_model();
     % disp('state')
     % disp(model.sym_x)
-    
+
     nx = length(model.sym_x);
     nu = length(model.sym_u);
     nz = length(model.sym_z);
-    
+
     %% acados sim model
     sim_model = acados_sim_model();
     sim_model.set('name', model_name);
     sim_model.set('T', 0.1); % simulation time
-    
+
     sim_model.set('sym_x', model.sym_x);
     if isfield(model, 'sym_u')
         sim_model.set('sym_u', model.sym_u);
@@ -80,7 +79,7 @@ for integrator = {'irk_gnsf', 'irk'}
     if isfield(model, 'sym_p')
         sim_model.set('sym_p', model.sym_p);
     end
-    
+
     % Note: DAEs can only be used with implicit integrator
     sim_model.set('dyn_type', 'implicit');
     sim_model.set('dyn_expr_f', model.expr_f_impl);
@@ -88,11 +87,10 @@ for integrator = {'irk_gnsf', 'irk'}
     if isfield(model, 'sym_z')
         sim_model.set('sym_z', model.sym_z);
     end
-    
+
     %% acados sim opts
     sim_opts = acados_sim_opts();
     sim_opts.set('compile_interface', compile_interface);
-    sim_opts.set('codgen_model', codgen_model);
     sim_opts.set('num_stages', num_stages);
     sim_opts.set('num_steps', num_steps);
     sim_opts.set('newton_iter', newton_iter);
@@ -106,50 +104,50 @@ for integrator = {'irk_gnsf', 'irk'}
     if (strcmp(method, 'irk_gnsf'))
         sim_opts.set('gnsf_detect_struct', gnsf_detect_struct);
     end
-    
-    
+
+
     %% acados sim
     % create integrator
-    sim = acados_sim(sim_model, sim_opts);
+    sim_solver = acados_sim(sim_model, sim_opts);
     N_sim = 100;
 
     % set initial state
-    sim.set('x', x0);
-    sim.set('u', u);
+    sim_solver.set('x', x0);
+    sim_solver.set('u', u);
 
     x_sim = zeros(nx, N_sim+1);
     x_sim(:,1) = x0;
-    
+
     tic
     for ii=1:N_sim
-        
+
         % set initial state
-        sim.set('x', x_sim(:,ii));
-        sim.set('u', u);
+        sim_solver.set('x', x_sim(:,ii));
+        sim_solver.set('u', u);
     
         % set adjoint seed
-        sim.set('seed_adj', ones(nx,1));
+        sim_solver.set('seed_adj', ones(nx,1));
     
         % initialize implicit integrator
         if (strcmp(method, 'irk'))
-            sim.set('xdot', zeros(nx,1));
-            sim.set('z', zeros(nz,1));
+            sim_solver.set('xdot', zeros(nx,1));
+            sim_solver.set('z', zeros(nz,1));
         elseif (strcmp(method, 'irk_gnsf'))
-            n_out = sim.model_struct.dim_gnsf_nout;
-            sim.set('phi_guess', zeros(n_out,1));
+            n_out = sim_solver.sim.dims.gnsf_nout;
+            sim_solver.set('phi_guess', zeros(n_out,1));
         end
-    
+
         % solve
-        sim.solve();
+        sim_solver.solve();
     
         % get simulated state
-        x_sim(:,ii+1) = sim.get('xn');
+        x_sim(:,ii+1) = sim_solver.get('xn');
 
     end
-	S_forw = sim.get('S_forw');
-    S_adj = sim.get('S_adj')';
-    z = sim.get('zn')'; % approximate value of algebraic variables at start of simulation
-    S_alg = sim.get('S_algebraic'); % sensitivities of algebraic variables z
+	S_forw = sim_solver.get('S_forw');
+    S_adj = sim_solver.get('S_adj')';
+    z = sim_solver.get('zn')'; % approximate value of algebraic variables at start of simulation
+    S_alg = sim_solver.get('S_algebraic'); % sensitivities of algebraic variables z
 
     required_accuracy = 1e-13;
     if i_method == 1

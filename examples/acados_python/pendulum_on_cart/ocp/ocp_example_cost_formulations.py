@@ -66,7 +66,7 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
     ny = NX + NU
     ny_e = NX
 
-    ocp.dims.N = N
+    ocp.solver_options.N_horizon = N
 
     # set cost
     Q_mat = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
@@ -198,7 +198,7 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
     return ocp
 
 
-def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', plot=False):
+def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', reformulate_to_external=False, plot=False):
 
     if cost_version == 'EXTERNAL':
         ext_cost_use_num_hess = True
@@ -219,7 +219,6 @@ def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', plot=
         ocp.solver_options.sim_method_num_steps = np.array([1] + (N-1)*[5])
     else:
         ocp = formulate_ocp(cost_version)
-
 
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES, FULL_CONDENSING_DAQP, FULL_CONDENSING_HPIPM
@@ -245,6 +244,10 @@ def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', plot=
     #  [00, 00, @2, 00, 00],
     #  [00, 00, 00, @1, 00],
     #  [00, 00, 00, 00, @1]])
+
+    if reformulate_to_external:
+        ocp.solver_options.fixed_hess = 0
+        ocp.translate_cost_to_external_cost(parametric_yref=True)
 
     # create solver
     ocp_solver = AcadosOcpSolver(ocp)
@@ -298,6 +301,9 @@ if __name__ == "__main__":
         for formulation_type in ['ocp', 'mocp']:
             print(f"cost version: {cost_version}, formulation type: {formulation_type}")
             main(cost_version=cost_version, formulation_type=formulation_type, plot=False)
+
+        print(f"cost version: {cost_version} reformulated as EXTERNAL cost")
+        main(cost_version=cost_version, formulation_type='ocp', plot=False, reformulate_to_external=True)
 
 # timings
 # time_tot = 1e8

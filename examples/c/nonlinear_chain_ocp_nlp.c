@@ -1011,6 +1011,10 @@ int main()
     * dynamics
     ************************************************/
 
+    external_function_opts ext_fun_opts;
+    external_function_opts_set_to_default(&ext_fun_opts);
+    ext_fun_opts.external_workspace = false;
+
 	#if 0
 	// NOTE(dimitris): temp code to test casadi integrator
 	int integrator_nx = 12;
@@ -1028,7 +1032,7 @@ int main()
 	casadi_integrator.casadi_sparsity_out = &casadi_erk4_chain_nm3_sparsity_out;
 	casadi_integrator.casadi_n_in = &casadi_erk4_chain_nm3_n_in;
 	casadi_integrator.casadi_n_out = &casadi_erk4_chain_nm3_n_out;
-	external_function_casadi_create(&casadi_integrator);
+	external_function_casadi_create(&casadi_integrator, &ext_fun_opts);
 
 	d_print_mat(1, integrator_nx+integrator_nu, integrator_in, 1);
 
@@ -1059,21 +1063,21 @@ int main()
 	                       impl_ode_fun_jac_x_xdot_u, impl_ode_jac_x_xdot_u, erk4_casadi);
 
 	// forw_vde
-	external_function_casadi_create_array(NN, expl_vde_for);
+	external_function_casadi_create_array(NN, expl_vde_for, &ext_fun_opts);
 
 	// impl_ode
-	external_function_casadi_create_array(NN, impl_ode_fun);
+	external_function_casadi_create_array(NN, impl_ode_fun, &ext_fun_opts);
 	//
-	external_function_casadi_create_array(NN, impl_ode_fun_jac_x_xdot);
+	external_function_casadi_create_array(NN, impl_ode_fun_jac_x_xdot, &ext_fun_opts);
 	//
-	external_function_casadi_create_array(NN, impl_ode_fun_jac_x_xdot_u);
+	external_function_casadi_create_array(NN, impl_ode_fun_jac_x_xdot_u, &ext_fun_opts);
 	//
-	external_function_casadi_create_array(NN, impl_ode_jac_x_xdot_u);
+	external_function_casadi_create_array(NN, impl_ode_jac_x_xdot_u, &ext_fun_opts);
 
 	if (NMF<4)
 	{
 		// discrete model supported
-		external_function_casadi_create_array(NN, erk4_casadi);
+		external_function_casadi_create_array(NN, erk4_casadi, &ext_fun_opts);
 	}
 	else
 	{
@@ -1099,17 +1103,17 @@ int main()
 
 			case NONLINEAR_LS:
 				select_ls_stage_cost_jac_casadi(i, NN, NMF, &ls_cost_jac_casadi[i]);
-				external_function_casadi_create(&ls_cost_jac_casadi[i]);
+				external_function_casadi_create(&ls_cost_jac_casadi[i], &ext_fun_opts);
 				break;
 
 			case EXTERNAL:
 				select_external_stage_cost_casadi(i, NN, NMF, &external_cost[i]);
-				external_function_casadi_create(&external_cost[i]);
+				external_function_casadi_create(&external_cost[i], &ext_fun_opts);
 				break;
 
 			default:
 				printf("\ninvalid cost module\n\n");
-				exit(1);	
+				exit(1);
 		}
 	}
 
@@ -1202,7 +1206,7 @@ int main()
 
 			default:
 				printf("\ninvalid cost module\n\n");
-				exit(1);	
+				exit(1);
 		}
 	}
 
@@ -1255,9 +1259,11 @@ int main()
 
 	// fist stage
 #if CONSTRAINTS==0 // box constraints
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lb", lb0);
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ub", ub0);
-    constraints[0]->idxb = idxb0;
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbu", lb0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", lb0+NU);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubu", ub0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", ub0+NU);
+	constraints[0]->idxb = idxb0;
 #elif CONSTRAINTS==1 // general constraints
 	double *Cu0; d_zeros(&Cu0, ng[0], nu[0]);
 	for (int ii=0; ii<nu[0]; ii++)
@@ -1291,12 +1297,14 @@ int main()
 	// other stages
     for (int i = 1; i < NN; i++)
 	{
-		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lb", lb1);
-		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ub", ub1);
+		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lbu", lb1);
+		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lbx", lb1+NU);
+		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ubu", ub1);
+		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ubx", ub1+NU);
         constraints[i]->idxb = idxb1;
     }
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "lb", lbN);
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "ub", ubN);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "lbx", lbN);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "ubx", ubN);
 
     constraints[NN]->idxb = idxbN;
 
@@ -1354,7 +1362,7 @@ int main()
 
 	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 
-	ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
+	ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts, nlp_in);
 	int status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
 
     /************************************************
@@ -1380,7 +1388,7 @@ int main()
     double time = acados_toc(&timer)/NREP;
 
     ocp_nlp_res *residual;
-    ocp_nlp_get(config, solver, "nlp_res", &residual);
+    ocp_nlp_get(solver, "nlp_res", &residual);
     printf("\nresiduals\n");
     ocp_nlp_res_print(dims, residual);
 
@@ -1390,10 +1398,10 @@ int main()
 	int sqp_iter;
     double time_lin, time_qp_sol, time_tot;
 
-    ocp_nlp_get(config, solver, "sqp_iter", &sqp_iter);
-    ocp_nlp_get(config, solver, "time_tot", &time_tot);
-    ocp_nlp_get(config, solver, "time_qp_sol", &time_qp_sol);
-    ocp_nlp_get(config, solver, "time_lin", &time_lin);
+    ocp_nlp_get(solver, "sqp_iter", &sqp_iter);
+    ocp_nlp_get(solver, "time_tot", &time_tot);
+    ocp_nlp_get(solver, "time_qp_sol", &time_qp_sol);
+    ocp_nlp_get(solver, "time_lin", &time_lin);
 
     printf("\n\nstatus = %i, iterations (max %d) = %d, total time = %f ms\n", status, MAX_SQP_ITERS, sqp_iter, time*1e3);
 	printf("\nlinearization time = %f ms\n", time_lin*1e3);

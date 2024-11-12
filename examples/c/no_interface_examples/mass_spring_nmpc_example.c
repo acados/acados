@@ -447,23 +447,26 @@ int main() {
     // external cost
     for (int ii = 0; ii <= N; ii++)
     {
-        ocp_nlp_cost_external_config_initialize_default(config->cost[ii]);
+        ocp_nlp_cost_external_config_initialize_default(config->cost[ii], ii);
     }
 
     // dynamics: discrete model
     for (int ii = 0; ii < N; ii++)
     {
-        ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[ii]);
+        ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[ii], ii);
     }
 
-    // constraitns
+    // constraints
     for (int ii = 0; ii <= N; ii++)
     {
-        ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[ii]);
+        ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[ii], ii);
     }
 
     // regularization
     ocp_nlp_reg_noreg_config_initialize_default(config->regularize);
+
+    ocp_nlp_globalization_fixed_step_config_initialize_default(config->globalization);
+
 
     /************************************************
     * ocp_nlp_dims
@@ -493,6 +496,8 @@ int main() {
 
     external_function_generic disc_model_generic;
     disc_model_generic.evaluate = &disc_model;
+    disc_model_generic.get_external_workspace_requirement = &external_function_param_generic_get_external_workspace_requirement;
+    disc_model_generic.set_external_workspace = &external_function_param_generic_set_external_workspace;
 
     /************************************************
     * external cost
@@ -500,9 +505,13 @@ int main() {
 
     external_function_generic ext_cost_generic;
     ext_cost_generic.evaluate = &ext_cost;
+    ext_cost_generic.get_external_workspace_requirement = &external_function_param_generic_get_external_workspace_requirement;
+    ext_cost_generic.set_external_workspace = &external_function_param_generic_set_external_workspace;
 
     external_function_generic ext_costN_generic;
     ext_costN_generic.evaluate = &ext_costN;
+    ext_costN_generic.get_external_workspace_requirement = &external_function_param_generic_get_external_workspace_requirement;
+    ext_costN_generic.set_external_workspace = &external_function_param_generic_set_external_workspace;
 
     /************************************************
     * constraints
@@ -795,16 +804,16 @@ int main() {
     * sqp memory
     ************************************************/
 
-    tmp_size = ocp_nlp_sqp_memory_calculate_size(config, dims, nlp_opts);
+    tmp_size = ocp_nlp_sqp_memory_calculate_size(config, dims, nlp_opts, nlp_in);
     void *nlp_mem_mem = malloc(tmp_size);
-    ocp_nlp_sqp_memory *nlp_mem = ocp_nlp_sqp_memory_assign(config, dims, nlp_opts, nlp_mem_mem);
+    ocp_nlp_sqp_memory *nlp_mem = ocp_nlp_sqp_memory_assign(config, dims, nlp_opts, nlp_in, nlp_mem_mem);
 
 
     /************************************************
     * sqp workspace
     ************************************************/
 
-    int workspace_size = ocp_nlp_sqp_workspace_calculate_size(config, dims, nlp_opts);
+    int workspace_size = ocp_nlp_sqp_workspace_calculate_size(config, dims, nlp_opts, nlp_in);
     void *nlp_work = acados_malloc(workspace_size, 1);
 
     /************************************************

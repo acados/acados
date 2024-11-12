@@ -36,7 +36,6 @@ addpath('../linear_mass_spring_model/');
 
 %% arguments
 compile_interface = 'auto';
-codgen_model = 'true';
 N = 20;
 shooting_nodes = [ linspace(0,1,N/2) linspace(1.1,5,N/2+1) ];
 
@@ -200,7 +199,6 @@ end
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
-ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('ext_fun_compile_flags', '');
 if (exist('shooting_nodes', 'var'))
@@ -222,43 +220,52 @@ ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
 
 %% acados ocp
 % create ocp
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 
 % set trajectory initialization
 x_traj_init = zeros(nx, N+1);
 u_traj_init = zeros(nu, N);
-ocp.set('init_x', x_traj_init);
-ocp.set('init_u', u_traj_init);
+ocp_solver.set('init_x', x_traj_init);
+ocp_solver.set('init_u', u_traj_init);
 
 
 % solve
 tic;
-ocp.solve();
+ocp_solver.solve();
 time_ext = toc;
 
 % store and load iterate
 filename = 'iterate.json';
-ocp.store_iterate(filename, true);
-ocp.load_iterate(filename);
+ocp_solver.store_iterate(filename, true);
+ocp_solver.load_iterate(filename);
 delete(filename)
 
+% test QP dump
+filename = 'qp.json';
+ocp_solver.dump_last_qp_to_json('qp.json')
+delete(filename)
+
+% test qp_diagnostics
+qp_diagnostics_result = ocp_solver.qp_diagnostics();
+
+
 % get solution
-u = ocp.get('u');
-x = ocp.get('x');
+u = ocp_solver.get('u');
+x = ocp_solver.get('x');
 
 % get info
-status = ocp.get('status');
-sqp_iter = ocp.get('sqp_iter');
-time_tot = ocp.get('time_tot');
-time_lin = ocp.get('time_lin');
-time_reg = ocp.get('time_reg');
-time_qp_sol = ocp.get('time_qp_sol');
+status = ocp_solver.get('status');
+sqp_iter = ocp_solver.get('sqp_iter');
+time_tot = ocp_solver.get('time_tot');
+time_lin = ocp_solver.get('time_lin');
+time_reg = ocp_solver.get('time_reg');
+time_qp_sol = ocp_solver.get('time_qp_sol');
 
 fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3);
 
 % print statistics
-ocp.print('stat')
+ocp_solver.print('stat')
 
 if status~=0
     error('ocp_nlp solver returned status nonzero');

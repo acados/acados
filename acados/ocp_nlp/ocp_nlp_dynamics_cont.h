@@ -140,8 +140,6 @@ void ocp_nlp_dynamics_cont_memory_set_pi_ptr(struct blasfeo_dvec *pi, void *memo
 //
 void ocp_nlp_dynamics_cont_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *memory);
 //
-void ocp_nlp_dynamics_cont_memory_get_params_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
-//
 void ocp_nlp_dynamics_cont_memory_get_params_lag_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
 
 
@@ -187,7 +185,7 @@ void ocp_nlp_dynamics_cont_model_set(void *config_, void *dims_, void *model_, c
  ************************************************/
 
 //
-void ocp_nlp_dynamics_cont_config_initialize_default(void *config);
+void ocp_nlp_dynamics_cont_config_initialize_default(void *config, int stage);
 //
 void ocp_nlp_dynamics_cont_initialize(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 //

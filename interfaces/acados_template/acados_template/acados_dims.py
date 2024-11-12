@@ -101,6 +101,7 @@ class AcadosOcpDims:
         self.__nu = None
         self.__nz = 0
         self.__np = 0
+        self.__nx_next = None
         # cost
         self.__ny = 0
         self.__ny_0 = 0
@@ -140,6 +141,9 @@ class AcadosOcpDims:
         self.__nsg_e = 0
         # equalities within x bounds
         self.__nbxe_0 = None
+        # global parameters
+        self.__np_global = 0
+        self.__n_global_data = 0
 
 
     @property
@@ -165,6 +169,12 @@ class AcadosOcpDims:
         """:math:`n_p` - number of parameters.
         Type: int; default: 0"""
         return self.__np
+
+    @property
+    def nx_next(self):
+        r""":math:`n_{x, \text{next}}` - state dimension of next state.
+        Type: int; default: None"""
+        return self.__nx_next
 
     @property
     def ny(self):
@@ -204,37 +214,37 @@ class AcadosOcpDims:
 
     @property
     def nr(self):
-        """:math:`n_{\pi}` - dimension of the image of the inner nonlinear function in positive definite constraints.
+        r""":math:`n_{\pi}` - dimension of the image of the inner nonlinear function in positive definite constraints.
         Type: int; default: 0"""
         return self.__nr
 
     @property
     def nr_e(self):
-        """:math:`n_{\pi}^e` - dimension of the image of the inner nonlinear function in positive definite constraints.
+        r""":math:`n_{\pi}^e` - dimension of the image of the inner nonlinear function in positive definite constraints.
         Type: int; default: 0"""
         return self.__nr_e
 
     @property
     def nr_0(self):
-        """:math:`n_{\pi}^0` - dimension of the image of the inner nonlinear function in positive definite constraints.
+        r""":math:`n_{\pi}^0` - dimension of the image of the inner nonlinear function in positive definite constraints.
         Type: int; default: 0"""
         return self.__nr_0
 
     @property
     def nphi(self):
-        """:math:`n_{\phi}` - number of convex-over-nonlinear constraints.
+        r""":math:`n_{\phi}` - number of convex-over-nonlinear constraints.
         Type: int; default: 0"""
         return self.__nphi
 
     @property
     def nphi_0(self):
-        """:math:`n_{\phi}^0` - number of convex-over-nonlinear constraints at initial shooting node 0.
+        r""":math:`n_{\phi}^0` - number of convex-over-nonlinear constraints at initial shooting node 0.
         Type: int; default: 0"""
         return self.__nphi_0
 
     @property
     def nphi_e(self):
-        """:math:`n_{\phi}^e` - number of convex-over-nonlinear constraints at terminal shooting node N.
+        r""":math:`n_{\phi}^e` - number of convex-over-nonlinear constraints at terminal shooting node N.
         Type: int; default: 0"""
         return self.__nphi_e
 
@@ -318,19 +328,19 @@ class AcadosOcpDims:
 
     @property
     def nsphi_0(self):
-        """:math:`n_{{s\phi}^0}` - number of soft convex-over-nonlinear constraints at shooting node 0.
+        r""":math:`n_{{s\phi}^0}` - number of soft convex-over-nonlinear constraints at shooting node 0.
         Type: int; default: 0"""
         return self.__nsphi_0
 
     @property
     def nsphi(self):
-        """:math:`n_{{s\phi}}` - number of soft convex-over-nonlinear constraints.
+        r""":math:`n_{{s\phi}}` - number of soft convex-over-nonlinear constraints.
         Type: int; default: 0"""
         return self.__nsphi
 
     @property
     def nsphi_e(self):
-        """:math:`n_{{s\phi}^e}` - number of soft convex-over-nonlinear constraints at terminal shooting node N.
+        r""":math:`n_{{s\phi}^e}` - number of soft convex-over-nonlinear constraints at terminal shooting node N.
         Type: int; default: 0"""
         return self.__nsphi_e
 
@@ -365,8 +375,22 @@ class AcadosOcpDims:
         return self.__ng_e
 
     @property
+    def np_global(self):
+        """number of global parameters p_global; default: 0"""
+        return self.__np_global
+
+    @property
+    def n_global_data(self):
+        """size of global_data; expressions that only depend on p_global; detected automatically during code generation.
+        Type: int; default: 0"""
+        return self.__n_global_data
+
+    @property
     def N(self):
-        """:math:`N` - prediction horizon.
+        """
+        :math:`N` - Number of shooting intervals.
+        DEPRECATED: use ocp.solver_options.N instead.
+
         Type: int; default: None"""
         return self.__N
 
@@ -397,6 +421,27 @@ class AcadosOcpDims:
             self.__np = np
         else:
             raise Exception('Invalid np value, expected nonnegative integer.')
+
+    @nx_next.setter
+    def nx_next(self, nx_next):
+        if isinstance(nx_next, int) and nx_next > 0:
+            self.__nx_next = nx_next
+        else:
+            raise Exception('Invalid nx_next value, expected positive integer.')
+
+    @np_global.setter
+    def np_global(self, np_global):
+        if isinstance(np_global, int) and np_global > -1:
+            self.__np_global = np_global
+        else:
+            raise Exception('Invalid np_global value, expected nonnegative integer.')
+
+    @n_global_data.setter
+    def n_global_data(self, n_global_data):
+        if isinstance(n_global_data, int) and n_global_data > -1:
+            self.__n_global_data = n_global_data
+        else:
+            raise Exception('Invalid n_global_data value, expected nonnegative integer.')
 
     @ny_0.setter
     def ny_0(self, ny_0):

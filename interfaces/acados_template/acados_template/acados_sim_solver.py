@@ -46,12 +46,14 @@ import numpy as np
 
 from .acados_model import AcadosModel
 from .acados_ocp import AcadosOcp
-from .acados_sim import AcadosSim, AcadosSimDims, AcadosSimOpts
+from .acados_sim import AcadosSim, AcadosSimDims, AcadosSimOptions
 
 from .builders import CMakeBuilder
-from .casadi_function_generation import (generate_c_code_explicit_ode,
-                                         generate_c_code_gnsf,
-                                         generate_c_code_implicit_ode)
+from .casadi_function_generation import (
+                    GenerateContext,
+                    generate_c_code_explicit_ode,
+                    generate_c_code_gnsf,
+                    generate_c_code_implicit_ode)
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (check_casadi_version, format_class_dict,
                     get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
@@ -69,7 +71,7 @@ def sim_formulation_json_dump(acados_sim: AcadosSim, json_file='acados_sim.json'
     # convert acados classes to dicts
     for key, v in sim_dict.items():
         # skip non dict attributes
-        if isinstance(v, (AcadosSim, AcadosSimDims, AcadosSimOpts, AcadosModel)):
+        if isinstance(v, (AcadosSim, AcadosSimDims, AcadosSimOptions, AcadosModel)):
             sim_dict[key]=dict(getattr(acados_sim, key).__dict__)
 
     sim_json = format_class_dict(sim_dict)
@@ -136,14 +138,19 @@ def sim_generate_external_functions(acados_sim: AcadosSim):
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
+    context = GenerateContext(model.p_global, model.name, opts)
+
     # generate external functions
     check_casadi_version()
     if integrator_type == 'ERK':
-        generate_c_code_explicit_ode(model, opts)
+        generate_c_code_explicit_ode(context, model, model_dir)
     elif integrator_type == 'IRK':
-        generate_c_code_implicit_ode(model, opts)
+        generate_c_code_implicit_ode(context, model, model_dir)
     elif integrator_type == 'GNSF':
-        generate_c_code_gnsf(model, opts)
+        generate_c_code_gnsf(context, model, model_dir)
+
+    context.finalize()
+    acados_sim.__external_function_files_model = context.get_external_function_file_list(ocp_specific=False)
 
 
 class AcadosSimSolver:

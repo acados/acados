@@ -72,6 +72,7 @@ typedef struct
     int nbxe; // number of state box constraints which are equality
     int nge;  // number of general linear constraints which are equality
     int nhe;  // number of nonlinear path constraints which are equality
+    int np_global;
 } ocp_nlp_constraints_bgh_dims;
 
 //
@@ -150,6 +151,7 @@ typedef struct
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
     struct blasfeo_dvec *lam;    // pointer to lam in nlp_out
     struct blasfeo_dvec *z_alg;  // pointer to z_alg in ocp_nlp memory
+    struct blasfeo_dvec *dmask;  // pointer to dmask in ocp_nlp memory
     struct blasfeo_dmat *DCt;    // pointer to DCt in qp_in
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
     struct blasfeo_dmat *dzduxt; // pointer to dzduxt in ocp_nlp memory
@@ -204,11 +206,15 @@ typedef struct
 
 //
 acados_size_t ocp_nlp_constraints_bgh_workspace_calculate_size(void *config, void *dims, void *opts);
+//
+size_t ocp_nlp_constraints_bgh_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_);
+//
+void ocp_nlp_constraints_bgh_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_);
 
 /* functions */
 
 //
-void ocp_nlp_constraints_bgh_config_initialize_default(void *config);
+void ocp_nlp_constraints_bgh_config_initialize_default(void *config, int stage);
 //
 void ocp_nlp_constraints_bgh_initialize(void *config, void *dims, void *model, void *opts,
                                     void *mem, void *work);

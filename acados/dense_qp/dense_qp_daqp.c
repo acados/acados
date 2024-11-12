@@ -129,7 +129,7 @@ void dense_qp_daqp_opts_set(void *config_, void *opts_, const char *field, void 
     else if (!strcmp(field, "tol_comp"))
     {
         // Complementary slackness is implicitly
-        // handled by the worlking set
+        // handled by the working set
     }
     else if (!strcmp(field, "iter_max"))
     {
@@ -511,6 +511,37 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
         mem->idxv_to_idxb[idxb[ii]] = ii;
     }
 
+    // printf("DAQP: dmask\n");
+    // blasfeo_print_tran_dvec(2*(nb+ng), qp_in->d_mask, 0);
+    for (int ii = 0; ii < nb; ii++)
+    {
+        // NOTE: DAQP always works with double sided constraints, so currently one can not only ignore the upper bound or the lower bound.
+
+        // "ignore" bounds that are marked as unconstrained in qp_in via dmask
+        if (BLASFEO_DVECEL(qp_in->d_mask, ii) == 0.0)
+        {
+            work->qp->blower[idxb[ii]] = -DAQP_INF;
+        }
+        if (BLASFEO_DVECEL(qp_in->d_mask, ii+ng+nb) == 0.0)
+        {
+            work->qp->bupper[idxb[ii]] = +DAQP_INF;
+        }
+    }
+    // ignore some general linear constraints.
+    for (int ii = 0; ii < ng; ii++)
+    {
+        if (BLASFEO_DVECEL(qp_in->d_mask, nb+ii) == 0.0)
+        {
+            work->qp->blower[ii+nv] = -DAQP_INF;
+        }
+        if (BLASFEO_DVECEL(qp_in->d_mask, 2*nb+ng+ii) == 0.0)
+        {
+            work->qp->bupper[ii+nv] = +DAQP_INF;
+        }
+    }
+
+
+
     // Mark equality constraints
     for (int ii = 0; ii < ne; ii++)
     {
@@ -674,6 +705,9 @@ int dense_qp_daqp(void* config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
 {
     qp_info *info = (qp_info *) qp_out->misc;
     acados_timer tot_timer, qp_timer, interface_timer;
+
+    // Uncomment to print dense QPs to file for solution with matlab;
+    // d_dense_qp_codegen_matlab("dense_qp_for_matlab.m", "a", qp_in->dim, qp_in);
 
     acados_tic(&tot_timer);
     acados_tic(&interface_timer);

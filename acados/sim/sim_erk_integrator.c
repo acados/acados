@@ -96,6 +96,10 @@ void sim_erk_dims_set(void *config_, void *dims_, const char *field, const int *
     {
         // np dimension not needed
     }
+    else if (!strcmp(field, "np_global"))
+    {
+        // np_global dimension not needed
+    }
     else
     {
         printf("\nerror: sim_erk_dims_set: dim type not available: %s\n", field);
@@ -151,6 +155,11 @@ void *sim_erk_model_assign(void *config, void *dims, void *raw_memory)
 
     erk_model *model = (erk_model *) c_ptr;
     c_ptr += sizeof(erk_model);
+
+    model->expl_ode_fun = NULL;
+    model->expl_vde_for = NULL;
+    model->expl_vde_adj = NULL;
+    model->expl_ode_hes = NULL;
 
     return model;
 }
@@ -522,6 +531,41 @@ static void *sim_erk_cast_workspace(void *config_, sim_erk_dims *dims, sim_opts 
 
     return (void *) work;
 }
+
+
+
+
+size_t sim_erk_get_external_fun_workspace_requirement(void *config_, void *dims_, void *opts_, void *model_)
+{
+    erk_model *model = model_;
+
+    size_t size = 0;
+    size_t tmp_size;
+
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->expl_ode_fun);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->expl_vde_for);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->expl_vde_adj);
+    size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->expl_ode_hes);
+    size = size > tmp_size ? size : tmp_size;
+
+    return size;
+}
+
+
+void sim_erk_set_external_fun_workspaces(void *config_, void *dims_, void *opts_, void *model_, void *workspace_)
+{
+    erk_model *model = model_;
+
+    external_function_set_fun_workspace_if_defined(model->expl_ode_fun, workspace_);
+    external_function_set_fun_workspace_if_defined(model->expl_vde_for, workspace_);
+    external_function_set_fun_workspace_if_defined(model->expl_vde_adj, workspace_);
+    external_function_set_fun_workspace_if_defined(model->expl_ode_hes, workspace_);
+}
+
+
 
 /************************************************
  * functions
@@ -900,6 +944,8 @@ void sim_erk_config_initialize_default(void *config_)
     config->memory_set_to_zero = &sim_erk_memory_set_to_zero;
     config->memory_get = &sim_erk_memory_get;
     config->workspace_calculate_size = &sim_erk_workspace_calculate_size;
+    config->get_external_fun_workspace_requirement = &sim_erk_get_external_fun_workspace_requirement;
+    config->set_external_fun_workspaces = &sim_erk_set_external_fun_workspaces;
     config->model_calculate_size = &sim_erk_model_calculate_size;
     config->model_assign = &sim_erk_model_assign;
     config->model_set = &sim_erk_model_set;

@@ -37,7 +37,6 @@ addpath('../pendulum_on_cart_model/');
 for itest = 1:3
     %% arguments
     compile_interface = 'auto';
-    codgen_model = 'true';
     gnsf_detect_struct = 'true';
 
     % discretization
@@ -195,7 +194,6 @@ for itest = 1:3
     %% acados ocp opts
     ocp_opts = acados_ocp_opts();
     ocp_opts.set('compile_interface', compile_interface);
-    ocp_opts.set('codgen_model', codgen_model);
     ocp_opts.set('param_scheme_N', N);
     ocp_opts.set('nlp_solver', nlp_solver);
     ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
@@ -227,7 +225,7 @@ for itest = 1:3
 
     %% acados ocp
     % create ocp
-    ocp = acados_ocp(ocp_model, ocp_opts);
+    ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
     % set trajectory initialization
     %x_traj_init = zeros(nx, N+1);
@@ -235,49 +233,49 @@ for itest = 1:3
     x_traj_init = [linspace(0, 0, N+1); linspace(pi, 0, N+1); linspace(0, 0, N+1); linspace(0, 0, N+1)];
 
     u_traj_init = zeros(nu, N);
-    ocp.set('init_x', x_traj_init);
-    ocp.set('init_u', u_traj_init);
+    ocp_solver.set('init_x', x_traj_init);
+    ocp_solver.set('init_u', u_traj_init);
 
     % change number of sqp iterations
-    ocp.set('nlp_solver_max_iter', 20);
+    ocp_solver.set('nlp_solver_max_iter', 20);
 
     % modify numerical data for a certain stage
     some_stages = 1:10:N-1;
     for i = some_stages
         if (strcmp(cost_type, 'linear_ls'))
-            ocp.set('cost_Vx', Vx, i); % cost_y_ref, cost_Vu, cost_Vx, cost_W, cost_Z, cost_Zl,...
+            ocp_solver.set('cost_Vx', Vx, i); % cost_y_ref, cost_Vu, cost_Vx, cost_W, cost_Z, cost_Zl,...
              % cost_Zu, cost_z, cost_zl, cost_zu;
-            ocp.set('cost_Vu', Vu, i);
-            ocp.set('cost_y_ref', yr, i);
+            ocp_solver.set('cost_Vu', Vu, i);
+            ocp_solver.set('cost_y_ref', yr, i);
         end
         if ng > 0
-            ocp.set('constr_C', C, i);
-            ocp.set('constr_D', D, i);
-            ocp.set('constr_ug', ubu, i);
-            ocp.set('constr_lg', lbu, i);
+            ocp_solver.set('constr_C', C, i);
+            ocp_solver.set('constr_D', D, i);
+            ocp_solver.set('constr_ug', ubu, i);
+            ocp_solver.set('constr_lg', lbu, i);
         end
     end
 
     % solve
     tic;
-    ocp.solve();
+    ocp_solver.solve();
     time_ext=toc;
     % get solution
-    utraj = ocp.get('u');
-    xtraj = ocp.get('x');
+    utraj = ocp_solver.get('u');
+    xtraj = ocp_solver.get('x');
 
     %% evaluation
-    status = ocp.get('status');
-    sqp_iter = ocp.get('sqp_iter');
-    time_tot = ocp.get('time_tot');
-    time_lin = ocp.get('time_lin');
-    time_reg = ocp.get('time_reg');
-    time_qp_sol = ocp.get('time_qp_sol');
+    status = ocp_solver.get('status');
+    sqp_iter = ocp_solver.get('sqp_iter');
+    time_tot = ocp_solver.get('time_tot');
+    time_lin = ocp_solver.get('time_lin');
+    time_reg = ocp_solver.get('time_reg');
+    time_qp_sol = ocp_solver.get('time_qp_sol');
 
     fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3);
 
-    stat = ocp.get('stat');
-    ocp.print('stat')
+    stat = ocp_solver.get('stat');
+    ocp_solver.print('stat')
 
     if itest == 1
         utraj_ref = utraj;

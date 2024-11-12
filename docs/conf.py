@@ -81,7 +81,7 @@ html_context = {
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.mathjax', 'breathe', 'recommonmark', 'sphinx.ext.autodoc', 'sphinx.ext.graphviz']
+extensions = ['sphinx.ext.mathjax', 'breathe', 'recommonmark', 'sphinx.ext.autodoc', 'sphinx.ext.graphviz', 'sphinx_markdown_tables']
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -90,14 +90,13 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = ['_build', 'README.md', 'Thumbs.db', '.DS_Store', '*env*', 'requirements.txt', 'memory_management.md']
 
 # -- GraphViz configuration --------------------------------------------------
 graphviz_output_format = 'svg'
 
 # -- Options for HTML output -------------------------------------------------
 
-exclude_patterns = ['_build', 'README.md', 'Thumbs.db', '.DS_Store', 'env', 'requirements.txt', 'memory_management.md']
 pygments_style = 'sphinx'
 todo_include_todos = True
 
@@ -108,26 +107,25 @@ cpp_id_attributes = ['ACADOS_SYMBOL_EXPORT']
 #
 html_theme = 'sphinx_rtd_theme'
 # html_theme = 'alabaster'
+html_logo = "_static/acados_logo.png"
 
+html_theme = 'sphinx_book_theme'
 html_theme_options = {
-    'canonical_url': '',
-    'analytics_id': 'UA-XXXXXXX-1',  #  Provided by Google in your dashboard
-    'logo_only': False,
-    'display_version': True,
-    'prev_next_buttons_location': 'bottom',
-    'style_external_links': False,
-    # 'vcs_pageview_mode': '',
-    # Toc options
-    'collapse_navigation': True,
-    'sticky_navigation': True,
-    'navigation_depth': 4,
-    'includehidden': True,
-    'titles_only': False
+    "path_to_docs": "docs",
+    "repository_url": "https://github.com/acados/acados",
+    "use_repository_button": True,
+    "use_source_button": True,
+    "use_issues_button": True,
+    "show_navbar_depth": 1,  # 2 looks nice, but only extends for real subpages, like C interface, which is not so relevant
+    "show_toc_level": 1,
 }
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+html_favicon = '_static/acados_favicon.png'
 
 def setup(app):
     app.add_config_value('recommonmark_config', {

@@ -72,14 +72,19 @@ typedef struct {{ name }}_solver_capsule
     ocp_nlp_config *nlp_config;
     ocp_nlp_dims *nlp_dims;
 
-	{%- for jj in range(end=n_phases) %}{# phases loop !#}
+{% if phases_dims[0].np_global > 0 %}
+    external_function_casadi p_global_precompute_fun;
+{%- endif %}
+
+    {%- for jj in range(end=n_phases) %}{# phases loop !#}
     /* external functions phase {{ jj }} */
     // dynamics
 {% if mocp_opts.integrator_type[jj] == "ERK" %}
-    external_function_external_param_casadi *forw_vde_casadi_{{ jj }};
+    external_function_external_param_casadi *expl_vde_forw_{{ jj }};
+    external_function_external_param_casadi *expl_vde_adj_{{ jj }};
     external_function_external_param_casadi *expl_ode_fun_{{ jj }};
 {% if solver_options.hessian_approx == "EXACT" %}
-    external_function_external_param_casadi *hess_vde_casadi_{{ jj }};
+    external_function_external_param_casadi *expl_ode_hess_{{ jj }};
 {%- endif %}
 {% elif mocp_opts.integrator_type[jj] == "IRK" %}
     external_function_external_param_{{ model[jj].dyn_ext_fun_type }} *impl_dae_fun_{{ jj }};
@@ -122,7 +127,9 @@ typedef struct {{ name }}_solver_capsule
 {% if cost[jj].cost_type == "NONLINEAR_LS" %}
     external_function_external_param_casadi *cost_y_fun_{{ jj }};
     external_function_external_param_casadi *cost_y_fun_jac_ut_xt_{{ jj }};
+{%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi *cost_y_hess_{{ jj }};
+{%- endif %}
 {% elif cost[jj].cost_type == "CONVEX_OVER_NONLINEAR" %}
     external_function_external_param_casadi *conl_cost_fun_{{ jj }};
     external_function_external_param_casadi *conl_cost_fun_jac_hess_{{ jj }};
@@ -134,13 +141,15 @@ typedef struct {{ name }}_solver_capsule
     external_function_external_param_{{ cost[jj].cost_ext_fun_type }} *ext_cost_hess_xu_p_{{ jj }};
     {% endif %}
 {% endif %}
-	{%- endfor %}{# for jj in range(end=n_phases) #}
+    {%- endfor %}{# for jj in range(end=n_phases) #}
 
 
 {% if cost_0.cost_type_0 == "NONLINEAR_LS" %}
     external_function_external_param_casadi cost_y_0_fun;
     external_function_external_param_casadi cost_y_0_fun_jac_ut_xt;
+    {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi cost_y_0_hess;
+    {%- endif %}
 {% elif cost_0.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
     external_function_external_param_casadi conl_cost_0_fun;
     external_function_external_param_casadi conl_cost_0_fun_jac_hess;
@@ -168,7 +177,9 @@ typedef struct {{ name }}_solver_capsule
 {% if cost_e.cost_type_e == "NONLINEAR_LS" %}
     external_function_external_param_casadi cost_y_e_fun;
     external_function_external_param_casadi cost_y_e_fun_jac_ut_xt;
+    {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi cost_y_e_hess;
+    {%- endif %}
 {% elif cost_e.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
     external_function_external_param_casadi conl_cost_e_fun;
     external_function_external_param_casadi conl_cost_e_fun_jac_hess;
@@ -211,6 +222,7 @@ ACADOS_SYMBOL_EXPORT int {{ name }}_acados_create_with_discretization({{ name }}
 
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_update_params({{ name }}_solver_capsule * capsule, int stage, double *value, int np);
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_update_params_sparse({{ name }}_solver_capsule * capsule, int stage, int *idx, double *p, int n_update);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver_capsule* capsule, double* data, int data_len);
 
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_solve({{ name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_free({{ name }}_solver_capsule * capsule);

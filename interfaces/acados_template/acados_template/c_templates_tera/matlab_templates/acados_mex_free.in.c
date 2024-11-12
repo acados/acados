@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <string.h>
 // acados
-#include "acados_solver_{{ model.name }}.h"
+#include "acados_solver_{{ name }}.h"
 
 // mex
 #include "mex.h"
@@ -48,18 +48,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     const mxArray *C_ocp = prhs[0];
     // capsule
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "capsule" ) );
-    {{ model.name }}_solver_capsule *capsule = ({{ model.name }}_solver_capsule *) ptr[0];
+    {{ name }}_solver_capsule *capsule = ({{ name }}_solver_capsule *) ptr[0];
 
-    status = {{ model.name }}_acados_free(capsule);
+    status = {{ name }}_acados_free(capsule);
     if (status)
     {
-        mexPrintf("{{ model.name }}_acados_free() returned status %d.\n", status);
+        mexPrintf("{{ name }}_acados_free() returned status %d.\n", status);
     }
 
-    status = {{ model.name }}_acados_free_capsule(capsule);
+    status = {{ name }}_acados_free_capsule(capsule);
     if (status)
     {
-        mexPrintf("{{ model.name }}_acados_free_capsule() returned status %d.\n", status);
+        mexPrintf("{{ name }}_acados_free_capsule() returned status %d.\n", status);
     }
 
     return;

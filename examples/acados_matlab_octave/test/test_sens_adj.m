@@ -37,7 +37,6 @@ addpath('../pendulum_on_cart_model/');
 for integrator = {'irk_gnsf', 'irk', 'erk'}
     %% arguments
     compile_interface = 'auto';
-    codgen_model = 'true';
     method = integrator{1}; %'irk'; 'irk_gnsf'; 'erk';
     sens_forw = 'false';
     num_stages = 4;
@@ -81,7 +80,6 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
 	%% acados sim opts
 	sim_opts = acados_sim_opts();
 	sim_opts.set('compile_interface', compile_interface);
-	sim_opts.set('codgen_model', codgen_model);
 	sim_opts.set('num_stages', num_stages);
 	sim_opts.set('num_steps', num_steps);
 	sim_opts.set('method', method);
@@ -90,21 +88,21 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
 
 	%% acados sim
 	% create sim
-	sim = acados_sim(sim_model, sim_opts);
+	sim_solver = acados_sim(sim_model, sim_opts);
 
     % Note: this does not work with gnsf, because it needs to be available
     % in the precomputation phase
-    % 	sim.set('T', Ts);
+    % 	sim_solver.set('T', Ts);
 
 	% set initial state
-	sim.set('x', x0);
-	sim.set('u', u);
+	sim_solver.set('x', x0);
+	sim_solver.set('u', u);
 
 	% solve
-	sim.solve();
+	sim_solver.solve();
 
-	xn = sim.get('xn');
-	S_forw_ind = sim.get('S_forw');
+	xn = sim_solver.get('xn');
+	S_forw_ind = sim_solver.get('S_forw');
 
 	%% compute forward sensitivities through adjoint sensitivities with unit seeds
 % 	sim_opts.set('sens_forw', 'false');
@@ -115,11 +113,11 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
 		% set seed
 		dx = zeros(nx, 1);
 		dx(ii) = 1.0;
-		sim.set('seed_adj', dx);
+		sim_solver.set('seed_adj', dx);
 
-		sim.solve();
+		sim_solver.solve();
 
-		S_adj = sim.get('S_adj');
+		S_adj = sim_solver.get('S_adj');
 		S_forw_adj(ii,:) = S_adj;
 	end
 

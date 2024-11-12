@@ -27,10 +27,17 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
+
+
+% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
+% as well as a new interface (>= v0.4.0).
+
+% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
+% with the examples that have been ported to the new interface already.
+% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
+
 import casadi.*
 
-%% test of native matlab interface
 clear all; clc;
 check_acados_requirements()
 
@@ -83,7 +90,7 @@ if (generic_or_casadi == 0)
     ocp_model.set('cost_source_ext_cost_0', 'generic_ext_cost.c');
     ocp_model.set('cost_function_ext_cost_0', 'ext_cost');
     % Generic stage cost
-    ocp_model.set('cost_ext_fun_type', 'generic');    
+    ocp_model.set('cost_ext_fun_type', 'generic');
     ocp_model.set('cost_source_ext_cost', 'generic_ext_cost.c');
     ocp_model.set('cost_function_ext_cost', 'ext_cost');
     % Generic terminal cost
@@ -105,12 +112,12 @@ elseif (generic_or_casadi == 2)
     ocp_model.set('cost_ext_fun_type_0', 'casadi');
     ocp_model.set('cost_expr_ext_cost_0', model.cost_expr_ext_cost_0);
     % Generic stage cost
-    ocp_model.set('cost_ext_fun_type', 'generic');    
+    ocp_model.set('cost_ext_fun_type', 'generic');
     ocp_model.set('cost_source_ext_cost', 'generic_ext_cost.c');
     ocp_model.set('cost_function_ext_cost', 'ext_cost');
     % Casadi terminal cost
     ocp_model.set('cost_ext_fun_type_e', 'casadi');
-    ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);    
+    ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);
 end
 
 % dynamics
@@ -133,7 +140,6 @@ ocp_model.set('constr_lh', -U_max);
 ocp_model.set('constr_uh', U_max);
 
 ocp_model.set('constr_x0', x0);
-% ... see ocp_model.model_struct to see what other fields can be set
 
 %% acados ocp set opts
 ocp_opts = acados_ocp_opts();
@@ -143,10 +149,9 @@ ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('qp_solver', qp_solver);
 ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
 ocp_opts.set('parameter_values', zeros(size(params))); % initialize to zero, change later
-% ... see ocp_opts.opts_struct to see what other fields can be set
 
 %% create ocp solver
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 x_traj_init = zeros(nx, N+1);
 u_traj_init = zeros(nu, N);
@@ -155,27 +160,27 @@ p = [1e3; 1e3; 1e-2; 1e-2];
 
 %% call ocp solver
 % update initial state
-ocp.set('constr_x0', x0);
+ocp_solver.set('constr_x0', x0);
 
 % set trajectory initialization
-ocp.set('init_x', x_traj_init);
-ocp.set('init_u', u_traj_init);
-ocp.set('init_pi', zeros(nx, N));
+ocp_solver.set('init_x', x_traj_init);
+ocp_solver.set('init_u', u_traj_init);
+ocp_solver.set('init_pi', zeros(nx, N));
 
 % change values for specific shooting node using:
-%   ocp.set('field', value, optional: stage_index)
-ocp.set('constr_lbx', x0, 0);
+%   ocp_solver.set('field', value, optional: stage_index)
+ocp_solver.set('constr_lbx', x0, 0);
 
-ocp.set('p', p);
+ocp_solver.set('p', p);
 
 % solve
-ocp.solve();
+ocp_solver.solve();
 % get solution
-utraj = ocp.get('u');
-xtraj = ocp.get('x');
+utraj = ocp_solver.get('u');
+xtraj = ocp_solver.get('x');
 
-status = ocp.get('status'); % 0 - success
-ocp.print('stat')
+status = ocp_solver.get('status'); % 0 - success
+ocp_solver.print('stat')
 
 %% Plots
 figure; hold on;
@@ -189,45 +194,3 @@ end
 figure
 stairs([utraj'; utraj(end)])
 grid on
-
-%% go embedded
-disp('testing templated solver');
-ocp.generate_c_code;
-cd c_generated_code/
-
-t_ocp = pendulum_mex_solver;
-
-% initial state
-t_ocp.set('constr_x0', x0);
-
-% set trajectory initialization
-t_ocp.set('init_x', x_traj_init);
-t_ocp.set('init_u', u_traj_init);
-t_ocp.set('init_pi', zeros(nx, N));
-
-% change values for specific shooting node using:
-%   ocp.set('field', value, optional: stage_index)
-t_ocp.set('constr_lbx', x0, 0);
-
-t_ocp.set('p', p);
-
-% solve
-t_ocp.solve();
-% get solution
-t_utraj = t_ocp.get('u');
-t_xtraj = t_ocp.get('x');
-t_status = t_ocp.get('status');
-
-error_X_mex_vs_mex_template = max(max(abs(t_xtraj - xtraj)))
-error_U_mex_vs_mex_template = max(max(abs(t_utraj - utraj)))
-
-t_ocp.print('stat')
-
-tol_check = 1e-6;
-
-if any([error_X_mex_vs_mex_template, error_U_mex_vs_mex_template] > tol_check)
-    error(['test_template_pendulum_exact_hess: solution of templated MEX and original MEX',...
-         ' differ too much. Should be < tol = ' num2str(tol_check)]);
-end
-
-cd ..
