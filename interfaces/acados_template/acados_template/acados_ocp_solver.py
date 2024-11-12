@@ -694,18 +694,18 @@ class AcadosOcpSolver:
 
 
     def eval_adjoint_solution_sensitivity(self,
-                                          seed_x: Union[np.ndarray, List[np.ndarray]],
-                                          seed_u: Union[np.ndarray, List[np.ndarray]],
-                                          stages: Union[int, List[int]] = 0,
+                                          seed_x: Optional[Sequence[Tuple[int, np.ndarray]]],
+                                          seed_u: Optional[Sequence[Tuple[int, np.ndarray]]],
                                           with_respect_to: str = "p_global",
                                           sanity_checks: bool = True,
                                           ) -> np.ndarray:
         """
         Evaluate the adjoint sensitivity of the solution with respect to the parameters.
-            :param seed_x : np.ndarray or list of np.ndarrays - seed for the states at stage `stages`
-            :param seed_u : np.ndarray or list of np.ndarrays - seed for the controls at stage `stages`
-            :param stages_seed_x : int or list of int - stages corresponding to the seeds_x
-            :param stages_seed_u : int or list of int - stages corresponding to the seeds_u            :param with_respect_to : string in ["p_global"]
+            :param seed_x : Sequence of tuples of the form (stage: int, seed_vec: np.ndarray).
+                    The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the states at that stage.
+            :param seed_x : Sequence of tuples of the form (stage: int, seed_vec: np.ndarray).
+                    The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the states at that stage.
+            :param with_respect_to : string in ["p_global"]
             :param sanity_checks : bool - whether to perform sanity checks, turn off for minimal overhead, default: True
         """
 
@@ -740,7 +740,7 @@ class AcadosOcpSolver:
             # check seeds
             for seed, name, dim in [(seed_x, "seed_x", nx), (seed_u, "seed_u", nu)]:
                 if not isinstance(seed, Sequence):
-                    raise Exception(f"{name} should be tuple, got {type(seed)}")
+                    raise Exception(f"{name} should be a Sequence, got {type(seed)}")
                 for stage, seed_stage in seed:
                     if not isinstance(stage, int) or stage < 0 or stage > N_horizon:
                         raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): stage {stage} for {name} is not valid.")
