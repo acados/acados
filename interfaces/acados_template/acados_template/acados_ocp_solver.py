@@ -703,8 +703,8 @@ class AcadosOcpSolver:
         Evaluate the adjoint sensitivity of the solution with respect to the parameters.
             :param seed_x : Sequence of tuples of the form (stage: int, seed_vec: np.ndarray).
                     The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the states at that stage.
-            :param seed_x : Sequence of tuples of the form (stage: int, seed_vec: np.ndarray).
-                    The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the states at that stage.
+            :param seed_u : Sequence of tuples of the form (stage: int, seed_vec: np.ndarray).
+                    The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the controls at that stage.
             :param with_respect_to : string in ["p_global"]
             :param sanity_checks : bool - whether to perform sanity checks, turn off for minimal overhead, default: True
         """
@@ -713,12 +713,12 @@ class AcadosOcpSolver:
         if seed_x is None:
             seed_x = []
         elif not isinstance(seed_x, Sequence):
-            raise Exception(f"seed_x should be a Sequence, got {type(seed)}")
+            raise Exception(f"seed_x should be a Sequence, got {type(seed_x)}")
 
         if seed_u is None:
             seed_u = []
         elif not isinstance(seed_u, Sequence):
-            raise Exception(f"seed_u should be a Sequence, got {type(seed)}")
+            raise Exception(f"seed_u should be a Sequence, got {type(seed_u)}")
 
         if len(seed_x) == 0 and len(seed_u) == 0:
             raise Exception("seed_x and seed_u cannot both be empty.")
