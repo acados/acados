@@ -3400,12 +3400,12 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
         for (i = 0; i < N; i++)
         {
             // dynamics contribution
-            config->dynamics[i]->compute_adj_p(config->dynamics[i], dims->dynamics[i], in->dynamics[i], opts,
+            config->dynamics[i]->compute_adj_p(config->dynamics[i], dims->dynamics[i], in->dynamics[i], opts->dynamics[i],
                                     mem->dynamics[i], &work->tmp_np_global);
             blasfeo_dvecad(np_global, 1., &work->tmp_np_global, 0, &mem->out_np_global, 0);
 
             // cost contribution
-            config->cost[i]->eval_grad_p(config->cost[i], dims->cost[i], in->cost[i], opts,
+            config->cost[i]->eval_grad_p(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i],
                                     mem->cost[i], work->cost[i], &work->tmp_np_global);
             blasfeo_dvecad(np_global, 1., &work->tmp_np_global, 0, &mem->out_np_global, 0);
 
@@ -3417,7 +3417,7 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
         }
 
         // terminal cost contribution
-        config->cost[N]->eval_grad_p(config->cost[N], dims->cost[N], in->cost[N], opts,
+        config->cost[N]->eval_grad_p(config->cost[N], dims->cost[N], in->cost[N], opts->cost[N],
                                     mem->cost[N], work->cost[N], &work->tmp_np_global);
         blasfeo_dvecad(np_global, 1., &work->tmp_np_global, 0, &mem->out_np_global, 0);
 
