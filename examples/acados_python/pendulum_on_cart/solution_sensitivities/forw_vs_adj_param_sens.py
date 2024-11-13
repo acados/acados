@@ -86,8 +86,6 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
     sensitivity_solver.load_iterate(filename='iterate.json', verbose=False)
     sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
 
-    if ocp_solver.get_status() not in [0]:
-        breakpoint()
     if sensitivity_solver.get_status() not in [0, 2]:
         breakpoint()
 
@@ -116,8 +114,8 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
 
         print(f"{adj_p=} {adj_p_ref=}")
         if not np.allclose(adj_p, adj_p_ref, atol=TOL):
-            # raise Exception("adj_p and adj_p_ref should match.")
-            print("ERROR: adj_p and adj_p_ref should match.")
+            raise Exception("adj_p and adj_p_ref should match.")
+            # print("ERROR: adj_p and adj_p_ref should match.")
         else:
             print("Success: adj_p and adj_p_ref match!")
 
