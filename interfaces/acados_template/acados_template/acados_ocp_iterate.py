@@ -44,6 +44,17 @@ class AcadosOcpIterate:
     pi_traj: List[np.ndarray]
     lam_traj: List[np.ndarray]
 
+    def to_flattened(self) -> "AcadosOcpFlattenedIterate":
+        return AcadosOcpFlattenedIterate(
+            x=np.concatenate(self.x_traj),
+            u=np.concatenate(self.u_traj),
+            z=np.concatenate(self.z_traj),
+            sl=np.concatenate(self.sl_traj),
+            su=np.concatenate(self.su_traj),
+            pi=np.concatenate(self.pi_traj),
+            lam=np.concatenate(self.lam_traj),
+        )
+
 @dataclass
 class AcadosOcpIterates:
 
