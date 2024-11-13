@@ -257,12 +257,12 @@ static int casadi_is_dense(const int *sparsity)
                 if (idxcol[jj + 1] - idxcol[jj] != nrow)
                 {
                     // printf("casadi_is_dense: REAL sparse!\n");
-                    // printf("idxco[jj+1] = %d idxcol[jj] %d nrow %d\n", idxcol[jj + 1], idxcol[jj], nrow);
+                    // printf("idxcol[jj+1] = %d idxcol[jj] %d nrow %d\n", idxcol[jj + 1], idxcol[jj], nrow);
                     return 0;
                 }
                 for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
                 {
-                    if (row[idx]+jj*ncol != idx)
+                    if (row[idx]+jj*nrow != idx)
                     {
                         // printf("casadi_is_dense: REAL sparse!\n");
                         // printf("row[idx] %d != idx = %d, nrow %d ncol %d, jj %d\n", row[idx], idx, nrow, ncol, jj);
