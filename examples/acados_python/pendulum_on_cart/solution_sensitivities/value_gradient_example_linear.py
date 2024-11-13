@@ -33,16 +33,15 @@ import numpy as np
 from sensitivity_utils import plot_cost_gradient_results
 from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
 from casadi.tools import entry, struct_symSX
-import casadi as cs
+import casadi as ca
 
 
-# taken from seal example
-params = {
+PARAM_VALUE_DICT = {
     "A": np.array([[1.0, 0.25], [0.0, 1.0]]),
     "B": np.array([[0.03125], [0.25]]),
     "Q": np.identity(2),
     "R": np.identity(1),
-    "b": np.array([[0.0], [0.0]]),
+    "b": np.array([[0.2], [0.2]]),
     "f": np.array([[0.0], [0.0], [0.0]]),
     "V_0": np.array([1e-3]),
 }
@@ -50,20 +49,17 @@ params = {
 
 def find_param_in_p_or_p_global(param_name: list[str], model: AcadosModel) -> list:
     if model.p == []:
-        return {key: model.p_global[key] for key in param_name}  # type:ignore
+        return {key: model.p_global[key] for key in param_name}
     elif model.p_global is None:
-        return {key: model.p[key] for key in param_name}  # type:ignore
+        return {key: model.p[key] for key in param_name}
     else:
         return {
-            key: (model.p[key] if key in model.p.keys() else model.p_global[key])  # type:ignore
+            key: (model.p[key] if key in model.p.keys() else model.p_global[key])
             for key in param_name
         }
 
 
 def disc_dyn_expr(model: AcadosModel):
-    """
-    Define the discrete dynamics function expression.
-    """
     x = model.x
     u = model.u
 
@@ -73,40 +69,30 @@ def disc_dyn_expr(model: AcadosModel):
 
 
 def cost_expr_ext_cost(model: AcadosModel):
-    """
-    Define the external cost function expression.
-    """
     x = model.x
     u = model.u
     param = find_param_in_p_or_p_global(["Q", "R", "f"], model)
 
     return 0.5 * (
-        cs.transpose(x) @ param["Q"] @ x
-        + cs.transpose(u) @ param["R"] @ u
-        + cs.transpose(param["f"]) @ cs.vertcat(x, u)
+        ca.transpose(x) @ param["Q"] @ x
+        + ca.transpose(u) @ param["R"] @ u
+        + ca.transpose(param["f"]) @ ca.vertcat(x, u)
     )
 
 
 def cost_expr_ext_cost_0(model: AcadosModel):
-    """
-    Define the external cost function expression at stage 0.
-    """
     param = find_param_in_p_or_p_global(["V_0"], model)
 
     return param["V_0"] + cost_expr_ext_cost(model)
 
 
 def cost_expr_ext_cost_e(model: AcadosModel, param: dict[str, np.ndarray]):
-    """
-    Define the external cost function expression at the terminal stage as the solution of the discrete-time algebraic Riccati
-    equation.
-    """
 
     x = model.x
 
-    return 0.5 * cs.mtimes(
+    return 0.5 * ca.mtimes(
         [
-            cs.transpose(x),
+            ca.transpose(x),
             param["Q"],
             x,
         ]
@@ -118,32 +104,12 @@ def export_parametric_ocp(
     name: str = "lti",
     learnable_params: list[str] = [],
 ) -> AcadosOcp:
-    """
-    Export a parametric optimal control problem (OCP) for a discrete-time linear time-invariant (LTI) system.
-
-    Parameters:
-    -----------
-    param : dict
-        Dictionary containing the parameters of the system. Keys should include "A", "B", "b", "V_0", and "f".
-    cost_type : str, optional
-        Type of cost function to use. Options are "LINEAR_LS" or "EXTERNAL".
-    name : str, optional
-        Name of the model.
-
-    Returns:
-    --------
-    AcadosOcp
-        An instance of the AcadosOcp class representing the optimal control problem.
-    """
     ocp = AcadosOcp()
 
     ocp.model.name = name
 
-    ocp.dims.nx = 2
-    ocp.dims.nu = 1
-
-    ocp.model.x = cs.SX.sym("x", ocp.dims.nx)  # type:ignore
-    ocp.model.u = cs.SX.sym("u", ocp.dims.nu)  # type:ignore
+    ocp.model.x = ca.SX.sym("x", 2)
+    ocp.model.u = ca.SX.sym("u", 1)
 
     ocp.solver_options.N_horizon = 4
     ocp.solver_options.tf = 8
@@ -200,7 +166,6 @@ def export_parametric_ocp(
     ocp.constraints.lbu = np.array([-1.0])
     ocp.constraints.ubu = np.array([+1.0])
 
-    # TODO: Make a PR to acados to allow struct_symSX | struct_symMX in acados_template and then concatenate there
     if isinstance(ocp.model.p, struct_symSX):
         ocp.model.p = ocp.model.p.cat if ocp.model.p is not None else []
     if isinstance(ocp.model.p_global, struct_symSX):
@@ -211,31 +176,32 @@ def export_parametric_ocp(
     return ocp
 
 
-
 def main():
-    """
-    Evaluate policy and calculate its gradient for the pendulum on a cart with a parametric model.
-    """
 
-    learnable_param = "A"
+    learnable_params = ["A", "Q", "b"]
     x0 = np.array([0.1, -0.2])
 
     delta_p = 0.005
-    p_nominal = params[learnable_param].flatten()
+    p_nominal = np.concatenate([PARAM_VALUE_DICT[k].flatten() for k in learnable_params]).flatten()
 
-    p_test = np.arange(-1.0, 1.0, delta_p)
+    p_test = np.arange(0.0, 1.0, delta_p)
     np_test = p_test.shape[0]
 
     dp = np.ones(p_nominal.shape).reshape((-1,))
-    dp[0] = 1.0
-    dp[1] = 1.0
-    dp[2] = 1.0
-    dp[3] = 1.0
-    ocp = export_parametric_ocp(params, learnable_params = [learnable_param])
+    # Q
+    dp[4] = 10.0
+    dp[5] = 0.0
+    dp[6] = 0.0
+    dp[7] = 10.0
+    # b
+    dp[8] = -0.2
+    dp[9] = -0.2
+
+    ocp = export_parametric_ocp(PARAM_VALUE_DICT, learnable_params = learnable_params)
     ocp.solver_options.with_value_sens_wrt_params = True
+    ocp.solver_options.nlp_solver_type = "SQP"
     acados_ocp_solver = AcadosOcpSolver(ocp)
 
-    np_global = dp.shape[0]
     optimal_value_grad = np.zeros((np_test,))
     optimal_value = np.zeros((np_test,))
 
@@ -244,7 +210,12 @@ def main():
     for i, p in enumerate(p_test):
         p_val = p_nominal + p * dp
         acados_ocp_solver.set_p_global_and_precompute_dependencies(p_val)
-        pi[i] = acados_ocp_solver.solve_for_x0(x0)[0]
+        pi[i] = acados_ocp_solver.solve_for_x0(x0, fail_on_nonzero_status=False)[0]
+
+        status = acados_ocp_solver.get_status()
+        if status != 0:
+            print(f"Solver failed with status {status} for p_val = {p_val}.")
+
         optimal_value[i] = acados_ocp_solver.get_cost()
         optimal_value_grad[i] = acados_ocp_solver.eval_and_get_optimal_value_gradient("p_global") @ dp
 
@@ -256,16 +227,14 @@ def main():
     plot_cost_gradient_results(p_test, optimal_value, optimal_value_grad,
                                optimal_value_grad_via_fd, cost_reconstructed_np_grad,
                                cost_reconstructed_acados, y_scale_log=True,
-                               title=f"varying parameter {learnable_param} in direction {dp}",
+                               title=f"varying parameters {', '.join(learnable_params)} in direction {dp}",
                                xlabel=r"$\alpha$ in $p+\alpha \Delta p$")
 
     # checks
-    test_tol = 1e-1
+    test_tol = 1e-3
     median_diff = np.median(np.abs(optimal_value_grad - optimal_value_grad_via_fd))
-    print(f"Median difference between value function gradient obtained by acados and via FD is {median_diff} should be < {test_tol}.")
+    print(f"Median difference between value function gradient obtained by acados and via FD is {median_diff:e} should be < {test_tol:e}.")
     assert median_diff <= test_tol
-
-
 
 if __name__ == "__main__":
     main()

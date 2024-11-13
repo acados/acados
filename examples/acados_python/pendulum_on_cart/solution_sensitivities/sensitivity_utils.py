@@ -198,7 +198,7 @@ def plot_cost_gradient_results(p_test, cost_values, acados_cost_grad, np_cost_gr
     # plot differences
     isub = 2
     ax[isub].plot(p_test, np.abs(acados_cost_grad - np_cost_grad), "--", label='acados vs. finite diff')
-    ax[isub].set_ylabel(r"difference $\partial_p V^*$")
+    ax[isub].set_ylabel(r"abs diff $\partial_p V^*$")
 
     if y_scale_log:
         ax[isub].set_yscale("log")
