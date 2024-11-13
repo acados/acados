@@ -430,12 +430,15 @@ static void d_cvt_dmat_to_casadi(struct blasfeo_dmat *in, double *out, int *spar
 
 
 
-// column vector: assume sparsity_in[1] = 1 !!! or empty vector;
 static void d_cvt_casadi_to_dvec(double *in, int *sparsity_in, struct blasfeo_dvec *out, int is_dense)
 {
     int idx;
 
-    assert((sparsity_in[1] == 1) | (sparsity_in[0] == 0) | (sparsity_in[1] == 0));
+    if (!((sparsity_in[1] == 1) | (sparsity_in[0] == 0) | (sparsity_in[1] == 0)))
+    {
+        printf("\nd_cvt_casadi_to_dvec: expected column vector or empty vector. Exiting.\n\n");
+        exit(1);
+    }
 
     int n = sparsity_in[0];
 
@@ -466,13 +469,15 @@ static void d_cvt_casadi_to_dvec(double *in, int *sparsity_in, struct blasfeo_dv
 
 
 
-// column vector: assume sparsity_in[1] = 1 !!! or empty vector;
 static void d_cvt_dvec_to_casadi(struct blasfeo_dvec *in, double *out, int *sparsity_out, int is_dense)
 {
     int idx;
 
-    assert((sparsity_out[1] == 1) | (sparsity_out[0] == 0) | (sparsity_out[1] == 0));
-
+    if (!((sparsity_out[1] == 1) | (sparsity_out[0] == 0) | (sparsity_out[1] == 0)))
+    {
+        printf("\nd_cvt_dvec_to_casadi: expected column vector or empty vector. Exiting.\n\n");
+        exit(1);
+    }
     int n = sparsity_out[0];
 
     if (n<=0)
@@ -661,12 +666,15 @@ static void d_cvt_dmat_args_to_casadi(struct blasfeo_dmat_args *in, double *out,
 
 
 
-// column vector: assume sparsity_in[1] = 1 !!! or empty vector;
 static void d_cvt_casadi_to_dvec_args(double *in, int *sparsity_in, struct blasfeo_dvec_args *out, int is_dense)
 {
     int idx;
 
-    assert((sparsity_in[1] == 1) | (sparsity_in[0] == 0) | (sparsity_in[1] == 0));
+    if (!((sparsity_in[1] == 1) | (sparsity_in[0] == 0) | (sparsity_in[1] == 0)))
+    {
+        printf("\nd_cvt_casadi_to_dvec_args: expected column vector or empty vector. Exiting.\n\n");
+        exit(1);
+    }
 
     int n = sparsity_in[0];
 
@@ -700,13 +708,15 @@ static void d_cvt_casadi_to_dvec_args(double *in, int *sparsity_in, struct blasf
 
 
 
-// column vector: assume sparsity_in[1] = 1 !!! or empty vector;
 static void d_cvt_dvec_args_to_casadi(struct blasfeo_dvec_args *in, double *out, int *sparsity_out, int is_dense)
 {
     int idx;
 
-    assert((sparsity_out[1] == 1) | (sparsity_out[0] == 0) | (sparsity_out[1] == 0));
-
+    if (!((sparsity_out[1] == 1) | (sparsity_out[0] == 0) | (sparsity_out[1] == 0)))
+    {
+        printf("\nd_cvt_dvec_args_to_casadi: expected column vector or empty vector. Exiting.\n\n");
+        exit(1);
+    }
     int n = sparsity_out[0];
 
     if (n<=0)
