@@ -1606,6 +1606,7 @@ void ocp_nlp_constraints_bgh_compute_adj_p(void* config_, void *dims_, void *mod
     int nh = dims->nh;
     int nb = dims->nb;
     int ng = dims->ng;
+    int np_global = dims->np_global;
 
     if (nh > 0)
     {
@@ -1647,6 +1648,11 @@ void ocp_nlp_constraints_bgh_compute_adj_p(void* config_, void *dims_, void *mod
         }
         model->nl_constr_h_adj_p->evaluate(model->nl_constr_h_adj_p,
                     ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+    }
+    else
+    {
+        // set output to zero - no contribution.
+        blasfeo_dvecse(np_global, 0.0, out, 0);
     }
 }
 
