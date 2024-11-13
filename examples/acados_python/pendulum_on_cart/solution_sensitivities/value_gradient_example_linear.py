@@ -115,7 +115,6 @@ def cost_expr_ext_cost_e(model: AcadosModel, param: dict[str, np.ndarray]):
 
 def export_parametric_ocp(
     param: dict[str, np.ndarray],
-    cost_type="EXTERNAL",
     name: str = "lti",
     learnable_params: list[str] = [],
 ) -> AcadosOcp:
@@ -146,8 +145,8 @@ def export_parametric_ocp(
     ocp.model.x = cs.SX.sym("x", ocp.dims.nx)  # type:ignore
     ocp.model.u = cs.SX.sym("u", ocp.dims.nu)  # type:ignore
 
-    ocp.solver_options.N_horizon = 40
-    ocp.solver_options.tf = 800
+    ocp.solver_options.N_horizon = 4
+    ocp.solver_options.tf = 8
     ocp.solver_options.integrator_type = 'DISCRETE'
 
     # Add learnable parameters to p_global
@@ -218,56 +217,51 @@ def main():
     Evaluate policy and calculate its gradient for the pendulum on a cart with a parametric model.
     """
 
-    p_nominal = 1.0
-    x0 = np.array([0.0, 0.0])
-    delta_p = 0.002
-    p_test = np.arange(p_nominal - 0.5, p_nominal + 0.5, delta_p)
+    learnable_param = "A"
+    x0 = np.array([0.1, -0.2])
 
+    delta_p = 0.005
+    p_nominal = params[learnable_param].flatten()
+
+    p_test = np.arange(-1.0, 1.0, delta_p)
     np_test = p_test.shape[0]
 
-    idx = 1
-    learnable_param = "f"
-    p_dim_ones = np.zeros(params[learnable_param].shape).reshape((-1,))
-    p_dim_ones[idx] = 1.
+    dp = np.ones(p_nominal.shape).reshape((-1,))
+    dp[0] = 1.0
+    dp[1] = 1.0
+    dp[2] = 1.0
+    dp[3] = 1.0
     ocp = export_parametric_ocp(params, learnable_params = [learnable_param])
     ocp.solver_options.with_value_sens_wrt_params = True
     acados_ocp_solver = AcadosOcpSolver(ocp)
 
-    np_global = p_dim_ones.shape[0]
-    optimal_value_grad = np.zeros((np_test, np_global))
+    np_global = dp.shape[0]
+    optimal_value_grad = np.zeros((np_test,))
     optimal_value = np.zeros((np_test,))
 
     dt = ocp.solver_options.tf/ocp.solver_options.N_horizon
-
     pi = np.zeros(np_test)
     for i, p in enumerate(p_test):
-
-        p_val = p * p_dim_ones
+        p_val = p_nominal + p * dp
         acados_ocp_solver.set_p_global_and_precompute_dependencies(p_val)
         pi[i] = acados_ocp_solver.solve_for_x0(x0)[0]
         optimal_value[i] = acados_ocp_solver.get_cost()
-        optimal_value_grad[i] = acados_ocp_solver.eval_and_get_optimal_value_gradient("p_global")
-
-        grad = 0
-        for n in range(ocp.solver_options.N_horizon):
-            x = acados_ocp_solver.get(n, 'x')
-            grad += x[idx]
-
-        grad = grad*0.5*dt
-
-        print(f"acados {optimal_value_grad[i][idx]}, analytic {grad}, iterations {acados_ocp_solver.get_stats('qp_iter')}")
+        optimal_value_grad[i] = acados_ocp_solver.eval_and_get_optimal_value_gradient("p_global") @ dp
 
     # evaluate cost gradient
     optimal_value_grad_via_fd = np.gradient(optimal_value, delta_p)
     cost_reconstructed_np_grad = np.cumsum(optimal_value_grad_via_fd) * delta_p + optimal_value[0]
-    cost_reconstructed_acados = np.cumsum(optimal_value_grad[:, idx]) * delta_p + optimal_value[0]
+    cost_reconstructed_acados = np.cumsum(optimal_value_grad) * delta_p + optimal_value[0]
 
-    plot_cost_gradient_results(p_test, optimal_value, optimal_value_grad[:, idx], optimal_value_grad_via_fd, cost_reconstructed_np_grad, y_scale_log=False)
-    # plot_cost_gradient_results(p_test, optimal_value, optimal_value_grad[:, idx], optimal_value_grad_via_fd, cost_reconstructed_acados, y_scale_log=False)
+    plot_cost_gradient_results(p_test, optimal_value, optimal_value_grad,
+                               optimal_value_grad_via_fd, cost_reconstructed_np_grad,
+                               cost_reconstructed_acados, y_scale_log=True,
+                               title=f"varying parameter {learnable_param} in direction {dp}",
+                               xlabel=r"$\alpha$ in $p+\alpha \Delta p$")
 
     # checks
     test_tol = 1e-1
-    median_diff = np.median(np.abs(optimal_value_grad[:, idx] - optimal_value_grad_via_fd))
+    median_diff = np.median(np.abs(optimal_value_grad - optimal_value_grad_via_fd))
     print(f"Median difference between value function gradient obtained by acados and via FD is {median_diff} should be < {test_tol}.")
     assert median_diff <= test_tol
 

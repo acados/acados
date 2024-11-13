@@ -177,15 +177,19 @@ def export_parametric_ocp(
 
     return ocp
 
-def plot_cost_gradient_results(p_test, cost_values, acados_cost_grad, np_cost_grad, cost_reconstructed_np_grad, y_scale_log=True):
+def plot_cost_gradient_results(p_test, cost_values, acados_cost_grad, np_cost_grad,
+                               cost_reconstructed_np_grad, cost_reconstructed_acados=None,
+                               y_scale_log=True, xlabel=None, title=None):
     _, ax = plt.subplots(nrows=4, ncols=1, sharex=True, figsize=(9,9))
 
     ax[0].plot(p_test, cost_values, label='cost acados', color='k')
     ax[0].plot(p_test, cost_reconstructed_np_grad, "--", label='reconstructed from finite diff')
+    if cost_reconstructed_acados is not None:
+        ax[0].plot(p_test, cost_reconstructed_acados, ":", label='reconstructed from acados derivatives')
     ax[0].set_ylabel(r"cost")
 
     ax[1].plot(p_test, np.abs(np_cost_grad), "--", label='finite diff')
-    ax[1].plot(p_test, np.abs(acados_cost_grad), "--", label='acados')
+    ax[1].plot(p_test, np.abs(acados_cost_grad), ":", label='acados')
     ax[1].set_ylabel(r"$|\partial_p V^*|$")
 
     if y_scale_log:
@@ -210,7 +214,11 @@ def plot_cost_gradient_results(p_test, cost_values, acados_cost_grad, np_cost_gr
         ax[i].grid()
         ax[i].legend()
 
-    ax[-1].set_xlabel(f"mass")
+    if xlabel is not None:
+        ax[-1].set_xlabel(xlabel)
+
+    if title is not None:
+        ax[0].set_title(title)
     ax[-1].set_xlim([p_test[0], p_test[-1]])
 
     fig_filename = f"cost_gradient.pdf"
