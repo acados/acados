@@ -489,7 +489,7 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
         context.add_function_definition(fun_name_param, [x, u, z, p], [hess_xu_p], cost_dir)
 
     if opts["with_value_sens_wrt_params"]:
-        grad_p = ca.jacobian(ext_cost, p_global)
+        grad_p = ca.jacobian(ext_cost, p_global).T
         context.add_function_definition(fun_name_value_sens, [x, u, z, p], [grad_p], cost_dir)
 
     return
