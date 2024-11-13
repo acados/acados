@@ -33,6 +33,18 @@ from dataclasses import dataclass
 from typing import List
 import numpy as np
 
+
+@dataclass
+class AcadosOcpFlattenedIterate:
+    x: np.ndarray
+    u: np.ndarray
+    z: np.ndarray
+    sl: np.ndarray
+    su: np.ndarray
+    pi: np.ndarray
+    lam: np.ndarray
+
+
 @dataclass
 class AcadosOcpIterate:
 
@@ -44,7 +56,7 @@ class AcadosOcpIterate:
     pi_traj: List[np.ndarray]
     lam_traj: List[np.ndarray]
 
-    def to_flattened(self) -> "AcadosOcpFlattenedIterate":
+    def flatten(self) -> AcadosOcpFlattenedIterate:
         return AcadosOcpFlattenedIterate(
             x=np.concatenate(self.x_traj),
             u=np.concatenate(self.u_traj),
@@ -79,13 +91,3 @@ class AcadosOcpIterates:
             raise Exception(f"Stage-wise dimensions are not the same for {field} trajectory.")
 
         return traj
-
-@dataclass
-class AcadosOcpFlattenedIterate:
-    x: np.ndarray
-    u: np.ndarray
-    z: np.ndarray
-    sl: np.ndarray
-    su: np.ndarray
-    pi: np.ndarray
-    lam: np.ndarray
