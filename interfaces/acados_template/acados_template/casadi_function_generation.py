@@ -784,9 +784,8 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
         phi_jac_x = ca.jacobian(con_phi_expr_x_u_z, x)
         phi_jac_z = ca.jacobian(con_phi_expr_x_u_z, z)
 
-        hess = ca.hessian(con_phi_expr[0], r)[0]
-        for i in range(1, nphi):
-            hess = ca.vertcat(hess, ca.hessian(con_phi_expr[i], r)[0])
+        hess = ca.vertcat(*[ca.hessian(con_phi_expr[i], r)[0] for i in range(nphi)])
+        hess = ca.substitute(hess, r, con_r_expr)
 
         r_jac_u = ca.jacobian(con_r_expr, u)
         r_jac_x = ca.jacobian(con_r_expr, x)
