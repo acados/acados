@@ -29,6 +29,8 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+import os, sys
+sys.path.insert(0, '../pendulum_on_cart/solution_sensitivities')
 import numpy as np
 from sensitivity_utils import plot_cost_gradient_results
 from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
@@ -233,7 +235,7 @@ def main():
     # checks
     test_tol = 1e-3
     median_diff = np.median(np.abs(optimal_value_grad - optimal_value_grad_via_fd))
-    print(f"Median difference between value function gradient obtained by acados and via FD is {median_diff:e} should be < {test_tol:e}.")
+    print(f"Median difference between value function gradient obtained by acados and via FD is {median_diff:.2e} should be < {test_tol:.2e}.")
     assert median_diff <= test_tol
 
 if __name__ == "__main__":

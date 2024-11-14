@@ -172,10 +172,12 @@ jobs:
         source ${{runner.workspace}}/acados/acadosenv/bin/activate
         cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/solution_sensitivities
         python value_gradient_example.py
-        python value_gradient_example_linear.py
         python policy_gradient_example.py
         python test_solution_sens_and_exact_hess.py
         python forw_vs_adj_param_sens.py
+        cd ${{runner.workspace}}/acados/examples/acados_python/solution_sensitivities_convex_example
+        python value_gradient_example_linear.py
+
 
     - name: Python Furuta pendulum timeout test
       working-directory: ${{runner.workspace}}/acados/build
