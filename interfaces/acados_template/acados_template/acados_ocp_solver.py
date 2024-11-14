@@ -535,7 +535,7 @@ class AcadosOcpSolver:
         - for field `initial_state`, the gradient is the Lagrange multiplier of the initial state constraint.
         The gradient computation consists of adding the Lagrange multipliers corresponding to the upper and lower bound of the initial state.
 
-        - for field `params_global`, the gradient of the Lagrange function w.r.t. the global parameters is computed in acados.
+        - for field `p_global`, the gradient of the Lagrange function w.r.t. the global parameters is computed.
 
         :param with_respect_to: string in ["initial_state", "p_global"]
         """
@@ -702,9 +702,9 @@ class AcadosOcpSolver:
         """
         Evaluate the adjoint sensitivity of the solution with respect to the parameters.
             :param seed_x : Sequence of tuples of the form (stage: int, seed_vec: np.ndarray).
-                    The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the states at that stage.
+                    The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the states at that stage with shape (nx, n_seeds)
             :param seed_u : Sequence of tuples of the form (stage: int, seed_vec: np.ndarray).
-                    The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the controls at that stage.
+                    The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the controls at that stage with shape (nu, n_seeds).
             :param with_respect_to : string in ["p_global"]
             :param sanity_checks : bool - whether to perform sanity checks, turn off for minimal overhead, default: True
         """
@@ -752,10 +752,6 @@ class AcadosOcpSolver:
                         raise Exception(f"{name} for stage {stage} should be np.ndarray, got {type(seed_stage)}")
                     if seed_stage.shape != (dim, n_seeds):
                         raise Exception(f"{name} for stage {stage} should have shape (dim, n_seeds) = ({dim}, {n_seeds}), got {seed_stage.shape}.")
-
-        t0 = time.time()
-        self.__acados_lib.ocp_nlp_eval_params_jac(self.nlp_solver, self.nlp_in, self.nlp_out)
-        self.time_solution_sens_lin = time.time() - t0
 
         if with_respect_to == "p_global":
             field = "p_global".encode('utf-8')
