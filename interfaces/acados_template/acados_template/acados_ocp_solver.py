@@ -80,6 +80,16 @@ class AcadosOcpSolver:
         """`acados_lib_uses_omp` - flag indicating whether the acados library has been compiled with openMP."""
         return self.__acados_lib_uses_omp
 
+    @property
+    def acados_lib(self,):
+        """`acados_lib` - acados shared library"""
+        return self.__acados_lib
+
+    @property
+    def shared_lib(self,):
+        """`shared_lib` - solver shared library"""
+        return self.__shared_lib
+
     @classmethod
     def generate(cls, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, simulink_opts=None, cmake_builder: CMakeBuilder = None):
         """
@@ -236,16 +246,16 @@ class AcadosOcpSolver:
         self.shared_lib_name = os.path.join(code_export_directory, libacados_ocp_solver_name)
 
         # get shared_lib
-        self.shared_lib = get_shared_lib(self.shared_lib_name, self.winmode)
+        self.__shared_lib = get_shared_lib(self.shared_lib_name, self.winmode)
 
         # create capsule
-        getattr(self.shared_lib, f"{self.name}_acados_create_capsule").restype = c_void_p
-        self.capsule = getattr(self.shared_lib, f"{self.name}_acados_create_capsule")()
+        getattr(self.__shared_lib, f"{self.name}_acados_create_capsule").restype = c_void_p
+        self.capsule = getattr(self.__shared_lib, f"{self.name}_acados_create_capsule")()
 
         # create solver
-        getattr(self.shared_lib, f"{self.name}_acados_create").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{self.name}_acados_create").restype = c_int
-        assert getattr(self.shared_lib, f"{self.name}_acados_create")(self.capsule)==0
+        getattr(self.__shared_lib, f"{self.name}_acados_create").argtypes = [c_void_p]
+        getattr(self.__shared_lib, f"{self.name}_acados_create").restype = c_int
+        assert getattr(self.__shared_lib, f"{self.name}_acados_create")(self.capsule)==0
         self.solver_created = True
 
         self.acados_ocp = acados_ocp
@@ -312,6 +322,8 @@ class AcadosOcpSolver:
 
         self.__acados_lib.ocp_nlp_set_all.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
         self.__acados_lib.ocp_nlp_set_all.restype = None
+
+        self.__acados_lib.ocp_nlp_out_set_values_to_zero.argtypes = [c_void_p, c_void_p, c_void_p]
 
         getattr(self.shared_lib, f"{self.name}_acados_solve").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{self.name}_acados_solve").restype = c_int
@@ -760,7 +772,6 @@ class AcadosOcpSolver:
 
             grad = np.zeros((n_seeds, nparam))
             grad_p = np.ascontiguousarray(grad, dtype=np.float64)
-            c_grad_p = cast(grad_p.ctypes.data, POINTER(c_double))
 
             # compute jacobian wrt params
             t0 = time.time()
@@ -1051,6 +1062,7 @@ class AcadosOcpSolver:
         if verbose:
             print("stored current iterate in ", os.path.join(os.getcwd(), filename))
 
+
     def qp_diagnostics(self, hessian_type: str='FULL_HESSIAN'):
             """
             Compute some diagnostic values for the last QP.
@@ -1066,7 +1078,7 @@ class AcadosOcpSolver:
             - min_abs_eigv_total: minimum absolute eigenvalue for the full Hessian.
             - max_eigv_total: maximum eigenvalue for the full Hessian.
 
-            for the 'PROJECTED_HESSIAN' it also includes 
+            for the 'PROJECTED_HESSIAN' it also includes
             - min_eig_P: minimum eigenvalue of P matrices
             - min_abs_eig_P: minimum absolute eigenvalue of P matrices
             """
@@ -1111,7 +1123,7 @@ class AcadosOcpSolver:
                 qp_diagnostic['max_eigv_stage'] = max_eigv_stage
                 qp_diagnostic['min_eigv_stage'] = min_eigv_stage
                 qp_diagnostic['condition_number_stage'] = condition_number_stage
-            
+
             elif hessian_type == "PROJECTED_HESSIAN":
                 # check projected Hessian
                 min_eig_proj_hess = np.inf
@@ -1156,9 +1168,7 @@ class AcadosOcpSolver:
             else:
                 raise ValueError("Wrong input given to function! Possible inputs\
                                  are FULL_HESSIAN, REDUCED_HESSIAN")
-            
-            
-            
+
             return qp_diagnostic
 
 
@@ -1617,8 +1627,6 @@ class AcadosOcpSolver:
 
 
     def reset_sens_out(self):
-        self.__acados_lib.ocp_nlp_out_set_values_to_zero.argtypes = \
-                    [c_void_p, c_void_p, c_void_p]
         self.__acados_lib.ocp_nlp_out_set_values_to_zero(self.nlp_config, self.nlp_dims, self.sens_out)
 
 

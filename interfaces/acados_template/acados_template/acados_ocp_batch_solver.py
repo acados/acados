@@ -31,9 +31,11 @@
 
 from .acados_ocp_solver import AcadosOcpSolver
 from .acados_ocp import AcadosOcp
-from typing import List
-from ctypes import (POINTER, c_int, c_void_p, cast, c_double)
+from typing import Optional, List, Tuple
+from collections.abc import Sequence
+from ctypes import (POINTER, c_int, c_void_p, cast, c_double, c_char_p)
 import numpy as np
+import time
 
 class AcadosOcpBatchSolver():
     """
@@ -56,6 +58,7 @@ class AcadosOcpBatchSolver():
         self.__ocp_solvers = [AcadosOcpSolver(ocp, json_file=json_file, build=n==0, generate=n==0, verbose=verbose) for n in range(self.N_batch)]
 
         self.__shared_lib = self.ocp_solvers[0].shared_lib
+        self.__acados_lib = self.ocp_solvers[0].acados_lib
         self.__name = self.ocp_solvers[0].name
         self.__ocp_solvers_pointer = (c_void_p * self.N_batch)()
 
