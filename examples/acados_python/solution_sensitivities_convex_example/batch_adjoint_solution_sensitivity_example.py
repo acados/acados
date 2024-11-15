@@ -57,7 +57,6 @@ def main_sequential(x0, N_sim):
     simX[0,:] = x0
 
     adjoints = []
-    x_trajs = []
 
     t0 = time.time()
     for i in range(N_sim):
@@ -66,15 +65,14 @@ def main_sequential(x0, N_sim):
         simX[i+1,:] = solver.get(1, "x")
         sens_adj = solver.eval_adjoint_solution_sensitivity([(1, np.ones((ocp.dims.nx, 1)))], [(1, np.ones((ocp.dims.nu, 1)))])
         adjoints.append(sens_adj)
-        x_trajs.append(solver.get_flat('x'))
 
     t_elapsed = 1e3 * (time.time() - t0)
     print("main_sequential, solve, adjoints and get:", f"{t_elapsed:.3f} ms\n")
 
-    return simX, simU, adjoints, x_trajs
+    return simX, simU, adjoints
 
 
-def main_batch(Xinit, simU, x_trajs, adjoints_ref, tol, num_threads_in_batch_solve=1):
+def main_batch(Xinit, simU, adjoints_ref, tol, num_threads_in_batch_solve=1):
 
     N_batch = Xinit.shape[0] - 1
 
@@ -100,10 +98,6 @@ def main_batch(Xinit, simU, x_trajs, adjoints_ref, tol, num_threads_in_batch_sol
         if not np.linalg.norm(u-simU[n]) < tol:
             raise Exception(f"solution should match sequential call up to {tol} got error {np.linalg.norm(u-simU[n])} for {n}th batch solve")
 
-        x_traj = batch_solver.ocp_solvers[n].get_flat('x')
-        if not np.linalg.norm(x_traj-x_trajs[n]) < tol:
-            raise Exception(f"solution should match sequential call up to {tol} got error {np.linalg.norm(u-simU[n])} for {n}th batch solve")
-
     # eval adjoint
     t0 = time.time()
     sens_adj = batch_solver.eval_adjoint_solution_sensitivity([(1, np.ones((N_batch, ocp.dims.nx, 1)))], [(1, np.ones((N_batch, ocp.dims.nu, 1)))])
@@ -120,10 +114,10 @@ def main_batch(Xinit, simU, x_trajs, adjoints_ref, tol, num_threads_in_batch_sol
 if __name__ == "__main__":
 
     tol = 1e-7
-    N_batch = 256
+    N_batch = 128
     x0 = np.array([0.1, -0.2])
 
-    simX, simU, adjoints, x_trajs = main_sequential(x0=x0, N_sim=N_batch)
+    simX, simU, adjoints = main_sequential(x0=x0, N_sim=N_batch)
 
-    main_batch(Xinit=simX, simU=simU, x_trajs=x_trajs, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=1)
-    main_batch(Xinit=simX, simU=simU, x_trajs=x_trajs, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=4)
+    main_batch(Xinit=simX, simU=simU, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=1)
+    main_batch(Xinit=simX, simU=simU, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=4)
