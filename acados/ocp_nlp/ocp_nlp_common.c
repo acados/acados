@@ -3213,6 +3213,13 @@ void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_
     // - jac_lag_stat_p_global: first dynamics writes its contribution, then cost and constraints modules add their contribution.
     // - jac_dyn_p_global is computed in dynamics module
     // - jac_ineq_p_global is computed in constraints module
+
+    if (!opts->with_solution_sens_wrt_params)
+    {
+        printf("ocp_nlp_params_jac_compute: option with_solution_sens_wrt_params has to be true to evaluate solution sensitivities wrt. global parameters.\n");
+        exit(1);
+    }
+
     int N = dims->N;
     int np_global = dims->np_global;
     int i;
@@ -3324,6 +3331,11 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
                         ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
                         ocp_nlp_out *sens_nlp_out, const char *field, int stage, void *grad_p)
 {
+    if (!opts->with_solution_sens_wrt_params)
+    {
+        printf("ocp_nlp_common_eval_solution_sens_adj_p: option with_solution_sens_wrt_params has to be true to evaluate solution sensitivities wrt. global parameters.\n");
+        exit(1);
+    }
     int i;
     int N = dims->N;
     int np_global = dims->np_global;

@@ -156,7 +156,6 @@ if __name__ == "__main__":
     tol = 1e-7
     N_batch = 256
     x0 = np.array([0.0, np.pi, 0.0, 0.0])
-    u0 = np.array([0.0])
 
     simX, simU = main_sequential(x0=x0, N_sim=N_batch, tol=tol)
 
