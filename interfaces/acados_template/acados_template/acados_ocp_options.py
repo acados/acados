@@ -63,6 +63,7 @@ class AcadosOcpOptions:
         self.__sim_method_newton_iter = 3
         self.__sim_method_newton_tol = 0.0
         self.__sim_method_jac_reuse = 0
+        self.__shooting_nodes = None
         self.__time_steps = None
         self.__Tsim = None
         self.__qp_solver = 'PARTIAL_CONDENSING_HPIPM'
@@ -83,7 +84,6 @@ class AcadosOcpOptions:
         self.__cost_discretization = 'EULER'
         self.__regularize_method = 'NO_REGULARIZE'
         self.__reg_epsilon = 1e-4
-        self.__shooting_nodes = None
         self.__exact_hess_cost = 1
         self.__exact_hess_dyn = 1
         self.__exact_hess_constr = 1
@@ -887,7 +887,9 @@ class AcadosOcpOptions:
     @property
     def time_steps(self):
         """
-        Vector with time steps between the shooting nodes. Set automatically to uniform discretization if :py:attr:`N` and :py:attr:`tf` are provided.
+        Vector of length `N_horizon` containing the time steps between the shooting nodes.
+        If `None` set automatically to uniform discretization using :py:attr:`N_horizon` and :py:attr:`tf`.
+        For nonuniform discretization: Either provide shooting_nodes or time_steps.
         Default: :code:`None`
         """
         return self.__time_steps
@@ -895,7 +897,9 @@ class AcadosOcpOptions:
     @property
     def shooting_nodes(self):
         """
-        Vector with the shooting nodes, time_steps will be computed from it automatically.
+        Vector of length `N_horizon + 1` containing the shooting nodes.
+        If `None` set automatically to uniform discretization using :py:attr:`N_horizon` and :py:attr:`tf`.
+        For nonuniform discretization: Either provide shooting_nodes or time_steps.
         Default: :code:`None`
         """
         return self.__shooting_nodes
