@@ -900,7 +900,7 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, i
 {%- endif %}
     // set cost scaling
     double* cost_scaling = malloc((N+1)*sizeof(double));
-    {%- for j in range(end=solver_options.N_horizon) %}
+    {%- for j in range(end=solver_options.N_horizon+1) %}
     cost_scaling[{{ j }}] = {{ solver_options.cost_scaling[j] }};
     {%- endfor %}
     for (int i = 0; i <= N; i++)
