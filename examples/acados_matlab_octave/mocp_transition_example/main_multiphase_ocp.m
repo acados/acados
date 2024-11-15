@@ -57,12 +57,17 @@ ocp.mocp_opts.integrator_type = {'ERK', 'DISCRETE', 'ERK'};
 
 % set solver options, common for AcadosOcp and AcadosMultiphaseOcp
 ocp.solver_options.nlp_solver_type = 'SQP';
-ocp.solver_options.tf = settings.T_HORIZON + 1.0;
+ocp.solver_options.tf = settings.T_HORIZON;
 T_HORIZON_1 = 0.4 * settings.T_HORIZON;
 T_HORIZON_2 = settings.T_HORIZON - T_HORIZON_1;
 ocp.solver_options.time_steps = [T_HORIZON_1 / N_list(1) * ones(1, N_list(1)), ...
-                                1.0, ...  % transition stage
+                                0.0, ...  % transition stage
                                 T_HORIZON_2 / N_list(3) * ones(1, N_list(3))];
+
+ocp.solver_options.cost_scaling = [T_HORIZON_1 / N_list(1) * ones(1, N_list(1)), ...
+                                1.0, ...  % transition stage
+                                T_HORIZON_2 / N_list(3) * ones(1, N_list(3)), ...
+                                1.0];  % terminal cost
 
 ocp.solver_options.store_iterates = true;
 
@@ -119,12 +124,11 @@ end
 
 %% plot trajectories in subplots
 figure;
-t_grid_3_plot = t_grid_phases{3} - 1.0;
 
 subplot(3, 1, 1);
 hold on;
 plot(t_grid_phases{1}, p_traj_1(:, 1), '-');
-plot(t_grid_3_plot, p_traj_3(:, 1), '-');
+plot(t_grid_phases{3}, p_traj_3(:, 1), '-');
 legend('phase 0', 'phase 2')
 ylabel('position');
 xlim([0, settings.T_HORIZON]);
@@ -132,7 +136,7 @@ xlim([0, settings.T_HORIZON]);
 subplot(3, 1, 2);
 hold on;
 plot(t_grid_phases{1}, v_traj_1(:, 1), '-');
-stairs(t_grid_3_plot, [v_traj_3; v_traj_3(end)], '-');
+stairs(t_grid_phases{3}, [v_traj_3; v_traj_3(end)], '-');
 legend('phase 0', 'phase 2')
 ylabel('velocity');
 xlim([0, settings.T_HORIZON]);
