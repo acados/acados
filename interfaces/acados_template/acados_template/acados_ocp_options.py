@@ -65,6 +65,7 @@ class AcadosOcpOptions:
         self.__sim_method_jac_reuse = 0
         self.__shooting_nodes = None
         self.__time_steps = None
+        self.__cost_scaling = None
         self.__Tsim = None
         self.__qp_solver = 'PARTIAL_CONDENSING_HPIPM'
         self.__qp_solver_tol_stat = None
@@ -905,6 +906,15 @@ class AcadosOcpOptions:
         return self.__shooting_nodes
 
     @property
+    def cost_scaling(self):
+        """
+        Vector with cost scaling factors of length `N_horizon`.
+        If `None` set automatically to match [`time_steps`, 1.0].
+        Default: :code:`None`
+        """
+        return self.__cost_scaling
+
+    @property
     def tf(self):
         """
         Prediction horizon
@@ -1164,6 +1174,11 @@ class AcadosOcpOptions:
     def shooting_nodes(self, shooting_nodes):
         shooting_nodes = check_if_nparray_and_flatten(shooting_nodes, "shooting_nodes")
         self.__shooting_nodes = shooting_nodes
+
+    @cost_scaling.setter
+    def cost_scaling(self, cost_scaling):
+        cost_scaling = check_if_nparray_and_flatten(cost_scaling, "cost_scaling")
+        self.__cost_scaling = cost_scaling
 
     @Tsim.setter
     def Tsim(self, Tsim):

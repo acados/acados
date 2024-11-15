@@ -132,30 +132,6 @@ int {{ name }}_acados_create({{ name }}_solver_capsule* capsule)
 }
 
 
-int {{ name }}_acados_update_time_steps({{ name }}_solver_capsule* capsule, int N, double* new_time_steps)
-{
-    if (N != capsule->nlp_solver_plan->N) {
-        fprintf(stderr, "{{ name }}_acados_update_time_steps: given number of time steps (= %d) " \
-            "differs from the currently allocated number of " \
-            "time steps (= %d)!\n" \
-            "Please recreate with new discretization and provide a new vector of time_stamps!\n",
-            N, capsule->nlp_solver_plan->N);
-        return 1;
-    }
-
-    ocp_nlp_config * nlp_config = capsule->nlp_config;
-    ocp_nlp_dims * nlp_dims = capsule->nlp_dims;
-    ocp_nlp_in * nlp_in = capsule->nlp_in;
-
-    for (int i = 0; i < N; i++)
-    {
-        ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &new_time_steps[i]);
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "scaling", &new_time_steps[i]);
-    }
-    return 0;
-}
-
-
 /**
  * Internal function for {{ name }}_acados_create: step 1
  */
@@ -910,16 +886,28 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, i
     for (int i = 0; i < N; i++)
     {
         ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_step);
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "scaling", &time_step);
     }
-{% else -%}{# time_steps are varying #}
+{%- else -%}{# time_steps are varying #}
     double* time_steps = malloc(N*sizeof(double));
-    {%- for j in range(end=N_horizon) %}
+    {%- for j in range(end=solver_options.N_horizon) %}
     time_steps[{{ j }}] = {{ solver_options.time_steps[j] }};
     {%- endfor %}
-    {{ name }}_acados_update_time_steps(capsule, N, time_steps);
+    for (int i = 0; i < N; i++)
+    {
+        ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_steps[i]);
+    }
     free(time_steps);
 {%- endif %}
+    // set cost scaling
+    double* cost_scaling = malloc((N+1)*sizeof(double));
+    {%- for j in range(end=solver_options.N_horizon) %}
+    cost_scaling[{{ j }}] = {{ solver_options.cost_scaling[j] }};
+    {%- endfor %}
+    for (int i = 0; i <= N; i++)
+    {
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "scaling", &cost_scaling[i]);
+    }
+    free(cost_scaling);
 
     /* INITIAL NODE */
 {%- if dims_0.ny_0 != 0 %}
@@ -2542,10 +2530,9 @@ int {{ name }}_acados_create_precompute({{ name }}_solver_capsule* capsule) {
 int {{ name }}_acados_create_with_discretization({{ name }}_solver_capsule* capsule, int N, double* new_time_steps)
 {
     // If N does not match the number of shooting intervals used for code generation, new_time_steps must be given.
-    if (N != {{ name | upper }}_N && !new_time_steps) {
-        fprintf(stderr, "{{ name }}_acados_create_with_discretization: new_time_steps is NULL " \
-            "but the number of shooting intervals (= %d) differs from the number of " \
-            "shooting intervals (= %d) during code generation! Please provide a new vector of time_stamps!\n", \
+    if (new_time_steps) {
+        fprintf(stderr, "{{ name }}_acados_create_with_discretization: new_time_steps should be NULL " \
+            "for multi-phase solver!\n", \
              N, {{ name | upper }}_N);
         return 1;
     }
