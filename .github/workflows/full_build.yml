@@ -177,6 +177,7 @@ jobs:
         python forw_vs_adj_param_sens.py
         cd ${{runner.workspace}}/acados/examples/acados_python/solution_sensitivities_convex_example
         python value_gradient_example_linear.py
+        python batch_adjoint_solution_sensitivity_example.py
 
 
     - name: Python Furuta pendulum timeout test
