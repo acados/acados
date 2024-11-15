@@ -41,8 +41,6 @@
 #include "blasfeo/include/blasfeo_d_blas.h"
 // hpipm
 #include "hpipm/include/hpipm_d_ocp_qp_dim.h"
-#include "hpipm/include/hpipm_d_ocp_qp_utils.h"
-
 // acados
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
@@ -3355,13 +3353,10 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
         //     blasfeo_dveccp(nx[i + 1], sens_nlp_out->pi + i, 0, tmp_qp_in->b + i, 0);
         // blasfeo_dveccp(2 * ni[i], sens_nlp_out->lam + i, ?);
         // blasfeo_dveccp(2 * ni[i], sens_nlp_out->t + i, ?);
-        // blasfeo_print_dvec(nv[i], tmp_qp_in->rqz + i, 0);
     }
 
     config->qp_solver->eval_sens(config->qp_solver, dims->qp_solver, tmp_qp_in, tmp_qp_out,
                             opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
-
-    // d_ocp_qp_sol_print(tmp_qp_out->dim, tmp_qp_out);
 
     if (!strcmp("p_global", field))
     {
@@ -3372,14 +3367,9 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
             blasfeo_dgemv_t(nv[i], np_global, 1.0, &jac_lag_stat_p_global[i], 0, 0, tmp_qp_out->ux+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
             blasfeo_dgemv_t(ni_nl[i], np_global, -1.0, &jac_ineq_p_global[i], 0, 0, tmp_qp_out->lam+i, nb[i]+ng[i], 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
             blasfeo_dgemv_t(ni_nl[i], np_global, 1.0, &jac_ineq_p_global[i], 0, 0, tmp_qp_out->lam+i, 2*(nb[i]+ng[i])+ni_nl[i], 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
-
-            // blasfeo_print_dmat(nv[i], np_global, &jac_lag_stat_p_global[i], 0, 0);
-            // blasfeo_print_dmat(ni_nl[i], np_global, &jac_ineq_p_global[i], 0, 0);
-
             if (i < N)
             {
                 blasfeo_dgemv_t(nx[i+1], np_global, 1.0, &jac_dyn_p_global[i], 0, 0, tmp_qp_out->pi+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
-                // blasfeo_print_dmat(nx[i+1], np_global, &jac_dyn_p_global[i], 0, 0);
             }
         }
 
