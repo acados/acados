@@ -35,18 +35,12 @@ from setup_parametric_ocp import PARAM_VALUE_DICT, export_parametric_ocp
 import time
 
 
-def setup_example(learnable_params, num_threads_in_batch_solve: int = 1):
-    ocp = export_parametric_ocp(PARAM_VALUE_DICT, learnable_params=learnable_params, num_threads_in_batch_solve = num_threads_in_batch_solve)
-    ocp.solver_options.with_solution_sens_wrt_params = True
-    ocp.solver_options.nlp_solver_type = "SQP"
-    ocp.solver_options.hessian_approx = "EXACT"
-    return ocp
-
-
 def main_sequential(x0, N_sim):
 
     learnable_params = ["A", "Q", "b"]
-    ocp = setup_example(learnable_params)
+    ocp = export_parametric_ocp(PARAM_VALUE_DICT, learnable_params=learnable_params)
+    ocp.solver_options.with_solution_sens_wrt_params = True
+
     solver = AcadosOcpSolver(ocp, verbose=False)
 
     nx = ocp.dims.nx
@@ -77,7 +71,9 @@ def main_batch(Xinit, simU, adjoints_ref, tol, num_threads_in_batch_solve=1):
     N_batch = Xinit.shape[0] - 1
 
     learnable_params = ["A", "Q", "b"]
-    ocp = setup_example(learnable_params, num_threads_in_batch_solve)
+    ocp = export_parametric_ocp(PARAM_VALUE_DICT, learnable_params=learnable_params, num_threads_in_batch_solve = num_threads_in_batch_solve)
+    ocp.solver_options.with_solution_sens_wrt_params = True
+
     batch_solver = AcadosOcpBatchSolver(ocp, N_batch, verbose=False)
 
     for n in range(N_batch):
@@ -117,7 +113,9 @@ if __name__ == "__main__":
     N_batch = 128
     x0 = np.array([0.1, -0.2])
 
+    print("main sequential")
     simX, simU, adjoints = main_sequential(x0=x0, N_sim=N_batch)
 
+    print("main batch")
     main_batch(Xinit=simX, simU=simU, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=1)
     main_batch(Xinit=simX, simU=simU, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=4)
