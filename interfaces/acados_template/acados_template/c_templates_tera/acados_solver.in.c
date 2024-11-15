@@ -961,7 +961,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     else
     {
         // set time_steps
-    {%- if all_equal == true -%}{# all time_steps are identical #}
+    {% if all_equal == true -%}{# all time_steps are identical #}
         double time_step = {{ solver_options.time_steps[0] }};
         for (int i = 0; i < N; i++)
         {
