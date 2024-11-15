@@ -183,7 +183,10 @@ class AcadosOcpBatchSolver():
 
             t1 = time.time()
 
-            out = np.zeros((self.N_batch, n_seeds, np_global))
+            grad = np.zeros((self.N_batch, n_seeds, np_global))
+            grad_p = np.ascontiguousarray(grad, dtype=np.float64)
+            offset = n_seeds*np_global
+
             for i_seed in range(n_seeds):
                 # set seed:
                 self.reset_sens_out()
@@ -195,21 +198,15 @@ class AcadosOcpBatchSolver():
                     for (stage, su) in seed_u:
                         self.ocp_solvers[m].set(stage, 'sens_u', su[m, :, i_seed])
 
-
-                grad = np.zeros((self.N_batch, np_global))
-                grad_p = np.ascontiguousarray(grad, dtype=np.float64)
-
-                c_grad_p = cast(grad_p.ctypes.data, POINTER(c_double))
+                c_grad_p = cast(grad_p[0, i_seed].ctypes.data, POINTER(c_double))
 
                 # solve adjoint sensitivities
                 getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_solution_sens_adj_p")(
-                    self.__ocp_solvers_pointer, field, 0, c_grad_p, np_global, self.__N_batch)
-
-                out[:, i_seed, :] = grad_p
+                    self.__ocp_solvers_pointer, field, 0, c_grad_p, offset, self.__N_batch)
 
             self.time_solution_sens_solve = time.time() - t1
 
-            return out
+            return grad_p
         else:
             raise NotImplementedError(f"with_respect_to {with_respect_to} not implemented.")
 
