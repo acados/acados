@@ -334,9 +334,6 @@ class AcadosOcpSolver:
         getattr(self.shared_lib, f"{self.name}_acados_custom_update").argtypes = [c_void_p, POINTER(c_double), c_int]
         getattr(self.shared_lib, f"{self.name}_acados_custom_update").restype = c_int
 
-        getattr(self.shared_lib, f"{self.name}_acados_update_time_steps").argtypes = [c_void_p, c_int, c_void_p]
-        getattr(self.shared_lib, f"{self.name}_acados_update_time_steps").restype = c_int
-
         getattr(self.shared_lib, f"{self.name}_acados_create_with_discretization").argtypes = [c_void_p, c_int, c_void_p]
         getattr(self.shared_lib, f"{self.name}_acados_create_with_discretization").restype = c_int
 
@@ -359,6 +356,9 @@ class AcadosOcpSolver:
         if isinstance(self.acados_ocp, AcadosOcp):
             getattr(self.shared_lib, f'{self.name}_acados_update_qp_solver_cond_N').argtypes = [c_void_p, c_int]
             getattr(self.shared_lib, f'{self.name}_acados_update_qp_solver_cond_N').restype = c_int
+            getattr(self.shared_lib, f"{self.name}_acados_update_time_steps").argtypes = [c_void_p, c_int, c_void_p]
+            getattr(self.shared_lib, f"{self.name}_acados_update_time_steps").restype = c_int
+
         return
 
     def __get_pointers_solver(self):
@@ -469,6 +469,8 @@ class AcadosOcpSolver:
                       the shooting nodes without changing the number, e.g., to reach a different final time. Both cases
                       do not require a new code export and compilation.
         """
+        if isinstance(self.acados_ocp, AcadosMultiphaseOcp):
+            raise Exception('This function can only be used for single phase OCPs!')
 
         # unlikely but still possible
         if not self.solver_created:

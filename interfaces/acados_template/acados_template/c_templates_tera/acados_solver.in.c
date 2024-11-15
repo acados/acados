@@ -943,7 +943,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 //    capsule->nlp_in = nlp_in;
     ocp_nlp_in * nlp_in = capsule->nlp_in;
 
-    // set up time_steps
+    // set up time_steps and cost_scaling
     {%- set all_equal = true -%}
     {%- set val = solver_options.time_steps[0] %}
     {%- for j in range(start=1, end=solver_options.N_horizon) %}
@@ -955,26 +955,41 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 
     if (new_time_steps)
     {
+        // NOTE: this sets scaling and time_steps
         {{ model.name }}_acados_update_time_steps(capsule, N, new_time_steps);
     }
     else
     {
-    {%- if all_equal == true -%}{# all time_steps are identical #}
+        // set time_steps
+    {% if all_equal == true -%}{# all time_steps are identical #}
         double time_step = {{ solver_options.time_steps[0] }};
         for (int i = 0; i < N; i++)
         {
             ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_step);
-            ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "scaling", &time_step);
         }
     {%- else -%}{# time_steps are varying #}
         double* time_steps = malloc(N*sizeof(double));
         {%- for j in range(end=solver_options.N_horizon) %}
         time_steps[{{ j }}] = {{ solver_options.time_steps[j] }};
         {%- endfor %}
-        {{ model.name }}_acados_update_time_steps(capsule, N, time_steps);
+        for (int i = 0; i < N; i++)
+        {
+            ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_steps[i]);
+        }
         free(time_steps);
     {%- endif %}
+        // set cost scaling
+        double* cost_scaling = malloc((N+1)*sizeof(double));
+      {%- for j in range(end=solver_options.N_horizon+1) %}
+        cost_scaling[{{ j }}] = {{ solver_options.cost_scaling[j] }};
+      {%- endfor %}
+        for (int i = 0; i <= N; i++)
+        {
+            ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "scaling", &cost_scaling[i]);
+        }
+        free(cost_scaling);
     }
+
 
     /**** Dynamics ****/
     for (int i = 0; i < N; i++)

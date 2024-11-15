@@ -582,6 +582,18 @@ classdef AcadosOcp < handle
                 error(['ocp discretization: time_steps between shooting nodes must all be > 0', ...
                     ' got: ' num2str(opts.time_steps)])
             end
+
+            % cost_scaling
+            if isempty(opts.cost_scaling)
+                opts.cost_scaling = [opts.time_steps(:); 1.0];
+            elseif length(opts.cost_scaling) ~= N+1
+                error(['cost_scaling must have length N+1 = ', num2str(N+1)]);
+            end
+
+            % set integrator time automatically
+            opts.Tsim = opts.time_steps(1);
+
+            % integrator: num_stages
             if ~isempty(opts.sim_method_num_stages)
                 if(strcmp(opts.integrator_type, "ERK"))
                     if (any(opts.sim_method_num_stages < 1) || any(opts.sim_method_num_stages > 4))
@@ -589,9 +601,6 @@ classdef AcadosOcp < handle
                     end
                 end
             end
-
-            % set integrator time automatically
-            opts.Tsim = opts.time_steps(1);
 
             % qpdunes
             if ~isempty(strfind(opts.qp_solver,'qpdunes'))

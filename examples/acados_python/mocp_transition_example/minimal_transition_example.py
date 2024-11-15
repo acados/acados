@@ -146,8 +146,13 @@ def main_multiphase_ocp():
     T_HORIZON_2 = T_HORIZON - T_HORIZON_1
     ocp.solver_options.time_steps = \
                 np.array(N_list[0] * [T_HORIZON_1 / N_list[0]]
-                         + [1.0] # transition stage
+                         + [0.0] # transition stage
                          + N_list[2] * [T_HORIZON_2 / N_list[2]])
+    ocp.solver_options.cost_scaling = \
+                np.array(N_list[0] * [T_HORIZON_1 / N_list[0]]
+                         + [1.0] # transition stage
+                         + N_list[2] * [T_HORIZON_2 / N_list[2]]
+                        + [1.0]) # terminal stage
 
     acados_ocp_solver = AcadosOcpSolver(ocp)
 
@@ -167,21 +172,19 @@ def main_multiphase_ocp():
         print("-----------------------------------")
 
     # plot solution
-    t_grid_2_plot = t_grid_phases[2] - 1.0
-
     fig, ax = plt.subplots(3, 1, sharex=True)
 
     p_traj_0 = [x[0] for x in x_traj_phases[0]]
     ax[0].plot(t_grid_phases[0], p_traj_0, color='C0', label='phase 1')
 
     p_traj_2 = [x[0] for x in x_traj_phases[2]]
-    ax[0].plot(t_grid_2_plot, p_traj_2, color='C1', label='phase 2')
+    ax[0].plot(t_grid_phases[2], p_traj_2, color='C1', label='phase 2')
 
     v_traj_0 = [x[1] for x in x_traj_phases[0]]
     ax[1].plot(t_grid_phases[0], v_traj_0, color='C0')
 
     v_traj_2 = [u_traj_phases[2][0][0]] + [x[0] for x in u_traj_phases[2]]
-    ax[1].step(t_grid_2_plot, v_traj_2, '-', color='C1')
+    ax[1].step(t_grid_phases[2], v_traj_2, '-', color='C1')
 
     a_traj = [u_traj_phases[0][0][0]] + [x[0] for x in u_traj_phases[0]]
     ax[2].step(t_grid_phases[0], a_traj, color='C0')

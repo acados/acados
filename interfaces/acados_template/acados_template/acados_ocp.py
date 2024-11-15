@@ -779,6 +779,12 @@ class AcadosOcp:
             raise Exception(f'Inconsistent discretization: {opts.tf}'\
                 f' = tf != sum(opts.time_steps) = {tf}.')
 
+        # cost scaling
+        if opts.cost_scaling is None:
+            opts.cost_scaling = np.append(opts.time_steps, 1.0)
+        if opts.cost_scaling.shape[0] != opts.N_horizon + 1:
+            raise Exception(f'cost_scaling should be of length N+1 = {opts.N_horizon+1}, got {opts.cost_scaling.shape[0]}.')
+
         # set integrator time automatically
         opts.Tsim = opts.time_steps[0]
 
