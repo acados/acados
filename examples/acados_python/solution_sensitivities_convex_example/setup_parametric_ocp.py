@@ -105,6 +105,9 @@ def export_parametric_ocp(
     ocp.solver_options.N_horizon = 4
     ocp.solver_options.tf = 8
     ocp.solver_options.integrator_type = 'DISCRETE'
+    ocp.solver_options.hessian_approx = 'EXACT'
+    ocp.solver_options.nlp_solver_type = "SQP"
+
     ocp.solver_options.num_threads_in_batch_solve = num_threads_in_batch_solve
 
     # Add learnable parameters to p_global

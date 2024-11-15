@@ -60,7 +60,6 @@ def main():
 
     ocp = export_parametric_ocp(PARAM_VALUE_DICT, learnable_params = learnable_params)
     ocp.solver_options.with_value_sens_wrt_params = True
-    ocp.solver_options.nlp_solver_type = "SQP"
     acados_ocp_solver = AcadosOcpSolver(ocp)
 
     optimal_value_grad = np.zeros((np_test,))
