@@ -908,8 +908,8 @@ class AcadosOcpOptions:
     @property
     def cost_scaling(self):
         """
-        Vector with cost scaling factors of length `N_horizon`.
-        If `None` set automatically to match [`time_steps`, 1.0].
+        Vector with cost scaling factors of length `N_horizon` + 1.
+        If `None` set automatically to [`time_steps`, 1.0].
         Default: :code:`None`
         """
         return self.__cost_scaling
