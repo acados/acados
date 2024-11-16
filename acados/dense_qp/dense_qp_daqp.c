@@ -313,6 +313,9 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
     c_ptr += (n+ns+1) * sizeof(int);
 
     // Initialize constants of workspace
+    work->qp->nb = 0;
+    work->qp->bin_ids = NULL;
+
     work->n = n;
     work->m = m;
     work->ms = ms;
@@ -322,7 +325,6 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
     work->sing_ind  = 0;
     work->soft_slack = 0;
 
-    work->RinvD = NULL; // In case Hessian is diagonal
     work->bnb = NULL; // No need to solve MIQP
 
     // initialize d_ls, d_us and sense
