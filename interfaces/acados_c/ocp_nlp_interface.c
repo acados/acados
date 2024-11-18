@@ -1525,7 +1525,6 @@ void ocp_nlp_get_from_iterate(ocp_nlp_solver *solver, int iter, int stage, const
 }
 
 
-
 void ocp_nlp_get_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, const char *field, void *value)
 {
     ocp_nlp_dims *dims = solver->dims;

@@ -46,6 +46,18 @@ class AcadosOcpFlattenedIterate:
 
 
 @dataclass
+class AcadosOcpFlattenedBatchIterate:
+    x: np.ndarray
+    u: np.ndarray
+    z: np.ndarray
+    sl: np.ndarray
+    su: np.ndarray
+    pi: np.ndarray
+    lam: np.ndarray
+    N_batch: int
+
+
+@dataclass
 class AcadosOcpIterate:
 
     x_traj: List[np.ndarray]
