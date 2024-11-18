@@ -144,13 +144,8 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
     if model.p_global is None:
         p_global = []  # to have same structure of model.p
 
-    if isinstance(x, ca.SX):
-        casadi_var = ca.SX
-    elif isinstance(x, ca.MX):
-        casadi_var = ca.MX
-    else:
-        raise TypeError(
-            "Optimization variables 'x' must be of type 'casadi SX' or 'casadi MX'")
+    casadi_var = model.get_casadi_symbol()
+    casadi_dm_zeros = ca.DM.zeros
 
     if stage_type == 'initial':
         expr_constr = model.con_h_expr_0
@@ -171,28 +166,23 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
         raise ValueError('Constraint detection: Wrong stage_type.')
 
     if expr_constr is None:
-        expr_constr = casadi_var.sym('con_h_expr', 0, 0)
-
-    if not isinstance(expr_constr, casadi_var):
-        print('expr_constr =', expr_constr)
-        raise ValueError(
-            f"Constraint expression h has type {expr_constr}, but optimization variable has type {casadi_var}")
+        expr_constr = casadi_var('con_h_expr', 0, 0)
 
     # Initialize
-    constr_expr_h = casadi_var.sym('con_h_expr', 0, 0)
+    constr_expr_h = casadi_var('con_h_expr', 0, 0)
     lh = []
     uh = []
 
-    c_lin = casadi_var.zeros(0, nx)
-    d_lin = casadi_var.zeros(0, nu)
+    c_lin = casadi_dm_zeros(0, nx)
+    d_lin = casadi_dm_zeros(0, nu)
     lg = []
     ug = []
 
-    Jbx = casadi_var.zeros(0, nx)
+    Jbx = casadi_dm_zeros(0, nx)
     lbx = []
     ubx = []
 
-    Jbu = casadi_var.zeros(0, nu)
+    Jbu = casadi_dm_zeros(0, nu)
     lbu = []
     ubu = []
 
@@ -214,14 +204,14 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
         else:  # c is linear in x and u
             Jc_fun = ca.Function('Jc_fun', [x[0]], [
                                  ca.jacobian(c, ca.vertcat(x, u))])
-            Jc = Jc_fun(0).full().squeeze()
+            Jc = Jc_fun(0)
 
             if np.sum(Jc != 0) == 1:
                 # c is bound
-                idb = Jc.nonzero()[0][0]
+                idb = Jc.full().squeeze().nonzero()[0][0]
                 if idb < nx:
                     # Bound on x
-                    Jbx = ca.vertcat(Jbx, casadi_var.zeros(1, nx))
+                    Jbx = ca.vertcat(Jbx, casadi_dm_zeros(1, nx))
                     Jbx[-1, idb] = 1
                     lbx.append(lb[ii] / Jc[idb])
                     ubx.append(ub[ii] / Jc[idb])
@@ -230,7 +220,7 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
                     print(' ')
                 else:
                     # Bound on u
-                    Jbu = ca.vertcat(Jbu, casadi_var.zeros(1, nu))
+                    Jbu = ca.vertcat(Jbu, casadi_dm_zeros(1, nu))
                     Jbu[-1, idb - nx] = 1
                     lbu.append(lb[ii] / Jc[idb])
                     ubu.append(ub[ii] / Jc[idb])
@@ -239,7 +229,7 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
                     print(' ')
             else:
                 # c is general linear constraint
-                c_lin = ca.vertcat(c_lin, Jc[0:nx])
+                c_lin = ca.vertcat(c_lin, Jc[:nx])
                 d_lin = ca.vertcat(d_lin, Jc[nx:])
                 lg.append(lb[ii])
                 ug.append(ub[ii])
@@ -299,8 +289,8 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
             constraints.uh = np.array([])
         # linear constraint g
         if lg:
-            constraints.C = c_lin
-            constraints.D = d_lin
+            constraints.C = np.array(c_lin)
+            constraints.D = np.array(d_lin)
             constraints.lg = np.array(lg)
             constraints.ug = np.array(ug)
         # Bounds x
