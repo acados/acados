@@ -145,54 +145,54 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
         p_global = []  # to have same structure of model.p
 
     if isinstance(x, ca.SX):
-        CASADI_VAR = ca.SX
+        casadi_var = ca.SX
     elif isinstance(x, ca.MX):
-        CASADI_VAR = ca.MX
+        casadi_var = ca.MX
     else:
         raise TypeError(
             "Optimization variables 'x' must be of type 'casadi SX' or 'casadi MX'")
 
     if stage_type == 'initial':
         expr_constr = model.con_h_expr_0
-        LB = constraints.lh_0
-        UB = constraints.uh_0
+        lb = constraints.lh_0
+        ub = constraints.uh_0
         print('\nConstraint detection for initial constraints.')
     elif stage_type == 'path':
         expr_constr = model.con_h_expr
-        LB = constraints.lh
-        UB = constraints.uh
+        lb = constraints.lh
+        ub = constraints.uh
         print('\nConstraint detection for path constraints.')
     elif stage_type == 'terminal':
         expr_constr = model.con_h_expr_e
-        LB = constraints.lh_e
-        UB = constraints.uh_e
+        lb = constraints.lh_e
+        ub = constraints.uh_e
         print('\nConstraint detection for terminal constraints.')
     else:
         raise ValueError('Constraint detection: Wrong stage_type.')
 
     if expr_constr is None:
-        expr_constr = CASADI_VAR.sym('con_h_expr', 0, 0)
+        expr_constr = casadi_var.sym('con_h_expr', 0, 0)
 
-    if not isinstance(expr_constr, CASADI_VAR):
+    if not isinstance(expr_constr, casadi_var):
         print('expr_constr =', expr_constr)
         raise ValueError(
-            f"Constraint expression h has type {expr_constr}, but optimization variable has type {CASADI_VAR}")
+            f"Constraint expression h has type {expr_constr}, but optimization variable has type {casadi_var}")
 
     # Initialize
-    constr_expr_h = CASADI_VAR.sym('con_h_expr', 0, 0)
+    constr_expr_h = casadi_var.sym('con_h_expr', 0, 0)
     lh = []
     uh = []
 
-    C = CASADI_VAR.zeros(0, nx)
-    D = CASADI_VAR.zeros(0, nu)
+    c_lin = casadi_var.zeros(0, nx)
+    d_lin = casadi_var.zeros(0, nu)
     lg = []
     ug = []
 
-    Jbx = CASADI_VAR.zeros(0, nx)
+    Jbx = casadi_var.zeros(0, nx)
     lbx = []
     ubx = []
 
-    Jbu = CASADI_VAR.zeros(0, nu)
+    Jbu = casadi_var.zeros(0, nu)
     lbu = []
     ubu = []
 
@@ -206,8 +206,8 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
 
             # External constraint
             constr_expr_h = ca.vertcat(constr_expr_h, c)
-            lh.append(LB[ii])
-            uh.append(UB[ii])
+            lh.append(lb[ii])
+            uh.append(ub[ii])
             print(f'constraint {ii+1} is kept as nonlinear constraint.')
             print(c)
             print(' ')
@@ -221,28 +221,28 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
                 idb = Jc.nonzero()[0][0]
                 if idb < nx:
                     # Bound on x
-                    Jbx = ca.vertcat(Jbx, CASADI_VAR.zeros(1, nx))
+                    Jbx = ca.vertcat(Jbx, casadi_var.zeros(1, nx))
                     Jbx[-1, idb] = 1
-                    lbx.append(LB[ii] / Jc[idb])
-                    ubx.append(UB[ii] / Jc[idb])
+                    lbx.append(lb[ii] / Jc[idb])
+                    ubx.append(ub[ii] / Jc[idb])
                     print(f'constraint {ii+1} is reformulated as bound on x.')
                     print(c)
                     print(' ')
                 else:
                     # Bound on u
-                    Jbu = ca.vertcat(Jbu, CASADI_VAR.zeros(1, nu))
+                    Jbu = ca.vertcat(Jbu, casadi_var.zeros(1, nu))
                     Jbu[-1, idb - nx] = 1
-                    lbu.append(LB[ii] / Jc[idb])
-                    ubu.append(UB[ii] / Jc[idb])
+                    lbu.append(lb[ii] / Jc[idb])
+                    ubu.append(ub[ii] / Jc[idb])
                     print(f'constraint {ii+1} is reformulated as bound on u.')
                     print(c)
                     print(' ')
             else:
                 # c is general linear constraint
-                C = ca.vertcat(C, Jc[0:nx])
-                D = ca.vertcat(D, Jc[nx:])
-                lg.append(LB[ii])
-                ug.append(UB[ii])
+                c_lin = ca.vertcat(c_lin, Jc[0:nx])
+                d_lin = ca.vertcat(d_lin, Jc[nx:])
+                lg.append(lb[ii])
+                ug.append(ub[ii])
                 print(
                     f'constraint {ii+1} is reformulated as general linear constraint.')
                 print(c)
@@ -250,7 +250,7 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
 
     if stage_type == 'terminal':
         # Checks
-        if any(ca.which_depends(expr_constr, u)) or lbu or (D.size()[0] > 0 and any(D)):
+        if any(ca.which_depends(expr_constr, u)) or lbu or (d_lin.size()[0] > 0 and any(d_lin)):
             raise ValueError(
                 'Terminal constraint may not depend on control input.')
         # h
@@ -265,7 +265,7 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
             constraints.uh_e = np.array([])
         # linear constraint g
         if lg:
-            constraints.C_e = C
+            constraints.C_e = c_lin
             constraints.lg_e = np.array(lg)
             constraints.ug_e = np.array(ug)
         # Bounds x
@@ -299,8 +299,8 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
             constraints.uh = np.array([])
         # linear constraint g
         if lg:
-            constraints.C = C
-            constraints.D = D
+            constraints.C = c_lin
+            constraints.D = d_lin
             constraints.lg = np.array(lg)
             constraints.ug = np.array(ug)
         # Bounds x
