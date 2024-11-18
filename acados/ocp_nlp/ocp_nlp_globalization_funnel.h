@@ -101,10 +101,6 @@ void *ocp_nlp_globalization_funnel_memory_assign(void *config, void *dims, void 
 /************************************************
  * functions
  ************************************************/
-
-void debug_output(ocp_nlp_opts *opts, char* message, int print_level);
-//
-void debug_output_double(ocp_nlp_opts *opts, char* message, double value, int print_level);
 //
 void initialize_funnel_width(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double initial_infeasibility);
 //

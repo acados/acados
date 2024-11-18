@@ -905,3 +905,18 @@ void print_qp_info(qp_info *info)
 // #endif
 //     printf("\n");
 // }
+
+void print_debug_output(char* message, int print_level, int required_print_level)
+{
+    if (print_level > required_print_level)
+    {
+        printf("%s", message); //debugging output
+    }
+}
+void print_debug_output_double(char* message, double value, int print_level, int required_print_level)
+{
+    if (print_level > required_print_level)
+    {
+        printf("%s: %.5e\n", message, value); //debugging output
+    }
+}

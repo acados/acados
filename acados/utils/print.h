@@ -103,6 +103,10 @@ void print_qp_info(qp_info *info);
 // blasfeo
 // void print_blasfeo_target();
 
+void print_debug_output(char* message, int print_level, int required_print_level);
+//
+void print_debug_output_double(char* message, double value, int print_level, int required_print_level);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

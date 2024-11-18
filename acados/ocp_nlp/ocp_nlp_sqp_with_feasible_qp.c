@@ -1698,25 +1698,26 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // printf("Optimality Multiplier norm inf is: %.4e\n", multiplier_norm_inf);
 
         double current_l1_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
-        printf("Current l1 infeasibility: %.4e\n", current_l1_infeasibility);
+        print_debug_output_double("Current l1 infeasibility: ", current_l1_infeasibility, nlp_opts->print_level, 2);
 
         // Calculate linearized l1-infeasibility for d_steering
-        double l1_inf_QP_feasibility = get_slacked_qp_l1_infeasibility(dims, mem, nlp_work->tmp_qp_out);
-        printf("linearized l1_inf_feas: %.4e\n", l1_inf_QP_feasibility);
+        // double l1_inf_QP_feasibility = get_slacked_qp_l1_infeasibility(dims, mem, nlp_work->tmp_qp_out);
+        // print_debug_output_double("linearized l1_inf_feas: ", l1_inf_QP_feasibility, nlp_opts->print_level, 2);
+
         double manual_l1_inf_QP_feasibility = full_manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, nlp_work->tmp_qp_out);
-        printf("full matrix manual l1_inf_feas: %.4e\n", manual_l1_inf_QP_feasibility);
+        print_debug_output_double("l1_inf_feas: ", manual_l1_inf_QP_feasibility, nlp_opts->print_level, 2);
         // predicted infeasibility reduction of feasibility QP should always be non-negative
         double pred_l1_inf_QP_feasibility, pred_l1_inf_QP_optimality;
         pred_l1_inf_QP_feasibility = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manual_l1_inf_QP_feasibility);
-        printf("pred_l1_inf_QP_feasibility: %.4e\n", pred_l1_inf_QP_feasibility);
+        print_debug_output_double("pred_l1_inf_QP_feasibility: ", pred_l1_inf_QP_feasibility, nlp_opts->print_level, 2);
 
         // Calculate linearized l1-infeasibility for d_predictor
-        double l1_inf_QP_optimality = get_slacked_qp_l1_infeasibility(dims, mem, nlp_mem->qp_out);
-        printf("linearized l1_inf_opt: %.4e\n", l1_inf_QP_optimality);
+        // double l1_inf_QP_optimality = get_slacked_qp_l1_infeasibility(dims, mem, nlp_mem->qp_out);
+        // print_debug_output_double("linearized l1_inf_opt: ", l1_inf_QP_optimality, nlp_opts->print_level, 2);
         double manual_l1_inf_QP_optimality = full_manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, qp_out);
-        printf("full matrix manual l1_inf_opt: %.4e\n", manual_l1_inf_QP_optimality);
+        print_debug_output_double("l1_inf_opt: ", manual_l1_inf_QP_optimality, nlp_opts->print_level, 2);
         pred_l1_inf_QP_optimality = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manual_l1_inf_QP_optimality);
-        printf("pred_l1_inf_QP_optimality: %.4e\n", pred_l1_inf_QP_optimality);
+        print_debug_output_double("pred_l1_inf_QP_optimality: ", pred_l1_inf_QP_optimality, nlp_opts->print_level, 2);
 
         // It seems appropriate that the fraction for sufficient improvement
         // in infeasibility is adaptive. So, if inf is large, and the improvement is small
