@@ -731,7 +731,7 @@ static double calculate_search_direction_interpolation_factor(ocp_nlp_sqp_wfqp_o
     {
         kappa = 1.0;
     }
-    printf("Kappa: %.4e\n", kappa);
+    // printf("Kappa: %.4e\n", kappa);
     return kappa;
 }
 
@@ -797,7 +797,7 @@ static double get_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wf
             l1_inf += fmax(0.0, tmp2);
 
             // int index = mem->idxns[i][j];
-            // printf("slacks for constraint %d %d: l %e\t u %e\n", i, index, tmp1, tmp2);
+            // printf("slacks for constraint %d %d: l %e\t u %e\n", i, j, tmp1, tmp2);
         }
     }
 
@@ -843,6 +843,7 @@ static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims,
                 // Calculate the product
                 blasfeo_dgemv_t(nu[i]+nx[i], 1, 1.0, qp_in->DCt+i, constr_index-nb[i], 0, qp_out->ux+i, 0,
                         0.0, qp_in->d+i, 0, &work->nlp_work->tmp_ni, 0);
+                // printf("evaluating constraint %d, constr index %d\n", constr_index, constr_index-nb[i]);
                 tmp = BLASFEO_DVECEL(&work->nlp_work->tmp_ni, 0);
             }
 
@@ -853,7 +854,10 @@ static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims,
                 tmp_bound = BLASFEO_DVECEL(qp_in->d+i, constr_index);
                 // maximum(0, lower_bound - value)
                 l1_inf += fmax(0.0, tmp_bound-tmp);
-                // printf("lower constraint %d %d: bound: %.4e, value: %.4e, result: %.4e\n", i, constr_index, tmp_bound, tmp, fmax(0.0, tmp_bound-tmp));
+                // if (fmax(0.0, tmp_bound-tmp) > 1e-8)
+                // {
+                //     printf("lower constraint %d %d: bound: %.4e, value: %.4e, result: %.4e\n", i, constr_index, tmp_bound, tmp, fmax(0.0, tmp_bound-tmp));
+                // }
             }
             // check upper bound
             mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, nb[i] + ng[i] + constr_index);
@@ -862,7 +866,10 @@ static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims,
                 // upper bounds have the wrong sign!
                 // it is lower_bounds <= value <= -upper_bounds, therefore plus below
                 tmp_bound = BLASFEO_DVECEL(qp_in->d+i, nb[i] + ng[i] + constr_index);
-                // printf("upper constraint %d %d: bound: %.4e, value: %.4e, result: %.4e\n", i, constr_index, tmp_bound, tmp, fmax(0.0, tmp_bound+tmp));
+                // if (fmax(0.0, tmp_bound+tmp) > 1e-8)
+                // {
+                //     printf("upper constraint %d %d: bound: %.4e, value: %.4e, result: %.4e\n", i, constr_index, tmp_bound, tmp, fmax(0.0, tmp_bound+tmp));
+                // }
                 l1_inf += fmax(0.0, tmp_bound+tmp);
             }
         }
@@ -874,90 +881,111 @@ static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims,
 // This function calculates the l1 infeasibility by calculating the matrix vector product of the
 // constraints
 // */
-// static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_sqp_wfqp_workspace *work, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
-// {
-//     int N = dims->N;
-//     int *nx = dims->nx;
-//     int *nu = dims->nu;
-//     int *ns = dims->ns;
-//     int *nns = mem->nns;
-//     int *ni = dims->ni;
-//     int *nh = dims->ni;
+static double full_manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_sqp_wfqp_workspace *work, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    int *nns = mem->nns;
+    int *ni = dims->ni;
+    int *nh = dims->ni;
 
-//     int *nb = qp_in->dim->nb;
-//     int *ng = qp_in->dim->ng; //number of general two sided constraints
+    int *nb = qp_in->dim->nb;
+    int *ng = qp_in->dim->ng; //number of general two sided constraints
 
-//     double l1_inf = 0.0;
-//     int i, j;
-//     double tmp, tmp_bound, mask_value;
-//     int nominal_dims;
+    double l1_inf = 0.0;
+    int i, j;
+    double tmp, tmp_bound, mask_value;
+    int nominal_dims;
 
-//     //TODO: Write this function more efficiently. Atm too many operations
-//     for (i = 0; i <= N; i++)
-//     {
-//         // bounds on states and controls
-//         for (j=0; j<nb[i]; ++j)
-//         {
-//             tmp = BLASFEO_DVECEL(qp_out->ux+i, qp_in->idxb[i][j]);
-//             blasfeo_dvecin1(tmp, &work->nlp_work->tmp_ni, j);
-//             blasfeo_dvecin1(tmp, &work->nlp_work->tmp_ni, nb[i]+ng[i]+j);
-//         }
-//         // general linear / linearized!
-//         // tmp_ni = D * u + C * x
-//         // lower bounds --> this seems to be correct and in accordance with slack variables
-//         blasfeo_dgemv_t(nu[i]+nx[i], ng[i], 1.0, qp_in->DCt+i, 0, 0, qp_out->ux+i, 0,
-//                         0.0, qp_in->d+i, nb[i], &work->nlp_work->tmp_ni, nb[i]);
-//         blasfeo_dveccp(ng[i], &work->nlp_work->tmp_ni, nb[i], &work->nlp_work->tmp_ni, 2*nb[i]+ng[i]);
+    for (i = 0; i <= N; i++)
+    {
+        // bounds on states and controls
+        for (j=0; j<nb[i]; ++j)
+        {
+            tmp = BLASFEO_DVECEL(qp_out->ux+i, qp_in->idxb[i][j]);
+            blasfeo_dvecin1(tmp, &work->nlp_work->tmp_ni, j);
+            blasfeo_dvecin1(tmp, &work->nlp_work->tmp_ni, nb[i]+ng[i]+j);
+        }
+        // general linear / linearized!
+        // tmp_ni = D * u + C * x
+        // lower bounds --> this seems to be correct and in accordance with slack variables
+        blasfeo_dgemv_t(nu[i]+nx[i], ng[i], 1.0, qp_in->DCt+i, 0, 0, qp_out->ux+i, 0,
+                        0.0, qp_in->d+i, nb[i], &work->nlp_work->tmp_ni, nb[i]);
+        blasfeo_dveccp(ng[i], &work->nlp_work->tmp_ni, nb[i], &work->nlp_work->tmp_ni, 2*nb[i]+ng[i]);
 
-//         // upper bounds (seems to be correct but I do not understand why??)
-//         // the sign of upper bound d is wrong!! We should use -d. Why is that?
-//         // blasfeo_dgemv_t(nu[i]+nx[i], ng[i], 1.0, qp_in->DCt+i, 0, 0, qp_out->ux+i, 0,
-//         //                 0.0, qp_in->d+i, 2*nb[i]+ng[i], &work->nlp_work->tmp_ni, 2*nb[i]+ng[i]);
-//         for (j=0; j<2*nb[i]+2*ng[i]; ++j)
-//         {
-//             mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, j);
-//             if (mask_value == 1.0)
-//             {
-//                 tmp = BLASFEO_DVECEL(&work->nlp_work->tmp_ni, j);
-//                 tmp_bound = BLASFEO_DVECEL(qp_in->d+i, j);
-//                 if (j < nb[i] + ng[i])
-//                 {
-//                     // maximum(0, lower_bound - value)
-//                     l1_inf += fmax(0.0, tmp_bound-tmp);
-//                     // printf("lower bounds: bound: %.4e, value: %.4e, result: %.4e\n", tmp_bound, tmp, fmax(0.0, tmp_bound-tmp));
-//                 }
-//                 else
-//                 {
-//                     // upper bounds have the wrong sign!
-//                     // it is lower_bounds <= value <= -upper_bounds, therefore plus below
-//                     // printf("upper bounds: value: %.4e, value: %.4e, result: %.4e\n", tmp_bound, tmp, fmax(0.0, tmp_bound+tmp));
-//                     l1_inf += fmax(0.0, tmp_bound+tmp);
-//                 }
-//             }
-//         }
+        // add slack contributions
+        // d[nb:nb+ng] += slack[idx]
+        // qp_in->idxs_rev
+        if (ns[i]>0)
+        {
+            for (j = 0; j < nb[i]+ng[i]; j++)
+            {
+                int slack_index = qp_in->idxs_rev[i][j];
+                // maybe we need <=?
+                if (slack_index >= 0 && slack_index < ns[i])
+                {
+                    // add slack contribution for lower and upper constraint
+                    // lower
+                    BLASFEO_DVECEL(&work->nlp_work->tmp_ni, j) +=
+                            BLASFEO_DVECEL(qp_out->ux+i, slack_index+nx[i]+nu[i]);
+                    // upper
+                    BLASFEO_DVECEL(&work->nlp_work->tmp_ni, j+nb[i]+ng[i]) -=
+                            BLASFEO_DVECEL(qp_out->ux+i, slack_index+nx[i]+nu[i]+ns[i]+nns[i]);
+                }
+            }
+        }
 
-//         // Printing
-//         // printf("Manual multiplication at stage %d\n", i);
-//         // printf("i=%d\n", i);
-//         // printf("Print the lower bound vector\n");
-//         // printf("product\n");
-//         // blasfeo_print_dvec(ng[i], &work->nlp_work->tmp_ni, nb[i]);
-//         // printf("bound\n");
-//         // blasfeo_print_dvec(ng[i], qp_in->d+i, nb[i]);
-//         // printf("d_mask\n");
-//         // blasfeo_print_dvec(ng[i], qp_in->d_mask+i, nb[i]);
-//         // printf("Print the upper bound vector\n");
-//         // printf("product\n");
-//         // blasfeo_print_dvec(ng[i], &work->nlp_work->tmp_ni, 2*nb[i]+ng[i]);
-//         // printf("bound\n");
-//         // blasfeo_print_dvec(ng[i], qp_in->d+i, 2*nb[i]+ng[i]);
-//         // printf("d_mask\n");
-//         // blasfeo_print_dvec(ng[i], qp_in->d_mask+i, 2*nb[i]+ng[i]);
+        // upper bounds (seems to be correct but I do not understand why??)
+        // the sign of upper bound d is wrong!! We should use -d. Why is that?
+        // blasfeo_dgemv_t(nu[i]+nx[i], ng[i], 1.0, qp_in->DCt+i, 0, 0, qp_out->ux+i, 0,
+        //                 0.0, qp_in->d+i, 2*nb[i]+ng[i], &work->nlp_work->tmp_ni, 2*nb[i]+ng[i]);
+        for (j=0; j<2*nb[i]+2*ng[i]; ++j)
+        {
+            mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, j);
+            if (mask_value == 1.0)
+            {
+                tmp = BLASFEO_DVECEL(&work->nlp_work->tmp_ni, j);
+                tmp_bound = BLASFEO_DVECEL(qp_in->d+i, j);
+                if (j < nb[i] + ng[i])
+                {
+                    // maximum(0, lower_bound - value)
+                    l1_inf += fmax(0.0, tmp_bound-tmp);
+                    // printf("lower bounds: bound: %.4e, value: %.4e, result: %.4e\n", tmp_bound, tmp, fmax(0.0, tmp_bound-tmp));
+                }
+                else
+                {
+                    // upper bounds have the wrong sign!
+                    // it is lower_bounds <= value <= -upper_bounds, therefore plus below
+                    // printf("upper bounds: value: %.4e, value: %.4e, result: %.4e\n", tmp_bound, tmp, fmax(0.0, tmp_bound+tmp));
+                    l1_inf += fmax(0.0, tmp_bound+tmp);
+                }
+            }
+        }
 
-//     }
+        // Printing
+        // printf("Manual multiplication at stage %d\n", i);
+        // printf("i=%d\n", i);
+        // printf("Print the lower bound vector\n");
+        // printf("product\n");
+        // blasfeo_print_dvec(ng[i], &work->nlp_work->tmp_ni, nb[i]);
+        // printf("bound\n");
+        // blasfeo_print_dvec(ng[i], qp_in->d+i, nb[i]);
+        // printf("d_mask\n");
+        // blasfeo_print_dvec(ng[i], qp_in->d_mask+i, nb[i]);
+        // printf("Print the upper bound vector\n");
+        // printf("product\n");
+        // blasfeo_print_dvec(ng[i], &work->nlp_work->tmp_ni, 2*nb[i]+ng[i]);
+        // printf("bound\n");
+        // blasfeo_print_dvec(ng[i], qp_in->d+i, 2*nb[i]+ng[i]);
+        // printf("d_mask\n");
+        // blasfeo_print_dvec(ng[i], qp_in->d_mask+i, 2*nb[i]+ng[i]);
 
-//     return l1_inf;
-// }
+    }
+
+    return l1_inf;
+}
 
 
 static void set_non_slacked_l1_penalties(ocp_nlp_config *config, ocp_nlp_dims *dims,
@@ -1607,7 +1635,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         prev_levenberg_marquardt = nlp_opts->levenberg_marquardt;
 
         double multiplier_norm_inf = get_multiplier_norm_inf(dims, qp_out);
-        printf("Multiplier norm inf is: %.4e\n", multiplier_norm_inf);
+        // printf("Multiplier norm inf is: %.4e\n", multiplier_norm_inf);
 
         // Termination
         if (check_termination(sqp_iter, dims, nlp_res, mem, opts))
@@ -1665,29 +1693,29 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // nlp_mem->qp_out = d with objective_multiplier
 
         multiplier_norm_inf = get_multiplier_norm_inf(dims, nlp_work->tmp_qp_out);
-        printf("Feasibility Multiplier norm inf is: %.4e\n", multiplier_norm_inf);
+        // printf("Feasibility Multiplier norm inf is: %.4e\n", multiplier_norm_inf);
         multiplier_norm_inf = get_multiplier_norm_inf(dims, qp_out);
-        printf("Optimality Multiplier norm inf is: %.4e\n", multiplier_norm_inf);
+        // printf("Optimality Multiplier norm inf is: %.4e\n", multiplier_norm_inf);
 
         double current_l1_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
         printf("Current l1 infeasibility: %.4e\n", current_l1_infeasibility);
+
         // Calculate linearized l1-infeasibility for d_steering
         double l1_inf_QP_feasibility = get_slacked_qp_l1_infeasibility(dims, mem, nlp_work->tmp_qp_out);
         printf("linearized l1_inf_feas: %.4e\n", l1_inf_QP_feasibility);
-        double manual_l1_inf_QP_feasibility = manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, nlp_work->tmp_qp_out);
-        printf("manual l1_inf_feas: %.4e\n", manual_l1_inf_QP_feasibility);
+        double manual_l1_inf_QP_feasibility = full_manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, nlp_work->tmp_qp_out);
+        printf("full matrix manual l1_inf_feas: %.4e\n", manual_l1_inf_QP_feasibility);
+        // predicted infeasibility reduction of feasibility QP should always be non-negative
+        double pred_l1_inf_QP_feasibility, pred_l1_inf_QP_optimality;
+        pred_l1_inf_QP_feasibility = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manual_l1_inf_QP_feasibility);
+        printf("pred_l1_inf_QP_feasibility: %.4e\n", pred_l1_inf_QP_feasibility);
 
         // Calculate linearized l1-infeasibility for d_predictor
         double l1_inf_QP_optimality = get_slacked_qp_l1_infeasibility(dims, mem, nlp_mem->qp_out);
         printf("linearized l1_inf_opt: %.4e\n", l1_inf_QP_optimality);
-        double manual_l1_inf_QP_optimality = manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, qp_out);
-        printf("manual l1_inf_opt: %.4e\n", manual_l1_inf_QP_optimality);
-
-        // predicted infeasibility reduction of feasibility QP should always be non-negative
-        double pred_l1_inf_QP_feasibility, pred_l1_inf_QP_optimality;
-        pred_l1_inf_QP_feasibility = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manual_l1_inf_QP_feasibility);
+        double manual_l1_inf_QP_optimality = full_manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, qp_out);
+        printf("full matrix manual l1_inf_opt: %.4e\n", manual_l1_inf_QP_optimality);
         pred_l1_inf_QP_optimality = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manual_l1_inf_QP_optimality);
-        printf("pred_l1_inf_QP_feasibility: %.4e\n", pred_l1_inf_QP_feasibility);
         printf("pred_l1_inf_QP_optimality: %.4e\n", pred_l1_inf_QP_optimality);
 
         // It seems appropriate that the fraction for sufficient improvement
@@ -1703,8 +1731,9 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Calculate search direction
         setup_search_direction(mem, dims, qp_out, nlp_work->tmp_qp_out, qp_out, kappa);
 
-        double pred_l1_inf_search_direction = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, qp_out));
-        printf("pred_l1_inf_search_direction: %.4e\n", pred_l1_inf_search_direction);
+        // double pred_l1_inf_search_direction = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, qp_out));
+        double pred_l1_inf_search_direction = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, full_manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, qp_out));
+        // printf("pred_l1_inf_search_direction: %.4e\n", pred_l1_inf_search_direction);
         //---------------------------------------------------------------------
         // scale_multiplier(dims, nlp_mem, qp_out);
 
@@ -1856,11 +1885,14 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
         config->constraints[stage]->model_get(config->constraints[stage], dims->constraints[stage], nlp_in->constraints[stage], "idxs", idxs);
 
         // DEBUG:
-        printf("stage %d: ni %d ns %d nns %d\n", stage, ni, ns, nns);
-        printf("got idxs at stage %d\n", stage);
-        for (int i=0; i<ns; i++)
-            printf("%d ", idxs[i]);
-        printf("\n");
+        if (opts->nlp_opts->print_level > 1)
+        {
+            printf("stage %d: ni %d ns %d nns %d\n", stage, ni, ns, nns);
+            printf("got idxs at stage %d\n", stage);
+            for (int i=0; i<ns; i++)
+                printf("%d ", idxs[i]);
+            printf("\n");
+        }
 
         int ins = 0;
         bool i_slacked;
