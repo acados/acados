@@ -861,7 +861,7 @@ class AcadosOcp:
         if opts.with_value_sens_wrt_params:
             if dims.np_global == 0:
                 raise Exception('with_value_sens_wrt_params is only compatible if global parameters `p_global` are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got emty p_global.')
-            if cost.cost_type != "EXTERNAL" or cost.cost_type_0 != "EXTERNAL" or cost.cost_type_e != "EXTERNAL":
+            if any([cost_type not in ["EXTERNAL", "LINEAR_LS"] for cost_type in [cost.cost_type, cost.cost_type_0, cost.cost_type_e]]):
                 raise Exception('with_value_sens_wrt_params is only compatible with EXTERNAL cost_type.')
             if opts.integrator_type != "DISCRETE":
                 raise Exception('with_value_sens_wrt_params is only compatible with DISCRETE dynamics.')
