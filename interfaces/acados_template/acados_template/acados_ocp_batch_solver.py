@@ -31,6 +31,7 @@
 
 from .acados_ocp_solver import AcadosOcpSolver
 from .acados_ocp import AcadosOcp
+from .acados_ocp_iterate import AcadosOcpFlattenedBatchIterate
 from typing import Optional, List, Tuple
 from collections.abc import Sequence
 from ctypes import (POINTER, c_int, c_void_p, cast, c_double, c_char_p)
@@ -73,6 +74,12 @@ class AcadosOcpBatchSolver():
 
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_solution_sens_adj_p").argtypes = [POINTER(c_void_p), c_char_p, c_int, POINTER(c_double), c_int, c_int]
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_solution_sens_adj_p").restype = c_void_p
+
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_set_flat").argtypes = [POINTER(c_void_p), c_char_p, POINTER(c_double), c_int, c_int]
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_set_flat").restype = c_void_p
+
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_get_flat").argtypes = [POINTER(c_void_p), c_char_p, POINTER(c_double), c_int, c_int]
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_get_flat").restype = c_void_p
 
         if self.ocp_solvers[0].acados_lib_uses_omp:
             msg = "Note: Please make sure that the acados shared library is compiled with the number of threads set to 1,\n"
@@ -223,7 +230,7 @@ class AcadosOcpBatchSolver():
         Set concatenation solver initialization for all `N_batch` solvers.
 
             :param field_: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']
-            :param value_: np.array of shape (N_batch, n_field)
+            :param value_: np.array of shape (N_batch, n_field_total)
         """
 
         field = field_.encode('utf-8')
@@ -240,7 +247,58 @@ class AcadosOcpBatchSolver():
 
         value_ = value_.astype(float)
         value_data = cast(value_.ctypes.data, POINTER(c_double))
-        value_data_p = cast((value_data), c_void_p)
 
-        getattr(self.__shared_lib, f"{self.__name}_acados_batch_set_flat")(self.__ocp_solvers_pointer, field, value_data_p, N_data, self.__N_batch)
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_set_flat")(self.__ocp_solvers_pointer, field, value_data, N_data, self.__N_batch)
 
+
+    def get_flat(self, field_: str) -> np.ndarray:
+        """
+        Get concatenation of all stages of last solution of the solver.
+
+            :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']
+            :returns: numpy array of shape (N_batch, n_field_total)
+        """
+        if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']:
+            raise Exception(f'AcadosOcpSolver.get_flat(field={field_}): \'{field_}\' is an invalid argument.')
+
+        field = field_.encode('utf-8')
+
+        dim = self.ocp_solvers[0].get_dim_flat(field_)
+
+        out = np.ascontiguousarray(np.zeros((self.N_batch, dim,)), dtype=np.float64)
+        out_data = cast(out.ctypes.data, POINTER(c_double))
+
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_get_flat")(self.__ocp_solvers_pointer, field, out_data, self.N_batch*dim, self.__N_batch)
+
+        return out
+
+
+    def store_iterate_to_flat_obj(self) -> AcadosOcpFlattenedBatchIterate:
+        """
+        Returns the current iterate of the OCP solvers as an AcadosOcpFlattenedBatchIterate.
+        """
+        return AcadosOcpFlattenedBatchIterate(x = self.get_flat("x"),
+                                              u = self.get_flat("u"),
+                                              z = self.get_flat("z"),
+                                              sl = self.get_flat("sl"),
+                                              su = self.get_flat("su"),
+                                              pi = self.get_flat("pi"),
+                                              lam = self.get_flat("lam"),
+                                              N_batch=self.N_batch)
+
+    def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedBatchIterate) -> None:
+        """
+        Loads the provided iterate into the OCP solvers.
+        Note: The iterate object does not contain the the parameters.
+        """
+
+        if self.N_batch != iterate.N_batch:
+            raise Exception(f"Wrong batch dimension. Expected {self.N_batch}, got {iterate.N_batch}")
+
+        self.set_flat("x", iterate.x)
+        self.set_flat("u", iterate.u)
+        self.set_flat("z", iterate.z)
+        self.set_flat("sl", iterate.sl)
+        self.set_flat("su", iterate.su)
+        self.set_flat("pi", iterate.pi)
+        self.set_flat("lam", iterate.lam)

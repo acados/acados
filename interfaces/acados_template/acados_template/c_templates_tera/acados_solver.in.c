@@ -2828,9 +2828,8 @@ void {{ model.name }}_acados_batch_eval_solution_sens_adj_p({{ model.name }}_sol
 }
 
 
-void {{ model.name }}_acados_batch_set_flat({{ model.name }}_solver_capsule ** capsules, const char *field, void *data, int N_data, int N_batch)
+void {{ model.name }}_acados_batch_set_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch)
 {
-    double *double_values = data;
     int offset = ocp_nlp_dims_get_total_from_attr(capsules[0]->nlp_solver->config, capsules[0]->nlp_solver->dims, field);
 
     if (N_batch*offset != N_data)
@@ -2847,7 +2846,36 @@ void {{ model.name }}_acados_batch_set_flat({{ model.name }}_solver_capsule ** c
 {%- endif %}
     for (int i = 0; i < N_batch; i++)
     {
-        ocp_nlp_set_all(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->nlp_out, field, double_values + i * offset);
+        ocp_nlp_set_all(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->nlp_out, field, data + i * offset);
+    }
+
+{% if solver_options.num_threads_in_batch_solve > 1 %}
+    omp_set_num_threads( num_threads_bkp );
+{%- endif %}
+    return;
+}
+
+
+
+void {{ model.name }}_acados_batch_get_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch)
+{
+    int offset = ocp_nlp_dims_get_total_from_attr(capsules[0]->nlp_solver->config, capsules[0]->nlp_solver->dims, field);
+
+    if (N_batch*offset != N_data)
+    {
+        printf("batch_get_flat: wrong input dimension, expected %d, got %d\n", N_batch*offset, N_data);
+        exit(1);
+    }
+
+{% if solver_options.num_threads_in_batch_solve > 1 %}
+    int num_threads_bkp = omp_get_num_threads();
+    omp_set_num_threads({{ solver_options.num_threads_in_batch_solve }});
+
+    #pragma omp parallel for
+{%- endif %}
+    for (int i = 0; i < N_batch; i++)
+    {
+        ocp_nlp_get_all(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->nlp_out, field, data + i * offset);
     }
 
 {% if solver_options.num_threads_in_batch_solve > 1 %}
