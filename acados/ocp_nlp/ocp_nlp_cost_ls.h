@@ -69,6 +69,7 @@ typedef struct
     int nu;  // number of inputs
     int ny;  // number of outputs
     int ns;  // number of slacks
+    int np_global;
 } ocp_nlp_cost_ls_dims;
 
 

@@ -82,72 +82,31 @@ void *ocp_nlp_cost_ls_dims_assign(void *config_, void *raw_memory)
 
 
 
-static void ocp_nlp_cost_ls_set_nx(void *config_, void *dims_, int *nx)
-{
-    ///  Initialize the dimensions struct of the
-    ///  ocp_nlp_cost_ls module
-    ///
-    ///  \param[in] config_ structure containing configuration of ocp_nlp_cost module
-    ///  \param[in] nx number of states
-    ///  \param[out] dims_
-    ///  \return []
-
-    ocp_nlp_cost_ls_dims *dims = (ocp_nlp_cost_ls_dims *) dims_;
-    dims->nx = *nx;
-}
-
-
-static void ocp_nlp_cost_ls_set_nz(void *config_, void *dims_, int *nz)
-{
-    ocp_nlp_cost_ls_dims *dims = (ocp_nlp_cost_ls_dims *) dims_;
-    dims->nz = *nz;
-}
-
-static void ocp_nlp_cost_ls_set_nu(void *config_, void *dims_, int *nu)
-{
-    ocp_nlp_cost_ls_dims *dims = (ocp_nlp_cost_ls_dims *) dims_;
-    dims->nu = *nu;
-}
-
-
-
-static void ocp_nlp_cost_ls_set_ny(void *config_, void *dims_, int *ny)
-{
-    ocp_nlp_cost_ls_dims *dims = (ocp_nlp_cost_ls_dims *) dims_;
-    dims->ny = *ny;
-}
-
-
-
-static void ocp_nlp_cost_ls_set_ns(void *config_, void *dims_, int *ns)
-{
-    ocp_nlp_cost_ls_dims *dims = (ocp_nlp_cost_ls_dims *) dims_;
-    dims->ns = *ns;
-}
-
 
 
 void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, const char *field, int* value)
 {
+    ocp_nlp_cost_ls_dims *dims = (ocp_nlp_cost_ls_dims *) dims_;
+
     if (!strcmp(field, "nx"))
     {
-        ocp_nlp_cost_ls_set_nx(config_, dims_, value);
+        dims->nx = *value;
     }
     else if (!strcmp(field, "nz"))
     {
-        ocp_nlp_cost_ls_set_nz(config_, dims_, value);
+        dims->nz = *value;
     }
     else if (!strcmp(field, "nu"))
     {
-        ocp_nlp_cost_ls_set_nu(config_, dims_, value);
+        dims->nu = *value;
     }
     else if (!strcmp(field, "ny"))
     {
-        ocp_nlp_cost_ls_set_ny(config_, dims_, value);
+        dims->ny = *value;
     }
     else if (!strcmp(field, "ns"))
     {
-        ocp_nlp_cost_ls_set_ns(config_, dims_, value);
+        dims->ns = *value;
     }
     else if (!strcmp(field, "np"))
     {
@@ -155,7 +114,7 @@ void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, const char *field, int
     }
     else if (!strcmp(field, "np_global"))
     {
-        // np_global dimension not needed
+        dims->np_global = *value;
     }
     else
     {
@@ -635,6 +594,15 @@ void ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_tran, 
 }
 
 
+void ocp_nlp_cost_ls_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory_)
+{
+    // do nothing -- ls cost can not depend on p_global, as it is not parametric
+
+    // ocp_nlp_cost_ls_memory *memory = memory_;
+    // memory->jac_lag_stat_p_global = jac_lag_stat_p_global;
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                 workspace                                  //
@@ -1014,16 +982,24 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
 }
 
 
-void ocp_nlp_cost_ls_compute_jac_p(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_)
+void ocp_nlp_cost_ls_compute_jac_p(void *config_, void *dims_, void *model_,
+                                       void *opts_, void *memory_, void *work_)
 {
-    printf("ocp_nlp_cost_ls_compute_jac_p: not implemented.\n");
-    exit(1);
+    // printf("in ocp_nlp_cost_ls_compute_jac_p\n");
+    // adds contribution to stationarity jacobian:
+    // jac_lag_stat_p_global += scaling * cost_grad_params_jac
+
+    // do nothing -- ls cost can not depend on p_global, as it is not parametric
+
+    return;
 }
 
-void ocp_nlp_cost_ls_eval_grad_p(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_, struct blasfeo_dvec *out)
+
+void ocp_nlp_cost_ls_eval_grad_p(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_, struct blasfeo_dvec *out)
 {
-    printf("ocp_nlp_cost_ls_eval_grad_p: not implemented.\n");
-    exit(1);
+    ocp_nlp_cost_ls_dims *dims = dims_;
+
+    blasfeo_dvecse(dims->np_global, 0.0, out, 0);
 }
 
 
@@ -1040,7 +1016,6 @@ void ocp_nlp_cost_ls_set_external_fun_workspaces(void *config_, void *dims_, voi
 {
     // ocp_nlp_cost_ls_model *model = model_;
 }
-
 
 
 void ocp_nlp_cost_ls_config_initialize_default(void *config_, int stage)
@@ -1068,6 +1043,7 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_, int stage)
     config->memory_set_dzdux_tran_ptr = &ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_cost_ls_memory_set_RSQrq_ptr;
     config->memory_set_Z_ptr = &ocp_nlp_cost_ls_memory_set_Z_ptr;
+    config->memory_set_jac_lag_stat_p_global_ptr = &ocp_nlp_cost_ls_memory_set_jac_lag_stat_p_global_ptr;
     config->workspace_calculate_size = &ocp_nlp_cost_ls_workspace_calculate_size;
     config->get_external_fun_workspace_requirement = &ocp_nlp_cost_ls_get_external_fun_workspace_requirement;
     config->set_external_fun_workspaces = &ocp_nlp_cost_ls_set_external_fun_workspaces;

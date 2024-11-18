@@ -161,7 +161,7 @@ class AcadosOcpBatchSolver():
             N_horizon = self.__ocp_solvers[0].acados_ocp.solver_options.N_horizon
 
             for n in range(self.N_batch):
-                self.__ocp_solvers[n].sanity_check_parametric_sensitivities()
+                self.__ocp_solvers[n]._sanity_check_solution_sensitivities()
 
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(
                 self.__ocp_solvers[0].nlp_config, self.__ocp_solvers[0].nlp_dims, self.__ocp_solvers[0].nlp_out, 0, "x".encode('utf-8'))
