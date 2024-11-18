@@ -190,8 +190,7 @@ class AcadosOcpBatchSolver():
 
             t1 = time.time()
 
-            grad = np.zeros((self.N_batch, n_seeds, np_global))
-            grad_p = np.ascontiguousarray(grad, dtype=np.float64)
+            grad_p = np.zeros((self.N_batch, n_seeds, np_global), order="C", dtype=np.float64)
             offset = n_seeds*np_global
 
             for i_seed in range(n_seeds):

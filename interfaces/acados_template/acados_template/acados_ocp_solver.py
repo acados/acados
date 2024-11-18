@@ -574,9 +574,8 @@ class AcadosOcpSolver:
 
             field = "p_global".encode('utf-8')
             t0 = time.time()
-            grad = np.zeros((np_global,))
-            grad_p = np.ascontiguousarray(grad, dtype=np.float64)
-            c_grad_p = cast(grad_p.ctypes.data, POINTER(c_double))
+            grad = np.zeros((np_global,), dtype=np.float64, order='C')
+            c_grad_p = cast(grad.ctypes.data, POINTER(c_double))
             self.__acados_lib.ocp_nlp_eval_lagrange_grad_p(self.nlp_solver, self.nlp_in, field, c_grad_p)
             self.time_value_grad = time.time() - t0
 
@@ -772,8 +771,7 @@ class AcadosOcpSolver:
 
             nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, field)
 
-            grad = np.zeros((n_seeds, nparam))
-            grad_p = np.ascontiguousarray(grad, dtype=np.float64)
+            grad_p = np.zeros((n_seeds, nparam), order='C', dtype=np.float64)
 
             # compute jacobian wrt params
             t0 = time.time()
@@ -889,7 +887,7 @@ class AcadosOcpSolver:
 
         dims = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field)
 
-        out = np.ascontiguousarray(np.zeros((dims,)), dtype=np.float64)
+        out = np.zeros((dims,), dtype=np.float64, order="C")
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
         if field_ in in_fields:
@@ -914,7 +912,7 @@ class AcadosOcpSolver:
 
         dims = self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, field)
 
-        out = np.ascontiguousarray(np.zeros((dims,)), dtype=np.float64)
+        out = np.zeros((dims,), dtype=np.float64, order="C")
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
         self.__acados_lib.ocp_nlp_get_all(self.nlp_solver, self.nlp_in, self.nlp_out, field, out_data)
@@ -1387,14 +1385,14 @@ class AcadosOcpSolver:
             stat_m = self.get_stats("stat_m")
             stat_n = self.get_stats("stat_n")
             min_size = min([stat_m, nlp_iter+1])
-            out = np.ascontiguousarray(np.zeros((stat_n+1, min_size)), dtype=np.float64)
+            out = np.zeros((stat_n+1, min_size), dtype=np.float64, order="C")
             out_data = cast(out.ctypes.data, POINTER(c_double))
             self.__acados_lib.ocp_nlp_get(self.nlp_solver, field, out_data)
             return out
 
         elif field_ == 'primal_step_norm':
             nlp_iter = self.get_stats("nlp_iter")
-            out = np.ascontiguousarray(np.zeros((nlp_iter,)), dtype=np.float64)
+            out = np.zeros((nlp_iter,), dtype=np.float64, order="C")
             out_data = cast(out.ctypes.data, POINTER(c_double))
             self.__acados_lib.ocp_nlp_get(self.nlp_solver, field, out_data)
             return out
@@ -1484,7 +1482,7 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_eval_cost(self.nlp_solver, self.nlp_in, self.nlp_out)
 
         # create output array
-        out = np.ascontiguousarray(np.zeros((1,)), dtype=np.float64)
+        out = np.zeros((1,), dtype=np.float64, order="C")
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
         # call getter
@@ -1509,7 +1507,7 @@ class AcadosOcpSolver:
             self.__acados_lib.ocp_nlp_eval_residuals(self.nlp_solver, self.nlp_in, self.nlp_out)
 
         # create output array
-        out = np.ascontiguousarray(np.zeros((4, 1)), dtype=np.float64)
+        out = np.zeros((4, 1), dtype=np.float64, order="C")
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
         # call getters
@@ -1656,7 +1654,7 @@ class AcadosOcpSolver:
         field = field_.encode('utf-8')
         stage = c_int(stage_)
 
-        dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
+        dims = np.zeros((2,), dtype=np.intc, order="C")
         dims_data = cast(dims.ctypes.data, POINTER(c_int))
 
         self.__acados_lib.ocp_nlp_cost_dims_get_from_attr(self.nlp_config, \
@@ -1723,7 +1721,7 @@ class AcadosOcpSolver:
         field = field_.encode('utf-8')
         stage = c_int(stage_)
 
-        dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
+        dims = np.zeros((2,), dtype=np.intc, order="C")
         dims_data = cast(dims.ctypes.data, POINTER(c_int))
 
         self.__acados_lib.ocp_nlp_constraint_dims_get_from_attr(self.nlp_config, \
@@ -1815,7 +1813,7 @@ class AcadosOcpSolver:
         stage = c_int(stage_)
 
         # get dims
-        dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
+        dims = np.zeros((2,), dtype=np.intc, order="C")
         dims_data = cast(dims.ctypes.data, POINTER(c_int))
 
         self.__acados_lib.ocp_nlp_qp_dims_get_from_attr(self.nlp_config, \
@@ -1823,9 +1821,9 @@ class AcadosOcpSolver:
 
         # create output data
         if field_ in self.__qp_constraint_int_fields:
-            out = np.ascontiguousarray(np.zeros((np.prod(dims),)), dtype=np.int32)
+            out =np.zeros((np.prod(dims),), dtype=np.int32, order="C")
         else:
-            out = np.ascontiguousarray(np.zeros((np.prod(dims),)), dtype=np.float64)
+            out = np.zeros((np.prod(dims),), dtype=np.float64, order="C")
         out = out.reshape(dims[0], dims[1], order='F')
 
         out_data = cast(out.ctypes.data, POINTER(c_double))
@@ -1848,7 +1846,7 @@ class AcadosOcpSolver:
         dim = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out,
                     stage, field)
 
-        out = np.ascontiguousarray(np.zeros((dim,)), dtype=np.float64)
+        out = np.zeros((dim,), dtype=np.float64, order="C")
         out_data = cast(out.ctypes.data, POINTER(c_double))
         out_data_p = cast((out_data), c_void_p)
         self.__acados_lib.ocp_nlp_get_from_iterate(self.nlp_solver, iteration, stage, field, out_data_p)
