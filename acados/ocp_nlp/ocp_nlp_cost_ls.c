@@ -635,6 +635,15 @@ void ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_tran, 
 }
 
 
+void ocp_nlp_cost_ls_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory_)
+{
+    // do nothing -- ls cost can not depend on p_global, as it is not parametric
+
+    // ocp_nlp_cost_ls_memory *memory = memory_;
+    // memory->jac_lag_stat_p_global = jac_lag_stat_p_global;
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                 workspace                                  //
@@ -1014,11 +1023,18 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
 }
 
 
-void ocp_nlp_cost_ls_compute_jac_p(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_)
+void ocp_nlp_cost_ls_compute_jac_p(void *config_, void *dims_, void *model_,
+                                       void *opts_, void *memory_, void *work_)
 {
-    printf("ocp_nlp_cost_ls_compute_jac_p: not implemented.\n");
-    exit(1);
+    // printf("in ocp_nlp_cost_ls_compute_jac_p\n");
+    // adds contribution to stationarity jacobian:
+    // jac_lag_stat_p_global += scaling * cost_grad_params_jac
+
+    // do nothing -- ls cost can not depend on p_global, as it is not parametric
+
+    return;
 }
+
 
 void ocp_nlp_cost_ls_eval_grad_p(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_, struct blasfeo_dvec *out)
 {
@@ -1040,7 +1056,6 @@ void ocp_nlp_cost_ls_set_external_fun_workspaces(void *config_, void *dims_, voi
 {
     // ocp_nlp_cost_ls_model *model = model_;
 }
-
 
 
 void ocp_nlp_cost_ls_config_initialize_default(void *config_, int stage)
@@ -1068,6 +1083,7 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_, int stage)
     config->memory_set_dzdux_tran_ptr = &ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_cost_ls_memory_set_RSQrq_ptr;
     config->memory_set_Z_ptr = &ocp_nlp_cost_ls_memory_set_Z_ptr;
+    config->memory_set_jac_lag_stat_p_global_ptr = &ocp_nlp_cost_ls_memory_set_jac_lag_stat_p_global_ptr;
     config->workspace_calculate_size = &ocp_nlp_cost_ls_workspace_calculate_size;
     config->get_external_fun_workspace_requirement = &ocp_nlp_cost_ls_get_external_fun_workspace_requirement;
     config->set_external_fun_workspaces = &ocp_nlp_cost_ls_set_external_fun_workspaces;
