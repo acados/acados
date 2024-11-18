@@ -589,7 +589,7 @@ class AcadosOcpSolver:
         return self.eval_and_get_optimal_value_gradient(with_respect_to)
 
 
-    def sanity_check_parametric_sensitivities(self):
+    def _sanity_check_solution_sensitivities(self, parametric=True) -> None:
         if not (self.acados_ocp.solver_options.qp_solver == 'FULL_CONDENSING_HPIPM' or
                 self.acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM'):
             raise Exception("Parametric sensitivities are only available with HPIPM as QP solver.")
@@ -607,6 +607,9 @@ class AcadosOcpSolver:
             self.acados_ocp.model.cost_expr_ext_cost_custom_hess_e is None
         ):
             raise Exception("Parametric sensitivities are only correct if an exact Hessian is used!")
+
+        if parametric and not self.acados_ocp.solver_options.with_solution_sens_wrt_params:
+            raise Exception("Parametric sensitivities are only available if with_solution_sens_wrt_params is set to True.")
 
 
     def eval_solution_sensitivity(self, stages: Union[int, List[int]], with_respect_to: str) \
@@ -641,8 +644,6 @@ class AcadosOcpSolver:
             print("Deprecation warning: 'params_global' is deprecated and has been renamed to 'p_global'.")
             with_respect_to = "p_global"
 
-        self.sanity_check_parametric_sensitivities()
-
         stages_is_list = isinstance(stages, list)
         stages_ = stages if stages_is_list else [stages]
 
@@ -659,11 +660,15 @@ class AcadosOcpSolver:
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
             ngrad = nx
             field = "ex"
+            self._sanity_check_solution_sensitivities(parametric=False)
+
 
         elif with_respect_to == "p_global":
             np_global = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p_global".encode('utf-8'))
             ngrad = np_global
             field = "p_global"
+            self._sanity_check_solution_sensitivities()
+
 
             # compute jacobians wrt params in all modules
             t0 = time.time()
@@ -752,7 +757,7 @@ class AcadosOcpSolver:
 
         if sanity_checks:
             N_horizon = self.acados_ocp.solver_options.N_horizon
-            self.sanity_check_parametric_sensitivities()
+            self._sanity_check_solution_sensitivities()
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
             nu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "u".encode('utf-8'))
 
@@ -818,7 +823,7 @@ class AcadosOcpSolver:
 
         print("WARNING: eval_param_sens() is deprecated. Please use eval_solution_sensitivity() instead!")
 
-        self.sanity_check_parametric_sensitivities()
+        self._sanity_check_solution_sensitivities(False)
 
         field = field.encode('utf-8')
 
