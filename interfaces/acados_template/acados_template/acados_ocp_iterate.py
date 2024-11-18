@@ -47,8 +47,8 @@ class AcadosOcpFlattenedIterate:
 
 @dataclass
 class AcadosOcpFlattenedBatchIterate:
-    x: np.ndarray
-    u: np.ndarray
+    x: np.ndarray # shape (N_batch, nx_total)
+    u: np.ndarray # shape (N_batch, nu_total)
     z: np.ndarray
     sl: np.ndarray
     su: np.ndarray

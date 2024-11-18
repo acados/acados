@@ -230,7 +230,7 @@ class AcadosOcpBatchSolver():
         Set concatenation solver initialization for all `N_batch` solvers.
 
             :param field_: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']
-            :param value_: np.array of shape (N_batch, n_field)
+            :param value_: np.array of shape (N_batch, n_field_total)
         """
 
         field = field_.encode('utf-8')
@@ -256,6 +256,7 @@ class AcadosOcpBatchSolver():
         Get concatenation of all stages of last solution of the solver.
 
             :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']
+            :returns: numpy array of shape (N_batch, n_field_total)
         """
         if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']:
             raise Exception(f'AcadosOcpSolver.get_flat(field={field_}): \'{field_}\' is an invalid argument.')
