@@ -125,6 +125,7 @@ class AcadosOcpBatchSolver():
                     The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the controls at that stage with shape (N_batch, nu, n_seeds)
             :param with_respect_to : string in ["p_global"]
             :param sanity_checks : bool - whether to perform sanity checks, turn off for minimal overhead, default: True
+            :returns : np.ndarray of shape (N_batch, n_seeds, np_global)
         """
 
         if seed_x is None:
@@ -190,8 +191,7 @@ class AcadosOcpBatchSolver():
 
             t1 = time.time()
 
-            grad = np.zeros((self.N_batch, n_seeds, np_global))
-            grad_p = np.ascontiguousarray(grad, dtype=np.float64)
+            grad_p = np.zeros((self.N_batch, n_seeds, np_global), order="C", dtype=np.float64)
             offset = n_seeds*np_global
 
             for i_seed in range(n_seeds):
