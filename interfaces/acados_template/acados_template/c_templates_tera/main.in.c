@@ -164,11 +164,13 @@ int main()
            sqp_iter, NTIMINGS, min_time*1000, kkt_norm_inf);
 
 {% if solver_options.with_solution_sens_wrt_params %}
+    // evaluate adjoint solution sensitivities wrt p_global
     ocp_nlp_out *sens_out = {{ name }}_acados_get_sens_out(acados_ocp_capsule);
     ocp_nlp_out_set_values_to_zero(nlp_config, nlp_dims, sens_out);
     ocp_nlp_eval_params_jac(nlp_solver, nlp_in, nlp_out);
     double tmp_p_global[NP_GLOBAL];
     ocp_nlp_eval_solution_sens_adj_p(nlp_solver, nlp_in, sens_out, "p_global", 0, tmp_p_global);
+    printf("Sucessfully evaluated adjoint solution sensitivities wrt p_global.")
 {%- endif %}
 
     // free solver
