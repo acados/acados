@@ -51,6 +51,7 @@
 #define NP     {{ name | upper }}_NP
 #define NU     {{ name | upper }}_NU
 #define NBX0   {{ name | upper }}_NBX0
+#define NP_GLOBAL   {{ name | upper }}_NP_GLOBAL
 
 
 int main()
@@ -161,6 +162,14 @@ int main()
     printf("\nSolver info:\n");
     printf(" SQP iterations %2d\n minimum time for %d solve %f [ms]\n KKT %e\n",
            sqp_iter, NTIMINGS, min_time*1000, kkt_norm_inf);
+
+{% if solver_options.with_solution_sens_wrt_params %}
+    ocp_nlp_out *sens_out = {{ name }}_acados_get_sens_out(acados_ocp_capsule);
+    ocp_nlp_out_set_values_to_zero(nlp_config, nlp_dims, sens_out);
+    ocp_nlp_eval_params_jac(nlp_solver, nlp_in, nlp_out);
+    double tmp_p_global[NP_GLOBAL];
+    ocp_nlp_eval_solution_sens_adj_p(nlp_solver, nlp_in, sens_out, "p_global", 0, tmp_p_global);
+{%- endif %}
 
     // free solver
     status = {{ name }}_acados_free(acados_ocp_capsule);
