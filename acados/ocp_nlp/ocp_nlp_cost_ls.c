@@ -995,10 +995,11 @@ void ocp_nlp_cost_ls_compute_jac_p(void *config_, void *dims_, void *model_,
 }
 
 
-void ocp_nlp_cost_ls_eval_grad_p(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_, struct blasfeo_dvec *out)
+void ocp_nlp_cost_ls_eval_grad_p(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_, struct blasfeo_dvec *out)
 {
-    printf("ocp_nlp_cost_ls_eval_grad_p: not implemented.\n");
-    exit(1);
+    ocp_nlp_cost_ls_dims *dims = dims_;
+
+    blasfeo_dvecse(dims->np_global, 0.0, out, 0);
 }
 
 
