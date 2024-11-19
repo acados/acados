@@ -44,8 +44,7 @@ if os.name == 'nt':
 else:
     from ctypes import CDLL as DllLoader
 from datetime import datetime
-from typing import Union, Optional, List, Tuple
-from collections.abc import Sequence
+from typing import Union, Optional, List, Tuple, Sequence
 
 import numpy as np
 import scipy.linalg
