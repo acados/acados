@@ -156,6 +156,9 @@ if(ACADOS_PYTHON)
     add_test(NAME python_test_ocp
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python main_test.py)
+    add_test(NAME python_test_detect_constraints
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
+        python test_detect_constraints.py)
 
     add_test(NAME python_test_cost_integration_euler
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
