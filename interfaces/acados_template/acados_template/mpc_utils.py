@@ -309,7 +309,7 @@ def J_to_idx(J):
     nrows = J.size()[0]
     idx = []
     for i in range(nrows):
-        this_idx = ca.DM(J[i, :].sparsity()).full().squeeze().nonzero()[0]
+        this_idx = ca.DM(J[i, :].sparsity()).full().nonzero()[0]
         if len(this_idx) != 1:
             raise ValueError(
                 f'J_to_idx: Invalid J matrix. Exiting. Found more than one nonzero in row {i+1}.')
