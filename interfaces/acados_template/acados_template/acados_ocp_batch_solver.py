@@ -32,8 +32,7 @@
 from .acados_ocp_solver import AcadosOcpSolver
 from .acados_ocp import AcadosOcp
 from .acados_ocp_iterate import AcadosOcpFlattenedBatchIterate
-from typing import Optional, List, Tuple
-from collections.abc import Sequence
+from typing import Optional, List, Tuple, Sequence
 from ctypes import (POINTER, c_int, c_void_p, cast, c_double, c_char_p)
 import numpy as np
 import time
