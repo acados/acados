@@ -111,7 +111,8 @@ def export_pendulum_ode_model_with_mass_as_p_global(dt) -> AcadosModel:
 def export_parametric_ocp(
     x0=np.array([0.0, np.pi / 6, 0.0, 0.0]), N_horizon=50, T_horizon=2.0, Fmax=80.0,
     hessian_approx = "GAUSS_NEWTON", qp_solver_ric_alg=1,
-    cost_scale_as_param=False
+    cost_scale_as_param=False,
+    with_parametric_constraint=True
 ) -> AcadosOcp:
 
     ocp = AcadosOcp()
@@ -147,6 +148,11 @@ def export_parametric_ocp(
     ocp.constraints.ubu = np.array([+Fmax])
     ocp.constraints.idxbu = np.array([0])
 
+    if with_parametric_constraint:
+        ocp.model.con_h_expr = -ocp.model.x[0] * ocp.model.p_global[0]
+        ocp.constraints.lh = np.array([-1.5])
+        ocp.constraints.uh = np.array([1.5])
+
     ocp.constraints.x0 = x0
 
     ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"
@@ -171,34 +177,48 @@ def export_parametric_ocp(
 
     return ocp
 
-def plot_cost_gradient_results(p_test, cost_values, acados_cost_grad, np_cost_grad, cost_reconstructed_np_grad):
+def plot_cost_gradient_results(p_test, cost_values, acados_cost_grad, np_cost_grad,
+                               cost_reconstructed_np_grad, cost_reconstructed_acados=None,
+                               y_scale_log=True, xlabel=None, title=None):
     _, ax = plt.subplots(nrows=4, ncols=1, sharex=True, figsize=(9,9))
 
     ax[0].plot(p_test, cost_values, label='cost acados', color='k')
     ax[0].plot(p_test, cost_reconstructed_np_grad, "--", label='reconstructed from finite diff')
+    if cost_reconstructed_acados is not None:
+        ax[0].plot(p_test, cost_reconstructed_acados, ":", label='reconstructed from acados derivatives')
     ax[0].set_ylabel(r"cost")
 
-    ax[1].plot(p_test, np_cost_grad, "--", label='finite diff')
-    ax[1].plot(p_test, acados_cost_grad, "--", label='acados')
-    ax[1].set_ylabel(r"$\partial_p V^*$")
-    ax[1].set_yscale("log")
+    ax[1].plot(p_test, np.abs(np_cost_grad), "--", label='finite diff')
+    ax[1].plot(p_test, np.abs(acados_cost_grad), ":", label='acados')
+    ax[1].set_ylabel(r"$|\partial_p V^*|$")
+
+    if y_scale_log:
+        ax[1].set_yscale("log")
 
     # plot differences
     isub = 2
     ax[isub].plot(p_test, np.abs(acados_cost_grad - np_cost_grad), "--", label='acados vs. finite diff')
-    ax[isub].set_ylabel(r"difference $\partial_p V^*$")
-    ax[isub].set_yscale("log")
+    ax[isub].set_ylabel(r"abs diff $\partial_p V^*$")
+
+    if y_scale_log:
+        ax[isub].set_yscale("log")
 
     isub += 1
     ax[isub].plot(p_test, np.abs(acados_cost_grad - np_cost_grad) / np.abs(np_cost_grad), "--", label='acados vs. finite diff')
     ax[isub].set_ylabel(r"rel. diff. $\partial_p V^*$")
-    ax[isub].set_yscale("log")
+
+    if y_scale_log:
+        ax[isub].set_yscale("log")
 
     for i in range(isub+1):
         ax[i].grid()
         ax[i].legend()
 
-    ax[-1].set_xlabel(f"mass")
+    if xlabel is not None:
+        ax[-1].set_xlabel(xlabel)
+
+    if title is not None:
+        ax[0].set_title(title)
     ax[-1].set_xlim([p_test[0], p_test[-1]])
 
     fig_filename = f"cost_gradient.pdf"

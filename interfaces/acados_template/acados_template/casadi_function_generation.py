@@ -489,7 +489,7 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
         context.add_function_definition(fun_name_param, [x, u, z, p], [hess_xu_p], cost_dir)
 
     if opts["with_value_sens_wrt_params"]:
-        grad_p = ca.jacobian(ext_cost, p_global)
+        grad_p = ca.jacobian(ext_cost, p_global).T
         context.add_function_definition(fun_name_value_sens, [x, u, z, p], [grad_p], cost_dir)
 
     return
@@ -690,10 +690,9 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
     if is_empty(z):
         z = symbol('z', 0, 0)
 
-    if not (is_empty(con_h_expr)) and opts['generate_hess']:
-        # multipliers for hessian
-        nh = casadi_length(con_h_expr)
-        lam_h = symbol('lam_h', nh, 1)
+    # multipliers for hessian
+    nh = casadi_length(con_h_expr)
+    lam_h = symbol('lam_h', nh, 1)
 
     # directory
     constraints_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model.name}_constraints'))
@@ -739,6 +738,32 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
             fun_name = model.name + '_constr_h_fun'
         context.add_function_definition(fun_name, [x, u, z, p], [con_h_expr], constraints_dir)
 
+        if opts["with_solution_sens_wrt_params"]:
+            jac_p = ca.jacobian(con_h_expr, model.p_global)
+            adj_ux = ca.jtimes(con_h_expr, ca.vertcat(u, x), lam_h, True)
+            hess_xu_p = ca.jacobian(adj_ux, model.p_global)
+
+            if stage_type == 'terminal':
+                fun_name = model.name + '_constr_h_e_jac_p_hess_xu_p'
+            elif stage_type == 'initial':
+                fun_name = model.name + '_constr_h_0_jac_p_hess_xu_p'
+            else:
+                fun_name = model.name + '_constr_h_jac_p_hess_xu_p'
+
+            context.add_function_definition(fun_name, [x, u, lam_h, z, p], \
+                    [jac_p, hess_xu_p], constraints_dir)
+
+        if opts["with_value_sens_wrt_params"]:
+            adj_p = ca.jtimes(con_h_expr, model.p_global, lam_h, True)
+            if stage_type == 'terminal':
+                fun_name = model.name + '_constr_h_e_adj_p'
+            elif stage_type == 'initial':
+                fun_name = model.name + '_constr_h_0_adj_p'
+            else:
+                fun_name = model.name + '_constr_h_adj_p'
+
+            context.add_function_definition(fun_name, [x, u, lam_h, p], [adj_p], constraints_dir)
+
     else: # BGP constraint
         if stage_type == 'terminal':
             fun_name_prefix = model.name + '_phi_e_constraint'
@@ -759,9 +784,8 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
         phi_jac_x = ca.jacobian(con_phi_expr_x_u_z, x)
         phi_jac_z = ca.jacobian(con_phi_expr_x_u_z, z)
 
-        hess = ca.hessian(con_phi_expr[0], r)[0]
-        for i in range(1, nphi):
-            hess = ca.vertcat(hess, ca.hessian(con_phi_expr[i], r)[0])
+        hess = ca.vertcat(*[ca.hessian(con_phi_expr[i], r)[0] for i in range(nphi)])
+        hess = ca.substitute(hess, r, con_r_expr)
 
         r_jac_u = ca.jacobian(con_r_expr, u)
         r_jac_x = ca.jacobian(con_r_expr, x)

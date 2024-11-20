@@ -28,37 +28,27 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 
 
-function ocp = formulate_single_integrator_ocp(settings)
-    ocp = AcadosOcp();
 
-    ocp.model = get_single_integrator_model();
+function ocp = set_solver_options(ocp)
+    % set options
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
+    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'; %'GAUSS_NEWTON'; %'EXACT'; %
+    ocp.solver_options.integrator_type = 'ERK';
+    ocp.solver_options.print_level = 0;
+    ocp.solver_options.nlp_solver_type = 'SQP_RTI';
 
-    ocp.cost.cost_type = 'NONLINEAR_LS';
-    ocp.cost.cost_type_e = 'NONLINEAR_LS';
-    ocp.cost.W = diag([settings.L2_COST_P, settings.L2_COST_V]);
-    ocp.cost.W_e = diag([1e1]);
-    ocp.cost.yref = [0.0; 0.0];
-    ocp.cost.yref_e = [0.0];
+    % set prediction horizon
+    Tf = 1.0;
+    N_horizon = 20;
+    ocp.solver_options.tf = Tf;
+    ocp.solver_options.N_horizon = N_horizon;
 
-    ocp.model.cost_y_expr = vertcat(ocp.model.x, ocp.model.u);
-    ocp.model.cost_y_expr_e = ocp.model.x;
+    % partial condensing
+    ocp.solver_options.qp_solver_cond_N = 5;
+    ocp.solver_options.qp_solver_cond_block_size = [3, 3, 3, 3, 7, 1];
 
-    u_max = 5.0;
-    ocp.constraints.lbu = [-u_max];
-    ocp.constraints.ubu = [u_max];
-    ocp.constraints.idxbu = [0];
-
-    ocp.constraints.x0 = settings.X0;
+    % NOTE: these additional flags are required for code generation of CasADi functions using casadi.blazing_spline
+    % These might be different depending on your compiler and operating system.
+    flags = ['-I' casadi.GlobalOptions.getCasadiIncludePath ' -O2 -ffast-math -march=native -fno-omit-frame-pointer']
+    ocp.solver_options.ext_fun_compile_flags = flags;
 end
-
-
-
-function model = get_single_integrator_model()
-    import casadi.*
-    model = AcadosModel();
-    model.name = 'single_integrator';
-    model.x = SX.sym('p');
-    model.u = SX.sym('v');
-    model.f_expl_expr = model.u;
-end
-

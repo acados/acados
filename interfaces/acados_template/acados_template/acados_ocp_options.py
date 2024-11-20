@@ -63,7 +63,9 @@ class AcadosOcpOptions:
         self.__sim_method_newton_iter = 3
         self.__sim_method_newton_tol = 0.0
         self.__sim_method_jac_reuse = 0
+        self.__shooting_nodes = None
         self.__time_steps = None
+        self.__cost_scaling = None
         self.__Tsim = None
         self.__qp_solver = 'PARTIAL_CONDENSING_HPIPM'
         self.__qp_solver_tol_stat = None
@@ -83,7 +85,6 @@ class AcadosOcpOptions:
         self.__cost_discretization = 'EULER'
         self.__regularize_method = 'NO_REGULARIZE'
         self.__reg_epsilon = 1e-4
-        self.__shooting_nodes = None
         self.__exact_hess_cost = 1
         self.__exact_hess_dyn = 1
         self.__exact_hess_constr = 1
@@ -898,7 +899,9 @@ class AcadosOcpOptions:
     @property
     def time_steps(self):
         """
-        Vector with time steps between the shooting nodes. Set automatically to uniform discretization if :py:attr:`N` and :py:attr:`tf` are provided.
+        Vector of length `N_horizon` containing the time steps between the shooting nodes.
+        If `None` set automatically to uniform discretization using :py:attr:`N_horizon` and :py:attr:`tf`.
+        For nonuniform discretization: Either provide shooting_nodes or time_steps.
         Default: :code:`None`
         """
         return self.__time_steps
@@ -906,10 +909,21 @@ class AcadosOcpOptions:
     @property
     def shooting_nodes(self):
         """
-        Vector with the shooting nodes, time_steps will be computed from it automatically.
+        Vector of length `N_horizon + 1` containing the shooting nodes.
+        If `None` set automatically to uniform discretization using :py:attr:`N_horizon` and :py:attr:`tf`.
+        For nonuniform discretization: Either provide shooting_nodes or time_steps.
         Default: :code:`None`
         """
         return self.__shooting_nodes
+
+    @property
+    def cost_scaling(self):
+        """
+        Vector with cost scaling factors of length `N_horizon` + 1.
+        If `None` set automatically to [`time_steps`, 1.0].
+        Default: :code:`None`
+        """
+        return self.__cost_scaling
 
     @property
     def tf(self):
@@ -1171,6 +1185,11 @@ class AcadosOcpOptions:
     def shooting_nodes(self, shooting_nodes):
         shooting_nodes = check_if_nparray_and_flatten(shooting_nodes, "shooting_nodes")
         self.__shooting_nodes = shooting_nodes
+
+    @cost_scaling.setter
+    def cost_scaling(self, cost_scaling):
+        cost_scaling = check_if_nparray_and_flatten(cost_scaling, "cost_scaling")
+        self.__cost_scaling = cost_scaling
 
     @Tsim.setter
     def Tsim(self, Tsim):

@@ -158,7 +158,7 @@ static acados_size_t ocp_nlp_dims_calculate_size_self(int N)
     size += sizeof(ocp_nlp_dims);
 
     // nlp sizes
-    size += 7 * (N + 1) * sizeof(int);  // nv, nx, nu, ni, nz, ns, np
+    size += 10 * (N + 1) * sizeof(int);  // nv, nx, nu, ni, nz, ns, np, ng, nb, ni_nl
 
     // dynamics
     size += N * sizeof(void *);
@@ -242,14 +242,20 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     assign_and_advance_int(N + 1, &dims->nx, &c_ptr);
     // nu
     assign_and_advance_int(N + 1, &dims->nu, &c_ptr);
-    // ni
-    assign_and_advance_int(N + 1, &dims->ni, &c_ptr);
     // nz
     assign_and_advance_int(N + 1, &dims->nz, &c_ptr);
     // ns
     assign_and_advance_int(N + 1, &dims->ns, &c_ptr);
     // np
     assign_and_advance_int(N + 1, &dims->np, &c_ptr);
+    // ni
+    assign_and_advance_int(N + 1, &dims->ni, &c_ptr);
+    // nb
+    assign_and_advance_int(N + 1, &dims->nb, &c_ptr);
+    // ng
+    assign_and_advance_int(N + 1, &dims->ng, &c_ptr);
+    // ni_nl
+    assign_and_advance_int(N + 1, &dims->ni_nl, &c_ptr);
 
     // intermediate align
     align_char_to(8, &c_ptr);
@@ -282,9 +288,6 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     // nu
     for(int i=0; i<=N; i++)
         dims->nu[i] = 0;
-    // ni
-    for(int i=0; i<=N; i++)
-        dims->ni[i] = 0;
     // nz
     for(int i=0; i<=N; i++)
         dims->nz[i] = 0;
@@ -294,7 +297,18 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     // np
     for(int i=0; i<=N; i++)
         dims->np[i] = 0;
-    // TODO initialize dims to zero by default also in modules !!!!!!!
+    // ni
+    for(int i=0; i<=N; i++)
+        dims->ni[i] = 0;
+    // nb
+    for(int i=0; i<=N; i++)
+        dims->nb[i] = 0;
+    // ng
+    for(int i=0; i<=N; i++)
+        dims->ng[i] = 0;
+    // ni_nl
+    for(int i=0; i<=N; i++)
+        dims->ni_nl[i] = 0;
 
     dims->n_global_data = 0;
     dims->np_global = 0;
@@ -371,12 +385,11 @@ void ocp_nlp_dims_set_global(void *config_, void *dims_, const char *field, int 
         {
             config->dynamics[i]->dims_set(config->dynamics[i], dims->dynamics[i], "np_global", &value_field);
         }
-        // TODO: implement for constraints
-        // // constraints
-        // for (int i = 0; i <= N; i++)
-        // {
-        //     config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i], "np_global", &int_array[i]);
-        // }
+        // constraints
+        for (int i = 0; i <= N; i++)
+        {
+            config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i], "np_global", &value_field);
+        }
     }
     else if (!strcmp(field, "n_global_data"))
     {
@@ -387,8 +400,6 @@ void ocp_nlp_dims_set_global(void *config_, void *dims_, const char *field, int 
         printf("ocp_nlp_dims_set_global: field %s not supported.\n", field);
         exit(1);
     }
-
-    // TOOD: propagate to modules
 }
 
 
@@ -615,9 +626,15 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
     // set in constraint module
     config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i],
                                         field, int_value);
-    // update ni in ocp_nlp dimensions
+    // update ocp_nlp dimensions
     config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i],
                                         "ni", &dims->ni[i]);
+    config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i],
+                                        "nb", &dims->nb[i]);
+    config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i],
+                                        "ng", &dims->ng[i]);
+    config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i],
+                                        "ni_nl", &dims->ni_nl[i]);
 
     // update qp_solver dims
     if ( (!strcmp(field, "nbx")) || (!strcmp(field, "nbu")) )
@@ -1561,6 +1578,7 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
     int *nz = dims->nz;
     int *nu = dims->nu;
     int *ni = dims->ni;
+    int *ni_nl = dims->ni_nl;
 
     acados_size_t size = sizeof(ocp_nlp_memory);
 
@@ -1615,7 +1633,7 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
         for (int i = 0; i <= N; i++)
         {
             size += blasfeo_memsize_dmat(nv[i], np_global);  // jac_lag_stat_p_global
-            size += blasfeo_memsize_dmat(2*ni[i], np_global);  // jac_ineq_p_global
+            size += blasfeo_memsize_dmat(ni_nl[i], np_global);  // jac_ineq_p_global
         }
         for (int i = 0; i < N; i++)
         {
@@ -1681,6 +1699,7 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     int *nz = dims->nz;
     int *nu = dims->nu;
     int *ni = dims->ni;
+    int *ni_nl = dims->ni_nl;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -1831,7 +1850,7 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
         for (i = 0; i <= N; i++)
         {
             assign_and_advance_blasfeo_dmat_mem(nv[i], np_global, mem->jac_lag_stat_p_global+i, &c_ptr);
-            assign_and_advance_blasfeo_dmat_mem(2*ni[i], np_global, mem->jac_ineq_p_global+i, &c_ptr);
+            assign_and_advance_blasfeo_dmat_mem(ni_nl[i], np_global, mem->jac_ineq_p_global+i, &c_ptr);
         }
         for (i = 0; i < N; i++)
         {
@@ -2557,6 +2576,11 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
         config->constraints[i]->memory_set_idxs_rev_ptr(nlp_mem->qp_in->idxs_rev[i], nlp_mem->constraints[i]);
         config->constraints[i]->memory_set_idxe_ptr(nlp_mem->qp_in->idxe[i], nlp_mem->constraints[i]);
         config->constraints[i]->memory_set_dmask_ptr(nlp_mem->qp_in->d_mask+i, nlp_mem->constraints[i]);
+        if (opts->with_solution_sens_wrt_params)
+        {
+            config->constraints[i]->memory_set_jac_lag_stat_p_global_ptr(nlp_mem->jac_lag_stat_p_global+i, nlp_mem->constraints[i]);
+            config->constraints[i]->memory_set_jac_ineq_p_global_ptr(nlp_mem->jac_ineq_p_global+i, nlp_mem->constraints[i]);
+        }
     }
 
     // alias to regularize memory
@@ -3313,40 +3337,51 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
     // This function sets up: jac_lag_stat_p_global, jac_ineq_p_global, jac_dyn_p_global
-    // - jac_dyn_p_global is computed in dynamics module
-    // - jac_ineq_p_global is computed in constraints module (TODO!)
     // - jac_lag_stat_p_global: first dynamics writes its contribution, then cost and constraints modules add their contribution.
+    // - jac_dyn_p_global is computed in dynamics module
+    // - jac_ineq_p_global is computed in constraints module
+
+    if (!opts->with_solution_sens_wrt_params)
+    {
+        printf("ocp_nlp_params_jac_compute: option with_solution_sens_wrt_params has to be true to evaluate solution sensitivities wrt. global parameters.\n");
+        exit(1);
+    }
+
     int N = dims->N;
     int np_global = dims->np_global;
     int i;
 
     int *nv = dims->nv;
-    int *ni = dims->ni;
     int *nx = dims->nx;
     int *nu = dims->nu;
     int *ns = dims->ns;
 
     struct blasfeo_dmat *jac_lag_stat_p_global = mem->jac_lag_stat_p_global;
-    struct blasfeo_dmat *jac_ineq_p_global = mem->jac_ineq_p_global;
+    // struct blasfeo_dmat *jac_ineq_p_global = mem->jac_ineq_p_global;
     // struct blasfeo_dmat *jac_dyn_p_global = mem->jac_dyn_p_global;
 
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
-    for (i = 0; i < N; i++)
+    for (i = 0; i <= N; i++)
     {
-        blasfeo_dgese(2*ns[i], np_global, 0., &jac_lag_stat_p_global[i], nx[i]+nu[i], 0);  // first nx+nu rows are overwritten by dynamics anyway
-        blasfeo_dgese(2*ni[i], np_global, 0., &jac_ineq_p_global[i], 0, 0);
-        config->dynamics[i]->compute_jac_hess_p(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
-                    opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
-        config->cost[i]->compute_jac_p(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
+        if (i < N)
+        {
+            // first nx+nu rows are overwritten by dynamics -> initialize ns part
+            blasfeo_dgese(2*ns[i], np_global, 0., &jac_lag_stat_p_global[i], nx[i]+nu[i], 0);
+            config->dynamics[i]->compute_jac_hess_p(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
+                        opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+        }
+        else
+        {
+            // initialize jac_lag_stat_p_global = 0 as dynamics dont contribute
+            blasfeo_dgese(nv[i], np_global, 0., &jac_lag_stat_p_global[i], 0, 0);
+        }
+        config->cost[i]->compute_jac_p(config->cost[i], dims->cost[i], in->cost[i],
+                            opts->cost[i], mem->cost[i], work->cost[i]);
+        config->constraints[i]->compute_jac_hess_p(config->constraints[i], dims->constraints[i],
+                    in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
     }
-
-    // terminal
-    i = N;
-    blasfeo_dgese(nv[i], np_global, 0., &jac_lag_stat_p_global[i], 0, 0);  // only needed here, as dynamics dont contribute
-    blasfeo_dgese(2*ni[i], np_global, 0., &jac_ineq_p_global[i], 0, 0);
-    config->cost[i]->compute_jac_p(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
 }
 
 
@@ -3360,9 +3395,12 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
     int *nv = dims->nv;
     int *ni = dims->ni;
     int *nx = dims->nx;
+    int *nb = dims->nb;
+    int *ng = dims->ng;
+    int *ni_nl = dims->ni_nl;
 
     struct blasfeo_dmat *jac_lag_stat_p_global = mem->jac_lag_stat_p_global;
-    // struct blasfeo_dmat *jac_ineq_p_global = mem->jac_ineq_p_global;
+    struct blasfeo_dmat *jac_ineq_p_global = mem->jac_ineq_p_global;
     struct blasfeo_dmat *jac_dyn_p_global = mem->jac_dyn_p_global;
 
     ocp_qp_in *tmp_qp_in = work->tmp_qp_in;
@@ -3378,13 +3416,19 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
     }
     else if (!strcmp("p_global", field))
     {
-        for (i = 0; i < N; i++)
+        for (i = 0; i <= N; i++)
         {
-            blasfeo_dcolex(nx[i+1], &jac_dyn_p_global[i], 0, index, &tmp_qp_in->b[i], 0);
+            // stationarity
             blasfeo_dcolex(nv[i], &jac_lag_stat_p_global[i], 0, index, &tmp_qp_in->rqz[i], 0);
+            // dynamics
+            if (i < N)
+                blasfeo_dcolex(nx[i+1], &jac_dyn_p_global[i], 0, index, &tmp_qp_in->b[i], 0);
+            // inequalities
+            blasfeo_dcolex(ni_nl[i], &jac_ineq_p_global[i], 0, index, &tmp_qp_in->d[i], nb[i]+ng[i]);
+            blasfeo_dvecsc(ni_nl[i], -1.0, &tmp_qp_in->d[i], nb[i]+ng[i]);
+            blasfeo_daxpy(ni_nl[i], -1.0, &tmp_qp_in->d[i], nb[i]+ng[i], &tmp_qp_in->d[i], 2*(nb[i]+ng[i])+ni_nl[i],
+                                                                         &tmp_qp_in->d[i], 2*(nb[i]+ng[i])+ni_nl[i]);
         }
-
-        blasfeo_dcolex(nv[N], &jac_lag_stat_p_global[N], 0, index, &tmp_qp_in->rqz[N], 0);
     }
     else
     {
@@ -3414,14 +3458,20 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
                         ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
                         ocp_nlp_out *sens_nlp_out, const char *field, int stage, void *grad_p)
 {
+    if (!opts->with_solution_sens_wrt_params)
+    {
+        printf("ocp_nlp_common_eval_solution_sens_adj_p: option with_solution_sens_wrt_params has to be true to evaluate solution sensitivities wrt. global parameters.\n");
+        exit(1);
+    }
     int i;
     int N = dims->N;
     int np_global = dims->np_global;
 
     int *nv = dims->nv;
-    int *ni = dims->ni;
-    // int *nu = dims->nu;
     int *nx = dims->nx;
+    int *nb = dims->nb;
+    int *ng = dims->ng;
+    int *ni_nl = dims->ni_nl;
 
     struct blasfeo_dmat *jac_lag_stat_p_global = mem->jac_lag_stat_p_global;
     struct blasfeo_dmat *jac_ineq_p_global = mem->jac_ineq_p_global;
@@ -3450,19 +3500,17 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
     if (!strcmp("p_global", field))
     {
         blasfeo_dvecse(np_global, 0., &mem->out_np_global, 0);
-        for (i = 0; i < N; i++)
+        for (i = 0; i <= N; i++)
         {
             // multiply J.T with result of backsolve and add to in mem->out_np_global
             blasfeo_dgemv_t(nv[i], np_global, 1.0, &jac_lag_stat_p_global[i], 0, 0, tmp_qp_out->ux+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
-            blasfeo_dgemv_t(ni[i], np_global, 1.0, &jac_ineq_p_global[i], 0, 0, tmp_qp_out->lam+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
-            blasfeo_dgemv_t(nx[i+1], np_global, 1.0, &jac_dyn_p_global[i], 0, 0, tmp_qp_out->pi+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
+            blasfeo_dgemv_t(ni_nl[i], np_global, -1.0, &jac_ineq_p_global[i], 0, 0, tmp_qp_out->lam+i, nb[i]+ng[i], 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
+            blasfeo_dgemv_t(ni_nl[i], np_global, 1.0, &jac_ineq_p_global[i], 0, 0, tmp_qp_out->lam+i, 2*(nb[i]+ng[i])+ni_nl[i], 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
+            if (i < N)
+            {
+                blasfeo_dgemv_t(nx[i+1], np_global, 1.0, &jac_dyn_p_global[i], 0, 0, tmp_qp_out->pi+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
+            }
         }
-
-        // terminal
-        i = N;
-        // multiply J.T with result of backsolve and add to in mem->out_np_global
-        blasfeo_dgemv_t(nv[i], np_global, 1.0, &jac_lag_stat_p_global[i], 0, 0, tmp_qp_out->ux+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
-        blasfeo_dgemv_t(ni[i], np_global, 1.0, &jac_ineq_p_global[i], 0, 0, tmp_qp_out->lam+i, 0, 1.0, &mem->out_np_global, 0, &mem->out_np_global, 0);
 
         // unpack
         blasfeo_unpack_dvec(np_global, &mem->out_np_global, 0, grad_p, 1);
@@ -3481,8 +3529,6 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
 {
     int i;
     int N = dims->N;
-    // int *nu = dims->nu;
-    // int *nx = dims->nx;
     int np_global = dims->np_global;
 
     if (!strcmp("p_global", field))
@@ -3493,20 +3539,24 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
         for (i = 0; i < N; i++)
         {
             // dynamics contribution
-            config->dynamics[i]->compute_adj_p(config->dynamics[i], dims->dynamics[i], in->dynamics[i], opts,
+            config->dynamics[i]->compute_adj_p(config->dynamics[i], dims->dynamics[i], in->dynamics[i], opts->dynamics[i],
                                     mem->dynamics[i], &work->tmp_np_global);
             blasfeo_dvecad(np_global, 1., &work->tmp_np_global, 0, &mem->out_np_global, 0);
 
             // cost contribution
-            config->cost[i]->eval_grad_p(config->cost[i], dims->cost[i], in->cost[i], opts,
+            config->cost[i]->eval_grad_p(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i],
                                     mem->cost[i], work->cost[i], &work->tmp_np_global);
             blasfeo_dvecad(np_global, 1., &work->tmp_np_global, 0, &mem->out_np_global, 0);
 
-            // TODO: add support for inequality constraints
+            // constraints contribution
+            config->constraints[i]->compute_adj_p(config->constraints[i], dims->constraints[i], in->constraints[i], opts,
+                                    mem->constraints[i], work->constraints[i], &work->tmp_np_global);
+
+            blasfeo_dvecad(np_global, 1., &work->tmp_np_global, 0, &mem->out_np_global, 0);
         }
 
         // terminal cost contribution
-        config->cost[N]->eval_grad_p(config->cost[N], dims->cost[N], in->cost[N], opts,
+        config->cost[N]->eval_grad_p(config->cost[N], dims->cost[N], in->cost[N], opts->cost[N],
                                     mem->cost[N], work->cost[N], &work->tmp_np_global);
         blasfeo_dvecad(np_global, 1., &work->tmp_np_global, 0, &mem->out_np_global, 0);
 

@@ -886,6 +886,28 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     return mem->nlp_mem->status;
 }
 
+
+void ocp_nlp_sqp_eval_kkt_residual(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
+                void *opts_, void *mem_, void *work_)
+{
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_opts *opts = opts_;
+    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
+    ocp_nlp_sqp_memory *mem = mem_;
+    ocp_nlp_in *nlp_in = nlp_in_;
+    ocp_nlp_out *nlp_out = nlp_out_;
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_nlp_sqp_workspace *work = work_;
+    ocp_nlp_workspace *nlp_work = work->nlp_work;
+
+    ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+    ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+    ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+    ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem);
+}
+
+
 void ocp_nlp_sqp_memory_reset_qp_solver(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     void *opts_, void *mem_, void *work_)
 {
@@ -1100,6 +1122,7 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->terminate = &ocp_nlp_sqp_terminate;
     config->step_update = &ocp_nlp_update_variables_sqp;
     config->is_real_time_algorithm = &ocp_nlp_sqp_is_real_time_algorithm;
+    config->eval_kkt_residual = &ocp_nlp_sqp_eval_kkt_residual;
 
     return;
 }

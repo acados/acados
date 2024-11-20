@@ -1286,10 +1286,7 @@ void ocp_nlp_eval_lagrange_grad_p(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, co
 void ocp_nlp_eval_residuals(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
 {
     ocp_nlp_config *config = solver->config;
-    ocp_nlp_memory *nlp_mem;
-    config->get(config, solver->dims, solver->mem, "nlp_mem", &nlp_mem);
-
-    ocp_nlp_res_compute(solver->dims, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem);
+    config->eval_kkt_residual(config, solver->dims, nlp_in, nlp_out, solver->opts, solver->mem, solver->work);
 }
 
 
@@ -1530,7 +1527,6 @@ void ocp_nlp_get_from_iterate(ocp_nlp_solver *solver, int iter, int stage, const
     }
     ocp_nlp_out_get(config, dims, nlp_mem->iterates[iter], stage, field, value);
 }
-
 
 
 void ocp_nlp_get_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, const char *field, void *value)

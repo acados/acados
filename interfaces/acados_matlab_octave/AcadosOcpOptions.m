@@ -56,6 +56,8 @@ classdef AcadosOcpOptions < handle
         sim_method_jac_reuse
         sim_method_detect_gnsf
         time_steps
+        shooting_nodes
+        cost_scaling
         Tsim
         qp_solver              %  qp solver to be used in the NLP solver
         qp_solver_tol_stat
@@ -75,7 +77,6 @@ classdef AcadosOcpOptions < handle
         cost_discretization
         regularize_method
         reg_epsilon
-        shooting_nodes
         exact_hess_cost
         exact_hess_dyn
         exact_hess_constr
@@ -161,6 +162,7 @@ classdef AcadosOcpOptions < handle
             obj.regularize_method = 'NO_REGULARIZE';
             obj.reg_epsilon = 1e-4;
             obj.shooting_nodes = [];
+            obj.cost_scaling = [];
             obj.exact_hess_cost = 1;
             obj.exact_hess_dyn = 1;
             obj.exact_hess_constr = 1;
@@ -220,7 +222,7 @@ classdef AcadosOcpOptions < handle
 
         function s = convert_to_struct_for_json_dump(self, N)
             s = self.struct();
-            s = prepare_struct_for_json_dump(s, {'time_steps', 'shooting_nodes', 'sim_method_num_stages', 'sim_method_num_steps', 'sim_method_jac_reuse', 'custom_templates'}, {});
+            s = prepare_struct_for_json_dump(s, {'time_steps', 'shooting_nodes', 'cost_scaling', 'sim_method_num_stages', 'sim_method_num_steps', 'sim_method_jac_reuse', 'custom_templates'}, {});
         end
     end
 end

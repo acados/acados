@@ -216,6 +216,12 @@ typedef struct {{ model.name }}_solver_capsule
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi *nl_constr_h_fun_jac_hess;
 {%- endif %}
+{% if solver_options.with_solution_sens_wrt_params %}
+    external_function_external_param_casadi *nl_constr_h_jac_p_hess_xu_p;
+{%- endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+    external_function_external_param_casadi *nl_constr_h_adj_p;
+{%- endif %}
 {%- endif %}
 
 
@@ -228,6 +234,12 @@ typedef struct {{ model.name }}_solver_capsule
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi nl_constr_h_0_fun_jac_hess;
 {%- endif %}
+{% if solver_options.with_solution_sens_wrt_params %}
+    external_function_external_param_casadi nl_constr_h_0_jac_p_hess_xu_p;
+{%- endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+    external_function_external_param_casadi nl_constr_h_0_adj_p;
+{%- endif %}
 {%- endif %}
 
 
@@ -239,6 +251,12 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_external_param_casadi nl_constr_h_e_fun;
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi nl_constr_h_e_fun_jac_hess;
+{%- endif %}
+{% if solver_options.with_solution_sens_wrt_params %}
+    external_function_external_param_casadi nl_constr_h_e_jac_p_hess_xu_p;
+{%- endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+    external_function_external_param_casadi nl_constr_h_e_adj_p;
 {%- endif %}
 {%- endif %}
 
@@ -275,7 +293,16 @@ ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_update_params_sparse({{ model.n
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver_capsule* capsule, double* data, int data_len);
 
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_solve({{ model.name }}_solver_capsule * capsule);
+
 ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** capsules, int N_batch);
+
+ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_set_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch);
+ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_get_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch);
+
+ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_eval_solution_sens_adj_p({{ model.name }}_solver_capsule ** capsules, const char *field, int stage, double *out, int offset, int N_batch);
+ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_eval_params_jac({{ model.name }}_solver_capsule ** capsules, int N_batch);
+
+
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_free({{ model.name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_custom_update({{ model.name }}_solver_capsule* capsule, double* data, int data_len);

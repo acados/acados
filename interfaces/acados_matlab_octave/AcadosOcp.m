@@ -582,6 +582,18 @@ classdef AcadosOcp < handle
                 error(['ocp discretization: time_steps between shooting nodes must all be > 0', ...
                     ' got: ' num2str(opts.time_steps)])
             end
+
+            % cost_scaling
+            if isempty(opts.cost_scaling)
+                opts.cost_scaling = [opts.time_steps(:); 1.0];
+            elseif length(opts.cost_scaling) ~= N+1
+                error(['cost_scaling must have length N+1 = ', num2str(N+1)]);
+            end
+
+            % set integrator time automatically
+            opts.Tsim = opts.time_steps(1);
+
+            % integrator: num_stages
             if ~isempty(opts.sim_method_num_stages)
                 if(strcmp(opts.integrator_type, "ERK"))
                     if (any(opts.sim_method_num_stages < 1) || any(opts.sim_method_num_stages > 4))
@@ -589,9 +601,6 @@ classdef AcadosOcp < handle
                     end
                 end
             end
-
-            % set integrator time automatically
-            opts.Tsim = opts.time_steps(1);
 
             % qpdunes
             if ~isempty(strfind(opts.qp_solver,'qpdunes'))
@@ -830,7 +839,7 @@ classdef AcadosOcp < handle
             constraint_types = {self.constraints.constr_type_0, self.constraints.constr_type, self.constraints.constr_type_e};
             for n=1:3
                 if strcmp(constraint_types{n}, 'AUTO')
-                    detect_constr(self.model, self.constraints, stage_types{n});
+                    detect_constraint_structure(self.model, self.constraints, stage_types{n});
                 end
             end
         end
@@ -1034,8 +1043,11 @@ classdef AcadosOcp < handle
                     template_list{end+1} = {fullfile(matlab_template_path, 'acados_sim_solver_sfun.in.c'), ['acados_sim_solver_sfunction_', self.name, '.c']};
                     template_list{end+1} = {fullfile(matlab_template_path, 'make_sfun_sim.in.m'), ['make_sfun_sim.m']};
                 end
-                if self.simulink_opts.inputs.rti_phase && self.solver_options.nlp_solver_type ~= 'SQP_RTI'
+                if self.simulink_opts.inputs.rti_phase && ~strcmp(self.solver_options.nlp_solver_type, 'SQP_RTI')
                     error('rti_phase is only supported for SQP_RTI');
+                end
+                if self.simulink_opts.outputs.KKT_residuals && strcmp(self.solver_options.nlp_solver_type, 'SQP_RTI')
+                    warning('KKT_residuals now computes the residuals of the output iterate in SQP_RTI, this leads to increased computation time, turn off this port if it is not needed. See https://github.com/acados/acados/pull/1346.');
                 end
             else
                 disp("Not rendering Simulink-related templates, as simulink_opts are not specified.")

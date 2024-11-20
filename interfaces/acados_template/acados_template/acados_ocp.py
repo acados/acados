@@ -779,6 +779,12 @@ class AcadosOcp:
             raise Exception(f'Inconsistent discretization: {opts.tf}'\
                 f' = tf != sum(opts.time_steps) = {tf}.')
 
+        # cost scaling
+        if opts.cost_scaling is None:
+            opts.cost_scaling = np.append(opts.time_steps, 1.0)
+        if opts.cost_scaling.shape[0] != opts.N_horizon + 1:
+            raise Exception(f'cost_scaling should be of length N+1 = {opts.N_horizon+1}, got {opts.cost_scaling.shape[0]}.')
+
         # set integrator time automatically
         opts.Tsim = opts.time_steps[0]
 
@@ -830,32 +836,41 @@ class AcadosOcp:
                 raise Exception('fixed_hess is only compatible LINEAR_LS cost_type_e.')
 
         # solution sensitivities
-        type_constraint_pairs = [("path", model.con_h_expr), ("initial", model.con_h_expr_0),
-                                 ("terminal", model.con_h_expr_e),
-                                 ("path", model.con_phi_expr), ("initial", model.con_phi_expr_0), ("terminal", model.con_phi_expr_e),
-                                 ("path", model.con_r_expr), ("initial", model.con_r_expr_0), ("terminal", model.con_r_expr_e)]
+        bgp_type_constraint_pairs = [
+            ("path", model.con_phi_expr), ("initial", model.con_phi_expr_0), ("terminal", model.con_phi_expr_e),
+            ("path", model.con_r_expr), ("initial", model.con_r_expr_0), ("terminal", model.con_r_expr_e)
+        ]
+        bgh_type_constraint_pairs = [
+            ("path", model.con_h_expr), ("initial", model.con_h_expr_0), ("terminal", model.con_h_expr_e),
+        ]
 
         if opts.with_solution_sens_wrt_params:
             if dims.np_global == 0:
                 raise Exception('with_solution_sens_wrt_params is only compatible if global parameters `p_global` are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got emty p_global.')
-            if cost.cost_type != "EXTERNAL" or cost.cost_type_0 != "EXTERNAL" or cost.cost_type_e != "EXTERNAL":
-                raise Exception('with_solution_sens_wrt_params is only compatible with EXTERNAL cost_type.')
+            if any([cost_type not in ["EXTERNAL", "LINEAR_LS"] for cost_type in [cost.cost_type, cost.cost_type_0, cost.cost_type_e]]):
+                raise Exception(f'with_solution_sens_wrt_params is only compatible with EXTERNAL and LINEAR_LS cost_type, got cost_types {cost.cost_type_0, cost.cost_type, cost.cost_type_e}.')
             if opts.integrator_type != "DISCRETE":
                 raise Exception('with_solution_sens_wrt_params is only compatible with DISCRETE dynamics.')
-            for horizon_type, constraint in type_constraint_pairs:
+            for horizon_type, constraint in bgp_type_constraint_pairs:
                 if constraint is not None and any(ca.which_depends(constraint, model.p_global)):
-                    raise Exception(f"with_solution_sens_wrt_params is only implemented if constraints don't depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
+                    raise Exception(f"with_solution_sens_wrt_params is not supported for BGP constraints that depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
+            for horizon_type, constraint in bgh_type_constraint_pairs:
+                if constraint is not None and model.p_global is not None and not ca.is_linear(constraint, model.p_global):
+                    raise Exception(f"with_solution_sens_wrt_params does not work for h constraint nonlinear in p_global yet. Got nonlinear dependency on p_global for {horizon_type} constraint.")
 
         if opts.with_value_sens_wrt_params:
             if dims.np_global == 0:
                 raise Exception('with_value_sens_wrt_params is only compatible if global parameters `p_global` are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got emty p_global.')
-            if cost.cost_type != "EXTERNAL" or cost.cost_type_0 != "EXTERNAL" or cost.cost_type_e != "EXTERNAL":
+            if any([cost_type not in ["EXTERNAL", "LINEAR_LS"] for cost_type in [cost.cost_type, cost.cost_type_0, cost.cost_type_e]]):
                 raise Exception('with_value_sens_wrt_params is only compatible with EXTERNAL cost_type.')
             if opts.integrator_type != "DISCRETE":
                 raise Exception('with_value_sens_wrt_params is only compatible with DISCRETE dynamics.')
-            for horizon_type, constraint in type_constraint_pairs:
+            for horizon_type, constraint in bgp_type_constraint_pairs:
                 if constraint is not None and any(ca.which_depends(constraint, model.p_global)):
-                    raise Exception(f"with_value_sens_wrt_params is only implemented if constraints don't depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
+                    raise Exception(f"with_value_sens_wrt_params is not supported for BGP constraints that depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
+            for horizon_type, constraint in bgh_type_constraint_pairs:
+                if constraint is not None and model.p_global is not None and not ca.is_linear(constraint, model.p_global):
+                    raise Exception(f"with_value_sens_wrt_params does not work for h constraint nonlinear in p_global yet. Got nonlinear dependency on p_global for {horizon_type} constraint.")
 
         if opts.qp_solver_cond_N is None:
             opts.qp_solver_cond_N = opts.N_horizon

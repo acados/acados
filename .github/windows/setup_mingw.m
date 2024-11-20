@@ -27,38 +27,5 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-
-function ocp = formulate_single_integrator_ocp(settings)
-    ocp = AcadosOcp();
-
-    ocp.model = get_single_integrator_model();
-
-    ocp.cost.cost_type = 'NONLINEAR_LS';
-    ocp.cost.cost_type_e = 'NONLINEAR_LS';
-    ocp.cost.W = diag([settings.L2_COST_P, settings.L2_COST_V]);
-    ocp.cost.W_e = diag([1e1]);
-    ocp.cost.yref = [0.0; 0.0];
-    ocp.cost.yref_e = [0.0];
-
-    ocp.model.cost_y_expr = vertcat(ocp.model.x, ocp.model.u);
-    ocp.model.cost_y_expr_e = ocp.model.x;
-
-    u_max = 5.0;
-    ocp.constraints.lbu = [-u_max];
-    ocp.constraints.ubu = [u_max];
-    ocp.constraints.idxbu = [0];
-
-    ocp.constraints.x0 = settings.X0;
-end
-
-
-
-function model = get_single_integrator_model()
-    import casadi.*
-    model = AcadosModel();
-    model.name = 'single_integrator';
-    model.x = SX.sym('p');
-    model.u = SX.sym('v');
-    model.f_expl_expr = model.u;
-end
-
+setenv("MW_MINGW64_LOC", "C:\ProgramData\mingw64\mingw64");
+mex -v -setup
