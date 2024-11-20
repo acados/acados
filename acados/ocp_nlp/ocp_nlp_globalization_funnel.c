@@ -245,8 +245,12 @@ void update_funnel_penalty_parameter(ocp_nlp_globalization_funnel_memory *mem,
     }
     if (mem->penalty_parameter * pred_optimality + pred_infeasibility < opts->penalty_eta * pred_infeasibility)
     {
-        mem->penalty_parameter = fmin(opts->penalty_contraction * mem->penalty_parameter, ((1-opts->penalty_eta) * pred_infeasibility) / (-pred_optimality + 1e-9));
+        mem->penalty_parameter = fmax(0.0, //objective multiplier should always be >= 0!
+                                        fmin(opts->penalty_contraction * mem->penalty_parameter,
+                                        ((1-opts->penalty_eta) * pred_infeasibility) / (-pred_optimality + 1e-9))
+                                     );
     }
+    assert(mem->penalty_parameter >= 0.0);
     // else: do not decrease penalty parameter
 }
 

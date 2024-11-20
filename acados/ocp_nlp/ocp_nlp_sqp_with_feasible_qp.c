@@ -497,19 +497,26 @@ acados_size_t ocp_nlp_sqp_wfqp_workspace_calculate_size(void *config_, void *dim
     return size;
 }
 
-static double get_multiplier_norm_inf(ocp_nlp_dims *dims, ocp_qp_out *qp_out)
+/*
+Gets the infinity norm of the multipliers which are returned from the QP. 
+This function does not take into account the multiplier values of the slack variables bounds.
+*/
+static double get_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims, ocp_qp_out *qp_out, bool was_feasibility_QP)
 {
     int N = dims->N;
     int *nx = dims->nx;
     int *ns = dims->ns;
     double tmp0 = 0.0;
 
-    for (int i = 0; i < N; i++)
+    if (!was_feasibility_QP)
     {
-        for (int j=0; j<nx[i+1]; j++)
+        for (int i = 0; i < N; i++)
         {
-            // abs(lambda) (LW)
-            tmp0 = fmax(tmp0, fabs(BLASFEO_DVECEL(qp_out->pi+i, j)));
+            for (int j=0; j<nx[i+1]; j++)
+            {
+                // abs(lambda) (LW)
+                tmp0 = fmax(tmp0, fabs(BLASFEO_DVECEL(qp_out->pi+i, j)));
+            }
         }
     }
     for (int i = 0; i <= N; i++)
@@ -524,7 +531,7 @@ static double get_multiplier_norm_inf(ocp_nlp_dims *dims, ocp_qp_out *qp_out)
         for (int j=0; j<ns[i]; j++)
         {
             // mu (LW)
-            tmp0 = fmax(tmp0, BLASFEO_DVECEL(qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]+j));
+            tmp0 = fmax(tmp0, BLASFEO_DVECEL(qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]+mem->nns[i]+j));
         }
     }
     return tmp0;
@@ -706,8 +713,8 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
 This function calculates the convex interpolation factor
 */
 static double calculate_search_direction_interpolation_factor(ocp_nlp_sqp_wfqp_opts* opts,
-                                                              double pred_l1_inf_QP_feasibility,
                                                               double pred_l1_inf_QP_optimality,
+                                                              double pred_l1_inf_QP_feasibility,
                                                               double l1_inf_QP_optimality,
                                                               double l1_inf_QP_feasibility)
 {
@@ -731,7 +738,7 @@ static double calculate_search_direction_interpolation_factor(ocp_nlp_sqp_wfqp_o
     {
         kappa = 1.0;
     }
-    // printf("Kappa: %.4e\n", kappa);
+    print_debug_output_double("kappa: ", kappa, opts->nlp_opts->print_level, 2);
     return kappa;
 }
 
@@ -806,76 +813,76 @@ static double get_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wf
 
 /*
 This function calculates the l1 infeasibility by calculating the matrix vector product of the
-constraints
+constraints. There is somewhere a bug, but not sure where!!!!
 */
-static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_sqp_wfqp_workspace *work, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
-{
-    int N = dims->N;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *nns = mem->nns;
+// static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_sqp_wfqp_workspace *work, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
+// {
+//     int N = dims->N;
+//     int *nx = dims->nx;
+//     int *nu = dims->nu;
+//     int *nns = mem->nns;
 
-    int *nb = qp_in->dim->nb;
-    int *ng = qp_in->dim->ng; //number of general two sided constraints
+//     int *nb = qp_in->dim->nb;
+//     int *ng = qp_in->dim->ng; //number of general two sided constraints
 
-    double l1_inf = 0.0;
-    int i, j;
-    double tmp, tmp_bound, mask_value;
-    int constr_index, ux_idx;
-    for (i = 0; i <= N; i++)
-    {
-        for (j=0; j<nns[i]; ++j)
-        {
-            constr_index = mem->idxns[i][j];
-            // tmp = \nabla c(z) * d
-            // simple bounds
-            if (constr_index < nb[i])
-            {
-                ux_idx = qp_in->idxb[i][constr_index];
-                // printf("evaluating constraint %d, bound on ux[%d]\n", constr_index, ux_idx);
-                tmp = BLASFEO_DVECEL(qp_out->ux+i, ux_idx);
-            }
-            // linear constraints
-            else
-            {
-                // general linear / linearized!
-                // tmp_ni = D * u + C * x
-                // Calculate the product
-                blasfeo_dgemv_t(nu[i]+nx[i], 1, 1.0, qp_in->DCt+i, constr_index-nb[i], 0, qp_out->ux+i, 0,
-                        0.0, qp_in->d+i, 0, &work->nlp_work->tmp_ni, 0);
-                // printf("evaluating constraint %d, constr index %d\n", constr_index, constr_index-nb[i]);
-                tmp = BLASFEO_DVECEL(&work->nlp_work->tmp_ni, 0);
-            }
+//     double l1_inf = 0.0;
+//     int i, j;
+//     double tmp, tmp_bound, mask_value;
+//     int constr_index, ux_idx;
+//     for (i = 0; i <= N; i++)
+//     {
+//         for (j=0; j<nns[i]; ++j)
+//         {
+//             constr_index = mem->idxns[i][j];
+//             // tmp = \nabla c(z) * d
+//             // simple bounds
+//             if (constr_index < nb[i])
+//             {
+//                 ux_idx = qp_in->idxb[i][constr_index];
+//                 // printf("evaluating constraint %d, bound on ux[%d]\n", constr_index, ux_idx);
+//                 tmp = BLASFEO_DVECEL(qp_out->ux+i, ux_idx);
+//             }
+//             // linear constraints
+//             else
+//             {
+//                 // general linear / linearized!
+//                 // tmp_ni = D * u + C * x
+//                 // Calculate the product
+//                 blasfeo_dgemv_t(nu[i]+nx[i], 1, 1.0, qp_in->DCt+i, constr_index-nb[i], 0, qp_out->ux+i, 0,
+//                         0.0, qp_in->d+i, 0, &work->nlp_work->tmp_ni, 0);
+//                 // printf("evaluating constraint %d, constr index %d\n", constr_index, constr_index-nb[i]);
+//                 tmp = BLASFEO_DVECEL(&work->nlp_work->tmp_ni, 0);
+//             }
 
-            // check lower bounds
-            mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, constr_index);
-            if (mask_value == 1.0)
-            {
-                tmp_bound = BLASFEO_DVECEL(qp_in->d+i, constr_index);
-                // maximum(0, lower_bound - value)
-                l1_inf += fmax(0.0, tmp_bound-tmp);
-                // if (fmax(0.0, tmp_bound-tmp) > 1e-8)
-                // {
-                //     printf("lower constraint %d %d: bound: %.4e, value: %.4e, result: %.4e\n", i, constr_index, tmp_bound, tmp, fmax(0.0, tmp_bound-tmp));
-                // }
-            }
-            // check upper bound
-            mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, nb[i] + ng[i] + constr_index);
-            if (mask_value == 1.0)
-            {
-                // upper bounds have the wrong sign!
-                // it is lower_bounds <= value <= -upper_bounds, therefore plus below
-                tmp_bound = BLASFEO_DVECEL(qp_in->d+i, nb[i] + ng[i] + constr_index);
-                // if (fmax(0.0, tmp_bound+tmp) > 1e-8)
-                // {
-                //     printf("upper constraint %d %d: bound: %.4e, value: %.4e, result: %.4e\n", i, constr_index, tmp_bound, tmp, fmax(0.0, tmp_bound+tmp));
-                // }
-                l1_inf += fmax(0.0, tmp_bound+tmp);
-            }
-        }
-    }
-    return l1_inf;
-}
+//             // check lower bounds
+//             mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, constr_index);
+//             if (mask_value == 1.0)
+//             {
+//                 tmp_bound = BLASFEO_DVECEL(qp_in->d+i, constr_index);
+//                 // maximum(0, lower_bound - value)
+//                 l1_inf += fmax(0.0, tmp_bound-tmp);
+//                 // if (fmax(0.0, tmp_bound-tmp) > 1e-8)
+//                 // {
+//                 //     printf("lower constraint %d %d: bound: %.4e, value: %.4e, result: %.4e\n", i, constr_index, tmp_bound, tmp, fmax(0.0, tmp_bound-tmp));
+//                 // }
+//             }
+//             // check upper bound
+//             mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, nb[i] + ng[i] + constr_index);
+//             if (mask_value == 1.0)
+//             {
+//                 // upper bounds have the wrong sign!
+//                 // it is lower_bounds <= value <= -upper_bounds, therefore plus below
+//                 tmp_bound = BLASFEO_DVECEL(qp_in->d+i, nb[i] + ng[i] + constr_index);
+//                 // if (fmax(0.0, tmp_bound+tmp) > 1e-8)
+//                 // {
+//                 //     printf("upper constraint %d %d: bound: %.4e, value: %.4e, result: %.4e\n", i, constr_index, tmp_bound, tmp, fmax(0.0, tmp_bound+tmp));
+//                 // }
+//                 l1_inf += fmax(0.0, tmp_bound+tmp);
+//             }
+//         }
+//     }
+//     return l1_inf;
+// }
 
 // /*
 // This function calculates the l1 infeasibility by calculating the matrix vector product of the
@@ -888,8 +895,6 @@ static double full_manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *
     int *nu = dims->nu;
     int *ns = dims->ns;
     int *nns = mem->nns;
-    int *ni = dims->ni;
-    int *nh = dims->ni;
 
     int *nb = qp_in->dim->nb;
     int *ng = qp_in->dim->ng; //number of general two sided constraints
@@ -897,7 +902,6 @@ static double full_manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *
     double l1_inf = 0.0;
     int i, j;
     double tmp, tmp_bound, mask_value;
-    int nominal_dims;
 
     for (i = 0; i <= N; i++)
     {
@@ -963,25 +967,6 @@ static double full_manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *
                 }
             }
         }
-
-        // Printing
-        // printf("Manual multiplication at stage %d\n", i);
-        // printf("i=%d\n", i);
-        // printf("Print the lower bound vector\n");
-        // printf("product\n");
-        // blasfeo_print_dvec(ng[i], &work->nlp_work->tmp_ni, nb[i]);
-        // printf("bound\n");
-        // blasfeo_print_dvec(ng[i], qp_in->d+i, nb[i]);
-        // printf("d_mask\n");
-        // blasfeo_print_dvec(ng[i], qp_in->d_mask+i, nb[i]);
-        // printf("Print the upper bound vector\n");
-        // printf("product\n");
-        // blasfeo_print_dvec(ng[i], &work->nlp_work->tmp_ni, 2*nb[i]+ng[i]);
-        // printf("bound\n");
-        // blasfeo_print_dvec(ng[i], qp_in->d+i, 2*nb[i]+ng[i]);
-        // printf("d_mask\n");
-        // blasfeo_print_dvec(ng[i], qp_in->d_mask+i, 2*nb[i]+ng[i]);
-
     }
 
     return l1_inf;
@@ -1061,6 +1046,52 @@ static double compute_gradient_directional_derivative(ocp_nlp_sqp_wfqp_memory* m
     return dir_der;
 }
 
+static double compute_qp_objective_value(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims,
+                                  ocp_qp_in *qp_in,
+                                  ocp_qp_out *qp_out,
+                                  ocp_nlp_workspace *nlp_work)
+{
+    // Compute the QP objective function value
+    double qp_cost = 0.0;
+    int i, nux, ns, nns;
+    int N = dims->N;
+    // Sum over stages 0 to N
+    for (i = 0; i <= N; i++)
+    {
+        nux = dims->nx[i] + dims->nu[i];
+        ns = dims->ns[i];
+        nns = mem->nns[i];
+        // Calculate 0.5 * d.T H d
+        blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0,
+                        0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
+        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
+
+        // slack QP objective value, compare to computation in cost modules;
+        // First part
+        // tmp_nv = 2 * z + Z .* slack;
+        blasfeo_dveccpsc(ns, 2.0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
+        blasfeo_dvecmulacc(ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
+        // qp_cost += .5 * (tmp_nv .* slack)
+        qp_cost += 0.5 * blasfeo_ddot(ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux);
+
+        // Second part
+        // tmp_nv = 2 * z + Z .* slack;
+        blasfeo_dveccpsc(ns, 2.0, &qp_out->ux[i], nux+ns+nns, &nlp_work->tmp_nv, 0);
+        blasfeo_dvecmulacc(ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux+ns+nns, &nlp_work->tmp_nv, 0);
+        // qp_cost += .5 * (tmp_nv .* slack)
+        qp_cost += 0.5 * blasfeo_ddot(ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux+ns+nns);
+
+        // Calculate g.T d
+        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
+
+        // Calculate gradient of slacks.T d_slacks
+        // First part of slacks
+        qp_cost += blasfeo_ddot(ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
+        // Second part of slacks
+        qp_cost += blasfeo_ddot(ns, &qp_out->ux[i], nux+ns+nns, &qp_in->rqz[i], nux+ns+nns);
+    }
+    return qp_cost;
+}
 
 /*
 Calculates the norm of the search direction, but the additional slack directions are removed.
@@ -1172,13 +1203,26 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
 
 static void print_indices(
     ocp_nlp_dims *dims,
+    ocp_nlp_sqp_wfqp_workspace *work,
     ocp_nlp_sqp_wfqp_memory *mem
 )
 {
+    ocp_nlp_workspace *nlp_work = work->nlp_work;
+    int ni, ns, nns;
+    int *idxs = nlp_work->tmp_nins;
     // DEBUG:
     for (int stage = 0; stage <= dims->N; stage++)
     {
-        int nns = mem->nns[stage];
+        ns = dims->ns[stage];
+        ni = dims->ni[stage];
+        nns = mem->nns[stage];
+        // DEBUG:
+        printf("stage %d: ni %d ns %d nns %d\n", stage, ni, ns, nns);
+        printf("got idxs at stage %d\n", stage);
+        for (int i=0; i<ns; i++)
+            printf("%d ", idxs[i]);
+        printf("\n");
+
         printf("got idxns at stage %d\n", stage);
         for (int i=0; i<nns; i++)
             printf("%d ", mem->idxns[stage][i]);
@@ -1562,6 +1606,12 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
      ************************************************/
     int sqp_iter = 0;
     double prev_levenberg_marquardt = 0.0;
+
+    if (nlp_opts->print_level > 1)
+    {
+        print_indices(dims, work, mem);
+    }
+
     for (; sqp_iter <= opts->max_iter; sqp_iter++) // <= needed such that after last iteration KKT residuals are checked before max_iter is thrown.
     {
         // We always evaluate the residuals until the last iteration
@@ -1634,7 +1684,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
         prev_levenberg_marquardt = nlp_opts->levenberg_marquardt;
 
-        double multiplier_norm_inf = get_multiplier_norm_inf(dims, qp_out);
+        //TODO: Implement function that calculates the norm of the NLP duals
+        // double multiplier_norm_inf = get_qp_multiplier_norm_inf(dims, qp_out);
         // printf("Multiplier norm inf is: %.4e\n", multiplier_norm_inf);
 
         // Termination
@@ -1692,10 +1743,10 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // nlp_work->tmp_qp_out = d without cost;
         // nlp_mem->qp_out = d with objective_multiplier
 
-        multiplier_norm_inf = get_multiplier_norm_inf(dims, nlp_work->tmp_qp_out);
-        // printf("Feasibility Multiplier norm inf is: %.4e\n", multiplier_norm_inf);
-        multiplier_norm_inf = get_multiplier_norm_inf(dims, qp_out);
-        // printf("Optimality Multiplier norm inf is: %.4e\n", multiplier_norm_inf);
+        double multiplier_norm_inf = get_qp_multiplier_norm_inf(mem, dims, nlp_work->tmp_qp_out, true);
+        print_debug_output_double("Feas QP multiplier norm: ", multiplier_norm_inf, nlp_opts->print_level, 2);
+        multiplier_norm_inf = get_qp_multiplier_norm_inf(mem, dims, qp_out, false);
+        print_debug_output_double("Opt QP multiplier norm: ", multiplier_norm_inf, nlp_opts->print_level, 2);
 
         double current_l1_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
         print_debug_output_double("Current l1 infeasibility: ", current_l1_infeasibility, nlp_opts->print_level, 2);
@@ -1718,30 +1769,31 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         print_debug_output_double("l1_inf_opt: ", manual_l1_inf_QP_optimality, nlp_opts->print_level, 2);
         pred_l1_inf_QP_optimality = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manual_l1_inf_QP_optimality);
         print_debug_output_double("pred_l1_inf_QP_optimality: ", pred_l1_inf_QP_optimality, nlp_opts->print_level, 2);
+        double predictor_qp_objective = compute_qp_objective_value(mem, dims, qp_in, qp_out, nlp_work);
+        print_debug_output_double("pred_obj_QP_optimality: ", -predictor_qp_objective, nlp_opts->print_level, 2);
 
         // It seems appropriate that the fraction for sufficient improvement
         // in infeasibility is adaptive. So, if inf is large, and the improvement is small
         // relative to infeasibility we should have a direction that is closer to
         // the feasibility direction??
         double kappa = calculate_search_direction_interpolation_factor(opts,
-                                                                pred_l1_inf_QP_feasibility,
                                                                 pred_l1_inf_QP_optimality,
+                                                                pred_l1_inf_QP_feasibility,
                                                                 manual_l1_inf_QP_optimality,
                                                                 manual_l1_inf_QP_feasibility);
 
         // Calculate search direction
         setup_search_direction(mem, dims, qp_out, nlp_work->tmp_qp_out, qp_out, kappa);
 
-        // double pred_l1_inf_search_direction = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, qp_out));
         double pred_l1_inf_search_direction = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, full_manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, qp_out));
-        // printf("pred_l1_inf_search_direction: %.4e\n", pred_l1_inf_search_direction);
+        print_debug_output_double("pred_l1_inf_search_direction: ", pred_l1_inf_search_direction, nlp_opts->print_level, 2);
         //---------------------------------------------------------------------
         // scale_multiplier(dims, nlp_mem, qp_out);
 
         // Calculate optimal QP objective (needed for globalization)
         if (config->globalization->needs_qp_objective_value() == 1)
         {
-            nlp_mem->qp_cost_value = ocp_nlp_compute_qp_objective_value(dims, qp_in, qp_out, nlp_work);
+            nlp_mem->qp_cost_value = compute_qp_objective_value(mem, dims, qp_in, qp_out, nlp_work);
             nlp_mem->predicted_infeasibility_reduction = pred_l1_inf_search_direction;
             nlp_mem->predicted_optimality_reduction = -compute_gradient_directional_derivative(mem, dims, qp_in, qp_out);
         }
@@ -1770,7 +1822,9 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         acados_tic(&timer1);
 
         int globalization_status;
-        globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts, &mem->alpha);
+        globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in,
+                                                                              nlp_out, nlp_mem, mem,
+                                                                              nlp_work, nlp_opts, &mem->alpha);
 
         if (globalization_status != ACADOS_SUCCESS)
         {
@@ -1790,6 +1844,27 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
         nlp_timings->time_glob += acados_toc(&timer1);
 
+        // Update the objective multiplier after every iteration according to Gould, Loh, Robinson
+        print_debug_output("-- END OF ITERATION PENALTY REDUCTION ---\n", nlp_opts->print_level, 2);
+        print_debug_output_double("lhs", -nlp_mem->qp_cost_value +  nlp_mem->predicted_infeasibility_reduction, nlp_opts->print_level, 2);
+        print_debug_output_double("rhs", 1e-3*(-predictor_qp_objective + pred_l1_inf_QP_optimality), nlp_opts->print_level, 2);
+        if (-nlp_mem->qp_cost_value +  nlp_mem->predicted_infeasibility_reduction < 1e-3*(-predictor_qp_objective + pred_l1_inf_QP_optimality))
+        {
+            printf("Penalty was reduced\n");
+            if (pred_l1_inf_QP_optimality < 0.0)
+            {
+                nlp_mem->objective_multiplier = 1e-1*nlp_mem->objective_multiplier;
+            } 
+            else
+            {
+                nlp_mem->objective_multiplier = 5e-1*nlp_mem->objective_multiplier;
+            }
+            printf("obj multiplier = %.4e\n", nlp_mem->objective_multiplier);
+        }
+        else
+        {
+            printf("Penalty was NOT reduced\n");
+        }
     }  // end SQP loop
 
     if (nlp_opts->print_level > 0)
@@ -1802,40 +1877,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #endif
     return nlp_mem->status;
 }
-
-
-// TODO(david): use common?
-double ocp_nlp_sqp_wfqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_nlp_workspace *nlp_work)
-{
-    // Compute the QP objective function value
-    double qp_cost = 0.0;
-    int i, nux, ns;
-    int N = dims->N;
-    // Sum over stages 0 to N
-    for (i = 0; i <= N; i++)
-    {
-        nux = dims->nx[i] + dims->nu[i];
-        ns = dims->ns[i];
-        // Calculate 0.5 * d.T H d
-        blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0,
-                        0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
-        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
-
-        // slack QP objective value, compare to computation in cost modules;
-        // tmp_nv = 2 * z + Z .* slack;
-        blasfeo_dveccpsc(2*ns, 2.0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
-        blasfeo_dvecmulacc(2*ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
-        // qp_cost += .5 * (tmp_nv .* slack)
-        qp_cost += 0.5 * blasfeo_ddot(2*ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux);
-        // Calculate g.T d
-        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
-
-        // Calculate gradient of slacks
-        qp_cost += blasfeo_ddot(2 * ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
-    }
-    return qp_cost;
-}
-
 
 void ocp_nlp_sqp_wfqp_memory_reset_qp_solver(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     void *opts_, void *mem_, void *work_)
@@ -1885,16 +1926,6 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
         nns = mem->nns[stage];
         config->constraints[stage]->model_get(config->constraints[stage], dims->constraints[stage], nlp_in->constraints[stage], "idxs", idxs);
 
-        // DEBUG:
-        if (opts->nlp_opts->print_level > 1)
-        {
-            printf("stage %d: ni %d ns %d nns %d\n", stage, ni, ns, nns);
-            printf("got idxs at stage %d\n", stage);
-            for (int i=0; i<ns; i++)
-                printf("%d ", idxs[i]);
-            printf("\n");
-        }
-
         int ins = 0;
         bool i_slacked;
         // create idxns
@@ -1916,15 +1947,6 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
                 ins++;
             }
         }
-        // DEBUG:
-        printf("got idxns at stage %d\n", stage);
-        for (int i=0; i<nns; i++)
-            printf("%d ", mem->idxns[stage][i]);
-        if (ins != nns)
-        {
-            printf("ins %d != nns %d", ins, nns);
-        }
-        printf("\n");
     }
 
 
