@@ -116,6 +116,8 @@ typedef struct
     struct blasfeo_dmat *RSQ_cost;
     struct blasfeo_dmat *RSQ_constr;
 
+    // TODO: add slacked qp_solver.
+
 } ocp_nlp_sqp_wfqp_memory;
 
 //

@@ -2123,6 +2123,7 @@ bool ocp_nlp_sqp_wfqp_is_real_time_algorithm()
 
 void ocp_nlp_sqp_wfqp_config_initialize_default(void *config_)
 {
+    // TODO: make sure all functions in ocp_nlp_config are defined!
     ocp_nlp_config *config = (ocp_nlp_config *) config_;
 
     config->with_feasible_qp = 1;
