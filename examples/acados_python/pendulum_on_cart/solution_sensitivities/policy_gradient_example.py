@@ -114,10 +114,10 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
         if eigen_analysis:
             full_hessian_diagnostics = sensitivity_solver.qp_diagnostics("FULL_HESSIAN")
             projected_hessian_diagnostics = sensitivity_solver.qp_diagnostics("PROJECTED_HESSIAN")
-            min_eig_full[i] = full_hessian_diagnostics['min_eigv_total']
-            min_abs_eig_full[i] = full_hessian_diagnostics['min_abs_eigv_total']
-            min_abs_eig_proj_hess[i]= projected_hessian_diagnostics['min_abs_eigv_total']
-            min_eig_proj_hess[i] = projected_hessian_diagnostics['min_eigv_total']
+            min_eig_full[i] = full_hessian_diagnostics['min_eigv_global']
+            min_abs_eig_full[i] = full_hessian_diagnostics['min_abs_eigv_global']
+            min_abs_eig_proj_hess[i]= projected_hessian_diagnostics['min_abs_eigv_global']
+            min_eig_proj_hess[i] = projected_hessian_diagnostics['min_eigv_global']
             min_eig_P[i] = projected_hessian_diagnostics['min_eig_P']
             min_abs_eig_P[i] = projected_hessian_diagnostics['min_abs_eig_P']
 
