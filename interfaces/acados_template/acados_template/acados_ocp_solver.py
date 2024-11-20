@@ -1076,11 +1076,11 @@ class AcadosOcpSolver:
             returns a dictionary with the following fields:
             - min_eigv_stage: dict with minimum eigenvalue for each Hessian block.
             - max_eigv_stage: dict with maximum eigenvalue for each Hessian block.
-            - condition_number: dict with condition number for each Hessian block.
-            - condition_number_total: condition number for the full Hessian.
-            - min_eigv_total: minimum eigenvalue for the full Hessian.
-            - min_abs_eigv_total: minimum absolute eigenvalue for the full Hessian.
-            - max_eigv_total: maximum eigenvalue for the full Hessian.
+            - condition_number_stage: dict with condition number for each Hessian block.
+            - condition_number_global: condition number for the full Hessian.
+            - min_eigv_global: minimum eigenvalue for the full Hessian.
+            - min_abs_eigv_global: minimum absolute eigenvalue for the full Hessian.
+            - max_eigv_global: maximum eigenvalue for the full Hessian.
 
             for the 'PROJECTED_HESSIAN' it also includes
             - min_eig_P: minimum eigenvalue of P matrices
@@ -1091,8 +1091,8 @@ class AcadosOcpSolver:
             qp_diagnostic = {}
             N_horizon = self.N
             offset = 0
-            min_eigv_total = np.inf
-            max_eigv_total = -np.inf
+            min_eigv_global = np.inf
+            max_eigv_global = -np.inf
             min_abs_eigv = np.inf
             max_abs_eigv = -np.inf
             max_eigv_stage = {}
@@ -1109,8 +1109,8 @@ class AcadosOcpSolver:
                     min_eigv = np.min(eigv)
                     max_eigv = np.max(eigv)
 
-                    min_eigv_total = min(min_eigv, min_eigv_total)
-                    max_eigv_total = max(max_eigv, max_eigv_total)
+                    min_eigv_global = min(min_eigv, min_eigv_global)
+                    max_eigv_global = max(max_eigv, max_eigv_global)
                     min_abs_eigv = min(min_abs_eigv, np.min(np.abs(eigv)))
                     max_abs_eigv = max(max_abs_eigv, np.max(np.abs(eigv)))
 
@@ -1118,12 +1118,12 @@ class AcadosOcpSolver:
                     min_eigv_stage[str(i)] = min_eigv
                     condition_number_stage[str(i)] = np.max(np.abs(eigv))/np.min(np.abs(eigv))
 
-                condition_number_total = max_abs_eigv/min_abs_eigv
+                condition_number_global = max_abs_eigv/min_abs_eigv
 
-                qp_diagnostic['max_eigv_total'] = max_eigv_total
-                qp_diagnostic['min_eigv_total'] = min_eigv_total
-                qp_diagnostic['min_abs_eigv_total'] = min_abs_eigv
-                qp_diagnostic['condition_number_total'] = condition_number_total
+                qp_diagnostic['max_eigv_global'] = max_eigv_global
+                qp_diagnostic['min_eigv_global'] = min_eigv_global
+                qp_diagnostic['min_abs_eigv_global'] = min_abs_eigv
+                qp_diagnostic['condition_number_global'] = condition_number_global
                 qp_diagnostic['max_eigv_stage'] = max_eigv_stage
                 qp_diagnostic['min_eigv_stage'] = min_eigv_stage
                 qp_diagnostic['condition_number_stage'] = condition_number_stage
@@ -1158,12 +1158,12 @@ class AcadosOcpSolver:
                     eigv = np.linalg.eigvals(P_mat)
                     min_eig_P = min(min_eig_P, np.min(eigv))
                     min_abs_eig_P = min(min_abs_eig_P, np.min(np.abs(eigv)))
-                condition_number_total = max_abs_eigv/min_abs_eigv
+                condition_number_global = max_abs_eigv/min_abs_eigv
 
-                qp_diagnostic['max_eigv_total'] = max_eig_proj_hess
-                qp_diagnostic['min_eigv_total'] = min_eig_proj_hess
-                qp_diagnostic['min_abs_eigv_total'] = min_abs_eigv
-                qp_diagnostic['condition_number_total'] = condition_number_total
+                qp_diagnostic['max_eigv_global'] = max_eig_proj_hess
+                qp_diagnostic['min_eigv_global'] = min_eig_proj_hess
+                qp_diagnostic['min_abs_eigv_global'] = min_abs_eigv
+                qp_diagnostic['condition_number_global'] = condition_number_global
                 qp_diagnostic['max_eigv_stage'] = max_eigv_stage
                 qp_diagnostic['min_eigv_stage'] = min_eigv_stage
                 qp_diagnostic['min_eig_P'] = min_eig_P
