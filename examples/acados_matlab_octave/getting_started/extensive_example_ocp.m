@@ -284,16 +284,16 @@ disp('QP diagnostics of last QP before condensing')
 result = ocp_solver.qp_diagnostics(false);
 disp(['min eigenvalues of blocks are in [', num2str(min(result.min_eigv_stage)), ', ', num2str(max(result.min_eigv_stage)), ']'])
 disp(['max eigenvalues of blocks are in [', num2str(min(result.max_eigv_stage)), ', ', num2str(max(result.max_eigv_stage)), ']'])
-disp(['condition_number_blockwise: '])
-disp(result.condition_number_blockwise)
+disp(['condition_number_stage: '])
+disp(result.condition_number_stage)
 disp(['condition_number_global: ', num2str(result.condition_number_global)])
 
 disp('QP diagnostics of last QP after partial condensing')
 result = ocp_solver.qp_diagnostics(true);
 disp(['min eigenvalues of blocks are in [', num2str(min(result.min_eigv_stage)), ', ', num2str(max(result.min_eigv_stage)), ']'])
 disp(['max eigenvalues of blocks are in [', num2str(min(result.max_eigv_stage)), ', ', num2str(max(result.max_eigv_stage)), ']'])
-disp(['condition_number_blockwise: '])
-disp(result.condition_number_blockwise)
+disp(['condition_number_stage: '])
+disp(result.condition_number_stage)
 disp(['condition_number_global: ', num2str(result.condition_number_global)])
 
 % get second SQP iterate
