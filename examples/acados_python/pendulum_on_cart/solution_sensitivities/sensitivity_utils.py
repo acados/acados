@@ -112,7 +112,8 @@ def export_parametric_ocp(
     x0=np.array([0.0, np.pi / 6, 0.0, 0.0]), N_horizon=50, T_horizon=2.0, Fmax=80.0,
     hessian_approx = "GAUSS_NEWTON", qp_solver_ric_alg=1,
     cost_scale_as_param=False,
-    with_parametric_constraint=True
+    with_parametric_constraint=True,
+    with_nonlinear_constraint=True
 ) -> AcadosOcp:
 
     ocp = AcadosOcp()
@@ -149,7 +150,10 @@ def export_parametric_ocp(
     ocp.constraints.idxbu = np.array([0])
 
     if with_parametric_constraint:
-        ocp.model.con_h_expr = -ocp.model.x[0] * ocp.model.p_global[0]
+        if with_nonlinear_constraint:
+            ocp.model.con_h_expr = -ocp.model.x[0] * ocp.model.p_global[0]**2
+        else:
+            ocp.model.con_h_expr = -ocp.model.x[0] * ocp.model.p_global[0]
         ocp.constraints.lh = np.array([-1.5])
         ocp.constraints.uh = np.array([1.5])
 
@@ -230,9 +234,11 @@ def plot_cost_gradient_results(p_test, cost_values, acados_cost_grad, np_cost_gr
 def plot_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, sens_u, np_grad,
                  min_eig_full=None, min_eig_proj_hess=None, min_eig_P=None,
                  min_abs_eig_full=None, min_abs_eig_proj_hess=None, min_abs_eig_P=None,
-                 eigen_analysis=False, qp_solver_ric_alg=1, parameter_name=""):
+                 eigen_analysis=False, qp_solver_ric_alg=1, parameter_name="", max_lam_parametric_constraint=None):
 
     nsub = 5 if eigen_analysis else 3
+    if max_lam_parametric_constraint is not None:
+        nsub += 1
 
     _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=(9,9))
 
@@ -253,6 +259,12 @@ def plot_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, 
     ax[isub].plot(p_test, np.abs(sens_u- np_grad), "--", label='acados - finite diff')
     ax[isub].set_ylabel(r"diff $\partial_p u$")
     ax[isub].set_yscale("log")
+
+    if max_lam_parametric_constraint is not None:
+        isub += 1
+        ax[isub].plot(p_test, max_lam_parametric_constraint, label=r'max $\lambda$ parametric constraint')
+        # ax[isub].set_ylabel("max lam parametric constraint")
+        # ax[isub].set_yscale("log")
 
     if eigen_analysis:
         isub += 1

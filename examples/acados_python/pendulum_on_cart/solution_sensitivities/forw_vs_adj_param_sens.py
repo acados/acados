@@ -81,9 +81,9 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
     sensitivity_solver.set_p_global_and_precompute_dependencies(p_val)
 
     u_opt = ocp_solver.solve_for_x0(x0)[0]
-    ocp_solver.store_iterate(filename='iterate.json', overwrite=True, verbose=False)
+    iterate = ocp_solver.store_iterate_to_obj()
 
-    sensitivity_solver.load_iterate(filename='iterate.json', verbose=False)
+    sensitivity_solver.load_iterate_from_obj(iterate)
     sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
 
     if sensitivity_solver.get_status() not in [0, 2]:
@@ -156,7 +156,6 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
             raise Exception(f"adj_p_vec and adj_p_mat[{i}, :] should match.")
         else:
             print(f"Success: adj_p_vec and adj_p_mat[{i}, :] match!")
-
 
     if plot_trajectory:
         nx = ocp.dims.nx

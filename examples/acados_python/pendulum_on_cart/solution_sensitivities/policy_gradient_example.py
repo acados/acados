@@ -88,6 +88,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
 
     sens_u = np.zeros(np_test)
     u_opt = np.zeros(np_test)
+    max_lam_parametric_constraint = np.zeros(np_test)
     for i, p in enumerate(p_test):
         p_val = np.array([p])
 
@@ -99,8 +100,11 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
 
         sensitivity_solver.load_iterate_from_flat_obj(iterate)
         sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
-        # residuals = sensitivity_solver.get_stats("residuals")
-        # print(f"residuals sensitivity_solver {residuals} status {sensitivity_solver.status}")
+
+        for j in range(1, N_horizon):
+            lam = ocp_solver.get(j, "lam")
+            # 1, 3 are indices of upper and lower multiplier for the parametric constraints
+            max_lam_parametric_constraint[i] = max(max_lam_parametric_constraint[i], lam[1], lam[3])
 
         if eigen_analysis:
             full_hessian_diagnostics = sensitivity_solver.qp_diagnostics("FULL_HESSIAN")
@@ -117,7 +121,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
             breakpoint()
         if sensitivity_solver.get_status() not in [0, 2]:
             print(f"sensitivity solver returned status {sensitivity_solver.get_status()}.")
-            breakpoint()
+            # breakpoint()
         # Calculate the policy gradient
         _, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "p_global")
         sens_u[i] = sens_u_.item()
@@ -133,7 +137,8 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     plot_results(p_test, u_opt, u_opt_reconstructed_acados, u_opt_reconstructed_fd, sens_u, sens_u_fd,
                  min_eig_full, min_eig_proj_hess, min_eig_P,
                  min_abs_eig_full, min_abs_eig_proj_hess, min_abs_eig_P,
-                 eigen_analysis, qp_solver_ric_alg, parameter_name="mass")
+                 eigen_analysis, qp_solver_ric_alg, parameter_name="mass",
+                 max_lam_parametric_constraint=max_lam_parametric_constraint)
 
     test_tol = 1e-2
     median_diff = np.median(np.abs(sens_u - sens_u_fd))
