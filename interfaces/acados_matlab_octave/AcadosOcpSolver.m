@@ -245,13 +245,14 @@ classdef AcadosOcpSolver < handle
             % result = ocp_solver.qp_diagnostics([partially_condensed_qp=false])
 
             % returns a struct with the following fields:
-            % - min_eigv_stage: dict with minimum eigenvalue for each Hessian block.
-            % - max_eigv_stage: dict with maximum eigenvalue for each Hessian block.
-            % - condition_number_stage: dict with condition number for each Hessian block.
-            % - condition_number_global: condition number for the full Hessian.
+            % - min_eigv_stage: array with minimum eigenvalue for each Hessian block.
+            % - max_eigv_stage: array with maximum eigenvalue for each Hessian block.
+            % - condition_number_stage: array with condition number for each Hessian block.
             % - min_eigv_global: minimum eigenvalue for the full Hessian.
             % - min_abs_eigv_global: minimum absolute eigenvalue for the full Hessian.
             % - max_eigv_global: maximum eigenvalue for the full Hessian.
+            % - max_abs_eigv_global: maximum absolute eigenvalue for the full Hessian.
+            % - condition_number_global: condition number for the full Hessian.
 
             if length(varargin) > 0
                 partially_condensed_qp = varargin{1};
