@@ -868,9 +868,6 @@ class AcadosOcp:
             for horizon_type, constraint in bgp_type_constraint_pairs:
                 if constraint is not None and any(ca.which_depends(constraint, model.p_global)):
                     raise Exception(f"with_value_sens_wrt_params is not supported for BGP constraints that depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
-            for horizon_type, constraint in bgh_type_constraint_pairs:
-                if constraint is not None and model.p_global is not None and not ca.is_linear(constraint, model.p_global):
-                    raise Exception(f"with_value_sens_wrt_params does not work for h constraint nonlinear in p_global yet. Got nonlinear dependency on p_global for {horizon_type} constraint.")
 
         if opts.qp_solver_cond_N is None:
             opts.qp_solver_cond_N = opts.N_horizon
