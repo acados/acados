@@ -36,7 +36,7 @@ from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
 import casadi as ca
 import numpy as np
 import scipy.linalg as scipylinalg
-from sensitivity_utils import plot_results
+from sensitivity_utils import plot_solution_sensitivities_results
 
 """
     This example computes solution sensitivities with respect to parameters using state augmentation.
@@ -270,10 +270,10 @@ def main_augmented(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, ei
     u_opt_reconstructed_acados = np.cumsum(sens_u) * delta_p + u_opt[0]
     u_opt_reconstructed_acados += u_opt[0] - u_opt_reconstructed_acados[0]
 
-    plot_results(p_test, u_opt, u_opt_reconstructed_acados, u_opt_reconstructed_np_grad, sens_u, np_grad,
+    plot_solution_sensitivities_results(p_test, u_opt, u_opt_reconstructed_acados, u_opt_reconstructed_np_grad, sens_u, np_grad,
                  min_eig_full, min_eig_proj_hess, min_eig_P,
                  min_abs_eig_full, min_abs_eig_proj_hess, min_abs_eig_P,
-                 eigen_analysis, qp_solver_ric_alg, parameter_name)
+                 eigen_analysis, title=None, parameter_name=parameter_name)
 
 
 if __name__ == "__main__":
