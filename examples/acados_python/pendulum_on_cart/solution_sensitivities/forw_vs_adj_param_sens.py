@@ -47,6 +47,13 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
 
     N_horizon = 10
     T_horizon = 1.0
+
+    # TODO: look more into why the test fails with these settings:
+    # adjoint sensitivities of first parameter dont match with forward sensitivities
+    # only "small" difference: in 5th digit, might be due to numerical inaccuracies
+    # N_horizon = 50
+    # T_horizon = 2.0
+    # p_test = p_nominal + 0.3
     Fmax = 80.0
 
     cost_scale_as_param = True # test with 2 parameters
