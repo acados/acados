@@ -2193,7 +2193,6 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
 
 {# globalization specific options #}
 {%- if solver_options.globalization == "MERIT_BACKTRACKING" %}
-    // ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "merit_backtracking");
 
     int globalization_line_search_use_sufficient_descent = {{ solver_options.globalization_line_search_use_sufficient_descent }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_line_search_use_sufficient_descent", &globalization_line_search_use_sufficient_descent);
@@ -2219,6 +2218,9 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
 
     double globalization_funnel_initial_penalty_parameter = {{ solver_options.globalization_funnel_initial_penalty_parameter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_initial_penalty_parameter", &globalization_funnel_initial_penalty_parameter);
+
+    bool globalization_funnel_use_merit_fun_only = {{ solver_options.globalization_funnel_use_merit_fun_only }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_use_merit_fun_only", &globalization_funnel_use_merit_fun_only);
 {%- endif %}
 
     int with_solution_sens_wrt_params = {{ solver_options.with_solution_sens_wrt_params }};

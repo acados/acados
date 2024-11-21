@@ -67,6 +67,7 @@ typedef struct
     double penalty_eta; // fraction in penalty update
     double penalty_contraction; // penalty contraction factor
     bool type_switching_condition; // which type of switching condition do we use?
+    bool use_merit_fun_only;
 } ocp_nlp_globalization_funnel_opts;
 
 //

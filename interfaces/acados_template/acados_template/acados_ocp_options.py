@@ -97,6 +97,7 @@ class AcadosOcpOptions:
         self.__globalization_funnel_kappa = 0.9
         self.__globalization_funnel_fraction_switching_condition = 1e-3
         self.__globalization_funnel_initial_penalty_parameter = 1.0
+        self.__globalization_funnel_use_merit_fun_only = False
         self.__globalization_fixed_step_length = 1.0
         self.__ext_cost_num_hess = 0
         self.__globalization_use_SOC = 0
@@ -849,6 +850,16 @@ class AcadosOcpOptions:
         return self.__globalization_funnel_initial_penalty_parameter
 
     @property
+    def globalization_funnel_use_merit_fun_only(self):
+        """
+        If this options is set, the funnel globalization only checks a merit function.
+
+        Type: bool
+        Default: False
+        """
+        return self.__globalization_funnel_use_merit_fun_only
+
+    @property
     def nlp_solver_tol_ineq(self):
         """NLP solver inequality tolerance"""
         return self.__nlp_solver_tol_ineq
@@ -1302,6 +1313,13 @@ class AcadosOcpOptions:
             self.__globalization_funnel_initial_penalty_parameter = globalization_funnel_initial_penalty_parameter
         else:
             raise Exception(f'Invalid value for globalization_funnel_initial_penalty_parameter. Should be in [0,1], got {globalization_funnel_initial_penalty_parameter}')
+
+    @globalization_funnel_use_merit_fun_only.setter
+    def globalization_funnel_use_merit_fun_only(self, globalization_funnel_use_merit_fun_only):
+        if type(globalization_funnel_use_merit_fun_only) == bool:
+            self.__globalization_funnel_use_merit_fun_only = globalization_funnel_use_merit_fun_only
+        else:
+            raise Exception(f'Invalid type for globalization_funnel_use_merit_fun_only. Should be bool, got {globalization_funnel_use_merit_fun_only}')
 
     @eval_residual_at_max_iter.setter
     def eval_residual_at_max_iter(self, eval_residual_at_max_iter):

@@ -88,6 +88,7 @@ void ocp_nlp_globalization_funnel_opts_initialize_default(void *config_, void *d
     opts->penalty_contraction = 5e-1;
     opts->penalty_eta = 1e-6;
     opts->type_switching_condition = false; // use ipopt/gould type of switching
+    opts->use_merit_fun_only = false;
 
     return;
 }
@@ -157,6 +158,11 @@ void ocp_nlp_globalization_funnel_opts_set(void *config_, void *opts_, const cha
             exit(1);
         }
         opts->initial_penalty_parameter = *funnel_initial_penalty_parameter;
+    }
+    else if (!strcmp(field, "funnel_use_merit_fun_only"))
+    {
+        bool* use_merit_fun_only = (bool *) value;
+        opts->use_merit_fun_only = *use_merit_fun_only;
     }
     else
     {
@@ -333,7 +339,12 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
     print_debug_output_double("trial infeasibility", trial_infeasibility, nlp_opts->print_level, 2);
     print_debug_output_double("pred", pred, nlp_opts->print_level, 2);
 
-    if(is_iterate_inside_of_funnel(mem, opts, trial_infeasibility))
+    if (opts->use_merit_fun_only) // We only check the penalty method but not the funnel!
+    {
+        mem->funnel_penalty_mode = true;
+    }
+
+    if (opts->use_merit_fun_only || is_iterate_inside_of_funnel(mem, opts, trial_infeasibility)) 
     {
         print_debug_output("Trial iterate is INSIDE of funnel\n", nlp_opts->print_level, 1);
         if (!mem->funnel_penalty_mode)
