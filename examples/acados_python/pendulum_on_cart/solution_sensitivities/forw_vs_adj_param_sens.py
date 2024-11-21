@@ -50,8 +50,10 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
     Fmax = 80.0
 
     cost_scale_as_param = True # test with 2 parameters
+    with_parametric_constraint = True
+    with_nonlinear_constraint = False
 
-    ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, qp_solver_ric_alg=1, cost_scale_as_param=cost_scale_as_param)
+    ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, qp_solver_ric_alg=1, cost_scale_as_param=cost_scale_as_param, with_parametric_constraint=with_parametric_constraint, with_nonlinear_constraint=with_nonlinear_constraint)
     if use_cython:
         raise NotImplementedError()
         AcadosOcpSolver.generate(ocp, json_file="parameter_augmented_acados_ocp.json")
@@ -61,7 +63,7 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
         ocp_solver = AcadosOcpSolver(ocp, json_file="parameter_augmented_acados_ocp.json", generate=generate_solvers, build=generate_solvers)
 
     # create sensitivity solver
-    ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, hessian_approx='EXACT', qp_solver_ric_alg=qp_solver_ric_alg, cost_scale_as_param=cost_scale_as_param)
+    ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, hessian_approx='EXACT', qp_solver_ric_alg=qp_solver_ric_alg, cost_scale_as_param=cost_scale_as_param, with_parametric_constraint=with_parametric_constraint, with_nonlinear_constraint=with_nonlinear_constraint)
     ocp.model.name = 'sensitivity_solver'
     ocp.code_export_directory = f'c_generated_code_{ocp.model.name}'
     if use_cython:

@@ -231,10 +231,11 @@ def plot_cost_gradient_results(p_test, cost_values, acados_cost_grad, np_cost_gr
     plt.show()
 
 
-def plot_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, sens_u, np_grad,
+def plot_solution_sensitivities_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, sens_u, np_grad,
                  min_eig_full=None, min_eig_proj_hess=None, min_eig_P=None,
                  min_abs_eig_full=None, min_abs_eig_proj_hess=None, min_abs_eig_P=None,
-                 eigen_analysis=False, qp_solver_ric_alg=1, parameter_name="", max_lam_parametric_constraint=None):
+                 eigen_analysis=False, title=None, parameter_name="",
+                 max_lam_parametric_constraint=None, sum_lam_parametric_constraint=None):
 
     nsub = 5 if eigen_analysis else 3
     if max_lam_parametric_constraint is not None:
@@ -244,10 +245,11 @@ def plot_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, 
 
     isub = 0
     ax[isub].plot(p_test, pi, label='acados', color='k')
-    ax[isub].plot(p_test, pi_reconstructed_acados, "--", label='reconstructed from acados')
+    ax[isub].plot(p_test, pi_reconstructed_acados, "--", label='reconstructed from acados solution sensitivities')
     ax[isub].plot(p_test, pi_reconstructed_np_grad, "--", label='reconstructed from finite diff')
     ax[isub].set_ylabel(r"$u$")
-    ax[isub].set_title(f'qp_solver_ric_alg {qp_solver_ric_alg}')
+    if title is not None:
+        ax[isub].set_title(title)
 
     isub += 1
     ax[isub].plot(p_test, sens_u, label="acados")
@@ -264,7 +266,9 @@ def plot_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, 
         isub += 1
         ax[isub].plot(p_test, max_lam_parametric_constraint, label=r'max $\lambda$ parametric constraint')
         # ax[isub].set_ylabel("max lam parametric constraint")
-        # ax[isub].set_yscale("log")
+        ax[isub].set_yscale("log")
+        if sum_lam_parametric_constraint is not None:
+            ax[isub].plot(p_test, sum_lam_parametric_constraint, label=r'sum $\lambda$ parametric constraint')
 
     if eigen_analysis:
         isub += 1
@@ -286,7 +290,7 @@ def plot_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, 
 
     ax[-1].set_xlabel(f"{parameter_name}")
 
-    fig_filename = f"solution_sens_{qp_solver_ric_alg}.pdf"
+    fig_filename = f"solution_sens_{title}.pdf"
     plt.savefig(fig_filename)
     print(f"stored figure as {fig_filename}")
     plt.show()

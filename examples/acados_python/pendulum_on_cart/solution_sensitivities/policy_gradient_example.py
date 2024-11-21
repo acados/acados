@@ -31,7 +31,7 @@
 
 import numpy as np
 from acados_template import AcadosOcpSolver
-from sensitivity_utils import plot_results, export_parametric_ocp, plot_pendulum
+from sensitivity_utils import plot_solution_sensitivities_results, export_parametric_ocp, plot_pendulum
 
 
 def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=False, plot_trajectory=False):
@@ -44,15 +44,17 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
 
     p_nominal = 1.0
     x0 = np.array([0.0, np.pi / 2, 0.0, 0.0])
-    delta_p = 0.002
+    delta_p = 0.001
     p_test = np.arange(p_nominal - 0.5, p_nominal + 0.5, delta_p)
 
     np_test = p_test.shape[0]
     N_horizon = 50
     T_horizon = 2.0
     Fmax = 80.0
+    with_parametric_constraint = True
+    with_nonlinear_constraint = True
 
-    ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, qp_solver_ric_alg=1)
+    ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, qp_solver_ric_alg=1, with_parametric_constraint=with_parametric_constraint, with_nonlinear_constraint=with_nonlinear_constraint)
 
     # solver creation arguments
     verbose = True
@@ -66,7 +68,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
         ocp_solver = AcadosOcpSolver(ocp, build=build, generate=generate, json_file="parameter_augmented_acados_ocp.json", verbose=verbose)
 
     # create sensitivity solver
-    ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, hessian_approx='EXACT', qp_solver_ric_alg=qp_solver_ric_alg)
+    ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, hessian_approx='EXACT', qp_solver_ric_alg=qp_solver_ric_alg, with_parametric_constraint=with_parametric_constraint, with_nonlinear_constraint=with_nonlinear_constraint)
     ocp.model.name = 'sensitivity_solver'
     ocp.code_export_directory = f'c_generated_code_{ocp.model.name}'
     if use_cython:
@@ -88,7 +90,9 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
 
     sens_u = np.zeros(np_test)
     u_opt = np.zeros(np_test)
-    max_lam_parametric_constraint = np.zeros(np_test)
+    if with_parametric_constraint:
+        max_lam_parametric_constraint = np.zeros(np_test)
+        sum_lam_parametric_constraint = np.zeros(np_test)
     for i, p in enumerate(p_test):
         p_val = np.array([p])
 
@@ -105,6 +109,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
             lam = ocp_solver.get(j, "lam")
             # 1, 3 are indices of upper and lower multiplier for the parametric constraints
             max_lam_parametric_constraint[i] = max(max_lam_parametric_constraint[i], lam[1], lam[3])
+            sum_lam_parametric_constraint[i] += lam[1] + lam[3]
 
         if eigen_analysis:
             full_hessian_diagnostics = sensitivity_solver.qp_diagnostics("FULL_HESSIAN")
@@ -134,11 +139,12 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     u_opt_reconstructed_acados = np.cumsum(sens_u) * delta_p + u_opt[0]
     u_opt_reconstructed_acados += u_opt[0] - u_opt_reconstructed_acados[0]
 
-    plot_results(p_test, u_opt, u_opt_reconstructed_acados, u_opt_reconstructed_fd, sens_u, sens_u_fd,
+    plot_solution_sensitivities_results(p_test, u_opt, u_opt_reconstructed_acados, u_opt_reconstructed_fd, sens_u, sens_u_fd,
                  min_eig_full, min_eig_proj_hess, min_eig_P,
                  min_abs_eig_full, min_abs_eig_proj_hess, min_abs_eig_P,
-                 eigen_analysis, qp_solver_ric_alg, parameter_name="mass",
-                 max_lam_parametric_constraint=max_lam_parametric_constraint)
+                 eigen_analysis, title=None, parameter_name="mass",
+                 max_lam_parametric_constraint=max_lam_parametric_constraint,
+                 sum_lam_parametric_constraint=sum_lam_parametric_constraint)
 
     test_tol = 1e-2
     median_diff = np.median(np.abs(sens_u - sens_u_fd))
@@ -163,4 +169,4 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
 
 
 if __name__ == "__main__":
-    main_parametric(qp_solver_ric_alg=0, eigen_analysis=False, use_cython=False, plot_trajectory=True)
+    main_parametric(qp_solver_ric_alg=0, eigen_analysis=False, use_cython=False, plot_trajectory=False)
