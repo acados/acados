@@ -124,6 +124,7 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
     opts->warm_start_first_qp = false;
     opts->eval_residual_at_max_iter = false;
     opts->initial_objective_multiplier = 1e0;
+    // opts->sufficient_l1_inf_reduction = 1e-3;
     opts->sufficient_l1_inf_reduction = 1e-1;
 
     // overwrite default submodules opts
@@ -1719,6 +1720,31 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return nlp_mem->status;
         }
 
+        double multiplier_norm_inf = get_qp_multiplier_norm_inf(mem, dims, nlp_work->tmp_qp_out, true);
+        print_debug_output_double("Feas QP multiplier norm: ", multiplier_norm_inf, nlp_opts->print_level, 2);
+
+        double current_l1_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
+        print_debug_output_double("Current l1 infeasibility: ", current_l1_infeasibility, nlp_opts->print_level, 2);
+
+        // Calculate linearized l1-infeasibility for d_steering
+        // double l1_inf_QP_feasibility = get_slacked_qp_l1_infeasibility(dims, mem, nlp_work->tmp_qp_out);
+        // print_debug_output_double("linearized l1_inf_feas: ", l1_inf_QP_feasibility, nlp_opts->print_level, 2);
+
+        double manual_l1_inf_QP_feasibility = full_manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, nlp_work->tmp_qp_out);
+        print_debug_output_double("l1_inf_feas: ", manual_l1_inf_QP_feasibility, nlp_opts->print_level, 2);
+        // predicted infeasibility reduction of feasibility QP should always be non-negative
+        double pred_l1_inf_QP_feasibility, pred_l1_inf_QP_optimality;
+        pred_l1_inf_QP_feasibility = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manual_l1_inf_QP_feasibility);
+        print_debug_output_double("pred_l1_inf_QP_feasibility: ", pred_l1_inf_QP_feasibility, nlp_opts->print_level, 2);
+
+        print_debug_output("-- OBJECTIVE MULTIPLIER UPDATE AFTER 1ST QP ---\n", nlp_opts->print_level, 2);
+        if (current_l1_infeasibility > 0.0 && pred_l1_inf_QP_feasibility <= 0.1*current_l1_infeasibility)
+        {
+            nlp_mem->objective_multiplier = 1e-1*nlp_mem->objective_multiplier;
+            print_debug_output_double("new obj multiplier", nlp_mem->objective_multiplier, nlp_opts->print_level, 2);
+        }
+
+
         /* solve 2. QP: We solve the standard l1-relaxed QP with gradient */
         qp_status = prepare_and_solve_QP(config, opts, qp_in, qp_out, dims, mem, nlp_in, nlp_out,
                     nlp_mem, nlp_work, sqp_iter, false, timer0, timer1);
@@ -1743,25 +1769,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // nlp_work->tmp_qp_out = d without cost;
         // nlp_mem->qp_out = d with objective_multiplier
 
-        double multiplier_norm_inf = get_qp_multiplier_norm_inf(mem, dims, nlp_work->tmp_qp_out, true);
-        print_debug_output_double("Feas QP multiplier norm: ", multiplier_norm_inf, nlp_opts->print_level, 2);
         multiplier_norm_inf = get_qp_multiplier_norm_inf(mem, dims, qp_out, false);
         print_debug_output_double("Opt QP multiplier norm: ", multiplier_norm_inf, nlp_opts->print_level, 2);
-
-        double current_l1_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
-        print_debug_output_double("Current l1 infeasibility: ", current_l1_infeasibility, nlp_opts->print_level, 2);
-
-        // Calculate linearized l1-infeasibility for d_steering
-        // double l1_inf_QP_feasibility = get_slacked_qp_l1_infeasibility(dims, mem, nlp_work->tmp_qp_out);
-        // print_debug_output_double("linearized l1_inf_feas: ", l1_inf_QP_feasibility, nlp_opts->print_level, 2);
-
-        double manual_l1_inf_QP_feasibility = full_manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, nlp_work->tmp_qp_out);
-        print_debug_output_double("l1_inf_feas: ", manual_l1_inf_QP_feasibility, nlp_opts->print_level, 2);
-        // predicted infeasibility reduction of feasibility QP should always be non-negative
-        double pred_l1_inf_QP_feasibility, pred_l1_inf_QP_optimality;
-        pred_l1_inf_QP_feasibility = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manual_l1_inf_QP_feasibility);
-        print_debug_output_double("pred_l1_inf_QP_feasibility: ", pred_l1_inf_QP_feasibility, nlp_opts->print_level, 2);
-
         // Calculate linearized l1-infeasibility for d_predictor
         // double l1_inf_QP_optimality = get_slacked_qp_l1_infeasibility(dims, mem, nlp_mem->qp_out);
         // print_debug_output_double("linearized l1_inf_opt: ", l1_inf_QP_optimality, nlp_opts->print_level, 2);
