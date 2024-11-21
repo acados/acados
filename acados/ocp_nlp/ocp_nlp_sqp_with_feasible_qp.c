@@ -1348,7 +1348,7 @@ static void ocp_nlp_sqp_wfqp_setup_qp_objective(ocp_nlp_config *config,
         {
             // Either we use the exact objective Hessian
             // blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
-            // blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0); I think we do not need this here
+            // blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);// I think we do not need this here
 
             // We use the identity matrix Hessian
             blasfeo_dgese(nxu, nxu, 0.0, nlp_mem->qp_in->RSQrq+i, 0, 0);
@@ -1482,6 +1482,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
 
         return mem->nlp_mem->status;
     }
+    
     // TODO: @david: How to log statistics?
     // We solve 2 QPs -> need 2 times qp_iter and qp_status?
     // Or do we make one row for one QP solve?
@@ -1706,11 +1707,11 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                     nlp_mem, nlp_work, sqp_iter, true, timer0, timer1);
         if (qp_status != ACADOS_SUCCESS)
         {
-            if (nlp_opts->print_level > 1)
+            if (nlp_opts->print_level >=1)
             {
-                printf("\nFailure in QP 1, got status %d!\n", qp_status);
+                printf("\nFailure in QP 1 (Feasibility), got qp_status %d!\n", qp_status);
             }
-            nlp_mem->status = qp_status;
+            nlp_mem->status = ACADOS_QP_FAILURE;
             nlp_mem->iter = sqp_iter;
             nlp_timings->time_tot = acados_toc(&timer0);
 #if defined(ACADOS_WITH_OPENMP)
@@ -1740,7 +1741,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         print_debug_output("-- OBJECTIVE MULTIPLIER UPDATE AFTER 1ST QP ---\n", nlp_opts->print_level, 2);
         if (current_l1_infeasibility > 0.0 && pred_l1_inf_QP_feasibility <= 0.1*current_l1_infeasibility)
         {
-            nlp_mem->objective_multiplier = 1e-1*nlp_mem->objective_multiplier;
+            nlp_mem->objective_multiplier = 5e-1*nlp_mem->objective_multiplier;
             print_debug_output_double("new obj multiplier", nlp_mem->objective_multiplier, nlp_opts->print_level, 2);
         }
 
@@ -1750,11 +1751,11 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                     nlp_mem, nlp_work, sqp_iter, false, timer0, timer1);
         if (qp_status != ACADOS_SUCCESS)
         {
-            if (nlp_opts->print_level > 1)
+            if (nlp_opts->print_level >=1)
             {
-                printf("\nFailure in QP 2, got status %d!\n", qp_status);
+                printf("\nFailure in QP 2 (Optimality), got qp_status %d!\n", qp_status);
             }
-            nlp_mem->status = qp_status;
+            nlp_mem->status = ACADOS_QP_FAILURE;
             nlp_mem->iter = sqp_iter;
             nlp_timings->time_tot = acados_toc(&timer0);
 #if defined(ACADOS_WITH_OPENMP)
