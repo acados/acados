@@ -42,15 +42,12 @@ from itertools import product
 # s.t.  x <= 1
 #       x^2 >= 4
 
-# Settings
-PLOT = False
-FOR_LOOPING = False # call solver in for loop to get all iterates
-TOL = 1e-6
 
 def main():
     # run test cases
-    params = {'globalization': ['FUNNEL_L1PEN_LINESEARCH']}
-    # params = {'globalization': ['FIXED_STEP']}
+    params = {'globalization': ['FUNNEL_L1PEN_LINESEARCH'],
+              'nlp_solver_type': ['SQP', 'SQP_WITH_FEASIBLE_QP'],
+              'init_iterate': [np.array([-0.001]), np.array([0.0])]}
 
     keys, values = zip(*params.items())
     for combination in product(*values):
@@ -61,6 +58,8 @@ def main():
 def solve_infeasible_linearization(setting):
 
     globalization = setting['globalization']
+    nlp_solver_type = setting['nlp_solver_type']
+    xinit = setting['init_iterate']
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -99,44 +98,50 @@ def solve_infeasible_linearization(setting):
     ocp.constraints.ubx_0 = 1 * np.ones((nx))
 
     # set options
+    ocp.solver_options.tol = 1e-6
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.qp_solver_cond_N = N
-    ocp.solver_options.hessian_approx = 'EXACT'
-    ocp.solver_options.integrator_type = 'DISCRETE'
-    ocp.solver_options.print_level = 3
-    ocp.solver_options.tol = TOL
-    # ocp.solver_options.nlp_solver_type = 'SQP'
-    ocp.solver_options.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'
-    ocp.solver_options.globalization = globalization
-    ocp.solver_options.globalization_full_step_dual = True
-    ocp.solver_options.alpha_min = 1e-15
-    SQP_max_iter = 10
     ocp.solver_options.qp_solver_iter_max = 1000
-    ocp.solver_options.regularize_method = 'PROJECT'
     ocp.solver_options.qp_tol = 1e-12
     ocp.solver_options.qp_solver_mu0 = 1e4
-    ocp.solver_options.nlp_solver_max_iter = SQP_max_iter
+    ocp.solver_options.hessian_approx = 'EXACT'
+    ocp.solver_options.regularize_method = 'MIRROR'
+    ocp.solver_options.integrator_type = 'DISCRETE'
+    ocp.solver_options.print_level = 1
+    ocp.solver_options.nlp_solver_type = nlp_solver_type
+    ocp.solver_options.globalization = globalization
+    ocp.solver_options.globalization_full_step_dual = True
+    ocp.solver_options.globalization_alpha_min = 1e-15
+    ocp.solver_options.nlp_solver_max_iter = 50
     ocp.solver_options.initial_objective_multiplier = 1e0
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
 
     # initialize solver
-    # xinit = np.array([-0.001])
-    xinit = np.array([-1.0])
     [ocp_solver.set(i, "x", xinit) for i in range(N+1)]
 
     # solve
     status = ocp_solver.solve()
-    # if status != 0:
-    #     raise RuntimeError("Solve failed, since QP infeasible!")
 
     # get solution
     solution = ocp_solver.get(0, "x")
-    print("solution: ", solution)
 
     # compare to analytical solution
     exact_solution = np.array([-2.0])
-    sol_err = max(np.abs(solution - exact_solution ))
+    infeasible_solution = np.array([1.0])
 
+    if ocp.solver_options.nlp_solver_type == 'SQP':
+        if np.allclose(xinit, np.array([-0.001])):
+            assert status == 0, "Standard SQP should be able to solve the problem!"
+            assert np.allclose(solution, exact_solution), "Optimal solution should be -2!"
+        elif np.allclose(xinit, np.array([0.0])):
+            assert status == 4, "QP subproblem should get infeasible for standard SQP!"
+    if ocp.solver_options.nlp_solver_type == 'SQP_WITH_FEASIBLE_QP':
+        if np.allclose(xinit, np.array([-0.001])):
+            assert status == 0, "SQP with feasible QP should be able to solve the problem!"
+            assert np.allclose(solution, exact_solution), "Optimal solution should be -2!"
+        elif np.allclose(xinit, np.array([0.0])):
+            assert status == 8, "SQP with feasible QP should converge to infeasible stationary point!"
+            assert np.allclose(solution, infeasible_solution), "Optimal solution should be 1!"
 
 if __name__ == '__main__':
     main()

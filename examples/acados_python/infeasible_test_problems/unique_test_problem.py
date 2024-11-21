@@ -130,7 +130,6 @@ def solve_unique(setting):
 
     # compare to analytical solution
     exact_solution = np.array([0.0, 1.0])
-    sol_err = max(np.abs(solution.squeeze() - exact_solution))
 
     if ocp.solver_options.nlp_solver_type == 'SQP':
         assert status == 4, "As expected the standard SQP method should not be able to solve the unique problem!"
