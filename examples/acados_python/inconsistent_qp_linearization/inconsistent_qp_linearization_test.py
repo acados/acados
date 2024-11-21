@@ -41,6 +41,9 @@ from itertools import product
 #
 # s.t.  x <= 1
 #       x^2 >= 4
+#
+# Optimal solution is x* = -2, but started from x > 0, SQP solver converges to
+# infeasible point x^ = 1.
 
 
 def main():
