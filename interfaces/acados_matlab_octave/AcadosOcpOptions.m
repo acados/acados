@@ -89,6 +89,12 @@ classdef AcadosOcpOptions < handle
         globalization_use_SOC
         globalization_full_step_dual
         globalization_eps_sufficient_descent
+        globalization_funnel_init_increase_factor
+        globalization_funnel_init_upper_bound
+        globalization_funnel_sufficient_decrease_factor
+        globalization_funnel_kappa
+        globalization_funnel_fraction_switching_condition
+        globalization_funnel_initial_penalty_parameter
         hpipm_mode
         with_solution_sens_wrt_params
         with_value_sens_wrt_params
@@ -174,6 +180,15 @@ classdef AcadosOcpOptions < handle
             obj.globalization_use_SOC = 0;
             obj.globalization_full_step_dual = [];
             obj.globalization_eps_sufficient_descent = [];
+
+            % funnel options
+            obj.globalization_funnel_init_increase_factor = 15;
+            obj.globalization_funnel_init_upper_bound = 1.0;
+            obj.globalization_funnel_sufficient_decrease_factor = 0.9;
+            obj.globalization_funnel_kappa = 0.9;
+            obj.globalization_funnel_fraction_switching_condition = 1e-3;
+            obj.globalization_funnel_initial_penalty_parameter = 1.0;
+
             obj.hpipm_mode = 'BALANCE';
             obj.with_solution_sens_wrt_params = 0;
             obj.with_value_sens_wrt_params = 0;
