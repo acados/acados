@@ -45,11 +45,11 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     p_nominal = 1.0
     x0 = np.array([0.0, np.pi / 2, 0.0, 0.0])
     delta_p = 0.001
-    p_test = np.arange(p_nominal, p_nominal + 0.2, delta_p)
+    p_test = np.arange(p_nominal - 0.5, p_nominal + 0.5, delta_p)
 
     np_test = p_test.shape[0]
-    N_horizon = 10
-    T_horizon = 1.0
+    N_horizon = 50
+    T_horizon = 2.0
     Fmax = 80.0
     with_parametric_constraint = True
     with_nonlinear_constraint = True
