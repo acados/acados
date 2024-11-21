@@ -218,6 +218,18 @@ add_test(NAME py_sqp_wfqp_linear_problem_slack_terminal_constraint
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/linear_mass_model
         python sqp_wfqp_test.py)
 
+add_test(NAME py_sqp_wfqp_inconsistent_linearization
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/inconsistent_qp_linearization
+        python inconsistent_qp_linearization.py)
+
+add_test(NAME py_sqp_wfqp_infeasible_problem_nactive
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/infeasible_test_problems
+        python nactive_test_problem.py)
+
+add_test(NAME py_sqp_wfqp_infeasible_problem_unique
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/infeasible_test_problems
+        python unique_test_problem.py)
+
 # CMake test
 add_test(NAME python_pendulum_ocp_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
