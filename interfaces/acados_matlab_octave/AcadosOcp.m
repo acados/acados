@@ -786,11 +786,6 @@ classdef AcadosOcp < handle
                 end
             end
 
-            % sanity check for Funnel globalization and SQP
-            if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH') strcmp(opts.nlp_solver_type, 'SQP')
-                error('FUNNEL_L1PEN_LINESEARCH only supports SQP.')
-            end
-
             if isa(self.zoro_description, 'ZoroDescription')
                 self.zoro_description.process();
             end
