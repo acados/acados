@@ -85,6 +85,15 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
     u_opt = ocp_solver.solve_for_x0(x0)[0]
     iterate = ocp_solver.store_iterate_to_obj()
 
+    if with_parametric_constraint:
+        lambdas = np.zeros((N_horizon-1, 2))
+        for i in range(1, N_horizon):
+            lam_ = ocp_solver.get(i, "lam")
+            lambdas[i-1] = np.array([lam_[1], lam_[3]])
+        print(f"lambdas of parametric constraints: {lambdas}\n")
+        max_lam = np.max(np.abs(lambdas))
+        print(f"max lambda of parametric constraints: {max_lam:.2f}\n")
+
     sensitivity_solver.load_iterate_from_obj(iterate)
     sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
 
