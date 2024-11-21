@@ -40,18 +40,18 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
     """
     p_nominal = 1.0
     x0 = np.array([0.0, np.pi / 2, 0.0, 0.0])
-    p_test = p_nominal + 0.4
+    p_test = p_nominal + 0.2
 
     nx = len(x0)
     nu = 1
 
-    N_horizon = 50
-    T_horizon = 2.0
+    N_horizon = 10
+    T_horizon = 1.0
     Fmax = 80.0
 
     cost_scale_as_param = True # test with 2 parameters
     with_parametric_constraint = True
-    with_nonlinear_constraint = False
+    with_nonlinear_constraint = True
 
     ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, qp_solver_ric_alg=1, cost_scale_as_param=cost_scale_as_param, with_parametric_constraint=with_parametric_constraint, with_nonlinear_constraint=with_nonlinear_constraint)
     if use_cython:
