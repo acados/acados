@@ -1067,7 +1067,7 @@ class AcadosOcpSolver:
             print("stored current iterate in ", os.path.join(os.getcwd(), filename))
 
 
-    def qp_diagnostics(self, hessian_type: str='FULL_HESSIAN'):
+    def qp_diagnostics(self, hessian_type: str = 'FULL_HESSIAN'):
             """
             Compute some diagnostic values for the last QP.
             result = ocp_solver.qp_diagnostics(hessian_type). Possible values are
@@ -1076,102 +1076,80 @@ class AcadosOcpSolver:
             returns a dictionary with the following fields:
             - min_eigv_stage: dict with minimum eigenvalue for each Hessian block.
             - max_eigv_stage: dict with maximum eigenvalue for each Hessian block.
-            - condition_number: dict with condition number for each Hessian block.
-            - condition_number_total: condition number for the full Hessian.
-            - min_eigv_total: minimum eigenvalue for the full Hessian.
-            - min_abs_eigv_total: minimum absolute eigenvalue for the full Hessian.
-            - max_eigv_total: maximum eigenvalue for the full Hessian.
+            - condition_number_stage: dict with condition number for each Hessian block.
+            - condition_number_global: condition number for the full Hessian.
+            - min_eigv_global: minimum eigenvalue for the full Hessian.
+            - min_abs_eigv_global: minimum absolute eigenvalue for the full Hessian.
+            - max_eigv_global: maximum eigenvalue for the full Hessian.
 
             for the 'PROJECTED_HESSIAN' it also includes
-            - min_eig_P: minimum eigenvalue of P matrices
-            - min_abs_eig_P: minimum absolute eigenvalue of P matrices
+            - min_eigv_P_global: minimum eigenvalue of P matrices
+            - min_abs_eigv_P_global: minimum absolute eigenvalue of P matrices
             """
-            if type(hessian_type) != str:
-                raise TypeError("Input should be string with value FULL_HESSIAN, REDUCED_HESSIAN")
+            if hessian_type not in ['FULL_HESSIAN', 'PROJECTED_HESSIAN']:
+                raise TypeError("Input should be string with value FULL_HESSIAN, PROJECTED_HESSIAN")
+
             qp_diagnostic = {}
             N_horizon = self.N
-            offset = 0
-            min_eigv_total = np.inf
-            max_eigv_total = -np.inf
+
+            min_eigv_global = np.inf
+            max_eigv_global = -np.inf
             min_abs_eigv = np.inf
             max_abs_eigv = -np.inf
-            max_eigv_stage = {}
-            min_eigv_stage = {}
-            condition_number_stage = {}
 
-            if hessian_type == "FULL_HESSIAN":
-                for i in range(N_horizon+1):
-                    hess_block_acados = self.get_hessian_block(i)
-                    nv = hess_block_acados.shape[0]
-                    offset += nv
+            min_eig_P_global = np.inf
+            min_abs_eig_P_global = np.inf
 
-                    eigv = np.linalg.eigvals(hess_block_acados)
-                    min_eigv = np.min(eigv)
-                    max_eigv = np.max(eigv)
+            max_eigv_stage = []
+            min_eigv_stage = []
+            condition_number_stage = []
 
-                    min_eigv_total = min(min_eigv, min_eigv_total)
-                    max_eigv_total = max(max_eigv, max_eigv_total)
-                    min_abs_eigv = min(min_abs_eigv, np.min(np.abs(eigv)))
-                    max_abs_eigv = max(max_abs_eigv, np.max(np.abs(eigv)))
+            for i in range(N_horizon+1):
+                if hessian_type == "FULL_HESSIAN":
+                    hess_block = self.get_hessian_block(i)
 
-                    max_eigv_stage[str(i)] = max_eigv
-                    min_eigv_stage[str(i)] = min_eigv
-                    condition_number_stage[str(i)] = np.max(np.abs(eigv))/np.min(np.abs(eigv))
-
-                condition_number_total = max_abs_eigv/min_abs_eigv
-
-                qp_diagnostic['max_eigv_total'] = max_eigv_total
-                qp_diagnostic['min_eigv_total'] = min_eigv_total
-                qp_diagnostic['min_abs_eigv_total'] = min_abs_eigv
-                qp_diagnostic['condition_number_total'] = condition_number_total
-                qp_diagnostic['max_eigv_stage'] = max_eigv_stage
-                qp_diagnostic['min_eigv_stage'] = min_eigv_stage
-                qp_diagnostic['condition_number_stage'] = condition_number_stage
-
-            elif hessian_type == "PROJECTED_HESSIAN":
-                # check projected Hessian
-                min_eig_proj_hess = np.inf
-                max_eig_proj_hess = -np.inf
-                min_eig_P = np.inf
-                min_abs_eig_P = np.inf
-                for i in range(1, N_horizon):
+                elif hessian_type == "PROJECTED_HESSIAN":
                     P_mat = self.get_from_qp_in(i, 'P')
                     B_mat = self.get_from_qp_in(i-1, 'B')
                     # Lr: lower triangular decomposition of R within Riccati != R in qp_in!
                     Lr = self.get_from_qp_in(i-1, 'Lr')
                     R_ric = Lr @ Lr.T
-                    proj_hess_block = R_ric + B_mat.T @ P_mat @ B_mat
+                    hess_block = R_ric + B_mat.T @ P_mat @ B_mat
 
-                    eigv = np.linalg.eigvals(proj_hess_block)
-                    min_eigv = np.min(eigv)
-                    max_eigv = np.max(eigv)
-
-                    min_eig_proj_hess = min(min_eigv, min_eig_proj_hess)
-                    max_eig_proj_hess = max(max_eigv, max_eig_proj_hess)
-                    min_abs_eigv = min(min_abs_eigv, np.min(np.abs(eigv)))
-                    max_abs_eigv = max(max_abs_eigv, np.max(np.abs(eigv)))
-
-                    max_eigv_stage[str(i)] = max_eigv
-                    min_eigv_stage[str(i)] = min_eigv
-                    condition_number_stage[str(i)] = np.max(np.abs(eigv))/np.min(np.abs(eigv))
                     # P
                     eigv = np.linalg.eigvals(P_mat)
-                    min_eig_P = min(min_eig_P, np.min(eigv))
-                    min_abs_eig_P = min(min_abs_eig_P, np.min(np.abs(eigv)))
-                condition_number_total = max_abs_eigv/min_abs_eigv
+                    min_eig_P_global = min(min_eig_P_global, np.min(eigv))
+                    min_abs_eig_P_global = min(min_abs_eig_P_global, np.min(np.abs(eigv)))
 
-                qp_diagnostic['max_eigv_total'] = max_eig_proj_hess
-                qp_diagnostic['min_eigv_total'] = min_eig_proj_hess
-                qp_diagnostic['min_abs_eigv_total'] = min_abs_eigv
-                qp_diagnostic['condition_number_total'] = condition_number_total
-                qp_diagnostic['max_eigv_stage'] = max_eigv_stage
-                qp_diagnostic['min_eigv_stage'] = min_eigv_stage
-                qp_diagnostic['min_eig_P'] = min_eig_P
-                qp_diagnostic['min_abs_eig_P'] = min_abs_eig_P
-                qp_diagnostic['condition_number_stage'] = condition_number_stage
-            else:
-                raise ValueError("Wrong input given to function! Possible inputs\
-                                 are FULL_HESSIAN, REDUCED_HESSIAN")
+                else:
+                    raise ValueError("Wrong input given to function! Possible inputs are FULL_HESSIAN, PROJECTED_HESSIAN")
+
+                eigv = np.linalg.eigvals(hess_block)
+                min_eigv = np.min(eigv)
+                max_eigv = np.max(eigv)
+
+                min_eigv_global = min(min_eigv, min_eigv_global)
+                max_eigv_global = max(max_eigv, max_eigv_global)
+                min_abs_eigv = min(min_abs_eigv, np.min(np.abs(eigv)))
+                max_abs_eigv = max(max_abs_eigv, np.max(np.abs(eigv)))
+
+                max_eigv_stage.append(max_eigv)
+                min_eigv_stage.append(min_eigv)
+                condition_number_stage.append(np.max(np.abs(eigv))/np.min(np.abs(eigv)))
+
+            condition_number_global = max_abs_eigv/min_abs_eigv
+
+            qp_diagnostic['max_eigv_global'] = max_eigv_global
+            qp_diagnostic['min_eigv_global'] = min_eigv_global
+            qp_diagnostic['min_abs_eigv_global'] = min_abs_eigv
+            qp_diagnostic['condition_number_global'] = condition_number_global
+            qp_diagnostic['max_eigv_stage'] = max_eigv_stage
+            qp_diagnostic['min_eigv_stage'] = min_eigv_stage
+            qp_diagnostic['condition_number_stage'] = condition_number_stage
+
+            if hessian_type == "PROJECTED_HESSIAN":
+                qp_diagnostic['min_eigv_P_global'] = min_eig_P_global
+                qp_diagnostic['min_abs_eigv_P_global'] = min_abs_eig_P_global
 
             return qp_diagnostic
 

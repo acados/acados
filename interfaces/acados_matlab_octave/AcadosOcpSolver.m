@@ -245,9 +245,13 @@ classdef AcadosOcpSolver < handle
             % result = ocp_solver.qp_diagnostics([partially_condensed_qp=false])
 
             % returns a struct with the following fields:
-            % - min_ev: minimum eigenvalue for each Hessian block.
-            % - max_ev: maximum eigenvalue for each Hessian block.
-            % - condition_number: condition number for each Hessian block.
+            % - min_eigv_stage: array with minimum eigenvalue for each Hessian block.
+            % - max_eigv_stage: array with maximum eigenvalue for each Hessian block.
+            % - condition_number_stage: array with condition number for each Hessian block.
+            % - min_eigv_global: minimum eigenvalue for the full Hessian.
+            % - min_abs_eigv_global: minimum absolute eigenvalue for the full Hessian.
+            % - max_eigv_global: maximum eigenvalue for the full Hessian.
+            % - max_abs_eigv_global: maximum absolute eigenvalue for the full Hessian.
             % - condition_number_global: condition number for the full Hessian.
 
             if length(varargin) > 0
@@ -262,9 +266,9 @@ classdef AcadosOcpSolver < handle
                 num_blocks = obj.ocp.dims.N + 1;
             end
             result = struct();
-            result.min_ev = zeros(num_blocks, 1);
-            result.max_ev = zeros(num_blocks, 1);
-            result.condition_number = zeros(num_blocks, 1);
+            result.min_eigv_stage = zeros(num_blocks, 1);
+            result.max_eigv_stage = zeros(num_blocks, 1);
+            result.condition_number_stage = zeros(num_blocks, 1);
             min_abs_val = inf;
             max_abs_val = -inf;
             max_ev = -inf;
@@ -277,19 +281,19 @@ classdef AcadosOcpSolver < handle
                     hess_block = obj.get('hess_block', n-1);
                 end
                 eigvals = eig(hess_block);
-                result.min_ev(n) = min(eigvals);
                 max_ev = max(max_ev, max(eigvals));
                 max_abs_val = max(max_abs_val, max(abs(eigvals)));
                 min_ev = min(min_ev, min(eigvals));
                 min_abs_val = min(min_abs_val, min(abs(eigvals)));
-                result.max_ev(n) = max(eigvals);
-                result.condition_number_blockwise(n) = max(eigvals) / min(eigvals);
+                result.min_eigv_stage(n) = min(eigvals);
+                result.max_eigv_stage(n) = max(eigvals);
+                result.condition_number_stage(n) = max(eigvals) / min(eigvals);
             end
             result.condition_number_global = max_abs_val / min_abs_val;
-            result.max_ev_global = max_ev;
-            result.max_abs_ev_global = max_abs_val;
-            result.min_ev_global = min_ev;
-            result.min_abs_ev_global = min_abs_val;
+            result.max_eigv_global = max_ev;
+            result.max_abs_eigv_global = max_abs_val;
+            result.min_eigv_global = min_ev;
+            result.min_abs_eigv_global = min_abs_val;
         end
 
 
