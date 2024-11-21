@@ -233,14 +233,25 @@ class AcadosOcp:
                 raise Exception("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
-        elif cost.cost_type_0 == 'EXTERNAL':
-            if opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and model.cost_expr_ext_cost_custom_hess_0 is None:
-                print("\nWARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not possible!\n"
-                "got cost_type_0: EXTERNAL, hessian_approx: 'GAUSS_NEWTON.'\n"
-                "GAUSS_NEWTON hessian is not defined for EXTERNAL cost formulation.\n"
-                "If you continue, acados will proceed computing the exact hessian for the cost term.\n"
-                "Note: There is also the option to use the external cost module with a numerical hessian approximation (see `ext_cost_num_hess`).\n"
-                "OR the option to provide a symbolic custom hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n")
+        # GN check
+        gn_warning_0 = (cost.cost_type_0 == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and model.cost_expr_ext_cost_custom_hess_0 is None)
+        gn_warning_path = (cost.cost_type == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and model.cost_expr_ext_cost_custom_hess is None)
+        gn_warning_terminal = (opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and model.cost_expr_ext_cost_custom_hess_e is None)
+        if any([gn_warning_0, gn_warning_path, gn_warning_terminal]):
+            external_cost_types = []
+            if gn_warning_0:
+                external_cost_types.append('cost_type_0')
+            if gn_warning_path:
+                external_cost_types.append('cost_type')
+            if gn_warning_terminal:
+                external_cost_types.append('cost_type_e')
+            print("\nWARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not well defined!\n"
+            f"got cost_type EXTERNAL for {', '.join(external_cost_types)}, hessian_approx: 'GAUSS_NEWTON'.\n"
+            "With this setting, acados will proceed computing the exact hessian for the cost term.\n"
+            "For cost functions that are linear least squares, the solver will correctly use the Gauss-Newton Hessian approximation.\n"
+            "Otherwise, the solver will use the exact Hessian of the cost term and no Hessian contribution from constraints and dynamics.\n"
+            "Note: There is also the option to use the external cost module with a numerical Hessian approximation (see `ext_cost_num_hess`).\n"
+            "OR the option to provide a symbolic custom Hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n")
 
         # path
         if cost.cost_type == 'LINEAR_LS':
@@ -286,15 +297,6 @@ class AcadosOcp:
                 raise Exception("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
-        elif cost.cost_type == 'EXTERNAL':
-            if opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and model.cost_expr_ext_cost_custom_hess is None:
-                print("\nWARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not possible!\n"
-                "got cost_type: EXTERNAL, hessian_approx: 'GAUSS_NEWTON.'\n"
-                "GAUSS_NEWTON hessian is only supported for cost_types [NON]LINEAR_LS.\n"
-                "If you continue, acados will proceed computing the exact hessian for the cost term.\n"
-                "Note: There is also the option to use the external cost module with a numerical hessian approximation (see `ext_cost_num_hess`).\n"
-                "OR the option to provide a symbolic custom hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n")
-
         # terminal
         if cost.cost_type_e == 'LINEAR_LS':
             ny_e = cost.W_e.shape[0]
@@ -332,15 +334,6 @@ class AcadosOcp:
             if not (opts.hessian_approx=='EXACT' and opts.exact_hess_cost==False) and opts.hessian_approx != 'GAUSS_NEWTON':
                 raise Exception("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
-
-        elif cost.cost_type_e == 'EXTERNAL':
-            if opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and model.cost_expr_ext_cost_custom_hess_e is None:
-                print("\nWARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not possible!\n"
-                "got cost_type_e: EXTERNAL, hessian_approx: 'GAUSS_NEWTON.'\n"
-                "GAUSS_NEWTON hessian is only supported for cost_types [NON]LINEAR_LS.\n"
-                "If you continue, acados will proceed computing the exact hessian for the cost term.\n"
-                "Note: There is also the option to use the external cost module with a numerical hessian approximation (see `ext_cost_num_hess`).\n"
-                "OR the option to provide a symbolic custom hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n")
 
         # cost integration
         supports_cost_integration = lambda type : type in ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
