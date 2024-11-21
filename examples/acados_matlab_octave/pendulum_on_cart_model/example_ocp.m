@@ -231,14 +231,14 @@ if (strcmp(sim_method, 'irk_gnsf'))
 end
 
 %% create acados OCP solver
-solver_creation = 'transcribe_explicit'
+solver_creation = 'transcribe_explicit';
 
 if strcmp(solver_creation, 'legacy')
     % legacy interface
     ocp_solver = acados_ocp(ocp_model, ocp_opts);
 elseif strcmp(solver_creation, 'transcribe_explicit')
     % test translation to new OCP formulation object
-    ocp = setup_AcadosOcp_from_legacy_ocp_description(ocp_model, ocp_opts)
+    ocp = setup_AcadosOcp_from_legacy_ocp_description(ocp_model, ocp_opts);
     ocp_solver = AcadosOcpSolver(ocp);
 end
 
