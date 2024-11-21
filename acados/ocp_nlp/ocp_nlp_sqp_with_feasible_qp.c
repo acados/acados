@@ -1859,7 +1859,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         print_debug_output_double("rhs", 1e-3*(-predictor_qp_objective + pred_l1_inf_QP_optimality), nlp_opts->print_level, 2);
         if (-nlp_mem->qp_cost_value +  nlp_mem->predicted_infeasibility_reduction < 1e-3*(-predictor_qp_objective + pred_l1_inf_QP_optimality))
         {
-            printf("Penalty was reduced\n");
+            print_debug_output("Penalty was reduced\n", nlp_opts->print_level, 2);
             if (pred_l1_inf_QP_optimality < 0.0)
             {
                 nlp_mem->objective_multiplier = 1e-1*nlp_mem->objective_multiplier;
@@ -1868,11 +1868,11 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             {
                 nlp_mem->objective_multiplier = 5e-1*nlp_mem->objective_multiplier;
             }
-            printf("obj multiplier = %.4e\n", nlp_mem->objective_multiplier);
+            print_debug_output_double("obj multiplier: ", nlp_mem->objective_multiplier, nlp_opts->print_level, 2);
         }
         else
         {
-            printf("Penalty was NOT reduced\n");
+            print_debug_output("Penalty was NOT reduced\n", nlp_opts->print_level, 2);
         }
     }  // end SQP loop
 
