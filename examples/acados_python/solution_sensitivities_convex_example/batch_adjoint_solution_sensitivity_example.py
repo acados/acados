@@ -51,22 +51,30 @@ def main_sequential(x0, N_sim):
     simX[0,:] = x0
 
     adjoints = []
+    param_vals = []
 
     t0 = time.time()
     for i in range(N_sim):
         solver.reset()
+
+        # vary global parameters
+        param = ocp.p_global_values.copy()
+        param[i % param.shape[0]] += 0.05
+        solver.set_p_global_and_precompute_dependencies(param)
+
         simU[i,:] = solver.solve_for_x0(x0_bar=simX[i, :])
         simX[i+1,:] = solver.get(1, "x")
         sens_adj = solver.eval_adjoint_solution_sensitivity([(1, np.ones((ocp.dims.nx, 1)))], [(1, np.ones((ocp.dims.nu, 1)))])
         adjoints.append(sens_adj)
+        param_vals.append(param)
 
     t_elapsed = 1e3 * (time.time() - t0)
-    print("main_sequential, solve, adjoints and get:", f"{t_elapsed:.3f} ms\n")
+    print("main_sequential, reset, set p_global, solve, adjoints and get:", f"{t_elapsed:.3f} ms\n")
 
-    return simX, simU, adjoints
+    return simX, simU, param_vals, adjoints
 
 
-def main_batch(Xinit, simU, adjoints_ref, tol, num_threads_in_batch_solve=1):
+def main_batch(Xinit, simU, param_vals, adjoints_ref, tol, num_threads_in_batch_solve=1):
 
     N_batch = Xinit.shape[0] - 1
 
@@ -76,10 +84,16 @@ def main_batch(Xinit, simU, adjoints_ref, tol, num_threads_in_batch_solve=1):
 
     batch_solver = AcadosOcpBatchSolver(ocp, N_batch, verbose=False)
 
+    # reset, set bounds and p_global
+    t0 = time.time()
     for n in range(N_batch):
         batch_solver.ocp_solvers[n].constraints_set(0, "lbx", Xinit[n])
         batch_solver.ocp_solvers[n].constraints_set(0, "ubx", Xinit[n])
         batch_solver.ocp_solvers[n].reset()
+        batch_solver.ocp_solvers[n].set_p_global_and_precompute_dependencies(param_vals[n])
+    t_elapsed = 1e3 * (time.time() - t0)
+
+    print(f"main_batch: with {num_threads_in_batch_solve} threads, reset, set x_0 and p_global: {t_elapsed:.3f} ms")
 
     # solve
     t0 = time.time()
@@ -114,8 +128,8 @@ if __name__ == "__main__":
     x0 = np.array([0.1, -0.2])
 
     print("main sequential")
-    simX, simU, adjoints = main_sequential(x0=x0, N_sim=N_batch)
+    simX, simU, param_vals, adjoints = main_sequential(x0=x0, N_sim=N_batch)
 
     print("main batch")
-    main_batch(Xinit=simX, simU=simU, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=1)
-    main_batch(Xinit=simX, simU=simU, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=4)
+    main_batch(Xinit=simX, simU=simU, param_vals=param_vals, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=1)
+    main_batch(Xinit=simX, simU=simU, param_vals=param_vals, adjoints_ref=adjoints, tol=tol, num_threads_in_batch_solve=4)
