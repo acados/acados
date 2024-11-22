@@ -90,9 +90,9 @@ def main_batch(Xinit, simU, adjoints_ref, tol, num_threads_in_batch_solve=1):
 
     for n in range(N_batch):
         u = batch_solver.ocp_solvers[n].get(0, "u")
-
-        if not np.linalg.norm(u-simU[n]) < tol:
-            raise Exception(f"solution should match sequential call up to {tol} got error {np.linalg.norm(u-simU[n])} for {n}th batch solve")
+        diff = np.linalg.norm(u-simU[n])
+        if not diff < tol:
+            raise Exception(f"solution should match sequential call up to {tol} got error {diff} for {n}th batch solve")
 
     # eval adjoint
     t0 = time.time()
@@ -102,14 +102,14 @@ def main_batch(Xinit, simU, adjoints_ref, tol, num_threads_in_batch_solve=1):
     print(f"main_batch: with {num_threads_in_batch_solve} threads, adjoint solution sens: {t_elapsed:.3f} ms\n")
 
     for n in range(N_batch):
-
-        if not np.max(np.abs(sens_adj[n] - adjoints_ref[n])) < tol*10:
-            raise Exception(f"solution should match sequential call up to {tol*10} got error {np.linalg.norm(sens_adj[n] - adjoints_ref[n])} for {n}th batch solve")
+        diff = sens_adj[n] - adjoints_ref[n]
+        if not np.linalg.norm(diff) < tol:
+            raise Exception(f"solution should match sequential call up to {tol} got error {np.linalg.norm(diff)} for {n}th batch solve")
 
 
 if __name__ == "__main__":
 
-    tol = 1e-7
+    tol = 1e-12
     N_batch = 128
     x0 = np.array([0.1, -0.2])
 
