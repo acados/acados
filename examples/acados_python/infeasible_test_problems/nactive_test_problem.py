@@ -110,7 +110,7 @@ def solve_nactive(setting):
     ocp.solver_options.nlp_solver_type = nlp_solver_type
     ocp.solver_options.globalization = 'FUNNEL_L1PEN_LINESEARCH'
     ocp.solver_options.globalization_full_step_dual = True
-    ocp.solver_options.alpha_min = 1e-15
+    ocp.solver_options.globalization_alpha_min = 1e-15
     ocp.solver_options.nlp_solver_max_iter = 1000
     ocp.solver_options.initial_objective_multiplier = 1e0
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')

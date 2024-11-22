@@ -220,7 +220,7 @@ add_test(NAME py_sqp_wfqp_linear_problem_slack_terminal_constraint
 
 add_test(NAME py_sqp_wfqp_inconsistent_linearization
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/inconsistent_qp_linearization
-        python inconsistent_qp_linearization.py)
+        python inconsistent_qp_linearization_test.py)
 
 add_test(NAME py_sqp_wfqp_infeasible_problem_nactive
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/infeasible_test_problems
