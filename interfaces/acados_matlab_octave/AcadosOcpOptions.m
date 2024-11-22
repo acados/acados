@@ -129,7 +129,7 @@ classdef AcadosOcpOptions < handle
             obj.integrator_type = 'ERK';
             obj.tf = [];
             obj.N_horizon = [];
-            obj.nlp_solver_type = 'SQP_RTI';
+            obj.nlp_solver_type = 'SQP';
             obj.globalization_fixed_step_length = 1.0;
             obj.nlp_solver_step_length = [];
             obj.nlp_solver_tol_stat = 1e-6;
