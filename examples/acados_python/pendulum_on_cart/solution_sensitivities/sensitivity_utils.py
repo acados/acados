@@ -237,41 +237,62 @@ def plot_solution_sensitivities_results(p_test, pi, pi_reconstructed_acados, pi_
                  min_eig_full=None, min_eig_proj_hess=None, min_eig_P=None,
                  min_abs_eig_full=None, min_abs_eig_proj_hess=None, min_abs_eig_P=None,
                  eigen_analysis=False, title=None, parameter_name="",
-                 max_lam_parametric_constraint=None, sum_lam_parametric_constraint=None):
+                 max_lam_parametric_constraint=None, sum_lam_parametric_constraint=None,
+                 multipliers_bu=None, multipliers_h=None,
+                 figsize=None,
+                 ):
 
     nsub = 5 if eigen_analysis else 3
-    if max_lam_parametric_constraint is not None:
+
+    with_multiplier_subplot = max_lam_parametric_constraint is not None or sum_lam_parametric_constraint is not None or multipliers_bu is not None or multipliers_h is not None
+    if with_multiplier_subplot:
         nsub += 1
 
-    _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=(9,9))
+    if figsize is None:
+        figsize = (9, 9)
+    _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=figsize)
 
     isub = 0
-    ax[isub].plot(p_test, pi, label='acados', color='k')
-    ax[isub].plot(p_test, pi_reconstructed_acados, "--", label='reconstructed from acados solution sensitivities')
-    ax[isub].plot(p_test, pi_reconstructed_np_grad, "--", label='reconstructed from finite diff')
+    ax[isub].plot(p_test, pi, label='solution acados', color='k')
+    ax[isub].plot(p_test, pi_reconstructed_acados, "--", label='reconstructed from acados solution sens.')
+    ax[isub].plot(p_test, pi_reconstructed_np_grad, "--", label='reconstructed from finite diff.')
     ax[isub].set_ylabel(r"$u$")
     if title is not None:
         ax[isub].set_title(title)
 
     isub += 1
     ax[isub].plot(p_test, sens_u, label="acados")
-    ax[isub].plot(p_test, np_grad, "--", label="finite diff")
+    ax[isub].plot(p_test, np_grad, "--", label="finite diff.")
     ax[isub].set_xlim([p_test[0], p_test[-1]])
     ax[isub].set_ylabel(r"$\partial_p u$")
 
     isub += 1
-    ax[isub].plot(p_test, np.abs(sens_u- np_grad), "--", label='acados - finite diff')
+    ax[isub].plot(p_test, np.abs(sens_u- np_grad), "--", label='acados - finite diff.')
     ax[isub].set_ylabel(r"diff $\partial_p u$")
     ax[isub].set_yscale("log")
 
-    if max_lam_parametric_constraint is not None:
+    if with_multiplier_subplot:
         isub += 1
-        ax[isub].plot(p_test, max_lam_parametric_constraint, label=r'max $\lambda$ parametric constraint')
+        isub_multipliers = isub
+        if max_lam_parametric_constraint is not None:
+            ax[isub].plot(p_test, max_lam_parametric_constraint, label=r'max $\lambda$ parametric constraint')
         # ax[isub].set_ylabel("max lam parametric constraint")
-        ax[isub].set_yscale("log")
+        # ax[isub].set_yscale("log")
         if sum_lam_parametric_constraint is not None:
             ax[isub].plot(p_test, sum_lam_parametric_constraint, label=r'sum $\lambda$ parametric constraint')
 
+        legend_elements = []
+        if multipliers_bu is not None:
+            for lam in multipliers_bu:
+                ax[isub].plot(p_test, lam, linestyle='--', color='C0', alpha=.6)
+            legend_elements += [plt.Line2D([0], [0], color='C0', linestyle='--', label='multipliers control bounds')]
+        if multipliers_h is not None:
+            for lam in multipliers_h:
+                ax[isub].plot(p_test, lam, linestyle='--', color='C1', alpha=.6)
+            legend_elements += [plt.Line2D([0], [0], color='C1', linestyle='--', label='multipliers $h$')]
+        ax[isub].legend(handles=legend_elements, ncol=2)
+        ax[isub].set_ylim([0, 14])
+        ax[isub].set_ylabel("multipliers")
     if eigen_analysis:
         isub += 1
         ax[isub].plot(p_test, np.sign(min_eig_full), linestyle="-", alpha=.6, label='full Hessian')
@@ -286,9 +307,10 @@ def plot_solution_sensitivities_results(p_test, pi, pi_reconstructed_acados, pi_
         ax[isub].set_ylabel("min abs eig")
         ax[isub].set_yscale("log")
 
-    for i in range(isub+1):
-        ax[i].grid()
-        ax[i].legend()
+    for isub in range(nsub):
+        ax[isub].grid()
+        if isub != isub_multipliers:
+            ax[isub].legend()
 
     ax[-1].set_xlabel(f"{parameter_name}")
 

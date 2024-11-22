@@ -93,6 +93,9 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     if with_parametric_constraint:
         max_lam_parametric_constraint = np.zeros(np_test)
         sum_lam_parametric_constraint = np.zeros(np_test)
+        n_lam_total = ocp_solver.get_flat('lam').shape[0]
+        lambda_flat = np.zeros((np_test, n_lam_total))
+
     for i, p in enumerate(p_test):
         p_val = np.array([p])
 
@@ -110,6 +113,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
             # 1, 3 are indices of upper and lower multiplier for the parametric constraints
             max_lam_parametric_constraint[i] = max(max_lam_parametric_constraint[i], lam[1], lam[3])
             sum_lam_parametric_constraint[i] += lam[1] + lam[3]
+            lambda_flat[i, :] = ocp_solver.get_flat('lam')
 
         if eigen_analysis:
             full_hessian_diagnostics = sensitivity_solver.qp_diagnostics("FULL_HESSIAN")
@@ -139,12 +143,37 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     u_opt_reconstructed_acados = np.cumsum(sens_u) * delta_p + u_opt[0]
     u_opt_reconstructed_acados += u_opt[0] - u_opt_reconstructed_acados[0]
 
+    # for multiplier plot
+    multipliers_bu = []
+    multipliers_h = []
+    nbu = ocp.dims.nbu
+    nx = ocp.dims.nx
+    x0_lam_idx = [*range(nbu, nx+nbu)] + [*range(2*nbu+nx, 2*nx+2*nbu)]
+    n_lam_0 = ocp_solver.get(0, "lam").shape[0]
+    bu_lam_idx = [*range(n_lam_0, n_lam_total, 2)]
+    h_lam_idx = [*range(n_lam_0+1, n_lam_total, 2)]
+
+    for i in range(n_lam_total):
+        if np.max(np.abs(lambda_flat[:, i])) > 1e-2 and i not in x0_lam_idx:
+            if i in bu_lam_idx:
+                multipliers_bu += [lambda_flat[:, i]]
+            elif i in h_lam_idx:
+                multipliers_h += [lambda_flat[:, i]]
+            else:
+                print(f"found multiplier with index {i} that is not in x0_lam_idx, bu_lam_idx or h_lam_idx.")
+
+            print(f"Multiplier {i} has non-zero values.")
+    print(f"Multipliers with absolute value > 1e-2: bu {len(multipliers_bu)}, h {len(multipliers_h)}")
+
     plot_solution_sensitivities_results(p_test, u_opt, u_opt_reconstructed_acados, u_opt_reconstructed_fd, sens_u, sens_u_fd,
                  min_eig_full, min_eig_proj_hess, min_eig_P,
                  min_abs_eig_full, min_abs_eig_proj_hess, min_abs_eig_P,
                  eigen_analysis, title=None, parameter_name="mass",
-                 max_lam_parametric_constraint=max_lam_parametric_constraint,
-                 sum_lam_parametric_constraint=sum_lam_parametric_constraint)
+                 multipliers_bu=multipliers_bu, multipliers_h=multipliers_h,
+                 figsize=(7, 9),
+                #  max_lam_parametric_constraint=max_lam_parametric_constraint,
+                #  sum_lam_parametric_constraint=sum_lam_parametric_constraint
+                 )
 
     test_tol = 1e-2
     median_diff = np.median(np.abs(sens_u - sens_u_fd))
@@ -169,4 +198,4 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
 
 
 if __name__ == "__main__":
-    main_parametric(qp_solver_ric_alg=0, eigen_analysis=False, use_cython=False, plot_trajectory=False)
+    main_parametric(qp_solver_ric_alg=0, eigen_analysis=False, use_cython=False, plot_trajectory=True)
