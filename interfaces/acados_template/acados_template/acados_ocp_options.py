@@ -46,7 +46,7 @@ class AcadosOcpOptions:
         self.__integrator_type = 'ERK'
         self.__tf = None
         self.__N_horizon = None
-        self.__nlp_solver_type = 'SQP_RTI'
+        self.__nlp_solver_type = 'SQP'
         self.__nlp_solver_tol_stat = 1e-6
         self.__nlp_solver_tol_eq = 1e-6
         self.__nlp_solver_tol_ineq = 1e-6
