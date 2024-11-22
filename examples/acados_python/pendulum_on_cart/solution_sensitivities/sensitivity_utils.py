@@ -256,7 +256,7 @@ def plot_solution_sensitivities_results(p_test, pi, pi_reconstructed_acados, pi_
     ax[isub].plot(p_test, pi, label='solution acados', color='k')
     ax[isub].plot(p_test, pi_reconstructed_acados, "--", label='reconstructed from acados solution sens.')
     ax[isub].plot(p_test, pi_reconstructed_np_grad, "--", label='reconstructed from finite diff.')
-    ax[isub].set_ylabel(r"$u$")
+    ax[isub].set_ylabel(r"$u_0$")
     if title is not None:
         ax[isub].set_title(title)
 
@@ -264,11 +264,11 @@ def plot_solution_sensitivities_results(p_test, pi, pi_reconstructed_acados, pi_
     ax[isub].plot(p_test, sens_u, label="acados")
     ax[isub].plot(p_test, np_grad, "--", label="finite diff.")
     ax[isub].set_xlim([p_test[0], p_test[-1]])
-    ax[isub].set_ylabel(r"$\partial_p u$")
+    ax[isub].set_ylabel(r"$\partial_\theta u_0$")
 
     isub += 1
     ax[isub].plot(p_test, np.abs(sens_u- np_grad), "--", label='acados - finite diff.')
-    ax[isub].set_ylabel(r"diff $\partial_p u$")
+    ax[isub].set_ylabel(r"difference $\partial_\theta u_0$")
     ax[isub].set_yscale("log")
 
     if with_multiplier_subplot:

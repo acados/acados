@@ -168,7 +168,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     plot_solution_sensitivities_results(p_test, u_opt, u_opt_reconstructed_acados, u_opt_reconstructed_fd, sens_u, sens_u_fd,
                  min_eig_full, min_eig_proj_hess, min_eig_P,
                  min_abs_eig_full, min_abs_eig_proj_hess, min_abs_eig_P,
-                 eigen_analysis, title=None, parameter_name="mass",
+                 eigen_analysis, title=None, parameter_name=r"$\theta$",
                  multipliers_bu=multipliers_bu, multipliers_h=multipliers_h,
                  figsize=(7, 9),
                 #  max_lam_parametric_constraint=max_lam_parametric_constraint,
