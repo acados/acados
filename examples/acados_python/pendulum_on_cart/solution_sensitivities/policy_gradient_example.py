@@ -52,7 +52,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     T_horizon = 2.0
     Fmax = 80.0
     with_parametric_constraint = True
-    with_nonlinear_constraint = True
+    with_nonlinear_constraint = False
 
     ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, qp_solver_ric_alg=1, with_parametric_constraint=with_parametric_constraint, with_nonlinear_constraint=with_nonlinear_constraint)
 
