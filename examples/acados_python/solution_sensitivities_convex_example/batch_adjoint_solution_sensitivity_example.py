@@ -116,9 +116,9 @@ def main_batch(Xinit, simU, param_vals, adjoints_ref, tol, num_threads_in_batch_
     print(f"main_batch: with {num_threads_in_batch_solve} threads, adjoint solution sens: {t_elapsed:.3f} ms\n")
 
     for n in range(N_batch):
-        diff = sens_adj[n] - adjoints_ref[n]
-        if not np.linalg.norm(diff) < tol:
-            raise Exception(f"solution should match sequential call up to {tol} got error {np.linalg.norm(diff)} for {n}th batch solve")
+        diff = np.linalg.norm(sens_adj[n] - adjoints_ref[n])
+        if not diff < tol:
+            raise Exception(f"solution should match sequential call up to {tol} got error {diff} for {n}th batch solve")
 
 
 if __name__ == "__main__":
