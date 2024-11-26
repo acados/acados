@@ -336,6 +336,21 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
     }
 #endif
 
+    /* print HPIPM stats */
+    // int iter; d_ocp_qp_ipm_get_iter(mem->hpipm_workspace, &iter);
+    // double res_stat; d_ocp_qp_ipm_get_max_res_stat(mem->hpipm_workspace, &res_stat);
+    // double res_eq; d_ocp_qp_ipm_get_max_res_eq(mem->hpipm_workspace, &res_eq);
+    // double res_ineq; d_ocp_qp_ipm_get_max_res_ineq(mem->hpipm_workspace, &res_ineq);
+    // double res_comp; d_ocp_qp_ipm_get_max_res_comp(mem->hpipm_workspace, &res_comp);
+    // double *stat; d_ocp_qp_ipm_get_stat(mem->hpipm_workspace, &stat);
+    // int stat_m; d_ocp_qp_ipm_get_stat_m(mem->hpipm_workspace, &stat_m);
+
+    // printf("\nipm residuals max: res_g = %e, res_b = %e, res_d = %e, res_m = %e\n", res_stat, res_eq, res_ineq, res_comp);
+
+    // printf("\nipm iter = %d\n", iter);
+    // printf("\nalpha_aff\tmu_aff\t\tsigma\t\talpha_prim\talpha_dual\tmu\t\tres_stat\tres_eq\t\tres_ineq\tres_comp\tdual_gap\tobj\t\tlq fact\t\titref pred\titref corr\tlin res stat\tlin res eq\tlin res ineq\tlin res comp\n");
+    // d_print_exp_tran_mat(stat_m, iter+1, stat, stat_m);
+
     // check exit conditions
     int acados_status = mem->status;
     if (mem->status == 0) acados_status = ACADOS_SUCCESS;
