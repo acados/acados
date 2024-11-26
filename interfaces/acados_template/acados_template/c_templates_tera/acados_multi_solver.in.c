@@ -2730,6 +2730,14 @@ int {{ name }}_acados_solve({{ name }}_solver_capsule* capsule)
 }
 
 
+int {{ name }}_acados_setup_qp_matrices_and_factorize({{ name }}_solver_capsule* capsule)
+{
+    // solve NLP
+    int solver_status = ocp_nlp_setup_qp_matrices_and_factorize(capsule->nlp_solver, capsule->nlp_in, capsule->nlp_out);
+
+    return solver_status;
+}
+
 
 
 void {{ name }}_acados_print_stats({{ name }}_solver_capsule* capsule)

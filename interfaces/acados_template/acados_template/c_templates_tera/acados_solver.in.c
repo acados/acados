@@ -2766,6 +2766,17 @@ int {{ model.name }}_acados_solve({{ model.name }}_solver_capsule* capsule)
 }
 
 
+
+int {{ model.name }}_acados_setup_qp_matrices_and_factorize({{ model.name }}_solver_capsule* capsule)
+{
+    // solve NLP
+    int solver_status = ocp_nlp_setup_qp_matrices_and_factorize(capsule->nlp_solver, capsule->nlp_in, capsule->nlp_out);
+
+    return solver_status;
+}
+
+
+
 void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** capsules, int N_batch)
 {
 {% if solver_options.num_threads_in_batch_solve > 1 %}

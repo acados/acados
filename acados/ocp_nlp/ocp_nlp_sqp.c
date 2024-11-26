@@ -864,6 +864,28 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     return mem->nlp_mem->status;
 }
 
+int ocp_nlp_sqp_setup_qp_matrices_and_factorize(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
+                void *opts_, void *mem_, void *work_)
+{
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_opts *opts = opts_;
+    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
+    ocp_nlp_sqp_memory *mem = mem_;
+    ocp_nlp_in *nlp_in = nlp_in_;
+    ocp_nlp_out *nlp_out = nlp_out_;
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_nlp_sqp_workspace *work = work_;
+    ocp_nlp_workspace *nlp_work = work->nlp_work;
+
+    ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+    ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+
+    // TODO: factorize
+    printf("ocp_nlp_sqp_setup_qp_matrices_and_factorize: not implemented, exiting\n");
+    exit(1);
+}
+
 
 void ocp_nlp_sqp_eval_kkt_residual(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
@@ -1088,6 +1110,7 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->memory_assign = &ocp_nlp_sqp_memory_assign;
     config->workspace_calculate_size = &ocp_nlp_sqp_workspace_calculate_size;
     config->evaluate = &ocp_nlp_sqp;
+    config->setup_qp_matrices_and_factorize = &ocp_nlp_sqp_setup_qp_matrices_and_factorize;
     config->memory_reset_qp_solver = &ocp_nlp_sqp_memory_reset_qp_solver;
     config->eval_param_sens = &ocp_nlp_sqp_eval_param_sens;
     config->eval_lagr_grad_p = &ocp_nlp_sqp_eval_lagr_grad_p;

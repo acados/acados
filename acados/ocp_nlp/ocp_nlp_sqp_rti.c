@@ -1129,6 +1129,14 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
     return;
 }
 
+int ocp_nlp_sqp_rti_setup_qp_matrices_and_factorize(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
+                void *opts_, void *mem_, void *work_)
+{
+    printf("ocp_nlp_sqp_rti_setup_qp_matrices_and_factorize: not implemented, exiting\n");
+    exit(1);
+}
+
+
 
 int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     void *opts_, void *mem_, void *work_)
@@ -1434,6 +1442,7 @@ void ocp_nlp_sqp_rti_config_initialize_default(void *config_)
     config->memory_assign = &ocp_nlp_sqp_rti_memory_assign;
     config->workspace_calculate_size = &ocp_nlp_sqp_rti_workspace_calculate_size;
     config->evaluate = &ocp_nlp_sqp_rti;
+    config->setup_qp_matrices_and_factorize = &ocp_nlp_sqp_rti_setup_qp_matrices_and_factorize;
     config->memory_reset_qp_solver = &ocp_nlp_sqp_rti_memory_reset_qp_solver;
     config->eval_param_sens = &ocp_nlp_sqp_rti_eval_param_sens;
     config->eval_lagr_grad_p = &ocp_nlp_sqp_rti_eval_lagr_grad_p;

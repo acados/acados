@@ -327,6 +327,9 @@ class AcadosOcpSolver:
         getattr(self.shared_lib, f"{self.name}_acados_solve").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{self.name}_acados_solve").restype = c_int
 
+        getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize").restype = c_int
+
         getattr(self.shared_lib, f"{self.name}_acados_reset").argtypes = [c_void_p, c_int]
         getattr(self.shared_lib, f"{self.name}_acados_reset").restype = c_int
 
@@ -422,6 +425,12 @@ class AcadosOcpSolver:
         self.status = getattr(self.shared_lib, f"{self.name}_acados_solve")(self.capsule)
 
         return self.status
+
+    def setup_qp_matrices_and_factorize(self):
+        """
+        Setup QP and factorize Hessian matrix.
+        """
+        getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize")(self.capsule)
 
 
     def get_dim_flat(self, field: str):

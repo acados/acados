@@ -601,6 +601,14 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
  * functions
  ************************************************/
 
+int ocp_nlp_ddp_setup_qp_matrices_and_factorize(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
+                void *opts_, void *mem_, void *work_)
+{
+    printf("ocp_nlp_ddp_setup_qp_matrices_and_factorize: not implemented, exiting\n");
+    exit(1);
+}
+
+
 // MAIN OPTIMIZATION ROUTINE
 int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
@@ -1133,6 +1141,7 @@ void ocp_nlp_ddp_config_initialize_default(void *config_)
     config->memory_assign = &ocp_nlp_ddp_memory_assign;
     config->workspace_calculate_size = &ocp_nlp_ddp_workspace_calculate_size;
     config->evaluate = &ocp_nlp_ddp;
+    config->setup_qp_matrices_and_factorize = &ocp_nlp_ddp_setup_qp_matrices_and_factorize;
     config->memory_reset_qp_solver = &ocp_nlp_ddp_memory_reset_qp_solver;
     config->eval_param_sens = &ocp_nlp_ddp_eval_param_sens;
     config->eval_lagr_grad_p = &ocp_nlp_ddp_eval_lagr_grad_p;
