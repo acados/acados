@@ -73,12 +73,24 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
     ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, hessian_approx='EXACT', qp_solver_ric_alg=qp_solver_ric_alg, cost_scale_as_param=cost_scale_as_param, with_parametric_constraint=with_parametric_constraint, with_nonlinear_constraint=with_nonlinear_constraint)
     ocp.model.name = 'sensitivity_solver'
     ocp.code_export_directory = f'c_generated_code_{ocp.model.name}'
-    if use_cython:
-        AcadosOcpSolver.generate(ocp, json_file=f"{ocp.model.name}.json")
-        AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
-        sensitivity_solver = AcadosOcpSolver.create_cython_solver(f"{ocp.model.name}.json")
-    else:
+
+    hp_sens_solver = False
+    if hp_sens_solver:
+        original_ocp = ocp_solver.acados_ocp
+        # undo some settings that are not needed for HP sens solver
+        ocp.solver_options.globalization_fixed_step_length = 1.0
+        ocp.solver_options.nlp_solver_max_iter = original_ocp.solver_options.nlp_solver_max_iter
+        ocp.solver_options.tol = original_ocp.solver_options.tol
+        ocp.solver_options.qp_tol = original_ocp.solver_options.tol
+
         sensitivity_solver = AcadosOcpSolver(ocp, json_file=f"{ocp.model.name}.json", generate=generate_solvers, build=generate_solvers)
+    else:
+        if use_cython:
+            AcadosOcpSolver.generate(ocp, json_file=f"{ocp.model.name}.json")
+            AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
+            sensitivity_solver = AcadosOcpSolver.create_cython_solver(f"{ocp.model.name}.json")
+        else:
+            sensitivity_solver = AcadosOcpSolver(ocp, json_file=f"{ocp.model.name}.json", generate=generate_solvers, build=generate_solvers)
 
     # set parameter value
     if cost_scale_as_param:
@@ -87,9 +99,13 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
         p_val = np.array([p_test])
 
     ocp_solver.set_p_global_and_precompute_dependencies(p_val)
+
     sensitivity_solver.set_p_global_and_precompute_dependencies(p_val)
 
     u_opt = ocp_solver.solve_for_x0(x0)[0]
+
+    tau_iter = ocp_solver.get_stats("qp_tau_iter")
+    print(f"qp tau iter: {tau_iter}\n")
     iterate = ocp_solver.store_iterate_to_obj()
 
     if with_parametric_constraint:
@@ -102,7 +118,12 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
         print(f"max lambda of parametric constraints: {max_lam:.2f}\n")
 
     sensitivity_solver.load_iterate_from_obj(iterate)
-    sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
+
+    if hp_sens_solver:
+        sensitivity_solver.setup_qp_matrices_and_factorize()
+
+    else:
+        sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
 
     if sensitivity_solver.get_status() not in [0, 2]:
         breakpoint()
