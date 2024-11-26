@@ -502,40 +502,74 @@ acados_size_t ocp_nlp_sqp_wfqp_workspace_calculate_size(void *config_, void *dim
 Gets the infinity norm of the multipliers which are returned from the QP. 
 This function does not take into account the multiplier values of the slack variables bounds.
 */
-static double get_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims, ocp_qp_out *qp_out, bool was_feasibility_QP)
+static void get_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims, ocp_qp_out *qp_out, ocp_qp_in *qp_in, bool was_feasibility_QP)
 {
+    int i,j;
     int N = dims->N;
     int *nx = dims->nx;
     int *ns = dims->ns;
     double tmp0 = 0.0;
+    double tmp1 = 0.0;
 
-    if (!was_feasibility_QP)
+    mem->norm_pi = 0.0;
+    mem->norm_lam_unslacked_bounds = 0.0;
+    mem->norm_lam_slacked_constraints = 0.0;
+
+    for (i = 0; i < N; i++)
     {
-        for (int i = 0; i < N; i++)
+        for (j=0; j<nx[i+1]; j++)
         {
-            for (int j=0; j<nx[i+1]; j++)
-            {
-                // abs(lambda) (LW)
-                tmp0 = fmax(tmp0, fabs(BLASFEO_DVECEL(qp_out->pi+i, j)));
-            }
+            // abs(lambda) (LW)
+            tmp0 = fmax(tmp0, fabs(BLASFEO_DVECEL(qp_out->pi+i, j)));
         }
     }
-    for (int i = 0; i <= N; i++)
+    mem->norm_pi = tmp0;
+
+    //TODO: not fully correct yet. We would need to distinguish between slacked and unslacked
+    // qp_out->lam = [lbu, ubu, lbx, ubx, lbg, ubg, lbh, ubh, lbs_NLP, lbs_QP, ubs_NLP, ubs_QP]
+    // nlp_out->lam = [lbu, ubu, lbx, ubx, lbg, ubg, lbh, ubh, lbs_NLP, ----, ubs_NLP, ---]
+    tmp0 = 0.0;
+    tmp1 = 0.0;
+    int n_unslacked_bounds, n_nominal_ineq_nlp, two_n_nominal_ineq_nlp;
+    for (i = 0; i <= N; i++)
     {
-        int n_nominal_ineq_nlp = dims->ni[i] - ns[i];
-        int two_n_nominal_ineq_nlp = 2*n_nominal_ineq_nlp;
-        for (int j=0; j<two_n_nominal_ineq_nlp+ns[i]; j++)
+        // printf("i=%d\n", i);
+        // blasfeo_print_dvec(2*(dims->ni[i] - ns[i]) +2*ns[i] +2*mem->nns[i], qp_out->lam+i, 0);
+        if (i == 0)
         {
-            // mu (LW)
+            // we do not slack the initial state conditions!
+            n_unslacked_bounds = 2*qp_in->dim->nbu[i] + 2*qp_in->dim->nbx[i];
+        }
+        else
+        {
+            n_unslacked_bounds = 2*qp_in->dim->nbu[i];
+        }
+
+        // Unslacked bounds multipliers!
+        for (j=0; j<n_unslacked_bounds; j++)
+        {
             tmp0 = fmax(tmp0, BLASFEO_DVECEL(qp_out->lam+i, j));
         }
-        for (int j=0; j<ns[i]; j++)
+
+        // Slacked multipliers (excluding the multipliers of the additional slacks)
+        // we use an offset for the unslacked variables
+        n_nominal_ineq_nlp = dims->ni[i] - ns[i];
+        two_n_nominal_ineq_nlp = 2*n_nominal_ineq_nlp;
+        for (j=n_unslacked_bounds; j<two_n_nominal_ineq_nlp+ns[i]; j++)
         {
             // mu (LW)
-            tmp0 = fmax(tmp0, BLASFEO_DVECEL(qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]+mem->nns[i]+j));
+            tmp1 = fmax(tmp1, BLASFEO_DVECEL(qp_out->lam+i, j));
+        }
+        // the offset is already taken into account int the BLASFEO_DVECEL
+        for (j=0; j<ns[i]; j++)
+        {
+            // mu (LW)
+            tmp1 = fmax(tmp1, BLASFEO_DVECEL(qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]+mem->nns[i]+j));
         }
     }
-    return tmp0;
+    mem->norm_lam_unslacked_bounds = tmp0;
+    mem->norm_lam_slacked_constraints = tmp1;
+    assert(tmp1 <= 1.0 + 1e-8); // Slacked multipliers should be in [0,1]
 }
 
 static void scale_multiplier(ocp_nlp_dims *dims, ocp_nlp_memory* nlp_mem, ocp_qp_out *qp_out)
@@ -1120,7 +1154,6 @@ static double slacked_qp_out_compute_primal_nrm_inf(ocp_qp_out* qp_out, ocp_nlp_
     return res;
 }
 
-
 /*
 calculates new iterate or trial iterate in 'out_destination' with step 'mem->qp_out',
 step size 'alpha', and current iterate 'out_start'.
@@ -1704,8 +1737,10 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
 
-        double multiplier_norm_inf = get_qp_multiplier_norm_inf(mem, dims, nlp_work->tmp_qp_out, true);
-        print_debug_output_double("Feas QP multiplier norm: ", multiplier_norm_inf, nlp_opts->print_level, 2);
+        get_qp_multiplier_norm_inf(mem, dims, nlp_work->tmp_qp_out, qp_in, true);
+        print_debug_output_double("Feas QP multiplier norm: pi", mem->norm_pi, nlp_opts->print_level, 2);
+        print_debug_output_double("Feas QP multiplier norm: lam slacked", mem->norm_lam_slacked_constraints, nlp_opts->print_level, 2);
+        print_debug_output_double("Feas QP multiplier norm: lam unslacked", mem->norm_lam_unslacked_bounds, nlp_opts->print_level, 2);
 
         double current_l1_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
         print_debug_output_double("Current l1 infeasibility: ", current_l1_infeasibility, nlp_opts->print_level, 2);
@@ -1765,8 +1800,10 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // nlp_work->tmp_qp_out = d without cost;
         // nlp_mem->qp_out = d with objective_multiplier
 
-        multiplier_norm_inf = get_qp_multiplier_norm_inf(mem, dims, qp_out, false);
-        print_debug_output_double("Opt QP multiplier norm: ", multiplier_norm_inf, nlp_opts->print_level, 2);
+        get_qp_multiplier_norm_inf(mem, dims, qp_out, qp_in, false);
+        print_debug_output_double("Opt QP multiplier norm: pi", mem->norm_pi, nlp_opts->print_level, 2);
+        print_debug_output_double("Opt QP multiplier norm: lam slacked", mem->norm_lam_slacked_constraints, nlp_opts->print_level, 2);
+        print_debug_output_double("Opt QP multiplier norm: lam unslacked", mem->norm_lam_unslacked_bounds, nlp_opts->print_level, 2);
         // Calculate linearized l1-infeasibility for d_predictor
         // double l1_inf_QP_optimality = get_slacked_qp_l1_infeasibility(dims, mem, nlp_mem->qp_out);
         // print_debug_output_double("linearized l1_inf_opt: ", l1_inf_QP_optimality, nlp_opts->print_level, 2);

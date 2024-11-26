@@ -117,6 +117,9 @@ typedef struct
     struct blasfeo_dmat *RSQ_constr;
 
     // TODO: add slacked qp_solver.
+    double norm_pi;
+    double norm_lam_unslacked_bounds;
+    double norm_lam_slacked_constraints;
 
 } ocp_nlp_sqp_wfqp_memory;
 
