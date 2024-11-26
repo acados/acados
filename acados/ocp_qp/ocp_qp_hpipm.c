@@ -247,6 +247,11 @@ void ocp_qp_hpipm_memory_get(void *config_, void *mem_, const char *field, void*
         int *tmp_ptr = value;
         *tmp_ptr = mem->status;
     }
+    else if (!strcmp(field, "tau_iter"))
+    {
+        double *tmp_ptr = value;
+        d_ocp_qp_ipm_get_tau_iter(mem->hpipm_workspace, tmp_ptr);
+    }
     else
     {
         printf("\nerror: ocp_qp_hpipm_memory_get: field %s not available\n", field);

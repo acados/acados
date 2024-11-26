@@ -3670,6 +3670,11 @@ void ocp_nlp_memory_get(ocp_nlp_config *config, ocp_nlp_memory *nlp_mem, const c
         config->qp_solver->memory_get(config->qp_solver,
             nlp_mem->qp_solver_mem, "status", return_value_);
     }
+    else if (!strcmp("qp_tau_iter", field))
+    {
+        config->qp_solver->memory_get(config->qp_solver,
+            nlp_mem->qp_solver_mem, "tau_iter", return_value_);
+    }
     else if (!strcmp("res_stat", field))
     {
         double *value = return_value_;

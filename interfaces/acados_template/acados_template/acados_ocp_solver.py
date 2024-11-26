@@ -1343,6 +1343,7 @@ class AcadosOcpSolver:
                   'time_reg',
                   'time_preparation',
                   'time_feedback',
+                  'qp_tau_iter',
         ]
         fields = double_fields + [
                   'sqp_iter',
