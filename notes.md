@@ -14,16 +14,22 @@
 - One solver `acados/examples/acados_python/solution_sensitivities_convex_example/batch_adjoint_solution_sensitivity_example.py`
 
 ## TODOs
-- check if HPIPM solve is needed in sens solver.
-  - last
-- getter for `mu_target`
-  - giaf
 - HPIPM hottest start
-  - giaf
-- setter for `tau_min` (`mu0`)
-  - setters are there;
-  - OJ: TODO: set to same value;
+  - giaf: implement HPIPM
+  - python: set this to 3 at creation?
+  - prepare
 
-### Optional
-- just factorize OR for 1 adjoint, already use the correct rhs
-  - OJ: prepare down to C.
+- setter for `tau_min` (`mu0`)
+  - Python: set at runtime TODO!
+
+- just eval_qp_matrices_and_factorize
+  - skelleton is there;
+  - giaf: HPIPM and C
+
+## Part 2:
+- check if HPIPM solve is needed in sens solver.
+
+
+# Done
+- getter for `tau_iter`
+  - giaf: done;
