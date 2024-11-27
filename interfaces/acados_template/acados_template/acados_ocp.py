@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from typing import Optional, Union
+from typing import Optional, Union, Tuple
 import numpy as np
 
 from scipy.linalg import block_diag
@@ -1180,16 +1180,28 @@ class AcadosOcp:
         return
 
 
-    def translate_cost_to_external_cost(self, parametric_yref: bool = False):
+    def translate_cost_to_external_cost(self,
+                                        parametric_yref: bool = False,
+                                        W_0_parametrization: Optional[Tuple[np.ndarray, Union[ca.SX, ca.MX], Union[ca.SX, ca.MX]]] = None,
+                                        W_parametrization: Optional[Tuple[np.ndarray, Union[ca.SX, ca.MX], Union[ca.SX, ca.MX]]] = None,
+                                        W_e_parametrization: Optional[Tuple[np.ndarray, Union[ca.SX, ca.MX], Union[ca.SX, ca.MX]]] = None,
+                                        ):
         """
         Translates cost to EXTERNAL cost.
         parametric_yref: If true, augment with additional parameters for yref_0, yref, yref_e.
+        W_parametrization: Optional tuple (W_params_vals, W_params, W) where W_params is a vector of CasADi symbols and W is a CasADi expression which can depend only on W_params, W_params_vals is a numpy array of the same size a W_params providing the initial values for the parameters.
+            If provided, the weighting matrix in (non)linear least-squares costs will be replaced with the given parametric expression and W_params is appended to model.p.
+        W_0_parametrization: as above but for initial stage
+        W_e_parametrization: as above but for terminal stage
+
+        If parametric_yref is True and parametrizations for the weighting matrices are provided, the resulting parameter in the model is order as follows:
+        model.p = [model.p, yref_0_params, yref_params, yref_params_e, W_0_params, W_params, W_e_params].
         """
-        # make yref a parameter
         yref_0 = self.cost.yref_0
         yref = self.cost.yref
         yref_e = self.cost.yref_e
 
+        # make yref a parameter
         if parametric_yref:
             symbol = self.model.get_casadi_symbol()
             if self.cost.yref_0 is not None:
@@ -1210,15 +1222,56 @@ class AcadosOcp:
                 self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref_e))
                 yref_e = param_yref_e
 
+        # check whether weighting matrices should be parametrized
+        if W_0_parametrization is None:
+            W_0 = self.cost.W_0
+        else:
+            if self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
+                raise Exception("W_0_parametrization can only be provided for (non)linear least-squares cost.")
+
+            (p_vals, W_0_params, W_0) = W_0_parametrization
+
+            if type(W_0_params) is not type(self.model.x):
+                raise Exception(f"Parameters in W_0_parametrization is {type(W_0_params)}, but model is defined using {type(self.model.x)}.")
+            self.model.p = ca.vertcat(self.model.p, W_0_params)
+            self.parameter_values = np.concatenate((self.parameter_values, p_vals))
+
+        if W_parametrization is None:
+            W = self.cost.W
+        else:
+            if self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+                raise Exception("W_parametrization can only be provided for (non)linear least-squares cost.")
+
+            (p_vals, W_params, W) = W_parametrization
+
+            if type(W_params) is not type(self.model.x):
+                raise Exception(f"Parameters in W_parametrization is {type(W_params)}, but model is defined using {type(self.model.x)}.")
+            self.model.p = ca.vertcat(self.model.p, W_params)
+            self.parameter_values = np.concatenate((self.parameter_values, p_vals))
+
+        if W_e_parametrization is None:
+            W_e = self.cost.W_e
+        else:
+            if self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
+                raise Exception("W_e_parametrization can only be provided for (non)linear least-squares cost.")
+
+            (p_vals, W_e_params, W_e) = W_e_parametrization
+
+            if type(W_e_params) is not type(self.model.x):
+                raise Exception(f"Parameters in W_e_parametrization is {type(W_e_params)}, but model is defined using {type(self.model.x)}.")
+            self.model.p = ca.vertcat(self.model.p, W_e_params)
+            self.parameter_values = np.concatenate((self.parameter_values, p_vals))
+
+
         # initial stage
         if self.cost.cost_type_0 == "LINEAR_LS":
             self.model.cost_expr_ext_cost_0 = \
                 self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
                                                           self.cost.Vx_0, self.cost.Vu_0, self.cost.Vz_0,
-                                                          yref_0, self.cost.W_0)
+                                                          yref_0, W_0)
         elif self.cost.cost_type_0 == "NONLINEAR_LS":
             self.model.cost_expr_ext_cost_0 = \
-                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_0, yref_0, self.cost.W_0)
+                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_0, yref_0, W_0)
 
         elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost_0 = \
@@ -1229,10 +1282,10 @@ class AcadosOcp:
             self.model.cost_expr_ext_cost = \
                 self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
                                                           self.cost.Vx, self.cost.Vu, self.cost.Vz,
-                                                          yref, self.cost.W)
+                                                          yref, W)
         elif self.cost.cost_type == "NONLINEAR_LS":
                 self.model.cost_expr_ext_cost = \
-                    self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr, yref, self.cost.W)
+                    self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr, yref, W)
         elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr, self.model.cost_psi_expr,
@@ -1242,10 +1295,10 @@ class AcadosOcp:
             self.model.cost_expr_ext_cost_e = \
                 self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
                                                           self.cost.Vx_e, None, None,
-                                                          yref_e, self.cost.W_e)
+                                                          yref_e, W_e)
         elif self.cost.cost_type_e == "NONLINEAR_LS":
             self.model.cost_expr_ext_cost_e = \
-                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_e, yref_e, self.cost.W_e)
+                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_e, yref_e, W_e)
         elif self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost_e = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_e, self.model.cost_psi_expr_e,
