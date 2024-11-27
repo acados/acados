@@ -846,6 +846,8 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             int globalization_status;
             acados_tic(&timer1);
             globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts, &mem->alpha);
+            nlp_timings->time_glob += acados_toc(&timer1);
+
             if (globalization_status != ACADOS_SUCCESS)
             {
                 if (nlp_opts->print_level > 1)
@@ -857,7 +859,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 nlp_timings->time_tot = acados_toc(&timer0);
                 return mem->nlp_mem->status;
             }
-            nlp_timings->time_glob += acados_toc(&timer1);
         }
     }  // end DDP loop
 
