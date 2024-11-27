@@ -501,6 +501,8 @@ acados_size_t ocp_nlp_sqp_wfqp_workspace_calculate_size(void *config_, void *dim
 /*
 Gets the infinity norm of the multipliers which are returned from the QP. 
 This function does not take into account the multiplier values of the slack variables bounds.
+
+This function assumes that the masked multipliers are always zero.
 */
 static void get_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims, ocp_qp_out *qp_out, ocp_qp_in *qp_in, bool was_feasibility_QP)
 {
@@ -525,46 +527,43 @@ static void get_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dim
     }
     mem->norm_pi = tmp0;
 
-    //TODO: not fully correct yet. We would need to distinguish between slacked and unslacked
-    // qp_out->lam = [lbu, ubu, lbx, ubx, lbg, ubg, lbh, ubh, lbs_NLP, lbs_QP, ubs_NLP, ubs_QP]
-    // nlp_out->lam = [lbu, ubu, lbx, ubx, lbg, ubg, lbh, ubh, lbs_NLP, ----, ubs_NLP, ---]
+    // qp_out->lam = [lbu, lbx, lg, l_nl, ubu, ubx, ug, u_nl, lbs_NLP, lbs_QP, ubs_NLP, ubs_QP]
+    // nlp_out->lam = [lbu, lbx, lg, l_nl, ubu, ubx, ug, u_nl, lbs_NLP, ----, ubs_NLP, ---]
     tmp0 = 0.0;
     tmp1 = 0.0;
     int n_unslacked_bounds, n_nominal_ineq_nlp, two_n_nominal_ineq_nlp;
     for (i = 0; i <= N; i++)
     {
-        // printf("i=%d\n", i);
-        // blasfeo_print_dvec(2*(dims->ni[i] - ns[i]) +2*ns[i] +2*mem->nns[i], qp_out->lam+i, 0);
+        n_nominal_ineq_nlp = dims->nb[i]+dims->ng[i]+dims->ni_nl[i];
+        printf("i=%d\n", i);
+        blasfeo_print_dvec(2*n_nominal_ineq_nlp +2*ns[i] +2*mem->nns[i], qp_out->lam+i, 0);
         if (i == 0)
         {
             // we do not slack the initial state conditions!
-            n_unslacked_bounds = 2*qp_in->dim->nbu[i] + 2*qp_in->dim->nbx[i];
+            n_unslacked_bounds = qp_in->dim->nbu[i] + qp_in->dim->nbx[i];
         }
         else
         {
-            n_unslacked_bounds = 2*qp_in->dim->nbu[i];
+            n_unslacked_bounds = qp_in->dim->nbu[i];
         }
 
         // Unslacked bounds multipliers!
         for (j=0; j<n_unslacked_bounds; j++)
         {
             tmp0 = fmax(tmp0, BLASFEO_DVECEL(qp_out->lam+i, j));
+            tmp0 = fmax(tmp0, BLASFEO_DVECEL(qp_out->lam+i, n_nominal_ineq_nlp+j));
         }
 
         // Slacked multipliers (excluding the multipliers of the additional slacks)
         // we use an offset for the unslacked variables
-        n_nominal_ineq_nlp = dims->ni[i] - ns[i];
         two_n_nominal_ineq_nlp = 2*n_nominal_ineq_nlp;
-        for (j=n_unslacked_bounds; j<two_n_nominal_ineq_nlp+ns[i]; j++)
+        // for (j=n_unslacked_bounds; j<two_n_nominal_ineq_nlp+ns[i]; j++)
+        for (j=n_unslacked_bounds; j<n_nominal_ineq_nlp; j++)
         {
-            // mu (LW)
+            // lower bounds
             tmp1 = fmax(tmp1, BLASFEO_DVECEL(qp_out->lam+i, j));
-        }
-        // the offset is already taken into account int the BLASFEO_DVECEL
-        for (j=0; j<ns[i]; j++)
-        {
-            // mu (LW)
-            tmp1 = fmax(tmp1, BLASFEO_DVECEL(qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]+mem->nns[i]+j));
+            // upper bounds
+            tmp1 = fmax(tmp1, BLASFEO_DVECEL(qp_out->lam+i, j+n_nominal_ineq_nlp));
         }
     }
     mem->norm_lam_unslacked_bounds = tmp0;
@@ -584,7 +583,7 @@ static void scale_multiplier(ocp_nlp_dims *dims, ocp_nlp_memory* nlp_mem, ocp_qp
     }
     for (int i = 0; i <= N; i++)
     {
-        int n_nominal_ineq_nlp = dims->ni[i] - ns[i];
+        int n_nominal_ineq_nlp = dims->nb[i]+dims->ng[i]+dims->ni_nl[i];
         int two_n_nominal_ineq_nlp = 2*n_nominal_ineq_nlp;
         blasfeo_dvecsc(two_n_nominal_ineq_nlp+ns[i], 1.0/nlp_mem->objective_multiplier, qp_out->lam+i, 0);
         blasfeo_dvecsc(ns[i], 1.0/nlp_mem->objective_multiplier, qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]);
@@ -1197,10 +1196,10 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
                       out_destination->ux + i, nx[i]+nu[i]+ns[i]);
 
         // update dual variables
-        n_nominal_ineq_nlp = dims->ni[i] - ns[i];
+        n_nominal_ineq_nlp = dims->nb[i]+dims->ng[i]+dims->ni_nl[i];
         two_n_nominal_ineq_nlp = 2*n_nominal_ineq_nlp;
-        // qp_out->lam = [lbu, ubu, lbx, ubx, lbg, ubg, lbh, ubh, lbs_NLP, lbs_QP, ubs_NLP, ubs_QP]
-        // nlp_out->lam = [lbu, ubu, lbx, ubx, lbg, ubg, lbh, ubh, lbs_NLP, ----, ubs_NLP, ---]
+        // qp_out->lam = [lbu, lbx, lg, l_nl, ubu, ubx, ug, u_nl, lbs_NLP, lbs_QP, ubs_NLP, ubs_QP]
+        // nlp_out->lam = [lbu, lbx, lg, l_nl, ubu, ubx, ug, u_nl, lbs_NLP, ----, ubs_NLP, ---]
         if (full_step_dual)
         {
             blasfeo_dveccp(two_n_nominal_ineq_nlp+ns[i], qp_out->lam+i, 0, out_destination->lam+i, 0);
