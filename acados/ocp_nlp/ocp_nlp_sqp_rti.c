@@ -646,7 +646,10 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
 
     // Update variables
     double step_size;
+    acados_tic(&timer1);
     globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts, &step_size);
+    timings->time_glob += acados_toc(&timer1);
+
     if (globalization_status != ACADOS_SUCCESS)
     {
         if (nlp_opts->print_level > 1)
