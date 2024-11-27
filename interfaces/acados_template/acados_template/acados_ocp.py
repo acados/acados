@@ -1185,6 +1185,7 @@ class AcadosOcp:
                                         W_0_parametrization: Optional[Tuple[np.ndarray, Union[ca.SX, ca.MX], Union[ca.SX, ca.MX]]] = None,
                                         W_parametrization: Optional[Tuple[np.ndarray, Union[ca.SX, ca.MX], Union[ca.SX, ca.MX]]] = None,
                                         W_e_parametrization: Optional[Tuple[np.ndarray, Union[ca.SX, ca.MX], Union[ca.SX, ca.MX]]] = None,
+                                        as_p_global: bool = False,
                                         ):
         """
         Translates cost to EXTERNAL cost.
@@ -1193,6 +1194,7 @@ class AcadosOcp:
             If provided, the weighting matrix in (non)linear least-squares costs will be replaced with the given parametric expression and W_params is appended to model.p.
         W_0_parametrization: as above but for initial stage
         W_e_parametrization: as above but for terminal stage
+        as_p_global: If True, the additional parameters are added to model.p_global, otherwise they are added to model.p, default: False.
 
         If parametric_yref is True and parametrizations for the weighting matrices are provided, the resulting parameter in the model is order as follows:
         model.p = [model.p, yref_0_params, yref_params, yref_params_e, W_0_params, W_params, W_e_params].
@@ -1206,21 +1208,36 @@ class AcadosOcp:
             symbol = self.model.get_casadi_symbol()
             if self.cost.yref_0 is not None:
                 param_yref_0 = symbol('param_yref_0', len(self.cost.yref_0))
-                self.model.p = ca.vertcat(self.model.p, param_yref_0)
-                self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref_0))
                 yref_0 = param_yref_0
+
+                if as_p_global:
+                    self.model.p_global = ca.vertcat(self.model.p_global, param_yref_0)
+                    self.p_global_values = np.concatenate((self.p_global_values, self.cost.yref_0))
+                else:
+                    self.model.p = ca.vertcat(self.model.p, param_yref_0)
+                    self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref_0))
 
             if self.cost.yref is not None:
                 param_yref = symbol('param_yref', len(self.cost.yref))
-                self.model.p = ca.vertcat(self.model.p, param_yref)
-                self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref))
                 yref = param_yref
+
+                if as_p_global:
+                    self.model.p_global = ca.vertcat(self.model.p, param_yref)
+                    self.p_global_values = np.concatenate((self.p_global_values, self.cost.yref))
+                else:
+                    self.model.p = ca.vertcat(self.model.p, param_yref)
+                    self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref))
 
             if self.cost.yref_e is not None:
                 param_yref_e = symbol('param_yref_e', len(self.cost.yref_e))
-                self.model.p = ca.vertcat(self.model.p, param_yref_e)
-                self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref_e))
                 yref_e = param_yref_e
+
+                if as_p_global:
+                    self.model.p_global = ca.vertcat(self.model.p_global, param_yref_e)
+                    self.p_global_values = np.concatenate((self.p_global_values, self.cost.yref_e))
+                else:
+                    self.model.p = ca.vertcat(self.model.p, param_yref_e)
+                    self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref_e))
 
         # check whether weighting matrices should be parametrized
         if W_0_parametrization is None:
@@ -1233,8 +1250,13 @@ class AcadosOcp:
 
             if type(W_0_params) is not type(self.model.x):
                 raise Exception(f"Parameters in W_0_parametrization is {type(W_0_params)}, but model is defined using {type(self.model.x)}.")
-            self.model.p = ca.vertcat(self.model.p, W_0_params)
-            self.parameter_values = np.concatenate((self.parameter_values, p_vals))
+
+            if as_p_global:
+                self.model.p_global = ca.vertcat(self.model.p_global, W_0_params)
+                self.p_global_values = np.concatenate((self.p_global_values, p_vals))
+            else:
+                self.model.p = ca.vertcat(self.model.p, W_0_params)
+                self.parameter_values = np.concatenate((self.parameter_values, p_vals))
 
         if W_parametrization is None:
             W = self.cost.W
@@ -1246,8 +1268,13 @@ class AcadosOcp:
 
             if type(W_params) is not type(self.model.x):
                 raise Exception(f"Parameters in W_parametrization is {type(W_params)}, but model is defined using {type(self.model.x)}.")
-            self.model.p = ca.vertcat(self.model.p, W_params)
-            self.parameter_values = np.concatenate((self.parameter_values, p_vals))
+
+            if as_p_global:
+                self.model.p_global = ca.vertcat(self.model.p_global, W_params)
+                self.p_global_values = np.concatenate((self.p_global_values, p_vals))
+            else:
+                self.model.p = ca.vertcat(self.model.p, W_params)
+                self.parameter_values = np.concatenate((self.parameter_values, p_vals))
 
         if W_e_parametrization is None:
             W_e = self.cost.W_e
@@ -1259,8 +1286,12 @@ class AcadosOcp:
 
             if type(W_e_params) is not type(self.model.x):
                 raise Exception(f"Parameters in W_e_parametrization is {type(W_e_params)}, but model is defined using {type(self.model.x)}.")
-            self.model.p = ca.vertcat(self.model.p, W_e_params)
-            self.parameter_values = np.concatenate((self.parameter_values, p_vals))
+            if as_p_global:
+                self.model.p_global = ca.vertcat(self.model.p_global, W_e_params)
+                self.p_global_values = np.concatenate((self.p_global_values, p_vals))
+            else:
+                self.model.p = ca.vertcat(self.model.p, W_e_params)
+                self.parameter_values = np.concatenate((self.parameter_values, p_vals))
 
 
         # initial stage
