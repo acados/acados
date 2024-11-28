@@ -889,7 +889,7 @@ class AcadosOcpSolver:
 
         out_fields = ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su']
         in_fields = ['p']
-        sens_fields = ['sens_u', 'sens_x']
+        sens_fields = ['sens_u', 'sens_x', 'sens_pi', 'sens_lam', 'sens_sl', 'sens_su']
         all_fields = out_fields + in_fields + sens_fields
 
         if (field_ not in all_fields):
