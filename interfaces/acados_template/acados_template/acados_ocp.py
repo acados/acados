@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from typing import Optional, Union, Tuple
+from typing import Optional, Union
 import numpy as np
 
 from scipy.linalg import block_diag
