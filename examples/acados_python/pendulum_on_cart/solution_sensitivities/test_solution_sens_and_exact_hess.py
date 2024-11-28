@@ -253,7 +253,8 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
         acados_ocp_solver_exact.set(0, 'u', u0+1e-7)
         acados_ocp_solver_exact.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
 
-        sens_x_, sens_u_ = acados_ocp_solver_exact.eval_solution_sensitivity(0, with_respect_to="initial_state")
+        out_dict = acados_ocp_solver_exact.eval_solution_sensitivity(0, with_respect_to="initial_state", return_sens_x=False)
+        sens_u_ = out_dict['sens_u']
         du0_dp_values[i] = sens_u_[0, idxp]
 
         exact_hessian_status[i] = acados_ocp_solver_exact.get_stats('qp_stat')[-1]
