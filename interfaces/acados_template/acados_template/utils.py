@@ -519,3 +519,18 @@ def verbose_system_call(cmd, verbose=True, shell=False):
         stderr=None if verbose else STDOUT,
         shell=shell
     )
+
+def array_to_float(arr):
+    """
+    Reduces a 1x1 or 0x0 numpy array to a float.
+    If the array is empty, returns None.
+
+    :param arr: numpy array to be reduced
+    :return: float value if 1x1, None if empty
+    """
+    if arr.size == 0:
+        return None  # Handle empty array
+    elif arr.size == 1:
+        return float(arr)  # Convert single-element array to float
+    else:
+        raise ValueError("Input array is neither 1x1 nor 0x0.")
