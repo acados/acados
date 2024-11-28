@@ -181,7 +181,7 @@ class AcadosCostConstraintEvaluator:
         # evaluate cost of soft constraints
         lower_slack_cost = 0.5 * self.ocp.cost.Zl @ (lower_slack * lower_slack) + self.ocp.cost.zl @ lower_slack
         upper_slack_cost = 0.5 * self.ocp.cost.Zu @ (upper_slack * upper_slack) + self.ocp.cost.zu @ upper_slack
-        slack_cost = (lower_slack_cost + upper_slack_cost).full()
+        slack_cost = (lower_slack_cost + upper_slack_cost).full() * dt
         if len(slack_cost)==0:
             cost = cost_without_slacks
         else:

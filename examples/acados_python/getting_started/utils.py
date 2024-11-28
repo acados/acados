@@ -27,6 +27,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.;
 #
+from typing import Dict
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -66,6 +67,62 @@ def plot_pendulum(t, u_max, U, X_true, latexify=False, plt_show=True, time_label
 
     axes[-1].hlines(u_max, t[0], t[-1], linestyles='dashed', alpha=0.7)
     axes[-1].hlines(-u_max, t[0], t[-1], linestyles='dashed', alpha=0.7)
+    axes[-1].set_ylim([-1.2*u_max, 1.2*u_max])
+    axes[-1].set_xlim(t[0], t[-1])
+    axes[-1].set_xlabel(time_label)
+    axes[-1].grid()
+
+    plt.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace=0.4)
+
+    fig.align_ylabels()
+
+    if plt_show:
+        plt.show()
+
+
+def plot_pendulum_eval(t, u_max, U, X_true, eval:Dict,latexify=False, plt_show=True, time_label='$t$', x_labels=None, u_labels=None):
+    """
+    Params:
+        t: time values of the discretization
+        u_max: maximum absolute value of u
+        U: arrray with shape (N_sim-1, nu) or (N_sim, nu)
+        X_true: arrray with shape (N_sim, nx)
+        eval: evaluation dictionary
+        latexify: latex style plots
+    """
+
+    if latexify:
+        latexify_plot()
+
+    nx = X_true.shape[1]
+    fig, axes = plt.subplots(nx+2, 1, sharex=True)
+
+    for i in range(nx):
+        axes[i].plot(t, X_true[:, i])
+        axes[i].grid()
+        if x_labels is not None:
+            axes[i].set_ylabel(x_labels[i])
+        else:
+            axes[i].set_ylabel(f'$x_{i}$')
+
+    axes[2].hlines(5, t[0], t[-1], linestyles='dashed', alpha=0.7, color='tab:red')
+    axes[2].hlines(-5, t[0], t[-1], linestyles='dashed', alpha=0.7, color = 'tab:red')
+
+    axes[-2].plot(t[:-1], eval['cost_without_slacks'], label='cost w/o slacks')
+    axes[-2].plot(t[:-1], eval['cost'], label='cost with slacks')
+    axes[-2].grid()
+    axes[-2].legend()
+    axes[-2].set_ylabel('cost')
+
+    axes[-1].step(t, np.append([U[0]], U))
+
+    if u_labels is not None:
+        axes[-1].set_ylabel(u_labels[0])
+    else:
+        axes[-1].set_ylabel('$u$')
+
+    axes[-1].hlines(u_max, t[0], t[-1], linestyles='dashed', alpha=0.7, color='tab:red')
+    axes[-1].hlines(-u_max, t[0], t[-1], linestyles='dashed', alpha=0.7, color='tab:red')
     axes[-1].set_ylim([-1.2*u_max, 1.2*u_max])
     axes[-1].set_xlim(t[0], t[-1])
     axes[-1].set_xlabel(time_label)

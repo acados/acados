@@ -32,7 +32,7 @@
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
 from acados_template.mpc_utils import AcadosCostConstraintEvaluator
 from pendulum_model import export_pendulum_ode_model
-from utils import plot_pendulum
+from utils import plot_pendulum_eval
 import numpy as np
 import scipy.linalg
 from casadi import vertcat
@@ -77,8 +77,8 @@ def setup(x0, Fmax, N_horizon, Tf, RTI=False):
     ocp.constraints.lsbx = np.zeros((1,))
     ocp.constraints.usbx = np.zeros((1,))
 
-    ocp.cost.zl = 0 * np.ones((1,))
-    ocp.cost.Zl = 2e3 * np.ones((1,))
+    ocp.cost.zl = 1e3 * np.ones((1,))
+    ocp.cost.Zl = 1e3 * np.ones((1,))
     ocp.cost.zu = ocp.cost.zl
     ocp.cost.Zu = ocp.cost.Zl
 
@@ -206,7 +206,7 @@ def main(use_RTI=False):
 
     # plot results
     model = ocp_solver.acados_ocp.model
-    plot_pendulum(
+    plot_pendulum_eval(
         np.linspace(0, (Tf / N_horizon) * Nsim, Nsim + 1),
         Fmax,
         simU,
