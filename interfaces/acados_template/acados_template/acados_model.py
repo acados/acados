@@ -336,7 +336,7 @@ class AcadosModel():
             dims.np_global = 0
             self.p_global = casadi_symbol('p_global', 0, 1)
         else:
-            dims.np = casadi_length(self.p)
+            dims.np_global = casadi_length(self.p_global)
 
         # sanity checks
         for symbol, name in [(self.x, 'x'), (self.xdot, 'xdot'), (self.u, 'u'), (self.z, 'z'), (self.p, 'p'), (self.p_global, 'p_global')]:
