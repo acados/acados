@@ -415,7 +415,7 @@ class AcadosOcpSolver:
         return u0
 
 
-    def solve(self):
+    def solve(self) -> int:
         """
         Solve the ocp with current input.
         """
@@ -580,8 +580,8 @@ class AcadosOcpSolver:
             lbu = self.get_from_qp_in(0, 'lbu')
             ubu = self.get_from_qp_in(0, 'ubu')
 
-            if not (nbu == nu and lbu == ubu):
-                raise Exception("OCP does not have an initial control constraint.")
+            if not (nbu == nu and np.all(lbu == ubu) and self.acados_ocp.dims.nsbu == 0):
+                raise Exception("OCP does not have an equality constraint on the initial control.")
 
             lam = self.get(0, 'lam')
             nlam_non_slack = lam.shape[0]//2 - ns
