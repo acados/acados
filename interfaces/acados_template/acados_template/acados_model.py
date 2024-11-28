@@ -299,10 +299,16 @@ class AcadosModel():
         casadi_symbol = self.get_casadi_symbol()
 
         # nx
-        if is_column(self.x):
-            dims.nx = casadi_length(self.x)
+        if is_empty(self.x):
+            raise Exception("model.x must be defined")
         else:
-            raise Exception('model.x should be column vector!')
+            dims.nx = casadi_length(self.x)
+
+        if is_empty(self.xdot):
+            self.xdot = casadi_symbol('xdot', dims.nx, 1)
+        else:
+            if casadi_length(self.xdot) != dims.nx:
+                raise Exception(f"model.xdot must have length nx = {dims.nx}, got {casadi_length(self.xdot)}")
 
         # nu
         if is_empty(self.u):
@@ -311,46 +317,52 @@ class AcadosModel():
         else:
             dims.nu = casadi_length(self.u)
 
-        # np
-        if is_empty(self.p):
-            dims.np = 0
-            self.p = casadi_symbol('p', 0, 0)
-        else:
-            dims.np = casadi_length(self.p)
-
         # nz
         if is_empty(self.z):
             dims.nz = 0
-            self.z = casadi_symbol('z', 0, 0)
+            self.z = casadi_symbol('z', 0, 1)
         else:
             dims.nz = casadi_length(self.z)
 
+        # np
+        if is_empty(self.p):
+            dims.np = 0
+            self.p = casadi_symbol('p', 0, 1)
+        else:
+            dims.np = casadi_length(self.p)
+
+        # np_global
+        if is_empty(self.p_global):
+            dims.np_global = 0
+            self.p_global = casadi_symbol('p_global', 0, 1)
+        else:
+            dims.np = casadi_length(self.p)
+
         # sanity checks
         for symbol, name in [(self.x, 'x'), (self.xdot, 'xdot'), (self.u, 'u'), (self.z, 'z'), (self.p, 'p'), (self.p_global, 'p_global')]:
-            if symbol is not None and not symbol.is_valid_input():
+            if not isinstance(symbol, (ca.MX, ca.SX)):
+                raise Exception(f"model.{name} must be casadi.MX, casadi.SX got {type(symbol)}")
+            if not symbol.is_valid_input():
                 raise Exception(f"model.{name} must be valid CasADi symbol, got {symbol}")
 
         # p_global
-        if self.p_global is not None:
+        if not is_empty(self.p_global):
             if isinstance(dims, AcadosSimDims):
                 raise Exception("model.p_global is only supported for OCPs")
             if any(ca.which_depends(self.p_global, self.p)):
                 raise Exception(f"model.p_global must not depend on model.p, got p_global ={self.p_global}, p = {self.p}")
-            if not isinstance(self.p_global, (ca.MX, ca.SX)):
-                raise Exception(f"model.p_global must be casadi.MX, casadi.SX got {type(self.p_global)}")
-            dims.np_global = casadi_length(self.p_global)
 
         # model output dimension nx_next: dimension of the next state
         if isinstance(dims, AcadosOcpDims):
-            if self.disc_dyn_expr is not None:
+            if not is_empty(self.disc_dyn_expr):
                 dims.nx_next = casadi_length(self.disc_dyn_expr)
             else:
                 dims.nx_next = casadi_length(self.x)
 
-        if self.f_impl_expr is not None:
+        if not is_empty(self.f_impl_expr):
             if casadi_length(self.f_impl_expr) != (dims.nx + dims.nz):
                 raise Exception(f"model.f_impl_expr must have length nx + nz = {dims.nx} + {dims.nz}, got {casadi_length(self.f_impl_expr)}")
-        if self.f_expl_expr is not None:
+        if not is_empty(self.f_expl_expr):
             if casadi_length(self.f_expl_expr) != dims.nx:
                 raise Exception(f"model.f_expl_expr must have length nx = {dims.nx}, got {casadi_length(self.f_expl_expr)}")
 

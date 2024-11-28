@@ -54,7 +54,7 @@ def is_casadi_SX(x):
 class GenerateContext:
     def __init__(self, p_global: Optional[Union[ca.SX, ca.MX]], problem_name: str, opts=None):
         self.p_global = p_global
-        if p_global is not None:
+        if not is_empty(p_global):
             check_casadi_version_supports_p_global()
 
         self.problem_name = problem_name
@@ -167,7 +167,7 @@ class GenerateContext:
         assert casadi_length(self.global_data_expr) == casadi_length(self.global_data_sym), f"Length mismatch: {casadi_length(self.global_data_expr)} != {casadi_length(self.global_data_sym)}"
 
     def finalize(self):
-        if self.p_global is not None:
+        if not is_empty(self.p_global):
             self.__setup_p_global_precompute_fun()
 
         self.__generate_functions()
