@@ -76,9 +76,13 @@ def find_non_default_fields_of_obj(obj: Union[AcadosOcpCost, AcadosOcpConstraint
     for field in all_fields:
         val = getattr(obj, field)
         default_val = getattr(dummy_obj, field)
-        if isinstance(val, np.ndarray):
+        if not isinstance(val, type(default_val)):
+            nondefault_fields.append(field)
+
+        elif isinstance(val, np.ndarray):
             if not np.array_equal(val, default_val):
                 nondefault_fields.append(field)
+
         elif val != default_val:
             nondefault_fields.append(field)
 
