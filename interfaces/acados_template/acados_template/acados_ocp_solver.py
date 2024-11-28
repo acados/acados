@@ -44,7 +44,7 @@ if os.name == 'nt':
 else:
     from ctypes import CDLL as DllLoader
 from datetime import datetime
-from typing import Union, Optional, List, Tuple, Sequence
+from typing import Union, Optional, List, Tuple, Sequence, Dict
 
 import numpy as np
 import scipy.linalg
@@ -630,17 +630,32 @@ class AcadosOcpSolver:
             raise Exception("Parametric sensitivities are only available if with_solution_sens_wrt_params is set to True.")
 
 
-    def eval_solution_sensitivity(self, stages: Union[int, List[int]], with_respect_to: str) \
-                -> Tuple[Union[List[np.ndarray], np.ndarray], Union[List[np.ndarray], np.ndarray]]:
+    def eval_solution_sensitivity(self,
+                                  stages: Union[int, List[int]],
+                                  with_respect_to: str,
+                                  return_sens_x: bool = True,
+                                  return_sens_u: bool = True,
+                                  return_sens_pi: bool = False,
+                                  return_sens_lam: bool = False,
+                                  return_sens_su: bool = False,
+                                  return_sens_sl: bool = False,
+                                  ) \
+                -> Dict:
         """
         Evaluate the sensitivity of the current solution x_i, u_i with respect to the initial state or the parameters for all stages i in `stages`.
 
             :param stages: stages for which the sensitivities are returned, int or list of int
             :param with_respect_to: string in ["initial_state", "p_global"]
-            :returns: a tuple (sens_x, sens_u) with the solution sensitivities.
-                    If stages is a list, sens_x is a list of the same length.
-                    For sens_u, the list has length len(stages) or len(stages)-1 depending on whether N is included or not.
-                    If stages is a scalar, sens_x and sens_u are np.ndarrays of shape (nx[stages], ngrad) and (nu[stages], ngrad).
+            :param return_sens_x: Flag indicating whether sensitivities of x should be returned. Default: True.
+            :param return_sens_u: Flag indicating whether sensitivities of u should be returned. Default: True.
+            :param return_sens_pi: Flag indicating whether sensitivities of pi should be returned. Default: False.
+            :param return_sens_lam: Flag indicating whether sensitivities of lam should be returned. Default: False.
+            :param return_sens_su: Flag indicating whether sensitivities of su should be returned. Default: False.
+            :param return_sens_sl: Flag indicating whether sensitivities of sl should be returned. Default: False.
+            :returns: A dictionary with the solution sensitivities with fields sens_x, sens_u, sens_pi, sens_lam, sens_su, sens_sl if corresponding flags were set.
+                    If stages is a list, sens_x, sens_lam, sens_su, sens_sl is a list of the same length.
+                    For sens_u, sens_pi, the list has length len(stages) or len(stages)-1 depending on whether N is included or not.
+                    If stages is a scalar, the returned sensitivities are np.ndarrays of shape (nfield[stages], ngrad).
 
         .. note::  Correct computation of sensitivities requires \n
 
@@ -667,6 +682,10 @@ class AcadosOcpSolver:
 
         sens_x = []
         sens_u = []
+        sens_pi = []
+        sens_lam = []
+        sens_sl = []
+        sens_su = []
 
         N = self.acados_ocp.solver_options.N_horizon
 
@@ -680,13 +699,11 @@ class AcadosOcpSolver:
             field = "ex"
             self._sanity_check_solution_sensitivities(parametric=False)
 
-
         elif with_respect_to == "p_global":
             np_global = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p_global".encode('utf-8'))
             ngrad = np_global
             field = "p_global"
             self._sanity_check_solution_sensitivities()
-
 
             # compute jacobians wrt params in all modules
             t0 = time.time()
@@ -698,14 +715,31 @@ class AcadosOcpSolver:
 
         # initialize jacobians with zeros
         for s in stages_:
-            nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "x".encode('utf-8'))
 
-            sens_x.append(np.zeros((nx, ngrad)))
+            if return_sens_x:
+                nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "x".encode('utf-8'))
+                sens_x.append(np.zeros((nx, ngrad)))
+
+            if return_sens_lam:
+                nlam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "lam".encode('utf-8'))
+                sens_lam.append(np.zeros((nlam, ngrad)))
+
+            if return_sens_sl:
+                ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "s".encode('utf-8'))
+                sens_sl.append(np.zeros((ns, ngrad)))
+
+            if return_sens_su:
+                ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "s".encode('utf-8'))
+                sens_su.append(np.zeros((ns, ngrad)))
 
             if s < N:
-                nu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "u".encode('utf-8'))
-                sens_u.append(np.zeros((nu, ngrad)))
+                if return_sens_u:
+                    nu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "u".encode('utf-8'))
+                    sens_u.append(np.zeros((nu, ngrad)))
 
+                if return_sens_pi:
+                    npi = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "pi".encode('utf-8'))
+                    sens_pi.append(np.zeros((npi, ngrad)))
 
         self.time_solution_sens_solve = 0.0
         for k in range(ngrad):
@@ -717,16 +751,43 @@ class AcadosOcpSolver:
 
             # extract sensitivities
             for n, s in enumerate(stages_):
-                sens_x[n][:, k] = self.get(s, "sens_x")
+
+                if return_sens_x:
+                    sens_x[n][:, k] = self.get(s, "sens_x")
+                if return_sens_lam:
+                    sens_lam[n][:, k] = self.get(s, "sens_lam")
+                if return_sens_sl:
+                    sens_sl[n][:, k] = self.get(s, "sens_sl")
+                if return_sens_su:
+                    sens_su[n][:, k] = self.get(s, "sens_su")
 
                 if s < N:
-                    sens_u[n][:, k] = self.get(s, "sens_u")
+                    if return_sens_u:
+                        sens_u[n][:, k] = self.get(s, "sens_u")
+                    if return_sens_pi:
+                        sens_pi[n][:, k] = self.get(s, "sens_pi")
 
-        if not stages_is_list:
-            sens_x = sens_x[0]
-            sens_u = sens_u[0]
+        out = {}
 
-        return sens_x, sens_u
+        if return_sens_x:
+            out["sens_x"] = sens_x if stages_is_list else sens_x[0]
+
+        if return_sens_u:
+            out["sens_u"] = sens_u if stages_is_list else sens_u[0]
+
+        if return_sens_pi:
+            out["sens_pi"] = sens_pi if stages_is_list else sens_pi[0]
+
+        if return_sens_lam:
+            out["sens_lam"] = sens_lam if stages_is_list else sens_lam[0]
+
+        if return_sens_sl:
+            out["sens_sl"] = sens_sl if stages_is_list else sens_sl[0]
+
+        if return_sens_su:
+            out["sens_su"] = sens_su if stages_is_list else sens_su[0]
+
+        return out
 
 
     def eval_adjoint_solution_sensitivity(self,
