@@ -189,6 +189,8 @@ def is_empty(x):
         return True
     elif isinstance(x, (set, list)):
         return True if len(x) == 0 else False
+    elif isinstance(x, (float, int)):
+        return False
     else:
         raise Exception("is_empty expects one of the following types: casadi.MX, casadi.SX, "
                         + "None, numpy array empty list, set. Got: " + str(type(x)))
