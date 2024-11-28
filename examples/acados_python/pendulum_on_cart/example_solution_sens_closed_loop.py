@@ -163,7 +163,8 @@ def main():
             u_lin = simU[i,:]
             x_lin = xcurrent
 
-            _, sens_u = acados_ocp_solver.eval_solution_sensitivity(0, with_respect_to="initial_state")
+            out_dict = acados_ocp_solver.eval_solution_sensitivity(0, with_respect_to="initial_state", return_sens_u=True, return_sens_x=False)
+            sens_u = out_dict['sens_u']
 
         else:
             # use linear feedback
