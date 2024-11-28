@@ -844,7 +844,7 @@ class AcadosOcpSolver:
             for seed, name, dim in [(seed_x, "seed_x", nx), (seed_u, "seed_u", nu)]:
                 for stage, seed_stage in seed:
                     if not isinstance(stage, int) or stage < 0 or stage > N_horizon:
-                        raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): stage {stage} for {name} is not valid.")
+                        raise Exception(f"AcadosOcpSolver.eval_adjoint_solution_sensitivity(): stage {stage} for {name} is not valid.")
                     if not isinstance(seed_stage, np.ndarray):
                         raise Exception(f"{name} for stage {stage} should be np.ndarray, got {type(seed_stage)}")
                     if seed_stage.shape != (dim, n_seeds):
