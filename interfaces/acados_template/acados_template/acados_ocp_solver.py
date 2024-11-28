@@ -54,7 +54,7 @@ from .acados_multiphase_ocp import AcadosMultiphaseOcp
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
-                    acados_lib_is_compiled_with_openmp)
+                    acados_lib_is_compiled_with_openmp, is_empty)
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
 
 
@@ -620,9 +620,9 @@ class AcadosOcpSolver:
             self.acados_ocp.solver_options.exact_hess_cost == 1 and
             self.acados_ocp.solver_options.exact_hess_dyn == 1 and
             self.acados_ocp.solver_options.fixed_hess == 0 and
-            self.acados_ocp.model.cost_expr_ext_cost_custom_hess_0 is None and
-            self.acados_ocp.model.cost_expr_ext_cost_custom_hess is None and
-            self.acados_ocp.model.cost_expr_ext_cost_custom_hess_e is None
+            is_empty(self.acados_ocp.model.cost_expr_ext_cost_custom_hess_0) and
+            is_empty(self.acados_ocp.model.cost_expr_ext_cost_custom_hess) and
+            is_empty(self.acados_ocp.model.cost_expr_ext_cost_custom_hess_e)
         ):
             raise Exception("Parametric sensitivities are only correct if an exact Hessian is used!")
 
