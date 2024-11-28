@@ -1199,12 +1199,12 @@ class AcadosOcp:
                                         ):
         """
         Translates cost to EXTERNAL cost and optionally provide parametrization of references and weighting matrices.
-        p: Optional CasADi symbolics with additional stagewise parameters which are used to define yref_0, yref, yref_e, W_0, W, W_e. Will be appended to model.p
-        p_values: numpy array with the same shape as p providing initial parameter values
-        p_global: Optional CasADi symbolics with additional global parameters which are used to define yref_0, yref, yref_e, W_0, W, W_e. Will be appended to model.p_global
-        p_global_values: numpy array with the same shape as p_global providing initial global parameter values
-        W_0, W, W_e: Optional CasADi expression which should be used instead of the numerical values provided by the cost module, shape should be (ny_0, ny_0), (ny, ny), (ny_e, ny_e)
-        yref_0, yref, yref_e: Optional CasADi expression which should be used instead of the numerical values provided by the cost module, shape should be (ny_0, 1), (ny, 1), (ny_e, 1)
+        p: Optional CasADi symbolics with additional stagewise parameters which are used to define yref_0, yref, yref_e, W_0, W, W_e. Will be appended to model.p.
+        p_values: numpy array with the same shape as p providing initial parameter values.
+        p_global: Optional CasADi symbolics with additional global parameters which are used to define yref_0, yref, yref_e, W_0, W, W_e. Will be appended to model.p_global.
+        p_global_values: numpy array with the same shape as p_global providing initial global parameter values.
+        W_0, W, W_e: Optional CasADi expressions which should be used instead of the numerical values provided by the cost module, shapes should be (ny_0, ny_0), (ny, ny), (ny_e, ny_e).
+        yref_0, yref, yref_e: Optional CasADi expressions which should be used instead of the numerical values provided by the cost module, shapes should be (ny_0, 1), (ny, 1), (ny_e, 1).
         """
 
         casadi_symbolics_type = type(self.model.x)
