@@ -1186,118 +1186,111 @@ class AcadosOcp:
 
 
     def translate_cost_to_external_cost(self,
-                                        parametric_yref: bool = False,
-                                        W_0_parametrization: Optional[Tuple[np.ndarray, Union[ca.SX, ca.MX], Union[ca.SX, ca.MX]]] = None,
-                                        W_parametrization: Optional[Tuple[np.ndarray, Union[ca.SX, ca.MX], Union[ca.SX, ca.MX]]] = None,
-                                        W_e_parametrization: Optional[Tuple[np.ndarray, Union[ca.SX, ca.MX], Union[ca.SX, ca.MX]]] = None,
-                                        as_p_global: bool = False,
+                                        p: Optional[Union[ca.SX, ca.MX]] = None,
+                                        p_values: Optional[np.ndarray] = None,
+                                        p_global: Optional[Union[ca.SX, ca.MX]] = None,
+                                        p_global_values: Optional[np.ndarray] = None,
+                                        yref_0: Optional[Union[ca.SX, ca.MX]] = None,
+                                        yref: Optional[Union[ca.SX, ca.MX]] = None,
+                                        yref_e: Optional[Union[ca.SX, ca.MX]] = None,
+                                        W_0: Optional[Union[ca.SX, ca.MX]] = None,
+                                        W: Optional[Union[ca.SX, ca.MX]] = None,
+                                        W_e: Optional[Union[ca.SX, ca.MX]] = None,
                                         ):
         """
-        Translates cost to EXTERNAL cost.
-        parametric_yref: If true, augment with additional parameters for yref_0, yref, yref_e.
-        W_parametrization: Optional tuple (W_params_vals, W_params, W) where W_params is a vector of CasADi symbols and W is a CasADi expression which can depend only on W_params, W_params_vals is a numpy array of the same size a W_params providing the initial values for the parameters.
-            If provided, the weighting matrix in (non)linear least-squares costs will be replaced with the given parametric expression and W_params is appended to model.p.
-        W_0_parametrization: as above but for initial stage
-        W_e_parametrization: as above but for terminal stage
-        as_p_global: If True, the additional parameters are added to model.p_global, otherwise they are added to model.p, default: False.
-
-        If parametric_yref is True and parametrizations for the weighting matrices are provided, the resulting parameter in the model is order as follows:
-        model.p = [model.p, yref_0_params, yref_params, yref_params_e, W_0_params, W_params, W_e_params].
+        Translates cost to EXTERNAL cost and optionally provide parametrization of references and weighting matrices.
+        p: Optional CasADi symbolics with additional stagewise parameters which are used to define yref_0, yref, yref_e, W_0, W, W_e. Will be appended to model.p
+        p_values: numpy array with the same shape as p providing initial parameter values
+        p_global: Optional CasADi symbolics with additional global parameters which are used to define yref_0, yref, yref_e, W_0, W, W_e. Will be appended to model.p_global
+        p_global_values: numpy array with the same shape as p_global providing initial global parameter values
+        W_0, W, W_e: Optional CasADi expression which should be used instead of the numerical values provided by the cost module, shape should be (ny_0, ny_0), (ny, ny), (ny_e, ny_e)
+        yref_0, yref, yref_e: Optional CasADi expression which should be used instead of the numerical values provided by the cost module, shape should be (ny_0, 1), (ny, 1), (ny_e, 1)
         """
-        yref_0 = self.cost.yref_0
-        yref = self.cost.yref
-        yref_e = self.cost.yref_e
 
-        # make yref a parameter
-        if parametric_yref:
-            symbol = self.model.get_casadi_symbol()
-            if self.cost.yref_0 is not None:
-                param_yref_0 = symbol('param_yref_0', len(self.cost.yref_0))
-                yref_0 = param_yref_0
+        casadi_symbolics_type = type(self.model.x)
 
-                if as_p_global:
-                    self.model.p_global = ca.vertcat(self.model.p_global, param_yref_0)
-                    self.p_global_values = np.concatenate((self.p_global_values, self.cost.yref_0))
-                else:
-                    self.model.p = ca.vertcat(self.model.p, param_yref_0)
-                    self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref_0))
+        # check p, p_values and append
+        if p is not None:
+            if p_values is None:
+                raise Exception("If p is not None, also p_values need to be provided.")
+            if not (is_column(p) and is_column(p_values)):
+                raise Exception("p, p_values need to be column vectors.")
+            if p.shape[0] != p_values.shape[0]:
+                raise Exception(f"Mismatching shapes regarding p, p_values: p has shape {p.shape}, p_values has shape {p_values.shape}.")
+            if not isinstance(p, casadi_symbolics_type):
+                raise Exception(f"p has wrong type, got {type(p)}, expected {casadi_symbolics_type}.")
 
-            if self.cost.yref is not None:
-                param_yref = symbol('param_yref', len(self.cost.yref))
-                yref = param_yref
+            self.model.p = ca.vertcat(self.model.p, p)
+            self.parameter_values = np.concatenate((self.parameter_values, p_values))
 
-                if as_p_global:
-                    self.model.p_global = ca.vertcat(self.model.p, param_yref)
-                    self.p_global_values = np.concatenate((self.p_global_values, self.cost.yref))
-                else:
-                    self.model.p = ca.vertcat(self.model.p, param_yref)
-                    self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref))
+        if p_global is not None:
+            if p_global_values is None:
+                raise Exception("If p_global is not None, also p_global_values need to be provided.")
+            if not (is_column(p_global) and is_column(p_global_values)):
+                raise Exception("p_global, p_global_values need to be column vectors.")
+            if p_global.shape[0] != p_global_values.shape[0]:
+                raise Exception(f"Mismatching shapes regarding p_global, p_global_values: p_global has shape {p_global.shape}, p_global_values has shape {p_global_values.shape}.")
+            if not isinstance(p_global, casadi_symbolics_type):
+                raise Exception(f"p_global has wrong type, got {type(p_global)}, expected {casadi_symbolics_type}.")
 
-            if self.cost.yref_e is not None:
-                param_yref_e = symbol('param_yref_e', len(self.cost.yref_e))
-                yref_e = param_yref_e
+            self.model.p_global = ca.vertcat(self.model.p_global, p_global)
+            self.p_global_values = np.concatenate((self.p_global_values, p_global_values))
 
-                if as_p_global:
-                    self.model.p_global = ca.vertcat(self.model.p_global, param_yref_e)
-                    self.p_global_values = np.concatenate((self.p_global_values, self.cost.yref_e))
-                else:
-                    self.model.p = ca.vertcat(self.model.p, param_yref_e)
-                    self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref_e))
+        # references
+        if yref_0 is None:
+            yref_0 = self.cost.yref_0
+        else:
+            if yref_0.shape[0] != self.cost.yref_0.shape[0]:
+                raise Exception(f"yref_0 has wrong shape, got {yref_0.shape}, expected {self.cost.yref_0.shape}.")
 
-        # check whether weighting matrices should be parametrized
-        if W_0_parametrization is None:
+            if not isinstance(yref_0, casadi_symbolics_type):
+                raise Exception(f"yref_0 has wrong type, got {type(yref_0)}, expected {casadi_symbolics_type}.")
+
+        if yref is None:
+            yref = self.cost.yref
+        else:
+            if yref.shape[0] != self.cost.yref.shape[0]:
+                raise Exception(f"yref has wrong shape, got {yref.shape}, expected {self.cost.yref.shape}.")
+
+            if not isinstance(yref, casadi_symbolics_type):
+                raise Exception(f"yref has wrong type, got {type(yref)}, expected {casadi_symbolics_type}.")
+
+        if yref_e is None:
+            yref_e = self.cost.yref_e
+        else:
+            if yref_e.shape[0] != self.cost.yref_e.shape[0]:
+                raise Exception(f"yref_e has wrong shape, got {yref_e.shape}, expected {self.cost.yref_e.shape}.")
+
+            if not isinstance(yref_e, casadi_symbolics_type):
+                raise Exception(f"yref_e has wrong type, got {type(yref_e)}, expected {casadi_symbolics_type}.")
+
+        # weighting matrices
+        if W_0 is None:
             W_0 = self.cost.W_0
         else:
-            if self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
-                raise Exception("W_0_parametrization can only be provided for (non)linear least-squares cost.")
+            if W_0.shape != self.cost.W_0.shape:
+                raise Exception(f"W_0 has wrong shape, got {W_0.shape}, expected {self.cost.W_0.shape}.")
 
-            (p_vals, W_0_params, W_0) = W_0_parametrization
+            if not isinstance(W_0, casadi_symbolics_type):
+                raise Exception(f"W_0 has wrong type, got {type(W_0)}, expected {casadi_symbolics_type}.")
 
-            if type(W_0_params) is not type(self.model.x):
-                raise Exception(f"Parameters in W_0_parametrization is {type(W_0_params)}, but model is defined using {type(self.model.x)}.")
-
-            if as_p_global:
-                self.model.p_global = ca.vertcat(self.model.p_global, W_0_params)
-                self.p_global_values = np.concatenate((self.p_global_values, p_vals))
-            else:
-                self.model.p = ca.vertcat(self.model.p, W_0_params)
-                self.parameter_values = np.concatenate((self.parameter_values, p_vals))
-
-        if W_parametrization is None:
+        if W is None:
             W = self.cost.W
         else:
-            if self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
-                raise Exception("W_parametrization can only be provided for (non)linear least-squares cost.")
+            if W.shape != self.cost.W.shape:
+                raise Exception(f"W has wrong shape, got {W.shape}, expected {self.cost.W.shape}.")
 
-            (p_vals, W_params, W) = W_parametrization
+            if not isinstance(W, casadi_symbolics_type):
+                raise Exception(f"W has wrong type, got {type(W)}, expected {casadi_symbolics_type}.")
 
-            if type(W_params) is not type(self.model.x):
-                raise Exception(f"Parameters in W_parametrization is {type(W_params)}, but model is defined using {type(self.model.x)}.")
-
-            if as_p_global:
-                self.model.p_global = ca.vertcat(self.model.p_global, W_params)
-                self.p_global_values = np.concatenate((self.p_global_values, p_vals))
-            else:
-                self.model.p = ca.vertcat(self.model.p, W_params)
-                self.parameter_values = np.concatenate((self.parameter_values, p_vals))
-
-        if W_e_parametrization is None:
+        if W_e is None:
             W_e = self.cost.W_e
         else:
-            if self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
-                raise Exception("W_e_parametrization can only be provided for (non)linear least-squares cost.")
+            if W_e.shape != self.cost.W_e.shape:
+                raise Exception(f"W_e has wrong shape, got {W_e.shape}, expected {self.cost.W_e.shape}.")
 
-            (p_vals, W_e_params, W_e) = W_e_parametrization
-
-            if type(W_e_params) is not type(self.model.x):
-                raise Exception(f"Parameters in W_e_parametrization is {type(W_e_params)}, but model is defined using {type(self.model.x)}.")
-            if as_p_global:
-                self.model.p_global = ca.vertcat(self.model.p_global, W_e_params)
-                self.p_global_values = np.concatenate((self.p_global_values, p_vals))
-            else:
-                self.model.p = ca.vertcat(self.model.p, W_e_params)
-                self.parameter_values = np.concatenate((self.parameter_values, p_vals))
-
+            if not isinstance(W_e, casadi_symbolics_type):
+                raise Exception(f"W_e has wrong type, got {type(W_e)}, expected {casadi_symbolics_type}.")
 
         # initial stage
         if self.cost.cost_type_0 == "LINEAR_LS":
