@@ -30,13 +30,145 @@
 #
 
 from copy import deepcopy
-from typing import Tuple
+from typing import Tuple, Optional
 import casadi as ca
 import numpy as np
 
 from .acados_model import AcadosModel
 from .acados_ocp import AcadosOcp, AcadosOcpConstraints
 from .utils import casadi_length, is_empty
+
+
+class AcadosCostConstraintEvaluator():
+    """
+    Limitation: values of numerical properties, such as bound values, W, zl, zu, Zu, Zl, yref, etc. are taken from original AcadosOcp;
+    If they are changed in the solve this is not taken into account here.
+    Could be generalized later, by making the casadi functions parametric in bounds.
+    """
+    def __init__(self, ocp: AcadosOcp, with_parametric_bounds):
+        ocp.make_consistent()
+
+        if with_parametric_bounds:
+            raise NotImplementedError(
+                "AcadosCostConstraintEvaluatator: with_parametric_bounds not implemented.")
+            # p_bounds = ca.MX.sym('p_bounds', 2*(ocp.dims.nh+ocp.dims.nbx+dims.nbu+dims.ng+dims.nphi), 1)
+
+        self.ocp = ocp
+
+        model = ocp.model
+        constraints = ocp.constraints
+        dims = ocp.dims
+        if casadi_length(ocp.model.z) > 0:
+            raise NotImplementedError(
+                "AcadosCostConstraintEvaluatator: not implemented for models with z.")
+        self.parameter_values = ocp.parameter_values
+        self.p_global_values = ocp.p_global_values
+        self.dt = ocp.solver_options.time_steps[0]
+
+        # setup casadi functions for constraints and cost
+        cost_expr = get_path_cost_expression(ocp)
+        self.cost_fun = ca.Function('cost_fun', [ocp.model.x, ocp.model.u, ocp.model.p, ocp.model.p_global], [cost_expr])
+        # constraints
+        bu_expr = model.u[constraints.idxbu]
+        bx_expr = model.x[constraints.idxbx]
+        if not is_empty(constraints.C):
+            g_expr = constraints.C @ model.x + constraints.D @ model.u
+        else:
+            g_expr = ca.DM.zeros(0, 1)
+
+        h_expr = model.con_h_expr
+
+        if ocp.dims.nphi > 0:
+            raise NotImplementedError("AcadosCostConstraintEvaluatator: not implemented for nontrivial phi.")
+
+        constraint_expr = ca.vertcat(bu_expr, bx_expr, g_expr, h_expr)
+        upper_bound = ca.vertcat(constraints.ubu, constraints.ubx, constraints.ug, constraints.uh, constraints.uphi)
+        lower_bound = ca.vertcat(constraints.lbu, constraints.lbx, constraints.lg, constraints.lh, constraints.lphi)
+
+        lower_violation = ca.fmax(lower_bound-constraint_expr, 0)
+        upper_violation = ca.fmax(constraint_expr-upper_bound, 0)
+
+        slack_indices = np.concatenate((
+            constraints.idxsbu,
+            constraints.idxsbx+dims.nbu,
+            constraints.idxsg+dims.nbu+dims.nbx,
+            constraints.idxsh+dims.nbu+dims.nbx+dims.ng,
+            constraints.idxsphi+dims.nbu+dims.nbx+dims.ng+dims.nh))
+
+        self.nonslacked_indices = np.setdiff1d(np.arange(constraint_expr.shape[0]), slack_indices)
+
+        lower_slack_expression = lower_violation(slack_indices)
+        upper_slack_expression = upper_violation(slack_indices)
+
+        self.constraint_function = ca.Function('constraint_function', [model.x, model.u, model.p, model.p_global], [lower_violation, upper_violation, lower_slack_expression, upper_slack_expression])
+
+    # TODO: shape checks
+    def set_params(self, params: np.ndarray):
+        self.parameter_values = params
+
+    def set_p_global(self, params: np.ndarray):
+        self.p_global_values = params
+
+    #
+    def evaluate(self,
+                 x: np.ndarray, u: np.ndarray,
+                 p: Optional[np.ndarray] = None,
+                 p_global: Optional[np.ndarray] = None,
+                 dt: Optional[float] = None) -> dict:
+        if p is not None:
+            self.set_params(p)
+        if p_global is not None:
+            self.set_p_global(p_global)
+        if dt is None:
+            dt = self.dt
+
+        # TODO
+        # evaluate cost
+        cost_without_slacks = self.cost_fun(x, u, self.parameter_values, self.p_global_values)
+
+        # evaluate constraints
+        # TODO: full()
+        lower_violation, upper_violation, lower_slack, upper_slack = self.constraint_function(x, u, self.parameter_values, self.p_global_values)
+        violation_hard_constraints = np.concatenate((lower_violation(self.nonslacked_indices),upper_violation(self.nonslacked_indices)))
+
+        # evaluate cost of soft constraints
+        lower_slack_cost = 0.5*self.ocp.cost.Zl @ (lower_slack * lower_slack) + self.ocp.cost.zl @ lower_slack
+        upper_slack_cost = 0.5*self.ocp.cost.Zu @ (upper_slack * upper_slack) + self.ocp.cost.zu @ upper_slack
+        slack_cost = lower_slack_cost + upper_slack_cost
+
+        # evaluate sum
+        result = {
+            'cost': cost_without_slacks + slack_cost,
+            'cost_without_slacks': cost_without_slacks,
+            'slack_cost': slack_cost,
+            'violation_hard_constraints': violation_hard_constraints,
+        }
+        return result
+
+
+def get_path_cost_expression(ocp: AcadosOcp):
+    model = ocp.model
+    if ocp.cost.cost_type == "LINEAR_LS":
+        y = ocp.cost.Vx @ model.x + ocp.cost.Vu @ model.u
+        if casadi_length(model.z) > 0:
+            ocp.cost.Vz @ model.z
+        residual = y - ocp.cost.yref
+        cost_dot = 0.5*(residual.T @ ocp.cost.W @ residual)
+
+    elif ocp.cost.cost_type == "NONLINEAR_LS":
+        residual = model.cost_y_expr - ocp.cost.yref
+        cost_dot = 0.5*(residual.T @ ocp.cost.W @ residual)
+
+    elif ocp.cost.cost_type == "EXTERNAL":
+        cost_dot = model.cost_expr_ext_cost
+
+    elif ocp.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+        cost_dot = ca.substitute(
+            model.cost_psi_expr, model.cost_r_in_psi_expr, model.cost_y_expr)
+    else:
+        raise Exception("create_model_with_cost_state: Unknown cost type.")
+
+    return cost_dot
 
 
 def create_model_with_cost_state(ocp: AcadosOcp) -> Tuple[AcadosModel, np.ndarray]:
@@ -55,26 +187,7 @@ def create_model_with_cost_state(ocp: AcadosOcp) -> Tuple[AcadosModel, np.ndarra
     cost_state = symbol("cost_state")
     cost_state_dot = symbol("cost_state_dot")
 
-    if ocp.cost.cost_type == "LINEAR_LS":
-        y = ocp.cost.Vx @ model.x + ocp.cost.Vu @ model.u
-        if casadi_length(model.z) > 0:
-            ocp.cost.Vz @ model.z
-        residual = y - ocp.cost.yref
-        cost_dot = 0.5*(residual.T @ ocp.cost.W @ residual)
-
-    elif ocp.cost.cost_type == "NONLINEAR_LS":
-        residual = model.cost_y_expr - ocp.cost.yref
-        cost_dot = 0.5*(residual.T @ ocp.cost.W @ residual)
-
-    elif ocp.cost.cost_type == "EXTERNAL":
-        cost_dot = model.cost_expr_ext_cost
-
-    elif ocp.cost.cost_type == "CONVEX_OVER_NONLINEAR":
-        cost_dot = ca.substitute(
-            model.cost_psi_expr, model.cost_r_in_psi_expr, model.cost_y_expr)
-
-    else:
-        raise Exception("create_model_with_cost_state: Unknown cost type.")
+    cost_dot = get_path_cost_expression(ocp)
 
     i_slack = 0
     for ibu in ocp.constraints.idxsbu:
