@@ -415,7 +415,7 @@ class AcadosOcpSolver:
         return u0
 
 
-    def solve(self):
+    def solve(self) -> int:
         """
         Solve the ocp with current input.
         """
@@ -548,9 +548,13 @@ class AcadosOcpSolver:
         - for field `initial_state`, the gradient is the Lagrange multiplier of the initial state constraint.
         The gradient computation consists of adding the Lagrange multipliers corresponding to the upper and lower bound of the initial state.
 
+        - for field `initial_control`, the gradient is the Lagrange multiplier of the initial control constraint.
+        The gradient computation consists of adding the Lagrange multipliers corresponding to the upper and lower bound of the initial control.
+        This requires the OCP to have control bounds with lbu = ubu at the first stage, i.e. the gradient of the state-action value function or Q-function is computed.
+
         - for field `p_global`, the gradient of the Lagrange function w.r.t. the global parameters is computed.
 
-        :param with_respect_to: string in ["initial_state", "p_global"]
+        :param with_respect_to: string in ["initial_state", "initial_control", "p_global"]
         """
 
         if with_respect_to == "params_global":
@@ -563,10 +567,25 @@ class AcadosOcpSolver:
 
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
             nbu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lbu".encode('utf-8'))
+            ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "s".encode('utf-8'))
 
             lam = self.get(0, 'lam')
-            nlam_non_slack = lam.shape[0]//2 - self.acados_ocp.dims.ns_0
+            nlam_non_slack = lam.shape[0]//2 - ns
             grad = lam[nbu:nbu+nx] - lam[nlam_non_slack+nbu : nlam_non_slack+nbu+nx]
+
+        elif with_respect_to == "initial_control":
+            nu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "u".encode('utf-8'))
+            nbu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lbu".encode('utf-8'))
+            ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "s".encode('utf-8'))
+            lbu = self.get_from_qp_in(0, 'lbu')
+            ubu = self.get_from_qp_in(0, 'ubu')
+
+            if not (nbu == nu and np.all(lbu == ubu) and self.acados_ocp.dims.nsbu == 0):
+                raise Exception("OCP does not have an equality constraint on the initial control.")
+
+            lam = self.get(0, 'lam')
+            nlam_non_slack = lam.shape[0]//2 - ns
+            grad = lam[:nbu] - lam[nlam_non_slack : nlam_non_slack+nbu]
 
         elif with_respect_to == "p_global":
             np_global = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p_global".encode('utf-8'))
