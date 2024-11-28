@@ -129,6 +129,8 @@ class AcadosOcp:
     @parameter_values.setter
     def parameter_values(self, parameter_values):
         if isinstance(parameter_values, np.ndarray):
+            if not is_column(parameter_values):
+                raise Exception("parameter_values should be column vector.")
             self.__parameter_values = parameter_values
         else:
             raise Exception('Invalid parameter_values value. ' +
@@ -144,6 +146,9 @@ class AcadosOcp:
     @p_global_values.setter
     def p_global_values(self, p_global_values):
         if isinstance(p_global_values, np.ndarray):
+            if not is_column(p_global_values):
+                raise Exception("p_global_values should be column vector.")
+
             self.__p_global_values = p_global_values
         else:
             raise Exception('Invalid p_global_values value. ' +
