@@ -550,7 +550,7 @@ class AcadosOcpSolver:
 
         - for field `initial_control`, the gradient is the Lagrange multiplier of the initial control constraint.
         The gradient computation consists of adding the Lagrange multipliers corresponding to the upper and lower bound of the initial control.
-        This requires the OCP to have control bounds with lbu = ubu at the first stage, i.e. the gradient of the action-value function or Q-function is computed.
+        This requires the OCP to have control bounds with lbu = ubu at the first stage, i.e. the gradient of the state-action value function or Q-function is computed.
 
         - for field `p_global`, the gradient of the Lagrange function w.r.t. the global parameters is computed.
 
