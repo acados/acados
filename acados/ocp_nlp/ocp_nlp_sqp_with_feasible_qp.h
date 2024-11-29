@@ -62,6 +62,7 @@ typedef struct
     double tol_comp;     // exit tolerance on complementarity condition
     double tol_unbounded; // exit threshold when objective function seems to be unbounded
     double tol_min_step_norm; // exit tolerance for small step
+    double tol_objective_multiplier; // objective multiplier needs to be below the given value to terminate with infeasible stationary point
     int max_iter;
     int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
     int log_primal_step_norm; // compute and log the max norm of the primal steps
@@ -111,7 +112,11 @@ typedef struct
 
     double step_norm;
 
-    struct blasfeo_dvec *slacks_not_in_original_nlp;  // slack values of slacks that are not part of NLP
+    struct blasfeo_dvec *adj_ineq_feasibility;  // slack values of slacks that are not part of NLP
+    struct blasfeo_dvec *adj_dyn_feasibility;  // slack values of slacks that are not part of NLP
+    struct blasfeo_dvec *lam_feasibility;  // lambda multipliers for steering QP (no gradient)
+    struct blasfeo_dvec *pi_feasibility;  // lambda multipliers for steering QP (no gradient)
+    struct blasfeo_dvec *res_stat_feasibility;  // stationarity residual for detecting infeasibility (no gradient)
     struct blasfeo_dvec *Z_cost_module;  // Z values from cost module
     struct blasfeo_dmat *RSQ_cost;
     struct blasfeo_dmat *RSQ_constr;
@@ -120,6 +125,8 @@ typedef struct
     double norm_pi;
     double norm_lam_unslacked_bounds;
     double norm_lam_slacked_constraints;
+    double inf_norm_res_comp_feasibility;
+    double inf_norm_res_stat_feasibility;
 
 } ocp_nlp_sqp_wfqp_memory;
 
