@@ -47,18 +47,6 @@ The back-end of acados uses the high-performance linear algebra package [`BLASFE
 `MATLAB`, `Octave` and `Python` interfaces can be used to conveniently describe optimal control problems and generate self-contained C code that can be readily deployed on embedded platforms.
 
 
-## Problem Formulation
-
-Since `acados` mainly aims on providing SQP type methods for optimal control, it naturally needs optimal control structured nonlinear programming formulations (OCP-NLP) and quadratic programming (QP) formulations to tackle the subproblems within SQP.
-
-- __Optimal control structured NLP (OCP-NLP)__: The problem formulation targeted by `acados` OCP solver is stated [here](https://github.com/acados/acados/blob/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf).
-
-
-- __QP formulations (dense and OCP structured)__: `acados` relies on `HPIPM` for reformulating QP problems via (partial) condensing and expansion routines.
-We thus use the flexible QP formulations from `HPIPM` for optimal control structured quadratic programming formulation (OCP-QP) and the dense QP formulation.
-Both problem formulations are documented in the [`HPIPM guide`](https://github.com/giaf/hpipm/blob/master/doc/guide.pdf).
-
-
 # Documentation page overview
 
 ```eval_rst
@@ -74,10 +62,7 @@ Documentation latest build: |today|
     installation/index
     list_of_projects/index
     developer_guide/index
-```
 
-
-```eval_rst
 .. toctree::
     :maxdepth: 2
     :caption: Interfaces
@@ -86,6 +71,14 @@ Documentation latest build: |today|
     python_interface/index
     matlab_octave_interface/index
     embedded_workflow/index
+
+.. toctree::
+    :maxdepth: 2
+    :caption: User Guide
+
+    problem_formulation/index
+    troubleshooting/index
+    features/index
 ```
 
 <!-- c_interface/index -->

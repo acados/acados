@@ -418,6 +418,8 @@ class AcadosOcpSolver:
     def solve(self) -> int:
         """
         Solve the ocp with current input.
+
+        :return: status of the solver
         """
         self.status = getattr(self.shared_lib, f"{self.name}_acados_solve")(self.capsule)
 
@@ -1352,13 +1354,14 @@ class AcadosOcpSolver:
         Returns the status of the last solver call.
 
         Status codes:
-        0 - Success (ACADOS_SUCCESS)
-        1 - NaN detected (ACADOS_NAN_DETECTED)
-        2 - Maximum number of iterations reached (ACADOS_MAXITER)
-        3 - Minimum step size reached (ACADOS_MINSTEP)
-        4 - QP solver failed (ACADOS_QP_FAILURE)
-        5 - Solver created (ACADOS_READY)
-        6 - Problem unbounded (ACADOS_UNBOUNDED)
+            - 0: Success (ACADOS_SUCCESS)
+            - 1: NaN detected (ACADOS_NAN_DETECTED)
+            - 2: Maximum number of iterations reached (ACADOS_MAXITER)
+            - 3: Minimum step size reached (ACADOS_MINSTEP)
+            - 4: QP solver failed (ACADOS_QP_FAILURE)
+            - 5: Solver created (ACADOS_READY)
+            - 6: Problem unbounded (ACADOS_UNBOUNDED)
+            - 7: Solver timeout (ACADOS_TIMEOUT)
 
         See `return_values` in https://github.com/acados/acados/blob/master/acados/utils/types.h
         """
