@@ -226,6 +226,10 @@ add_test(NAME py_sqp_wfqp_infeasible_problem_nactive
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/infeasible_test_problems
         python nactive_test_problem.py)
 
+add_test(NAME py_sqp_wfqp_infeasible_problem_hs015
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/nlp_hs015
+        python hs015_test.py)
+
 add_test(NAME py_sqp_wfqp_infeasible_problem_unique
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/infeasible_test_problems
         python unique_test_problem.py)
