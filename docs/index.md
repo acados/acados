@@ -62,10 +62,7 @@ Documentation latest build: |today|
     installation/index
     list_of_projects/index
     developer_guide/index
-```
 
-
-```eval_rst
 .. toctree::
     :maxdepth: 2
     :caption: Interfaces
@@ -74,9 +71,7 @@ Documentation latest build: |today|
     python_interface/index
     matlab_octave_interface/index
     embedded_workflow/index
-```
 
-```eval_rst
 .. toctree::
     :maxdepth: 2
     :caption: User Guide
