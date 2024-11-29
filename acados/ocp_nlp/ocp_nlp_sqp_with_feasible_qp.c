@@ -1368,6 +1368,7 @@ static void ocp_nlp_sqp_wfqp_setup_qp_objective(ocp_nlp_config *config,
     ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work, double objective_multiplier)
 {
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_qp_in *qp_in = nlp_mem->qp_in;
     int N = dims->N;
 
     int *nx = dims->nx;
@@ -1388,27 +1389,27 @@ static void ocp_nlp_sqp_wfqp_setup_qp_objective(ocp_nlp_config *config,
         if (objective_multiplier == 0.0)
         {
             // Either we use the exact objective Hessian
-            blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
-            blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);// I think we do not need this here
+            blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, qp_in->RSQrq+i, 0, 0);
+            blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, qp_in->RSQrq+i, 0, 0);// I think we do not need this here
 
             // We use the identity matrix Hessian
-            // blasfeo_dgese(nxu, nxu, 0.0, nlp_mem->qp_in->RSQrq+i, 0, 0);
-            // blasfeo_ddiare(nxu, 1e-4, nlp_mem->qp_in->RSQrq+i, 0, 0);  // dPsi_dx is unit now
+            // blasfeo_dgese(nxu, nxu, 0.0, qp_in->RSQrq+i, 0, 0);
+            // blasfeo_ddiare(nxu, 1e-4, qp_in->RSQrq+i, 0, 0);  // dPsi_dx is unit now
         }
         else
         {
-            blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
+            blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, qp_in->RSQrq+i, 0, 0);
             //
-            blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
+            blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, qp_in->RSQrq+i, 0, 0);
         }
         // Z -- slack matrix
-        blasfeo_dveccpsc(ns[i], objective_multiplier, mem->Z_cost_module+i, 0, nlp_mem->qp_in->Z+i, 0);
-        blasfeo_dveccpsc(ns[i], objective_multiplier, mem->Z_cost_module+i, 0, nlp_mem->qp_in->Z+i, ns[i]+mem->nns[i]);
+        blasfeo_dveccpsc(ns[i], objective_multiplier, mem->Z_cost_module+i, 0, qp_in->Z+i, 0);
+        blasfeo_dveccpsc(ns[i], objective_multiplier, mem->Z_cost_module+i, 0, qp_in->Z+i, ns[i]+mem->nns[i]);
 
         /* vectors */
         // g
-        blasfeo_dveccpsc(nx[i]+nu[i]+ns[i], objective_multiplier, nlp_mem->cost_grad + i, 0, nlp_mem->qp_in->rqz + i, 0);
-        blasfeo_dveccpsc(ns[i], objective_multiplier, nlp_mem->cost_grad + i, nx[i]+nu[i]+ns[i], nlp_mem->qp_in->rqz + i, nx[i]+nu[i]+ns[i]+nns[i]);
+        blasfeo_dveccpsc(nx[i]+nu[i]+ns[i], objective_multiplier, nlp_mem->cost_grad + i, 0, qp_in->rqz + i, 0);
+        blasfeo_dveccpsc(ns[i], objective_multiplier, nlp_mem->cost_grad + i, nx[i]+nu[i]+ns[i], qp_in->rqz + i, nx[i]+nu[i]+ns[i]+nns[i]);
     }
 }
 
