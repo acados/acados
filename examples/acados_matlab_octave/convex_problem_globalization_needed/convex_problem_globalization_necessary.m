@@ -64,7 +64,7 @@ for num = 1:length(globalization_params)
 
     % terminal cost term
     ocp.cost.cost_type_e = 'EXTERNAL';
-    ocp.model.cost_y_expr_e = log(exp(model.x) + exp(-model.x));
+    ocp.model.cost_expr_ext_cost_e = log(exp(model.x) + exp(-model.x));
 
     % define solver options
     ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM';
