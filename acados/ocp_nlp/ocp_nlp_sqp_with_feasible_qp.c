@@ -901,87 +901,12 @@ static double get_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wf
     return l1_inf;
 }
 
-/*
-This function calculates the l1 infeasibility by calculating the matrix vector product of the
-constraints. There is somewhere a bug, but not sure where!!!!
-*/
-// static double manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_sqp_wfqp_workspace *work, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
-// {
-//     int N = dims->N;
-//     int *nx = dims->nx;
-//     int *nu = dims->nu;
-//     int *nns = mem->nns;
-
-//     int *nb = qp_in->dim->nb;
-//     int *ng = qp_in->dim->ng; //number of general two sided constraints
-
-//     double l1_inf = 0.0;
-//     int i, j;
-//     double tmp, tmp_bound, mask_value;
-//     int constr_index, ux_idx;
-//     for (i = 0; i <= N; i++)
-//     {
-//         for (j=0; j<nns[i]; ++j)
-//         {
-//             constr_index = mem->idxns[i][j];
-//             // tmp = \nabla c(z) * d
-//             // simple bounds
-//             if (constr_index < nb[i])
-//             {
-//                 ux_idx = qp_in->idxb[i][constr_index];
-//                 // printf("evaluating constraint %d, bound on ux[%d]\n", constr_index, ux_idx);
-//                 tmp = BLASFEO_DVECEL(qp_out->ux+i, ux_idx);
-//             }
-//             // linear constraints
-//             else
-//             {
-//                 // general linear / linearized!
-//                 // tmp_ni = D * u + C * x
-//                 // Calculate the product
-//                 blasfeo_dgemv_t(nu[i]+nx[i], 1, 1.0, qp_in->DCt+i, constr_index-nb[i], 0, qp_out->ux+i, 0,
-//                         0.0, qp_in->d+i, 0, &work->nlp_work->tmp_ni, 0);
-//                 // printf("evaluating constraint %d, constr index %d\n", constr_index, constr_index-nb[i]);
-//                 tmp = BLASFEO_DVECEL(&work->nlp_work->tmp_ni, 0);
-//             }
-
-//             // check lower bounds
-//             mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, constr_index);
-//             if (mask_value == 1.0)
-//             {
-//                 tmp_bound = BLASFEO_DVECEL(qp_in->d+i, constr_index);
-//                 // maximum(0, lower_bound - value)
-//                 l1_inf += fmax(0.0, tmp_bound-tmp);
-//                 // if (fmax(0.0, tmp_bound-tmp) > 1e-8)
-//                 // {
-//                 //     printf("lower constraint %d %d: bound: %.4e, value: %.4e, result: %.4e\n", i, constr_index, tmp_bound, tmp, fmax(0.0, tmp_bound-tmp));
-//                 // }
-//             }
-//             // check upper bound
-//             mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, nb[i] + ng[i] + constr_index);
-//             if (mask_value == 1.0)
-//             {
-//                 // upper bounds have the wrong sign!
-//                 // it is lower_bounds <= value <= -upper_bounds, therefore plus below
-//                 tmp_bound = BLASFEO_DVECEL(qp_in->d+i, nb[i] + ng[i] + constr_index);
-//                 // if (fmax(0.0, tmp_bound+tmp) > 1e-8)
-//                 // {
-//                 //     printf("upper constraint %d %d: bound: %.4e, value: %.4e, result: %.4e\n", i, constr_index, tmp_bound, tmp, fmax(0.0, tmp_bound+tmp));
-//                 // }
-//                 l1_inf += fmax(0.0, tmp_bound+tmp);
-//             }
-//         }
-//     }
-//     return l1_inf;
-// }
-
-
-
 
 // /*
 // This function calculates the l1 infeasibility by calculating the matrix vector product of the
 // constraints
 // */
-static double full_manually_calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_sqp_wfqp_workspace *work, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
+static double calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_sqp_wfqp_workspace *work, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
 {
     int N = dims->N;
     int *nx = dims->nx;
@@ -2011,7 +1936,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Calculate linearized l1-infeasibility for d_predictor
         // double l1_inf_QP_optimality = get_slacked_qp_l1_infeasibility(dims, mem, nlp_mem->qp_out);
         // print_debug_output_double("linearized l1_inf_opt: ", l1_inf_QP_optimality, nlp_opts->print_level, 2);
-        manual_l1_inf_QP_optimality = full_manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, qp_out);
+        manual_l1_inf_QP_optimality = calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, qp_out);
         print_debug_output_double("l1_inf_opt: ", manual_l1_inf_QP_optimality, nlp_opts->print_level, 2);
         pred_l1_inf_QP_optimality = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manual_l1_inf_QP_optimality);
         print_debug_output_double("pred_l1_inf_QP_optimality: ", pred_l1_inf_QP_optimality, nlp_opts->print_level, 2);
@@ -2055,7 +1980,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // Calculate linearized l1-infeasibility for d_steering
             // double l1_inf_QP_feasibility = get_slacked_qp_l1_infeasibility(dims, mem, nlp_work->tmp_qp_out);
             // print_debug_output_double("linearized l1_inf_feas: ", l1_inf_QP_feasibility, nlp_opts->print_level, 2);
-            manual_l1_inf_QP_feasibility = full_manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, nlp_work->tmp_qp_out);
+            manual_l1_inf_QP_feasibility = calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, nlp_work->tmp_qp_out);
             print_debug_output_double("l1_inf_feas: ", manual_l1_inf_QP_feasibility, nlp_opts->print_level, 2);
             // predicted infeasibility reduction of feasibility QP should always be non-negative
             pred_l1_inf_QP_feasibility = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manual_l1_inf_QP_feasibility);
@@ -2099,7 +2024,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Calculate search direction
         setup_search_direction(mem, dims, qp_out, nlp_work->tmp_qp_out, qp_out, kappa);
 
-        double pred_l1_inf_search_direction = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, full_manually_calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, qp_out));
+        double pred_l1_inf_search_direction = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, qp_out));
         print_debug_output_double("pred_l1_inf_search_direction: ", pred_l1_inf_search_direction, nlp_opts->print_level, 2);
         //---------------------------------------------------------------------
 
