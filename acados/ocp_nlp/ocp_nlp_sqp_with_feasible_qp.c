@@ -777,6 +777,7 @@ static void compute_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp
             norm_lam_hard_constr = fmax(norm_lam_hard_constr, BLASFEO_DVECEL(qp_out->lam+i, n_nominal_ineq_nlp+j));
         }
 
+        // TODO: these are multipliers of constraints that are slacked by user or algorithm? Correct?
         // Slacked multipliers (excluding the multipliers of the additional slacks)
         // we use an offset for the unslacked variables
         for (j=n_unslacked_bounds; j<n_nominal_ineq_nlp; j++)
@@ -1102,7 +1103,8 @@ static double compute_qp_objective_value(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_d
         qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
 
         // Calculate gradient of slacks.T d_slacks
-        // First part of slacks
+        // TODO: either comment or formula is not correct, this computs slack.T * z
+        // lower of slacks
         qp_cost += blasfeo_ddot(ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
         // upper of slacks
         qp_cost += blasfeo_ddot(ns, &qp_out->ux[i], nux+ns+nns, &qp_in->rqz[i], nux+ns+nns);
@@ -1386,12 +1388,14 @@ static void ocp_nlp_sqp_wfqp_setup_qp_objective(ocp_nlp_config *config,
         // hess_QP = objective_multiplier * hess_cost + hess_constraints
         nxu = nx[i]+nu[i];
         // TODO: axpby for matrices? Do we need to take slacks here into account as well? I.e., scale slack Hessian?
+        // NOTE: I think this TODO is from before we switched to using objective multiplier and it should be fine now.
         if (objective_multiplier == 0.0)
         {
             // Either we use the exact objective Hessian
             blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, qp_in->RSQrq+i, 0, 0);
             blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, qp_in->RSQrq+i, 0, 0);// I think we do not need this here
 
+            // TODO: remove this code below? you added an option I think?
             // We use the identity matrix Hessian
             // blasfeo_dgese(nxu, nxu, 0.0, qp_in->RSQrq+i, 0, 0);
             // blasfeo_ddiare(nxu, 1e-4, qp_in->RSQrq+i, 0, 0);  // dPsi_dx is unit now
@@ -1444,6 +1448,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
         ocp_nlp_sqp_wfqp_setup_qp_objective(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, nlp_mem->objective_multiplier);
     }
     // TODO: if we solve the feasibility QP, we probably do not need or want the LM term?
+    // TODO: discuss this!
     ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter);
     // regularize Hessian
     acados_tic(&timer1);
@@ -1549,7 +1554,7 @@ static void eval_adjoints(ocp_qp_in* qp_in, ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp
         // adj[nu+nx: ] += lam[2*nb+2*ng+2*nh :]
         blasfeo_daxpy(2*ns[i], 1.0, mem->lam_feasibility+i, 2*nb[i]+2*ng[i]+2*ni_nl[i], mem->adj_ineq_feasibility+i, nu[i]+nx[i], mem->adj_ineq_feasibility+i, nu[i]+nx[i]);
 
-        // adjoint for 
+        // adjoint for ?
         if (i < N)
         {
             blasfeo_dgemv_n(nu[i]+nx[i], nx[i+1], -1.0, qp_in->BAbt+i, 0, 0, mem->pi_feasibility+i, 0, 0.0, mem->adj_dyn_feasibility+i, 0, mem->adj_dyn_feasibility+i, 0);
@@ -1615,6 +1620,7 @@ double sqp_wfqp_calculate_res_comp(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *
         }
 
         // slacked constraints given by user
+        // TODO: check this with OJ! Not sure if this is correct!?
         for (j=2*n_nominal_ineq_nlp; j<2*ni[i]; j++)
         {
             tmp = BLASFEO_DVECEL(nlp_mem->ineq_fun+i, j);
@@ -1911,6 +1917,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return nlp_mem->status;
         }
         compute_qp_multiplier_norm_inf(mem, dims, qp_out, qp_in, false);
+
+        // TODO: one if (print_level > x) would be more readable to see what is actually done here.
         print_debug_output_double("Opt QP multiplier norm: pi", mem->norm_pi, nlp_opts->print_level, 2);
         print_debug_output_double("Opt QP multiplier norm: lam slacked", mem->norm_lam_slacked_constraints, nlp_opts->print_level, 2);
         print_debug_output_double("Opt QP multiplier norm: lam unslacked", mem->norm_lam_unslacked_bounds, nlp_opts->print_level, 2);
@@ -1998,6 +2006,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->stat[mem->stat_n*(sqp_iter+1)+5] = qp_iter;
         }
 
+        // TODO: comment cleanup
         // We have two search directions:
         // nlp_work->tmp_qp_out = d without cost;
         // nlp_mem->qp_out = d with objective_multiplier
@@ -2005,6 +2014,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Calculate search direction
         setup_search_direction(mem, dims, qp_out, nlp_work->tmp_qp_out, qp_out, kappa);
 
+        // TODO: I dont like this nested call.
         double pred_l1_inf_search_direction = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, qp_out));
         print_debug_output_double("pred_l1_inf_search_direction: ", pred_l1_inf_search_direction, nlp_opts->print_level, 2);
         //---------------------------------------------------------------------
@@ -2023,6 +2033,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             // For the moment we do not care about the artificial slack variables to keep problem
             // feasible
+            // TODO: can we make this function name more descriptive to avoid the comment above?
             mem->step_norm = slacked_qp_out_compute_primal_nrm_inf(qp_out, dims, mem);
             if (nlp_opts->log_primal_step_norm)
                 mem->primal_step_norm[sqp_iter] = mem->step_norm;
@@ -2082,8 +2093,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         // Update the feasibility multipliers
         // TODO: add this into the update_variables function at a later stage
+        // TODO: anything blocking to do this?
         update_feasibility_multipliers(dims, nlp_work->tmp_qp_out, mem);
-
     }  // end SQP loop
 
     if (nlp_opts->print_level > 0)
