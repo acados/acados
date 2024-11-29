@@ -554,10 +554,7 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
                                             &int_array[i]);
             }
         }
-        for (int i = 0; i <= N; i++)
-        {
-            // do nothing: does not depend on nominal ns
-        }
+        // else: do nothing: does not depend on nominal ns
     }
     else if (!strcmp(field, "np"))
     {
@@ -745,22 +742,8 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
     }
     else if (!strcmp(field, "nbue"))
     {
-        if (!config->with_feasible_qp)
-        {
-            // qp solver
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
-        }
-        else
-        {
-            // relaxed_qp_solver
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
-            // TODO: implement check somewhere else?
-            // if ((int_value != 0))
-            // {
-            //     printf("\nerror: relaxed QP with %s>0 not supported, exiting.\n\n", field, stage);
-            //     exit(1);
-            // }
-        }
+        // independent of with_feasible_qp
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
     }
     else if ( (!strcmp(field, "nge")) || (!strcmp(field, "nhe")) || (!strcmp(field, "nphie")))
     {
@@ -777,13 +760,11 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
         else
         {
             // relaxed_qp_solver
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
-            // TODO: implement check somewhere else?
-            // if ((int_value != 0))
-            // {
-            //     printf("\nerror: relaxed QP with %s>0 not supported, exiting.\n\n", field, stage);
-            //     exit(1);
-            // }
+            if ((int_value != 0))
+            {
+                printf("\nerror: relaxed QP with %s>0 not supported, exiting.\n\n", field, stage);
+                exit(1);
+            }
         }
     }
 }
