@@ -72,7 +72,6 @@ for num = 1:length(globalization_params)
     ocp.solver_options.hessian_approx = 'EXACT';
     ocp.solver_options.integrator_type = 'DISCRETE';
     ocp.solver_options.print_level = 1;
-    ocp.solver_options.tol = 1e-5;
     ocp.solver_options.nlp_solver_type = 'SQP';
     ocp.solver_options.globalization = globalization;
     ocp.solver_options.qp_solver_iter_max = 400;
