@@ -77,6 +77,7 @@ Documentation latest build: |today|
     :caption: User Guide
 
     problem_formulation/index
+    troubleshooting/index
     features/index
 ```
 
