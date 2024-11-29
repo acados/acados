@@ -1258,7 +1258,7 @@ class AcadosOcpSolver:
             json.dump(qp_data, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         print("stored qp from solver memory in ", os.path.join(os.getcwd(), filename))
 
-    def get_last_qp(self):
+    def get_last_qp(self) -> dict:
         """
         Returns the latest QP data as a dict
         """
@@ -1278,7 +1278,7 @@ class AcadosOcpSolver:
         for k in list(qp_data.keys()):
             if len(qp_data[k]) == 0:
                 del qp_data[k]
-        
+
         return qp_data
 
     def load_iterate(self, filename:str, verbose: bool = True):
