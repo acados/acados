@@ -424,9 +424,9 @@ typedef struct ocp_nlp_memory
 
     double cost_value;
     double qp_cost_value;
-    double predicted_infeasibility_reduction;
-    double predicted_optimality_reduction;
-    double objective_multiplier;
+    double predicted_infeasibility_reduction; // used for funnel globalization
+    double predicted_optimality_reduction; // // used for funnel globalization
+    double objective_multiplier; // used for funnel globalization
     int compute_hess;
 
     int status;
