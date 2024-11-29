@@ -99,6 +99,7 @@ ocp_nlp_config *ocp_nlp_config_assign(int N, void *raw_memory)
     c_ptr += sizeof(ocp_nlp_config);
 
     config->N = N;
+    config->with_feasible_qp = false;
 
     // qp solver
     config->qp_solver = ocp_qp_xcond_solver_config_assign(c_ptr);
