@@ -53,7 +53,6 @@ for num = 1:length(globalization_params)
     model.u = SX.sym('u', 0, 0)
     model.p = []
     model.name = 'convex_globalization_problem'
-    ocp.model = model
 
     %% solver settings
     T = 1; 
@@ -76,7 +75,6 @@ for num = 1:length(globalization_params)
     ocp.solver_options.globalization = globalization;
     ocp.solver_options.qp_solver_iter_max = 400;
     ocp.solver_options.regularize_method = 'MIRROR';
-    ocp.solver_options.qp_tol = 5e-7;
     ocp.solver_options.nlp_solver_max_iter = 100;
 
     % create solver
