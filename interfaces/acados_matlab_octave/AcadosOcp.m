@@ -855,14 +855,14 @@ classdef AcadosOcp < handle
             else
                 code_gen_opts = context.opts;
             end
-            context = setup_code_generation_context(ocp, context);
+            context = setup_code_generation_context(ocp, context, false, false);
             context.finalize();
             ocp.external_function_files_model = context.get_external_function_file_list(false);
             ocp.external_function_files_ocp = context.get_external_function_file_list(true);
             ocp.dims.n_global_data = context.get_n_global_data();
         end
 
-        function context = setup_code_generation_context(ocp, context)
+        function context = setup_code_generation_context(ocp, context, ignore_initial, ignore_terminal)
             code_gen_opts = context.opts;
             solver_opts = ocp.solver_options;
             constraints = ocp.constraints;
@@ -899,6 +899,16 @@ classdef AcadosOcp < handle
                 error('Unknown dyn_ext_fun_type.')
             end
 
+            if ignore_initial && ignore_terminal
+                idxs = [2];
+            elseif ignore_terminal
+                idxs = [1, 2];
+            elseif ignore_initial
+                idxs = [2, 3];
+            else
+                idxs = [1, 2, 3]
+            end
+
             stage_types = {'initial', 'path', 'terminal'};
 
             % cost
@@ -906,7 +916,9 @@ classdef AcadosOcp < handle
             cost_ext_fun_types = {cost.cost_ext_fun_type_0, cost.cost_ext_fun_type, cost.cost_ext_fun_type_e};
             cost_dir = fullfile(pwd, ocp.code_export_directory, [ocp.name '_cost']);
 
-            for i = 1:3
+            for n = 1:length(idxs)
+
+                i = idxs(n);
                 if strcmp(cost_ext_fun_types{i}, 'generic')
                     if strcmp(cost_types{i}, 'EXTERNAL')
                         setup_generic_cost(context, cost, cost_dir, stage_types{i})
@@ -938,7 +950,8 @@ classdef AcadosOcp < handle
             constraints_dims = {dims.nh_0, dims.nh, dims.nh_e};
             constraints_dir = fullfile(pwd, ocp.code_export_directory, [ocp.name '_constraints']);
 
-            for i = 1:3
+            for n = 1:length(idxs)
+                i = idxs(n);
                 if strcmp(constraints_types{i}, 'BGH') && constraints_dims{i} > 0
                     generate_c_code_nonlinear_constr(context, ocp.model, constraints_dir, stage_types{i});
                 end
