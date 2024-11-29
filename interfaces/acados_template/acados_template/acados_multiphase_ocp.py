@@ -86,6 +86,9 @@ def find_non_default_fields_of_obj(obj: Union[AcadosOcpCost, AcadosOcpConstraint
         elif val != default_val:
             nondefault_fields.append(field)
 
+            if isinstance(val, ca.MX) or isinstance(val, ca.SX):
+                setattr(obj, field, default_val)
+
     return nondefault_fields
 
 
