@@ -27,10 +27,11 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-% Simplest NLP with Marathos effect
+% Simplest Convex NLP where full-step SQP fails
 %
 % min log(exp(x) + exp(-x))
 %
+% Solution is x* = 0.0
 
 
 import casadi.*
