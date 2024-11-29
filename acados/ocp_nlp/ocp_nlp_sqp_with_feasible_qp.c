@@ -879,14 +879,13 @@ static double get_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wf
     {
         for (j=0; j<nns[i]; j++)
         {
-            // Add lb slack
+            // Add lower slack
             tmp1 = BLASFEO_DVECEL(qp_out->ux + i, nx[i]+nu[i]+ns[i] + j);
             l1_inf += fmax(0.0, tmp1);
 
-            // Add ub slack
+            // Add upper slack
             tmp2 = BLASFEO_DVECEL(qp_out->ux + i, nx[i]+nu[i]+2*ns[i]+nns[i] + j);
             l1_inf += fmax(0.0, tmp2);
-
             // int index = mem->idxns[i][j];
             // printf("slacks for constraint %d %d: l %e\t u %e\n", i, j, tmp1, tmp2);
         }
@@ -896,10 +895,10 @@ static double get_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wf
 }
 
 
-// /*
-// This function calculates the l1 infeasibility by calculating the matrix vector product of the
-// constraints
-// */
+/*
+This function calculates the l1 infeasibility by calculating the matrix vector product of the
+constraints
+*/
 static double calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_sqp_wfqp_workspace *work, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
 {
     int N = dims->N;
@@ -909,7 +908,7 @@ static double calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_
     int *nns = mem->nns;
 
     int *nb = qp_in->dim->nb;
-    int *ng = qp_in->dim->ng; //number of general two sided constraints
+    int *ng = qp_in->dim->ng;
 
     double l1_inf = 0.0;
     int i, j;
@@ -1038,7 +1037,7 @@ static void set_non_slacked_l2_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
 
 static double compute_gradient_directional_derivative(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
 {
-    // Compute the directional derivative in the direction of the search direction
+    // Compute the directional derivative of the user-specified objective in the direction qp_out
     double dir_der = 0.0;
     int i, nux;
     int N = dims->N;
@@ -1069,7 +1068,7 @@ static double compute_qp_objective_value(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_d
                                   ocp_qp_out *qp_out,
                                   ocp_nlp_workspace *nlp_work)
 {
-    // Compute the QP objective function value
+    // Compute the QP objective function value corresponding to the user specified objective.
     double qp_cost = 0.0;
     int i, nux, ns, nns;
     int N = dims->N;
@@ -1085,14 +1084,14 @@ static double compute_qp_objective_value(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_d
         qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
 
         // slack QP objective value, compare to computation in cost modules;
-        // First part
+        // lower
         // tmp_nv = 2 * z + Z .* slack;
         blasfeo_dveccpsc(ns, 2.0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
         blasfeo_dvecmulacc(ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
         // qp_cost += .5 * (tmp_nv .* slack)
         qp_cost += 0.5 * blasfeo_ddot(ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux);
 
-        // Second part
+        // upper
         // tmp_nv = 2 * z + Z .* slack;
         blasfeo_dveccpsc(ns, 2.0, &qp_out->ux[i], nux+ns+nns, &nlp_work->tmp_nv, 0);
         blasfeo_dvecmulacc(ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux+ns+nns, &nlp_work->tmp_nv, 0);
@@ -1105,7 +1104,7 @@ static double compute_qp_objective_value(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_d
         // Calculate gradient of slacks.T d_slacks
         // First part of slacks
         qp_cost += blasfeo_ddot(ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
-        // Second part of slacks
+        // upper of slacks
         qp_cost += blasfeo_ddot(ns, &qp_out->ux[i], nux+ns+nns, &qp_in->rqz[i], nux+ns+nns);
     }
     return qp_cost;
@@ -1114,7 +1113,7 @@ static double compute_qp_objective_value(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_d
 
 
 /*
-Calculates the norm of the search direction, but the additional slack directions are removed.
+Calculates the norm of the search direction in user defined variable space.
 If the problem is infeasibe, or the algorithm converges towards an infeasible point,
 then the step size would not converge to 0 for our additional slack variables (since we do not do a delta
 update in the master problem).
@@ -1173,9 +1172,9 @@ void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
 #endif
     for (int i = 0; i <= N; i++)
     {
-        // Assuming the variable order
+        // variable order NLP
         // [u x lb_slack ub_slack]
-        // Assuming the variable order for QP direction
+        // variable order QP
         // [u x lb_slack lb_relaxation_slack ub_slack ub_relaxation_slack]
 
         // step in primal variables
@@ -1248,18 +1247,16 @@ static void update_feasibility_multipliers(ocp_nlp_dims *dims, ocp_qp_out *feasi
 
 
 
-static void print_indices( ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_workspace *work, ocp_nlp_sqp_wfqp_memory *mem)
+static void print_indices(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_workspace *work, ocp_nlp_sqp_wfqp_memory *mem)
 {
     ocp_nlp_workspace *nlp_work = work->nlp_work;
     int ni, ns, nns;
     int *idxs = nlp_work->tmp_nins;
-    // DEBUG:
     for (int stage = 0; stage <= dims->N; stage++)
     {
         ns = dims->ns[stage];
         ni = dims->ni[stage];
         nns = mem->nns[stage];
-        // DEBUG:
         printf("stage %d: ni %d ns %d nns %d\n", stage, ni, ns, nns);
         printf("got idxs at stage %d\n", stage);
         for (int i=0; i<ns; i++)
@@ -1337,7 +1334,6 @@ void ocp_nlp_sqp_wfqp_approximate_qp_constraint_vectors(ocp_nlp_config *config,
     int *ns = dims->ns;
     int *ni = dims->ni;
     int *nns = mem->nns;
-
 
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
