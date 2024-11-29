@@ -1081,18 +1081,18 @@ class AcadosOcp:
             context.add_external_function_file(model.dyn_generic_source, target_dir)
 
         if ignore_initial and ignore_terminal:
-            idxs = [1]
+            stage_type_indices = [1]
         elif ignore_initial:
-            idxs = [1, 2]
+            stage_type_indices = [1, 2]
         elif ignore_terminal:
-            idxs = [0, 1]
+            stage_type_indices = [0, 1]
         else:
-            idxs = [0, 1, 2]
+            stage_type_indices = [0, 1, 2]
 
-        stage_types = [val for i, val in enumerate(['initial', 'path', 'terminal']) if i in idxs]
-        nhs = [val for i, val in enumerate(['nh_0', 'nh', 'nh_e']) if i in idxs]
-        nphis = [val for i, val in enumerate(['nphi_0', 'nphi', 'nphi_e']) if i in idxs]
-        cost_types = [val for i, val in enumerate(['cost_type_0', 'cost_type', 'cost_type_e']) if i in idxs]
+        stage_types = [val for i, val in enumerate(['initial', 'path', 'terminal']) if i in stage_type_indices]
+        nhs = [val for i, val in enumerate(['nh_0', 'nh', 'nh_e']) if i in stage_type_indices]
+        nphis = [val for i, val in enumerate(['nphi_0', 'nphi', 'nphi_e']) if i in stage_type_indices]
+        cost_types = [val for i, val in enumerate(['cost_type_0', 'cost_type', 'cost_type_e']) if i in stage_type_indices]
 
         for attr_nh, attr_nphi, stage_type in zip(nhs, nphis, stage_types):
             if getattr(self.dims, attr_nh) > 0 or getattr(self.dims, attr_nphi) > 0:

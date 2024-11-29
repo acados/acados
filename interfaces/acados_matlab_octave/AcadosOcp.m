@@ -900,13 +900,13 @@ classdef AcadosOcp < handle
             end
 
             if ignore_initial && ignore_terminal
-                idxs = [2];
+                stage_type_indices = [2];
             elseif ignore_terminal
-                idxs = [1, 2];
+                stage_type_indices = [1, 2];
             elseif ignore_initial
-                idxs = [2, 3];
+                stage_type_indices = [2, 3];
             else
-                idxs = [1, 2, 3]
+                stage_type_indices = [1, 2, 3]
             end
 
             stage_types = {'initial', 'path', 'terminal'};
@@ -916,9 +916,9 @@ classdef AcadosOcp < handle
             cost_ext_fun_types = {cost.cost_ext_fun_type_0, cost.cost_ext_fun_type, cost.cost_ext_fun_type_e};
             cost_dir = fullfile(pwd, ocp.code_export_directory, [ocp.name '_cost']);
 
-            for n = 1:length(idxs)
+            for n = 1:length(stage_type_indices)
 
-                i = idxs(n);
+                i = stage_type_indices(n);
                 if strcmp(cost_ext_fun_types{i}, 'generic')
                     if strcmp(cost_types{i}, 'EXTERNAL')
                         setup_generic_cost(context, cost, cost_dir, stage_types{i})
@@ -950,8 +950,8 @@ classdef AcadosOcp < handle
             constraints_dims = {dims.nh_0, dims.nh, dims.nh_e};
             constraints_dir = fullfile(pwd, ocp.code_export_directory, [ocp.name '_constraints']);
 
-            for n = 1:length(idxs)
-                i = idxs(n);
+            for n = 1:length(stage_type_indices)
+                i = stage_type_indices(n);
                 if strcmp(constraints_types{i}, 'BGH') && constraints_dims{i} > 0
                     generate_c_code_nonlinear_constr(context, ocp.model, constraints_dir, stage_types{i});
                 end
