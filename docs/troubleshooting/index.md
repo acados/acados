@@ -1,10 +1,9 @@
 
 # Trouble shooting
 
-
 As a first step, check the [solver status](https://docs.acados.org/python_interface/index.html#acados_template.acados_ocp_solver.AcadosOcpSolver.get_status) which is returned by `solve()` in Python and can be obtained with `solver.get_status()` and `solver.get('status')` in Python and MATLAB/Octave, respectively.
 
-Next, check the NLP residuals by calling `solver.print_statistics()` in Python and `solver.print('stat')`.
+Next, check the NLP residuals by calling `solver.print_statistics()` in Python and `solver.print('stat')` in MATLAB/Octave.
 
 In order to asses the QP solver status, you need to check the corresponding QP solver status definitions. For `HPIPM`, they are given [here](https://github.com/giaf/hpipm/blob/deb7808e49a3cc2b1bdb721cba23f13869c0a35c/include/hpipm_common.h#L57).
 

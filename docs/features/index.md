@@ -106,7 +106,7 @@ Relevant publications: [Frey2024](https://publications.syscop.de/Frey2024.pdf), 
 - [Python](examples/acados_python/chain_mass/solution_sensitivity_example.py)
 - currently not supported for MATLAB/Octave
 
-### Adjoiont solution sensitivities
+### Adjoint solution sensitivities
 - [Python](examples/acados_python/pendulum_on_cart/solution_sensitivities/forw_vs_adj_param_sens.py)
 - currently no supported for MATLAB/Octave
 
