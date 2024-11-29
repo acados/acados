@@ -54,7 +54,7 @@ def is_casadi_SX(x):
 class GenerateContext:
     def __init__(self, p_global: Optional[Union[ca.SX, ca.MX]], problem_name: str, opts=None):
         self.p_global = p_global
-        if p_global is not None:
+        if not is_empty(p_global):
             check_casadi_version_supports_p_global()
 
         self.problem_name = problem_name
@@ -167,7 +167,7 @@ class GenerateContext:
         assert casadi_length(self.global_data_expr) == casadi_length(self.global_data_sym), f"Length mismatch: {casadi_length(self.global_data_expr)} != {casadi_length(self.global_data_sym)}"
 
     def finalize(self):
-        if self.p_global is not None:
+        if not is_empty(self.p_global):
             self.__setup_p_global_precompute_fun()
 
         self.__generate_functions()
@@ -472,7 +472,7 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
     hess_z = hess_uxz[nunx:, nunx:]
     hess_z_ux = hess_uxz[nunx:, :nunx]
 
-    if custom_hess is not None:
+    if not is_empty(custom_hess):
         hess_ux = custom_hess
 
     cost_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model.name}_cost'))
@@ -562,8 +562,7 @@ def generate_c_code_conl_cost(context: GenerateContext, model: AcadosModel, stag
     t = model.t
 
     symbol = get_casadi_symbol(x)
-    if p_global is None:
-        p_global = symbol('p_global', 0, 0)
+    p_global = symbol('p_global', 0, 0)
 
     if stage_type == 'terminal':
         u = symbol('u', 0, 0)
@@ -614,7 +613,7 @@ def generate_c_code_conl_cost(context: GenerateContext, model: AcadosModel, stag
 
     outer_loss_grad_fun = ca.Function('outer_loss_grad', [res_expr, t, p, p_global], [ca.jacobian(outer_expr, res_expr).T])
 
-    if custom_hess is None:
+    if is_empty(custom_hess):
         hess = ca.hessian(outer_loss_fun(res_expr, t, p, p_global), res_expr)[0]
     else:
         hess = custom_hess
