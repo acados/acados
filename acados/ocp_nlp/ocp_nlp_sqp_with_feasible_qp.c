@@ -1493,15 +1493,6 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
         // increment sqp_iter to return full statistics and improve output below.
         sqp_iter++;
 
-// #ifndef ACADOS_SILENT
-//         printf("\nQP solver returned error status %d in SQP iteration %d, QP iteration %d.\n",
-//                 qp_status, sqp_iter, qp_iter);
-// #endif
-// TODO: fix openmp
-// #if defined(ACADOS_WITH_OPENMP)
-//         // restore number of threads
-//         omp_set_num_threads(num_threads_bkp);
-// #endif
         if (nlp_opts->print_level > 1)
         {
             printf("\n Failed to solve the following QP:\n");
@@ -1527,7 +1518,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
  ************************************************/
 
 /*
-Evaluates the adjoint value of the inequalities such that we can use it with a 
+Evaluates the adjoint value of the inequalities such that we can use it with a
 different multiplier.
 */
 static void eval_adjoints(ocp_qp_in* qp_in, ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_workspace* nlp_work)
@@ -1637,7 +1628,7 @@ double sqp_wfqp_calculate_res_comp(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *
             }
         }
 
-        //slacked constraints
+        // slacked constraints
         for (j=n_unslacked_bounds; j<n_nominal_ineq_nlp; j++)
         {
             tmp = BLASFEO_DVECEL(nlp_mem->ineq_fun+i, j);
@@ -1656,7 +1647,6 @@ double sqp_wfqp_calculate_res_comp(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *
             {
                 tmp_res = tmp_val;
             }
-
 
             // Do the same with offset
             tmp = BLASFEO_DVECEL(nlp_mem->ineq_fun+i, j+n_nominal_ineq_nlp);
@@ -1677,7 +1667,7 @@ double sqp_wfqp_calculate_res_comp(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *
             }
 
         }
-    }    
+    }
 
     return tmp_res;
 }
@@ -1939,12 +1929,12 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         if (pred_l1_inf_QP_optimality >= 0.0 && -nlp_mem->objective_multiplier*predictor_lp_objective + pred_l1_inf_QP_optimality >= opts->sufficient_l1_inf_reduction * current_l1_infeasibility)
         {
             print_debug_output("Only Predictor QP was solved!\n", nlp_opts->print_level, 2);
-            kappa = 1.0; //we take only the predictor step
+            kappa = 1.0; // we take only the predictor step
         }
         else
         {
             print_debug_output("Solve Steering QP!\n", nlp_opts->print_level, 2);
-            /* Solve Steering QP: We solve without gradient and only with constraint Hessian */
+            /* Solve steering QP: We solve without gradient and only with constraint Hessian */
             qp_status = prepare_and_solve_QP(config, opts, qp_in, nlp_work->tmp_qp_out, dims, mem, nlp_in, nlp_out,
                         nlp_mem, nlp_work, sqp_iter, true, timer0, timer1);
             ocp_qp_out_get(nlp_work->tmp_qp_out, "qp_info", &qp_info_);
@@ -2078,7 +2068,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             if (pred_l1_inf_QP_optimality < 0.0)
             {
                 nlp_mem->objective_multiplier = 1e-1*nlp_mem->objective_multiplier;
-            } 
+            }
             else
             {
                 nlp_mem->objective_multiplier = 5e-1*nlp_mem->objective_multiplier;
