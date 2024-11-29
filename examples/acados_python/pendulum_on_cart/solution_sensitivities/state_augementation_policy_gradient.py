@@ -258,7 +258,8 @@ def main_augmented(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, ei
             min_abs_eig_P[i] = projected_hessian_diagnostics['min_abs_eigv_P_global']
 
         # Calculate the policy gradient
-        _, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "initial_state")
+        out_dict = sensitivity_solver.eval_solution_sensitivity(0, "initial_state", return_sens_x=False)
+        sens_u_ = out_dict['sens_u']
         sens_u[i] = sens_u_[:, idxp]
 
     # Compare to numerical gradients

@@ -128,8 +128,8 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
             print(f"sensitivity solver returned status {sensitivity_solver.get_status()}.")
             # breakpoint()
         # Calculate the policy gradient
-        _, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "p_global")
-        sens_u[i] = sens_u_.item()
+        out_dict = sensitivity_solver.eval_solution_sensitivity(0, "p_global", return_sens_x=False)
+        sens_u[i] = out_dict['sens_u'].item()
 
     # Compare to numerical gradients
     sens_u_fd = np.gradient(u_opt, delta_p)

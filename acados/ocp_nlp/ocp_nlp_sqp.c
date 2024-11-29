@@ -852,8 +852,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // NOTE on timings: currently all within globalization is accounted for within time_glob.
         //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
         acados_tic(&timer1);
-
         globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts, &mem->alpha);
+        nlp_timings->time_glob += acados_toc(&timer1);
 
         if (globalization_status != ACADOS_SUCCESS)
         {
@@ -871,7 +871,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return mem->nlp_mem->status;
         }
         mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
-        nlp_timings->time_glob += acados_toc(&timer1);
 
     }  // end SQP loop
 

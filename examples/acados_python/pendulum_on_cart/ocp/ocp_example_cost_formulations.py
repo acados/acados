@@ -247,7 +247,14 @@ def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', refor
 
     if reformulate_to_external:
         ocp.solver_options.fixed_hess = 0
-        ocp.translate_cost_to_external_cost(parametric_yref=True)
+        if cost_version in ['LS', 'NLS', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z']:
+            p = ca.SX.sym('yref', ocp.cost.yref.shape[0])
+            p_values = ocp.cost.yref
+            yref = p
+            yref_e = p[:ocp.cost.yref_e.shape[0]]
+        else:
+            p = p_values = yref= yref_e = None
+        ocp.translate_cost_to_external_cost(p=p, p_values=p_values, yref=yref, yref_e=yref_e)
 
     # create solver
     ocp_solver = AcadosOcpSolver(ocp)
