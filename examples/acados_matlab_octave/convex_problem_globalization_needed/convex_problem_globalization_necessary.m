@@ -108,7 +108,7 @@ for num = 1:length(globalization_params)
     sol_err = abs(solution - exact_solution);
 
     if strcmp(globalization, 'FIXED_STEP')
-        assert(status != 0, 'FIXED_STEP converged. Theoretically impossible!');
+        assert(status ~= 0, 'FIXED_STEP converged. Theoretically impossible!');
     elseif strcmp(globalization, 'FUNNEL_L1PEN_LINESEARCH')
         assert(status == 0, 'FUNNEL_L1PEN_LINESEARCH did not converge. Algorithm should converge!');
         assert(sol_err <= 1e-5, "numerical solutions do not match to analytical solution with tolerance");
