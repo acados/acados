@@ -32,11 +32,9 @@ def solve_problem_with_setting(setting):
     model = AcadosModel()
     x = SX.sym('x')
 
-    # dynamics: identity
+    # dynamics: identity, no control input
     model.disc_dyn_expr = x
     model.x = x
-    model.u = SX.sym('u', 0, 0)
-    model.p = []
     model.name = f'convex_globalization_problem'
     ocp.model = model
 
@@ -67,14 +65,13 @@ def solve_problem_with_setting(setting):
 
     # initialize solver
     xinit = np.array([1.5])
-    [ocp_solver.set(i, "x", xinit) for i in range(N+1)]
+    for i in range(N+1):
+        ocp_solver.set(i, "x", xinit)
 
-    print(f"solved convex globalization test problem with settings {setting}")
     # solve
-    ocp_solver.solve()
+    status = ocp_solver.solve()
 
-    status = ocp_solver.get_status()
-
+    print(f"solved convex globalization test problem with settings {setting}, got status {status}")
     # get solution
     solution = ocp_solver.get(0, "x")
 
@@ -87,6 +84,7 @@ def solve_problem_with_setting(setting):
         assert sol_err <= TOL*1e1, f"numerical solutions do not match to analytical solution with tolerance {TOL}"
     else:
         assert status != 0, 'Fixed step converged. Theoretically impossible!'
+        assert status == 1, 'Fixed step should run into NaN, i.e. status 3'
 
 if __name__ == '__main__':
     main()
