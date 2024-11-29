@@ -82,6 +82,7 @@ Documentation latest build: |today|
     :caption: User Guide
 
     problem_formulation/index
+    features/index
 ```
 
 <!-- c_interface/index -->

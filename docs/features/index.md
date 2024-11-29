@@ -1,11 +1,11 @@
-# Features
+# Features by Example
 This page showcases how specific `acados` features can be used, by pointing to the relevant examples.
 If you are new to `acados` we highly recommend you to start with the `getting_started` examples:
 - for Python: [`examples/acados_python/getting_started`](https://github.com/acados/acados/blob/master/examples/acados_python/getting_started)
 - for MATLAB, Octave: [`examples/acados_matlab_octave/getting_started`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started)
 
 
-## Simulation via AcadosSimSolver & Sensitivity propagation
+## Simulation and Sensitivity propagation via `AcadosSimSolver`
 - for Python: [`examples/acados_python/pendulum_on_cart/sim/extensive_example_sim.py`](https://github.com/acados/acados/blob/master/examples/acados_python/pendulum_on_cart/sim/extensive_example_sim.py)
 - for MATLAB, Octave, Simulink: [`examples/acados_matlab_octave/getting_started/minimal_example_sim.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started/minimal_example_sim.m)
 
@@ -33,30 +33,34 @@ If you are new to `acados` we highly recommend you to start with the `getting_st
 - for MATLAB, Octave, Simulink: [`examples/acados_matlab_octave/control_rates/main.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/control_rates/main.m)
 
 ### Soft constraints
+- for Python: `examples/acados_python/linear_mass_model/solve_marathos_ocp.py`(https://github.com/acados/acados/blob/master/examples/acados_python/linear_mass_model/solve_marathos_ocp.py)
+- for MATLAB, Octave: [`examples/acados_matlab_octave/test/create_slacked_ocp_qp_solver_formulation.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/test/create_slacked_ocp_qp_solver_formulation.m)
+
 
 ### Moving horizon estimation (MHE)
 - for Python: `examples/acados_python/pendulum_on_cart/mhe/closed_loop_mhe_ocp.py`(https://github.com/acados/acados/blob/master/examples/acados_python/pendulum_on_cart/mhe/closed_loop_mhe_ocp.py)
-- for MATLAB / Octave: [`examples/acados_matlab_octave/lorentz/example_mhe.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/lorentz/example_mhe.m)
+- for MATLAB, Octave: [`examples/acados_matlab_octave/lorentz/example_mhe.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/lorentz/example_mhe.m)
 
 ### Nonuniform grid OCP discretization
 - [`examples/acados_python/furuta_pendulum/main_closed_loop.py`](https://github.com/acados/acados/blob/master/examples/acados_python/furuta_pendulum/main_closed_loop.py)
 - [`examples/acados_matlab_octave/getting_started/extensive_example_ocp.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started/extensive_example_ocp.m)
 
 ### Time varying reference tracking
-- for MATLAB / Octave: [`examples/acados_matlab_octave/control_rates/main.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/control_rates/main.m)
+- for MATLAB, Octave: [`examples/acados_matlab_octave/control_rates/main.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/control_rates/main.m)
 - for Python: `examples/acados_python/pendulum_on_cart/mhe/closed_loop_mhe_ocp.py`(https://github.com/acados/acados/blob/master/examples/acados_python/pendulum_on_cart/mhe/closed_loop_mhe_ocp.py)
 
 
 ### One-sided constraints
 - for Python: [`examples/acados_python/convex_ocp_with_onesided_constraints/main_convex_onesided.py`](https://github.com/acados/acados/blob/master/examples/acados_python/convex_ocp_with_onesided_constraints/main_convex_onesided.py)
-- for MATLAB / Octave: [`examples/acados_matlab_octave/linear_mpc/main.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/linear_mpc/main.m)
+- for MATLAB, Octave: [`examples/acados_matlab_octave/linear_mpc/main.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/linear_mpc/main.m)
+
 
 
 ## Algorithmic features and solver options
 
 ### Real-time Iterations (RTI)
 - for Python: [`examples/acados_python/furuta_pendulum/main_closed_loop.py`](https://github.com/acados/acados/blob/master/examples/acados_python/furuta_pendulum/main_closed_loop.py)
-- for MATLAB / Octave: [`examples/acados_matlab_octave/masses_chain_model/example_closed_loop.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/masses_chain_model/example_closed_loop.m)
+- for MATLAB, Octave: [`examples/acados_matlab_octave/masses_chain_model/example_closed_loop.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/masses_chain_model/example_closed_loop.m)
 
 ### Advanced-Step Real-Time Iterations (AS-RTI)
 Relevant publications: [Frey2024a](https://publications.syscop.de/Frey2024a.pdf), [Nurkanovic2019a](https://publications.syscop.de/Nurkanovic2019a.pdf)
@@ -65,8 +69,6 @@ Relevant publications: [Frey2024a](https://publications.syscop.de/Frey2024a.pdf)
 
 ### Cost integration
 - for Python: [`examples/acados_python/tests/test_ggn_cost_integration.py`](examples/acados_python/tests/test_ggn_cost_integration.py)
-
-### Solution sensitivities
 
 ### Globalization
 - for Python: [`examples/acados_python/convex_problem_globalization_needed/convex_problem_globalization_necessary.py`](examples/acados_python/convex_problem_globalization_needed/convex_problem_globalization_necessary.py)
@@ -81,7 +83,6 @@ Additionally, one can use `qp_solver_cond_block_size` to specify how many blocks
 - for MATLAB, Octave, Simulink: [`examples/acados_matlab_octave/p_global_example/set_solver_options.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/p_global_example/set_solver_options.m)
 
 
-
 ### zero-order robust optimization (zoRO)
 Relevant publications:
 [Frey2024](https://publications.syscop.de/Frey2024.pdf)
@@ -91,15 +92,32 @@ Examples
 - for Python: [`examples/acados_python/zoRO_example`](https://github.com/acados/acados/blob/master/examples/acados_python/zoRO_example)
 - for MATLAB, Octave, Simulink: [`examples/acados_matlab_octave/pendulum_on_cart_model/zoro_example.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/pendulum_on_cart_model/zoro_example.m)
 
+
+### Solution sensitivities
+- for Python: [`examples/acados_python/chain_mass/solution_sensitivity_example.py`](examples/acados_python/chain_mass/solution_sensitivity_example.py)
+
+### Adjoiont solution sensitivities
+- for Python: [`examples/acados_python/pendulum_on_cart/solution_sensitivities/forw_vs_adj_param_sens.py`](examples/acados_python/pendulum_on_cart/solution_sensitivities/forw_vs_adj_param_sens.py)
+
+
+
+
 ## Trouble shooting
 Check Solver status: see [documentation of acados status for NLP solver status.](https://docs.acados.org/python_interface/index.html#acados_template.acados_ocp_solver.AcadosOcpSolver.get_status)
 In order to asses the QP solver status, one has to check the corresponding QP solver status definitions.
 
-### Store iterates
 
 ### QP diagnostics
+- for Python: [`examples/acados_python/pendulum_on_cart/solution_sensitivities/policy_gradient_example.py`](examples/acados_python/pendulum_on_cart/solution_sensitivities/policy_gradient_example.py)
+- for MATLAB, Octave: [`examples/acados_matlab_octave/getting_started/extensive_example_ocp.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started/extensive_example_ocp.m)
 
 
+### Store iterates
+One can always get the last iterate using `ocp_solver.get()`, see
+- for Python: [`examples/acados_python/linear_mass_model/linear_mass_test_problem.py`](examples/acados_python/linear_mass_model/linear_mass_test_problem.py)
+- for MATLAB, Octave: [`examples/acados_matlab_octave/getting_started/extensive_example_ocp.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started/extensive_example_ocp.m)
 
-
+In addition, one can set the solver option [`store_iterates`](https://docs.acados.org/python_interface/index.html#acados_template.acados_ocp_options.AcadosOcpOptions.store_iterates) to store all intermediate NLP solver iterates and get them after a solver call.
+- for Python: [`examples/acados_python/convex_ocp_with_onesided_constraints/main_convex_onesided.py`](examples/acados_python/convex_ocp_with_onesided_constraints/main_convex_onesided.py)
+- for MATLAB, Octave: [`examples/acados_matlab_octave/getting_started/extensive_example_ocp.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started/extensive_example_ocp.m)
 
