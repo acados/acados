@@ -83,8 +83,7 @@ def solve_problem_with_setting(setting):
         assert status == 0, f'{globalization} did not converge. Algorithm should converge!'
         assert sol_err <= TOL*1e1, f"numerical solutions do not match to analytical solution with tolerance {TOL}"
     else:
-        assert status != 0, 'Fixed step converged. Theoretically impossible!'
-        assert status == 1, 'Fixed step should run into NaN, i.e. status 3'
+        assert status == 1, 'Fixed step should run into NaN, i.e. status 1'
 
 if __name__ == '__main__':
     main()
