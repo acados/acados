@@ -734,38 +734,32 @@ This function does not take into account the multiplier values of the slack vari
 
 This function assumes that the masked multipliers are always zero.
 */
-static void get_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims, ocp_qp_out *qp_out, ocp_qp_in *qp_in, bool was_feasibility_QP)
+static void compute_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims, ocp_qp_out *qp_out, ocp_qp_in *qp_in, bool was_feasibility_QP)
 {
     int i,j;
     int N = dims->N;
     int *nx = dims->nx;
-    double tmp0 = 0.0;
-    double tmp1 = 0.0;
+    double norm_pi = 0.0;
+    double norm_lam_slacked_constraints = 0.0;
+    double norm_lam_hard_constr = 0.0;
 
-    mem->norm_pi = 0.0;
-    mem->norm_lam_unslacked_bounds = 0.0;
-    mem->norm_lam_slacked_constraints = 0.0;
-
+    // compute inf norm of pi
     for (i = 0; i < N; i++)
     {
         for (j=0; j<nx[i+1]; j++)
         {
-            // abs(lambda) (LW)
-            tmp0 = fmax(tmp0, fabs(BLASFEO_DVECEL(qp_out->pi+i, j)));
+            norm_pi = fmax(norm_pi, fabs(BLASFEO_DVECEL(qp_out->pi+i, j)));
         }
     }
-    mem->norm_pi = tmp0;
+    mem->norm_pi = norm_pi;
 
+    /* structure of QP and NLP iterates: */
     // qp_out->lam = [lbu, lbx, lg, l_nl, ubu, ubx, ug, u_nl, lbs_NLP, lbs_QP, ubs_NLP, ubs_QP]
     // nlp_out->lam = [lbu, lbx, lg, l_nl, ubu, ubx, ug, u_nl, lbs_NLP, ----, ubs_NLP, ---]
-    tmp0 = 0.0;
-    tmp1 = 0.0;
     int n_unslacked_bounds, n_nominal_ineq_nlp;
     for (i = 0; i <= N; i++)
     {
         n_nominal_ineq_nlp = dims->nb[i]+dims->ng[i]+dims->ni_nl[i];
-        // printf("i=%d\n", i);
-        // blasfeo_print_dvec(2*n_nominal_ineq_nlp +2*ns[i] +2*mem->nns[i], qp_out->lam+i, 0);
         if (i == 0)
         {
             // we do not slack the initial state conditions!
@@ -776,11 +770,11 @@ static void get_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dim
             n_unslacked_bounds = qp_in->dim->nbu[i];
         }
 
-        // Unslacked bounds multipliers!
+        // Unslacked bounds multipliers
         for (j=0; j<n_unslacked_bounds; j++)
         {
-            tmp0 = fmax(tmp0, BLASFEO_DVECEL(qp_out->lam+i, j));
-            tmp0 = fmax(tmp0, BLASFEO_DVECEL(qp_out->lam+i, n_nominal_ineq_nlp+j));
+            norm_lam_hard_constr = fmax(norm_lam_hard_constr, BLASFEO_DVECEL(qp_out->lam+i, j));
+            norm_lam_hard_constr = fmax(norm_lam_hard_constr, BLASFEO_DVECEL(qp_out->lam+i, n_nominal_ineq_nlp+j));
         }
 
         // Slacked multipliers (excluding the multipliers of the additional slacks)
@@ -788,14 +782,14 @@ static void get_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dim
         for (j=n_unslacked_bounds; j<n_nominal_ineq_nlp; j++)
         {
             // lower bounds
-            tmp1 = fmax(tmp1, BLASFEO_DVECEL(qp_out->lam+i, j));
+            norm_lam_slacked_constraints = fmax(norm_lam_slacked_constraints, BLASFEO_DVECEL(qp_out->lam+i, j));
             // upper bounds
-            tmp1 = fmax(tmp1, BLASFEO_DVECEL(qp_out->lam+i, j+n_nominal_ineq_nlp));
+            norm_lam_slacked_constraints = fmax(norm_lam_slacked_constraints, BLASFEO_DVECEL(qp_out->lam+i, j+n_nominal_ineq_nlp));
         }
     }
-    mem->norm_lam_unslacked_bounds = tmp0;
-    mem->norm_lam_slacked_constraints = tmp1;
-    // assert(tmp1 <= 1.0 + 1e-8); // Slacked multipliers should be in [0,1]
+    mem->norm_lam_unslacked_bounds = norm_lam_hard_constr;
+    mem->norm_lam_slacked_constraints = norm_lam_slacked_constraints;
+    // assert(norm_lam_slacked_constraints <= 1.0 + 1e-8); // Slacked multipliers should be in [0,1]
 }
 
 
@@ -1929,7 +1923,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #endif
             return nlp_mem->status;
         }
-        get_qp_multiplier_norm_inf(mem, dims, qp_out, qp_in, false);
+        compute_qp_multiplier_norm_inf(mem, dims, qp_out, qp_in, false);
         print_debug_output_double("Opt QP multiplier norm: pi", mem->norm_pi, nlp_opts->print_level, 2);
         print_debug_output_double("Opt QP multiplier norm: lam slacked", mem->norm_lam_slacked_constraints, nlp_opts->print_level, 2);
         print_debug_output_double("Opt QP multiplier norm: lam unslacked", mem->norm_lam_unslacked_bounds, nlp_opts->print_level, 2);
@@ -1973,7 +1967,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #endif
                 return nlp_mem->status;
             }
-            get_qp_multiplier_norm_inf(mem, dims, nlp_work->tmp_qp_out, qp_in, true);
+            compute_qp_multiplier_norm_inf(mem, dims, nlp_work->tmp_qp_out, qp_in, true);
             print_debug_output_double("Feas QP multiplier norm: pi", mem->norm_pi, nlp_opts->print_level, 2);
             print_debug_output_double("Feas QP multiplier norm: lam slacked", mem->norm_lam_slacked_constraints, nlp_opts->print_level, 2);
             print_debug_output_double("Feas QP multiplier norm: lam unslacked", mem->norm_lam_unslacked_bounds, nlp_opts->print_level, 2);
