@@ -126,6 +126,7 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
     opts->eval_residual_at_max_iter = false;
     opts->initial_objective_multiplier = 1e0;
     opts->sufficient_l1_inf_reduction = 0.9;//1e-1;
+    opts->use_exact_hessian_in_feas_qp = false;
 
     // overwrite default submodules opts
     // qp tolerance
@@ -241,6 +242,11 @@ void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, vo
         {
             double* initial_objective_multiplier = (double *) value;
             opts->initial_objective_multiplier = *initial_objective_multiplier;
+        }
+        else if (!strcmp(field, "use_exact_hessian_in_feas_qp"))
+        {
+            bool* use_exact_hessian_in_feas_qp = (bool *) value;
+            opts->use_exact_hessian_in_feas_qp = *use_exact_hessian_in_feas_qp;
         }
         else
         {
@@ -1374,7 +1380,7 @@ void ocp_nlp_sqp_wfqp_approximate_qp_constraint_vectors(ocp_nlp_config *config,
 
 
 static void ocp_nlp_sqp_wfqp_setup_qp_objective(ocp_nlp_config *config,
-    ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+    ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_sqp_wfqp_opts *opts,
     ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work, double objective_multiplier)
 {
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
@@ -1397,13 +1403,18 @@ static void ocp_nlp_sqp_wfqp_setup_qp_objective(ocp_nlp_config *config,
         // TODO: axpby for matrices? Do we need to take slacks here into account as well? I.e., scale slack Hessian?
         if (objective_multiplier == 0.0)
         {
-            // Either we use the exact objective Hessian
-            blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
-            blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);// I think we do not need this here
-
-            // We use the identity matrix Hessian
-            // blasfeo_dgese(nxu, nxu, 0.0, nlp_mem->qp_in->RSQrq+i, 0, 0);
-            // blasfeo_ddiare(nxu, 1e-4, nlp_mem->qp_in->RSQrq+i, 0, 0);  // dPsi_dx is unit now
+            if (opts->use_exact_hessian_in_feas_qp)
+            {
+                // Either we use the exact objective Hessian
+                blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
+                blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
+            }
+            else
+            {
+                // We use the identity matrix Hessian
+                blasfeo_dgese(nxu, nxu, 0.0, nlp_mem->qp_in->RSQrq+i, 0, 0);
+                blasfeo_ddiare(nxu, 1e-4, nlp_mem->qp_in->RSQrq+i, 0, 0);
+            }
         }
         else
         {
@@ -1446,11 +1457,11 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     // Load input to QP and regularize Hessian
     if (solve_feasibility_qp)
     {
-        ocp_nlp_sqp_wfqp_setup_qp_objective(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, 0.0);
+        ocp_nlp_sqp_wfqp_setup_qp_objective(config, dims, nlp_in, nlp_out, opts, mem, nlp_work, 0.0);
     }
     else
     {
-        ocp_nlp_sqp_wfqp_setup_qp_objective(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, nlp_mem->objective_multiplier);
+        ocp_nlp_sqp_wfqp_setup_qp_objective(config, dims, nlp_in, nlp_out, opts, mem, nlp_work, nlp_mem->objective_multiplier);
     }
     // TODO: if we solve the feasibility QP, we probably do not need or want the LM term?
     ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter);

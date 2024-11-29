@@ -70,7 +70,8 @@ typedef struct
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
     bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
     double initial_objective_multiplier; //Initial value for objective multiplier, normalle 1e0
-    double sufficient_l1_inf_reduction; //scalar multiplication factor for 
+    double sufficient_l1_inf_reduction; //scalar multiplication factor for
+    bool use_exact_hessian_in_feas_qp; // Either use exact Hessian or identity matrix in feasibility QP
 } ocp_nlp_sqp_wfqp_opts;
 
 //
