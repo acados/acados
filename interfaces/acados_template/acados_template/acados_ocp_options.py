@@ -556,7 +556,7 @@ class AcadosOcpOptions:
     def store_iterates(self,):
         """
         Flag indicating whether the intermediate primal-dual iterates should be stored.
-        This is implemented only for solver type `SQP` and `DDP`.
+        This is implemented only for solver types `SQP` and `DDP`.
         Default: False
         """
         return self.__store_iterates

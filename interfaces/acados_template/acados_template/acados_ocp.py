@@ -1046,7 +1046,7 @@ class AcadosOcp:
         return context
 
 
-    def _setup_code_generation_context(self, context: GenerateContext) -> GenerateContext:
+    def _setup_code_generation_context(self, context: GenerateContext, ignore_initial: bool = False, ignore_terminal: bool = False) -> GenerateContext:
 
         model = self.model
         constraints = self.constraints
@@ -1080,13 +1080,25 @@ class AcadosOcp:
             shutil.copyfile(model.dyn_generic_source, target_location)
             context.add_external_function_file(model.dyn_generic_source, target_dir)
 
-        stage_types = ['initial', 'path', 'terminal']
+        if ignore_initial and ignore_terminal:
+            stage_type_indices = [1]
+        elif ignore_initial:
+            stage_type_indices = [1, 2]
+        elif ignore_terminal:
+            stage_type_indices = [0, 1]
+        else:
+            stage_type_indices = [0, 1, 2]
 
-        for attr_nh, attr_nphi, stage_type in zip(['nh_0', 'nh', 'nh_e'], ['nphi_0', 'nphi', 'nphi_e'], stage_types):
+        stage_types = [val for i, val in enumerate(['initial', 'path', 'terminal']) if i in stage_type_indices]
+        nhs = [val for i, val in enumerate(['nh_0', 'nh', 'nh_e']) if i in stage_type_indices]
+        nphis = [val for i, val in enumerate(['nphi_0', 'nphi', 'nphi_e']) if i in stage_type_indices]
+        cost_types = [val for i, val in enumerate(['cost_type_0', 'cost_type', 'cost_type_e']) if i in stage_type_indices]
+
+        for attr_nh, attr_nphi, stage_type in zip(nhs, nphis, stage_types):
             if getattr(self.dims, attr_nh) > 0 or getattr(self.dims, attr_nphi) > 0:
                 generate_c_code_constraint(context, model, constraints, stage_type)
 
-        for attr, stage_type in zip(['cost_type_0', 'cost_type', 'cost_type_e'], stage_types):
+        for attr, stage_type in zip(cost_types, stage_types):
             if getattr(self.cost, attr) == 'NONLINEAR_LS':
                 generate_c_code_nls_cost(context, model, stage_type)
             elif getattr(self.cost, attr) == 'CONVEX_OVER_NONLINEAR':
