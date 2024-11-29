@@ -1089,16 +1089,16 @@ class AcadosOcp:
         else:
             idxs = [0, 1, 2]
 
-        stage_types = ['initial', 'path', 'terminal']
-        nhs = ['nh_0', 'nh', 'nh_e']
-        nphis = ['nphi_0', 'nphi', 'nphi_e']
-        cost_types = ['cost_type_0', 'cost_type', 'cost_type_e']
+        stage_types = [val for i, val in enumerate(['initial', 'path', 'terminal']) if i in idxs]
+        nhs = [val for i, val in enumerate(['nh_0', 'nh', 'nh_e']) if i in idxs]
+        nphis = [val for i, val in enumerate(['nphi_0', 'nphi', 'nphi_e']) if i in idxs]
+        cost_types = [val for i, val in enumerate(['cost_type_0', 'cost_type', 'cost_type_e']) if i in idxs]
 
-        for attr_nh, attr_nphi, stage_type in zip(nhs[idxs], nphis[idxs], stage_types[idxs]):
+        for attr_nh, attr_nphi, stage_type in zip(nhs, nphis, stage_types):
             if getattr(self.dims, attr_nh) > 0 or getattr(self.dims, attr_nphi) > 0:
                 generate_c_code_constraint(context, model, constraints, stage_type)
 
-        for attr, stage_type in zip(cost_types[idxs], stage_types[idxs]):
+        for attr, stage_type in zip(cost_types, stage_types):
             if getattr(self.cost, attr) == 'NONLINEAR_LS':
                 generate_c_code_nls_cost(context, model, stage_type)
             elif getattr(self.cost, attr) == 'CONVEX_OVER_NONLINEAR':
