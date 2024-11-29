@@ -772,8 +772,9 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
     }
 
     // check for infeasible problem
-    if (nlp_res->inf_norm_res_eq < opts->tol_eq && nlp_res->inf_norm_res_ineq > opts->tol_ineq &&
-        mem->objective_multiplier < opts->tol_objective_multiplier && mem->inf_norm_res_comp_feasibility < opts->tol_comp)
+    if (nlp_res->inf_norm_res_eq < opts->tol_eq && nlp_res->inf_norm_res_ineq > opts->tol_ineq 
+            && mem->nlp_mem->objective_multiplier < opts->tol_objective_multiplier
+            && mem->inf_norm_res_comp_feasibility < opts->tol_comp)
     {
         mem->nlp_mem->status = ACADOS_INFEASIBLE;
         if (opts->nlp_opts->print_level > 0)
@@ -1432,12 +1433,12 @@ static void ocp_nlp_sqp_wfqp_setup_qp_objective(ocp_nlp_config *config,
         if (objective_multiplier == 0.0)
         {
             // Either we use the exact objective Hessian
-            // blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
-            // blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);// I think we do not need this here
+            blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);
+            blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, nlp_mem->qp_in->RSQrq+i, 0, 0);// I think we do not need this here
 
             // We use the identity matrix Hessian
-            blasfeo_dgese(nxu, nxu, 0.0, nlp_mem->qp_in->RSQrq+i, 0, 0);
-            blasfeo_ddiare(nxu, 1e-4, nlp_mem->qp_in->RSQrq+i, 0, 0);  // dPsi_dx is unit now
+            // blasfeo_dgese(nxu, nxu, 0.0, nlp_mem->qp_in->RSQrq+i, 0, 0);
+            // blasfeo_ddiare(nxu, 1e-4, nlp_mem->qp_in->RSQrq+i, 0, 0);  // dPsi_dx is unit now
         }
         else
         {

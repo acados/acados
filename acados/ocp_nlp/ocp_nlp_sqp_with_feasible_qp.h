@@ -103,8 +103,6 @@ typedef struct
     int *nns;  // number of non-slacked constraints in NLP
     int **idxns;  // indices of non-slacked constraints in NLP
 
-    double objective_multiplier;  // TODO: use in globalization?
-
     // statistics
     double *stat;
     int stat_m;
