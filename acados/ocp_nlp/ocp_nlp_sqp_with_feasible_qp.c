@@ -516,7 +516,7 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     }
     assert((char *) raw_memory + ocp_nlp_sqp_wfqp_memory_calculate_size(config, dims, opts, in) >= c_ptr);
 
-    // zero solution
+    // initialize with zero
     for(int i=0; i<N; i++)
     {
         blasfeo_dvecse(2*mem->nns[i], 0.0, mem->adj_ineq_feasibility+i, 0);
@@ -646,7 +646,7 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         mem->nlp_mem->status = ACADOS_MAXITER;
         if (opts->nlp_opts->print_level > 0)
         {
-            printf("Stopped: Maximum Iterations Reached.\n");
+            printf("Stopped: Maximum iterations Reached.\n");
         }
         return true;
     }
@@ -660,7 +660,7 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         mem->nlp_mem->status = ACADOS_SUCCESS;
         if (opts->nlp_opts->print_level > 0)
         {
-            printf("Optimal Solution found! Converged to KKT point.\n");
+            printf("Optimal solution found! Converged to KKT point.\n");
         }
         return true;
     }
@@ -672,11 +672,11 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         {
             if (nlp_res->inf_norm_res_eq < opts->tol_eq && nlp_res->inf_norm_res_ineq < opts->tol_ineq)
             {
-                printf("Stopped: Converged to Feasible Point. Step size is < tol_eq.\n");
+                printf("Stopped: Converged to feasible Point. Step size is < tol_eq.\n");
             }
             else
             {
-                printf("Stopped: Converged to Infeasible Point. Step size is < tol_eq.\n");
+                printf("Stopped: Converged to infeasible Point. Step size is < tol_eq.\n");
             }
         }
         mem->nlp_mem->status = ACADOS_MINSTEP;
@@ -700,20 +700,20 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         mem->nlp_mem->status = ACADOS_MAXITER;
         if (opts->nlp_opts->print_level > 0)
         {
-            printf("Stopped: Maximum Iterations Reached.\n");
+            printf("Stopped: Maximum iterations reached.\n");
         }
         return true;
     }
 
     // check for infeasible problem
-    if (nlp_res->inf_norm_res_eq < opts->tol_eq && nlp_res->inf_norm_res_ineq > opts->tol_ineq 
+    if (nlp_res->inf_norm_res_eq < opts->tol_eq && nlp_res->inf_norm_res_ineq > opts->tol_ineq
             && mem->nlp_mem->objective_multiplier < opts->tol_objective_multiplier
             && mem->inf_norm_res_comp_feasibility < opts->tol_comp)
     {
         mem->nlp_mem->status = ACADOS_INFEASIBLE;
         if (opts->nlp_opts->print_level > 0)
         {
-            printf("Converged to Infeasible Stationary Point! Problem Might be Locally Infeasible!\n");
+            printf("Converged to infeasible stationary point! Problem might be locally infeasible!\n");
         }
         return true;
     }
@@ -729,7 +729,7 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
  * functions
  ************************************************/
 /*
-Gets the infinity norm of the multipliers which are returned from the QP. 
+Gets the infinity norm of the multipliers which are returned from the QP.
 This function does not take into account the multiplier values of the slack variables bounds.
 
 This function assumes that the masked multipliers are always zero.
