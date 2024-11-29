@@ -41,22 +41,20 @@ check_acados_requirements()
 globalization_params = {'FIXED_STEP', 'FUNNEL_L1PEN_LINESEARCH', 'MERIT_BACKTRACKING'}
 
 for num = 1:length(globalization_params)
-    globalization = globalization_params{num}
+    globalization = globalization_params{num};
 
     % set model
-    model = AcadosModel()
-    x = SX.sym('x')
+    model = AcadosModel();
+    x = SX.sym('x');
 
     % dynamics: identity
-    model.disc_dyn_expr = x
-    model.x = x
-    model.u = SX.sym('u', 0, 0)
-    model.p = []
-    model.name = 'convex_globalization_problem'
+    model.disc_dyn_expr = x;
+    model.x = x;
+    model.name = strcat('convex_problem_', globalization);
 
     %% solver settings
-    T = 1; 
-    N = 1; 
+    T = 1;
+    N_horizon = 1;
 
     %% OCP formulation object
     ocp = AcadosOcp();
@@ -65,8 +63,12 @@ for num = 1:length(globalization_params)
     % terminal cost term
     ocp.cost.cost_type_e = 'EXTERNAL';
     ocp.model.cost_expr_ext_cost_e = log(exp(model.x) + exp(-model.x));
+    ocp.cost.cost_type = 'EXTERNAL';
+    ocp.model.cost_expr_ext_cost = 0;
 
     % define solver options
+    ocp.solver_options.tf = T;
+    ocp.solver_options.N_horizon = N_horizon;
     ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM';
     ocp.solver_options.hessian_approx = 'EXACT';
     ocp.solver_options.integrator_type = 'DISCRETE';
@@ -83,22 +85,16 @@ for num = 1:length(globalization_params)
     % solver initial guess
     xinit = 1.5;
 
-    %% call ocp solver
-    % update initial state
-    ocp_solver.set('constr_x0', x0);
-
     % set trajectory initialization
-    ocp_solver.set('init_x', xinit); % states
-
-    % change values for specific shooting node using:
-    %   ocp_solver.set('field', value, optional: stage_index)
+    ocp_solver.set('init_x', xinit, 0);
+    ocp_solver.set('init_x', xinit, 1);
 
     % solve
     ocp_solver.solve();
     % get status
     status = ocp_solver.get('status');
     % get solution
-    solution = ocp_solver.get(0, 'x');
+    solution = ocp_solver.get('x', 0);
 
     % compare to analytical solution
     exact_solution = 0;
