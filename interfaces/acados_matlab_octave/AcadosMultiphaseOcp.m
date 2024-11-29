@@ -321,10 +321,22 @@ classdef AcadosMultiphaseOcp < handle
 
             for i=1:self.n_phases
                 disp(['generating external functions for phase ', num2str(i)]);
+                if i ~= self.n_phases
+                    ignore_terminal = true;
+                else
+                    ignore_terminal = false;
+                end
+
+                if i ~= 1
+                    ignore_initial = true;
+                else
+                    ignore_initial = false;
+                end
+
                 % this is the only option that can vary and influence external functions to be generated
                 self.dummy_ocp_list{i}.solver_options.integrator_type = self.mocp_opts.integrator_type{i};
                 self.dummy_ocp_list{i}.code_export_directory = self.code_export_directory;
-                context = self.dummy_ocp_list{i}.setup_code_generation_context(context);
+                context = self.dummy_ocp_list{i}.setup_code_generation_context(context, ignore_initial, ignore_terminal);
             end
 
             context.finalize();

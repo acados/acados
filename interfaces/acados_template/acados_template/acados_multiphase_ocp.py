@@ -460,9 +460,11 @@ class AcadosMultiphaseOcp:
         context = GenerateContext(self.model[0].p_global, self.name, code_gen_opts)
 
         for i in range(self.n_phases):
+            ignore_initial = True if i != 0 else False
+            ignore_terminal = True if i != self.n_phases-1 else False
             # this is the only option that can vary and influence external functions to be generated
             self.dummy_ocp_list[i].solver_options.integrator_type = self.mocp_opts.integrator_type[i]
-            context = self.dummy_ocp_list[i]._setup_code_generation_context(context)
+            context = self.dummy_ocp_list[i]._setup_code_generation_context(context, ignore_initial, ignore_terminal)
             self.dummy_ocp_list[i].code_export_directory = self.code_export_directory
 
         context.finalize()
