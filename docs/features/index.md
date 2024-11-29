@@ -2,10 +2,12 @@
 This page showcases how specific `acados` features can be used, by pointing to the relevant examples.
 If you are new to `acados` we highly recommend you to start with the `getting_started` examples:
 - for Python: [`examples/acados_python/getting_started`](https://github.com/acados/acados/blob/master/examples/acados_python/getting_started)
-- for MATLAB, Octave, Simulink: [`examples/acados_matlab_octave/getting_started`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started)
+- for MATLAB, Octave: [`examples/acados_matlab_octave/getting_started`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started)
 
 
 ## Simulation via AcadosSimSolver & Sensitivity propagation
+- for Python: [`examples/acados_python/pendulum_on_cart/sim/extensive_example_sim.py`](https://github.com/acados/acados/blob/master/examples/acados_python/pendulum_on_cart/sim/extensive_example_sim.py)
+- for MATLAB, Octave, Simulink: [`examples/acados_matlab_octave/getting_started/minimal_example_sim.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started/minimal_example_sim.m)
 
 
 ## Optimal Control Problem Formulation
@@ -41,6 +43,9 @@ If you are new to `acados` we highly recommend you to start with the `getting_st
 - [`examples/acados_matlab_octave/getting_started/extensive_example_ocp.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started/extensive_example_ocp.m)
 
 ### Time varying reference tracking
+- for MATLAB / Octave: [`examples/acados_matlab_octave/control_rates/main.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/control_rates/main.m)
+- for Python: `examples/acados_python/pendulum_on_cart/mhe/closed_loop_mhe_ocp.py`(https://github.com/acados/acados/blob/master/examples/acados_python/pendulum_on_cart/mhe/closed_loop_mhe_ocp.py)
+
 
 ### One-sided constraints
 - for Python: [`examples/acados_python/convex_ocp_with_onesided_constraints/main_convex_onesided.py`](https://github.com/acados/acados/blob/master/examples/acados_python/convex_ocp_with_onesided_constraints/main_convex_onesided.py)
@@ -66,9 +71,16 @@ Relevant publications: [Frey2024a](https://publications.syscop.de/Frey2024a.pdf)
 ### Globalization
 - for Python: [`examples/acados_python/convex_problem_globalization_needed/convex_problem_globalization_necessary.py`](examples/acados_python/convex_problem_globalization_needed/convex_problem_globalization_necessary.py)
 
-### DDP
+### Differential Dynamic Programming (DDP)
+- for Python: [`examples/acados_python/unconstrained_ocps/hour_glass_p2p_motion/hour_glass_time_optimal_p2p_motion.py`](examples/acados_python/unconstrained_ocps/hour_glass_p2p_motion/hour_glass_time_optimal_p2p_motion.py)
 
 ### Partial condensing
+Use a `qp_solver` starting with `PARTIAL_CONDENSING`, use `qp_solver_cond_N` to set the horizon of the partially condensed QP.
+Additionally, one can use `qp_solver_cond_block_size` to specify how many blocks are condensed into one block in partial condensing.
+- for Python: [`examples/acados_python/pendulum_on_cart/ocp/nonuniform_discretization_example.py`](examples/acados_python/pendulum_on_cart/ocp/nonuniform_discretization_example.py)
+- for MATLAB, Octave, Simulink: [`examples/acados_matlab_octave/p_global_example/set_solver_options.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/p_global_example/set_solver_options.m)
+
+
 
 ### zero-order robust optimization (zoRO)
 Relevant publications:
@@ -80,7 +92,8 @@ Examples
 - for MATLAB, Octave, Simulink: [`examples/acados_matlab_octave/pendulum_on_cart_model/zoro_example.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/pendulum_on_cart_model/zoro_example.m)
 
 ## Trouble shooting
-Solver status.
+Check Solver status: see [documentation of acados status for NLP solver status.](https://docs.acados.org/python_interface/index.html#acados_template.acados_ocp_solver.AcadosOcpSolver.get_status)
+In order to asses the QP solver status, one has to check the corresponding QP solver status definitions.
 
 ### Store iterates
 
