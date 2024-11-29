@@ -171,7 +171,17 @@ tar -xf casadi-linux-matlabR2014b-v3.4.0.tar.gz -C casadi-matlab
 cd ..
 ```
 
-### **Octave version 4.4 or later**
+### **Octave version 6.2 or later**
+Download and extract the `CasADi` binaries into `<acados_root_folder>/external/casadi-octave`:
+```
+cd external
+wget -O casadi-linux-octave.zip https://github.com/casadi/casadi/releases/download/3.6.7/casadi-3.6.7-linux64-octave7.3.0.zip
+mkdir -p casadi-octave
+unzip casadi-linux-octave.zip -d ./casadi-octave;
+```
+
+
+<!-- ### **Octave version 4.4 or later**
 Download and extract the `CasADi` binaries into `<acados_root_folder>/external/casadi-octave`:
 ```
 cd external
@@ -188,4 +198,4 @@ wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3
 mkdir -p casadi-octave
 tar -xf casadi-linux-octave-v3.4.0.tar.gz -C casadi-octave
 cd ..
-```
+``` -->
