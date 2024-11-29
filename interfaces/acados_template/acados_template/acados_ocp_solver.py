@@ -418,6 +418,8 @@ class AcadosOcpSolver:
     def solve(self) -> int:
         """
         Solve the ocp with current input.
+
+        :return: status of the solver
         """
         self.status = getattr(self.shared_lib, f"{self.name}_acados_solve")(self.capsule)
 
@@ -1258,7 +1260,7 @@ class AcadosOcpSolver:
             json.dump(qp_data, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         print("stored qp from solver memory in ", os.path.join(os.getcwd(), filename))
 
-    def get_last_qp(self):
+    def get_last_qp(self) -> dict:
         """
         Returns the latest QP data as a dict
         """
@@ -1278,7 +1280,7 @@ class AcadosOcpSolver:
         for k in list(qp_data.keys()):
             if len(qp_data[k]) == 0:
                 del qp_data[k]
-        
+
         return qp_data
 
     def load_iterate(self, filename:str, verbose: bool = True):
@@ -1359,13 +1361,14 @@ class AcadosOcpSolver:
         Returns the status of the last solver call.
 
         Status codes:
-        0 - Success (ACADOS_SUCCESS)
-        1 - NaN detected (ACADOS_NAN_DETECTED)
-        2 - Maximum number of iterations reached (ACADOS_MAXITER)
-        3 - Minimum step size reached (ACADOS_MINSTEP)
-        4 - QP solver failed (ACADOS_QP_FAILURE)
-        5 - Solver created (ACADOS_READY)
-        6 - Problem unbounded (ACADOS_UNBOUNDED)
+            - 0: Success (ACADOS_SUCCESS)
+            - 1: NaN detected (ACADOS_NAN_DETECTED)
+            - 2: Maximum number of iterations reached (ACADOS_MAXITER)
+            - 3: Minimum step size reached (ACADOS_MINSTEP)
+            - 4: QP solver failed (ACADOS_QP_FAILURE)
+            - 5: Solver created (ACADOS_READY)
+            - 6: Problem unbounded (ACADOS_UNBOUNDED)
+            - 7: Solver timeout (ACADOS_TIMEOUT)
 
         See `return_values` in https://github.com/acados/acados/blob/master/acados/utils/types.h
         """

@@ -30,7 +30,7 @@
 #
 
 # CASADI_VERSION='3.5.3'; # Latest version with Octave 4.2.2 binaries
-CASADI_VERSION='3.6.5';
+CASADI_VERSION='3.6.7';
 OCTAVE_VERSION='7.3.0';
 
 _CASADI_GITHUB_RELEASES="https://github.com/casadi/casadi/releases/download/${CASADI_VERSION}";

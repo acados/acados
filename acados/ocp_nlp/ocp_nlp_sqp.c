@@ -469,7 +469,7 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         mem->nlp_mem->status = ACADOS_MAXITER;
         if (opts->nlp_opts->print_level > 0)
         {
-            printf("Stopped: Maximum Iterations Reached.\n");
+            printf("Stopped: Maximum iterations reached.\n");
         }
         return true;
     }
@@ -483,7 +483,7 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         mem->nlp_mem->status = ACADOS_SUCCESS;
         if (opts->nlp_opts->print_level > 0)
         {
-            printf("Optimal Solution found! Converged to KKT point.\n");
+            printf("Optimal solution found! Converged to KKT point.\n");
         }
         return true;
     }
@@ -495,11 +495,11 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         {
             if (nlp_res->inf_norm_res_eq < opts->tol_eq && nlp_res->inf_norm_res_ineq < opts->tol_ineq)
             {
-                printf("Stopped: Converged to Feasible Point. Step size is < tol_eq.\n");
+                printf("Stopped: Converged to feasible point. Step size is < tol_eq.\n");
             }
             else
             {
-                printf("Stopped: Converged to Infeasible Point. Step size is < tol_eq.\n");
+                printf("Stopped: Converged to infeasible point. Step size is < tol_eq.\n");
             }
         }
         mem->nlp_mem->status = ACADOS_MINSTEP;
@@ -523,7 +523,7 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         mem->nlp_mem->status = ACADOS_MAXITER;
         if (opts->nlp_opts->print_level > 0)
         {
-            printf("Stopped: Maximum Iterations Reached.\n");
+            printf("Stopped: Maximum iterations reached.\n");
         }
         return true;
     }
