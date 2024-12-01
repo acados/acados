@@ -735,12 +735,10 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
  * functions
  ************************************************/
 /*
-Gets the infinity norm of the multipliers which are returned from the QP.
-This function does not take into account the multiplier values of the slack variables bounds.
-
-This function assumes that the masked multipliers are always zero.
+Compute infinity norm of QP multipliers in NLP space.
+Assumes that the masked multipliers are always zero.
 */
-static void compute_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims, ocp_qp_out *qp_out, ocp_qp_in *qp_in, bool was_feasibility_QP)
+static void compute_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims, ocp_qp_out *qp_out, ocp_qp_in *qp_in)
 {
     int i,j;
     int N = dims->N;
@@ -783,16 +781,14 @@ static void compute_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp
             norm_lam_hard_constr = fmax(norm_lam_hard_constr, BLASFEO_DVECEL(qp_out->lam+i, n_nominal_ineq_nlp+j));
         }
 
-        // TODO: these are multipliers of constraints that are slacked by user or algorithm? Correct?
-        // Slacked multipliers (excluding the multipliers of the additional slacks)
-        // we use an offset for the unslacked variables
         for (j=n_unslacked_bounds; j<n_nominal_ineq_nlp; j++)
         {
-            // lower bounds
+            // lb_not_l1_slacked, lg, l_nl
             norm_lam_slacked_constraints = fmax(norm_lam_slacked_constraints, BLASFEO_DVECEL(qp_out->lam+i, j));
-            // upper bounds
+            // ub_not_l1_slacked, ug, u_nl
             norm_lam_slacked_constraints = fmax(norm_lam_slacked_constraints, BLASFEO_DVECEL(qp_out->lam+i, j+n_nominal_ineq_nlp));
         }
+        // TODO: add lbs_NLP, ubs_NLP mutlipliers
     }
     mem->norm_lam_unslacked_bounds = norm_lam_hard_constr;
     mem->norm_lam_slacked_constraints = norm_lam_slacked_constraints;
@@ -1544,8 +1540,8 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
  ************************************************/
 
 /*
-Evaluates the adjoint value of the inequalities such that we can use it with a
-different multiplier.
+Evaluate adjoint of constraints with multipliers pi_feasibility, lam_feasibility.
+in user space.
 */
 static void eval_adjoints(ocp_qp_in* qp_in, ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_workspace* nlp_work)
 {
@@ -1575,7 +1571,7 @@ static void eval_adjoints(ocp_qp_in* qp_in, ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp
         // adj[nu+nx: ] += lam[2*nb+2*ng+2*nh :]
         blasfeo_daxpy(2*ns[i], 1.0, mem->lam_feasibility+i, 2*nb[i]+2*ng[i]+2*ni_nl[i], mem->adj_ineq_feasibility+i, nu[i]+nx[i], mem->adj_ineq_feasibility+i, nu[i]+nx[i]);
 
-        // adjoint for ?
+        // adjoint for dynamics
         if (i < N)
         {
             blasfeo_dgemv_n(nu[i]+nx[i], nx[i+1], -1.0, qp_in->BAbt+i, 0, 0, mem->pi_feasibility+i, 0, 0.0, mem->adj_dyn_feasibility+i, 0, mem->adj_dyn_feasibility+i, 0);
@@ -1598,9 +1594,10 @@ double sqp_wfqp_calculate_res_comp(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *
     double tmp, tmp_lam, tmp_val;
     int i,j;
 
-    // res_comp -----
+    // res_comp
     // (we only want standard complementarity of the unslacked or initially slacked values)
     // res_comp for bound constraints that are not slacked!
+    // TODO: add full vector as comment (lb ... ) and comment individual lines below with the subvectors.
     int n_unslacked_bounds, n_nominal_ineq_nlp;
     for (i = 0; i <= N; i++)
     {
@@ -1692,7 +1689,6 @@ double sqp_wfqp_calculate_res_comp(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *
             {
                 tmp_res = tmp_val;
             }
-
         }
     }
 
@@ -1769,15 +1765,6 @@ void ocp_nlp_sqp_wfqp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_ou
 
     res->inf_norm_res_comp = sqp_wfqp_calculate_res_comp(dims, mem, qp_in, out->lam);
     mem->inf_norm_res_comp_feasibility = sqp_wfqp_calculate_res_comp(dims, mem, qp_in, mem->lam_feasibility);
-
-    // acados standard (outdated)
-    // for (int i = 0; i <= N; i++)
-    // {
-    //     blasfeo_dvecmul(2 * ni[i], out->lam + i, 0, nlp_mem->ineq_fun+i, 0, res->res_comp + i, 0);
-    //     blasfeo_dvecnrm_inf(2 * ni[i], res->res_comp + i, 0, &tmp_res);
-    //     blasfeo_dvecse(1, tmp_res, &res->tmp, i);
-    // }
-    // blasfeo_dvecnrm_inf(N+1, &res->tmp, 0, &res->inf_norm_res_comp);
 }
 
 /************************************************
@@ -1939,19 +1926,21 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
         compute_qp_multiplier_norm_inf(mem, dims, qp_out, qp_in, false);
 
-        // TODO: one if (print_level > x) would be more readable to see what is actually done here.
+        // TODO: make an if out of the two
+        manual_l1_inf_QP_optimality = calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, qp_out);
+        // double l1_inf_QP_optimality = get_slacked_qp_l1_infeasibility(dims, mem, nlp_mem->qp_out);
+        pred_l1_inf_QP_optimality = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manual_l1_inf_QP_optimality);
+        predictor_qp_objective = compute_qp_objective_value(mem, dims, qp_in, qp_out, nlp_work);
+        predictor_lp_objective = compute_gradient_directional_derivative(mem, dims, qp_in, qp_out);
+
+        /* Debug */
         print_debug_output_double("Opt QP multiplier norm: pi", mem->norm_pi, nlp_opts->print_level, 2);
         print_debug_output_double("Opt QP multiplier norm: lam slacked", mem->norm_lam_slacked_constraints, nlp_opts->print_level, 2);
         print_debug_output_double("Opt QP multiplier norm: lam unslacked", mem->norm_lam_unslacked_bounds, nlp_opts->print_level, 2);
         // Calculate linearized l1-infeasibility for d_predictor
-        // double l1_inf_QP_optimality = get_slacked_qp_l1_infeasibility(dims, mem, nlp_mem->qp_out);
         // print_debug_output_double("linearized l1_inf_opt: ", l1_inf_QP_optimality, nlp_opts->print_level, 2);
-        manual_l1_inf_QP_optimality = calculate_slacked_qp_l1_infeasibility(dims, mem, work, qp_in, qp_out);
         print_debug_output_double("l1_inf_opt: ", manual_l1_inf_QP_optimality, nlp_opts->print_level, 2);
-        pred_l1_inf_QP_optimality = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manual_l1_inf_QP_optimality);
         print_debug_output_double("pred_l1_inf_QP_optimality: ", pred_l1_inf_QP_optimality, nlp_opts->print_level, 2);
-        predictor_qp_objective = compute_qp_objective_value(mem, dims, qp_in, qp_out, nlp_work);
-        predictor_lp_objective = compute_gradient_directional_derivative(mem, dims, qp_in, qp_out);
         print_debug_output_double("pred_obj_QP_optimality: ", -predictor_qp_objective, nlp_opts->print_level, 2);
         print_debug_output_double("pred_obj_LP_optimality: ", -predictor_lp_objective, nlp_opts->print_level, 2);
 
@@ -1984,6 +1973,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 return nlp_mem->status;
             }
             compute_qp_multiplier_norm_inf(mem, dims, nlp_work->tmp_qp_out, qp_in, true);
+
+            // TODO: sort debug
             print_debug_output_double("Feas QP multiplier norm: pi", mem->norm_pi, nlp_opts->print_level, 2);
             print_debug_output_double("Feas QP multiplier norm: lam slacked", mem->norm_lam_slacked_constraints, nlp_opts->print_level, 2);
             print_debug_output_double("Feas QP multiplier norm: lam unslacked", mem->norm_lam_unslacked_bounds, nlp_opts->print_level, 2);
@@ -1996,16 +1987,16 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             pred_l1_inf_QP_feasibility = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, manual_l1_inf_QP_feasibility);
             print_debug_output_double("pred_l1_inf_QP_feasibility: ", pred_l1_inf_QP_feasibility, nlp_opts->print_level, 2);
 
+
+            // TODO: cleanup move the whole logic into the fun.
             if (pred_l1_inf_QP_optimality >= 0.0 && -nlp_mem->objective_multiplier*predictor_lp_objective + pred_l1_inf_QP_optimality >= opts->sufficient_l1_inf_reduction * pred_l1_inf_QP_feasibility)
             {
                 kappa = 1.0;
             }
             else
             {
-                // It seems appropriate that the fraction for sufficient improvement
-                // in infeasibility is adaptive. So, if inf is large, and the improvement is small
-                // relative to infeasibility we should have a direction that is closer to
-                // the feasibility direction??
+                // It seems appropriate that the fraction for sufficient improvement in infeasibility is adaptive.
+                // So, if infeasibilit is large, and the improvement is small relative to infeasibility, we should have a direction that is closer to the feasibility direction??
                 kappa = calculate_search_direction_interpolation_factor(opts,
                                                                         pred_l1_inf_QP_optimality,
                                                                         pred_l1_inf_QP_feasibility,
