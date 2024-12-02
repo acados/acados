@@ -906,7 +906,7 @@ classdef AcadosOcp < handle
             elseif ignore_initial
                 stage_type_indices = [2, 3];
             else
-                stage_type_indices = [1, 2, 3]
+                stage_type_indices = [1, 2, 3];
             end
 
             stage_types = {'initial', 'path', 'terminal'};

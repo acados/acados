@@ -3,7 +3,7 @@ import numpy as np
 from casadi import *
 import casadi as cs
 from itertools import product
-# Simplest NLP with Marathos effect
+# Simplest Convex NLP where full-step SQP fails
 #
 # min log(exp(x) + exp(-x))
 #
