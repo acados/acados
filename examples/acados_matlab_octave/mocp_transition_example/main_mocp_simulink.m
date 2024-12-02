@@ -244,13 +244,13 @@ for itest = 1:2
         disp('failed');
         quit(1);
     end
-    % 
+    %
     pi_signal = out_sim.logsout.getElement('pi_all');
     pi_simulink = pi_signal.Values.Data(1, :);
     disp('checking pi values, should match solution in MATLAB.')
     if norm(pi_simulink(:) - pi_traj(:)) > 1e-8
         disp('failed');
-        % quit(1);
+        quit(1);
     end
 
     x1_signal = out_sim.logsout.getElement('x1');
@@ -259,7 +259,7 @@ for itest = 1:2
     disp('checking x1_value')
     if norm(x1_val(:) - x1_ref(:)) > 1e-8
         disp('failed');
-        % quit(1);
+        quit(1);
     end
 
     u0_signal = out_sim.logsout.getElement('u0');
@@ -268,7 +268,7 @@ for itest = 1:2
     disp('checking u0_value')
     if norm(u0_val(:) - u0_ref(:)) > 1e-8
         disp('failed');
-        % quit(1);
+        quit(1);
     end
 
 end
