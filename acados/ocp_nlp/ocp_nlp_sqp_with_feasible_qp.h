@@ -72,6 +72,7 @@ typedef struct
     double initial_objective_multiplier; //Initial value for objective multiplier, normalle 1e0
     double sufficient_l1_inf_reduction; //scalar multiplication factor for
     bool use_exact_hessian_in_feas_qp; // Either use exact Hessian or identity matrix in feasibility QP
+    bool use_QP_l1_inf_from_slacks; // Sums up the slack variable values in the QPs as l1_inf
 } ocp_nlp_sqp_wfqp_opts;
 
 //
