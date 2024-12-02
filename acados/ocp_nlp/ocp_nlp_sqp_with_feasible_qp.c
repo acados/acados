@@ -633,8 +633,6 @@ void ocp_nlp_sqp_wfqp_work_get(void *config_, void *dims_, void *work_,
 
 static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_res, ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_sqp_wfqp_opts *opts)
 {
-    // ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-
     // check for nans
     if (isnan(nlp_res->inf_norm_res_stat) || isnan(nlp_res->inf_norm_res_eq) ||
         isnan(nlp_res->inf_norm_res_ineq) || isnan(nlp_res->inf_norm_res_comp))
