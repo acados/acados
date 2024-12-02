@@ -1397,7 +1397,6 @@ static void ocp_nlp_sqp_wfqp_setup_qp_objective(ocp_nlp_config *config,
         // NOTE: I think this TODO is from before we switched to using objective multiplier and it should be fine now.
         if (objective_multiplier == 0.0)
         {
-<<<<<<< HEAD
             if (opts->use_exact_hessian_in_feas_qp)
             {
                 // Either we use the exact objective Hessian
@@ -1410,16 +1409,6 @@ static void ocp_nlp_sqp_wfqp_setup_qp_objective(ocp_nlp_config *config,
                 blasfeo_dgese(nxu, nxu, 0.0, nlp_mem->qp_in->RSQrq+i, 0, 0);
                 blasfeo_ddiare(nxu, 1e-4, nlp_mem->qp_in->RSQrq+i, 0, 0);
             }
-=======
-            // Either we use the exact objective Hessian
-            blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, qp_in->RSQrq+i, 0, 0);
-            blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, qp_in->RSQrq+i, 0, 0);// I think we do not need this here
-
-            // TODO: remove this code below? you added an option I think?
-            // We use the identity matrix Hessian
-            // blasfeo_dgese(nxu, nxu, 0.0, qp_in->RSQrq+i, 0, 0);
-            // blasfeo_ddiare(nxu, 1e-4, qp_in->RSQrq+i, 0, 0);  // dPsi_dx is unit now
->>>>>>> a6f3a6d527967cf162fdc218c83b38a3a8ca02ae
         }
         else
         {
