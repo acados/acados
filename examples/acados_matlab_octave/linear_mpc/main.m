@@ -130,7 +130,8 @@ for isim = 1:nsim
     ocp_solver.solve();
 
     % check the solver output
-    if ocp_solver.get('status') ~= 0
+    status = ocp_solver.get('status');
+    if status ~= 0
         warning(['acados ocp solver failed with status ',num2str(status)]);
     end
 
