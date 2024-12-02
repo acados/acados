@@ -48,7 +48,7 @@ function ocp = formulate_single_integrator_ocp(settings)
     ocp.constraints.ubu = [u_max];
     ocp.constraints.idxbu = [0];
 
-    ocp.constraints.x0 = settings.X0;
+    ocp.constraints.x0 = settings.X0(1);
 end
 
 
