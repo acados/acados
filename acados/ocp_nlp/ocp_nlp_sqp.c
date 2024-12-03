@@ -555,7 +555,7 @@ static double compute_gradient_directional_derivative(ocp_nlp_dims *dims, ocp_qp
         dir_der += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
 
         // Calculate gradient of slacks
-        // we need to extract the gradient of the 
+        // we need to extract the gradient of the
         dir_der += blasfeo_ddot(2 * ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
     }
     return dir_der;
@@ -598,6 +598,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->alpha = 0.0;
     mem->step_norm = 0.0;
     mem->nlp_mem->status = ACADOS_SUCCESS;
+    nlp_mem->objective_multiplier = 1.0;
 
     if (opts->timeout_heuristic != MAX_OVERALL)
         mem->timeout_estimated_per_iteration_time = 0;
