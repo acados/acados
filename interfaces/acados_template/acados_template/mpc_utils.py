@@ -141,7 +141,8 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
     nx = x.shape[0]
     nu = u.shape[0]
 
-    p_global = model.p_global
+    if model.p_global is None:
+        p_global = []  # to have same structure of model.p
 
     casadi_var = model.get_casadi_symbol()
     casadi_dm_zeros = ca.DM.zeros
@@ -164,7 +165,7 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
     else:
         raise ValueError('Constraint detection: Wrong stage_type.')
 
-    if is_empty(expr_constr):
+    if expr_constr is None:
         expr_constr = casadi_var('con_h_expr', 0, 0)
 
     # Initialize
@@ -274,6 +275,22 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
             model.con_h_expr_0 = None
             constraints.lh_0 = np.array([])
             constraints.uh_0 = np.array([])
+        # linear constraint g
+        if lg:
+            constraints.C = np.array(c_lin)
+            constraints.D = np.array(d_lin)
+            constraints.lg = np.array(lg)
+            constraints.ug = np.array(ug)
+        # Bounds x
+        if lbx:
+            constraints.idxbx_0 = J_to_idx(Jbx)
+            constraints.lbx_0 = np.array(lbx)
+            constraints.ubx_0 = np.array(ubx)
+        # Bounds u
+        if lbu:
+            constraints.idxbu = J_to_idx(Jbu)
+            constraints.lbu = np.array(lbu)
+            constraints.ubu = np.array(ubu)
     else:  # path
         constraints.constr_type = 'BGH'
         # nonlinear constraint
