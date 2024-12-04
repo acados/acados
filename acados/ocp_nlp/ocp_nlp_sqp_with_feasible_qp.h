@@ -127,6 +127,7 @@ typedef struct
     double norm_lam_slacked_constraints;
     double inf_norm_res_comp_feasibility;
     double inf_norm_res_stat_feasibility;
+    bool needs_steering_step;
 
 } ocp_nlp_sqp_wfqp_memory;
 
