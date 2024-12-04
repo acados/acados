@@ -141,9 +141,7 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
     nx = x.shape[0]
     nu = u.shape[0]
 
-    if model.p_global is None:
-        p_global = []  # to have same structure of model.p
-
+    p_global = model.p_global
     casadi_var = model.get_casadi_symbol()
     casadi_dm_zeros = ca.DM.zeros
 
@@ -165,7 +163,7 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
     else:
         raise ValueError('Constraint detection: Wrong stage_type.')
 
-    if expr_constr is None:
+    if is_empty(expr_constr):
         expr_constr = casadi_var('con_h_expr', 0, 0)
 
     # Initialize
