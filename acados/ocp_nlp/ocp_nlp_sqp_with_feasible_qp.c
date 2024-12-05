@@ -126,7 +126,7 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
     opts->eval_residual_at_max_iter = false;
     opts->initial_objective_multiplier = 1e0;
     opts->sufficient_l1_inf_reduction = 0.9;//1e-1;
-    opts->use_exact_hessian_in_feas_qp = true;
+    opts->use_exact_hessian_in_feas_qp = false;
     opts->use_QP_l1_inf_from_slacks = false; // with we use the manual calculation, results seem to be more accurate and solvers performs better!
 
     // overwrite default submodules opts
@@ -1842,10 +1842,10 @@ static int steering_direction_penalty_update(ocp_nlp_dims *dims,
             nlp_mem->status = ACADOS_QP_FAILURE;
             nlp_mem->iter = sqp_iter;
             nlp_timings->time_tot = acados_toc(&timer0);
-    #if defined(ACADOS_WITH_OPENMP)
+#if defined(ACADOS_WITH_OPENMP)
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
-    #endif
+#endif
             return nlp_mem->status;
         }
         compute_qp_multiplier_norm_inf(mem, dims, qp_out, qp_in);
@@ -1901,10 +1901,10 @@ static int steering_direction_penalty_update(ocp_nlp_dims *dims,
                 nlp_mem->status = ACADOS_QP_FAILURE;
                 nlp_mem->iter = sqp_iter;
                 nlp_timings->time_tot = acados_toc(&timer0);
-    #if defined(ACADOS_WITH_OPENMP)
+#if defined(ACADOS_WITH_OPENMP)
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
-    #endif
+#endif
                 return nlp_mem->status;
             }
             compute_qp_multiplier_norm_inf(mem, dims, nlp_work->tmp_qp_out, qp_in);
@@ -1990,6 +1990,7 @@ static int squid_search_direction_computation(ocp_nlp_dims *dims,
         nlp_timings->time_tot = acados_toc(&timer0);
 #if defined(ACADOS_WITH_OPENMP)
         // restore number of threads
+        int num_threads_bkp = omp_get_num_threads();
         omp_set_num_threads(num_threads_bkp);
 #endif
         return nlp_mem->status;
@@ -2046,6 +2047,7 @@ static int squid_search_direction_computation(ocp_nlp_dims *dims,
             nlp_timings->time_tot = acados_toc(&timer0);
 #if defined(ACADOS_WITH_OPENMP)
         // restore number of threads
+        int num_threads_bkp = omp_get_num_threads();
         omp_set_num_threads(num_threads_bkp);
 #endif
             return nlp_mem->status;

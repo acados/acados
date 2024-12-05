@@ -763,7 +763,7 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
             // relaxed_qp_solver
             if ((int_value != 0))
             {
-                printf("\nerror: relaxed QP with %s>0 not supported, exiting.\n\n", field, stage);
+                printf("\nerror: relaxed QP with %s>0 for stage %d not supported, exiting.\n\n", field, stage);
                 exit(1);
             }
         }
