@@ -1058,6 +1058,25 @@ static void set_non_slacked_l2_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
 
 
 
+set_feasibility_multipliers(ocp_nlp_dims *dims,
+                            ocp_nlp_sqp_wfqp_memory *mem,
+                            ocp_nlp_out *nlp_out)
+{
+    int *ni = dims->ni;
+    int *nx = dims->nx;
+    int N = dims->N;
+
+    for (int i=0; i<dims->N; ++i)
+    {
+        blasfeo_dveccp(2*ni[i], nlp_out->lam+i, 0, mem->lam_feasibility+i, 0);
+        if (i < N)
+        {
+            blasfeo_dveccp(nx[i+1], nlp_out->pi+i, 0, mem->pi_feasibility+i, 0);
+        }
+    }
+}
+
+
 static double compute_gradient_directional_derivative(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
 {
     // Compute the directional derivative of the user-specified objective in the direction qp_out
@@ -2139,6 +2158,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
     set_non_slacked_l2_penalties(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
     set_non_slacked_l1_penalties(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
+    set_feasibility_multipliers(dims, mem, nlp_out);
 
     /************************************************
      * main sqp loop
