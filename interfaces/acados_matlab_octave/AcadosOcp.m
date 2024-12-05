@@ -264,6 +264,9 @@ classdef AcadosOcp < handle
                 if nbx_0 ~= length(constraints.ubx_0) || nbx_0 ~= length(constraints.idxbx_0)
                     error('inconsistent dimension nbx_0, regarding idxbx_0, lbx_0, ubx_0.');
                 end
+                if min(constraints.idxbx_0) < 0 || max(constraints.idxbx_0) > (dims.nx-1)
+                    error(['idxbx_0 should contain (zero-based) indices between 0 and ', num2str(dims.nx-1)])
+                end
             elseif ~isempty(constraints.idxbx_0) || ~isempty(constraints.lbx_0) || ~isempty(constraints.ubx_0)
                 error('setting bounds on x: need idxbx_0, lbx_0, ubx_0, at least one missing.');
             else
@@ -281,6 +284,9 @@ classdef AcadosOcp < handle
                 if nbx ~= length(constraints.ubx) || nbx ~= length(constraints.idxbx)
                     error('inconsistent dimension nbx, regarding idxbx, lbx, ubx.');
                 end
+                if min(constraints.idxbx) < 0 || max(constraints.idxbx) > (dims.nx-1)
+                    error(['idxbx should contain (zero-based) indices between 0 and ', num2str(dims.nx-1)])
+                end
             elseif ~isempty(constraints.idxbx) || ~isempty(constraints.lbx) || ~isempty(constraints.ubx)
                 error('setting bounds on x: need idxbx, lbx, ubx, at least one missing.');
             else
@@ -292,6 +298,9 @@ classdef AcadosOcp < handle
                 nbu = length(constraints.lbu);
                 if nbu ~= length(constraints.ubu) || nbu ~= length(constraints.idxbu)
                     error('inconsistent dimension nbu, regarding idxbu, lbu, ubu.');
+                end
+                if min(constraints.idxbu) < 0 || max(constraints.idxbu) > (dims.nu-1)
+                    error(['idxbu should contain (zero-based) indices between 0 and ', num2str(dims.nu-1)])
                 end
             elseif ~isempty(constraints.idxbu) || ~isempty(constraints.lbu) || ~isempty(constraints.ubu)
                 error('setting bounds on u: need idxbu, lbu, ubu, at least one missing.');
@@ -347,6 +356,9 @@ classdef AcadosOcp < handle
                 nbx_e = length(constraints.lbx_e);
                 if nbx_e ~= length(constraints.ubx_e) || nbx_e ~= length(constraints.idxbx_e)
                     error('inconsistent dimension nbx_e, regarding Jbx_e, lbx_e, ubx_e.');
+                end
+                if min(constraints.idxbx_e) < 0 || max(constraints.idxbx_e) > (dims.nx-1)
+                    error(['idxbx_e should contain (zero-based) indices between 0 and ', num2str(dims.nx-1)])
                 end
             elseif ~isempty(constraints.idxbx_e) || ~isempty(constraints.lbx_e) || ~isempty(constraints.ubx_e)
                 error('setting bounds on x: need Jbx_e, lbx_e, ubx_e, at least one missing.');
