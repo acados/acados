@@ -142,7 +142,6 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
     nu = u.shape[0]
 
     p_global = model.p_global
-
     casadi_var = model.get_casadi_symbol()
     casadi_dm_zeros = ca.DM.zeros
 
@@ -201,10 +200,9 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
             print(c)
             print(' ')
         else:  # c is linear in x and u
-            Jc_fun = ca.Function('Jc_fun', [x[0]], [
+            Jc_fun = ca.Function('Jc_fun', [x, u], [
                                  ca.jacobian(c, ca.vertcat(x, u))])
-            Jc = Jc_fun(0)
-
+            Jc = Jc_fun(0, 0)
             if np.sum(Jc != 0) == 1:
                 # c is bound
                 idb = Jc.full().squeeze().nonzero()[0][0]
@@ -275,6 +273,22 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
             model.con_h_expr_0 = None
             constraints.lh_0 = np.array([])
             constraints.uh_0 = np.array([])
+        # linear constraint g
+        if lg:
+            constraints.C = np.array(c_lin)
+            constraints.D = np.array(d_lin)
+            constraints.lg = np.array(lg)
+            constraints.ug = np.array(ug)
+        # Bounds x
+        if lbx:
+            constraints.idxbx_0 = J_to_idx(Jbx)
+            constraints.lbx_0 = np.array(lbx)
+            constraints.ubx_0 = np.array(ubx)
+        # Bounds u
+        if lbu:
+            constraints.idxbu = J_to_idx(Jbu)
+            constraints.lbu = np.array(lbu)
+            constraints.ubu = np.array(ubu)
     else:  # path
         constraints.constr_type = 'BGH'
         # nonlinear constraint
@@ -305,10 +319,11 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
 
 
 def J_to_idx(J):
+    J = ca.sparsify(J)
     nrows = J.size()[0]
     idx = []
     for i in range(nrows):
-        this_idx = ca.DM(J[i, :].sparsity()).full().nonzero()[0]
+        this_idx = ca.DM(J[i, :].sparsity()).full().flatten().nonzero()[0]
         if len(this_idx) != 1:
             raise ValueError(
                 f'J_to_idx: Invalid J matrix. Exiting. Found more than one nonzero in row {i+1}.')
