@@ -1058,7 +1058,7 @@ static void set_non_slacked_l2_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
 
 
 
-set_feasibility_multipliers(ocp_nlp_dims *dims,
+static void set_feasibility_multipliers(ocp_nlp_dims *dims,
                             ocp_nlp_sqp_wfqp_memory *mem,
                             ocp_nlp_out *nlp_out)
 {
