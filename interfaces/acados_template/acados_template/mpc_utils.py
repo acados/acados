@@ -62,15 +62,16 @@ class AcadosCostConstraintEvaluator:
         if casadi_length(ocp.model.z) > 0:
             raise NotImplementedError(
                 "AcadosCostConstraintEvaluatator: not implemented for models with z.")
-        self.parameter_values = ocp.parameter_values
-        self.p_global_values = ocp.p_global_values
+
+        self.__parameter_values = ocp.parameter_values
+        self.__p_global_values = ocp.p_global_values
+
         self.dt = ocp.solver_options.time_steps[0]
 
         # setup casadi functions for constraints and cost
         cost_expr = get_path_cost_expression(ocp)
 
         # build function. fields may be None or empty casadi expressions
-        # todo: check if acados defalut value should be changed to be consistent
         if ocp.model.p_global is None:
             p_global = ca.SX(0,0)
         else:
@@ -142,39 +143,65 @@ class AcadosCostConstraintEvaluator:
             [lower_violation, upper_violation, lower_slack_expression, upper_slack_expression]
         )
 
-    # TODO: shape checks
-    def set_params(self, params: np.ndarray):
-        self.parameter_values = params
+    @property
+    def parameter_values(self):
+        """:math:`p` - initial values for parameter vector - can be updated stagewise"""
+        return self.__parameter_values
 
-    def set_p_global(self, params: np.ndarray):
-        self.p_global_values = params
+    @parameter_values.setter
+    def parameter_values(self, parameter_values):
+        if isinstance(parameter_values, np.ndarray):
+            self.__parameter_values = parameter_values
+        else:
+            raise Exception('Invalid parameter_values value. ' +
+                            f'Expected numpy array, got {type(parameter_values)}.')
+        if parameter_values.shape[0] != self.ocp.dims.np:
+            raise Exception('inconsistent dimension np, regarding model.p and parameter_values.' + \
+                            f'\nGot np = {self.ocp.dims.np}, ' + \
+                            f'self.parameter_values.shape = {parameter_values.shape[0]}\n')
 
-    #
+    @property
+    def p_global_values(self):
+        r"""initial values for :math:`p_\text{global}` vector,
+        Type: `numpy.ndarray` of shape `(np_global, )`.
+        """
+        return self.__p_global_values
+
+    @p_global_values.setter
+    def p_global_values(self, p_global_values):
+        if isinstance(p_global_values, np.ndarray):
+            self.__p_global_values = p_global_values
+        else:
+            raise Exception('Invalid p_global_values value. ' +
+                            f'Expected numpy array, got {type(p_global_values)}.')
+        if p_global_values.shape[0] != self.ocp.dims.np_global:
+            raise Exception('inconsistent dimension np_global, regarding model.p_global and p_global_values.' + \
+                f'\nGot np_global = {self.ocp.dims.np_global}, '
+                f'self.p_global_values.shape = {p_global_values.shape[0]}\n')
+
     def evaluate(self,
                  x: np.ndarray, u: np.ndarray,
                  p: Optional[np.ndarray] = None,
                  p_global: Optional[np.ndarray] = None,
                  dt: Optional[float] = None) -> dict:
         if p is not None:
-            self.set_params(p)
+            self.parameter_values(p)
         if p_global is not None:
-            self.set_p_global(p_global)
+            self.p_global_values(p_global)
         if dt is None:
             dt = self.dt
 
-        cost_fun_args = [x, u, self.parameter_values, self.p_global_values]
+        cost_fun_args = [x, u, self.__parameter_values, self.__p_global_values]
         # cost_fun_args = [arg for arg in cost_fun_args if arg is not None]
 
-        # TODO
         # evaluate cost
         cost_without_slacks = self.cost_fun(*cost_fun_args).full()
 
         # evaluate constraints
-        # TODO: full()
         lower_violation, upper_violation, lower_slack, upper_slack = (
             self.constraint_function(x, u,
-                                     self.parameter_values,
-                                     self.p_global_values))
+                                     self.__parameter_values,
+                                     self.__p_global_values))
         violation_hard_constraints = np.concatenate(
             (lower_violation[self.nonslacked_indices], upper_violation[self.nonslacked_indices]))
 
@@ -202,8 +229,9 @@ def get_path_cost_expression(ocp: AcadosOcp):
     model = ocp.model
     if ocp.cost.cost_type == "LINEAR_LS":
         y = ocp.cost.Vx @ model.x + ocp.cost.Vu @ model.u
+
         if casadi_length(model.z) > 0:
-            ocp.cost.Vz @ model.z
+            y += ocp.cost.Vz @ model.z
         residual = y - ocp.cost.yref
         cost_dot = 0.5*(residual.T @ ocp.cost.W @ residual)
 

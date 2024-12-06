@@ -221,5 +221,4 @@ def main(use_RTI=False):
 
 
 if __name__ == '__main__':
-    main(use_RTI=False)
     main(use_RTI=True)
