@@ -1861,10 +1861,10 @@ static int steering_direction_penalty_update(ocp_nlp_dims *dims,
             nlp_mem->status = ACADOS_QP_FAILURE;
             nlp_mem->iter = sqp_iter;
             nlp_timings->time_tot = acados_toc(&timer0);
-#if defined(ACADOS_WITH_OPENMP)
-            // restore number of threads
-            omp_set_num_threads(num_threads_bkp);
-#endif
+// #if defined(ACADOS_WITH_OPENMP)
+//             // restore number of threads
+//             omp_set_num_threads(num_threads_bkp);
+// #endif
             return nlp_mem->status;
         }
         compute_qp_multiplier_norm_inf(mem, dims, qp_out, qp_in);
@@ -1920,10 +1920,10 @@ static int steering_direction_penalty_update(ocp_nlp_dims *dims,
                 nlp_mem->status = ACADOS_QP_FAILURE;
                 nlp_mem->iter = sqp_iter;
                 nlp_timings->time_tot = acados_toc(&timer0);
-#if defined(ACADOS_WITH_OPENMP)
-            // restore number of threads
-            omp_set_num_threads(num_threads_bkp);
-#endif
+// #if defined(ACADOS_WITH_OPENMP)
+//             // restore number of threads
+//             omp_set_num_threads(num_threads_bkp);
+// #endif
                 return nlp_mem->status;
             }
             compute_qp_multiplier_norm_inf(mem, dims, nlp_work->tmp_qp_out, qp_in);
@@ -2006,11 +2006,11 @@ static int squid_search_direction_computation(ocp_nlp_dims *dims,
         nlp_mem->status = ACADOS_QP_FAILURE;
         nlp_mem->iter = sqp_iter;
         nlp_timings->time_tot = acados_toc(&timer0);
-#if defined(ACADOS_WITH_OPENMP)
-        // restore number of threads
-        int num_threads_bkp = omp_get_num_threads();
-        omp_set_num_threads(num_threads_bkp);
-#endif
+// #if defined(ACADOS_WITH_OPENMP)
+//         // restore number of threads
+//         int num_threads_bkp = omp_get_num_threads();
+//         omp_set_num_threads(num_threads_bkp);
+// #endif
         return nlp_mem->status;
     }
     compute_qp_multiplier_norm_inf(mem, dims, qp_out, qp_in);
@@ -2063,11 +2063,11 @@ static int squid_search_direction_computation(ocp_nlp_dims *dims,
             nlp_mem->status = ACADOS_QP_FAILURE;
             nlp_mem->iter = sqp_iter;
             nlp_timings->time_tot = acados_toc(&timer0);
-#if defined(ACADOS_WITH_OPENMP)
-        // restore number of threads
-        int num_threads_bkp = omp_get_num_threads();
-        omp_set_num_threads(num_threads_bkp);
-#endif
+// #if defined(ACADOS_WITH_OPENMP)
+//         // restore number of threads
+//         int num_threads_bkp = omp_get_num_threads();
+//         omp_set_num_threads(num_threads_bkp);
+// #endif
             return nlp_mem->status;
         }
         compute_qp_multiplier_norm_inf(mem, dims, nlp_work->tmp_qp_out, qp_in);
