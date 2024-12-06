@@ -2413,6 +2413,9 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
 
     bool use_exact_hessian_in_feas_qp = {{ solver_options.use_exact_hessian_in_feas_qp }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "use_exact_hessian_in_feas_qp", &use_exact_hessian_in_feas_qp);
+
+    bool use_steering_rules = {{ solver_options.use_steering_rules }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "use_steering_rules", &use_steering_rules);
 {%- endif %}
 
 {% if solver_options.nlp_solver_type == "SQP" or solver_options.nlp_solver_type == "DDP" or solver_options.nlp_solver_type == "SQP_WITH_FEASIBLE_QP"%}

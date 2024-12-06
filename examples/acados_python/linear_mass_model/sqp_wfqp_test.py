@@ -156,7 +156,12 @@ def create_solver_opts(setting: dict, N=4, Tf=2):
 
     solver_options.globalization_funnel_use_merit_fun_only = use_merit_fun_only
     solver_options.initial_objective_multiplier = initial_obj_multiplier
-    solver_options.use_exact_hessian_in_feas_qp = True
+    if False:
+        solver_options.use_exact_hessian_in_feas_qp = True
+        solver_options.use_steering_rules = True
+    else:
+        solver_options.use_exact_hessian_in_feas_qp = False
+        solver_options.use_steering_rules = False
 
     # set prediction horizon
     solver_options.tf = Tf

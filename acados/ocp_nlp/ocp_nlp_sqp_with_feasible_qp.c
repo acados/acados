@@ -125,8 +125,9 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
     opts->warm_start_first_qp = false;
     opts->eval_residual_at_max_iter = false;
     opts->initial_objective_multiplier = 1e0;
-    opts->sufficient_l1_inf_reduction = 0.9;//1e-1;
+    opts->sufficient_l1_inf_reduction = 1e-1;
     opts->use_exact_hessian_in_feas_qp = false;
+    opts->use_steering_rules = false;
     opts->use_QP_l1_inf_from_slacks = false; // with we use the manual calculation, results seem to be more accurate and solvers performs better!
 
     // overwrite default submodules opts
@@ -248,6 +249,11 @@ void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, vo
         {
             bool* use_exact_hessian_in_feas_qp = (bool *) value;
             opts->use_exact_hessian_in_feas_qp = *use_exact_hessian_in_feas_qp;
+        }
+        else if (!strcmp(field, "use_steering_rules"))
+        {
+            bool* use_steering_rules = (bool *) value;
+            opts->use_steering_rules = *use_steering_rules;
         }
         else
         {
@@ -1958,6 +1964,11 @@ static int steering_direction_penalty_update(ocp_nlp_dims *dims,
                 return 1;
             }
         }
+        /*
+        At the moment we did not implement the additional penalty decrease and
+        the decrease wrt stationarity residual
+        (latter one would give quadratic convergence)
+        */
     }
     return 1; // we should never reach that point!
 }
@@ -1976,8 +1987,7 @@ static int squid_search_direction_computation(ocp_nlp_dims *dims,
                                             double current_l1_infeasibility,
                                             double sqp_iter,
                                             acados_timer timer0,
-                                            acados_timer timer1,
-                                            qp_info *qp_info_)
+                                            acados_timer timer1)
 {
     ocp_nlp_memory* nlp_mem = mem->nlp_mem;
     ocp_nlp_workspace* nlp_work = work->nlp_work;
@@ -1985,10 +1995,10 @@ static int squid_search_direction_computation(ocp_nlp_dims *dims,
     ocp_qp_out *qp_out = nlp_mem->qp_out;
     int qp_status, qp_iter;
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
+    qp_info* qp_info_;
 
-    double pred_l1_inf_QP_feasibility, pred_l1_inf_QP_optimality;
+    double pred_l1_inf_QP_feasibility;
     double l1_inf_QP_optimality, l1_inf_QP_feasibility;
-    double predictor_qp_objective, predictor_lp_objective;
 
     double kappa;
 
@@ -2016,31 +2026,32 @@ static int squid_search_direction_computation(ocp_nlp_dims *dims,
     compute_qp_multiplier_norm_inf(mem, dims, qp_out, qp_in);
 
     l1_inf_QP_optimality = calculate_slacked_qp_l1_infeasibility(dims, mem, work, opts, qp_in, qp_out, opts->use_QP_l1_inf_from_slacks);
-    pred_l1_inf_QP_optimality = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, l1_inf_QP_optimality);
-    predictor_qp_objective = compute_qp_objective_value(mem, dims, qp_in, qp_out, nlp_work);
-    predictor_lp_objective = compute_gradient_directional_derivative(mem, dims, qp_in, qp_out);
+    mem->pred_l1_inf_QP_optimality = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, l1_inf_QP_optimality);
+    mem->predictor_qp_objective = compute_qp_objective_value(mem, dims, qp_in, qp_out, nlp_work);
+    mem->predictor_lp_objective = compute_gradient_directional_derivative(mem, dims, qp_in, qp_out);
 
     /* Debug */
     print_debug_output_double("Opt QP: Multiplier norm: pi", mem->norm_pi, nlp_opts->print_level, 2);
     print_debug_output_double("Opt QP: Multiplier norm: lam slacked", mem->norm_lam_slacked_constraints, nlp_opts->print_level, 2);
     print_debug_output_double("Opt QP: Multiplier norm: lam unslacked", mem->norm_lam_unslacked_bounds, nlp_opts->print_level, 2);
     print_debug_output_double("Opt QP: l1_inf: ", l1_inf_QP_optimality, nlp_opts->print_level, 2);
-    print_debug_output_double("Opt QP: pred_l1_inf_QP: ", pred_l1_inf_QP_optimality, nlp_opts->print_level, 2);
-    print_debug_output_double("Opt QP: pred_obj_QP: ", -predictor_qp_objective, nlp_opts->print_level, 2);
-    print_debug_output_double("Opt QP: pred_obj_LP: ", -predictor_lp_objective, nlp_opts->print_level, 2);
+    print_debug_output_double("Opt QP: pred_l1_inf_QP: ", mem->pred_l1_inf_QP_optimality, nlp_opts->print_level, 2);
+    print_debug_output_double("Opt QP: pred_obj_QP: ", -mem->predictor_qp_objective, nlp_opts->print_level, 2);
+    print_debug_output_double("Opt QP: pred_obj_LP: ", -mem->predictor_lp_objective, nlp_opts->print_level, 2);
+    int qps_solved = 1;
 
     // Do we need the steering step?
     mem->needs_steering_step = true;
     if (current_l1_infeasibility <= 0.5*fmin(opts->tol_eq, opts->tol_ineq))
     {
-            if (-pred_l1_inf_QP_optimality <= 0.5*(fmin(opts->tol_eq, opts->tol_ineq)-current_l1_infeasibility))
+            if (-mem->pred_l1_inf_QP_optimality <= 0.5*(fmin(opts->tol_eq, opts->tol_ineq)-current_l1_infeasibility))
             {
                 mem->needs_steering_step = false;
             }
     }
     else
     {
-        if (pred_l1_inf_QP_optimality >= 0.5*current_l1_infeasibility)
+        if (mem->pred_l1_inf_QP_optimality >= 0.5*current_l1_infeasibility)
         {
             mem->needs_steering_step = false;
         }
@@ -2083,13 +2094,14 @@ static int squid_search_direction_computation(ocp_nlp_dims *dims,
         assert(pred_l1_inf_QP_feasibility > -1e2*opts->tol_ineq);
 
         kappa = calculate_search_direction_interpolation_factor(opts,
-                                                                pred_l1_inf_QP_optimality,
+                                                                mem->pred_l1_inf_QP_optimality,
                                                                 pred_l1_inf_QP_feasibility,
                                                                 l1_inf_QP_optimality,
                                                                 l1_inf_QP_feasibility);
         // We have two search directions:
         // Solution of Feasibility QP (d without cost) in nlp_work->tmp_qp_out
         // Solution of Feasibility QP (d with objective_multiplier) in nlp_mem->qp_out
+        qps_solved = 2;
 
         // Calculate search direction
         setup_search_direction(mem, dims, qp_out, nlp_work->tmp_qp_out, qp_out, kappa);
@@ -2099,7 +2111,6 @@ static int squid_search_direction_computation(ocp_nlp_dims *dims,
         {
             nlp_mem->objective_multiplier *= 0.5;
         }
-
     }
 
     // Log the qp stats. At the moment we sum up the number of total QP iterations
@@ -2111,6 +2122,7 @@ static int squid_search_direction_computation(ocp_nlp_dims *dims,
         mem->stat[val+5] = qp_iter;
     }
 
+    printf("QPs solved: %d\n", qps_solved);
     return 0;
 }
 
@@ -2151,6 +2163,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->alpha = 0.0;
     mem->step_norm = 0.0;
     mem->needs_steering_step = true;
+    mem->predictor_qp_objective = 0.0;
+    mem->predictor_lp_objective = 0.0;
     mem->nlp_mem->status = ACADOS_READY;
     nlp_mem->objective_multiplier = opts->initial_objective_multiplier;
 
@@ -2253,19 +2267,38 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
 
         // Compute the search direction
-        int steering_status = steering_direction_penalty_update(dims,
-                                                                config,
-                                                                opts,
-                                                                nlp_opts,
-                                                                nlp_in,
-                                                                nlp_out,
-                                                                mem,
-                                                                work,
-                                                                current_l1_infeasibility,
-                                                                sqp_iter,
-                                                                timer0,
-                                                                timer1);
-        if (steering_status == 1)
+        int search_direction_status = 0;
+        if (opts->use_steering_rules)
+        {
+            search_direction_status = steering_direction_penalty_update(dims,
+                                                                    config,
+                                                                    opts,
+                                                                    nlp_opts,
+                                                                    nlp_in,
+                                                                    nlp_out,
+                                                                    mem,
+                                                                    work,
+                                                                    current_l1_infeasibility,
+                                                                    sqp_iter,
+                                                                    timer0,
+                                                                    timer1);
+        }
+        else
+        {
+            search_direction_status = squid_search_direction_computation(dims,
+                                                                    config,
+                                                                    opts,
+                                                                    nlp_opts,
+                                                                    nlp_in,
+                                                                    nlp_out,
+                                                                    mem,
+                                                                    work,
+                                                                    current_l1_infeasibility,
+                                                                    sqp_iter,
+                                                                    timer0,
+                                                                    timer1);
+        }
+        if (search_direction_status == 1)
         {
             printf("Error in steering!\n");
             exit(1);
@@ -2334,7 +2367,10 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         nlp_timings->time_glob += acados_toc(&timer1);
 
         // Update according to Gould, Loh, Robinson paper
-        // end_of_iteration_obj_multiplier_update(nlp_mem, nlp_opts, predictor_qp_objective, pred_l1_inf_QP_optimality);
+        if (!opts->use_steering_rules)
+        {
+            end_of_iteration_obj_multiplier_update(nlp_mem, nlp_opts, mem->predictor_qp_objective, mem->pred_l1_inf_QP_optimality);
+        }
     }  // end SQP loop
 
     if (nlp_opts->print_level > 0)
