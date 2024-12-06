@@ -89,6 +89,9 @@ class AcadosOcpOptions:
         self.__exact_hess_dyn = 1
         self.__exact_hess_constr = 1
         self.__eval_residual_at_max_iter = None
+        self.__initial_objective_multiplier = 1e0
+        self.__use_exact_hessian_in_feas_qp = False
+        self.__use_steering_rules = False
         self.__fixed_hess = 0
         self.__globalization_funnel_init_increase_factor = 15.0
         self.__globalization_funnel_init_upper_bound = 1.0
@@ -96,6 +99,7 @@ class AcadosOcpOptions:
         self.__globalization_funnel_kappa = 0.9
         self.__globalization_funnel_fraction_switching_condition = 1e-3
         self.__globalization_funnel_initial_penalty_parameter = 1.0
+        self.__globalization_funnel_use_merit_fun_only = False
         self.__globalization_fixed_step_length = 1.0
         self.__ext_cost_num_hess = 0
         self.__globalization_use_SOC = 0
@@ -247,8 +251,8 @@ class AcadosOcpOptions:
     @property
     def nlp_solver_type(self):
         """NLP solver.
-        String in ('SQP', 'SQP_RTI', 'DDP').
-        Default: 'SQP'.
+        String in ('SQP', 'SQP_RTI', 'DDP', 'SQP_WITH_FEASIBLE_QP').
+        Default: 'SQP_RTI'.
         """
         return self.__nlp_solver_type
 
@@ -828,6 +832,38 @@ class AcadosOcpOptions:
         return self.__eval_residual_at_max_iter
 
     @property
+    def initial_objective_multiplier(self):
+        """
+        Sets the initial objective multiplier
+
+        Type: double
+        Default: 1e0
+        """
+        return self.__initial_objective_multiplier
+
+    @property
+    def use_exact_hessian_in_feas_qp(self):
+        """
+        Determines if exact Hessian of the constraints or identity Hessian is
+        used in the feasibility QP of `SQP_WITH_FEASIBLE_QP`
+
+        Type: bool
+        Default: False
+        """
+        return self.__use_exact_hessian_in_feas_qp
+
+    @property
+    def use_steering_rules(self):
+        """
+        Determines if exact Hessian of the constraints or identity Hessian is
+        used in the feasibility QP of `SQP_WITH_FEASIBLE_QP`
+
+        Type: bool
+        Default: False
+        """
+        return self.__use_steering_rules
+
+    @property
     def globalization_funnel_initial_penalty_parameter(self):
         """
         Initialization.
@@ -836,6 +872,16 @@ class AcadosOcpOptions:
         Default: 1.0
         """
         return self.__globalization_funnel_initial_penalty_parameter
+
+    @property
+    def globalization_funnel_use_merit_fun_only(self):
+        """
+        If this options is set, the funnel globalization only checks a merit function.
+
+        Type: bool
+        Default: False
+        """
+        return self.__globalization_funnel_use_merit_fun_only
 
     @property
     def nlp_solver_tol_ineq(self):
@@ -1292,12 +1338,40 @@ class AcadosOcpOptions:
         else:
             raise Exception(f'Invalid value for globalization_funnel_initial_penalty_parameter. Should be in [0,1], got {globalization_funnel_initial_penalty_parameter}')
 
+    @globalization_funnel_use_merit_fun_only.setter
+    def globalization_funnel_use_merit_fun_only(self, globalization_funnel_use_merit_fun_only):
+        if type(globalization_funnel_use_merit_fun_only) == bool:
+            self.__globalization_funnel_use_merit_fun_only = globalization_funnel_use_merit_fun_only
+        else:
+            raise Exception(f'Invalid type for globalization_funnel_use_merit_fun_only. Should be bool, got {globalization_funnel_use_merit_fun_only}')
+
     @eval_residual_at_max_iter.setter
     def eval_residual_at_max_iter(self, eval_residual_at_max_iter):
         if isinstance(eval_residual_at_max_iter, bool):
             self.__eval_residual_at_max_iter = eval_residual_at_max_iter
         else:
             raise Exception(f'Invalid datatype for eval_residual_at_max_iter. Should be bool, got {type(eval_residual_at_max_iter)}')
+
+    @initial_objective_multiplier.setter
+    def initial_objective_multiplier(self, initial_objective_multiplier):
+        if isinstance(initial_objective_multiplier, float):
+            self.__initial_objective_multiplier = initial_objective_multiplier
+        else:
+            raise Exception(f'Invalid datatype for initial_objective_multiplier. Should be bool, got {type(initial_objective_multiplier)}')
+
+    @use_exact_hessian_in_feas_qp.setter
+    def use_exact_hessian_in_feas_qp(self, use_exact_hessian_in_feas_qp):
+        if isinstance(use_exact_hessian_in_feas_qp, bool):
+            self.__use_exact_hessian_in_feas_qp = use_exact_hessian_in_feas_qp
+        else:
+            raise Exception(f'Invalid datatype for use_exact_hessian_in_feas_qp. Should be bool, got {type(use_exact_hessian_in_feas_qp)}')
+
+    @use_steering_rules.setter
+    def use_steering_rules(self, use_steering_rules):
+        if isinstance(use_steering_rules, bool):
+            self.__use_steering_rules = use_steering_rules
+        else:
+            raise Exception(f'Invalid datatype for use_steering_rules. Should be bool, got {type(use_steering_rules)}')
 
     @globalization_eps_sufficient_descent.setter
     def globalization_eps_sufficient_descent(self, globalization_eps_sufficient_descent):
@@ -1352,7 +1426,7 @@ class AcadosOcpOptions:
 
     @nlp_solver_type.setter
     def nlp_solver_type(self, nlp_solver_type):
-        nlp_solver_types = ('SQP', 'SQP_RTI', 'DDP')
+        nlp_solver_types = ('SQP', 'SQP_RTI', 'DDP', 'SQP_WITH_FEASIBLE_QP')
         if nlp_solver_type in nlp_solver_types:
             self.__nlp_solver_type = nlp_solver_type
         else:
