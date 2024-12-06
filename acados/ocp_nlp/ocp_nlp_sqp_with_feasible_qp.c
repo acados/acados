@@ -1959,10 +1959,11 @@ static int steering_direction_penalty_update(ocp_nlp_dims *dims,
             }
         }
     }
+    return 1; // we should never reach that point!
 }
 
 /*
-Implements steering rules according to Byrd paper.
+Implements squid update according to SQuID/Curtis paper.
 */
 static int squid_search_direction_computation(ocp_nlp_dims *dims,
                                             ocp_nlp_config *config,
@@ -1985,12 +1986,11 @@ static int squid_search_direction_computation(ocp_nlp_dims *dims,
     int qp_status, qp_iter;
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
 
-    double pred_l1_inf_QP_feasibility, pred_l1_inf_QP_optimality, pred_l1_inf_search_direction;
-    double l1_inf_QP_optimality, l1_inf_QP_feasibility, l1_inf_search_direction;
+    double pred_l1_inf_QP_feasibility, pred_l1_inf_QP_optimality;
+    double l1_inf_QP_optimality, l1_inf_QP_feasibility;
     double predictor_qp_objective, predictor_lp_objective;
 
     double kappa;
-
 
     /* Solve Predictor QP: We solve the standard l1-relaxed QP with gradient */
     qp_status = prepare_and_solve_QP(config, opts, qp_in, qp_out, dims, mem, nlp_in, nlp_out,
@@ -2101,6 +2101,16 @@ static int squid_search_direction_computation(ocp_nlp_dims *dims,
         }
 
     }
+
+    // Log the qp stats. At the moment we sum up the number of total QP iterations
+    // The solver anyway terminates if a QP was not solved correctly at this point
+    int val = mem->stat_n*(sqp_iter+1); // dont know why we need to do this.
+    if (sqp_iter+1 < mem->stat_m)
+    {
+        mem->stat[val+4] = qp_status;
+        mem->stat[val+5] = qp_iter;
+    }
+
     return 0;
 }
 
@@ -2124,7 +2134,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_nlp_in *nlp_in = nlp_in_;
     ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-    // ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_res *nlp_res = nlp_mem->nlp_res;
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
 
@@ -2137,7 +2146,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // zero timers
     ocp_nlp_timings_reset(nlp_timings);
 
-    qp_info *qp_info_;
     int qp_status = 0;
     int qp_iter = 0;
     mem->alpha = 0.0;
@@ -2164,10 +2172,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
      ************************************************/
     int sqp_iter = 0;
     double prev_levenberg_marquardt = 0.0;
-    double pred_l1_inf_QP_feasibility, pred_l1_inf_QP_optimality, pred_l1_inf_search_direction;
-    double l1_inf_QP_optimality, l1_inf_QP_feasibility, l1_inf_search_direction;
-    double predictor_qp_objective, predictor_lp_objective;
-    double kappa;
+    double pred_l1_inf_search_direction;
+    double l1_inf_search_direction;
 
     if (nlp_opts->print_level > 1)
     {
@@ -2245,6 +2251,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         double current_l1_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
         print_debug_output_double("Current l1 infeasibility: ", current_l1_infeasibility, nlp_opts->print_level, 2);
 
+
+        // Compute the search direction
         int steering_status = steering_direction_penalty_update(dims,
                                                                 config,
                                                                 opts,
@@ -2272,6 +2280,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->stat[mem->stat_n*(sqp_iter+1)+5] = qp_iter;
         }
 
+
         l1_inf_search_direction = calculate_slacked_qp_l1_infeasibility(dims, mem, work, opts, qp_in, qp_out, false);
         pred_l1_inf_search_direction = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, l1_inf_search_direction);
         print_debug_output_double("objective multiplier: ", nlp_mem->objective_multiplier, nlp_opts->print_level, 2);
@@ -2287,7 +2296,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             if (nlp_opts->log_primal_step_norm)
                 mem->primal_step_norm[sqp_iter] = mem->step_norm;
         }
-        /* end preparation of search direction */
 
         /* globalization */
         // Calculate optimal QP objective (needed for globalization)
