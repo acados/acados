@@ -34,7 +34,7 @@ from casadi import *
 from matplotlib import pyplot as plt
 from itertools import product
 # The problem described here is taken from the paper
-# R. H. Byrd, F. E. Curtis, and J. Nocedal, Infeasibility detection and SQP 
+# R. H. Byrd, F. E. Curtis, and J. Nocedal, Infeasibility detection and SQP
 # methods for nonlinear optimization, SIAM J. Optim., 20 (2010), pp. 2281–2299.
 #
 # The problem is called "nactive"
@@ -46,7 +46,7 @@ from itertools import product
 #       x1-x2^2 >= 0
 #       -x1 + x2^2 >= 0
 #
-# The problem has a local minimizer of constraint violation at (0,0) and is 
+# The problem has a local minimizer of constraint violation at (0,0) and is
 # started at (-20,10)
 
 
@@ -111,8 +111,9 @@ def solve_nactive(setting):
     ocp.solver_options.globalization = 'FUNNEL_L1PEN_LINESEARCH'
     ocp.solver_options.globalization_full_step_dual = True
     ocp.solver_options.globalization_alpha_min = 1e-15
-    ocp.solver_options.nlp_solver_max_iter = 1000
+    ocp.solver_options.nlp_solver_max_iter = 50
     ocp.solver_options.initial_objective_multiplier = 1e0
+    ocp.solver_options.use_exact_hessian_in_feas_qp = True
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
 
     # initialize solver

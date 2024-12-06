@@ -34,7 +34,7 @@ from casadi import *
 from matplotlib import pyplot as plt
 from itertools import product
 # The problem described here is taken from the paper
-# R. H. Byrd, F. E. Curtis, and J. Nocedal, Infeasibility detection and SQP 
+# R. H. Byrd, F. E. Curtis, and J. Nocedal, Infeasibility detection and SQP
 # methods for nonlinear optimization, SIAM J. Optim., 20 (2010), pp. 2281–2299.
 #
 # The problem is called "unique"
@@ -45,7 +45,7 @@ from itertools import product
 # s.t.  x2 - x1^2 -1 >= 0
 #       0.3(1-exp(x2)) >= 0
 #
-# The problem has a local minimizer of constraint violation at (0,1) and is 
+# The problem has a local minimizer of constraint violation at (0,1) and is
 # started at (3,2)
 
 
@@ -116,6 +116,7 @@ def solve_unique(setting):
     ocp.solver_options.globalization_alpha_min = 1e-15
     ocp.solver_options.nlp_solver_max_iter = 1000
     ocp.solver_options.initial_objective_multiplier = objective_multiplier
+    ocp.solver_options.use_exact_hessian_in_feas_qp = True
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
 
     # initialize solver

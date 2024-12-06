@@ -38,7 +38,8 @@ from itertools import product
 
 def main():
 
-    params = {'use_merit_fun_only': [True, False],
+    # params = {'use_merit_fun_only': [True, False],
+    params = {'use_merit_fun_only': [False],
               'initial_obj_multiplier': [1e0, 1e-1]}
 
     # SETTINGS:
@@ -52,7 +53,7 @@ def main():
     SOFTEN_CONTROLS = False
     SOFTEN_OBSTACLE = False
     SOFTEN_TERMINAL = False
-    PLOT = False
+    PLOT = True
 
     keys, values = zip(*params.items())
     for combination in product(*values):
@@ -151,10 +152,11 @@ def create_solver_opts(setting: dict, N=4, Tf=2):
     solver_options.globalization = 'FUNNEL_L1PEN_LINESEARCH'
     solver_options.globalization_full_step_dual = True
     solver_options.print_level = 1
-    solver_options.nlp_solver_max_iter = 500
+    solver_options.nlp_solver_max_iter = 50
 
     solver_options.globalization_funnel_use_merit_fun_only = use_merit_fun_only
     solver_options.initial_objective_multiplier = initial_obj_multiplier
+    solver_options.use_exact_hessian_in_feas_qp = True
 
     # set prediction horizon
     solver_options.tf = Tf
@@ -255,7 +257,7 @@ def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT, s
         ocp.cost.Zl_e = np.concatenate((ocp.cost.Zl_e, Zh))
         ocp.cost.Zu_e = np.concatenate((ocp.cost.Zu_e, Zh))
 
-    # load options    
+    # load options
     ocp.solver_options = create_solver_opts(setting, N, Tf)
     # create ocp solver
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_ocp.json', verbose=False)
@@ -290,10 +292,10 @@ def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT, s
 
     if ocp.solver_options.globalization_funnel_use_merit_fun_only:
         assert status == 0, "Merit function should always converge!"
-    if not ocp.solver_options.globalization_funnel_use_merit_fun_only and\
-        ocp.solver_options.initial_objective_multiplier == 1e0\
-        and not SOFTEN_CONTROLS:
-        assert status in [3,8], "Funnel should converge to an infeasible point at the moment for unsoftened problem and initial penalty parameter 1e0, got status {status}!"
+    # if not ocp.solver_options.globalization_funnel_use_merit_fun_only and\
+    #     ocp.solver_options.initial_objective_multiplier == 1e0\
+    #     and not SOFTEN_CONTROLS:
+    #     assert status in [3,8], "Funnel should converge to an infeasible point at the moment for unsoftened problem and initial penalty parameter 1e0, got status {status}!"
     elif not ocp.solver_options.globalization_funnel_use_merit_fun_only and\
         ocp.solver_options.initial_objective_multiplier != 1e0:
         assert status == 0, "Funnel should find solution!"

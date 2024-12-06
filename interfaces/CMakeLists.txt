@@ -214,7 +214,7 @@ add_test(NAME py_ddp_rockit_hello_world
         python rockit_hello_world_ocp.py)
 
 # Tests for SQP_WITH_FEASIBLE_QP
-add_test(NAME py_sqp_wfqp_linear_problem_slack_terminal_constraint
+add_test(NAME py_sqp_wfqp_linear_problem_obstacle_avoidance
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/linear_mass_model
         python sqp_wfqp_test.py)
 
@@ -226,7 +226,7 @@ add_test(NAME py_sqp_wfqp_infeasible_problem_nactive
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/infeasible_test_problems
         python nactive_test_problem.py)
 
-add_test(NAME py_sqp_wfqp_infeasible_problem_hs015
+add_test(NAME py_sqp_wfqp_problem_hs015
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/nlp_hs015
         python hs015_test.py)
 
