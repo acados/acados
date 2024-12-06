@@ -205,11 +205,11 @@ def get_path_cost_expression(ocp: AcadosOcp):
         if casadi_length(model.z) > 0:
             ocp.cost.Vz @ model.z
         residual = y - ocp.cost.yref
-        cost_dot = 0.5 * (residual.T @ ocp.cost.W @ residual)
+        cost_dot = 0.5*(residual.T @ ocp.cost.W @ residual)
 
     elif ocp.cost.cost_type == "NONLINEAR_LS":
         residual = model.cost_y_expr - ocp.cost.yref
-        cost_dot = 0.5 * (residual.T @ ocp.cost.W @ residual)
+        cost_dot = 0.5*(residual.T @ ocp.cost.W @ residual)
 
     elif ocp.cost.cost_type == "EXTERNAL":
         cost_dot = model.cost_expr_ext_cost
@@ -247,9 +247,9 @@ def create_model_with_cost_state(ocp: AcadosOcp) -> Tuple[AcadosModel, np.ndarra
         lower_violation = ca.fmax(ocp.constraints.lbu[ibu] - model.u[iu], 0)
         upper_violation = ca.fmax(model.u[iu] - ocp.constraints.ubu[ibu], 0)
         cost_dot += ocp.cost.zl[i_slack] * lower_violation + \
-                    ocp.cost.Zl[i_slack] * lower_violation ** 2
+            ocp.cost.Zl[i_slack] * lower_violation ** 2
         cost_dot += ocp.cost.zu[i_slack] * upper_violation + \
-                    ocp.cost.Zu[i_slack] * upper_violation ** 2
+            ocp.cost.Zu[i_slack] * upper_violation ** 2
         i_slack += 1
 
     for ibx in ocp.constraints.idxsbx:
@@ -257,9 +257,9 @@ def create_model_with_cost_state(ocp: AcadosOcp) -> Tuple[AcadosModel, np.ndarra
         lower_violation = ca.fmax(ocp.constraints.lbx[ibx] - model.x[ix], 0)
         upper_violation = ca.fmax(model.x[ix] - ocp.constraints.ubx[ibx], 0)
         cost_dot += ocp.cost.zl[i_slack] * lower_violation + \
-                    ocp.cost.Zl[i_slack] * lower_violation ** 2
+            ocp.cost.Zl[i_slack] * lower_violation ** 2
         cost_dot += ocp.cost.zu[i_slack] * upper_violation + \
-                    ocp.cost.Zu[i_slack] * upper_violation ** 2
+            ocp.cost.Zu[i_slack] * upper_violation ** 2
         i_slack += 1
 
     if not is_empty(ocp.constraints.C):
@@ -268,9 +268,9 @@ def create_model_with_cost_state(ocp: AcadosOcp) -> Tuple[AcadosModel, np.ndarra
             lower_violation = ca.fmax(ocp.constraints.lg[ig] - g[ig], 0)
             upper_violation = ca.fmax(g[ig] - ocp.constraints.ug[ig], 0)
             cost_dot += ocp.cost.zl[i_slack] * lower_violation + \
-                        ocp.cost.Zl[i_slack] * lower_violation ** 2
+                ocp.cost.Zl[i_slack] * lower_violation ** 2
             cost_dot += ocp.cost.zu[i_slack] * upper_violation + \
-                        ocp.cost.Zu[i_slack] * upper_violation ** 2
+                ocp.cost.Zu[i_slack] * upper_violation ** 2
             i_slack += 1
 
     for ih in ocp.constraints.idxsh:
@@ -279,9 +279,9 @@ def create_model_with_cost_state(ocp: AcadosOcp) -> Tuple[AcadosModel, np.ndarra
         upper_violation = ca.fmax(
             ocp.model.con_h_expr[ih] - ocp.constraints.uh[ih], 0)
         cost_dot += ocp.cost.zl[i_slack] * lower_violation + \
-                    ocp.cost.Zl[i_slack] * lower_violation ** 2
+            ocp.cost.Zl[i_slack] * lower_violation ** 2
         cost_dot += ocp.cost.zu[i_slack] * upper_violation + \
-                    ocp.cost.Zu[i_slack] * upper_violation ** 2
+            ocp.cost.Zu[i_slack] * upper_violation ** 2
         i_slack += 1
 
     if not is_empty(ocp.constraints.idxsphi):
@@ -291,7 +291,7 @@ def create_model_with_cost_state(ocp: AcadosOcp) -> Tuple[AcadosModel, np.ndarra
     model.x = ca.vertcat(model.x, cost_state)
     model.xdot = ca.vertcat(model.xdot, cost_state_dot)
     model.f_expl_expr = ca.vertcat(model.f_expl_expr, cost_dot)
-    model.f_impl_expr = ca.vertcat(model.f_impl_expr, cost_state_dot - cost_dot)
+    model.f_impl_expr = ca.vertcat(model.f_impl_expr, cost_state_dot-cost_dot)
 
     return model, ocp.parameter_values
 
@@ -363,12 +363,12 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
             constr_expr_h = ca.vertcat(constr_expr_h, c)
             lh.append(lb[ii])
             uh.append(ub[ii])
-            print(f'constraint {ii + 1} is kept as nonlinear constraint.')
+            print(f'constraint {ii+1} is kept as nonlinear constraint.')
             print(c)
             print(' ')
         else:  # c is linear in x and u
             Jc_fun = ca.Function('Jc_fun', [x[0]], [
-                ca.jacobian(c, ca.vertcat(x, u))])
+                                 ca.jacobian(c, ca.vertcat(x, u))])
             Jc = Jc_fun(0)
 
             if np.sum(Jc != 0) == 1:
@@ -380,7 +380,7 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
                     Jbx[-1, idb] = 1
                     lbx.append(lb[ii] / Jc[idb])
                     ubx.append(ub[ii] / Jc[idb])
-                    print(f'constraint {ii + 1} is reformulated as bound on x.')
+                    print(f'constraint {ii+1} is reformulated as bound on x.')
                     print(c)
                     print(' ')
                 else:
@@ -389,7 +389,7 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
                     Jbu[-1, idb - nx] = 1
                     lbu.append(lb[ii] / Jc[idb])
                     ubu.append(ub[ii] / Jc[idb])
-                    print(f'constraint {ii + 1} is reformulated as bound on u.')
+                    print(f'constraint {ii+1} is reformulated as bound on u.')
                     print(c)
                     print(' ')
             else:
@@ -399,7 +399,7 @@ def detect_constraint_structure(model: AcadosModel, constraints: AcadosOcpConstr
                 lg.append(lb[ii])
                 ug.append(ub[ii])
                 print(
-                    f'constraint {ii + 1} is reformulated as general linear constraint.')
+                    f'constraint {ii+1} is reformulated as general linear constraint.')
                 print(c)
                 print(' ')
 
@@ -477,9 +477,9 @@ def J_to_idx(J):
         this_idx = ca.DM(J[i, :].sparsity()).full().nonzero()[0]
         if len(this_idx) != 1:
             raise ValueError(
-                f'J_to_idx: Invalid J matrix. Exiting. Found more than one nonzero in row {i + 1}.')
+                f'J_to_idx: Invalid J matrix. Exiting. Found more than one nonzero in row {i+1}.')
         if J[i, this_idx] != 1:
             raise ValueError(
-                f'J_to_idx: J matrices can only contain 1s, got J({i + 1}, {this_idx}) = {J[i, this_idx]}')
+                f'J_to_idx: J matrices can only contain 1s, got J({i+1}, {this_idx}) = {J[i, this_idx]}')
         idx.append(this_idx[0])
     return np.array(idx)

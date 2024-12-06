@@ -28,7 +28,6 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 from typing import Dict
-
 import matplotlib.pyplot as plt
 import numpy as np
 from acados_template import latexify_plot
