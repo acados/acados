@@ -745,7 +745,9 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
 Compute infinity norm of QP multipliers in NLP space.
 Assumes that the masked multipliers are always zero.
 */
-static void compute_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims, ocp_qp_out *qp_out, ocp_qp_in *qp_in)
+static void compute_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims,
+                                           ocp_qp_out *qp_out, ocp_qp_in *qp_in,
+                                           bool get_feasibility_multipliers)
 {
     int i,j;
     int N = dims->N;
@@ -762,7 +764,14 @@ static void compute_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp
             norm_pi = fmax(norm_pi, fabs(BLASFEO_DVECEL(qp_out->pi+i, j)));
         }
     }
-    mem->norm_pi = norm_pi;
+    if (get_feasibility_multipliers)
+    {
+        mem->norm_feas_qp_pi = norm_pi;
+    }
+    else
+    {
+        mem->norm_opt_qp_pi = norm_pi;
+    }
 
     /* structure of QP and NLP iterates: */
     // qp_out->lam = [lbu, lbx, lg, l_nl, ubu, ubx, ug, u_nl, lbs_NLP, lbs_QP, ubs_NLP, ubs_QP]
@@ -797,8 +806,16 @@ static void compute_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp
         }
         // TODO: add lbs_NLP, ubs_NLP mutlipliers
     }
-    mem->norm_lam_unslacked_bounds = norm_lam_hard_constr;
-    mem->norm_lam_slacked_constraints = norm_lam_slacked_constraints;
+    if (get_feasibility_multipliers)
+    {
+        mem->norm_feas_qp_lam_unslacked_bounds = norm_lam_hard_constr;
+        mem->norm_feas_qp_lam_slacked_constraints = norm_lam_slacked_constraints;
+    }
+    else
+    {
+        mem->norm_opt_qp_lam_unslacked_bounds = norm_lam_hard_constr;
+        mem->norm_opt_qp_lam_slacked_constraints = norm_lam_slacked_constraints;
+    }
     // assert(norm_lam_slacked_constraints <= 1.0 + 1e-8); // Slacked multipliers should be in [0,1]
 }
 
@@ -1832,7 +1849,7 @@ static int steering_direction_penalty_update(ocp_nlp_dims *dims,
                                             ocp_nlp_sqp_wfqp_memory *mem,
                                             ocp_nlp_sqp_wfqp_workspace *work,
                                             double current_l1_infeasibility,
-                                            double sqp_iter,
+                                            int sqp_iter,
                                             acados_timer timer0,
                                             acados_timer timer1)
 {
@@ -1873,7 +1890,7 @@ static int steering_direction_penalty_update(ocp_nlp_dims *dims,
 // #endif
             return nlp_mem->status;
         }
-        compute_qp_multiplier_norm_inf(mem, dims, qp_out, qp_in);
+        compute_qp_multiplier_norm_inf(mem, dims, qp_out, qp_in, false);
 
         qps_solved += 1;
         l1_inf_QP_optimality = calculate_slacked_qp_l1_infeasibility(dims, mem, work, opts, qp_in, qp_out, opts->use_QP_l1_inf_from_slacks);
@@ -1882,9 +1899,9 @@ static int steering_direction_penalty_update(ocp_nlp_dims *dims,
         predictor_lp_objective = compute_gradient_directional_derivative(mem, dims, qp_in, qp_out);
 
         /* Debug */
-        print_debug_output_double("Opt QP: Multiplier norm: pi", mem->norm_pi, nlp_opts->print_level, 2);
-        print_debug_output_double("Opt QP: Multiplier norm: lam slacked", mem->norm_lam_slacked_constraints, nlp_opts->print_level, 2);
-        print_debug_output_double("Opt QP: Multiplier norm: lam unslacked", mem->norm_lam_unslacked_bounds, nlp_opts->print_level, 2);
+        print_debug_output_double("Opt QP: Multiplier norm: pi", mem->norm_opt_qp_pi, nlp_opts->print_level, 2);
+        print_debug_output_double("Opt QP: Multiplier norm: lam slacked", mem->norm_opt_qp_lam_slacked_constraints, nlp_opts->print_level, 2);
+        print_debug_output_double("Opt QP: Multiplier norm: lam unslacked", mem->norm_opt_qp_lam_unslacked_bounds, nlp_opts->print_level, 2);
         print_debug_output_double("Opt QP: l1_inf: ", l1_inf_QP_optimality, nlp_opts->print_level, 2);
         print_debug_output_double("Opt QP: pred_l1_inf_QP: ", pred_l1_inf_QP_optimality, nlp_opts->print_level, 2);
         print_debug_output_double("Opt QP: pred_obj_QP: ", -predictor_qp_objective, nlp_opts->print_level, 2);
@@ -1932,14 +1949,14 @@ static int steering_direction_penalty_update(ocp_nlp_dims *dims,
 // #endif
                 return nlp_mem->status;
             }
-            compute_qp_multiplier_norm_inf(mem, dims, nlp_work->tmp_qp_out, qp_in);
+            compute_qp_multiplier_norm_inf(mem, dims, nlp_work->tmp_qp_out, qp_in, true);
 
             l1_inf_QP_feasibility = calculate_slacked_qp_l1_infeasibility(dims, mem, work, opts, qp_in, nlp_work->tmp_qp_out, opts->use_QP_l1_inf_from_slacks);
             pred_l1_inf_QP_feasibility = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, l1_inf_QP_feasibility);
 
-            print_debug_output_double("Feas QP: Multiplier norm: pi", mem->norm_pi, nlp_opts->print_level, 2);
-            print_debug_output_double("Feas QP: Multiplier norm: lam slacked", mem->norm_lam_slacked_constraints, nlp_opts->print_level, 2);
-            print_debug_output_double("Feas QP: Multiplier norm: lam unslacked", mem->norm_lam_unslacked_bounds, nlp_opts->print_level, 2);
+            print_debug_output_double("Feas QP: Multiplier norm: pi", mem->norm_feas_qp_pi, nlp_opts->print_level, 2);
+            print_debug_output_double("Feas QP: Multiplier norm: lam slacked", mem->norm_opt_qp_lam_slacked_constraints, nlp_opts->print_level, 2);
+            print_debug_output_double("Feas QP: Multiplier norm: lam unslacked", mem->norm_feas_qp_lam_unslacked_bounds, nlp_opts->print_level, 2);
             print_debug_output_double("Feas QP: l1_inf_feas: ", l1_inf_QP_feasibility, nlp_opts->print_level, 2);
             print_debug_output_double("Feas QP: pred_l1_inf_QP: ", pred_l1_inf_QP_feasibility, nlp_opts->print_level, 2);
             assert(pred_l1_inf_QP_feasibility > -1e2*opts->tol_ineq);
@@ -1985,7 +2002,7 @@ static int squid_search_direction_computation(ocp_nlp_dims *dims,
                                             ocp_nlp_sqp_wfqp_memory *mem,
                                             ocp_nlp_sqp_wfqp_workspace *work,
                                             double current_l1_infeasibility,
-                                            double sqp_iter,
+                                            int sqp_iter,
                                             acados_timer timer0,
                                             acados_timer timer1)
 {
@@ -2023,7 +2040,7 @@ static int squid_search_direction_computation(ocp_nlp_dims *dims,
 // #endif
         return nlp_mem->status;
     }
-    compute_qp_multiplier_norm_inf(mem, dims, qp_out, qp_in);
+    compute_qp_multiplier_norm_inf(mem, dims, qp_out, qp_in, false);
 
     l1_inf_QP_optimality = calculate_slacked_qp_l1_infeasibility(dims, mem, work, opts, qp_in, qp_out, opts->use_QP_l1_inf_from_slacks);
     mem->pred_l1_inf_QP_optimality = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, l1_inf_QP_optimality);
@@ -2031,9 +2048,9 @@ static int squid_search_direction_computation(ocp_nlp_dims *dims,
     mem->predictor_lp_objective = compute_gradient_directional_derivative(mem, dims, qp_in, qp_out);
 
     /* Debug */
-    print_debug_output_double("Opt QP: Multiplier norm: pi", mem->norm_pi, nlp_opts->print_level, 2);
-    print_debug_output_double("Opt QP: Multiplier norm: lam slacked", mem->norm_lam_slacked_constraints, nlp_opts->print_level, 2);
-    print_debug_output_double("Opt QP: Multiplier norm: lam unslacked", mem->norm_lam_unslacked_bounds, nlp_opts->print_level, 2);
+    print_debug_output_double("Opt QP: Multiplier norm: pi", mem->norm_opt_qp_pi, nlp_opts->print_level, 2);
+    print_debug_output_double("Opt QP: Multiplier norm: lam slacked", mem->norm_opt_qp_lam_slacked_constraints, nlp_opts->print_level, 2);
+    print_debug_output_double("Opt QP: Multiplier norm: lam unslacked", mem->norm_opt_qp_lam_unslacked_bounds, nlp_opts->print_level, 2);
     print_debug_output_double("Opt QP: l1_inf: ", l1_inf_QP_optimality, nlp_opts->print_level, 2);
     print_debug_output_double("Opt QP: pred_l1_inf_QP: ", mem->pred_l1_inf_QP_optimality, nlp_opts->print_level, 2);
     print_debug_output_double("Opt QP: pred_obj_QP: ", -mem->predictor_qp_objective, nlp_opts->print_level, 2);
@@ -2081,14 +2098,14 @@ static int squid_search_direction_computation(ocp_nlp_dims *dims,
 // #endif
             return nlp_mem->status;
         }
-        compute_qp_multiplier_norm_inf(mem, dims, nlp_work->tmp_qp_out, qp_in);
+        compute_qp_multiplier_norm_inf(mem, dims, nlp_work->tmp_qp_out, qp_in, true);
 
         l1_inf_QP_feasibility = calculate_slacked_qp_l1_infeasibility(dims, mem, work, opts, qp_in, nlp_work->tmp_qp_out, opts->use_QP_l1_inf_from_slacks);
         pred_l1_inf_QP_feasibility = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, l1_inf_QP_feasibility);
 
-        print_debug_output_double("Feas QP: Multiplier norm: pi", mem->norm_pi, nlp_opts->print_level, 2);
-        print_debug_output_double("Feas QP: Multiplier norm: lam slacked", mem->norm_lam_slacked_constraints, nlp_opts->print_level, 2);
-        print_debug_output_double("Feas QP: Multiplier norm: lam unslacked", mem->norm_lam_unslacked_bounds, nlp_opts->print_level, 2);
+        print_debug_output_double("Feas QP: Multiplier norm: pi", mem->norm_feas_qp_pi, nlp_opts->print_level, 2);
+        print_debug_output_double("Feas QP: Multiplier norm: lam slacked", mem->norm_feas_qp_lam_slacked_constraints, nlp_opts->print_level, 2);
+        print_debug_output_double("Feas QP: Multiplier norm: lam unslacked", mem->norm_opt_qp_lam_unslacked_bounds, nlp_opts->print_level, 2);
         print_debug_output_double("Feas QP: l1_inf_feas: ", l1_inf_QP_feasibility, nlp_opts->print_level, 2);
         print_debug_output_double("Feas QP: pred_l1_inf_QP: ", pred_l1_inf_QP_feasibility, nlp_opts->print_level, 2);
         assert(pred_l1_inf_QP_feasibility > -1e2*opts->tol_ineq);
@@ -2105,11 +2122,14 @@ static int squid_search_direction_computation(ocp_nlp_dims *dims,
 
         // Calculate search direction
         setup_search_direction(mem, dims, qp_out, nlp_work->tmp_qp_out, qp_out, kappa);
+    }
 
-        // if kappa < 1: We should remove the objective multiplier
-        if (kappa < 1.0)
+    print_debug_output_double("Product penalty and norm: ", mem->norm_opt_qp_lam_unslacked_bounds*nlp_mem->objective_multiplier, nlp_opts->print_level, 2);
+    if (nlp_mem->objective_multiplier > 1e-3)
+    {
+        if (mem->norm_opt_qp_lam_unslacked_bounds*nlp_mem->objective_multiplier > 1.0)
         {
-            nlp_mem->objective_multiplier *= 0.5;
+            nlp_mem->objective_multiplier = sqrt(0.5*nlp_mem->objective_multiplier* (1-opts->sufficient_l1_inf_reduction)/mem->norm_opt_qp_lam_unslacked_bounds);
         }
     }
 

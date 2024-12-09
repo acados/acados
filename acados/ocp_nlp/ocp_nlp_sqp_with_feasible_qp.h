@@ -123,9 +123,14 @@ typedef struct
     struct blasfeo_dmat *RSQ_constr;
 
     // TODO: add slacked qp_solver.
-    double norm_pi;
-    double norm_lam_unslacked_bounds;
-    double norm_lam_slacked_constraints;
+    double norm_feas_qp_pi;
+    double norm_feas_qp_lam_unslacked_bounds;
+    double norm_feas_qp_lam_slacked_constraints;
+
+    double norm_opt_qp_pi;
+    double norm_opt_qp_lam_unslacked_bounds;
+    double norm_opt_qp_lam_slacked_constraints;
+
     double inf_norm_res_comp_feasibility;
     double inf_norm_res_stat_feasibility;
     bool needs_steering_step;

@@ -344,7 +344,7 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
         mem->funnel_penalty_mode = true;
     }
 
-    if (opts->use_merit_fun_only || is_iterate_inside_of_funnel(mem, opts, trial_infeasibility)) 
+    if (opts->use_merit_fun_only || is_iterate_inside_of_funnel(mem, opts, trial_infeasibility))
     {
         print_debug_output("Trial iterate is INSIDE of funnel\n", nlp_opts->print_level, 1);
         if (!mem->funnel_penalty_mode)
