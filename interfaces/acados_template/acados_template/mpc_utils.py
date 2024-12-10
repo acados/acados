@@ -34,6 +34,7 @@ from typing import Tuple, Optional
 import casadi as ca
 import numpy as np
 
+from . import AcadosOcpIterate
 from .acados_model import AcadosModel
 from .acados_ocp import AcadosOcp, AcadosOcpConstraints
 from .utils import casadi_length, is_empty, array_to_float
@@ -66,12 +67,17 @@ class AcadosCostConstraintEvaluator:
         self.__parameter_values = ocp.parameter_values
         self.__p_global_values = ocp.p_global_values
 
-        self.dt = ocp.solver_options.time_steps[0]
+        self.time_steps = ocp.solver_options.time_steps
 
         # setup casadi functions for constraints and cost
         cost_expr = get_path_cost_expression(ocp)
+        cost_expr_e = get_terminal_cost_expression(ocp)
 
         # build function. fields may be None or empty casadi expressions
+        # todo: empty list als default,
+        #  SX und MX moeglich "get_casadi_symbol"-function in acados_model
+        # was kann sich aendern:
+        # p, p_global, x, u, z, t (kann auch ein parameter sein),
         if ocp.model.p_global is None:
             p_global = ca.SX(0,0)
         else:
@@ -84,16 +90,31 @@ class AcadosCostConstraintEvaluator:
             cost_fun_args,
             [cost_expr]
         )
+        cost_fun_args_e = [ocp.model.x, ocp.model.p, p_global]
+        cost_fun_args_e = [arg for arg in cost_fun_args_e if arg is not None]
+        self.terminal_cost_fun = ca.Function(
+            'cost_fun_e',
+            cost_fun_args_e,
+            [cost_expr_e]
+        )
 
         # constraints
         bu_expr = model.u[constraints.idxbu]
         bx_expr = model.x[constraints.idxbx]
+        bx_expr_e = model.x[constraints.idxbx_e]
+
         if not is_empty(constraints.C):
             g_expr = constraints.C @ model.x + constraints.D @ model.u
         else:
             g_expr = ca.DM.zeros(0, 1)
 
+        if not is_empty(constraints.C_e):
+            g_expr_e = constraints.C_e @ model.x
+        else:
+            g_expr_e = ca.DM.zeros(0, 1)
+
         h_expr = model.con_h_expr
+        h_expr_e = model.con_h_expr_e
 
         if ocp.dims.nphi > 0:
             raise NotImplementedError("AcadosCostConstraintEvaluatator: not implemented for nontrivial phi.")
@@ -101,6 +122,9 @@ class AcadosCostConstraintEvaluator:
         # build function. fields may be None, which creates problems for casadi function
         constraint_args = [bu_expr, bx_expr, g_expr, h_expr]
         constraint_args = [arg for arg in constraint_args if arg is not None]
+
+        constraint_args_e = [bx_expr_e, g_expr_e, h_expr_e]
+        constraint_args_e = [arg for arg in constraint_args_e if arg is not None]
 
         constraint_expr = ca.vertcat(*constraint_args)
         upper_bound = ca.vertcat(
@@ -118,8 +142,25 @@ class AcadosCostConstraintEvaluator:
             constraints.lphi
         )
 
+        constraint_expr_e = ca.vertcat(*constraint_args_e)
+        upper_bound_e = ca.vertcat(
+            constraints.ubx_e,
+            constraints.ug_e,
+            constraints.uh_e,
+            constraints.uphi_e
+        )
+        lower_bound_e = ca.vertcat(
+            constraints.lbx_e,
+            constraints.lg_e,
+            constraints.lh_e,
+            constraints.lphi_e
+        )
+
         lower_violation = ca.fmax(lower_bound - constraint_expr, 0)
         upper_violation = ca.fmax(constraint_expr - upper_bound, 0)
+
+        lower_violation_e = ca.fmax(lower_bound_e - constraint_expr_e, 0)
+        upper_violation_e = ca.fmax(constraint_expr_e - upper_bound_e, 0)
 
         slack_indices = np.concatenate((
             constraints.idxsbu,
@@ -129,18 +170,39 @@ class AcadosCostConstraintEvaluator:
             constraints.idxsphi + dims.nbu + dims.nbx + dims.ng + dims.nh
         ))
 
+        slack_indices_e = np.concatenate((
+            constraints.idxsbx_e,
+            constraints.idxsg_e  + dims.nbx_e,
+            constraints.idxsh_e + dims.nbx_e + dims.ng_e,
+            constraints.idxsphi_e + dims.nbx_e + dims.ng_e + dims.nh_e
+        ))
+
         self.nonslacked_indices = np.setdiff1d(
             np.arange(constraint_expr.shape[0]),
             slack_indices
         )
 
+        self.nonslacked_indices_e = np.setdiff1d(
+            np.arange(constraint_expr_e.shape[0]),
+            slack_indices_e
+        )
+
         lower_slack_expression = lower_violation[slack_indices]
         upper_slack_expression = upper_violation[slack_indices]
+
+        lower_slack_expression_e = lower_violation_e[slack_indices_e]
+        upper_slack_expression_e = upper_violation_e[slack_indices_e]
 
         self.constraint_function = ca.Function(
             'constraint_function',
             cost_fun_args,
             [lower_violation, upper_violation, lower_slack_expression, upper_slack_expression]
+        )
+
+        self.constraint_function_e = ca.Function(
+            'constraint_function_e',
+            cost_fun_args_e,
+            [lower_violation_e, upper_violation_e, lower_slack_expression_e, upper_slack_expression_e]
         )
 
     @property
@@ -179,23 +241,12 @@ class AcadosCostConstraintEvaluator:
                 f'\nGot np_global = {self.ocp.dims.np_global}, '
                 f'self.p_global_values.shape = {p_global_values.shape[0]}\n')
 
-    def evaluate(self,
-                 x: np.ndarray, u: np.ndarray,
-                 p: Optional[np.ndarray] = None,
-                 p_global: Optional[np.ndarray] = None,
-                 dt: Optional[float] = None) -> dict:
-        if p is not None:
-            self.parameter_values(p)
-        if p_global is not None:
-            self.p_global_values(p_global)
-        if dt is None:
-            dt = self.dt
+    def evaluate(self, x: np.ndarray, u: np.ndarray, step: int = 0) -> dict:
 
         cost_fun_args = [x, u, self.__parameter_values, self.__p_global_values]
-        # cost_fun_args = [arg for arg in cost_fun_args if arg is not None]
 
         # evaluate cost
-        cost_without_slacks = self.cost_fun(*cost_fun_args).full()
+        cost_without_slacks = self.cost_fun(*cost_fun_args).full() * self.time_steps[step]
 
         # evaluate constraints
         lower_violation, upper_violation, lower_slack, upper_slack = (
@@ -206,16 +257,30 @@ class AcadosCostConstraintEvaluator:
             (lower_violation[self.nonslacked_indices], upper_violation[self.nonslacked_indices]))
 
         # evaluate cost of soft constraints
-        lower_slack_cost = 0.5 * self.ocp.cost.Zl @ (lower_slack * lower_slack) + self.ocp.cost.zl @ lower_slack
-        upper_slack_cost = 0.5 * self.ocp.cost.Zu @ (upper_slack * upper_slack) + self.ocp.cost.zu @ upper_slack
-        slack_cost = (lower_slack_cost + upper_slack_cost).full() * dt
-        if len(slack_cost)==0:
+        lower_slack_cost, upper_slack_cost = np.array([0.]), np.array([0.])
+
+        if self.ocp.cost.Zl.size > 0:
+            lower_slack_cost += 0.5 * self.ocp.cost.Zl @ (lower_slack.full()  * lower_slack.full())
+        if self.ocp.cost.zl.size > 0:
+            lower_slack_cost += self.ocp.cost.zl @ lower_slack.full()
+
+        if self.ocp.cost.Zu.size > 0:
+            upper_slack_cost += 0.5 * self.ocp.cost.Zu @ (upper_slack.full() * upper_slack.full() )
+        if self.ocp.cost.zu.size > 0:
+            upper_slack_cost += self.ocp.cost.zu @ upper_slack.full()
+
+        slack_cost = (lower_slack_cost + upper_slack_cost) * self.time_steps[step]
+
+        if len(slack_cost) == 0:
             cost = cost_without_slacks
         else:
             cost = cost_without_slacks + slack_cost
 
 
         # evaluate sum
+        # violation per constraint, upper und lower bound aufteilen. linear, nonlinear, std bounds
+        # einmal kompletter constraint vector
+        # subset hard constraints
         result = {
             'cost': array_to_float(cost),
             'cost_without_slacks': array_to_float(cost_without_slacks),
@@ -224,8 +289,58 @@ class AcadosCostConstraintEvaluator:
         }
         return result
 
+    def evaluate_ocp_cost(self, acados_ocp_iterate: AcadosOcpIterate):
+        acados_ocp_iterate = deepcopy(acados_ocp_iterate)
+        acados_ocp_iterate.flatten()
+        x_traj = np.array(acados_ocp_iterate.x_traj)
+        u_traj = np.array(acados_ocp_iterate.u_traj)
+
+        N, nx = np.array(acados_ocp_iterate.x_traj).shape
+        cost = 0
+
+        # the cost on the first step is different in the OCP
+        result = self.evaluate(x_traj[0, :], u_traj[0, :], step=0)
+        cost += result['cost_without_slacks']
+
+        for i in range(1,N-1):
+            result = self.evaluate(x_traj[i,:],u_traj[i,:],step=i)
+            cost += result['cost']
+
+        cost_fun_args = [x_traj[N-1,:], self.__parameter_values, self.__p_global_values]
+        cost += self.terminal_cost_fun(*cost_fun_args).full()
+
+        lower_violation_e, upper_violation_e, lower_slack_e, upper_slack_e = (
+            self.constraint_function_e(x_traj[N-1,:],
+                                     self.__parameter_values,
+                                     self.__p_global_values))
+        violation_hard_constraints = np.concatenate(
+            (lower_violation_e[self.nonslacked_indices_e], upper_violation_e[self.nonslacked_indices_e]))
+
+        # evaluate cost of soft constraints
+        lower_slack_cost_e, upper_slack_cost_e = np.array([0.]), np.array([0.])
+        if self.ocp.cost.Zl_e.size > 0:
+            lower_slack_cost_e += 0.5 * self.ocp.cost.Zl @ (lower_slack_e.full() * lower_slack_e.full())
+        if self.ocp.cost.zl_e.size > 0:
+            lower_slack_cost_e += self.ocp.cost.zl @ lower_slack_e.full()
+
+        if self.ocp.cost.Zu_e.size > 0:
+            upper_slack_cost_e += 0.5 * self.ocp.cost.Zu @ (upper_slack_e.full() * upper_slack_e.full())
+        if self.ocp.cost.zu_e.size > 0:
+            upper_slack_cost_e += self.ocp.cost.zu @ upper_slack_e.full()
+
+        if lower_slack_e.full().size > 0:
+            cost += lower_slack_e.full()
+        if upper_slack_e.full().size > 0 :
+            cost += upper_slack_e.full()
+
+        return cost[0][0]
+
+
 
 def get_path_cost_expression(ocp: AcadosOcp):
+    # multiply path costs with td, nonuniform grid
+    # multiply with cost scaling
+    # cost scaling ueberschreibt tds, falls gesetzt
     model = ocp.model
     if ocp.cost.cost_type == "LINEAR_LS":
         y = ocp.cost.Vx @ model.x + ocp.cost.Vu @ model.u
@@ -247,6 +362,28 @@ def get_path_cost_expression(ocp: AcadosOcp):
             model.cost_psi_expr, model.cost_r_in_psi_expr, model.cost_y_expr)
     else:
         raise Exception("create_model_with_cost_state: Unknown cost type.")
+
+    return cost_dot
+
+def get_terminal_cost_expression(ocp: AcadosOcp):
+    model = ocp.model
+    if ocp.cost.cost_type_e == "LINEAR_LS":
+        y = ocp.cost.Vx_e @ model.x
+        residual = y - ocp.cost.yref
+        cost_dot = 0.5*(residual.T @ ocp.cost.W_e @ residual)
+
+    elif ocp.cost.cost_type == "NONLINEAR_LS":
+        residual = model.cost_y_expr_e - ocp.cost.yref_e
+        cost_dot = 0.5*(residual.T @ ocp.cost.W_e @ residual)
+
+    elif ocp.cost.cost_type == "EXTERNAL":
+        cost_dot = model.cost_expr_ext_cost_e
+
+    elif ocp.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+        cost_dot = ca.substitute(
+            model.cost_psi_expr_e, model.cost_r_in_psi_expr_e, model.cost_y_expr_e)
+    else:
+        raise Exception("create_model_with_cost_state: Unknown terminal cost type.")
 
     return cost_dot
 

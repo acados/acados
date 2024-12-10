@@ -35,6 +35,7 @@ from pendulum_model import export_pendulum_ode_model
 from utils import plot_pendulum_eval
 import numpy as np
 import scipy.linalg
+import math
 from casadi import vertcat
 
 
@@ -73,6 +74,11 @@ def setup(x0, Fmax, N_horizon, Tf, RTI=False):
     ocp.constraints.idxbx = np.array([2])
     ocp.constraints.lbx = np.array([-5])
     ocp.constraints.ubx = np.array([5])
+
+    ocp.constraints.idxbx_e = np.array([2])
+    ocp.constraints.lbx_e = np.array([-5])
+    ocp.constraints.ubx_e = np.array([5])
+
     ocp.constraints.idxsbx = np.array([0])
     ocp.constraints.lsbx = np.zeros((1,))
     ocp.constraints.usbx = np.zeros((1,))
@@ -184,6 +190,12 @@ def main(use_RTI=False):
             # solve ocp and get next control input
             simU[i, :] = ocp_solver.solve_for_x0(x0_bar=simX[i, :])
             t[i] = ocp_solver.get_stats('time_tot')
+
+        # evaluate the cost of the full trajectory
+        solution_obj = ocp_solver.store_iterate_to_obj()
+        cost_ext_eval = evaluator.evaluate_ocp_cost(solution_obj)
+        cost_int_eval = ocp_solver.get_cost()
+        assert math.isclose(cost_ext_eval, cost_int_eval, abs_tol=1e-7)
 
         # simulate system
         simX[i + 1, :] = integrator.simulate(x=simX[i, :], u=simU[i, :])
