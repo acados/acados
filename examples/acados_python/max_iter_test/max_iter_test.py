@@ -106,6 +106,13 @@ def create_acados_solver_and_solve_problem(globalization='FIXED_STEP', solver_ty
 
     status = ocp_solver.solve()
 
+    # test getter
+    Vu_ = ocp_solver.cost_get(1, "Vu")
+    Vx_ = ocp_solver.cost_get(1, "Vx")
+
+    assert np.allclose(Vu, Vu_)
+    assert np.allclose(ocp.cost.Vx, Vx_)
+
     # get solution
     for i in range(N):
         sol_X[i,:] = ocp_solver.get(i, "x")
