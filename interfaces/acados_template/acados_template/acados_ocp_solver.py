@@ -1720,7 +1720,7 @@ class AcadosOcpSolver:
             self.nlp_dims, self.nlp_out, stage_, field, dims_data)
 
         # vector-valued fields
-        if field in ['yref', 'zl', 'zu', 'Zl', 'Zu', 'scaling']:
+        if field_ in ['yref', 'zl', 'zu', 'Zl', 'Zu', 'scaling']:
             dims = dims[0]
 
         out = np.zeros(tuple(dims), dtype=np.float64, order="F")
@@ -1825,7 +1825,7 @@ class AcadosOcpSolver:
             self.nlp_dims, self.nlp_out, stage_, field, dims_data)
 
         # check whether field is vector-valued
-        if field not in ['C', 'D']:
+        if field_ not in ['C', 'D']:
             dims = dims[0]
 
         out = np.zeros(tuple(dims), dtype=np.float64, order="F")
