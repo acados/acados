@@ -313,9 +313,7 @@ stage = N;
 field = 'qp_Q';
 disp(strcat(field, " at stage ", num2str(stage), " = "));
 ocp_solver.get(field, stage)
-field = 'qp_R';
-disp(strcat(field, " at stage ", num2str(stage), " = "));
-ocp_solver.get(field, stage)
+
 
 % or for all stages
 qp_Q = ocp_solver.get('qp_Q');
