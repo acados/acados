@@ -112,11 +112,17 @@ classdef AcadosOcpSolver < handle
 
                 if length(varargin) > 0
                     n = varargin{1};
-                    Q = obj.get('qp_Q', n);
-                    R = obj.get('qp_R', n);
-                    S = obj.get('qp_S', n);
 
-                    value = [R, S; S', Q];
+                    if n < obj.ocp.solver_options.N_horizon
+                        Q = obj.get('qp_Q', n);
+                        R = obj.get('qp_R', n);
+                        S = obj.get('qp_S', n);
+
+                        value = [R, S; S', Q];
+                    else
+                        value = obj.get('qp_Q', n);
+                    end
+
                     return;
                 else
                     value = cell(obj.ocp.solver_options.N_horizon, 1);
