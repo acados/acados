@@ -145,6 +145,9 @@ def main():
     cost = ocp_solver.get_cost()
     print("cost function value of solution = ", cost)
 
+    # test getter
+    assert np.allclose(ocp.constraints.C, ocp_solver.constraints_get(1, 'C'))
+
     PRINT_QP = False
 
     range_without_terminal = [0, 1, N-2, N-1]

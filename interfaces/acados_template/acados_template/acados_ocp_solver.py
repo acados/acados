@@ -293,8 +293,11 @@ class AcadosOcpSolver:
 
         self.__acados_lib.ocp_nlp_eval_cost.argtypes = [c_void_p, c_void_p, c_void_p]
         self.__acados_lib.ocp_nlp_eval_residuals.argtypes = [c_void_p, c_void_p, c_void_p]
+
         self.__acados_lib.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        self.__acados_lib.ocp_nlp_constraints_model_get.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
         self.__acados_lib.ocp_nlp_cost_model_set.argtypes =  [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        self.__acados_lib.ocp_nlp_cost_model_get.argtypes =  [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
 
         self.__acados_lib.ocp_nlp_out_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
         self.__acados_lib.ocp_nlp_set.argtypes = [c_void_p, c_int, c_char_p, c_void_p]
@@ -1695,6 +1698,41 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_out_set_values_to_zero(self.nlp_config, self.nlp_dims, self.sens_out)
 
 
+    def cost_get(self, stage_: int, field_: str) -> np.ndarray:
+        """
+        Get numerical data in the cost module of the solver.
+
+            :param stage: integer corresponding to shooting node
+            :param field: string in ['yref', 'W', 'ext_cost_num_hess', 'zl', 'zu', 'Zl', 'Zu', 'scaling']
+        """
+
+        if not isinstance(stage_, int):
+            raise Exception('stage should be integer.')
+        elif stage_ < 0 or stage_ > self.N:
+            raise Exception(f'stage should be in [0, N], got {stage_}')
+
+        field = field_.encode('utf-8')
+        stage = c_int(stage_)
+
+        dims = np.zeros((2,), dtype=np.intc, order="C")
+        dims_data = cast(dims.ctypes.data, POINTER(c_int))
+
+        self.__acados_lib.ocp_nlp_cost_dims_get_from_attr(self.nlp_config, \
+            self.nlp_dims, self.nlp_out, stage_, field, dims_data)
+
+        # vector-valued fields
+        if field_ in ['yref', 'zl', 'zu', 'Zl', 'Zu', 'scaling']:
+            dims = dims[0]
+
+        out = np.zeros(tuple(dims), dtype=np.float64, order="F")
+        out_data = cast(out.ctypes.data, POINTER(c_double))
+
+        self.__acados_lib.ocp_nlp_cost_model_get(self.nlp_config, \
+            self.nlp_dims, self.nlp_in, stage, field, out_data)
+
+        return out
+
+
     def cost_set(self, stage_: int, field_: str, value_, api='warn'):
         """
         Set numerical data in the cost module of the solver.
@@ -1765,7 +1803,42 @@ class AcadosOcpSolver:
         return
 
 
-    def constraints_set(self, stage_, field_, value_, api='warn'):
+    def constraints_get(self, stage_: int, field_: str) -> np.ndarray:
+        """
+        Get numerical data in the constraint module of the solver.
+
+            :param stage: integer corresponding to shooting node
+            :param field: string in ['lbx', 'ubx', 'lbu', 'ubu', 'lg', 'ug', 'lh', 'uh', 'uphi', 'C', 'D']
+        """
+
+        if not isinstance(stage_, int):
+            raise Exception('stage should be integer.')
+        elif stage_ < 0 or stage_ > self.N:
+            raise Exception(f'stage should be in [0, N], got {stage_}')
+
+        field = field_.encode('utf-8')
+        stage = c_int(stage_)
+
+        dims = np.zeros((2,), dtype=np.intc, order="C")
+        dims_data = cast(dims.ctypes.data, POINTER(c_int))
+
+        self.__acados_lib.ocp_nlp_cost_dims_get_from_attr(self.nlp_config, \
+            self.nlp_dims, self.nlp_out, stage_, field, dims_data)
+
+        # check whether field is vector-valued
+        if field_ not in ['C', 'D']:
+            dims = dims[0]
+
+        out = np.zeros(tuple(dims), dtype=np.float64, order="F")
+        out_data = cast(out.ctypes.data, POINTER(c_double))
+
+        self.__acados_lib.ocp_nlp_constraints_model_get(self.nlp_config, \
+            self.nlp_dims, self.nlp_in, stage, field, out_data)
+
+        return out
+
+
+    def constraints_set(self, stage_: int, field_: str, value_: np.ndarray, api='warn'):
         """
         Set numerical data in the constraint module of the solver.
 
