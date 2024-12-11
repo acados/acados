@@ -1834,10 +1834,10 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_constraints_model_get(self.nlp_config, \
             self.nlp_dims, self.nlp_in, stage, field, out_data)
 
-        return
+        return out
 
 
-    def constraints_set(self, stage_, field_, value_, api='warn'):
+    def constraints_set(self, stage_: int, field_: str, value_: np.ndarray, api='warn'):
         """
         Set numerical data in the constraint module of the solver.
 
