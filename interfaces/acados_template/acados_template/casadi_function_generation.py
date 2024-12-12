@@ -37,14 +37,6 @@ from .acados_model import AcadosModel
 from .acados_ocp_constraints import AcadosOcpConstraints
 
 
-def get_casadi_symbol(x):
-    if isinstance(x, ca.MX):
-        return ca.MX.sym
-    elif isinstance(x, ca.SX):
-        return ca.SX.sym
-    else:
-        raise TypeError("Expected casadi SX or MX.")
-
 def is_casadi_SX(x):
     if isinstance(x, ca.SX):
         return True
@@ -212,7 +204,7 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
     phi = model.disc_dyn_expr
     model_name = model.name
 
-    symbol = get_casadi_symbol(x)
+    symbol = model.get_casadi_symbol()
     nx1 = casadi_length(phi)
 
     lam = symbol('lam', nx1, 1)
@@ -265,7 +257,7 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, m
     nx = x.size()[0]
     nu = u.size()[0]
 
-    symbol = get_casadi_symbol(x)
+    symbol = model.get_casadi_symbol()
 
     # set up expressions
     Sx = symbol('Sx', nx, nx)
@@ -342,7 +334,7 @@ def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel, m
 
     if context.opts["generate_hess"]:
         x_xdot_z_u = ca.vertcat(x, xdot, z, u)
-        symbol = get_casadi_symbol(x)
+        symbol = model.get_casadi_symbol()
         multiplier = symbol('multiplier', nx + nz)
         ADJ = ca.jtimes(f_impl, x_xdot_z_u, multiplier, True)
         HESS = ca.jacobian(ADJ, x_xdot_z_u, {"symmetric": is_casadi_SX(x)})
@@ -370,7 +362,7 @@ def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir
     # the DAE can be exported as ca.SX -> detect GNSF in Matlab
     # -> evaluated ca.SX GNSF functions with ca.MX.
     u = model.u
-    symbol = get_casadi_symbol(u)
+    symbol = model.get_casadi_symbol()
 
     y = symbol("y", gnsf_ny, 1)
     uhat = symbol("uhat", gnsf_nuhat, 1)
@@ -428,7 +420,7 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
     u = model.u
     z = model.z
     p_global = model.p_global
-    symbol = get_casadi_symbol(x)
+    symbol = model.get_casadi_symbol()
 
     if stage_type == 'terminal':
         suffix_name = "_cost_ext_cost_e_fun"
@@ -508,7 +500,7 @@ def generate_c_code_nls_cost(context: GenerateContext, model: AcadosModel, stage
     u = model.u
     t = model.t
 
-    symbol = get_casadi_symbol(x)
+    symbol = model.get_casadi_symbol()
 
     if stage_type == 'terminal':
         middle_name = '_cost_y_e'
@@ -565,7 +557,7 @@ def generate_c_code_conl_cost(context: GenerateContext, model: AcadosModel, stag
     p_global = model.p_global
     t = model.t
 
-    symbol = get_casadi_symbol(x)
+    symbol = model.get_casadi_symbol()
     p_global = symbol('p_global', 0, 0)
 
     if stage_type == 'terminal':
@@ -662,7 +654,7 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
     u = model.u
     z = model.z
 
-    symbol = get_casadi_symbol(x)
+    symbol = model.get_casadi_symbol()
 
     if stage_type == 'terminal':
         constr_type = constraints.constr_type_e
