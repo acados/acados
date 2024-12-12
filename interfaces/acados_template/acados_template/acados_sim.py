@@ -359,35 +359,25 @@ class AcadosSim:
         if not os.path.exists(json_path):
             raise Exception(f"{json_path} not found!")
 
-        # Render templates
-        in_file = 'acados_sim_solver.in.c'
-        out_file = f'acados_sim_solver_{self.model.name}.c'
-        render_template(in_file, out_file, self.code_export_dir, json_path)
-
-        in_file = 'acados_sim_solver.in.h'
-        out_file = f'acados_sim_solver_{self.model.name}.h'
-        render_template(in_file, out_file, self.code_export_dir, json_path)
-
-        in_file = 'acados_sim_solver.in.pxd'
-        out_file = f'acados_sim_solver.pxd'
-        render_template(in_file, out_file, self.code_export_dir, json_path)
+        template_list = [
+            ('acados_sim_solver.in.c', f'acados_sim_solver_{self.model.name}.c'),
+            ('acados_sim_solver.in.h', f'acados_sim_solver_{self.model.name}.h'),
+            ('acados_sim_solver.in.pxd', 'acados_sim_solver.pxd'),
+            ('main_sim.in.c', f'main_sim_{self.model.name}.c'),
+        ]
 
         # Builder
         if cmake_options is not None:
-            in_file = 'CMakeLists.in.txt'
-            out_file = 'CMakeLists.txt'
-            render_template(in_file, out_file, self.code_export_dir, json_path)
+            template_list.append(('CMakeLists.in.txt', 'CMakeLists.txt'))
         else:
-            in_file = 'Makefile.in'
-            out_file = 'Makefile'
-            render_template(in_file, out_file, self.code_export_dir, json_path)
+            template_list.append(('Makefile.in', 'Makefile'))
 
-        in_file = 'main_sim.in.c'
-        out_file = f'main_sim_{self.model.name}.c'
-        render_template(in_file, out_file, self.code_export_dir, json_path)
+        # Render templates
+        for (in_file, out_file) in template_list:
+            render_template(in_file, out_file, self.code_export_directory, json_path)
 
         # folder model
-        model_dir = os.path.join(self.code_export_dir, self.model.name + '_model')
+        model_dir = os.path.join(self.code_export_directory, self.model.name + '_model')
 
         in_file = 'model.in.h'
         out_file = f'{self.model.name}_model.h'

@@ -86,11 +86,12 @@ class AcadosSimSolver:
 
     # TODO move this to AcadosSim
     @classmethod
-    def generate(cls, acados_sim: AcadosSim, json_file='acados_sim.json', cmake_builder: CMakeBuilder = None):
+    def generate(self, acados_sim: AcadosSim, json_file='acados_sim.json', cmake_builder: CMakeBuilder = None):
         """
         Generates the code for an acados sim solver, given the description in acados_sim
         """
 
+        acados_sim.code_export_directory = os.path.abspath(acados_sim.code_export_directory)
         acados_sim.make_consistent()
 
         # module dependent post processing
@@ -109,8 +110,9 @@ class AcadosSimSolver:
 
 
     @classmethod
-    def build(cls, code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose: bool = True):
+    def build(self, code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose: bool = True):
         # Compile solver
+        code_export_dir = os.path.abspath(code_export_dir)
         cwd = os.getcwd()
         os.chdir(code_export_dir)
         if with_cython:
@@ -125,7 +127,7 @@ class AcadosSimSolver:
 
 
     @classmethod
-    def create_cython_solver(cls, json_file):
+    def create_cython_solver(self, json_file):
         """
         """
         with open(json_file, 'r') as f:
@@ -145,7 +147,7 @@ class AcadosSimSolver:
         model_name = acados_sim.model.name
         self.model_name = model_name
 
-        # TODO move somewhere else?
+        # TODO move somewhere else? make a property in sim and move to setter?
         acados_sim.code_export_directory = os.path.abspath(acados_sim.code_export_directory)
 
         # reuse existing json and casadi functions, when creating integrator from ocp
