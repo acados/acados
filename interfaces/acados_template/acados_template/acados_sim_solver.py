@@ -147,7 +147,7 @@ class AcadosSimSolver:
         model_name = acados_sim.model.name
         self.model_name = model_name
 
-        # TODO move somewhere else? make a property in sim and move to setter?
+        # TODO this has to be done here, in build and in generate (to work with cython), fix somehow?
         acados_sim.code_export_directory = os.path.abspath(acados_sim.code_export_directory)
 
         # reuse existing json and casadi functions, when creating integrator from ocp

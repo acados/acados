@@ -321,13 +321,11 @@ class AcadosSim:
                             f'Expected numpy array, got {type(parameter_values)}.')
 
     def make_consistent(self):
-        dims = self.dims
-        model = self.model
-        model.make_consistent(dims)
+        self.model.make_consistent(self.dims)
 
-        if self.parameter_values.shape[0] != dims.np:
+        if self.parameter_values.shape[0] != self.dims.np:
             raise Exception('inconsistent dimension np, regarding model.p and parameter_values.' + \
-                f'\nGot np = {dims.np}, acados_sim.parameter_values.shape = {self.parameter_values.shape[0]}\n')
+                f'\nGot np = {self.dims.np}, acados_sim.parameter_values.shape = {self.parameter_values.shape[0]}\n')
 
         # check required arguments are given
         if self.solver_options.T is None:
