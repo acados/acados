@@ -91,8 +91,6 @@ class AcadosSimSolver:
         Generates the code for an acados sim solver, given the description in acados_sim
         """
 
-        acados_sim.code_export_directory = os.path.abspath(acados_sim.code_export_directory)
-
         acados_sim.make_consistent()
 
         # module dependent post processing
@@ -147,7 +145,8 @@ class AcadosSimSolver:
         model_name = acados_sim.model.name
         self.model_name = model_name
 
-        code_export_dir = os.path.abspath(acados_sim.code_export_directory)
+        # TODO move somewhere else?
+        acados_sim.code_export_directory = os.path.abspath(acados_sim.code_export_directory)
 
         # reuse existing json and casadi functions, when creating integrator from ocp
         if generate and not isinstance(acados_sim, AcadosOcp):
@@ -164,7 +163,7 @@ class AcadosSimSolver:
         self.acados_sim = acados_sim # TODO make read-only property
 
         if build:
-            self.build(code_export_dir, cmake_builder=cmake_builder, verbose=verbose)
+            self.build(acados_sim.code_export_directory, cmake_builder=cmake_builder, verbose=verbose)
 
         # prepare library loading
         lib_ext = get_shared_lib_ext()
@@ -184,7 +183,7 @@ class AcadosSimSolver:
         self.__acados_lib_uses_omp = acados_lib_is_compiled_with_openmp(self.__acados_lib, verbose)
 
         libacados_sim_solver_name = f'{lib_prefix}acados_sim_solver_{self.model_name}{lib_ext}'
-        self.shared_lib_name = os.path.join(code_export_dir, libacados_sim_solver_name)
+        self.shared_lib_name = os.path.join(acados_sim.code_export_directory, libacados_sim_solver_name)
         self.shared_lib = get_shared_lib(self.shared_lib_name, winmode=self.winmode)
 
         # create capsule
