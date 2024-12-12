@@ -44,9 +44,8 @@ else:
 
 import numpy as np
 
-from .acados_model import AcadosModel
 from .acados_ocp import AcadosOcp
-from .acados_sim import AcadosSim, AcadosSimDims, AcadosSimOptions
+from .acados_sim import AcadosSim
 
 from .builders import CMakeBuilder
 from .casadi_function_generation import (
@@ -55,29 +54,11 @@ from .casadi_function_generation import (
                     generate_c_code_gnsf,
                     generate_c_code_implicit_ode)
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
-from .utils import (check_casadi_version, format_class_dict,
+from .utils import (check_casadi_version,
                     get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
-                    make_object_json_dumpable,
                     render_template, set_up_imported_gnsf_model,
                     verbose_system_call, acados_lib_is_compiled_with_openmp,
                     get_shared_lib)
-
-
-def sim_formulation_json_dump(acados_sim: AcadosSim, json_file='acados_sim.json'):
-
-    # Copy input sim object dictionary
-    sim_dict = dict(deepcopy(acados_sim).__dict__)
-
-    # convert acados classes to dicts
-    for key, v in sim_dict.items():
-        # skip non dict attributes
-        if isinstance(v, (AcadosSim, AcadosSimDims, AcadosSimOptions, AcadosModel)):
-            sim_dict[key]=dict(getattr(acados_sim, key).__dict__)
-
-    sim_json = format_class_dict(sim_dict)
-
-    with open(json_file, 'w') as f:
-        json.dump(sim_json, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
 
 
 
@@ -178,6 +159,11 @@ class AcadosSimSolver:
         """`acados_lib_uses_omp` - flag indicating whether the acados library has been compiled with openMP."""
         return self.__acados_lib_uses_omp
 
+    @property
+    def T(self,):
+        """`T` - Simulation time."""
+        return self.__T
+
     @classmethod
     def generate(cls, acados_sim: AcadosSim, json_file='acados_sim.json', cmake_builder: CMakeBuilder = None):
         """
@@ -201,7 +187,7 @@ class AcadosSimSolver:
         sim_generate_external_functions(acados_sim)
 
         # dump to json
-        sim_formulation_json_dump(acados_sim, json_file)
+        acados_sim.dump_to_json(json_file)
 
         # render templates
         sim_render_templates(json_file, acados_sim.model.name, acados_sim.code_export_directory, cmake_builder)
@@ -254,11 +240,11 @@ class AcadosSimSolver:
             print("Warning: An AcadosSimSolver is created from an AcadosOcp description.",
                   "This only works if you created an AcadosOcpSolver before with the same description."
                   "Otherwise it leads to undefined behavior. Using an AcadosSim description is recommended.")
-            self.T = acados_sim.solver_options.Tsim
+            self.__T = acados_sim.solver_options.Tsim
         else:
-            self.T = acados_sim.solver_options.T
+            self.__T = acados_sim.solver_options.T
 
-        self.acados_sim = acados_sim
+        self.acados_sim = acados_sim # TODO make read-only property
 
         if build:
             self.build(code_export_dir, cmake_builder=cmake_builder, verbose=verbose)
@@ -318,6 +304,19 @@ class AcadosSimSolver:
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver").restype = c_void_p
         self.sim_solver = getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver")(self.capsule)
 
+        # argtypes and restypes
+        self.__acados_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
+        self.__acados_lib.sim_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_int)]
+
+        self.__acados_lib.sim_solver_set.argtypes = [c_void_p, c_char_p, c_void_p]
+        self.__acados_lib.sim_in_set.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
+        self.__acados_lib.sim_opts_set.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_bool)]
+
+        getattr(self.shared_lib, f"{model_name}_acados_sim_update_params").argtypes = [c_void_p, POINTER(c_double), c_int]
+
+        getattr(self.shared_lib, f"{self.model_name}_acados_sim_solve").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.model_name}_acados_sim_solve").restype = c_int
+
         self.gettable_vectors = ['x', 'u', 'z', 'S_adj']
         self.gettable_matrices = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic']
         self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
@@ -354,9 +353,6 @@ class AcadosSimSolver:
         """
         Solve the simulation problem with current input.
         """
-        getattr(self.shared_lib, f"{self.model_name}_acados_sim_solve").argtypes = [c_void_p]
-        getattr(self.shared_lib, f"{self.model_name}_acados_sim_solve").restype = c_int
-
         status = getattr(self.shared_lib, f"{self.model_name}_acados_sim_solve")(self.capsule)
         return status
 
@@ -371,37 +367,32 @@ class AcadosSimSolver:
 
         if field_ in self.gettable_vectors:
             # get dims
-            dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
+            dims = np.zeros((1,), dtype=np.intc, order='F')
             dims_data = cast(dims.ctypes.data, POINTER(c_int))
 
-            self.__acados_lib.sim_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_int)]
             self.__acados_lib.sim_dims_get_from_attr(self.sim_config, self.sim_dims, field, dims_data)
 
             # allocate array
-            out = np.ascontiguousarray(np.zeros((dims[0],)), dtype=np.float64)
+            out = np.zeros((dims[0],), dtype=np.float64, order='F')
             out_data = cast(out.ctypes.data, POINTER(c_double))
 
-            self.__acados_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
             self.__acados_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, out_data)
 
         elif field_ in self.gettable_matrices:
             # get dims
-            dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
+            dims = np.zeros((2,), dtype=np.intc, order='F')
             dims_data = cast(dims.ctypes.data, POINTER(c_int))
 
-            self.__acados_lib.sim_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_int)]
             self.__acados_lib.sim_dims_get_from_attr(self.sim_config, self.sim_dims, field, dims_data)
 
-            out = np.zeros((dims[0], dims[1]), order='F')
+            out = np.zeros((dims[0], dims[1]), dtype=np.float64, order='F')
             out_data = cast(out.ctypes.data, POINTER(c_double))
 
-            self.__acados_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
             self.__acados_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, out_data)
 
         elif field_ in self.gettable_scalars:
             scalar = c_double()
             scalar_data = byref(scalar)
-            self.__acados_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
             self.__acados_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, scalar_data)
 
             out = scalar.value
@@ -436,18 +427,17 @@ class AcadosSimSolver:
         # treat parameters separately
         if field_ == 'p':
             model_name = self.acados_sim.model.name
-            getattr(self.shared_lib, f"{model_name}_acados_sim_update_params").argtypes = [c_void_p, POINTER(c_double), c_int]
             value_data = cast(value_.ctypes.data, POINTER(c_double))
             getattr(self.shared_lib, f"{model_name}_acados_sim_update_params")(self.capsule, value_data, value_.shape[0])
             return
         else:
             # dimension check
-            dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
+            dims = np.zeros((2,), dtype=np.intc, order='F')
             dims_data = cast(dims.ctypes.data, POINTER(c_int))
 
-            self.__acados_lib.sim_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_int)]
             self.__acados_lib.sim_dims_get_from_attr(self.sim_config, self.sim_dims, field, dims_data)
 
+            # TODO: isn't the shape check afterwards meaningless if we ravel first?
             value_ = np.ravel(value_, order='F')
 
             value_shape = value_.shape
@@ -459,14 +449,12 @@ class AcadosSimSolver:
                     f' for field "{field_}" with dimension {tuple(dims)} (you have {value_shape}).')
 
             if field_ == 'T':
-                self.T = value_
+                self.__T = value_
 
         # set
         if field_ in ['xdot', 'z']:
-            self.__acados_lib.sim_solver_set.argtypes = [c_void_p, c_char_p, c_void_p]
             self.__acados_lib.sim_solver_set(self.sim_solver, field, value_data_p)
         elif field_ in settable:
-            self.__acados_lib.sim_in_set.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
             self.__acados_lib.sim_in_set(self.sim_config, self.sim_dims, self.sim_in, field, value_data_p)
         else:
             raise Exception(f'AcadosSimSolver.set(): Unknown field {field_},' \
@@ -494,7 +482,6 @@ class AcadosSimSolver:
 
         # only allow setting
         if getattr(self.acados_sim.solver_options, field_) or value_ == False:
-            self.__acados_lib.sim_opts_set.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_bool)]
             self.__acados_lib.sim_opts_set(self.sim_config, self.sim_opts, field, value_ctypes)
         else:
             raise RuntimeError(f"Cannot set option {field_} to True, because it was False in original solver options.\n")

@@ -29,11 +29,12 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import os
+import os, json
 import numpy as np
+from copy import deepcopy
 from .acados_model import AcadosModel
 from .acados_dims import AcadosSimDims
-from .utils import get_acados_path, get_shared_lib_ext
+from .utils import get_acados_path, get_shared_lib_ext, format_class_dict, make_object_json_dumpable
 
 class AcadosSimOptions:
     """
@@ -324,3 +325,21 @@ class AcadosSim:
         # check required arguments are given
         if self.solver_options.T is None:
             raise Exception('acados_sim.solver_options.T is None, should be provided.')
+
+
+    def to_dict(self) -> dict:
+        # Copy input sim object dictionary
+        sim_dict = dict(deepcopy(self).__dict__)
+
+        # convert acados classes to dicts
+        for key, v in sim_dict.items():
+            # skip non dict attributes
+            if isinstance(v, (AcadosSim, AcadosSimDims, AcadosSimOptions, AcadosModel)):
+                sim_dict[key]=dict(getattr(self, key).__dict__)
+
+        return format_class_dict(sim_dict)
+
+
+    def dump_to_json(self, json_file='acados_sim.json') -> None:
+        with open(json_file, 'w') as f:
+            json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
