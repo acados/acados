@@ -89,6 +89,7 @@ class AcadosOcpSolver:
         """`shared_lib` - solver shared library"""
         return self.__shared_lib
 
+    # TODO move this to AcadosOcp
     @classmethod
     def generate(cls, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, simulink_opts=None, cmake_builder: CMakeBuilder = None):
         """

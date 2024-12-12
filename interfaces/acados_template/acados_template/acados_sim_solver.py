@@ -33,7 +33,6 @@ import importlib
 import json
 import os
 import sys
-from copy import deepcopy
 from ctypes import (POINTER, byref, c_bool, c_char_p, c_double, c_int,
                     c_void_p, cast)
 if os.name == 'nt':
@@ -48,90 +47,11 @@ from .acados_ocp import AcadosOcp
 from .acados_sim import AcadosSim
 
 from .builders import CMakeBuilder
-from .casadi_function_generation import (
-                    GenerateContext,
-                    generate_c_code_explicit_ode,
-                    generate_c_code_gnsf,
-                    generate_c_code_implicit_ode)
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
-from .utils import (check_casadi_version,
-                    get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
-                    render_template, set_up_imported_gnsf_model,
+from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
+                    set_up_imported_gnsf_model,
                     verbose_system_call, acados_lib_is_compiled_with_openmp,
                     get_shared_lib)
-
-
-
-def sim_render_templates(json_file, model_name: str, code_export_dir, cmake_options: CMakeBuilder = None):
-    # setting up loader and environment
-    json_path = os.path.join(os.getcwd(), json_file)
-
-    if not os.path.exists(json_path):
-        raise Exception(f"{json_path} not found!")
-
-    # Render templates
-    in_file = 'acados_sim_solver.in.c'
-    out_file = f'acados_sim_solver_{model_name}.c'
-    render_template(in_file, out_file, code_export_dir, json_path)
-
-    in_file = 'acados_sim_solver.in.h'
-    out_file = f'acados_sim_solver_{model_name}.h'
-    render_template(in_file, out_file, code_export_dir, json_path)
-
-    in_file = 'acados_sim_solver.in.pxd'
-    out_file = f'acados_sim_solver.pxd'
-    render_template(in_file, out_file, code_export_dir, json_path)
-
-    # Builder
-    if cmake_options is not None:
-        in_file = 'CMakeLists.in.txt'
-        out_file = 'CMakeLists.txt'
-        render_template(in_file, out_file, code_export_dir, json_path)
-    else:
-        in_file = 'Makefile.in'
-        out_file = 'Makefile'
-        render_template(in_file, out_file, code_export_dir, json_path)
-
-    in_file = 'main_sim.in.c'
-    out_file = f'main_sim_{model_name}.c'
-    render_template(in_file, out_file, code_export_dir, json_path)
-
-    # folder model
-    model_dir = os.path.join(code_export_dir, model_name + '_model')
-
-    in_file = 'model.in.h'
-    out_file = f'{model_name}_model.h'
-    render_template(in_file, out_file, model_dir, json_path)
-
-
-def sim_generate_external_functions(acados_sim: AcadosSim):
-    model = acados_sim.model
-
-    integrator_type = acados_sim.solver_options.integrator_type
-
-    opts = dict(generate_hess = acados_sim.solver_options.sens_hess,
-                code_export_directory = acados_sim.code_export_directory)
-
-    # create code_export_dir, model_dir
-    code_export_dir = acados_sim.code_export_directory
-    opts['code_export_directory'] = code_export_dir
-    model_dir = os.path.join(code_export_dir, model.name + '_model')
-    if not os.path.exists(model_dir):
-        os.makedirs(model_dir)
-
-    context = GenerateContext(model.p_global, model.name, opts)
-
-    # generate external functions
-    check_casadi_version()
-    if integrator_type == 'ERK':
-        generate_c_code_explicit_ode(context, model, model_dir)
-    elif integrator_type == 'IRK':
-        generate_c_code_implicit_ode(context, model, model_dir)
-    elif integrator_type == 'GNSF':
-        generate_c_code_gnsf(context, model, model_dir)
-
-    context.finalize()
-    acados_sim.__external_function_files_model = context.get_external_function_file_list(ocp_specific=False)
 
 
 class AcadosSimSolver:
@@ -164,6 +84,7 @@ class AcadosSimSolver:
         """`T` - Simulation time."""
         return self.__T
 
+    # TODO move this to AcadosSim
     @classmethod
     def generate(cls, acados_sim: AcadosSim, json_file='acados_sim.json', cmake_builder: CMakeBuilder = None):
         """
@@ -183,14 +104,10 @@ class AcadosSimSolver:
             else:
                 detect_gnsf_structure(acados_sim)
 
-        # generate external functions
-        sim_generate_external_functions(acados_sim)
-
-        # dump to json
+        # generate code for external functions
+        acados_sim.generate_external_functions()
         acados_sim.dump_to_json(json_file)
-
-        # render templates
-        sim_render_templates(json_file, acados_sim.model.name, acados_sim.code_export_directory, cmake_builder)
+        acados_sim.render_templates(json_file, cmake_builder)
 
 
     @classmethod
