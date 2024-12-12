@@ -154,6 +154,11 @@ class GenerateContext:
         self.global_data_sym = ca.vertcat(*global_data_sym_list)
         self.global_data_expr = ca.cse(ca.vertcat(*[output for _, output in precompute_pairs]))
 
+        assert casadi_length(self.global_data_expr) == casadi_length(self.global_data_sym), f"Length mismatch: {casadi_length(self.global_data_expr)} != {casadi_length(self.global_data_sym)}"
+
+        if casadi_length(self.global_data_expr) == 0:
+            raise Exception("The model contains global parameters, but no CasADi function depends on them. This is currently not supported. Please remove p_global from the model definition.")
+
         # add global data as input to all functions
         for i in range(len(self.function_input_output_pairs)):
             self.function_input_output_pairs[i][0].append(self.global_data_sym)
@@ -164,7 +169,6 @@ class GenerateContext:
 
         # self.print_global_data_summary()
 
-        assert casadi_length(self.global_data_expr) == casadi_length(self.global_data_sym), f"Length mismatch: {casadi_length(self.global_data_expr)} != {casadi_length(self.global_data_sym)}"
 
     def finalize(self):
         if not is_empty(self.p_global):
