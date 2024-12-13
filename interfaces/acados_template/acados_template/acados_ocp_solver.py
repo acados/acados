@@ -149,8 +149,9 @@ class AcadosOcpSolver:
                    `MS Visual Studio`); default: `None`
             :param verbose: indicating if build command is printed
         """
+        code_export_dir = os.path.abspath(code_export_dir)
 
-        with set_directory(os.path.abspath(code_export_dir)):
+        with set_directory(code_export_dir):
             if os.name == 'nt':
                 make_cmd = 'mingw32-make'
             else:

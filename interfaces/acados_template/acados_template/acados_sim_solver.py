@@ -112,7 +112,8 @@ class AcadosSimSolver:
     @classmethod
     def build(self, code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose: bool = True):
 
-        with set_directory(os.path.abspath(code_export_dir)):
+        code_export_dir = os.path.abspath(code_export_dir)
+        with set_directory(code_export_dir):
             if with_cython:
                 verbose_system_call(['make', 'clean_sim_cython'], verbose)
                 verbose_system_call(['make', 'sim_cython'], verbose)
