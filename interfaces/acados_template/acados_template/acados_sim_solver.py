@@ -51,7 +51,7 @@ from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
                     set_up_imported_gnsf_model,
                     verbose_system_call, acados_lib_is_compiled_with_openmp,
-                    get_shared_lib)
+                    get_shared_lib, set_directory)
 
 
 class AcadosSimSolver:
@@ -111,19 +111,16 @@ class AcadosSimSolver:
 
     @classmethod
     def build(self, code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose: bool = True):
-        # Compile solver
-        code_export_dir = os.path.abspath(code_export_dir)
-        cwd = os.getcwd()
-        os.chdir(code_export_dir)
-        if with_cython:
-            verbose_system_call(['make', 'clean_sim_cython'], verbose)
-            verbose_system_call(['make', 'sim_cython'], verbose)
-        else:
-            if cmake_builder is not None:
-                cmake_builder.exec(code_export_dir, verbose)
+
+        with set_directory(os.path.abspath(code_export_dir)):
+            if with_cython:
+                verbose_system_call(['make', 'clean_sim_cython'], verbose)
+                verbose_system_call(['make', 'sim_cython'], verbose)
             else:
-                verbose_system_call(['make', 'sim_shared_lib'], verbose)
-        os.chdir(cwd)
+                if cmake_builder is not None:
+                    cmake_builder.exec(code_export_dir, verbose)
+                else:
+                    verbose_system_call(['make', 'sim_shared_lib'], verbose)
 
 
     @classmethod

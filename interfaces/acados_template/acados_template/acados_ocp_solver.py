@@ -54,7 +54,7 @@ from .acados_multiphase_ocp import AcadosMultiphaseOcp
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
-                    acados_lib_is_compiled_with_openmp, is_empty)
+                    acados_lib_is_compiled_with_openmp, is_empty, set_directory)
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
 
 
@@ -149,25 +149,22 @@ class AcadosOcpSolver:
                    `MS Visual Studio`); default: `None`
             :param verbose: indicating if build command is printed
         """
-        code_export_dir = os.path.abspath(code_export_dir)
-        cwd = os.getcwd()
-        os.chdir(code_export_dir)
 
-        if os.name == 'nt':
-            make_cmd = 'mingw32-make'
-        else:
-            make_cmd = 'make'
-
-        if with_cython:
-            verbose_system_call([make_cmd, 'clean_all'], verbose)
-            verbose_system_call([make_cmd, 'ocp_cython'], verbose)
-        else:
-            if cmake_builder is not None:
-                cmake_builder.exec(code_export_dir, verbose)
+        with set_directory(os.path.abspath(code_export_dir)):
+            if os.name == 'nt':
+                make_cmd = 'mingw32-make'
             else:
-                verbose_system_call([make_cmd, 'clean_ocp_shared_lib'], verbose)
-                verbose_system_call([make_cmd, 'ocp_shared_lib'], verbose)
-        os.chdir(cwd)
+                make_cmd = 'make'
+
+            if with_cython:
+                verbose_system_call([make_cmd, 'clean_all'], verbose)
+                verbose_system_call([make_cmd, 'ocp_cython'], verbose)
+            else:
+                if cmake_builder is not None:
+                    cmake_builder.exec(code_export_dir, verbose)
+                else:
+                    verbose_system_call([make_cmd, 'clean_ocp_shared_lib'], verbose)
+                    verbose_system_call([make_cmd, 'ocp_shared_lib'], verbose)
 
 
     @classmethod
