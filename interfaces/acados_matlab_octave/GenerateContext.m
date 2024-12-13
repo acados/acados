@@ -196,21 +196,22 @@ classdef GenerateContext < handle
             assert(length(self.global_data_expr) == length(self.global_data_sym), ...
                    sprintf('Length mismatch: %d != %d', length(self.global_data_expr), length(self.global_data_sym)));
 
-            if length(self.global_data_expr) == 0
-                error("The model contains global parameters, but no CasADi function depends on them. This is currently not supported. Please remove p_global from the model definition.")
+            if length(self.global_data_expr) > 0
+                % Add global data as input to all functions
+                for i = 1:length(self.function_input_output_pairs)
+                    self.function_input_output_pairs{i}{1}{end+1} = self.global_data_sym;
+                end
+
+                % Define output directory and function name
+                output_dir = fullfile(pwd, self.opts.code_export_directory);
+                fun_name = sprintf('%s_p_global_precompute_fun', self.problem_name);
+
+                % Add function definition
+                self.add_function_definition(fun_name, {self.p_global}, {self.global_data_expr}, output_dir);
+            else
+                disp("WARNING: No CasADi function depends on p_global.")
             end
 
-            % Add global data as input to all functions
-            for i = 1:length(self.function_input_output_pairs)
-                self.function_input_output_pairs{i}{1}{end+1} = self.global_data_sym;
-            end
-
-            % Define output directory and function name
-            output_dir = fullfile(pwd, self.opts.code_export_directory);
-            fun_name = sprintf('%s_p_global_precompute_fun', self.problem_name);
-
-            % Add function definition
-            self.add_function_definition(fun_name, {self.p_global}, {self.global_data_expr}, output_dir);
 
         end
 

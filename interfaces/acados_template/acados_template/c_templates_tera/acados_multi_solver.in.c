@@ -80,7 +80,7 @@
 {%- endif %}
     {%- endfor %}{# for jj in range(end=n_phases) #}
 
-{% if phases_dims[0].np_global > 0 %}
+{% if phases_dims[0].n_global_data > 0 %}
 #include "{{ name }}_p_global_precompute_fun.h"
 {%- endif %}
 
@@ -414,7 +414,7 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
     external_function_opts ext_fun_opts;
     external_function_opts_set_to_default(&ext_fun_opts);
 
-{% if phases_dims[0].np_global > 0 %}
+{% if phases_dims[0].n_global_data > 0 %}
     // NOTE: p_global_precompute_fun cannot use external_workspace!!!
     ext_fun_opts.external_workspace = false;
     capsule->p_global_precompute_fun.casadi_fun = &{{ name }}_p_global_precompute_fun;
@@ -2704,7 +2704,7 @@ int {{ name }}_acados_update_params_sparse({{ name }}_solver_capsule * capsule, 
 
 int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver_capsule* capsule, double* data, int data_len)
 {
-{% if dims_0.np_global > 0 %}
+{% if dims_0.n_global_data > 0 %}
     external_function_casadi* fun = &capsule->p_global_precompute_fun;
     fun->args[0] = data;
     int np_global = {{ dims_0.np_global }};
@@ -2719,11 +2719,11 @@ int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver
     fun->res[0] = in->global_data;
 
     fun->casadi_fun((const double **) fun->args, fun->res, fun->int_work, fun->float_work, NULL);
-    return 1;
 
 {%- else %}
-    printf("p_global is not defined, {{ name }}_acados_set_p_global_and_precompute_dependencies does nothing.\n");
+    printf("No global_data, {{ name }}_acados_set_p_global_and_precompute_dependencies does nothing.\n");
 {%- endif %}
+    return 0;
 }
 
 
@@ -3047,7 +3047,7 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     external_function_external_param_{{ cost_e.cost_ext_fun_type_e }}_free(&capsule->ext_cost_e_fun_jac_hess);
 {%- endif %}
 
-{% if phases_dims[0].np_global > 0 %}
+{% if phases_dims[0].n_global_data > 0 %}
     external_function_casadi_free(&capsule->p_global_precompute_fun);
 {%- endif %}
 

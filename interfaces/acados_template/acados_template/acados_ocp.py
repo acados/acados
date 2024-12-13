@@ -992,7 +992,7 @@ class AcadosOcp:
         # model
         template_list += self._get_external_function_header_templates()
 
-        if self.dims.np_global > 0:
+        if self.dims.n_global_data > 0:
             template_list.append(('p_global_precompute_fun.in.h', f'{self.name}_p_global_precompute_fun.h'))
 
         # Simulink

@@ -37,7 +37,7 @@ classdef AcadosOcpOptions < handle
         N_horizon
 
         nlp_solver_type        %  NLP solver
-        nlp_solver_step_length
+        nlp_solver_step_length % TODO: is deprecated, remove in future release
         nlp_solver_tol_stat
         nlp_solver_tol_eq
         nlp_solver_tol_ineq
