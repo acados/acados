@@ -193,9 +193,14 @@ class AcadosOcpSolver:
                     acados_ocp_json['dims']['N'])
 
 
-    def __init__(self, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file=None, simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None, verbose=True):
+    def __init__(self, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file=None, simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None, verbose=True, save_p_global=False):
 
         self.solver_created = False
+        self.__save_p_global = save_p_global
+        if save_p_global:
+            self.__p_global_values = acados_ocp.p_global_values
+        else:
+            self.__p_global_values = np.array([])
 
         if not (isinstance(acados_ocp, AcadosOcp) or isinstance(acados_ocp, AcadosMultiphaseOcp)):
             raise Exception('acados_ocp should be of type AcadosOcp or AcadosMultiphaseOcp.')
@@ -992,10 +997,18 @@ class AcadosOcpSolver:
         """
         Get concatenation of all stages of last solution of the solver.
 
-            :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']
+            :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'p_global']
+
+            .. note:: The parameter 'p_global' has no stage-wise structure and is processed in a memory saving manner by default. \n
+                  In order to read the 'p_global' parameter, the option 'save_p_global' must be set upon instantiation. \n
         """
-        if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']:
+        if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'p_global']:
             raise Exception(f'AcadosOcpSolver.get_flat(field={field_}): \'{field_}\' is an invalid argument.')
+
+        if field_ == 'p_global':
+            if not self.__save_p_global:
+                raise Exception(f'The field \'{field_}\' is not stored within the solver by default. Please set the option \'save_p_global=True\' when instantiating the solver.')
+            return self.__p_global_values
 
         field = field_.encode('utf-8')
 
@@ -2228,6 +2241,8 @@ class AcadosOcpSolver:
             raise Exception(f'data must have length {np_global}, got {data_len}.')
 
         status = getattr(self.shared_lib, f"{self.name}_acados_set_p_global_and_precompute_dependencies")(self.capsule, c_data, data_len)
+        if self.__save_p_global:
+            self.__p_global_values = data_
 
         return status
 
