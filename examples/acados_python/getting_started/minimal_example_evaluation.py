@@ -60,7 +60,7 @@ def setup(x0, Fmax, N_horizon, Tf, RTI=False):
     R_mat = 2 * np.diag([1e-2])
 
     ocp.cost.W = scipy.linalg.block_diag(Q_mat, R_mat)
-    ocp.cost.W_e = Q_mat
+    ocp.cost.W_e = Q_mat*10
 
     ocp.model.cost_y_expr = vertcat(model.x, model.u)
     ocp.model.cost_y_expr_e = model.x
@@ -88,6 +88,15 @@ def setup(x0, Fmax, N_horizon, Tf, RTI=False):
     ocp.cost.zu = ocp.cost.zl
     ocp.cost.Zu = ocp.cost.Zl
 
+    ocp.constraints.idxsbx_e = np.array([0])
+    ocp.constraints.lsbx_e = np.zeros((1,))
+    ocp.constraints.usbx_e = np.zeros((1,))
+
+    ocp.cost.zl_e = 1e3 * np.ones((1,))
+    ocp.cost.Zl_e = 1e3 * np.ones((1,))
+    ocp.cost.zu_e = ocp.cost.zl_e
+    ocp.cost.Zu_e = ocp.cost.Zl_e
+
     ocp.constraints.x0 = x0
     ocp.constraints.idxbu = np.array([0])
 
@@ -110,7 +119,7 @@ def setup(x0, Fmax, N_horizon, Tf, RTI=False):
     ocp.solver_options.qp_solver_cond_N = N_horizon
 
     solver_json = 'acados_ocp_' + model.name + '.json'
-    acados_ocp_solver = AcadosOcpSolver(ocp, json_file=solver_json)
+    acados_ocp_solver = AcadosOcpSolver(ocp, json_file=solver_json, save_p_global=True)
 
     # create an integrator with the same settings as used in the OCP solver.
     acados_integrator = AcadosSimSolver(ocp, json_file=solver_json)
@@ -166,6 +175,7 @@ def main(use_RTI=False):
     for _ in range(num_iter_initial):
         ocp_solver.solve_for_x0(x0_bar=x0)
 
+    evaluator.update_all(ocp_solver)
     # closed loop
     for i in range(Nsim):
 
@@ -195,7 +205,7 @@ def main(use_RTI=False):
         solution_obj = ocp_solver.store_iterate_to_obj()
         cost_ext_eval = evaluator.evaluate_ocp_cost(solution_obj)
         cost_int_eval = ocp_solver.get_cost()
-        assert math.isclose(cost_ext_eval, cost_int_eval, abs_tol=1e-7)
+        assert math.isclose(cost_ext_eval, cost_int_eval, abs_tol=1e-6)
 
         # simulate system
         simX[i + 1, :] = integrator.simulate(x=simX[i, :], u=simU[i, :])
@@ -233,4 +243,4 @@ def main(use_RTI=False):
 
 
 if __name__ == '__main__':
-    main(use_RTI=True)
+    main(use_RTI=False)

@@ -34,7 +34,7 @@ from typing import Tuple, Optional
 import casadi as ca
 import numpy as np
 
-from . import AcadosOcpIterate
+from . import AcadosOcpIterate, AcadosOcpSolver
 from .acados_model import AcadosModel
 from .acados_ocp import AcadosOcp, AcadosOcpConstraints
 from .utils import casadi_length, is_empty, array_to_float
@@ -47,7 +47,7 @@ class AcadosCostConstraintEvaluator:
     Could be generalized later, by making the casadi functions parametric in bounds.
     """
 
-    def __init__(self, ocp: AcadosOcp, with_parametric_bounds: bool):
+    def __init__(self, ocp: AcadosOcp, with_parametric_bounds: bool = False):
         ocp.make_consistent()
 
         if with_parametric_bounds:
@@ -78,6 +78,7 @@ class AcadosCostConstraintEvaluator:
         #  SX und MX moeglich "get_casadi_symbol"-function in acados_model
         # was kann sich aendern:
         # p, p_global, x, u, z, t (kann auch ein parameter sein),
+
         if ocp.model.p_global is None:
             p_global = ca.SX(0,0)
         else:
@@ -241,6 +242,22 @@ class AcadosCostConstraintEvaluator:
                 f'\nGot np_global = {self.ocp.dims.np_global}, '
                 f'self.p_global_values.shape = {p_global_values.shape[0]}\n')
 
+    def update_all(self, acados_solver: AcadosOcpSolver):
+        N = self.ocp.dims.N
+        if self.ocp.dims.np > 0:
+            new_parameter_values = np.zeros((self.ocp.dims.np, N))
+            for i in range(N):
+                new_parameter_values[:,i] = acados_solver.get(i, 'p')
+            self.parameter_values = new_parameter_values
+
+        if acados_solver.get_option_save_p_global() is False:
+            print('\nCan not set \'p_global\', since the solver does not store these values by default. '
+                  'In order to update \'p_global\', please set the option \'save_p_global=True\' in the '
+                  'instantiation of the acados solver.')
+        else:
+            self.p_global_values = acados_solver.get_flat('p_global')
+
+
     def evaluate(self, x: np.ndarray, u: np.ndarray, step: int = 0) -> dict:
 
         cost_fun_args = [x, u, self.__parameter_values, self.__p_global_values]
@@ -314,7 +331,8 @@ class AcadosCostConstraintEvaluator:
                                      self.__parameter_values,
                                      self.__p_global_values))
         violation_hard_constraints = np.concatenate(
-            (lower_violation_e[self.nonslacked_indices_e], upper_violation_e[self.nonslacked_indices_e]))
+            (lower_violation_e[self.nonslacked_indices_e],
+             upper_violation_e[self.nonslacked_indices_e]))
 
         # evaluate cost of soft constraints
         lower_slack_cost_e, upper_slack_cost_e = np.array([0.]), np.array([0.])

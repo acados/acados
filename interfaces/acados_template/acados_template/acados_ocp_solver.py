@@ -192,10 +192,14 @@ class AcadosOcpSolver:
                     acados_ocp_json['solver_options']['nlp_solver_type'],
                     acados_ocp_json['dims']['N'])
 
+    def get_option_save_p_global(self) -> bool:
+        """Returns the option save_p_global. This option can only be set in the constructor. """
+        return self.__save_p_global
 
     def __init__(self, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file=None, simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None, verbose=True, save_p_global=False):
 
         self.solver_created = False
+        self.tmp = False
         self.__save_p_global = save_p_global
         if save_p_global:
             self.__p_global_values = acados_ocp.p_global_values
