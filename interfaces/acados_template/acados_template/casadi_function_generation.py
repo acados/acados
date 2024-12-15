@@ -32,7 +32,7 @@ from typing import Union, List, Optional
 
 import os
 import casadi as ca
-from .utils import is_empty, casadi_length, check_casadi_version_supports_p_global, print_casadi_expression
+from .utils import is_empty, casadi_length, check_casadi_version_supports_p_global, print_casadi_expression, set_directory
 from .acados_model import AcadosModel
 from .acados_ocp_constraints import AcadosOcpConstraints
 
@@ -83,22 +83,18 @@ class GenerateContext:
                 print(e)
                 raise e
 
-            # setup and change directory
-            cwd = os.getcwd()
+            # setup output directory
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
-            os.chdir(output_dir)
 
-            # generate function
-            try:
-                fun.generate(name, self.casadi_codegen_opts)
-            except Exception as e:
-                print(f"Error while generating function {name} in directory {output_dir}")
-                print(e)
-                raise e
+            with set_directory(output_dir):
+                try:
+                    fun.generate(name, self.casadi_codegen_opts)
+                except Exception as e:
+                    print(f"Error while generating function {name} in directory {output_dir}")
+                    print(e)
+                    raise e
 
-            # change back to original directory
-            os.chdir(cwd)
 
     def add_external_function_file(self, fun_name: str, output_dir: str):
         # remove trailing .c if present
