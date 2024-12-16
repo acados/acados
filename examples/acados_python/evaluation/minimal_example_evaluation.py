@@ -28,12 +28,15 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.;
 #
+import sys
+sys.path.insert(0, '../getting_started')
+
 from matplotlib import pyplot as plt
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
 from acados_template.mpc_utils import AcadosCostConstraintEvaluator
 from pendulum_model import export_pendulum_ode_model
-from utils import plot_pendulum_eval, plot_pendulum
+from utils_eval import plot_pendulum_eval
 import numpy as np
 import scipy.linalg
 import math

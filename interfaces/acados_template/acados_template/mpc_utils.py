@@ -42,9 +42,9 @@ from .utils import casadi_length, is_empty, array_to_float
 
 class AcadosCostConstraintEvaluator:
     """
-    Limitation: values of numerical properties, such as bound values, W, zl, zu, Zu, Zl, yref, etc. are taken from original AcadosOcp;
-    If they are changed in the solve this is not taken into account here.
-    Could be generalized later, by making the casadi functions parametric in bounds.
+    Limitation: values of numerical properties, such as bound values, W, zl, zu, Zu, Zl, yref,
+    etc. are taken from original AcadosOcp;
+    If they are changed in the solver, this is not taken into account in the evaluator.
     """
 
     def __init__(self, ocp: AcadosOcp, with_parametric_bounds: bool = False):
@@ -202,7 +202,7 @@ class AcadosCostConstraintEvaluator:
 
     @property
     def parameter_values(self):
-        """:math:`p` - initial values for parameter vector - can be updated stagewise"""
+        """:math:`p` - initial values for parameter vector - can be updated stage-wise"""
         return self.__parameter_values
 
     @parameter_values.setter
@@ -237,6 +237,10 @@ class AcadosCostConstraintEvaluator:
                 f'self.p_global_values.shape = {p_global_values.shape[0]}\n')
 
     def update_all(self, acados_solver: AcadosOcpSolver):
+        """
+        Update the parameter values and global parameter values from the acados solver.
+        ATTENTION: Currently only parameter values are updated. Reference values, bounds, etc. are not updated.
+        """
         N = self.ocp.dims.N
         if self.ocp.dims.np > 0:
             new_parameter_values = np.zeros((self.ocp.dims.np, N))
@@ -253,6 +257,19 @@ class AcadosCostConstraintEvaluator:
 
 
     def evaluate(self, x: np.ndarray, u: np.ndarray, step: int = 0) -> dict:
+        """
+        Evaluates the cost and constraints at a given stage of the OCP. For a closed-loop evaluation the stage is
+        typically 0.
+        @param x: state vector
+        @param u: control input vector
+        @param step: stage index (0 <= stage < N)
+        @return: dictionary with the following keys:
+            - 'cost': total cost of the transition
+            - 'cost_without_slacks': total cost of transition without slack penalties
+            - 'cost_slacks': total cost of slack penalties
+            - 'violation_soft_constraints': individual violation of soft constraints (equal to slacks)
+            - 'violation_hard_constraints': individual violation of hard constraints
+        """
 
         cost_fun_args = [x, u, self.__parameter_values[:,step], self.__p_global_values]
 
@@ -287,20 +304,20 @@ class AcadosCostConstraintEvaluator:
         else:
             cost = cost_without_slacks + slack_cost
 
-
         # evaluate sum
-        # violation per constraint, upper und lower bound aufteilen. linear, nonlinear, std bounds
-        # einmal kompletter constraint vector
-        # subset hard constraints
         result = {
             'cost': array_to_float(cost),
             'cost_without_slacks': array_to_float(cost_without_slacks),
-            'slack_cost': array_to_float(slack_cost),
+            'cost_slacks': array_to_float(slack_cost),
+            'violation_soft_constraints': np.concatenate((lower_slack.full(), upper_slack.full())),
             'violation_hard_constraints': violation_hard_constraints,
         }
         return result
 
     def evaluate_ocp_cost(self, acados_ocp_iterate: AcadosOcpIterate):
+        """
+        Evaluates the cost of a whole OCP trajectory, as evaluated inside acados.
+        """
         acados_ocp_iterate = deepcopy(acados_ocp_iterate)
         acados_ocp_iterate.flatten()
         x_traj = np.array(acados_ocp_iterate.x_traj)
