@@ -1044,7 +1044,7 @@ class AcadosOcpSolver:
         """
         stat = self.get_stats("statistics")
 
-        if self.__solver_options['nlp_solver_type'] == 'SQP':
+        if self.__solver_options['nlp_solver_type'] in ['SQP', 'SQP_WITH_FEASIBLE_QP']:
             print('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha')
             if stat.shape[0]>8:
                 print('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp')
@@ -1252,6 +1252,18 @@ class AcadosOcpSolver:
                 filename += datetime.now().strftime('%Y-%m-%d-%H:%M:%S.%f') + '.json'
 
         # get QP data:
+        qp_data = self.get_last_qp()
+
+        # save
+        with open(filename, 'w') as f:
+            json.dump(qp_data, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
+        print("stored qp from solver memory in ", os.path.join(os.getcwd(), filename))
+
+    def get_last_qp(self) -> dict:
+        """
+        Returns the latest QP data as a dict
+        """
+        # get QP data:
         qp_data = dict()
 
         lN = len(str(self.N+1))
@@ -1268,12 +1280,7 @@ class AcadosOcpSolver:
             if len(qp_data[k]) == 0:
                 del qp_data[k]
 
-        # save
-        with open(filename, 'w') as f:
-            json.dump(qp_data, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
-        print("stored qp from solver memory in ", os.path.join(os.getcwd(), filename))
-
-
+        return qp_data
 
     def load_iterate(self, filename:str, verbose: bool = True):
         """
@@ -2023,6 +2030,7 @@ class AcadosOcpSolver:
                          'globalization_funnel_kappa',
                          'globalization_funnel_fraction_switching_condition',
                          'globalization_funnel_initial_penalty_parameter',
+                         'initial_objective_multiplier',
                          'levenberg_marquardt',
                          'adaptive_levenberg_marquardt_lam',
                          'adaptive_levenberg_marquardt_mu_min',
