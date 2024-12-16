@@ -64,7 +64,7 @@ class AcadosCostConstraintEvaluator:
             raise NotImplementedError(
                 "AcadosCostConstraintEvaluatator: not implemented for models with z.")
 
-        self.__parameter_values = ocp.parameter_values
+        self.__parameter_values = np.tile(ocp.parameter_values, (ocp.dims.np, ocp.dims.N))
         self.__p_global_values = ocp.p_global_values
 
         self.time_steps = ocp.solver_options.time_steps
@@ -72,12 +72,6 @@ class AcadosCostConstraintEvaluator:
         # setup casadi functions for constraints and cost
         cost_expr = get_path_cost_expression(ocp)
         cost_expr_e = get_terminal_cost_expression(ocp)
-
-        # build function. fields may be None or empty casadi expressions
-        # todo: empty list als default,
-        #  SX und MX moeglich "get_casadi_symbol"-function in acados_model
-        # was kann sich aendern:
-        # p, p_global, x, u, z, t (kann auch ein parameter sein),
 
         if ocp.model.p_global is None:
             p_global = ca.SX(0,0)
@@ -260,7 +254,7 @@ class AcadosCostConstraintEvaluator:
 
     def evaluate(self, x: np.ndarray, u: np.ndarray, step: int = 0) -> dict:
 
-        cost_fun_args = [x, u, self.__parameter_values, self.__p_global_values]
+        cost_fun_args = [x, u, self.__parameter_values[:,step], self.__p_global_values]
 
         # evaluate cost
         cost_without_slacks = self.cost_fun(*cost_fun_args).full() * self.time_steps[step]
@@ -268,7 +262,7 @@ class AcadosCostConstraintEvaluator:
         # evaluate constraints
         lower_violation, upper_violation, lower_slack, upper_slack = (
             self.constraint_function(x, u,
-                                     self.__parameter_values,
+                                     self.__parameter_values[:,step],
                                      self.__p_global_values))
         violation_hard_constraints = np.concatenate(
             (lower_violation[self.nonslacked_indices], upper_violation[self.nonslacked_indices]))
@@ -323,13 +317,14 @@ class AcadosCostConstraintEvaluator:
             result = self.evaluate(x_traj[i,:],u_traj[i,:],step=i)
             cost += result['cost']
 
-        cost_fun_args = [x_traj[N-1,:], self.__parameter_values, self.__p_global_values]
+        cost_fun_args = [x_traj[N-1,:], self.__parameter_values[:,-1], self.__p_global_values]
         cost += self.terminal_cost_fun(*cost_fun_args).full()
 
         lower_violation_e, upper_violation_e, lower_slack_e, upper_slack_e = (
             self.constraint_function_e(x_traj[N-1,:],
-                                     self.__parameter_values,
+                                     self.__parameter_values[:,-1],
                                      self.__p_global_values))
+
         violation_hard_constraints = np.concatenate(
             (lower_violation_e[self.nonslacked_indices_e],
              upper_violation_e[self.nonslacked_indices_e]))
@@ -337,14 +332,14 @@ class AcadosCostConstraintEvaluator:
         # evaluate cost of soft constraints
         lower_slack_cost_e, upper_slack_cost_e = np.array([0.]), np.array([0.])
         if self.ocp.cost.Zl_e.size > 0:
-            lower_slack_cost_e += 0.5 * self.ocp.cost.Zl @ (lower_slack_e.full() * lower_slack_e.full())
+            lower_slack_cost_e += 0.5 * self.ocp.cost.Zl_e @ (lower_slack_e.full() * lower_slack_e.full())
         if self.ocp.cost.zl_e.size > 0:
-            lower_slack_cost_e += self.ocp.cost.zl @ lower_slack_e.full()
+            lower_slack_cost_e += self.ocp.cost.zl_e @ lower_slack_e.full()
 
         if self.ocp.cost.Zu_e.size > 0:
-            upper_slack_cost_e += 0.5 * self.ocp.cost.Zu @ (upper_slack_e.full() * upper_slack_e.full())
+            upper_slack_cost_e += 0.5 * self.ocp.cost.Zu_e @ (upper_slack_e.full() * upper_slack_e.full())
         if self.ocp.cost.zu_e.size > 0:
-            upper_slack_cost_e += self.ocp.cost.zu @ upper_slack_e.full()
+            upper_slack_cost_e += self.ocp.cost.zu_e @ upper_slack_e.full()
 
         if lower_slack_e.full().size > 0:
             cost += lower_slack_e.full()

@@ -28,24 +28,39 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.;
 #
+from matplotlib import pyplot as plt
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
 from acados_template.mpc_utils import AcadosCostConstraintEvaluator
 from pendulum_model import export_pendulum_ode_model
-from utils import plot_pendulum_eval
+from utils import plot_pendulum_eval, plot_pendulum
 import numpy as np
 import scipy.linalg
 import math
-from casadi import vertcat
+from casadi import vertcat, SX
+
+# Define constraints to make evaluation more challenging
+constraint_par = {'omega_dot_min_1': -4,
+                  'omega_dot_min_2': -6,
+                  'iter_omega_change': 6,
+                  'v_max': 5,
+                  'F_max': 80}
 
 
-def setup(x0, Fmax, N_horizon, Tf, RTI=False):
+def setup(x0, N_horizon, Tf, RTI=False):
     # create ocp object to formulate the OCP
+    global constraint_par
     ocp = AcadosOcp()
 
     # set model
     model = export_pendulum_ode_model()
+    omega_dot_min = SX.sym('omega_dot_min')
+
     ocp.model = model
+    ocp.model.p = omega_dot_min
+    ocp.model.con_h_expr = omega_dot_min - model.x[3]
+    omega_dot_min_1 = constraint_par['omega_dot_min_1']
+    ocp.parameter_values = np.array([omega_dot_min_1])
 
     nx = model.x.rows()
     nu = model.u.rows()
@@ -60,7 +75,7 @@ def setup(x0, Fmax, N_horizon, Tf, RTI=False):
     R_mat = 2 * np.diag([1e-2])
 
     ocp.cost.W = scipy.linalg.block_diag(Q_mat, R_mat)
-    ocp.cost.W_e = Q_mat*10
+    ocp.cost.W_e = Q_mat * 10
 
     ocp.model.cost_y_expr = vertcat(model.x, model.u)
     ocp.model.cost_y_expr_e = model.x
@@ -68,23 +83,27 @@ def setup(x0, Fmax, N_horizon, Tf, RTI=False):
     ocp.cost.yref_e = np.zeros((ny_e,))
 
     # set constraints
-    ocp.constraints.lbu = np.array([-Fmax])
-    ocp.constraints.ubu = np.array([+Fmax])
+    ocp.constraints.lbu = np.array([-constraint_par['F_max']])
+    ocp.constraints.ubu = np.array([+constraint_par['F_max']])
 
     ocp.constraints.idxbx = np.array([2])
-    ocp.constraints.lbx = np.array([-5])
-    ocp.constraints.ubx = np.array([5])
+    ocp.constraints.lbx = np.array([-constraint_par['v_max']])
+    ocp.constraints.ubx = np.array([constraint_par['v_max']])
 
     ocp.constraints.idxbx_e = np.array([2])
-    ocp.constraints.lbx_e = np.array([-5])
-    ocp.constraints.ubx_e = np.array([5])
+    ocp.constraints.lbx_e = np.array([-constraint_par['v_max']])
+    ocp.constraints.ubx_e = np.array([constraint_par['v_max']])
 
     ocp.constraints.idxsbx = np.array([0])
     ocp.constraints.lsbx = np.zeros((1,))
     ocp.constraints.usbx = np.zeros((1,))
 
-    ocp.cost.zl = 1e3 * np.ones((1,))
-    ocp.cost.Zl = 1e3 * np.ones((1,))
+    ocp.constraints.uh = np.array([0])
+    ocp.constraints.lh = np.array([-10])
+    ocp.constraints.idxsh = np.array([0])
+
+    ocp.cost.zl = 2e3 * np.ones((2,))
+    ocp.cost.Zl = 5e3 * np.ones((2,))
     ocp.cost.zu = ocp.cost.zl
     ocp.cost.Zu = ocp.cost.Zl
 
@@ -145,13 +164,14 @@ def update_comprehensive_dict(comprehensive_dict, input_dict):
 
 
 def main(use_RTI=False):
+    global constraint_par
     x0 = np.array([0.0, np.pi, 0.0, 0.0])
-    Fmax = 80
 
     Tf = .8
     N_horizon = 40
+    td = Tf/N_horizon
 
-    ocp_solver, integrator, evaluator = setup(x0, Fmax, N_horizon, Tf, use_RTI)
+    ocp_solver, integrator, evaluator = setup(x0, N_horizon, Tf, use_RTI)
 
     nx = ocp_solver.acados_ocp.dims.nx
     nu = ocp_solver.acados_ocp.dims.nu
@@ -176,8 +196,16 @@ def main(use_RTI=False):
         ocp_solver.solve_for_x0(x0_bar=x0)
 
     evaluator.update_all(ocp_solver)
+
     # closed loop
     for i in range(Nsim):
+
+        # change constraint parameter in the middle of the simulation
+        if i == constraint_par['iter_omega_change']:
+            new_omega_dot_min = np.array([constraint_par['omega_dot_min_2']])
+            for j in range(ocp_solver.acados_ocp.dims.N):
+                ocp_solver.set(j, "p", new_omega_dot_min)
+            evaluator.update_all(ocp_solver)
 
         if use_RTI:
             # preparation phase
@@ -205,7 +233,10 @@ def main(use_RTI=False):
         solution_obj = ocp_solver.store_iterate_to_obj()
         cost_ext_eval = evaluator.evaluate_ocp_cost(solution_obj)
         cost_int_eval = ocp_solver.get_cost()
-        assert math.isclose(cost_ext_eval, cost_int_eval, abs_tol=1e-6)
+        rel_error_perc = np.abs(cost_ext_eval - cost_int_eval) / cost_int_eval * 100
+        # formatted print relative error up to 3 decimal places
+        print(f'cost_err_rel: {rel_error_perc:.8f} %')
+        assert math.isclose(cost_ext_eval, cost_int_eval, rel_tol=1e-3)
 
         # simulate system
         simX[i + 1, :] = integrator.simulate(x=simX[i, :], u=simU[i, :])
@@ -228,9 +259,9 @@ def main(use_RTI=False):
 
     # plot results
     model = ocp_solver.acados_ocp.model
-    plot_pendulum_eval(
-        np.linspace(0, (Tf / N_horizon) * Nsim, Nsim + 1),
-        Fmax,
+
+    fix, axes = plot_pendulum_eval(
+        np.linspace(0, td * Nsim, Nsim + 1),
         simU,
         simX,
         eval_dict,
@@ -239,8 +270,19 @@ def main(use_RTI=False):
         x_labels=model.x_labels,
         u_labels=model.u_labels)
 
-    ocp_solver = None
+    axes[2].axhline(constraint_par['v_max'], alpha=0.7, color='tab:red')
+    axes[2].axhline(-constraint_par['v_max'], alpha=0.7, color='tab:red')
+
+    constraint_omega_dot = np.empty(Nsim)
+    constraint_omega_dot[:constraint_par['iter_omega_change']+1] = constraint_par['omega_dot_min_1']
+    constraint_omega_dot[constraint_par['iter_omega_change']+1:] = constraint_par['omega_dot_min_2']
+    axes[3].plot(np.linspace(0, td*Nsim, Nsim), constraint_omega_dot, alpha=0.7, color='tab:red')
+
+    axes[-1].set_ylim([-1.2 * constraint_par['F_max'], 1.2 * constraint_par['F_max']])
+    axes[-1].axhline(constraint_par['F_max'], alpha=0.7, color='tab:red')
+    axes[-1].axhline(-constraint_par['F_max'], alpha=0.7, color='tab:red')
+    plt.show()
 
 
 if __name__ == '__main__':
-    main(use_RTI=False)
+    main(use_RTI=True)

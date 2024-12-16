@@ -79,7 +79,7 @@ def plot_pendulum(t, u_max, U, X_true, latexify=False, plt_show=True, time_label
         plt.show()
 
 
-def plot_pendulum_eval(t, u_max, U, X_true, eval:Dict,latexify=False, plt_show=True, time_label='$t$', x_labels=None, u_labels=None):
+def plot_pendulum_eval(t, U, X_true, eval:Dict,latexify=False, time_label='$t$', x_labels=None, u_labels=None):
     """
     Params:
         t: time values of the discretization
@@ -104,8 +104,7 @@ def plot_pendulum_eval(t, u_max, U, X_true, eval:Dict,latexify=False, plt_show=T
         else:
             axes[i].set_ylabel(f'$x_{i}$')
 
-    axes[2].hlines(5, t[0], t[-1], linestyles='dashed', alpha=0.7, color='tab:red')
-    axes[2].hlines(-5, t[0], t[-1], linestyles='dashed', alpha=0.7, color = 'tab:red')
+
 
     axes[-2].plot(t[:-1], eval['cost_without_slacks'], label='cost w/o slacks')
     axes[-2].plot(t[:-1], eval['cost'], label='cost with slacks')
@@ -120,9 +119,6 @@ def plot_pendulum_eval(t, u_max, U, X_true, eval:Dict,latexify=False, plt_show=T
     else:
         axes[-1].set_ylabel('$u$')
 
-    axes[-1].hlines(u_max, t[0], t[-1], linestyles='dashed', alpha=0.7, color='tab:red')
-    axes[-1].hlines(-u_max, t[0], t[-1], linestyles='dashed', alpha=0.7, color='tab:red')
-    axes[-1].set_ylim([-1.2*u_max, 1.2*u_max])
     axes[-1].set_xlim(t[0], t[-1])
     axes[-1].set_xlabel(time_label)
     axes[-1].grid()
@@ -131,5 +127,4 @@ def plot_pendulum_eval(t, u_max, U, X_true, eval:Dict,latexify=False, plt_show=T
 
     fig.align_ylabels()
 
-    if plt_show:
-        plt.show()
+    return fig, axes
