@@ -1713,17 +1713,19 @@ class AcadosOcpSolver:
         field = field_.encode('utf-8')
         stage = c_int(stage_)
 
-        dims = np.zeros((2,), dtype=np.intc, order="C")
-        dims_data = cast(dims.ctypes.data, POINTER(c_int))
+        dims_ = np.zeros((2,), dtype=np.intc, order="C")
+        dims_data = cast(dims_.ctypes.data, POINTER(c_int))
 
         self.__acados_lib.ocp_nlp_cost_dims_get_from_attr(self.nlp_config, \
             self.nlp_dims, self.nlp_out, stage_, field, dims_data)
 
         # vector-valued fields
         if field_ in ['yref', 'zl', 'zu', 'Zl', 'Zu', 'scaling']:
-            dims = dims[0]
+            dims = (dims_[0],)
+        else:
+            dims = tuple(dims_)
 
-        out = np.zeros(tuple(dims), dtype=np.float64, order="F")
+        out = np.zeros(dims, dtype=np.float64, order="F")
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
         self.__acados_lib.ocp_nlp_cost_model_get(self.nlp_config, \
@@ -1818,17 +1820,19 @@ class AcadosOcpSolver:
         field = field_.encode('utf-8')
         stage = c_int(stage_)
 
-        dims = np.zeros((2,), dtype=np.intc, order="C")
-        dims_data = cast(dims.ctypes.data, POINTER(c_int))
+        dims_ = np.zeros((2,), dtype=np.intc, order="C")
+        dims_data = cast(dims_.ctypes.data, POINTER(c_int))
 
         self.__acados_lib.ocp_nlp_cost_dims_get_from_attr(self.nlp_config, \
             self.nlp_dims, self.nlp_out, stage_, field, dims_data)
 
         # check whether field is vector-valued
         if field_ not in ['C', 'D']:
-            dims = dims[0]
+            dims = (dims_[0],)
+        else:
+            dims = tuple(dims_)
 
-        out = np.zeros(tuple(dims), dtype=np.float64, order="F")
+        out = np.zeros(dims, dtype=np.float64, order="F")
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
         self.__acados_lib.ocp_nlp_constraints_model_get(self.nlp_config, \
