@@ -35,12 +35,11 @@
 import sys
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
-from pendulum_model import export_pendulum_ode_model, export_augmented_pendulum_model
+from acados_template import AcadosOcp, AcadosOcpSolver
+from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
-from casadi import vertcat, SX
 
 # contraint to test and compare
 # * non-linear constraint expression
@@ -52,14 +51,12 @@ def test_initial_h_constraints(constraint_version: str):
     print(f'#################################################################################### {constraint_version} constraint ####################################################################################')
     ocp = AcadosOcp()
 
-    model = export_pendulum_ode_model()
-    model.name = f'{model.name}_{constraint_version}_LS'
-    # set model
-    ocp.model = model
+    ocp.model = export_pendulum_ode_model()
+    ocp.model.name = f'{ocp.model.name}_{constraint_version}_LS'
 
     Tf = 1.0
-    nx = model.x.rows()
-    nu = model.u.rows()
+    nx = ocp.model.x.rows()
+    nu = ocp.model.u.rows()
     ny = nx + nu
     ny_e = nx
     N = 20
@@ -69,9 +66,6 @@ def test_initial_h_constraints(constraint_version: str):
     # set cost
     Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
     R = 2*np.diag([1e-2])
-
-    x = ocp.model.x
-    u = ocp.model.u
 
     cost_W = scipy.linalg.block_diag(Q, R)
     ocp.cost.cost_type = 'LINEAR_LS'
@@ -168,6 +162,7 @@ def test_initial_h_constraints(constraint_version: str):
         simX[i,:] = ocp_solver.get(i, "x")
         simU[i,:] = ocp_solver.get(i, "u")
     simX[N,:] = ocp_solver.get(N, "x")
+
     # plot results
     plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
 
