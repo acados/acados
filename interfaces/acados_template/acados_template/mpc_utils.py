@@ -65,7 +65,7 @@ class AcadosCostConstraintEvaluator:
                 "AcadosCostConstraintEvaluatator: with_parametric_bounds not implemented.")
             # p_bounds = ca.MX.sym('p_bounds', 2*(ocp.dims.nh+ocp.dims.nbx+dims.nbu+dims.ng+dims.nphi), 1)
 
-        self.ocp = ocp
+        self.__ocp = deepcopy(ocp)
 
         model = ocp.model
         constraints = ocp.constraints
@@ -219,12 +219,10 @@ class AcadosCostConstraintEvaluator:
         Update the parameter values and global parameter values from the acados solver.
         ATTENTION: Currently only parameter values are updated. Reference values, bounds, etc. are not updated.
         """
-        N = self.ocp.dims.N
-        if self.ocp.dims.np > 0:
-            new_parameter_values = np.zeros((self.ocp.dims.np, N))
+        N = self.__ocp.dims.N
+        if self.__ocp.dims.np > 0:
             for i in range(N):
-                new_parameter_values[:, i] = acados_solver.get(i, 'p')
-            self.__parameter_values = new_parameter_values
+                self.__parameter_values[:, i] = acados_solver.get(i, 'p')
 
         if acados_solver.save_p_global is False:
             print('\nCan not set \'p_global\', since the solver does not store these values by default. '
@@ -233,22 +231,26 @@ class AcadosCostConstraintEvaluator:
         else:
             self.__p_global_values = acados_solver.get_flat('p_global')
 
-    def _set_check_parameters(
+    def _get_check_parameters(
             self, p: np.ndarray = None,
-            p_global: np.ndarray = None):
+            p_global: np.ndarray = None) -> Tuple[np.ndarray, np.ndarray]:
+        parameter_values_return = self.__parameter_values
+        p_global_values_return = self.__p_global_values
+
         if p is not None:
-            if p.shape == self.__parameter_values:
-                self.__parameter_values = p
+            if p.shape == self.__parameter_values.shape:
+                parameter_values_return = p
             else:
                 raise ValueError(
                     f"Parameter vector 'p' has wrong shape {p.shape} instead of {self.__parameter_values.shape}.")
 
         if p_global is not None:
-            if p_global.shape == self.__p_global_values:
-                self.__p_global_values = p_global
+            if p_global.shape == self.__p_global_values.shape:
+                p_global_values_return = p_global
             else:
                 raise ValueError(
                     f"Global parameter vector 'p_global' has wrong shape {p_global.shape} instead of {self.__p_global_values.shape}.")
+        return parameter_values_return, p_global_values_return
 
     def evaluate(self, x: np.ndarray,
                  u: np.ndarray,
@@ -272,13 +274,13 @@ class AcadosCostConstraintEvaluator:
             - 'violation_soft_constraints': individual violation of soft constraints (equal to slacks)
             - 'violation_hard_constraints': individual violation of hard constraints
         """
-        self._set_check_parameters(p, p_global)
+        parameter_values, p_global_values = self._get_check_parameters(p, p_global)
 
-        if len(self.__parameter_values) > 0:
-            parameter_values = self.__parameter_values[:, step]
+        if len(parameter_values) > 0:
+            parameter_values = parameter_values[:, step]
         else:
-            parameter_values = self.__parameter_values
-        cost_fun_args = [x, u, parameter_values, self.__p_global_values]
+            parameter_values = parameter_values
+        cost_fun_args = [x, u, parameter_values, p_global_values]
 
         # evaluate cost
         cost_without_slacks = self.cost_fun(*cost_fun_args).full() * self.time_steps[step]
@@ -287,22 +289,22 @@ class AcadosCostConstraintEvaluator:
         lower_violation, upper_violation, lower_slack, upper_slack = (
             self.constraint_function(x, u,
                                      parameter_values,
-                                     self.__p_global_values))
+                                     p_global_values))
         violation_hard_constraints = np.concatenate(
             (lower_violation[self.nonslacked_indices], upper_violation[self.nonslacked_indices]))
 
         # evaluate cost of soft constraints
         lower_slack_cost, upper_slack_cost = np.array([0.]), np.array([0.])
 
-        if self.ocp.cost.Zl.size > 0:
-            lower_slack_cost += 0.5 * self.ocp.cost.Zl @ (lower_slack.full() * lower_slack.full())
-        if self.ocp.cost.zl.size > 0:
-            lower_slack_cost += self.ocp.cost.zl @ lower_slack.full()
+        if self.__ocp.cost.Zl.size > 0:
+            lower_slack_cost += 0.5 * self.__ocp.cost.Zl @ (lower_slack.full() * lower_slack.full())
+        if self.__ocp.cost.zl.size > 0:
+            lower_slack_cost += self.__ocp.cost.zl @ lower_slack.full()
 
-        if self.ocp.cost.Zu.size > 0:
-            upper_slack_cost += 0.5 * self.ocp.cost.Zu @ (upper_slack.full() * upper_slack.full())
-        if self.ocp.cost.zu.size > 0:
-            upper_slack_cost += self.ocp.cost.zu @ upper_slack.full()
+        if self.__ocp.cost.Zu.size > 0:
+            upper_slack_cost += 0.5 * self.__ocp.cost.Zu @ (upper_slack.full() * upper_slack.full())
+        if self.__ocp.cost.zu.size > 0:
+            upper_slack_cost += self.__ocp.cost.zu @ upper_slack.full()
 
         slack_cost = (lower_slack_cost + upper_slack_cost) * self.time_steps[step]
 
@@ -333,7 +335,7 @@ class AcadosCostConstraintEvaluator:
         @param p: parameter vector used for evaluation (optional)
         @param p_global: global parameter vector used for evaluation (optional)
         """
-        self._set_check_parameters(p, p_global)
+        parameter_values, p_global_values = self._get_check_parameters(p, p_global)
         cost = 0
 
         # the cost on the first step is different in the OCP
@@ -347,18 +349,18 @@ class AcadosCostConstraintEvaluator:
             cost += result['cost']
             step += 1
 
-        if len(self.__parameter_values) > 0:
-            parameter_values = self.__parameter_values[:, -1]
+        if len(parameter_values) > 0:
+            parameter_values = parameter_values[:, -1]
         else:
-            parameter_values = self.__parameter_values
+            parameter_values = parameter_values
 
-        cost_fun_args = [acados_ocp_iterate.x_traj[-1], parameter_values, self.__p_global_values]
+        cost_fun_args = [acados_ocp_iterate.x_traj[-1], parameter_values, p_global_values]
         cost += self.terminal_cost_fun(*cost_fun_args).full()
 
         lower_violation_e, upper_violation_e, lower_slack_e, upper_slack_e = (
             self.constraint_function_e(acados_ocp_iterate.x_traj[-1],
                                        parameter_values,
-                                       self.__p_global_values))
+                                       p_global_values))
 
         violation_hard_constraints = np.concatenate(
             (lower_violation_e[self.nonslacked_indices_e],
@@ -366,15 +368,15 @@ class AcadosCostConstraintEvaluator:
 
         # evaluate cost of soft constraints
         lower_slack_cost_e, upper_slack_cost_e = np.array([0.]), np.array([0.])
-        if self.ocp.cost.Zl_e.size > 0:
-            lower_slack_cost_e += 0.5 * self.ocp.cost.Zl_e @ (lower_slack_e.full() * lower_slack_e.full())
-        if self.ocp.cost.zl_e.size > 0:
-            lower_slack_cost_e += self.ocp.cost.zl_e @ lower_slack_e.full()
+        if self.__ocp.cost.Zl_e.size > 0:
+            lower_slack_cost_e += 0.5 * self.__ocp.cost.Zl_e @ (lower_slack_e.full() * lower_slack_e.full())
+        if self.__ocp.cost.zl_e.size > 0:
+            lower_slack_cost_e += self.__ocp.cost.zl_e @ lower_slack_e.full()
 
-        if self.ocp.cost.Zu_e.size > 0:
-            upper_slack_cost_e += 0.5 * self.ocp.cost.Zu_e @ (upper_slack_e.full() * upper_slack_e.full())
-        if self.ocp.cost.zu_e.size > 0:
-            upper_slack_cost_e += self.ocp.cost.zu_e @ upper_slack_e.full()
+        if self.__ocp.cost.Zu_e.size > 0:
+            upper_slack_cost_e += 0.5 * self.__ocp.cost.Zu_e @ (upper_slack_e.full() * upper_slack_e.full())
+        if self.__ocp.cost.zu_e.size > 0:
+            upper_slack_cost_e += self.__ocp.cost.zu_e @ upper_slack_e.full()
 
         if lower_slack_e.full().size > 0:
             cost += lower_slack_e.full()
