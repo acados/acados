@@ -54,7 +54,7 @@ from .acados_multiphase_ocp import AcadosMultiphaseOcp
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
-                    acados_lib_is_compiled_with_openmp, is_empty)
+                    acados_lib_is_compiled_with_openmp, is_empty, set_directory)
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
 
 
@@ -89,6 +89,7 @@ class AcadosOcpSolver:
         """`shared_lib` - solver shared library"""
         return self.__shared_lib
 
+    # TODO move this to AcadosOcp
     @classmethod
     def generate(cls, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, simulink_opts=None, cmake_builder: CMakeBuilder = None):
         """
@@ -149,24 +150,22 @@ class AcadosOcpSolver:
             :param verbose: indicating if build command is printed
         """
         code_export_dir = os.path.abspath(code_export_dir)
-        cwd = os.getcwd()
-        os.chdir(code_export_dir)
 
-        if os.name == 'nt':
-            make_cmd = 'mingw32-make'
-        else:
-            make_cmd = 'make'
-
-        if with_cython:
-            verbose_system_call([make_cmd, 'clean_all'], verbose)
-            verbose_system_call([make_cmd, 'ocp_cython'], verbose)
-        else:
-            if cmake_builder is not None:
-                cmake_builder.exec(code_export_dir, verbose)
+        with set_directory(code_export_dir):
+            if os.name == 'nt':
+                make_cmd = 'mingw32-make'
             else:
-                verbose_system_call([make_cmd, 'clean_ocp_shared_lib'], verbose)
-                verbose_system_call([make_cmd, 'ocp_shared_lib'], verbose)
-        os.chdir(cwd)
+                make_cmd = 'make'
+
+            if with_cython:
+                verbose_system_call([make_cmd, 'clean_all'], verbose)
+                verbose_system_call([make_cmd, 'ocp_cython'], verbose)
+            else:
+                if cmake_builder is not None:
+                    cmake_builder.exec(code_export_dir, verbose)
+                else:
+                    verbose_system_call([make_cmd, 'clean_ocp_shared_lib'], verbose)
+                    verbose_system_call([make_cmd, 'ocp_shared_lib'], verbose)
 
 
     @classmethod
@@ -1730,17 +1729,19 @@ class AcadosOcpSolver:
         field = field_.encode('utf-8')
         stage = c_int(stage_)
 
-        dims = np.zeros((2,), dtype=np.intc, order="C")
-        dims_data = cast(dims.ctypes.data, POINTER(c_int))
+        dims_ = np.zeros((2,), dtype=np.intc, order="C")
+        dims_data = cast(dims_.ctypes.data, POINTER(c_int))
 
         self.__acados_lib.ocp_nlp_cost_dims_get_from_attr(self.nlp_config, \
             self.nlp_dims, self.nlp_out, stage_, field, dims_data)
 
         # vector-valued fields
         if field_ in ['yref', 'zl', 'zu', 'Zl', 'Zu', 'scaling']:
-            dims = dims[0]
+            dims = (dims_[0],)
+        else:
+            dims = tuple(dims_)
 
-        out = np.zeros(tuple(dims), dtype=np.float64, order="F")
+        out = np.zeros(dims, dtype=np.float64, order="F")
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
         self.__acados_lib.ocp_nlp_cost_model_get(self.nlp_config, \
@@ -1835,17 +1836,19 @@ class AcadosOcpSolver:
         field = field_.encode('utf-8')
         stage = c_int(stage_)
 
-        dims = np.zeros((2,), dtype=np.intc, order="C")
-        dims_data = cast(dims.ctypes.data, POINTER(c_int))
+        dims_ = np.zeros((2,), dtype=np.intc, order="C")
+        dims_data = cast(dims_.ctypes.data, POINTER(c_int))
 
         self.__acados_lib.ocp_nlp_cost_dims_get_from_attr(self.nlp_config, \
             self.nlp_dims, self.nlp_out, stage_, field, dims_data)
 
         # check whether field is vector-valued
         if field_ not in ['C', 'D']:
-            dims = dims[0]
+            dims = (dims_[0],)
+        else:
+            dims = tuple(dims_)
 
-        out = np.zeros(tuple(dims), dtype=np.float64, order="F")
+        out = np.zeros(dims, dtype=np.float64, order="F")
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
         self.__acados_lib.ocp_nlp_constraints_model_get(self.nlp_config, \
@@ -2068,16 +2071,18 @@ class AcadosOcpSolver:
         """
         Set options of the solver.
 
-            :param field: string, e.g. 'print_level', 'rti_phase', 'globalization_fixed_step_length', 'globalization_alpha_min', 'globalization_alpha_reduction',
-                                        'qp_warm_start', 'globalization_line_search_use_sufficient_descent',
-                                        'globalization_full_step_dual', 'globalization_use_SOC', 'qp_tol_stat',
-                                        'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min',
-                                        'qp_mu0', 'qp_print_level', 'globalization_funnel_init_increase_factor',
-                                        'globalization_funnel_init_upper_bound', 'globalization_funnel_sufficient_decrease_factor',
-                                        'globalization_funnel_kappa', 'globalization_funnel_fraction_switching_condition',
-                                        'globalization_funnel_initial_penalty_parameter', 'levenberg_marquardt',
-                                        'adaptive_levenberg_marquardt_lam', 'adaptive_levenberg_marquardt_mu_min',
-                                        'adaptive_levenberg_marquardt_mu0',
+            :param field: string, possible values are:
+                'print_level', 'rti_phase', 'nlp_solver_max_iter, 'as_rti_level',
+                'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp',
+                'qp_tol_stat', 'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min',
+                'qp_warm_start', 'qp_mu0', 'qp_print_level', 'warm_start_first_qp',
+                'globalization_fixed_step_length', 'globalization_alpha_min', 'globalization_alpha_reduction',
+                'globalization_line_search_use_sufficient_descent', 'globalization_full_step_dual', 'globalization_use_SOC',
+                'globalization_funnel_init_upper_bound', 'globalization_funnel_sufficient_decrease_factor',
+                'globalization_funnel_kappa', 'globalization_funnel_fraction_switching_condition',
+                'globalization_funnel_initial_penalty_parameter', 'globalization_funnel_init_increase_factor',
+                'levenberg_marquardt',
+                'adaptive_levenberg_marquardt_lam', 'adaptive_levenberg_marquardt_mu_min', 'adaptive_levenberg_marquardt_mu0',
 
             :param value: of type int, float, string, bool
 
@@ -2098,6 +2103,7 @@ class AcadosOcpSolver:
                       'warm_start_first_qp',
                       'as_rti_level',
                       'max_iter',
+                      'nlp_solver_max_iter',
                       'qp_warm_start',
                       'qp_print_level']
         double_fields = ['globalization_fixed_step_length',
@@ -2154,7 +2160,7 @@ class AcadosOcpSolver:
                 f' Possible values are {fields}.')
 
 
-        if field_ == 'max_iter' and value_ > self.__solver_options['nlp_solver_max_iter']:
+        if (field_ == 'max_iter' or field_ == 'nlp_solver_max_iter') and value_ > self.__solver_options['nlp_solver_max_iter']:
             raise Exception('AcadosOcpSolver.options_set() cannot increase nlp_solver_max_iter' \
                     f' above initial value {self.__nlp_solver_max_iter} (you have {value_})')
             return
