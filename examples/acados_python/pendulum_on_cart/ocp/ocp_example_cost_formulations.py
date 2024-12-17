@@ -296,19 +296,25 @@ def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', refor
         raise Exception(f"Cost value is not correct: rel_diff_cost = {rel_diff_cost:.2e} > {1e-6}.")
 
     # test getter
-    if ocp.cost.cost_type in ['LINEAR_LS', 'NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']:
+    if formulation_type == 'mocp':
+        cost = ocp.cost[0]
+        cost_e = ocp.cost[-1]
+    else:
+        cost = cost_e = ocp.cost
+
+    if cost.cost_type in ['LINEAR_LS', 'NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']:
         yref_ = ocp_solver.cost_get(1, 'yref')
-        assert np.allclose(yref_, ocp.cost.yref)
+        assert np.allclose(yref_, cost.yref)
 
         W_ = ocp_solver.cost_get(1, 'W')
-        assert np.allclose(W_, ocp.cost.W)
+        assert np.allclose(W_, cost.W)
 
-    if ocp.cost.cost_type_e in ['LINEAR_LS', 'NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']:
+    if cost_e.cost_type_e in ['LINEAR_LS', 'NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']:
         yref_e_ = ocp_solver.cost_get(ocp.solver_options.N_horizon, 'yref')
-        assert np.allclose(yref_e_, ocp.cost.yref_e)
+        assert np.allclose(yref_e_, cost_e.yref_e)
 
-        W_e_ = ocp_solver.cost_get(1, 'W_e')
-        assert np.allclose(W_e_, ocp.cost.W_e)
+        W_e_ = ocp_solver.cost_get(ocp.solver_options.N_horizon, 'W')
+        assert np.allclose(W_e_, cost_e.W_e)
 
     # plot results
     if plot:
