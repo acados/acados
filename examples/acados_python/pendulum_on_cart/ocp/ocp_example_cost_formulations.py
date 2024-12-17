@@ -295,6 +295,21 @@ def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', refor
     if rel_diff_cost > 1e-6:
         raise Exception(f"Cost value is not correct: rel_diff_cost = {rel_diff_cost:.2e} > {1e-6}.")
 
+    # test getter
+    if ocp.cost.cost_type in ['LINEAR_LS', 'NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']:
+        yref_ = ocp_solver.cost_get(1, 'yref')
+        assert np.allclose(yref_, ocp.cost.yref)
+
+        W_ = ocp_solver.cost_get(1, 'W')
+        assert np.allclose(W_, ocp.cost.W)
+
+    if ocp.cost.cost_type_e in ['LINEAR_LS', 'NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']:
+        yref_e_ = ocp_solver.cost_get(ocp.solver_options.N_horizon, 'yref')
+        assert np.allclose(yref_e_, ocp.cost.yref_e)
+
+        W_e_ = ocp_solver.cost_get(1, 'W_e')
+        assert np.allclose(W_e_, ocp.cost.W_e)
+
     # plot results
     if plot:
         plot_pendulum(np.linspace(0, T_HORIZON, N+1), FMAX, simU, simX, latexify=False)
