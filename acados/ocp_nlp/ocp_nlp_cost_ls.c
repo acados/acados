@@ -369,6 +369,82 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
 }
 
 
+int ocp_nlp_cost_ls_model_get(void *config_, void *dims_, void *model_,
+                                 const char *field, void *value_)
+{
+    int status = ACADOS_SUCCESS;
+
+    if ( !config_ || !dims_ || !model_ || !value_ )
+    {
+        printf("ocp_nlp_cost_ls_model_set: got NULL pointer, setting field %s\n", field);
+        printf("config %p, dims %p model %p, value %p \n", config_, dims_, model_, value_);
+        exit(1);
+    }
+
+    ocp_nlp_cost_ls_dims *dims = dims_;
+    ocp_nlp_cost_ls_model *model = model_;
+
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int ny = dims->ny;
+    int ns = dims->ns;
+    int nz = dims->nz;
+
+    double * value = (double *) value_;
+
+    if (!strcmp(field, "W"))
+    {
+        blasfeo_unpack_dmat(ny, ny, &model->W, 0, 0, value, ny);
+    }
+    else if (!strcmp(field, "Cyt"))
+    {
+        blasfeo_unpack_dmat(nx+nu, ny,  &model->Cyt, 0, 0, value, nx+nu);
+    }
+    else if (!strcmp(field, "Vx"))
+    {
+        blasfeo_unpack_tran_dmat(nx, ny, &model->Cyt, nu, 0, value, ny);
+    }
+    else if (!strcmp(field, "Vu"))
+    {
+        blasfeo_unpack_tran_dmat(nu, ny, &model->Cyt, 0, 0, value, ny);
+    }
+    // TODO(andrea): inconsistent order x, u, z. Make x, z, u later!
+    else if (!strcmp(field, "Vz"))
+    {
+        blasfeo_unpack_dmat(ny, nz, &model->Vz, 0, 0, value, ny);
+    }
+    else if (!strcmp(field, "y_ref") || !strcmp(field, "yref"))
+    {
+        blasfeo_unpack_dvec(ny, &model->y_ref, 0, value, 1);
+    }
+    else if (!strcmp(field, "Zl"))
+    {
+        blasfeo_unpack_dvec(ns, &model->Z, 0, value, 1);
+    }
+    else if (!strcmp(field, "Zu"))
+    {
+        blasfeo_unpack_dvec(ns, &model->Z, ns, value, 1);
+    }
+    else if (!strcmp(field, "zl"))
+    {
+        blasfeo_unpack_dvec(ns, &model->z, 0, value, 1);
+    }
+    else if (!strcmp(field, "zu"))
+    {
+        blasfeo_unpack_dvec(ns, &model->z, ns, value, 1);
+    }
+    else if (!strcmp(field, "scaling"))
+    {
+        value[0] = model->scaling;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_cost_ls_model_get\n", field);
+        exit(1);
+    }
+    return status;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                   options                                  //
@@ -1029,6 +1105,7 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_, int stage)
     config->model_calculate_size = &ocp_nlp_cost_ls_model_calculate_size;
     config->model_assign = &ocp_nlp_cost_ls_model_assign;
     config->model_set = &ocp_nlp_cost_ls_model_set;
+    config->model_get = &ocp_nlp_cost_ls_model_get;
     config->opts_calculate_size = &ocp_nlp_cost_ls_opts_calculate_size;
     config->opts_assign = &ocp_nlp_cost_ls_opts_assign;
     config->opts_initialize_default = &ocp_nlp_cost_ls_opts_initialize_default;

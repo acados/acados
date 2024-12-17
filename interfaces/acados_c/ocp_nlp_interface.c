@@ -505,7 +505,15 @@ int ocp_nlp_cost_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 }
 
+int ocp_nlp_cost_model_get(ocp_nlp_config *config, ocp_nlp_dims *dims,
+        ocp_nlp_in *in, int stage, const char *field, void *value)
+{
+    ocp_nlp_cost_config *cost_config = config->cost[stage];
 
+    printf("ocp_nlp_cost_model_get\n");
+    return cost_config->model_get(cost_config, dims->cost[stage], in->cost[stage], field, value);
+
+}
 
 int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
         ocp_nlp_in *in, int stage, const char *field, void *value)
@@ -1073,21 +1081,24 @@ void ocp_nlp_cost_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
         config->cost[stage]->dims_get(config->cost[stage], dims->cost[stage],
                                             "ny", &dims_out[0]);
     }
-    else if (!strcmp(field, "Zl"))
+    else if (!strcmp(field, "Zl") || !strcmp(field, "Zu") ||
+             !strcmp(field, "zl") || !strcmp(field, "zu"))
     {
         dims_out[0] = dims->ns[stage];
     }
-    else if (!strcmp(field, "Zu"))
+    else if (!strcmp(field, "lg") || !strcmp(field, "ug"))
     {
-        dims_out[0] = dims->ns[stage];
+        dims_out[0] = dims->ng[stage];
     }
-    else if (!strcmp(field, "zl"))
+    else if (!strcmp(field, "lbx") || !strcmp(field, "ubx") || !strcmp(field, "lbu") || !strcmp(field, "ubu"))
     {
-        dims_out[0] = dims->ns[stage];
+        // TODO is this correct if condensing is used?
+        ocp_nlp_qp_dims_get_from_attr(config, dims, out, stage, field, dims_out);
     }
-    else if (!strcmp(field, "zu"))
+    else if (!strcmp(field, "lh") || !strcmp(field, "uh") || !strcmp(field, "uphi"))
     {
-        dims_out[0] = dims->ns[stage];
+        // TODO here we should also check that its the correct constraint module
+        dims_out[0] = dims->ni_nl[stage];
     }
     // matrices
     else if (!strcmp(field, "W"))
@@ -1120,6 +1131,16 @@ void ocp_nlp_cost_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
     {
         dims_out[0] = dims->nx[stage] + dims->nu[stage];
         dims_out[1] = dims->nx[stage] + dims->nu[stage];
+    }
+    else if (!strcmp(field, "C"))
+    {
+        dims_out[0] = dims->ng[stage];
+        dims_out[1] = dims->nx[stage];
+    }
+    else if (!strcmp(field, "D"))
+    {
+        dims_out[0] = dims->ng[stage];
+        dims_out[1] = dims->nu[stage];
     }
     else if (!strcmp(field, "scaling"))
     {
