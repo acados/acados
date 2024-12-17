@@ -185,6 +185,14 @@ classdef GenerateContext < handle
             global_data_expr_list = cellfun(@(pair) pair{2}, precompute_pairs, 'UniformOutput', false);
             self.global_data_expr = cse(vertcat(global_data_expr_list{:}));
 
+            % Assert length match
+            assert(length(self.global_data_expr) == length(self.global_data_sym), ...
+                   sprintf('Length mismatch: %d != %d', length(self.global_data_expr), length(self.global_data_sym)));
+
+            if length(self.global_data_expr) == 0
+                error("The model contains global parameters, but no CasADi function depends on them. This is currently not supported. Please remove p_global from the model definition.")
+            end
+
             % Add global data as input to all functions
             for i = 1:length(self.function_input_output_pairs)
                 self.function_input_output_pairs{i}{1}{end+1} = self.global_data_sym;
@@ -197,9 +205,6 @@ classdef GenerateContext < handle
             % Add function definition
             self.add_function_definition(fun_name, {self.p_global}, {self.global_data_expr}, output_dir);
 
-            % Assert length match
-            assert(length(self.global_data_expr) == length(self.global_data_sym), ...
-                   sprintf('Length mismatch: %d != %d', length(self.global_data_expr), length(self.global_data_sym)));
         end
 
 

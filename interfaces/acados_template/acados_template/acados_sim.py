@@ -29,11 +29,19 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import os
+import os, json
 import numpy as np
+from copy import deepcopy
 from .acados_model import AcadosModel
 from .acados_dims import AcadosSimDims
-from .utils import get_acados_path, get_shared_lib_ext
+from .builders import CMakeBuilder
+from .utils import (get_acados_path, get_shared_lib_ext, format_class_dict, check_casadi_version,
+                    make_object_json_dumpable, render_template)
+from .casadi_function_generation import (
+                    GenerateContext,
+                    generate_c_code_explicit_ode,
+                    generate_c_code_gnsf,
+                    generate_c_code_implicit_ode)
 
 class AcadosSimOptions:
     """
@@ -313,14 +321,91 @@ class AcadosSim:
                             f'Expected numpy array, got {type(parameter_values)}.')
 
     def make_consistent(self):
-        dims = self.dims
-        model = self.model
-        model.make_consistent(dims)
+        self.model.make_consistent(self.dims)
 
-        if self.parameter_values.shape[0] != dims.np:
+        if self.parameter_values.shape[0] != self.dims.np:
             raise Exception('inconsistent dimension np, regarding model.p and parameter_values.' + \
-                f'\nGot np = {dims.np}, acados_sim.parameter_values.shape = {self.parameter_values.shape[0]}\n')
+                f'\nGot np = {self.dims.np}, acados_sim.parameter_values.shape = {self.parameter_values.shape[0]}\n')
 
         # check required arguments are given
         if self.solver_options.T is None:
             raise Exception('acados_sim.solver_options.T is None, should be provided.')
+
+
+    def to_dict(self) -> dict:
+        # Copy input sim object dictionary
+        sim_dict = dict(deepcopy(self).__dict__)
+
+        # convert acados classes to dicts
+        for key, v in sim_dict.items():
+            # skip non dict attributes
+            if isinstance(v, (AcadosSim, AcadosSimDims, AcadosSimOptions, AcadosModel)):
+                sim_dict[key]=dict(getattr(self, key).__dict__)
+
+        return format_class_dict(sim_dict)
+
+
+    def dump_to_json(self, json_file='acados_sim.json') -> None:
+        with open(json_file, 'w') as f:
+            json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
+
+
+    def render_templates(self, json_file, cmake_options: CMakeBuilder = None):
+        # setting up loader and environment
+        json_path = os.path.join(os.getcwd(), json_file)
+
+        if not os.path.exists(json_path):
+            raise Exception(f"{json_path} not found!")
+
+        template_list = [
+            ('acados_sim_solver.in.c', f'acados_sim_solver_{self.model.name}.c'),
+            ('acados_sim_solver.in.h', f'acados_sim_solver_{self.model.name}.h'),
+            ('acados_sim_solver.in.pxd', 'acados_sim_solver.pxd'),
+            ('main_sim.in.c', f'main_sim_{self.model.name}.c'),
+        ]
+
+        # Builder
+        if cmake_options is not None:
+            template_list.append(('CMakeLists.in.txt', 'CMakeLists.txt'))
+        else:
+            template_list.append(('Makefile.in', 'Makefile'))
+
+        # Render templates
+        for (in_file, out_file) in template_list:
+            render_template(in_file, out_file, self.code_export_directory, json_path)
+
+        # folder model
+        model_dir = os.path.join(self.code_export_directory, self.model.name + '_model')
+
+        in_file = 'model.in.h'
+        out_file = f'{self.model.name}_model.h'
+        render_template(in_file, out_file, model_dir, json_path)
+
+
+    def generate_external_functions(self, ):
+
+        integrator_type = self.solver_options.integrator_type
+
+        opts = dict(generate_hess = self.solver_options.sens_hess,
+                    code_export_directory = self.code_export_directory)
+
+        # create code_export_dir, model_dir
+        code_export_dir = self.code_export_directory
+        opts['code_export_directory'] = code_export_dir
+        model_dir = os.path.join(code_export_dir, self.model.name + '_model')
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir)
+
+        context = GenerateContext(self.model.p_global, self.model.name, opts)
+
+        # generate external functions
+        check_casadi_version()
+        if integrator_type == 'ERK':
+            generate_c_code_explicit_ode(context, self.model, model_dir)
+        elif integrator_type == 'IRK':
+            generate_c_code_implicit_ode(context, self.model, model_dir)
+        elif integrator_type == 'GNSF':
+            generate_c_code_gnsf(context, self.model, model_dir)
+
+        context.finalize()
+        self.__external_function_files_model = context.get_external_function_file_list(ocp_specific=False)
