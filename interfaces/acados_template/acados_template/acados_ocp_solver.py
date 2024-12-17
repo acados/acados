@@ -192,14 +192,13 @@ class AcadosOcpSolver:
                     acados_ocp_json['solver_options']['nlp_solver_type'],
                     acados_ocp_json['dims']['N'])
 
-    def get_option_save_p_global(self) -> bool:
-        """Returns the option save_p_global. This option can only be set in the constructor. """
+    @property
+    def save_p_global(self) -> bool:
         return self.__save_p_global
 
     def __init__(self, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file=None, simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None, verbose=True, save_p_global=False):
 
         self.solver_created = False
-        self.tmp = False
         self.__save_p_global = save_p_global
         if save_p_global:
             self.__p_global_values = acados_ocp.p_global_values
@@ -1004,7 +1003,7 @@ class AcadosOcpSolver:
             :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'p_global']
 
             .. note:: The parameter 'p_global' has no stage-wise structure and is processed in a memory saving manner by default. \n
-                  In order to read the 'p_global' parameter, the option 'save_p_global' must be set upon instantiation. \n
+                  In order to read the 'p_global' parameter, the option 'save_p_global' must be set to 'True' upon instantiation. \n
         """
         if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'p_global']:
             raise Exception(f'AcadosOcpSolver.get_flat(field={field_}): \'{field_}\' is an invalid argument.')
