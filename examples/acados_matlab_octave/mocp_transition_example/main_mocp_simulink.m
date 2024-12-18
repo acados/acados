@@ -51,9 +51,9 @@ ocp.set_phase(phase_2, 2);
 
 phase_3 = formulate_single_integrator_ocp(settings);
 % add dummy constraints to test Simulink
-phase_3.model.con_h_expr = phase_3.model.x;
-phase_3.constraints.lh = -100;
-phase_3.constraints.uh = 100;
+phase_3.model.con_h_expr = [phase_3.model.x; phase_3.model.x^2];
+phase_3.constraints.lh = [-100; -200];
+phase_3.constraints.uh = [100; 200];
 
 phase_3.constraints.idxbx = [0];
 phase_3.constraints.lbx = -200;
