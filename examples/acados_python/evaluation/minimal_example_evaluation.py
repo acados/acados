@@ -34,7 +34,7 @@ sys.path.insert(0, '../getting_started')
 
 from matplotlib import pyplot as plt
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver, AcadosSim
 from acados_template.mpc_utils import AcadosCostConstraintEvaluator
 from pendulum_model import export_pendulum_ode_model
 from utils_eval import plot_pendulum_eval
@@ -46,26 +46,31 @@ from casadi import vertcat, SX
 # Define constraints to make evaluation more challenging
 constraint_par = {'omega_dot_min_1': -4,
                   'omega_dot_min_2': -6,
+                  'omega_dot_max_1': 1.,
+                  'omega_dot_max_2': 2.,
                   'iter_omega_change': 6,
                   'v_max': 5,
                   'F_max': 80}
 
 
-def setup(x0, N_horizon, Tf, RTI=False, parametric_constraints=False):
+def setup(x0, N_horizon, Tf, td, RTI=False, parametric_constraints=False):
     # create ocp object to formulate the OCP
     global constraint_par
     ocp = AcadosOcp()
 
     # set model
-    model = export_pendulum_ode_model()
-    omega_dot_min = SX.sym('omega_dot_min')
+    ocp.model = model = export_pendulum_ode_model()
 
-    ocp.model = model
     if parametric_constraints:
+        omega_dot_min = SX.sym('omega_dot_min')
+        omega_dot_max = SX.sym('omega_dot_max')
+
         ocp.model.p = omega_dot_min
-        ocp.model.con_h_expr = omega_dot_min - model.x[3]
-        omega_dot_min_1 = constraint_par['omega_dot_min_1']
-        ocp.parameter_values = np.array([omega_dot_min_1])
+        ocp.model.p_global = omega_dot_max
+        ocp.model.con_h_expr = vertcat(omega_dot_min - model.x[3],  # assuming ub=0, lb=-inf
+                                       model.x[3] - omega_dot_max)  # assuming ub=0, lb=-inf
+        ocp.parameter_values = np.array([constraint_par['omega_dot_min_1']])
+        ocp.p_global_values = np.array([constraint_par['omega_dot_max_1']])
 
     nx = model.x.rows()
     nu = model.u.rows()
@@ -104,26 +109,21 @@ def setup(x0, N_horizon, Tf, RTI=False, parametric_constraints=False):
     ocp.constraints.usbx = np.zeros((1,))
 
     if parametric_constraints:
-        ocp.constraints.uh = np.array([0])
-        ocp.constraints.lh = np.array([-10])
-        ocp.constraints.idxsh = np.array([0])
-        ocp.cost.zl = 2e3 * np.ones((2,))
-        ocp.cost.Zl = 5e3 * np.ones((2,))
+        ocp.constraints.uh = np.array([0, 0])
+        ocp.constraints.lh = np.array([-10, -10])
+        ocp.constraints.idxsh = np.array([0, 1])
+        ocp.cost.zu = ocp.cost.zl = 2e3 * np.ones((3,))
+        ocp.cost.Zu = ocp.cost.Zl = 5e3 * np.ones((3,))
     else:
-        ocp.cost.zl = 2e3 * np.ones((1,))
-        ocp.cost.Zl = 5e3 * np.ones((1,))
-
-    ocp.cost.zu = ocp.cost.zl
-    ocp.cost.Zu = ocp.cost.Zl
+        ocp.cost.zu = ocp.cost.zl = 2e3 * np.ones((1,))
+        ocp.cost.Zu = ocp.cost.Zl = 5e3 * np.ones((1,))
 
     ocp.constraints.idxsbx_e = np.array([0])
     ocp.constraints.lsbx_e = np.zeros((1,))
     ocp.constraints.usbx_e = np.zeros((1,))
 
-    ocp.cost.zl_e = 1e3 * np.ones((1,))
-    ocp.cost.Zl_e = 1e3 * np.ones((1,))
-    ocp.cost.zu_e = ocp.cost.zl_e
-    ocp.cost.Zu_e = ocp.cost.Zl_e
+    ocp.cost.zu_e = ocp.cost.zl_e = 1e3 * np.ones((1,))
+    ocp.cost.Zu_e = ocp.cost.Zl_e = 1e3 * np.ones((1,))
 
     ocp.constraints.x0 = x0
     ocp.constraints.idxbu = np.array([0])
@@ -150,7 +150,19 @@ def setup(x0, N_horizon, Tf, RTI=False, parametric_constraints=False):
     acados_ocp_solver = AcadosOcpSolver(ocp, json_file=solver_json, save_p_global=True)
 
     # create an integrator with the same settings as used in the OCP solver.
-    acados_integrator = AcadosSimSolver(ocp, json_file=solver_json)
+    # attention, with p_global, integrator cannot be built from OCP
+    sim = AcadosSim()
+    sim.model = export_pendulum_ode_model()
+
+    # set simulation time
+    sim.solver_options.T = td
+    # set options
+    sim.solver_options.integrator_type = 'IRK'
+    sim.solver_options.num_stages = 3
+    sim.solver_options.num_steps = 3
+    sim.solver_options.newton_iter = 3  # for implicit integrator
+    sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
+    acados_integrator = AcadosSimSolver(sim)
 
     acados_evaluator = AcadosCostConstraintEvaluator(ocp, with_parametric_bounds=False)
 
@@ -180,7 +192,11 @@ def main(use_RTI: bool = False, parametric_constraints: bool = True, plot_result
     N_horizon = 40
     td = Tf / N_horizon
 
-    ocp_solver, integrator, evaluator = setup(x0, N_horizon, Tf, use_RTI, parametric_constraints=parametric_constraints)
+    ocp_solver, integrator, evaluator = setup(
+        x0, N_horizon, Tf,
+        td=Tf / N_horizon,
+        RTI=use_RTI,
+        parametric_constraints=parametric_constraints)
 
     nx = ocp_solver.acados_ocp.dims.nx
     nu = ocp_solver.acados_ocp.dims.nu
@@ -207,6 +223,7 @@ def main(use_RTI: bool = False, parametric_constraints: bool = True, plot_result
             new_omega_dot_min = np.array([constraint_par['omega_dot_min_2']])
             for j in range(ocp_solver.acados_ocp.dims.N):
                 ocp_solver.set(j, "p", new_omega_dot_min)
+            ocp_solver.set_p_global_and_precompute_dependencies(np.array([constraint_par['omega_dot_max_2']]))
             evaluator.update_all(ocp_solver)
 
         if use_RTI:
@@ -227,7 +244,6 @@ def main(use_RTI: bool = False, parametric_constraints: bool = True, plot_result
         else:
             # solve ocp and get next control input
             simU[i, :] = ocp_solver.solve_for_x0(x0_bar=simX[i, :])
-
 
         # evaluate the cost of the full trajectory
         solution_obj = ocp_solver.store_iterate_to_obj()
@@ -263,10 +279,15 @@ def main(use_RTI: bool = False, parametric_constraints: bool = True, plot_result
     axes[2].axhline(-constraint_par['v_max'], alpha=0.7, color='tab:red')
 
     if parametric_constraints:
-        constraint_omega_dot = np.empty(Nsim)
-        constraint_omega_dot[:constraint_par['iter_omega_change'] + 1] = constraint_par['omega_dot_min_1']
-        constraint_omega_dot[constraint_par['iter_omega_change'] + 1:] = constraint_par['omega_dot_min_2']
-        axes[3].plot(np.linspace(0, td * Nsim, Nsim), constraint_omega_dot, alpha=0.7, color='tab:red')
+        constr_omega_dot_min = np.empty(Nsim)
+        constr_omega_dot_min[:constraint_par['iter_omega_change'] + 1] = constraint_par['omega_dot_min_1']
+        constr_omega_dot_min[constraint_par['iter_omega_change'] + 1:] = constraint_par['omega_dot_min_2']
+        constr_omega_dot_max = np.empty(Nsim)
+        constr_omega_dot_max[:constraint_par['iter_omega_change'] + 1] = constraint_par['omega_dot_max_1']
+        constr_omega_dot_max[constraint_par['iter_omega_change'] + 1:] = constraint_par['omega_dot_max_2']
+        axes[3].plot(np.linspace(0, td * Nsim, Nsim), constr_omega_dot_min, alpha=0.7, color='tab:red')
+        axes[3].plot(np.linspace(0, td * Nsim, Nsim), constr_omega_dot_max, alpha=0.7, color='tab:red')
+
 
     axes[-1].set_ylim([-1.2 * constraint_par['F_max'], 1.2 * constraint_par['F_max']])
     axes[-1].axhline(constraint_par['F_max'], alpha=0.7, color='tab:red')
@@ -275,7 +296,7 @@ def main(use_RTI: bool = False, parametric_constraints: bool = True, plot_result
 
 
 if __name__ == '__main__':
-    for use_RTI in [True, False]:
-        for parametric_constraints in [True, False]:
-            print(f'RTI: {use_RTI}, parametric_constraints: {parametric_constraints}\n')
-            main(use_RTI=use_RTI, parametric_constraints=parametric_constraints, plot_results=False)
+
+    for parametric_constraints in [False, True]:
+        print(f'Parametric_constraints: {parametric_constraints}\n')
+        main(use_RTI=True, parametric_constraints=parametric_constraints, plot_results=False)
