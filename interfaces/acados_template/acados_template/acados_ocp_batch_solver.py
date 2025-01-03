@@ -39,9 +39,9 @@ import time
 
 class AcadosOcpBatchSolver():
     """
-    Batch Integrator for parallel integration.
+    Batch OCP solver for parallel solves.
 
-        :param sim: type :py:class:`~acados_template.acados_sim.AcadosOcp`
+        :param ocp: type :py:class:`~acados_template.acados_ocp.AcadosOcp`
         :param N_batch: batch size, positive integer
         :param json_file: Default: 'acados_ocp.json'
         :param build: Flag indicating whether solver should be (re)compiled. If False an attempt is made to load an already compiled shared library for the solver. Default: True
