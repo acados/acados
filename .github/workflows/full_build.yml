@@ -188,6 +188,14 @@ jobs:
         cd ${{runner.workspace}}/acados/examples/acados_python/furuta_pendulum
         python main_closed_loop.py
 
+    - name: Python evaluator test
+      working-directory: ${{runner.workspace}}/acados/build
+      shell: bash
+      run: |
+        source ${{runner.workspace}}/acados/acadosenv/bin/activate
+        cd ${{runner.workspace}}/acados/examples/acados_python/evaluation
+        python minimal_example_evaluation.py
+
   MATLAB_test:
     needs: core_build
     runs-on: ubuntu-22.04

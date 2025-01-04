@@ -26,19 +26,21 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.;
-#
+
+from typing import Dict
 import matplotlib.pyplot as plt
 import numpy as np
 from acados_template import latexify_plot
 
 
-def plot_pendulum(t, u_max, U, X_true, latexify=False, plt_show=True, time_label='$t$', x_labels=None, u_labels=None):
+def plot_pendulum_eval(t, U, X_true, eval: Dict, latexify=False, time_label='$t$', x_labels=None, u_labels=None):
     """
+    Plots pendulum with evaluation of cost function.
     Params:
         t: time values of the discretization
-        u_max: maximum absolute value of u
         U: arrray with shape (N_sim-1, nu) or (N_sim, nu)
         X_true: arrray with shape (N_sim, nx)
+        eval: evaluation dictionary
         latexify: latex style plots
     """
 
@@ -46,7 +48,7 @@ def plot_pendulum(t, u_max, U, X_true, latexify=False, plt_show=True, time_label
         latexify_plot()
 
     nx = X_true.shape[1]
-    fig, axes = plt.subplots(nx+1, 1, sharex=True)
+    fig, axes = plt.subplots(nx + 2, 1, sharex=True)
 
     for i in range(nx):
         axes[i].plot(t, X_true[:, i])
@@ -56,6 +58,12 @@ def plot_pendulum(t, u_max, U, X_true, latexify=False, plt_show=True, time_label
         else:
             axes[i].set_ylabel(f'$x_{i}$')
 
+    axes[-2].plot(t[:-1], eval['cost_without_slacks'], label='cost w/o slacks')
+    axes[-2].plot(t[:-1], eval['cost'], label='cost with slacks')
+    axes[-2].grid()
+    axes[-2].legend()
+    axes[-2].set_ylabel('cost')
+
     axes[-1].step(t, np.append([U[0]], U))
 
     if u_labels is not None:
@@ -63,9 +71,6 @@ def plot_pendulum(t, u_max, U, X_true, latexify=False, plt_show=True, time_label
     else:
         axes[-1].set_ylabel('$u$')
 
-    axes[-1].hlines(u_max, t[0], t[-1], linestyles='dashed', alpha=0.7)
-    axes[-1].hlines(-u_max, t[0], t[-1], linestyles='dashed', alpha=0.7)
-    axes[-1].set_ylim([-1.2*u_max, 1.2*u_max])
     axes[-1].set_xlim(t[0], t[-1])
     axes[-1].set_xlabel(time_label)
     axes[-1].grid()
@@ -74,5 +79,4 @@ def plot_pendulum(t, u_max, U, X_true, latexify=False, plt_show=True, time_label
 
     fig.align_ylabels()
 
-    if plt_show:
-        plt.show()
+    return fig, axes
