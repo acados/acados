@@ -392,20 +392,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         if (nrhs == min_nrhs)
         {
-            acados_size = 0;
-            for (int ii=0; ii<N; ii++)
-            {
-                tmp_int = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "u");
-                acados_size += tmp_int;
-            }
+            acados_size = ocp_nlp_dims_get_total_from_attr(config, dims, "u");
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-            offset = 0;
-            for (int ii=0; ii<N; ii++)
-            {
-                ocp_nlp_out_set(config, dims, out, ii, "u", value+offset);
-                tmp_int = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "u");
-                offset += tmp_int;
-            }
+            ocp_nlp_set_all(solver, in, out, "u", value);
         }
         else // (nrhs == min_nrhs + 1)
         {
@@ -516,20 +505,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         if (nrhs == min_nrhs)
         {
-            acados_size = 0;
-            for (int ii=0; ii<N; ii++)
-            {
-                tmp_int = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "pi");
-                acados_size += tmp_int;
-            }
+            acados_size = ocp_nlp_dims_get_total_from_attr(config, dims, "pi");
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-            offset = 0;
-            for (int ii=0; ii<N; ii++)
-            {
-                ocp_nlp_out_set(config, dims, out, ii, "pi", value+offset);
-                tmp_int = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "pi");
-                offset += tmp_int;
-            }
+            ocp_nlp_set_all(solver, in, out, "pi", value);
         }
         else // (nrhs == min_nrhs + 1)
         {
@@ -542,7 +520,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         if (nrhs == min_nrhs)
         {
-            MEX_SETTER_NO_ALL_STAGES_SUPPORT(fun_name, field)
+            acados_size = ocp_nlp_dims_get_total_from_attr(config, dims, "lam");
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            ocp_nlp_set_all(solver, in, out, "lam", value);
         }
         else //(nrhs == min_nrhs+1)
         {
@@ -555,7 +535,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         if (nrhs == min_nrhs)
         {
-            MEX_SETTER_NO_ALL_STAGES_SUPPORT(fun_name, field)
+            acados_size = ocp_nlp_dims_get_total_from_attr(config, dims, "sl");
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            ocp_nlp_set_all(solver, in, out, "sl", value);
         }
         else //(nrhs == min_nrhs+1)
         {
@@ -568,7 +550,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         if (nrhs == min_nrhs)
         {
-            MEX_SETTER_NO_ALL_STAGES_SUPPORT(fun_name, field)
+            acados_size = ocp_nlp_dims_get_total_from_attr(config, dims, "su");
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            ocp_nlp_set_all(solver, in, out, "su", value);
         }
         else //(nrhs == min_nrhs+1)
         {
@@ -581,12 +565,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         if (nrhs == min_nrhs) // all stages
         {
-            for (int ii=0; ii<=N; ii++)
-            {
-                acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "p");
-                MEX_DIM_CHECK_VEC_STAGE(fun_name, field, ii, matlab_size, acados_size)
-                {{ name }}_acados_update_params(capsule, ii, value, matlab_size);
-            }
+            acados_size = ocp_nlp_dims_get_total_from_attr(config, dims, "p");
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            ocp_nlp_set_all(solver, in, out, "p", value);
         }
         else if (nrhs == min_nrhs+1) // one stage
         {
