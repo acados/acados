@@ -48,7 +48,8 @@ ocp_opts.set('nlp_solver_max_iter', 0);
 ocp_solver = acados_ocp(ocp_model, ocp_opts, simulink_opts);
 
 %% test parameter setters and getters;
-ocp_solver.set('p', zeros(np, 1));
+ocp_solver.set('p', zeros(np, 1)); % TODO: this behaviour is only supported for p!
+ocp_solver.set('p', zeros(np, N+1));
 
 p_values = {ones(np, 1), (1:np)'};
 
