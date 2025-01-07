@@ -48,6 +48,48 @@
  * helper functions
  ************************************************/
 
+#if 1
+static void print_csc_as_dns(ClarabelCscMatrix *M)
+{
+    int i, j = 0; // Predefine row index and column index
+    int idx;
+
+    // Initialize matrix of zeros
+    double *A = (double *) calloc(M->m * M->n, sizeof(double));
+    for (int ii=0; ii<M->m*M->n; ii++)
+        A[ii] = 1e30;
+
+    // Allocate elements
+    for (idx = 0; idx < M->colptr[M->n]; idx++)
+    {
+        // Get row index i (starting from 1)
+        i = M->rowval[idx];
+
+        // Get column index j (increase if necessary) (starting from 1)
+        while (M->colptr[j + 1] <= idx) j++;
+
+        // Assign values to A
+        A[j * (M->m) + i] = M->nzval[idx];
+    }
+
+    for (i = 0; i < M->m; i++)
+    {
+        for (j = 0; j < M->n; j++)
+        {
+            if (A[j * (M->m) + i]==1e30)
+                printf("  *      ");
+            else
+                printf("%8.4f ", A[j * (M->m) + i]);
+        }
+        printf("\n");
+    }
+
+    free(A);
+}
+#endif
+
+
+
 
 
 
@@ -101,13 +143,13 @@ void print_csc_matrix(ClarabelCscMatrix *M, const char *name)
     printf("%s :\n", name);
 
     for (j = 0; j < M->n; j++) {
-        row_start = M->rowval[j];
-        row_stop  = M->rowval[j + 1];
+        row_start = M->colptr[j];
+        row_stop  = M->colptr[j + 1];
 
         if (row_start == row_stop) continue;
         else {
         for (i = row_start; i < row_stop; i++) {
-            printf("\t[%3u,%3u] = %.3g\n", (int)M->colptr[i], (int)j, M->nzval[k++]);
+            printf("\t[%3u,%3u] = %.3g\n", (int)M->rowval[i], (int)j, M->nzval[k++]);
         }
         }
     }
@@ -120,7 +162,7 @@ static int acados_clarabel_num_vars(ocp_qp_dims *dims)
 
     for (int ii = 0; ii <= dims->N; ii++)
     {
-        n += dims->nx[ii] + dims->nu[ii];
+        n += dims->nx[ii] + dims->nu[ii] + 2*dims->ns[ii];
     }
 
     return n;
@@ -132,15 +174,20 @@ static int acados_clarabel_num_constr(ocp_qp_dims *dims)
 {
     int m = 0;
 
+	//printf("\ndims N %d\n", dims->N);
+
     for (int ii = 0; ii <= dims->N; ii++)
     {
+	//printf("dims[%d] nx %d nu %d nb %d ng %d ns %d\n", ii, dims->nx[ii], dims->nu[ii], dims->nb[ii], dims->ng[ii], dims->ns[ii]);
+
         m += 2 * dims->nb[ii];
         m += 2 * dims->ng[ii];
+        m += 2 * dims->ns[ii];
 
         // equalities
         if (ii < dims->N)
         {
-            m += dims->nx[ii + 1];
+            m += dims->nx[ii+1];
         }
     }
 
@@ -153,11 +200,14 @@ static int acados_clarabel_nnzmax_P(const ocp_qp_dims *dims)
 {
     int nnz = 0;
 
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+	int *ns = dims->ns;
+
     for (int ii = 0; ii <= dims->N; ii++)
     {
-        nnz += dims->nx[ii] * dims->nx[ii];      // Q
-        nnz += dims->nu[ii] * dims->nu[ii];      // R
-        nnz += 2 * dims->nx[ii] * dims->nu[ii];  // S
+        nnz += (nu[ii]+nx[ii])*(nu[ii]+nx[ii]+1)/2; // triu(RSQ)
+		nnz += 2*ns[ii]; // Z
     }
 
     return nnz;
@@ -167,21 +217,30 @@ static int acados_clarabel_nnzmax_P(const ocp_qp_dims *dims)
 
 static int acados_clarabel_nnzmax_A(const ocp_qp_dims *dims)
 {
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *nb = dims->nb;
+    int *ng = dims->ng;
+    int *ns = dims->ns;
+
     int nnz = 0;
 
-    for (int ii = 0; ii <= dims->N; ii++)
+    for (int ii = 0; ii <= N; ii++)
     {
         // inequality constraints
-        nnz += 2 * dims->nb[ii];                 // eye
-        nnz += 2 * dims->ng[ii] * dims->nx[ii];  // C
-        nnz += 2 * dims->ng[ii] * dims->nu[ii];  // D
+        nnz += 2*nb[ii];         // eye of box constraints
+        nnz += 2*ng[ii]*nx[ii];  // C
+        nnz += 2*ng[ii]*nu[ii];  // D
+        nnz += 2*(nb[ii]+ng[ii])*2*ns[ii]; // soft constraints at worst case, when idxs_rev encoding is used. Typically just 2*ns
+        nnz += 2*ns[ii]; // eye of slacks nonnegativity constraints
 
-        // equality constraints
+        // dynamics equality constraints
         if (ii < dims->N)
         {
-            nnz += dims->nx[ii + 1] * dims->nx[ii];  // A
-            nnz += dims->nx[ii + 1] * dims->nu[ii];  // B
-            nnz += dims->nx[ii + 1];                 // eye
+            nnz += nx[ii+1] * nx[ii];  // A
+            nnz += nx[ii+1] * nu[ii];  // B
+            nnz += nx[ii+1];           // eye
         }
     }
 
@@ -190,195 +249,317 @@ static int acados_clarabel_nnzmax_A(const ocp_qp_dims *dims)
 
 
 
-// static void update_gradient(const ocp_qp_in *in, ocp_qp_clarabel_memory *mem)
-// {
-//     int kk, nn = 0;
-//     ocp_qp_dims *dims = in->dim;
+static void update_gradient(const ocp_qp_in *in, ocp_qp_clarabel_memory *mem)
+{
+    ocp_qp_dims *dims = in->dim;
 
-//     for (kk = 0; kk <= dims->N; kk++)
-//     {
-//         blasfeo_unpack_dvec(dims->nu[kk] + dims->nx[kk], in->rqz + kk, 0, &mem->q[nn], 1);
-//         nn += dims->nu[kk] + dims->nx[kk];
-//     }
-// }
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
 
-
-
-// static void update_hessian_structure(const ocp_qp_in *in, ocp_qp_clarabel_memory *mem)
-// {
-//     int ii, jj, kk, nn = 0, offset = 0, col = 0;
-//     ocp_qp_dims *dims = in->dim;
-
-//     // CSC format: P_i are row indices and P_p are column pointers
-//     for (kk = 0; kk <= dims->N; kk++)
-//     {
-//         // writing RSQ[kk]
-//         for (jj = 0; jj < dims->nx[kk] + dims->nu[kk]; jj++)
-//         {
-//             mem->P_p[col++] = nn;
-
-//             for (ii = 0; ii <= jj; ii++)
-//             {
-//                 // we write only the upper triangular part
-//                 mem->P_i[nn++] = offset + ii;
-//             }
-//         }
-
-//         offset += dims->nx[kk] + dims->nu[kk];
-//     }
-
-//     mem->P_p[col] = nn;
-// }
+    int kk, nn = 0;
+    for (kk = 0; kk <= N; kk++)
+    {
+        blasfeo_unpack_dvec(nu[kk]+nx[kk]+2*ns[kk], in->rqz + kk, 0, &mem->q[nn], 1);
+        nn += nu[kk]+nx[kk]+2*ns[kk];
+    }
+}
 
 
 
-// static void update_hessian_data(const ocp_qp_in *in, ocp_qp_clarabel_memory *mem)
-// {
-//     int ii, jj, kk, nn = 0;
-//     ocp_qp_dims *dims = in->dim;
+static void update_hessian_structure(const ocp_qp_in *in, ocp_qp_clarabel_memory *mem)
+{
+    ocp_qp_dims *dims = in->dim;
 
-//     // Traversing the matrix in column-major order
-//     for (kk = 0; kk <= dims->N; kk++)
-//     {
-//         // writing RSQ[kk]
-//         for (ii = 0; ii < dims->nx[kk] + dims->nu[kk]; ii++)
-//         {
-//             for (jj = 0; jj <= ii; jj++)
-//             {
-//                 // we write the lower triangular part in row-major order
-//                 // that's the same as writing the upper triangular part in
-//                 // column-major order
-//                 mem->P_x[nn++] = BLASFEO_DMATEL(&in->RSQrq[kk], ii, jj);
-//             }
-//         }
-//     }
-// }
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+
+    int ii, jj, kk;
+
+    // CSC format: P_rowval are row indices and P_col_ptr are column pointers
+    int nn = 0, offset = 0, col = 0;
+    for (kk = 0; kk <= N; kk++)
+    {
+        // write triu(RSQ[kk])
+        for (jj = 0; jj < nx[kk] + nu[kk]; jj++)
+        {
+            mem->P_col_ptr[col] = nn;
+            col++;
+
+            for (ii = 0; ii <= jj; ii++)
+            {
+                // we write only the upper triangular part
+                mem->P_rowval[nn] = offset + ii;
+                nn++;
+            }
+        }
+        offset += nx[kk] + nu[kk];
+
+        // write Z[kk]
+        for (jj = 0; jj < 2*ns[kk]; jj++)
+        {
+            mem->P_col_ptr[col] = nn;
+            col++;
+
+            // diagonal
+            mem->P_rowval[nn] = offset + jj;
+            nn++;
+        }
+
+        offset += 2*ns[kk];
+    }
+
+    mem->P_col_ptr[col] = nn;
+}
+
+
+
+static void update_hessian_data(const ocp_qp_in *in, ocp_qp_clarabel_memory *mem)
+{
+    ocp_qp_dims *dims = in->dim;
+
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+
+    int ii, kk;
+
+    // Traversing the matrix in column-major order
+    int nn = 0;
+    for (kk = 0; kk <= N; kk++)
+    {
+        // writing RSQ[kk]
+        // we write the lower triangular part in row-major order
+        // that's the same as writing the upper triangular part in
+        // column-major order
+        for (ii = 0; ii < nx[kk] + nu[kk]; ii++)
+        {
+            blasfeo_unpack_dmat(1, ii+1, in->RSQrq+kk, ii, 0, mem->P_nzval+nn, 1);
+            nn += ii+1;
+        }
+
+        // write Z[kk]
+        blasfeo_unpack_dvec(2*ns[kk], in->Z+kk, 0, mem->P_nzval+nn, 1);
+        nn += 2*ns[kk];
+    }
+}
 
 
 
 static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_clarabel_memory *mem)
 {
-    int ii, jj, kk;
-    int nn = 0, col = 0;
-    int con_start = 0, bnd_start = 0;
-    int row_offset_dyn = 0, row_offset_con = 0, row_offset_bnd = 0;
     ocp_qp_dims *dims = in->dim;
 
-    for (kk = 0; kk <= dims->N; kk++)
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *nb = dims->nb;
+    int *ng = dims->ng;
+    int *ns = dims->ns;
+
+    int ii, jj, kk;
+
+    int row_offset_dyn = 0;
+    int row_offset_con = 0;
+    int row_offset_slk = 0;
+
+    int con_start = 0;
+    int slk_start = 0;
+    for (kk = 0; kk <= N; kk++)
     {
-        con_start += kk < dims->N ? dims->nx[kk + 1] : 0;
-        bnd_start += dims->ng[kk];
+        con_start += kk < N ? nx[kk+1] : 0;
+        slk_start += 2*nb[kk]+2*ng[kk];
     }
 
-    bnd_start += con_start;
+    slk_start += con_start;
 
-    // CSC format: A_rowval are row indices and A_col_ptr are column pointers
-    for (kk = 0; kk <= dims->N; kk++)
+	// setup cones type
+	int m = acados_clarabel_num_constr(dims);
+	int m_eq = con_start;
+	int m_ineq = m-m_eq;
+	mem->cones[0] = ClarabelZeroConeT(m_eq);
+	mem->cones[1] = ClarabelNonnegativeConeT(m_ineq);
+
+    // CSC format: A_i are row indices and A_p are column pointers
+    int nn = 0, col = 0;
+    for (kk = 0; kk <= N; kk++)
     {
-        int nbu = 0;
 
-        for (jj = 0; jj < dims->nu[kk]; jj++)
+        // control variables
+        for (jj = 0; jj < nu[kk]; jj++)
         {
-            mem->A_col_ptr[col++] = nn;
+            mem->A_col_ptr[col] = nn;
+			//printf("\nA col ptr col %d nn %d\n", col, nn);
+            col++;
 
             if (kk < dims->N)
             {
                 // write column from B
-                for (ii = 0; ii < dims->nx[kk + 1]; ii++)
+                for (ii = 0; ii < nx[kk+1]; ii++)
                 {
-                    mem->A_rowval[nn++] = ii + row_offset_dyn;
+                    mem->A_rowval[nn+ii] = row_offset_dyn + ii;
                 }
+				nn += nx[kk+1];
             }
 
-            // write column from D
-            for (ii = 0; ii < dims->ng[kk]; ii++)
-            {
-                mem->A_rowval[nn++] = ii + con_start + row_offset_con;
-            }
-
-            // write bound on u
-            for (ii = 0; ii < dims->nb[kk]; ii++)
+            // write bound on u (upper and lower)
+            for (ii = 0; ii < nb[kk]; ii++)
             {
                 if (in->idxb[kk][ii] == jj)
                 {
-                    mem->A_rowval[nn++] = ii + bnd_start + row_offset_bnd;
-                    nbu++;
+                    mem->A_rowval[nn] = con_start + row_offset_con + ii;
+                    nn++;
+                    mem->A_rowval[nn] = con_start + row_offset_con + nb[kk] + ng[kk] + ii;
+                    nn++;
                     break;
                 }
             }
+
+            // write column from D (upper and lower)
+            for (ii = 0; ii < ng[kk]; ii++)
+            {
+                mem->A_rowval[nn+ii] = con_start + row_offset_con + nb[kk] + ii;
+                mem->A_rowval[nn+ng[kk]+ii] = con_start + row_offset_con + 2*nb[kk] + ng[kk] + ii;
+            }
+			nn += 2*ng[kk];
         }
 
-        for (jj = 0; jj < dims->nx[kk]; jj++)
+        // state variables
+        for (jj = 0; jj < nx[kk]; jj++)
         {
-            mem->A_col_ptr[col++] = nn;
+            mem->A_col_ptr[col] = nn;
+			//printf("\nA col ptr col %d nn %d\n", col, nn);
+            col++;
 
             if (kk > 0)
             {
                 // write column from -I
-                mem->A_rowval[nn++] = jj + row_offset_dyn - dims->nx[kk];
+                mem->A_rowval[nn] = row_offset_dyn - nx[kk] + jj;
+                nn++;
             }
 
-            if (kk < dims->N)
+            if (kk < N)
             {
                 // write column from A
-                for (ii = 0; ii < dims->nx[kk + 1]; ii++)
+                for (ii = 0; ii < nx[kk + 1]; ii++)
                 {
-                    mem->A_rowval[nn++] = ii + row_offset_dyn;
+                    mem->A_rowval[nn+ii] = row_offset_dyn + ii;
                 }
+				nn += nx[kk+1];
             }
 
-            // write column from C
-            for (ii = 0; ii < dims->ng[kk]; ii++)
+            // write bound on x (upper and lower)
+            for (ii = 0; ii < nb[kk]; ii++)
             {
-                mem->A_rowval[nn++] = ii + con_start + row_offset_con;
-            }
-
-            // write bound on x
-            for (ii = 0; ii < dims->nb[kk]; ii++)
-            {
-                if (in->idxb[kk][ii] == jj + dims->nu[kk])
+                if (in->idxb[kk][ii] == nu[kk] + jj)
                 {
-                    mem->A_rowval[nn++] = ii + bnd_start + row_offset_bnd;
+                    mem->A_rowval[nn] = con_start + row_offset_con + ii;
+                    nn++;
+                    mem->A_rowval[nn] = con_start + row_offset_con + nb[kk] + ng[kk] + ii;
+                    nn++;
                     break;
                 }
             }
+
+            // write column from C (upper and lower)
+            for (ii = 0; ii < ng[kk]; ii++)
+            {
+                mem->A_rowval[nn+ii] = con_start + row_offset_con + nb[kk] + ii;
+                mem->A_rowval[nn+ng[kk]+ii] = con_start + row_offset_con + 2*nb[kk] + ng[kk] + ii;
+            }
+			nn += 2*ng[kk];
         }
 
-        row_offset_bnd += dims->nb[kk];
-        row_offset_con += dims->ng[kk];
-        row_offset_dyn += kk < dims->N ? dims->nx[kk + 1] : 0;
+        // slack variables on lower inequalities
+        for (jj = 0; jj < ns[kk]; jj++)
+        {
+            mem->A_col_ptr[col] = nn;
+			//printf("\nA col ptr col %d nn %d\n", col, nn);
+            col++;
+
+            // soft constraint
+            for (ii=0; ii<nb[kk]+ng[kk]; ii++)
+            {
+                if (in->idxs_rev[kk][ii]==jj)
+                {
+                    mem->A_rowval[nn] = con_start + row_offset_con + ii;
+                    nn++;
+                    // no break, there could possibly be multiple
+                }
+            }
+
+            // nonnegativity constraint
+            mem->A_rowval[nn] = slk_start + row_offset_slk + jj;
+            nn++;
+        }
+
+        // slack variables on upper inequalities
+        for (jj = 0; jj < ns[kk]; jj++)
+        {
+            mem->A_col_ptr[col] = nn;
+			//printf("\nA col ptr col %d nn %d\n", col, nn);
+            col++;
+
+            // soft constraint
+            for (ii=0; ii<nb[kk]+ng[kk]; ii++)
+            {
+                if (in->idxs_rev[kk][ii]==jj)
+                {
+                    mem->A_rowval[nn] = con_start + row_offset_con + nb[kk] + ng[kk] + ii;
+                    nn++;
+                    // no break, there could possibly be multiple
+                }
+            }
+
+            // nonnegativity constraint
+            mem->A_rowval[nn] = slk_start + row_offset_slk + ns[kk] + jj;
+            nn++;
+        }
+
+        row_offset_con += 2*nb[kk]+2*ng[kk];
+        row_offset_dyn += kk < N ? nx[kk + 1] : 0;
+        row_offset_slk += 2*ns[kk];
     }
 
+    // end of matrix
     mem->A_col_ptr[col] = nn;
+	//printf("\nA col ptr col %d nn %d\n", col, nn);
 }
 
 
 
+// TODO move constant stuff like I to structure routine
 static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_clarabel_memory *mem)
 {
-    int ii, jj, kk, nn = 0;
     ocp_qp_dims *dims = in->dim;
 
-    // Traverse matrix in column-major order
-    for (kk = 0; kk <= dims->N; kk++)
-    {
-        int nbu = 0;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *nb = dims->nb;
+    int *ng = dims->ng;
+    int *ns = dims->ns;
 
-        for (jj = 0; jj < dims->nu[kk]; jj++)
+    int ii, jj, kk;
+
+
+    // Traverse matrix in column-major order
+    int nn = 0;
+    for (kk = 0; kk <= N; kk++)
+    {
+
+        // control variables
+        for (jj = 0; jj < nu[kk]; jj++)
         {
             if (kk < dims->N)
             {
                 // write column from B
-                for (ii = 0; ii < dims->nx[kk + 1]; ii++)
-                {
-                    mem->A_nzval[nn++] = BLASFEO_DMATEL(&in->BAbt[kk], jj, ii);
-                }
-            }
-
-            // write column from D
-            for (ii = 0; ii < dims->ng[kk]; ii++)
-            {
-                mem->A_nzval[nn++] = BLASFEO_DMATEL(&in->DCt[kk], jj, ii);
+                blasfeo_unpack_dmat(1, nx[kk+1], in->BAbt+kk, jj, 0, mem->A_nzval+nn, 1);
+                nn += nx[kk+1];
             }
 
             // write bound on u
@@ -386,121 +567,207 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_clarabel_
             {
                 if (in->idxb[kk][ii] == jj)
                 {
-                    mem->A_nzval[nn++] = 1.0;
-                    nbu++;
+                    mem->A_nzval[nn] = -1.0; // lower bound
+                    nn++;
+                    mem->A_nzval[nn] = 1.0; // upper bound
+                    nn++;
                     break;
                 }
             }
+
+            // write column from D
+            blasfeo_unpack_dmat(1, ng[kk], in->DCt+kk, jj, 0, mem->A_nzval+nn+ng[kk], 1);
+			for(ii=0; ii<ng[kk]; ii++)
+			{
+				mem->A_nzval[nn+ii] = - mem->A_nzval[nn+ng[kk]+ii];
+			}
+            nn += 2*ng[kk];
+
         }
 
-        for (jj = 0; jj < dims->nx[kk]; jj++)
+        // state variables
+        for (jj = 0; jj < nx[kk]; jj++)
         {
             if (kk > 0)
             {
                 // write column from -I
-                mem->A_nzval[nn++] = -1.0;
+                mem->A_nzval[nn] = -1.0;
+                nn++;
             }
 
-            if (kk < dims->N)
+            if (kk < N)
             {
                 // write column from A
-                for (ii = 0; ii < dims->nx[kk + 1]; ii++)
+                blasfeo_unpack_dmat(1, nx[kk+1], in->BAbt+kk, nu[kk]+jj, 0, mem->A_nzval+nn, 1);
+                nn += nx[kk+1];
+            }
+
+            // write bound on x
+            for (ii = 0; ii < nb[kk]; ii++)
+            {
+                if (in->idxb[kk][ii] == nu[kk] + jj)
                 {
-                    mem->A_nzval[nn++] = BLASFEO_DMATEL(&in->BAbt[kk], jj + dims->nu[kk], ii);
+                    mem->A_nzval[nn] = -1.0; // lower bound
+                    nn++;
+                    mem->A_nzval[nn] = 1.0; // upper bound
+                    nn++;
+                    break;
                 }
             }
 
             // write column from C
-            for (ii = 0; ii < dims->ng[kk]; ii++)
-            {
-                mem->A_nzval[nn++] = BLASFEO_DMATEL(&in->DCt[kk], jj + dims->nu[kk], ii);
-            }
+            blasfeo_unpack_dmat(1, ng[kk], in->DCt+kk, nu[kk]+jj, 0, mem->A_nzval+nn+ng[kk], 1);
+			for(ii=0; ii<ng[kk]; ii++)
+			{
+				mem->A_nzval[nn+ii] = - mem->A_nzval[nn+ng[kk]+ii];
+			}
+            nn += 2*ng[kk];
 
-            // write bound on x
-            for (ii = 0; ii < dims->nb[kk]; ii++)
+        }
+
+        // slack variables on lower inequalities
+        for (jj = 0; jj < ns[kk]; jj++)
+        {
+
+            // soft constraint
+            for (ii=0; ii<nb[kk]+ng[kk]; ii++)
             {
-                if (in->idxb[kk][ii] == jj + dims->nu[kk])
+                if (in->idxs_rev[kk][ii]==jj)
                 {
-                    mem->A_nzval[nn++] = 1.0;
+                    //mem->A_nzval[nn] = 1.0;
+                    mem->A_nzval[nn] = -1.0;
+                    nn++;
+                    // no break, there could possibly be multiple
                 }
             }
+
+            // nonnegativity constraint
+            mem->A_nzval[nn] = -1.0; //1.0;
+            nn++;
         }
+
+        // slack variables on upper inequalities
+        for (jj = 0; jj < ns[kk]; jj++)
+        {
+
+            // soft constraint
+            for (ii=0; ii<nb[kk]+ng[kk]; ii++)
+            {
+                if (in->idxs_rev[kk][ii]==jj)
+                {
+                    //mem->A_nzval[nn] = 1.0; //-1.0;
+                    mem->A_nzval[nn] = -1.0; //-1.0;
+                    nn++;
+                    // no break, there could possibly be multiple
+                }
+            }
+
+            // nonnegativity constraint
+            mem->A_nzval[nn] = -1.0; //1.0;
+            nn++;
+        }
+
     }
+
 }
+
+
+
+static void update_bounds(const ocp_qp_in *in, ocp_qp_clarabel_memory *mem)
+{
+    ocp_qp_dims *dims = in->dim;
+
+    int N = dims->N;
+    int *nx = dims->nx;
+    //int *nu = dims->nu;
+    int *nb = dims->nb;
+    int *ng = dims->ng;
+    int *ns = dims->ns;
+
+    int ii, kk, nn = 0;
+
+    // write b to b
+    for (kk = 0; kk < N; kk++)
+    {
+        // unpack b to b
+        blasfeo_unpack_dvec(nx[kk + 1], in->b + kk, 0, &mem->b[nn], 1);
+        for (ii = 0; ii < 2*nx[kk+1]; ii++)
+        {
+			mem->b[nn+ii] = - mem->b[nn+ii];
+        }
+        nn += nx[kk + 1];
+    }
+
+    // write lb lg and ub ug
+    for (kk = 0; kk <= N; kk++)
+    {
+        // unpack lb lg to l and flip sign because in Clarabel lower bounds are casted as upper bounds
+        blasfeo_unpack_dvec(nb[kk]+ng[kk], in->d+kk, 0, &mem->b[nn], 1);
+        // unpack ub ug to u and flip signs because in HPIPM the signs are flipped for upper bounds
+        blasfeo_unpack_dvec(nb[kk]+ng[kk], in->d+kk, nb[kk]+ng[kk], &mem->b[nn+nb[kk]+ng[kk]], 1);
+        for (ii = 0; ii < 2*nb[kk]+2*ng[kk]; ii++)
+        {
+			mem->b[nn+ii] = - mem->b[nn+ii];
+        }
+        nn += 2*nb[kk] + 2*ng[kk];
+    }
+
+    // write ls and us
+    for (kk = 0; kk <= N; kk++)
+    {
+        // unpack ls and us to b because in Clarabel lower bounds are casted as upper bounds
+        blasfeo_unpack_dvec(2*ns[kk], in->d+kk, 2*nb[kk]+2*ng[kk], &mem->b[nn], 1);
+        for (ii = 0; ii < 2*ns[kk]; ii++)
+        {
+			mem->b[nn+ii] = - mem->b[nn+ii];
+        }
+        nn += 2*ns[kk];
+    }
+
+}
+
+
 
 static void clarabel_init_data(ocp_qp_clarabel_memory* mem, ocp_qp_in *qp_in)
 {
     update_constraints_matrix_structure(qp_in, mem);
+    update_hessian_structure(qp_in, mem);
+
     update_constraints_matrix_data(qp_in, mem);
-    int A_rows = acados_clarabel_num_constr(qp_in->dim);
-    int A_cols = acados_clarabel_num_vars(qp_in->dim);
+    update_hessian_data(qp_in, mem);
 
-    clarabel_CscMatrix_init(
-        &mem->A,
-        A_rows,                                             // row
-        A_cols,                                             // col
-        mem->A_col_ptr,                      // colptr
-        mem->A_rowval,             // rowval
-        mem->A_nzval // nzval
-    );
+    update_bounds(qp_in, mem);
+    update_gradient(qp_in, mem);
 
-    printf("ocp_qp_clarabel: created A\n");
-    print_csc_matrix(&mem->A, "A_mat");
+    int n = acados_clarabel_num_vars(qp_in->dim);
+    int m = acados_clarabel_num_constr(qp_in->dim);
+
+    //printf("\nn %d m %d\n", n, m);
+
+	// allocates and initializes a csc matrix
+    clarabel_CscMatrix_init(&mem->A, m, n, mem->A_col_ptr, mem->A_rowval, mem->A_nzval);
+    //printf("ocp_qp_clarabel: created A\n");
+    //print_csc_matrix(&mem->A, "A_mat");
+    //print_csc_as_dns(&mem->A);
+	//for(int ii=0; ii<=n; ii++)
+	//{
+	//	printf("col ptr %d: %d\n", ii, mem->A_col_ptr[ii]);
+	//}
+
+	// allocates and initializes a csc matrix
+    clarabel_CscMatrix_init(&mem->P, n, n, mem->P_col_ptr, mem->P_rowval, mem->P_nzval);
+    //printf("ocp_qp_clarabel: created P\n");
+    //print_csc_matrix(&mem->P, "P_mat");
+    //print_csc_as_dns(&mem->P);
+	//for(int ii=0; ii<=n; ii++)
+	//{
+	//	printf("col ptr %d: %d\n", ii, mem->P_col_ptr[ii]);
+	//}
+
+    //printf("\ndone\n");
+	//exit(0);
+
 }
-
-
-
-// static void update_bounds(const ocp_qp_in *in, ocp_qp_clarabel_memory *mem)
-// {
-//     int ii, kk, nn = 0;
-//     ocp_qp_dims *dims = in->dim;
-
-//     // write -b to l and u
-//     for (kk = 0; kk < dims->N; kk++)
-//     {
-//         // unpack b to l
-//         blasfeo_unpack_dvec(dims->nx[kk + 1], in->b + kk, 0, &mem->l[nn], 1);
-
-//         // change sign of l (to get -b) and copy to u
-//         for (ii = 0; ii < dims->nx[kk + 1]; ii++)
-//         {
-//             mem->l[nn + ii] = -mem->l[nn + ii];
-//             mem->u[nn + ii] = mem->l[nn + ii];
-//         }
-
-//         nn += dims->nx[kk + 1];
-//     }
-
-//     // write lg and ug
-//     for (kk = 0; kk <= dims->N; kk++)
-//     {
-//         // unpack lg to l
-//         blasfeo_unpack_dvec(dims->ng[kk], in->d + kk, dims->nb[kk], &mem->l[nn], 1);
-
-//         // unpack ug to u and flip signs because in HPIPM the signs are flipped for upper bounds
-//         for (ii = 0; ii < dims->ng[kk]; ii++)
-//         {
-//             mem->u[nn + ii] = -BLASFEO_DVECEL(&in->d[kk], ii + 2 * dims->nb[kk] + dims->ng[kk]);
-//         }
-
-//         nn += dims->ng[kk];
-//     }
-
-//     // write lb and ub
-//     for (kk = 0; kk <= dims->N; kk++)
-//     {
-//         // unpack lb to l
-//         blasfeo_unpack_dvec(dims->nb[kk], in->d + kk, 0, &mem->l[nn], 1);
-
-//         // unpack ub to u and flip signs because in HPIPM the signs are flipped for upper bounds
-//         for (ii = 0; ii < dims->nb[kk]; ii++)
-//         {
-//             mem->u[nn + ii] = -BLASFEO_DVECEL(&in->d[kk], ii + dims->nb[kk] + dims->ng[kk]);
-//         }
-
-//         nn += dims->nb[kk];
-//     }
-// }
 
 
 
@@ -513,9 +780,9 @@ static void ocp_qp_clarabel_update_memory(const ocp_qp_in *in, const ocp_qp_clar
     //     update_constraints_matrix_structure(in, mem);
     // }
 
-    // update_bounds(in, mem);
-    // update_gradient(in, mem);
-    // update_hessian_data(in, mem);
+    update_bounds(in, mem);
+    update_gradient(in, mem);
+    update_hessian_data(in, mem);
     update_constraints_matrix_data(in, mem);
 }
 
@@ -527,8 +794,8 @@ static void ocp_qp_clarabel_update_memory(const ocp_qp_in *in, const ocp_qp_clar
 acados_size_t ocp_qp_clarabel_opts_calculate_size(void *config_, void *dims_)
 {
     acados_size_t size = 0;
-//     size += sizeof(ocp_qp_clarabel_opts);
-//     size += sizeof(ClarabelSettings);
+    size += sizeof(ocp_qp_clarabel_opts);
+    //size += sizeof(ClarabelSettings);
 
     return size;
 }
@@ -539,10 +806,10 @@ void *ocp_qp_clarabel_opts_assign(void *config_, void *dims_, void *raw_memory)
 {
     ocp_qp_clarabel_opts *opts;
 
-//     char *c_ptr = (char *) raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-//     opts = (ocp_qp_clarabel_opts *) c_ptr;
-//     c_ptr += sizeof(ocp_qp_clarabel_opts);
+    opts = (ocp_qp_clarabel_opts *) c_ptr;
+    c_ptr += sizeof(ocp_qp_clarabel_opts);
 
 //     opts->clarabel_opts = (ClarabelSettings *) c_ptr;
 //     c_ptr += sizeof(ClarabelSettings);
@@ -578,7 +845,7 @@ void ocp_qp_clarabel_opts_update(void *config_, void *dims_, void *opts_)
 
 void ocp_qp_clarabel_opts_set(void *config_, void *opts_, const char *field, void *value)
 {
-    ocp_qp_clarabel_opts *opts = opts_;
+    //ocp_qp_clarabel_opts *opts = opts_;
 
 //     // NOTE/TODO(oj): options are copied into Clarabel at first call.
 //     // Updating options through this function does not work, only before the first call!
@@ -724,13 +991,21 @@ acados_size_t ocp_qp_clarabel_memory_calculate_size(void *config_, void *dims_, 
     size_t m = acados_clarabel_num_constr(dims);
 
     size_t A_nnzmax = acados_clarabel_nnzmax_A(dims);
+    size_t P_nnzmax = acados_clarabel_nnzmax_P(dims);
 
     acados_size_t size = 0;
     size += sizeof(ocp_qp_clarabel_memory);
 
     size += A_nnzmax * sizeof(ClarabelFloat);  // A_nzval
-    size += A_nnzmax * sizeof(uintptr_t);    // A_rowval
-    size += (n + 1) * sizeof(uintptr_t);     // A_col_ptr
+    size += A_nnzmax * sizeof(uintptr_t);      // A_rowval
+    size += (n + 1) * sizeof(uintptr_t);       // A_col_ptr
+
+    size += P_nnzmax * sizeof(ClarabelFloat);  // A_nzval
+    size += P_nnzmax * sizeof(uintptr_t);      // P_rowval
+    size += (n + 1) * sizeof(uintptr_t);       // P_col_ptr
+
+    size += n * sizeof(ClarabelFloat);  // q
+    size += m * sizeof(ClarabelFloat);  // b
 
     size += 1 * 8;
 
@@ -763,32 +1038,29 @@ void *ocp_qp_clarabel_memory_assign(void *config_, void *dims_, void *opts_, voi
     align_char_to(8, &c_ptr);
 
     // doubles
-    // mem->q = (double *) c_ptr;
-    // c_ptr += n * sizeof(double);
+    mem->q = (ClarabelFloat *) c_ptr;
+    c_ptr += n * sizeof(ClarabelFloat);
 
-    // mem->l = (double *) c_ptr;
-    // c_ptr += m * sizeof(double);
+    mem->b = (ClarabelFloat *) c_ptr;
+    c_ptr += m * sizeof(ClarabelFloat);
 
-    // mem->u = (double *) c_ptr;
-    // c_ptr += m * sizeof(double);
-
-    // mem->P_x = (double *) c_ptr;
-    // c_ptr += (mem->P_nnzmax) * sizeof(double);
+    mem->P_nzval = (ClarabelFloat *) c_ptr;
+    c_ptr += (mem->P_nnzmax) * sizeof(ClarabelFloat);
 
     mem->A_nzval = (ClarabelFloat *) c_ptr;
     c_ptr += (mem->A_nnzmax) * sizeof(ClarabelFloat);
 
     // ints
-    // mem->P_i = (int *) c_ptr;
-    // c_ptr += (mem->P_nnzmax) * sizeof(int);
+    mem->P_rowval = (uintptr_t *) c_ptr;
+    c_ptr += (mem->P_nnzmax) * sizeof(uintptr_t);
 
-    // mem->P_p = (int *) c_ptr;
-    // c_ptr += (n + 1) * sizeof(int);
-
-    mem->A_col_ptr = (uintptr_t *) c_ptr;
-    c_ptr += (mem->A_nnzmax) * sizeof(uintptr_t);
+    mem->P_col_ptr = (uintptr_t *) c_ptr;
+    c_ptr += (n + 1) * sizeof(uintptr_t);
 
     mem->A_rowval = (uintptr_t *) c_ptr;
+    c_ptr += (mem->A_nnzmax) * sizeof(uintptr_t);
+
+    mem->A_col_ptr = (uintptr_t *) c_ptr;
     c_ptr += (n + 1) * sizeof(uintptr_t);
 
     assert((char *) raw_memory + ocp_qp_clarabel_memory_calculate_size(config_, dims, opts_) >= c_ptr);
@@ -856,79 +1128,105 @@ acados_size_t ocp_qp_clarabel_workspace_calculate_size(void *config_, void *dims
 
 static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_clarabel_memory *mem)
 {
-    // int ii, kk, nn = 0, mm, con_start = 0, bnd_start = 0;
-    // ocp_qp_dims *dims = in->dim;
-    // ClarabelSolution *sol = mem->clarabel_work->solution;
+    ocp_qp_dims *dims = in->dim;
 
-    // for (kk = 0; kk <= dims->N; kk++)
-    // {
-    //     blasfeo_pack_dvec(dims->nx[kk] + dims->nu[kk], &sol->x[nn], 1, out->ux + kk, 0);
-    //     nn += dims->nx[kk] + dims->nu[kk];
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *nb = dims->nb;
+    int *ng = dims->ng;
+    int *ns = dims->ns;
 
-    //     con_start += kk < dims->N ? dims->nx[kk + 1] : 0;
-    //     bnd_start += dims->ng[kk];
-    // }
+    int kk, nn;
 
-    // bnd_start += con_start;
+    //int con_start = 0;
+    //int slk_start = 0;
+    //for (kk = 0; kk <= N; kk++)
+    //{
+    //    con_start += kk < N ? nx[kk + 1] : 0;
+    //    slk_start += 2*nb[kk] + 2*ng[kk];
+    //}
 
-    // nn = 0;
-    // for (kk = 0; kk < dims->N; kk++)
-    // {
-    //     blasfeo_pack_dvec(dims->nx[kk + 1], &sol->y[nn], 1, out->pi + kk, 0);
-    //     nn += dims->nx[kk + 1];
-    // }
+    //slk_start += con_start;
 
-    // nn = 0;
-    // mm = 0;
-    // for (kk = 0; kk <= dims->N; kk++)
-    // {
-    //     for (ii = 0; ii < 2 * dims->nb[kk] + 2 * dims->ng[kk] + 2 * dims->ns[kk]; ii++)
-    //         out->lam[kk].pa[ii] = 0.0;
+    ClarabelDefaultSolution *sol = &mem->solution;
 
-    //     for (ii = 0; ii < dims->nb[kk]; ii++)
-    //     {
-    //         double lam = sol->y[bnd_start + nn + ii];
-    //         if (lam <= 0)
-    //             out->lam[kk].pa[ii] = -lam;
-    //         else
-    //             out->lam[kk].pa[dims->nb[kk] + dims->ng[kk] + ii] = lam;
-    //     }
+    // primal variables
+    nn = 0;
+    for (kk = 0; kk <= N; kk++)
+    {
+        blasfeo_pack_dvec(nx[kk]+nu[kk]+2*ns[kk], &sol->x[nn], 1, out->ux + kk, 0);
+        nn += nx[kk] + nu[kk] + 2*ns[kk];
+    }
 
-    //     nn += dims->nb[kk];
+    // dual variables
+    nn = 0;
+    for (kk = 0; kk < N; kk++)
+    {
+        blasfeo_pack_dvec(nx[kk + 1], &sol->z[nn], 1, out->pi + kk, 0);
+        nn += nx[kk + 1];
+    }
 
-    //     for (ii = 0; ii < dims->ng[kk]; ii++)
-    //     {
-    //         double lam = sol->y[con_start + mm + ii];
-    //         if (lam <= 0)
-    //             out->lam[kk].pa[dims->nb[kk] + ii] = -lam;
-    //         else
-    //             out->lam[kk].pa[2 * dims->nb[kk] + dims->ng[kk] + ii] = lam;
-    //     }
+    //nn = 0;
+    for (kk = 0; kk <= N; kk++)
+    {
+        blasfeo_pack_dvec(2*nb[kk]+2*ng[kk], &sol->z[nn], 1, out->lam+kk, 0);
+        nn += 2*nb[kk]+2*ng[kk];
+    }
 
-    //     mm += dims->ng[kk];
-    // }
+    nn = 0;
+    for (kk = 0; kk <= N; kk++)
+    {
+        blasfeo_pack_dvec(2*ns[kk], &sol->z[nn], 1, out->lam+kk, 2*nb[kk]+2*ng[kk]);
+        nn += 2*ns[kk];
+    }
 }
 
 
+
+// clarabel f64 printing stuff (TODO remove)
+static void print_array_double(double *array, size_t n)
+{
+    printf("[");
+    for (size_t i = 0; i < n; i++)
+    {
+        printf("%.10f", array[i]);
+        if (i < n - 1)
+        {
+            printf(", ");
+        }
+    }
+    printf("]\n");
+}
+
+static void print_solution(ClarabelDefaultSolution_f64 *solution)
+{
+    printf("Solution (x)\t = ");
+    print_array_double(solution->x, solution->x_length);
+    printf("Multipliers (z)\t = ");
+    print_array_double(solution->z, solution->z_length);
+    printf("Slacks (s)\t = ");
+    print_array_double(solution->s, solution->s_length);
+}
 
 int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_)
 {
     ocp_qp_in *qp_in = qp_in_;
     ocp_qp_out *qp_out = qp_out_;
 
-    int N = qp_in->dim->N;
-    int *ns = qp_in->dim->ns;
+    //int N = qp_in->dim->N;
+    //int *ns = qp_in->dim->ns;
 
-    // print_ocp_qp_dims(qp_in->dim);
+    //print_ocp_qp_dims(qp_in->dim);
 
-    for (int ii = 0; ii <= N; ii++)
-    {
-        if (ns[ii] > 0)
-        {
-            printf("\nClarabel interface can not handle ns>0 yet.\n");
-            exit(1);
-        }
-    }
+    //for (int ii = 0; ii <= N; ii++)
+    //{
+    //    if (ns[ii] > 0)
+    //    {
+    //        printf("\nClarabel interface can not handle ns>0 yet.\n");
+    //        exit(1);
+    //    }
+    //}
 
     // print_ocp_qp_in(qp_in);
 
@@ -962,17 +1260,38 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
     //     mem->first_run = 0;
     // }
 
+	mem->settings = clarabel_DefaultSettings_default();
 
+	//printf("\nbefore build solver\n");
+
+    // Build solver
+    mem->solver = clarabel_DefaultSolver_new(&mem->P, mem->q, &mem->A, mem->b, 2, mem->cones, &mem->settings);
+
+	//printf("\nafter build solver\n");
 
     // // solve Clarabel
     acados_tic(&solver_call_timer);
-    // clarabel_solve(mem->clarabel_work);
+    // Solve
+    clarabel_DefaultSolver_solve(mem->solver);
     mem->time_qp_solver_call = acados_toc(&solver_call_timer);
     // mem->iter = mem->clarabel_work->info->iter;
 
+
+    // Get solution
+    mem->solution = clarabel_DefaultSolver_solution(mem->solver);
+    //print_solution(&mem->solution);
+    //clarabel_DefaultSolver_free(mem->solver);
+    //print_solution(&mem->solution);
+
     // // fill qp_out
-    // fill_in_qp_out(qp_in, qp_out, mem);
-    // ocp_qp_compute_t(qp_in, qp_out);
+    fill_in_qp_out(qp_in, qp_out, mem);
+    ocp_qp_compute_t(qp_in, qp_out);
+
+	//d_ocp_qp_sol_print(qp_in->dim, qp_out);
+
+	//printf("\nreturning\n");
+	//exit(0);
+	//return 0;
 
     // info
     info->solve_QP_time = acados_toc(&qp_timer);
@@ -985,7 +1304,7 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
 
     // // check exit conditions
 
-    return 1;
+    //return 1;
 }
 
 
@@ -1004,6 +1323,16 @@ void ocp_qp_clarabel_solver_get(void *config_, void *qp_in_, void *qp_out_, void
 }
 
 
+void ocp_qp_clarabel_terminate(void *config_, void *mem_, void *work_)
+{
+    ocp_qp_clarabel_memory *mem = (ocp_qp_clarabel_memory *) mem_;
+    // Free the matrices and the solver
+    clarabel_DefaultSolver_free(mem->solver);
+}
+
+
+
+
 void ocp_qp_clarabel_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
@@ -1018,6 +1347,7 @@ void ocp_qp_clarabel_config_initialize_default(void *config_)
     config->memory_get = &ocp_qp_clarabel_memory_get;
     config->workspace_calculate_size = &ocp_qp_clarabel_workspace_calculate_size;
     config->evaluate = &ocp_qp_clarabel;
+    config->terminate = &ocp_qp_clarabel_terminate;
     config->eval_sens = &ocp_qp_clarabel_eval_sens;
     config->memory_reset = &ocp_qp_clarabel_memory_reset;
     config->solver_get = &ocp_qp_clarabel_solver_get;

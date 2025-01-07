@@ -55,20 +55,26 @@ typedef struct ocp_qp_clarabel_memory_
 {
     uintptr_t first_run;
 
-    // ClarabelFloat *q;
-    // ClarabelFloat *l;
-    // ClarabelFloat *u;
-
+    ClarabelCscMatrix P; // just upper triangular is enough
     uintptr_t P_nnzmax;
-    // uintptr_t *P_i;
-    // uintptr_t *P_p;
-    // ClarabelFloat *P_x;
+    uintptr_t *P_col_ptr;
+    uintptr_t *P_rowval;
+    ClarabelFloat *P_nzval;
 
     ClarabelCscMatrix A;
     uintptr_t A_nnzmax;
     uintptr_t *A_col_ptr;
     uintptr_t *A_rowval;
     ClarabelFloat *A_nzval;
+
+    ClarabelFloat *q;
+    ClarabelFloat *b;
+
+	ClarabelSupportedConeT cones[2];
+
+	ClarabelDefaultSettings settings;
+	ClarabelDefaultSolver *solver;
+	ClarabelDefaultSolution solution;
 
     double time_qp_solver_call;
     int iter;
