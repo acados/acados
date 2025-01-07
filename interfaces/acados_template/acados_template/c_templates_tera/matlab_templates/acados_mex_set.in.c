@@ -405,26 +405,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "init_z")||!strcmp(field, "z"))
     {
-{% if problem_class == "MOCP" %}
-        MEX_FIELD_NOT_SUPPORTED(fun_name, field);
-{% else %}
         sim_solver_plan_t sim_plan = plan->sim_solver_plan[0];
         sim_solver_t type = sim_plan.sim_solver;
         if (type == IRK)
         {
-            int nz = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "z");
             if (nrhs == min_nrhs)
             {
-                acados_size = N*nz;
+                acados_size = ocp_nlp_dims_get_total_from_attr(config, dims, "z");
                 MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-                for (int ii=0; ii<N; ii++)
-                {
-                    ocp_nlp_set(solver, ii, "z_guess", value+ii*nz);
-                }
+                ocp_nlp_set_all(solver, in, out, "z", value);
             }
             else // (nrhs == min_nrhs+1)
             {
-                acados_size = nz;
+                acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "z");
                 MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
                 ocp_nlp_set(solver, s0, "z_guess", value);
             }
@@ -433,7 +426,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, "init_z", "irk")
         }
-{% endif %}
     }
     else if (!strcmp(field, "init_xdot")||!strcmp(field, "xdot"))
     {
