@@ -92,6 +92,8 @@ option(ACADOS_WITH_OSQP "OSQP solver" OFF)
 # Interfaces
 option(ACADOS_OCTAVE "Octave Interface tests" OFF)
 option(ACADOS_PYTHON "Python Interface tests" OFF)
+# Options to use libraries found via find_package
+option(ACADOS_WITH_SYSTEM_BLASFEO "If ON, use blasfeo found via find_package(blasfeo) instead of compiling it" OFF)
 
 
 # Set custom path

@@ -42,7 +42,7 @@ extern "C" {
 #include "acados/utils/types.h"
 #include "acados/sim/sim_common.h"
 
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_common.h"
 
 /*
 GNSF - Generalized Nonlinear Static Feedback Model

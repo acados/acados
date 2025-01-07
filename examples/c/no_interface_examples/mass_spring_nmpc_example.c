@@ -36,9 +36,9 @@
 // #include <xmmintrin.h>
 #include "acados_c/ocp_nlp_interface.h"
 
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_d_blasfeo_api.h"
-#include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
+#include "blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_blasfeo_api.h"
+#include "blasfeo_i_aux_ext_dep.h"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_xcond_solver.h"
