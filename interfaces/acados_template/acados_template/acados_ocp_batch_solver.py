@@ -72,7 +72,11 @@ class AcadosOcpBatchSolver():
         for i in range(self.N_batch):
             self.__ocp_solvers_pointer[i] = self.ocp_solvers[i].capsule
 
-        getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve").argtypes = [POINTER(c_void_p), c_int]
+        # out data for solve
+        self.__status = np.zeros((self.N_batch,), dtype=np.intc, order="C")
+        self.__status_p = cast(self.__status.ctypes.data, POINTER(c_int))
+
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve").argtypes = [POINTER(c_void_p), POINTER(c_int), c_int]
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve").restype = c_void_p
 
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_params_jac").argtypes = [POINTER(c_void_p), c_int]
@@ -113,8 +117,12 @@ class AcadosOcpBatchSolver():
         """
         Call solve for all `N_batch` solvers.
         """
-        getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve")(self.__ocp_solvers_pointer, self.__N_batch)
 
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve")(self.__ocp_solvers_pointer, self.__status_p, self.__N_batch)
+
+        # to be consistent with non-batched solve
+        for s, solver in zip(self.__status, self.ocp_solvers):
+            solver.status = s
 
 
     def eval_adjoint_solution_sensitivity(self,

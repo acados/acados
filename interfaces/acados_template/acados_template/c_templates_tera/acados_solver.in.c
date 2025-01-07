@@ -2766,7 +2766,7 @@ int {{ model.name }}_acados_solve({{ model.name }}_solver_capsule* capsule)
 }
 
 
-void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** capsules, int N_batch)
+void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** capsules, int * status_out, int N_batch)
 {
 {% if solver_options.num_threads_in_batch_solve > 1 %}
     int num_threads_bkp = omp_get_num_threads();
@@ -2776,7 +2776,7 @@ void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** caps
 {%- endif %}
     for (int i = 0; i < N_batch; i++)
     {
-        ocp_nlp_solve(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->nlp_out);
+        status_out[i] = ocp_nlp_solve(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->nlp_out);
     }
 
 {% if solver_options.num_threads_in_batch_solve > 1 %}

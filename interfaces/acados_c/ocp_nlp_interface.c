@@ -509,8 +509,6 @@ int ocp_nlp_cost_model_get(ocp_nlp_config *config, ocp_nlp_dims *dims,
         ocp_nlp_in *in, int stage, const char *field, void *value)
 {
     ocp_nlp_cost_config *cost_config = config->cost[stage];
-
-    printf("ocp_nlp_cost_model_get\n");
     return cost_config->model_get(cost_config, dims->cost[stage], in->cost[stage], field, value);
 
 }
