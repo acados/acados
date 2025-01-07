@@ -292,6 +292,9 @@ ACADOS_SYMBOL_EXPORT void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *
         int stage, const char *field, void *value);
 
 
+// TODO: document
+ACADOS_SYMBOL_EXPORT void ocp_nlp_out_set_values_to_zero(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out);
+
 /// Gets values of fields in the output struct of an nlp solver.
 ///
 /// \param config The configuration struct.
@@ -328,7 +331,7 @@ ACADOS_SYMBOL_EXPORT void ocp_nlp_cost_dims_get_from_attr(ocp_nlp_config *config
 ACADOS_SYMBOL_EXPORT void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
         int stage, const char *field, int *dims_out);
 
-int ocp_nlp_dims_get_total_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, const char *field);
+ACADOS_SYMBOL_EXPORT int ocp_nlp_dims_get_total_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, const char *field);
 
 /* opts */
 
