@@ -57,7 +57,128 @@
 #include "acados/utils/types.h"
 #include "acados_c/ocp_qp_interface.h"
 
+/*************************************************
+* Allocate the memory for the standard QP solver
+**************************************************/
+static void setup_standard_qp_solver_dimensions(
+    ocp_nlp_sqp_wfqp_memory *mem,
+    ocp_nlp_config *config,
+    ocp_nlp_dims *dims,
+    ocp_nlp_sqp_wfqp_opts *opts)
+{
+    int N = dims->N;
+    int tmp_int, i;
 
+    /* dimensions that are the same as for QP solver */
+    for (i = 0; i <= N; i++)
+    {
+        mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nx", dims->nx+i);
+        mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nu", dims->nu+i);
+        // nbx
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nbx", &tmp_int);
+        mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nbx", &tmp_int);
+        // nbu
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nbu", &tmp_int);
+        mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nbu", &tmp_int);
+        // ng
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "ng_qp_solver", &tmp_int);
+        mem->standard_qp_solver->dims_set(config->qp_solver, mem->standard_qp_solver_dims, i, "ng", &tmp_int);
+        // nbue
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nbue", &tmp_int);
+        mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nbue", &tmp_int);
+
+        // nbxe
+        // TODO: add warning / error if nonzero for i > 0?
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nbxe", &tmp_int);
+        mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nbxe", &tmp_int);
+        // nge
+        // TODO: add warning / error if nonzero, otherwise there is a slacked equality.
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nge_qp_solver", &tmp_int);
+        mem->standard_qp_solver->dims_set(config->qp_solver, mem->standard_qp_solver_dims, i, "nge", &tmp_int);
+    }
+
+    /* This is not correct yet!!!*/
+    /* dimensions that are different compared to standard QP solver */
+    // nsbx_0_rel = nsbx_0
+    i = 0;
+    config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsbx", &tmp_int);
+    mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nsbx", &tmp_int);
+    // TODO: do we want to check if nsbx_0 is 0?
+    // if (tmp_int > 0)
+    // {
+    // }
+    for (i = 0; i <= N; i++)
+    {
+        if (i > 0)
+        {
+            // nsbx_rel = nbx
+            config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nbx", &tmp_int);
+            mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nsbx", &tmp_int);
+        }
+        // nsbu_rel = nsbu
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsbu", &tmp_int);
+        mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nsbu", &tmp_int);
+        // nsg_relaxed = ng
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "ng_qp_solver", &tmp_int);
+        mem->standard_qp_solver->dims_set(config->qp_solver, mem->standard_qp_solver_dims, i, "nsg", &tmp_int);
+        // print warning that those are not tested!?
+    }
+
+    // set ns_rel according to nsbx, nsbu, nsg;
+    for (i = 0; i <= N; i++)
+    {
+        int ns = 0;
+        config->qp_solver->dims_get(config->qp_solver, mem->standard_qp_solver_dims, i, "nsbu", &tmp_int);
+        ns += tmp_int;
+        config->qp_solver->dims_get(config->qp_solver, mem->standard_qp_solver_dims, i, "nsbx", &tmp_int);
+        ns += tmp_int;
+        config->qp_solver->dims_get(config->qp_solver, mem->standard_qp_solver_dims, i, "nsg", &tmp_int);
+        ns += tmp_int;
+        mem->standard_qp_solver->dims_set(config->qp_solver, mem->standard_qp_solver_dims, i, "ns", &ns);
+    }
+}
+
+static void allocate_standard_qp_solver(ocp_nlp_sqp_wfqp_memory *mem,
+    ocp_nlp_config *config,
+    ocp_nlp_dims *dims,
+    ocp_nlp_sqp_wfqp_opts *opts)
+{
+    int N = config->N;
+    // allocate xcond_solver_config --> seems correct
+    acados_size_t size = ocp_qp_xcond_solver_config_calculate_size();
+    void* memsize = malloc(size);
+    mem->standard_qp_solver = ocp_qp_xcond_solver_config_assign(memsize);
+    ocp_qp_xcond_solver_config_initialize_from_plan(PARTIAL_CONDENSING_HPIPM, mem->standard_qp_solver);
+    printf("Config succesfully allocated!\n");
+
+    // allocate xcond_solver_dims
+    size = ocp_qp_xcond_solver_dims_calculate_size(mem->standard_qp_solver, N);
+    memsize = malloc(size);
+    mem->standard_qp_solver_dims = ocp_qp_xcond_solver_dims_assign(mem->standard_qp_solver, N, memsize);
+    printf("Dims succesfully allocated!\n");
+
+    // Setup the solver dimensions
+    // setup_standard_qp_solver_dimensions(mem, config, dims, opts);
+
+    // Allocate solver opts
+    size = ocp_qp_xcond_solver_opts_calculate_size(mem->standard_qp_solver, mem->standard_qp_solver_dims);
+    memsize = malloc(size);
+    mem->standard_qp_solver_opts = ocp_qp_xcond_solver_opts_assign(mem->standard_qp_solver, mem->standard_qp_solver_dims, memsize);
+    ocp_qp_xcond_solver_opts_initialize_default(mem->standard_qp_solver, mem->standard_qp_solver_dims, mem->standard_qp_solver_opts);
+    printf("Opts succesfully allocated!\n");
+
+    // // Allocate qp in
+    size = ocp_qp_in_calculate_size(mem->standard_qp_solver_dims->orig_dims);
+    memsize = malloc(size);
+    mem->standard_qp_in = ocp_qp_in_assign(mem->standard_qp_solver_dims->orig_dims, memsize);
+    printf("QP_in succesfully allocated!\n");
+
+    // // Allocate qp_out
+    size = ocp_qp_out_calculate_size(mem->standard_qp_solver_dims->orig_dims);
+    memsize = malloc(size);
+    mem->standard_qp_out = ocp_qp_out_assign(mem->standard_qp_solver_dims->orig_dims, memsize);
+    printf("QP_out succesfully allocated!\n");
+}
 
 /************************************************
  * options
@@ -2262,6 +2383,9 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // set number of threads
     omp_set_num_threads(opts->nlp_opts->num_threads);
 #endif
+
+    printf("We enter the allocation\n");
+    allocate_standard_qp_solver(mem, config, dims, opts);
 
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
     set_non_slacked_l2_penalties(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
