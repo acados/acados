@@ -38,7 +38,7 @@ import casadi.*
 N = 20; % number of discretization steps
 nx = 3;
 nu = 3;
-np = 100;
+np = 10;
 [ocp_model, ocp_opts, simulink_opts, x0] = create_parametric_ocp_qp(N, np);
 % NOTE: here we don't perform iterations and just test initialization
 % functionality
@@ -48,16 +48,17 @@ ocp_opts.set('nlp_solver_max_iter', 0);
 ocp_solver = acados_ocp(ocp_model, ocp_opts, simulink_opts);
 
 %% test parameter setters and getters;
-ocp_solver.set('p', zeros(np, 1));
+ocp_solver.set('p', zeros(np, 1)); % TODO: this behaviour is only supported for p!
 
-p_values = {ones(np, 1), (1:np)'};
+p_vals_different = eye(np, N+1);
+ocp_solver.set('p', p_vals_different);
 
-for i_p = 1: length(p_values);
-    p_val = p_values{i_p};
+for i_p = 1:length(N+1);
+    p_val = p_vals_different(:, i_p);
     ocp_solver.set('p', p_val, 0);
     p = ocp_solver.get('p', 0);
 
-    if any(p~=p_val)
+    if any(p ~= p_val)
         disp('simple parameter setter doesnt work properly');
         exit(1);
     end
@@ -65,7 +66,7 @@ end
 
 for stage = 1:N
     p = ocp_solver.get('p', stage);
-    if any(p)
+    if any(p ~= p_vals_different(:, stage+1))
         disp('simple parameter setter doesnt work properly, parameter values should not change after setting at another stage');
         exit(1);
     end
