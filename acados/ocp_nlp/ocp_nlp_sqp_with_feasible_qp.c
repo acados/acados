@@ -112,14 +112,15 @@ static void setup_standard_qp_solver_dimensions(
         if (i > 0)
         {
             // nsbx_rel = nbx
-            config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nbx", &tmp_int);
+            // config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nbx", &tmp_int);
+            config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsbx", &tmp_int);
             mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nsbx", &tmp_int);
         }
         // nsbu_rel = nsbu
         config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsbu", &tmp_int);
         mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nsbu", &tmp_int);
         // nsg_relaxed = ng
-        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "ng_qp_solver", &tmp_int);
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsg_qp_solver", &tmp_int);
         mem->standard_qp_solver->dims_set(config->qp_solver, mem->standard_qp_solver_dims, i, "nsg", &tmp_int);
         // print warning that those are not tested!?
     }
@@ -158,7 +159,7 @@ static void allocate_standard_qp_solver(ocp_nlp_sqp_wfqp_memory *mem,
     printf("Dims succesfully allocated!\n");
 
     // Setup the solver dimensions
-    // setup_standard_qp_solver_dimensions(mem, config, dims, opts);
+    setup_standard_qp_solver_dimensions(mem, config, dims, opts);
 
     // Allocate solver opts
     size = ocp_qp_xcond_solver_opts_calculate_size(mem->standard_qp_solver, mem->standard_qp_solver_dims);
