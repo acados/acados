@@ -142,8 +142,9 @@ typedef struct
 
     ocp_qp_xcond_solver_dims *standard_qp_solver_dims;
     ocp_qp_xcond_solver_config *standard_qp_solver;
-    ocp_qp_xcond_solver_opts *standard_qp_solver_opts;
+    // ocp_qp_xcond_solver_opts *standard_qp_solver_opts;
     ocp_qp_xcond_solver_memory *standard_qp_solver_mem;
+    ocp_qp_xcond_solver_workspace *standard_qp_solver_work;
     // qp in & out
     ocp_qp_in *standard_qp_in;
     ocp_qp_out *standard_qp_out;
