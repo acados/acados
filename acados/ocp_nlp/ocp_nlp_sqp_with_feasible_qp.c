@@ -2458,7 +2458,10 @@ static int standard_qp_direction(ocp_nlp_dims *dims,
     ocp_nlp_dump_qp_in_to_file(qp_in, sqp_iter, 0);
 #endif
 
-    qp_status = my_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, mem->standard_qp_in, mem->standard_qp_out, mem->standard_qp_solver);
+    qp_status = my_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work,
+                                             false, mem->standard_qp_in, mem->standard_qp_out,
+                                             mem->standard_qp_solver, mem->standard_qp_solver_dims,
+                                             mem->standard_qp_solver_mem, mem->standard_qp_solver_work);
     printf("Solved the qp with status: %d\n", qp_status);
     // restore default warm start
     if (sqp_iter==0)
@@ -2682,18 +2685,18 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // solve standard QP
-        search_direction_status = standard_qp_direction(dims,
-                                                        config,
-                                                        opts,
-                                                        nlp_opts,
-                                                        nlp_in,
-                                                        nlp_out,
-                                                        mem,
-                                                        work,
-                                                        current_l1_infeasibility,
-                                                        sqp_iter,
-                                                        timer0,
-                                                        timer1);
+        // search_direction_status = standard_qp_direction(dims,
+        //                                                 config,
+        //                                                 opts,
+        //                                                 nlp_opts,
+        //                                                 nlp_in,
+        //                                                 nlp_out,
+        //                                                 mem,
+        //                                                 work,
+        //                                                 current_l1_infeasibility,
+        //                                                 sqp_iter,
+        //                                                 timer0,
+        //                                                 timer1);
 
         if (search_direction_status == 1)
         {

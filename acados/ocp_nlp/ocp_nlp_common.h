@@ -564,6 +564,14 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
                      ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work,
                      bool precondensed_lhs, ocp_qp_in *qp_in_, ocp_qp_out *qp_out_);
 //
+int my_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *nlp_opts,
+                     ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work,
+                     bool precondensed_lhs, ocp_qp_in *qp_in_, ocp_qp_out *qp_out_,
+                     ocp_qp_xcond_solver_config *standard_qp_solver,
+                     ocp_qp_xcond_solver_dims *standard_qp_solver_dims,
+                     ocp_qp_xcond_solver_memory *standard_qp_solver_memory,
+                     ocp_qp_xcond_solver_workspace *standard_qp_solver_workspace);
+//
 double ocp_nlp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_nlp_workspace *nlp_work);
 
 // print / debug functionality
