@@ -93,8 +93,7 @@ p_ref([43, 44], :) = 8;
 p_ref([13], 3+1) = input_update_port_p12_stage3(end);
 
 if any(any(p_ref ~= p_matlab))
-    disp('Setting sparse parameters in Matlab does NOT work as expected.');
-    quit(1);
+    error('Setting sparse parameters in Matlab does NOT work as expected.');
 else
     disp('Setting sparse parameters in Matlab works as expected.');
 end
@@ -115,8 +114,7 @@ parameter_traj_out_signal = out_sim.logsout.getElement('parameter_traj_out');
 p_simulink = reshape(parameter_traj_out_signal.Values.Data(1, :), np, N+1);
 
 if any(any(p_simulink ~= p_matlab))
-    disp('Setting sparse parameters in Simulink does NOT work as expected.');
-    quit(1);
+    error('Setting sparse parameters in Simulink does NOT work as expected.');
 else
     disp('Setting sparse parameters in Simulink works as expected.');
 end

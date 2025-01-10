@@ -78,16 +78,13 @@ out_sim = sim('parameter_test_simulink', 'SaveOutput', 'on');
 status_signal = out_sim.logsout.getElement('status');
 disp('checking status, should be 2 (max iter).')
 if any(status_signal.Values.Data ~= 2)
-    disp('failed. got status values:');
-    disp(status_signal.Values.Data);
-    quit(1);
+    errror(['failed. got status values:' mat2str(status_signal.Values.Data)]);
 end
 
 element_names = out_sim.logsout.getElementNames();
 parameter_traj_out_signal = out_sim.logsout.getElement('parameter_traj_out');
 if any(parameter_traj_out_signal.Values.Data(1,:) ~= p_values)
-    disp('Setting parameters in Simulink does NOT work as expected.');
-    quit(1);
+    error('Setting parameters in Simulink does NOT work as expected.');
 end
 disp('Setting parameters in Simulink works as expected.');
 

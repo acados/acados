@@ -208,49 +208,42 @@ for itest = 1:2
     kkt_signal = out_sim.logsout.getElement('KKT_residual');
     kkt_val = kkt_signal.Values.data;
     if any(kkt_val > 1e-6)
-        disp('failed');
-        quit(1);
+        error('failed');
     end
 
     sqp_iter_signal = out_sim.logsout.getElement('sqp_iter');
     sqp_iter_val = sqp_iter_signal.Values.Data;
     disp('checking sqp_iter_val, should be 1 because problem is a QP.')
     if any(sqp_iter_val ~= 1)
-        disp('failed');
-        quit(1);
+        error('failed');
     end
 
     status_signal = out_sim.logsout.getElement('status');
     status_val = status_signal.Values.Data;
     disp('checking status, should be 0 (success).')
     if any(status_val ~= 0)
-        disp('failed. got status values:');
-        disp(status_val);
-        quit(1);
+        error(['failed. got status values:' mat2str(status_val)]);
     end
 
     utraj_signal = out_sim.logsout.getElement('utraj');
     u_simulink = utraj_signal.Values.Data(1, :);
     disp('checking u values.')
     if norm(u_simulink(:) - u_traj(:)) > 1e-8
-        disp('failed');
-        quit(1);
+        error('failed');
     end
 
     xtraj_signal = out_sim.logsout.getElement('xtraj');
     x_simulink = xtraj_signal.Values.Data(1, :);
     disp('checking x values, should match solution in MATLAB.')
     if norm(x_simulink(:) - x_traj(:)) > 1e-8
-        disp('failed');
-        quit(1);
+        error('failed');
     end
     %
     pi_signal = out_sim.logsout.getElement('pi_all');
     pi_simulink = pi_signal.Values.Data(1, :);
     disp('checking pi values, should match solution in MATLAB.')
     if norm(pi_simulink(:) - pi_traj(:)) > 1e-8
-        disp('failed');
-        quit(1);
+        error('failed');
     end
 
     x1_signal = out_sim.logsout.getElement('x1');
@@ -258,8 +251,7 @@ for itest = 1:2
     x1_ref = ocp_solver.get('x', 1);
     disp('checking x1_value')
     if norm(x1_val(:) - x1_ref(:)) > 1e-8
-        disp('failed');
-        quit(1);
+        error('failed');
     end
 
     u0_signal = out_sim.logsout.getElement('u0');
@@ -267,8 +259,7 @@ for itest = 1:2
     u0_ref = ocp_solver.get('u', 0);
     disp('checking u0_value')
     if norm(u0_val(:) - u0_ref(:)) > 1e-8
-        disp('failed');
-        quit(1);
+        error('failed');
     end
 
 end
