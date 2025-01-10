@@ -50,6 +50,7 @@ Fmax = 80
 
 # NOTE: hard coded in export_pendulum_ode_model;
 l_true = 0.8
+v_stds = np.array([0.4, 0.2, 0.2, 0.2])
 
 # ocp model and solver
 model = export_pendulum_ode_model()
@@ -69,16 +70,13 @@ nx_augmented = model_mhe.x.rows()
 nw = model_mhe.u.rows()
 ny = nx
 
-Q0_mhe = np.diag([0.1, 0.1, 0.1, 0.1, 1])
+Q0_mhe = np.diag([0.01, 0.01, 0.01, 0.01, .01])
 Q_mhe  = 10.*np.diag([0.2, 0.2, 2, 2, 0.1])
-R_mhe  = 2*np.diag([0.1, 0.1, 0.1, 0.1])
+R_mhe  = np.diag(1/v_stds**2)
 
 acados_solver_mhe = export_mhe_solver_with_param(model_mhe, N, h, Q_mhe, Q0_mhe, R_mhe, use_cython=True)
 
 # simulation
-v_stds = [0.2, 0.5, 1, 1]
-v_stds = [0, 0, 0, 0]
-
 simX = np.zeros((N+1, nx))
 simU = np.zeros((N, nu))
 simY = np.zeros((N+1, nx))
@@ -88,8 +86,8 @@ simWest = np.zeros((N, nx_augmented))
 sim_l_est = np.zeros((N+1, 1))
 
 # arrival cost mean (with wrong guess for l)
-# x0_bar = np.array([0.0, np.pi, 0.0, 0.0, 1])
-x0_bar = np.array([0.0, 0, 0.0, 0.0, 0.2])
+x0_bar = np.array([0.0, np.pi, 0.0, 0.0, 1])
+# x0_bar = np.array([0.0, 0, 0.0, 0.0, 0.2])
 
 # solve ocp problem
 status = acados_solver_ocp.solve()
