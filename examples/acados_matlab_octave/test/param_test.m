@@ -34,26 +34,25 @@ check_acados_requirements()
 
 import casadi.*
 
-%%
 N = 20; % number of discretization steps
 nx = 3;
 nu = 3;
 np = 10;
-[ocp_model, ocp_opts, simulink_opts, x0] = create_parametric_ocp_qp(N, np);
-% NOTE: here we don't perform iterations and just test initialization
-% functionality
-ocp_opts.set('nlp_solver_max_iter', 0);
+[ocp, x0] = create_parametric_ocp_qp(N, np);
 
 %% create ocp solver
-ocp_solver = acados_ocp(ocp_model, ocp_opts, simulink_opts);
+ocp_solver = AcadosOcpSolver(ocp);
+% NOTE: here we don't perform iterations and just test initialization
+% functionality
+ocp.solver_options.nlp_solver_max_iter = 0;
 
 %% test parameter setters and getters;
 ocp_solver.set('p', zeros(np, 1)); % TODO: this behaviour is only supported for p!
 
-p_vals_different = eye(np, N+1);
+p_vals_different = reshape(1:(np*(N+1)), [np, N+1]);
 ocp_solver.set('p', p_vals_different);
 
-for i_p = 1:length(N+1);
+for i_p = 1:N+1;
     p_val = p_vals_different(:, i_p);
     ocp_solver.set('p', p_val, 0);
     p = ocp_solver.get('p', 0);

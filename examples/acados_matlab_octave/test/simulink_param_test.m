@@ -39,30 +39,31 @@ N = 20; % number of discretization steps
 nx = 3;
 nu = 3;
 np = 100;
-[ocp_model, ocp_opts, simulink_opts, x0] = create_parametric_ocp_qp(N, np);
+[ocp, x0] = create_parametric_ocp_qp(N, np);
+
 % NOTE: here we don't perform iterations and just test initialization
 % functionality
-ocp_opts.set('nlp_solver_max_iter', 0);
+ocp.solver_options.nlp_solver_max_iter = 0;
 
 % deactivate ports.
-simulink_opts.inputs.lbx_0 = 0;
-simulink_opts.inputs.ubx_0 = 0;
-simulink_opts.inputs.lbx = 0;
-simulink_opts.inputs.ubx = 0;
-simulink_opts.inputs.reset_solver = 0;
-simulink_opts.inputs.x_init = 0;
-simulink_opts.inputs.u_init = 0;
-simulink_opts.inputs.pi_init = 0;
-simulink_opts.inputs.ignore_inits = 0;
-simulink_opts.outputs.pi_all = 0;
-simulink_opts.outputs.sqp_iter = 0;
+ocp.simulink_opts.inputs.lbx_0 = 0;
+ocp.simulink_opts.inputs.ubx_0 = 0;
+ocp.simulink_opts.inputs.lbx = 0;
+ocp.simulink_opts.inputs.ubx = 0;
+ocp.simulink_opts.inputs.reset_solver = 0;
+ocp.simulink_opts.inputs.x_init = 0;
+ocp.simulink_opts.inputs.u_init = 0;
+ocp.simulink_opts.inputs.pi_init = 0;
+ocp.simulink_opts.inputs.ignore_inits = 0;
+ocp.simulink_opts.outputs.pi_all = 0;
+ocp.simulink_opts.outputs.sqp_iter = 0;
 
 % parameter ports
-simulink_opts.inputs.parameter_traj = 1;
-simulink_opts.outputs.parameter_traj = 1;
+ocp.simulink_opts.inputs.parameter_traj = 1;
+ocp.simulink_opts.outputs.parameter_traj = 1;
 
 %% create ocp solver
-ocp_solver = acados_ocp(ocp_model, ocp_opts, simulink_opts);
+ocp_solver = AcadosOcpSolver(ocp);
 
 %% simulink test
 cd c_generated_code
