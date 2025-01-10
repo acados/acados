@@ -294,7 +294,7 @@ class AcadosCostConstraintEvaluator:
             (lower_violation[self.nonslacked_indices], upper_violation[self.nonslacked_indices]))
 
         # evaluate cost of soft constraints
-        lower_slack_cost, upper_slack_cost = np.array([0.]), np.array([0.])
+        lower_slack_cost, upper_slack_cost = 0.,0.
 
         if self.__ocp.cost.Zl.size > 0:
             lower_slack_cost += 0.5 * self.__ocp.cost.Zl @ (lower_slack.full() * lower_slack.full())
@@ -302,11 +302,12 @@ class AcadosCostConstraintEvaluator:
             lower_slack_cost += self.__ocp.cost.zl @ lower_slack.full()
 
         if self.__ocp.cost.Zu.size > 0:
-            upper_slack_cost += 0.5 * self.__ocp.cost.Zu @ (upper_slack.full() * upper_slack.full())
+            upper_slack_cost += 0.5 * self.__ocp.cost.Zu @ (upper_slack.full()* upper_slack.full())
         if self.__ocp.cost.zu.size > 0:
             upper_slack_cost += self.__ocp.cost.zu @ upper_slack.full()
 
         slack_cost = (lower_slack_cost + upper_slack_cost) * self.time_steps[step]
+
 
         if len(slack_cost) == 0:
             cost = cost_without_slacks
@@ -369,19 +370,22 @@ class AcadosCostConstraintEvaluator:
         # evaluate cost of soft constraints
         lower_slack_cost_e, upper_slack_cost_e = np.array([0.]), np.array([0.])
         if self.__ocp.cost.Zl_e.size > 0:
-            lower_slack_cost_e += 0.5 * self.__ocp.cost.Zl_e @ (lower_slack_e.full() * lower_slack_e.full())
+            lower_slack_cost_e += 0.5 * lower_slack_e.full().transpose()@self.__ocp.cost.Zl_e @ lower_slack_e.full()
+
         if self.__ocp.cost.zl_e.size > 0:
             lower_slack_cost_e += self.__ocp.cost.zl_e @ lower_slack_e.full()
 
+
         if self.__ocp.cost.Zu_e.size > 0:
-            upper_slack_cost_e += 0.5 * self.__ocp.cost.Zu_e @ (upper_slack_e.full() * upper_slack_e.full())
+            upper_slack_cost_e += 0.5 * upper_slack_e.full().transpose()@self.__ocp.cost.Zu_e @  upper_slack_e.full()
+
         if self.__ocp.cost.zu_e.size > 0:
             upper_slack_cost_e += self.__ocp.cost.zu_e @ upper_slack_e.full()
 
         if lower_slack_e.full().size > 0:
-            cost += lower_slack_e.full()
+            cost += lower_slack_cost_e
         if upper_slack_e.full().size > 0:
-            cost += upper_slack_e.full()
+            cost += upper_slack_cost_e
 
         return cost[0][0]
 

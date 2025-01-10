@@ -34,7 +34,7 @@ sys.path.insert(0, '../getting_started')
 
 from matplotlib import pyplot as plt
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver, AcadosSim
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver, AcadosSim, ACADOS_INFTY
 from acados_template.mpc_utils import AcadosCostConstraintEvaluator
 from pendulum_model import export_pendulum_ode_model
 from utils_eval import plot_pendulum_eval
@@ -110,20 +110,13 @@ def setup(x0, N_horizon, Tf, td, RTI=False, parametric_constraints=False):
 
     if parametric_constraints:
         ocp.constraints.uh = np.array([0, 0])
-        ocp.constraints.lh = np.array([-10, -10])
+        ocp.constraints.lh = np.array([-ACADOS_INFTY, -ACADOS_INFTY])
         ocp.constraints.idxsh = np.array([0, 1])
         ocp.cost.zu = ocp.cost.zl = 2e3 * np.ones((3,))
         ocp.cost.Zu = ocp.cost.Zl = 5e3 * np.ones((3,))
     else:
         ocp.cost.zu = ocp.cost.zl = 2e3 * np.ones((1,))
         ocp.cost.Zu = ocp.cost.Zl = 5e3 * np.ones((1,))
-
-    ocp.constraints.idxsbx_e = np.array([0])
-    ocp.constraints.lsbx_e = np.zeros((1,))
-    ocp.constraints.usbx_e = np.zeros((1,))
-
-    ocp.cost.zu_e = ocp.cost.zl_e = 1e3 * np.ones((1,))
-    ocp.cost.Zu_e = ocp.cost.Zl_e = 1e3 * np.ones((1,))
 
     ocp.constraints.x0 = x0
     ocp.constraints.idxbu = np.array([0])
@@ -249,11 +242,11 @@ def main(use_RTI: bool = False, parametric_constraints: bool = True, plot_result
         solution_obj = ocp_solver.store_iterate_to_obj()
         cost_ext_eval = evaluator.evaluate_ocp_cost(solution_obj)
         cost_int_eval = ocp_solver.get_cost()
-        rel_error_perc = np.abs(cost_ext_eval - cost_int_eval) / cost_int_eval * 100
+        abs_error = np.abs(cost_ext_eval - cost_int_eval)
 
         # formatted print relative error up to 3 decimal places
-        print(f'cost_err_rel: {rel_error_perc:.8f} %')
-        assert math.isclose(cost_ext_eval, cost_int_eval, rel_tol=1e-3)
+        print(f'cost_err_abs: {abs_error:.9f}')
+        assert math.isclose(cost_ext_eval, cost_int_eval, abs_tol=1e-8, rel_tol=1e-8)
 
         # simulate system
         simX[i + 1, :] = integrator.simulate(x=simX[i, :], u=simU[i, :])
@@ -297,6 +290,6 @@ def main(use_RTI: bool = False, parametric_constraints: bool = True, plot_result
 
 if __name__ == '__main__':
 
-    for parametric_constraints in [False, True]:
+    for parametric_constraints in [True, False]:
         print(f'Parametric_constraints: {parametric_constraints}\n')
         main(use_RTI=True, parametric_constraints=parametric_constraints, plot_results=False)
