@@ -1130,6 +1130,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         // set sl
         int tmp_offset_buffer = 0;
         int stage;
+        tmp_offset = 0;
         for (stage = 0; stage <= N; stage++)
         {
             tmp_int = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, stage, "sl");
