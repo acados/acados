@@ -39,23 +39,30 @@ import time
 
 class AcadosOcpBatchSolver():
     """
-    Batch Integrator for parallel integration.
+    Batch OCP solver for parallel solves.
 
-        :param sim: type :py:class:`~acados_template.acados_sim.AcadosOcp`
+        :param ocp: type :py:class:`~acados_template.acados_ocp.AcadosOcp`
         :param N_batch: batch size, positive integer
-        :param json_file: Default: 'acados_sim.json'
+        :param json_file: Default: 'acados_ocp.json'
+        :param build: Flag indicating whether solver should be (re)compiled. If False an attempt is made to load an already compiled shared library for the solver. Default: True
+        :param generate: Flag indicating whether problem functions should be code generated. Default: True
         :verbose: bool, default: True
     """
 
     __ocp_solvers : List[AcadosOcpSolver]
 
-    def __init__(self, ocp: AcadosOcp, N_batch: int, json_file: str = 'acados_ocp.json', verbose: bool=True):
+    def __init__(self, ocp: AcadosOcp, N_batch: int, json_file: str = 'acados_ocp.json',  build: bool = True, generate: bool = True, verbose: bool=True):
 
         if not isinstance(N_batch, int) or N_batch <= 0:
             raise Exception("AcadosOcpBatchSolver: argument N_batch should be a positive integer.")
 
         self.__N_batch = N_batch
-        self.__ocp_solvers = [AcadosOcpSolver(ocp, json_file=json_file, build=n==0, generate=n==0, verbose=verbose) for n in range(self.N_batch)]
+        self.__ocp_solvers = [AcadosOcpSolver(ocp,
+                                              json_file=json_file,
+                                              build=n==0 if build else False,
+                                              generate=n==0 if generate else False,
+                                              verbose=verbose)
+                               for n in range(self.N_batch)]
 
         self.__shared_lib = self.ocp_solvers[0].shared_lib
         self.__acados_lib = self.ocp_solvers[0].acados_lib
@@ -65,7 +72,11 @@ class AcadosOcpBatchSolver():
         for i in range(self.N_batch):
             self.__ocp_solvers_pointer[i] = self.ocp_solvers[i].capsule
 
-        getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve").argtypes = [POINTER(c_void_p), c_int]
+        # out data for solve
+        self.__status = np.zeros((self.N_batch,), dtype=np.intc, order="C")
+        self.__status_p = cast(self.__status.ctypes.data, POINTER(c_int))
+
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve").argtypes = [POINTER(c_void_p), POINTER(c_int), c_int]
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve").restype = c_void_p
 
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_params_jac").argtypes = [POINTER(c_void_p), c_int]
@@ -106,8 +117,12 @@ class AcadosOcpBatchSolver():
         """
         Call solve for all `N_batch` solvers.
         """
-        getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve")(self.__ocp_solvers_pointer, self.__N_batch)
 
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve")(self.__ocp_solvers_pointer, self.__status_p, self.__N_batch)
+
+        # to be consistent with non-batched solve
+        for s, solver in zip(self.__status, self.ocp_solvers):
+            solver.status = s
 
 
     def eval_adjoint_solution_sensitivity(self,

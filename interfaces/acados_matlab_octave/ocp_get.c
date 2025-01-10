@@ -144,8 +144,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     sprintf(buffer, "\nocp_get: cannot get multiple %s values at once due to varying dimension", field);
                     mexErrMsgTxt(buffer);
                 }
-                ocp_nlp_out_get(config, dims, out, ii, "x", x+ii*nx0);
             }
+            ocp_nlp_get_all(solver, in, out, "x", x);
+
         }
         else if (nrhs==3)
         {
@@ -183,8 +184,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     sprintf(buffer, "\nocp_get: cannot get multiple %s values at once due to varying dimension", field);
                     mexErrMsgTxt(buffer);
                 }
-                ocp_nlp_out_get(config, dims, out, ii, "u", u+ii*nu0);
             }
+            ocp_nlp_get_all(solver, in, out, "u", u);
         }
         else if (nrhs==3)
         {
@@ -249,8 +250,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     sprintf(buffer, "\nocp_get: cannot get multiple %s values at once due to varying dimension", field);
                     mexErrMsgTxt(buffer);
                 }
-                ocp_nlp_out_get(config, dims, out, ii, "z", z+ii*nz);
             }
+            ocp_nlp_get_all(solver, in, out, "z", z);
         }
         else if (nrhs==3)
         {
@@ -289,8 +290,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     sprintf(buffer, "\nocp_get: cannot get multiple %s values at once due to varying dimension", field);
                     mexErrMsgTxt(buffer);
                 }
-                ocp_nlp_out_get(config, dims, out, ii, "pi", pi+ii*npi);
             }
+            ocp_nlp_get_all(solver, in, out, "pi", pi);
         }
         else if (nrhs==3)
         {

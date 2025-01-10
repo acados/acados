@@ -500,19 +500,14 @@ int ocp_nlp_cost_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
         ocp_nlp_in *in, int stage, const char *field, void *value)
 {
     ocp_nlp_cost_config *cost_config = config->cost[stage];
-
     return cost_config->model_set(cost_config, dims->cost[stage], in->cost[stage], field, value);
-
 }
 
 int ocp_nlp_cost_model_get(ocp_nlp_config *config, ocp_nlp_dims *dims,
         ocp_nlp_in *in, int stage, const char *field, void *value)
 {
     ocp_nlp_cost_config *cost_config = config->cost[stage];
-
-    printf("ocp_nlp_cost_model_get\n");
     return cost_config->model_get(cost_config, dims->cost[stage], in->cost[stage], field, value);
-
 }
 
 int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
@@ -954,6 +949,7 @@ void ocp_nlp_constraint_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims 
 }
 
 
+// TODO: ocp_nlp_out not needed?
 void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
         int stage, const char *field, int *dims_out)
 {

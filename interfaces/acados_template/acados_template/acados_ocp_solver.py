@@ -1367,6 +1367,7 @@ class AcadosOcpSolver:
         self.set_flat("lam", iterate.lam)
 
 
+    # TODO this should be a property
     def get_status(self) -> int:
         """
         Returns the status of the last solver call.
