@@ -153,7 +153,6 @@ ocp_solver.print('stat')
 if status == 0
     disp('test_ocp_qpDUNES: success!');
 else
-    disp(['test_ocp_qpDUNES: Failed with status ', num2str(status)]);
-    quit(1);
+    error(['test_ocp_qpDUNES: Failed with status ', num2str(status)]);
 end
 
