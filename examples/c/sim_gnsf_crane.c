@@ -45,7 +45,7 @@
 #include "acados_c/external_function_interface.h"
 #include "acados_c/sim_interface.h"
 
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h" // for printing
+#include "blasfeo_d_aux_ext_dep.h" // for printing
 
 // model
 #include "examples/c/crane_nx9_model/crane_nx9_model.h"

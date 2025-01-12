@@ -37,8 +37,8 @@
 #include <math.h>
 
 // blasfeo
-#include "blasfeo/include/blasfeo_common.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_common.h"
+#include "blasfeo_d_blas.h"
 // hpipm
 #include "hpipm/include/hpipm_d_ocp_qp_dim.h"
 // acados

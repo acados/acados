@@ -35,7 +35,7 @@
 // acados
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados/dense_qp/dense_qp_common.h"
-#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo_d_aux.h"
 // mex
 #include "mex.h"
 #include "mex_macros.h"

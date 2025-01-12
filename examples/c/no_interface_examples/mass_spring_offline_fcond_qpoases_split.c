@@ -46,9 +46,9 @@
 #include "acados/utils/timing.h"
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_blas.h"
 
 // NOTE(nielsvd): required to cast memory etc. should go.
 #include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"

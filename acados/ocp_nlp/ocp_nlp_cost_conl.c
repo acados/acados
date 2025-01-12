@@ -38,9 +38,9 @@
 #include <math.h>
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
+#include "blasfeo_common.h"
 // acados
 #include "acados/utils/mem.h"
 

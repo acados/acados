@@ -92,7 +92,12 @@ option(ACADOS_WITH_OSQP "OSQP solver" OFF)
 # Interfaces
 option(ACADOS_OCTAVE "Octave Interface tests" OFF)
 option(ACADOS_PYTHON "Python Interface tests" OFF)
-
+# Options to use libraries found via find_package
+option(ACADOS_WITH_SYSTEM_BLASFEO "If ON, use blasfeo found via find_package(blasfeo) instead of compiling it" OFF)
+mark_as_advanced(ACADOS_WITH_SYSTEM_BLASFEO)
+if(ACADOS_WITH_SYSTEM_BLASFEO)
+    message(WARNING "The ACADOS_WITH_SYSTEM_BLASFEO option is enabled. ACADOS is tested by its developers only with ACADOS_WITH_SYSTEM_BLASFEO=OFF, when using an external blasfeo may sure that everything works as expected.")
+endif()
 
 # Set custom path
 set(EXTERNAL_SRC_DIR ${PROJECT_SOURCE_DIR}/external)

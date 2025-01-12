@@ -76,6 +76,11 @@ target_include_directories(acados PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/interfaces>
         $<INSTALL_INTERFACE:include>)
 
+if(NOT ACADOS_WITH_SYSTEM_BLASFEO)
+    target_include_directories(acados PUBLIC
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/blasfeo/include>)
+endif()
+
 # OPENMP
 # find_package(OpenMP)
 if(ACADOS_WITH_OPENMP)
