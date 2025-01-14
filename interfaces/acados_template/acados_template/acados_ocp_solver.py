@@ -323,7 +323,7 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_get_from_iterate.argtypes = [c_void_p, c_int, c_int, c_char_p, c_void_p]
         self.__acados_lib.ocp_nlp_get_from_iterate.restypes = c_void_p
 
-        self.__acados_lib.ocp_nlp_dims_get_total_from_attr.argtypes = [c_void_p, c_void_p, c_char_p]
+        self.__acados_lib.ocp_nlp_dims_get_total_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p]
         self.__acados_lib.ocp_nlp_dims_get_total_from_attr.restype = c_int
 
         self.__acados_lib.ocp_nlp_get_all.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
@@ -443,7 +443,7 @@ class AcadosOcpSolver:
         if field not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']:
             raise Exception(f'AcadosOcpSolver.get_dim_flat(field={field}): \'{field}\' is an invalid argument.')
 
-        return self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, field.encode('utf-8'))
+        return self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, field.encode('utf-8'))
 
 
     def custom_update(self, data_: np.ndarray):
@@ -1014,12 +1014,13 @@ class AcadosOcpSolver:
 
         field = field_.encode('utf-8')
 
-        dims = self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, field)
+        dims = self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, field)
 
         out = np.zeros((dims,), dtype=np.float64, order="C")
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
         self.__acados_lib.ocp_nlp_get_all(self.nlp_solver, self.nlp_in, self.nlp_out, field, out_data)
+
         return out
 
 
@@ -1032,7 +1033,7 @@ class AcadosOcpSolver:
         field = field_.encode('utf-8')
         if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']:
             raise Exception(f'AcadosOcpSolver.get_flat(field={field_}): \'{field_}\' is an invalid argument.')
-        dims = self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, field)
+        dims = self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, field)
 
         if len(value_) != dims:
             raise Exception(f'AcadosOcpSolver.set_flat(field={field_}, value): value has wrong length, expected {dims}, got {len(value_)}.')
@@ -1346,12 +1347,12 @@ class AcadosOcpSolver:
         Returns the current iterate of the OCP solver as an AcadosOcpFlattenedIterate.
         """
         return AcadosOcpFlattenedIterate(x = self.get_flat("x"),
-                                        u = self.get_flat("u"),
-                                        z = self.get_flat("z"),
-                                        sl = self.get_flat("sl"),
-                                        su = self.get_flat("su"),
-                                        pi = self.get_flat("pi"),
-                                        lam = self.get_flat("lam"))
+                                         u = self.get_flat("u"),
+                                         z = self.get_flat("z"),
+                                         sl = self.get_flat("sl"),
+                                         su = self.get_flat("su"),
+                                         pi = self.get_flat("pi"),
+                                         lam = self.get_flat("lam"))
 
     def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedIterate) -> None:
         """

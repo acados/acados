@@ -2830,7 +2830,7 @@ void {{ model.name }}_acados_batch_eval_solution_sens_adj_p({{ model.name }}_sol
 
 void {{ model.name }}_acados_batch_set_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch)
 {
-    int offset = ocp_nlp_dims_get_total_from_attr(capsules[0]->nlp_solver->config, capsules[0]->nlp_solver->dims, field);
+    int offset = ocp_nlp_dims_get_total_from_attr(capsules[0]->nlp_solver->config, capsules[0]->nlp_solver->dims, capsules[0]->nlp_out, field);
 
     if (N_batch*offset != N_data)
     {
@@ -2859,7 +2859,7 @@ void {{ model.name }}_acados_batch_set_flat({{ model.name }}_solver_capsule ** c
 
 void {{ model.name }}_acados_batch_get_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch)
 {
-    int offset = ocp_nlp_dims_get_total_from_attr(capsules[0]->nlp_solver->config, capsules[0]->nlp_solver->dims, field);
+    int offset = ocp_nlp_dims_get_total_from_attr(capsules[0]->nlp_solver->config, capsules[0]->nlp_solver->dims, capsules[0]->nlp_out, field);
 
     if (N_batch*offset != N_data)
     {
