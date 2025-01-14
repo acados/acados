@@ -1021,7 +1021,6 @@ class AcadosOcpSolver:
 
         self.__acados_lib.ocp_nlp_get_all(self.nlp_solver, self.nlp_in, self.nlp_out, field, out_data)
 
-        print("done")
         return out
 
 
