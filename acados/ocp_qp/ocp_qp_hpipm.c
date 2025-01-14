@@ -121,8 +121,7 @@ void ocp_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts
     d_ocp_qp_ipm_arg_set_default(BALANCE, opts->hpipm_opts);
 
     ocp_qp_hpipm_opts_overwrite_mode_opts(opts);
-    // opts->print_level = 0;
-    opts->print_level = 2;
+    opts->print_level = 0;
 
     return;
 }

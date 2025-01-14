@@ -828,19 +828,19 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
     }
 
     // check for infeasible problem
-    if (nlp_res->inf_norm_res_eq < opts->tol_eq
-        && nlp_res->inf_norm_res_ineq > opts->tol_ineq
-        && mem->inf_norm_res_stat_feasibility < opts->tol_stat
-        && mem->inf_norm_res_comp_feasibility < opts->tol_comp)
-            // && mem->nlp_mem->objective_multiplier < opts->tol_objective_multiplier //maybe we should include this later!
-    {
-        mem->nlp_mem->status = ACADOS_INFEASIBLE;
-        if (opts->nlp_opts->print_level > 0)
-        {
-            printf("Converged to infeasible stationary point! Problem might be locally infeasible!\n");
-        }
-        return true;
-    }
+    // if (nlp_res->inf_norm_res_eq < opts->tol_eq
+    //     && nlp_res->inf_norm_res_ineq > opts->tol_ineq
+    //     && mem->inf_norm_res_stat_feasibility < opts->tol_stat
+    //     && mem->inf_norm_res_comp_feasibility < opts->tol_comp)
+    //         // && mem->nlp_mem->objective_multiplier < opts->tol_objective_multiplier //maybe we should include this later!
+    // {
+    //     mem->nlp_mem->status = ACADOS_INFEASIBLE;
+    //     if (opts->nlp_opts->print_level > 0)
+    //     {
+    //         printf("Converged to infeasible stationary point! Problem might be locally infeasible!\n");
+    //     }
+    //     return true;
+    // }
 
     // check for small step
     if (opts->tol_min_step_norm > 0.0 && (n_iter > 0) && (mem->step_norm < opts->tol_min_step_norm))
@@ -983,59 +983,6 @@ static double calculate_predicted_l1_inf_reduction(ocp_nlp_sqp_wfqp_opts* opts, 
         return current_infeasibility - qp_infeasibility;
     }
 }
-
-
-
-/*
-This function calculates the convex interpolation factor
-*/
-static double calculate_search_direction_interpolation_factor(ocp_nlp_sqp_wfqp_opts* opts,
-                                                              double pred_l1_inf_QP_optimality,
-                                                              double pred_l1_inf_QP_feasibility,
-                                                              double l1_inf_QP_optimality,
-                                                              double l1_inf_QP_feasibility)
-{
-    double kappa;
-
-    if (pred_l1_inf_QP_optimality >= opts->sufficient_l1_inf_reduction * pred_l1_inf_QP_feasibility)
-    {
-        kappa = 1.0;
-    }
-    else
-    {
-        kappa = fmin(1.0, ((1-opts->sufficient_l1_inf_reduction)*pred_l1_inf_QP_feasibility)/(l1_inf_QP_optimality - l1_inf_QP_feasibility));
-    }
-    // We have a convex combination, therefore kappa in [0,1]
-    // assert(kappa >= 0.0 && kappa <= 1.0);
-    if (kappa < 0.0)
-    {
-        kappa = 0.0;
-    }
-    else if (kappa > 1.0)
-    {
-        kappa = 1.0;
-    }
-    print_debug_output_double("kappa: ", kappa, opts->nlp_opts->print_level, 2);
-    return kappa;
-}
-
-
-
-static void setup_search_direction(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims* dims, ocp_qp_out* prediction_direction,
-                                ocp_qp_out* steering_direction, ocp_qp_out* search_direction, double kappa)
-{
-    // steering direction is solution of feasibility problem
-    // prediction direction is solution of optimality problem
-    if (kappa != 1.0)
-    {
-        for (int i = 0; i <= dims->N; i++)
-        {
-            int dim = dims->nx[i]+dims->nu[i]+2*dims->ns[i]+2*mem->nns[i];
-            blasfeo_daxpby(dim, kappa, &prediction_direction->ux[i], 0, 1-kappa, &steering_direction->ux[i], 0, &search_direction->ux[i], 0);
-        }
-    }
-}
-
 
 
 /*
@@ -1215,8 +1162,6 @@ static void set_non_slacked_l1_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
     }
 }
 
-
-
 static void set_non_slacked_l2_penalties(ocp_nlp_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_sqp_wfqp_memory *mem,
     ocp_nlp_workspace *work)
@@ -1240,8 +1185,6 @@ static void set_non_slacked_l2_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
     }
     // print_ocp_qp_in(qp_in);
 }
-
-
 
 static void set_feasibility_multipliers(ocp_nlp_dims *dims,
                             ocp_nlp_sqp_wfqp_memory *mem,
@@ -1366,98 +1309,98 @@ static double slacked_qp_out_compute_primal_nrm_inf(ocp_qp_out* qp_out, ocp_nlp_
     return res;
 }
 
-/*
-calculates new iterate or trial iterate in 'out_destination' with step 'mem->qp_out',
-step size 'alpha', and current iterate 'out_start'.
- */
-void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
-            void *in_, void *out_, void *opts_, void *mem_,
-            void *work_, void *out_destination_,
-            void *solver_mem, double alpha, bool full_step_dual)
-{
-    ocp_nlp_dims *dims = dims_;
-    ocp_nlp_out *out_start = out_;
-    ocp_nlp_sqp_wfqp_memory *mem = solver_mem;
-    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-    ocp_nlp_workspace* nlp_work = work_;
+// /*
+// calculates new iterate or trial iterate in 'out_destination' with step 'mem->qp_out',
+// step size 'alpha', and current iterate 'out_start'.
+//  */
+// void ocp_nlp_update_variables_sqp_wfqp(void *config_, void *dims_,
+//             void *in_, void *out_, void *opts_, void *mem_,
+//             void *work_, void *out_destination_,
+//             void *solver_mem, double alpha, bool full_step_dual)
+// {
+//     ocp_nlp_dims *dims = dims_;
+//     ocp_nlp_out *out_start = out_;
+//     ocp_nlp_sqp_wfqp_memory *mem = solver_mem;
+//     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+//     ocp_nlp_workspace* nlp_work = work_;
 
-    ocp_nlp_out *out_destination = out_destination_;
-    ocp_qp_out *qp_out = nlp_mem->qp_out;
-    // solver_mem is not used in this function, but needed for DDP
-    // the function is used in the config->globalization->step_update
-    int N = dims->N;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *nz = dims->nz;
-    int *ns = dims->ns;
-    int *nns = mem->nns;
-    int n_nominal_ineq_nlp, two_n_nominal_ineq_nlp;
+//     ocp_nlp_out *out_destination = out_destination_;
+//     ocp_qp_out *qp_out = nlp_mem->qp_out;
+//     // solver_mem is not used in this function, but needed for DDP
+//     // the function is used in the config->globalization->step_update
+//     int N = dims->N;
+//     int *nx = dims->nx;
+//     int *nu = dims->nu;
+//     int *nz = dims->nz;
+//     int *ns = dims->ns;
+//     int *nns = mem->nns;
+//     int n_nominal_ineq_nlp, two_n_nominal_ineq_nlp;
 
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
-    for (int i = 0; i <= N; i++)
-    {
-        // variable order NLP
-        // [u x lb_slack ub_slack]
-        // variable order QP
-        // [u x lb_slack lb_relaxation_slack ub_slack ub_relaxation_slack]
+// #if defined(ACADOS_WITH_OPENMP)
+//     #pragma omp parallel for
+// #endif
+//     for (int i = 0; i <= N; i++)
+//     {
+//         // variable order NLP
+//         // [u x lb_slack ub_slack]
+//         // variable order QP
+//         // [u x lb_slack lb_relaxation_slack ub_slack ub_relaxation_slack]
 
-        // step in primal variables
-        blasfeo_daxpy(nx[i]+nu[i]+ns[i], alpha, qp_out->ux + i, 0, out_start->ux + i, 0, out_destination->ux + i, 0);
-        blasfeo_daxpy(ns[i], alpha, qp_out->ux + i, nx[i]+nu[i]+ns[i]+nns[i],
-                      out_start->ux + i, nx[i]+nu[i]+ns[i],
-                      out_destination->ux + i, nx[i]+nu[i]+ns[i]);
+//         // step in primal variables
+//         blasfeo_daxpy(nx[i]+nu[i]+ns[i], alpha, qp_out->ux + i, 0, out_start->ux + i, 0, out_destination->ux + i, 0);
+//         blasfeo_daxpy(ns[i], alpha, qp_out->ux + i, nx[i]+nu[i]+ns[i]+nns[i],
+//                       out_start->ux + i, nx[i]+nu[i]+ns[i],
+//                       out_destination->ux + i, nx[i]+nu[i]+ns[i]);
 
-        // update dual variables
-        n_nominal_ineq_nlp = dims->nb[i]+dims->ng[i]+dims->ni_nl[i];
-        two_n_nominal_ineq_nlp = 2*n_nominal_ineq_nlp;
-        // qp_out->lam = [lbu, lbx, lg, l_nl, ubu, ubx, ug, u_nl, lbs_NLP, lbs_QP, ubs_NLP, ubs_QP]
-        // nlp_out->lam = [lbu, lbx, lg, l_nl, ubu, ubx, ug, u_nl, lbs_NLP, ----, ubs_NLP, ---]
-        if (full_step_dual)
-        {
-            blasfeo_dveccp(two_n_nominal_ineq_nlp+ns[i], qp_out->lam+i, 0, out_destination->lam+i, 0);
-            blasfeo_dveccp(ns[i], qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]+mem->nns[i],
-                           out_destination->lam+i, two_n_nominal_ineq_nlp+ns[i]);
-            if (i < N)
-            {
-                blasfeo_dveccp(nx[i+1], qp_out->pi+i, 0, out_destination->pi+i, 0);
-            }
-        }
-        else
-        {
-            // update duals with alpha step
-            blasfeo_daxpby(two_n_nominal_ineq_nlp+ns[i], 1.0-alpha, out_start->lam+i, 0, alpha, qp_out->lam+i, 0, out_destination->lam+i, 0);
-            blasfeo_daxpby(ns[i], 1.0-alpha, out_start->lam+i, two_n_nominal_ineq_nlp+ns[i]+mem->nns[i], alpha,
-                           qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]+mem->nns[i], out_destination->lam+i, two_n_nominal_ineq_nlp+ns[i]);
+//         // update dual variables
+//         n_nominal_ineq_nlp = dims->nb[i]+dims->ng[i]+dims->ni_nl[i];
+//         two_n_nominal_ineq_nlp = 2*n_nominal_ineq_nlp;
+//         // qp_out->lam = [lbu, lbx, lg, l_nl, ubu, ubx, ug, u_nl, lbs_NLP, lbs_QP, ubs_NLP, ubs_QP]
+//         // nlp_out->lam = [lbu, lbx, lg, l_nl, ubu, ubx, ug, u_nl, lbs_NLP, ----, ubs_NLP, ---]
+//         if (full_step_dual)
+//         {
+//             blasfeo_dveccp(two_n_nominal_ineq_nlp+ns[i], qp_out->lam+i, 0, out_destination->lam+i, 0);
+//             blasfeo_dveccp(ns[i], qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]+mem->nns[i],
+//                            out_destination->lam+i, two_n_nominal_ineq_nlp+ns[i]);
+//             if (i < N)
+//             {
+//                 blasfeo_dveccp(nx[i+1], qp_out->pi+i, 0, out_destination->pi+i, 0);
+//             }
+//         }
+//         else
+//         {
+//             // update duals with alpha step
+//             blasfeo_daxpby(two_n_nominal_ineq_nlp+ns[i], 1.0-alpha, out_start->lam+i, 0, alpha, qp_out->lam+i, 0, out_destination->lam+i, 0);
+//             blasfeo_daxpby(ns[i], 1.0-alpha, out_start->lam+i, two_n_nominal_ineq_nlp+ns[i]+mem->nns[i], alpha,
+//                            qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]+mem->nns[i], out_destination->lam+i, two_n_nominal_ineq_nlp+ns[i]);
 
-            if (i < N)
-            {
-                blasfeo_daxpby(nx[i+1], 1.0-alpha, out_start->pi+i, 0, alpha, qp_out->pi+i, 0, out_destination->pi+i, 0);
-            }
-        }
+//             if (i < N)
+//             {
+//                 blasfeo_daxpby(nx[i+1], 1.0-alpha, out_start->pi+i, 0, alpha, qp_out->pi+i, 0, out_destination->pi+i, 0);
+//             }
+//         }
 
-        // linear update of algebraic variables using state and input sensitivity
-        if (i < N)
-        {
-            // out->z = nlp_mem->z_alg + alpha * dzdux * qp_out->ux
-            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, nlp_mem->dzduxt+i, 0, 0,
-                    qp_out->ux+i, 0, 1.0, nlp_mem->z_alg+i, 0, out_destination->z+i, 0);
-        }
+//         // linear update of algebraic variables using state and input sensitivity
+//         if (i < N)
+//         {
+//             // out->z = nlp_mem->z_alg + alpha * dzdux * qp_out->ux
+//             blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, nlp_mem->dzduxt+i, 0, 0,
+//                     qp_out->ux+i, 0, 1.0, nlp_mem->z_alg+i, 0, out_destination->z+i, 0);
+//         }
 
-        if (mem->needs_steering_step) //avoiding null-pointer
-        {
-            // Full step update of the feasibility multipliers
-            blasfeo_dveccp(two_n_nominal_ineq_nlp+ns[i], nlp_work->tmp_qp_out->lam+i, 0, mem->lam_feasibility+i, 0);
-            blasfeo_dveccp(ns[i], nlp_work->tmp_qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]+mem->nns[i],
-                            mem->lam_feasibility+i, two_n_nominal_ineq_nlp+ns[i]);
-            if (i < N)
-            {
-                blasfeo_dveccp(nx[i+1], nlp_work->tmp_qp_out->pi+i, 0, mem->pi_feasibility+i, 0);
-            }
-        }
-    }
-}
+//         if (mem->needs_steering_step) //avoiding null-pointer
+//         {
+//             // Full step update of the feasibility multipliers
+//             blasfeo_dveccp(two_n_nominal_ineq_nlp+ns[i], nlp_work->tmp_qp_out->lam+i, 0, mem->lam_feasibility+i, 0);
+//             blasfeo_dveccp(ns[i], nlp_work->tmp_qp_out->lam+i, two_n_nominal_ineq_nlp+ns[i]+mem->nns[i],
+//                             mem->lam_feasibility+i, two_n_nominal_ineq_nlp+ns[i]);
+//             if (i < N)
+//             {
+//                 blasfeo_dveccp(nx[i+1], nlp_work->tmp_qp_out->pi+i, 0, mem->pi_feasibility+i, 0);
+//             }
+//         }
+//     }
+// }
 
 
 
@@ -1729,13 +1672,9 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
 }
 
 
-
-
-
 /************************************************
  * residual functions
  ************************************************/
-
 /*
 Evaluate adjoint of constraints with multipliers pi_feasibility, lam_feasibility.
 in user space.
@@ -1912,7 +1851,8 @@ void ocp_nlp_sqp_wfqp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_ou
     // res_stat --> with objective multiplier and optimality/predictor QP mutlipliers
     for (int i = 0; i <= N; i++)
     {
-        blasfeo_daxpy(nv[i], -nlp_mem->objective_multiplier, nlp_mem->cost_grad + i, 0, nlp_mem->ineq_adj + i, 0,
+        // blasfeo_daxpy(nv[i], -nlp_mem->objective_multiplier, nlp_mem->cost_grad + i, 0, nlp_mem->ineq_adj + i, 0,
+        blasfeo_daxpy(nv[i], -1.0, nlp_mem->cost_grad + i, 0, nlp_mem->ineq_adj + i, 0,
                       res->res_stat + i, 0);
         blasfeo_daxpy(nu[i] + nx[i], 1.0, nlp_mem->dyn_adj + i, 0, res->res_stat + i, 0,
                       res->res_stat + i, 0);
@@ -1936,7 +1876,7 @@ void ocp_nlp_sqp_wfqp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_ou
         blasfeo_dvecse(1, tmp_res, &res->tmp, i);
     }
     blasfeo_dvecnrm_inf(N+1, &res->tmp, 0, &mem->inf_norm_res_stat_feasibility);
-    printf("Res_stat infeasibility: %.4e\n",mem->inf_norm_res_stat_feasibility);
+    // printf("Res_stat infeasibility: %.4e\n",mem->inf_norm_res_stat_feasibility);
 
     // res_eq -----
     for (int i = 0; i < N; i++)
@@ -1961,402 +1901,24 @@ void ocp_nlp_sqp_wfqp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_ou
         }
     }
 
-    res->inf_norm_res_comp = sqp_wfqp_calculate_res_comp(dims, mem, qp_in, out->lam);
-    mem->inf_norm_res_comp_feasibility = sqp_wfqp_calculate_res_comp(dims, mem, qp_in, mem->lam_feasibility);
-    printf("Res_comp infeasibility: %.4e\n",mem->inf_norm_res_comp_feasibility);
-
-}
-
-static void end_of_iteration_obj_multiplier_update(ocp_nlp_memory* nlp_mem, ocp_nlp_opts* nlp_opts,
-                                                    double predictor_qp_objective, double pred_l1_inf_QP_optimality)
-{
-    print_debug_output("--- END OF ITERATION OJECTIVE MULTIPLIER UPDATE ---\n", nlp_opts->print_level, 2);
-    print_debug_output_double("lhs", -nlp_mem->qp_cost_value +  nlp_mem->predicted_infeasibility_reduction, nlp_opts->print_level, 2);
-    print_debug_output_double("rhs", 1e-3*(-predictor_qp_objective + pred_l1_inf_QP_optimality), nlp_opts->print_level, 2);
-    if (-nlp_mem->qp_cost_value +  nlp_mem->predicted_infeasibility_reduction < 1e-3*(-predictor_qp_objective + pred_l1_inf_QP_optimality))
-    {
-        if (pred_l1_inf_QP_optimality < 0.0)
-        {
-            nlp_mem->objective_multiplier = 1e-1*nlp_mem->objective_multiplier;
-        }
-        else
-        {
-            nlp_mem->objective_multiplier = 5e-1*nlp_mem->objective_multiplier;
-        }
-        print_debug_output("Objective multiplier was reduced\n", nlp_opts->print_level, 2);
-        print_debug_output_double("obj multiplier: ", nlp_mem->objective_multiplier, nlp_opts->print_level, 2);
-    }
-    else
-    {
-        print_debug_output("Objective multiplier was NOT reduced\n", nlp_opts->print_level, 2);
-    }
-}
-
-
-
-/*
-Implements steering rules according to Byrd paper.
-*/
-static int steering_direction_penalty_update(ocp_nlp_dims *dims,
-                                            ocp_nlp_config *config,
-                                            ocp_nlp_sqp_wfqp_opts *opts,
-                                            ocp_nlp_opts *nlp_opts,
-                                            ocp_nlp_in *nlp_in,
-                                            ocp_nlp_out *nlp_out,
-                                            ocp_nlp_sqp_wfqp_memory *mem,
-                                            ocp_nlp_sqp_wfqp_workspace *work,
-                                            double current_l1_infeasibility,
-                                            int sqp_iter,
-                                            acados_timer timer0,
-                                            acados_timer timer1)
-{
-    ocp_nlp_memory* nlp_mem = mem->nlp_mem;
-    ocp_nlp_workspace* nlp_work = work->nlp_work;
-    ocp_qp_in *qp_in = nlp_mem->qp_in;
-    ocp_qp_out *qp_out = nlp_mem->qp_out;
-    qp_info* qp_info_;
-    int qp_status, qp_iter;
-    ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
-
-    double pred_l1_inf_QP_feasibility, pred_l1_inf_QP_optimality;
-    double l1_inf_QP_optimality, l1_inf_QP_feasibility;
-    double predictor_qp_objective, predictor_lp_objective;
-
-    bool steering_computed = false;
-    bool obj_mult_good = false;
-    int qps_solved = 0;
-    while(!obj_mult_good)
-    {
-        /* Solve Predictor QP: We solve the standard l1-relaxed QP with gradient */
-        qp_status = prepare_and_solve_QP(config, opts, qp_in, qp_out, dims, mem, nlp_in, nlp_out,
-                    nlp_mem, nlp_work, sqp_iter, false, timer0, timer1);
-        ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
-        qp_iter = qp_info_->num_iter; // we add up the iterations of both QPs
-        if (qp_status != ACADOS_SUCCESS)
-        {
-            if (nlp_opts->print_level >=1)
-            {
-                printf("\nFailure in Optimality QP (with gradient) in iteration %d, got qp_status %d!\n", qp_info_->num_iter, qp_status);
-            }
-            nlp_mem->status = ACADOS_QP_FAILURE;
-            nlp_mem->iter = sqp_iter;
-            nlp_timings->time_tot = acados_toc(&timer0);
-// #if defined(ACADOS_WITH_OPENMP)
-//             // restore number of threads
-//             omp_set_num_threads(num_threads_bkp);
-// #endif
-            return nlp_mem->status;
-        }
-        compute_qp_multiplier_norm_inf(mem, dims, qp_out, qp_in, false);
-
-        qps_solved += 1;
-        l1_inf_QP_optimality = calculate_slacked_qp_l1_infeasibility(dims, mem, work, opts, qp_in, qp_out, opts->use_QP_l1_inf_from_slacks);
-        pred_l1_inf_QP_optimality = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, l1_inf_QP_optimality);
-        predictor_qp_objective = compute_qp_objective_value(mem, dims, qp_in, qp_out, nlp_work);
-        predictor_lp_objective = compute_gradient_directional_derivative(mem, dims, qp_in, qp_out);
-
-        /* Debug */
-        print_debug_output_double("Opt QP: Multiplier norm: pi", mem->norm_opt_qp_pi, nlp_opts->print_level, 2);
-        print_debug_output_double("Opt QP: Multiplier norm: lam slacked", mem->norm_opt_qp_lam_slacked_constraints, nlp_opts->print_level, 2);
-        print_debug_output_double("Opt QP: Multiplier norm: lam unslacked", mem->norm_opt_qp_lam_unslacked_bounds, nlp_opts->print_level, 2);
-        print_debug_output_double("Opt QP: l1_inf: ", l1_inf_QP_optimality, nlp_opts->print_level, 2);
-        print_debug_output_double("Opt QP: pred_l1_inf_QP: ", pred_l1_inf_QP_optimality, nlp_opts->print_level, 2);
-        print_debug_output_double("Opt QP: pred_obj_QP: ", -predictor_qp_objective, nlp_opts->print_level, 2);
-        print_debug_output_double("Opt QP: pred_obj_LP: ", -predictor_lp_objective, nlp_opts->print_level, 2);
-
-        // Do we need the steering step?
-        if (current_l1_infeasibility <= 0.5*fmin(opts->tol_eq, opts->tol_ineq))
-        {
-                if (-pred_l1_inf_QP_optimality <= 0.5*(fmin(opts->tol_eq, opts->tol_ineq)-current_l1_infeasibility))
-                {
-                    printf("QPs solved: %d\n", qps_solved);
-                    return 0;
-                }
-        }
-        else
-        {
-            if (pred_l1_inf_QP_optimality >= 0.5*current_l1_infeasibility)
-            {
-                printf("QPs solved: %d\n", qps_solved);
-                return 0;
-            }
-        }
-
-        if (!steering_computed)
-        {
-            print_debug_output("Solve Steering QP!\n", nlp_opts->print_level, 2);
-            /* Solve steering QP: We solve without gradient and only with constraint Hessian */
-            qp_status = prepare_and_solve_QP(config, opts, qp_in, nlp_work->tmp_qp_out, dims, mem, nlp_in, nlp_out,
-                        nlp_mem, nlp_work, sqp_iter, true, timer0, timer1);
-            ocp_qp_out_get(nlp_work->tmp_qp_out, "qp_info", &qp_info_);
-            qp_iter += qp_info_->num_iter;
-            qps_solved += 1;
-            if (qp_status != ACADOS_SUCCESS)
-            {
-                if (nlp_opts->print_level >=1)
-                {
-                    printf("\nFailure in QP 1 (Feasibility) in iteration %d, got qp_status %d!\n", qp_iter, qp_status);
-                }
-                nlp_mem->status = ACADOS_QP_FAILURE;
-                nlp_mem->iter = sqp_iter;
-                nlp_timings->time_tot = acados_toc(&timer0);
-// #if defined(ACADOS_WITH_OPENMP)
-//             // restore number of threads
-//             omp_set_num_threads(num_threads_bkp);
-// #endif
-                return nlp_mem->status;
-            }
-            compute_qp_multiplier_norm_inf(mem, dims, nlp_work->tmp_qp_out, qp_in, true);
-
-            l1_inf_QP_feasibility = calculate_slacked_qp_l1_infeasibility(dims, mem, work, opts, qp_in, nlp_work->tmp_qp_out, opts->use_QP_l1_inf_from_slacks);
-            pred_l1_inf_QP_feasibility = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, l1_inf_QP_feasibility);
-
-            print_debug_output_double("Feas QP: Multiplier norm: pi", mem->norm_feas_qp_pi, nlp_opts->print_level, 2);
-            print_debug_output_double("Feas QP: Multiplier norm: lam slacked", mem->norm_opt_qp_lam_slacked_constraints, nlp_opts->print_level, 2);
-            print_debug_output_double("Feas QP: Multiplier norm: lam unslacked", mem->norm_feas_qp_lam_unslacked_bounds, nlp_opts->print_level, 2);
-            print_debug_output_double("Feas QP: l1_inf_feas: ", l1_inf_QP_feasibility, nlp_opts->print_level, 2);
-            print_debug_output_double("Feas QP: pred_l1_inf_QP: ", pred_l1_inf_QP_feasibility, nlp_opts->print_level, 2);
-            assert(pred_l1_inf_QP_feasibility > -1e2*opts->tol_ineq);
-
-            steering_computed = true;
-        }
-        // We have two search directions:
-        // Solution of Feasibility QP (d without cost) in nlp_work->tmp_qp_out
-        // Solution of Feasibility QP (d with objective_multiplier) in nlp_mem->qp_out
-        // check steering criterion
-        if (pred_l1_inf_QP_optimality >= 0.1*pred_l1_inf_QP_feasibility)
-        {
-            printf("QPs solved: %d\n", qps_solved);
-            return 0;
-        }
-        else
-        {
-            // reduce penalty parameter
-            nlp_mem->objective_multiplier *= 0.5;
-            if (nlp_mem->objective_multiplier < 1e-12)
-            {
-                return 1;
-            }
-        }
-        /*
-        At the moment we did not implement the additional penalty decrease and
-        the decrease wrt stationarity residual
-        (latter one would give quadratic convergence)
-        */
-    }
-    return 1; // we should never reach that point!
-}
-
-/*
-Implements squid update according to SQuID/Curtis paper.
-*/
-static int squid_search_direction_computation(ocp_nlp_dims *dims,
-                                            ocp_nlp_config *config,
-                                            ocp_nlp_sqp_wfqp_opts *opts,
-                                            ocp_nlp_opts *nlp_opts,
-                                            ocp_nlp_in *nlp_in,
-                                            ocp_nlp_out *nlp_out,
-                                            ocp_nlp_sqp_wfqp_memory *mem,
-                                            ocp_nlp_sqp_wfqp_workspace *work,
-                                            double current_l1_infeasibility,
-                                            int sqp_iter,
-                                            acados_timer timer0,
-                                            acados_timer timer1)
-{
-    ocp_nlp_memory* nlp_mem = mem->nlp_mem;
-    ocp_nlp_workspace* nlp_work = work->nlp_work;
-    ocp_qp_in *qp_in = nlp_mem->qp_in;
-    ocp_qp_out *qp_out = nlp_mem->qp_out;
-    int qp_status, qp_iter;
-    ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
-    qp_info* qp_info_;
-
-    double pred_l1_inf_QP_feasibility;
-    double l1_inf_QP_optimality, l1_inf_QP_feasibility;
-
-    double kappa;
-
-    /* Solve Predictor QP: We solve the standard l1-relaxed QP with gradient */
-    qp_status = prepare_and_solve_QP(config, opts, qp_in, qp_out, dims, mem, nlp_in, nlp_out,
-                nlp_mem, nlp_work, sqp_iter, false, timer0, timer1);
-    ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
-    qp_iter = qp_info_->num_iter; // we add up the iterations of both QPs
-    if (qp_status != ACADOS_SUCCESS)
-    {
-        if (nlp_opts->print_level >=1)
-        {
-            printf("\nFailure in Optimality QP (with gradient) in iteration %d, got qp_status %d!\n", qp_info_->num_iter, qp_status);
-        }
-        nlp_mem->status = ACADOS_QP_FAILURE;
-        nlp_mem->iter = sqp_iter;
-        nlp_timings->time_tot = acados_toc(&timer0);
-// #if defined(ACADOS_WITH_OPENMP)
-//         // restore number of threads
-//         int num_threads_bkp = omp_get_num_threads();
-//         omp_set_num_threads(num_threads_bkp);
-// #endif
-        return nlp_mem->status;
-    }
-    compute_qp_multiplier_norm_inf(mem, dims, qp_out, qp_in, false);
-
-    l1_inf_QP_optimality = calculate_slacked_qp_l1_infeasibility(dims, mem, work, opts, qp_in, qp_out, opts->use_QP_l1_inf_from_slacks);
-    mem->pred_l1_inf_QP_optimality = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, l1_inf_QP_optimality);
-    mem->predictor_qp_objective = compute_qp_objective_value(mem, dims, qp_in, qp_out, nlp_work);
-    mem->predictor_lp_objective = compute_gradient_directional_derivative(mem, dims, qp_in, qp_out);
-
-    /* Debug */
-    print_debug_output_double("Opt QP: Multiplier norm: pi", mem->norm_opt_qp_pi, nlp_opts->print_level, 2);
-    print_debug_output_double("Opt QP: Multiplier norm: lam slacked", mem->norm_opt_qp_lam_slacked_constraints, nlp_opts->print_level, 2);
-    print_debug_output_double("Opt QP: Multiplier norm: lam unslacked", mem->norm_opt_qp_lam_unslacked_bounds, nlp_opts->print_level, 2);
-    print_debug_output_double("Opt QP: l1_inf: ", l1_inf_QP_optimality, nlp_opts->print_level, 2);
-    print_debug_output_double("Opt QP: pred_l1_inf_QP: ", mem->pred_l1_inf_QP_optimality, nlp_opts->print_level, 2);
-    print_debug_output_double("Opt QP: pred_obj_QP: ", -mem->predictor_qp_objective, nlp_opts->print_level, 2);
-    print_debug_output_double("Opt QP: pred_obj_LP: ", -mem->predictor_lp_objective, nlp_opts->print_level, 2);
-    int qps_solved = 1;
-
-    // Do we need the steering step?
-    mem->needs_steering_step = true;
-    if (current_l1_infeasibility <= 0.5*fmin(opts->tol_eq, opts->tol_ineq))
-    {
-            if (-mem->pred_l1_inf_QP_optimality <= 0.5*(fmin(opts->tol_eq, opts->tol_ineq)-current_l1_infeasibility))
-            {
-                mem->needs_steering_step = false;
-            }
-    }
-    else
-    {
-        if (mem->pred_l1_inf_QP_optimality >= 0.5*current_l1_infeasibility)
-        {
-            mem->needs_steering_step = false;
-        }
-    }
-
-    if (mem->needs_steering_step)
-    {
-        print_debug_output("Solve Steering QP!\n", nlp_opts->print_level, 2);
-        /* Solve steering QP: We solve without gradient and only with constraint Hessian */
-        qp_status = prepare_and_solve_QP(config, opts, qp_in, nlp_work->tmp_qp_out, dims, mem, nlp_in, nlp_out,
-                    nlp_mem, nlp_work, sqp_iter, true, timer0, timer1);
-        ocp_qp_out_get(nlp_work->tmp_qp_out, "qp_info", &qp_info_);
-        qp_iter += qp_info_->num_iter;
-        if (qp_status != ACADOS_SUCCESS)
-        {
-            if (nlp_opts->print_level >=1)
-            {
-                printf("\nFailure in QP 1 (Feasibility) in iteration %d, got qp_status %d!\n", qp_iter, qp_status);
-            }
-            nlp_mem->status = ACADOS_QP_FAILURE;
-            nlp_mem->iter = sqp_iter;
-            nlp_timings->time_tot = acados_toc(&timer0);
-// #if defined(ACADOS_WITH_OPENMP)
-//         // restore number of threads
-//         int num_threads_bkp = omp_get_num_threads();
-//         omp_set_num_threads(num_threads_bkp);
-// #endif
-            return nlp_mem->status;
-        }
-        compute_qp_multiplier_norm_inf(mem, dims, nlp_work->tmp_qp_out, qp_in, true);
-
-        l1_inf_QP_feasibility = calculate_slacked_qp_l1_infeasibility(dims, mem, work, opts, qp_in, nlp_work->tmp_qp_out, opts->use_QP_l1_inf_from_slacks);
-        pred_l1_inf_QP_feasibility = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, l1_inf_QP_feasibility);
-
-        print_debug_output_double("Feas QP: Multiplier norm: pi", mem->norm_feas_qp_pi, nlp_opts->print_level, 2);
-        print_debug_output_double("Feas QP: Multiplier norm: lam slacked", mem->norm_feas_qp_lam_slacked_constraints, nlp_opts->print_level, 2);
-        print_debug_output_double("Feas QP: Multiplier norm: lam unslacked", mem->norm_opt_qp_lam_unslacked_bounds, nlp_opts->print_level, 2);
-        print_debug_output_double("Feas QP: l1_inf_feas: ", l1_inf_QP_feasibility, nlp_opts->print_level, 2);
-        print_debug_output_double("Feas QP: pred_l1_inf_QP: ", pred_l1_inf_QP_feasibility, nlp_opts->print_level, 2);
-        assert(pred_l1_inf_QP_feasibility > -1e2*opts->tol_ineq);
-
-        kappa = calculate_search_direction_interpolation_factor(opts,
-                                                                mem->pred_l1_inf_QP_optimality,
-                                                                pred_l1_inf_QP_feasibility,
-                                                                l1_inf_QP_optimality,
-                                                                l1_inf_QP_feasibility);
-        // We have two search directions:
-        // Solution of Feasibility QP (d without cost) in nlp_work->tmp_qp_out
-        // Solution of Feasibility QP (d with objective_multiplier) in nlp_mem->qp_out
-        qps_solved = 2;
-
-        // Calculate search direction
-        setup_search_direction(mem, dims, qp_out, nlp_work->tmp_qp_out, qp_out, kappa);
-    }
-
-    print_debug_output_double("Product penalty and norm: ", mem->norm_opt_qp_lam_unslacked_bounds*nlp_mem->objective_multiplier, nlp_opts->print_level, 2);
-    if (nlp_mem->objective_multiplier > 1e-3)
-    {
-        if (mem->norm_opt_qp_lam_unslacked_bounds*nlp_mem->objective_multiplier > 1.0)
-        {
-            nlp_mem->objective_multiplier = sqrt(0.5*nlp_mem->objective_multiplier* (1-opts->sufficient_l1_inf_reduction)/mem->norm_opt_qp_lam_unslacked_bounds);
-        }
-    }
-
-    // Log the qp stats. At the moment we sum up the number of total QP iterations
-    // The solver anyway terminates if a QP was not solved correctly at this point
-    int val = mem->stat_n*(sqp_iter+1); // dont know why we need to do this.
-    if (sqp_iter+1 < mem->stat_m)
-    {
-        mem->stat[val+4] = qp_status;
-        mem->stat[val+5] = qp_iter;
-    }
-
-    printf("QPs solved: %d\n", qps_solved);
-    return 0;
-}
-
-/********************************
-* Functions for standard QP
-*********************************/
-static void set_standard_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp_qp_in *qp_in)
-{
-    mem->standard_qp_in->BAbt = qp_in->BAbt; // dynamics matrix & vector work space
-	mem->standard_qp_in->RSQrq = qp_in->RSQrq; // hessian of cost & vector work space
-	mem->standard_qp_in->DCt = qp_in->DCt; // inequality constraints matrix
-	mem->standard_qp_in->d_mask = qp_in->d_mask; // inequality constraints matrix
-
-    // mem->standard_qp_in->idxs_rev = mem->nlp_idxs_rev; // TODO: This is wrong vector!!!
-    mem->standard_qp_in->idxb = qp_in->idxb;
-    mem->standard_qp_in->idxe = qp_in->idxe;
-    mem->standard_qp_in->diag_H_flag = qp_in->diag_H_flag;
-    mem->standard_qp_in->m = qp_in->m; // TODO: Not sure what happens here
-    // TODO: if we have slacks in the original QP how is this transferred here??
-}
-
-static void approximate_standard_qp_vectors(ocp_nlp_config *config,
-    ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
-    ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
-{
-    int N = dims->N;
-    int *nv = dims->nv;
-    int *nx = dims->nx;
-    // int *nu = dims->nu;
-    int *ni = dims->ni;
-    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
+    // res->inf_norm_res_comp = sqp_wfqp_calculate_res_comp(dims, mem, qp_in, out->lam);
+    // mem->inf_norm_res_comp_feasibility = sqp_wfqp_calculate_res_comp(dims, mem, qp_in, mem->lam_feasibility);
+    // res_comp
+    res->inf_norm_res_comp = 0.0;
     for (int i = 0; i <= N; i++)
     {
-        // g
-        blasfeo_dveccp(nv[i], nlp_mem->cost_grad + i, 0, mem->standard_qp_in->rqz + i, 0);
-
-        // b
-        if (i < N)
-            blasfeo_dveccp(nx[i + 1], nlp_mem->dyn_fun + i, 0, mem->standard_qp_in->b + i, 0);
-
-        // evaluate constraint residuals
-        config->constraints[i]->update_qp_vectors(config->constraints[i], dims->constraints[i],
-            in->constraints[i], opts->constraints[i], nlp_mem->constraints[i], work->constraints[i]);
-
-        // copy ineq function value into nlp mem, then into QP
-        struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
-        blasfeo_dveccp(2 * ni[i], ineq_fun, 0, nlp_mem->ineq_fun + i, 0);
-
-        // d
-        blasfeo_dveccp(2 * ni[i], nlp_mem->ineq_fun + i, 0, mem->standard_qp_in->d + i, 0);
+        blasfeo_dvecmul(2 * ni[i], out->lam + i, 0, mem->nlp_mem->ineq_fun+i, 0, res->res_comp + i, 0);
+        blasfeo_dvecnrm_inf(2 * ni[i], res->res_comp + i, 0, &tmp_res);
+        blasfeo_dvecse(1, tmp_res, &res->tmp, i);
     }
+    blasfeo_dvecnrm_inf(N+1, &res->tmp, 0, &res->inf_norm_res_comp);
+    // printf("Res_comp infeasibility: %.4e\n",mem->inf_norm_res_comp_feasibility);
+
 }
 
+/************************************************
+* Byrd-Omojokun Subproblem Stuff
+************************************************/
 /*
 Adjusts the bounds of the QP with the given slack variables, such that the
 resulting QP has always a feasible solution.
@@ -2378,15 +1940,15 @@ static void setup_byrd_omojokun_bounds(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memo
 
     for (i = 0; i <= N; i++)
     {
-        printf("i = %d\n", i);
-        printf("ns[i] = %d\n", dims->ns[i]);
-        printf("nns[i] = %d\n", mem->nns[i]);
+        // printf("i = %d\n", i);
+        // printf("ns[i] = %d\n", dims->ns[i]);
+        // printf("nns[i] = %d\n", mem->nns[i]);
         for (j=0; j<mem->nns[i]; ++j)
         {
-            printf("j = %d\n", j);
+            // printf("j = %d\n", j);
             int constr_index = mem->idxns[i][j]; //
             int slack_index = mem->qp_idxs_rev[i][constr_index];
-            printf("slack_index = %d\n", slack_index);
+            // printf("slack_index = %d\n", slack_index);
             // get lower slack
             tmp_lower = BLASFEO_DVECEL(qp_out->ux + i, nx[i]+nu[i]+slack_index);
             // lower_bound - value
@@ -2403,15 +1965,6 @@ static void setup_byrd_omojokun_bounds(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memo
         }
     }
 }
-
-static void destroy_standard_qp_solver_memory(ocp_nlp_sqp_wfqp_memory *mem)
-{
-    free(mem->standard_qp_solver);
-    free(mem->standard_qp_solver_dims);
-    free(mem->standard_qp_in);
-    free(mem->standard_qp_out);
-}
-
 
 /*
 Solve a standard QP
@@ -2473,7 +2026,7 @@ static int standard_qp_direction(ocp_nlp_dims *dims,
                                              false, qp_in, qp_out,
                                              mem->standard_qp_solver, mem->standard_qp_solver_dims,
                                              mem->standard_qp_solver_mem, mem->standard_qp_solver_work);
-    printf("Solved the qp with status: %d\n", qp_status);
+    // printf("Solved the qp with status: %d\n", qp_status);
     // restore default warm start
     if (sqp_iter==0)
     {
@@ -2518,6 +2071,151 @@ static int standard_qp_direction(ocp_nlp_dims *dims,
 
     return 0;
 }
+
+/*
+Solve feasibility QP first and then solve standard QP with adjusted bounds
+*/
+static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
+                                            ocp_nlp_config *config,
+                                            ocp_nlp_sqp_wfqp_opts *opts,
+                                            ocp_nlp_opts *nlp_opts,
+                                            ocp_nlp_in *nlp_in,
+                                            ocp_nlp_out *nlp_out,
+                                            ocp_nlp_sqp_wfqp_memory *mem,
+                                            ocp_nlp_sqp_wfqp_workspace *work,
+                                            double current_l1_infeasibility,
+                                            int sqp_iter,
+                                            acados_timer timer0,
+                                            acados_timer timer1)
+{
+    ocp_nlp_memory* nlp_mem = mem->nlp_mem;
+    ocp_nlp_workspace* nlp_work = work->nlp_work;
+    ocp_qp_in *qp_in = nlp_mem->qp_in;
+    ocp_qp_out *qp_out = nlp_mem->qp_out;
+    int qp_status, qp_iter;
+    ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
+    qp_info* qp_info_;
+
+    double pred_l1_inf_QP_feasibility;
+    double l1_inf_QP_optimality, l1_inf_QP_feasibility;
+
+    double kappa;
+
+    print_debug_output("Solve Feasibility QP!\n", nlp_opts->print_level, 2);
+    /* Solve steering QP: We solve without gradient and only with constraint Hessian */
+    qp_status = prepare_and_solve_QP(config, opts, qp_in, nlp_work->tmp_qp_out, dims, mem, nlp_in, nlp_out,
+                nlp_mem, nlp_work, sqp_iter, true, timer0, timer1);
+    ocp_qp_out_get(nlp_work->tmp_qp_out, "qp_info", &qp_info_);
+    qp_iter += qp_info_->num_iter;
+    if (qp_status != ACADOS_SUCCESS)
+    {
+        if (nlp_opts->print_level >=1)
+        {
+            printf("\nFailure in QP 1 (Feasibility) in iteration %d, got qp_status %d!\n", qp_iter, qp_status);
+        }
+        nlp_mem->status = ACADOS_QP_FAILURE;
+        nlp_mem->iter = sqp_iter;
+        nlp_timings->time_tot = acados_toc(&timer0);
+// #if defined(ACADOS_WITH_OPENMP)
+//         // restore number of threads
+//         int num_threads_bkp = omp_get_num_threads();
+//         omp_set_num_threads(num_threads_bkp);
+// #endif
+        return nlp_mem->status;
+    }
+    compute_qp_multiplier_norm_inf(mem, dims, nlp_work->tmp_qp_out, qp_in, true);
+
+    l1_inf_QP_feasibility = calculate_slacked_qp_l1_infeasibility(dims, mem, work, opts, qp_in, nlp_work->tmp_qp_out, opts->use_QP_l1_inf_from_slacks);
+    pred_l1_inf_QP_feasibility = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, l1_inf_QP_feasibility);
+
+    print_debug_output_double("Feas QP: Multiplier norm: pi", mem->norm_feas_qp_pi, nlp_opts->print_level, 2);
+    print_debug_output_double("Feas QP: Multiplier norm: lam slacked", mem->norm_feas_qp_lam_slacked_constraints, nlp_opts->print_level, 2);
+    print_debug_output_double("Feas QP: Multiplier norm: lam unslacked", mem->norm_opt_qp_lam_unslacked_bounds, nlp_opts->print_level, 2);
+    print_debug_output_double("Feas QP: l1_inf_feas: ", l1_inf_QP_feasibility, nlp_opts->print_level, 2);
+    print_debug_output_double("Feas QP: pred_l1_inf_QP: ", pred_l1_inf_QP_feasibility, nlp_opts->print_level, 2);
+    assert(pred_l1_inf_QP_feasibility > -1e2*opts->tol_ineq);
+
+    /* Solve the standard QP with updated bounds*/
+    setup_byrd_omojokun_bounds(dims, mem, work, opts, mem->standard_qp_in, qp_out);
+
+    int search_direction_status = standard_qp_direction(dims,
+                                                        config,
+                                                        opts,
+                                                        nlp_opts,
+                                                        nlp_in,
+                                                        nlp_out,
+                                                        mem,
+                                                        work,
+                                                        current_l1_infeasibility,
+                                                        sqp_iter,
+                                                        timer0,
+                                                        timer1);
+
+    return 0;
+}
+
+/********************************
+* Functions for standard QP
+*********************************/
+static void set_standard_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp_qp_in *qp_in)
+{
+    mem->standard_qp_in->BAbt = qp_in->BAbt; // dynamics matrix & vector work space
+	mem->standard_qp_in->RSQrq = qp_in->RSQrq; // hessian of cost & vector work space
+	mem->standard_qp_in->DCt = qp_in->DCt; // inequality constraints matrix
+	mem->standard_qp_in->d_mask = qp_in->d_mask; // inequality constraints matrix
+
+    // mem->standard_qp_in->idxs_rev = mem->nlp_idxs_rev; // TODO: This is wrong vector!!!
+    mem->standard_qp_in->idxb = qp_in->idxb;
+    mem->standard_qp_in->idxe = qp_in->idxe;
+    mem->standard_qp_in->diag_H_flag = qp_in->diag_H_flag;
+    mem->standard_qp_in->m = qp_in->m; // TODO: Not sure what happens here
+    // TODO: if we have slacks in the original QP how is this transferred here??
+}
+
+static void approximate_standard_qp_vectors(ocp_nlp_config *config,
+    ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+    ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
+{
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    // int *nu = dims->nu;
+    int *ni = dims->ni;
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        // g
+        blasfeo_dveccp(nv[i], nlp_mem->cost_grad + i, 0, mem->standard_qp_in->rqz + i, 0);
+
+        // b
+        if (i < N)
+            blasfeo_dveccp(nx[i + 1], nlp_mem->dyn_fun + i, 0, mem->standard_qp_in->b + i, 0);
+
+        // evaluate constraint residuals
+        config->constraints[i]->update_qp_vectors(config->constraints[i], dims->constraints[i],
+            in->constraints[i], opts->constraints[i], nlp_mem->constraints[i], work->constraints[i]);
+
+        // copy ineq function value into nlp mem, then into QP
+        struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
+        blasfeo_dveccp(2 * ni[i], ineq_fun, 0, nlp_mem->ineq_fun + i, 0);
+
+        // d
+        blasfeo_dveccp(2 * ni[i], nlp_mem->ineq_fun + i, 0, mem->standard_qp_in->d + i, 0);
+    }
+}
+
+static void destroy_standard_qp_solver_memory(ocp_nlp_sqp_wfqp_memory *mem)
+{
+    free(mem->standard_qp_solver);
+    free(mem->standard_qp_solver_dims);
+    free(mem->standard_qp_in);
+    free(mem->standard_qp_out);
+}
+
 
 /************************************************
 * MAIN OPTIMIZATION ROUTINE
@@ -2664,54 +2362,22 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         // Compute the search direction
         int search_direction_status = 0;
-        // if (opts->use_steering_rules)
-        // {
-        //     search_direction_status = steering_direction_penalty_update(dims,
-        //                                                             config,
-        //                                                             opts,
-        //                                                             nlp_opts,
-        //                                                             nlp_in,
-        //                                                             nlp_out,
-        //                                                             mem,
-        //                                                             work,
-        //                                                             current_l1_infeasibility,
-        //                                                             sqp_iter,
-        //                                                             timer0,
-        //                                                             timer1);
-        // }
-        // else
-        // {
-        //     search_direction_status = squid_search_direction_computation(dims,
-        //                                                             config,
-        //                                                             opts,
-        //                                                             nlp_opts,
-        //                                                             nlp_in,
-        //                                                             nlp_out,
-        //                                                             mem,
-        //                                                             work,
-        //                                                             current_l1_infeasibility,
-        //                                                             sqp_iter,
-        //                                                             timer0,
-        //                                                             timer1);
-        // }
-
-        // solve standard QP
-        search_direction_status = standard_qp_direction(dims,
-                                                        config,
-                                                        opts,
-                                                        nlp_opts,
-                                                        nlp_in,
-                                                        nlp_out,
-                                                        mem,
-                                                        work,
-                                                        current_l1_infeasibility,
-                                                        sqp_iter,
-                                                        timer0,
-                                                        timer1);
+        search_direction_status = byrd_omojokun_direction_computation(dims,
+                                                                    config,
+                                                                    opts,
+                                                                    nlp_opts,
+                                                                    nlp_in,
+                                                                    nlp_out,
+                                                                    mem,
+                                                                    work,
+                                                                    current_l1_infeasibility,
+                                                                    sqp_iter,
+                                                                    timer0,
+                                                                    timer1);
 
         if (search_direction_status == 1)
         {
-            printf("Error in steering!\n");
+            printf("Error in search direction computation!\n");
             exit(1);
         }
 
@@ -2723,10 +2389,9 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->stat[mem->stat_n*(sqp_iter+1)+5] = qp_iter;
         }
 
-
+        // We want to keep this! Since l1 QP should have the same as ourt ByrdOmojokun-QP
         l1_inf_search_direction = calculate_slacked_qp_l1_infeasibility(dims, mem, work, opts, qp_in, qp_out, false);
         pred_l1_inf_search_direction = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, l1_inf_search_direction);
-        print_debug_output_double("objective multiplier: ", nlp_mem->objective_multiplier, nlp_opts->print_level, 2);
         print_debug_output_double("pred_l1_inf_search_direction: ", pred_l1_inf_search_direction, nlp_opts->print_level, 2);
 
         // Compute the step norm
@@ -2735,7 +2400,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // For the moment we do not care about the artificial slack variables to keep problem
             // feasible
             // TODO: can we make this function name more descriptive to avoid the comment above?
-            mem->step_norm = slacked_qp_out_compute_primal_nrm_inf(qp_out, dims, mem);
+            // mem->step_norm = slacked_qp_out_compute_primal_nrm_inf(qp_out, dims, mem);
+            mem->step_norm = ocp_qp_out_compute_primal_nrm_inf(mem->standard_qp_out);
             if (nlp_opts->log_primal_step_norm)
                 mem->primal_step_norm[sqp_iter] = mem->step_norm;
         }
@@ -2744,19 +2410,34 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Calculate optimal QP objective (needed for globalization)
         if (config->globalization->needs_qp_objective_value() == 1)
         {
-            nlp_mem->qp_cost_value = compute_qp_objective_value(mem, dims, qp_in, qp_out, nlp_work);
+            // nlp_mem->qp_cost_value = compute_qp_objective_value(mem, dims, qp_in, qp_out, nlp_work);
+            nlp_mem->qp_cost_value = compute_qp_objective_value(mem, dims, mem->standard_qp_in, mem->standard_qp_out, nlp_work);
             nlp_mem->predicted_infeasibility_reduction = pred_l1_inf_search_direction;
-            nlp_mem->predicted_optimality_reduction = -compute_gradient_directional_derivative(mem, dims, qp_in, qp_out);
+            nlp_mem->predicted_optimality_reduction = -compute_gradient_directional_derivative(mem, dims, mem->standard_qp_in, mem->standard_qp_out);
+            // nlp_mem->predicted_optimality_reduction = -compute_gradient_directional_derivative(mem, dims, qp_in, qp_out);
             print_debug_output_double("pred_opt_search_direction: ", nlp_mem->predicted_optimality_reduction, nlp_opts->print_level, 2);
         }
         // NOTE on timings: currently all within globalization is accounted for within time_glob.
         //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
         acados_tic(&timer1);
 
+        nlp_work->tmp_qp_out->ux = qp_out->ux;
+        nlp_work->tmp_qp_out->lam = qp_out->lam;
+        nlp_work->tmp_qp_out->pi = qp_out->pi;
+
+        qp_out->ux = mem->standard_qp_out->ux;
+        qp_out->lam = mem->standard_qp_out->lam;
+        qp_out->pi = mem->standard_qp_out->pi;
+
+
         int globalization_status;
         globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in,
                                                                               nlp_out, nlp_mem, mem,
                                                                               nlp_work, nlp_opts, &mem->alpha);
+
+        qp_out->ux = nlp_work->tmp_qp_out->ux;
+        qp_out->lam = nlp_work->tmp_qp_out->lam;
+        qp_out->pi = nlp_work->tmp_qp_out->pi;
 
         if (globalization_status != ACADOS_SUCCESS)
         {
@@ -2776,11 +2457,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
         nlp_timings->time_glob += acados_toc(&timer1);
 
-        // Update according to Gould, Loh, Robinson paper
-        if (!opts->use_steering_rules)
-        {
-            end_of_iteration_obj_multiplier_update(nlp_mem, nlp_opts, mem->predictor_qp_objective, mem->pred_l1_inf_QP_optimality);
-        }
     }  // end SQP loop
 
     if (nlp_opts->print_level > 0)
@@ -3092,7 +2768,7 @@ void ocp_nlp_sqp_wfqp_config_initialize_default(void *config_)
     config->opts_get = &ocp_nlp_sqp_wfqp_opts_get;
     config->work_get = &ocp_nlp_sqp_wfqp_work_get;
     config->terminate = &ocp_nlp_sqp_wfqp_terminate;
-    config->step_update = &ocp_nlp_update_variables_sqp_wfqp;
+    config->step_update = &ocp_nlp_update_variables_sqp;
     config->is_real_time_algorithm = &ocp_nlp_sqp_wfqp_is_real_time_algorithm;
 
     return;

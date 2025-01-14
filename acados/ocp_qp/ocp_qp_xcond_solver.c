@@ -517,7 +517,6 @@ int ocp_qp_xcond_solve(void *config_, ocp_qp_xcond_solver_dims *dims, ocp_qp_in 
     xcond->condensing(qp_in, memory->xcond_qp_in, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
     info->condensing_time = acados_toc(&cond_timer);
 
-    print_ocp_qp_in(memory->xcond_qp_in);
     // solve qp
     solver_status = qp_solver->evaluate(qp_solver, memory->xcond_qp_in, memory->xcond_qp_out,
                                 opts->qp_solver_opts, memory->solver_memory, work->qp_solver_work);
@@ -528,7 +527,6 @@ int ocp_qp_xcond_solve(void *config_, ocp_qp_xcond_solver_dims *dims, ocp_qp_in 
     info->condensing_time += acados_toc(&cond_timer);
 
     // output qp info
-    print_ocp_qp_out(memory->xcond_qp_out);
     qp_info *info_mem;
     xcond->memory_get(xcond, memory->xcond_memory, "qp_out_info", &info_mem);
 
