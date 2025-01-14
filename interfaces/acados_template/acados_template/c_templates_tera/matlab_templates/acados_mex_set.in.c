@@ -101,7 +101,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int N = dims->N;
     int tmp_int, offset;
     int ii;
-    int total_size;
 
     // stage
     int s0, se;
@@ -167,7 +166,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
         if (nrhs == min_nrhs) // all stages
         {
-            total_size = ocp_nlp_dims_get_total_from_attr(config, dims, out, field_name);
             acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, 0, field_name);
 
             if (acados_size == matlab_size) // set the same value for all stages for which the dimension is not 0
@@ -186,7 +184,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             }
             else
             {
-                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, total_size);
+                acados_size = ocp_nlp_dims_get_total_from_attr(config, dims, out, field_name);
+                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
                 offset = 0;
                 for (ii=0; ii<=N; ii++) // TODO implement set_all
                 {
@@ -291,7 +290,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
         if (nrhs == min_nrhs) // all stages
         {
-            total_size = ocp_nlp_dims_get_total_from_attr(config, dims, out, field);
             acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, 0, field);
 
             if (acados_size == matlab_size) // set the same value for all stages
@@ -306,7 +304,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             }
             else
             {
-                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, total_size);
+                acados_size = ocp_nlp_dims_get_total_from_attr(config, dims, out, field);
+                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
                 offset = 0;
                 for (ii=0; ii<=N; ii++) // TODO implement set_all
                 {
@@ -332,7 +331,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
         if (nrhs == min_nrhs) // all stages
         {
-            total_size = ocp_nlp_dims_get_total_from_attr(config, dims, out, field_name);
             acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, 0, field_name);
 
             if (acados_size == matlab_size) // set the same value for all stages
@@ -349,7 +347,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             }
             else
             {
-                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, total_size);
+                acados_size = ocp_nlp_dims_get_total_from_attr(config, dims, out, field_name);
+                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
                 offset = 0;
                 for (ii=0; ii<=N; ii++) // TODO implement set_all
                 {
@@ -552,7 +551,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         if (nrhs == min_nrhs) // all stages
         {
-            total_size = ocp_nlp_dims_get_total_from_attr(config, dims, out, "p");
             acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "p");
 
             if (acados_size == matlab_size) // setting the same value for all stages
@@ -566,7 +564,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             }
             else
             {
-                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, total_size);
+                acados_size = ocp_nlp_dims_get_total_from_attr(config, dims, out, "p");
+                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
                 ocp_nlp_set_all(solver, in, out, "p", value);
             }
         }

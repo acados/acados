@@ -85,7 +85,7 @@ ocp.solver_options.store_iterates = true;
 
 ocp_solver = AcadosOcpSolver(ocp);
 
-% set stagewie
+% set stagewise
 for i = 0:N_list(1)-1
     ocp_solver.set('p', ones(np_phase_1, 1), i);
 end
