@@ -33,7 +33,8 @@
 #include <string>
 #include <vector>
 
-#include "catch/include/catch.hpp"
+#include "catch.hpp"
+
 //#include "test/test_utils/eigen.h"
 
 #include "acados_c/ocp_qp_interface.h"

@@ -35,7 +35,8 @@
 
 #include "blasfeo_target.h"
 #include "blasfeo_v_aux_ext_dep.h"
-#include "catch/include/catch.hpp"
+#include "catch.hpp"
+
 
 #ifdef OOQP
 #include "acados/ocp_qp/ocp_qp_ooqp.h"

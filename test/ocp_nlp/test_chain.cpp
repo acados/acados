@@ -35,7 +35,8 @@
 #include <cstdlib>
 
 #include "test/test_utils/eigen.h"
-#include "catch/include/catch.hpp"
+#include "catch.hpp"
+
 
 #include "blasfeo_d_aux_ext_dep.h"
 #include "blasfeo_i_aux_ext_dep.h"
