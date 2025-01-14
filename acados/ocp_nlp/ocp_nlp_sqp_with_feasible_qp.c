@@ -2313,7 +2313,7 @@ static void set_standard_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp
 	mem->standard_qp_in->DCt = qp_in->DCt; // inequality constraints matrix
 	mem->standard_qp_in->d_mask = qp_in->d_mask; // inequality constraints matrix
 
-    // mem->standard_qp_in->idxs_rev = mem->nlp_idxs_rev; // This is wrong!!!
+    // mem->standard_qp_in->idxs_rev = mem->nlp_idxs_rev; // TODO: This is wrong vector!!!
     mem->standard_qp_in->idxb = qp_in->idxb;
     mem->standard_qp_in->idxe = qp_in->idxe;
     mem->standard_qp_in->diag_H_flag = qp_in->diag_H_flag;
