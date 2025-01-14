@@ -720,7 +720,7 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
 }
 
 
-int ocp_nlp_dims_get_total_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, const char *field)
+int ocp_nlp_dims_get_total_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out, const char *field)
 {
     int N = dims->N;
 
@@ -740,14 +740,16 @@ int ocp_nlp_dims_get_total_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
             size += dims->nu[stage];
         }
     }
-    else if (!strcmp(field, "sl") || !strcmp(field, "su"))
+    else if (!strcmp(field, "sl") || !strcmp(field, "su") ||
+             !strcmp(field, "zl") || !strcmp(field, "zu") ||
+             !strcmp(field, "Zl") || !strcmp(field, "Zu"))
     {
         for (stage = 0; stage < N+1; stage++)
         {
             size += dims->ns[stage];
         }
     }
-    else if (!strcmp(field, "s"))
+    else if (!strcmp(field, "s") || !strcmp(field, "cost_z") || !strcmp(field, "cost_Z"))
     {
         for (stage = 0; stage < N+1; stage++)
         {
@@ -782,6 +784,40 @@ int ocp_nlp_dims_get_total_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
             size += dims->np[stage];
         }
     }
+    else if (!strcmp(field, "lbx") || !strcmp(field, "ubx") || !strcmp(field, "nbx"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            size += ocp_nlp_dims_get_from_attr(config, dims, out, stage, "lbx");
+        }
+    }
+    else if (!strcmp(field, "lbu") || !strcmp(field, "ubu") || !strcmp(field, "nbu"))
+    {
+        for (stage = 0; stage < N; stage++)
+        {
+            size += ocp_nlp_dims_get_from_attr(config, dims, out, stage, "lbu");
+        }
+    }
+    else if (!strcmp(field, "lg") || !strcmp(field, "ug") || !strcmp(field, "ng"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            size += ocp_nlp_dims_get_from_attr(config, dims, out, stage, "lg");
+        }
+    }
+    else if (!strcmp(field, "lh") || !strcmp(field, "uh") || !strcmp(field, "nh"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            size += ocp_nlp_dims_get_from_attr(config, dims, out, stage, "lh");
+        }
+    }
+    else
+    {
+        printf("\nerror: ocp_nlp_dims_get_total_from_attr: field %s not available\n", field);
+        exit(1);
+    }
+
     return size;
 }
 
@@ -821,9 +857,13 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
     {
         return 2*dims->ni[stage];
     }
-    else if (!strcmp(field, "sl") || !strcmp(field, "su") || !strcmp(field, "s") ||
-             !strcmp(field, "zl") || !strcmp(field, "zu") || !strcmp(field, "cost_z") ||
-             !strcmp(field, "Zl") || !strcmp(field, "Zu") || !strcmp(field, "cost_Z"))
+    else if (!strcmp(field, "s") || !strcmp(field, "cost_z") || !strcmp(field, "cost_Z"))
+    {
+        return 2*dims->ns[stage];
+    }
+    else if (!strcmp(field, "sl") || !strcmp(field, "su") ||
+             !strcmp(field, "zl") || !strcmp(field, "zu") ||
+             !strcmp(field, "Zl") || !strcmp(field, "Zu"))
     {
         return dims->ns[stage];
     }

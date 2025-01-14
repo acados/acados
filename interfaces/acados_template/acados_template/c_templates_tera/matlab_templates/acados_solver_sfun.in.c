@@ -1096,7 +1096,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         // x_init
         {%- set i_input = i_input + 1 %}
         in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
-        tmp_int = ocp_nlp_dims_get_total_from_attr(nlp_config, nlp_dims, "x");
+        tmp_int = ocp_nlp_dims_get_total_from_attr(nlp_config, nlp_dims, nlp_out, "x");
         for (int jj = 0; jj < tmp_int; jj++)
             buffer[jj] = (double)(*in_sign[jj]);
         ocp_nlp_set_all(nlp_solver, nlp_in, nlp_out, "x", (void *) buffer);
@@ -1106,7 +1106,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         // u_init
         {%- set i_input = i_input + 1 %}
         in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
-        tmp_int = ocp_nlp_dims_get_total_from_attr(nlp_config, nlp_dims, "u");
+        tmp_int = ocp_nlp_dims_get_total_from_attr(nlp_config, nlp_dims, nlp_out, "u");
         for (int jj = 0; jj < tmp_int; jj++)
             buffer[jj] = (double)(*in_sign[jj]);
         ocp_nlp_set_all(nlp_solver, nlp_in, nlp_out, "u", (void *) buffer);
@@ -1116,7 +1116,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         // pi_init
         {%- set i_input = i_input + 1 %}
         in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
-        tmp_int = ocp_nlp_dims_get_total_from_attr(nlp_config, nlp_dims, "pi");
+        tmp_int = ocp_nlp_dims_get_total_from_attr(nlp_config, nlp_dims, nlp_out, "pi");
         for (int jj = 0; jj < tmp_int; jj++)
             buffer[jj] = (double)(*in_sign[jj]);
         ocp_nlp_set_all(nlp_solver, nlp_in, nlp_out, "pi", (void *) buffer);
