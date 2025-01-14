@@ -2311,6 +2311,14 @@ static void set_standard_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp
     mem->standard_qp_in->BAbt = qp_in->BAbt; // dynamics matrix & vector work space
 	mem->standard_qp_in->RSQrq = qp_in->RSQrq; // hessian of cost & vector work space
 	mem->standard_qp_in->DCt = qp_in->DCt; // inequality constraints matrix
+	mem->standard_qp_in->d_mask = qp_in->d_mask; // inequality constraints matrix
+
+    // mem->standard_qp_in->idxs_rev = mem->nlp_idxs_rev; // This is wrong!!!
+    mem->standard_qp_in->idxb = qp_in->idxb;
+    mem->standard_qp_in->idxe = qp_in->idxe;
+    mem->standard_qp_in->diag_H_flag = qp_in->diag_H_flag;
+    mem->standard_qp_in->m = qp_in->m; // TODO: Not sure what happens here
+    // TODO: if we have slacks in the original QP how is this transferred here??
 }
 
 static void approximate_standard_qp_vectors(ocp_nlp_config *config,
