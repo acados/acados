@@ -2656,36 +2656,36 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         // Compute the search direction
         int search_direction_status = 0;
-        if (opts->use_steering_rules)
-        {
-            search_direction_status = steering_direction_penalty_update(dims,
-                                                                    config,
-                                                                    opts,
-                                                                    nlp_opts,
-                                                                    nlp_in,
-                                                                    nlp_out,
-                                                                    mem,
-                                                                    work,
-                                                                    current_l1_infeasibility,
-                                                                    sqp_iter,
-                                                                    timer0,
-                                                                    timer1);
-        }
-        else
-        {
-            search_direction_status = squid_search_direction_computation(dims,
-                                                                    config,
-                                                                    opts,
-                                                                    nlp_opts,
-                                                                    nlp_in,
-                                                                    nlp_out,
-                                                                    mem,
-                                                                    work,
-                                                                    current_l1_infeasibility,
-                                                                    sqp_iter,
-                                                                    timer0,
-                                                                    timer1);
-        }
+        // if (opts->use_steering_rules)
+        // {
+        //     search_direction_status = steering_direction_penalty_update(dims,
+        //                                                             config,
+        //                                                             opts,
+        //                                                             nlp_opts,
+        //                                                             nlp_in,
+        //                                                             nlp_out,
+        //                                                             mem,
+        //                                                             work,
+        //                                                             current_l1_infeasibility,
+        //                                                             sqp_iter,
+        //                                                             timer0,
+        //                                                             timer1);
+        // }
+        // else
+        // {
+        //     search_direction_status = squid_search_direction_computation(dims,
+        //                                                             config,
+        //                                                             opts,
+        //                                                             nlp_opts,
+        //                                                             nlp_in,
+        //                                                             nlp_out,
+        //                                                             mem,
+        //                                                             work,
+        //                                                             current_l1_infeasibility,
+        //                                                             sqp_iter,
+        //                                                             timer0,
+        //                                                             timer1);
+        // }
 
         // solve standard QP
         search_direction_status = standard_qp_direction(dims,

@@ -50,21 +50,29 @@ from itertools import product
 def main():
     # run test cases
     params = {'globalization': ['FUNNEL_L1PEN_LINESEARCH'],
-              'nlp_solver_type': ['SQP', 'SQP_WITH_FEASIBLE_QP'],
-              'init_iterate': [np.array([-0.001]), np.array([0.0])]}
+            #   'nlp_solver_type': ['SQP', 'SQP_WITH_FEASIBLE_QP'],
+              'nlp_solver_type': ['SQP_WITH_FEASIBLE_QP'],
+              'init_iterate': [np.array([-0.001])]}
+            #   'init_iterate': [np.array([-0.001]), np.array([0.0])]}
 
-    test_residual_computation_sqp_wfqp()
+    # test_residual_computation_sqp_wfqp()
+    GIAF = False
 
     keys, values = zip(*params.items())
     for combination in product(*values):
         setting = dict(zip(keys, combination))
-        test_convergence_of_solver(setting)
+        test_convergence_of_solver(setting, GIAF)
 
 
-def create_solver(setting):
+def create_solver(setting, GIAF):
 
     globalization = setting['globalization']
     nlp_solver_type = setting['nlp_solver_type']
+
+    if GIAF:
+        nlp_solver_type = 'SQP'
+    else:
+        nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -117,16 +125,17 @@ def create_solver(setting):
     ocp.solver_options.globalization = globalization
     ocp.solver_options.globalization_full_step_dual = True
     ocp.solver_options.globalization_alpha_min = 1e-15
-    ocp.solver_options.nlp_solver_max_iter = 50
+    ocp.solver_options.nlp_solver_max_iter = 1
     ocp.solver_options.initial_objective_multiplier = 1e0
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
 
     return ocp, ocp_solver
 
-def test_convergence_of_solver(setting):
+# def test_convergence_of_solver(setting):
+def test_convergence_of_solver(setting, GIAF):
 
     N = 1
-    ocp, ocp_solver = create_solver(setting)
+    ocp, ocp_solver = create_solver(setting, GIAF)
     xinit = setting['init_iterate']
 
     # initialize solver
