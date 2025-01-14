@@ -164,7 +164,10 @@ static void allocate_standard_qp_solver(ocp_nlp_sqp_wfqp_memory *mem,
                                                      mem->standard_qp_solver_dims,
                                                      opts->nlp_opts->qp_solver_opts);
     memsize = malloc(size);
-    mem->standard_qp_solver_mem = ocp_qp_xcond_solver_dims_assign(mem->standard_qp_solver, N, memsize);
+    mem->standard_qp_solver_mem = ocp_qp_xcond_solver_memory_assign(mem->standard_qp_solver,
+                                                                    mem->standard_qp_solver_dims,
+                                                                    opts->nlp_opts->qp_solver_opts,
+                                                                    memsize);
 
     // allocate ocp_qp_xcond_solver_workspace
     size = ocp_qp_xcond_solver_workspace_calculate_size(mem->standard_qp_solver,
@@ -2420,8 +2423,8 @@ static int standard_qp_direction(ocp_nlp_dims *dims,
 {
     ocp_nlp_memory* nlp_mem = mem->nlp_mem;
     ocp_nlp_workspace* nlp_work = work->nlp_work;
-    ocp_qp_in *qp_in = nlp_mem->qp_in;
-    ocp_qp_out *qp_out = nlp_mem->qp_out;
+    ocp_qp_in *qp_in = mem->standard_qp_in;
+    ocp_qp_out *qp_out = mem->standard_qp_out;
     int qp_status, qp_iter;
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
     qp_info* qp_info_;
@@ -2459,7 +2462,7 @@ static int standard_qp_direction(ocp_nlp_dims *dims,
 #endif
 
     qp_status = my_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work,
-                                             false, mem->standard_qp_in, mem->standard_qp_out,
+                                             false, qp_in, qp_out,
                                              mem->standard_qp_solver, mem->standard_qp_solver_dims,
                                              mem->standard_qp_solver_mem, mem->standard_qp_solver_work);
     printf("Solved the qp with status: %d\n", qp_status);
@@ -2685,18 +2688,18 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // solve standard QP
-        // search_direction_status = standard_qp_direction(dims,
-        //                                                 config,
-        //                                                 opts,
-        //                                                 nlp_opts,
-        //                                                 nlp_in,
-        //                                                 nlp_out,
-        //                                                 mem,
-        //                                                 work,
-        //                                                 current_l1_infeasibility,
-        //                                                 sqp_iter,
-        //                                                 timer0,
-        //                                                 timer1);
+        search_direction_status = standard_qp_direction(dims,
+                                                        config,
+                                                        opts,
+                                                        nlp_opts,
+                                                        nlp_in,
+                                                        nlp_out,
+                                                        mem,
+                                                        work,
+                                                        current_l1_infeasibility,
+                                                        sqp_iter,
+                                                        timer0,
+                                                        timer1);
 
         if (search_direction_status == 1)
         {
