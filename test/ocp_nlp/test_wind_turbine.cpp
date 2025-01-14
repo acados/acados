@@ -34,8 +34,7 @@
 #include <cstdlib>
 
 #include "test/test_utils/eigen.h"
-#include "catch.hpp"
-
+#include "catch/include/catch.hpp"
 
 // std
 #include <math.h>

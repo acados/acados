@@ -40,8 +40,7 @@
 #include <locale>
 #include <string>
 
-#include "catch.hpp"
-
+#include "catch/include/catch.hpp"
 
 #define MAXBUFSIZE ((int) 1e6)
 

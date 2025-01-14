@@ -37,8 +37,7 @@
 #include <math.h>
 
 #include "test/test_utils/eigen.h"
-#include "catch.hpp"
-
+#include "catch/include/catch.hpp"
 
 // acados
 #include "acados/sim/sim_common.h"
