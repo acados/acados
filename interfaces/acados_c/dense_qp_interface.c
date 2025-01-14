@@ -37,7 +37,7 @@
 #include <string.h>
 
 // hpipm
-#include "hpipm/include/hpipm_d_dense_qp.h"
+#include "hpipm_d_dense_qp.h"
 
 // acados_c
 
