@@ -316,8 +316,9 @@ classdef AcadosMultiphaseOcp < handle
             code_gen_opts.with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params;
             code_gen_opts.with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params;
             code_gen_opts.code_export_directory = self.code_export_directory;
+            code_gen_opts.ext_fun_expand = self.solver_options.ext_fun_expand;
 
-            context = GenerateContext(self.model{1}.p_global, self.name, code_gen_opts, self.solver_options);
+            context = GenerateContext(self.model{1}.p_global, self.name, code_gen_opts);
 
             for i=1:self.n_phases
                 disp(['generating external functions for phase ', num2str(i)]);

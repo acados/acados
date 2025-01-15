@@ -40,11 +40,10 @@ classdef GenerateContext < handle
         casadi_fun_opts
         global_data_sym
         global_data_expr
-        solver_options
     end
 
     methods
-        function obj = GenerateContext(p_global, problem_name, opts, solver_options)
+        function obj = GenerateContext(p_global, problem_name, opts)
             if nargin < 3
                 opts = [];
             end
@@ -68,7 +67,6 @@ classdef GenerateContext < handle
             obj.generic_funname_dir_pairs = {};
 
             obj.casadi_fun_opts = struct();
-            obj.solver_options = solver_options;
 
             import casadi.*
             try
@@ -232,7 +230,7 @@ classdef GenerateContext < handle
                 end
 
                 if ~strcmp(name, sprintf('%s_p_global_precompute_fun', obj.problem_name))
-                    if obj.solver_options.ext_fun_expand
+                    if obj.opts.ext_fun_expand
                         fun = fun.expand();
                     end
                 end
