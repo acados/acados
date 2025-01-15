@@ -83,6 +83,10 @@ class GenerateContext:
                 print(e)
                 raise e
 
+            # expand function to SX
+            if "p_global_precompute" not in name and self.opts["ext_fun_expand"]:
+                fun.expand()
+
             # setup output directory
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)

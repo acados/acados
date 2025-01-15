@@ -121,6 +121,7 @@ class AcadosOcpOptions:
         # TODO: move those out? they are more about generation than about the acados OCP solver.
         env = os.environ
         self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
+        self.__ext_fun_expand = False
         self.__model_external_shared_lib_dir = None
         self.__model_external_shared_lib_name = None
         self.__custom_update_filename = ''
@@ -145,6 +146,13 @@ class AcadosOcpOptions:
         """
         return self.__ext_fun_compile_flags
 
+    @property
+    def ext_fun_expand(self):
+        """
+        Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation.
+        Default: False
+        """
+        return self.__ext_fun_expand
 
     @property
     def custom_update_filename(self):
@@ -1101,8 +1109,14 @@ class AcadosOcpOptions:
         if isinstance(ext_fun_compile_flags, str):
             self.__ext_fun_compile_flags = ext_fun_compile_flags
         else:
-            raise Exception('Invalid ext_fun_compile_flags, expected a string.\n')
+            raise Exception('Invalid ext_fun_compile_flags value, expected a string.\n')
 
+    @ext_fun_expand.setter
+    def ext_fun_expand(self, ext_fun_expand):
+        if isinstance(ext_fun_expand, bool):
+            self.__ext_fun_expand = ext_fun_expand
+        else:
+            raise Exception('Invalid ext_fun_expand value, expected bool.\n')
 
     @custom_update_filename.setter
     def custom_update_filename(self, custom_update_filename):
