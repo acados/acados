@@ -231,7 +231,7 @@ classdef GenerateContext < handle
                     rethrow(e);
                 end
 
-                if ~contains(name,'p_global_precompute')
+                if ~strcmp(name, sprintf('%s_p_global_precompute_fun', obj.problem_name))
                     if obj.solver_options.ext_fun_expand
                         fun = fun.expand();
                     end
