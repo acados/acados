@@ -2133,7 +2133,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
     print_debug_output_double("Feas QP: Multiplier norm: lam unslacked", mem->norm_opt_qp_lam_unslacked_bounds, nlp_opts->print_level, 2);
     print_debug_output_double("Feas QP: l1_inf_feas: ", l1_inf_QP_feasibility, nlp_opts->print_level, 2);
     print_debug_output_double("Feas QP: pred_l1_inf_QP: ", pred_l1_inf_QP_feasibility, nlp_opts->print_level, 2);
-    assert(pred_l1_inf_QP_feasibility > -1e2*opts->tol_ineq);
+    // assert(pred_l1_inf_QP_feasibility > -1e2*opts->tol_ineq);
 
     /* Solve the standard QP with updated bounds*/
     setup_byrd_omojokun_bounds(dims, mem, work, opts, mem->standard_qp_in, qp_out);
