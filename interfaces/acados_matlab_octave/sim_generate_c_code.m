@@ -36,7 +36,7 @@ function sim_generate_c_code(sim, context)
         code_gen_opts = struct();
         code_gen_opts.generate_hess = sim.solver_options.sens_hess;
         code_gen_opts.code_export_directory = 'c_generated_code'; % TODO: for OCP this is part of OCP class
-        context = GenerateContext(sim.model.p_global, sim.model.name, code_gen_opts);
+        context = GenerateContext(sim.model.p_global, sim.model.name, code_gen_opts, sim.solver_options);
     else
         code_gen_opts = context.code_gen_opts;
     end
