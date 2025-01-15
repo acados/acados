@@ -110,6 +110,7 @@ classdef acados_ocp_opts < handle
             else
                 obj.opts_struct.ext_fun_compile_flags = env_var;
             end
+            obj.opts_struct.ext_fun_expand = false;
 
             obj.opts_struct.output_dir = fullfile(pwd, 'build');
             obj.opts_struct.json_file = 'acados_ocp_nlp.json';
@@ -241,6 +242,8 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.store_iterates = value;
             elseif (strcmp(field, 'ext_fun_compile_flags'))
                 obj.opts_struct.ext_fun_compile_flags = value;
+            elseif (strcmp(field, 'ext_fun_expand'))
+                obj.opts_struct.ext_fun_expand = value;
             elseif (strcmp(field, 'json_file'))
                 obj.opts_struct.json_file = value;
             elseif (strcmp(field, 'timeout_max_time'))

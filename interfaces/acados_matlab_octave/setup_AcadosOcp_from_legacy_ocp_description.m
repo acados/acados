@@ -129,6 +129,7 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, 
     ocp.solver_options.fixed_hess = opts_struct.fixed_hess;
 
     ocp.solver_options.ext_fun_compile_flags = opts_struct.ext_fun_compile_flags;
+    ocp.solver_options.ext_fun_expand = opts_struct.ext_fun_expand;
 
     ocp.solver_options.time_steps = opts_struct.time_steps;
     ocp.solver_options.shooting_nodes = opts_struct.shooting_nodes;

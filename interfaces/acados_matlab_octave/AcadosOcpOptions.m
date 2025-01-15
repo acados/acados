@@ -112,6 +112,7 @@ classdef AcadosOcpOptions < handle
         timeout_heuristic
 
         ext_fun_compile_flags
+        ext_fun_expand
         model_external_shared_lib_dir
         model_external_shared_lib_name
         custom_update_filename
@@ -211,6 +212,7 @@ classdef AcadosOcpOptions < handle
             else
                 obj.ext_fun_compile_flags = env_var;
             end
+            obj.ext_fun_expand = false;
 
             obj.model_external_shared_lib_dir = [];
             obj.model_external_shared_lib_name = [];
