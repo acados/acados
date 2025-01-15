@@ -272,7 +272,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             if ((plan->nlp_cost[ii] == LINEAR_LS) || (plan->nlp_cost[ii] == NONLINEAR_LS))
             {
-                int ny = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "y_ref");
+                int ny = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "y_ref");
                 acados_size = ny * ny;
                 MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
                 if (matlab_size != 0)
