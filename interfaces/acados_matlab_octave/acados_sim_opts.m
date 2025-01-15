@@ -66,7 +66,7 @@ classdef acados_sim_opts < handle
             else
                 obj.opts_struct.ext_fun_compile_flags = env_var;
             end
-            obj.ext_fun_expand = false;
+            obj.opts_struct.ext_fun_expand = false;
             obj.opts_struct.parameter_values = [];
         end
 
