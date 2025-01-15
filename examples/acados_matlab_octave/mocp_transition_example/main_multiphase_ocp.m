@@ -74,12 +74,18 @@ ocp.solver_options.store_iterates = true;
 
 ocp_solver = AcadosOcpSolver(ocp);
 
+x0 = ocp.constraints{1}.x0;
 
 % initialize x trajectory using flattened format
-x0 = ocp.constraints{1}.x0;
 x_init = [repmat(x0, 1, N_list(1)+N_list(2)) repmat(x0(1), 1, N_list(3)+1)];
-
 ocp_solver.set('x', x_init);
+
+% update state bounds using flattened format
+lbx = [repmat([-10, -5], 1, N_list(1)) repmat([-10], 1, N_list(3)+1)];
+ocp_solver.set('constr_lbx', lbx);
+
+% need to set initial state after updating the bounds onx as this again overwrites lbx_0
+ocp_solver.set('constr_x0', x0);
 
 ocp_solver.solve();
 ocp_solver.print();
