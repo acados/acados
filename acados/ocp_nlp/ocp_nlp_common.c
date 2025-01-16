@@ -40,7 +40,7 @@
 #include "blasfeo_common.h"
 #include "blasfeo_d_blas.h"
 // hpipm
-#include "hpipm/include/hpipm_d_ocp_qp_dim.h"
+#include "hpipm_d_ocp_qp_dim.h"
 // acados
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
