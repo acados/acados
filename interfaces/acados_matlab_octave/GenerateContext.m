@@ -231,7 +231,11 @@ classdef GenerateContext < handle
 
                 if ~strcmp(name, sprintf('%s_p_global_precompute_fun', obj.problem_name))
                     if obj.opts.ext_fun_expand
-                        fun = fun.expand();
+                        try
+                            fun = fun.expand();
+                        catch
+                            warning(['Failed to expand the CasADi function ' name '.'])
+                        end
                     end
                 end
 
