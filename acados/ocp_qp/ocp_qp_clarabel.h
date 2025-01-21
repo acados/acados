@@ -47,7 +47,7 @@ extern "C" {
 typedef struct ocp_qp_clarabel_opts_
 {
     // settings *clarabel_opts;
-    int dummy;
+	ClarabelDefaultSettings *clarabel_opts;
 } ocp_qp_clarabel_opts;
 
 
@@ -72,7 +72,6 @@ typedef struct ocp_qp_clarabel_memory_
 
 	ClarabelSupportedConeT cones[2];
 
-	ClarabelDefaultSettings settings;
 	ClarabelDefaultSolver *solver;
 	ClarabelDefaultSolution solution;
 

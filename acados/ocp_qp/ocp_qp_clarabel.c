@@ -795,7 +795,7 @@ acados_size_t ocp_qp_clarabel_opts_calculate_size(void *config_, void *dims_)
 {
     acados_size_t size = 0;
     size += sizeof(ocp_qp_clarabel_opts);
-    //size += sizeof(ClarabelSettings);
+    size += sizeof(ClarabelDefaultSettings);
 
     return size;
 }
@@ -811,8 +811,8 @@ void *ocp_qp_clarabel_opts_assign(void *config_, void *dims_, void *raw_memory)
     opts = (ocp_qp_clarabel_opts *) c_ptr;
     c_ptr += sizeof(ocp_qp_clarabel_opts);
 
-//     opts->clarabel_opts = (ClarabelSettings *) c_ptr;
-//     c_ptr += sizeof(ClarabelSettings);
+     opts->clarabel_opts = (ClarabelDefaultSettings *) c_ptr;
+     c_ptr += sizeof(ClarabelDefaultSettings);
 
     assert((char *) raw_memory + ocp_qp_clarabel_opts_calculate_size(config_, dims_) == c_ptr);
 
@@ -823,8 +823,10 @@ void *ocp_qp_clarabel_opts_assign(void *config_, void *dims_, void *raw_memory)
 
 void ocp_qp_clarabel_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
-    // ocp_qp_clarabel_opts *opts = opts_;
+    ocp_qp_clarabel_opts *opts = opts_;
 
+	*opts->clarabel_opts = clarabel_DefaultSettings_default();
+	opts->clarabel_opts->verbose = false;
 //     clarabel_set_default_settings(opts->clarabel_opts);
 //     opts->clarabel_opts->verbose = 0;
 //     opts->clarabel_opts->polish = 1;
@@ -845,15 +847,15 @@ void ocp_qp_clarabel_opts_update(void *config_, void *dims_, void *opts_)
 
 void ocp_qp_clarabel_opts_set(void *config_, void *opts_, const char *field, void *value)
 {
-    //ocp_qp_clarabel_opts *opts = opts_;
+    ocp_qp_clarabel_opts *opts = opts_;
 
 //     // NOTE/TODO(oj): options are copied into Clarabel at first call.
 //     // Updating options through this function does not work, only before the first call!
-//     if (!strcmp(field, "iter_max"))
-//     {
-//         int *tmp_ptr = value;
-//         opts->clarabel_opts->max_iter = *tmp_ptr;
-//     }
+     if (!strcmp(field, "iter_max"))
+     {
+         int *tmp_ptr = value;
+         opts->clarabel_opts->max_iter = *tmp_ptr;
+     }
 //     else if (!strcmp(field, "tol_stat"))
 //     {
 //         double *tol = value;
@@ -1260,12 +1262,10 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
     //     mem->first_run = 0;
     // }
 
-	mem->settings = clarabel_DefaultSettings_default();
-
 	//printf("\nbefore build solver\n");
 
     // Build solver
-    mem->solver = clarabel_DefaultSolver_new(&mem->P, mem->q, &mem->A, mem->b, 2, mem->cones, &mem->settings);
+    mem->solver = clarabel_DefaultSolver_new(&mem->P, mem->q, &mem->A, mem->b, 2, mem->cones, opts->clarabel_opts);
 
 	//printf("\nafter build solver\n");
 
@@ -1294,17 +1294,24 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
 	//return 0;
 
     // info
+	ClarabelDefaultInfo clarabel_info = clarabel_DefaultSolver_info(mem->solver);
     info->solve_QP_time = acados_toc(&qp_timer);
+    //info->solve_QP_time = clarabel_info.solve_time;
     info->total_time = acados_toc(&tot_timer);
-    // info->num_iter = mem->clarabel_work->info->iter;
+    info->num_iter = clarabel_info.iterations;
     // info->t_computed = 1;
 
-    // int clarabel_status = mem->clarabel_work->info->status_val;
-    // int acados_status = clarabel_status;
+	// status
+	int acados_status = ACADOS_QP_FAILURE; // generic QP failure
+    ClarabelSolverStatus clarabel_status = mem->solution.status;
+	if(clarabel_status==ClarabelSolved)
+		acados_status = ACADOS_SUCCESS;
+	else if(clarabel_status==ClarabelMaxIterations)
+		acados_status = ACADOS_MAXITER;
 
     // // check exit conditions
 
-    //return 1;
+    return acados_status;
 }
 
 
