@@ -66,6 +66,7 @@ class AcadosSimOptions:
         self.__sim_method_jac_reuse = 0
         env = os.environ
         self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
+        self.__ext_fun_expand = False
         self.__num_threads_in_batch_solve: int = 1
 
     @property
@@ -149,6 +150,16 @@ class AcadosSimOptions:
         """
         return self.__ext_fun_compile_flags
 
+
+    @property
+    def ext_fun_expand(self):
+        """
+        Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation.
+        Default: False
+        """
+        return self.__ext_fun_expand
+
+
     @property
     def num_threads_in_batch_solve(self):
         """
@@ -164,7 +175,14 @@ class AcadosSimOptions:
         if isinstance(ext_fun_compile_flags, str):
             self.__ext_fun_compile_flags = ext_fun_compile_flags
         else:
-            raise Exception('Invalid ext_fun_compile_flags, expected a string.\n')
+            raise Exception('Invalid ext_fun_compile_flags value, expected a string.\n')
+
+    @ext_fun_expand.setter
+    def ext_fun_expand(self, ext_fun_expand):
+        if isinstance(ext_fun_expand, bool):
+            self.__ext_fun_expand = ext_fun_expand
+        else:
+            raise Exception('Invalid ext_fun_expand value, expected bool.\n')
 
     @integrator_type.setter
     def integrator_type(self, integrator_type):
@@ -387,7 +405,8 @@ class AcadosSim:
         integrator_type = self.solver_options.integrator_type
 
         opts = dict(generate_hess = self.solver_options.sens_hess,
-                    code_export_directory = self.code_export_directory)
+                    code_export_directory = self.code_export_directory,
+                    ext_fun_expand = self.solver_options.ext_fun_expand)
 
         # create code_export_dir, model_dir
         code_export_dir = self.code_export_directory

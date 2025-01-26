@@ -30,7 +30,7 @@
 
 from typing import Union, List, Optional
 
-import os
+import os, warnings
 import casadi as ca
 from .utils import is_empty, casadi_length, check_casadi_version_supports_p_global, print_casadi_expression, set_directory
 from .acados_model import AcadosModel
@@ -83,6 +83,13 @@ class GenerateContext:
                 print(e)
                 raise e
 
+            # expand function to SX
+            if "p_global_precompute" not in name and self.opts["ext_fun_expand"]:
+                try:
+                    fun = fun.expand()
+                except:
+                    warnings.warn(f"Failed to expand CasADi function {name}.")
+
             # setup output directory
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
@@ -116,7 +123,7 @@ class GenerateContext:
             outputs = ca.cse(self.function_input_output_pairs[i][1])
 
             # detect parametric expressions in p_global
-            [outputs_ret, symbols, param_expr] = ca.extract_parametric(outputs, self.p_global)
+            [outputs_ret, symbols, param_expr] = ca.extract_parametric(outputs, self.p_global, {'extract_trivial': True})
 
             # substitute previously detected param_expr in outputs
             symbols_to_add = []

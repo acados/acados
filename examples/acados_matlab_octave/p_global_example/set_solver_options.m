@@ -51,4 +51,5 @@ function ocp = set_solver_options(ocp)
     % These might be different depending on your compiler and operating system.
     flags = ['-I' casadi.GlobalOptions.getCasadiIncludePath ' -O2 -ffast-math -march=native -fno-omit-frame-pointer']
     ocp.solver_options.ext_fun_compile_flags = flags;
+    ocp.solver_options.ext_fun_expand = true;
 end

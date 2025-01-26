@@ -863,6 +863,8 @@ classdef AcadosOcp < handle
                 code_gen_opts.with_solution_sens_wrt_params = solver_opts.with_solution_sens_wrt_params;
                 code_gen_opts.with_value_sens_wrt_params = solver_opts.with_value_sens_wrt_params;
                 code_gen_opts.code_export_directory = ocp.code_export_directory;
+                code_gen_opts.ext_fun_expand = ocp.solver_options.ext_fun_expand;
+
                 context = GenerateContext(ocp.model.p_global, ocp.name, code_gen_opts);
             else
                 code_gen_opts = context.opts;
