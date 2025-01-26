@@ -142,7 +142,7 @@ classdef GenerateContext < handle
                 outputs = cse(self.function_input_output_pairs{i}{2});
 
                 % detect parametric expressions in p_global
-                [outputs_ret, symbols, param_expr] = extract_parametric(outputs, self.p_global);
+                [outputs_ret, symbols, param_expr] = extract_parametric(outputs, self.p_global, struct('extract_trivial', true));
 
                 % substitute previously detected param_expr in outputs
                 symbols_to_add = {};
@@ -265,7 +265,7 @@ function check_casadi_version_supports_p_global()
     try
         dummy = MX.sym('dummy');
         % Check if the required functions exist in CasADi
-        extract_parametric(dummy, dummy);  % Check if extract_parametric exists
+        extract_parametric(dummy, dummy, struct('extract_trivial', true));  % Check if extract_parametric exists
         cse(dummy); % Check if cse exists
         blazing_spline('blazing_spline', {[1, 2, 3], [1, 2, 3]});
     catch

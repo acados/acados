@@ -123,7 +123,7 @@ class GenerateContext:
             outputs = ca.cse(self.function_input_output_pairs[i][1])
 
             # detect parametric expressions in p_global
-            [outputs_ret, symbols, param_expr] = ca.extract_parametric(outputs, self.p_global)
+            [outputs_ret, symbols, param_expr] = ca.extract_parametric(outputs, self.p_global, {'extract_trivial': True})
 
             # substitute previously detected param_expr in outputs
             symbols_to_add = []
