@@ -61,6 +61,12 @@ classdef GenerateContext < handle
             obj.casadi_codegen_opts.mex = false;
             obj.casadi_codegen_opts.casadi_int = 'int';
             obj.casadi_codegen_opts.casadi_real = 'double';
+            try
+                CodeGenerator('foo',struct('force_canonical',true))
+                obj.casadi_codegen_opts.force_canonical = false;
+            catch
+                % Option does not exist
+            end
 
             obj.list_funname_dir_pairs = {};
             obj.function_input_output_pairs = {};
