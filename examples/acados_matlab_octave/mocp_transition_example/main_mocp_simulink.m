@@ -29,6 +29,7 @@
 
 
 settings = get_example_settings();
+settings.WITH_X_BOUNDS = false;
 
 N_list = [10, 1, 15];
 n_phases = length(N_list);
