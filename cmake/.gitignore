@@ -3,3 +3,4 @@
 *Config*.cmake
 *Targets*.cmake
 daqp*.cmake
+Clarabel.cmake
