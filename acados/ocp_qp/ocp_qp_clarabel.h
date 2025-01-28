@@ -60,15 +60,19 @@ typedef struct ocp_qp_clarabel_memory_
     uintptr_t *P_col_ptr;
     uintptr_t *P_rowval;
     ClarabelFloat *P_nzval;
+    uintptr_t P_nnz;
 
     ClarabelCscMatrix A;
     uintptr_t A_nnzmax;
     uintptr_t *A_col_ptr;
     uintptr_t *A_rowval;
     ClarabelFloat *A_nzval;
+    uintptr_t A_nnz;
 
     ClarabelFloat *q;
+    uintptr_t q_nnz;
     ClarabelFloat *b;
+    uintptr_t b_nnz;
 
 	ClarabelSupportedConeT cones[2];
 

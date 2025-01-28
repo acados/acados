@@ -264,6 +264,9 @@ static void update_gradient(const ocp_qp_in *in, ocp_qp_clarabel_memory *mem)
         blasfeo_unpack_dvec(nu[kk]+nx[kk]+2*ns[kk], in->rqz + kk, 0, &mem->q[nn], 1);
         nn += nu[kk]+nx[kk]+2*ns[kk];
     }
+
+	// actual number of nonzeros
+	mem->q_nnz = nn;
 }
 
 
@@ -313,6 +316,8 @@ static void update_hessian_structure(const ocp_qp_in *in, ocp_qp_clarabel_memory
     }
 
     mem->P_col_ptr[col] = nn;
+	// actual number of nonzeros
+	mem->P_nnz = nn;
 }
 
 
@@ -346,6 +351,8 @@ static void update_hessian_data(const ocp_qp_in *in, ocp_qp_clarabel_memory *mem
         blasfeo_unpack_dvec(2*ns[kk], in->Z+kk, 0, mem->P_nzval+nn, 1);
         nn += 2*ns[kk];
     }
+
+	// TODO ? check that nn==mem->P_nnz
 }
 
 
@@ -393,7 +400,6 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_clar
         for (jj = 0; jj < nu[kk]; jj++)
         {
             mem->A_col_ptr[col] = nn;
-			//printf("\nA col ptr col %d nn %d\n", col, nn);
             col++;
 
             if (kk < dims->N)
@@ -432,7 +438,6 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_clar
         for (jj = 0; jj < nx[kk]; jj++)
         {
             mem->A_col_ptr[col] = nn;
-			//printf("\nA col ptr col %d nn %d\n", col, nn);
             col++;
 
             if (kk > 0)
@@ -478,7 +483,6 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_clar
         for (jj = 0; jj < ns[kk]; jj++)
         {
             mem->A_col_ptr[col] = nn;
-			//printf("\nA col ptr col %d nn %d\n", col, nn);
             col++;
 
             // soft constraint
@@ -501,7 +505,6 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_clar
         for (jj = 0; jj < ns[kk]; jj++)
         {
             mem->A_col_ptr[col] = nn;
-			//printf("\nA col ptr col %d nn %d\n", col, nn);
             col++;
 
             // soft constraint
@@ -527,7 +530,8 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_clar
 
     // end of matrix
     mem->A_col_ptr[col] = nn;
-	//printf("\nA col ptr col %d nn %d\n", col, nn);
+	// actual number of nonzeros
+	mem->A_nnz = nn;
 }
 
 
@@ -669,6 +673,7 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_clarabel_
 
     }
 
+	// TODO ? check that nn==mem->A_nnz
 }
 
 
@@ -724,20 +729,20 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_clarabel_memory *mem)
         nn += 2*ns[kk];
     }
 
+	// actual number of nonzeros
+	mem->b_nnz = nn;
 }
 
 
 
 static void clarabel_init_data(ocp_qp_clarabel_memory* mem, ocp_qp_in *qp_in)
 {
-    update_constraints_matrix_structure(qp_in, mem);
-    update_hessian_structure(qp_in, mem);
 
-    update_constraints_matrix_data(qp_in, mem);
-    update_hessian_data(qp_in, mem);
+    //update_constraints_matrix_data(qp_in, mem);
+    //update_hessian_data(qp_in, mem);
 
-    update_bounds(qp_in, mem);
-    update_gradient(qp_in, mem);
+    //update_bounds(qp_in, mem);
+    //update_gradient(qp_in, mem);
 
     int n = acados_clarabel_num_vars(qp_in->dim);
     int m = acados_clarabel_num_constr(qp_in->dim);
@@ -774,16 +779,16 @@ static void clarabel_init_data(ocp_qp_clarabel_memory* mem, ocp_qp_in *qp_in)
 static void ocp_qp_clarabel_update_memory(const ocp_qp_in *in, const ocp_qp_clarabel_opts *opts,
                                       ocp_qp_clarabel_memory *mem)
 {
-    // if (mem->first_run)
-    // {
-    //     update_hessian_structure(in, mem);
-    //     update_constraints_matrix_structure(in, mem);
-    // }
+    if (mem->first_run)
+    {
+		update_hessian_structure(in, mem);
+		update_constraints_matrix_structure(in, mem);
+    }
 
-    update_bounds(in, mem);
-    update_gradient(in, mem);
     update_hessian_data(in, mem);
     update_constraints_matrix_data(in, mem);
+    update_bounds(in, mem);
+    update_gradient(in, mem);
 }
 
 
@@ -827,6 +832,7 @@ void ocp_qp_clarabel_opts_initialize_default(void *config_, void *dims_, void *o
 
 	*opts->clarabel_opts = clarabel_DefaultSettings_default();
 	opts->clarabel_opts->verbose = false;
+	opts->clarabel_opts->presolve_enable = false;
 //     clarabel_set_default_settings(opts->clarabel_opts);
 //     opts->clarabel_opts->verbose = 0;
 //     opts->clarabel_opts->polish = 1;
@@ -1248,26 +1254,24 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
 
     // update clarabel workspace with new data
     clarabel_init_data(mem, qp_in);
-    // if (!mem->first_run)
-    // {
-    //     clarabel_update_lin_cost(mem->clarabel_work, mem->q);
-    //     clarabel_update_P_A(mem->clarabel_work, mem->P_x, NULL, mem->P_nnzmax, mem->A_nzval, NULL,
-    //                     mem->A_nnzmax);
-    //     clarabel_update_bounds(mem->clarabel_work, mem->l, mem->u);
-    // }
-    // else
-    // {
-    //     // mem->clarabel_work = clarabel_setup(mem->clarabel_data, opts->clarabel_opts);
-    //     clarabel_init_data();
-    //     mem->first_run = 0;
-    // }
-
-	//printf("\nbefore build solver\n");
-
-    // Build solver
-    mem->solver = clarabel_DefaultSolver_new(&mem->P, mem->q, &mem->A, mem->b, 2, mem->cones, opts->clarabel_opts);
-
-	//printf("\nafter build solver\n");
+    if (!mem->first_run)
+    {
+		ClarabelDefaultInfo tmp_info;
+	    tmp_info = clarabel_DefaultSolver_update_P(mem->solver, mem->P_nzval, mem->P_nnz);
+	    tmp_info = clarabel_DefaultSolver_update_A(mem->solver, mem->A_nzval, mem->A_nnz);
+	    tmp_info = clarabel_DefaultSolver_update_q(mem->solver, mem->q, mem->q_nnz);
+	    tmp_info = clarabel_DefaultSolver_update_b(mem->solver, mem->b, mem->b_nnz);
+    }
+    else
+    {
+		//printf("\nbefore build solver\n");
+		// Build solver
+		mem->solver = clarabel_DefaultSolver_new(&mem->P, mem->q, &mem->A, mem->b, 2, mem->cones, opts->clarabel_opts);
+		//printf("\nafter build solver %p\n", mem->solver);
+		// TODO for now always force first_run, because the updates are crashing...
+        //mem->first_run = 0; // TODO uncomments once updates work ...
+        mem->first_run = 1;
+    }
 
     // // solve Clarabel
     acados_tic(&solver_call_timer);
