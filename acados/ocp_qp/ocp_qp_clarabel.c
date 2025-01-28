@@ -1041,7 +1041,9 @@ void *ocp_qp_clarabel_memory_assign(void *config_, void *dims_, void *opts_, voi
 
     mem->P_nnzmax = P_nnzmax;
     mem->A_nnzmax = A_nnzmax;
+
     mem->first_run = 1;
+    mem->solver = NULL;
 
     align_char_to(8, &c_ptr);
 
@@ -1252,8 +1254,6 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
 
     acados_tic(&qp_timer);
 
-    // update clarabel workspace with new data
-    clarabel_init_data(mem, qp_in);
     if (!mem->first_run)
     {
         ClarabelDefaultInfo tmp_info;
@@ -1265,6 +1265,14 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
     else
     {
         //printf("\nbefore build solver\n");
+        // TODO for now, need to free previous solver (and csc matrices) ...
+        if(mem->solver!=NULL)
+        {
+            //printf("\nfreeing solver before new\n");
+            clarabel_DefaultSolver_free(mem->solver);
+        }
+        // init new csc matrices
+        clarabel_init_data(mem, qp_in);
         // Build solver
         mem->solver = clarabel_DefaultSolver_new(&mem->P, mem->q, &mem->A, mem->b, 2, mem->cones, opts->clarabel_opts);
         //printf("\nafter build solver %p\n", mem->solver);
@@ -1338,6 +1346,8 @@ void ocp_qp_clarabel_terminate(void *config_, void *mem_, void *work_)
 {
     ocp_qp_clarabel_memory *mem = (ocp_qp_clarabel_memory *) mem_;
     // Free the matrices and the solver
+    //printf("\nfree!!!!!!!!!\n");
+    // TODO is terminate actually called ??????
     clarabel_DefaultSolver_free(mem->solver);
 }
 
