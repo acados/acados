@@ -174,11 +174,11 @@ static int acados_clarabel_num_constr(ocp_qp_dims *dims)
 {
     int m = 0;
 
-	//printf("\ndims N %d\n", dims->N);
+    //printf("\ndims N %d\n", dims->N);
 
     for (int ii = 0; ii <= dims->N; ii++)
     {
-	//printf("dims[%d] nx %d nu %d nb %d ng %d ns %d\n", ii, dims->nx[ii], dims->nu[ii], dims->nb[ii], dims->ng[ii], dims->ns[ii]);
+    //printf("dims[%d] nx %d nu %d nb %d ng %d ns %d\n", ii, dims->nx[ii], dims->nu[ii], dims->nb[ii], dims->ng[ii], dims->ns[ii]);
 
         m += 2 * dims->nb[ii];
         m += 2 * dims->ng[ii];
@@ -200,14 +200,14 @@ static int acados_clarabel_nnzmax_P(const ocp_qp_dims *dims)
 {
     int nnz = 0;
 
-	int *nx = dims->nx;
-	int *nu = dims->nu;
-	int *ns = dims->ns;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
 
     for (int ii = 0; ii <= dims->N; ii++)
     {
         nnz += (nu[ii]+nx[ii])*(nu[ii]+nx[ii]+1)/2; // triu(RSQ)
-		nnz += 2*ns[ii]; // Z
+        nnz += 2*ns[ii]; // Z
     }
 
     return nnz;
@@ -265,8 +265,8 @@ static void update_gradient(const ocp_qp_in *in, ocp_qp_clarabel_memory *mem)
         nn += nu[kk]+nx[kk]+2*ns[kk];
     }
 
-	// actual number of nonzeros
-	mem->q_nnz = nn;
+    // actual number of nonzeros
+    mem->q_nnz = nn;
 }
 
 
@@ -316,8 +316,8 @@ static void update_hessian_structure(const ocp_qp_in *in, ocp_qp_clarabel_memory
     }
 
     mem->P_col_ptr[col] = nn;
-	// actual number of nonzeros
-	mem->P_nnz = nn;
+    // actual number of nonzeros
+    mem->P_nnz = nn;
 }
 
 
@@ -352,7 +352,7 @@ static void update_hessian_data(const ocp_qp_in *in, ocp_qp_clarabel_memory *mem
         nn += 2*ns[kk];
     }
 
-	// TODO ? check that nn==mem->P_nnz
+    // TODO ? check that nn==mem->P_nnz
 }
 
 
@@ -384,12 +384,12 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_clar
 
     slk_start += con_start;
 
-	// setup cones type
-	int m = acados_clarabel_num_constr(dims);
-	int m_eq = con_start;
-	int m_ineq = m-m_eq;
-	mem->cones[0] = ClarabelZeroConeT(m_eq);
-	mem->cones[1] = ClarabelNonnegativeConeT(m_ineq);
+    // setup cones type
+    int m = acados_clarabel_num_constr(dims);
+    int m_eq = con_start;
+    int m_ineq = m-m_eq;
+    mem->cones[0] = ClarabelZeroConeT(m_eq);
+    mem->cones[1] = ClarabelNonnegativeConeT(m_ineq);
 
     // CSC format: A_i are row indices and A_p are column pointers
     int nn = 0, col = 0;
@@ -409,7 +409,7 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_clar
                 {
                     mem->A_rowval[nn+ii] = row_offset_dyn + ii;
                 }
-				nn += nx[kk+1];
+                nn += nx[kk+1];
             }
 
             // write bound on u (upper and lower)
@@ -431,7 +431,7 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_clar
                 mem->A_rowval[nn+ii] = con_start + row_offset_con + nb[kk] + ii;
                 mem->A_rowval[nn+ng[kk]+ii] = con_start + row_offset_con + 2*nb[kk] + ng[kk] + ii;
             }
-			nn += 2*ng[kk];
+            nn += 2*ng[kk];
         }
 
         // state variables
@@ -454,7 +454,7 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_clar
                 {
                     mem->A_rowval[nn+ii] = row_offset_dyn + ii;
                 }
-				nn += nx[kk+1];
+                nn += nx[kk+1];
             }
 
             // write bound on x (upper and lower)
@@ -476,7 +476,7 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_clar
                 mem->A_rowval[nn+ii] = con_start + row_offset_con + nb[kk] + ii;
                 mem->A_rowval[nn+ng[kk]+ii] = con_start + row_offset_con + 2*nb[kk] + ng[kk] + ii;
             }
-			nn += 2*ng[kk];
+            nn += 2*ng[kk];
         }
 
         // slack variables on lower inequalities
@@ -530,8 +530,8 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_clar
 
     // end of matrix
     mem->A_col_ptr[col] = nn;
-	// actual number of nonzeros
-	mem->A_nnz = nn;
+    // actual number of nonzeros
+    mem->A_nnz = nn;
 }
 
 
@@ -581,10 +581,10 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_clarabel_
 
             // write column from D
             blasfeo_unpack_dmat(1, ng[kk], in->DCt+kk, jj, 0, mem->A_nzval+nn+ng[kk], 1);
-			for(ii=0; ii<ng[kk]; ii++)
-			{
-				mem->A_nzval[nn+ii] = - mem->A_nzval[nn+ng[kk]+ii];
-			}
+            for(ii=0; ii<ng[kk]; ii++)
+            {
+                mem->A_nzval[nn+ii] = - mem->A_nzval[nn+ng[kk]+ii];
+            }
             nn += 2*ng[kk];
 
         }
@@ -621,10 +621,10 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_clarabel_
 
             // write column from C
             blasfeo_unpack_dmat(1, ng[kk], in->DCt+kk, nu[kk]+jj, 0, mem->A_nzval+nn+ng[kk], 1);
-			for(ii=0; ii<ng[kk]; ii++)
-			{
-				mem->A_nzval[nn+ii] = - mem->A_nzval[nn+ng[kk]+ii];
-			}
+            for(ii=0; ii<ng[kk]; ii++)
+            {
+                mem->A_nzval[nn+ii] = - mem->A_nzval[nn+ng[kk]+ii];
+            }
             nn += 2*ng[kk];
 
         }
@@ -673,7 +673,7 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_clarabel_
 
     }
 
-	// TODO ? check that nn==mem->A_nnz
+    // TODO ? check that nn==mem->A_nnz
 }
 
 
@@ -698,7 +698,7 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_clarabel_memory *mem)
         blasfeo_unpack_dvec(nx[kk + 1], in->b + kk, 0, &mem->b[nn], 1);
         for (ii = 0; ii < 2*nx[kk+1]; ii++)
         {
-			mem->b[nn+ii] = - mem->b[nn+ii];
+            mem->b[nn+ii] = - mem->b[nn+ii];
         }
         nn += nx[kk + 1];
     }
@@ -712,7 +712,7 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_clarabel_memory *mem)
         blasfeo_unpack_dvec(nb[kk]+ng[kk], in->d+kk, nb[kk]+ng[kk], &mem->b[nn+nb[kk]+ng[kk]], 1);
         for (ii = 0; ii < 2*nb[kk]+2*ng[kk]; ii++)
         {
-			mem->b[nn+ii] = - mem->b[nn+ii];
+            mem->b[nn+ii] = - mem->b[nn+ii];
         }
         nn += 2*nb[kk] + 2*ng[kk];
     }
@@ -724,13 +724,13 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_clarabel_memory *mem)
         blasfeo_unpack_dvec(2*ns[kk], in->d+kk, 2*nb[kk]+2*ng[kk], &mem->b[nn], 1);
         for (ii = 0; ii < 2*ns[kk]; ii++)
         {
-			mem->b[nn+ii] = - mem->b[nn+ii];
+            mem->b[nn+ii] = - mem->b[nn+ii];
         }
         nn += 2*ns[kk];
     }
 
-	// actual number of nonzeros
-	mem->b_nnz = nn;
+    // actual number of nonzeros
+    mem->b_nnz = nn;
 }
 
 
@@ -749,28 +749,28 @@ static void clarabel_init_data(ocp_qp_clarabel_memory* mem, ocp_qp_in *qp_in)
 
     //printf("\nn %d m %d\n", n, m);
 
-	// allocates and initializes a csc matrix
+    // allocates and initializes a csc matrix
     clarabel_CscMatrix_init(&mem->A, m, n, mem->A_col_ptr, mem->A_rowval, mem->A_nzval);
     //printf("ocp_qp_clarabel: created A\n");
     //print_csc_matrix(&mem->A, "A_mat");
     //print_csc_as_dns(&mem->A);
-	//for(int ii=0; ii<=n; ii++)
-	//{
-	//	printf("col ptr %d: %d\n", ii, mem->A_col_ptr[ii]);
-	//}
+    //for(int ii=0; ii<=n; ii++)
+    //{
+    //    printf("col ptr %d: %d\n", ii, mem->A_col_ptr[ii]);
+    //}
 
-	// allocates and initializes a csc matrix
+    // allocates and initializes a csc matrix
     clarabel_CscMatrix_init(&mem->P, n, n, mem->P_col_ptr, mem->P_rowval, mem->P_nzval);
     //printf("ocp_qp_clarabel: created P\n");
     //print_csc_matrix(&mem->P, "P_mat");
     //print_csc_as_dns(&mem->P);
-	//for(int ii=0; ii<=n; ii++)
-	//{
-	//	printf("col ptr %d: %d\n", ii, mem->P_col_ptr[ii]);
-	//}
+    //for(int ii=0; ii<=n; ii++)
+    //{
+    //    printf("col ptr %d: %d\n", ii, mem->P_col_ptr[ii]);
+    //}
 
     //printf("\ndone\n");
-	//exit(0);
+    //exit(0);
 
 }
 
@@ -781,8 +781,8 @@ static void ocp_qp_clarabel_update_memory(const ocp_qp_in *in, const ocp_qp_clar
 {
     if (mem->first_run)
     {
-		update_hessian_structure(in, mem);
-		update_constraints_matrix_structure(in, mem);
+        update_hessian_structure(in, mem);
+        update_constraints_matrix_structure(in, mem);
     }
 
     update_hessian_data(in, mem);
@@ -830,9 +830,9 @@ void ocp_qp_clarabel_opts_initialize_default(void *config_, void *dims_, void *o
 {
     ocp_qp_clarabel_opts *opts = opts_;
 
-	*opts->clarabel_opts = clarabel_DefaultSettings_default();
-	opts->clarabel_opts->verbose = false;
-	opts->clarabel_opts->presolve_enable = false;
+    *opts->clarabel_opts = clarabel_DefaultSettings_default();
+    opts->clarabel_opts->verbose = false;
+    opts->clarabel_opts->presolve_enable = false;
 //     clarabel_set_default_settings(opts->clarabel_opts);
 //     opts->clarabel_opts->verbose = 0;
 //     opts->clarabel_opts->polish = 1;
@@ -1256,19 +1256,19 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
     clarabel_init_data(mem, qp_in);
     if (!mem->first_run)
     {
-		ClarabelDefaultInfo tmp_info;
-	    tmp_info = clarabel_DefaultSolver_update_P(mem->solver, mem->P_nzval, mem->P_nnz);
-	    tmp_info = clarabel_DefaultSolver_update_A(mem->solver, mem->A_nzval, mem->A_nnz);
-	    tmp_info = clarabel_DefaultSolver_update_q(mem->solver, mem->q, mem->q_nnz);
-	    tmp_info = clarabel_DefaultSolver_update_b(mem->solver, mem->b, mem->b_nnz);
+        ClarabelDefaultInfo tmp_info;
+        tmp_info = clarabel_DefaultSolver_update_P(mem->solver, mem->P_nzval, mem->P_nnz);
+        tmp_info = clarabel_DefaultSolver_update_A(mem->solver, mem->A_nzval, mem->A_nnz);
+        tmp_info = clarabel_DefaultSolver_update_q(mem->solver, mem->q, mem->q_nnz);
+        tmp_info = clarabel_DefaultSolver_update_b(mem->solver, mem->b, mem->b_nnz);
     }
     else
     {
-		//printf("\nbefore build solver\n");
-		// Build solver
-		mem->solver = clarabel_DefaultSolver_new(&mem->P, mem->q, &mem->A, mem->b, 2, mem->cones, opts->clarabel_opts);
-		//printf("\nafter build solver %p\n", mem->solver);
-		// TODO for now always force first_run, because the updates are crashing...
+        //printf("\nbefore build solver\n");
+        // Build solver
+        mem->solver = clarabel_DefaultSolver_new(&mem->P, mem->q, &mem->A, mem->b, 2, mem->cones, opts->clarabel_opts);
+        //printf("\nafter build solver %p\n", mem->solver);
+        // TODO for now always force first_run, because the updates are crashing...
         //mem->first_run = 0; // TODO uncomments once updates work ...
         mem->first_run = 1;
     }
@@ -1291,27 +1291,27 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
     fill_in_qp_out(qp_in, qp_out, mem);
     ocp_qp_compute_t(qp_in, qp_out);
 
-	//d_ocp_qp_sol_print(qp_in->dim, qp_out);
+    //d_ocp_qp_sol_print(qp_in->dim, qp_out);
 
-	//printf("\nreturning\n");
-	//exit(0);
-	//return 0;
+    //printf("\nreturning\n");
+    //exit(0);
+    //return 0;
 
     // info
-	ClarabelDefaultInfo clarabel_info = clarabel_DefaultSolver_info(mem->solver);
+    ClarabelDefaultInfo clarabel_info = clarabel_DefaultSolver_info(mem->solver);
     info->solve_QP_time = acados_toc(&qp_timer);
     //info->solve_QP_time = clarabel_info.solve_time;
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = clarabel_info.iterations;
     // info->t_computed = 1;
 
-	// status
-	int acados_status = ACADOS_QP_FAILURE; // generic QP failure
+    // status
+    int acados_status = ACADOS_QP_FAILURE; // generic QP failure
     ClarabelSolverStatus clarabel_status = mem->solution.status;
-	if(clarabel_status==ClarabelSolved)
-		acados_status = ACADOS_SUCCESS;
-	else if(clarabel_status==ClarabelMaxIterations)
-		acados_status = ACADOS_MAXITER;
+    if(clarabel_status==ClarabelSolved)
+        acados_status = ACADOS_SUCCESS;
+    else if(clarabel_status==ClarabelMaxIterations)
+        acados_status = ACADOS_MAXITER;
 
     // // check exit conditions
 
