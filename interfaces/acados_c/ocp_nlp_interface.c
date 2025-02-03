@@ -1124,20 +1124,6 @@ void ocp_nlp_cost_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
     {
         dims_out[0] = dims->ns[stage];
     }
-    else if (!strcmp(field, "lg") || !strcmp(field, "ug"))
-    {
-        dims_out[0] = dims->ng[stage];
-    }
-    else if (!strcmp(field, "lbx") || !strcmp(field, "ubx") || !strcmp(field, "lbu") || !strcmp(field, "ubu"))
-    {
-        // TODO is this correct if condensing is used?
-        ocp_nlp_qp_dims_get_from_attr(config, dims, out, stage, field, dims_out);
-    }
-    else if (!strcmp(field, "lh") || !strcmp(field, "uh") || !strcmp(field, "uphi"))
-    {
-        // TODO here we should also check that its the correct constraint module
-        dims_out[0] = dims->ni_nl[stage];
-    }
     // matrices
     else if (!strcmp(field, "W"))
     {
