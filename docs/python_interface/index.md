@@ -163,6 +163,15 @@ The cython based wrapper is called [`AcadosOcpSolverCython`](#acados_template.ac
     :exclude-members:
 ```
 
+### OCP iterate classes
+``` eval_rst
+.. automodule:: acados_template.acados_ocp_iterate
+    :members:
+    :private-members:
+    :exclude-members:
+```
+
+
 
 ### `AcadosModel`
 ``` eval_rst
