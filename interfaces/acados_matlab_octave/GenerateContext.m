@@ -44,10 +44,12 @@ classdef GenerateContext < handle
 
     methods
         function obj = GenerateContext(p_global, problem_name, opts)
+            import casadi.*
             if nargin < 3
                 opts = [];
             end
             obj.p_global = p_global;
+
             if ~(isempty(obj.p_global) || length(obj.p_global) == 0)
                 check_casadi_version_supports_p_global();
             end
@@ -62,7 +64,7 @@ classdef GenerateContext < handle
             obj.casadi_codegen_opts.casadi_int = 'int';
             obj.casadi_codegen_opts.casadi_real = 'double';
             try
-                CodeGenerator('foo',struct('force_canonical',true))
+                CodeGenerator('foo', struct('force_canonical', true))
                 obj.casadi_codegen_opts.force_canonical = false;
             catch
                 % Option does not exist
@@ -74,7 +76,6 @@ classdef GenerateContext < handle
 
             obj.casadi_fun_opts = struct();
 
-            import casadi.*
             try
                 dummy = MX.sym('dummy');
                 cse(dummy); % Check if cse exists
