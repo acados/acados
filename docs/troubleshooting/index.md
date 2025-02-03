@@ -10,15 +10,15 @@ In order to asses the QP solver status, you need to check the corresponding QP s
 
 ### QP diagnostics
 - [Python](examples/acados_python/pendulum_on_cart/solution_sensitivities/policy_gradient_example.py)
-- [MATLAB/Octave](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started/extensive_example_ocp.m)
+- [MATLAB/Octave](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/getting_started/extensive_example_ocp.m)
 
 
 ### Store iterates
 One can always get the last iterate using `solver.get()`, see
 - [Python](examples/acados_python/linear_mass_model/linear_mass_test_problem.py)
-- [MATLAB/Octave](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started/extensive_example_ocp.m)
+- [MATLAB/Octave](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/getting_started/extensive_example_ocp.m)
 
 In addition, one can set the solver option [`store_iterates`](https://docs.acados.org/python_interface/index.html#acados_template.acados_ocp_options.AcadosOcpOptions.store_iterates) to store all intermediate NLP solver iterates and get them after a solver call.
 - [Python](examples/acados_python/convex_ocp_with_onesided_constraints/main_convex_onesided.py)
-- [MATLAB/Octave](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started/extensive_example_ocp.m)
+- [MATLAB/Octave](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/getting_started/extensive_example_ocp.m)
 

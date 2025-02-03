@@ -1383,7 +1383,7 @@ class AcadosOcpSolver:
             - 6: Problem unbounded (ACADOS_UNBOUNDED)
             - 7: Solver timeout (ACADOS_TIMEOUT)
 
-        See `return_values` in https://github.com/acados/acados/blob/master/acados/utils/types.h
+        See `return_values` in https://github.com/acados/acados/blob/main/acados/utils/types.h
         """
         return self.status
 
