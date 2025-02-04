@@ -595,7 +595,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
         print_ocp_qp_in(nlp_mem->qp_in);
     }
 
-    if (!opts->warm_start_first_qp)
+    if (mem->is_first_call && !opts->warm_start_first_qp)
     {
         int tmp_int = 0;
         config->qp_solver->opts_set(config->qp_solver,
@@ -613,6 +613,12 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     qp_info *qp_info_;
     ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
     qp_iter = qp_info_->num_iter;
+
+    // restore default warm start
+    if (mem->is_first_call)
+    {
+        config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "warm_start", &opts->qp_warm_start);
+    }
 
     // compute external QP residuals (for debugging)
     if (opts->ext_qp_res)
@@ -658,6 +664,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
         }
     }
     mem->nlp_mem->status = ACADOS_SUCCESS;
+    mem->is_first_call = false;
 
     if (opts->rti_log_residuals && !opts->rti_log_only_available_residuals)
     {
@@ -1126,8 +1133,6 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         // tmp_nlp_out <- nlp_out
         copy_ocp_nlp_out(dims, nlp_out, tmp_nlp_out);
     }
-
-    mem->is_first_call = false;
 
     return;
 }
