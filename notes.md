@@ -17,12 +17,11 @@
 - HPIPM hottest start
   - giaf: implement HPIPM
   - python: set this to 3 at creation?
-  - prepare
 
 - setter for `tau_min` (`mu0`)
   - Python: set at runtime TODO!
 
-- just eval_qp_matrices_and_factorize
+- just setup_qp_matrices_and_factorize
   - skelleton is there;
   - giaf: HPIPM and C
 
