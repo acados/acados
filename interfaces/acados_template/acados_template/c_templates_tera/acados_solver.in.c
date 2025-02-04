@@ -2349,6 +2349,11 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "warm_start_first_qp", &nlp_solver_warm_start_first_qp);
     {%- endif %}
 
+    {%- if solver_options.nlp_solver_warm_start_first_qp_from_nlp %}
+    int nlp_solver_warm_start_first_qp_from_nlp = {{ solver_options.nlp_solver_warm_start_first_qp_from_nlp }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "warm_start_first_qp_from_nlp", &nlp_solver_warm_start_first_qp_from_nlp);
+    {%- endif %}
+
     double levenberg_marquardt = {{ solver_options.levenberg_marquardt }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "levenberg_marquardt", &levenberg_marquardt);
 
