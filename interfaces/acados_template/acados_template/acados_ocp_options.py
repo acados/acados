@@ -321,8 +321,8 @@ class AcadosOcpOptions:
     def nlp_solver_warm_start_first_qp(self):
         """
         Flag indicating whether the first QP in an NLP solve should be warm started.
-        Type: int.
-        Default: 0.
+        Type: bool.
+        Default: False.
         """
         return self.__nlp_solver_warm_start_first_qp
 
