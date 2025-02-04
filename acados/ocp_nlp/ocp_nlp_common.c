@@ -2903,6 +2903,28 @@ void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
     }
 }
 
+void ocp_nlp_initialize_qp_from_nlp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_qp_in *qp_in,
+            ocp_nlp_out *out, ocp_qp_out *qp_out)
+{
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+
+    for (int i = 0; i <= N; i++)
+    {
+        // set primal variables to zero
+        blasfeo_dvecse(nv[i], 0.0, qp_out->ux+i, 0);
+
+        // copy multipliers from ocp_nlp_out to ocp_qp_out
+        blasfeo_dveccp(2*ni[i], out->lam+i, 0, qp_out->lam+i, 0);
+        if (i < N)
+            blasfeo_dveccp(nx[i+1], out->pi+i, 0, qp_out->pi+i, 0);
+    }
+    // compute t
+    ocp_qp_compute_t(qp_in, qp_out);
+}
+
 
 int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)

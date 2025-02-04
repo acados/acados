@@ -724,11 +724,19 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
 
         /* solve QP */
-        // (typically) no warm start at first iteration
-        if (sqp_iter == 0 && !opts->warm_start_first_qp)
+        // warm start of first QP
+        if (sqp_iter == 0)
         {
-            int tmp_int = 0;
-            qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
+            // (typically) no warm start at first iteration
+            if (!opts->warm_start_first_qp)
+            {
+                int tmp_int = 0;
+                qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
+            }
+            else
+            {
+                ocp_nlp_initialize_qp_from_nlp(config, dims, qp_in, nlp_out, qp_out);
+            }
         }
         // Show input to QP
         if (nlp_opts->print_level > 3)
