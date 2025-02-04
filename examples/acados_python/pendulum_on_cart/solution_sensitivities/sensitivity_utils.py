@@ -238,7 +238,7 @@ def plot_solution_sensitivities_results(p_test, pi, pi_reconstructed_acados, pi_
                  min_abs_eig_full=None, min_abs_eig_proj_hess=None, min_abs_eig_P=None,
                  eigen_analysis=False, title=None, parameter_name="",
                  max_lam_parametric_constraint=None, sum_lam_parametric_constraint=None,
-                 multipliers_bu=None, multipliers_h=None,
+                 multipliers_bu=None, multipliers_h=None, plot_reconstructed=True,
                  figsize=None,
                  ):
 
@@ -254,8 +254,9 @@ def plot_solution_sensitivities_results(p_test, pi, pi_reconstructed_acados, pi_
 
     isub = 0
     ax[isub].plot(p_test, pi, label='solution acados', color='k')
-    ax[isub].plot(p_test, pi_reconstructed_acados, "--", label='reconstructed from acados solution sens.')
-    ax[isub].plot(p_test, pi_reconstructed_np_grad, "--", label='reconstructed from finite diff.')
+    if plot_reconstructed:
+        ax[isub].plot(p_test, pi_reconstructed_acados, "--", label='reconstructed from acados solution sens.')
+        ax[isub].plot(p_test, pi_reconstructed_np_grad, "--", label='reconstructed from finite diff.')
     ax[isub].set_ylabel(r"$u_0$")
     if title is not None:
         ax[isub].set_title(title)

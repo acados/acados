@@ -45,7 +45,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     p_nominal = 1.0
     x0 = np.array([0.0, np.pi / 2, 0.0, 0.0])
     delta_p = 0.001
-    p_test = np.arange(p_nominal - 0.5, p_nominal + 0.5, delta_p)
+    p_test = np.arange(p_nominal + 0.1, p_nominal + 0.5, delta_p)
 
     np_test = p_test.shape[0]
     N_horizon = 50
@@ -53,6 +53,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     Fmax = 80.0
     with_parametric_constraint = True
     with_nonlinear_constraint = False
+    plot_reconstructed = False
 
     ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, qp_solver_ric_alg=1, with_parametric_constraint=with_parametric_constraint, with_nonlinear_constraint=with_nonlinear_constraint)
 
@@ -171,6 +172,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
                  eigen_analysis, title=None, parameter_name=r"$\theta$",
                  multipliers_bu=multipliers_bu, multipliers_h=multipliers_h,
                  figsize=(7, 9),
+                 plot_reconstructed=plot_reconstructed,
                 #  max_lam_parametric_constraint=max_lam_parametric_constraint,
                 #  sum_lam_parametric_constraint=sum_lam_parametric_constraint
                  )
