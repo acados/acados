@@ -115,6 +115,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_,
     // SQP RTI opts
     opts->ext_qp_res = 0;
     opts->warm_start_first_qp = false;
+    opts->warm_start_first_qp_from_nlp = true;
     opts->rti_phase = 0;
     opts->as_rti_level = STANDARD_RTI;
     opts->as_rti_advancement_strategy = SIMULATE_ADVANCE;
@@ -595,11 +596,19 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
         print_ocp_qp_in(nlp_mem->qp_in);
     }
 
-    if (mem->is_first_call && !opts->warm_start_first_qp)
+    // set QP warm start
+    if (mem->is_first_call)
     {
-        int tmp_int = 0;
-        config->qp_solver->opts_set(config->qp_solver,
-            opts->nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
+        if (!opts->warm_start_first_qp)
+        {
+            int tmp_int = 0;
+            config->qp_solver->opts_set(config->qp_solver,
+                opts->nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
+        }
+        else if (opts->warm_start_first_qp_from_nlp)
+        {
+            ocp_nlp_initialize_qp_from_nlp(config, dims, nlp_mem->qp_in, nlp_out, nlp_mem->qp_out);
+        }
     }
 
     // solve QP
