@@ -216,6 +216,11 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
             bool* warm_start_first_qp = (bool *) value;
             opts->warm_start_first_qp = *warm_start_first_qp;
         }
+        else if (!strcmp(field, "warm_start_first_qp_from_nlp"))
+        {
+            bool* warm_start_first_qp_from_nlp = (bool *) value;
+            opts->warm_start_first_qp_from_nlp = *warm_start_first_qp_from_nlp;
+        }
         else if (!strcmp(field, "eval_residual_at_max_iter"))
         {
             bool* eval_residual_at_max_iter = (bool *) value;
@@ -727,13 +732,13 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // warm start of first QP
         if (sqp_iter == 0)
         {
-            // (typically) no warm start at first iteration
             if (!opts->warm_start_first_qp)
             {
+                // (typically) no warm start at first iteration
                 int tmp_int = 0;
                 qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
             }
-            else
+            else if (opts->warm_start_first_qp_from_nlp)
             {
                 ocp_nlp_initialize_qp_from_nlp(config, dims, qp_in, nlp_out, qp_out);
             }
