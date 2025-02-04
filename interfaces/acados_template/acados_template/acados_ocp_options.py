@@ -54,6 +54,7 @@ class AcadosOcpOptions:
         self.__nlp_solver_max_iter = 100
         self.__nlp_solver_ext_qp_res = 0
         self.__nlp_solver_warm_start_first_qp = False
+        self.__nlp_solver_warm_start_first_qp_from_nlp = False
         self.__nlp_solver_tol_min_step_norm = None
         self.__globalization = 'FIXED_STEP'
         self.__levenberg_marquardt = 0.0
@@ -320,10 +321,20 @@ class AcadosOcpOptions:
     def nlp_solver_warm_start_first_qp(self):
         """
         Flag indicating whether the first QP in an NLP solve should be warm started.
-        Type: int.
-        Default: 0.
+        Type: bool.
+        Default: False.
         """
         return self.__nlp_solver_warm_start_first_qp
+
+    @property
+    def nlp_solver_warm_start_first_qp_from_nlp(self):
+        """
+        If True first QP will be initialized using values from NLP iterate, otherwise from previous QP solution, only relevant if `nlp_solver_warm_start_first_qp` is True.
+        Type: bool.
+        Default: False.
+        """
+        return self.__nlp_solver_warm_start_first_qp_from_nlp
+
 
     @property
     def levenberg_marquardt(self):
@@ -1399,6 +1410,12 @@ class AcadosOcpOptions:
             self.__nlp_solver_warm_start_first_qp = nlp_solver_warm_start_first_qp
         else:
             raise Exception('Invalid nlp_solver_warm_start_first_qp value. Expected bool.')
+
+    @nlp_solver_warm_start_first_qp_from_nlp.setter
+    def nlp_solver_warm_start_first_qp_from_nlp(self, nlp_solver_warm_start_first_qp_from_nlp):
+        if not isinstance(nlp_solver_warm_start_first_qp_from_nlp, bool):
+            raise Exception('Invalid nlp_solver_warm_start_first_qp_from_nlp value. Expected bool.')
+        self.__nlp_solver_warm_start_first_qp_from_nlp = nlp_solver_warm_start_first_qp_from_nlp
 
     @levenberg_marquardt.setter
     def levenberg_marquardt(self, levenberg_marquardt):
