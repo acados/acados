@@ -90,6 +90,8 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
             AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
             sensitivity_solver = AcadosOcpSolver.create_cython_solver(f"{ocp.model.name}.json")
         else:
+            ocp.solver_options.nlp_solver_warm_start_first_qp = True
+            ocp.solver_options.qp_solver_warm_start = 2
             sensitivity_solver = AcadosOcpSolver(ocp, json_file=f"{ocp.model.name}.json", generate=generate_solvers, build=generate_solvers)
 
     # set parameter value
