@@ -189,7 +189,7 @@ def create_ocp_formulation_without_opts(p_global, m, l, C, lut=True, use_p_globa
 
     if not use_p_global:
         model.p = ca.vertcat(model.p, p_global)
-        model.p_global = None
+        model.p_global = MX.sym('p_global', 0, 1)
 
     return ocp
 

@@ -2227,9 +2227,14 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
     int globalization_full_step_dual = {{ solver_options.globalization_full_step_dual }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_full_step_dual", &globalization_full_step_dual);
 
-    {%- if solver_options.nlp_solver_warm_start_first_qp %}
+    {%- if solver_options.nlp_solver_warm_start_first_qp_from_nlp %}
     int nlp_solver_warm_start_first_qp = {{ solver_options.nlp_solver_warm_start_first_qp }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "warm_start_first_qp", &nlp_solver_warm_start_first_qp);
+    {%- endif %}
+
+    {%- if solver_options.nlp_solver_warm_start_first_qp_from_nlp %}
+    int nlp_solver_warm_start_first_qp_from_nlp = {{ solver_options.nlp_solver_warm_start_first_qp_from_nlp }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "warm_start_first_qp", &nlp_solver_warm_start_first_qp_from_nlp);
     {%- endif %}
 
     double levenberg_marquardt = {{ solver_options.levenberg_marquardt }};
@@ -2372,7 +2377,6 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
 {% endif %}
 
 
-{# TODO: check this part again carefully!! #}
     /* Stage varying options */
     int ext_cost_num_hess;
     bool output_z_val = true;
@@ -2401,7 +2405,6 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
 
 {%- if phases_dims[jj].nz > 0 %}
     // TODO: these options are lower level -> should be encapsulated! maybe through hessian approx option.
-
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_output_z", &output_z_val);
@@ -2524,16 +2527,12 @@ int {{ name }}_acados_create_precompute({{ name }}_solver_capsule* capsule) {
 
 
 
-
-
-
 int {{ name }}_acados_create_with_discretization({{ name }}_solver_capsule* capsule, int N, double* new_time_steps)
 {
     // If N does not match the number of shooting intervals used for code generation, new_time_steps must be given.
     if (new_time_steps) {
         fprintf(stderr, "{{ name }}_acados_create_with_discretization: new_time_steps should be NULL " \
-            "for multi-phase solver!\n", \
-             N, {{ name | upper }}_N);
+            "for multi-phase solver!\n");
         return 1;
     }
 

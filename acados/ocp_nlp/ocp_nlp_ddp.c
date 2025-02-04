@@ -42,9 +42,9 @@
 #endif
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_blas.h"
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
@@ -121,6 +121,7 @@ void ocp_nlp_ddp_opts_initialize_default(void *config_, void *dims_, void *opts_
 
     opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
+    opts->warm_start_first_qp_from_nlp = false;
     opts->eval_residual_at_max_iter = false;
 
     // overwrite default submodules opts
@@ -210,6 +211,11 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
         {
             bool* warm_start_first_qp = (bool *) value;
             opts->warm_start_first_qp = *warm_start_first_qp;
+        }
+        else if (!strcmp(field, "warm_start_first_qp_from_nlp"))
+        {
+            bool* warm_start_first_qp_from_nlp = (bool *) value;
+            opts->warm_start_first_qp_from_nlp = *warm_start_first_qp_from_nlp;
         }
         else if (!strcmp(field, "eval_residual_at_max_iter"))
         {
@@ -755,11 +761,19 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         /* solve QP */
-        // (typically) no warm start at first iteration
-        if (ddp_iter == 0 && !opts->warm_start_first_qp)
+        // warm start of first QP
+        if (ddp_iter == 0)
         {
-            int tmp_int = 0;
-            qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
+            if (!opts->warm_start_first_qp)
+            {
+                // (typically) no warm start at first iteration
+                int tmp_int = 0;
+                qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
+            }
+            else if (opts->warm_start_first_qp_from_nlp)
+            {
+                ocp_nlp_initialize_qp_from_nlp(config, dims, qp_in, nlp_out, qp_out);
+            }
         }
         // Show input to QP
         if (nlp_opts->print_level > 1)
@@ -854,6 +868,8 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             int globalization_status;
             acados_tic(&timer1);
             globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts, &mem->alpha);
+            nlp_timings->time_glob += acados_toc(&timer1);
+
             if (globalization_status != ACADOS_SUCCESS)
             {
                 if (nlp_opts->print_level > 1)
@@ -865,7 +881,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 nlp_timings->time_tot = acados_toc(&timer0);
                 return mem->nlp_mem->status;
             }
-            nlp_timings->time_glob += acados_toc(&timer1);
         }
     }  // end DDP loop
 

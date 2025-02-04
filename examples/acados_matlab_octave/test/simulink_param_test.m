@@ -39,30 +39,31 @@ N = 20; % number of discretization steps
 nx = 3;
 nu = 3;
 np = 100;
-[ocp_model, ocp_opts, simulink_opts, x0] = create_parametric_ocp_qp(N, np);
+[ocp, x0] = create_parametric_ocp_qp(N, np);
+
 % NOTE: here we don't perform iterations and just test initialization
 % functionality
-ocp_opts.set('nlp_solver_max_iter', 0);
+ocp.solver_options.nlp_solver_max_iter = 0;
 
 % deactivate ports.
-simulink_opts.inputs.lbx_0 = 0;
-simulink_opts.inputs.ubx_0 = 0;
-simulink_opts.inputs.lbx = 0;
-simulink_opts.inputs.ubx = 0;
-simulink_opts.inputs.reset_solver = 0;
-simulink_opts.inputs.x_init = 0;
-simulink_opts.inputs.u_init = 0;
-simulink_opts.inputs.pi_init = 0;
-simulink_opts.inputs.ignore_inits = 0;
-simulink_opts.outputs.pi_all = 0;
-simulink_opts.outputs.sqp_iter = 0;
+ocp.simulink_opts.inputs.lbx_0 = 0;
+ocp.simulink_opts.inputs.ubx_0 = 0;
+ocp.simulink_opts.inputs.lbx = 0;
+ocp.simulink_opts.inputs.ubx = 0;
+ocp.simulink_opts.inputs.reset_solver = 0;
+ocp.simulink_opts.inputs.x_init = 0;
+ocp.simulink_opts.inputs.u_init = 0;
+ocp.simulink_opts.inputs.pi_init = 0;
+ocp.simulink_opts.inputs.ignore_inits = 0;
+ocp.simulink_opts.outputs.pi_all = 0;
+ocp.simulink_opts.outputs.sqp_iter = 0;
 
 % parameter ports
-simulink_opts.inputs.parameter_traj = 1;
-simulink_opts.outputs.parameter_traj = 1;
+ocp.simulink_opts.inputs.parameter_traj = 1;
+ocp.simulink_opts.outputs.parameter_traj = 1;
 
 %% create ocp solver
-ocp_solver = acados_ocp(ocp_model, ocp_opts, simulink_opts);
+ocp_solver = AcadosOcpSolver(ocp);
 
 %% simulink test
 cd c_generated_code
@@ -77,16 +78,13 @@ out_sim = sim('parameter_test_simulink', 'SaveOutput', 'on');
 status_signal = out_sim.logsout.getElement('status');
 disp('checking status, should be 2 (max iter).')
 if any(status_signal.Values.Data ~= 2)
-    disp('failed. got status values:');
-    disp(status_signal.Values.Data);
-    quit(1);
+    errror(['failed. got status values:' mat2str(status_signal.Values.Data)]);
 end
 
 element_names = out_sim.logsout.getElementNames();
 parameter_traj_out_signal = out_sim.logsout.getElement('parameter_traj_out');
 if any(parameter_traj_out_signal.Values.Data(1,:) ~= p_values)
-    disp('Setting parameters in Simulink does NOT work as expected.');
-    quit(1);
+    error('Setting parameters in Simulink does NOT work as expected.');
 end
 disp('Setting parameters in Simulink works as expected.');
 

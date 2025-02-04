@@ -44,7 +44,7 @@ if os.name == 'nt':
 else:
     from ctypes import CDLL as DllLoader
 from datetime import datetime
-from typing import Union, Optional, List, Tuple, Sequence
+from typing import Union, Optional, List, Tuple, Sequence, Dict
 
 import numpy as np
 import scipy.linalg
@@ -54,7 +54,7 @@ from .acados_multiphase_ocp import AcadosMultiphaseOcp
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
-                    acados_lib_is_compiled_with_openmp)
+                    acados_lib_is_compiled_with_openmp, is_empty, set_directory)
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
 
 
@@ -89,6 +89,7 @@ class AcadosOcpSolver:
         """`shared_lib` - solver shared library"""
         return self.__shared_lib
 
+    # TODO move this to AcadosOcp
     @classmethod
     def generate(cls, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, simulink_opts=None, cmake_builder: CMakeBuilder = None):
         """
@@ -149,24 +150,22 @@ class AcadosOcpSolver:
             :param verbose: indicating if build command is printed
         """
         code_export_dir = os.path.abspath(code_export_dir)
-        cwd = os.getcwd()
-        os.chdir(code_export_dir)
 
-        if os.name == 'nt':
-            make_cmd = 'mingw32-make'
-        else:
-            make_cmd = 'make'
-
-        if with_cython:
-            verbose_system_call([make_cmd, 'clean_all'], verbose)
-            verbose_system_call([make_cmd, 'ocp_cython'], verbose)
-        else:
-            if cmake_builder is not None:
-                cmake_builder.exec(code_export_dir, verbose)
+        with set_directory(code_export_dir):
+            if os.name == 'nt':
+                make_cmd = 'mingw32-make'
             else:
-                verbose_system_call([make_cmd, 'clean_ocp_shared_lib'], verbose)
-                verbose_system_call([make_cmd, 'ocp_shared_lib'], verbose)
-        os.chdir(cwd)
+                make_cmd = 'make'
+
+            if with_cython:
+                verbose_system_call([make_cmd, 'clean_all'], verbose)
+                verbose_system_call([make_cmd, 'ocp_cython'], verbose)
+            else:
+                if cmake_builder is not None:
+                    cmake_builder.exec(code_export_dir, verbose)
+                else:
+                    verbose_system_call([make_cmd, 'clean_ocp_shared_lib'], verbose)
+                    verbose_system_call([make_cmd, 'ocp_shared_lib'], verbose)
 
 
     @classmethod
@@ -192,10 +191,18 @@ class AcadosOcpSolver:
                     acados_ocp_json['solver_options']['nlp_solver_type'],
                     acados_ocp_json['dims']['N'])
 
+    @property
+    def save_p_global(self) -> bool:
+        return self.__save_p_global
 
-    def __init__(self, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file=None, simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None, verbose=True):
+    def __init__(self, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file=None, simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None, verbose=True, save_p_global=False):
 
         self.solver_created = False
+        self.__save_p_global = save_p_global
+        if save_p_global:
+            self.__p_global_values = acados_ocp.p_global_values
+        else:
+            self.__p_global_values = np.array([])
 
         if not (isinstance(acados_ocp, AcadosOcp) or isinstance(acados_ocp, AcadosMultiphaseOcp)):
             raise Exception('acados_ocp should be of type AcadosOcp or AcadosMultiphaseOcp.')
@@ -293,8 +300,11 @@ class AcadosOcpSolver:
 
         self.__acados_lib.ocp_nlp_eval_cost.argtypes = [c_void_p, c_void_p, c_void_p]
         self.__acados_lib.ocp_nlp_eval_residuals.argtypes = [c_void_p, c_void_p, c_void_p]
+
         self.__acados_lib.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        self.__acados_lib.ocp_nlp_constraints_model_get.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
         self.__acados_lib.ocp_nlp_cost_model_set.argtypes =  [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        self.__acados_lib.ocp_nlp_cost_model_get.argtypes =  [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
 
         self.__acados_lib.ocp_nlp_out_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
         self.__acados_lib.ocp_nlp_set.argtypes = [c_void_p, c_int, c_char_p, c_void_p]
@@ -313,7 +323,7 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_get_from_iterate.argtypes = [c_void_p, c_int, c_int, c_char_p, c_void_p]
         self.__acados_lib.ocp_nlp_get_from_iterate.restypes = c_void_p
 
-        self.__acados_lib.ocp_nlp_dims_get_total_from_attr.argtypes = [c_void_p, c_void_p, c_char_p]
+        self.__acados_lib.ocp_nlp_dims_get_total_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p]
         self.__acados_lib.ocp_nlp_dims_get_total_from_attr.restype = c_int
 
         self.__acados_lib.ocp_nlp_get_all.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
@@ -418,9 +428,11 @@ class AcadosOcpSolver:
         return u0
 
 
-    def solve(self):
+    def solve(self) -> int:
         """
         Solve the ocp with current input.
+
+        :return: status of the solver
         """
         self.status = getattr(self.shared_lib, f"{self.name}_acados_solve")(self.capsule)
 
@@ -440,7 +452,7 @@ class AcadosOcpSolver:
         if field not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']:
             raise Exception(f'AcadosOcpSolver.get_dim_flat(field={field}): \'{field}\' is an invalid argument.')
 
-        return self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, field.encode('utf-8'))
+        return self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, field.encode('utf-8'))
 
 
     def custom_update(self, data_: np.ndarray):
@@ -557,9 +569,13 @@ class AcadosOcpSolver:
         - for field `initial_state`, the gradient is the Lagrange multiplier of the initial state constraint.
         The gradient computation consists of adding the Lagrange multipliers corresponding to the upper and lower bound of the initial state.
 
+        - for field `initial_control`, the gradient is the Lagrange multiplier of the initial control constraint.
+        The gradient computation consists of adding the Lagrange multipliers corresponding to the upper and lower bound of the initial control.
+        This requires the OCP to have control bounds with lbu = ubu at the first stage, i.e. the gradient of the state-action value function or Q-function is computed.
+
         - for field `p_global`, the gradient of the Lagrange function w.r.t. the global parameters is computed.
 
-        :param with_respect_to: string in ["initial_state", "p_global"]
+        :param with_respect_to: string in ["initial_state", "initial_control", "p_global"]
         """
 
         if with_respect_to == "params_global":
@@ -572,10 +588,25 @@ class AcadosOcpSolver:
 
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
             nbu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lbu".encode('utf-8'))
+            ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "s".encode('utf-8'))
 
             lam = self.get(0, 'lam')
-            nlam_non_slack = lam.shape[0]//2 - self.acados_ocp.dims.ns_0
+            nlam_non_slack = lam.shape[0]//2 - ns
             grad = lam[nbu:nbu+nx] - lam[nlam_non_slack+nbu : nlam_non_slack+nbu+nx]
+
+        elif with_respect_to == "initial_control":
+            nu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "u".encode('utf-8'))
+            nbu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lbu".encode('utf-8'))
+            ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "s".encode('utf-8'))
+            lbu = self.get_from_qp_in(0, 'lbu')
+            ubu = self.get_from_qp_in(0, 'ubu')
+
+            if not (nbu == nu and np.all(lbu == ubu) and self.acados_ocp.dims.nsbu == 0):
+                raise Exception("OCP does not have an equality constraint on the initial control.")
+
+            lam = self.get(0, 'lam')
+            nlam_non_slack = lam.shape[0]//2 - ns
+            grad = lam[:nbu] - lam[nlam_non_slack : nlam_non_slack+nbu]
 
         elif with_respect_to == "p_global":
             np_global = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p_global".encode('utf-8'))
@@ -610,9 +641,9 @@ class AcadosOcpSolver:
             self.acados_ocp.solver_options.exact_hess_cost == 1 and
             self.acados_ocp.solver_options.exact_hess_dyn == 1 and
             self.acados_ocp.solver_options.fixed_hess == 0 and
-            self.acados_ocp.model.cost_expr_ext_cost_custom_hess_0 is None and
-            self.acados_ocp.model.cost_expr_ext_cost_custom_hess is None and
-            self.acados_ocp.model.cost_expr_ext_cost_custom_hess_e is None
+            is_empty(self.acados_ocp.model.cost_expr_ext_cost_custom_hess_0) and
+            is_empty(self.acados_ocp.model.cost_expr_ext_cost_custom_hess) and
+            is_empty(self.acados_ocp.model.cost_expr_ext_cost_custom_hess_e)
         ):
             raise Exception("Parametric sensitivities are only correct if an exact Hessian is used!")
 
@@ -620,17 +651,32 @@ class AcadosOcpSolver:
             raise Exception("Parametric sensitivities are only available if with_solution_sens_wrt_params is set to True.")
 
 
-    def eval_solution_sensitivity(self, stages: Union[int, List[int]], with_respect_to: str) \
-                -> Tuple[Union[List[np.ndarray], np.ndarray], Union[List[np.ndarray], np.ndarray]]:
+    def eval_solution_sensitivity(self,
+                                  stages: Union[int, List[int]],
+                                  with_respect_to: str,
+                                  return_sens_x: bool = True,
+                                  return_sens_u: bool = True,
+                                  return_sens_pi: bool = False,
+                                  return_sens_lam: bool = False,
+                                  return_sens_su: bool = False,
+                                  return_sens_sl: bool = False,
+                                  ) \
+                -> Dict:
         """
         Evaluate the sensitivity of the current solution x_i, u_i with respect to the initial state or the parameters for all stages i in `stages`.
 
             :param stages: stages for which the sensitivities are returned, int or list of int
             :param with_respect_to: string in ["initial_state", "p_global"]
-            :returns: a tuple (sens_x, sens_u) with the solution sensitivities.
-                    If stages is a list, sens_x is a list of the same length.
-                    For sens_u, the list has length len(stages) or len(stages)-1 depending on whether N is included or not.
-                    If stages is a scalar, sens_x and sens_u are np.ndarrays of shape (nx[stages], ngrad) and (nu[stages], ngrad).
+            :param return_sens_x: Flag indicating whether sensitivities of x should be returned. Default: True.
+            :param return_sens_u: Flag indicating whether sensitivities of u should be returned. Default: True.
+            :param return_sens_pi: Flag indicating whether sensitivities of pi should be returned. Default: False.
+            :param return_sens_lam: Flag indicating whether sensitivities of lam should be returned. Default: False.
+            :param return_sens_su: Flag indicating whether sensitivities of su should be returned. Default: False.
+            :param return_sens_sl: Flag indicating whether sensitivities of sl should be returned. Default: False.
+            :returns: A dictionary with the solution sensitivities with fields sens_x, sens_u, sens_pi, sens_lam, sens_su, sens_sl if corresponding flags were set.
+                    If stages is a list, sens_x, sens_lam, sens_su, sens_sl is a list of the same length.
+                    For sens_u, sens_pi, the list has length len(stages) or len(stages)-1 depending on whether N is included or not.
+                    If stages is a scalar, the returned sensitivities are np.ndarrays of shape (nfield[stages], ngrad).
 
         .. note::  Correct computation of sensitivities requires \n
 
@@ -657,6 +703,10 @@ class AcadosOcpSolver:
 
         sens_x = []
         sens_u = []
+        sens_pi = []
+        sens_lam = []
+        sens_sl = []
+        sens_su = []
 
         N = self.acados_ocp.solver_options.N_horizon
 
@@ -670,13 +720,11 @@ class AcadosOcpSolver:
             field = "ex"
             self._sanity_check_solution_sensitivities(parametric=False)
 
-
         elif with_respect_to == "p_global":
             np_global = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p_global".encode('utf-8'))
             ngrad = np_global
             field = "p_global"
             self._sanity_check_solution_sensitivities()
-
 
             # compute jacobians wrt params in all modules
             t0 = time.time()
@@ -688,14 +736,31 @@ class AcadosOcpSolver:
 
         # initialize jacobians with zeros
         for s in stages_:
-            nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "x".encode('utf-8'))
 
-            sens_x.append(np.zeros((nx, ngrad)))
+            if return_sens_x:
+                nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "x".encode('utf-8'))
+                sens_x.append(np.zeros((nx, ngrad)))
+
+            if return_sens_lam:
+                nlam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "lam".encode('utf-8'))
+                sens_lam.append(np.zeros((nlam, ngrad)))
+
+            if return_sens_sl:
+                ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "s".encode('utf-8'))
+                sens_sl.append(np.zeros((ns, ngrad)))
+
+            if return_sens_su:
+                ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "s".encode('utf-8'))
+                sens_su.append(np.zeros((ns, ngrad)))
 
             if s < N:
-                nu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "u".encode('utf-8'))
-                sens_u.append(np.zeros((nu, ngrad)))
+                if return_sens_u:
+                    nu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "u".encode('utf-8'))
+                    sens_u.append(np.zeros((nu, ngrad)))
 
+                if return_sens_pi:
+                    npi = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "pi".encode('utf-8'))
+                    sens_pi.append(np.zeros((npi, ngrad)))
 
         self.time_solution_sens_solve = 0.0
         for k in range(ngrad):
@@ -707,16 +772,43 @@ class AcadosOcpSolver:
 
             # extract sensitivities
             for n, s in enumerate(stages_):
-                sens_x[n][:, k] = self.get(s, "sens_x")
+
+                if return_sens_x:
+                    sens_x[n][:, k] = self.get(s, "sens_x")
+                if return_sens_lam:
+                    sens_lam[n][:, k] = self.get(s, "sens_lam")
+                if return_sens_sl:
+                    sens_sl[n][:, k] = self.get(s, "sens_sl")
+                if return_sens_su:
+                    sens_su[n][:, k] = self.get(s, "sens_su")
 
                 if s < N:
-                    sens_u[n][:, k] = self.get(s, "sens_u")
+                    if return_sens_u:
+                        sens_u[n][:, k] = self.get(s, "sens_u")
+                    if return_sens_pi:
+                        sens_pi[n][:, k] = self.get(s, "sens_pi")
 
-        if not stages_is_list:
-            sens_x = sens_x[0]
-            sens_u = sens_u[0]
+        out = {}
 
-        return sens_x, sens_u
+        if return_sens_x:
+            out["sens_x"] = sens_x if stages_is_list else sens_x[0]
+
+        if return_sens_u:
+            out["sens_u"] = sens_u if stages_is_list else sens_u[0]
+
+        if return_sens_pi:
+            out["sens_pi"] = sens_pi if stages_is_list else sens_pi[0]
+
+        if return_sens_lam:
+            out["sens_lam"] = sens_lam if stages_is_list else sens_lam[0]
+
+        if return_sens_sl:
+            out["sens_sl"] = sens_sl if stages_is_list else sens_sl[0]
+
+        if return_sens_su:
+            out["sens_su"] = sens_su if stages_is_list else sens_su[0]
+
+        return out
 
 
     def eval_adjoint_solution_sensitivity(self,
@@ -773,7 +865,7 @@ class AcadosOcpSolver:
             for seed, name, dim in [(seed_x, "seed_x", nx), (seed_u, "seed_u", nu)]:
                 for stage, seed_stage in seed:
                     if not isinstance(stage, int) or stage < 0 or stage > N_horizon:
-                        raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): stage {stage} for {name} is not valid.")
+                        raise Exception(f"AcadosOcpSolver.eval_adjoint_solution_sensitivity(): stage {stage} for {name} is not valid.")
                     if not isinstance(seed_stage, np.ndarray):
                         raise Exception(f"{name} for stage {stage} should be np.ndarray, got {type(seed_stage)}")
                     if seed_stage.shape != (dim, n_seeds):
@@ -863,7 +955,7 @@ class AcadosOcpSolver:
         Get the last solution of the solver:
 
             :param stage: integer corresponding to shooting node
-            :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'sens_u', 'sens_x']
+            :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'sens_u', 'sens_pi', 'sens_x', 'sens_lam', 'sens_sl', 'sens_su']
 
             .. note:: regarding lam: \n
                     the inequalities are internally organized in the following order: \n
@@ -879,7 +971,7 @@ class AcadosOcpSolver:
 
         out_fields = ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su']
         in_fields = ['p']
-        sens_fields = ['sens_u', 'sens_x']
+        sens_fields = ['sens_u', 'sens_x', 'sens_pi', 'sens_lam', 'sens_sl', 'sens_su']
         all_fields = out_fields + in_fields + sens_fields
 
         if (field_ not in all_fields):
@@ -916,19 +1008,28 @@ class AcadosOcpSolver:
         """
         Get concatenation of all stages of last solution of the solver.
 
-            :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']
+            :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'p_global']
+
+            .. note:: The parameter 'p_global' has no stage-wise structure and is processed in a memory saving manner by default. \n
+                  In order to read the 'p_global' parameter, the option 'save_p_global' must be set to 'True' upon instantiation. \n
         """
-        if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']:
+        if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'p_global']:
             raise Exception(f'AcadosOcpSolver.get_flat(field={field_}): \'{field_}\' is an invalid argument.')
+
+        if field_ == 'p_global':
+            if not self.__save_p_global:
+                raise Exception(f'The field \'{field_}\' is not stored within the solver by default. Please set the option \'save_p_global=True\' when instantiating the solver.')
+            return self.__p_global_values
 
         field = field_.encode('utf-8')
 
-        dims = self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, field)
+        dims = self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, field)
 
         out = np.zeros((dims,), dtype=np.float64, order="C")
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
         self.__acados_lib.ocp_nlp_get_all(self.nlp_solver, self.nlp_in, self.nlp_out, field, out_data)
+
         return out
 
 
@@ -941,7 +1042,7 @@ class AcadosOcpSolver:
         field = field_.encode('utf-8')
         if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']:
             raise Exception(f'AcadosOcpSolver.get_flat(field={field_}): \'{field_}\' is an invalid argument.')
-        dims = self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, field)
+        dims = self.__acados_lib.ocp_nlp_dims_get_total_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, field)
 
         if len(value_) != dims:
             raise Exception(f'AcadosOcpSolver.set_flat(field={field_}, value): value has wrong length, expected {dims}, got {len(value_)}.')
@@ -1255,12 +1356,12 @@ class AcadosOcpSolver:
         Returns the current iterate of the OCP solver as an AcadosOcpFlattenedIterate.
         """
         return AcadosOcpFlattenedIterate(x = self.get_flat("x"),
-                                        u = self.get_flat("u"),
-                                        z = self.get_flat("z"),
-                                        sl = self.get_flat("sl"),
-                                        su = self.get_flat("su"),
-                                        pi = self.get_flat("pi"),
-                                        lam = self.get_flat("lam"))
+                                         u = self.get_flat("u"),
+                                         z = self.get_flat("z"),
+                                         sl = self.get_flat("sl"),
+                                         su = self.get_flat("su"),
+                                         pi = self.get_flat("pi"),
+                                         lam = self.get_flat("lam"))
 
     def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedIterate) -> None:
         """
@@ -1276,20 +1377,22 @@ class AcadosOcpSolver:
         self.set_flat("lam", iterate.lam)
 
 
+    # TODO this should be a property
     def get_status(self) -> int:
         """
         Returns the status of the last solver call.
 
         Status codes:
-        0 - Success (ACADOS_SUCCESS)
-        1 - NaN detected (ACADOS_NAN_DETECTED)
-        2 - Maximum number of iterations reached (ACADOS_MAXITER)
-        3 - Minimum step size reached (ACADOS_MINSTEP)
-        4 - QP solver failed (ACADOS_QP_FAILURE)
-        5 - Solver created (ACADOS_READY)
-        6 - Problem unbounded (ACADOS_UNBOUNDED)
+            - 0: Success (ACADOS_SUCCESS)
+            - 1: NaN detected (ACADOS_NAN_DETECTED)
+            - 2: Maximum number of iterations reached (ACADOS_MAXITER)
+            - 3: Minimum step size reached (ACADOS_MINSTEP)
+            - 4: QP solver failed (ACADOS_QP_FAILURE)
+            - 5: Solver created (ACADOS_READY)
+            - 6: Problem unbounded (ACADOS_UNBOUNDED)
+            - 7: Solver timeout (ACADOS_TIMEOUT)
 
-        See `return_values` in https://github.com/acados/acados/blob/master/acados/utils/types.h
+        See `return_values` in https://github.com/acados/acados/blob/main/acados/utils/types.h
         """
         return self.status
 
@@ -1622,6 +1725,43 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_out_set_values_to_zero(self.nlp_config, self.nlp_dims, self.sens_out)
 
 
+    def cost_get(self, stage_: int, field_: str) -> np.ndarray:
+        """
+        Get numerical data in the cost module of the solver.
+
+            :param stage: integer corresponding to shooting node
+            :param field: string in ['yref', 'W', 'ext_cost_num_hess', 'zl', 'zu', 'Zl', 'Zu', 'scaling']
+        """
+
+        if not isinstance(stage_, int):
+            raise Exception('stage should be integer.')
+        elif stage_ < 0 or stage_ > self.N:
+            raise Exception(f'stage should be in [0, N], got {stage_}')
+
+        field = field_.encode('utf-8')
+        stage = c_int(stage_)
+
+        dims_ = np.zeros((2,), dtype=np.intc, order="C")
+        dims_data = cast(dims_.ctypes.data, POINTER(c_int))
+
+        self.__acados_lib.ocp_nlp_cost_dims_get_from_attr(self.nlp_config, \
+            self.nlp_dims, self.nlp_out, stage_, field, dims_data)
+
+        # vector-valued fields
+        if field_ in ['yref', 'zl', 'zu', 'Zl', 'Zu', 'scaling']:
+            dims = (dims_[0],)
+        else:
+            dims = tuple(dims_)
+
+        out = np.zeros(dims, dtype=np.float64, order="F")
+        out_data = cast(out.ctypes.data, POINTER(c_double))
+
+        self.__acados_lib.ocp_nlp_cost_model_get(self.nlp_config, \
+            self.nlp_dims, self.nlp_in, stage, field, out_data)
+
+        return out
+
+
     def cost_set(self, stage_: int, field_: str, value_, api='warn'):
         """
         Set numerical data in the cost module of the solver.
@@ -1692,7 +1832,44 @@ class AcadosOcpSolver:
         return
 
 
-    def constraints_set(self, stage_, field_, value_, api='warn'):
+    def constraints_get(self, stage_: int, field_: str) -> np.ndarray:
+        """
+        Get numerical data in the constraint module of the solver.
+
+            :param stage: integer corresponding to shooting node
+            :param field: string in ['lbx', 'ubx', 'lbu', 'ubu', 'lg', 'ug', 'lh', 'uh', 'uphi', 'C', 'D']
+        """
+
+        if not isinstance(stage_, int):
+            raise Exception('stage should be integer.')
+        elif stage_ < 0 or stage_ > self.N:
+            raise Exception(f'stage should be in [0, N], got {stage_}')
+
+        field = field_.encode('utf-8')
+        stage = c_int(stage_)
+
+        dims_ = np.zeros((2,), dtype=np.intc, order="C")
+        dims_data = cast(dims_.ctypes.data, POINTER(c_int))
+
+        self.__acados_lib.ocp_nlp_cost_dims_get_from_attr(self.nlp_config, \
+            self.nlp_dims, self.nlp_out, stage_, field, dims_data)
+
+        # check whether field is vector-valued
+        if field_ not in ['C', 'D']:
+            dims = (dims_[0],)
+        else:
+            dims = tuple(dims_)
+
+        out = np.zeros(dims, dtype=np.float64, order="F")
+        out_data = cast(out.ctypes.data, POINTER(c_double))
+
+        self.__acados_lib.ocp_nlp_constraints_model_get(self.nlp_config, \
+            self.nlp_dims, self.nlp_in, stage, field, out_data)
+
+        return out
+
+
+    def constraints_set(self, stage_: int, field_: str, value_: np.ndarray, api='warn'):
         """
         Set numerical data in the constraint module of the solver.
 
@@ -1906,16 +2083,18 @@ class AcadosOcpSolver:
         """
         Set options of the solver.
 
-            :param field: string, e.g. 'print_level', 'rti_phase', 'globalization_fixed_step_length', 'globalization_alpha_min', 'globalization_alpha_reduction',
-                                        'qp_warm_start', 'globalization_line_search_use_sufficient_descent',
-                                        'globalization_full_step_dual', 'globalization_use_SOC', 'qp_tol_stat',
-                                        'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min',
-                                        'qp_mu0', 'qp_print_level', 'globalization_funnel_init_increase_factor',
-                                        'globalization_funnel_init_upper_bound', 'globalization_funnel_sufficient_decrease_factor',
-                                        'globalization_funnel_kappa', 'globalization_funnel_fraction_switching_condition',
-                                        'globalization_funnel_initial_penalty_parameter', 'levenberg_marquardt',
-                                        'adaptive_levenberg_marquardt_lam', 'adaptive_levenberg_marquardt_mu_min',
-                                        'adaptive_levenberg_marquardt_mu0',
+            :param field: string, possible values are:
+                'print_level', 'rti_phase', 'nlp_solver_max_iter, 'as_rti_level',
+                'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp',
+                'qp_tol_stat', 'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min',
+                'qp_warm_start', 'qp_mu0', 'qp_print_level', 'warm_start_first_qp',
+                'globalization_fixed_step_length', 'globalization_alpha_min', 'globalization_alpha_reduction',
+                'globalization_line_search_use_sufficient_descent', 'globalization_full_step_dual', 'globalization_use_SOC',
+                'globalization_funnel_init_upper_bound', 'globalization_funnel_sufficient_decrease_factor',
+                'globalization_funnel_kappa', 'globalization_funnel_fraction_switching_condition',
+                'globalization_funnel_initial_penalty_parameter', 'globalization_funnel_init_increase_factor',
+                'levenberg_marquardt',
+                'adaptive_levenberg_marquardt_lam', 'adaptive_levenberg_marquardt_mu_min', 'adaptive_levenberg_marquardt_mu0',
 
             :param value: of type int, float, string, bool
 
@@ -1936,6 +2115,7 @@ class AcadosOcpSolver:
                       'warm_start_first_qp',
                       'as_rti_level',
                       'max_iter',
+                      'nlp_solver_max_iter',
                       'qp_warm_start',
                       'qp_print_level']
         double_fields = ['globalization_fixed_step_length',
@@ -1992,7 +2172,7 @@ class AcadosOcpSolver:
                 f' Possible values are {fields}.')
 
 
-        if field_ == 'max_iter' and value_ > self.__solver_options['nlp_solver_max_iter']:
+        if (field_ == 'max_iter' or field_ == 'nlp_solver_max_iter') and value_ > self.__solver_options['nlp_solver_max_iter']:
             raise Exception('AcadosOcpSolver.options_set() cannot increase nlp_solver_max_iter' \
                     f' above initial value {self.__nlp_solver_max_iter} (you have {value_})')
             return
@@ -2082,6 +2262,8 @@ class AcadosOcpSolver:
             raise Exception(f'data must have length {np_global}, got {data_len}.')
 
         status = getattr(self.shared_lib, f"{self.name}_acados_set_p_global_and_precompute_dependencies")(self.capsule, c_data, data_len)
+        if self.__save_p_global:
+            self.__p_global_values = data_
 
         return status
 

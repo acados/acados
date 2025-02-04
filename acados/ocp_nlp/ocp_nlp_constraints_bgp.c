@@ -36,8 +36,8 @@
 #include <string.h>
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/mem.h"
@@ -561,40 +561,91 @@ void ocp_nlp_constraints_bgp_model_get(void *config_, void *dims_,
     ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
     ocp_nlp_constraints_bgp_model *model = (ocp_nlp_constraints_bgp_model *) model_;
 
-    // int ii;
-    // int *ptr_i;
+    int ii;
+    int *ptr_i;
 
     if (!dims || !model || !field || !value)
     {
-        printf("ocp_nlp_constraints_bgp_model_get: got Null pointer \n");
+        printf("ocp_nlp_constraints_bgp_model_get: got null pointer \n");
         exit(1);
     }
 
-    // int nu = dims->nu;
-    // int nx = dims->nx;
-    // int nb = dims->nb;
-    // int ng = dims->ng;
-    // int nphi = dims->nphi;
+    int nu = dims->nu;
+    int nx = dims->nx;
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int nphi = dims->nphi;
     // int ns = dims->ns;
     // int nsbu = dims->nsbu;
     // int nsbx = dims->nsbx;
     // int nsg = dims->nsg;
-    // int nsphi = dims->nsphi;
+    // int nsh = dims->nsh;
     int nbx = dims->nbx;
     int nbu = dims->nbu;
-    // int nbue = dims->nbue;
-    // int nbxe = dims->nbxe;
-    // int nge = dims->nge;
-    // int nphie = dims->nphie;
 
-    if (!strcmp(field, "lbx"))
+    if (!strcmp(field, "idxbx"))
     {
-        blasfeo_unpack_dvec(nbx, &model->d, nbu, value, 0);
+        ptr_i = (int *) value;
+        for (ii=0; ii < nbx; ii++)
+            ptr_i[ii] = model->idxb[ii+nbu] - nu;
+    }
+    else if (!strcmp(field, "lbx"))
+    {
+        blasfeo_unpack_dvec(nbx, &model->d, nbu, value, 1);
+    }
+    else if (!strcmp(field, "ubx"))
+    {
+        blasfeo_unpack_dvec(nbx, &model->d, nb + ng + nphi + nbu, value, 1);
+    }
+    else if (!strcmp(field, "idxbu"))
+    {
+        ptr_i = (int *) value;
+        for (ii=0; ii < nbu; ii++)
+            ptr_i[ii] = model->idxb[ii];
+    }
+    else if (!strcmp(field, "lbu"))
+    {
+        blasfeo_unpack_dvec(nbu, &model->d, 0, value, 1);
+    }
+    else if (!strcmp(field, "ubu"))
+    {
+        blasfeo_unpack_dvec(nbu, &model->d, nb + ng + nphi, value, 1);
+    }
+    else if (!strcmp(field, "lg"))
+    {
+        blasfeo_unpack_dvec(ng, &model->d, nb, value, 1);
+    }
+    else if (!strcmp(field, "ug"))
+    {
+        blasfeo_unpack_dvec(ng, &model->d, nb + ng + nphi + nb, value, 1);
+    }
+    else if (!strcmp(field, "lphi"))
+    {
+        blasfeo_unpack_dvec(nphi, &model->d, nb + ng, value, 1);
+    }
+    else if (!strcmp(field, "uphi"))
+    {
+        blasfeo_unpack_dvec(nphi, &model->d, nb + ng + nphi + nb + ng, value, 1);
+    }
+    else if (!strcmp(field, "C"))
+    {
+        blasfeo_unpack_tran_dmat(nx, ng, &model->DCt, nu, 0, value, ng);
+    }
+    else if (!strcmp(field, "D"))
+    {
+        blasfeo_unpack_tran_dmat(nu, ng, &model->DCt, 0, 0, value, ng);
+    }
+    else if (!strcmp(field, "Ct"))
+    {
+        blasfeo_unpack_dmat(nx, ng, &model->DCt, nu, 0, value, nx);
+    }
+    else if (!strcmp(field, "Dt"))
+    {
+        blasfeo_unpack_dmat(nu, ng, &model->DCt, 0, 0, value, nu);
     }
     else
     {
-        printf("\nerror: ocp_nlp_constraints_bgp_model_get field %s not available.\n",
-            field);
+        printf("\nerror: ocp_nlp_constraints_bgp_model_get field %s not available.\n", field);
         exit(1);
     }
 

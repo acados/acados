@@ -42,9 +42,9 @@
 #endif
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_blas.h"
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
@@ -115,6 +115,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_,
     // SQP RTI opts
     opts->ext_qp_res = 0;
     opts->warm_start_first_qp = false;
+    opts->warm_start_first_qp_from_nlp = true;
     opts->rti_phase = 0;
     opts->as_rti_level = STANDARD_RTI;
     opts->as_rti_advancement_strategy = SIMULATE_ADVANCE;
@@ -595,11 +596,19 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
         print_ocp_qp_in(nlp_mem->qp_in);
     }
 
-    if (!opts->warm_start_first_qp)
+    // set QP warm start
+    if (mem->is_first_call)
     {
-        int tmp_int = 0;
-        config->qp_solver->opts_set(config->qp_solver,
-            opts->nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
+        if (!opts->warm_start_first_qp)
+        {
+            int tmp_int = 0;
+            config->qp_solver->opts_set(config->qp_solver,
+                opts->nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
+        }
+        else if (opts->warm_start_first_qp_from_nlp)
+        {
+            ocp_nlp_initialize_qp_from_nlp(config, dims, nlp_mem->qp_in, nlp_out, nlp_mem->qp_out);
+        }
     }
 
     // solve QP
@@ -613,6 +622,12 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     qp_info *qp_info_;
     ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
     qp_iter = qp_info_->num_iter;
+
+    // restore default warm start
+    if (mem->is_first_call)
+    {
+        config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "warm_start", &opts->qp_warm_start);
+    }
 
     // compute external QP residuals (for debugging)
     if (opts->ext_qp_res)
@@ -646,7 +661,10 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
 
     // Update variables
     double step_size;
+    acados_tic(&timer1);
     globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts, &step_size);
+    timings->time_glob += acados_toc(&timer1);
+
     if (globalization_status != ACADOS_SUCCESS)
     {
         if (nlp_opts->print_level > 1)
@@ -655,6 +673,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
         }
     }
     mem->nlp_mem->status = ACADOS_SUCCESS;
+    mem->is_first_call = false;
 
     if (opts->rti_log_residuals && !opts->rti_log_only_available_residuals)
     {
@@ -1123,8 +1142,6 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         // tmp_nlp_out <- nlp_out
         copy_ocp_nlp_out(dims, nlp_out, tmp_nlp_out);
     }
-
-    mem->is_first_call = false;
 
     return;
 }

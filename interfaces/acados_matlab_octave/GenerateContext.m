@@ -44,10 +44,12 @@ classdef GenerateContext < handle
 
     methods
         function obj = GenerateContext(p_global, problem_name, opts)
+            import casadi.*
             if nargin < 3
                 opts = [];
             end
             obj.p_global = p_global;
+
             if ~(isempty(obj.p_global) || length(obj.p_global) == 0)
                 check_casadi_version_supports_p_global();
             end
@@ -61,6 +63,12 @@ classdef GenerateContext < handle
             obj.casadi_codegen_opts.mex = false;
             obj.casadi_codegen_opts.casadi_int = 'int';
             obj.casadi_codegen_opts.casadi_real = 'double';
+            try
+                CodeGenerator('foo', struct('force_canonical', true))
+                obj.casadi_codegen_opts.force_canonical = false;
+            catch
+                % Option does not exist
+            end
 
             obj.list_funname_dir_pairs = {};
             obj.function_input_output_pairs = {};
@@ -68,7 +76,6 @@ classdef GenerateContext < handle
 
             obj.casadi_fun_opts = struct();
 
-            import casadi.*
             try
                 dummy = MX.sym('dummy');
                 cse(dummy); % Check if cse exists
@@ -142,7 +149,7 @@ classdef GenerateContext < handle
                 outputs = cse(self.function_input_output_pairs{i}{2});
 
                 % detect parametric expressions in p_global
-                [outputs_ret, symbols, param_expr] = extract_parametric(outputs, self.p_global);
+                [outputs_ret, symbols, param_expr] = extract_parametric(outputs, self.p_global, struct('extract_trivial', true));
 
                 % substitute previously detected param_expr in outputs
                 symbols_to_add = {};
@@ -185,6 +192,14 @@ classdef GenerateContext < handle
             global_data_expr_list = cellfun(@(pair) pair{2}, precompute_pairs, 'UniformOutput', false);
             self.global_data_expr = cse(vertcat(global_data_expr_list{:}));
 
+            % Assert length match
+            assert(length(self.global_data_expr) == length(self.global_data_sym), ...
+                   sprintf('Length mismatch: %d != %d', length(self.global_data_expr), length(self.global_data_sym)));
+
+            if length(self.global_data_expr) == 0
+                error("The model contains global parameters, but no CasADi function depends on them. This is currently not supported. Please remove p_global from the model definition.")
+            end
+
             % Add global data as input to all functions
             for i = 1:length(self.function_input_output_pairs)
                 self.function_input_output_pairs{i}{1}{end+1} = self.global_data_sym;
@@ -197,9 +212,6 @@ classdef GenerateContext < handle
             % Add function definition
             self.add_function_definition(fun_name, {self.p_global}, {self.global_data_expr}, output_dir);
 
-            % Assert length match
-            assert(length(self.global_data_expr) == length(self.global_data_sym), ...
-                   sprintf('Length mismatch: %d != %d', length(self.global_data_expr), length(self.global_data_sym)));
         end
 
 
@@ -222,6 +234,16 @@ classdef GenerateContext < handle
                 catch e
                     fprintf('Error while setting up casadi function %s\n', name);
                     rethrow(e);
+                end
+
+                if ~strcmp(name, sprintf('%s_p_global_precompute_fun', obj.problem_name))
+                    if obj.opts.ext_fun_expand
+                        try
+                            fun = fun.expand();
+                        catch
+                            warning(['Failed to expand the CasADi function ' name '.'])
+                        end
+                    end
                 end
 
                 % setup and change directory
@@ -250,7 +272,7 @@ function check_casadi_version_supports_p_global()
     try
         dummy = MX.sym('dummy');
         % Check if the required functions exist in CasADi
-        extract_parametric(dummy, dummy);  % Check if extract_parametric exists
+        extract_parametric(dummy, dummy, struct('extract_trivial', true));  % Check if extract_parametric exists
         cse(dummy); % Check if cse exists
         blazing_spline('blazing_spline', {[1, 2, 3], [1, 2, 3]});
     catch

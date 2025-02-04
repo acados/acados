@@ -45,6 +45,7 @@ classdef AcadosOcpOptions < handle
         nlp_solver_max_iter
         nlp_solver_ext_qp_res
         nlp_solver_warm_start_first_qp
+        nlp_solver_warm_start_first_qp_from_nlp
         nlp_solver_tol_min_step_norm
         globalization
         levenberg_marquardt
@@ -112,6 +113,7 @@ classdef AcadosOcpOptions < handle
         timeout_heuristic
 
         ext_fun_compile_flags
+        ext_fun_expand
         model_external_shared_lib_dir
         model_external_shared_lib_name
         custom_update_filename
@@ -140,6 +142,7 @@ classdef AcadosOcpOptions < handle
             obj.nlp_solver_max_iter = 100;
             obj.nlp_solver_ext_qp_res = 0;
             obj.nlp_solver_warm_start_first_qp = false;
+            obj.nlp_solver_warm_start_first_qp_from_nlp = false;
             obj.globalization = 'FIXED_STEP';
             obj.levenberg_marquardt = 0.0;
             obj.collocation_type = 'GAUSS_LEGENDRE';
@@ -211,6 +214,7 @@ classdef AcadosOcpOptions < handle
             else
                 obj.ext_fun_compile_flags = env_var;
             end
+            obj.ext_fun_expand = false;
 
             obj.model_external_shared_lib_dir = [];
             obj.model_external_shared_lib_name = [];

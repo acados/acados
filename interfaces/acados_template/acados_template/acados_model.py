@@ -52,12 +52,12 @@ class AcadosModel():
         ## common for OCP and Integrator
         self.name = None
         """The model name is used for code generation. Type: string. Default: :code:`None`"""
-        self.x = None
-        """CasADi variable describing the state of the system; Default: :code:`None`"""
-        self.xdot = None
-        """CasADi variable describing the derivative of the state wrt time; Default: :code:`None`"""
-        self.u = None
-        """CasADi variable describing the input of the system; Default: :code:`None`"""
+        self.x = []
+        """CasADi variable describing the state of the system; Default: :code:`[]`"""
+        self.xdot = []
+        """CasADi variable describing the derivative of the state wrt time; Default: :code:`[]`"""
+        self.u = []
+        """CasADi variable describing the input of the system; Default: :code:`[]`"""
         self.z = []
         """CasADi variable describing the algebraic variables of the DAE; Default: :code:`[]`"""
         self.p = []
@@ -71,34 +71,34 @@ class AcadosModel():
         The time dependency can be used within cost formulations and is relevant when cost integration is used.
         Start times of shooting intervals can be added using parameters.
         """
-        self.p_global = None
+        self.p_global = []
         """
         CasADi variable containing global parameters.
         This feature can be used to precompute expensive terms which only depend on these parameters, e.g. spline coefficients, when p_global are underlying data points.
         Only supported for OCP solvers.
         Updating these parameters can be done using :py:attr:`acados_template.acados_ocp_solver.AcadosOcpSolver.set_p_global_and_precompute_dependencies(values)`.
         NOTE: this is only supported with CasADi beta release https://github.com/casadi/casadi/releases/tag/nightly-se
-        Default: :code:`None`
+        Default: :code:`[]`
         """
 
         ## dynamics
-        self.f_impl_expr = None
+        self.f_impl_expr = []
         r"""
         CasADi expression for the implicit dynamics :math:`f_\text{impl}(\dot{x}, x, u, z, p) = 0`.
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.integrator_type` == 'IRK'.
-        Default: :code:`None`
+        Default: :code:`[]`
         """
-        self.f_expl_expr = None
+        self.f_expl_expr = []
         r"""
         CasADi expression for the explicit dynamics :math:`\dot{x} = f_\text{expl}(x, u, p)`.
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.integrator_type` == 'ERK'.
-        Default: :code:`None`
+        Default: :code:`[]`
         """
-        self.disc_dyn_expr = None
+        self.disc_dyn_expr = []
         r"""
         CasADi expression for the discrete dynamics :math:`x_{+} = f_\text{disc}(x, u, p)`.
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.integrator_type` == 'DISCRETE'.
-        Default: :code:`None`
+        Default: :code:`[]`
         """
 
         self.dyn_ext_fun_type = 'casadi'
@@ -130,106 +130,106 @@ class AcadosModel():
         # NOTE: These could be moved to cost / constraints
 
         # constraints at initial stage
-        self.con_h_expr_0 = None
-        """CasADi expression for the initial constraint :math:`h^0`; Default: :code:`None`"""
-        self.con_phi_expr_0 = None
-        r"""CasADi expression for the terminal constraint :math:`\phi_0`; Default: :code:`None`"""
-        self.con_r_expr_0 = None
+        self.con_h_expr_0 = []
+        """CasADi expression for the initial constraint :math:`h^0`; Default: :code:`[]`"""
+        self.con_phi_expr_0 = []
+        r"""CasADi expression for the terminal constraint :math:`\phi_0`; Default: :code:`[]`"""
+        self.con_r_expr_0 = []
         r"""CasADi expression for the terminal constraint :math:`\phi_0(r)`,
-        dummy input for outer function; Default: :code:`None`"""
-        self.con_r_in_phi_0 = None
-        r"""CasADi expression for the terminal constraint :math:`\phi_0(r)`, input for outer function; Default: :code:`None`"""
+        dummy input for outer function; Default: :code:`[]`"""
+        self.con_r_in_phi_0 = []
+        r"""CasADi expression for the terminal constraint :math:`\phi_0(r)`, input for outer function; Default: :code:`[]`"""
 
 
         # path constraints
         # BGH(default): lh <= h(x, u) <= uh
-        self.con_h_expr = None
-        """CasADi expression for the constraint :math:`h`; Default: :code:`None`"""
+        self.con_h_expr = []
+        """CasADi expression for the constraint :math:`h`; Default: :code:`[]`"""
         # BGP(convex over nonlinear): lphi <= phi(r(x, u)) <= uphi
-        self.con_phi_expr = None
-        """CasADi expression for the constraint phi; Default: :code:`None`"""
-        self.con_r_expr = None
+        self.con_phi_expr = []
+        """CasADi expression for the constraint phi; Default: :code:`[]`"""
+        self.con_r_expr = []
         """CasADi expression for the constraint phi(r),
-        dummy input for outer function; Default: :code:`None`"""
-        self.con_r_in_phi = None
+        dummy input for outer function; Default: :code:`[]`"""
+        self.con_r_in_phi = []
         r"""CasADi expression for the terminal constraint :math:`\phi(r)`,
-        input for outer function; Default: :code:`None`"""
+        input for outer function; Default: :code:`[]`"""
 
         # terminal
-        self.con_h_expr_e = None
-        """CasADi expression for the terminal constraint :math:`h^e`; Default: :code:`None`"""
-        self.con_phi_expr_e = None
-        r"""CasADi expression for the terminal constraint :math:`\phi_e`; Default: :code:`None`"""
-        self.con_r_expr_e = None
+        self.con_h_expr_e = []
+        """CasADi expression for the terminal constraint :math:`h^e`; Default: :code:`[]`"""
+        self.con_phi_expr_e = []
+        r"""CasADi expression for the terminal constraint :math:`\phi_e`; Default: :code:`[]`"""
+        self.con_r_expr_e = []
         r"""CasADi expression for the terminal constraint :math:`\phi_e(r)`,
-        dummy input for outer function; Default: :code:`None`"""
-        self.con_r_in_phi_e = None
-        r"""CasADi expression for the terminal constraint :math:`\phi_e(r)`, input for outer function; Default: :code:`None`"""
+        dummy input for outer function; Default: :code:`[]`"""
+        self.con_r_in_phi_e = []
+        r"""CasADi expression for the terminal constraint :math:`\phi_e(r)`, input for outer function; Default: :code:`[]`"""
 
         # cost
-        self.cost_y_expr = None
-        """CasADi expression for nonlinear least squares; Default: :code:`None`"""
-        self.cost_y_expr_e = None
-        """CasADi expression for nonlinear least squares, terminal; Default: :code:`None`"""
-        self.cost_y_expr_0 = None
-        """CasADi expression for nonlinear least squares, initial; Default: :code:`None`"""
-        self.cost_expr_ext_cost = None
-        """CasADi expression for external cost; Default: :code:`None`"""
-        self.cost_expr_ext_cost_e = None
-        """CasADi expression for external cost, terminal; Default: :code:`None`"""
-        self.cost_expr_ext_cost_0 = None
-        """CasADi expression for external cost, initial; Default: :code:`None`"""
-        self.cost_expr_ext_cost_custom_hess = None
-        """CasADi expression for custom hessian (only for external cost); Default: :code:`None`"""
-        self.cost_expr_ext_cost_custom_hess_e = None
-        """CasADi expression for custom hessian (only for external cost), terminal; Default: :code:`None`"""
-        self.cost_expr_ext_cost_custom_hess_0 = None
-        """CasADi expression for custom hessian (only for external cost), initial; Default: :code:`None`"""
+        self.cost_y_expr = []
+        """CasADi expression for nonlinear least squares; Default: :code:`[]`"""
+        self.cost_y_expr_e = []
+        """CasADi expression for nonlinear least squares, terminal; Default: :code:`[]`"""
+        self.cost_y_expr_0 = []
+        """CasADi expression for nonlinear least squares, initial; Default: :code:`[]`"""
+        self.cost_expr_ext_cost = []
+        """CasADi expression for external cost; Default: :code:`[]`"""
+        self.cost_expr_ext_cost_e = []
+        """CasADi expression for external cost, terminal; Default: :code:`[]`"""
+        self.cost_expr_ext_cost_0 = []
+        """CasADi expression for external cost, initial; Default: :code:`[]`"""
+        self.cost_expr_ext_cost_custom_hess = []
+        """CasADi expression for custom hessian (only for external cost); Default: :code:`[]`"""
+        self.cost_expr_ext_cost_custom_hess_e = []
+        """CasADi expression for custom hessian (only for external cost), terminal; Default: :code:`[]`"""
+        self.cost_expr_ext_cost_custom_hess_0 = []
+        """CasADi expression for custom hessian (only for external cost), initial; Default: :code:`[]`"""
 
         ## CONVEX_OVER_NONLINEAR convex-over-nonlinear cost: psi(y(x, u, p) - y_ref; p)
-        self.cost_psi_expr_0 = None
+        self.cost_psi_expr_0 = []
         r"""
-        CasADi expression for the outer loss function :math:`\psi(r - yref, t, p)`, initial; Default: :code:`None`
+        CasADi expression for the outer loss function :math:`\psi(r - yref, t, p)`, initial; Default: :code:`[]`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type_0` is 'CONVEX_OVER_NONLINEAR'.
         """
-        self.cost_psi_expr = None
+        self.cost_psi_expr = []
         r"""
-        CasADi expression for the outer loss function :math:`\psi(r - yref, t, p)`; Default: :code:`None`
+        CasADi expression for the outer loss function :math:`\psi(r - yref, t, p)`; Default: :code:`[]`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type` is 'CONVEX_OVER_NONLINEAR'.
         """
-        self.cost_psi_expr_e = None
+        self.cost_psi_expr_e = []
         r"""
-        CasADi expression for the outer loss function :math:`\psi(r - yref, p)`, terminal; Default: :code:`None`
+        CasADi expression for the outer loss function :math:`\psi(r - yref, p)`, terminal; Default: :code:`[]`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type_e` is 'CONVEX_OVER_NONLINEAR'.
         """
-        self.cost_r_in_psi_expr_0 = None
+        self.cost_r_in_psi_expr_0 = []
         r"""
-        CasADi symbolic input variable for the argument :math:`r` to the outer loss function :math:`\psi(r, t, p)`, initial; Default: :code:`None`
+        CasADi symbolic input variable for the argument :math:`r` to the outer loss function :math:`\psi(r, t, p)`, initial; Default: :code:`[]`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type_0` is 'CONVEX_OVER_NONLINEAR'.
         """
-        self.cost_r_in_psi_expr = None
+        self.cost_r_in_psi_expr = []
         r"""
-        CasADi symbolic input variable for the argument :math:`r` to the outer loss function :math:`\psi(r, t, p)`; Default: :code:`None`
+        CasADi symbolic input variable for the argument :math:`r` to the outer loss function :math:`\psi(r, t, p)`; Default: :code:`[]`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type` is 'CONVEX_OVER_NONLINEAR'.
         """
-        self.cost_r_in_psi_expr_e = None
+        self.cost_r_in_psi_expr_e = []
         r"""
-        CasADi symbolic input variable for the argument :math:`r` to the outer loss function :math:`\psi(r, p)`, terminal; Default: :code:`None`
+        CasADi symbolic input variable for the argument :math:`r` to the outer loss function :math:`\psi(r, p)`, terminal; Default: :code:`[]`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type_e` is 'CONVEX_OVER_NONLINEAR'.
         """
-        self.cost_conl_custom_outer_hess_0 = None
+        self.cost_conl_custom_outer_hess_0 = []
         """
-        CasADi expression for the custom hessian of the outer loss function (only for convex-over-nonlinear cost), initial; Default: :code:`None`
+        CasADi expression for the custom hessian of the outer loss function (only for convex-over-nonlinear cost), initial; Default: :code:`[]`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type_0` is 'CONVEX_OVER_NONLINEAR'.
         """
-        self.cost_conl_custom_outer_hess = None
+        self.cost_conl_custom_outer_hess = []
         """
-        CasADi expression for the custom hessian of the outer loss function (only for convex-over-nonlinear cost); Default: :code:`None`
+        CasADi expression for the custom hessian of the outer loss function (only for convex-over-nonlinear cost); Default: :code:`[]`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type` is 'CONVEX_OVER_NONLINEAR'.
         """
-        self.cost_conl_custom_outer_hess_e = None
+        self.cost_conl_custom_outer_hess_e = []
         """
-        CasADi expression for the custom hessian of the outer loss function (only for convex-over-nonlinear cost), terminal; Default: :code:`None`
+        CasADi expression for the custom hessian of the outer loss function (only for convex-over-nonlinear cost), terminal; Default: :code:`[]`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type_e` is 'CONVEX_OVER_NONLINEAR'.
         """
         self.nu_original = None # TODO: remove? only used by benchmark
@@ -299,10 +299,16 @@ class AcadosModel():
         casadi_symbol = self.get_casadi_symbol()
 
         # nx
-        if is_column(self.x):
-            dims.nx = casadi_length(self.x)
+        if is_empty(self.x):
+            raise Exception("model.x must be defined")
         else:
-            raise Exception('model.x should be column vector!')
+            dims.nx = casadi_length(self.x)
+
+        if is_empty(self.xdot):
+            self.xdot = casadi_symbol('xdot', dims.nx, 1)
+        else:
+            if casadi_length(self.xdot) != dims.nx:
+                raise Exception(f"model.xdot must have length nx = {dims.nx}, got {casadi_length(self.xdot)}")
 
         # nu
         if is_empty(self.u):
@@ -311,46 +317,52 @@ class AcadosModel():
         else:
             dims.nu = casadi_length(self.u)
 
-        # np
-        if is_empty(self.p):
-            dims.np = 0
-            self.p = casadi_symbol('p', 0, 0)
-        else:
-            dims.np = casadi_length(self.p)
-
         # nz
         if is_empty(self.z):
             dims.nz = 0
-            self.z = casadi_symbol('z', 0, 0)
+            self.z = casadi_symbol('z', 0, 1)
         else:
             dims.nz = casadi_length(self.z)
 
+        # np
+        if is_empty(self.p):
+            dims.np = 0
+            self.p = casadi_symbol('p', 0, 1)
+        else:
+            dims.np = casadi_length(self.p)
+
+        # np_global
+        if is_empty(self.p_global):
+            dims.np_global = 0
+            self.p_global = casadi_symbol('p_global', 0, 1)
+        else:
+            dims.np_global = casadi_length(self.p_global)
+
         # sanity checks
         for symbol, name in [(self.x, 'x'), (self.xdot, 'xdot'), (self.u, 'u'), (self.z, 'z'), (self.p, 'p'), (self.p_global, 'p_global')]:
-            if symbol is not None and not symbol.is_valid_input():
+            if not isinstance(symbol, (ca.MX, ca.SX)):
+                raise Exception(f"model.{name} must be casadi.MX, casadi.SX got {type(symbol)}")
+            if not symbol.is_valid_input():
                 raise Exception(f"model.{name} must be valid CasADi symbol, got {symbol}")
 
         # p_global
-        if self.p_global is not None:
+        if not is_empty(self.p_global):
             if isinstance(dims, AcadosSimDims):
                 raise Exception("model.p_global is only supported for OCPs")
             if any(ca.which_depends(self.p_global, self.p)):
                 raise Exception(f"model.p_global must not depend on model.p, got p_global ={self.p_global}, p = {self.p}")
-            if not isinstance(self.p_global, (ca.MX, ca.SX)):
-                raise Exception(f"model.p_global must be casadi.MX, casadi.SX got {type(self.p_global)}")
-            dims.np_global = casadi_length(self.p_global)
 
         # model output dimension nx_next: dimension of the next state
         if isinstance(dims, AcadosOcpDims):
-            if self.disc_dyn_expr is not None:
+            if not is_empty(self.disc_dyn_expr):
                 dims.nx_next = casadi_length(self.disc_dyn_expr)
             else:
                 dims.nx_next = casadi_length(self.x)
 
-        if self.f_impl_expr is not None:
+        if not is_empty(self.f_impl_expr):
             if casadi_length(self.f_impl_expr) != (dims.nx + dims.nz):
                 raise Exception(f"model.f_impl_expr must have length nx + nz = {dims.nx} + {dims.nz}, got {casadi_length(self.f_impl_expr)}")
-        if self.f_expl_expr is not None:
+        if not is_empty(self.f_expl_expr):
             if casadi_length(self.f_expl_expr) != dims.nx:
                 raise Exception(f"model.f_expl_expr must have length nx = {dims.nx}, got {casadi_length(self.f_expl_expr)}")
 

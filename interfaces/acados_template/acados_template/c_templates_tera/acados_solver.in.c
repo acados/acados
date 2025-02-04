@@ -2349,6 +2349,11 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "warm_start_first_qp", &nlp_solver_warm_start_first_qp);
     {%- endif %}
 
+    {%- if solver_options.nlp_solver_warm_start_first_qp_from_nlp %}
+    int nlp_solver_warm_start_first_qp_from_nlp = {{ solver_options.nlp_solver_warm_start_first_qp_from_nlp }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "warm_start_first_qp_from_nlp", &nlp_solver_warm_start_first_qp_from_nlp);
+    {%- endif %}
+
     double levenberg_marquardt = {{ solver_options.levenberg_marquardt }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "levenberg_marquardt", &levenberg_marquardt);
 
@@ -2777,7 +2782,7 @@ int {{ model.name }}_acados_setup_qp_matrices_and_factorize({{ model.name }}_sol
 
 
 
-void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** capsules, int N_batch)
+void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** capsules, int * status_out, int N_batch)
 {
 {% if solver_options.num_threads_in_batch_solve > 1 %}
     int num_threads_bkp = omp_get_num_threads();
@@ -2787,7 +2792,7 @@ void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** caps
 {%- endif %}
     for (int i = 0; i < N_batch; i++)
     {
-        ocp_nlp_solve(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->nlp_out);
+        status_out[i] = ocp_nlp_solve(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->nlp_out);
     }
 
 {% if solver_options.num_threads_in_batch_solve > 1 %}
@@ -2841,7 +2846,7 @@ void {{ model.name }}_acados_batch_eval_solution_sens_adj_p({{ model.name }}_sol
 
 void {{ model.name }}_acados_batch_set_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch)
 {
-    int offset = ocp_nlp_dims_get_total_from_attr(capsules[0]->nlp_solver->config, capsules[0]->nlp_solver->dims, field);
+    int offset = ocp_nlp_dims_get_total_from_attr(capsules[0]->nlp_solver->config, capsules[0]->nlp_solver->dims, capsules[0]->nlp_out, field);
 
     if (N_batch*offset != N_data)
     {
@@ -2870,7 +2875,7 @@ void {{ model.name }}_acados_batch_set_flat({{ model.name }}_solver_capsule ** c
 
 void {{ model.name }}_acados_batch_get_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch)
 {
-    int offset = ocp_nlp_dims_get_total_from_attr(capsules[0]->nlp_solver->config, capsules[0]->nlp_solver->dims, field);
+    int offset = ocp_nlp_dims_get_total_from_attr(capsules[0]->nlp_solver->config, capsules[0]->nlp_solver->dims, capsules[0]->nlp_out, field);
 
     if (N_batch*offset != N_data)
     {

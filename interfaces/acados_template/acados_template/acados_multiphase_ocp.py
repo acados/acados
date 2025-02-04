@@ -43,7 +43,7 @@ from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_ocp_options import AcadosOcpOptions, INTEGRATOR_TYPES, COLLOCATION_TYPES, COST_DISCRETIZATION_TYPES
 from .acados_ocp import AcadosOcp
 from .casadi_function_generation import GenerateContext
-from .utils import make_object_json_dumpable, get_acados_path, format_class_dict, get_shared_lib_ext, render_template
+from .utils import make_object_json_dumpable, get_acados_path, format_class_dict, get_shared_lib_ext, render_template, is_empty
 
 
 def find_non_default_fields_of_obj(obj: Union[AcadosOcpCost, AcadosOcpConstraints, AcadosOcpOptions], stage_type='all') -> list:
@@ -76,9 +76,13 @@ def find_non_default_fields_of_obj(obj: Union[AcadosOcpCost, AcadosOcpConstraint
     for field in all_fields:
         val = getattr(obj, field)
         default_val = getattr(dummy_obj, field)
-        if isinstance(val, np.ndarray):
+        if not isinstance(val, type(default_val)):
+            nondefault_fields.append(field)
+
+        elif isinstance(val, np.ndarray):
             if not np.array_equal(val, default_val):
                 nondefault_fields.append(field)
+
         elif val != default_val:
             nondefault_fields.append(field)
 
@@ -269,9 +273,9 @@ class AcadosMultiphaseOcp:
         # p_global check:
         p_global = self.model[0].p_global
         for i in range(self.n_phases):
-            if p_global is None and self.model[i].p_global is not None:
-                raise Exception(f"p_global is None for phase 0, but not for phase {i}. Should be the same for all phases.")
-            if p_global is not None and not ca.is_equal(p_global, self.model[i].p_global):
+            if is_empty(p_global) and not is_empty(self.model[i].p_global):
+                raise Exception(f"p_global is empty for phase 0, but not for phase {i}. Should be the same for all phases.")
+            if not is_empty(p_global) and not ca.is_equal(p_global, self.model[i].p_global):
                 raise Exception(f"p_global is different for phase 0 and phase {i}. Should be the same for all phases.")
 
         # compute phase indices
@@ -452,13 +456,16 @@ class AcadosMultiphaseOcp:
         code_gen_opts['with_solution_sens_wrt_params'] = self.solver_options.with_solution_sens_wrt_params
         code_gen_opts['with_value_sens_wrt_params'] = self.solver_options.with_value_sens_wrt_params
         code_gen_opts['code_export_directory'] = self.code_export_directory
+        code_gen_opts['ext_fun_expand'] = self.solver_options.ext_fun_expand
 
         context = GenerateContext(self.model[0].p_global, self.name, code_gen_opts)
 
         for i in range(self.n_phases):
+            ignore_initial = True if i != 0 else False
+            ignore_terminal = True if i != self.n_phases-1 else False
             # this is the only option that can vary and influence external functions to be generated
             self.dummy_ocp_list[i].solver_options.integrator_type = self.mocp_opts.integrator_type[i]
-            context = self.dummy_ocp_list[i]._setup_code_generation_context(context)
+            context = self.dummy_ocp_list[i]._setup_code_generation_context(context, ignore_initial, ignore_terminal)
             self.dummy_ocp_list[i].code_export_directory = self.code_export_directory
 
         context.finalize()

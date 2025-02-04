@@ -50,6 +50,7 @@ Fmax = 80
 
 # NOTE: hard coded in export_pendulum_ode_model;
 l_true = 0.8
+v_stds = np.array([0.4, 0.2, 0.2, 0.2])
 
 # ocp model and solver
 model = export_pendulum_ode_model()
@@ -69,15 +70,14 @@ nx_augmented = model_mhe.x.rows()
 nw = model_mhe.u.rows()
 ny = nx
 
+
 Q0_mhe = np.diag([0.1, 0.01, 0.01, 0.01, 10])
 Q_mhe  = 10.*np.diag([0.1, 0.01, 0.01, 0.01])
-R_mhe  = 2*np.diag([0.1, 0.01, 0.01, 0.01])
+R_mhe  = 0.1*np.diag(1./v_stds**2)
 
 acados_solver_mhe = export_mhe_solver_with_param(model_mhe, N, h, Q_mhe, Q0_mhe, R_mhe)
 
 # simulation
-v_stds = [0.1, 0.1, 0.1, 0.1]
-v_stds = [0, 0, 0, 0]
 
 simX = np.zeros((N+1, nx))
 simU = np.zeros((N, nu))
@@ -88,7 +88,6 @@ simWest = np.zeros((N, nx))
 sim_l_est = np.zeros((N+1, 1))
 
 # arrival cost mean (with wrong guess for l)
-x0_bar = np.array([0.0, np.pi, 0.0, 0.0, 0.8])
 x0_bar = np.array([0.0, np.pi, 0.0, 0.0, 1])
 
 # solve ocp problem
@@ -151,15 +150,3 @@ print('difference |l_est - l_true|', np.abs(sim_l_est[0] - l_true))
 
 ts = np.linspace(0, Tf, N+1)
 plot_pendulum(ts, Fmax, simU, simX, simXest, simY, latexify=False)
-
-## plot estimated M over shooting nodes
-
-# import matplotlib.pyplot as plt
-# plt.figure()
-# plt.plot(ts, l_true*np.ones((N+1, 1)), '-')
-# plt.plot(ts, sim_l_est, '.-')
-# plt.grid()
-# plt.ylabel('M')
-# plt.xlabel('time')
-# plt.legend(['true M', 'estimated M'])
-# plt.show()

@@ -48,6 +48,12 @@ function ocp = formulate_double_integrator_ocp(settings)
     ocp.constraints.ubu = [u_max];
     ocp.constraints.idxbu = [0];
 
+    if settings.WITH_X_BOUNDS
+        ocp.constraints.lbx = [-100, -10];
+        ocp.constraints.ubx = [100, 10];
+        ocp.constraints.idxbx = [0, 1];
+    end
+
     ocp.constraints.x0 = settings.X0;
 
 end

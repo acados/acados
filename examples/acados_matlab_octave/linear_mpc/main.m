@@ -88,7 +88,7 @@ ocp.constraints.x0 = zeros(nx,1);
 % state constraints on the first, second and sixth state
 % (not applied to the initial state)
 ocp.constraints.idxbx = [0 1 5];                % zero-based indices
-infty = get_acados_infty();                     % to approximate one-sided constraints
+infty = get_acados_infty();                     % for one-sided constraints
 ocp.constraints.lbx = [-pi/6; -pi/6; -1];       % state lower bounds
 ocp.constraints.ubx = [ pi/6;  pi/6; infty];    % state upper bounds
 
@@ -130,7 +130,8 @@ for isim = 1:nsim
     ocp_solver.solve();
 
     % check the solver output
-    if ocp_solver.get('status') ~= 0
+    status = ocp_solver.get('status');
+    if status ~= 0
         warning(['acados ocp solver failed with status ',num2str(status)]);
     end
 
@@ -144,7 +145,7 @@ for isim = 1:nsim
     solve_time_log(isim) = ocp_solver.get('time_tot');
 end
 
-disp([newline,'Average solve time: ',num2str(1e3*mean(solve_time_log)),' ms'])
+disp([newline,'Average solve time: ', num2str(1e3*mean(solve_time_log)), ' ms'])
 
 %% plot the results
 figure

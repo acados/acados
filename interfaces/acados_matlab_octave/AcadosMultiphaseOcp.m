@@ -316,15 +316,28 @@ classdef AcadosMultiphaseOcp < handle
             code_gen_opts.with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params;
             code_gen_opts.with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params;
             code_gen_opts.code_export_directory = self.code_export_directory;
+            code_gen_opts.ext_fun_expand = self.solver_options.ext_fun_expand;
 
             context = GenerateContext(self.model{1}.p_global, self.name, code_gen_opts);
 
             for i=1:self.n_phases
                 disp(['generating external functions for phase ', num2str(i)]);
+                if i ~= self.n_phases
+                    ignore_terminal = true;
+                else
+                    ignore_terminal = false;
+                end
+
+                if i ~= 1
+                    ignore_initial = true;
+                else
+                    ignore_initial = false;
+                end
+
                 % this is the only option that can vary and influence external functions to be generated
                 self.dummy_ocp_list{i}.solver_options.integrator_type = self.mocp_opts.integrator_type{i};
                 self.dummy_ocp_list{i}.code_export_directory = self.code_export_directory;
-                context = self.dummy_ocp_list{i}.setup_code_generation_context(context);
+                context = self.dummy_ocp_list{i}.setup_code_generation_context(context, ignore_initial, ignore_terminal);
             end
 
             context.finalize();

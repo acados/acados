@@ -129,6 +129,8 @@ class AcadosOcp:
     @parameter_values.setter
     def parameter_values(self, parameter_values):
         if isinstance(parameter_values, np.ndarray):
+            if not is_column(parameter_values):
+                raise Exception("parameter_values should be column vector.")
             self.__parameter_values = parameter_values
         else:
             raise Exception('Invalid parameter_values value. ' +
@@ -144,6 +146,9 @@ class AcadosOcp:
     @p_global_values.setter
     def p_global_values(self, p_global_values):
         if isinstance(p_global_values, np.ndarray):
+            if not is_column(p_global_values):
+                raise Exception("p_global_values should be column vector.")
+
             self.__p_global_values = p_global_values
         else:
             raise Exception('Invalid p_global_values value. ' +
@@ -234,9 +239,9 @@ class AcadosOcp:
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
         # GN check
-        gn_warning_0 = (cost.cost_type_0 == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and model.cost_expr_ext_cost_custom_hess_0 is None)
-        gn_warning_path = (cost.cost_type == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and model.cost_expr_ext_cost_custom_hess is None)
-        gn_warning_terminal = (opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and model.cost_expr_ext_cost_custom_hess_e is None)
+        gn_warning_0 = (cost.cost_type_0 == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess_0))
+        gn_warning_path = (cost.cost_type == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess))
+        gn_warning_terminal = (cost.cost_type_e == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess_e))
         if any([gn_warning_0, gn_warning_path, gn_warning_terminal]):
             external_cost_types = []
             if gn_warning_0:
@@ -1029,6 +1034,7 @@ class AcadosOcp:
             code_gen_opts['with_solution_sens_wrt_params'] = self.solver_options.with_solution_sens_wrt_params
             code_gen_opts['with_value_sens_wrt_params'] = self.solver_options.with_value_sens_wrt_params
             code_gen_opts['code_export_directory'] = self.code_export_directory
+            code_gen_opts['ext_fun_expand'] = self.solver_options.ext_fun_expand
 
             context = GenerateContext(self.model.p_global, self.name, code_gen_opts)
 
@@ -1041,7 +1047,7 @@ class AcadosOcp:
         return context
 
 
-    def _setup_code_generation_context(self, context: GenerateContext) -> GenerateContext:
+    def _setup_code_generation_context(self, context: GenerateContext, ignore_initial: bool = False, ignore_terminal: bool = False) -> GenerateContext:
 
         model = self.model
         constraints = self.constraints
@@ -1075,13 +1081,25 @@ class AcadosOcp:
             shutil.copyfile(model.dyn_generic_source, target_location)
             context.add_external_function_file(model.dyn_generic_source, target_dir)
 
-        stage_types = ['initial', 'path', 'terminal']
+        if ignore_initial and ignore_terminal:
+            stage_type_indices = [1]
+        elif ignore_initial:
+            stage_type_indices = [1, 2]
+        elif ignore_terminal:
+            stage_type_indices = [0, 1]
+        else:
+            stage_type_indices = [0, 1, 2]
 
-        for attr_nh, attr_nphi, stage_type in zip(['nh_0', 'nh', 'nh_e'], ['nphi_0', 'nphi', 'nphi_e'], stage_types):
+        stage_types = [val for i, val in enumerate(['initial', 'path', 'terminal']) if i in stage_type_indices]
+        nhs = [val for i, val in enumerate(['nh_0', 'nh', 'nh_e']) if i in stage_type_indices]
+        nphis = [val for i, val in enumerate(['nphi_0', 'nphi', 'nphi_e']) if i in stage_type_indices]
+        cost_types = [val for i, val in enumerate(['cost_type_0', 'cost_type', 'cost_type_e']) if i in stage_type_indices]
+
+        for attr_nh, attr_nphi, stage_type in zip(nhs, nphis, stage_types):
             if getattr(self.dims, attr_nh) > 0 or getattr(self.dims, attr_nphi) > 0:
                 generate_c_code_constraint(context, model, constraints, stage_type)
 
-        for attr, stage_type in zip(['cost_type_0', 'cost_type', 'cost_type_e'], stage_types):
+        for attr, stage_type in zip(cost_types, stage_types):
             if getattr(self.cost, attr) == 'NONLINEAR_LS':
                 generate_c_code_nls_cost(context, model, stage_type)
             elif getattr(self.cost, attr) == 'CONVEX_OVER_NONLINEAR':
@@ -1180,45 +1198,122 @@ class AcadosOcp:
         return
 
 
-    def translate_cost_to_external_cost(self, parametric_yref: bool = False):
+    def translate_cost_to_external_cost(self,
+                                        p: Optional[Union[ca.SX, ca.MX]] = None,
+                                        p_values: Optional[np.ndarray] = None,
+                                        p_global: Optional[Union[ca.SX, ca.MX]] = None,
+                                        p_global_values: Optional[np.ndarray] = None,
+                                        yref_0: Optional[Union[ca.SX, ca.MX]] = None,
+                                        yref: Optional[Union[ca.SX, ca.MX]] = None,
+                                        yref_e: Optional[Union[ca.SX, ca.MX]] = None,
+                                        W_0: Optional[Union[ca.SX, ca.MX]] = None,
+                                        W: Optional[Union[ca.SX, ca.MX]] = None,
+                                        W_e: Optional[Union[ca.SX, ca.MX]] = None,
+                                        ):
         """
-        Translates cost to EXTERNAL cost.
-        parametric_yref: If true, augment with additional parameters for yref_0, yref, yref_e.
+        Translates cost to EXTERNAL cost and optionally provide parametrization of references and weighting matrices.
+        p: Optional CasADi symbolics with additional stagewise parameters which are used to define yref_0, yref, yref_e, W_0, W, W_e. Will be appended to model.p.
+        p_values: numpy array with the same shape as p providing initial parameter values.
+        p_global: Optional CasADi symbolics with additional global parameters which are used to define yref_0, yref, yref_e, W_0, W, W_e. Will be appended to model.p_global.
+        p_global_values: numpy array with the same shape as p_global providing initial global parameter values.
+        W_0, W, W_e: Optional CasADi expressions which should be used instead of the numerical values provided by the cost module, shapes should be (ny_0, ny_0), (ny, ny), (ny_e, ny_e).
+        yref_0, yref, yref_e: Optional CasADi expressions which should be used instead of the numerical values provided by the cost module, shapes should be (ny_0, 1), (ny, 1), (ny_e, 1).
         """
-        # make yref a parameter
-        yref_0 = self.cost.yref_0
-        yref = self.cost.yref
-        yref_e = self.cost.yref_e
 
-        if parametric_yref:
-            symbol = self.model.get_casadi_symbol()
-            if self.cost.yref_0 is not None:
-                param_yref_0 = symbol('param_yref_0', len(self.cost.yref_0))
-                self.model.p = ca.vertcat(self.model.p, param_yref_0)
-                self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref_0))
-                yref_0 = param_yref_0
+        casadi_symbolics_type = type(self.model.x)
 
-            if self.cost.yref is not None:
-                param_yref = symbol('param_yref', len(self.cost.yref))
-                self.model.p = ca.vertcat(self.model.p, param_yref)
-                self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref))
-                yref = param_yref
+        # check p, p_values and append
+        if p is not None:
+            if p_values is None:
+                raise Exception("If p is not None, also p_values need to be provided.")
+            if not (is_column(p) and is_column(p_values)):
+                raise Exception("p, p_values need to be column vectors.")
+            if p.shape[0] != p_values.shape[0]:
+                raise Exception(f"Mismatching shapes regarding p, p_values: p has shape {p.shape}, p_values has shape {p_values.shape}.")
+            if not isinstance(p, casadi_symbolics_type):
+                raise Exception(f"p has wrong type, got {type(p)}, expected {casadi_symbolics_type}.")
 
-            if self.cost.yref_e is not None:
-                param_yref_e = symbol('param_yref_e', len(self.cost.yref_e))
-                self.model.p = ca.vertcat(self.model.p, param_yref_e)
-                self.parameter_values = np.concatenate((self.parameter_values, self.cost.yref_e))
-                yref_e = param_yref_e
+            self.model.p = ca.vertcat(self.model.p, p)
+            self.parameter_values = np.concatenate((self.parameter_values, p_values))
+
+        if p_global is not None:
+            if p_global_values is None:
+                raise Exception("If p_global is not None, also p_global_values need to be provided.")
+            if not (is_column(p_global) and is_column(p_global_values)):
+                raise Exception("p_global, p_global_values need to be column vectors.")
+            if p_global.shape[0] != p_global_values.shape[0]:
+                raise Exception(f"Mismatching shapes regarding p_global, p_global_values: p_global has shape {p_global.shape}, p_global_values has shape {p_global_values.shape}.")
+            if not isinstance(p_global, casadi_symbolics_type):
+                raise Exception(f"p_global has wrong type, got {type(p_global)}, expected {casadi_symbolics_type}.")
+
+            self.model.p_global = ca.vertcat(self.model.p_global, p_global)
+            self.p_global_values = np.concatenate((self.p_global_values, p_global_values))
+
+        # references
+        if yref_0 is None:
+            yref_0 = self.cost.yref_0
+        else:
+            if yref_0.shape[0] != self.cost.yref_0.shape[0]:
+                raise Exception(f"yref_0 has wrong shape, got {yref_0.shape}, expected {self.cost.yref_0.shape}.")
+
+            if not isinstance(yref_0, casadi_symbolics_type):
+                raise Exception(f"yref_0 has wrong type, got {type(yref_0)}, expected {casadi_symbolics_type}.")
+
+        if yref is None:
+            yref = self.cost.yref
+        else:
+            if yref.shape[0] != self.cost.yref.shape[0]:
+                raise Exception(f"yref has wrong shape, got {yref.shape}, expected {self.cost.yref.shape}.")
+
+            if not isinstance(yref, casadi_symbolics_type):
+                raise Exception(f"yref has wrong type, got {type(yref)}, expected {casadi_symbolics_type}.")
+
+        if yref_e is None:
+            yref_e = self.cost.yref_e
+        else:
+            if yref_e.shape[0] != self.cost.yref_e.shape[0]:
+                raise Exception(f"yref_e has wrong shape, got {yref_e.shape}, expected {self.cost.yref_e.shape}.")
+
+            if not isinstance(yref_e, casadi_symbolics_type):
+                raise Exception(f"yref_e has wrong type, got {type(yref_e)}, expected {casadi_symbolics_type}.")
+
+        # weighting matrices
+        if W_0 is None:
+            W_0 = self.cost.W_0
+        else:
+            if W_0.shape != self.cost.W_0.shape:
+                raise Exception(f"W_0 has wrong shape, got {W_0.shape}, expected {self.cost.W_0.shape}.")
+
+            if not isinstance(W_0, casadi_symbolics_type):
+                raise Exception(f"W_0 has wrong type, got {type(W_0)}, expected {casadi_symbolics_type}.")
+
+        if W is None:
+            W = self.cost.W
+        else:
+            if W.shape != self.cost.W.shape:
+                raise Exception(f"W has wrong shape, got {W.shape}, expected {self.cost.W.shape}.")
+
+            if not isinstance(W, casadi_symbolics_type):
+                raise Exception(f"W has wrong type, got {type(W)}, expected {casadi_symbolics_type}.")
+
+        if W_e is None:
+            W_e = self.cost.W_e
+        else:
+            if W_e.shape != self.cost.W_e.shape:
+                raise Exception(f"W_e has wrong shape, got {W_e.shape}, expected {self.cost.W_e.shape}.")
+
+            if not isinstance(W_e, casadi_symbolics_type):
+                raise Exception(f"W_e has wrong type, got {type(W_e)}, expected {casadi_symbolics_type}.")
 
         # initial stage
         if self.cost.cost_type_0 == "LINEAR_LS":
             self.model.cost_expr_ext_cost_0 = \
                 self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
                                                           self.cost.Vx_0, self.cost.Vu_0, self.cost.Vz_0,
-                                                          yref_0, self.cost.W_0)
+                                                          yref_0, W_0)
         elif self.cost.cost_type_0 == "NONLINEAR_LS":
             self.model.cost_expr_ext_cost_0 = \
-                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_0, yref_0, self.cost.W_0)
+                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_0, yref_0, W_0)
 
         elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost_0 = \
@@ -1229,10 +1324,10 @@ class AcadosOcp:
             self.model.cost_expr_ext_cost = \
                 self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
                                                           self.cost.Vx, self.cost.Vu, self.cost.Vz,
-                                                          yref, self.cost.W)
+                                                          yref, W)
         elif self.cost.cost_type == "NONLINEAR_LS":
                 self.model.cost_expr_ext_cost = \
-                    self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr, yref, self.cost.W)
+                    self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr, yref, W)
         elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr, self.model.cost_psi_expr,
@@ -1242,10 +1337,10 @@ class AcadosOcp:
             self.model.cost_expr_ext_cost_e = \
                 self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
                                                           self.cost.Vx_e, None, None,
-                                                          yref_e, self.cost.W_e)
+                                                          yref_e, W_e)
         elif self.cost.cost_type_e == "NONLINEAR_LS":
             self.model.cost_expr_ext_cost_e = \
-                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_e, yref_e, self.cost.W_e)
+                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_e, yref_e, W_e)
         elif self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost_e = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_e, self.model.cost_psi_expr_e,
@@ -1380,7 +1475,7 @@ class AcadosOcp:
         if self.cost.cost_type != "CONVEX_OVER_NONLINEAR":
             raise Exception("Huber penalty is only supported for CONVEX_OVER_NONLINEAR cost type.")
 
-        if use_xgn and self.model.cost_conl_custom_outer_hess is None:
+        if use_xgn and is_empty(self.model.cost_conl_custom_outer_hess):
             # switch to XGN Hessian start with exact Hessian of previously defined cost
             exact_cost_hess = ca.hessian(self.model.cost_psi_expr, self.model.cost_r_in_psi_expr)[0]
             self.model.cost_conl_custom_outer_hess = exact_cost_hess
@@ -1418,7 +1513,7 @@ class AcadosOcp:
             zero_offdiag = casadi_zeros(self.model.cost_conl_custom_outer_hess.shape[0], penalty_hess_xgn.shape[1])
             self.model.cost_conl_custom_outer_hess = ca.blockcat(self.model.cost_conl_custom_outer_hess,
                                                                 zero_offdiag, zero_offdiag.T, penalty_hess_xgn)
-        elif self.model.cost_conl_custom_outer_hess is not None:
+        elif not is_empty(self.model.cost_conl_custom_outer_hess):
             zero_offdiag = casadi_zeros(self.model.cost_conl_custom_outer_hess.shape[0], penalty_hess_xgn.shape[1])
             # add penalty Hessian to existing Hessian
             self.model.cost_conl_custom_outer_hess = ca.blockcat(self.model.cost_conl_custom_outer_hess,
