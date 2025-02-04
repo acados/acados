@@ -64,6 +64,7 @@ typedef struct
     int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
     int qp_warm_start;   // qp_warm_start in all but the first ddp iterations
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
+    bool warm_start_first_qp_from_nlp;
     bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
 } ocp_nlp_ddp_opts;
 
