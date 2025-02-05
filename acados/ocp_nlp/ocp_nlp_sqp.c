@@ -876,9 +876,13 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     return mem->nlp_mem->status;
 }
 
+
 int ocp_nlp_sqp_setup_qp_matrices_and_factorize(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
 {
+    acados_timer timer0, timer1;
+    acados_tic(&timer0);
+
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
     ocp_nlp_sqp_opts *opts = opts_;
@@ -887,15 +891,52 @@ int ocp_nlp_sqp_setup_qp_matrices_and_factorize(void *config_, void *dims_, void
     ocp_nlp_in *nlp_in = nlp_in_;
     ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    ocp_nlp_res *nlp_res = nlp_mem->nlp_res;
+    ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
+
     ocp_nlp_sqp_workspace *work = work_;
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
-    ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-    ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+    ocp_qp_in *qp_in = nlp_mem->qp_in;
+    ocp_qp_out *qp_out = nlp_mem->qp_out;
 
-    // TODO: factorize
-    printf("ocp_nlp_sqp_setup_qp_matrices_and_factorize: not implemented, exiting\n");
-    exit(1);
+    ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+
+    int globalization_status, qp_iter, qp_status;
+    qp_info *qp_info_;
+
+    /* Prepare the QP data */
+    // linearize NLP and update QP matrices
+    acados_tic(&timer1);
+    ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+    // update QP rhs for SQP (step prim var, abs dual var)
+    ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+    nlp_timings->time_lin += acados_toc(&timer1);
+
+    /* solve QP */
+    // warm start of first QP
+    if (!opts->warm_start_first_qp)
+    {
+        // (typically) no warm start at first iteration
+        int tmp_int = 0;
+        qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
+    }
+    else if (opts->warm_start_first_qp_from_nlp)
+    {
+        ocp_nlp_initialize_qp_from_nlp(config, dims, qp_in, nlp_out, qp_out);
+    }
+
+    qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, NULL, NULL);
+
+    // restore default warm start
+    qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &opts->qp_warm_start);
+
+    ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
+    qp_iter = qp_info_->num_iter;
+    /* end solve QP */
+
+    return mem->nlp_mem->status;
 }
 
 
