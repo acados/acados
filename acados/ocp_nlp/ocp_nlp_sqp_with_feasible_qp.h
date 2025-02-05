@@ -140,6 +140,7 @@ typedef struct
     double predictor_lp_objective;
     double pred_l1_inf_QP_optimality;
 
+    ocp_qp_xcond_solver nominal_qp_solver;
     ocp_qp_xcond_solver_dims *standard_qp_solver_dims;
     ocp_qp_xcond_solver_config *standard_qp_solver;
     // ocp_qp_xcond_solver_opts *standard_qp_solver_opts;

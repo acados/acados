@@ -150,10 +150,6 @@ static void allocate_standard_qp_solver(ocp_nlp_sqp_wfqp_memory *mem,
     mem->standard_qp_solver_work = malloc(size);
 
     // Don't allocate solver opts, use same as before.
-    mem->standard_qp_solver->opts_set(mem->standard_qp_solver, opts->nlp_opts->qp_solver_opts, "tol_stat", &opts->tol_stat);
-    mem->standard_qp_solver->opts_set(mem->standard_qp_solver, opts->nlp_opts->qp_solver_opts, "tol_eq", &opts->tol_eq);
-    mem->standard_qp_solver->opts_set(mem->standard_qp_solver, opts->nlp_opts->qp_solver_opts, "tol_ineq", &opts->tol_ineq);
-    mem->standard_qp_solver->opts_set(mem->standard_qp_solver, opts->nlp_opts->qp_solver_opts, "tol_comp", &opts->tol_comp);
 
     // Allocate qp_in
     size = ocp_qp_in_calculate_size(mem->standard_qp_solver_dims->orig_dims);
@@ -166,6 +162,13 @@ static void allocate_standard_qp_solver(ocp_nlp_sqp_wfqp_memory *mem,
     memsize = malloc(size);
     mem->standard_qp_out = ocp_qp_out_assign(mem->standard_qp_solver_dims->orig_dims, memsize);
     printf("QP_out succesfully allocated!\n");
+
+    // nominal
+    mem->nominal_qp_solver.config = mem->standard_qp_solver;
+    mem->nominal_qp_solver.dims = mem->standard_qp_solver_dims;
+    mem->nominal_qp_solver.opts = opts->nlp_opts->qp_solver_opts;
+    mem->nominal_qp_solver.mem = mem->standard_qp_solver_mem;
+    mem->nominal_qp_solver.work = mem->standard_qp_solver_work;
 }
 
 /************************************************
@@ -1591,7 +1594,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     ocp_nlp_dump_qp_in_to_file(qp_in, sqp_iter, 0);
 #endif
 
-    int qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, qp_out);
+    int qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, qp_out, NULL);
 
     // restore default warm start
     if (sqp_iter==0)
@@ -1938,17 +1941,17 @@ static void setup_byrd_omojokun_bounds(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memo
 Solve a standard QP
 */
 static int standard_qp_direction(ocp_nlp_dims *dims,
-                                            ocp_nlp_config *config,
-                                            ocp_nlp_sqp_wfqp_opts *opts,
-                                            ocp_nlp_opts *nlp_opts,
-                                            ocp_nlp_in *nlp_in,
-                                            ocp_nlp_out *nlp_out,
-                                            ocp_nlp_sqp_wfqp_memory *mem,
-                                            ocp_nlp_sqp_wfqp_workspace *work,
-                                            double current_l1_infeasibility,
-                                            int sqp_iter,
-                                            acados_timer timer0,
-                                            acados_timer timer1)
+                                ocp_nlp_config *config,
+                                ocp_nlp_sqp_wfqp_opts *opts,
+                                ocp_nlp_opts *nlp_opts,
+                                ocp_nlp_in *nlp_in,
+                                ocp_nlp_out *nlp_out,
+                                ocp_nlp_sqp_wfqp_memory *mem,
+                                ocp_nlp_sqp_wfqp_workspace *work,
+                                double current_l1_infeasibility,
+                                int sqp_iter,
+                                acados_timer timer0,
+                                acados_timer timer1)
 {
     ocp_nlp_memory* nlp_mem = mem->nlp_mem;
     ocp_nlp_workspace* nlp_work = work->nlp_work;
@@ -1990,10 +1993,9 @@ static int standard_qp_direction(ocp_nlp_dims *dims,
     ocp_nlp_dump_qp_in_to_file(qp_in, sqp_iter, 0);
 #endif
 
-    qp_status = my_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work,
+    qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work,
                                              false, qp_in, qp_out,
-                                             mem->standard_qp_solver, mem->standard_qp_solver_dims,
-                                             mem->standard_qp_solver_mem, mem->standard_qp_solver_work);
+                                             &mem->nominal_qp_solver);
     // printf("Solved the qp with status: %d\n", qp_status);
     // restore default warm start
     if (sqp_iter==0)
