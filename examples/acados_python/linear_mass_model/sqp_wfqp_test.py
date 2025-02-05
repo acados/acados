@@ -67,8 +67,10 @@ def feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, 
     dims = ocp_solver.acados_ocp.dims
 
     for i in range(N+1):
-        idxs = ocp_solver.get_from_qp_in(i,"idxs")
-        idxb = ocp_solver.get_from_qp_in(i,"idxb")
+        idxs = ocp_solver.get_from_qp_in(i, "relaxed_idxs")
+        print(f"got idxs {idxs}")
+        idxb = ocp_solver.get_from_qp_in(i, "relaxed_idxb")
+        print(f"got idxb {idxb}")
 
         # Initial stage
         if i == 0:
