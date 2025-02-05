@@ -1433,7 +1433,7 @@ class AcadosOcpOptions:
 
     @qp_solver_iter_max.setter
     def qp_solver_iter_max(self, qp_solver_iter_max):
-        if isinstance(qp_solver_iter_max, int) and qp_solver_iter_max > 0:
+        if isinstance(qp_solver_iter_max, int) and qp_solver_iter_max >= 0:
             self.__qp_solver_iter_max = qp_solver_iter_max
         else:
             raise Exception('Invalid qp_solver_iter_max value. qp_solver_iter_max must be a positive int.')
