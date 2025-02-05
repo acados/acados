@@ -120,18 +120,15 @@ static void allocate_standard_qp_solver(ocp_nlp_sqp_wfqp_memory *mem,
     ocp_nlp_sqp_wfqp_opts *opts)
 {
     int N = config->N;
-    // allocate xcond_solver_config --> seems correct
     acados_size_t size = ocp_qp_xcond_solver_config_calculate_size();
     void* memsize = malloc(size);
     mem->standard_qp_solver = ocp_qp_xcond_solver_config_assign(memsize);
     ocp_qp_xcond_solver_config_initialize_from_plan(PARTIAL_CONDENSING_HPIPM, mem->standard_qp_solver);
-    printf("Config succesfully allocated!\n");
 
     // allocate xcond_solver_dims
     size = ocp_qp_xcond_solver_dims_calculate_size(mem->standard_qp_solver, N);
     memsize = malloc(size);
     mem->standard_qp_solver_dims = ocp_qp_xcond_solver_dims_assign(mem->standard_qp_solver, N, memsize);
-    printf("Dims succesfully allocated!\n");
 
     // Setup the solver dimensions
     setup_standard_qp_solver_dimensions(mem, config, dims, opts);
@@ -152,25 +149,19 @@ static void allocate_standard_qp_solver(ocp_nlp_sqp_wfqp_memory *mem,
                                                         opts->nlp_opts->qp_solver_opts);
     mem->standard_qp_solver_work = malloc(size);
 
-    // Allocate solver opts ---> do we really need the options?
-    // size = ocp_qp_xcond_solver_opts_calculate_size(mem->standard_qp_solver, mem->standard_qp_solver_dims);
-    // memsize = malloc(size);
-    // mem->standard_qp_solver_opts = ocp_qp_xcond_solver_opts_assign(mem->standard_qp_solver, mem->standard_qp_solver_dims, memsize);
-    // ocp_qp_xcond_solver_opts_initialize_default(mem->standard_qp_solver, mem->standard_qp_solver_dims, mem->standard_qp_solver_opts);
-    // printf("Opts succesfully allocated!\n");
-    // qp tolerance
+    // Don't allocate solver opts, use same as before.
     mem->standard_qp_solver->opts_set(mem->standard_qp_solver, opts->nlp_opts->qp_solver_opts, "tol_stat", &opts->tol_stat);
     mem->standard_qp_solver->opts_set(mem->standard_qp_solver, opts->nlp_opts->qp_solver_opts, "tol_eq", &opts->tol_eq);
     mem->standard_qp_solver->opts_set(mem->standard_qp_solver, opts->nlp_opts->qp_solver_opts, "tol_ineq", &opts->tol_ineq);
     mem->standard_qp_solver->opts_set(mem->standard_qp_solver, opts->nlp_opts->qp_solver_opts, "tol_comp", &opts->tol_comp);
 
-    // // Allocate qp_in
+    // Allocate qp_in
     size = ocp_qp_in_calculate_size(mem->standard_qp_solver_dims->orig_dims);
     memsize = malloc(size);
     mem->standard_qp_in = ocp_qp_in_assign(mem->standard_qp_solver_dims->orig_dims, memsize);
     printf("QP_in succesfully allocated!\n");
 
-    // // Allocate qp_out
+    // Allocate qp_out
     size = ocp_qp_out_calculate_size(mem->standard_qp_solver_dims->orig_dims);
     memsize = malloc(size);
     mem->standard_qp_out = ocp_qp_out_assign(mem->standard_qp_solver_dims->orig_dims, memsize);
