@@ -135,7 +135,7 @@ typedef struct ocp_nlp_plan_t
 } ocp_nlp_plan_t;
 
 
-/// Structure to store the state/configuration for the non-linear programming solver
+/// Structure to store the collection of pointers for the nonlinear programming solver
 typedef struct ocp_nlp_solver
 {
     ocp_nlp_config *config;
