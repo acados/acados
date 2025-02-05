@@ -1050,6 +1050,11 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ns", &dims_out[0]);
         dims_out[1] = 1;
     }
+    else if (!strcmp(field, "relaxed_idxs"))
+    {
+        config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "ns", &dims_out[0]);
+        dims_out[1] = 1;
+    }
     else if (!strcmp(field, "p"))
     {
         dims_out[0] = dims->nx[stage];
@@ -1091,6 +1096,14 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         int tmp_int;
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbu", &dims_out[0]);
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbx", &tmp_int);
+        dims_out[0] += tmp_int;
+        dims_out[1] = 1;
+    }
+    else if (!strcmp(field, "relaxed_idxb"))
+    {
+        int tmp_int;
+        config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "nbu", &dims_out[0]);
+        config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "nbx", &tmp_int);
         dims_out[0] += tmp_int;
         dims_out[1] = 1;
     }
@@ -1507,6 +1520,20 @@ void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, 
     {
         int *int_values = value;
         d_ocp_qp_get_idxb(stage, nlp_mem->qp_in, int_values);
+    }
+    else if (!strcmp(field, "relaxed_idxs"))
+    {
+        ocp_qp_in *relaxed_qp_in;
+        ocp_nlp_get(solver, "relaxed_qp_in", &relaxed_qp_in);
+        int *int_values = value;
+        d_ocp_qp_get_idxs(stage, relaxed_qp_in, int_values);
+    }
+    else if (!strcmp(field, "relaxed_idxb"))
+    {
+        ocp_qp_in *relaxed_qp_in;
+        ocp_nlp_get(solver, "relaxed_qp_in", &relaxed_qp_in);
+        int *int_values = value;
+        d_ocp_qp_get_idxb(stage, relaxed_qp_in, int_values);
     }
     else if (!strcmp(field, "P") || !strcmp(field, "K") || !strcmp(field, "Lr") || !strcmp(field, "p"))
     {

@@ -2203,6 +2203,11 @@ void ocp_nlp_sqp_wfqp_get(void *config_, void *dims_, void *mem_, const char *fi
         void **value = return_value_;
         *value = dims->qp_solver->xcond_dims;
     }
+    else if (!strcmp("relaxed_qp_in", field))
+    {
+        void **value = return_value_;
+        *value = mem->relaxed_qp_in;
+    }
     else
     {
         ocp_nlp_memory_get(config, mem->nlp_mem, field, return_value_);

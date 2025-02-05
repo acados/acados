@@ -99,8 +99,8 @@ def feasible_qp_index_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N,
     dims = ocp_solver.acados_ocp.dims
 
     for i in range(N+1):
-        idxs = ocp_solver.get_from_qp_in(i,"idxs").squeeze()
-        idxb = ocp_solver.get_from_qp_in(i,"idxb").squeeze()
+        idxs = ocp_solver.get_from_qp_in(i, "relaxed_idxs").squeeze()
+        idxb = ocp_solver.get_from_qp_in(i, "relaxed_idxb").squeeze()
 
         # Initial stage
         if i == 0:
@@ -276,9 +276,9 @@ def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT, s
     sqp_iter = ocp_solver.get_stats('sqp_iter')
     print(f'acados returned status {status}.')
 
-    # if ocp.solver_options.nlp_solver_type == 'SQP_WITH_FEASIBLE_QP':
-    #     feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver)
-    #     feasible_qp_index_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver)
+    if ocp.solver_options.nlp_solver_type == 'SQP_WITH_FEASIBLE_QP':
+        feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver)
+        feasible_qp_index_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver)
 
     # get solution
     simX = np.array([ocp_solver.get(i,"x") for i in range(N+1)])
