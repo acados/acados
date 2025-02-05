@@ -295,6 +295,7 @@ typedef struct ocp_nlp_opts
     int fixed_hess;
     int log_primal_step_norm; // compute and log the max norm of the primal steps
     int max_iter; // maximum number of (SQP/DDP) iterations
+    int qp_iter_max; // maximum iter of QP solver, stored to remember.
 
     // Flag for usage of adaptive levenberg marquardt strategy
     bool with_adaptive_levenberg_marquardt;

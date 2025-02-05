@@ -1223,6 +1223,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
     {
         config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts,
                                     field+module_length+1, value);
+        if (!strcmp(field, "qp_iter_max"))
+        {
+            int* qp_iter_max = (int *) value;
+            opts->qp_iter_max = *qp_iter_max;
+        }
     }
     else if ( ptr_module!=NULL && (!strcmp(ptr_module, "reg")) )
     {
