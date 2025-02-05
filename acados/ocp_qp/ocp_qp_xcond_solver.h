@@ -103,6 +103,16 @@ typedef struct
 } ocp_qp_xcond_solver_config;  // pcond - partial condensing or fcond - full condensing
 
 
+typedef struct ocp_qp_xcond_solver
+{
+    ocp_qp_xcond_solver_config *config;
+    ocp_qp_xcond_solver_dims *dims;
+    ocp_qp_xcond_solver_opts *opts;
+    ocp_qp_xcond_solver_memory *mem;
+    ocp_qp_xcond_solver_workspace *work;
+} ocp_qp_xcond_solver;
+
+
 
 /* config */
 //

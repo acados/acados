@@ -32,7 +32,7 @@
 #include <assert.h>
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_blasfeo_api.h"
+#include "blasfeo_d_blasfeo_api.h"
 
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"

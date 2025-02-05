@@ -46,6 +46,9 @@ import numpy as np
 
 
 def main():
+
+    np.random.seed(42)
+
     Tf_ocp = 1.0
     N_ocp = 20
 
@@ -80,12 +83,12 @@ def main():
     # mhe model and solver
     model_mhe = export_mhe_ode_model()
 
-    # inverse covariances, R_mhe has to be scaled with time step
-    Q_mhe = np.diag(1/w_stds_mhe)
-    R_mhe = 1/Ts*np.diag(1/v_stds_mhe)
+    # inverse covariances
+    Q_mhe = np.diag(1/w_stds_mhe**2)
+    R_mhe = np.diag(1/v_stds_mhe**2)
 
     # arrival cost weighting
-    Q0_mhe = 0.01*Q_mhe
+    Q0_mhe = 0.005*Q_mhe
 
     acados_mhe_solver = export_mhe_solver(model_mhe, N_mhe, Ts, Q_mhe, Q0_mhe, R_mhe)
 

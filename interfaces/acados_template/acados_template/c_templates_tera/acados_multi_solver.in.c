@@ -2227,9 +2227,14 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
     int globalization_full_step_dual = {{ solver_options.globalization_full_step_dual }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_full_step_dual", &globalization_full_step_dual);
 
-    {%- if solver_options.nlp_solver_warm_start_first_qp %}
+    {%- if solver_options.nlp_solver_warm_start_first_qp_from_nlp %}
     int nlp_solver_warm_start_first_qp = {{ solver_options.nlp_solver_warm_start_first_qp }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "warm_start_first_qp", &nlp_solver_warm_start_first_qp);
+    {%- endif %}
+
+    {%- if solver_options.nlp_solver_warm_start_first_qp_from_nlp %}
+    int nlp_solver_warm_start_first_qp_from_nlp = {{ solver_options.nlp_solver_warm_start_first_qp_from_nlp }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "warm_start_first_qp", &nlp_solver_warm_start_first_qp_from_nlp);
     {%- endif %}
 
     double levenberg_marquardt = {{ solver_options.levenberg_marquardt }};

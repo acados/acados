@@ -35,7 +35,7 @@
 // acados
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados/dense_qp/dense_qp_common.h"
-#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo_d_aux.h"
 // mex
 #include "mex.h"
 #include "mex_macros.h"
@@ -93,7 +93,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             sprintf(buffer, "\nocp_get: invalid stage index, got %d\n", stage);
             mexErrMsgTxt(buffer);
         }
-        else if (stage == N && strcmp(field, "x") && strcmp(field, "lam") && strcmp(field, "p") && strcmp(field, "sens_x") && strcmp(field, "sl") && strcmp(field, "su") && strcmp(field, "qp_Q") && strcmp(field, "qp_R") && strcmp(field, "qp_S") && strcmp(field, "qp_q") && strcmp(field, "qp_lbx") && strcmp(field, "qp_ubx") && strcmp(field, "qp_zl") && strcmp(field, "qp_zu") && strcmp(field, "qp_Zl") && strcmp(field, "qp_Zu"))
+        else if (stage == N && strcmp(field, "x") &&
+                               strcmp(field, "lam") &&
+                               strcmp(field, "p") &&
+                               strcmp(field, "sens_x") &&
+                               strcmp(field, "sl") &&
+                               strcmp(field, "su") &&
+                               strcmp(field, "qp_Q") &&
+                               strcmp(field, "qp_q") &&
+                               strcmp(field, "qp_C") &&
+                               strcmp(field, "qp_lg") &&
+                               strcmp(field, "qp_ug") &&
+                               strcmp(field, "qp_lbx") &&
+                               strcmp(field, "qp_ubx") &&
+                               strcmp(field, "qp_zl") &&
+                               strcmp(field, "qp_zu") &&
+                               strcmp(field, "qp_Zl") &&
+                               strcmp(field, "qp_Zu"))
         {
             sprintf(buffer, "\nocp_get: invalid stage index, got stage = %d = N, field = %s, field not available at final shooting node\n", stage, field);
             mexErrMsgTxt(buffer);
@@ -128,8 +144,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     sprintf(buffer, "\nocp_get: cannot get multiple %s values at once due to varying dimension", field);
                     mexErrMsgTxt(buffer);
                 }
-                ocp_nlp_out_get(config, dims, out, ii, "x", x+ii*nx0);
             }
+            ocp_nlp_get_all(solver, in, out, "x", x);
+
         }
         else if (nrhs==3)
         {
@@ -167,8 +184,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     sprintf(buffer, "\nocp_get: cannot get multiple %s values at once due to varying dimension", field);
                     mexErrMsgTxt(buffer);
                 }
-                ocp_nlp_out_get(config, dims, out, ii, "u", u+ii*nu0);
             }
+            ocp_nlp_get_all(solver, in, out, "u", u);
         }
         else if (nrhs==3)
         {
@@ -233,8 +250,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     sprintf(buffer, "\nocp_get: cannot get multiple %s values at once due to varying dimension", field);
                     mexErrMsgTxt(buffer);
                 }
-                ocp_nlp_out_get(config, dims, out, ii, "z", z+ii*nz);
             }
+            ocp_nlp_get_all(solver, in, out, "z", z);
         }
         else if (nrhs==3)
         {
@@ -273,8 +290,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     sprintf(buffer, "\nocp_get: cannot get multiple %s values at once due to varying dimension", field);
                     mexErrMsgTxt(buffer);
                 }
-                ocp_nlp_out_get(config, dims, out, ii, "pi", pi+ii*npi);
             }
+            ocp_nlp_get_all(solver, in, out, "pi", pi);
         }
         else if (nrhs==3)
         {

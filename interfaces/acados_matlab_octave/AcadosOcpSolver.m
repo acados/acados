@@ -112,22 +112,28 @@ classdef AcadosOcpSolver < handle
 
                 if length(varargin) > 0
                     n = varargin{1};
-                    Q = obj.get('qp_Q', n);
-                    R = obj.get('qp_R', n);
-                    S = obj.get('qp_S', n);
 
-                    value = [R, S; S', Q];
+                    if n < obj.ocp.solver_options.N_horizon
+                        Q = obj.get('qp_Q', n);
+                        R = obj.get('qp_R', n);
+                        S = obj.get('qp_S', n);
+
+                        value = [R, S; S', Q];
+                    else
+                        value = obj.get('qp_Q', n);
+                    end
+
                     return;
                 else
                     value = cell(obj.ocp.solver_options.N_horizon, 1);
-                    for n=0:obj.ocp.solver_options.N_horizon
+                    for n=0:(obj.ocp.solver_options.N_horizon-1)
                         Q = obj.get('qp_Q', n);
                         R = obj.get('qp_R', n);
                         S = obj.get('qp_S', n);
 
                         value{n+1} = [R, S; S', Q];
-
                     end
+                    value{end+1} = obj.get('qp_Q', obj.ocp.solver_options.N_horizon);
                     return;
                 end
             elseif strcmp('pc_hess_block', field)
@@ -311,8 +317,17 @@ classdef AcadosOcpSolver < handle
                     val = obj.get(field, i);
                     qp_data = setfield(qp_data, key, val);
                 end
-
-                if strcmp(field, 'qp_Q') || strcmp(field, 'qp_q') || strcmp(field, 'qp_zl') || strcmp(field, 'qp_zu') || strcmp(field, 'qp_Zl') || strcmp(field, 'qp_Zu')
+                if strcmp(field, 'qp_Q') || ...
+                   strcmp(field, 'qp_q') || ...
+                   strcmp(field, 'qp_C') || ...
+                   strcmp(field, 'qp_lg') || ...
+                   strcmp(field, 'qp_ug') || ...
+                   strcmp(field, 'qp_lbx') || ...
+                   strcmp(field, 'qp_ubx') || ...
+                   strcmp(field, 'qp_zl') || ...
+                   strcmp(field, 'qp_zu') || ...
+                   strcmp(field, 'qp_Zl') || ...
+                   strcmp(field, 'qp_Zu')
                     s_indx = sprintf(strcat('%0', num2str(lN), 'd'), obj.ocp.solver_options.N_horizon);
                     key = strcat(field, '_', s_indx);
                     val = obj.get(field, obj.ocp.solver_options.N_horizon);

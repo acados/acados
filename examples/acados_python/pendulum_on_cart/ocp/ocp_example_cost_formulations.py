@@ -295,6 +295,29 @@ def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', refor
     if rel_diff_cost > 1e-6:
         raise Exception(f"Cost value is not correct: rel_diff_cost = {rel_diff_cost:.2e} > {1e-6}.")
 
+    # test getter
+    if formulation_type == 'mocp':
+        cost = ocp.cost[0]
+        cost_e = ocp.cost[-1]
+    else:
+        cost = cost_e = ocp.cost
+
+    if cost.cost_type in ['LINEAR_LS', 'NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']:
+        yref_ = ocp_solver.cost_get(1, 'yref')
+        assert np.allclose(yref_, cost.yref)
+
+    if cost.cost_type in ['LINEAR_LS', 'NONLINEAR_LS']:
+        W_ = ocp_solver.cost_get(1, 'W')
+        assert np.allclose(W_, cost.W)
+
+    if cost_e.cost_type_e in ['LINEAR_LS', 'NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']:
+        yref_e_ = ocp_solver.cost_get(ocp.solver_options.N_horizon, 'yref')
+        assert np.allclose(yref_e_, cost_e.yref_e)
+
+    if cost.cost_type in ['LINEAR_LS', 'NONLINEAR_LS']:
+        W_e_ = ocp_solver.cost_get(ocp.solver_options.N_horizon, 'W')
+        assert np.allclose(W_e_, cost_e.W_e)
+
     # plot results
     if plot:
         plot_pendulum(np.linspace(0, T_HORIZON, N+1), FMAX, simU, simX, latexify=False)

@@ -526,6 +526,11 @@ void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
 //
 int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
+
+//
+void ocp_nlp_initialize_qp_from_nlp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_qp_in *qp_in,
+            ocp_nlp_out *out, ocp_qp_out *qp_out);
+
 //
 void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out,
                          ocp_nlp_res *res, ocp_nlp_memory *mem);
@@ -562,7 +567,8 @@ double ocp_nlp_get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, 
 
 int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *nlp_opts,
                      ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work,
-                     bool precondensed_lhs, ocp_qp_in *qp_in_, ocp_qp_out *qp_out_);
+                     bool precondensed_lhs, ocp_qp_in *qp_in_, ocp_qp_out *qp_out_,
+                     ocp_qp_xcond_solver *xcond_solver);
 //
 int my_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *nlp_opts,
                      ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work,

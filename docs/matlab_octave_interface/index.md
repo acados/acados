@@ -3,7 +3,7 @@
 In order to use `acados` from Octave or Matlab, you need to create the `acados` shared libraries using either the `CMake` or `Make` build system, as described [on the installation page](../installation/index.md).
 
 ## Getting started
-Check out the examples [`minimal_example_ocp.m`](https://github.com/acados/acados/tree/master/examples/acados_matlab_octave/getting_started/minimal_example_ocp.m) and [`minimal_example_sim.m`](https://github.com/acados/acados/tree/master/examples/acados_matlab_octave/getting_started/minimal_example_sim.m) to get started with the Matlab interface of `acados`.
+Check out the examples [`minimal_example_ocp.m`](https://github.com/acados/acados/tree/main/examples/acados_matlab_octave/getting_started/minimal_example_ocp.m) and [`minimal_example_sim.m`](https://github.com/acados/acados/tree/main/examples/acados_matlab_octave/getting_started/minimal_example_sim.m) to get started with the Matlab interface of `acados`.
 Note that `acados` currently supports both an old Matlab interface (< v0.4.0) as well as the new one (>= v0.4.0).
 Unfortunately, not all MATLAB examples have been ported to the new interface yet.
 If you are new to `acados` please start with [those examples](https://github.com/acados/acados/issues/1196#issuecomment-2311822122) that use the new interface already.
@@ -13,7 +13,7 @@ The examples require an installation of `CasADi` to generate the model functions
 The `getting_started` example offers the option to attempt to automatically download the correct version in the recommended folder.
 Detailed instructions for a manual installation can be found in the last section of this page [Setup CasADi](#setup-casadi).
 
-The problem formulation is stated in [this PDF](https://github.com/acados/acados/tree/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf).
+The problem formulation is stated in [this PDF](https://github.com/acados/acados/tree/main/docs/problem_formulation/problem_formulation_ocp_mex.pdf).
 
 
 
@@ -36,9 +36,9 @@ Afterwards, launch `Matlab` or `Octave` from the same shell.
 If you want to run the examples in a different folder, please close the current shell and open a new one to repeat the procedure: this ensures the correct setting of the environment variables.
 
 ### Windows
-1. Open `Matlab` and navigate into [`<acados_root>/examples/acados_matlab_octave`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave).
-2. Run [`acados_env_variables_windows`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/acados_env_variables_windows.m) to export the environment variable `ACADOS_INSTALL_DIR`.
-3. Navigate into [`<acados_root>/examples/acados_matlab_octave/getting_started`](https://github.com/acados/acados/tree/master/examples/acados_matlab_octave/getting_started) and run one of the examples.
+1. Open `Matlab` and navigate into [`<acados_root>/examples/acados_matlab_octave`](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave).
+2. Run [`acados_env_variables_windows`](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/acados_env_variables_windows.m) to export the environment variable `ACADOS_INSTALL_DIR`.
+3. Navigate into [`<acados_root>/examples/acados_matlab_octave/getting_started`](https://github.com/acados/acados/tree/main/examples/acados_matlab_octave/getting_started) and run one of the examples.
 
 
 ## Interface structure
@@ -47,7 +47,7 @@ The nonlinear problem functions can be formulated using CasADi symbolics which a
 The whole problem description is written to a json-file which is then used to render different templates, via the `Tera` renderer.
 These are the same templates as in the Python interface (see [`Python interface`](../python_interface/index.md)).
 In addition to a `MEX` wrapper it contains all the `C` code that is needed for embedded deployment.
-These templates can be found in [`<acados_root>/interfaces/acados_template/acados_template/c_templates_tera`](https://github.com/acados/acados/tree/master/interfaces/acados_template/acados_template/c_templates_tera).
+These templates can be found in [`<acados_root>/interfaces/acados_template/acados_template/c_templates_tera`](https://github.com/acados/acados/tree/main/interfaces/acados_template/acados_template/c_templates_tera).
 
 ## Options documentation
 For the template based part of the `Matlab` interface, we refer to [the docstring based documentation of the Python interface](../python_interface/index.md).
@@ -55,9 +55,9 @@ For the template based part of the `Matlab` interface, we refer to [the docstrin
 ## Simulink
 The templates mentioned [above](#templates) also contain templated S-functions and corresponding make functions for both the OCP solver and the acados integrator.
 
-A basic Simulink example can be found in [`<acados_root>/examples/acados_python/getting_started/simulink_example.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started/simulink_example.m)
+A basic Simulink example can be found in [`<acados_root>/examples/acados_python/getting_started/simulink_example.m`](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/getting_started/simulink_example.m)
 
-A more advanced Simulink example which showcases how to customize the inputs and outputs of the Simulink block corresponding to the solver can be found in [`<acados_root>/examples/acados_python/getting_started/simulink_example.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started/simulink_example_advanced.m)
+A more advanced Simulink example which showcases how to customize the inputs and outputs of the Simulink block corresponding to the solver can be found in [`<acados_root>/examples/acados_python/getting_started/simulink_example.m`](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/getting_started/simulink_example_advanced.m)
 
 ### List of possible inputs
 This is a list of possible inputs to the Simulink block of an OCP solver which can be activated by setting the corresponding values in the acados Simulink options.
@@ -127,7 +127,7 @@ This is a list of possible outputs of the Simulink block of an OCP solver which 
 
 
 ### Developing extensions
-If you want a more advanced interaction with the `acados` solver via Simulink, feel free to edit the corresponding templates in [`<acados_root>/interfaces/acados_template/acados_template/c_templates_tera/matlab_templates`](https://github.com/acados/acados/tree/master/interfaces/acados_template/acados_template/c_templates_tera/matlab_templates) to add more inputs or outputs.
+If you want a more advanced interaction with the `acados` solver via Simulink, feel free to edit the corresponding templates in [`<acados_root>/interfaces/acados_template/acados_template/c_templates_tera/matlab_templates`](https://github.com/acados/acados/tree/main/interfaces/acados_template/acados_template/c_templates_tera/matlab_templates) to add more inputs or outputs.
 
 ### S-function Mask
 The Simulink S-functions interface can be improved using the following mask commands, which shows the names of input and output ports, facilitating debugging operations.
