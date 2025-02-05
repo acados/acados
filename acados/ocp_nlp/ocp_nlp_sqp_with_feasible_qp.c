@@ -96,44 +96,21 @@ static void setup_standard_qp_solver_dimensions(
         config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nge_qp_solver", &tmp_int);
         mem->standard_qp_solver->dims_set(config->qp_solver, mem->standard_qp_solver_dims, i, "nge", &tmp_int);
     }
-    /* dimensions that are different compared to standard QP solver */
-    // nsbx_0_rel = nsbx_0
-    i = 0;
-    config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsbx", &tmp_int);
-    mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nsbx", &tmp_int);
-    // TODO: do we want to check if nsbx_0 is 0?
-    // if (tmp_int > 0)
-    // {
-    // }
+    /* slack dims standard QP solver correspond to NLP dims */
     for (i = 0; i <= N; i++)
     {
-        if (i > 0)
-        {
-            // nsbx_rel = nbx
-            // config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nbx", &tmp_int);
-            config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsbx", &tmp_int);
-            mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nsbx", &tmp_int);
-        }
-        // nsbu_rel = nsbu
+        // nsbx
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsbx", &tmp_int);
+        mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nsbx", &tmp_int);
+        // nsbu
         config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsbu", &tmp_int);
         mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nsbu", &tmp_int);
-        // nsg_relaxed = ng
+        // nsg_qp
         config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsg_qp_solver", &tmp_int);
         mem->standard_qp_solver->dims_set(config->qp_solver, mem->standard_qp_solver_dims, i, "nsg", &tmp_int);
-        // print warning that those are not tested!?
-    }
-
-    // set ns_rel according to nsbx, nsbu, nsg;
-    for (i = 0; i <= N; i++)
-    {
-        int ns = 0;
-        config->qp_solver->dims_get(config->qp_solver, mem->standard_qp_solver_dims, i, "nsbu", &tmp_int);
-        ns += tmp_int;
-        config->qp_solver->dims_get(config->qp_solver, mem->standard_qp_solver_dims, i, "nsbx", &tmp_int);
-        ns += tmp_int;
-        config->qp_solver->dims_get(config->qp_solver, mem->standard_qp_solver_dims, i, "nsg", &tmp_int);
-        ns += tmp_int;
-        mem->standard_qp_solver->dims_set(config->qp_solver, mem->standard_qp_solver_dims, i, "ns", &ns);
+        // ns
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "ns", &tmp_int);
+        mem->standard_qp_solver->dims_set(config->qp_solver, mem->standard_qp_solver_dims, i, "ns", &tmp_int);
     }
 }
 
