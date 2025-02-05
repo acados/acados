@@ -1542,10 +1542,10 @@ class AcadosOcpOptions:
 
     @qp_solver_warm_start.setter
     def qp_solver_warm_start(self, qp_solver_warm_start):
-        if qp_solver_warm_start in [0, 1, 2]:
+        if qp_solver_warm_start in [0, 1, 2, 3]:
             self.__qp_solver_warm_start = qp_solver_warm_start
         else:
-            raise Exception('Invalid qp_solver_warm_start value. qp_solver_warm_start must be 0 or 1 or 2.')
+            raise Exception('Invalid qp_solver_warm_start value. qp_solver_warm_start must be 0 or 1 or 2 or 3.')
 
     @qp_tol.setter
     def qp_tol(self, qp_tol):
