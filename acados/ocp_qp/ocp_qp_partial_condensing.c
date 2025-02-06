@@ -443,6 +443,8 @@ void *ocp_qp_partial_condensing_memory_assign(void *dims_, void *opts_, void *ra
 
     mem->qp_out_info = (qp_info *) mem->pcond_qp_out->misc;
 
+    mem->dims = dims;
+
     assert((char *) raw_memory + ocp_qp_partial_condensing_memory_calculate_size(dims, opts) >= c_ptr);
 
     return mem;
