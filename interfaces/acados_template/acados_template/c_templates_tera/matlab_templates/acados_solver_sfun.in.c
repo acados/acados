@@ -811,18 +811,6 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", buffer);
   {%- endif %}
 
-  {%- if dims_0.np_global > 0 and simulink_opts.inputs.p_global -%}  {#- p_global #}
-    {%- set i_input = i_input + 1 %}
-    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
-    buffer[0] = (double)(*in_sign[0]);
-    if (buffer[0] != 0)
-    {
-        for (int i = 0; i < {{ dims_0.np_global }}; i++)
-            buffer[i] = (double)(*in_sign[i+1]);
-        {{ name }}_acados_set_p_global_and_precompute_dependencies(capsule, buffer, {{ dims_0.np_global }});
-    }
-  {%- endif %}
-
   {%- if np_total > 0 and simulink_opts.inputs.parameter_traj -%}  {#- parameter_traj #}
     // parameter_traj
     {%- set i_input = i_input + 1 %}
@@ -838,6 +826,18 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         }
         {{ name }}_acados_update_params(capsule, stage, buffer, tmp_int);
         tmp_offset += tmp_int;
+    }
+  {%- endif %}
+
+  {%- if dims_0.np_global > 0 and simulink_opts.inputs.p_global -%}  {#- p_global #}
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    buffer[0] = (double)(*in_sign[0]);
+    if (buffer[0] != 0)
+    {
+        for (int i = 0; i < {{ dims_0.np_global }}; i++)
+            buffer[i] = (double)(*in_sign[i+1]);
+        {{ name }}_acados_set_p_global_and_precompute_dependencies(capsule, buffer, {{ dims_0.np_global }});
     }
   {%- endif %}
 
