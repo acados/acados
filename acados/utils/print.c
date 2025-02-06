@@ -257,6 +257,12 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
         blasfeo_print_tran_dvec(2 * nb[ii] + 2 * ng[ii], &qp_in->d[ii], 0);
     }
 
+    printf("d_mask =\n");
+    for (int ii = 0; ii <= N; ii++)
+    {
+        blasfeo_print_tran_dvec(2 * nb[ii] + 2 * ng[ii], &qp_in->d_mask[ii], 0);
+    }
+
     printf("idxb =\n");
     for (int ii = 0; ii < N + 1; ii++)
     {
