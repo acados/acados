@@ -396,13 +396,13 @@ static void mdlInitializeSizes (SimStruct *S)
 
   {%- if np_total > 0 and simulink_opts.inputs.parameter_traj -%}  {#- parameter_traj #}
     {%- set i_input = i_input + 1 %}
-    // parameters
+    // parameter_traj
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ np_total }});
   {%- endif %}
 
   {%- if dims_0.np_global > 0 and simulink_opts.inputs.p_global -%}  {#- p_global #}
     {%- set i_input = i_input + 1 %}
-    // parameters
+    // p_global
     ssSetInputPortVectorDimension(S, {{ i_input }}, 1 + {{ dims_0.np_global }});
   {%- endif %}
 
@@ -830,6 +830,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {%- endif %}
 
   {%- if dims_0.np_global > 0 and simulink_opts.inputs.p_global -%}  {#- p_global #}
+    // p_global
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
     buffer[0] = (double)(*in_sign[0]);
