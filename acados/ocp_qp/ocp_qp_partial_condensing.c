@@ -571,7 +571,8 @@ int ocp_qp_partial_condensing_condense_qp_out(void *qp_in_, void *pcond_qp_in_, 
     int *ns = orig_dims->ns;
 
     // uxs 0
-    blasfeo_dveccp(nu[0] + 2 * ns[0], qp_out->ux+0, 0, pcond_qp_out->ux+0, 0);
+    blasfeo_dveccp(nu[0], qp_out->ux+0, 0, pcond_qp_out->ux+0, 0);
+    blasfeo_dveccp(2 * ns[0], qp_out->ux+0, nu[0]+nx[0], pcond_qp_out->ux+0, nu[0]);
     // lam 0
     blasfeo_dveccp(nbu[0], qp_out->lam+0, 0, pcond_qp_out->lam+0, 0);
     blasfeo_dveccp(ng[0], qp_out->lam+0, nbu[0]+nbx[0], pcond_qp_out->lam+0, nbu[0]);
