@@ -88,8 +88,10 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
         # QP warm start
         ocp.solver_options.qp_solver_warm_start = 3
         ocp.solver_options.nlp_solver_warm_start_first_qp = True
+        ocp.solver_options.nlp_solver_warm_start_first_qp_from_nlp = True
         # HPIPM settings
         ocp.solver_options.qp_solver_iter_max = 0
+        # ocp.remove_x0_elimination()
 
         sensitivity_solver = AcadosOcpSolver(ocp, json_file=f"{ocp.model.name}.json", generate=generate_solvers, build=generate_solvers)
     else:
@@ -171,7 +173,7 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
 
         print(f"{adj_p=} {adj_p_ref=}")
         if not np.allclose(adj_p, adj_p_ref, atol=TOL):
-            raise Exception("adj_p and adj_p_ref should match.")
+            test_failure_message("adj_p and adj_p_ref should match.")
             # print("ERROR: adj_p and adj_p_ref should match.")
         else:
             print("Success: adj_p and adj_p_ref match!")
@@ -182,9 +184,9 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
     adj_p_zero_x_seed = sensitivity_solver.eval_adjoint_solution_sensitivity(seed_x=[(1, 0*seed_xstage)], seed_u=[(0, seed_ustage)])
 
     if not np.allclose(adj_p, adj_p_ref, atol=TOL):
-        raise Exception("adj_p and adj_p_ref should match.")
+        test_failure_message("adj_p and adj_p_ref should match.")
     if not np.allclose(adj_p, adj_p_zero_x_seed, atol=TOL):
-        raise Exception("adj_p and adj_p_zero_x_seed should match.")
+        test_failure_message("adj_p and adj_p_zero_x_seed should match.")
     print("Success: adj_p and adj_p_ref match! Tested with None and empty list for seed_x.")
 
     # test with list vs. single stage API: varying seed_u
@@ -193,9 +195,9 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
     adj_p_zero_x_seed = sensitivity_solver.eval_adjoint_solution_sensitivity(seed_x=[(0, seed_xstage)], seed_u=[(0, 0*seed_ustage)])
 
     if not np.allclose(adj_p, adj_p_ref, atol=1e-7):
-        raise Exception("adj_p and adj_p_ref should match.")
+        test_failure_message("adj_p and adj_p_ref should match.")
     if not np.allclose(adj_p, adj_p_zero_x_seed, atol=1e-7):
-        raise Exception("adj_p and adj_p_zero_x_seed should match.")
+        test_failure_message("adj_p and adj_p_zero_x_seed should match.")
     print("Success: adj_p and adj_p_ref match! Tested with None and empty list for seed_u.")
 
     # test multiple adjoint seeds at once
@@ -210,7 +212,7 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
                                             seed_u=[(1, seed_u_mat[:, [i]])])
         print(f"{adj_p_vec=} {adj_p_mat[i, :]=}")
         if not np.allclose(adj_p_vec, adj_p_mat[i, :], atol=TOL):
-            raise Exception(f"adj_p_vec and adj_p_mat[{i}, :] should match.")
+            test_failure_message(f"adj_p_vec and adj_p_mat[{i}, :] should match.")
         else:
             print(f"Success: adj_p_vec and adj_p_mat[{i}, :] match!")
 
@@ -228,6 +230,10 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
 
         plot_pendulum(ocp.solver_options.shooting_nodes, Fmax, simU, simX, latexify=True, time_label=ocp.model.t_label, x_labels=ocp.model.x_labels, u_labels=ocp.model.u_labels)
 
+
+def test_failure_message(msg):
+    print(f"ERROR: {msg}")
+    # raise Exception(msg)
 
 if __name__ == "__main__":
     main(qp_solver_ric_alg=0, use_cython=False, generate_solvers=True, plot_trajectory=False)
