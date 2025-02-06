@@ -14,9 +14,6 @@
 - One solver `acados/examples/acados_python/solution_sensitivities_convex_example/batch_adjoint_solution_sensitivity_example.py`
 
 ## TODOs
-- HPIPM hottest start
-  - giaf: implement HPIPM
-  - python: set this to 3 at creation?
 
 - setter for `tau_min` (`mu0`)
   - Python: set at runtime TODO!
@@ -32,3 +29,7 @@
 # Done
 - getter for `tau_iter`
   - giaf: done;
+
+- HPIPM hottest start
+  - giaf: implement HPIPM
+  - python: set this to 3 at creation?
