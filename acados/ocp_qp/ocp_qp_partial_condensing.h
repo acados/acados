@@ -59,11 +59,8 @@ typedef struct ocp_qp_partial_condensing_opts_
 {
     struct d_part_cond_qp_arg *hpipm_pcond_opts;
     struct d_ocp_qp_reduce_eq_dof_arg *hpipm_red_opts;
-//    ocp_qp_dims *pcond_dims;  // TODO(all): move to dims
-//    int *block_size;
     int N2;
     int N2_bkp;
-//    int expand_dual_sol; // 0 primal sol only, 1 primal + dual sol
     int *block_size;
     bool block_size_was_set;
     int ric_alg;
