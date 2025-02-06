@@ -484,6 +484,14 @@ int ocp_qp_full_condensing(void *qp_in_, void *fcond_qp_in_, void *opts_, void *
     return ACADOS_SUCCESS;
 }
 
+int ocp_qp_full_condensing_condense_qp_out(void *qp_in_, void *fcond_qp_in_, void *qp_out_, void *fcond_qp_out_, void *opts_, void *mem_, void *work)
+{
+    printf("ocp_qp_full_condensing_condense_qp_out: not implemented\n");
+    printf("what about implementing it? :) do it for acados!\n");
+    exit(1);
+}
+
+
 
 int ocp_qp_full_condensing_condense_lhs(void *qp_in_, void *fcond_qp_in_, void *opts_, void *mem_, void *work_)
 {
@@ -600,6 +608,7 @@ void ocp_qp_full_condensing_config_initialize_default(void *config_)
     config->condensing = &ocp_qp_full_condensing;
     config->condense_rhs = &ocp_qp_full_condensing_condense_rhs;
     config->condense_lhs = &ocp_qp_full_condensing_condense_lhs;
+    config->condense_qp_out = &ocp_qp_full_condensing_condense_qp_out;
     config->expansion = &ocp_qp_full_expansion;
 
     return;
