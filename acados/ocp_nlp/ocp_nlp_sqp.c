@@ -740,6 +740,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             }
             else if (opts->warm_start_first_qp_from_nlp)
             {
+                int tmp_bool = true;
+                qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "initialize_next_xcond_qp_from_qp_out", &tmp_bool);
                 ocp_nlp_initialize_qp_from_nlp(config, dims, qp_in, nlp_out, qp_out);
             }
         }

@@ -607,6 +607,8 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
         }
         else if (opts->warm_start_first_qp_from_nlp)
         {
+            int tmp_bool = true;
+            config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "initialize_next_xcond_qp_from_qp_out", &tmp_bool);
             ocp_nlp_initialize_qp_from_nlp(config, dims, nlp_mem->qp_in, nlp_out, nlp_mem->qp_out);
         }
     }
