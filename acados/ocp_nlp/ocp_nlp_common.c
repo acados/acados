@@ -1163,6 +1163,8 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->with_adaptive_levenberg_marquardt = false;
 
     opts->ext_qp_res = 0;
+    opts->qp_warm_start = 0;
+
     opts->store_iterates = false;
 
     return;

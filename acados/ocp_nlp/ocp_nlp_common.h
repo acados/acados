@@ -307,6 +307,7 @@ typedef struct ocp_nlp_opts
     int with_value_sens_wrt_params;
 
     int ext_qp_res;
+    int qp_warm_start;
 
     bool store_iterates; // flag indicating whether intermediate iterates should be stored
 
