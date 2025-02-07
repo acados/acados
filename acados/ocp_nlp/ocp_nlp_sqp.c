@@ -905,8 +905,7 @@ int ocp_nlp_sqp_setup_qp_matrices_and_factorize(void *config_, void *dims_, void
 
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
-    int globalization_status, qp_iter, qp_status;
-    qp_info *qp_info_;
+    int qp_status, tmp_int;
 
     /* Prepare the QP data */
     // linearize NLP and update QP matrices
@@ -917,26 +916,42 @@ int ocp_nlp_sqp_setup_qp_matrices_and_factorize(void *config_, void *dims_, void
     nlp_timings->time_lin += acados_toc(&timer1);
 
     /* solve QP */
-    // warm start of first QP
-    if (!opts->warm_start_first_qp)
-    {
-        // (typically) no warm start at first iteration
-        int tmp_int = 0;
-        qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
-    }
-    else if (opts->warm_start_first_qp_from_nlp)
-    {
-        ocp_nlp_initialize_qp_from_nlp(config, dims, qp_in, nlp_out, qp_out);
-    }
+    // warm start QP
+    ocp_nlp_initialize_qp_from_nlp(config, dims, qp_in, nlp_out, qp_out);
+    int tmp_bool = true;
+    qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "initialize_next_xcond_qp_from_qp_out", &tmp_bool);
+    // HPIPM hot start
+    tmp_int = 3;
+    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
+    // HPIPM: iter_max 0
+    tmp_int = 0;
+    config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts, "iter_max", &tmp_int);
+    // require new factorization at exit
+    tmp_int = 1;
+    config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts, "update_fact_exit", &tmp_int);
+    // HPIPM: set t_min, lam_min to avoid ill-conditioning
+    double tmp_double = 1e-10;
+    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "t_min", &tmp_double);
+    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "lam_min", &tmp_double);
 
+    // QP solve
     qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, NULL, NULL);
 
-    // restore default warm start
+    // reset QP solver settings
     qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &opts->qp_warm_start);
+    qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "iter_max", &nlp_opts->qp_iter_max);
+    tmp_double = 1e-16;
+    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "t_min", &tmp_double);
+    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "lam_min", &tmp_double);
 
-    ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
-    qp_iter = qp_info_->num_iter;
-    /* end solve QP */
+    if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
+    {
+        mem->nlp_mem->status = ACADOS_QP_FAILURE;
+    }
+    else
+    {
+        mem->nlp_mem->status = ACADOS_SUCCESS;
+    }
 
     return mem->nlp_mem->status;
 }
