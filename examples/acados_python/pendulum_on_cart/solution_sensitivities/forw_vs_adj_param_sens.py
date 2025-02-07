@@ -143,6 +143,15 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
     qp_iter = sensitivity_solver.get_stats("qp_iter")
     print(f"qp iter: {qp_iter}\n")
 
+    for i in range(1, N_horizon-1):
+        P_mat = sensitivity_solver.get_from_qp_in(i, "P")
+        K_mat = sensitivity_solver.get_from_qp_in(i, "K")
+        Lr_mat = sensitivity_solver.get_from_qp_in(i, "Lr")
+        print(f"stage {i} got factorization")
+        # print(f"P_mat = {P_mat}")
+        # print(f"K_mat = {K_mat}")
+        print(f"Lr_mat = {Lr_mat}")
+
     if sensitivity_solver.get_status() not in [0, 2]:
         breakpoint()
 
