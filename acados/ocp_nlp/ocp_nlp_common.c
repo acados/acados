@@ -467,6 +467,11 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
         {
             config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nx", &int_array[i]);
         }
+        // relaxed qp solver
+        for (int i = 0; i <= N; i++)
+        {
+            config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, "nx", &int_array[i]);
+        }
         // regularization
         for (int i = 0; i <= N; i++)
         {
@@ -510,6 +515,11 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
         for (int i = 0; i <= N; i++)
         {
             config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nu", &int_array[i]);
+        }
+        // relaxed qp solver
+        for (int i = 0; i <= N; i++)
+        {
+            config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, "nu", &int_array[i]);
         }
         // regularization
         for (int i = 0; i <= N; i++)
@@ -1259,6 +1269,8 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     // qp solver
     qp_solver->opts_initialize_default(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
+    // relaxed qp solver --> we do not do this, since we use the same opts object!
+
     // regularization
     regularize->opts_initialize_default(regularize, dims->regularize, opts->regularize);
 
@@ -1570,6 +1582,7 @@ void ocp_nlp_opts_set_at_stage(void *config_, void *opts_, int stage, const char
 acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_in *nlp_in)
 {
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    ocp_qp_xcond_solver_config *relaxed_qp_solver = config->relaxed_qp_solver;
     ocp_nlp_dynamics_config **dynamics = config->dynamics;
     ocp_nlp_cost_config **cost = config->cost;
     ocp_nlp_constraints_config **constraints = config->constraints;
@@ -1595,6 +1608,8 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
 
     // qp solver
     size += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
+
+    // relaxed qp solver memory in sqp_with_feasible_qp.c
 
     // regularization
     size += config->regularize->memory_calculate_size(config->regularize, dims->regularize, opts->regularize);
