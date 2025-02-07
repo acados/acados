@@ -1134,6 +1134,7 @@ static void set_non_slacked_l1_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
     int *ns = dims->ns;
     int *nns = mem->nns;
     ocp_qp_in *qp_in = mem->nlp_mem->qp_in;
+    ocp_qp_in *relaxed_qp_in = mem->relaxed_qp_in;
     // TODO: we need to add relaxed_qp here!
 
     // be aware of rqz_QP = [r, q, zl_NLP, zl_QP, zu_NLP, zu_QP]
@@ -1143,8 +1144,10 @@ static void set_non_slacked_l1_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
         {
             // zl_QP
             blasfeo_dvecse(nns[stage], 1.0, qp_in->rqz+stage, nu[stage]+nx[stage]+ns[stage]);
+            blasfeo_dvecse(nns[stage], 1.0, relaxed_qp_in->rqz+stage, nu[stage]+nx[stage]+ns[stage]);
             // zu_QP
             blasfeo_dvecse(nns[stage], 1.0, qp_in->rqz+stage, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
+            blasfeo_dvecse(nns[stage], 1.0, relaxed_qp_in->rqz+stage, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
             // printf("qp_in->rqz %d\n", stage);
             // blasfeo_print_exp_tran_dvec(nu[stage] +nx[stage] + 2*(nns[stage]+ns[stage]), qp_in->rqz+stage, 0);
         }
@@ -1166,6 +1169,7 @@ static void set_non_slacked_l2_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
     int *ns = dims->ns;
     int *nns = mem->nns;
     ocp_qp_in *qp_in = mem->nlp_mem->qp_in;
+    ocp_qp_in *relaxed_qp_in = mem->relaxed_qp_in;
     // TODO: we need to add the relaxed QP solver here
 
     // be aware of rqz_QP = [r, q, zl_NLP, zl_QP, zu_NLP, zu_QP]
@@ -1173,10 +1177,13 @@ static void set_non_slacked_l2_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
     {
         // zu_NLP shift back
         blasfeo_dveccp(ns[stage], qp_in->Z+stage, ns[stage], qp_in->Z+stage, ns[stage]+nns[stage]);
+        blasfeo_dveccp(ns[stage], qp_in->Z+stage, ns[stage], relaxed_qp_in->Z+stage, ns[stage]+nns[stage]);
         // zl_QP
         blasfeo_dvecse(nns[stage], 0.0, qp_in->Z+stage, ns[stage]);
+        blasfeo_dvecse(nns[stage], 0.0, relaxed_qp_in->Z+stage, ns[stage]);
         // zu_QP
         blasfeo_dvecse(nns[stage], 0.0, qp_in->Z+stage, 2*ns[stage]+nns[stage]);
+        blasfeo_dvecse(nns[stage], 0.0, relaxed_qp_in->Z+stage, 2*ns[stage]+nns[stage]);
 
         // printf("qp_in->Z %d\n", stage);
         // blasfeo_print_exp_tran_dvec(2*(nns[stage]+ns[stage]), qp_in->Z+stage, 0);
@@ -1625,7 +1632,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     ocp_nlp_dump_qp_in_to_file(qp_in, sqp_iter, 0);
 #endif
 
-    int qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, qp_out, NULL);
+    int qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, qp_in, qp_out, NULL);
 
     // restore default warm start
     if (sqp_iter==0)
@@ -2104,7 +2111,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
 
     print_debug_output("Solve Feasibility QP!\n", nlp_opts->print_level, 2);
     /* Solve steering QP: We solve without gradient and only with constraint Hessian */
-    qp_status = prepare_and_solve_QP(config, opts, qp_in, mem->relaxed_qp_out, dims, mem, nlp_in, nlp_out,
+    qp_status = prepare_and_solve_QP(config, opts, mem->relaxed_qp_in, mem->relaxed_qp_out, dims, mem, nlp_in, nlp_out,
                 nlp_mem, nlp_work, sqp_iter, true, timer0, timer1);
     ocp_qp_out_get(mem->relaxed_qp_out, "qp_info", &qp_info_);
     qp_iter += qp_info_->num_iter;
