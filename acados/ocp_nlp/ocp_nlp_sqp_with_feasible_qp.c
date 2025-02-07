@@ -1127,38 +1127,37 @@ static double calculate_slacked_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_
 
 static void set_non_slacked_l1_penalties(ocp_nlp_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_sqp_wfqp_memory *mem,
-    ocp_nlp_workspace *work, bool solve_slacked_qp)
+    ocp_nlp_workspace *work)
 {
     int *nx = dims->nx;
     int *nu = dims->nu;
     int *ns = dims->ns;
     int *nns = mem->nns;
-    ocp_qp_in *qp_in = mem->nlp_mem->qp_in;
+    // ocp_qp_in *qp_in = mem->nlp_mem->qp_in;
     ocp_qp_in *relaxed_qp_in = mem->relaxed_qp_in;
-    // TODO: we need to add relaxed_qp here!
 
     // be aware of rqz_QP = [r, q, zl_NLP, zl_QP, zu_NLP, zu_QP]
     for (int stage = 0; stage <= dims->N; stage++)
     {
-        if (solve_slacked_qp)
-        {
-            // zl_QP
-            blasfeo_dvecse(nns[stage], 1.0, qp_in->rqz+stage, nu[stage]+nx[stage]+ns[stage]);
-            blasfeo_dvecse(nns[stage], 1.0, relaxed_qp_in->rqz+stage, nu[stage]+nx[stage]+ns[stage]);
-            // zu_QP
-            blasfeo_dvecse(nns[stage], 1.0, qp_in->rqz+stage, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
-            blasfeo_dvecse(nns[stage], 1.0, relaxed_qp_in->rqz+stage, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
-            // printf("qp_in->rqz %d\n", stage);
-            // blasfeo_print_exp_tran_dvec(nu[stage] +nx[stage] + 2*(nns[stage]+ns[stage]), qp_in->rqz+stage, 0);
-        }
-        else
-        {
-            // We remove the gradient contribution of the slacks variables, since we want to solve an unslacked QP
-            // zl_QP
-            blasfeo_dvecse(nns[stage], 0.0, qp_in->rqz+stage, nu[stage]+nx[stage]+ns[stage]);
-            // zu_QP
-            blasfeo_dvecse(nns[stage], 0.0, qp_in->rqz+stage, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
-        }
+        // if (solve_slacked_qp)
+        // {
+        // zl_QP
+        // blasfeo_dvecse(nns[stage], 1.0, qp_in->rqz+stage, nu[stage]+nx[stage]+ns[stage]);
+        blasfeo_dvecse(nns[stage], 1.0, relaxed_qp_in->rqz+stage, nu[stage]+nx[stage]+ns[stage]);
+        // zu_QP
+        // blasfeo_dvecse(nns[stage], 1.0, qp_in->rqz+stage, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
+        blasfeo_dvecse(nns[stage], 1.0, relaxed_qp_in->rqz+stage, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
+        // printf("qp_in->rqz %d\n", stage);
+        // blasfeo_print_exp_tran_dvec(nu[stage] +nx[stage] + 2*(nns[stage]+ns[stage]), qp_in->rqz+stage, 0);
+        // }
+        // else
+        // {
+        //     // We remove the gradient contribution of the slacks variables, since we want to solve an unslacked QP
+        //     // zl_QP
+        //     blasfeo_dvecse(nns[stage], 0.0, qp_in->rqz+stage, nu[stage]+nx[stage]+ns[stage]);
+        //     // zu_QP
+        //     blasfeo_dvecse(nns[stage], 0.0, qp_in->rqz+stage, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
+        // }
     }
 }
 
@@ -1176,13 +1175,13 @@ static void set_non_slacked_l2_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
     for (int stage = 0; stage <= dims->N; stage++)
     {
         // zu_NLP shift back
-        blasfeo_dveccp(ns[stage], qp_in->Z+stage, ns[stage], qp_in->Z+stage, ns[stage]+nns[stage]);
+        // blasfeo_dveccp(ns[stage], qp_in->Z+stage, ns[stage], qp_in->Z+stage, ns[stage]+nns[stage]);
         blasfeo_dveccp(ns[stage], qp_in->Z+stage, ns[stage], relaxed_qp_in->Z+stage, ns[stage]+nns[stage]);
         // zl_QP
-        blasfeo_dvecse(nns[stage], 0.0, qp_in->Z+stage, ns[stage]);
+        // blasfeo_dvecse(nns[stage], 0.0, qp_in->Z+stage, ns[stage]);
         blasfeo_dvecse(nns[stage], 0.0, relaxed_qp_in->Z+stage, ns[stage]);
         // zu_QP
-        blasfeo_dvecse(nns[stage], 0.0, qp_in->Z+stage, 2*ns[stage]+nns[stage]);
+        // blasfeo_dvecse(nns[stage], 0.0, qp_in->Z+stage, 2*ns[stage]+nns[stage]);
         blasfeo_dvecse(nns[stage], 0.0, relaxed_qp_in->Z+stage, 2*ns[stage]+nns[stage]);
 
         // printf("qp_in->Z %d\n", stage);
@@ -1529,12 +1528,13 @@ void ocp_nlp_sqp_wfqp_approximate_qp_constraint_vectors(ocp_nlp_config *config,
 
 
 
-static void ocp_nlp_sqp_wfqp_setup_qp_objective(ocp_nlp_config *config,
+static void ocp_nlp_sqp_wfqp_setup_feasibility_qp_objective(ocp_nlp_config *config,
     ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_sqp_wfqp_opts *opts,
-    ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work, double objective_multiplier)
+    ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
 {
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-    ocp_qp_in *qp_in = nlp_mem->qp_in;
+    // ocp_qp_in *qp_in = nlp_mem->qp_in;
+    ocp_qp_in *qp_in = mem->relaxed_qp_in;
     // TODO: ocp_qp_in *qp_in = mem->relaxed_qp_in;
     int N = dims->N;
 
@@ -1554,35 +1554,28 @@ static void ocp_nlp_sqp_wfqp_setup_qp_objective(ocp_nlp_config *config,
         nxu = nx[i]+nu[i];
         // TODO: axpby for matrices? Do we need to take slacks here into account as well? I.e., scale slack Hessian?
         // NOTE: I think this TODO is from before we switched to using objective multiplier and it should be fine now.
-        if (objective_multiplier == 0.0)
-        {
-            if (opts->use_exact_hessian_in_feas_qp)
-            {
-                // Either we use the exact objective Hessian
-                blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, qp_in->RSQrq+i, 0, 0);
-                blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, qp_in->RSQrq+i, 0, 0);
-            }
-            else
-            {
-                // We use the identity matrix Hessian
-                blasfeo_dgese(nxu, nxu, 0.0, qp_in->RSQrq+i, 0, 0);
-                blasfeo_ddiare(nxu, 1e-4, qp_in->RSQrq+i, 0, 0);
-            }
-        }
-        else
-        {
-            blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, qp_in->RSQrq+i, 0, 0);
-            //
-            blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, qp_in->RSQrq+i, 0, 0);
-        }
+
+        // if (opts->use_exact_hessian_in_feas_qp)
+        // {
+        //     // Either we use the exact objective Hessian
+        //     blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, qp_in->RSQrq+i, 0, 0);
+        //     blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, qp_in->RSQrq+i, 0, 0);
+        // }
+        // else
+        // {
+        // We use the identity matrix Hessian
+        blasfeo_dgese(nxu, nxu, 0.0, qp_in->RSQrq+i, 0, 0);
+        blasfeo_ddiare(nxu, 1e-4, qp_in->RSQrq+i, 0, 0);
+        // }
+
         // Z -- slack matrix
-        blasfeo_dveccpsc(ns[i], objective_multiplier, mem->Z_cost_module+i, 0, qp_in->Z+i, 0);
-        blasfeo_dveccpsc(ns[i], objective_multiplier, mem->Z_cost_module+i, 0, qp_in->Z+i, ns[i]+mem->nns[i]);
+        blasfeo_dveccpsc(ns[i], 0.0, mem->Z_cost_module+i, 0, qp_in->Z+i, 0);
+        blasfeo_dveccpsc(ns[i], 0.0, mem->Z_cost_module+i, 0, qp_in->Z+i, ns[i]+mem->nns[i]);
 
         /* vectors */
         // g
-        blasfeo_dveccpsc(nx[i]+nu[i]+ns[i], objective_multiplier, nlp_mem->cost_grad + i, 0, qp_in->rqz + i, 0);
-        blasfeo_dveccpsc(ns[i], objective_multiplier, nlp_mem->cost_grad + i, nx[i]+nu[i]+ns[i], qp_in->rqz + i, nx[i]+nu[i]+ns[i]+nns[i]);
+        blasfeo_dveccpsc(nx[i]+nu[i]+ns[i], 0.0, nlp_mem->cost_grad + i, 0, qp_in->rqz + i, 0);
+        blasfeo_dveccpsc(ns[i], 0.0, nlp_mem->cost_grad + i, nx[i]+nu[i]+ns[i], qp_in->rqz + i, nx[i]+nu[i]+ns[i]+nns[i]);
     }
 }
 
@@ -1606,14 +1599,14 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
         qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
     }
     // Load input to QP and regularize Hessian
-    if (solve_feasibility_qp)
-    {
-        ocp_nlp_sqp_wfqp_setup_qp_objective(config, dims, nlp_in, nlp_out, opts, mem, nlp_work, 0.0);
-    }
-    else
-    {
-        ocp_nlp_sqp_wfqp_setup_qp_objective(config, dims, nlp_in, nlp_out, opts, mem, nlp_work, nlp_mem->objective_multiplier);
-    }
+    // if (solve_feasibility_qp)
+    // {
+    //     ocp_nlp_sqp_wfqp_setup_qp_objective(config, dims, nlp_in, nlp_out, opts, mem, nlp_work, 0.0);
+    // }
+    // else
+    // {
+    //     ocp_nlp_sqp_wfqp_setup_qp_objective(config, dims, nlp_in, nlp_out, opts, mem, nlp_work, nlp_mem->objective_multiplier);
+    // }
     // TODO: if we solve the feasibility QP, we probably do not need or want the LM term?
     // TODO: discuss this!
     ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter);
@@ -2192,8 +2185,6 @@ static void set_standard_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp
 	mem->relaxed_qp_in->DCt = qp_in->DCt; // inequality constraints matrix
 	mem->relaxed_qp_in->d_mask = qp_in->d_mask; // inequality constraints matrix
     // mem->relaxed_qp_in->b = qp_in->b; TODO: maybe we should copy this again!
-
-    // mem->relaxed_qp_in->idxs_rev = mem->nlp_idxs_rev; // TODO: This is wrong vector!!!
     mem->relaxed_qp_in->idxb = qp_in->idxb;
     mem->relaxed_qp_in->idxe = qp_in->idxe;
     mem->relaxed_qp_in->diag_H_flag = qp_in->diag_H_flag;
@@ -2299,8 +2290,11 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     set_standard_qp_in_matrix_pointers(mem, qp_in);
 
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+    // feasibility QP objective is always constant!
+    ocp_nlp_sqp_wfqp_setup_feasibility_qp_objective(config, dims, nlp_in, nlp_out, opts, mem, nlp_work);
+
     set_non_slacked_l2_penalties(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
-    set_non_slacked_l1_penalties(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, true);
+    set_non_slacked_l1_penalties(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
     set_feasibility_multipliers(dims, mem, nlp_out);
 
     /************************************************
@@ -2328,6 +2322,9 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             ocp_nlp_sqp_wfqp_prepare_hessian_evaluation(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
             acados_tic(&timer1);
             ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+            // update nominal QP rhs for SQP (step prim var, abs dual var)
+            ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+            // set the vector for feasibility QP
             ocp_nlp_sqp_wfqp_approximate_qp_constraint_vectors(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
 
             if (nlp_opts->with_adaptive_levenberg_marquardt || config->globalization->needs_objective_value() == 1)
