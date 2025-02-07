@@ -60,116 +60,116 @@
 /*************************************************
 * Allocate the memory for the standard QP solver
 **************************************************/
-static void setup_standard_qp_solver_dimensions(
-    ocp_nlp_sqp_wfqp_memory *mem,
-    ocp_nlp_config *config,
-    ocp_nlp_dims *dims,
-    ocp_nlp_sqp_wfqp_opts *opts)
-{
-    int N = dims->N;
-    int tmp_int, i;
+// static void setup_standard_qp_solver_dimensions(
+//     ocp_nlp_sqp_wfqp_memory *mem,
+//     ocp_nlp_config *config,
+//     ocp_nlp_dims *dims,
+//     ocp_nlp_sqp_wfqp_opts *opts)
+// {
+//     int N = dims->N;
+//     int tmp_int, i;
 
-    /* dimensions that are the same as for QP solver */
-    for (i = 0; i <= N; i++)
-    {
-        mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nx", dims->nx+i);
-        mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nu", dims->nu+i);
-        // nbx
-        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nbx", &tmp_int);
-        mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nbx", &tmp_int);
-        // nbu
-        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nbu", &tmp_int);
-        mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nbu", &tmp_int);
-        // ng
-        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "ng_qp_solver", &tmp_int);
-        mem->standard_qp_solver->dims_set(config->qp_solver, mem->standard_qp_solver_dims, i, "ng", &tmp_int);
-        // nbue
-        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nbue", &tmp_int);
-        mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nbue", &tmp_int);
+//     /* dimensions that are the same as for QP solver */
+//     for (i = 0; i <= N; i++)
+//     {
+//         mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nx", dims->nx+i);
+//         mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nu", dims->nu+i);
+//         // nbx
+//         config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nbx", &tmp_int);
+//         mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nbx", &tmp_int);
+//         // nbu
+//         config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nbu", &tmp_int);
+//         mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nbu", &tmp_int);
+//         // ng
+//         config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "ng_qp_solver", &tmp_int);
+//         mem->standard_qp_solver->dims_set(config->qp_solver, mem->standard_qp_solver_dims, i, "ng", &tmp_int);
+//         // nbue
+//         config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nbue", &tmp_int);
+//         mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nbue", &tmp_int);
 
-        // nbxe
-        // TODO: add warning / error if nonzero for i > 0?
-        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nbxe", &tmp_int);
-        mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nbxe", &tmp_int);
-        // nge
-        // TODO: add warning / error if nonzero, otherwise there is a slacked equality.
-        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nge_qp_solver", &tmp_int);
-        mem->standard_qp_solver->dims_set(config->qp_solver, mem->standard_qp_solver_dims, i, "nge", &tmp_int);
-    }
-    /* slack dims standard QP solver correspond to NLP dims */
-    for (i = 0; i <= N; i++)
-    {
-        // nsbx
-        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsbx", &tmp_int);
-        mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nsbx", &tmp_int);
-        // nsbu
-        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsbu", &tmp_int);
-        mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nsbu", &tmp_int);
-        // nsg_qp
-        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsg_qp_solver", &tmp_int);
-        mem->standard_qp_solver->dims_set(config->qp_solver, mem->standard_qp_solver_dims, i, "nsg", &tmp_int);
-        // ns
-        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "ns", &tmp_int);
-        mem->standard_qp_solver->dims_set(config->qp_solver, mem->standard_qp_solver_dims, i, "ns", &tmp_int);
-    }
-}
+//         // nbxe
+//         // TODO: add warning / error if nonzero for i > 0?
+//         config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nbxe", &tmp_int);
+//         mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nbxe", &tmp_int);
+//         // nge
+//         // TODO: add warning / error if nonzero, otherwise there is a slacked equality.
+//         config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nge_qp_solver", &tmp_int);
+//         mem->standard_qp_solver->dims_set(config->qp_solver, mem->standard_qp_solver_dims, i, "nge", &tmp_int);
+//     }
+//     /* slack dims standard QP solver correspond to NLP dims */
+//     for (i = 0; i <= N; i++)
+//     {
+//         // nsbx
+//         config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsbx", &tmp_int);
+//         mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nsbx", &tmp_int);
+//         // nsbu
+//         config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsbu", &tmp_int);
+//         mem->standard_qp_solver->dims_set(mem->standard_qp_solver, mem->standard_qp_solver_dims, i, "nsbu", &tmp_int);
+//         // nsg_qp
+//         config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsg_qp_solver", &tmp_int);
+//         mem->standard_qp_solver->dims_set(config->qp_solver, mem->standard_qp_solver_dims, i, "nsg", &tmp_int);
+//         // ns
+//         config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "ns", &tmp_int);
+//         mem->standard_qp_solver->dims_set(config->qp_solver, mem->standard_qp_solver_dims, i, "ns", &tmp_int);
+//     }
+// }
 
-static void allocate_standard_qp_solver(ocp_nlp_sqp_wfqp_memory *mem,
-    ocp_nlp_config *config,
-    ocp_nlp_dims *dims,
-    ocp_nlp_sqp_wfqp_opts *opts)
-{
-    int N = config->N;
-    acados_size_t size = ocp_qp_xcond_solver_config_calculate_size();
-    void* memsize = malloc(size);
-    mem->standard_qp_solver = ocp_qp_xcond_solver_config_assign(memsize);
-    ocp_qp_xcond_solver_config_initialize_from_plan(PARTIAL_CONDENSING_HPIPM, mem->standard_qp_solver);
+// static void allocate_standard_qp_solver(ocp_nlp_sqp_wfqp_memory *mem,
+//     ocp_nlp_config *config,
+//     ocp_nlp_dims *dims,
+//     ocp_nlp_sqp_wfqp_opts *opts)
+// {
+//     int N = config->N;
+//     acados_size_t size = ocp_qp_xcond_solver_config_calculate_size();
+//     void* memsize = malloc(size);
+//     mem->standard_qp_solver = ocp_qp_xcond_solver_config_assign(memsize);
+//     ocp_qp_xcond_solver_config_initialize_from_plan(PARTIAL_CONDENSING_HPIPM, mem->standard_qp_solver);
 
-    // allocate xcond_solver_dims
-    size = ocp_qp_xcond_solver_dims_calculate_size(mem->standard_qp_solver, N);
-    memsize = malloc(size);
-    mem->standard_qp_solver_dims = ocp_qp_xcond_solver_dims_assign(mem->standard_qp_solver, N, memsize);
+//     // allocate xcond_solver_dims
+//     size = ocp_qp_xcond_solver_dims_calculate_size(mem->standard_qp_solver, N);
+//     memsize = malloc(size);
+//     mem->standard_qp_solver_dims = ocp_qp_xcond_solver_dims_assign(mem->standard_qp_solver, N, memsize);
 
-    // Setup the solver dimensions
-    setup_standard_qp_solver_dimensions(mem, config, dims, opts);
+//     // Setup the solver dimensions
+//     setup_standard_qp_solver_dimensions(mem, config, dims, opts);
 
-    // Allocate ocp_qp_xcond_solver_memory
-    size = ocp_qp_xcond_solver_memory_calculate_size(mem->standard_qp_solver,
-                                                     mem->standard_qp_solver_dims,
-                                                     opts->nlp_opts->qp_solver_opts);
-    memsize = malloc(size);
-    mem->standard_qp_solver_mem = ocp_qp_xcond_solver_memory_assign(mem->standard_qp_solver,
-                                                                    mem->standard_qp_solver_dims,
-                                                                    opts->nlp_opts->qp_solver_opts,
-                                                                    memsize);
+//     // Allocate ocp_qp_xcond_solver_memory
+//     size = ocp_qp_xcond_solver_memory_calculate_size(mem->standard_qp_solver,
+//                                                      mem->standard_qp_solver_dims,
+//                                                      opts->nlp_opts->qp_solver_opts);
+//     memsize = malloc(size);
+//     mem->standard_qp_solver_mem = ocp_qp_xcond_solver_memory_assign(mem->standard_qp_solver,
+//                                                                     mem->standard_qp_solver_dims,
+//                                                                     opts->nlp_opts->qp_solver_opts,
+//                                                                     memsize);
 
-    // allocate ocp_qp_xcond_solver_workspace
-    size = ocp_qp_xcond_solver_workspace_calculate_size(mem->standard_qp_solver,
-                                                        mem->standard_qp_solver_dims,
-                                                        opts->nlp_opts->qp_solver_opts);
-    mem->standard_qp_solver_work = malloc(size);
+//     // allocate ocp_qp_xcond_solver_workspace
+//     size = ocp_qp_xcond_solver_workspace_calculate_size(mem->standard_qp_solver,
+//                                                         mem->standard_qp_solver_dims,
+//                                                         opts->nlp_opts->qp_solver_opts);
+//     mem->standard_qp_solver_work = malloc(size);
 
-    // Don't allocate solver opts, use same as before.
+//     // Don't allocate solver opts, use same as before.
 
-    // Allocate qp_in
-    size = ocp_qp_in_calculate_size(mem->standard_qp_solver_dims->orig_dims);
-    memsize = malloc(size);
-    mem->standard_qp_in = ocp_qp_in_assign(mem->standard_qp_solver_dims->orig_dims, memsize);
-    printf("QP_in succesfully allocated!\n");
+//     // Allocate qp_in
+//     size = ocp_qp_in_calculate_size(mem->standard_qp_solver_dims->orig_dims);
+//     memsize = malloc(size);
+//     mem->standard_qp_in = ocp_qp_in_assign(mem->standard_qp_solver_dims->orig_dims, memsize);
+//     printf("QP_in succesfully allocated!\n");
 
-    // Allocate qp_out
-    size = ocp_qp_out_calculate_size(mem->standard_qp_solver_dims->orig_dims);
-    memsize = malloc(size);
-    mem->standard_qp_out = ocp_qp_out_assign(mem->standard_qp_solver_dims->orig_dims, memsize);
-    printf("QP_out succesfully allocated!\n");
+//     // Allocate qp_out
+//     size = ocp_qp_out_calculate_size(mem->standard_qp_solver_dims->orig_dims);
+//     memsize = malloc(size);
+//     mem->standard_qp_out = ocp_qp_out_assign(mem->standard_qp_solver_dims->orig_dims, memsize);
+//     printf("QP_out succesfully allocated!\n");
 
-    // nominal
-    // mem->nominal_qp_solver.config = mem->standard_qp_solver;
-    // mem->nominal_qp_solver.dims = mem->standard_qp_solver_dims;
-    // mem->nominal_qp_solver.opts = opts->nlp_opts->qp_solver_opts;
-    // mem->nominal_qp_solver.mem = mem->standard_qp_solver_mem;
-    // mem->nominal_qp_solver.work = mem->standard_qp_solver_work;
-}
+//     // nominal
+//     // mem->nominal_qp_solver.config = mem->standard_qp_solver;
+//     // mem->nominal_qp_solver.dims = mem->standard_qp_solver_dims;
+//     // mem->nominal_qp_solver.opts = opts->nlp_opts->qp_solver_opts;
+//     // mem->nominal_qp_solver.mem = mem->standard_qp_solver_mem;
+//     // mem->nominal_qp_solver.work = mem->standard_qp_solver_work;
+// }
 
 /************************************************
  * options
@@ -1209,81 +1209,81 @@ static void set_feasibility_multipliers(ocp_nlp_dims *dims,
 }
 
 
-static double compute_gradient_directional_derivative(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
-{
-    // Compute the directional derivative of the user-specified objective in the direction qp_out
-    double dir_der = 0.0;
-    int i, nux;
-    int N = dims->N;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *ns = dims->ns;
-    int *nns = mem->nns;
-    // Sum over stages 0 to N
-    for (i = 0; i <= N; i++)
-    {
-        nux = nx[i] + nu[i];
-        // Calculate g.T d
-        dir_der += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
+// static double compute_gradient_directional_derivative(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
+// {
+//     // Compute the directional derivative of the user-specified objective in the direction qp_out
+//     double dir_der = 0.0;
+//     int i, nux;
+//     int N = dims->N;
+//     int *nx = dims->nx;
+//     int *nu = dims->nu;
+//     int *ns = dims->ns;
+//     int *nns = mem->nns;
+//     // Sum over stages 0 to N
+//     for (i = 0; i <= N; i++)
+//     {
+//         nux = nx[i] + nu[i];
+//         // Calculate g.T d
+//         dir_der += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
 
-        // Calculate gradient of slacks.T d_slacks
-        // First part of slacks
-        dir_der += blasfeo_ddot(ns[i], &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
-        // Second part of slacks
-        dir_der += blasfeo_ddot(ns[i], &qp_out->ux[i], nux+ns[i]+nns[i], &qp_in->rqz[i], nux+ns[i]+nns[i]);
-    }
-    return dir_der;
-}
+//         // Calculate gradient of slacks.T d_slacks
+//         // First part of slacks
+//         dir_der += blasfeo_ddot(ns[i], &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
+//         // Second part of slacks
+//         dir_der += blasfeo_ddot(ns[i], &qp_out->ux[i], nux+ns[i]+nns[i], &qp_in->rqz[i], nux+ns[i]+nns[i]);
+//     }
+//     return dir_der;
+// }
 
 
 
-static double compute_qp_objective_value(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims,
-                                  ocp_qp_in *qp_in,
-                                  ocp_qp_out *qp_out,
-                                  ocp_nlp_workspace *nlp_work)
-{
-    // Compute the QP objective function value corresponding to the user specified objective.
-    double qp_cost = 0.0;
-    int i, nux, ns, nns;
-    int N = dims->N;
-    // Sum over stages 0 to N
-    for (i = 0; i <= N; i++)
-    {
-        nux = dims->nx[i] + dims->nu[i];
-        ns = dims->ns[i];
-        nns = mem->nns[i];
-        // Calculate 0.5 * d.T H d
-        blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0,
-                        0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
-        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
+// static double compute_qp_objective_value(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims,
+//                                   ocp_qp_in *qp_in,
+//                                   ocp_qp_out *qp_out,
+//                                   ocp_nlp_workspace *nlp_work)
+// {
+//     // Compute the QP objective function value corresponding to the user specified objective.
+//     double qp_cost = 0.0;
+//     int i, nux, ns, nns;
+//     int N = dims->N;
+//     // Sum over stages 0 to N
+//     for (i = 0; i <= N; i++)
+//     {
+//         nux = dims->nx[i] + dims->nu[i];
+//         ns = dims->ns[i];
+//         nns = mem->nns[i];
+//         // Calculate 0.5 * d.T H d
+//         blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0,
+//                         0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
+//         qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
 
-        // slack QP objective value, compare to computation in cost modules;
-        // lower
-        // tmp_nv = 2 * z + Z .* slack;
-        blasfeo_dveccpsc(ns, 2.0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
-        blasfeo_dvecmulacc(ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
-        // qp_cost += .5 * (tmp_nv .* slack)
-        qp_cost += 0.5 * blasfeo_ddot(ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux);
+//         // slack QP objective value, compare to computation in cost modules;
+//         // lower
+//         // tmp_nv = 2 * z + Z .* slack;
+//         blasfeo_dveccpsc(ns, 2.0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
+//         blasfeo_dvecmulacc(ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
+//         // qp_cost += .5 * (tmp_nv .* slack)
+//         qp_cost += 0.5 * blasfeo_ddot(ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux);
 
-        // upper
-        // tmp_nv = 2 * z + Z .* slack;
-        blasfeo_dveccpsc(ns, 2.0, &qp_out->ux[i], nux+ns+nns, &nlp_work->tmp_nv, 0);
-        blasfeo_dvecmulacc(ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux+ns+nns, &nlp_work->tmp_nv, 0);
-        // qp_cost += .5 * (tmp_nv .* slack)
-        qp_cost += 0.5 * blasfeo_ddot(ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux+ns+nns);
+//         // upper
+//         // tmp_nv = 2 * z + Z .* slack;
+//         blasfeo_dveccpsc(ns, 2.0, &qp_out->ux[i], nux+ns+nns, &nlp_work->tmp_nv, 0);
+//         blasfeo_dvecmulacc(ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux+ns+nns, &nlp_work->tmp_nv, 0);
+//         // qp_cost += .5 * (tmp_nv .* slack)
+//         qp_cost += 0.5 * blasfeo_ddot(ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux+ns+nns);
 
-        // Calculate g.T d
-        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
+//         // Calculate g.T d
+//         qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
 
-        // Calculate gradient of slacks.T d_slacks
-        // TODO: either comment or formula is not correct, this computs slack.T * z
-        // lower of slacks
-        qp_cost += blasfeo_ddot(ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
-        // upper of slacks
-        qp_cost += blasfeo_ddot(ns, &qp_out->ux[i], nux+ns+nns, &qp_in->rqz[i], nux+ns+nns);
-    }
-    return qp_cost;
-}
+//         // Calculate gradient of slacks.T d_slacks
+//         // TODO: either comment or formula is not correct, this computs slack.T * z
+//         // lower of slacks
+//         qp_cost += blasfeo_ddot(ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
+//         // upper of slacks
+//         qp_cost += blasfeo_ddot(ns, &qp_out->ux[i], nux+ns+nns, &qp_in->rqz[i], nux+ns+nns);
+//     }
+//     return qp_cost;
+// }
 
 
 
@@ -1929,47 +1929,47 @@ void ocp_nlp_sqp_wfqp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_ou
 Adjusts the bounds of the QP with the given slack variables, such that the
 resulting QP has always a feasible solution.
 */
-static void setup_byrd_omojokun_bounds(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_sqp_wfqp_workspace *work, ocp_nlp_sqp_wfqp_opts* opts, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
-{
-    int N = dims->N;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *ns = dims->ns;
-    int *nns = mem->nns;
+// static void setup_byrd_omojokun_bounds(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_sqp_wfqp_workspace *work, ocp_nlp_sqp_wfqp_opts* opts, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
+// {
+//     int N = dims->N;
+//     int *nx = dims->nx;
+//     int *nu = dims->nu;
+//     int *ns = dims->ns;
+//     int *nns = mem->nns;
 
-    int *nb = qp_in->dim->nb;
-    int *ng = qp_in->dim->ng;
+//     int *nb = qp_in->dim->nb;
+//     int *ng = qp_in->dim->ng;
 
-    int i, j;
-    double tmp_lower, tmp_upper;
+//     int i, j;
+//     double tmp_lower, tmp_upper;
 
-    for (i = 0; i <= N; i++)
-    {
-        // printf("i = %d\n", i);
-        // printf("ns[i] = %d\n", dims->ns[i]);
-        // printf("nns[i] = %d\n", mem->nns[i]);
-        for (j=0; j<mem->nns[i]; ++j)
-        {
-            // printf("j = %d\n", j);
-            int constr_index = mem->idxns[i][j]; //
-            int slack_index = mem->qp_idxs_rev[i][constr_index];
-            // printf("slack_index = %d\n", slack_index);
-            // get lower slack
-            tmp_lower = BLASFEO_DVECEL(qp_out->ux + i, nx[i]+nu[i]+slack_index);
-            // lower_bound - value
-            BLASFEO_DVECEL(qp_in->d+i, constr_index) -= tmp_lower;
+//     for (i = 0; i <= N; i++)
+//     {
+//         // printf("i = %d\n", i);
+//         // printf("ns[i] = %d\n", dims->ns[i]);
+//         // printf("nns[i] = %d\n", mem->nns[i]);
+//         for (j=0; j<mem->nns[i]; ++j)
+//         {
+//             // printf("j = %d\n", j);
+//             int constr_index = mem->idxns[i][j]; //
+//             int slack_index = mem->qp_idxs_rev[i][constr_index];
+//             // printf("slack_index = %d\n", slack_index);
+//             // get lower slack
+//             tmp_lower = BLASFEO_DVECEL(qp_out->ux + i, nx[i]+nu[i]+slack_index);
+//             // lower_bound - value
+//             BLASFEO_DVECEL(qp_in->d+i, constr_index) -= tmp_lower;
 
-            // get upper slack
-            tmp_upper = BLASFEO_DVECEL(qp_out->ux + i, nx[i]+nu[i]+ns[i]+nns[i] + slack_index);
-            // upper bounds have the wrong sign!
-            // it is lower_bounds <= value <= -upper_bounds, therefore plus below
-            // for the slacks with upper bound we have value - slack, therefore
-            // value <= -upper_bound + slack,
-            // therefore we store upper_bound - slack??
-            BLASFEO_DVECEL(qp_in->d+i, nb[i] + ng[i] + constr_index) -= tmp_upper;
-        }
-    }
-}
+//             // get upper slack
+//             tmp_upper = BLASFEO_DVECEL(qp_out->ux + i, nx[i]+nu[i]+ns[i]+nns[i] + slack_index);
+//             // upper bounds have the wrong sign!
+//             // it is lower_bounds <= value <= -upper_bounds, therefore plus below
+//             // for the slacks with upper bound we have value - slack, therefore
+//             // value <= -upper_bound + slack,
+//             // therefore we store upper_bound - slack??
+//             BLASFEO_DVECEL(qp_in->d+i, nb[i] + ng[i] + constr_index) -= tmp_upper;
+//         }
+//     }
+// }
 
 /*
 Solve a standard QP
@@ -2144,7 +2144,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
     // assert(pred_l1_inf_QP_feasibility > -1e2*opts->tol_ineq);
 
     /* Solve the standard QP with updated bounds*/
-    setup_byrd_omojokun_bounds(dims, mem, work, opts, mem->standard_qp_in, qp_out);
+    // setup_byrd_omojokun_bounds(dims, mem, work, opts, mem->standard_qp_in, qp_out);
 
     int search_direction_status = 0;
     // int search_direction_status = standard_qp_direction(dims,
@@ -2168,16 +2168,16 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
 *********************************/
 static void set_standard_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp_qp_in *qp_in)
 {
-    mem->standard_qp_in->BAbt = qp_in->BAbt; // dynamics matrix & vector work space
-	mem->standard_qp_in->RSQrq = qp_in->RSQrq; // hessian of cost & vector work space
-	mem->standard_qp_in->DCt = qp_in->DCt; // inequality constraints matrix
-	mem->standard_qp_in->d_mask = qp_in->d_mask; // inequality constraints matrix
+    // mem->standard_qp_in->BAbt = qp_in->BAbt; // dynamics matrix & vector work space
+	// mem->standard_qp_in->RSQrq = qp_in->RSQrq; // hessian of cost & vector work space
+	// mem->standard_qp_in->DCt = qp_in->DCt; // inequality constraints matrix
+	// mem->standard_qp_in->d_mask = qp_in->d_mask; // inequality constraints matrix
 
-    // mem->standard_qp_in->idxs_rev = mem->nlp_idxs_rev; // TODO: This is wrong vector!!!
-    mem->standard_qp_in->idxb = qp_in->idxb;
-    mem->standard_qp_in->idxe = qp_in->idxe;
-    mem->standard_qp_in->diag_H_flag = qp_in->diag_H_flag;
-    mem->standard_qp_in->m = qp_in->m; // TODO: Not sure what happens here
+    // // mem->standard_qp_in->idxs_rev = mem->nlp_idxs_rev; // TODO: This is wrong vector!!!
+    // mem->standard_qp_in->idxb = qp_in->idxb;
+    // mem->standard_qp_in->idxe = qp_in->idxe;
+    // mem->standard_qp_in->diag_H_flag = qp_in->diag_H_flag;
+    // mem->standard_qp_in->m = qp_in->m; // TODO: Not sure what happens here
     // TODO: if we have slacks in the original QP how is this transferred here??
 
     mem->relaxed_qp_in->BAbt = qp_in->BAbt; // dynamics matrix & vector work space
@@ -2191,52 +2191,52 @@ static void set_standard_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp
     mem->relaxed_qp_in->m = qp_in->m; // TODO: Not sure what happens here
 }
 
-static void approximate_standard_qp_vectors(ocp_nlp_config *config,
-    ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
-    ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
-{
-    int N = dims->N;
-    int *nv = dims->nv;
-    int *nx = dims->nx;
-    // int *nu = dims->nu;
-    int *ni = dims->ni;
-    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+// static void approximate_standard_qp_vectors(ocp_nlp_config *config,
+//     ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+//     ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
+// {
+//     int N = dims->N;
+//     int *nv = dims->nv;
+//     int *nx = dims->nx;
+//     // int *nu = dims->nu;
+//     int *ni = dims->ni;
+//     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
-    for (int i = 0; i <= N; i++)
-    {
-        // g
-        blasfeo_dveccp(nv[i], nlp_mem->cost_grad + i, 0, mem->standard_qp_in->rqz + i, 0);
-        // TODO: blasfeo_dveccp(nv[i], nlp_mem->cost_grad + i, 0, nlp_mem->qp_in->rqz + i, 0);
+// #if defined(ACADOS_WITH_OPENMP)
+//     #pragma omp parallel for
+// #endif
+//     for (int i = 0; i <= N; i++)
+//     {
+//         // g
+//         blasfeo_dveccp(nv[i], nlp_mem->cost_grad + i, 0, mem->standard_qp_in->rqz + i, 0);
+//         // TODO: blasfeo_dveccp(nv[i], nlp_mem->cost_grad + i, 0, nlp_mem->qp_in->rqz + i, 0);
 
-        // b
-        if (i < N)
-            blasfeo_dveccp(nx[i + 1], nlp_mem->dyn_fun + i, 0, mem->standard_qp_in->b + i, 0);
-            // TODO: blasfeo_dveccp(nx[i + 1], nlp_mem->dyn_fun + i, 0, nlp_mem->qp_in->b + i, 0);
+//         // b
+//         if (i < N)
+//             blasfeo_dveccp(nx[i + 1], nlp_mem->dyn_fun + i, 0, mem->standard_qp_in->b + i, 0);
+//             // TODO: blasfeo_dveccp(nx[i + 1], nlp_mem->dyn_fun + i, 0, nlp_mem->qp_in->b + i, 0);
 
-        // evaluate constraint residuals
-        config->constraints[i]->update_qp_vectors(config->constraints[i], dims->constraints[i],
-            in->constraints[i], opts->constraints[i], nlp_mem->constraints[i], work->constraints[i]);
+//         // evaluate constraint residuals
+//         config->constraints[i]->update_qp_vectors(config->constraints[i], dims->constraints[i],
+//             in->constraints[i], opts->constraints[i], nlp_mem->constraints[i], work->constraints[i]);
 
-        // copy ineq function value into nlp mem, then into QP
-        struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
-        blasfeo_dveccp(2 * ni[i], ineq_fun, 0, nlp_mem->ineq_fun + i, 0);
+//         // copy ineq function value into nlp mem, then into QP
+//         struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
+//         blasfeo_dveccp(2 * ni[i], ineq_fun, 0, nlp_mem->ineq_fun + i, 0);
 
-        // d
-        blasfeo_dveccp(2 * ni[i], nlp_mem->ineq_fun + i, 0, mem->standard_qp_in->d + i, 0);
-        // TODO: blasfeo_dveccp(2 * ni[i], nlp_mem->ineq_fun + i, 0, nlp_mem->qp_in->d + i, 0);
-    }
-}
+//         // d
+//         blasfeo_dveccp(2 * ni[i], nlp_mem->ineq_fun + i, 0, mem->standard_qp_in->d + i, 0);
+//         // TODO: blasfeo_dveccp(2 * ni[i], nlp_mem->ineq_fun + i, 0, nlp_mem->qp_in->d + i, 0);
+//     }
+// }
 
-static void destroy_standard_qp_solver_memory(ocp_nlp_sqp_wfqp_memory *mem)
-{
-    free(mem->standard_qp_solver);
-    free(mem->standard_qp_solver_dims);
-    free(mem->standard_qp_in);
-    free(mem->standard_qp_out);
-}
+// static void destroy_standard_qp_solver_memory(ocp_nlp_sqp_wfqp_memory *mem)
+// {
+//     free(mem->standard_qp_solver);
+//     free(mem->standard_qp_solver_dims);
+//     free(mem->standard_qp_in);
+//     free(mem->standard_qp_out);
+// }
 
 
 /************************************************
@@ -2286,7 +2286,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     omp_set_num_threads(opts->nlp_opts->num_threads);
 #endif
 
-    allocate_standard_qp_solver(mem, config, dims, opts);
+    // allocate_standard_qp_solver(mem, config, dims, opts);
     set_standard_qp_in_matrix_pointers(mem, qp_in);
 
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
@@ -2338,7 +2338,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             ocp_nlp_sqp_wfqp_res_compute(dims, nlp_in, nlp_out, nlp_res, mem, qp_in);
             ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
 
-            approximate_standard_qp_vectors(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
+            // approximate_standard_qp_vectors(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
         }
 
         // Initialize the memory for different globalization strategies
@@ -2381,7 +2381,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #endif
             nlp_mem->iter = sqp_iter;
             nlp_timings->time_tot = acados_toc(&timer0);
-            destroy_standard_qp_solver_memory(mem); // do I need that? Since config is anyway destroyed in the interface?
+            // destroy_standard_qp_solver_memory(mem); // do I need that? Since config is anyway destroyed in the interface?
             return mem->nlp_mem->status;
         }
 
@@ -2429,7 +2429,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // feasible
             // TODO: can we make this function name more descriptive to avoid the comment above?
             // mem->step_norm = slacked_qp_out_compute_primal_nrm_inf(qp_out, dims, mem);
-            mem->step_norm = ocp_qp_out_compute_primal_nrm_inf(mem->standard_qp_out);
+            // mem->step_norm = ocp_qp_out_compute_primal_nrm_inf(mem->standard_qp_out);
             if (nlp_opts->log_primal_step_norm)
                 mem->primal_step_norm[sqp_iter] = mem->step_norm;
         }
@@ -2439,9 +2439,9 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         if (config->globalization->needs_qp_objective_value() == 1)
         {
             // nlp_mem->qp_cost_value = compute_qp_objective_value(mem, dims, qp_in, qp_out, nlp_work);
-            nlp_mem->qp_cost_value = compute_qp_objective_value(mem, dims, mem->standard_qp_in, mem->standard_qp_out, nlp_work);
-            nlp_mem->predicted_infeasibility_reduction = pred_l1_inf_search_direction;
-            nlp_mem->predicted_optimality_reduction = -compute_gradient_directional_derivative(mem, dims, mem->standard_qp_in, mem->standard_qp_out);
+            // nlp_mem->qp_cost_value = compute_qp_objective_value(mem, dims, mem->standard_qp_in, mem->standard_qp_out, nlp_work);
+            // nlp_mem->predicted_infeasibility_reduction = pred_l1_inf_search_direction;
+            // nlp_mem->predicted_optimality_reduction = -compute_gradient_directional_derivative(mem, dims, mem->standard_qp_in, mem->standard_qp_out);
             // nlp_mem->predicted_optimality_reduction = -compute_gradient_directional_derivative(mem, dims, qp_in, qp_out);
             print_debug_output_double("pred_opt_search_direction: ", nlp_mem->predicted_optimality_reduction, nlp_opts->print_level, 2);
         }
@@ -2449,13 +2449,13 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
         acados_tic(&timer1);
 
-        nlp_work->tmp_qp_out->ux = qp_out->ux;
-        nlp_work->tmp_qp_out->lam = qp_out->lam;
-        nlp_work->tmp_qp_out->pi = qp_out->pi;
+        // nlp_work->tmp_qp_out->ux = qp_out->ux;
+        // nlp_work->tmp_qp_out->lam = qp_out->lam;
+        // nlp_work->tmp_qp_out->pi = qp_out->pi;
 
-        qp_out->ux = mem->standard_qp_out->ux;
-        qp_out->lam = mem->standard_qp_out->lam;
-        qp_out->pi = mem->standard_qp_out->pi;
+        // qp_out->ux = mem->standard_qp_out->ux;
+        // qp_out->lam = mem->standard_qp_out->lam;
+        // qp_out->pi = mem->standard_qp_out->pi;
 
 
         int globalization_status;
@@ -2463,9 +2463,9 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                                                               nlp_out, nlp_mem, mem,
                                                                               nlp_work, nlp_opts, &mem->alpha);
 
-        qp_out->ux = nlp_work->tmp_qp_out->ux;
-        qp_out->lam = nlp_work->tmp_qp_out->lam;
-        qp_out->pi = nlp_work->tmp_qp_out->pi;
+        // qp_out->ux = nlp_work->tmp_qp_out->ux;
+        // qp_out->lam = nlp_work->tmp_qp_out->lam;
+        // qp_out->pi = nlp_work->tmp_qp_out->pi;
 
         if (globalization_status != ACADOS_SUCCESS)
         {
