@@ -1566,6 +1566,8 @@ static void ocp_nlp_sqp_wfqp_setup_feasibility_qp_objective(ocp_nlp_config *conf
         // We use the identity matrix Hessian
         blasfeo_dgese(nxu, nxu, 0.0, qp_in->RSQrq+i, 0, 0);
         blasfeo_ddiare(nxu, 1e-4, qp_in->RSQrq+i, 0, 0);
+        // indicate that Hessian is diagonal
+        qp_in->diag_H_flag[i] = 1;
         // }
 
         // Z -- slack matrix
@@ -1576,6 +1578,7 @@ static void ocp_nlp_sqp_wfqp_setup_feasibility_qp_objective(ocp_nlp_config *conf
         // g
         blasfeo_dveccpsc(nx[i]+nu[i]+ns[i], 0.0, nlp_mem->cost_grad + i, 0, qp_in->rqz + i, 0);
         blasfeo_dveccpsc(ns[i], 0.0, nlp_mem->cost_grad + i, nx[i]+nu[i]+ns[i], qp_in->rqz + i, nx[i]+nu[i]+ns[i]+nns[i]);
+
     }
 }
 
@@ -2187,7 +2190,7 @@ static void set_standard_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp
     // mem->relaxed_qp_in->b = qp_in->b; TODO: maybe we should copy this again!
     mem->relaxed_qp_in->idxb = qp_in->idxb;
     mem->relaxed_qp_in->idxe = qp_in->idxe;
-    mem->relaxed_qp_in->diag_H_flag = qp_in->diag_H_flag;
+    // mem->relaxed_qp_in->diag_H_flag = qp_in->diag_H_flag; // set somewhere else!
     mem->relaxed_qp_in->m = qp_in->m; // TODO: Not sure what happens here
 }
 
