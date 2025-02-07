@@ -1489,8 +1489,7 @@ void ocp_nlp_sqp_wfqp_approximate_qp_constraint_vectors(ocp_nlp_config *config,
     ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
 {
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-    // TODO: ocp_qp_in *qp_in = mem->relaxed_qp_in;
-    ocp_qp_in *qp_in = nlp_mem->qp_in;
+    ocp_qp_in *qp_in = mem->relaxed_qp_in;
     int N = dims->N;
 
     // int *nv = dims->nv;
@@ -1505,8 +1504,11 @@ void ocp_nlp_sqp_wfqp_approximate_qp_constraint_vectors(ocp_nlp_config *config,
     for (int i = 0; i <= N; i++)
     {
         // b
+        // TODO: this is the same as for the nominal QP and can be evaluated only once!
         if (i < N)
+        {
             blasfeo_dveccp(nx[i + 1], nlp_mem->dyn_fun + i, 0, qp_in->b + i, 0);
+        }
 
         // evaluate constraint residuals
         config->constraints[i]->update_qp_vectors(config->constraints[i], dims->constraints[i],
@@ -1633,7 +1635,6 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     ocp_nlp_dump_qp_in_to_file(qp_in, sqp_iter, 0);
 #endif
 
-    // int qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, qp_in, qp_out, NULL);
     int qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, qp_in, qp_out, &mem->relaxed_qp_solver);
 
     // restore default warm start
@@ -2190,8 +2191,7 @@ static void set_standard_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp
 	mem->relaxed_qp_in->RSQrq = qp_in->RSQrq; // hessian of cost & vector work space
 	mem->relaxed_qp_in->DCt = qp_in->DCt; // inequality constraints matrix
 	mem->relaxed_qp_in->d_mask = qp_in->d_mask; // inequality constraints matrix
-    mem->relaxed_qp_in->b = qp_in->b;
-    mem->relaxed_qp_in->d = qp_in->d;
+    // mem->relaxed_qp_in->b = qp_in->b; TODO: maybe we should copy this again!
 
     // mem->relaxed_qp_in->idxs_rev = mem->nlp_idxs_rev; // TODO: This is wrong vector!!!
     mem->relaxed_qp_in->idxb = qp_in->idxb;
