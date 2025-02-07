@@ -1617,14 +1617,15 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter);
     // regularize Hessian
     acados_tic(&timer1);
-    config->regularize->regularize(config->regularize, dims->regularize,
-                                            nlp_opts->regularize, nlp_mem->regularize_mem);
+    config->regularize->regularize(config->regularize, dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
     nlp_timings->time_reg += acados_toc(&timer1);
     // Show input to QP
     if (nlp_opts->print_level > 3)
     {
         printf("\n\nSQP: ocp_qp_in at iteration %d\n", sqp_iter);
         print_ocp_qp_dims(qp_in->dim);
+        printf("Built- in qp_in:\n");
+        print_ocp_qp_dims(nlp_mem->qp_in->dim);
         print_ocp_qp_in(qp_in);
     }
 
@@ -1632,7 +1633,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     ocp_nlp_dump_qp_in_to_file(qp_in, sqp_iter, 0);
 #endif
 
-    int qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, qp_in, qp_out, NULL);
+    int qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, nlp_mem->qp_in, qp_out, NULL);
 
     // restore default warm start
     if (sqp_iter==0)
