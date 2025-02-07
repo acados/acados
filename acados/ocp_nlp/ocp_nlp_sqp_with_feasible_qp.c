@@ -561,11 +561,11 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     mem->relaxed_qp_out = ocp_qp_out_assign(dims->relaxed_qp_solver->orig_dims, c_ptr);
     c_ptr += ocp_qp_out_calculate_size(dims->relaxed_qp_solver->orig_dims);
     // nominal
-    // mem->relaxed_qp_solver.config = config->relaxed_qp_solver;
-    // mem->relaxed_qp_solver.dims = dims->relaxed_qp_solver;
-    // mem->relaxed_qp_solver.opts = opts->nlp_opts->qp_solver_opts;
-    // mem->relaxed_qp_solver.mem = mem->relaxed_qp_solver_mem;
-    // mem->relaxed_qp_solver.work = mem->relaxed_qp_solver_work;
+    mem->relaxed_qp_solver.config = config->relaxed_qp_solver;
+    mem->relaxed_qp_solver.dims = dims->relaxed_qp_solver;
+    mem->relaxed_qp_solver.opts = opts->nlp_opts->qp_solver_opts;
+    mem->relaxed_qp_solver.mem = mem->relaxed_qp_solver_mem;
+    mem->relaxed_qp_solver.work = mem->relaxed_qp_solver_work;
 
     // adj_ineq_feasibility
     assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->adj_ineq_feasibility, &c_ptr);
@@ -1633,7 +1633,8 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     ocp_nlp_dump_qp_in_to_file(qp_in, sqp_iter, 0);
 #endif
 
-    int qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, qp_in, qp_out, NULL);
+    // int qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, qp_in, qp_out, NULL);
+    int qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, qp_in, qp_out, &mem->relaxed_qp_solver);
 
     // restore default warm start
     if (sqp_iter==0)

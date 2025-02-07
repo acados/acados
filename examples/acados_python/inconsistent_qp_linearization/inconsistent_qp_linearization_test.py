@@ -52,7 +52,7 @@ def main():
     params = {'globalization': ['FUNNEL_L1PEN_LINESEARCH'],
             #   'nlp_solver_type': ['SQP', 'SQP_WITH_FEASIBLE_QP'],
               'nlp_solver_type': ['SQP_WITH_FEASIBLE_QP'],
-              'init_iterate': [np.array([-0.000])]}
+              'init_iterate': [np.array([0.0])]}
             #   'init_iterate': [np.array([-0.001]), np.array([0.0])]}
 
     # test_residual_computation_sqp_wfqp()

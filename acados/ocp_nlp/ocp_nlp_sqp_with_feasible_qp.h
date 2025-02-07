@@ -149,6 +149,7 @@ typedef struct
     ocp_qp_in *standard_qp_in;
     ocp_qp_out *standard_qp_out;
 
+    ocp_qp_xcond_solver relaxed_qp_solver;
     ocp_qp_xcond_solver_memory *relaxed_qp_solver_mem;
     ocp_qp_xcond_solver_workspace *relaxed_qp_solver_work;
     // qp in & out
