@@ -336,13 +336,14 @@ def export_parametric_ocp(
     ocp.solver_options.nlp_solver_max_iter = nlp_iter
 
     if hessian_approx == "EXACT":
-        ocp.solver_options.globalization_fixed_step_length = 0.0
-        ocp.solver_options.nlp_solver_max_iter = 1
-        ocp.solver_options.qp_solver_iter_max = 200
-        ocp.solver_options.tol = 1e-10
         ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg
         ocp.solver_options.qp_solver_cond_N = ocp.solver_options.N_horizon
         ocp.solver_options.with_solution_sens_wrt_params = True
+        # # Old settings needed, when calling solve() instead of setup_qp_matrices_and_factorize()
+        # ocp.solver_options.globalization_fixed_step_length = 0.0
+        # ocp.solver_options.nlp_solver_max_iter = 1
+        # ocp.solver_options.qp_solver_iter_max = 200
+        # ocp.solver_options.tol = 1e-10
     else:
         ocp.solver_options.nlp_solver_max_iter = nlp_iter
         ocp.solver_options.qp_solver_cond_N = ocp.solver_options.N_horizon
@@ -449,7 +450,7 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
         timings_store_load[i] = time.time() - t_start
 
         # Call sensitivity solver -- factorize exact Hessian QP
-        sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
+        sensitivity_solver.setup_qp_matrices_and_factorize()
         timings_lin_exact_hessian_qp[i] = sensitivity_solver.get_stats("time_lin")
         timings_lin_and_factorize[i] = sensitivity_solver.get_stats("time_tot") - timings_lin_exact_hessian_qp[i]
         print(f"sensitivity_solver status {sensitivity_solver.status}")
