@@ -81,16 +81,15 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
         ocp.solver_options.globalization_fixed_step_length = 1.0
         ocp.solver_options.nlp_solver_max_iter = original_ocp.solver_options.nlp_solver_max_iter
         # to "force" a QP solve
-        ocp.solver_options.tol = 1e-3 * original_ocp.solver_options.tol
+        ocp.solver_options.tol = original_ocp.solver_options.tol
         ocp.solver_options.qp_tol = original_ocp.solver_options.tol
-        ocp.solver_options.print_level = 2
-        ocp.solver_options.nlp_solver_max_iter = 1
+        ocp.solver_options.nlp_solver_max_iter = original_ocp.solver_options.nlp_solver_max_iter
         # QP warm start
-        ocp.solver_options.qp_solver_warm_start = 3
-        ocp.solver_options.nlp_solver_warm_start_first_qp = True
-        ocp.solver_options.nlp_solver_warm_start_first_qp_from_nlp = True
-        # HPIPM settings
-        ocp.solver_options.qp_solver_iter_max = 0
+        # ocp.solver_options.qp_solver_warm_start = 3
+        # ocp.solver_options.nlp_solver_warm_start_first_qp = True
+        # ocp.solver_options.nlp_solver_warm_start_first_qp_from_nlp = True
+        # # HPIPM settings
+        # ocp.solver_options.qp_solver_iter_max = 0
         # ocp.remove_x0_elimination()
 
         sensitivity_solver = AcadosOcpSolver(ocp, json_file=f"{ocp.model.name}.json", generate=generate_solvers, build=generate_solvers)
@@ -132,9 +131,8 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
     sensitivity_solver.load_iterate_from_obj(iterate)
 
     if hp_sens_solver:
-        sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
-        # TODO: use this instead.
-        # sensitivity_solver.setup_qp_matrices_and_factorize()
+        # sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
+        sensitivity_solver.setup_qp_matrices_and_factorize()
 
     else:
         sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
