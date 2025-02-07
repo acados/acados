@@ -52,7 +52,7 @@ def main():
     params = {'globalization': ['FUNNEL_L1PEN_LINESEARCH'],
             #   'nlp_solver_type': ['SQP', 'SQP_WITH_FEASIBLE_QP'],
               'nlp_solver_type': ['SQP_WITH_FEASIBLE_QP'],
-              'init_iterate': [np.array([-0.001])]}
+              'init_iterate': [np.array([-0.000])]}
             #   'init_iterate': [np.array([-0.001]), np.array([0.0])]}
 
     # test_residual_computation_sqp_wfqp()
@@ -120,7 +120,7 @@ def create_solver(setting, GIAF):
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.regularize_method = 'MIRROR'
     ocp.solver_options.integrator_type = 'DISCRETE'
-    ocp.solver_options.print_level = 1
+    ocp.solver_options.print_level = 4
     ocp.solver_options.nlp_solver_type = nlp_solver_type
     ocp.solver_options.globalization = globalization
     ocp.solver_options.globalization_full_step_dual = True

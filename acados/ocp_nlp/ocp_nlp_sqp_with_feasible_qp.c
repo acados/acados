@@ -1633,7 +1633,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     ocp_nlp_dump_qp_in_to_file(qp_in, sqp_iter, 0);
 #endif
 
-    int qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, nlp_mem->qp_in, qp_out, NULL);
+    int qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, qp_in, qp_out, NULL);
 
     // restore default warm start
     if (sqp_iter==0)
@@ -2189,6 +2189,8 @@ static void set_standard_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp
 	mem->relaxed_qp_in->RSQrq = qp_in->RSQrq; // hessian of cost & vector work space
 	mem->relaxed_qp_in->DCt = qp_in->DCt; // inequality constraints matrix
 	mem->relaxed_qp_in->d_mask = qp_in->d_mask; // inequality constraints matrix
+    mem->relaxed_qp_in->b = qp_in->b;
+    mem->relaxed_qp_in->d = qp_in->d;
 
     // mem->relaxed_qp_in->idxs_rev = mem->nlp_idxs_rev; // TODO: This is wrong vector!!!
     mem->relaxed_qp_in->idxb = qp_in->idxb;
