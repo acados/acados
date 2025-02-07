@@ -214,6 +214,10 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
     ocp_qp_xcond_solver_config_initialize_from_plan(plan.ocp_qp_solver_plan.qp_solver,
                                                     config->qp_solver);
 
+    // relaxed QP solver
+    ocp_qp_xcond_solver_config_initialize_from_plan(plan.ocp_qp_solver_plan.qp_solver,
+                                                    config->relaxed_qp_solver);
+
     // regularization
     switch (plan.regularization)
     {

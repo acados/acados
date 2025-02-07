@@ -65,6 +65,9 @@ acados_size_t ocp_nlp_config_calculate_size(int N)
     // qp solver
     size += ocp_qp_xcond_solver_config_calculate_size();
 
+    // relaxed qp solver
+    size += ocp_qp_xcond_solver_config_calculate_size();
+
     // regularization
     size += ocp_nlp_reg_config_calculate_size();
 
@@ -103,6 +106,10 @@ ocp_nlp_config *ocp_nlp_config_assign(int N, void *raw_memory)
 
     // qp solver
     config->qp_solver = ocp_qp_xcond_solver_config_assign(c_ptr);
+    c_ptr += ocp_qp_xcond_solver_config_calculate_size();
+
+    // relaxed qp solver
+    config->relaxed_qp_solver = ocp_qp_xcond_solver_config_assign(c_ptr);
     c_ptr += ocp_qp_xcond_solver_config_calculate_size();
 
     // regularization
@@ -208,6 +215,9 @@ acados_size_t ocp_nlp_dims_calculate_size(void *config_)
 
     // qp solver
     size += config->qp_solver->dims_calculate_size(config->qp_solver, N);
+
+    // relaxed qp solver
+    size += config->relaxed_qp_solver->dims_calculate_size(config->qp_solver, N);
 
     return size;
 }
@@ -359,6 +369,10 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
     // qp solver
     dims->qp_solver = config->qp_solver->dims_assign(config->qp_solver, N, c_ptr);
     c_ptr += config->qp_solver->dims_calculate_size(config->qp_solver, N);
+
+    // relaxed qp solver
+    dims->relaxed_qp_solver = config->relaxed_qp_solver->dims_assign(config->relaxed_qp_solver, N, c_ptr);
+    c_ptr += config->relaxed_qp_solver->dims_calculate_size(config->relaxed_qp_solver, N);
 
     // assert
     assert((char *) raw_memory + ocp_nlp_dims_calculate_size(config_) >= c_ptr);
@@ -607,6 +621,7 @@ static void ocp_nlp_update_qp_solver_ns_from_qp_solver_nsbxug(void *config_, voi
     config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nsg", &tmp_int);
     ns += tmp_int;
     config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, stage, "ns", &ns);
+    config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "ns", &ns);
 }
 
 
@@ -646,10 +661,12 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
         {
             // relaxed qp solver: nb* = nb*
             config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
+            config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, field, int_value);
             if ((!strcmp(field, "nbx")) && (stage != 0))
             {
                 // nsbx_i_relaxed = nbx_i for i > 0;
                 config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nsbx", int_value);
+                config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, "nsbx", int_value);
             }
             ocp_nlp_update_qp_solver_ns_from_qp_solver_nsbxug(config, dims, stage);
         }
@@ -671,6 +688,7 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
             {
                 config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsbx", &tmp_int);
                 config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, &tmp_int);
+                config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, field, &tmp_int);
             }
             ocp_nlp_update_qp_solver_ns_from_qp_solver_nsbxug(config, dims, stage);
         }
@@ -686,6 +704,7 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
         {
             // relaxed_qp_solver: nsbu = nsbu
             config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
+            config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, field, int_value);
             ocp_nlp_update_qp_solver_ns_from_qp_solver_nsbxug(config, dims, stage);
         }
     }
@@ -705,6 +724,8 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
             // relaxed qp solver: nsg = ng;
             config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "ng", &ng_qp_solver);
             config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nsg", &ng_qp_solver);
+            config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, "ng", &ng_qp_solver);
+            config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, "nsg", &ng_qp_solver);
             ocp_nlp_update_qp_solver_ns_from_qp_solver_nsbxug(config, dims, stage);
         }
 
@@ -721,6 +742,7 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
 
             // qp solver
             config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nsg", &nsg_qp_solver);
+            config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, "nsg", &nsg_qp_solver);
         }
     }
     else if (!strcmp(field, "nbxe"))
@@ -739,6 +761,7 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
                 exit(1);
             }
             config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
+            config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, field, int_value);
         }
     }
     else if (!strcmp(field, "nbue"))

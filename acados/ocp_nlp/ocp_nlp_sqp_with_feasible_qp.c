@@ -1260,25 +1260,25 @@ If the problem is infeasibe, or the algorithm converges towards an infeasible po
 then the step size would not converge to 0 for our additional slack variables (since we do not do a delta
 update in the master problem).
 */
-static double slacked_qp_out_compute_primal_nrm_inf(ocp_qp_out* qp_out, ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory* mem)
-{
-    double res = 0;
-    double res_stage = 0;
-    int N = dims->N;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *ns = dims->ns;
-    int *nns = mem->nns;
+// static double slacked_qp_out_compute_primal_nrm_inf(ocp_qp_out* qp_out, ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory* mem)
+// {
+//     double res = 0;
+//     double res_stage = 0;
+//     int N = dims->N;
+//     int *nx = dims->nx;
+//     int *nu = dims->nu;
+//     int *ns = dims->ns;
+//     int *nns = mem->nns;
 
-    for (int i = 0; i <= N; i++)
-    {
-        blasfeo_dvecnrm_inf(nx[i]+nu[i]+ns[i], qp_out->ux+i, 0, &res_stage);
-        res += res_stage;
-        blasfeo_dvecnrm_inf(ns[i], qp_out->ux+i, nx[i]+nu[i]+ns[i]+nns[i], &res_stage);
-        res += res_stage;
-    }
-    return res;
-}
+//     for (int i = 0; i <= N; i++)
+//     {
+//         blasfeo_dvecnrm_inf(nx[i]+nu[i]+ns[i], qp_out->ux+i, 0, &res_stage);
+//         res += res_stage;
+//         blasfeo_dvecnrm_inf(ns[i], qp_out->ux+i, nx[i]+nu[i]+ns[i]+nns[i], &res_stage);
+//         res += res_stage;
+//     }
+//     return res;
+// }
 
 // /*
 // calculates new iterate or trial iterate in 'out_destination' with step 'mem->qp_out',
@@ -1905,9 +1905,8 @@ static void setup_byrd_omojokun_bounds(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memo
     int *nb = qp_in->dim->nb;
     int *ng = qp_in->dim->ng;
 
-    double l1_inf = 0.0;
     int i, j;
-    double tmp_lower, tmp_upper, tmp_bound, mask_value;
+    double tmp_lower, tmp_upper;
 
     for (i = 0; i <= N; i++)
     {
@@ -1957,13 +1956,11 @@ static int standard_qp_direction(ocp_nlp_dims *dims,
     ocp_nlp_workspace* nlp_work = work->nlp_work;
     ocp_qp_in *qp_in = mem->standard_qp_in;
     ocp_qp_out *qp_out = mem->standard_qp_out;
-    int qp_status, qp_iter;
+    int qp_status;
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
-    qp_info* qp_info_;
     ocp_qp_xcond_solver_config *qp_solver = mem->standard_qp_solver;
 
-    double pred_l1_inf_QP_feasibility;
-    double l1_inf_QP_optimality, l1_inf_QP_feasibility;
+    double l1_inf_QP_optimality;
 
     /* Solve QP: We solve the standard l1-relaxed QP with gradient */
     // (typically) no warm start at first iteration
@@ -2062,14 +2059,13 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
     ocp_nlp_workspace* nlp_work = work->nlp_work;
     ocp_qp_in *qp_in = nlp_mem->qp_in;
     ocp_qp_out *qp_out = nlp_mem->qp_out;
-    int qp_status, qp_iter;
+    int qp_status;
+    int qp_iter = 0;
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
     qp_info* qp_info_;
 
     double pred_l1_inf_QP_feasibility;
-    double l1_inf_QP_optimality, l1_inf_QP_feasibility;
-
-    double kappa;
+    double l1_inf_QP_feasibility;
 
     print_debug_output("Solve Feasibility QP!\n", nlp_opts->print_level, 2);
     /* Solve steering QP: We solve without gradient and only with constraint Hessian */
@@ -2077,6 +2073,10 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
                 nlp_mem, nlp_work, sqp_iter, true, timer0, timer1);
     ocp_qp_out_get(nlp_work->tmp_qp_out, "qp_info", &qp_info_);
     qp_iter += qp_info_->num_iter;
+    if (qp_status == 0)
+    {
+        printf("Feasibility QP succesfully solved!\n");
+    }
     if (qp_status != ACADOS_SUCCESS)
     {
         if (nlp_opts->print_level >=1)
@@ -2121,7 +2121,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
                                                         timer0,
                                                         timer1);
 
-    return 0;
+    return search_direction_status;
 }
 
 /********************************
