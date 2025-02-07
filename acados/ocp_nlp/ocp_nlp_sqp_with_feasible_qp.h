@@ -105,8 +105,8 @@ typedef struct
 
     int *nns;  // number of non-slacked constraints in NLP
     int **idxns;  // indices of non-slacked constraints in NLP
-    int **nlp_idxs_rev;  // reverse storage of slacks in NLP problem
-    int **qp_idxs_rev;  // reverse storage of slacks in slacked QP problem
+    // int **nlp_idxs_rev;  // reverse storage of slacks in NLP problem
+    // int **qp_idxs_rev;  // reverse storage of slacks in slacked QP problem
 
     // statistics
     double *stat;

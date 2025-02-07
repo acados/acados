@@ -608,7 +608,7 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     // ptrs
     assign_and_advance_int_ptrs(N+1, &mem->idxns, &c_ptr);
 
-    assign_and_advance_int_ptrs(N+1, &mem->nlp_idxs_rev, &c_ptr);
+    // assign_and_advance_int_ptrs(N+1, &mem->nlp_idxs_rev, &c_ptr);
 
     // integers
     assign_and_advance_int(N+1, &mem->nns, &c_ptr);
@@ -631,7 +631,7 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
         }
         assign_and_advance_int(mem->nns[stage], &mem->idxns[stage], &c_ptr);
 
-        assign_and_advance_int(dims->nb[stage]+dims->ng[stage]+dims->ni_nl[stage], &mem->nlp_idxs_rev[stage], &c_ptr);
+        // assign_and_advance_int(dims->nb[stage]+dims->ng[stage]+dims->ni_nl[stage], &mem->nlp_idxs_rev[stage], &c_ptr);
     }
 
     mem->nlp_mem->status = ACADOS_READY;
@@ -2322,12 +2322,15 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             /* Prepare the QP data */
             // linearize NLP and update QP matrices
+            // for nominal QP only. relaxed QP has identity Hessian
             ocp_nlp_sqp_wfqp_prepare_hessian_evaluation(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
             acados_tic(&timer1);
+            // nominal QP solver
             ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-            // update nominal QP rhs for SQP (step prim var, abs dual var)
             ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-            // set the vector for feasibility QP
+
+            // relaxed QP solver
+            // matrices for relaxed QP solver evaluated in nominal QP solver
             ocp_nlp_sqp_wfqp_approximate_qp_constraint_vectors(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
 
             if (nlp_opts->with_adaptive_levenberg_marquardt || config->globalization->needs_objective_value() == 1)
@@ -2460,7 +2463,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // qp_out->lam = mem->standard_qp_out->lam;
         // qp_out->pi = mem->standard_qp_out->pi;
 
-
         int globalization_status;
         globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in,
                                                                               nlp_out, nlp_mem, mem,
@@ -2590,29 +2592,29 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
         }
     }
     // additional pointer that keeps memory of the qp_in->idxs_rev
-    mem->qp_idxs_rev = nlp_mem->qp_in->idxs_rev;
+    // mem->qp_idxs_rev = nlp_mem->qp_in->idxs_rev;
 
     // set nlp_idxs_rev to solve hard-constrained QP -- MAYBE OUTDATED FROM HERE
-    for (int stage = 0; stage <= dims->N; stage++)
-    {
-        ns = dims->ns[stage];
-        int *nlp_idxs_rev = mem->nlp_idxs_rev[stage];
-        for (int i=0; i<dims->nb[i]+dims->ng[i]+dims->ni_nl[i]; i++)
-        {
-            nlp_idxs_rev[i] = -1;
-        }
-    }
+    // for (int stage = 0; stage <= dims->N; stage++)
+    // {
+    //     ns = dims->ns[stage];
+    //     int *nlp_idxs_rev = mem->nlp_idxs_rev[stage];
+    //     for (int i=0; i<dims->nb[i]+dims->ng[i]+dims->ni_nl[i]; i++)
+    //     {
+    //         nlp_idxs_rev[i] = -1;
+    //     }
+    // }
 
-    for (int stage = 0; stage <= dims->N; stage++)
-    {
-        config->constraints[stage]->model_get(config->constraints[stage], dims->constraints[stage], nlp_in->constraints[stage], "idxs", idxs);
-        ns = dims->ns[stage];
-        int *nlp_idxs_rev = mem->nlp_idxs_rev[stage];
-        for (int i=0; i<ns; i++)
-        {
-            nlp_idxs_rev[idxs[i]] = i;
-        }
-    }
+    // for (int stage = 0; stage <= dims->N; stage++)
+    // {
+    //     config->constraints[stage]->model_get(config->constraints[stage], dims->constraints[stage], nlp_in->constraints[stage], "idxs", idxs);
+    //     ns = dims->ns[stage];
+    //     int *nlp_idxs_rev = mem->nlp_idxs_rev[stage];
+    //     for (int i=0; i<ns; i++)
+    //     {
+    //         nlp_idxs_rev[idxs[i]] = i;
+    //     }
+    // }
 
     ocp_nlp_precompute_common(config, dims, nlp_in, nlp_out, opts->nlp_opts, nlp_mem, nlp_work);
 
