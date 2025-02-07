@@ -3244,6 +3244,7 @@ int ocp_nlp_common_setup_qp_matrices_and_factorize(ocp_nlp_config *config, ocp_n
     ocp_nlp_dims *dims = dims_;
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
+    ocp_nlp_timings_reset(nlp_timings);
 
     ocp_qp_in *qp_in = nlp_mem->qp_in;
     ocp_qp_out *qp_out = nlp_mem->qp_out;
@@ -3258,7 +3259,7 @@ int ocp_nlp_common_setup_qp_matrices_and_factorize(ocp_nlp_config *config, ocp_n
     ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
     // update QP rhs for SQP (step prim var, abs dual var)
     ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-    nlp_timings->time_lin += acados_toc(&timer1);
+    nlp_timings->time_lin = acados_toc(&timer1);
 
     /* solve QP */
     // warm start QP
@@ -3297,6 +3298,8 @@ int ocp_nlp_common_setup_qp_matrices_and_factorize(ocp_nlp_config *config, ocp_n
     {
         nlp_mem->status = ACADOS_SUCCESS;
     }
+
+    nlp_timings->time_tot = acados_toc(&timer0);
 
     return nlp_mem->status;
 }
