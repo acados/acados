@@ -440,8 +440,18 @@ class AcadosOcpSolver:
 
     def setup_qp_matrices_and_factorize(self) -> int:
         """
-        Setup QP and factorize Hessian matrix.
+        This function sets up the QP and factorizes Hessian matrix.
+
+        The current NLP iterate is used to setup the QP iterate (which includes t-slacks).
+        The t and lambda values are clipped according to `solution_sens_qp_t_lam_min` to avoid ill-conditioning.
+        Then the Hessian matrix is factorized.
+        If a two-solver approach is used to obtain solution sensitivities from acados, this function should be called before calling `eval_solution_sensitivity`, or `eval_adjoint_solution_sensitivity()`.
+
+        This is only implemented for HPIPM QP solver without condensing.
         """
+        if self.acados_ocp.solver_options.qp_solver != 'PARTIAL_CONDENSING_HPIPM' or self.acados_ocp.solver_options.qp_solver_cond_N != self.acados_ocp.dims.N:
+            raise Exception('This function is only implemented for HPIPM QP solver without condensing!')
+
         self.status = getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize")(self.capsule)
 
         return self.status
