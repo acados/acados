@@ -1485,10 +1485,10 @@ static void ocp_nlp_sqp_wfqp_prepare_hessian_evaluation(ocp_nlp_config *config,
 // - evaluate constraints wrt bounds -> allows to update all bounds between preparation and feedback phase.
 void ocp_nlp_sqp_wfqp_approximate_qp_constraint_vectors(ocp_nlp_config *config,
     ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
-    ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
+    ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work, int sqp_iter)
 {
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-    ocp_qp_in *qp_in = mem->relaxed_qp_in;
+    ocp_qp_in *relaxed_qp_in = mem->relaxed_qp_in;
     int N = dims->N;
 
     // int *nv = dims->nv;
@@ -1506,7 +1506,7 @@ void ocp_nlp_sqp_wfqp_approximate_qp_constraint_vectors(ocp_nlp_config *config,
         // TODO: this is the same as for the nominal QP and can be evaluated only once!
         if (i < N)
         {
-            blasfeo_dveccp(nx[i + 1], nlp_mem->dyn_fun + i, 0, qp_in->b + i, 0);
+            blasfeo_dveccp(nx[i + 1], nlp_mem->dyn_fun + i, 0, relaxed_qp_in->b + i, 0);
         }
 
         // evaluate constraint residuals
@@ -1520,9 +1520,20 @@ void ocp_nlp_sqp_wfqp_approximate_qp_constraint_vectors(ocp_nlp_config *config,
         // d
         int n_nominal_ineq_nlp = ni[i] - ns[i];
 
-        // blasfeo_dveccp(2 * ni[i], nlp_mem->ineq_fun + i, 0, nlp_mem->qp_in->d + i, 0);
-        blasfeo_dveccp(2*n_nominal_ineq_nlp+ns[i], nlp_mem->ineq_fun + i, 0, qp_in->d + i, 0);
-        blasfeo_dveccp(ns[i], nlp_mem->ineq_fun + i, 2*n_nominal_ineq_nlp+ns[i], qp_in->d + i, 2*n_nominal_ineq_nlp+ns[i]+nns[i]);
+        // blasfeo_dveccp(2 * ni[i], nlp_mem->ineq_fun + i, 0, relaxed_qp_in->d + i, 0);
+        blasfeo_dveccp(2*n_nominal_ineq_nlp+ns[i], nlp_mem->ineq_fun + i, 0, relaxed_qp_in->d + i, 0);
+        blasfeo_dveccp(ns[i], nlp_mem->ineq_fun + i, 2*n_nominal_ineq_nlp+ns[i], relaxed_qp_in->d + i, 2*n_nominal_ineq_nlp+ns[i]+nns[i]);
+    }
+    // setup d_mask
+    if (sqp_iter == 0)
+    {
+        int offset_dmask;
+        for (int i=0; i<=dims->N; i++)
+        {
+            offset_dmask = 2*(dims->nb[i]+dims->ng[i]+dims->ni_nl[i]);
+            blasfeo_dveccp(offset_dmask, nlp_mem->qp_in->d_mask+i, 0, relaxed_qp_in->d_mask+i, 0);
+            blasfeo_dvecse(2*relaxed_qp_in->dim->ns[i], 1.0, relaxed_qp_in->d_mask+i,offset_dmask);
+        }
     }
 }
 
@@ -2172,9 +2183,9 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
 static void set_standard_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp_qp_in *qp_in)
 {
     // mem->standard_qp_in->BAbt = qp_in->BAbt; // dynamics matrix & vector work space
-	// mem->standard_qp_in->RSQrq = qp_in->RSQrq; // hessian of cost & vector work space
-	// mem->standard_qp_in->DCt = qp_in->DCt; // inequality constraints matrix
-	// mem->standard_qp_in->d_mask = qp_in->d_mask; // inequality constraints matrix
+    // mem->standard_qp_in->RSQrq = qp_in->RSQrq; // hessian of cost & vector work space
+    // mem->standard_qp_in->DCt = qp_in->DCt; // inequality constraints matrix
+    // mem->standard_qp_in->d_mask = qp_in->d_mask; // inequality constraints matrix
 
     // // mem->standard_qp_in->idxs_rev = mem->nlp_idxs_rev; // TODO: This is wrong vector!!!
     // mem->standard_qp_in->idxb = qp_in->idxb;
@@ -2184,14 +2195,13 @@ static void set_standard_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp
     // TODO: if we have slacks in the original QP how is this transferred here??
 
     mem->relaxed_qp_in->BAbt = qp_in->BAbt; // dynamics matrix & vector work space
-	mem->relaxed_qp_in->RSQrq = qp_in->RSQrq; // hessian of cost & vector work space
-	mem->relaxed_qp_in->DCt = qp_in->DCt; // inequality constraints matrix
-	mem->relaxed_qp_in->d_mask = qp_in->d_mask; // inequality constraints matrix
-    // mem->relaxed_qp_in->b = qp_in->b; TODO: maybe we should copy this again!
+    mem->relaxed_qp_in->RSQrq = qp_in->RSQrq; // hessian of cost & vector work space
+    mem->relaxed_qp_in->DCt = qp_in->DCt; // inequality constraints matrix
     mem->relaxed_qp_in->idxb = qp_in->idxb;
     mem->relaxed_qp_in->idxe = qp_in->idxe;
+
     // mem->relaxed_qp_in->diag_H_flag = qp_in->diag_H_flag; // set somewhere else!
-    mem->relaxed_qp_in->m = qp_in->m; // TODO: Not sure what happens here
+    // mem->relaxed_qp_in->m = qp_in->m; // TODO: Not sure what happens here
 }
 
 // static void approximate_standard_qp_vectors(ocp_nlp_config *config,
@@ -2269,6 +2279,9 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_qp_in *qp_in = nlp_mem->qp_in;
     ocp_qp_out *qp_out = nlp_mem->qp_out;
 
+    ocp_qp_in *relaxed_qp_in = mem->relaxed_qp_in;
+    ocp_qp_out *relaxed_qp_out = mem->relaxed_qp_out;
+
     // zero timers
     ocp_nlp_timings_reset(nlp_timings);
 
@@ -2331,7 +2344,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             // relaxed QP solver
             // matrices for relaxed QP solver evaluated in nominal QP solver
-            ocp_nlp_sqp_wfqp_approximate_qp_constraint_vectors(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
+            ocp_nlp_sqp_wfqp_approximate_qp_constraint_vectors(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, sqp_iter);
 
             if (nlp_opts->with_adaptive_levenberg_marquardt || config->globalization->needs_objective_value() == 1)
             {
