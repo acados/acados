@@ -571,14 +571,14 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
                                       dims->cost[i], "ns", &int_array[i]);
         }
         // qp solver
-        if (!config->with_feasible_qp)
+        // if (!config->with_feasible_qp)
+        // {
+        for (int i = 0; i <= N; i++)
         {
-            for (int i = 0; i <= N; i++)
-            {
-                config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "ns",
-                                            &int_array[i]);
-            }
+            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "ns",
+                                        &int_array[i]);
         }
+        // }
         // else: do nothing: does not depend on nominal ns
     }
     else if (!strcmp(field, "np"))
@@ -624,13 +624,16 @@ static void ocp_nlp_update_qp_solver_ns_from_qp_solver_nsbxug(void *config_, voi
 
     int tmp_int;
     int ns = 0;
-    config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nsbu", &tmp_int);
+    // config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nsbu", &tmp_int);
+    config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "nsbu", &tmp_int);
     ns += tmp_int;
-    config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nsbx", &tmp_int);
+    // config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nsbx", &tmp_int);
+    config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "nsbx", &tmp_int);
     ns += tmp_int;
-    config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nsg", &tmp_int);
+    config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "nsg", &tmp_int);
+    // config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nsg", &tmp_int);
     ns += tmp_int;
-    config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, stage, "ns", &ns);
+    // config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, stage, "ns", &ns);
     config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "ns", &ns);
 }
 
@@ -662,61 +665,61 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
     // update qp_solver dims
     if ( (!strcmp(field, "nbx")) || (!strcmp(field, "nbu")) )
     {
-        if (!config->with_feasible_qp)
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
+        // if (!config->with_feasible_qp)
+        // {
+        //     // qp solver
+        // }
+        // else
+        // {
+        // relaxed qp solver: nb* = nb*
+        // config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
+        config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, field, int_value);
+        if ((!strcmp(field, "nbx")) && (stage != 0))
         {
-            // qp solver
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
+            // nsbx_i_relaxed = nbx_i for i > 0;
+            // config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nsbx", int_value);
+            config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, "nsbx", int_value);
         }
-        else
-        {
-            // relaxed qp solver: nb* = nb*
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
-            config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, field, int_value);
-            if ((!strcmp(field, "nbx")) && (stage != 0))
-            {
-                // nsbx_i_relaxed = nbx_i for i > 0;
-                config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nsbx", int_value);
-                config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, "nsbx", int_value);
-            }
-            ocp_nlp_update_qp_solver_ns_from_qp_solver_nsbxug(config, dims, stage);
-        }
+        ocp_nlp_update_qp_solver_ns_from_qp_solver_nsbxug(config, dims, stage);
+        // }
 
         // regularization
         config->regularize->dims_set(config->regularize, dims->regularize, i, (char *) field, int_value);
     }
     else if (!strcmp(field, "nsbx"))
     {
-        if (!config->with_feasible_qp)
+        // qp solver
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
+        // if (!config->with_feasible_qp)
+        // {
+        // }
+        // else
+        // {
+        // relaxed_qp_solver
+        if (stage == 0)
         {
-            // qp solver
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
+            config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsbx", &tmp_int);
+            // config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, &tmp_int);
+            config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, field, &tmp_int);
         }
-        else
-        {
-            // relaxed_qp_solver
-            if (stage == 0)
-            {
-                config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsbx", &tmp_int);
-                config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, &tmp_int);
-                config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, field, &tmp_int);
-            }
-            ocp_nlp_update_qp_solver_ns_from_qp_solver_nsbxug(config, dims, stage);
-        }
+        ocp_nlp_update_qp_solver_ns_from_qp_solver_nsbxug(config, dims, stage);
+        // }
     }
     else if (!strcmp(field, "nsbu"))
     {
-        if (!config->with_feasible_qp)
-        {
-            // qp solver
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
-        }
-        else
-        {
-            // relaxed_qp_solver: nsbu = nsbu
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
-            config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, field, int_value);
-            ocp_nlp_update_qp_solver_ns_from_qp_solver_nsbxug(config, dims, stage);
-        }
+        // qp solver
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
+        // if (!config->with_feasible_qp)
+        // {
+        // }
+        // else
+        // {
+        // relaxed_qp_solver: nsbu = nsbu
+        // config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
+        config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, field, int_value);
+        ocp_nlp_update_qp_solver_ns_from_qp_solver_nsbxug(config, dims, stage);
+        // }
     }
     else if ( (!strcmp(field, "ng")) || (!strcmp(field, "nh")) || (!strcmp(field, "nphi")))
     {
@@ -724,55 +727,57 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
         int ng_qp_solver;
         config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i],
                                         "ng_qp_solver", &ng_qp_solver);
-        if (!config->with_feasible_qp)
-        {
-            // qp solver
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "ng", &ng_qp_solver);
-        }
-        else
-        {
-            // relaxed qp solver: nsg = ng;
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "ng", &ng_qp_solver);
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nsg", &ng_qp_solver);
-            config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, "ng", &ng_qp_solver);
-            config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, "nsg", &ng_qp_solver);
-            ocp_nlp_update_qp_solver_ns_from_qp_solver_nsbxug(config, dims, stage);
-        }
+        // qp solver
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "ng", &ng_qp_solver);
+        // if (!config->with_feasible_qp)
+        // {
+        // }
+        // else
+        // {
+        // relaxed qp solver: nsg = ng;
+        // config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "ng", &ng_qp_solver);
+        // config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nsg", &ng_qp_solver);
+        config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, "ng", &ng_qp_solver);
+        config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, "nsg", &ng_qp_solver);
+        ocp_nlp_update_qp_solver_ns_from_qp_solver_nsbxug(config, dims, stage);
+        // }
 
         // regularization
         config->regularize->dims_set(config->regularize, dims->regularize, i, "ng", &ng_qp_solver);
     }
     else if ( (!strcmp(field, "nsg")) || (!strcmp(field, "nsh")) || (!strcmp(field, "nsphi")))
     {
-        if (!config->with_feasible_qp)
-        {
+        // if (!config->with_feasible_qp)
+        // {
+            // TODO: rethink this!
             // update ng_qp_solver in qp_solver
-            int nsg_qp_solver;
-            config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsg_qp_solver", &nsg_qp_solver);
+        int nsg_qp_solver;
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsg_qp_solver", &nsg_qp_solver);
 
-            // qp solver
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nsg", &nsg_qp_solver);
-            config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, "nsg", &nsg_qp_solver);
-        }
+        // qp solver
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nsg", &nsg_qp_solver);
+        // we don't care about relaxed since we always slack here!
+        // config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, "nsg", &nsg_qp_solver);
+        // }
     }
     else if (!strcmp(field, "nbxe"))
     {
-        if (!config->with_feasible_qp)
+        // if (!config->with_feasible_qp)
+        // {
+        // qp solver
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
+        // }
+        // else
+        // {
+        // relaxed_qp_solver
+        if ((stage != 0) && (*int_value != 0))
         {
-            // qp solver
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
+            printf("\nerror: relaxed QP with nbxe= %d >0 for stage %d > 0 not supported, exiting.\n\n", *int_value, stage);
+            exit(1);
         }
-        else
-        {
-            // relaxed_qp_solver
-            if ((stage != 0) && (*int_value != 0))
-            {
-                printf("\nerror: relaxed QP with nbxe= %d >0 for stage %d > 0 not supported, exiting.\n\n", *int_value, stage);
-                exit(1);
-            }
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
-            config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, field, int_value);
-        }
+        // config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
+        config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, field, int_value);
+        // }
     }
     else if (!strcmp(field, "nbue"))
     {
@@ -786,20 +791,20 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
         config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i],
                                          "nge_qp_solver", &ng_qp_solver);
 
-        if (!config->with_feasible_qp)
-        {
-            // qp solver
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nge", &ng_qp_solver);
-        }
-        else
-        {
+        // if (!config->with_feasible_qp)
+        // {
+        // qp solver
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nge", &ng_qp_solver);
+        // }
+        // else
+        // {
             // relaxed_qp_solver
-            if ((int_value != 0))
-            {
-                printf("\nerror: relaxed QP with %s>0 for stage %d not supported, exiting.\n\n", field, stage);
-                exit(1);
-            }
-        }
+        //     if ((int_value != 0))
+        //     {
+        //         printf("\nerror: relaxed QP with %s>0 for stage %d not supported, exiting.\n\n", field, stage);
+        //         exit(1);
+        //     }
+        // }
     }
 }
 
@@ -1582,7 +1587,6 @@ void ocp_nlp_opts_set_at_stage(void *config_, void *opts_, int stage, const char
 acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_in *nlp_in)
 {
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
-    ocp_qp_xcond_solver_config *relaxed_qp_solver = config->relaxed_qp_solver;
     ocp_nlp_dynamics_config **dynamics = config->dynamics;
     ocp_nlp_cost_config **cost = config->cost;
     ocp_nlp_constraints_config **constraints = config->constraints;
