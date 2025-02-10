@@ -438,11 +438,13 @@ class AcadosOcpSolver:
 
         return self.status
 
-    def setup_qp_matrices_and_factorize(self):
+    def setup_qp_matrices_and_factorize(self) -> int:
         """
         Setup QP and factorize Hessian matrix.
         """
-        getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize")(self.capsule)
+        self.status = getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize")(self.capsule)
+
+        return self.status
 
 
     def get_dim_flat(self, field: str):
