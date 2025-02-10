@@ -217,7 +217,7 @@ acados_size_t ocp_nlp_dims_calculate_size(void *config_)
     size += config->qp_solver->dims_calculate_size(config->qp_solver, N);
 
     // relaxed qp solver
-    size += config->relaxed_qp_solver->dims_calculate_size(config->qp_solver, N);
+    size += config->relaxed_qp_solver->dims_calculate_size(config->relaxed_qp_solver, N);
 
     return size;
 }
