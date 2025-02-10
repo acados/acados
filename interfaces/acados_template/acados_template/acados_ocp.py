@@ -930,6 +930,9 @@ class AcadosOcp:
             else:
                 self.zoro_description = process_zoro_description(self.zoro_description)
 
+        # nlp_solver_warm_start_first_qp_from_nlp
+        if opts.nlp_solver_warm_start_first_qp_from_nlp and (opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon):
+            raise Exception('nlp_solver_warm_start_first_qp_from_nlp only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N.')
         return
 
 

@@ -331,6 +331,7 @@ class AcadosOcpOptions:
     def nlp_solver_warm_start_first_qp_from_nlp(self):
         """
         If True first QP will be initialized using values from NLP iterate, otherwise from previous QP solution, only relevant if `nlp_solver_warm_start_first_qp` is True.
+        Note: for now only works with HPIPM and partial condensing with N = qp_solver_partial_cond_N
         Type: bool.
         Default: False.
         """
