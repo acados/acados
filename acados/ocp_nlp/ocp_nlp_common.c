@@ -3291,7 +3291,7 @@ int ocp_nlp_common_setup_qp_matrices_and_factorize(ocp_nlp_config *config, ocp_n
     // reset QP solver settings
     qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &nlp_opts->qp_warm_start);
     qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "iter_max", &nlp_opts->qp_iter_max);
-    tmp_double = 1e-16;
+    tmp_double = 1e-16; // TODO: fix this if t_min, lam_min defaults change in HPIPM, or if they are exposed in acados high level interfaces.
     config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "t_min", &tmp_double);
     config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "lam_min", &tmp_double);
 
