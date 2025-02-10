@@ -2293,7 +2293,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     set_standard_qp_in_matrix_pointers(mem, qp_in);
 
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-    // feasibility QP objective is always constant!
+    // feasibility QP objective always constant! Only done once!
     ocp_nlp_sqp_wfqp_setup_feasibility_qp_objective(config, dims, nlp_in, nlp_out, opts, mem, nlp_work);
 
     set_non_slacked_l2_penalties(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
