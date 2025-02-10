@@ -226,6 +226,10 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
     int *nb = qp_in->dim->nb;
     int *ng = qp_in->dim->ng;
     int *ns = qp_in->dim->ns;
+    int *nbxe = qp_in->dim->nbxe;
+    int *nbue = qp_in->dim->nbue;
+    int *nge = qp_in->dim->nge;
+
 
 #if 1
     printf("BAbt =\n");
@@ -284,10 +288,22 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
             blasfeo_print_tran_dvec(2 * ns[ii], &qp_in->d[ii], 2 * nb[ii] + 2 * ng[ii]);
     }
 
+    printf("d_mask_s =\n");
+    for (int ii = 0; ii <= N; ii++)
+    {
+        blasfeo_print_tran_dvec(2 * ns[ii], &qp_in->d_mask[ii], 2 * nb[ii] + 2 * ng[ii]);
+    }
+
     printf("idxs_rev =\n");
     for (int ii = 0; ii <= N; ii++)
     {
         int_print_mat(1, nb[ii]+ng[ii], qp_in->idxs_rev[ii], 1);
+    }
+
+    printf("idxe =\n");
+    for (int ii = 0; ii <= N; ii++)
+    {
+        int_print_mat(1, nbxe[ii]+nbue[ii]+nge[ii], qp_in->idxe[ii], 1);
     }
 
     printf("Z =\n");
