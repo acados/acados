@@ -239,8 +239,8 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True, plot_t
 
 
 def test_failure_message(msg):
-    print(f"ERROR: {msg}")
-    # raise Exception(msg)
+    # print(f"ERROR: {msg}")
+    raise Exception(msg)
 
 if __name__ == "__main__":
     main(qp_solver_ric_alg=0, use_cython=False, generate_solvers=True, plot_trajectory=False)
