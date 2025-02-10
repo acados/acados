@@ -1296,6 +1296,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             double* adaptive_levenberg_marquardt_mu0 = (double *) value;
             opts->adaptive_levenberg_marquardt_mu0 = *adaptive_levenberg_marquardt_mu0;
         }
+        else if (!strcmp(field, "solution_sens_qp_t_lam_min"))
+        {
+            double* solution_sens_qp_t_lam_min = (double *) value;
+            opts->solution_sens_qp_t_lam_min = *solution_sens_qp_t_lam_min;
+        }
         else if (!strcmp(field, "exact_hess"))
         {
             int N = config->N;
@@ -3276,7 +3281,7 @@ int ocp_nlp_common_setup_qp_matrices_and_factorize(ocp_nlp_config *config, ocp_n
     tmp_int = 1;
     config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "update_fact_exit", &tmp_int);
     // HPIPM: set t_min, lam_min to avoid ill-conditioning
-    double tmp_double = 1e-10;
+    double tmp_double = nlp_opts->solution_sens_qp_t_lam_min;
     config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "t_min", &tmp_double);
     config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "lam_min", &tmp_double);
 

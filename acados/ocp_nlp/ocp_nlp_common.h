@@ -305,6 +305,7 @@ typedef struct ocp_nlp_opts
 
     int with_solution_sens_wrt_params;
     int with_value_sens_wrt_params;
+    double solution_sens_qp_t_lam_min;
 
     int ext_qp_res;
     int qp_warm_start;

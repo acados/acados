@@ -80,6 +80,7 @@ class AcadosOcpOptions:
         self.__qp_solver_cond_ric_alg = 1
         self.__qp_solver_ric_alg = 1
         self.__qp_solver_mu0 = 0.0
+        self.__solution_sens_qp_t_lam_min = 1e-9
         self.__rti_log_residuals = 0
         self.__rti_log_only_available_residuals = 0
         self.__print_level = 0
@@ -486,6 +487,15 @@ class AcadosOcpOptions:
         Default: 0
         """
         return self.__qp_solver_mu0
+
+    @property
+    def solution_sens_qp_t_lam_min(self):
+        """
+        When computing the solution sensitivities using the function `setup_qp_matrices_and_factorize()`, this value is used to clip the values lambda and t slack values of the QP iterate before factorization.
+
+        Default: 1e-9
+        """
+        return self.__solution_sens_qp_t_lam_min
 
     @property
     def qp_solver_iter_max(self):
@@ -1430,6 +1440,13 @@ class AcadosOcpOptions:
             self.__qp_solver_mu0 = qp_solver_mu0
         else:
             raise Exception('Invalid qp_solver_mu0 value. qp_solver_mu0 must be a positive float.')
+
+    @solution_sens_qp_t_lam_min.setter
+    def solution_sens_qp_t_lam_min(self, solution_sens_qp_t_lam_min):
+        if isinstance(solution_sens_qp_t_lam_min, float) and solution_sens_qp_t_lam_min >= 0:
+            self.__solution_sens_qp_t_lam_min = solution_sens_qp_t_lam_min
+        else:
+            raise Exception('Invalid solution_sens_qp_t_lam_min value. solution_sens_qp_t_lam_min must be a nonnegative float.')
 
     @qp_solver_iter_max.setter
     def qp_solver_iter_max(self, qp_solver_iter_max):
