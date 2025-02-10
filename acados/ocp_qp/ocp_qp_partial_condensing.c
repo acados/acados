@@ -541,7 +541,7 @@ int ocp_qp_partial_condensing(void *qp_in_, void *pcond_qp_in_, void *opts_, voi
 
 int ocp_qp_partial_condensing_condense_qp_out(void *qp_in_, void *pcond_qp_in_, void *qp_out_, void *pcond_qp_out_, void *opts_, void *mem_, void *work)
 {
-    ocp_qp_in *qp_in = qp_in_;
+    // ocp_qp_in *qp_in = qp_in_;
     // ocp_qp_in *pcond_qp_in = pcond_qp_in_;
     ocp_qp_out *qp_out = qp_out_;
     ocp_qp_out *pcond_qp_out = pcond_qp_out_;
