@@ -600,11 +600,14 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
  * functions
  ************************************************/
 
-int ocp_nlp_ddp_setup_qp_matrices_and_factorize(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
-                void *opts_, void *mem_, void *work_)
+ int ocp_nlp_ddp_setup_qp_matrices_and_factorize(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
+    void *opts_, void *mem_, void *work_)
 {
-    printf("ocp_nlp_ddp_setup_qp_matrices_and_factorize: not implemented, exiting\n");
-    exit(1);
+    ocp_nlp_ddp_opts *opts = opts_;
+    ocp_nlp_ddp_memory *mem = mem_;
+    ocp_nlp_ddp_workspace *work = work_;
+
+    return ocp_nlp_common_setup_qp_matrices_and_factorize(config_, dims_, nlp_in_, nlp_out_, opts->nlp_opts, mem->nlp_mem, work->nlp_work);
 }
 
 
