@@ -125,6 +125,18 @@ class AcadosOcpBatchSolver():
             solver.status = s
 
 
+    def setup_qp_matrices_and_factorize(self):
+        """
+        Call setup_qp_matrices_and_factorize for all `N_batch` solvers.
+        """
+
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve")(self.__ocp_solvers_pointer, self.__status_p, self.__N_batch)
+
+        # to be consistent with non-batched solve
+        for s, solver in zip(self.__status, self.ocp_solvers):
+            solver.status = s
+
+
     def eval_adjoint_solution_sensitivity(self,
                                           seed_x: Optional[Sequence[Tuple[int, np.ndarray]]],
                                           seed_u: Optional[Sequence[Tuple[int, np.ndarray]]],

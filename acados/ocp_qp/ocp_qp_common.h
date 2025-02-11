@@ -94,9 +94,10 @@ typedef struct
     void *(*memory_assign)(void *dims, void *opts, void *raw_memory);
     void (*memory_get)(void *config, void *mem, const char *field, void* value);
     acados_size_t (*workspace_calculate_size)(void *dims, void *opts);
-    int (*condensing)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);
-    int (*condense_rhs)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);
-    int (*condense_lhs)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);
+    int (*condensing)(void *qp_in, void *x_cond_qp_in, void *opts, void *mem, void *work);
+    int (*condense_rhs)(void *qp_in, void *x_cond_qp_in, void *opts, void *mem, void *work);
+    int (*condense_lhs)(void *qp_in, void *x_cond_qp_in, void *opts, void *mem, void *work);
+    int (*condense_qp_out)(void *qp_in, void *x_cond_qp_in, void *qp_out, void *p_cond_qp_out, void *opts, void *mem, void *work);
     int (*expansion)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);
 } ocp_qp_xcond_config;
 

@@ -243,6 +243,9 @@ ACADOS_SYMBOL_EXPORT int {{ name }}_acados_update_params_sparse({{ name }}_solve
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver_capsule* capsule, double* data, int data_len);
 
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_solve({{ name }}_solver_capsule * capsule);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_setup_qp_matrices_and_factorize({{ name }}_solver_capsule* capsule);
+
+
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_free({{ name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT void {{ name }}_acados_print_stats({{ name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_custom_update({{ name }}_solver_capsule* capsule, double* data, int data_len);

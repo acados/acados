@@ -87,6 +87,8 @@ typedef struct ocp_nlp_config
     void (*opts_set_at_stage)(void *config_, void *opts_, size_t stage, const char *field, void* value);
     // evaluate solver // TODO rename into solve
     int (*evaluate)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
+    int (*setup_qp_matrices_and_factorize)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
+
     void (*eval_kkt_residual)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
     void (*eval_param_sens)(void *config, void *dims, void *opts_, void *mem, void *work,
                             char *field, int stage, int index, void *sens_nlp_out);
@@ -293,6 +295,7 @@ typedef struct ocp_nlp_opts
     int fixed_hess;
     int log_primal_step_norm; // compute and log the max norm of the primal steps
     int max_iter; // maximum number of (SQP/DDP) iterations
+    int qp_iter_max; // maximum iter of QP solver, stored to remember.
 
     // Flag for usage of adaptive levenberg marquardt strategy
     bool with_adaptive_levenberg_marquardt;
@@ -302,8 +305,10 @@ typedef struct ocp_nlp_opts
 
     int with_solution_sens_wrt_params;
     int with_value_sens_wrt_params;
+    double solution_sens_qp_t_lam_min;
 
     int ext_qp_res;
+    int qp_warm_start;
 
     bool store_iterates; // flag indicating whether intermediate iterates should be stored
 
@@ -536,7 +541,10 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 //
 void ocp_nlp_get_cost_value_from_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
-
+//
+int ocp_nlp_common_setup_qp_matrices_and_factorize(ocp_nlp_config *config, ocp_nlp_dims *dims_, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
+                ocp_nlp_opts *nlp_opts, ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work);
+//
 void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
 
 void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,

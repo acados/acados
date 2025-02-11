@@ -1301,6 +1301,12 @@ int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_o
 }
 
 
+int ocp_nlp_setup_qp_matrices_and_factorize(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
+{
+    return solver->config->setup_qp_matrices_and_factorize(solver->config, solver->dims, nlp_in, nlp_out,
+                                    solver->opts, solver->mem, solver->work);
+}
+
 
 int ocp_nlp_precompute(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
 {

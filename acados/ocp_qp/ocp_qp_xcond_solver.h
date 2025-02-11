@@ -54,6 +54,7 @@ typedef struct ocp_qp_xcond_solver_opts_
 {
     void *xcond_opts;
     void *qp_solver_opts;
+    bool initialize_next_xcond_qp_from_qp_out;
 } ocp_qp_xcond_solver_opts;
 
 

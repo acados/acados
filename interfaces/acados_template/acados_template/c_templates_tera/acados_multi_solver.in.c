@@ -2224,6 +2224,9 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
     int with_value_sens_wrt_params = {{ solver_options.with_value_sens_wrt_params }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "with_value_sens_wrt_params", &with_value_sens_wrt_params);
 
+    double solution_sens_qp_t_lam_min = {{ solver_options.solution_sens_qp_t_lam_min }};
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "solution_sens_qp_t_lam_min", &solution_sens_qp_t_lam_min);
+
     int globalization_full_step_dual = {{ solver_options.globalization_full_step_dual }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_full_step_dual", &globalization_full_step_dual);
 
@@ -2728,6 +2731,14 @@ int {{ name }}_acados_solve({{ name }}_solver_capsule* capsule)
     return solver_status;
 }
 
+
+int {{ name }}_acados_setup_qp_matrices_and_factorize({{ name }}_solver_capsule* capsule)
+{
+    // solve NLP
+    int solver_status = ocp_nlp_setup_qp_matrices_and_factorize(capsule->nlp_solver, capsule->nlp_in, capsule->nlp_out);
+
+    return solver_status;
+}
 
 
 

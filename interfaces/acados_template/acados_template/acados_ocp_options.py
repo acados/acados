@@ -80,6 +80,7 @@ class AcadosOcpOptions:
         self.__qp_solver_cond_ric_alg = 1
         self.__qp_solver_ric_alg = 1
         self.__qp_solver_mu0 = 0.0
+        self.__solution_sens_qp_t_lam_min = 1e-9
         self.__rti_log_residuals = 0
         self.__rti_log_only_available_residuals = 0
         self.__print_level = 0
@@ -330,6 +331,7 @@ class AcadosOcpOptions:
     def nlp_solver_warm_start_first_qp_from_nlp(self):
         """
         If True first QP will be initialized using values from NLP iterate, otherwise from previous QP solution, only relevant if `nlp_solver_warm_start_first_qp` is True.
+        Note: for now only works with HPIPM and partial condensing with N = qp_solver_partial_cond_N
         Type: bool.
         Default: False.
         """
@@ -486,6 +488,15 @@ class AcadosOcpOptions:
         Default: 0
         """
         return self.__qp_solver_mu0
+
+    @property
+    def solution_sens_qp_t_lam_min(self):
+        """
+        When computing the solution sensitivities using the function `setup_qp_matrices_and_factorize()`, this value is used to clip the values lambda and t slack values of the QP iterate before factorization.
+
+        Default: 1e-9
+        """
+        return self.__solution_sens_qp_t_lam_min
 
     @property
     def qp_solver_iter_max(self):
@@ -1431,9 +1442,16 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid qp_solver_mu0 value. qp_solver_mu0 must be a positive float.')
 
+    @solution_sens_qp_t_lam_min.setter
+    def solution_sens_qp_t_lam_min(self, solution_sens_qp_t_lam_min):
+        if isinstance(solution_sens_qp_t_lam_min, float) and solution_sens_qp_t_lam_min >= 0:
+            self.__solution_sens_qp_t_lam_min = solution_sens_qp_t_lam_min
+        else:
+            raise Exception('Invalid solution_sens_qp_t_lam_min value. solution_sens_qp_t_lam_min must be a nonnegative float.')
+
     @qp_solver_iter_max.setter
     def qp_solver_iter_max(self, qp_solver_iter_max):
-        if isinstance(qp_solver_iter_max, int) and qp_solver_iter_max > 0:
+        if isinstance(qp_solver_iter_max, int) and qp_solver_iter_max >= 0:
             self.__qp_solver_iter_max = qp_solver_iter_max
         else:
             raise Exception('Invalid qp_solver_iter_max value. qp_solver_iter_max must be a positive int.')
@@ -1542,10 +1560,10 @@ class AcadosOcpOptions:
 
     @qp_solver_warm_start.setter
     def qp_solver_warm_start(self, qp_solver_warm_start):
-        if qp_solver_warm_start in [0, 1, 2]:
+        if qp_solver_warm_start in [0, 1, 2, 3]:
             self.__qp_solver_warm_start = qp_solver_warm_start
         else:
-            raise Exception('Invalid qp_solver_warm_start value. qp_solver_warm_start must be 0 or 1 or 2.')
+            raise Exception('Invalid qp_solver_warm_start value. qp_solver_warm_start must be 0 or 1 or 2 or 3.')
 
     @qp_tol.setter
     def qp_tol(self, qp_tol):

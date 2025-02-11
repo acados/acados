@@ -119,7 +119,6 @@ void ocp_nlp_ddp_opts_initialize_default(void *config_, void *dims_, void *opts_
 
     opts->ext_qp_res = 0;
 
-    opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
     opts->warm_start_first_qp_from_nlp = false;
     opts->eval_residual_at_max_iter = false;
@@ -165,12 +164,6 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
     {
         ocp_nlp_opts_set(config, nlp_opts, field, value);
-
-        if (!strcmp(field, "qp_warm_start"))
-        {
-            int* i_ptr = (int *) value;
-            opts->qp_warm_start = *i_ptr;
-        }
     }
     else // nlp opts
     {
@@ -607,6 +600,17 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
  * functions
  ************************************************/
 
+ int ocp_nlp_ddp_setup_qp_matrices_and_factorize(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
+    void *opts_, void *mem_, void *work_)
+{
+    ocp_nlp_ddp_opts *opts = opts_;
+    ocp_nlp_ddp_memory *mem = mem_;
+    ocp_nlp_ddp_workspace *work = work_;
+
+    return ocp_nlp_common_setup_qp_matrices_and_factorize(config_, dims_, nlp_in_, nlp_out_, opts->nlp_opts, mem->nlp_mem, work->nlp_work);
+}
+
+
 // MAIN OPTIMIZATION ROUTINE
 int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
@@ -764,6 +768,8 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             }
             else if (opts->warm_start_first_qp_from_nlp)
             {
+                int tmp_bool = true;
+                qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "initialize_next_xcond_qp_from_qp_out", &tmp_bool);
                 ocp_nlp_initialize_qp_from_nlp(config, dims, qp_in, nlp_out, qp_out);
             }
         }
@@ -779,7 +785,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // restore default warm start
         if (ddp_iter==0)
         {
-            qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &opts->qp_warm_start);
+            qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &nlp_opts->qp_warm_start);
         }
 
         if (nlp_opts->print_level > 1)
@@ -1148,6 +1154,7 @@ void ocp_nlp_ddp_config_initialize_default(void *config_)
     config->memory_assign = &ocp_nlp_ddp_memory_assign;
     config->workspace_calculate_size = &ocp_nlp_ddp_workspace_calculate_size;
     config->evaluate = &ocp_nlp_ddp;
+    config->setup_qp_matrices_and_factorize = &ocp_nlp_ddp_setup_qp_matrices_and_factorize;
     config->memory_reset_qp_solver = &ocp_nlp_ddp_memory_reset_qp_solver;
     config->eval_param_sens = &ocp_nlp_ddp_eval_param_sens;
     config->eval_lagr_grad_p = &ocp_nlp_ddp_eval_lagr_grad_p;

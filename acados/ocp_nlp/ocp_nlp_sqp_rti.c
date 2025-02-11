@@ -158,12 +158,6 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_,
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
     {
         ocp_nlp_opts_set(config, nlp_opts, field, value);
-
-        if (!strcmp(field, "qp_warm_start"))
-        {
-            int* i_ptr = (int *) value;
-            opts->qp_warm_start = *i_ptr;
-        }
     }
     else // nlp opts
     {
@@ -607,6 +601,8 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
         }
         else if (opts->warm_start_first_qp_from_nlp)
         {
+            int tmp_bool = true;
+            config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "initialize_next_xcond_qp_from_qp_out", &tmp_bool);
             ocp_nlp_initialize_qp_from_nlp(config, dims, nlp_mem->qp_in, nlp_out, nlp_mem->qp_out);
         }
     }
@@ -626,7 +622,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     // restore default warm start
     if (mem->is_first_call)
     {
-        config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "warm_start", &opts->qp_warm_start);
+        config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "warm_start", &nlp_opts->qp_warm_start);
     }
 
     // compute external QP residuals (for debugging)
@@ -1146,6 +1142,17 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
     return;
 }
 
+int ocp_nlp_sqp_rti_setup_qp_matrices_and_factorize(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
+                void *opts_, void *mem_, void *work_)
+{
+    ocp_nlp_sqp_rti_opts *opts = opts_;
+    ocp_nlp_sqp_rti_memory *mem = mem_;
+    ocp_nlp_sqp_rti_workspace *work = work_;
+
+    return ocp_nlp_common_setup_qp_matrices_and_factorize(config_, dims_, nlp_in_, nlp_out_, opts->nlp_opts, mem->nlp_mem, work->nlp_work);
+}
+
+
 
 int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     void *opts_, void *mem_, void *work_)
@@ -1451,6 +1458,7 @@ void ocp_nlp_sqp_rti_config_initialize_default(void *config_)
     config->memory_assign = &ocp_nlp_sqp_rti_memory_assign;
     config->workspace_calculate_size = &ocp_nlp_sqp_rti_workspace_calculate_size;
     config->evaluate = &ocp_nlp_sqp_rti;
+    config->setup_qp_matrices_and_factorize = &ocp_nlp_sqp_rti_setup_qp_matrices_and_factorize;
     config->memory_reset_qp_solver = &ocp_nlp_sqp_rti_memory_reset_qp_solver;
     config->eval_param_sens = &ocp_nlp_sqp_rti_eval_param_sens;
     config->eval_lagr_grad_p = &ocp_nlp_sqp_rti_eval_lagr_grad_p;
