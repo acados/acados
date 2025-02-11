@@ -64,6 +64,7 @@ typedef struct
     void (*opts_initialize_default)(void *config, void *dims, void *opts);
     void (*opts_update)(void *config, void *dims, void *opts);
     void (*opts_set)(void *config_, void *opts_, const char *field, void* value);
+    void (*opts_get)(void *config_, void *opts_, const char *field, void* value);
     acados_size_t (*memory_calculate_size)(void *config, void *dims, void *opts);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     void (*memory_get)(void *config_, void *mem_, const char *field, void* value);

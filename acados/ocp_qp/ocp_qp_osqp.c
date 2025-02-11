@@ -1069,6 +1069,14 @@ void ocp_qp_osqp_opts_set(void *config_, void *opts_, const char *field, void *v
 }
 
 
+void ocp_qp_osqp_opts_get(void *config_, void *opts_, const char *field, void *value)
+{
+    // ocp_qp_osqp_opts *opts = opts_;
+    printf("\nerror: ocp_qp_osqp_opts_get: not implemented for field %s\n", field);
+    exit(1);
+}
+
+
 
 /************************************************
  * memory
@@ -1803,6 +1811,7 @@ void ocp_qp_osqp_config_initialize_default(void *config_)
     config->opts_initialize_default = &ocp_qp_osqp_opts_initialize_default;
     config->opts_update = &ocp_qp_osqp_opts_update;
     config->opts_set = &ocp_qp_osqp_opts_set;
+    config->opts_get = &ocp_qp_osqp_opts_get;
     config->memory_calculate_size = &ocp_qp_osqp_memory_calculate_size;
     config->memory_assign = &ocp_qp_osqp_memory_assign;
     config->memory_get = &ocp_qp_osqp_memory_get;
