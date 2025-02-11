@@ -1012,31 +1012,15 @@ static void set_non_slacked_l1_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
     int *nu = dims->nu;
     int *ns = dims->ns;
     int *nns = mem->nns;
-    // ocp_qp_in *qp_in = mem->nlp_mem->qp_in;
     ocp_qp_in *relaxed_qp_in = mem->relaxed_qp_in;
 
     // be aware of rqz_QP = [r, q, zl_NLP, zl_QP, zu_NLP, zu_QP]
     for (int stage = 0; stage <= dims->N; stage++)
     {
-        // if (solve_slacked_qp)
-        // {
         // zl_QP
-        // blasfeo_dvecse(nns[stage], 1.0, qp_in->rqz+stage, nu[stage]+nx[stage]+ns[stage]);
         blasfeo_dvecse(nns[stage], 1.0, relaxed_qp_in->rqz+stage, nu[stage]+nx[stage]+ns[stage]);
         // zu_QP
-        // blasfeo_dvecse(nns[stage], 1.0, qp_in->rqz+stage, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
         blasfeo_dvecse(nns[stage], 1.0, relaxed_qp_in->rqz+stage, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
-        // printf("qp_in->rqz %d\n", stage);
-        // blasfeo_print_exp_tran_dvec(nu[stage] +nx[stage] + 2*(nns[stage]+ns[stage]), qp_in->rqz+stage, 0);
-        // }
-        // else
-        // {
-        //     // We remove the gradient contribution of the slacks variables, since we want to solve an unslacked QP
-        //     // zl_QP
-        //     blasfeo_dvecse(nns[stage], 0.0, qp_in->rqz+stage, nu[stage]+nx[stage]+ns[stage]);
-        //     // zu_QP
-        //     blasfeo_dvecse(nns[stage], 0.0, qp_in->rqz+stage, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
-        // }
     }
 }
 
@@ -1048,7 +1032,6 @@ static void set_non_slacked_l2_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
     int *nns = mem->nns;
     ocp_qp_in *qp_in = mem->nlp_mem->qp_in;
     ocp_qp_in *relaxed_qp_in = mem->relaxed_qp_in;
-    // TODO: we need to add the relaxed QP solver here
 
     // be aware of rqz_QP = [r, q, zl_NLP, zl_QP, zu_NLP, zu_QP]
     for (int stage = 0; stage <= dims->N; stage++)
