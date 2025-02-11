@@ -66,8 +66,6 @@ Ct  = 3.25e-4       # [N/krpm^2] Thrust coefficient
 dq  = 92e-3         # [m] distance between motors' center
 l   = dq/2          # [m] distance between motors' center and the axis of rotation
 
-INF = 1e5
-
 # timing parameters
 T_del = 0.02               # time between steps in seconds
 N = 50                     # number of shooting nodes

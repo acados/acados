@@ -31,7 +31,7 @@
 # reference : "Towards Time-optimal Tunnel-following for Quadrotors", Jon Arrizabalaga et al.
 
 import casadi as ca
-from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver, AcadosSimSolver
+from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver, AcadosSimSolver, ACADOS_INFTY
 import scipy.linalg
 
 from common import *
@@ -136,7 +136,7 @@ class AcadosCustomOcp:
 
         # Bounds on path constraints (inequality)
         lh = np.zeros(nh);        uh = np.zeros(nh)
-        lh[:] = -INF;             uh[:] = 1
+        lh[:] = -ACADOS_INFTY;             uh[:] = 1
 
         ocp.constraints.lh = lh
         ocp.constraints.uh = uh
