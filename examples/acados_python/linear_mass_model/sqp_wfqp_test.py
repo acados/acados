@@ -158,10 +158,8 @@ def create_solver_opts(setting: dict, N=4, Tf=2):
     solver_options.initial_objective_multiplier = initial_obj_multiplier
     if False:
         solver_options.use_exact_hessian_in_feas_qp = True
-        solver_options.use_steering_rules = True
     else:
         solver_options.use_exact_hessian_in_feas_qp = False
-        solver_options.use_steering_rules = False
 
     # set prediction horizon
     solver_options.tf = Tf

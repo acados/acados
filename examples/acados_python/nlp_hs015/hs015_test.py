@@ -119,10 +119,8 @@ def solve_infeasible_linearization(setting):
 
     if False:
         ocp.solver_options.use_exact_hessian_in_feas_qp = True
-        ocp.solver_options.use_steering_rules = True
     else:
         ocp.solver_options.use_exact_hessian_in_feas_qp = False
-        ocp.solver_options.use_steering_rules = False
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
 
     # initialize solver

@@ -92,7 +92,6 @@ class AcadosOcpOptions:
         self.__eval_residual_at_max_iter = None
         self.__initial_objective_multiplier = 1e0
         self.__use_exact_hessian_in_feas_qp = False
-        self.__use_steering_rules = False
         self.__fixed_hess = 0
         self.__globalization_funnel_init_increase_factor = 15.0
         self.__globalization_funnel_init_upper_bound = 1.0
@@ -872,17 +871,6 @@ class AcadosOcpOptions:
         return self.__use_exact_hessian_in_feas_qp
 
     @property
-    def use_steering_rules(self):
-        """
-        Determines if exact Hessian of the constraints or identity Hessian is
-        used in the feasibility QP of `SQP_WITH_FEASIBLE_QP`
-
-        Type: bool
-        Default: False
-        """
-        return self.__use_steering_rules
-
-    @property
     def globalization_funnel_initial_penalty_parameter(self):
         """
         Initialization.
@@ -1390,13 +1378,6 @@ class AcadosOcpOptions:
             self.__use_exact_hessian_in_feas_qp = use_exact_hessian_in_feas_qp
         else:
             raise Exception(f'Invalid datatype for use_exact_hessian_in_feas_qp. Should be bool, got {type(use_exact_hessian_in_feas_qp)}')
-
-    @use_steering_rules.setter
-    def use_steering_rules(self, use_steering_rules):
-        if isinstance(use_steering_rules, bool):
-            self.__use_steering_rules = use_steering_rules
-        else:
-            raise Exception(f'Invalid datatype for use_steering_rules. Should be bool, got {type(use_steering_rules)}')
 
     @globalization_eps_sufficient_descent.setter
     def globalization_eps_sufficient_descent(self, globalization_eps_sufficient_descent):

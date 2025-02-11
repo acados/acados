@@ -124,7 +124,6 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
     opts->initial_objective_multiplier = 1e0;
     opts->sufficient_l1_inf_reduction = 1e-1;
     opts->use_exact_hessian_in_feas_qp = false;
-    opts->use_steering_rules = false;
     opts->use_QP_l1_inf_from_slacks = false; // with we use the manual calculation, results seem to be more accurate and solvers performs better!
 
     // overwrite default submodules opts
@@ -246,11 +245,6 @@ void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, vo
         {
             bool* use_exact_hessian_in_feas_qp = (bool *) value;
             opts->use_exact_hessian_in_feas_qp = *use_exact_hessian_in_feas_qp;
-        }
-        else if (!strcmp(field, "use_steering_rules"))
-        {
-            bool* use_steering_rules = (bool *) value;
-            opts->use_steering_rules = *use_steering_rules;
         }
         else
         {
