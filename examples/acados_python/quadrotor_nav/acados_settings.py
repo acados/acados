@@ -56,7 +56,7 @@ class AcadosCustomOcp:
 
 
     def setup_acados_ocp(self):
-        '''Formulate Acados OCP'''
+        '''Formulate acados OCP'''
 
         # create casadi symbolic expressions
         sysModel = SysDyn()
@@ -113,7 +113,6 @@ class AcadosCustomOcp:
         # constrain AGV dynamics : acceleration, angular velocity (convex ?, Non-linear)
         dyn_constr_eqn = []
         dyn_constr_eqn = ca.vertcat(dyn_constr_eqn , proj_constr)
-        dyn_constr_len = dyn_constr_eqn.shape[0]
 
         ineq_constr_eqn = []
         ineq_constr_eqn = ca.vertcat(ineq_constr_eqn, dyn_constr_eqn)
@@ -160,13 +159,11 @@ class AcadosCustomOcp:
         ocp.solver_options.qp_solver_cond_N = int(N/2)
         ocp.solver_options.nlp_solver_type = "SQP_RTI"
         ocp.solver_options.tol = 1e-3
-        ocp.qp_solver_tol = 1e-3
 
         # create solver
-        solve_json = "planner_ocp.json"
         self.ocp = ocp
-        self.solver = AcadosOcpSolver(ocp, json_file = solve_json)
-        self.integrator = AcadosSimSolver(ocp, json_file = solve_json) #TODO
+        self.solver = AcadosOcpSolver(ocp, json_file = "planner_ocp.json")
+        self.integrator = AcadosSimSolver(ocp)
 
         return True
 
@@ -185,7 +182,7 @@ class AcadosCustomOcp:
             self.zeta_N = np.concatenate((self.zeta_N, zeta_i), axis = 1)
 
         self.u_N[:, 0] = u_0
-        # return status
+
 
     def cost_update_ref(self, zeta_0, u_ref):
 
