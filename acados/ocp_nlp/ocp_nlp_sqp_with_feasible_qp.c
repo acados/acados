@@ -1942,7 +1942,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->stat[mem->stat_n*sqp_iter+3] = nlp_res->inf_norm_res_comp;
         }
 
-        // Output
+        /* Output */
         if (nlp_opts->print_level > 0)
         {
             config->globalization->print_iteration(nlp_mem->cost_value,
@@ -1958,7 +1958,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         prev_levenberg_marquardt = nlp_opts->levenberg_marquardt;
 
-        // Termination
+        /* Termination */
         if (check_termination(sqp_iter, dims, nlp_res, mem, opts))
         {
 #if defined(ACADOS_WITH_OPENMP)
@@ -1973,7 +1973,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         double current_l1_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
         print_debug_output_double("Current l1 infeasibility: ", current_l1_infeasibility, nlp_opts->print_level, 2);
 
-        // Compute the search direction
+        /* search direction computation */
         int search_direction_status = 0;
         search_direction_status = byrd_omojokun_direction_computation(dims,
                                                                     config,
@@ -2035,7 +2035,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in,
                                                                               nlp_out, nlp_mem, mem,
                                                                               nlp_work, nlp_opts, &mem->alpha);
-
         if (globalization_status != ACADOS_SUCCESS)
         {
             if (nlp_opts->print_level > 1)
@@ -2051,7 +2050,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #endif
             return nlp_mem->status;
         }
-
 
         mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
         nlp_timings->time_glob += acados_toc(&timer1);
@@ -2157,30 +2155,6 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
             relaxed_idxs_rev[idxns[i]] = i+dims->ns[stage];
         }
     }
-    // additional pointer that keeps memory of the qp_in->idxs_rev
-    // mem->qp_idxs_rev = nlp_mem->qp_in->idxs_rev;
-
-    // set nlp_idxs_rev to solve hard-constrained QP -- MAYBE OUTDATED FROM HERE
-    // for (int stage = 0; stage <= dims->N; stage++)
-    // {
-    //     ns = dims->ns[stage];
-    //     int *nlp_idxs_rev = mem->nlp_idxs_rev[stage];
-    //     for (int i=0; i<dims->nb[i]+dims->ng[i]+dims->ni_nl[i]; i++)
-    //     {
-    //         nlp_idxs_rev[i] = -1;
-    //     }
-    // }
-
-    // for (int stage = 0; stage <= dims->N; stage++)
-    // {
-    //     config->constraints[stage]->model_get(config->constraints[stage], dims->constraints[stage], nlp_in->constraints[stage], "idxs", idxs);
-    //     ns = dims->ns[stage];
-    //     int *nlp_idxs_rev = mem->nlp_idxs_rev[stage];
-    //     for (int i=0; i<ns; i++)
-    //     {
-    //         nlp_idxs_rev[idxs[i]] = i;
-    //     }
-    // }
 
     ocp_nlp_precompute_common(config, dims, nlp_in, nlp_out, opts->nlp_opts, nlp_mem, nlp_work);
 
