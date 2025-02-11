@@ -96,7 +96,6 @@ void *ocp_nlp_sqp_wfqp_opts_assign(void *config_, void *dims_, void *raw_memory)
 }
 
 
-
 void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     ocp_nlp_dims *dims = dims_;
@@ -1322,49 +1321,49 @@ static void print_indices(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_workspace *work, 
 /************************************************
  * functions for QP preparation
  ************************************************/
+// TODO: we still need this somewhere such that we can use the feasibility QP with constraint Hessian matrix
+// static void ocp_nlp_sqp_wfqp_prepare_hessian_evaluation(ocp_nlp_config *config,
+//     ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+//     ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
+// {
+//     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
-static void ocp_nlp_sqp_wfqp_prepare_hessian_evaluation(ocp_nlp_config *config,
-    ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
-    ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
-{
-    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+//     int N = dims->N;
 
-    int N = dims->N;
+//     // int *nv = dims->nv;
+//     int *nx = dims->nx;
+//     int *nu = dims->nu;
 
-    // int *nv = dims->nv;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
+//     if (!nlp_mem->compute_hess)
+//     {
+//         printf("ocp_nlp_sqp_wfqp_prepare_hessian_evaluation: constant hessian not supported!\n\n");
+//         exit(1);
+//     }
 
-    if (!nlp_mem->compute_hess)
-    {
-        printf("ocp_nlp_sqp_wfqp_prepare_hessian_evaluation: constant hessian not supported!\n\n");
-        exit(1);
-    }
+// #if defined(ACADOS_WITH_OPENMP)
+//     #pragma omp parallel for
+// #endif
+//     for (int i = 0; i <= N; i++)
+//     {
+//         // TODO: first compute cost hessian (without adding) and avoid setting everything to zero?
+//         // init Hessians to 0
 
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
-    for (int i = 0; i <= N; i++)
-    {
-        // TODO: first compute cost hessian (without adding) and avoid setting everything to zero?
-        // init Hessians to 0
+//         // TODO: avoid setting qp_in->RSQ to zero in ocp_nlp_approximate_qp_matrices?
+//         blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->RSQ_constr+i, 0, 0);
+//         blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->RSQ_cost+i, 0, 0);
+//     }
 
-        // TODO: avoid setting qp_in->RSQ to zero in ocp_nlp_approximate_qp_matrices?
-        blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->RSQ_constr+i, 0, 0);
-        blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->RSQ_cost+i, 0, 0);
-    }
-
-    for (int i = 0; i < N; i++)
-    {
-        config->dynamics[i]->memory_set_RSQrq_ptr(mem->RSQ_constr+i, nlp_mem->dynamics[i]);
-    }
-    for (int i = 0; i <= N; i++)
-    {
-        config->cost[i]->memory_set_RSQrq_ptr(mem->RSQ_cost+i, nlp_mem->cost[i]);
-        config->constraints[i]->memory_set_RSQrq_ptr(mem->RSQ_constr+i, nlp_mem->constraints[i]);
-    }
-    return;
-}
+//     for (int i = 0; i < N; i++)
+//     {
+//         config->dynamics[i]->memory_set_RSQrq_ptr(mem->RSQ_constr+i, nlp_mem->dynamics[i]);
+//     }
+//     for (int i = 0; i <= N; i++)
+//     {
+//         config->cost[i]->memory_set_RSQrq_ptr(mem->RSQ_cost+i, nlp_mem->cost[i]);
+//         config->constraints[i]->memory_set_RSQrq_ptr(mem->RSQ_constr+i, nlp_mem->constraints[i]);
+//     }
+//     return;
+// }
 
 // update QP rhs for SQP (step prim var, abs dual var)
 // - use cost gradient and dynamics residual from memory
@@ -1520,7 +1519,6 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
         printf("\n\nSQP: ocp_qp_in at iteration %d\n", sqp_iter);
         print_ocp_qp_dims(qp_in->dim);
         printf("Built- in qp_in:\n");
-        print_ocp_qp_dims(nlp_mem->qp_in->dim);
         print_ocp_qp_in(qp_in);
     }
 
@@ -2074,7 +2072,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
 static void set_standard_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp_qp_in *qp_in)
 {
     mem->relaxed_qp_in->BAbt = qp_in->BAbt; // dynamics matrix & vector work space
-    mem->relaxed_qp_in->RSQrq = qp_in->RSQrq; // hessian of cost & vector work space
+    // mem->relaxed_qp_in->RSQrq = qp_in->RSQrq; // hessian of cost & vector work space we do not want this!!
     mem->relaxed_qp_in->DCt = qp_in->DCt; // inequality constraints matrix
     mem->relaxed_qp_in->idxb = qp_in->idxb;
     mem->relaxed_qp_in->idxe = qp_in->idxe;
@@ -2214,7 +2212,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             /* Prepare the QP data */
             // linearize NLP and update QP matrices
             // for nominal QP only. relaxed QP has identity Hessian
-            ocp_nlp_sqp_wfqp_prepare_hessian_evaluation(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
+            // TODO: this seems outdated at the moment!
+            // ocp_nlp_sqp_wfqp_prepare_hessian_evaluation(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
             acados_tic(&timer1);
             // nominal QP solver
             ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
