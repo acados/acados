@@ -896,6 +896,16 @@ void ocp_qp_ooqp_opts_set(void *config_, void *opts_, const char *field, void *v
 
 
 
+void ocp_qp_ooqp_opts_get(void *config_, void *opts_, const char *field, void *value)
+{
+    // ocp_qp_ooqp_opts *opts = opts_;
+    printf("\nerror: ocp_qp_ooqp_opts_get: not implemented for field %s\n", field);
+    exit(1);
+}
+
+
+
+
 acados_size_t ocp_qp_ooqp_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
     size_t nx = get_number_of_primal_vars(dims);
@@ -1190,6 +1200,7 @@ void ocp_qp_ooqp_config_initialize_default(void *config_)
         (void (*)(void *, void *, void *)) & ocp_qp_ooqp_opts_initialize_default;
     config->opts_update = (void (*)(void *, void *, void *)) & ocp_qp_ooqp_opts_update;
     config->opts_set = &ocp_qp_ooqp_opts_set;
+    config->opts_get = &ocp_qp_ooqp_opts_get;
     config->memory_calculate_size =
         (size_t (*)(void *, void *, void *)) & ocp_qp_ooqp_memory_calculate_size;
     config->memory_assign =

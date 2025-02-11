@@ -171,6 +171,16 @@ void ocp_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void *
 }
 
 
+void ocp_qp_hpipm_opts_get(void *config_, void *opts_, const char *field, void *value)
+{
+    ocp_qp_hpipm_opts *opts = opts_;
+
+    d_ocp_qp_ipm_arg_get((char *) field, opts->hpipm_opts, value);
+
+    return;
+}
+
+
 
 /************************************************
  * memory
@@ -479,6 +489,7 @@ void ocp_qp_hpipm_config_initialize_default(void *config_)
     config->opts_initialize_default = &ocp_qp_hpipm_opts_initialize_default;
     config->opts_update = &ocp_qp_hpipm_opts_update;
     config->opts_set = &ocp_qp_hpipm_opts_set;
+    config->opts_get = &ocp_qp_hpipm_opts_get;
     config->memory_calculate_size = &ocp_qp_hpipm_memory_calculate_size;
     config->memory_assign = &ocp_qp_hpipm_memory_assign;
     config->memory_get = &ocp_qp_hpipm_memory_get;

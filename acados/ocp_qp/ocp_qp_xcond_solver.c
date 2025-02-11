@@ -299,6 +299,19 @@ void ocp_qp_xcond_solver_opts_set_(void *config_, void *opts_, const char *field
 
 
 
+void ocp_qp_xcond_solver_opts_get_(void *config_, void *opts_, const char *field, void* value)
+{
+    ocp_qp_xcond_solver_opts *opts = (ocp_qp_xcond_solver_opts *) opts_;
+    ocp_qp_xcond_solver_config *config = config_;
+    qp_solver_config *qp_solver = config->qp_solver;
+    // ocp_qp_xcond_config *xcond = config->xcond;
+
+    qp_solver->opts_get(qp_solver, opts->qp_solver_opts, field, value);
+
+    return;
+}
+
+
 /************************************************
  * memory
  ************************************************/
@@ -717,6 +730,7 @@ void ocp_qp_xcond_solver_config_initialize_default(void *config_)
     config->opts_initialize_default = &ocp_qp_xcond_solver_opts_initialize_default;
     config->opts_update = &ocp_qp_xcond_solver_opts_update;
     config->opts_set = &ocp_qp_xcond_solver_opts_set_;
+    config->opts_get = &ocp_qp_xcond_solver_opts_get_;
     config->memory_calculate_size = &ocp_qp_xcond_solver_memory_calculate_size;
     config->memory_assign = &ocp_qp_xcond_solver_memory_assign;
     config->memory_get = &ocp_qp_xcond_solver_memory_get;
