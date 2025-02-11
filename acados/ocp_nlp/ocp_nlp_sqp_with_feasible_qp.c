@@ -2061,66 +2061,20 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
 }
 
 /********************************
-* Functions for standard QP
+* Functions for relaxed QP
 *********************************/
-static void set_standard_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp_qp_in *qp_in)
+static void set_relaxed_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp_qp_in *qp_in)
 {
     mem->relaxed_qp_in->BAbt = qp_in->BAbt; // dynamics matrix & vector work space
-    // mem->relaxed_qp_in->RSQrq = qp_in->RSQrq; // hessian of cost & vector work space we do not want this!!
+    // TODO: could we reuse ->b as well?
+    // mem->relaxed_qp_in->RSQrq -->  Hessians should be different Hessian
     mem->relaxed_qp_in->DCt = qp_in->DCt; // inequality constraints matrix
     mem->relaxed_qp_in->idxb = qp_in->idxb;
     mem->relaxed_qp_in->idxe = qp_in->idxe;
 
-    // mem->relaxed_qp_in->diag_H_flag = qp_in->diag_H_flag; // set somewhere else!
+    // mem->relaxed_qp_in->diag_H_flag // if identity Hessian is used for feasibility QP, we need to set it elsewhere
     // mem->relaxed_qp_in->m = qp_in->m; // TODO: Not sure what happens here
 }
-
-// static void approximate_standard_qp_vectors(ocp_nlp_config *config,
-//     ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
-//     ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
-// {
-//     int N = dims->N;
-//     int *nv = dims->nv;
-//     int *nx = dims->nx;
-//     // int *nu = dims->nu;
-//     int *ni = dims->ni;
-//     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-
-// #if defined(ACADOS_WITH_OPENMP)
-//     #pragma omp parallel for
-// #endif
-//     for (int i = 0; i <= N; i++)
-//     {
-//         // g
-//         blasfeo_dveccp(nv[i], nlp_mem->cost_grad + i, 0, mem->standard_qp_in->rqz + i, 0);
-//         // TODO: blasfeo_dveccp(nv[i], nlp_mem->cost_grad + i, 0, nlp_mem->qp_in->rqz + i, 0);
-
-//         // b
-//         if (i < N)
-//             blasfeo_dveccp(nx[i + 1], nlp_mem->dyn_fun + i, 0, mem->standard_qp_in->b + i, 0);
-//             // TODO: blasfeo_dveccp(nx[i + 1], nlp_mem->dyn_fun + i, 0, nlp_mem->qp_in->b + i, 0);
-
-//         // evaluate constraint residuals
-//         config->constraints[i]->update_qp_vectors(config->constraints[i], dims->constraints[i],
-//             in->constraints[i], opts->constraints[i], nlp_mem->constraints[i], work->constraints[i]);
-
-//         // copy ineq function value into nlp mem, then into QP
-//         struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
-//         blasfeo_dveccp(2 * ni[i], ineq_fun, 0, nlp_mem->ineq_fun + i, 0);
-
-//         // d
-//         blasfeo_dveccp(2 * ni[i], nlp_mem->ineq_fun + i, 0, mem->standard_qp_in->d + i, 0);
-//         // TODO: blasfeo_dveccp(2 * ni[i], nlp_mem->ineq_fun + i, 0, nlp_mem->qp_in->d + i, 0);
-//     }
-// }
-
-// static void destroy_standard_qp_solver_memory(ocp_nlp_sqp_wfqp_memory *mem)
-// {
-//     free(mem->standard_qp_solver);
-//     free(mem->standard_qp_solver_dims);
-//     free(mem->standard_qp_in);
-//     free(mem->standard_qp_out);
-// }
 
 
 /************************************************
@@ -2172,8 +2126,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     omp_set_num_threads(opts->nlp_opts->num_threads);
 #endif
 
-    // allocate_standard_qp_solver(mem, config, dims, opts);
-    set_standard_qp_in_matrix_pointers(mem, nominal_qp_in);
+    set_relaxed_qp_in_matrix_pointers(mem, nominal_qp_in);
 
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
     // feasibility QP objective always constant! Only done once!
@@ -2228,7 +2181,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             ocp_nlp_sqp_wfqp_res_compute(dims, nlp_in, nlp_out, nlp_res, mem, relaxed_qp_in);
             ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
 
-            // approximate_standard_qp_vectors(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
         }
 
         // Initialize the memory for different globalization strategies
@@ -2271,7 +2223,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #endif
             nlp_mem->iter = sqp_iter;
             nlp_timings->time_tot = acados_toc(&timer0);
-            // destroy_standard_qp_solver_memory(mem); // do I need that? Since config is anyway destroyed in the interface?
             return mem->nlp_mem->status;
         }
 
