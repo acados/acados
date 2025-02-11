@@ -80,6 +80,7 @@ class AcadosOcpOptions:
         self.__qp_solver_cond_ric_alg = 1
         self.__qp_solver_ric_alg = 1
         self.__qp_solver_mu0 = 0.0
+        self.__tau_min = 0.0
         self.__solution_sens_qp_t_lam_min = 1e-9
         self.__rti_log_residuals = 0
         self.__rti_log_only_available_residuals = 0
@@ -488,6 +489,16 @@ class AcadosOcpOptions:
         Default: 0
         """
         return self.__qp_solver_mu0
+
+    @property
+    def tau_min(self):
+        """
+        For HPIPM QP solver: Minimum value for tau for the barrier parameter.
+        If 0, the default value according to hpipm_mode is used.
+
+        Default: 0
+        """
+        return self.__tau_min
 
     @property
     def solution_sens_qp_t_lam_min(self):
@@ -1441,6 +1452,13 @@ class AcadosOcpOptions:
             self.__qp_solver_mu0 = qp_solver_mu0
         else:
             raise Exception('Invalid qp_solver_mu0 value. qp_solver_mu0 must be a positive float.')
+
+    @tau_min.setter
+    def tau_min(self, tau_min):
+        if isinstance(tau_min, float) and tau_min >= 0:
+            self.__tau_min = tau_min
+        else:
+            raise Exception('Invalid tau_min value. tau_min must be a positive float.')
 
     @solution_sens_qp_t_lam_min.setter
     def solution_sens_qp_t_lam_min(self, solution_sens_qp_t_lam_min):

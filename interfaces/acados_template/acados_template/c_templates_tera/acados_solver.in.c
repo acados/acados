@@ -2410,6 +2410,11 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     double qp_solver_mu0 = {{ solver_options.qp_solver_mu0 }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_mu0", &qp_solver_mu0);
 {%- endif %}
+
+{% if solver_options.tau_min > 0 %}
+    double tau_min = {{ solver_options.tau_min }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_tau_min", &tau_min);
+{%- endif %}
 {%- endif %}
 
 {% if solver_options.nlp_solver_type == "SQP" or solver_options.nlp_solver_type == "DDP" %}
