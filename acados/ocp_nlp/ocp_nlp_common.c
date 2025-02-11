@@ -3281,9 +3281,14 @@ int ocp_nlp_common_setup_qp_matrices_and_factorize(ocp_nlp_config *config, ocp_n
     tmp_int = 1;
     config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "update_fact_exit", &tmp_int);
     // HPIPM: set t_min, lam_min to avoid ill-conditioning
+    // backup
+    double t0_min_bkp, lam0_min;
+    config->qp_solver->opts_get(config->qp_solver, nlp_opts->qp_solver_opts, "t0_min", &t0_min_bkp);
+    config->qp_solver->opts_get(config->qp_solver, nlp_opts->qp_solver_opts, "lam0_min", &lam0_min);
+    // set
     double tmp_double = nlp_opts->solution_sens_qp_t_lam_min;
-    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "t_min", &tmp_double);
-    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "lam_min", &tmp_double);
+    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "t0_min", &tmp_double);
+    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "lam0_min", &tmp_double);
 
     // QP solve
     qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, NULL, NULL);
@@ -3291,9 +3296,8 @@ int ocp_nlp_common_setup_qp_matrices_and_factorize(ocp_nlp_config *config, ocp_n
     // reset QP solver settings
     qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &nlp_opts->qp_warm_start);
     qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "iter_max", &nlp_opts->qp_iter_max);
-    tmp_double = 1e-16; // TODO: fix this if t_min, lam_min defaults change in HPIPM, or if they are exposed in acados high level interfaces.
-    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "t_min", &tmp_double);
-    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "lam_min", &tmp_double);
+    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "t0_min", &t0_min_bkp);
+    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "lam0_min", &lam0_min);
 
     if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
     {
