@@ -75,6 +75,7 @@ typedef struct
     bool use_QP_l1_inf_from_slacks; // Sums up the slack variable values in the QPs as l1_inf
 } ocp_nlp_sqp_wfqp_opts;
 
+
 //
 acados_size_t ocp_nlp_sqp_wfqp_opts_calculate_size(void *config, void *dims);
 //
@@ -104,8 +105,6 @@ typedef struct
 
     int *nns;  // number of non-slacked constraints in NLP
     int **idxns;  // indices of non-slacked constraints in NLP
-    // int **nlp_idxs_rev;  // reverse storage of slacks in NLP problem
-    // int **qp_idxs_rev;  // reverse storage of slacks in slacked QP problem
 
     // statistics
     double *stat;
@@ -123,7 +122,6 @@ typedef struct
     struct blasfeo_dmat *RSQ_cost;
     struct blasfeo_dmat *RSQ_constr;
 
-    // TODO: add slacked qp_solver.
     double norm_feas_qp_pi;
     double norm_feas_qp_lam_unslacked_bounds;
     double norm_feas_qp_lam_slacked_constraints;
@@ -138,15 +136,6 @@ typedef struct
     double predictor_qp_objective;
     double predictor_lp_objective;
     double pred_l1_inf_QP_optimality;
-
-    // ocp_qp_xcond_solver_dims *standard_qp_solver_dims;
-    // ocp_qp_xcond_solver_config *standard_qp_solver;
-    // // ocp_qp_xcond_solver_opts *standard_qp_solver_opts;
-    // ocp_qp_xcond_solver_memory *standard_qp_solver_mem;
-    // ocp_qp_xcond_solver_workspace *standard_qp_solver_work;
-    // // qp in & out
-    // ocp_qp_in *standard_qp_in;
-    // ocp_qp_out *standard_qp_out;
 
     ocp_qp_xcond_solver relaxed_qp_solver;
     ocp_qp_xcond_solver_memory *relaxed_qp_solver_mem;
