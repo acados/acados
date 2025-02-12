@@ -64,7 +64,7 @@ classdef GenerateContext < handle
             obj.casadi_codegen_opts.casadi_int = 'int';
             obj.casadi_codegen_opts.casadi_real = 'double';
             try
-                CodeGenerator('foo', struct('force_canonical', true))
+                CodeGenerator('foo', struct('force_canonical', true));
                 obj.casadi_codegen_opts.force_canonical = false;
             catch
                 % Option does not exist
