@@ -51,9 +51,9 @@ def main():
     # run test cases
     params = {'globalization': ['FUNNEL_L1PEN_LINESEARCH'],
             #   'nlp_solver_type': ['SQP', 'SQP_WITH_FEASIBLE_QP'],
-              'nlp_solver_type': ['SQP_WITH_FEASIBLE_QP'],
-              'init_iterate': [np.array([0.0])]}
-            #   'init_iterate': [np.array([-0.001]), np.array([0.0])]}
+              'nlp_solver_type': ['SQP'],
+              'init_iterate': [np.array([-0.001])]}
+            #   'init_iterate': [np.array([-1.0]), np.array([-0.001]), np.array([0.0]), np.array([-0.5])]}
 
     # test_residual_computation_sqp_wfqp()
     GIAF = False
@@ -115,18 +115,19 @@ def create_solver(setting, GIAF):
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.qp_solver_cond_N = N
     ocp.solver_options.qp_solver_iter_max = 1000
-    ocp.solver_options.qp_tol = 1e-12
+    ocp.solver_options.qp_tol = 1e-9
     ocp.solver_options.qp_solver_mu0 = 1e4
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.regularize_method = 'MIRROR'
     ocp.solver_options.integrator_type = 'DISCRETE'
-    ocp.solver_options.print_level = 4
+    ocp.solver_options.print_level = 2
     ocp.solver_options.nlp_solver_type = nlp_solver_type
     ocp.solver_options.globalization = globalization
     ocp.solver_options.globalization_full_step_dual = True
     ocp.solver_options.globalization_alpha_min = 1e-15
-    ocp.solver_options.nlp_solver_max_iter = 1
+    ocp.solver_options.nlp_solver_max_iter = 20
     ocp.solver_options.initial_objective_multiplier = 1e0
+    ocp.solver_options.search_direction_mode = "BYRD_OMOJOKUN"
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
 
     return ocp, ocp_solver

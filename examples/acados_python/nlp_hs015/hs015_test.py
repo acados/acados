@@ -104,7 +104,7 @@ def solve_infeasible_linearization(setting):
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.qp_solver_cond_N = N
     ocp.solver_options.qp_solver_iter_max = 1000
-    ocp.solver_options.qp_tol = 1e-12
+    ocp.solver_options.qp_tol = 1e-9
     ocp.solver_options.qp_solver_mu0 = 1e4
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.regularize_method = 'MIRROR'
@@ -116,6 +116,7 @@ def solve_infeasible_linearization(setting):
     ocp.solver_options.globalization_alpha_min = 1e-15
     ocp.solver_options.nlp_solver_max_iter = 100
     ocp.solver_options.initial_objective_multiplier = 1e0
+    ocp.solver_options.search_direction_mode = "BYRD_OMOJOKUN"
 
     if False:
         ocp.solver_options.use_exact_hessian_in_feas_qp = True

@@ -134,11 +134,11 @@ def create_solver_opts(setting: dict, N=4, Tf=2):
     # set options
     solver_options.N_horizon = N
     solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-    qp_tol = 5e-7
-    solver_options.qp_solver_tol_stat = qp_tol
-    solver_options.qp_solver_tol_eq = qp_tol
-    solver_options.qp_solver_tol_ineq = qp_tol
-    solver_options.qp_solver_tol_comp = qp_tol
+    # qp_tol = 5e-7
+    # solver_options.qp_solver_tol_stat = qp_tol
+    # solver_options.qp_solver_tol_eq = qp_tol
+    # solver_options.qp_solver_tol_ineq = qp_tol
+    # solver_options.qp_solver_tol_comp = qp_tol
     solver_options.qp_solver_ric_alg = 1
     solver_options.qp_solver_mu0 = 1e4
     solver_options.qp_solver_warm_start = 1
@@ -151,8 +151,9 @@ def create_solver_opts(setting: dict, N=4, Tf=2):
     solver_options.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'
     solver_options.globalization = 'FUNNEL_L1PEN_LINESEARCH'
     solver_options.globalization_full_step_dual = True
-    solver_options.print_level = 4
-    solver_options.nlp_solver_max_iter = 6
+    solver_options.print_level = 1
+    solver_options.nlp_solver_max_iter = 10
+    solver_options.search_direction_mode = "BYRD_OMOJOKUN"
 
     solver_options.globalization_funnel_use_merit_fun_only = use_merit_fun_only
     solver_options.initial_objective_multiplier = initial_obj_multiplier

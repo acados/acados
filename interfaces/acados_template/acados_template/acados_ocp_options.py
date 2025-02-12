@@ -92,6 +92,7 @@ class AcadosOcpOptions:
         self.__eval_residual_at_max_iter = None
         self.__initial_objective_multiplier = 1e0
         self.__use_exact_hessian_in_feas_qp = False
+        self.__search_direction_mode = 0
         self.__fixed_hess = 0
         self.__globalization_funnel_init_increase_factor = 15.0
         self.__globalization_funnel_init_upper_bound = 1.0
@@ -871,6 +872,20 @@ class AcadosOcpOptions:
         return self.__use_exact_hessian_in_feas_qp
 
     @property
+    def search_direction_mode(self):
+        """
+        Determines how the search direction should be solved in the initial iteration.
+
+        This option is set with strings instead of int! Possible entries are
+        NOMINAL_QP, BYRD_OMOJOKUN, FEASIBILITY_QP
+
+        Type: int
+        Default: 0 (NOMINAL_QP)
+        Other options: 1 (BYRD_OMOJOKUN), 2 (FEASIBILITY_QP)
+        """
+        return self.__search_direction_mode
+
+    @property
     def globalization_funnel_initial_penalty_parameter(self):
         """
         Initialization.
@@ -1378,6 +1393,20 @@ class AcadosOcpOptions:
             self.__use_exact_hessian_in_feas_qp = use_exact_hessian_in_feas_qp
         else:
             raise Exception(f'Invalid datatype for use_exact_hessian_in_feas_qp. Should be bool, got {type(use_exact_hessian_in_feas_qp)}')
+
+    @search_direction_mode.setter
+    def search_direction_mode(self, search_direction_mode):
+        if isinstance(search_direction_mode, str):
+            if search_direction_mode == 'NOMINAL_QP':
+                self.__search_direction_mode = 0
+            elif search_direction_mode == 'BYRD_OMOJOKUN':
+                self.__search_direction_mode = 1
+            elif search_direction_mode == 'FEASIBILITY_QP':
+                self.__search_direction_mode = 2
+            else:
+                Exception(f'Invalid string for search_direction_mode. Should be NOMINAL_QP, BYRD_OMOJOKUN, FEASIBILITY_QP, got {search_direction_mode}')
+        else:
+            raise Exception(f'Invalid datatype for search_direction_mode. Should be str, got {type(search_direction_mode)}')
 
     @globalization_eps_sufficient_descent.setter
     def globalization_eps_sufficient_descent(self, globalization_eps_sufficient_descent):
