@@ -1,9 +1,8 @@
 import numpy as np
 import casadi as ca
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosMultiphaseOcp, AcadosModel
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosMultiphaseOcp, AcadosModel, ACADOS_INFTY
 
-INF = 1e15
 
 def export_double_integrator_model(dim_q, dt) -> AcadosModel:
     model_name = 'double_integrator_disc_dyn'
@@ -55,7 +54,6 @@ def main():
     multiphase_ocp = AcadosMultiphaseOcp(N_list=N_list)
 
     #### PHASE 0: velocity can take any value ####
-
     # Dynamics
     phase_idx = 0
     acados_model = export_double_integrator_model(nq, dt)
@@ -91,7 +89,7 @@ def main():
     # Nonlinear constraint: velocity must be nonpositive (yes, this is actually
     # a linear constraint, but we're enforcing it using the acados nonlinear constraint interface)
     h_expr = acados_model.x[nq:]
-    h_lb = -INF*np.ones(nv)
+    h_lb = -1e-1 * ACADOS_INFTY*np.ones(nv)  # One-sided constraint with qpOASES not supported yet, otherwise we'd use -ACADOS_INFTY
     h_ub = np.zeros(nv)
 
     acados_model.con_h_expr = h_expr
@@ -135,6 +133,7 @@ def main():
 
     status = ocp_solver.solve()
     ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+    assert status == 0, f'acados returned status {status}'
 
 if __name__ == '__main__':
     main()
