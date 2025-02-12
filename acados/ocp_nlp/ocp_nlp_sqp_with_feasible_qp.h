@@ -48,6 +48,14 @@ extern "C" {
 #include "acados/utils/types.h"
 
 
+// enum of return values
+enum search_direction_mode
+{
+    NOMINAL_QP = 0,
+    BYRD_OMOJOKUN = 1,
+    FEASIBILITY_QP = 2,
+};
+
 
 /************************************************
  * options
@@ -73,6 +81,7 @@ typedef struct
     double sufficient_l1_inf_reduction; //scalar multiplication factor for
     bool use_exact_hessian_in_feas_qp; // Either use exact Hessian or identity matrix in feasibility QP
     bool use_QP_l1_inf_from_slacks; // Sums up the slack variable values in the QPs as l1_inf
+    int search_direction_mode; // determines how the QPs should be solved
 } ocp_nlp_sqp_wfqp_opts;
 
 
@@ -132,10 +141,9 @@ typedef struct
 
     double inf_norm_res_comp_feasibility;
     double inf_norm_res_stat_feasibility;
-    bool needs_steering_step;
-    double predictor_qp_objective;
-    double predictor_lp_objective;
     double pred_l1_inf_QP_optimality;
+
+    int search_direction_mode;
 
     ocp_qp_xcond_solver relaxed_qp_solver;
     ocp_qp_xcond_solver_memory *relaxed_qp_solver_mem;
