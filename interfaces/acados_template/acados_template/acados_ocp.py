@@ -874,6 +874,9 @@ class AcadosOcp:
         if opts.qp_solver_cond_N is None:
             opts.qp_solver_cond_N = opts.N_horizon
 
+        if opts.tau_min > 0 and not "HPIPM" in opts.qp_solver:
+            raise Exception('tau_min > 0 is only compatible with HPIPM.')
+
         if opts.qp_solver_cond_block_size is not None:
             if sum(opts.qp_solver_cond_block_size) != opts.N_horizon:
                 raise Exception(f'sum(qp_solver_cond_block_size) = {sum(opts.qp_solver_cond_block_size)} != N = {opts.N_horizon}.')

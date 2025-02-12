@@ -493,8 +493,10 @@ class AcadosOcpOptions:
     @property
     def tau_min(self):
         """
-        For HPIPM QP solver: Minimum value for tau for the barrier parameter.
+        Minimum value for tau for the barrier parameter.
+        Relevant if an interior point method is used as a (sub)solver, right now this is only HPIPM.
         If 0, the default value according to hpipm_mode is used.
+        If no interior point method is used, this is set to 0.
 
         Default: 0
         """
