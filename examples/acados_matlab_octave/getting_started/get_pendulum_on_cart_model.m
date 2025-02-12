@@ -87,7 +87,6 @@ function model = get_pendulum_on_cart_model(varargin)
     model.xdot = xdot;
     model.u = u;
     model.p = param;
-    model.p_global = SX.sym('p_global', 500);
 
     model.f_expl_expr = f_expl_expr;
     model.f_impl_expr = f_impl_expr;

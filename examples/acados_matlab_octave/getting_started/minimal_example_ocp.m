@@ -91,8 +91,6 @@ ocp.constraints.uh = U_max;
 ocp.constraints.uh_0 = U_max;
 ocp.constraints.x0 = x0;
 
-ocp.p_global_values = ones(500, 1);
-
 % define solver options
 ocp.solver_options.N_horizon = N;
 ocp.solver_options.tf = T;
