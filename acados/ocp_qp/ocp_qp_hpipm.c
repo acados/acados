@@ -34,12 +34,12 @@
 #include <assert.h>
 #include <string.h>
 // hpipm
-#include "hpipm/include/hpipm_d_ocp_qp.h"
-#include "hpipm/include/hpipm_d_ocp_qp_ipm.h"
-#include "hpipm/include/hpipm_d_ocp_qp_sol.h"
+#include "hpipm_d_ocp_qp.h"
+#include "hpipm_d_ocp_qp_ipm.h"
+#include "hpipm_d_ocp_qp_sol.h"
 
 // uncomment to codegen QP
-// #include "hpipm/include/hpipm_d_ocp_qp_utils.h"
+// #include "hpipm_d_ocp_qp_utils.h"
 
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
