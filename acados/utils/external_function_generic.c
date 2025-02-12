@@ -1333,9 +1333,9 @@ void external_function_external_param_generic_assign(external_function_external_
     fun->ptr_ext_mem = raw_memory;
 
     // char pointer for byte advances
-    char *c_ptr = raw_memory;
+    // char *c_ptr = raw_memory;
 
-    assert((char *) raw_memory + external_function_external_param_generic_calculate_size(fun, &fun->opts) >= c_ptr);
+    assert((char *) raw_memory + external_function_external_param_generic_calculate_size(fun, &fun->opts) >= (char *) raw_memory);
 
     return;
 }
