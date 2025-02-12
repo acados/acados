@@ -68,27 +68,27 @@ def solve_and_compute_sens(p_test, tau):
     np_test = p_test.shape[0]
 
     ocp = export_parametric_ocp()
-    # ocp.solver_options.solution_sens_qp_t_lam_min = tau
-    ocp.solver_options.qp_solver_tau_min = tau
-    # ocp.solver_options.qp_solver_tol_comp = 1e-6
-    # ocp.solver_options.nlp_solver_tol_comp = 1e1 * tau
+    ocp.solver_options.tau_min = tau
+    ocp.solver_options.nlp_solver_tol_comp = tau
+    ocp.solver_options.qp_solver_tol_comp = 1e-6
+    ocp.solver_options.qp_solver_t0_init = 0
+    ocp.solver_options.nlp_solver_max_iter = 2 # QP should converge in one iteration
 
-    # solver creation arguments
     ocp_solver = AcadosOcpSolver(ocp, json_file="parameter_augmented_acados_ocp.json", verbose=False)
 
     sens_x = np.zeros(np_test)
-    u_opt = np.zeros(np_test)
+    solution = np.zeros(np_test)
 
     for i, p in enumerate(p_test):
         p_val = np.array([p])
 
         ocp_solver.set_p_global_and_precompute_dependencies(p_val)
         status = ocp_solver.solve()
-        u_opt[i] = ocp_solver.get(0, "x")
+        solution[i] = ocp_solver.get(0, "x")
 
-        if status not in [0]:
-            print(f"OCP solver returned status {status} at {i}th p value {p}, {tau=}.")
+        if status != 0:
             ocp_solver.print_statistics()
+            print(f"OCP solver returned status {status} at {i}th p value {p}, {tau=}.")
             breakpoint()
 
         ocp_solver.setup_qp_matrices_and_factorize()
@@ -96,7 +96,7 @@ def solve_and_compute_sens(p_test, tau):
         out_dict = ocp_solver.eval_solution_sensitivity(0, "p_global", return_sens_x=True)
         sens_x[i] = out_dict['sens_x'].item()
 
-    return u_opt, sens_x
+    return solution, sens_x
 
 def main():
     p_nominal = 0.0
@@ -104,60 +104,64 @@ def main():
     p_test = np.arange(p_nominal - 2, p_nominal + 2, delta_p)
     sens_list = []
     labels_list = []
-    # tau = 1e-6
-    # u_opt, sens_x = solve_and_compute_sens(p_test, tau)
+    tau = 1e-6
+    solution, sens_x = solve_and_compute_sens(p_test, tau)
 
-    # # Compare to numerical gradients
-    # sens_x_fd = np.gradient(u_opt, delta_p)
-    # test_tol = 1e-2
-    # median_diff = np.median(np.abs(sens_x - sens_x_fd))
-    # print(f"Median difference between policy gradient obtained by acados and via FD is {median_diff} should be < {test_tol}.")
-    # # test: check median since derivative cannot be compared at active set changes
-    # assert median_diff <= test_tol
+    # Compare to numerical gradients
+    sens_x_fd = np.gradient(solution, delta_p)
+    test_tol = 1e-2
+    median_diff = np.median(np.abs(sens_x - sens_x_fd))
+    print(f"Median difference between policy gradient obtained by acados and via FD is {median_diff} should be < {test_tol}.")
+    # test: check median since derivative cannot be compared at active set changes
+    assert median_diff <= test_tol
 
-    # sens_list = [sens_x]
-    # labels_list = [r"$\tau = 10^{-6}$"]
-    tau_vals = [1e-4, 1e-3, 1e-2]
+    sens_list.append(sens_x)
+    labels_list.append(r"$\tau = 10^{-6}$")
+
+    tau_vals = [1e-4, 1e-3, 1e-2, 1e-1]
+    # tau_vals = [1e-3]
     for tau in tau_vals:
         _, sens_x_tau = solve_and_compute_sens(p_test, tau)
         sens_list.append(sens_x_tau)
         labels_list.append(r"$\tau =" + f"{tau} $")
 
-    plot_solution_sensitivities_results(p_test, u_opt, sens_list, labels_list,
-                 title=None, parameter_name="p")
+    plot_solution_sensitivities_results(p_test, solution, sens_list, labels_list,
+                 title=None, parameter_name=r"$\theta$")
 
 
-def plot_solution_sensitivities_results(p_test, pi, sens_list, labels_list, title=None, parameter_name=""):
-
+def plot_solution_sensitivities_results(p_test, solution, sens_list, labels_list, title=None, parameter_name=""):
     nsub = 2
-
-    _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=(9,9))
+    _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=(8,6))
 
     isub = 0
-    ax[isub].plot(p_test, pi, label='acados', color='k')
-    ax[isub].set_ylabel(r"$u$")
+    if solution is not None:
+        ax[isub].plot(p_test, solution, color='k') # , label='acados')
+    ax[isub].set_ylabel(r"solution $x^{\star}$")
     if title is not None:
         ax[isub].set_title(title)
+    # ax[isub].legend(ncol=2)
 
     isub += 1
+    # plot analytic sensitivity
+    p_min = p_test[0]
+    p_max = p_test[-1]
+    ax[isub].plot([p_min, -1], [0, 0], "k--", label="analytic sensitivity")
+    ax[isub].plot([1, p_max], [0, 0], "k--")
+    ax[isub].plot([-1, 1], [-2, 2], "k--")
+
+    # plot numerical sensitivities
     linestyles = ["-", "--", "-.", ":", "-"]
     for i, sens_x_tau in enumerate(sens_list):
         ax[isub].plot(p_test, sens_x_tau, label=labels_list[i], color=f"C{i}", linestyle=linestyles[i])
     ax[isub].set_xlim([p_test[0], p_test[-1]])
-    ax[isub].set_ylabel(r"$\partial_p u$")
+    ax[isub].set_ylabel(r"derivative $\partial_\theta x^{\star}$")
+    ax[isub].legend(ncol=2)
 
-    # isub += 1
-    # ax[isub].plot(p_test, np.abs(sens_x- np_grad), "--", label='acados - finite diff')
-    # ax[isub].set_ylabel(r"diff $\partial_p u$")
-    # ax[isub].set_yscale("log")
-
-    for i in range(isub+1):
-        ax[i].grid()
-        ax[i].legend()
-
+    for i in range(nsub):
+        ax[i].grid(True)
     ax[-1].set_xlabel(f"{parameter_name}")
 
-    fig_filename = f"solution_sens_{title}.pdf"
+    fig_filename = f"solution_sens_non_ocp.pdf"
     plt.savefig(fig_filename)
     print(f"stored figure as {fig_filename}")
     plt.show()
