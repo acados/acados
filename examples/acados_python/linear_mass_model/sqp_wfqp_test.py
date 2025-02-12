@@ -42,23 +42,23 @@ def main():
     params = {'use_merit_fun_only': [False],
               'initial_obj_multiplier': [1e0, 1e-1]}
 
-    # SETTINGS:
+    # # SETTINGS:
     SOFTEN_CONTROLS = True
     SOFTEN_OBSTACLE = False
     SOFTEN_TERMINAL = True
-    PLOT = False
+    PLOT = True
     solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT, {'use_merit_fun_only': False,
                                                                                 'initial_obj_multiplier':1e0})
 
-    SOFTEN_CONTROLS = False
-    SOFTEN_OBSTACLE = False
-    SOFTEN_TERMINAL = False
-    PLOT = True
+    # SOFTEN_CONTROLS = False
+    # SOFTEN_OBSTACLE = False
+    # SOFTEN_TERMINAL = False
+    # PLOT = True
 
-    keys, values = zip(*params.items())
-    for combination in product(*values):
-        setting = dict(zip(keys, combination))
-        solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT, setting)
+    # keys, values = zip(*params.items())
+    # for combination in product(*values):
+    #     setting = dict(zip(keys, combination))
+    #     solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT, setting)
 
 def feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver: AcadosOcpSolver):
     """
@@ -151,8 +151,8 @@ def create_solver_opts(setting: dict, N=4, Tf=2):
     solver_options.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'
     solver_options.globalization = 'FUNNEL_L1PEN_LINESEARCH'
     solver_options.globalization_full_step_dual = True
-    solver_options.print_level = 1
-    solver_options.nlp_solver_max_iter = 50
+    solver_options.print_level = 4
+    solver_options.nlp_solver_max_iter = 6
 
     solver_options.globalization_funnel_use_merit_fun_only = use_merit_fun_only
     solver_options.initial_objective_multiplier = initial_obj_multiplier
@@ -275,9 +275,9 @@ def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT, s
     sqp_iter = ocp_solver.get_stats('sqp_iter')
     print(f'acados returned status {status}.')
 
-    if ocp.solver_options.nlp_solver_type == 'SQP_WITH_FEASIBLE_QP':
-        feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver)
-        feasible_qp_index_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver)
+    # if ocp.solver_options.nlp_solver_type == 'SQP_WITH_FEASIBLE_QP':
+    #     feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver)
+    #     feasible_qp_index_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver)
 
     # get solution
     simX = np.array([ocp_solver.get(i,"x") for i in range(N+1)])
