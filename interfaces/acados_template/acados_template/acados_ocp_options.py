@@ -80,6 +80,7 @@ class AcadosOcpOptions:
         self.__qp_solver_cond_ric_alg = 1
         self.__qp_solver_ric_alg = 1
         self.__qp_solver_mu0 = 0.0
+        self.__qp_solver_t0_init = 2
         self.__tau_min = 0.0
         self.__solution_sens_qp_t_lam_min = 1e-9
         self.__rti_log_residuals = 0
@@ -489,6 +490,21 @@ class AcadosOcpOptions:
         Default: 0
         """
         return self.__qp_solver_mu0
+
+    @property
+    def qp_solver_t0_init(self):
+        """
+        For HPIPM QP solver: Initialization scheme of lambda and t slacks within HPIPM.
+        0: initialize with sqrt(mu0)
+        1: initialize with 1.0
+        2: heuristic for primal feasibility
+
+        When using larger value for tau_min, it is beneficial to not use 2, as the initialization of (t, lambda) might be too far off from the central path and prevent convergence.
+
+        Type: int > 0
+        Default: 2
+        """
+        return self.__qp_solver_t0_init
 
     @property
     def tau_min(self):
@@ -1454,6 +1470,13 @@ class AcadosOcpOptions:
             self.__qp_solver_mu0 = qp_solver_mu0
         else:
             raise Exception('Invalid qp_solver_mu0 value. qp_solver_mu0 must be a positive float.')
+
+    @qp_solver_t0_init.setter
+    def qp_solver_t0_init(self, qp_solver_t0_init):
+        if qp_solver_t0_init in [0, 1, 2]:
+            self.__qp_solver_t0_init = qp_solver_t0_init
+        else:
+            raise Exception('Invalid qp_solver_t0_init value. Must be in [0, 1, 2].')
 
     @tau_min.setter
     def tau_min(self, tau_min):

@@ -2411,6 +2411,8 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_mu0", &qp_solver_mu0);
 {%- endif %}
 
+    int qp_solver_t0_init = {{ solver_options.qp_solver_t0_init }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_t0_init", &qp_solver_t0_init);
 {%- endif %}
 
 {% if solver_options.tau_min > 0 %}
