@@ -460,7 +460,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install liboctave-dev -y --fix-missing
         octave --version
-        ${{runner.workspace}}/acados/.github/linux/install_casadi_octave.sh
+        ${{runner.workspace}}/acados/.github/linux/install_new_casadi_octave.sh
 
     - name: Install Tera
       working-directory: ${{runner.workspace}}/acados

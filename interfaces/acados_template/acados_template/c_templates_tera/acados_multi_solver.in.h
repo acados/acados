@@ -72,7 +72,7 @@ typedef struct {{ name }}_solver_capsule
     ocp_nlp_config *nlp_config;
     ocp_nlp_dims *nlp_dims;
 
-{% if phases_dims[0].np_global > 0 %}
+{% if phases_dims[0].n_global_data > 0 %}
     external_function_casadi p_global_precompute_fun;
 {%- endif %}
 

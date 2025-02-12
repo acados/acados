@@ -45,7 +45,7 @@
 // example specific
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
 
-{% if dims.np_global > 0 %}
+{% if dims.n_global_data > 0 %}
 #include "{{ name }}_p_global_precompute_fun.h"
 {%- endif %}
 
@@ -416,7 +416,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     external_function_opts ext_fun_opts;
     external_function_opts_set_to_default(&ext_fun_opts);
 
-{% if dims.np_global > 0 %}
+{% if dims.n_global_data > 0 %}
     // NOTE: p_global_precompute_fun cannot use external_workspace!!!
     ext_fun_opts.external_workspace = false;
     capsule->p_global_precompute_fun.casadi_fun = &{{ name }}_p_global_precompute_fun;
@@ -2740,7 +2740,7 @@ int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule
 
 int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver_capsule* capsule, double* data, int data_len)
 {
-{% if dims.np_global > 0 %}
+{% if dims.n_global_data > 0 %}
     external_function_casadi* fun = &capsule->p_global_precompute_fun;
     fun->args[0] = data;
     int np_global = {{ dims.np_global }};
@@ -2755,11 +2755,11 @@ int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver
     fun->res[0] = in->global_data;
 
     fun->casadi_fun((const double **) fun->args, fun->res, fun->int_work, fun->float_work, NULL);
-    return 1;
 
 {%- else %}
-    printf("p_global is not defined, {{ name }}_acados_set_p_global_and_precompute_dependencies does nothing.\n");
+    printf("No global_data, {{ name }}_acados_set_p_global_and_precompute_dependencies does nothing.\n");
 {%- endif %}
+    return 0;
 }
 
 
@@ -3189,7 +3189,7 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     external_function_external_param_casadi_free(&capsule->phi_e_constraint_fun_jac_hess);
 {%- endif %}
 
-{% if dims.np_global > 0 %}
+{% if dims.n_global_data > 0 %}
     external_function_casadi_free(&capsule->p_global_precompute_fun);
 {%- endif %}
 
