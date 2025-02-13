@@ -3678,6 +3678,21 @@ void ocp_nlp_dump_qp_out_to_file(ocp_qp_out *qp_out, int sqp_iter, int soc)
 }
 
 
+void ocp_nlp_print_iteration_header()
+{
+    printf("%6s   %10s   %10s   %10s   %10s   ", "# it", "res_stat", "res_eq", "res_ineq", "res_comp");
+}
+
+void ocp_nlp_print_iteration(int iter_count, ocp_nlp_res *nlp_res)
+{
+    printf("%6i   %10.4e   %10.4e   %10.4e   %10.4e   ",
+        iter_count,
+        nlp_res->inf_norm_res_stat,
+        nlp_res->inf_norm_res_eq,
+        nlp_res->inf_norm_res_ineq,
+        nlp_res->inf_norm_res_comp);
+}
+
 void ocp_nlp_timings_get(ocp_nlp_config *config, ocp_nlp_timings *timings, const char *field, void *return_value_)
 {
     double *value = return_value_;

@@ -576,6 +576,8 @@ double ocp_nlp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, 
 // print / debug functionality
 void ocp_nlp_dump_qp_out_to_file(ocp_qp_out *qp_out, int sqp_iter, int soc);
 void ocp_nlp_dump_qp_in_to_file(ocp_qp_in *qp_in, int sqp_iter, int soc);
+void ocp_nlp_print_iteration_header();
+void ocp_nlp_print_iteration(int iter_count, ocp_nlp_res *nlp_res);
 
 
 #ifdef __cplusplus

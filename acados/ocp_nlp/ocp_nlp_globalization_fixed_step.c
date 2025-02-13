@@ -174,36 +174,15 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
 
 void ocp_nlp_globalization_fixed_step_print_iteration_header()
 {
-    printf("# it\tstat\t\teq\t\tineq\t\tcomp\t\tqp_stat\tqp_iter\talpha\n");
+    printf("%10s   ", "alpha");
 }
 
 void ocp_nlp_globalization_fixed_step_print_iteration(double objective_value,
-                                                int iter_count,
-                                                void* nlp_res_,
-                                                double step_norm,
-                                                double reg_param,
-                                                int qp_status,
-                                                int qp_iter,
                                                 void* nlp_opts_,
                                                 void* mem_)
 {
-    ocp_nlp_res *nlp_res = nlp_res_;
-    ocp_nlp_opts *nlp_opts = nlp_opts_;
-    ocp_nlp_globalization_fixed_step_opts *opts = nlp_opts->globalization;
-    // ocp_nlp_globalization_fixed_step_memory* mem = mem_;
-
-    if ((iter_count % 10 == 0)){
-        ocp_nlp_globalization_fixed_step_print_iteration_header();
-    }
-    printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n",
-        iter_count,
-        nlp_res->inf_norm_res_stat,
-        nlp_res->inf_norm_res_eq,
-        nlp_res->inf_norm_res_ineq,
-        nlp_res->inf_norm_res_comp,
-        qp_status,
-        qp_iter,
-        opts->step_length);
+    ocp_nlp_globalization_fixed_step_opts *opts = nlp_opts_;
+    printf("%10.4e    ", opts->step_length);
 }
 
 int ocp_nlp_globalization_fixed_step_needs_objective_value()
