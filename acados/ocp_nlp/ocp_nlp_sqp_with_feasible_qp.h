@@ -82,6 +82,7 @@ typedef struct
     bool use_exact_hessian_in_feas_qp; // Either use exact Hessian or identity matrix in feasibility QP
     bool use_QP_l1_inf_from_slacks; // Sums up the slack variable values in the QPs as l1_inf
     int search_direction_mode; // determines how the QPs should be solved
+    int watchdog_zero_slacks_max; // if after watchdog time iterations, QP slacks zero, switch mode
 } ocp_nlp_sqp_wfqp_opts;
 
 
@@ -144,6 +145,9 @@ typedef struct
     double pred_l1_inf_QP_optimality;
 
     int search_direction_mode;
+    char* search_direction_type;
+    int watchdog_zero_slacks_counter;
+    int absolute_nns;
 
     ocp_qp_xcond_solver relaxed_qp_solver;
     ocp_qp_xcond_solver_memory *relaxed_qp_solver_mem;
