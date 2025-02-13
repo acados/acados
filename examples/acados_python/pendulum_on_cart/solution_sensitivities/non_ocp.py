@@ -100,10 +100,11 @@ def solve_and_compute_sens(p_test, tau):
 
 def main():
     p_nominal = 0.0
-    delta_p = 0.01
+    delta_p = 0.002
     p_test = np.arange(p_nominal - 2, p_nominal + 2, delta_p)
     sens_list = []
     labels_list = []
+    sol_list = []
     tau = 1e-6
     solution, sens_x = solve_and_compute_sens(p_test, tau)
 
@@ -117,40 +118,51 @@ def main():
 
     sens_list.append(sens_x)
     labels_list.append(r"$\tau = 10^{-6}$")
+    sol_list.append(solution)
 
-    tau_vals = [1e-4, 1e-3, 1e-2, 1e-1]
-    # tau_vals = [1e-3]
+    tau_vals = [1e-4, 1e-3, 1e-2]
     for tau in tau_vals:
-        _, sens_x_tau = solve_and_compute_sens(p_test, tau)
+        sol_tau, sens_x_tau = solve_and_compute_sens(p_test, tau)
         sens_list.append(sens_x_tau)
-        labels_list.append(r"$\tau =" + f"{tau} $")
+        labels_list.append(r"$\tau = 10^{" + f"{int(np.log10(tau))}" + r"}$")
+        # labels_list.append(r"$\tau =" + f"{tau}" + r"$")
+        sol_list.append(sol_tau)
 
-    plot_solution_sensitivities_results(p_test, solution, sens_list, labels_list,
+    plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list,
                  title=None, parameter_name=r"$\theta$")
 
 
-def plot_solution_sensitivities_results(p_test, solution, sens_list, labels_list, title=None, parameter_name=""):
+def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list, title=None, parameter_name=""):
+    p_min = p_test[0]
+    p_max = p_test[-1]
+    linestyles = ["--", "-.", "--", ":", "-.", ":"]
+
     nsub = 2
     _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=(8,6))
 
     isub = 0
-    if solution is not None:
-        ax[isub].plot(p_test, solution, color='k') # , label='acados')
+    # plot analytic solution
+    ax[isub].plot([p_min, -1], [1, 1], "k-", linewidth=2, label="analytic")
+    ax[isub].plot([1, p_max], [1, 1], "k-", linewidth=2)
+    x_vals = np.linspace(-1, 1, 100)
+    y_vals = x_vals**2
+    ax[isub].plot(x_vals, y_vals, "k-", linewidth=2)
+
+    for i, sol in enumerate(sol_list):
+        ax[isub].plot(p_test, sol, label=labels_list[i], linestyle=linestyles[i])
+    ax[isub].set_xlim([p_test[0], p_test[-1]])
     ax[isub].set_ylabel(r"solution $x^{\star}$")
     if title is not None:
         ax[isub].set_title(title)
-    # ax[isub].legend(ncol=2)
 
     isub += 1
+
     # plot analytic sensitivity
-    p_min = p_test[0]
-    p_max = p_test[-1]
-    ax[isub].plot([p_min, -1], [0, 0], "k--", label="analytic sensitivity")
-    ax[isub].plot([1, p_max], [0, 0], "k--")
-    ax[isub].plot([-1, 1], [-2, 2], "k--")
+    ax[isub].plot([p_min, -1], [0, 0], "k-", linewidth=2, label="analytic")
+    ax[isub].plot([1, p_max], [0, 0], "k-", linewidth=2)
+    ax[isub].plot([-1, 1], [-2, 2], "k-", linewidth=2)
 
     # plot numerical sensitivities
-    linestyles = ["-", "--", "-.", ":", "-"]
     for i, sens_x_tau in enumerate(sens_list):
         ax[isub].plot(p_test, sens_x_tau, label=labels_list[i], color=f"C{i}", linestyle=linestyles[i])
     ax[isub].set_xlim([p_test[0], p_test[-1]])
