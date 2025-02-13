@@ -91,7 +91,6 @@ def solve_and_compute_sens(p_test, tau):
             print(f"OCP solver returned status {status} at {i}th p value {p}, {tau=}.")
             breakpoint()
 
-        ocp_solver.setup_qp_matrices_and_factorize()
         # Calculate the policy gradient
         out_dict = ocp_solver.eval_solution_sensitivity(0, "p_global", return_sens_x=True)
         sens_x[i] = out_dict['sens_x'].item()
