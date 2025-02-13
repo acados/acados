@@ -53,6 +53,7 @@ def export_parametric_ocp() -> AcadosOcp:
 
     ocp.cost.cost_type = "EXTERNAL"
     ocp.solver_options.integrator_type = "DISCRETE"
+    ocp.solver_options.qp_solver = "FULL_CONDENSING_HPIPM"
     ocp.solver_options.hessian_approx = "EXACT"
     ocp.solver_options.N_horizon = 1
     ocp.solver_options.tf = 1.0
@@ -69,8 +70,6 @@ def solve_and_compute_sens(p_test, tau):
 
     ocp = export_parametric_ocp()
     ocp.solver_options.tau_min = tau
-    ocp.solver_options.nlp_solver_tol_comp = tau
-    ocp.solver_options.qp_solver_tol_comp = 1e-6
     ocp.solver_options.qp_solver_t0_init = 0
     ocp.solver_options.nlp_solver_max_iter = 2 # QP should converge in one iteration
 
