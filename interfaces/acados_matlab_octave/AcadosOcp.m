@@ -707,8 +707,14 @@ classdef AcadosOcp < handle
                 error('qp_solver_t0_init must be one of [0, 1, 2].');
             end
 
-            if opts.tau_min > 0 && isempty(strfind(opts.qp_solver, 'HPIPM'))
-                error('tau_min > 0 is only compatible with HPIPM.');
+            if opts.tau_min > 0
+                if isempty(strfind(opts.qp_solver, 'HPIPM'))
+                    error('tau_min > 0 is only compatible with HPIPM.');
+                end
+                if opts.nlp_solver_tol_comp <= opts.tau_min
+                    warning(['nlp_solver_tol_comp = ', num2str(opts.nlp_solver_tol_comp), ' < tau_min = ', num2str(opts.tau_min), '. This might prevent convergence.']);
+                    disp('It is recommended to set nlp_solver_tol_comp >= tau_min and additionally set qp_solver_tol_comp appropriately.');
+                end
             end
 
             % Set default parameters for globalization
