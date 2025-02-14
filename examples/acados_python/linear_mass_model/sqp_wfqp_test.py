@@ -68,9 +68,7 @@ def feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, 
 
     for i in range(N+1):
         idxs = ocp_solver.get_from_qp_in(i, "relaxed_idxs")
-        print(f"got idxs {idxs}")
         idxb = ocp_solver.get_from_qp_in(i, "relaxed_idxb")
-        print(f"got idxb {idxb}")
 
         # Initial stage
         if i == 0:
@@ -111,7 +109,7 @@ def feasible_qp_index_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N,
             if not SOFTEN_CONTROLS:
                 assert np.allclose(idxs,np.arange(0)), f"i=0, NOT SOFTEN_CONTROLS: The initial condition should have 0 slacks, got {len(idxs)}!"
             else:
-                assert np.allclose(idxs, np.arange(dims.nbu)), f"i=0, SOFTEN_CONTROLS: The initial condition should have {dims.nbu} slacks, got {len(idxs)}!"
+                assert np.allclose(idxs, np.arange(dims.nbu)), f"i=0, SOFTEN_CONTROLS: The initial stage should have slack indices {np.arange(dims.nbu)} slacks, got {idxs})!"
 
         if i > 0 and i < N:
             assert np.allclose(idxb, np.arange(dims.nbu)), f"We should have {dims.nbu} indices for bounds on u, but got {len(idxb)}"
