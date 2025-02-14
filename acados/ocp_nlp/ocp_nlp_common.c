@@ -1275,6 +1275,12 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             double* levenberg_marquardt = (double *) value;
             opts->levenberg_marquardt = *levenberg_marquardt;
         }
+        else if (!strcmp(field, "tau_min"))
+        {
+            double* tau_min = (double *) value;
+            opts->tau_min = *tau_min;
+            config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field, value);
+        }
         // newly added options for DDP and SQP
         else if (!strcmp(field, "with_adaptive_levenberg_marquardt"))
         {
@@ -1850,9 +1856,9 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
         ni_max = ni_max > ni[i] ? ni_max : ni[i];
         // np_max = np_max > np[i] ? np_max : np[i];
     }
-    size += 1 * blasfeo_memsize_dvec(nx_max);
-    size += 1 * blasfeo_memsize_dvec(nv_max);
-    size += 1 * blasfeo_memsize_dvec(ni_max);
+    size += 1 * blasfeo_memsize_dvec(nx_max);  // dxnext_dy
+    size += 1 * blasfeo_memsize_dvec(nv_max);  // tmp_nv
+    size += 1 * blasfeo_memsize_dvec(2*ni_max);  // tmp_2ni
 
     size += 1 * blasfeo_memsize_dvec(np_global); //  tmp_np_global;
 
@@ -2091,7 +2097,7 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
 
     // blasfeo_dvec
     assign_and_advance_blasfeo_dvec_mem(nv_max, &work->tmp_nv, &c_ptr);
-    assign_and_advance_blasfeo_dvec_mem(ni_max, &work->tmp_ni, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(2*ni_max, &work->tmp_2ni, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx_max, &work->dxnext_dy, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(np_global, &work->tmp_np_global, &c_ptr);
 
@@ -3095,8 +3101,8 @@ ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory)
 
 
 
-void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res,
-                         ocp_nlp_memory *mem)
+void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res,
+                         ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
     // extract dims
     int N = dims->N;
@@ -3143,13 +3149,44 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
         }
     }
 
-    // res_comp
+    // res_comp = inf_norm(lam_i * ineq_fun_i - tau_min * ones)
     res->inf_norm_res_comp = 0.0;
-    for (int i = 0; i <= N; i++)
+    if (opts->tau_min != 0)
     {
-        blasfeo_dvecmul(2 * ni[i], out->lam + i, 0, mem->ineq_fun+i, 0, res->res_comp + i, 0);
-        blasfeo_dvecnrm_inf(2 * ni[i], res->res_comp + i, 0, &tmp_res);
-        blasfeo_dvecse(1, tmp_res, &res->tmp, i);
+        int ni_max = 0;
+        for (int i = 0; i <= N; i++)
+        {
+            ni_max = ni_max > ni[i] ? ni_max : ni[i];
+        }
+        blasfeo_dvecse(2*ni_max, opts->tau_min, &work->tmp_2ni, 0);
+        for (int i = 0; i <= N; i++)
+        {
+            if (ni[i] > 0)
+            {
+            // printf("res_comp %d\n", i);
+            // printf("ineq_fun\n");
+            // blasfeo_print_exp_tran_dvec(2*ni[i], mem->ineq_fun+i, 0);
+            // printf("lam\n");
+            // blasfeo_print_exp_tran_dvec(2*ni[i], out->lam+i, 0);
+            blasfeo_dvecmul(2 * ni[i], out->lam + i, 0, mem->ineq_fun+i, 0, res->res_comp + i, 0);
+            // printf("ineq_fun * lam\n");
+            // blasfeo_print_exp_tran_dvec(2*ni[i], res->res_comp+i, 0);
+            blasfeo_dvecad(2 * ni[i], 1.0, &work->tmp_2ni, 0, res->res_comp + i, 0);
+            // printf("res_comp: + tau_min = %e\n", opts->tau_min);
+            // blasfeo_print_exp_tran_dvec(2*ni[i], res->res_comp+i, 0);
+            blasfeo_dvecnrm_inf(2 * ni[i], res->res_comp + i, 0, &tmp_res);
+            blasfeo_dvecse(1, tmp_res, &res->tmp, i);
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i <= N; i++)
+        {
+            blasfeo_dvecmul(2 * ni[i], out->lam + i, 0, mem->ineq_fun+i, 0, res->res_comp + i, 0);
+            blasfeo_dvecnrm_inf(2 * ni[i], res->res_comp + i, 0, &tmp_res);
+            blasfeo_dvecse(1, tmp_res, &res->tmp, i);
+        }
     }
     blasfeo_dvecnrm_inf(N+1, &res->tmp, 0, &res->inf_norm_res_comp);
 }
