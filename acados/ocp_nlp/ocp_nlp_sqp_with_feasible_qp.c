@@ -951,15 +951,15 @@ static double calculate_slacked_qp_l1_infeasibility_manually(ocp_nlp_dims *dims,
         for (j=0; j<nb[i]; ++j)
         {
             tmp = BLASFEO_DVECEL(qp_out->ux+i, qp_in->idxb[i][j]);
-            blasfeo_dvecin1(tmp, &work->nlp_work->tmp_ni, j);
-            blasfeo_dvecin1(tmp, &work->nlp_work->tmp_ni, nb[i]+ng[i]+j);
+            blasfeo_dvecin1(tmp, &work->nlp_work->tmp_2ni, j);
+            blasfeo_dvecin1(tmp, &work->nlp_work->tmp_2ni, nb[i]+ng[i]+j);
         }
         // general linear / linearized!
         // tmp_ni = D * u + C * x
         // lower bounds --> this seems to be correct and in accordance with slack variables
         blasfeo_dgemv_t(nu[i]+nx[i], ng[i], 1.0, qp_in->DCt+i, 0, 0, qp_out->ux+i, 0,
-                        0.0, qp_in->d+i, nb[i], &work->nlp_work->tmp_ni, nb[i]);
-        blasfeo_dveccp(ng[i], &work->nlp_work->tmp_ni, nb[i], &work->nlp_work->tmp_ni, 2*nb[i]+ng[i]);
+                        0.0, qp_in->d+i, nb[i], &work->nlp_work->tmp_2ni, nb[i]);
+        blasfeo_dveccp(ng[i], &work->nlp_work->tmp_2ni, nb[i], &work->nlp_work->tmp_2ni, 2*nb[i]+ng[i]);
 
         // add slack contributions
         // d[nb:nb+ng] += slack[idx]
@@ -974,10 +974,10 @@ static double calculate_slacked_qp_l1_infeasibility_manually(ocp_nlp_dims *dims,
                 {
                     // add slack contribution for lower and upper constraint
                     // lower
-                    BLASFEO_DVECEL(&work->nlp_work->tmp_ni, j) +=
+                    BLASFEO_DVECEL(&work->nlp_work->tmp_2ni, j) +=
                             BLASFEO_DVECEL(qp_out->ux+i, slack_index+nx[i]+nu[i]);
                     // upper
-                    BLASFEO_DVECEL(&work->nlp_work->tmp_ni, j+nb[i]+ng[i]) -=
+                    BLASFEO_DVECEL(&work->nlp_work->tmp_2ni, j+nb[i]+ng[i]) -=
                             BLASFEO_DVECEL(qp_out->ux+i, slack_index+nx[i]+nu[i]+ns[i]+nns[i]);
                 }
             }
@@ -986,13 +986,13 @@ static double calculate_slacked_qp_l1_infeasibility_manually(ocp_nlp_dims *dims,
         // upper bounds (seems to be correct but I do not understand why??)
         // the sign of upper bound d is wrong!! We should use -d. Why is that?
         // blasfeo_dgemv_t(nu[i]+nx[i], ng[i], 1.0, qp_in->DCt+i, 0, 0, qp_out->ux+i, 0,
-        //                 0.0, qp_in->d+i, 2*nb[i]+ng[i], &work->nlp_work->tmp_ni, 2*nb[i]+ng[i]);
+        //                 0.0, qp_in->d+i, 2*nb[i]+ng[i], &work->nlp_work->tmp_2ni, 2*nb[i]+ng[i]);
         for (j=0; j<2*nb[i]+2*ng[i]; ++j)
         {
             mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, j);
             if (mask_value == 1.0)
             {
-                tmp = BLASFEO_DVECEL(&work->nlp_work->tmp_ni, j);
+                tmp = BLASFEO_DVECEL(&work->nlp_work->tmp_2ni, j);
                 tmp_bound = BLASFEO_DVECEL(qp_in->d+i, j);
                 if (j < nb[i] + ng[i])
                 {
@@ -1688,6 +1688,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
         }
         // Here is something missing that we might switch back to the nominal mode
         double l1_inf = calculate_slacked_qp_l1_infeasibility_from_slacks(dims, mem, opts, mem->relaxed_qp_out);
+        printf("Slack sum: %10.4e\n", l1_inf);
         if (l1_inf/(fmax(1.0, (double) mem->absolute_nns)) < opts->tol_ineq)
         {
             mem->watchdog_zero_slacks_counter += 1;
@@ -1843,7 +1844,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             //
             nlp_timings->time_lin += acados_toc(&timer1);
             // compute nlp residuals
-            ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
+            ocp_nlp_res_compute(dims, nlp_opts, nlp_in, nlp_out, nlp_res, nlp_mem, nlp_work);
             ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
 
         }
