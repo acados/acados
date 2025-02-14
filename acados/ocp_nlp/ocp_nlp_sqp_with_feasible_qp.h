@@ -145,7 +145,7 @@ typedef struct
     double pred_l1_inf_QP_optimality;
 
     int search_direction_mode;
-    char* search_direction_type;
+    char* search_direction_type; // for output logging
     int watchdog_zero_slacks_counter;
     int absolute_nns;
 

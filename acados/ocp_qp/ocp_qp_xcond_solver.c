@@ -243,6 +243,8 @@ void ocp_qp_xcond_solver_opts_initialize_default(void *config_, ocp_qp_xcond_sol
     xcond->opts_initialize_default(dims->xcond_dims, opts->xcond_opts);
     // qp solver opts
     qp_solver->opts_initialize_default(qp_solver, xcond_qp_dims, opts->qp_solver_opts);
+
+    opts->initialize_next_xcond_qp_from_qp_out = false;
 }
 
 
@@ -282,6 +284,11 @@ void ocp_qp_xcond_solver_opts_set_(void *config_, void *opts_, const char *field
     {
         xcond->opts_set(opts->xcond_opts, field+module_length+1, value);
     }
+    else if (!strcmp(field, "initialize_next_xcond_qp_from_qp_out"))
+    {
+        bool* initialize_next_xcond_qp_from_qp_out = (bool *) value;
+        opts->initialize_next_xcond_qp_from_qp_out = *initialize_next_xcond_qp_from_qp_out;
+    }
     else // pass options to QP module
     {
         qp_solver->opts_set(qp_solver, opts->qp_solver_opts, field, value);
@@ -291,6 +298,19 @@ void ocp_qp_xcond_solver_opts_set_(void *config_, void *opts_, const char *field
 
 }
 
+
+
+void ocp_qp_xcond_solver_opts_get_(void *config_, void *opts_, const char *field, void* value)
+{
+    ocp_qp_xcond_solver_opts *opts = (ocp_qp_xcond_solver_opts *) opts_;
+    ocp_qp_xcond_solver_config *config = config_;
+    qp_solver_config *qp_solver = config->qp_solver;
+    // ocp_qp_xcond_config *xcond = config->xcond;
+
+    qp_solver->opts_get(qp_solver, opts->qp_solver_opts, field, value);
+
+    return;
+}
 
 
 /************************************************
@@ -405,7 +425,7 @@ void ocp_qp_xcond_solver_memory_get(void *config_, void *mem_, const char *field
 
     // TODO extract module name as for opts_set
 
-    if (!strcmp(field, "time_qp_solver_call"))
+    if (!strcmp(field, "time_qp_solver_call") || !strcmp(field, "tau_iter"))
     {
         qp_solver->memory_get(qp_solver, mem->solver_memory, field, value);
     }
@@ -516,6 +536,19 @@ int ocp_qp_xcond_solve(void *config_, ocp_qp_xcond_solver_dims *dims, ocp_qp_in 
     acados_tic(&cond_timer);
     xcond->condensing(qp_in, memory->xcond_qp_in, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
     info->condensing_time = acados_toc(&cond_timer);
+
+    if (opts->initialize_next_xcond_qp_from_qp_out)
+    {
+        // printf("initialize_next_xcond_qp_from_qp_out\n");
+        xcond->condense_qp_out(qp_in, memory->xcond_qp_in, qp_out, memory->xcond_qp_out, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
+        opts->initialize_next_xcond_qp_from_qp_out = false;
+
+        // printf("initialize_next_xcond_qp_from_qp_out: qp_out\n");
+        // print_ocp_qp_out(qp_out);
+
+        // printf("initialize_next_xcond_qp_from_qp_out: xcond_qp_out\n");
+        // print_ocp_qp_out(memory->xcond_qp_out);
+    }
 
     // solve qp
     solver_status = qp_solver->evaluate(qp_solver, memory->xcond_qp_in, memory->xcond_qp_out,
@@ -697,6 +730,7 @@ void ocp_qp_xcond_solver_config_initialize_default(void *config_)
     config->opts_initialize_default = &ocp_qp_xcond_solver_opts_initialize_default;
     config->opts_update = &ocp_qp_xcond_solver_opts_update;
     config->opts_set = &ocp_qp_xcond_solver_opts_set_;
+    config->opts_get = &ocp_qp_xcond_solver_opts_get_;
     config->memory_calculate_size = &ocp_qp_xcond_solver_memory_calculate_size;
     config->memory_assign = &ocp_qp_xcond_solver_memory_assign;
     config->memory_get = &ocp_qp_xcond_solver_memory_get;

@@ -159,16 +159,16 @@ class GenerateContext:
 
         assert casadi_length(self.global_data_expr) == casadi_length(self.global_data_sym), f"Length mismatch: {casadi_length(self.global_data_expr)} != {casadi_length(self.global_data_sym)}"
 
-        if casadi_length(self.global_data_expr) == 0:
-            raise Exception("The model contains global parameters, but no CasADi function depends on them. This is currently not supported. Please remove p_global from the model definition.")
+        if casadi_length(self.global_data_expr) > 0:
+            # add global data as input to all functions
+            for i in range(len(self.function_input_output_pairs)):
+                self.function_input_output_pairs[i][0].append(self.global_data_sym)
 
-        # add global data as input to all functions
-        for i in range(len(self.function_input_output_pairs)):
-            self.function_input_output_pairs[i][0].append(self.global_data_sym)
-
-        output_dir = os.path.abspath(self.opts["code_export_directory"])
-        fun_name = f'{self.problem_name}_p_global_precompute_fun'
-        self.add_function_definition(fun_name, [self.p_global], [self.global_data_expr], output_dir)
+            output_dir = os.path.abspath(self.opts["code_export_directory"])
+            fun_name = f'{self.problem_name}_p_global_precompute_fun'
+            self.add_function_definition(fun_name, [self.p_global], [self.global_data_expr], output_dir)
+        else:
+            print("WARNING: No CasADi function depends on p_global.")
 
         # self.print_global_data_summary()
 

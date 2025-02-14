@@ -37,7 +37,7 @@ classdef AcadosOcpOptions < handle
         N_horizon
 
         nlp_solver_type        %  NLP solver
-        nlp_solver_step_length
+        nlp_solver_step_length % TODO: is deprecated, remove in future release
         nlp_solver_tol_stat
         nlp_solver_tol_eq
         nlp_solver_tol_ineq
@@ -99,6 +99,7 @@ classdef AcadosOcpOptions < handle
         hpipm_mode
         with_solution_sens_wrt_params
         with_value_sens_wrt_params
+        solution_sens_qp_t_lam_min
         as_rti_iter
         as_rti_level
         with_adaptive_levenberg_marquardt
@@ -195,6 +196,7 @@ classdef AcadosOcpOptions < handle
             obj.hpipm_mode = 'BALANCE';
             obj.with_solution_sens_wrt_params = 0;
             obj.with_value_sens_wrt_params = 0;
+            obj.solution_sens_qp_t_lam_min = 1e-9;
             obj.as_rti_iter = 1;
             obj.as_rti_level = 4;
             obj.with_adaptive_levenberg_marquardt = 0;

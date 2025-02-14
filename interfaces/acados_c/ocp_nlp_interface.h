@@ -381,12 +381,15 @@ ACADOS_SYMBOL_EXPORT ocp_nlp_solver *ocp_nlp_solver_create(ocp_nlp_config *confi
 ACADOS_SYMBOL_EXPORT void ocp_nlp_solver_destroy(ocp_nlp_solver *solver);
 
 /// Solves the optimal control problem. Call ocp_nlp_precompute before
-/// calling this functions (TBC).
+/// calling this function.
 ///
 /// \param solver The solver struct.
 /// \param nlp_in The inputs struct.
 /// \param nlp_out The output struct.
 ACADOS_SYMBOL_EXPORT int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
+
+//
+ACADOS_SYMBOL_EXPORT int ocp_nlp_setup_qp_matrices_and_factorize(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
 
 
 
@@ -399,7 +402,7 @@ ACADOS_SYMBOL_EXPORT void ocp_nlp_solver_reset_qp_memory(ocp_nlp_solver *solver,
 
 
 /// Performs precomputations for the solver. Needs to be called before
-/// ocl_nlp_solve (TBC).
+/// ocp_nlp_solve (TBC).
 ///
 /// \param solver The solver struct.
 /// \param nlp_in The inputs struct.

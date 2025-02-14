@@ -103,7 +103,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
         iterate = ocp_solver.store_iterate_to_flat_obj()
 
         sensitivity_solver.load_iterate_from_flat_obj(iterate)
-        sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
+        sensitivity_solver.setup_qp_matrices_and_factorize()
 
         for j in range(1, N_horizon):
             lam = ocp_solver.get(j, "lam")

@@ -47,7 +47,7 @@ from .acados_ocp_options import AcadosOcpOptions
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
                     get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square,
-                    check_casadi_version)
+                    check_casadi_version, ACADOS_INFTY)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
 from .zoro_description import ZoroDescription, process_zoro_description
@@ -730,6 +730,14 @@ class AcadosOcp:
 
         dims.ns_e = ns_e
 
+        # check for ACADOS_INFTY
+        if opts.qp_solver not in ["PARTIAL_CONDENSING_HPIPM", "FULL_CONDENSING_HPIPM", "FULL_CONDENSING_DAQP"]:
+            # loop over all bound vectors
+            for field in ['lbx_0', 'ubx_0', 'lbx', 'ubx', 'lbx_e', 'ubx_e', 'lg', 'ug', 'lg_e', 'ug_e', 'lh', 'uh', 'lh_e', 'uh_e', 'lbu', 'ubu', 'lphi', 'uphi', 'lphi_e', 'uphi_e']:
+                bound = getattr(constraints, field)
+                if any(bound >= ACADOS_INFTY) or any(bound <= -ACADOS_INFTY):
+                    raise Exception(f"Field {field} contains values outside the interval (-ACADOS_INFTY, ACADOS_INFTY) with ACADOS_INFTY = {ACADOS_INFTY:.2e}. One-sided constraints are not supported by the chosen QP solver {opts.qp_solver}.")
+
         # discretization
         if opts.N_horizon is None and dims.N is None:
             raise Exception('N_horizon not provided.')
@@ -930,6 +938,9 @@ class AcadosOcp:
             else:
                 self.zoro_description = process_zoro_description(self.zoro_description)
 
+        # nlp_solver_warm_start_first_qp_from_nlp
+        if opts.nlp_solver_warm_start_first_qp_from_nlp and (opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon):
+            raise Exception('nlp_solver_warm_start_first_qp_from_nlp only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N.')
         return
 
 
@@ -981,7 +992,7 @@ class AcadosOcp:
         # model
         template_list += self._get_external_function_header_templates()
 
-        if self.dims.np_global > 0:
+        if self.dims.n_global_data > 0:
             template_list.append(('p_global_precompute_fun.in.h', f'{self.name}_p_global_precompute_fun.h'))
 
         # Simulink

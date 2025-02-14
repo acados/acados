@@ -150,6 +150,13 @@ void dense_qp_daqp_opts_set(void *config_, void *opts_, const char *field, void 
     return;
 }
 
+void dense_qp_daqp_opts_get(void *config_, void *opts_, const char *field, void *value)
+{
+    // dense_qp_daqp_opts *opts = opts_;
+    printf("\nerror: dense_qp_daqp_opts_get: not implemented for field: %s\n", field);
+    exit(1);
+}
+
 
 
 /************************************************
@@ -812,6 +819,7 @@ void dense_qp_daqp_config_initialize_default(void *config_)
         (void (*)(void *, void *, void *)) & dense_qp_daqp_opts_initialize_default;
     config->opts_update = (void (*)(void *, void *, void *)) & dense_qp_daqp_opts_update;
     config->opts_set = &dense_qp_daqp_opts_set;
+    config->opts_get = &dense_qp_daqp_opts_get;
     config->memory_calculate_size =
         (acados_size_t (*)(void *, void *, void *)) & dense_qp_daqp_memory_calculate_size;
     config->memory_assign =

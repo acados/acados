@@ -1309,6 +1309,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->with_adaptive_levenberg_marquardt = false;
 
     opts->ext_qp_res = 0;
+    opts->qp_warm_start = 0;
     opts->store_iterates = false;
 
     return;
@@ -1369,6 +1370,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
     {
         config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts,
                                     field+module_length+1, value);
+        if (!strcmp(field, "qp_iter_max"))
+        {
+            int* qp_iter_max = (int *) value;
+            opts->qp_iter_max = *qp_iter_max;
+        }
     }
     else if ( ptr_module!=NULL && (!strcmp(ptr_module, "reg")) )
     {
@@ -1435,6 +1441,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             double* adaptive_levenberg_marquardt_mu0 = (double *) value;
             opts->adaptive_levenberg_marquardt_mu0 = *adaptive_levenberg_marquardt_mu0;
+        }
+        else if (!strcmp(field, "solution_sens_qp_t_lam_min"))
+        {
+            double* solution_sens_qp_t_lam_min = (double *) value;
+            opts->solution_sens_qp_t_lam_min = *solution_sens_qp_t_lam_min;
         }
         else if (!strcmp(field, "exact_hess"))
         {
@@ -3379,6 +3390,80 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 
 
 
+int ocp_nlp_common_setup_qp_matrices_and_factorize(ocp_nlp_config *config, ocp_nlp_dims *dims_, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
+                ocp_nlp_opts *nlp_opts, ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work)
+{
+    acados_timer timer0, timer1;
+    acados_tic(&timer0);
+
+    ocp_nlp_dims *dims = dims_;
+    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
+    ocp_nlp_timings_reset(nlp_timings);
+
+    ocp_qp_in *qp_in = nlp_mem->qp_in;
+    ocp_qp_out *qp_out = nlp_mem->qp_out;
+
+    ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+
+    int qp_status, tmp_int;
+
+    /* Prepare the QP data */
+    // linearize NLP and update QP matrices
+    acados_tic(&timer1);
+    ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+    // update QP rhs for SQP (step prim var, abs dual var)
+    ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+    nlp_timings->time_lin = acados_toc(&timer1);
+
+    /* solve QP */
+    // warm start QP
+    ocp_nlp_initialize_qp_from_nlp(config, dims, qp_in, nlp_out, qp_out);
+    int tmp_bool = true;
+    qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "initialize_next_xcond_qp_from_qp_out", &tmp_bool);
+    // HPIPM hot start
+    tmp_int = 3;
+    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
+    // HPIPM: iter_max 0
+    tmp_int = 0;
+    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "iter_max", &tmp_int);
+    // require new factorization at exit
+    tmp_int = 1;
+    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "update_fact_exit", &tmp_int);
+    // HPIPM: set t_min, lam_min to avoid ill-conditioning
+    // backup
+    double t0_min_bkp, lam0_min;
+    config->qp_solver->opts_get(config->qp_solver, nlp_opts->qp_solver_opts, "t0_min", &t0_min_bkp);
+    config->qp_solver->opts_get(config->qp_solver, nlp_opts->qp_solver_opts, "lam0_min", &lam0_min);
+    // set
+    double tmp_double = nlp_opts->solution_sens_qp_t_lam_min;
+    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "t0_min", &tmp_double);
+    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "lam0_min", &tmp_double);
+
+    // QP solve
+    qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, NULL, NULL);
+
+    // reset QP solver settings
+    qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &nlp_opts->qp_warm_start);
+    qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "iter_max", &nlp_opts->qp_iter_max);
+    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "t0_min", &t0_min_bkp);
+    config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "lam0_min", &lam0_min);
+
+    if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
+    {
+        nlp_mem->status = ACADOS_QP_FAILURE;
+    }
+    else
+    {
+        nlp_mem->status = ACADOS_SUCCESS;
+    }
+
+    nlp_timings->time_tot = acados_toc(&timer0);
+
+    return nlp_mem->status;
+}
+
+
 void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
     // This function sets up: jac_lag_stat_p_global, jac_ineq_p_global, jac_dyn_p_global
@@ -3743,6 +3828,21 @@ void ocp_nlp_dump_qp_out_to_file(ocp_qp_out *qp_out, int sqp_iter, int soc)
 }
 
 
+void ocp_nlp_common_print_iteration_header()
+{
+    printf("%6s   %10s   %10s   %10s   %10s   ", "# it", "res_stat", "res_eq", "res_ineq", "res_comp");
+}
+
+void ocp_nlp_common_print_iteration(int iter_count, ocp_nlp_res *nlp_res)
+{
+    printf("%6i   %10.4e   %10.4e   %10.4e   %10.4e   ",
+        iter_count,
+        nlp_res->inf_norm_res_stat,
+        nlp_res->inf_norm_res_eq,
+        nlp_res->inf_norm_res_ineq,
+        nlp_res->inf_norm_res_comp);
+}
+
 void ocp_nlp_timings_get(ocp_nlp_config *config, ocp_nlp_timings *timings, const char *field, void *return_value_)
 {
     double *value = return_value_;
@@ -3863,6 +3963,11 @@ void ocp_nlp_memory_get(ocp_nlp_config *config, ocp_nlp_memory *nlp_mem, const c
     {
         config->qp_solver->memory_get(config->qp_solver,
             nlp_mem->qp_solver_mem, "status", return_value_);
+    }
+    else if (!strcmp("qp_tau_iter", field))
+    {
+        config->qp_solver->memory_get(config->qp_solver,
+            nlp_mem->qp_solver_mem, "tau_iter", return_value_);
     }
     else if (!strcmp("res_stat", field))
     {

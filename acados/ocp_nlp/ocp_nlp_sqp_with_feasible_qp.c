@@ -765,7 +765,27 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
     return false;
 }
 
-
+/************************************************
+ * output
+ ************************************************/
+static void print_iteration(int iter, ocp_nlp_config *config, ocp_nlp_res *nlp_res, ocp_nlp_sqp_wfqp_memory *mem,
+    ocp_nlp_opts *nlp_opts, double prev_levenberg_marquardt, int qp_status, int qp_iter)
+{
+ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+// print iteration header
+if (iter % 10 == 0)
+{
+ocp_nlp_common_print_iteration_header();
+printf("%9s   %9s   %8s   ", "step_norm", "step_type", "lm_reg.");
+config->globalization->print_iteration_header();
+printf("\n");
+}
+// print iteration
+ocp_nlp_common_print_iteration(iter, nlp_res);
+printf("%9.2e   %9s   %8.2e   ", mem->step_norm, mem->search_direction_type, prev_levenberg_marquardt);
+config->globalization->print_iteration(nlp_mem->cost_value, nlp_opts->globalization, nlp_mem->globalization);
+printf("\n");
+}
 
 /************************************************
  * functions
@@ -1544,10 +1564,6 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
         // #endif
         return nlp_mem->status;
     }
-    else
-    {
-        printf("Feasibility QP succesfully solved!\n");
-    }
     compute_qp_multiplier_norm_inf(mem, dims, relaxed_qp_out, relaxed_qp_in, true);
 
     l1_inf_QP_feasibility = calculate_slacked_qp_l1_infeasibility(dims, mem, work, opts, relaxed_qp_in, relaxed_qp_out, opts->use_QP_l1_inf_from_slacks);
@@ -1582,10 +1598,6 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
         //         omp_set_num_threads(num_threads_bkp);
         // #endif
         return nlp_mem->status;
-    }
-    else
-    {
-        printf("Search Direction QP succesfully solved!\n");
     }
     compute_qp_multiplier_norm_inf(mem, dims, nominal_qp_out, nominal_qp_in, false);
 
@@ -1636,10 +1648,6 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
         }
         else
         {
-            if (nlp_opts->print_level >=1)
-            {
-                printf("Nominal QP succesfully solved!\n");
-            }
             compute_qp_multiplier_norm_inf(mem, dims, nlp_mem->qp_out, nlp_mem->qp_in, false);
             mem->search_direction_type = "N";
             return ACADOS_SUCCESS;
@@ -1853,17 +1861,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         /* Output */
         if (nlp_opts->print_level > 0)
         {
-            config->globalization->print_iteration(nlp_mem->cost_value,
-                                                   sqp_iter,
-                                                   nlp_res,
-                                                   mem->step_norm,
-                                                   prev_levenberg_marquardt,
-                                                   qp_status,
-                                                   qp_iter,
-                                                   nlp_opts,
-                                                   nlp_mem->globalization);
+            print_iteration(sqp_iter, config, nlp_res, mem, nlp_opts, prev_levenberg_marquardt, qp_status, qp_iter);
         }
-
         prev_levenberg_marquardt = nlp_opts->levenberg_marquardt;
 
         /* Termination */

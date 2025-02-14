@@ -538,6 +538,20 @@ classdef AcadosOcp < handle
             dims.nsh_e = nsh_e;
             dims.nsphi_e = nsphi_e;
 
+            % check for ACADOS_INFTY
+            if ~ismember(opts.qp_solver, {'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_DAQP'})
+                ACADOS_INFTY = get_acados_infty();
+                % loop over all bound vectors
+                fields = {'lbx_0', 'ubx_0', 'lbx', 'ubx', 'lbx_e', 'ubx_e', 'lg', 'ug', 'lg_e', 'ug_e', 'lh', 'uh', 'lh_e', 'uh_e', 'lbu', 'ubu', 'lphi', 'uphi', 'lphi_e', 'uphi_e'};
+                for i = 1:length(fields)
+                    field = fields{i};
+                    bound = constraints.(field);
+                    if any(bound >= ACADOS_INFTY) || any(bound <= -ACADOS_INFTY)
+                        error(['Field ', field, ' contains values outside the interval (-ACADOS_INFTY, ACADOS_INFTY) with ACADOS_INFTY = ', num2str(ACADOS_INFTY, '%.2e'), '. One-sided constraints are not supported by the chosen QP solver ', opts.qp_solver, '.']);
+                    end
+                end
+            end
+
             % shooting nodes -> time_steps
             % discretization
             if isempty(opts.N_horizon) && isempty(dims.N)
@@ -1053,7 +1067,7 @@ classdef AcadosOcp < handle
             % append headers
             template_list = [template_list, self.get_external_function_header_templates()];
 
-            if self.dims.np_global > 0
+            if self.dims.n_global_data > 0
                 template_list{end+1} = {'p_global_precompute_fun.in.h',  [self.model.name, '_p_global_precompute_fun.h']};
             end
 

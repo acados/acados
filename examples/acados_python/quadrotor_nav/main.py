@@ -33,13 +33,11 @@
 import numpy as np
 from time import time
 import casadi as ca
-import os
 from common import *
 from acados_settings import AcadosCustomOcp
-from matplotlib import pyplot
 from visualize_mpl import animOptVars
 
-def plan_ocp( ocp_wrapper):
+def plan_ocp(ocp_wrapper: AcadosCustomOcp):
     '''Motion control problem of drone trajectory tracking'''
 
     # dimensions
@@ -52,7 +50,6 @@ def plan_ocp( ocp_wrapper):
     times = np.array([[0]])
     mpc_iter = 0
     cost = 0
-    fail = 0
 
     # Define states, controls, and slacks as coloumn vectors
     zeta_0 = np.copy(ocp_wrapper.zeta_0)
@@ -69,7 +66,6 @@ def plan_ocp( ocp_wrapper):
     misc_step = ca.repmat(np.array([0, 0]).T, 1)
 
     # Control loop entry point
-
     for i in range(Nsim):
         # Store previous iterate data for plots
         discr_step = ca.reshape(np.array([t0, cost]), 2, 1)
@@ -87,8 +83,6 @@ def plan_ocp( ocp_wrapper):
 
         # Solve the OCP with updated state and controls
         ocp_wrapper.solve_and_sim()
-
-        # cost = ocp_wrapper.get_cost()
 
         t0 = round(t0 + T_del, 3)
         t2 = time()

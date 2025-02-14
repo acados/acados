@@ -100,7 +100,7 @@ typedef struct {{ model.name }}_solver_capsule
     unsigned int nlp_np;
 
     /* external functions */
-{% if dims.np_global > 0 %}
+{% if dims.n_global_data > 0 %}
     external_function_casadi p_global_precompute_fun;
 {%- endif %}
     // dynamics
@@ -293,6 +293,7 @@ ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_update_params_sparse({{ model.n
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver_capsule* capsule, double* data, int data_len);
 
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_solve({{ model.name }}_solver_capsule * capsule);
+ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_setup_qp_matrices_and_factorize({{ model.name }}_solver_capsule* capsule);
 
 ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** capsules, int * status_out, int N_batch);
 
