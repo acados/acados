@@ -538,6 +538,28 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
     return false;
 }
 
+/************************************************
+ * output
+ ************************************************/
+static void print_iteration(int iter, ocp_nlp_config *config, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memory *mem,
+                            ocp_nlp_opts *nlp_opts, double prev_levenberg_marquardt, int qp_status, int qp_iter)
+{
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    // print iteration header
+    if (iter % 10 == 0)
+    {
+        ocp_nlp_common_print_iteration_header();
+        printf("%7s   %7s  %9s   %8s  ", "qp_stat", "qp_iter", "step_norm", "lm_reg.");
+        config->globalization->print_iteration_header();
+        printf("\n");
+    }
+    // print iteration
+    ocp_nlp_common_print_iteration(iter, nlp_res);
+    printf("%7d   %7d   %8.2e   %8.2e  ", qp_status, qp_iter, mem->step_norm, prev_levenberg_marquardt);
+    config->globalization->print_iteration(nlp_mem->cost_value, nlp_opts->globalization, nlp_mem->globalization);
+    printf("\n");
+}
+
 
 /************************************************
  * functions
@@ -649,15 +671,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Output
         if (nlp_opts->print_level > 0)
         {
-            config->globalization->print_iteration(nlp_mem->cost_value,
-                                                   sqp_iter,
-                                                   nlp_res,
-                                                   mem->step_norm,
-                                                   prev_levenberg_marquardt,
-                                                   qp_status,
-                                                   qp_iter,
-                                                   nlp_opts,
-                                                   nlp_mem->globalization);
+            print_iteration(sqp_iter, config, nlp_res, mem, nlp_opts, prev_levenberg_marquardt, qp_status, qp_iter);
         }
         prev_levenberg_marquardt = nlp_opts->levenberg_marquardt;
 

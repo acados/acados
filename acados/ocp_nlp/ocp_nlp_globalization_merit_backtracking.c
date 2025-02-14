@@ -269,34 +269,15 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
 
 void ocp_nlp_globalization_merit_backtracking_print_iteration_header()
 {
-    printf("# it\tstat\t\teq\t\tineq\t\tcomp\t\tqp_stat\tqp_iter\talpha\n");
+    printf("%8s   ", "alpha");
 }
 
 void ocp_nlp_globalization_merit_backtracking_print_iteration(double objective_value,
-                                                            int iter_count,
-                                                            void* nlp_res_,
-                                                            double step_norm,
-                                                            double reg_param,
-                                                            int qp_status,
-                                                            int qp_iter,
-                                                            void* nlp_opts_,
-                                                            void* mem_)
+                                                                void* nlp_opts_,
+                                                                void* mem_)
 {
-    ocp_nlp_res *nlp_res = nlp_res_;
     ocp_nlp_globalization_merit_backtracking_memory* mem = mem_;
-
-    if ((iter_count % 10 == 0)){
-        ocp_nlp_globalization_merit_backtracking_print_iteration_header();
-    }
-    printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n",
-        iter_count,
-        nlp_res->inf_norm_res_stat,
-        nlp_res->inf_norm_res_eq,
-        nlp_res->inf_norm_res_ineq,
-        nlp_res->inf_norm_res_comp,
-        qp_status,
-        qp_iter,
-        mem->alpha);
+    printf("%8.2e   ", mem->alpha);
 }
 
 static double ocp_nlp_get_violation_inf_norm(ocp_nlp_config *config, ocp_nlp_dims *dims,

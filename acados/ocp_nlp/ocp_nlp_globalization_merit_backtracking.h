@@ -112,14 +112,8 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate_for_ddp(voi
 void ocp_nlp_globalization_merit_backtracking_print_iteration_header();
 //
 void ocp_nlp_globalization_merit_backtracking_print_iteration(double objective_value,
-                                                            int iter_count,
-                                                            void *nlp_res_,
-                                                            double step_norm,
-                                                            double reg_param,
-                                                            int qp_status,
-                                                            int qp_iter,
-                                                            void* nlp_opts_,
-                                                            void* mem_);
+                                                                void* nlp_opts_,
+                                                                void* mem_);
 //
 int ocp_nlp_globalization_merit_backtracking_needs_objective_value();
 //
