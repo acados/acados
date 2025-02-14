@@ -174,7 +174,7 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
 
 void ocp_nlp_globalization_fixed_step_print_iteration_header()
 {
-    printf("%10s   ", "alpha");
+    printf("%8s   ", "alpha");
 }
 
 void ocp_nlp_globalization_fixed_step_print_iteration(double objective_value,
@@ -182,7 +182,7 @@ void ocp_nlp_globalization_fixed_step_print_iteration(double objective_value,
                                                 void* mem_)
 {
     ocp_nlp_globalization_fixed_step_opts *opts = nlp_opts_;
-    printf("%10.4e    ", opts->step_length);
+    printf("%8.2e    ", opts->step_length);
 }
 
 int ocp_nlp_globalization_fixed_step_needs_objective_value()

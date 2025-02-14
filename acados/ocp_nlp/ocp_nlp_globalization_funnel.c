@@ -571,13 +571,13 @@ Printing functions
 
 void ocp_nlp_globalization_funnel_print_iteration_header()
 {
-    printf("%10s   %10s   %10s   %10s   %7s   ", "obj", "alpha", "funnel_w", "penalty", "it_type");
+    printf("%10s   %8s   %10s   %10s   %7s   ", "obj", "alpha", "funnel_w", "penalty", "it_type");
 }
 
 void ocp_nlp_globalization_funnel_print_iteration(double objective_value, void* nlp_opts_, void* mem_)
 {
     ocp_nlp_globalization_funnel_memory* mem = (ocp_nlp_globalization_funnel_memory*) mem_;
-    printf("%10.4e   %10.4e   %10.4e   %10.4e   %7c   ",
+    printf("%10.4e   %8.2e   %10.4e   %10.4e   %7c   ",
             objective_value,
             mem->alpha,
             mem->funnel_width,

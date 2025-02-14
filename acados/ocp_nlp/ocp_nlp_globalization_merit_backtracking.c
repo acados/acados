@@ -269,7 +269,7 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
 
 void ocp_nlp_globalization_merit_backtracking_print_iteration_header()
 {
-    printf("%10s   ", "alpha");
+    printf("%8s   ", "alpha");
 }
 
 void ocp_nlp_globalization_merit_backtracking_print_iteration(double objective_value,
@@ -277,7 +277,7 @@ void ocp_nlp_globalization_merit_backtracking_print_iteration(double objective_v
                                                                 void* mem_)
 {
     ocp_nlp_globalization_merit_backtracking_memory* mem = mem_;
-    printf("%10.4e   ", mem->alpha);
+    printf("%8.2e   ", mem->alpha);
 }
 
 static double ocp_nlp_get_violation_inf_norm(ocp_nlp_config *config, ocp_nlp_dims *dims,
