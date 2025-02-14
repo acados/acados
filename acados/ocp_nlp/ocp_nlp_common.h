@@ -299,6 +299,7 @@ typedef struct ocp_nlp_opts
     int log_primal_step_norm; // compute and log the max norm of the primal steps
     int max_iter; // maximum number of (SQP/DDP) iterations
     int qp_iter_max; // maximum iter of QP solver, stored to remember.
+    double tau_min;  // minimum value of the barrier parameter, for IPMs
 
     // Flag for usage of adaptive levenberg marquardt strategy
     bool with_adaptive_levenberg_marquardt;
@@ -480,7 +481,7 @@ typedef struct ocp_nlp_workspace
     ocp_nlp_out *tmp_nlp_out;
     ocp_nlp_out *weight_merit_fun;
     struct blasfeo_dvec tmp_nv;
-    struct blasfeo_dvec tmp_ni;
+    struct blasfeo_dvec tmp_2ni;
     struct blasfeo_dvec dxnext_dy;
 
     // optimal value gradient wrt params
@@ -539,8 +540,8 @@ void ocp_nlp_initialize_qp_from_nlp(ocp_nlp_config *config, ocp_nlp_dims *dims, 
             ocp_nlp_out *out, ocp_qp_out *qp_out);
 
 //
-void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out,
-                         ocp_nlp_res *res, ocp_nlp_memory *mem);
+void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_in *in, ocp_nlp_out *out,
+                         ocp_nlp_res *res, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
 //
 void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out *to);
 

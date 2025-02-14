@@ -703,6 +703,14 @@ classdef AcadosOcp < handle
                 end
             end
 
+            if ~ismember(opts.qp_solver_t0_init, [0, 1, 2])
+                error('qp_solver_t0_init must be one of [0, 1, 2].');
+            end
+
+            if opts.tau_min > 0 && isempty(strfind(opts.qp_solver, 'HPIPM'))
+                error('tau_min > 0 is only compatible with HPIPM.');
+            end
+
             % Set default parameters for globalization
             ddp_with_merit_or_funnel = strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH') || (strcmp(opts.globalization, 'MERIT_BACKTRACKING') && strcmp(opts.nlp_solver_type, 'DDP'));
 
