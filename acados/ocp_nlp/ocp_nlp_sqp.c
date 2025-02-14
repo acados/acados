@@ -548,13 +548,13 @@ static void print_iteration(int iter, ocp_nlp_config *config, ocp_nlp_res *nlp_r
     // print iteration header
     if (iter % 10 == 0)
     {
-        ocp_nlp_print_iteration_header(); //print common stuff
+        ocp_nlp_common_print_iteration_header();
         printf("%10s   %10s   %9s   %7s   ", "step_norm", "lm_reg.", "qp_status", "qp_iter");
         config->globalization->print_iteration_header();
         printf("\n");
     }
     // print iteration
-    ocp_nlp_print_iteration(iter, nlp_res);
+    ocp_nlp_common_print_iteration(iter, nlp_res);
     printf("%10.4e   %10.4e   %9d   %7d   ", mem->step_norm, prev_levenberg_marquardt, qp_status, qp_iter);
     config->globalization->print_iteration(nlp_mem->cost_value, nlp_opts->globalization, nlp_mem->globalization);
     printf("\n");
