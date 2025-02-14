@@ -874,12 +874,8 @@ class AcadosOcp:
         if opts.qp_solver_cond_N is None:
             opts.qp_solver_cond_N = opts.N_horizon
 
-        if opts.tau_min > 0:
-            if "HPIPM" not in opts.qp_solver:
-                raise Exception('tau_min > 0 is only compatible with HPIPM.')
-            if opts.nlp_solver_tol_comp < opts.tau_min:
-                print(f"WARNING: nlp_solver_tol_comp = {opts.nlp_solver_tol_comp} <= tau_min = {opts.tau_min}. This might prevent convergence.")
-                print("It is recommended to set nlp_solver_tol_comp >= tau_min and additionally set qp_solver_tol_comp appropriately.")
+        if opts.tau_min > 0 and not "HPIPM" in opts.qp_solver:
+            raise Exception('tau_min > 0 is only compatible with HPIPM.')
 
         if opts.qp_solver_cond_block_size is not None:
             if sum(opts.qp_solver_cond_block_size) != opts.N_horizon:
