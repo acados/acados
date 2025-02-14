@@ -87,8 +87,9 @@ def solve_and_compute_sens(p_test, tau):
 
         if status != 0:
             ocp_solver.print_statistics()
-            print(f"OCP solver returned status {status} at {i}th p value {p}, {tau=}.")
-            breakpoint()
+            raise Exception(f"OCP solver returned status {status} at {i}th p value {p}, {tau=}.")
+            # print(f"OCP solver returned status {status} at {i}th p value {p}, {tau=}.")
+            # breakpoint()
 
         # Calculate the policy gradient
         out_dict = ocp_solver.eval_solution_sensitivity(0, "p_global", return_sens_x=True)
