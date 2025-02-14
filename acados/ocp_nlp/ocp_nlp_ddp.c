@@ -600,20 +600,20 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
  * output
  ************************************************/
 static void print_iteration(int iter, ocp_nlp_config *config, ocp_nlp_res *nlp_res, ocp_nlp_ddp_memory *mem,
-    ocp_nlp_opts *nlp_opts, double prev_levenberg_marquardt)
+    ocp_nlp_opts *nlp_opts, double prev_levenberg_marquardt, int qp_status, int qp_iter)
 {
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
     // print iteration header
     if (iter % 10 == 0)
     {
-    ocp_nlp_print_iteration_header(); //print common stuff
-    printf("%10s   %10s   ", "step_norm", "LM_reg.");
-    config->globalization->print_iteration_header();
-    printf("\n");
+        ocp_nlp_print_iteration_header(); //print common stuff
+        printf("%10s   %10s   %9s   %7s   ", "step_norm", "lm_reg.", "qp_status", "qp_iter");
+        config->globalization->print_iteration_header();
+        printf("\n");
     }
     // print iteration
     ocp_nlp_print_iteration(iter, nlp_res);
-    printf("%10.4e   %10.4e   ", mem->step_norm, prev_levenberg_marquardt);
+    printf("%10.4e   %10.4e   %9d   %7d   ", mem->step_norm, prev_levenberg_marquardt, qp_status, qp_iter);
     config->globalization->print_iteration(nlp_mem->cost_value, nlp_opts->globalization, nlp_mem->globalization);
     printf("\n");
 }
@@ -747,7 +747,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Output
         if (nlp_opts->print_level > 0)
         {
-            print_iteration(ddp_iter, config, nlp_res, mem, nlp_opts, reg_param_memory);
+            print_iteration(ddp_iter, config, nlp_res, mem, nlp_opts, reg_param_memory, qp_status, qp_iter);
         }
         reg_param_memory = nlp_opts->levenberg_marquardt;
 
