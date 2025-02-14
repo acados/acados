@@ -1481,8 +1481,9 @@ static void setup_byrd_omojokun_bounds(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memo
     int *ns = dims->ns;
     int *nns = mem->nns;
 
-    int *nb = qp_in->dim->nb;
-    int *ng = qp_in->dim->ng;
+    int *nb = dims->nb;
+    int *ng = dims->ng;
+    int *ni_nl = dims->ni_nl;
 
     int i, j;
     double tmp_lower, tmp_upper;
@@ -1501,6 +1502,7 @@ static void setup_byrd_omojokun_bounds(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memo
             // get lower slack
             tmp_lower = BLASFEO_DVECEL(qp_out->ux + i, nx[i]+nu[i]+slack_index);
             // lower_bound - value
+            // TODO: d should be copied such that we can extract in python
             BLASFEO_DVECEL(qp_in->d+i, constr_index) -= tmp_lower;
 
             // get upper slack
@@ -1510,7 +1512,7 @@ static void setup_byrd_omojokun_bounds(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memo
             // for the slacks with upper bound we have value - slack, therefore
             // value <= -upper_bound + slack,
             // therefore we store upper_bound - slack??
-            BLASFEO_DVECEL(qp_in->d+i, nb[i] + ng[i] + constr_index) -= tmp_upper;
+            BLASFEO_DVECEL(qp_in->d+i, nb[i] + ng[i] + ni_nl[i] + constr_index) -= tmp_upper;
         }
     }
 }
