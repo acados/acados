@@ -2424,6 +2424,9 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
 
     int search_direction_mode = {{ solver_options.search_direction_mode }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "search_direction_mode", &search_direction_mode);
+
+    bool allow_direction_mode_switch = {{ solver_options.allow_direction_mode_switch }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "allow_direction_mode_switch", &allow_direction_mode_switch);
 {%- endif %}
 
 {% if solver_options.nlp_solver_type == "SQP" or solver_options.nlp_solver_type == "DDP" or solver_options.nlp_solver_type == "SQP_WITH_FEASIBLE_QP"%}

@@ -94,6 +94,7 @@ class AcadosOcpOptions:
         self.__initial_objective_multiplier = 1e0
         self.__use_exact_hessian_in_feas_qp = False
         self.__search_direction_mode = 0
+        self.__allow_direction_mode_switch = True
         self.__fixed_hess = 0
         self.__globalization_funnel_init_increase_factor = 15.0
         self.__globalization_funnel_init_upper_bound = 1.0
@@ -897,6 +898,16 @@ class AcadosOcpOptions:
         return self.__search_direction_mode
 
     @property
+    def allow_direction_mode_switch(self):
+        """
+        Do we allow switching back from BYRD_OMOJOKUN to NOMINAL_QP?
+
+        Type: bool
+        Default: True
+        """
+        return self.__allow_direction_mode_switch
+
+    @property
     def globalization_funnel_initial_penalty_parameter(self):
         """
         Initialization.
@@ -1418,6 +1429,13 @@ class AcadosOcpOptions:
                 Exception(f'Invalid string for search_direction_mode. Should be NOMINAL_QP, BYRD_OMOJOKUN, FEASIBILITY_QP, got {search_direction_mode}')
         else:
             raise Exception(f'Invalid datatype for search_direction_mode. Should be str, got {type(search_direction_mode)}')
+
+    @allow_direction_mode_switch.setter
+    def allow_direction_mode_switch(self, allow_direction_mode_switch):
+        if isinstance(allow_direction_mode_switch, bool):
+            self.__allow_direction_mode_switch = allow_direction_mode_switch
+        else:
+            raise Exception(f'Invalid datatype for allow_direction_mode_switch. Should be str, got {type(allow_direction_mode_switch)}')
 
     @globalization_eps_sufficient_descent.setter
     def globalization_eps_sufficient_descent(self, globalization_eps_sufficient_descent):

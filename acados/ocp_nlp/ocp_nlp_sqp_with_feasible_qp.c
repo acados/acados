@@ -126,6 +126,7 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
     opts->use_QP_l1_inf_from_slacks = false; // if manual calculation used, results seem more accurate and solver performs better!
     opts->search_direction_mode = NOMINAL_QP;
     opts->watchdog_zero_slacks_max = 2;
+    opts->allow_direction_mode_switch = true;
 
     // overwrite default submodules opts
     // qp tolerance
@@ -251,6 +252,11 @@ void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, vo
         {
             bool* search_direction_mode = (bool *) value;
             opts->search_direction_mode = *search_direction_mode;
+        }
+        else if (!strcmp(field, "allow_direction_mode_switch"))
+        {
+            bool* allow_direction_mode_switch = (bool *) value;
+            opts->allow_direction_mode_switch = *allow_direction_mode_switch;
         }
         else
         {
@@ -1600,7 +1606,6 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
         return nlp_mem->status;
     }
     compute_qp_multiplier_norm_inf(mem, dims, nominal_qp_out, nominal_qp_in, false);
-
     return qp_status;
 }
 
@@ -1672,7 +1677,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
                                                                     timer0,
                                                                     timer1);
         // TODO: solve this below!!!
-        search_direction_status = 0;
+        // search_direction_status = 0;
         if (solved_nominal_before)
         {
             mem->search_direction_type = "NFN";
@@ -1688,7 +1693,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
             mem->watchdog_zero_slacks_counter += 1;
         }
 
-        if (mem->watchdog_zero_slacks_counter == opts->watchdog_zero_slacks_max)
+        if (opts->allow_direction_mode_switch && mem->watchdog_zero_slacks_counter == opts->watchdog_zero_slacks_max)
         {
             mem->watchdog_zero_slacks_counter = 0;
             mem->search_direction_mode = NOMINAL_QP;
