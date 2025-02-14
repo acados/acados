@@ -1551,7 +1551,8 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
 
     /* Solve Feasibility QP: Only gradient of slack variables */
     print_debug_output("Solve Feasibility QP!\n", nlp_opts->print_level, 2);
-
+    print_ocp_qp_dims(relaxed_qp_in->dim);
+    print_ocp_qp_in(relaxed_qp_in);
     qp_status = prepare_and_solve_QP(config, opts, relaxed_qp_in, relaxed_qp_out, dims, mem, nlp_in, nlp_out,
                 nlp_mem, nlp_work, sqp_iter, true, timer0, timer1);
     ocp_qp_out_get(relaxed_qp_out, "qp_info", &qp_info_);
@@ -2053,17 +2054,20 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
         }
     }
 
-    // set idxs_rev of QP:
+    // set idxs_rev of relaxed QP
     for (int stage = 0; stage <= dims->N; stage++)
     {
         config->constraints[stage]->model_get(config->constraints[stage], dims->constraints[stage], nlp_in->constraints[stage], "idxs", idxs);
-        // int *idxs_rev = nlp_mem->qp_in->idxs_rev[stage];
         int *relaxed_idxs_rev = mem->relaxed_qp_in->idxs_rev[stage];
         int *idxns = mem->idxns[stage];
         nns = mem->nns[stage];
+        ns = dims->ns[stage];
+        for (int i=0; i<ns; i++)
+        {
+            relaxed_idxs_rev[idxs[i]] = i;
+        }
         for (int i=0; i<nns; i++)
         {
-            // idxs_rev[idxns[i]] = i+dims->ns[stage];
             relaxed_idxs_rev[idxns[i]] = i+dims->ns[stage];
         }
     }
