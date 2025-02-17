@@ -128,16 +128,16 @@ def main():
         sol_list.append(sol_tau)
 
     plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list,
-                 title=None, parameter_name=r"$\theta$")
+                 title=None, parameter_name=r"$\theta$", fig_filename="solution_sens_non_ocp.pdf")
 
 
-def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list, title=None, parameter_name=""):
+def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list, title=None, parameter_name="", fig_filename=None):
     p_min = p_test[0]
     p_max = p_test[-1]
     linestyles = ["--", "-.", "--", ":", "-.", ":"]
 
     nsub = 2
-    _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=(8,6))
+    _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=(6.5,5))
 
     isub = 0
     # plot analytic solution
@@ -153,6 +153,7 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
     ax[isub].set_ylabel(r"solution $x^{\star}$")
     if title is not None:
         ax[isub].set_title(title)
+    ax[isub].legend()
 
     isub += 1
 
@@ -166,16 +167,19 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
         ax[isub].plot(p_test, sens_x_tau, label=labels_list[i], color=f"C{i}", linestyle=linestyles[i])
     ax[isub].set_xlim([p_test[0], p_test[-1]])
     ax[isub].set_ylabel(r"derivative $\partial_\theta x^{\star}$")
-    ax[isub].legend(ncol=2)
+    # ax[isub].legend(ncol=2)
 
     for i in range(nsub):
         ax[i].grid(True)
     ax[-1].set_xlabel(f"{parameter_name}")
 
-    fig_filename = f"solution_sens_non_ocp.pdf"
-    plt.savefig(fig_filename)
-    print(f"stored figure as {fig_filename}")
+    plt.tight_layout()
+
+    if fig_filename is not None:
+        plt.savefig(fig_filename)
+        print(f"stored figure as {fig_filename}")
     plt.show()
 
 if __name__ == "__main__":
     main()
+    # plot_solution_sensitivities_results([-2, 2], [], [], [], parameter_name=r"$\theta$", fig_filename="solution_sens_non_ocp_analytic.pdf")
