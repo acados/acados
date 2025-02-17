@@ -155,6 +155,9 @@ def main(algorithm='RTI', as_rti_iter=1):
             status = ocp_solver.solve()
             t_preparation[i] = ocp_solver.get_stats('time_tot')
 
+            if status not in [0, 2, 5]:
+                raise Exception(f'acados returned status {status}. Exiting.')
+
             # set initial state
             ocp_solver.set(0, "lbx", simX[i, :])
             ocp_solver.set(0, "ubx", simX[i, :])
@@ -169,9 +172,12 @@ def main(algorithm='RTI', as_rti_iter=1):
         else:
             # solve ocp and get next control input
             simU[i,:] = ocp_solver.solve_for_x0(x0_bar = simX[i, :])
+            status = ocp_solver.get_status()
 
             t[i] = ocp_solver.get_stats('time_tot')
 
+        if status not in [0, 2, 5]:
+            raise Exception(f'acados returned status {status}. Exiting.')
         # simulate system
         simX[i+1, :] = integrator.simulate(x=simX[i, :], u=simU[i,:])
 
