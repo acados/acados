@@ -315,6 +315,8 @@ def plot_solution_sensitivities_results(p_test, pi, pi_reconstructed_acados, pi_
 
     ax[-1].set_xlabel(f"{parameter_name}")
 
+    plt.tight_layout()
+
     fig_filename = f"solution_sens_{title}.pdf"
     plt.savefig(fig_filename)
     print(f"stored figure as {fig_filename}")
