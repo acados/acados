@@ -38,27 +38,18 @@ from itertools import product
 
 def main():
 
-    # params = {'use_merit_fun_only': [True, False],
-    params = {'use_merit_fun_only': [False],
-              'initial_obj_multiplier': [1e0, 1e-1]}
-
     # # SETTINGS:
     SOFTEN_CONTROLS = True
     SOFTEN_OBSTACLE = False
     SOFTEN_TERMINAL = True
     PLOT = True
-    solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT, {'use_merit_fun_only': False,
-                                                                                'initial_obj_multiplier':1e0})
+    solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT)
 
-    # SOFTEN_CONTROLS = False
-    # SOFTEN_OBSTACLE = False
-    # SOFTEN_TERMINAL = False
-    # PLOT = True
-
-    # keys, values = zip(*params.items())
-    # for combination in product(*values):
-    #     setting = dict(zip(keys, combination))
-    #     solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT, setting)
+    SOFTEN_CONTROLS = False
+    SOFTEN_OBSTACLE = False
+    SOFTEN_TERMINAL = False
+    PLOT = True
+    solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT)
 
 def feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver: AcadosOcpSolver):
     """
@@ -119,44 +110,35 @@ def feasible_qp_index_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N,
             else:
                 assert np.allclose(idxs, np.arange(dims.nbx + dims.nbu + dims.nh)), f"i=0: SOFTEN_CONTROLS: The initial condition should have {dims.nh + dims.nbu} slacks, got {len(idxs)}!"
 
+        # TODO: rework here!
         # if not SOFTEN_CONTROLS and not SOFTEN_OBSTACLE and SOFTEN_TERMINAL:
         if i == N:
             # We slack the obstacle constraint and the terminal constraints
             assert np.allclose(idxs, np.arange(dims.nh_e + dims.nbx_e)), f"i=N+1: Everything should be slacked"
 
-def create_solver_opts(setting: dict, N=4, Tf=2):
-
-    use_merit_fun_only = setting['use_merit_fun_only']
-    initial_obj_multiplier = setting['initial_obj_multiplier']
+def create_solver_opts(N=4, Tf=2):
 
     solver_options = AcadosOcp().solver_options
 
     # set options
     solver_options.N_horizon = N
     solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-    # qp_tol = 5e-7
-    # solver_options.qp_solver_tol_stat = qp_tol
-    # solver_options.qp_solver_tol_eq = qp_tol
-    # solver_options.qp_solver_tol_ineq = qp_tol
-    # solver_options.qp_solver_tol_comp = qp_tol
+    qp_tol = 5e-7
+    solver_options.qp_solver_tol_stat = qp_tol
+    solver_options.qp_solver_tol_eq = qp_tol
+    solver_options.qp_solver_tol_ineq = qp_tol
+    solver_options.qp_solver_tol_comp = qp_tol
     solver_options.qp_solver_ric_alg = 1
     solver_options.qp_solver_mu0 = 1e4
     solver_options.qp_solver_warm_start = 1
     solver_options.qp_solver_iter_max = 400
-    # solver_options.hessian_approx = 'EXACT'
-    # solver_options.regularize_method = 'MIRROR'
     solver_options.hessian_approx = 'GAUSS_NEWTON'
-    # solver_options.levenberg_marquardt = 1e-2
     solver_options.integrator_type = 'ERK'
     solver_options.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'
     solver_options.globalization = 'FUNNEL_L1PEN_LINESEARCH'
     solver_options.globalization_full_step_dual = True
     solver_options.print_level = 1
-    solver_options.nlp_solver_max_iter = 10
-    solver_options.search_direction_mode = "BYRD_OMOJOKUN"
-
-    solver_options.globalization_funnel_use_merit_fun_only = use_merit_fun_only
-    solver_options.initial_objective_multiplier = initial_obj_multiplier
+    solver_options.nlp_solver_max_iter = 15
     if False:
         solver_options.use_exact_hessian_in_feas_qp = True
     else:
@@ -167,7 +149,7 @@ def create_solver_opts(setting: dict, N=4, Tf=2):
 
     return solver_options
 
-def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT, setting):
+def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT):
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -262,7 +244,7 @@ def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT, s
         ocp.cost.Zu_e = np.concatenate((ocp.cost.Zu_e, Zh))
 
     # load options
-    ocp.solver_options = create_solver_opts(setting, N, Tf)
+    ocp.solver_options = create_solver_opts(N, Tf)
     # create ocp solver
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_ocp.json', verbose=False)
 
@@ -289,17 +271,13 @@ def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT, s
 
     # print summary
     print(f"cost function value = {ocp_solver.get_cost()} after {sqp_iter} SQP iterations")
-    print(f"solved sqp_wfqp problem with settings SOFTEN_OBSTACLE = {SOFTEN_OBSTACLE},SOFTEN_TERMINAL = {SOFTEN_TERMINAL}, SOFTEN_CONTROL = {SOFTEN_CONTROLS}, use_merit_fun_only = {setting['use_merit_fun_only']}, funnel_init_penalty_parameter = {setting['initial_obj_multiplier']}")
+    print(f"solved sqp_wfqp problem with settings SOFTEN_OBSTACLE = {SOFTEN_OBSTACLE},SOFTEN_TERMINAL = {SOFTEN_TERMINAL}, SOFTEN_CONTROL = {SOFTEN_CONTROLS}")
 
     if PLOT:
         plot_linear_mass_system_X_state_space(simX, circle=circle, x_goal=x_goal)
 
     if ocp.solver_options.globalization_funnel_use_merit_fun_only:
         assert status == 0, "Merit function should always converge!"
-    # if not ocp.solver_options.globalization_funnel_use_merit_fun_only and\
-    #     ocp.solver_options.initial_objective_multiplier == 1e0\
-    #     and not SOFTEN_CONTROLS:
-    #     assert status in [3,8], "Funnel should converge to an infeasible point at the moment for unsoftened problem and initial penalty parameter 1e0, got status {status}!"
     elif not ocp.solver_options.globalization_funnel_use_merit_fun_only and\
         ocp.solver_options.initial_objective_multiplier != 1e0:
         assert status == 0, "Funnel should find solution!"
