@@ -893,7 +893,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #endif
             return mem->nlp_mem->status;
         }
-        mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
+        if (sqp_iter+1 < mem->stat_m)
+            mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
 
     }  // end SQP loop
 

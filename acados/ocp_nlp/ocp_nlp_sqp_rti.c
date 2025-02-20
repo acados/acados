@@ -1032,7 +1032,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // update variables
             double step_size;
             globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_out, &step_size);
-            if (globalization_status != 1)
+            if (globalization_status != ACADOS_SUCCESS)
             {
                 if (nlp_opts->print_level > 1)
                 {
