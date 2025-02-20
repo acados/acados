@@ -1551,8 +1551,8 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
 
     /* Solve Feasibility QP: Only gradient of slack variables */
     print_debug_output("Solve Feasibility QP!\n", nlp_opts->print_level, 2);
-    print_ocp_qp_dims(relaxed_qp_in->dim);
-    print_ocp_qp_in(relaxed_qp_in);
+    // print_ocp_qp_dims(relaxed_qp_in->dim);
+    // print_ocp_qp_in(relaxed_qp_in);
     qp_status = prepare_and_solve_QP(config, opts, relaxed_qp_in, relaxed_qp_out, dims, mem, nlp_in, nlp_out,
                 nlp_mem, nlp_work, sqp_iter, true, timer0, timer1);
     ocp_qp_out_get(relaxed_qp_out, "qp_info", &qp_info_);
