@@ -531,8 +531,10 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
     plt.yscale("log")
     plt.xlabel(p_label)
     plt.xlim(p_var[0], p_var[-1])
+    plt.tight_layout()
+    plt.savefig("chain_adj_fwd_sens.pdf")
 
-    plot_timings([timing_results_forward, timing_results_adjoint], timing_results_forward.keys(), ['forward', 'adjoint'], figure_filename=None)
+    plot_timings([timing_results_forward, timing_results_adjoint], timing_results_forward.keys(), ['forward', 'adjoint'], figure_filename="timing_adj_fwd_sens_chain.pdf")
 
     plt.show()
 
