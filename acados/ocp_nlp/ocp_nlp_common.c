@@ -3475,6 +3475,9 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
                         ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
                         ocp_nlp_out *sens_nlp_out, const char *field, int stage, void *grad_p)
 {
+    acados_timer timer;
+    acados_tic(&timer);
+
     if (!opts->with_solution_sens_wrt_params)
     {
         printf("ocp_nlp_common_eval_solution_sens_adj_p: option with_solution_sens_wrt_params has to be true to evaluate solution sensitivities wrt. global parameters.\n");
@@ -3541,6 +3544,7 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
         printf("\nerror: field %s at stage %d not available in ocp_nlp_common_eval_solution_sens_adj_p\n", field, stage);
         exit(1);
     }
+    mem->nlp_timings->time_solution_sensitivities = acados_toc(&timer);
 }
 
 
