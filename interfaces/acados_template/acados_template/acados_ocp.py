@@ -347,13 +347,12 @@ class AcadosOcp:
 
         ## constraints
         # initial
-        this_shape = constraints.lbx_0.shape
-        other_shape = constraints.ubx_0.shape
-        if not this_shape == other_shape:
-            raise Exception('lbx_0, ubx_0 have different shapes!')
-        if not is_column(constraints.lbx_0):
-            raise Exception('lbx_0, ubx_0 must be column vectors!')
-        dims.nbx_0 = constraints.lbx_0.size
+        nbx_0 = constraints.idxbx_0.shape[0]
+        if constraints.ubx_0.shape[0] != nbx_0 or constraints.lbx_0.shape[0] != nbx_0:
+            raise Exception('inconsistent dimension nbx_0, regarding idxbx_0, ubx_0, lbx_0.')
+        dims.nbx_0 = nbx_0
+        if any(constraints.idxbx_0 >= dims.nx):
+            raise Exception(f'idxbx_0 = {constraints.idxbx_0} contains value >= nx = {dims.nx}.')
 
         if constraints.has_x0 and dims.nbx_0 != dims.nx:
             raise Exception(f"x0 should have shape nx = {dims.nx}.")
