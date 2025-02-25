@@ -358,15 +358,12 @@ class AcadosOcp:
             raise Exception(f"x0 should have shape nx = {dims.nx}.")
 
         if constraints.has_x0:
-            # case: x0 was set: nbx0 are all equalities.
-            dims.nbxe_0 = dims.nbx_0
-        elif constraints.idxbxe_0 is not None:
-            dims.nbxe_0 = constraints.idxbxe_0.shape[0]
-            if any(constraints.idxbxe_0 > dims.nbx_0):
-                raise Exception(f'idxbxe_0 = {constraints.idxbxe_0} contains value > nbx_0 = {dims.nbx_0}.')
-        elif dims.nbxe_0 is None:
-            # case: x0 and idxbxe_0 were not set -> dont assume nbx0 to be equality constraints.
-            dims.nbxe_0 = 0
+            if not np.alltrue(constraints.idxbxe_0 == np.arange(dims.nx)):
+                raise Exception(f"idxbxe_0 should be 0:{dims.nx} if x0 is set.")
+
+        dims.nbxe_0 = constraints.idxbxe_0.shape[0]
+        if any(constraints.idxbxe_0 > dims.nbx_0):
+            raise Exception(f'idxbxe_0 = {constraints.idxbxe_0} contains value > nbx_0 = {dims.nbx_0}.')
 
         if not is_empty(model.con_h_expr_0):
             nh_0 = casadi_length(model.con_h_expr_0)
