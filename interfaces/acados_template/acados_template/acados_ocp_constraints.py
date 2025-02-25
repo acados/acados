@@ -30,7 +30,7 @@
 #
 
 import numpy as np
-from .utils import J_to_idx, print_J_to_idx_note, J_to_idx_slack, check_if_nparray_and_flatten, check_if_2d_nparray
+from .utils import J_to_idx, print_J_to_idx_note, J_to_idx_slack, check_if_nparray_and_flatten, check_if_2d_nparray, is_empty
 
 class AcadosOcpConstraints:
     """
@@ -825,12 +825,19 @@ class AcadosOcpConstraints:
 
     @x0.setter
     def x0(self, x0):
-        x0 = check_if_nparray_and_flatten(x0, "x0")
-        self.__lbx_0 = x0
-        self.__ubx_0 = x0
-        self.__idxbx_0 = np.arange(x0.size)
-        self.__idxbxe_0 = np.arange(x0.size)
-        self.__has_x0 = True
+        if is_empty(x0):
+            self.__has_x0 = False
+            self.__lbx_0 = np.array([])
+            self.__ubx_0 = np.array([])
+            self.__idxbx_0 = np.array([])
+            self.__idxbxe_0 = np.array([])
+        else:
+            x0 = check_if_nparray_and_flatten(x0, "x0")
+            self.__lbx_0 = x0
+            self.__ubx_0 = x0
+            self.__idxbx_0 = np.arange(x0.size)
+            self.__idxbxe_0 = np.arange(x0.size)
+            self.__has_x0 = True
 
     # bounds on x
     @lbx.setter
