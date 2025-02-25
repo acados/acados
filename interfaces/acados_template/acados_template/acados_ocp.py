@@ -357,9 +357,8 @@ class AcadosOcp:
         if constraints.has_x0 and dims.nbx_0 != dims.nx:
             raise Exception(f"x0 should have shape nx = {dims.nx}.")
 
-        if constraints.has_x0:
-            if not np.alltrue(constraints.idxbxe_0 == np.arange(dims.nx)):
-                raise Exception(f"idxbxe_0 should be 0:{dims.nx} if x0 is set.")
+        if constraints.has_x0 and not np.all(constraints.idxbxe_0 == np.arange(dims.nx)):
+            raise Exception(f"idxbxe_0 should be 0:{dims.nx} if x0 is set.")
 
         dims.nbxe_0 = constraints.idxbxe_0.shape[0]
         if any(constraints.idxbxe_0 > dims.nbx_0):
