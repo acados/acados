@@ -189,6 +189,11 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxbxe_0
 
+    def remove_x0_elimination(self):
+        """Remove the elimination of x0 from the constraints, bounds on x0 are handled as general bounds on x."""
+        self.__has_x0 = False
+        self.idxbxe_0 = np.array([])
+
     # bounds on x
     @property
     def lbx(self):

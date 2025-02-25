@@ -1121,10 +1121,8 @@ class AcadosOcp:
         return context
 
     def remove_x0_elimination(self) -> None:
-        self.constraints.idxbxe_0 = np.zeros((0,))
-        self.dims.nbxe_0 = 0
-        return
-
+        """Remove the elimination of x0 from the constraints, bounds on x0 are handled as general bounds on x."""
+        self.constraints.remove_x0_elimination()
 
     def to_dict(self) -> dict:
         # Copy ocp object dictionary
