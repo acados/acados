@@ -627,6 +627,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         acados_size = 1;
         MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
         int nlp_solver_max_iter = (int) value[0];
+        if (nlp_solver_max_iter > {{ solver_options.nlp_solver_max_iter }})
+        {
+            sprintf(buffer, "ocp_set: nlp_solver_max_iter %d > {{ solver_options.nlp_solver_max_iter }} = original nlp_solver_max_iter. nlp_solver_max_iter should be <= to what was specified when codegenerating the solver.\n", nlp_solver_max_iter);
+            mexErrMsgTxt(buffer);
+        }
         ocp_nlp_solver_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
     }
     else if (!strcmp(field, "rti_phase"))

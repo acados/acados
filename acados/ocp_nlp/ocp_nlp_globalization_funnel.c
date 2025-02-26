@@ -543,6 +543,7 @@ int backtracking_line_search(ocp_nlp_config *config,
     }
 }
 
+
 int ocp_nlp_globalization_funnel_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_, double *step_size)
 {
     ocp_nlp_config *nlp_config = nlp_config_;
@@ -564,58 +565,24 @@ int ocp_nlp_globalization_funnel_find_acceptable_iterate(void *nlp_config_, void
     return linesearch_success;
 }
 
+/****************************************************
+Printing functions
+*****************************************************/
 
 void ocp_nlp_globalization_funnel_print_iteration_header()
 {
-    printf("%6s | %11s | %10s | %10s | %10s | %10s | %10s | %10s | %10s | %12s | %10s | %10s | %10s | %10s\n",
-    "iter.",
-    "objective",
-    "res_eq",
-    "res_ineq",
-    "res_stat",
-    "res_comp",
-    "alpha",
-    "step_norm",
-    "LM_reg.",
-    "funnel width",
-    "penalty",
-    "qp_status",
-    "qp_iter",
-    "iter. type");
+    printf("%10s   %8s   %10s   %10s   %7s   ", "obj", "alpha", "funnel_w", "penalty", "it_type");
 }
 
-
-void ocp_nlp_globalization_funnel_print_iteration(double objective_value,
-                                                int iter_count,
-                                                void* nlp_res_,
-                                                double step_norm,
-                                                double reg_param,
-                                                int qp_status,
-                                                int qp_iter,
-                                                void *nlp_opts_,
-                                                void *mem_)
+void ocp_nlp_globalization_funnel_print_iteration(double objective_value, void* nlp_opts_, void* mem_)
 {
-    ocp_nlp_res *nlp_res = nlp_res_;
     ocp_nlp_globalization_funnel_memory* mem = (ocp_nlp_globalization_funnel_memory*) mem_;
-    if ((iter_count % 10 == 0))
-    {
-        ocp_nlp_globalization_funnel_print_iteration_header();
-    }
-    printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %12.4e | %10.4e | %10i | %10i | %10c\n",
-        iter_count,
-        objective_value,
-        nlp_res->inf_norm_res_eq,
-        nlp_res->inf_norm_res_ineq,
-        nlp_res->inf_norm_res_stat,
-        nlp_res->inf_norm_res_comp,
-        mem->alpha,
-        step_norm,
-        reg_param,
-        mem->funnel_width,
-        mem->penalty_parameter,
-        qp_status,
-        qp_iter,
-        mem->funnel_iter_type);
+    printf("%10.4e   %8.2e   %10.4e   %10.4e   %7c   ",
+            objective_value,
+            mem->alpha,
+            mem->funnel_width,
+            mem->penalty_parameter,
+            mem->funnel_iter_type);
 }
 
 int ocp_nlp_globalization_funnel_needs_objective_value()
@@ -623,6 +590,7 @@ int ocp_nlp_globalization_funnel_needs_objective_value()
     return 1;
 }
 
+// QP objective value! Do not delete :D
 int ocp_nlp_globalization_funnel_needs_qp_objective_value()
 {
     return 1;

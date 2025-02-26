@@ -347,27 +347,22 @@ class AcadosOcp:
 
         ## constraints
         # initial
-        this_shape = constraints.lbx_0.shape
-        other_shape = constraints.ubx_0.shape
-        if not this_shape == other_shape:
-            raise Exception('lbx_0, ubx_0 have different shapes!')
-        if not is_column(constraints.lbx_0):
-            raise Exception('lbx_0, ubx_0 must be column vectors!')
-        dims.nbx_0 = constraints.lbx_0.size
+        nbx_0 = constraints.idxbx_0.shape[0]
+        if constraints.ubx_0.shape[0] != nbx_0 or constraints.lbx_0.shape[0] != nbx_0:
+            raise Exception('inconsistent dimension nbx_0, regarding idxbx_0, ubx_0, lbx_0.')
+        dims.nbx_0 = nbx_0
+        if any(constraints.idxbx_0 >= dims.nx):
+            raise Exception(f'idxbx_0 = {constraints.idxbx_0} contains value >= nx = {dims.nx}.')
 
         if constraints.has_x0 and dims.nbx_0 != dims.nx:
             raise Exception(f"x0 should have shape nx = {dims.nx}.")
 
-        if constraints.has_x0:
-            # case: x0 was set: nbx0 are all equalities.
-            dims.nbxe_0 = dims.nbx_0
-        elif constraints.idxbxe_0 is not None:
-            dims.nbxe_0 = constraints.idxbxe_0.shape[0]
-            if any(constraints.idxbxe_0 > dims.nbx_0):
-                raise Exception(f'idxbxe_0 = {constraints.idxbxe_0} contains value > nbx_0 = {dims.nbx_0}.')
-        elif dims.nbxe_0 is None:
-            # case: x0 and idxbxe_0 were not set -> dont assume nbx0 to be equality constraints.
-            dims.nbxe_0 = 0
+        if constraints.has_x0 and not np.all(constraints.idxbxe_0 == np.arange(dims.nx)):
+            raise Exception(f"idxbxe_0 should be 0:{dims.nx} if x0 is set.")
+
+        dims.nbxe_0 = constraints.idxbxe_0.shape[0]
+        if any(constraints.idxbxe_0 >= dims.nbx_0):
+            raise Exception(f'idxbxe_0 = {constraints.idxbxe_0} contains value >= nbx_0 = {dims.nbx_0}.')
 
         if not is_empty(model.con_h_expr_0):
             nh_0 = casadi_length(model.con_h_expr_0)
@@ -396,16 +391,16 @@ class AcadosOcp:
             raise Exception('inconsistent dimension nbx, regarding idxbx, ubx, lbx.')
         else:
             dims.nbx = nbx
-        if any(constraints.idxbx > dims.nx):
-            raise Exception(f'idxbx = {constraints.idxbx} contains value > nx = {dims.nx}.')
+        if any(constraints.idxbx >= dims.nx):
+            raise Exception(f'idxbx = {constraints.idxbx} contains value >= nx = {dims.nx}.')
 
         nbu = constraints.idxbu.shape[0]
         if constraints.ubu.shape[0] != nbu or constraints.lbu.shape[0] != nbu:
             raise Exception('inconsistent dimension nbu, regarding idxbu, ubu, lbu.')
         else:
             dims.nbu = nbu
-        if any(constraints.idxbu > dims.nu):
-            raise Exception(f'idxbu = {constraints.idxbu} contains value > nu = {dims.nu}.')
+        if any(constraints.idxbu >= dims.nu):
+            raise Exception(f'idxbu = {constraints.idxbu} contains value >= nu = {dims.nu}.')
 
         # lg <= C * x + D * u <= ug
         ng = constraints.lg.shape[0]
@@ -449,8 +444,8 @@ class AcadosOcp:
             raise Exception('inconsistent dimension nbx_e, regarding idxbx_e, ubx_e, lbx_e.')
         else:
             dims.nbx_e = nbx_e
-        if any(constraints.idxbx_e > dims.nx):
-            raise Exception(f'idxbx_e = {constraints.idxbx_e} contains value > nx = {dims.nx}.')
+        if any(constraints.idxbx_e >= dims.nx):
+            raise Exception(f'idxbx_e = {constraints.idxbx_e} contains value >= nx = {dims.nx}.')
 
         ng_e = constraints.lg_e.shape[0]
         if constraints.ug_e.shape[0] != ng_e or constraints.C_e.shape[0] != ng_e:
@@ -483,8 +478,8 @@ class AcadosOcp:
         nsbx = constraints.idxsbx.shape[0]
         if nsbx > nbx:
             raise Exception(f'inconsistent dimension nsbx = {nsbx}. Is greater than nbx = {nbx}.')
-        if any(constraints.idxsbx > nbx):
-            raise Exception(f'idxsbx = {constraints.idxsbx} contains value > nbx = {nbx}.')
+        if any(constraints.idxsbx >= nbx):
+            raise Exception(f'idxsbx = {constraints.idxsbx} contains value >= nbx = {nbx}.')
         if is_empty(constraints.lsbx):
             constraints.lsbx = np.zeros((nsbx,))
         elif constraints.lsbx.shape[0] != nsbx:
@@ -498,8 +493,8 @@ class AcadosOcp:
         nsbu = constraints.idxsbu.shape[0]
         if nsbu > nbu:
             raise Exception(f'inconsistent dimension nsbu = {nsbu}. Is greater than nbu = {nbu}.')
-        if any(constraints.idxsbu > nbu):
-            raise Exception(f'idxsbu = {constraints.idxsbu} contains value > nbu = {nbu}.')
+        if any(constraints.idxsbu >= nbu):
+            raise Exception(f'idxsbu = {constraints.idxsbu} contains value >= nbu = {nbu}.')
         if is_empty(constraints.lsbu):
             constraints.lsbu = np.zeros((nsbu,))
         elif constraints.lsbu.shape[0] != nsbu:
@@ -513,8 +508,8 @@ class AcadosOcp:
         nsh = constraints.idxsh.shape[0]
         if nsh > nh:
             raise Exception(f'inconsistent dimension nsh = {nsh}. Is greater than nh = {nh}.')
-        if any(constraints.idxsh > nh):
-            raise Exception(f'idxsh = {constraints.idxsh} contains value > nh = {nh}.')
+        if any(constraints.idxsh >= nh):
+            raise Exception(f'idxsh = {constraints.idxsh} contains value >= nh = {nh}.')
         if is_empty(constraints.lsh):
             constraints.lsh = np.zeros((nsh,))
         elif constraints.lsh.shape[0] != nsh:
@@ -528,8 +523,8 @@ class AcadosOcp:
         nsphi = constraints.idxsphi.shape[0]
         if nsphi > dims.nphi:
             raise Exception(f'inconsistent dimension nsphi = {nsphi}. Is greater than nphi = {dims.nphi}.')
-        if any(constraints.idxsphi > dims.nphi):
-            raise Exception(f'idxsphi = {constraints.idxsphi} contains value > nphi = {dims.nphi}.')
+        if any(constraints.idxsphi >= dims.nphi):
+            raise Exception(f'idxsphi = {constraints.idxsphi} contains value >= nphi = {dims.nphi}.')
         if is_empty(constraints.lsphi):
             constraints.lsphi = np.zeros((nsphi,))
         elif constraints.lsphi.shape[0] != nsphi:
@@ -543,8 +538,8 @@ class AcadosOcp:
         nsg = constraints.idxsg.shape[0]
         if nsg > ng:
             raise Exception(f'inconsistent dimension nsg = {nsg}. Is greater than ng = {ng}.')
-        if any(constraints.idxsg > ng):
-            raise Exception(f'idxsg = {constraints.idxsg} contains value > ng = {ng}.')
+        if any(constraints.idxsg >= ng):
+            raise Exception(f'idxsg = {constraints.idxsg} contains value >= ng = {ng}.')
         if is_empty(constraints.lsg):
             constraints.lsg = np.zeros((nsg,))
         elif constraints.lsg.shape[0] != nsg:
@@ -580,8 +575,8 @@ class AcadosOcp:
         nsh_0 = constraints.idxsh_0.shape[0]
         if nsh_0 > nh_0:
             raise Exception(f'inconsistent dimension nsh_0 = {nsh_0}. Is greater than nh_0 = {nh_0}.')
-        if any(constraints.idxsh_0 > nh_0):
-            raise Exception(f'idxsh_0 = {constraints.idxsh_0} contains value > nh_0 = {nh_0}.')
+        if any(constraints.idxsh_0 >= nh_0):
+            raise Exception(f'idxsh_0 = {constraints.idxsh_0} contains value >= nh_0 = {nh_0}.')
         if is_empty(constraints.lsh_0):
             constraints.lsh_0 = np.zeros((nsh_0,))
         elif constraints.lsh_0.shape[0] != nsh_0:
@@ -595,8 +590,8 @@ class AcadosOcp:
         nsphi_0 = constraints.idxsphi_0.shape[0]
         if nsphi_0 > dims.nphi_0:
             raise Exception(f'inconsistent dimension nsphi_0 = {nsphi_0}. Is greater than nphi_0 = {dims.nphi_0}.')
-        if any(constraints.idxsphi_0 > dims.nphi_0):
-            raise Exception(f'idxsphi_0 = {constraints.idxsphi_0} contains value > nphi_0 = {dims.nphi_0}.')
+        if any(constraints.idxsphi_0 >= dims.nphi_0):
+            raise Exception(f'idxsphi_0 = {constraints.idxsphi_0} contains value >= nphi_0 = {dims.nphi_0}.')
         if is_empty(constraints.lsphi_0):
             constraints.lsphi_0 = np.zeros((nsphi_0,))
         elif constraints.lsphi_0.shape[0] != nsphi_0:
@@ -650,8 +645,8 @@ class AcadosOcp:
         nsbx_e = constraints.idxsbx_e.shape[0]
         if nsbx_e > nbx_e:
             raise Exception(f'inconsistent dimension nsbx_e = {nsbx_e}. Is greater than nbx_e = {nbx_e}.')
-        if any(constraints.idxsbx_e > nbx_e):
-            raise Exception(f'idxsbx_e = {constraints.idxsbx_e} contains value > nbx_e = {nbx_e}.')
+        if any(constraints.idxsbx_e >= nbx_e):
+            raise Exception(f'idxsbx_e = {constraints.idxsbx_e} contains value >= nbx_e = {nbx_e}.')
         if is_empty(constraints.lsbx_e):
             constraints.lsbx_e = np.zeros((nsbx_e,))
         elif constraints.lsbx_e.shape[0] != nsbx_e:
@@ -665,8 +660,8 @@ class AcadosOcp:
         nsh_e = constraints.idxsh_e.shape[0]
         if nsh_e > nh_e:
             raise Exception(f'inconsistent dimension nsh_e = {nsh_e}. Is greater than nh_e = {nh_e}.')
-        if nsh_e > nh_e:
-            raise Exception(f'inconsistent dimension nsh_e = {nsh_e}. Is greater than nh_e = {nh_e}.')
+        if any(constraints.idxsh_e >= nh_e):
+            raise Exception(f'idxsh_e = {constraints.idxsh_e} contains value >= nh_e = {nh_e}.')
         if is_empty(constraints.lsh_e):
             constraints.lsh_e = np.zeros((nsh_e,))
         elif constraints.lsh_e.shape[0] != nsh_e:
@@ -680,8 +675,8 @@ class AcadosOcp:
         nsphi_e = constraints.idxsphi_e.shape[0]
         if nsphi_e > dims.nphi_e:
             raise Exception(f'inconsistent dimension nsphi_e = {nsphi_e}. Is greater than nphi_e = {dims.nphi_e}.')
-        if nsphi_e > dims.nphi_e:
-            raise Exception(f'inconsistent dimension nsphi_e = {nsphi_e}. Is greater than nphi_e = {dims.nphi_e}.')
+        if any(constraints.idxsphi_e >= dims.nphi_e):
+            raise Exception(f'idxsphi_e = {constraints.idxsphi_e} contains value >= nphi_e = {dims.nphi_e}.')
         if is_empty(constraints.lsphi_e):
             constraints.lsphi_e = np.zeros((nsphi_e,))
         elif constraints.lsphi_e.shape[0] != nsphi_e:
@@ -695,8 +690,8 @@ class AcadosOcp:
         nsg_e = constraints.idxsg_e.shape[0]
         if nsg_e > ng_e:
             raise Exception(f'inconsistent dimension nsg_e = {nsg_e}. Is greater than ng_e = {ng_e}.')
-        if nsg_e > ng_e:
-            raise Exception(f'inconsistent dimension nsg_e = {nsg_e}. Is greater than ng_e = {ng_e}.')
+        if any(constraints.idxsg_e >= ng_e):
+            raise Exception(f'idxsg_e = {constraints.idxsg_e} contains value >= ng_e = {ng_e}.')
         if is_empty(constraints.lsg_e):
             constraints.lsg_e = np.zeros((nsg_e,))
         elif constraints.lsg_e.shape[0] != nsg_e:
@@ -873,6 +868,9 @@ class AcadosOcp:
 
         if opts.qp_solver_cond_N is None:
             opts.qp_solver_cond_N = opts.N_horizon
+
+        if opts.tau_min > 0 and not "HPIPM" in opts.qp_solver:
+            raise Exception('tau_min > 0 is only compatible with HPIPM.')
 
         if opts.qp_solver_cond_block_size is not None:
             if sum(opts.qp_solver_cond_block_size) != opts.N_horizon:
@@ -1122,11 +1120,8 @@ class AcadosOcp:
         return context
 
     def remove_x0_elimination(self) -> None:
-        self.constraints.idxbxe_0 = np.zeros((0,))
-        self.dims.nbxe_0 = 0
-        self.constraints.__has_x0 = False
-        return
-
+        """Remove the elimination of x0 from the constraints, bounds on x0 are handled as general bounds on x."""
+        self.constraints.remove_x0_elimination()
 
     def to_dict(self) -> dict:
         # Copy ocp object dictionary
