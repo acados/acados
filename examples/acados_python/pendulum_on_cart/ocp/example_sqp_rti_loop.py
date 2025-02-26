@@ -93,6 +93,7 @@ def main():
     ocp.constraints.ug = np.array([+Fmax])
 
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
+    ocp.remove_x0_elimination()
 
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
