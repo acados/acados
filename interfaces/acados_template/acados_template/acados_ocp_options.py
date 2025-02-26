@@ -30,8 +30,8 @@
 #
 
 import os
-from .utils import check_if_nparray_and_flatten
 
+from .utils import check_if_nparray_and_flatten
 
 INTEGRATOR_TYPES = ('ERK', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK')
 COLLOCATION_TYPES = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA')
@@ -321,7 +321,9 @@ class AcadosOcpOptions:
     @property
     def nlp_solver_warm_start_first_qp(self):
         """
-        Flag indicating whether the first QP in an NLP solve should be warm started.
+        Flag indicating whether the first QP in an NLP solve should be warm started. 
+        If the warm start should be done using the NLP iterate, see property nlp_solver_warm_start_first_qp_from_nlp.
+        For warm starting the other QPs in the NLP solve, see property qp_solver_warm_start.
         Type: bool.
         Default: False.
         """
@@ -330,7 +332,9 @@ class AcadosOcpOptions:
     @property
     def nlp_solver_warm_start_first_qp_from_nlp(self):
         """
-        If True first QP will be initialized using values from NLP iterate, otherwise from previous QP solution, only relevant if `nlp_solver_warm_start_first_qp` is True.
+        If True first QP will be initialized using values from NLP iterate, otherwise from previous QP solution, 
+        only relevant if `nlp_solver_warm_start_first_qp` is True.
+        For warmstarting the other QPs in the NLP solve, see property qp_solver_warm_start.
         Note: for now only works with HPIPM and partial condensing with N = qp_solver_partial_cond_N
         Type: bool.
         Default: False.
@@ -444,7 +448,9 @@ class AcadosOcpOptions:
     @property
     def qp_solver_warm_start(self):
         """
-        QP solver: Warm starting.
+        Controls the QP solver warm starting, but not the warm start of the very first QP in an NLP solve.
+        For this, see properties nlp_solver_warm_start_first_qp and nlp_solver_warm_start_first_qp_from_nlp.
+        What warm/hot start means in detail is dependend on the QP solver being used.
         0: no warm start; 1: warm start; 2: hot start.
         Default: 0
         """
