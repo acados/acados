@@ -168,18 +168,13 @@ def export_parametric_ocp(
 
     ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg
     ocp.solver_options.hessian_approx = hessian_approx
+    ocp.solver_options.nlp_solver_max_iter = 400
+    ocp.solver_options.tol = 1e-8
+
     if hessian_approx == 'EXACT':
         # sensitivity solver settings!
         ocp.solver_options.with_solution_sens_wrt_params = True
         ocp.solver_options.with_value_sens_wrt_params = True
-        # Old settings needed, when calling solve() instead of setup_qp_matrices_and_factorize()
-        # ocp.solver_options.globalization_fixed_step_length = 0.0 # to not perfrom an SQP step update
-        # ocp.solver_options.nlp_solver_max_iter = 1
-        # ocp.solver_options.qp_solver_iter_max = 200
-        # ocp.solver_options.tol = 1e-10  # to "force" a QP solve
-    else:
-        ocp.solver_options.nlp_solver_max_iter = 400
-        ocp.solver_options.tol = 1e-8
 
     return ocp
 
