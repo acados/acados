@@ -30,7 +30,7 @@
 #
 
 import numpy as np
-from .utils import J_to_idx, print_J_to_idx_note, J_to_idx_slack, check_if_nparray_and_flatten, check_if_2d_nparray
+from .utils import J_to_idx, print_J_to_idx_note, J_to_idx_slack, check_if_nparray_and_flatten, check_if_2d_nparray, is_empty
 
 class AcadosOcpConstraints:
     """
@@ -188,6 +188,11 @@ class AcadosOcpConstraints:
         """Indices of bounds on x0 that are equalities -- can be set automatically via :py:attr:`x0`.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxbxe_0
+
+    def remove_x0_elimination(self):
+        """Remove the elimination of x0 from the constraints, bounds on x0 are handled as general bounds on x."""
+        self.__has_x0 = False
+        self.idxbxe_0 = np.array([])
 
     # bounds on x
     @property
@@ -825,12 +830,19 @@ class AcadosOcpConstraints:
 
     @x0.setter
     def x0(self, x0):
-        x0 = check_if_nparray_and_flatten(x0, "x0")
-        self.__lbx_0 = x0
-        self.__ubx_0 = x0
-        self.__idxbx_0 = np.arange(x0.size)
-        self.__idxbxe_0 = np.arange(x0.size)
-        self.__has_x0 = True
+        if is_empty(x0):
+            self.__has_x0 = False
+            self.__lbx_0 = np.array([])
+            self.__ubx_0 = np.array([])
+            self.__idxbx_0 = np.array([])
+            self.__idxbxe_0 = np.array([])
+        else:
+            x0 = check_if_nparray_and_flatten(x0, "x0")
+            self.__lbx_0 = x0
+            self.__ubx_0 = x0
+            self.__idxbx_0 = np.arange(x0.size)
+            self.__idxbxe_0 = np.arange(x0.size)
+            self.__has_x0 = True
 
     # bounds on x
     @lbx.setter
