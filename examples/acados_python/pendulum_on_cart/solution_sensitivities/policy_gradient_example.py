@@ -61,6 +61,8 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     verbose = True
     build = True
     generate = True
+
+    # create nominal solver
     if use_cython:
         AcadosOcpSolver.generate(ocp, json_file="parameter_augmented_acados_ocp.json")
         AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
