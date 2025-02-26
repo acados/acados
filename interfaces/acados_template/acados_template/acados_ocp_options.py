@@ -323,9 +323,11 @@ class AcadosOcpOptions:
     @property
     def nlp_solver_warm_start_first_qp(self):
         """
-        Flag indicating whether the first QP in an NLP solve should be warm started. 
+        Flag indicating whether the first QP in an NLP solve should be warm started.
         If the warm start should be done using the NLP iterate, see property nlp_solver_warm_start_first_qp_from_nlp.
-        For warm starting the other QPs in the NLP solve, see property qp_solver_warm_start.
+
+        The warm start level of the QP solver is controlled by the property qp_solver_warm_start.
+
         Type: bool.
         Default: False.
         """
@@ -334,9 +336,9 @@ class AcadosOcpOptions:
     @property
     def nlp_solver_warm_start_first_qp_from_nlp(self):
         """
-        If True first QP will be initialized using values from NLP iterate, otherwise from previous QP solution, 
-        only relevant if `nlp_solver_warm_start_first_qp` is True.
-        For warm starting the other QPs in the NLP solve, see property qp_solver_warm_start.
+        Only relevant if `nlp_solver_warm_start_first_qp` is True.
+        If True first QP will be initialized using values from NLP iterate, otherwise from previous QP solution.
+
         Note: for now only works with HPIPM and partial condensing with N = qp_solver_partial_cond_N
         Type: bool.
         Default: False.
@@ -450,8 +452,11 @@ class AcadosOcpOptions:
     @property
     def qp_solver_warm_start(self):
         """
-        Controls the QP solver warm starting, but not the warm start of the very first QP in an NLP solve.
-        For this, see properties nlp_solver_warm_start_first_qp and nlp_solver_warm_start_first_qp_from_nlp.
+        Controls the QP solver warm start level.
+        The very first QP in an NLP solve is by default not warm started, i.e. the QP warm start level for the first QP solve is set to 0.
+        To warm start also the first QP, set nlp_solver_warm_start_first_qp.
+        Also see nlp_solver_warm_start_first_qp_from_nlp.
+
         What warm/hot start means in detail is dependend on the QP solver being used.
         0: no warm start; 1: warm start; 2: hot start.
         Default: 0
