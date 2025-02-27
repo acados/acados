@@ -31,29 +31,73 @@
 
 import numpy as np
 from acados_template import AcadosOcpSolver
-from sensitivity_utils import plot_solution_sensitivities_results, export_parametric_ocp, plot_pendulum
+from sensitivity_utils import plot_smoothed_solution_sensitivities_results, export_parametric_ocp, plot_pendulum
 
 
-def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=False, plot_trajectory=False):
+with_parametric_constraint = True
+with_nonlinear_constraint = False
+
+def solve_ocp_and_compute_sen(ocp_solver: AcadosOcpSolver, sensitivity_solver: AcadosOcpSolver, p_test, x0, N_horizon, tau_min):
+
+    ocp_solver.options_set('tau_min', tau_min)
+    sensitivity_solver.options_set('tau_min', tau_min)
+
+    np_test = p_test.shape[0]
+    sens_u = np.zeros(np_test)
+    u_opt = np.zeros(np_test)
+
+    if with_parametric_constraint:
+        n_lam_total = ocp_solver.get_flat('lam').shape[0]
+        lambda_flat = np.zeros((np_test, n_lam_total))
+
+    for i, p in enumerate(p_test):
+        p_val = np.array([p])
+
+        ocp_solver.set_p_global_and_precompute_dependencies(p_val)
+        sensitivity_solver.set_p_global_and_precompute_dependencies(p_val)
+        u_opt[i] = ocp_solver.solve_for_x0(x0, fail_on_nonzero_status=False)[0]
+        status = ocp_solver.get_status()
+        ocp_solver.print_statistics()
+        if status != 0:
+            ocp_solver.print_statistics()
+            print(f"Solver failed with status {status} for {i}th parameter value {p} and {tau_min=}.")
+            breakpoint()
+
+        iterate = ocp_solver.store_iterate_to_flat_obj()
+
+        sensitivity_solver.load_iterate_from_flat_obj(iterate)
+        sensitivity_solver.setup_qp_matrices_and_factorize()
+
+        for j in range(1, N_horizon):
+            # 1, 3 are indices of upper and lower multiplier for the parametric constraints
+            lambda_flat[i, :] = ocp_solver.get_flat('lam')
+
+        if ocp_solver.get_status() not in [0]:
+            print(f"OCP solver returned status {ocp_solver.get_status()}.")
+            breakpoint()
+        if sensitivity_solver.get_status() not in [0, 2]:
+            print(f"sensitivity solver returned status {sensitivity_solver.get_status()}.")
+            # breakpoint()
+        # Calculate the policy gradient
+        out_dict = sensitivity_solver.eval_solution_sensitivity(0, "p_global", return_sens_x=False)
+        sens_u[i] = out_dict['sens_u'].item()
+
+    return u_opt, sens_u, lambda_flat
+
+def main_parametric(qp_solver_ric_alg: int, use_cython=False, plot_trajectory=False):
     """
     Evaluate policy and calculate its gradient for the pendulum on a cart with a parametric model.
     """
 
-    if eigen_analysis and use_cython:
-        raise Exception("Eigenvalue analysis is not possible with the cython interface.")
-
-    p_nominal = 1.0
     x0 = np.array([0.0, np.pi / 2, 0.0, 0.0])
-    delta_p = 0.001
-    p_test = np.arange(p_nominal + 0.1, p_nominal + 0.5, delta_p)
+    delta_p = 0.0002
+    # p_nominal = 1.0
+    # p_test = np.arange(p_nominal + 0.1, p_nominal + 0.5, delta_p)
+    p_test = np.arange(1.3, 1.5, delta_p)
 
-    np_test = p_test.shape[0]
     N_horizon = 50
     T_horizon = 2.0
     Fmax = 80.0
-    with_parametric_constraint = True
-    with_nonlinear_constraint = False
-    plot_reconstructed = False
 
     ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, qp_solver_ric_alg=1, with_parametric_constraint=with_parametric_constraint, with_nonlinear_constraint=with_nonlinear_constraint)
 
@@ -81,68 +125,8 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     else:
         sensitivity_solver = AcadosOcpSolver(ocp, build=build, generate=generate, json_file=f"{ocp.model.name}.json", verbose=verbose)
 
-    if eigen_analysis:
-        min_eig_full = np.zeros(np_test)
-        min_abs_eig_full = np.zeros(np_test)
-        min_abs_eig_proj_hess = np.zeros(np_test)
-        min_eig_proj_hess = np.zeros(np_test)
-        min_eig_P = np.zeros(np_test)
-        min_abs_eig_P = np.zeros(np_test)
-    else:
-        min_eig_full = min_abs_eig_full = min_abs_eig_proj_hess = min_eig_proj_hess = min_eig_P = min_abs_eig_P = None
-
-    sens_u = np.zeros(np_test)
-    u_opt = np.zeros(np_test)
-    if with_parametric_constraint:
-        max_lam_parametric_constraint = np.zeros(np_test)
-        sum_lam_parametric_constraint = np.zeros(np_test)
-        n_lam_total = ocp_solver.get_flat('lam').shape[0]
-        lambda_flat = np.zeros((np_test, n_lam_total))
-
-    for i, p in enumerate(p_test):
-        p_val = np.array([p])
-
-        ocp_solver.set_p_global_and_precompute_dependencies(p_val)
-        sensitivity_solver.set_p_global_and_precompute_dependencies(p_val)
-        u_opt[i] = ocp_solver.solve_for_x0(x0, fail_on_nonzero_status=False)[0]
-        status = ocp_solver.get_status()
-        ocp_solver.print_statistics()
-        if status != 0:
-            ocp_solver.print_statistics()
-            print(f"Solver failed with status {status} for {i}th parameter value {p}.")
-            breakpoint()
-
-        iterate = ocp_solver.store_iterate_to_flat_obj()
-
-        sensitivity_solver.load_iterate_from_flat_obj(iterate)
-        sensitivity_solver.setup_qp_matrices_and_factorize()
-
-        for j in range(1, N_horizon):
-            lam = ocp_solver.get(j, "lam")
-            # 1, 3 are indices of upper and lower multiplier for the parametric constraints
-            max_lam_parametric_constraint[i] = max(max_lam_parametric_constraint[i], lam[1], lam[3])
-            sum_lam_parametric_constraint[i] += lam[1] + lam[3]
-            lambda_flat[i, :] = ocp_solver.get_flat('lam')
-
-        if eigen_analysis:
-            full_hessian_diagnostics = sensitivity_solver.qp_diagnostics("FULL_HESSIAN")
-            projected_hessian_diagnostics = sensitivity_solver.qp_diagnostics("PROJECTED_HESSIAN")
-            min_eig_full[i] = full_hessian_diagnostics['min_eigv_global']
-            min_abs_eig_full[i] = full_hessian_diagnostics['min_abs_eigv_global']
-            min_abs_eig_proj_hess[i]= projected_hessian_diagnostics['min_abs_eigv_global']
-            min_eig_proj_hess[i] = projected_hessian_diagnostics['min_eigv_global']
-            min_eig_P[i] = projected_hessian_diagnostics['min_eigv_P_global']
-            min_abs_eig_P[i] = projected_hessian_diagnostics['min_abs_eigv_P_global']
-
-        if ocp_solver.get_status() not in [0]:
-            print(f"OCP solver returned status {ocp_solver.get_status()}.")
-            breakpoint()
-        if sensitivity_solver.get_status() not in [0, 2]:
-            print(f"sensitivity solver returned status {sensitivity_solver.get_status()}.")
-            # breakpoint()
-        # Calculate the policy gradient
-        out_dict = sensitivity_solver.eval_solution_sensitivity(0, "p_global", return_sens_x=False)
-        sens_u[i] = out_dict['sens_u'].item()
+    # compute policy and its gradient
+    u_opt, sens_u, lambda_flat = solve_ocp_and_compute_sen(ocp_solver, sensitivity_solver, p_test, x0, N_horizon, tau_min=0.0)
 
     # Compare to numerical gradients
     sens_u_fd = np.gradient(u_opt, delta_p)
@@ -152,7 +136,14 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     u_opt_reconstructed_acados = np.cumsum(sens_u) * delta_p + u_opt[0]
     u_opt_reconstructed_acados += u_opt[0] - u_opt_reconstructed_acados[0]
 
+    test_tol = 1e-2
+    median_diff = np.median(np.abs(sens_u - sens_u_fd))
+    print(f"Median difference between policy gradient obtained by acados and via FD is {median_diff} should be < {test_tol}.")
+    # test: check median since derivative cannot be compared at active set changes
+    assert median_diff <= test_tol
+
     # for multiplier plot
+    n_lam_total = ocp_solver.get_flat('lam').shape[0]
     multipliers_bu = []
     multipliers_h = []
     nbu = ocp.dims.nbu
@@ -170,26 +161,31 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
                 multipliers_h += [lambda_flat[:, i]]
             else:
                 print(f"found multiplier with index {i} that is not in x0_lam_idx, bu_lam_idx or h_lam_idx.")
-
             print(f"Multiplier {i} has non-zero values.")
     print(f"Multipliers with absolute value > 1e-2: bu {len(multipliers_bu)}, h {len(multipliers_h)}")
 
-    plot_solution_sensitivities_results(p_test, u_opt, u_opt_reconstructed_acados, u_opt_reconstructed_fd, sens_u, sens_u_fd,
-                 min_eig_full, min_eig_proj_hess, min_eig_P,
-                 min_abs_eig_full, min_abs_eig_proj_hess, min_abs_eig_P,
-                 eigen_analysis, title=None, parameter_name=r"$\theta$",
+    # solutions to plot
+    label = r'$\tau_{\mathrm{min}} = 0$'
+    pi_label_pairs = []
+    sens_pi_label_pairs = []
+
+    pi_label_pairs.append((u_opt, label))
+    sens_pi_label_pairs.append((sens_u, label))
+
+    for tau_min in [1e-3, 1e-2]:
+        u_opt, sens_u, _ = solve_ocp_and_compute_sen(ocp_solver, sensitivity_solver, p_test, x0, N_horizon, tau_min=tau_min)
+        label = r'$\tau_{\mathrm{min}} = 10^{' + f"{int(np.log10(tau_min))}" + r"}$"
+        pi_label_pairs.append((u_opt, label))
+        sens_pi_label_pairs.append((sens_u, label))
+
+    sens_pi_label_pairs.append((sens_u_fd, 'finite differences'))
+
+    # plot
+    plot_smoothed_solution_sensitivities_results(p_test, pi_label_pairs, sens_pi_label_pairs, title=None, parameter_name=r"$\theta$",
                  multipliers_bu=multipliers_bu, multipliers_h=multipliers_h,
                  figsize=(7, 9),
-                 plot_reconstructed=plot_reconstructed,
-                #  max_lam_parametric_constraint=max_lam_parametric_constraint,
-                #  sum_lam_parametric_constraint=sum_lam_parametric_constraint
+                 fig_filename="smoothed_solution_sensitivities.pdf",
                  )
-
-    test_tol = 1e-2
-    median_diff = np.median(np.abs(sens_u - sens_u_fd))
-    print(f"Median difference between policy gradient obtained by acados and via FD is {median_diff} should be < {test_tol}.")
-    # test: check median since derivative cannot be compared at active set changes
-    assert median_diff <= test_tol
 
     #
     if plot_trajectory:
@@ -208,4 +204,4 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
 
 
 if __name__ == "__main__":
-    main_parametric(qp_solver_ric_alg=0, eigen_analysis=False, use_cython=False, plot_trajectory=True)
+    main_parametric(qp_solver_ric_alg=0, use_cython=False, plot_trajectory=True)

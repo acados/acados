@@ -167,9 +167,11 @@ def export_parametric_ocp(
     ocp.solver_options.tf = T_horizon
 
     ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg
+    ocp.solver_options.qp_solver_mu0 = 1e3  # makes HPIPM converge more robustly
     ocp.solver_options.hessian_approx = hessian_approx
     ocp.solver_options.nlp_solver_max_iter = 400
     ocp.solver_options.tol = 1e-8
+    # ocp.solver_options.globalization = "MERIT_BACKTRACKING"
 
     if hessian_approx == 'EXACT':
         # sensitivity solver settings!
@@ -316,6 +318,71 @@ def plot_solution_sensitivities_results(p_test, pi, pi_reconstructed_acados, pi_
     plt.savefig(fig_filename)
     print(f"stored figure as {fig_filename}")
     plt.show()
+
+
+def plot_smoothed_solution_sensitivities_results(p_test, pi_label_pairs, sens_pi_label_pairs,
+                 title=None, parameter_name="",
+                 multipliers_bu=None, multipliers_h=None,
+                 figsize=None,
+                 fig_filename=None,
+                 ):
+
+    nsub = 2
+
+    with_multiplier_subplot = multipliers_bu is not None or multipliers_h is not None
+    if with_multiplier_subplot:
+        nsub += 1
+
+    if figsize is None:
+        figsize = (9, 9)
+    _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=figsize)
+    ax[0].set_xlim([p_test[0], p_test[-1]])
+
+
+    linestyles = ["-", "--", "-.", ":", "-", "--", "-.", ":"]
+
+    isub = 0
+    for i, (pi, label) in enumerate(pi_label_pairs):
+        ax[isub].plot(p_test, pi, label=label, linestyle=linestyles[i])
+    ax[isub].set_ylabel(r"$u_0$")
+    if title is not None:
+        ax[isub].set_title(title)
+
+    isub += 1
+    for i, (sens_pi, label) in enumerate(sens_pi_label_pairs):
+        ax[isub].plot(p_test, sens_pi, label=label, linestyle=linestyles[i])
+    ax[isub].set_ylabel(r"$\partial_\theta u_0$")
+
+    if with_multiplier_subplot:
+        isub += 1
+        isub_multipliers = isub
+
+        legend_elements = []
+        if multipliers_bu is not None:
+            for lam in multipliers_bu:
+                ax[isub].plot(p_test, lam, linestyle='--', color='C0', alpha=.6)
+            legend_elements += [plt.Line2D([0], [0], color='C0', linestyle='--', label='multipliers control bounds')]
+        if multipliers_h is not None:
+            for lam in multipliers_h:
+                ax[isub].plot(p_test, lam, linestyle='--', color='C1', alpha=.6)
+            legend_elements += [plt.Line2D([0], [0], color='C1', linestyle='--', label='multipliers $h$')]
+        ax[isub].legend(handles=legend_elements, ncol=2)
+        ax[isub].set_ylim([0, 14])
+        ax[isub].set_ylabel("multipliers")
+
+    for isub in range(nsub):
+        ax[isub].grid()
+        if isub != isub_multipliers:
+            ax[isub].legend()
+
+    ax[-1].set_xlabel(f"{parameter_name}")
+
+    plt.tight_layout()
+    if fig_filename is not None:
+        plt.savefig(fig_filename)
+        print(f"stored figure as {fig_filename}")
+    plt.show()
+
 
 
 
