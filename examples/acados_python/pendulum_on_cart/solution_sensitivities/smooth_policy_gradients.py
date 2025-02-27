@@ -230,6 +230,13 @@ def main_plot_trajectories():
         u_opt[i] = ocp_solver.solve_for_x0(x0, fail_on_nonzero_status=False)[0]
         status = ocp_solver.get_status()
         ocp_solver.print_statistics()
+
+        iterate = ocp_solver.store_iterate_to_flat_obj()
+        sensitivity_solver.load_iterate_from_flat_obj(iterate)
+        sensitivity_solver.setup_qp_matrices_and_factorize()
+        diagnostics = sensitivity_solver.qp_diagnostics()
+        print(diagnostics)
+
         if status != 0:
             ocp_solver.print_statistics()
             print(f"Solver failed with status {status} for {i}th parameter value {p} and {tau_min=}.")
