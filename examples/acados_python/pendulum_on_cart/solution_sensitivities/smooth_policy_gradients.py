@@ -37,7 +37,12 @@ from sensitivity_utils import plot_smoothed_solution_sensitivities_results, expo
 with_parametric_constraint = True
 with_nonlinear_constraint = False
 
-def solve_ocp_and_compute_sen(ocp_solver: AcadosOcpSolver, sensitivity_solver: AcadosOcpSolver, p_test, x0, N_horizon, tau_min):
+N_horizon = 50
+T_horizon = 2.0
+Fmax = 80.0
+
+
+def solve_ocp_and_compute_sens(ocp_solver: AcadosOcpSolver, sensitivity_solver: AcadosOcpSolver, p_test, x0, tau_min):
 
     ocp_solver.options_set('tau_min', tau_min)
     sensitivity_solver.options_set('tau_min', tau_min)
@@ -84,27 +89,9 @@ def solve_ocp_and_compute_sen(ocp_solver: AcadosOcpSolver, sensitivity_solver: A
 
     return u_opt, sens_u, lambda_flat
 
-def main_parametric(qp_solver_ric_alg: int, use_cython=False, plot_trajectory=False):
-    """
-    Evaluate policy and calculate its gradient for the pendulum on a cart with a parametric model.
-    """
-
-    x0 = np.array([0.0, np.pi / 2, 0.0, 0.0])
-    delta_p = 0.0002
-    # p_nominal = 1.0
-    # p_test = np.arange(p_nominal + 0.1, p_nominal + 0.5, delta_p)
-    p_test = np.arange(1.3, 1.5, delta_p)
-
-    N_horizon = 50
-    T_horizon = 2.0
-    Fmax = 80.0
-
+def create_solvers(x0, use_cython=False, qp_solver_ric_alg=0,
+                    verbose = True, build = True, generate = True):
     ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, qp_solver_ric_alg=1, with_parametric_constraint=with_parametric_constraint, with_nonlinear_constraint=with_nonlinear_constraint)
-
-    # solver creation arguments
-    verbose = True
-    build = True
-    generate = True
 
     # create nominal solver
     if use_cython:
@@ -125,8 +112,25 @@ def main_parametric(qp_solver_ric_alg: int, use_cython=False, plot_trajectory=Fa
     else:
         sensitivity_solver = AcadosOcpSolver(ocp, build=build, generate=generate, json_file=f"{ocp.model.name}.json", verbose=verbose)
 
+    return ocp_solver, sensitivity_solver
+
+
+def main_parametric(qp_solver_ric_alg: int, use_cython=False, plot_trajectory=False):
+    """
+    Evaluate policy and calculate its gradient for the pendulum on a cart with a parametric model.
+    """
+
+    x0 = np.array([0.0, np.pi / 2, 0.0, 0.0])
+    delta_p = 0.0002
+    # p_nominal = 1.0
+    # p_test = np.arange(p_nominal + 0.1, p_nominal + 0.5, delta_p)
+    p_test = np.arange(1.3, 1.5, delta_p)
+
+    ocp_solver, sensitivity_solver = create_solvers(x0, use_cython=use_cython, qp_solver_ric_alg=qp_solver_ric_alg)
+    ocp = ocp_solver.acados_ocp
+
     # compute policy and its gradient
-    u_opt, sens_u, lambda_flat = solve_ocp_and_compute_sen(ocp_solver, sensitivity_solver, p_test, x0, N_horizon, tau_min=0.0)
+    u_opt, sens_u, lambda_flat = solve_ocp_and_compute_sens(ocp_solver, sensitivity_solver, p_test, x0, tau_min=0.0)
 
     # Compare to numerical gradients
     sens_u_fd = np.gradient(u_opt, delta_p)
@@ -173,7 +177,7 @@ def main_parametric(qp_solver_ric_alg: int, use_cython=False, plot_trajectory=Fa
     sens_pi_label_pairs.append((sens_u, label))
 
     for tau_min in [1e-3, 1e-2]:
-        u_opt, sens_u, _ = solve_ocp_and_compute_sen(ocp_solver, sensitivity_solver, p_test, x0, N_horizon, tau_min=tau_min)
+        u_opt, sens_u, _ = solve_ocp_and_compute_sens(ocp_solver, sensitivity_solver, p_test, x0, tau_min=tau_min)
         label = r'$\tau_{\mathrm{min}} = 10^{' + f"{int(np.log10(tau_min))}" + r"}$"
         pi_label_pairs.append((u_opt, label))
         sens_pi_label_pairs.append((sens_u, label))
@@ -186,22 +190,54 @@ def main_parametric(qp_solver_ric_alg: int, use_cython=False, plot_trajectory=Fa
                  figsize=(7, 9),
                  fig_filename="smoothed_solution_sensitivities.pdf",
                  )
-
-    #
     if plot_trajectory:
-        nx = ocp.dims.nx
-        nu = ocp.dims.nu
-        simX = np.zeros((N_horizon+1, nx))
-        simU = np.zeros((N_horizon, nu))
+        plot_pendulum_traj_from_ocp_iterate(ocp_solver)
 
-        # get solution
-        for i in range(N_horizon):
-            simX[i,:] = ocp_solver.get(i, "x")
-            simU[i,:] = ocp_solver.get(i, "u")
-        simX[N_horizon,:] = ocp_solver.get(N_horizon, "x")
 
-        plot_pendulum(ocp.solver_options.shooting_nodes, Fmax, simU, simX, latexify=True, time_label=ocp.model.t_label, x_labels=ocp.model.x_labels, u_labels=ocp.model.u_labels)
+def plot_pendulum_traj_from_ocp_iterate(ocp_solver: AcadosOcpSolver):
+    ocp = ocp_solver.acados_ocp
+    nx = ocp.dims.nx
+    nu = ocp.dims.nu
+    simX = np.zeros((N_horizon+1, nx))
+    simU = np.zeros((N_horizon, nu))
+
+    # get solution
+    for i in range(N_horizon):
+        simX[i,:] = ocp_solver.get(i, "x")
+        simU[i,:] = ocp_solver.get(i, "u")
+    simX[N_horizon,:] = ocp_solver.get(N_horizon, "x")
+
+    plot_pendulum(ocp.solver_options.shooting_nodes, Fmax, simU, simX, latexify=True, time_label=ocp.model.t_label, x_labels=ocp.model.x_labels, u_labels=ocp.model.u_labels)
+
+
+def main_plot_trajectories():
+    x0 = np.array([0.0, np.pi / 2, 0.0, 0.0])
+    ocp_solver, sensitivity_solver = create_solvers(x0, use_cython=False, qp_solver_ric_alg=0, verbose=False, build=False, generate=False)
+
+    tau_min = 0.0
+    ocp_solver.options_set('tau_min', tau_min)
+    sensitivity_solver.options_set('tau_min', tau_min)
+
+    p_test = np.array([1.4435, 1.444])
+    np_test = p_test.shape[0]
+    u_opt = np.zeros(np_test)
+
+    for i, p in enumerate(p_test):
+        p_val = np.array([p])
+
+        ocp_solver.set_p_global_and_precompute_dependencies(p_val)
+        sensitivity_solver.set_p_global_and_precompute_dependencies(p_val)
+        u_opt[i] = ocp_solver.solve_for_x0(x0, fail_on_nonzero_status=False)[0]
+        status = ocp_solver.get_status()
+        ocp_solver.print_statistics()
+        if status != 0:
+            ocp_solver.print_statistics()
+            print(f"Solver failed with status {status} for {i}th parameter value {p} and {tau_min=}.")
+            breakpoint()
+
+        plot_pendulum_traj_from_ocp_iterate(ocp_solver)
 
 
 if __name__ == "__main__":
     main_parametric(qp_solver_ric_alg=0, use_cython=False, plot_trajectory=True)
+    # main_plot_trajectories()
