@@ -654,7 +654,7 @@ void ocp_nlp_constraints_bgp_model_get(void *config_, void *dims_,
     {
         int ns = dims->ns;
         ptr_i = (int *) value;
-        for (int ii=0; ii < ns; ii++)
+        for (ii=0; ii < ns; ii++)
             ptr_i[ii] = model->idxs[ii];
     }
     else
