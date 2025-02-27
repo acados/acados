@@ -3263,6 +3263,7 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_in *in,
 
     double tmp_res;
     double tmp;
+    ocp_qp_dims *qp_dims = mem->qp_in->dim;
 
     // res_stat
     for (int i = 0; i <= N; i++)
@@ -3304,6 +3305,7 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_in *in,
     if (opts->tau_min != 0)
     {
         int ni_max = 0;
+        int ne = 0;
         for (int i = 0; i <= N; i++)
         {
             ni_max = ni_max > ni[i] ? ni_max : ni[i];
@@ -3323,6 +3325,16 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_in *in,
             // blasfeo_print_exp_tran_dvec(2*ni[i], res->res_comp+i, 0);
             blasfeo_dvecad(2 * ni[i], 1.0, &work->tmp_2ni, 0, res->res_comp + i, 0);
             // printf("res_comp: + tau_min = %e\n", opts->tau_min);
+            // blasfeo_print_exp_tran_dvec(2*ni[i], res->res_comp+i, 0);
+
+            // zero out complementarities corresponding to equalities
+            ne = qp_dims->nbue[i] + qp_dims->nbxe[i] + qp_dims->nge[i];
+            for (int j = 0; j < ne; j++)
+            {
+                BLASFEO_DVECEL(res->res_comp+i, mem->qp_in->idxe[i][j]) = 0.0;
+                BLASFEO_DVECEL(res->res_comp+i, mem->qp_in->idxe[i][j]+ni[i]) = 0.0;
+            }
+            // printf("res_comp: after zeroing equalities = %e\n", opts->tau_min);
             // blasfeo_print_exp_tran_dvec(2*ni[i], res->res_comp+i, 0);
             blasfeo_dvecnrm_inf(2 * ni[i], res->res_comp + i, 0, &tmp_res);
             blasfeo_dvecse(1, tmp_res, &res->tmp, i);
@@ -3625,6 +3637,9 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
                         ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
                         ocp_nlp_out *sens_nlp_out, const char *field, int stage, void *grad_p)
 {
+    acados_timer timer;
+    acados_tic(&timer);
+
     if (!opts->with_solution_sens_wrt_params)
     {
         printf("ocp_nlp_common_eval_solution_sens_adj_p: option with_solution_sens_wrt_params has to be true to evaluate solution sensitivities wrt. global parameters.\n");
@@ -3691,6 +3706,7 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
         printf("\nerror: field %s at stage %d not available in ocp_nlp_common_eval_solution_sens_adj_p\n", field, stage);
         exit(1);
     }
+    mem->nlp_timings->time_solution_sensitivities = acados_toc(&timer);
 }
 
 

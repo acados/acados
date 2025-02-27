@@ -230,7 +230,6 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
     int *nbue = qp_in->dim->nbue;
     int *nge = qp_in->dim->nge;
 
-
 #if 1
     printf("BAbt =\n");
     for (int ii = 0; ii < N; ii++)
@@ -272,6 +271,12 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
     for (int ii = 0; ii < N + 1; ii++)
     {
         int_print_mat(1, nb[ii], qp_in->idxb[ii], 1);
+    }
+
+    printf("idxe =\n");
+    for (int ii = 0; ii < N + 1; ii++)
+    {
+        int_print_mat(1, nbue[ii]+nbxe[ii]+nge[ii], qp_in->idxe[ii], 1);
     }
 
     printf("DCt =\n");
