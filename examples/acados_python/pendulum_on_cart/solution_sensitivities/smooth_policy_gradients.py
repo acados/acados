@@ -124,7 +124,7 @@ def main_parametric(qp_solver_ric_alg: int, use_cython=False, plot_trajectory=Fa
     delta_p = 0.0002
     # p_nominal = 1.0
     # p_test = np.arange(p_nominal + 0.1, p_nominal + 0.5, delta_p)
-    p_test = np.arange(1.3, 1.5, delta_p)
+    p_test = np.arange(1.0, 1.4, delta_p)
 
     ocp_solver, sensitivity_solver = create_solvers(x0, use_cython=use_cython, qp_solver_ric_alg=qp_solver_ric_alg)
     ocp = ocp_solver.acados_ocp
