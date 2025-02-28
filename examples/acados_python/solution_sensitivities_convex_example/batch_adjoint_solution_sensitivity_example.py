@@ -64,6 +64,8 @@ def main_sequential(x0, N_sim):
 
         simU[i,:] = solver.solve_for_x0(x0_bar=simX[i, :])
         simX[i+1,:] = solver.get(1, "x")
+
+        solver.setup_qp_matrices_and_factorize()
         sens_adj = solver.eval_adjoint_solution_sensitivity([(1, np.ones((ocp.dims.nx, 1)))], [(1, np.ones((ocp.dims.nu, 1)))])
         adjoints.append(sens_adj)
         param_vals.append(param)
@@ -107,6 +109,9 @@ def main_batch(Xinit, simU, param_vals, adjoints_ref, tol, num_threads_in_batch_
         diff = np.linalg.norm(u-simU[n])
         if not diff < tol:
             raise Exception(f"solution should match sequential call up to {tol} got error {diff} for {n}th batch solve")
+
+    # actually not needed for convex problem but we want to test it
+    batch_solver.setup_qp_matrices_and_factorize()
 
     # eval adjoint
     t0 = time.time()
