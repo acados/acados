@@ -62,7 +62,7 @@ def export_discrete_erk4_integrator_step(f_expl: SX, x: SX, u: SX, p: struct_sym
     return xnext
 
 
-def define_param_struct_symSX(n_mass: int, disturbance: bool = True) -> DMStruct:
+def define_param_struct_symSX(n_mass: int, disturbance: bool = True) -> struct_symSX:
     """Define parameter struct."""
     n_link = n_mass - 1
 
@@ -101,7 +101,7 @@ def export_chain_mass_model(n_mass: int, Ts: float = 0.2, disturbance: bool = Fa
     """Export chain mass model for acados."""
     x0 = np.array([0, 0, 0])  # fix mass (at wall)
 
-    M = n_mass - 2  # number of intermediate massesu
+    M = n_mass - 2  # number of intermediate masses
 
     nx, nu = define_nx_nu(n_mass)
 
@@ -189,7 +189,7 @@ def export_chain_mass_model(n_mass: int, Ts: float = 0.2, disturbance: bool = Fa
 
 
 def compute_parametric_steady_state(
-    model: AcadosModel, p: DMStruct, xPosFirstMass: np.ndarray, xEndRef: np.ndarray
+    model: AcadosModel, p: struct_symSX, xPosFirstMass: np.ndarray, xEndRef: np.ndarray
 ) -> np.ndarray:
     """Compute steady state for chain mass model."""
     # TODO reuse/adapt the compute_steady_state function in utils.py
@@ -556,7 +556,7 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
     u_opt_reconstructed_acados = np.cumsum(sens_u, axis=0) * delta_p + u_opt[0, :]
     u_opt_reconstructed_acados += u_opt[0, :] - u_opt_reconstructed_acados[0, :]
 
-    plt.figure(figsize=(7, 10))
+    plt.figure(figsize=(7, 7))
     for col in range(3):
         plt.subplot(4, 1, col + 1)
         plt.plot(p_var, u_opt[:, col], label=f"$u^*_{col}$")
