@@ -130,7 +130,7 @@ class AcadosOcpBatchSolver():
         Call setup_qp_matrices_and_factorize for all `N_batch` solvers.
         """
 
-        getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve")(self.__ocp_solvers_pointer, self.__status_p, self.__N_batch)
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_setup_qp_matrices_and_factorize")(self.__ocp_solvers_pointer, self.__status_p, self.__N_batch)
 
         # to be consistent with non-batched solve
         for s, solver in zip(self.__status, self.ocp_solvers):
