@@ -37,12 +37,12 @@
 #include <string.h>
 
 // hpipm
-#include "hpipm/include/hpipm_d_dense_qp.h"
-#include "hpipm/include/hpipm_d_dense_qp_ipm.h"
-#include "hpipm/include/hpipm_d_dense_qp_kkt.h"
-#include "hpipm/include/hpipm_d_dense_qp_res.h"
-#include "hpipm/include/hpipm_d_dense_qp_sol.h"
-#include "hpipm/include/hpipm_d_dense_qp_dim.h"
+#include "hpipm_d_dense_qp.h"
+#include "hpipm_d_dense_qp_ipm.h"
+#include "hpipm_d_dense_qp_kkt.h"
+#include "hpipm_d_dense_qp_res.h"
+#include "hpipm_d_dense_qp_sol.h"
+#include "hpipm_d_dense_qp_dim.h"
 
 // blasfeo
 #include "blasfeo_d_aux.h"
