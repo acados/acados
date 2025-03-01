@@ -263,6 +263,10 @@ void ocp_nlp_constraints_bgp_dims_get(void *config_, void *dims_, const char *fi
     {
         *value = dims->nge + dims->nphie;
     }
+    else if (!strcmp(field, "ne"))
+    {
+        *value = dims->nbxe + dims->nbue + dims->nge + dims->nphie;
+    }
     else
     {
         printf("error: attempt to get dimension %s from constraint model, that is not there", field);
