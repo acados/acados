@@ -1182,6 +1182,12 @@ void ocp_qp_ooqp_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_
     exit(1);
 }
 
+void ocp_qp_ooqp_eval_adj_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+{
+    printf("\nerror: ocp_qp_ooqp_eval_adj_sens: not implemented yet\n");
+    exit(1);
+}
+
 
 void ocp_qp_ooqp_terminate(void *config_, void *mem_, void *work_)
 {
@@ -1210,6 +1216,7 @@ void ocp_qp_ooqp_config_initialize_default(void *config_)
         (size_t (*)(void *, void *, void *)) & ocp_qp_ooqp_workspace_calculate_size;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & ocp_qp_ooqp;
     config->eval_sens = &ocp_qp_ooqp_eval_sens;
+    config->eval_adj_sens = &ocp_qp_ooqp_eval_adj_sens;
     config->memory_reset = &ocp_qp_ooqp_memory_reset;
     config->solver_get = &ocp_qp_ooqp_solver_get;
     config->terminate = &ocp_qp_ooqp_terminate;

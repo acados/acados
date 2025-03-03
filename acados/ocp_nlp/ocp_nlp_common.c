@@ -3526,7 +3526,7 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
         // blasfeo_dveccp(2 * ni[i], sens_nlp_out->t + i, ?);
     }
 
-    config->qp_solver->eval_sens(config->qp_solver, dims->qp_solver, tmp_qp_in, tmp_qp_out,
+    config->qp_solver->eval_adj_sens(config->qp_solver, dims->qp_solver, tmp_qp_in, tmp_qp_out,
                             opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
 
     if (!strcmp("p_global", field))
