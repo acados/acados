@@ -263,8 +263,8 @@ def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT):
         feasible_qp_index_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver)
 
     # get solution
-    simX = np.array([ocp_solver.get(i,"x") for i in range(N+1)])
-    simU = np.array([ocp_solver.get(i,"u") for i in range(N)])
+    sol_X = np.array([ocp_solver.get(i,"x") for i in range(N+1)])
+    sol_U = np.array([ocp_solver.get(i,"u") for i in range(N)])
     pi_multiplier = [ocp_solver.get(i, "pi") for i in range(N)]
 
     # We should put the optimal solution here ....
@@ -274,12 +274,11 @@ def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT):
     print(f"solved sqp_wfqp problem with settings SOFTEN_OBSTACLE = {SOFTEN_OBSTACLE},SOFTEN_TERMINAL = {SOFTEN_TERMINAL}, SOFTEN_CONTROL = {SOFTEN_CONTROLS}")
 
     if PLOT:
-        plot_linear_mass_system_X_state_space(simX, circle=circle, x_goal=x_goal)
+        plot_linear_mass_system_X_state_space(sol_X, circle=circle, x_goal=x_goal)
 
     if ocp.solver_options.globalization_funnel_use_merit_fun_only:
         assert status == 0, "Merit function should always converge!"
-    elif not ocp.solver_options.globalization_funnel_use_merit_fun_only and\
-        ocp.solver_options.initial_objective_multiplier != 1e0:
+    elif not ocp.solver_options.globalization_funnel_use_merit_fun_only:
         assert status == 0, "Funnel should find solution!"
 
     print(f"\n\n----------------------\n")
