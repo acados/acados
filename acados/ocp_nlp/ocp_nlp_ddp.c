@@ -880,6 +880,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             int globalization_status;
             acados_tic(&timer1);
             globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts, &mem->alpha);
+            mem->stat[mem->stat_n*ddp_iter+6] = mem->alpha;
             nlp_timings->time_glob += acados_toc(&timer1);
 
             if (globalization_status != ACADOS_SUCCESS)
