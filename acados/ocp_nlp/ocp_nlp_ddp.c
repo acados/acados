@@ -542,7 +542,7 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
     // inequalities since we have an unconstrainted OCP
     if (nlp_res->inf_norm_res_eq < opts->tol_eq)
     { // Check that iterate must be dynamically feasible
-        if (nlp_res->inf_norm_res_stat < opts->tol_stat)
+        if (nlp_res->inf_norm_res_stat < opts->tol_stat && nlp_res->inf_norm_res_ineq < opts->tol_ineq)
         {// Check Stationarity
             nlp_mem->status = ACADOS_SUCCESS;
             if (opts->nlp_opts->print_level > 0)
