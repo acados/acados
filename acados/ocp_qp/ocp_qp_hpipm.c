@@ -455,27 +455,28 @@ void ocp_qp_hpipm_eval_sens(void *config_, void *param_qp_in_, void *sens_qp_out
     ocp_qp_in *param_qp_in = param_qp_in_;
     ocp_qp_out *sens_qp_out = sens_qp_out_;
 
-//    qp_info *info = sens_qp_out->misc;
-//    acados_timer tot_timer, qp_timer;
-
-//    acados_tic(&tot_timer);
-    // cast data structures
     ocp_qp_hpipm_opts *opts = opts_;
     ocp_qp_hpipm_memory *mem = mem_;
 
-    // solve ipm
-//    acados_tic(&qp_timer);
-    // print_ocp_qp_in(param_qp_in);
     d_ocp_qp_ipm_sens(param_qp_in, sens_qp_out, opts->hpipm_opts, mem->hpipm_workspace);
-
-//    info->solve_QP_time = acados_toc(&qp_timer);
-//    info->interface_time = 0;  // there are no conversions for hpipm
-//    info->total_time = acados_toc(&tot_timer);
-//    info->num_iter = mem->hpipm_workspace->iter;
-//    info->t_computed = 1;
 
     return;
 }
+
+
+void ocp_qp_hpipm_eval_adj_sens(void *config_, void *param_qp_in_, void *sens_qp_out_, void *opts_, void *mem_, void *work_)
+{
+    ocp_qp_in *param_qp_in = param_qp_in_;
+    ocp_qp_out *sens_qp_out = sens_qp_out_;
+
+    ocp_qp_hpipm_opts *opts = opts_;
+    ocp_qp_hpipm_memory *mem = mem_;
+
+    d_ocp_qp_ipm_sens_adj(param_qp_in, sens_qp_out, opts->hpipm_opts, mem->hpipm_workspace);
+
+    return;
+}
+
 
 
 void ocp_qp_hpipm_terminate(void *config_, void *mem_, void *work_)
@@ -504,6 +505,7 @@ void ocp_qp_hpipm_config_initialize_default(void *config_)
     config->solver_get = &ocp_qp_hpipm_solver_get;
     config->memory_reset = &ocp_qp_hpipm_memory_reset;
     config->eval_sens = &ocp_qp_hpipm_eval_sens;
+    config->eval_adj_sens = &ocp_qp_hpipm_eval_adj_sens;
     config->terminate = &ocp_qp_hpipm_terminate;
 
     return;
