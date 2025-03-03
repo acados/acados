@@ -173,10 +173,10 @@ def export_parametric_ocp(
     ocp.solver_options.tol = 1e-8
     # ocp.solver_options.globalization = "MERIT_BACKTRACKING"
 
-    if hessian_approx == 'EXACT':
+    # if hessian_approx == 'EXACT':
         # sensitivity solver settings!
-        ocp.solver_options.with_solution_sens_wrt_params = True
-        ocp.solver_options.with_value_sens_wrt_params = True
+    ocp.solver_options.with_solution_sens_wrt_params = True
+    ocp.solver_options.with_value_sens_wrt_params = True
 
     return ocp
 
@@ -347,15 +347,16 @@ def plot_smoothed_solution_sensitivities_results(p_test, pi_label_pairs, sens_pi
     ax[isub].set_ylabel(r"$u_0$")
     if title is not None:
         ax[isub].set_title(title)
+    ax[isub].legend()
 
     isub += 1
     for i, (sens_pi, label) in enumerate(sens_pi_label_pairs):
         ax[isub].plot(p_test, sens_pi, label=label, linestyle=linestyles[i])
     ax[isub].set_ylabel(r"$\partial_\theta u_0$")
+    ax[isub].legend(loc = 'upper left')
 
     if with_multiplier_subplot:
         isub += 1
-        isub_multipliers = isub
 
         legend_elements = []
         if multipliers_bu is not None:
@@ -372,8 +373,6 @@ def plot_smoothed_solution_sensitivities_results(p_test, pi_label_pairs, sens_pi
 
     for isub in range(nsub):
         ax[isub].grid()
-        if isub != isub_multipliers:
-            ax[isub].legend()
 
     ax[-1].set_xlabel(f"{parameter_name}")
 

@@ -42,7 +42,7 @@ T_horizon = 2.0
 Fmax = 80.0
 
 
-def solve_ocp_and_compute_sens(ocp_solver: AcadosOcpSolver, sensitivity_solver: AcadosOcpSolver, p_test, x0, tau_min):
+def solve_ocp_and_compute_sens(ocp_solver: AcadosOcpSolver, sensitivity_solver: AcadosOcpSolver, p_test, x0, tau_min, sanity_checks=True):
 
     ocp_solver.options_set('tau_min', tau_min)
     sensitivity_solver.options_set('tau_min', tau_min)
@@ -84,7 +84,7 @@ def solve_ocp_and_compute_sens(ocp_solver: AcadosOcpSolver, sensitivity_solver: 
             print(f"sensitivity solver returned status {sensitivity_solver.get_status()}.")
             # breakpoint()
         # Calculate the policy gradient
-        out_dict = sensitivity_solver.eval_solution_sensitivity(0, "p_global", return_sens_x=False)
+        out_dict = sensitivity_solver.eval_solution_sensitivity(0, "p_global", return_sens_x=False, sanity_checks=sanity_checks)
         sens_u[i] = out_dict['sens_u'].item()
 
     return u_opt, sens_u, lambda_flat
@@ -121,12 +121,12 @@ def main_parametric(qp_solver_ric_alg: int, use_cython=False, plot_trajectory=Fa
     """
 
     x0 = np.array([0.0, np.pi / 2, 0.0, 0.0])
-    delta_p = 0.0002
+    delta_p = 0.001
     # p_nominal = 1.0
     # p_test = np.arange(p_nominal + 0.1, p_nominal + 0.5, delta_p)
     p_test = np.arange(1.0, 1.4, delta_p)
 
-    ocp_solver, sensitivity_solver = create_solvers(x0, use_cython=use_cython, qp_solver_ric_alg=qp_solver_ric_alg)
+    ocp_solver, sensitivity_solver = create_solvers(x0, use_cython=use_cython, qp_solver_ric_alg=qp_solver_ric_alg,) # verbose=False, build=False, generate=False)
     ocp = ocp_solver.acados_ocp
 
     # compute policy and its gradient
@@ -183,6 +183,13 @@ def main_parametric(qp_solver_ric_alg: int, use_cython=False, plot_trajectory=Fa
         sens_pi_label_pairs.append((sens_u, label))
 
     sens_pi_label_pairs.append((sens_u_fd, 'finite differences'))
+
+    # without 2-solver approach
+    tau_min = 1e-6
+    u_opt, sens_u, _ = solve_ocp_and_compute_sens(ocp_solver, ocp_solver, p_test, x0, tau_min=tau_min, sanity_checks=False)
+    label = r"IFT with approx. Hess."
+    # pi_label_pairs.append((u_opt, label))
+    sens_pi_label_pairs.append((sens_u, label))
 
     # plot
     plot_smoothed_solution_sensitivities_results(p_test, pi_label_pairs, sens_pi_label_pairs, title=None, parameter_name=r"$\theta$",
