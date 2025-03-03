@@ -1387,7 +1387,7 @@ static void setup_hessian_matrices(ocp_nlp_config *config,
         }
         // setup nominal QP Hessian
         blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, nominal_qp_in->RSQrq+i, 0, 0);
-        blasfeo_dgead(nxu, nxu, 0.0, mem->RSQ_cost+i, 0, 0, nominal_qp_in->RSQrq+i, 0, 0);
+        blasfeo_dgead(nxu, nxu, 1.0, mem->RSQ_cost+i, 0, 0, nominal_qp_in->RSQrq+i, 0, 0);
 
         // Z -- slack matrix
         blasfeo_dveccpsc(ns[i], 0.0, mem->Z_cost_module+i, 0, nominal_qp_in->Z+i, 0);
