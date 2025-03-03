@@ -115,7 +115,6 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
     opts->tol_comp = 1e-8;
     opts->tol_unbounded = -1e10;
     opts->tol_min_step_norm = 1e-12;
-    opts->tol_objective_multiplier = 1e-8;
 
     opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
@@ -709,7 +708,6 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
     //     && nlp_res->inf_norm_res_ineq > opts->tol_ineq
     //     && mem->inf_norm_res_stat_feasibility < opts->tol_stat
     //     && mem->inf_norm_res_comp_feasibility < opts->tol_comp)
-    //         // && mem->nlp_mem->objective_multiplier < opts->tol_objective_multiplier //maybe we should include this later!
     // {
     //     mem->nlp_mem->status = ACADOS_INFEASIBLE;
     //     if (opts->nlp_opts->print_level > 0)
