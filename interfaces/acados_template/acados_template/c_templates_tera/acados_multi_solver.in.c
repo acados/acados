@@ -2295,7 +2295,12 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tau_min", &tau_min);
 {%- endif %}
 
-{% if solver_options.nlp_solver_type == "SQP" or solver_options.nlp_solver_type == "DDP" %}
+{%- if solver_options.nlp_solver_type == "SQP_WITH_FEASIBLE_QP" %}
+    bool use_exact_hessian_in_feas_qp = {{ solver_options.use_exact_hessian_in_feas_qp }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "use_exact_hessian_in_feas_qp", &use_exact_hessian_in_feas_qp);
+{%- endif %}
+
+{% if solver_options.nlp_solver_type == "SQP" or solver_options.nlp_solver_type == "DDP" or solver_options.nlp_solver_type == "SQP_WITH_FEASIBLE_QP" %}
     // set SQP specific options
     double nlp_solver_tol_stat = {{ solver_options.nlp_solver_tol_stat }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_stat", &nlp_solver_tol_stat);
