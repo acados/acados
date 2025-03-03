@@ -121,6 +121,7 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
     opts->eval_residual_at_max_iter = true; // we want to know in last iteration if we converged
     opts->use_QP_l1_inf_from_slacks = false; // if manual calculation used, results seem more accurate and solver performs better!
 
+    // options for calculating the search direction
     opts->use_exact_hessian_in_feas_qp = false;
     opts->search_direction_mode = NOMINAL_QP;
     opts->watchdog_zero_slacks_max = 2;
@@ -413,9 +414,6 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     char *c_ptr = (char *) raw_memory;
 
     int N = dims->N;
-    // int *nx = dims->nx;
-    // int *nu = dims->nu;
-    // int *nz = dims->nz;
 
     // initial align
     align_char_to(8, &c_ptr);
@@ -862,7 +860,6 @@ static void compute_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp
         mem->norm_opt_qp_lam_unslacked_bounds = norm_lam_hard_constr;
         mem->norm_opt_qp_lam_slacked_constraints = norm_lam_slacked_constraints;
     }
-    // assert(norm_lam_slacked_constraints <= 1.0 + 1e-8); // Slacked multipliers should be in [0,1]
 }
 
 
@@ -1210,49 +1207,48 @@ static void print_indices(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_workspace *work, 
 /************************************************
  * functions for QP preparation
  ************************************************/
-// TODO: we still need this somewhere such that we can use the feasibility QP with constraint Hessian matrix
-// static void ocp_nlp_sqp_wfqp_prepare_hessian_evaluation(ocp_nlp_config *config,
-//     ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
-//     ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
-// {
-//     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+static void prepare_hessian_evaluation(ocp_nlp_config *config,
+    ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+    ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
+{
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
-//     int N = dims->N;
+    int N = dims->N;
 
-//     // int *nv = dims->nv;
-//     int *nx = dims->nx;
-//     int *nu = dims->nu;
+    // int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
 
-//     if (!nlp_mem->compute_hess)
-//     {
-//         printf("ocp_nlp_sqp_wfqp_prepare_hessian_evaluation: constant hessian not supported!\n\n");
-//         exit(1);
-//     }
+    if (!nlp_mem->compute_hess)
+    {
+        printf("prepare_hessian_evaluation: constant hessian not supported!\n\n");
+        exit(1);
+    }
 
-// #if defined(ACADOS_WITH_OPENMP)
-//     #pragma omp parallel for
-// #endif
-//     for (int i = 0; i <= N; i++)
-//     {
-//         // TODO: first compute cost hessian (without adding) and avoid setting everything to zero?
-//         // init Hessians to 0
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        // TODO: first compute cost hessian (without adding) and avoid setting everything to zero?
+        // init Hessians to 0
 
-//         // TODO: avoid setting qp_in->RSQ to zero in ocp_nlp_approximate_qp_matrices?
-//         blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->RSQ_constr+i, 0, 0);
-//         blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->RSQ_cost+i, 0, 0);
-//     }
+        // TODO: avoid setting qp_in->RSQ to zero in ocp_nlp_approximate_qp_matrices?
+        blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->RSQ_constr+i, 0, 0);
+        blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->RSQ_cost+i, 0, 0);
+    }
 
-//     for (int i = 0; i < N; i++)
-//     {
-//         config->dynamics[i]->memory_set_RSQrq_ptr(mem->RSQ_constr+i, nlp_mem->dynamics[i]);
-//     }
-//     for (int i = 0; i <= N; i++)
-//     {
-//         config->cost[i]->memory_set_RSQrq_ptr(mem->RSQ_cost+i, nlp_mem->cost[i]);
-//         config->constraints[i]->memory_set_RSQrq_ptr(mem->RSQ_constr+i, nlp_mem->constraints[i]);
-//     }
-//     return;
-// }
+    for (int i = 0; i < N; i++)
+    {
+        config->dynamics[i]->memory_set_RSQrq_ptr(mem->RSQ_constr+i, nlp_mem->dynamics[i]);
+    }
+    for (int i = 0; i <= N; i++)
+    {
+        config->cost[i]->memory_set_RSQrq_ptr(mem->RSQ_cost+i, nlp_mem->cost[i]);
+        config->constraints[i]->memory_set_RSQrq_ptr(mem->RSQ_constr+i, nlp_mem->constraints[i]);
+    }
+    return;
+}
 
 // update QP rhs for SQP (step prim var, abs dual var)
 // - use cost gradient and dynamics residual from memory
@@ -1306,7 +1302,7 @@ void ocp_nlp_sqp_wfqp_approximate_qp_constraint_vectors(ocp_nlp_config *config,
 
 
 
-static void ocp_nlp_sqp_wfqp_setup_feasibility_qp_objective(ocp_nlp_config *config,
+static void setup_feasibility_qp_objective(ocp_nlp_config *config,
     ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_sqp_wfqp_opts *opts,
     ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
 {
@@ -1333,20 +1329,14 @@ static void ocp_nlp_sqp_wfqp_setup_feasibility_qp_objective(ocp_nlp_config *conf
         // TODO: axpby for matrices? Do we need to take slacks here into account as well? I.e., scale slack Hessian?
         // NOTE: I think this TODO is from before we switched to using objective multiplier and it should be fine now.
 
-        // if (opts->use_exact_hessian_in_feas_qp)
-        // {
-        //     // Either we use the exact objective Hessian
-        //     blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, qp_in->RSQrq+i, 0, 0);
-        //     blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, qp_in->RSQrq+i, 0, 0);
-        // }
-        // else
-        // {
-        // We use the identity matrix Hessian
-        blasfeo_dgese(nxu, nxu, 0.0, qp_in->RSQrq+i, 0, 0);
-        blasfeo_ddiare(nxu, 1e-4, qp_in->RSQrq+i, 0, 0);
-        // indicate that Hessian is diagonal
-        qp_in->diag_H_flag[i] = 1;
-        // }
+        if (!opts->use_exact_hessian_in_feas_qp)
+        {
+            // We use the identity matrix Hessian
+            blasfeo_dgese(nxu, nxu, 0.0, qp_in->RSQrq+i, 0, 0);
+            blasfeo_ddiare(nxu, 1e-4, qp_in->RSQrq+i, 0, 0);
+            // indicate that Hessian is diagonal
+            qp_in->diag_H_flag[i] = 1;
+        }
 
         // Z -- slack matrix
         blasfeo_dveccpsc(ns[i], 0.0, mem->Z_cost_module+i, 0, qp_in->Z+i, 0);
@@ -1356,6 +1346,52 @@ static void ocp_nlp_sqp_wfqp_setup_feasibility_qp_objective(ocp_nlp_config *conf
         // g
         blasfeo_dveccpsc(nx[i]+nu[i]+ns[i], 0.0, nlp_mem->cost_grad + i, 0, qp_in->rqz + i, 0);
         blasfeo_dveccpsc(ns[i], 0.0, nlp_mem->cost_grad + i, nx[i]+nu[i]+ns[i], qp_in->rqz + i, nx[i]+nu[i]+ns[i]+nns[i]);
+
+    }
+}
+
+static void setup_hessian_matrices(ocp_nlp_config *config,
+    ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_sqp_wfqp_opts *opts,
+    ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
+{
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_qp_in *nominal_qp_in = nlp_mem->qp_in;
+    ocp_qp_in *relaxed_qp_in = mem->relaxed_qp_in;
+    int N = dims->N;
+
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+
+    int nxu;
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        /* Hessian matrices */
+        // hess_QP = objective_multiplier * hess_cost + hess_constraints
+        nxu = nx[i]+nu[i];
+        // TODO: axpby for matrices? Do we need to take slacks here into account as well? I.e., scale slack Hessian?
+        // NOTE: I think this TODO is from before we switched to using objective multiplier and it should be fine now.
+
+        if (opts->use_exact_hessian_in_feas_qp)
+        {
+            // Either we use the exact objective Hessian
+            blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, relaxed_qp_in->RSQrq+i, 0, 0);
+        }
+        else
+        {
+            // We use identity Hessian. Only needs to be set once!
+            // THIS WAS ALREADY SET UP BEFORE LOOP STARTED
+        }
+        // setup nominal QP Hessian
+        blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, nominal_qp_in->RSQrq+i, 0, 0);
+        blasfeo_dgead(nxu, nxu, 0.0, mem->RSQ_cost+i, 0, 0, nominal_qp_in->RSQrq+i, 0, 0);
+
+        // Z -- slack matrix
+        blasfeo_dveccpsc(ns[i], 0.0, mem->Z_cost_module+i, 0, nominal_qp_in->Z+i, 0);
+        blasfeo_dveccpsc(ns[i], 0.0, mem->Z_cost_module+i, 0, nominal_qp_in->Z+i, ns[i]+mem->nns[i]);
 
     }
 }
@@ -1542,8 +1578,6 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
 
     /* Solve Feasibility QP: Only gradient of slack variables */
     print_debug_output("Solve Feasibility QP!\n", nlp_opts->print_level, 2);
-    // print_ocp_qp_dims(relaxed_qp_in->dim);
-    // print_ocp_qp_in(relaxed_qp_in);
     qp_status = prepare_and_solve_QP(config, opts, relaxed_qp_in, relaxed_qp_out, dims, mem, nlp_in, nlp_out,
                 nlp_mem, nlp_work, sqp_iter, true, timer0, timer1);
     ocp_qp_out_get(relaxed_qp_out, "qp_info", &qp_info_);
@@ -1670,8 +1704,6 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
                                                                     sqp_iter,
                                                                     timer0,
                                                                     timer1);
-        // TODO: solve this below!!!
-        // search_direction_status = 0;
         if (solved_nominal_before)
         {
             mem->search_direction_type = "NFN";
@@ -1790,7 +1822,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
     // feasibility QP objective always constant! Only done once!
-    ocp_nlp_sqp_wfqp_setup_feasibility_qp_objective(config, dims, nlp_in, nlp_out, opts, mem, nlp_work);
+    setup_feasibility_qp_objective(config, dims, nlp_in, nlp_out, opts, mem, nlp_work);
 
     set_non_slacked_l2_penalties(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
     set_non_slacked_l1_penalties(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
@@ -1812,16 +1844,15 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     for (; sqp_iter <= opts->max_iter; sqp_iter++) // <= needed such that after last iteration KKT residuals are checked before max_iter is thrown.
     {
+        /* Prepare the QP data */
         // We always evaluate the residuals until the last iteration
         // If the option "eval_residual_at_max_iter" is set, we also
         // evaluate the residuals after the last iteration.
         if (sqp_iter != opts->max_iter || opts->eval_residual_at_max_iter)
         {
-            /* Prepare the QP data */
             // linearize NLP and update QP matrices
             // for nominal QP only. relaxed QP has identity Hessian
-            // TODO: this seems outdated at the moment!
-            // ocp_nlp_sqp_wfqp_prepare_hessian_evaluation(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
+            prepare_hessian_evaluation(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
             acados_tic(&timer1);
             // nominal QP solver
             ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
@@ -1830,6 +1861,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // relaxed QP solver
             // matrices for relaxed QP solver evaluated in nominal QP solver
             ocp_nlp_sqp_wfqp_approximate_qp_constraint_vectors(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, sqp_iter);
+
+            setup_hessian_matrices(config, dims, nlp_in, nlp_out, opts, mem, nlp_work);
 
             if (nlp_opts->with_adaptive_levenberg_marquardt || config->globalization->needs_objective_value() == 1)
             {
@@ -1880,7 +1913,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         double current_l1_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
         print_debug_output_double("Current l1 infeasibility: ", current_l1_infeasibility, nlp_opts->print_level, 2);
 
-        /* search direction computation */
+        /* Compute Search Direction */
         search_direction_status = calculate_search_direction(dims,
                                                             config,
                                                             opts,
@@ -1921,8 +1954,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 mem->primal_step_norm[sqp_iter] = mem->step_norm;
         }
 
-        /* globalization */
-        // Calculate optimal QP objective (needed for globalization)
+        /* Globalization */
+        // Prepare some values that are needed for globalization
         if (config->globalization->needs_qp_objective_value() == 1)
         {
             // nlp_mem->qp_cost_value = compute_qp_objective_value(mem, dims, qp_in, qp_out, nlp_work);

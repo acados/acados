@@ -50,9 +50,9 @@ extern "C" {
 // enum of return values
 enum search_direction_mode
 {
-    NOMINAL_QP = 0,
-    BYRD_OMOJOKUN = 1,
-    FEASIBILITY_QP = 2,
+    NOMINAL_QP = 0, // solve the nominal QP of SQP
+    BYRD_OMOJOKUN = 1, // solve a feasibility QP first and then a nominal QP with updated bounds
+    FEASIBILITY_QP = 2, // solve a feasibility QP
 };
 
 /************************************************
@@ -125,7 +125,7 @@ typedef struct
     struct blasfeo_dvec *pi_feasibility;  // lambda multipliers for steering QP (no gradient)
     struct blasfeo_dvec *res_stat_feasibility;  // stationarity residual for detecting infeasibility (no gradient)
     struct blasfeo_dvec *Z_cost_module;  // Z values from cost module
-    struct blasfeo_dmat *RSQ_cost;
+    struct blasfeo_dmat *RSQ_cost; // --> not needed anymore?
     struct blasfeo_dmat *RSQ_constr;
 
     double norm_feas_qp_pi;
