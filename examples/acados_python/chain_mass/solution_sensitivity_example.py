@@ -192,7 +192,6 @@ def compute_parametric_steady_state(
     model: AcadosModel, p: DMStruct, xPosFirstMass: np.ndarray, xEndRef: np.ndarray
 ) -> np.ndarray:
     """Compute steady state for chain mass model."""
-    # TODO reuse/adapt the compute_steady_state function in utils.py
 
     p_ = p(0)
     p_["m"] = p["m"]
@@ -339,11 +338,6 @@ def export_parametric_ocp(
         ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg
         ocp.solver_options.qp_solver_cond_N = ocp.solver_options.N_horizon
         ocp.solver_options.with_solution_sens_wrt_params = True
-        # # Old settings needed, when calling solve() instead of setup_qp_matrices_and_factorize()
-        # ocp.solver_options.globalization_fixed_step_length = 0.0
-        # ocp.solver_options.nlp_solver_max_iter = 1
-        # ocp.solver_options.qp_solver_iter_max = 200
-        # ocp.solver_options.tol = 1e-10
     else:
         ocp.solver_options.nlp_solver_max_iter = nlp_iter
         ocp.solver_options.qp_solver_cond_N = ocp.solver_options.N_horizon
