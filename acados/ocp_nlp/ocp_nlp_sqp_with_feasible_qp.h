@@ -47,7 +47,6 @@ extern "C" {
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/utils/types.h"
 
-
 // enum of return values
 enum search_direction_mode
 {
@@ -55,7 +54,6 @@ enum search_direction_mode
     BYRD_OMOJOKUN = 1,
     FEASIBILITY_QP = 2,
 };
-
 
 /************************************************
  * options
@@ -77,7 +75,6 @@ typedef struct
     int qp_warm_start;   // qp_warm_start in all but the first sqp iterations
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
     bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
-    double initial_objective_multiplier; //Initial value for objective multiplier, normalle 1e0
     double sufficient_l1_inf_reduction; //scalar multiplication factor for
     bool use_exact_hessian_in_feas_qp; // Either use exact Hessian or identity matrix in feasibility QP
     bool use_QP_l1_inf_from_slacks; // Sums up the slack variable values in the QPs as l1_inf
@@ -99,7 +96,6 @@ void ocp_nlp_sqp_wfqp_opts_update(void *config, void *dims, void *opts);
 void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, void* value);
 //
 void ocp_nlp_sqp_wfqp_opts_set_at_stage(void *config_, void *opts_, size_t stage, const char *field, void* value);
-
 
 
 /************************************************

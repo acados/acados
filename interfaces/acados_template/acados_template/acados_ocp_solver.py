@@ -2150,7 +2150,6 @@ class AcadosOcpSolver:
                          'globalization_funnel_kappa',
                          'globalization_funnel_fraction_switching_condition',
                          'globalization_funnel_initial_penalty_parameter',
-                         'initial_objective_multiplier',
                          'levenberg_marquardt',
                          'adaptive_levenberg_marquardt_lam',
                          'adaptive_levenberg_marquardt_mu_min',

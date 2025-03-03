@@ -115,7 +115,6 @@ def solve_infeasible_linearization(setting):
     ocp.solver_options.globalization_full_step_dual = True
     ocp.solver_options.globalization_alpha_min = 1e-15
     ocp.solver_options.nlp_solver_max_iter = 100
-    ocp.solver_options.initial_objective_multiplier = 1e0
     ocp.solver_options.search_direction_mode = "BYRD_OMOJOKUN"
 
     if False:

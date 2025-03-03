@@ -120,7 +120,6 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
     opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
     opts->eval_residual_at_max_iter = false;
-    opts->initial_objective_multiplier = 1e0;
     opts->sufficient_l1_inf_reduction = 1e-1;
     opts->use_exact_hessian_in_feas_qp = false;
     opts->use_QP_l1_inf_from_slacks = false; // if manual calculation used, results seem more accurate and solver performs better!
@@ -237,11 +236,6 @@ void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, vo
         {
             bool* eval_residual_at_max_iter = (bool *) value;
             opts->eval_residual_at_max_iter = *eval_residual_at_max_iter;
-        }
-        else if (!strcmp(field, "initial_objective_multiplier"))
-        {
-            double* initial_objective_multiplier = (double *) value;
-            opts->initial_objective_multiplier = *initial_objective_multiplier;
         }
         else if (!strcmp(field, "use_exact_hessian_in_feas_qp"))
         {
@@ -386,7 +380,6 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
     }
     // nns
     size += (N+1) * sizeof(int);
-
     // adj_ineq_feasibility
     size += (N + 1) * sizeof(struct blasfeo_dvec);
     // adj_dyn_feasibility
@@ -544,12 +537,12 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     {
         assign_and_advance_blasfeo_dvec_mem(dims->nu[i] + dims->nx[i], mem->adj_dyn_feasibility + i, &c_ptr);
     }
-    // pi_steering
+    // pi_feasibility
     for (int i = 0; i < N; ++i)
     {
         assign_and_advance_blasfeo_dvec_mem(dims->nx[i + 1], mem->pi_feasibility + i, &c_ptr);
     }
-    // lam_steering
+    // lam_feasibility
     for (int i = 0; i <= N; ++i)
     {
         assign_and_advance_blasfeo_dvec_mem(2 * dims->ni[i], mem->lam_feasibility + i, &c_ptr);
@@ -1778,7 +1771,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->step_norm = 0.0;
     mem->nlp_mem->status = ACADOS_READY;
     mem->search_direction_type = "-";
-    nlp_mem->objective_multiplier = opts->initial_objective_multiplier;
+    nlp_mem->objective_multiplier = 1.0;
     mem->search_direction_mode = opts->search_direction_mode;
     mem->watchdog_zero_slacks_counter = 0;
 

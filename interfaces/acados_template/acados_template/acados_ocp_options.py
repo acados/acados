@@ -93,7 +93,6 @@ class AcadosOcpOptions:
         self.__exact_hess_dyn = 1
         self.__exact_hess_constr = 1
         self.__eval_residual_at_max_iter = None
-        self.__initial_objective_multiplier = 1e0
         self.__use_exact_hessian_in_feas_qp = False
         self.__search_direction_mode = 0
         self.__allow_direction_mode_switch = True
@@ -891,16 +890,6 @@ class AcadosOcpOptions:
         return self.__eval_residual_at_max_iter
 
     @property
-    def initial_objective_multiplier(self):
-        """
-        Sets the initial objective multiplier
-
-        Type: double
-        Default: 1e0
-        """
-        return self.__initial_objective_multiplier
-
-    @property
     def use_exact_hessian_in_feas_qp(self):
         """
         Determines if exact Hessian of the constraints or identity Hessian is
@@ -1429,13 +1418,6 @@ class AcadosOcpOptions:
             self.__eval_residual_at_max_iter = eval_residual_at_max_iter
         else:
             raise Exception(f'Invalid datatype for eval_residual_at_max_iter. Should be bool, got {type(eval_residual_at_max_iter)}')
-
-    @initial_objective_multiplier.setter
-    def initial_objective_multiplier(self, initial_objective_multiplier):
-        if isinstance(initial_objective_multiplier, float):
-            self.__initial_objective_multiplier = initial_objective_multiplier
-        else:
-            raise Exception(f'Invalid datatype for initial_objective_multiplier. Should be bool, got {type(initial_objective_multiplier)}')
 
     @use_exact_hessian_in_feas_qp.setter
     def use_exact_hessian_in_feas_qp(self, use_exact_hessian_in_feas_qp):
