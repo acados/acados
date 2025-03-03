@@ -53,6 +53,7 @@ Thumbs.db
 *.synctex
 *.fdb_latexmk
 *.fls
+*.pdf
 
 # dSpace #
 ##########
