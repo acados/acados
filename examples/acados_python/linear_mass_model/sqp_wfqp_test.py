@@ -138,11 +138,8 @@ def create_solver_opts(N=4, Tf=2):
     solver_options.globalization = 'FUNNEL_L1PEN_LINESEARCH'
     solver_options.globalization_full_step_dual = True
     solver_options.print_level = 1
-    solver_options.nlp_solver_max_iter = 15
-    if False:
-        solver_options.use_exact_hessian_in_feas_qp = True
-    else:
-        solver_options.use_exact_hessian_in_feas_qp = False
+    solver_options.nlp_solver_max_iter = 20
+    solver_options.use_exact_hessian_in_feas_qp = False
 
     # set prediction horizon
     solver_options.tf = Tf
