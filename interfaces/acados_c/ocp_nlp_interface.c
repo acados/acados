@@ -56,6 +56,7 @@
 #include "acados/ocp_nlp/ocp_nlp_globalization_merit_backtracking.h"
 #include "acados/ocp_nlp/ocp_nlp_globalization_funnel.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
+#include "acados/ocp_nlp/ocp_nlp_sqp_with_feasible_qp.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
 #include "acados/ocp_nlp/ocp_nlp_ddp.h"
 #include "acados/utils/mem.h"
@@ -192,6 +193,9 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
         case SQP:
             ocp_nlp_sqp_config_initialize_default(config);
             break;
+        case SQP_WITH_FEASIBLE_QP:
+            ocp_nlp_sqp_wfqp_config_initialize_default(config);
+            break;
         case SQP_RTI:
             ocp_nlp_sqp_rti_config_initialize_default(config);
             break;
@@ -209,6 +213,10 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
     // QP solver
     ocp_qp_xcond_solver_config_initialize_from_plan(plan.ocp_qp_solver_plan.qp_solver,
                                                     config->qp_solver);
+
+    // relaxed QP solver
+    ocp_qp_xcond_solver_config_initialize_from_plan(plan.ocp_qp_solver_plan.qp_solver,
+                                                    config->relaxed_qp_solver);
 
     // regularization
     switch (plan.regularization)
@@ -1042,6 +1050,11 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ns", &dims_out[0]);
         dims_out[1] = 1;
     }
+    else if (!strcmp(field, "relaxed_idxs"))
+    {
+        config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "ns", &dims_out[0]);
+        dims_out[1] = 1;
+    }
     else if (!strcmp(field, "p"))
     {
         dims_out[0] = dims->nx[stage];
@@ -1083,6 +1096,14 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         int tmp_int;
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbu", &dims_out[0]);
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbx", &tmp_int);
+        dims_out[0] += tmp_int;
+        dims_out[1] = 1;
+    }
+    else if (!strcmp(field, "relaxed_idxb"))
+    {
+        int tmp_int;
+        config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "nbu", &dims_out[0]);
+        config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "nbx", &tmp_int);
         dims_out[0] += tmp_int;
         dims_out[1] = 1;
     }
@@ -1387,6 +1408,7 @@ void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, 
     ocp_nlp_dims *dims = solver->dims;
     ocp_nlp_config *config = solver->config;
     ocp_nlp_memory *nlp_mem;
+    // TODO: use getter for qp_in
     config->get(config, dims, solver->mem, "nlp_mem", &nlp_mem);
 
     if (!strcmp(field, "A"))
@@ -1498,6 +1520,20 @@ void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, 
     {
         int *int_values = value;
         d_ocp_qp_get_idxb(stage, nlp_mem->qp_in, int_values);
+    }
+    else if (!strcmp(field, "relaxed_idxs"))
+    {
+        ocp_qp_in *relaxed_qp_in;
+        ocp_nlp_get(solver, "relaxed_qp_in", &relaxed_qp_in);
+        int *int_values = value;
+        d_ocp_qp_get_idxs(stage, relaxed_qp_in, int_values);
+    }
+    else if (!strcmp(field, "relaxed_idxb"))
+    {
+        ocp_qp_in *relaxed_qp_in;
+        ocp_nlp_get(solver, "relaxed_qp_in", &relaxed_qp_in);
+        int *int_values = value;
+        d_ocp_qp_get_idxb(stage, relaxed_qp_in, int_values);
     }
     else if (!strcmp(field, "P") || !strcmp(field, "K") || !strcmp(field, "Lr") || !strcmp(field, "p"))
     {
