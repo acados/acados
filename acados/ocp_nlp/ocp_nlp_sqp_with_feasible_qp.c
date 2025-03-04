@@ -1645,7 +1645,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
                                                                     timer0,
                                                                     timer1);
         // TODO: solve this below!!!
-        // search_direction_status = 0;
+        search_direction_status = 0;
         if (solved_nominal_before)
         {
             mem->search_direction_type = "NFN";
