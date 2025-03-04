@@ -204,27 +204,25 @@ class AcadosOcpSolver:
         else:
             self.__p_global_values = np.array([])
 
-        if not (isinstance(acados_ocp, AcadosOcp) or isinstance(acados_ocp, AcadosMultiphaseOcp) or acados_ocp is None):
+        if not (isinstance(acados_ocp, AcadosOcp) or isinstance(acados_ocp, AcadosMultiphaseOcp)):
             raise Exception('acados_ocp should be of type AcadosOcp or AcadosMultiphaseOcp.')
 
-        if generate:
+        if json_file is not None:
+            acados_ocp.json_file = json_file
 
-            if json_file is not None:
-                acados_ocp.json_file = json_file
+        if generate:
             self.generate(acados_ocp, json_file=acados_ocp.json_file, simulink_opts=simulink_opts, cmake_builder=cmake_builder)
         else:
-            if acados_ocp is not None:
-                acados_ocp.make_consistent()
+            acados_ocp.make_consistent()
 
         # load json, store options in object
-        with open(json_file, 'r') as f:
+        with open(acados_ocp.json_file, 'r') as f:
             acados_ocp_json = json.load(f)
         if isinstance(acados_ocp, AcadosOcp):
             self.N = acados_ocp_json['dims']['N']
         elif isinstance(acados_ocp, AcadosMultiphaseOcp):
             self.N = acados_ocp_json['N_horizon']
         self.__solver_options = acados_ocp_json['solver_options']
-        self.N = acados_ocp_json['solver_options']['N_horizon']
         self.name = acados_ocp_json['name']
 
         acados_lib_path = acados_ocp_json['acados_lib_path']
