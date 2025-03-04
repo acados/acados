@@ -538,11 +538,9 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
         return true;
     }
 
-    // We do not need to check for the complementarity condition and for the
-    // inequalities since we have an unconstrainted OCP
-    if (nlp_res->inf_norm_res_eq < opts->tol_eq)
+    if (nlp_res->inf_norm_res_eq < opts->tol_eq && nlp_res->inf_norm_res_ineq < opts->tol_ineq && nlp_res->inf_norm_res_comp < opts->tol_comp)
     { // Check that iterate must be dynamically feasible
-        if (nlp_res->inf_norm_res_stat < opts->tol_stat && nlp_res->inf_norm_res_ineq < opts->tol_ineq)
+        if (nlp_res->inf_norm_res_stat < opts->tol_stat)
         {// Check Stationarity
             nlp_mem->status = ACADOS_SUCCESS;
             if (opts->nlp_opts->print_level > 0)
