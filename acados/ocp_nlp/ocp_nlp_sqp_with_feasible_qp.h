@@ -119,10 +119,8 @@ typedef struct
 
     double step_norm;
 
-    struct blasfeo_dvec *adj_ineq_feasibility;  // slack values of slacks that are not part of NLP
-    struct blasfeo_dvec *adj_dyn_feasibility;  // slack values of slacks that are not part of NLP
-    struct blasfeo_dvec *lam_feasibility;  // lambda multipliers for steering QP (no gradient)
-    struct blasfeo_dvec *pi_feasibility;  // lambda multipliers for steering QP (no gradient)
+    struct blasfeo_dvec *lam_feasibility;  // lambda multipliers for feasibility QP (no gradient)
+    struct blasfeo_dvec *pi_feasibility;  // lambda multipliers for feasibility QP (no gradient)
     struct blasfeo_dvec *res_stat_feasibility;  // stationarity residual for detecting infeasibility (no gradient)
     struct blasfeo_dvec *Z_cost_module;  // Z values from cost module
     struct blasfeo_dmat *RSQ_cost;

@@ -359,10 +359,6 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
         // nlp_idxs_rev
         size += (dims->nb[stage] + dims->ng[stage] + dims->ni_nl[stage]) * sizeof(int);
 
-        // adj_ineq_feasibility
-        size += blasfeo_memsize_dvec(dims->nx[stage]+dims->nu[stage]+2*dims->ns[stage]);
-        size += blasfeo_memsize_dvec(dims->nu[stage] + dims->nx[stage]); // adj_dyn_feasibility
-
         // multipliers for the feasibility QP
         size += 1 * blasfeo_memsize_dvec(2 * dims->ni[stage]);  // lam_steering
         if (stage < N)
@@ -379,10 +375,6 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
     }
     // nns
     size += (N+1) * sizeof(int);
-    // adj_ineq_feasibility
-    size += (N + 1) * sizeof(struct blasfeo_dvec);
-    // adj_dyn_feasibility
-    size += (N + 1) * sizeof(struct blasfeo_dvec);
     // multipliers for the feasibility QP
     size += 1 * (N + 1) * sizeof(struct blasfeo_dvec);  // lam_steering
     size += 1 * N * sizeof(struct blasfeo_dvec);  // pi_steering
@@ -448,12 +440,6 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     mem->relaxed_qp_solver.opts = opts->nlp_opts->qp_solver_opts;
     mem->relaxed_qp_solver.mem = mem->relaxed_qp_solver_mem;
     mem->relaxed_qp_solver.work = mem->relaxed_qp_solver_work;
-
-    // adj_ineq_feasibility
-    assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->adj_ineq_feasibility, &c_ptr);
-
-    // adj_dyn_feasibility
-    assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->adj_dyn_feasibility, &c_ptr);
 
     // pi_feasibility
     assign_and_advance_blasfeo_dvec_structs(N, &mem->pi_feasibility, &c_ptr);
@@ -526,16 +512,6 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
         assign_and_advance_blasfeo_dmat_mem(dims->nx[i]+dims->nu[i], dims->nx[i]+dims->nu[i], mem->RSQ_cost + i, &c_ptr);
         assign_and_advance_blasfeo_dmat_mem(dims->nx[i]+dims->nu[i], dims->nx[i]+dims->nu[i], mem->RSQ_constr + i, &c_ptr);
     }
-    // adj_ineq_feasibility
-    for (int i = 0; i <= N; ++i)
-    {
-        assign_and_advance_blasfeo_dvec_mem(dims->nv[i], mem->adj_ineq_feasibility + i, &c_ptr);
-    }
-    // adj_dyn_feasibility
-    for (int i = 0; i <= N; ++i)
-    {
-        assign_and_advance_blasfeo_dvec_mem(dims->nu[i] + dims->nx[i], mem->adj_dyn_feasibility + i, &c_ptr);
-    }
     // pi_feasibility
     for (int i = 0; i < N; ++i)
     {
@@ -561,12 +537,9 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     // initialize with zero
     for(int i=0; i<N; i++)
     {
-        blasfeo_dvecse(2*mem->nns[i], 0.0, mem->adj_ineq_feasibility+i, 0);
-        blasfeo_dvecse(2*mem->nns[i], 0.0, mem->adj_dyn_feasibility+i, 0);
         blasfeo_dvecse(dims->nx[i+1], 0.0, mem->pi_feasibility+i, 0);
         blasfeo_dvecse(2*dims->ni[i], 0.0, mem->lam_feasibility+i, 0);
     }
-    blasfeo_dvecse(2*mem->nns[N], 0.0, mem->adj_ineq_feasibility+N, 0);
     blasfeo_dvecse(2*dims->ni[N], 0.0, mem->lam_feasibility+N, 0);
 
     return mem;
