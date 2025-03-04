@@ -1284,9 +1284,7 @@ static void ocp_nlp_sqp_wfqp_setup_feasibility_qp_objective(ocp_nlp_config *conf
     ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
 {
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-    // ocp_qp_in *qp_in = nlp_mem->qp_in;
-    ocp_qp_in *qp_in = mem->relaxed_qp_in;
-    // TODO: ocp_qp_in *qp_in = mem->relaxed_qp_in;
+    ocp_qp_in *relaxed_qp_in = mem->relaxed_qp_in;
     int N = dims->N;
 
     int *nx = dims->nx;
@@ -1301,34 +1299,29 @@ static void ocp_nlp_sqp_wfqp_setup_feasibility_qp_objective(ocp_nlp_config *conf
     for (int i = 0; i <= N; i++)
     {
         /* Hessian matrices */
-        // hess_QP = objective_multiplier * hess_cost + hess_constraints
+        // hess_QP = hess_cost + hess_constraints
         nxu = nx[i]+nu[i];
         // TODO: axpby for matrices? Do we need to take slacks here into account as well? I.e., scale slack Hessian?
         // NOTE: I think this TODO is from before we switched to using objective multiplier and it should be fine now.
 
-        // if (opts->use_exact_hessian_in_feas_qp)
-        // {
-        //     // Either we use the exact objective Hessian
-        //     blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, qp_in->RSQrq+i, 0, 0);
-        //     blasfeo_dgead(nxu, nxu, objective_multiplier, mem->RSQ_cost+i, 0, 0, qp_in->RSQrq+i, 0, 0);
-        // }
-        // else
-        // {
-        // We use the identity matrix Hessian
-        blasfeo_dgese(nxu, nxu, 0.0, qp_in->RSQrq+i, 0, 0);
-        blasfeo_ddiare(nxu, 1e-4, qp_in->RSQrq+i, 0, 0);
-        // indicate that Hessian is diagonal
-        qp_in->diag_H_flag[i] = 1;
-        // }
+        blasfeo_dgese(nxu, nxu, 0.0, relaxed_qp_in->RSQrq+i, 0, 0);
+        if (!opts->use_exact_hessian_in_feas_qp)
+        {
+            // We use the identity matrix Hessian
+            blasfeo_ddiare(nxu, 1e-4, relaxed_qp_in->RSQrq+i, 0, 0);
+            // indicate that Hessian is diagonal
+            relaxed_qp_in->diag_H_flag[i] = 1;
+        }
 
         // Z -- slack matrix
-        blasfeo_dveccpsc(ns[i], 0.0, mem->Z_cost_module+i, 0, qp_in->Z+i, 0);
-        blasfeo_dveccpsc(ns[i], 0.0, mem->Z_cost_module+i, 0, qp_in->Z+i, ns[i]+mem->nns[i]);
+        //TODO: add the diagonal entry here as well for the slack variables?
+        blasfeo_dveccpsc(ns[i], 0.0, mem->Z_cost_module+i, 0, relaxed_qp_in->Z+i, 0);
+        blasfeo_dveccpsc(ns[i], 0.0, mem->Z_cost_module+i, 0, relaxed_qp_in->Z+i, ns[i]+mem->nns[i]);
 
         /* vectors */
         // g
-        blasfeo_dveccpsc(nx[i]+nu[i]+ns[i], 0.0, nlp_mem->cost_grad + i, 0, qp_in->rqz + i, 0);
-        blasfeo_dveccpsc(ns[i], 0.0, nlp_mem->cost_grad + i, nx[i]+nu[i]+ns[i], qp_in->rqz + i, nx[i]+nu[i]+ns[i]+nns[i]);
+        blasfeo_dveccpsc(nx[i]+nu[i]+ns[i], 0.0, nlp_mem->cost_grad + i, 0, relaxed_qp_in->rqz + i, 0);
+        blasfeo_dveccpsc(ns[i], 0.0, nlp_mem->cost_grad + i, nx[i]+nu[i]+ns[i], relaxed_qp_in->rqz + i, nx[i]+nu[i]+ns[i]+nns[i]);
 
     }
 }
@@ -1338,7 +1331,8 @@ static void setup_nominal_qp_hessian(ocp_nlp_config *config,
     ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
 {
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-    ocp_qp_in *qp_in = nlp_mem->qp_in;
+    ocp_qp_in *nominal_qp_in = nlp_mem->qp_in;
+    ocp_qp_in *relaxed_qp_in = mem->relaxed_qp_in;
     int N = dims->N;
 
     int *nx = dims->nx;
@@ -1355,11 +1349,17 @@ static void setup_nominal_qp_hessian(ocp_nlp_config *config,
         // hess_QP = objective_multiplier * hess_cost + hess_constraints
         nxu = nx[i]+nu[i];
 
-        blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, qp_in->RSQrq+i, 0, 0);
-        blasfeo_dgead(nxu, nxu, 1.0, mem->RSQ_cost+i, 0, 0, qp_in->RSQrq+i, 0, 0);
+        if (opts->use_exact_hessian_in_feas_qp)
+        {
+            // Either we use the exact objective Hessian
+            blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, relaxed_qp_in->RSQrq+i, 0, 0);
+        }
+
+        blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, nominal_qp_in->RSQrq+i, 0, 0);
+        blasfeo_dgead(nxu, nxu, 1.0, mem->RSQ_cost+i, 0, 0, nominal_qp_in->RSQrq+i, 0, 0);
 
         // Z -- slack matrix --> needs to be at correct position!
-        blasfeo_dveccpsc(2*ns[i], 1.0, mem->Z_cost_module+i, 0, qp_in->Z+i, 0);
+        blasfeo_dveccpsc(2*ns[i], 1.0, mem->Z_cost_module+i, 0, nominal_qp_in->Z+i, 0);
     }
 }
 
