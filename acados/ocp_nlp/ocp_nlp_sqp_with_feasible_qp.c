@@ -360,10 +360,10 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
         size += (dims->nb[stage] + dims->ng[stage] + dims->ni_nl[stage]) * sizeof(int);
 
         // multipliers for the feasibility QP
-        size += 1 * blasfeo_memsize_dvec(2 * dims->ni[stage]);  // lam_steering
+        size += 1 * blasfeo_memsize_dvec(2 * dims->ni[stage]);  // lam_feasibility
         if (stage < N)
         {
-            size += 1 * blasfeo_memsize_dvec(dims->nx[stage + 1]);  // pi_steering
+            size += 1 * blasfeo_memsize_dvec(dims->nx[stage + 1]);  // pi_feasibility
         }
         size += 1 * blasfeo_memsize_dvec(dims->nv[stage]);      // res_stat_feasibility
 
@@ -376,8 +376,8 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
     // nns
     size += (N+1) * sizeof(int);
     // multipliers for the feasibility QP
-    size += 1 * (N + 1) * sizeof(struct blasfeo_dvec);  // lam_steering
-    size += 1 * N * sizeof(struct blasfeo_dvec);  // pi_steering
+    size += 1 * (N + 1) * sizeof(struct blasfeo_dvec);  // lam_feasibility
+    size += 1 * N * sizeof(struct blasfeo_dvec);  // pi_feasibility
     size += 1 * (N + 1) * sizeof(struct blasfeo_dvec);  // res_stat_feasibility
     // Z_cost_module
     size += (N + 1) * sizeof(struct blasfeo_dvec);
