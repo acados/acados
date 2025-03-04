@@ -545,7 +545,7 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
             nlp_mem->status = ACADOS_SUCCESS;
             if (opts->nlp_opts->print_level > 0)
             {
-                printf("Optimal Solution found! Converged to KKT point.\n");
+                printf("Optimal solution found! Converged to KKT point.\n");
             }
             return true;
         }
@@ -556,7 +556,7 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
             nlp_mem->status = ACADOS_SUCCESS;
             if (opts->nlp_opts->print_level > 0)
             {
-                printf("Optimal Solution found! Converged To Zero Residual Solution.\n");
+                printf("Optimal solution found! Converged to zero residual solution.\n");
             }
             return true;
         }
@@ -569,11 +569,11 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
         {
             if (nlp_res->inf_norm_res_eq < opts->tol_eq)
             {
-                printf("Stopped: Converged To Feasible Point. Step size is < tol_eq.\n");
+                printf("Stopped: Converged to feasible point. Step size is < tol_eq.\n");
             }
             else
             {
-                printf("Stopped: Converged To Infeasible Point. Step size is < tol_eq.\n");
+                printf("Stopped: Converged to infeasible point. Step size is < tol_eq.\n");
             }
         }
         nlp_mem->status = ACADOS_MINSTEP;
