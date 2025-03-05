@@ -136,7 +136,7 @@ typedef struct
 
     double inf_norm_res_comp_feasibility;
     double inf_norm_res_stat_feasibility;
-    double pred_l1_inf_QP_optimality;
+    double pred_l1_inf_QP;
 
     int search_direction_mode;
     char* search_direction_type; // for output logging

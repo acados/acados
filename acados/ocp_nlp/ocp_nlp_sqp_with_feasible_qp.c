@@ -841,15 +841,23 @@ static void compute_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp
 
 
 
-static double calculate_predicted_l1_inf_reduction(ocp_nlp_sqp_wfqp_opts* opts, double current_infeasibility, double qp_infeasibility)
+static double calculate_predicted_l1_inf_reduction(ocp_nlp_sqp_wfqp_opts* opts, ocp_nlp_sqp_wfqp_memory *mem,
+                                                   double current_l1_infeasibility, double qp_infeasibility)
 {
-    if (current_infeasibility < fmin(opts->tol_ineq, opts->tol_eq))
+    if (mem->search_direction_mode == NOMINAL_QP)
     {
-        return 0.0;
+        return current_l1_infeasibility;
     }
     else
     {
-        return current_infeasibility - qp_infeasibility;
+        if (current_l1_infeasibility < fmin(opts->tol_ineq, opts->tol_eq))
+        {
+            return 0.0;
+        }
+        else
+        {
+            return current_l1_infeasibility - qp_infeasibility;
+        }
     }
 }
 
@@ -1078,83 +1086,26 @@ static void set_feasibility_multipliers(ocp_nlp_dims *dims,
 
 
 
-static double compute_gradient_directional_derivative(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
+static double compute_gradient_directional_derivative(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
 {
-    // Compute the directional derivative of the user-specified objective in the direction qp_out
+    // Compute the QP objective function value
     double dir_der = 0.0;
-    int i, nux;
-    int N = dims->N;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *ns = dims->ns;
-    int *nns = mem->nns;
-    // Sum over stages 0 to N
-    for (i = 0; i <= N; i++)
-    {
-        nux = nx[i] + nu[i];
-        // Calculate g.T d
-        dir_der += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
-
-        // Calculate gradient of slacks.T d_slacks
-        // First part of slacks
-        dir_der += blasfeo_ddot(ns[i], &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
-        // Second part of slacks
-        dir_der += blasfeo_ddot(ns[i], &qp_out->ux[i], nux+ns[i]+nns[i], &qp_in->rqz[i], nux+ns[i]+nns[i]);
-    }
-    return dir_der;
-}
-
-
-
-static double compute_qp_objective_value(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims,
-                                  ocp_qp_in *qp_in,
-                                  ocp_qp_out *qp_out,
-                                  ocp_nlp_workspace *nlp_work)
-{
-    // Compute the QP objective function value corresponding to the user specified objective.
-    double qp_cost = 0.0;
-    int i, nux, ns, nns;
+    int i, nux, ns;
     int N = dims->N;
     // Sum over stages 0 to N
     for (i = 0; i <= N; i++)
     {
         nux = dims->nx[i] + dims->nu[i];
         ns = dims->ns[i];
-        nns = mem->nns[i];
-        // Calculate 0.5 * d.T H d
-        blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0,
-                        0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
-        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
-
-        // slack QP objective value, compare to computation in cost modules;
-        // lower
-        // tmp_nv = 2 * z + Z .* slack;
-        blasfeo_dveccpsc(ns, 2.0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
-        blasfeo_dvecmulacc(ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
-        // qp_cost += .5 * (tmp_nv .* slack)
-        qp_cost += 0.5 * blasfeo_ddot(ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux);
-
-        // upper
-        // tmp_nv = 2 * z + Z .* slack;
-        blasfeo_dveccpsc(ns, 2.0, &qp_out->ux[i], nux+ns+nns, &nlp_work->tmp_nv, 0);
-        blasfeo_dvecmulacc(ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux+ns+nns, &nlp_work->tmp_nv, 0);
-        // qp_cost += .5 * (tmp_nv .* slack)
-        qp_cost += 0.5 * blasfeo_ddot(ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux+ns+nns);
-
         // Calculate g.T d
-        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
+        dir_der += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
 
-        // Calculate gradient of slacks.T d_slacks
-        // TODO: either comment or formula is not correct, this computs slack.T * z
-        // lower of slacks
-        qp_cost += blasfeo_ddot(ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
-        // upper of slacks
-        qp_cost += blasfeo_ddot(ns, &qp_out->ux[i], nux+ns+nns, &qp_in->rqz[i], nux+ns+nns);
+        // Calculate gradient of slacks
+        // we need to extract the gradient of the
+        dir_der += blasfeo_ddot(2 * ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
     }
-    return qp_cost;
+    return dir_der;
 }
-
-
 
 static void print_indices(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_workspace *work, ocp_nlp_sqp_wfqp_memory *mem)
 {
@@ -1540,7 +1491,6 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
 
     int qp_status;
     int qp_iter = 0;
-    double pred_l1_inf_QP_feasibility;
     double l1_inf_QP_feasibility;
 
     /* Solve Feasibility QP: Only gradient of slack variables */
@@ -1570,14 +1520,13 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
     compute_qp_multiplier_norm_inf(mem, dims, relaxed_qp_out, relaxed_qp_in, true);
 
     l1_inf_QP_feasibility = calculate_slacked_qp_l1_infeasibility(dims, mem, work, opts, relaxed_qp_in, relaxed_qp_out, opts->use_QP_l1_inf_from_slacks);
-    pred_l1_inf_QP_feasibility = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, l1_inf_QP_feasibility);
-    mem->pred_l1_inf_QP_optimality = pred_l1_inf_QP_feasibility;
+    mem->pred_l1_inf_QP = calculate_predicted_l1_inf_reduction(opts, mem, current_l1_infeasibility, l1_inf_QP_feasibility);
 
     print_debug_output_double("Feas QP: Multiplier norm: pi", mem->norm_feas_qp_pi, nlp_opts->print_level, 2);
     print_debug_output_double("Feas QP: Multiplier norm: lam slacked", mem->norm_feas_qp_lam_slacked_constraints, nlp_opts->print_level, 2);
     print_debug_output_double("Feas QP: Multiplier norm: lam unslacked", mem->norm_opt_qp_lam_unslacked_bounds, nlp_opts->print_level, 2);
-    print_debug_output_double("Feas QP: l1_inf_feas: ", l1_inf_QP_feasibility, nlp_opts->print_level, 2);
-    print_debug_output_double("Feas QP: pred_l1_inf_QP: ", pred_l1_inf_QP_feasibility, nlp_opts->print_level, 2);
+    print_debug_output_double("Feas QP: l1_inf_QP_feasibility: ", l1_inf_QP_feasibility, nlp_opts->print_level, 2);
+    print_debug_output_double("Feas QP: pred_l1_inf_QP: ", mem->pred_l1_inf_QP, nlp_opts->print_level, 2);
     // assert(pred_l1_inf_QP_feasibility > -1e2*opts->tol_ineq);
 
     /* Solve the nominal QP with updated bounds*/
@@ -1652,6 +1601,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
         {
             compute_qp_multiplier_norm_inf(mem, dims, nlp_mem->qp_out, nlp_mem->qp_in, false);
             mem->search_direction_type = "N";
+            mem->pred_l1_inf_QP = calculate_predicted_l1_inf_reduction(opts, mem, current_l1_infeasibility, -1.0);
             return ACADOS_SUCCESS;
         }
     }
@@ -1760,8 +1710,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     ocp_qp_in *nominal_qp_in = nlp_mem->qp_in;
     ocp_qp_out *nominal_qp_out = nlp_mem->qp_out;
-    ocp_qp_in *relaxed_qp_in = mem->relaxed_qp_in;
-    ocp_qp_out *relaxed_qp_out = mem->relaxed_qp_out;
+    // ocp_qp_in *relaxed_qp_in = mem->relaxed_qp_in;
+    // ocp_qp_out *relaxed_qp_out = mem->relaxed_qp_out;
 
     // zero timers
     ocp_nlp_timings_reset(nlp_timings);
@@ -1805,8 +1755,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     int sqp_iter = 0;
     double prev_levenberg_marquardt = 0.0;
     int search_direction_status = 0;
-    double pred_l1_inf_search_direction;
-    double l1_inf_search_direction;
 
     if (nlp_opts->print_level > 1)
     {
@@ -1882,7 +1830,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         double current_l1_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
-        print_debug_output_double("Current l1 infeasibility: ", current_l1_infeasibility, nlp_opts->print_level, 2);
 
         /* search direction computation */
         search_direction_status = calculate_search_direction(dims,
@@ -1910,11 +1857,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->stat[mem->stat_n*(sqp_iter+1)+5] = qp_iter;
         }
 
-        // We want to keep this! Since l1 QP should have the same as our ByrdOmojokun-QP
-        l1_inf_search_direction = calculate_slacked_qp_l1_infeasibility(dims, mem, work, opts, relaxed_qp_in, relaxed_qp_out, false);
-        pred_l1_inf_search_direction = calculate_predicted_l1_inf_reduction(opts, current_l1_infeasibility, l1_inf_search_direction);
-        print_debug_output_double("pred_l1_inf_search_direction: ", pred_l1_inf_search_direction, nlp_opts->print_level, 2);
-
         // Compute the step norm
         if (opts->tol_min_step_norm > 0.0 || nlp_opts->log_primal_step_norm)
         {
@@ -1929,11 +1871,9 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Calculate optimal QP objective (needed for globalization)
         if (config->globalization->needs_qp_objective_value() == 1)
         {
-            // nlp_mem->qp_cost_value = compute_qp_objective_value(mem, dims, qp_in, qp_out, nlp_work);
-            nlp_mem->qp_cost_value = compute_qp_objective_value(mem, dims, nominal_qp_in, nominal_qp_out, nlp_work);
-            nlp_mem->predicted_infeasibility_reduction = pred_l1_inf_search_direction;
-            nlp_mem->predicted_optimality_reduction = -compute_gradient_directional_derivative(mem, dims, nominal_qp_in, nominal_qp_out);
-            print_debug_output_double("pred_opt_search_direction: ", nlp_mem->predicted_optimality_reduction, nlp_opts->print_level, 2);
+            nlp_mem->qp_cost_value = ocp_nlp_compute_qp_objective_value(dims, nominal_qp_in, nominal_qp_out, nlp_work);
+            nlp_mem->predicted_infeasibility_reduction = mem->pred_l1_inf_QP;
+            nlp_mem->predicted_optimality_reduction = -compute_gradient_directional_derivative(dims, nominal_qp_in, nominal_qp_out);
         }
         // NOTE on timings: currently all within globalization is accounted for within time_glob.
         //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
