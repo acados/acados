@@ -1086,27 +1086,6 @@ static void set_feasibility_multipliers(ocp_nlp_dims *dims,
 
 
 
-static double compute_gradient_directional_derivative(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
-{
-    // Compute the QP objective function value
-    double dir_der = 0.0;
-    int i, nux, ns;
-    int N = dims->N;
-    // Sum over stages 0 to N
-    for (i = 0; i <= N; i++)
-    {
-        nux = dims->nx[i] + dims->nu[i];
-        ns = dims->ns[i];
-        // Calculate g.T d
-        dir_der += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
-
-        // Calculate gradient of slacks
-        // we need to extract the gradient of the
-        dir_der += blasfeo_ddot(2 * ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
-    }
-    return dir_der;
-}
-
 static void print_indices(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_workspace *work, ocp_nlp_sqp_wfqp_memory *mem)
 {
     ocp_nlp_workspace *nlp_work = work->nlp_work;
@@ -1873,7 +1852,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             nlp_mem->qp_cost_value = ocp_nlp_compute_qp_objective_value(dims, nominal_qp_in, nominal_qp_out, nlp_work);
             nlp_mem->predicted_infeasibility_reduction = mem->pred_l1_inf_QP;
-            nlp_mem->predicted_optimality_reduction = -compute_gradient_directional_derivative(dims, nominal_qp_in, nominal_qp_out);
+            nlp_mem->predicted_optimality_reduction = -ocp_nlp_compute_gradient_directional_derivative(dims, nominal_qp_in, nominal_qp_out);
         }
         // NOTE on timings: currently all within globalization is accounted for within time_glob.
         //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.

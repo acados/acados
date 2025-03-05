@@ -2418,6 +2418,27 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
 /************************************************
  * functions
  ************************************************/
+double ocp_nlp_compute_gradient_directional_derivative(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
+{
+    // Compute the QP objective function value
+    double dir_der = 0.0;
+    int i, nux, ns;
+    int N = dims->N;
+    // Sum over stages 0 to N
+    for (i = 0; i <= N; i++)
+    {
+        nux = dims->nx[i] + dims->nu[i];
+        ns = dims->ns[i];
+        // Calculate g.T d
+        dir_der += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
+
+        // Calculate gradient of slacks
+        // we need to extract the gradient of the
+        dir_der += blasfeo_ddot(2 * ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
+    }
+    return dir_der;
+}
+
 double ocp_nlp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_nlp_workspace *nlp_work)
 {
     // Compute the QP objective function value
