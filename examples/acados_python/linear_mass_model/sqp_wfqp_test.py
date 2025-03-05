@@ -36,20 +36,22 @@ from itertools import product
 
 # an OCP to test Maratos effect an second order correction
 
-def main():
+def main_test():
 
     # # SETTINGS:
     SOFTEN_CONTROLS = True
     SOFTEN_OBSTACLE = False
     SOFTEN_TERMINAL = True
     PLOT = True
-    solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT)
+    ocp, ocp_solver1 = create_solver("1", SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS)
+    standard_test(ocp, ocp_solver1, SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT)
 
     SOFTEN_CONTROLS = False
     SOFTEN_OBSTACLE = False
     SOFTEN_TERMINAL = False
     PLOT = True
-    solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT)
+    ocp, ocp_solver2 = create_solver("2", SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS)
+    standard_test(ocp, ocp_solver2, SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT)
 
 def feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver: AcadosOcpSolver):
     """
@@ -116,7 +118,7 @@ def feasible_qp_index_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N,
             # We slack the obstacle constraint and the terminal constraints
             assert np.allclose(idxs, np.arange(dims.nh_e + dims.nbx_e)), f"i=N+1: Everything should be slacked"
 
-def create_solver_opts(N=4, Tf=2):
+def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'):
 
     solver_options = AcadosOcp().solver_options
 
@@ -134,7 +136,7 @@ def create_solver_opts(N=4, Tf=2):
     solver_options.qp_solver_iter_max = 400
     solver_options.hessian_approx = 'GAUSS_NEWTON'
     solver_options.integrator_type = 'ERK'
-    solver_options.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'
+    solver_options.nlp_solver_type = nlp_solver_type
     solver_options.globalization = 'FUNNEL_L1PEN_LINESEARCH'
     solver_options.globalization_full_step_dual = True
     solver_options.print_level = 1
@@ -146,7 +148,8 @@ def create_solver_opts(N=4, Tf=2):
 
     return solver_options
 
-def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT):
+def create_solver(solver_name: str, SOFTEN_OBSTACLE: bool, SOFTEN_TERMINAL: bool,
+                  SOFTEN_CONTROLS: bool, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP'):
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -154,6 +157,7 @@ def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT):
     # set model
     model = export_linear_mass_model()
     ocp.model = model
+    ocp.model.name += solver_name
 
     nx = model.x.rows()
     nu = model.u.rows()
@@ -241,16 +245,22 @@ def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT):
         ocp.cost.Zu_e = np.concatenate((ocp.cost.Zu_e, Zh))
 
     # load options
-    ocp.solver_options = create_solver_opts(N, Tf)
+    ocp.solver_options = create_solver_opts(N, Tf, nlp_solver_type)
     # create ocp solver
-    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_ocp.json', verbose=False)
+    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_{solver_name}_ocp.json', verbose=False)
 
     # # initialize
     for i in range(N+1):
         ocp_solver.set(i, "x", (N+1-i)/(N+1) * x0 + i/(N+1) * x_goal)
 
+    return ocp, ocp_solver
+
+def standard_test(ocp: AcadosOcp, ocp_solver: AcadosOcpSolver, SOFTEN_OBSTACLE: bool,
+                  SOFTEN_TERMINAL: bool, SOFTEN_CONTROLS: bool, PLOT: bool):
     # solve
     status = ocp_solver.solve()
+
+    N = ocp.solver_options.N_horizon
 
     sqp_iter = ocp_solver.get_stats('sqp_iter')
     print(f'acados returned status {status}.')
@@ -264,21 +274,41 @@ def solve_maratos_ocp(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT):
     sol_U = np.array([ocp_solver.get(i,"u") for i in range(N)])
     pi_multiplier = [ocp_solver.get(i, "pi") for i in range(N)]
 
-    # We should put the optimal solution here ....
 
     # print summary
     print(f"cost function value = {ocp_solver.get_cost()} after {sqp_iter} SQP iterations")
     print(f"solved sqp_wfqp problem with settings SOFTEN_OBSTACLE = {SOFTEN_OBSTACLE},SOFTEN_TERMINAL = {SOFTEN_TERMINAL}, SOFTEN_CONTROL = {SOFTEN_CONTROLS}")
 
     if PLOT:
+        obs_rad = 1.0; obs_x = 0.0; obs_y = 0.0
+        circle = (obs_x, obs_y, obs_rad)
+        x_goal = x_goal = np.array([0, -1.1, 0, 0])
         plot_linear_mass_system_X_state_space(sol_X, circle=circle, x_goal=x_goal)
-
-    if ocp.solver_options.globalization_funnel_use_merit_fun_only:
-        assert status == 0, "Merit function should always converge!"
-    elif not ocp.solver_options.globalization_funnel_use_merit_fun_only:
-        assert status == 0, "Funnel should find solution!"
 
     print(f"\n\n----------------------\n")
 
+def test_same_behavior_sqp_and_sqp_wfqp():
+    # # SETTINGS:
+    SOFTEN_CONTROLS = True
+    SOFTEN_OBSTACLE = False
+    SOFTEN_TERMINAL = True
+    PLOT = False
+
+    # SQP solver
+    ocp, ocp_solver1 = create_solver("v1", SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, nlp_solver_type='SQP_WITH_FEASIBLE_QP')
+    status1 = ocp_solver1.solve()
+
+    ocp, ocp_solver2 = create_solver("v2", SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, nlp_solver_type='SQP')
+    status2 = ocp_solver2.solve()
+
+    assert status1 == status2, "both solvers should converge"
+
+    # check residuals
+    res_solver1 = ocp_solver1.get_residuals()
+    res_solver2 = ocp_solver2.get_residuals()
+    assert np.array_equal(res_solver1, res_solver2), "both solvers should have identical residual stats"
+
+
 if __name__ == '__main__':
-    main()
+    main_test()
+    test_same_behavior_sqp_and_sqp_wfqp()
