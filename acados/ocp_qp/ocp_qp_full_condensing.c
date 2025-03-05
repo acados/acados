@@ -229,8 +229,6 @@ void ocp_qp_full_condensing_opts_initialize_default(void *dims_, void *opts_)
 
     // condense both Hessian and gradient by default
     opts->cond_hess = 1;
-    // expand only primal solution (linear MPC, Gauss-Newton)
-    opts->expand_dual_sol = 1;
 
     // hpipm_cond_opts
     d_cond_qp_arg_set_default(opts->hpipm_cond_opts);
@@ -275,13 +273,6 @@ void ocp_qp_full_condensing_opts_set(void *opts_, const char *field, void* value
     {
         int *tmp_ptr = value;
         opts->cond_hess = *tmp_ptr;
-    }
-    else if(!strcmp(field, "dual_sol"))
-    {
-        int *tmp_ptr = value;
-        opts->expand_dual_sol = *tmp_ptr;
-        d_ocp_qp_reduce_eq_dof_arg_set_comp_dual_sol_eq(tmp_ptr, opts->hpipm_red_opts);
-        d_ocp_qp_reduce_eq_dof_arg_set_comp_dual_sol_ineq(tmp_ptr, opts->hpipm_red_opts);
     }
     else
     {
@@ -565,14 +556,7 @@ int ocp_qp_full_expansion(void *fcond_qp_out_, void *qp_out_, void *opts_, void 
     acados_tic(&timer);
 
     // expand solution
-    if (opts->expand_dual_sol == 0)
-    {
-        d_cond_qp_expand_primal_sol(mem->red_qp, fcond_qp_out, mem->red_sol, opts->hpipm_cond_opts, mem->hpipm_cond_work);
-    }
-    else
-    {
-        d_cond_qp_expand_sol(mem->red_qp, fcond_qp_out, mem->red_sol, opts->hpipm_cond_opts, mem->hpipm_cond_work);
-    }
+    d_cond_qp_expand_sol(mem->red_qp, fcond_qp_out, mem->red_sol, opts->hpipm_cond_opts, mem->hpipm_cond_work);
 
     // restore solution
     d_ocp_qp_restore_eq_dof(mem->ptr_qp_in, mem->red_sol, qp_out, opts->hpipm_red_opts, mem->hpipm_red_work);
