@@ -124,8 +124,8 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
 
     opts->use_exact_hessian_in_feas_qp = false;
     opts->search_direction_mode = NOMINAL_QP;
-    opts->watchdog_zero_slacks_max = 2;
-    opts->allow_direction_mode_switch = true;
+    opts->watchdog_zero_slacks_max = 2; // n of consecutive BYRD_OMOJOKUN iterations with zero slacks before switching back to NOMINAL_QP
+    opts->allow_direction_mode_switch = true; // allows switching from BYRD_OMOJOKUN to NOMINAL_QP
 
     // overwrite default submodules opts
     // qp tolerance
@@ -366,7 +366,6 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
         {
             size += 1 * blasfeo_memsize_dvec(dims->nx[stage + 1]);  // pi_feasibility
         }
-        size += 1 * blasfeo_memsize_dvec(dims->nv[stage]);      // res_stat_feasibility
 
         // Z_cost_module
         size += blasfeo_memsize_dvec(2*dims->ns[stage]);
@@ -379,7 +378,6 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
     // multipliers for the feasibility QP
     size += 1 * (N + 1) * sizeof(struct blasfeo_dvec);  // lam_feasibility
     size += 1 * N * sizeof(struct blasfeo_dvec);  // pi_feasibility
-    size += 1 * (N + 1) * sizeof(struct blasfeo_dvec);  // res_stat_feasibility
     // Z_cost_module
     size += (N + 1) * sizeof(struct blasfeo_dvec);
     // RSQ_cost, RSQ_constr
@@ -406,9 +404,6 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     char *c_ptr = (char *) raw_memory;
 
     int N = dims->N;
-    // int *nx = dims->nx;
-    // int *nu = dims->nu;
-    // int *nz = dims->nz;
 
     // initial align
     align_char_to(8, &c_ptr);
@@ -446,8 +441,6 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     assign_and_advance_blasfeo_dvec_structs(N, &mem->pi_feasibility, &c_ptr);
     // lam_feasibility
     assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->lam_feasibility, &c_ptr);
-    // res_stat_feasibility
-    assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->res_stat_feasibility, &c_ptr);
 
     // Z_cost_module
     assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->Z_cost_module, &c_ptr);
@@ -522,11 +515,6 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     for (int i = 0; i <= N; ++i)
     {
         assign_and_advance_blasfeo_dvec_mem(2 * dims->ni[i], mem->lam_feasibility + i, &c_ptr);
-    }
-    // res_stat_feasibility
-    for (int i = 0; i <= N; i++)
-    {
-        assign_and_advance_blasfeo_dvec_mem(dims->nv[i], mem->res_stat_feasibility + i, &c_ptr);
     }
     // Z_cost_module
     for (int i = 0; i <= N; ++i)
