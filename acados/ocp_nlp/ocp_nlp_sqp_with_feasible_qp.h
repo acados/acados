@@ -125,11 +125,12 @@ typedef struct
 
     double pred_l1_inf_QP;
     double l1_infeasibility;
-    int search_direction_mode;
+    int search_direction_mode; // either NOMINAL_QP or BYRD_OMOJOKUN
     char* search_direction_type; // for output logging
-    int watchdog_zero_slacks_counter;
-    int absolute_nns;
+    int watchdog_zero_slacks_counter; // counts number of consecutive BYRD_OMOJOKUN iter with slack sum == 0
+    int absolute_nns; // sum of all nns[i]
 
+    // QP solver with always feasible QPs
     ocp_qp_xcond_solver relaxed_qp_solver;
     ocp_qp_xcond_solver_memory *relaxed_qp_solver_mem;
     ocp_qp_xcond_solver_workspace *relaxed_qp_solver_work;
