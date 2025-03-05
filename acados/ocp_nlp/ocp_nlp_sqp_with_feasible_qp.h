@@ -119,13 +119,12 @@ typedef struct
 
     double step_norm;
 
-    struct blasfeo_dvec *lam_feasibility;  // lambda multipliers for feasibility QP (no gradient)
-    struct blasfeo_dvec *pi_feasibility;  // lambda multipliers for feasibility QP (no gradient)
     struct blasfeo_dvec *Z_cost_module;  // Z values from cost module
     struct blasfeo_dmat *RSQ_cost;
     struct blasfeo_dmat *RSQ_constr;
 
     double pred_l1_inf_QP;
+    double l1_infeasibility;
     int search_direction_mode;
     char* search_direction_type; // for output logging
     int watchdog_zero_slacks_counter;

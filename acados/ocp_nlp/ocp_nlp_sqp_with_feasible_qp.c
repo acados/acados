@@ -696,22 +696,21 @@ static void print_iteration(int iter, ocp_nlp_config *config, ocp_nlp_res *nlp_r
 /************************************************
  * functions
  ************************************************/
-static double calculate_predicted_l1_inf_reduction(ocp_nlp_sqp_wfqp_opts* opts, ocp_nlp_sqp_wfqp_memory *mem,
-                                                   double current_l1_infeasibility, double qp_infeasibility)
+static double calculate_predicted_l1_inf_reduction(ocp_nlp_sqp_wfqp_opts* opts, ocp_nlp_sqp_wfqp_memory *mem, double qp_infeasibility)
 {
     if (mem->search_direction_mode == NOMINAL_QP)
     {
-        return current_l1_infeasibility;
+        return mem->l1_infeasibility;
     }
     else
     {
-        if (current_l1_infeasibility < fmin(opts->tol_ineq, opts->tol_eq))
+        if (mem->l1_infeasibility < fmin(opts->tol_ineq, opts->tol_eq))
         {
             return 0.0;
         }
         else
         {
-            return current_l1_infeasibility - qp_infeasibility;
+            return mem->l1_infeasibility - qp_infeasibility;
         }
     }
 }
@@ -1260,7 +1259,6 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
                                             ocp_nlp_out *nlp_out,
                                             ocp_nlp_sqp_wfqp_memory *mem,
                                             ocp_nlp_sqp_wfqp_workspace *work,
-                                            double current_l1_infeasibility,
                                             int sqp_iter,
                                             acados_timer timer0,
                                             acados_timer timer1)
@@ -1303,8 +1301,11 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
         return nlp_mem->status;
     }
 
-    l1_inf_QP_feasibility = calculate_slacked_qp_l1_infeasibility(dims, mem, work, opts, relaxed_qp_in, relaxed_qp_out, opts->use_QP_l1_inf_from_slacks);
-    mem->pred_l1_inf_QP = calculate_predicted_l1_inf_reduction(opts, mem, current_l1_infeasibility, l1_inf_QP_feasibility);
+    if (config->globalization->needs_objective_value() == 1)
+    {
+        l1_inf_QP_feasibility = calculate_slacked_qp_l1_infeasibility(dims, mem, work, opts, relaxed_qp_in, relaxed_qp_out, opts->use_QP_l1_inf_from_slacks);
+        mem->pred_l1_inf_QP = calculate_predicted_l1_inf_reduction(opts, mem, l1_inf_QP_feasibility);
+    }
 
     /* Solve the nominal QP with updated bounds*/
     print_debug_output("Solve Nominal QP!\n", nlp_opts->print_level, 2);
@@ -1342,7 +1343,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
                                         ocp_nlp_out *nlp_out,
                                         ocp_nlp_sqp_wfqp_memory *mem,
                                         ocp_nlp_sqp_wfqp_workspace *work,
-                                        double current_l1_infeasibility,
+                                        // double current_l1_infeasibility,
                                         int sqp_iter,
                                         acados_timer timer0,
                                         acados_timer timer1)
@@ -1352,6 +1353,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
     int qp_iter = 0;
     int search_direction_status;
     int solved_nominal_before = 0;
+
     if (mem->search_direction_mode == NOMINAL_QP)
     {
         // if the QP can be solved and the status is good, we
@@ -1376,7 +1378,10 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
         else
         {
             mem->search_direction_type = "N";
-            mem->pred_l1_inf_QP = calculate_predicted_l1_inf_reduction(opts, mem, current_l1_infeasibility, -1.0);
+            if (config->globalization->needs_objective_value() == 1)
+            {
+                mem->pred_l1_inf_QP = calculate_predicted_l1_inf_reduction(opts, mem, -1.0);
+            }
             return ACADOS_SUCCESS;
         }
     }
@@ -1394,7 +1399,6 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
                                                                     nlp_out,
                                                                     mem,
                                                                     work,
-                                                                    current_l1_infeasibility,
                                                                     sqp_iter,
                                                                     timer0,
                                                                     timer1);
@@ -1501,6 +1505,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->search_direction_type = "-";
     mem->search_direction_mode = opts->search_direction_mode;
     mem->watchdog_zero_slacks_counter = 0;
+    mem->l1_infeasibility = -1.0; // default, cannot be negative
 
     #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -1606,9 +1611,12 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return mem->nlp_mem->status;
         }
 
-        double current_l1_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
+        if (config->globalization->needs_objective_value() == 1)
+        {
+            mem->l1_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
+        }
 
-        /* search direction computation */
+        /* Search Direction Computation */
         search_direction_status = calculate_search_direction(dims,
                                                             config,
                                                             opts,
@@ -1617,7 +1625,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                                             nlp_out,
                                                             mem,
                                                             work,
-                                                            current_l1_infeasibility,
                                                             sqp_iter,
                                                             timer0,
                                                             timer1);
