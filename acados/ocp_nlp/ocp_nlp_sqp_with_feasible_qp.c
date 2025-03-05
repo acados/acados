@@ -1295,7 +1295,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
 }
 
 /************************************************
-* Byrd-Omojokun Subproblem Stuff
+* Byrd-Omojokun Subproblem Functions
 ************************************************/
 /*
 Adjusts the bounds of the QP with the given slack variables, such that the
@@ -1494,7 +1494,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
                                                                     sqp_iter,
                                                                     timer0,
                                                                     timer1);
-        // TODO: solve this below!!!
+        // TODO: solve line below!!!
         search_direction_status = 0;
         if (solved_nominal_before)
         {
@@ -1581,8 +1581,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     ocp_qp_in *nominal_qp_in = nlp_mem->qp_in;
     ocp_qp_out *nominal_qp_out = nlp_mem->qp_out;
-    // ocp_qp_in *relaxed_qp_in = mem->relaxed_qp_in;
-    // ocp_qp_out *relaxed_qp_out = mem->relaxed_qp_out;
 
     // zero timers
     ocp_nlp_timings_reset(nlp_timings);
@@ -1720,7 +1718,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return nlp_mem->status;
         }
 
-        // Log the qp stats. At the moment we sum up the number of total QP iterations
         // The solver anyway terminates if a QP was not solved correctly at this point
         if (sqp_iter+1 < mem->stat_m)
         {
