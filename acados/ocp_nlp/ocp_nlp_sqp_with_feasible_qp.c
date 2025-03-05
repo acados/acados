@@ -360,13 +360,6 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
         // nlp_idxs_rev
         size += (dims->nb[stage] + dims->ng[stage] + dims->ni_nl[stage]) * sizeof(int);
 
-        // multipliers for the feasibility QP
-        size += 1 * blasfeo_memsize_dvec(2 * dims->ni[stage]);  // lam_feasibility
-        if (stage < N)
-        {
-            size += 1 * blasfeo_memsize_dvec(dims->nx[stage + 1]);  // pi_feasibility
-        }
-
         // Z_cost_module
         size += blasfeo_memsize_dvec(2*dims->ns[stage]);
 
@@ -375,9 +368,6 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
     }
     // nns
     size += (N+1) * sizeof(int);
-    // multipliers for the feasibility QP
-    size += 1 * (N + 1) * sizeof(struct blasfeo_dvec);  // lam_feasibility
-    size += 1 * N * sizeof(struct blasfeo_dvec);  // pi_feasibility
     // Z_cost_module
     size += (N + 1) * sizeof(struct blasfeo_dvec);
     // RSQ_cost, RSQ_constr
@@ -436,11 +426,6 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     mem->relaxed_qp_solver.opts = opts->nlp_opts->qp_solver_opts;
     mem->relaxed_qp_solver.mem = mem->relaxed_qp_solver_mem;
     mem->relaxed_qp_solver.work = mem->relaxed_qp_solver_work;
-
-    // pi_feasibility
-    assign_and_advance_blasfeo_dvec_structs(N, &mem->pi_feasibility, &c_ptr);
-    // lam_feasibility
-    assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->lam_feasibility, &c_ptr);
 
     // Z_cost_module
     assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->Z_cost_module, &c_ptr);
@@ -506,30 +491,12 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
         assign_and_advance_blasfeo_dmat_mem(dims->nx[i]+dims->nu[i], dims->nx[i]+dims->nu[i], mem->RSQ_cost + i, &c_ptr);
         assign_and_advance_blasfeo_dmat_mem(dims->nx[i]+dims->nu[i], dims->nx[i]+dims->nu[i], mem->RSQ_constr + i, &c_ptr);
     }
-    // pi_feasibility
-    for (int i = 0; i < N; ++i)
-    {
-        assign_and_advance_blasfeo_dvec_mem(dims->nx[i + 1], mem->pi_feasibility + i, &c_ptr);
-    }
-    // lam_feasibility
-    for (int i = 0; i <= N; ++i)
-    {
-        assign_and_advance_blasfeo_dvec_mem(2 * dims->ni[i], mem->lam_feasibility + i, &c_ptr);
-    }
     // Z_cost_module
     for (int i = 0; i <= N; ++i)
     {
         assign_and_advance_blasfeo_dvec_mem(2*dims->ns[i], mem->Z_cost_module + i, &c_ptr);
     }
     assert((char *) raw_memory + ocp_nlp_sqp_wfqp_memory_calculate_size(config, dims, opts, in) >= c_ptr);
-
-    // initialize with zero
-    for(int i=0; i<N; i++)
-    {
-        blasfeo_dvecse(dims->nx[i+1], 0.0, mem->pi_feasibility+i, 0);
-        blasfeo_dvecse(2*dims->ni[i], 0.0, mem->lam_feasibility+i, 0);
-    }
-    blasfeo_dvecse(2*dims->ni[N], 0.0, mem->lam_feasibility+N, 0);
 
     return mem;
 }
@@ -955,28 +922,6 @@ static void set_non_slacked_l2_penalties(ocp_nlp_config *config, ocp_nlp_dims *d
         // blasfeo_print_exp_tran_dvec(2*(nns[stage]+ns[stage]), qp_in->Z+stage, 0);
     }
 }
-
-
-
-static void set_feasibility_multipliers(ocp_nlp_dims *dims,
-                            ocp_nlp_sqp_wfqp_memory *mem,
-                            ocp_nlp_out *nlp_out)
-{
-    int *ni = dims->ni;
-    int *nx = dims->nx;
-    int N = dims->N;
-
-    for (int i=0; i<dims->N; ++i)
-    {
-        blasfeo_dveccp(2*ni[i], nlp_out->lam+i, 0, mem->lam_feasibility+i, 0);
-        if (i < N)
-        {
-            blasfeo_dveccp(nx[i+1], nlp_out->pi+i, 0, mem->pi_feasibility+i, 0);
-        }
-    }
-}
-
-
 
 static void print_indices(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_workspace *work, ocp_nlp_sqp_wfqp_memory *mem)
 {
@@ -1604,7 +1549,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     set_non_slacked_l2_penalties(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
     set_non_slacked_l1_penalties(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
-    set_feasibility_multipliers(dims, mem, nlp_out);
 
     /************************************************
      * main sqp loop
