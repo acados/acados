@@ -252,11 +252,15 @@ void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, const char *fi
     }
     else if (!strcmp(field, "nge"))
     {
-        *value =dims-> nge;
+        *value =dims->nge;
     }
     else if (!strcmp(field, "nhe"))
     {
-        *value =dims-> nhe;
+        *value = dims->nhe;
+    }
+    else if (!strcmp(field, "ne"))
+    {
+        *value = dims->nbxe + dims->nbue + dims->nge + dims->nhe;
     }
     else if (!strcmp(field, "nge_qp_solver"))
     {

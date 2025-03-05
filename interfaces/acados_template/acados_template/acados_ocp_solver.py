@@ -2117,6 +2117,7 @@ class AcadosOcpSolver:
                 'globalization_funnel_initial_penalty_parameter', 'globalization_funnel_init_increase_factor',
                 'levenberg_marquardt',
                 'adaptive_levenberg_marquardt_lam', 'adaptive_levenberg_marquardt_mu_min', 'adaptive_levenberg_marquardt_mu0',
+                'tau_min'
 
             :param value: of type int, float, string, bool
 
@@ -2154,6 +2155,7 @@ class AcadosOcpSolver:
                          'adaptive_levenberg_marquardt_lam',
                          'adaptive_levenberg_marquardt_mu_min',
                          'adaptive_levenberg_marquardt_mu0',
+                         'tau_min',
                          'tol_eq',
                          'tol_stat',
                          'tol_ineq',
