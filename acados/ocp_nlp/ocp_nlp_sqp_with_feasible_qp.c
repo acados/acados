@@ -677,20 +677,6 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         return true;
     }
 
-    // check for infeasible problem
-    // if (nlp_res->inf_norm_res_eq < opts->tol_eq
-    //     && nlp_res->inf_norm_res_ineq > opts->tol_ineq
-    //     && mem->inf_norm_res_stat_feasibility < opts->tol_stat
-    //     && mem->inf_norm_res_comp_feasibility < opts->tol_comp)
-    // {
-    //     mem->nlp_mem->status = ACADOS_INFEASIBLE;
-    //     if (opts->nlp_opts->print_level > 0)
-    //     {
-    //         printf("Converged to infeasible stationary point! Problem might be locally infeasible!\n");
-    //     }
-    //     return true;
-    // }
-
     // check for small step
     if (opts->tol_min_step_norm > 0.0 && (n_iter > 0) && (mem->step_norm < opts->tol_min_step_norm))
     {
@@ -731,8 +717,6 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         return true;
     }
 
-    // convergence to FJ point?
-
     return false;
 }
 
@@ -742,105 +726,25 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
 static void print_iteration(int iter, ocp_nlp_config *config, ocp_nlp_res *nlp_res, ocp_nlp_sqp_wfqp_memory *mem,
     ocp_nlp_opts *nlp_opts, double prev_levenberg_marquardt, int qp_status, int qp_iter)
 {
-ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-// print iteration header
-if (iter % 10 == 0)
-{
-ocp_nlp_common_print_iteration_header();
-printf("%9s   %9s   %8s   ", "step_norm", "step_type", "lm_reg.");
-config->globalization->print_iteration_header();
-printf("\n");
-}
-// print iteration
-ocp_nlp_common_print_iteration(iter, nlp_res);
-printf("%9.2e   %9s   %8.2e   ", mem->step_norm, mem->search_direction_type, prev_levenberg_marquardt);
-config->globalization->print_iteration(nlp_mem->cost_value, nlp_opts->globalization, nlp_mem->globalization);
-printf("\n");
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    // print iteration header
+    if (iter % 10 == 0)
+    {
+    ocp_nlp_common_print_iteration_header();
+    printf("%9s   %9s   %8s   ", "step_norm", "step_type", "lm_reg.");
+    config->globalization->print_iteration_header();
+    printf("\n");
+    }
+    // print iteration
+    ocp_nlp_common_print_iteration(iter, nlp_res);
+    printf("%9.2e   %9s   %8.2e   ", mem->step_norm, mem->search_direction_type, prev_levenberg_marquardt);
+    config->globalization->print_iteration(nlp_mem->cost_value, nlp_opts->globalization, nlp_mem->globalization);
+    printf("\n");
 }
 
 /************************************************
  * functions
  ************************************************/
-/*
-Compute infinity norm of QP multipliers in NLP space.
-Assumes that the masked multipliers are always zero.
-*/
-static void compute_qp_multiplier_norm_inf(ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_dims *dims,
-                                           ocp_qp_out *qp_out, ocp_qp_in *qp_in,
-                                           bool get_feasibility_multipliers)
-{
-    int i,j;
-    int N = dims->N;
-    int *nx = dims->nx;
-    double norm_pi = 0.0;
-    double norm_lam_slacked_constraints = 0.0;
-    double norm_lam_hard_constr = 0.0;
-
-    // compute inf norm of pi
-    for (i = 0; i < N; i++)
-    {
-        for (j=0; j<nx[i+1]; j++)
-        {
-            norm_pi = fmax(norm_pi, fabs(BLASFEO_DVECEL(qp_out->pi+i, j)));
-        }
-    }
-    if (get_feasibility_multipliers)
-    {
-        mem->norm_feas_qp_pi = norm_pi;
-    }
-    else
-    {
-        mem->norm_opt_qp_pi = norm_pi;
-    }
-
-    /* structure of QP and NLP iterates: */
-    // qp_out->lam = [lbu, lbx, lg, l_nl, ubu, ubx, ug, u_nl, lbs_NLP, lbs_QP, ubs_NLP, ubs_QP]
-    // nlp_out->lam = [lbu, lbx, lg, l_nl, ubu, ubx, ug, u_nl, lbs_NLP, ----, ubs_NLP, ---]
-    int n_unslacked_bounds, n_nominal_ineq_nlp;
-    for (i = 0; i <= N; i++)
-    {
-        n_nominal_ineq_nlp = dims->nb[i]+dims->ng[i]+dims->ni_nl[i];
-        if (i == 0)
-        {
-            // we do not slack the initial state conditions!
-            n_unslacked_bounds = qp_in->dim->nbu[i] + qp_in->dim->nbx[i];
-        }
-        else
-        {
-            n_unslacked_bounds = qp_in->dim->nbu[i];
-        }
-
-        // Unslacked bounds multipliers
-        for (j=0; j<n_unslacked_bounds; j++)
-        {
-            norm_lam_hard_constr = fmax(norm_lam_hard_constr, BLASFEO_DVECEL(qp_out->lam+i, j));
-            norm_lam_hard_constr = fmax(norm_lam_hard_constr, BLASFEO_DVECEL(qp_out->lam+i, n_nominal_ineq_nlp+j));
-        }
-
-        for (j=n_unslacked_bounds; j<n_nominal_ineq_nlp; j++)
-        {
-            // lb_not_l1_slacked, lg, l_nl
-            norm_lam_slacked_constraints = fmax(norm_lam_slacked_constraints, BLASFEO_DVECEL(qp_out->lam+i, j));
-            // ub_not_l1_slacked, ug, u_nl
-            norm_lam_slacked_constraints = fmax(norm_lam_slacked_constraints, BLASFEO_DVECEL(qp_out->lam+i, j+n_nominal_ineq_nlp));
-        }
-        // TODO: add lbs_NLP, ubs_NLP mutlipliers
-    }
-    if (get_feasibility_multipliers)
-    {
-        mem->norm_feas_qp_lam_unslacked_bounds = norm_lam_hard_constr;
-        mem->norm_feas_qp_lam_slacked_constraints = norm_lam_slacked_constraints;
-    }
-    else
-    {
-        mem->norm_opt_qp_lam_unslacked_bounds = norm_lam_hard_constr;
-        mem->norm_opt_qp_lam_slacked_constraints = norm_lam_slacked_constraints;
-    }
-    // assert(norm_lam_slacked_constraints <= 1.0 + 1e-8); // Slacked multipliers should be in [0,1]
-}
-
-
-
 static double calculate_predicted_l1_inf_reduction(ocp_nlp_sqp_wfqp_opts* opts, ocp_nlp_sqp_wfqp_memory *mem,
                                                    double current_l1_infeasibility, double qp_infeasibility)
 {
@@ -1160,7 +1064,7 @@ static void ocp_nlp_sqp_wfqp_prepare_hessian_evaluation(ocp_nlp_config *config,
 // update QP rhs for SQP (step prim var, abs dual var)
 // - use cost gradient and dynamics residual from memory
 // - evaluate constraints wrt bounds -> allows to update all bounds between preparation and feedback phase.
-void ocp_nlp_sqp_wfqp_approximate_qp_constraint_vectors(ocp_nlp_config *config,
+void ocp_nlp_sqp_wfqp_approximate_feasibility_qp_constraint_vectors(ocp_nlp_config *config,
     ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
     ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work, int sqp_iter)
 {
@@ -1472,10 +1376,8 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
     int qp_iter = 0;
     double l1_inf_QP_feasibility;
 
-    /* Solve Feasibility QP: Only gradient of slack variables */
+    /* Solve Feasibility QP: Objective: Only constraint Hessian/Identity AND only gradient of slack variables */
     print_debug_output("Solve Feasibility QP!\n", nlp_opts->print_level, 2);
-    // print_ocp_qp_dims(relaxed_qp_in->dim);
-    // print_ocp_qp_in(relaxed_qp_in);
     qp_status = prepare_and_solve_QP(config, opts, relaxed_qp_in, relaxed_qp_out, dims, mem, nlp_in, nlp_out,
                 nlp_mem, nlp_work, sqp_iter, true, timer0, timer1);
     ocp_qp_out_get(relaxed_qp_out, "qp_info", &qp_info_);
@@ -1496,17 +1398,9 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
         // #endif
         return nlp_mem->status;
     }
-    compute_qp_multiplier_norm_inf(mem, dims, relaxed_qp_out, relaxed_qp_in, true);
 
     l1_inf_QP_feasibility = calculate_slacked_qp_l1_infeasibility(dims, mem, work, opts, relaxed_qp_in, relaxed_qp_out, opts->use_QP_l1_inf_from_slacks);
     mem->pred_l1_inf_QP = calculate_predicted_l1_inf_reduction(opts, mem, current_l1_infeasibility, l1_inf_QP_feasibility);
-
-    print_debug_output_double("Feas QP: Multiplier norm: pi", mem->norm_feas_qp_pi, nlp_opts->print_level, 2);
-    print_debug_output_double("Feas QP: Multiplier norm: lam slacked", mem->norm_feas_qp_lam_slacked_constraints, nlp_opts->print_level, 2);
-    print_debug_output_double("Feas QP: Multiplier norm: lam unslacked", mem->norm_opt_qp_lam_unslacked_bounds, nlp_opts->print_level, 2);
-    print_debug_output_double("Feas QP: l1_inf_QP_feasibility: ", l1_inf_QP_feasibility, nlp_opts->print_level, 2);
-    print_debug_output_double("Feas QP: pred_l1_inf_QP: ", mem->pred_l1_inf_QP, nlp_opts->print_level, 2);
-    // assert(pred_l1_inf_QP_feasibility > -1e2*opts->tol_ineq);
 
     /* Solve the nominal QP with updated bounds*/
     print_debug_output("Solve Nominal QP!\n", nlp_opts->print_level, 2);
@@ -1530,7 +1424,6 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
         // #endif
         return nlp_mem->status;
     }
-    compute_qp_multiplier_norm_inf(mem, dims, nominal_qp_out, nominal_qp_in, false);
     return qp_status;
 }
 
@@ -1578,7 +1471,6 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
         }
         else
         {
-            compute_qp_multiplier_norm_inf(mem, dims, nlp_mem->qp_out, nlp_mem->qp_in, false);
             mem->search_direction_type = "N";
             mem->pred_l1_inf_QP = calculate_predicted_l1_inf_reduction(opts, mem, current_l1_infeasibility, -1.0);
             return ACADOS_SUCCESS;
@@ -1657,7 +1549,7 @@ static void set_relaxed_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp_
     mem->relaxed_qp_in->DCt = qp_in->DCt; // inequality constraints matrix
     mem->relaxed_qp_in->idxb = qp_in->idxb;
     mem->relaxed_qp_in->idxe = qp_in->idxe;
-    // mem->relaxed_qp_in->d_mask --> different due to slacks
+    // mem->relaxed_qp_in->d_mask --> different due to slacks in feasibility QP
     // mem->relaxed_qp_in->diag_H_flag --> if identity Hessian used in feasibility QP, flag set elsewhere
     // mem->relaxed_qp_in->m = qp_in->m; // TODO: Not sure what happens here
 }
@@ -1758,7 +1650,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             // relaxed QP solver
             // matrices for relaxed QP solver evaluated in nominal QP solver
-            ocp_nlp_sqp_wfqp_approximate_qp_constraint_vectors(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, sqp_iter);
+            ocp_nlp_sqp_wfqp_approximate_feasibility_qp_constraint_vectors(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, sqp_iter);
 
             if (nlp_opts->with_adaptive_levenberg_marquardt || config->globalization->needs_objective_value() == 1)
             {

@@ -126,18 +126,7 @@ typedef struct
     struct blasfeo_dmat *RSQ_cost;
     struct blasfeo_dmat *RSQ_constr;
 
-    double norm_feas_qp_pi;
-    double norm_feas_qp_lam_unslacked_bounds;
-    double norm_feas_qp_lam_slacked_constraints;
-
-    double norm_opt_qp_pi;
-    double norm_opt_qp_lam_unslacked_bounds;
-    double norm_opt_qp_lam_slacked_constraints;
-
-    double inf_norm_res_comp_feasibility;
-    double inf_norm_res_stat_feasibility;
     double pred_l1_inf_QP;
-
     int search_direction_mode;
     char* search_direction_type; // for output logging
     int watchdog_zero_slacks_counter;
