@@ -60,6 +60,7 @@ typedef struct ocp_qp_full_condensing_opts_
     struct d_ocp_qp_reduce_eq_dof_arg *hpipm_red_opts;
 //    dense_qp_dims *fcond_dims;  // TODO(all): move to dims
     int cond_hess; // 0 cond only rhs, 1 cond hess + rhs
+    int expand_dual_sol; // 0 primal sol only, 1 primal + dual sol
     int ric_alg;
     int mem_qp_in; // allocate qp_in in memory
 } ocp_qp_full_condensing_opts;
