@@ -38,22 +38,22 @@ from itertools import product
 
 def main_test():
 
-    # # SETTINGS:
-    SOFTEN_CONTROLS = True
-    SOFTEN_OBSTACLE = False
-    SOFTEN_TERMINAL = True
-    PLOT = True
-    ocp, ocp_solver1 = create_solver("1", SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS)
-    standard_test(ocp, ocp_solver1, SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT)
+    # SETTINGS:
+    soften_controls = True
+    soften_obstacle = False
+    soften_terminal = True
+    plot = True
+    ocp, ocp_solver1 = create_solver("1", soften_obstacle, soften_terminal, soften_controls)
+    standard_test(ocp, ocp_solver1, soften_obstacle, soften_terminal, soften_controls, plot)
 
-    SOFTEN_CONTROLS = False
-    SOFTEN_OBSTACLE = False
-    SOFTEN_TERMINAL = False
-    PLOT = True
-    ocp, ocp_solver2 = create_solver("2", SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS)
-    standard_test(ocp, ocp_solver2, SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, PLOT)
+    soften_controls = False
+    soften_obstacle = False
+    soften_terminal = False
+    plot = True
+    ocp, ocp_solver2 = create_solver("2", soften_obstacle, soften_terminal, soften_controls)
+    standard_test(ocp, ocp_solver2, soften_obstacle, soften_terminal, soften_controls, plot)
 
-def feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver: AcadosOcpSolver):
+def feasible_qp_dims_test(soften_obstacle, soften_terminal, soften_controls, N, ocp_solver: AcadosOcpSolver):
     """
     The dynamics has four state variables and two control variables
     """
@@ -67,25 +67,25 @@ def feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, 
         if i == 0:
             assert len(idxb) == dims.nbu + dims.nbx_0, f"We should have {dims.nbu+dims.nbx} indices for bounds on x and u at stage {i}, but got {len(idxb)}"
 
-            if not SOFTEN_CONTROLS:
-                assert len(idxs) == 0, f"i=0, NOT SOFTEN_CONTROLS: The initial condition should have 0 slacks, got {len(idxs)}!"
+            if not soften_controls:
+                assert len(idxs) == 0, f"i=0, NOT soften_controls: The initial condition should have 0 slacks, got {len(idxs)}!"
             else:
-                assert len(idxs) == dims.nbu, f"i=0, SOFTEN_CONTROLS: The initial condition should have {dims.nbu} slacks, got {len(idxs)}!"
+                assert len(idxs) == dims.nbu, f"i=0, soften_controls: The initial condition should have {dims.nbu} slacks, got {len(idxs)}!"
 
         if i > 0 and i < N:
             assert len(idxb) == dims.nbu, f"We should have {dims.nbu} indices for bounds on u, but got {len(idxb)}"
 
-            if not SOFTEN_CONTROLS:
-                assert len(idxs) == dims.nh, f"i=0, NOT SOFTEN_CONTROLS: The initial condition should have {dims.nh} slacks, got {len(idxs)}!"
+            if not soften_controls:
+                assert len(idxs) == dims.nh, f"i=0, NOT soften_controls: The initial condition should have {dims.nh} slacks, got {len(idxs)}!"
             else:
-                assert len(idxs) == dims.nh + dims.nbu, f"i=0: SOFTEN_CONTROLS: The initial condition should have {dims.nh + dims.nbu} slacks, got {len(idxs)}!"
+                assert len(idxs) == dims.nh + dims.nbu, f"i=0: soften_controls: The initial condition should have {dims.nh + dims.nbu} slacks, got {len(idxs)}!"
 
-        # if not SOFTEN_CONTROLS and not SOFTEN_OBSTACLE and SOFTEN_TERMINAL:
+        # if not soften_controls and not soften_obstacle and soften_terminal:
         if i == N:
             # We slack the obstacle constraint and the terminal constraints
             assert len(idxs) == dims.nh_e + dims.nbx_e, f"i=N+1: Everything should be slacked, but got only {len(idxs)} slacks"
 
-def feasible_qp_index_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver: AcadosOcpSolver):
+def feasible_qp_index_test(soften_obstacle, soften_terminal, soften_controls, N, ocp_solver: AcadosOcpSolver):
     """
     The dynamics has four state variables and two control variables
     """
@@ -99,21 +99,21 @@ def feasible_qp_index_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N,
         if i == 0:
             assert np.allclose(idxb, np.arange(dims.nbx_0 + dims.nbu)) , f"We should have {dims.nbx} bounds on x and u, but got {len(idxb)}"
 
-            if not SOFTEN_CONTROLS:
-                assert np.allclose(idxs,np.arange(0)), f"i=0, NOT SOFTEN_CONTROLS: The initial condition should have 0 slacks, got {len(idxs)}!"
+            if not soften_controls:
+                assert np.allclose(idxs,np.arange(0)), f"i=0, NOT soften_controls: The initial condition should have 0 slacks, got {len(idxs)}!"
             else:
-                assert np.allclose(idxs, np.arange(dims.nbu)), f"i=0, SOFTEN_CONTROLS: The initial stage should have slack indices {np.arange(dims.nbu)} slacks, got {idxs})!"
+                assert np.allclose(idxs, np.arange(dims.nbu)), f"i=0, soften_controls: The initial stage should have slack indices {np.arange(dims.nbu)} slacks, got {idxs})!"
 
         if i > 0 and i < N:
             assert np.allclose(idxb, np.arange(dims.nbu)), f"We should have {dims.nbu} indices for bounds on u, but got {len(idxb)}"
 
-            if not SOFTEN_CONTROLS:
-                assert np.allclose(idxs, np.arange(dims.nbx + dims.nbu, dims.nbx + dims.nbu + dims.nh)), f"i=0, NOT SOFTEN_CONTROLS: The initial condition should have {dims.nh} slacks, got {len(idxs)}!"
+            if not soften_controls:
+                assert np.allclose(idxs, np.arange(dims.nbx + dims.nbu, dims.nbx + dims.nbu + dims.nh)), f"i=0, NOT soften_controls: The initial condition should have {dims.nh} slacks, got {len(idxs)}!"
             else:
-                assert np.allclose(idxs, np.arange(dims.nbx + dims.nbu + dims.nh)), f"i=0: SOFTEN_CONTROLS: The initial condition should have {dims.nh + dims.nbu} slacks, got {len(idxs)}!"
+                assert np.allclose(idxs, np.arange(dims.nbx + dims.nbu + dims.nh)), f"i=0: soften_controls: The initial condition should have {dims.nh + dims.nbu} slacks, got {len(idxs)}!"
 
         # TODO: rework here!
-        # if not SOFTEN_CONTROLS and not SOFTEN_OBSTACLE and SOFTEN_TERMINAL:
+        # if not soften_controls and not soften_obstacle and soften_terminal:
         if i == N:
             # We slack the obstacle constraint and the terminal constraints
             assert np.allclose(idxs, np.arange(dims.nh_e + dims.nbx_e)), f"i=N+1: Everything should be slacked"
@@ -148,8 +148,8 @@ def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'):
 
     return solver_options
 
-def create_solver(solver_name: str, SOFTEN_OBSTACLE: bool, SOFTEN_TERMINAL: bool,
-                  SOFTEN_CONTROLS: bool, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP'):
+def create_solver(solver_name: str, soften_obstacle: bool, soften_terminal: bool,
+                  soften_controls: bool, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP'):
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -166,7 +166,6 @@ def create_solver(solver_name: str, SOFTEN_OBSTACLE: bool, SOFTEN_TERMINAL: bool
     # discretization
     Tf = 2
     N = 4
-    shooting_nodes = np.linspace(0, Tf, N+1)
 
     # set cost
     Q = 2*np.diag([])
@@ -191,7 +190,7 @@ def create_solver(solver_name: str, SOFTEN_OBSTACLE: bool, SOFTEN_TERMINAL: bool
     ocp.constraints.idxbu = np.array(range(nu))
 
     # Slack the controls
-    if SOFTEN_CONTROLS:
+    if soften_controls:
         ocp.constraints.idxsbu = np.array(range(nu))
 
     x0 = np.array([1e-1, 1.1, 0, 0])
@@ -203,7 +202,7 @@ def create_solver(solver_name: str, SOFTEN_OBSTACLE: bool, SOFTEN_TERMINAL: bool
     ocp.constraints.lbx_e = x_goal
     ocp.constraints.ubx_e = x_goal
 
-    if SOFTEN_TERMINAL:
+    if soften_terminal:
         ocp.constraints.idxsbx_e = np.array(range(nx))
         ocp.cost.zl_e = 42 * 1e5 * np.ones(nx)
         ocp.cost.zu_e = 42 * 1e5 * np.ones(nx)
@@ -211,7 +210,7 @@ def create_solver(solver_name: str, SOFTEN_OBSTACLE: bool, SOFTEN_TERMINAL: bool
         ocp.cost.Zu_e = 0 * np.ones(nx)
 
     # add cost for slacks
-    if SOFTEN_CONTROLS:
+    if soften_controls:
         ocp.cost.zl = 1e1 * np.ones(nu)
         ocp.cost.zu = 1e1 * np.ones(nu)
         ocp.cost.Zl = 1e1 * np.ones(nu)
@@ -230,7 +229,7 @@ def create_solver(solver_name: str, SOFTEN_OBSTACLE: bool, SOFTEN_TERMINAL: bool
     ocp.model.con_h_expr_e = ocp.model.con_h_expr
 
     # # soften
-    if SOFTEN_OBSTACLE:
+    if soften_obstacle:
         ocp.constraints.idxsh = np.array([0])
         ocp.constraints.idxsh_e = np.array([0])
         Zh = 1e6 * np.ones(1)
@@ -255,8 +254,8 @@ def create_solver(solver_name: str, SOFTEN_OBSTACLE: bool, SOFTEN_TERMINAL: bool
 
     return ocp, ocp_solver
 
-def standard_test(ocp: AcadosOcp, ocp_solver: AcadosOcpSolver, SOFTEN_OBSTACLE: bool,
-                  SOFTEN_TERMINAL: bool, SOFTEN_CONTROLS: bool, PLOT: bool):
+def standard_test(ocp: AcadosOcp, ocp_solver: AcadosOcpSolver, soften_obstacle: bool,
+                  soften_terminal: bool, soften_controls: bool, plot: bool):
     # solve
     status = ocp_solver.solve()
 
@@ -266,8 +265,8 @@ def standard_test(ocp: AcadosOcp, ocp_solver: AcadosOcpSolver, SOFTEN_OBSTACLE: 
     print(f'acados returned status {status}.')
 
     if ocp.solver_options.nlp_solver_type == 'SQP_WITH_FEASIBLE_QP':
-        feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver)
-        feasible_qp_index_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, ocp_solver)
+        feasible_qp_dims_test(soften_obstacle, soften_terminal, soften_controls, N, ocp_solver)
+        feasible_qp_index_test(soften_obstacle, soften_terminal, soften_controls, N, ocp_solver)
 
     # get solution
     sol_X = np.array([ocp_solver.get(i,"x") for i in range(N+1)])
@@ -279,9 +278,9 @@ def standard_test(ocp: AcadosOcp, ocp_solver: AcadosOcpSolver, SOFTEN_OBSTACLE: 
 
     # print summary
     print(f"cost function value = {ocp_solver.get_cost()} after {sqp_iter} SQP iterations")
-    print(f"solved sqp_wfqp problem with settings SOFTEN_OBSTACLE = {SOFTEN_OBSTACLE},SOFTEN_TERMINAL = {SOFTEN_TERMINAL}, SOFTEN_CONTROL = {SOFTEN_CONTROLS}")
+    print(f"solved sqp_wfqp problem with settings soften_obstacle = {soften_obstacle},soften_terminal = {soften_terminal}, SOFTEN_CONTROL = {soften_controls}")
 
-    if PLOT:
+    if plot:
         obs_rad = 1.0; obs_x = 0.0; obs_y = 0.0
         circle = (obs_x, obs_y, obs_rad)
         x_goal = x_goal = np.array([0, -1.1, 0, 0])
@@ -291,16 +290,15 @@ def standard_test(ocp: AcadosOcp, ocp_solver: AcadosOcpSolver, SOFTEN_OBSTACLE: 
 
 def test_same_behavior_sqp_and_sqp_wfqp():
     # # SETTINGS:
-    SOFTEN_CONTROLS = True
-    SOFTEN_OBSTACLE = False
-    SOFTEN_TERMINAL = True
-    PLOT = False
+    soften_controls = True
+    soften_obstacle = False
+    soften_terminal = True
 
     # SQP solver
-    ocp, ocp_solver1 = create_solver("v1", SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, nlp_solver_type='SQP_WITH_FEASIBLE_QP')
+    ocp, ocp_solver1 = create_solver("v1", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type='SQP_WITH_FEASIBLE_QP')
     status1 = ocp_solver1.solve()
 
-    ocp, ocp_solver2 = create_solver("v2", SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, nlp_solver_type='SQP')
+    ocp, ocp_solver2 = create_solver("v2", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type='SQP')
     status2 = ocp_solver2.solve()
 
     assert status1 == status2, "both solvers should converge"
