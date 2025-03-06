@@ -51,29 +51,29 @@ class AcadosOcpBatchSolver():
 
     __ocp_solvers : List[AcadosOcpSolver]
 
-    def __init__(self, ocp: AcadosOcp, N_batch: int, json_file: str = 'acados_ocp.json',  build: bool = True, generate: bool = True, verbose: bool=True):
+    def __init__(self, ocp: AcadosOcp, N_batch_max: int, json_file: str = 'acados_ocp.json',  build: bool = True, generate: bool = True, verbose: bool=True):
 
-        if not isinstance(N_batch, int) or N_batch <= 0:
-            raise Exception("AcadosOcpBatchSolver: argument N_batch should be a positive integer.")
+        if not isinstance(N_batch_max, int) or N_batch_max <= 0:
+            raise Exception("AcadosOcpBatchSolver: argument N_batch_max should be a positive integer.")
 
-        self.__N_batch = N_batch
+        self.__N_batch_max = N_batch_max
         self.__ocp_solvers = [AcadosOcpSolver(ocp,
                                               json_file=json_file,
                                               build=n==0 if build else False,
                                               generate=n==0 if generate else False,
                                               verbose=verbose)
-                               for n in range(self.N_batch)]
+                               for n in range(self.N_batch_max)]
 
         self.__shared_lib = self.ocp_solvers[0].shared_lib
         self.__acados_lib = self.ocp_solvers[0].acados_lib
         self.__name = self.ocp_solvers[0].name
-        self.__ocp_solvers_pointer = (c_void_p * self.N_batch)()
+        self.__ocp_solvers_pointer = (c_void_p * self.N_batch_max)()
 
-        for i in range(self.N_batch):
+        for i in range(self.N_batch_max):
             self.__ocp_solvers_pointer[i] = self.ocp_solvers[i].capsule
 
         # out data for solve
-        self.__status = np.zeros((self.N_batch,), dtype=np.intc, order="C")
+        self.__status = np.zeros((self.N_batch_max,), dtype=np.intc, order="C")
         self.__status_p = cast(self.__status.ctypes.data, POINTER(c_int))
 
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve").argtypes = [POINTER(c_void_p), POINTER(c_int), c_int]
@@ -108,29 +108,31 @@ class AcadosOcpBatchSolver():
 
 
     @property
-    def N_batch(self):
-        """Batch size."""
-        return self.__N_batch
+    def N_batch_max(self):
+        """Maximum batch size."""
+        return self.__N_batch_max
 
 
-    def solve(self):
+    def solve(self, n_batch: int) -> None:
         """
-        Call solve for all `N_batch` solvers.
+        Call solve for the first `n_batch` solvers.
         """
+        self.__check_n_batch(n_batch)
 
-        getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve")(self.__ocp_solvers_pointer, self.__status_p, self.__N_batch)
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve")(self.__ocp_solvers_pointer, self.__status_p, n_batch)
 
         # to be consistent with non-batched solve
         for s, solver in zip(self.__status, self.ocp_solvers):
             solver.status = s
 
 
-    def setup_qp_matrices_and_factorize(self):
+    def setup_qp_matrices_and_factorize(self, n_batch: int) -> None:
         """
-        Call setup_qp_matrices_and_factorize for all `N_batch` solvers.
+        Call setup_qp_matrices_and_factorize for the first `n_batch` solvers.
         """
+        self.__check_n_batch(n_batch)
 
-        getattr(self.__shared_lib, f"{self.__name}_acados_batch_setup_qp_matrices_and_factorize")(self.__ocp_solvers_pointer, self.__status_p, self.__N_batch)
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_setup_qp_matrices_and_factorize")(self.__ocp_solvers_pointer, self.__status_p, n_batch)
 
         # to be consistent with non-batched solve
         for s, solver in zip(self.__status, self.ocp_solvers):
@@ -146,12 +148,12 @@ class AcadosOcpBatchSolver():
         """
         Evaluate the adjoint sensitivity of the solution with respect to the parameters.
             :param seed_x : Sequence of tuples of the form (stage: int, seed_vec: np.ndarray).
-                    The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the states at that stage with shape (N_batch, nx, n_seeds)
+                    The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the states at that stage with shape (n_batch, nx, n_seeds)
             :param seed_u : Sequence of tuples of the form (stage: int, seed_vec: np.ndarray).
-                    The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the controls at that stage with shape (N_batch, nu, n_seeds)
+                    The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the controls at that stage with shape (n_batch, nu, n_seeds)
             :param with_respect_to : string in ["p_global"]
             :param sanity_checks : bool - whether to perform sanity checks, turn off for minimal overhead, default: True
-            :returns : np.ndarray of shape (N_batch, n_seeds, np_global)
+            :returns : np.ndarray of shape (n_batch, n_seeds, np_global)
         """
 
         if seed_x is None:
@@ -174,6 +176,7 @@ class AcadosOcpBatchSolver():
             if not isinstance(s, np.ndarray):
                 raise Exception(f"seed_x[0][1] should be np.ndarray, got {type(s)}")
             n_seeds = seed_x[0][1].shape[2]
+            n_batch = seed_x[0][1].shape[0]
 
         if len(seed_u) > 0:
             if not isinstance(seed_u[0], tuple) or len(seed_u[0]) != 2:
@@ -182,11 +185,14 @@ class AcadosOcpBatchSolver():
             if not isinstance(s, np.ndarray):
                 raise Exception(f"seed_u[0][1] should be np.ndarray, got {type(s)}")
             n_seeds = seed_u[0][1].shape[2]
+            n_batch = seed_u[0][1].shape[0]
+
+        self.__check_n_batch(n_batch)
 
         if sanity_checks:
             N_horizon = self.__ocp_solvers[0].acados_ocp.solver_options.N_horizon
 
-            for n in range(self.N_batch):
+            for n in range(n_batch):
                 self.__ocp_solvers[n]._sanity_check_solution_sensitivities()
 
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(
@@ -201,8 +207,8 @@ class AcadosOcpBatchSolver():
                         raise Exception(f"AcadosOcpBatchSolver.eval_adjoint_solution_sensitivity(): stage {stage} for {name} is not valid.")
                     if not isinstance(seed_stage, np.ndarray):
                         raise Exception(f"{name} for stage {stage} should be np.ndarray, got {type(seed_stage)}")
-                    if seed_stage.shape != (self.N_batch, dim, n_seeds):
-                        raise Exception(f"{name} for stage {stage} should have shape (N_batch, dim, n_seeds) = ({self.N_batch}, {dim}, {n_seeds}), got {seed_stage.shape}.")
+                    if seed_stage.shape != (n_batch, dim, n_seeds):
+                        raise Exception(f"{name} for stage {stage} should have shape (n_batch, dim, n_seeds) = ({n_batch}, {dim}, {n_seeds}), got {seed_stage.shape}.")
 
         if with_respect_to == "p_global":
             field = "p_global".encode('utf-8')
@@ -212,20 +218,20 @@ class AcadosOcpBatchSolver():
 
             # compute jacobian wrt params
             t0 = time.time()
-            getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_params_jac")(self.__ocp_solvers_pointer, self.__N_batch)
+            getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_params_jac")(self.__ocp_solvers_pointer, n_batch)
             self.time_solution_sens_lin = time.time() - t0
 
             t1 = time.time()
 
-            grad_p = np.zeros((self.N_batch, n_seeds, np_global), order="C", dtype=np.float64)
+            grad_p = np.zeros((n_batch, n_seeds, np_global), order="C", dtype=np.float64)
             offset = n_seeds*np_global
 
             for i_seed in range(n_seeds):
                 # set seed:
-                self.reset_sens_out()
+                self.reset_sens_out(n_batch)
 
                 # TODO this could be a batch_set
-                for m in range(self.N_batch):
+                for m in range(n_batch):
                     for (stage, sx) in seed_x:
                         self.ocp_solvers[m].set(stage, 'sens_x', sx[m, :, i_seed])
                     for (stage, su) in seed_u:
@@ -235,7 +241,7 @@ class AcadosOcpBatchSolver():
 
                 # solve adjoint sensitivities
                 getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_solution_sens_adj_p")(
-                    self.__ocp_solvers_pointer, field, 0, c_grad_p, offset, self.__N_batch)
+                    self.__ocp_solvers_pointer, field, 0, c_grad_p, offset, n_batch)
 
             self.time_solution_sens_solve = time.time() - t1
 
@@ -244,19 +250,19 @@ class AcadosOcpBatchSolver():
             raise NotImplementedError(f"with_respect_to {with_respect_to} not implemented.")
 
 
-    def reset_sens_out(self, ):
+    def reset_sens_out(self, n_batch: int) -> None:
         # TODO batch this
-        for n in range(self.N_batch):
+        for n in range(n_batch):
             self.__acados_lib.ocp_nlp_out_set_values_to_zero(self.__ocp_solvers[n].nlp_config, self.__ocp_solvers[n].nlp_dims, self.__ocp_solvers[n].sens_out)
 
 
 
     def set_flat(self, field_: str, value_: np.ndarray) -> None:
         """
-        Set concatenation solver initialization for all `N_batch` solvers.
+        Set concatenation solver initialization for the first `n_batch` solvers.
 
             :param field_: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']
-            :param value_: np.array of shape (N_batch, n_field_total)
+            :param value_: np.array of shape (n_batch, n_field_total)
         """
 
         field = field_.encode('utf-8')
@@ -264,9 +270,12 @@ class AcadosOcpBatchSolver():
             raise Exception(f'AcadosOcpSolver.get_flat(field={field_}): \'{field_}\' is an invalid argument.')
 
         dim = self.ocp_solvers[0].get_dim_flat(field_)
+        n_batch = value_.shape[0]
 
-        if value_.shape != (self.N_batch, dim):
-            raise Exception(f'AcadosOcpBatchSolver.set_flat(field={field_}, value): value has wrong shape, expected ({self.N_batch}, {dim}), got {value_.shape}.')
+        self.__check_n_batch(n_batch)
+
+        if value_.shape != (n_batch, dim):
+            raise Exception(f'AcadosOcpBatchSolver.set_flat(field={field_}, value): value has wrong shape, expected ({n_batch}, {dim}), got {value_.shape}.')
 
         value_ = value_.reshape((-1,), order='C')
         N_data = value_.shape[0]
@@ -274,10 +283,10 @@ class AcadosOcpBatchSolver():
         value_ = value_.astype(float)
         value_data = cast(value_.ctypes.data, POINTER(c_double))
 
-        getattr(self.__shared_lib, f"{self.__name}_acados_batch_set_flat")(self.__ocp_solvers_pointer, field, value_data, N_data, self.__N_batch)
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_set_flat")(self.__ocp_solvers_pointer, field, value_data, N_data, n_batch)
 
 
-    def get_flat(self, field_: str) -> np.ndarray:
+    def get_flat(self, field_: str, n_batch: int) -> np.ndarray:
         """
         Get concatenation of all stages of last solution of the solver.
 
@@ -286,22 +295,23 @@ class AcadosOcpBatchSolver():
         """
         if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']:
             raise Exception(f'AcadosOcpSolver.get_flat(field={field_}): \'{field_}\' is an invalid argument.')
+        self.__check_n_batch(n_batch)
 
         field = field_.encode('utf-8')
 
         dim = self.ocp_solvers[0].get_dim_flat(field_)
 
-        out = np.ascontiguousarray(np.zeros((self.N_batch, dim,)), dtype=np.float64)
+        out = np.ascontiguousarray(np.zeros((n_batch, dim,)), dtype=np.float64)
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
-        getattr(self.__shared_lib, f"{self.__name}_acados_batch_get_flat")(self.__ocp_solvers_pointer, field, out_data, self.N_batch*dim, self.__N_batch)
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_get_flat")(self.__ocp_solvers_pointer, field, out_data, n_batch*dim, n_batch)
 
         return out
 
 
-    def store_iterate_to_flat_obj(self) -> AcadosOcpFlattenedBatchIterate:
+    def store_iterate_to_flat_obj(self, n_batch) -> AcadosOcpFlattenedBatchIterate:
         """
-        Returns the current iterate of the OCP solvers as an AcadosOcpFlattenedBatchIterate.
+        Returns the current iterate of the first `n_batch` OCP solvers as an AcadosOcpFlattenedBatchIterate.
         """
         return AcadosOcpFlattenedBatchIterate(x = self.get_flat("x"),
                                               u = self.get_flat("u"),
@@ -310,16 +320,18 @@ class AcadosOcpBatchSolver():
                                               su = self.get_flat("su"),
                                               pi = self.get_flat("pi"),
                                               lam = self.get_flat("lam"),
-                                              N_batch=self.N_batch)
+                                              N_batch=n_batch)
 
     def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedBatchIterate) -> None:
         """
-        Loads the provided iterate into the OCP solvers.
+        Loads the provided iterate into the first `n_batch` OCP solvers.
+        n_batch is determined by the iterate object.
+
         Note: The iterate object does not contain the the parameters.
         """
+        n_batch = iterate.N_batch
 
-        if self.N_batch != iterate.N_batch:
-            raise Exception(f"Wrong batch dimension. Expected {self.N_batch}, got {iterate.N_batch}")
+        self.__check_n_batch(n_batch)
 
         self.set_flat("x", iterate.x)
         self.set_flat("u", iterate.u)
@@ -328,3 +340,7 @@ class AcadosOcpBatchSolver():
         self.set_flat("su", iterate.su)
         self.set_flat("pi", iterate.pi)
         self.set_flat("lam", iterate.lam)
+
+    def __check_n_batch(self, n_batch: int) -> None:
+        if n_batch > self.N_batch_max:
+            raise Exception(f"AcadosOcpBatchSolver: n_batch {n_batch} is larger than N_batch_max {self.N_batch_max}.")
