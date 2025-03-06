@@ -152,8 +152,8 @@ def main_batch(Xinit, simU, tol, num_threads_in_batch_solve=1):
     U_batch = batch_solver.get_flat("u")
 
     for n in range(N_batch):
-        if not np.linalg.norm(U_batch[n, :ocp.dims.nu] -simU[n]) < tol*10:
-            raise Exception(f"solution should match sequential call up to {tol*10} got error {np.linalg.norm(u-simU[n])} for {n}th batch solve")
+        if not np.linalg.norm(U_batch[n, :ocp.dims.nu] - simU[n]) < tol*10:
+            raise Exception(f"solution should match sequential call up to {tol*10} got error {np.linalg.norm(U_batch[n, :ocp.dims.nu] - simU[n])} for {n}th batch solve")
 
 
 if __name__ == "__main__":
