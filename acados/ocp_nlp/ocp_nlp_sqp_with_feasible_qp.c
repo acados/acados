@@ -1743,6 +1743,40 @@ void ocp_nlp_sqp_wfqp_memory_reset_qp_solver(void *config_, void *dims_, void *n
 }
 
 
+int ocp_nlp_sqp_wfqp_setup_qp_matrices_and_factorize(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
+    void *opts_, void *mem_, void *work_)
+{
+    ocp_nlp_sqp_wfqp_opts *opts = opts_;
+    ocp_nlp_sqp_wfqp_memory *mem = mem_;
+    ocp_nlp_sqp_wfqp_workspace *work = work_;
+
+    return ocp_nlp_common_setup_qp_matrices_and_factorize(config_, dims_, nlp_in_, nlp_out_, opts->nlp_opts, mem->nlp_mem, work->nlp_work);
+}
+
+
+void ocp_nlp_sqp_wfqp_eval_kkt_residual(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
+    void *opts_, void *mem_, void *work_)
+{
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_wfqp_opts *opts = opts_;
+    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
+    ocp_nlp_sqp_wfqp_memory *mem = mem_;
+    ocp_nlp_in *nlp_in = nlp_in_;
+    ocp_nlp_out *nlp_out = nlp_out_;
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_nlp_sqp_wfqp_workspace *work = work_;
+    ocp_nlp_workspace *nlp_work = work->nlp_work;
+
+    ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+    ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+    ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+    ocp_nlp_res_compute(dims, nlp_opts, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem, nlp_work);
+}
+
+
+
+
 /*
 Computes indices of constraints in NLP that were not slacked by the user. Excludes
 bounds on controls (u)
@@ -1876,6 +1910,21 @@ void ocp_nlp_sqp_wfqp_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_
     return;
 }
 
+void ocp_nlp_sqp_wfqp_eval_solution_sens_adj_p(void *config_, void *dims_,
+    void *opts_, void *mem_, void *work_, void *sens_nlp_out,
+    const char *field, int stage, void *grad_p)
+{
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_wfqp_opts *opts = opts_;
+    ocp_nlp_sqp_wfqp_memory *mem = mem_;
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_nlp_sqp_wfqp_workspace *work = work_;
+    ocp_nlp_workspace *nlp_work = work->nlp_work;
+    ocp_nlp_common_eval_solution_sens_adj_p(config, dims,
+        opts->nlp_opts, nlp_mem, nlp_work,
+        sens_nlp_out, field, stage, grad_p);
+}
 
 
 void ocp_nlp_sqp_wfqp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_)
@@ -1999,9 +2048,11 @@ void ocp_nlp_sqp_wfqp_config_initialize_default(void *config_)
     config->memory_assign = &ocp_nlp_sqp_wfqp_memory_assign;
     config->workspace_calculate_size = &ocp_nlp_sqp_wfqp_workspace_calculate_size;
     config->evaluate = &ocp_nlp_sqp_wfqp;
+    config->setup_qp_matrices_and_factorize = &ocp_nlp_sqp_wfqp_setup_qp_matrices_and_factorize;
     config->memory_reset_qp_solver = &ocp_nlp_sqp_wfqp_memory_reset_qp_solver;
     config->eval_param_sens = &ocp_nlp_sqp_wfqp_eval_param_sens;
     config->eval_lagr_grad_p = &ocp_nlp_sqp_wfqp_eval_lagr_grad_p;
+    config->eval_solution_sens_adj_p = &ocp_nlp_sqp_eval_solution_sens_adj_p;
     config->config_initialize_default = &ocp_nlp_sqp_wfqp_config_initialize_default;
     config->precompute = &ocp_nlp_sqp_wfqp_precompute;
     config->get = &ocp_nlp_sqp_wfqp_get;
@@ -2010,6 +2061,7 @@ void ocp_nlp_sqp_wfqp_config_initialize_default(void *config_)
     config->terminate = &ocp_nlp_sqp_wfqp_terminate;
     config->step_update = &ocp_nlp_update_variables_sqp;
     config->is_real_time_algorithm = &ocp_nlp_sqp_wfqp_is_real_time_algorithm;
+    config->eval_kkt_residual = &ocp_nlp_sqp_wfqp_eval_kkt_residual;
 
     return;
 }
