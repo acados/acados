@@ -106,7 +106,13 @@ typedef enum
   ZERO,
 } ocp_nlp_timeout_heuristic_t;
 
-
+// Types of modes for calculating the search direction in SQP_WITH_FEASIBLE_QP
+enum search_direction_mode
+{
+    NOMINAL_QP = 0,
+    BYRD_OMOJOKUN = 1,
+    FEASIBILITY_QP = 2,
+};
 
 #ifdef __cplusplus
 } /* extern "C" */

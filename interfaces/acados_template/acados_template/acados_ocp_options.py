@@ -94,7 +94,7 @@ class AcadosOcpOptions:
         self.__exact_hess_constr = 1
         self.__eval_residual_at_max_iter = None
         self.__use_constraint_hessian_in_feas_qp = False
-        self.__search_direction_mode = 0
+        self.__search_direction_mode = 'NOMINAL_QP'
         self.__allow_direction_mode_switch_to_nominal = True
         self.__fixed_hess = 0
         self.__globalization_funnel_init_increase_factor = 15.0
@@ -915,14 +915,14 @@ class AcadosOcpOptions:
         """
         Determines how the search direction should be calculated in the initial
         iteration
-        Type: bool
+        Type: string
 
-        This option is set with strings instead of int! Possible entries are
+        Possible entries are
         NOMINAL_QP, BYRD_OMOJOKUN, FEASIBILITY_QP
 
-        Type: int
-        Default: 0 (NOMINAL_QP)
-        Other options: 1 (BYRD_OMOJOKUN), 2 (FEASIBILITY_QP)
+        Type: string
+        Default: NOMINAL_QP
+        Other options: BYRD_OMOJOKUN, FEASIBILITY_QP
         """
         return self.__search_direction_mode
 
@@ -1441,15 +1441,12 @@ class AcadosOcpOptions:
 
     @search_direction_mode.setter
     def search_direction_mode(self, search_direction_mode):
+        modes = ('NOMINAL_QP', 'BYRD_OMOJOKUN', 'FEASIBILITY_QP')
         if isinstance(search_direction_mode, str):
-            if search_direction_mode == 'NOMINAL_QP':
-                self.__search_direction_mode = 0
-            elif search_direction_mode == 'BYRD_OMOJOKUN':
-                self.__search_direction_mode = 1
-            elif search_direction_mode == 'FEASIBILITY_QP':
-                self.__search_direction_mode = 2
+            if search_direction_mode in modes:
+                self.__search_direction_mode = search_direction_mode
             else:
-                Exception(f'Invalid string for search_direction_mode. Should be NOMINAL_QP, BYRD_OMOJOKUN, FEASIBILITY_QP, got {search_direction_mode}')
+                Exception(f'Invalid string for search_direction_mode. Possible modes are'+', '.join(modes) +  f', got {search_direction_mode}')
         else:
             raise Exception(f'Invalid datatype for search_direction_mode. Should be str, got {type(search_direction_mode)}')
 

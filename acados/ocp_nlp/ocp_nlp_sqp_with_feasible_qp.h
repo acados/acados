@@ -47,14 +47,6 @@ extern "C" {
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/utils/types.h"
 
-// enum of return values
-enum search_direction_mode
-{
-    NOMINAL_QP = 0,
-    BYRD_OMOJOKUN = 1,
-    FEASIBILITY_QP = 2,
-};
-
 /************************************************
  * options
  ************************************************/
@@ -75,11 +67,11 @@ typedef struct
     bool warm_start_first_qp_from_nlp;
     bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
 
-    bool use_exact_hessian_in_feas_qp; // Either use exact Hessian or identity matrix in feasibility QP
+    bool use_constraint_hessian_in_feas_qp; // Either use exact Hessian or identity matrix in feasibility QP
     bool use_QP_l1_inf_from_slacks; // True: sums up the slack variable values from qp_out; False: compute manually; Should give the same result.
     int search_direction_mode; // determines how the QPs should be solved
     int watchdog_zero_slacks_max; // number of consecutive BYRD_OMOJOKUN iterations with zero slacks before switching back to NOMINAL_QP
-    bool allow_direction_mode_switch; // if true, mode can switch from Byrd-Omojokun to nominal mode
+    bool allow_direction_mode_switch_to_nominal; // if true, mode can switch from Byrd-Omojokun to nominal mode
 } ocp_nlp_sqp_wfqp_opts;
 
 

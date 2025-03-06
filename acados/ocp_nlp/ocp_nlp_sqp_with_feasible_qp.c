@@ -121,10 +121,10 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
     opts->eval_residual_at_max_iter = true;
     opts->use_QP_l1_inf_from_slacks = false; // if manual calculation used, results seem more accurate and solver performs better!
 
-    opts->use_exact_hessian_in_feas_qp = false;
+    opts->use_constraint_hessian_in_feas_qp = false;
     opts->search_direction_mode = NOMINAL_QP;
     opts->watchdog_zero_slacks_max = 2;
-    opts->allow_direction_mode_switch = true;
+    opts->allow_direction_mode_switch_to_nominal = true;
 
     // overwrite default submodules opts
     // qp tolerance
@@ -235,20 +235,20 @@ void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, vo
             bool* eval_residual_at_max_iter = (bool *) value;
             opts->eval_residual_at_max_iter = *eval_residual_at_max_iter;
         }
-        else if (!strcmp(field, "use_exact_hessian_in_feas_qp"))
+        else if (!strcmp(field, "use_constraint_hessian_in_feas_qp"))
         {
-            bool* use_exact_hessian_in_feas_qp = (bool *) value;
-            opts->use_exact_hessian_in_feas_qp = *use_exact_hessian_in_feas_qp;
+            bool* use_constraint_hessian_in_feas_qp = (bool *) value;
+            opts->use_constraint_hessian_in_feas_qp = *use_constraint_hessian_in_feas_qp;
         }
         else if (!strcmp(field, "search_direction_mode"))
         {
             bool* search_direction_mode = (bool *) value;
             opts->search_direction_mode = *search_direction_mode;
         }
-        else if (!strcmp(field, "allow_direction_mode_switch"))
+        else if (!strcmp(field, "allow_direction_mode_switch_to_nominal"))
         {
-            bool* allow_direction_mode_switch = (bool *) value;
-            opts->allow_direction_mode_switch = *allow_direction_mode_switch;
+            bool* allow_direction_mode_switch_to_nominal = (bool *) value;
+            opts->allow_direction_mode_switch_to_nominal = *allow_direction_mode_switch_to_nominal;
         }
         else
         {
@@ -1068,7 +1068,7 @@ static void initial_setup_feasibility_qp_objective(ocp_nlp_config *config,
         nxu = nx[i]+nu[i];
 
         blasfeo_dgese(nxu, nxu, 0.0, relaxed_qp_in->RSQrq+i, 0, 0);
-        if (!opts->use_exact_hessian_in_feas_qp)
+        if (!opts->use_constraint_hessian_in_feas_qp)
         {
             // We use the identity matrix Hessian
             blasfeo_ddiare(nxu, 1e-4, relaxed_qp_in->RSQrq+i, 0, 0);
@@ -1114,7 +1114,7 @@ static void setup_hessian_matrices_for_qps(ocp_nlp_config *config,
         // hess_QP = objective_multiplier * hess_cost + hess_constraints
         nxu = nx[i]+nu[i];
 
-        if (opts->use_exact_hessian_in_feas_qp)
+        if (opts->use_constraint_hessian_in_feas_qp)
         {
             // Either we use the exact objective Hessian
             blasfeo_dgecp(nxu, nxu, mem->RSQ_constr+i, 0, 0, relaxed_qp_in->RSQrq+i, 0, 0);
@@ -1451,7 +1451,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
             mem->watchdog_zero_slacks_counter += 1;
         }
 
-        if (opts->allow_direction_mode_switch && mem->watchdog_zero_slacks_counter == opts->watchdog_zero_slacks_max)
+        if (opts->allow_direction_mode_switch_to_nominal && mem->watchdog_zero_slacks_counter == opts->watchdog_zero_slacks_max)
         {
             mem->watchdog_zero_slacks_counter = 0;
             mem->search_direction_mode = NOMINAL_QP;
