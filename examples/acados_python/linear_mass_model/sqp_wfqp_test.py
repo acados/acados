@@ -65,7 +65,7 @@ def feasible_qp_dims_test(SOFTEN_OBSTACLE, SOFTEN_TERMINAL, SOFTEN_CONTROLS, N, 
 
         # Initial stage
         if i == 0:
-            assert len(idxb) == dims.nbu + dims.nbx_0, f"We should have {dims.nbu+dims.nbx} indices for bounds on x and u, but got {len(idxb)}"
+            assert len(idxb) == dims.nbu + dims.nbx_0, f"We should have {dims.nbu+dims.nbx} indices for bounds on x and u at stage {i}, but got {len(idxb)}"
 
             if not SOFTEN_CONTROLS:
                 assert len(idxs) == 0, f"i=0, NOT SOFTEN_CONTROLS: The initial condition should have 0 slacks, got {len(idxs)}!"
@@ -274,6 +274,8 @@ def standard_test(ocp: AcadosOcp, ocp_solver: AcadosOcpSolver, SOFTEN_OBSTACLE: 
     sol_U = np.array([ocp_solver.get(i,"u") for i in range(N)])
     pi_multiplier = [ocp_solver.get(i, "pi") for i in range(N)]
 
+    qp = ocp_solver.get_last_qp()
+    relaxed_qp = ocp_solver.get_last_relaxed_qp()
 
     # print summary
     print(f"cost function value = {ocp_solver.get_cost()} after {sqp_iter} SQP iterations")
