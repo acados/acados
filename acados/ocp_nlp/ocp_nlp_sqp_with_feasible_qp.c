@@ -1436,17 +1436,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
         // if the second QP is feasible, we change back to nominal QP mode.
         // Maybe we want some kind of watchdog, if for two consecutive QPs this holds
         // then we switch back
-        search_direction_status = byrd_omojokun_direction_computation(dims,
-                                                                    config,
-                                                                    opts,
-                                                                    nlp_opts,
-                                                                    nlp_in,
-                                                                    nlp_out,
-                                                                    mem,
-                                                                    work,
-                                                                    sqp_iter,
-                                                                    timer0,
-                                                                    timer1);
+        search_direction_status = byrd_omojokun_direction_computation(dims, config, opts, nlp_opts, nlp_in, nlp_out, mem, work, sqp_iter, timer0, timer1);
         if (solved_nominal_before)
         {
             mem->search_direction_type = "NFN";
@@ -1662,17 +1652,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         /* Search Direction Computation */
-        search_direction_status = calculate_search_direction(dims,
-                                                            config,
-                                                            opts,
-                                                            nlp_opts,
-                                                            nlp_in,
-                                                            nlp_out,
-                                                            mem,
-                                                            work,
-                                                            sqp_iter,
-                                                            timer0,
-                                                            timer1);
+        search_direction_status = calculate_search_direction(dims, config, opts, nlp_opts, nlp_in, nlp_out, mem, work, sqp_iter, timer0, timer1);
         if (search_direction_status != ACADOS_SUCCESS)
         {
             return nlp_mem->status;
