@@ -33,7 +33,7 @@
 /// @{
 /// \addtogroup ocp_nlp_solver
 /// @{
-/// \addtogroup ocp_nlp_sqp ocp_nlp_sqp
+/// \addtogroup ocp_nlp_sqp_wfqp ocp_nlp_sqp_wfqp
 /// @{
 
 #ifndef ACADOS_OCP_NLP_OCP_NLP_SQP_WITH_FEASIBLE_QP_H_
