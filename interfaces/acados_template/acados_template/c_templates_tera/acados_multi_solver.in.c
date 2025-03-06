@@ -2729,7 +2729,7 @@ int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver
     fun->casadi_fun((const double **) fun->args, fun->res, fun->int_work, fun->float_work, NULL);
 
 {%- else %}
-    printf("No global_data, {{ name }}_acados_set_p_global_and_precompute_dependencies does nothing.\n");
+    // printf("No global_data, {{ name }}_acados_set_p_global_and_precompute_dependencies does nothing.\n");
 {%- endif %}
     return 0;
 }
