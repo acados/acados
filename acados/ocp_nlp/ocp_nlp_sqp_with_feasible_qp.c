@@ -2052,7 +2052,7 @@ void ocp_nlp_sqp_wfqp_config_initialize_default(void *config_)
     config->memory_reset_qp_solver = &ocp_nlp_sqp_wfqp_memory_reset_qp_solver;
     config->eval_param_sens = &ocp_nlp_sqp_wfqp_eval_param_sens;
     config->eval_lagr_grad_p = &ocp_nlp_sqp_wfqp_eval_lagr_grad_p;
-    config->eval_solution_sens_adj_p = &ocp_nlp_sqp_eval_solution_sens_adj_p;
+    config->eval_solution_sens_adj_p = &ocp_nlp_sqp_wfqp_eval_solution_sens_adj_p;
     config->config_initialize_default = &ocp_nlp_sqp_wfqp_config_initialize_default;
     config->precompute = &ocp_nlp_sqp_wfqp_precompute;
     config->get = &ocp_nlp_sqp_wfqp_get;
