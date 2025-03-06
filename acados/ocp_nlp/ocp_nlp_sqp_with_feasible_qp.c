@@ -1399,10 +1399,8 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
 
     if (mem->search_direction_mode == NOMINAL_QP)
     {
-        // if the QP can be solved and the status is good, we
-        // return 0
-        // otherwise, we change the mode to Byrd-Omojokun and we continue
-        // below!
+        // if the QP can be solved and the status is good, we return 0
+        // otherwise, we change the mode to Byrd-Omojokun and we continue.
         search_direction_status = prepare_and_solve_QP(config, opts, nlp_mem->qp_in, nlp_mem->qp_out,
                                                        dims, mem, nlp_in, nlp_out, nlp_mem, work->nlp_work,
                                                        sqp_iter, false, timer0, timer1);
