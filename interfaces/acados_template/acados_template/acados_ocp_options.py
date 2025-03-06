@@ -93,9 +93,9 @@ class AcadosOcpOptions:
         self.__exact_hess_dyn = 1
         self.__exact_hess_constr = 1
         self.__eval_residual_at_max_iter = None
-        self.__use_exact_hessian_in_feas_qp = False
+        self.__use_constraint_hessian_in_feas_qp = False
         self.__search_direction_mode = 0
-        self.__allow_direction_mode_switch = True
+        self.__allow_direction_mode_switch_to_nominal = True
         self.__fixed_hess = 0
         self.__globalization_funnel_init_increase_factor = 15.0
         self.__globalization_funnel_init_upper_bound = 1.0
@@ -901,20 +901,21 @@ class AcadosOcpOptions:
         return self.__eval_residual_at_max_iter
 
     @property
-    def use_exact_hessian_in_feas_qp(self):
+    def use_constraint_hessian_in_feas_qp(self):
         """
-        Determines if exact Hessian of the constraints or identity Hessian is
-        used in the feasibility QP of `SQP_WITH_FEASIBLE_QP`
+        Determines if exact/approximate Hessian of the constraints or the identity
+        matrix is used as Hessian in the feasibility QP of `SQP_WITH_FEASIBLE_QP`
 
-        Type: bool
         Default: False
         """
-        return self.__use_exact_hessian_in_feas_qp
+        return self.__use_constraint_hessian_in_feas_qp
 
     @property
     def search_direction_mode(self):
         """
-        Determines how the search direction should be solved in the initial iteration.
+        Determines how the search direction should be calculated in the initial
+        iteration
+        Type: bool
 
         This option is set with strings instead of int! Possible entries are
         NOMINAL_QP, BYRD_OMOJOKUN, FEASIBILITY_QP
@@ -926,14 +927,15 @@ class AcadosOcpOptions:
         return self.__search_direction_mode
 
     @property
-    def allow_direction_mode_switch(self):
+    def allow_direction_mode_switch_to_nominal(self):
         """
-        Do we allow switching back from BYRD_OMOJOKUN to NOMINAL_QP?
+        Indicated if we allow switching back from BYRD_OMOJOKUN to NOMINAL_QP
+        search direction mode?
 
         Type: bool
         Default: True
         """
-        return self.__allow_direction_mode_switch
+        return self.__allow_direction_mode_switch_to_nominal
 
     @property
     def globalization_funnel_initial_penalty_parameter(self):
@@ -1430,12 +1432,12 @@ class AcadosOcpOptions:
         else:
             raise Exception(f'Invalid datatype for eval_residual_at_max_iter. Should be bool, got {type(eval_residual_at_max_iter)}')
 
-    @use_exact_hessian_in_feas_qp.setter
-    def use_exact_hessian_in_feas_qp(self, use_exact_hessian_in_feas_qp):
-        if isinstance(use_exact_hessian_in_feas_qp, bool):
-            self.__use_exact_hessian_in_feas_qp = use_exact_hessian_in_feas_qp
+    @use_constraint_hessian_in_feas_qp.setter
+    def use_constraint_hessian_in_feas_qp(self, use_constraint_hessian_in_feas_qp):
+        if isinstance(use_constraint_hessian_in_feas_qp, bool):
+            self.__use_constraint_hessian_in_feas_qp = use_constraint_hessian_in_feas_qp
         else:
-            raise Exception(f'Invalid datatype for use_exact_hessian_in_feas_qp. Should be bool, got {type(use_exact_hessian_in_feas_qp)}')
+            raise Exception(f'Invalid datatype for use_constraint_hessian_in_feas_qp. Should be bool, got {type(use_constraint_hessian_in_feas_qp)}')
 
     @search_direction_mode.setter
     def search_direction_mode(self, search_direction_mode):
@@ -1451,12 +1453,12 @@ class AcadosOcpOptions:
         else:
             raise Exception(f'Invalid datatype for search_direction_mode. Should be str, got {type(search_direction_mode)}')
 
-    @allow_direction_mode_switch.setter
-    def allow_direction_mode_switch(self, allow_direction_mode_switch):
-        if isinstance(allow_direction_mode_switch, bool):
-            self.__allow_direction_mode_switch = allow_direction_mode_switch
+    @allow_direction_mode_switch_to_nominal.setter
+    def allow_direction_mode_switch_to_nominal(self, allow_direction_mode_switch_to_nominal):
+        if isinstance(allow_direction_mode_switch_to_nominal, bool):
+            self.__allow_direction_mode_switch_to_nominal = allow_direction_mode_switch_to_nominal
         else:
-            raise Exception(f'Invalid datatype for allow_direction_mode_switch. Should be str, got {type(allow_direction_mode_switch)}')
+            raise Exception(f'Invalid datatype for allow_direction_mode_switch_to_nominal. Should be str, got {type(allow_direction_mode_switch_to_nominal)}')
 
     @globalization_eps_sufficient_descent.setter
     def globalization_eps_sufficient_descent(self, globalization_eps_sufficient_descent):
