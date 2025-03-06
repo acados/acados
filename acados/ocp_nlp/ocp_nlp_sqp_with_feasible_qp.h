@@ -76,7 +76,7 @@ typedef struct
     bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
 
     bool use_exact_hessian_in_feas_qp; // Either use exact Hessian or identity matrix in feasibility QP
-    bool use_QP_l1_inf_from_slacks; // Sums up the slack variable values in the QPs as l1_inf
+    bool use_QP_l1_inf_from_slacks; // True: sums up the slack variable values from qp_out; False: compute manually; Should give the same result.
     int search_direction_mode; // determines how the QPs should be solved
     int watchdog_zero_slacks_max; // number of consecutive BYRD_OMOJOKUN iterations with zero slacks before switching back to NOMINAL_QP
     bool allow_direction_mode_switch; // if true, mode can switch from Byrd-Omojokun to nominal mode

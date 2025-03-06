@@ -856,11 +856,11 @@ static double calculate_qp_l1_infeasibility_manually(ocp_nlp_dims *dims, ocp_nlp
 static double calculate_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *mem,
                                             ocp_nlp_sqp_wfqp_workspace *work, ocp_nlp_sqp_wfqp_opts* opts,
                                             ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-                                            bool use_slacks)
+                                            bool use_QP_l1_inf_from_slacks)
 {
     double l1_inf = 0.0;
     // this is only possible if directly after a QP was solved
-    if (use_slacks)
+    if (use_QP_l1_inf_from_slacks)
     {
         // seems to be inaccurate. Results are worse!
         l1_inf = calculate_qp_l1_infeasibility_from_slacks(dims, mem, opts, qp_out);
@@ -1083,7 +1083,7 @@ static void initial_setup_feasibility_qp_objective(ocp_nlp_config *config,
         }
 
         // Z -- slack matrix
-        //TODO: add the diagonal entry here as well for the slack variables?
+        // TODO: add the diagonal entry here as well for the slack variables?
         blasfeo_dveccpsc(ns[i], 0.0, mem->Z_cost_module+i, 0, relaxed_qp_in->Z+i, 0);
         blasfeo_dveccpsc(ns[i], 0.0, mem->Z_cost_module+i, 0, relaxed_qp_in->Z+i, ns[i]+mem->nns[i]);
 
@@ -1091,7 +1091,6 @@ static void initial_setup_feasibility_qp_objective(ocp_nlp_config *config,
         // g
         blasfeo_dveccpsc(nx[i]+nu[i]+ns[i], 0.0, nlp_mem->cost_grad + i, 0, relaxed_qp_in->rqz + i, 0);
         blasfeo_dveccpsc(ns[i], 0.0, nlp_mem->cost_grad + i, nx[i]+nu[i]+ns[i], relaxed_qp_in->rqz + i, nx[i]+nu[i]+ns[i]+nns[i]);
-
     }
 }
 
