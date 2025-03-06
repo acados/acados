@@ -1274,7 +1274,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     // qp solver
     qp_solver->opts_initialize_default(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
-    // relaxed qp solver --> we do not do this, since we use the same opts object!
+    // relaxed qp solver: use the same opts object as qp solver
 
     // regularization
     regularize->opts_initialize_default(regularize, dims->regularize, opts->regularize);
