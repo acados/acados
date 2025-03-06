@@ -118,13 +118,13 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
     opts->tol_min_step_norm = 1e-12;
 
     opts->warm_start_first_qp = false;
-    opts->eval_residual_at_max_iter = true; // we want to know in last iteration if we converged
+    opts->eval_residual_at_max_iter = true;
     opts->use_QP_l1_inf_from_slacks = false; // if manual calculation used, results seem more accurate and solver performs better!
 
     opts->use_exact_hessian_in_feas_qp = false;
     opts->search_direction_mode = NOMINAL_QP;
-    opts->watchdog_zero_slacks_max = 2; // n of consecutive BYRD_OMOJOKUN iterations with zero slacks before switching back to NOMINAL_QP
-    opts->allow_direction_mode_switch = true; // allows switching from BYRD_OMOJOKUN to NOMINAL_QP
+    opts->watchdog_zero_slacks_max = 2;
+    opts->allow_direction_mode_switch = true;
 
     // overwrite default submodules opts
     // qp tolerance
