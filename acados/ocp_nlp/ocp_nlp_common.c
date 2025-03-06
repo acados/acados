@@ -2369,7 +2369,6 @@ double ocp_nlp_compute_gradient_directional_derivative(ocp_nlp_dims *dims, ocp_q
         dir_der += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
 
         // Calculate gradient of slacks
-        // we need to extract the gradient of the
         dir_der += blasfeo_ddot(2 * ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
     }
     return dir_der;
@@ -2727,7 +2726,6 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
 #endif
     for (int i = 0; i <= N; i++)
     {
-        // TODO: first compute cost hessian (without adding) and avoid setting everything to zero?
         // init Hessian to 0
         if (mem->compute_hess)
         {
