@@ -231,6 +231,11 @@ void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, vo
             bool* warm_start_first_qp = (bool *) value;
             opts->warm_start_first_qp = *warm_start_first_qp;
         }
+        else if (!strcmp(field, "warm_start_first_qp_from_nlp"))
+        {
+            bool* warm_start_first_qp_from_nlp = (bool *) value;
+            opts->warm_start_first_qp_from_nlp = *warm_start_first_qp_from_nlp;
+        }
         else if (!strcmp(field, "eval_residual_at_max_iter"))
         {
             bool* eval_residual_at_max_iter = (bool *) value;
@@ -1143,11 +1148,21 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
     int qp_status = ACADOS_SUCCESS;
 
-    // (typically) no warm start at first iteration
-    if (sqp_iter == 0 && !opts->warm_start_first_qp)
+    // warm start of first QP
+    if (sqp_iter == 0)
     {
-        int tmp_int = 0;
-        qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
+        if (!opts->warm_start_first_qp)
+        {
+            // (typically) no warm start at first iteration
+            int tmp_int = 0;
+            qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
+        }
+        else if (opts->warm_start_first_qp_from_nlp)
+        {
+            int tmp_bool = true;
+            qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "initialize_next_xcond_qp_from_qp_out", &tmp_bool);
+            ocp_nlp_initialize_qp_from_nlp(config, dims, qp_in, nlp_out, qp_out);
+        }
     }
 
     ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter);

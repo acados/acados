@@ -62,16 +62,17 @@ enum search_direction_mode
 typedef struct
 {
     ocp_nlp_opts *nlp_opts;
-    double tol_stat;     // exit tolerance on stationarity condition
-    double tol_eq;       // exit tolerance on equality constraints
-    double tol_ineq;     // exit tolerance on inequality constraints
-    double tol_comp;     // exit tolerance on complementarity condition
+    double tol_stat;
+    double tol_eq;
+    double tol_ineq;
+    double tol_comp;
     double tol_unbounded; // exit threshold when objective function seems to be unbounded
     double tol_min_step_norm; // exit tolerance for small step
     int max_iter;
     int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
     int log_primal_step_norm; // compute and log the max norm of the primal steps
-    bool warm_start_first_qp; // to set qp_warm_start in first iteration
+    bool warm_start_first_qp;
+    bool warm_start_first_qp_from_nlp;
     bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
 
     bool use_exact_hessian_in_feas_qp; // Either use exact Hessian or identity matrix in feasibility QP
