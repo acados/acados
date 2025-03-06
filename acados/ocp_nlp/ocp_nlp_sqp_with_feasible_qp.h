@@ -71,7 +71,6 @@ typedef struct
     int max_iter;
     int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
     int log_primal_step_norm; // compute and log the max norm of the primal steps
-    int qp_warm_start;   // qp_warm_start in all but the first sqp iterations
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
     bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
 

@@ -117,7 +117,6 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
     opts->tol_unbounded = -1e10;
     opts->tol_min_step_norm = 1e-12;
 
-    opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
     opts->eval_residual_at_max_iter = true; // we want to know in last iteration if we converged
     opts->use_QP_l1_inf_from_slacks = false; // if manual calculation used, results seem more accurate and solver performs better!
@@ -1184,7 +1183,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     // restore default warm start
     if (sqp_iter==0)
     {
-        qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &opts->qp_warm_start);
+        qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &nlp_opts->qp_warm_start);
     }
 
     if (nlp_opts->print_level > 3)
