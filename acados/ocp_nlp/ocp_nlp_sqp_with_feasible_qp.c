@@ -1708,13 +1708,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return nlp_mem->status;
         }
 
-        // The solver anyway terminates if a QP was not solved correctly at this point
-        // if (sqp_iter+1 < mem->stat_m)
-        // {
-        //     mem->stat[mem->stat_n*(sqp_iter+1)+4] = qp_status;
-        //     mem->stat[mem->stat_n*(sqp_iter+1)+5] = qp_iter;
-        // }
-
         // Compute the step norm
         if (opts->tol_min_step_norm > 0.0 || nlp_opts->log_primal_step_norm)
         {
