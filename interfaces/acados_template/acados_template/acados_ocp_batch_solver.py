@@ -42,8 +42,8 @@ class AcadosOcpBatchSolver():
     Batch OCP solver for parallel solves.
 
         :param ocp: type :py:class:`~acados_template.acados_ocp.AcadosOcp`
-        :param N_batch: batch size, positive integer
         :param num_threads_in_batch_solve: number of threads used for parallelizing the batch methods. Default: 1
+        :param N_batch_max: batch size, positive integer
         :param json_file: Default: 'acados_ocp.json'
         :param build: Flag indicating whether solver should be (re)compiled. If False an attempt is made to load an already compiled shared library for the solver. Default: True
         :param generate: Flag indicating whether problem functions should be code generated. Default: True
