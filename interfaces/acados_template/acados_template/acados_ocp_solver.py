@@ -1126,9 +1126,8 @@ class AcadosOcpSolver:
         elif self.__solver_options['nlp_solver_type'] == 'DDP':
             for jj in range(stat.shape[1]):
                 if jj % 10 == 0:
-                    # print('\niter\tres_stat\tres_eq\t\tqp_stat\tqp_iter\talpha')
-                    print(("{iter:>6} | {obj:^10} | {inf:^10} | {stat:^10} | "
-                   "{alpha:^10} | {gamma:^10} | {qp_status:^10} | {qp_iter:^10}").format(
+                    print(("{iter:>6} | {obj:>10} | {inf:>10} | {stat:>10} | "
+                   "{alpha:>10} | {gamma:>10} | {qp_status:>10} | {qp_iter:>10}").format(
                         obj='objective',
                         iter='iter.',
                         inf='res_eq',
@@ -1137,9 +1136,8 @@ class AcadosOcpSolver:
                         gamma='LM_reg.',
                         qp_status='qp_status',
                         qp_iter='qp_iter.'))
-                # print(f'{int(stat[0][jj]):d}\t{stat[1][jj]:e}\t{stat[2][jj]:e}\t{int(stat[5][jj]):d}\t{int(stat[6][jj]):d}\t{stat[7][jj]:e}\t')
-                print(("{iter:>6} | {obj:^10.4e} | {inf:^10.4e} | {stat:^10.4e} | "
-                   "{alpha:^10.4e} | {gamma:^10.4e} | {qp_status:^10} | {qp_iter:^10}").format(
+                print(("{iter:>6} | {obj:>10.4e} | {inf:>10.4e} | {stat:>10.4e} | "
+                   "{alpha:>10.4e} | {gamma:>10.4e} | {qp_status:>10} | {qp_iter:>10}").format(
                      iter=int(stat[0][jj]),
                      stat=stat[1][jj],
                      inf=stat[2][jj],
@@ -1150,32 +1148,27 @@ class AcadosOcpSolver:
                      alpha=stat[7][jj]))
             print('\n')
         elif self.__solver_options['nlp_solver_type'] == 'SQP_WITH_FEASIBLE_QP':
-            # print('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp1_stat\tqp1_iter\tqp2_stat\tqp2_iter\tqp3_stat\tqp3_iter\talpha')
-            print(("{iter:>6}   {stat:^10}   {res_eq:^10}   "
-                   "{res_ineq:^10}   {res_comp:^10}   {qp1_status:^10}   {qp1_iter:^10}   "
-                   "{qp2_status:^10}   {qp2_iter:^10}   {qp3_status:^10}   {qp3_iter:^10}   "
-                   "{alpha:^10}").format(
-                        iter='iter.',
+            print(("{iter:>5}   {stat:>10}   {res_eq:>10}   "
+                   "{res_ineq:>10}   {res_comp:>10}   {qp1_status:>8}   {qp1_iter:>6}   "
+                   "{qp2_status:>8}   {qp2_iter:>6}   {qp3_status:>8}   {qp3_iter:>6}   "
+                   "{alpha:>10}").format(
+                        iter='#it',
                         stat='res_stat',
                         res_eq='res_eq',
                         res_ineq='res_ineq',
                         res_comp='res_comp',
-                        qp1_status='qp1_status',
-                        qp1_iter='qp1_iter.',
-                        qp2_status='qp2_status',
-                        qp2_iter='qp2_iter.',
-                        qp3_status='qp3_status',
-                        qp3_iter='qp3_iter.',
+                        qp1_status='qp1_stat',
+                        qp1_iter='qp1_it',
+                        qp2_status='qp2_stat',
+                        qp2_iter='qp2_it',
+                        qp3_status='qp3_stat',
+                        qp3_iter='qp3_it',
                         alpha='alpha'))
-            # if stat.shape[0]>8:
-            #     print('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp')
             for jj in range(stat.shape[1]):
-                # print(f'{int(stat[0][jj]):d}\t{stat[1][jj]:e}\t{stat[2][jj]:e}\t{stat[3][jj]:e}\t' +
-                #       f'{stat[4][jj]:e}\t{int(stat[5][jj]):d}\t{int(stat[6][jj]):d}\t{stat[7][jj]:e}\t')
-                print(("{iter:>6}   {stat:^10.4e}   {res_eq:^10.4e}   "
-                   "{res_ineq:^10.4e}   {res_comp:^10.4e}   {qp1_status:^10}   {qp1_iter:^10}   "
-                   "{qp2_status:^10}   {qp2_iter:^10}   {qp3_status:^10}   {qp3_iter:^10}   "
-                   "{alpha:^10.4e}").format(
+                print(("{iter:>5}   {stat:>10.4e}   {res_eq:>10.4e}   "
+                   "{res_ineq:>10.4e}   {res_comp:>10.4e}   {qp1_status:>8}   {qp1_iter:>6}   "
+                   "{qp2_status:>8}   {qp2_iter:>6}   {qp3_status:>8}   {qp3_iter:>6}   "
+                   "{alpha:>10.4e}").format(
                         iter=int(stat[0][jj]),
                         stat=stat[1][jj],
                         res_eq=stat[2][jj],
@@ -1188,9 +1181,6 @@ class AcadosOcpSolver:
                         qp3_status=int(stat[9][jj]),
                         qp3_iter=int(stat[10][jj]),
                         alpha=int(stat[11][jj])))
-                # if stat.shape[0]>8:
-                #     print('\t{:e}\t{:e}\t{:e}\t{:e}'.format( \
-                #         stat[8][jj], stat[9][jj], stat[10][jj], stat[11][jj]))
             print('\n')
 
         return
