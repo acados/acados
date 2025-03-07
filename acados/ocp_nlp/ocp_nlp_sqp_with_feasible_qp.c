@@ -325,7 +325,7 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
     }
     // stat
     int stat_m = opts->max_iter+1;
-    int stat_n = 7;
+    int stat_n = 11;
     if (nlp_opts->ext_qp_res)
         stat_n += 4;
     size += stat_n*stat_m*sizeof(double);
@@ -1673,11 +1673,11 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // The solver anyway terminates if a QP was not solved correctly at this point
-        if (sqp_iter+1 < mem->stat_m)
-        {
-            mem->stat[mem->stat_n*(sqp_iter+1)+4] = qp_status;
-            mem->stat[mem->stat_n*(sqp_iter+1)+5] = qp_iter;
-        }
+        // if (sqp_iter+1 < mem->stat_m)
+        // {
+        //     mem->stat[mem->stat_n*(sqp_iter+1)+4] = qp_status;
+        //     mem->stat[mem->stat_n*(sqp_iter+1)+5] = qp_iter;
+        // }
 
         // Compute the step norm
         if (opts->tol_min_step_norm > 0.0 || nlp_opts->log_primal_step_norm)
@@ -1721,7 +1721,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return nlp_mem->status;
         }
 
-        mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
+        mem->stat[mem->stat_n*(sqp_iter+1)+10] = mem->alpha;
         nlp_timings->time_glob += acados_toc(&timer1);
 
     }  // end SQP loop
