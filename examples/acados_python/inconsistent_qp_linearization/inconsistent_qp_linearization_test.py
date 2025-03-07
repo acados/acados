@@ -49,8 +49,9 @@ from itertools import product
 
 def main():
     # run test cases
-    params = {'globalization': ['FUNNEL_L1PEN_LINESEARCH'],
-              'nlp_solver_type': ['SQP', 'SQP_WITH_FEASIBLE_QP'],
+    params = {'nlp_solver_type': ['SQP_WITH_FEASIBLE_QP'],
+              'search_direction_mode':['NOMINAL_QP'],
+              'max_iter':[20],
               'init_iterate': [np.array([-0.001]), np.array([0.5])]}
 
     keys, values = zip(*params.items())
@@ -58,11 +59,98 @@ def main():
         setting = dict(zip(keys, combination))
         test_convergence_of_solver(setting)
 
+def test_nominal_qp():
+    params = {'nlp_solver_type': 'SQP_WITH_FEASIBLE_QP',
+              'search_direction_mode':'NOMINAL_QP',
+              'max_iter':1,
+              'init_iterate': np.array([-0.001])}
+
+    N = 1
+    ocp, ocp_solver = create_solver(params)
+    xinit = params['init_iterate']
+
+    # initialize solver
+    [ocp_solver.set(i, "x", xinit) for i in range(N+1)]
+
+    # solve
+    _ = ocp_solver.solve()
+
+    iter0 = ocp_solver.get_iterate(0)
+    iter1 = ocp_solver.get_iterate(1)
+
+    # solution is d = -1999.9995
+    d = iter1.x_traj[0] - iter0.x_traj[0]
+    assert np.allclose(d, -1999.9995), f"Solution should be -1999.9995, got {d}"
+
+def test_byrd_omojokun_qps():
+    params = {'nlp_solver_type': 'SQP_WITH_FEASIBLE_QP',
+              'search_direction_mode':'BYRD_OMOJOKUN',
+              'max_iter':1,
+              'init_iterate': np.array([-0.001])}
+
+    N = 1
+    ocp, ocp_solver = create_solver(params)
+    xinit = params['init_iterate']
+
+    # initialize solver
+    [ocp_solver.set(i, "x", xinit) for i in range(N+1)]
+
+    # solve
+    status = ocp_solver.solve()
+    last_qp = ocp_solver.get_last_qp()
+    last_relaxed_qp = ocp_solver.get_last_relaxed_qp()
+
+    iter0 = ocp_solver.get_iterate(0)
+    iter1 = ocp_solver.get_iterate(1)
+
+    # feasibility QP solution should be (d = -10, s = 3.98)
+    # here should be a test of the bounds
+
+    # nominal QP solution should be d= -10
+    d = iter1.x_traj[0] - iter0.x_traj[0]
+    assert np.allclose(d, -10), f"Solution should be -10, got {d}"
+
+
+def create_solver_opts(N=1,
+                       Tf=1,
+                       nlp_solver_type ='SQP_WITH_FEASIBLE_QP',
+                       max_iter: int = 20,
+                       search_direction_mode='NOMINAL_QP'):
+
+    solver_options = AcadosOcp().solver_options
+
+    # set options
+    solver_options.N_horizon = N
+    solver_options.tol = 1e-6
+    solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    solver_options.qp_solver_cond_N = N
+    solver_options.qp_solver_iter_max = 1000
+    solver_options.qp_tol = 1e-9
+    solver_options.qp_solver_mu0 = 1e4
+    solver_options.hessian_approx = 'EXACT'
+    solver_options.regularize_method = 'MIRROR'
+    solver_options.integrator_type = 'DISCRETE'
+    solver_options.print_level = 1
+    solver_options.nlp_solver_type = nlp_solver_type
+    solver_options.globalization = 'FUNNEL_L1PEN_LINESEARCH'
+    solver_options.globalization_full_step_dual = True
+    solver_options.globalization_alpha_min = 1e-15
+    solver_options.nlp_solver_max_iter = max_iter
+    solver_options.search_direction_mode = search_direction_mode
+    solver_options.use_constraint_hessian_in_feas_qp = False
+    solver_options.store_iterates = False
+
+    # set prediction horizon
+    solver_options.tf = Tf
+
+    return solver_options
 
 def create_solver(setting):
+    print(setting)
 
-    globalization = setting['globalization']
     nlp_solver_type = setting['nlp_solver_type']
+    search_direction_mode = setting['search_direction_mode']
+    max_iter = setting['max_iter']
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -82,8 +170,6 @@ def create_solver(setting):
     # discretization
     Tf = 1
     N = 1
-    ocp.solver_options.N_horizon = N
-    ocp.solver_options.tf = Tf
 
     # cost
     ocp.cost.cost_type_0 = 'EXTERNAL'
@@ -100,24 +186,7 @@ def create_solver(setting):
     ocp.constraints.lbx_0 = -ACADOS_INFTY * np.ones((nx))
     ocp.constraints.ubx_0 = 1 * np.ones((nx))
 
-    # set options
-    ocp.solver_options.tol = 1e-6
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-    ocp.solver_options.qp_solver_cond_N = N
-    ocp.solver_options.qp_solver_iter_max = 1000
-    ocp.solver_options.qp_tol = 1e-9
-    ocp.solver_options.qp_solver_mu0 = 1e4
-    ocp.solver_options.hessian_approx = 'EXACT'
-    ocp.solver_options.regularize_method = 'MIRROR'
-    ocp.solver_options.integrator_type = 'DISCRETE'
-    ocp.solver_options.print_level = 1
-    ocp.solver_options.nlp_solver_type = nlp_solver_type
-    ocp.solver_options.globalization = globalization
-    ocp.solver_options.globalization_full_step_dual = True
-    ocp.solver_options.globalization_alpha_min = 1e-15
-    ocp.solver_options.nlp_solver_max_iter = 20
-    ocp.solver_options.search_direction_mode = "BYRD_OMOJOKUN"
-    ocp.solver_options.use_exact_hessian_in_feas_qp = False
+    ocp.solver_options = create_solver_opts(N, Tf, nlp_solver_type, max_iter, search_direction_mode)
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
 
     return ocp, ocp_solver
@@ -133,6 +202,7 @@ def test_convergence_of_solver(setting):
 
     # solve
     status = ocp_solver.solve()
+    ocp_solver.print_statistics()
 
     # get solution
     solution = ocp_solver.get(0, "x")
@@ -157,4 +227,6 @@ def test_convergence_of_solver(setting):
             assert np.allclose(solution, infeasible_solution), "Optimal solution should be 1!"
 
 if __name__ == '__main__':
+    test_nominal_qp()
+    test_byrd_omojokun_qps()
     main()
