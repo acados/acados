@@ -321,8 +321,6 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
     // stat
     int stat_m = opts->nlp_opts->max_iter+1;
     int stat_n = 11;
-    if (nlp_opts->ext_qp_res)
-        stat_n += 4;
     size += stat_n*stat_m*sizeof(double);
 
     // idxns
@@ -438,8 +436,6 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     // stat
     mem->stat_m = opts->nlp_opts->max_iter+1;
     mem->stat_n = 11;
-    if (nlp_opts->ext_qp_res)
-        mem->stat_n += 4;
     mem->stat = (double *) c_ptr;
     assign_and_advance_double(mem->stat_m*mem->stat_n, &mem->stat, &c_ptr);
 
@@ -512,15 +508,6 @@ acados_size_t ocp_nlp_sqp_wfqp_workspace_calculate_size(void *config_, void *dim
     // nlp
     size += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts, in);
 
-    if (nlp_opts->ext_qp_res)
-    {
-        // qp res
-        size += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
-
-        // qp res ws
-        size += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
-    }
-
     return size;
 }
 
@@ -539,17 +526,6 @@ static void ocp_nlp_sqp_wfqp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims
     // nlp
     work->nlp_work = ocp_nlp_workspace_assign(config, dims, nlp_opts, in, nlp_mem, c_ptr);
     c_ptr += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts, in);
-
-    if (nlp_opts->ext_qp_res)
-    {
-        // qp res
-        work->nlp_work->qp_res = ocp_qp_res_assign(dims->qp_solver->orig_dims, c_ptr);
-        c_ptr += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
-
-        // qp res ws
-        work->nlp_work->qp_res_ws = ocp_qp_res_workspace_assign(dims->qp_solver->orig_dims, c_ptr);
-        c_ptr += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
-    }
 
     assert((char *) work + ocp_nlp_sqp_wfqp_workspace_calculate_size(config, dims, opts, in) >= c_ptr);
 
@@ -1054,14 +1030,6 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
     ocp_nlp_dump_qp_out_to_file(qp_out, sqp_iter, 0);
 #endif
-
-    // compute external QP residuals (for debugging)
-    if (nlp_opts->ext_qp_res)
-    {
-        ocp_qp_res_compute(qp_in, qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
-        if (sqp_iter+1 < mem->stat_m)
-            ocp_qp_res_compute_nrm_inf(nlp_work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+7));
-    }
 
     // exit conditions on QP status
     if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
