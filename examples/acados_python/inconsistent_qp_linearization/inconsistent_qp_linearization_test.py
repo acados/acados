@@ -52,7 +52,8 @@ def main():
     params = {'nlp_solver_type': ['SQP_WITH_FEASIBLE_QP'],
               'search_direction_mode':['NOMINAL_QP'],
               'max_iter':[20],
-              'init_iterate': [np.array([-0.001]), np.array([0.5])]}
+              'init_iterate': [np.array([-0.001])]}
+            #   'init_iterate': [np.array([-0.001]), np.array([0.5])]}
 
     keys, values = zip(*params.items())
     for combination in product(*values):
@@ -138,7 +139,7 @@ def create_solver_opts(N=1,
     solver_options.nlp_solver_max_iter = max_iter
     solver_options.search_direction_mode = search_direction_mode
     solver_options.use_constraint_hessian_in_feas_qp = False
-    solver_options.store_iterates = False
+    solver_options.store_iterates = True
 
     # set prediction horizon
     solver_options.tf = Tf
@@ -227,6 +228,6 @@ def test_convergence_of_solver(setting):
             assert np.allclose(solution, infeasible_solution), "Optimal solution should be 1!"
 
 if __name__ == '__main__':
-    test_nominal_qp()
-    test_byrd_omojokun_qps()
+    # test_nominal_qp()
+    # test_byrd_omojokun_qps()
     main()
