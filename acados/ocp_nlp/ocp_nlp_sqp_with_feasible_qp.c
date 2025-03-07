@@ -1631,6 +1631,11 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // evaluate the residuals after the last iteration.
         if (sqp_iter != opts->max_iter || opts->eval_residual_at_max_iter)
         {
+            // store current iterate
+            if (nlp_opts->store_iterates)
+            {
+                copy_ocp_nlp_out(dims, nlp_out, nlp_mem->iterates[sqp_iter]);
+            }
             /* Prepare the QP data */
             // linearize NLP and update QP matrices
             set_pointers_for_hessian_evaluation(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
