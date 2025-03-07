@@ -1090,6 +1090,31 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     return qp_status;
 }
 
+static void log_qp_stats(ocp_nlp_sqp_wfqp_memory *mem, int sqp_iter, bool solve_feasibility_qp,
+    int qp_status, int qp_iter)
+{
+    if (sqp_iter < mem->stat_m)
+    {
+        if (mem->search_direction_mode == NOMINAL_QP)
+        {
+            mem->stat[mem->stat_n*(sqp_iter)+4] = qp_status;
+            mem->stat[mem->stat_n*(sqp_iter)+5] = qp_iter;
+        }
+        else if (mem->search_direction_mode == BYRD_OMOJOKUN)
+        {
+            if (solve_feasibility_qp)
+            {
+                mem->stat[mem->stat_n*(sqp_iter)+6] = qp_status;
+                mem->stat[mem->stat_n*(sqp_iter)+7] = qp_iter;
+            }
+            else
+            {
+                mem->stat[mem->stat_n*(sqp_iter)+8] = qp_status;
+                mem->stat[mem->stat_n*(sqp_iter)+9] = qp_iter;
+            }
+        }
+    }
+}
 /************************************************
 * Byrd-Omojokun Subproblem Functions:
 ************************************************/
@@ -1173,7 +1198,8 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
     qp_status = prepare_and_solve_QP(config, opts, relaxed_qp_in, relaxed_qp_out, dims, mem, nlp_in, nlp_out,
                 nlp_mem, nlp_work, sqp_iter, true, timer0, timer1);
     ocp_qp_out_get(relaxed_qp_out, "qp_info", &qp_info_);
-    qp_iter += qp_info_->num_iter;
+    qp_iter = qp_info_->num_iter;
+    log_qp_stats(mem, sqp_iter, true, qp_status, qp_iter);
     if (qp_status != ACADOS_SUCCESS)
     {
         if (nlp_opts->print_level >=1)
@@ -1207,6 +1233,10 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
     // solve_feasibility_qp --> false in prepare_and_solve_QP
     qp_status = prepare_and_solve_QP(config, opts, nominal_qp_in, nominal_qp_out, dims, mem, nlp_in, nlp_out,
                                      nlp_mem, nlp_work, sqp_iter, false, timer0, timer1);
+    ocp_qp_out_get(nominal_qp_out, "qp_info", &qp_info_);
+    qp_iter = qp_info_->num_iter;
+    log_qp_stats(mem, sqp_iter, false, qp_status, qp_iter);
+
     if (qp_status != ACADOS_SUCCESS)
     {
         if (nlp_opts->print_level >=1)
@@ -1431,88 +1461,89 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
     acados_timer timer0,
     acados_timer timer1)
 {
-ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-qp_info* qp_info_;
-int qp_iter = 0;
-int search_direction_status;
-int solved_nominal_before = 0;
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    qp_info* qp_info_;
+    int qp_iter = 0;
+    int search_direction_status;
+    int solved_nominal_before = 0;
 
-if (mem->search_direction_mode == NOMINAL_QP)
-{
-// if the QP can be solved and the status is good, we return 0
-// otherwise, we change the mode to Byrd-Omojokun and we continue.
-search_direction_status = prepare_and_solve_QP(config, opts, nlp_mem->qp_in, nlp_mem->qp_out,
-                   dims, mem, nlp_in, nlp_out, nlp_mem, work->nlp_work,
-                   sqp_iter, false, timer0, timer1);
-                   ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
-qp_iter += qp_info_->num_iter;
-if (search_direction_status != ACADOS_SUCCESS)
-{
-if (nlp_opts->print_level >=1)
-{
-printf("\n Error in Nominal QP in iteration %d, got qp_status %d!\n", qp_iter, search_direction_status);
-printf("Switch to Byrd-Omojokun mode!\n");
-}
-mem->search_direction_mode = BYRD_OMOJOKUN;
-solved_nominal_before = 1;
-}
-else
-{
-mem->search_direction_type = "N";
-if (config->globalization->needs_objective_value() == 1)
-{
-/*
-Calculates predicted reduction of l1 infeasibility by a QP. This is defined by
-l1_inf_QP(0 step) - search direction)
-*/
-mem->pred_l1_inf_QP = calculate_pred_l1_inf(opts, mem, -1.0);
-}
-return ACADOS_SUCCESS;
-}
-}
-if (mem->search_direction_mode == BYRD_OMOJOKUN)
-{
-// We solve two QPs and return the search direction that we found!
-// if the second QP is feasible, we change back to nominal QP mode.
-// Maybe we want some kind of watchdog, if for two consecutive QPs this holds
-// then we switch back
-search_direction_status = byrd_omojokun_direction_computation(dims, config, opts, nlp_opts, nlp_in, nlp_out, mem, work, sqp_iter, timer0, timer1);
-if (solved_nominal_before)
-{
-mem->search_direction_type = "NFN";
-}
-else
-{
-mem->search_direction_type = "FN";
-}
-double l1_inf = calculate_qp_l1_infeasibility(dims, mem, work, opts, mem->relaxed_qp_in, mem->relaxed_qp_out, false);
-if (l1_inf/(fmax(1.0, (double) mem->absolute_nns)) < opts->tol_ineq)
-{
-mem->watchdog_zero_slacks_counter += 1;
-}
+    if (mem->search_direction_mode == NOMINAL_QP)
+    {
+        // if the QP can be solved and the status is good, we return 0
+        // otherwise, we change the mode to Byrd-Omojokun and we continue.
+        search_direction_status = prepare_and_solve_QP(config, opts, nlp_mem->qp_in, nlp_mem->qp_out,
+                        dims, mem, nlp_in, nlp_out, nlp_mem, work->nlp_work,
+                        sqp_iter, false, timer0, timer1);
+        ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
+        qp_iter = qp_info_->num_iter;
+        log_qp_stats(mem, sqp_iter, false, search_direction_status, qp_iter);
+        if (search_direction_status != ACADOS_SUCCESS)
+        {
+            if (nlp_opts->print_level >=1)
+            {
+                printf("\n Error in Nominal QP in iteration %d, got qp_status %d!\n", qp_iter, search_direction_status);
+                printf("Switch to Byrd-Omojokun mode!\n");
+            }
+            mem->search_direction_mode = BYRD_OMOJOKUN;
+            solved_nominal_before = 1;
+        }
+        else
+        {
+            mem->search_direction_type = "N";
+            if (config->globalization->needs_objective_value() == 1)
+            {
+                /*
+                Calculates predicted reduction of l1 infeasibility by a QP. This is defined by
+                l1_inf_QP(0 step) - search direction)
+                */
+                mem->pred_l1_inf_QP = calculate_pred_l1_inf(opts, mem, -1.0);
+            }
+            return ACADOS_SUCCESS;
+        }
+    }
+    if (mem->search_direction_mode == BYRD_OMOJOKUN)
+    {
+        // We solve two QPs and return the search direction that we found!
+        // if the second QP is feasible, we change back to nominal QP mode.
+        // Maybe we want some kind of watchdog, if for two consecutive QPs this holds
+        // then we switch back
+        search_direction_status = byrd_omojokun_direction_computation(dims, config, opts, nlp_opts, nlp_in, nlp_out, mem, work, sqp_iter, timer0, timer1);
+        if (solved_nominal_before)
+        {
+            mem->search_direction_type = "NFN";
+        }
+        else
+        {
+            mem->search_direction_type = "FN";
+        }
+        double l1_inf = calculate_qp_l1_infeasibility(dims, mem, work, opts, mem->relaxed_qp_in, mem->relaxed_qp_out, false);
+        if (l1_inf/(fmax(1.0, (double) mem->absolute_nns)) < opts->tol_ineq)
+        {
+            mem->watchdog_zero_slacks_counter += 1;
+        }
 
-if (opts->allow_direction_mode_switch_to_nominal && mem->watchdog_zero_slacks_counter == opts->watchdog_zero_slacks_max)
-{
-mem->watchdog_zero_slacks_counter = 0;
-mem->search_direction_mode = NOMINAL_QP;
-}
+        if (opts->allow_direction_mode_switch_to_nominal && mem->watchdog_zero_slacks_counter == opts->watchdog_zero_slacks_max)
+        {
+            mem->watchdog_zero_slacks_counter = 0;
+            mem->search_direction_mode = NOMINAL_QP;
+        }
 
-return search_direction_status;
-// Maybe we want to switch to a full feasibility restoration phase
-// if the NLP seems to be infeasible? Will be implemented later
-}
-else if (mem->search_direction_mode == FEASIBILITY_QP)
-{
-// for the moment we do nothing here!
-printf("Feasibility mode not implemented at the moment!\n");
-mem->search_direction_type = "F";
-return 1;
-}
-else
-{
-printf("Wrong search direction mode\n");
-return 1;
-}
+        return search_direction_status;
+        // Maybe we want to switch to a full feasibility restoration phase
+        // if the NLP seems to be infeasible? Will be implemented later
+    }
+    else if (mem->search_direction_mode == FEASIBILITY_QP)
+    {
+        // for the moment we do nothing here!
+        printf("Feasibility mode not implemented at the moment!\n");
+        mem->search_direction_type = "F";
+        return 1;
+    }
+    else
+    {
+        printf("Wrong search direction mode\n");
+        return 1;
+    }
 }
 
 /************************************************
