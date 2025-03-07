@@ -1609,7 +1609,7 @@ void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, 
         char module[MAX_STR_LEN];
         extract_module_name(field, module, &module_length, &ptr_module);
         ocp_qp_in *qp_in;
-        char *qp_field_name = field;
+        const char *qp_field_name = field;
         if ( ptr_module!=NULL && (!strcmp(ptr_module, "relaxed")) )
         {
             ocp_nlp_get(solver, "relaxed_qp_in", &qp_in);
