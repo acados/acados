@@ -442,7 +442,7 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
 
     // stat
     mem->stat_m = opts->max_iter+1;
-    mem->stat_n = 7;
+    mem->stat_n = 11;
     if (nlp_opts->ext_qp_res)
         mem->stat_n += 4;
     mem->stat = (double *) c_ptr;

@@ -1093,7 +1093,7 @@ class AcadosOcpSolver:
         """
         stat = self.get_stats("statistics")
 
-        if self.__solver_options['nlp_solver_type'] in ['SQP', 'SQP_WITH_FEASIBLE_QP']:
+        if self.__solver_options['nlp_solver_type'] == 'SQP':
             print('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha')
             if stat.shape[0]>8:
                 print('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp')
@@ -1148,6 +1148,49 @@ class AcadosOcpSolver:
                      qp_status=int(stat[5][jj]),
                      qp_iter=int(stat[6][jj]),
                      alpha=stat[7][jj]))
+            print('\n')
+        elif self.__solver_options['nlp_solver_type'] == 'SQP_WITH_FEASIBLE_QP':
+            # print('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp1_stat\tqp1_iter\tqp2_stat\tqp2_iter\tqp3_stat\tqp3_iter\talpha')
+            print(("{iter:>6}   {stat:^10}   {res_eq:^10}   "
+                   "{res_ineq:^10}   {res_comp:^10}   {qp1_status:^10}   {qp1_iter:^10}   "
+                   "{qp2_status:^10}   {qp2_iter:^10}   {qp3_status:^10}   {qp3_iter:^10}   "
+                   "{alpha:^10}").format(
+                        iter='iter.',
+                        stat='res_stat',
+                        res_eq='res_eq',
+                        res_ineq='res_ineq',
+                        res_comp='res_comp',
+                        qp1_status='qp1_status',
+                        qp1_iter='qp1_iter.',
+                        qp2_status='qp2_status',
+                        qp2_iter='qp2_iter.',
+                        qp3_status='qp3_status',
+                        qp3_iter='qp3_iter.',
+                        alpha='alpha'))
+            # if stat.shape[0]>8:
+            #     print('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp')
+            for jj in range(stat.shape[1]):
+                # print(f'{int(stat[0][jj]):d}\t{stat[1][jj]:e}\t{stat[2][jj]:e}\t{stat[3][jj]:e}\t' +
+                #       f'{stat[4][jj]:e}\t{int(stat[5][jj]):d}\t{int(stat[6][jj]):d}\t{stat[7][jj]:e}\t')
+                print(("{iter:>6}   {stat:^10.4e}   {res_eq:^10.4e}   "
+                   "{res_ineq:^10.4e}   {res_comp:^10.4e}   {qp1_status:^10}   {qp1_iter:^10}   "
+                   "{qp2_status:^10}   {qp2_iter:^10}   {qp3_status:^10}   {qp3_iter:^10}   "
+                   "{alpha:^10.4e}").format(
+                        iter=int(stat[0][jj]),
+                        stat=stat[1][jj],
+                        res_eq=stat[2][jj],
+                        res_ineq=stat[3][jj],
+                        res_comp=stat[4][jj],
+                        qp1_status=int(stat[5][jj]),
+                        qp1_iter=int(stat[6][jj]),
+                        qp2_status=int(stat[7][jj]),
+                        qp2_iter=int(stat[8][jj]),
+                        qp3_status=int(stat[9][jj]),
+                        qp3_iter=int(stat[10][jj]),
+                        alpha=int(stat[11][jj])))
+                # if stat.shape[0]>8:
+                #     print('\t{:e}\t{:e}\t{:e}\t{:e}'.format( \
+                #         stat[8][jj], stat[9][jj], stat[10][jj], stat[11][jj]))
             print('\n')
 
         return
@@ -1531,6 +1574,7 @@ class AcadosOcpSolver:
             nlp_iter = self.get_stats("nlp_iter")
             stat_m = self.get_stats("stat_m")
             stat_n = self.get_stats("stat_n")
+            print("stat_n: ", stat_n)
             min_size = min([stat_m, nlp_iter+1])
             out = np.zeros((stat_n+1, min_size), dtype=np.float64, order="C")
             out_data = cast(out.ctypes.data, POINTER(c_double))
