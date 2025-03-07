@@ -109,7 +109,7 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
     ocp_nlp_opts_initialize_default(config, dims, nlp_opts);
 
     // SQP opts
-    opts->max_iter = 20;
+    opts->nlp_opts->max_iter = 20;
     opts->tol_stat = 1e-8;
     opts->tol_eq   = 1e-8;
     opts->tol_ineq = 1e-8;
@@ -182,12 +182,7 @@ void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, vo
     }
     else // nlp opts
     {
-        if (!strcmp(field, "max_iter"))
-        {
-            int* max_iter = (int *) value;
-            opts->max_iter = *max_iter;
-        }
-        else if (!strcmp(field, "tol_stat"))
+        if (!strcmp(field, "tol_stat"))
         {
             double* tol_stat = (double *) value;
             opts->tol_stat = *tol_stat;
@@ -321,10 +316,10 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
     // primal step norm
     if (opts->nlp_opts->log_primal_step_norm)
     {
-        size += opts->max_iter*sizeof(double);
+        size += opts->nlp_opts->max_iter*sizeof(double);
     }
     // stat
-    int stat_m = opts->max_iter+1;
+    int stat_m = opts->nlp_opts->max_iter+1;
     int stat_n = 11;
     if (nlp_opts->ext_qp_res)
         stat_n += 4;
@@ -437,11 +432,11 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     if (opts->nlp_opts->log_primal_step_norm)
     {
         mem->primal_step_norm = (double *) c_ptr;
-        c_ptr += opts->max_iter*sizeof(double);
+        c_ptr += opts->nlp_opts->max_iter*sizeof(double);
     }
 
     // stat
-    mem->stat_m = opts->max_iter+1;
+    mem->stat_m = opts->nlp_opts->max_iter+1;
     mem->stat_n = 11;
     if (nlp_opts->ext_qp_res)
         mem->stat_n += 4;
@@ -602,7 +597,7 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
     }
 
     // check for maximum iterations
-    if (!opts->eval_residual_at_max_iter && n_iter >= opts->max_iter)
+    if (!opts->eval_residual_at_max_iter && n_iter >= opts->nlp_opts->max_iter)
     {
         mem->nlp_mem->status = ACADOS_MAXITER;
         if (opts->nlp_opts->print_level > 0)
@@ -656,7 +651,7 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
     }
 
     // check for maximum iterations
-    if (n_iter >= opts->max_iter)
+    if (n_iter >= opts->nlp_opts->max_iter)
     {
         mem->nlp_mem->status = ACADOS_MAXITER;
         if (opts->nlp_opts->print_level > 0)
@@ -1624,12 +1619,12 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         print_indices(dims, work, mem);
     }
 
-    for (; sqp_iter <= opts->max_iter; sqp_iter++) // <= needed such that after last iteration KKT residuals are checked before max_iter is thrown.
+    for (; sqp_iter <= opts->nlp_opts->max_iter; sqp_iter++) // <= needed such that after last iteration KKT residuals are checked before max_iter is thrown.
     {
         // We always evaluate the residuals until the last iteration
         // If the option "eval_residual_at_max_iter" is set, we also
         // evaluate the residuals after the last iteration.
-        if (sqp_iter != opts->max_iter || opts->eval_residual_at_max_iter)
+        if (sqp_iter != opts->nlp_opts->max_iter || opts->eval_residual_at_max_iter)
         {
             // store current iterate
             if (nlp_opts->store_iterates)
