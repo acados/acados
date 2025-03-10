@@ -146,6 +146,8 @@ void {{ name }}_acados_create_set_plan(ocp_nlp_plan_t* nlp_solver_plan, const in
     nlp_solver_plan->nlp_solver = {{ solver_options.nlp_solver_type }};
 
     nlp_solver_plan->ocp_qp_solver_plan.qp_solver = {{ solver_options.qp_solver }};
+    nlp_solver_plan->relaxed_ocp_qp_solver_plan.qp_solver = {{ solver_options.qp_solver }}; {# TODO: add option? #}
+
     nlp_solver_plan->regularization = {{ solver_options.regularize_method }};
     nlp_solver_plan->globalization = {{ solver_options.globalization }};
 
