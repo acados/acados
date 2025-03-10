@@ -1234,6 +1234,30 @@ the Hessian mode
 Feasibility QP only has the gradient of the slack variables, but NOT the gradient of the objective.
 
 Aim of feasibility QP: Achieve maximum reduction of infeasibility of QP, if nominal QP is not feasible
+
+dynamics: shared with nominal QP, set_relaxed_qp_in_matrix_pointers
+- BAbt
+- b
+
+constraint definitions: shared with nominal QP, set_relaxed_qp_in_matrix_pointers
+- DCt
+- idxb
+- idxe
+
+
+- d_mask: different due to slacks in feasibility QP setup once in ocp_nlp_sqp_wfqp_approximate_feasibility_qp_constraint_vectors
+
+Hessian:
+- RSQrq: if identity in initial_setup_feasibility_qp_objective, otherwise in setup_hessian_matrices_for_qps
+
+- rqz: set_non_user_slacked_l1_penalties_in_relaxed_QP, TODO: merge!
+d
+m
+Z
+idxs_rev
+diag_H_flag
+-
+
 *********************************/
 
 /*
@@ -1297,14 +1321,13 @@ Where we point to the same memory for both QPs is given below.
 */
 static void set_relaxed_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp_qp_in *qp_in)
 {
+    // dynamics
     mem->relaxed_qp_in->BAbt = qp_in->BAbt; // dynamics matrix & vector work space
     mem->relaxed_qp_in->b = qp_in->b; // dynamics vector work space
-    // mem->relaxed_qp_in->RSQrq -->  Hessians should be different Hessian
+    // constraint defintitions
     mem->relaxed_qp_in->DCt = qp_in->DCt; // inequality constraints matrix
     mem->relaxed_qp_in->idxb = qp_in->idxb;
     mem->relaxed_qp_in->idxe = qp_in->idxe;
-    // mem->relaxed_qp_in->d_mask --> different due to slacks in feasibility QP
-    // mem->relaxed_qp_in->diag_H_flag --> if identity Hessian used in feasibility QP, flag set elsewhere
     // mem->relaxed_qp_in->m = qp_in->m; // TODO: Not sure what happens here
 }
 
@@ -1395,7 +1418,7 @@ static void initial_setup_feasibility_qp_objective(ocp_nlp_config *config,
         blasfeo_dveccpsc(ns[i], 0.0, mem->Z_cost_module+i, 0, relaxed_qp_in->Z+i, ns[i]+mem->nns[i]);
 
         /* vectors */
-        // g
+        // rqz
         blasfeo_dveccpsc(nx[i]+nu[i]+ns[i], 0.0, nlp_mem->cost_grad + i, 0, relaxed_qp_in->rqz + i, 0);
         blasfeo_dveccpsc(ns[i], 0.0, nlp_mem->cost_grad + i, nx[i]+nu[i]+ns[i], relaxed_qp_in->rqz + i, nx[i]+nu[i]+ns[i]+nns[i]);
     }
@@ -1444,7 +1467,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
         {
             if (nlp_opts->print_level >=1)
             {
-                printf("\n Error in Nominal QP in iteration %d, got qp_status %d!\n", qp_iter, search_direction_status);
+                printf("\nError in nominal QP in iteration %d, got qp_status %d!\n", qp_iter, search_direction_status);
                 printf("Switch to Byrd-Omojokun mode!\n");
             }
             mem->search_direction_mode = BYRD_OMOJOKUN;
