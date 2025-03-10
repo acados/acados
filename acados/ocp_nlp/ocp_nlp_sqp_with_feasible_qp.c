@@ -1249,69 +1249,19 @@ constraint definitions: shared with nominal QP, set_relaxed_qp_in_matrix_pointer
 
 Hessian:
 - RSQrq: if identity in initial_setup_feasibility_qp_objective, otherwise in setup_hessian_matrices_for_qps
+- Z: set in initial_setup_feasibility_qp_objective
 
-- rqz: set_non_user_slacked_l1_penalties_in_relaxed_QP, TODO: merge!
-d
-m
-Z
-idxs_rev
-diag_H_flag
--
+Vectors
+- rqz: initial_setup_feasibility_qp_objective
+- d: ocp_nlp_sqp_wfqp_approximate_feasibility_qp_constraint_vectors
+
+Index vectors
+- idxs_rev: set in ocp_nlp_sqp_wfqp_precompute
+- diag_H_flag : set in initial_setup_feasibility_qp_objective
+
+- m not set at the moment
 
 *********************************/
-
-/*
-Sets gradient for slacks added in feasibility QP to 1
-*/
-static void set_non_user_slacked_l1_penalties_in_relaxed_QP(ocp_nlp_config *config, ocp_nlp_dims *dims,
-    ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_sqp_wfqp_memory *mem,
-    ocp_nlp_workspace *work)
-{
-    int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *ns = dims->ns;
-    int *nns = mem->nns;
-    ocp_qp_in *relaxed_qp_in = mem->relaxed_qp_in;
-
-    // be aware of rqz_QP = [r, q, zl_NLP, zl_QP, zu_NLP, zu_QP]
-    for (int stage = 0; stage <= dims->N; stage++)
-    {
-        // zl_QP
-        blasfeo_dvecse(nns[stage], 1.0, relaxed_qp_in->rqz+stage, nu[stage]+nx[stage]+ns[stage]);
-        // zu_QP
-        blasfeo_dvecse(nns[stage], 1.0, relaxed_qp_in->rqz+stage, nu[stage]+nx[stage]+2*ns[stage]+nns[stage]);
-    }
-}
-
-
-/*
-Sets Hessian of slacks added in feasibility QP to zero.
-*/
-static void set_non_user_slacked_l2_penalties_in_relaxed_QP(ocp_nlp_config *config, ocp_nlp_dims *dims,
-    ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_sqp_wfqp_memory *mem,
-    ocp_nlp_workspace *work)
-{
-    int *ns = dims->ns;
-    int *nns = mem->nns;
-    ocp_qp_in *nominal_qp_in = mem->nlp_mem->qp_in;
-    ocp_qp_in *relaxed_qp_in = mem->relaxed_qp_in;
-
-    // be aware of rqz_QP = [r, q, zl_NLP, zl_QP, zu_NLP, zu_QP]
-    for (int stage = 0; stage <= dims->N; stage++)
-    {
-        // zu_NLP shift back
-        // TODO: Do we want this to be 1e-4 like all standard variables?
-        blasfeo_dveccp(ns[stage], nominal_qp_in->Z+stage, ns[stage], relaxed_qp_in->Z+stage, ns[stage]+nns[stage]);
-
-        // zl_QP
-        blasfeo_dvecse(nns[stage], 0.0, relaxed_qp_in->Z+stage, ns[stage]);
-        // zu_QP
-        blasfeo_dvecse(nns[stage], 0.0, relaxed_qp_in->Z+stage, 2*ns[stage]+nns[stage]);
-    }
-}
-
-
-
 /*
 Feasibility QP and nominal QP share many entries.
 - Constraint matrices are always the same
@@ -1384,10 +1334,10 @@ static void initial_setup_feasibility_qp_objective(ocp_nlp_config *config,
     ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_sqp_wfqp_opts *opts,
     ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
 {
-    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
     ocp_qp_in *relaxed_qp_in = mem->relaxed_qp_in;
-    int N = dims->N;
+    ocp_qp_in *nominal_qp_in = mem->nlp_mem->qp_in;
 
+    int N = dims->N;
     int *nx = dims->nx;
     int *nu = dims->nu;
     int *ns = dims->ns;
@@ -1413,14 +1363,33 @@ static void initial_setup_feasibility_qp_objective(ocp_nlp_config *config,
         }
 
         // Z -- slack matrix
+        // be aware of rqz_QP = [r, q, zl_NLP, zl_QP, zu_NLP, zu_QP]
+
+        // zu_NLP shift back
+        // TODO: Do we want this to be 1e-4 like all standard variables?
+        // TODO: is here the first line missing starting from zero offset?
+        blasfeo_dveccp(ns[i], nominal_qp_in->Z+i, ns[i], relaxed_qp_in->Z+i, ns[i]+nns[i]); // TODO: is this the same as in 1376 and 1377?
+
+        // zl_QP
+        blasfeo_dvecse(nns[i], 0.0, relaxed_qp_in->Z+i, ns[i]);
+        // zu_QP
+        blasfeo_dvecse(nns[i], 0.0, relaxed_qp_in->Z+i, 2*ns[i]+nns[i]);
+
         // TODO: add the diagonal entry here as well for the slack variables?
         blasfeo_dveccpsc(ns[i], 0.0, mem->Z_cost_module+i, 0, relaxed_qp_in->Z+i, 0);
         blasfeo_dveccpsc(ns[i], 0.0, mem->Z_cost_module+i, 0, relaxed_qp_in->Z+i, ns[i]+mem->nns[i]);
 
         /* vectors */
         // rqz
-        blasfeo_dveccpsc(nx[i]+nu[i]+ns[i], 0.0, nlp_mem->cost_grad + i, 0, relaxed_qp_in->rqz + i, 0);
-        blasfeo_dveccpsc(ns[i], 0.0, nlp_mem->cost_grad + i, nx[i]+nu[i]+ns[i], relaxed_qp_in->rqz + i, nx[i]+nu[i]+ns[i]+nns[i]);
+        // be aware of rqz_QP = [r, q, zl_NLP, zl_QP, zu_NLP, zu_QP]
+        blasfeo_dvecse(nx[i]+nu[i]+ns[i], 0.0, relaxed_qp_in->rqz+i, 0);
+        blasfeo_dvecse(ns[i], 0.0, relaxed_qp_in->rqz+i, nx[i]+nu[i]+ns[i]+nns[i]);
+
+        // zl_QP
+        blasfeo_dvecse(nns[i], 1.0, relaxed_qp_in->rqz+i, nu[i]+nx[i]+ns[i]);
+        // zu_QP
+        blasfeo_dvecse(nns[i], 1.0, relaxed_qp_in->rqz+i, nu[i]+nx[i]+2*ns[i]+nns[i]);
+
     }
 }
 
@@ -1594,9 +1563,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     // gradient of feasibility QP is always constant. So is Hessian, if identity Hessian is used
     initial_setup_feasibility_qp_objective(config, dims, nlp_in, nlp_out, opts, mem, nlp_work);
-
-    set_non_user_slacked_l2_penalties_in_relaxed_QP(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
-    set_non_user_slacked_l1_penalties_in_relaxed_QP(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
 
     /************************************************
      * main sqp loop
