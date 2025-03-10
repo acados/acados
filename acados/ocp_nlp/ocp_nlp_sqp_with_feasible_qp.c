@@ -607,11 +607,11 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         {
             if (nlp_res->inf_norm_res_eq < opts->tol_eq && nlp_res->inf_norm_res_ineq < opts->tol_ineq)
             {
-                printf("Stopped: Converged to feasible Point. Step size is < tol_eq.\n");
+                printf("Stopped: Converged to feasible point. Step size is < tol_eq.\n");
             }
             else
             {
-                printf("Stopped: Converged to infeasible Point. Step size is < tol_eq.\n");
+                printf("Stopped: Converged to infeasible point. Step size is < tol_eq.\n");
             }
         }
         mem->nlp_mem->status = ACADOS_MINSTEP;
@@ -1203,7 +1203,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
     {
         if (nlp_opts->print_level >=1)
         {
-            printf("\n Error in Nominal QP in iteration %d, got qp_status %d!\n", qp_iter, qp_status);
+            printf("\nError in nominal QP in iteration %d, got qp_status %d!\n", qp_iter, qp_status);
         }
         nlp_mem->status = ACADOS_QP_FAILURE;
         nlp_mem->iter = sqp_iter;
@@ -1277,7 +1277,6 @@ void set_relaxed_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp_qp_in *
     mem->relaxed_qp_in->DCt = qp_in->DCt; // inequality constraints matrix
     mem->relaxed_qp_in->idxb = qp_in->idxb;
     mem->relaxed_qp_in->idxe = qp_in->idxe;
-    // mem->relaxed_qp_in->m = qp_in->m; // TODO: Not sure what happens here
 }
 
 /*
@@ -1303,8 +1302,6 @@ void ocp_nlp_sqp_wfqp_approximate_feasibility_qp_constraint_vectors(ocp_nlp_conf
 #endif
     for (int i = 0; i <= N; i++)
     {
-        // b is set by pointer of nominal QP
-
         // d --> copy what is possible from nominal_qp_in
         int n_nominal_ineq_nlp = ni[i] - ns[i];
         blasfeo_dveccp(2*n_nominal_ineq_nlp+ns[i], nominal_qp_in->d + i, 0, relaxed_qp_in->d + i, 0);
@@ -1546,12 +1543,12 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->watchdog_zero_slacks_counter = 0;
     mem->l1_infeasibility = -1.0; // default, cannot be negative
 
-    #if defined(ACADOS_WITH_OPENMP)
+#if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
     int num_threads_bkp = omp_get_num_threads();
     // set number of threads
     omp_set_num_threads(opts->nlp_opts->num_threads);
-    #endif
+#endif
 
     // Calculate the absolute number of constraints which are not slacked by the user,
     // but which are slacked in QP to ensure feasibility
