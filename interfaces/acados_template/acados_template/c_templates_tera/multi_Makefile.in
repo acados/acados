@@ -284,6 +284,9 @@ CPPFLAGS += -DACADOS_WITH_DAQP
 {%- if solver_options.qp_solver == "PARTIAL_CONDENSING_OSQP" %}
 CPPFLAGS += -DACADOS_WITH_OSQP
 {%- endif %}
+{%- if solver_options.qp_solver == "PARTIAL_CONDENSING_CLARABEL" %}
+CPPFLAGS += -DACADOS_WITH_CLARABEL
+{%- endif %}
 {%- if solver_options.qp_solver == "PARTIAL_CONDENSING_QPDUNES" %}
 CPPFLAGS += -DACADOS_WITH_QPDUNES
 {%- endif %}
