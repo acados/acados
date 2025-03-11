@@ -1659,8 +1659,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Compute the step norm
         if (opts->tol_min_step_norm > 0.0 || nlp_opts->log_primal_step_norm)
         {
-            // For the moment we do not care about the artificial slack variables to keep problem
-            // feasible
             mem->step_norm = ocp_qp_out_compute_primal_nrm_inf(nominal_qp_out);
             if (nlp_opts->log_primal_step_norm)
                 mem->primal_step_norm[sqp_iter] = mem->step_norm;
@@ -1727,10 +1725,18 @@ void ocp_nlp_sqp_wfqp_memory_reset_qp_solver(void *config_, void *dims_, void *n
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_sqp_wfqp_workspace *work = work_;
     ocp_nlp_workspace *nlp_work = work->nlp_work;
+    ocp_qp_xcond_solver relaxed_qp_solver = mem->relaxed_qp_solver;
 
     config->qp_solver->memory_reset(qp_solver, dims->qp_solver,
         nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
         nlp_mem->qp_solver_mem, nlp_work->qp_work);
+    relaxed_qp_solver.config->memory_reset(relaxed_qp_solver.config,
+                                           relaxed_qp_solver.dims,
+                                           mem->relaxed_qp_in,
+                                           mem->relaxed_qp_out,
+                                           opts->nlp_opts->qp_solver_opts,
+                                           mem->relaxed_qp_solver_mem,
+                                           mem->relaxed_qp_solver_work);
 }
 
 
