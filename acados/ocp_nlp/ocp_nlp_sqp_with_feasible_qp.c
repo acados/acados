@@ -365,6 +365,9 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
     // RSQ_cost, RSQ_constr
     size += 2*(N + 1) * sizeof(struct blasfeo_dmat);
 
+    // search_direction_type
+    size += MAX_STR_LEN * sizeof(char);
+
     size += 3*8;  // align
     size += 64;  // blasfeo_mem align
 
@@ -477,6 +480,7 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     }
 
     mem->nlp_mem->status = ACADOS_READY;
+    assign_and_advance_char(MAX_STR_LEN, &mem->search_direction_type, &c_ptr);
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
