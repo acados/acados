@@ -118,7 +118,7 @@ def feasible_qp_index_test(soften_obstacle, soften_terminal, soften_controls, N,
             # We slack the obstacle constraint and the terminal constraints
             assert np.allclose(idxs, np.arange(dims.nh_e + dims.nbx_e)), f"i=N+1: Everything should be slacked"
 
-def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'):
+def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', allow_switching_modes=True):
 
     solver_options = AcadosOcp().solver_options
 
@@ -143,13 +143,18 @@ def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'):
     solver_options.nlp_solver_max_iter = 20
     solver_options.use_constraint_hessian_in_feas_qp = False
 
+    if not allow_switching_modes:
+        solver_options.search_direction_mode = 'BYRD_OMOJOKUN'
+        solver_options.allow_direction_mode_switch_to_nominal = False
+
     # set prediction horizon
     solver_options.tf = Tf
 
     return solver_options
 
 def create_solver(solver_name: str, soften_obstacle: bool, soften_terminal: bool,
-                  soften_controls: bool, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP'):
+                  soften_controls: bool, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP',
+                  allow_switches: bool = True):
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -244,7 +249,7 @@ def create_solver(solver_name: str, soften_obstacle: bool, soften_terminal: bool
         ocp.cost.Zu_e = np.concatenate((ocp.cost.Zu_e, Zh))
 
     # load options
-    ocp.solver_options = create_solver_opts(N, Tf, nlp_solver_type)
+    ocp.solver_options = create_solver_opts(N, Tf, nlp_solver_type, allow_switches)
     # create ocp solver
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_{solver_name}_ocp.json', verbose=False)
 
@@ -270,11 +275,7 @@ def standard_test(ocp: AcadosOcp, ocp_solver: AcadosOcpSolver, soften_obstacle: 
 
     # get solution
     sol_X = np.array([ocp_solver.get(i,"x") for i in range(N+1)])
-    sol_U = np.array([ocp_solver.get(i,"u") for i in range(N)])
-    pi_multiplier = [ocp_solver.get(i, "pi") for i in range(N)]
 
-    qp = ocp_solver.get_last_qp()
-    relaxed_qp = ocp_solver.get_last_relaxed_qp()
 
     # print summary
     print(f"cost function value = {ocp_solver.get_cost()} after {sqp_iter} SQP iterations")
@@ -301,6 +302,9 @@ def test_same_behavior_sqp_and_sqp_wfqp():
     ocp, ocp_solver2 = create_solver("v2", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type='SQP')
     status2 = ocp_solver2.solve()
 
+    qp = ocp_solver1.get_last_qp()
+    relaxed_qp = ocp_solver2.get_last_qp()
+
     assert status1 == status2, "both solvers should converge"
 
     # check residuals
@@ -308,7 +312,35 @@ def test_same_behavior_sqp_and_sqp_wfqp():
     res_solver2 = ocp_solver2.get_residuals()
     assert np.array_equal(res_solver1, res_solver2), "both solvers should have identical residual stats"
 
+def sqp_wfqp_test_same_matrices():
+    # # SETTINGS:
+    soften_controls = False
+    soften_obstacle = False
+    soften_terminal = False
+
+    # SQP solver
+    _, ocp_solver1 = create_solver("v1", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type='SQP_WITH_FEASIBLE_QP', allow_switches=False)
+    _ = ocp_solver1.solve()
+
+    qp = ocp_solver1.get_last_qp()
+    relaxed_qp = ocp_solver1.get_last_relaxed_qp()
+
+    dynamics_and_bu = ['b_', 'A_', 'B_', 'lbu_', 'ubu_']
+    for prefix in dynamics_and_bu:
+        for i in range(ocp_solver1.N):
+            assert np.equal(qp[prefix+str(i)], relaxed_qp['relaxed_'+prefix+str(i)]).all(), f" matrices do not coincide for {prefix}{i},"
+
+    constraints =  ['C_', 'D_']
+    for prefix in constraints:
+        for i in range(1, ocp_solver1.N):
+            assert np.equal(qp[prefix+str(i)], relaxed_qp['relaxed_'+prefix+str(i)]).all(), f" matrices do not coincide for {prefix}{i},"
+
+    idxb =  ['idxb_']
+    for prefix in idxb:
+        for i in range(0, ocp_solver1.N+1):
+            assert np.equal(qp[prefix+str(i)], relaxed_qp['relaxed_'+prefix+str(i)]).all(), f" matrices do not coincide for {prefix}{i},"
 
 if __name__ == '__main__':
     main_test()
     test_same_behavior_sqp_and_sqp_wfqp()
+    sqp_wfqp_test_same_matrices()
