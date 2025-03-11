@@ -565,14 +565,7 @@ int ocp_qp_full_expansion(void *fcond_qp_out_, void *qp_out_, void *opts_, void 
     acados_tic(&timer);
 
     // expand solution
-    if (opts->expand_dual_sol == 0)
-    {
-        d_cond_qp_expand_primal_sol(mem->red_qp, fcond_qp_out, mem->red_sol, opts->hpipm_cond_opts, mem->hpipm_cond_work);
-    }
-    else
-    {
-        d_cond_qp_expand_sol(mem->red_qp, fcond_qp_out, mem->red_sol, opts->hpipm_cond_opts, mem->hpipm_cond_work);
-    }
+    d_cond_qp_expand_sol(mem->red_qp, fcond_qp_out, mem->red_sol, opts->hpipm_cond_opts, mem->hpipm_cond_work);
 
     // restore solution
     d_ocp_qp_restore_eq_dof(mem->ptr_qp_in, mem->red_sol, qp_out, opts->hpipm_red_opts, mem->hpipm_red_work);
