@@ -984,11 +984,16 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
         }
     }
 
-    ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter);
-    // regularize Hessian
-    acados_tic(&timer1);
-    config->regularize->regularize(config->regularize, dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
-    nlp_timings->time_reg += acados_toc(&timer1);
+    if (mem->qps_solved_in_sqp_iter < 2 && (!solve_feasibility_qp || opts->use_constraint_hessian_in_feas_qp))
+    {
+        // levenberg marquardt term
+        ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter, qp_in);
+        // regularize Hessian
+        acados_tic(&timer1);
+        config->regularize->regularize(config->regularize, dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
+        nlp_timings->time_reg += acados_toc(&timer1);
+    }
+
     // Show input to QP
     if (nlp_opts->print_level > 3)
     {
@@ -1003,9 +1008,18 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
 
     if (solve_feasibility_qp)
     {
-        qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts,
-                                                    nlp_mem, nlp_work, false,
-                                                    qp_in, qp_out, &mem->relaxed_qp_solver);
+        if (opts->use_constraint_hessian_in_feas_qp)
+        {
+            qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts,
+                nlp_mem, nlp_work, false,
+                qp_in, qp_out, &mem->relaxed_qp_solver);
+        }
+        else
+        {
+            // dont regularize Hessian for feasibility QP
+            qp_status = ocp_nlp_solve_qp(config, dims, nlp_opts,
+                nlp_mem, nlp_work, qp_in, qp_out, &mem->relaxed_qp_solver);
+        }
     }
     else
     {
@@ -1013,6 +1027,8 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
                                                     nlp_mem, nlp_work, false,
                                                     NULL, NULL, NULL);
     }
+
+    mem->qps_solved_in_sqp_iter += 1;
 
     // restore default warm start
     if (sqp_iter==0)
@@ -1169,7 +1185,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
     {
         if (nlp_opts->print_level >=1)
         {
-            printf("\n Error in Feasibility QP in iteration %d, got qp_status %d!\n", qp_iter, qp_status);
+            printf("\nError in feasibility QP in iteration %d, got qp_status %d!\n", qp_iter, qp_status);
         }
         nlp_mem->status = ACADOS_QP_FAILURE;
         nlp_mem->iter = sqp_iter;
@@ -1421,7 +1437,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
     qp_info* qp_info_;
     int qp_iter = 0;
     int search_direction_status;
-    int solved_nominal_before = 0;
+    mem->qps_solved_in_sqp_iter = 0;
 
     if (mem->search_direction_mode == NOMINAL_QP)
     {
@@ -1441,7 +1457,6 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
                 printf("Switch to Byrd-Omojokun mode!\n");
             }
             mem->search_direction_mode = BYRD_OMOJOKUN;
-            solved_nominal_before = 1;
         }
         else
         {
@@ -1463,8 +1478,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
         // if the second QP is feasible, we change back to nominal QP mode.
         // Maybe we want some kind of watchdog, if for two consecutive QPs this holds
         // then we switch back
-        search_direction_status = byrd_omojokun_direction_computation(dims, config, opts, nlp_opts, nlp_in, nlp_out, mem, work, sqp_iter, timer0, timer1);
-        if (solved_nominal_before)
+        if (mem->qps_solved_in_sqp_iter == 1)
         {
             mem->search_direction_type = "NFN";
         }
@@ -1472,6 +1486,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
         {
             mem->search_direction_type = "FN";
         }
+        search_direction_status = byrd_omojokun_direction_computation(dims, config, opts, nlp_opts, nlp_in, nlp_out, mem, work, sqp_iter, timer0, timer1);
         double l1_inf = calculate_qp_l1_infeasibility(dims, mem, work, opts, mem->relaxed_qp_in, mem->relaxed_qp_out);
         if (l1_inf/(fmax(1.0, (double) mem->absolute_nns)) < opts->tol_ineq)
         {

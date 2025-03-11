@@ -2661,7 +2661,7 @@ static void adaptive_levenberg_marquardt_update_mu(double iter, double step_size
 
 void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
-    ocp_nlp_workspace *work, double alpha, int iter)
+    ocp_nlp_workspace *work, double alpha, int iter, ocp_qp_in *qp_in)
 {
     if (opts->with_adaptive_levenberg_marquardt)
     {
@@ -3808,6 +3808,45 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
 
     return qp_status;
 }
+
+
+
+int ocp_nlp_solve_qp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *nlp_opts,
+                     ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work,
+                     ocp_qp_in *qp_in_, ocp_qp_out *qp_out_,
+                     ocp_qp_xcond_solver *xcond_solver)
+{
+    acados_timer timer;
+
+    ocp_qp_xcond_solver_config *qp_solver = xcond_solver->config;
+    ocp_qp_xcond_solver_dims *qp_dims = xcond_solver->dims;
+    ocp_qp_xcond_solver_opts *qp_opts = xcond_solver->opts;
+    ocp_qp_xcond_solver_memory *qp_mem = xcond_solver->mem;
+    ocp_qp_xcond_solver_workspace *qp_work = xcond_solver->work;
+
+    ocp_qp_in *qp_in = qp_in_;
+    ocp_qp_out *qp_out = qp_out_;
+
+    ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
+
+    double tmp_time;
+    int qp_status;
+
+    // solve qp
+    acados_tic(&timer);
+    qp_status = qp_solver->evaluate(qp_solver, qp_dims,
+                qp_in, qp_out, qp_opts, qp_mem, qp_work);
+    // add qp timings
+    nlp_timings->time_qp_sol += acados_toc(&timer);
+    // NOTE: timings within qp solver are added internally (lhs+rhs)
+    qp_solver->memory_get(qp_solver, qp_mem, "time_qp_solver_call", &tmp_time);
+    nlp_timings->time_qp_solver_call += tmp_time;
+    qp_solver->memory_get(qp_solver, qp_mem, "time_qp_xcond", &tmp_time);
+    nlp_timings->time_qp_xcond += tmp_time;
+
+    return qp_status;
+}
+
 
 
 void ocp_nlp_dump_qp_in_to_file(ocp_qp_in *qp_in, int sqp_iter, int soc)

@@ -122,6 +122,8 @@ typedef struct
     int watchdog_zero_slacks_counter; // counts number of consecutive BYRD_OMOJOKUN iter with slack sum == 0
     int absolute_nns; // sum of all nns[i]
 
+    int qps_solved_in_sqp_iter;
+
     // QP solver with always feasible QPs
     ocp_qp_xcond_solver relaxed_qp_solver;
     ocp_qp_xcond_solver_memory *relaxed_qp_solver_mem;
