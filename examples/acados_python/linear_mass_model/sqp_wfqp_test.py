@@ -141,7 +141,7 @@ def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'):
     solver_options.globalization_full_step_dual = True
     solver_options.print_level = 1
     solver_options.nlp_solver_max_iter = 20
-    solver_options.use_exact_hessian_in_feas_qp = False
+    solver_options.use_constraint_hessian_in_feas_qp = False
 
     # set prediction horizon
     solver_options.tf = Tf

@@ -116,11 +116,8 @@ def solve_infeasible_linearization(setting):
     ocp.solver_options.globalization_alpha_min = 1e-15
     ocp.solver_options.nlp_solver_max_iter = 100
     ocp.solver_options.search_direction_mode = "BYRD_OMOJOKUN"
+    ocp.solver_options.use_constraint_hessian_in_feas_qp = False
 
-    if False:
-        ocp.solver_options.use_exact_hessian_in_feas_qp = True
-    else:
-        ocp.solver_options.use_exact_hessian_in_feas_qp = False
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
 
     # initialize solver
