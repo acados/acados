@@ -419,6 +419,8 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     mem->relaxed_qp_solver.mem = mem->relaxed_qp_solver_mem;
     mem->relaxed_qp_solver.work = mem->relaxed_qp_solver_work;
 
+    set_relaxed_qp_in_matrix_pointers(mem, mem->nlp_mem->qp_in);
+
     // Z_cost_module
     assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->Z_cost_module, &c_ptr);
 
@@ -1266,7 +1268,7 @@ Feasibility QP and nominal QP share many entries.
 - Constraint bounds are different
 Where we point to the same memory for both QPs is given below.
 */
-static void set_relaxed_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp_qp_in *qp_in)
+void set_relaxed_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp_qp_in *qp_in)
 {
     // dynamics
     mem->relaxed_qp_in->BAbt = qp_in->BAbt; // dynamics matrix & vector work space
@@ -1558,8 +1560,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     {
         mem->absolute_nns += mem->nns[i];
     }
-
-    set_relaxed_qp_in_matrix_pointers(mem, nominal_qp_in);
 
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
