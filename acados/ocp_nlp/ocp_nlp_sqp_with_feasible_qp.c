@@ -919,7 +919,7 @@ static void set_pointers_for_hessian_evaluation(ocp_nlp_config *config,
 
 static void setup_hessian_matrices_for_qps(ocp_nlp_config *config,
     ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_sqp_wfqp_opts *opts,
-    ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
+    ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work, int sqp_iter)
 {
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
     ocp_qp_in *nominal_qp_in = nlp_mem->qp_in;
@@ -937,7 +937,7 @@ static void setup_hessian_matrices_for_qps(ocp_nlp_config *config,
     for (int i = 0; i <= N; i++)
     {
         /* Hessian matrices */
-        // hess_QP = objective_multiplier * hess_cost + hess_constraints
+        // hess_QP = hess_cost + hess_constraints
         nxu = nx[i]+nu[i];
 
         if (opts->use_constraint_hessian_in_feas_qp)
@@ -952,6 +952,8 @@ static void setup_hessian_matrices_for_qps(ocp_nlp_config *config,
         // Z -- slack matrix --> needs to be at correct position!
         blasfeo_dveccpsc(2*ns[i], 1.0, mem->Z_cost_module+i, 0, nominal_qp_in->Z+i, 0);
     }
+    // Levenberg Marquardt term for nominal QP
+    ocp_nlp_add_levenberg_marquardt_term(config, dims, in, out, opts->nlp_opts, nlp_mem, work, mem->alpha, sqp_iter, nlp_mem->qp_in);
 }
 
 /*
@@ -986,8 +988,12 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
 
     if (mem->qps_solved_in_sqp_iter < 2 && (!solve_feasibility_qp || opts->use_constraint_hessian_in_feas_qp))
     {
-        // levenberg marquardt term
-        ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter, qp_in);
+        if (solve_feasibility_qp && opts->use_constraint_hessian_in_feas_qp)
+        {
+            // LM for feasibility QP
+            ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, opts->nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter, qp_in);
+        }
+
         // regularize Hessian
         acados_tic(&timer1);
         config->regularize->regularize(config->regularize, dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
@@ -1619,13 +1625,12 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 ocp_nlp_get_cost_value_from_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
             }
 
-            setup_hessian_matrices_for_qps(config, dims, nlp_in, nlp_out, opts, mem, nlp_work);
+            setup_hessian_matrices_for_qps(config, dims, nlp_in, nlp_out, opts, mem, nlp_work, sqp_iter);
             //
             nlp_timings->time_lin += acados_toc(&timer1);
             // compute nlp residuals
             ocp_nlp_res_compute(dims, nlp_opts, nlp_in, nlp_out, nlp_res, nlp_mem, nlp_work);
             ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
-
         }
 
         // Initialize the memory for different globalization strategies
