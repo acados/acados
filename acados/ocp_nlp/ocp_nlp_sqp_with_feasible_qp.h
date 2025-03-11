@@ -106,6 +106,7 @@ typedef struct
 
     // statistics
     double *stat;
+        // res_stat, res_eq, res_ineq, res_comp, qp_stat_N1, qp_iter_N1, qp_stat_F, qp_iter_F, qp_stat_N2, qp_iter_N2, alpha
     int stat_m;
     int stat_n;
 

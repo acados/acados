@@ -815,10 +815,7 @@ static double calculate_qp_l1_infeasibility_manually(ocp_nlp_dims *dims, ocp_nlp
             }
         }
 
-        // upper bounds (seems to be correct but I do not understand why??)
-        // the sign of upper bound d is wrong!! We should use -d. Why is that?
-        // blasfeo_dgemv_t(nu[i]+nx[i], ng[i], 1.0, qp_in->DCt+i, 0, 0, qp_out->ux+i, 0,
-        //                 0.0, qp_in->d+i, 2*nb[i]+ng[i], &work->nlp_work->tmp_2ni, 2*nb[i]+ng[i]);
+        // upper bounds
         for (j=0; j<2*nb[i]+2*ng[i]; ++j)
         {
             mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, j);
@@ -1142,7 +1139,7 @@ static void setup_byrd_omojokun_bounds(ocp_nlp_dims *dims, ocp_nlp_memory *nlp_m
             // it is lower_bounds <= value <= -upper_bounds, therefore plus below
             // for the slacks with upper bound we have value - slack, therefore
             // value <= -upper_bound + slack,
-            // we store upper_bound - slack??
+            // we store upper_bound - slack
             BLASFEO_DVECEL(nominal_qp_in->d+i, nb[i] + ng[i] + ni_nl[i] + constr_index) -= tmp_upper;
         }
     }
@@ -1379,26 +1376,25 @@ static void initial_setup_feasibility_qp_objective(ocp_nlp_config *config,
             relaxed_qp_in->diag_H_flag[i] = 1;
         }
 
-        // Z -- slack matrix
-        // be aware of rqz_QP = [r, q, zl_NLP, zl_QP, zu_NLP, zu_QP]
+        // Z -- slack matrix; order: Z = [Zl_NLP, Zl_QP, Zu_NLP, Zu_QP]
 
-        // zl_QP
+        // Zl_QP
         blasfeo_dvecse(nns[i], 0.0, relaxed_qp_in->Z+i, ns[i]);
-        // zu_QP
+        // Zu_QP
         blasfeo_dvecse(nns[i], 0.0, relaxed_qp_in->Z+i, 2*ns[i]+nns[i]);
 
         if (opts->use_constraint_hessian_in_feas_qp)
         {
-            // zl_QP
+            // Zl_NLP
             blasfeo_dvecse(ns[i], 0.0, relaxed_qp_in->Z+i, 0);
-            // zu_QP
+            // Zu_NLP
             blasfeo_dvecse(ns[i], 0.0, relaxed_qp_in->Z+i, ns[i]+nns[i]);
         }
         else
         {
-            // zl_QP
+            // Zl_NLP
             blasfeo_dvecse(ns[i], opts->feasibility_qp_hessian_scalar, relaxed_qp_in->Z+i, 0);
-            // zu_QP
+            // Zu_NLP
             blasfeo_dvecse(ns[i], opts->feasibility_qp_hessian_scalar, relaxed_qp_in->Z+i, ns[i]+nns[i]);
         }
 
