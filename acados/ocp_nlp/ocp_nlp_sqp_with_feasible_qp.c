@@ -469,6 +469,13 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
         assign_and_advance_int(mem->nns[stage], &mem->idxns[stage], &c_ptr);
     }
 
+    // sum of all nns[i]
+    mem->absolute_nns = 0;
+    for (int i = 0; i <= dims->N; i++)
+    {
+        mem->absolute_nns += mem->nns[i];
+    }
+
     mem->nlp_mem->status = ACADOS_READY;
 
     // blasfeo_mem align
@@ -959,8 +966,9 @@ Solves the QP. Either solves feasibility QP or nominal QP
 static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* opts, ocp_qp_in* qp_in, ocp_qp_out* qp_out,
                     ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_in* nlp_in, ocp_nlp_out* nlp_out,
                     ocp_nlp_memory* nlp_mem, ocp_nlp_workspace* nlp_work, int sqp_iter, bool solve_feasibility_qp,
-                    acados_timer timer0, acados_timer timer1)
+                    acados_timer timer_tot)
 {
+    acados_timer timer_qp;
     ocp_nlp_opts* nlp_opts = opts->nlp_opts;
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
@@ -992,9 +1000,9 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
         }
 
         // regularize Hessian
-        acados_tic(&timer1);
+        acados_tic(&timer_qp);
         config->regularize->regularize(config->regularize, dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
-        nlp_timings->time_reg += acados_toc(&timer1);
+        nlp_timings->time_reg += acados_toc(&timer_qp);
     }
 
     // Show input to QP
@@ -1065,7 +1073,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
 
         mem->nlp_mem->status = ACADOS_QP_FAILURE;
         nlp_mem->iter = sqp_iter;
-        nlp_timings->time_tot = acados_toc(&timer0);
+        nlp_timings->time_tot = acados_toc(&timer_tot);
 
         return mem->nlp_mem->status;
     }
@@ -1159,8 +1167,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
                                             ocp_nlp_sqp_wfqp_memory *mem,
                                             ocp_nlp_sqp_wfqp_workspace *work,
                                             int sqp_iter,
-                                            acados_timer timer0,
-                                            acados_timer timer1)
+                                            acados_timer timer_tot)
 {
     ocp_nlp_memory* nlp_mem = mem->nlp_mem;
     ocp_nlp_workspace* nlp_work = work->nlp_work;
@@ -1180,7 +1187,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
     /* Solve Feasibility QP: Objective: Only constraint Hessian/Identity AND only gradient of slack variables */
     print_debug_output("Solve Feasibility QP!\n", nlp_opts->print_level, 2);
     qp_status = prepare_and_solve_QP(config, opts, relaxed_qp_in, relaxed_qp_out, dims, mem, nlp_in, nlp_out,
-                nlp_mem, nlp_work, sqp_iter, true, timer0, timer1);
+                nlp_mem, nlp_work, sqp_iter, true, timer_tot);
     ocp_qp_out_get(relaxed_qp_out, "qp_info", &qp_info_);
     qp_iter = qp_info_->num_iter;
     log_qp_stats(mem, sqp_iter, true, qp_status, qp_iter);
@@ -1192,7 +1199,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
         }
         nlp_mem->status = ACADOS_QP_FAILURE;
         nlp_mem->iter = sqp_iter;
-        nlp_timings->time_tot = acados_toc(&timer0);
+        nlp_timings->time_tot = acados_toc(&timer_tot);
         // #if defined(ACADOS_WITH_OPENMP)
         //         // restore number of threads
         //         int num_threads_bkp = omp_get_num_threads();
@@ -1213,7 +1220,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
     setup_byrd_omojokun_bounds(dims, nlp_mem, mem, work, opts);
     // solve_feasibility_qp --> false in prepare_and_solve_QP
     qp_status = prepare_and_solve_QP(config, opts, nominal_qp_in, nominal_qp_out, dims, mem, nlp_in, nlp_out,
-                                     nlp_mem, nlp_work, sqp_iter, false, timer0, timer1);
+                                     nlp_mem, nlp_work, sqp_iter, false, timer_tot);
     ocp_qp_out_get(nominal_qp_out, "qp_info", &qp_info_);
     qp_iter = qp_info_->num_iter;
     log_qp_stats(mem, sqp_iter, false, qp_status, qp_iter);
@@ -1226,7 +1233,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
         }
         nlp_mem->status = ACADOS_QP_FAILURE;
         nlp_mem->iter = sqp_iter;
-        nlp_timings->time_tot = acados_toc(&timer0);
+        nlp_timings->time_tot = acados_toc(&timer_tot);
         // #if defined(ACADOS_WITH_OPENMP)
         //         // restore number of threads
         //         int num_threads_bkp = omp_get_num_threads();
@@ -1432,8 +1439,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
     ocp_nlp_sqp_wfqp_memory *mem,
     ocp_nlp_sqp_wfqp_workspace *work,
     int sqp_iter,
-    acados_timer timer0,
-    acados_timer timer1)
+    acados_timer timer_tot)
 {
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
     qp_info* qp_info_;
@@ -1447,7 +1453,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
         // otherwise, we change the mode to Byrd-Omojokun and we continue.
         search_direction_status = prepare_and_solve_QP(config, opts, nlp_mem->qp_in, nlp_mem->qp_out,
                         dims, mem, nlp_in, nlp_out, nlp_mem, work->nlp_work,
-                        sqp_iter, false, timer0, timer1);
+                        sqp_iter, false, timer_tot);
         ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
         qp_iter = qp_info_->num_iter;
         log_qp_stats(mem, sqp_iter, false, search_direction_status, qp_iter);
@@ -1478,8 +1484,6 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
     {
         // We solve two QPs and return the search direction that we found!
         // if the second QP is feasible, we change back to nominal QP mode.
-        // Maybe we want some kind of watchdog, if for two consecutive QPs this holds
-        // then we switch back
         if (mem->qps_solved_in_sqp_iter == 1)
         {
             mem->search_direction_type = "NFN";
@@ -1488,7 +1492,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
         {
             mem->search_direction_type = "FN";
         }
-        search_direction_status = byrd_omojokun_direction_computation(dims, config, opts, nlp_opts, nlp_in, nlp_out, mem, work, sqp_iter, timer0, timer1);
+        search_direction_status = byrd_omojokun_direction_computation(dims, config, opts, nlp_opts, nlp_in, nlp_out, mem, work, sqp_iter, timer_tot);
         double l1_inf = calculate_qp_l1_infeasibility(dims, mem, work, opts, mem->relaxed_qp_in, mem->relaxed_qp_out);
         if (l1_inf/(fmax(1.0, (double) mem->absolute_nns)) < opts->tol_ineq)
         {
@@ -1502,8 +1506,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
         }
 
         return search_direction_status;
-        // Maybe we want to switch to a full feasibility restoration phase
-        // if the NLP seems to be infeasible? Will be implemented later
+        // Maybe switch to a full feasibility restoration phase if NLP seems infeasible? Will be implemented later
     }
     else if (mem->search_direction_mode == FEASIBILITY_QP)
     {
@@ -1526,8 +1529,8 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
 int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
 {
-    acados_timer timer0, timer1;
-    acados_tic(&timer0);
+    acados_timer timer_tot, timer1;
+    acados_tic(&timer_tot);
 
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
@@ -1566,14 +1569,6 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // set number of threads
     omp_set_num_threads(opts->nlp_opts->num_threads);
 #endif
-
-    // Calculate the absolute number of constraints which are not slacked by the user,
-    // but which are slacked in QP to ensure feasibility
-    mem->absolute_nns = 0;
-    for (int i = 0; i <= dims->N; i++)
-    {
-        mem->absolute_nns += mem->nns[i];
-    }
 
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
@@ -1659,7 +1654,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             omp_set_num_threads(num_threads_bkp);
 #endif
             nlp_mem->iter = sqp_iter;
-            nlp_timings->time_tot = acados_toc(&timer0);
+            nlp_timings->time_tot = acados_toc(&timer_tot);
             return mem->nlp_mem->status;
         }
 
@@ -1669,7 +1664,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         /* Search Direction Computation */
-        search_direction_status = calculate_search_direction(dims, config, opts, nlp_opts, nlp_in, nlp_out, mem, work, sqp_iter, timer0, timer1);
+        search_direction_status = calculate_search_direction(dims, config, opts, nlp_opts, nlp_in, nlp_out, mem, work, sqp_iter, timer_tot);
         if (search_direction_status != ACADOS_SUCCESS)
         {
             return nlp_mem->status;
@@ -1707,7 +1702,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             }
             nlp_mem->status = globalization_status;
             nlp_mem->iter = sqp_iter;
-            nlp_timings->time_tot = acados_toc(&timer0);
+            nlp_timings->time_tot = acados_toc(&timer_tot);
 #if defined(ACADOS_WITH_OPENMP)
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
@@ -1883,8 +1878,8 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
 void ocp_nlp_sqp_wfqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *mem_, void *work_,
                                  char *field, int stage, int index, void *sens_nlp_out_)
 {
-    acados_timer timer0;
-    acados_tic(&timer0);
+    acados_timer timer_tot;
+    acados_tic(&timer_tot);
 
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
@@ -1899,7 +1894,7 @@ void ocp_nlp_sqp_wfqp_eval_param_sens(void *config_, void *dims_, void *opts_, v
     ocp_nlp_common_eval_param_sens(config, dims, opts->nlp_opts, nlp_mem, nlp_work,
                                  field, stage, index, sens_nlp_out);
 
-    nlp_mem->nlp_timings->time_solution_sensitivities = acados_toc(&timer0);
+    nlp_mem->nlp_timings->time_solution_sensitivities = acados_toc(&timer_tot);
 
     return;
 }
