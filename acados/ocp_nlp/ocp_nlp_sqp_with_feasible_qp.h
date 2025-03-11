@@ -71,6 +71,7 @@ typedef struct
     int search_direction_mode; // determines how the QPs should be solved
     int watchdog_zero_slacks_max; // number of consecutive BYRD_OMOJOKUN iterations with zero slacks before switching back to NOMINAL_QP
     bool allow_direction_mode_switch_to_nominal; // if true, mode can switch from Byrd-Omojokun to nominal mode
+    double feasibility_qp_hessian_scalar; // multiplication factor of feasibility QP Hessian
 } ocp_nlp_sqp_wfqp_opts;
 
 

@@ -125,6 +125,7 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
     opts->search_direction_mode = NOMINAL_QP;
     opts->watchdog_zero_slacks_max = 2;
     opts->allow_direction_mode_switch_to_nominal = true;
+    opts->feasibility_qp_hessian_scalar = 1e-4;
 
     // overwrite default submodules opts
     // qp tolerance
@@ -1331,7 +1332,6 @@ static void initial_setup_feasibility_qp_objective(ocp_nlp_config *config,
     ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
 {
     ocp_qp_in *relaxed_qp_in = mem->relaxed_qp_in;
-    ocp_qp_in *nominal_qp_in = mem->nlp_mem->qp_in;
 
     int N = dims->N;
     int *nx = dims->nx;
@@ -1353,7 +1353,7 @@ static void initial_setup_feasibility_qp_objective(ocp_nlp_config *config,
         if (!opts->use_constraint_hessian_in_feas_qp)
         {
             // We use the identity matrix Hessian
-            blasfeo_ddiare(nxu, 1e-4, relaxed_qp_in->RSQrq+i, 0, 0);
+            blasfeo_ddiare(nxu, opts->feasibility_qp_hessian_scalar, relaxed_qp_in->RSQrq+i, 0, 0);
             // indicate that Hessian is diagonal
             relaxed_qp_in->diag_H_flag[i] = 1;
         }
@@ -1361,19 +1361,25 @@ static void initial_setup_feasibility_qp_objective(ocp_nlp_config *config,
         // Z -- slack matrix
         // be aware of rqz_QP = [r, q, zl_NLP, zl_QP, zu_NLP, zu_QP]
 
-        // zu_NLP shift back
-        // TODO: Do we want this to be 1e-4 like all standard variables?
-        // TODO: is here the first line missing starting from zero offset?
-        blasfeo_dveccp(ns[i], nominal_qp_in->Z+i, ns[i], relaxed_qp_in->Z+i, ns[i]+nns[i]); // TODO: is this the same as in 1376 and 1377?
-
         // zl_QP
         blasfeo_dvecse(nns[i], 0.0, relaxed_qp_in->Z+i, ns[i]);
         // zu_QP
         blasfeo_dvecse(nns[i], 0.0, relaxed_qp_in->Z+i, 2*ns[i]+nns[i]);
 
-        // TODO: add the diagonal entry here as well for the slack variables?
-        blasfeo_dveccpsc(ns[i], 0.0, mem->Z_cost_module+i, 0, relaxed_qp_in->Z+i, 0);
-        blasfeo_dveccpsc(ns[i], 0.0, mem->Z_cost_module+i, 0, relaxed_qp_in->Z+i, ns[i]+mem->nns[i]);
+        if (opts->use_constraint_hessian_in_feas_qp)
+        {
+            // zl_QP
+            blasfeo_dvecse(ns[i], 0.0, relaxed_qp_in->Z+i, 0);
+            // zu_QP
+            blasfeo_dvecse(ns[i], 0.0, relaxed_qp_in->Z+i, ns[i]+nns[i]);
+        }
+        else
+        {
+            // zl_QP
+            blasfeo_dvecse(ns[i], opts->feasibility_qp_hessian_scalar, relaxed_qp_in->Z+i, 0);
+            // zu_QP
+            blasfeo_dvecse(ns[i], opts->feasibility_qp_hessian_scalar, relaxed_qp_in->Z+i, ns[i]+nns[i]);
+        }
 
         /* vectors */
         // rqz
