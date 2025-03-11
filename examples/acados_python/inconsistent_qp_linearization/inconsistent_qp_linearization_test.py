@@ -228,6 +228,6 @@ def test_convergence_of_solver(setting):
             assert np.allclose(solution, infeasible_solution), "Optimal solution should be 1!"
 
 if __name__ == '__main__':
-    # test_nominal_qp()
-    # test_byrd_omojokun_qps()
+    test_nominal_qp()
+    test_byrd_omojokun_qps()
     main()
