@@ -748,8 +748,6 @@ static double calculate_qp_l1_infeasibility_from_slacks(ocp_nlp_dims *dims, ocp_
             // Add upper slack
             tmp2 = BLASFEO_DVECEL(qp_out->ux + i, nx[i]+nu[i]+2*ns[i]+nns[i] + j);
             l1_inf += fmax(0.0, tmp2);
-            // int index = mem->idxns[i][j];
-            // printf("slacks for constraint %d %d: l %e\t u %e\n", i, j, tmp1, tmp2);
         }
     }
     assert(l1_inf > -opts->tol_ineq);
@@ -849,12 +847,11 @@ static double calculate_qp_l1_infeasibility_manually(ocp_nlp_dims *dims, ocp_nlp
 
 static double calculate_qp_l1_infeasibility(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *mem,
                                             ocp_nlp_sqp_wfqp_workspace *work, ocp_nlp_sqp_wfqp_opts* opts,
-                                            ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-                                            bool use_QP_l1_inf_from_slacks)
+                                            ocp_qp_in *qp_in, ocp_qp_out *qp_out)
 {
     double l1_inf = 0.0;
     // this is only possible if directly after a QP was solved
-    if (use_QP_l1_inf_from_slacks)
+    if (opts->use_QP_l1_inf_from_slacks)
     {
         // seems to be inaccurate. Results are worse!
         l1_inf = calculate_qp_l1_infeasibility_from_slacks(dims, mem, opts, qp_out);
@@ -1085,7 +1082,7 @@ static void log_qp_stats(ocp_nlp_sqp_wfqp_memory *mem, int sqp_iter, bool solve_
 Adjusts the bounds of the nominal QP with the optimal slack variables of the
 feasibility. Resulting nominal QP has always a feasible solution.
 */
-static void setup_byrd_omojokun_bounds(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_sqp_wfqp_workspace *work, ocp_nlp_sqp_wfqp_opts* opts, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
+static void setup_byrd_omojokun_bounds(ocp_nlp_dims *dims, ocp_nlp_memory *nlp_mem, ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_sqp_wfqp_workspace *work, ocp_nlp_sqp_wfqp_opts* opts)
 {
     int N = dims->N;
     int *nx = dims->nx;
@@ -1097,6 +1094,9 @@ static void setup_byrd_omojokun_bounds(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memo
     int *ng = dims->ng;
     int *ni_nl = dims->ni_nl;
 
+    ocp_qp_in *nominal_qp_in = nlp_mem->qp_in;
+    ocp_qp_out *relaxed_qp_out = mem->relaxed_qp_out;
+
     int i, j;
     double tmp_lower, tmp_upper;
 
@@ -1107,19 +1107,18 @@ static void setup_byrd_omojokun_bounds(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memo
             int constr_index = mem->idxns[i][j]; //
             int slack_index = mem->relaxed_qp_in->idxs_rev[i][constr_index];
             // get lower slack
-            tmp_lower = BLASFEO_DVECEL(qp_out->ux + i, nx[i]+nu[i]+slack_index);
+            tmp_lower = BLASFEO_DVECEL(relaxed_qp_out->ux + i, nx[i]+nu[i]+slack_index);
             // lower_bound - value
-            // TODO: d should be copied such that we can extract in python
-            BLASFEO_DVECEL(qp_in->d+i, constr_index) -= tmp_lower;
+            BLASFEO_DVECEL(nominal_qp_in->d+i, constr_index) -= tmp_lower;
 
             // get upper slack
-            tmp_upper = BLASFEO_DVECEL(qp_out->ux + i, nx[i]+nu[i]+ns[i]+nns[i] + slack_index);
+            tmp_upper = BLASFEO_DVECEL(relaxed_qp_out->ux + i, nx[i]+nu[i]+ns[i]+nns[i] + slack_index);
             // upper bounds have the wrong sign!
             // it is lower_bounds <= value <= -upper_bounds, therefore plus below
             // for the slacks with upper bound we have value - slack, therefore
             // value <= -upper_bound + slack,
-            // therefore we store upper_bound - slack??
-            BLASFEO_DVECEL(qp_in->d+i, nb[i] + ng[i] + ni_nl[i] + constr_index) -= tmp_upper;
+            // we store upper_bound - slack??
+            BLASFEO_DVECEL(nominal_qp_in->d+i, nb[i] + ng[i] + ni_nl[i] + constr_index) -= tmp_upper;
         }
     }
 }
@@ -1182,17 +1181,14 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
 
     if (config->globalization->needs_objective_value() == 1)
     {
-        l1_inf_QP_feasibility = calculate_qp_l1_infeasibility(dims, mem, work,
-            /*
-            Calculates predicted reduction of l1 infeasibility by a QP. This is defined by
-            l1_inf_QP(0 step) - search direction)
-            */ opts, relaxed_qp_in, relaxed_qp_out, opts->use_QP_l1_inf_from_slacks);
+
+        l1_inf_QP_feasibility = calculate_qp_l1_infeasibility(dims, mem, work, opts, relaxed_qp_in, relaxed_qp_out);
         mem->pred_l1_inf_QP = calculate_pred_l1_inf(opts, mem, l1_inf_QP_feasibility);
     }
 
     /* Solve the nominal QP with updated bounds*/
     print_debug_output("Solve Nominal QP!\n", nlp_opts->print_level, 2);
-    setup_byrd_omojokun_bounds(dims, mem, work, opts, nominal_qp_in, relaxed_qp_out);
+    setup_byrd_omojokun_bounds(dims, nlp_mem, mem, work, opts);
     // solve_feasibility_qp --> false in prepare_and_solve_QP
     qp_status = prepare_and_solve_QP(config, opts, nominal_qp_in, nominal_qp_out, dims, mem, nlp_in, nlp_out,
                                      nlp_mem, nlp_work, sqp_iter, false, timer0, timer1);
@@ -1471,7 +1467,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
         {
             mem->search_direction_type = "FN";
         }
-        double l1_inf = calculate_qp_l1_infeasibility(dims, mem, work, opts, mem->relaxed_qp_in, mem->relaxed_qp_out, false);
+        double l1_inf = calculate_qp_l1_infeasibility(dims, mem, work, opts, mem->relaxed_qp_in, mem->relaxed_qp_out);
         if (l1_inf/(fmax(1.0, (double) mem->absolute_nns)) < opts->tol_ineq)
         {
             mem->watchdog_zero_slacks_counter += 1;
