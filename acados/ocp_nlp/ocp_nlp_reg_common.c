@@ -200,7 +200,7 @@ void acados_mirror(int dim, double *A, double *V, double *d, double *e, double e
     acados_reconstruct_A(dim, A, V, d);
 }
 
-void acados_mirror_adaptive_eps(int dim, double *A, double *V, double *d, double *e, double max_eig_block)
+void acados_mirror_adaptive_eps(int dim, double *A, double *V, double *d, double *e, double max_cond_block)
 {
     int i;
     acados_eigen_decomposition(dim, A, V, d, e);
@@ -250,7 +250,7 @@ void acados_project(int dim, double *A, double *V, double *d, double *e, double 
 }
 
 
-void acados_project_adaptive_eps(int dim, double *A, double *V, double *d, double *e, double max_eig_block)
+void acados_project_adaptive_eps(int dim, double *A, double *V, double *d, double *e, double max_cond_block)
 {
     int i;
     acados_eigen_decomposition(dim, A, V, d, e);
