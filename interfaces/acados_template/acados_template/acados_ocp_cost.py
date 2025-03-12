@@ -282,7 +282,7 @@ class AcadosOcpCost:
 
     @cost_type.setter
     def cost_type(self, cost_type):
-        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR')
+        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR', 'AUTO')
         if cost_type in cost_types:
             self.__cost_type = cost_type
         else:
@@ -290,7 +290,7 @@ class AcadosOcpCost:
 
     @cost_type_0.setter
     def cost_type_0(self, cost_type_0):
-        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR')
+        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR', 'AUTO')
         if cost_type_0 in cost_types:
             self.__cost_type_0 = cost_type_0
         else:
@@ -455,7 +455,7 @@ class AcadosOcpCost:
 
     @cost_type_e.setter
     def cost_type_e(self, cost_type_e):
-        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR')
+        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR', 'AUTO')
         if cost_type_e in cost_types:
             self.__cost_type_e = cost_type_e
         else:
