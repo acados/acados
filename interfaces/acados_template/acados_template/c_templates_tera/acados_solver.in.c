@@ -2388,11 +2388,6 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "reg_epsilon", &reg_epsilon);
 {%- endif %}
 
-{%- if solver_options.regularize_method == "PROJECT" or solver_options.regularize_method == "MIRROR" or solver_options.regularize_method == "CONVEXIFY" %}
-    double reg_epsilon = {{ solver_options.reg_epsilon }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "reg_epsilon", &reg_epsilon);
-{%- endif %}
-
 {%- if solver_options.regularize_method == "PROJECT" or solver_options.regularize_method == "MIRROR" %}
     double reg_max_cond_block = {{ solver_options.reg_max_cond_block }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "reg_max_cond_block", &reg_max_cond_block);
