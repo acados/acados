@@ -217,8 +217,7 @@ void acados_mirror_adaptive_eps(int dim, double *A, double *V, double *d, double
     if (min_eig == 0.0 && max_eig == 0.0)
         eps = 1.0;
     else
-        eps = max_eig*1e-6;
-    // printf("eps = %5.e\n", eps);
+        eps = max_eig/max_cond_block;
 
     // mirror
     for (i = 0; i < dim; i++)
@@ -267,8 +266,7 @@ void acados_project_adaptive_eps(int dim, double *A, double *V, double *d, doubl
     if (min_eig == 0.0 && max_eig == 0.0)
         eps = 1.0;
     else
-        eps = max_eig*1e-6;
-    // printf("eps = %5.e\n", eps);
+        eps = max_eig/max_cond_block;
 
     // project
     for (i = 0; i < dim; i++)
