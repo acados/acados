@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include "acados/utils/math.h"
 
@@ -187,12 +188,11 @@ void acados_mirror(int dim, double *A, double *V, double *d, double *e, double e
 
     acados_eigen_decomposition(dim, A, V, d, e);
 
+    // mirror
     for (i = 0; i < dim; i++)
     {
-        // project
         if (d[i] >= -epsilon && d[i] <= epsilon)
             d[i] = epsilon;
-        // mirror
         else if (d[i] < 0)
             d[i] = -d[i];
     }
@@ -200,7 +200,37 @@ void acados_mirror(int dim, double *A, double *V, double *d, double *e, double e
     acados_reconstruct_A(dim, A, V, d);
 }
 
+void acados_mirror_adaptive_eps(int dim, double *A, double *V, double *d, double *e, double max_eig_block)
+{
+    int i;
+    acados_eigen_decomposition(dim, A, V, d, e);
+    double max_eig = 0.0;
+    double min_eig = ACADOS_INFTY;
+    double eps;
 
+    // compute max and min eigenvalues
+    for (i=0; i < dim; i++)
+    {
+        max_eig = MAX(max_eig, fabs(d[i]));
+        min_eig = MIN(min_eig, fabs(d[i]));
+    }
+    if (min_eig == 0.0 && max_eig == 0.0)
+        eps = 1.0;
+    else
+        eps = max_eig*1e-6;
+    // printf("eps = %5.e\n", eps);
+
+    // mirror
+    for (i = 0; i < dim; i++)
+    {
+        if (d[i] >= -eps && d[i] <= eps)
+            d[i] = eps;
+        else if (d[i] < 0)
+            d[i] = -d[i];
+    }
+
+    acados_reconstruct_A(dim, A, V, d);
+}
 
 // projecting regularization
 void acados_project(int dim, double *A, double *V, double *d, double *e, double epsilon)
