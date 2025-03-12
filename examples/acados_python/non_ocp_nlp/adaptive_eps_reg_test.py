@@ -49,29 +49,21 @@ def export_parametric_ocp() -> AcadosOcp:
     model.disc_dyn_expr = x_next
 
     # define cost
+    p_W = ca.SX.sym("W", nx+nu, nx+nu)
+    p_W_e = ca.SX.sym("W_e", nx, nx)
+    model.p = ca.vertcat(p_W[:], p_W_e[:])
+    ocp.parameter_values = np.ones((model.p.size()[0], ))
     ny = nx+nu
-    Vx = np.zeros((ny, nx))
-    Vx[:nx, :] = np.eye(nx)
-    Vu = np.zeros((ny, nu))
-    Vu[nx:, :] = np.eye(nu)
-    Vx_e = np.eye(nx)
-
-    ocp.cost.Vx = Vx
-    ocp.cost.Vx_e = Vx_e
-    ocp.cost.Vu = Vu
-    ocp.cost.cost_type = "LINEAR_LS"
-    ocp.cost.cost_type_e = "LINEAR_LS"
-    ocp.cost.W = np.eye(ny)
-    ocp.cost.W_e = np.eye(nx)
-    ocp.cost.yref = np.zeros((ny, ))
-    ocp.cost.yref_e = np.zeros((nx, ))
+    xu = ca.vertcat(model.x, model.u)
+    model.cost_expr_ext_cost = xu.T @ p_W @ xu
+    model.cost_expr_ext_cost_e = model.x.T @ p_W_e @ model.x
+    ocp.cost.cost_type = "EXTERNAL"
+    ocp.cost.cost_type_e = "EXTERNAL"
 
     model.name = "non_ocp"
     ocp.model = model
 
-    ocp.constraints.lbx_0 = np.array([-1.0])
-    ocp.constraints.ubx_0 = np.array([1.0])
-    ocp.constraints.idxbx_0 = np.array([0])
+    ocp.constraints.x0 = np.ones((nx, ))
 
     ocp.solver_options.integrator_type = "DISCRETE"
     ocp.solver_options.qp_solver = "FULL_CONDENSING_HPIPM"
@@ -82,15 +74,19 @@ def export_parametric_ocp() -> AcadosOcp:
     ocp.solver_options.tf = 1.0
     ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_ext_qp_res = 1
-    ocp.solver_options.nlp_solver_max_iter = 1
+    ocp.solver_options.nlp_solver_max_iter = 2
     ocp.solver_options.eval_residual_at_max_iter = False
     ocp.solver_options.reg_adaptive_eps = True
     ocp.solver_options.reg_max_cond_block = 1e3
 
     return ocp
 
-def test_reg_adaptive_mirror():
+def set_cost_matrix(solver, W_mat, W_mat_e):
+    p_val = np.concatenate([W_mat.flatten(), W_mat_e.flatten()])
+    solver.set(0, "p", p_val)
+    solver.set(1, "p", p_val)
 
+def test_reg_adaptive_mirror():
     ocp = export_parametric_ocp()
     ocp.solver_options.qp_solver_t0_init = 0
     ocp.solver_options.nlp_solver_max_iter = 2 # QP should converge in one iteration
@@ -104,10 +100,12 @@ def test_reg_adaptive_mirror():
     # Test zero matrix
     W_mat = np.zeros((nx+nu, nx+nu))
     W_mat_e = np.zeros((nx, nx))
-    ocp_solver.cost_set(0, 'W', W_mat)
-    ocp_solver.cost_set(1, 'W', W_mat_e)
+    set_cost_matrix(ocp_solver, W_mat, W_mat_e)
 
     _ = ocp_solver.solve()
+    ocp_solver.print_statistics()
+    nlp_iter = ocp_solver.get_stats("nlp_iter")
+    print(f"{nlp_iter=}")
 
     hessian_0 = ocp_solver.get_hessian_block(0)
     assert np.equal(hessian_0, np.eye(nx+nu)).all(), "Zero Hessian matrix should be transformed into identity"
@@ -123,12 +121,16 @@ def test_reg_adaptive_mirror():
     W_mat[0,0] = 1e6
     W_mat[nx+nu-1, nx+nu-1] = 1e-4
     W_mat_e = np.zeros((nx, nx))
-    ocp_solver.cost_set(0, 'W', W_mat)
-    ocp_solver.cost_set(1, 'W', W_mat_e)
+    set_cost_matrix(ocp_solver, W_mat, W_mat_e)
+
     _ = ocp_solver.solve()
+    ocp_solver.print_statistics()
+    nlp_iter = ocp_solver.get_stats("nlp_iter")
+    print(f"{nlp_iter=}")
 
     hessian_0 = ocp_solver.get_hessian_block(0)
-    assert np.equal(hessian_0, np.diag([1e3, 1e3, 1e6, 1e3, 1e3, 1e3])).all(), "Something in adaptive mirror went wrong!"
+    print(f"{hessian_0=}")
+    assert np.equal(hessian_0, 2*np.diag([1e3, 1e3, 1e6, 1e3, 1e3, 1e3])).all(), "Something in adaptive mirror went wrong!"
     qp_diagnostics = ocp_solver.qp_diagnostics()
     assert qp_diagnostics['condition_number_stage'][0] <= ocp.solver_options.reg_max_cond_block, "Condition number must be <= ocp.solver_options.reg_max_cond_block per stage"
 
@@ -147,15 +149,19 @@ def test_reg_adaptive_mirror():
 
     W_mat = block_diag(mat_x, mat_u)
     print(np.linalg.eigvals(W_mat))
-    # print(W_mat)
-    W_mat_e = np.zeros((nx, nx))
-    ocp_solver.cost_set(0, 'W', W_mat)
-    ocp_solver.cost_set(1, 'W', W_mat_e)
+    set_cost_matrix(ocp_solver, W_mat, W_mat_e)
+
     _ = ocp_solver.solve()
+
+    ocp_solver.print_statistics()
+    nlp_iter = ocp_solver.get_stats("nlp_iter")
+    print(f"{nlp_iter=}")
+
     hessian_0 = ocp_solver.get_hessian_block(0)
-    # print(hessian_0)
-    # print(np.linalg.eigvals(hessian_0))
-    assert np.allclose(np.linalg.eigvals(hessian_0), np.diag([2e5, 2e2, 2e2, 2e2, 2e2, 2e2])), "Something in adaptive mirror went wrong!"
+    print(hessian_0)
+    print(np.linalg.eigvals(hessian_0))
+
+    assert np.allclose(np.linalg.eigvals(hessian_0), 2*np.diag([2e5, 2e2, 2e2, 2e2, 2e2, 2e2])), "Something in adaptive mirror went wrong!"
     qp_diagnostics = ocp_solver.qp_diagnostics()
     assert qp_diagnostics['condition_number_stage'][0] <= ocp.solver_options.reg_max_cond_block, "Condition number must be <= ocp.solver_options.reg_max_cond_block per stage"
 
