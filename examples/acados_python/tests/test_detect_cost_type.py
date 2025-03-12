@@ -78,7 +78,7 @@ def main(cost_to_test: str):
 
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+    ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.integrator_type = 'IRK'
     ocp.solver_options.nlp_solver_type = 'SQP'
     ocp.solver_options.globalization = 'MERIT_BACKTRACKING'

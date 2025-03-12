@@ -421,9 +421,10 @@ add_test(NAME python_pendulum_ocp_example_cmake
     set_tests_properties(python_regularization_test PROPERTIES DEPENDS python_test_sim_dae)
     set_tests_properties(python_test_sim_dae PROPERTIES DEPENDS python_sparse_param_test)
     set_tests_properties(python_sparse_param_test PROPERTIES DEPENDS python_test_detect_constraints)
+    set_tests_properties(python_test_detect_constraints PROPERTIES DEPENDS python_test_detect_cost_type)
 
     if(ACADOS_WITH_OSQP)
-        set_tests_properties(python_test_detect_constraints PROPERTIES DEPENDS python_OSQP_test)
+        set_tests_properties(python_test_detect_cost_type PROPERTIES DEPENDS python_OSQP_test)
     endif()
 
     # Directory acados_python/chain_mass
