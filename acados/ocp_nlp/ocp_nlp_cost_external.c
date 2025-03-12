@@ -760,7 +760,7 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     }
 
     // slack update gradient
-    // grad_s = z + Z * slack
+    // grad_s (z_QP) = z_NLP + Z_NLP * slack
     blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
 
