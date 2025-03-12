@@ -113,7 +113,7 @@ void acados_reconstruct_A(int dim, double *A, double *V, double *d);
 void acados_mirror(int dim, double *A, double *V, double *d, double *e, double epsilon);
 void acados_mirror_adaptive_eps(int dim, double *A, double *V, double *d, double *e, double max_eig_block);
 void acados_project(int dim, double *A, double *V, double *d, double *e, double epsilon);
-
+void acados_project_adaptive_eps(int dim, double *A, double *V, double *d, double *e, double max_eig_block);
 
 
 #ifdef __cplusplus

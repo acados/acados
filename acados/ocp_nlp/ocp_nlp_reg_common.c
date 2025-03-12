@@ -250,5 +250,32 @@ void acados_project(int dim, double *A, double *V, double *d, double *e, double 
 }
 
 
+void acados_project_adaptive_eps(int dim, double *A, double *V, double *d, double *e, double max_eig_block)
+{
+    int i;
+    acados_eigen_decomposition(dim, A, V, d, e);
+    double max_eig = 0.0;
+    double min_eig = ACADOS_INFTY;
+    double eps;
 
+    // compute max and min eigenvalues
+    for (i=0; i < dim; i++)
+    {
+        max_eig = MAX(max_eig, fabs(d[i]));
+        min_eig = MIN(min_eig, fabs(d[i]));
+    }
+    if (min_eig == 0.0 && max_eig == 0.0)
+        eps = 1.0;
+    else
+        eps = max_eig*1e-6;
+    // printf("eps = %5.e\n", eps);
 
+    // project
+    for (i = 0; i < dim; i++)
+    {
+        if (d[i] < eps)
+            d[i] = eps;
+    }
+
+    acados_reconstruct_A(dim, A, V, d);
+}
