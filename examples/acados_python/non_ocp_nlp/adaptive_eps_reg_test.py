@@ -119,22 +119,23 @@ def test_reg_adaptive_eps(regularize_method='MIRROR'):
     W_mats = [np.zeros((nx+nu, nx+nu)), W_mat2, W_mat3]
     W_mat_e = np.zeros((nx, nx))
 
-    for i in range(3):
+    for i, W_mat in enumerate(W_mats):
         print(f"{regularize_method} i={i}")
         print("---------------------")
-        W_mat = W_mats[i]
 
         # Test zero matrix
         set_cost_matrix(ocp_solver, W_mat, W_mat_e)
 
-        _ = ocp_solver.solve()
+        status = ocp_solver.solve()
         ocp_solver.print_statistics()
         nlp_iter = ocp_solver.get_stats("nlp_iter")
-        print(f"{nlp_iter=}")
 
         qp_diagnostics = ocp_solver.qp_diagnostics()
         assert qp_diagnostics['condition_number_stage'][0] <= ocp.solver_options.reg_max_cond_block +1e-8, f"Condition number must be <= {ocp.solver_options.reg_max_cond_block} per stage, got {qp_diagnostics['condition_number_stage'][0]} for i = {i}"
         assert qp_diagnostics['condition_number_stage'][1] <= ocp.solver_options.reg_max_cond_block +1e-8, f"Condition number must be <= {ocp.solver_options.reg_max_cond_block} per stage, got {qp_diagnostics['condition_number_stage'][1]} for i = {i}"
+
+        assert nlp_iter == 1, f"Number of NLP iterations should be 1, got {nlp_iter} for i = {i}"
+        assert status == 0, f"acados returned status {status} for i = {i}"
 
         hessian_0 = ocp_solver.get_hessian_block(0)
         if i == 0:
