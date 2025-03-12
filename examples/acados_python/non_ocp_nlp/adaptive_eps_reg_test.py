@@ -43,7 +43,7 @@ def export_parametric_ocp() -> AcadosOcp:
     model.x = ca.SX.sym("x", nx)
     model.u = ca.SX.sym("u", nu)
 
-    x_next = model.x
+    x_next = ca.vertcat(model.x)
     x_next[:nu] += model.u
     model.disc_dyn_expr = x_next
 
@@ -75,13 +75,16 @@ def export_parametric_ocp() -> AcadosOcp:
     ocp.solver_options.integrator_type = "DISCRETE"
     ocp.solver_options.qp_solver = "FULL_CONDENSING_HPIPM"
     ocp.solver_options.hessian_approx = "EXACT"
+    ocp.solver_options.regularize_method = "MIRROR"
+    ocp.solver_options.nlp_solver_type = "SQP"
     ocp.solver_options.N_horizon = 1
     ocp.solver_options.tf = 1.0
-
-    ocp.p_global_values = np.zeros((1,))
-    ocp.solver_options.with_solution_sens_wrt_params = True
-    ocp.solver_options.with_value_sens_wrt_params = True
+    ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_ext_qp_res = 1
+    ocp.solver_options.nlp_solver_max_iter = 1
+    ocp.solver_options.eval_residual_at_max_iter = False
+    ocp.solver_options.reg_adaptive_eps = True
+    ocp.solver_options.reg_max_cond_block = 1e3
 
     return ocp
 
@@ -94,9 +97,23 @@ def test_reg():
 
     ocp_solver = AcadosOcpSolver(ocp, json_file="parameter_augmented_acados_ocp.json", verbose=False)
 
+    nx = ocp.dims.nx
+    nu = ocp.dims.nu
     # TODO: test different matrices
-    W_mat = np.zeros()
-    # ...
+    # Test zero matrix
+    W_mat = np.zeros((nx+nu, nx+nu))
+    W_mat_e = np.zeros((nx, nx))
+    ocp_solver.cost_set(0, 'W', W_mat)
+    ocp_solver.cost_set(1, 'W', W_mat_e)
+
+    status = ocp_solver.solve()
+    hessian_0 = ocp_solver.get_hessian_block(0)
+    print(hessian_0)
+    hessian_1 = ocp_solver.get_hessian_block(1)
+    print(hessian_1)
+
+
+    # Second test
 
 
 if __name__ == "__main__":
