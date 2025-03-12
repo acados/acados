@@ -196,6 +196,10 @@ if(ACADOS_PYTHON)
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/time_varying
         python test_mocp_qp.py)
 
+    add_test(NAME python_test_detect_cost_type
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
+        python test_detect_cost_type.py)
+
 # Tests for DDP
 add_test(NAME py_ddp_solve_qp
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/unconstrained_ocps/linear_dynamics_qp_ocp
