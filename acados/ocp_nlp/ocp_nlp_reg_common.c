@@ -205,16 +205,14 @@ void acados_mirror_adaptive_eps(int dim, double *A, double *V, double *d, double
     int i;
     acados_eigen_decomposition(dim, A, V, d, e);
     double max_eig = 0.0;
-    double min_eig = ACADOS_INFTY;
     double eps;
 
     // compute max and min eigenvalues
     for (i=0; i < dim; i++)
     {
         max_eig = MAX(max_eig, fabs(d[i]));
-        min_eig = MIN(min_eig, fabs(d[i]));
     }
-    if (min_eig == 0.0 && max_eig == 0.0)
+    if (max_eig == 0.0)
         eps = 1.0;
     else
         eps = max_eig/max_cond_block;
@@ -255,16 +253,13 @@ void acados_project_adaptive_eps(int dim, double *A, double *V, double *d, doubl
     acados_eigen_decomposition(dim, A, V, d, e);
     double max_eig = 0.0;
     double eps;
-    int eig_0_count = 0;
 
     // compute max and min eigenvalues
     for (i=0; i < dim; i++)
     {
-        max_eig = MAX(max_eig, d[i]); // negative eigenvalues are clipped, i.e., not important for condition number
-        if (fabs(d[i]) == 0.0)
-            eig_0_count += 1;
+        max_eig = MAX(max_eig, d[i]);
     }
-    if (eig_0_count == dim)
+    if (max_eig == 0.0)
         eps = 1.0;
     else
         eps = max_eig/max_cond_block;

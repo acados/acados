@@ -739,7 +739,7 @@ class AcadosOcpOptions:
 
     @property
     def reg_max_cond_block(self):
-        """Maximum condition number per block when using regularize_method in ['PROJECT', 'MIRROR'] with reg_adaptive_eps = True
+        """Maximum condition number of each Hessian block after regularization with regularize_method in ['PROJECT', 'MIRROR'] and reg_adaptive_eps = True
 
         Type: float
         Default: 1e-7
