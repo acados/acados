@@ -113,7 +113,7 @@ class AcadosOcpCost:
     @property
     def cost_type_0(self):
         """Cost type at initial shooting node (0)
-        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS, CONVEX_OVER_NONLINEAR} or :code:`None`.
+        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS, CONVEX_OVER_NONLINEAR, AUTO} or :code:`None`.
         Default: :code:`None`.
 
             .. note:: Cost at initial stage is the same as for intermediate shooting nodes if not set differently explicitly.
@@ -161,7 +161,7 @@ class AcadosOcpCost:
     def cost_ext_fun_type_0(self):
         """Type of external function for cost at initial shooting node (0)
         -- string in {casadi, generic} or :code:`None`
-        Default: :code:'casadi'.
+        Default: :code:`casadi`.
 
             .. note:: Cost at initial stage is the same as for intermediate shooting nodes if not set differently explicitly.
         """
@@ -204,7 +204,7 @@ class AcadosOcpCost:
     def cost_type(self):
         """
         Cost type at intermediate shooting nodes (1 to N-1)
-        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS, CONVEX_OVER_NONLINEAR}.
+        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS, CONVEX_OVER_NONLINEAR, AUTO}.
         Default: 'LINEAR_LS'.
         """
         return self.__cost_type
@@ -276,7 +276,7 @@ class AcadosOcpCost:
     def cost_ext_fun_type(self):
         """Type of external function for cost at intermediate shooting nodes (1 to N-1).
         -- string in {casadi, generic}
-        Default: :code:'casadi'.
+        Default: :code:`casadi`.
         """
         return self.__cost_ext_fun_type
 
@@ -362,7 +362,7 @@ class AcadosOcpCost:
     def cost_type_e(self):
         """
         Cost type at terminal shooting node (N)
-        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS, CONVEX_OVER_NONLINEAR}.
+        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS, CONVEX_OVER_NONLINEAR, AUTO}.
         Default: 'LINEAR_LS'.
         """
         return self.__cost_type_e
@@ -449,7 +449,7 @@ class AcadosOcpCost:
     def cost_ext_fun_type_e(self):
         """Type of external function for cost at terminal shooting node (N).
         -- string in {casadi, generic}
-        Default: :code:'casadi'.
+        Default: :code:`casadi`.
         """
         return self.__cost_ext_fun_type_e
 
