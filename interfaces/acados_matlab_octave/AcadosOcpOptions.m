@@ -80,6 +80,8 @@ classdef AcadosOcpOptions < handle
         cost_discretization
         regularize_method
         reg_epsilon
+        reg_max_cond_block
+        reg_adaptive_eps
         exact_hess_cost
         exact_hess_dyn
         exact_hess_constr
@@ -179,6 +181,8 @@ classdef AcadosOcpOptions < handle
             obj.cost_discretization = 'EULER';
             obj.regularize_method = 'NO_REGULARIZE';
             obj.reg_epsilon = 1e-4;
+            obj.reg_adaptive_eps = false;
+            obj.reg_max_cond_block = 1e-7;
             obj.shooting_nodes = [];
             obj.cost_scaling = [];
             obj.exact_hess_cost = 1;
