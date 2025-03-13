@@ -49,7 +49,6 @@ from .utils import (get_acados_path, format_class_dict, make_object_json_dumpabl
                     get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square,
                     check_casadi_version, ACADOS_INFTY)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
-# from .mpc_utils import detect_cost_type
 
 from .zoro_description import ZoroDescription, process_zoro_description
 from .casadi_function_generation import (
