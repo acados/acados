@@ -1702,6 +1702,10 @@ class AcadosOcp:
     
 
     def detect_cost_type(self, model: AcadosModel, cost: AcadosOcpCost, dims: AcadosOcpDims, stage_type: str) -> None:
+        """
+        If the cost type of a stage (initial, path or terminal) is set to AUTO, try to reformulate it as a LINEAR_LS cost.
+        If that is not possible (cost is not quadratic or includes parameters), use the EXTERNAL cost type.
+        """
         # Extract model variables
         x = model.x
         u = model.u
@@ -1710,7 +1714,7 @@ class AcadosOcp:
 
         # Check type
         if not isinstance(x, ca.SX):
-            raise ValueError("Constraint detection only works for casadi.SX!")
+            raise ValueError("Cost type detection only works for casadi.SX!")
 
         nx = casadi_length(x)
         nu = casadi_length(u)
@@ -1732,11 +1736,11 @@ class AcadosOcp:
             raise ValueError("Cost type detection requires definition of cost term as CasADi SX or MX.")
 
         if ca.is_quadratic(expr_cost, x) and ca.is_quadratic(expr_cost, u) and ca.is_quadratic(expr_cost, z) \
-                and not any(ca.which_depends(expr_cost, p)):
+                and not any(ca.which_depends(expr_cost, p)) and not any(ca.which_depends(expr_cost, model.p_global)) \
+                and not any(ca.which_depends(expr_cost, model.t)):
 
-            if expr_cost.is_zero() and stage_type == 'path':
-                print('Path cost function is zero -> Reformulating as LINEAR_LS cost.')
-                self.cost.cost_type = 'LINEAR_LS'
+            if expr_cost.is_zero():
+                print('Cost function is zero -> Reformulating as LINEAR_LS cost.')
                 ny = 0
                 Vx, Vu, Vz, W, y_ref, y = [], [], [], [], [], []
             else:
@@ -1813,9 +1817,9 @@ class AcadosOcp:
             # Extract output
             if stage_type == 'terminal':
                 if np.any(Vu):
-                    raise ValueError('Cost mayer term cannot depend on control input u!')
+                    raise ValueError('Terminal cost term cannot depend on the control input (u)!')
                 if np.any(Vz):
-                    raise ValueError('Cost mayer term cannot depend on z!')
+                    raise ValueError('Terminal cost term cannot depend on the algebraic variables (z)!')
                 cost.cost_type_e = 'LINEAR_LS'
                 dims.ny_e = ny
                 cost.Vx_e = Vx
@@ -1849,7 +1853,7 @@ class AcadosOcp:
             print('NOTE: These numerical values can be updated online using the appropriate setters.')
 
         else:
-            print('\n\nCost function is not quadratic -> Using external cost\n\n')
+            print('\n\nCost function is not quadratic or includes parameters -> Using external cost\n\n')
             if stage_type == 'terminal':
                 cost.cost_type_e = 'EXTERNAL'
             elif stage_type == 'path':

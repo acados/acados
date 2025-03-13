@@ -39,7 +39,7 @@ import scipy.linalg
 from utils import plot_pendulum
 import casadi as ca
 
-COST_VERSIONS = ['LS', 'EXTERNAL', 'EXTERNAL_Z', 'NLS', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z']
+COST_VERSIONS = ['LS', 'EXTERNAL', 'EXTERNAL_Z', 'NLS', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z', 'AUTO']
 HESSIAN_APPROXIMATION = 'GAUSS_NEWTON' # 'GAUSS_NEWTON
 N = 20
 T_HORIZON = 1.0
@@ -77,7 +77,7 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
 
     cost_W = scipy.linalg.block_diag(Q_mat, R_mat)
 
-    if cost_version in ['CONL', 'CONL_Z', 'EXTERNAL', 'EXTERNAL_Z']:
+    if cost_version in ['CONL', 'CONL_Z', 'EXTERNAL', 'EXTERNAL_Z', 'AUTO']:
         cost_W = ca.sparsify(ca.DM(cost_W))
         Q_mat = ca.sparsify(ca.DM(Q_mat))
 
@@ -179,8 +179,14 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
         ocp.model.cost_expr_ext_cost = .5*y_expr_z.T @ cost_W @ y_expr_z
         ocp.model.cost_expr_ext_cost_e = .5*x.T @ Q_mat @ x
 
+    elif cost_version == 'AUTO':
+        ocp.cost.cost_type = 'AUTO'
+        ocp.cost.cost_type_e = 'AUTO'
+        ocp.model.cost_expr_ext_cost = .5*ca.vertcat(x, u).T @ cost_W @ ca.vertcat(x, u)
+        ocp.model.cost_expr_ext_cost_e = .5*x.T @ Q_mat @ x
+
     else:
-        raise Exception('Unknown cost_version. Possible values are \'LS\' and \'NLS\'.')
+        raise Exception('Unknown cost_version.')
 
     if cost_version in ['LS', 'NLS', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z']:
         ocp.cost.yref = np.zeros((ny, ))
