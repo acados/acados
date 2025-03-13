@@ -3715,6 +3715,7 @@ void ocp_nlp_dump_qp_in_to_file(ocp_qp_in *qp_in, int sqp_iter, int soc)
     FILE *out_file = fopen(filename, "w");
     print_ocp_qp_in_to_file(out_file, qp_in);
     fclose(out_file);
+    printf("qp_in dumped to %s\n", filename);
 }
 
 
