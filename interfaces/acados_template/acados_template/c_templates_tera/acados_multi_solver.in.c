@@ -2271,6 +2271,14 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "reg_epsilon", &reg_epsilon);
 {%- endif %}
 
+{%- if solver_options.regularize_method == "PROJECT" or solver_options.regularize_method == "MIRROR" %}
+    double reg_max_cond_block = {{ solver_options.reg_max_cond_block }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "reg_max_cond_block", &reg_max_cond_block);
+
+    bool reg_adaptive_eps = {{ solver_options.reg_adaptive_eps }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "reg_adaptive_eps", &reg_adaptive_eps);
+{%- endif %}
+
     bool store_iterates = {{ solver_options.store_iterates }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "store_iterates", &store_iterates);
 
@@ -2729,7 +2737,7 @@ int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver
     fun->casadi_fun((const double **) fun->args, fun->res, fun->int_work, fun->float_work, NULL);
 
 {%- else %}
-    printf("No global_data, {{ name }}_acados_set_p_global_and_precompute_dependencies does nothing.\n");
+    // printf("No global_data, {{ name }}_acados_set_p_global_and_precompute_dependencies does nothing.\n");
 {%- endif %}
     return 0;
 }

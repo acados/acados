@@ -89,6 +89,8 @@ class AcadosOcpOptions:
         self.__cost_discretization = 'EULER'
         self.__regularize_method = 'NO_REGULARIZE'
         self.__reg_epsilon = 1e-4
+        self.__reg_max_cond_block = 1e-7
+        self.__reg_adaptive_eps = False
         self.__exact_hess_cost = 1
         self.__exact_hess_dyn = 1
         self.__exact_hess_constr = 1
@@ -736,6 +738,28 @@ class AcadosOcpOptions:
         return self.__reg_epsilon
 
     @property
+    def reg_max_cond_block(self):
+        """Maximum condition number of each Hessian block after regularization with regularize_method in ['PROJECT', 'MIRROR'] and reg_adaptive_eps = True
+
+        Type: float
+        Default: 1e-7
+        """
+        return self.__reg_max_cond_block
+
+    @property
+    def reg_adaptive_eps(self):
+        """Determines if epsilon is chosen adaptively in regularization
+        used if regularize_method in ['PROJECT', 'MIRROR']
+
+        If true, epsilon is chosen block-wise based on reg_max_cond_block.
+        Otherwise, epsilon is chosen globally based on reg_epsilon.
+
+        Type: bool
+        Default: False
+        """
+        return self.__reg_adaptive_eps
+
+    @property
     def globalization_alpha_reduction(self):
         """Step size reduction factor for globalization MERIT_BACKTRACKING,
 
@@ -1271,6 +1295,16 @@ class AcadosOcpOptions:
     @reg_epsilon.setter
     def reg_epsilon(self, reg_epsilon):
         self.__reg_epsilon = reg_epsilon
+
+    @reg_max_cond_block.setter
+    def reg_max_cond_block(self, reg_max_cond_block):
+        self.__reg_max_cond_block = reg_max_cond_block
+
+    @reg_adaptive_eps.setter
+    def reg_adaptive_eps(self, reg_adaptive_eps):
+        if not isinstance(reg_adaptive_eps, bool):
+            raise Exception(f'Invalid reg_adaptive_eps value, expected bool, got {reg_adaptive_eps}')
+        self.__reg_adaptive_eps = reg_adaptive_eps
 
     @globalization_alpha_min.setter
     def globalization_alpha_min(self, globalization_alpha_min):

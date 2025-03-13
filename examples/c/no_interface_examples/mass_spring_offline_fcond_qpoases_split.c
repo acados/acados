@@ -162,8 +162,9 @@ int main() {
 
 	if(OFFLINE_CONDENSING == 1)
     {
-        cond_opts->cond_hess = 0;
-		cond_opts->expand_dual_sol = 0;
+        int tmp_int = 0;
+        ocp_qp_full_condensing_opts_set(cond_opts, "dual_sol", tmp_int);
+        ocp_qp_full_condensing_opts_set(cond_opts, "hess", tmp_int);
 
         ocp_qp_full_condensing_opts_update(qp_in->dim, cond_opts);
         ocp_qp_full_condensing_opts_update(qp_in->dim, cond_opts);

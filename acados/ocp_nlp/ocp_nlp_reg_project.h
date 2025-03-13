@@ -64,6 +64,8 @@ extern "C" {
 typedef struct
 {
     double epsilon;
+    bool adaptive_eps;
+    double max_cond_block;
 } ocp_nlp_reg_project_opts;
 
 //
