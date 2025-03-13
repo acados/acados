@@ -195,6 +195,9 @@ class AcadosOcp:
         if cost.cost_type_0 is None:
             self.copy_path_cost_to_stage_0()
 
+        if cost.cost_type_0 == 'AUTO':
+            self.detect_cost_type(model, cost, dims, "initial")
+
         if cost.cost_type_0 == 'LINEAR_LS':
             check_if_square(cost.W_0, 'W_0')
             ny_0 = cost.W_0.shape[0]
@@ -258,6 +261,9 @@ class AcadosOcp:
             "OR the option to provide a symbolic custom Hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n")
 
         # path
+        if cost.cost_type == 'AUTO':
+            self.detect_cost_type(model, cost, dims, "path")
+
         if cost.cost_type == 'LINEAR_LS':
             ny = cost.W.shape[0]
             check_if_square(cost.W, 'W')
@@ -302,6 +308,9 @@ class AcadosOcp:
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
         # terminal
+        if cost.cost_type_e == 'AUTO':
+            self.detect_cost_type(model, cost, dims, "terminal")
+
         if cost.cost_type_e == 'LINEAR_LS':
             ny_e = cost.W_e.shape[0]
             check_if_square(cost.W_e, 'W_e')
@@ -1689,3 +1698,166 @@ class AcadosOcp:
         self.parameter_values = np.append(self.parameter_values, [0.0])
         self.p_global_values = np.append(self.p_global_values, [0.0])
         return
+    
+
+    def detect_cost_type(self, model: AcadosModel, cost: AcadosOcpCost, dims: AcadosOcpDims, stage_type: str) -> None:
+        """
+        If the cost type of a stage (initial, path or terminal) is set to AUTO, try to reformulate it as a LINEAR_LS cost.
+        If that is not possible (cost is not quadratic or includes parameters), use the EXTERNAL cost type.
+        """
+        # Extract model variables
+        x = model.x
+        u = model.u
+        z = model.z
+        p = model.p
+
+        # Check type
+        if not isinstance(x, ca.SX):
+            raise ValueError("Cost type detection only works for casadi.SX!")
+
+        nx = casadi_length(x)
+        nu = casadi_length(u)
+        nz = casadi_length(z)
+
+        print('--------------------------------------------------------------')
+        if stage_type == 'terminal':
+            expr_cost = model.cost_expr_ext_cost_e
+            print('Structure detection for terminal cost term')
+        elif stage_type == 'path':
+            expr_cost = model.cost_expr_ext_cost
+            print('Structure detection for path cost')
+        elif stage_type == 'initial':
+            expr_cost = model.cost_expr_ext_cost_0
+            print('Structure detection for initial cost term')
+
+        if not (isinstance(expr_cost, ca.SX) or isinstance(expr_cost, ca.MX)):
+            print('expr_cost =', expr_cost)
+            raise ValueError("Cost type detection requires definition of cost term as CasADi SX or MX.")
+
+        if ca.is_quadratic(expr_cost, x) and ca.is_quadratic(expr_cost, u) and ca.is_quadratic(expr_cost, z) \
+                and not any(ca.which_depends(expr_cost, p)) and not any(ca.which_depends(expr_cost, model.p_global)) \
+                and not any(ca.which_depends(expr_cost, model.t)):
+
+            if expr_cost.is_zero():
+                print('Cost function is zero -> Reformulating as LINEAR_LS cost.')
+                ny = 0
+                Vx, Vu, Vz, W, y_ref, y = [], [], [], [], [], []
+            else:
+                cost_fun = ca.Function('cost_fun', [x, u, z], [expr_cost])
+                dummy = ca.SX.sym('dummy', 1, 1)
+
+                print('Cost function is quadratic -> Reformulating as LINEAR_LS cost.')
+
+                Hxuz_fun = ca.Function('Hxuz_fun', [dummy], [ca.hessian(expr_cost, ca.vertcat(x, u, z))[0]])
+                H_xuz = np.array(Hxuz_fun(0))
+
+                xuz_idx = []
+                for i in range(nx + nu + nz):
+                    if np.any(H_xuz[i, :]):
+                        xuz_idx.append(i)
+
+                x_idx = list(set(range(nx)) & set(xuz_idx))
+                u_idx = list(set(range(nx, nx + nu)) & set(xuz_idx))
+                z_idx = list(set(range(nx + nu, nx + nu + nz)) & set(xuz_idx))
+
+                ny = len(xuz_idx)
+
+                Vx = np.zeros((ny, nx))
+                Vu = np.zeros((ny, nu))
+                Vz = np.zeros((ny, nz))
+                W = np.zeros((ny, ny))
+
+                i = 0
+                for idx in x_idx:
+                    Vx[i, idx] = 1
+                    W[i, :] = H_xuz[idx, xuz_idx] / 2
+                    i += 1
+
+                for idx in u_idx:
+                    iu = idx - nx
+                    Vu[i, iu] = 1
+                    W[i, :] = H_xuz[idx, xuz_idx] / 2
+                    i += 1
+
+                for idx in z_idx:
+                    iz = idx - nx - nu
+                    Vz[i, iz] = 1
+                    W[i, :] = H_xuz[idx, xuz_idx] / 2
+                    i += 1
+
+                xuz = ca.vertcat(x, u, z)
+                y = xuz[xuz_idx]
+                jac_fun = ca.Function('jac_fun', [y], [ca.jacobian(expr_cost, y).T])
+                y_ref = np.linalg.solve(W, -0.5 * np.array(jac_fun(np.zeros((ny, 1)))))
+
+                y = -y_ref + Vx @ x + Vu @ u
+                if nz > 0:
+                    y += Vz @ z
+
+                lls_cost_fun = ca.Function('lls_cost_fun', [x, u, z], [ca.mtimes(y.T, ca.mtimes(W, y))])
+
+                rel_err_tol = 1e-13
+                for jj in range(5):
+                    x0 = np.random.rand(nx)
+                    u0 = np.random.rand(nu)
+                    z0 = np.random.rand(nz)
+
+                    val1 = np.array(lls_cost_fun(x0, u0, z0))
+                    val2 = np.array(cost_fun(x0, u0, z0))
+                    diff_eval = np.abs(val1 - val2)
+                    rel_error = diff_eval / np.maximum(np.abs(val1), np.abs(val2))
+                    if rel_error > rel_err_tol:
+                        print(f'Something went wrong when reformulating with linear least square cost, '
+                            f'got relative error {rel_error:.2e}, should be < {rel_err_tol:.2e}')
+                        raise RuntimeError('Reformulation error')
+
+                W = 2 * W
+
+            # Extract output
+            if stage_type == 'terminal':
+                if np.any(Vu):
+                    raise ValueError('Terminal cost term cannot depend on the control input (u)!')
+                if np.any(Vz):
+                    raise ValueError('Terminal cost term cannot depend on the algebraic variables (z)!')
+                cost.cost_type_e = 'LINEAR_LS'
+                dims.ny_e = ny
+                cost.Vx_e = Vx
+                cost.W_e = W
+                cost.yref_e = y_ref
+            elif stage_type == 'path':
+                cost.cost_type = 'LINEAR_LS'
+                dims.ny = ny
+                cost.Vx = Vx
+                cost.Vu = Vu
+                cost.Vz = Vz
+                cost.W = W
+                cost.yref = y_ref
+            elif stage_type == 'initial':
+                cost.cost_type_0 = 'LINEAR_LS'
+                dims.ny_0 = ny
+                cost.Vx_0 = Vx
+                cost.Vu_0 = Vu
+                cost.Vz_0 = Vz
+                cost.W_0 = W
+                cost.yref_0 = y_ref
+
+            print('\n\nReformulated cost term in linear least squares form with:')
+            print('cost = 0.5 * || Vx * x + Vu * u + Vz * z - y_ref ||_W\n')
+            print('Vx\n', Vx)
+            print('Vu\n', Vu)
+            print('Vz\n', Vz)
+            print('W\n', W)
+            print('y_ref\n', y_ref)
+            print('y (symbolic)\n', y)
+            print('NOTE: These numerical values can be updated online using the appropriate setters.')
+
+        else:
+            print('\n\nCost function is not quadratic or includes parameters -> Using external cost\n\n')
+            if stage_type == 'terminal':
+                cost.cost_type_e = 'EXTERNAL'
+            elif stage_type == 'path':
+                cost.cost_type = 'EXTERNAL'
+            elif stage_type == 'initial':
+                cost.cost_type_0 = 'EXTERNAL'
+
+        print('--------------------------------------------------------------')
