@@ -953,8 +953,8 @@ class AcadosOcpOptions:
     @property
     def allow_direction_mode_switch_to_nominal(self):
         """
-        Indicated if we allow switching back from BYRD_OMOJOKUN to NOMINAL_QP
-        search direction mode?
+        Indicates if we allow switching back from BYRD_OMOJOKUN to NOMINAL_QP
+        search direction mode
 
         Type: bool
         Default: True
