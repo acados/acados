@@ -323,7 +323,7 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
     }
     // stat
     int stat_m = opts->nlp_opts->max_iter+1;
-    int stat_n = 11;
+    int stat_n = 13;
     size += stat_n*stat_m*sizeof(double);
 
     // idxns
@@ -443,7 +443,7 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
 
     // stat
     mem->stat_m = opts->nlp_opts->max_iter+1;
-    mem->stat_n = 11;
+    mem->stat_n = 13;
     mem->stat = (double *) c_ptr;
     assign_and_advance_double(mem->stat_m*mem->stat_n, &mem->stat, &c_ptr);
 
@@ -1112,15 +1112,17 @@ static void log_qp_stats(ocp_nlp_sqp_wfqp_memory *mem, int sqp_iter, bool solve_
     }
 }
 
-static void log_multiplier_norms(ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_sqp_wfqp_opts *opts, ocp_nlp_out *nlp_out, ocp_nlp_dims *dims)
+static void log_multiplier_norms(int sqp_iter, ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_sqp_wfqp_opts *opts, ocp_nlp_out *nlp_out, ocp_nlp_dims *dims)
 {
     if (opts->log_pi_norm_inf)
     {
         mem->norm_inf_pi = ocp_nlp_compute_dual_pi_norm_inf(nlp_out, dims);
+        mem->stat[mem->stat_n*(sqp_iter)+10] = mem->norm_inf_pi;
     }
     if (opts->log_lam_norm_inf)
     {
         mem->norm_inf_lam = ocp_nlp_compute_dual_lam_norm_inf(nlp_out, dims);
+        mem->stat[mem->stat_n*(sqp_iter)+11] = mem->norm_inf_lam;
     }
 }
 
@@ -1650,7 +1652,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->stat[mem->stat_n*sqp_iter+3] = nlp_res->inf_norm_res_comp;
         }
 
-        log_multiplier_norms(mem, opts, nlp_out, dims);
+        log_multiplier_norms(sqp_iter, mem, opts, nlp_out, dims);
 
         /* Output */
         if (nlp_opts->print_level > 0)
