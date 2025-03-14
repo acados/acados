@@ -73,9 +73,9 @@ void dense_qp_hpipm_opts_initialize_default(void *config, void *dims, void *opts
 //
 void dense_qp_hpipm_opts_update(void *config, void *dims, void *opts_);
 //
-acados_size_t dense_qp_hpipm_calculate_memory_size(void *dims, void *opts_);
+acados_size_t dense_qp_hpipm_memory_calculate_size(void *config_, void *dims_, void *opts_);
 //
-void *dense_qp_hpipm_assign_memory(void *dims, void *opts_, void *raw_memory);
+void *dense_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory);
 //
 acados_size_t dense_qp_hpipm_calculate_workspace_size(void *dims, void *opts_);
 //
