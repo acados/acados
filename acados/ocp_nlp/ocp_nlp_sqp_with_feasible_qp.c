@@ -673,7 +673,7 @@ static void print_iteration(int iter, ocp_nlp_config *config, ocp_nlp_res *nlp_r
     }
     // print iteration
     ocp_nlp_common_print_iteration(iter, nlp_res);
-    printf("%9.2e   %9s   %8.2e   %9.2e   %9.2e   ", mem->step_norm, mem->search_direction_type, prev_levenberg_marquardt, mem->norm_inf_pi, mem->norm_inf_pi);
+    printf("%9.2e   %9s   %8.2e   %9.2e   %9.2e   ", mem->step_norm, mem->search_direction_type, prev_levenberg_marquardt, mem->norm_inf_pi, mem->norm_inf_lam);
     config->globalization->print_iteration(nlp_mem->cost_value, nlp_opts->globalization, nlp_mem->globalization);
     printf("\n");
 }
@@ -1117,12 +1117,12 @@ static void log_multiplier_norms(int sqp_iter, ocp_nlp_sqp_wfqp_memory *mem, ocp
     if (opts->log_pi_norm_inf)
     {
         mem->norm_inf_pi = ocp_nlp_compute_dual_pi_norm_inf(nlp_out, dims);
-        mem->stat[mem->stat_n*(sqp_iter)+10] = mem->norm_inf_pi;
+        mem->stat[mem->stat_n*(sqp_iter)+11] = mem->norm_inf_pi;
     }
     if (opts->log_lam_norm_inf)
     {
         mem->norm_inf_lam = ocp_nlp_compute_dual_lam_norm_inf(nlp_out, dims);
-        mem->stat[mem->stat_n*(sqp_iter)+11] = mem->norm_inf_lam;
+        mem->stat[mem->stat_n*(sqp_iter)+12] = mem->norm_inf_lam;
     }
 }
 
