@@ -34,7 +34,7 @@ import scipy.linalg
 from linear_mass_model import *
 from itertools import product
 
-# an OCP to test Maratos effect an second order correction
+# an OCP to test the behavior of the SQP_WITH_FEASIBLE_QP functionalities
 
 def main_test():
 
