@@ -222,7 +222,7 @@ def test_convergence_of_solver(setting):
     if ocp.solver_options.nlp_solver_type == 'SQP_WITH_FEASIBLE_QP':
         if np.allclose(xinit, np.array([-0.001])):
             assert status == 0, "SQP with feasible QP should be able to solve the problem!"
-            assert np.allclose(solution, exact_solution), "Optimal soluvscodetion should be -2!"
+            assert np.allclose(solution, exact_solution), "Optimal solution should be -2!"
         elif np.allclose(xinit, np.array([0.5])):
             assert status == 3, "SQP with feasible QP should converge to infeasible stationary point with min step!"
             assert np.allclose(solution, infeasible_solution), "Optimal solution should be 1!"
