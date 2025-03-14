@@ -266,7 +266,7 @@ class AcadosOcpOptions:
     def nlp_solver_type(self):
         """NLP solver.
         String in ('SQP', 'SQP_RTI', 'DDP', 'SQP_WITH_FEASIBLE_QP').
-        Default: 'SQP_RTI'.
+        Default: 'SQP'.
         """
         return self.__nlp_solver_type
 
