@@ -52,6 +52,7 @@
 #include "acados/ocp_nlp/ocp_nlp_reg_project.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_project_reduc_hess.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_noreg.h"
+#include "acados/ocp_nlp/ocp_nlp_qp_scaling_noscale.h"
 #include "acados/ocp_nlp/ocp_nlp_globalization_fixed_step.h"
 #include "acados/ocp_nlp/ocp_nlp_globalization_merit_backtracking.h"
 #include "acados/ocp_nlp/ocp_nlp_globalization_funnel.h"
@@ -140,6 +141,9 @@ static void ocp_nlp_plan_initialize_default(ocp_nlp_plan_t *plan)
 
     // regularization: no reg by default
     plan->regularization = NO_REGULARIZE;
+
+    // QP scaling: no scale by default
+    plan->qp_scaling = NO_SCALING;
 
     // globalization: fixed step by default
     plan->globalization = FIXED_STEP;
@@ -239,6 +243,17 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
             break;
         default:
             printf("\nerror: ocp_nlp_config_create: unsupported plan->regularization\n");
+            exit(1);
+    }
+
+    // QP scaling
+    switch (plan.qp_scaling)
+    {
+        case NO_SCALING:
+            ocp_nlp_qp_scaling_noscale_config_initialize_default(config->qp_scaling);
+            break;
+        default:
+            printf("\nerror: ocp_nlp_config_create: unsupported plan->qp_scaling\n");
             exit(1);
     }
 
