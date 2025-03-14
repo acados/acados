@@ -1571,6 +1571,9 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
     // regularization
     size += config->regularize->memory_calculate_size(config->regularize, dims->regularize, opts->regularize);
 
+    // globalization
+    size += config->globalization->memory_calculate_size(config->globalization, dims);
+
     // dynamics
     size += N * sizeof(void *);
     for (int i = 0; i < N; i++)
@@ -1732,7 +1735,6 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     // globalization
     mem->globalization = config->globalization->memory_assign(config->globalization, dims, c_ptr);
     c_ptr += config->globalization->memory_calculate_size(config->globalization, dims);
-    // ->memory_calculate_size(config->globalization, dims);
 
     int i;
     // dynamics
