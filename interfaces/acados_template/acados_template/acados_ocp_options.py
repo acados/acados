@@ -1454,7 +1454,7 @@ class AcadosOcpOptions:
 
     @globalization_funnel_use_merit_fun_only.setter
     def globalization_funnel_use_merit_fun_only(self, globalization_funnel_use_merit_fun_only):
-        if type(globalization_funnel_use_merit_fun_only) == bool:
+        if isinstance(globalization_funnel_use_merit_fun_only, bool):
             self.__globalization_funnel_use_merit_fun_only = globalization_funnel_use_merit_fun_only
         else:
             raise Exception(f'Invalid type for globalization_funnel_use_merit_fun_only. Should be bool, got {globalization_funnel_use_merit_fun_only}')
