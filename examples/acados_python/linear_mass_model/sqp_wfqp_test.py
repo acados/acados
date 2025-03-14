@@ -296,14 +296,11 @@ def test_same_behavior_sqp_and_sqp_wfqp():
     soften_terminal = True
 
     # SQP solver
-    ocp, ocp_solver1 = create_solver("v1", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type='SQP_WITH_FEASIBLE_QP')
+    _, ocp_solver1 = create_solver("v1", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type='SQP_WITH_FEASIBLE_QP')
     status1 = ocp_solver1.solve()
 
-    ocp, ocp_solver2 = create_solver("v2", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type='SQP')
+    _, ocp_solver2 = create_solver("v2", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type='SQP')
     status2 = ocp_solver2.solve()
-
-    qp = ocp_solver1.get_last_qp()
-    relaxed_qp = ocp_solver2.get_last_qp()
 
     assert status1 == status2, "both solvers should converge"
 
@@ -311,6 +308,8 @@ def test_same_behavior_sqp_and_sqp_wfqp():
     res_solver1 = ocp_solver1.get_residuals()
     res_solver2 = ocp_solver2.get_residuals()
     assert np.array_equal(res_solver1, res_solver2), "both solvers should have identical residual stats"
+
+    print(f"\n\n----------------------\n")
 
 def sqp_wfqp_test_same_matrices():
     # # SETTINGS:
@@ -339,6 +338,8 @@ def sqp_wfqp_test_same_matrices():
     for prefix in idxb:
         for i in range(0, ocp_solver1.N+1):
             assert np.equal(qp[prefix+str(i)], relaxed_qp['relaxed_'+prefix+str(i)]).all(), f" matrices do not coincide for {prefix}{i},"
+
+    print(f"\n\n----------------------\n")
 
 if __name__ == '__main__':
     main_test()

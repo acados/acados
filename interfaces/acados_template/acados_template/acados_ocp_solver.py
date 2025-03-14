@@ -282,10 +282,10 @@ class AcadosOcpSolver:
         self.__qp_pc_fields = {'pcond_Q', 'pcond_R', 'pcond_S'}
         self.__all_qp_fields = self.__qp_dynamics_fields | self.__qp_cost_fields | self.__qp_constraint_fields | self.__qp_constraint_int_fields | self.__qp_pc_hpipm_fields | self.__qp_pc_fields
 
-        self.__relaxed_qp_dynamics_fields = set([f'relaxed_{field}' for field in self.__qp_dynamics_fields])
-        self.__relaxed_qp_cost_fields = set([f'relaxed_{field}' for field in self.__qp_cost_fields])
-        self.__relaxed_qp_constraint_fields = set([f'relaxed_{field}' for field in self.__qp_constraint_fields])
-        self.__relaxed_qp_constraint_int_fields = set([f'relaxed_{field}' for field in self.__qp_constraint_int_fields])
+        self.__relaxed_qp_dynamics_fields = {f'relaxed_{field}' for field in self.__qp_dynamics_fields}
+        self.__relaxed_qp_cost_fields = {f'relaxed_{field}' for field in self.__qp_cost_fields}
+        self.__relaxed_qp_constraint_fields = {f'relaxed_{field}' for field in self.__qp_constraint_fields}
+        self.__relaxed_qp_constraint_int_fields = {f'relaxed_{field}' for field in self.__qp_constraint_int_fields}
         self.__all_relaxed_qp_fields = self.__relaxed_qp_dynamics_fields | self.__relaxed_qp_cost_fields | self.__relaxed_qp_constraint_fields | self.__relaxed_qp_constraint_int_fields
 
         # set arg and res types
