@@ -62,6 +62,8 @@ typedef struct
     double tol_min_step_norm; // exit tolerance for small step
     int max_iter;
     int log_primal_step_norm; // compute and log the max norm of the primal steps
+    int log_pi_norm_inf; // compute and log the max norm of the pi multipliers
+    int log_lam_norm_inf; // compute and log the max norm of the lam multipliers
     bool warm_start_first_qp;
     bool warm_start_first_qp_from_nlp;
     bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
@@ -111,6 +113,8 @@ typedef struct
     int stat_n;
 
     double step_norm;
+    double norm_inf_pi;
+    double norm_inf_lam;
 
     struct blasfeo_dvec *Z_cost_module;  // Z values from cost module
     struct blasfeo_dmat *RSQ_cost;
