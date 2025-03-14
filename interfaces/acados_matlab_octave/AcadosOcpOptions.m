@@ -100,6 +100,10 @@ classdef AcadosOcpOptions < handle
         globalization_funnel_kappa
         globalization_funnel_fraction_switching_condition
         globalization_funnel_initial_penalty_parameter
+        globalization_funnel_use_merit_fun_only
+        search_direction_mode
+        use_constraint_hessian_in_feas_qp
+        allow_direction_mode_switch_to_nominal
         hpipm_mode
         with_solution_sens_wrt_params
         with_value_sens_wrt_params
@@ -200,6 +204,12 @@ classdef AcadosOcpOptions < handle
             obj.globalization_funnel_kappa = 0.9;
             obj.globalization_funnel_fraction_switching_condition = 1e-3;
             obj.globalization_funnel_initial_penalty_parameter = 1.0;
+            obj.globalization_funnel_use_merit_fun_only = false;
+
+            % SQP_WITH_FEASIBLE_QP options
+            obj.search_direction_mode = 'NOMINAL_QP';
+            obj.use_constraint_hessian_in_feas_qp = false;
+            obj.allow_direction_mode_switch_to_nominal = true;
 
             obj.hpipm_mode = 'BALANCE';
             obj.with_solution_sens_wrt_params = 0;

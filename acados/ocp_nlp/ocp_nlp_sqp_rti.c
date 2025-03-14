@@ -511,7 +511,7 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
     acados_tic(&timer1);
     ocp_nlp_approximate_qp_matrices(config, dims, nlp_in,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
-    ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1.0, 0);
+    ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1.0, 0, nlp_mem->qp_in);
 
     timings->time_lin += acados_toc(&timer1);
 
@@ -1058,7 +1058,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // linearize NLP
             ocp_nlp_approximate_qp_matrices(config, dims, nlp_in,
                 nlp_out, nlp_opts, nlp_mem, nlp_work);
-            ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1.0, 0);
+            ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1.0, 0, nlp_mem->qp_in);
             ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in,
                 nlp_out, nlp_opts, nlp_mem, nlp_work);
             timings->time_lin += acados_toc(&timer1);
@@ -1114,7 +1114,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
     acados_tic(&timer1);
     ocp_nlp_approximate_qp_matrices(config, dims, nlp_in,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
-    ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1.0, 0);
+    ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1.0, 0, nlp_mem->qp_in);
     timings->time_lin += acados_toc(&timer1);
 
     // regularize Hessian

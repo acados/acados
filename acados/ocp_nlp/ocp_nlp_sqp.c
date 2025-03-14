@@ -467,7 +467,7 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         mem->nlp_mem->status = ACADOS_MAXITER;
         if (opts->nlp_opts->print_level > 0)
         {
-            printf("Stopped: Maximum Iterations Reached.\n");
+            printf("Stopped: Maximum iterations reached.\n");
         }
         return true;
     }
@@ -481,7 +481,7 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         mem->nlp_mem->status = ACADOS_SUCCESS;
         if (opts->nlp_opts->print_level > 0)
         {
-            printf("Optimal Solution found! Converged to KKT point.\n");
+            printf("Optimal solution found! Converged to KKT point.\n");
         }
         return true;
     }
@@ -493,11 +493,11 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         {
             if (nlp_res->inf_norm_res_eq < opts->tol_eq && nlp_res->inf_norm_res_ineq < opts->tol_ineq)
             {
-                printf("Stopped: Converged to Feasible Point. Step size is < tol_eq.\n");
+                printf("Stopped: Converged to feasible point. Step size is < tol_eq.\n");
             }
             else
             {
-                printf("Stopped: Converged to Infeasible Point. Step size is < tol_eq.\n");
+                printf("Stopped: Converged to infeasible point. Step size is < tol_eq.\n");
             }
         }
         mem->nlp_mem->status = ACADOS_MINSTEP;
@@ -521,7 +521,7 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         mem->nlp_mem->status = ACADOS_MAXITER;
         if (opts->nlp_opts->print_level > 0)
         {
-            printf("Stopped: Maximum Iterations Reached.\n");
+            printf("Stopped: Maximum iterations reached.\n");
         }
         return true;
     }
@@ -537,6 +537,7 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
     }
     return false;
 }
+
 
 /************************************************
  * output
@@ -598,6 +599,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->alpha = 0.0;
     mem->step_norm = 0.0;
     mem->nlp_mem->status = ACADOS_SUCCESS;
+    nlp_mem->objective_multiplier = 1.0;
 
     if (opts->timeout_heuristic != MAX_OVERALL)
         mem->timeout_estimated_per_iteration_time = 0;
@@ -638,14 +640,14 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // linearize NLP and update QP matrices
             acados_tic(&timer1);
             ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+            // update QP rhs for SQP (step prim var, abs dual var)
+            ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+
             if (nlp_opts->with_adaptive_levenberg_marquardt || config->globalization->needs_objective_value() == 1)
             {
                 ocp_nlp_get_cost_value_from_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
             }
-            ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter);
-
-            // update QP rhs for SQP (step prim var, abs dual var)
-            ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+            ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter, nlp_mem->qp_in);
             nlp_timings->time_lin += acados_toc(&timer1);
 
             // compute nlp residuals
@@ -837,6 +839,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         if (config->globalization->needs_qp_objective_value() == 1)
         {
             nlp_mem->qp_cost_value = ocp_nlp_compute_qp_objective_value(dims, qp_in, qp_out, nlp_work);
+            nlp_mem->predicted_infeasibility_reduction = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
+            nlp_mem->predicted_optimality_reduction = -ocp_nlp_compute_gradient_directional_derivative(dims, qp_in, qp_out);
         }
 
         // Compute the step norm

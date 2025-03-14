@@ -56,9 +56,11 @@
 #include "acados/ocp_nlp/ocp_nlp_globalization_merit_backtracking.h"
 #include "acados/ocp_nlp/ocp_nlp_globalization_funnel.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
+#include "acados/ocp_nlp/ocp_nlp_sqp_with_feasible_qp.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
 #include "acados/ocp_nlp/ocp_nlp_ddp.h"
 #include "acados/utils/mem.h"
+#include "acados/utils/strsep.h"
 
 
 /************************************************
@@ -192,6 +194,9 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
         case SQP:
             ocp_nlp_sqp_config_initialize_default(config);
             break;
+        case SQP_WITH_FEASIBLE_QP:
+            ocp_nlp_sqp_wfqp_config_initialize_default(config);
+            break;
         case SQP_RTI:
             ocp_nlp_sqp_rti_config_initialize_default(config);
             break;
@@ -209,6 +214,10 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
     // QP solver
     ocp_qp_xcond_solver_config_initialize_from_plan(plan.ocp_qp_solver_plan.qp_solver,
                                                     config->qp_solver);
+
+    // relaxed QP solver
+    ocp_qp_xcond_solver_config_initialize_from_plan(plan.ocp_qp_solver_plan.qp_solver,
+                                                    config->relaxed_qp_solver);
 
     // regularization
     switch (plan.regularization)
@@ -997,42 +1006,43 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
 {
     // only matrices here matrices
     // dynamics
-    if (!strcmp(field, "A"))
+    if (!strcmp(field, "A") || !strcmp(field, "relaxed_A"))
     {
         dims_out[0] = dims->nx[stage+1];
         dims_out[1] = dims->nx[stage];
     }
-    else if (!strcmp(field, "B"))
+    else if (!strcmp(field, "B") || !strcmp(field, "relaxed_B"))
     {
         dims_out[0] = dims->nx[stage+1];
         dims_out[1] = dims->nu[stage];
     }
-    else if (!strcmp(field, "b"))
+    else if (!strcmp(field, "b") || !strcmp(field, "relaxed_b"))
     {
         dims_out[0] = 1;
         dims_out[1] = dims->nx[stage+1];
     }
-    else if (!strcmp(field, "Q") || !strcmp(field, "P"))
+    // cost
+    else if (!strcmp(field, "Q") || !strcmp(field, "relaxed_Q") || !strcmp(field, "P") || !strcmp(field, "relaxed_P"))
     {
         dims_out[0] = dims->nx[stage];
         dims_out[1] = dims->nx[stage];
     }
-    else if (!strcmp(field, "R") || !strcmp(field, "Lr"))
+    else if (!strcmp(field, "R") || !strcmp(field, "relaxed_R") || !strcmp(field, "Lr") || !strcmp(field, "relaxed_Lr"))
     {
         dims_out[0] = dims->nu[stage];
         dims_out[1] = dims->nu[stage];
     }
-    else if (!strcmp(field, "S") || !strcmp(field, "K"))
+    else if (!strcmp(field, "S") || !strcmp(field, "relaxed_S") || !strcmp(field, "K") || !strcmp(field, "relaxed_K"))
     {
         dims_out[0] = dims->nu[stage];
         dims_out[1] = dims->nx[stage];
     }
-    else if (!strcmp(field, "r"))
+    else if (!strcmp(field, "r") || !strcmp(field, "relaxed_r"))
     {
         dims_out[0] = 1;
         dims_out[1] = dims->nu[stage];
     }
-    else if (!strcmp(field, "q"))
+    else if (!strcmp(field, "q") || !strcmp(field, "relaxed_q"))
     {
         dims_out[0] = 1;
         dims_out[1] = dims->nx[stage];
@@ -1040,6 +1050,11 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
     else if (!strcmp(field, "zl") || !strcmp(field, "zu") || !strcmp(field, "Zl") || !strcmp(field, "Zu")  || !strcmp(field, "idxs"))
     {
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ns", &dims_out[0]);
+        dims_out[1] = 1;
+    }
+    else if (!strcmp(field, "relaxed_zl") || !strcmp(field, "relaxed_zu") || !strcmp(field, "relaxed_Zl") || !strcmp(field, "relaxed_Zu")  || !strcmp(field, "relaxed_idxs"))
+    {
+        config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "ns", &dims_out[0]);
         dims_out[1] = 1;
     }
     else if (!strcmp(field, "p"))
@@ -1058,12 +1073,7 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ng", &dims_out[0]);
         dims_out[1] = dims->nu[stage];
     }
-    else if (!strcmp(field, "lg"))
-    {
-        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ng", &dims_out[0]);
-        dims_out[1] = 1;
-    }
-    else if (!strcmp(field, "ug"))
+    else if (!strcmp(field, "lg") || !strcmp(field, "ug"))
     {
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ng", &dims_out[0]);
         dims_out[1] = 1;
@@ -1084,6 +1094,40 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbu", &dims_out[0]);
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbx", &tmp_int);
         dims_out[0] += tmp_int;
+        dims_out[1] = 1;
+    }
+    // constraints of relaxed qp
+    else if (!strcmp(field, "relaxed_C"))
+    {
+        config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "ng", &dims_out[0]);
+        dims_out[1] = dims->nx[stage];
+    }
+    else if (!strcmp(field, "relaxed_D"))
+    {
+        config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "ng", &dims_out[0]);
+        dims_out[1] = dims->nu[stage];
+    }
+    else if (!strcmp(field, "relaxed_lg") || !strcmp(field, "relaxed_ug"))
+    {
+        config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "ng", &dims_out[0]);
+        dims_out[1] = 1;
+    }
+    else if (!strcmp(field, "relaxed_idxb"))
+    {
+        int tmp_int;
+        config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "nbu", &dims_out[0]);
+        config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "nbx", &tmp_int);
+        dims_out[0] += tmp_int;
+        dims_out[1] = 1;
+    }
+    else if (!strcmp(field, "relaxed_lbx") || !strcmp(field, "relaxed_ubx") || !strcmp(field, "relaxed_idxbx"))
+    {
+        config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "nbx", &dims_out[0]);
+        dims_out[1] = 1;
+    }
+    else if (!strcmp(field, "relaxed_lbu") || !strcmp(field, "relaxed_ubu") || !strcmp(field, "relaxed_idxbu"))
+    {
+        config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "nbu", &dims_out[0]);
         dims_out[1] = 1;
     }
     else if (!strcmp(field, "pcond_R"))
@@ -1382,6 +1426,126 @@ void ocp_nlp_get(ocp_nlp_solver *solver, const char *field, void *return_value_)
 
 
 
+static void get_from_qp_in(ocp_qp_in *qp_in, int stage, const char *field, void *value)
+{
+    if (!strcmp(field, "A"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_A(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "B"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_B(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "b"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_b(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "Q"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_Q(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "R"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_R(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "S"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_S(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "r"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_r(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "q"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_q(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "lbx"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lbx(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "ubx"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_ubx(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "lbu"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lbu(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "ubu"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_ubu(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "C"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_C(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "D"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_D(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "lg"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lg(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "ug"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_ug(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "zl"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_zl(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "zu"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_zu(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "Zl"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_Zl(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "Zu"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_Zu(stage, qp_in, double_values);
+    }
+    else if (!strcmp(field, "idxs"))
+    {
+        int *int_values = value;
+        d_ocp_qp_get_idxs(stage, qp_in, int_values);
+    }
+    else if (!strcmp(field, "idxb"))
+    {
+        int *int_values = value;
+        d_ocp_qp_get_idxb(stage, qp_in, int_values);
+    }
+    else
+    {
+        printf("\nerror: ocp_nlp_get_at_stage: field %s not available\n", field);
+        exit(1);
+    }
+}
+
+
 void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, void *value)
 {
     ocp_nlp_dims *dims = solver->dims;
@@ -1389,117 +1553,7 @@ void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, 
     ocp_nlp_memory *nlp_mem;
     config->get(config, dims, solver->mem, "nlp_mem", &nlp_mem);
 
-    if (!strcmp(field, "A"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_A(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "B"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_B(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "b"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_b(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "Q"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_Q(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "R"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_R(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "S"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_S(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "r"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_r(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "q"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_q(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "lbx"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_lbx(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "ubx"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_ubx(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "lbu"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_lbu(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "ubu"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_ubu(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "C"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_C(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "D"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_D(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "lg"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_lg(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "ug"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_ug(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "zl"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_zl(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "zu"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_zu(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "Zl"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_Zl(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "Zu"))
-    {
-        double *double_values = value;
-        d_ocp_qp_get_Zu(stage, nlp_mem->qp_in, double_values);
-    }
-    else if (!strcmp(field, "idxs"))
-    {
-        int *int_values = value;
-        d_ocp_qp_get_idxs(stage, nlp_mem->qp_in, int_values);
-    }
-    else if (!strcmp(field, "idxb"))
-    {
-        int *int_values = value;
-        d_ocp_qp_get_idxb(stage, nlp_mem->qp_in, int_values);
-    }
-    else if (!strcmp(field, "P") || !strcmp(field, "K") || !strcmp(field, "Lr") || !strcmp(field, "p"))
+    if (!strcmp(field, "P") || !strcmp(field, "K") || !strcmp(field, "Lr") || !strcmp(field, "p"))
     {
         ocp_nlp_opts *nlp_opts;
         config->opts_get(config, dims, solver->opts, "nlp_opts", &nlp_opts);
@@ -1550,8 +1604,22 @@ void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, 
     }
     else
     {
-        printf("\nerror: ocp_nlp_get_at_stage: field %s not available\n", field);
-        exit(1);
+        char *ptr_module = NULL;
+        int module_length = 0;
+        char module[MAX_STR_LEN];
+        extract_module_name(field, module, &module_length, &ptr_module);
+        ocp_qp_in *qp_in;
+        const char *qp_field_name = field;
+        if ( ptr_module!=NULL && (!strcmp(ptr_module, "relaxed")) )
+        {
+            ocp_nlp_get(solver, "relaxed_qp_in", &qp_in);
+            qp_field_name = field+module_length+1;
+        }
+        else
+        {
+            qp_in = nlp_mem->qp_in;
+        }
+        get_from_qp_in(qp_in, stage, qp_field_name, value);
     }
 }
 

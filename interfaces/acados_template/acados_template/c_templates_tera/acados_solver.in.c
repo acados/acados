@@ -177,6 +177,7 @@ void {{ model.name }}_acados_create_set_plan(ocp_nlp_plan_t* nlp_solver_plan, co
     nlp_solver_plan->nlp_solver = {{ solver_options.nlp_solver_type }};
 
     nlp_solver_plan->ocp_qp_solver_plan.qp_solver = {{ solver_options.qp_solver }};
+    nlp_solver_plan->relaxed_ocp_qp_solver_plan.qp_solver = {{ solver_options.qp_solver }};
 
     nlp_solver_plan->nlp_cost[0] = {{ cost.cost_type_0 }};
     for (int i = 1; i < N; i++)
@@ -2192,7 +2193,6 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
 
 {# globalization specific options #}
 {%- if solver_options.globalization == "MERIT_BACKTRACKING" %}
-    // ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "merit_backtracking");
 
     int globalization_line_search_use_sufficient_descent = {{ solver_options.globalization_line_search_use_sufficient_descent }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_line_search_use_sufficient_descent", &globalization_line_search_use_sufficient_descent);
@@ -2218,6 +2218,9 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
 
     double globalization_funnel_initial_penalty_parameter = {{ solver_options.globalization_funnel_initial_penalty_parameter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_initial_penalty_parameter", &globalization_funnel_initial_penalty_parameter);
+
+    bool globalization_funnel_use_merit_fun_only = {{ solver_options.globalization_funnel_use_merit_fun_only }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_use_merit_fun_only", &globalization_funnel_use_merit_fun_only);
 {%- endif %}
 
     int with_solution_sens_wrt_params = {{ solver_options.with_solution_sens_wrt_params }};
@@ -2428,7 +2431,18 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tau_min", &tau_min);
 {%- endif %}
 
-{% if solver_options.nlp_solver_type == "SQP" or solver_options.nlp_solver_type == "DDP" %}
+{%- if solver_options.nlp_solver_type == "SQP_WITH_FEASIBLE_QP" %}
+    bool use_constraint_hessian_in_feas_qp = {{ solver_options.use_constraint_hessian_in_feas_qp }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "use_constraint_hessian_in_feas_qp", &use_constraint_hessian_in_feas_qp);
+
+    int search_direction_mode = {{ solver_options.search_direction_mode }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "search_direction_mode", &search_direction_mode);
+
+    bool allow_direction_mode_switch_to_nominal = {{ solver_options.allow_direction_mode_switch_to_nominal }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "allow_direction_mode_switch_to_nominal", &allow_direction_mode_switch_to_nominal);
+{%- endif %}
+
+{% if solver_options.nlp_solver_type == "SQP" or solver_options.nlp_solver_type == "DDP" or solver_options.nlp_solver_type == "SQP_WITH_FEASIBLE_QP"%}
     // set SQP specific options
     double nlp_solver_tol_stat = {{ solver_options.nlp_solver_tol_stat }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_stat", &nlp_solver_tol_stat);

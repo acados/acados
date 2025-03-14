@@ -53,6 +53,7 @@ extern "C" {
 typedef enum
 {
     SQP,
+    SQP_WITH_FEASIBLE_QP,
     SQP_RTI,
     DDP,
     INVALID_NLP_SOLVER,
@@ -107,6 +108,9 @@ typedef struct ocp_nlp_plan_t
 {
     /// QP solver configuration.
     ocp_qp_solver_plan_t ocp_qp_solver_plan;
+
+    /// QP solver configuration.
+    ocp_qp_solver_plan_t relaxed_ocp_qp_solver_plan;
 
     /// Simulation solver configuration for each stage.
     sim_solver_plan_t *sim_solver_plan;

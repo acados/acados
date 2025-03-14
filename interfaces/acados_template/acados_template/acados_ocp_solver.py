@@ -274,12 +274,19 @@ class AcadosOcpSolver:
         self.time_solution_sens_lin = 0.0
 
         # gettable fields
-        self.__qp_dynamics_fields = ['A', 'B', 'b']
-        self.__qp_cost_fields = ['Q', 'R', 'S', 'q', 'r', 'zl', 'zu', 'Zl', 'Zu']
-        self.__qp_constraint_fields = ['C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
-        self.__qp_constraint_int_fields = ['idxs', 'idxb']
-        self.__qp_pc_hpipm_fields = ['P', 'K', 'Lr', 'p']
-        self.__qp_pc_fields = ['pcond_Q', 'pcond_R', 'pcond_S']
+        self.__qp_dynamics_fields = {'A', 'B', 'b'}
+        self.__qp_cost_fields = {'Q', 'R', 'S', 'q', 'r', 'zl', 'zu', 'Zl', 'Zu'}
+        self.__qp_constraint_fields = {'C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu'}
+        self.__qp_constraint_int_fields = {'idxs', 'idxb'}
+        self.__qp_pc_hpipm_fields = {'P', 'K', 'Lr', 'p'}
+        self.__qp_pc_fields = {'pcond_Q', 'pcond_R', 'pcond_S'}
+        self.__all_qp_fields = self.__qp_dynamics_fields | self.__qp_cost_fields | self.__qp_constraint_fields | self.__qp_constraint_int_fields | self.__qp_pc_hpipm_fields | self.__qp_pc_fields
+
+        self.__relaxed_qp_dynamics_fields = {f'relaxed_{field}' for field in self.__qp_dynamics_fields}
+        self.__relaxed_qp_cost_fields = {f'relaxed_{field}' for field in self.__qp_cost_fields}
+        self.__relaxed_qp_constraint_fields = {f'relaxed_{field}' for field in self.__qp_constraint_fields}
+        self.__relaxed_qp_constraint_int_fields = {f'relaxed_{field}' for field in self.__qp_constraint_int_fields}
+        self.__all_relaxed_qp_fields = self.__relaxed_qp_dynamics_fields | self.__relaxed_qp_cost_fields | self.__relaxed_qp_constraint_fields | self.__relaxed_qp_constraint_int_fields
 
         # set arg and res types
         self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
@@ -1119,9 +1126,8 @@ class AcadosOcpSolver:
         elif self.__solver_options['nlp_solver_type'] == 'DDP':
             for jj in range(stat.shape[1]):
                 if jj % 10 == 0:
-                    # print('\niter\tres_stat\tres_eq\t\tqp_stat\tqp_iter\talpha')
-                    print(("{iter:>6} | {obj:^10} | {inf:^10} | {stat:^10} | "
-                   "{alpha:^10} | {gamma:^10} | {qp_status:^10} | {qp_iter:^10}").format(
+                    print(("{iter:>6} | {obj:>10} | {inf:>10} | {stat:>10} | "
+                   "{alpha:>10} | {gamma:>10} | {qp_status:>10} | {qp_iter:>10}").format(
                         obj='objective',
                         iter='iter.',
                         inf='res_eq',
@@ -1130,9 +1136,8 @@ class AcadosOcpSolver:
                         gamma='LM_reg.',
                         qp_status='qp_status',
                         qp_iter='qp_iter.'))
-                # print(f'{int(stat[0][jj]):d}\t{stat[1][jj]:e}\t{stat[2][jj]:e}\t{int(stat[5][jj]):d}\t{int(stat[6][jj]):d}\t{stat[7][jj]:e}\t')
-                print(("{iter:>6} | {obj:^10.4e} | {inf:^10.4e} | {stat:^10.4e} | "
-                   "{alpha:^10.4e} | {gamma:^10.4e} | {qp_status:^10} | {qp_iter:^10}").format(
+                print(("{iter:>6} | {obj:>10.4e} | {inf:>10.4e} | {stat:>10.4e} | "
+                   "{alpha:>10.4e} | {gamma:>10.4e} | {qp_status:>10} | {qp_iter:>10}").format(
                      iter=int(stat[0][jj]),
                      stat=stat[1][jj],
                      inf=stat[2][jj],
@@ -1141,6 +1146,41 @@ class AcadosOcpSolver:
                      qp_status=int(stat[5][jj]),
                      qp_iter=int(stat[6][jj]),
                      alpha=stat[7][jj]))
+            print('\n')
+        elif self.__solver_options['nlp_solver_type'] == 'SQP_WITH_FEASIBLE_QP':
+            print(("{iter:>5}   {stat:>10}   {res_eq:>10}   "
+                   "{res_ineq:>10}   {res_comp:>10}   {qp1_status:>8}   {qp1_iter:>6}   "
+                   "{qp2_status:>8}   {qp2_iter:>6}   {qp3_status:>8}   {qp3_iter:>6}   "
+                   "{alpha:>10}").format(
+                        iter='#it',
+                        stat='res_stat',
+                        res_eq='res_eq',
+                        res_ineq='res_ineq',
+                        res_comp='res_comp',
+                        qp1_status='qp1_stat',
+                        qp1_iter='qp1_it',
+                        qp2_status='qp2_stat',
+                        qp2_iter='qp2_it',
+                        qp3_status='qp3_stat',
+                        qp3_iter='qp3_it',
+                        alpha='alpha'))
+            for jj in range(stat.shape[1]):
+                print(("{iter:>5}   {stat:>10.4e}   {res_eq:>10.4e}   "
+                   "{res_ineq:>10.4e}   {res_comp:>10.4e}   {qp1_status:>8}   {qp1_iter:>6}   "
+                   "{qp2_status:>8}   {qp2_iter:>6}   {qp3_status:>8}   {qp3_iter:>6}   "
+                   "{alpha:>10.4e}").format(
+                        iter=int(stat[0][jj]),
+                        stat=stat[1][jj],
+                        res_eq=stat[2][jj],
+                        res_ineq=stat[3][jj],
+                        res_comp=stat[4][jj],
+                        qp1_status=int(stat[5][jj]),
+                        qp1_iter=int(stat[6][jj]),
+                        qp2_status=int(stat[7][jj]),
+                        qp2_iter=int(stat[8][jj]),
+                        qp3_status=int(stat[9][jj]),
+                        qp3_iter=int(stat[10][jj]),
+                        alpha=int(stat[11][jj])))
             print('\n')
 
         return
@@ -1294,6 +1334,18 @@ class AcadosOcpSolver:
                 filename += datetime.now().strftime('%Y-%m-%d-%H:%M:%S.%f') + '.json'
 
         # get QP data:
+        qp_data = self.get_last_qp()
+
+        # save
+        with open(filename, 'w') as f:
+            json.dump(qp_data, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
+        print("stored qp from solver memory in ", os.path.join(os.getcwd(), filename))
+
+    def get_last_qp(self) -> dict:
+        """
+        Returns the latest QP data as a dict
+        """
+        # get QP data:
         qp_data = dict()
 
         lN = len(str(self.N+1))
@@ -1301,7 +1353,7 @@ class AcadosOcpSolver:
             for i in range(self.N):
                 qp_data[f'{field}_{i:0{lN}d}'] = self.get_from_qp_in(i,field)
 
-        for field in self.__qp_constraint_fields + self.__qp_cost_fields + self.__qp_constraint_int_fields:
+        for field in self.__qp_constraint_fields | self.__qp_cost_fields | self.__qp_constraint_int_fields:
             for i in range(self.N+1):
                 qp_data[f'{field}_{i:0{lN}d}'] = self.get_from_qp_in(i,field)
 
@@ -1310,11 +1362,31 @@ class AcadosOcpSolver:
             if len(qp_data[k]) == 0:
                 del qp_data[k]
 
-        # save
-        with open(filename, 'w') as f:
-            json.dump(qp_data, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
-        print("stored qp from solver memory in ", os.path.join(os.getcwd(), filename))
+        return qp_data
 
+
+    def get_last_relaxed_qp(self) -> dict:
+        """
+        Returns the latest relaxed QP data as a dict
+        """
+        # get QP data:
+        qp_data = dict()
+
+        lN = len(str(self.N+1))
+        for field in self.__relaxed_qp_dynamics_fields:
+            for i in range(self.N):
+                qp_data[f'{field}_{i:0{lN}d}'] = self.get_from_qp_in(i,field)
+
+        for field in self.__relaxed_qp_constraint_fields | self.__relaxed_qp_cost_fields | self.__relaxed_qp_constraint_int_fields:
+            for i in range(self.N+1):
+                qp_data[f'{field}_{i:0{lN}d}'] = self.get_from_qp_in(i,field)
+
+        # remove empty fields
+        for k in list(qp_data.keys()):
+            if len(qp_data[k]) == 0:
+                del qp_data[k]
+
+        return qp_data
 
 
     def load_iterate(self, filename:str, verbose: bool = True):
@@ -1492,6 +1564,7 @@ class AcadosOcpSolver:
             nlp_iter = self.get_stats("nlp_iter")
             stat_m = self.get_stats("stat_m")
             stat_n = self.get_stats("stat_n")
+            print("stat_n: ", stat_n)
             min_size = min([stat_m, nlp_iter+1])
             out = np.zeros((stat_n+1, min_size), dtype=np.float64, order="C")
             out_data = cast(out.ctypes.data, POINTER(c_double))
@@ -1974,14 +2047,13 @@ class AcadosOcpSolver:
         - additional supported fields are ['P', 'K', 'Lr'], which can be extracted form QP solver PARTIAL_CONDENSING_HPIPM.
         - for PARTIAL_CONDENSING_* QP solvers, the following additional fields are available: ['pcond_Q', 'pcond_R', 'pcond_S']
         """
-        # idx* should be added too..
         if not isinstance(stage_, int):
             raise TypeError("stage should be int")
         if stage_ > self.N:
             raise Exception("stage should be <= self.N")
         if field_ in self.__qp_dynamics_fields and stage_ >= self.N:
             raise ValueError(f"dynamics field {field_} not available at terminal stage")
-        if field_ not in self.__qp_dynamics_fields + self.__qp_cost_fields + self.__qp_constraint_fields + self.__qp_pc_hpipm_fields + self.__qp_pc_fields + self.__qp_constraint_int_fields:
+        if field_ not in self.__all_qp_fields | self.__all_relaxed_qp_fields:
             raise Exception(f"field {field_} not supported.")
         if field_ in self.__qp_pc_hpipm_fields:
             if self.acados_ocp.solver_options.qp_solver != "PARTIAL_CONDENSING_HPIPM" or self.acados_ocp.solver_options.qp_solver_cond_N != self.acados_ocp.solver_options.N_horizon:
@@ -1990,6 +2062,8 @@ class AcadosOcpSolver:
                 raise Exception(f"getting field {field_} at stage 0 only works without x0 elimination (see nbxe_0).")
         if field_ in self.__qp_pc_fields and not self.acados_ocp.solver_options.qp_solver.startswith("PARTIAL_CONDENSING"):
             raise Exception(f"field {field_} only works for PARTIAL_CONDENSING QP solvers.")
+        if field_ in self.__all_relaxed_qp_fields and not self.acados_ocp.solver_options.nlp_solver_type == "SQP_WITH_FEASIBLE_QP":
+            raise Exception(f"field {field_} only works for SQP_WITH_FEASIBLE_QP nlp_solver_type.")
 
         field = field_.encode('utf-8')
         stage = c_int(stage_)
@@ -2002,8 +2076,8 @@ class AcadosOcpSolver:
             self.nlp_dims, self.nlp_out, stage_, field, dims_data)
 
         # create output data
-        if field_ in self.__qp_constraint_int_fields:
-            out =np.zeros((np.prod(dims),), dtype=np.int32, order="C")
+        if field_ in self.__qp_constraint_int_fields | self.__relaxed_qp_constraint_int_fields:
+            out = np.zeros((np.prod(dims),), dtype=np.int32, order="C")
         else:
             out = np.zeros((np.prod(dims),), dtype=np.float64, order="C")
         out = out.reshape(dims[0], dims[1], order='F')
@@ -2014,7 +2088,7 @@ class AcadosOcpSolver:
         # call getter
         self.__acados_lib.ocp_nlp_get_at_stage(self.nlp_solver, stage, field, out_data_p)
 
-        if field_ in ["Q", "R"]:
+        if field_ in ["Q", "R", "relaxed_Q", "relaxed_R"]:
             # make symmetric: copy lower triangular part to upper triangular part
             out = np.tril(out) + np.tril(out, -1).T
 

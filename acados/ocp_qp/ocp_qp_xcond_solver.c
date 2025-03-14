@@ -40,6 +40,7 @@
 #include "acados/utils/mem.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+#include "acados/utils/print.h"
 #include "acados/utils/strsep.h"
 
 
@@ -531,7 +532,6 @@ int ocp_qp_xcond_solve(void *config_, ocp_qp_xcond_solver_dims *dims, ocp_qp_in 
     cast_workspace(config_, dims, opts, memory, work);
 
     int solver_status = ACADOS_SUCCESS;
-
     // condensing
     acados_tic(&cond_timer);
     xcond->condensing(qp_in, memory->xcond_qp_in, opts->xcond_opts, memory->xcond_memory, work->xcond_work);

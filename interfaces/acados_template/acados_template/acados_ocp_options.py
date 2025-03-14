@@ -95,6 +95,9 @@ class AcadosOcpOptions:
         self.__exact_hess_dyn = 1
         self.__exact_hess_constr = 1
         self.__eval_residual_at_max_iter = None
+        self.__use_constraint_hessian_in_feas_qp = False
+        self.__search_direction_mode = 'NOMINAL_QP'
+        self.__allow_direction_mode_switch_to_nominal = True
         self.__fixed_hess = 0
         self.__globalization_funnel_init_increase_factor = 15.0
         self.__globalization_funnel_init_upper_bound = 1.0
@@ -102,6 +105,7 @@ class AcadosOcpOptions:
         self.__globalization_funnel_kappa = 0.9
         self.__globalization_funnel_fraction_switching_condition = 1e-3
         self.__globalization_funnel_initial_penalty_parameter = 1.0
+        self.__globalization_funnel_use_merit_fun_only = False
         self.__globalization_fixed_step_length = 1.0
         self.__ext_cost_num_hess = 0
         self.__globalization_use_SOC = 0
@@ -261,7 +265,7 @@ class AcadosOcpOptions:
     @property
     def nlp_solver_type(self):
         """NLP solver.
-        String in ('SQP', 'SQP_RTI', 'DDP').
+        String in ('SQP', 'SQP_RTI', 'DDP', 'SQP_WITH_FEASIBLE_QP').
         Default: 'SQP'.
         """
         return self.__nlp_solver_type
@@ -921,6 +925,43 @@ class AcadosOcpOptions:
         return self.__eval_residual_at_max_iter
 
     @property
+    def use_constraint_hessian_in_feas_qp(self):
+        """
+        Determines if exact/approximate Hessian of the constraints or the identity
+        matrix is used as Hessian in the feasibility QP of `SQP_WITH_FEASIBLE_QP`
+
+        Default: False
+        """
+        return self.__use_constraint_hessian_in_feas_qp
+
+    @property
+    def search_direction_mode(self):
+        """
+        Determines how the search direction should be calculated in the initial
+        iteration
+        Type: string
+
+        Possible entries are
+        NOMINAL_QP, BYRD_OMOJOKUN, FEASIBILITY_QP
+
+        Type: string
+        Default: NOMINAL_QP
+        Other options: BYRD_OMOJOKUN, FEASIBILITY_QP
+        """
+        return self.__search_direction_mode
+
+    @property
+    def allow_direction_mode_switch_to_nominal(self):
+        """
+        Indicates if we allow switching back from BYRD_OMOJOKUN to NOMINAL_QP
+        search direction mode
+
+        Type: bool
+        Default: True
+        """
+        return self.__allow_direction_mode_switch_to_nominal
+
+    @property
     def globalization_funnel_initial_penalty_parameter(self):
         """
         Initialization.
@@ -929,6 +970,16 @@ class AcadosOcpOptions:
         Default: 1.0
         """
         return self.__globalization_funnel_initial_penalty_parameter
+
+    @property
+    def globalization_funnel_use_merit_fun_only(self):
+        """
+        If this options is set, the funnel globalization only checks a merit function.
+
+        Type: bool
+        Default: False
+        """
+        return self.__globalization_funnel_use_merit_fun_only
 
     @property
     def nlp_solver_tol_ineq(self):
@@ -1401,12 +1452,44 @@ class AcadosOcpOptions:
         else:
             raise Exception(f'Invalid value for globalization_funnel_initial_penalty_parameter. Should be in [0,1], got {globalization_funnel_initial_penalty_parameter}')
 
+    @globalization_funnel_use_merit_fun_only.setter
+    def globalization_funnel_use_merit_fun_only(self, globalization_funnel_use_merit_fun_only):
+        if isinstance(globalization_funnel_use_merit_fun_only, bool):
+            self.__globalization_funnel_use_merit_fun_only = globalization_funnel_use_merit_fun_only
+        else:
+            raise Exception(f'Invalid type for globalization_funnel_use_merit_fun_only. Should be bool, got {globalization_funnel_use_merit_fun_only}')
+
     @eval_residual_at_max_iter.setter
     def eval_residual_at_max_iter(self, eval_residual_at_max_iter):
         if isinstance(eval_residual_at_max_iter, bool):
             self.__eval_residual_at_max_iter = eval_residual_at_max_iter
         else:
             raise Exception(f'Invalid datatype for eval_residual_at_max_iter. Should be bool, got {type(eval_residual_at_max_iter)}')
+
+    @use_constraint_hessian_in_feas_qp.setter
+    def use_constraint_hessian_in_feas_qp(self, use_constraint_hessian_in_feas_qp):
+        if isinstance(use_constraint_hessian_in_feas_qp, bool):
+            self.__use_constraint_hessian_in_feas_qp = use_constraint_hessian_in_feas_qp
+        else:
+            raise Exception(f'Invalid datatype for use_constraint_hessian_in_feas_qp. Should be bool, got {type(use_constraint_hessian_in_feas_qp)}')
+
+    @search_direction_mode.setter
+    def search_direction_mode(self, search_direction_mode):
+        modes = ('NOMINAL_QP', 'BYRD_OMOJOKUN', 'FEASIBILITY_QP')
+        if isinstance(search_direction_mode, str):
+            if search_direction_mode in modes:
+                self.__search_direction_mode = search_direction_mode
+            else:
+                Exception(f'Invalid string for search_direction_mode. Possible modes are'+', '.join(modes) +  f', got {search_direction_mode}')
+        else:
+            raise Exception(f'Invalid datatype for search_direction_mode. Should be str, got {type(search_direction_mode)}')
+
+    @allow_direction_mode_switch_to_nominal.setter
+    def allow_direction_mode_switch_to_nominal(self, allow_direction_mode_switch_to_nominal):
+        if isinstance(allow_direction_mode_switch_to_nominal, bool):
+            self.__allow_direction_mode_switch_to_nominal = allow_direction_mode_switch_to_nominal
+        else:
+            raise Exception(f'Invalid datatype for allow_direction_mode_switch_to_nominal. Should be str, got {type(allow_direction_mode_switch_to_nominal)}')
 
     @globalization_eps_sufficient_descent.setter
     def globalization_eps_sufficient_descent(self, globalization_eps_sufficient_descent):
@@ -1461,7 +1544,7 @@ class AcadosOcpOptions:
 
     @nlp_solver_type.setter
     def nlp_solver_type(self, nlp_solver_type):
-        nlp_solver_types = ('SQP', 'SQP_RTI', 'DDP')
+        nlp_solver_types = ('SQP', 'SQP_RTI', 'DDP', 'SQP_WITH_FEASIBLE_QP')
         if nlp_solver_type in nlp_solver_types:
             self.__nlp_solver_type = nlp_solver_type
         else:
