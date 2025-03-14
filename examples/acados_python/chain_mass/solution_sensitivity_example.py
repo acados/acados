@@ -526,7 +526,7 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
     timing_results_adjoint[backsolve_label] = timings_solve_params_adj * 1e3
 
     timings_list = [timing_results_forward, timing_results_adjoint]
-    labels = ['forward', 'adjoint']
+    labels = [r'$\frac{\partial w^\star}{\partial \theta}$ via forward', r'$\nu^\top \frac{\partial w^\star}{\partial \theta}$ via adjoint']
 
     if with_more_adjoints:
         timing_results_adj_uforw[backsolve_label] = timings_solve_params_adj_uforw * 1e3
@@ -575,7 +575,7 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
     plt.tight_layout()
     plt.savefig("chain_adj_fwd_sens.pdf")
 
-    plot_timings(timings_list, labels, figure_filename="timing_adj_fwd_sens_chain.pdf", t_max=10)
+    plot_timings(timings_list, labels, figure_filename="timing_adj_fwd_sens_chain.pdf", t_max=10, horizontal=True, figsize=(12, 3))
 
     plt.show()
 
