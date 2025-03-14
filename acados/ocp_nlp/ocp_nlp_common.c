@@ -2406,6 +2406,42 @@ double ocp_nlp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, 
 }
 
 
+double ocp_nlp_compute_dual_pi_norm_inf(ocp_nlp_out *nlp_out, ocp_nlp_dims *dims)
+{
+    int i,j;
+    int N = dims->N;
+    int *nx = dims->nx;
+    double norm_pi = 0.0;
+
+    // compute inf norm of pi
+    for (i = 0; i < N; i++)
+    {
+        for (j=0; j<nx[i+1]; j++)
+        {
+            norm_pi = fmax(norm_pi, fabs(BLASFEO_DVECEL(nlp_out->pi+i, j)));
+        }
+    }
+    return norm_pi;
+}
+
+double ocp_nlp_compute_dual_lam_norm_inf(ocp_nlp_out *nlp_out, ocp_nlp_dims *dims)
+{
+    int i,j;
+    int N = dims->N;
+    double norm_lam = 0.0;
+
+    // compute inf norm of lam
+    for (i = 0; i < N; i++)
+    {
+        for (j=0; j<2*dims->ni[i]; j++)
+        {
+            norm_lam = fmax(norm_lam, fabs(BLASFEO_DVECEL(nlp_out->lam+i, j)));
+        }
+    }
+    return norm_lam;
+}
+
+
 double ocp_nlp_get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_memory *nlp_mem)
 {
     int N = dims->N;
