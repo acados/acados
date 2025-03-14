@@ -325,6 +325,7 @@ def plot_smoothed_solution_sensitivities_results(p_test, pi_label_pairs, sens_pi
                  multipliers_bu=None, multipliers_h=None,
                  figsize=None,
                  fig_filename=None,
+                 horizontal_plot=False,
                  ):
 
     nsub = 2
@@ -335,9 +336,10 @@ def plot_smoothed_solution_sensitivities_results(p_test, pi_label_pairs, sens_pi
 
     if figsize is None:
         figsize = (9, 9)
-    _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=figsize)
-    ax[0].set_xlim([p_test[0], p_test[-1]])
-
+    if not horizontal_plot:
+        _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=figsize)
+    else:
+        _, ax = plt.subplots(nrows=1, ncols=nsub, sharex=False, figsize=figsize)
 
     linestyles = ["-", "--", "-.", ":", "-", "--", "-.", ":"]
 
@@ -348,16 +350,19 @@ def plot_smoothed_solution_sensitivities_results(p_test, pi_label_pairs, sens_pi
     if title is not None:
         ax[isub].set_title(title)
     ax[isub].legend()
+    ax[isub].legend(handlelength=1.2)
 
     isub += 1
     for i, (sens_pi, label) in enumerate(sens_pi_label_pairs):
         ax[isub].plot(p_test, sens_pi, label=label, linestyle=linestyles[i])
     ax[isub].set_ylabel(r"$\partial_\theta u_0$")
-    ax[isub].legend(loc = 'upper left')
+    if horizontal_plot:
+        ax[isub].legend(loc = 'upper left', handlelength=1.2, ncol=2, columnspacing=0.5, labelspacing=0.2)
+    else:
+        ax[isub].legend(loc = 'upper left', handlelength=1.2)
 
     if with_multiplier_subplot:
         isub += 1
-
         legend_elements = []
         if multipliers_bu is not None:
             for lam in multipliers_bu:
@@ -367,12 +372,19 @@ def plot_smoothed_solution_sensitivities_results(p_test, pi_label_pairs, sens_pi
             for lam in multipliers_h:
                 ax[isub].plot(p_test, lam, linestyle='--', color='C1', alpha=.6)
             legend_elements += [plt.Line2D([0], [0], color='C1', linestyle='--', label='multipliers $h$')]
-        ax[isub].legend(handles=legend_elements, ncol=2)
+        if horizontal_plot:
+            ax[isub].legend(handles=legend_elements, ncol=1, handlelength=1.2)
+        else:
+            ax[isub].legend(handles=legend_elements, ncol=2)
         ax[isub].set_ylim([0, 14])
         ax[isub].set_ylabel("multipliers")
 
     for isub in range(nsub):
         ax[isub].grid()
+        ax[isub].set_xlim([p_test[0], p_test[-1]])
+
+        if horizontal_plot:
+            ax[isub].set_xlabel(f"{parameter_name}")
 
     ax[-1].set_xlabel(f"{parameter_name}")
 

@@ -62,7 +62,7 @@ def solve_ocp_and_compute_sens(ocp_solver: AcadosOcpSolver, sensitivity_solver: 
         sensitivity_solver.set_p_global_and_precompute_dependencies(p_val)
         u_opt[i] = ocp_solver.solve_for_x0(x0, fail_on_nonzero_status=False)[0]
         status = ocp_solver.get_status()
-        ocp_solver.print_statistics()
+        # ocp_solver.print_statistics()
         if status != 0:
             ocp_solver.print_statistics()
             print(f"Solver failed with status {status} for {i}th parameter value {p} and {tau_min=}.")
@@ -124,7 +124,7 @@ def main_parametric(qp_solver_ric_alg: int, use_cython=False, plot_trajectory=Fa
     delta_p = 0.001
     # p_nominal = 1.0
     # p_test = np.arange(p_nominal + 0.1, p_nominal + 0.5, delta_p)
-    p_test = np.arange(1.0, 1.4, delta_p)
+    p_test = np.arange(1.05, 1.4+delta_p, delta_p)
 
     ocp_solver, sensitivity_solver = create_solvers(x0, use_cython=use_cython, qp_solver_ric_alg=qp_solver_ric_alg,) # verbose=False, build=False, generate=False)
     ocp = ocp_solver.acados_ocp
@@ -182,21 +182,27 @@ def main_parametric(qp_solver_ric_alg: int, use_cython=False, plot_trajectory=Fa
         pi_label_pairs.append((u_opt, label))
         sens_pi_label_pairs.append((sens_u, label))
 
-    sens_pi_label_pairs.append((sens_u_fd, 'finite differences'))
+    sens_pi_label_pairs.append((sens_u_fd, 'finite diff.'))
 
     # without 2-solver approach
     tau_min = 1e-6
     u_opt, sens_u, _ = solve_ocp_and_compute_sens(ocp_solver, ocp_solver, p_test, x0, tau_min=tau_min, sanity_checks=False)
-    label = r"IFT with approx. Hess."
+    label = r"IFT approx. Hess."
     # pi_label_pairs.append((u_opt, label))
     sens_pi_label_pairs.append((sens_u, label))
 
     # plot
+    # plot_smoothed_solution_sensitivities_results(p_test, pi_label_pairs, sens_pi_label_pairs, title=None, parameter_name=r"$\theta$",
+    #              multipliers_bu=multipliers_bu, multipliers_h=multipliers_h,
+    #              figsize=(7, 9),
+    #              fig_filename="smoothed_solution_sensitivities.pdf",
+    #              )
     plot_smoothed_solution_sensitivities_results(p_test, pi_label_pairs, sens_pi_label_pairs, title=None, parameter_name=r"$\theta$",
-                 multipliers_bu=multipliers_bu, multipliers_h=multipliers_h,
-                 figsize=(7, 9),
-                 fig_filename="smoothed_solution_sensitivities.pdf",
-                 )
+                multipliers_bu=multipliers_bu, multipliers_h=multipliers_h,
+                figsize=(12, 3.2),
+                fig_filename="smoothed_solution_sensitivities_horizontal.pdf",
+                horizontal_plot=True,
+                )
     if plot_trajectory:
         plot_pendulum_traj_from_ocp_iterate(ocp_solver)
 
