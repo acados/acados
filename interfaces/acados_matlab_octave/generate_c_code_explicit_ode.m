@@ -88,17 +88,17 @@ function generate_c_code_explicit_ode(context, model, model_dir)
     end
 
     fun_name = [model.name,'_expl_ode_fun'];
-    context.add_function_definition(fun_name, {x, u, p}, {f_expl}, model_dir);
+    context.add_function_definition(fun_name, {x, u, p}, {f_expl}, model_dir, 'dyn');
 
     fun_name = [model.name,'_expl_vde_forw'];
-    context.add_function_definition(fun_name, {x, Sx, Su, u, p}, {f_expl, vdeX, vdeU}, model_dir);
+    context.add_function_definition(fun_name, {x, Sx, Su, u, p}, {f_expl, vdeX, vdeU}, model_dir, 'dyn');
 
     fun_name = [model.name,'_expl_vde_adj'];
-    context.add_function_definition(fun_name, {x, lambdaX, u, p}, {adj}, model_dir);
+    context.add_function_definition(fun_name, {x, lambdaX, u, p}, {adj}, model_dir, 'dyn');
 
     if context.opts.generate_hess
         fun_name = [model.name,'_expl_ode_hess'];
-        context.add_function_definition(fun_name, {x, Sx, Su, lambdaX, u, p}, {adj, hess2}, model_dir);
+        context.add_function_definition(fun_name, {x, Sx, Su, lambdaX, u, p}, {adj, hess2}, model_dir, 'dyn');
     end
 
 end

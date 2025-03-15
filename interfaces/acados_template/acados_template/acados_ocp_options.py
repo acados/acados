@@ -131,7 +131,10 @@ class AcadosOcpOptions:
         # TODO: move those out? they are more about generation than about the acados OCP solver.
         env = os.environ
         self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
-        self.__ext_fun_expand = False
+        self.__ext_fun_expand_constr = False
+        self.__ext_fun_expand_cost = False
+        self.__ext_fun_expand_precompute = False
+        self.__ext_fun_expand_dyn = False
         self.__model_external_shared_lib_dir = None
         self.__model_external_shared_lib_name = None
         self.__custom_update_filename = ''
@@ -157,12 +160,36 @@ class AcadosOcpOptions:
         return self.__ext_fun_compile_flags
 
     @property
-    def ext_fun_expand(self):
+    def ext_fun_expand_constr(self):
         """
-        Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation.
+        Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for constraint functions.
         Default: False
         """
-        return self.__ext_fun_expand
+        return self.__ext_fun_expand_constr
+
+    @property
+    def ext_fun_expand_cost(self):
+        """
+        Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for cost functions.
+        Default: False
+        """
+        return self.__ext_fun_expand_cost
+
+    @property
+    def ext_fun_expand_dyn(self):
+        """
+        Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for dynamics functions.
+        Default: False
+        """
+        return self.__ext_fun_expand_dyn
+
+    @property
+    def ext_fun_expand_precompute(self):
+        """
+        Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for the precompute function.
+        Default: False
+        """
+        return self.__ext_fun_expand_precompute
 
     @property
     def custom_update_filename(self):
@@ -1247,12 +1274,29 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid ext_fun_compile_flags value, expected a string.\n')
 
-    @ext_fun_expand.setter
-    def ext_fun_expand(self, ext_fun_expand):
-        if isinstance(ext_fun_expand, bool):
-            self.__ext_fun_expand = ext_fun_expand
-        else:
-            raise Exception('Invalid ext_fun_expand value, expected bool.\n')
+    @ext_fun_expand_constr.setter
+    def ext_fun_expand_constr(self, ext_fun_expand_constr):
+        if not isinstance(ext_fun_expand_constr, bool):
+            raise Exception('Invalid ext_fun_expand_constr value, expected bool.\n')
+        self.__ext_fun_expand_constr = ext_fun_expand_constr
+
+    @ext_fun_expand_cost.setter
+    def ext_fun_expand_cost(self, ext_fun_expand_cost):
+        if not isinstance(ext_fun_expand_cost, bool):
+            raise Exception('Invalid ext_fun_expand_cost value, expected bool.\n')
+        self.__ext_fun_expand_cost = ext_fun_expand_cost
+
+    @ext_fun_expand_dyn.setter
+    def ext_fun_expand_dyn(self, ext_fun_expand_dyn):
+        if not isinstance(ext_fun_expand_dyn, bool):
+            raise Exception('Invalid ext_fun_expand_dyn value, expected bool.\n')
+        self.__ext_fun_expand_dyn = ext_fun_expand_dyn
+
+    @ext_fun_expand_precompute.setter
+    def ext_fun_expand_precompute(self, ext_fun_expand_precompute):
+        if not isinstance(ext_fun_expand_precompute, bool):
+            raise Exception('Invalid ext_fun_expand_precompute value, expected bool.\n')
+        self.__ext_fun_expand_precompute = ext_fun_expand_precompute
 
     @custom_update_filename.setter
     def custom_update_filename(self, custom_update_filename):
