@@ -132,3 +132,5 @@ qp_in*.txt
 qp_out*.txt
 
 figures
+examples/**/*.pdf
+examples/**/*.png
