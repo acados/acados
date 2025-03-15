@@ -1116,12 +1116,12 @@ static void log_multiplier_norms(int sqp_iter, ocp_nlp_sqp_wfqp_memory *mem, ocp
 {
     if (opts->log_pi_norm_inf)
     {
-        mem->norm_inf_pi = ocp_nlp_compute_dual_pi_norm_inf(nlp_out, dims);
+        mem->norm_inf_pi = ocp_nlp_compute_dual_pi_norm_inf(dims, nlp_out);
         mem->stat[mem->stat_n*(sqp_iter)+11] = mem->norm_inf_pi;
     }
     if (opts->log_lam_norm_inf)
     {
-        mem->norm_inf_lam = ocp_nlp_compute_dual_lam_norm_inf(nlp_out, dims);
+        mem->norm_inf_lam = ocp_nlp_compute_dual_lam_norm_inf(dims, nlp_out);
         mem->stat[mem->stat_n*(sqp_iter)+12] = mem->norm_inf_lam;
     }
 }

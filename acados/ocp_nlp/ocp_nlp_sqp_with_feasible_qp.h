@@ -62,8 +62,8 @@ typedef struct
     double tol_min_step_norm; // exit tolerance for small step
     int max_iter;
     int log_primal_step_norm; // compute and log the max norm of the primal steps
-    int log_pi_norm_inf; // compute and log the max norm of the pi multipliers
-    int log_lam_norm_inf; // compute and log the max norm of the lam multipliers
+    bool log_pi_norm_inf; // compute and log the max norm of the pi multipliers
+    bool log_lam_norm_inf; // compute and log the max norm of the lam multipliers
     bool warm_start_first_qp;
     bool warm_start_first_qp_from_nlp;
     bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached

@@ -573,9 +573,9 @@ void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
     ocp_nlp_workspace *work, double alpha, int iter, ocp_qp_in *qp_in);
 //
-double ocp_nlp_compute_dual_pi_norm_inf(ocp_nlp_out *nlp_out, ocp_nlp_dims *dims);
+double ocp_nlp_compute_dual_pi_norm_inf(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out);
 //
-double ocp_nlp_compute_dual_lam_norm_inf(ocp_nlp_out *nlp_out, ocp_nlp_dims *dims);
+double ocp_nlp_compute_dual_lam_norm_inf(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out);
 //
 double ocp_nlp_get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_memory *nlp_mem);
 //

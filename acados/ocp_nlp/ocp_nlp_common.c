@@ -2406,7 +2406,7 @@ double ocp_nlp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, 
 }
 
 
-double ocp_nlp_compute_dual_pi_norm_inf(ocp_nlp_out *nlp_out, ocp_nlp_dims *dims)
+double ocp_nlp_compute_dual_pi_norm_inf(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out)
 {
     int i,j;
     int N = dims->N;
@@ -2424,7 +2424,7 @@ double ocp_nlp_compute_dual_pi_norm_inf(ocp_nlp_out *nlp_out, ocp_nlp_dims *dims
     return norm_pi;
 }
 
-double ocp_nlp_compute_dual_lam_norm_inf(ocp_nlp_out *nlp_out, ocp_nlp_dims *dims)
+double ocp_nlp_compute_dual_lam_norm_inf(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out)
 {
     int i,j;
     int N = dims->N;
