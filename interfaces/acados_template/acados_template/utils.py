@@ -202,7 +202,7 @@ def is_empty(x):
         return True if np.prod(x.shape) == 0 else False
     elif x is None:
         return True
-    elif isinstance(x, (set, list)):
+    elif isinstance(x, (set, list, str)):
         return True if len(x) == 0 else False
     elif isinstance(x, (float, int)):
         return False
