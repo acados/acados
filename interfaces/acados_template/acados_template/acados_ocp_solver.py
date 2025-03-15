@@ -803,7 +803,7 @@ class AcadosOcpSolver:
                 ns = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "s".encode('utf-8'))
                 sens_su.append(np.zeros((ns, ngrad)))
 
-            if s < N:
+            if s < self.N:
                 if return_sens_u:
                     nu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "u".encode('utf-8'))
                     sens_u.append(np.zeros((nu, ngrad)))
@@ -832,7 +832,7 @@ class AcadosOcpSolver:
                 if return_sens_su:
                     sens_su[n][:, k] = self.get(s, "sens_su")
 
-                if s < N:
+                if s < self.N:
                     if return_sens_u:
                         sens_u[n][:, k] = self.get(s, "sens_u")
                     if return_sens_pi:
