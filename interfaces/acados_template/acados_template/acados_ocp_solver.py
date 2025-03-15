@@ -226,6 +226,7 @@ class AcadosOcpSolver:
             if json_file is not None:
                 acados_ocp.json_file = json_file
             self.generate(acados_ocp, json_file=acados_ocp.json_file, simulink_opts=simulink_opts, cmake_builder=cmake_builder)
+            json_file = acados_ocp.json_file
         else:
             if acados_ocp is not None:
                 acados_ocp.make_consistent()
