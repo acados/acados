@@ -135,6 +135,8 @@ def setup_solver_and_integrator(x0: np.ndarray, xf: np.ndarray, N: int, creation
     elif creation_mode == 'ctypes_precompiled':
         ## Note: skip generate and build assuming this is done before (in cython run)
         ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file, build=False, generate=False)
+    elif creation_mode == 'ctypes_precompiled_no_ocp':
+        ocp_solver = AcadosOcpSolver(None, json_file=ocp_json_file, build=False, generate=False)
     elif creation_mode == 'ctypes':
         ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file)
     else:
@@ -231,9 +233,9 @@ def main(creation_mode=True):
 
     plot_crane_trajectories(ts_fine, simX_fine, simU_fine)
 
-CREATION_MODES = ['cython', 'ctypes_precompiled', 'ctypes']
+CREATION_MODES = ['cython', 'ctypes_precompiled', 'ctypes', 'ctypes_precompiled_no_ocp']
 
 if __name__ == "__main__":
-    for creation_mode in ['ctypes', 'ctypes_precompiled']:
+    for creation_mode in ['cython', 'ctypes_precompiled_no_ocp', 'ctypes_precompiled']:
         main(creation_mode=creation_mode)
 
