@@ -45,18 +45,6 @@ extern "C" {
 #include "blasfeo_d_aux.h"
 #include "blasfeo_d_aux_ext_dep.h"
 
-// TODO(dimitris): probably does not belong here
-typedef struct
-{
-    int (*fun)(void *);
-    acados_size_t (*calculate_args_size)(void *);
-    void *(*assign_args)(void *);
-    void (*initialize_default_args)(void *);
-    acados_size_t (*calculate_memory_size)(void *);
-    void *(*assign_memory)(void *);
-    acados_size_t (*calculate_workspace_size)(void *);
-} module_solver;
-
 // make int counter of memory multiple of a number (typically 8 or 64)
 void make_int_multiple_of(acados_size_t num, acados_size_t *size);
 
