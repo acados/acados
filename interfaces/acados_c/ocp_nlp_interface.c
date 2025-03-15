@@ -53,6 +53,7 @@
 #include "acados/ocp_nlp/ocp_nlp_reg_project_reduc_hess.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_noreg.h"
 #include "acados/ocp_nlp/ocp_nlp_qp_scaling_noscale.h"
+#include "acados/ocp_nlp/ocp_nlp_qp_scaling_obj_gershgorin.h"
 #include "acados/ocp_nlp/ocp_nlp_globalization_fixed_step.h"
 #include "acados/ocp_nlp/ocp_nlp_globalization_merit_backtracking.h"
 #include "acados/ocp_nlp/ocp_nlp_globalization_funnel.h"
@@ -251,6 +252,9 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
     {
         case NO_SCALING:
             ocp_nlp_qp_scaling_noscale_config_initialize_default(config->qp_scaling);
+            break;
+        case OBJECTIVE_GERSHGORIN:
+            ocp_nlp_qp_scaling_obj_gershgorin_config_initialize_default(config->qp_scaling);
             break;
         default:
             printf("\nerror: ocp_nlp_config_create: unsupported plan->qp_scaling\n");

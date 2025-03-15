@@ -125,3 +125,50 @@ void ocp_nlp_qp_scaling_dims_set(void *config_, ocp_nlp_qp_scaling_dims *dims, i
 
     return;
 }
+
+
+/************************************************
+ * functions
+ ************************************************/
+
+void ocp_qp_scale_objective(ocp_qp_in *qp_in, double factor)
+{
+    int *nx = qp_in->dim->nx;
+    int *nu = qp_in->dim->nu;
+    int *ns = qp_in->dim->ns;
+
+    struct blasfeo_dvec *rqz = qp_in->rqz;
+    struct blasfeo_dmat *RSQrq = qp_in->RSQrq;
+    struct blasfeo_dvec *Z = qp_in->Z;
+
+    for (int stage = 0; stage <= qp_in->dim->N; stage++)
+    {
+        // scale cost
+        blasfeo_dvecsc(nx[stage]+nu[stage]+2*ns[stage], factor, rqz+stage, 0);
+        blasfeo_dvecsc(2*ns[stage], factor, Z+stage, 0);
+        blasfeo_dgecpsc(nx[stage]+nu[stage], nx[stage]+nu[stage], factor, RSQrq+stage, 0, 0, RSQrq+stage, 0, 0);
+    }
+}
+
+
+void compute_gershgorin_max_abs_eig_estimate(int n, struct blasfeo_dmat *A, double *out)
+{
+    double max_abs_eig = 0.0;
+    double r_i, lam, rho, a;
+    for (int ii = 0; ii < n; ii++)
+    {
+        r_i = 0.0;
+        for (int jj = 0; jj < n; jj++)
+        {
+            if (jj != ii)
+            {
+                r_i += fabs(BLASFEO_DMATEL(A, ii, jj));
+            }
+        }
+        a = BLASFEO_DMATEL(A, ii, ii);
+        lam = a - r_i;
+        rho = a + r_i;
+        max_abs_eig = fmax(max_abs_eig, fmax(fabs(lam), fabs(rho)));
+    }
+    *out = max_abs_eig;
+}

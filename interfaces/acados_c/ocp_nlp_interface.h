@@ -100,6 +100,7 @@ typedef enum
 typedef enum
 {
     NO_SCALING,
+    OBJECTIVE_GERSHGORIN,
 } ocp_nlp_qp_scaling_t;
 
 

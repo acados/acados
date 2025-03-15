@@ -102,92 +102,18 @@ void *ocp_nlp_qp_scaling_noscale_memory_assign(void *config_, ocp_nlp_qp_scaling
 
 
 
-void ocp_nlp_qp_scaling_noscale_memory_set_RSQrq_ptr(ocp_nlp_qp_scaling_dims *dims, struct blasfeo_dmat *RSQrq, void *memory_)
-{
-    return;
-}
-
-
-
-void ocp_nlp_qp_scaling_noscale_memory_set_rq_ptr(ocp_nlp_qp_scaling_dims *dims, struct blasfeo_dvec *rq, void *memory_)
-{
-    return;
-}
-
-
-
-void ocp_nlp_qp_scaling_noscale_memory_set_BAbt_ptr(ocp_nlp_qp_scaling_dims *dims, struct blasfeo_dmat *BAbt, void *memory_)
-{
-    return;
-}
-
-
-
-void ocp_nlp_qp_scaling_noscale_memory_set_b_ptr(ocp_nlp_qp_scaling_dims *dims, struct blasfeo_dvec *b, void *memory_)
-{
-    return;
-}
-
-
-
-void ocp_nlp_qp_scaling_noscale_memory_set_idxb_ptr(ocp_nlp_qp_scaling_dims *dims, int **idxb, void *memory_)
-{
-    return;
-}
-
-
-
-void ocp_nlp_qp_scaling_noscale_memory_set_DCt_ptr(ocp_nlp_qp_scaling_dims *dims, struct blasfeo_dmat *DCt, void *memory_)
-{
-    return;
-}
-
-
-
-void ocp_nlp_qp_scaling_noscale_memory_set_ux_ptr(ocp_nlp_qp_scaling_dims *dims, struct blasfeo_dvec *ux, void *memory_)
-{
-    return;
-}
-
-
-
-void ocp_nlp_qp_scaling_noscale_memory_set_pi_ptr(ocp_nlp_qp_scaling_dims *dims, struct blasfeo_dvec *pi, void *memory_)
-{
-    return;
-}
-
-
-
-void ocp_nlp_qp_scaling_noscale_memory_set_lam_ptr(ocp_nlp_qp_scaling_dims *dims, struct blasfeo_dvec *lam, void *memory_)
-{
-    return;
-}
-
-
-
-void ocp_nlp_qp_scaling_noscale_memory_set(void *config_, ocp_nlp_qp_scaling_dims *dims, void *memory_, char *field, void *value)
-{
-
-    printf("\nerror: field %s not available in ocp_nlp_qp_scaling_noscale_set\n", field);
-    exit(1);
-
-    return;
-}
-
-
-
 /************************************************
  * functions
  ************************************************/
 
-void ocp_nlp_qp_scaling_noscale_scale_qp(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts_, void *mem_)
+void ocp_nlp_qp_scaling_noscale_scale_qp(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in)
 {
     printf("ocp_nlp_qp_scaling_noscale_scale_qp: nothing to do\n");
     return;
 }
 
 
-void ocp_nlp_qp_scaling_noscale_rescale_solution(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts_, void *mem_)
+void ocp_nlp_qp_scaling_noscale_rescale_solution(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in)
 {
     printf("ocp_nlp_qp_scaling_noscale_rescale_solution: nothing to do\n");
     return;
@@ -208,16 +134,6 @@ void ocp_nlp_qp_scaling_noscale_config_initialize_default(ocp_nlp_qp_scaling_con
     // memory
     config->memory_calculate_size = &ocp_nlp_qp_scaling_noscale_memory_calculate_size;
     config->memory_assign = &ocp_nlp_qp_scaling_noscale_memory_assign;
-    config->memory_set = &ocp_nlp_qp_scaling_noscale_memory_set;
-    config->memory_set_RSQrq_ptr = &ocp_nlp_qp_scaling_noscale_memory_set_RSQrq_ptr;
-    config->memory_set_rq_ptr = &ocp_nlp_qp_scaling_noscale_memory_set_rq_ptr;
-    config->memory_set_BAbt_ptr = &ocp_nlp_qp_scaling_noscale_memory_set_BAbt_ptr;
-    config->memory_set_b_ptr = &ocp_nlp_qp_scaling_noscale_memory_set_b_ptr;
-    config->memory_set_idxb_ptr = &ocp_nlp_qp_scaling_noscale_memory_set_idxb_ptr;
-    config->memory_set_DCt_ptr = &ocp_nlp_qp_scaling_noscale_memory_set_DCt_ptr;
-    config->memory_set_ux_ptr = &ocp_nlp_qp_scaling_noscale_memory_set_ux_ptr;
-    config->memory_set_pi_ptr = &ocp_nlp_qp_scaling_noscale_memory_set_pi_ptr;
-    config->memory_set_lam_ptr = &ocp_nlp_qp_scaling_noscale_memory_set_lam_ptr;
     // functions
     config->scale_qp = &ocp_nlp_qp_scaling_noscale_scale_qp;
     config->rescale_solution = &ocp_nlp_qp_scaling_noscale_rescale_solution;
