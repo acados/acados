@@ -42,7 +42,7 @@ from .acados_ocp_cost import AcadosOcpCost
 from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_ocp_options import AcadosOcpOptions, INTEGRATOR_TYPES, COLLOCATION_TYPES, COST_DISCRETIZATION_TYPES
 from .acados_ocp import AcadosOcp
-from .casadi_function_generation import GenerateContext
+from .casadi_function_generation import GenerateContext, AcadosCodegenOptions
 from .utils import make_object_json_dumpable, get_acados_path, format_class_dict, get_shared_lib_ext, render_template, is_empty
 
 
@@ -451,16 +451,16 @@ class AcadosMultiphaseOcp:
     def generate_external_functions(self) -> GenerateContext:
 
         # options for code generation
-        code_gen_opts = dict()
-        code_gen_opts['generate_hess'] = self.solver_options.hessian_approx == 'EXACT'
-        code_gen_opts['with_solution_sens_wrt_params'] = self.solver_options.with_solution_sens_wrt_params
-        code_gen_opts['with_value_sens_wrt_params'] = self.solver_options.with_value_sens_wrt_params
-        code_gen_opts['code_export_directory'] = self.code_export_directory
-        code_gen_opts['ext_fun_expand_constr'] = self.solver_options.ext_fun_expand_constr
-        code_gen_opts['ext_fun_expand_cost'] = self.solver_options.ext_fun_expand_cost
-        code_gen_opts['ext_fun_expand_precompute'] = self.solver_options.ext_fun_expand_precompute
-        code_gen_opts['ext_fun_expand_dyn'] = self.solver_options.ext_fun_expand_dyn
-
+        code_gen_opts = AcadosCodegenOptions(
+                ext_fun_expand_constr = self.solver_options.ext_fun_expand_constr,
+                ext_fun_expand_cost = self.solver_options.ext_fun_expand_cost,
+                ext_fun_expand_precompute = self.solver_options.ext_fun_expand_precompute,
+                ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn,
+                code_export_directory = self.code_export_directory,
+                with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params,
+                with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params,
+                generate_hess = self.solver_options.hessian_approx == 'EXACT',
+            )
         context = GenerateContext(self.model[0].p_global, self.name, code_gen_opts)
 
         for i in range(self.n_phases):

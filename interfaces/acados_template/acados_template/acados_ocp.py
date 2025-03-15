@@ -52,7 +52,7 @@ from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
 from .zoro_description import ZoroDescription, process_zoro_description
 from .casadi_function_generation import (
-    GenerateContext,
+    GenerateContext, AcadosCodegenOptions,
     generate_c_code_conl_cost, generate_c_code_nls_cost, generate_c_code_external_cost,
     generate_c_code_explicit_ode, generate_c_code_implicit_ode, generate_c_code_discrete_dynamics, generate_c_code_gnsf,
     generate_c_code_constraint
@@ -1047,15 +1047,16 @@ class AcadosOcp:
 
         if context is None:
             # options for code generation
-            code_gen_opts = dict()
-            code_gen_opts['generate_hess'] = self.solver_options.hessian_approx == 'EXACT'
-            code_gen_opts['with_solution_sens_wrt_params'] = self.solver_options.with_solution_sens_wrt_params
-            code_gen_opts['with_value_sens_wrt_params'] = self.solver_options.with_value_sens_wrt_params
-            code_gen_opts['code_export_directory'] = self.code_export_directory
-            code_gen_opts['ext_fun_expand_constr'] = self.solver_options.ext_fun_expand_constr
-            code_gen_opts['ext_fun_expand_cost'] = self.solver_options.ext_fun_expand_cost
-            code_gen_opts['ext_fun_expand_precompute'] = self.solver_options.ext_fun_expand_precompute
-            code_gen_opts['ext_fun_expand_dyn'] = self.solver_options.ext_fun_expand_dyn
+            code_gen_opts = AcadosCodegenOptions(
+                ext_fun_expand_constr = self.solver_options.ext_fun_expand_constr,
+                ext_fun_expand_cost = self.solver_options.ext_fun_expand_cost,
+                ext_fun_expand_precompute = self.solver_options.ext_fun_expand_precompute,
+                ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn,
+                code_export_directory = self.code_export_directory,
+                with_solution_sens_wrt_params = self.solver_options.with_solution_sens_wrt_params,
+                with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params,
+                generate_hess = self.solver_options.hessian_approx == 'EXACT',
+            )
 
             context = GenerateContext(self.model.p_global, self.name, code_gen_opts)
 
@@ -1076,7 +1077,7 @@ class AcadosOcp:
         code_gen_opts = context.opts
 
         # create code_export_dir, model_dir
-        model_dir = os.path.join(code_gen_opts['code_export_directory'], model.name + '_model')
+        model_dir = os.path.join(code_gen_opts.code_export_directory, model.name + '_model')
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
 
@@ -1097,7 +1098,7 @@ class AcadosOcp:
             else:
                 raise Exception("ocp_generate_external_functions: unknown integrator type.")
         else:
-            target_dir = os.path.join(code_gen_opts['code_export_directory'], model_dir)
+            target_dir = os.path.join(code_gen_opts.code_export_directory, model_dir)
             target_location = os.path.join(target_dir, model.dyn_generic_source)
             shutil.copyfile(model.dyn_generic_source, target_location)
             context.add_external_function_file(model.dyn_generic_source, target_dir)

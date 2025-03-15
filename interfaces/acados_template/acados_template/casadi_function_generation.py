@@ -29,6 +29,7 @@
 #
 
 from typing import Union, List, Optional
+from dataclasses import dataclass
 
 import os, warnings
 import casadi as ca
@@ -42,9 +43,19 @@ def is_casadi_SX(x):
         return True
     return False
 
+@dataclass
+class AcadosCodegenOptions:
+    ext_fun_expand_constr: bool = False
+    ext_fun_expand_cost: bool = False
+    ext_fun_expand_dyn: bool = False
+    ext_fun_expand_precompute: bool = False
+    code_export_directory: str = "c_generated_code"
+    with_solution_sens_wrt_params: bool = False
+    with_value_sens_wrt_params: bool = False
+    generate_hess: bool = True
 
 class GenerateContext:
-    def __init__(self, p_global: Optional[Union[ca.SX, ca.MX]], problem_name: str, opts: dict):
+    def __init__(self, p_global: Optional[Union[ca.SX, ca.MX]], problem_name: str, opts: AcadosCodegenOptions):
         self.p_global = p_global
         if not is_empty(p_global):
             check_casadi_version_supports_p_global()
@@ -93,10 +104,10 @@ class GenerateContext:
                 raise e
 
             # expand function to SX
-            if ((dyn_cost_constr_type == 'dyn' and self.opts['ext_fun_expand_dyn'])
-                or (dyn_cost_constr_type == 'cost' and self.opts['ext_fun_expand_cost'])
-                or (dyn_cost_constr_type == 'constr' and self.opts['ext_fun_expand_constr'])
-                or (dyn_cost_constr_type == 'precompute' and self.opts['ext_fun_expand_precompute'])):
+            if ((dyn_cost_constr_type == 'dyn' and self.opts.ext_fun_expand_dyn)
+                or (dyn_cost_constr_type == 'cost' and self.opts.ext_fun_expand_cost)
+                or (dyn_cost_constr_type == 'constr' and self.opts.ext_fun_expand_constr)
+                or (dyn_cost_constr_type == 'precompute' and self.opts.ext_fun_expand_precompute)):
                 try:
                     fun = fun.expand()
                 except:
@@ -170,7 +181,7 @@ class GenerateContext:
             for i in range(len(self.function_input_output_pairs)):
                 self.function_input_output_pairs[i][0].append(self.global_data_sym)
 
-            output_dir = os.path.abspath(self.opts["code_export_directory"])
+            output_dir = os.path.abspath(self.opts.code_export_directory)
             fun_name = f'{self.problem_name}_p_global_precompute_fun'
             self.add_function_definition(fun_name, [self.p_global], [self.global_data_expr], output_dir, 'precompute')
         else:
@@ -192,7 +203,7 @@ class GenerateContext:
     def get_external_function_file_list(self, ocp_specific=False):
         out = []
         for (fun_name, fun_dir) in self.generic_funname_dir_pairs + self.list_funname_dir_pairs:
-            rel_fun_dir = os.path.relpath(fun_dir, self.opts["code_export_directory"])
+            rel_fun_dir = os.path.relpath(fun_dir, self.opts.code_export_directory)
             is_ocp_specific = not rel_fun_dir.endswith("model")
             if ocp_specific != is_ocp_specific:
                 continue
@@ -244,7 +255,7 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
     fun_name = model_name + '_dyn_disc_phi_fun_jac_hess'
     context.add_function_definition(fun_name, [x, u, lam, p], [phi, jac_ux.T, hess_ux], model_dir, 'dyn')
 
-    if opts["with_solution_sens_wrt_params"]:
+    if opts.with_solution_sens_wrt_params:
         # generate jacobian of lagrange gradient wrt p
         jac_p = ca.jacobian(phi, p_global)
         # hess_xu_p_old = ca.jacobian((lam.T @ jac_ux).T, p)
@@ -252,7 +263,7 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
         fun_name = model_name + '_dyn_disc_phi_jac_p_hess_xu_p'
         context.add_function_definition(fun_name, [x, u, lam, p], [jac_p, hess_xu_p], model_dir, 'dyn')
 
-    if opts["with_value_sens_wrt_params"]:
+    if opts.with_value_sens_wrt_params:
         adj_p = ca.jtimes(phi, p_global, lam, True)
         fun_name = model_name + '_dyn_disc_phi_adj_p'
         context.add_function_definition(fun_name, [x, u, lam, p], [adj_p], model_dir, 'dyn')
@@ -262,7 +273,7 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
 
 
 def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, model_dir: str):
-    generate_hess = context.opts["generate_hess"]
+    generate_hess = context.opts.generate_hess
 
     # load model
     x = model.x
@@ -349,7 +360,7 @@ def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel, m
     fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
     context.add_function_definition(fun_name, [x, xdot, u, z, t, p], [jac_x, jac_xdot, jac_u, jac_z], model_dir, 'dyn')
 
-    if context.opts["generate_hess"]:
+    if context.opts.generate_hess:
         x_xdot_z_u = ca.vertcat(x, xdot, z, u)
         symbol = model.get_casadi_symbol()
         multiplier = symbol('multiplier', nx + nz)
@@ -488,20 +499,20 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
     if not is_empty(custom_hess):
         hess_ux = custom_hess
 
-    cost_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model.name}_cost'))
+    cost_dir = os.path.abspath(os.path.join(opts.code_export_directory, f'{model.name}_cost'))
 
     context.add_function_definition(fun_name, [x, u, z, p], [ext_cost], cost_dir, 'cost')
     context.add_function_definition(fun_name_hess, [x, u, z, p], [ext_cost, grad_uxz, hess_ux, hess_z, hess_z_ux], cost_dir, 'cost')
     context.add_function_definition(fun_name_jac, [x, u, z, p], [ext_cost, grad_uxz], cost_dir, 'cost')
 
-    if opts["with_solution_sens_wrt_params"]:
+    if opts.with_solution_sens_wrt_params:
         if casadi_length(z) > 0:
             raise Exception("acados: solution sensitivities wrt parameters not supported with algebraic variables.")
         grad_ux = ca.jacobian(ext_cost, ca.vertcat(u, x))
         hess_xu_p = ca.jacobian(grad_ux, p_global)
         context.add_function_definition(fun_name_param, [x, u, z, p], [hess_xu_p], cost_dir, 'cost')
 
-    if opts["with_value_sens_wrt_params"]:
+    if opts.with_value_sens_wrt_params:
         grad_p = ca.jacobian(ext_cost, p_global).T
         context.add_function_definition(fun_name_value_sens, [x, u, z, p], [grad_p], cost_dir, 'cost')
 
@@ -532,7 +543,7 @@ def generate_c_code_nls_cost(context: GenerateContext, model: AcadosModel, stage
         middle_name = '_cost_y'
         y_expr = model.cost_y_expr
 
-    cost_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model.name}_cost'))
+    cost_dir = os.path.abspath(os.path.join(opts.code_export_directory, f'{model.name}_cost'))
 
     # set up expressions
     cost_jac_expr = ca.transpose(ca.jacobian(y_expr, ca.vertcat(u, x)))
@@ -641,7 +652,7 @@ def generate_c_code_conl_cost(context: GenerateContext, model: AcadosModel, stag
     Jt_z_expr = ca.jacobian(inner_expr, z).T
 
     # change directory
-    cost_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model.name}_cost'))
+    cost_dir = os.path.abspath(os.path.join(opts.code_export_directory, f'{model.name}_cost'))
 
     context.add_function_definition(
         fun_name_cost_fun,
@@ -707,7 +718,7 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
     lam_h = symbol('lam_h', nh, 1)
 
     # directory
-    constraints_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model.name}_constraints'))
+    constraints_dir = os.path.abspath(os.path.join(opts.code_export_directory, f'{model.name}_constraints'))
 
     # export casadi functions
     if constr_type == 'BGH':
@@ -723,7 +734,7 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
         context.add_function_definition(fun_name, [x, u, z, p], \
                 [con_h_expr, jac_ux_t, jac_z_t], constraints_dir, 'constr')
 
-        if opts['generate_hess']:
+        if opts.generate_hess:
             if stage_type == 'terminal':
                 fun_name = model.name + '_constr_h_e_fun_jac_uxt_zt_hess'
             elif stage_type == 'initial':
@@ -750,7 +761,7 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
             fun_name = model.name + '_constr_h_fun'
         context.add_function_definition(fun_name, [x, u, z, p], [con_h_expr], constraints_dir, 'constr')
 
-        if opts["with_solution_sens_wrt_params"]:
+        if opts.with_solution_sens_wrt_params:
             jac_p = ca.jacobian(con_h_expr, model.p_global)
             adj_ux = ca.jtimes(con_h_expr, ca.vertcat(u, x), lam_h, True)
             hess_xu_p = ca.jacobian(adj_ux, model.p_global)
@@ -765,7 +776,7 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
             context.add_function_definition(fun_name, [x, u, lam_h, z, p], \
                     [jac_p, hess_xu_p], constraints_dir, 'constr')
 
-        if opts["with_value_sens_wrt_params"]:
+        if opts.with_value_sens_wrt_params:
             adj_p = ca.jtimes(con_h_expr, model.p_global, lam_h, True)
             if stage_type == 'terminal':
                 fun_name = model.name + '_constr_h_e_adj_p'

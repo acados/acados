@@ -39,6 +39,7 @@ from .utils import (get_acados_path, get_shared_lib_ext, format_class_dict, chec
                     make_object_json_dumpable, render_template)
 from .casadi_function_generation import (
                     GenerateContext,
+                    AcadosCodegenOptions,
                     generate_c_code_explicit_ode,
                     generate_c_code_gnsf,
                     generate_c_code_implicit_ode)
@@ -403,8 +404,9 @@ class AcadosSim:
     def generate_external_functions(self, ):
 
         integrator_type = self.solver_options.integrator_type
+        code_export_dir = self.code_export_directory
 
-        opts = dict(generate_hess = self.solver_options.sens_hess,
+        opts = AcadosCodegenOptions(generate_hess = self.solver_options.sens_hess,
                     code_export_directory = self.code_export_directory,
                     ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn,
                     ext_fun_expand_cost = False,
@@ -413,8 +415,6 @@ class AcadosSim:
                     )
 
         # create code_export_dir, model_dir
-        code_export_dir = self.code_export_directory
-        opts['code_export_directory'] = code_export_dir
         model_dir = os.path.join(code_export_dir, self.model.name + '_model')
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
