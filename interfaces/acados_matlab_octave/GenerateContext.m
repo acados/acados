@@ -241,9 +241,9 @@ classdef GenerateContext < handle
                     rethrow(e);
                 end
 
-                if ((strcmp(dyn_cost_constr_type, 'dyn') && obj.opts.ext_fun_expand_dyn)
-                    || (strcmp(dyn_cost_constr_type, 'cost') && obj.opts.ext_fun_expand_cost)
-                    || (strcmp(dyn_cost_constr_type, 'constr') && obj.opts.ext_fun_expand_constr)
+                if ((strcmp(dyn_cost_constr_type, 'dyn') && obj.opts.ext_fun_expand_dyn) ...
+                    || (strcmp(dyn_cost_constr_type, 'cost') && obj.opts.ext_fun_expand_cost) ...
+                    || (strcmp(dyn_cost_constr_type, 'constr') && obj.opts.ext_fun_expand_constr) ...
                     || (strcmp(dyn_cost_constr_type, 'precompute') && obj.opts.ext_fun_expand_precompute))
                     try
                         fun = fun.expand();
