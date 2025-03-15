@@ -126,6 +126,8 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
     opts->watchdog_zero_slacks_max = 2;
     opts->allow_direction_mode_switch_to_nominal = true;
     opts->feasibility_qp_hessian_scalar = 1e-4;
+    opts->log_pi_norm_inf = true;
+    opts->log_lam_norm_inf = true;
 
     // overwrite default submodules opts
     // qp tolerance
@@ -321,7 +323,7 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
     }
     // stat
     int stat_m = opts->nlp_opts->max_iter+1;
-    int stat_n = 11;
+    int stat_n = 13;
     size += stat_n*stat_m*sizeof(double);
 
     // idxns
@@ -441,7 +443,7 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
 
     // stat
     mem->stat_m = opts->nlp_opts->max_iter+1;
-    mem->stat_n = 11;
+    mem->stat_n = 13;
     mem->stat = (double *) c_ptr;
     assign_and_advance_double(mem->stat_m*mem->stat_n, &mem->stat, &c_ptr);
 
@@ -665,13 +667,13 @@ static void print_iteration(int iter, ocp_nlp_config *config, ocp_nlp_res *nlp_r
     if (iter % 10 == 0)
     {
     ocp_nlp_common_print_iteration_header();
-    printf("%9s   %9s   %8s   ", "step_norm", "step_type", "lm_reg.");
+    printf("%9s   %9s   %8s   %9s   %9s   ", "step_norm", "step_type", "lm_reg.", "||pi||", "||lam||");
     config->globalization->print_iteration_header();
     printf("\n");
     }
     // print iteration
     ocp_nlp_common_print_iteration(iter, nlp_res);
-    printf("%9.2e   %9s   %8.2e   ", mem->step_norm, mem->search_direction_type, prev_levenberg_marquardt);
+    printf("%9.2e   %9s   %8.2e   %9.2e   %9.2e   ", mem->step_norm, mem->search_direction_type, prev_levenberg_marquardt, mem->norm_inf_pi, mem->norm_inf_lam);
     config->globalization->print_iteration(nlp_mem->cost_value, nlp_opts->globalization, nlp_mem->globalization);
     printf("\n");
 }
@@ -1109,6 +1111,21 @@ static void log_qp_stats(ocp_nlp_sqp_wfqp_memory *mem, int sqp_iter, bool solve_
         }
     }
 }
+
+static void log_multiplier_norms(int sqp_iter, ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_sqp_wfqp_opts *opts, ocp_nlp_out *nlp_out, ocp_nlp_dims *dims)
+{
+    if (opts->log_pi_norm_inf)
+    {
+        mem->norm_inf_pi = ocp_nlp_compute_dual_pi_norm_inf(dims, nlp_out);
+        mem->stat[mem->stat_n*(sqp_iter)+11] = mem->norm_inf_pi;
+    }
+    if (opts->log_lam_norm_inf)
+    {
+        mem->norm_inf_lam = ocp_nlp_compute_dual_lam_norm_inf(dims, nlp_out);
+        mem->stat[mem->stat_n*(sqp_iter)+12] = mem->norm_inf_lam;
+    }
+}
+
 /************************************************
 * Byrd-Omojokun Subproblem Functions:
 ************************************************/
@@ -1453,7 +1470,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
         log_qp_stats(mem, sqp_iter, false, search_direction_status, qp_iter);
         if (search_direction_status != ACADOS_SUCCESS)
         {
-            if (nlp_opts->print_level >=1)
+            if (nlp_opts->print_level >1)
             {
                 printf("\nError in nominal QP in iteration %d, got qp_status %d!\n", qp_iter, search_direction_status);
                 printf("Switch to Byrd-Omojokun mode!\n");
@@ -1551,6 +1568,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     nlp_mem->objective_multiplier = 1.0;
     mem->alpha = 0.0;
     mem->step_norm = 0.0;
+    mem->norm_inf_lam = 0.0;
+    mem->norm_inf_pi = 0.0;
     mem->nlp_mem->status = ACADOS_READY;
     mem->search_direction_type = "-";
     mem->search_direction_mode = opts->search_direction_mode;
@@ -1632,6 +1651,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->stat[mem->stat_n*sqp_iter+2] = nlp_res->inf_norm_res_ineq;
             mem->stat[mem->stat_n*sqp_iter+3] = nlp_res->inf_norm_res_comp;
         }
+
+        log_multiplier_norms(sqp_iter, mem, opts, nlp_out, dims);
 
         /* Output */
         if (nlp_opts->print_level > 0)
