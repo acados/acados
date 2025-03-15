@@ -66,7 +66,7 @@ class AcadosSimOptions:
         self.__sim_method_jac_reuse = 0
         env = os.environ
         self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
-        self.__ext_fun_expand = False
+        self.__ext_fun_expand_dyn = False
         self.__num_threads_in_batch_solve: int = 1
 
     @property
@@ -152,12 +152,12 @@ class AcadosSimOptions:
 
 
     @property
-    def ext_fun_expand(self):
+    def ext_fun_expand_dyn(self):
         """
         Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation.
         Default: False
         """
-        return self.__ext_fun_expand
+        return self.__ext_fun_expand_dyn
 
 
     @property
@@ -177,12 +177,12 @@ class AcadosSimOptions:
         else:
             raise Exception('Invalid ext_fun_compile_flags value, expected a string.\n')
 
-    @ext_fun_expand.setter
-    def ext_fun_expand(self, ext_fun_expand):
-        if isinstance(ext_fun_expand, bool):
-            self.__ext_fun_expand = ext_fun_expand
+    @ext_fun_expand_dyn.setter
+    def ext_fun_expand_dyn(self, ext_fun_expand_dyn):
+        if isinstance(ext_fun_expand_dyn, bool):
+            self.__ext_fun_expand_dyn = ext_fun_expand_dyn
         else:
-            raise Exception('Invalid ext_fun_expand value, expected bool.\n')
+            raise Exception('Invalid ext_fun_expand_dyn value, expected bool.\n')
 
     @integrator_type.setter
     def integrator_type(self, integrator_type):
@@ -406,7 +406,7 @@ class AcadosSim:
 
         opts = dict(generate_hess = self.solver_options.sens_hess,
                     code_export_directory = self.code_export_directory,
-                    ext_fun_expand_dyn = self.solver_options.ext_fun_expand,
+                    ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn,
                     ext_fun_expand_cost = False,
                     ext_fun_expand_constr = False,
                     ext_fun_expand_precompute = False,
