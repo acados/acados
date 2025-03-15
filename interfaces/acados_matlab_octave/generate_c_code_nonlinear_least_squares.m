@@ -73,10 +73,10 @@ function generate_c_code_nonlinear_least_squares(context, model, target_dir, sta
         y_0_hess = jacobian(y_0_adj, [u; x], struct('symmetric', isSX));
         dy_dz = jacobian(fun, z);
         % add functions to context
-        context.add_function_definition([model.name,'_cost_y_0_fun'], {x, u, z, p}, {fun}, target_dir);
-        context.add_function_definition([model.name,'_cost_y_0_fun_jac_ut_xt'], {x, u, z, p}, {fun, [jac_u'; jac_x'], dy_dz}, target_dir);
+        context.add_function_definition([model.name,'_cost_y_0_fun'], {x, u, z, p}, {fun}, target_dir, 'cost');
+        context.add_function_definition([model.name,'_cost_y_0_fun_jac_ut_xt'], {x, u, z, p}, {fun, [jac_u'; jac_x'], dy_dz}, target_dir, 'cost');
         if context.opts.generate_hess
-            context.add_function_definition([model.name,'_cost_y_0_hess'], {x, u, z, y_0, p}, {y_0_hess}, target_dir);
+            context.add_function_definition([model.name,'_cost_y_0_hess'], {x, u, z, y_0, p}, {y_0_hess}, target_dir, 'cost');
         end
     elseif strcmp(stage_type, 'path')
         fun = model.cost_y_expr;
@@ -99,12 +99,12 @@ function generate_c_code_nonlinear_least_squares(context, model, target_dir, sta
         y_hess = jacobian(y_adj, [u; x], struct('symmetric', isSX));
         dy_dz = jacobian(fun, z);
         % add functions to context
-        context.add_function_definition([model.name,'_cost_y_fun'], {x, u, z, p}, {fun}, target_dir);
+        context.add_function_definition([model.name,'_cost_y_fun'], {x, u, z, p}, {fun}, target_dir, 'cost');
         context.add_function_definition([model.name,'_cost_y_fun_jac_ut_xt'], ...
-                                {x, u, z, p}, {fun, [jac_u'; jac_x'], dy_dz}, target_dir);
+                                {x, u, z, p}, {fun, [jac_u'; jac_x'], dy_dz}, target_dir, 'cost');
 
         if context.opts.generate_hess
-            context.add_function_definition([model.name,'_cost_y_hess'], {x, u, z, y, p}, {y_hess}, target_dir);
+            context.add_function_definition([model.name,'_cost_y_hess'], {x, u, z, y, p}, {y_hess}, target_dir, 'cost');
         end
 
     elseif strcmp(stage_type, 'terminal')
@@ -129,11 +129,11 @@ function generate_c_code_nonlinear_least_squares(context, model, target_dir, sta
         y_e_adj = jtimes(fun, x, y_e, true);
         y_e_hess = jacobian(y_e_adj, x, struct('symmetric', isSX));
         % add functions to context
-        context.add_function_definition([model.name,'_cost_y_e_fun'], {x, u, z, p}, {fun}, target_dir);
-        context.add_function_definition([model.name,'_cost_y_e_fun_jac_ut_xt'], {x, u, z, p}, {fun, jac_x', dy_dz}, target_dir);
+        context.add_function_definition([model.name,'_cost_y_e_fun'], {x, u, z, p}, {fun}, target_dir, 'cost');
+        context.add_function_definition([model.name,'_cost_y_e_fun_jac_ut_xt'], {x, u, z, p}, {fun, jac_x', dy_dz}, target_dir, 'cost');
 
         if context.opts.generate_hess
-            context.add_function_definition([model.name,'_cost_y_e_hess'], {x, u, z, y_e, p}, {y_e_hess}, target_dir);
+            context.add_function_definition([model.name,'_cost_y_e_hess'], {x, u, z, y_e, p}, {y_e_hess}, target_dir, 'cost');
         end
     end
 

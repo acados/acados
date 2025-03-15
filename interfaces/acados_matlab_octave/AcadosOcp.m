@@ -885,7 +885,11 @@ classdef AcadosOcp < handle
                 code_gen_opts.with_solution_sens_wrt_params = solver_opts.with_solution_sens_wrt_params;
                 code_gen_opts.with_value_sens_wrt_params = solver_opts.with_value_sens_wrt_params;
                 code_gen_opts.code_export_directory = ocp.code_export_directory;
-                code_gen_opts.ext_fun_expand = ocp.solver_options.ext_fun_expand;
+
+                code_gen_opts.ext_fun_expand_dyn = solver_opts.ext_fun_expand_dyn;
+                code_gen_opts.ext_fun_expand_cost = solver_opts.ext_fun_expand_cost;
+                code_gen_opts.ext_fun_expand_constr = solver_opts.ext_fun_expand_constr;
+                code_gen_opts.ext_fun_expand_precompute = solver_opts.ext_fun_expand_precompute;
 
                 context = GenerateContext(ocp.model.p_global, ocp.name, code_gen_opts);
             else

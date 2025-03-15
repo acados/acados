@@ -37,6 +37,7 @@ classdef GenerateContext < handle
         list_funname_dir_pairs  % list of (function_name, output_dir) pairs, files that are generated
         generic_funname_dir_pairs % list of (function_name, output_dir) pairs, files that are not generated
         function_input_output_pairs
+        function_dyn_cost_constr_types
         casadi_fun_opts
         global_data_sym
         global_data_expr
@@ -72,6 +73,7 @@ classdef GenerateContext < handle
 
             obj.list_funname_dir_pairs = {};
             obj.function_input_output_pairs = {};
+            obj.function_dyn_cost_constr_types = {};
             obj.generic_funname_dir_pairs = {};
 
             obj.casadi_fun_opts = struct();
@@ -85,9 +87,10 @@ classdef GenerateContext < handle
             end
         end
 
-        function obj = add_function_definition(obj, name, inputs, outputs, output_dir)
+        function obj = add_function_definition(obj, name, inputs, outputs, output_dir, dyn_cost_constr_type)
             obj.list_funname_dir_pairs{end+1} = {name, output_dir};
             obj.function_input_output_pairs{end+1} = {inputs, outputs};
+            obj.function_dyn_cost_constr_types{end+1} = dyn_cost_constr_type;
         end
 
         function obj = finalize(obj)
@@ -207,7 +210,7 @@ classdef GenerateContext < handle
                 fun_name = sprintf('%s_p_global_precompute_fun', self.problem_name);
 
                 % Add function definition
-                self.add_function_definition(fun_name, {self.p_global}, {self.global_data_expr}, output_dir);
+                self.add_function_definition(fun_name, {self.p_global}, {self.global_data_expr}, output_dir, 'precompute');
             else
                 disp("WARNING: No CasADi function depends on p_global.")
             end
@@ -224,6 +227,7 @@ classdef GenerateContext < handle
                 output_dir = obj.list_funname_dir_pairs{i}{2};
                 inputs = obj.function_input_output_pairs{i}{1};
                 outputs = obj.function_input_output_pairs{i}{2};
+                dyn_cost_constr_type = obj.function_dyn_cost_constr_types{i};
 
                 % fprintf('Generating function %s in directory %s\n', name, output_dir);
                 % disp('Inputs:');
@@ -237,13 +241,14 @@ classdef GenerateContext < handle
                     rethrow(e);
                 end
 
-                if ~strcmp(name, sprintf('%s_p_global_precompute_fun', obj.problem_name))
-                    if obj.opts.ext_fun_expand
-                        try
-                            fun = fun.expand();
-                        catch
-                            warning(['Failed to expand the CasADi function ' name '.'])
-                        end
+                if ((strcmp(dyn_cost_constr_type, 'dyn') && obj.opts.ext_fun_expand_dyn)
+                    || (strcmp(dyn_cost_constr_type, 'cost') && obj.opts.ext_fun_expand_cost)
+                    || (strcmp(dyn_cost_constr_type, 'constr') && obj.opts.ext_fun_expand_constr)
+                    || (strcmp(dyn_cost_constr_type, 'precompute') && obj.opts.ext_fun_expand_precompute))
+                    try
+                        fun = fun.expand();
+                    catch
+                        warning(['Failed to expand the CasADi function ' name '.'])
                     end
                 end
 
