@@ -406,7 +406,11 @@ class AcadosSim:
 
         opts = dict(generate_hess = self.solver_options.sens_hess,
                     code_export_directory = self.code_export_directory,
-                    ext_fun_expand = self.solver_options.ext_fun_expand)
+                    ext_fun_expand_dyn = self.solver_options.ext_fun_expand,
+                    ext_fun_expand_cost = False,
+                    ext_fun_expand_constr = False,
+                    ext_fun_expand_precompute = False,
+                    )
 
         # create code_export_dir, model_dir
         code_export_dir = self.code_export_directory

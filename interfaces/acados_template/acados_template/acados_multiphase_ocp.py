@@ -456,7 +456,10 @@ class AcadosMultiphaseOcp:
         code_gen_opts['with_solution_sens_wrt_params'] = self.solver_options.with_solution_sens_wrt_params
         code_gen_opts['with_value_sens_wrt_params'] = self.solver_options.with_value_sens_wrt_params
         code_gen_opts['code_export_directory'] = self.code_export_directory
-        code_gen_opts['ext_fun_expand'] = self.solver_options.ext_fun_expand
+        code_gen_opts['ext_fun_expand_constr'] = self.solver_options.ext_fun_expand_constr
+        code_gen_opts['ext_fun_expand_cost'] = self.solver_options.ext_fun_expand_cost
+        code_gen_opts['ext_fun_expand_precompute'] = self.solver_options.ext_fun_expand_precompute
+        code_gen_opts['ext_fun_expand_dyn'] = self.solver_options.ext_fun_expand_dyn
 
         context = GenerateContext(self.model[0].p_global, self.name, code_gen_opts)
 
