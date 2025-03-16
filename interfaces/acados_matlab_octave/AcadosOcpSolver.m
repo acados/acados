@@ -111,7 +111,7 @@ classdef AcadosOcpSolver < handle
             end
 
             %% load json, store options in object
-            acados_ocp_struct = loadjson(fileread(json_file));
+            acados_ocp_struct = loadjson(fileread(json_file), 'SimplifyCell', 0);
             obj.problem_class = acados_ocp_struct.problem_class;
             obj.solver_options = acados_ocp_struct.solver_options;
             obj.N = acados_ocp_struct.solver_options.N_horizon;
