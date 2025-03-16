@@ -40,30 +40,42 @@ classdef AcadosOcpSolver < handle
 
     methods
 
-        function obj = AcadosOcpSolver(ocp, output_dir)
+        function obj = AcadosOcpSolver(ocp, output_dir, varargin)
+            obj.ocp = ocp;
 
+            % optional arguments
             if nargin < 2
                 output_dir = fullfile(pwd, 'build');
             end
+            obj.compile_mex_interface_if_needed(output_dir);
 
-            % detect dimensions & sanity checks
-            obj.ocp = ocp;
-            obj.ocp.make_consistent()
+            % solver creation options
+            default_solver_creation_opts = struct('json_file', '',...
+                    'build', true,...
+                    'generate', true,...
+                    'verbose', true);
+            if length(varargin) > 0
+                solver_creation_opts = varargin{1};
+                % set non-specified opts to default
+                fields = fieldnames(default_solver_creation_opts);
+                for i = 1:length(fields)
+                    if ~isfield(solver_creation_opts, fields{i})
+                        solver_creation_opts.(fields{i}) = default_solver_creation_opts.(fields{i});
+                    end
+                end
+            else
+                solver_creation_opts = default_solver_creation_opts;
+            end
 
-            % compile mex interface if needed
-            obj.compile_mex_interface_if_needed(output_dir)
+            if solver_creation_opts.generate
+                obj.generate(ocp);
+            end
 
-            % generate
-            check_dir_and_create(fullfile(pwd, ocp.code_export_directory));
-            context = ocp.generate_external_functions();
+            if solver_creation_opts.build
+                acados_template_mex.compile_ocp_shared_lib(ocp.code_export_directory)
+            end
 
-            ocp.dump_to_json()
-            ocp.render_templates()
-
-            % build
-            acados_template_mex.compile_ocp_shared_lib(ocp.code_export_directory)
-
-            % templated MEX
+            % create solver
             return_dir = pwd();
             cd(obj.ocp.code_export_directory)
 
@@ -75,6 +87,17 @@ classdef AcadosOcpSolver < handle
             cd(return_dir);
         end
 
+        function generate(obj, ocp)
+            % detect dimensions & sanity checks
+            obj.ocp.make_consistent()
+
+            % generate
+            check_dir_and_create(fullfile(pwd, ocp.code_export_directory));
+            context = ocp.generate_external_functions();
+
+            ocp.dump_to_json()
+            ocp.render_templates()
+        end
 
         function solve(obj)
             obj.t_ocp.solve();
