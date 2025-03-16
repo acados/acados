@@ -35,9 +35,8 @@ function solver = acados_ocp(model, opts, simulink_opts)
     if nargin < 3
         simulink_opts = get_acados_simulink_opts();
     end
-    output_dir = opts.opts_struct.output_dir;
 
     ocp = setup_AcadosOcp_from_legacy_ocp_description(model, opts, simulink_opts);
-    solver = AcadosOcpSolver(ocp, output_dir);
+    solver = AcadosOcpSolver(ocp, struct('output_dir', opts.opts_struct.output_dir));
 
 end
