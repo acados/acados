@@ -15,7 +15,7 @@
 % this list of conditions and the following disclaimer in the documentation
 % and/or other materials provided with the distribution.
 %
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS'
 % AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 % IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 % ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -27,46 +27,40 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
+import casadi.*
 
-assert(1+1==2)
+check_acados_requirements()
+creation_modes = {'standard', 'precompiled', 'no_ocp'};
+for i = 1:length(creation_modes)
+    ocp_solver = create_ocp_solver_code_reuse(creation_modes{i});
+    nx = length(ocp_solver.get('x', 0));
+    [nu, N] = size(ocp_solver.get('u'));
+    T = 1;
 
-disp('assertation works')
+    % solver initial guess
+    x_traj_init = zeros(nx, N+1);
+    u_traj_init = zeros(nu, N);
 
-disp('checking environment variables')
+    %% call ocp solver
+    % set trajectory initialization
+    ocp_solver.set('init_x', x_traj_init); % states
+    ocp_solver.set('init_u', u_traj_init); % inputs
+    ocp_solver.set('init_pi', zeros(nx, N)); % multipliers for dynamics equality constraints
 
-disp('MATLABPATH')
-disp(getenv('MATLABPATH'))
+    % solve
+    ocp_solver.solve();
+    % get solution
+    utraj = ocp_solver.get('u');
+    xtraj = ocp_solver.get('x');
 
-disp('MODEL_FOLDER')
-disp(getenv('MODEL_FOLDER'))
+    status = ocp_solver.get('status'); % 0 - success
+    ocp_solver.print('stat');
+    stat = ocp_solver.get('stat');
+    if i == 1
+        stat_ref = stat;
+    elseif max(abs(stat-stat_ref)) > 1e-6
+        error('solvers should have the same log independent of compilation options');
+    end
 
-
-disp('ENV_RUN')
-disp(getenv('ENV_RUN'))
-
-disp('LD_LIBRARY_PATH')
-disp(getenv('LD_LIBRARY_PATH'))
-
-disp('pwd')
-disp(pwd)
-
-disp('running tests')
-
-%% run all tests
-test_names = [
-    "test_code_reuse",
-    "run_test_dim_check",
-"run_test_ocp_mass_spring",
-% "run_test_ocp_pendulum",
-"run_test_ocp_wtnx6",
-% "run_test_sim_adj",
-"run_test_sim_dae",
-% "run_test_sim_forw",
-"run_test_sim_hess",
-"param_test",
-];
-
-for k = 1:length(test_names)
-    disp(strcat("running test ", test_names(k)));
-    run(test_names(k))
+    clear ocp_solver
 end
