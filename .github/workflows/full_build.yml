@@ -171,6 +171,7 @@ jobs:
         source ${{runner.workspace}}/acados/acadosenv/bin/activate
         cd ${{runner.workspace}}/acados/examples/acados_python/p_global_example
         python example_p_global.py
+        echo "\nPython run done; testing tranfer to Octave\n"
         octave code_reuse_py2matlab.m
 
     - name: Run more Python tests
