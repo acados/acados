@@ -1221,7 +1221,7 @@ class AcadosOcpOptions:
 
     @qp_scaling_type.setter
     def qp_scaling_type(self, qp_scaling_type):
-        qp_scaling_types = ('NONE', 'USER')
+        qp_scaling_types = ('NO_SCALING', 'OBJECTIVE_GERSHGORIN')
         if qp_scaling_type in qp_scaling_types:
             self.__qp_scaling_type = qp_scaling_type
         else:
