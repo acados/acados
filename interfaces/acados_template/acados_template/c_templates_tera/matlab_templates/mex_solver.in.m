@@ -257,7 +257,7 @@ classdef {{ name }}_mex_solver < handle
         end
 
         function [] = reset(obj)
-            acados_mex_reset_{{ name }}(obj.C_ocp);
+            acados_mex_set_{{ name }}(obj.C_ocp, 'reset', 1);
         end
 
 

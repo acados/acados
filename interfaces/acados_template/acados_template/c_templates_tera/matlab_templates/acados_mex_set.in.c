@@ -688,6 +688,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int print_level = (int) value[0];
         ocp_nlp_solver_opts_set(config, opts, "print_level", &print_level);
     }
+    else if (!strcmp(field, "reset"))
+    {
+        {{ name }}_acados_reset(capsule, 1);
+    }
     else
     {
         MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field, "p, constr_x0,\
