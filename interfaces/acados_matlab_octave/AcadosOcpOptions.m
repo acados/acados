@@ -82,6 +82,7 @@ classdef AcadosOcpOptions < handle
         reg_epsilon
         reg_max_cond_block
         reg_adaptive_eps
+        qp_scaling_type
         exact_hess_cost
         exact_hess_dyn
         exact_hess_constr
@@ -180,6 +181,7 @@ classdef AcadosOcpOptions < handle
             obj.print_level = 0;
             obj.cost_discretization = 'EULER';
             obj.regularize_method = 'NO_REGULARIZE';
+            obj.qp_scaling_type = 'NO_SCALING';
             obj.reg_epsilon = 1e-4;
             obj.reg_adaptive_eps = false;
             obj.reg_max_cond_block = 1e-7;
