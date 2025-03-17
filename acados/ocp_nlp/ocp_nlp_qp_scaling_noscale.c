@@ -108,14 +108,14 @@ void *ocp_nlp_qp_scaling_noscale_memory_assign(void *config_, ocp_nlp_qp_scaling
 
 void ocp_nlp_qp_scaling_noscale_scale_qp(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in)
 {
-    printf("ocp_nlp_qp_scaling_noscale_scale_qp: nothing to do\n");
+    // printf("ocp_nlp_qp_scaling_noscale_scale_qp: nothing to do\n");
     return;
 }
 
 
 void ocp_nlp_qp_scaling_noscale_rescale_solution(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in)
 {
-    printf("ocp_nlp_qp_scaling_noscale_rescale_solution: nothing to do\n");
+    // printf("ocp_nlp_qp_scaling_noscale_rescale_solution: nothing to do\n");
     return;
 }
 
