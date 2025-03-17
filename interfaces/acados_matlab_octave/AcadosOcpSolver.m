@@ -101,13 +101,9 @@ classdef AcadosOcpSolver < handle
             %% compile mex interface if needed
             obj.compile_mex_interface_if_needed(solver_creation_opts);
 
-            %% generate and compile
+            %% generate
             if solver_creation_opts.generate
                 obj.generate(ocp);
-            end
-
-            if solver_creation_opts.build
-                acados_template_mex.compile_ocp_shared_lib(ocp.code_export_directory)
             end
 
             %% load json, store options in object
@@ -127,6 +123,11 @@ classdef AcadosOcpSolver < handle
                 obj.nbxe_0 = acados_ocp_struct.phases_dims{1}.nbxe_0;
             end
             code_export_directory = acados_ocp_struct.code_export_directory;
+
+            %% compile problem specific shared library
+            if solver_creation_opts.build
+                acados_template_mex.compile_ocp_shared_lib(code_export_directory)
+            end
 
             %% create solver
             return_dir = pwd();
