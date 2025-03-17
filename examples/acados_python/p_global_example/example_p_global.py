@@ -28,7 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, AcadosMultiphaseOcp
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, AcadosMultiphaseOcp, get_simulink_default_opts
 import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
@@ -258,7 +258,7 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True):
     return residuals, timing
 
 
-def main_mocp(lut=True, use_p_global=True):
+def main_mocp(lut=True, use_p_global=True, with_matlab_templates=False):
     print(f"\n\nRunning multi-phase example with lut={lut}, use_p_global={use_p_global}")
     p_global, m, l, C, p_global_values = create_p_global(lut=lut)
 
@@ -299,6 +299,8 @@ def main_mocp(lut=True, use_p_global=True):
     # create ocp solver
     print(f"Creating ocp solver with p_global = {mocp.model[0].p_global}, p_phase_1 = {mocp.model[0].p}, p_phase_2 = {mocp.model[1].p}")
 
+    if with_matlab_templates:
+        mocp.simulink_opts = get_simulink_default_opts()
     ocp_solver = AcadosOcpSolver(mocp, generate=True, build=True)
 
     # call SQP_RTI solver in the loop:
@@ -337,7 +339,6 @@ if __name__ == "__main__":
     np.testing.assert_almost_equal(res_lut, res_lut_no_blazing)
     np.testing.assert_almost_equal(ref_lut, res_lut_no_blazing)
 
-
     ref_nolut, _ = main(use_cython=False, use_p_global=False, lut=False)
     res_nolut, _ = main(use_cython=False, use_p_global=True, lut=False)
     np.testing.assert_almost_equal(ref_nolut, res_nolut)
@@ -349,12 +350,9 @@ if __name__ == "__main__":
     np.testing.assert_almost_equal(ref_nolut, res_mocp_nolut_p_global)
 
     res_mocp_lut_p, _ = main_mocp(use_p_global=False, lut=True)
-    res_mocp_lut_p_global, _ = main_mocp(use_p_global=True, lut=True)
+    res_mocp_lut_p_global, _ = main_mocp(use_p_global=True, lut=True, with_matlab_templates=True)
     np.testing.assert_almost_equal(ref_lut, res_mocp_lut_p)
     np.testing.assert_almost_equal(ref_lut, res_mocp_lut_p_global)
 
-
     with np.testing.assert_raises(Exception):
         np.testing.assert_almost_equal(ref_lut, ref_nolut)
-
-    # main(use_cython=True) TODO: fix cython
