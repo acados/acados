@@ -158,6 +158,12 @@ jobs:
         octave --version
         ${{runner.workspace}}/acados/.github/linux/install_new_casadi_octave.sh
 
+    - name: Export Paths for octave
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: |
+        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+
     - name: Run Python tests that need new CasADi
       working-directory: ${{runner.workspace}}/acados/build
       shell: bash
