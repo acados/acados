@@ -158,6 +158,12 @@ jobs:
         octave --version
         ${{runner.workspace}}/acados/.github/linux/install_new_casadi_octave.sh
 
+    # just needed for blasfeo_target.h in MEX interface
+    - name: Configure CMake
+      shell: bash
+      working-directory: ${{runner.workspace}}/acados/build
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
+
     - name: Export Paths for octave
       working-directory: ${{runner.workspace}}/acados
       shell: bash
@@ -245,7 +251,7 @@ jobs:
           release: R2021a
           cache: true
 
-    # just needed for blasfeo_target.h
+    # just needed for blasfeo_target.h in MEX interface
     - name: Configure CMake
       shell: bash
       working-directory: ${{runner.workspace}}/acados/build
@@ -302,7 +308,7 @@ jobs:
           products: Simulink Simulink_Test
           cache: true
 
-    # just needed for blasfeo_target.h
+    # just needed for blasfeo_target.h in MEX interface
     - name: Configure CMake
       shell: bash
       working-directory: ${{runner.workspace}}/acados/build
@@ -361,7 +367,7 @@ jobs:
           products: Simulink Simulink_Test
           cache: true
 
-    # just needed for blasfeo_target.h
+    # just needed for blasfeo_target.h in MEX interface
     - name: Configure CMake
       shell: bash
       working-directory: ${{runner.workspace}}/acados/build
@@ -414,7 +420,7 @@ jobs:
         products: Simulink Simulink_Test
         cache: true
 
-    # just needed for blasfeo_target.h
+    # just needed for blasfeo_target.h in MEX interface
     - name: Configure CMake
       shell: bash
       working-directory: ${{runner.workspace}}/acados/build
