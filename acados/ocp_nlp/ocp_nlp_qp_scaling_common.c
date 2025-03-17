@@ -39,6 +39,8 @@
 
 #include "acados/ocp_nlp/ocp_nlp_qp_scaling_common.h"
 
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
 
 
 /************************************************
@@ -147,6 +149,22 @@ void ocp_qp_scale_objective(ocp_qp_in *qp_in, double factor)
         blasfeo_dvecsc(nx[stage]+nu[stage]+2*ns[stage], factor, rqz+stage, 0);
         blasfeo_dvecsc(2*ns[stage], factor, Z+stage, 0);
         blasfeo_dgecpsc(nx[stage]+nu[stage], nx[stage]+nu[stage], factor, RSQrq+stage, 0, 0, RSQrq+stage, 0, 0);
+    }
+}
+
+
+
+void ocp_qp_out_scale_duals(ocp_qp_out *qp_out, double factor)
+{
+    struct d_ocp_qp_dim *qp_dim = qp_out->dim;
+    struct blasfeo_dvec *pi = qp_out->pi;
+    struct blasfeo_dvec *lam = qp_out->lam;
+    // print_ocp_qp_dims(qp_dim);
+    for (int stage = 0; stage <= qp_dim->N; stage++)
+    {
+        blasfeo_dvecsc(2*qp_dim->nb[stage]+2*qp_dim->ng[stage]+2*qp_dim->ns[stage], factor, lam+stage, 0);
+        if (stage < qp_dim->N)
+            blasfeo_dvecsc(qp_dim->nx[stage+1], factor, pi+stage, 0);
     }
 }
 

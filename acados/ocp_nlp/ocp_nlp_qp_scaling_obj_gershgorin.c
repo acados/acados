@@ -136,7 +136,7 @@ void ocp_nlp_qp_scaling_obj_gershgorin_scale_qp(void *config, ocp_nlp_qp_scaling
     int *nx = qp_in->dim->nx;
     int *nu = qp_in->dim->nu;
     int *ns = qp_in->dim->ns;
-    // ocp_nlp_qp_scaling_obj_gershgorin_memory *memory = mem_;
+    ocp_nlp_qp_scaling_obj_gershgorin_memory *memory = mem_;
 
     struct blasfeo_dmat *RSQrq = qp_in->RSQrq;
     for (int stage = 0; stage <= dims->N; stage++)
@@ -145,19 +145,30 @@ void ocp_nlp_qp_scaling_obj_gershgorin_scale_qp(void *config, ocp_nlp_qp_scaling
         max_abs_eig = fmax(max_abs_eig, tmp);
         // take Z into account
         blasfeo_dvecnrm_inf(2*ns[stage], qp_in->Z+stage, 0, &tmp);
+        max_abs_eig = fmax(max_abs_eig, tmp);
     }
 
     //
-    double scale_factor = 1.0 / max_abs_eig;
+    memory->obj_factor = 1.0 / max_abs_eig;
 
     // scale QP cost
-    ocp_qp_scale_objective(qp_in, scale_factor);
+    ocp_qp_scale_objective(qp_in, memory->obj_factor);
+    print_ocp_qp_in(qp_in);
+    printf("ocp_nlp_qp_scaling_obj_gershgorin_scale_qp: computed obj_factor = %e\n", memory->obj_factor);
 }
 
 
-void ocp_nlp_qp_scaling_obj_gershgorin_rescale_solution(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in)
+void ocp_nlp_qp_scaling_obj_gershgorin_rescale_solution(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts_, void *mem_, ocp_qp_out *qp_out)
 {
-    printf("ocp_nlp_qp_scaling_obj_gershgorin_rescale_solution: nothing to do\n");
+    ocp_nlp_qp_scaling_obj_gershgorin_memory *memory = mem_;
+
+    // printf("ocp_nlp_qp_scaling_obj_gershgorin_rescale_solution: qp_out before rescaling\n");
+    // print_ocp_qp_out(qp_out);
+    ocp_qp_out_scale_duals(qp_out, 1/memory->obj_factor);
+    // printf("ocp_nlp_qp_scaling_obj_gershgorin_rescale_solution: qp_out after rescaling\n");
+    // print_ocp_qp_out(qp_out);
+    // printf("ocp_nlp_qp_scaling_obj_gershgorin_rescale_solution: using obj_factor = %e\n", memory->obj_factor);
+
     return;
 }
 

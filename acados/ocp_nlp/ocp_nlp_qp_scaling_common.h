@@ -92,6 +92,10 @@ acados_size_t ocp_nlp_qp_scaling_config_calculate_size(void);
 void *ocp_nlp_qp_scaling_config_assign(void *raw_memory);
 
 void ocp_qp_scale_objective(ocp_qp_in *qp_in, double factor);
+//
+void compute_gershgorin_max_abs_eig_estimate(int n, struct blasfeo_dmat *A, double *out);
+//
+void ocp_qp_out_scale_duals(ocp_qp_out *qp_out, double factor);
 
 #ifdef __cplusplus
 }
