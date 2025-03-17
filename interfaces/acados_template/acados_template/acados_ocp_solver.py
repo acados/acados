@@ -103,10 +103,14 @@ class AcadosOcpSolver:
                    `MS Visual Studio`); default: `None`
         """
         acados_ocp.code_export_directory = os.path.abspath(acados_ocp.code_export_directory)
-        acados_ocp.simulink_opts = simulink_opts
 
         # add kwargs to acados_ocp
         acados_ocp.json_file = json_file
+        if simulink_opts is not None:
+            if acados_ocp.simulink_opts is not None:
+                raise Exception('simulink_opts are already set in acados_ocp.')
+            else:
+                acados_ocp.simulink_opts = simulink_opts
 
         # make consistent
         acados_ocp.make_consistent()

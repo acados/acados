@@ -396,11 +396,11 @@ class AcadosMultiphaseOcp:
             template_list.append(('multi_Makefile.in', 'Makefile'))
 
         if self.phases_dims[0].np_global > 0:
-            template_list.append(('p_global_precompute_fun.in.h', f'{self.name}_p_global_precompute_fun.h'))
+            template_list.append(('p_global_precompute_fun.in.h', f'{name}_p_global_precompute_fun.h'))
 
         # Simulink
         if self.simulink_opts is not None:
-            raise NotImplementedError('Simulink not yet supported for multiphase OCPs.')
+            template_list += AcadosOcp._get_matlab_simulink_template_list(name)
 
         return template_list
 
