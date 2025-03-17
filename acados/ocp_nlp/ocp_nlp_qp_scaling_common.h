@@ -83,7 +83,7 @@ typedef struct
     void *(*memory_assign)(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts, void *raw_memory);
     /* functions */
     void (*scale_qp)(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts, void *memory, ocp_qp_in *qp_in);
-    void (*rescale_solution)(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts, void *memory, ocp_qp_out *qp_out);
+    void (*rescale_solution)(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts, void *memory, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
 } ocp_nlp_qp_scaling_config;
 
 //
