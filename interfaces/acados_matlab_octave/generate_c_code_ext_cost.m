@@ -48,13 +48,13 @@ function generate_c_code_ext_cost(context, model, target_dir, stage_type)
         % generate jacobian, hessian
         [full_hess, grad] = hessian(ext_cost_0, vertcat(u, x, z));
         % add functions to context
-        context.add_function_definition([model.name,'_cost_ext_cost_0_fun'], {x, u, z, p}, {ext_cost_0}, target_dir);
-        context.add_function_definition([model.name,'_cost_ext_cost_0_fun_jac'], {x, u, z, p}, {ext_cost_0, grad}, target_dir);
+        context.add_function_definition([model.name,'_cost_ext_cost_0_fun'], {x, u, z, p}, {ext_cost_0}, target_dir, 'cost');
+        context.add_function_definition([model.name,'_cost_ext_cost_0_fun_jac'], {x, u, z, p}, {ext_cost_0, grad}, target_dir, 'cost');
         if ~isempty(model.cost_expr_ext_cost_custom_hess_0)
             context.add_function_definition([model.name,'_cost_ext_cost_0_fun_jac_hess'], {x, u, z, p},...
-                                        {ext_cost_0, grad, model.cost_expr_ext_cost_custom_hess_0}, target_dir);
+                                        {ext_cost_0, grad, model.cost_expr_ext_cost_custom_hess_0}, target_dir, 'cost');
         else
-            context.add_function_definition([model.name,'_cost_ext_cost_0_fun_jac_hess'], {x, u, z, p}, {ext_cost_0, grad, full_hess}, target_dir);
+            context.add_function_definition([model.name,'_cost_ext_cost_0_fun_jac_hess'], {x, u, z, p}, {ext_cost_0, grad, full_hess}, target_dir, 'cost');
         end
 
     elseif strcmp(stage_type, "path")
@@ -65,14 +65,14 @@ function generate_c_code_ext_cost(context, model, target_dir, stage_type)
         % generate jacobian, hessian
         [full_hess, grad] = hessian(ext_cost, vertcat(u, x, z));
         % add functions to context
-        context.add_function_definition([model.name,'_cost_ext_cost_fun'], {x, u, z, p}, {ext_cost}, target_dir);
-        context.add_function_definition([model.name,'_cost_ext_cost_fun_jac'], {x, u, z, p}, {ext_cost, grad}, target_dir);
+        context.add_function_definition([model.name,'_cost_ext_cost_fun'], {x, u, z, p}, {ext_cost}, target_dir, 'cost');
+        context.add_function_definition([model.name,'_cost_ext_cost_fun_jac'], {x, u, z, p}, {ext_cost, grad}, target_dir, 'cost');
         if ~isempty(model.cost_expr_ext_cost_custom_hess)
             context.add_function_definition([model.name,'_cost_ext_cost_fun_jac_hess'], {x, u, z, p}, ...
-                                        {ext_cost, grad, model.cost_expr_ext_cost_custom_hess}, target_dir);
+                                        {ext_cost, grad, model.cost_expr_ext_cost_custom_hess}, target_dir, 'cost');
         else
             context.add_function_definition([model.name,'_cost_ext_cost_fun_jac_hess'], {x, u, z, p}, ...
-                                        {ext_cost, grad, full_hess}, target_dir);
+                                        {ext_cost, grad, full_hess}, target_dir, 'cost');
         end
 
     elseif strcmp(stage_type, "terminal")
@@ -85,13 +85,13 @@ function generate_c_code_ext_cost(context, model, target_dir, stage_type)
         % generate hessians
         hes_xx_e = jacobian(jac_x_e', x);
         % add functions to context
-        context.add_function_definition([model.name,'_cost_ext_cost_e_fun'], {x, p}, {ext_cost_e}, target_dir);
-        context.add_function_definition([model.name,'_cost_ext_cost_e_fun_jac'], {x, p}, {ext_cost_e, jac_x_e'}, target_dir);
+        context.add_function_definition([model.name,'_cost_ext_cost_e_fun'], {x, p}, {ext_cost_e}, target_dir, 'cost');
+        context.add_function_definition([model.name,'_cost_ext_cost_e_fun_jac'], {x, p}, {ext_cost_e, jac_x_e'}, target_dir, 'cost');
         if ~isempty(model.cost_expr_ext_cost_custom_hess_e)
             context.add_function_definition([model.name,'_cost_ext_cost_e_fun_jac_hess'], {x, p},...
-                                        {ext_cost_e, jac_x_e', model.cost_expr_ext_cost_custom_hess_e}, target_dir);
+                                        {ext_cost_e, jac_x_e', model.cost_expr_ext_cost_custom_hess_e}, target_dir, 'cost');
         else
-            context.add_function_definition([model.name, '_cost_ext_cost_e_fun_jac_hess'], {x, p}, {ext_cost_e, jac_x_e', hes_xx_e}, target_dir);
+            context.add_function_definition([model.name, '_cost_ext_cost_e_fun_jac_hess'], {x, p}, {ext_cost_e, jac_x_e', hes_xx_e}, target_dir, 'cost');
         end
     else
         error("Unknown stage type.")

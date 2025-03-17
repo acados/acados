@@ -1151,7 +1151,7 @@ class AcadosOcpSolver:
             print(("{iter:>5}   {stat:>10}   {res_eq:>10}   "
                    "{res_ineq:>10}   {res_comp:>10}   {qp1_status:>8}   {qp1_iter:>6}   "
                    "{qp2_status:>8}   {qp2_iter:>6}   {qp3_status:>8}   {qp3_iter:>6}   "
-                   "{alpha:>10}").format(
+                   "{alpha:>10}   {norm_pi:>8}   {norm_lam:>8}").format(
                         iter='#it',
                         stat='res_stat',
                         res_eq='res_eq',
@@ -1163,12 +1163,14 @@ class AcadosOcpSolver:
                         qp2_iter='qp2_it',
                         qp3_status='qp3_stat',
                         qp3_iter='qp3_it',
-                        alpha='alpha'))
+                        alpha='alpha',
+                        norm_pi='||pi||',
+                        norm_lam='||lam||',))
             for jj in range(stat.shape[1]):
                 print(("{iter:>5}   {stat:>10.4e}   {res_eq:>10.4e}   "
                    "{res_ineq:>10.4e}   {res_comp:>10.4e}   {qp1_status:>8}   {qp1_iter:>6}   "
                    "{qp2_status:>8}   {qp2_iter:>6}   {qp3_status:>8}   {qp3_iter:>6}   "
-                   "{alpha:>10.4e}").format(
+                   "{alpha:>10.4e}   {norm_pi:>8.2e}   {norm_lam:>8.2e}").format(
                         iter=int(stat[0][jj]),
                         stat=stat[1][jj],
                         res_eq=stat[2][jj],
@@ -1180,7 +1182,9 @@ class AcadosOcpSolver:
                         qp2_iter=int(stat[8][jj]),
                         qp3_status=int(stat[9][jj]),
                         qp3_iter=int(stat[10][jj]),
-                        alpha=int(stat[11][jj])))
+                        alpha=int(stat[11][jj]),
+                        norm_pi=stat[12][jj],
+                        norm_lam=stat[13][jj]))
             print('\n')
 
         return
