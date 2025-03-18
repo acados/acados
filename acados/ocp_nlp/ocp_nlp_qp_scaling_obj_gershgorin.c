@@ -158,11 +158,13 @@ void ocp_nlp_qp_scaling_obj_gershgorin_scale_qp(void *config, ocp_nlp_qp_scaling
 
     // scale QP cost
     // print_ocp_qp_in(qp_in);
-    // printf("AFTER SCALING\n");
     if (memory->obj_factor != 1.0)
+    {
         ocp_qp_scale_objective(qp_in, memory->obj_factor);
+    }
+    // printf("AFTER SCALING\n");
     // print_ocp_qp_in(qp_in);
-    printf("ocp_nlp_qp_scaling_obj_gershgorin_scale_qp: computed obj_factor = %e\n", memory->obj_factor);
+    // printf("ocp_nlp_qp_scaling_obj_gershgorin_scale_qp: computed obj_factor = %e\n", memory->obj_factor);
     // exit(1);
 }
 

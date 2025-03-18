@@ -3910,8 +3910,6 @@ int ocp_nlp_solve_qp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *n
     qp_solver->memory_get(qp_solver, qp_mem, "time_qp_xcond", &tmp_time);
     nlp_timings->time_qp_xcond += tmp_time;
 
-    config->qp_scaling->rescale_solution(config->qp_scaling, dims->qp_scaling, nlp_opts->qp_scaling, nlp_mem->qp_scaling, qp_in, qp_out);
-
     return qp_status;
 }
 
