@@ -980,6 +980,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
     int qp_status = ACADOS_SUCCESS;
 
+    printf("\nprepare_and_solve_QP: solve_feasibility_qp %d\n", solve_feasibility_qp);
     // warm start of first QP
     if (sqp_iter == 0)
     {
@@ -1007,6 +1008,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
 
         // regularize Hessian
         acados_tic(&timer_qp);
+        config->qp_scaling->scale_qp(config->qp_scaling, dims->qp_scaling, nlp_opts->qp_scaling, nlp_mem->qp_scaling, qp_in);
         config->regularize->regularize(config->regularize, dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
         nlp_timings->time_reg += acados_toc(&timer_qp);
     }
