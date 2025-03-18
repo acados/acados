@@ -1007,7 +1007,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
 
         // regularize Hessian
         acados_tic(&timer_qp);
-        config->regularize->regularize(config->regularize, dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
+        config->regularize->regularize(config->regularize, dims->regularize, nlp_opts->regularize, nlp_mem->regularize);
         nlp_timings->time_reg += acados_toc(&timer_qp);
     }
 

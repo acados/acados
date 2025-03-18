@@ -1727,7 +1727,7 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     c_ptr += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
     // regularization
-    mem->regularize_mem = config->regularize->memory_assign(config->regularize, dims->regularize,
+    mem->regularize = config->regularize->memory_assign(config->regularize, dims->regularize,
                                                             opts->regularize, c_ptr);
     c_ptr += config->regularize->memory_calculate_size(config->regularize, dims->regularize,
                                                        opts->regularize);
@@ -2619,8 +2619,8 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
     }
 
     // alias to regularize memory
-    ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, nlp_mem->qp_in);
-    ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, nlp_mem->qp_out);
+    ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, nlp_mem->regularize, nlp_mem->qp_in);
+    ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, nlp_mem->regularize, nlp_mem->qp_out);
 
     // copy sampling times into dynamics model
 #if defined(ACADOS_WITH_OPENMP)
@@ -3789,7 +3789,7 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
     else
     {
         qp_in = qp_in_;
-        ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, qp_in);
+        ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, nlp_mem->regularize, qp_in);
     }
 
     ocp_qp_out *qp_out = nlp_mem->qp_out;
@@ -3800,7 +3800,7 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
     else
     {
         qp_out = qp_out_;
-        ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, qp_out);
+        ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, nlp_mem->regularize, qp_out);
     }
 
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
@@ -3831,17 +3831,17 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
     // compute correct dual solution in case of Hessian regularization
     acados_tic(&timer);
     config->regularize->correct_dual_sol(config->regularize, dims->regularize,
-                                            nlp_opts->regularize, nlp_mem->regularize_mem);
+                                            nlp_opts->regularize, nlp_mem->regularize);
     nlp_timings->time_reg += acados_toc(&timer);
 
     // reset regularize pointers if necessary
     if (qp_in_ != NULL)
     {
-        ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, nlp_mem->qp_in);
+        ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, nlp_mem->regularize, nlp_mem->qp_in);
     }
     if (qp_out_ != NULL)
     {
-        ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, nlp_mem->qp_out);
+        ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, nlp_mem->regularize, nlp_mem->qp_out);
     }
 
     return qp_status;
