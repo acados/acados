@@ -329,7 +329,7 @@ if __name__ == "__main__":
     res_lut_no_blazing, t_lin_lut_no_blazing = main(use_cython=False, use_p_global=True, lut=True, blazing=False)
 
     ref_lut, t_lin_lut_ref = main(use_cython=False, use_p_global=False, lut=True)
-    res_lut, t_lin_lut = main(use_cython=False, use_p_global=True, lut=True, with_matlab_templates=True, code_export_directory='c_generated_code_single_phase')
+    res_lut, t_lin_lut = main(use_cython=False, use_p_global=True, lut=True)
 
     print(f"\t\t bspline \t blazing")
     print(f"ref\t\t {t_lin_lut_no_blazing_ref:.5f} \t {t_lin_lut_ref:.5f}")
@@ -359,3 +359,6 @@ if __name__ == "__main__":
 
     with np.testing.assert_raises(Exception):
         np.testing.assert_almost_equal(ref_lut, ref_nolut)
+
+    # to test transfer to MATLAB/Octave
+    res_lut, t_lin_lut = main(use_cython=False, use_p_global=True, lut=True, with_matlab_templates=True, code_export_directory='c_generated_code_single_phase')
