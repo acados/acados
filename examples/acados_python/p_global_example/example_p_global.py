@@ -325,11 +325,11 @@ def main_mocp(lut=True, use_p_global=True, with_matlab_templates=False):
 if __name__ == "__main__":
 
     # OCP with lookuptable, comparing blazing, bspline, p_global
-    ref_lut, t_lin_lut_ref = main(use_cython=False, use_p_global=False, lut=True)
-    res_lut, t_lin_lut = main(use_cython=False, use_p_global=True, lut=True, with_matlab_templates=True, code_export_directory='c_generated_code_single_phase')
-
     ref_lut_no_blazing, t_lin_lut_no_blazing_ref = main(use_cython=False, use_p_global=False, lut=True, blazing=False)
     res_lut_no_blazing, t_lin_lut_no_blazing = main(use_cython=False, use_p_global=True, lut=True, blazing=False)
+
+    ref_lut, t_lin_lut_ref = main(use_cython=False, use_p_global=False, lut=True)
+    res_lut, t_lin_lut = main(use_cython=False, use_p_global=True, lut=True, with_matlab_templates=True, code_export_directory='c_generated_code_single_phase')
 
     print(f"\t\t bspline \t blazing")
     print(f"ref\t\t {t_lin_lut_no_blazing_ref:.5f} \t {t_lin_lut_ref:.5f}")
