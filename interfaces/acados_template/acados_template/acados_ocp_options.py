@@ -1403,6 +1403,8 @@ class AcadosOcpOptions:
 
     @reg_max_cond_block.setter
     def reg_max_cond_block(self, reg_max_cond_block):
+        if not isinstance(reg_max_cond_block, float) or reg_max_cond_block < 1.0:
+            raise Exception('Invalid reg_max_cond_block value, expected float > 1.0.')
         self.__reg_max_cond_block = reg_max_cond_block
 
     @reg_adaptive_eps.setter
