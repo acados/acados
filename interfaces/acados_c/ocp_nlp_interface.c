@@ -48,6 +48,7 @@
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgp.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_convexify.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_glm.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_mirror.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_project.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_project_reduc_hess.h"
@@ -236,6 +237,9 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
             break;
         case CONVEXIFY:
             ocp_nlp_reg_convexify_config_initialize_default(config->regularize);
+            break;
+        case GERSHGORIN_LEVENBERG_MARQUARDT:
+            ocp_nlp_reg_glm_config_initialize_default(config->regularize);
             break;
         default:
             printf("\nerror: ocp_nlp_config_create: unsupported plan->regularization\n");
