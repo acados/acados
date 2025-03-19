@@ -258,6 +258,10 @@ add_test(NAME python_pendulum_ocp_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/non_ocp_nlp
         python maratos_test_problem.py)
 
+    add_test(NAME python_test_adaptive_reg
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/non_ocp_nlp
+        python adaptive_eps_reg_test.py)
+
     # Convex test problem where full step SQP does not converge, but globalized SQP does
     add_test(NAME python_convex_test_problem_globalization
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/convex_problem_globalization_needed
@@ -415,6 +419,9 @@ add_test(NAME python_pendulum_ocp_example_cmake
     # Directory getting_started
     set_tests_properties(python_pendulum_sim_example PROPERTIES DEPENDS python_pendulum_ocp_example)
     set_tests_properties(python_pendulum_closed_loop_example PROPERTIES DEPENDS python_pendulum_sim_example)
+
+    # Directory non_ocp_nlp
+    set_tests_properties(python_maratos_test_problem_globalization PROPERTIES DEPENDS python_test_adaptive_reg)
 
     # Directory acados_python/tests
     set_tests_properties(python_test_cython_vs_ctypes PROPERTIES DEPENDS python_test_reset)
