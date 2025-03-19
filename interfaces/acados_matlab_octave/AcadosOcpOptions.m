@@ -187,7 +187,7 @@ classdef AcadosOcpOptions < handle
             obj.regularize_method = 'NO_REGULARIZE';
             obj.reg_epsilon = 1e-4;
             obj.reg_adaptive_eps = false;
-            obj.reg_max_cond_block = 1e-7;
+            obj.reg_max_cond_block = 1e7;
             obj.reg_min_epsilon = 1e-8;
             obj.shooting_nodes = [];
             obj.cost_scaling = [];

@@ -89,7 +89,7 @@ class AcadosOcpOptions:
         self.__cost_discretization = 'EULER'
         self.__regularize_method = 'NO_REGULARIZE'
         self.__reg_epsilon = 1e-4
-        self.__reg_max_cond_block = 1e-7
+        self.__reg_max_cond_block = 1e7
         self.__reg_adaptive_eps = False
         self.__reg_min_epsilon = 1e-8
         self.__exact_hess_cost = 1
@@ -774,7 +774,7 @@ class AcadosOcpOptions:
         """Maximum condition number of each Hessian block after regularization with regularize_method in ['PROJECT', 'MIRROR'] and reg_adaptive_eps = True
 
         Type: float
-        Default: 1e-7
+        Default: 1e7
         """
         return self.__reg_max_cond_block
 
