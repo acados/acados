@@ -101,7 +101,7 @@ else
 end
 
 %% simulink test
-cd c_generated_code
+cd(ocp.code_export_directory)
 make_sfun; % ocp solver
 cd ..;
 
