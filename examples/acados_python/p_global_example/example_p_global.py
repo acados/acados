@@ -194,7 +194,7 @@ def create_ocp_formulation_without_opts(p_global, m, l, C, lut=True, use_p_globa
     return ocp
 
 
-def main(use_cython=False, lut=True, use_p_global=True, blazing=True):
+def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matlab_templates=False, code_export_directory=None):
 
     print(f"\n\nRunning example with lut={lut}, use_p_global={use_p_global}, {blazing=}")
     p_global, m, l, C, p_global_values = create_p_global(lut=lut)
@@ -217,6 +217,8 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True):
     ocp.solver_options.print_level = 0
     ocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP_RTI, SQP
     ocp.solver_options.ext_fun_compile_flags += ' -I' + ca.GlobalOptions.getCasadiIncludePath() + ' -ffast-math -march=native'
+    if code_export_directory is not None:
+        ocp.code_export_directory = code_export_directory
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -224,7 +226,8 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True):
 
     # create ocp solver
     print(f"Creating ocp solver with p_global = {ocp.model.p_global}, p = {ocp.model.p}")
-
+    if with_matlab_templates:
+        ocp.simulink_opts = get_simulink_default_opts()
     solver_json = 'acados_ocp_' + ocp.model.name + '.json'
     if use_cython:
         AcadosOcpSolver.generate(ocp, json_file=solver_json)
@@ -323,7 +326,7 @@ if __name__ == "__main__":
 
     # OCP with lookuptable, comparing blazing, bspline, p_global
     ref_lut, t_lin_lut_ref = main(use_cython=False, use_p_global=False, lut=True)
-    res_lut, t_lin_lut = main(use_cython=False, use_p_global=True, lut=True)
+    res_lut, t_lin_lut = main(use_cython=False, use_p_global=True, lut=True, with_matlab_templates=True, code_export_directory='c_generated_code_single_phase')
 
     ref_lut_no_blazing, t_lin_lut_no_blazing_ref = main(use_cython=False, use_p_global=False, lut=True, blazing=False)
     res_lut_no_blazing, t_lin_lut_no_blazing = main(use_cython=False, use_p_global=True, lut=True, blazing=False)

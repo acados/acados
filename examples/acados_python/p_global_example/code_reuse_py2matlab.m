@@ -31,24 +31,31 @@ import casadi.*
 
 check_acados_requirements()
 
-json_file = 'mocp.json';
-solver_creation_opts = struct();
-solver_creation_opts.json_file = json_file;
-solver_creation_opts.generate = false;
-solver_creation_opts.build = false;
-solver_creation_opts.compile_mex_wrapper = true;
-ocp = [];
+json_files = {'acados_ocp_pendulum_blazing_True_p_global_True.json', 'mocp.json'};
 
-% create solver
-ocp_solver = AcadosOcpSolver(ocp, solver_creation_opts);
+for i = 1:length(json_files)
+    json_file = json_files{i};
+    disp('testing solver creation with code reuse with json file: ')
+    disp(json_file)
+    solver_creation_opts = struct();
+    solver_creation_opts.json_file = json_file;
+    solver_creation_opts.generate = false;
+    solver_creation_opts.build = false;
+    solver_creation_opts.compile_mex_wrapper = true;
+    ocp = [];
 
-nx = length(ocp_solver.get('x', 0));
-[nu, N] = size(ocp_solver.get('u'));
+    % create solver
+    ocp_solver = AcadosOcpSolver(ocp, solver_creation_opts);
 
-for i = 1:20
-    ocp_solver.solve();
+    nx = length(ocp_solver.get('x', 0));
+    [nu, N] = size(ocp_solver.get('u'));
 
-    status = ocp_solver.get('status'); % 0 - success
-    ocp_solver.print('stat');
+    for i = 1:5
+        ocp_solver.solve();
+
+        status = ocp_solver.get('status');
+        ocp_solver.print('stat');
+    end
+    clear ocp_solver
 end
-clear ocp_solver
+
