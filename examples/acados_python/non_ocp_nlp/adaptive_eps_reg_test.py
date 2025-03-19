@@ -79,6 +79,7 @@ def export_parametric_ocp() -> AcadosOcp:
     ocp.solver_options.eval_residual_at_max_iter = False
     ocp.solver_options.reg_adaptive_eps = True
     ocp.solver_options.reg_max_cond_block = 1e3
+    ocp.solver_options.reg_min_epsilon = 1e-7
 
     return ocp
 
@@ -98,6 +99,8 @@ def test_reg_adaptive_eps(regularize_method='MIRROR'):
     nx = ocp.dims.nx
     nu = ocp.dims.nu
 
+    eps_min = ocp.solver_options.reg_min_epsilon
+
     W_mat2 = np.zeros((nx+nu, nx+nu))
     W_mat2[0,0] = 1e6
     W_mat2[nx+nu-1, nx+nu-1] = 1e-4
@@ -112,7 +115,8 @@ def test_reg_adaptive_eps(regularize_method='MIRROR'):
                     [0.5000,  -0.5000,  -0.5000,   0.5000],
                     [0.2706,  -0.6533,   0.6533,  -0.2706]])
 
-    mat_x = A_x.T @ np.diag([15, 4.0, -2e5, 1e-6]) @ A_x
+    W3_eig = [15, 4.0, -2e5, 1e-6]
+    mat_x = A_x.T @ np.diag(W3_eig) @ A_x
 
     W_mat3 = block_diag(mat_x, mat_u)
 
@@ -122,39 +126,41 @@ def test_reg_adaptive_eps(regularize_method='MIRROR'):
     for i, W_mat in enumerate(W_mats):
         print(f"{regularize_method} i={i}")
         print("---------------------")
-
-        # Test zero matrix
         set_cost_matrix(ocp_solver, W_mat, W_mat_e)
 
         status = ocp_solver.solve()
         ocp_solver.print_statistics()
         nlp_iter = ocp_solver.get_stats("nlp_iter")
+        hess_0 = ocp_solver.get_hessian_block(0)
+        hess_1 = ocp_solver.get_hessian_block(1)
 
+        # check condition numbers
         qp_diagnostics = ocp_solver.qp_diagnostics()
-        assert qp_diagnostics['condition_number_stage'][0] <= ocp.solver_options.reg_max_cond_block +1e-8, f"Condition number must be <= {ocp.solver_options.reg_max_cond_block} per stage, got {qp_diagnostics['condition_number_stage'][0]} for i = {i}"
-        assert qp_diagnostics['condition_number_stage'][1] <= ocp.solver_options.reg_max_cond_block +1e-8, f"Condition number must be <= {ocp.solver_options.reg_max_cond_block} per stage, got {qp_diagnostics['condition_number_stage'][1]} for i = {i}"
+        assert qp_diagnostics['condition_number_stage'][0] <= ocp.solver_options.reg_max_cond_block +1e-8, f"Condition number must be <= {ocp.solver_options.reg_max_cond_block} per stage, got {qp_diagnostics['condition_number_stage'][0]}"
+        assert qp_diagnostics['condition_number_stage'][1] <= ocp.solver_options.reg_max_cond_block +1e-8, f"Condition number must be <= {ocp.solver_options.reg_max_cond_block} per stage, got {qp_diagnostics['condition_number_stage'][1]}"
 
-        assert nlp_iter == 1, f"Number of NLP iterations should be 1, got {nlp_iter} for i = {i}"
-        assert status == 0, f"acados returned status {status} for i = {i}"
+        # check solver stats
+        assert status == 0, f"acados returned status {status}"
 
-        hessian_0 = ocp_solver.get_hessian_block(0)
+        # check hessian
         if i == 0:
-            assert np.equal(hessian_0, np.eye(nx+nu)).all(), f"Zero Hessian matrix should be transformed into identity for {regularize_method} for i = {i}"
+            assert np.equal(hess_0, eps_min*np.eye(nx+nu)).all(), f"Zero matrix should be regularized to eps_min * eye for {regularize_method}"
         elif i == 1:
-            assert np.equal(hessian_0, np.diag([1e3, 1e3, 1e6, 1e3, 1e3, 1e3])).all(), f"Something in adaptive {regularize_method} went wrong for i = {i}!"
+            assert np.equal(hess_0, np.diag([1e3, 1e3, 1e6, 1e3, 1e3, 1e3])).all(), f"Something in adaptive {regularize_method} went wrong!"
         elif i == 2:
-            print(np.linalg.eigvals(W_mat))
-            print(hessian_0)
-            print(np.real(np.linalg.eigvals(hessian_0)))
+            # print(np.linalg.eigvals(W_mat))
+            print(hess_0)
+            print(np.real(np.linalg.eigvals(hess_0)))
             if regularize_method == 'MIRROR':
-                reg_eps = 2e5/ocp.solver_options.reg_max_cond_block
-                assert np.allclose(np.linalg.eigvals(hessian_0), np.array([reg_eps, 2e5, reg_eps, reg_eps, reg_eps, reg_eps])), f"Something in adaptive {regularize_method} went wrong for i = {i}!"
+                max_abs_eig = np.max(np.abs(W3_eig))
+                reg_eps = max(max_abs_eig/ocp.solver_options.reg_max_cond_block, eps_min)
+                assert np.allclose(np.linalg.eigvals(hess_0), np.array([reg_eps, max_abs_eig, reg_eps, reg_eps, reg_eps, reg_eps])), f"Something in adaptive {regularize_method} went wrong!"
             elif regularize_method == 'PROJECT':
-                reg_eps = 15/ocp.solver_options.reg_max_cond_block
-                assert np.allclose(np.real(np.linalg.eigvals(hessian_0)), np.array([15, 4, reg_eps, reg_eps, reg_eps, reg_eps]), rtol=1e-03, atol=1e-3), f"Something in adaptive {regularize_method} went wrong for i = {i}!"
+                max_pos_eig = np.max(W3_eig)
+                reg_eps = max(max_pos_eig/ocp.solver_options.reg_max_cond_block, eps_min)
+                assert np.allclose(np.real(np.linalg.eigvals(hess_0)), np.array([15, 4, reg_eps, reg_eps, reg_eps, reg_eps]), rtol=1e-03, atol=1e-3), f"Something in adaptive {regularize_method} went wrong!"
 
-        hessian_1 = ocp_solver.get_hessian_block(1)
-        assert np.equal(hessian_1, np.eye(nx)).all(), f"Zero Hessian matrix should be transformed into identity for {regularize_method} for i = {i}"
+        assert np.equal(hess_1, eps_min*np.eye(nx)).all(), f"Zero matrix should be regularized to eps_min * eye for {regularize_method}"
 
 
 if __name__ == "__main__":

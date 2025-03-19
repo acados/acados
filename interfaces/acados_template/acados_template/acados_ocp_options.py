@@ -89,8 +89,9 @@ class AcadosOcpOptions:
         self.__cost_discretization = 'EULER'
         self.__regularize_method = 'NO_REGULARIZE'
         self.__reg_epsilon = 1e-4
-        self.__reg_max_cond_block = 1e-7
+        self.__reg_max_cond_block = 1e7
         self.__reg_adaptive_eps = False
+        self.__reg_min_epsilon = 1e-8
         self.__exact_hess_cost = 1
         self.__exact_hess_dyn = 1
         self.__exact_hess_constr = 1
@@ -773,7 +774,7 @@ class AcadosOcpOptions:
         """Maximum condition number of each Hessian block after regularization with regularize_method in ['PROJECT', 'MIRROR'] and reg_adaptive_eps = True
 
         Type: float
-        Default: 1e-7
+        Default: 1e7
         """
         return self.__reg_max_cond_block
 
@@ -789,6 +790,15 @@ class AcadosOcpOptions:
         Default: False
         """
         return self.__reg_adaptive_eps
+
+    @property
+    def reg_min_epsilon(self):
+        """Minimum value for epsilon if regularize_method in ['PROJECT', 'MIRROR'] is used with reg_adaptive_eps.
+
+        Type: float
+        Default: 1e-8
+        """
+        return self.__reg_min_epsilon
 
     @property
     def globalization_alpha_reduction(self):
@@ -1393,6 +1403,8 @@ class AcadosOcpOptions:
 
     @reg_max_cond_block.setter
     def reg_max_cond_block(self, reg_max_cond_block):
+        if not isinstance(reg_max_cond_block, float) or reg_max_cond_block < 1.0:
+            raise Exception('Invalid reg_max_cond_block value, expected float > 1.0.')
         self.__reg_max_cond_block = reg_max_cond_block
 
     @reg_adaptive_eps.setter
@@ -1400,6 +1412,12 @@ class AcadosOcpOptions:
         if not isinstance(reg_adaptive_eps, bool):
             raise Exception(f'Invalid reg_adaptive_eps value, expected bool, got {reg_adaptive_eps}')
         self.__reg_adaptive_eps = reg_adaptive_eps
+
+    @reg_min_epsilon.setter
+    def reg_min_epsilon(self, reg_min_epsilon):
+        if not isinstance(reg_min_epsilon, float) or reg_min_epsilon < 0:
+            raise Exception(f'Invalid reg_min_epsilon value, expected float > 0, got {reg_min_epsilon}')
+        self.__reg_min_epsilon = reg_min_epsilon
 
     @globalization_alpha_min.setter
     def globalization_alpha_min(self, globalization_alpha_min):
