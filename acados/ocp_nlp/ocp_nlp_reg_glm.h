@@ -63,7 +63,7 @@ extern "C" {
 
 typedef struct
 {
-    int dummy;
+    double epsilon;
 } ocp_nlp_reg_glm_opts;
 
 //
@@ -83,11 +83,6 @@ void ocp_nlp_reg_glm_opts_set(void *config_, void *opts_, const char *field, voi
 
 typedef struct
 {
-    double *reg_hess; // TODO move to workspace
-    double *V; // TODO move to workspace
-    double *d; // TODO move to workspace
-    double *e; // TODO move to workspace
-
     struct blasfeo_dmat **RSQrq;  // pointer to RSQrq in qp_in
 } ocp_nlp_reg_glm_memory;
 
@@ -95,12 +90,6 @@ typedef struct
 acados_size_t ocp_nlp_reg_glm_memory_calculate_size(void *config, ocp_nlp_reg_dims *dims, void *opts);
 //
 void *ocp_nlp_reg_glm_memory_assign(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);
-
-/************************************************
- * workspace
- ************************************************/
-
- // TODO
 
 /************************************************
  * functions

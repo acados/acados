@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <math.h>
 
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
 #include "acados/utils/math.h"
@@ -64,7 +65,8 @@ void *ocp_nlp_reg_glm_opts_assign(void *raw_memory)
 
 void ocp_nlp_reg_glm_opts_initialize_default(void *config_, ocp_nlp_reg_dims *dims, void *opts_)
 {
-    // ocp_nlp_reg_glm_opts *opts = opts_;
+    ocp_nlp_reg_glm_opts *opts = opts_;
+    opts->epsilon = 1e-6;
     return;
 }
 
@@ -73,19 +75,17 @@ void ocp_nlp_reg_glm_opts_initialize_default(void *config_, ocp_nlp_reg_dims *di
 void ocp_nlp_reg_glm_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
 
-    // ocp_nlp_reg_glm_opts *opts = opts_;
-    printf("\nerror: field %s not available in ocp_nlp_reg_glm_opts_set\n", field);
-    exit(1);
-    // if (!strcmp(field, "epsilon"))
-    // {
-    //     double *d_ptr = value;
-    //     opts->epsilon = *d_ptr;
-    // }
-    // else
-    // {
-    //     printf("\nerror: field %s not available in ocp_nlp_reg_glm_opts_set\n", field);
-    //     exit(1);
-    // }
+    ocp_nlp_reg_glm_opts *opts = opts_;
+    if (!strcmp(field, "epsilon"))
+    {
+        double *d_ptr = value;
+        opts->epsilon = *d_ptr;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_reg_glm_opts_set\n", field);
+        exit(1);
+    }
 
     return;
 }
@@ -253,13 +253,13 @@ void ocp_nlp_reg_glm_memory_set(void *config_, ocp_nlp_reg_dims *dims, void *mem
 void ocp_nlp_reg_glm_regularize(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
 {
     ocp_nlp_reg_glm_memory *mem = (ocp_nlp_reg_glm_memory *) mem_;
-    // ocp_nlp_reg_glm_opts *opts = opts_;
+    ocp_nlp_reg_glm_opts *opts = opts_;
 
     int ii;
 
     int *nx = dims->nx;
     int *nu = dims->nu;
-    double tmp;
+    double tmp, alpha;
 
     for(ii=0; ii<=dims->N; ii++)
     {
@@ -268,8 +268,14 @@ void ocp_nlp_reg_glm_regularize(void *config, ocp_nlp_reg_dims *dims, void *opts
 
         // regularize
         compute_gershgorin_min_eig_estimate(nu[ii]+nx[ii], mem->RSQrq[ii], &tmp);
-
-        blasfeo_ddiare(nu[ii]+nx[ii], tmp, mem->RSQrq[ii], 0, 0);
+        if (tmp < opts->epsilon)
+        {
+            if (tmp < 0)
+                alpha = fabs(tmp)+opts->epsilon;
+            else
+                alpha = opts->epsilon;
+            blasfeo_ddiare(nu[ii]+nx[ii], alpha, mem->RSQrq[ii], 0, 0);
+        }
     }
 }
 
