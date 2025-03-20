@@ -330,8 +330,7 @@ class AcadosOcpOptions:
         - PROJECT: performs eigenvalue decomposition H = V^T D V and sets D_ii = max(eps, D_ii)
         - CONVEXIFY: Algorithm 6 from Verschueren2017, https://cdn.syscop.de/publications/Verschueren2017.pdf, does not support nonlinear constraints
         - PROJECT_REDUC_HESS: experimental
-
-        Note: default eps = 1e-4
+        - GERSHGORIN_LEVENBERG_MARQUARDT: estimates the smallest eigenvalue block-wise using Gershgorin circles and adds multiple of identity to the block, such that smallest eigenvalue after regularization is at least reg_epsilon
 
         Default: 'NO_REGULARIZE'.
         """
