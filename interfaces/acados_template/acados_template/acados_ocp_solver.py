@@ -1568,7 +1568,6 @@ class AcadosOcpSolver:
             nlp_iter = self.get_stats("nlp_iter")
             stat_m = self.get_stats("stat_m")
             stat_n = self.get_stats("stat_n")
-            print("stat_n: ", stat_n)
             min_size = min([stat_m, nlp_iter+1])
             out = np.zeros((stat_n+1, min_size), dtype=np.float64, order="C")
             out_data = cast(out.ctypes.data, POINTER(c_double))
