@@ -766,7 +766,7 @@ class AcadosOcpOptions:
 
     @property
     def reg_epsilon(self):
-        """Epsilon for regularization, used if regularize_method in ['PROJECT', 'MIRROR', 'CONVEXIFY']"""
+        """Epsilon for regularization, used if regularize_method in ['PROJECT', 'MIRROR', 'CONVEXIFY', 'GERSHGORIN_LEVENBERG_MARQUARDT']."""
         return self.__reg_epsilon
 
     @property
@@ -1239,7 +1239,7 @@ class AcadosOcpOptions:
     @regularize_method.setter
     def regularize_method(self, regularize_method):
         regularize_methods = ('NO_REGULARIZE', 'MIRROR', 'PROJECT', \
-                                'PROJECT_REDUC_HESS', 'CONVEXIFY')
+                                'PROJECT_REDUC_HESS', 'CONVEXIFY', 'GERSHGORIN_LEVENBERG_MARQUARDT')
         if regularize_method in regularize_methods:
             self.__regularize_method = regularize_method
         else:
