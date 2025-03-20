@@ -34,8 +34,8 @@
 /// \addtogroup ocp_nlp_reg
 /// @{
 
-#ifndef ACADOS_OCP_NLP_OCP_NLP_REG_PROJECT_H_
-#define ACADOS_OCP_NLP_OCP_NLP_REG_PROJECT_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_REG_GLM_H_
+#define ACADOS_OCP_NLP_OCP_NLP_REG_GLM_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -104,6 +104,6 @@ void ocp_nlp_reg_glm_config_initialize_default(ocp_nlp_reg_config *config);
 }
 #endif
 
-#endif  // ACADOS_OCP_NLP_OCP_NLP_REG_PROJECT_H_
+#endif  // ACADOS_OCP_NLP_OCP_NLP_REG_GLM_H_
 /// @}
 /// @}
