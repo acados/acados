@@ -324,14 +324,13 @@ class AcadosOcpOptions:
     @property
     def regularize_method(self):
         """Regularization method for the Hessian.
-        String in ('NO_REGULARIZE', 'MIRROR', 'PROJECT', 'PROJECT_REDUC_HESS', 'CONVEXIFY') or :code:`None`.
+        String in ('NO_REGULARIZE', 'MIRROR', 'PROJECT', 'PROJECT_REDUC_HESS', 'CONVEXIFY', 'GERSHGORIN_LEVENBERG_MARQUARDT').
 
         - MIRROR: performs eigenvalue decomposition H = V^T D V and sets D_ii = max(eps, abs(D_ii))
         - PROJECT: performs eigenvalue decomposition H = V^T D V and sets D_ii = max(eps, D_ii)
         - CONVEXIFY: Algorithm 6 from Verschueren2017, https://cdn.syscop.de/publications/Verschueren2017.pdf, does not support nonlinear constraints
         - PROJECT_REDUC_HESS: experimental
-
-        Note: default eps = 1e-4
+        - GERSHGORIN_LEVENBERG_MARQUARDT: estimates the smallest eigenvalue of each Hessian block using Gershgorin circles and adds multiple of identity to each block, such that smallest eigenvalue after regularization is at least reg_epsilon
 
         Default: 'NO_REGULARIZE'.
         """
@@ -766,7 +765,7 @@ class AcadosOcpOptions:
 
     @property
     def reg_epsilon(self):
-        """Epsilon for regularization, used if regularize_method in ['PROJECT', 'MIRROR', 'CONVEXIFY']"""
+        """Epsilon for regularization, used if regularize_method in ['PROJECT', 'MIRROR', 'CONVEXIFY', 'GERSHGORIN_LEVENBERG_MARQUARDT']."""
         return self.__reg_epsilon
 
     @property
@@ -1239,7 +1238,7 @@ class AcadosOcpOptions:
     @regularize_method.setter
     def regularize_method(self, regularize_method):
         regularize_methods = ('NO_REGULARIZE', 'MIRROR', 'PROJECT', \
-                                'PROJECT_REDUC_HESS', 'CONVEXIFY')
+                                'PROJECT_REDUC_HESS', 'CONVEXIFY', 'GERSHGORIN_LEVENBERG_MARQUARDT')
         if regularize_method in regularize_methods:
             self.__regularize_method = regularize_method
         else:
