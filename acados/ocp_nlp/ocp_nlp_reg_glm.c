@@ -157,13 +157,10 @@ void ocp_nlp_reg_glm_memory_set_RSQrq_ptr(ocp_nlp_reg_dims *dims, struct blasfeo
     int ii;
 
     int N = dims->N;
-    // int *nx = dims->nx;
-    // int *nu = dims->nu;
 
     for(ii=0; ii<=N; ii++)
     {
         memory->RSQrq[ii] = RSQrq+ii;
-//        blasfeo_print_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], memory->RSQrq[ii], 0, 0);
     }
 
     return;
@@ -229,17 +226,9 @@ void ocp_nlp_reg_glm_memory_set_lam_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_d
 
 void ocp_nlp_reg_glm_memory_set(void *config_, ocp_nlp_reg_dims *dims, void *memory_, char *field, void *value)
 {
-
-    if(!strcmp(field, "RSQrq_ptr"))
-    {
-        struct blasfeo_dmat *RSQrq = value;
-        ocp_nlp_reg_glm_memory_set_RSQrq_ptr(dims, RSQrq, memory_);
-    }
-    else
-    {
-        printf("\nerror: field %s not available in ocp_nlp_reg_glm_set\n", field);
-        exit(1);
-    }
+    // TODO: remove this function in all regularizaiton modules
+    printf("\nerror: field %s not available in ocp_nlp_reg_glm_set\n", field);
+    exit(1);
 
     return;
 }
