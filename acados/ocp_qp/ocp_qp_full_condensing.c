@@ -486,9 +486,16 @@ int ocp_qp_full_condensing(void *qp_in_, void *fcond_qp_in_, void *opts_, void *
 
 int ocp_qp_full_condensing_condense_qp_out(void *qp_in_, void *fcond_qp_in_, void *qp_out_, void *fcond_qp_out_, void *opts_, void *mem_, void *work)
 {
-    printf("ocp_qp_full_condensing_condense_qp_out: not implemented\n");
-    printf("what about implementing it? :) do it for acados!\n");
-    exit(1);
+    ocp_qp_in *qp_in = qp_in_;
+    ocp_qp_out *qp_out = qp_out_;
+    dense_qp_out *fcond_qp_out = fcond_qp_out_;
+    ocp_qp_full_condensing_opts *opts = opts_;
+    ocp_qp_full_condensing_memory *mem = mem_;
+
+    d_ocp_qp_reduce_eq_dof_sol(qp_in, qp_out, mem->red_sol, opts->hpipm_red_opts, mem->hpipm_red_work);
+    d_cond_qp_cond_sol(mem->red_qp, mem->red_sol, fcond_qp_out, opts->hpipm_cond_opts, mem->hpipm_cond_work);
+
+    return ACADOS_SUCCESS;
 }
 
 
