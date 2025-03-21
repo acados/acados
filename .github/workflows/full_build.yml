@@ -179,6 +179,8 @@ jobs:
         python value_gradient_example_linear.py
         python batch_adjoint_solution_sensitivity_example.py
         python non_ocp_example.py
+        cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/ocp
+        python initialization_test.py
 
 
     - name: Python Furuta pendulum timeout test

@@ -2235,7 +2235,7 @@ class AcadosOcpSolver:
                          'qp_tau_min',
                          'qp_mu0']
         string_fields = []
-        bool_fields = ['with_adaptive_levenberg_marquardt']
+        bool_fields = ['with_adaptive_levenberg_marquardt', 'warm_start_first_qp_from_nlp', 'warm_start_first_qp']
 
         # check field availability and type
         if field_ in int_fields:
