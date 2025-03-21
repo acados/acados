@@ -174,42 +174,6 @@ cdef class AcadosOcpSolverCython:
         """
 
         raise NotImplementedError("AcadosOcpSolverCython: does not support set_new_time_steps() since it is only a prototyping feature")
-        # # unlikely but still possible
-        # if not self.solver_created:
-        #     raise Exception('Solver was not yet created!')
-
-        # ## check if time steps really changed in value
-        # # get time steps
-        # cdef cnp.ndarray[cnp.float64_t, ndim=1] old_time_steps = np.ascontiguousarray(np.zeros((self.N,)), dtype=np.float64)
-        # assert acados_solver.acados_get_time_steps(self.capsule, self.N, <double *> old_time_steps.data)
-
-        # if np.array_equal(old_time_steps, new_time_steps):
-        #     return
-
-        # N = new_time_steps.size
-        # cdef cnp.ndarray[cnp.float64_t, ndim=1] value = np.ascontiguousarray(new_time_steps, dtype=np.float64)
-
-        # # check if recreation of acados is necessary (no need to recreate acados if sizes are identical)
-        # if len(old_time_steps) == N:
-        #     assert acados_solver.acados_update_time_steps(self.capsule, N, <double *> value.data) == 0
-
-        # else:  # recreate the solver with the new time steps
-        #     self.solver_created = False
-
-        #     # delete old memory (analog to __del__)
-        #     acados_solver.acados_free(self.capsule)
-
-        #     # create solver with new time steps
-        #     assert acados_solver.acados_create_with_discretization(self.capsule, N, <double *> value.data) == 0
-
-        #     self.solver_created = True
-
-        #     # get pointers solver
-        #     self.__get_pointers_solver()
-
-        # # store time_steps, N
-        # self.time_steps = new_time_steps
-        # self.N = N
 
 
     def update_qp_solver_cond_N(self, qp_solver_cond_N: int):
@@ -226,25 +190,6 @@ cdef class AcadosOcpSolverCython:
                       `qp_solver_cond_N < N`.
         """
         raise NotImplementedError("AcadosOcpSolverCython: does not support update_qp_solver_cond_N() since it is only a prototyping feature")
-
-        # # unlikely but still possible
-        # if not self.solver_created:
-        #     raise Exception('Solver was not yet created!')
-        # if self.N < qp_solver_cond_N:
-        #     raise Exception('Setting qp_solver_cond_N to be larger than N does not work!')
-        # if self.qp_solver_cond_N != qp_solver_cond_N:
-        #     self.solver_created = False
-
-        #     # recreate the solver
-        #     acados_solver.acados_update_qp_solver_cond_N(self.capsule, qp_solver_cond_N)
-
-        #     # store the new value
-        #     self.qp_solver_cond_N = qp_solver_cond_N
-        #     self.solver_created = True
-
-        #     # get pointers solver
-        #     self.__get_pointers_solver()
-
 
 
     def eval_and_get_optimal_value_gradient(self, with_respect_to: str = "initial_state") -> np.ndarray:

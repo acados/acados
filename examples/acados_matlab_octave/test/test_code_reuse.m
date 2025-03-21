@@ -15,7 +15,7 @@
 % this list of conditions and the following disclaimer in the documentation
 % and/or other materials provided with the distribution.
 %
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS'
 % AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 % IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 % ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -27,16 +27,40 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
+import casadi.*
 
-function solver = acados_ocp(model, opts, simulink_opts)
+check_acados_requirements()
+creation_modes = {'standard', 'precompiled', 'no_ocp'};
+for i = 1:length(creation_modes)
+    ocp_solver = create_ocp_solver_code_reuse(creation_modes{i});
+    nx = length(ocp_solver.get('x', 0));
+    [nu, N] = size(ocp_solver.get('u'));
+    T = 1;
 
-    warning('acados_ocp will be deprecated in the future. Use AcadosOcpSolver instead. For more information on the major acados Matlab interface overhaul, see https://github.com/acados/acados/releases/tag/v0.4.0');
+    % solver initial guess
+    x_traj_init = zeros(nx, N+1);
+    u_traj_init = zeros(nu, N);
 
-    if nargin < 3
-        simulink_opts = get_acados_simulink_opts();
+    %% call ocp solver
+    % set trajectory initialization
+    ocp_solver.set('init_x', x_traj_init); % states
+    ocp_solver.set('init_u', u_traj_init); % inputs
+    ocp_solver.set('init_pi', zeros(nx, N)); % multipliers for dynamics equality constraints
+
+    % solve
+    ocp_solver.solve();
+    % get solution
+    utraj = ocp_solver.get('u');
+    xtraj = ocp_solver.get('x');
+
+    status = ocp_solver.get('status'); % 0 - success
+    ocp_solver.print('stat');
+    stat = ocp_solver.get('stat');
+    if i == 1
+        stat_ref = stat;
+    elseif max(abs(stat-stat_ref)) > 1e-6
+        error('solvers should have the same log independent of compilation options');
     end
 
-    ocp = setup_AcadosOcp_from_legacy_ocp_description(model, opts, simulink_opts);
-    solver = AcadosOcpSolver(ocp, struct('output_dir', opts.opts_struct.output_dir));
-
+    clear ocp_solver
 end

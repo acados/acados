@@ -31,50 +31,124 @@
 
 classdef AcadosOcpSolver < handle
 
-    properties
-        t_ocp % templated solver
+    properties (Access = public)
         ocp % Matlab class AcadosOcp describing the OCP formulation
-        qp_gettable_fields = {'qp_Q', 'qp_R', 'qp_S', 'qp_q', 'qp_r', 'qp_A', 'qp_B', 'qp_b', 'qp_C', 'qp_D', 'qp_lg', 'qp_ug', 'qp_lbx', 'qp_ubx', 'qp_lbu', 'qp_ubu', 'qp_zl', 'qp_zu', 'qp_Zl', 'qp_Zu'}
     end % properties
 
+    properties (Access = private)
+        fields = {'x', 'u', 'z', 'sl', 'su', 'lam', 'pi'};
+        qp_gettable_fields = {'qp_Q', 'qp_R', 'qp_S', 'qp_q', 'qp_r', 'qp_A', 'qp_B', 'qp_b', 'qp_C', 'qp_D', 'qp_lg', 'qp_ug', 'qp_lbx', 'qp_ubx', 'qp_lbu', 'qp_ubu', 'qp_zl', 'qp_zu', 'qp_Zl', 'qp_Zu'}
+        t_ocp % templated solver
 
+        % required info loaded from json
+        N_horizon
+        solver_options
+        problem_class
+        name
+        has_x0
+        nsbu_0
+        nbxe_0
+    end
     methods
 
-        function obj = AcadosOcpSolver(ocp, output_dir)
+        function obj = AcadosOcpSolver(ocp, varargin)
+            %% optional arguments:
+            % varagin{1}: solver_creation_opts: this is a struct in which some of the fields can be defined to overwrite the default values.
+            % The fields are:
+            % - json_file: path to the json file containing the ocp description
+            % - build: boolean, if true, the problem specific shared library is compiled
+            % - generate: boolean, if true, the C code is generated
+            % - compile_mex_wrapper: boolean, if true, the mex wrapper is compiled
+            % - compile_interface: can be [], true or false. If [], the interface is compiled if it does not exist.
+            % - output_dir: path to the directory where the MEX interface is compiled
+            obj.ocp = ocp;
 
-            if nargin < 2
-                output_dir = fullfile(pwd, 'build');
+            % optional arguments
+            % solver creation options
+            default_solver_creation_opts = struct('json_file', '', ...
+                    'build', true, ...
+                    'generate', true, ...
+                    'compile_mex_wrapper', true, ...
+                    'compile_interface', [], ...
+                    'output_dir', fullfile(pwd, 'build'));
+            if length(varargin) > 0
+                solver_creation_opts = varargin{1};
+                % set non-specified opts to default
+                fields = fieldnames(default_solver_creation_opts);
+                for i = 1:length(fields)
+                    if ~isfield(solver_creation_opts, fields{i})
+                        solver_creation_opts.(fields{i}) = default_solver_creation_opts.(fields{i});
+                    end
+                end
+            else
+                solver_creation_opts = default_solver_creation_opts;
             end
 
-            % detect dimensions & sanity checks
-            obj.ocp = ocp;
-            obj.ocp.make_consistent()
+            if isempty(ocp) && isempty(solver_creation_opts.json_file)
+                error('AcadosOcpSolver: provide either an OCP object or a json file');
+            end
 
-            % compile mex interface if needed
-            obj.compile_mex_interface_if_needed(output_dir)
+            if isempty(ocp)
+                json_file = solver_creation_opts.json_file;
 
-            % generate
-            check_dir_and_create(fullfile(pwd, ocp.code_export_directory));
-            context = ocp.generate_external_functions();
+            else
+                % OCP / MOCP provided
+                if ~isempty(solver_creation_opts.json_file)
+                    ocp.json_file = solver_creation_opts.json_file;
+                end
+                json_file = ocp.json_file;
+                if ~isempty(ocp.solver_options.compile_interface) && ~isempty(solver_creation_opts.compile_interface)
+                    error('AcadosOcpSolver: provide either compile_interface in OCP object or solver_creation_opts');
+                end
+                if ~isempty(ocp.solver_options.compile_interface)
+                    solver_creation_opts.compile_interface = ocp.solver_options.compile_interface;
+                end
 
-            ocp.dump_to_json()
-            ocp.render_templates()
+            end
 
-            % build
-            acados_template_mex.compile_ocp_shared_lib(ocp.code_export_directory)
 
-            % templated MEX
+            %% compile mex interface if needed
+            obj.compile_mex_interface_if_needed(solver_creation_opts);
+
+            %% generate
+            if solver_creation_opts.generate
+                obj.generate(ocp);
+            end
+
+            %% load json, store options in object
+            acados_ocp_struct = loadjson(fileread(json_file), 'SimplifyCell', 0);
+            obj.problem_class = acados_ocp_struct.problem_class;
+            obj.solver_options = acados_ocp_struct.solver_options;
+            obj.N_horizon = acados_ocp_struct.solver_options.N_horizon;
+            obj.name = acados_ocp_struct.name;
+
+            if strcmp(obj.problem_class, "OCP")
+                obj.has_x0 = acados_ocp_struct.constraints.has_x0;
+                obj.nsbu_0 = acados_ocp_struct.dims.nsbu;
+                obj.nbxe_0 = acados_ocp_struct.dims.nbxe_0;
+            elseif strcmp(obj.problem_class, "MOCP")
+                obj.has_x0 = acados_ocp_struct.constraints{1}.has_x0;
+                obj.nsbu_0 = acados_ocp_struct.phases_dims{1}.nsbu;
+                obj.nbxe_0 = acados_ocp_struct.phases_dims{1}.nbxe_0;
+            end
+            code_export_directory = acados_ocp_struct.code_export_directory;
+
+            %% compile problem specific shared library
+            if solver_creation_opts.build
+                acados_template_mex.compile_ocp_shared_lib(code_export_directory)
+            end
+
+            %% create solver
             return_dir = pwd();
-            cd(obj.ocp.code_export_directory)
+            cd(code_export_directory)
 
-            mex_solver_name = sprintf('%s_mex_solver', obj.ocp.name);
+            mex_solver_name = sprintf('%s_mex_solver', obj.name);
             mex_solver = str2func(mex_solver_name);
-            obj.t_ocp = mex_solver();
+            obj.t_ocp = mex_solver(solver_creation_opts);
             addpath(pwd());
 
             cd(return_dir);
         end
-
 
         function solve(obj)
             obj.t_ocp.solve();
@@ -113,7 +187,7 @@ classdef AcadosOcpSolver < handle
                 if length(varargin) > 0
                     n = varargin{1};
 
-                    if n < obj.ocp.solver_options.N_horizon
+                    if n < obj.solver_options.N_horizon
                         Q = obj.get('qp_Q', n);
                         R = obj.get('qp_R', n);
                         S = obj.get('qp_S', n);
@@ -125,20 +199,20 @@ classdef AcadosOcpSolver < handle
 
                     return;
                 else
-                    value = cell(obj.ocp.solver_options.N_horizon, 1);
-                    for n=0:(obj.ocp.solver_options.N_horizon-1)
+                    value = cell(obj.solver_options.N_horizon, 1);
+                    for n=0:(obj.solver_options.N_horizon-1)
                         Q = obj.get('qp_Q', n);
                         R = obj.get('qp_R', n);
                         S = obj.get('qp_S', n);
 
                         value{n+1} = [R, S; S', Q];
                     end
-                    value{end+1} = obj.get('qp_Q', obj.ocp.solver_options.N_horizon);
+                    value{end+1} = obj.get('qp_Q', obj.solver_options.N_horizon);
                     return;
                 end
             elseif strcmp('pc_hess_block', field)
 
-                if ~strncmp(obj.ocp.solver_options.qp_solver, 'PARTIAL_CONDENSING', length('PARTIAL_CONDENSING'))
+                if ~strncmp(obj.solver_options.qp_solver, 'PARTIAL_CONDENSING', length('PARTIAL_CONDENSING'))
                     error("Getting hessian block of partially condensed QP only works for PARTIAL_CONDENSING QP solvers");
                 end
                 if length(varargin) > 0
@@ -188,15 +262,15 @@ classdef AcadosOcpSolver < handle
                 error("iteration needs to be nonnegative and <= nlp_iter.");
             end
 
-            if ~obj.ocp.solver_options.store_iterates
+            if ~obj.solver_options.store_iterates
                 error("get_iterate: the solver option store_iterates needs to be true in order to get iterates.");
             end
 
-            if strcmp(obj.ocp.solver_options.nlp_solver_type, 'SQP_RTI')
+            if strcmp(obj.solver_options.nlp_solver_type, 'SQP_RTI')
                 error("get_iterate: SQP_RTI not supported.");
             end
 
-            N_horizon = obj.ocp.solver_options.N_horizon;
+            N_horizon = obj.solver_options.N_horizon;
 
             x_traj = cell(N_horizon + 1, 1);
             u_traj = cell(N_horizon, 1);
@@ -267,9 +341,9 @@ classdef AcadosOcpSolver < handle
             end
 
             if partially_condensed_qp
-                num_blocks = obj.ocp.solver_options.qp_solver_cond_N + 1;
+                num_blocks = obj.solver_options.qp_solver_cond_N + 1;
             else
-                num_blocks = obj.ocp.dims.N + 1;
+                num_blocks = obj.N_horizon + 1;
             end
             result = struct();
             result.min_eigv_stage = zeros(num_blocks, 1);
@@ -306,12 +380,12 @@ classdef AcadosOcpSolver < handle
         function dump_last_qp_to_json(obj, filename)
             qp_data = struct();
 
-            lN = length(num2str(obj.ocp.solver_options.N_horizon+1));
+            lN = length(num2str(obj.solver_options.N_horizon+1));
             n_fields = length(obj.qp_gettable_fields);
             for n=1:n_fields
 
                 field = obj.qp_gettable_fields{n};
-                for i=0:obj.ocp.solver_options.N_horizon-1
+                for i=0:obj.solver_options.N_horizon-1
                     s_indx = sprintf(strcat('%0', num2str(lN), 'd'), i);
                     key = strcat(field, '_', s_indx);
                     val = obj.get(field, i);
@@ -328,9 +402,9 @@ classdef AcadosOcpSolver < handle
                    strcmp(field, 'qp_zu') || ...
                    strcmp(field, 'qp_Zl') || ...
                    strcmp(field, 'qp_Zu')
-                    s_indx = sprintf(strcat('%0', num2str(lN), 'd'), obj.ocp.solver_options.N_horizon);
+                    s_indx = sprintf(strcat('%0', num2str(lN), 'd'), obj.solver_options.N_horizon);
                     key = strcat(field, '_', s_indx);
-                    val = obj.get(field, obj.ocp.solver_options.N_horizon);
+                    val = obj.get(field, obj.solver_options.N_horizon);
                     qp_data = setfield(qp_data, key, val);
                 end
             end
@@ -371,25 +445,36 @@ classdef AcadosOcpSolver < handle
     end % methods
 
     methods (Access = private)
+        function generate(obj, ocp)
+            % detect dimensions & sanity checks
+            obj.ocp.make_consistent()
 
-        function compile_mex_interface_if_needed(obj, output_dir)
+            % generate
+            check_dir_and_create(fullfile(pwd, ocp.code_export_directory));
+            context = ocp.generate_external_functions();
+
+            ocp.dump_to_json()
+            ocp.render_templates()
+        end
+
+        function compile_mex_interface_if_needed(obj, solver_creation_opts)
 
             % check if path contains spaces
-            [~,~] = mkdir(output_dir);
-            addpath(output_dir);
-            if ~isempty(strfind(output_dir, ' '))
+            [~,~] = mkdir(solver_creation_opts.output_dir);
+            addpath(solver_creation_opts.output_dir);
+            if ~isempty(strfind(solver_creation_opts.output_dir, ' '))
                 error(strcat('AcadosOcpSolver: Path should not contain spaces, got: ',...
-                    output_dir));
+                    solver_creation_opts.output_dir));
             end
 
             % auto detect whether to compile the interface or not
-            if isempty(obj.ocp.solver_options.compile_interface)
+            if isempty(solver_creation_opts.compile_interface)
                 % check if mex interface exists already
                 if is_octave()
-                    mex_exists = exist( fullfile(output_dir,...
+                    mex_exists = exist( fullfile(solver_creation_opts.output_dir,...
                         '/ocp_get.mex'), 'file');
                 else
-                    mex_exists = exist( fullfile(output_dir,...
+                    mex_exists = exist( fullfile(solver_creation_opts.output_dir,...
                         ['ocp_get.', mexext]), 'file');
                 end
                 % check if mex interface is linked against the same external libs as the core
@@ -403,30 +488,29 @@ classdef AcadosOcpSolver < handle
                     end
                     core_links = loadjson(fileread(json_filename));
 
-                    json_filename = fullfile(output_dir, 'link_libs.json');
+                    json_filename = fullfile(solver_creation_opts.output_dir, 'link_libs.json');
                     if ~exist(json_filename, 'file')
-                        obj.ocp.solver_options.compile_interface = true;
+                        solver_creation_opts.compile_interface = true;
                     else
                         interface_links = loadjson(fileread(json_filename));
                         if isequal(core_links, interface_links)
-                            obj.ocp.solver_options.compile_interface = false;
+                            solver_creation_opts.compile_interface = false;
                         else
-                            obj.ocp.solver_options.compile_interface = true;
+                            solver_creation_opts.compile_interface = true;
                         end
                     end
                 else
-                    obj.ocp.solver_options.compile_interface = true;
+                    solver_creation_opts.compile_interface = true;
                 end
             end
 
-            if obj.ocp.solver_options.compile_interface
-                ocp_compile_interface(output_dir);
+            if solver_creation_opts.compile_interface
+                ocp_compile_interface(solver_creation_opts.output_dir);
                 disp('acados MEX interface compiled successfully')
             else
                 disp('found compiled acados MEX interface')
             end
         end
-
     end
 
 end % class

@@ -1004,17 +1004,43 @@ class AcadosOcp:
 
         # Simulink
         if self.simulink_opts is not None:
-            template_file = os.path.join('matlab_templates', 'acados_solver_sfun.in.c')
-            template_list.append((template_file, f'acados_solver_sfunction_{name}.c'))
-            template_file = os.path.join('matlab_templates', 'make_sfun.in.m')
-            template_list.append((template_file, f'make_sfun_{name}.m'))
-            template_file = os.path.join('matlab_templates', 'acados_sim_solver_sfun.in.c')
-            template_list.append((template_file, f'acados_sim_solver_sfunction_{name}.c'))
-            template_file = os.path.join('matlab_templates', 'make_sfun_sim.in.m')
-            template_list.append((template_file, f'make_sfun_sim_{name}.m'))
+            template_list += self._get_matlab_simulink_template_list(name)
+            template_list += self._get_integrator_simulink_template_list(name)
 
         return template_list
 
+
+    @classmethod
+    def _get_matlab_simulink_template_list(cls, name: str) -> list:
+        template_list = []
+        template_file = os.path.join('matlab_templates', 'acados_solver_sfun.in.c')
+        template_list.append((template_file, f'acados_solver_sfunction_{name}.c'))
+        template_file = os.path.join('matlab_templates', 'make_sfun.in.m')
+        template_list.append((template_file, f'make_sfun_{name}.m'))
+        # MEX wrapper files
+        template_file = os.path.join('matlab_templates', 'mex_solver.in.m')
+        template_list.append((template_file, f'{name}_mex_solver.m'))
+        template_file = os.path.join('matlab_templates', 'make_mex.in.m')
+        template_list.append((template_file, f'make_mex_{name}.m'))
+        template_file = os.path.join('matlab_templates', 'acados_mex_create.in.c')
+        template_list.append((template_file, f'acados_mex_create_{name}.c'))
+        template_file = os.path.join('matlab_templates', 'acados_mex_free.in.c')
+        template_list.append((template_file, f'acados_mex_free_{name}.c'))
+        template_file = os.path.join('matlab_templates', 'acados_mex_solve.in.c')
+        template_list.append((template_file, f'acados_mex_solve_{name}.c'))
+        template_file = os.path.join('matlab_templates', 'acados_mex_set.in.c')
+        template_list.append((template_file, f'acados_mex_set_{name}.c'))
+        return template_list
+
+    # dont render sim sfunctions for MOCP
+    @classmethod
+    def _get_integrator_simulink_template_list(cls, name: str) -> list:
+        template_list = []
+        template_file = os.path.join('matlab_templates', 'acados_sim_solver_sfun.in.c')
+        template_list.append((template_file, f'acados_sim_solver_sfunction_{name}.c'))
+        template_file = os.path.join('matlab_templates', 'make_sfun_sim.in.m')
+        template_list.append((template_file, f'make_sfun_sim_{name}.m'))
+        return template_list
 
     def render_templates(self, cmake_builder=None):
 

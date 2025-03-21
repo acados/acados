@@ -57,7 +57,8 @@ def plot_crane_trajectories(ts, simX, simU):
 
     plt.show()
 
-def setup_solver_and_integrator(x0: np.ndarray, xf: np.ndarray, N: int, use_cython: bool = True) -> Tuple[AcadosOcpSolver, AcadosSimSolver]:
+
+def setup_solver_and_integrator(x0: np.ndarray, xf: np.ndarray, N: int, creation_mode: str) -> Tuple[AcadosOcpSolver, AcadosSimSolver]:
 
     # (very) simple crane model
     beta = 0.001
@@ -126,13 +127,20 @@ def setup_solver_and_integrator(x0: np.ndarray, xf: np.ndarray, N: int, use_cyth
     ocp.solver_options.exact_hess_constr = 0
     ocp.solver_options.exact_hess_dyn = 0
 
-    if use_cython:
-        AcadosOcpSolver.generate(ocp, json_file='acados_ocp.json')
+    ocp_json_file = 'acados_ocp.json'
+    if creation_mode == 'cython':
+        AcadosOcpSolver.generate(ocp, json_file=ocp_json_file)
         AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
-        ocp_solver = AcadosOcpSolver.create_cython_solver('acados_ocp.json')
-    else: # ctypes
+        ocp_solver = AcadosOcpSolver.create_cython_solver(ocp_json_file)
+    elif creation_mode == 'ctypes_precompiled':
         ## Note: skip generate and build assuming this is done before (in cython run)
-        ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json', build=False, generate=False)
+        ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file, build=False, generate=False)
+    elif creation_mode == 'ctypes_precompiled_no_ocp':
+        ocp_solver = AcadosOcpSolver(None, json_file=ocp_json_file, build=False, generate=False)
+    elif creation_mode == 'ctypes':
+        ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file)
+    else:
+        raise Exception(f"Invalid creation mode: {creation_mode}")
 
     ocp_solver.reset()
 
@@ -148,20 +156,20 @@ def setup_solver_and_integrator(x0: np.ndarray, xf: np.ndarray, N: int, use_cyth
 
     return ocp_solver, integrator
 
-def main(use_cython=True):
+def main(creation_mode=True):
 
     nu = 2
     nx = 4
 
-    N = 7 # N - maximum number of bangs
+    N_horizon = 7 # N_horizon - maximum number of bangs
 
     x0 = np.array([2.0, 0.0, 2.0, 0.0])
     xf = np.zeros((nx,))
 
-    ocp_solver, integrator = setup_solver_and_integrator(x0, xf, N, use_cython)
+    ocp_solver, integrator = setup_solver_and_integrator(x0, xf, N_horizon, creation_mode)
 
     # initialization
-    for i, tau in enumerate(np.linspace(0, 1, N)):
+    for i, tau in enumerate(np.linspace(0, 1, N_horizon)):
         ocp_solver.set(i, 'x', (1-tau)*x0 + tau*xf)
         ocp_solver.set(i, 'u', np.array([0.1, 0.5]))
 
@@ -172,12 +180,12 @@ def main(use_cython=True):
         raise Exception(f'acados returned status {status}.')
 
     # get solution
-    simX = np.zeros((N+1, nx))
-    simU = np.zeros((N, nu))
-    for i in range(N):
+    simX = np.zeros((N_horizon+1, nx))
+    simU = np.zeros((N_horizon, nu))
+    for i in range(N_horizon):
         simX[i,:] = ocp_solver.get(i, "x")
         simU[i,:] = ocp_solver.get(i, "u")
-    simX[N,:] = ocp_solver.get(N, "x")
+    simX[N_horizon,:] = ocp_solver.get(N_horizon, "x")
 
     dts = simU[:, 1]
 
@@ -187,11 +195,11 @@ def main(use_cython=True):
     # simulate on finer grid
     dt_approx = 0.0005
 
-    dts_fine = np.zeros((N,))
-    Ns_fine = np.zeros((N,), dtype='int16')
+    dts_fine = np.zeros((N_horizon,))
+    Ns_fine = np.zeros((N_horizon,), dtype='int16')
 
     # compute number of simulation steps for bang interval + dt_fine
-    for i in range(N):
+    for i in range(N_horizon):
         N_approx = max(int(dts[i]/dt_approx), 1)
         dts_fine[i] = dts[i]/N_approx
         Ns_fine[i] = int(round(dts[i]/dts_fine[i]))
@@ -204,7 +212,7 @@ def main(use_cython=True):
     simX_fine[0, :] = x0
 
     k = 0
-    for i in range(N):
+    for i in range(N_horizon):
         u = simU[i, 0]
         integrator.set("u", np.hstack((u, np.ones(1, ))))
 
@@ -225,8 +233,9 @@ def main(use_cython=True):
 
     plot_crane_trajectories(ts_fine, simX_fine, simU_fine)
 
+CREATION_MODES = ['cython', 'ctypes_precompiled', 'ctypes', 'ctypes_precompiled_no_ocp']
 
 if __name__ == "__main__":
-    for use_cython in [True, False]:
-        main(use_cython=use_cython)
+    for creation_mode in ['cython', 'ctypes_precompiled_no_ocp', 'ctypes_precompiled']:
+        main(creation_mode=creation_mode)
 

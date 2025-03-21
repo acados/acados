@@ -40,7 +40,7 @@ x0 = [0.0, 0.15*pi, 0.0, 0.0];
 
 
 %% model dynamics
-model = get_pendulum_on_cart_AcadosModel();
+model = get_pendulum_on_cart_model();
 nx = length(model.x); % state size
 nu = length(model.u); % input size
 
