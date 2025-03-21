@@ -575,7 +575,7 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
     plt.tight_layout()
     plt.savefig("chain_adj_fwd_sens.pdf")
 
-    plot_timings(timings_list, labels, figure_filename="timing_adj_fwd_sens_chain.pdf", t_max=10, horizontal=True, figsize=(12, 3))
+    plot_timings(timings_list, labels, figure_filename="timing_adj_fwd_sens_chain.pdf", t_max=10, horizontal=True, figsize=(12, 3), with_patterns=True)
 
     plt.show()
 

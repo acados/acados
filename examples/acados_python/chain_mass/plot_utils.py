@@ -36,7 +36,7 @@ from acados_template import latexify_plot
 latexify_plot()
 
 
-def plot_timings(results_list, labels, figure_filename=None, t_max=None, horizontal=False, figsize=None):
+def plot_timings(results_list, labels, figure_filename=None, t_max=None, horizontal=False, figsize=None, with_patterns=False):
     num_entries = len(labels)
     if num_entries != len(results_list):
         raise ValueError("Number of labels and result files do not match")
@@ -46,13 +46,14 @@ def plot_timings(results_list, labels, figure_filename=None, t_max=None, horizon
 
     bottom = np.zeros(num_entries)
     colors = ["C0", "C1", "C4", "C3", "C6", "C5", "C2", "C7"]
+    patterns = [ "/" , "\\" , "o" , "|" , "-" , "x", None, "o", "O", ".", "*" ]
     fig, ax = plt.subplots(figsize=figsize)
     if not horizontal:
         width = 0.8
 
         for i, k in enumerate(results_list[0].keys()):
             vals = [np.mean(res_dict[k]) for res_dict in results_list]
-            plt.bar(labels, vals, width, label=k, bottom=bottom, color=colors[i])
+            plt.bar(labels, vals, width, label=k, bottom=bottom, color=colors[i], hatch=patterns[i] if with_patterns else None)
             bottom += vals
         if t_max is not None:
             plt.ylim(0, t_max)
@@ -68,7 +69,7 @@ def plot_timings(results_list, labels, figure_filename=None, t_max=None, horizon
         width = 0.8
         for i, k in enumerate(results_list[0].keys()):
             vals = [np.mean(res_dict[k]) for res_dict in results_list]
-            plt.barh(labels, vals, width, label=k, left=bottom, color=colors[i])
+            plt.barh(labels, vals, width, label=k, left=bottom, color=colors[i], hatch=patterns[i] if with_patterns else None)
             bottom += vals
         if t_max is not None:
             plt.xlim(0, t_max)
