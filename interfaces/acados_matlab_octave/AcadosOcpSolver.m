@@ -41,7 +41,7 @@ classdef AcadosOcpSolver < handle
         t_ocp % templated solver
 
         % required info loaded from json
-        N
+        N_horizon
         solver_options
         problem_class
         name
@@ -119,7 +119,7 @@ classdef AcadosOcpSolver < handle
             acados_ocp_struct = loadjson(fileread(json_file), 'SimplifyCell', 0);
             obj.problem_class = acados_ocp_struct.problem_class;
             obj.solver_options = acados_ocp_struct.solver_options;
-            obj.N = acados_ocp_struct.solver_options.N_horizon;
+            obj.N_horizon = acados_ocp_struct.solver_options.N_horizon;
             obj.name = acados_ocp_struct.name;
 
             if strcmp(obj.problem_class, "OCP")
@@ -343,7 +343,7 @@ classdef AcadosOcpSolver < handle
             if partially_condensed_qp
                 num_blocks = obj.solver_options.qp_solver_cond_N + 1;
             else
-                num_blocks = obj.N + 1;
+                num_blocks = obj.N_horizon + 1;
             end
             result = struct();
             result.min_eigv_stage = zeros(num_blocks, 1);
