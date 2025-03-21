@@ -509,19 +509,19 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
             assert np.allclose(sens_adj, out_dict['sens_u'])
 
     timings_common = {
-        "NLP solve": timings_solve_ocp_solver * 1e3,
+        "NLP solve (S1)": timings_solve_ocp_solver * 1e3,
         "store \& load iterates": timings_store_load * 1e3,
         "parameter update": timings_parameter_update * 1e3,
-        "setup exact Lagrange Hessian": timings_lin_exact_hessian_qp * 1e3,
-        "factorize exact Lagrange Hessian": timings_lin_and_factorize * 1e3,
-        r"evaluate $J$": timings_lin_params * 1e3,
+        "setup exact Lagrange Hessian (S2)": timings_lin_exact_hessian_qp * 1e3,
+        "factorize exact Lagrange Hessian (S3)": timings_lin_and_factorize * 1e3,
+        r"evaluate $J$ (S4)": timings_lin_params * 1e3,
     }
     timing_results_forward = timings_common.copy()
     timing_results_adjoint = timings_common.copy()
     timing_results_adj_uforw = timings_common.copy()
     timing_results_adj_all_primals = timings_common.copy()
 
-    backsolve_label = "sensitivity solve given factorization"
+    backsolve_label = "sensitivity solve given factorization (S5)"
     timing_results_forward[backsolve_label] = timings_solve_params * 1e3
     timing_results_adjoint[backsolve_label] = timings_solve_params_adj * 1e3
 
