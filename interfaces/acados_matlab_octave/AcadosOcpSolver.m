@@ -52,6 +52,15 @@ classdef AcadosOcpSolver < handle
     methods
 
         function obj = AcadosOcpSolver(ocp, varargin)
+            %% optional arguments:
+            % varagin{1}: solver_creation_opts: this is a struct in which some of the fields can be defined to overwrite the default values.
+            % The fields are:
+            % - json_file: path to the json file containing the ocp description
+            % - build: boolean, if true, the problem specific shared library is compiled
+            % - generate: boolean, if true, the C code is generated
+            % - compile_mex_wrapper: boolean, if true, the mex wrapper is compiled
+            % - compile_interface: can be [], true or false. If [], the interface is compiled if it does not exist.
+            % - output_dir: path to the directory where the MEX interface is compiled
             obj.ocp = ocp;
 
             % optional arguments
