@@ -514,3 +514,16 @@ class AcadosOcpCost:
 
     def set(self, attr, value):
         setattr(self, attr, value)
+
+    def load_from_dict(self, dict):
+        """
+        Load all properties from a given dictionary.
+        """
+        # loop over all properties
+        for attr, _ in inspect.getmembers(type(self), lambda v: isinstance(v, property)):
+            try:
+                value = dict.get(attr)
+                setattr(self, attr, value)
+            except Exception as e:
+                warnings.warn("Failed to load attribute {attr} from dictionary:\n" + repr(e))
+
