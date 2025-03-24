@@ -15,7 +15,7 @@
 % this list of conditions and the following disclaimer in the documentation
 % and/or other materials provided with the distribution.
 %
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS'
 % AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 % IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 % ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -27,16 +27,35 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
+import casadi.*
 
-function solver = acados_ocp(model, opts, simulink_opts)
+check_acados_requirements()
 
-    warning('acados_ocp will be deprecated in the future. Use AcadosOcpSolver instead. For more information on the major acados Matlab interface overhaul, see https://github.com/acados/acados/releases/tag/v0.4.0');
+json_files = {'acados_ocp_pendulum_blazing_True_p_global_True.json', 'mocp.json'};
 
-    if nargin < 3
-        simulink_opts = get_acados_simulink_opts();
+for i = 1:length(json_files)
+    json_file = json_files{i};
+    disp('testing solver creation with code reuse with json file: ')
+    disp(json_file)
+    solver_creation_opts = struct();
+    solver_creation_opts.json_file = json_file;
+    solver_creation_opts.generate = false;
+    solver_creation_opts.build = false;
+    solver_creation_opts.compile_mex_wrapper = true;
+    ocp = [];
+
+    % create solver
+    ocp_solver = AcadosOcpSolver(ocp, solver_creation_opts);
+
+    nx = length(ocp_solver.get('x', 0));
+    [nu, N] = size(ocp_solver.get('u'));
+
+    for i = 1:5
+        ocp_solver.solve();
+
+        status = ocp_solver.get('status');
+        ocp_solver.print('stat');
     end
-
-    ocp = setup_AcadosOcp_from_legacy_ocp_description(model, opts, simulink_opts);
-    solver = AcadosOcpSolver(ocp, struct('output_dir', opts.opts_struct.output_dir));
-
+    clear ocp_solver
 end
+
