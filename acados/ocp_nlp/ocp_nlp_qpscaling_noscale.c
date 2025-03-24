@@ -74,10 +74,7 @@ void ocp_nlp_qpscaling_noscale_opts_initialize_default(void *config_, ocp_nlp_qp
 
 void ocp_nlp_qpscaling_noscale_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
-
-    printf("\nerror: field %s not available in ocp_nlp_qpscaling_noscale_opts_set\n", field);
-    exit(1);
-
+    return;
 }
 
 
