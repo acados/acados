@@ -29,7 +29,7 @@
  */
 
 
-#include "acados/ocp_nlp/ocp_nlp_qp_scaling_obj_gershgorin.h"
+#include "acados/ocp_nlp/ocp_nlp_qpscaling_obj_gershgorin.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -37,7 +37,7 @@
 #include <assert.h>
 #include <math.h>
 
-#include "acados/ocp_nlp/ocp_nlp_qp_scaling_common.h"
+#include "acados/ocp_nlp/ocp_nlp_qpscaling_common.h"
 #include "acados/utils/math.h"
 
 #include "blasfeo_d_aux.h"

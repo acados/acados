@@ -47,7 +47,7 @@ extern "C" {
 #include "blasfeo_common.h"
 
 // acados
-#include "acados/ocp_nlp/ocp_nlp_qp_scaling_common.h"
+#include "acados/ocp_nlp/ocp_nlp_qpscaling_common.h"
 
 
 

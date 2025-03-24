@@ -29,14 +29,14 @@
  */
 
 
-#include "acados/ocp_nlp/ocp_nlp_qp_scaling_noscale.h"
+#include "acados/ocp_nlp/ocp_nlp_qpscaling_noscale.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
 
-#include "acados/ocp_nlp/ocp_nlp_qp_scaling_common.h"
+#include "acados/ocp_nlp/ocp_nlp_qpscaling_common.h"
 #include "acados/utils/math.h"
 
 #include "blasfeo_d_aux.h"
