@@ -144,7 +144,7 @@ static void ocp_nlp_plan_initialize_default(ocp_nlp_plan_t *plan)
     plan->regularization = NO_REGULARIZE;
 
     // QP scaling: no scale by default
-    plan->qp_scaling = NO_SCALING;
+    plan->qpscaling = NO_SCALING;
 
     // globalization: fixed step by default
     plan->globalization = FIXED_STEP;
@@ -248,16 +248,16 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
     }
 
     // QP scaling
-    switch (plan.qp_scaling)
+    switch (plan.qpscaling)
     {
         case NO_SCALING:
-            ocp_nlp_qp_scaling_noscale_config_initialize_default(config->qp_scaling);
+            ocp_nlp_qpscaling_noscale_config_initialize_default(config->qpscaling);
             break;
         case OBJECTIVE_GERSHGORIN:
-            ocp_nlp_qp_scaling_obj_gershgorin_config_initialize_default(config->qp_scaling);
+            ocp_nlp_qpscaling_obj_gershgorin_config_initialize_default(config->qpscaling);
             break;
         default:
-            printf("\nerror: ocp_nlp_config_create: unsupported plan->qp_scaling\n");
+            printf("\nerror: ocp_nlp_config_create: unsupported plan->qpscaling\n");
             exit(1);
     }
 

@@ -34,8 +34,8 @@
 /// \addtogroup ocp_nlp_reg
 /// @{
 
-#ifndef ACADOS_OCP_NLP_OCP_NLP_QP_SCALING_OBJECTIVE_GERSHGORIN_H_
-#define ACADOS_OCP_NLP_OCP_NLP_QP_SCALING_OBJECTIVE_GERSHGORIN_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_qpscaling_OBJECTIVE_GERSHGORIN_H_
+#define ACADOS_OCP_NLP_OCP_NLP_qpscaling_OBJECTIVE_GERSHGORIN_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,7 +54,7 @@ extern "C" {
  * dims
  ************************************************/
 
-// use the functions in ocp_nlp_qp_scaling_common
+// use the functions in ocp_nlp_qpscaling_common
 
 
 /************************************************
@@ -66,11 +66,11 @@ extern "C" {
 
 typedef struct {
     double obj_factor;
-} ocp_nlp_qp_scaling_obj_gershgorin_memory;
+} ocp_nlp_qpscaling_obj_gershgorin_memory;
 
 
 //
-void ocp_nlp_qp_scaling_obj_gershgorin_config_initialize_default(ocp_nlp_qp_scaling_config *config);
+void ocp_nlp_qpscaling_obj_gershgorin_config_initialize_default(ocp_nlp_qpscaling_config *config);
 
 
 
@@ -78,7 +78,7 @@ void ocp_nlp_qp_scaling_obj_gershgorin_config_initialize_default(ocp_nlp_qp_scal
 }
 #endif
 
-#endif  // ACADOS_OCP_NLP_OCP_NLP_QP_SCALING_OBJECTIVE_GERSHGORIN_H_
+#endif  // ACADOS_OCP_NLP_OCP_NLP_qpscaling_OBJECTIVE_GERSHGORIN_H_
 
 /// @}
 /// @}

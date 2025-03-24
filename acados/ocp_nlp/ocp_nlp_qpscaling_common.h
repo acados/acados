@@ -35,8 +35,8 @@
 /// \defgroup ocp_nlp_reg ocp_nlp_reg
 /// @{
 
-#ifndef ACADOS_OCP_NLP_OCP_NLP_QP_SCALING_COMMON_H_
-#define ACADOS_OCP_NLP_OCP_NLP_QP_SCALING_COMMON_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_qpscaling_COMMON_H_
+#define ACADOS_OCP_NLP_OCP_NLP_qpscaling_COMMON_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,14 +54,14 @@ typedef struct
     int *nx;
     int *nu;
     int N;
-} ocp_nlp_qp_scaling_dims;
+} ocp_nlp_qpscaling_dims;
 
 //
-acados_size_t ocp_nlp_qp_scaling_dims_calculate_size(int N);
+acados_size_t ocp_nlp_qpscaling_dims_calculate_size(int N);
 //
-ocp_nlp_qp_scaling_dims *ocp_nlp_qp_scaling_dims_assign(int N, void *raw_memory);
+ocp_nlp_qpscaling_dims *ocp_nlp_qpscaling_dims_assign(int N, void *raw_memory);
 //
-void ocp_nlp_qp_scaling_dims_set(void *config_, ocp_nlp_qp_scaling_dims *dims, int stage, char *field, int* value);
+void ocp_nlp_qpscaling_dims_set(void *config_, ocp_nlp_qpscaling_dims *dims, int stage, char *field, int* value);
 
 
 
@@ -71,25 +71,25 @@ typedef struct
 {
     /* dims */
     acados_size_t (*dims_calculate_size)(int N);
-    ocp_nlp_qp_scaling_dims *(*dims_assign)(int N, void *raw_memory);
-    void (*dims_set)(void *config, ocp_nlp_qp_scaling_dims *dims, int stage, char *field, int *value);
+    ocp_nlp_qpscaling_dims *(*dims_assign)(int N, void *raw_memory);
+    void (*dims_set)(void *config, ocp_nlp_qpscaling_dims *dims, int stage, char *field, int *value);
     /* opts */
     acados_size_t (*opts_calculate_size)(void);
     void *(*opts_assign)(void *raw_memory);
-    void (*opts_initialize_default)(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts);
+    void (*opts_initialize_default)(void *config, ocp_nlp_qpscaling_dims *dims, void *opts);
     void (*opts_set)(void *config, void *opts, const char *field, void* value);
     /* memory */
-    acados_size_t (*memory_calculate_size)(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts);
-    void *(*memory_assign)(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts, void *raw_memory);
+    acados_size_t (*memory_calculate_size)(void *config, ocp_nlp_qpscaling_dims *dims, void *opts);
+    void *(*memory_assign)(void *config, ocp_nlp_qpscaling_dims *dims, void *opts, void *raw_memory);
     /* functions */
-    void (*scale_qp)(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts, void *memory, ocp_qp_in *qp_in);
-    void (*rescale_solution)(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts, void *memory, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
-} ocp_nlp_qp_scaling_config;
+    void (*scale_qp)(void *config, ocp_nlp_qpscaling_dims *dims, void *opts, void *memory, ocp_qp_in *qp_in);
+    void (*rescale_solution)(void *config, ocp_nlp_qpscaling_dims *dims, void *opts, void *memory, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
+} ocp_nlp_qpscaling_config;
 
 //
-acados_size_t ocp_nlp_qp_scaling_config_calculate_size(void);
+acados_size_t ocp_nlp_qpscaling_config_calculate_size(void);
 //
-void *ocp_nlp_qp_scaling_config_assign(void *raw_memory);
+void *ocp_nlp_qpscaling_config_assign(void *raw_memory);
 
 void ocp_qp_scale_objective(ocp_qp_in *qp_in, double factor);
 //
@@ -101,6 +101,6 @@ void ocp_qp_out_scale_duals(ocp_qp_out *qp_out, double factor);
 }
 #endif
 
-#endif  // ACADOS_OCP_NLP_OCP_NLP_QP_SCALING_COMMON_H_
+#endif  // ACADOS_OCP_NLP_OCP_NLP_qpscaling_COMMON_H_
 /// @}
 /// @}

@@ -206,7 +206,7 @@ void {{ model.name }}_acados_create_set_plan(ocp_nlp_plan_t* nlp_solver_plan, co
     nlp_solver_plan->nlp_constraints[N] = {{ constraints.constr_type_e }};
 
     nlp_solver_plan->regularization = {{ solver_options.regularize_method }};
-    nlp_solver_plan->qp_scaling = {{ solver_options.qp_scaling_type }};
+    nlp_solver_plan->qpscaling = {{ solver_options.qpscaling_type }};
 
     nlp_solver_plan->globalization = {{ solver_options.globalization }};
 }

@@ -47,14 +47,14 @@
  * config
  ************************************************/
 
-acados_size_t ocp_nlp_qp_scaling_config_calculate_size(void)
+acados_size_t ocp_nlp_qpscaling_config_calculate_size(void)
 {
-    return sizeof(ocp_nlp_qp_scaling_config);
+    return sizeof(ocp_nlp_qpscaling_config);
 }
 
 
 
-void *ocp_nlp_qp_scaling_config_assign(void *raw_memory)
+void *ocp_nlp_qpscaling_config_assign(void *raw_memory)
 {
     return raw_memory;
 }
@@ -65,9 +65,9 @@ void *ocp_nlp_qp_scaling_config_assign(void *raw_memory)
  * dims
  ************************************************/
 
-acados_size_t ocp_nlp_qp_scaling_dims_calculate_size(int N)
+acados_size_t ocp_nlp_qpscaling_dims_calculate_size(int N)
 {
-    acados_size_t size = sizeof(ocp_nlp_qp_scaling_dims);
+    acados_size_t size = sizeof(ocp_nlp_qpscaling_dims);
 
     size += 2*(N+1)*sizeof(int); // nx nu
 
@@ -76,13 +76,13 @@ acados_size_t ocp_nlp_qp_scaling_dims_calculate_size(int N)
 
 
 
-ocp_nlp_qp_scaling_dims *ocp_nlp_qp_scaling_dims_assign(int N, void *raw_memory)
+ocp_nlp_qpscaling_dims *ocp_nlp_qpscaling_dims_assign(int N, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
     // dims
-    ocp_nlp_qp_scaling_dims *dims = (ocp_nlp_qp_scaling_dims *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_qp_scaling_dims);
+    ocp_nlp_qpscaling_dims *dims = (ocp_nlp_qpscaling_dims *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_qpscaling_dims);
     // nx
     dims->nx = (int *) c_ptr;
     c_ptr += (N+1)*sizeof(int);
@@ -101,14 +101,14 @@ ocp_nlp_qp_scaling_dims *ocp_nlp_qp_scaling_dims_assign(int N, void *raw_memory)
     for(ii=0; ii<=N; ii++)
         dims->nu[ii] = 0;
 
-    assert((char *) raw_memory + ocp_nlp_qp_scaling_dims_calculate_size(N) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_qpscaling_dims_calculate_size(N) >= c_ptr);
 
     return dims;
 }
 
 
 
-void ocp_nlp_qp_scaling_dims_set(void *config_, ocp_nlp_qp_scaling_dims *dims, int stage, char *field, int* value)
+void ocp_nlp_qpscaling_dims_set(void *config_, ocp_nlp_qpscaling_dims *dims, int stage, char *field, int* value)
 {
 
     if (!strcmp(field, "nx"))
@@ -121,7 +121,7 @@ void ocp_nlp_qp_scaling_dims_set(void *config_, ocp_nlp_qp_scaling_dims *dims, i
     }
     else
     {
-        printf("\nerror: field %s not available in module ocp_nlp_qp_scaling_dims_set\n", field);
+        printf("\nerror: field %s not available in module ocp_nlp_qpscaling_dims_set\n", field);
         exit(1);
     }
 

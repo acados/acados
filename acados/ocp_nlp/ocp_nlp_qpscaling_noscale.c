@@ -48,7 +48,7 @@
  * opts
  ************************************************/
 
-acados_size_t ocp_nlp_qp_scaling_noscale_opts_calculate_size(void)
+acados_size_t ocp_nlp_qpscaling_noscale_opts_calculate_size(void)
 {
     acados_size_t size = 0;
 
@@ -57,14 +57,14 @@ acados_size_t ocp_nlp_qp_scaling_noscale_opts_calculate_size(void)
 
 
 
-void *ocp_nlp_qp_scaling_noscale_opts_assign(void *raw_memory)
+void *ocp_nlp_qpscaling_noscale_opts_assign(void *raw_memory)
 {
     return raw_memory;
 }
 
 
 
-void ocp_nlp_qp_scaling_noscale_opts_initialize_default(void *config_, ocp_nlp_qp_scaling_dims *dims, void *opts_)
+void ocp_nlp_qpscaling_noscale_opts_initialize_default(void *config_, ocp_nlp_qpscaling_dims *dims, void *opts_)
 {
 
     return;
@@ -72,10 +72,10 @@ void ocp_nlp_qp_scaling_noscale_opts_initialize_default(void *config_, ocp_nlp_q
 
 
 
-void ocp_nlp_qp_scaling_noscale_opts_set(void *config_, void *opts_, const char *field, void* value)
+void ocp_nlp_qpscaling_noscale_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
 
-    printf("\nerror: field %s not available in ocp_nlp_qp_scaling_noscale_opts_set\n", field);
+    printf("\nerror: field %s not available in ocp_nlp_qpscaling_noscale_opts_set\n", field);
     exit(1);
 
 }
@@ -86,7 +86,7 @@ void ocp_nlp_qp_scaling_noscale_opts_set(void *config_, void *opts_, const char 
  * memory
  ************************************************/
 
-acados_size_t ocp_nlp_qp_scaling_noscale_memory_calculate_size(void *config_, ocp_nlp_qp_scaling_dims *dims, void *opts_)
+acados_size_t ocp_nlp_qpscaling_noscale_memory_calculate_size(void *config_, ocp_nlp_qpscaling_dims *dims, void *opts_)
 {
     acados_size_t size = 0;
 
@@ -95,7 +95,7 @@ acados_size_t ocp_nlp_qp_scaling_noscale_memory_calculate_size(void *config_, oc
 
 
 
-void *ocp_nlp_qp_scaling_noscale_memory_assign(void *config_, ocp_nlp_qp_scaling_dims *dims, void *opts_, void *raw_memory)
+void *ocp_nlp_qpscaling_noscale_memory_assign(void *config_, ocp_nlp_qpscaling_dims *dims, void *opts_, void *raw_memory)
 {
     return raw_memory;
 }
@@ -106,36 +106,36 @@ void *ocp_nlp_qp_scaling_noscale_memory_assign(void *config_, ocp_nlp_qp_scaling
  * functions
  ************************************************/
 
-void ocp_nlp_qp_scaling_noscale_scale_qp(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in)
+void ocp_nlp_qpscaling_noscale_scale_qp(void *config, ocp_nlp_qpscaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in)
 {
-    // printf("ocp_nlp_qp_scaling_noscale_scale_qp: nothing to do\n");
+    // printf("ocp_nlp_qpscaling_noscale_scale_qp: nothing to do\n");
     return;
 }
 
 
-void ocp_nlp_qp_scaling_noscale_rescale_solution(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
+void ocp_nlp_qpscaling_noscale_rescale_solution(void *config, ocp_nlp_qpscaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
 {
-    // printf("ocp_nlp_qp_scaling_noscale_rescale_solution: nothing to do\n");
+    // printf("ocp_nlp_qpscaling_noscale_rescale_solution: nothing to do\n");
     return;
 }
 
 
-void ocp_nlp_qp_scaling_noscale_config_initialize_default(ocp_nlp_qp_scaling_config *config)
+void ocp_nlp_qpscaling_noscale_config_initialize_default(ocp_nlp_qpscaling_config *config)
 {
     // dims
-    config->dims_calculate_size = &ocp_nlp_qp_scaling_dims_calculate_size;
-    config->dims_assign = &ocp_nlp_qp_scaling_dims_assign;
-    config->dims_set = &ocp_nlp_qp_scaling_dims_set;
+    config->dims_calculate_size = &ocp_nlp_qpscaling_dims_calculate_size;
+    config->dims_assign = &ocp_nlp_qpscaling_dims_assign;
+    config->dims_set = &ocp_nlp_qpscaling_dims_set;
     // opts
-    config->opts_calculate_size = &ocp_nlp_qp_scaling_noscale_opts_calculate_size;
-    config->opts_assign = &ocp_nlp_qp_scaling_noscale_opts_assign;
-    config->opts_initialize_default = &ocp_nlp_qp_scaling_noscale_opts_initialize_default;
-    config->opts_set = &ocp_nlp_qp_scaling_noscale_opts_set;
+    config->opts_calculate_size = &ocp_nlp_qpscaling_noscale_opts_calculate_size;
+    config->opts_assign = &ocp_nlp_qpscaling_noscale_opts_assign;
+    config->opts_initialize_default = &ocp_nlp_qpscaling_noscale_opts_initialize_default;
+    config->opts_set = &ocp_nlp_qpscaling_noscale_opts_set;
     // memory
-    config->memory_calculate_size = &ocp_nlp_qp_scaling_noscale_memory_calculate_size;
-    config->memory_assign = &ocp_nlp_qp_scaling_noscale_memory_assign;
+    config->memory_calculate_size = &ocp_nlp_qpscaling_noscale_memory_calculate_size;
+    config->memory_assign = &ocp_nlp_qpscaling_noscale_memory_assign;
     // functions
-    config->scale_qp = &ocp_nlp_qp_scaling_noscale_scale_qp;
-    config->rescale_solution = &ocp_nlp_qp_scaling_noscale_rescale_solution;
+    config->scale_qp = &ocp_nlp_qpscaling_noscale_scale_qp;
+    config->rescale_solution = &ocp_nlp_qpscaling_noscale_rescale_solution;
 }
 

@@ -34,8 +34,8 @@
 /// \addtogroup ocp_nlp_reg
 /// @{
 
-#ifndef ACADOS_OCP_NLP_OCP_NLP_QP_SCALING_NOSCALE_H_
-#define ACADOS_OCP_NLP_OCP_NLP_QP_SCALING_NOSCALE_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_qpscaling_NOSCALE_H_
+#define ACADOS_OCP_NLP_OCP_NLP_qpscaling_NOSCALE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,7 +55,7 @@ extern "C" {
  * dims
  ************************************************/
 
-// use the functions in ocp_nlp_qp_scaling_common
+// use the functions in ocp_nlp_qpscaling_common
 
 
 /************************************************
@@ -65,7 +65,7 @@ extern "C" {
 // use all functions just through config pointers
 
 //
-void ocp_nlp_qp_scaling_noscale_config_initialize_default(ocp_nlp_qp_scaling_config *config);
+void ocp_nlp_qpscaling_noscale_config_initialize_default(ocp_nlp_qpscaling_config *config);
 
 
 
@@ -73,7 +73,7 @@ void ocp_nlp_qp_scaling_noscale_config_initialize_default(ocp_nlp_qp_scaling_con
 }
 #endif
 
-#endif  // ACADOS_OCP_NLP_OCP_NLP_QP_SCALING_NOSCALE_H_
+#endif  // ACADOS_OCP_NLP_OCP_NLP_qpscaling_NOSCALE_H_
 
 /// @}
 /// @}

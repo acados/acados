@@ -49,7 +49,7 @@
  * opts
  ************************************************/
 
-acados_size_t ocp_nlp_qp_scaling_obj_gershgorin_opts_calculate_size(void)
+acados_size_t ocp_nlp_qpscaling_obj_gershgorin_opts_calculate_size(void)
 {
     acados_size_t size = 0;
 
@@ -58,14 +58,14 @@ acados_size_t ocp_nlp_qp_scaling_obj_gershgorin_opts_calculate_size(void)
 
 
 
-void *ocp_nlp_qp_scaling_obj_gershgorin_opts_assign(void *raw_memory)
+void *ocp_nlp_qpscaling_obj_gershgorin_opts_assign(void *raw_memory)
 {
     return raw_memory;
 }
 
 
 
-void ocp_nlp_qp_scaling_obj_gershgorin_opts_initialize_default(void *config_, ocp_nlp_qp_scaling_dims *dims, void *opts_)
+void ocp_nlp_qpscaling_obj_gershgorin_opts_initialize_default(void *config_, ocp_nlp_qpscaling_dims *dims, void *opts_)
 {
 
     return;
@@ -73,10 +73,10 @@ void ocp_nlp_qp_scaling_obj_gershgorin_opts_initialize_default(void *config_, oc
 
 
 
-void ocp_nlp_qp_scaling_obj_gershgorin_opts_set(void *config_, void *opts_, const char *field, void* value)
+void ocp_nlp_qpscaling_obj_gershgorin_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
 
-    printf("\nerror: field %s not available in ocp_nlp_qp_scaling_obj_gershgorin_opts_set\n", field);
+    printf("\nerror: field %s not available in ocp_nlp_qpscaling_obj_gershgorin_opts_set\n", field);
     exit(1);
 
 }
@@ -87,7 +87,7 @@ void ocp_nlp_qp_scaling_obj_gershgorin_opts_set(void *config_, void *opts_, cons
  * memory
  ************************************************/
 
-acados_size_t ocp_nlp_qp_scaling_obj_gershgorin_memory_calculate_size(void *config_, ocp_nlp_qp_scaling_dims *dims, void *opts_)
+acados_size_t ocp_nlp_qpscaling_obj_gershgorin_memory_calculate_size(void *config_, ocp_nlp_qpscaling_dims *dims, void *opts_)
 {
 
     int N = dims->N;
@@ -96,7 +96,7 @@ acados_size_t ocp_nlp_qp_scaling_obj_gershgorin_memory_calculate_size(void *conf
 
     acados_size_t size = 0;
 
-    size += sizeof(ocp_nlp_qp_scaling_obj_gershgorin_memory);
+    size += sizeof(ocp_nlp_qpscaling_obj_gershgorin_memory);
 
     size += (2*(N+1)+N)*sizeof(struct blasfeo_dmat *); // RSQrq BAbt DCt
     size += (3*(N+1)+2*N)*sizeof(struct blasfeo_dvec *); // rq b ux pi lam
@@ -107,7 +107,7 @@ acados_size_t ocp_nlp_qp_scaling_obj_gershgorin_memory_calculate_size(void *conf
 
 
 
-void *ocp_nlp_qp_scaling_obj_gershgorin_memory_assign(void *config_, ocp_nlp_qp_scaling_dims *dims, void *opts_, void *raw_memory)
+void *ocp_nlp_qpscaling_obj_gershgorin_memory_assign(void *config_, ocp_nlp_qpscaling_dims *dims, void *opts_, void *raw_memory)
 {
     // int N = dims->N;
     // int *nx = dims->nx;
@@ -115,10 +115,10 @@ void *ocp_nlp_qp_scaling_obj_gershgorin_memory_assign(void *config_, ocp_nlp_qp_
 
     char *c_ptr = (char *) raw_memory;
 
-    ocp_nlp_qp_scaling_obj_gershgorin_memory *mem = (ocp_nlp_qp_scaling_obj_gershgorin_memory *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_qp_scaling_obj_gershgorin_memory);
+    ocp_nlp_qpscaling_obj_gershgorin_memory *mem = (ocp_nlp_qpscaling_obj_gershgorin_memory *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_qpscaling_obj_gershgorin_memory);
 
-    assert((char *)mem + ocp_nlp_qp_scaling_obj_gershgorin_memory_calculate_size(config_, dims, opts_) >= c_ptr);
+    assert((char *)mem + ocp_nlp_qpscaling_obj_gershgorin_memory_calculate_size(config_, dims, opts_) >= c_ptr);
 
     return mem;
 }
@@ -129,14 +129,14 @@ void *ocp_nlp_qp_scaling_obj_gershgorin_memory_assign(void *config_, ocp_nlp_qp_
  * functions
  ************************************************/
 
-void ocp_nlp_qp_scaling_obj_gershgorin_scale_qp(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in)
+void ocp_nlp_qpscaling_obj_gershgorin_scale_qp(void *config, ocp_nlp_qpscaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in)
 {
     double max_abs_eig = 0.0;
     double tmp;
     int *nx = qp_in->dim->nx;
     int *nu = qp_in->dim->nu;
     int *ns = qp_in->dim->ns;
-    ocp_nlp_qp_scaling_obj_gershgorin_memory *memory = mem_;
+    ocp_nlp_qpscaling_obj_gershgorin_memory *memory = mem_;
 
     struct blasfeo_dmat *RSQrq = qp_in->RSQrq;
     for (int stage = 0; stage <= dims->N; stage++)
@@ -164,46 +164,46 @@ void ocp_nlp_qp_scaling_obj_gershgorin_scale_qp(void *config, ocp_nlp_qp_scaling
     }
     // printf("AFTER SCALING\n");
     // print_ocp_qp_in(qp_in);
-    // printf("ocp_nlp_qp_scaling_obj_gershgorin_scale_qp: computed obj_factor = %e\n", memory->obj_factor);
+    // printf("ocp_nlp_qpscaling_obj_gershgorin_scale_qp: computed obj_factor = %e\n", memory->obj_factor);
     // exit(1);
 }
 
 
-void ocp_nlp_qp_scaling_obj_gershgorin_rescale_solution(void *config, ocp_nlp_qp_scaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
+void ocp_nlp_qpscaling_obj_gershgorin_rescale_solution(void *config, ocp_nlp_qpscaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
 {
-    ocp_nlp_qp_scaling_obj_gershgorin_memory *memory = mem_;
+    ocp_nlp_qpscaling_obj_gershgorin_memory *memory = mem_;
 
-    // printf("ocp_nlp_qp_scaling_obj_gershgorin_rescale_solution: qp_out before rescaling\n");
+    // printf("ocp_nlp_qpscaling_obj_gershgorin_rescale_solution: qp_out before rescaling\n");
     // print_ocp_qp_out(qp_out);
     if (memory->obj_factor != 1.0)
     {
         ocp_qp_out_scale_duals(qp_out, 1/memory->obj_factor);
         ocp_qp_scale_objective(qp_in, 1/memory->obj_factor);
     }
-    // printf("ocp_nlp_qp_scaling_obj_gershgorin_rescale_solution: qp_out after rescaling\n");
+    // printf("ocp_nlp_qpscaling_obj_gershgorin_rescale_solution: qp_out after rescaling\n");
     // print_ocp_qp_out(qp_out);
-    // printf("ocp_nlp_qp_scaling_obj_gershgorin_rescale_solution: using obj_factor = %e\n", memory->obj_factor);
+    // printf("ocp_nlp_qpscaling_obj_gershgorin_rescale_solution: using obj_factor = %e\n", memory->obj_factor);
 
     return;
 }
 
 
-void ocp_nlp_qp_scaling_obj_gershgorin_config_initialize_default(ocp_nlp_qp_scaling_config *config)
+void ocp_nlp_qpscaling_obj_gershgorin_config_initialize_default(ocp_nlp_qpscaling_config *config)
 {
     // dims
-    config->dims_calculate_size = &ocp_nlp_qp_scaling_dims_calculate_size;
-    config->dims_assign = &ocp_nlp_qp_scaling_dims_assign;
-    config->dims_set = &ocp_nlp_qp_scaling_dims_set;
+    config->dims_calculate_size = &ocp_nlp_qpscaling_dims_calculate_size;
+    config->dims_assign = &ocp_nlp_qpscaling_dims_assign;
+    config->dims_set = &ocp_nlp_qpscaling_dims_set;
     // opts
-    config->opts_calculate_size = &ocp_nlp_qp_scaling_obj_gershgorin_opts_calculate_size;
-    config->opts_assign = &ocp_nlp_qp_scaling_obj_gershgorin_opts_assign;
-    config->opts_initialize_default = &ocp_nlp_qp_scaling_obj_gershgorin_opts_initialize_default;
-    config->opts_set = &ocp_nlp_qp_scaling_obj_gershgorin_opts_set;
+    config->opts_calculate_size = &ocp_nlp_qpscaling_obj_gershgorin_opts_calculate_size;
+    config->opts_assign = &ocp_nlp_qpscaling_obj_gershgorin_opts_assign;
+    config->opts_initialize_default = &ocp_nlp_qpscaling_obj_gershgorin_opts_initialize_default;
+    config->opts_set = &ocp_nlp_qpscaling_obj_gershgorin_opts_set;
     // memory
-    config->memory_calculate_size = &ocp_nlp_qp_scaling_obj_gershgorin_memory_calculate_size;
-    config->memory_assign = &ocp_nlp_qp_scaling_obj_gershgorin_memory_assign;
+    config->memory_calculate_size = &ocp_nlp_qpscaling_obj_gershgorin_memory_calculate_size;
+    config->memory_assign = &ocp_nlp_qpscaling_obj_gershgorin_memory_assign;
     // functions
-    config->scale_qp = &ocp_nlp_qp_scaling_obj_gershgorin_scale_qp;
-    config->rescale_solution = &ocp_nlp_qp_scaling_obj_gershgorin_rescale_solution;
+    config->scale_qp = &ocp_nlp_qpscaling_obj_gershgorin_scale_qp;
+    config->rescale_solution = &ocp_nlp_qpscaling_obj_gershgorin_rescale_solution;
 }
 
