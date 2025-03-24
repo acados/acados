@@ -65,7 +65,7 @@ def main():
     p_test = [-1.5]
 
     ocp = export_parametric_ocp()
-    ocp.solver_options.qp_scaling_type = "OBJECTIVE_GERSHGORIN"
+    ocp.solver_options.qpscaling_type = "OBJECTIVE_GERSHGORIN"
     ocp.solver_options.nlp_solver_max_iter = 2
 
     ocp_solver = AcadosOcpSolver(ocp, json_file="parameter_augmented_acados_ocp.json", verbose=False)

@@ -88,7 +88,7 @@ class AcadosOcpOptions:
         self.__print_level = 0
         self.__cost_discretization = 'EULER'
         self.__regularize_method = 'NO_REGULARIZE'
-        self.__qp_scaling_type = 'NO_SCALING'
+        self.__qpscaling_type = 'NO_SCALING'
         self.__reg_epsilon = 1e-4
         self.__reg_max_cond_block = 1e-7
         self.__reg_adaptive_eps = False
@@ -338,13 +338,13 @@ class AcadosOcpOptions:
         return self.__regularize_method
 
     @property
-    def qp_scaling_type(self):
+    def qpscaling_type(self):
         """QP scaling type.
         String in ('NO_SCALING', 'OBJECTIVE_GERSHGORIN')
 
         Default: 'NO_SCALING'
         """
-        return self.__qp_scaling_type
+        return self.__qpscaling_type
 
     @property
     def globalization_fixed_step_length(self):
@@ -1246,14 +1246,14 @@ class AcadosOcpOptions:
             raise Exception('Invalid regularize_method value. Possible values are:\n\n' \
                     + ',\n'.join(regularize_methods) + '.\n\nYou have: ' + regularize_method + '.\n\n')
 
-    @qp_scaling_type.setter
-    def qp_scaling_type(self, qp_scaling_type):
-        qp_scaling_types = ('NO_SCALING', 'OBJECTIVE_GERSHGORIN')
-        if qp_scaling_type in qp_scaling_types:
-            self.__qp_scaling_type = qp_scaling_type
+    @qpscaling_type.setter
+    def qpscaling_type(self, qpscaling_type):
+        qpscaling_types = ('NO_SCALING', 'OBJECTIVE_GERSHGORIN')
+        if qpscaling_type in qpscaling_types:
+            self.__qpscaling_type = qpscaling_type
         else:
-            raise Exception('Invalid qp_scaling_type value. Possible values are:\n\n' \
-                    + ',\n'.join(qp_scaling_types) + '.\n\nYou have: ' + qp_scaling_type + '.\n\n')
+            raise Exception('Invalid qpscaling_type value. Possible values are:\n\n' \
+                    + ',\n'.join(qpscaling_types) + '.\n\nYou have: ' + qpscaling_type + '.\n\n')
 
     @collocation_type.setter
     def collocation_type(self, collocation_type):
