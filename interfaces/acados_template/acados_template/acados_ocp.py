@@ -242,7 +242,9 @@ class AcadosOcp:
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
         elif cost.cost_type_0 == 'EXTERNAL':
-            if not isinstance(model.cost_expr_ext_cost_0, (ca.MX, ca.SX)):
+            if isinstance(model.cost_expr_ext_cost_0, float):
+                model.cost_expr_ext_cost_0 = ca.DM(model.cost_expr_ext_cost_0)
+            if not isinstance(model.cost_expr_ext_cost_0, (ca.MX, ca.SX, ca.DM)):
                 raise Exception('cost_expr_ext_cost_0 should be casadi expression.')
             if not casadi_length(model.cost_expr_ext_cost_0) == 1:
                 raise Exception('cost_expr_ext_cost_0 should be scalar-valued.')
@@ -317,7 +319,9 @@ class AcadosOcp:
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
         elif cost.cost_type == 'EXTERNAL':
-            if not isinstance(model.cost_expr_ext_cost, (ca.MX, ca.SX)):
+            if isinstance(model.cost_expr_ext_cost, float):
+                model.cost_expr_ext_cost = ca.DM(model.cost_expr_ext_cost)
+            if not isinstance(model.cost_expr_ext_cost, (ca.MX, ca.SX, ca.DM)):
                 raise Exception('cost_expr_ext_cost should be casadi expression.')
             if not casadi_length(model.cost_expr_ext_cost) == 1:
                 raise Exception('cost_expr_ext_cost should be scalar-valued.')
@@ -366,7 +370,9 @@ class AcadosOcp:
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
         elif cost.cost_type_e == 'EXTERNAL':
-            if not isinstance(model.cost_expr_ext_cost_e, (ca.MX, ca.SX)):
+            if isinstance(model.cost_expr_ext_cost_e, float):
+                model.cost_expr_ext_cost_e = ca.DM(model.cost_expr_ext_cost_e)
+            if not isinstance(model.cost_expr_ext_cost_e, (ca.MX, ca.SX, ca.DM)):
                 raise Exception('cost_expr_ext_cost_e should be casadi expression.')
             if not casadi_length(model.cost_expr_ext_cost_e) == 1:
                 raise Exception('cost_expr_ext_cost_e should be scalar-valued.')
