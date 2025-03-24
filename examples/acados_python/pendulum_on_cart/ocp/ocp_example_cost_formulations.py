@@ -39,7 +39,7 @@ import scipy.linalg
 from utils import plot_pendulum
 import casadi as ca
 
-COST_VERSIONS = ['LS', 'EXTERNAL', 'EXTERNAL_Z', 'NLS', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z', 'AUTO']
+COST_VERSIONS = ['LS', 'EXTERNAL', 'EXTERNAL_Z', 'NLS', 'NLS_TO_EXTERNAL', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z', 'AUTO']
 HESSIAN_APPROXIMATION = 'GAUSS_NEWTON' # 'GAUSS_NEWTON
 N = 20
 T_HORIZON = 1.0
@@ -76,6 +76,13 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
     u = ocp.model.u
 
     cost_W = scipy.linalg.block_diag(Q_mat, R_mat)
+
+    if cost_version in ['LS', 'NLS', 'NLS_TO_EXTERNAL', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z']:
+        ocp.cost.yref = np.zeros((ny, ))
+        ocp.cost.yref_e = np.zeros((ny_e, ))
+    if cost_version in ['LS', 'NLS', 'NLS_TO_EXTERNAL', 'NLS_Z', 'LS_Z']:
+        ocp.cost.W_e = Q_mat
+        ocp.cost.W = cost_W
 
     if cost_version in ['CONL', 'CONL_Z', 'EXTERNAL', 'EXTERNAL_Z', 'AUTO']:
         cost_W = ca.sparsify(ca.DM(cost_W))
@@ -185,15 +192,15 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
         ocp.model.cost_expr_ext_cost = .5*ca.vertcat(x, u).T @ cost_W @ ca.vertcat(x, u)
         ocp.model.cost_expr_ext_cost_e = .5*x.T @ Q_mat @ x
 
+    elif cost_version == 'NLS_TO_EXTERNAL':
+        ocp.cost.cost_type = 'NONLINEAR_LS'
+        ocp.cost.cost_type_e = 'NONLINEAR_LS'
+
+        ocp.model.cost_y_expr = ca.vertcat(x, u)
+        ocp.model.cost_y_expr_e = x
+        ocp.translate_cost_to_external_cost(cost_hessian='GAUSS_NEWTON')
     else:
         raise Exception('Unknown cost_version.')
-
-    if cost_version in ['LS', 'NLS', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z']:
-        ocp.cost.yref = np.zeros((ny, ))
-        ocp.cost.yref_e = np.zeros((ny_e, ))
-    if cost_version in ['LS', 'NLS', 'NLS_Z', 'LS_Z']:
-        ocp.cost.W_e = Q_mat
-        ocp.cost.W = cost_W
 
     # set constraints
     ocp.constraints.lbu = np.array([-FMAX])
@@ -263,7 +270,7 @@ def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', refor
         ocp.translate_cost_to_external_cost(p=p, p_values=p_values, yref=yref, yref_e=yref_e)
 
     # create solver
-    ocp_solver = AcadosOcpSolver(ocp)
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
     # NOTE: hessian is wrt [u,x]
     if ext_cost_use_num_hess and cost_version in  ['EXTERNAL', 'EXTERNAL_Z']:
