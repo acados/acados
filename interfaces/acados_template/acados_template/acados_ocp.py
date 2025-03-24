@@ -241,6 +241,15 @@ class AcadosOcp:
                 raise Exception("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
+        elif cost.cost_type_0 == 'EXTERNAL':
+            if not isinstance(model.cost_expr_ext_cost_0, (ca.MX, ca.SX)):
+                raise Exception('cost_expr_ext_cost_0 should be casadi expression.')
+            if not casadi_length(model.cost_expr_ext_cost_0) == 1:
+                raise Exception('cost_expr_ext_cost_0 should be scalar-valued.')
+            if not is_empty(model.cost_expr_ext_cost_custom_hess_0):
+                if model.cost_expr_ext_cost_custom_hess_0.shape != (dims.nx+dims.nu, dims.nx+dims.nu):
+                    raise Exception('cost_expr_ext_cost_custom_hess_0 should have shape (nx+nu, nx+nu).')
+
         # GN check
         gn_warning_0 = (cost.cost_type_0 == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess_0))
         gn_warning_path = (cost.cost_type == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess))
@@ -307,6 +316,14 @@ class AcadosOcp:
                 raise Exception("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
+        elif cost.cost_type == 'EXTERNAL':
+            if not isinstance(model.cost_expr_ext_cost, (ca.MX, ca.SX)):
+                raise Exception('cost_expr_ext_cost should be casadi expression.')
+            if not casadi_length(model.cost_expr_ext_cost) == 1:
+                raise Exception('cost_expr_ext_cost should be scalar-valued.')
+            if not is_empty(model.cost_expr_ext_cost_custom_hess):
+                if model.cost_expr_ext_cost_custom_hess.shape != (dims.nx+dims.nu, dims.nx+dims.nu):
+                    raise Exception('cost_expr_ext_cost_custom_hess should have shape (nx+nu, nx+nu).')
         # terminal
         if cost.cost_type_e == 'AUTO':
             self.detect_cost_type(model, cost, dims, "terminal")
@@ -347,6 +364,15 @@ class AcadosOcp:
             if not (opts.hessian_approx=='EXACT' and opts.exact_hess_cost==False) and opts.hessian_approx != 'GAUSS_NEWTON':
                 raise Exception("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
+
+        elif cost.cost_type_e == 'EXTERNAL':
+            if not isinstance(model.cost_expr_ext_cost_e, (ca.MX, ca.SX)):
+                raise Exception('cost_expr_ext_cost_e should be casadi expression.')
+            if not casadi_length(model.cost_expr_ext_cost_e) == 1:
+                raise Exception('cost_expr_ext_cost_e should be scalar-valued.')
+            if not is_empty(model.cost_expr_ext_cost_custom_hess_e):
+                if model.cost_expr_ext_cost_custom_hess_e.shape != (dims.nx, dims.nx):
+                    raise Exception('cost_expr_ext_cost_custom_hess_e should have shape (nx, nx).')
 
         # cost integration
         supports_cost_integration = lambda type : type in ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
