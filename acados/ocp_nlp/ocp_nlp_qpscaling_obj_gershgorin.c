@@ -48,12 +48,17 @@
 /************************************************
  * opts
  ************************************************/
+typedef struct
+{
+    double ub_max_abs_eig; // upper bound
+    double ub_norm_inf_grad_obj; // upper bound
+    double lb_norm_inf_grad_obj; // lower bound
+} ocp_nlp_qpscaling_obj_gershgorin_opts;
+
 
 acados_size_t ocp_nlp_qpscaling_obj_gershgorin_opts_calculate_size(void)
 {
-    acados_size_t size = 0;
-
-    return size;
+    return sizeof(ocp_nlp_qpscaling_obj_gershgorin_opts);
 }
 
 
@@ -67,17 +72,45 @@ void *ocp_nlp_qpscaling_obj_gershgorin_opts_assign(void *raw_memory)
 
 void ocp_nlp_qpscaling_obj_gershgorin_opts_initialize_default(void *config_, ocp_nlp_qpscaling_dims *dims, void *opts_)
 {
+    ocp_nlp_qpscaling_obj_gershgorin_opts *opts = opts_;
+
+    opts->lb_norm_inf_grad_obj = 1e-4;
+    opts->ub_norm_inf_grad_obj = 1e2;
+    opts->ub_max_abs_eig = 1e5;
 
     return;
 }
 
-
-
 void ocp_nlp_qpscaling_obj_gershgorin_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
 
-    printf("\nerror: field %s not available in ocp_nlp_qpscaling_obj_gershgorin_opts_set\n", field);
-    exit(1);
+    ocp_nlp_qpscaling_obj_gershgorin_opts *opts = opts_;
+
+    if (!strcmp(field, "ub_max_abs_eig"))
+    {
+        double *d_ptr = value;
+        opts->ub_max_abs_eig = *d_ptr;
+        printf("ub_max_eig_abs: %2.e\n", opts->ub_max_abs_eig);
+    }
+    else if (!strcmp(field, "ub_norm_inf_grad_obj"))
+    {
+        double *d_ptr = value;
+        opts->ub_norm_inf_grad_obj = *d_ptr;
+        printf("ub_norm_inf_grad_obj : %2.e\n", opts->ub_norm_inf_grad_obj);
+    }
+    else if (!strcmp(field, "lb_norm_inf_grad_obj"))
+    {
+        double *d_ptr = value;
+        opts->lb_norm_inf_grad_obj = *d_ptr;
+        printf("lb_norm_inf_grad_obj : %2.e\n", opts->lb_norm_inf_grad_obj);
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_qpscaling_obj_gershgorin_opts_set\n", field);
+        exit(1);
+    }
+
+    return;
 
 }
 
@@ -137,6 +170,7 @@ void ocp_nlp_qpscaling_obj_gershgorin_scale_qp(void *config, ocp_nlp_qpscaling_d
     int *nu = qp_in->dim->nu;
     int *ns = qp_in->dim->ns;
     ocp_nlp_qpscaling_obj_gershgorin_memory *memory = mem_;
+    ocp_nlp_qpscaling_obj_gershgorin_opts *opts = opts_;
 
     struct blasfeo_dmat *RSQrq = qp_in->RSQrq;
     for (int stage = 0; stage <= dims->N; stage++)
@@ -148,8 +182,7 @@ void ocp_nlp_qpscaling_obj_gershgorin_scale_qp(void *config, ocp_nlp_qpscaling_d
         max_abs_eig = fmax(max_abs_eig, tmp);
     }
 
-    //
-    if (max_abs_eig < 1e-8)
+    if (max_abs_eig < opts->ub_max_abs_eig)
     {
         max_abs_eig = 1.0;
     }

@@ -1337,6 +1337,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         config->regularize->opts_set(config->regularize, opts->regularize,
                                     field+module_length+1, value);
     }
+    else if ( ptr_module!=NULL && (!strcmp(ptr_module, "qpscaling")) )
+    {
+        config->qpscaling->opts_set(config->qpscaling, opts->qpscaling,
+                                    field+module_length+1, value);
+    }
     else if ( ptr_module!=NULL && (!strcmp(ptr_module, "globalization")) )
     {
         config->globalization->opts_set(config->globalization, opts->globalization,

@@ -108,6 +108,9 @@ class AcadosOcpOptions:
         self.__globalization_funnel_initial_penalty_parameter = 1.0
         self.__globalization_funnel_use_merit_fun_only = False
         self.__globalization_fixed_step_length = 1.0
+        self.__qpscaling_ub_max_abs_eig = 1e5
+        self.__qpscaling_ub_norm_inf_grad_obj = 1e2
+        self.__qpscaling_lb_norm_inf_grad_obj = 1e-4
         self.__ext_cost_num_hess = 0
         self.__globalization_use_SOC = 0
         self.__globalization_alpha_min = None
@@ -354,6 +357,33 @@ class AcadosOcpOptions:
         Default: 1.0.
         """
         return self.__globalization_fixed_step_length
+
+    @property
+    def qpscaling_ub_max_abs_eig(self):
+        """
+        Maximum allowed upper bound for eigenvalues in qp scaling.
+        Type: float >= 0.
+        Default: 1e5.
+        """
+        return self.__qpscaling_ub_max_abs_eig
+
+    @property
+    def qpscaling_ub_norm_inf_grad_obj(self):
+        """
+        Maximum allowed upper bound for inf norm of qp gradient in qp scaling.
+        Type: float >= 0.
+        Default: 1e2.
+        """
+        return self.__qpscaling_ub_norm_inf_grad_obj
+
+    @property
+    def qpscaling_lb_norm_inf_grad_obj(self):
+        """
+        Minimum allowed lower bound for inf norm of qp gradient in qp scaling.
+        Type: float >= 0.
+        Default: 1e-4.
+        """
+        return self.__qpscaling_lb_norm_inf_grad_obj
 
     @property
     def nlp_solver_step_length(self):
@@ -1628,6 +1658,27 @@ class AcadosOcpOptions:
             self.__globalization_fixed_step_length = globalization_fixed_step_length
         else:
             raise Exception('Invalid globalization_fixed_step_length value. globalization_fixed_step_length must be a positive float.')
+
+    @qpscaling_ub_max_abs_eig.setter
+    def qpscaling_ub_max_abs_eig(self, qpscaling_ub_max_abs_eig):
+        if isinstance(qpscaling_ub_max_abs_eig, float) and qpscaling_ub_max_abs_eig >= 0.:
+            self.__qpscaling_ub_max_abs_eig = qpscaling_ub_max_abs_eig
+        else:
+            raise Exception('Invalid globalization_fixed_step_length value. globalization_fixed_step_length must be a positive float.')
+
+    @qpscaling_ub_norm_inf_grad_obj.setter
+    def qpscaling_ub_norm_inf_grad_obj(self, qpscaling_ub_norm_inf_grad_obj):
+        if isinstance(qpscaling_ub_norm_inf_grad_obj, float) and qpscaling_ub_norm_inf_grad_obj >= 0.:
+            self.__qpscaling_ub_norm_inf_grad_obj = qpscaling_ub_norm_inf_grad_obj
+        else:
+            raise Exception('Invalid qpscaling_ub_norm_inf_grad_obj value. qpscaling_ub_norm_inf_grad_obj must be a positive float.')
+
+    @qpscaling_lb_norm_inf_grad_obj.setter
+    def qpscaling_lb_norm_inf_grad_obj(self, qpscaling_lb_norm_inf_grad_obj):
+        if isinstance(qpscaling_lb_norm_inf_grad_obj, float) and qpscaling_lb_norm_inf_grad_obj >= 0.:
+            self.__qpscaling_lb_norm_inf_grad_obj = qpscaling_lb_norm_inf_grad_obj
+        else:
+            raise Exception('Invalid qpscaling_lb_norm_inf_grad_obj value. qpscaling_lb_norm_inf_grad_obj must be a positive float.')
 
     @nlp_solver_step_length.setter
     def nlp_solver_step_length(self, nlp_solver_step_length):
