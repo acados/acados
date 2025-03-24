@@ -1254,16 +1254,26 @@ class AcadosOcp:
                                         W_0: Optional[Union[ca.SX, ca.MX]] = None,
                                         W: Optional[Union[ca.SX, ca.MX]] = None,
                                         W_e: Optional[Union[ca.SX, ca.MX]] = None,
+                                        cost_hessian: str = 'EXACT',
                                         ):
         """
         Translates cost to EXTERNAL cost and optionally provide parametrization of references and weighting matrices.
-        p: Optional CasADi symbolics with additional stagewise parameters which are used to define yref_0, yref, yref_e, W_0, W, W_e. Will be appended to model.p.
-        p_values: numpy array with the same shape as p providing initial parameter values.
-        p_global: Optional CasADi symbolics with additional global parameters which are used to define yref_0, yref, yref_e, W_0, W, W_e. Will be appended to model.p_global.
-        p_global_values: numpy array with the same shape as p_global providing initial global parameter values.
-        W_0, W, W_e: Optional CasADi expressions which should be used instead of the numerical values provided by the cost module, shapes should be (ny_0, ny_0), (ny, ny), (ny_e, ny_e).
-        yref_0, yref, yref_e: Optional CasADi expressions which should be used instead of the numerical values provided by the cost module, shapes should be (ny_0, 1), (ny, 1), (ny_e, 1).
+
+        :param p: Optional CasADi symbolics with additional stagewise parameters which are used to define yref_0, yref, yref_e, W_0, W, W_e. Will be appended to model.p.
+        :param p_values: numpy array with the same shape as p providing initial parameter values.
+        :param p_global: Optional CasADi symbolics with additional global parameters which are used to define yref_0, yref, yref_e, W_0, W, W_e. Will be appended to model.p_global.
+        :param p_global_values: numpy array with the same shape as p_global providing initial global parameter values.
+        :param W_0, W, W_e: Optional CasADi expressions which should be used instead of the numerical values provided by the cost module, shapes should be (ny_0, ny_0), (ny, ny), (ny_e, ny_e).
+        :param yref_0, yref, yref_e: Optional CasADi expressions which should be used instead of the numerical values provided by the cost module, shapes should be (ny_0, 1), (ny, 1), (ny_e, 1).
+        cost_hessian: 'EXACT' or 'GAUSS_NEWTON', determines how the cost hessian is computed.
         """
+
+        if cost_hessian not in ['EXACT', 'GAUSS_NEWTON']:
+            raise Exception(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
+        if cost_hessian == 'GAUSS_NEWTON':
+            for attr_name, cost_type in ([('cost_type', self.cost.cost_type), ('cost_type_0', self.cost.cost_type_0), ('cost_type_e', self.cost.cost_type_e)]):
+                if cost_type in ['EXTERNAL', 'AUTO', 'CONVEX_OVER_NONLINEAR']:
+                    raise Exception(f"cost_hessian 'GAUSS_NEWTON' is only supported for LINEAR_LS, NONLINEAR_LS cost types, got {attr_name} = {cost_type}.")
 
         casadi_symbolics_type = type(self.model.x)
 
@@ -1360,6 +1370,8 @@ class AcadosOcp:
             self.model.cost_expr_ext_cost_0 = \
                 self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_0, yref_0, W_0)
 
+            if cost_hessian == 'GAUSS_NEWTON':
+                self.model.cost_expr_ext_cost_custom_hess_0 = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr_0, yref_0, W_0, self.model.x, self.model.u, self.model.z)
         elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost_0 = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_0, self.model.cost_psi_expr_0,
@@ -1371,8 +1383,10 @@ class AcadosOcp:
                                                           self.cost.Vx, self.cost.Vu, self.cost.Vz,
                                                           yref, W)
         elif self.cost.cost_type == "NONLINEAR_LS":
-                self.model.cost_expr_ext_cost = \
-                    self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr, yref, W)
+            self.model.cost_expr_ext_cost = \
+                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr, yref, W)
+            if cost_hessian == 'GAUSS_NEWTON':
+                self.model.cost_expr_ext_cost_custom_hess = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr, yref, W, self.model.x, self.model.u, self.model.z)
         elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr, self.model.cost_psi_expr,
@@ -1386,6 +1400,8 @@ class AcadosOcp:
         elif self.cost.cost_type_e == "NONLINEAR_LS":
             self.model.cost_expr_ext_cost_e = \
                 self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_e, yref_e, W_e)
+            if cost_hessian == 'GAUSS_NEWTON':
+                self.model.cost_expr_ext_cost_custom_hess_e = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr_e, yref_e, W_e, self.model.x, [], self.model.z)
         elif self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost_e = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_e, self.model.cost_psi_expr_e,
@@ -1413,6 +1429,14 @@ class AcadosOcp:
     def __translate_nls_cost_to_external_cost(y_expr, yref, W):
         res = y_expr - yref
         return 0.5 * (res.T @ W @ res)
+
+    @staticmethod
+    def __get_gn_hessian_expression_from_nls_cost(y_expr, yref, W, x, u, z):
+        res = y_expr - yref
+        ux = ca.vertcat(u, x)
+        inner_jac = ca.jacobian(res, ux)
+        gn_hess = inner_jac.T @ W @ inner_jac
+        return gn_hess
 
     @staticmethod
     def __translate_conl_cost_to_external_cost(r, psi, y_expr, yref):
@@ -1728,7 +1752,7 @@ class AcadosOcp:
         self.parameter_values = np.append(self.parameter_values, [0.0])
         self.p_global_values = np.append(self.p_global_values, [0.0])
         return
-    
+
 
     def detect_cost_type(self, model: AcadosModel, cost: AcadosOcpCost, dims: AcadosOcpDims, stage_type: str) -> None:
         """
