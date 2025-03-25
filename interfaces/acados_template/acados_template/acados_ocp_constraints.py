@@ -30,7 +30,7 @@
 #
 
 import numpy as np
-from .utils import J_to_idx, print_J_to_idx_note, J_to_idx_slack, check_if_nparray_and_flatten, check_if_2d_nparray, is_empty
+from .utils import J_to_idx, print_J_to_idx_note, J_to_idx_slack, cast_to_1d_nparray, cast_to_2d_nparray, is_empty
 
 class AcadosOcpConstraints:
     """
@@ -44,6 +44,8 @@ class AcadosOcpConstraints:
     Option 2) is the new way of formulating soft constraints, which is more flexible, as one slack variable can be used for multiple constraints.
     """
     def __init__(self):
+        self.__constr_types = ('BGH', 'BGP')
+
         self.__constr_type_0 = 'BGH'
         self.__constr_type = 'BGH'
         self.__constr_type_e = 'BGH'
@@ -861,57 +863,52 @@ class AcadosOcpConstraints:
     # SETTERS
     @constr_type.setter
     def constr_type(self, constr_type):
-        constr_types = ('BGH', 'BGP')
-        if constr_type in constr_types:
+        if constr_type in self.__constr_types:
             self.__constr_type = constr_type
         else:
-            raise ValueError('Invalid constr_type value. Possible values are:\n\n' \
-                    + ',\n'.join(constr_types) + '.\n\nYou have: ' + constr_type + '.\n\n')
+            raise Exception('Invalid constr_type value. Possible values are:\n\n' \
+                    + ',\n'.join(self.__constr_types) + '.\n\nYou have: ' + constr_type + '.\n\n')
 
     @constr_type_0.setter
     def constr_type_0(self, constr_type_0):
-        constr_types = ('BGH', 'BGP')
-        if constr_type_0 in constr_types:
+        if constr_type_0 in self.__constr_types:
             self.__constr_type_0 = constr_type_0
         else:
-            raise ValueError('Invalid constr_type_0 value. Possible values are:\n\n' \
-                    + ',\n'.join(constr_types) + '.\n\nYou have: ' + constr_type_0 + '.\n\n')
+            raise Exception('Invalid constr_type_0 value. Possible values are:\n\n' \
+                    + ',\n'.join(self.__constr_types) + '.\n\nYou have: ' + constr_type_0 + '.\n\n')
 
     @constr_type_e.setter
     def constr_type_e(self, constr_type_e):
-        constr_types = ('BGH', 'BGP')
-        if constr_type_e in constr_types:
+        if constr_type_e in self.__constr_types:
             self.__constr_type_e = constr_type_e
         else:
-            raise ValueError('Invalid constr_type_e value. Possible values are:\n\n' \
-                    + ',\n'.join(constr_types) + '.\n\nYou have: ' + constr_type_e + '.\n\n')
+            raise Exception('Invalid constr_type_e value. Possible values are:\n\n' \
+                    + ',\n'.join(self.__constr_types) + '.\n\nYou have: ' + constr_type_e + '.\n\n')
 
     # initial x
     @lbx_0.setter
     def lbx_0(self, lbx_0):
-        lbx_0 = check_if_nparray_and_flatten(lbx_0, "lbx_0")
+        lbx_0 = cast_to_1d_nparray(lbx_0, "lbx_0")
         self.__lbx_0 = lbx_0
 
     @ubx_0.setter
     def ubx_0(self, ubx_0):
-        ubx_0 = check_if_nparray_and_flatten(ubx_0, "ubx_0")
+        ubx_0 = cast_to_1d_nparray(ubx_0, "ubx_0")
         self.__ubx_0 = ubx_0
 
     @idxbx_0.setter
     def idxbx_0(self, idxbx_0):
-        idxbx_0 = check_if_nparray_and_flatten(idxbx_0, "idxbx_0")
+        idxbx_0 = cast_to_1d_nparray(idxbx_0, "idxbx_0")
         self.__idxbx_0 = idxbx_0
 
     @Jbx_0.setter
     def Jbx_0(self, Jbx_0):
-        if isinstance(Jbx_0, np.ndarray):
-            self.__idxbx_0 = J_to_idx(Jbx_0)
-        else:
-            raise ValueError('Invalid Jbx_0 value.')
+        Jbx_0 = cast_to_2d_nparray(Jbx_0, "Jbx_0")
+        self.__idxbx_0 = J_to_idx(Jbx_0)
 
     @idxbxe_0.setter
     def idxbxe_0(self, idxbxe_0):
-        idxbxe_0 = check_if_nparray_and_flatten(idxbxe_0, "idxbxe_0")
+        idxbxe_0 = cast_to_1d_nparray(idxbxe_0, "idxbxe_0")
         self.__idxbxe_0 = idxbxe_0
 
     @x0.setter
@@ -923,7 +920,7 @@ class AcadosOcpConstraints:
             self.__idxbx_0 = np.array([])
             self.__idxbxe_0 = np.array([])
         else:
-            x0 = check_if_nparray_and_flatten(x0, "x0")
+            x0 = cast_to_1d_nparray(x0, "x0")
             self.__lbx_0 = x0
             self.__ubx_0 = x0
             self.__idxbx_0 = np.arange(x0.size)
@@ -933,471 +930,443 @@ class AcadosOcpConstraints:
     # bounds on x
     @lbx.setter
     def lbx(self, lbx):
-        lbx = check_if_nparray_and_flatten(lbx, "lbx")
+        lbx = cast_to_1d_nparray(lbx, "lbx")
         self.__lbx = lbx
 
     @ubx.setter
     def ubx(self, ubx):
-        ubx = check_if_nparray_and_flatten(ubx, "ubx")
+        ubx = cast_to_1d_nparray(ubx, "ubx")
         self.__ubx = ubx
 
     @idxbx.setter
     def idxbx(self, idxbx):
-        idxbx = check_if_nparray_and_flatten(idxbx, "idxbx")
+        idxbx = cast_to_1d_nparray(idxbx, "idxbx")
         self.__idxbx = idxbx
 
     @Jbx.setter
     def Jbx(self, Jbx):
-        if isinstance(Jbx, np.ndarray):
-            self.__idxbx = J_to_idx(Jbx)
-        else:
-            raise ValueError('Invalid Jbx value.')
+        Jbx = cast_to_2d_nparray(Jbx, "Jbx")
+        self.__idxbx = J_to_idx(Jbx)
 
     # bounds on u
     @lbu.setter
     def lbu(self, lbu):
-        lbu = check_if_nparray_and_flatten(lbu, "lbu")
+        lbu = cast_to_1d_nparray(lbu, "lbu")
         self.__lbu = lbu
 
     @ubu.setter
     def ubu(self, ubu):
-        ubu = check_if_nparray_and_flatten(ubu, "ubu")
+        ubu = cast_to_1d_nparray(ubu, "ubu")
         self.__ubu = ubu
 
     @idxbu.setter
     def idxbu(self, idxbu):
-        idxbu = check_if_nparray_and_flatten(idxbu, "idxbu")
+        idxbu = cast_to_1d_nparray(idxbu, "idxbu")
         self.__idxbu = idxbu
 
     @Jbu.setter
     def Jbu(self, Jbu):
-        if isinstance(Jbu, np.ndarray):
-            self.__idxbu = J_to_idx(Jbu)
-        else:
-            raise ValueError('Invalid Jbu value.')
+        Jbu = cast_to_2d_nparray(Jbu, "Jbu")
+        self.__idxbu = J_to_idx(Jbu)
 
     # bounds on x at shooting node N
     @lbx_e.setter
     def lbx_e(self, lbx_e):
-        lbx_e = check_if_nparray_and_flatten(lbx_e, "lbx_e")
+        lbx_e = cast_to_1d_nparray(lbx_e, "lbx_e")
         self.__lbx_e = lbx_e
 
     @ubx_e.setter
     def ubx_e(self, ubx_e):
-        ubx_e = check_if_nparray_and_flatten(ubx_e, "ubx_e")
+        ubx_e = cast_to_1d_nparray(ubx_e, "ubx_e")
         self.__ubx_e = ubx_e
 
     @idxbx_e.setter
     def idxbx_e(self, idxbx_e):
-        idxbx_e = check_if_nparray_and_flatten(idxbx_e, "idxbx_e")
+        idxbx_e = cast_to_1d_nparray(idxbx_e, "idxbx_e")
         self.__idxbx_e = idxbx_e
 
     @Jbx_e.setter
     def Jbx_e(self, Jbx_e):
-        if isinstance(Jbx_e, np.ndarray):
-            self.__idxbx_e = J_to_idx(Jbx_e)
-        else:
-            raise ValueError('Invalid Jbx_e value.')
+        Jbx_e = cast_to_2d_nparray(Jbx_e, "Jbx_e")
+        self.__idxbx_e = J_to_idx(Jbx_e)
 
     # polytopic constraints
     @D.setter
     def D(self, D):
-        check_if_2d_nparray(D, "D")
+        D = cast_to_2d_nparray(D, "D")
         self.__D = D
 
     @C.setter
     def C(self, C):
-        check_if_2d_nparray(C, "C")
+        C = cast_to_2d_nparray(C, "C")
         self.__C = C
 
     # polytopic constraints at shooting node N
     @C_e.setter
     def C_e(self, C_e):
-        check_if_2d_nparray(C_e, "C_e")
+        C_e = cast_to_2d_nparray(C_e, "C_e")
         self.__C_e = C_e
 
     @lg.setter
     def lg(self, value):
-        value = check_if_nparray_and_flatten(value, 'lg')
+        value = cast_to_1d_nparray(value, 'lg')
         self.__lg = value
 
     @ug.setter
     def ug(self, value):
-        value = check_if_nparray_and_flatten(value, 'ug')
+        value = cast_to_1d_nparray(value, 'ug')
         self.__ug = value
 
     @lg_e.setter
     def lg_e(self, value):
-        value = check_if_nparray_and_flatten(value, 'lg_e')
+        value = cast_to_1d_nparray(value, 'lg_e')
         self.__lg_e = value
 
     @ug_e.setter
     def ug_e(self, value):
-        value = check_if_nparray_and_flatten(value, 'ug_e')
+        value = cast_to_1d_nparray(value, 'ug_e')
         self.__ug_e = value
 
     # nonlinear constraints
     @lh.setter
     def lh(self, value):
-        value = check_if_nparray_and_flatten(value, 'lh')
+        value = cast_to_1d_nparray(value, 'lh')
         self.__lh = value
 
     @uh.setter
     def uh(self, value):
-        value = check_if_nparray_and_flatten(value, 'uh')
+        value = cast_to_1d_nparray(value, 'uh')
         self.__uh = value
 
     @lh_e.setter
     def lh_e(self, value):
-        value = check_if_nparray_and_flatten(value, 'lh_e')
+        value = cast_to_1d_nparray(value, 'lh_e')
         self.__lh_e = value
 
     @uh_e.setter
     def uh_e(self, value):
-        value = check_if_nparray_and_flatten(value, 'uh_e')
+        value = cast_to_1d_nparray(value, 'uh_e')
         self.__uh_e = value
 
     @lh_0.setter
     def lh_0(self, value):
-        value = check_if_nparray_and_flatten(value, 'lh_0')
+        value = cast_to_1d_nparray(value, 'lh_0')
         self.__lh_0 = value
 
     @uh_0.setter
     def uh_0(self, value):
-        value = check_if_nparray_and_flatten(value, 'uh_0')
+        value = cast_to_1d_nparray(value, 'uh_0')
         self.__uh_0 = value
 
     # convex-over-nonlinear constraints
     @lphi.setter
     def lphi(self, value):
-        value = check_if_nparray_and_flatten(value, 'lphi')
+        value = cast_to_1d_nparray(value, 'lphi')
         self.__lphi = value
 
     @uphi.setter
     def uphi(self, value):
-        value = check_if_nparray_and_flatten(value, 'uphi')
+        value = cast_to_1d_nparray(value, 'uphi')
         self.__uphi = value
 
     @lphi_e.setter
     def lphi_e(self, value):
-        value = check_if_nparray_and_flatten(value, 'lphi_e')
+        value = cast_to_1d_nparray(value, 'lphi_e')
         self.__lphi_e = value
 
     @uphi_e.setter
     def uphi_e(self, value):
-        value = check_if_nparray_and_flatten(value, 'uphi_e')
+        value = cast_to_1d_nparray(value, 'uphi_e')
         self.__uphi_e = value
 
     @lphi_0.setter
     def lphi_0(self, value):
-        value = check_if_nparray_and_flatten(value, 'lphi_0')
+        value = cast_to_1d_nparray(value, 'lphi_0')
         self.__lphi_0 = value
 
     @uphi_0.setter
     def uphi_0(self, value):
-        value = check_if_nparray_and_flatten(value, 'uphi_0')
+        value = cast_to_1d_nparray(value, 'uphi_0')
         self.__uphi_0 = value
 
     # idxs_rev slack formulation
     @idxs_rev_0.setter
     def idxs_rev_0(self, idxs_rev_0):
-        idxs_rev_0 = check_if_nparray_and_flatten(idxs_rev_0, "idxs_rev_0")
+        idxs_rev_0 = cast_to_1d_nparray(idxs_rev_0, "idxs_rev_0")
         self.__idxs_rev_0 = idxs_rev_0
 
     @idxs_rev.setter
     def idxs_rev(self, idxs_rev):
-        idxs_rev = check_if_nparray_and_flatten(idxs_rev, "idxs_rev")
+        idxs_rev = cast_to_1d_nparray(idxs_rev, "idxs_rev")
         self.__idxs_rev = idxs_rev
 
     @idxs_rev_e.setter
     def idxs_rev_e(self, idxs_rev_e):
-        idxs_rev_e = check_if_nparray_and_flatten(idxs_rev_e, "idxs_rev_e")
+        idxs_rev_e = cast_to_1d_nparray(idxs_rev_e, "idxs_rev_e")
         self.__idxs_rev_e = idxs_rev_e
 
     @ls_0.setter
     def ls_0(self, ls_0):
-        ls_0 = check_if_nparray_and_flatten(ls_0, "ls_0")
+        ls_0 = cast_to_1d_nparray(ls_0, "ls_0")
         self.__ls_0 = ls_0
 
     @ls.setter
     def ls(self, ls):
-        ls = check_if_nparray_and_flatten(ls, "ls")
+        ls = cast_to_1d_nparray(ls, "ls")
         self.__ls = ls
 
     @ls_e.setter
     def ls_e(self, ls_e):
-        ls_e = check_if_nparray_and_flatten(ls_e, "ls_e")
+        ls_e = cast_to_1d_nparray(ls_e, "ls_e")
         self.__ls_e = ls_e
 
     @us_0.setter
     def us_0(self, us_0):
-        us_0 = check_if_nparray_and_flatten(us_0, "us_0")
+        us_0 = cast_to_1d_nparray(us_0, "us_0")
         self.__us_0 = us_0
 
     @us.setter
     def us(self, us):
-        us = check_if_nparray_and_flatten(us, "us")
+        us = cast_to_1d_nparray(us, "us")
         self.__us = us
 
     @us_e.setter
     def us_e(self, us_e):
-        us_e = check_if_nparray_and_flatten(us_e, "us_e")
+        us_e = cast_to_1d_nparray(us_e, "us_e")
         self.__us_e = us_e
 
     # SLACK bounds
     # soft bounds on x
     @lsbx.setter
     def lsbx(self, value):
-        value = check_if_nparray_and_flatten(value, 'lsbx')
+        value = cast_to_1d_nparray(value, 'lsbx')
         self.__lsbx = value
 
     @usbx.setter
     def usbx(self, value):
-        value = check_if_nparray_and_flatten(value, 'usbx')
+        value = cast_to_1d_nparray(value, 'usbx')
         self.__usbx = value
 
     @idxsbx.setter
     def idxsbx(self, idxsbx):
-        idxsbx = check_if_nparray_and_flatten(idxsbx, "idxsbx")
+        idxsbx = cast_to_1d_nparray(idxsbx, "idxsbx")
         self.__idxsbx = idxsbx
 
     @Jsbx.setter
     def Jsbx(self, Jsbx):
-        if isinstance(Jsbx, np.ndarray):
-            self.__idxsbx = J_to_idx_slack(Jsbx)
-        else:
-            raise TypeError('Invalid Jsbx value, expected numpy array.')
+        Jsbx = cast_to_2d_nparray(Jsbx, "Jsbx")
+        self.__idxsbx = J_to_idx_slack(Jsbx)
 
     # soft bounds on u
     @lsbu.setter
     def lsbu(self, value):
-        value = check_if_nparray_and_flatten(value, 'lsbu')
+        value = cast_to_1d_nparray(value, 'lsbu')
         self.__lsbu = value
 
     @usbu.setter
     def usbu(self, value):
-        value = check_if_nparray_and_flatten(value, 'usbu')
+        value = cast_to_1d_nparray(value, 'usbu')
         self.__usbu = value
 
     @idxsbu.setter
     def idxsbu(self, idxsbu):
-        idxsbu = check_if_nparray_and_flatten(idxsbu, "idxsbu")
+        idxsbu = cast_to_1d_nparray(idxsbu, "idxsbu")
         self.__idxsbu = idxsbu
 
     @Jsbu.setter
     def Jsbu(self, Jsbu):
-        if isinstance(Jsbu, np.ndarray):
-            self.__idxsbu = J_to_idx_slack(Jsbu)
-        else:
-            raise ValueError('Invalid Jsbu value.')
+        Jsbu = cast_to_2d_nparray(Jsbu, "Jsbu")
+        self.__idxsbu = J_to_idx_slack(Jsbu)
 
     # soft bounds on x at shooting node N
     @lsbx_e.setter
     def lsbx_e(self, value):
-        value = check_if_nparray_and_flatten(value, 'lsbx_e')
+        value = cast_to_1d_nparray(value, 'lsbx_e')
         self.__lsbx_e = value
 
     @usbx_e.setter
     def usbx_e(self, value):
-        value = check_if_nparray_and_flatten(value, 'usbx_e')
+        value = cast_to_1d_nparray(value, 'usbx_e')
         self.__usbx_e = value
 
     @idxsbx_e.setter
     def idxsbx_e(self, idxsbx_e):
-        idxsbx_e = check_if_nparray_and_flatten(idxsbx_e, "idxsbx_e")
+        idxsbx_e = cast_to_1d_nparray(idxsbx_e, "idxsbx_e")
         self.__idxsbx_e = idxsbx_e
 
     @Jsbx_e.setter
     def Jsbx_e(self, Jsbx_e):
-        if isinstance(Jsbx_e, np.ndarray):
-            self.__idxsbx_e = J_to_idx_slack(Jsbx_e)
-        else:
-            raise ValueError('Invalid Jsbx_e value.')
+        Jsbx_e = cast_to_2d_nparray(Jsbx_e, "Jsbx_e")
+        self.__idxsbx_e = J_to_idx_slack(Jsbx_e)
 
     # soft bounds on general linear constraints
     @lsg.setter
     def lsg(self, value):
-        value = check_if_nparray_and_flatten(value, 'lsg')
+        value = cast_to_1d_nparray(value, 'lsg')
         self.__lsg = value
 
     @usg.setter
     def usg(self, value):
-        value = check_if_nparray_and_flatten(value, 'usg')
+        value = cast_to_1d_nparray(value, 'usg')
         self.__usg = value
 
     @idxsg.setter
     def idxsg(self, value):
-        value = check_if_nparray_and_flatten(value, 'idxsg')
+        value = cast_to_1d_nparray(value, 'idxsg')
         self.__idxsg = value
 
     @Jsg.setter
     def Jsg(self, Jsg):
-        if isinstance(Jsg, np.ndarray):
-            self.__idxsg = J_to_idx_slack(Jsg)
-        else:
-            raise TypeError('Invalid Jsg value, expected numpy array.')
+        Jsg = cast_to_2d_nparray(Jsg, "Jsg")
+        self.__idxsg = J_to_idx_slack(Jsg)
 
     # soft bounds on nonlinear constraints
     @lsh.setter
     def lsh(self, value):
-        value = check_if_nparray_and_flatten(value, 'lsh')
+        value = cast_to_1d_nparray(value, 'lsh')
         self.__lsh = value
 
     @ush.setter
     def ush(self, value):
-        value = check_if_nparray_and_flatten(value, 'ush')
+        value = cast_to_1d_nparray(value, 'ush')
         self.__ush = value
 
     @idxsh.setter
     def idxsh(self, value):
-        value = check_if_nparray_and_flatten(value, 'idxsh')
+        value = cast_to_1d_nparray(value, 'idxsh')
         self.__idxsh = value
 
 
     @Jsh.setter
     def Jsh(self, Jsh):
-        if isinstance(Jsh, np.ndarray):
-            self.__idxsh = J_to_idx_slack(Jsh)
-        else:
-            raise TypeError('Invalid Jsh value, expected numpy array.')
+        Jsh = cast_to_2d_nparray(Jsh, "Jsh")
+        self.__idxsh = J_to_idx_slack(Jsh)
 
     # soft bounds on convex-over-nonlinear constraints
     @lsphi.setter
     def lsphi(self, value):
-        value = check_if_nparray_and_flatten(value, 'lsphi')
+        value = cast_to_1d_nparray(value, 'lsphi')
         self.__lsphi = value
 
     @usphi.setter
     def usphi(self, value):
-        value = check_if_nparray_and_flatten(value, 'usphi')
+        value = cast_to_1d_nparray(value, 'usphi')
         self.__usphi = value
 
     @idxsphi.setter
     def idxsphi(self, value):
-        value = check_if_nparray_and_flatten(value, 'idxsphi')
+        value = cast_to_1d_nparray(value, 'idxsphi')
         self.__idxsphi = value
 
     @Jsphi.setter
     def Jsphi(self, Jsphi):
-        if isinstance(Jsphi, np.ndarray):
-            self.__idxsphi = J_to_idx_slack(Jsphi)
-        else:
-            raise TypeError('Invalid Jsphi value, expected numpy array.')
+        Jsphi = cast_to_2d_nparray(Jsphi, "Jsphi")
+        self.__idxsphi = J_to_idx_slack(Jsphi)
 
     # soft bounds on general linear constraints at shooting node N
     @lsg_e.setter
     def lsg_e(self, value):
-        value = check_if_nparray_and_flatten(value, 'lsg_e')
+        value = cast_to_1d_nparray(value, 'lsg_e')
         self.__lsg_e = value
 
     @usg_e.setter
     def usg_e(self, value):
-        value = check_if_nparray_and_flatten(value, 'usg_e')
+        value = cast_to_1d_nparray(value, 'usg_e')
         self.__usg_e = value
 
     @idxsg_e.setter
     def idxsg_e(self, value):
-        value = check_if_nparray_and_flatten(value, 'idxsg_e')
+        value = cast_to_1d_nparray(value, 'idxsg_e')
         self.__idxsg_e = value
 
     @Jsg_e.setter
     def Jsg_e(self, Jsg_e):
-        if isinstance(Jsg_e, np.ndarray):
-            self.__idxsg_e = J_to_idx_slack(Jsg_e)
-        else:
-            raise TypeError('Invalid Jsg_e value, expected numpy array.')
+        Jsg_e = cast_to_2d_nparray(Jsg_e, "Jsg_e")
+        self.__idxsg_e = J_to_idx_slack(Jsg_e)
 
     # soft bounds on nonlinear constraints at shooting node N
     @lsh_e.setter
     def lsh_e(self, value):
-        value = check_if_nparray_and_flatten(value, 'lsh_e')
+        value = cast_to_1d_nparray(value, 'lsh_e')
         self.__lsh_e = value
 
     @ush_e.setter
     def ush_e(self, value):
-        value = check_if_nparray_and_flatten(value, 'ush_e')
+        value = cast_to_1d_nparray(value, 'ush_e')
         self.__ush_e = value
 
     @idxsh_e.setter
     def idxsh_e(self, value):
-        value = check_if_nparray_and_flatten(value, 'idxsh_e')
+        value = cast_to_1d_nparray(value, 'idxsh_e')
         self.__idxsh_e = value
 
     @Jsh_e.setter
     def Jsh_e(self, Jsh_e):
-        if isinstance(Jsh_e, np.ndarray):
-            self.__idxsh_e = J_to_idx_slack(Jsh_e)
-        else:
-            raise TypeError('Invalid Jsh_e value, expected numpy array.')
+        Jsh_e = cast_to_2d_nparray(Jsh_e, "Jsh_e")
+        self.__idxsh_e = J_to_idx_slack(Jsh_e)
 
 
     # soft bounds on convex-over-nonlinear constraints at shooting node N
     @lsphi_e.setter
     def lsphi_e(self, value):
-        value = check_if_nparray_and_flatten(value, 'lsphi_e')
+        value = cast_to_1d_nparray(value, 'lsphi_e')
         self.__lsphi_e = value
 
     @usphi_e.setter
     def usphi_e(self, value):
-        value = check_if_nparray_and_flatten(value, 'usphi_e')
+        value = cast_to_1d_nparray(value, 'usphi_e')
         self.__usphi_e = value
 
     @idxsphi_e.setter
     def idxsphi_e(self, value):
-        value = check_if_nparray_and_flatten(value, 'idxsphi_e')
+        value = cast_to_1d_nparray(value, 'idxsphi_e')
         self.__idxsphi_e = value
 
     @Jsphi_e.setter
     def Jsphi_e(self, Jsphi_e):
-        if isinstance(Jsphi_e, np.ndarray):
-            self.__idxsphi_e = J_to_idx_slack(Jsphi_e)
-        else:
-            raise ValueError('Invalid Jsphi_e value.')
+        Jsphi_e = cast_to_2d_nparray(Jsphi_e, "Jsphi_e")
+        self.__idxsphi_e = J_to_idx_slack(Jsphi_e)
 
     # soft constraints at shooting node 0
     @lsh_0.setter
     def lsh_0(self, value):
-        value = check_if_nparray_and_flatten(value, 'lsh_0')
+        value = cast_to_1d_nparray(value, 'lsh_0')
         self.__lsh_0 = value
 
     @ush_0.setter
     def ush_0(self, value):
-        value = check_if_nparray_and_flatten(value, 'ush_0')
+        value = cast_to_1d_nparray(value, 'ush_0')
         self.__ush_0 = value
 
     @idxsh_0.setter
     def idxsh_0(self, value):
-        value = check_if_nparray_and_flatten(value, 'idxsh_0')
+        value = cast_to_1d_nparray(value, 'idxsh_0')
         self.__idxsh_0 = value
 
     @Jsh_0.setter
     def Jsh_0(self, Jsh_0):
-        if isinstance(Jsh_0, np.ndarray):
-            self.__idxsh_0 = J_to_idx_slack(Jsh_0)
-        else:
-            raise TypeError('Invalid Jsh_0 value, expected numpy array.')
+        Jsh_0 = cast_to_2d_nparray(Jsh_0, "Jsh_0")
+        self.__idxsh_0 = J_to_idx_slack(Jsh_0)
 
     @lsphi_0.setter
     def lsphi_0(self, value):
-        value = check_if_nparray_and_flatten(value, 'lsphi_0')
+        value = cast_to_1d_nparray(value, 'lsphi_0')
         self.__lsphi_0 = value
 
     @usphi_0.setter
     def usphi_0(self, value):
-        value = check_if_nparray_and_flatten(value, 'usphi_0')
+        value = cast_to_1d_nparray(value, 'usphi_0')
         self.__usphi_0 = value
 
     @idxsphi_0.setter
     def idxsphi_0(self, value):
-        value = check_if_nparray_and_flatten(value, 'idxsphi_0')
+        value = cast_to_1d_nparray(value, 'idxsphi_0')
         self.__idxsphi_0 = value
 
     @Jsphi_0.setter
     def Jsphi_0(self, Jsphi_0):
-        if isinstance(Jsphi_0, np.ndarray):
-            self.__idxsphi_0 = J_to_idx_slack(Jsphi_0)
-        else:
-            raise ValueError('Invalid Jsphi_0 value.')
+        Jsphi_0 = cast_to_2d_nparray(Jsphi_0, "Jsphi_0")
+        self.__idxsphi_0 = J_to_idx_slack(Jsphi_0)
 
     def set(self, attr, value):
         setattr(self, attr, value)
