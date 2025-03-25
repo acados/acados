@@ -162,8 +162,8 @@ def check_casadi_version():
 def check_casadi_version_supports_p_global():
     try:
         from casadi import extract_parametric, cse
-    except:
-        raise Exception("CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se2 release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se2")
+    except ImportError:
+        raise ImportError("CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se2 release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se2")
 
 
 def get_simulink_default_opts() -> dict:
@@ -192,7 +192,7 @@ def is_column(x):
     elif x == None or x == []:
         return False
     else:
-        raise Exception("is_column expects one of the following types: np.ndarray, casadi.MX, casadi.SX."
+        raise TypeError("is_column expects one of the following types: np.ndarray, casadi.MX, casadi.SX."
                         + " Got: " + str(type(x)))
 
 
@@ -208,7 +208,7 @@ def is_empty(x):
     elif isinstance(x, (float, int)):
         return False
     else:
-        raise Exception("is_empty expects one of the following types: casadi.MX, casadi.SX, "
+        raise TypeError("is_empty expects one of the following types: casadi.MX, casadi.SX, "
                         + "None, numpy array empty list, set. Got: " + str(type(x)))
 
 
@@ -220,7 +220,7 @@ def casadi_length(x):
     elif isinstance(x, list):
         return len(x)
     else:
-        raise Exception("casadi_length expects one of the following types: casadi.MX, casadi.SX."
+        raise TypeError("casadi_length expects one of the following types: casadi.MX, casadi.SX."
                         + " Got: " + str(type(x)))
 
 def get_shared_lib_ext():
@@ -318,7 +318,7 @@ def render_template(in_file, out_file, output_dir, json_path, template_glob=None
 
         status = os.system(os_cmd)
         if status != 0:
-            raise Exception(f'Rendering of {in_file} failed!\n\nAttempted to execute OS command:\n{os_cmd}\n\n')
+            raise RuntimeError(f'Rendering of {in_file} failed!\n\nAttempted to execute OS command:\n{os_cmd}\n\n')
 
 
 
@@ -369,18 +369,18 @@ def get_default_simulink_opts() -> dict:
 
 def J_to_idx(J):
     if not isinstance(J, np.ndarray):
-        raise Exception('J_to_idx: J must be a numpy array.')
+        raise TypeError('J_to_idx: J must be a numpy array.')
     if J.ndim != 2:
-        raise Exception('J_to_idx: J must be a 2D numpy array.')
+        raise ValueError('J_to_idx: J must be a 2D numpy array.')
     nrows = J.shape[0]
     idx = np.zeros((nrows, ))
     for i in range(nrows):
         this_idx = np.nonzero(J[i,:])[0]
         if len(this_idx) != 1:
-            raise Exception('Invalid J matrix structure detected, ' \
+            raise ValueError('Invalid J matrix structure detected, ' \
                 'must contain exactly one nonzero element per row.')
         if this_idx.size > 0 and J[i,this_idx[0]] != 1:
-            raise Exception('J matrices can only contain 1 and 0 entries.')
+            raise ValueError('J matrices can only contain 1 and 0 entries.')
         idx[i] = this_idx[0]
     return idx
 
@@ -396,27 +396,27 @@ def J_to_idx_slack(J):
             idx[i_idx] = i
             i_idx = i_idx + 1
         elif len(this_idx) > 1:
-            raise Exception('J_to_idx_slack: Invalid J matrix. ' \
+            raise ValueError('J_to_idx_slack: Invalid J matrix. ' \
                 'Found more than one nonzero in row ' + str(i))
         if this_idx.size > 0 and J[i,this_idx[0]] != 1:
-            raise Exception('J_to_idx_slack: J matrices can only contain 1s, ' \
+            raise ValueError('J_to_idx_slack: J matrices can only contain 1s, ' \
                  'got J(' + str(i) + ', ' + str(this_idx[0]) + ') = ' + str(J[i,this_idx[0]]) )
     if not i_idx == ncol:
-            raise Exception('J_to_idx_slack: J must contain a 1 in every column!')
+            raise ValueError('J_to_idx_slack: J must contain a 1 in every column!')
     return idx
 
 
 def check_if_nparray_and_flatten(val, name) -> np.ndarray:
     if not isinstance(val, np.ndarray):
-        raise Exception(f"{name} must be a numpy array, got {type(val)}")
+        raise TypeError(f"{name} must be a numpy array, got {type(val)}")
     return val.reshape(-1)
 
 
 def check_if_2d_nparray(val, name) -> None:
     if not isinstance(val, np.ndarray):
-        raise Exception(f"{name} must be a numpy array, got {type(val)}")
+        raise TypeError(f"{name} must be a numpy array, got {type(val)}")
     if val.ndim != 2:
-        raise Exception(f"{name} must be a 2D numpy array, got shape {val.shape}")
+        raise ValueError(f"{name} must be a 2D numpy array, got shape {val.shape}")
     return
 
 def print_J_to_idx_note():
