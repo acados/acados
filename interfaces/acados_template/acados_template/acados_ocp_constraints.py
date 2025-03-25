@@ -1024,7 +1024,7 @@ class AcadosOcpConstraints:
     @Jsbx.setter
     def Jsbx(self, Jsbx):
         Jsbx = cast_to_2d_nparray(Jsbx, "Jsbx")
-        self.__idxsbx = J_to_idx(Jsbx)
+        self.__idxsbx = J_to_idx_slack(Jsbx)
 
     # soft bounds on u
     @lsbu.setter
@@ -1045,7 +1045,7 @@ class AcadosOcpConstraints:
     @Jsbu.setter
     def Jsbu(self, Jsbu):
         Jsbu = cast_to_2d_nparray(Jsbu, "Jsbu")
-        self.__idxsbu = J_to_idx(Jsbu)
+        self.__idxsbu = J_to_idx_slack(Jsbu)
 
     # soft bounds on x at shooting node N
     @lsbx_e.setter
@@ -1066,7 +1066,7 @@ class AcadosOcpConstraints:
     @Jsbx_e.setter
     def Jsbx_e(self, Jsbx_e):
         Jsbx_e = cast_to_2d_nparray(Jsbx_e, "Jsbx_e")
-        self.__idxsbx_e = J_to_idx(Jsbx_e)
+        self.__idxsbx_e = J_to_idx_slack(Jsbx_e)
 
     # soft bounds on general linear constraints
     @lsg.setter
@@ -1087,7 +1087,7 @@ class AcadosOcpConstraints:
     @Jsg.setter
     def Jsg(self, Jsg):
         Jsg = cast_to_2d_nparray(Jsg, "Jsg")
-        self.__idxsg = J_to_idx(Jsg)
+        self.__idxsg = J_to_idx_slack(Jsg)
 
     # soft bounds on nonlinear constraints
     @lsh.setter
@@ -1109,7 +1109,7 @@ class AcadosOcpConstraints:
     @Jsh.setter
     def Jsh(self, Jsh):
         Jsh = cast_to_2d_nparray(Jsh, "Jsh")
-        self.__idxsh = J_to_idx(Jsh)
+        self.__idxsh = J_to_idx_slack(Jsh)
 
     # soft bounds on convex-over-nonlinear constraints
     @lsphi.setter
@@ -1130,7 +1130,7 @@ class AcadosOcpConstraints:
     @Jsphi.setter
     def Jsphi(self, Jsphi):
         Jsphi = cast_to_2d_nparray(Jsphi, "Jsphi")
-        self.__idxsphi = J_to_idx(Jsphi)
+        self.__idxsphi = J_to_idx_slack(Jsphi)
 
     # soft bounds on general linear constraints at shooting node N
     @lsg_e.setter
@@ -1151,7 +1151,7 @@ class AcadosOcpConstraints:
     @Jsg_e.setter
     def Jsg_e(self, Jsg_e):
         Jsg_e = cast_to_2d_nparray(Jsg_e, "Jsg_e")
-        self.__idxsg_e = J_to_idx(Jsg_e)
+        self.__idxsg_e = J_to_idx_slack(Jsg_e)
 
     # soft bounds on nonlinear constraints at shooting node N
     @lsh_e.setter
@@ -1172,7 +1172,7 @@ class AcadosOcpConstraints:
     @Jsh_e.setter
     def Jsh_e(self, Jsh_e):
         Jsh_e = cast_to_2d_nparray(Jsh_e, "Jsh_e")
-        self.__idxsh_e = J_to_idx(Jsh_e)
+        self.__idxsh_e = J_to_idx_slack(Jsh_e)
 
 
     # soft bounds on convex-over-nonlinear constraints at shooting node N
@@ -1194,7 +1194,7 @@ class AcadosOcpConstraints:
     @Jsphi_e.setter
     def Jsphi_e(self, Jsphi_e):
         Jsphi_e = cast_to_2d_nparray(Jsphi_e, "Jsphi_e")
-        self.__idxsphi_e = J_to_idx(Jsphi_e)
+        self.__idxsphi_e = J_to_idx_slack(Jsphi_e)
 
     # soft constraints at shooting node 0
     @lsh_0.setter
@@ -1215,7 +1215,7 @@ class AcadosOcpConstraints:
     @Jsh_0.setter
     def Jsh_0(self, Jsh_0):
         Jsh_0 = cast_to_2d_nparray(Jsh_0, "Jsh_0")
-        self.__idxsh_0 = J_to_idx(Jsh_0)
+        self.__idxsh_0 = J_to_idx_slack(Jsh_0)
 
     @lsphi_0.setter
     def lsphi_0(self, value):
@@ -1235,7 +1235,7 @@ class AcadosOcpConstraints:
     @Jsphi_0.setter
     def Jsphi_0(self, Jsphi_0):
         Jsphi_0 = cast_to_2d_nparray(Jsphi_0, "Jsphi_0")
-        self.__idxsphi_0 = J_to_idx(Jsphi_0)
+        self.__idxsphi_0 = J_to_idx_slack(Jsphi_0)
 
     def set(self, attr, value):
         setattr(self, attr, value)
