@@ -369,10 +369,7 @@ def get_default_simulink_opts() -> dict:
 
 
 def J_to_idx(J):
-    if not isinstance(J, np.ndarray):
-        raise Exception('J_to_idx: J must be a numpy array.')
-    if J.ndim != 2:
-        raise Exception('J_to_idx: J must be a 2D numpy array.')
+    J = cast_to_2d_nparray(J)
     nrows = J.shape[0]
     idx = np.zeros((nrows, ))
     for i in range(nrows):
@@ -387,6 +384,7 @@ def J_to_idx(J):
 
 
 def J_to_idx_slack(J):
+    J = cast_to_2d_nparray(J)
     nrows = J.shape[0]
     ncol = J.shape[1]
     idx = np.zeros((ncol, ))
