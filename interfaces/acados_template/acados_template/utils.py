@@ -443,12 +443,12 @@ def cast_to_1d_nparray(val, name) -> np.ndarray:
     try:
         val = np.asarray(val)
     except:
-        raise ValueError(f"Failed to cast {name} to np.array, expected array-like type got {type(val)}.")
+        raise TypeError(f"Failed to cast {name} to np.array, expected array-like type got {type(val)}.")
 
     val = np.atleast_1d(np.squeeze(val))
 
     if val.ndim > 1:
-        raise Exception(f"Expected vector-like array, got {val.shape}.")
+        raise ValueError(f"Expected vector-like array, got {val.shape}.")
 
     return val
 
@@ -467,10 +467,10 @@ def cast_to_2d_nparray(val, name) -> np.ndarray:
     try:
         val = np.asarray(val)
     except:
-        raise ValueError(f"Failed to cast {name} to np.array, expected array-like type got {type(val)}.")
+        raise TypeError(f"Failed to cast {name} to np.array, expected array-like type got {type(val)}.")
 
     if val.ndim != 2:
-        raise Exception(f"Expected two dimensional array, got {val.shape}.")
+        raise ValueError(f"Expected two dimensional array, got {val.shape}.")
 
     return val
 
