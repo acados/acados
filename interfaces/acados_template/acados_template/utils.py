@@ -412,7 +412,7 @@ def check_if_nparray_and_flatten(val, name) -> np.ndarray:
         raise Exception(f"{name} must be a numpy array, got {type(val)}")
     return val.reshape(-1)
 
-def check_if_nparray_or_symbolic_and_flatten(val, name) -> np.ndarray:
+def check_if_nparray_or_casadi_symbolic_and_flatten(val, name) -> np.ndarray:
     if not isinstance(val, (np.ndarray, SX, MX)):
         raise Exception(f"{name} must be array of type np.ndarray, casadi.SX, or casadi.MX, got {type(val)}")
 
@@ -430,7 +430,7 @@ def check_if_2d_nparray(val, name) -> None:
     return
 
 
-def check_if_2d_nparray_or_symbolic(val, name) -> None:
+def check_if_2d_nparray_or_casadi_symbolic(val, name) -> None:
     if isinstance(val, (SX, MX, DM)):
         return
     if not isinstance(val, np.ndarray):

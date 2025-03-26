@@ -30,7 +30,7 @@
 #
 
 import numpy as np
-from .utils import check_if_nparray_and_flatten, check_if_2d_nparray, check_if_2d_nparray_or_symbolic, check_if_nparray_or_symbolic_and_flatten
+from .utils import check_if_nparray_and_flatten, check_if_2d_nparray, check_if_2d_nparray_or_casadi_symbolic, check_if_nparray_or_casadi_symbolic_and_flatten
 
 class AcadosOcpCost:
     r"""
@@ -169,12 +169,12 @@ class AcadosOcpCost:
 
     @yref_0.setter
     def yref_0(self, yref_0):
-        yref_0 = check_if_nparray_or_symbolic_and_flatten(yref_0, "yref_0")
+        yref_0 = check_if_nparray_or_casadi_symbolic_and_flatten(yref_0, "yref_0")
         self.__yref_0 = yref_0
 
     @W_0.setter
     def W_0(self, W_0):
-        check_if_2d_nparray_or_symbolic(W_0, "W_0")
+        check_if_2d_nparray_or_casadi_symbolic(W_0, "W_0")
         self.__W_0 = W_0
 
     @Vx_0.setter
@@ -298,7 +298,7 @@ class AcadosOcpCost:
 
     @W.setter
     def W(self, W):
-        check_if_2d_nparray_or_symbolic(W, "W")
+        check_if_2d_nparray_or_casadi_symbolic(W, "W")
         self.__W = W
 
 
@@ -319,7 +319,7 @@ class AcadosOcpCost:
 
     @yref.setter
     def yref(self, yref):
-        yref = check_if_nparray_or_symbolic_and_flatten(yref, "yref")
+        yref = check_if_nparray_or_casadi_symbolic_and_flatten(yref, "yref")
         self.__yref = yref
 
     @Zl.setter
@@ -463,7 +463,7 @@ class AcadosOcpCost:
 
     @W_e.setter
     def W_e(self, W_e):
-        check_if_2d_nparray_or_symbolic(W_e, "W_e")
+        check_if_2d_nparray_or_casadi_symbolic(W_e, "W_e")
         self.__W_e = W_e
 
     @Vx_e.setter
@@ -473,7 +473,7 @@ class AcadosOcpCost:
 
     @yref_e.setter
     def yref_e(self, yref_e):
-        yref_e = check_if_nparray_or_symbolic_and_flatten(yref_e, "yref_e")
+        yref_e = check_if_nparray_or_casadi_symbolic_and_flatten(yref_e, "yref_e")
         self.__yref_e = yref_e
 
     @Zl_e.setter
