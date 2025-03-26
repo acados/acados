@@ -1468,10 +1468,6 @@ class AcadosOcp:
         self.cost.cost_type_e = 'EXTERNAL'
 
 
-
-
-
-
     @staticmethod
     def __translate_ls_cost_to_external_cost(x, u, z, Vx, Vu, Vz, yref, W):
         res = 0

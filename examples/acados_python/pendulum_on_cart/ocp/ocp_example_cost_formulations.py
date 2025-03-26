@@ -204,7 +204,7 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
         ocp.cost.cost_type = 'NONLINEAR_LS'
         ocp.cost.cost_type_e = 'NONLINEAR_LS'
 
-        p_global =struct_symSX([
+        p_global = struct_symSX([
             entry('W', shape=(ny, ny)),
             entry('yref', shape=(ny, )),
             entry('W_e', shape=(ny_e, ny_e)),
