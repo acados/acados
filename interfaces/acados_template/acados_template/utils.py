@@ -429,17 +429,15 @@ def check_if_2d_nparray(val, name) -> None:
         raise Exception(f"{name} must be a 2D numpy array, got shape {val.shape}")
     return
 
-def check_if_2d_nparray_or_symbolic(val, name) -> None:
-    if not isinstance(val, (np.ndarray, SX, MX)):
-        raise Exception(f"{name} must be a array of type np.ndarray, casadi.SX, or casadi.MX, got {type(val)}")
 
-    if isinstance(val, (np.ndarray)):
-        if val.ndim != 2:
-            raise Exception(f"{name} must be a 2D array of type np.ndarray, casadi.SX, or casadi.MX, got shape {val.shape}")
-    else:
-        if len(val.size()) != 2:
-            raise Exception(f"{name} must be a 2D array of type np.ndarray, casadi.SX, or casadi.MX, got shape {val.size()}")
-    return
+def check_if_2d_nparray_or_symbolic(val, name) -> None:
+    if isinstance(val, (SX, MX, DM)):
+        return
+    if not isinstance(val, np.ndarray):
+        raise Exception(f"{name} must be a array of type np.ndarray, casadi.SX, or casadi.MX, got {type(val)}")
+    if val.ndim != 2:
+        raise Exception(f"{name} must be a 2D array of type np.ndarray, casadi.SX, or casadi.MX, got shape {val.shape}")
+
 
 def print_J_to_idx_note():
     print("NOTE: J* matrix is converted to zero based vector idx* vector, which is returned here.")
