@@ -122,6 +122,35 @@ classdef AcadosOcp < handle
                 end
             end
 
+            % sanity checks on options, which are done in setters in Python
+            qp_solvers = {'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP', 'FULL_CONDENSING_DAQP'};
+            if ~ismember(opts.qp_solver, qp_solvers)
+                error(['Invalid qp_solver: ', opts.qp_solver, '. Available options are: ', strjoin(qp_solvers, ', ')]);
+            end
+
+            regularize_methods = {'NO_REGULARIZE', 'MIRROR', 'PROJECT', 'PROJECT_REDUC_HESS', 'CONVEXIFY', 'GERSHGORIN_LEVENBERG_MARQUARDT'};
+            if ~ismember(opts.regularize_method, regularize_methods)
+                error(['Invalid regularize_method: ', opts.regularize_method, '. Available options are: ', strjoin(regularize_methods, ', ')]);
+            end
+            hpipm_modes = {'BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST'};
+            if ~ismember(opts.hpipm_mode, hpipm_modes)
+                error(['Invalid hpipm_mode: ', opts.hpipm_mode, '. Available options are: ', strjoin(hpipm_modes, ', ')]);
+            end
+            INTEGRATOR_TYPES = {'ERK', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK'};
+            if ~ismember(opts.integrator_type, INTEGRATOR_TYPES)
+                error(['Invalid integrator_type: ', opts.integrator_type, '. Available options are: ', strjoin(INTEGRATOR_TYPES, ', ')]);
+            end
+
+            COLLOCATION_TYPES = {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA'};
+            if ~ismember(opts.collocation_type, COLLOCATION_TYPES)
+                error(['Invalid collocation_type: ', opts.collocation_type, '. Available options are: ', strjoin(COLLOCATION_TYPES, ', ')]);
+            end
+
+            COST_DISCRETIZATION_TYPES = {'EULER', 'INTEGRATOR'};
+            if ~ismember(opts.cost_discretization, COST_DISCRETIZATION_TYPES)
+                error(['Invalid cost_discretization: ', opts.cost_discretization, '. Available options are: ', strjoin(COST_DISCRETIZATION_TYPES, ', ')]);
+            end
+
             % OCP name
             self.name = model.name;
 
