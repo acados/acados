@@ -151,6 +151,11 @@ classdef AcadosOcp < handle
                 error(['Invalid cost_discretization: ', opts.cost_discretization, '. Available options are: ', strjoin(COST_DISCRETIZATION_TYPES, ', ')]);
             end
 
+            search_direction_modes = {'NOMINAL_QP', 'BYRD_OMOJOKUN', 'FEASIBILITY_QP'};
+            if ~ismember(opts.search_direction_mode, search_direction_modes)
+                error(['Invalid search_direction_mode: ', opts.search_direction_mode, '. Available options are: ', strjoin(search_direction_modes, ', ')]);
+            end
+
             % OCP name
             self.name = model.name;
 
