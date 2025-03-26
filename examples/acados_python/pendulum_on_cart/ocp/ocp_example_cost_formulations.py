@@ -229,14 +229,6 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
         p_global_values['yref_e'] = np.zeros((ny_e, ))
 
         ocp.p_global_values = p_global_values.cat.full().flatten()
-
-        ocp.cost.W_0 = np.zeros((0,0))
-        ocp.cost.W   = np.zeros((0,0))
-        ocp.cost.W_e = np.zeros((0,0))
-
-        ocp.cost.yref_0 = np.array([])
-        ocp.cost.yref   = np.array([])
-        ocp.cost.yref_e = np.array([])
     else:
         raise Exception('Unknown cost_version.')
 
@@ -378,10 +370,10 @@ def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', refor
 
 if __name__ == "__main__":
     main(cost_version='LS', formulation_type='mocp', integrator_type=['IRK', 'ERK'], plot=False)
-    for cost_version in COST_VERSIONS:
-        for formulation_type in ['ocp', 'mocp']:
-            print(f"cost version: {cost_version}, formulation type: {formulation_type}")
-            main(cost_version=cost_version, formulation_type=formulation_type, plot=False)
+    # for cost_version in COST_VERSIONS:
+    #     for formulation_type in ['ocp', 'mocp']:
+    #         print(f"cost version: {cost_version}, formulation type: {formulation_type}")
+    #         main(cost_version=cost_version, formulation_type=formulation_type, plot=False)
 
     for cost_version in ["NLS_TO_EXTERNAL_P_GLOBAL"]:
         print(f"cost version: {cost_version} reformulated as EXTERNAL cost")

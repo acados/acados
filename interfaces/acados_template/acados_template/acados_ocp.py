@@ -1465,6 +1465,23 @@ class AcadosOcp:
         self.cost.cost_type_e = 'EXTERNAL'
 
 
+        # Set default values after translation
+        if not isinstance(self.cost.W_0, np.ndarray):
+            self.cost.W_0 = np.zeros((0,0))
+        if not isinstance(self.cost.yref_0, np.ndarray):
+            self.cost.yref_0 = np.array([])
+
+        if not isinstance(self.cost.W, np.ndarray):
+            self.cost.W   = np.zeros((0,0))
+        if not isinstance(self.cost.yref, np.ndarray):
+            self.cost.yref   = np.array([])
+
+        if not isinstance(self.cost.W_e, np.ndarray):
+            self.cost.W_e = np.zeros((0,0))
+        if not isinstance(self.cost.yref_e, np.ndarray):
+            self.cost.yref_e = np.array([])
+
+
     @staticmethod
     def __translate_ls_cost_to_external_cost(x, u, z, Vx, Vu, Vz, yref, W):
         res = 0
