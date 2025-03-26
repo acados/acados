@@ -1404,6 +1404,7 @@ class AcadosOcp:
 
             if cost_hessian == 'GAUSS_NEWTON':
                 self.model.cost_expr_ext_cost_custom_hess_0 = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr_0, yref_0, W_0, self.model.x, self.model.u, self.model.z)
+                # TODO maybe: Set W to empty numpary array or whatever acados default. The same for the yref etc.
         elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost_0 = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_0, self.model.cost_psi_expr_0,
@@ -1419,6 +1420,7 @@ class AcadosOcp:
                 self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr, yref, W)
             if cost_hessian == 'GAUSS_NEWTON':
                 self.model.cost_expr_ext_cost_custom_hess = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr, yref, W, self.model.x, self.model.u, self.model.z)
+                # TODO maybe: Set W to empty numpary array or whatever acados default. The same for the yref etc.
         elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr, self.model.cost_psi_expr,
@@ -1434,6 +1436,7 @@ class AcadosOcp:
                 self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_e, yref_e, W_e)
             if cost_hessian == 'GAUSS_NEWTON':
                 self.model.cost_expr_ext_cost_custom_hess_e = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr_e, yref_e, W_e, self.model.x, [], self.model.z)
+                # TODO maybe: Set W to empty numpary array or whatever acados default. The same for the yref etc.
         elif self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost_e = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_e, self.model.cost_psi_expr_e,
