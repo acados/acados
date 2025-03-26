@@ -1320,9 +1320,10 @@ class AcadosOcp:
         :param yref_0, yref, yref_e: Optional CasADi expressions which should be used instead of the numerical values provided by the cost module, shapes should be (ny_0, 1), (ny, 1), (ny_e, 1).
         cost_hessian: 'EXACT' or 'GAUSS_NEWTON', determines how the cost hessian is computed.
         """
-
+        # TODO: always test
         if cost_hessian not in ['EXACT', 'GAUSS_NEWTON']:
             raise Exception(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
+        # TODO: move in stage function
         if cost_hessian == 'GAUSS_NEWTON':
             for attr_name, cost_type in ([('cost_type', self.cost.cost_type), ('cost_type_0', self.cost.cost_type_0), ('cost_type_e', self.cost.cost_type_e)]):
                 if cost_type in ['EXTERNAL', 'AUTO', 'CONVEX_OVER_NONLINEAR']:
@@ -1413,6 +1414,8 @@ class AcadosOcp:
             if not isinstance(W_e, casadi_symbolics_type):
                 raise Exception(f"W_e has wrong type, got {type(W_e)}, expected {casadi_symbolics_type}.")
 
+        # TODO: all optional argument checks above stay here
+
         # initial stage
         if self.cost.cost_type_0 == "LINEAR_LS":
             self.model.cost_expr_ext_cost_0 = \
@@ -1462,6 +1465,7 @@ class AcadosOcp:
             self.model.cost_expr_ext_cost_e = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_e, self.model.cost_psi_expr_e,
                                                             self.model.cost_y_expr_e, yref_e)
+        # TODO: move inside stage
         if self.cost.cost_type_0 is not None:
             self.cost.cost_type_0 = 'EXTERNAL'
         self.cost.cost_type = 'EXTERNAL'
