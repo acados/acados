@@ -391,9 +391,6 @@ class AcadosCostConstraintEvaluator:
 
 
 def get_path_cost_expression(ocp: AcadosOcp):
-    # multiply path costs with td, nonuniform grid
-    # multiply with cost scaling
-    # cost scaling ueberschreibt tds, falls gesetzt
     model = ocp.model
     if ocp.cost.cost_type == "LINEAR_LS":
         y = ocp.cost.Vx @ model.x + ocp.cost.Vu @ model.u
