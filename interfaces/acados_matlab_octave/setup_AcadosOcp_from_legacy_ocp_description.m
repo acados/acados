@@ -59,7 +59,6 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, 
         ocp.solver_options.integrator_type = upper(opts_struct.sim_method);
     end
 
-    N = opts_struct.param_scheme_N;
     % options
     ocp.solver_options.sim_method_num_steps = opts_struct.sim_method_num_steps;
     ocp.solver_options.sim_method_num_stages = opts_struct.sim_method_num_stages;
