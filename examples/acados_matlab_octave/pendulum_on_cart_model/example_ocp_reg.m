@@ -27,15 +27,6 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
-
-% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
-% as well as a new interface (>= v0.4.0).
-
-% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
-% with the examples that have been ported to the new interface already.
-% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
-
 
 clear all
 
@@ -54,36 +45,25 @@ N = 100;
 h = 0.01;
 
 nlp_solver = 'sqp';
-%nlp_solver = 'sqp_rti';
 nlp_solver_step_length = 1.0;
-%nlp_solver_exact_hessian = 'false';
 nlp_solver_exact_hessian = 'true';
-%regularize_method = 'no_regularize';
-%regularize_method = 'project';
 regularize_method = 'project_reduc_hess';
-%regularize_method = 'mirror';
-%regularize_method = 'convexify';
 nlp_solver_max_iter = 20; %100;
 nlp_solver_tol_stat = 1e-8;
 nlp_solver_tol_eq   = 1e-8;
 nlp_solver_tol_ineq = 1e-8;
 nlp_solver_tol_comp = 1e-8;
 nlp_solver_ext_qp_res = 1;
-%qp_solver = 'partial_condensing_hpipm';
 qp_solver = 'full_condensing_hpipm';
-%qp_solver = 'full_condensing_qpoases';
 qp_solver_cond_N = 5;
 qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
 qp_solver_warm_start = 0;
 qp_solver_max_iter = 100;
-%sim_method = 'erk';
 sim_method = 'irk';
-%sim_method = 'irk_gnsf';
 sim_method_num_stages = 4;
 sim_method_num_steps = 3;
 cost_type = 'linear_ls';
-%cost_type = 'ext_cost';
 model_name = 'ocp_pendulum';
 
 
@@ -96,21 +76,13 @@ nx = model.nx;
 nu = model.nu;
 ny = nu+nx; % number of outputs in lagrange term
 ny_e = nx; % number of outputs in mayer term
-if 0
-    nbx = 0;
-    nbu = nu;
-    ng = 0;
-    ng_e = 0;
-    nh = 0;
-    nh_e = 0;
-else
-    nbx = 0;
-    nbu = 0;
-    ng = 0;
-    ng_e = 0;
-    nh = nu;
-    nh_e = 0;
-end
+
+nbx = 0;
+nbu = 0;
+ng = 0;
+ng_e = 0;
+nh = nu;
+nh_e = 0;
 
 % cost
 Vu = zeros(ny, nu); for ii=1:nu Vu(ii,ii)=1.0; end % input-to-output matrix in lagrange term
@@ -177,15 +149,8 @@ else % irk irk_gnsf
 end
 % constraints
 ocp_model.set('constr_x0', x0);
-if (ng>0)
-    ocp_model.set('constr_C', C);
-    ocp_model.set('constr_D', D);
-    ocp_model.set('constr_lg', lg);
-    ocp_model.set('constr_ug', ug);
-    ocp_model.set('constr_C_e', C_e);
-    ocp_model.set('constr_lg_e', lg_e);
-    ocp_model.set('constr_ug_e', ug_e);
-elseif (nh>0)
+
+
     ocp_model.set('constr_expr_h_0', model.constr_expr_h);
     ocp_model.set('constr_lh_0', lbu);
     ocp_model.set('constr_uh_0', ubu);
@@ -231,20 +196,13 @@ ocp_opts.set('qp_solver_iter_max', qp_solver_max_iter);
 ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
-if (strcmp(sim_method, 'irk_gnsf'))
-    ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
-end
 
 
 %% acados ocp
 % create ocp
 ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
-% set trajectory initialization
-%x_traj_init = zeros(nx, N+1);
-%for ii=1:N x_traj_init(:,ii) = [0; pi; 0; 0]; end
 x_traj_init = [linspace(0, 0, N+1); linspace(pi, 0, N+1); linspace(0, 0, N+1); linspace(0, 0, N+1)];
-
 u_traj_init = zeros(nu, N);
 
 % if not set, the trajectory is initialized with the previous solution
@@ -288,7 +246,7 @@ else
         end
         fprintf('A eig max %e\n', qp_A_eig_max);
 
-        % compute conditioning number and eigenvalues of hessian of (partial) cond qp
+        % compute condition number and eigenvalues of hessian of (partial) cond qp
         qp_cond_H = ocp_solver.get('qp_solver_cond_H');
         if iscell(qp_cond_H)
 
@@ -347,13 +305,6 @@ fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (t
 
 ocp_solver.print('stat');
 
-
-%% figures
-
-for ii=1:N+1
-    x_cur = x(:,ii);
-%visualize;
-end
 
 %% plot trajectory
 figure;
