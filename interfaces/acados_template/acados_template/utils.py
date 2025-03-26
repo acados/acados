@@ -43,6 +43,7 @@ else:
     from ctypes import CDLL as DllLoader
 import numpy as np
 from casadi import DM, MX, SX, CasadiMeta, Function
+import casadi as ca
 from contextlib import contextmanager
 
 
@@ -411,6 +412,15 @@ def check_if_nparray_and_flatten(val, name) -> np.ndarray:
         raise Exception(f"{name} must be a numpy array, got {type(val)}")
     return val.reshape(-1)
 
+def check_if_nparray_or_casadi_symbolic_and_flatten(val, name) -> np.ndarray:
+    if not isinstance(val, (np.ndarray, SX, MX)):
+        raise Exception(f"{name} must be array of type np.ndarray, casadi.SX, or casadi.MX, got {type(val)}")
+
+    if isinstance(val, (SX, MX)):
+        return ca.reshape(val, val.numel(), 1)
+    else:
+        return val.reshape(-1)
+
 
 def check_if_2d_nparray(val, name) -> None:
     if not isinstance(val, np.ndarray):
@@ -418,6 +428,16 @@ def check_if_2d_nparray(val, name) -> None:
     if val.ndim != 2:
         raise Exception(f"{name} must be a 2D numpy array, got shape {val.shape}")
     return
+
+
+def check_if_2d_nparray_or_casadi_symbolic(val, name) -> None:
+    if isinstance(val, (SX, MX, DM)):
+        return
+    if not isinstance(val, np.ndarray):
+        raise Exception(f"{name} must be a array of type np.ndarray, casadi.SX, or casadi.MX, got {type(val)}")
+    if val.ndim != 2:
+        raise Exception(f"{name} must be a 2D array of type np.ndarray, casadi.SX, or casadi.MX, got shape {val.shape}")
+
 
 def print_J_to_idx_note():
     print("NOTE: J* matrix is converted to zero based vector idx* vector, which is returned here.")
