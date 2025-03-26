@@ -48,21 +48,13 @@ h = 0.01;
 
 nlp_solver_step_length = 1.0;
 nlp_solver_exact_hessian = 'true';
-regularize_method = 'PROJECT_REDUC_HESS';
-nlp_solver_max_iter = 20; %100;
+regularize_method = 'PROJECT'; % PROJECT_REDUC_HESS, PROJECT, GERSHGORIN_LEVENBERG_MARQUARDT
+nlp_solver_max_iter = 100; %100;
 nlp_solver_tol_stat = 1e-8;
 nlp_solver_tol_eq   = 1e-8;
 nlp_solver_tol_ineq = 1e-8;
 nlp_solver_tol_comp = 1e-8;
-nlp_solver_ext_qp_res = 1;
-qp_solver_cond_N = 5;
-qp_solver_cond_ric_alg = 0;
-qp_solver_ric_alg = 0;
-qp_solver_warm_start = 0;
-qp_solver_max_iter = 100;
-sim_method = 'IRK';
-sim_method_num_stages = 4;
-sim_method_num_steps = 3;
+
 model_name = 'ocp_pendulum';
 
 % dims
@@ -112,26 +104,26 @@ ocp.constraints.uh = ubu;
 % options
 ocp.solver_options.tf = T;
 ocp.solver_options.N_horizon = N;
-ocp.solver_options.nlp_solver_type = "SQP";
-ocp.solver_options.hessian_approx = "EXACT";
-ocp.solver_options.integrator_type = "IRK";
+ocp.solver_options.nlp_solver_type = 'SQP';
+ocp.solver_options.hessian_approx = 'EXACT';
+ocp.solver_options.integrator_type = 'IRK';
 
 ocp.solver_options.regularize_method = regularize_method;
-ocp.solver_options.nlp_solver_ext_qp_res = nlp_solver_ext_qp_res;
+ocp.solver_options.nlp_solver_ext_qp_res = 1;
 ocp.solver_options.nlp_solver_step_length = nlp_solver_step_length;
 ocp.solver_options.nlp_solver_max_iter = nlp_solver_max_iter;
 ocp.solver_options.nlp_solver_tol_stat = nlp_solver_tol_stat;
 ocp.solver_options.nlp_solver_tol_eq = nlp_solver_tol_eq;
 ocp.solver_options.nlp_solver_tol_ineq = nlp_solver_tol_ineq;
 ocp.solver_options.nlp_solver_tol_comp = nlp_solver_tol_comp;
-ocp.solver_options.qp_solver = "FULL_CONDENSING_HPIPM";
-ocp.solver_options.qp_solver_cond_N = qp_solver_cond_N;
-ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg;
-ocp.solver_options.qp_solver_cond_ric_alg = qp_solver_cond_ric_alg;
-ocp.solver_options.qp_solver_warm_start = qp_solver_warm_start;
-ocp.solver_options.qp_solver_iter_max = qp_solver_max_iter;
-ocp.solver_options.sim_method_num_stages = sim_method_num_stages;
-ocp.solver_options.sim_method_num_steps = sim_method_num_steps;
+ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
+ocp.solver_options.qp_solver_cond_N = 5;
+ocp.solver_options.qp_solver_ric_alg = 0;
+ocp.solver_options.qp_solver_cond_ric_alg = 0;
+ocp.solver_options.qp_solver_warm_start = 0;
+ocp.solver_options.qp_solver_iter_max = 100;
+ocp.solver_options.sim_method_num_stages = 2;
+ocp.solver_options.sim_method_num_steps = 1;
 
 %% create solver
 ocp_solver = AcadosOcpSolver(ocp);
@@ -146,7 +138,8 @@ ocp_solver.set('init_u', u_traj_init);
 % solve
 tic;
 
-if 0
+matlab_sqp_loop = 0;
+if ~matlab_sqp_loop
     % solve ocp
     ocp_solver.solve();
 else
@@ -229,13 +222,26 @@ status = ocp_solver.get('status');
 sqp_iter = ocp_solver.get('sqp_iter');
 time_tot = ocp_solver.get('time_tot');
 time_lin = ocp_solver.get('time_lin');
+time_sim = ocp_solver.get('time_sim');
+time_lin_remaining = time_lin - time_sim; % linearization excluding integrators
 time_reg = ocp_solver.get('time_reg');
+time_qp_solver_call = ocp_solver.get('time_qp_solver_call');
 time_qp_sol = ocp_solver.get('time_qp_sol');
+time_qp_remaining = time_qp_sol - time_qp_solver_call; % time for QP solution in addition to QP solver call, mostly condensing
+time_remaining_nlp = time_tot - time_lin - time_reg - time_qp_sol;
 
 fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3);
 
 ocp_solver.print('stat');
 
+%%
+figure;
+bar_data = 1e3*[time_sim, time_lin_remaining, time_reg, time_qp_solver_call, time_qp_remaining, time_remaining_nlp]';
+bar(0, bar_data, 'stacked')
+legend('integrators', 'remaining linearization', 'regularization', 'QP solver call', 'QP processing: condensing, etc', 'remaining')
+xlim([-.5, 1])
+ylabel('time in [ms]');
+xticks([]);
 
 %% plot trajectory
 figure;
