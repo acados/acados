@@ -198,6 +198,12 @@ class AcadosOcp:
         if cost.cost_type_0 == 'AUTO':
             self.detect_cost_type(model, cost, dims, "initial")
 
+        if isinstance(cost.yref_0, (ca.SX, ca.MX, ca.DM)):
+            raise Exception("yref_0 should be numpy array, symbolics are only supported before solver creation, to allow reformulating costs, e.g. using translate_cost_to_external_cost().")
+
+        if isinstance(cost.W_0, (ca.SX, ca.MX, ca.DM)):
+            raise Exception("W_0 should be numpy array, symbolics are only supported before solver creation, to allow reformulating costs, e.g. using translate_cost_to_external_cost().")
+
         if cost.cost_type_0 == 'LINEAR_LS':
             check_if_square(cost.W_0, 'W_0')
             ny_0 = cost.W_0.shape[0]
@@ -275,6 +281,12 @@ class AcadosOcp:
         if cost.cost_type == 'AUTO':
             self.detect_cost_type(model, cost, dims, "path")
 
+        if isinstance(cost.yref, (ca.SX, ca.MX, ca.DM)):
+            raise Exception("yref should be numpy array, symbolics are only supported before solver creation, to allow reformulating costs, e.g. using translate_cost_to_external_cost().")
+
+        if isinstance(cost.W, (ca.SX, ca.MX, ca.DM)):
+            raise Exception("W should be numpy array, symbolics are only supported before solver creation, to allow reformulating costs, e.g. using translate_cost_to_external_cost().")
+
         if cost.cost_type == 'LINEAR_LS':
             ny = cost.W.shape[0]
             check_if_square(cost.W, 'W')
@@ -331,6 +343,12 @@ class AcadosOcp:
         # terminal
         if cost.cost_type_e == 'AUTO':
             self.detect_cost_type(model, cost, dims, "terminal")
+
+        if isinstance(cost.yref_e, (ca.SX, ca.MX, ca.DM)):
+            raise Exception("yref_e should be numpy array, symbolics are only supported before solver creation, to allow reformulating costs, e.g. using translate_cost_to_external_cost().")
+        
+        if isinstance(cost.W_e, (ca.SX, ca.MX, ca.DM)):
+            raise Exception("W_e should be numpy array, symbolics are only supported before solver creation, to allow reformulating costs, e.g. using translate_cost_to_external_cost().")
 
         if cost.cost_type_e == 'LINEAR_LS':
             ny_e = cost.W_e.shape[0]
