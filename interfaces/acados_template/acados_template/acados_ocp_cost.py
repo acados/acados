@@ -30,6 +30,7 @@
 #
 
 import numpy as np
+import inspect
 from .utils import cast_to_1d_nparray, cast_to_2d_nparray, cast_to_1d_nparray_or_casadi_symbolic, cast_to_2d_nparray_or_casadi_symbolic
 
 class AcadosOcpCost:
@@ -528,5 +529,5 @@ class AcadosOcpCost:
                 if not (isinstance(value, list) and not value):
                     setattr(self, attr, value)
             except Exception as e:
-                warnings.warn("Failed to load attribute {attr} from dictionary:\n" + repr(e))
+                Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))
 

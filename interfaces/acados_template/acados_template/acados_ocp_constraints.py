@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import inspect, warnings
+import inspect
 import numpy as np
 from .utils import J_to_idx, print_J_to_idx_note, J_to_idx_slack, cast_to_1d_nparray, cast_to_2d_nparray, is_empty
 
@@ -1253,5 +1253,5 @@ class AcadosOcpConstraints:
                 if not (isinstance(value, list) and not value):
                     setattr(self, attr, value)
             except Exception as e:
-                warnings.warn("Failed to load attribute {attr} from dictionary:\n" + repr(e))
+                Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))
 
