@@ -1352,12 +1352,12 @@ class AcadosOcp:
             self.model.p_global = ca.vertcat(self.model.p_global, p_global)
             self.p_global_values = np.concatenate((self.p_global_values, p_global_values))
 
-        self.translate_cost_0_term_to_external(yref_0, W_0, cost_hessian)
-        self.translate_cost_term_to_external(yref, W, cost_hessian)
-        self.translate_cost_e_term_to_external(yref_e, W_e, cost_hessian)
+        self.translate_intial_cost_term_to_external(yref_0, W_0, cost_hessian)
+        self.translate_intermediate_cost_term_to_external(yref, W, cost_hessian)
+        self.translate_terminal_cost_term_to_external(yref_e, W_e, cost_hessian)
 
 
-    def translate_cost_0_term_to_external(self, yref_0: Optional[Union[ca.SX, ca.MX]] = None, W_0: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
+    def translate_intial_cost_term_to_external(self, yref_0: Optional[Union[ca.SX, ca.MX]] = None, W_0: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
 
         if cost_hessian not in ['EXACT', 'GAUSS_NEWTON']:
             raise Exception(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
@@ -1406,7 +1406,8 @@ class AcadosOcp:
         if self.cost.cost_type_0 is not None:
             self.cost.cost_type_0 = 'EXTERNAL'
 
-    def translate_cost_term_to_external(self, yref: Optional[Union[ca.SX, ca.MX]] = None, W: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
+
+    def translate_intermediate_cost_term_to_external(self, yref: Optional[Union[ca.SX, ca.MX]] = None, W: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
 
         if cost_hessian not in ['EXACT', 'GAUSS_NEWTON']:
             raise Exception(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
@@ -1453,9 +1454,8 @@ class AcadosOcp:
 
         self.cost.cost_type = 'EXTERNAL'
 
-    def translate_cost_e_term_to_external(self, yref_e: Optional[Union[ca.SX, ca.MX]] = None, W_e: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
 
-
+    def translate_terminal_cost_term_to_external(self, yref_e: Optional[Union[ca.SX, ca.MX]] = None, W_e: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
         if cost_hessian not in ['EXACT', 'GAUSS_NEWTON']:
             raise Exception(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
 
