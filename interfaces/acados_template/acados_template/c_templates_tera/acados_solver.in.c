@@ -2817,7 +2817,7 @@ int {{ model.name }}_acados_setup_qp_matrices_and_factorize({{ model.name }}_sol
 
 void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** capsules, int * status_out, int N_batch, int num_threads_in_batch_solve)
 {
-    int num_threads_bkp
+    int num_threads_bkp;
     if (num_threads_in_batch_solve > 1)
     {
         num_threads_bkp = omp_get_num_threads();
@@ -2840,7 +2840,7 @@ void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** caps
 
 void {{ model.name }}_acados_batch_setup_qp_matrices_and_factorize({{ model.name }}_solver_capsule ** capsules, int * status_out, int N_batch, int num_threads_in_batch_solve)
 {
-    int num_threads_bkp
+    int num_threads_bkp;
     if (num_threads_in_batch_solve > 1)
     {
         num_threads_bkp = omp_get_num_threads();
@@ -2863,7 +2863,7 @@ void {{ model.name }}_acados_batch_setup_qp_matrices_and_factorize({{ model.name
 
 void {{ model.name }}_acados_batch_eval_params_jac({{ model.name }}_solver_capsule ** capsules, int N_batch, int num_threads_in_batch_solve)
 {
-    int num_threads_bkp
+    int num_threads_bkp;
     if (num_threads_in_batch_solve > 1)
     {
         num_threads_bkp = omp_get_num_threads();
@@ -2887,7 +2887,7 @@ void {{ model.name }}_acados_batch_eval_params_jac({{ model.name }}_solver_capsu
 
 void {{ model.name }}_acados_batch_eval_solution_sens_adj_p({{ model.name }}_solver_capsule ** capsules, const char *field, int stage, double *out, int offset, int N_batch, int num_threads_in_batch_solve)
 {
-    int num_threads_bkp
+    int num_threads_bkp;
     if (num_threads_in_batch_solve > 1)
     {
         num_threads_bkp = omp_get_num_threads();
@@ -2918,7 +2918,7 @@ void {{ model.name }}_acados_batch_set_flat({{ model.name }}_solver_capsule ** c
         exit(1);
     }
 
-    int num_threads_bkp
+    int num_threads_bkp;
     if (num_threads_in_batch_solve > 1)
     {
         num_threads_bkp = omp_get_num_threads();
@@ -2949,7 +2949,7 @@ void {{ model.name }}_acados_batch_get_flat({{ model.name }}_solver_capsule ** c
         printf("batch_get_flat: wrong input dimension, expected %d, got %d\n", N_batch*offset, N_data);
         exit(1);
     }
-    int num_threads_bkp
+    int num_threads_bkp;
     if (num_threads_in_batch_solve > 1)
     {
         num_threads_bkp = omp_get_num_threads();
