@@ -1536,12 +1536,12 @@ class AcadosOcpOptions:
 
     @search_direction_mode.setter
     def search_direction_mode(self, search_direction_mode):
-        modes = ('NOMINAL_QP', 'BYRD_OMOJOKUN', 'FEASIBILITY_QP')
+        search_direction_modes = ('NOMINAL_QP', 'BYRD_OMOJOKUN', 'FEASIBILITY_QP')
         if isinstance(search_direction_mode, str):
-            if search_direction_mode in modes:
+            if search_direction_mode in search_direction_modes:
                 self.__search_direction_mode = search_direction_mode
             else:
-                Exception(f'Invalid string for search_direction_mode. Possible modes are'+', '.join(modes) +  f', got {search_direction_mode}')
+                raise Exception(f'Invalid string for search_direction_mode. Possible search_direction_modes are'+', '.join(search_direction_modes) +  f', got {search_direction_mode}')
         else:
             raise Exception(f'Invalid datatype for search_direction_mode. Should be str, got {type(search_direction_mode)}')
 
