@@ -295,13 +295,13 @@ ACADOS_SYMBOL_EXPORT int {{ name }}_acados_set_p_global_and_precompute_dependenc
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_solve({{ model.name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_setup_qp_matrices_and_factorize({{ model.name }}_solver_capsule* capsule);
 
-ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** capsules, int * status_out, int N_batch);
+ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** capsules, int * status_out, int N_batch, int num_threads_in_batch_solve);
 
-ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_set_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch);
-ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_get_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch);
+ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_set_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch, int num_threads_in_batch_solve);
+ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_get_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch, int num_threads_in_batch_solve);
 
-ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_eval_solution_sens_adj_p({{ model.name }}_solver_capsule ** capsules, const char *field, int stage, double *out, int offset, int N_batch);
-ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_eval_params_jac({{ model.name }}_solver_capsule ** capsules, int N_batch);
+ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_eval_solution_sens_adj_p({{ model.name }}_solver_capsule ** capsules, const char *field, int stage, double *out, int offset, int N_batch, int num_threads_in_batch_solve);
+ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_batch_eval_params_jac({{ model.name }}_solver_capsule ** capsules, int N_batch, int num_threads_in_batch_solve);
 
 
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_free({{ model.name }}_solver_capsule * capsule);
