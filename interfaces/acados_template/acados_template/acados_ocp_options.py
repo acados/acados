@@ -143,6 +143,7 @@ class AcadosOcpOptions:
         self.__custom_templates = []
         self.__custom_update_copy = True
         self.__num_threads_in_batch_solve: int = 1
+        self.__with_batch_functionality: bool = False
 
     @property
     def qp_solver(self):
@@ -1220,6 +1221,15 @@ class AcadosOcpOptions:
         Default: 1.
         """
         return self.__num_threads_in_batch_solve
+    
+    @property
+    def with_batch_functionality(self):
+        """
+        Whether the AcadosOcpBatchSolver can be used.
+        In this case, the solver is compiled with openmp.
+        Default: False.
+        """
+        return self.__with_batch_functionality
 
 
     @qp_solver.setter
@@ -1976,6 +1986,14 @@ class AcadosOcpOptions:
             self.__num_threads_in_batch_solve = num_threads_in_batch_solve
         else:
             raise Exception('Invalid num_threads_in_batch_solve value. num_threads_in_batch_solve must be a positive integer.')
+
+    @with_batch_functionality.setter
+    def with_batch_functionality(self, with_batch_functionality):
+        if isinstance(with_batch_functionality, bool):
+            self.__with_batch_functionality = with_batch_functionality
+        else:
+            raise Exception('Invalid with_batch_functionality value. Expected bool.')
+
 
     def set(self, attr, value):
         setattr(self, attr, value)
