@@ -308,7 +308,7 @@ CFLAGS += -fopenmp
 
 # linker flags
 LDFLAGS+= -L$(LIB_PATH)
-{% if solver_options..with_batch_functionality %}
+{% if solver_options.with_batch_functionality %}
 LDFLAGS += -fopenmp
 {%- endif %}
 
