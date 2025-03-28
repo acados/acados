@@ -1222,7 +1222,7 @@ class AcadosOcpOptions:
         Default: 1.
         """
         return self.__num_threads_in_batch_solve
-    
+
     @property
     def with_batch_functionality(self):
         """
