@@ -30,7 +30,7 @@
 #
 
 import numpy as np
-import inspect
+import inspect, warnings
 from .utils import cast_to_1d_nparray, cast_to_2d_nparray, cast_to_1d_nparray_or_casadi_symbolic, cast_to_2d_nparray_or_casadi_symbolic
 
 class AcadosOcpCost:
@@ -523,11 +523,15 @@ class AcadosOcpCost:
         """
         # loop over all properties
         for attr, _ in inspect.getmembers(type(self), lambda v: isinstance(v, property)):
-            try:
-                value = dict.get(attr)
-                # check whether value is not the empty list
-                if not (isinstance(value, list) and not value):
-                    setattr(self, attr, value)
-            except Exception as e:
-                Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))
 
+            value = dict.get(attr)
+
+            if value is None:
+                warnings.warn(f"Attribute {attr} not in dictionary.")
+            else:
+                try:
+                    # check whether value is not the empty list
+                    if not (isinstance(value, list) and not value):
+                        setattr(self, attr, value)
+                except Exception as e:
+                    Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))

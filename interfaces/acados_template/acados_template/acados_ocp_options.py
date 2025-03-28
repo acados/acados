@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import os, inspect
+import os, inspect, warnings
 
 from .utils import check_if_nparray_and_flatten
 
@@ -1989,11 +1989,15 @@ class AcadosOcpOptions:
         """
         # loop over all properties
         for attr, _ in inspect.getmembers(type(self), lambda v: isinstance(v, property)):
-            try:
-                value = dict.get(attr)
-                # check whether value is not the empty list
-                if not (isinstance(value, list) and not value):
-                    setattr(self, attr, value)
-            except Exception as e:
-                Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))
 
+            value = dict.get(attr)
+
+            if value is None:
+                warnings.warn(f"Attribute {attr} not in dictionary.")
+            else:
+                try:
+                    # check whether value is not the empty list
+                    if not (isinstance(value, list) and not value):
+                        setattr(self, attr, value)
+                except Exception as e:
+                    Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))

@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import inspect
+import inspect, warnings
 import numpy as np
 from .utils import J_to_idx, print_J_to_idx_note, J_to_idx_slack, cast_to_1d_nparray, cast_to_2d_nparray, is_empty
 
@@ -1247,11 +1247,15 @@ class AcadosOcpConstraints:
         """
         # loop over all properties
         for attr, _ in inspect.getmembers(type(self), lambda v: isinstance(v, property)):
-            try:
-                value = dict.get(attr)
-                # check whether value is not the empty list
-                if not (isinstance(value, list) and not value):
-                    setattr(self, attr, value)
-            except Exception as e:
-                Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))
 
+            value = dict.get(attr)
+
+            if value is None:
+                warnings.warn(f"Attribute {attr} not in dictionary.")
+            else:
+                try:
+                    # check whether value is not the empty list
+                    if not (isinstance(value, list) and not value):
+                        setattr(self, attr, value)
+                except Exception as e:
+                    Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))
