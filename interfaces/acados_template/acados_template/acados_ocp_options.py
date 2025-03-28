@@ -1216,6 +1216,7 @@ class AcadosOcpOptions:
     @property
     def num_threads_in_batch_solve(self):
         """
+        DEPRECATED, use the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.
         Integer indicating how many threads should be used within the batch solve.
         If more than one thread should be used, the solver is compiled with openmp.
         Default: 1.
@@ -1982,6 +1983,7 @@ class AcadosOcpOptions:
 
     @num_threads_in_batch_solve.setter
     def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
+        print("Warning: num_threads_in_batch_solve is deprecated, set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
         if isinstance(num_threads_in_batch_solve, int) and num_threads_in_batch_solve > 0:
             self.__num_threads_in_batch_solve = num_threads_in_batch_solve
         else:
