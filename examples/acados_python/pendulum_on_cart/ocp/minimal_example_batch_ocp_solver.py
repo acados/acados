@@ -123,6 +123,12 @@ def main_batch(Xinit, simU, tol, num_threads_in_batch_solve=1):
     N_batch = Xinit.shape[0] - 1
     ocp = setup_ocp(tol)
     batch_solver = AcadosOcpBatchSolver(ocp, N_batch, num_threads_in_batch_solve=num_threads_in_batch_solve, verbose=False)
+    
+    assert batch_solver.num_threads_in_batch_solve == num_threads_in_batch_solve
+    batch_solver.num_threads_in_batch_solve = 1337
+    assert batch_solver.num_threads_in_batch_solve == 1337
+    batch_solver.num_threads_in_batch_solve = num_threads_in_batch_solve
+    assert batch_solver.num_threads_in_batch_solve == num_threads_in_batch_solve
 
     for n in range(N_batch):
         batch_solver.ocp_solvers[n].constraints_set(0, "lbx", Xinit[n])

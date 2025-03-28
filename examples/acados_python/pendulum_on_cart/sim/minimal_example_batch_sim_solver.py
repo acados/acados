@@ -86,6 +86,12 @@ def main_batch(Xinit, u0, num_threads_in_batch_solve=1):
     N_batch = Xinit.shape[0] - 1
     sim = setup_integrator()
     batch_integrator = AcadosSimBatchSolver(sim, N_batch, num_threads_in_batch_solve=num_threads_in_batch_solve, verbose=False)
+    
+    assert batch_integrator.num_threads_in_batch_solve == num_threads_in_batch_solve
+    batch_integrator.num_threads_in_batch_solve = 1337
+    assert batch_integrator.num_threads_in_batch_solve == 1337
+    batch_integrator.num_threads_in_batch_solve = num_threads_in_batch_solve
+    assert batch_integrator.num_threads_in_batch_solve == num_threads_in_batch_solve
 
     for n in range(N_batch):
         batch_integrator.sim_solvers[n].set("u", u0)

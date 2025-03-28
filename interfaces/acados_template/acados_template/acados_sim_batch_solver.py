@@ -103,4 +103,13 @@ class AcadosSimBatchSolver():
     def N_batch(self):
         """Batch size."""
         return self.__N_batch
+    
+    @property
+    def num_threads_in_batch_solve(self):
+        """Number of threads used for parallelizing the batch methods."""
+        return self.__num_threads_in_batch_solve
+    
+    @num_threads_in_batch_solve.setter
+    def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
+        self.__num_threads_in_batch_solve = num_threads_in_batch_solve
 
