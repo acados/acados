@@ -955,19 +955,3 @@ class AcadosModel():
 
         return evaluate_polynomial_u_fun
 
-
-    def load_from_dict(self, dict):
-        """
-        Load all properties from a given dictionary (obtained from loading a generated json).
-        Values that correspond to the empty list are ignored.
-        """
-        # loop over all properties
-        for attr, _ in inspect.getmembers(type(self), lambda v: isinstance(v, property)):
-            try:
-                value = dict.get(attr)
-                # check whether value is not the empty list
-                if not (isinstance(value, list) and not value):
-                    setattr(self, attr, value)
-            except Exception as e:
-                Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))
-
