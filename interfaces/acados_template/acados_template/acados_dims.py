@@ -90,6 +90,27 @@ class AcadosSimDims:
             raise Exception('Invalid np value, expected nonnegative integer.')
 
 
+    def load_from_dict(self, dict):
+        """
+        Load all properties from a given dictionary (obtained from loading a generated json).
+        Values that correspond to the empty list are ignored.
+        """
+        # loop over all properties
+        for attr, _ in inspect.getmembers(type(self), lambda v: isinstance(v, property)):
+
+            value = dict.get(attr)
+
+            if value is None:
+                warnings.warn(f"Attribute {attr} not in dictionary.")
+            else:
+                try:
+                    # check whether value is not the empty list
+                    if not (isinstance(value, list) and not value):
+                        setattr(self, attr, value)
+                except Exception as e:
+                    Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))
+
+
 class AcadosOcpDims:
     """
     Class containing the dimensions of the optimal control problem.
