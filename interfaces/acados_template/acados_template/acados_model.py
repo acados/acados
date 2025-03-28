@@ -821,7 +821,7 @@ class AcadosModel():
         elif isinstance(self.x, SX):
             return SX.sym
         else:
-            raise Exception(f"model.x must be casadi.SX or casadi.MX, got {type(self.x)}")
+            raise TypeError(f"model.x must be casadi.SX or casadi.MX, got {type(self.x)}")
 
     def get_casadi_zeros(self):
         if isinstance(self.x, MX):
@@ -829,7 +829,7 @@ class AcadosModel():
         elif isinstance(self.x, SX):
             return SX.zeros
         else:
-            raise Exception(f"model.x must be casadi.SX or casadi.MX, got {type(self.x)}")
+            raise TypeError(f"model.x must be casadi.SX or casadi.MX, got {type(self.x)}")
 
 
     def make_consistent(self, dims: Union[AcadosOcpDims, AcadosSimDims]) -> None:
@@ -838,7 +838,7 @@ class AcadosModel():
 
         # nx
         if is_empty(self.x):
-            raise Exception("model.x must be defined")
+            raise ValueError("model.x must be defined")
         else:
             dims.nx = casadi_length(self.x)
 
@@ -846,7 +846,7 @@ class AcadosModel():
             self.xdot = casadi_symbol('xdot', dims.nx, 1)
         else:
             if casadi_length(self.xdot) != dims.nx:
-                raise Exception(f"model.xdot must have length nx = {dims.nx}, got {casadi_length(self.xdot)}")
+                raise ValueError(f"model.xdot must have length nx = {dims.nx}, got {casadi_length(self.xdot)}")
 
         # nu
         if is_empty(self.u):
@@ -879,16 +879,16 @@ class AcadosModel():
         # sanity checks
         for symbol, name in [(self.x, 'x'), (self.xdot, 'xdot'), (self.u, 'u'), (self.z, 'z'), (self.p, 'p'), (self.p_global, 'p_global')]:
             if not isinstance(symbol, (ca.MX, ca.SX)):
-                raise Exception(f"model.{name} must be casadi.MX, casadi.SX got {type(symbol)}")
+                raise TypeError(f"model.{name} must be casadi.MX, casadi.SX got {type(symbol)}")
             if not symbol.is_valid_input():
-                raise Exception(f"model.{name} must be valid CasADi symbol, got {symbol}")
+                raise ValueError(f"model.{name} must be valid CasADi symbol, got {symbol}")
 
         # p_global
         if not is_empty(self.p_global):
             if isinstance(dims, AcadosSimDims):
-                raise Exception("model.p_global is only supported for OCPs")
+                raise NotImplementedError("model.p_global is only supported for OCPs")
             if any(ca.which_depends(self.p_global, self.p)):
-                raise Exception(f"model.p_global must not depend on model.p, got p_global ={self.p_global}, p = {self.p}")
+                raise ValueError(f"model.p_global must not depend on model.p, got p_global ={self.p_global}, p = {self.p}")
 
         # model output dimension nx_next: dimension of the next state
         if isinstance(dims, AcadosOcpDims):
@@ -899,10 +899,10 @@ class AcadosModel():
 
         if not is_empty(self.f_impl_expr):
             if casadi_length(self.f_impl_expr) != (dims.nx + dims.nz):
-                raise Exception(f"model.f_impl_expr must have length nx + nz = {dims.nx} + {dims.nz}, got {casadi_length(self.f_impl_expr)}")
+                raise ValueError(f"model.f_impl_expr must have length nx + nz = {dims.nx} + {dims.nz}, got {casadi_length(self.f_impl_expr)}")
         if not is_empty(self.f_expl_expr):
             if casadi_length(self.f_expl_expr) != dims.nx:
-                raise Exception(f"model.f_expl_expr must have length nx = {dims.nx}, got {casadi_length(self.f_expl_expr)}")
+                raise ValueError(f"model.f_expl_expr must have length nx = {dims.nx}, got {casadi_length(self.f_expl_expr)}")
 
         return
 
@@ -936,9 +936,9 @@ class AcadosModel():
         :type degree: int
         """
         if self.u is None:
-            raise Exception('model.u must be defined')
+            raise ValueError('model.u must be defined')
         if self.nu_original is not None:
-            raise Exception('model.u has already been augmented')
+            raise ValueError('model.u has already been augmented')
 
         casadi_symbol = self.get_casadi_symbol()
 
