@@ -304,6 +304,20 @@ class AcadosModel():
     def dyn_disc_fun_jac_hess(self, dyn_disc_fun_jac_hess):
         self.__dyn_disc_fun_jac_hess = dyn_disc_fun_jac_hess
 
+
+    @property
+    def dyn_disc_fun_jac(self):
+        """
+        Name of function discrete dynamics + jacobian, only relevant if :code:`dyn_ext_fun_type` is :code:`'generic'`;
+        Default: :code:`None`
+        """
+        return self.__dyn_disc_fun_jac
+
+    @dyn_disc_fun_jac.setter
+    def dyn_disc_fun_jac(self, dyn_disc_fun_jac):
+        self.__dyn_disc_fun_jac = dyn_disc_fun_jac
+
+
     @property
     def dyn_disc_fun(self):
         """
@@ -315,6 +329,7 @@ class AcadosModel():
     @dyn_disc_fun.setter
     def dyn_disc_fun(self, dyn_disc_fun):
         self.__dyn_disc_fun = dyn_disc_fun
+
 
     @property
     def dyn_impl_dae_fun_jac(self):
