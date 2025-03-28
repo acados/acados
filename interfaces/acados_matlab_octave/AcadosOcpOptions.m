@@ -134,7 +134,7 @@ classdef AcadosOcpOptions < handle
         custom_update_header_filename
         custom_templates
         custom_update_copy
-        num_threads_in_batch_solve
+        with_batch_functionality
 
         compile_interface
 
@@ -251,7 +251,7 @@ classdef AcadosOcpOptions < handle
             obj.custom_update_header_filename = '';
             obj.custom_templates = [];
             obj.custom_update_copy = true;
-            obj.num_threads_in_batch_solve = 1;
+            obj.with_batch_functionality = false;
 
             obj.compile_interface = []; % corresponds to automatic detection, possible values: true, false, []
         end

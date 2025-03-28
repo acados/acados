@@ -69,6 +69,7 @@ class AcadosSimOptions:
         self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
         self.__ext_fun_expand_dyn = False
         self.__num_threads_in_batch_solve: int = 1
+        self.__with_batch_functionality: bool = False
 
     @property
     def integrator_type(self):
@@ -164,12 +165,21 @@ class AcadosSimOptions:
     @property
     def num_threads_in_batch_solve(self):
         """
+        DEPRECATED, use the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.
         Integer indicating how many threads should be used within the batch solve.
         If more than one thread should be used, the sim solver is compiled with openmp.
         Default: 1.
         """
         return self.__num_threads_in_batch_solve
-
+    
+    @property
+    def with_batch_functionality(self):
+        """
+        Whether the AcadosSimBatchSolver can be used.
+        In this case, the sim solver is compiled with openmp.
+        Default: False.
+        """
+        return self.__with_batch_functionality
 
     @ext_fun_compile_flags.setter
     def ext_fun_compile_flags(self, ext_fun_compile_flags):
@@ -279,10 +289,18 @@ class AcadosSimOptions:
 
     @num_threads_in_batch_solve.setter
     def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
+        print("Warning: num_threads_in_batch_solve is deprecated, set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
         if isinstance(num_threads_in_batch_solve, int) and num_threads_in_batch_solve > 0:
             self.__num_threads_in_batch_solve = num_threads_in_batch_solve
         else:
             raise Exception('Invalid num_threads_in_batch_solve value. num_threads_in_batch_solve must be a positive integer.')
+
+    @with_batch_functionality.setter
+    def with_batch_functionality(self, with_batch_functionality):
+        if isinstance(with_batch_functionality, bool):
+            self.__with_batch_functionality = with_batch_functionality
+        else:
+            raise Exception('Invalid with_batch_functionality value. Expected bool.')
 
 class AcadosSim:
     """
