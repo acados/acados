@@ -1087,6 +1087,20 @@ class AcadosOcp:
             json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         return
 
+
+    def load_from_json(self) -> None:
+        with open(self.json_file, 'r') as f:
+            ocp_dict = json.load(f)
+
+        for field in ('constraints', 'cost', 'solver_options', 'dims'):
+            field_dict = ocp_dict.get(field)
+
+            if field_dict is not None:
+                getattr(self, field).load_from_dict(field_dict)
+            else:
+                raise Exception(f"Failed to load OCP from json. Field {field} is not provided.")
+
+
     def generate_external_functions(self, context: Optional[GenerateContext] = None) -> GenerateContext:
 
         if context is None:
