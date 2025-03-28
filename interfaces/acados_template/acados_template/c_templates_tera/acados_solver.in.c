@@ -2816,159 +2816,159 @@ int {{ model.name }}_acados_setup_qp_matrices_and_factorize({{ model.name }}_sol
 
 
 {% if solver_options.with_batch_functionality %}
-    void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** capsules, int * status_out, int N_batch, int num_threads_in_batch_solve)
+void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** capsules, int * status_out, int N_batch, int num_threads_in_batch_solve)
+{
+    int num_threads_bkp;
+    if (num_threads_in_batch_solve > 1)
     {
-        int num_threads_bkp;
-        if (num_threads_in_batch_solve > 1)
-        {
-            num_threads_bkp = omp_get_num_threads();
-            omp_set_num_threads(num_threads_in_batch_solve);
-        }
-
-        #pragma omp parallel for
-        for (int i = 0; i < N_batch; i++)
-        {
-            status_out[i] = ocp_nlp_solve(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->nlp_out);
-        }
-
-        if (num_threads_in_batch_solve > 1)
-        {
-            omp_set_num_threads( num_threads_bkp );
-        }
-        return;
+        num_threads_bkp = omp_get_num_threads();
+        omp_set_num_threads(num_threads_in_batch_solve);
     }
 
-
-    void {{ model.name }}_acados_batch_setup_qp_matrices_and_factorize({{ model.name }}_solver_capsule ** capsules, int * status_out, int N_batch, int num_threads_in_batch_solve)
+    #pragma omp parallel for
+    for (int i = 0; i < N_batch; i++)
     {
-        int num_threads_bkp;
-        if (num_threads_in_batch_solve > 1)
-        {
-            num_threads_bkp = omp_get_num_threads();
-            omp_set_num_threads(num_threads_in_batch_solve);
-        }
-
-        #pragma omp parallel for
-        for (int i = 0; i < N_batch; i++)
-        {
-            status_out[i] = ocp_nlp_setup_qp_matrices_and_factorize(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->nlp_out);
-        }
-
-        if (num_threads_in_batch_solve > 1)
-        {
-            omp_set_num_threads( num_threads_bkp );
-        }
-        return;
+        status_out[i] = ocp_nlp_solve(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->nlp_out);
     }
 
-
-    void {{ model.name }}_acados_batch_eval_params_jac({{ model.name }}_solver_capsule ** capsules, int N_batch, int num_threads_in_batch_solve)
+    if (num_threads_in_batch_solve > 1)
     {
-        int num_threads_bkp;
-        if (num_threads_in_batch_solve > 1)
-        {
-            num_threads_bkp = omp_get_num_threads();
-            omp_set_num_threads(num_threads_in_batch_solve);
-        }
+        omp_set_num_threads( num_threads_bkp );
+    }
+    return;
+}
 
-        #pragma omp parallel for
-        for (int i = 0; i < N_batch; i++)
-        {
-            ocp_nlp_eval_params_jac(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->nlp_out);
-        }
 
-        if (num_threads_in_batch_solve > 1)
-        {
-            omp_set_num_threads( num_threads_bkp );
-        }
-        return;
+void {{ model.name }}_acados_batch_setup_qp_matrices_and_factorize({{ model.name }}_solver_capsule ** capsules, int * status_out, int N_batch, int num_threads_in_batch_solve)
+{
+    int num_threads_bkp;
+    if (num_threads_in_batch_solve > 1)
+    {
+        num_threads_bkp = omp_get_num_threads();
+        omp_set_num_threads(num_threads_in_batch_solve);
     }
 
-
-
-    void {{ model.name }}_acados_batch_eval_solution_sens_adj_p({{ model.name }}_solver_capsule ** capsules, const char *field, int stage, double *out, int offset, int N_batch, int num_threads_in_batch_solve)
+    #pragma omp parallel for
+    for (int i = 0; i < N_batch; i++)
     {
-        int num_threads_bkp;
-        if (num_threads_in_batch_solve > 1)
-        {
-            num_threads_bkp = omp_get_num_threads();
-            omp_set_num_threads(num_threads_in_batch_solve);
-        }
-
-        #pragma omp parallel for
-        for (int i = 0; i < N_batch; i++)
-        {
-            ocp_nlp_eval_solution_sens_adj_p(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->sens_out, field, stage, out + i*offset);
-        }
-
-        if (num_threads_in_batch_solve > 1)
-        {
-            omp_set_num_threads( num_threads_bkp );
-        }
-        return;
+        status_out[i] = ocp_nlp_setup_qp_matrices_and_factorize(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->nlp_out);
     }
 
-
-    void {{ model.name }}_acados_batch_set_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch, int num_threads_in_batch_solve)
+    if (num_threads_in_batch_solve > 1)
     {
-        int offset = ocp_nlp_dims_get_total_from_attr(capsules[0]->nlp_solver->config, capsules[0]->nlp_solver->dims, capsules[0]->nlp_out, field);
+        omp_set_num_threads( num_threads_bkp );
+    }
+    return;
+}
 
-        if (N_batch*offset != N_data)
-        {
-            printf("batch_set_flat: wrong input dimension, expected %d, got %d\n", N_batch*offset, N_data);
-            exit(1);
-        }
 
-        int num_threads_bkp;
-        if (num_threads_in_batch_solve > 1)
-        {
-            num_threads_bkp = omp_get_num_threads();
-            omp_set_num_threads(num_threads_in_batch_solve);
-        }
-
-        #pragma omp parallel for
-        for (int i = 0; i < N_batch; i++)
-        {
-            ocp_nlp_set_all(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->nlp_out, field, data + i * offset);
-        }
-
-        if (num_threads_in_batch_solve > 1)
-        {
-            omp_set_num_threads( num_threads_bkp );
-        }
-        return;
+void {{ model.name }}_acados_batch_eval_params_jac({{ model.name }}_solver_capsule ** capsules, int N_batch, int num_threads_in_batch_solve)
+{
+    int num_threads_bkp;
+    if (num_threads_in_batch_solve > 1)
+    {
+        num_threads_bkp = omp_get_num_threads();
+        omp_set_num_threads(num_threads_in_batch_solve);
     }
 
-
-
-    void {{ model.name }}_acados_batch_get_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch, int num_threads_in_batch_solve)
+    #pragma omp parallel for
+    for (int i = 0; i < N_batch; i++)
     {
-        int offset = ocp_nlp_dims_get_total_from_attr(capsules[0]->nlp_solver->config, capsules[0]->nlp_solver->dims, capsules[0]->nlp_out, field);
-
-        if (N_batch*offset != N_data)
-        {
-            printf("batch_get_flat: wrong input dimension, expected %d, got %d\n", N_batch*offset, N_data);
-            exit(1);
-        }
-        int num_threads_bkp;
-        if (num_threads_in_batch_solve > 1)
-        {
-            num_threads_bkp = omp_get_num_threads();
-            omp_set_num_threads(num_threads_in_batch_solve);
-        }
-
-        #pragma omp parallel for
-        for (int i = 0; i < N_batch; i++)
-        {
-            ocp_nlp_get_all(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->nlp_out, field, data + i * offset);
-        }
-
-        if (num_threads_in_batch_solve > 1)
-        {
-            omp_set_num_threads( num_threads_bkp );
-        }
-        return;
+        ocp_nlp_eval_params_jac(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->nlp_out);
     }
+
+    if (num_threads_in_batch_solve > 1)
+    {
+        omp_set_num_threads( num_threads_bkp );
+    }
+    return;
+}
+
+
+
+void {{ model.name }}_acados_batch_eval_solution_sens_adj_p({{ model.name }}_solver_capsule ** capsules, const char *field, int stage, double *out, int offset, int N_batch, int num_threads_in_batch_solve)
+{
+    int num_threads_bkp;
+    if (num_threads_in_batch_solve > 1)
+    {
+        num_threads_bkp = omp_get_num_threads();
+        omp_set_num_threads(num_threads_in_batch_solve);
+    }
+
+    #pragma omp parallel for
+    for (int i = 0; i < N_batch; i++)
+    {
+        ocp_nlp_eval_solution_sens_adj_p(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->sens_out, field, stage, out + i*offset);
+    }
+
+    if (num_threads_in_batch_solve > 1)
+    {
+        omp_set_num_threads( num_threads_bkp );
+    }
+    return;
+}
+
+
+void {{ model.name }}_acados_batch_set_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch, int num_threads_in_batch_solve)
+{
+    int offset = ocp_nlp_dims_get_total_from_attr(capsules[0]->nlp_solver->config, capsules[0]->nlp_solver->dims, capsules[0]->nlp_out, field);
+
+    if (N_batch*offset != N_data)
+    {
+        printf("batch_set_flat: wrong input dimension, expected %d, got %d\n", N_batch*offset, N_data);
+        exit(1);
+    }
+
+    int num_threads_bkp;
+    if (num_threads_in_batch_solve > 1)
+    {
+        num_threads_bkp = omp_get_num_threads();
+        omp_set_num_threads(num_threads_in_batch_solve);
+    }
+
+    #pragma omp parallel for
+    for (int i = 0; i < N_batch; i++)
+    {
+        ocp_nlp_set_all(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->nlp_out, field, data + i * offset);
+    }
+
+    if (num_threads_in_batch_solve > 1)
+    {
+        omp_set_num_threads( num_threads_bkp );
+    }
+    return;
+}
+
+
+
+void {{ model.name }}_acados_batch_get_flat({{ model.name }}_solver_capsule ** capsules, const char *field, double *data, int N_data, int N_batch, int num_threads_in_batch_solve)
+{
+    int offset = ocp_nlp_dims_get_total_from_attr(capsules[0]->nlp_solver->config, capsules[0]->nlp_solver->dims, capsules[0]->nlp_out, field);
+
+    if (N_batch*offset != N_data)
+    {
+        printf("batch_get_flat: wrong input dimension, expected %d, got %d\n", N_batch*offset, N_data);
+        exit(1);
+    }
+    int num_threads_bkp;
+    if (num_threads_in_batch_solve > 1)
+    {
+        num_threads_bkp = omp_get_num_threads();
+        omp_set_num_threads(num_threads_in_batch_solve);
+    }
+
+    #pragma omp parallel for
+    for (int i = 0; i < N_batch; i++)
+    {
+        ocp_nlp_get_all(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->nlp_out, field, data + i * offset);
+    }
+
+    if (num_threads_in_batch_solve > 1)
+    {
+        omp_set_num_threads( num_threads_bkp );
+    }
+    return;
+}
 {% endif %}
 
 
