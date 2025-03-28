@@ -28,6 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+import inspect
 from typing import Union
 
 import casadi as ca
@@ -317,7 +318,6 @@ class AcadosModel():
         self.__dyn_disc_fun_jac = dyn_disc_fun_jac
 
 
-
     @property
     def dyn_disc_fun(self):
         """
@@ -329,6 +329,7 @@ class AcadosModel():
     @dyn_disc_fun.setter
     def dyn_disc_fun(self, dyn_disc_fun):
         self.__dyn_disc_fun = dyn_disc_fun
+
 
     @property
     def dyn_impl_dae_fun_jac(self):
@@ -968,3 +969,4 @@ class AcadosModel():
         self.name = self.name + f"_d{degree}"
 
         return evaluate_polynomial_u_fun
+
