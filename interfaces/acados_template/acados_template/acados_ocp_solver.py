@@ -111,9 +111,6 @@ class AcadosOcpSolver:
             else:
                 acados_ocp.simulink_opts = simulink_opts
 
-        # make consistent
-        acados_ocp.make_consistent()
-
         # module dependent post processing
         if acados_ocp.solver_options.integrator_type == 'GNSF':
             if 'gnsf_model' in acados_ocp.__dict__:
@@ -225,21 +222,20 @@ class AcadosOcpSolver:
             if not os.path.exists(json_file):
                 raise Exception(f'json_file {json_file} does not exist.')
 
+        if acados_ocp is not None:
+            acados_ocp.make_consistent()
+
         if generate:
             if json_file is not None:
                 acados_ocp.json_file = json_file
             self.generate(acados_ocp, json_file=acados_ocp.json_file, simulink_opts=simulink_opts, cmake_builder=cmake_builder)
             json_file = acados_ocp.json_file
-        else:
-            if acados_ocp is not None:
-                acados_ocp.make_consistent()
 
         # load json, store options in object
         with open(json_file, 'r') as f:
             acados_ocp_json = json.load(f)
 
         if acados_ocp is None:
-
             if acados_ocp_json['problem_class']:
                 self.acados_ocp = AcadosOcp()
                 self.acados_ocp.load_from_json(acados_ocp_json)
