@@ -30,7 +30,7 @@
 
 import matplotlib.pyplot as plt
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, AcadosSimSolver, AcadosSim
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, AcadosSimSolver, AcadosSim, is_empty
 import numpy as np
 from casadi import SX, vertcat, diag
 from typing import Tuple
@@ -137,6 +137,24 @@ def setup_solver_and_integrator(x0: np.ndarray, xf: np.ndarray, N: int, creation
         ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file, build=False, generate=False)
     elif creation_mode == 'ctypes_precompiled_no_ocp':
         ocp_solver = AcadosOcpSolver(None, json_file=ocp_json_file, build=False, generate=False)
+
+        ocp.make_consistent()
+        # ocp_solver.acados_ocp.make_consistent() # this does not work yet due to missing symbolics
+
+        for cls in ['cost', 'constraints', 'dims', 'solver_options']:
+            dict = getattr(ocp, cls).__dict__
+            dict_other = getattr(ocp_solver.acados_ocp, cls).__dict__
+
+            for field in dict:
+                if is_empty(dict[field]):
+                    assert is_empty(dict_other[field])
+                else:
+                    if (not isinstance(dict[field], np.ndarray) and dict[field] != dict_other[field]) or \
+                       (isinstance(dict[field], np.ndarray) and not np.array_equal(dict[field], dict_other[field])):
+                        # raise Exception(f"Got different values for {field=}: got {dict[field]} and {dict_other[field]}")
+                        print(f"Got different values for {field=}: got {dict[field]} and {dict_other[field]}")
+
+
     elif creation_mode == 'ctypes':
         ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file)
     else:

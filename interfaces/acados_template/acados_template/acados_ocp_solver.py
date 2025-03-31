@@ -125,6 +125,7 @@ class AcadosOcpSolver:
             print(f"NOTE: The selected QP solver {acados_ocp.solver_options.qp_solver} does not support one-sided constraints yet.")
 
         # generate code (external functions and templated code)
+        acados_ocp.make_consistent()
         acados_ocp.generate_external_functions()
         acados_ocp.dump_to_json()
         acados_ocp.render_templates(cmake_builder=cmake_builder)
@@ -222,23 +223,22 @@ class AcadosOcpSolver:
             if not os.path.exists(json_file):
                 raise Exception(f'json_file {json_file} does not exist.')
 
-        if acados_ocp is not None:
-            acados_ocp.make_consistent()
-
         if generate:
             if json_file is not None:
                 acados_ocp.json_file = json_file
             self.generate(acados_ocp, json_file=acados_ocp.json_file, simulink_opts=simulink_opts, cmake_builder=cmake_builder)
             json_file = acados_ocp.json_file
+        elif acados_ocp is not None:
+            acados_ocp.make_consistent()
 
         # load json, store options in object
         with open(json_file, 'r') as f:
             acados_ocp_json = json.load(f)
 
         if acados_ocp is None:
-            if acados_ocp_json['problem_class']:
+            if acados_ocp_json['problem_class'] == "OCP":
                 self.acados_ocp = AcadosOcp()
-                self.acados_ocp.load_from_json(acados_ocp_json)
+                self.acados_ocp.load_from_dict(acados_ocp_json)
             else:
                 # TODO implement MOCP
                 pass

@@ -746,7 +746,7 @@ class AcadosOcp:
         ns_e = nsbx_e + nsh_e + nsg_e + nsphi_e
         for field in ("Zl_e", "Zu_e", "zl_e", "zu_e"):
             dim = getattr(cost, field).shape[0]
-            if dim != ns_0:
+            if dim != ns_e:
                 raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
                     + f'Detected ns_e = {ns_e} = nsbx_e + nsg_e + nsh_e + nsphi_e.\n\t'\
                     + f'With nsbx_e = {nsbx_e}, nsg_e = {nsg_e}, nsh_e = {nsh_e}, nsphi_e = {nsphi_e}.')
@@ -1097,6 +1097,9 @@ class AcadosOcp:
                 getattr(self, field).load_from_dict(field_dict)
             else:
                 raise Exception(f"Failed to load OCP from json. Field {field} is not provided.")
+
+        # TODO also load model expressions?
+        self.model.name = ocp_dict['name']
 
 
     def generate_external_functions(self, context: Optional[GenerateContext] = None) -> GenerateContext:
