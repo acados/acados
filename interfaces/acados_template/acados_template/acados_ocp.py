@@ -1088,9 +1088,7 @@ class AcadosOcp:
         return
 
 
-    def load_from_json(self) -> None:
-        with open(self.json_file, 'r') as f:
-            ocp_dict = json.load(f)
+    def load_from_dict(self, ocp_dict: dict) -> None:
 
         for field in ('constraints', 'cost', 'solver_options', 'dims'):
             field_dict = ocp_dict.get(field)
