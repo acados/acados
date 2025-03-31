@@ -237,6 +237,18 @@ class AcadosOcpSolver:
         # load json, store options in object
         with open(json_file, 'r') as f:
             acados_ocp_json = json.load(f)
+
+        if acados_ocp is None:
+
+            if acados_ocp_json['problem_class']:
+                self.acados_ocp = AcadosOcp()
+                self.acados_ocp.load_from_json(acados_ocp_json)
+            else:
+                # TODO implement MOCP
+                pass
+        else:
+            self.acados_ocp = acados_ocp
+
         self.__problem_class = acados_ocp_json['problem_class']
         self.__solver_options = acados_ocp_json['solver_options']
         self.__N = acados_ocp_json['solver_options']['N_horizon']
@@ -306,8 +318,6 @@ class AcadosOcpSolver:
         getattr(self.__shared_lib, f"{self.name}_acados_create").restype = c_int
         assert getattr(self.__shared_lib, f"{self.name}_acados_create")(self.capsule)==0
         self.solver_created = True
-
-        self.acados_ocp = acados_ocp
 
         # get pointers solver
         self.__get_pointers_solver()
