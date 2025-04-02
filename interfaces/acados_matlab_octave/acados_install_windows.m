@@ -55,7 +55,8 @@ function acados_install_windows(varargin)
     % #     if this is not the case, set -DACADOS_INSTALL_DIR=<acados_root_folder> explicitly above.
     fprintf('Executing cmake configuration\n');
     % Command slightly modified to work with CMD instead of PowerShell
-    cmake_cmd = sprintf('cmake.exe -G "MinGW Makefiles" -DACADOS_INSTALL_DIR=%%ACADOS_INSTALL_DIR%% %s ..',cmakeConfigString);
+    cmake_cmd = sprintf('cmake.exe -G "MinGW Makefiles" -DACADOS_INSTALL_DIR=%%ACADOS_INSTALL_DIR%% %s ..', cmakeConfigString);
+    fprintf(cmakeConfigString)
 
     status=system(cmake_cmd);
     if (status~=0)
