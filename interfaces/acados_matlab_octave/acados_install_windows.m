@@ -6,7 +6,7 @@ function acados_install_windows(varargin)
 
     switch(nargin)
         case 0
-            cmakeConfigString='-DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=OFF';
+            cmakeConfigString='-DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=OFF -DCMAKE_POLICY_VERSION_MINIMUM=3.5';
         case 1
             cmakeConfigString=varargin{1};
         otherwise
