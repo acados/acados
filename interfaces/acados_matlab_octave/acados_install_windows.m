@@ -53,11 +53,13 @@ function acados_install_windows(varargin)
     % # -DBLASFEO_TARGET=GENERIC -DHPIPM_TARGET=GENERIC
     % # NOTE: check the output of cmake: -- Installation directory: should be <acados_root_folder>,
     % #     if this is not the case, set -DACADOS_INSTALL_DIR=<acados_root_folder> explicitly above.
-    fprintf('Executing cmake configuration\n');
     % Command slightly modified to work with CMD instead of PowerShell
-    cmake_cmd = sprintf('cmake.exe -G "MinGW Makefiles" -DACADOS_INSTALL_DIR=%%ACADOS_INSTALL_DIR%% %s ..', cmakeConfigString);
-    fprintf(cmakeConfigString)
+    cmake_cmd = sprintf('cmake.exe -G "MinGW Makefiles" -DACADOS_INSTALL_DIR=%%ACADOS_INSTALL_DIR%% %s ..',cmakeConfigString);
 
+    % print cmake command
+    fprintf('Executing cmake configuration\n');
+    disp(cmake_cmd);
+    % Execute cmake command
     status=system(cmake_cmd);
     if (status~=0)
         error('cmake command failed. Command was:\n%s\n', cmake_cmd);
