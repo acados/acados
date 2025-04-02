@@ -54,7 +54,7 @@ class AcadosOcpBatchSolver():
     def __init__(self, ocp: AcadosOcp, N_batch: int, json_file: str = 'acados_ocp.json',  build: bool = True, generate: bool = True, verbose: bool=True):
 
         if not isinstance(N_batch, int) or N_batch <= 0:
-            raise Exception("AcadosOcpBatchSolver: argument N_batch should be a positive integer.")
+            raise ValueError("AcadosOcpBatchSolver: argument N_batch should be a positive integer.")
 
         self.__N_batch = N_batch
         self.__ocp_solvers = [AcadosOcpSolver(ocp,
@@ -157,30 +157,30 @@ class AcadosOcpBatchSolver():
         if seed_x is None:
             seed_x = []
         elif not isinstance(seed_x, Sequence):
-            raise Exception(f"seed_x should be a Sequence, got {type(seed_x)}")
+            raise TypeError(f"seed_x should be a Sequence, got {type(seed_x)}")
 
         if seed_u is None:
             seed_u = []
         elif not isinstance(seed_u, Sequence):
-            raise Exception(f"seed_u should be a Sequence, got {type(seed_u)}")
+            raise TypeError(f"seed_u should be a Sequence, got {type(seed_u)}")
 
         if len(seed_x) == 0 and len(seed_u) == 0:
-            raise Exception("seed_x and seed_u cannot both be empty.")
+            raise ValueError("seed_x and seed_u cannot both be empty.")
 
         if len(seed_x) > 0:
             if not isinstance(seed_x[0], tuple) or len(seed_x[0]) != 2:
-                raise Exception(f"seed_x[0] should be tuple of length 2, got seed_x[0] {seed_x[0]}")
+                raise TypeError(f"seed_x[0] should be tuple of length 2, got seed_x[0] {seed_x[0]}")
             s = seed_x[0][1]
             if not isinstance(s, np.ndarray):
-                raise Exception(f"seed_x[0][1] should be np.ndarray, got {type(s)}")
+                raise TypeError(f"seed_x[0][1] should be np.ndarray, got {type(s)}")
             n_seeds = seed_x[0][1].shape[2]
 
         if len(seed_u) > 0:
             if not isinstance(seed_u[0], tuple) or len(seed_u[0]) != 2:
-                raise Exception(f"seed_u[0] should be tuple of length 2, got seed_u[0] {seed_u[0]}")
+                raise ValueError(f"seed_u[0] should be tuple of length 2, got seed_u[0] {seed_u[0]}")
             s = seed_u[0][1]
             if not isinstance(s, np.ndarray):
-                raise Exception(f"seed_u[0][1] should be np.ndarray, got {type(s)}")
+                raise TypeError(f"seed_u[0][1] should be np.ndarray, got {type(s)}")
             n_seeds = seed_u[0][1].shape[2]
 
         if sanity_checks:
@@ -198,11 +198,11 @@ class AcadosOcpBatchSolver():
             for seed, name, dim in [(seed_x, "seed_x", nx,), (seed_u, "seed_u", nu)]:
                 for stage, seed_stage in seed:
                     if not isinstance(stage, int) or stage < 0 or stage > N_horizon:
-                        raise Exception(f"AcadosOcpBatchSolver.eval_adjoint_solution_sensitivity(): stage {stage} for {name} is not valid.")
+                        raise ValueError(f"AcadosOcpBatchSolver.eval_adjoint_solution_sensitivity(): stage {stage} for {name} is not valid.")
                     if not isinstance(seed_stage, np.ndarray):
-                        raise Exception(f"{name} for stage {stage} should be np.ndarray, got {type(seed_stage)}")
+                        raise TypeError(f"{name} for stage {stage} should be np.ndarray, got {type(seed_stage)}")
                     if seed_stage.shape != (self.N_batch, dim, n_seeds):
-                        raise Exception(f"{name} for stage {stage} should have shape (N_batch, dim, n_seeds) = ({self.N_batch}, {dim}, {n_seeds}), got {seed_stage.shape}.")
+                        raise ValueError(f"{name} for stage {stage} should have shape (N_batch, dim, n_seeds) = ({self.N_batch}, {dim}, {n_seeds}), got {seed_stage.shape}.")
 
         if with_respect_to == "p_global":
             field = "p_global".encode('utf-8')
@@ -261,12 +261,12 @@ class AcadosOcpBatchSolver():
 
         field = field_.encode('utf-8')
         if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']:
-            raise Exception(f'AcadosOcpSolver.get_flat(field={field_}): \'{field_}\' is an invalid argument.')
+            raise ValueError(f'AcadosOcpSolver.get_flat(field={field_}): \'{field_}\' is an invalid argument.')
 
         dim = self.ocp_solvers[0].get_dim_flat(field_)
 
         if value_.shape != (self.N_batch, dim):
-            raise Exception(f'AcadosOcpBatchSolver.set_flat(field={field_}, value): value has wrong shape, expected ({self.N_batch}, {dim}), got {value_.shape}.')
+            raise ValueError(f'AcadosOcpBatchSolver.set_flat(field={field_}, value): value has wrong shape, expected ({self.N_batch}, {dim}), got {value_.shape}.')
 
         value_ = value_.reshape((-1,), order='C')
         N_data = value_.shape[0]
@@ -285,7 +285,7 @@ class AcadosOcpBatchSolver():
             :returns: numpy array of shape (N_batch, n_field_total)
         """
         if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']:
-            raise Exception(f'AcadosOcpSolver.get_flat(field={field_}): \'{field_}\' is an invalid argument.')
+            raise ValueError(f'AcadosOcpSolver.get_flat(field={field_}): \'{field_}\' is an invalid argument.')
 
         field = field_.encode('utf-8')
 
@@ -319,7 +319,7 @@ class AcadosOcpBatchSolver():
         """
 
         if self.N_batch != iterate.N_batch:
-            raise Exception(f"Wrong batch dimension. Expected {self.N_batch}, got {iterate.N_batch}")
+            raise ValueError(f"Wrong batch dimension. Expected {self.N_batch}, got {iterate.N_batch}")
 
         self.set_flat("x", iterate.x)
         self.set_flat("u", iterate.u)
