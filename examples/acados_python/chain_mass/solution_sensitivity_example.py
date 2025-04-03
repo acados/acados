@@ -508,7 +508,7 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
         "parameter update": timings_parameter_update * 1e3,
         "setup exact Lagrange Hessian (S2)": timings_lin_exact_hessian_qp * 1e3,
         "factorize exact Lagrange Hessian (S3)": timings_lin_and_factorize * 1e3,
-        r"evaluate $J$ (S4)": timings_lin_params * 1e3,
+        r"evaluate $J_\star$ (S4)": timings_lin_params * 1e3,
     }
     timing_results_forward = timings_common.copy()
     timing_results_adjoint = timings_common.copy()
@@ -526,7 +526,7 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
         timing_results_adj_uforw[backsolve_label] = timings_solve_params_adj_uforw * 1e3
         timing_results_adj_all_primals[backsolve_label] = timings_solve_params_adj_all_primals * 1e3
         timings_list += [timing_results_adj_uforw, timing_results_adj_all_primals]
-        labels += [r'$\frac{\partial u_0}{\partial \theta}$ via adjoints', r'$\frac{\partial z}{\partial \theta} $ via adjoints']
+        labels += [r'$\frac{\partial u_0^\star}{\partial \theta}$ via adjoints', r'$\frac{\partial z^\star}{\partial \theta} $ via adjoints']
 
 
     print_timings(timing_results_forward, metric="median")
