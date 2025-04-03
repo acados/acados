@@ -163,8 +163,6 @@ void ocp_nlp_constraints_bgp_memory_set_DCt_ptr(struct blasfeo_dmat *DCt, void *
 //
 void ocp_nlp_constraints_bgp_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void *memory_);
 //
-void ocp_nlp_constraints_bgp_memory_set_dmask_ptr(struct blasfeo_dvec *dmask, void *memory_);
-//
 void ocp_nlp_constraints_bgp_memory_set_dzduxt_ptr(struct blasfeo_dmat *dzduxt, void *memory_);
 //
 void ocp_nlp_constraints_bgp_memory_set_idxb_ptr(int *idxb, void *memory_);
