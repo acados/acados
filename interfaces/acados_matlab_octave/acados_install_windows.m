@@ -46,6 +46,8 @@ function acados_install_windows(varargin)
     mkdir(acadosBuildPath);
     cd(acadosBuildPath);
 
+    disp(['ACADOS_INSTALL_DIR is' acadosPath]);
+
     %% Acados installation instructions:
     % cmake.exe -G "MinGW Makefiles" -DACADOS_INSTALL_DIR="$ACADOS_INSTALL_DIR" -DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=ON ..
     % # useful options to add above:
