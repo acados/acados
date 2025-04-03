@@ -47,28 +47,6 @@ import casadi as ca
 from contextlib import contextmanager
 
 
-
-
-ALLOWED_CASADI_VERSIONS = (
-    '3.4.0',
-    '3.4.5',
-    '3.5.1',
-    '3.5.2',
-    '3.5.3',
-    '3.5.4',
-    '3.5.6',
-    '3.5.5',
-    '3.6.0',
-    '3.6.1',
-    '3.6.2',
-    '3.6.3',
-    '3.6.4',
-    '3.6.5',
-    '3.6.6',
-    '3.6.7',
-    '3.6.7+',
-)
-
 TERA_VERSION = "0.0.34"
 
 PLATFORM2TERA = {
@@ -150,15 +128,18 @@ def get_shared_lib(shared_lib_name: str, winmode = None) -> DllLoader:
 
 def check_casadi_version():
     casadi_version = CasadiMeta.version()
-    if casadi_version in ALLOWED_CASADI_VERSIONS:
-        return
-    else:
-        msg =  'Warning: Please note that the following versions of CasADi are '
-        msg += 'officially supported: {}.\n '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
-        msg += 'If there is an incompatibility with the CasADi generated code, '
-        msg += 'please consider changing your CasADi version.\n'
-        msg += 'Version {} currently in use.'.format(casadi_version)
-        print(msg)
+    major_minor = casadi_version.split('.')
+    major = int(major_minor[0])
+    minor = int(major_minor[1])
+    if major < 3 or (major == 3 and minor < 4): # < 3.4
+        raise Exception(f'CasADi version {casadi_version} is not supported. '
+                        'Please use a version >= 3.4.0.')
+
+    if major > 3 or (major == 3 and minor > 7): # >= 3.7
+        print(f"Warning: CasADi version {casadi_version} is not tested with acados yet.")
+    elif major == 3 and minor < 7:
+        print(f"Warning: Full featured acados requires CasADi version >= 3.7, got {casadi_version}.")
+
 
 def check_casadi_version_supports_p_global():
     try:
