@@ -21,7 +21,7 @@ function acados_install_windows(varargin)
     [folderPath,~,~]=fileparts(folderPath);
     [acadosPath,~,~]=fileparts(folderPath);
 
-    % backwar to forward slashes
+    % backward to forward slashes
     acadosPath = strrep(acadosPath, '\', '/');
     acadosBuildPath=fullfile(acadosPath,'build');
 
