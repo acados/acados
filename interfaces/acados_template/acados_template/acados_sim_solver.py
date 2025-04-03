@@ -97,7 +97,7 @@ class AcadosSimSolver:
         # module dependent post processing
         if acados_sim.solver_options.integrator_type == 'GNSF':
             if acados_sim.solver_options.sens_hess == True:
-                raise Exception("AcadosSimSolver: GNSF does not support sens_hess = True.")
+                raise ValueError("AcadosSimSolver: GNSF does not support sens_hess = True.")
             if 'gnsf_model' in acados_sim.__dict__:
                 set_up_imported_gnsf_model(acados_sim)
             else:
@@ -259,7 +259,7 @@ class AcadosSimSolver:
         status = self.solve()
 
         if status != 0:
-            raise Exception(f'acados_sim_solver for model {self.model_name} returned status {status}.')
+            raise RuntimeError(f'acados_sim_solver for model {self.model_name} returned status {status}.')
 
         x_next = self.get('x')
         return x_next
@@ -313,7 +313,7 @@ class AcadosSimSolver:
 
             out = scalar.value
         else:
-            raise Exception(f'AcadosSimSolver.get(): Unknown field {field_},' \
+            raise KeyError(f'AcadosSimSolver.get(): Unknown field {field_},'
                 f' available fields are {", ".join(self.gettable_vectors+self.gettable_matrices)}, {", ".join(self.gettable_scalars)}')
 
         return out
@@ -361,7 +361,7 @@ class AcadosSimSolver:
                 value_shape = (value_shape[0], 0)
 
             if value_shape != tuple(dims):
-                raise Exception(f'AcadosSimSolver.set(): mismatching dimension' \
+                raise ValueError(f'AcadosSimSolver.set(): mismatching dimension' \
                     f' for field "{field_}" with dimension {tuple(dims)} (you have {value_shape}).')
 
             if field_ == 'T':
@@ -373,7 +373,7 @@ class AcadosSimSolver:
         elif field_ in settable:
             self.__acados_lib.sim_in_set(self.sim_config, self.sim_dims, self.sim_in, field, value_data_p)
         else:
-            raise Exception(f'AcadosSimSolver.set(): Unknown field {field_},' \
+            raise KeyError(f'AcadosSimSolver.set(): Unknown field {field_},'
                 f' available fields are {", ".join(settable)}')
 
         return
@@ -388,7 +388,7 @@ class AcadosSimSolver:
         """
         fields = ['sens_forw', 'sens_adj', 'sens_hess']
         if field_ not in fields:
-            raise Exception(f"field {field_} not supported. Supported values are {', '.join(fields)}.\n")
+            raise ValueError(f"field {field_} not supported. Supported values are {', '.join(fields)}.\n")
 
         field = field_.encode('utf-8')
         value_ctypes = c_bool(value_)

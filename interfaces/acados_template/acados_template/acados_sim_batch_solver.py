@@ -52,7 +52,7 @@ class AcadosSimBatchSolver():
     def __init__(self, sim: AcadosSim, N_batch: int, json_file: str = 'acados_sim.json', build: bool = True, generate: bool = True, verbose: bool=True):
 
         if not isinstance(N_batch, int) or N_batch <= 0:
-            raise Exception("AcadosSimBatchSolver: argument N_batch should be a positive integer.")
+            raise ValueError("AcadosSimBatchSolver: argument N_batch should be a positive integer.")
 
         self.__N_batch = N_batch
         self.__sim_solvers = [AcadosSimSolver(sim,
