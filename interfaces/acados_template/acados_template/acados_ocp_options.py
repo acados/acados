@@ -90,8 +90,9 @@ class AcadosOcpOptions:
         self.__regularize_method = 'NO_REGULARIZE'
         self.__qpscaling_type = 'NO_SCALING'
         self.__reg_epsilon = 1e-4
-        self.__reg_max_cond_block = 1e-7
+        self.__reg_max_cond_block = 1e7
         self.__reg_adaptive_eps = False
+        self.__reg_min_epsilon = 1e-8
         self.__exact_hess_cost = 1
         self.__exact_hess_dyn = 1
         self.__exact_hess_constr = 1
@@ -146,6 +147,7 @@ class AcadosOcpOptions:
         self.__custom_templates = []
         self.__custom_update_copy = True
         self.__num_threads_in_batch_solve: int = 1
+        self.__with_batch_functionality: bool = False
 
     @property
     def qp_solver(self):
@@ -327,14 +329,13 @@ class AcadosOcpOptions:
     @property
     def regularize_method(self):
         """Regularization method for the Hessian.
-        String in ('NO_REGULARIZE', 'MIRROR', 'PROJECT', 'PROJECT_REDUC_HESS', 'CONVEXIFY') or :code:`None`.
+        String in ('NO_REGULARIZE', 'MIRROR', 'PROJECT', 'PROJECT_REDUC_HESS', 'CONVEXIFY', 'GERSHGORIN_LEVENBERG_MARQUARDT').
 
         - MIRROR: performs eigenvalue decomposition H = V^T D V and sets D_ii = max(eps, abs(D_ii))
         - PROJECT: performs eigenvalue decomposition H = V^T D V and sets D_ii = max(eps, D_ii)
         - CONVEXIFY: Algorithm 6 from Verschueren2017, https://cdn.syscop.de/publications/Verschueren2017.pdf, does not support nonlinear constraints
         - PROJECT_REDUC_HESS: experimental
-
-        Note: default eps = 1e-4
+        - GERSHGORIN_LEVENBERG_MARQUARDT: estimates the smallest eigenvalue of each Hessian block using Gershgorin circles and adds multiple of identity to each block, such that smallest eigenvalue after regularization is at least reg_epsilon
 
         Default: 'NO_REGULARIZE'.
         """
@@ -805,7 +806,7 @@ class AcadosOcpOptions:
 
     @property
     def reg_epsilon(self):
-        """Epsilon for regularization, used if regularize_method in ['PROJECT', 'MIRROR', 'CONVEXIFY']"""
+        """Epsilon for regularization, used if regularize_method in ['PROJECT', 'MIRROR', 'CONVEXIFY', 'GERSHGORIN_LEVENBERG_MARQUARDT']."""
         return self.__reg_epsilon
 
     @property
@@ -813,7 +814,7 @@ class AcadosOcpOptions:
         """Maximum condition number of each Hessian block after regularization with regularize_method in ['PROJECT', 'MIRROR'] and reg_adaptive_eps = True
 
         Type: float
-        Default: 1e-7
+        Default: 1e7
         """
         return self.__reg_max_cond_block
 
@@ -829,6 +830,15 @@ class AcadosOcpOptions:
         Default: False
         """
         return self.__reg_adaptive_eps
+
+    @property
+    def reg_min_epsilon(self):
+        """Minimum value for epsilon if regularize_method in ['PROJECT', 'MIRROR'] is used with reg_adaptive_eps.
+
+        Type: float
+        Default: 1e-8
+        """
+        return self.__reg_min_epsilon
 
     @property
     def globalization_alpha_reduction(self):
@@ -1246,11 +1256,21 @@ class AcadosOcpOptions:
     @property
     def num_threads_in_batch_solve(self):
         """
+        DEPRECATED, use the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.
         Integer indicating how many threads should be used within the batch solve.
         If more than one thread should be used, the solver is compiled with openmp.
         Default: 1.
         """
         return self.__num_threads_in_batch_solve
+    
+    @property
+    def with_batch_functionality(self):
+        """
+        Whether the AcadosOcpBatchSolver can be used.
+        In this case, the solver is compiled with openmp.
+        Default: False.
+        """
+        return self.__with_batch_functionality
 
 
     @qp_solver.setter
@@ -1269,7 +1289,7 @@ class AcadosOcpOptions:
     @regularize_method.setter
     def regularize_method(self, regularize_method):
         regularize_methods = ('NO_REGULARIZE', 'MIRROR', 'PROJECT', \
-                                'PROJECT_REDUC_HESS', 'CONVEXIFY')
+                                'PROJECT_REDUC_HESS', 'CONVEXIFY', 'GERSHGORIN_LEVENBERG_MARQUARDT')
         if regularize_method in regularize_methods:
             self.__regularize_method = regularize_method
         else:
@@ -1442,6 +1462,8 @@ class AcadosOcpOptions:
 
     @reg_max_cond_block.setter
     def reg_max_cond_block(self, reg_max_cond_block):
+        if not isinstance(reg_max_cond_block, float) or reg_max_cond_block < 1.0:
+            raise Exception('Invalid reg_max_cond_block value, expected float > 1.0.')
         self.__reg_max_cond_block = reg_max_cond_block
 
     @reg_adaptive_eps.setter
@@ -1449,6 +1471,12 @@ class AcadosOcpOptions:
         if not isinstance(reg_adaptive_eps, bool):
             raise Exception(f'Invalid reg_adaptive_eps value, expected bool, got {reg_adaptive_eps}')
         self.__reg_adaptive_eps = reg_adaptive_eps
+
+    @reg_min_epsilon.setter
+    def reg_min_epsilon(self, reg_min_epsilon):
+        if not isinstance(reg_min_epsilon, float) or reg_min_epsilon < 0:
+            raise Exception(f'Invalid reg_min_epsilon value, expected float > 0, got {reg_min_epsilon}')
+        self.__reg_min_epsilon = reg_min_epsilon
 
     @globalization_alpha_min.setter
     def globalization_alpha_min(self, globalization_alpha_min):
@@ -1568,12 +1596,12 @@ class AcadosOcpOptions:
 
     @search_direction_mode.setter
     def search_direction_mode(self, search_direction_mode):
-        modes = ('NOMINAL_QP', 'BYRD_OMOJOKUN', 'FEASIBILITY_QP')
+        search_direction_modes = ('NOMINAL_QP', 'BYRD_OMOJOKUN', 'FEASIBILITY_QP')
         if isinstance(search_direction_mode, str):
-            if search_direction_mode in modes:
+            if search_direction_mode in search_direction_modes:
                 self.__search_direction_mode = search_direction_mode
             else:
-                Exception(f'Invalid string for search_direction_mode. Possible modes are'+', '.join(modes) +  f', got {search_direction_mode}')
+                raise Exception(f'Invalid string for search_direction_mode. Possible search_direction_modes are'+', '.join(search_direction_modes) +  f', got {search_direction_mode}')
         else:
             raise Exception(f'Invalid datatype for search_direction_mode. Should be str, got {type(search_direction_mode)}')
 
@@ -2025,10 +2053,19 @@ class AcadosOcpOptions:
 
     @num_threads_in_batch_solve.setter
     def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
+        print("Warning: num_threads_in_batch_solve is deprecated, set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
         if isinstance(num_threads_in_batch_solve, int) and num_threads_in_batch_solve > 0:
             self.__num_threads_in_batch_solve = num_threads_in_batch_solve
         else:
             raise Exception('Invalid num_threads_in_batch_solve value. num_threads_in_batch_solve must be a positive integer.')
+
+    @with_batch_functionality.setter
+    def with_batch_functionality(self, with_batch_functionality):
+        if isinstance(with_batch_functionality, bool):
+            self.__with_batch_functionality = with_batch_functionality
+        else:
+            raise Exception('Invalid with_batch_functionality value. Expected bool.')
+
 
     def set(self, attr, value):
         setattr(self, attr, value)

@@ -81,6 +81,7 @@ classdef AcadosOcpOptions < handle
         regularize_method
         reg_epsilon
         reg_max_cond_block
+        reg_min_epsilon
         reg_adaptive_eps
         qpscaling_type
         qpscaling_ub_max_abs_eig
@@ -139,7 +140,7 @@ classdef AcadosOcpOptions < handle
         custom_update_header_filename
         custom_templates
         custom_update_copy
-        num_threads_in_batch_solve
+        with_batch_functionality
 
         compile_interface
 
@@ -196,7 +197,8 @@ classdef AcadosOcpOptions < handle
             obj.qpscaling_lb_norm_inf_grad_obj = 1e-4
             obj.reg_epsilon = 1e-4;
             obj.reg_adaptive_eps = false;
-            obj.reg_max_cond_block = 1e-7;
+            obj.reg_max_cond_block = 1e7;
+            obj.reg_min_epsilon = 1e-8;
             obj.shooting_nodes = [];
             obj.cost_scaling = [];
             obj.exact_hess_cost = 1;
@@ -260,7 +262,7 @@ classdef AcadosOcpOptions < handle
             obj.custom_update_header_filename = '';
             obj.custom_templates = [];
             obj.custom_update_copy = true;
-            obj.num_threads_in_batch_solve = 1;
+            obj.with_batch_functionality = false;
 
             obj.compile_interface = []; % corresponds to automatic detection, possible values: true, false, []
         end

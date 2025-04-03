@@ -81,10 +81,10 @@ def main_batch(Xinit, simU, param_vals, adjoints_ref, tol, num_threads_in_batch_
     N_batch = Xinit.shape[0] - 1
 
     learnable_params = ["A", "Q", "b"]
-    ocp = export_parametric_ocp(PARAM_VALUE_DICT, learnable_params=learnable_params, num_threads_in_batch_solve = num_threads_in_batch_solve)
+    ocp = export_parametric_ocp(PARAM_VALUE_DICT, learnable_params=learnable_params)
     ocp.solver_options.with_solution_sens_wrt_params = True
 
-    batch_solver = AcadosOcpBatchSolver(ocp, N_batch, verbose=False)
+    batch_solver = AcadosOcpBatchSolver(ocp, N_batch, num_threads_in_batch_solve=num_threads_in_batch_solve, verbose=False)
 
     # reset, set bounds and p_global
     t0 = time.time()

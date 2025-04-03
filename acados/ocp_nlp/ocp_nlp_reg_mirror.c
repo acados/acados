@@ -67,6 +67,7 @@ void ocp_nlp_reg_mirror_opts_initialize_default(void *config_, ocp_nlp_reg_dims 
     ocp_nlp_reg_mirror_opts *opts = opts_;
 
     opts->epsilon = 1e-4;
+    opts->min_epsilon = 1e-8;
     opts->adaptive_eps = false;
     opts->max_cond_block = 1e7;
 
@@ -84,6 +85,11 @@ void ocp_nlp_reg_mirror_opts_set(void *config_, void *opts_, const char *field, 
     {
         double *d_ptr = value;
         opts->epsilon = *d_ptr;
+    }
+    else if (!strcmp(field, "min_epsilon"))
+    {
+        double *d_ptr = value;
+        opts->min_epsilon = *d_ptr;
     }
     else if (!strcmp(field, "max_cond_block"))
     {
@@ -299,7 +305,7 @@ void ocp_nlp_reg_mirror_regularize(void *config, ocp_nlp_reg_dims *dims, void *o
         blasfeo_unpack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->reg_hess, nu[ii]+nx[ii]);
         if (opts->adaptive_eps)
         {
-            acados_mirror_adaptive_eps(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e, opts->max_cond_block);
+            acados_mirror_adaptive_eps(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e, opts->max_cond_block, opts->min_epsilon);
         }
         else
         {

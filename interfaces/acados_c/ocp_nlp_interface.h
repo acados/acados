@@ -92,6 +92,7 @@ typedef enum
     PROJECT,
     PROJECT_REDUC_HESS,
     CONVEXIFY,
+    GERSHGORIN_LEVENBERG_MARQUARDT,
     INVALID_REGULARIZE,
 } ocp_nlp_reg_t;
 

@@ -34,8 +34,8 @@
 /// \addtogroup ocp_nlp_reg
 /// @{
 
-#ifndef ACADOS_OCP_NLP_OCP_NLP_REG_PROJECT_H_
-#define ACADOS_OCP_NLP_OCP_NLP_REG_PROJECT_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_REG_GLM_H_
+#define ACADOS_OCP_NLP_OCP_NLP_REG_GLM_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,19 +64,16 @@ extern "C" {
 typedef struct
 {
     double epsilon;
-    double min_epsilon;
-    bool adaptive_eps;
-    double max_cond_block;
-} ocp_nlp_reg_project_opts;
+} ocp_nlp_reg_glm_opts;
 
 //
-acados_size_t ocp_nlp_reg_project_opts_calculate_size(void);
+acados_size_t ocp_nlp_reg_glm_opts_calculate_size(void);
 //
-void *ocp_nlp_reg_project_opts_assign(void *raw_memory);
+void *ocp_nlp_reg_glm_opts_assign(void *raw_memory);
 //
-void ocp_nlp_reg_project_opts_initialize_default(void *config_, ocp_nlp_reg_dims *dims, void *opts_);
+void ocp_nlp_reg_glm_opts_initialize_default(void *config_, ocp_nlp_reg_dims *dims, void *opts_);
 //
-void ocp_nlp_reg_project_opts_set(void *config_, void *opts_, const char *field, void* value);
+void ocp_nlp_reg_glm_opts_set(void *config_, void *opts_, const char *field, void* value);
 
 
 
@@ -86,32 +83,20 @@ void ocp_nlp_reg_project_opts_set(void *config_, void *opts_, const char *field,
 
 typedef struct
 {
-    double *reg_hess; // TODO move to workspace
-    double *V; // TODO move to workspace
-    double *d; // TODO move to workspace
-    double *e; // TODO move to workspace
-
-    // giaf's
     struct blasfeo_dmat **RSQrq;  // pointer to RSQrq in qp_in
-} ocp_nlp_reg_project_memory;
+} ocp_nlp_reg_glm_memory;
 
 //
-acados_size_t ocp_nlp_reg_project_memory_calculate_size(void *config, ocp_nlp_reg_dims *dims, void *opts);
+acados_size_t ocp_nlp_reg_glm_memory_calculate_size(void *config, ocp_nlp_reg_dims *dims, void *opts);
 //
-void *ocp_nlp_reg_project_memory_assign(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);
-
-/************************************************
- * workspace
- ************************************************/
-
- // TODO
+void *ocp_nlp_reg_glm_memory_assign(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);
 
 /************************************************
  * functions
  ************************************************/
 
 //
-void ocp_nlp_reg_project_config_initialize_default(ocp_nlp_reg_config *config);
+void ocp_nlp_reg_glm_config_initialize_default(ocp_nlp_reg_config *config);
 
 
 
@@ -119,6 +104,6 @@ void ocp_nlp_reg_project_config_initialize_default(ocp_nlp_reg_config *config);
 }
 #endif
 
-#endif  // ACADOS_OCP_NLP_OCP_NLP_REG_PROJECT_H_
+#endif  // ACADOS_OCP_NLP_OCP_NLP_REG_GLM_H_
 /// @}
 /// @}
