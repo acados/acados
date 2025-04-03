@@ -41,32 +41,32 @@
 
 
 {%- if solver_options.model_external_shared_lib_dir %}
-	{%- set model_external_shared_lib_dir = solver_options.model_external_shared_lib_dir %}
+    {%- set model_external_shared_lib_dir = solver_options.model_external_shared_lib_dir %}
 {%- endif %}
 
 {%- if solver_options.model_external_shared_lib_name %}
-	{%- set model_external_shared_lib_name = solver_options.model_external_shared_lib_name %}
+    {%- set model_external_shared_lib_name = solver_options.model_external_shared_lib_name %}
 {%- endif %}
 
 {#- control operator #}
 {%- if os and os == "pc" %}
-	{%- set control = "&" %}
+    {%- set control = "&" %}
 {%- else %}
-	{%- set control = ";" %}
+    {%- set control = ";" %}
 {%- endif %}
 
 {%- if acados_link_libs and os and os == "pc" %}{# acados linking libraries and flags #}
-	{%- set link_libs = acados_link_libs.qpoases ~ " " ~ acados_link_libs.hpmpc ~ " " ~ acados_link_libs.osqp ~ " " ~ acados_link_libs.daqp -%}
-	{%- set openmp_flag = acados_link_libs.openmp %}
+    {%- set link_libs = acados_link_libs.qpoases ~ " " ~ acados_link_libs.hpmpc ~ " " ~ acados_link_libs.osqp ~ " " ~ acados_link_libs.daqp -%}
+    {%- set openmp_flag = acados_link_libs.openmp %}
 {%- else %}
-	{%- set openmp_flag = " " %}
-	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
-		{%- set link_libs = "-lqpOASES_e" %}
-	{%- elif solver_options.qp_solver == "FULL_CONDENSING_DAQP" %}
-		{%- set link_libs = "-ldaqp" %}
-	{%- else %}
-		{%- set link_libs = "" %}
-	{%- endif %}
+    {%- set openmp_flag = " " %}
+    {%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
+        {%- set link_libs = "-lqpOASES_e" %}
+    {%- elif solver_options.qp_solver == "FULL_CONDENSING_DAQP" %}
+        {%- set link_libs = "-ldaqp" %}
+    {%- else %}
+        {%- set link_libs = "" %}
+    {%- endif %}
 {%- endif %}
 
 cmake_minimum_required(VERSION 3.13)
@@ -105,36 +105,36 @@ set(OCP_OBJ ocp_{{ name }})
 # model
 set(MODEL_SRC
 {%- for jj in range(end=n_phases) %}{# phases loop !#}
-	{%- if model[jj].dyn_ext_fun_type == "casadi" %}
+    {%- if model[jj].dyn_ext_fun_type == "casadi" %}
 {%- if  mocp_opts.integrator_type[jj] == "ERK" %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_expl_ode_fun.c
     {{ model[jj].name }}_model/{{ model[jj].name }}_expl_vde_forw.c
     {{ model[jj].name }}_model/{{ model[jj].name }}_expl_vde_adj.c
-	{%- if solver_options.hessian_approx == "EXACT" %}
+    {%- if solver_options.hessian_approx == "EXACT" %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_expl_ode_hess.c
-	{%- endif %}
+    {%- endif %}
 {%- elif mocp_opts.integrator_type[jj] == "IRK" %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_fun.c
     {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_fun_jac_x_xdot_z.c
     {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_jac_x_xdot_u_z.c
-	{%- if solver_options.hessian_approx == "EXACT" %}
+    {%- if solver_options.hessian_approx == "EXACT" %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_hess.c
-	{%- endif %}
+    {%- endif %}
 {%- elif mocp_opts.integrator_type[jj] == "LIFTED_IRK" %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_fun.c
     {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_fun_jac_x_xdot_u.c
-	{%- if solver_options.hessian_approx == "EXACT" %}
+    {%- if solver_options.hessian_approx == "EXACT" %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_hess.c
-	{%- endif %}
+    {%- endif %}
 {%- elif mocp_opts.integrator_type[jj] == "GNSF" %}
-	{% if model[jj].gnsf_purely_linear != 1 %}
+    {% if model[jj].gnsf_purely_linear != 1 %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_gnsf_phi_fun.c
     {{ model[jj].name }}_model/{{ model[jj].name }}_gnsf_phi_fun_jac_y.c
     {{ model[jj].name }}_model/{{ model[jj].name }}_gnsf_phi_jac_y_uhat.c
-		{%- if model[jj].gnsf.nontrivial_f_LO == 1 %}
+        {%- if model[jj].gnsf.nontrivial_f_LO == 1 %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_gnsf_f_lo_fun_jac_x1k1uz.c
-		{%- endif %}
-	{%- endif %}
+        {%- endif %}
+    {%- endif %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_gnsf_get_matrices_fun.c
 {%- elif mocp_opts.integrator_type[jj] == "DISCRETE" %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_dyn_disc_phi_fun.c
@@ -145,13 +145,13 @@ set(MODEL_SRC
     {%- if solver_options.with_value_sens_wrt_params %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_dyn_disc_phi_adj_p.c
     {%- endif %}
-		{%- if solver_options.hessian_approx == "EXACT" %}
+        {%- if solver_options.hessian_approx == "EXACT" %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_dyn_disc_phi_fun_jac_hess.c
-		{%- endif %}
+        {%- endif %}
 {%- endif -%}
-	{%- else %}
+    {%- else %}
     {{ model[jj].name }}_model/{{ model[jj].dyn_generic_source }}
-	{%- endif %}
+    {%- endif %}
 {%- endfor %}
 )
 add_library(${MODEL_OBJ} OBJECT ${MODEL_SRC} )
@@ -229,7 +229,7 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model_0.name }}_cost/{{ model_0.name }}_conl_cost_0_fun.c
         {{ model_0.name }}_cost/{{ model_0.name }}_conl_cost_0_fun_jac_hess.c
 {%- elif cost_0.cost_type_0 == "EXTERNAL" %}
-    {%- if cost.cost_ext_fun_type_0 == "casadi" %}
+    {%- if cost_0.cost_ext_fun_type_0 == "casadi" %}
         {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_fun.c
         {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_fun_jac.c
         {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_fun_jac_hess.c

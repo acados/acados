@@ -44,7 +44,7 @@ extern "C" {
 
 
 // blasfeo
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_common.h"
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
@@ -139,8 +139,6 @@ void ocp_nlp_dynamics_cont_memory_set_ux1_ptr(struct blasfeo_dvec *ux1, void *me
 void ocp_nlp_dynamics_cont_memory_set_pi_ptr(struct blasfeo_dvec *pi, void *memory);
 //
 void ocp_nlp_dynamics_cont_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *memory);
-//
-void ocp_nlp_dynamics_cont_memory_get_params_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
 //
 void ocp_nlp_dynamics_cont_memory_get_params_lag_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
 

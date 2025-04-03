@@ -42,7 +42,7 @@
 
 #include "test/test_utils/eigen.h"
 #include "catch/include/catch.hpp"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_aux_ext_dep.h"
 
 // acados
 #include "acados/sim/sim_common.h"

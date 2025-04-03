@@ -313,9 +313,7 @@ stage = N;
 field = 'qp_Q';
 disp(strcat(field, " at stage ", num2str(stage), " = "));
 ocp_solver.get(field, stage)
-field = 'qp_R';
-disp(strcat(field, " at stage ", num2str(stage), " = "));
-ocp_solver.get(field, stage)
+
 
 % or for all stages
 qp_Q = ocp_solver.get('qp_Q');
@@ -323,18 +321,18 @@ cond_H = ocp_solver.get('qp_solver_cond_H');
 
 disp('QP diagnostics of last QP before condensing')
 result = ocp_solver.qp_diagnostics(false);
-disp(['min eigenvalues of blocks are in [', num2str(min(result.min_ev)), ', ', num2str(max(result.min_ev)), ']'])
-disp(['max eigenvalues of blocks are in [', num2str(min(result.max_ev)), ', ', num2str(max(result.max_ev)), ']'])
-disp(['condition_number_blockwise: '])
-disp(result.condition_number_blockwise)
+disp(['min eigenvalues of blocks are in [', num2str(min(result.min_eigv_stage)), ', ', num2str(max(result.min_eigv_stage)), ']'])
+disp(['max eigenvalues of blocks are in [', num2str(min(result.max_eigv_stage)), ', ', num2str(max(result.max_eigv_stage)), ']'])
+disp(['condition_number_stage: '])
+disp(result.condition_number_stage)
 disp(['condition_number_global: ', num2str(result.condition_number_global)])
 
 disp('QP diagnostics of last QP after partial condensing')
 result = ocp_solver.qp_diagnostics(true);
-disp(['min eigenvalues of blocks are in [', num2str(min(result.min_ev)), ', ', num2str(max(result.min_ev)), ']'])
-disp(['max eigenvalues of blocks are in [', num2str(min(result.max_ev)), ', ', num2str(max(result.max_ev)), ']'])
-disp(['condition_number_blockwise: '])
-disp(result.condition_number_blockwise)
+disp(['min eigenvalues of blocks are in [', num2str(min(result.min_eigv_stage)), ', ', num2str(max(result.min_eigv_stage)), ']'])
+disp(['max eigenvalues of blocks are in [', num2str(min(result.max_eigv_stage)), ', ', num2str(max(result.max_eigv_stage)), ']'])
+disp(['condition_number_stage: '])
+disp(result.condition_number_stage)
 disp(['condition_number_global: ', num2str(result.condition_number_global)])
 
 %% Plot trajectories

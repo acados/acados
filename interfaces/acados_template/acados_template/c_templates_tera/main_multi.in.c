@@ -45,7 +45,7 @@
 #include "acados_solver_{{ name }}.h"
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_aux_ext_dep.h"
 
 {%- set nx_values = [] -%}
 {%- for jj in range(end=n_phases) %}

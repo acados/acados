@@ -42,11 +42,11 @@
 
 #include "acados/sim/sim_common.h"
 
-#include "blasfeo/include/blasfeo_common.h"
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
-#include "blasfeo/include/blasfeo_v_aux_ext_dep.h"
+#include "blasfeo_common.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_blas.h"
+#include "blasfeo_v_aux_ext_dep.h"
 
 
 /************************************************
@@ -500,24 +500,24 @@ void sim_lifted_irk_memory_get(void *config_, void *dims_, void *mem_, const cha
 
     if (!strcmp(field, "time_sim"))
     {
-		double *ptr = value;
-		*ptr = mem->time_sim;
-	}
+        double *ptr = value;
+        *ptr = mem->time_sim;
+    }
     else if (!strcmp(field, "time_sim_ad"))
     {
-		double *ptr = value;
-		*ptr = mem->time_ad;
-	}
+        double *ptr = value;
+        *ptr = mem->time_ad;
+    }
     else if (!strcmp(field, "time_sim_la"))
     {
-		double *ptr = value;
-		*ptr = mem->time_la;
-	}
-	else
-	{
-		printf("sim_lifted_irk_memory_get field %s is not supported! \n", field);
-		exit(1);
-	}
+        double *ptr = value;
+        *ptr = mem->time_la;
+    }
+    else
+    {
+        printf("sim_lifted_irk_memory_get field %s is not supported! \n", field);
+        exit(1);
+    }
 }
 
 
@@ -988,9 +988,9 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
     out->info->CPUtime = acados_toc(&timer);
     out->info->ADtime = timing_ad;
 
-	mem->time_sim = out->info->CPUtime;
-	mem->time_ad = out->info->ADtime;
-	mem->time_la = out->info->LAtime;
+    mem->time_sim = out->info->CPUtime;
+    mem->time_ad = out->info->ADtime;
+    mem->time_la = out->info->LAtime;
 
     return 0;
 }

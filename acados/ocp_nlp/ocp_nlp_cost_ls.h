@@ -50,7 +50,7 @@ extern "C" {
 #include <math.h>
 
 // blasfeo
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_common.h"
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
@@ -69,6 +69,7 @@ typedef struct
     int nu;  // number of inputs
     int ny;  // number of outputs
     int ns;  // number of slacks
+    int np_global;
 } ocp_nlp_cost_ls_dims;
 
 
@@ -123,7 +124,9 @@ void *ocp_nlp_cost_ls_model_assign(void *config, void *dims, void *raw_memory);
 //
 int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
                               const char *field, void *value_);
-
+//
+int ocp_nlp_cost_ls_model_get(void *config_, void *dims_, void *model_,
+                              const char *field, void *value_);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -170,7 +173,7 @@ typedef struct
     struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
     struct blasfeo_dmat *RSQrq;         ///< pointer to RSQrq in qp_in
     struct blasfeo_dvec *Z;             ///< pointer to Z in qp_in
-	double fun;                         ///< value of the cost function
+    double fun;                         ///< value of the cost function
 } ocp_nlp_cost_ls_memory;
 
 //

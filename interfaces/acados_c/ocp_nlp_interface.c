@@ -503,12 +503,15 @@ int ocp_nlp_cost_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
         ocp_nlp_in *in, int stage, const char *field, void *value)
 {
     ocp_nlp_cost_config *cost_config = config->cost[stage];
-
     return cost_config->model_set(cost_config, dims->cost[stage], in->cost[stage], field, value);
-
 }
 
-
+int ocp_nlp_cost_model_get(ocp_nlp_config *config, ocp_nlp_dims *dims,
+        ocp_nlp_in *in, int stage, const char *field, void *value)
+{
+    ocp_nlp_cost_config *cost_config = config->cost[stage];
+    return cost_config->model_get(cost_config, dims->cost[stage], in->cost[stage], field, value);
+}
 
 int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
         ocp_nlp_in *in, ocp_nlp_out *out, int stage, const char *field, void *value)
@@ -727,7 +730,7 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
 }
 
 
-int ocp_nlp_dims_get_total_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, const char *field)
+int ocp_nlp_dims_get_total_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out, const char *field)
 {
     int N = dims->N;
 
@@ -747,7 +750,10 @@ int ocp_nlp_dims_get_total_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
             size += dims->nu[stage];
         }
     }
-    else if (!strcmp(field, "sl") || !strcmp(field, "su"))
+    else if (!strcmp(field, "sl") || !strcmp(field, "su") ||
+             !strcmp(field, "zl") || !strcmp(field, "zu") ||
+             !strcmp(field, "Zl") || !strcmp(field, "Zu") ||
+             !strcmp(field, "cost_z") || !strcmp(field, "cost_Z"))
     {
         for (stage = 0; stage < N+1; stage++)
         {
@@ -782,6 +788,47 @@ int ocp_nlp_dims_get_total_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
             size += 2*dims->ni[stage];
         }
     }
+    else if (!strcmp(field, "p"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            size += dims->np[stage];
+        }
+    }
+    else if (!strcmp(field, "lbx") || !strcmp(field, "ubx") || !strcmp(field, "nbx"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            size += ocp_nlp_dims_get_from_attr(config, dims, out, stage, "lbx");
+        }
+    }
+    else if (!strcmp(field, "lbu") || !strcmp(field, "ubu") || !strcmp(field, "nbu"))
+    {
+        for (stage = 0; stage < N; stage++)
+        {
+            size += ocp_nlp_dims_get_from_attr(config, dims, out, stage, "lbu");
+        }
+    }
+    else if (!strcmp(field, "lg") || !strcmp(field, "ug") || !strcmp(field, "ng"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            size += ocp_nlp_dims_get_from_attr(config, dims, out, stage, "lg");
+        }
+    }
+    else if (!strcmp(field, "lh") || !strcmp(field, "uh") || !strcmp(field, "nh"))
+    {
+        for (stage = 0; stage < N+1; stage++)
+        {
+            size += ocp_nlp_dims_get_from_attr(config, dims, out, stage, "lh");
+        }
+    }
+    else
+    {
+        printf("\nerror: ocp_nlp_dims_get_total_from_attr: field %s not available\n", field);
+        exit(1);
+    }
+
     return size;
 }
 
@@ -821,9 +868,14 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
     {
         return 2*dims->ni[stage];
     }
-    else if (!strcmp(field, "sl") || !strcmp(field, "su") || !strcmp(field, "s") ||
-             !strcmp(field, "zl") || !strcmp(field, "zu") || !strcmp(field, "cost_z") ||
-             !strcmp(field, "Zl") || !strcmp(field, "Zu") || !strcmp(field, "cost_Z"))
+    else if (!strcmp(field, "s"))
+    {
+        return 2*dims->ns[stage];
+    }
+    else if (!strcmp(field, "sl") || !strcmp(field, "su") ||
+             !strcmp(field, "zl") || !strcmp(field, "zu") ||
+             !strcmp(field, "Zl") || !strcmp(field, "Zu") ||
+             !strcmp(field, "cost_z") || !strcmp(field, "cost_Z"))
     {
         return dims->ns[stage];
     }
@@ -949,6 +1001,7 @@ void ocp_nlp_constraint_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims 
 }
 
 
+// TODO: ocp_nlp_out not needed?
 void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
         int stage, const char *field, int *dims_out)
 {
@@ -1076,21 +1129,24 @@ void ocp_nlp_cost_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
         config->cost[stage]->dims_get(config->cost[stage], dims->cost[stage],
                                             "ny", &dims_out[0]);
     }
-    else if (!strcmp(field, "Zl"))
+    else if (!strcmp(field, "Zl") || !strcmp(field, "Zu") ||
+             !strcmp(field, "zl") || !strcmp(field, "zu"))
     {
         dims_out[0] = dims->ns[stage];
     }
-    else if (!strcmp(field, "Zu"))
+    else if (!strcmp(field, "lg") || !strcmp(field, "ug"))
     {
-        dims_out[0] = dims->ns[stage];
+        dims_out[0] = dims->ng[stage];
     }
-    else if (!strcmp(field, "zl"))
+    else if (!strcmp(field, "lbx") || !strcmp(field, "ubx") || !strcmp(field, "lbu") || !strcmp(field, "ubu"))
     {
-        dims_out[0] = dims->ns[stage];
+        // TODO is this correct if condensing is used?
+        ocp_nlp_qp_dims_get_from_attr(config, dims, out, stage, field, dims_out);
     }
-    else if (!strcmp(field, "zu"))
+    else if (!strcmp(field, "lh") || !strcmp(field, "uh") || !strcmp(field, "uphi"))
     {
-        dims_out[0] = dims->ns[stage];
+        // TODO here we should also check that its the correct constraint module
+        dims_out[0] = dims->ni_nl[stage];
     }
     // matrices
     else if (!strcmp(field, "W"))
@@ -1123,6 +1179,16 @@ void ocp_nlp_cost_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
     {
         dims_out[0] = dims->nx[stage] + dims->nu[stage];
         dims_out[1] = dims->nx[stage] + dims->nu[stage];
+    }
+    else if (!strcmp(field, "C"))
+    {
+        dims_out[0] = dims->ng[stage];
+        dims_out[1] = dims->nx[stage];
+    }
+    else if (!strcmp(field, "D"))
+    {
+        dims_out[0] = dims->ng[stage];
+        dims_out[1] = dims->nu[stage];
     }
     else if (!strcmp(field, "scaling"))
     {
@@ -1285,10 +1351,7 @@ void ocp_nlp_eval_lagrange_grad_p(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, co
 void ocp_nlp_eval_residuals(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
 {
     ocp_nlp_config *config = solver->config;
-    ocp_nlp_memory *nlp_mem;
-    config->get(config, solver->dims, solver->mem, "nlp_mem", &nlp_mem);
-
-    ocp_nlp_res_compute(solver->dims, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem);
+    config->eval_kkt_residual(config, solver->dims, nlp_in, nlp_out, solver->opts, solver->mem, solver->work);
 }
 
 
@@ -1531,7 +1594,6 @@ void ocp_nlp_get_from_iterate(ocp_nlp_solver *solver, int iter, int stage, const
 }
 
 
-
 void ocp_nlp_get_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, const char *field, void *value)
 {
     ocp_nlp_dims *dims = solver->dims;
@@ -1612,6 +1674,19 @@ void ocp_nlp_get_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, c
         {
             tmp_int = 2*dims->ni[stage];
             blasfeo_unpack_dvec(tmp_int, &out->lam[stage], 0, (double_values + tmp_offset), 1);
+            tmp_offset += tmp_int;
+        }
+    }
+    else if (!strcmp(field, "p"))
+    {
+        int ii;
+        for (stage = 0; stage < N+1; stage++)
+        {
+            tmp_int = dims->np[stage];
+            for (ii = 0; ii < dims->np[stage]; ii++)
+            {
+                double_values[tmp_offset + ii] = in->parameter_values[stage][ii];
+            }
             tmp_offset += tmp_int;
         }
     }
@@ -1702,6 +1777,18 @@ void ocp_nlp_set_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, c
             tmp_int = 2*dims->ni[stage];
             blasfeo_pack_dvec(tmp_int, double_values + tmp_offset, 1, &out->lam[stage], 0);
             tmp_offset += tmp_int;
+        }
+    }
+    else if (!strcmp(field, "p"))
+    {
+        int ii;
+        for (stage = 0; stage < N+1; stage++)
+        {
+            for (ii = 0; ii < dims->np[stage]; ii++)
+            {
+                in->parameter_values[stage][ii] = double_values[tmp_offset + ii];
+            }
+            tmp_offset += dims->np[stage];
         }
     }
     else

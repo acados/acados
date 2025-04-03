@@ -46,8 +46,8 @@
 #include "acados/utils/mem.h"
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
 
 
 /************************************************
@@ -154,7 +154,7 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
     int N = dims->N;
     int *nv = dims->nv;
 
-    double merit_fun1;
+    double merit_fun1 = 0;
     ocp_qp_out *qp_out = mem->qp_out;
 
     /* MERIT_BACKTRACKING line search */
@@ -865,7 +865,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
     merit_fun = cost_fun + dyn_fun + constr_fun;
 
-	// printf("Merit fun: %e cost: %e dyn: %e constr: %e\n", merit_fun, cost_fun, dyn_fun, constr_fun);
+    // printf("Merit fun: %e cost: %e dyn: %e constr: %e\n", merit_fun, cost_fun, dyn_fun, constr_fun);
 
     return merit_fun;
 }

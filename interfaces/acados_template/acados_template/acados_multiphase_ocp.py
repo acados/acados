@@ -43,7 +43,7 @@ from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_ocp_options import AcadosOcpOptions, INTEGRATOR_TYPES, COLLOCATION_TYPES, COST_DISCRETIZATION_TYPES
 from .acados_ocp import AcadosOcp
 from .casadi_function_generation import GenerateContext
-from .utils import make_object_json_dumpable, get_acados_path, format_class_dict, get_shared_lib_ext, render_template
+from .utils import make_object_json_dumpable, get_acados_path, format_class_dict, get_shared_lib_ext, render_template, is_empty
 
 
 def find_non_default_fields_of_obj(obj: Union[AcadosOcpCost, AcadosOcpConstraints, AcadosOcpOptions], stage_type='all') -> list:
@@ -76,9 +76,13 @@ def find_non_default_fields_of_obj(obj: Union[AcadosOcpCost, AcadosOcpConstraint
     for field in all_fields:
         val = getattr(obj, field)
         default_val = getattr(dummy_obj, field)
-        if isinstance(val, np.ndarray):
+        if not isinstance(val, type(default_val)):
+            nondefault_fields.append(field)
+
+        elif isinstance(val, np.ndarray):
             if not np.array_equal(val, default_val):
                 nondefault_fields.append(field)
+
         elif val != default_val:
             nondefault_fields.append(field)
 
@@ -91,6 +95,10 @@ class AcadosMultiphaseOptions:
 
     All of the fields can be either None, then the corresponding value from ocp.solver_options is used,
     or a list of length n_phases describing the value for this option at each phase.
+
+    - integrator_type: list of strings, must be in ["ERK", "IRK", "GNSF", "DISCRETE", "LIFTED_IRK"]
+    - collocation_type: list of strings, must be in ["GAUSS_RADAU_IIA", "GAUSS_LEGENDRE", "EXPLICIT_RUNGE_KUTTA"]
+    - cost_discretization: list of strings, must be in ["EULER", "INTEGRATOR"]
     """
     def __init__(self):
         self.integrator_type = None
@@ -98,7 +106,6 @@ class AcadosMultiphaseOptions:
         self.cost_discretization = None
 
     def make_consistent(self, opts: AcadosOcpOptions, n_phases: int) -> None:
-
         for field, variants in zip(['integrator_type', 'collocation_type', 'cost_discretization'],
                                 [INTEGRATOR_TYPES, COLLOCATION_TYPES, COST_DISCRETIZATION_TYPES]
                                 ):
@@ -120,7 +127,8 @@ class AcadosMultiphaseOcp:
 
     Initial cost and constraints are defined by the first phase, terminal cost and constraints by the last phase.
     All other phases are treated as intermediate phases, where only dynamics and path cost and constraints are used.
-    Solver options are shared between all phases. Options that can vary phase-wise must be set via self.mocp_opts of type AcadosMultiphaseOptions.
+
+    Solver options are shared between all phases. Options that can vary phase-wise must be set via self.mocp_opts of type :py:class:`acados_template.acados_multiphase_ocp.AcadosMultiphaseOptions`.
 
     :param N_list: list containing the number of shooting intervals for each phase
     """
@@ -265,9 +273,9 @@ class AcadosMultiphaseOcp:
         # p_global check:
         p_global = self.model[0].p_global
         for i in range(self.n_phases):
-            if p_global is None and self.model[i].p_global is not None:
-                raise Exception(f"p_global is None for phase 0, but not for phase {i}. Should be the same for all phases.")
-            if p_global is not None and not ca.is_equal(p_global, self.model[i].p_global):
+            if is_empty(p_global) and not is_empty(self.model[i].p_global):
+                raise Exception(f"p_global is empty for phase 0, but not for phase {i}. Should be the same for all phases.")
+            if not is_empty(p_global) and not ca.is_equal(p_global, self.model[i].p_global):
                 raise Exception(f"p_global is different for phase 0 and phase {i}. Should be the same for all phases.")
 
         # compute phase indices
@@ -452,9 +460,11 @@ class AcadosMultiphaseOcp:
         context = GenerateContext(self.model[0].p_global, self.name, code_gen_opts)
 
         for i in range(self.n_phases):
+            ignore_initial = True if i != 0 else False
+            ignore_terminal = True if i != self.n_phases-1 else False
             # this is the only option that can vary and influence external functions to be generated
             self.dummy_ocp_list[i].solver_options.integrator_type = self.mocp_opts.integrator_type[i]
-            context = self.dummy_ocp_list[i]._setup_code_generation_context(context)
+            context = self.dummy_ocp_list[i]._setup_code_generation_context(context, ignore_initial, ignore_terminal)
             self.dummy_ocp_list[i].code_export_directory = self.code_export_directory
 
         context.finalize()

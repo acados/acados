@@ -156,6 +156,9 @@ if(ACADOS_PYTHON)
     add_test(NAME python_test_ocp
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python main_test.py)
+    add_test(NAME python_test_detect_constraints
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
+        python test_detect_constraints.py)
 
     add_test(NAME python_test_cost_integration_euler
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
@@ -319,6 +322,10 @@ add_test(NAME python_pendulum_ocp_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/zoRO_example
         python diff_drive/main.py)
 
+    add_test(NAME python_convex_ocp_with_onesided_constraints
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/convex_ocp_with_onesided_constraints
+        python main_convex_onesided.py)
+
     # Sim
     add_test(NAME python_pendulum_sim_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/sim
@@ -409,9 +416,10 @@ add_test(NAME python_pendulum_ocp_example_cmake
     set_tests_properties(python_test_nan_globalization PROPERTIES DEPENDS python_regularization_test)
     set_tests_properties(python_regularization_test PROPERTIES DEPENDS python_test_sim_dae)
     set_tests_properties(python_test_sim_dae PROPERTIES DEPENDS python_sparse_param_test)
+    set_tests_properties(python_sparse_param_test PROPERTIES DEPENDS python_test_detect_constraints)
 
     if(ACADOS_WITH_OSQP)
-        set_tests_properties(python_sparse_param_test PROPERTIES DEPENDS python_OSQP_test)
+        set_tests_properties(python_test_detect_constraints PROPERTIES DEPENDS python_OSQP_test)
     endif()
 
     # Directory acados_python/chain_mass

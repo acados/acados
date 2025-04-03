@@ -37,8 +37,8 @@
 #include <string.h>
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
 // acados
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
@@ -277,6 +277,60 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
 
 
 
+int ocp_nlp_cost_external_model_get(void *config_, void *dims_, void *model_,
+                                         const char *field, void *value_)
+{
+    int status = ACADOS_SUCCESS;
+
+    if ( !config_ || !dims_ || !model_ || !value_ )
+    {
+        printf("ocp_nlp_cost_external_model_set: got Null pointer \n");
+        exit(1);
+    }
+
+    ocp_nlp_cost_external_dims *dims = dims_;
+    ocp_nlp_cost_external_model *model = model_;
+
+    int ns = dims->ns;
+    int nx = dims->nx;
+    int nu = dims->nu;
+
+    double * value = (double *) value_;
+
+    if (!strcmp(field, "ext_cost_num_hess"))
+    {
+        printf("in cost_get numerical hessian\n");
+        blasfeo_unpack_dmat(nx+nu, nx+nu, &model->numerical_hessian, 0, 0, value, nx+nu);
+    }
+    else if (!strcmp(field, "Zl"))
+    {
+        blasfeo_unpack_dvec(ns, &model->Z, 0, value, 1);
+    }
+    else if (!strcmp(field, "Zu"))
+    {
+        blasfeo_unpack_dvec(ns, &model->Z, ns, value, 1);
+    }
+    else if (!strcmp(field, "zl"))
+    {
+        blasfeo_unpack_dvec(ns, &model->z, 0, value, 1);
+    }
+    else if (!strcmp(field, "zu"))
+    {
+        blasfeo_unpack_dvec(ns, &model->z, ns, value, 1);
+    }
+    else if (!strcmp(field, "scaling"))
+    {
+        value[0] = model->scaling;
+    }
+    else
+    {
+        printf("\nerror: %s not available in module ocp_nlp_cost_external_model_get\n", field);
+        exit(1);
+    }
+    return status;
+}
+
+
 /************************************************
  * options
  ************************************************/
@@ -376,22 +430,15 @@ acados_size_t ocp_nlp_cost_external_memory_calculate_size(void *config_, void *d
 {
     // ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_external_dims *dims = dims_;
-    ocp_nlp_cost_external_opts *opts = opts_;
 
     int nx = dims->nx;
     int nu = dims->nu;
     int ns = dims->ns;
-    int np_global = dims->np_global;
-    int nz = dims->nz;
 
     acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_cost_external_memory);
 
-    if (opts->with_solution_sens_wrt_params)
-    {
-        size += 1 * blasfeo_memsize_dmat(nu + nx + nz, np_global);  // cost_grad_params_jac
-    }
     size += 1 * blasfeo_memsize_dvec(nu + nx + 2 * ns);  // grad
 
     size += 64;  // blasfeo_mem align
@@ -405,7 +452,6 @@ void *ocp_nlp_cost_external_memory_assign(void *config_, void *dims_, void *opts
 {
     // ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_external_dims *dims = dims_;
-    ocp_nlp_cost_external_opts *opts = opts_;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -413,7 +459,6 @@ void *ocp_nlp_cost_external_memory_assign(void *config_, void *dims_, void *opts
     int nx = dims->nx;
     int nu = dims->nu;
     int ns = dims->ns;
-    int np_global = dims->np_global;
 
     // struct
     ocp_nlp_cost_external_memory *memory = (ocp_nlp_cost_external_memory *) c_ptr;
@@ -422,10 +467,6 @@ void *ocp_nlp_cost_external_memory_assign(void *config_, void *dims_, void *opts
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
 
-    if (opts->with_solution_sens_wrt_params)
-    {
-        assign_and_advance_blasfeo_dmat_mem(nu + nx, np_global, &memory->cost_grad_params_jac, &c_ptr);
-    }
     // grad
     assign_and_advance_blasfeo_dvec_mem(nu + nx + 2 * ns, &memory->grad, &c_ptr);
 
@@ -503,15 +544,12 @@ void ocp_nlp_cost_external_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_
 }
 
 
-void ocp_nlp_cost_external_memory_get_params_grad(void *config, void *dims_, void *opts, void *memory_, int index, struct blasfeo_dvec *out, int offset)
+
+void ocp_nlp_cost_external_memory_set_jac_lag_stat_p_global_ptr(struct blasfeo_dmat *jac_lag_stat_p_global, void *memory_)
 {
-    ocp_nlp_cost_external_dims *dims = dims_;
     ocp_nlp_cost_external_memory *memory = memory_;
 
-    int nx = dims->nx;
-    int nu = dims->nu;
-
-    blasfeo_dcolex(nx + nu, &memory->cost_grad_params_jac, 0, index, out, offset);
+    memory->jac_lag_stat_p_global = jac_lag_stat_p_global;
 }
 
 
@@ -522,17 +560,23 @@ void ocp_nlp_cost_external_memory_get_params_grad(void *config, void *dims_, voi
 acados_size_t ocp_nlp_cost_external_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
     ocp_nlp_cost_external_dims *dims = dims_;
+    ocp_nlp_cost_external_opts *opts = opts_;
 
     // extract dims
     int nx = dims->nx;
     int nz = dims->nz;
     int nu = dims->nu;
     int ns = dims->ns;
+    int np_global = dims->np_global;
 
     acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_cost_external_workspace);
 
+    if (opts->with_solution_sens_wrt_params)
+    {
+        size += 1 * blasfeo_memsize_dmat(nu + nx, np_global);  // cost_grad_params_jac
+    }
     size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);  // tmp_nunx_nunx
     size += 1 * blasfeo_memsize_dmat(nz, nz);  // tmp_nz_nz
     size += 1 * blasfeo_memsize_dmat(nz, nu+nx);  // tmp_nz_nunx
@@ -552,18 +596,26 @@ static void ocp_nlp_cost_external_cast_workspace(void *config_, void *dims_, voi
 {
     ocp_nlp_cost_external_dims *dims = dims_;
     ocp_nlp_cost_external_workspace *work = work_;
+    ocp_nlp_cost_external_opts *opts = opts_;
 
     // extract dims
     int nx = dims->nx;
     int nz = dims->nz;
     int nu = dims->nu;
     int ns = dims->ns;
+    int np_global = dims->np_global;
 
     char *c_ptr = (char *) work_;
     c_ptr += sizeof(ocp_nlp_cost_external_workspace);
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
+
+
+    if (opts->with_solution_sens_wrt_params)
+    {
+        assign_and_advance_blasfeo_dmat_mem(nu + nx, np_global, &work->cost_grad_params_jac, &c_ptr);
+    }
 
     // tmp_nunx_nunx
     assign_and_advance_blasfeo_dmat_mem(nu + nx, nu + nx, &work->tmp_nunx_nunx, &c_ptr);
@@ -882,6 +934,7 @@ void ocp_nlp_cost_external_compute_jac_p(void *config_, void *dims_, void *model
     ocp_nlp_cost_external_dims *dims = dims_;
     ocp_nlp_cost_external_model *model = model_;
     ocp_nlp_cost_external_memory *memory = memory_;
+    ocp_nlp_cost_external_workspace *work = work_;
 
     ocp_nlp_cost_external_cast_workspace(config_, dims, opts_, work_);
 
@@ -889,7 +942,7 @@ void ocp_nlp_cost_external_compute_jac_p(void *config_, void *dims_, void *model
 
     int nu = dims->nu;
     int nx = dims->nx;
-    int nz = dims->nz;
+    // int nz = dims->nz;
     int np_global = dims->np_global;
 
     /* specify input types and pointers for external cost function */
@@ -916,7 +969,7 @@ void ocp_nlp_cost_external_compute_jac_p(void *config_, void *dims_, void *model
 
     // OUTPUT
     ext_fun_type_out[0] = BLASFEO_DMAT;
-    ext_fun_out[0] = &memory->cost_grad_params_jac;
+    ext_fun_out[0] = &work->cost_grad_params_jac;
 
     // evaluate external function
     if (model->ext_cost_hess_xu_p == 0)
@@ -927,11 +980,9 @@ void ocp_nlp_cost_external_compute_jac_p(void *config_, void *dims_, void *model
     model->ext_cost_hess_xu_p->evaluate(model->ext_cost_hess_xu_p, ext_fun_type_in, ext_fun_in,
                                   ext_fun_type_out, ext_fun_out);
 
-    // scale
-    if(model->scaling != 1.0)
-    {
-        blasfeo_dgesc(nu + nx + nz, np_global, model->scaling, &memory->cost_grad_params_jac, 0, 0);
-    }
+    // add contribution to stationarity jacobian:
+    // jac_lag_stat_p_global += scaling * cost_grad_params_jac
+    blasfeo_dgead(nu+nx, np_global, model->scaling, &work->cost_grad_params_jac, 0, 0, memory->jac_lag_stat_p_global, 0, 0);
 
     return;
 }
@@ -1038,6 +1089,7 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_, int stage)
     config->model_calculate_size = &ocp_nlp_cost_external_model_calculate_size;
     config->model_assign = &ocp_nlp_cost_external_model_assign;
     config->model_set = &ocp_nlp_cost_external_model_set;
+    config->model_get = &ocp_nlp_cost_external_model_get;
     config->opts_calculate_size = &ocp_nlp_cost_external_opts_calculate_size;
     config->opts_assign = &ocp_nlp_cost_external_opts_assign;
     config->opts_initialize_default = &ocp_nlp_cost_external_opts_initialize_default;
@@ -1052,7 +1104,7 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_, int stage)
     config->memory_set_dzdux_tran_ptr = &ocp_nlp_cost_external_memory_set_dzdux_tran_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_cost_external_memory_set_RSQrq_ptr;
     config->memory_set_Z_ptr = &ocp_nlp_cost_external_memory_set_Z_ptr;
-    config->memory_get_params_grad = &ocp_nlp_cost_external_memory_get_params_grad;
+    config->memory_set_jac_lag_stat_p_global_ptr = &ocp_nlp_cost_external_memory_set_jac_lag_stat_p_global_ptr;
     config->workspace_calculate_size = &ocp_nlp_cost_external_workspace_calculate_size;
     config->get_external_fun_workspace_requirement = &ocp_nlp_cost_external_get_external_fun_workspace_requirement;
     config->set_external_fun_workspaces = &ocp_nlp_cost_external_set_external_fun_workspaces;

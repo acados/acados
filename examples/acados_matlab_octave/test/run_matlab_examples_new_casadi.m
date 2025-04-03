@@ -35,6 +35,8 @@ clearvars; clc; close all;
 % list the examples you would like to test
 targets = {
     '../p_global_example/main.m';
+    '../p_global_example/simulink_test_p_global.m';
+    '../mocp_transition_example/main_parametric_mocp.m';
 };
 
 
@@ -71,9 +73,9 @@ for idx = 1:length(targets)
     delete(strcat(testpath, "/test_workspace.mat"));
     % delete generated code to avoid failure in examples using similar names
     code_gen_dir = strcat(testpath, "/", dir, "/c_generated_code");
-    if exist(code_gen_dir, 'dir')
-        rmdir(code_gen_dir, 's')
-    end
+    % if exist(code_gen_dir, 'dir')
+    %     rmdir(code_gen_dir, 's')
+    % end
     close all;
     % clc;
 end

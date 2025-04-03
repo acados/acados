@@ -46,7 +46,7 @@ extern "C" {
 #endif
 
 // blasfeo
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_common.h"
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"

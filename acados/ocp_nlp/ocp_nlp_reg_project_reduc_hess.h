@@ -44,7 +44,7 @@ extern "C" {
 
 
 // blasfeo
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_common.h"
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
@@ -66,7 +66,7 @@ typedef struct
     double thr_eig;
     double min_eig;
     double min_pivot;
-	int pivoting;
+    int pivoting;
 } ocp_nlp_reg_project_reduc_hess_opts;
 
 //

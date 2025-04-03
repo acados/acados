@@ -42,7 +42,7 @@ extern "C" {
 #include "acados/utils/types.h"
 #include "acados/sim/sim_common.h"
 
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_common.h"
 
 /*
 GNSF - Generalized Nonlinear Static Feedback Model
@@ -308,9 +308,9 @@ typedef struct
     // struct blasfeo_dmat *Lxdot;
     // struct blasfeo_dmat *Lz;
 
-	double time_sim;
-	double time_ad;
-	double time_la;
+    double time_sim;
+    double time_ad;
+    double time_la;
 
 } sim_gnsf_memory;
 

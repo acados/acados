@@ -76,7 +76,7 @@ typedef struct {{ name }}_solver_capsule
     external_function_casadi p_global_precompute_fun;
 {%- endif %}
 
-	{%- for jj in range(end=n_phases) %}{# phases loop !#}
+    {%- for jj in range(end=n_phases) %}{# phases loop !#}
     /* external functions phase {{ jj }} */
     // dynamics
 {% if mocp_opts.integrator_type[jj] == "ERK" %}
@@ -120,6 +120,12 @@ typedef struct {{ name }}_solver_capsule
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi *nl_constr_h_fun_jac_hess_{{ jj }};
 {%- endif %}
+{% if solver_options.with_solution_sens_wrt_params %}
+    external_function_external_param_casadi *nl_constr_h_jac_p_hess_xu_p_{{ jj }};
+{%- endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+    external_function_external_param_casadi *nl_constr_h_adj_p_{{ jj }};
+{%- endif %}
 {%- endif %}
 
 
@@ -141,7 +147,7 @@ typedef struct {{ name }}_solver_capsule
     external_function_external_param_{{ cost[jj].cost_ext_fun_type }} *ext_cost_hess_xu_p_{{ jj }};
     {% endif %}
 {% endif %}
-	{%- endfor %}{# for jj in range(end=n_phases) #}
+    {%- endfor %}{# for jj in range(end=n_phases) #}
 
 
 {% if cost_0.cost_type_0 == "NONLINEAR_LS" %}
@@ -172,6 +178,12 @@ typedef struct {{ name }}_solver_capsule
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi nl_constr_h_0_fun_jac_hess;
 {%- endif %}
+{% if solver_options.with_solution_sens_wrt_params %}
+    external_function_external_param_casadi nl_constr_h_0_jac_p_hess_xu_p;
+{%- endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+    external_function_external_param_casadi nl_constr_h_0_adj_p;
+{%- endif %}
 {%- endif %}
 
 {% if cost_e.cost_type_e == "NONLINEAR_LS" %}
@@ -201,6 +213,12 @@ typedef struct {{ name }}_solver_capsule
     external_function_external_param_casadi nl_constr_h_e_fun;
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi nl_constr_h_e_fun_jac_hess;
+{%- endif %}
+{% if solver_options.with_solution_sens_wrt_params %}
+    external_function_external_param_casadi nl_constr_h_e_jac_p_hess_xu_p;
+{%- endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+    external_function_external_param_casadi nl_constr_h_e_adj_p;
 {%- endif %}
 {%- endif %}
 

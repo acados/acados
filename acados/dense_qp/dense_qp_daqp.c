@@ -35,8 +35,8 @@
 #include <string.h>
 #include <stdio.h>
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
 
 // daqp
 #define SOFT_WEIGHTS

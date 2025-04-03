@@ -50,6 +50,22 @@ phase_2.cost.yref = zeros(2, 1);
 ocp.set_phase(phase_2, 2);
 
 phase_3 = formulate_single_integrator_ocp(settings);
+% add dummy constraints to test Simulink
+phase_3.model.con_h_expr = [phase_3.model.x; phase_3.model.x^2];
+phase_3.constraints.lh = [-100; -200];
+phase_3.constraints.uh = [100; 200];
+
+phase_3.constraints.idxbx = [0];
+phase_3.constraints.lbx = -200;
+phase_3.constraints.ubx = 200;
+
+% values for Simulink
+N_3 = 15;
+lbx_all = repmat(phase_3.constraints.lbx, N_3);
+ubx_all = repmat(phase_3.constraints.ubx, N_3);
+lh_all = repmat(phase_3.constraints.lh, N_3);
+uh_all = repmat(phase_3.constraints.uh, N_3);
+
 ocp.set_phase(phase_3, 3);
 
 % set mocp specific options
@@ -71,8 +87,10 @@ simulink_opts.inputs.u_init = 1;
 simulink_opts.inputs.pi_init = 1;
 simulink_opts.inputs.ignore_inits = 1;
 simulink_opts.inputs.reset_solver = 1;
-
-
+simulink_opts.inputs.lbx = 1;
+simulink_opts.inputs.ubx = 1;
+simulink_opts.inputs.lh = 1;
+simulink_opts.inputs.uh = 1;
 
 simulink_opts.outputs.xtraj = 1;
 simulink_opts.outputs.utraj = 1;
@@ -124,6 +142,21 @@ for itest = 1:2
                repmat(phase_2.constraints.ubu, N_list(2), 1);
                repmat(phase_3.constraints.ubu, N_list(3), 1)];
 
+    lbx_all = [repmat(phase_1.constraints.lbx, N_list(1)-1, 1);
+               repmat(phase_2.constraints.lbx, N_list(2), 1);
+               repmat(phase_3.constraints.lbx, N_list(3), 1)];
+    ubx_all = [repmat(phase_1.constraints.ubx, N_list(1)-1, 1);
+               repmat(phase_2.constraints.ubx, N_list(2), 1);
+               repmat(phase_3.constraints.ubx, N_list(3), 1)];
+
+    lh_all = [repmat(phase_1.constraints.lh, N_list(1)-1, 1);
+               repmat(phase_2.constraints.lh, N_list(2), 1);
+               repmat(phase_3.constraints.lh, N_list(3), 1)];
+    uh_all = [repmat(phase_1.constraints.uh, N_list(1)-1, 1);
+               repmat(phase_2.constraints.uh, N_list(2), 1);
+               repmat(phase_3.constraints.uh, N_list(3), 1)];
+
+
     bu_fact = 1;
     if itest == 2
         bu_fact = 0.8;
@@ -156,7 +189,7 @@ for itest = 1:2
         u_traj = [u_traj; ocp_solver.get('u', i)];
         pi_traj = [pi_traj; ocp_solver.get('pi', i)];
     end
-    
+
     x_init = 0 * x_traj;
     u_init = 0 * u_traj;
     pi_init = 0 * pi_traj;
@@ -175,49 +208,42 @@ for itest = 1:2
     kkt_signal = out_sim.logsout.getElement('KKT_residual');
     kkt_val = kkt_signal.Values.data;
     if any(kkt_val > 1e-6)
-        disp('failed');
-        quit(1);
+        error('failed');
     end
 
     sqp_iter_signal = out_sim.logsout.getElement('sqp_iter');
     sqp_iter_val = sqp_iter_signal.Values.Data;
     disp('checking sqp_iter_val, should be 1 because problem is a QP.')
     if any(sqp_iter_val ~= 1)
-        disp('failed');
-        quit(1);
+        error('failed');
     end
 
     status_signal = out_sim.logsout.getElement('status');
     status_val = status_signal.Values.Data;
     disp('checking status, should be 0 (success).')
     if any(status_val ~= 0)
-        disp('failed. got status values:');
-        disp(status_val);
-        quit(1);
+        error(['failed. got status values:' mat2str(status_val)]);
     end
 
     utraj_signal = out_sim.logsout.getElement('utraj');
     u_simulink = utraj_signal.Values.Data(1, :);
     disp('checking u values.')
     if norm(u_simulink(:) - u_traj(:)) > 1e-8
-        disp('failed');
-        % quit(1);
+        error('failed');
     end
 
     xtraj_signal = out_sim.logsout.getElement('xtraj');
     x_simulink = xtraj_signal.Values.Data(1, :);
     disp('checking x values, should match solution in MATLAB.')
     if norm(x_simulink(:) - x_traj(:)) > 1e-8
-        disp('failed');
-        % quit(1);
+        error('failed');
     end
-    % 
+    %
     pi_signal = out_sim.logsout.getElement('pi_all');
     pi_simulink = pi_signal.Values.Data(1, :);
     disp('checking pi values, should match solution in MATLAB.')
     if norm(pi_simulink(:) - pi_traj(:)) > 1e-8
-        disp('failed');
-        % quit(1);
+        error('failed');
     end
 
     x1_signal = out_sim.logsout.getElement('x1');
@@ -225,8 +251,7 @@ for itest = 1:2
     x1_ref = ocp_solver.get('x', 1);
     disp('checking x1_value')
     if norm(x1_val(:) - x1_ref(:)) > 1e-8
-        disp('failed');
-        % quit(1);
+        error('failed');
     end
 
     u0_signal = out_sim.logsout.getElement('u0');
@@ -234,8 +259,7 @@ for itest = 1:2
     u0_ref = ocp_solver.get('u', 0);
     disp('checking u0_value')
     if norm(u0_val(:) - u0_ref(:)) > 1e-8
-        disp('failed');
-        % quit(1);
+        error('failed');
     end
 
 end

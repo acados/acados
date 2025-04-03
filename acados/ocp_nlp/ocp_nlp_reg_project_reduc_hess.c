@@ -40,8 +40,8 @@
 #include "acados/utils/math.h"
 #include "acados/utils/mem.h"
 
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
 
 
 
@@ -70,7 +70,7 @@ void ocp_nlp_reg_project_reduc_hess_opts_initialize_default(void *config_, ocp_n
     opts->thr_eig = 1e-12;
     opts->min_eig = 1e-4;
     opts->min_pivot = 1e-12;
-	opts->pivoting = 1;
+    opts->pivoting = 1;
 
     return;
 }
@@ -126,8 +126,8 @@ acados_size_t ocp_nlp_reg_project_reduc_hess_memory_calculate_size(void *config_
     int ii;
 
     int nuxM = nu[0]+nx[0];
-	int nuM = nu[0];
-	int nxM = nx[0];
+    int nuM = nu[0];
+    int nxM = nx[0];
     for(ii=1; ii<=N; ii++)
     {
         nuxM = nu[ii]+nx[ii]>nuxM ? nu[ii]+nx[ii] : nuxM;
@@ -168,8 +168,8 @@ void *ocp_nlp_reg_project_reduc_hess_memory_assign(void *config_, ocp_nlp_reg_di
     int ii;
 
     int nuxM = nu[0]+nx[0];
-	int nuM = nu[0];
-	int nxM = nx[0];
+    int nuM = nu[0];
+    int nxM = nx[0];
     for(ii=1; ii<=N; ii++)
     {
         nuxM = nu[ii]+nx[ii]>nuxM ? nu[ii]+nx[ii] : nuxM;
@@ -222,7 +222,7 @@ void ocp_nlp_reg_project_reduc_hess_memory_set_RSQrq_ptr(ocp_nlp_reg_dims *dims,
 
     int ii;
 
-	int N = dims->N;
+    int N = dims->N;
 
     for(ii=0; ii<=N; ii++)
     {
@@ -247,7 +247,7 @@ void ocp_nlp_reg_project_reduc_hess_memory_set_BAbt_ptr(ocp_nlp_reg_dims *dims, 
 
     int ii;
 
-	int N = dims->N;
+    int N = dims->N;
 
     for(ii=0; ii<N; ii++)
     {
@@ -340,184 +340,184 @@ void ocp_nlp_reg_project_reduc_hess_regularize(void *config, ocp_nlp_reg_dims *d
     int *nu = dims->nu;
     int N = dims->N;
 
-	struct blasfeo_dmat *L = &mem->L;
-	struct blasfeo_dmat *L2 = &mem->L2;
-	struct blasfeo_dmat *L3 = &mem->L3;
-	struct blasfeo_dmat *Ls = &mem->Ls;
-	struct blasfeo_dmat *P = &mem->P;
-	struct blasfeo_dmat *AL = &mem->AL;
+    struct blasfeo_dmat *L = &mem->L;
+    struct blasfeo_dmat *L2 = &mem->L2;
+    struct blasfeo_dmat *L3 = &mem->L3;
+    struct blasfeo_dmat *Ls = &mem->Ls;
+    struct blasfeo_dmat *P = &mem->P;
+    struct blasfeo_dmat *AL = &mem->AL;
 
-	int do_reg = 0;
-	double pivot, tmp_el;
+    int do_reg = 0;
+    double pivot, tmp_el;
 
 
-	// last + middle stages
-	for(ii=-1; ii<N-1; ii++)
-	{
+    // last + middle stages
+    for(ii=-1; ii<N-1; ii++)
+    {
 
-		ss = N-ii-1;
-		// last stage
-		if(ss==N)
-		{
-			blasfeo_dtrcp_l(nu[ss]+nx[ss], mem->RSQrq[ss], 0, 0, L, 0, 0);
-		}
-		// middle stages
-		else
-		{
-			blasfeo_dgemm_nt(nu[ss]+nx[ss], nx[ss+1], nx[ss+1], 1.0, mem->BAbt[ss], 0, 0, P, 0, 0, 0.0, AL, 0, 0, AL, 0, 0); // TODO symm
-			blasfeo_dsyrk_ln(nu[ss]+nx[ss], nx[ss+1], 1.0, AL, 0, 0, mem->BAbt[ss], 0, 0, 1.0, mem->RSQrq[ss], 0, 0, L, 0, 0);
-		}
-		blasfeo_dtrtr_l(nu[ss]+nx[ss], L, 0, 0, L, 0, 0); // necessary ???
+        ss = N-ii-1;
+        // last stage
+        if(ss==N)
+        {
+            blasfeo_dtrcp_l(nu[ss]+nx[ss], mem->RSQrq[ss], 0, 0, L, 0, 0);
+        }
+        // middle stages
+        else
+        {
+            blasfeo_dgemm_nt(nu[ss]+nx[ss], nx[ss+1], nx[ss+1], 1.0, mem->BAbt[ss], 0, 0, P, 0, 0, 0.0, AL, 0, 0, AL, 0, 0); // TODO symm
+            blasfeo_dsyrk_ln(nu[ss]+nx[ss], nx[ss+1], 1.0, AL, 0, 0, mem->BAbt[ss], 0, 0, 1.0, mem->RSQrq[ss], 0, 0, L, 0, 0);
+        }
+        blasfeo_dtrtr_l(nu[ss]+nx[ss], L, 0, 0, L, 0, 0); // necessary ???
 
-		// backup L in L3
-		blasfeo_dgese(nu[ss]+nx[ss], nu[ss]+nx[ss], 0.0, L3, 0, 0);
-		blasfeo_dgecp(nu[ss]+nx[ss], nu[ss], L, 0, 0, L3, 0, 0);
+        // backup L in L3
+        blasfeo_dgese(nu[ss]+nx[ss], nu[ss]+nx[ss], 0.0, L3, 0, 0);
+        blasfeo_dgecp(nu[ss]+nx[ss], nu[ss], L, 0, 0, L3, 0, 0);
 
-		// project L_R
-		blasfeo_unpack_dmat(nu[ss], nu[ss], L, 0, 0, mem->reg_hess, nu[ss]);
-		acados_eigen_decomposition(nu[ss], mem->reg_hess, mem->V, mem->d, mem->e);
-		do_reg = 0;
-		for(jj=0; jj<nu[ss]; jj++)
-		{
-			if(mem->d[jj]<opts->thr_eig)
-			{
-				mem->e[jj] = opts->min_eig - mem->d[jj];
-				do_reg = 1;
-			}
-			else
-			{
-				mem->e[jj] = 0.0;
-			}
-		}
-		if(do_reg)
-		{
-			acados_reconstruct_A(nu[ss], mem->reg_hess, mem->V, mem->e);
-			blasfeo_dgese(nu[ss]+nx[ss], nu[ss]+nx[ss], 0.0, L2, 0, 0);
-			blasfeo_pack_dmat(nu[ss], nu[ss], mem->reg_hess, nu[ss], L2, 0, 0);
+        // project L_R
+        blasfeo_unpack_dmat(nu[ss], nu[ss], L, 0, 0, mem->reg_hess, nu[ss]);
+        acados_eigen_decomposition(nu[ss], mem->reg_hess, mem->V, mem->d, mem->e);
+        do_reg = 0;
+        for(jj=0; jj<nu[ss]; jj++)
+        {
+            if(mem->d[jj]<opts->thr_eig)
+            {
+                mem->e[jj] = opts->min_eig - mem->d[jj];
+                do_reg = 1;
+            }
+            else
+            {
+                mem->e[jj] = 0.0;
+            }
+        }
+        if(do_reg)
+        {
+            acados_reconstruct_A(nu[ss], mem->reg_hess, mem->V, mem->e);
+            blasfeo_dgese(nu[ss]+nx[ss], nu[ss]+nx[ss], 0.0, L2, 0, 0);
+            blasfeo_pack_dmat(nu[ss], nu[ss], mem->reg_hess, nu[ss], L2, 0, 0);
 
-			// apply reg to R
-			blasfeo_dgead(nu[ss], nu[ss], 1.0, L2, 0, 0, mem->RSQrq[ss], 0, 0);
-			// apply reg to L
-			blasfeo_dgead(nu[ss], nu[ss], 1.0, L2, 0, 0, L, 0, 0);
-		}
+            // apply reg to R
+            blasfeo_dgead(nu[ss], nu[ss], 1.0, L2, 0, 0, mem->RSQrq[ss], 0, 0);
+            // apply reg to L
+            blasfeo_dgead(nu[ss], nu[ss], 1.0, L2, 0, 0, L, 0, 0);
+        }
 
-		// compute reg_schur
-		blasfeo_dgecp(nu[ss]+nx[ss], nu[ss], L, 0, 0, L2, 0, 0);
-		blasfeo_dpotrf_l_mn(nu[ss]+nx[ss], nu[ss], L2, 0, 0, L2, 0, 0);
-		blasfeo_dgecp(nx[ss], nu[ss], L2, nu[ss], 0, Ls, 0, 0);
-		blasfeo_dsyrk_ln_mn(nx[ss], nx[ss], nu[ss], -1.0, Ls, 0, 0, Ls, 0, 0, 0.0, L2, nu[ss], nu[ss], L2, nu[ss], nu[ss]);
+        // compute reg_schur
+        blasfeo_dgecp(nu[ss]+nx[ss], nu[ss], L, 0, 0, L2, 0, 0);
+        blasfeo_dpotrf_l_mn(nu[ss]+nx[ss], nu[ss], L2, 0, 0, L2, 0, 0);
+        blasfeo_dgecp(nx[ss], nu[ss], L2, nu[ss], 0, Ls, 0, 0);
+        blasfeo_dsyrk_ln_mn(nx[ss], nx[ss], nu[ss], -1.0, Ls, 0, 0, Ls, 0, 0, 0.0, L2, nu[ss], nu[ss], L2, nu[ss], nu[ss]);
 
-		// compute true_schur
-		if(do_reg)
-		{
-			for(jj=0; jj<nu[ss]; jj++)
-			{
-				if(opts->pivoting)
-				{
-					// find pivot element
-					pivot = BLASFEO_DMATEL(L3, jj, jj);
-					idx = jj;
-					for(kk=jj+1; kk<nu[ss]; kk++)
-					{
-						tmp_el = BLASFEO_DMATEL(L3, kk, kk);
-						if((tmp_el<pivot) & (tmp_el>-pivot))
-						{
-							pivot = BLASFEO_DMATEL(L3, kk, kk);
-							idx = kk;
-						}
-					}
-					// symmetric permute
-					if(idx!=jj)
-					{
-						// top triangle
-						for(kk=jj; kk<idx; kk++)
-						{
-							tmp_el = BLASFEO_DMATEL(L3, kk, jj);
-							BLASFEO_DMATEL(L3, kk, jj) = BLASFEO_DMATEL(L3, idx-jj, idx-kk);
-							BLASFEO_DMATEL(L3, idx-jj, idx-kk) = tmp_el;
-						}
-						// bottom rectangle
-						for(kk=idx+1; kk<nu[ss]+nx[ss]; kk++)
+        // compute true_schur
+        if(do_reg)
+        {
+            for(jj=0; jj<nu[ss]; jj++)
+            {
+                if(opts->pivoting)
+                {
+                    // find pivot element
+                    pivot = BLASFEO_DMATEL(L3, jj, jj);
+                    idx = jj;
+                    for(kk=jj+1; kk<nu[ss]; kk++)
+                    {
+                        tmp_el = BLASFEO_DMATEL(L3, kk, kk);
+                        if((tmp_el<pivot) & (tmp_el>-pivot))
+                        {
+                            pivot = BLASFEO_DMATEL(L3, kk, kk);
+                            idx = kk;
+                        }
+                    }
+                    // symmetric permute
+                    if(idx!=jj)
+                    {
+                        // top triangle
+                        for(kk=jj; kk<idx; kk++)
+                        {
+                            tmp_el = BLASFEO_DMATEL(L3, kk, jj);
+                            BLASFEO_DMATEL(L3, kk, jj) = BLASFEO_DMATEL(L3, idx-jj, idx-kk);
+                            BLASFEO_DMATEL(L3, idx-jj, idx-kk) = tmp_el;
+                        }
+                        // bottom rectangle
+                        for(kk=idx+1; kk<nu[ss]+nx[ss]; kk++)
                             {
-							tmp_el = BLASFEO_DMATEL(L3, kk, jj);
-							BLASFEO_DMATEL(L3, kk, jj) = BLASFEO_DMATEL(L3, kk, idx);
-							BLASFEO_DMATEL(L3, kk, idx) = tmp_el;
-						}
-					}
-				}
+                            tmp_el = BLASFEO_DMATEL(L3, kk, jj);
+                            BLASFEO_DMATEL(L3, kk, jj) = BLASFEO_DMATEL(L3, kk, idx);
+                            BLASFEO_DMATEL(L3, kk, idx) = tmp_el;
+                        }
+                    }
+                }
 
-				pivot = BLASFEO_DMATEL(L3, jj, jj);
-				if ((pivot<opts->min_pivot) & (pivot>-opts->min_pivot))
-				{
-					if(pivot<0.0)
-						pivot = opts->min_pivot;
-					else
-						pivot = - opts->min_pivot;
-				}
-				pivot = 1.0/pivot;
-				for(kk=jj+1; kk<nu[ss]+nx[ss]; kk++)
-				{
-					tmp_el = pivot * BLASFEO_DMATEL(L3, kk, jj);
-					for(ll=kk; ll<nu[ss]+nx[ss]; ll++)
-					{
-						BLASFEO_DMATEL(L3, ll, kk) -= BLASFEO_DMATEL(L3, ll, jj) * tmp_el;
-					}
-				}
-			}
-		}
+                pivot = BLASFEO_DMATEL(L3, jj, jj);
+                if ((pivot<opts->min_pivot) & (pivot>-opts->min_pivot))
+                {
+                    if(pivot<0.0)
+                        pivot = opts->min_pivot;
+                    else
+                        pivot = - opts->min_pivot;
+                }
+                pivot = 1.0/pivot;
+                for(kk=jj+1; kk<nu[ss]+nx[ss]; kk++)
+                {
+                    tmp_el = pivot * BLASFEO_DMATEL(L3, kk, jj);
+                    for(ll=kk; ll<nu[ss]+nx[ss]; ll++)
+                    {
+                        BLASFEO_DMATEL(L3, ll, kk) -= BLASFEO_DMATEL(L3, ll, jj) * tmp_el;
+                    }
+                }
+            }
+        }
 
-		// apply schur to P
-		blasfeo_dgecp(nx[ss], nx[ss], L, nu[ss], nu[ss], P, 0, 0);
-		if(do_reg)
-//		if(0)
-		{
-			// P
-			blasfeo_dgead(nx[ss], nx[ss], 1.0, L3, nu[ss], nu[ss], P, 0, 0);
-			// Q
-			blasfeo_dgead(nx[ss], nx[ss], -1.0, L2, nu[ss], nu[ss], mem->RSQrq[ss], nu[ss], nu[ss]);
-			blasfeo_dgead(nx[ss], nx[ss],  1.0, L3, nu[ss], nu[ss], mem->RSQrq[ss], nu[ss], nu[ss]);
-		}
-		else
-		{
-			// P
-			blasfeo_dgead(nx[ss], nx[ss], 1.0, L2, nu[ss], nu[ss], P, 0, 0);
-		}
-		blasfeo_dtrtr_l(nx[ss], P, 0, 0, P, 0, 0);
+        // apply schur to P
+        blasfeo_dgecp(nx[ss], nx[ss], L, nu[ss], nu[ss], P, 0, 0);
+        if(do_reg)
+//        if(0)
+        {
+            // P
+            blasfeo_dgead(nx[ss], nx[ss], 1.0, L3, nu[ss], nu[ss], P, 0, 0);
+            // Q
+            blasfeo_dgead(nx[ss], nx[ss], -1.0, L2, nu[ss], nu[ss], mem->RSQrq[ss], nu[ss], nu[ss]);
+            blasfeo_dgead(nx[ss], nx[ss],  1.0, L3, nu[ss], nu[ss], mem->RSQrq[ss], nu[ss], nu[ss]);
+        }
+        else
+        {
+            // P
+            blasfeo_dgead(nx[ss], nx[ss], 1.0, L2, nu[ss], nu[ss], P, 0, 0);
+        }
+        blasfeo_dtrtr_l(nx[ss], P, 0, 0, P, 0, 0);
 
-	}
-
-
-	// first stage: factorize P in L too
-	ss = 0;
-	blasfeo_dgemm_nt(nu[ss]+nx[ss], nx[ss+1], nx[ss+1], 1.0, mem->BAbt[ss], 0, 0, P, 0, 0, 0.0, AL, 0, 0, AL, 0, 0); // TODO symm
-	blasfeo_dsyrk_ln(nu[ss]+nx[ss], nx[ss+1], 1.0, AL, 0, 0, mem->BAbt[ss], 0, 0, 1.0, mem->RSQrq[ss], 0, 0, L, 0, 0);
-	blasfeo_dtrtr_l(nu[ss]+nx[ss], L, 0, 0, L, 0, 0); // necessary ???
-	blasfeo_unpack_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], L, 0, 0, mem->reg_hess, nu[ss]+nx[ss]);
-	acados_eigen_decomposition(nu[ss]+nx[ss], mem->reg_hess, mem->V, mem->d, mem->e);
-	for(jj=0; jj<nu[ss]+nx[ss]; jj++)
-	{
-		if(mem->d[jj]<opts->thr_eig)
-			mem->e[jj] = opts->min_eig - mem->d[jj];
-		else
-			mem->e[jj] = 0.0;
-	}
-	acados_reconstruct_A(nu[ss]+nx[ss], mem->reg_hess, mem->V, mem->e);
-	blasfeo_pack_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], mem->reg_hess, nu[ss]+nx[ss], L2, 0, 0);
-	blasfeo_dgead(nu[ss]+nx[ss], nu[ss]+nx[ss], 1.0, L2, 0, 0, mem->RSQrq[ss], 0, 0);
+    }
 
 
-//	printf("\nhessian after\n");
-//	for(ii=0; ii<=N; ii++)
-//	{
-//		printf("\nii = %d\n", ii);
-//		blasfeo_print_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0);
-//		blasfeo_unpack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->reg_hess, nu[ii]+nx[ii]);
-//		acados_eigen_decomposition(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e);
-//		d_print_mat(1, nu[ii]+nx[ii], mem->d, 1);
-//	}
-//	exit(1);
+    // first stage: factorize P in L too
+    ss = 0;
+    blasfeo_dgemm_nt(nu[ss]+nx[ss], nx[ss+1], nx[ss+1], 1.0, mem->BAbt[ss], 0, 0, P, 0, 0, 0.0, AL, 0, 0, AL, 0, 0); // TODO symm
+    blasfeo_dsyrk_ln(nu[ss]+nx[ss], nx[ss+1], 1.0, AL, 0, 0, mem->BAbt[ss], 0, 0, 1.0, mem->RSQrq[ss], 0, 0, L, 0, 0);
+    blasfeo_dtrtr_l(nu[ss]+nx[ss], L, 0, 0, L, 0, 0); // necessary ???
+    blasfeo_unpack_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], L, 0, 0, mem->reg_hess, nu[ss]+nx[ss]);
+    acados_eigen_decomposition(nu[ss]+nx[ss], mem->reg_hess, mem->V, mem->d, mem->e);
+    for(jj=0; jj<nu[ss]+nx[ss]; jj++)
+    {
+        if(mem->d[jj]<opts->thr_eig)
+            mem->e[jj] = opts->min_eig - mem->d[jj];
+        else
+            mem->e[jj] = 0.0;
+    }
+    acados_reconstruct_A(nu[ss]+nx[ss], mem->reg_hess, mem->V, mem->e);
+    blasfeo_pack_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], mem->reg_hess, nu[ss]+nx[ss], L2, 0, 0);
+    blasfeo_dgead(nu[ss]+nx[ss], nu[ss]+nx[ss], 1.0, L2, 0, 0, mem->RSQrq[ss], 0, 0);
 
-	return;
+
+//    printf("\nhessian after\n");
+//    for(ii=0; ii<=N; ii++)
+//    {
+//        printf("\nii = %d\n", ii);
+//        blasfeo_print_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0);
+//        blasfeo_unpack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->reg_hess, nu[ii]+nx[ii]);
+//        acados_eigen_decomposition(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e);
+//        d_print_mat(1, nu[ii]+nx[ii], mem->d, 1);
+//    }
+//    exit(1);
+
+    return;
 }
 
 

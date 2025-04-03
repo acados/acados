@@ -56,6 +56,8 @@ classdef AcadosOcpOptions < handle
         sim_method_jac_reuse
         sim_method_detect_gnsf
         time_steps
+        shooting_nodes
+        cost_scaling
         Tsim
         qp_solver              %  qp solver to be used in the NLP solver
         qp_solver_tol_stat
@@ -75,7 +77,6 @@ classdef AcadosOcpOptions < handle
         cost_discretization
         regularize_method
         reg_epsilon
-        shooting_nodes
         exact_hess_cost
         exact_hess_dyn
         exact_hess_constr
@@ -88,6 +89,12 @@ classdef AcadosOcpOptions < handle
         globalization_use_SOC
         globalization_full_step_dual
         globalization_eps_sufficient_descent
+        globalization_funnel_init_increase_factor
+        globalization_funnel_init_upper_bound
+        globalization_funnel_sufficient_decrease_factor
+        globalization_funnel_kappa
+        globalization_funnel_fraction_switching_condition
+        globalization_funnel_initial_penalty_parameter
         hpipm_mode
         with_solution_sens_wrt_params
         with_value_sens_wrt_params
@@ -122,7 +129,7 @@ classdef AcadosOcpOptions < handle
             obj.integrator_type = 'ERK';
             obj.tf = [];
             obj.N_horizon = [];
-            obj.nlp_solver_type = 'SQP_RTI';
+            obj.nlp_solver_type = 'SQP';
             obj.globalization_fixed_step_length = 1.0;
             obj.nlp_solver_step_length = [];
             obj.nlp_solver_tol_stat = 1e-6;
@@ -161,6 +168,7 @@ classdef AcadosOcpOptions < handle
             obj.regularize_method = 'NO_REGULARIZE';
             obj.reg_epsilon = 1e-4;
             obj.shooting_nodes = [];
+            obj.cost_scaling = [];
             obj.exact_hess_cost = 1;
             obj.exact_hess_dyn = 1;
             obj.exact_hess_constr = 1;
@@ -172,6 +180,15 @@ classdef AcadosOcpOptions < handle
             obj.globalization_use_SOC = 0;
             obj.globalization_full_step_dual = [];
             obj.globalization_eps_sufficient_descent = [];
+
+            % funnel options
+            obj.globalization_funnel_init_increase_factor = 15;
+            obj.globalization_funnel_init_upper_bound = 1.0;
+            obj.globalization_funnel_sufficient_decrease_factor = 0.9;
+            obj.globalization_funnel_kappa = 0.9;
+            obj.globalization_funnel_fraction_switching_condition = 1e-3;
+            obj.globalization_funnel_initial_penalty_parameter = 1.0;
+
             obj.hpipm_mode = 'BALANCE';
             obj.with_solution_sens_wrt_params = 0;
             obj.with_value_sens_wrt_params = 0;
@@ -220,7 +237,7 @@ classdef AcadosOcpOptions < handle
 
         function s = convert_to_struct_for_json_dump(self, N)
             s = self.struct();
-            s = prepare_struct_for_json_dump(s, {'time_steps', 'shooting_nodes', 'sim_method_num_stages', 'sim_method_num_steps', 'sim_method_jac_reuse', 'custom_templates'}, {});
+            s = prepare_struct_for_json_dump(s, {'time_steps', 'shooting_nodes', 'cost_scaling', 'sim_method_num_stages', 'sim_method_num_steps', 'sim_method_jac_reuse', 'custom_templates'}, {});
         end
     end
 end

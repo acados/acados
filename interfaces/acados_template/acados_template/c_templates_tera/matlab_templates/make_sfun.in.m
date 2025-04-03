@@ -41,6 +41,8 @@
 
   {%- set ns_total = dims.ns_0 + dims.ns_e + (solver_options.N_horizon - 1) * dims.ns %}
   {% set_global nx_total = dims.nx * (solver_options.N_horizon+1) %}
+  {% set nbx_total = dims.nbx * (solver_options.N_horizon-1) %}{# Note: without initial and terminal node #}
+  {% set nh_total = dims.nh * (solver_options.N_horizon-1) %}{# Note: without initial and terminal node #}
   {% set_global nu_total = dims.nu * (solver_options.N_horizon) %}
   {% set_global nbu_total = dims.nbu * (solver_options.N_horizon) %}
   {% set np_total = dims.np * (solver_options.N_horizon+1) %}
@@ -63,6 +65,8 @@
 
   {% set ns_total = dims_0.ns_0 %}
   {% set nx_total = 0 %}
+  {% set nbx_total = 0 %}{# Note: without initial and terminal node #}
+  {% set nh_total = 0 %}{# Note: without initial and terminal node #}
   {% set nu_total = 0 %}
   {% set nbu_total = 0 %}
   {% set nz_total = 0 %}
@@ -71,6 +75,8 @@
   {% for jj in range(end=n_phases) %}{# phases loop !#}
     {% set_global ns_total = ns_total + (end_idx[jj] - cost_start_idx[jj]) * phases_dims[jj].ns %}
     {% set_global nx_total = nx_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nx %}
+    {% set_global nbx_total = nbx_total + (end_idx[jj] - cost_start_idx[jj]) * phases_dims[jj].nbx %}
+    {% set_global nh_total = nh_total + (end_idx[jj] - cost_start_idx[jj]) * phases_dims[jj].nh %}
     {% set_global nu_total = nu_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nu %}
     {% set_global nbu_total = nbu_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nbu %}
     {% set_global nz_total = nz_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nz %}
@@ -257,17 +263,15 @@ sfun_input_names = [sfun_input_names; 'y_ref_e [{{ dims_e.ny_e }}]'];
 i_in = i_in + 1;
 {%- endif %}
 
-{% if problem_class == "OCP" %}
-{%- if dims.nbx > 0 and solver_options.N_horizon > 1 and simulink_opts.inputs.lbx -%}  {#- lbx #}
-input_note = strcat(input_note, num2str(i_in), ') lbx values concatenated for stages 1 to N-1, size [{{ (solver_options.N_horizon-1) * dims.nbx }}]\n ');
-sfun_input_names = [sfun_input_names; 'lbx [{{ (solver_options.N_horizon-1) * dims.nbx }}]'];
+{%- if nbx_total and simulink_opts.inputs.lbx -%}  {#- lbx #}
+input_note = strcat(input_note, num2str(i_in), ') lbx values concatenated for stages 1 to N-1, size [{{ nbx_total }}]\n ');
+sfun_input_names = [sfun_input_names; 'lbx [{{ nbx_total }}]'];
 i_in = i_in + 1;
 {%- endif %}
-{%- if dims.nbx > 0 and solver_options.N_horizon > 1 and simulink_opts.inputs.ubx -%}  {#- ubx #}
-input_note = strcat(input_note, num2str(i_in), ') ubx values concatenated for stages 1 to N-1, size [{{ (solver_options.N_horizon-1) * dims.nbx }}]\n ');
-sfun_input_names = [sfun_input_names; 'ubx [{{ (solver_options.N_horizon-1) * dims.nbx }}]'];
+{%- if nbx_total and simulink_opts.inputs.ubx -%}  {#- ubx #}
+input_note = strcat(input_note, num2str(i_in), ') ubx values concatenated for stages 1 to N-1, size [{{ nbx_total }}]\n ');
+sfun_input_names = [sfun_input_names; 'ubx [{{ nbx_total }}]'];
 i_in = i_in + 1;
-{%- endif %}
 {%- endif %}
 
 {%- if dims_e.nbx_e > 0 and solver_options.N_horizon > 0 and simulink_opts.inputs.lbx_e -%}  {#- lbx_e #}
@@ -303,19 +307,18 @@ input_note = strcat(input_note, num2str(i_in), ') ug for stages 0 to N-1, size [
 sfun_input_names = [sfun_input_names; 'ug [{{ solver_options.N_horizon*dims.ng }}]'];
 i_in = i_in + 1;
 {%- endif %}
-
-{%- if dims.nh > 0 and simulink_opts.inputs.lh -%}  {#- lh #}
-input_note = strcat(input_note, num2str(i_in), ') lh for stages 0 to N-1, size [{{ solver_options.N_horizon*dims.nh }}]\n ');
-sfun_input_names = [sfun_input_names; 'lh [{{ solver_options.N_horizon*dims.nh }}]'];
-i_in = i_in + 1;
-{%- endif %}
-{%- if dims.nh > 0 and simulink_opts.inputs.uh -%}  {#- uh #}
-input_note = strcat(input_note, num2str(i_in), ') uh for stages 0 to N-1, size [{{ solver_options.N_horizon*dims.nh }}]\n ');
-sfun_input_names = [sfun_input_names; 'uh [{{ solver_options.N_horizon*dims.nh }}]'];
-i_in = i_in + 1;
-{%- endif %}
 {%- endif %}
 
+{%- if nh_total > 0 and simulink_opts.inputs.lh -%}  {#- lh #}
+input_note = strcat(input_note, num2str(i_in), ') lh for stages 1 to N-1, size [{{ nh_total }}]\n ');
+sfun_input_names = [sfun_input_names; 'lh [{{ nh_total }}]'];
+i_in = i_in + 1;
+{%- endif %}
+{%- if nh_total > 0 and simulink_opts.inputs.uh -%}  {#- uh #}
+input_note = strcat(input_note, num2str(i_in), ') uh for stages 1 to N-1, size [{{ nh_total }}]\n ');
+sfun_input_names = [sfun_input_names; 'uh [{{ nh_total }}]'];
+i_in = i_in + 1;
+{%- endif %}
 
 {%- if dims_0.nh_0 > 0 and simulink_opts.inputs.lh_0 -%}  {#- lh_0 #}
 input_note = strcat(input_note, num2str(i_in), ') lh_0, size [{{ dims_0.nh_0 }}]\n ');
@@ -564,10 +567,10 @@ fprintf(output_note)
 % ---
 % global sfun_input_names sfun_output_names
 % for i = 1:length(sfun_input_names)
-% 	port_label('input', i, sfun_input_names{i})
+%     port_label('input', i, sfun_input_names{i})
 % end
 % for i = 1:length(sfun_output_names)
-% 	port_label('output', i, sfun_output_names{i})
+%     port_label('output', i, sfun_output_names{i})
 % end
 % ---
 % It can be used by copying it in sfunction/Mask/Edit mask/Icon drawing commands

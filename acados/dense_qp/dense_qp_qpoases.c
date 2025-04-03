@@ -34,8 +34,8 @@
 #include <assert.h>
 #include <string.h>
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
 
 /* Ignore compiler warnings from qpOASES */
 #if defined(__clang__)

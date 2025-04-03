@@ -37,7 +37,7 @@ extern "C" {
 #endif
 
 // blasfeo
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_common.h"
 
 // daqp
 #include "daqp/include/types.h"

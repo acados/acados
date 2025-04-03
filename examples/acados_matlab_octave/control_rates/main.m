@@ -156,7 +156,7 @@ function run_simulation(timeout_max_time, timeout_heuristic)
     x1ref = 0.4.*(-(0.5./(1+exp(t./0.1-0.8))) + (1./(1+exp(t./0.1-30))) - 0.4);
 
     % run mpc
-    fprintf('Simulation started.  It might take a while...\n')
+    fprintf('Simulation started. It might take a while...\n')
     tic;
     for i = 1:N_sim
 

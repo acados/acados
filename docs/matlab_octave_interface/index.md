@@ -71,16 +71,16 @@ This is a list of possible inputs to the Simulink block of an OCP solver which c
 | `y_ref_0`         | Reference `y_ref` at stage 0                                                                  | `ny_0`                | Yes          |
 | `y_ref`           | `y_ref` concatenated for stages 1 to N-1                                                      | `(N-1) * ny`          | No           |
 | `y_ref_e`         | Reference `y_ref` at stage N                                                                  | `ny_e`                | Yes          |
-| `lbx`             | Lower bound x values concatenated for stages 1 to N-1                                         | `(N-1) * nbx`         | No           |
-| `ubx`             | Upper bound x values concatenated for stages 1 to N-1                                         | `(N-1) * nbx`         | No           |
+| `lbx`             | Lower bound x values concatenated for stages 1 to N-1                                         | `sum(nbx_i), for i = 1,..., N-1`         | Yes           |
+| `ubx`             | Upper bound x values concatenated for stages 1 to N-1                                         | `sum(nbx_i), for i = 1,..., N-1`         | Yes           |
 | `lbx_e`           | Lower bound x at shooting node N                                                              | `nbx_e`               | Yes          |
 | `ubx_e`           | Upper bound x at shooting node N                                                              | `nbx_e`               | Yes          |
 | `lbu`             | Lower bound u values concatenated for stages 0 to N-1                                         | `sum(nbu_i), for i = 0,..., N-1` | Yes          |
 | `ubu`             | Upper bound u values concatenated for stages 0 to N-1                                         | `sum(nbu_i), for i = 0,..., N-1` | Yes          |
 | `lg`              | Lower bound g values concatenated for stages 0 to N-1                                         | `sum(ng_i), for i = 0,..., N-1`  | No           |
 | `ug`              | Upper bound g values concatenated for stages 0 to N-1                                         | `sum(ng_i), for i = 0,..., N-1`  | No           |
-| `lh`              | Lower bound h values concatenated for stages 0 to N-1                                         | `sum(nh_i), for i = 0,..., N-1`  | No           |
-| `uh`              | Upper bound h values concatenated for stages 0 to N-1                                         | `sum(nh_i), for i = 0,..., N-1`  | No           |
+| `lh`              | Lower bound h values concatenated for stages 1 to N-1                                         | `sum(nh_i), for i = 1,..., N-1`  | Yes           |
+| `uh`              | Upper bound h values concatenated for stages 1 to N-1                                         | `sum(nh_i), for i = 1,..., N-1`  | Yes           |
 | `lh_0`            | Lower bound h at stage 0                                                                      | `nh_0`                | Yes          |
 | `uh_0`            | Upper bound h at stage 0                                                                      | `nh_0`                | Yes          |
 | `lh_e`            | Lower bound h at stage N                                                                      | `nh_e`                | Yes          |
@@ -158,7 +158,7 @@ To use the mask command just copy-paste it in the "icon drawing commands" field,
 To create external function for your problem, we suggest to use `CasADi` from the folder `<acados_root_folder>/external`.
 Depending on the environment you want to use to generate `CasADi` functions from, proceed with the corresponding paragraph (Matlab, Octave).
 
-Any CasADi version between 3.4.0 and 3.6.5 should work.
+Any CasADi version between 3.4.0 and 3.6.7 should work.
 If you don't have CasADi yet, you can install it as described below.
 
 ### **Matlab**
@@ -171,7 +171,17 @@ tar -xf casadi-linux-matlabR2014b-v3.4.0.tar.gz -C casadi-matlab
 cd ..
 ```
 
-### **Octave version 4.4 or later**
+### **Octave version 6.2 or later**
+Download and extract the `CasADi` binaries into `<acados_root_folder>/external/casadi-octave`:
+```
+cd external
+wget -O casadi-linux-octave.zip https://github.com/casadi/casadi/releases/download/3.6.7/casadi-3.6.7-linux64-octave7.3.0.zip
+mkdir -p casadi-octave
+unzip casadi-linux-octave.zip -d ./casadi-octave;
+```
+
+
+<!-- ### **Octave version 4.4 or later**
 Download and extract the `CasADi` binaries into `<acados_root_folder>/external/casadi-octave`:
 ```
 cd external
@@ -188,4 +198,4 @@ wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3
 mkdir -p casadi-octave
 tar -xf casadi-linux-octave-v3.4.0.tar.gz -C casadi-octave
 cd ..
-```
+``` -->

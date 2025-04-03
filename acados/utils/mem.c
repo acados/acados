@@ -35,8 +35,8 @@
 #include <stdlib.h>
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_aux_ext_dep.h"
 // acados
 #include "acados/utils/mem.h"
 
@@ -62,7 +62,7 @@ void make_int_multiple_of(acados_size_t num, acados_size_t *size)
     // avoid changes for num < 2
     if(num>1)
     // round integer size up to next multiple of num;
-	*size = (*size + num - 1) / num * num;
+    *size = (*size + num - 1) / num * num;
 }
 
 

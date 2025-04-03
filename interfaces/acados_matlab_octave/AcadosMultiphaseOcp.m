@@ -161,6 +161,11 @@ classdef AcadosMultiphaseOcp < handle
                 end
             end
 
+            % check N_horizon
+            if self.N_horizon ~= sum(self.N_list)
+                error('N_horizon must be equal to the sum of N_list, N_horizon is detected automatically for AcadosMultiphaseOcp and should not be set manually.');
+            end
+
             % compute phase indices
             phase_idx = cumsum([0, self.N_list]);
             self.start_idx = phase_idx(1:end-1);
@@ -231,6 +236,8 @@ classdef AcadosMultiphaseOcp < handle
 
                 disp(['Calling make_consistent for phase ', num2str(i), '.']);
                 ocp.make_consistent(true);
+                % use the updated objects that are not handles
+                self.parameter_values{i} = ocp.parameter_values;
 
                 self.dummy_ocp_list{i} = ocp;
             end
@@ -291,8 +298,7 @@ classdef AcadosMultiphaseOcp < handle
                     error('rti_phase is only supported for SQP_RTI');
                 end
                 inputs = self.simulink_opts.inputs;
-                nonsupported_mocp_inputs = {'y_ref', 'lbx', 'ubx', ...
-                'lbx_e', 'ubx_e', 'lg', 'ug', 'lh', 'uh', 'cost_W_0', 'cost_W', 'cost_W_e'};
+                nonsupported_mocp_inputs = {'y_ref', 'lg', 'ug', 'cost_W_0', 'cost_W', 'cost_W_e'};
                 for i=1:length(nonsupported_mocp_inputs)
                     if inputs.(nonsupported_mocp_inputs{i})
                         error(['Simulink inputs ', nonsupported_mocp_inputs{i}, ' are not supported for MOCP.']);
@@ -315,10 +321,22 @@ classdef AcadosMultiphaseOcp < handle
 
             for i=1:self.n_phases
                 disp(['generating external functions for phase ', num2str(i)]);
+                if i ~= self.n_phases
+                    ignore_terminal = true;
+                else
+                    ignore_terminal = false;
+                end
+
+                if i ~= 1
+                    ignore_initial = true;
+                else
+                    ignore_initial = false;
+                end
+
                 % this is the only option that can vary and influence external functions to be generated
                 self.dummy_ocp_list{i}.solver_options.integrator_type = self.mocp_opts.integrator_type{i};
                 self.dummy_ocp_list{i}.code_export_directory = self.code_export_directory;
-                context = self.dummy_ocp_list{i}.setup_code_generation_context(context);
+                context = self.dummy_ocp_list{i}.setup_code_generation_context(context, ignore_initial, ignore_terminal);
             end
 
             context.finalize();

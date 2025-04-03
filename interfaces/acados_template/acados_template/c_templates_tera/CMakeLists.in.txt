@@ -29,46 +29,46 @@
 #
 
 {%- if solver_options.qp_solver %}
-	{%- set qp_solver = solver_options.qp_solver %}
+    {%- set qp_solver = solver_options.qp_solver %}
 {%- else %}
-	{%- set qp_solver = "FULL_CONDENSING_HPIPM" %}
+    {%- set qp_solver = "FULL_CONDENSING_HPIPM" %}
 {%- endif %}
 
 {%- if solver_options.hessian_approx %}
-	{%- set hessian_approx = solver_options.hessian_approx %}
+    {%- set hessian_approx = solver_options.hessian_approx %}
 {%- elif solver_options.sens_hess %}
-	{%- set hessian_approx = "EXACT" %}
+    {%- set hessian_approx = "EXACT" %}
 {%- else %}
-	{%- set hessian_approx = "GAUSS_NEWTON" %}
+    {%- set hessian_approx = "GAUSS_NEWTON" %}
 {%- endif %}
 
 {%- if solver_options.model_external_shared_lib_dir %}
-	{%- set model_external_shared_lib_dir = solver_options.model_external_shared_lib_dir %}
+    {%- set model_external_shared_lib_dir = solver_options.model_external_shared_lib_dir %}
 {%- endif %}
 
 {%- if solver_options.model_external_shared_lib_name %}
-	{%- set model_external_shared_lib_name = solver_options.model_external_shared_lib_name %}
+    {%- set model_external_shared_lib_name = solver_options.model_external_shared_lib_name %}
 {%- endif %}
 
 {#- control operator #}
 {%- if os and os == "pc" %}
-	{%- set control = "&" %}
+    {%- set control = "&" %}
 {%- else %}
-	{%- set control = ";" %}
+    {%- set control = ";" %}
 {%- endif %}
 
 {%- if acados_link_libs and os and os == "pc" %}{# acados linking libraries and flags #}
-	{%- set link_libs = acados_link_libs.qpoases ~ " " ~ acados_link_libs.hpmpc ~ " " ~ acados_link_libs.osqp ~ " " ~ acados_link_libs.daqp -%}
-	{%- set openmp_flag = acados_link_libs.openmp %}
+    {%- set link_libs = acados_link_libs.qpoases ~ " " ~ acados_link_libs.hpmpc ~ " " ~ acados_link_libs.osqp ~ " " ~ acados_link_libs.daqp -%}
+    {%- set openmp_flag = acados_link_libs.openmp %}
 {%- else %}
-	{%- set openmp_flag = " " %}
-	{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
-		{%- set link_libs = "-lqpOASES_e" %}
-	{%- elif qp_solver == "FULL_CONDENSING_DAQP" %}
-		{%- set link_libs = "-ldaqp" %}
-	{%- else %}
-		{%- set link_libs = "" %}
-	{%- endif %}
+    {%- set openmp_flag = " " %}
+    {%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
+        {%- set link_libs = "-lqpOASES_e" %}
+    {%- elif qp_solver == "FULL_CONDENSING_DAQP" %}
+        {%- set link_libs = "-ldaqp" %}
+    {%- else %}
+        {%- set link_libs = "" %}
+    {%- endif %}
 {%- endif %}
 
 cmake_minimum_required(VERSION 3.13)
@@ -131,9 +131,9 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ filename }}
 {%- endfor %}
 {%- if solver_options.custom_update_filename %}
-	{%- if solver_options.custom_update_filename != "" %}
+    {%- if solver_options.custom_update_filename != "" %}
         {{ solver_options.custom_update_filename }}
-	{%- endif %}
+    {%- endif %}
 {%- endif %}
         acados_solver_{{ model.name }}.c
     )

@@ -114,7 +114,7 @@ def main_sequential(x0, N_sim, tol):
         simX[i+1,:] = solver.get(1, "x")
 
     t_elapsed = 1e3 * (time.time() - t0)
-    print("main_sequential:", f"{t_elapsed:.3f}ms")
+    print("main_sequential, solve and get:", f"{t_elapsed:.3f}ms")
 
     return simX, simU
 
@@ -129,20 +129,25 @@ def main_batch(Xinit, simU, tol, num_threads_in_batch_solve=1):
         batch_solver.ocp_solvers[n].constraints_set(0, "lbx", Xinit[n])
         batch_solver.ocp_solvers[n].constraints_set(0, "ubx", Xinit[n])
 
-        # set initial guess
-        for i in range(ocp.solver_options.N_horizon):
-            batch_solver.ocp_solvers[n].set(i, "x", Xinit[n])
+    # set initial guess
+    Xinit_batch = np.array([np.tile(Xinit[i], (ocp.solver_options.N_horizon+1,)) for i in range(N_batch)])
+    t0 = time.time()
+    batch_solver.set_flat('x', Xinit_batch)
+    t_elapsed = 1e3 * (time.time() - t0)
 
+    print(f"main_batch: with {num_threads_in_batch_solve} threads, set_flat: {t_elapsed:.3f}ms")
+
+    # solve
     t0 = time.time()
     batch_solver.solve()
     t_elapsed = 1e3 * (time.time() - t0)
 
-    print(f"main_batch: with {num_threads_in_batch_solve} threads, timing: {t_elapsed:.3f}ms")
+    print(f"main_batch: with {num_threads_in_batch_solve} threads, solve: {t_elapsed:.3f}ms")
+
+    U_batch = batch_solver.get_flat("u")
 
     for n in range(N_batch):
-        u = batch_solver.ocp_solvers[n].get(0, "u")
-
-        if not np.linalg.norm(u-simU[n]) < tol*10:
+        if not np.linalg.norm(U_batch[n, :ocp.dims.nu] -simU[n]) < tol*10:
             raise Exception(f"solution should match sequential call up to {tol*10} got error {np.linalg.norm(u-simU[n])} for {n}th batch solve")
 
 
@@ -151,7 +156,6 @@ if __name__ == "__main__":
     tol = 1e-7
     N_batch = 256
     x0 = np.array([0.0, np.pi, 0.0, 0.0])
-    u0 = np.array([0.0])
 
     simX, simU = main_sequential(x0=x0, N_sim=N_batch, tol=tol)
 

@@ -33,8 +33,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
+#include "blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_i_aux_ext_dep.h"
 
 #include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/ocp_qp/ocp_qp_common.h"

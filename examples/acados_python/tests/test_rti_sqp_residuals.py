@@ -117,6 +117,14 @@ def main(nlp_solver_type="SQP"):
         res_ineq_all = solver.get_stats("res_ineq_all")
         res_comp_all = solver.get_stats("res_comp_all")
         nlp_iter = solver.get_stats('nlp_iter')
+
+        res_init = solver.get_initial_residuals()
+        print(f"residuals: {res_init}")
+        assert res_init[0] == res_stat_all[0]
+        assert res_init[1] == res_eq_all[0]
+        assert res_init[2] == res_ineq_all[0]
+        assert res_init[3] == res_comp_all[0]
+
     elif nlp_solver_type == "SQP_RTI":
         TOL = 1e-6
         res_stat_all = []
@@ -132,7 +140,22 @@ def main(nlp_solver_type="SQP"):
             res_comp_all.append(solver.get_stats("res_comp_all")[0])
             #
             # quick way to get all residuals
-            # res_all = solver.get_stats('statistics')[3:,0]
+            res_all = solver.get_initial_residuals()
+            print(f"res_all: {res_all}")
+
+            assert res_all[0] == res_stat_all[-1]
+            assert res_all[1] == res_eq_all[-1]
+            assert res_all[2] == res_ineq_all[-1]
+            assert res_all[3] == res_comp_all[-1]
+            if nlp_iter > 0:
+                # veryfiy that the residuals were "predicted" correctly
+                assert res_next[0] == res_stat_all[-1]
+                assert res_next[1] == res_eq_all[-1]
+                assert res_next[2] == res_ineq_all[-1]
+                assert res_next[3] == res_comp_all[-1]
+            # overwrite res_next
+            res_next = solver.get_residuals()
+            print(f"res_next: {res_next}")
 
             if max([res_stat_all[-1], res_eq_all[-1], res_ineq_all[-1], res_comp_all[-1]]) < TOL:
                 break
