@@ -1776,6 +1776,8 @@ void ocp_nlp_set_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, c
         {
             tmp_int = 2*dims->ni[stage];
             blasfeo_pack_dvec(tmp_int, double_values + tmp_offset, 1, &out->lam[stage], 0);
+            // multiply with mask to ensure that multiplier associated with masked constraints are zero
+            blasfeo_dvecmul(2*dims->ni[stage], &in->dmask[stage], 0, &out->lam[stage], 0, &out->lam[stage], 0);
             tmp_offset += tmp_int;
         }
     }
