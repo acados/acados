@@ -186,8 +186,12 @@ void ocp_nlp_qpscaling_obj_gershgorin_scale_qp(void *config, ocp_nlp_qpscaling_d
     {
         max_abs_eig = 1.0;
     }
-    memory->obj_factor = 1.0 / max_abs_eig;
-
+    else
+    {
+        max_abs_eig = max_abs_eig/opts->ub_max_abs_eig;
+    }
+    memory->obj_factor = 1.0 / (max_abs_eig);
+    printf("Scaling factor objective: %.2e\n",memory->obj_factor);
 
     // scale QP cost
     // print_ocp_qp_in(qp_in);
