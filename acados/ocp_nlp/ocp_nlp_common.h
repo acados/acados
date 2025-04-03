@@ -399,12 +399,8 @@ typedef struct ocp_nlp_memory
 {
 //    void *qp_solver_mem; // xcond solver mem instead ???
     ocp_qp_xcond_solver_memory *qp_solver_mem; // xcond solver mem instead ???
-<<<<<<< HEAD
     void *regularize_mem;
     void *qpscaling;
-=======
-    void *regularize;
->>>>>>> d3d7f472a8bcbe1c841706f796888f7a103e7edd
     void *globalization; // globalization memory
     void **dynamics;     // dynamics memory
     void **cost;         // cost memory

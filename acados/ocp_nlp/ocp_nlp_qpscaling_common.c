@@ -167,26 +167,3 @@ void ocp_qp_out_scale_duals(ocp_qp_out *qp_out, double factor)
             blasfeo_dvecsc(qp_dim->nx[stage+1], factor, pi+stage, 0);
     }
 }
-
-
-void compute_gershgorin_max_abs_eig_estimate(int n, struct blasfeo_dmat *A, double *out)
-{
-    double max_abs_eig = 0.0;
-    double r_i, lam, rho, a;
-    for (int ii = 0; ii < n; ii++)
-    {
-        r_i = 0.0;
-        for (int jj = 0; jj < n; jj++)
-        {
-            if (jj != ii)
-            {
-                r_i += fabs(BLASFEO_DMATEL(A, ii, jj));
-            }
-        }
-        a = BLASFEO_DMATEL(A, ii, ii);
-        lam = a - r_i;
-        rho = a + r_i;
-        max_abs_eig = fmax(max_abs_eig, fmax(fabs(lam), fabs(rho)));
-    }
-    *out = max_abs_eig;
-}

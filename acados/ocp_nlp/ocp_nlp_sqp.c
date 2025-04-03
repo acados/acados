@@ -682,7 +682,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         acados_tic(&timer1);
         config->qpscaling->scale_qp(config->qpscaling, dims->qpscaling, nlp_opts->qpscaling, nlp_mem->qpscaling, qp_in);
         config->regularize->regularize(config->regularize, dims->regularize,
-                                               nlp_opts->regularize, nlp_mem->regularize);
+                                               nlp_opts->regularize, nlp_mem->regularize_mem);
         nlp_timings->time_reg += acados_toc(&timer1);
 
         // update timeout memory based on chosen heuristic
