@@ -80,6 +80,9 @@ classdef AcadosOcpOptions < handle
         cost_discretization
         regularize_method
         reg_epsilon
+        reg_max_cond_block
+        reg_min_epsilon
+        reg_adaptive_eps
         exact_hess_cost
         exact_hess_dyn
         exact_hess_constr
@@ -98,6 +101,10 @@ classdef AcadosOcpOptions < handle
         globalization_funnel_kappa
         globalization_funnel_fraction_switching_condition
         globalization_funnel_initial_penalty_parameter
+        globalization_funnel_use_merit_fun_only
+        search_direction_mode
+        use_constraint_hessian_in_feas_qp
+        allow_direction_mode_switch_to_nominal
         hpipm_mode
         with_solution_sens_wrt_params
         with_value_sens_wrt_params
@@ -116,14 +123,18 @@ classdef AcadosOcpOptions < handle
         timeout_heuristic
 
         ext_fun_compile_flags
-        ext_fun_expand
+        ext_fun_expand_dyn
+        ext_fun_expand_cost
+        ext_fun_expand_constr
+        ext_fun_expand_precompute
+
         model_external_shared_lib_dir
         model_external_shared_lib_name
         custom_update_filename
         custom_update_header_filename
         custom_templates
         custom_update_copy
-        num_threads_in_batch_solve
+        with_batch_functionality
 
         compile_interface
 
@@ -175,6 +186,9 @@ classdef AcadosOcpOptions < handle
             obj.cost_discretization = 'EULER';
             obj.regularize_method = 'NO_REGULARIZE';
             obj.reg_epsilon = 1e-4;
+            obj.reg_adaptive_eps = false;
+            obj.reg_max_cond_block = 1e7;
+            obj.reg_min_epsilon = 1e-8;
             obj.shooting_nodes = [];
             obj.cost_scaling = [];
             obj.exact_hess_cost = 1;
@@ -196,6 +210,12 @@ classdef AcadosOcpOptions < handle
             obj.globalization_funnel_kappa = 0.9;
             obj.globalization_funnel_fraction_switching_condition = 1e-3;
             obj.globalization_funnel_initial_penalty_parameter = 1.0;
+            obj.globalization_funnel_use_merit_fun_only = false;
+
+            % SQP_WITH_FEASIBLE_QP options
+            obj.search_direction_mode = 'NOMINAL_QP';
+            obj.use_constraint_hessian_in_feas_qp = false;
+            obj.allow_direction_mode_switch_to_nominal = true;
 
             obj.hpipm_mode = 'BALANCE';
             obj.with_solution_sens_wrt_params = 0;
@@ -220,7 +240,10 @@ classdef AcadosOcpOptions < handle
             else
                 obj.ext_fun_compile_flags = env_var;
             end
-            obj.ext_fun_expand = false;
+            obj.ext_fun_expand_dyn = false;
+            obj.ext_fun_expand_cost = false;
+            obj.ext_fun_expand_constr = false;
+            obj.ext_fun_expand_precompute = false;
 
             obj.model_external_shared_lib_dir = [];
             obj.model_external_shared_lib_name = [];
@@ -228,7 +251,7 @@ classdef AcadosOcpOptions < handle
             obj.custom_update_header_filename = '';
             obj.custom_templates = [];
             obj.custom_update_copy = true;
-            obj.num_threads_in_batch_solve = 1;
+            obj.with_batch_functionality = false;
 
             obj.compile_interface = []; % corresponds to automatic detection, possible values: true, false, []
         end

@@ -89,10 +89,16 @@ class AcadosOcpOptions:
         self.__cost_discretization = 'EULER'
         self.__regularize_method = 'NO_REGULARIZE'
         self.__reg_epsilon = 1e-4
+        self.__reg_max_cond_block = 1e7
+        self.__reg_adaptive_eps = False
+        self.__reg_min_epsilon = 1e-8
         self.__exact_hess_cost = 1
         self.__exact_hess_dyn = 1
         self.__exact_hess_constr = 1
         self.__eval_residual_at_max_iter = None
+        self.__use_constraint_hessian_in_feas_qp = False
+        self.__search_direction_mode = 'NOMINAL_QP'
+        self.__allow_direction_mode_switch_to_nominal = True
         self.__fixed_hess = 0
         self.__globalization_funnel_init_increase_factor = 15.0
         self.__globalization_funnel_init_upper_bound = 1.0
@@ -100,6 +106,7 @@ class AcadosOcpOptions:
         self.__globalization_funnel_kappa = 0.9
         self.__globalization_funnel_fraction_switching_condition = 1e-3
         self.__globalization_funnel_initial_penalty_parameter = 1.0
+        self.__globalization_funnel_use_merit_fun_only = False
         self.__globalization_fixed_step_length = 1.0
         self.__ext_cost_num_hess = 0
         self.__globalization_use_SOC = 0
@@ -125,7 +132,10 @@ class AcadosOcpOptions:
         # TODO: move those out? they are more about generation than about the acados OCP solver.
         env = os.environ
         self.__ext_fun_compile_flags = '-O2' if 'ACADOS_EXT_FUN_COMPILE_FLAGS' not in env else env['ACADOS_EXT_FUN_COMPILE_FLAGS']
-        self.__ext_fun_expand = False
+        self.__ext_fun_expand_constr = False
+        self.__ext_fun_expand_cost = False
+        self.__ext_fun_expand_precompute = False
+        self.__ext_fun_expand_dyn = False
         self.__model_external_shared_lib_dir = None
         self.__model_external_shared_lib_name = None
         self.__custom_update_filename = ''
@@ -133,6 +143,7 @@ class AcadosOcpOptions:
         self.__custom_templates = []
         self.__custom_update_copy = True
         self.__num_threads_in_batch_solve: int = 1
+        self.__with_batch_functionality: bool = False
 
     @property
     def qp_solver(self):
@@ -151,12 +162,36 @@ class AcadosOcpOptions:
         return self.__ext_fun_compile_flags
 
     @property
-    def ext_fun_expand(self):
+    def ext_fun_expand_constr(self):
         """
-        Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation.
+        Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for constraint functions.
         Default: False
         """
-        return self.__ext_fun_expand
+        return self.__ext_fun_expand_constr
+
+    @property
+    def ext_fun_expand_cost(self):
+        """
+        Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for cost functions.
+        Default: False
+        """
+        return self.__ext_fun_expand_cost
+
+    @property
+    def ext_fun_expand_dyn(self):
+        """
+        Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for dynamics functions.
+        Default: False
+        """
+        return self.__ext_fun_expand_dyn
+
+    @property
+    def ext_fun_expand_precompute(self):
+        """
+        Flag indicating whether CasADi.MX should be expanded to CasADi.SX before code generation for the precompute function.
+        Default: False
+        """
+        return self.__ext_fun_expand_precompute
 
     @property
     def custom_update_filename(self):
@@ -259,7 +294,7 @@ class AcadosOcpOptions:
     @property
     def nlp_solver_type(self):
         """NLP solver.
-        String in ('SQP', 'SQP_RTI', 'DDP').
+        String in ('SQP', 'SQP_RTI', 'DDP', 'SQP_WITH_FEASIBLE_QP').
         Default: 'SQP'.
         """
         return self.__nlp_solver_type
@@ -290,14 +325,13 @@ class AcadosOcpOptions:
     @property
     def regularize_method(self):
         """Regularization method for the Hessian.
-        String in ('NO_REGULARIZE', 'MIRROR', 'PROJECT', 'PROJECT_REDUC_HESS', 'CONVEXIFY') or :code:`None`.
+        String in ('NO_REGULARIZE', 'MIRROR', 'PROJECT', 'PROJECT_REDUC_HESS', 'CONVEXIFY', 'GERSHGORIN_LEVENBERG_MARQUARDT').
 
         - MIRROR: performs eigenvalue decomposition H = V^T D V and sets D_ii = max(eps, abs(D_ii))
         - PROJECT: performs eigenvalue decomposition H = V^T D V and sets D_ii = max(eps, D_ii)
         - CONVEXIFY: Algorithm 6 from Verschueren2017, https://cdn.syscop.de/publications/Verschueren2017.pdf, does not support nonlinear constraints
         - PROJECT_REDUC_HESS: experimental
-
-        Note: default eps = 1e-4
+        - GERSHGORIN_LEVENBERG_MARQUARDT: estimates the smallest eigenvalue of each Hessian block using Gershgorin circles and adds multiple of identity to each block, such that smallest eigenvalue after regularization is at least reg_epsilon
 
         Default: 'NO_REGULARIZE'.
         """
@@ -732,8 +766,39 @@ class AcadosOcpOptions:
 
     @property
     def reg_epsilon(self):
-        """Epsilon for regularization, used if regularize_method in ['PROJECT', 'MIRROR', 'CONVEXIFY']"""
+        """Epsilon for regularization, used if regularize_method in ['PROJECT', 'MIRROR', 'CONVEXIFY', 'GERSHGORIN_LEVENBERG_MARQUARDT']."""
         return self.__reg_epsilon
+
+    @property
+    def reg_max_cond_block(self):
+        """Maximum condition number of each Hessian block after regularization with regularize_method in ['PROJECT', 'MIRROR'] and reg_adaptive_eps = True
+
+        Type: float
+        Default: 1e7
+        """
+        return self.__reg_max_cond_block
+
+    @property
+    def reg_adaptive_eps(self):
+        """Determines if epsilon is chosen adaptively in regularization
+        used if regularize_method in ['PROJECT', 'MIRROR']
+
+        If true, epsilon is chosen block-wise based on reg_max_cond_block.
+        Otherwise, epsilon is chosen globally based on reg_epsilon.
+
+        Type: bool
+        Default: False
+        """
+        return self.__reg_adaptive_eps
+
+    @property
+    def reg_min_epsilon(self):
+        """Minimum value for epsilon if regularize_method in ['PROJECT', 'MIRROR'] is used with reg_adaptive_eps.
+
+        Type: float
+        Default: 1e-8
+        """
+        return self.__reg_min_epsilon
 
     @property
     def globalization_alpha_reduction(self):
@@ -897,6 +962,43 @@ class AcadosOcpOptions:
         return self.__eval_residual_at_max_iter
 
     @property
+    def use_constraint_hessian_in_feas_qp(self):
+        """
+        Determines if exact/approximate Hessian of the constraints or the identity
+        matrix is used as Hessian in the feasibility QP of `SQP_WITH_FEASIBLE_QP`
+
+        Default: False
+        """
+        return self.__use_constraint_hessian_in_feas_qp
+
+    @property
+    def search_direction_mode(self):
+        """
+        Determines how the search direction should be calculated in the initial
+        iteration
+        Type: string
+
+        Possible entries are
+        NOMINAL_QP, BYRD_OMOJOKUN, FEASIBILITY_QP
+
+        Type: string
+        Default: NOMINAL_QP
+        Other options: BYRD_OMOJOKUN, FEASIBILITY_QP
+        """
+        return self.__search_direction_mode
+
+    @property
+    def allow_direction_mode_switch_to_nominal(self):
+        """
+        Indicates if we allow switching back from BYRD_OMOJOKUN to NOMINAL_QP
+        search direction mode
+
+        Type: bool
+        Default: True
+        """
+        return self.__allow_direction_mode_switch_to_nominal
+
+    @property
     def globalization_funnel_initial_penalty_parameter(self):
         """
         Initialization.
@@ -905,6 +1007,16 @@ class AcadosOcpOptions:
         Default: 1.0
         """
         return self.__globalization_funnel_initial_penalty_parameter
+
+    @property
+    def globalization_funnel_use_merit_fun_only(self):
+        """
+        If this options is set, the funnel globalization only checks a merit function.
+
+        Type: bool
+        Default: False
+        """
+        return self.__globalization_funnel_use_merit_fun_only
 
     @property
     def nlp_solver_tol_ineq(self):
@@ -1104,11 +1216,21 @@ class AcadosOcpOptions:
     @property
     def num_threads_in_batch_solve(self):
         """
+        DEPRECATED, use the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.
         Integer indicating how many threads should be used within the batch solve.
         If more than one thread should be used, the solver is compiled with openmp.
         Default: 1.
         """
         return self.__num_threads_in_batch_solve
+    
+    @property
+    def with_batch_functionality(self):
+        """
+        Whether the AcadosOcpBatchSolver can be used.
+        In this case, the solver is compiled with openmp.
+        Default: False.
+        """
+        return self.__with_batch_functionality
 
 
     @qp_solver.setter
@@ -1127,7 +1249,7 @@ class AcadosOcpOptions:
     @regularize_method.setter
     def regularize_method(self, regularize_method):
         regularize_methods = ('NO_REGULARIZE', 'MIRROR', 'PROJECT', \
-                                'PROJECT_REDUC_HESS', 'CONVEXIFY')
+                                'PROJECT_REDUC_HESS', 'CONVEXIFY', 'GERSHGORIN_LEVENBERG_MARQUARDT')
         if regularize_method in regularize_methods:
             self.__regularize_method = regularize_method
         else:
@@ -1172,12 +1294,29 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid ext_fun_compile_flags value, expected a string.\n')
 
-    @ext_fun_expand.setter
-    def ext_fun_expand(self, ext_fun_expand):
-        if isinstance(ext_fun_expand, bool):
-            self.__ext_fun_expand = ext_fun_expand
-        else:
-            raise Exception('Invalid ext_fun_expand value, expected bool.\n')
+    @ext_fun_expand_constr.setter
+    def ext_fun_expand_constr(self, ext_fun_expand_constr):
+        if not isinstance(ext_fun_expand_constr, bool):
+            raise Exception('Invalid ext_fun_expand_constr value, expected bool.\n')
+        self.__ext_fun_expand_constr = ext_fun_expand_constr
+
+    @ext_fun_expand_cost.setter
+    def ext_fun_expand_cost(self, ext_fun_expand_cost):
+        if not isinstance(ext_fun_expand_cost, bool):
+            raise Exception('Invalid ext_fun_expand_cost value, expected bool.\n')
+        self.__ext_fun_expand_cost = ext_fun_expand_cost
+
+    @ext_fun_expand_dyn.setter
+    def ext_fun_expand_dyn(self, ext_fun_expand_dyn):
+        if not isinstance(ext_fun_expand_dyn, bool):
+            raise Exception('Invalid ext_fun_expand_dyn value, expected bool.\n')
+        self.__ext_fun_expand_dyn = ext_fun_expand_dyn
+
+    @ext_fun_expand_precompute.setter
+    def ext_fun_expand_precompute(self, ext_fun_expand_precompute):
+        if not isinstance(ext_fun_expand_precompute, bool):
+            raise Exception('Invalid ext_fun_expand_precompute value, expected bool.\n')
+        self.__ext_fun_expand_precompute = ext_fun_expand_precompute
 
     @custom_update_filename.setter
     def custom_update_filename(self, custom_update_filename):
@@ -1271,6 +1410,24 @@ class AcadosOcpOptions:
     @reg_epsilon.setter
     def reg_epsilon(self, reg_epsilon):
         self.__reg_epsilon = reg_epsilon
+
+    @reg_max_cond_block.setter
+    def reg_max_cond_block(self, reg_max_cond_block):
+        if not isinstance(reg_max_cond_block, float) or reg_max_cond_block < 1.0:
+            raise Exception('Invalid reg_max_cond_block value, expected float > 1.0.')
+        self.__reg_max_cond_block = reg_max_cond_block
+
+    @reg_adaptive_eps.setter
+    def reg_adaptive_eps(self, reg_adaptive_eps):
+        if not isinstance(reg_adaptive_eps, bool):
+            raise Exception(f'Invalid reg_adaptive_eps value, expected bool, got {reg_adaptive_eps}')
+        self.__reg_adaptive_eps = reg_adaptive_eps
+
+    @reg_min_epsilon.setter
+    def reg_min_epsilon(self, reg_min_epsilon):
+        if not isinstance(reg_min_epsilon, float) or reg_min_epsilon < 0:
+            raise Exception(f'Invalid reg_min_epsilon value, expected float > 0, got {reg_min_epsilon}')
+        self.__reg_min_epsilon = reg_min_epsilon
 
     @globalization_alpha_min.setter
     def globalization_alpha_min(self, globalization_alpha_min):
@@ -1367,12 +1524,44 @@ class AcadosOcpOptions:
         else:
             raise Exception(f'Invalid value for globalization_funnel_initial_penalty_parameter. Should be in [0,1], got {globalization_funnel_initial_penalty_parameter}')
 
+    @globalization_funnel_use_merit_fun_only.setter
+    def globalization_funnel_use_merit_fun_only(self, globalization_funnel_use_merit_fun_only):
+        if isinstance(globalization_funnel_use_merit_fun_only, bool):
+            self.__globalization_funnel_use_merit_fun_only = globalization_funnel_use_merit_fun_only
+        else:
+            raise Exception(f'Invalid type for globalization_funnel_use_merit_fun_only. Should be bool, got {globalization_funnel_use_merit_fun_only}')
+
     @eval_residual_at_max_iter.setter
     def eval_residual_at_max_iter(self, eval_residual_at_max_iter):
         if isinstance(eval_residual_at_max_iter, bool):
             self.__eval_residual_at_max_iter = eval_residual_at_max_iter
         else:
             raise Exception(f'Invalid datatype for eval_residual_at_max_iter. Should be bool, got {type(eval_residual_at_max_iter)}')
+
+    @use_constraint_hessian_in_feas_qp.setter
+    def use_constraint_hessian_in_feas_qp(self, use_constraint_hessian_in_feas_qp):
+        if isinstance(use_constraint_hessian_in_feas_qp, bool):
+            self.__use_constraint_hessian_in_feas_qp = use_constraint_hessian_in_feas_qp
+        else:
+            raise Exception(f'Invalid datatype for use_constraint_hessian_in_feas_qp. Should be bool, got {type(use_constraint_hessian_in_feas_qp)}')
+
+    @search_direction_mode.setter
+    def search_direction_mode(self, search_direction_mode):
+        search_direction_modes = ('NOMINAL_QP', 'BYRD_OMOJOKUN', 'FEASIBILITY_QP')
+        if isinstance(search_direction_mode, str):
+            if search_direction_mode in search_direction_modes:
+                self.__search_direction_mode = search_direction_mode
+            else:
+                raise Exception(f'Invalid string for search_direction_mode. Possible search_direction_modes are'+', '.join(search_direction_modes) +  f', got {search_direction_mode}')
+        else:
+            raise Exception(f'Invalid datatype for search_direction_mode. Should be str, got {type(search_direction_mode)}')
+
+    @allow_direction_mode_switch_to_nominal.setter
+    def allow_direction_mode_switch_to_nominal(self, allow_direction_mode_switch_to_nominal):
+        if isinstance(allow_direction_mode_switch_to_nominal, bool):
+            self.__allow_direction_mode_switch_to_nominal = allow_direction_mode_switch_to_nominal
+        else:
+            raise Exception(f'Invalid datatype for allow_direction_mode_switch_to_nominal. Should be str, got {type(allow_direction_mode_switch_to_nominal)}')
 
     @globalization_eps_sufficient_descent.setter
     def globalization_eps_sufficient_descent(self, globalization_eps_sufficient_descent):
@@ -1427,7 +1616,7 @@ class AcadosOcpOptions:
 
     @nlp_solver_type.setter
     def nlp_solver_type(self, nlp_solver_type):
-        nlp_solver_types = ('SQP', 'SQP_RTI', 'DDP')
+        nlp_solver_types = ('SQP', 'SQP_RTI', 'DDP', 'SQP_WITH_FEASIBLE_QP')
         if nlp_solver_type in nlp_solver_types:
             self.__nlp_solver_type = nlp_solver_type
         else:
@@ -1794,10 +1983,19 @@ class AcadosOcpOptions:
 
     @num_threads_in_batch_solve.setter
     def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
+        print("Warning: num_threads_in_batch_solve is deprecated, set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
         if isinstance(num_threads_in_batch_solve, int) and num_threads_in_batch_solve > 0:
             self.__num_threads_in_batch_solve = num_threads_in_batch_solve
         else:
             raise Exception('Invalid num_threads_in_batch_solve value. num_threads_in_batch_solve must be a positive integer.')
+
+    @with_batch_functionality.setter
+    def with_batch_functionality(self, with_batch_functionality):
+        if isinstance(with_batch_functionality, bool):
+            self.__with_batch_functionality = with_batch_functionality
+        else:
+            raise Exception('Invalid with_batch_functionality value. Expected bool.')
+
 
     def set(self, attr, value):
         setattr(self, attr, value)

@@ -146,6 +146,8 @@ void {{ name }}_acados_create_set_plan(ocp_nlp_plan_t* nlp_solver_plan, const in
     nlp_solver_plan->nlp_solver = {{ solver_options.nlp_solver_type }};
 
     nlp_solver_plan->ocp_qp_solver_plan.qp_solver = {{ solver_options.qp_solver }};
+    nlp_solver_plan->relaxed_ocp_qp_solver_plan.qp_solver = {{ solver_options.qp_solver }};
+
     nlp_solver_plan->regularization = {{ solver_options.regularize_method }};
     nlp_solver_plan->globalization = {{ solver_options.globalization }};
 
@@ -2216,6 +2218,9 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
 
     double globalization_funnel_initial_penalty_parameter = {{ solver_options.globalization_funnel_initial_penalty_parameter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_initial_penalty_parameter", &globalization_funnel_initial_penalty_parameter);
+
+    bool globalization_funnel_use_merit_fun_only = {{ solver_options.globalization_funnel_use_merit_fun_only }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization_funnel_use_merit_fun_only", &globalization_funnel_use_merit_fun_only);
 {%- endif %}
 
     int with_solution_sens_wrt_params = {{ solver_options.with_solution_sens_wrt_params }};
@@ -2266,9 +2271,20 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
     {%- endif %}
 {%- endif %}
 
-{%- if solver_options.regularize_method == "PROJECT" or solver_options.regularize_method == "MIRROR" or solver_options.regularize_method == "CONVEXIFY" %}
+{%- if solver_options.regularize_method == "PROJECT" or solver_options.regularize_method == "MIRROR" or solver_options.regularize_method == "CONVEXIFY" or solver_options.regularize_method == "GERSHGORIN_LEVENBERG_MARQUARDT"%}
     double reg_epsilon = {{ solver_options.reg_epsilon }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "reg_epsilon", &reg_epsilon);
+{%- endif %}
+
+{%- if solver_options.regularize_method == "PROJECT" or solver_options.regularize_method == "MIRROR" %}
+    double reg_max_cond_block = {{ solver_options.reg_max_cond_block }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "reg_max_cond_block", &reg_max_cond_block);
+
+    double reg_min_epsilon = {{ solver_options.reg_min_epsilon }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "reg_min_epsilon", &reg_min_epsilon);
+
+    bool reg_adaptive_eps = {{ solver_options.reg_adaptive_eps }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "reg_adaptive_eps", &reg_adaptive_eps);
 {%- endif %}
 
     bool store_iterates = {{ solver_options.store_iterates }};
@@ -2295,7 +2311,18 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tau_min", &tau_min);
 {%- endif %}
 
-{% if solver_options.nlp_solver_type == "SQP" or solver_options.nlp_solver_type == "DDP" %}
+{%- if solver_options.nlp_solver_type == "SQP_WITH_FEASIBLE_QP" %}
+bool use_constraint_hessian_in_feas_qp = {{ solver_options.use_constraint_hessian_in_feas_qp }};
+ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "use_constraint_hessian_in_feas_qp", &use_constraint_hessian_in_feas_qp);
+
+int search_direction_mode = {{ solver_options.search_direction_mode }};
+ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "search_direction_mode", &search_direction_mode);
+
+bool allow_direction_mode_switch_to_nominal = {{ solver_options.allow_direction_mode_switch_to_nominal }};
+ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "allow_direction_mode_switch_to_nominal", &allow_direction_mode_switch_to_nominal);
+{%- endif %}
+
+{% if solver_options.nlp_solver_type == "SQP" or solver_options.nlp_solver_type == "DDP" or solver_options.nlp_solver_type == "SQP_WITH_FEASIBLE_QP" %}
     // set SQP specific options
     double nlp_solver_tol_stat = {{ solver_options.nlp_solver_tol_stat }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_stat", &nlp_solver_tol_stat);
@@ -2729,7 +2756,7 @@ int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver
     fun->casadi_fun((const double **) fun->args, fun->res, fun->int_work, fun->float_work, NULL);
 
 {%- else %}
-    printf("No global_data, {{ name }}_acados_set_p_global_and_precompute_dependencies does nothing.\n");
+    // printf("No global_data, {{ name }}_acados_set_p_global_and_precompute_dependencies does nothing.\n");
 {%- endif %}
     return 0;
 }

@@ -32,7 +32,7 @@
 from .acados_ocp_solver import AcadosOcpSolver
 from .acados_ocp import AcadosOcp
 from .acados_ocp_iterate import AcadosOcpFlattenedBatchIterate
-from typing import Optional, List, Tuple, Sequence
+from typing import Optional, List, Tuple, Sequence, Union
 from ctypes import (POINTER, c_int, c_void_p, cast, c_double, c_char_p)
 import numpy as np
 import time
@@ -43,6 +43,7 @@ class AcadosOcpBatchSolver():
 
         :param ocp: type :py:class:`~acados_template.acados_ocp.AcadosOcp`
         :param N_batch: batch size, positive integer
+        :param num_threads_in_batch_solve: number of threads used for parallelizing the batch methods. Default: 1
         :param json_file: Default: 'acados_ocp.json'
         :param build: Flag indicating whether solver should be (re)compiled. If False an attempt is made to load an already compiled shared library for the solver. Default: True
         :param generate: Flag indicating whether problem functions should be code generated. Default: True
@@ -51,10 +52,22 @@ class AcadosOcpBatchSolver():
 
     __ocp_solvers : List[AcadosOcpSolver]
 
-    def __init__(self, ocp: AcadosOcp, N_batch: int, json_file: str = 'acados_ocp.json',  build: bool = True, generate: bool = True, verbose: bool=True):
+    def __init__(self, ocp: AcadosOcp, N_batch: int, num_threads_in_batch_solve: Union[int, None] = None, json_file: str = 'acados_ocp.json',  build: bool = True, generate: bool = True, verbose: bool=True):
 
         if not isinstance(N_batch, int) or N_batch <= 0:
             raise Exception("AcadosOcpBatchSolver: argument N_batch should be a positive integer.")
+        if num_threads_in_batch_solve is None:
+            num_threads_in_batch_solve = ocp.solver_options.num_threads_in_batch_solve
+            print(f"Warning: num_threads_in_batch_solve is None. Using value {num_threads_in_batch_solve} set in ocp.solver_options instead.")
+            print("In the future, it should be passed explicitly in the AcadosOcpBatchSolver constructor.")
+        if not isinstance(num_threads_in_batch_solve, int) or num_threads_in_batch_solve <= 0:
+            raise Exception("AcadosOcpBatchSolver: argument num_threads_in_batch_solve should be a positive integer.")
+        if not ocp.solver_options.with_batch_functionality:
+            print("Warning: Using AcadosOcpBatchSolver, but ocp.solver_options.with_batch_functionality is False.")
+            print("Attempting to compile with openmp nonetheless.")
+            ocp.solver_options.with_batch_functionality = True
+        
+        self.__num_threads_in_batch_solve = num_threads_in_batch_solve
 
         self.__N_batch = N_batch
         self.__ocp_solvers = [AcadosOcpSolver(ocp,
@@ -76,19 +89,19 @@ class AcadosOcpBatchSolver():
         self.__status = np.zeros((self.N_batch,), dtype=np.intc, order="C")
         self.__status_p = cast(self.__status.ctypes.data, POINTER(c_int))
 
-        getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve").argtypes = [POINTER(c_void_p), POINTER(c_int), c_int]
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve").argtypes = [POINTER(c_void_p), POINTER(c_int), c_int, c_int]
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve").restype = c_void_p
 
-        getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_params_jac").argtypes = [POINTER(c_void_p), c_int]
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_params_jac").argtypes = [POINTER(c_void_p), c_int, c_int]
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_params_jac").restype = c_void_p
 
-        getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_solution_sens_adj_p").argtypes = [POINTER(c_void_p), c_char_p, c_int, POINTER(c_double), c_int, c_int]
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_solution_sens_adj_p").argtypes = [POINTER(c_void_p), c_char_p, c_int, POINTER(c_double), c_int, c_int, c_int]
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_solution_sens_adj_p").restype = c_void_p
 
-        getattr(self.__shared_lib, f"{self.__name}_acados_batch_set_flat").argtypes = [POINTER(c_void_p), c_char_p, POINTER(c_double), c_int, c_int]
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_set_flat").argtypes = [POINTER(c_void_p), c_char_p, POINTER(c_double), c_int, c_int, c_int]
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_set_flat").restype = c_void_p
 
-        getattr(self.__shared_lib, f"{self.__name}_acados_batch_get_flat").argtypes = [POINTER(c_void_p), c_char_p, POINTER(c_double), c_int, c_int]
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_get_flat").argtypes = [POINTER(c_void_p), c_char_p, POINTER(c_double), c_int, c_int, c_int]
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_get_flat").restype = c_void_p
 
         if self.ocp_solvers[0].acados_lib_uses_omp:
@@ -111,6 +124,15 @@ class AcadosOcpBatchSolver():
     def N_batch(self):
         """Batch size."""
         return self.__N_batch
+    
+    @property
+    def num_threads_in_batch_solve(self):
+        """Number of threads used for parallelizing the batch methods."""
+        return self.__num_threads_in_batch_solve
+    
+    @num_threads_in_batch_solve.setter
+    def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
+        self.__num_threads_in_batch_solve = num_threads_in_batch_solve
 
 
     def solve(self):
@@ -118,7 +140,7 @@ class AcadosOcpBatchSolver():
         Call solve for all `N_batch` solvers.
         """
 
-        getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve")(self.__ocp_solvers_pointer, self.__status_p, self.__N_batch)
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve")(self.__ocp_solvers_pointer, self.__status_p, self.__N_batch, self.__num_threads_in_batch_solve)
 
         # to be consistent with non-batched solve
         for s, solver in zip(self.__status, self.ocp_solvers):
@@ -130,7 +152,7 @@ class AcadosOcpBatchSolver():
         Call setup_qp_matrices_and_factorize for all `N_batch` solvers.
         """
 
-        getattr(self.__shared_lib, f"{self.__name}_acados_batch_setup_qp_matrices_and_factorize")(self.__ocp_solvers_pointer, self.__status_p, self.__N_batch)
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_setup_qp_matrices_and_factorize")(self.__ocp_solvers_pointer, self.__status_p, self.__N_batch, self.__num_threads_in_batch_solve)
 
         # to be consistent with non-batched solve
         for s, solver in zip(self.__status, self.ocp_solvers):
@@ -212,7 +234,7 @@ class AcadosOcpBatchSolver():
 
             # compute jacobian wrt params
             t0 = time.time()
-            getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_params_jac")(self.__ocp_solvers_pointer, self.__N_batch)
+            getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_params_jac")(self.__ocp_solvers_pointer, self.__N_batch, self.__num_threads_in_batch_solve)
             self.time_solution_sens_lin = time.time() - t0
 
             t1 = time.time()
@@ -235,7 +257,7 @@ class AcadosOcpBatchSolver():
 
                 # solve adjoint sensitivities
                 getattr(self.__shared_lib, f"{self.__name}_acados_batch_eval_solution_sens_adj_p")(
-                    self.__ocp_solvers_pointer, field, 0, c_grad_p, offset, self.__N_batch)
+                    self.__ocp_solvers_pointer, field, 0, c_grad_p, offset, self.__N_batch, self.__num_threads_in_batch_solve)
 
             self.time_solution_sens_solve = time.time() - t1
 
@@ -274,7 +296,7 @@ class AcadosOcpBatchSolver():
         value_ = value_.astype(float)
         value_data = cast(value_.ctypes.data, POINTER(c_double))
 
-        getattr(self.__shared_lib, f"{self.__name}_acados_batch_set_flat")(self.__ocp_solvers_pointer, field, value_data, N_data, self.__N_batch)
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_set_flat")(self.__ocp_solvers_pointer, field, value_data, N_data, self.__N_batch, self.__num_threads_in_batch_solve)
 
 
     def get_flat(self, field_: str) -> np.ndarray:
@@ -294,7 +316,7 @@ class AcadosOcpBatchSolver():
         out = np.ascontiguousarray(np.zeros((self.N_batch, dim,)), dtype=np.float64)
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
-        getattr(self.__shared_lib, f"{self.__name}_acados_batch_get_flat")(self.__ocp_solvers_pointer, field, out_data, self.N_batch*dim, self.__N_batch)
+        getattr(self.__shared_lib, f"{self.__name}_acados_batch_get_flat")(self.__ocp_solvers_pointer, field, out_data, self.N_batch*dim, self.__N_batch, self.__num_threads_in_batch_solve)
 
         return out
 

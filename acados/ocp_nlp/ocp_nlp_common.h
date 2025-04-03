@@ -74,6 +74,7 @@ extern "C" {
 typedef struct ocp_nlp_config
 {
     int N;  // number of stages
+    int with_feasible_qp;
 
     // solver-specific implementations of memory management functions
     acados_size_t (*opts_calculate_size)(void *config, void *dims);
@@ -117,6 +118,7 @@ typedef struct ocp_nlp_config
 
     // config structs of submodules
     ocp_qp_xcond_solver_config *qp_solver; // TODO rename xcond_solver
+    ocp_qp_xcond_solver_config *relaxed_qp_solver;
     ocp_nlp_dynamics_config **dynamics;
     ocp_nlp_cost_config **cost;
     ocp_nlp_constraints_config **constraints;
@@ -143,6 +145,7 @@ typedef struct ocp_nlp_dims
     void **dynamics;
     void **constraints;
     ocp_qp_xcond_solver_dims *qp_solver;  // xcond solver instead ??
+    ocp_qp_xcond_solver_dims *relaxed_qp_solver;  // xcond solver instead ??
     ocp_nlp_reg_dims *regularize;
 
     int *nv;  // number of primal variables (states+controls+slacks)
@@ -392,7 +395,7 @@ typedef struct ocp_nlp_memory
 {
 //    void *qp_solver_mem; // xcond solver mem instead ???
     ocp_qp_xcond_solver_memory *qp_solver_mem; // xcond solver mem instead ???
-    void *regularize_mem;
+    void *regularize;
     void *globalization; // globalization memory
     void **dynamics;     // dynamics memory
     void **cost;         // cost memory
@@ -410,6 +413,7 @@ typedef struct ocp_nlp_memory
     // qp in & out
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
+
     // QP stuff not entering the qp_in struct
     struct blasfeo_dmat *dzduxt; // dzdux transposed
     struct blasfeo_dvec *z_alg; // z_alg, output algebraic variables
@@ -428,6 +432,9 @@ typedef struct ocp_nlp_memory
 
     double cost_value;
     double qp_cost_value;
+    double predicted_infeasibility_reduction; // used for funnel globalization
+    double predicted_optimality_reduction; // // used for funnel globalization
+    double objective_multiplier; // used for funnel globalization
     int compute_hess;
 
     int status;
@@ -481,6 +488,8 @@ typedef struct ocp_nlp_workspace
     struct blasfeo_dvec tmp_np_global;
     // AS-RTI
     double *tmp_nv_double;
+
+    int *tmp_nins;
 
 } ocp_nlp_workspace;
 
@@ -559,20 +568,30 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
 void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
                         ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
                         ocp_nlp_out *sens_nlp_out, const char *field, int stage, void *grad_p);
-
 //
 void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
-    ocp_nlp_workspace *work, double alpha, int iter);
+    ocp_nlp_workspace *work, double alpha, int iter, ocp_qp_in *qp_in);
+//
+double ocp_nlp_compute_dual_pi_norm_inf(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out);
+//
+double ocp_nlp_compute_dual_lam_norm_inf(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out);
 //
 double ocp_nlp_get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_memory *nlp_mem);
-
+//
 int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *nlp_opts,
                      ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work,
                      bool precondensed_lhs, ocp_qp_in *qp_in_, ocp_qp_out *qp_out_,
                      ocp_qp_xcond_solver *xcond_solver);
 //
+int ocp_nlp_solve_qp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *nlp_opts,
+    ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work,
+    ocp_qp_in *qp_in_, ocp_qp_out *qp_out_,
+    ocp_qp_xcond_solver *xcond_solver);
+//
 double ocp_nlp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_nlp_workspace *nlp_work);
+//
+double ocp_nlp_compute_gradient_directional_derivative(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
 
 // print / debug functionality
 void ocp_nlp_dump_qp_out_to_file(ocp_qp_out *qp_out, int sqp_iter, int soc);

@@ -30,7 +30,7 @@
 #
 
 import numpy as np
-from .utils import check_if_nparray_and_flatten, check_if_2d_nparray
+from .utils import check_if_nparray_and_flatten, check_if_2d_nparray, check_if_2d_nparray_or_casadi_symbolic, check_if_nparray_or_casadi_symbolic_and_flatten
 
 class AcadosOcpCost:
     r"""
@@ -113,7 +113,7 @@ class AcadosOcpCost:
     @property
     def cost_type_0(self):
         """Cost type at initial shooting node (0)
-        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS, CONVEX_OVER_NONLINEAR} or :code:`None`.
+        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS, CONVEX_OVER_NONLINEAR, AUTO} or :code:`None`.
         Default: :code:`None`.
 
             .. note:: Cost at initial stage is the same as for intermediate shooting nodes if not set differently explicitly.
@@ -161,7 +161,7 @@ class AcadosOcpCost:
     def cost_ext_fun_type_0(self):
         """Type of external function for cost at initial shooting node (0)
         -- string in {casadi, generic} or :code:`None`
-        Default: :code:'casadi'.
+        Default: :code:`casadi`.
 
             .. note:: Cost at initial stage is the same as for intermediate shooting nodes if not set differently explicitly.
         """
@@ -169,12 +169,12 @@ class AcadosOcpCost:
 
     @yref_0.setter
     def yref_0(self, yref_0):
-        yref_0 = check_if_nparray_and_flatten(yref_0, "yref_0")
+        yref_0 = check_if_nparray_or_casadi_symbolic_and_flatten(yref_0, "yref_0")
         self.__yref_0 = yref_0
 
     @W_0.setter
     def W_0(self, W_0):
-        check_if_2d_nparray(W_0, "W_0")
+        check_if_2d_nparray_or_casadi_symbolic(W_0, "W_0")
         self.__W_0 = W_0
 
     @Vx_0.setter
@@ -204,7 +204,7 @@ class AcadosOcpCost:
     def cost_type(self):
         """
         Cost type at intermediate shooting nodes (1 to N-1)
-        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS, CONVEX_OVER_NONLINEAR}.
+        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS, CONVEX_OVER_NONLINEAR, AUTO}.
         Default: 'LINEAR_LS'.
         """
         return self.__cost_type
@@ -276,13 +276,13 @@ class AcadosOcpCost:
     def cost_ext_fun_type(self):
         """Type of external function for cost at intermediate shooting nodes (1 to N-1).
         -- string in {casadi, generic}
-        Default: :code:'casadi'.
+        Default: :code:`casadi`.
         """
         return self.__cost_ext_fun_type
 
     @cost_type.setter
     def cost_type(self, cost_type):
-        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR')
+        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR', 'AUTO')
         if cost_type in cost_types:
             self.__cost_type = cost_type
         else:
@@ -290,7 +290,7 @@ class AcadosOcpCost:
 
     @cost_type_0.setter
     def cost_type_0(self, cost_type_0):
-        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR')
+        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR', 'AUTO')
         if cost_type_0 in cost_types:
             self.__cost_type_0 = cost_type_0
         else:
@@ -298,7 +298,7 @@ class AcadosOcpCost:
 
     @W.setter
     def W(self, W):
-        check_if_2d_nparray(W, "W")
+        check_if_2d_nparray_or_casadi_symbolic(W, "W")
         self.__W = W
 
 
@@ -319,7 +319,7 @@ class AcadosOcpCost:
 
     @yref.setter
     def yref(self, yref):
-        yref = check_if_nparray_and_flatten(yref, "yref")
+        yref = check_if_nparray_or_casadi_symbolic_and_flatten(yref, "yref")
         self.__yref = yref
 
     @Zl.setter
@@ -362,7 +362,7 @@ class AcadosOcpCost:
     def cost_type_e(self):
         """
         Cost type at terminal shooting node (N)
-        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS, CONVEX_OVER_NONLINEAR}.
+        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS, CONVEX_OVER_NONLINEAR, AUTO}.
         Default: 'LINEAR_LS'.
         """
         return self.__cost_type_e
@@ -449,13 +449,13 @@ class AcadosOcpCost:
     def cost_ext_fun_type_e(self):
         """Type of external function for cost at terminal shooting node (N).
         -- string in {casadi, generic}
-        Default: :code:'casadi'.
+        Default: :code:`casadi`.
         """
         return self.__cost_ext_fun_type_e
 
     @cost_type_e.setter
     def cost_type_e(self, cost_type_e):
-        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR')
+        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR', 'AUTO')
         if cost_type_e in cost_types:
             self.__cost_type_e = cost_type_e
         else:
@@ -463,7 +463,7 @@ class AcadosOcpCost:
 
     @W_e.setter
     def W_e(self, W_e):
-        check_if_2d_nparray(W_e, "W_e")
+        check_if_2d_nparray_or_casadi_symbolic(W_e, "W_e")
         self.__W_e = W_e
 
     @Vx_e.setter
@@ -473,7 +473,7 @@ class AcadosOcpCost:
 
     @yref_e.setter
     def yref_e(self, yref_e):
-        yref_e = check_if_nparray_and_flatten(yref_e, "yref_e")
+        yref_e = check_if_nparray_or_casadi_symbolic_and_flatten(yref_e, "yref_e")
         self.__yref_e = yref_e
 
     @Zl_e.setter

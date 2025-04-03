@@ -709,7 +709,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             {
                 ocp_nlp_get_cost_value_from_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
             }
-            ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, ddp_iter);
+            ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, ddp_iter, nlp_mem->qp_in);
 
             nlp_timings->time_lin += acados_toc(&timer1);
 
@@ -755,7 +755,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // NOTE: this is done before termination, such that we can get the QP at the stationary point that is actually solved, if we exit with success.
         acados_tic(&timer1);
         config->regularize->regularize(config->regularize, dims->regularize,
-                                               nlp_opts->regularize, nlp_mem->regularize_mem);
+                                               nlp_opts->regularize, nlp_mem->regularize);
         nlp_timings->time_reg += acados_toc(&timer1);
 
         // Termination

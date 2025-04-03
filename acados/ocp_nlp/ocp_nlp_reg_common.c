@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include "acados/utils/math.h"
 
@@ -187,12 +188,11 @@ void acados_mirror(int dim, double *A, double *V, double *d, double *e, double e
 
     acados_eigen_decomposition(dim, A, V, d, e);
 
+    // mirror
     for (i = 0; i < dim; i++)
     {
-        // project
         if (d[i] >= -epsilon && d[i] <= epsilon)
             d[i] = epsilon;
-        // mirror
         else if (d[i] < 0)
             d[i] = -d[i];
     }
@@ -200,7 +200,31 @@ void acados_mirror(int dim, double *A, double *V, double *d, double *e, double e
     acados_reconstruct_A(dim, A, V, d);
 }
 
+void acados_mirror_adaptive_eps(int dim, double *A, double *V, double *d, double *e, double max_cond_block, double min_eps)
+{
+    int i;
+    acados_eigen_decomposition(dim, A, V, d, e);
+    double max_eig = 0.0;
+    double eps;
 
+    // compute max and min eigenvalues
+    for (i=0; i < dim; i++)
+    {
+        max_eig = MAX(max_eig, fabs(d[i]));
+    }
+    eps = MAX(max_eig/max_cond_block, min_eps);
+
+    // mirror
+    for (i = 0; i < dim; i++)
+    {
+        if (d[i] >= -eps && d[i] <= eps)
+            d[i] = eps;
+        else if (d[i] < 0)
+            d[i] = -d[i];
+    }
+
+    acados_reconstruct_A(dim, A, V, d);
+}
 
 // projecting regularization
 void acados_project(int dim, double *A, double *V, double *d, double *e, double epsilon)
@@ -220,5 +244,26 @@ void acados_project(int dim, double *A, double *V, double *d, double *e, double 
 }
 
 
+void acados_project_adaptive_eps(int dim, double *A, double *V, double *d, double *e, double max_cond_block, double min_eps)
+{
+    int i;
+    acados_eigen_decomposition(dim, A, V, d, e);
+    double max_eig = 0.0;
+    double eps;
 
+    // compute max and min eigenvalues
+    for (i=0; i < dim; i++)
+    {
+        max_eig = MAX(max_eig, d[i]);
+    }
+    eps = MAX(max_eig/max_cond_block, min_eps);
 
+    // project
+    for (i = 0; i < dim; i++)
+    {
+        if (d[i] < eps)
+            d[i] = eps;
+    }
+
+    acados_reconstruct_A(dim, A, V, d);
+}
