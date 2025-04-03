@@ -83,7 +83,7 @@ def solve_and_compute_sens(p_test, tau):
 
         ocp_solver.set_p_global_and_precompute_dependencies(p_val)
         status = ocp_solver.solve()
-        solution[i] = ocp_solver.get(0, "x")
+        solution[i] = ocp_solver.get(0, "x")[0]
 
         if status != 0:
             ocp_solver.print_statistics()
