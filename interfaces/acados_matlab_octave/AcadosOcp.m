@@ -745,6 +745,12 @@ classdef AcadosOcp < handle
                 error('tau_min > 0 is only compatible with HPIPM.');
             end
 
+            if opts.as_rti_level == 2 && any(strcmp(cost.cost_type, {'LINEAR_LS', 'NONLINEAR_LS'}) || ...
+                                             strcmp(cost.cost_type_0, {'LINEAR_LS', 'NONLINEAR_LS'}) || ...
+                                             strcmp(cost.cost_type_e, {'LINEAR_LS', 'NONLINEAR_LS'}))
+                error('as_rti_level == 2 not supported for LINEAR_LS and NONLINEAR_LS cost type.');
+            end
+
             % Set default parameters for globalization
             ddp_with_merit_or_funnel = strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH') || (strcmp(opts.globalization, 'MERIT_BACKTRACKING') && strcmp(opts.nlp_solver_type, 'DDP'));
 
