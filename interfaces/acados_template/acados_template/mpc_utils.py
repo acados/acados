@@ -391,9 +391,6 @@ class AcadosCostConstraintEvaluator:
 
 
 def get_path_cost_expression(ocp: AcadosOcp):
-    # multiply path costs with td, nonuniform grid
-    # multiply with cost scaling
-    # cost scaling ueberschreibt tds, falls gesetzt
     model = ocp.model
     if ocp.cost.cost_type == "LINEAR_LS":
         y = ocp.cost.Vx @ model.x + ocp.cost.Vu @ model.u
@@ -411,10 +408,8 @@ def get_path_cost_expression(ocp: AcadosOcp):
         cost_dot = model.cost_expr_ext_cost
 
     elif ocp.cost.cost_type == "CONVEX_OVER_NONLINEAR":
-        raise NotImplementedError(
-            "get_terminal_cost_expression: not implemented for CONVEX_OVER_NONLINEAR.")
-        #cost_dot = ca.substitute(
-        #    model.cost_psi_expr, model.cost_r_in_psi_expr, model.cost_y_expr)
+        cost_dot = ca.substitute(
+           model.cost_psi_expr, model.cost_r_in_psi_expr, model.cost_y_expr)
     else:
         raise ValueError("create_model_with_cost_state: Unknown cost type.")
 
@@ -436,10 +431,8 @@ def get_terminal_cost_expression(ocp: AcadosOcp):
         cost_dot = model.cost_expr_ext_cost_e
 
     elif ocp.cost.cost_type == "CONVEX_OVER_NONLINEAR":
-        raise NotImplementedError(
-            "get_terminal_cost_expression: not implemented for CONVEX_OVER_NONLINEAR.")
-        #cost_dot = ca.substitute(
-        #    model.cost_psi_expr_e, model.cost_r_in_psi_expr_e, model.cost_y_expr_e)
+        cost_dot = ca.substitute(
+           model.cost_psi_expr_e, model.cost_r_in_psi_expr_e, model.cost_y_expr_e)
     else:
         raise ValueError("create_model_with_cost_state: Unknown terminal cost type.")
 

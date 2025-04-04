@@ -89,7 +89,6 @@ def export_parametric_ocp(
     param: dict[str, np.ndarray],
     name: str = "lti",
     learnable_params: Optional[list[str]] = None,
-    num_threads_in_batch_solve: int = 1,
 ) -> AcadosOcp:
 
     if learnable_params is None:
@@ -107,8 +106,6 @@ def export_parametric_ocp(
     ocp.solver_options.integrator_type = 'DISCRETE'
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.nlp_solver_type = "SQP"
-
-    ocp.solver_options.num_threads_in_batch_solve = num_threads_in_batch_solve
 
     # Add learnable parameters to p_global
     if len(learnable_params) != 0:

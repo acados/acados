@@ -43,30 +43,9 @@ else:
     from ctypes import CDLL as DllLoader
 import numpy as np
 from casadi import DM, MX, SX, CasadiMeta, Function
+import casadi as ca
 from contextlib import contextmanager
 
-
-
-
-ALLOWED_CASADI_VERSIONS = (
-    '3.4.0',
-    '3.4.5',
-    '3.5.1',
-    '3.5.2',
-    '3.5.3',
-    '3.5.4',
-    '3.5.6',
-    '3.5.5',
-    '3.6.0',
-    '3.6.1',
-    '3.6.2',
-    '3.6.3',
-    '3.6.4',
-    '3.6.5',
-    '3.6.6',
-    '3.6.7',
-    '3.6.7+',
-)
 
 TERA_VERSION = "0.0.34"
 
@@ -149,15 +128,18 @@ def get_shared_lib(shared_lib_name: str, winmode = None) -> DllLoader:
 
 def check_casadi_version():
     casadi_version = CasadiMeta.version()
-    if casadi_version in ALLOWED_CASADI_VERSIONS:
-        return
-    else:
-        msg =  'Warning: Please note that the following versions of CasADi are '
-        msg += 'officially supported: {}.\n '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
-        msg += 'If there is an incompatibility with the CasADi generated code, '
-        msg += 'please consider changing your CasADi version.\n'
-        msg += 'Version {} currently in use.'.format(casadi_version)
-        print(msg)
+    major_minor = casadi_version.split('.')
+    major = int(major_minor[0])
+    minor = int(major_minor[1])
+    if major < 3 or (major == 3 and minor < 4): # < 3.4
+        raise Exception(f'CasADi version {casadi_version} is not supported. '
+                        'Please use a version >= 3.4.0.')
+
+    if major > 3 or (major == 3 and minor > 7): # >= 3.7
+        print(f"Warning: CasADi version {casadi_version} is not tested with acados yet.")
+    elif major == 3 and minor < 7:
+        print(f"Warning: Full featured acados requires CasADi version >= 3.7, got {casadi_version}.")
+
 
 def check_casadi_version_supports_p_global():
     try:
@@ -411,6 +393,15 @@ def check_if_nparray_and_flatten(val, name) -> np.ndarray:
         raise TypeError(f"{name} must be a numpy array, got {type(val)}")
     return val.reshape(-1)
 
+def check_if_nparray_or_casadi_symbolic_and_flatten(val, name) -> np.ndarray:
+    if not isinstance(val, (np.ndarray, SX, MX)):
+        raise Exception(f"{name} must be array of type np.ndarray, casadi.SX, or casadi.MX, got {type(val)}")
+
+    if isinstance(val, (SX, MX)):
+        return ca.reshape(val, val.numel(), 1)
+    else:
+        return val.reshape(-1)
+
 
 def check_if_2d_nparray(val, name) -> None:
     if not isinstance(val, np.ndarray):
@@ -418,6 +409,16 @@ def check_if_2d_nparray(val, name) -> None:
     if val.ndim != 2:
         raise ValueError(f"{name} must be a 2D numpy array, got shape {val.shape}")
     return
+
+
+def check_if_2d_nparray_or_casadi_symbolic(val, name) -> None:
+    if isinstance(val, (SX, MX, DM)):
+        return
+    if not isinstance(val, np.ndarray):
+        raise Exception(f"{name} must be a array of type np.ndarray, casadi.SX, or casadi.MX, got {type(val)}")
+    if val.ndim != 2:
+        raise Exception(f"{name} must be a 2D array of type np.ndarray, casadi.SX, or casadi.MX, got shape {val.shape}")
+
 
 def print_J_to_idx_note():
     print("NOTE: J* matrix is converted to zero based vector idx* vector, which is returned here.")

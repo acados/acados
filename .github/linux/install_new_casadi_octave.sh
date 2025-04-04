@@ -30,7 +30,7 @@
 #
 
 echo "Installing CasADi for Octave";
-CASADI_OCTAVE_URL="https://github.com/casadi/casadi/releases/download/nightly-main/casadi-main-linux64-octave7.3.0.zip";
+CASADI_OCTAVE_URL="https://github.com/casadi/casadi/releases/download/3.7.0/casadi-3.7.0-linux64-octave7.3.0.zip";
 
 wget -O casadi-linux-octave.zip "${CASADI_OCTAVE_URL}";
 mkdir -p casadi-octave;

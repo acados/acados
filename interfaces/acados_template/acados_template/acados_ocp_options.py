@@ -143,6 +143,7 @@ class AcadosOcpOptions:
         self.__custom_templates = []
         self.__custom_update_copy = True
         self.__num_threads_in_batch_solve: int = 1
+        self.__with_batch_functionality: bool = False
 
     @property
     def qp_solver(self):
@@ -1215,11 +1216,21 @@ class AcadosOcpOptions:
     @property
     def num_threads_in_batch_solve(self):
         """
+        DEPRECATED, use the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.
         Integer indicating how many threads should be used within the batch solve.
         If more than one thread should be used, the solver is compiled with openmp.
         Default: 1.
         """
         return self.__num_threads_in_batch_solve
+    
+    @property
+    def with_batch_functionality(self):
+        """
+        Whether the AcadosOcpBatchSolver can be used.
+        In this case, the solver is compiled with openmp.
+        Default: False.
+        """
+        return self.__with_batch_functionality
 
 
     @qp_solver.setter
@@ -1536,12 +1547,12 @@ class AcadosOcpOptions:
 
     @search_direction_mode.setter
     def search_direction_mode(self, search_direction_mode):
-        modes = ('NOMINAL_QP', 'BYRD_OMOJOKUN', 'FEASIBILITY_QP')
+        search_direction_modes = ('NOMINAL_QP', 'BYRD_OMOJOKUN', 'FEASIBILITY_QP')
         if isinstance(search_direction_mode, str):
-            if search_direction_mode in modes:
+            if search_direction_mode in search_direction_modes:
                 self.__search_direction_mode = search_direction_mode
             else:
-                raise ValueError(f'Invalid string for search_direction_mode. Possible modes are'+', '.join(modes) +  f', got {search_direction_mode}')
+                raise ValueError(f'Invalid string for search_direction_mode. Possible search_direction_modes are'+', '.join(search_direction_modes) +  f', got {search_direction_mode}')
         else:
             raise TypeError(f'Invalid datatype for search_direction_mode. Should be str, got {type(search_direction_mode)}')
 
@@ -1972,10 +1983,19 @@ class AcadosOcpOptions:
 
     @num_threads_in_batch_solve.setter
     def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
+        print("Warning: num_threads_in_batch_solve is deprecated, set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
         if isinstance(num_threads_in_batch_solve, int) and num_threads_in_batch_solve > 0:
             self.__num_threads_in_batch_solve = num_threads_in_batch_solve
         else:
             raise ValueError('Invalid num_threads_in_batch_solve value. num_threads_in_batch_solve must be a positive integer.')
+
+    @with_batch_functionality.setter
+    def with_batch_functionality(self, with_batch_functionality):
+        if isinstance(with_batch_functionality, bool):
+            self.__with_batch_functionality = with_batch_functionality
+        else:
+            raise Exception('Invalid with_batch_functionality value. Expected bool.')
+
 
     def set(self, attr, value):
         setattr(self, attr, value)
