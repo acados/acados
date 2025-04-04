@@ -85,7 +85,7 @@ def plot_timings(results_list, labels, figure_filename=None, t_max=None, horizon
     # tight layout
     plt.tight_layout()
     if figure_filename is not None:
-        plt.savefig(figure_filename)
+        plt.savefig(figure_filename, dpi=600)
         print(f"Saved figure to {figure_filename}")
     plt.show()
 

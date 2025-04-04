@@ -543,6 +543,7 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
     u_opt_reconstructed_acados = np.cumsum(sens_u, axis=0) * delta_p + u_opt[0, :]
     u_opt_reconstructed_acados += u_opt[0, :] - u_opt_reconstructed_acados[0, :]
 
+    # TODO move to plot utils
     plt.figure(figsize=(7, 7))
     for col in range(3):
         plt.subplot(4, 1, col + 1)
@@ -569,7 +570,7 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
     plt.tight_layout()
     plt.savefig("chain_adj_fwd_sens.pdf")
 
-    plot_timings(timings_list, labels, figure_filename="timing_adj_fwd_sens_chain.pdf", t_max=10, horizontal=True, figsize=(12, 3), with_patterns=True)
+    plot_timings(timings_list, labels, figure_filename="timing_adj_fwd_sens_chain.png", t_max=10, horizontal=True, figsize=(12, 3), with_patterns=True)
 
     plt.show()
 
