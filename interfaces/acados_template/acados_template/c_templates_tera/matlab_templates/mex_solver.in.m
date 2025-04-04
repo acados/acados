@@ -127,11 +127,11 @@ classdef {{ name }}_mex_solver < handle
             % obj.get(field, value, [stage])
             obj = varargin{1};
             field = varargin{2};
-            if any(strfind('sens', field))
-                error('field sens* (sensitivities of optimal solution) not yet supported for templated MEX.')
-            end
             if ~isa(field, 'char')
                 error('field must be a char vector, use '' ''');
+            end
+            if any(strfind('sens', field))
+                error('field sens* (sensitivities of optimal solution) not yet supported for templated MEX.')
             end
 
             if nargin==2
