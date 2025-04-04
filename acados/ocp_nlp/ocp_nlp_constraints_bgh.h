@@ -95,6 +95,7 @@ typedef struct
     int *idxb;
     int *idxs;
     int *idxe;
+    struct blasfeo_dvec *dmask;  // pointer to dmask in ocp_nlp_in
     struct blasfeo_dvec d;  // gathers bounds
     struct blasfeo_dmat DCt;  // general linear constraint matrix
             // lg <= [D, C] * [u; x] <= ug
@@ -156,7 +157,6 @@ typedef struct
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
     struct blasfeo_dvec *lam;    // pointer to lam in nlp_out
     struct blasfeo_dvec *z_alg;  // pointer to z_alg in ocp_nlp memory
-    struct blasfeo_dvec *dmask;  // pointer to dmask in ocp_nlp memory
     struct blasfeo_dmat *DCt;    // pointer to DCt in qp_in
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
     struct blasfeo_dmat *dzduxt; // pointer to dzduxt in ocp_nlp memory

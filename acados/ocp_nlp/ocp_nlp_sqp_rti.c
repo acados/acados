@@ -749,8 +749,8 @@ static void as_rti_advance_problem(ocp_nlp_config *config, ocp_nlp_dims *dims, o
     }
     if (opts->as_rti_advancement_strategy != NO_ADVANCE)
     {
-        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", nlp_work->tmp_nv_double);
-        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", nlp_work->tmp_nv_double);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, 0, "lbx", nlp_work->tmp_nv_double);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, 0, "ubx", nlp_work->tmp_nv_double);
     }
     // printf("advanced x value\n");
     // blasfeo_print_exp_tran_dvec(dims->nx[1], nlp_out->ux+1, dims->nu[1]);

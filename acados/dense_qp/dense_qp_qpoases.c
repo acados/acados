@@ -742,6 +742,16 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
             qp_out->lam->pa[2*nb + 2*ng + ns + ii] = dual_sol[nv + ns + ii] - offset_l;
     }
 
+    // compute slacks
+    if (opts->compute_t)
+    {
+        dense_qp_compute_t(qp_in, qp_out);
+        info->t_computed = 1;
+    }
+
+    // multiply with mask to ensure that multipliers associated with masked constraints are zero
+    blasfeo_dvecmul(2*(qp_in->dim->nb + qp_in->dim->ng + qp_in->dim->ns), qp_in->d_mask, 0, qp_out->lam, 0, qp_out->lam, 0);
+
     info->interface_time += acados_toc(&interface_timer);
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = nwsr;
@@ -749,12 +759,6 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     memory->time_qp_solver_call = info->solve_QP_time;
     memory->iter = nwsr;
 
-    // compute slacks
-    if (opts->compute_t)
-    {
-        dense_qp_compute_t(qp_in, qp_out);
-        info->t_computed = 1;
-    }
 
     int acados_status = qpoases_status;
     if (qpoases_status == SUCCESSFUL_RETURN) acados_status = ACADOS_SUCCESS;

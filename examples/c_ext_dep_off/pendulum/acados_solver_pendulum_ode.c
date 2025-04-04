@@ -399,9 +399,8 @@ void pendulum_ode_acados_setup_nlp_in(pendulum_ode_solver_capsule* capsule, cons
     /************************************************
     *  nlp_in
     ************************************************/
-//    ocp_nlp_in * nlp_in = ocp_nlp_in_create(nlp_config, nlp_dims);
-//    capsule->nlp_in = nlp_in;
     ocp_nlp_in * nlp_in = capsule->nlp_in;
+    ocp_nlp_out * nlp_out = capsule->nlp_out;
 
     // set up time_steps
 
@@ -512,9 +511,9 @@ void pendulum_ode_acados_setup_nlp_in(pendulum_ode_solver_capsule* capsule, cons
     lbx0[1] = 3.141592653589793;
     ubx0[1] = 3.141592653589793;
 
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbx", idxbx0);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", lbx0);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", ubx0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "idxbx", idxbx0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "lbx", lbx0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "ubx", ubx0);
     free(idxbx0);
     free(lubx0);
     // idxbxe_0
@@ -524,7 +523,7 @@ void pendulum_ode_acados_setup_nlp_in(pendulum_ode_solver_capsule* capsule, cons
     idxbxe_0[1] = 1;
     idxbxe_0[2] = 2;
     idxbxe_0[3] = 3;
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbxe", idxbxe_0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "idxbxe", idxbxe_0);
     free(idxbxe_0);
 
     /* constraints that are the same for initial and intermediate */
@@ -541,9 +540,9 @@ void pendulum_ode_acados_setup_nlp_in(pendulum_ode_solver_capsule* capsule, cons
 
     for (int i = 0; i < N; i++)
     {
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxbu", idxbu);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lbu", lbu);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ubu", ubu);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "idxbu", idxbu);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "lbu", lbu);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "ubu", ubu);
     }
     free(idxbu);
     free(lubu);
@@ -645,6 +644,7 @@ void pendulum_ode_acados_set_nlp_out(pendulum_ode_solver_capsule* capsule)
     ocp_nlp_config* nlp_config = capsule->nlp_config;
     ocp_nlp_dims* nlp_dims = capsule->nlp_dims;
     ocp_nlp_out* nlp_out = capsule->nlp_out;
+    ocp_nlp_in* nlp_in = capsule->nlp_in;
 
     // initialize primal solution
     double* xu0 = calloc(NX+NU, sizeof(double));
@@ -659,11 +659,11 @@ void pendulum_ode_acados_set_nlp_out(pendulum_ode_solver_capsule* capsule)
     for (int i = 0; i < N; i++)
     {
         // x0
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "x", x0);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "x", x0);
         // u0
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "u", u0);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "u", u0);
     }
-    ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, N, "x", x0);
+    ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, N, "x", x0);
     free(xu0);
 }
 
@@ -708,25 +708,25 @@ int pendulum_ode_acados_create_with_discretization(pendulum_ode_solver_capsule* 
     capsule->nlp_opts = ocp_nlp_solver_opts_create(capsule->nlp_config, capsule->nlp_dims);
     pendulum_ode_acados_create_set_opts(capsule);
 
-    // 4) create nlp_in
+    // 4) create and set nlp_out
+    // 4.1) nlp_out
+    capsule->nlp_out = ocp_nlp_out_create(capsule->nlp_config, capsule->nlp_dims);
+    // 4.2) sens_out
+    capsule->sens_out = ocp_nlp_out_create(capsule->nlp_config, capsule->nlp_dims);
+    pendulum_ode_acados_set_nlp_out(capsule);
+
+    // 5) create nlp_in
     capsule->nlp_in = ocp_nlp_in_create(capsule->nlp_config, capsule->nlp_dims);
 
-    // 5) setup functions, nlp_in and default parameters
+    // 6) setup functions, nlp_in and default parameters
     pendulum_ode_acados_create_setup_functions(capsule);
     pendulum_ode_acados_setup_nlp_in(capsule, N, new_time_steps);
     pendulum_ode_acados_create_set_default_parameters(capsule);
 
-    // 6) create solver
+    // 7) create solver
     capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts, capsule->nlp_in);
 
-    // 7) create and set nlp_out
-    // 7.1) nlp_out
-    capsule->nlp_out = ocp_nlp_out_create(capsule->nlp_config, capsule->nlp_dims);
-    // 7.2) sens_out
-    capsule->sens_out = ocp_nlp_out_create(capsule->nlp_config, capsule->nlp_dims);
-    pendulum_ode_acados_set_nlp_out(capsule);
-
-    // 8) do precomputations
+    // 9) do precomputations
     int status = pendulum_ode_acados_create_precompute(capsule);
 
     return status;
@@ -749,15 +749,15 @@ int pendulum_ode_acados_reset(pendulum_ode_solver_capsule* capsule, int reset_qp
 
     for(int i=0; i<N+1; i++)
     {
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "x", buffer);
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "u", buffer);
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "sl", buffer);
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "su", buffer);
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "lam", buffer);
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "z", buffer);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "x", buffer);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "u", buffer);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "sl", buffer);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "su", buffer);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "lam", buffer);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "z", buffer);
         if (i<N)
         {
-            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "pi", buffer);
+            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "pi", buffer);
             ocp_nlp_set(nlp_solver, i, "xdot_guess", buffer);
             ocp_nlp_set(nlp_solver, i, "z_guess", buffer);
         }
