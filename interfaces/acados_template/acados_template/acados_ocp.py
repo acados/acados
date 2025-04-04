@@ -245,7 +245,7 @@ class AcadosOcp:
             dims.ny_0 = ny_0
 
             if not (opts.hessian_approx=='EXACT' and opts.exact_hess_cost==False) and opts.hessian_approx != 'GAUSS_NEWTON':
-                raise ValueError("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n")
+                raise ValueError("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
         elif cost.cost_type_0 == 'EXTERNAL':
@@ -329,7 +329,7 @@ class AcadosOcp:
             dims.ny = ny
 
             if not (opts.hessian_approx=='EXACT' and opts.exact_hess_cost==False) and opts.hessian_approx != 'GAUSS_NEWTON':
-                raise ValueError("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n")
+                raise ValueError("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
         elif cost.cost_type == 'EXTERNAL':
@@ -387,7 +387,7 @@ class AcadosOcp:
             dims.ny_e = ny_e
 
             if not (opts.hessian_approx=='EXACT' and opts.exact_hess_cost==False) and opts.hessian_approx != 'GAUSS_NEWTON':
-                raise ValueError("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n")
+                raise ValueError("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
                 "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
         elif cost.cost_type_e == 'EXTERNAL':
@@ -628,7 +628,7 @@ class AcadosOcp:
             dim = cost.zu.shape[0]
 
         if wrong_fields != []:
-            raise ValueError(f'Inconsistent size for fields {", ".join(wrong_fields)}, with dimension {dim}, \n\t')
+            raise ValueError(f'Inconsistent size for fields {", ".join(wrong_fields)}, with dimension {dim}, \n\t'
                 + f'Detected ns = {ns} = nsbx + nsbu + nsg + nsh + nsphi.\n\t'\
                 + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh = {nsh}, nsphi = {nsphi}.')
         dims.ns = ns
@@ -698,7 +698,7 @@ class AcadosOcp:
             dim = cost.zu_0.shape[0]
 
         if wrong_fields != []:
-            raise ValueError(f'Inconsistent size for fields {", ".join(wrong_fields)}, with dimension {dim}, \n\t')
+            raise ValueError(f'Inconsistent size for fields {", ".join(wrong_fields)}, with dimension {dim}, \n\t'
                 + f'Detected ns_0 = {ns_0} = nsbu + nsg + nsh_0 + nsphi_0.\n\t'\
                 + f'With nsbu = {nsbu}, nsg = {nsg}, nsh_0 = {nsh_0}, nsphi_0 = {nsphi_0}.')
         dims.ns_0 = ns_0
@@ -781,7 +781,7 @@ class AcadosOcp:
             dim = cost.zu_e.shape[0]
 
         if wrong_field != "":
-            raise ValueError(f'Inconsistent size for field {wrong_field}, with dimension {dim}, \n\t')
+            raise ValueError(f'Inconsistent size for field {wrong_field}, with dimension {dim}, \n\t'
                 + f'Detected ns_e = {ns_e} = nsbx_e + nsg_e + nsh_e + nsphi_e.\n\t'\
                 + f'With nsbx_e = {nsbx_e}, nsg_e = {nsg_e}, nsh_e = {nsh_e}, nsphi_e = {nsphi_e}.')
 
@@ -838,7 +838,7 @@ class AcadosOcp:
 
         tf = np.sum(opts.time_steps)
         if (tf - opts.tf) / tf > 1e-13:
-            raise ValueError(f'Inconsistent discretization: {opts.tf}')
+            raise ValueError(f'Inconsistent discretization: {opts.tf}'
                 f' = tf != sum(opts.time_steps) = {tf}.')
 
         # cost scaling
