@@ -981,8 +981,8 @@ class AcadosOcp:
                 opts.globalization_full_step_dual = 0
 
         # AS-RTI
-        if opts.as_rti_level == 2 and any([cost.cost_type.endswith('LINEAR_LS'), cost.cost_type_0.endswith('LINEAR_LS'), cost.cost_type_e.endswith('LINEAR_LS')]):
-            raise Exception('as_rti_level == 2 not supported for LINEAR_LS and NONLINEAR_LS cost type.')
+        if opts.as_rti_level == 1 and any([cost.cost_type.endswith('LINEAR_LS'), cost.cost_type_0.endswith('LINEAR_LS'), cost.cost_type_e.endswith('LINEAR_LS')]):
+            raise NotImplementedError('as_rti_level == 1 not supported for LINEAR_LS and NONLINEAR_LS cost type.')
 
         # sanity check for Funnel globalization and SQP
         if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' and opts.nlp_solver_type not in ['SQP', 'SQP_WITH_FEASIBLE_QP']:
