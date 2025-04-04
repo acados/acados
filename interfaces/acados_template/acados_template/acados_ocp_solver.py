@@ -1027,8 +1027,8 @@ class AcadosOcpSolver:
         all_fields = out_fields + in_fields + sens_fields
 
         if (field_ not in all_fields):
-            raise ValueError(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): \'{field_}\' is an invalid argument.')
-                    \n Possible values are {all_fields}.')
+            raise ValueError(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): \'{field_}\' is an invalid argument.'
+                             f'\n Possible values are {all_fields}.')
 
         if not isinstance(stage_, int):
             raise TypeError(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): stage index must be an integer, got type {type(stage_)}.')
@@ -1686,7 +1686,7 @@ class AcadosOcpSolver:
                 raise KeyError(f"res_comp_all is not available for nlp_solver_type {self.__solver_options['nlp_solver_type']}.")
 
         else:
-            raise ValueError(f'AcadosOcpSolver.get_stats(): \'{field}\' is not a valid argument.')
+            raise ValueError(f'AcadosOcpSolver.get_stats(): \'{field}\' is not a valid argument.'
                     + f'\n Possible values are {fields}.')
 
 
@@ -1805,7 +1805,7 @@ class AcadosOcpSolver:
             assert getattr(self.shared_lib, f"{self.name}_acados_update_params")(self.capsule, stage, value_data, value_.shape[0])==0
         else:
             if field_ not in constraints_fields + cost_fields + out_fields + mem_fields + sens_fields:
-                raise ValueError(f"AcadosOcpSolver.set(): '{field}' is not a valid argument.\n")
+                raise ValueError(f"AcadosOcpSolver.set(): '{field}' is not a valid argument.\n"
                     f" Possible values are {constraints_fields + cost_fields + out_fields + mem_fields + sens_fields + ['p']}.")
 
             dims = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, \
@@ -2303,10 +2303,10 @@ class AcadosOcpSolver:
 
         if field_ == 'rti_phase':
             if value_ < 0 or value_ > 2:
-                raise ValueError('AcadosOcpSolver.options_set(): argument \'rti_phase\' can ')
+                raise ValueError('AcadosOcpSolver.options_set(): argument \'rti_phase\' can '
                     'take only values 0, 1, 2 for SQP-RTI-type solvers')
             if self.__solver_options['nlp_solver_type'] != 'SQP_RTI' and value_ > 0:
-                raise ValueError('AcadosOcpSolver.options_set(): argument \'rti_phase\' can ')
+                raise ValueError('AcadosOcpSolver.options_set(): argument \'rti_phase\' can '
                     'take only value 0 for SQP-type solvers')
 
         # encode

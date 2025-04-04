@@ -1943,7 +1943,7 @@ class AcadosOcpOptions:
             else :
                 self.__model_external_shared_lib_name = model_external_shared_lib_name
         else:
-            raise TypeError('Invalid model_external_shared_lib_name value. Str expected.')
+            raise TypeError('Invalid model_external_shared_lib_name value. Str expected.'
             + '.\n\nYou have: ' + type(model_external_shared_lib_name) + '.\n\n')
 
     @exact_hess_constr.setter
