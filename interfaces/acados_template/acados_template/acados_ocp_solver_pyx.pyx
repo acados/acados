@@ -697,7 +697,7 @@ cdef class AcadosOcpSolverCython:
             assert acados_solver.acados_update_params(self.capsule, stage, <double *> value.data, value.shape[0]) == 0
         else:
             if field_ not in constraints_fields + cost_fields + out_fields:
-                raise ValueError("AcadosOcpSolverCython.set(): {} is not a valid argument.")
+                raise ValueError("AcadosOcpSolverCython.set(): {} is not a valid argument.\
                     \nPossible values are {}.".format(field, \
                     constraints_fields + cost_fields + out_fields + ['p']))
 
@@ -707,7 +707,7 @@ cdef class AcadosOcpSolverCython:
             if value_.shape[0] != dims:
                 msg = 'AcadosOcpSolverCython.set(): mismatching dimension for field "{}" '.format(field_)
                 msg += 'with dimension {} (you have {})'.format(dims, value_.shape[0])
-                raise RuntimeError(msg)
+                raise ValueError(msg)
 
             if field_ in constraints_fields:
                 acados_solver_common.ocp_nlp_constraints_model_set(self.nlp_config,
@@ -856,10 +856,10 @@ cdef class AcadosOcpSolverCython:
 
             if field_ == 'rti_phase':
                 if value_ < 0 or value_ > 2:
-                    raise ValueError('AcadosOcpSolverCython.solve(): argument \'rti_phase\' can ')
+                    raise ValueError('AcadosOcpSolverCython.solve(): argument \'rti_phase\' can '
                         'take only values 0, 1, 2 for SQP-RTI-type solvers')
                 if self.nlp_solver_type != 'SQP_RTI':
-                    raise ValueError('AcadosOcpSolverCython.solve(): argument \'rti_phase\' can ')
+                    raise ValueError('AcadosOcpSolverCython.solve(): argument \'rti_phase\' can '
                         'take only value 0 for SQP-type solvers')
 
             int_value = value_
