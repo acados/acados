@@ -715,6 +715,7 @@ class AcadosOcpSolver:
                                   return_sens_lam: bool = False,
                                   return_sens_su: bool = False,
                                   return_sens_sl: bool = False,
+                                  sanity_checks: bool = True,
                                   ) \
                 -> Dict:
         """
@@ -728,6 +729,8 @@ class AcadosOcpSolver:
             :param return_sens_lam: Flag indicating whether sensitivities of lam should be returned. Default: False.
             :param return_sens_su: Flag indicating whether sensitivities of su should be returned. Default: False.
             :param return_sens_sl: Flag indicating whether sensitivities of sl should be returned. Default: False.
+            :param sanity_checks : bool - whether to perform sanity checks, turn off for minimal overhead, default: True
+
             :returns: A dictionary with the solution sensitivities with fields sens_x, sens_u, sens_pi, sens_lam, sens_su, sens_sl if corresponding flags were set.
                     If stages is a list, sens_x, sens_lam, sens_su, sens_sl is a list of the same length.
                     For sens_u, sens_pi, the list has length len(stages) or len(stages)-1 depending on whether N is included or not.
@@ -763,21 +766,24 @@ class AcadosOcpSolver:
         sens_sl = []
         sens_su = []
 
-        for s in stages_:
-            if not isinstance(s, int) or s < 0 or s > self.N:
-                raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): stages need to be int or list[int] and in [0, N], got stages = {stages_}.")
+        if sanity_checks:
+            for s in stages_:
+                if not isinstance(s, int) or s < 0 or s > self.N:
+                    raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): stages need to be int or list[int] and in [0, N], got stages = {stages_}.")
 
         if with_respect_to == "initial_state":
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
             ngrad = nx
             field = "ex"
-            self._sanity_check_solution_sensitivities(parametric=False)
+            if sanity_checks:
+                self._sanity_check_solution_sensitivities(parametric=False)
 
         elif with_respect_to == "p_global":
             np_global = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p_global".encode('utf-8'))
             ngrad = np_global
             field = "p_global"
-            self._sanity_check_solution_sensitivities()
+            if sanity_checks:
+                self._sanity_check_solution_sensitivities()
 
             # compute jacobians wrt params in all modules
             t0 = time.time()
