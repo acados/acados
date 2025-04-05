@@ -111,9 +111,6 @@ class AcadosOcpSolver:
             else:
                 acados_ocp.simulink_opts = simulink_opts
 
-        # make consistent
-        acados_ocp.make_consistent()
-
         # module dependent post processing
         if acados_ocp.solver_options.integrator_type == 'GNSF':
             if 'gnsf_model' in acados_ocp.__dict__:
@@ -128,6 +125,7 @@ class AcadosOcpSolver:
             print(f"NOTE: The selected QP solver {acados_ocp.solver_options.qp_solver} does not support one-sided constraints yet.")
 
         # generate code (external functions and templated code)
+        acados_ocp.make_consistent()
         acados_ocp.generate_external_functions()
         acados_ocp.dump_to_json()
         acados_ocp.render_templates(cmake_builder=cmake_builder)
@@ -230,13 +228,23 @@ class AcadosOcpSolver:
                 acados_ocp.json_file = json_file
             self.generate(acados_ocp, json_file=acados_ocp.json_file, simulink_opts=simulink_opts, cmake_builder=cmake_builder)
             json_file = acados_ocp.json_file
-        else:
-            if acados_ocp is not None:
-                acados_ocp.make_consistent()
+        elif acados_ocp is not None:
+            acados_ocp.make_consistent()
 
         # load json, store options in object
         with open(json_file, 'r') as f:
             acados_ocp_json = json.load(f)
+
+        if acados_ocp is None:
+            if acados_ocp_json['problem_class'] == "OCP":
+                self.acados_ocp = AcadosOcp()
+                self.acados_ocp.load_from_dict(acados_ocp_json)
+            else:
+                # TODO implement MOCP
+                pass
+        else:
+            self.acados_ocp = acados_ocp
+
         self.__problem_class = acados_ocp_json['problem_class']
         self.__solver_options = acados_ocp_json['solver_options']
         self.__N = acados_ocp_json['solver_options']['N_horizon']
@@ -306,8 +314,6 @@ class AcadosOcpSolver:
         getattr(self.__shared_lib, f"{self.name}_acados_create").restype = c_int
         assert getattr(self.__shared_lib, f"{self.name}_acados_create")(self.capsule)==0
         self.solver_created = True
-
-        self.acados_ocp = acados_ocp
 
         # get pointers solver
         self.__get_pointers_solver()
