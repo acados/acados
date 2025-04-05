@@ -53,6 +53,7 @@ Thumbs.db
 *.synctex
 *.fdb_latexmk
 *.fls
+*.pdf
 
 # dSpace #
 ##########
@@ -131,3 +132,5 @@ qp_in*.txt
 qp_out*.txt
 
 figures
+examples/**/*.pdf
+examples/**/*.png

@@ -83,7 +83,7 @@ def solve_and_compute_sens(p_test, tau):
 
         ocp_solver.set_p_global_and_precompute_dependencies(p_val)
         status = ocp_solver.solve()
-        solution[i] = ocp_solver.get(0, "x")
+        solution[i] = ocp_solver.get(0, "x")[0]
 
         if status != 0:
             ocp_solver.print_statistics()
@@ -129,15 +129,19 @@ def main():
 
     plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list,
                  title=None, parameter_name=r"$\theta$", fig_filename="solution_sens_non_ocp.pdf")
+    plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list,
+                 title=None, parameter_name=r"$\theta$", fig_filename="solution_sens_non_ocp_transposed.pdf", horizontal_plot=True)
 
-
-def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list, title=None, parameter_name="", fig_filename=None):
+def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list, title=None, parameter_name="", fig_filename=None, horizontal_plot=False):
     p_min = p_test[0]
     p_max = p_test[-1]
     linestyles = ["--", "-.", "--", ":", "-.", ":"]
 
     nsub = 2
-    _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=(6.5,5))
+    if horizontal_plot:
+        _, ax = plt.subplots(nrows=1, ncols=nsub, sharex=False, figsize=(12, 3.0))
+    else:
+        _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=(6.5,5))
 
     isub = 0
     # plot analytic solution
@@ -171,6 +175,8 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
 
     for i in range(nsub):
         ax[i].grid(True)
+        if horizontal_plot:
+            ax[i].set_xlabel(f"{parameter_name}")
     ax[-1].set_xlabel(f"{parameter_name}")
 
     plt.tight_layout()
@@ -182,4 +188,6 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
 
 if __name__ == "__main__":
     main()
+
+    # to plot only analytic solution
     # plot_solution_sensitivities_results([-2, 2], [], [], [], parameter_name=r"$\theta$", fig_filename="solution_sens_non_ocp_analytic.pdf")
