@@ -2345,7 +2345,7 @@ class AcadosOcpSolver:
             raise ValueError(f'stage should be in [0, N], got {stage_}')
 
         # if not isinstance(idx_values_, np.ndarray) or not issubclass(type(idx_values_[0]), np.integer):
-        raise TypeError('idx_values_ must be np.array of integers.')
+        #     raise TypeError('idx_values_ must be np.array of integers.')
 
         if not isinstance(param_values_, np.ndarray):
             raise TypeError('param_values_ must be np.array.')
