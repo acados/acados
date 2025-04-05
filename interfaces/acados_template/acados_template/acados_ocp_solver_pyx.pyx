@@ -405,7 +405,7 @@ cdef class AcadosOcpSolverCython:
         all_fields = out_fields + in_fields + sens_fields
 
         if field_ not in all_fields:
-            raise ValueError(f'AcadosOcpSolver.get(stage={stage}, field={field_}): \'{field_}\' is an invalid argument.')
+            raise ValueError(f'AcadosOcpSolver.get(stage={stage}, field={field_}): \'{field_}\' is an invalid argument.\
                     \n Possible values are {all_fields}.')
 
         if stage < 0 or stage > self.N:
