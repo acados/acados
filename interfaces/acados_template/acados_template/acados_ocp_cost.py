@@ -197,7 +197,7 @@ class AcadosOcpCost:
         if cost_ext_fun_type_0 in ['casadi', 'generic']:
             self.__cost_ext_fun_type_0 = cost_ext_fun_type_0
         else:
-            raise Exception('Invalid cost_ext_fun_type_0 value, expected numpy array.')
+            raise TypeError('Invalid cost_ext_fun_type_0 value, expected numpy array.')
 
     # Lagrange term
     @property
@@ -286,7 +286,7 @@ class AcadosOcpCost:
         if cost_type in cost_types:
             self.__cost_type = cost_type
         else:
-            raise Exception('Invalid cost_type value.')
+            raise ValueError('Invalid cost_type value.')
 
     @cost_type_0.setter
     def cost_type_0(self, cost_type_0):
@@ -294,7 +294,7 @@ class AcadosOcpCost:
         if cost_type_0 in cost_types:
             self.__cost_type_0 = cost_type_0
         else:
-            raise Exception('Invalid cost_type_0 value.')
+            raise ValueError('Invalid cost_type_0 value.')
 
     @W.setter
     def W(self, W):
@@ -327,35 +327,35 @@ class AcadosOcpCost:
         if isinstance(Zl, np.ndarray):
             self.__Zl = Zl
         else:
-            raise Exception('Invalid Zl value, expected numpy array.')
+            raise TypeError('Invalid Zl value, expected numpy array.')
 
     @Zu.setter
     def Zu(self, Zu):
         if isinstance(Zu, np.ndarray):
             self.__Zu = Zu
         else:
-            raise Exception('Invalid Zu value, expected numpy array.')
+            raise TypeError('Invalid Zu value, expected numpy array.')
 
     @zl.setter
     def zl(self, zl):
         if isinstance(zl, np.ndarray):
             self.__zl = zl
         else:
-            raise Exception('Invalid zl value, expected numpy array.')
+            raise TypeError('Invalid zl value, expected numpy array.')
 
     @zu.setter
     def zu(self, zu):
         if isinstance(zu, np.ndarray):
             self.__zu = zu
         else:
-            raise Exception('Invalid zu value, expected numpy array.')
+            raise TypeError('Invalid zu value, expected numpy array.')
 
     @cost_ext_fun_type.setter
     def cost_ext_fun_type(self, cost_ext_fun_type):
         if cost_ext_fun_type in ['casadi', 'generic']:
             self.__cost_ext_fun_type = cost_ext_fun_type
         else:
-            raise Exception("Invalid cost_ext_fun_type value, expected one in ['casadi', 'generic'].")
+            raise ValueError("Invalid cost_ext_fun_type value, expected one in ['casadi', 'generic'].")
 
     # Mayer term
     @property
@@ -459,7 +459,7 @@ class AcadosOcpCost:
         if cost_type_e in cost_types:
             self.__cost_type_e = cost_type_e
         else:
-            raise Exception('Invalid cost_type_e value.')
+            raise ValueError('Invalid cost_type_e value.')
 
     @W_e.setter
     def W_e(self, W_e):
@@ -521,7 +521,7 @@ class AcadosOcpCost:
         if cost_ext_fun_type_e in ['casadi', 'generic']:
             self.__cost_ext_fun_type_e = cost_ext_fun_type_e
         else:
-            raise Exception("Invalid cost_ext_fun_type_e value, expected one in ['casadi', 'generic'].")
+            raise ValueError("Invalid cost_ext_fun_type_e value, expected one in ['casadi', 'generic'].")
 
     def set(self, attr, value):
         setattr(self, attr, value)

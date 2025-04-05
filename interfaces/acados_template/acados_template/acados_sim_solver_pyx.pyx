@@ -121,7 +121,7 @@ cdef class AcadosSimSolverCython:
         if status == 2:
             print("Warning: acados_sim_solver reached maximum iterations.")
         elif status != 0:
-            raise Exception(f'acados_sim_solver for model {self.model_name} returned status {status}.')
+            raise RuntimeError(f'acados_sim_solver for model {self.model_name} returned status {status}.')
 
         x_next = self.get('x')
         return x_next
@@ -149,7 +149,7 @@ cdef class AcadosSimSolverCython:
         elif field_ in self.gettable_scalars:
             return self.__get_scalar(field)
         else:
-            raise Exception(f'AcadosSimSolver.get(): Unknown field {field_},' \
+            raise KeyError(f'AcadosSimSolver.get(): Unknown field {field_},' \
                 f' available fields are {", ".join(self.gettable.keys())}')
 
 
@@ -210,7 +210,7 @@ cdef class AcadosSimSolverCython:
                 value_shape = (value_shape[0], 0)
 
             if value_shape != tuple(dims):
-                raise Exception(f'AcadosSimSolverCython.set(): mismatching dimension' \
+                raise ValueError(f'AcadosSimSolverCython.set(): mismatching dimension' \
                     f' for field "{field_}" with dimension {tuple(dims)} (you have {value_shape}).')
 
         # set
@@ -219,7 +219,7 @@ cdef class AcadosSimSolverCython:
         elif field_ in settable:
             acados_sim_solver_common.sim_in_set(self.sim_config, self.sim_dims, self.sim_in, field, <void *> value.data)
         else:
-            raise Exception(f'AcadosSimSolverCython.set(): Unknown field {field_},' \
+            raise ValueError(f'AcadosSimSolverCython.set(): Unknown field {field_},' \
                 f' available fields are {", ".join(settable)}')
 
 
@@ -232,7 +232,7 @@ cdef class AcadosSimSolverCython:
         """
         fields = ['sens_forw', 'sens_adj', 'sens_hess']
         if field_ not in fields:
-            raise Exception(f"field {field_} not supported. Supported values are {', '.join(fields)}.\n")
+            raise ValueError(f"field {field_} not supported. Supported values are {', '.join(fields)}.\n")
 
         field = field_.encode('utf-8')
 

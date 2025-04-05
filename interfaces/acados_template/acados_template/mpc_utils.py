@@ -411,7 +411,7 @@ def get_path_cost_expression(ocp: AcadosOcp):
         cost_dot = ca.substitute(
            model.cost_psi_expr, model.cost_r_in_psi_expr, model.cost_y_expr)
     else:
-        raise Exception("create_model_with_cost_state: Unknown cost type.")
+        raise ValueError("create_model_with_cost_state: Unknown cost type.")
 
     return cost_dot
 
@@ -434,7 +434,7 @@ def get_terminal_cost_expression(ocp: AcadosOcp):
         cost_dot = ca.substitute(
            model.cost_psi_expr_e, model.cost_r_in_psi_expr_e, model.cost_y_expr_e)
     else:
-        raise Exception("create_model_with_cost_state: Unknown terminal cost type.")
+        raise ValueError("create_model_with_cost_state: Unknown terminal cost type.")
 
     return cost_dot
 

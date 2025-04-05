@@ -186,14 +186,14 @@ class AcadosSimOptions:
         if isinstance(ext_fun_compile_flags, str):
             self.__ext_fun_compile_flags = ext_fun_compile_flags
         else:
-            raise Exception('Invalid ext_fun_compile_flags value, expected a string.\n')
+            raise TypeError('Invalid ext_fun_compile_flags value, expected a string.\n')
 
     @ext_fun_expand_dyn.setter
     def ext_fun_expand_dyn(self, ext_fun_expand_dyn):
         if isinstance(ext_fun_expand_dyn, bool):
             self.__ext_fun_expand_dyn = ext_fun_expand_dyn
         else:
-            raise Exception('Invalid ext_fun_expand_dyn value, expected bool.\n')
+            raise TypeError('Invalid ext_fun_expand_dyn value, expected bool.\n')
 
     @integrator_type.setter
     def integrator_type(self, integrator_type):
@@ -201,7 +201,7 @@ class AcadosSimOptions:
         if integrator_type in integrator_types:
             self.__integrator_type = integrator_type
         else:
-            raise Exception('Invalid integrator_type value. Possible values are:\n\n' \
+            raise ValueError('Invalid integrator_type value. Possible values are:\n\n' \
                     + ',\n'.join(integrator_types) + '.\n\nYou have: ' + integrator_type + '.\n\n')
 
     @collocation_type.setter
@@ -210,7 +210,7 @@ class AcadosSimOptions:
         if collocation_type in collocation_types:
             self.__collocation_type = collocation_type
         else:
-            raise Exception('Invalid collocation_type value. Possible values are:\n\n' \
+            raise ValueError('Invalid collocation_type value. Possible values are:\n\n' \
                     + ',\n'.join(collocation_types) + '.\n\nYou have: ' + collocation_type + '.\n\n')
 
     @T.setter
@@ -222,70 +222,70 @@ class AcadosSimOptions:
         if isinstance(num_stages, int):
             self.__sim_method_num_stages = num_stages
         else:
-            raise Exception('Invalid num_stages value. num_stages must be an integer.')
+            raise ValueError('Invalid num_stages value. num_stages must be an integer.')
 
     @num_steps.setter
     def num_steps(self, num_steps):
         if isinstance(num_steps, int):
             self.__sim_method_num_steps = num_steps
         else:
-            raise Exception('Invalid num_steps value. num_steps must be an integer.')
+            raise TypeError('Invalid num_steps value. num_steps must be an integer.')
 
     @newton_iter.setter
     def newton_iter(self, newton_iter):
         if isinstance(newton_iter, int):
             self.__sim_method_newton_iter = newton_iter
         else:
-            raise Exception('Invalid newton_iter value. newton_iter must be an integer.')
+            raise TypeError('Invalid newton_iter value. newton_iter must be an integer.')
 
     @newton_tol.setter
     def newton_tol(self, newton_tol):
         if isinstance(newton_tol, float):
             self.__sim_method_newton_tol = newton_tol
         else:
-            raise Exception('Invalid newton_tol value. newton_tol must be an float.')
+            raise TypeError('Invalid newton_tol value. newton_tol must be a float.')
 
     @sens_forw.setter
     def sens_forw(self, sens_forw):
         if sens_forw in (True, False):
             self.__sens_forw = sens_forw
         else:
-            raise Exception('Invalid sens_forw value. sens_forw must be a Boolean.')
+            raise ValueError('Invalid sens_forw value. sens_forw must be a Boolean.')
 
     @sens_adj.setter
     def sens_adj(self, sens_adj):
         if sens_adj in (True, False):
             self.__sens_adj = sens_adj
         else:
-            raise Exception('Invalid sens_adj value. sens_adj must be a Boolean.')
+            raise ValueError('Invalid sens_adj value. sens_adj must be a Boolean.')
 
     @sens_hess.setter
     def sens_hess(self, sens_hess):
         if sens_hess in (True, False):
             self.__sens_hess = sens_hess
         else:
-            raise Exception('Invalid sens_hess value. sens_hess must be a Boolean.')
+            raise ValueError('Invalid sens_hess value. sens_hess must be a Boolean.')
 
     @sens_algebraic.setter
     def sens_algebraic(self, sens_algebraic):
         if sens_algebraic in (True, False):
             self.__sens_algebraic = sens_algebraic
         else:
-            raise Exception('Invalid sens_algebraic value. sens_algebraic must be a Boolean.')
+            raise ValueError('Invalid sens_algebraic value. sens_algebraic must be a Boolean.')
 
     @output_z.setter
     def output_z(self, output_z):
         if output_z in (True, False):
             self.__output_z = output_z
         else:
-            raise Exception('Invalid output_z value. output_z must be a Boolean.')
+            raise ValueError('Invalid output_z value. output_z must be a Boolean.')
 
     @sim_method_jac_reuse.setter
     def sim_method_jac_reuse(self, sim_method_jac_reuse):
         if sim_method_jac_reuse in (0, 1):
             self.__sim_method_jac_reuse = sim_method_jac_reuse
         else:
-            raise Exception('Invalid sim_method_jac_reuse value. sim_method_jac_reuse must be 0 or 1.')
+            raise ValueError('Invalid sim_method_jac_reuse value. sim_method_jac_reuse must be 0 or 1.')
 
     @num_threads_in_batch_solve.setter
     def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
@@ -293,7 +293,7 @@ class AcadosSimOptions:
         if isinstance(num_threads_in_batch_solve, int) and num_threads_in_batch_solve > 0:
             self.__num_threads_in_batch_solve = num_threads_in_batch_solve
         else:
-            raise Exception('Invalid num_threads_in_batch_solve value. num_threads_in_batch_solve must be a positive integer.')
+            raise ValueError('Invalid num_threads_in_batch_solve value. num_threads_in_batch_solve must be a positive integer.')
 
     @with_batch_functionality.setter
     def with_batch_functionality(self, with_batch_functionality):
@@ -354,19 +354,19 @@ class AcadosSim:
         if isinstance(parameter_values, np.ndarray):
             self.__parameter_values = parameter_values
         else:
-            raise Exception('Invalid parameter_values value. ' +
+            raise ValueError('Invalid parameter_values value. ' +
                             f'Expected numpy array, got {type(parameter_values)}.')
 
     def make_consistent(self):
         self.model.make_consistent(self.dims)
 
         if self.parameter_values.shape[0] != self.dims.np:
-            raise Exception('inconsistent dimension np, regarding model.p and parameter_values.' + \
+            raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \
                 f'\nGot np = {self.dims.np}, acados_sim.parameter_values.shape = {self.parameter_values.shape[0]}\n')
 
         # check required arguments are given
         if self.solver_options.T is None:
-            raise Exception('acados_sim.solver_options.T is None, should be provided.')
+            raise ValueError('acados_sim.solver_options.T is None, should be provided.')
 
 
     def to_dict(self) -> dict:
@@ -392,7 +392,7 @@ class AcadosSim:
         json_path = os.path.join(os.getcwd(), json_file)
 
         if not os.path.exists(json_path):
-            raise Exception(f"{json_path} not found!")
+            raise FileNotFoundError(f"{json_path} not found!")
 
         template_list = [
             ('acados_sim_solver.in.c', f'acados_sim_solver_{self.model.name}.c'),

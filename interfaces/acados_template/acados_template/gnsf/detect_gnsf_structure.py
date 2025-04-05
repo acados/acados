@@ -73,7 +73,7 @@ def detect_gnsf_structure(acados_ocp, transcribe_opts=None):
     # acados_root_dir = getenv('ACADOS_INSTALL_DIR')
 
     if not is_empty(acados_ocp.model.p_global) and depends_on(acados_ocp.model.f_impl_expr, acados_ocp.model.p_global):
-        Exception("GNSF does not support global parameters")
+        NotImplementedError("GNSF does not support global parameters")
 
     ## load transcribe_opts
     if transcribe_opts is None:

@@ -110,7 +110,7 @@ def process_zoro_description(zoro_description: ZoroDescription):
     zoro_description.nuh_e_t = len(zoro_description.idx_uh_e_t)
 
     if zoro_description.input_P0_diag and zoro_description.input_P0:
-        raise Exception("Only one of input_P0_diag and input_P0 can be True")
+        raise ValueError("Only one of input_P0_diag and input_P0 can be True")
 
     # Print input note:
     print(f"\nThe data of the generated custom update function consists of the concatenation of:")

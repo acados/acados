@@ -52,13 +52,13 @@ class AcadosSimBatchSolver():
     def __init__(self, sim: AcadosSim, N_batch: int, num_threads_in_batch_solve: Union[int, None] = None , json_file: str = 'acados_sim.json', build: bool = True, generate: bool = True, verbose: bool=True):
 
         if not isinstance(N_batch, int) or N_batch <= 0:
-            raise Exception("AcadosSimBatchSolver: argument N_batch should be a positive integer.")
+            raise ValueError("AcadosSimBatchSolver: argument N_batch should be a positive integer.")
         if num_threads_in_batch_solve is None:
             num_threads_in_batch_solve = sim.solver_options.num_threads_in_batch_solve
             print(f"Warning: num_threads_in_batch_solve is None. Using value {num_threads_in_batch_solve} set in sim.solver_options instead.")
             print("In the future, it should be passed explicitly in the AcadosSimBatchSolver constructor.")
         if not isinstance(num_threads_in_batch_solve, int) or num_threads_in_batch_solve <= 0:
-            raise Exception("AcadosSimBatchSolver: argument num_threads_in_batch_solve should be a positive integer.")
+            raise ValueError("AcadosSimBatchSolver: argument num_threads_in_batch_solve should be a positive integer.")
         if not sim.solver_options.with_batch_functionality:
             print("Warning: Using AcadosSimBatchSolver, but sim.solver_options.with_batch_functionality is False.")
             print("Attempting to compile with openmp nonetheless.")

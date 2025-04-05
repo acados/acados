@@ -68,10 +68,10 @@ def one_sided_huber_penalty(
 
     if tau is None:
         if w is None:
-            raise Exception("Either specify w or tau")
+            raise ValueError("Either specify w or tau")
         tau = 2 * w * delta
     elif w is not None:
-        raise Exception("Either specify w or tau")
+        raise ValueError("Either specify w or tau")
 
     loss, _, _, loss_hess_XGN = huber_loss(u, delta, tau)
     # shifted by delta to get a penalty
@@ -112,10 +112,10 @@ def symmetric_huber_penalty(
 
     if tau is None:
         if w is None:
-            raise Exception("Either specify w or tau")
+            raise ValueError("Either specify w or tau")
         tau = 2 * w * delta
     elif w is not None:
-        raise Exception("Either specify w or tau")
+        raise ValueError("Either specify w or tau")
 
     loss, _, _, loss_hess_XGN = huber_loss(u, delta, tau)
 
