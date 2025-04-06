@@ -98,7 +98,7 @@ class GenerateContext:
             try:
                 fun = ca.Function(name, inputs, outputs, self.__casadi_fun_opts)
                 # print(f"Generating function {name} with inputs {inputs}")
-            except Exception as e:
+            except RuntimeError as e:
                 print(f"\nError while creating function {name} with inputs {inputs} and outputs {outputs}")
                 print(e)
                 raise e
@@ -120,7 +120,7 @@ class GenerateContext:
             with set_directory(output_dir):
                 try:
                     fun.generate(name, self.casadi_codegen_opts)
-                except Exception as e:
+                except RuntimeError as e:
                     print(f"Error while generating function {name} in directory {output_dir}")
                     print(e)
                     raise e
@@ -507,7 +507,7 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
 
     if opts.with_solution_sens_wrt_params:
         if casadi_length(z) > 0:
-            raise Exception("acados: solution sensitivities wrt parameters not supported with algebraic variables.")
+            raise NotImplementedError("acados: solution sensitivities wrt parameters not supported with algebraic variables.")
         grad_ux = ca.jacobian(ext_cost, ca.vertcat(u, x))
         hess_xu_p = ca.jacobian(grad_ux, p_global)
         context.add_function_definition(fun_name_param, [x, u, z, p], [hess_xu_p], cost_dir, 'cost')
@@ -701,7 +701,7 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
         con_phi_expr = model.con_phi_expr
 
     if (not is_empty(con_h_expr)) and (not is_empty(con_phi_expr)):
-        raise Exception("acados: you can either have constraint_h, or constraint_phi, not both.")
+        raise ValueError("acados: you can either have constraint_h, or constraint_phi, not both.")
 
     if (is_empty(con_h_expr) and is_empty(con_phi_expr)):
         # both empty -> nothing to generate
