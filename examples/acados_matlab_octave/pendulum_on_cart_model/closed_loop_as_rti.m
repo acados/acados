@@ -173,7 +173,7 @@ function main(algorithm, as_rti_iter)
 
             % set initial state
             % NOTE: all bounds can be updated between the phases
-            % all other updates, such as parameters are not used in the preparation phase
+            % all other updates, such as parameters are not used in the feedback phase
             ocp_solver.set('constr_lbx', simX(i, :), 0);
             ocp_solver.set('constr_ubx', simX(i, :), 0);
 
