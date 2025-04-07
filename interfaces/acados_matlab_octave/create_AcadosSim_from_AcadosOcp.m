@@ -35,6 +35,12 @@ function sim = create_AcadosSim_from_AcadosOcp(ocp)
         error('create_AcadosSim_from_AcadosOcp: First argument must be an AcadosOcp object.');
     end
     ocp.make_consistent();
+    if strcmp(ocp.solver_options.integrator_type, 'DISCRETE')
+        error('create_AcadosSim_from_AcadosOcp: AcadosOcp cannot have integrator_type DISCRETE.');
+    end
+    if ~isempty(ocp.model.p_global)
+        error('create_AcadosSim_from_AcadosOcp: AcadosOcp cannot have p_global.');
+    end
     sim = AcadosSim();
     sim.model = ocp.model;
     % copy all relevant options
