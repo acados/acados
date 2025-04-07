@@ -199,11 +199,24 @@ def main(algorithm='RTI', as_rti_iter=1):
     # plot results
     plot_pendulum(np.linspace(0, (Tf/N_horizon)*Nsim, Nsim+1), Fmax, simU, simX, title=algorithm)
 
+    # check terminal state
+    if algorithm == "RTI":
+        x_terminal_ref = np.array([-0.01402487, -0.02343146,  0.00874453,  0.07601564])
+    else:
+        x_terminal_ref = np.array([-0.0028129 , -0.00106827,  0.00653341,  0.00663193])
+
+    x_terminal = simX[-1, :]
+    if np.linalg.norm(x_terminal - x_terminal_ref) > 1e-3:
+        raise Exception(f"Terminal state {x_terminal} does not match reference {x_terminal_ref}. Exiting.")
+    else:
+        print(f"Terminal state {x_terminal} matches reference {x_terminal_ref}. Test passed.")
+
+    # delete solver
     ocp_solver = None
 
 
 if __name__ == '__main__':
-    main(algorithm="AS-RTI-D", as_rti_iter=1)
+    # main(algorithm="AS-RTI-D", as_rti_iter=1)
 
     for algorithm in ["SQP", "RTI", "AS-RTI-A", "AS-RTI-B", "AS-RTI-C", "AS-RTI-D"]:
         main(algorithm=algorithm, as_rti_iter=1)
