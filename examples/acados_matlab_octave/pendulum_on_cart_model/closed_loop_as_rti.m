@@ -29,8 +29,8 @@
 
 
 function closed_loop_as_rti()
-    algorithms = {'SQP', 'RTI', 'AS-RTI-A', 'AS-RTI-C', 'AS-RTI-D'};
-    algorithms = {'AS-RTI-B'};
+    algorithms = {'SQP', 'RTI', 'AS-RTI-A', 'AS-RTI-B', 'AS-RTI-C', 'AS-RTI-D'};
+    % algorithms = {'AS-RTI-B'};
     for i = 1:length(algorithms)
         main(algorithms{i}, 1);
     end
@@ -61,6 +61,7 @@ function [ocp_solver, integrator] = setup(x0, Fmax, N_horizon, Tf, algorithm, as
     Q_mat = 2 * diag([1e3, 1e3, 1e-2, 1e-2]);
     R_mat = 2 * diag([1e-2]);
     if 0
+        % NOTE: not yet implemented in MATLAB
         ocp.cost.cost_type = 'NONLINEAR_LS';
         ocp.cost.cost_type_e = 'NONLINEAR_LS';
 
@@ -231,8 +232,8 @@ function main(algorithm, as_rti_iter)
         legend('F');
         title(['algorithm: ', algorithm, '-', num2str(as_rti_iter)]);
 
-        if is_octave()
-            waitforbuttonpress;
-        end
+        % if is_octave()
+        %     waitforbuttonpress;
+        % end
     end
 end
