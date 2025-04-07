@@ -45,6 +45,7 @@ REAL_TIME_ALGORITHMS = ["RTI", "AS-RTI-A", "AS-RTI-B", "AS-RTI-C", "AS-RTI-D"]
 ALGORITHMS = ["SQP"] + REAL_TIME_ALGORITHMS
 
 def setup(x0, Fmax, N_horizon, Tf, algorithm, as_rti_iter=1):
+    print(f'running with algorithm: {algorithm}, as_rti_iter: {as_rti_iter}')
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -112,7 +113,7 @@ def setup(x0, Fmax, N_horizon, Tf, algorithm, as_rti_iter=1):
     ocp.solver_options.tf = Tf
 
     solver_json = 'acados_ocp_' + model.name + '.json'
-    acados_ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)
+    acados_ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json, verbose=False)
 
     # create an integrator with the same settings as used in the OCP solver.
     acados_integrator = AcadosSimSolver(ocp, json_file = solver_json)
