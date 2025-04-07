@@ -745,10 +745,10 @@ classdef AcadosOcp < handle
                 error('tau_min > 0 is only compatible with HPIPM.');
             end
 
-            if opts.as_rti_level == 1 && any(strcmp(cost.cost_type, {'LINEAR_LS', 'NONLINEAR_LS'}) || ...
-                                             strcmp(cost.cost_type_0, {'LINEAR_LS', 'NONLINEAR_LS'}) || ...
-                                             strcmp(cost.cost_type_e, {'LINEAR_LS', 'NONLINEAR_LS'}))
-                error('as_rti_level == 1 not supported for LINEAR_LS and NONLINEAR_LS cost type.');
+            if (opts.as_rti_level == 1 || opts.as_rti_level == 2) && any([strcmp(cost.cost_type, {'LINEAR_LS', 'NONLINEAR_LS'}) ...
+                                             strcmp(cost.cost_type_0, {'LINEAR_LS', 'NONLINEAR_LS'}) ...
+                                             strcmp(cost.cost_type_e, {'LINEAR_LS', 'NONLINEAR_LS'})])
+                error('as_rti_level in [1, 2] not supported for LINEAR_LS and NONLINEAR_LS cost type.');
             end
 
             % Set default parameters for globalization
