@@ -881,27 +881,19 @@ classdef AcadosOcp < handle
             if isempty(cost_types{1})
                 warning("cost_type_0 not set, using path cost");
                 self.cost.cost_type_0 = self.cost.cost_type;
-                if (strcmp(self.cost.cost_type, 'LINEAR_LS'))
-                    self.cost.Vx_0 = self.cost.Vx;
-                    self.cost.Vu_0 = self.cost.Vu;
-                    self.cost.Vz_0 = self.cost.Vz;
-                elseif (strcmp(self.cost.cost_type, 'NONLINEAR_LS'))
-                    self.model.cost_y_expr_0 = self.model.cost_y_expr;
-                elseif (strcmp(self.cost.cost_type, 'EXTERNAL'))
-                    self.cost.cost_ext_fun_type_0 = self.cost.cost_ext_fun_type;
-                    if strcmp(self.cost.cost_ext_fun_type_0, 'casadi')
-                        self.model.cost_expr_ext_cost_0 = self.model.cost_expr_ext_cost;
-                        self.model.cost_expr_ext_cost_custom_hess_0 = self.model.cost_expr_ext_cost_custom_hess;
-                    else % generic
-                        self.cost.cost_source_ext_cost_0 = self.cost.cost_source_ext_cost;
-                        self.cost.cost_function_ext_cost_0 = self.cost.cost_function_ext_cost;
-                    end
-                end
-                if (strcmp(self.cost.cost_type, 'LINEAR_LS')) || (strcmp(self.cost.cost_type, 'NONLINEAR_LS'))
-                    self.cost.W_0 = self.cost.W;
-                    self.cost.yref_0 = self.cost.yref;
-                    self.dims.ny_0 = self.dims.ny;
-                end
+                self.cost.Vx_0 = self.cost.Vx;
+                self.cost.Vu_0 = self.cost.Vu;
+                self.cost.Vz_0 = self.cost.Vz;
+                self.model.cost_y_expr_0 = self.model.cost_y_expr;
+                self.cost.cost_ext_fun_type_0 = self.cost.cost_ext_fun_type;
+                self.model.cost_expr_ext_cost_0 = self.model.cost_expr_ext_cost;
+                self.model.cost_expr_ext_cost_custom_hess_0 = self.model.cost_expr_ext_cost_custom_hess;
+                self.cost.cost_source_ext_cost_0 = self.cost.cost_source_ext_cost;
+                self.cost.cost_function_ext_cost_0 = self.cost.cost_function_ext_cost;
+                self.cost.W_0 = self.cost.W;
+                self.cost.yref_0 = self.cost.yref;
+                self.model.cost_psi_expr_0 = self.model.cost_psi_expr;
+                self.model.cost_r_in_psi_expr_0 = self.model.cost_r_in_psi_expr;
             end
 
             % detect constraint structure
