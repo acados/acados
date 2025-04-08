@@ -848,8 +848,7 @@ class AcadosOcp:
             return
 
         # set integrator time automatically
-        if opts.N_horizon > 0:        
-            opts.Tsim = opts.time_steps[0]
+        opts.Tsim = opts.time_steps[0]
 
         # num_steps
         if isinstance(opts.sim_method_num_steps, np.ndarray) and opts.sim_method_num_steps.size == 1:
@@ -998,19 +997,29 @@ class AcadosOcp:
                 raise ValueError('fixed_hess is only compatible LINEAR_LS cost_type_e.')
 
         # solution sensitivities
-        bgp_type_constraint_pairs = [
-            ("path", model.con_phi_expr), ("initial", model.con_phi_expr_0), ("terminal", model.con_phi_expr_e),
-            ("path", model.con_r_expr), ("initial", model.con_r_expr_0), ("terminal", model.con_r_expr_e)
-        ]
         bgh_type_constraint_pairs = [
             ("path", model.con_h_expr), ("initial", model.con_h_expr_0), ("terminal", model.con_h_expr_e),
         ]
 
+        if opts.N_horizon > 0:
+            bgp_type_constraint_pairs = [
+                ("path", model.con_phi_expr), ("initial", model.con_phi_expr_0), ("terminal", model.con_phi_expr_e),
+                ("path", model.con_r_expr), ("initial", model.con_r_expr_0), ("terminal", model.con_r_expr_e)
+            ]
+            cost_types_to_check = [cost.cost_type, cost.cost_type_0, cost.cost_type_e]
+            suffix = f", got cost_types {cost.cost_type_0, cost.cost_type, cost.cost_type_e}."
+        else:
+            bgp_type_constraint_pairs = [
+                ("terminal", model.con_phi_expr_e), ("terminal", model.con_r_expr_e)
+            ]
+            cost_types_to_check = [cost.cost_type_e]
+            suffix = f", got cost_type_e {cost.cost_type_e}."
+
         if opts.with_solution_sens_wrt_params:
             if dims.np_global == 0:
                 raise ValueError('with_solution_sens_wrt_params is only compatible if global parameters `p_global` are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got emty p_global.')
-            if any([cost_type not in ["EXTERNAL", "LINEAR_LS"] for cost_type in [cost.cost_type, cost.cost_type_0, cost.cost_type_e]]):
-                raise ValueError(f'with_solution_sens_wrt_params is only compatible with EXTERNAL and LINEAR_LS cost_type, got cost_types {cost.cost_type_0, cost.cost_type, cost.cost_type_e}.')
+            if any([cost_type not in ["EXTERNAL", "LINEAR_LS"] for cost_type in cost_types_to_check]):
+                raise ValueError('with_solution_sens_wrt_params is only compatible with EXTERNAL and LINEAR_LS cost_type' + suffix)
             if opts.integrator_type != "DISCRETE":
                 raise NotImplementedError('with_solution_sens_wrt_params is only compatible with DISCRETE dynamics.')
             for horizon_type, constraint in bgp_type_constraint_pairs:
@@ -1020,33 +1029,35 @@ class AcadosOcp:
         if opts.with_value_sens_wrt_params:
             if dims.np_global == 0:
                 raise ValueError('with_value_sens_wrt_params is only compatible if global parameters `p_global` are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got emty p_global.')
-            if any([cost_type not in ["EXTERNAL", "LINEAR_LS"] for cost_type in [cost.cost_type, cost.cost_type_0, cost.cost_type_e]]):
-                raise ValueError('with_value_sens_wrt_params is only compatible with EXTERNAL cost_type.')
+            if any([cost_type not in ["EXTERNAL", "LINEAR_LS"] for cost_type in cost_types_to_check]):
+                raise ValueError('with_value_sens_wrt_params is only compatible with EXTERNAL cost_type' + suffix)
             if opts.integrator_type != "DISCRETE":
                 raise NotImplementedError('with_value_sens_wrt_params is only compatible with DISCRETE dynamics.')
             for horizon_type, constraint in bgp_type_constraint_pairs:
                 if constraint is not None and any(ca.which_depends(constraint, model.p_global)):
                     raise NotImplementedError(f"with_value_sens_wrt_params is not supported for BGP constraints that depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
 
-        if opts.qp_solver_cond_N is None:
-            opts.qp_solver_cond_N = opts.N_horizon
 
         if opts.tau_min > 0 and not "HPIPM" in opts.qp_solver:
             raise ValueError('tau_min > 0 is only compatible with HPIPM.')
 
-        if opts.qp_solver_cond_block_size is not None:
-            if sum(opts.qp_solver_cond_block_size) != opts.N_horizon:
-                raise ValueError(f'sum(qp_solver_cond_block_size) = {sum(opts.qp_solver_cond_block_size)} != N = {opts.N_horizon}.')
-            if len(opts.qp_solver_cond_block_size) != opts.qp_solver_cond_N+1:
-                raise ValueError(f'qp_solver_cond_block_size = {opts.qp_solver_cond_block_size} should have length qp_solver_cond_N+1 = {opts.qp_solver_cond_N+1}.')
+        if opts.N_horizon > 0:
+            if opts.qp_solver_cond_N is None:
+                opts.qp_solver_cond_N = opts.N_horizon
 
-        if opts.nlp_solver_type == "DDP":
-            if opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon:
-                raise ValueError(f'DDP solver only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N, got qp solver {opts.qp_solver} and qp_solver_cond_N {opts.qp_solver_cond_N}, N {opts.N_horizon}.')
-            if any([dims.nbu, dims.nbx, dims.ng, dims.nh, dims.nphi]):
-                raise ValueError(f'DDP only supports initial state constraints, got path constraints. Dimensions: dims.nbu = {dims.nbu}, dims.nbx = {dims.nbx}, dims.ng = {dims.ng}, dims.nh = {dims.nh}, dims.nphi = {dims.nphi}')
-            if any([dims.ng_e, dims.nphi_e, dims.nh_e]):
-                raise ValueError('DDP only supports initial state constraints, got terminal constraints.')
+            if opts.qp_solver_cond_block_size is not None:
+                if sum(opts.qp_solver_cond_block_size) != opts.N_horizon:
+                    raise ValueError(f'sum(qp_solver_cond_block_size) = {sum(opts.qp_solver_cond_block_size)} != N = {opts.N_horizon}.')
+                if len(opts.qp_solver_cond_block_size) != opts.qp_solver_cond_N+1:
+                    raise ValueError(f'qp_solver_cond_block_size = {opts.qp_solver_cond_block_size} should have length qp_solver_cond_N+1 = {opts.qp_solver_cond_N+1}.')
+
+            if opts.nlp_solver_type == "DDP":
+                if opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon:
+                    raise ValueError(f'DDP solver only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N, got qp solver {opts.qp_solver} and qp_solver_cond_N {opts.qp_solver_cond_N}, N {opts.N_horizon}.')
+                if any([dims.nbu, dims.nbx, dims.ng, dims.nh, dims.nphi]):
+                    raise ValueError(f'DDP only supports initial state constraints, got path constraints. Dimensions: dims.nbu = {dims.nbu}, dims.nbx = {dims.nbx}, dims.ng = {dims.ng}, dims.nh = {dims.nh}, dims.nphi = {dims.nphi}')
+                if any([dims.ng_e, dims.nphi_e, dims.nh_e]):
+                    raise ValueError('DDP only supports initial state constraints, got terminal constraints.')
 
         ddp_with_merit_or_funnel = opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' or (opts.nlp_solver_type == "DDP" and opts.globalization == 'MERIT_BACKTRACKING')
         # Set default parameters for globalization
