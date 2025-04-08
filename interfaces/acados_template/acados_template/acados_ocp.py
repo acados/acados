@@ -800,6 +800,93 @@ class AcadosOcp:
 
         dims.ns_e = ns_e
 
+    def _make_consistent_discretization(self):
+        opts = self.solver_options
+        if self.dims.N == 0:
+            opts.shooting_nodes = np.array([0.])
+            opts.time_steps = np.array([])
+            return
+
+        if not isinstance(opts.tf, (float, int)):
+            raise TypeError(f'Time horizon tf should be float provided, got tf = {opts.tf}.')
+
+        if is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
+            # uniform discretization
+            opts.time_steps = opts.tf / opts.N_horizon * np.ones((opts.N_horizon,))
+            opts.shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(opts.time_steps)))
+
+        elif not is_empty(opts.shooting_nodes):
+            if np.shape(opts.shooting_nodes)[0] != opts.N_horizon+1:
+                raise ValueError('inconsistent dimension N, regarding shooting_nodes.')
+
+            time_steps = opts.shooting_nodes[1:] - opts.shooting_nodes[0:-1]
+            # identify constant time_steps: due to numerical reasons the content of time_steps might vary a bit
+            avg_time_steps = np.average(time_steps)
+            # criterion for constant time step detection: the min/max difference in values normalized by the average
+            check_const_time_step = (np.max(time_steps)-np.min(time_steps)) / avg_time_steps
+            # if the criterion is small, we have a constant time_step
+            if check_const_time_step < 1e-9:
+                time_steps[:] = avg_time_steps  # if we have a constant time_step: apply the average time_step
+
+            opts.time_steps = time_steps
+
+        elif not is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
+            # compute shooting nodes from time_steps for convenience
+            opts.shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(opts.time_steps)))
+
+        elif (not is_empty(opts.time_steps)) and (not is_empty(opts.shooting_nodes)):
+            ValueError('Please provide either time_steps or shooting_nodes for nonuniform discretization')
+
+        tf = np.sum(opts.time_steps)
+        if (tf - opts.tf) / tf > 1e-13:
+            raise ValueError(f'Inconsistent discretization: {opts.tf}'
+                f' = tf != sum(opts.time_steps) = {tf}.')
+
+    def _make_consistent_simulation(self):
+        opts = self.solver_options
+        if opts.N_horizon == 0:
+            return
+
+        # set integrator time automatically
+        if opts.N_horizon > 0:        
+            opts.Tsim = opts.time_steps[0]
+
+        # num_steps
+        if isinstance(opts.sim_method_num_steps, np.ndarray) and opts.sim_method_num_steps.size == 1:
+            opts.sim_method_num_steps = opts.sim_method_num_steps.item()
+
+        if isinstance(opts.sim_method_num_steps, (int, float)) and opts.sim_method_num_steps % 1 == 0:
+            opts.sim_method_num_steps = opts.sim_method_num_steps * np.ones((opts.N_horizon,), dtype=np.int64)
+        elif isinstance(opts.sim_method_num_steps, np.ndarray) and opts.sim_method_num_steps.size == opts.N_horizon \
+            and np.all(np.equal(np.mod(opts.sim_method_num_steps, 1), 0)):
+            opts.sim_method_num_steps = np.reshape(opts.sim_method_num_steps, (opts.N_horizon,)).astype(np.int64)
+        else:
+            raise TypeError("Wrong value for sim_method_num_steps. Should be either int or array of ints of shape (N,).")
+
+        # num_stages
+        if isinstance(opts.sim_method_num_stages, np.ndarray) and opts.sim_method_num_stages.size == 1:
+            opts.sim_method_num_stages = opts.sim_method_num_stages.item()
+
+        if isinstance(opts.sim_method_num_stages, (int, float)) and opts.sim_method_num_stages % 1 == 0:
+            opts.sim_method_num_stages = opts.sim_method_num_stages * np.ones((opts.N_horizon,), dtype=np.int64)
+        elif isinstance(opts.sim_method_num_stages, np.ndarray) and opts.sim_method_num_stages.size == opts.N_horizon \
+            and np.all(np.equal(np.mod(opts.sim_method_num_stages, 1), 0)):
+            opts.sim_method_num_stages = np.reshape(opts.sim_method_num_stages, (opts.N_horizon,)).astype(np.int64)
+        else:
+            raise ValueError("Wrong value for sim_method_num_stages. Should be either int or array of ints of shape (N,).")
+
+        # jac_reuse
+        if isinstance(opts.sim_method_jac_reuse, np.ndarray) and opts.sim_method_jac_reuse.size == 1:
+            opts.sim_method_jac_reuse = opts.sim_method_jac_reuse.item()
+
+        if isinstance(opts.sim_method_jac_reuse, (int, float)) and opts.sim_method_jac_reuse % 1 == 0:
+            opts.sim_method_jac_reuse = opts.sim_method_jac_reuse * np.ones((opts.N_horizon,), dtype=np.int64)
+        elif isinstance(opts.sim_method_jac_reuse, np.ndarray) and opts.sim_method_jac_reuse.size == opts.N_horizon \
+            and np.all(np.equal(np.mod(opts.sim_method_jac_reuse, 1), 0)):
+            opts.sim_method_jac_reuse = np.reshape(opts.sim_method_jac_reuse, (opts.N_horizon,)).astype(np.int64)
+        else:
+            raise ValueError("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
+
     def make_consistent(self, is_mocp_phase=False) -> None:
         """
         Detect dimensions, perform sanity checks
@@ -889,45 +976,7 @@ class AcadosOcp:
                 if any(bound >= ACADOS_INFTY) or any(bound <= -ACADOS_INFTY):
                     raise ValueError(f"Field {field} contains values outside the interval (-ACADOS_INFTY, ACADOS_INFTY) with ACADOS_INFTY = {ACADOS_INFTY:.2e}. One-sided constraints are not supported by the chosen QP solver {opts.qp_solver}.")
 
-        # discretization
-        if opts.N_horizon > 0:
-            if not isinstance(opts.tf, (float, int)):
-                raise TypeError(f'Time horizon tf should be float provided, got tf = {opts.tf}.')
-
-            if is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
-                # uniform discretization
-                opts.time_steps = opts.tf / opts.N_horizon * np.ones((opts.N_horizon,))
-                opts.shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(opts.time_steps)))
-
-            elif not is_empty(opts.shooting_nodes):
-                if np.shape(opts.shooting_nodes)[0] != opts.N_horizon+1:
-                    raise ValueError('inconsistent dimension N, regarding shooting_nodes.')
-
-                time_steps = opts.shooting_nodes[1:] - opts.shooting_nodes[0:-1]
-                # identify constant time_steps: due to numerical reasons the content of time_steps might vary a bit
-                avg_time_steps = np.average(time_steps)
-                # criterion for constant time step detection: the min/max difference in values normalized by the average
-                check_const_time_step = (np.max(time_steps)-np.min(time_steps)) / avg_time_steps
-                # if the criterion is small, we have a constant time_step
-                if check_const_time_step < 1e-9:
-                    time_steps[:] = avg_time_steps  # if we have a constant time_step: apply the average time_step
-
-                opts.time_steps = time_steps
-
-            elif not is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
-                # compute shooting nodes from time_steps for convenience
-                opts.shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(opts.time_steps)))
-
-            elif (not is_empty(opts.time_steps)) and (not is_empty(opts.shooting_nodes)):
-                ValueError('Please provide either time_steps or shooting_nodes for nonuniform discretization')
-
-            tf = np.sum(opts.time_steps)
-            if (tf - opts.tf) / tf > 1e-13:
-                raise ValueError(f'Inconsistent discretization: {opts.tf}'
-                    f' = tf != sum(opts.time_steps) = {tf}.')
-        else:
-            opts.shooting_nodes = np.array([0.])
-            opts.time_steps = np.array([])
+        self._make_consistent_discretization()
 
         # cost scaling
         if opts.cost_scaling is None:
@@ -935,52 +984,15 @@ class AcadosOcp:
         if opts.cost_scaling.shape[0] != opts.N_horizon + 1:
             raise ValueError(f'cost_scaling should be of length N+1 = {opts.N_horizon+1}, got {opts.cost_scaling.shape[0]}.')
 
-        # set integrator time automatically
-        opts.Tsim = opts.time_steps[0]
-
-        # num_steps
-        if isinstance(opts.sim_method_num_steps, np.ndarray) and opts.sim_method_num_steps.size == 1:
-            opts.sim_method_num_steps = opts.sim_method_num_steps.item()
-
-        if isinstance(opts.sim_method_num_steps, (int, float)) and opts.sim_method_num_steps % 1 == 0:
-            opts.sim_method_num_steps = opts.sim_method_num_steps * np.ones((opts.N_horizon,), dtype=np.int64)
-        elif isinstance(opts.sim_method_num_steps, np.ndarray) and opts.sim_method_num_steps.size == opts.N_horizon \
-            and np.all(np.equal(np.mod(opts.sim_method_num_steps, 1), 0)):
-            opts.sim_method_num_steps = np.reshape(opts.sim_method_num_steps, (opts.N_horizon,)).astype(np.int64)
-        else:
-            raise TypeError("Wrong value for sim_method_num_steps. Should be either int or array of ints of shape (N,).")
-
-        # num_stages
-        if isinstance(opts.sim_method_num_stages, np.ndarray) and opts.sim_method_num_stages.size == 1:
-            opts.sim_method_num_stages = opts.sim_method_num_stages.item()
-
-        if isinstance(opts.sim_method_num_stages, (int, float)) and opts.sim_method_num_stages % 1 == 0:
-            opts.sim_method_num_stages = opts.sim_method_num_stages * np.ones((opts.N_horizon,), dtype=np.int64)
-        elif isinstance(opts.sim_method_num_stages, np.ndarray) and opts.sim_method_num_stages.size == opts.N_horizon \
-            and np.all(np.equal(np.mod(opts.sim_method_num_stages, 1), 0)):
-            opts.sim_method_num_stages = np.reshape(opts.sim_method_num_stages, (opts.N_horizon,)).astype(np.int64)
-        else:
-            raise ValueError("Wrong value for sim_method_num_stages. Should be either int or array of ints of shape (N,).")
-
-        # jac_reuse
-        if isinstance(opts.sim_method_jac_reuse, np.ndarray) and opts.sim_method_jac_reuse.size == 1:
-            opts.sim_method_jac_reuse = opts.sim_method_jac_reuse.item()
-
-        if isinstance(opts.sim_method_jac_reuse, (int, float)) and opts.sim_method_jac_reuse % 1 == 0:
-            opts.sim_method_jac_reuse = opts.sim_method_jac_reuse * np.ones((opts.N_horizon,), dtype=np.int64)
-        elif isinstance(opts.sim_method_jac_reuse, np.ndarray) and opts.sim_method_jac_reuse.size == opts.N_horizon \
-            and np.all(np.equal(np.mod(opts.sim_method_jac_reuse, 1), 0)):
-            opts.sim_method_jac_reuse = np.reshape(opts.sim_method_jac_reuse, (opts.N_horizon,)).astype(np.int64)
-        else:
-            raise ValueError("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
+        self._make_consistent_simulation()
 
         # fixed hessian
         if opts.fixed_hess:
             if opts.hessian_approx == 'EXACT':
                 raise ValueError('fixed_hess is not compatible with hessian_approx == EXACT.')
-            if cost.cost_type != "LINEAR_LS":
+            if cost.cost_type != "LINEAR_LS" and opts.N_horizon > 0:
                 raise ValueError('fixed_hess is only compatible LINEAR_LS cost_type.')
-            if cost.cost_type_0 != "LINEAR_LS":
+            if cost.cost_type_0 != "LINEAR_LS" and opts.N_horizon > 0:
                 raise ValueError('fixed_hess is only compatible LINEAR_LS cost_type_0.')
             if cost.cost_type_e != "LINEAR_LS":
                 raise ValueError('fixed_hess is only compatible LINEAR_LS cost_type_e.')
