@@ -813,6 +813,16 @@ class AcadosOcp:
         model.make_consistent(dims)
         self.name = model.name
 
+        if opts.N_horizon is None and dims.N is None:
+            raise ValueError('N_horizon not provided.')
+        elif opts.N_horizon is None and dims.N is not None:
+            opts.N_horizon = dims.N
+            print("field AcadosOcpDims.N has been migrated to AcadosOcpOptions.N_horizon. setting AcadosOcpOptions.N_horizon = N. For future comppatibility, please use AcadosOcpOptions.N_horizon directly.")
+        elif opts.N_horizon is not None and dims.N is not None and opts.N_horizon != dims.N:
+            raise ValueError(f'Inconsistent dimension N, regarding N = {dims.N}, N_horizon = {opts.N_horizon}.')
+        else:
+            dims.N = opts.N_horizon
+
         # check if nx != nx_next
         if not is_mocp_phase and dims.nx != dims.nx_next and opts.N_horizon > 1:
             raise ValueError('nx_next should be equal to nx if more than one shooting interval is used.')
@@ -880,16 +890,6 @@ class AcadosOcp:
                     raise ValueError(f"Field {field} contains values outside the interval (-ACADOS_INFTY, ACADOS_INFTY) with ACADOS_INFTY = {ACADOS_INFTY:.2e}. One-sided constraints are not supported by the chosen QP solver {opts.qp_solver}.")
 
         # discretization
-        if opts.N_horizon is None and dims.N is None:
-            raise ValueError('N_horizon not provided.')
-        elif opts.N_horizon is None and dims.N is not None:
-            opts.N_horizon = dims.N
-            print("field AcadosOcpDims.N has been migrated to AcadosOcpOptions.N_horizon. setting AcadosOcpOptions.N_horizon = N. For future comppatibility, please use AcadosOcpOptions.N_horizon directly.")
-        elif opts.N_horizon is not None and dims.N is not None and opts.N_horizon != dims.N:
-            raise ValueError(f'Inconsistent dimension N, regarding N = {dims.N}, N_horizon = {opts.N_horizon}.')
-        else:
-            dims.N = opts.N_horizon
-
         if opts.N_horizon > 0:
             if not isinstance(opts.tf, (float, int)):
                 raise TypeError(f'Time horizon tf should be float provided, got tf = {opts.tf}.')
