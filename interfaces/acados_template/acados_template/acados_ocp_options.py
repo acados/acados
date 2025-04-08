@@ -1108,7 +1108,7 @@ class AcadosOcpOptions:
     def N_horizon(self):
         """
         Number of shooting intervals.
-        Type: int > 0
+        Type: int >= 0
         Default: :code:`None`
         """
         return self.__N_horizon
@@ -1374,10 +1374,10 @@ class AcadosOcpOptions:
 
     @N_horizon.setter
     def N_horizon(self, N_horizon):
-        if isinstance(N_horizon, int) and N_horizon > 0:
+        if isinstance(N_horizon, int) and N_horizon >= 0:
             self.__N_horizon = N_horizon
         else:
-            raise ValueError('Invalid N_horizon value, expected positive integer.')
+            raise ValueError('Invalid N_horizon value, expected non-negative integer.')
 
     @time_steps.setter
     def time_steps(self, time_steps):
