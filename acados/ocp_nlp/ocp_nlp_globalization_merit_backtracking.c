@@ -143,9 +143,151 @@ void *ocp_nlp_globalization_merit_backtracking_memory_assign(void *config_, void
  * functions
  ************************************************/
 
-int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+static double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims,
+                                  ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+                                  ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    /* computes merit function gradient at iterate: out -- using already evaluated gradients of submodules
+       with weights: work->weight_merit_fun */
+    int i, j;
+
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ni = dims->ni;
+
+    double merit_grad = 0.0;
+    double weight;
+
+    // NOTE: step is in: mem->qp_out->ux
+    struct blasfeo_dvec *tmp_vec; // size nv
+    struct blasfeo_dvec tmp_vec_nxu = work->tmp_nv;  // size nxu
+    struct blasfeo_dvec dxnext_dy = work->dxnext_dy;  // size nx
+
+    // cost
+    for (i=0; i<=N; i++)
+    {
+        tmp_vec = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
+        merit_grad += blasfeo_ddot(nv[i], tmp_vec, 0, mem->qp_out->ux + i, 0);
+    }
+    double merit_grad_cost = merit_grad;
+
+    /* dynamics */
+    double merit_grad_dyn = 0.0;
+    for (i=0; i<N; i++)
+    {
+        // get shooting node gap x_next(x_n, u_n) - x_{n+1};
+        tmp_vec = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
+
+        /* compute directional derivative of xnext with direction y -> dxnext_dy */
+        blasfeo_dgemv_t(nx[i]+nu[i], nx[i+1], 1.0, mem->qp_in->BAbt+i, 0, 0, mem->qp_out->ux+i, 0,
+                        0.0, &dxnext_dy, 0, &dxnext_dy, 0);
+
+        /* add merit gradient contributions depending on sign of shooting gap */
+        for (j = 0; j < nx[i+1]; j++)
+        {
+            weight = BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j);
+            double deqj_dy = BLASFEO_DVECEL(&dxnext_dy, j) - BLASFEO_DVECEL(mem->qp_out->ux+(i+1), nu[i+1]+j);
+            {
+                if (BLASFEO_DVECEL(tmp_vec, j) > 0)
+                {
+                    merit_grad_dyn += weight * deqj_dy;
+                    // printf("\ndyn_contribution +%e, weight %e, deqj_dy %e, i %d, j %d", weight * deqj_dy, weight, deqj_dy, i, j);
+                }
+                else
+                {
+                    merit_grad_dyn -= weight * deqj_dy;
+                    // printf("\ndyn_contribution %e, weight %e, deqj_dy %e, i %d, j %d", -weight * deqj_dy, weight, deqj_dy, i, j);
+                }
+            }
+        }
+    }
+
+    /* inequality contributions */
+    // NOTE: slack bound inequalities are not considered here.
+    // They should never be infeasible. Only if explicitly initialized infeasible from outside.
+    int constr_index, slack_index_in_ux, slack_index;
+    ocp_qp_dims* qp_dims = mem->qp_in->dim;
+    int *nb = qp_dims->nb;
+    int *ng = qp_dims->ng;
+    int *ns = qp_dims->ns;
+    double merit_grad_ineq = 0.0;
+    double slack_step;
+
+    for (i=0; i<=N; i++)
+    {
+        tmp_vec = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
+        int *idxb = mem->qp_in->idxb[i];
+        if (ni[i] > 0)
+        {
+            // NOTE: loop could be simplified handling lower and upper constraints together.
+            for (j = 0; j < 2 * (nb[i] + ng[i]); j++) // 2 * ni
+            {
+                double constraint_val = BLASFEO_DVECEL(tmp_vec, j);
+                if (constraint_val > 0)
+                {
+                    weight = BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j);
+
+                    // find corresponding slack value
+                    constr_index = j < nb[i]+ng[i] ? j : j-(nb[i]+ng[i]);
+                    slack_index = mem->qp_in->idxs_rev[i][constr_index];
+                    // if softened: add slack contribution
+                    if (slack_index >= 0)
+                    {
+                        slack_index_in_ux = j < (nb[i]+ng[i]) ? nx[i] + nu[i] + slack_index
+                                                              : nx[i] + nu[i] + slack_index + ns[i];
+                        slack_step = BLASFEO_DVECEL(mem->qp_out->ux+i, slack_index_in_ux);
+                        merit_grad_ineq -= weight * slack_step;
+                        // printf("at node %d, ineq %d, idxs_rev[%d] = %d\n", i, j, constr_index, slack_index);
+                        // printf("slack contribution: uxs[%d] = %e\n", slack_index_in_ux, slack_step);
+                    }
+
+
+                    // NOTE: the inequalities are internally organized in the following order:
+                    //     [ lbu lbx lg lh lphi ubu ubx ug uh uphi;
+                    //     lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
+                    // printf("constraint %d %d is active with value %e", i, j, constraint_val);
+                    if (j < nb[i])
+                    {
+                        // printf("lower idxb[%d] = %d dir %f, constraint_val %f, nb = %d\n", j, idxb[j], BLASFEO_DVECEL(mem->qp_out->ux, idxb[j]), constraint_val, nb[i]);
+                        merit_grad_ineq += weight * BLASFEO_DVECEL(mem->qp_out->ux+i, idxb[j]);
+                    }
+                    else if (j < nb[i] + ng[i])
+                    {
+                        // merit_grad_ineq += weight * mem->qp_in->DCt_j * dux
+                        blasfeo_dcolex(nx[i] + nu[i], mem->qp_in->DCt+i, j - nb[i], 0, &tmp_vec_nxu, 0);
+                        merit_grad_ineq += weight * blasfeo_ddot(nx[i] + nu[i], &tmp_vec_nxu, 0, mem->qp_out->ux+i, 0);
+                        // printf("general linear constraint lower contribution = %e, val = %e\n", blasfeo_ddot(nx[i] + nu[i], &tmp_vec_nxu, 0, mem->qp_out->ux+i, 0), constraint_val);
+                    }
+                    else if (j < 2*nb[i] + ng[i])
+                    {
+                        // printf("upper idxb[%d] = %d dir %f, constraint_val %f, nb = %d\n", j-nb[i]-ng[i], idxb[j-nb[i]-ng[i]], BLASFEO_DVECEL(mem->qp_out->ux, idxb[j-nb[i]-ng[i]]), constraint_val, nb[i]);
+                        merit_grad_ineq += weight * BLASFEO_DVECEL(mem->qp_out->ux+i, idxb[j-nb[i]-ng[i]]);
+                    }
+                    else if (j < 2*nb[i] + 2*ng[i])
+                    {
+                        blasfeo_dcolex(nx[i] + nu[i], mem->qp_in->DCt+i, j - 2*nb[i] - ng[i], 0, &tmp_vec_nxu, 0);
+                        merit_grad_ineq += weight * blasfeo_ddot(nx[i] + nu[i], &tmp_vec_nxu, 0, mem->qp_out->ux+i, 0);
+                        // printf("general linear constraint upper contribution = %e, val = %e\n", blasfeo_ddot(nx[i] + nu[i], &tmp_vec_nxu, 0, mem->qp_out->ux+i, 0), constraint_val);
+                    }
+                }
+            }
+        }
+    }
+    // print_ocp_qp_dims(qp_dims);
+    // print_ocp_qp_in(mem->qp_in);
+
+    merit_grad = merit_grad_cost + merit_grad_dyn + merit_grad_ineq;
+    if (opts->print_level > 1)
+        printf("computed merit_grad = %e, merit_grad_cost = %e, merit_grad_dyn = %e, merit_grad_ineq = %e\n", merit_grad, merit_grad_cost, merit_grad_dyn, merit_grad_ineq);
+
+    return merit_grad;
+}
+
+static int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
-            int sqp_iter, double *alpha_reference)
+            double *alpha_reference)
 {
     ocp_nlp_globalization_merit_backtracking_opts *merit_opts = opts->globalization;
     ocp_nlp_globalization_opts *globalization_opts = merit_opts->globalization_opts;
@@ -174,7 +316,7 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
     //    }
 
     /* modify/initialize merit function weights (Leineweber1999 M5.1, p.89) */
-    if (sqp_iter==0)
+    if (mem->iter==0)
     {
         merit_backtracking_initialize_weights(dims, work->weight_merit_fun, qp_out);
     }
@@ -184,9 +326,6 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
     }
 
     // TODO: why does Leineweber do full step in first SQP iter?
-    // if (sqp_iter == 0)
-    // {
-    // }
 
     double merit_fun0 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
 
@@ -538,7 +677,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
 
     if (nlp_opts->print_level > 3)
     {
-        printf("\n\nSQP: SOC ocp_qp_in at iteration %d\n", mem->sqp_iter);
+        printf("\n\nSQP: SOC ocp_qp_in at iteration %d\n", nlp_mem->iter);
         // print_ocp_qp_in(qp_in);
     }
 
@@ -604,148 +743,6 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
         return true;
     }
     return true;
-}
-
-double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims,
-                                  ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
-                                  ocp_nlp_memory *mem, ocp_nlp_workspace *work)
-{
-    /* computes merit function gradient at iterate: out -- using already evaluated gradients of submodules
-       with weights: work->weight_merit_fun */
-    int i, j;
-
-    int N = dims->N;
-    int *nv = dims->nv;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *ni = dims->ni;
-
-    double merit_grad = 0.0;
-    double weight;
-
-    // NOTE: step is in: mem->qp_out->ux
-    struct blasfeo_dvec *tmp_vec; // size nv
-    struct blasfeo_dvec tmp_vec_nxu = work->tmp_nv;  // size nxu
-    struct blasfeo_dvec dxnext_dy = work->dxnext_dy;  // size nx
-
-    // cost
-    for (i=0; i<=N; i++)
-    {
-        tmp_vec = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
-        merit_grad += blasfeo_ddot(nv[i], tmp_vec, 0, mem->qp_out->ux + i, 0);
-    }
-    double merit_grad_cost = merit_grad;
-
-    /* dynamics */
-    double merit_grad_dyn = 0.0;
-    for (i=0; i<N; i++)
-    {
-        // get shooting node gap x_next(x_n, u_n) - x_{n+1};
-        tmp_vec = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
-
-        /* compute directional derivative of xnext with direction y -> dxnext_dy */
-        blasfeo_dgemv_t(nx[i]+nu[i], nx[i+1], 1.0, mem->qp_in->BAbt+i, 0, 0, mem->qp_out->ux+i, 0,
-                        0.0, &dxnext_dy, 0, &dxnext_dy, 0);
-
-        /* add merit gradient contributions depending on sign of shooting gap */
-        for (j = 0; j < nx[i+1]; j++)
-        {
-            weight = BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j);
-            double deqj_dy = BLASFEO_DVECEL(&dxnext_dy, j) - BLASFEO_DVECEL(mem->qp_out->ux+(i+1), nu[i+1]+j);
-            {
-                if (BLASFEO_DVECEL(tmp_vec, j) > 0)
-                {
-                    merit_grad_dyn += weight * deqj_dy;
-                    // printf("\ndyn_contribution +%e, weight %e, deqj_dy %e, i %d, j %d", weight * deqj_dy, weight, deqj_dy, i, j);
-                }
-                else
-                {
-                    merit_grad_dyn -= weight * deqj_dy;
-                    // printf("\ndyn_contribution %e, weight %e, deqj_dy %e, i %d, j %d", -weight * deqj_dy, weight, deqj_dy, i, j);
-                }
-            }
-        }
-    }
-
-    /* inequality contributions */
-    // NOTE: slack bound inequalities are not considered here.
-    // They should never be infeasible. Only if explicitly initialized infeasible from outside.
-    int constr_index, slack_index_in_ux, slack_index;
-    ocp_qp_dims* qp_dims = mem->qp_in->dim;
-    int *nb = qp_dims->nb;
-    int *ng = qp_dims->ng;
-    int *ns = qp_dims->ns;
-    double merit_grad_ineq = 0.0;
-    double slack_step;
-
-    for (i=0; i<=N; i++)
-    {
-        tmp_vec = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
-        int *idxb = mem->qp_in->idxb[i];
-        if (ni[i] > 0)
-        {
-            // NOTE: loop could be simplified handling lower and upper constraints together.
-            for (j = 0; j < 2 * (nb[i] + ng[i]); j++) // 2 * ni
-            {
-                double constraint_val = BLASFEO_DVECEL(tmp_vec, j);
-                if (constraint_val > 0)
-                {
-                    weight = BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j);
-
-                    // find corresponding slack value
-                    constr_index = j < nb[i]+ng[i] ? j : j-(nb[i]+ng[i]);
-                    slack_index = mem->qp_in->idxs_rev[i][constr_index];
-                    // if softened: add slack contribution
-                    if (slack_index >= 0)
-                    {
-                        slack_index_in_ux = j < (nb[i]+ng[i]) ? nx[i] + nu[i] + slack_index
-                                                              : nx[i] + nu[i] + slack_index + ns[i];
-                        slack_step = BLASFEO_DVECEL(mem->qp_out->ux+i, slack_index_in_ux);
-                        merit_grad_ineq -= weight * slack_step;
-                        // printf("at node %d, ineq %d, idxs_rev[%d] = %d\n", i, j, constr_index, slack_index);
-                        // printf("slack contribution: uxs[%d] = %e\n", slack_index_in_ux, slack_step);
-                    }
-
-
-                    // NOTE: the inequalities are internally organized in the following order:
-                    //     [ lbu lbx lg lh lphi ubu ubx ug uh uphi;
-                    //     lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
-                    // printf("constraint %d %d is active with value %e", i, j, constraint_val);
-                    if (j < nb[i])
-                    {
-                        // printf("lower idxb[%d] = %d dir %f, constraint_val %f, nb = %d\n", j, idxb[j], BLASFEO_DVECEL(mem->qp_out->ux, idxb[j]), constraint_val, nb[i]);
-                        merit_grad_ineq += weight * BLASFEO_DVECEL(mem->qp_out->ux+i, idxb[j]);
-                    }
-                    else if (j < nb[i] + ng[i])
-                    {
-                        // merit_grad_ineq += weight * mem->qp_in->DCt_j * dux
-                        blasfeo_dcolex(nx[i] + nu[i], mem->qp_in->DCt+i, j - nb[i], 0, &tmp_vec_nxu, 0);
-                        merit_grad_ineq += weight * blasfeo_ddot(nx[i] + nu[i], &tmp_vec_nxu, 0, mem->qp_out->ux+i, 0);
-                        // printf("general linear constraint lower contribution = %e, val = %e\n", blasfeo_ddot(nx[i] + nu[i], &tmp_vec_nxu, 0, mem->qp_out->ux+i, 0), constraint_val);
-                    }
-                    else if (j < 2*nb[i] + ng[i])
-                    {
-                        // printf("upper idxb[%d] = %d dir %f, constraint_val %f, nb = %d\n", j-nb[i]-ng[i], idxb[j-nb[i]-ng[i]], BLASFEO_DVECEL(mem->qp_out->ux, idxb[j-nb[i]-ng[i]]), constraint_val, nb[i]);
-                        merit_grad_ineq += weight * BLASFEO_DVECEL(mem->qp_out->ux+i, idxb[j-nb[i]-ng[i]]);
-                    }
-                    else if (j < 2*nb[i] + 2*ng[i])
-                    {
-                        blasfeo_dcolex(nx[i] + nu[i], mem->qp_in->DCt+i, j - 2*nb[i] - ng[i], 0, &tmp_vec_nxu, 0);
-                        merit_grad_ineq += weight * blasfeo_ddot(nx[i] + nu[i], &tmp_vec_nxu, 0, mem->qp_out->ux+i, 0);
-                        // printf("general linear constraint upper contribution = %e, val = %e\n", blasfeo_ddot(nx[i] + nu[i], &tmp_vec_nxu, 0, mem->qp_out->ux+i, 0), constraint_val);
-                    }
-                }
-            }
-        }
-    }
-    // print_ocp_qp_dims(qp_dims);
-    // print_ocp_qp_in(mem->qp_in);
-
-    merit_grad = merit_grad_cost + merit_grad_dyn + merit_grad_ineq;
-    if (opts->print_level > 1)
-        printf("computed merit_grad = %e, merit_grad_cost = %e, merit_grad_dyn = %e, merit_grad_ineq = %e\n", merit_grad, merit_grad_cost, merit_grad_dyn, merit_grad_ineq);
-
-    return merit_grad;
 }
 
 
