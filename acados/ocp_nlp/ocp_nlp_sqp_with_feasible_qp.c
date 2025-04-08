@@ -1344,7 +1344,7 @@ void ocp_nlp_sqp_wfqp_approximate_feasibility_qp_constraint_vectors(ocp_nlp_conf
         blasfeo_dveccp(2*n_nominal_ineq_nlp+ns[i], nominal_qp_in->d + i, 0, relaxed_qp_in->d + i, 0);
         blasfeo_dveccp(ns[i], nominal_qp_in->d + i, 2*n_nominal_ineq_nlp+ns[i], relaxed_qp_in->d + i, 2*n_nominal_ineq_nlp+ns[i]+nns[i]);
     }
-    // setup d_mask
+    // setup d_mask; TODO: this is only needed at the start of each NLP solve
     if (sqp_iter == 0)
     {
         int offset_dmask;
