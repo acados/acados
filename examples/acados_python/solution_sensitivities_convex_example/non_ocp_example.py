@@ -40,23 +40,19 @@ def export_parametric_ocp() -> AcadosOcp:
     model = AcadosModel()
     model.x = ca.SX.sym("x", 1)
     model.p_global = ca.SX.sym("p_global", 1)
-    model.disc_dyn_expr = model.x
-    model.cost_expr_ext_cost = (model.x - model.p_global**2)**2
-    model.cost_expr_ext_cost_e = 0
+    model.cost_expr_ext_cost_e = (model.x - model.p_global**2)**2
     model.name = "non_ocp"
     ocp = AcadosOcp()
     ocp.model = model
 
-    ocp.constraints.lbx_0 = np.array([-1.0])
-    ocp.constraints.ubx_0 = np.array([1.0])
-    ocp.constraints.idxbx_0 = np.array([0])
+    ocp.constraints.lbx_e = np.array([-1.0])
+    ocp.constraints.ubx_e = np.array([1.0])
+    ocp.constraints.idxbx_e = np.array([0])
 
     ocp.cost.cost_type = "EXTERNAL"
-    ocp.solver_options.integrator_type = "DISCRETE"
     ocp.solver_options.qp_solver = "FULL_CONDENSING_HPIPM"
     ocp.solver_options.hessian_approx = "EXACT"
-    ocp.solver_options.N_horizon = 1
-    ocp.solver_options.tf = 1.0
+    ocp.solver_options.N_horizon = 0
 
     ocp.p_global_values = np.zeros((1,))
     ocp.solver_options.with_solution_sens_wrt_params = True
