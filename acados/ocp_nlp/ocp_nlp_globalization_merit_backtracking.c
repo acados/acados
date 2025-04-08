@@ -316,7 +316,7 @@ static int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
     //    }
 
     /* modify/initialize merit function weights (Leineweber1999 M5.1, p.89) */
-    if (mem->iter==0)
+    if (0) //(mem->iter==0)
     {
         merit_backtracking_initialize_weights(dims, work->weight_merit_fun, qp_out);
     }
@@ -504,7 +504,7 @@ static int ocp_nlp_line_search_merit_check_full_step(ocp_nlp_config *config, ocp
     // NOTE: copying duals not needed, as they dont enter the merit function, see ocp_nlp_line_search
 
     /* modify/initialize merit function weights (Leineweber1999 M5.1, p.89) */
-    if (mem->iter==0)
+    if (0) //(mem->iter==0)
     {
         merit_backtracking_initialize_weights(dims, work->weight_merit_fun, qp_out);
     }
@@ -536,7 +536,7 @@ static int ocp_nlp_line_search_merit_check_full_step(ocp_nlp_config *config, ocp
     if (isnan(merit_fun1) || isinf(merit_fun1))
     {
         // do nothing and continue with normal line search, i.e. step reduction
-        if (mem->iter != 0)
+        if (1) //(mem->iter != 0)
         {
             // reset merit function weights;
             copy_multipliers_qp_to_nlp(dims, work->tmp_qp_out, work->weight_merit_fun);
@@ -552,7 +552,7 @@ static int ocp_nlp_line_search_merit_check_full_step(ocp_nlp_config *config, ocp
     else
     {
         // trigger SOC
-        if (mem->iter != 0)
+        if (1) //(mem->iter != 0)
         {
             // reset merit function weights;
             copy_multipliers_qp_to_nlp(dims, work->tmp_qp_out, work->weight_merit_fun);
