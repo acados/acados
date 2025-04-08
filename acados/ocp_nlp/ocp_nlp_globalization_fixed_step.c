@@ -174,7 +174,7 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
         {
             // store in anderson_step, prev_qp_step
             ocp_qp_out_copy(qp_out, nlp_mem->anderson_step);
-            // update variables
+            // update variables (TODO: DDP primals are different)
             ocp_nlp_update_variables_sqp_delta_primal_dual(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, nlp_mem->anderson_step);
         }
         else
@@ -190,7 +190,7 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
             ocp_qp_out_add(gamma*mem->alpha, nlp_mem->prev_qp_out, nlp_mem->anderson_step);
             // anderson_step += (alpha - alpha * gamma) * qp_out
             ocp_qp_out_add(mem->alpha-gamma*mem->alpha, qp_out, nlp_mem->anderson_step);
-            // update variables
+            // update variables (TODO: DDP primals are different)
             ocp_nlp_update_variables_sqp_delta_primal_dual(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, nlp_mem->anderson_step);
         }
         // store prev qp step
