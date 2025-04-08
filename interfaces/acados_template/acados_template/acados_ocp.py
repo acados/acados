@@ -375,7 +375,7 @@ class AcadosOcp:
                 if model.cost_expr_ext_cost_custom_hess_e.shape != (dims.nx, dims.nx):
                     raise ValueError('cost_expr_ext_cost_custom_hess_e should have shape (nx, nx).')
 
-    def make_consistent_constraints_initial(self):
+    def _make_consistent_constraints_initial(self):
         constraints = self.constraints
         dims = self.dims
         model = self.model
@@ -421,7 +421,7 @@ class AcadosOcp:
             else:
                 dims.nr_0 = casadi_length(model.con_r_expr_0)
 
-    def make_consistent_constraints_path(self):
+    def _make_consistent_constraints_path(self):
         constraints = self.constraints
         dims = self.dims
         model = self.model
@@ -480,7 +480,7 @@ class AcadosOcp:
             else:
                 dims.nr = casadi_length(model.con_r_expr)
         
-    def make_consistent_constraints_terminal(self):
+    def _make_consistent_constraints_terminal(self):
         dims = self.dims
         constraints = self.constraints
         model = self.model
@@ -520,7 +520,7 @@ class AcadosOcp:
             else:
                 dims.nr_e = casadi_length(model.con_r_expr_e)
 
-    def make_consistent_slacks_initial(self):
+    def _make_consistent_slacks_initial(self):
         constraints = self.constraints
         dims = self.dims
         opts = self.solver_options
@@ -601,7 +601,7 @@ class AcadosOcp:
                 + f'With nsbu = {nsbu}, nsg = {nsg}, nsh_0 = {nsh_0}, nsphi_0 = {nsphi_0}.')
         dims.ns_0 = ns_0
 
-    def make_consistent_slacks_path(self):
+    def _make_consistent_slacks_path(self):
         constraints = self.constraints
         dims = self.dims
         opts = self.solver_options
@@ -709,7 +709,7 @@ class AcadosOcp:
                 + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh = {nsh}, nsphi = {nsphi}.')
         dims.ns = ns
         
-    def make_consistent_slacks_terminal(self):
+    def _make_consistent_slacks_terminal(self):
         constraints = self.constraints
         dims = self.dims
         cost = self.cost
@@ -859,13 +859,13 @@ class AcadosOcp:
                 raise ValueError('cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs.')
 
         ## constraints
-        self.make_consistent_constraints_initial()
-        self.make_consistent_constraints_path()
-        self.make_consistent_constraints_terminal()
+        self._make_consistent_constraints_initial()
+        self._make_consistent_constraints_path()
+        self._make_consistent_constraints_terminal()
         
-        self.make_consistent_slacks_path()
-        self.make_consistent_slacks_initial()
-        self.make_consistent_slacks_terminal()
+        self._make_consistent_slacks_path()
+        self._make_consistent_slacks_initial()
+        self._make_consistent_slacks_terminal()
 
         # check for ACADOS_INFTY
         if opts.qp_solver not in ["PARTIAL_CONDENSING_HPIPM", "FULL_CONDENSING_HPIPM", "FULL_CONDENSING_DAQP"]:
