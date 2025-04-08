@@ -28,6 +28,8 @@ acados contributor list:
 - Benjamin Michaud
 - Daniel Geweth (Robert Bosch GmbH)
 - Andrea Ghezzi (University Freiburg)
+- Josip Kir Hromatko
+- David Kiessling (KU Leuven)
 - Greg Horn
 - Jacob Grunnet
 - Leonardo Cecchin (Robert Bosch GmbH)
@@ -36,6 +38,19 @@ acados contributor list:
 - Severin Hänggi (ETH Zürich)
 - Harald Schäfer (comma.ai)
 - Sourish Pramanick
+- Akash John Subash
+- Franek Stark
+- Dirk Reinhardt
+- Henrik Hose
+- Ian McInerney
+- Jan Zwiener
+- Rudolf Reiter (University Freiburg)
+- Mohammed Hababeh
+- Alexander Sherikov
+- Ajinkya Krishnakumar
+- Federico Pizarro Bejarano
+- Anton Pozharskiy (University Freiburg)
+- Silvio Traversaro
 - Adeeb Shihadeh (comma.ai)
 - Martin Koch
 - Miralem Saljanin (Uni Stuttgart)

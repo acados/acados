@@ -43,6 +43,7 @@ nu = 3;
 
 %% create ocp solver
 ocp_solver = acados_ocp(ocp_model, ocp_opts, simulink_opts);
+ocp_solver.reset();
 
 % solver initial guess
 x_traj_init = rand(nx, N+1);

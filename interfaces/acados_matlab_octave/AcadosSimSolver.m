@@ -99,7 +99,7 @@ classdef AcadosSimSolver < handle
 
             % check if path contains spaces
             if ~isempty(strfind(output_dir, ' '))
-                error(strcat('acados_ocp: Path should not contain spaces, got: ',...
+                error(strcat('compile_mex_sim_interface_if_needed: Path should not contain spaces, got: ',...
                     output_dir));
             end
 

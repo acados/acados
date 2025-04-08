@@ -122,6 +122,40 @@ classdef AcadosOcp < handle
                 end
             end
 
+            % sanity checks on options, which are done in setters in Python
+            qp_solvers = {'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP', 'FULL_CONDENSING_DAQP'};
+            if ~ismember(opts.qp_solver, qp_solvers)
+                error(['Invalid qp_solver: ', opts.qp_solver, '. Available options are: ', strjoin(qp_solvers, ', ')]);
+            end
+
+            regularize_methods = {'NO_REGULARIZE', 'MIRROR', 'PROJECT', 'PROJECT_REDUC_HESS', 'CONVEXIFY', 'GERSHGORIN_LEVENBERG_MARQUARDT'};
+            if ~ismember(opts.regularize_method, regularize_methods)
+                error(['Invalid regularize_method: ', opts.regularize_method, '. Available options are: ', strjoin(regularize_methods, ', ')]);
+            end
+            hpipm_modes = {'BALANCE', 'SPEED_ABS', 'SPEED', 'ROBUST'};
+            if ~ismember(opts.hpipm_mode, hpipm_modes)
+                error(['Invalid hpipm_mode: ', opts.hpipm_mode, '. Available options are: ', strjoin(hpipm_modes, ', ')]);
+            end
+            INTEGRATOR_TYPES = {'ERK', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK'};
+            if ~ismember(opts.integrator_type, INTEGRATOR_TYPES)
+                error(['Invalid integrator_type: ', opts.integrator_type, '. Available options are: ', strjoin(INTEGRATOR_TYPES, ', ')]);
+            end
+
+            COLLOCATION_TYPES = {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA'};
+            if ~ismember(opts.collocation_type, COLLOCATION_TYPES)
+                error(['Invalid collocation_type: ', opts.collocation_type, '. Available options are: ', strjoin(COLLOCATION_TYPES, ', ')]);
+            end
+
+            COST_DISCRETIZATION_TYPES = {'EULER', 'INTEGRATOR'};
+            if ~ismember(opts.cost_discretization, COST_DISCRETIZATION_TYPES)
+                error(['Invalid cost_discretization: ', opts.cost_discretization, '. Available options are: ', strjoin(COST_DISCRETIZATION_TYPES, ', ')]);
+            end
+
+            search_direction_modes = {'NOMINAL_QP', 'BYRD_OMOJOKUN', 'FEASIBILITY_QP'};
+            if ~ismember(opts.search_direction_mode, search_direction_modes)
+                error(['Invalid search_direction_mode: ', opts.search_direction_mode, '. Available options are: ', strjoin(search_direction_modes, ', ')]);
+            end
+
             % OCP name
             self.name = model.name;
 
@@ -538,6 +572,20 @@ classdef AcadosOcp < handle
             dims.nsh_e = nsh_e;
             dims.nsphi_e = nsphi_e;
 
+            % check for ACADOS_INFTY
+            if ~ismember(opts.qp_solver, {'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_DAQP'})
+                ACADOS_INFTY = get_acados_infty();
+                % loop over all bound vectors
+                fields = {'lbx_0', 'ubx_0', 'lbx', 'ubx', 'lbx_e', 'ubx_e', 'lg', 'ug', 'lg_e', 'ug_e', 'lh', 'uh', 'lh_e', 'uh_e', 'lbu', 'ubu', 'lphi', 'uphi', 'lphi_e', 'uphi_e'};
+                for i = 1:length(fields)
+                    field = fields{i};
+                    bound = constraints.(field);
+                    if any(bound >= ACADOS_INFTY) || any(bound <= -ACADOS_INFTY)
+                        error(['Field ', field, ' contains values outside the interval (-ACADOS_INFTY, ACADOS_INFTY) with ACADOS_INFTY = ', num2str(ACADOS_INFTY, '%.2e'), '. One-sided constraints are not supported by the chosen QP solver ', opts.qp_solver, '.']);
+                    end
+                end
+            end
+
             % shooting nodes -> time_steps
             % discretization
             if isempty(opts.N_horizon) && isempty(dims.N)
@@ -689,6 +737,20 @@ classdef AcadosOcp < handle
                 end
             end
 
+            if ~ismember(opts.qp_solver_t0_init, [0, 1, 2])
+                error('qp_solver_t0_init must be one of [0, 1, 2].');
+            end
+
+            if opts.tau_min > 0 && isempty(strfind(opts.qp_solver, 'HPIPM'))
+                error('tau_min > 0 is only compatible with HPIPM.');
+            end
+
+            if (opts.as_rti_level == 1 || opts.as_rti_level == 2) && any([strcmp(cost.cost_type, {'LINEAR_LS', 'NONLINEAR_LS'}) ...
+                                             strcmp(cost.cost_type_0, {'LINEAR_LS', 'NONLINEAR_LS'}) ...
+                                             strcmp(cost.cost_type_e, {'LINEAR_LS', 'NONLINEAR_LS'})])
+                error('as_rti_level in [1, 2] not supported for LINEAR_LS and NONLINEAR_LS cost type.');
+            end
+
             % Set default parameters for globalization
             ddp_with_merit_or_funnel = strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH') || (strcmp(opts.globalization, 'MERIT_BACKTRACKING') && strcmp(opts.nlp_solver_type, 'DDP'));
 
@@ -819,27 +881,19 @@ classdef AcadosOcp < handle
             if isempty(cost_types{1})
                 warning("cost_type_0 not set, using path cost");
                 self.cost.cost_type_0 = self.cost.cost_type;
-                if (strcmp(self.cost.cost_type, 'LINEAR_LS'))
-                    self.cost.Vx_0 = self.cost.Vx;
-                    self.cost.Vu_0 = self.cost.Vu;
-                    self.cost.Vz_0 = self.cost.Vz;
-                elseif (strcmp(self.cost.cost_type, 'NONLINEAR_LS'))
-                    self.model.cost_y_expr_0 = self.model.cost_y_expr;
-                elseif (strcmp(self.cost.cost_type, 'EXTERNAL'))
-                    self.cost.cost_ext_fun_type_0 = self.cost.cost_ext_fun_type;
-                    if strcmp(self.cost.cost_ext_fun_type_0, 'casadi')
-                        self.model.cost_expr_ext_cost_0 = self.model.cost_expr_ext_cost;
-                        self.model.cost_expr_ext_cost_custom_hess_0 = self.model.cost_expr_ext_cost_custom_hess;
-                    else % generic
-                        self.cost.cost_source_ext_cost_0 = self.cost.cost_source_ext_cost;
-                        self.cost.cost_function_ext_cost_0 = self.cost.cost_function_ext_cost;
-                    end
-                end
-                if (strcmp(self.cost.cost_type, 'LINEAR_LS')) || (strcmp(self.cost.cost_type, 'NONLINEAR_LS'))
-                    self.cost.W_0 = self.cost.W;
-                    self.cost.yref_0 = self.cost.yref;
-                    self.dims.ny_0 = self.dims.ny;
-                end
+                self.cost.Vx_0 = self.cost.Vx;
+                self.cost.Vu_0 = self.cost.Vu;
+                self.cost.Vz_0 = self.cost.Vz;
+                self.model.cost_y_expr_0 = self.model.cost_y_expr;
+                self.cost.cost_ext_fun_type_0 = self.cost.cost_ext_fun_type;
+                self.model.cost_expr_ext_cost_0 = self.model.cost_expr_ext_cost;
+                self.model.cost_expr_ext_cost_custom_hess_0 = self.model.cost_expr_ext_cost_custom_hess;
+                self.cost.cost_source_ext_cost_0 = self.cost.cost_source_ext_cost;
+                self.cost.cost_function_ext_cost_0 = self.cost.cost_function_ext_cost;
+                self.cost.W_0 = self.cost.W;
+                self.cost.yref_0 = self.cost.yref;
+                self.model.cost_psi_expr_0 = self.model.cost_psi_expr;
+                self.model.cost_r_in_psi_expr_0 = self.model.cost_r_in_psi_expr;
             end
 
             % detect constraint structure
@@ -863,6 +917,12 @@ classdef AcadosOcp < handle
                 code_gen_opts.with_solution_sens_wrt_params = solver_opts.with_solution_sens_wrt_params;
                 code_gen_opts.with_value_sens_wrt_params = solver_opts.with_value_sens_wrt_params;
                 code_gen_opts.code_export_directory = ocp.code_export_directory;
+
+                code_gen_opts.ext_fun_expand_dyn = solver_opts.ext_fun_expand_dyn;
+                code_gen_opts.ext_fun_expand_cost = solver_opts.ext_fun_expand_cost;
+                code_gen_opts.ext_fun_expand_constr = solver_opts.ext_fun_expand_constr;
+                code_gen_opts.ext_fun_expand_precompute = solver_opts.ext_fun_expand_precompute;
+
                 context = GenerateContext(ocp.model.p_global, ocp.name, code_gen_opts);
             else
                 code_gen_opts = context.opts;
@@ -1042,7 +1102,6 @@ classdef AcadosOcp < handle
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_free.in.c'), ['acados_mex_free_', self.name, '.c']};
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_solve.in.c'), ['acados_mex_solve_', self.name, '.c']};
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_set.in.c'), ['acados_mex_set_', self.name, '.c']};
-            template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_reset.in.c'), ['acados_mex_reset_', self.name, '.c']};
 
             if ~isempty(self.solver_options.custom_update_filename)
                 template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_custom_update.in.c'), ['acados_mex_custom_update_', self.name, '.c']};
@@ -1051,7 +1110,7 @@ classdef AcadosOcp < handle
             % append headers
             template_list = [template_list, self.get_external_function_header_templates()];
 
-            if self.dims.np_global > 0
+            if self.dims.n_global_data > 0
                 template_list{end+1} = {'p_global_precompute_fun.in.h',  [self.model.name, '_p_global_precompute_fun.h']};
             end
 

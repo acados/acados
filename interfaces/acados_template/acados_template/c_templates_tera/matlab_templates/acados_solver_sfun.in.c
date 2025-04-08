@@ -297,16 +297,84 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- endfor -%}
 {%- endif -%}
 
+  {#- compute number of output ports #}
+  {%- set n_outputs = 0 -%}
+
+  {%- if dims_0.nu > 0 and simulink_opts.outputs.u0 == 1 %}
+    {%- set n_outputs = n_outputs + 1 %}
+  {%- endif %}
+
+  {%- if simulink_opts.outputs.utraj == 1 %}
+    {%- set n_outputs = n_outputs + 1 %}
+  {%- endif %}
+
+  {% if simulink_opts.outputs.xtraj == 1 %}
+    {%- set n_outputs = n_outputs + 1 %}
+  {%- endif %}
+
+  {% if simulink_opts.outputs.ztraj == 1 %}
+    {%- set n_outputs = n_outputs + 1 %}
+  {%- endif %}
+
+  {% if simulink_opts.outputs.pi_all == 1 %}
+    {%- set n_outputs = n_outputs + 1 %}
+  {%- endif %}
+
+  {% if simulink_opts.outputs.slack_values == 1 %}
+    {%- set n_outputs = n_outputs + 1 %}
+  {%- endif %}
+
+  {%- if simulink_opts.outputs.solver_status == 1 %}
+    {%- set n_outputs = n_outputs + 1 %}
+  {%- endif %}
+
+  {%- if simulink_opts.outputs.cost_value == 1 %}
+    {%- set n_outputs = n_outputs + 1 %}
+  {%- endif %}
+
+  {%- if simulink_opts.outputs.KKT_residual == 1 %}
+    {%- set n_outputs = n_outputs + 1 %}
+  {%- endif %}
+
+  {%- if simulink_opts.outputs.KKT_residuals == 1 %}
+    {%- set n_outputs = n_outputs + 1 %}
+  {%- endif %}
+
+  {%- if solver_options.N_horizon > 0 and simulink_opts.outputs.x1 == 1 %}
+    {%- set n_outputs = n_outputs + 1 %}
+  {%- endif %}
+
+  {%- if simulink_opts.outputs.CPU_time == 1 %}
+    {%- set n_outputs = n_outputs + 1 %}
+  {%- endif -%}
+
+  {%- if simulink_opts.outputs.CPU_time_sim == 1 %}
+    {%- set n_outputs = n_outputs + 1 %}
+  {%- endif -%}
+
+  {%- if simulink_opts.outputs.CPU_time_qp == 1 %}
+    {%- set n_outputs = n_outputs + 1 %}
+  {%- endif -%}
+
+  {%- if simulink_opts.outputs.CPU_time_lin == 1 %}
+    {%- set n_outputs = n_outputs + 1 %}
+  {%- endif -%}
+
+  {%- if simulink_opts.outputs.sqp_iter == 1 %}
+    {%- set n_outputs = n_outputs + 1 %}
+  {%- endif %}
+
+  {% if simulink_opts.outputs.parameter_traj == 1 %}
+    {%- set n_outputs = n_outputs + 1 %}
+  {%- endif %}
+
     // specify the number of input ports
     if ( !ssSetNumInputPorts(S, {{ n_inputs }}) )
         return;
 
     // specify the number of output ports
-    {%- set_global n_outputs = 0 %}
     {%- for key, val in simulink_opts.outputs %}
-      {%- if val == 1 %}
-        {%- set_global n_outputs = n_outputs + val %}
-      {%- elif val != 0 %}
+      {%- if val != 0 and val != 1 %}
         {{ throw(message = "simulink_opts.outputs must be 0 or 1, got val") }}
       {%- endif %}
     {%- endfor %}
@@ -328,13 +396,13 @@ static void mdlInitializeSizes (SimStruct *S)
 
   {%- if np_total > 0 and simulink_opts.inputs.parameter_traj -%}  {#- parameter_traj #}
     {%- set i_input = i_input + 1 %}
-    // parameters
+    // parameter_traj
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ np_total }});
   {%- endif %}
 
   {%- if dims_0.np_global > 0 and simulink_opts.inputs.p_global -%}  {#- p_global #}
     {%- set i_input = i_input + 1 %}
-    // parameters
+    // p_global
     ssSetInputPortVectorDimension(S, {{ i_input }}, 1 + {{ dims_0.np_global }});
   {%- endif %}
 
@@ -743,18 +811,6 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "ubx", buffer);
   {%- endif %}
 
-  {%- if dims_0.np_global > 0 and simulink_opts.inputs.p_global -%}  {#- p_global #}
-    {%- set i_input = i_input + 1 %}
-    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
-    buffer[0] = (double)(*in_sign[0]);
-    if (buffer[0] != 0)
-    {
-        for (int i = 0; i < {{ dims_0.np_global }}; i++)
-            buffer[i] = (double)(*in_sign[i+1]);
-        {{ name }}_acados_set_p_global_and_precompute_dependencies(capsule, buffer, {{ dims_0.np_global }});
-    }
-  {%- endif %}
-
   {%- if np_total > 0 and simulink_opts.inputs.parameter_traj -%}  {#- parameter_traj #}
     // parameter_traj
     {%- set i_input = i_input + 1 %}
@@ -770,6 +826,19 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         }
         {{ name }}_acados_update_params(capsule, stage, buffer, tmp_int);
         tmp_offset += tmp_int;
+    }
+  {%- endif %}
+
+  {%- if dims_0.np_global > 0 and simulink_opts.inputs.p_global -%}  {#- p_global #}
+    // p_global
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    buffer[0] = (double)(*in_sign[0]);
+    if (buffer[0] != 0)
+    {
+        for (int i = 0; i < {{ dims_0.np_global }}; i++)
+            buffer[i] = (double)(*in_sign[i+1]);
+        {{ name }}_acados_set_p_global_and_precompute_dependencies(capsule, buffer, {{ dims_0.np_global }});
     }
   {%- endif %}
 

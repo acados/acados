@@ -45,6 +45,7 @@ REAL_TIME_ALGORITHMS = ["RTI", "AS-RTI-A", "AS-RTI-B", "AS-RTI-C", "AS-RTI-D"]
 ALGORITHMS = ["SQP"] + REAL_TIME_ALGORITHMS
 
 def setup(x0, Fmax, N_horizon, Tf, algorithm, as_rti_iter=1):
+    print(f'running with algorithm: {algorithm}, as_rti_iter: {as_rti_iter}')
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -112,7 +113,7 @@ def setup(x0, Fmax, N_horizon, Tf, algorithm, as_rti_iter=1):
     ocp.solver_options.tf = Tf
 
     solver_json = 'acados_ocp_' + model.name + '.json'
-    acados_ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)
+    acados_ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json, verbose=False)
 
     # create an integrator with the same settings as used in the OCP solver.
     acados_integrator = AcadosSimSolver(ocp, json_file = solver_json)
@@ -155,6 +156,9 @@ def main(algorithm='RTI', as_rti_iter=1):
             status = ocp_solver.solve()
             t_preparation[i] = ocp_solver.get_stats('time_tot')
 
+            if status not in [0, 2, 5]:
+                raise Exception(f'acados returned status {status}. Exiting.')
+
             # set initial state
             ocp_solver.set(0, "lbx", simX[i, :])
             ocp_solver.set(0, "ubx", simX[i, :])
@@ -169,9 +173,12 @@ def main(algorithm='RTI', as_rti_iter=1):
         else:
             # solve ocp and get next control input
             simU[i,:] = ocp_solver.solve_for_x0(x0_bar = simX[i, :])
+            status = ocp_solver.get_status()
 
             t[i] = ocp_solver.get_stats('time_tot')
 
+        if status not in [0, 2, 5]:
+            raise Exception(f'acados returned status {status}. Exiting.')
         # simulate system
         simX[i+1, :] = integrator.simulate(x=simX[i, :], u=simU[i,:])
 
@@ -192,11 +199,24 @@ def main(algorithm='RTI', as_rti_iter=1):
     # plot results
     plot_pendulum(np.linspace(0, (Tf/N_horizon)*Nsim, Nsim+1), Fmax, simU, simX, title=algorithm)
 
+    # check terminal state
+    if algorithm == "RTI":
+        x_terminal_ref = np.array([-0.01402487, -0.02343146,  0.00874453,  0.07601564])
+    else:
+        x_terminal_ref = np.array([-0.0028129 , -0.00106827,  0.00653341,  0.00663193])
+
+    x_terminal = simX[-1, :]
+    if np.linalg.norm(x_terminal - x_terminal_ref) > 1e-3:
+        raise Exception(f"Terminal state {x_terminal} does not match reference {x_terminal_ref}. Exiting.")
+    else:
+        print(f"Terminal state {x_terminal} matches reference {x_terminal_ref}. Test passed.")
+
+    # delete solver
     ocp_solver = None
 
 
 if __name__ == '__main__':
-    main(algorithm="AS-RTI-D", as_rti_iter=1)
+    # main(algorithm="AS-RTI-D", as_rti_iter=1)
 
     for algorithm in ["SQP", "RTI", "AS-RTI-A", "AS-RTI-B", "AS-RTI-C", "AS-RTI-D"]:
         main(algorithm=algorithm, as_rti_iter=1)

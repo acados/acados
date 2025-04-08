@@ -72,7 +72,7 @@ html_context = {
   'display_github': True,
   'github_user': 'acados',
   'github_repo': 'acados',
-  'github_version': 'master/docs/',
+  'github_version': 'main/docs/',
 }
 
 

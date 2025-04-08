@@ -31,7 +31,7 @@
 
 function make_mex_{{ name }}()
 
-    opts.output_dir = pwd;
+    output_dir = pwd;
 
     % get acados folder
     acados_folder = getenv('ACADOS_INSTALL_DIR');
@@ -74,7 +74,6 @@ function make_mex_{{ name }}()
         'acados_mex_free_{{ name }}' ...
         'acados_mex_solve_{{ name }}' ...
         'acados_mex_set_{{ name }}' ...
-        'acados_mex_reset_{{ name }}' ...
 {%- if solver_options.custom_update_filename != "" %}
         'acados_mex_custom_update_{{ name }}' ...
 {%- endif %}
@@ -87,12 +86,12 @@ function make_mex_{{ name }}()
 
     %% octave C flags
     if is_octave()
-        if ~exist(fullfile(opts.output_dir, 'cflags_octave.txt'), 'file')
-            diary(fullfile(opts.output_dir, 'cflags_octave.txt'));
+        if ~exist(fullfile(output_dir, 'cflags_octave.txt'), 'file')
+            diary(fullfile(output_dir, 'cflags_octave.txt'));
             diary on
             mkoctfile -p CFLAGS
             diary off
-            input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'r');
+            input_file = fopen(fullfile(output_dir, 'cflags_octave.txt'), 'r');
             cflags_tmp = fscanf(input_file, '%[^\n]s');
             fclose(input_file);
             if ~ismac()
@@ -100,12 +99,12 @@ function make_mex_{{ name }}()
             else
                 cflags_tmp = [cflags_tmp, ' -std=c99'];
             end
-            input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'w');
+            input_file = fopen(fullfile(output_dir, 'cflags_octave.txt'), 'w');
             fprintf(input_file, '%s', cflags_tmp);
             fclose(input_file);
         end
         % read cflags from file
-        input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'r');
+        input_file = fopen(fullfile(output_dir, 'cflags_octave.txt'), 'r');
         cflags_tmp = fscanf(input_file, '%[^\n]s');
         fclose(input_file);
         setenv('CFLAGS', cflags_tmp);

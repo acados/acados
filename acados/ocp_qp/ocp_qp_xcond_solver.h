@@ -54,6 +54,7 @@ typedef struct ocp_qp_xcond_solver_opts_
 {
     void *xcond_opts;
     void *qp_solver_opts;
+    bool initialize_next_xcond_qp_from_qp_out;
 } ocp_qp_xcond_solver_opts;
 
 
@@ -87,6 +88,7 @@ typedef struct
     void (*opts_initialize_default)(void *config, ocp_qp_xcond_solver_dims *dims, void *opts);
     void (*opts_update)(void *config, ocp_qp_xcond_solver_dims *dims, void *opts);
     void (*opts_set)(void *config_, void *opts_, const char *field, void* value);
+    void (*opts_get)(void *config_, void *opts_, const char *field, void* value);
     acados_size_t (*memory_calculate_size)(void *config, ocp_qp_xcond_solver_dims *dims, void *opts);
     void *(*memory_assign)(void *config, ocp_qp_xcond_solver_dims *dims, void *opts, void *raw_memory);
     void (*memory_get)(void *config_, void *mem_, const char *field, void* value);
@@ -97,10 +99,21 @@ typedef struct
     int (*condense_lhs)(void *config, ocp_qp_xcond_solver_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts, void *mem, void *work);
     int (*condense_rhs_and_solve)(void *config, ocp_qp_xcond_solver_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts, void *mem, void *work);
     void (*eval_sens)(void *config, ocp_qp_xcond_solver_dims *dims, ocp_qp_in *param_qp_in, ocp_qp_out *sens_qp_out, void *opts, void *mem, void *work);
+    void (*eval_adj_sens)(void *config, ocp_qp_xcond_solver_dims *dims, ocp_qp_in *param_qp_in, ocp_qp_out *sens_qp_out, void *opts, void *mem, void *work);
     void (*terminate)(void *config, void *mem, void *work);
     qp_solver_config *qp_solver;  // either ocp_qp_solver or dense_solver
     ocp_qp_xcond_config *xcond;
 } ocp_qp_xcond_solver_config;  // pcond - partial condensing or fcond - full condensing
+
+
+typedef struct ocp_qp_xcond_solver
+{
+    ocp_qp_xcond_solver_config *config;
+    ocp_qp_xcond_solver_dims *dims;
+    ocp_qp_xcond_solver_opts *opts;
+    ocp_qp_xcond_solver_memory *mem;
+    ocp_qp_xcond_solver_workspace *work;
+} ocp_qp_xcond_solver;
 
 
 
@@ -129,6 +142,7 @@ void ocp_qp_xcond_solver_opts_initialize_default(void *config, ocp_qp_xcond_solv
 void ocp_qp_xcond_solver_opts_update(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
 //
 void ocp_qp_xcond_solver_opts_set_(void *config_, void *opts_, const char *field, void* value);
+void ocp_qp_xcond_solver_opts_get_(void *config_, void *opts_, const char *field, void* value);
 
 /* memory */
 //

@@ -36,6 +36,10 @@ import numpy as np
 
 @dataclass
 class AcadosOcpFlattenedIterate:
+    """
+    This class is used to store the primal-dual iterate of an optimal control problem in a flattened form.
+    This allows faster interactions with the solver.
+    """
     x: np.ndarray
     u: np.ndarray
     z: np.ndarray
@@ -47,6 +51,10 @@ class AcadosOcpFlattenedIterate:
 
 @dataclass
 class AcadosOcpFlattenedBatchIterate:
+    """
+    Similar to :py:class:`~acados_template.acados_ocp.AcadosOcpFlattenedIterate` but with an additional field N_batch.
+    The fields x, u, z, sl, su, pi, lam are of shape (N_batch, nx_total), (N_batch, nu_total), etc.
+    """
     x: np.ndarray # shape (N_batch, nx_total)
     u: np.ndarray # shape (N_batch, nu_total)
     z: np.ndarray
@@ -59,6 +67,9 @@ class AcadosOcpFlattenedBatchIterate:
 
 @dataclass
 class AcadosOcpIterate:
+    """
+    This class is used to store the primal-dual iterate of an optimal control problem.
+    """
 
     x_traj: List[np.ndarray]
     u_traj: List[np.ndarray]
@@ -81,6 +92,9 @@ class AcadosOcpIterate:
 
 @dataclass
 class AcadosOcpIterates:
+    """
+    This class is used to store a list of :py:class:`~acados_template.acados_ocp.AcadosOcpIterate` objects.
+    """
 
     iterate_list: List[AcadosOcpIterate]
     __iterate_fields = ["x", "u", "z", "sl", "su", "pi", "lam"]
@@ -92,7 +106,7 @@ class AcadosOcpIterates:
         """
 
         if field not in self.__iterate_fields:
-            raise Exception(f"Invalid field: got {field}, expected value in {self.__iterate_fields}")
+            raise ValueError(f"Invalid field: got {field}, expected value in {self.__iterate_fields}")
 
         attr = f"{field}_traj"
         traj_ = [getattr(iterate, attr) for iterate in self.iterate_list]
@@ -100,6 +114,6 @@ class AcadosOcpIterates:
         try:
             traj = np.array(traj_, dtype=float)
         except ValueError:
-            raise Exception(f"Stage-wise dimensions are not the same for {field} trajectory.")
+            raise ValueError(f"Stage-wise dimensions are not the same for {field} trajectory.")
 
         return traj

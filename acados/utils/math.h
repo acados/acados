@@ -36,6 +36,7 @@ extern "C" {
 #endif
 
 #include "acados/utils/types.h"
+#include "blasfeo_common.h"
 
 #if defined(__MABX2__)
 double fmax(double a, double b);
@@ -99,6 +100,11 @@ void acados_eigen_decomposition(int dim, double *A, double *V, double *d, double
 double minimum_of_doubles(double *x, int n);
 
 void neville_algorithm(double xx, int n, double *x, double *Q, double *out);
+
+void compute_gershgorin_max_abs_eig_estimate(int n, struct blasfeo_dmat *A, double *out);
+
+void compute_gershgorin_min_eig_estimate(int n, struct blasfeo_dmat *A, double *out);
+
 
 #ifdef __cplusplus
 } /* extern "C" */

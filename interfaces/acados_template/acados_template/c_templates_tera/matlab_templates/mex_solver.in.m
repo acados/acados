@@ -43,8 +43,10 @@ classdef {{ name }}_mex_solver < handle
     methods
 
         % constructor
-        function obj = {{ name }}_mex_solver()
-            make_mex_{{ name }}();
+        function obj = {{ name }}_mex_solver(solver_creation_opts)
+            if solver_creation_opts.compile_mex_wrapper
+                make_mex_{{ name }}();
+            end
             obj.C_ocp = acados_mex_create_{{ name }}();
             % to have path to destructor when changing directory
             addpath('.')
@@ -125,11 +127,11 @@ classdef {{ name }}_mex_solver < handle
             % obj.get(field, value, [stage])
             obj = varargin{1};
             field = varargin{2};
-            if any(strfind('sens', field))
-                error('field sens* (sensitivities of optimal solution) not yet supported for templated MEX.')
-            end
             if ~isa(field, 'char')
                 error('field must be a char vector, use '' ''');
+            end
+            if any(strfind('sens', field))
+                error('field sens* (sensitivities of optimal solution) not yet supported for templated MEX.')
             end
 
             if nargin==2
@@ -257,7 +259,7 @@ classdef {{ name }}_mex_solver < handle
         end
 
         function [] = reset(obj)
-            acados_mex_reset_{{ name }}(obj.C_ocp);
+            acados_mex_set_{{ name }}(obj.C_ocp, 'reset', 1);
         end
 
 

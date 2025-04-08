@@ -45,8 +45,9 @@ classdef AcadosSimOptions < handle
         sens_hess
         output_z
         ext_fun_compile_flags
-        num_threads_in_batch_solve
+        ext_fun_expand_dyn
         compile_interface
+        with_batch_functionality
     end
 
     methods
@@ -71,7 +72,8 @@ classdef AcadosSimOptions < handle
             else
                 obj.ext_fun_compile_flags = env_var;
             end
-            obj.num_threads_in_batch_solve = 1;
+            obj.ext_fun_expand_dyn = false;
+            obj.with_batch_functionality = false;
             obj.compile_interface = []; % corresponds to automatic detection, possible values: true, false, []
         end
 

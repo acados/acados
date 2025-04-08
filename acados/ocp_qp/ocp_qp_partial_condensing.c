@@ -443,6 +443,8 @@ void *ocp_qp_partial_condensing_memory_assign(void *dims_, void *opts_, void *ra
 
     mem->qp_out_info = (qp_info *) mem->pcond_qp_out->misc;
 
+    mem->dims = dims;
+
     assert((char *) raw_memory + ocp_qp_partial_condensing_memory_calculate_size(dims, opts) >= c_ptr);
 
     return mem;
@@ -535,6 +537,75 @@ int ocp_qp_partial_condensing(void *qp_in_, void *pcond_qp_in_, void *opts_, voi
 
     return ACADOS_SUCCESS;
 }
+
+
+int ocp_qp_partial_condensing_condense_qp_out(void *qp_in_, void *pcond_qp_in_, void *qp_out_, void *pcond_qp_out_, void *opts_, void *mem_, void *work)
+{
+    // ocp_qp_in *qp_in = qp_in_;
+    // ocp_qp_in *pcond_qp_in = pcond_qp_in_;
+    ocp_qp_out *qp_out = qp_out_;
+    ocp_qp_out *pcond_qp_out = pcond_qp_out_;
+    ocp_qp_partial_condensing_opts *opts = opts_;
+    ocp_qp_partial_condensing_memory *mem = mem_;
+
+    assert(opts->N2 == opts->N2_bkp);
+    ocp_qp_dims *orig_dims = mem->dims->orig_dims;
+
+    if (opts->N2 != mem->dims->orig_dims->N)
+    {
+        printf("\nocp_qp_partial_condensing_condense_qp_out: only works if N==N2 for now.\n");
+        exit(1);
+    }
+    if (orig_dims->nbxe[0] != 0 && (orig_dims->nbxe[0] != orig_dims->nbx[0] || orig_dims->nx[0] != orig_dims->nbx[0]))
+    {
+        printf("\nocp_qp_partial_condensing_condense_qp_out: only works if nbxe[0] == nbx[0] == nx[0], or nbxe[0] == 0 for now.\n");
+        exit(1);
+    }
+
+    int N = orig_dims->N;
+    int *nx = orig_dims->nx;
+    int *nu = orig_dims->nu;
+    int *nbu = orig_dims->nbu;
+    int *nbx = orig_dims->nbx;
+    int *ng = orig_dims->ng;
+    int *ns = orig_dims->ns;
+    int i;
+
+    if (orig_dims->nbxe[0] != 0)
+    {
+        // uxs 0
+        blasfeo_dveccp(nu[0], qp_out->ux+0, 0, pcond_qp_out->ux+0, 0);
+        blasfeo_dveccp(2 * ns[0], qp_out->ux+0, nu[0]+nx[0], pcond_qp_out->ux+0, nu[0]);
+        // lam 0
+        blasfeo_dveccp(nbu[0], qp_out->lam+0, 0, pcond_qp_out->lam+0, 0);
+        blasfeo_dveccp(ng[0], qp_out->lam+0, nbu[0]+nbx[0], pcond_qp_out->lam+0, nbu[0]);
+        blasfeo_dveccp(nbu[0], qp_out->lam+0, nbu[0]+nbx[0]+ng[0], pcond_qp_out->lam+0,  nbu[0]+ng[0]);
+        blasfeo_dveccp(ng[0], qp_out->lam+0, 2*(nbu[0]+nbx[0])+ng[0], pcond_qp_out->lam+0, 2*nbu[0]+ng[0]);
+        // t 0
+        blasfeo_dveccp(nbu[0], qp_out->t+0, 0, pcond_qp_out->t+0, 0);
+        blasfeo_dveccp(ng[0], qp_out->t+0, nbu[0]+nbx[0], pcond_qp_out->t+0, nbu[0]);
+        blasfeo_dveccp(nbu[0], qp_out->t+0, nbu[0]+nbx[0]+ng[0], pcond_qp_out->t+0,  nbu[0]+ng[0]);
+        blasfeo_dveccp(ng[0], qp_out->t+0, 2*(nbu[0]+nbx[0])+ng[0], pcond_qp_out->t+0, 2*nbu[0]+ng[0]);
+    }
+    else
+    {
+        i = 0;
+        blasfeo_dveccp(nx[i] + nu[i] + 2 * ns[i], qp_out->ux+i, 0, pcond_qp_out->ux+i, 0);
+        blasfeo_dveccp(2 * (nbu[i] + nbx[i] + ng[i] + ns[i]), qp_out->lam+i, 0, pcond_qp_out->lam+i, 0);
+        blasfeo_dveccp(2 * (nbu[i] + nbx[i] + ng[i] + ns[i]), qp_out->t+i, 0, pcond_qp_out->t+i, 0);
+    }
+    for (i = 1; i<=N; i++)
+    {
+        blasfeo_dveccp(nx[i] + nu[i] + 2 * ns[i], qp_out->ux+i, 0, pcond_qp_out->ux+i, 0);
+        blasfeo_dveccp(2 * (nbu[i] + nbx[i] + ng[i] + ns[i]), qp_out->lam+i, 0, pcond_qp_out->lam+i, 0);
+        blasfeo_dveccp(2 * (nbu[i] + nbx[i] + ng[i] + ns[i]), qp_out->t+i, 0, pcond_qp_out->t+i, 0);
+    }
+    for (i = 0; i<N; i++)
+        blasfeo_dveccp(nx[i+1], qp_out->pi+i, 0, pcond_qp_out->pi+i, 0);
+
+    return ACADOS_SUCCESS;
+}
+
 
 int ocp_qp_partial_condensing_condense_lhs(void *qp_in_, void *pcond_qp_in_, void *opts_, void *mem_, void *work)
 {
@@ -644,6 +715,7 @@ void ocp_qp_partial_condensing_config_initialize_default(void *config_)
     config->condensing = &ocp_qp_partial_condensing;
     config->condense_lhs = &ocp_qp_partial_condensing_condense_lhs;
     config->condense_rhs = &ocp_qp_partial_condensing_condense_rhs;
+    config->condense_qp_out = &ocp_qp_partial_condensing_condense_qp_out;
     config->expansion = &ocp_qp_partial_expansion;
 
     return;

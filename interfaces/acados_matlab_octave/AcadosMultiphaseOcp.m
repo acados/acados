@@ -281,8 +281,7 @@ classdef AcadosMultiphaseOcp < handle
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_free.in.c'), ['acados_mex_free_', self.name, '.c']};
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_solve.in.c'), ['acados_mex_solve_', self.name, '.c']};
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_set.in.c'), ['acados_mex_set_', self.name, '.c']};
-            template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_reset.in.c'), ['acados_mex_reset_', self.name, '.c']};
-            if self.phases_dims{1}.np_global > 0
+            if self.phases_dims{1}.n_global_data > 0
                 template_list{end+1} = {'p_global_precompute_fun.in.h',  [self.name, '_p_global_precompute_fun.h']};
             end
             % Simulink
@@ -317,6 +316,10 @@ classdef AcadosMultiphaseOcp < handle
             code_gen_opts.with_value_sens_wrt_params = self.solver_options.with_value_sens_wrt_params;
             code_gen_opts.code_export_directory = self.code_export_directory;
 
+            code_gen_opts.ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn;
+            code_gen_opts.ext_fun_expand_cost = self.solver_options.ext_fun_expand_cost;
+            code_gen_opts.ext_fun_expand_constr = self.solver_options.ext_fun_expand_constr;
+            code_gen_opts.ext_fun_expand_precompute = self.solver_options.ext_fun_expand_precompute;
             context = GenerateContext(self.model{1}.p_global, self.name, code_gen_opts);
 
             for i=1:self.n_phases

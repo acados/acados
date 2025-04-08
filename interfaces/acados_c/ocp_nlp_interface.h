@@ -53,6 +53,7 @@ extern "C" {
 typedef enum
 {
     SQP,
+    SQP_WITH_FEASIBLE_QP,
     SQP_RTI,
     DDP,
     INVALID_NLP_SOLVER,
@@ -91,6 +92,7 @@ typedef enum
     PROJECT,
     PROJECT_REDUC_HESS,
     CONVEXIFY,
+    GERSHGORIN_LEVENBERG_MARQUARDT,
     INVALID_REGULARIZE,
 } ocp_nlp_reg_t;
 
@@ -107,6 +109,9 @@ typedef struct ocp_nlp_plan_t
 {
     /// QP solver configuration.
     ocp_qp_solver_plan_t ocp_qp_solver_plan;
+
+    /// QP solver configuration.
+    ocp_qp_solver_plan_t relaxed_ocp_qp_solver_plan;
 
     /// Simulation solver configuration for each stage.
     sim_solver_plan_t *sim_solver_plan;
@@ -135,7 +140,7 @@ typedef struct ocp_nlp_plan_t
 } ocp_nlp_plan_t;
 
 
-/// Structure to store the state/configuration for the non-linear programming solver
+/// Structure to store the collection of pointers for the nonlinear programming solver
 typedef struct ocp_nlp_solver
 {
     ocp_nlp_config *config;
@@ -377,12 +382,15 @@ ACADOS_SYMBOL_EXPORT ocp_nlp_solver *ocp_nlp_solver_create(ocp_nlp_config *confi
 ACADOS_SYMBOL_EXPORT void ocp_nlp_solver_destroy(ocp_nlp_solver *solver);
 
 /// Solves the optimal control problem. Call ocp_nlp_precompute before
-/// calling this functions (TBC).
+/// calling this function.
 ///
 /// \param solver The solver struct.
 /// \param nlp_in The inputs struct.
 /// \param nlp_out The output struct.
 ACADOS_SYMBOL_EXPORT int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
+
+//
+ACADOS_SYMBOL_EXPORT int ocp_nlp_setup_qp_matrices_and_factorize(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
 
 
 
@@ -395,7 +403,7 @@ ACADOS_SYMBOL_EXPORT void ocp_nlp_solver_reset_qp_memory(ocp_nlp_solver *solver,
 
 
 /// Performs precomputations for the solver. Needs to be called before
-/// ocl_nlp_solve (TBC).
+/// ocp_nlp_solve (TBC).
 ///
 /// \param solver The solver struct.
 /// \param nlp_in The inputs struct.

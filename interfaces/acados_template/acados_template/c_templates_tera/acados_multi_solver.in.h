@@ -72,7 +72,7 @@ typedef struct {{ name }}_solver_capsule
     ocp_nlp_config *nlp_config;
     ocp_nlp_dims *nlp_dims;
 
-{% if phases_dims[0].np_global > 0 %}
+{% if phases_dims[0].n_global_data > 0 %}
     external_function_casadi p_global_precompute_fun;
 {%- endif %}
 
@@ -243,6 +243,9 @@ ACADOS_SYMBOL_EXPORT int {{ name }}_acados_update_params_sparse({{ name }}_solve
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver_capsule* capsule, double* data, int data_len);
 
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_solve({{ name }}_solver_capsule * capsule);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_setup_qp_matrices_and_factorize({{ name }}_solver_capsule* capsule);
+
+
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_free({{ name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT void {{ name }}_acados_print_stats({{ name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_custom_update({{ name }}_solver_capsule* capsule, double* data, int data_len);

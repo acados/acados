@@ -59,7 +59,6 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, 
         ocp.solver_options.integrator_type = upper(opts_struct.sim_method);
     end
 
-    N = opts_struct.param_scheme_N;
     % options
     ocp.solver_options.sim_method_num_steps = opts_struct.sim_method_num_steps;
     ocp.solver_options.sim_method_num_stages = opts_struct.sim_method_num_stages;
@@ -129,6 +128,10 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, 
     ocp.solver_options.fixed_hess = opts_struct.fixed_hess;
 
     ocp.solver_options.ext_fun_compile_flags = opts_struct.ext_fun_compile_flags;
+    ocp.solver_options.ext_fun_expand_dyn = opts_struct.ext_fun_expand_dyn;
+    ocp.solver_options.ext_fun_expand_cost = opts_struct.ext_fun_expand_cost;
+    ocp.solver_options.ext_fun_expand_constr = opts_struct.ext_fun_expand_constr;
+    ocp.solver_options.ext_fun_expand_precompute = opts_struct.ext_fun_expand_precompute;
 
     ocp.solver_options.time_steps = opts_struct.time_steps;
     ocp.solver_options.shooting_nodes = opts_struct.shooting_nodes;

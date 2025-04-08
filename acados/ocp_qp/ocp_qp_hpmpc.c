@@ -151,6 +151,13 @@ void ocp_qp_hpmpc_opts_set(void *config_, void *opts_, const char *field, void *
     return;
 }
 
+void ocp_qp_hpmpc_opts_get(void *config_, void *opts_, const char *field, void *value)
+{
+    // ocp_qp_hpmpc_opts *opts = opts_;
+    printf("\nerror: ocp_qp_hpmpc_opts_get: not implemented for field %s\n", field);
+    exit(1);
+}
+
 
 
 /************************************************
@@ -576,6 +583,11 @@ void ocp_qp_hpmpc_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts
     exit(1);
 }
 
+void ocp_qp_hpmpc_eval_adj_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+{
+    printf("\nerror: ocp_qp_hpmpc_eval_adj_sens: not implemented yet\n");
+    exit(1);
+}
 
 
 void ocp_qp_hpmpc_terminate(void *config_, void *mem_, void *work_)
@@ -595,6 +607,7 @@ void ocp_qp_hpmpc_config_initialize_default(void *config_)
         (void (*)(void *, void *, void *)) & ocp_qp_hpmpc_opts_initialize_default;
     config->opts_update = (void (*)(void *, void *, void *)) & ocp_qp_hpmpc_opts_update;
     config->opts_set = &ocp_qp_hpmpc_opts_set;
+    config->opts_get = &ocp_qp_hpmpc_opts_get;
     config->memory_calculate_size =
         (size_t (*)(void *, void *, void *)) & ocp_qp_hpmpc_memory_calculate_size;
     config->memory_assign =
@@ -604,6 +617,7 @@ void ocp_qp_hpmpc_config_initialize_default(void *config_)
         (size_t (*)(void *, void *, void *)) & ocp_qp_hpmpc_workspace_calculate_size;
     config->evaluate = &ocp_qp_hpmpc;
     config->eval_sens = &ocp_qp_hpmpc_eval_sens;
+    config->eval_adj_sens = &ocp_qp_hpmpc_eval_adj_sens;
     config->memory_reset = &ocp_qp_hpmpc_memory_reset;
     config->solver_get = &ocp_qp_hpmpc_solver_get;
     config->terminate = &ocp_qp_hpmpc_terminate;

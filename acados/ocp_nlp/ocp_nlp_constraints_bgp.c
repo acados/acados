@@ -231,6 +231,14 @@ void ocp_nlp_constraints_bgp_dims_get(void *config_, void *dims_, const char *fi
     {
         *value = dims->nsg;
     }
+    else if (!strcmp(field, "nsbx"))
+    {
+        *value = dims->nsbx;
+    }
+    else if (!strcmp(field, "nsbu"))
+    {
+        *value = dims->nsbu;
+    }
     else if (!strcmp(field, "nr"))
     {
         *value = dims->nr;
@@ -262,6 +270,10 @@ void ocp_nlp_constraints_bgp_dims_get(void *config_, void *dims_, const char *fi
     else if (!strcmp(field, "nge_qp_solver"))
     {
         *value = dims->nge + dims->nphie;
+    }
+    else if (!strcmp(field, "ne"))
+    {
+        *value = dims->nbxe + dims->nbue + dims->nge + dims->nphie;
     }
     else
     {
@@ -617,7 +629,6 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
 void ocp_nlp_constraints_bgp_model_get(void *config_, void *dims_,
                          void *model_, const char *field, void *value)
 {
-    // NOTE(oj): this is adapted from the bgh module, maybe something has to be changed here.
     ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
     ocp_nlp_constraints_bgp_model *model = (ocp_nlp_constraints_bgp_model *) model_;
 
@@ -702,6 +713,13 @@ void ocp_nlp_constraints_bgp_model_get(void *config_, void *dims_,
     else if (!strcmp(field, "Dt"))
     {
         blasfeo_unpack_dmat(nu, ng, &model->DCt, 0, 0, value, nu);
+    }
+    else if (!strcmp(field, "idxs"))
+    {
+        int ns = dims->ns;
+        ptr_i = (int *) value;
+        for (ii=0; ii < ns; ii++)
+            ptr_i[ii] = model->idxs[ii];
     }
     else
     {
@@ -1091,7 +1109,6 @@ void ocp_nlp_constraints_bgp_initialize(void *config_, void *dims_, void *model_
     // initialize idxs_rev
     for (j = 0; j < ns; j++)
     {
-//        memory->idxs[j] = model->idxs[j];
         memory->idxs_rev[model->idxs[j]] = j;
     }
 

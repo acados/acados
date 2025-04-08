@@ -246,7 +246,7 @@ OCP_SRC+= {{ solver_options.custom_update_filename }}
 	{%- endif %}
 {%- endif %}
 
-{%- if dims_0.np_global > 0 %}
+{%- if dims_0.n_global_data > 0 %}
 OCP_SRC+= {{ name }}_p_global_precompute_fun.c
 {%- endif %}
 
@@ -300,7 +300,7 @@ CPPFLAGS+= -I $(INCLUDE_PATH)/daqp/include
 
 # define the c-compiler flags for make's implicit rules
 CFLAGS = -fPIC -std=c99 {{ openmp_flag }} {{ solver_options.ext_fun_compile_flags }}#-fno-diagnostics-show-line-numbers -g
-{% if solver_options.num_threads_in_batch_solve > 1 %}
+{% if solver_options.with_batch_functionality %}
 CFLAGS += -fopenmp
 {%- endif %}
 # # Debugging
@@ -308,7 +308,7 @@ CFLAGS += -fopenmp
 
 # linker flags
 LDFLAGS+= -L$(LIB_PATH)
-{% if solver_options.num_threads_in_batch_solve > 1 %}
+{% if solver_options.with_batch_functionality %}
 LDFLAGS += -fopenmp
 {%- endif %}
 

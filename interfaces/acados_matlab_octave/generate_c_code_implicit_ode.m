@@ -76,19 +76,19 @@ function generate_c_code_implicit_ode(context, model, model_dir)
     end
 
     fun_name = [model.name,'_impl_dae_fun'];
-    context.add_function_definition(fun_name, {x, xdot, u, z, p}, {f_impl}, model_dir);
+    context.add_function_definition(fun_name, {x, xdot, u, z, p}, {f_impl}, model_dir, 'dyn');
 
     fun_name = [model.name,'_impl_dae_fun_jac_x_xdot_z'];
-    context.add_function_definition(fun_name, {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_z}, model_dir);
+    context.add_function_definition(fun_name, {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_z}, model_dir, 'dyn');
 
     fun_name = [model.name,'_impl_dae_jac_x_xdot_u_z'];
-    context.add_function_definition(fun_name, {x, xdot, u, z, p}, {jac_x, jac_xdot, jac_u, jac_z}, model_dir);
+    context.add_function_definition(fun_name, {x, xdot, u, z, p}, {jac_x, jac_xdot, jac_u, jac_z}, model_dir, 'dyn');
 
     fun_name = [model.name,'_impl_dae_fun_jac_x_xdot_u'];
-    context.add_function_definition(fun_name, {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_u}, model_dir);
+    context.add_function_definition(fun_name, {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_u}, model_dir, 'dyn');
 
     if context.opts.generate_hess
         fun_name = [model.name,'_impl_dae_hess'];
-        context.add_function_definition(fun_name, {x, xdot, u, z, multiplier, p}, {HESS}, model_dir);
+        context.add_function_definition(fun_name, {x, xdot, u, z, multiplier, p}, {HESS}, model_dir, 'dyn');
     end
 end

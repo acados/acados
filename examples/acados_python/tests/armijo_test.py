@@ -30,7 +30,7 @@
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
 import numpy as np
-from casadi import *
+import casadi as ca
 from itertools import product
 
 # tests different globalization settings on simple test problem
@@ -70,12 +70,12 @@ def solve_armijo_problem_with_setting(setting):
 
     # set model
     model = AcadosModel()
-    x = SX.sym('x')
+    x = ca.SX.sym('x')
 
     # dynamics: identity
     model.disc_dyn_expr = x
     model.x = x
-    model.u = SX.sym('u', 0, 0) # [] / None doesnt work
+    model.u = ca.SX.sym('u', 0, 0) # [] / None doesnt work
     model.p = []
     model.name = f'armijo_problem'
     ocp.model = model
@@ -89,7 +89,7 @@ def solve_armijo_problem_with_setting(setting):
     # cost
     ocp.cost.cost_type_e = 'EXTERNAL'
     ocp.model.cost_expr_ext_cost_e = x @ x
-    ocp.model.cost_expr_ext_cost_custom_hess_e = 1.0 # 2.0 is the actual hessian
+    ocp.model.cost_expr_ext_cost_custom_hess_e = ca.DM(1.0) # 2.0 is the actual hessian
 
     # constarints
     ocp.constraints.idxbx = np.array([0])

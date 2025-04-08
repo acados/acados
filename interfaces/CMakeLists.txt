@@ -64,6 +64,9 @@ if(ACADOS_OCTAVE)
     add_test(NAME octave_test_ocp_pendulum
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./run_test_ocp_pendulum.m)
+    add_test(NAME octave_test_ocp_pendulum_code_reuse
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+        octave --no-gui --no-window-system ./test_code_reuse.m)
     add_test(NAME octave_test_ocp_wtnx6
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./run_test_ocp_wtnx6.m)
@@ -73,6 +76,11 @@ if(ACADOS_OCTAVE)
     add_test(NAME octave_test_ocp_simple_dae
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/simple_dae_model
         octave --no-gui --no-window-system ./example_ocp.m)
+
+    # AS-RTI closed loop example
+    add_test(NAME octave_closed_loop_as_rti_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/pendulum_on_cart_model
+        octave --no-gui --no-window-system ./closed_loop_as_rti.m)
 
     add_test(NAME octave_test_mhe_lorentz
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/lorentz
@@ -119,8 +127,9 @@ if(ACADOS_OCTAVE)
     set_tests_properties(octave_test_ocp_wtnx6 PROPERTIES DEPENDS octave_test_ocp_mass_spring)
     set_tests_properties(octave_test_ocp_mass_spring PROPERTIES DEPENDS octave_test_ocp_simple_dae)
     set_tests_properties(octave_test_ocp_simple_dae PROPERTIES DEPENDS octave_test_target_selector)
+    set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_ocp_pendulum_code_reuse)
     if(ACADOS_WITH_OSQP)
-        set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_OSQP)
+        set_tests_properties(octave_test_ocp_pendulum_code_reuse PROPERTIES DEPENDS octave_test_OSQP)
     endif()
     if(ACADOS_WITH_QPDUNES)
         set_tests_properties(octave_test_OSQP PROPERTIES DEPENDS octave_test_qpDUNES)
@@ -196,6 +205,7 @@ if(ACADOS_PYTHON)
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/time_varying
         python test_mocp_qp.py)
 
+
 # Tests for DDP
 add_test(NAME py_ddp_solve_qp
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/unconstrained_ocps/linear_dynamics_qp_ocp
@@ -213,6 +223,18 @@ add_test(NAME py_ddp_rockit_hello_world
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/unconstrained_ocps/rockit_hello_world
         python rockit_hello_world_ocp.py)
 
+# Tests for SQP_WITH_FEASIBLE_QP
+add_test(NAME py_sqp_wfqp_linear_problem_obstacle_avoidance
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/linear_mass_model
+        python sqp_wfqp_test.py)
+
+add_test(NAME py_sqp_wfqp_inconsistent_linearization
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/inconsistent_qp_linearization
+        python inconsistent_qp_linearization_test.py)
+
+add_test(NAME py_sqp_wfqp_problem_hs015
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/nlp_hs015
+        python hs015_test.py)
 
 # CMake test
 add_test(NAME python_pendulum_ocp_example_cmake
@@ -244,6 +266,10 @@ add_test(NAME python_pendulum_ocp_example_cmake
     add_test(NAME python_maratos_test_problem_globalization
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/non_ocp_nlp
         python maratos_test_problem.py)
+
+    add_test(NAME python_test_adaptive_reg
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/non_ocp_nlp
+        python adaptive_eps_reg_test.py)
 
     # Convex test problem where full step SQP does not converge, but globalized SQP does
     add_test(NAME python_convex_test_problem_globalization
@@ -301,10 +327,6 @@ add_test(NAME python_pendulum_ocp_example_cmake
     add_test(NAME python_pendulum_mhe_ocp_closed_loop_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/mhe
         python closed_loop_mhe_ocp.py)
-
-    add_test(NAME python_pendulum_ocp_cost_example
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
-        python ocp_example_cost_formulations.py)
 
     add_test(NAME python_custom_update_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/custom_update
@@ -402,6 +424,9 @@ add_test(NAME python_pendulum_ocp_example_cmake
     # Directory getting_started
     set_tests_properties(python_pendulum_sim_example PROPERTIES DEPENDS python_pendulum_ocp_example)
     set_tests_properties(python_pendulum_closed_loop_example PROPERTIES DEPENDS python_pendulum_sim_example)
+
+    # Directory non_ocp_nlp
+    set_tests_properties(python_maratos_test_problem_globalization PROPERTIES DEPENDS python_test_adaptive_reg)
 
     # Directory acados_python/tests
     set_tests_properties(python_test_cython_vs_ctypes PROPERTIES DEPENDS python_test_reset)

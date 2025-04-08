@@ -45,14 +45,15 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     p_nominal = 1.0
     x0 = np.array([0.0, np.pi / 2, 0.0, 0.0])
     delta_p = 0.001
-    p_test = np.arange(p_nominal - 0.5, p_nominal + 0.5, delta_p)
+    p_test = np.arange(p_nominal + 0.1, p_nominal + 0.5, delta_p)
 
     np_test = p_test.shape[0]
     N_horizon = 50
     T_horizon = 2.0
     Fmax = 80.0
     with_parametric_constraint = True
-    with_nonlinear_constraint = True
+    with_nonlinear_constraint = False
+    plot_reconstructed = False
 
     ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, qp_solver_ric_alg=1, with_parametric_constraint=with_parametric_constraint, with_nonlinear_constraint=with_nonlinear_constraint)
 
@@ -60,6 +61,8 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     verbose = True
     build = True
     generate = True
+
+    # create nominal solver
     if use_cython:
         AcadosOcpSolver.generate(ocp, json_file="parameter_augmented_acados_ocp.json")
         AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
@@ -93,6 +96,9 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     if with_parametric_constraint:
         max_lam_parametric_constraint = np.zeros(np_test)
         sum_lam_parametric_constraint = np.zeros(np_test)
+        n_lam_total = ocp_solver.get_flat('lam').shape[0]
+        lambda_flat = np.zeros((np_test, n_lam_total))
+
     for i, p in enumerate(p_test):
         p_val = np.array([p])
 
@@ -103,13 +109,14 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
         iterate = ocp_solver.store_iterate_to_flat_obj()
 
         sensitivity_solver.load_iterate_from_flat_obj(iterate)
-        sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
+        sensitivity_solver.setup_qp_matrices_and_factorize()
 
         for j in range(1, N_horizon):
             lam = ocp_solver.get(j, "lam")
             # 1, 3 are indices of upper and lower multiplier for the parametric constraints
             max_lam_parametric_constraint[i] = max(max_lam_parametric_constraint[i], lam[1], lam[3])
             sum_lam_parametric_constraint[i] += lam[1] + lam[3]
+            lambda_flat[i, :] = ocp_solver.get_flat('lam')
 
         if eigen_analysis:
             full_hessian_diagnostics = sensitivity_solver.qp_diagnostics("FULL_HESSIAN")
@@ -139,12 +146,38 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     u_opt_reconstructed_acados = np.cumsum(sens_u) * delta_p + u_opt[0]
     u_opt_reconstructed_acados += u_opt[0] - u_opt_reconstructed_acados[0]
 
+    # for multiplier plot
+    multipliers_bu = []
+    multipliers_h = []
+    nbu = ocp.dims.nbu
+    nx = ocp.dims.nx
+    x0_lam_idx = [*range(nbu, nx+nbu)] + [*range(2*nbu+nx, 2*nx+2*nbu)]
+    n_lam_0 = ocp_solver.get(0, "lam").shape[0]
+    bu_lam_idx = [*range(n_lam_0, n_lam_total, 2)]
+    h_lam_idx = [*range(n_lam_0+1, n_lam_total, 2)]
+
+    for i in range(n_lam_total):
+        if np.max(np.abs(lambda_flat[:, i])) > 1e-2 and i not in x0_lam_idx:
+            if i in bu_lam_idx:
+                multipliers_bu += [lambda_flat[:, i]]
+            elif i in h_lam_idx:
+                multipliers_h += [lambda_flat[:, i]]
+            else:
+                print(f"found multiplier with index {i} that is not in x0_lam_idx, bu_lam_idx or h_lam_idx.")
+
+            print(f"Multiplier {i} has non-zero values.")
+    print(f"Multipliers with absolute value > 1e-2: bu {len(multipliers_bu)}, h {len(multipliers_h)}")
+
     plot_solution_sensitivities_results(p_test, u_opt, u_opt_reconstructed_acados, u_opt_reconstructed_fd, sens_u, sens_u_fd,
                  min_eig_full, min_eig_proj_hess, min_eig_P,
                  min_abs_eig_full, min_abs_eig_proj_hess, min_abs_eig_P,
-                 eigen_analysis, title=None, parameter_name="mass",
-                 max_lam_parametric_constraint=max_lam_parametric_constraint,
-                 sum_lam_parametric_constraint=sum_lam_parametric_constraint)
+                 eigen_analysis, title=None, parameter_name=r"$\theta$",
+                 multipliers_bu=multipliers_bu, multipliers_h=multipliers_h,
+                 figsize=(7, 9),
+                 plot_reconstructed=plot_reconstructed,
+                #  max_lam_parametric_constraint=max_lam_parametric_constraint,
+                #  sum_lam_parametric_constraint=sum_lam_parametric_constraint
+                 )
 
     test_tol = 1e-2
     median_diff = np.median(np.abs(sens_u - sens_u_fd))
@@ -169,4 +202,4 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
 
 
 if __name__ == "__main__":
-    main_parametric(qp_solver_ric_alg=0, eigen_analysis=False, use_cython=False, plot_trajectory=False)
+    main_parametric(qp_solver_ric_alg=0, eigen_analysis=False, use_cython=False, plot_trajectory=True)

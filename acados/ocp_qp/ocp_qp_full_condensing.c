@@ -484,6 +484,14 @@ int ocp_qp_full_condensing(void *qp_in_, void *fcond_qp_in_, void *opts_, void *
     return ACADOS_SUCCESS;
 }
 
+int ocp_qp_full_condensing_condense_qp_out(void *qp_in_, void *fcond_qp_in_, void *qp_out_, void *fcond_qp_out_, void *opts_, void *mem_, void *work)
+{
+    printf("ocp_qp_full_condensing_condense_qp_out: not implemented\n");
+    printf("what about implementing it? :) do it for acados!\n");
+    exit(1);
+}
+
+
 
 int ocp_qp_full_condensing_condense_lhs(void *qp_in_, void *fcond_qp_in_, void *opts_, void *mem_, void *work_)
 {
@@ -557,14 +565,7 @@ int ocp_qp_full_expansion(void *fcond_qp_out_, void *qp_out_, void *opts_, void 
     acados_tic(&timer);
 
     // expand solution
-    if (opts->expand_dual_sol == 0)
-    {
-        d_cond_qp_expand_primal_sol(mem->red_qp, fcond_qp_out, mem->red_sol, opts->hpipm_cond_opts, mem->hpipm_cond_work);
-    }
-    else
-    {
-        d_cond_qp_expand_sol(mem->red_qp, fcond_qp_out, mem->red_sol, opts->hpipm_cond_opts, mem->hpipm_cond_work);
-    }
+    d_cond_qp_expand_sol(mem->red_qp, fcond_qp_out, mem->red_sol, opts->hpipm_cond_opts, mem->hpipm_cond_work);
 
     // restore solution
     d_ocp_qp_restore_eq_dof(mem->ptr_qp_in, mem->red_sol, qp_out, opts->hpipm_red_opts, mem->hpipm_red_work);
@@ -600,6 +601,7 @@ void ocp_qp_full_condensing_config_initialize_default(void *config_)
     config->condensing = &ocp_qp_full_condensing;
     config->condense_rhs = &ocp_qp_full_condensing_condense_rhs;
     config->condense_lhs = &ocp_qp_full_condensing_condense_lhs;
+    config->condense_qp_out = &ocp_qp_full_condensing_condense_qp_out;
     config->expansion = &ocp_qp_full_expansion;
 
     return;

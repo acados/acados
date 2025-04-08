@@ -269,34 +269,15 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
 
 void ocp_nlp_globalization_merit_backtracking_print_iteration_header()
 {
-    printf("# it\tstat\t\teq\t\tineq\t\tcomp\t\tqp_stat\tqp_iter\talpha\n");
+    printf("%8s   ", "alpha");
 }
 
 void ocp_nlp_globalization_merit_backtracking_print_iteration(double objective_value,
-                                                            int iter_count,
-                                                            void* nlp_res_,
-                                                            double step_norm,
-                                                            double reg_param,
-                                                            int qp_status,
-                                                            int qp_iter,
-                                                            void* nlp_opts_,
-                                                            void* mem_)
+                                                                void* nlp_opts_,
+                                                                void* mem_)
 {
-    ocp_nlp_res *nlp_res = nlp_res_;
     ocp_nlp_globalization_merit_backtracking_memory* mem = mem_;
-
-    if ((iter_count % 10 == 0)){
-        ocp_nlp_globalization_merit_backtracking_print_iteration_header();
-    }
-    printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n",
-        iter_count,
-        nlp_res->inf_norm_res_stat,
-        nlp_res->inf_norm_res_eq,
-        nlp_res->inf_norm_res_ineq,
-        nlp_res->inf_norm_res_comp,
-        qp_status,
-        qp_iter,
-        mem->alpha);
+    printf("%8.2e   ", mem->alpha);
 }
 
 static double ocp_nlp_get_violation_inf_norm(ocp_nlp_config *config, ocp_nlp_dims *dims,
@@ -523,13 +504,13 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
         blasfeo_dveccp(ng[ii], tmp_fun_vec, nb[ii], qp_in->d+ii, nb[ii]); // lg
         blasfeo_dveccp(ng[ii], tmp_fun_vec, 2*nb[ii]+ng[ii], qp_in->d+ii, 2*nb[ii]+ng[ii]); // ug
         // general linear / linearized!
-        // tmp_ni = D * u + C * x
+        // tmp_2ni = D * u + C * x
         blasfeo_dgemv_t(nu[ii]+nx[ii], ng[ii], 1.0, qp_in->DCt+ii, 0, 0, qp_out->ux+ii, 0,
-                        0.0, &nlp_work->tmp_ni, 0, &nlp_work->tmp_ni, 0);
-        // d[nb:nb+ng] += tmp_ni (lower)
-        blasfeo_dvecad(ng[ii], 1.0, &nlp_work->tmp_ni, 0, qp_in->d+ii, nb[ii]);
-        // d[nb:nb+ng] -= tmp_ni
-        blasfeo_dvecad(ng[ii], -1.0, &nlp_work->tmp_ni, 0, qp_in->d+ii, 2*nb[ii]+ng[ii]);
+                        0.0, &nlp_work->tmp_2ni, 0, &nlp_work->tmp_2ni, 0);
+        // d[nb:nb+ng] += tmp_2ni (lower)
+        blasfeo_dvecad(ng[ii], 1.0, &nlp_work->tmp_2ni, 0, qp_in->d+ii, nb[ii]);
+        // d[nb:nb+ng] -= tmp_2ni
+        blasfeo_dvecad(ng[ii], -1.0, &nlp_work->tmp_2ni, 0, qp_in->d+ii, 2*nb[ii]+ng[ii]);
 
         // add slack contributions
         // d[nb:nb+ng] += slack[idx]
@@ -574,7 +555,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
 
     // compute correct dual solution in case of Hessian regularization
     config->regularize->correct_dual_sol(config->regularize, dims->regularize,
-                                        nlp_opts->regularize, nlp_mem->regularize_mem);
+                                        nlp_opts->regularize, nlp_mem->regularize);
 
     // ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
     // int qp_iter = qp_info_->num_iter;

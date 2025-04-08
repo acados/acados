@@ -1069,6 +1069,14 @@ void ocp_qp_osqp_opts_set(void *config_, void *opts_, const char *field, void *v
 }
 
 
+void ocp_qp_osqp_opts_get(void *config_, void *opts_, const char *field, void *value)
+{
+    // ocp_qp_osqp_opts *opts = opts_;
+    printf("\nerror: ocp_qp_osqp_opts_get: not implemented for field %s\n", field);
+    exit(1);
+}
+
+
 
 /************************************************
  * memory
@@ -1786,6 +1794,12 @@ void ocp_qp_osqp_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_
     exit(1);
 }
 
+void ocp_qp_osqp_eval_adj_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+{
+    printf("\nerror: ocp_qp_osqp_eval_adj_sens: not implemented yet\n");
+    exit(1);
+}
+
 
 void ocp_qp_osqp_solver_get(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, const char *field, int stage, void* value, int size1, int size2)
 {
@@ -1803,6 +1817,7 @@ void ocp_qp_osqp_config_initialize_default(void *config_)
     config->opts_initialize_default = &ocp_qp_osqp_opts_initialize_default;
     config->opts_update = &ocp_qp_osqp_opts_update;
     config->opts_set = &ocp_qp_osqp_opts_set;
+    config->opts_get = &ocp_qp_osqp_opts_get;
     config->memory_calculate_size = &ocp_qp_osqp_memory_calculate_size;
     config->memory_assign = &ocp_qp_osqp_memory_assign;
     config->memory_get = &ocp_qp_osqp_memory_get;
@@ -1810,6 +1825,7 @@ void ocp_qp_osqp_config_initialize_default(void *config_)
     config->evaluate = &ocp_qp_osqp;
     config->terminate = &ocp_qp_osqp_terminate;
     config->eval_sens = &ocp_qp_osqp_eval_sens;
+    config->eval_adj_sens = &ocp_qp_osqp_eval_adj_sens;
     config->memory_reset = &ocp_qp_osqp_memory_reset;
     config->solver_get = &ocp_qp_osqp_solver_get;
 
