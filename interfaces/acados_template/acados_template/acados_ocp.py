@@ -163,35 +163,15 @@ class AcadosOcp:
     def json_file(self, json_file):
         self.__json_file = json_file
 
-    def make_consistent(self, is_mocp_phase=False) -> None:
-        """
-        Detect dimensions, perform sanity checks
-        """
+    def make_consistent_cost_initial(self):
         dims = self.dims
         cost = self.cost
-        constraints = self.constraints
         model = self.model
         opts = self.solver_options
+        if opts.N_horizon == 0:
+            return
 
-        model.make_consistent(dims)
-        self.name = model.name
-
-        # check if nx != nx_next
-        if not is_mocp_phase and dims.nx != dims.nx_next and opts.N_horizon > 1:
-            raise ValueError('nx_next should be equal to nx if more than one shooting interval is used.')
-
-        # parameters
-        if self.parameter_values.shape[0] != dims.np:
-            raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \
-                f'\nGot np = {dims.np}, self.parameter_values.shape = {self.parameter_values.shape[0]}\n')
-
-        # p_global_values
-        if self.p_global_values.shape[0] != dims.np_global:
-            raise ValueError('inconsistent dimension np_global, regarding model.p_global and p_global_values.' + \
-                f'\nGot np_global = {dims.np_global}, self.p_global_values.shape = {self.p_global_values.shape[0]}\n')
-
-        ## cost
-        # initial stage - if not set, copy fields from path constraints
+        # if not set, copy fields from path constraints
         if cost.cost_type_0 is None:
             self.copy_path_cost_to_stage_0()
 
@@ -258,27 +238,15 @@ class AcadosOcp:
             if not is_empty(model.cost_expr_ext_cost_custom_hess_0):
                 if model.cost_expr_ext_cost_custom_hess_0.shape != (dims.nx+dims.nu, dims.nx+dims.nu):
                     raise ValueError('cost_expr_ext_cost_custom_hess_0 should have shape (nx+nu, nx+nu).')
+    
+    def make_consistent_cost_path(self):
+        dims = self.dims
+        cost = self.cost
+        model = self.model
+        opts = self.solver_options
+        if opts.N_horizon == 0:
+            return
 
-        # GN check
-        gn_warning_0 = (cost.cost_type_0 == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess_0))
-        gn_warning_path = (cost.cost_type == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess))
-        gn_warning_terminal = (cost.cost_type_e == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess_e))
-        if any([gn_warning_0, gn_warning_path, gn_warning_terminal]):
-            external_cost_types = []
-            if gn_warning_0:
-                external_cost_types.append('cost_type_0')
-            if gn_warning_path:
-                external_cost_types.append('cost_type')
-            if gn_warning_terminal:
-                external_cost_types.append('cost_type_e')
-            print("\nWARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not well defined!\n"
-            f"got cost_type EXTERNAL for {', '.join(external_cost_types)}, hessian_approx: 'GAUSS_NEWTON'.\n"
-            "With this setting, acados will proceed computing the exact Hessian for the cost term and no Hessian contribution from constraints and dynamics.\n"
-            "If the external cost is a linear least squares cost, this coincides with the Gauss-Newton Hessian.\n"
-            "Note: There is also the option to use the external cost module with a numerical Hessian approximation (see `ext_cost_num_hess`).\n"
-            "OR the option to provide a symbolic custom Hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n")
-
-        # path
         if cost.cost_type == 'AUTO':
             self.detect_cost_type(model, cost, dims, "path")
 
@@ -342,7 +310,13 @@ class AcadosOcp:
             if not is_empty(model.cost_expr_ext_cost_custom_hess):
                 if model.cost_expr_ext_cost_custom_hess.shape != (dims.nx+dims.nu, dims.nx+dims.nu):
                     raise ValueError('cost_expr_ext_cost_custom_hess should have shape (nx+nu, nx+nu).')
-        # terminal
+        
+    def make_consistent_cost_terminal(self):
+        dims = self.dims
+        cost = self.cost
+        model = self.model
+        opts = self.solver_options
+
         if cost.cost_type_e == 'AUTO':
             self.detect_cost_type(model, cost, dims, "terminal")
 
@@ -401,14 +375,14 @@ class AcadosOcp:
                 if model.cost_expr_ext_cost_custom_hess_e.shape != (dims.nx, dims.nx):
                     raise ValueError('cost_expr_ext_cost_custom_hess_e should have shape (nx, nx).')
 
-        # cost integration
-        supports_cost_integration = lambda type : type in ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
-        if opts.cost_discretization == 'INTEGRATOR' and \
-            any([not supports_cost_integration(cost) for cost in [cost.cost_type_0, cost.cost_type]]):
-            raise ValueError('cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs.')
+    def make_consistent_constraints_initial(self):
+        constraints = self.constraints
+        dims = self.dims
+        model = self.model
+        opts = self.solver_options
+        if opts.N_horizon > 0:
+            return
 
-        ## constraints
-        # initial
         nbx_0 = constraints.idxbx_0.shape[0]
         if constraints.ubx_0.shape[0] != nbx_0 or constraints.lbx_0.shape[0] != nbx_0:
             raise ValueError('inconsistent dimension nbx_0, regarding idxbx_0, ubx_0, lbx_0.')
@@ -447,7 +421,14 @@ class AcadosOcp:
             else:
                 dims.nr_0 = casadi_length(model.con_r_expr_0)
 
-        # path
+    def make_consistent_constraints_path(self):
+        constraints = self.constraints
+        dims = self.dims
+        model = self.model
+        opts = self.solver_options
+        if opts.N_horizon > 0:
+            return
+
         nbx = constraints.idxbx.shape[0]
         if constraints.ubx.shape[0] != nbx or constraints.lbx.shape[0] != nbx:
             raise ValueError('inconsistent dimension nbx, regarding idxbx, ubx, lbx.')
@@ -498,9 +479,12 @@ class AcadosOcp:
                 raise ValueError('convex over nonlinear constraints: con_r_expr but con_phi_expr is nonempty')
             else:
                 dims.nr = casadi_length(model.con_r_expr)
+        
+    def make_consistent_constraints_terminal(self):
+        dims = self.dims
+        constraints = self.constraints
+        model = self.model
 
-
-        # terminal
         nbx_e = constraints.idxbx_e.shape[0]
         if constraints.ubx_e.shape[0] != nbx_e or constraints.lbx_e.shape[0] != nbx_e:
             raise ValueError('inconsistent dimension nbx_e, regarding idxbx_e, ubx_e, lbx_e.')
@@ -536,7 +520,99 @@ class AcadosOcp:
             else:
                 dims.nr_e = casadi_length(model.con_r_expr_e)
 
-        # Slack dimensions
+    def make_consistent_slacks_initial(self):
+        constraints = self.constraints
+        dims = self.dims
+        opts = self.solver_options
+        cost = self.cost
+        if opts.N_horizon > 0:
+            return
+
+        nh_0 = dims.nh_0
+        nsbu = dims.nsbu
+        nsg = dims.nsg
+        ns = dims.ns
+        nsh_0 = constraints.idxsh_0.shape[0]
+        if nsh_0 > nh_0:
+            raise ValueError(f'inconsistent dimension nsh_0 = {nsh_0}. Is greater than nh_0 = {nh_0}.')
+        if any(constraints.idxsh_0 >= nh_0):
+            raise ValueError(f'idxsh_0 = {constraints.idxsh_0} contains value >= nh_0 = {nh_0}.')
+        if is_empty(constraints.lsh_0):
+            constraints.lsh_0 = np.zeros((nsh_0,))
+        elif constraints.lsh_0.shape[0] != nsh_0:
+            raise ValueError('inconsistent dimension nsh_0, regarding idxsh_0, lsh_0.')
+        if is_empty(constraints.ush_0):
+            constraints.ush_0 = np.zeros((nsh_0,))
+        elif constraints.ush_0.shape[0] != nsh_0:
+            raise ValueError('inconsistent dimension nsh_0, regarding idxsh_0, ush_0.')
+        dims.nsh_0 = nsh_0
+
+        nsphi_0 = constraints.idxsphi_0.shape[0]
+        if nsphi_0 > dims.nphi_0:
+            raise ValueError(f'inconsistent dimension nsphi_0 = {nsphi_0}. Is greater than nphi_0 = {dims.nphi_0}.')
+        if any(constraints.idxsphi_0 >= dims.nphi_0):
+            raise ValueError(f'idxsphi_0 = {constraints.idxsphi_0} contains value >= nphi_0 = {dims.nphi_0}.')
+        if is_empty(constraints.lsphi_0):
+            constraints.lsphi_0 = np.zeros((nsphi_0,))
+        elif constraints.lsphi_0.shape[0] != nsphi_0:
+            raise ValueError('inconsistent dimension nsphi_0, regarding idxsphi_0, lsphi_0.')
+        if is_empty(constraints.usphi_0):
+            constraints.usphi_0 = np.zeros((nsphi_0,))
+        elif constraints.usphi_0.shape[0] != nsphi_0:
+            raise ValueError('inconsistent dimension nsphi_0, regarding idxsphi_0, usphi_0.')
+        dims.nsphi_0 = nsphi_0
+
+        # Note: at stage 0 bounds on x are not slacked!
+        ns_0 = nsbu + nsg + nsphi_0 + nsh_0  # NOTE: nsbx not supported at stage 0
+
+        if cost.zl_0 is None and cost.zu_0 is None and cost.Zl_0 is None and cost.Zu_0 is None:
+            if ns_0 == 0:
+                cost.zl_0 = np.array([])
+                cost.zu_0 = np.array([])
+                cost.Zl_0 = np.array([])
+                cost.Zu_0 = np.array([])
+            elif ns_0 == ns:
+                cost.zl_0 = cost.zl
+                cost.zu_0 = cost.zu
+                cost.Zl_0 = cost.Zl
+                cost.Zu_0 = cost.Zu
+                print("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided.")
+                print("Using entries [zl, zu, Zl, Zu] at intial node for slack penalties.\n")
+            else:
+                raise ValueError("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided and cannot be inferred from other fields.\n")
+
+        wrong_fields = []
+        if cost.Zl_0.shape[0] != ns_0:
+            wrong_fields += ["Zl_0"]
+            dim = cost.Zl_0.shape[0]
+        elif cost.Zu_0.shape[0] != ns_0:
+            wrong_fields += ["Zu_0"]
+            dim = cost.Zu_0.shape[0]
+        elif cost.zl_0.shape[0] != ns_0:
+            wrong_fields += ["zl_0"]
+            dim = cost.zl_0.shape[0]
+        elif cost.zu_0.shape[0] != ns_0:
+            wrong_fields += ["zu_0"]
+            dim = cost.zu_0.shape[0]
+
+        if wrong_fields != []:
+            raise ValueError(f'Inconsistent size for fields {", ".join(wrong_fields)}, with dimension {dim}, \n\t'
+                + f'Detected ns_0 = {ns_0} = nsbu + nsg + nsh_0 + nsphi_0.\n\t'\
+                + f'With nsbu = {nsbu}, nsg = {nsg}, nsh_0 = {nsh_0}, nsphi_0 = {nsphi_0}.')
+        dims.ns_0 = ns_0
+
+    def make_consistent_slacks_path(self):
+        constraints = self.constraints
+        dims = self.dims
+        opts = self.solver_options
+        cost = self.cost
+        if opts.N_horizon > 0:
+            return
+
+        nbx = dims.nbx
+        nbu = dims.nbu
+        nh = dims.nh
+        ng = dims.ng
         nsbx = constraints.idxsbx.shape[0]
         if nsbx > nbx:
             raise ValueError(f'inconsistent dimension nsbx = {nsbx}. Is greater than nbx = {nbx}.')
@@ -632,78 +708,15 @@ class AcadosOcp:
                 + f'Detected ns = {ns} = nsbx + nsbu + nsg + nsh + nsphi.\n\t'\
                 + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh = {nsh}, nsphi = {nsphi}.')
         dims.ns = ns
+        
+    def make_consistent_slacks_terminal(self):
+        constraints = self.constraints
+        dims = self.dims
+        cost = self.cost
 
-        # slack dimensions at initial node
-        nsh_0 = constraints.idxsh_0.shape[0]
-        if nsh_0 > nh_0:
-            raise ValueError(f'inconsistent dimension nsh_0 = {nsh_0}. Is greater than nh_0 = {nh_0}.')
-        if any(constraints.idxsh_0 >= nh_0):
-            raise ValueError(f'idxsh_0 = {constraints.idxsh_0} contains value >= nh_0 = {nh_0}.')
-        if is_empty(constraints.lsh_0):
-            constraints.lsh_0 = np.zeros((nsh_0,))
-        elif constraints.lsh_0.shape[0] != nsh_0:
-            raise ValueError('inconsistent dimension nsh_0, regarding idxsh_0, lsh_0.')
-        if is_empty(constraints.ush_0):
-            constraints.ush_0 = np.zeros((nsh_0,))
-        elif constraints.ush_0.shape[0] != nsh_0:
-            raise ValueError('inconsistent dimension nsh_0, regarding idxsh_0, ush_0.')
-        dims.nsh_0 = nsh_0
-
-        nsphi_0 = constraints.idxsphi_0.shape[0]
-        if nsphi_0 > dims.nphi_0:
-            raise ValueError(f'inconsistent dimension nsphi_0 = {nsphi_0}. Is greater than nphi_0 = {dims.nphi_0}.')
-        if any(constraints.idxsphi_0 >= dims.nphi_0):
-            raise ValueError(f'idxsphi_0 = {constraints.idxsphi_0} contains value >= nphi_0 = {dims.nphi_0}.')
-        if is_empty(constraints.lsphi_0):
-            constraints.lsphi_0 = np.zeros((nsphi_0,))
-        elif constraints.lsphi_0.shape[0] != nsphi_0:
-            raise ValueError('inconsistent dimension nsphi_0, regarding idxsphi_0, lsphi_0.')
-        if is_empty(constraints.usphi_0):
-            constraints.usphi_0 = np.zeros((nsphi_0,))
-        elif constraints.usphi_0.shape[0] != nsphi_0:
-            raise ValueError('inconsistent dimension nsphi_0, regarding idxsphi_0, usphi_0.')
-        dims.nsphi_0 = nsphi_0
-
-        # Note: at stage 0 bounds on x are not slacked!
-        ns_0 = nsbu + nsg + nsphi_0 + nsh_0  # NOTE: nsbx not supported at stage 0
-
-        if cost.zl_0 is None and cost.zu_0 is None and cost.Zl_0 is None and cost.Zu_0 is None:
-            if ns_0 == 0:
-                cost.zl_0 = np.array([])
-                cost.zu_0 = np.array([])
-                cost.Zl_0 = np.array([])
-                cost.Zu_0 = np.array([])
-            elif ns_0 == ns:
-                cost.zl_0 = cost.zl
-                cost.zu_0 = cost.zu
-                cost.Zl_0 = cost.Zl
-                cost.Zu_0 = cost.Zu
-                print("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided.")
-                print("Using entries [zl, zu, Zl, Zu] at intial node for slack penalties.\n")
-            else:
-                raise ValueError("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided and cannot be inferred from other fields.\n")
-
-        wrong_fields = []
-        if cost.Zl_0.shape[0] != ns_0:
-            wrong_fields += ["Zl_0"]
-            dim = cost.Zl_0.shape[0]
-        elif cost.Zu_0.shape[0] != ns_0:
-            wrong_fields += ["Zu_0"]
-            dim = cost.Zu_0.shape[0]
-        elif cost.zl_0.shape[0] != ns_0:
-            wrong_fields += ["zl_0"]
-            dim = cost.zl_0.shape[0]
-        elif cost.zu_0.shape[0] != ns_0:
-            wrong_fields += ["zu_0"]
-            dim = cost.zu_0.shape[0]
-
-        if wrong_fields != []:
-            raise ValueError(f'Inconsistent size for fields {", ".join(wrong_fields)}, with dimension {dim}, \n\t'
-                + f'Detected ns_0 = {ns_0} = nsbu + nsg + nsh_0 + nsphi_0.\n\t'\
-                + f'With nsbu = {nsbu}, nsg = {nsg}, nsh_0 = {nsh_0}, nsphi_0 = {nsphi_0}.')
-        dims.ns_0 = ns_0
-
-        # slacks at terminal node
+        nbx_e = dims.nbx_e
+        nh_e = dims.nh_e
+        ng_e = dims.ng_e
         nsbx_e = constraints.idxsbx_e.shape[0]
         if nsbx_e > nbx_e:
             raise ValueError(f'inconsistent dimension nsbx_e = {nsbx_e}. Is greater than nbx_e = {nbx_e}.')
@@ -787,10 +800,81 @@ class AcadosOcp:
 
         dims.ns_e = ns_e
 
+    def make_consistent(self, is_mocp_phase=False) -> None:
+        """
+        Detect dimensions, perform sanity checks
+        """
+        dims = self.dims
+        cost = self.cost
+        constraints = self.constraints
+        model = self.model
+        opts = self.solver_options
+
+        model.make_consistent(dims)
+        self.name = model.name
+
+        # check if nx != nx_next
+        if not is_mocp_phase and dims.nx != dims.nx_next and opts.N_horizon > 1:
+            raise ValueError('nx_next should be equal to nx if more than one shooting interval is used.')
+
+        # parameters
+        if self.parameter_values.shape[0] != dims.np:
+            raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \
+                f'\nGot np = {dims.np}, self.parameter_values.shape = {self.parameter_values.shape[0]}\n')
+
+        # p_global_values
+        if self.p_global_values.shape[0] != dims.np_global:
+            raise ValueError('inconsistent dimension np_global, regarding model.p_global and p_global_values.' + \
+                f'\nGot np_global = {dims.np_global}, self.p_global_values.shape = {self.p_global_values.shape[0]}\n')
+
+        ## cost
+        self.make_consistent_cost_initial()
+        self.make_consistent_cost_path()
+        self.make_consistent_cost_terminal()
+
+        # GN check
+        gn_warning_0 = (opts.N_horizon > 0 and cost.cost_type_0 == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess_0))
+        gn_warning_path = (opts.N_horizon > 0 and cost.cost_type == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess))
+        gn_warning_terminal = (cost.cost_type_e == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess_e))
+        if any([gn_warning_0, gn_warning_path, gn_warning_terminal]):
+            external_cost_types = []
+            if gn_warning_0:
+                external_cost_types.append('cost_type_0')
+            if gn_warning_path:
+                external_cost_types.append('cost_type')
+            if gn_warning_terminal:
+                external_cost_types.append('cost_type_e')
+            print("\nWARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not well defined!\n"
+            f"got cost_type EXTERNAL for {', '.join(external_cost_types)}, hessian_approx: 'GAUSS_NEWTON'.\n"
+            "With this setting, acados will proceed computing the exact Hessian for the cost term and no Hessian contribution from constraints and dynamics.\n"
+            "If the external cost is a linear least squares cost, this coincides with the Gauss-Newton Hessian.\n"
+            "Note: There is also the option to use the external cost module with a numerical Hessian approximation (see `ext_cost_num_hess`).\n"
+            "OR the option to provide a symbolic custom Hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n")
+
+        # cost integration
+        if opts.N_horizon > 0:
+            supports_cost_integration = lambda type : type in ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
+            if opts.cost_discretization == 'INTEGRATOR' and \
+                any([not supports_cost_integration(cost) for cost in [cost.cost_type_0, cost.cost_type]]):
+                raise ValueError('cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs.')
+
+        ## constraints
+        self.make_consistent_constraints_initial()
+        self.make_consistent_constraints_path()
+        self.make_consistent_constraints_terminal()
+        
+        self.make_consistent_slacks_path()
+        self.make_consistent_slacks_initial()
+        self.make_consistent_slacks_terminal()
+
         # check for ACADOS_INFTY
         if opts.qp_solver not in ["PARTIAL_CONDENSING_HPIPM", "FULL_CONDENSING_HPIPM", "FULL_CONDENSING_DAQP"]:
             # loop over all bound vectors
-            for field in ['lbx_0', 'ubx_0', 'lbx', 'ubx', 'lbx_e', 'ubx_e', 'lg', 'ug', 'lg_e', 'ug_e', 'lh', 'uh', 'lh_e', 'uh_e', 'lbu', 'ubu', 'lphi', 'uphi', 'lphi_e', 'uphi_e']:
+            if opts.N_horizon > 0:
+                fields_to_check = ['lbx_0', 'ubx_0', 'lbx', 'ubx', 'lbx_e', 'ubx_e', 'lg', 'ug', 'lg_e', 'ug_e', 'lh', 'uh', 'lh_e', 'uh_e', 'lbu', 'ubu', 'lphi', 'uphi', 'lphi_e', 'uphi_e']
+            else:
+                fields_to_check = ['lbx_0', 'ubx_0', 'lbx_e', 'ubx_e', 'lg_e', 'ug_e', 'lh_e', 'uh_e''lphi_e', 'uphi_e']
+            for field in fields_to_check:
                 bound = getattr(constraints, field)
                 if any(bound >= ACADOS_INFTY) or any(bound <= -ACADOS_INFTY):
                     raise ValueError(f"Field {field} contains values outside the interval (-ACADOS_INFTY, ACADOS_INFTY) with ACADOS_INFTY = {ACADOS_INFTY:.2e}. One-sided constraints are not supported by the chosen QP solver {opts.qp_solver}.")
@@ -806,40 +890,44 @@ class AcadosOcp:
         else:
             dims.N = opts.N_horizon
 
-        if not isinstance(opts.tf, (float, int)):
-            raise TypeError(f'Time horizon tf should be float provided, got tf = {opts.tf}.')
+        if opts.N_horizon > 0:
+            if not isinstance(opts.tf, (float, int)):
+                raise TypeError(f'Time horizon tf should be float provided, got tf = {opts.tf}.')
 
-        if is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
-            # uniform discretization
-            opts.time_steps = opts.tf / opts.N_horizon * np.ones((opts.N_horizon,))
-            opts.shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(opts.time_steps)))
+            if is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
+                # uniform discretization
+                opts.time_steps = opts.tf / opts.N_horizon * np.ones((opts.N_horizon,))
+                opts.shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(opts.time_steps)))
 
-        elif not is_empty(opts.shooting_nodes):
-            if np.shape(opts.shooting_nodes)[0] != opts.N_horizon+1:
-                raise ValueError('inconsistent dimension N, regarding shooting_nodes.')
+            elif not is_empty(opts.shooting_nodes):
+                if np.shape(opts.shooting_nodes)[0] != opts.N_horizon+1:
+                    raise ValueError('inconsistent dimension N, regarding shooting_nodes.')
 
-            time_steps = opts.shooting_nodes[1:] - opts.shooting_nodes[0:-1]
-            # identify constant time_steps: due to numerical reasons the content of time_steps might vary a bit
-            avg_time_steps = np.average(time_steps)
-            # criterion for constant time step detection: the min/max difference in values normalized by the average
-            check_const_time_step = (np.max(time_steps)-np.min(time_steps)) / avg_time_steps
-            # if the criterion is small, we have a constant time_step
-            if check_const_time_step < 1e-9:
-                time_steps[:] = avg_time_steps  # if we have a constant time_step: apply the average time_step
+                time_steps = opts.shooting_nodes[1:] - opts.shooting_nodes[0:-1]
+                # identify constant time_steps: due to numerical reasons the content of time_steps might vary a bit
+                avg_time_steps = np.average(time_steps)
+                # criterion for constant time step detection: the min/max difference in values normalized by the average
+                check_const_time_step = (np.max(time_steps)-np.min(time_steps)) / avg_time_steps
+                # if the criterion is small, we have a constant time_step
+                if check_const_time_step < 1e-9:
+                    time_steps[:] = avg_time_steps  # if we have a constant time_step: apply the average time_step
 
-            opts.time_steps = time_steps
+                opts.time_steps = time_steps
 
-        elif not is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
-            # compute shooting nodes from time_steps for convenience
-            opts.shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(opts.time_steps)))
+            elif not is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
+                # compute shooting nodes from time_steps for convenience
+                opts.shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(opts.time_steps)))
 
-        elif (not is_empty(opts.time_steps)) and (not is_empty(opts.shooting_nodes)):
-            ValueError('Please provide either time_steps or shooting_nodes for nonuniform discretization')
+            elif (not is_empty(opts.time_steps)) and (not is_empty(opts.shooting_nodes)):
+                ValueError('Please provide either time_steps or shooting_nodes for nonuniform discretization')
 
-        tf = np.sum(opts.time_steps)
-        if (tf - opts.tf) / tf > 1e-13:
-            raise ValueError(f'Inconsistent discretization: {opts.tf}'
-                f' = tf != sum(opts.time_steps) = {tf}.')
+            tf = np.sum(opts.time_steps)
+            if (tf - opts.tf) / tf > 1e-13:
+                raise ValueError(f'Inconsistent discretization: {opts.tf}'
+                    f' = tf != sum(opts.time_steps) = {tf}.')
+        else:
+            opts.shooting_nodes = np.array([0.])
+            opts.time_steps = np.array([])
 
         # cost scaling
         if opts.cost_scaling is None:
