@@ -65,6 +65,9 @@
 #include "acados/utils/mem.h"
 #include "acados/utils/strsep.h"
 
+// blasfeo
+#include "blasfeo/include/blasfeo_d_blas.h"
+
 
 /************************************************
 * plan
@@ -543,12 +546,17 @@ int ocp_nlp_cost_model_get(ocp_nlp_config *config, ocp_nlp_dims *dims,
 }
 
 int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
-        ocp_nlp_in *in, int stage, const char *field, void *value)
+        ocp_nlp_in *in, ocp_nlp_out *out, int stage, const char *field, void *value)
 {
     ocp_nlp_constraints_config *constr_config = config->constraints[stage];
 
-    return constr_config->model_set(constr_config, dims->constraints[stage],
+    // this updates both the bounds and the mask
+    int status = constr_config->model_set(constr_config, dims->constraints[stage],
             in->constraints[stage], field, value);
+    // multiply lam with new mask to ensure that multipliers associated with masked constraints are zero.
+    blasfeo_dvecmul(2*dims->ni[stage], &in->dmask[stage], 0, &out->lam[stage], 0, &out->lam[stage], 0);
+
+    return status;
 }
 
 
@@ -644,7 +652,7 @@ void ocp_nlp_out_destroy(void *out_)
 
 
 
-void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
+void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out, ocp_nlp_in *in,
         int stage, const char *field, void *value)
 {
     double *double_values = value;
@@ -673,6 +681,8 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
     else if (!strcmp(field, "lam"))
     {
         blasfeo_pack_dvec(2*dims->ni[stage], double_values, 1, &out->lam[stage], 0);
+        // multiply with mask to ensure that multiplier associated with masked constraints are zero
+        blasfeo_dvecmul(2*dims->ni[stage], &in->dmask[stage], 0, &out->lam[stage], 0, &out->lam[stage], 0);
     }
     else if (!strcmp(field, "z"))
     {
@@ -1849,6 +1859,8 @@ void ocp_nlp_set_all(ocp_nlp_solver *solver, ocp_nlp_in *in, ocp_nlp_out *out, c
         {
             tmp_int = 2*dims->ni[stage];
             blasfeo_pack_dvec(tmp_int, double_values + tmp_offset, 1, &out->lam[stage], 0);
+            // multiply with mask to ensure that multiplier associated with masked constraints are zero
+            blasfeo_dvecmul(2*dims->ni[stage], &in->dmask[stage], 0, &out->lam[stage], 0, &out->lam[stage], 0);
             tmp_offset += tmp_int;
         }
     }

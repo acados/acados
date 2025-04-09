@@ -503,30 +503,30 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
             assert np.allclose(sens_adj, out_dict['sens_u'])
 
     timings_common = {
-        "NLP solve": timings_solve_ocp_solver * 1e3,
+        "NLP solve (S1)": timings_solve_ocp_solver * 1e3,
         "store \& load iterates": timings_store_load * 1e3,
         "parameter update": timings_parameter_update * 1e3,
-        "setup exact Lagrange Hessian": timings_lin_exact_hessian_qp * 1e3,
-        "factorize exact Lagrange Hessian": timings_lin_and_factorize * 1e3,
-        r"evaluate $J$": timings_lin_params * 1e3,
+        "setup exact Lagrange Hessian (S2)": timings_lin_exact_hessian_qp * 1e3,
+        "factorize exact Lagrange Hessian (S3)": timings_lin_and_factorize * 1e3,
+        r"evaluate $J_\star$ (S4)": timings_lin_params * 1e3,
     }
     timing_results_forward = timings_common.copy()
     timing_results_adjoint = timings_common.copy()
     timing_results_adj_uforw = timings_common.copy()
     timing_results_adj_all_primals = timings_common.copy()
 
-    backsolve_label = "sensitivity solve given factorization"
+    backsolve_label = "sensitivity solve given factorization (S5)"
     timing_results_forward[backsolve_label] = timings_solve_params * 1e3
     timing_results_adjoint[backsolve_label] = timings_solve_params_adj * 1e3
 
     timings_list = [timing_results_forward, timing_results_adjoint]
-    labels = ['forward', 'adjoint']
+    labels = [r'$\frac{\partial w^\star}{\partial \theta}$ via forward', r'$\nu^\top \frac{\partial w^\star}{\partial \theta}$ via adjoint']
 
     if with_more_adjoints:
         timing_results_adj_uforw[backsolve_label] = timings_solve_params_adj_uforw * 1e3
         timing_results_adj_all_primals[backsolve_label] = timings_solve_params_adj_all_primals * 1e3
         timings_list += [timing_results_adj_uforw, timing_results_adj_all_primals]
-        labels += [r'$\frac{\partial u_0}{\partial \theta}$ via adjoints', r'$\frac{\partial z}{\partial \theta} $ via adjoints']
+        labels += [r'$\frac{\partial u_0^\star}{\partial \theta}$ via adjoints', r'$\frac{\partial z^\star}{\partial \theta} $ via adjoints']
 
 
     print_timings(timing_results_forward, metric="median")
@@ -543,6 +543,7 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
     u_opt_reconstructed_acados = np.cumsum(sens_u, axis=0) * delta_p + u_opt[0, :]
     u_opt_reconstructed_acados += u_opt[0, :] - u_opt_reconstructed_acados[0, :]
 
+    # TODO move to plot utils
     plt.figure(figsize=(7, 7))
     for col in range(3):
         plt.subplot(4, 1, col + 1)
@@ -569,7 +570,7 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
     plt.tight_layout()
     plt.savefig("chain_adj_fwd_sens.pdf")
 
-    plot_timings(timings_list, labels, figure_filename="timing_adj_fwd_sens_chain.pdf", t_max=10)
+    plot_timings(timings_list, labels, figure_filename="timing_adj_fwd_sens_chain.png", t_max=10, horizontal=True, figsize=(12, 3), with_patterns=True)
 
     plt.show()
 

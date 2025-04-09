@@ -36,6 +36,7 @@
 // blasfeo
 #include "blasfeo_d_aux.h"
 #include "blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_blas.h"
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/dense_qp/dense_qp_qore.h"
@@ -537,12 +538,8 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
             qp_out->lam->pa[2*nb + 2*ng + ns + ii] = dual_sol[nv + ns + ii] - offset_l;
     }
 
-    info->interface_time += acados_toc(&interface_timer);
-    info->total_time = acados_toc(&tot_timer);
-    info->num_iter = num_iter;
-
-    mem->time_qp_solver_call = info->solve_QP_time;
-    mem->iter = num_iter;
+    // multiply with mask to ensure that multipliers associated with masked constraints are zero
+    blasfeo_dvecmul(2*(qp_in->dim->nb + qp_in->dim->ng + qp_in->dim->ns), qp_in->d_mask, 0, qp_out->lam, 0, qp_out->lam, 0);
 
     // compute slacks
     if (opts->compute_t)
@@ -550,6 +547,13 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
         dense_qp_compute_t(qp_in, qp_out);
         info->t_computed = 1;
     }
+
+    info->interface_time += acados_toc(&interface_timer);
+    info->total_time = acados_toc(&tot_timer);
+    info->num_iter = num_iter;
+
+    mem->time_qp_solver_call = info->solve_QP_time;
+    mem->iter = num_iter;
 
     int acados_status = qore_status;
     if (qore_status == QPSOLVER_DENSE_OPTIMAL) acados_status = ACADOS_SUCCESS;

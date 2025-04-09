@@ -77,6 +77,11 @@ if(ACADOS_OCTAVE)
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/simple_dae_model
         octave --no-gui --no-window-system ./example_ocp.m)
 
+    # AS-RTI closed loop example
+    add_test(NAME octave_closed_loop_as_rti_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/pendulum_on_cart_model
+        octave --no-gui --no-window-system ./closed_loop_as_rti.m)
+
     add_test(NAME octave_test_mhe_lorentz
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/lorentz
         octave --no-gui --no-window-system ./example_mhe.m)
