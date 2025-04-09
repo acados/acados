@@ -1125,11 +1125,13 @@ class AcadosOcp:
     def _get_external_function_header_templates(self, ) -> list:
         dims = self.dims
         name = self.model.name
+        opts = self.solver_options
         template_list = []
 
         # dynamics
-        model_dir = os.path.join(self.code_export_directory, f'{name}_model')
-        template_list.append(('model.in.h', f'{name}_model.h', model_dir))
+        if opts.N_horizon > 0:
+            model_dir = os.path.join(self.code_export_directory, f'{name}_model')
+            template_list.append(('model.in.h', f'{name}_model.h', model_dir))
         # constraints
         if any(np.array([dims.nh, dims.nh_e, dims.nh_0, dims.nphi, dims.nphi_e, dims.nphi_0]) > 0):
             constraints_dir = os.path.join(self.code_export_directory, f'{name}_constraints')
@@ -1150,6 +1152,7 @@ class AcadosOcp:
         (input_filename, output_filname, output_directory)
         """
         name = self.model.name
+        opts = self.solver_options
         template_list = []
 
         template_list.append(('main.in.c', f'main_{name}.c'))
@@ -1162,7 +1165,7 @@ class AcadosOcp:
             template_list.append(('Makefile.in', 'Makefile'))
 
         # sim
-        if self.solver_options.integrator_type != 'DISCRETE':
+        if opts.N_horizon > 0 and self.solver_options.integrator_type != 'DISCRETE':
             template_list.append(('acados_sim_solver.in.c', f'acados_sim_solver_{name}.c'))
             template_list.append(('acados_sim_solver.in.h', f'acados_sim_solver_{name}.h'))
             template_list.append(('main_sim.in.c', f'main_sim_{name}.c'))
