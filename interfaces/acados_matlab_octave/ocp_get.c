@@ -514,6 +514,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 mat_ptr[ii+(jj+1)*min_size] = stat[jj+ii*stat_n];
         }
     }
+    else if (!strcmp(field, "primal_step_norm") || !strcmp(field, "dual_step_norm"))
+    {
+        int nlp_iter;
+        ocp_nlp_get(solver, "nlp_iter", &nlp_iter);
+        plhs[0] = mxCreateNumericMatrix(nlp_iter, 1, mxDOUBLE_CLASS, mxREAL);
+        double *mat_ptr = mxGetPr( plhs[0] );
+        ocp_nlp_get(solver, field, mat_ptr);
+    }
     else if (!strcmp(field, "residuals"))
     {
         if (plan->nlp_solver == SQP_RTI)
