@@ -60,7 +60,6 @@ typedef struct
     double tol_comp;
     double tol_unbounded; // exit threshold when objective function seems to be unbounded
     double tol_min_step_norm; // exit tolerance for small step
-    int max_iter;
     bool log_pi_norm_inf; // compute and log the max norm of the pi multipliers
     bool log_lam_norm_inf; // compute and log the max norm of the lam multipliers
     bool warm_start_first_qp;
