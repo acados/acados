@@ -1686,7 +1686,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
         if (nlp_opts->log_dual_step_norm)
         {
-            nlp_mem->dual_step_norm[sqp_iter] = ocp_nlp_compute_delta_dual_norm(dims, nlp_work, nlp_out, nominal_qp_out);
+            nlp_mem->dual_step_norm[sqp_iter] = ocp_nlp_compute_delta_dual_norm_inf(dims, nlp_work, nlp_out, nominal_qp_out);
         }
 
         /* globalization */
