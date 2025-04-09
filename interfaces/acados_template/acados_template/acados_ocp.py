@@ -1020,7 +1020,7 @@ class AcadosOcp:
                 raise ValueError('with_solution_sens_wrt_params is only compatible if global parameters `p_global` are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got emty p_global.')
             if any([cost_type not in ["EXTERNAL", "LINEAR_LS"] for cost_type in cost_types_to_check]):
                 raise ValueError('with_solution_sens_wrt_params is only compatible with EXTERNAL and LINEAR_LS cost_type' + suffix)
-            if opts.integrator_type != "DISCRETE":
+            if opts.N_horizon > 0 and opts.integrator_type != "DISCRETE":
                 raise NotImplementedError('with_solution_sens_wrt_params is only compatible with DISCRETE dynamics.')
             for horizon_type, constraint in bgp_type_constraint_pairs:
                 if constraint is not None and any(ca.which_depends(constraint, model.p_global)):
@@ -1031,7 +1031,7 @@ class AcadosOcp:
                 raise ValueError('with_value_sens_wrt_params is only compatible if global parameters `p_global` are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got emty p_global.')
             if any([cost_type not in ["EXTERNAL", "LINEAR_LS"] for cost_type in cost_types_to_check]):
                 raise ValueError('with_value_sens_wrt_params is only compatible with EXTERNAL cost_type' + suffix)
-            if opts.integrator_type != "DISCRETE":
+            if opts.N_horizon > 0 and opts.integrator_type != "DISCRETE":
                 raise NotImplementedError('with_value_sens_wrt_params is only compatible with DISCRETE dynamics.')
             for horizon_type, constraint in bgp_type_constraint_pairs:
                 if constraint is not None and any(ca.which_depends(constraint, model.p_global)):
