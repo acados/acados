@@ -49,7 +49,7 @@ def export_parametric_ocp() -> AcadosOcp:
     ocp.constraints.ubx_e = np.array([1.0])
     ocp.constraints.idxbx_e = np.array([0])
 
-    ocp.cost.cost_type = "EXTERNAL"
+    ocp.cost.cost_type_e = "EXTERNAL"
     ocp.solver_options.qp_solver = "FULL_CONDENSING_HPIPM"
     ocp.solver_options.hessian_approx = "EXACT"
     ocp.solver_options.N_horizon = 0
@@ -102,6 +102,8 @@ def main():
     sol_list = []
     tau = 1e-6
     solution, sens_x = solve_and_compute_sens(p_test, tau)
+    print(solution)
+    print(sens_x)
 
     # Compare to numerical gradients
     sens_x_fd = np.gradient(solution, delta_p)
