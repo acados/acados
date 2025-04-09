@@ -459,7 +459,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     ext_fun_opts.external_workspace = true;
 
 {%- if solver_options.N_horizon > 0 %}
-{%- if constraints.constr_type_0 == "BGH" and dims.nh_0 > 0 and opts.%}
+{%- if constraints.constr_type_0 == "BGH" and dims.nh_0 > 0 %}
     MAP_CASADI_FNC(nl_constr_h_0_fun_jac, {{ model.name }}_constr_h_0_fun_jac_uxt_zt);
     MAP_CASADI_FNC(nl_constr_h_0_fun, {{ model.name }}_constr_h_0_fun);
 
