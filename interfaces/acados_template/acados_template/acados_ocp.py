@@ -1038,26 +1038,27 @@ class AcadosOcp:
                     raise NotImplementedError(f"with_value_sens_wrt_params is not supported for BGP constraints that depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
 
 
-        if opts.tau_min > 0 and not "HPIPM" in opts.qp_solver:
+        if opts.tau_min > 0 and "HPIPM" not in opts.qp_solver:
             raise ValueError('tau_min > 0 is only compatible with HPIPM.')
 
-        if opts.N_horizon > 0:
-            if opts.qp_solver_cond_N is None:
-                opts.qp_solver_cond_N = opts.N_horizon
+        if opts.qp_solver_cond_N is None:
+            opts.qp_solver_cond_N = opts.N_horizon
 
-            if opts.qp_solver_cond_block_size is not None:
-                if sum(opts.qp_solver_cond_block_size) != opts.N_horizon:
-                    raise ValueError(f'sum(qp_solver_cond_block_size) = {sum(opts.qp_solver_cond_block_size)} != N = {opts.N_horizon}.')
-                if len(opts.qp_solver_cond_block_size) != opts.qp_solver_cond_N+1:
-                    raise ValueError(f'qp_solver_cond_block_size = {opts.qp_solver_cond_block_size} should have length qp_solver_cond_N+1 = {opts.qp_solver_cond_N+1}.')
+        if opts.qp_solver_cond_block_size is not None:
+            if sum(opts.qp_solver_cond_block_size) != opts.N_horizon:
+                raise ValueError(f'sum(qp_solver_cond_block_size) = {sum(opts.qp_solver_cond_block_size)} != N = {opts.N_horizon}.')
+            if len(opts.qp_solver_cond_block_size) != opts.qp_solver_cond_N+1:
+                raise ValueError(f'qp_solver_cond_block_size = {opts.qp_solver_cond_block_size} should have length qp_solver_cond_N+1 = {opts.qp_solver_cond_N+1}.')
 
-            if opts.nlp_solver_type == "DDP":
-                if opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon:
-                    raise ValueError(f'DDP solver only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N, got qp solver {opts.qp_solver} and qp_solver_cond_N {opts.qp_solver_cond_N}, N {opts.N_horizon}.')
-                if any([dims.nbu, dims.nbx, dims.ng, dims.nh, dims.nphi]):
-                    raise ValueError(f'DDP only supports initial state constraints, got path constraints. Dimensions: dims.nbu = {dims.nbu}, dims.nbx = {dims.nbx}, dims.ng = {dims.ng}, dims.nh = {dims.nh}, dims.nphi = {dims.nphi}')
-                if any([dims.ng_e, dims.nphi_e, dims.nh_e]):
-                    raise ValueError('DDP only supports initial state constraints, got terminal constraints.')
+        if opts.nlp_solver_type == "DDP":
+            if opts.N_horizon == 0:
+                raise ValueError("DDP solver only supported for N_horizon > 0.")
+            if opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon:
+                raise ValueError(f'DDP solver only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N, got qp solver {opts.qp_solver} and qp_solver_cond_N {opts.qp_solver_cond_N}, N {opts.N_horizon}.')
+            if any([dims.nbu, dims.nbx, dims.ng, dims.nh, dims.nphi]):
+                raise ValueError(f'DDP only supports initial state constraints, got path constraints. Dimensions: dims.nbu = {dims.nbu}, dims.nbx = {dims.nbx}, dims.ng = {dims.ng}, dims.nh = {dims.nh}, dims.nphi = {dims.nphi}')
+            if any([dims.ng_e, dims.nphi_e, dims.nh_e]):
+                raise ValueError('DDP only supports initial state constraints, got terminal constraints.')
 
         ddp_with_merit_or_funnel = opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' or (opts.nlp_solver_type == "DDP" and opts.globalization == 'MERIT_BACKTRACKING')
         # Set default parameters for globalization
@@ -1092,7 +1093,7 @@ class AcadosOcp:
                 opts.globalization_full_step_dual = 0
 
         # AS-RTI
-        if opts.as_rti_level in [1, 2] and any([cost.cost_type.endswith('LINEAR_LS'), cost.cost_type_0.endswith('LINEAR_LS'), cost.cost_type_e.endswith('LINEAR_LS')]):
+        if opts.as_rti_level in [1, 2] and any([cost_type.endswith("LINEAR_LS") for cost_type in cost_types_to_check]):
             raise NotImplementedError('as_rti_level in [1, 2] not supported for LINEAR_LS and NONLINEAR_LS cost type.')
 
         # sanity check for Funnel globalization and SQP
@@ -1100,7 +1101,7 @@ class AcadosOcp:
             raise NotImplementedError('FUNNEL_L1PEN_LINESEARCH only supports SQP.')
 
         # termination
-        if opts.nlp_solver_tol_min_step_norm == None:
+        if opts.nlp_solver_tol_min_step_norm is None:
             if ddp_with_merit_or_funnel:
                 opts.nlp_solver_tol_min_step_norm = 1e-12
             else:
@@ -1108,6 +1109,8 @@ class AcadosOcp:
 
         # zoRO
         if self.zoro_description is not None:
+            if opts.N_horizon == 0:
+                raise ValueError('zoRO only supported for N_horizon > 0.')
             if not isinstance(self.zoro_description, ZoroDescription):
                 raise TypeError('zoro_description should be of type ZoroDescription or None')
             else:
