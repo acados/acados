@@ -62,7 +62,6 @@ typedef struct
     double tol_comp;     // exit tolerance on complementarity condition
     double tol_unbounded; // exit threshold when objective function seems to be unbounded
     double tol_min_step_norm; // exit tolerance for small step
-    int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
     int log_primal_step_norm; // compute and log the max norm of the primal steps
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
     bool warm_start_first_qp_from_nlp;  // if True first QP will be initialized using values from NLP iterate, otherwise from previous QP solution.

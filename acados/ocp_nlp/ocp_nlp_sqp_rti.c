@@ -113,7 +113,6 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_,
     ocp_nlp_opts_initialize_default(config, dims, nlp_opts);
 
     // SQP RTI opts
-    opts->ext_qp_res = 0;
     opts->warm_start_first_qp = false;
     opts->warm_start_first_qp_from_nlp = true;
     opts->rti_phase = 0;
@@ -161,12 +160,7 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_,
     }
     else // nlp opts
     {
-        if (!strcmp(field, "ext_qp_res"))
-        {
-            int* ext_qp_res = (int *) value;
-            opts->ext_qp_res = *ext_qp_res;
-        }
-        else if (!strcmp(field, "warm_start_first_qp"))
+        if (!strcmp(field, "warm_start_first_qp"))
         {
             bool* warm_start_first_qp = (bool *) value;
             opts->warm_start_first_qp = *warm_start_first_qp;
@@ -256,7 +250,7 @@ acados_size_t ocp_nlp_sqp_rti_memory_calculate_size(void *config_,
     int stat_n = 2; // qp_status, qp_iter
     if (opts->rti_log_residuals)
         stat_n += 4;  // nlp_res
-    if (opts->ext_qp_res)
+    if (nlp_opts->ext_qp_res)
         stat_n += 4;  // qp_res
     size += stat_n*stat_m*sizeof(double);
 
@@ -296,7 +290,7 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_,
     mem->stat_n = 2; // qp_status, qp_iter
     if (opts->rti_log_residuals)
         mem->stat_n += 4;  // nlp_res
-    if (opts->ext_qp_res)
+    if (nlp_opts->ext_qp_res)
         mem->stat_n += 4;  // qp_res
     c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
 
@@ -382,9 +376,10 @@ static void rti_store_residuals_in_stats(ocp_nlp_sqp_rti_opts *opts, ocp_nlp_sqp
 {
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
     ocp_nlp_res *nlp_res = nlp_mem->nlp_res;
+    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
     if (nlp_mem->iter < mem->stat_m)
     {
-        int m_offset = 2 + 4 * opts->ext_qp_res;
+        int m_offset = 2 + 4 * nlp_opts->ext_qp_res;
         // printf("storing residuals AS RTI, m_offset %d\n", m_offset);
         // printf("%e\t%e\t%e\t%e\n", nlp_res->inf_norm_res_stat, nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_comp);
         mem->stat[mem->stat_n * nlp_mem->iter+0+m_offset] = nlp_res->inf_norm_res_stat;
@@ -604,7 +599,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     }
 
     // compute external QP residuals (for debugging)
-    if (opts->ext_qp_res)
+    if (nlp_opts->ext_qp_res)
     {
         ocp_qp_res_compute(nlp_mem->qp_in, nlp_mem->qp_out, work->qp_res, work->qp_res_ws);
         ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*1+2));
