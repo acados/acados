@@ -125,6 +125,7 @@ class AcadosOcpOptions:
         self.__adaptive_levenberg_marquardt_mu_min = 1e-16
         self.__adaptive_levenberg_marquardt_mu0 = 1e-3
         self.__log_primal_step_norm: bool = False
+        self.__log_dual_step_norm: bool = False
         self.__store_iterates: bool = False
         self.__timeout_max_time = 0.
         self.__timeout_heuristic = 'LAST'
@@ -647,16 +648,25 @@ class AcadosOcpOptions:
         return self.__adaptive_levenberg_marquardt_mu0
 
     @property
-    def log_primal_step_norm(self,):
+    def log_primal_step_norm(self):
         """
         Flag indicating whether the max norm of the primal steps should be logged.
-        This is implemented only for solver type `SQP`.
+        This is implemented only for solver types `SQP`, `SQP_WITH_FEASIBLE_QP`.
         Default: False
         """
         return self.__log_primal_step_norm
 
     @property
-    def store_iterates(self,):
+    def log_dual_step_norm(self):
+        """
+        Flag indicating whether the max norm of the dual steps should be logged.
+        This is implemented only for solver types `SQP`, `SQP_WITH_FEASIBLE_QP`.
+        Default: False
+        """
+        return self.__log_dual_step_norm
+
+    @property
+    def store_iterates(self):
         """
         Flag indicating whether the intermediate primal-dual iterates should be stored.
         This is implemented only for solver types `SQP` and `DDP`.
@@ -665,7 +675,7 @@ class AcadosOcpOptions:
         return self.__store_iterates
 
     @property
-    def timeout_max_time(self,):
+    def timeout_max_time(self):
         """
         Maximum time before solver timeout. If 0, there is no timeout.
         A timeout is triggered if the condition
@@ -678,7 +688,7 @@ class AcadosOcpOptions:
         return self.__timeout_max_time
 
     @property
-    def timeout_heuristic(self,):
+    def timeout_heuristic(self):
         """
         Heuristic to be used for predicting the runtime of the next SQP iteration, cf. `timeout_max_time`.
         Possible values are "MAX_CALL", "MAX_OVERALL", "LAST", "AVERAGE", "ZERO".
@@ -1728,10 +1738,15 @@ class AcadosOcpOptions:
 
     @log_primal_step_norm.setter
     def log_primal_step_norm(self, val):
-        if isinstance(val, bool):
-            self.__log_primal_step_norm = val
-        else:
+        if not isinstance(val, bool):
             raise TypeError('Invalid log_primal_step_norm value. Expected bool.')
+        self.__log_primal_step_norm = val
+
+    @log_dual_step_norm.setter
+    def log_dual_step_norm(self, val):
+        if not isinstance(val, bool):
+            raise TypeError('Invalid log_dual_step_norm value. Expected bool.')
+        self.__log_dual_step_norm = val
 
     @store_iterates.setter
     def store_iterates(self, val):

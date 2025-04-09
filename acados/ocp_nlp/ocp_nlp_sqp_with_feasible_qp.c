@@ -316,11 +316,6 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
     size += ocp_qp_in_calculate_size(dims->relaxed_qp_solver->orig_dims);
     size += ocp_qp_out_calculate_size(dims->relaxed_qp_solver->orig_dims);
 
-    // primal step norm
-    if (opts->nlp_opts->log_primal_step_norm)
-    {
-        size += opts->nlp_opts->max_iter*sizeof(double);
-    }
     // stat
     int stat_m = opts->nlp_opts->max_iter+1;
     int stat_n = 13;
@@ -433,13 +428,6 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     assign_and_advance_blasfeo_dmat_structs(N + 1, &mem->RSQ_cost, &c_ptr);
     // RSQ_constr
     assign_and_advance_blasfeo_dmat_structs(N + 1, &mem->RSQ_constr, &c_ptr);
-
-    // primal step norm
-    if (opts->nlp_opts->log_primal_step_norm)
-    {
-        mem->primal_step_norm = (double *) c_ptr;
-        c_ptr += opts->nlp_opts->max_iter*sizeof(double);
-    }
 
     // stat
     mem->stat_m = opts->nlp_opts->max_iter+1;
@@ -1693,7 +1681,11 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             mem->step_norm = ocp_qp_out_compute_primal_nrm_inf(nominal_qp_out);
             if (nlp_opts->log_primal_step_norm)
-                mem->primal_step_norm[sqp_iter] = mem->step_norm;
+                nlp_mem->primal_step_norm[sqp_iter] = mem->step_norm;
+        }
+        if (nlp_opts->log_dual_step_norm)
+        {
+            nlp_mem->dual_step_norm[sqp_iter] = ocp_nlp_compute_delta_dual_norm_inf(dims, nlp_work, nlp_out, nominal_qp_out);
         }
 
         /* globalization */
@@ -1961,7 +1953,7 @@ void ocp_nlp_sqp_wfqp_get(void *config_, void *dims_, void *mem_, const char *fi
     ocp_nlp_config *config = config_;
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_sqp_wfqp_memory *mem = mem_;
-
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
     char module[MAX_STR_LEN];
     char *ptr_module = NULL;
@@ -1981,32 +1973,16 @@ void ocp_nlp_sqp_wfqp_get(void *config_, void *dims_, void *mem_, const char *fi
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "time")) )
     {
         // call timings getter
-        ocp_nlp_timings_get(config, mem->nlp_mem->nlp_timings, field, return_value_);
+        ocp_nlp_timings_get(config, nlp_mem->nlp_timings, field, return_value_);
     }
     else if (!strcmp("stat", field))
     {
         double **value = return_value_;
         *value = mem->stat;
     }
-    else if (!strcmp("primal_step_norm", field))
-    {
-        if (mem->primal_step_norm == NULL)
-        {
-            printf("\nerror: options log_primal_step_norm was not set\n");
-            exit(1);
-        }
-        else
-        {
-            double *value = return_value_;
-            for (int ii=0; ii<mem->nlp_mem->iter; ii++)
-            {
-                value[ii] = mem->primal_step_norm[ii];
-            }
-        }
-    }
     else if (!strcmp("statistics", field))
     {
-        int n_row = mem->stat_m<mem->nlp_mem->iter+1 ? mem->stat_m : mem->nlp_mem->iter+1;
+        int n_row = mem->stat_m<nlp_mem->iter+1 ? mem->stat_m : nlp_mem->iter+1;
         double *value = return_value_;
         for (int ii=0; ii<n_row; ii++)
         {
@@ -2037,7 +2013,7 @@ void ocp_nlp_sqp_wfqp_get(void *config_, void *dims_, void *mem_, const char *fi
     }
     else
     {
-        ocp_nlp_memory_get(config, mem->nlp_mem, field, return_value_);
+        ocp_nlp_memory_get(config, nlp_mem, field, return_value_);
     }
 }
 
