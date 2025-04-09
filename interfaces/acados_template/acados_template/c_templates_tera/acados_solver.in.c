@@ -279,7 +279,9 @@ static ocp_nlp_dims* {{ model.name }}_acados_create_setup_dimensions({{ model.na
     nbx[0] = NBX0;
     nsbx[0] = 0;
     ns[0] = NS0;
+    {% if solver_options.N_horizon > 0 %}
     nbxe[0] = {{ dims.nbxe_0 }};
+    {% endif %}
     ny[0] = NY0;
     nh[0] = NH0;
     nsh[0] = NSH0;
