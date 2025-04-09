@@ -1631,6 +1631,11 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
     size += sizeof(struct ocp_nlp_timings);
 
     size += (N+1)*sizeof(bool); // set_sim_guess
+    // primal step norm
+    if (opts->log_primal_step_norm)
+    {
+        size += opts->max_iter*sizeof(double);
+    }
 
     size += (N+1)*sizeof(struct blasfeo_dmat); // dzduxt
     size += 6*(N+1)*sizeof(struct blasfeo_dvec);  // cost_grad ineq_fun ineq_adj dyn_adj sim_guess z_alg
@@ -1815,6 +1820,13 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->dyn_adj, &c_ptr);
     // sim_guess
     assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->sim_guess, &c_ptr);
+
+    // primal step norm
+    if (opts->log_primal_step_norm)
+    {
+        mem->primal_step_norm = (double *) c_ptr;
+        c_ptr += opts->max_iter*sizeof(double);
+    }
 
     // set_sim_guess
     assign_and_advance_bool(N+1, &mem->set_sim_guess, &c_ptr);
@@ -4084,6 +4096,22 @@ void ocp_nlp_memory_get(ocp_nlp_config *config, ocp_nlp_memory *nlp_mem, const c
     {
         double *value = return_value_;
         *value = nlp_mem->cost_value;
+    }
+    else if (!strcmp("primal_step_norm", field))
+    {
+        if (nlp_mem->primal_step_norm == NULL)
+        {
+            printf("\nerror: options log_primal_step_norm was not set\n");
+            exit(1);
+        }
+        else
+        {
+            double *value = return_value_;
+            for (int ii=0; ii<nlp_mem->iter; ii++)
+            {
+                value[ii] = nlp_mem->primal_step_norm[ii];
+            }
+        }
     }
     else
     {

@@ -446,6 +446,8 @@ typedef struct ocp_nlp_memory
     double adaptive_levenberg_marquardt_mu_bar;
 
     bool *set_sim_guess; // indicate if there is new explicitly provided guess for integration variables
+    double *primal_step_norm;
+
     struct blasfeo_dvec *sim_guess;
     acados_size_t workspace_size;
 
