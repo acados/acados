@@ -2291,11 +2291,19 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "reg_adaptive_eps", &reg_adaptive_eps);
 {%- endif %}
 
+    int nlp_solver_ext_qp_res = {{ solver_options.nlp_solver_ext_qp_res }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "ext_qp_res", &nlp_solver_ext_qp_res);
+
     bool store_iterates = {{ solver_options.store_iterates }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "store_iterates", &store_iterates);
 
-    int nlp_solver_ext_qp_res = {{ solver_options.nlp_solver_ext_qp_res }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "ext_qp_res", &nlp_solver_ext_qp_res);
+{%- if solver_options.nlp_solver_type == "SQP" or solver_options.nlp_solver_type == "SQP_WITH_FEASIBLE_QP" %}
+    int log_primal_step_norm = {{ solver_options.log_primal_step_norm }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "log_primal_step_norm", &log_primal_step_norm);
+
+    double nlp_solver_tol_min_step_norm = {{ solver_options.nlp_solver_tol_min_step_norm }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_min_step_norm", &nlp_solver_tol_min_step_norm);
+{%- endif %}
 
 {%- if solver_options.qp_solver is containing("HPIPM") %}
     // set HPIPM mode: should be done before setting other QP solver options

@@ -2408,7 +2408,7 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     bool store_iterates = {{ solver_options.store_iterates }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "store_iterates", &store_iterates);
 
-{%- if solver_options.nlp_solver_type == "SQP" %}
+{%- if solver_options.nlp_solver_type == "SQP" or solver_options.nlp_solver_type == "SQP_WITH_FEASIBLE_QP" %}
     int log_primal_step_norm = {{ solver_options.log_primal_step_norm }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "log_primal_step_norm", &log_primal_step_norm);
 

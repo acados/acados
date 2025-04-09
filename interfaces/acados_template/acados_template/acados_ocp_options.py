@@ -650,7 +650,7 @@ class AcadosOcpOptions:
     def log_primal_step_norm(self,):
         """
         Flag indicating whether the max norm of the primal steps should be logged.
-        This is implemented only for solver type `SQP`.
+        This is implemented only for solver types `SQP`, `SQP_WITH_FEASIBLE_QP`.
         Default: False
         """
         return self.__log_primal_step_norm
