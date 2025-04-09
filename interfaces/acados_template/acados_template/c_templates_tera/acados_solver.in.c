@@ -41,7 +41,9 @@
 #include <omp.h>
 
 // example specific
+{% if solver_options.N_horizon > 0 %}
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
+{%- endif %}
 
 {% if dims.n_global_data > 0 %}
 #include "{{ name }}_p_global_precompute_fun.h"
@@ -183,9 +185,11 @@ void {{ model.name }}_acados_create_set_plan(ocp_nlp_plan_t* nlp_solver_plan, co
     nlp_solver_plan->ocp_qp_solver_plan.qp_solver = {{ solver_options.qp_solver }};
     nlp_solver_plan->relaxed_ocp_qp_solver_plan.qp_solver = {{ solver_options.qp_solver }};
 
+    {%- if solver_options.N_horizon > 0 %}
     nlp_solver_plan->nlp_cost[0] = {{ cost.cost_type_0 }};
     for (int i = 1; i < N; i++)
         nlp_solver_plan->nlp_cost[i] = {{ cost.cost_type }};
+    {%- endif %}
 
     nlp_solver_plan->nlp_cost[N] = {{ cost.cost_type_e }};
 
@@ -960,6 +964,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
                 {%- break %}
             {%- endif %}
         {%- endfor %}
+    {%- endif %}
 
     if (new_time_steps)
     {
@@ -969,6 +974,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     else
     {
         // set time_steps
+    {%- if solver_options.N_horizon > 0 %}
     {% if all_equal == true -%}{# all time_steps are identical #}
         double time_step = {{ solver_options.time_steps[0] }};
         for (int i = 0; i < N; i++)
