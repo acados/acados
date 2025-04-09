@@ -2586,7 +2586,7 @@ void {{ model.name }}_acados_set_nlp_out({{ model.name }}_solver_capsule* capsul
     // initialize primal solution
     double* xu0 = calloc(NX+NU, sizeof(double));
     double* x0 = xu0;
-{% if dims.nbx_0 == dims.nx %}
+{% if dims.nbx_0 == dims.nx and solver_options.N_horizon > 0 %}
     // initialize with x0
     {%- for item in constraints.lbx_0 %}
         {%- if item != 0 %}
@@ -3015,6 +3015,7 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
 
     /* free external function */
     // dynamics
+{%- if solver_options.N_horizon > 0 %}
 {%- if solver_options.integrator_type == "IRK" %}
     for (int i = 0; i < N; i++)
     {
@@ -3175,6 +3176,7 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     free(capsule->ext_cost_grad_p);
   {%- endif %}
 {%- endif %}
+{%- endif %}{# if solver_options.N_horizon > 0 #}
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
     external_function_external_param_casadi_free(&capsule->cost_y_e_fun);
     external_function_external_param_casadi_free(&capsule->cost_y_e_fun_jac_ut_xt);
@@ -3197,6 +3199,7 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
 {%- endif %}
 
     // constraints
+{%- if solver_options.N_horizon > 0 %}
 {%- if constraints.constr_type == "BGH" and dims.nh > 0 %}
     for (int i = 0; i < N-1; i++)
     {
@@ -3244,6 +3247,7 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     external_function_external_param_casadi_free(&capsule->phi_0_constraint_fun);
     external_function_external_param_casadi_free(&capsule->phi_0_constraint_fun_jac_hess);
 {%- endif %}
+{%- endif %}{# if solver_options.N_horizon > 0 #}
 
 {%- if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
     external_function_external_param_casadi_free(&capsule->nl_constr_h_e_fun_jac);
