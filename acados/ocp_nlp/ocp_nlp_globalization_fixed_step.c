@@ -157,8 +157,8 @@ void *ocp_nlp_globalization_fixed_step_memory_assign(void *config_, void *dims_,
  ************************************************/
 int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_, double *step_size)
 {
-    ocp_nlp_config *nlp_config = nlp_config_;
-    ocp_nlp_dims *nlp_dims = nlp_dims_;
+    ocp_nlp_config *config = nlp_config_;
+    ocp_nlp_dims *dims = nlp_dims_;
     ocp_nlp_in *nlp_in = nlp_in_;
     ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_memory *nlp_mem = nlp_mem_;
@@ -166,16 +166,19 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
     ocp_nlp_opts *nlp_opts = nlp_opts_;
     ocp_nlp_globalization_fixed_step_opts *opts = nlp_opts->globalization;
 
+    ocp_qp_out *qp_out = nlp_mem->qp_out;
+    double alpha = opts->step_length;
+
     if (nlp_opts->with_anderson_acceleration)
     {
         // convert qp_out to delta primal-dual step
         ocp_nlp_convert_primaldelta_absdual_step_to_delta_step(config, dims, nlp_out, qp_out);
-        if (sqp_iter == 0)
+        if (nlp_mem->iter == 0)
         {
             // store in anderson_step, prev_qp_step
             ocp_qp_out_copy(qp_out, nlp_mem->anderson_step);
             // update variables (TODO: DDP primals are different)
-            ocp_nlp_update_variables_sqp_delta_primal_dual(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, nlp_mem->anderson_step);
+            ocp_nlp_update_variables_sqp_delta_primal_dual(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha, nlp_mem->anderson_step);
         }
         else
         {
@@ -187,25 +190,25 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
             // anderson_step *= -gamma
             ocp_qp_out_sc(-gamma, nlp_mem->anderson_step);
             // anderson_step += alpha * gamma * prev_qp_out
-            ocp_qp_out_add(gamma*mem->alpha, nlp_mem->prev_qp_out, nlp_mem->anderson_step);
+            ocp_qp_out_add(gamma*alpha, nlp_mem->prev_qp_out, nlp_mem->anderson_step);
             // anderson_step += (alpha - alpha * gamma) * qp_out
-            ocp_qp_out_add(mem->alpha-gamma*mem->alpha, qp_out, nlp_mem->anderson_step);
+            ocp_qp_out_add(alpha-gamma*alpha, qp_out, nlp_mem->anderson_step);
             // update variables (TODO: DDP primals are different)
-            ocp_nlp_update_variables_sqp_delta_primal_dual(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, nlp_mem->anderson_step);
+            ocp_nlp_update_variables_sqp_delta_primal_dual(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha, nlp_mem->anderson_step);
         }
         // store prev qp step
         ocp_qp_out_copy(qp_out, nlp_mem->prev_qp_out);
         // step norm: TODO, make sure this is done properly!
-        if (opts->nlp_opts->log_primal_step_norm)
+        if (nlp_opts->log_primal_step_norm)
         {
-            mem->primal_step_norm[sqp_iter] = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->anderson_step);
+            mem->primal_step_norm[nlp_mem->iter] = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->anderson_step);
         }
     }
     else
     {
-        nlp_config->step_update(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, opts->step_length, opts->globalization_opts->full_step_dual);
+        config->step_update(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, alpha, opts->globalization_opts->full_step_dual);
     }
-    *step_size = opts->step_length;
+    *step_size = alpha;
 
     return ACADOS_SUCCESS;
 }

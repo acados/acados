@@ -3187,9 +3187,6 @@ void ocp_nlp_convert_primaldelta_absdual_step_to_delta_step(ocp_nlp_config *conf
         {
             blasfeo_dvecad(nx[i+1], -1.0, out->pi+i, 0, step->pi+i, 0);
         }
-
-        // slack values
-        blasfeo_dvecad(2*ni[i], -1.0, out->t+i, 0, step->t+i, 0);
     }
 }
 
@@ -3219,9 +3216,6 @@ void ocp_nlp_update_variables_sqp_delta_primal_dual(ocp_nlp_config *config, ocp_
         {
             blasfeo_daxpy(nx[i+1], alpha, step->pi+i, 0, out->pi+i, 0, out->pi+i, 0);
         }
-
-        // update slack values
-        blasfeo_daxpy(2*ni[i], alpha, step->t+i, 0, out->t+i, 0, out->t+i, 0);
 
         // linear update of algebraic variables using state and input sensitivity
         if (i < N)
