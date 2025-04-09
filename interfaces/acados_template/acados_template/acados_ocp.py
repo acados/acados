@@ -1043,6 +1043,8 @@ class AcadosOcp:
 
         if opts.qp_solver_cond_N is None:
             opts.qp_solver_cond_N = opts.N_horizon
+        if opts.qp_solver_cond_N > opts.N_horizon:
+            raise ValueError("qp_solver_cond_N > N_horizon is not supported.")
 
         if opts.qp_solver_cond_block_size is not None:
             if sum(opts.qp_solver_cond_block_size) != opts.N_horizon:
