@@ -997,10 +997,6 @@ class AcadosOcp:
                 raise ValueError('fixed_hess is only compatible LINEAR_LS cost_type_e.')
 
         # solution sensitivities
-        bgh_type_constraint_pairs = [
-            ("path", model.con_h_expr), ("initial", model.con_h_expr_0), ("terminal", model.con_h_expr_e),
-        ]
-
         if opts.N_horizon > 0:
             bgp_type_constraint_pairs = [
                 ("path", model.con_phi_expr), ("initial", model.con_phi_expr_0), ("terminal", model.con_phi_expr_e),
