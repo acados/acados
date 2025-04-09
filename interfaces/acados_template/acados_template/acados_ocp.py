@@ -1270,44 +1270,22 @@ class AcadosOcp:
 
         model = self.model
         constraints = self.constraints
-
-        code_gen_opts = context.opts
-
-        # create code_export_dir, model_dir
-        model_dir = os.path.join(code_gen_opts.code_export_directory, model.name + '_model')
-        if not os.path.exists(model_dir):
-            os.makedirs(model_dir)
+        opts = self.solver_options
 
         check_casadi_version()
-        if self.model.dyn_ext_fun_type == 'casadi':
-            if self.solver_options.integrator_type == 'ERK':
-                generate_c_code_explicit_ode(context, model, model_dir)
-            elif self.solver_options.integrator_type == 'IRK':
-                generate_c_code_implicit_ode(context, model, model_dir)
-            elif self.solver_options.integrator_type == 'LIFTED_IRK':
-                if model.t != []:
-                    raise NotImplementedError("LIFTED_IRK with time-varying dynamics not implemented yet.")
-                generate_c_code_implicit_ode(context, model, model_dir)
-            elif self.solver_options.integrator_type == 'GNSF':
-                generate_c_code_gnsf(context, model, model_dir)
-            elif self.solver_options.integrator_type == 'DISCRETE':
-                generate_c_code_discrete_dynamics(context, model, model_dir)
-            else:
-                raise ValueError("ocp_generate_external_functions: unknown integrator type.")
-        else:
-            target_dir = os.path.join(code_gen_opts.code_export_directory, model_dir)
-            target_location = os.path.join(target_dir, model.dyn_generic_source)
-            shutil.copyfile(model.dyn_generic_source, target_location)
-            context.add_external_function_file(model.dyn_generic_source, target_dir)
+        self._setup_ode_generation_context(context)
 
-        if ignore_initial and ignore_terminal:
-            stage_type_indices = [1]
-        elif ignore_initial:
-            stage_type_indices = [1, 2]
-        elif ignore_terminal:
-            stage_type_indices = [0, 1]
+        if opts.N_horizon > 0:
+            if ignore_initial and ignore_terminal:
+                stage_type_indices = [1]
+            elif ignore_initial:
+                stage_type_indices = [1, 2]
+            elif ignore_terminal:
+                stage_type_indices = [0, 1]
+            else:
+                stage_type_indices = [0, 1, 2]
         else:
-            stage_type_indices = [0, 1, 2]
+            stage_type_indices = [2]
 
         stage_types = [val for i, val in enumerate(['initial', 'path', 'terminal']) if i in stage_type_indices]
         nhs = [val for i, val in enumerate(['nh_0', 'nh', 'nh_e']) if i in stage_type_indices]
@@ -1328,6 +1306,41 @@ class AcadosOcp:
             # TODO: generic
 
         return context
+
+    def _setup_ode_generation_context(self, context: GenerateContext):
+        opts = self.solver_options
+        model = self.model
+
+        if opts.N_horizon == 0:
+            return
+        
+        code_gen_opts = context.opts
+
+        # create code_export_dir, model_dir
+        model_dir = os.path.join(code_gen_opts.code_export_directory, model.name + '_model')
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir)
+
+        if self.model.dyn_ext_fun_type == 'casadi':
+            if self.solver_options.integrator_type == 'ERK':
+                generate_c_code_explicit_ode(context, model, model_dir)
+            elif self.solver_options.integrator_type == 'IRK':
+                generate_c_code_implicit_ode(context, model, model_dir)
+            elif self.solver_options.integrator_type == 'LIFTED_IRK':
+                if model.t != []:
+                    raise NotImplementedError("LIFTED_IRK with time-varying dynamics not implemented yet.")
+                generate_c_code_implicit_ode(context, model, model_dir)
+            elif self.solver_options.integrator_type == 'GNSF':
+                generate_c_code_gnsf(context, model, model_dir)
+            elif self.solver_options.integrator_type == 'DISCRETE':
+                generate_c_code_discrete_dynamics(context, model, model_dir)
+            else:
+                raise ValueError("ocp_generate_external_functions: unknown integrator type.")
+        else:
+            target_dir = os.path.join(code_gen_opts.code_export_directory, model_dir)
+            target_location = os.path.join(target_dir, model.dyn_generic_source)
+            shutil.copyfile(model.dyn_generic_source, target_location)
+            context.add_external_function_file(model.dyn_generic_source, target_dir)
 
     def remove_x0_elimination(self) -> None:
         """Remove the elimination of x0 from the constraints, bounds on x0 are handled as general bounds on x."""
