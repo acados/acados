@@ -325,7 +325,7 @@ static ocp_nlp_dims* {{ model.name }}_acados_create_setup_dimensions({{ model.na
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsg", &nsg[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nbxe", &nbxe[i]);
     }
-{% if solver_options.N_horizon > 0 %}
+{%- if solver_options.N_horizon > 0 %}
 {%- if cost.cost_type_0 == "NONLINEAR_LS" or cost.cost_type_0 == "LINEAR_LS" or cost.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
     ocp_nlp_dims_set_cost(nlp_config, nlp_dims, 0, "ny", &ny[0]);
 {%- endif %}
@@ -355,7 +355,7 @@ static ocp_nlp_dims* {{ model.name }}_acados_create_setup_dimensions({{ model.na
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsphi", &nsphi[i]);
         {%- endif %}
     }
-{% endif %}
+{%- endif %}{# solver_options.N_horizon > 0 #}
 {%- if constraints.constr_type_e == "BGH" %}
     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nh", &nh[N]);
     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nsh", &nsh[N]);
@@ -368,7 +368,7 @@ static ocp_nlp_dims* {{ model.name }}_acados_create_setup_dimensions({{ model.na
     ocp_nlp_dims_set_cost(nlp_config, nlp_dims, N, "ny", &ny[N]);
 {%- endif %}
 
-{% if solver_options.N_horizon > 0 %}
+{%- if solver_options.N_horizon > 0 %}
 {%- if solver_options.integrator_type == "GNSF" -%}
     // GNSF specific dimensions
     int gnsf_nx1 = {{ dims.gnsf_nx1 }};
@@ -391,7 +391,7 @@ static ocp_nlp_dims* {{ model.name }}_acados_create_setup_dimensions({{ model.na
     for (int i = 0; i < N; i++)
         ocp_nlp_dims_set_dynamics(nlp_config, nlp_dims, i, "ny", &ny[i]);
 {%- endif %}
-{% endif %}
+{%- endif %}{# solver_options.N_horizon > 0 #}
     free(intNp1mem);
 
     return nlp_dims;
@@ -458,7 +458,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
 {%- endif %}
     ext_fun_opts.external_workspace = true;
 
-
+{%- if solver_options.N_horizon > 0 %}
 {%- if constraints.constr_type_0 == "BGH" and dims.nh_0 > 0 and opts.%}
     MAP_CASADI_FNC(nl_constr_h_0_fun_jac, {{ model.name }}_constr_h_0_fun_jac_uxt_zt);
     MAP_CASADI_FNC(nl_constr_h_0_fun, {{ model.name }}_constr_h_0_fun);
@@ -816,6 +816,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     }
     {%- endif %}
 {%- endif %}
+{%- endif %}{# solver_options.N_horizon > 0 #}
 
 
 {%- if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
@@ -2252,6 +2253,7 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     }
 {%- endif %}
 
+{%- if solver_options.N_horizon > 0 %}
 {%- if solver_options.integrator_type != "DISCRETE" %}
 
     // set collocation type (relevant for implicit integrators)
@@ -2354,6 +2356,7 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     }
 {%- endif %}
 {%- endif %}{# solver_options.integrator_type != "DISCRETE" #}
+{%- endif %}{# solver_options.N_horizon > 0 #}
 
     {%- if solver_options.nlp_solver_warm_start_first_qp %}
     int nlp_solver_warm_start_first_qp = {{ solver_options.nlp_solver_warm_start_first_qp }};
@@ -2381,7 +2384,7 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     {%- endif %}
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_cond_N", &qp_solver_cond_N);
 
-    {%- if solver_options.qp_solver_cond_block_size -%}
+    {%- if solver_options.qp_solver_cond_block_size and solver_options.N_horizon > 0 -%}
     int* qp_solver_cond_block_size = malloc((qp_solver_cond_N+1) * sizeof(int));
     {%- for i in range(end=solver_options.qp_solver_cond_N+1) %}
     qp_solver_cond_block_size[{{ i }}] = {{ solver_options.qp_solver_cond_block_size[i] }};
@@ -2548,7 +2551,7 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
 {% endif %}
 
     int ext_cost_num_hess = {{ solver_options.ext_cost_num_hess }};
-{%- if cost.cost_type == "EXTERNAL" %}
+{%- if cost.cost_type == "EXTERNAL" and solver_options.N_horizon > 0 %}
     for (int i = 0; i < N; i++)
     {
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "cost_numerical_hessian", &ext_cost_num_hess);
