@@ -142,7 +142,7 @@ int {{ model.name }}_acados_create({{ model.name }}_solver_capsule* capsule)
 
 int {{ model.name }}_acados_update_time_steps({{ model.name }}_solver_capsule* capsule, int N, double* new_time_steps)
 {
-{% if solver_options.N_horizon > 0 %}
+{% if solver_options.N_horizon == 0 %}
     printf("\nacados_update_time_steps() not implemented, since N_horizon = 0!\n\n");
     exit(1);
     return -1;
@@ -2694,7 +2694,7 @@ int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_c
  */
 int {{ model.name }}_acados_update_qp_solver_cond_N({{ model.name }}_solver_capsule* capsule, int qp_solver_cond_N)
 {
-{%- if solver_options.N_horizon > 0 %}
+{%- if solver_options.N_horizon == 0 %}
     printf("\nacados_update_qp_solver_cond_N() not implemented, since N_horizon = 0!\n\n");
     exit(1);
     return -1;
