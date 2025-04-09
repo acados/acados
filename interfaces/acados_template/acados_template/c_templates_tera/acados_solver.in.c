@@ -892,7 +892,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
 
 
 /**
- * Internal function for {{ model.name }}_acados_create: step 4
+ * Internal function for {{ model.name }}_acados_create: step 5
  */
 void {{ model.name }}_acados_create_set_default_parameters({{ model.name }}_solver_capsule* capsule)
 {
@@ -951,14 +951,15 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     ocp_nlp_in * nlp_in = capsule->nlp_in;
 
     // set up time_steps and cost_scaling
-    {%- set all_equal = true -%}
-    {%- set val = solver_options.time_steps[0] %}
-    {%- for j in range(start=1, end=solver_options.N_horizon) %}
-        {%- if val != solver_options.time_steps[j] %}
-            {%- set_global all_equal = false %}
-            {%- break %}
-        {%- endif %}
-    {%- endfor %}
+    {%- if solver_options.N_horizon > 0 -%}
+        {%- set all_equal = true -%}
+        {%- set val = solver_options.time_steps[0] %}
+        {%- for j in range(start=1, end=solver_options.N_horizon) %}
+            {%- if val != solver_options.time_steps[j] %}
+                {%- set_global all_equal = false %}
+                {%- break %}
+            {%- endif %}
+        {%- endfor %}
 
     if (new_time_steps)
     {
@@ -985,6 +986,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
         }
         free(time_steps);
     {%- endif %}
+    {%- endif %}{# solver_options.N_horizon > 0 #}
         // set cost scaling
         double* cost_scaling = malloc((N+1)*sizeof(double));
       {%- for j in range(end=solver_options.N_horizon+1) %}
@@ -998,6 +1000,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     }
 
 
+{% if solver_options.N_horizon > 0 %}
     /**** Dynamics ****/
     for (int i = 0; i < N; i++)
     {
@@ -1230,6 +1233,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     {%- endif %}
   {%- endif %}{# LINEAR LS #}
 {%- endif %}{# ny != 0 #}
+{%- endif %}{# solver_options.N_horizon > 0 #}
 
 
 {%- if dims.ny_e != 0 %}
@@ -1274,6 +1278,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
   {%- endif %}
 {%- endif %}{# ny_e != 0 #}
 
+{%- if solver_options.N_horizon > 0 %}
 {%- if cost.cost_type_0 == "NONLINEAR_LS" %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun", &capsule->cost_y_0_fun);
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun_jac", &capsule->cost_y_0_fun_jac_ut_xt);
@@ -1324,6 +1329,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
         {% endif %}
     }
 {%- endif %}
+{%- endif %}{# solver_options.N_horizon > 0 #}
 
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
     ocp_nlp_cost_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nls_y_fun", &capsule->cost_y_e_fun);
@@ -1349,6 +1355,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 {%- endif %}
 
 
+{% if solver_options.N_horizon > 0 %}
 {% if dims.ns_0 > 0 %}
     // slacks initial
     double* zlu0_mem = calloc(4*NS0, sizeof(double));
@@ -1431,6 +1438,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     }
     free(zlumem);
 {%- endif %}
+{%- endif %}{# solver_options.N_horizon > 0 #}
 
 {% if dims.ns_e > 0 %}
     // slacks terminal
@@ -1475,6 +1483,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     /**** Constraints ****/
 
     // bounds for initial stage
+{%- if solver_options.N_horizon > 0 %}
 {%- if dims.nbx_0 > 0 %}
     // x0
     int* idxbx0 = malloc(NBX0 * sizeof(int));
@@ -1941,6 +1950,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     }
     free(luphi);
 {%- endif %}
+{%- endif %}{# solver_options.N_horizon > 0 #}
 
     /* terminal constraints */
 {% if dims.nbx_e > 0 %}
