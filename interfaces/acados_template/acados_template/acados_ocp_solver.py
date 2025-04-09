@@ -1611,7 +1611,7 @@ class AcadosOcpSolver:
             self.__acados_lib.ocp_nlp_get(self.nlp_solver, field, out_data)
             return out
 
-        elif field_ == 'primal_step_norm':
+        elif field_ in ['primal_step_norm', 'dual_step_norm']:
             nlp_iter = self.get_stats("nlp_iter")
             out = np.zeros((nlp_iter,), dtype=np.float64, order="C")
             out_data = cast(out.ctypes.data, POINTER(c_double))
