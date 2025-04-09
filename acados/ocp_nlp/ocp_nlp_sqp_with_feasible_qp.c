@@ -1226,7 +1226,6 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
 
     if (config->globalization->needs_objective_value() == 1)
     {
-
         l1_inf_QP_feasibility = calculate_qp_l1_infeasibility(dims, mem, work, opts, relaxed_qp_in, relaxed_qp_out);
         mem->pred_l1_inf_QP = calculate_pred_l1_inf(opts, mem, l1_inf_QP_feasibility);
     }

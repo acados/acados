@@ -2105,6 +2105,16 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
             ext_fun_workspace_size += dynamics[i]->get_external_fun_workspace_requirement(dynamics[i], dims->dynamics[i], opts->dynamics[i], in->dynamics[i]);
         }
     }
+
+    if (opts->ext_qp_res)
+    {
+        // qp_res
+        size += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
+
+        // qp_res_ws
+        size += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
+    }
+
     size += 64; // ext_fun_workspace_size align
     size += ext_fun_workspace_size;
 
@@ -2347,6 +2357,17 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
             dynamics[i]->set_external_fun_workspaces(dynamics[i], dims->dynamics[i], opts->dynamics[i], nlp_in->dynamics[i], c_ptr);
             c_ptr += dynamics[i]->get_external_fun_workspace_requirement(dynamics[i], dims->dynamics[i], opts->dynamics[i], nlp_in->dynamics[i]);
         }
+    }
+
+    if (opts->ext_qp_res)
+    {
+        // qp res
+        work->qp_res = ocp_qp_res_assign(dims->qp_solver->orig_dims, c_ptr);
+        c_ptr += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
+
+        // qp res ws
+        work->qp_res_ws = ocp_qp_res_workspace_assign(dims->qp_solver->orig_dims, c_ptr);
+        c_ptr += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
     }
 
     assert((char *) work + mem->workspace_size >= c_ptr);
