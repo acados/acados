@@ -836,9 +836,16 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Compute the step norm
         if (opts->tol_min_step_norm > 0.0 || nlp_opts->log_primal_step_norm)
         {
-            mem->step_norm = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->qp_out);
+            mem->step_norm = ocp_qp_out_compute_primal_nrm_inf(qp_out);
             if (nlp_opts->log_primal_step_norm)
                 nlp_mem->primal_step_norm[sqp_iter] = mem->step_norm;
+        }
+        if (nlp_opts->log_dual_step_norm)
+        {
+            if (nlp_opts->log_dual_step_norm)
+            {
+                nlp_mem->dual_step_norm[sqp_iter] = ocp_nlp_compute_delta_dual_norm(dims, nlp_work, nlp_out, qp_out);
+            }
         }
         /* end solve QP */
 

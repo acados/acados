@@ -299,6 +299,7 @@ typedef struct ocp_nlp_opts
     int print_level;
     int fixed_hess;
     int log_primal_step_norm; // compute and log the max norm of the primal steps
+    int log_dual_step_norm; // compute and log the max norm of the dual steps
     int max_iter; // maximum number of (SQP/DDP) iterations
     int qp_iter_max; // maximum iter of QP solver, stored to remember.
     double tau_min;  // minimum value of the barrier parameter, for IPMs
@@ -447,6 +448,7 @@ typedef struct ocp_nlp_memory
 
     bool *set_sim_guess; // indicate if there is new explicitly provided guess for integration variables
     double *primal_step_norm;
+    double *dual_step_norm;
 
     struct blasfeo_dvec *sim_guess;
     acados_size_t workspace_size;
@@ -546,6 +548,8 @@ void ocp_nlp_initialize_qp_from_nlp(ocp_nlp_config *config, ocp_nlp_dims *dims, 
 //
 void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_in *in, ocp_nlp_out *out,
                          ocp_nlp_res *res, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
+
+double ocp_nlp_compute_delta_dual_norm(ocp_nlp_dims *dims, ocp_nlp_workspace *work, ocp_nlp_out *nlp_out, ocp_qp_out *qp_out);
 //
 void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out *to);
 

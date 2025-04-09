@@ -1207,6 +1207,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->print_level = 0;
     opts->levenberg_marquardt = 0.0;
     opts->log_primal_step_norm = 0;
+    opts->log_dual_step_norm = 0;
     opts->max_iter = 1;
 
     /* submodules opts */
@@ -1433,6 +1434,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             int* log_primal_step_norm = (int *) value;
             opts->log_primal_step_norm = *log_primal_step_norm;
         }
+        else if (!strcmp(field, "log_dual_step_norm"))
+        {
+            int* log_dual_step_norm = (int *) value;
+            opts->log_dual_step_norm = *log_dual_step_norm;
+        }
         else if (!strcmp(field, "max_iter"))
         {
             int* max_iter = (int *) value;
@@ -1636,6 +1642,11 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
     {
         size += opts->max_iter*sizeof(double);
     }
+    // dual step norm
+    if (opts->log_dual_step_norm)
+    {
+        size += opts->max_iter*sizeof(double);
+    }
 
     size += (N+1)*sizeof(struct blasfeo_dmat); // dzduxt
     size += 6*(N+1)*sizeof(struct blasfeo_dvec);  // cost_grad ineq_fun ineq_adj dyn_adj sim_guess z_alg
@@ -1825,6 +1836,13 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     if (opts->log_primal_step_norm)
     {
         mem->primal_step_norm = (double *) c_ptr;
+        c_ptr += opts->max_iter*sizeof(double);
+    }
+
+    // dual step norm
+    if (opts->log_dual_step_norm)
+    {
+        mem->dual_step_norm = (double *) c_ptr;
         c_ptr += opts->max_iter*sizeof(double);
     }
 
@@ -3374,6 +3392,32 @@ void ocp_nlp_res_get_inf_norm(ocp_nlp_res *res, double *out)
 }
 
 
+double ocp_nlp_compute_delta_dual_norm(ocp_nlp_dims *dims, ocp_nlp_workspace *work, ocp_nlp_out *nlp_out, ocp_qp_out *qp_out)
+{
+    /* computes the inf norm of multipliers in qp_out and nlp_out */
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+    double tmp;
+    double norm = 0.0;
+    // compute delta dual
+    for (int i = 0; i <= N; i++)
+    {
+        blasfeo_daxpy(2*ni[i], -1.0, nlp_out->lam+i, 0, qp_out->lam+i, 0, &work->tmp_2ni, 0);
+        blasfeo_dvecnrm_inf(2*ni[i], &work->tmp_2ni, 0, &tmp);
+        norm = norm > tmp ? norm : tmp;
+        if (i < N)
+        {
+            blasfeo_daxpy(nx[i+1], -1.0, nlp_out->pi+i, 0, qp_out->pi+i, 0, &work->tmp_nv, 0);
+            blasfeo_dvecnrm_inf(nx[i+1], &work->tmp_nv, 0, &tmp);
+            norm = norm > tmp ? norm : tmp;
+        }
+    }
+    return norm;
+}
+
+
+
 void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out *to)
 {
     // extract dims
@@ -4110,6 +4154,22 @@ void ocp_nlp_memory_get(ocp_nlp_config *config, ocp_nlp_memory *nlp_mem, const c
             for (int ii=0; ii<nlp_mem->iter; ii++)
             {
                 value[ii] = nlp_mem->primal_step_norm[ii];
+            }
+        }
+    }
+    else if (!strcmp("dual_step_norm", field))
+    {
+        if (nlp_mem->dual_step_norm == NULL)
+        {
+            printf("\nerror: options log_dual_step_norm was not set\n");
+            exit(1);
+        }
+        else
+        {
+            double *value = return_value_;
+            for (int ii=0; ii<nlp_mem->iter; ii++)
+            {
+                value[ii] = nlp_mem->dual_step_norm[ii];
             }
         }
     }
