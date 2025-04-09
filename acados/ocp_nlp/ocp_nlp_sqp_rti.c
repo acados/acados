@@ -336,15 +336,6 @@ acados_size_t ocp_nlp_sqp_rti_workspace_calculate_size(void *config_,
     // nlp
     size += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts, in);
 
-    if (opts->ext_qp_res)
-    {
-        // qp res
-        size += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
-
-        // qp res ws
-        size += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
-    }
-
     return size;
 }
 
@@ -365,19 +356,6 @@ static void ocp_nlp_sqp_rti_cast_workspace(
     work->nlp_work = ocp_nlp_workspace_assign(
         config, dims, nlp_opts, nlp_in, nlp_mem, c_ptr);
     c_ptr += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts, nlp_in);
-
-    if (opts->ext_qp_res)
-    {
-        // qp res
-        work->nlp_work->qp_res = ocp_qp_res_assign(dims->qp_solver->orig_dims, c_ptr);
-        c_ptr += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
-
-        // qp res ws
-        work->nlp_work->qp_res_ws = ocp_qp_res_workspace_assign(
-            dims->qp_solver->orig_dims, c_ptr);
-        c_ptr += ocp_qp_res_workspace_calculate_size(
-            dims->qp_solver->orig_dims);
-    }
 
     assert((char *) work + ocp_nlp_sqp_rti_workspace_calculate_size(config,
         dims, opts, nlp_in) >= c_ptr);
