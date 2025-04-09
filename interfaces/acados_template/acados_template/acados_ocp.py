@@ -426,7 +426,7 @@ class AcadosOcp:
         dims = self.dims
         model = self.model
         opts = self.solver_options
-        if opts.N_horizon > 0:
+        if opts.N_horizon == 0:
             return
 
         nbx = constraints.idxbx.shape[0]
@@ -525,7 +525,7 @@ class AcadosOcp:
         dims = self.dims
         opts = self.solver_options
         cost = self.cost
-        if opts.N_horizon > 0:
+        if opts.N_horizon == 0:
             return
 
         nh_0 = dims.nh_0
@@ -606,7 +606,7 @@ class AcadosOcp:
         dims = self.dims
         opts = self.solver_options
         cost = self.cost
-        if opts.N_horizon > 0:
+        if opts.N_horizon == 0:
             return
 
         nbx = dims.nbx
