@@ -46,7 +46,7 @@ BUILD_SYSTEMS = ['cmake', 'make']
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='test Python interface on pendulum example.')
-    parser.add_argument('--INTEGRATOR_TYPE', dest='INTEGRATOR_TYPE',
+    parser.add_argument('--INTEGRATOR_TYPE', dest='INTEGRATOR_TYPE', default="ERK",
                         help=f'INTEGRATOR_TYPE: supports {INTEGRATOR_TYPES}')
     parser.add_argument('--BUILD_SYSTEM', dest='BUILD_SYSTEM',
                         default='make',
@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     build_system = args.BUILD_SYSTEM
     if build_system not in BUILD_SYSTEMS:
-        msg = f'Invalid unit test value {build_system} for parameter INTEGRATOR_TYPE. Possible values are' \
+        msg = f'Invalid unit test value {build_system} for parameter BUILD_SYSTEM. Possible values are' \
               f' {BUILD_SYSTEMS}, got {build_system}.'
         raise Exception(msg)
 
