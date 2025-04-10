@@ -1277,7 +1277,7 @@ class AcadosOcp:
         opts = self.solver_options
 
         check_casadi_version()
-        self._setup_ode_generation_context(context)
+        self._setup_code_generation_context_dynamics(context)
 
         if opts.N_horizon > 0:
             if ignore_initial and ignore_terminal:
@@ -1311,7 +1311,7 @@ class AcadosOcp:
 
         return context
 
-    def _setup_ode_generation_context(self, context: GenerateContext):
+    def _setup_code_generation_context_dynamics(self, context: GenerateContext):
         opts = self.solver_options
         model = self.model
 
