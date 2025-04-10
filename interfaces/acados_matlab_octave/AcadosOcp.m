@@ -1134,6 +1134,7 @@ classdef AcadosOcp < handle
         end
 
         function setup_code_generation_context_dynamics(ocp, context)
+            code_gen_opts = context.opts;
             solver_opts = ocp.solver_options;
             if solver_opts.N_horizon == 0
                 return
