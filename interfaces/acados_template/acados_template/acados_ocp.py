@@ -985,6 +985,9 @@ class AcadosOcp:
 
         self._make_consistent_simulation()
 
+        if opts.qp_solver == 'PARTIAL_CONDENSING_QPDUNES':
+            self.remove_x0_elimination()
+
         # fixed hessian
         if opts.fixed_hess:
             if opts.hessian_approx == 'EXACT':
