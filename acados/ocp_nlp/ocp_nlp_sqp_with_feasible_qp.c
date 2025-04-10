@@ -985,7 +985,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
         }
     }
 
-    if (mem->qps_solved_in_sqp_iter < 2 && (!solve_feasibility_qp || opts->use_constraint_hessian_in_feas_qp))
+    if (mem->qps_solved_in_iter < 2 && (!solve_feasibility_qp || opts->use_constraint_hessian_in_feas_qp))
     {
         if (solve_feasibility_qp && opts->use_constraint_hessian_in_feas_qp)
         {
@@ -1033,7 +1033,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
                                                     NULL, NULL, NULL);
     }
 
-    mem->qps_solved_in_sqp_iter += 1;
+    mem->qps_solved_in_iter += 1;
 
     // restore default warm start
     if (nlp_mem->iter==0)
@@ -1439,7 +1439,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
     qp_info* qp_info_;
     int qp_iter = 0;
     int search_direction_status;
-    mem->qps_solved_in_sqp_iter = 0;
+    mem->qps_solved_in_iter = 0;
 
     if (mem->search_direction_mode == NOMINAL_QP)
     {
@@ -1478,7 +1478,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
     {
         // We solve two QPs and return the search direction that we found!
         // if the second QP is feasible, we change back to nominal QP mode.
-        if (mem->qps_solved_in_sqp_iter == 1)
+        if (mem->qps_solved_in_iter == 1)
         {
             mem->search_direction_type = "NFN";
         }
