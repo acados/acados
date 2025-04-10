@@ -113,7 +113,7 @@ def solve_maratos_problem_with_setting(setting):
     # ocp.constraints.ubx_0 = 2 * np.ones((nx))
 
     # set options
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+    ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES # TODO: Someone should change this to PARTIAL_CONDENSING_HPIPM after the HPIPM fix for N=0
     # PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM,
     # PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP
     ocp.solver_options.hessian_approx = 'EXACT'
@@ -123,6 +123,7 @@ def solve_maratos_problem_with_setting(setting):
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
     ocp.solver_options.levenberg_marquardt = 1e-1
     SQP_max_iter = 300
+    ocp.solver_options.qp_solver_cond_block_size = [0] # TODO: Someone should check if this can be left out after PARTIAL_CONDENSING_HPIPM fix for N=0
     ocp.solver_options.qp_solver_iter_max = 400
     ocp.solver_options.qp_tol = 5e-7
     ocp.solver_options.regularize_method = 'MIRROR'
