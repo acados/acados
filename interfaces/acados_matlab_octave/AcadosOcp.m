@@ -807,7 +807,7 @@ classdef AcadosOcp < handle
                 end
                 if ~strcmp(cost.cost_type_e, "LINEAR_LS")
                     error('fixed_hess requires LINEAR_LS cost_type_e')
-                endf
+                end
             end
 
             % TODO: add checks for solution sensitivities when brining them to Matlab
@@ -818,6 +818,7 @@ classdef AcadosOcp < handle
             end
             if opts.qp_solver_cond_N > opts.N_horizon
                 error('qp_solver_cond_N > N_horizon is not supported.');
+            end
 
             if ~isempty(opts.qp_solver_cond_block_size)
                 if sum(opts.qp_solver_cond_block_size) ~= N
