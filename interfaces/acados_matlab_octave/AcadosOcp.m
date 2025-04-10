@@ -605,18 +605,18 @@ classdef AcadosOcp < handle
 
             %% options sanity checks
             if length(opts.sim_method_num_steps) == 1
-                opts.sim_method_num_steps = opts.sim_method_num_steps * ones(1, N);
-            elseif length(opts.sim_method_num_steps) ~= N
+                opts.sim_method_num_steps = opts.sim_method_num_steps * ones(1, opts.N_horizon);
+            elseif length(opts.sim_method_num_steps) ~= opts.N_horizon
                 error('sim_method_num_steps must be a scalar or a vector of length N');
             end
             if length(opts.sim_method_num_stages) == 1
-                opts.sim_method_num_stages = opts.sim_method_num_stages * ones(1, N);
-            elseif length(opts.sim_method_num_stages) ~= N
+                opts.sim_method_num_stages = opts.sim_method_num_stages * ones(1, opts.N_horizon);
+            elseif length(opts.sim_method_num_stages) ~= opts.N_horizon
                 error('sim_method_num_stages must be a scalar or a vector of length N');
             end
             if length(opts.sim_method_jac_reuse) == 1
-                opts.sim_method_jac_reuse = opts.sim_method_jac_reuse * ones(1, N);
-            elseif length(opts.sim_method_jac_reuse) ~= N
+                opts.sim_method_jac_reuse = opts.sim_method_jac_reuse * ones(1, opts.N_horizon);
+            elseif length(opts.sim_method_jac_reuse) ~= opts.N_horizon
                 error('sim_method_jac_reuse must be a scalar or a vector of length N');
             end
 
