@@ -529,8 +529,8 @@ classdef AcadosOcp < handle
             opts = self.solver_options
 
             if opts.N_horizon == 0:
-                opts.shooting_nodes = np.array([0.])
-                opts.time_steps = np.array([])
+                opts.shooting_nodes = zeros(1, 1)
+                opts.time_steps = ones(1, 1)
                 return
 
             N = opts.N_horizon;
