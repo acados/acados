@@ -542,17 +542,15 @@ classdef AcadosOcp < handle
                 return
             end
 
-            N = opts.N_horizon;
-
             if length(opts.tf) ~= 1 || opts.tf < 0
                 error('time horizon tf should be a nonnegative number');
             end
 
             if ~isempty(opts.shooting_nodes)
-                if N + 1 ~= length(opts.shooting_nodes)
+                if opts.N_horizon + 1 ~= length(opts.shooting_nodes)
                     error('inconsistent dimension N regarding shooting nodes.');
                 end
-                for i=1:N
+                for i=1:opts.N_horizon
                     opts.time_steps(i) = opts.shooting_nodes(i+1) - opts.shooting_nodes(i);
                 end
                 sum_time_steps = sum(opts.time_steps);
@@ -561,7 +559,7 @@ classdef AcadosOcp < handle
                     opts.time_steps = opts.time_steps * opts.tf / sum_time_steps;
                 end
             elseif ~isempty(opts.time_steps)
-                if N ~= length(opts.time_steps)
+                if opts.N_horizon ~= length(opts.time_steps)
                     error('inconsistent dimension N regarding time steps.');
                 end
                 sum_time_steps = sum(opts.time_steps);
@@ -570,12 +568,12 @@ classdef AcadosOcp < handle
                         'got tf = ' num2str(opts.tf) '; sum(time_steps) = ' num2str(sum_time_steps) '.']);
                 end
             else
-                opts.time_steps = opts.tf/N * ones(N,1);
+                opts.time_steps = opts.tf/opts.N_horizon * ones(opts.N_horizon,1);
             end
             % add consistent shooting_nodes e.g. for plotting;
             if isempty(opts.shooting_nodes)
                 opts.shooting_nodes = zeros(N+1, 1);
-                for i = 1:N
+                for i = 1:opts.N_horizon
                     opts.shooting_nodes(i+1) = sum(opts.time_steps(1:i));
                 end
             end
@@ -776,7 +774,7 @@ classdef AcadosOcp < handle
             % cost_scaling
             if isempty(opts.cost_scaling)
                 opts.cost_scaling = [opts.time_steps(:); 1.0];
-            elseif length(opts.cost_scaling) ~= N+1
+            elseif length(opts.cost_scaling) ~= opts.N_horizon+1
                 error(['cost_scaling must have length N+1 = ', num2str(N+1)]);
             end
 
@@ -829,7 +827,7 @@ classdef AcadosOcp < handle
             end
 
             if ~isempty(opts.qp_solver_cond_block_size)
-                if sum(opts.qp_solver_cond_block_size) ~= N
+                if sum(opts.qp_solver_cond_block_size) ~= opts.N_horizon
                     error(['sum(qp_solver_cond_block_size) =', num2str(sum(opts.qp_solver_cond_block_size)), ' != N = {opts.N_horizon}.']);
                 end
                 if length(opts.qp_solver_cond_block_size) ~= opts.qp_solver_cond_N+1
@@ -842,7 +840,7 @@ classdef AcadosOcp < handle
                     error('DDP solver only supported for N_horizon > 0.');
                 end
                 if ~strcmp(opts.qp_solver, "PARTIAL_CONDENSING_HPIPM") || (opts.qp_solver_cond_N ~= opts.N_horizon)
-                    error('DDP solver only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N.');
+                    error('DDP solver only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N_horizon.');
                 end
                 if any([dims.nbu, dims.nbx, dims.ng, dims.nh, dims.nphi])
                     error('DDP only supports initial state constraints, got path constraints.')
