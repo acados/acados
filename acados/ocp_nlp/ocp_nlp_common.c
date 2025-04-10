@@ -3167,6 +3167,13 @@ void ocp_nlp_initialize_qp_from_nlp(ocp_nlp_config *config, ocp_nlp_dims *dims, 
 }
 
 
+double ocp_nlp_sqp_compute_anderson_gamma(ocp_qp_out *new_qp_step, ocp_qp_out *new_minus_old_qp_step)
+{
+    double gamma = ocp_qp_out_ddot(new_qp_step, new_minus_old_qp_step) /
+                        ocp_qp_out_ddot(new_minus_old_qp_step, new_minus_old_qp_step);
+    return gamma;
+}
+
 
 void ocp_nlp_convert_primaldelta_absdual_step_to_delta_step(ocp_nlp_config *config, ocp_nlp_dims *dims,
         ocp_nlp_out *out, ocp_qp_out *step)

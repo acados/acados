@@ -201,7 +201,7 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
         // step norm: TODO, make sure this is done properly!
         if (nlp_opts->log_primal_step_norm)
         {
-            mem->primal_step_norm[nlp_mem->iter] = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->anderson_step);
+            nlp_mem->primal_step_norm[nlp_mem->iter] = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->anderson_step);
         }
     }
     else
