@@ -802,7 +802,7 @@ class AcadosOcp:
 
     def _make_consistent_discretization(self):
         opts = self.solver_options
-        if self.dims.N == 0:
+        if opts.N_horizon == 0:
             opts.shooting_nodes = np.array([0.])
             opts.time_steps = np.array([])
             return
