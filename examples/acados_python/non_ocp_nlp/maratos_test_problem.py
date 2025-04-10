@@ -81,7 +81,6 @@ def solve_maratos_problem_with_setting(setting):
     x = vertcat(x1, x2)
 
     # dynamics: identity
-    model.disc_dyn_expr = x
     model.x = x
     model.u = SX.sym('u', 0, 0) # [] / None doesnt work
     model.p = []
@@ -89,19 +88,17 @@ def solve_maratos_problem_with_setting(setting):
     ocp.model = model
 
     # discretization
-    Tf = 1
-    N = 1
+    N = 0
     ocp.solver_options.N_horizon = N
-    ocp.solver_options.tf = Tf
 
     # cost
     ocp.cost.cost_type_e = 'EXTERNAL'
     ocp.model.cost_expr_ext_cost_e = x1
 
-    # constarints
-    ocp.model.con_h_expr_0 = x1 ** 2 + x2 ** 2
-    ocp.constraints.lh_0 = np.array([1.0])
-    ocp.constraints.uh_0 = np.array([1.0])
+    # constraints
+    ocp.model.con_h_expr_e = x1 ** 2 + x2 ** 2
+    ocp.constraints.lh_e = np.array([1.0])
+    ocp.constraints.uh_e = np.array([1.0])
     # # soften
     # ocp.constraints.idxsh = np.array([0])
     # ocp.cost.zl = 1e5 * np.array([1])
@@ -120,7 +117,6 @@ def solve_maratos_problem_with_setting(setting):
     # PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM,
     # PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP
     ocp.solver_options.hessian_approx = 'EXACT'
-    ocp.solver_options.integrator_type = 'DISCRETE'
     if globalization == 'FUNNEL_L1PEN_LINESEARCH':
         ocp.solver_options.print_level = 1
     ocp.solver_options.tol = TOL
