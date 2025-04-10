@@ -493,7 +493,7 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
         // regularize Hessian
         acados_tic(&timer1);
         config->regularize->regularize_lhs(config->regularize,
-            dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize);
+            dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
         timings->time_reg += acados_toc(&timer1);
         // condense lhs
         acados_tic(&timer1);
@@ -544,13 +544,13 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     {
         // finish regularization
         config->regularize->regularize_rhs(config->regularize,
-            dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize);
+            dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
     }
     else if (opts->rti_phase == PREPARATION_AND_FEEDBACK)
     {
         // full regularization
         config->regularize->regularize(config->regularize,
-            dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize);
+            dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
     }
     else
     {
@@ -851,7 +851,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         // regularization rhs
         acados_tic(&timer1);
         config->regularize->regularize_rhs(config->regularize,
-            dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize);
+            dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
 
         // solve QP
         qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, true, NULL, NULL, NULL);
@@ -903,7 +903,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // rhs regularization
             acados_tic(&timer1);
             config->regularize->regularize_rhs(config->regularize,
-                dims->regularize, nlp_opts->regularize, nlp_mem->regularize);
+                dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
             timings->time_reg += acados_toc(&timer1);
 
             // QP solve
@@ -919,7 +919,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // compute correct dual solution in case of Hessian regularization
             acados_tic(&timer1);
             config->regularize->correct_dual_sol(config->regularize,
-                dims->regularize, nlp_opts->regularize, nlp_mem->regularize);
+                dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
             timings->time_reg += acados_toc(&timer1);
             if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
             {
@@ -973,7 +973,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // rhs regularization
             acados_tic(&timer1);
             config->regularize->regularize_rhs(config->regularize,
-                dims->regularize, nlp_opts->regularize, nlp_mem->regularize);
+                dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
             timings->time_reg += acados_toc(&timer1);
 
             // QP solve
@@ -1045,7 +1045,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // full regularization
             acados_tic(&timer1);
             config->regularize->regularize(config->regularize,
-                dims->regularize, nlp_opts->regularize, nlp_mem->regularize);
+                dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
             timings->time_reg += acados_toc(&timer1);
 
             // QP solve
@@ -1093,7 +1093,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
     // regularize Hessian
     acados_tic(&timer1);
     config->regularize->regularize_lhs(config->regularize,
-        dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize);
+        dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
     timings->time_reg += acados_toc(&timer1);
     // condense lhs
     qp_solver->condense_lhs(qp_solver, dims->qp_solver,
