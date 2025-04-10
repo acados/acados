@@ -91,6 +91,529 @@ classdef AcadosOcp < handle
             end
         end
 
+        function make_consistent_cost_initial(self)
+            cost = self.cost;
+            dims = self.dims;
+            model = self.model;
+            if self.solver_options.N_horizon == 0
+                return
+            end
+            if strcmp(cost.cost_type_0, 'LINEAR_LS')
+                if ~isempty(cost.W_0) && ~isempty(cost.Vx_0) && ~isempty(cost.Vu_0)
+                    ny = length(cost.W_0);
+
+                    if isempty(cost.yref_0)
+                        warning(['yref_0 not defined provided.' 10 'Using zeros(ny_0,1) by default.']);
+                        self.cost.yref_0 = zeros(ny,1);
+                    end
+                    if ny ~= size(cost.Vx_0, 1) || ny ~= size(cost.Vu_0, 1) || ny ~= size(cost.yref_0, 1)
+                        error('inconsistent dimension ny_0, regarding W_0, Vx_0, Vu_0, yref_0.');
+                    end
+                else
+                    error('setting linear least square cost: need W_0, Vx_0, Vu_0, at least one missing.')
+                end
+                dims.ny_0 = ny;
+            elseif strcmp(cost.cost_type_0, 'NONLINEAR_LS')
+                if ~isempty(cost.W_0) && ~isempty(model.cost_y_expr_0)
+                    ny = length(cost.W_0);
+                    if isempty(cost.yref_0)
+                        warning(['yref_0 not defined provided.' 10 'Using zeros(ny_0,1) by default.']);
+                        self.cost.yref_0 = zeros(ny,1);
+                    end
+                    if ny ~= length(model.cost_y_expr_0) || ny ~= size(cost.yref_0, 1)
+                        error('inconsistent dimension ny_0, regarding W_0, cost_y_expr_0, yref_0.');
+                    end
+                else
+                    error('setting nonlinear least square cost: need W_0, cost_y_expr_0, at least one missing.')
+                end
+                dims.ny_0 = ny;
+            end
+        end
+
+        function make_consistent_cost_path(self)
+            cost = self.cost;
+            dims = self.dims;
+            model = self.model;
+            if self.solver_options.N_horizon == 0
+                return
+            end
+            if strcmp(cost.cost_type, 'LINEAR_LS')
+                if ~isempty(cost.W) && ~isempty(cost.Vx) && ~isempty(cost.Vu)
+                    ny = length(cost.W);
+                    if isempty(cost.yref)
+                        warning(['yref not defined provided.' 10 'Using zeros(ny,1) by default.']);
+                        self.cost.yref = zeros(ny,1);
+                    end
+                    if ny ~= size(cost.Vx, 1) || ny ~= size(cost.Vu, 1) || ny ~= size(cost.yref, 1)
+                        error('inconsistent dimension ny, regarding W, Vx, Vu, yref.');
+                    end
+                else
+                    error('setting linear least square cost: need W, Vx, Vu, at least one missing.')
+                end
+                dims.ny = ny;
+            elseif strcmp(cost.cost_type, 'NONLINEAR_LS')
+                if ~isempty(cost.W) && ~isempty(model.cost_y_expr)
+                    ny = length(cost.W);
+                    if isempty(cost.yref)
+                        warning(['yref not defined provided.' 10 'Using zeros(ny,1) by default.']);
+                        self.cost.yref = zeros(ny,1);
+                    end
+                    if ny ~= length(model.cost_y_expr) || ny ~= size(cost.yref, 1)
+                        error('inconsistent dimension ny, regarding W, cost_y_expr, yref.');
+                    end
+                else
+                    error('setting nonlinear least square cost: need W, cost_y_expr, at least one missing.')
+                end
+                dims.ny = ny;
+            end
+        end
+
+        function make_consistent_cost_terminal(self)
+            cost = self.cost;
+            dims = self.dims;
+            model = self.model;
+
+            if strcmp(cost.cost_type_e, 'LINEAR_LS')
+                if ~isempty(cost.W_e) && ~isempty(cost.Vx_e)
+                    ny_e = length(cost.W_e);
+                    if isempty(cost.yref_e)
+                        warning(['yref_e not defined provided.' 10 'Using zeros(ny_e,1) by default.']);
+                        self.cost.yref_e = zeros(ny_e,1);
+                    end
+                    if ny_e ~= size(cost.Vx_e, 1) || ny_e ~= size(cost.yref_e, 1)
+                        error('inconsistent dimension ny_e, regarding W_e, Vx_e, yref_e');
+                    end
+                elseif ~~isempty(cost.W_e) && ~~isempty(cost.Vx_e)
+                    ny_e = 0;
+                    warning('Fields W_e and Vx_e not provided. Using empty ls terminal cost.')
+                else
+                    error('setting linear least square cost: need W_e, Vx_e, at least one missing.')
+                end
+                dims.ny_e = ny_e;
+            elseif strcmp(cost.cost_type_e, 'NONLINEAR_LS')
+                if ~isempty(cost.W_e) && ~isempty(model.cost_y_expr_e)
+                    ny_e = length(cost.W_e);
+                    if isempty(cost.yref_e)
+                        warning(['yref_e not defined provided.' 10 'Using zeros(ny_e,1) by default.']);
+                        self.cost.yref_e = zeros(ny_e,1);
+                    end
+                    if ny_e ~= length(model.cost_y_expr_e) || ny_e ~= size(cost.yref_e, 1)
+                        error('inconsistent dimension ny_e, regarding W_e, cost_y_expr_e, yref_e.');
+                    end
+                else
+                    error('setting nonlinear least square cost: need W_e, cost_y_expr_e, at least one missing.')
+                end
+                dims.ny_e = ny_e;
+            end
+        end
+
+        function make_consistent_constraints_initial(self)
+            dims = self.dims;
+            constraints = self.constraints;
+            if self.solver_options.N_horizon == 0
+                return
+            end
+
+            if ~isempty(constraints.idxbx_0) && ~isempty(constraints.lbx_0) && ~isempty(constraints.ubx_0)
+                nbx_0 = length(constraints.lbx_0);
+                if nbx_0 ~= length(constraints.ubx_0) || nbx_0 ~= length(constraints.idxbx_0)
+                    error('inconsistent dimension nbx_0, regarding idxbx_0, lbx_0, ubx_0.');
+                end
+                if min(constraints.idxbx_0) < 0 || max(constraints.idxbx_0) > (dims.nx-1)
+                    error(['idxbx_0 should contain (zero-based) indices between 0 and ', num2str(dims.nx-1)])
+                end
+            elseif ~isempty(constraints.idxbx_0) || ~isempty(constraints.lbx_0) || ~isempty(constraints.ubx_0)
+                error('setting bounds on x: need idxbx_0, lbx_0, ubx_0, at least one missing.');
+            else
+                % no initial state constraint
+                disp("OCP without constraints on initial state detected.")
+                nbx_0 = 0;
+            end
+            dims.nbx_0 = nbx_0;
+
+            dims.nbxe_0 = length(constraints.idxbxe_0);
+
+            if ~isempty(model.con_h_expr_0) && ...
+                ~isempty(constraints.lh_0) && ~isempty(constraints.uh_0)
+            nh_0 = length(constraints.lh_0);
+            if nh_0 ~= length(constraints.uh_0) || nh_0 ~= length(model.con_h_expr_0)
+                error('inconsistent dimension nh_0, regarding expr_h_0, lh_0, uh_0.');
+            end
+            elseif ~isempty(model.con_h_expr_0) || ...
+                ~isempty(constraints.lh_0) || ~isempty(constraints.uh_0)
+            error('setting external constraint function h: need expr_h_0, lh_0, uh_0 at least one missing.');
+            else
+                nh_0 = 0;
+            end
+            dims.nh_0 = nh_0;
+        end
+
+        function make_consistent_constraints_path(self)
+            dims = self.dims;
+            constraints = self.constraints;
+            if self.solver_options.N_horizon == 0
+                return
+            end
+
+            if ~isempty(constraints.idxbx) && ~isempty(constraints.lbx) && ~isempty(constraints.ubx)
+                nbx = length(constraints.lbx);
+                if nbx ~= length(constraints.ubx) || nbx ~= length(constraints.idxbx)
+                    error('inconsistent dimension nbx, regarding idxbx, lbx, ubx.');
+                end
+                if min(constraints.idxbx) < 0 || max(constraints.idxbx) > (dims.nx-1)
+                    error(['idxbx should contain (zero-based) indices between 0 and ', num2str(dims.nx-1)])
+                end
+            elseif ~isempty(constraints.idxbx) || ~isempty(constraints.lbx) || ~isempty(constraints.ubx)
+                error('setting bounds on x: need idxbx, lbx, ubx, at least one missing.');
+            else
+                nbx = 0;
+            end
+            dims.nbx = nbx;
+
+            if ~isempty(constraints.idxbu) && ~isempty(constraints.lbu) && ~isempty(constraints.ubu)
+                nbu = length(constraints.lbu);
+                if nbu ~= length(constraints.ubu) || nbu ~= length(constraints.idxbu)
+                    error('inconsistent dimension nbu, regarding idxbu, lbu, ubu.');
+                end
+                if min(constraints.idxbu) < 0 || max(constraints.idxbu) > (dims.nu-1)
+                    error(['idxbu should contain (zero-based) indices between 0 and ', num2str(dims.nu-1)])
+                end
+            elseif ~isempty(constraints.idxbu) || ~isempty(constraints.lbu) || ~isempty(constraints.ubu)
+                error('setting bounds on u: need idxbu, lbu, ubu, at least one missing.');
+            else
+                nbu = 0;
+            end
+            dims.nbu = nbu;
+
+            if ~isempty(constraints.C) && ~isempty(constraints.D) && ...
+            ~isempty(constraints.lg) && ~isempty(constraints.ug)
+                ng = length(constraints.lg);
+                if ng ~= length(constraints.ug) || ng ~= size(constraints.C, 1) || ng ~= size(constraints.D, 1)
+                    error('inconsistent dimension ng, regarding C, D, lg, ug.');
+                end
+            elseif ~isempty(constraints.C) || ~isempty(constraints.D) || ...
+                ~isempty(constraints.lg) || ~isempty(constraints.ug)
+                error('setting general linear constraints: need C, D, lg, ug, at least one missing.');
+            else
+                ng = 0;
+            end
+            dims.ng = ng;
+
+            if ~isempty(model.con_h_expr) && ...
+                    ~isempty(constraints.lh) && ~isempty(constraints.uh)
+                nh = length(constraints.lh);
+                if nh ~= length(constraints.uh) || nh ~= length(model.con_h_expr)
+                    error('inconsistent dimension nh, regarding expr_h, lh, uh.');
+                end
+            elseif ~isempty(model.con_h_expr) || ...
+                ~isempty(constraints.lh) || ~isempty(constraints.uh)
+                error('setting external constraint function h: need expr_h, lh, uh at least one missing.');
+            else
+                nh = 0;
+            end
+            dims.nh = nh;
+        end
+
+        function make_consistent_constraints_path(self)
+            dims = self.dims;
+            constraints = self.constraints;
+
+            if ~isempty(constraints.idxbx_e) && ~isempty(constraints.lbx_e) && ~isempty(constraints.ubx_e)
+                nbx_e = length(constraints.lbx_e);
+                if nbx_e ~= length(constraints.ubx_e) || nbx_e ~= length(constraints.idxbx_e)
+                    error('inconsistent dimension nbx_e, regarding Jbx_e, lbx_e, ubx_e.');
+                end
+                if min(constraints.idxbx_e) < 0 || max(constraints.idxbx_e) > (dims.nx-1)
+                    error(['idxbx_e should contain (zero-based) indices between 0 and ', num2str(dims.nx-1)])
+                end
+            elseif ~isempty(constraints.idxbx_e) || ~isempty(constraints.lbx_e) || ~isempty(constraints.ubx_e)
+                error('setting bounds on x: need Jbx_e, lbx_e, ubx_e, at least one missing.');
+            else
+                nbx_e = 0;
+            end
+            dims.nbx_e = nbx_e;
+
+            if ~isempty(constraints.C_e) && ...
+            ~isempty(constraints.lg_e) && ~isempty(constraints.ug_e)
+                ng_e = length(constraints.lg_e);
+                if ng_e ~= length(constraints.ug_e) || ng_e ~= size(constraints.C_e, 1)
+                    error('inconsistent dimension ng_e, regarding C_e, lg_e, ug_e.');
+                end
+            elseif ~isempty(constraints.C_e) || ...
+                ~isempty(constraints.lg_e) || ~isempty(constraints.ug_e)
+                error('setting general linear constraints: need C_e, lg_e, ug_e, at least one missing.');
+            else
+                ng_e = 0;
+            end
+            dims.ng_e = ng_e;
+
+            if ~isempty(model.con_h_expr_e) && ...
+                    ~isempty(constraints.lh_e) && ~isempty(constraints.uh_e)
+                nh_e = length(constraints.lh_e);
+                if nh_e ~= length(constraints.uh_e) || nh_e ~= length(model.con_h_expr_e)
+                    error('inconsistent dimension nh_e, regarding expr_h_e, lh_e, uh_e.');
+                end
+            elseif ~isempty(model.con_h_expr_e) || ...
+                ~isempty(constraints.lh_e) || ~isempty(constraints.uh_e)
+                error('setting external constraint function h: need expr_h_e, lh_e, uh_e at least one missing.');
+            else
+                nh_e = 0;
+            end
+            dims.nh_e = nh_e;
+        end
+
+        function make_consistent_slack_dimensions_path(self)
+            constraints = self.constraints
+            dims = self.dims
+            if self.solver_options.N_horizon == 0
+                return
+            end
+
+            nsbx = length(constraints.idxsbx);
+            nsbu = length(constraints.idxsbu);
+            nsg = length(constraints.idxsg);
+            nsh = length(constraints.idxsh);
+            nsphi = length(constraints.idxsphi);
+
+            ns = nsbx + nsbu + nsg + nsh + nsphi;
+            wrong_field = '';
+
+            if ns == 0
+                expected_shape = [0, 0];
+            else
+                expected_shape = [ns, 1];
+            end
+
+            if ~all(size(cost.Zl) == expected_shape)
+                wrong_field = 'Zl';
+                dim = size(cost.Zl);
+            elseif ~all(size(cost.Zu) == expected_shape)
+                wrong_field = 'Zu';
+                dim = size(cost.Zu);
+            elseif ~all(size(cost.zl) == expected_shape)
+                wrong_field = 'zl';
+                dim = size(cost.zl);
+            elseif ~all(size(cost.zu) == expected_shape)
+                wrong_field = 'zu';
+                dim = size(cost.zu);
+            end
+
+            if ~strcmp(wrong_field, '')
+                error(['Inconsistent size for field ', wrong_field, ' with dimension ', num2str(dim),...
+                      '. Detected ns = ', num2str(ns), ' = nsbx + nsbu + nsg + nsh + nsphi.',...
+                      ' With nsbx = ', num2str(nsbx), ', nsbu = ', num2str(nsbu), ' nsg = ', num2str(nsg),...
+                      ' nsh = ', num2str(nsh), ', nsphi = ', num2str(nsphi), '.'])
+            end
+
+            constraints.lsbu = zeros(nsbu, 1);
+            constraints.usbu = zeros(nsbu, 1);
+            constraints.lsbx = zeros(nsbx, 1);
+            constraints.usbx = zeros(nsbx, 1);
+            constraints.lsh = zeros(nsh, 1);
+            constraints.ush = zeros(nsh, 1);
+            constraints.lsphi = zeros(nsphi, 1);
+            constraints.usphi = zeros(nsphi, 1);
+
+            dims.ns = ns;
+            dims.nsbx = nsbx;
+            dims.nsbu = nsbu;
+            dims.nsg = nsg;
+            dims.nsh = nsh;
+            dims.nsphi = nsphi;
+        end
+
+        function make_consistent_slack_dimensions_initial(self)
+            constraints = self.constraints
+            dims = self.dims
+            if self.solver_options.N_horizon == 0
+                return
+            end
+
+            nsh_0 = length(constraints.idxsh_0);
+            nsphi_0 = length(constraints.idxsphi_0);
+
+            ns_0 = nsbu + nsg + nsh_0 + nsphi_0;
+            wrong_field = '';
+            if ns_0 == 0
+                expected_shape = [0, 0];
+            else
+                expected_shape = [ns_0, 1];
+            end
+
+            if ~all(size(cost.Zl_0) == expected_shape)
+                wrong_field = 'Zl_0';
+                dim = size(cost.Zl_0);
+            elseif ~all(size(cost.Zu_0) == expected_shape)
+                wrong_field = 'Zu_0';
+                dim = size(cost.Zu_0);
+            elseif ~all(size(cost.zl_0) == expected_shape)
+                wrong_field = 'zl_0';
+                dim = size(cost.zl_0);
+            elseif ~all(size(cost.zu_0) == expected_shape)
+                wrong_field = 'zu_0';
+                dim = size(cost.zu_0);
+            end
+
+            if ~strcmp(wrong_field, '')
+                error(['Inconsistent size for field', wrong_field, ' with dimension ', num2str(dim),...
+                        '. Detected ns_0 = ', num2str(ns_0), ' = nsbu + nsg + nsh_0 + nsphi_0.',...
+                        ' With nsg = ', num2str(nsg), ' nsh_0 = ', num2str(nsh_0), ', nsphi_0 = ', num2str(nsphi_0), '.'])
+            end
+
+            constraints.lsh_0 = zeros(nsh_0, 1);
+            constraints.ush_0 = zeros(nsh_0, 1);
+            constraints.lsphi_0 = zeros(nsphi_0, 1);
+            constraints.usphi_0 = zeros(nsphi_0, 1);
+
+            dims.ns_0 = ns_0;
+            dims.nsh_0 = nsh_0;
+            dims.nsphi_0 = nsphi_0;
+        end
+
+        function make_consistent_slack_dimensions_terminal(self)
+            constraints = self.constraints
+            dims = self.dims
+            
+            nsbx_e = length(constraints.idxsbx_e);
+            nsg_e = length(constraints.idxsg_e);
+            nsh_e = length(constraints.idxsh_e);
+            nsphi_e = length(constraints.idxsphi_e);
+
+            ns_e = nsbx_e + nsg_e + nsh_e + nsphi_e;
+            wrong_field = '';
+            if ns_e == 0
+                expected_shape = [0, 0];
+            else
+                expected_shape = [ns_e, 1];
+            end
+
+            if ~all(size(cost.Zl_e) == expected_shape)
+                wrong_field = 'Zl_e';
+                dim = size(cost.Zl_e);
+            elseif ~all(size(cost.Zu_e) == expected_shape)
+                wrong_field = 'Zu_e';
+                dim = size(cost.Zu_e);
+            elseif ~all(size(cost.zl_e) == expected_shape)
+                wrong_field = 'zl_e';
+                dim = size(cost.zl_e);
+            elseif ~all(size(cost.zu_e) == expected_shape)
+                wrong_field = 'zu_e';
+                dim = size(cost.zu_e);
+            end
+
+            if ~strcmp(wrong_field, '')
+                error(['Inconsistent size for field', wrong_field, ' with dimension ', num2str(dim),...
+                        '. Detected ns_e = ', num2str(ns_e), ' = nsbx_e + nsg_e + nsh_e + nsphi_e.',...
+                        ' With nsbx_e = ', num2str(nsbx_e), ' nsg_e = ', num2str(nsg_e),...
+                        ' nsh_e = ', num2str(nsh_e), ', nsphi_e = ', num2str(nsphi_e), '.'])
+            end
+
+
+            constraints.lsbx_e = zeros(nsbx_e, 1);
+            constraints.usbx_e = zeros(nsbx_e, 1);
+            constraints.lsh_e = zeros(nsh_e, 1);
+            constraints.ush_e = zeros(nsh_e, 1);
+            constraints.lsphi_e = zeros(nsphi_e, 1);
+            constraints.usphi_e = zeros(nsphi_e, 1);
+
+            dims.ns_e = ns_e;
+            dims.nsbx_e = nsbx_e;
+            dims.nsg_e = nsg_e;
+            dims.nsh_e = nsh_e;
+            dims.nsphi_e = nsphi_e;
+
+        end
+
+        function make_consistent_discretization(self)
+            dims = self.dims
+            opts = self.solver_options
+
+            if opts.N_horizon == 0:
+                opts.shooting_nodes = np.array([0.])
+                opts.time_steps = np.array([])
+                return
+
+            N = opts.N_horizon;
+
+            if length(opts.tf) ~= 1 || opts.tf < 0
+                error('time horizon tf should be a nonnegative number');
+            end
+
+            if ~isempty(opts.shooting_nodes)
+                if N + 1 ~= length(opts.shooting_nodes)
+                    error('inconsistent dimension N regarding shooting nodes.');
+                end
+                for i=1:N
+                    opts.time_steps(i) = opts.shooting_nodes(i+1) - opts.shooting_nodes(i);
+                end
+                sum_time_steps = sum(opts.time_steps);
+                if abs((sum_time_steps - opts.tf) / opts.tf) > 1e-14
+                    warning('shooting nodes are not consistent with time horizon tf, rescaling automatically');
+                    opts.time_steps = opts.time_steps * opts.tf / sum_time_steps;
+                end
+            elseif ~isempty(opts.time_steps)
+                if N ~= length(opts.time_steps)
+                    error('inconsistent dimension N regarding time steps.');
+                end
+                sum_time_steps = sum(opts.time_steps);
+                if abs((sum_time_steps - opts.tf) / opts.tf) > 1e-14
+                    error(['time steps are not consistent with time horizon tf, ', ...
+                        'got tf = ' num2str(opts.tf) '; sum(time_steps) = ' num2str(sum_time_steps) '.']);
+                end
+            else
+                opts.time_steps = opts.tf/N * ones(N,1);
+            end
+            % add consistent shooting_nodes e.g. for plotting;
+            if isempty(opts.shooting_nodes)
+                opts.shooting_nodes = zeros(N+1, 1);
+                for i = 1:N
+                    opts.shooting_nodes(i+1) = sum(opts.time_steps(1:i));
+                end
+            end
+            if any(opts.time_steps < 0)
+                error(['ocp discretization: time_steps between shooting nodes must all be > 0', ...
+                    ' got: ' num2str(opts.time_steps)])
+            end
+        end
+
+        function make_consistent_simulation(self)
+            opts = self.solver_options
+            if opts.N_horizon == 0
+                return
+            end
+
+            % set integrator time automatically
+            opts.Tsim = opts.time_steps(1);
+
+            % integrator: num_stages
+            if ~isempty(opts.sim_method_num_stages)
+                if(strcmp(opts.integrator_type, "ERK"))
+                    if (any(opts.sim_method_num_stages < 1) || any(opts.sim_method_num_stages > 4))
+                        error(['ERK: num_stages = ', num2str(opts.sim_method_num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
+                    end
+                end
+            end
+
+            %% options sanity checks
+            if length(opts.sim_method_num_steps) == 1
+                opts.sim_method_num_steps = opts.sim_method_num_steps * ones(1, N);
+            elseif length(opts.sim_method_num_steps) ~= N
+                error('sim_method_num_steps must be a scalar or a vector of length N');
+            end
+            if length(opts.sim_method_num_stages) == 1
+                opts.sim_method_num_stages = opts.sim_method_num_stages * ones(1, N);
+            elseif length(opts.sim_method_num_stages) ~= N
+                error('sim_method_num_stages must be a scalar or a vector of length N');
+            end
+            if length(opts.sim_method_jac_reuse) == 1
+                opts.sim_method_jac_reuse = opts.sim_method_jac_reuse * ones(1, N);
+            elseif length(opts.sim_method_jac_reuse) ~= N
+                error('sim_method_jac_reuse must be a scalar or a vector of length N');
+            end
+
+
+        end
+
         function make_consistent(self, is_mocp_phase)
             if nargin < 2
                 is_mocp_phase = false;
@@ -103,8 +626,21 @@ classdef AcadosOcp < handle
             constraints = self.constraints;
             opts = self.solver_options;
 
-            N = opts.N_horizon;
             self.detect_cost_and_constraints();
+
+            if isempty(opts.N_horizon) && isempty(dims.N)
+                error('N_horizon not provided.');
+            elseif isempty(opts.N_horizon) && ~isempty(dims.N)
+                opts.N_horizon = dims.N;
+                disp(['field AcadosOcpDims.N has been migrated to AcadosOcpOptions.N_horizon.',...
+                      ' setting AcadosOcpOptions.N_horizon = N.',...
+                      ' For future comppatibility, please use AcadosOcpOptions.N_horizon directly.']);
+            elseif ~isempty(opts.N_horizon) && ~isempty(dims.N) && opts.N_horizon ~= dims.N
+                error(['Inconsistent dimension N, regarding N = ', num2str(dims.N),...
+                       ', N_horizon = ', num2str(opts.N_horizon), '.']);
+            else
+                dims.N = opts.N_horizon;
+            end
 
             % check if nx != nx_next
             if ~is_mocp_phase && dims.nx ~= dims.nx_next && opts.N_horizon > 1
@@ -112,7 +648,7 @@ classdef AcadosOcp < handle
             end
 
             % detect GNSF structure
-            if strcmp(opts.integrator_type, 'GNSF')
+            if strcmp(opts.integrator_type, 'GNSF') && opts.N_horizon > 0
                 if dims.gnsf_nx1 + dims.gnsf_nx2 ~= dims.nx
                     % TODO: properly interface those.
                     gnsf_transcription_opts = struct();
@@ -183,105 +719,12 @@ classdef AcadosOcp < handle
             end
 
             %% cost
-            % initial
-            if strcmp(cost.cost_type_0, 'LINEAR_LS')
-                if ~isempty(cost.W_0) && ~isempty(cost.Vx_0) && ~isempty(cost.Vu_0)
-                    ny = length(cost.W_0);
-
-                    if isempty(cost.yref_0)
-                        warning(['yref_0 not defined provided.' 10 'Using zeros(ny_0,1) by default.']);
-                        self.cost.yref_0 = zeros(ny,1);
-                    end
-                    if ny ~= size(cost.Vx_0, 1) || ny ~= size(cost.Vu_0, 1) || ny ~= size(cost.yref_0, 1)
-                        error('inconsistent dimension ny_0, regarding W_0, Vx_0, Vu_0, yref_0.');
-                    end
-                else
-                    error('setting linear least square cost: need W_0, Vx_0, Vu_0, at least one missing.')
-                end
-                dims.ny_0 = ny;
-            elseif strcmp(cost.cost_type_0, 'NONLINEAR_LS')
-                if ~isempty(cost.W_0) && ~isempty(model.cost_y_expr_0)
-                    ny = length(cost.W_0);
-                    if isempty(cost.yref_0)
-                        warning(['yref_0 not defined provided.' 10 'Using zeros(ny_0,1) by default.']);
-                        self.cost.yref_0 = zeros(ny,1);
-                    end
-                    if ny ~= length(model.cost_y_expr_0) || ny ~= size(cost.yref_0, 1)
-                        error('inconsistent dimension ny_0, regarding W_0, cost_y_expr_0, yref_0.');
-                    end
-                else
-                    error('setting nonlinear least square cost: need W_0, cost_y_expr_0, at least one missing.')
-                end
-                dims.ny_0 = ny;
-            end
-
-            % path
-            if strcmp(cost.cost_type, 'LINEAR_LS')
-                if ~isempty(cost.W) && ~isempty(cost.Vx) && ~isempty(cost.Vu)
-                    ny = length(cost.W);
-                    if isempty(cost.yref)
-                        warning(['yref not defined provided.' 10 'Using zeros(ny,1) by default.']);
-                        self.cost.yref = zeros(ny,1);
-                    end
-                    if ny ~= size(cost.Vx, 1) || ny ~= size(cost.Vu, 1) || ny ~= size(cost.yref, 1)
-                        error('inconsistent dimension ny, regarding W, Vx, Vu, yref.');
-                    end
-                else
-                    error('setting linear least square cost: need W, Vx, Vu, at least one missing.')
-                end
-                dims.ny = ny;
-            elseif strcmp(cost.cost_type, 'NONLINEAR_LS')
-                if ~isempty(cost.W) && ~isempty(model.cost_y_expr)
-                    ny = length(cost.W);
-                    if isempty(cost.yref)
-                        warning(['yref not defined provided.' 10 'Using zeros(ny,1) by default.']);
-                        self.cost.yref = zeros(ny,1);
-                    end
-                    if ny ~= length(model.cost_y_expr) || ny ~= size(cost.yref, 1)
-                        error('inconsistent dimension ny, regarding W, cost_y_expr, yref.');
-                    end
-                else
-                    error('setting nonlinear least square cost: need W, cost_y_expr, at least one missing.')
-                end
-                dims.ny = ny;
-            end
-
-            % terminal
-            if strcmp(cost.cost_type_e, 'LINEAR_LS')
-                if ~isempty(cost.W_e) && ~isempty(cost.Vx_e)
-                    ny_e = length(cost.W_e);
-                    if isempty(cost.yref_e)
-                        warning(['yref_e not defined provided.' 10 'Using zeros(ny_e,1) by default.']);
-                        self.cost.yref_e = zeros(ny_e,1);
-                    end
-                    if ny_e ~= size(cost.Vx_e, 1) || ny_e ~= size(cost.yref_e, 1)
-                        error('inconsistent dimension ny_e, regarding W_e, Vx_e, yref_e');
-                    end
-                elseif ~~isempty(cost.W_e) && ~~isempty(cost.Vx_e)
-                    ny_e = 0;
-                    warning('Fields W_e and Vx_e not provided. Using empty ls terminal cost.')
-                else
-                    error('setting linear least square cost: need W_e, Vx_e, at least one missing.')
-                end
-                dims.ny_e = ny_e;
-            elseif strcmp(cost.cost_type_e, 'NONLINEAR_LS')
-                if ~isempty(cost.W_e) && ~isempty(model.cost_y_expr_e)
-                    ny_e = length(cost.W_e);
-                    if isempty(cost.yref_e)
-                        warning(['yref_e not defined provided.' 10 'Using zeros(ny_e,1) by default.']);
-                        self.cost.yref_e = zeros(ny_e,1);
-                    end
-                    if ny_e ~= length(model.cost_y_expr_e) || ny_e ~= size(cost.yref_e, 1)
-                        error('inconsistent dimension ny_e, regarding W_e, cost_y_expr_e, yref_e.');
-                    end
-                else
-                    error('setting nonlinear least square cost: need W_e, cost_y_expr_e, at least one missing.')
-                end
-                dims.ny_e = ny_e;
-            end
+            self.make_consistent_cost_initial();
+            self.make_consistent_cost_path();
+            self.make_consistent_cost_terminal();
 
             % cost integration
-            if strcmp(opts.cost_discretization, "INTEGRATOR")
+            if strcmp(opts.cost_discretization, "INTEGRATOR") && opts.N_horizon > 0
                 if ~(strcmp(cost.cost_type, "NONLINEAR_LS") || strcmp(cost.cost_type, "CONVEX_OVER_NONLINEAR"))
                     error('INTEGRATOR cost discretization requires CONVEX_OVER_NONLINEAR or NONLINEAR_LS cost type for path cost.')
                 end
@@ -292,291 +735,24 @@ classdef AcadosOcp < handle
 
 
             %% constraints
-            % initial
-            if ~isempty(constraints.idxbx_0) && ~isempty(constraints.lbx_0) && ~isempty(constraints.ubx_0)
-                nbx_0 = length(constraints.lbx_0);
-                if nbx_0 ~= length(constraints.ubx_0) || nbx_0 ~= length(constraints.idxbx_0)
-                    error('inconsistent dimension nbx_0, regarding idxbx_0, lbx_0, ubx_0.');
-                end
-                if min(constraints.idxbx_0) < 0 || max(constraints.idxbx_0) > (dims.nx-1)
-                    error(['idxbx_0 should contain (zero-based) indices between 0 and ', num2str(dims.nx-1)])
-                end
-            elseif ~isempty(constraints.idxbx_0) || ~isempty(constraints.lbx_0) || ~isempty(constraints.ubx_0)
-                error('setting bounds on x: need idxbx_0, lbx_0, ubx_0, at least one missing.');
-            else
-                % no initial state constraint
-                disp("OCP without constraints on initial state detected.")
-                nbx_0 = 0;
-            end
-            dims.nbx_0 = nbx_0;
-
-            dims.nbxe_0 = length(constraints.idxbxe_0);
-
-            % path
-            if ~isempty(constraints.idxbx) && ~isempty(constraints.lbx) && ~isempty(constraints.ubx)
-                nbx = length(constraints.lbx);
-                if nbx ~= length(constraints.ubx) || nbx ~= length(constraints.idxbx)
-                    error('inconsistent dimension nbx, regarding idxbx, lbx, ubx.');
-                end
-                if min(constraints.idxbx) < 0 || max(constraints.idxbx) > (dims.nx-1)
-                    error(['idxbx should contain (zero-based) indices between 0 and ', num2str(dims.nx-1)])
-                end
-            elseif ~isempty(constraints.idxbx) || ~isempty(constraints.lbx) || ~isempty(constraints.ubx)
-                error('setting bounds on x: need idxbx, lbx, ubx, at least one missing.');
-            else
-                nbx = 0;
-            end
-            dims.nbx = nbx;
-
-            if ~isempty(constraints.idxbu) && ~isempty(constraints.lbu) && ~isempty(constraints.ubu)
-                nbu = length(constraints.lbu);
-                if nbu ~= length(constraints.ubu) || nbu ~= length(constraints.idxbu)
-                    error('inconsistent dimension nbu, regarding idxbu, lbu, ubu.');
-                end
-                if min(constraints.idxbu) < 0 || max(constraints.idxbu) > (dims.nu-1)
-                    error(['idxbu should contain (zero-based) indices between 0 and ', num2str(dims.nu-1)])
-                end
-            elseif ~isempty(constraints.idxbu) || ~isempty(constraints.lbu) || ~isempty(constraints.ubu)
-                error('setting bounds on u: need idxbu, lbu, ubu, at least one missing.');
-            else
-                nbu = 0;
-            end
-            dims.nbu = nbu;
-
-            if ~isempty(constraints.C) && ~isempty(constraints.D) && ...
-               ~isempty(constraints.lg) && ~isempty(constraints.ug)
-                ng = length(constraints.lg);
-                if ng ~= length(constraints.ug) || ng ~= size(constraints.C, 1) || ng ~= size(constraints.D, 1)
-                    error('inconsistent dimension ng, regarding C, D, lg, ug.');
-                end
-            elseif ~isempty(constraints.C) || ~isempty(constraints.D) || ...
-                   ~isempty(constraints.lg) || ~isempty(constraints.ug)
-                error('setting general linear constraints: need C, D, lg, ug, at least one missing.');
-            else
-                ng = 0;
-            end
-            dims.ng = ng;
-
-            if ~isempty(model.con_h_expr) && ...
-                     ~isempty(constraints.lh) && ~isempty(constraints.uh)
-                nh = length(constraints.lh);
-                if nh ~= length(constraints.uh) || nh ~= length(model.con_h_expr)
-                    error('inconsistent dimension nh, regarding expr_h, lh, uh.');
-                end
-            elseif ~isempty(model.con_h_expr) || ...
-                   ~isempty(constraints.lh) || ~isempty(constraints.uh)
-                error('setting external constraint function h: need expr_h, lh, uh at least one missing.');
-            else
-                nh = 0;
-            end
-            dims.nh = nh;
-
-            if ~isempty(model.con_h_expr_0) && ...
-                    ~isempty(constraints.lh_0) && ~isempty(constraints.uh_0)
-            nh_0 = length(constraints.lh_0);
-            if nh_0 ~= length(constraints.uh_0) || nh_0 ~= length(model.con_h_expr_0)
-                error('inconsistent dimension nh_0, regarding expr_h_0, lh_0, uh_0.');
-            end
-            elseif ~isempty(model.con_h_expr_0) || ...
-                ~isempty(constraints.lh_0) || ~isempty(constraints.uh_0)
-            error('setting external constraint function h: need expr_h_0, lh_0, uh_0 at least one missing.');
-            else
-                nh_0 = 0;
-            end
-            dims.nh_0 = nh_0;
-
-            % terminal
-            if ~isempty(constraints.idxbx_e) && ~isempty(constraints.lbx_e) && ~isempty(constraints.ubx_e)
-                nbx_e = length(constraints.lbx_e);
-                if nbx_e ~= length(constraints.ubx_e) || nbx_e ~= length(constraints.idxbx_e)
-                    error('inconsistent dimension nbx_e, regarding Jbx_e, lbx_e, ubx_e.');
-                end
-                if min(constraints.idxbx_e) < 0 || max(constraints.idxbx_e) > (dims.nx-1)
-                    error(['idxbx_e should contain (zero-based) indices between 0 and ', num2str(dims.nx-1)])
-                end
-            elseif ~isempty(constraints.idxbx_e) || ~isempty(constraints.lbx_e) || ~isempty(constraints.ubx_e)
-                error('setting bounds on x: need Jbx_e, lbx_e, ubx_e, at least one missing.');
-            else
-                nbx_e = 0;
-            end
-            dims.nbx_e = nbx_e;
-
-            if ~isempty(constraints.C_e) && ...
-               ~isempty(constraints.lg_e) && ~isempty(constraints.ug_e)
-                ng_e = length(constraints.lg_e);
-                if ng_e ~= length(constraints.ug_e) || ng_e ~= size(constraints.C_e, 1)
-                    error('inconsistent dimension ng_e, regarding C_e, lg_e, ug_e.');
-                end
-            elseif ~isempty(constraints.C_e) || ...
-                   ~isempty(constraints.lg_e) || ~isempty(constraints.ug_e)
-                error('setting general linear constraints: need C_e, lg_e, ug_e, at least one missing.');
-            else
-                ng_e = 0;
-            end
-            dims.ng_e = ng_e;
-
-            if ~isempty(model.con_h_expr_e) && ...
-                     ~isempty(constraints.lh_e) && ~isempty(constraints.uh_e)
-                nh_e = length(constraints.lh_e);
-                if nh_e ~= length(constraints.uh_e) || nh_e ~= length(model.con_h_expr_e)
-                    error('inconsistent dimension nh_e, regarding expr_h_e, lh_e, uh_e.');
-                end
-            elseif ~isempty(model.con_h_expr_e) || ...
-                   ~isempty(constraints.lh_e) || ~isempty(constraints.uh_e)
-                error('setting external constraint function h: need expr_h_e, lh_e, uh_e at least one missing.');
-            else
-                nh_e = 0;
-            end
-            dims.nh_e = nh_e;
+            self.make_consistent_constraints_initial();
+            self.make_consistent_constraints_path();
+            self.make_consistent_constraints_terminal();
 
             %% slack dimensions
-            nsbx = length(constraints.idxsbx);
-            nsbu = length(constraints.idxsbu);
-            nsg = length(constraints.idxsg);
-            nsh = length(constraints.idxsh);
-            nsphi = length(constraints.idxsphi);
-
-            ns = nsbx + nsbu + nsg + nsh + nsphi;
-            wrong_field = '';
-
-            if ns == 0
-                expected_shape = [0, 0];
-            else
-                expected_shape = [ns, 1];
-            end
-
-            if ~all(size(cost.Zl) == expected_shape)
-                wrong_field = 'Zl';
-                dim = size(cost.Zl);
-            elseif ~all(size(cost.Zu) == expected_shape)
-                wrong_field = 'Zu';
-                dim = size(cost.Zu);
-            elseif ~all(size(cost.zl) == expected_shape)
-                wrong_field = 'zl';
-                dim = size(cost.zl);
-            elseif ~all(size(cost.zu) == expected_shape)
-                wrong_field = 'zu';
-                dim = size(cost.zu);
-            end
-
-            if ~strcmp(wrong_field, '')
-                error(['Inconsistent size for field ', wrong_field, ' with dimension ', num2str(dim),...
-                      '. Detected ns = ', num2str(ns), ' = nsbx + nsbu + nsg + nsh + nsphi.',...
-                      ' With nsbx = ', num2str(nsbx), ', nsbu = ', num2str(nsbu), ' nsg = ', num2str(nsg),...
-                      ' nsh = ', num2str(nsh), ', nsphi = ', num2str(nsphi), '.'])
-            end
-
-            constraints.lsbu = zeros(nsbu, 1);
-            constraints.usbu = zeros(nsbu, 1);
-            constraints.lsbx = zeros(nsbx, 1);
-            constraints.usbx = zeros(nsbx, 1);
-            constraints.lsh = zeros(nsh, 1);
-            constraints.ush = zeros(nsh, 1);
-            constraints.lsphi = zeros(nsphi, 1);
-            constraints.usphi = zeros(nsphi, 1);
-
-            dims.ns = ns;
-            dims.nsbx = nsbx;
-            dims.nsbu = nsbu;
-            dims.nsg = nsg;
-            dims.nsh = nsh;
-            dims.nsphi = nsphi;
-
-            % slacks at initial stage
-            nsh_0 = length(constraints.idxsh_0);
-            nsphi_0 = length(constraints.idxsphi_0);
-
-            ns_0 = nsbu + nsg + nsh_0 + nsphi_0;
-            wrong_field = '';
-            if ns_0 == 0
-                expected_shape = [0, 0];
-            else
-                expected_shape = [ns_0, 1];
-            end
-
-            if ~all(size(cost.Zl_0) == expected_shape)
-                wrong_field = 'Zl_0';
-                dim = size(cost.Zl_0);
-            elseif ~all(size(cost.Zu_0) == expected_shape)
-                wrong_field = 'Zu_0';
-                dim = size(cost.Zu_0);
-            elseif ~all(size(cost.zl_0) == expected_shape)
-                wrong_field = 'zl_0';
-                dim = size(cost.zl_0);
-            elseif ~all(size(cost.zu_0) == expected_shape)
-                wrong_field = 'zu_0';
-                dim = size(cost.zu_0);
-            end
-
-            if ~strcmp(wrong_field, '')
-                error(['Inconsistent size for field', wrong_field, ' with dimension ', num2str(dim),...
-                        '. Detected ns_0 = ', num2str(ns_0), ' = nsbu + nsg + nsh_0 + nsphi_0.',...
-                        ' With nsg = ', num2str(nsg), ' nsh_0 = ', num2str(nsh_0), ', nsphi_0 = ', num2str(nsphi_0), '.'])
-            end
-
-            constraints.lsh_0 = zeros(nsh_0, 1);
-            constraints.ush_0 = zeros(nsh_0, 1);
-            constraints.lsphi_0 = zeros(nsphi_0, 1);
-            constraints.usphi_0 = zeros(nsphi_0, 1);
-
-            dims.ns_0 = ns_0;
-            dims.nsh_0 = nsh_0;
-            dims.nsphi_0 = nsphi_0;
-
-            %% terminal slack dimensions
-            nsbx_e = length(constraints.idxsbx_e);
-            nsg_e = length(constraints.idxsg_e);
-            nsh_e = length(constraints.idxsh_e);
-            nsphi_e = length(constraints.idxsphi_e);
-
-            ns_e = nsbx_e + nsg_e + nsh_e + nsphi_e;
-            wrong_field = '';
-            if ns_e == 0
-                expected_shape = [0, 0];
-            else
-                expected_shape = [ns_e, 1];
-            end
-
-            if ~all(size(cost.Zl_e) == expected_shape)
-                wrong_field = 'Zl_e';
-                dim = size(cost.Zl_e);
-            elseif ~all(size(cost.Zu_e) == expected_shape)
-                wrong_field = 'Zu_e';
-                dim = size(cost.Zu_e);
-            elseif ~all(size(cost.zl_e) == expected_shape)
-                wrong_field = 'zl_e';
-                dim = size(cost.zl_e);
-            elseif ~all(size(cost.zu_e) == expected_shape)
-                wrong_field = 'zu_e';
-                dim = size(cost.zu_e);
-            end
-
-            if ~strcmp(wrong_field, '')
-                error(['Inconsistent size for field', wrong_field, ' with dimension ', num2str(dim),...
-                        '. Detected ns_e = ', num2str(ns_e), ' = nsbx_e + nsg_e + nsh_e + nsphi_e.',...
-                        ' With nsbx_e = ', num2str(nsbx_e), ' nsg_e = ', num2str(nsg_e),...
-                        ' nsh_e = ', num2str(nsh_e), ', nsphi_e = ', num2str(nsphi_e), '.'])
-            end
-
-
-            constraints.lsbx_e = zeros(nsbx_e, 1);
-            constraints.usbx_e = zeros(nsbx_e, 1);
-            constraints.lsh_e = zeros(nsh_e, 1);
-            constraints.ush_e = zeros(nsh_e, 1);
-            constraints.lsphi_e = zeros(nsphi_e, 1);
-            constraints.usphi_e = zeros(nsphi_e, 1);
-
-            dims.ns_e = ns_e;
-            dims.nsbx_e = nsbx_e;
-            dims.nsg_e = nsg_e;
-            dims.nsh_e = nsh_e;
-            dims.nsphi_e = nsphi_e;
+            self.make_consistent_slack_dimensions_path();
+            self.make_consistent_slack_dimensions_initial();
+            self.make_consistent_slack_dimensions_terminal();
 
             % check for ACADOS_INFTY
             if ~ismember(opts.qp_solver, {'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_DAQP'})
                 ACADOS_INFTY = get_acados_infty();
                 % loop over all bound vectors
-                fields = {'lbx_0', 'ubx_0', 'lbx', 'ubx', 'lbx_e', 'ubx_e', 'lg', 'ug', 'lg_e', 'ug_e', 'lh', 'uh', 'lh_e', 'uh_e', 'lbu', 'ubu', 'lphi', 'uphi', 'lphi_e', 'uphi_e'};
+                if opts.N_horizon > 0
+                    fields = {'lbx_e', 'ubx_e', 'lg_e', 'ug_e', 'lh_e', 'uh_e', 'lphi_e', 'uphi_e'};
+                else
+                    fields = {'lbx_0', 'ubx_0', 'lbx', 'ubx', 'lbx_e', 'ubx_e', 'lg', 'ug', 'lg_e', 'ug_e', 'lh', 'uh', 'lh_e', 'uh_e', 'lbu', 'ubu', 'lphi', 'uphi', 'lphi_e', 'uphi_e'};
+                end
                 for i = 1:length(fields)
                     field = fields{i};
                     bound = constraints.(field);
@@ -586,62 +762,7 @@ classdef AcadosOcp < handle
                 end
             end
 
-            % shooting nodes -> time_steps
-            % discretization
-            if isempty(opts.N_horizon) && isempty(dims.N)
-                error('N_horizon not provided.');
-            elseif isempty(opts.N_horizon) && ~isempty(dims.N)
-                opts.N_horizon = dims.N;
-                disp(['field AcadosOcpDims.N has been migrated to AcadosOcpOptions.N_horizon.',...
-                      ' setting AcadosOcpOptions.N_horizon = N.',...
-                      ' For future comppatibility, please use AcadosOcpOptions.N_horizon directly.']);
-            elseif ~isempty(opts.N_horizon) && ~isempty(dims.N) && opts.N_horizon ~= dims.N
-                error(['Inconsistent dimension N, regarding N = ', num2str(dims.N),...
-                       ', N_horizon = ', num2str(opts.N_horizon), '.']);
-            else
-                dims.N = opts.N_horizon;
-            end
-            N = opts.N_horizon;
-
-            if length(opts.tf) ~= 1 || opts.tf < 0
-                error('time horizon tf should be a nonnegative number');
-            end
-
-            if ~isempty(opts.shooting_nodes)
-                if N + 1 ~= length(opts.shooting_nodes)
-                    error('inconsistent dimension N regarding shooting nodes.');
-                end
-                for i=1:N
-                    opts.time_steps(i) = opts.shooting_nodes(i+1) - opts.shooting_nodes(i);
-                end
-                sum_time_steps = sum(opts.time_steps);
-                if abs((sum_time_steps - opts.tf) / opts.tf) > 1e-14
-                    warning('shooting nodes are not consistent with time horizon tf, rescaling automatically');
-                    opts.time_steps = opts.time_steps * opts.tf / sum_time_steps;
-                end
-            elseif ~isempty(opts.time_steps)
-                if N ~= length(opts.time_steps)
-                    error('inconsistent dimension N regarding time steps.');
-                end
-                sum_time_steps = sum(opts.time_steps);
-                if abs((sum_time_steps - opts.tf) / opts.tf) > 1e-14
-                    error(['time steps are not consistent with time horizon tf, ', ...
-                        'got tf = ' num2str(opts.tf) '; sum(time_steps) = ' num2str(sum_time_steps) '.']);
-                end
-            else
-                opts.time_steps = opts.tf/N * ones(N,1);
-            end
-            % add consistent shooting_nodes e.g. for plotting;
-            if isempty(opts.shooting_nodes)
-                opts.shooting_nodes = zeros(N+1, 1);
-                for i = 1:N
-                    opts.shooting_nodes(i+1) = sum(opts.time_steps(1:i));
-                end
-            end
-            if any(opts.time_steps < 0)
-                error(['ocp discretization: time_steps between shooting nodes must all be > 0', ...
-                    ' got: ' num2str(opts.time_steps)])
-            end
+            self.make_consistent_discretization();
 
             % cost_scaling
             if isempty(opts.cost_scaling)
@@ -650,39 +771,12 @@ classdef AcadosOcp < handle
                 error(['cost_scaling must have length N+1 = ', num2str(N+1)]);
             end
 
-            % set integrator time automatically
-            opts.Tsim = opts.time_steps(1);
-
-            % integrator: num_stages
-            if ~isempty(opts.sim_method_num_stages)
-                if(strcmp(opts.integrator_type, "ERK"))
-                    if (any(opts.sim_method_num_stages < 1) || any(opts.sim_method_num_stages > 4))
-                        error(['ERK: num_stages = ', num2str(opts.sim_method_num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
-                    end
-                end
-            end
+            self.make_consistent_simulation();
 
             % qpdunes
             if ~isempty(strfind(opts.qp_solver,'qpdunes'))
                 constraints.idxbxe_0 = [];
                 dims.nbxe_0 = 0;
-            end
-
-            %% options sanity checks
-            if length(opts.sim_method_num_steps) == 1
-                opts.sim_method_num_steps = opts.sim_method_num_steps * ones(1, N);
-            elseif length(opts.sim_method_num_steps) ~= N
-                error('sim_method_num_steps must be a scalar or a vector of length N');
-            end
-            if length(opts.sim_method_num_stages) == 1
-                opts.sim_method_num_stages = opts.sim_method_num_stages * ones(1, N);
-            elseif length(opts.sim_method_num_stages) ~= N
-                error('sim_method_num_stages must be a scalar or a vector of length N');
-            end
-            if length(opts.sim_method_jac_reuse) == 1
-                opts.sim_method_jac_reuse = opts.sim_method_jac_reuse * ones(1, N);
-            elseif length(opts.sim_method_jac_reuse) ~= N
-                error('sim_method_jac_reuse must be a scalar or a vector of length N');
             end
 
             if strcmp(opts.qp_solver, "PARTIAL_CONDENSING_HPMPC") || ...
@@ -704,8 +798,14 @@ classdef AcadosOcp < handle
                 if opts.hessian_approx == 'EXACT'
                     error('fixed_hess and hessian_approx = EXACT are incompatible')
                 end
-                if ~(strcmp(cost.cost_type_0, "LINEAR_LS") && strcmp(cost.cost_type, "LINEAR_LS") && strcmp(cost.cost_type_e, "LINEAR_LS"))
-                    error('fixed_hess requires LINEAR_LS cost type')
+                if ~strcmp(cost.cost_type_0, "LINEAR_LS") && opts.N_horizon > 0
+                    error('fixed_hess requires LINEAR_LS cost_type_0')
+                end
+                if ~strcmp(cost.cost_type, "LINEAR_LS") && opts.N_horizon > 0
+                    error('fixed_hess requires LINEAR_LS cost_type')
+                end
+                if ~strcmp(cost.cost_type_e, "LINEAR_LS")
+                    error('fixed_hess requires LINEAR_LS cost_type_e')
                 end
             end
 
@@ -715,6 +815,8 @@ classdef AcadosOcp < handle
             if isempty(opts.qp_solver_cond_N)
                 opts.qp_solver_cond_N = N;
             end
+            if opts.qp_solver_cond_N > opts.N_horizon:
+                error('qp_solver_cond_N > N_horizon is not supported.');
 
             if ~isempty(opts.qp_solver_cond_block_size)
                 if sum(opts.qp_solver_cond_block_size) ~= N
@@ -726,6 +828,9 @@ classdef AcadosOcp < handle
             end
 
             if strcmp(opts.nlp_solver_type, "DDP")
+                if opts.N_horizon == 0
+                    error('DDP solver only supported for N_horizon > 0.');
+                end
                 if ~strcmp(opts.qp_solver, "PARTIAL_CONDENSING_HPIPM") || (opts.qp_solver_cond_N ~= opts.N_horizon)
                     error('DDP solver only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N.');
                 end
@@ -861,12 +966,26 @@ classdef AcadosOcp < handle
             end
 
             if isa(self.zoro_description, 'ZoroDescription')
+                if opts.N_horizon == 0
+                    error('ZORO only supported for N_horizon > 0.');
+                end
                 self.zoro_description.process();
             end
         end
 
         function [] = detect_cost_and_constraints(self)
             % detect cost type
+            N = self.solver_options.N_horizon
+            if N == 0
+                if strcmp(self.cost.cost_type_e, 'AUTO')
+                    detect_cost_type(self.model, self.cost, self.dims, 'terminal');
+                end
+                if strcmp(self.constraints.constr_type_e, 'AUTO')
+                    detect_constraint_structure(self.model, self.constraints, 'terminal');
+                end
+                return
+            end
+
             stage_types = {'initial', 'path', 'terminal'};
             cost_types = {self.cost.cost_type_0, self.cost.cost_type, self.cost.cost_type_e};
 
