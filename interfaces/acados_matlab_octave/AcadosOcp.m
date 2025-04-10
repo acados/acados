@@ -572,7 +572,7 @@ classdef AcadosOcp < handle
             end
             % add consistent shooting_nodes e.g. for plotting;
             if isempty(opts.shooting_nodes)
-                opts.shooting_nodes = zeros(N+1, 1);
+                opts.shooting_nodes = zeros(opts.N_horizon+1, 1);
                 for i = 1:opts.N_horizon
                     opts.shooting_nodes(i+1) = sum(opts.time_steps(1:i));
                 end
