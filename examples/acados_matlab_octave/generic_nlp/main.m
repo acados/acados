@@ -76,7 +76,7 @@ ocp_solver = AcadosOcpSolver(ocp);
 %% solve the NLP
 % initial guess
 init_x = [2.5; 3.0];
-ocp_solver.set('init_x', repmat(init_x,1,2));
+ocp_solver.set('init_x', init_x);
 
 % set the parameters
 p_value = [1;1];
