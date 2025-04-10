@@ -814,7 +814,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // Compute the step norm
-        if (opts->tol_min_step_norm > 0.0 || nlp_opts->log_primal_step_norm)
+        if (opts->tol_min_step_norm > 0.0 || nlp_opts->log_primal_step_norm || nlp_opts->print_level > 0)
         {
             mem->step_norm = ocp_qp_out_compute_primal_nrm_inf(qp_out);
             if (nlp_opts->log_primal_step_norm)
