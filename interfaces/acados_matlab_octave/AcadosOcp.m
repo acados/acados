@@ -363,8 +363,8 @@ classdef AcadosOcp < handle
         end
 
         function make_consistent_slack_dimensions_path(self)
-            constraints = self.constraints
-            dims = self.dims
+            constraints = self.constraints;
+            dims = self.dims;
             if self.solver_options.N_horizon == 0
                 return
             end
@@ -423,8 +423,8 @@ classdef AcadosOcp < handle
         end
 
         function make_consistent_slack_dimensions_initial(self)
-            constraints = self.constraints
-            dims = self.dims
+            constraints = self.constraints;
+            dims = self.dims;
             if self.solver_options.N_horizon == 0
                 return
             end
@@ -471,8 +471,8 @@ classdef AcadosOcp < handle
         end
 
         function make_consistent_slack_dimensions_terminal(self)
-            constraints = self.constraints
-            dims = self.dims
+            constraints = self.constraints;
+            dims = self.dims;
             
             nsbx_e = length(constraints.idxsbx_e);
             nsg_e = length(constraints.idxsg_e);
@@ -525,13 +525,14 @@ classdef AcadosOcp < handle
         end
 
         function make_consistent_discretization(self)
-            dims = self.dims
-            opts = self.solver_options
+            dims = self.dims;
+            opts = self.solver_options;
 
-            if opts.N_horizon == 0:
-                opts.shooting_nodes = zeros(1, 1)
-                opts.time_steps = ones(1, 1)
+            if opts.N_horizon == 0
+                opts.shooting_nodes = zeros(1, 1);
+                opts.time_steps = ones(1, 1);
                 return
+            end
 
             N = opts.N_horizon;
 
@@ -806,7 +807,7 @@ classdef AcadosOcp < handle
                 end
                 if ~strcmp(cost.cost_type_e, "LINEAR_LS")
                     error('fixed_hess requires LINEAR_LS cost_type_e')
-                end
+                endf
             end
 
             % TODO: add checks for solution sensitivities when brining them to Matlab
@@ -815,7 +816,7 @@ classdef AcadosOcp < handle
             if isempty(opts.qp_solver_cond_N)
                 opts.qp_solver_cond_N = N;
             end
-            if opts.qp_solver_cond_N > opts.N_horizon:
+            if opts.qp_solver_cond_N > opts.N_horizon
                 error('qp_solver_cond_N > N_horizon is not supported.');
 
             if ~isempty(opts.qp_solver_cond_block_size)
@@ -1125,7 +1126,7 @@ classdef AcadosOcp < handle
             end
         end
 
-        function setup_code_generation_context_dynamics(self, ocp, context, )
+        function setup_code_generation_context_dynamics(self, ocp, context)
             solver_opts = self.solver_options;
             if solver_opts.N_horizon == 0
                 return
