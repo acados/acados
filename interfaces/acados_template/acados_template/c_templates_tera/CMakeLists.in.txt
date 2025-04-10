@@ -108,7 +108,7 @@ endif()
 
 
 # object target names
-{%- if solver_options.N_horizon > 0 %}
+{%- if problem_class == "SIM" or solver_options.N_horizon > 0 %}
 set(MODEL_OBJ model_{{ model.name }})
 {%- endif %}
 set(OCP_OBJ ocp_{{ model.name }})
@@ -116,7 +116,7 @@ set(OCP_OBJ ocp_{{ model.name }})
 set(SIM_OBJ sim_{{ model.name }})
 {%- endif %}
 
-{%- if solver_options.N_horizon > 0 %}
+{%- if problem_class == "SIM" or solver_options.N_horizon > 0 %}
 # model
 set(MODEL_SRC
 {%- for filename in external_function_files_model %}
@@ -272,21 +272,14 @@ endif(${BUILD_EXAMPLE})
 if(${BUILD_SIM_EXAMPLE})
     set(EX_SIM_SRC main_sim_{{ model.name }}.c)
     set(EX_SIM_EXE main_sim_{{ model.name }})
-    add_executable(${EX_SIM_EXE} ${EX_SIM_SRC} 
-    {%- if solver_options.N_horizon > 0 %}
-    $<TARGET_OBJECTS:${MODEL_OBJ}>
-    {%- endif %}
-    $<TARGET_OBJECTS:${SIM_OBJ}>)
+    add_executable(${EX_SIM_EXE} ${EX_SIM_SRC} $<TARGET_OBJECTS:${MODEL_OBJ}> $<TARGET_OBJECTS:${SIM_OBJ}>)
     install(TARGETS ${EX_SIM_EXE} DESTINATION ${CMAKE_INSTALL_PREFIX})
 endif(${BUILD_SIM_EXAMPLE})
 
 # sim_shared_lib
 if(${BUILD_ACADOS_SIM_SOLVER_LIB})
     set(LIB_ACADOS_SIM_SOLVER acados_sim_solver_{{ model.name }})
-    add_library(${LIB_ACADOS_SIM_SOLVER} SHARED 
-    {%- if solver_options.N_horizon > 0 %}
-    $<TARGET_OBJECTS:${MODEL_OBJ}>
-    {%- endif %} $<TARGET_OBJECTS:${SIM_OBJ}>)
+    add_library(${LIB_ACADOS_SIM_SOLVER} SHARED $<TARGET_OBJECTS:${MODEL_OBJ}> $<TARGET_OBJECTS:${SIM_OBJ}>)
     install(TARGETS ${LIB_ACADOS_SIM_SOLVER} DESTINATION ${CMAKE_INSTALL_PREFIX})
 endif(${BUILD_ACADOS_SIM_SOLVER_LIB})
 {%- endif %}
