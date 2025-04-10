@@ -210,6 +210,7 @@ classdef AcadosOcp < handle
         function make_consistent_constraints_initial(self)
             dims = self.dims;
             constraints = self.constraints;
+            model = self.model;
             if self.solver_options.N_horizon == 0
                 return
             end
@@ -251,6 +252,7 @@ classdef AcadosOcp < handle
         function make_consistent_constraints_path(self)
             dims = self.dims;
             constraints = self.constraints;
+            model = self.model;
             if self.solver_options.N_horizon == 0
                 return
             end
@@ -314,9 +316,10 @@ classdef AcadosOcp < handle
             dims.nh = nh;
         end
 
-        function make_consistent_constraints_path(self)
+        function make_consistent_constraints_terminal(self)
             dims = self.dims;
             constraints = self.constraints;
+            model = self.model;
 
             if ~isempty(constraints.idxbx_e) && ~isempty(constraints.lbx_e) && ~isempty(constraints.ubx_e)
                 nbx_e = length(constraints.lbx_e);
@@ -365,6 +368,7 @@ classdef AcadosOcp < handle
         function make_consistent_slack_dimensions_path(self)
             constraints = self.constraints;
             dims = self.dims;
+            cost = self.cost;
             if self.solver_options.N_horizon == 0
                 return
             end
@@ -425,6 +429,7 @@ classdef AcadosOcp < handle
         function make_consistent_slack_dimensions_initial(self)
             constraints = self.constraints;
             dims = self.dims;
+            cost = self.cost;
             if self.solver_options.N_horizon == 0
                 return
             end
@@ -473,6 +478,7 @@ classdef AcadosOcp < handle
         function make_consistent_slack_dimensions_terminal(self)
             constraints = self.constraints;
             dims = self.dims;
+            cost = self.cost;
             
             nsbx_e = length(constraints.idxsbx_e);
             nsg_e = length(constraints.idxsg_e);
@@ -814,7 +820,7 @@ classdef AcadosOcp < handle
 
             % check if qp_solver_cond_N is set
             if isempty(opts.qp_solver_cond_N)
-                opts.qp_solver_cond_N = N;
+                opts.qp_solver_cond_N = opts.N_horizon;
             end
             if opts.qp_solver_cond_N > opts.N_horizon
                 error('qp_solver_cond_N > N_horizon is not supported.');
@@ -1062,7 +1068,7 @@ classdef AcadosOcp < handle
             cost = ocp.cost;
             dims = ocp.dims;
 
-            self.setup_code_generation_context_dynamics(ocp, context);
+            setup_code_generation_context_dynamics(ocp, context);
 
             if solver_opts.N_horizon == 0
                 stage_type_indices = [3];
@@ -1127,8 +1133,8 @@ classdef AcadosOcp < handle
             end
         end
 
-        function setup_code_generation_context_dynamics(self, ocp, context)
-            solver_opts = self.solver_options;
+        function setup_code_generation_context_dynamics(ocp, context)
+            solver_opts = ocp.solver_options;
             if solver_opts.N_horizon == 0
                 return
             end
