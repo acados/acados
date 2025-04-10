@@ -37,8 +37,10 @@
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
 
+{%- if solver_options.with_batch_functionality %}
 // openmp
 #include <omp.h>
+{%- endif %}
 
 // example specific
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
