@@ -1060,44 +1060,20 @@ classdef AcadosOcp < handle
             cost = ocp.cost;
             dims = ocp.dims;
 
-            % dynamics
-            model_dir = fullfile(pwd, code_gen_opts.code_export_directory, [ocp.name '_model']);
+            self.setup_code_generation_context_dynamics(ocp, context);
 
-            if strcmp(ocp.model.dyn_ext_fun_type, 'generic')
-                check_dir_and_create(model_dir);
-                copyfile(fullfile(pwd, ocp.model.dyn_generic_source), model_dir);
-                context.add_external_function_file(ocp.model.dyn_generic_source, model_dir);
-            elseif strcmp(ocp.model.dyn_ext_fun_type, 'casadi')
-                check_casadi_version();
-                switch solver_opts.integrator_type
-                    case 'ERK'
-                        generate_c_code_explicit_ode(context, ocp.model, model_dir);
-                    case 'IRK'
-                        generate_c_code_implicit_ode(context, ocp.model, model_dir);
-                    case 'LIFTED_IRK'
-                        if ~(isempty(ocp.model.t) || length(ocp.model.t) == 0)
-                            error('NOT LIFTED_IRK with time-varying dynamics not implemented yet.')
-                        end
-                        generate_c_code_implicit_ode(context, ocp.model, model_dir);
-                    case 'GNSF'
-                        generate_c_code_gnsf(context, ocp.model, model_dir);
-                    case 'DISCRETE'
-                        generate_c_code_discrete_dynamics(context, ocp.model, model_dir);
-                    otherwise
-                        error('Unknown integrator type.')
+            if solver_opts.N_horizon == 0
+                stage_type_indices = [3];
+            else
+                if ignore_initial && ignore_terminal
+                    stage_type_indices = [2];
+                elseif ignore_terminal
+                    stage_type_indices = [1, 2];
+                elseif ignore_initial
+                    stage_type_indices = [2, 3];
+                else
+                    stage_type_indices = [1, 2, 3];
                 end
-            else
-                error('Unknown dyn_ext_fun_type.')
-            end
-
-            if ignore_initial && ignore_terminal
-                stage_type_indices = [2];
-            elseif ignore_terminal
-                stage_type_indices = [1, 2];
-            elseif ignore_initial
-                stage_type_indices = [2, 3];
-            else
-                stage_type_indices = [1, 2, 3];
             end
 
             stage_types = {'initial', 'path', 'terminal'};
@@ -1146,6 +1122,42 @@ classdef AcadosOcp < handle
                 if strcmp(constraints_types{i}, 'BGH') && constraints_dims{i} > 0
                     generate_c_code_nonlinear_constr(context, ocp.model, constraints_dir, stage_types{i});
                 end
+            end
+        end
+
+        function setup_code_generation_context_dynamics(self, ocp, context, )
+            solver_opts = self.solver_options;
+            if solver_opts.N_horizon == 0
+                return
+            end
+
+            model_dir = fullfile(pwd, code_gen_opts.code_export_directory, [ocp.name '_model']);
+
+            if strcmp(ocp.model.dyn_ext_fun_type, 'generic')
+                check_dir_and_create(model_dir);
+                copyfile(fullfile(pwd, ocp.model.dyn_generic_source), model_dir);
+                context.add_external_function_file(ocp.model.dyn_generic_source, model_dir);
+            elseif strcmp(ocp.model.dyn_ext_fun_type, 'casadi')
+                check_casadi_version();
+                switch solver_opts.integrator_type
+                    case 'ERK'
+                        generate_c_code_explicit_ode(context, ocp.model, model_dir);
+                    case 'IRK'
+                        generate_c_code_implicit_ode(context, ocp.model, model_dir);
+                    case 'LIFTED_IRK'
+                        if ~(isempty(ocp.model.t) || length(ocp.model.t) == 0)
+                            error('NOT LIFTED_IRK with time-varying dynamics not implemented yet.')
+                        end
+                        generate_c_code_implicit_ode(context, ocp.model, model_dir);
+                    case 'GNSF'
+                        generate_c_code_gnsf(context, ocp.model, model_dir);
+                    case 'DISCRETE'
+                        generate_c_code_discrete_dynamics(context, ocp.model, model_dir);
+                    otherwise
+                        error('Unknown integrator type.')
+                end
+            else
+                error('Unknown dyn_ext_fun_type.')
             end
         end
 
