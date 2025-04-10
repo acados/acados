@@ -94,7 +94,7 @@ if status ~= 0
 end
 
 % display results
-x_opt = ocp_solver.get('x',1);
+x_opt = ocp_solver.get('x', 0);
 disp('Optimal solution:')  % should be [1;1] for p = [1;1]
 disp(x_opt)
 disp(['Total time: ', num2str(1e3*total_time), ' ms'])
