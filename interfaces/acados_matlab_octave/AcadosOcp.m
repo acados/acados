@@ -430,6 +430,8 @@ classdef AcadosOcp < handle
             constraints = self.constraints;
             dims = self.dims;
             cost = self.cost;
+            nsbu = dims.nsbu;
+            nsg = dims.nsg;
             if self.solver_options.N_horizon == 0
                 return
             end
