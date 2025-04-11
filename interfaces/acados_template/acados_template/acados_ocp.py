@@ -163,7 +163,7 @@ class AcadosOcp:
     def json_file(self, json_file):
         self.__json_file = json_file
 
-    def make_consistent_cost_initial(self):
+    def _make_consistent_cost_initial(self):
         dims = self.dims
         cost = self.cost
         model = self.model
@@ -238,8 +238,8 @@ class AcadosOcp:
             if not is_empty(model.cost_expr_ext_cost_custom_hess_0):
                 if model.cost_expr_ext_cost_custom_hess_0.shape != (dims.nx+dims.nu, dims.nx+dims.nu):
                     raise ValueError('cost_expr_ext_cost_custom_hess_0 should have shape (nx+nu, nx+nu).')
-    
-    def make_consistent_cost_path(self):
+
+    def _make_consistent_cost_path(self):
         dims = self.dims
         cost = self.cost
         model = self.model
@@ -310,8 +310,8 @@ class AcadosOcp:
             if not is_empty(model.cost_expr_ext_cost_custom_hess):
                 if model.cost_expr_ext_cost_custom_hess.shape != (dims.nx+dims.nu, dims.nx+dims.nu):
                     raise ValueError('cost_expr_ext_cost_custom_hess should have shape (nx+nu, nx+nu).')
-        
-    def make_consistent_cost_terminal(self):
+
+    def _make_consistent_cost_terminal(self):
         dims = self.dims
         cost = self.cost
         model = self.model
@@ -479,7 +479,7 @@ class AcadosOcp:
                 raise ValueError('convex over nonlinear constraints: con_r_expr but con_phi_expr is nonempty')
             else:
                 dims.nr = casadi_length(model.con_r_expr)
-        
+
     def _make_consistent_constraints_terminal(self):
         dims = self.dims
         constraints = self.constraints
@@ -708,7 +708,7 @@ class AcadosOcp:
                 + f'Detected ns = {ns} = nsbx + nsbu + nsg + nsh + nsphi.\n\t'\
                 + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh = {nsh}, nsphi = {nsphi}.')
         dims.ns = ns
-        
+
     def _make_consistent_slacks_terminal(self):
         constraints = self.constraints
         dims = self.dims
@@ -924,9 +924,9 @@ class AcadosOcp:
                 f'\nGot np_global = {dims.np_global}, self.p_global_values.shape = {self.p_global_values.shape[0]}\n')
 
         ## cost
-        self.make_consistent_cost_initial()
-        self.make_consistent_cost_path()
-        self.make_consistent_cost_terminal()
+        self._make_consistent_cost_initial()
+        self._make_consistent_cost_path()
+        self._make_consistent_cost_terminal()
 
         # GN check
         gn_warning_0 = (opts.N_horizon > 0 and cost.cost_type_0 == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess_0))
