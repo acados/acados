@@ -859,11 +859,11 @@ classdef AcadosOcp < handle
             end
 
             if opts.N_horizon == 0
-                [strcmp(cost.cost_type_e, {'LINEAR_LS', 'NONLINEAR_LS'})]
+                cost_types_to_check = [strcmp(cost.cost_type_e, {'LINEAR_LS', 'NONLINEAR_LS'})]
             else
-                [strcmp(cost.cost_type, {'LINEAR_LS', 'NONLINEAR_LS'}) ...
-                                             strcmp(cost.cost_type_0, {'LINEAR_LS', 'NONLINEAR_LS'}) ...
-                                             strcmp(cost.cost_type_e, {'LINEAR_LS', 'NONLINEAR_LS'})]
+                cost_types_to_check = [strcmp(cost.cost_type, {'LINEAR_LS', 'NONLINEAR_LS'}) ...
+                                            strcmp(cost.cost_type_0, {'LINEAR_LS', 'NONLINEAR_LS'}) ...
+                                            strcmp(cost.cost_type_e, {'LINEAR_LS', 'NONLINEAR_LS'})]
             end
             if (opts.as_rti_level == 1 || opts.as_rti_level == 2) && any(cost_types_to_check)
                 error('as_rti_level in [1, 2] not supported for LINEAR_LS and NONLINEAR_LS cost type.');
