@@ -1322,13 +1322,14 @@ class AcadosOcp:
 
         return context
 
+
     def _setup_code_generation_context_dynamics(self, context: GenerateContext):
         opts = self.solver_options
         model = self.model
 
         if opts.N_horizon == 0:
             return
-        
+
         code_gen_opts = context.opts
 
         # create code_export_dir, model_dir
@@ -1356,6 +1357,7 @@ class AcadosOcp:
             target_location = os.path.join(target_dir, model.dyn_generic_source)
             shutil.copyfile(model.dyn_generic_source, target_location)
             context.add_external_function_file(model.dyn_generic_source, target_dir)
+
 
     def remove_x0_elimination(self) -> None:
         """Remove the elimination of x0 from the constraints, bounds on x0 are handled as general bounds on x."""
