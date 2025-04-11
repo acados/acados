@@ -226,7 +226,7 @@ endif()
 # bundled_shared_lib
 if(${BUILD_ACADOS_SOLVER_LIB})
     set(LIB_ACADOS_SOLVER acados_solver_{{ model.name }})
-    add_library(${LIB_ACADOS_SOLVER} SHARED 
+    add_library(${LIB_ACADOS_SOLVER} SHARED
     {%- if solver_options.N_horizon > 0 %}
     $<TARGET_OBJECTS:${MODEL_OBJ}>
     {%- endif %}
@@ -241,10 +241,10 @@ endif(${BUILD_ACADOS_SOLVER_LIB})
 # ocp_shared_lib
 if(${BUILD_ACADOS_OCP_SOLVER_LIB})
     set(LIB_ACADOS_OCP_SOLVER acados_ocp_solver_{{ model.name }})
-    add_library(${LIB_ACADOS_OCP_SOLVER} SHARED 
+    add_library(${LIB_ACADOS_OCP_SOLVER} SHARED
     {%- if solver_options.N_horizon > 0 %}
     $<TARGET_OBJECTS:${MODEL_OBJ}>
-    {%- endif %} 
+    {%- endif %}
     $<TARGET_OBJECTS:${OCP_OBJ}>)
     # Specify libraries or flags to use when linking a given target and/or its dependents.
     target_link_libraries(${LIB_ACADOS_OCP_SOLVER} PRIVATE ${EXTERNAL_LIB})
@@ -254,10 +254,10 @@ endif(${BUILD_ACADOS_OCP_SOLVER_LIB})
 
 # example
 if(${BUILD_EXAMPLE})
-    add_executable(${EX_EXE} ${EX_SRC} 
+    add_executable(${EX_EXE} ${EX_SRC}
     {%- if solver_options.N_horizon > 0 %}
     $<TARGET_OBJECTS:${MODEL_OBJ}>
-    {%- endif %} 
+    {%- endif %}
     $<TARGET_OBJECTS:${OCP_OBJ}>
     {%- if solver_options.integrator_type != "DISCRETE" %}
         $<TARGET_OBJECTS:${SIM_OBJ}>
