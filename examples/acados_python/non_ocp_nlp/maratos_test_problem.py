@@ -82,7 +82,6 @@ def solve_maratos_problem_with_setting(setting):
 
     # dynamics: identity
     model.x = x
-    model.u = SX.sym('u', 0, 0) # [] / None doesnt work
     model.p = []
     model.name = f'maratos_problem'
     ocp.model = model
@@ -100,17 +99,17 @@ def solve_maratos_problem_with_setting(setting):
     ocp.constraints.lh_e = np.array([1.0])
     ocp.constraints.uh_e = np.array([1.0])
     # # soften
-    # ocp.constraints.idxsh = np.array([0])
-    # ocp.cost.zl = 1e5 * np.array([1])
-    # ocp.cost.zu = 1e5 * np.array([1])
-    # ocp.cost.Zl = 1e5 * np.array([1])
-    # ocp.cost.Zu = 1e5 * np.array([1])
+    # ocp.constraints.idxsh_e = np.array([0])
+    # ocp.cost.zl_e = 1e5 * np.array([1])
+    # ocp.cost.zu_e = 1e5 * np.array([1])
+    # ocp.cost.Zl_e = 1e5 * np.array([1])
+    # ocp.cost.Zu_e = 1e5 * np.array([1])
 
     # add bounds on x
     # nx = 2
-    # ocp.constraints.idxbx_0 = np.array(range(nx))
-    # ocp.constraints.lbx_0 = -2 * np.ones((nx))
-    # ocp.constraints.ubx_0 = 2 * np.ones((nx))
+    # ocp.constraints.idxbx_e = np.array(range(nx))
+    # ocp.constraints.lbx_e = -2 * np.ones((nx))
+    # ocp.constraints.ubx_e = 2 * np.ones((nx))
 
     # set options
     ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES # TODO: Someone should change this to PARTIAL_CONDENSING_HPIPM after the HPIPM fix for N=0
