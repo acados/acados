@@ -163,6 +163,7 @@ class AcadosOcp:
     def json_file(self, json_file):
         self.__json_file = json_file
 
+
     def _make_consistent_cost_initial(self):
         dims = self.dims
         cost = self.cost
@@ -239,6 +240,7 @@ class AcadosOcp:
                 if model.cost_expr_ext_cost_custom_hess_0.shape != (dims.nx+dims.nu, dims.nx+dims.nu):
                     raise ValueError('cost_expr_ext_cost_custom_hess_0 should have shape (nx+nu, nx+nu).')
 
+
     def _make_consistent_cost_path(self):
         dims = self.dims
         cost = self.cost
@@ -311,6 +313,7 @@ class AcadosOcp:
                 if model.cost_expr_ext_cost_custom_hess.shape != (dims.nx+dims.nu, dims.nx+dims.nu):
                     raise ValueError('cost_expr_ext_cost_custom_hess should have shape (nx+nu, nx+nu).')
 
+
     def _make_consistent_cost_terminal(self):
         dims = self.dims
         cost = self.cost
@@ -375,6 +378,7 @@ class AcadosOcp:
                 if model.cost_expr_ext_cost_custom_hess_e.shape != (dims.nx, dims.nx):
                     raise ValueError('cost_expr_ext_cost_custom_hess_e should have shape (nx, nx).')
 
+
     def _make_consistent_constraints_initial(self):
         constraints = self.constraints
         dims = self.dims
@@ -420,6 +424,7 @@ class AcadosOcp:
                 raise ValueError('convex over nonlinear constraints: con_r_expr_0 but con_phi_expr_0 is nonempty')
             else:
                 dims.nr_0 = casadi_length(model.con_r_expr_0)
+
 
     def _make_consistent_constraints_path(self):
         constraints = self.constraints
@@ -480,6 +485,7 @@ class AcadosOcp:
             else:
                 dims.nr = casadi_length(model.con_r_expr)
 
+
     def _make_consistent_constraints_terminal(self):
         dims = self.dims
         constraints = self.constraints
@@ -519,6 +525,7 @@ class AcadosOcp:
                 raise ValueError('convex over nonlinear constraints: con_r_expr_e but con_phi_expr_e is nonempty')
             else:
                 dims.nr_e = casadi_length(model.con_r_expr_e)
+
 
     def _make_consistent_slacks_initial(self):
         constraints = self.constraints
@@ -600,6 +607,7 @@ class AcadosOcp:
                 + f'Detected ns_0 = {ns_0} = nsbu + nsg + nsh_0 + nsphi_0.\n\t'\
                 + f'With nsbu = {nsbu}, nsg = {nsg}, nsh_0 = {nsh_0}, nsphi_0 = {nsphi_0}.')
         dims.ns_0 = ns_0
+
 
     def _make_consistent_slacks_path(self):
         constraints = self.constraints
@@ -709,6 +717,7 @@ class AcadosOcp:
                 + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh = {nsh}, nsphi = {nsphi}.')
         dims.ns = ns
 
+
     def _make_consistent_slacks_terminal(self):
         constraints = self.constraints
         dims = self.dims
@@ -800,6 +809,7 @@ class AcadosOcp:
 
         dims.ns_e = ns_e
 
+
     def _make_consistent_discretization(self):
         opts = self.solver_options
         if opts.N_horizon == 0:
@@ -841,6 +851,7 @@ class AcadosOcp:
         if (tf - opts.tf) / tf > 1e-13:
             raise ValueError(f'Inconsistent discretization: {opts.tf}'
                 f' = tf != sum(opts.time_steps) = {tf}.')
+
 
     def _make_consistent_simulation(self):
         opts = self.solver_options
@@ -885,6 +896,7 @@ class AcadosOcp:
             opts.sim_method_jac_reuse = np.reshape(opts.sim_method_jac_reuse, (opts.N_horizon,)).astype(np.int64)
         else:
             raise ValueError("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
+
 
     def make_consistent(self, is_mocp_phase=False) -> None:
         """
@@ -958,7 +970,7 @@ class AcadosOcp:
         self._make_consistent_constraints_initial()
         self._make_consistent_constraints_path()
         self._make_consistent_constraints_terminal()
-        
+
         self._make_consistent_slacks_path()
         self._make_consistent_slacks_initial()
         self._make_consistent_slacks_terminal()
@@ -1035,7 +1047,6 @@ class AcadosOcp:
             for horizon_type, constraint in bgp_type_constraint_pairs:
                 if constraint is not None and any(ca.which_depends(constraint, model.p_global)):
                     raise NotImplementedError(f"with_value_sens_wrt_params is not supported for BGP constraints that depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
-
 
         if opts.tau_min > 0 and "HPIPM" not in opts.qp_solver:
             raise ValueError('tau_min > 0 is only compatible with HPIPM.')
