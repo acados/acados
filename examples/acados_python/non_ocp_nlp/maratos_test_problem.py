@@ -82,7 +82,6 @@ def solve_maratos_problem_with_setting(setting):
 
     # dynamics: identity
     model.x = x
-    model.p = []
     model.name = f'maratos_problem'
     ocp.model = model
 
