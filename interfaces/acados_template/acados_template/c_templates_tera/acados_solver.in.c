@@ -362,6 +362,7 @@ static ocp_nlp_dims* {{ model.name }}_acados_create_setup_dimensions({{ model.na
         {%- endif %}
     }
 {%- endif %}{# solver_options.N_horizon > 0 #}
+
 {%- if constraints.constr_type_e == "BGH" %}
     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nh", &nh[N]);
     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nsh", &nsh[N]);
@@ -2697,7 +2698,6 @@ int {{ model.name }}_acados_update_qp_solver_cond_N({{ model.name }}_solver_caps
 {%- if solver_options.N_horizon == 0 %}
     printf("\nacados_update_qp_solver_cond_N() not implemented, since N_horizon = 0!\n\n");
     exit(1);
-    return -1;
 {%- elif solver_options.qp_solver is starting_with("PARTIAL_CONDENSING") %}
     // 1) destroy solver
     ocp_nlp_solver_destroy(capsule->nlp_solver);
@@ -2718,7 +2718,6 @@ int {{ model.name }}_acados_update_qp_solver_cond_N({{ model.name }}_solver_caps
 {%- else %}
     printf("\nacados_update_qp_solver_cond_N() not implemented, since no partial condensing solver is used!\n\n");
     exit(1);
-    return -1;
 {%- endif %}
 }
 
