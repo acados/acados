@@ -235,14 +235,14 @@ classdef AcadosOcp < handle
             dims.nbxe_0 = length(constraints.idxbxe_0);
 
             if ~isempty(model.con_h_expr_0) && ...
-                ~isempty(constraints.lh_0) && ~isempty(constraints.uh_0)
-            nh_0 = length(constraints.lh_0);
-            if nh_0 ~= length(constraints.uh_0) || nh_0 ~= length(model.con_h_expr_0)
-                error('inconsistent dimension nh_0, regarding expr_h_0, lh_0, uh_0.');
-            end
+               ~isempty(constraints.lh_0) && ~isempty(constraints.uh_0)
+                nh_0 = length(constraints.lh_0);
+                if nh_0 ~= length(constraints.uh_0) || nh_0 ~= length(model.con_h_expr_0)
+                    error('inconsistent dimension nh_0, regarding expr_h_0, lh_0, uh_0.');
+                end
             elseif ~isempty(model.con_h_expr_0) || ...
-                ~isempty(constraints.lh_0) || ~isempty(constraints.uh_0)
-            error('setting external constraint function h: need expr_h_0, lh_0, uh_0 at least one missing.');
+                   ~isempty(constraints.lh_0) || ~isempty(constraints.uh_0)
+                error('setting external constraint function h: need expr_h_0, lh_0, uh_0 at least one missing.');
             else
                 nh_0 = 0;
             end
@@ -288,13 +288,13 @@ classdef AcadosOcp < handle
             dims.nbu = nbu;
 
             if ~isempty(constraints.C) && ~isempty(constraints.D) && ...
-            ~isempty(constraints.lg) && ~isempty(constraints.ug)
+               ~isempty(constraints.lg) && ~isempty(constraints.ug)
                 ng = length(constraints.lg);
                 if ng ~= length(constraints.ug) || ng ~= size(constraints.C, 1) || ng ~= size(constraints.D, 1)
                     error('inconsistent dimension ng, regarding C, D, lg, ug.');
                 end
             elseif ~isempty(constraints.C) || ~isempty(constraints.D) || ...
-                ~isempty(constraints.lg) || ~isempty(constraints.ug)
+                   ~isempty(constraints.lg) || ~isempty(constraints.ug)
                 error('setting general linear constraints: need C, D, lg, ug, at least one missing.');
             else
                 ng = 0;
@@ -302,13 +302,13 @@ classdef AcadosOcp < handle
             dims.ng = ng;
 
             if ~isempty(model.con_h_expr) && ...
-                    ~isempty(constraints.lh) && ~isempty(constraints.uh)
+               ~isempty(constraints.lh) && ~isempty(constraints.uh)
                 nh = length(constraints.lh);
                 if nh ~= length(constraints.uh) || nh ~= length(model.con_h_expr)
                     error('inconsistent dimension nh, regarding expr_h, lh, uh.');
                 end
             elseif ~isempty(model.con_h_expr) || ...
-                ~isempty(constraints.lh) || ~isempty(constraints.uh)
+                   ~isempty(constraints.lh) || ~isempty(constraints.uh)
                 error('setting external constraint function h: need expr_h, lh, uh at least one missing.');
             else
                 nh = 0;
@@ -337,13 +337,13 @@ classdef AcadosOcp < handle
             dims.nbx_e = nbx_e;
 
             if ~isempty(constraints.C_e) && ...
-            ~isempty(constraints.lg_e) && ~isempty(constraints.ug_e)
+               ~isempty(constraints.lg_e) && ~isempty(constraints.ug_e)
                 ng_e = length(constraints.lg_e);
                 if ng_e ~= length(constraints.ug_e) || ng_e ~= size(constraints.C_e, 1)
                     error('inconsistent dimension ng_e, regarding C_e, lg_e, ug_e.');
                 end
             elseif ~isempty(constraints.C_e) || ...
-                ~isempty(constraints.lg_e) || ~isempty(constraints.ug_e)
+                   ~isempty(constraints.lg_e) || ~isempty(constraints.ug_e)
                 error('setting general linear constraints: need C_e, lg_e, ug_e, at least one missing.');
             else
                 ng_e = 0;
@@ -351,13 +351,13 @@ classdef AcadosOcp < handle
             dims.ng_e = ng_e;
 
             if ~isempty(model.con_h_expr_e) && ...
-                    ~isempty(constraints.lh_e) && ~isempty(constraints.uh_e)
+               ~isempty(constraints.lh_e) && ~isempty(constraints.uh_e)
                 nh_e = length(constraints.lh_e);
                 if nh_e ~= length(constraints.uh_e) || nh_e ~= length(model.con_h_expr_e)
                     error('inconsistent dimension nh_e, regarding expr_h_e, lh_e, uh_e.');
                 end
             elseif ~isempty(model.con_h_expr_e) || ...
-                ~isempty(constraints.lh_e) || ~isempty(constraints.uh_e)
+                   ~isempty(constraints.lh_e) || ~isempty(constraints.uh_e)
                 error('setting external constraint function h: need expr_h_e, lh_e, uh_e at least one missing.');
             else
                 nh_e = 0;
