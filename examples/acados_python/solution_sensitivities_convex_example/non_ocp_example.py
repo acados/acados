@@ -102,8 +102,6 @@ def main():
     sol_list = []
     tau = 1e-6
     solution, sens_x = solve_and_compute_sens(p_test, tau)
-    print(solution)
-    print(sens_x)
 
     # Compare to numerical gradients
     sens_x_fd = np.gradient(solution, delta_p)
