@@ -48,13 +48,11 @@ for num = 1:length(globalization_params)
     x = SX.sym('x');
 
     % dynamics: identity
-    model.disc_dyn_expr = x;
     model.x = x;
     model.name = strcat('convex_problem_', globalization);
 
     %% solver settings
-    T = 1;
-    N_horizon = 1;
+    N_horizon = 0;
 
     %% OCP formulation object
     ocp = AcadosOcp();
@@ -63,11 +61,8 @@ for num = 1:length(globalization_params)
     % terminal cost term
     ocp.cost.cost_type_e = 'EXTERNAL';
     ocp.model.cost_expr_ext_cost_e = log(exp(model.x) + exp(-model.x));
-    ocp.cost.cost_type = 'EXTERNAL';
-    ocp.model.cost_expr_ext_cost = 0;
 
     % define solver options
-    ocp.solver_options.tf = T;
     ocp.solver_options.N_horizon = N_horizon;
     ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM';
     ocp.solver_options.hessian_approx = 'EXACT';
@@ -87,7 +82,6 @@ for num = 1:length(globalization_params)
 
     % set trajectory initialization
     ocp_solver.set('init_x', xinit, 0);
-    ocp_solver.set('init_x', xinit, 1);
 
     % solve
     ocp_solver.solve();
