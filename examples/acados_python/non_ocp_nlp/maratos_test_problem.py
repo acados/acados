@@ -41,7 +41,6 @@ from itertools import product
 
 # Settings
 PLOT = False
-FOR_LOOPING = False # call solver in for loop to get all iterates
 TOL = 1e-6
 
 def main():
@@ -137,9 +136,7 @@ def solve_maratos_problem_with_setting(setting):
     # ocp.constraints.ubx_e = 2 * np.ones((nx))
 
     # set options
-    ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES # TODO: Someone should change this to PARTIAL_CONDENSING_HPIPM after the HPIPM fix for N=0
-    # PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM,
-    # PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # TODO: check difference wrt FULL_CONDENSING
     ocp.solver_options.hessian_approx = 'EXACT'
     # ocp.solver_options.print_level = 2
     ocp.solver_options.tol = TOL
@@ -212,8 +209,9 @@ def solve_maratos_problem_with_setting(setting):
         elif globalization == 'MERIT_BACKTRACKING':
             if max_infeasibility > 0.5:
                 raise Exception(f"Expected max_infeasibility < 0.5 when using globalized SQP on Maratos problem")
-            if globalization_use_SOC == 0:
-                raise Exception(f"Expected 57 SQP iterations when using globalized SQP without SOC on Maratos problem, got {iter}")
+            elif globalization_use_SOC == 0:
+                if iter not in range(56, 61):
+                    raise Exception(f"Expected 56 to 60 SQP iterations when using globalized SQP without SOC on Maratos problem, got {iter}")
             elif line_search_use_sufficient_descent == 1:
                 if iter not in range(29, 37):
                     # NOTE: got 29 locally and 36 on Github actions.
