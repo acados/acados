@@ -147,7 +147,6 @@ int {{ model.name }}_acados_update_time_steps({{ model.name }}_solver_capsule* c
 {% if solver_options.N_horizon == 0 %}
     printf("\nacados_update_time_steps() not implemented, since N_horizon = 0!\n\n");
     exit(1);
-    return -1;
 {% else %}
     if (N != capsule->nlp_solver_plan->N) {
         fprintf(stderr, "{{ model.name }}_acados_update_time_steps: given number of time steps (= %d) " \
