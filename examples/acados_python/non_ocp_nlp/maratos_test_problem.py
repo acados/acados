@@ -83,47 +83,52 @@ def solve_maratos_problem_with_setting(setting):
     x = vertcat(x1, x2)
 
     # dynamics: identity
+    model.disc_dyn_expr = x
     model.x = x
+    model.u = SX.sym('u', 0, 0) # [] / None doesnt work
+    model.p = []
     model.name = f'maratos_problem'
     ocp.model = model
 
     # discretization
-    N = 0
+    Tf = 1
+    N = 1
     ocp.solver_options.N_horizon = N
+    ocp.solver_options.tf = Tf
 
     # cost
     ocp.cost.cost_type_e = 'EXTERNAL'
     ocp.model.cost_expr_ext_cost_e = x1
 
-    # constraints
-    ocp.model.con_h_expr_e = x1 ** 2 + x2 ** 2
-    ocp.constraints.lh_e = np.array([1.0])
-    ocp.constraints.uh_e = np.array([1.0])
+    # constarints
+    ocp.model.con_h_expr_0 = x1 ** 2 + x2 ** 2
+    ocp.constraints.lh_0 = np.array([1.0])
+    ocp.constraints.uh_0 = np.array([1.0])
     # # soften
-    # ocp.constraints.idxsh_e = np.array([0])
-    # ocp.cost.zl_e = 1e5 * np.array([1])
-    # ocp.cost.zu_e = 1e5 * np.array([1])
-    # ocp.cost.Zl_e = 1e5 * np.array([1])
-    # ocp.cost.Zu_e = 1e5 * np.array([1])
+    # ocp.constraints.idxsh = np.array([0])
+    # ocp.cost.zl = 1e5 * np.array([1])
+    # ocp.cost.zu = 1e5 * np.array([1])
+    # ocp.cost.Zl = 1e5 * np.array([1])
+    # ocp.cost.Zu = 1e5 * np.array([1])
 
     # add bounds on x
     # nx = 2
-    # ocp.constraints.idxbx_e = np.array(range(nx))
-    # ocp.constraints.lbx_e = -2 * np.ones((nx))
-    # ocp.constraints.ubx_e = 2 * np.ones((nx))
+    # ocp.constraints.idxbx_0 = np.array(range(nx))
+    # ocp.constraints.lbx_0 = -2 * np.ones((nx))
+    # ocp.constraints.ubx_0 = 2 * np.ones((nx))
 
     # set options
-    ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES # TODO: Someone should change this to PARTIAL_CONDENSING_HPIPM after the HPIPM fix for N=0
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
     # PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM,
     # PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP
     ocp.solver_options.hessian_approx = 'EXACT'
+    ocp.solver_options.integrator_type = 'DISCRETE'
     if globalization == 'FUNNEL_L1PEN_LINESEARCH':
         ocp.solver_options.print_level = 1
     ocp.solver_options.tol = TOL
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
     ocp.solver_options.levenberg_marquardt = 1e-1
     SQP_max_iter = 300
-    ocp.solver_options.qp_solver_cond_block_size = [0] # TODO: Someone should check if this can be left out after PARTIAL_CONDENSING_HPIPM fix for N=0
     ocp.solver_options.qp_solver_iter_max = 400
     ocp.solver_options.qp_tol = 5e-7
     ocp.solver_options.regularize_method = 'MIRROR'
