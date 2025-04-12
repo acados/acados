@@ -116,6 +116,7 @@ classdef AcadosOcpOptions < handle
         adaptive_levenberg_marquardt_mu_min
         adaptive_levenberg_marquardt_mu0
         log_primal_step_norm
+        log_dual_step_norm
         store_iterates
         eval_residual_at_max_iter
 
@@ -228,6 +229,7 @@ classdef AcadosOcpOptions < handle
             obj.adaptive_levenberg_marquardt_mu_min = 1e-16;
             obj.adaptive_levenberg_marquardt_mu0 = 1e-3;
             obj.log_primal_step_norm = 0;
+            obj.log_dual_step_norm = 0;
             obj.store_iterates = false;
             obj.eval_residual_at_max_iter = [];
             obj.timeout_max_time = 0.;

@@ -71,6 +71,8 @@ def solve_maratos_problem_with_setting(setting):
     line_search_use_sufficient_descent = setting['line_search_use_sufficient_descent']
     globalization_use_SOC = setting['globalization_use_SOC']
 
+    print(f"running maratos test problem with settings {setting}")
+
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -134,10 +136,10 @@ def solve_maratos_problem_with_setting(setting):
 
     if FOR_LOOPING: # call solver in for loop to get all iterates
         ocp.solver_options.nlp_solver_max_iter = 1
-        ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
+        ocp_solver = AcadosOcpSolver(ocp, verbose=False)
     else:
         ocp.solver_options.nlp_solver_max_iter = SQP_max_iter
-        ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
+        ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
     # initialize solver
     rad_init = 0.1 #0.1 #np.pi / 4

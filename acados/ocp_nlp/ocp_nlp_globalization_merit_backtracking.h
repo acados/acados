@@ -89,14 +89,7 @@ void *ocp_nlp_globalization_merit_backtracking_memory_assign(void *config, void 
 /************************************************
  * functions
  ************************************************/
-//
-double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims,
-                                  ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
-                                  ocp_nlp_memory *mem, ocp_nlp_workspace *work);
-//
-int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
-            int sqp_iter, double *alpha_ref);
+
 //
 double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
           ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);

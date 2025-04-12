@@ -40,6 +40,7 @@
 // blasfeo
 #include "blasfeo_d_aux.h"
 #include "blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_blas.h"
 
 // acados
 #include "acados/dense_qp/dense_qp_ooqp.h"
@@ -601,8 +602,11 @@ int_t dense_qp_ooqp(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, voi
     acados_tic(&interface_timer);
     fill_in_qp_out(qp_in, qp_out, work);
     dense_qp_compute_t(qp_in, qp_out);
-    info->interface_time += acados_toc(&interface_timer);
 
+    // multiply with mask to ensure that multipliers associated with masked constraints are zero
+    blasfeo_dvecmul(2*(qp_in->dim->nb + qp_in->dim->ng + qp_in->dim->ns), qp_in->d_mask, 0, qp_out->lam, 0, qp_out->lam, 0);
+
+    info->interface_time += acados_toc(&interface_timer);
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = -1;
     info->t_computed = 1;
