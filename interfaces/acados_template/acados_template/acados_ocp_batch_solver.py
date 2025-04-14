@@ -139,7 +139,7 @@ class AcadosOcpBatchSolver():
 
     def solve(self, n_batch: Optional[int] = None) -> None:
         """
-        Call solve for the first `n_batch` solvers.
+        Call solve for the first `n_batch` solvers. Or `N_batch_max` if `n_batch` is None.
         """
         n_batch = self.__check_n_batch(n_batch)
 
@@ -211,7 +211,7 @@ class AcadosOcpBatchSolver():
             n_seeds = seed_u[0][1].shape[2]
             n_batch = seed_u[0][1].shape[0]
 
-        n_batch = self.__check_n_batch(n_batch, optional=False)
+        n_batch = self.__check_n_batch(n_batch)
 
         if sanity_checks:
             N_horizon = self.__ocp_solvers[0].acados_ocp.solver_options.N_horizon
@@ -365,12 +365,9 @@ class AcadosOcpBatchSolver():
         self.set_flat("pi", iterate.pi)
         self.set_flat("lam", iterate.lam)
 
-    def __check_n_batch(self, n_batch: Optional[int], optional=True) -> int:
+    def __check_n_batch(self, n_batch: Optional[int]) -> int:
         if n_batch is None:
-            if optional:
-                n_batch = self.N_batch_max
-            else:
-                raise Exception("AcadosOcpBatchSolver: n_batch is None and not optional.")
+            n_batch = self.N_batch_max
         if n_batch > self.N_batch_max:
             raise Exception(f"AcadosOcpBatchSolver: n_batch {n_batch} is larger than N_batch_max {self.N_batch_max}.")
         return n_batch
