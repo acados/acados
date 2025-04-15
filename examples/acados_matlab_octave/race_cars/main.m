@@ -149,7 +149,7 @@ ocp_model.set('cost_zu', 100 * ones(nsh,1));
 ocp_model.set('cost_Zl', eye(nsh,nsh));
 ocp_model.set('cost_Zu', eye(nsh,nsh));
 
-% set intial condition
+% set initial condition
 ocp_model.set('constr_x0', model.x0);
 
 % cost = define linear cost on x and u
@@ -188,7 +188,7 @@ W_e = Qe / unscale;
 ocp_model.set('cost_W', W);
 ocp_model.set('cost_W_e', W_e);
 
-% set intial references
+% set initial references
 y_ref = zeros(ny,1);
 y_ref_e = zeros(ny_e,1);
 y_ref(1) = 1; % set reference on 's' to 1 to push the car forward (progress)

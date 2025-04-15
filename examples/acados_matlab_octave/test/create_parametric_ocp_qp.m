@@ -33,7 +33,7 @@ function [ocp, x0] = create_parametric_ocp_qp(N, np)
     Vx_e = zeros(ny_e,nx); Vx_e(1:nx,:) = eye(nx);  % state-to-output matrix in mayer term
     W = eye(ny);
     W_e = 5 * W(1:ny_e,1:ny_e);                         % cost weights in mayer term
-    y_ref = zeros(ny,1);                            % set intial references
+    y_ref = zeros(ny,1);                            % set initial references
     y_ref_e = zeros(ny_e,1);
 
     ocp.cost.cost_type = cost_type;

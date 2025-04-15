@@ -106,7 +106,7 @@ def acados_settings(Tf, N, track_file):
     ocp.cost.Zl = 1 * np.ones((ns,))
     ocp.cost.Zu = 1 * np.ones((ns,))
 
-    # set intial references
+    # set initial references
     ocp.cost.yref = np.array([1, 0, 0, 0, 0, 0, 0, 0])
     ocp.cost.yref_e = np.array([0, 0, 0, 0, 0, 0])
 
@@ -144,7 +144,7 @@ def acados_settings(Tf, N, track_file):
     ocp.constraints.ush = np.zeros(nsh)
     ocp.constraints.idxsh = np.array(range(nsh))
 
-    # set intial condition
+    # set initial condition
     ocp.constraints.x0 = model.x0
 
     # set QP solver and integration
