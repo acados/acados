@@ -584,7 +584,7 @@ class AcadosOcp:
                 cost.Zl_0 = cost.Zl
                 cost.Zu_0 = cost.Zu
                 print("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided.")
-                print("Using entries [zl, zu, Zl, Zu] at intial node for slack penalties.\n")
+                print("Using entries [zl, zu, Zl, Zu] at initial node for slack penalties.\n")
             else:
                 raise ValueError("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided and cannot be inferred from other fields.\n")
 
@@ -1500,12 +1500,12 @@ class AcadosOcp:
             self.model.p_global = ca.vertcat(self.model.p_global, p_global)
             self.p_global_values = np.concatenate((self.p_global_values, p_global_values))
 
-        self.translate_intial_cost_term_to_external(yref_0, W_0, cost_hessian)
+        self.translate_initial_cost_term_to_external(yref_0, W_0, cost_hessian)
         self.translate_intermediate_cost_term_to_external(yref, W, cost_hessian)
         self.translate_terminal_cost_term_to_external(yref_e, W_e, cost_hessian)
 
 
-    def translate_intial_cost_term_to_external(self, yref_0: Optional[Union[ca.SX, ca.MX]] = None, W_0: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
+    def translate_initial_cost_term_to_external(self, yref_0: Optional[Union[ca.SX, ca.MX]] = None, W_0: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
 
         if cost_hessian not in ['EXACT', 'GAUSS_NEWTON']:
             raise Exception(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
