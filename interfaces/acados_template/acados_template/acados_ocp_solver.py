@@ -711,7 +711,7 @@ class AcadosOcpSolver:
 
         .. note:: Timing of the sensitivities computation consists of time_solution_sens_lin, time_solution_sens_solve.
         .. note:: Solution sensitivities with respect to parameters are currently implemented assuming the parameter vector p is global within the OCP, i.e. p=p_i with i=0, ..., N.
-        .. note:: Solution sensitivities with respect to parameters are currently implemented only for parametric discrete dynamics and parametric external costs (in particular, parametric constraints are not covered).
+        .. note:: Solution sensitivities with respect to parameters are currently implemented only for parametric discrete dynamics, parametric external costs and parametric nonlinear constraints (h).
         """
 
         if with_respect_to == "params_global":
