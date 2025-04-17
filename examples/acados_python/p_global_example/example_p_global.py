@@ -28,7 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, AcadosMultiphaseOcp
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, AcadosMultiphaseOcp, get_simulink_default_opts
 import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
@@ -194,7 +194,7 @@ def create_ocp_formulation_without_opts(p_global, m, l, C, lut=True, use_p_globa
     return ocp
 
 
-def main(use_cython=False, lut=True, use_p_global=True, blazing=True):
+def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matlab_templates=False, code_export_directory=None):
 
     print(f"\n\nRunning example with lut={lut}, use_p_global={use_p_global}, {blazing=}")
     p_global, m, l, C, p_global_values = create_p_global(lut=lut)
@@ -217,6 +217,8 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True):
     ocp.solver_options.print_level = 0
     ocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP_RTI, SQP
     ocp.solver_options.ext_fun_compile_flags += ' -I' + ca.GlobalOptions.getCasadiIncludePath() + ' -ffast-math -march=native'
+    if code_export_directory is not None:
+        ocp.code_export_directory = code_export_directory
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -224,7 +226,8 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True):
 
     # create ocp solver
     print(f"Creating ocp solver with p_global = {ocp.model.p_global}, p = {ocp.model.p}")
-
+    if with_matlab_templates:
+        ocp.simulink_opts = get_simulink_default_opts()
     solver_json = 'acados_ocp_' + ocp.model.name + '.json'
     if use_cython:
         AcadosOcpSolver.generate(ocp, json_file=solver_json)
@@ -258,7 +261,7 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True):
     return residuals, timing
 
 
-def main_mocp(lut=True, use_p_global=True):
+def main_mocp(lut=True, use_p_global=True, with_matlab_templates=False):
     print(f"\n\nRunning multi-phase example with lut={lut}, use_p_global={use_p_global}")
     p_global, m, l, C, p_global_values = create_p_global(lut=lut)
 
@@ -299,6 +302,8 @@ def main_mocp(lut=True, use_p_global=True):
     # create ocp solver
     print(f"Creating ocp solver with p_global = {mocp.model[0].p_global}, p_phase_1 = {mocp.model[0].p}, p_phase_2 = {mocp.model[1].p}")
 
+    if with_matlab_templates:
+        mocp.simulink_opts = get_simulink_default_opts()
     ocp_solver = AcadosOcpSolver(mocp, generate=True, build=True)
 
     # call SQP_RTI solver in the loop:
@@ -320,11 +325,11 @@ def main_mocp(lut=True, use_p_global=True):
 if __name__ == "__main__":
 
     # OCP with lookuptable, comparing blazing, bspline, p_global
-    ref_lut, t_lin_lut_ref = main(use_cython=False, use_p_global=False, lut=True)
-    res_lut, t_lin_lut = main(use_cython=False, use_p_global=True, lut=True)
-
     ref_lut_no_blazing, t_lin_lut_no_blazing_ref = main(use_cython=False, use_p_global=False, lut=True, blazing=False)
     res_lut_no_blazing, t_lin_lut_no_blazing = main(use_cython=False, use_p_global=True, lut=True, blazing=False)
+
+    ref_lut, t_lin_lut_ref = main(use_cython=False, use_p_global=False, lut=True)
+    res_lut, t_lin_lut = main(use_cython=False, use_p_global=True, lut=True)
 
     print(f"\t\t bspline \t blazing")
     print(f"ref\t\t {t_lin_lut_no_blazing_ref:.5f} \t {t_lin_lut_ref:.5f}")
@@ -337,7 +342,6 @@ if __name__ == "__main__":
     np.testing.assert_almost_equal(res_lut, res_lut_no_blazing)
     np.testing.assert_almost_equal(ref_lut, res_lut_no_blazing)
 
-
     ref_nolut, _ = main(use_cython=False, use_p_global=False, lut=False)
     res_nolut, _ = main(use_cython=False, use_p_global=True, lut=False)
     np.testing.assert_almost_equal(ref_nolut, res_nolut)
@@ -349,12 +353,12 @@ if __name__ == "__main__":
     np.testing.assert_almost_equal(ref_nolut, res_mocp_nolut_p_global)
 
     res_mocp_lut_p, _ = main_mocp(use_p_global=False, lut=True)
-    res_mocp_lut_p_global, _ = main_mocp(use_p_global=True, lut=True)
+    res_mocp_lut_p_global, _ = main_mocp(use_p_global=True, lut=True, with_matlab_templates=True)
     np.testing.assert_almost_equal(ref_lut, res_mocp_lut_p)
     np.testing.assert_almost_equal(ref_lut, res_mocp_lut_p_global)
-
 
     with np.testing.assert_raises(Exception):
         np.testing.assert_almost_equal(ref_lut, ref_nolut)
 
-    # main(use_cython=True) TODO: fix cython
+    # to test transfer to MATLAB/Octave
+    res_lut, t_lin_lut = main(use_cython=False, use_p_global=True, lut=True, with_matlab_templates=True, code_export_directory='c_generated_code_single_phase')

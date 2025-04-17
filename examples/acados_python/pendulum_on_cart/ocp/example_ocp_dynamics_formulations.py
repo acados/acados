@@ -46,7 +46,7 @@ BUILD_SYSTEMS = ['cmake', 'make']
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='test Python interface on pendulum example.')
-    parser.add_argument('--INTEGRATOR_TYPE', dest='INTEGRATOR_TYPE',
+    parser.add_argument('--INTEGRATOR_TYPE', dest='INTEGRATOR_TYPE', default="ERK",
                         help=f'INTEGRATOR_TYPE: supports {INTEGRATOR_TYPES}')
     parser.add_argument('--BUILD_SYSTEM', dest='BUILD_SYSTEM',
                         default='make',
@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     build_system = args.BUILD_SYSTEM
     if build_system not in BUILD_SYSTEMS:
-        msg = f'Invalid unit test value {build_system} for parameter INTEGRATOR_TYPE. Possible values are' \
+        msg = f'Invalid unit test value {build_system} for parameter BUILD_SYSTEM. Possible values are' \
               f' {BUILD_SYSTEMS}, got {build_system}.'
         raise Exception(msg)
 
@@ -118,6 +118,8 @@ if __name__ == "__main__":
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = integrator_type
     ocp.solver_options.print_level = 1
+    ocp.solver_options.log_dual_step_norm = True
+    ocp.solver_options.log_primal_step_norm = True
 
     if ocp.solver_options.integrator_type == 'GNSF':
         from acados_template import acados_dae_model_json_dump
@@ -170,5 +172,14 @@ if __name__ == "__main__":
         simX[i, :] = ocp_solver.get(i, "x")
         simU[i, :] = ocp_solver.get(i, "u")
     simX[N, :] = ocp_solver.get(N, "x")
+
+    # test getting step norms
+    primal_step_norms = ocp_solver.get_stats('primal_step_norm')
+    dual_step_norms = ocp_solver.get_stats('dual_step_norm')
+    print(f"primal step norms: {primal_step_norms}")
+    print(f"dual step norms: {dual_step_norms}")
+    # Assert that step norms are decreasing
+    assert np.all(np.diff(primal_step_norms)[1:] <= 0), "Primal step norms are not decreasing."
+    assert np.all(np.diff(dual_step_norms) <= 0), "Dual step norms are not decreasing."
 
     plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX)

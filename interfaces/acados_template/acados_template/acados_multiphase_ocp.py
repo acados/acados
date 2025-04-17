@@ -68,7 +68,7 @@ def find_non_default_fields_of_obj(obj: Union[AcadosOcpCost, AcadosOcpConstraint
     elif stage_type == 'terminal':
         all_fields = [field for field in all_fields if field.endswith("_e")]
     else:
-        raise Exception(f"stage_type {stage_type} not supported.")
+        raise ValueError(f"stage_type {stage_type} not supported.")
 
     obj_type = type(obj)
     dummy_obj = obj_type()
@@ -113,11 +113,11 @@ class AcadosMultiphaseOptions:
                 # non varying field, use value from ocp opts
                 setattr(self, field, [getattr(opts, field) for _ in range(n_phases)])
             if not isinstance(getattr(self, field), list):
-                raise Exception(f'AcadosMultiphaseOptions.{field} must be a list, got {getattr(self, field)}.')
+                raise TypeError(f'AcadosMultiphaseOptions.{field} must be a list, got {getattr(self, field)}.')
             if len(getattr(self, field)) != n_phases:
-                raise Exception(f'AcadosMultiphaseOptions.{field} must be a list of length n_phases, got {getattr(self, field)}.')
+                raise ValueError(f'AcadosMultiphaseOptions.{field} must be a list of length n_phases, got {getattr(self, field)}.')
             if not all([item in variants for item in getattr(self, field)]):
-                raise Exception(f'AcadosMultiphaseOptions.{field} must be a list of strings in {variants}, got {getattr(self, field)}.')
+                raise ValueError(f'AcadosMultiphaseOptions.{field} must be a list of strings in {variants}, got {getattr(self, field)}.')
 
 
 class AcadosMultiphaseOcp:
@@ -135,9 +135,9 @@ class AcadosMultiphaseOcp:
     def __init__(self, N_list: list):
 
         if not isinstance(N_list, list) or len(N_list) < 1:
-            raise Exception("N_list must be a list of integers.")
+            raise TypeError("N_list must be a list of integers.")
         if any([not isinstance(N, int) for N in N_list]):
-            raise Exception("N_list must be a list of integers.")
+            raise TypeError("N_list must be a list of integers.")
 
         n_phases = len(N_list)
 
@@ -196,9 +196,9 @@ class AcadosMultiphaseOcp:
     @parameter_values.setter
     def parameter_values(self, parameter_values):
         if not isinstance(parameter_values, list):
-            raise Exception('parameter_values must be a list of numpy.ndarrays.')
+            raise TypeError('parameter_values must be a list of numpy.ndarrays.')
         elif len(parameter_values) != self.n_phases:
-            raise Exception('parameter_values must be a list of length n_phases.')
+            raise ValueError('parameter_values must be a list of length n_phases.')
         self.__parameter_values = parameter_values
 
 
@@ -213,7 +213,7 @@ class AcadosMultiphaseOcp:
     @p_global_values.setter
     def p_global_values(self, p_global_values):
         if not isinstance(p_global_values, np.ndarray):
-            raise Exception('p_global_values must be a single numpy.ndarrays.')
+            raise TypeError('p_global_values must be a single numpy.ndarrays.')
         self.__p_global_values = p_global_values
 
 
@@ -237,7 +237,7 @@ class AcadosMultiphaseOcp:
         :param phase_idx: index of the phase, must be in [0, n_phases-1]
         """
         if phase_idx >= self.n_phases:
-            raise Exception(f"phase_idx {phase_idx} out of bounds, must be in [0, {self.n_phases-1}].")
+            raise IndexError(f"phase_idx {phase_idx} out of bounds, must be in [0, {self.n_phases-1}].")
 
         # check options
         non_default_opts = find_non_default_fields_of_obj(ocp.solver_options)
@@ -268,15 +268,15 @@ class AcadosMultiphaseOcp:
         warning = "\nNOTE: this can happen if set_phase() is called with the same ocp object for multiple phases."
         for field in ['model', 'cost', 'constraints']:
             if len(set(getattr(self, field))) != self.n_phases:
-                raise Exception(f"AcadosMultiphaseOcp: make_consistent: {field} objects are not distinct.{warning}")
+                raise ValueError(f"AcadosMultiphaseOcp: make_consistent: {field} objects are not distinct.{warning}")
 
         # p_global check:
         p_global = self.model[0].p_global
         for i in range(self.n_phases):
             if is_empty(p_global) and not is_empty(self.model[i].p_global):
-                raise Exception(f"p_global is empty for phase 0, but not for phase {i}. Should be the same for all phases.")
+                raise ValueError(f"p_global is empty for phase 0, but not for phase {i}. Should be the same for all phases.")
             if not is_empty(p_global) and not ca.is_equal(p_global, self.model[i].p_global):
-                raise Exception(f"p_global is different for phase 0 and phase {i}. Should be the same for all phases.")
+                raise ValueError(f"p_global is different for phase 0 and phase {i}. Should be the same for all phases.")
 
         # compute phase indices
         phase_idx = np.cumsum([0] + self.N_list).tolist()
@@ -339,9 +339,9 @@ class AcadosMultiphaseOcp:
         for i in range(1, self.n_phases):
             if nx_list[i] != nx_list[i-1]:
                 if self.phases_dims[i].nx != self.phases_dims[i-1].nx_next:
-                    raise Exception(f"detected stage transition with different nx from phase {i-1} to {i}, nx_next at phase {i-1} = {self.phases_dims[i-1].nx_next} should match nx at phase {i} = {nx_list[i]}.")
+                    raise ValueError(f"detected stage transition with different nx from phase {i-1} to {i}, nx_next at phase {i-1} = {self.phases_dims[i-1].nx_next} should match nx at phase {i} = {nx_list[i]}.")
                 if self.N_list[i-1] != 1 or self.mocp_opts.integrator_type[i-1] != 'DISCRETE':
-                    raise Exception(f"detected stage transition with different nx from phase {i-1} to {i}, which is only supported for integrator_type='DISCRETE' and N_list[i] == 1.")
+                    raise ValueError(f"detected stage transition with different nx from phase {i-1} to {i}, which is only supported for integrator_type='DISCRETE' and N_list[i] == 1.")
         return
 
 
@@ -396,11 +396,11 @@ class AcadosMultiphaseOcp:
             template_list.append(('multi_Makefile.in', 'Makefile'))
 
         if self.phases_dims[0].np_global > 0:
-            template_list.append(('p_global_precompute_fun.in.h', f'{self.name}_p_global_precompute_fun.h'))
+            template_list.append(('p_global_precompute_fun.in.h', f'{name}_p_global_precompute_fun.h'))
 
         # Simulink
         if self.simulink_opts is not None:
-            raise NotImplementedError('Simulink not yet supported for multiphase OCPs.')
+            template_list += AcadosOcp._get_matlab_simulink_template_list(name)
 
         return template_list
 
@@ -428,7 +428,7 @@ class AcadosMultiphaseOcp:
         # check json file
         json_path = os.path.abspath(self.json_file)
         if not os.path.exists(json_path):
-            raise Exception(f'Path "{json_path}" not found!')
+            raise FileNotFoundError(f'Path "{json_path}" not found!')
 
         # solver templates
         template_list = self.__get_template_list(cmake_builder=cmake_builder)

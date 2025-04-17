@@ -15,7 +15,7 @@
 % this list of conditions and the following disclaimer in the documentation
 % and/or other materials provided with the distribution.
 %
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS'
 % AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 % IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 % ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -27,15 +27,35 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
-function check_casadi_version()
-    import casadi.*
-    casadi_version = CasadiMeta.version();
-    if ~(strcmp(casadi_version(1:3),'3.7'))
-        if ~(strcmp(casadi_version(1:3),'3.4') || strcmp(casadi_version(1:3),'3.5') || strcmp(casadi_version(1:3),'3.6'))
-            warning('Tested CasADi versions are 3.4, 3.5, 3.6, 3.7 you are using: %s.', casadi_version);
-        else
-            warning('Recommended CasADi version to be used in acados is 3.7 for a full featured experience. Versions 3.4 to 3.6 work for most problem formulations. You are using %s.', casadi_version);
-        end
+import casadi.*
+
+check_acados_requirements()
+
+json_files = {'acados_ocp_pendulum_blazing_True_p_global_True.json', 'mocp.json'};
+
+for i = 1:length(json_files)
+    json_file = json_files{i};
+    disp('testing solver creation with code reuse with json file: ')
+    disp(json_file)
+    solver_creation_opts = struct();
+    solver_creation_opts.json_file = json_file;
+    solver_creation_opts.generate = false;
+    solver_creation_opts.build = false;
+    solver_creation_opts.compile_mex_wrapper = true;
+    ocp = [];
+
+    % create solver
+    ocp_solver = AcadosOcpSolver(ocp, solver_creation_opts);
+
+    nx = length(ocp_solver.get('x', 0));
+    [nu, N] = size(ocp_solver.get('u'));
+
+    for i = 1:5
+        ocp_solver.solve();
+
+        status = ocp_solver.get('status');
+        ocp_solver.print('stat');
     end
+    clear ocp_solver
 end
+

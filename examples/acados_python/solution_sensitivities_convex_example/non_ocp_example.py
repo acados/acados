@@ -40,23 +40,19 @@ def export_parametric_ocp() -> AcadosOcp:
     model = AcadosModel()
     model.x = ca.SX.sym("x", 1)
     model.p_global = ca.SX.sym("p_global", 1)
-    model.disc_dyn_expr = model.x
-    model.cost_expr_ext_cost = (model.x - model.p_global**2)**2
-    model.cost_expr_ext_cost_e = 0
+    model.cost_expr_ext_cost_e = (model.x - model.p_global**2)**2
     model.name = "non_ocp"
     ocp = AcadosOcp()
     ocp.model = model
 
-    ocp.constraints.lbx_0 = np.array([-1.0])
-    ocp.constraints.ubx_0 = np.array([1.0])
-    ocp.constraints.idxbx_0 = np.array([0])
+    ocp.constraints.lbx_e = np.array([-1.0])
+    ocp.constraints.ubx_e = np.array([1.0])
+    ocp.constraints.idxbx_e = np.array([0])
 
-    ocp.cost.cost_type = "EXTERNAL"
-    ocp.solver_options.integrator_type = "DISCRETE"
+    ocp.cost.cost_type_e = "EXTERNAL"
     ocp.solver_options.qp_solver = "FULL_CONDENSING_HPIPM"
     ocp.solver_options.hessian_approx = "EXACT"
-    ocp.solver_options.N_horizon = 1
-    ocp.solver_options.tf = 1.0
+    ocp.solver_options.N_horizon = 0
 
     ocp.p_global_values = np.zeros((1,))
     ocp.solver_options.with_solution_sens_wrt_params = True
@@ -83,7 +79,7 @@ def solve_and_compute_sens(p_test, tau):
 
         ocp_solver.set_p_global_and_precompute_dependencies(p_val)
         status = ocp_solver.solve()
-        solution[i] = ocp_solver.get(0, "x")
+        solution[i] = ocp_solver.get(0, "x")[0]
 
         if status != 0:
             ocp_solver.print_statistics()
@@ -92,7 +88,7 @@ def solve_and_compute_sens(p_test, tau):
             # breakpoint()
 
         # Calculate the policy gradient
-        out_dict = ocp_solver.eval_solution_sensitivity(0, "p_global", return_sens_x=True)
+        out_dict = ocp_solver.eval_solution_sensitivity(0, "p_global", return_sens_x=True, return_sens_u=False)
         sens_x[i] = out_dict['sens_x'].item()
 
     return solution, sens_x
@@ -129,15 +125,19 @@ def main():
 
     plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list,
                  title=None, parameter_name=r"$\theta$", fig_filename="solution_sens_non_ocp.pdf")
+    plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list,
+                 title=None, parameter_name=r"$\theta$", fig_filename="solution_sens_non_ocp_transposed.pdf", horizontal_plot=True)
 
-
-def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list, title=None, parameter_name="", fig_filename=None):
+def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list, title=None, parameter_name="", fig_filename=None, horizontal_plot=False):
     p_min = p_test[0]
     p_max = p_test[-1]
     linestyles = ["--", "-.", "--", ":", "-.", ":"]
 
     nsub = 2
-    _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=(6.5,5))
+    if horizontal_plot:
+        _, ax = plt.subplots(nrows=1, ncols=nsub, sharex=False, figsize=(12, 3.0))
+    else:
+        _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=(6.5,5))
 
     isub = 0
     # plot analytic solution
@@ -171,6 +171,8 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
 
     for i in range(nsub):
         ax[i].grid(True)
+        if horizontal_plot:
+            ax[i].set_xlabel(f"{parameter_name}")
     ax[-1].set_xlabel(f"{parameter_name}")
 
     plt.tight_layout()
@@ -182,4 +184,6 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
 
 if __name__ == "__main__":
     main()
+
+    # to plot only analytic solution
     # plot_solution_sensitivities_results([-2, 2], [], [], [], parameter_name=r"$\theta$", fig_filename="solution_sens_non_ocp_analytic.pdf")

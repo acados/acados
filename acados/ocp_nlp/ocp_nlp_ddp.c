@@ -117,8 +117,6 @@ void ocp_nlp_ddp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->tol_comp = 1e-8;
     opts->tol_zero_res = 1e-12;
 
-    opts->ext_qp_res = 0;
-
     opts->warm_start_first_qp = false;
     opts->warm_start_first_qp_from_nlp = false;
     opts->eval_residual_at_max_iter = false;
@@ -195,11 +193,6 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
             // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
             config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts, "tol_comp", value);
         }
-        else if (!strcmp(field, "ext_qp_res"))
-        {
-            int* ext_qp_res = (int *) value;
-            opts->ext_qp_res = *ext_qp_res;
-        }
         else if (!strcmp(field, "warm_start_first_qp"))
         {
             bool* warm_start_first_qp = (bool *) value;
@@ -265,7 +258,7 @@ acados_size_t ocp_nlp_ddp_memory_calculate_size(void *config_, void *dims_, void
     // stat
     int stat_m = opts->nlp_opts->max_iter+1;
     int stat_n = 7;
-    if (opts->ext_qp_res)
+    if (nlp_opts->ext_qp_res)
         stat_n += 4;
     size += stat_n*stat_m*sizeof(double);
 
@@ -332,9 +325,9 @@ void *ocp_nlp_ddp_memory_assign(void *config_, void *dims_, void *opts_, void *i
 
     // stat
     mem->stat = (double *) c_ptr;
-    mem->stat_m = opts->nlp_opts->max_iter+1;
+    mem->stat_m = nlp_opts->max_iter+1;
     mem->stat_n = 7;
-    if (opts->ext_qp_res)
+    if (nlp_opts->ext_qp_res)
         mem->stat_n += 4;
     c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
 
@@ -373,15 +366,6 @@ acados_size_t ocp_nlp_ddp_workspace_calculate_size(void *config_, void *dims_, v
     // nlp
     size += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts, nlp_in);
 
-    if (opts->ext_qp_res)
-    {
-        // qp res
-        size += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
-
-        // qp res ws
-        size += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
-    }
-
     return size;
 }
 
@@ -400,17 +384,6 @@ static void ocp_nlp_ddp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dim
     // nlp
     work->nlp_work = ocp_nlp_workspace_assign(config, dims, nlp_opts, nlp_in, nlp_mem, c_ptr);
     c_ptr += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts, nlp_in);
-
-    if (opts->ext_qp_res)
-    {
-        // qp res
-        work->qp_res = ocp_qp_res_assign(dims->qp_solver->orig_dims, c_ptr);
-        c_ptr += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
-
-        // qp res ws
-        work->qp_res_ws = ocp_qp_res_workspace_assign(dims->qp_solver->orig_dims, c_ptr);
-        c_ptr += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
-    }
 
     assert((char *) work + ocp_nlp_ddp_workspace_calculate_size(config, dims, opts, nlp_in) >= c_ptr);
 
@@ -820,7 +793,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // compute external QP residuals (for debugging)
-        if (opts->ext_qp_res)
+        if (nlp_opts->ext_qp_res)
         {
             ocp_qp_res_compute(qp_in, qp_out, work->qp_res, work->qp_res_ws);
             if (ddp_iter+1 < mem->stat_m)

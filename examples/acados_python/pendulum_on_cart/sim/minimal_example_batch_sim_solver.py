@@ -43,11 +43,11 @@ This example shows how the AcadosSimBatchSolver can be used to parallelize mulit
 
 If you want to use the batch solver, make sure to compile acados with openmp and num_threads set to 1,
 i.e. with the flags -DACADOS_WITH_OPENMP=ON -DACADOS_NUM_THREADS=1
-The number of threads for the batch solver is then set via the option `num_threads_in_batch_solve`, see below.
+The number of threads for the batch solver is then set in its constructor, see below.
 """
 
 
-def setup_integrator(num_threads_in_batch_solve=1):
+def setup_integrator():
 
     sim = AcadosSim()
     sim.model = export_pendulum_ode_model()
@@ -57,7 +57,6 @@ def setup_integrator(num_threads_in_batch_solve=1):
     sim.solver_options.num_steps = 10
     sim.solver_options.newton_iter = 10 # for implicit integrator
     sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
-    sim.solver_options.num_threads_in_batch_solve = num_threads_in_batch_solve
 
     return sim
 
@@ -85,8 +84,14 @@ def main_sequential(x0, u0, N_sim):
 def main_batch(Xinit, u0, num_threads_in_batch_solve=1):
 
     N_batch = Xinit.shape[0] - 1
-    sim = setup_integrator(num_threads_in_batch_solve)
-    batch_integrator = AcadosSimBatchSolver(sim, N_batch, verbose=False)
+    sim = setup_integrator()
+    batch_integrator = AcadosSimBatchSolver(sim, N_batch, num_threads_in_batch_solve=num_threads_in_batch_solve, verbose=False)
+    
+    assert batch_integrator.num_threads_in_batch_solve == num_threads_in_batch_solve
+    batch_integrator.num_threads_in_batch_solve = 1337
+    assert batch_integrator.num_threads_in_batch_solve == 1337
+    batch_integrator.num_threads_in_batch_solve = num_threads_in_batch_solve
+    assert batch_integrator.num_threads_in_batch_solve == num_threads_in_batch_solve
 
     for n in range(N_batch):
         batch_integrator.sim_solvers[n].set("u", u0)

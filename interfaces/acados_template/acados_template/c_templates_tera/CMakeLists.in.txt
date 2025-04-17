@@ -108,12 +108,15 @@ endif()
 
 
 # object target names
+{%- if problem_class == "SIM" or solver_options.N_horizon > 0 %}
 set(MODEL_OBJ model_{{ model.name }})
+{%- endif %}
 set(OCP_OBJ ocp_{{ model.name }})
 {%- if solver_options.integrator_type != "DISCRETE" %}
 set(SIM_OBJ sim_{{ model.name }})
 {%- endif %}
 
+{%- if problem_class == "SIM" or solver_options.N_horizon > 0 %}
 # model
 set(MODEL_SRC
 {%- for filename in external_function_files_model %}
@@ -121,7 +124,7 @@ set(MODEL_SRC
 {%- endfor %}
 )
 add_library(${MODEL_OBJ} OBJECT ${MODEL_SRC} )
-
+{%- endif %}
 
 {% if problem_class != "SIM" %}
 # optimal control problem - mostly CasADi exports
@@ -188,7 +191,7 @@ set(CMAKE_C_FLAGS "-fPIC -std=c99 {{ openmp_flag }} {{ solver_options.ext_fun_co
 {%- if qp_solver == "PARTIAL_CONDENSING_QPDUNES" -%}
     -DACADOS_WITH_QPDUNES
 {%- endif -%}
-{%- if solver_options.num_threads_in_batch_solve > 1 -%}
+{%- if solver_options.with_batch_functionality -%}
     -fopenmp
 {%- endif -%}
 ")
@@ -223,7 +226,11 @@ endif()
 # bundled_shared_lib
 if(${BUILD_ACADOS_SOLVER_LIB})
     set(LIB_ACADOS_SOLVER acados_solver_{{ model.name }})
-    add_library(${LIB_ACADOS_SOLVER} SHARED $<TARGET_OBJECTS:${MODEL_OBJ}> $<TARGET_OBJECTS:${OCP_OBJ}>
+    add_library(${LIB_ACADOS_SOLVER} SHARED
+    {%- if solver_options.N_horizon > 0 %}
+    $<TARGET_OBJECTS:${MODEL_OBJ}>
+    {%- endif %}
+    $<TARGET_OBJECTS:${OCP_OBJ}>
     {%- if solver_options.integrator_type != "DISCRETE" %}
         $<TARGET_OBJECTS:${SIM_OBJ}>
     {%- endif -%}
@@ -234,7 +241,11 @@ endif(${BUILD_ACADOS_SOLVER_LIB})
 # ocp_shared_lib
 if(${BUILD_ACADOS_OCP_SOLVER_LIB})
     set(LIB_ACADOS_OCP_SOLVER acados_ocp_solver_{{ model.name }})
-    add_library(${LIB_ACADOS_OCP_SOLVER} SHARED $<TARGET_OBJECTS:${MODEL_OBJ}> $<TARGET_OBJECTS:${OCP_OBJ}>)
+    add_library(${LIB_ACADOS_OCP_SOLVER} SHARED
+    {%- if solver_options.N_horizon > 0 %}
+    $<TARGET_OBJECTS:${MODEL_OBJ}>
+    {%- endif %}
+    $<TARGET_OBJECTS:${OCP_OBJ}>)
     # Specify libraries or flags to use when linking a given target and/or its dependents.
     target_link_libraries(${LIB_ACADOS_OCP_SOLVER} PRIVATE ${EXTERNAL_LIB})
     target_link_directories(${LIB_ACADOS_OCP_SOLVER} PRIVATE ${EXTERNAL_DIR})
@@ -243,7 +254,11 @@ endif(${BUILD_ACADOS_OCP_SOLVER_LIB})
 
 # example
 if(${BUILD_EXAMPLE})
-    add_executable(${EX_EXE} ${EX_SRC} $<TARGET_OBJECTS:${MODEL_OBJ}> $<TARGET_OBJECTS:${OCP_OBJ}>
+    add_executable(${EX_EXE} ${EX_SRC}
+    {%- if solver_options.N_horizon > 0 %}
+    $<TARGET_OBJECTS:${MODEL_OBJ}>
+    {%- endif %}
+    $<TARGET_OBJECTS:${OCP_OBJ}>
     {%- if solver_options.integrator_type != "DISCRETE" %}
         $<TARGET_OBJECTS:${SIM_OBJ}>
     {%- endif -%}

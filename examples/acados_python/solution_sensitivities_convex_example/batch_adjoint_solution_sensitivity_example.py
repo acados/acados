@@ -81,10 +81,10 @@ def main_batch(Xinit, simU, param_vals, adjoints_ref, tol, num_threads_in_batch_
     N_batch = Xinit.shape[0] - 1
 
     learnable_params = ["A", "Q", "b"]
-    ocp = export_parametric_ocp(PARAM_VALUE_DICT, learnable_params=learnable_params, num_threads_in_batch_solve = num_threads_in_batch_solve)
+    ocp = export_parametric_ocp(PARAM_VALUE_DICT, learnable_params=learnable_params)
     ocp.solver_options.with_solution_sens_wrt_params = True
 
-    batch_solver = AcadosOcpBatchSolver(ocp, N_batch, verbose=False)
+    batch_solver = AcadosOcpBatchSolver(ocp, N_batch, num_threads_in_batch_solve=num_threads_in_batch_solve, verbose=False)
 
     # reset, set bounds and p_global
     t0 = time.time()
@@ -99,7 +99,7 @@ def main_batch(Xinit, simU, param_vals, adjoints_ref, tol, num_threads_in_batch_
 
     # solve
     t0 = time.time()
-    batch_solver.solve()
+    batch_solver.solve(N_batch)
     t_elapsed = 1e3 * (time.time() - t0)
 
     print(f"main_batch: with {num_threads_in_batch_solve} threads, solve: {t_elapsed:.3f} ms")
@@ -111,7 +111,7 @@ def main_batch(Xinit, simU, param_vals, adjoints_ref, tol, num_threads_in_batch_
             raise Exception(f"solution should match sequential call up to {tol} got error {diff} for {n}th batch solve")
 
     # actually not needed for convex problem but we want to test it
-    batch_solver.setup_qp_matrices_and_factorize()
+    batch_solver.setup_qp_matrices_and_factorize(N_batch)
 
     # eval adjoint
     t0 = time.time()

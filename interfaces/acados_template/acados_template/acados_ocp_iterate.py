@@ -106,7 +106,7 @@ class AcadosOcpIterates:
         """
 
         if field not in self.__iterate_fields:
-            raise Exception(f"Invalid field: got {field}, expected value in {self.__iterate_fields}")
+            raise ValueError(f"Invalid field: got {field}, expected value in {self.__iterate_fields}")
 
         attr = f"{field}_traj"
         traj_ = [getattr(iterate, attr) for iterate in self.iterate_list]
@@ -114,6 +114,6 @@ class AcadosOcpIterates:
         try:
             traj = np.array(traj_, dtype=float)
         except ValueError:
-            raise Exception(f"Stage-wise dimensions are not the same for {field} trajectory.")
+            raise ValueError(f"Stage-wise dimensions are not the same for {field} trajectory.")
 
         return traj
