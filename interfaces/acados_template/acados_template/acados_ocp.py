@@ -898,7 +898,7 @@ class AcadosOcp:
             raise ValueError("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
 
 
-    def make_consistent(self, is_mocp_phase=False) -> None:
+    def make_consistent(self, is_mocp_phase: bool=False, verbose: bool=True) -> None:
         """
         Detect dimensions, perform sanity checks
         """
@@ -941,23 +941,24 @@ class AcadosOcp:
         self._make_consistent_cost_terminal()
 
         # GN check
-        gn_warning_0 = (opts.N_horizon > 0 and cost.cost_type_0 == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess_0))
-        gn_warning_path = (opts.N_horizon > 0 and cost.cost_type == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess))
-        gn_warning_terminal = (cost.cost_type_e == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess_e))
-        if any([gn_warning_0, gn_warning_path, gn_warning_terminal]):
-            external_cost_types = []
-            if gn_warning_0:
-                external_cost_types.append('cost_type_0')
-            if gn_warning_path:
-                external_cost_types.append('cost_type')
-            if gn_warning_terminal:
-                external_cost_types.append('cost_type_e')
-            print("\nWARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not well defined!\n"
-            f"got cost_type EXTERNAL for {', '.join(external_cost_types)}, hessian_approx: 'GAUSS_NEWTON'.\n"
-            "With this setting, acados will proceed computing the exact Hessian for the cost term and no Hessian contribution from constraints and dynamics.\n"
-            "If the external cost is a linear least squares cost, this coincides with the Gauss-Newton Hessian.\n"
-            "Note: There is also the option to use the external cost module with a numerical Hessian approximation (see `ext_cost_num_hess`).\n"
-            "OR the option to provide a symbolic custom Hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n")
+        if verbose:
+            gn_warning_0 = (opts.N_horizon > 0 and cost.cost_type_0 == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess_0))
+            gn_warning_path = (opts.N_horizon > 0 and cost.cost_type == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess))
+            gn_warning_terminal = (cost.cost_type_e == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess_e))
+            if any([gn_warning_0, gn_warning_path, gn_warning_terminal]):
+                external_cost_types = []
+                if gn_warning_0:
+                    external_cost_types.append('cost_type_0')
+                if gn_warning_path:
+                    external_cost_types.append('cost_type')
+                if gn_warning_terminal:
+                    external_cost_types.append('cost_type_e')
+                print("\nWARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not well defined!\n"
+                f"got cost_type EXTERNAL for {', '.join(external_cost_types)}, hessian_approx: 'GAUSS_NEWTON'.\n"
+                "With this setting, acados will proceed computing the exact Hessian for the cost term and no Hessian contribution from constraints and dynamics.\n"
+                "If the external cost is a linear least squares cost, this coincides with the Gauss-Newton Hessian.\n"
+                "Note: There is also the option to use the external cost module with a numerical Hessian approximation (see `ext_cost_num_hess`).\n"
+                "OR the option to provide a symbolic custom Hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n")
 
         # cost integration
         if opts.N_horizon > 0:
