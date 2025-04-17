@@ -90,7 +90,7 @@ class AcadosOcpSolver:
         return self.__shared_lib
 
     @classmethod
-    def generate(cls, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, simulink_opts=None, cmake_builder: CMakeBuilder = None):
+    def generate(cls, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, simulink_opts=None, cmake_builder: CMakeBuilder = None, verbose=True):
         """
         Generates the code for an acados OCP solver, given the description in acados_ocp.
             :param acados_ocp: type Union[AcadosOcp, AcadosMultiphaseOcp] - description of the OCP for acados
@@ -112,7 +112,7 @@ class AcadosOcpSolver:
                 acados_ocp.simulink_opts = simulink_opts
 
         # make consistent
-        acados_ocp.make_consistent()
+        acados_ocp.make_consistent(verbose=verbose)
 
         # module dependent post processing
         if acados_ocp.solver_options.integrator_type == 'GNSF':
@@ -225,11 +225,11 @@ class AcadosOcpSolver:
         if generate:
             if json_file is not None:
                 acados_ocp.json_file = json_file
-            self.generate(acados_ocp, json_file=acados_ocp.json_file, simulink_opts=simulink_opts, cmake_builder=cmake_builder)
+            self.generate(acados_ocp, json_file=acados_ocp.json_file, simulink_opts=simulink_opts, cmake_builder=cmake_builder, verbose=verbose)
             json_file = acados_ocp.json_file
         else:
             if acados_ocp is not None:
-                acados_ocp.make_consistent()
+                acados_ocp.make_consistent(verbose=verbose)
 
         # load json, store options in object
         with open(json_file, 'r') as f:
