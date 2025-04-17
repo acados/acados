@@ -511,16 +511,14 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
         return true;
     }
 
-    // We do not need to check for the complementarity condition and for the
-    // inequalities since we have an unconstrainted OCP
-    if (nlp_res->inf_norm_res_eq < opts->tol_eq)
+    if (nlp_res->inf_norm_res_eq < opts->tol_eq && nlp_res->inf_norm_res_ineq < opts->tol_ineq && nlp_res->inf_norm_res_comp < opts->tol_comp)
     { // Check that iterate must be dynamically feasible
         if (nlp_res->inf_norm_res_stat < opts->tol_stat)
         {// Check Stationarity
             nlp_mem->status = ACADOS_SUCCESS;
             if (opts->nlp_opts->print_level > 0)
             {
-                printf("Optimal Solution found! Converged to KKT point.\n");
+                printf("Optimal solution found! Converged to KKT point.\n");
             }
             return true;
         }
@@ -531,7 +529,7 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
             nlp_mem->status = ACADOS_SUCCESS;
             if (opts->nlp_opts->print_level > 0)
             {
-                printf("Optimal Solution found! Converged To Zero Residual Solution.\n");
+                printf("Optimal solution found! Converged to zero residual solution.\n");
             }
             return true;
         }
@@ -544,11 +542,11 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
         {
             if (nlp_res->inf_norm_res_eq < opts->tol_eq)
             {
-                printf("Stopped: Converged To Feasible Point. Step size is < tol_eq.\n");
+                printf("Stopped: Converged to feasible point. Step size is < tol_eq.\n");
             }
             else
             {
-                printf("Stopped: Converged To Infeasible Point. Step size is < tol_eq.\n");
+                printf("Stopped: Converged to infeasible point. Step size is < tol_eq.\n");
             }
         }
         nlp_mem->status = ACADOS_MINSTEP;
@@ -814,7 +812,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
 #endif
-            if (nlp_opts->print_level > 1)
+            if (nlp_opts->print_level > 0)
             {
                 printf("\n Failed to solve the following QP:\n");
                 if (nlp_opts->print_level)
@@ -853,11 +851,12 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             int globalization_status;
             acados_tic(&timer1);
             globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts, &mem->alpha);
+            mem->stat[mem->stat_n*ddp_iter+6] = mem->alpha;
             nlp_timings->time_glob += acados_toc(&timer1);
 
             if (globalization_status != ACADOS_SUCCESS)
             {
-                if (nlp_opts->print_level > 1)
+                if (nlp_opts->print_level > 0)
                 {
                     printf("\nFailure in globalization, got status %d!\n", globalization_status);
                 }
