@@ -100,6 +100,7 @@ class AcadosOcpSolver:
             :param cmake_builder: type :py:class:`~acados_template.builders.CMakeBuilder` generate a `CMakeLists.txt` and use
                    the `CMake` pipeline instead of a `Makefile` (`CMake` seems to be the better option in conjunction with
                    `MS Visual Studio`); default: `None`
+            :param verbose: indicating if warnings are printed
         """
         acados_ocp.code_export_directory = os.path.abspath(acados_ocp.code_export_directory)
 
