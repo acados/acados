@@ -701,6 +701,10 @@ class AcadosOcpSolver:
         if parametric and not self.__solver_options["with_solution_sens_wrt_params"]:
             raise ValueError("Parametric sensitivities are only available if with_solution_sens_wrt_params is set to True.")
 
+        if self.__solver_options["qp_solver_cond_N"] != self.N or self.__solver_options["qp_solver"].startwith("FULL_CONDENSING"):
+            if self.__solver_options["qp_solver_cond_ric_alg"] != 0:
+                raise ValueError("Parametric sensitivities with condensing should be used with qp_solver_cond_ric_alg=0, as otherwise the full space Hessian needs to be factorized and the algorithm cannot handle indefinite ones.")
+
 
     def eval_solution_sensitivity(self,
                                   stages: Union[int, List[int]],
