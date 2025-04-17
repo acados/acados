@@ -497,8 +497,8 @@ class AcadosOcpSolver:
 
         This is only implemented for HPIPM QP solver without condensing.
         """
-        if self.__solver_options["qp_solver"] != 'PARTIAL_CONDENSING_HPIPM' or self.__solver_options["qp_solver_cond_N"] != self.N:
-            raise NotImplementedError('This function is only implemented for HPIPM QP solver without condensing!')
+        if self.__solver_options["qp_solver"] != 'PARTIAL_CONDENSING_HPIPM':
+            raise NotImplementedError('This function is only implemented for PARTIAL_CONDENSING_HPIPM!')
 
         self.status = getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize")(self.capsule)
 
@@ -742,11 +742,12 @@ class AcadosOcpSolver:
         (3) positive definiteness of the full-space Hessian if the square-root version of the Riccati recursion is used
             OR positive definiteness of the reduced Hessian if the classic Riccati recursion is used (compare: `solver_options.qp_solver_ric_alg`), \n
 
-        (4) the solution of at least one QP in advance to evaluation of the sensitivities as the factorization is reused.
+        (4) the last interaction before calling this function should involve the solution of the QP at the NLP solution.
+            This can happen as call to `solve()` with at least 1 QP being solved or `setup_qp_matrices_and_factorize()`, \n
 
         .. note:: Timing of the sensitivities computation consists of time_solution_sens_lin, time_solution_sens_solve.
         .. note:: Solution sensitivities with respect to parameters are currently implemented assuming the parameter vector p is global within the OCP, i.e. p=p_i with i=0, ..., N.
-        .. note:: Solution sensitivities with respect to parameters are currently implemented only for parametric discrete dynamics and parametric external costs (in particular, parametric constraints are not covered).
+        .. note:: Solution sensitivities with respect to parameters are currently implemented only for parametric discrete dynamics, parametric external costs and parametric nonlinear constraints (h).
         """
 
         if with_respect_to == "params_global":
@@ -881,6 +882,8 @@ class AcadosOcpSolver:
                     The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the controls at that stage with shape (nu, n_seeds).
             :param with_respect_to : string in ["p_global"]
             :param sanity_checks : bool - whether to perform sanity checks, turn off for minimal overhead, default: True
+
+            The correct computation of solution of adjoint sensitivities has the same requirements as the computation of solution sensitivities, see the documentation of `eval_solution_sensitivity`.
         """
 
         # get n_seeds
@@ -2268,7 +2271,7 @@ class AcadosOcpSolver:
                          'qp_tau_min',
                          'qp_mu0']
         string_fields = []
-        bool_fields = ['with_adaptive_levenberg_marquardt']
+        bool_fields = ['with_adaptive_levenberg_marquardt', 'warm_start_first_qp_from_nlp', 'warm_start_first_qp']
 
         # check field availability and type
         if field_ in int_fields:

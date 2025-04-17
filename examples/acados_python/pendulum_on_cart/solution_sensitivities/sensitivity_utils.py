@@ -167,6 +167,7 @@ def export_parametric_ocp(
     ocp.solver_options.tf = T_horizon
 
     ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg
+    ocp.solver_options.qp_solver_cond_ric_alg = qp_solver_ric_alg
     ocp.solver_options.qp_solver_mu0 = 1e3  # makes HPIPM converge more robustly
     ocp.solver_options.hessian_approx = hessian_approx
     ocp.solver_options.nlp_solver_max_iter = 400
