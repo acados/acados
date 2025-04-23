@@ -118,6 +118,12 @@ function generate_c_code_nonlinear_least_squares(context, model, target_dir, sta
         dy_dz = jacobian(fun, z);
         % output symbolics
         ny_e = length(fun);
+        if any(which_depends(fun, model.u))
+            error('terminal cost cannot depend on u.');
+        end
+        if any(which_depends(fun, model.z))
+            error('terminal cost cannot depend on z.');
+        end
         if isSX
             y_e = SX.sym('y', ny_e, 1);
             u = SX.sym('u', 0, 0);
