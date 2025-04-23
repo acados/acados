@@ -26,6 +26,8 @@ The [software design](#design-paradigms) allows to implement many algorithms bey
 - **Real-time performance**: Optimized for high-frequency control loops, enabling reliable solutions for time-critical applications.
 - **High-performance solvers**: Implements fast SQP-type solvers tailored for optimal control problems.
 - **Modular design**: Easily extend and combine components for simulation, estimation, and control to fit diverse applications.
+- **Solution sensitivity computation and combination with reinforcement learning (RL)**: The combination of MPC and RL is a hot research topic in control. Many learning algorithms can profit from the availability of solution sensitivities or in particular policy gradients.
+`acados` offers the possibility to embed an NLP solver as a differentiable layer in an ML architecture as is demonstrated in the [`leap-c` project](https://github.com/leap-c/leap-c).
 
 ## Documentation
 - Documentation can be found on [docs.acados.org](https://docs.acados.org/)
