@@ -80,6 +80,12 @@ function generate_c_code_ext_cost(context, model, target_dir, stage_type)
             error('Field `cost_expr_ext_cost_e` is required for cost_type_e == EXTERNAL.')
         end
         ext_cost_e = model.cost_expr_ext_cost_e;
+        if any(which_depends(ext_cost_e, model.u))
+            error('terminal cost cannot depend on u.');
+        end
+        if any(which_depends(ext_cost_e, model.z))
+            error('terminal cost cannot depend on z.');
+        end
         % generate jacobians
         jac_x_e = jacobian(ext_cost_e, x);
         % generate hessians
