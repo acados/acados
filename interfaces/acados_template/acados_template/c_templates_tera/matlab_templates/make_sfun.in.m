@@ -430,6 +430,12 @@ sfun_input_names = [sfun_input_names; 'rti_phase [1]'];
 i_in = i_in + 1;
 {%- endif %}
 
+{%- if simulink_opts.inputs.levenberg_marquardt %}  {#- levenberg_marquardt #}
+input_note = strcat(input_note, num2str(i_in), ') levenberg_marquardt, size [1]\n ');
+sfun_input_names = [sfun_input_names; 'levenberg_marquardt [1]'];
+i_in = i_in + 1;
+{%- endif %}
+
 {%- if simulink_opts.customizable_inputs %}
 {#- customizable inputs #}
 {%- for input_name, input_spec in simulink_opts.customizable_inputs -%}

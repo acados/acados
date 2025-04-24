@@ -53,7 +53,8 @@
         "u_init": 0,
         "pi_init": 0,
         "slacks_init": 0,
-        "rti_phase": 0
+        "rti_phase": 0,
+        "levenberg_marquardt": 0
     },
     "samplingtime": "t0"
 }
