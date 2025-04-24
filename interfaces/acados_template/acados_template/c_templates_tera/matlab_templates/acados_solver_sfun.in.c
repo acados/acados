@@ -286,6 +286,10 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
 
+  {%- if simulink_opts.inputs.levenberg_marquardt -%}  {#- levenberg_marquardt #}
+    {%- set n_inputs = n_inputs + 1 -%}
+  {%- endif -%}
+
 {%- if simulink_opts.customizable_inputs %}
   {#- customizable inputs #}
   {%- for input_name, input_spec in simulink_opts.customizable_inputs -%}
@@ -589,6 +593,11 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetInputPortVectorDimension(S, {{ i_input }}, 1);
   {%- endif -%}
 
+  {%- if simulink_opts.inputs.levenberg_marquardt -%}  {#- levenberg_marquardt #}
+    {%- set i_input = i_input + 1 %}
+    // levenberg_marquardt
+    ssSetInputPortVectorDimension(S, {{ i_input }}, 1);
+  {%- endif -%}
 
 {%- if simulink_opts.customizable_inputs %}
   {#- customizable inputs #}
@@ -1235,6 +1244,12 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
   {%- endif %}
 
+  {%- if simulink_opts.inputs.levenberg_marquardt %}  {#- levenberg_marquardt #}
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    double levenberg_marquardt = (double)(*in_sign[0]);
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "levenberg_marquardt", &levenberg_marquardt);
+  {%- endif %}
 
 {%- if simulink_opts.customizable_inputs %}
   {#- customizable inputs #}
