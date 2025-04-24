@@ -43,7 +43,7 @@ The [software design](#design-paradigms) allows to implement many algorithms bey
 - Instructions can be found at
 [docs.acados.org/installation](https://docs.acados.org/installation)
 
-### Design paradigms:
+### Design paradigms
 The main design paradigms of `acados` are
 - **efficiency**: realized by rigorously exploiting the OCP structure via tailored quadratic programming (QP) solvers, such as `HPIPM`, and (partial) condensing methods to transform QPs, enabling their efficient treatment.
 Moreover, the common structure of slack variables, which for example occur when formulating soft constraints, can be exploited.

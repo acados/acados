@@ -56,7 +56,7 @@ The back-end of acados uses the high-performance linear algebra package [`BLASFE
 `MATLAB`, `Octave` and `Python` interfaces can be used to conveniently describe optimal control problems and generate self-contained C code that can be readily deployed on embedded platforms.
 
 
-### Design paradigms:
+### Design paradigms
 The main design paradigms of `acados` are
 - **efficiency**: realized by rigorously exploiting the OCP structure via tailored quadratic programming (QP) solvers, such as `HPIPM`, and (partial) condensing methods to transform QPs, enabling their efficient treatment.
 Moreover, the common structure of slack variables, which for example occur when formulating soft constraints, can be exploited.
@@ -71,7 +71,7 @@ Moreover, cost and constraint functions can be declared by explicitly providing 
 The interfaces allow to conveniently specify commonly used problem formulations via the `AcadosOcp` class and additionally expose the full flexibility of the internal `acados` problem formulation, via multi-phase formulations and `AcadosMultiphaseOcp`.
 
 ## Fields of applications
-A non-exhaustive list of projects featuring `acados` is available at [docs.acados.org/list_of_projects](https://docs.acados.org/list_of_projects/index.html).
+A non-exhaustive list of projects featuring `acados` is available [here](https://docs.acados.org/list_of_projects/index.html).
 Contributions to this list are very welcome and allow to increase visibility of your work among other `acados` users.
 - Robotics: Real-time NMPC for quadrotors, legged locomotion, and agile robotic platforms.
 - Autonomous Vehicles: Used in projects like openpilot in driving assistance systems.
