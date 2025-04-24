@@ -1033,6 +1033,7 @@ class AcadosOcp:
                 raise ValueError('DDP only supports initial state constraints, got terminal constraints.')
 
         ddp_with_merit_or_funnel = opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' or (opts.nlp_solver_type == "DDP" and opts.globalization == 'MERIT_BACKTRACKING')
+
         # Set default parameters for globalization
         if opts.globalization_alpha_min is None:
             if ddp_with_merit_or_funnel:
@@ -1091,6 +1092,15 @@ class AcadosOcp:
         # nlp_solver_warm_start_first_qp_from_nlp
         if opts.nlp_solver_warm_start_first_qp_from_nlp and (opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon):
             raise NotImplementedError('nlp_solver_warm_start_first_qp_from_nlp only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N.')
+
+        # check terminal stage
+        for field in ('cost_expr_ext_cost_e', 'cost_expr_ext_cost_custom_hess_e',
+                      'cost_y_expr_e', 'cost_psi_expr_e', 'cost_conl_custom_outer_hess_e',
+                      'con_h_expr_e', 'con_phi_expr_e', 'con_r_expr_e',):
+            val = getattr(model, field)
+            if ca.depends_on(val, model.u) or ca.depends_on(val, model.z):
+                raise ValueError(f'{field} can not depend on u or z.')
+
         return
 
 
