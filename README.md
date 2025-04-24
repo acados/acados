@@ -54,7 +54,7 @@ More precisely, all problem functions and dimensions can vary between all stages
 Such problems are often called *multi-stage* or *multi-phase* problems.
 Different NLP solvers, QP solvers, integration methods, regularization methods and globalization methods can be combined freely.
 Moreover, cost and constraint functions can be declared by explicitly providing general *convex-over-nonlinear* structures, which can be exploited in the solvers.
-- **usability**: The interfaces to Python, MATLAB, Simulink and Octave allow users to conveniently specify their problem in different domains and to specify their nonlinear expressions via the popular `CasADi` symbolic software framework.
+- **usability**: The interfaces to Python, MATLAB, Simulink and Octave allow users to conveniently specify their problem in different domains and to specify their nonlinear expressions via the popular [`CasADi`](https://web.casadi.org/) symbolic software framework.
 The interfaces allow to conveniently specify commonly used problem formulations via the `AcadosOcp` class and additionally expose the full flexibility of the internal `acados` problem formulation, via multi-phase formulations and `AcadosMultiphaseOcp`.
 
 ## Fields of applications
