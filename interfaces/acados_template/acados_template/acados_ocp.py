@@ -580,22 +580,10 @@ class AcadosOcp:
             else:
                 raise ValueError("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided and cannot be inferred from other fields.\n")
 
-        wrong_fields = []
-        if cost.Zl_0.shape[0] != ns_0:
-            wrong_fields += ["Zl_0"]
-            dim = cost.Zl_0.shape[0]
-        elif cost.Zu_0.shape[0] != ns_0:
-            wrong_fields += ["Zu_0"]
-            dim = cost.Zu_0.shape[0]
-        elif cost.zl_0.shape[0] != ns_0:
-            wrong_fields += ["zl_0"]
-            dim = cost.zl_0.shape[0]
-        elif cost.zu_0.shape[0] != ns_0:
-            wrong_fields += ["zu_0"]
-            dim = cost.zu_0.shape[0]
-
-        if wrong_fields != []:
-            raise ValueError(f'Inconsistent size for fields {", ".join(wrong_fields)}, with dimension {dim}, \n\t'
+        for field in ("Zl_0", "Zu_0", "zl_0", "zu_0"):
+            dim = getattr(cost, field).shape[0]
+            if dim != ns_0:
+                raise Exception(f'Inconsistent size for fields {field}, with dimension {dim}, \n\t'\
                 + f'Detected ns_0 = {ns_0} = nsbu + nsg + nsh_0 + nsphi_0.\n\t'\
                 + f'With nsbu = {nsbu}, nsg = {nsg}, nsh_0 = {nsh_0}, nsphi_0 = {nsphi_0}.')
         dims.ns_0 = ns_0
@@ -689,24 +677,12 @@ class AcadosOcp:
         dims.nsg = nsg
 
         ns = nsbx + nsbu + nsh + nsg + nsphi
-        wrong_fields = []
-        if cost.Zl.shape[0] != ns:
-            wrong_fields += ["Zl"]
-            dim = cost.Zl.shape[0]
-        elif cost.Zu.shape[0] != ns:
-            wrong_fields += ["Zu"]
-            dim = cost.Zu.shape[0]
-        elif cost.zl.shape[0] != ns:
-            wrong_fields += ["zl"]
-            dim = cost.zl.shape[0]
-        elif cost.zu.shape[0] != ns:
-            wrong_fields += ["zu"]
-            dim = cost.zu.shape[0]
-
-        if wrong_fields != []:
-            raise ValueError(f'Inconsistent size for fields {", ".join(wrong_fields)}, with dimension {dim}, \n\t'
-                + f'Detected ns = {ns} = nsbx + nsbu + nsg + nsh + nsphi.\n\t'\
-                + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh = {nsh}, nsphi = {nsphi}.')
+        for field in ("Zl", "Zu", "zl", "zu"):
+            dim = getattr(cost, field).shape[0]
+            if dim != ns:
+                raise Exception(f'Inconsistent size for fields {field}, with dimension {dim}, \n\t'\
+                    + f'Detected ns = {ns} = nsbx + nsbu + nsg + nsh + nsphi.\n\t'\
+                    + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh = {nsh}, nsphi = {nsphi}.')
         dims.ns = ns
 
 
@@ -780,22 +756,10 @@ class AcadosOcp:
 
         # terminal
         ns_e = nsbx_e + nsh_e + nsg_e + nsphi_e
-        wrong_field = ""
-        if cost.Zl_e.shape[0] != ns_e:
-            wrong_field = "Zl_e"
-            dim = cost.Zl_e.shape[0]
-        elif cost.Zu_e.shape[0] != ns_e:
-            wrong_field = "Zu_e"
-            dim = cost.Zu_e.shape[0]
-        elif cost.zl_e.shape[0] != ns_e:
-            wrong_field = "zl_e"
-            dim = cost.zl_e.shape[0]
-        elif cost.zu_e.shape[0] != ns_e:
-            wrong_field = "zu_e"
-            dim = cost.zu_e.shape[0]
-
-        if wrong_field != "":
-            raise ValueError(f'Inconsistent size for field {wrong_field}, with dimension {dim}, \n\t'
+        for field in ("Zl_e", "Zu_e", "zl_e", "zu_e"):
+            dim = getattr(cost, field).shape[0]
+            if dim != ns_e:
+                raise Exception(f'Inconsistent size for fields {field}, with dimension {dim}, \n\t'\
                 + f'Detected ns_e = {ns_e} = nsbx_e + nsg_e + nsh_e + nsphi_e.\n\t'\
                 + f'With nsbx_e = {nsbx_e}, nsg_e = {nsg_e}, nsh_e = {nsh_e}, nsphi_e = {nsphi_e}.')
 
