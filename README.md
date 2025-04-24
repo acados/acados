@@ -12,19 +12,19 @@ It is written in `C` and offers interfaces to the programming languages `Python`
 ## General
 `acados` is a modular and efficient software package for solving nonlinear programs (NLP) with an optimal control problem (OCP) structure.
 Such problems have to be solved repeatedly in **model predictive control (MPC)** and **moving horizon estimation (MHE)**.
-The computational speed and modularity, make `acados` an ideal choice for real-time applications.
-It is designed for high-performance applications, embedded computations, and has been successfully used in [a wide range of fields of applications](#fields-of-applications).
+The computational efficiency and modularity make `acados` an ideal choice for real-time applications.
+It is designed for high-performance applications, embedded computations, and has been successfully used in [a wide range of applications](#fields-of-applications).
 
 ### Key Features:
-Some key features of `acados` are summarized in the follow.
+Some key features of `acados` are summarized in the following.
 The [software design](#design-paradigms) allows to implement many algorithms beyond this list.
 - **Nonlinear and economic model predictive control (NMPC)**: Solve challenging control problems with nonlinear dynamics and cost functions.
 - **Moving horizon estimation (MHE)**: Estimate states and parameters of dynamic systems in real-time.
 - **Support for differential algebraic equations (DAE)**: Efficiently handle systems with algebraic constraints.
-- **Multiple shooting method**: Leverages the multiple shooting approach for time discretization, enabling fast and robust solutions.
-- **Efficient integration methods**: Includes advanced integrators for solving ODEs and DAEs, with support for first- and second-order sensitivities.
+- **Multiple shooting method**: Leverage the multiple shooting approach for time discretization, enabling fast and robust solutions.
+- **Efficient integration methods**: Include advanced integrators for solving ODEs and DAEs, with support for first- and second-order sensitivities.
 - **Real-time performance**: Optimized for high-frequency control loops, enabling reliable solutions for time-critical applications.
-- **High-performance solvers**: Implements fast SQP-type solvers tailored for optimal control problems.
+- **High-performance solvers**: Implement fast SQP-type solvers tailored for optimal control problems.
 - **Modular design**: Easily extend and combine components for simulation, estimation, and control to fit diverse applications.
 - **Solution sensitivity computation and combination with reinforcement learning (RL)**: The combination of MPC and RL is a hot research topic in control. Many learning algorithms can profit from the availability of solution sensitivities or in particular policy gradients.
 `acados` offers the possibility to embed an NLP solver as a differentiable layer in an ML architecture as is demonstrated in the [`leap-c` project](https://github.com/leap-c/leap-c).
@@ -45,7 +45,7 @@ The [software design](#design-paradigms) allows to implement many algorithms bey
 
 ### Design paradigms:
 The main design paradigms of `acados` are
-- **efficiency**: realized by rigorously exploiting the OCP structure, via tailored quadratic programming (QP) solvers, such as `HPIPM`, (partial) condensing methods to transform QPs, enabling their efficient treatment.
+- **efficiency**: realized by rigorously exploiting the OCP structure via tailored quadratic programming (QP) solvers, such as `HPIPM`, and (partial) condensing methods to transform QPs, enabling their efficient treatment.
 Moreover, the common structure of slack variables, which for example occur when formulating soft constraints, can be exploited.
 Additionally, a structure exploiting Runge-Kutta method is implemented, allowing to utilize linear dependencies within dynamical system models.
 - **modularity**:
@@ -59,7 +59,7 @@ The interfaces allow to conveniently specify commonly used problem formulations 
 
 ## Fields of applications
 A non-exhaustive list of projects featuring `acados` is available at [docs.acados.org/list_of_projects](https://docs.acados.org/list_of_projects/index.html).
-Contributions to this list are very welcome and allow to increas visibility of your work among other `acados` users.
+Contributions to this list are very welcome and allow to increase visibility of your work among other `acados` users.
 - Robotics: Real-time NMPC for quadrotors, legged locomotion, and agile robotic platforms.
 - Autonomous Vehicles: Used in projects like openpilot in driving assistance systems.
 - Energy Systems: Optimization-based control for microgrids and wind turbines.
