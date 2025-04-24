@@ -1098,7 +1098,7 @@ class AcadosOcp:
                       'cost_y_expr_e', 'cost_psi_expr_e', 'cost_conl_custom_outer_hess_e',
                       'con_h_expr_e', 'con_phi_expr_e', 'con_r_expr_e',):
             val = getattr(model, field)
-            if ca.depends_on(val, model.u) or ca.depends_on(val, model.z):
+            if not is_empty(val) and (ca.depends_on(val, model.u) or ca.depends_on(val, model.z)):
                 raise ValueError(f'{field} can not depend on u or z.')
 
         return
