@@ -330,26 +330,24 @@ class AcadosOcp:
             if isinstance(cost.W_e, (ca.SX, ca.MX, ca.DM)):
                 raise Exception("W_e should be numpy array, symbolics are only supported before solver creation, to allow reformulating costs, e.g. using translate_cost_to_external_cost().")
 
-        if cost.cost_type_e == 'LINEAR_LS':
             ny_e = cost.W_e.shape[0]
             check_if_square(cost.W_e, 'W_e')
-            if cost.Vx_e.shape[0] != ny_e:
-                raise ValueError('inconsistent dimension ny_e: regarding W_e, cost_y_expr_e.' + \
-                    f'\nGot W_e[{cost.W_e.shape}], Vx_e[{cost.Vx_e.shape}]')
-            if cost.Vx_e.shape[1] != dims.nx and ny_e != 0:
-                raise ValueError('inconsistent dimension: Vx_e should have nx columns.')
-            if cost.yref_e.shape[0] != ny_e:
-                raise ValueError('inconsistent dimension: regarding W_e, yref_e.')
             dims.ny_e = ny_e
 
-        elif cost.cost_type_e == 'NONLINEAR_LS':
-            ny_e = cost.W_e.shape[0]
-            check_if_square(cost.W_e, 'W_e')
-            if (is_empty(model.cost_y_expr_e) and ny_e != 0) or casadi_length(model.cost_y_expr_e) != ny_e or cost.yref_e.shape[0] != ny_e:
-                raise ValueError('inconsistent dimension ny_e: regarding W_e, cost_y_expr.' +
-                                f'\nGot W_e[{cost.W_e.shape}], yref_e[{cost.yref_e.shape}], ',
-                                f'cost_y_expr_e [{casadi_length(model.cost_y_expr_e)}]\n')
-            dims.ny_e = ny_e
+            if cost.cost_type_e == 'LINEAR_LS':
+                if cost.Vx_e.shape[0] != ny_e:
+                    raise ValueError('inconsistent dimension ny_e: regarding W_e, cost_y_expr_e.' + \
+                        f'\nGot W_e[{cost.W_e.shape}], Vx_e[{cost.Vx_e.shape}]')
+                if cost.Vx_e.shape[1] != dims.nx and ny_e != 0:
+                    raise ValueError('inconsistent dimension: Vx_e should have nx columns.')
+                if cost.yref_e.shape[0] != ny_e:
+                    raise ValueError('inconsistent dimension: regarding W_e, yref_e.')
+
+            elif cost.cost_type_e == 'NONLINEAR_LS':
+                if (is_empty(model.cost_y_expr_e) and ny_e != 0) or casadi_length(model.cost_y_expr_e) != ny_e or cost.yref_e.shape[0] != ny_e:
+                    raise ValueError('inconsistent dimension ny_e: regarding W_e, cost_y_expr.' +
+                                    f'\nGot W_e[{cost.W_e.shape}], yref_e[{cost.yref_e.shape}], ',
+                                    f'cost_y_expr_e [{casadi_length(model.cost_y_expr_e)}]\n')
 
         elif cost.cost_type_e == 'CONVEX_OVER_NONLINEAR':
             if is_empty(model.cost_y_expr_e):
@@ -388,9 +386,9 @@ class AcadosOcp:
             return
 
         nbx_0 = constraints.idxbx_0.shape[0]
+        dims.nbx_0 = nbx_0
         if constraints.ubx_0.shape[0] != nbx_0 or constraints.lbx_0.shape[0] != nbx_0:
             raise ValueError('inconsistent dimension nbx_0, regarding idxbx_0, ubx_0, lbx_0.')
-        dims.nbx_0 = nbx_0
         if any(constraints.idxbx_0 >= dims.nx):
             raise ValueError(f'idxbx_0 = {constraints.idxbx_0} contains value >= nx = {dims.nx}.')
 
@@ -404,10 +402,7 @@ class AcadosOcp:
         if any(constraints.idxbxe_0 >= dims.nbx_0):
             raise ValueError(f'idxbxe_0 = {constraints.idxbxe_0} contains value >= nbx_0 = {dims.nbx_0}.')
 
-        if not is_empty(model.con_h_expr_0):
-            nh_0 = casadi_length(model.con_h_expr_0)
-        else:
-            nh_0 = 0
+        nh_0 = 0 if is_empty(model.con_h_expr_0) else casadi_length(model.con_h_expr_0)
 
         if constraints.uh_0.shape[0] != nh_0 or constraints.lh_0.shape[0] != nh_0:
             raise ValueError('inconsistent dimension nh_0, regarding lh_0, uh_0, con_h_expr_0.')
@@ -505,10 +500,7 @@ class AcadosOcp:
         else:
             dims.ng_e = ng_e
 
-        if not is_empty(model.con_h_expr_e):
-            nh_e = casadi_length(model.con_h_expr_e)
-        else:
-            nh_e = 0
+        nh_e = 0 if is_empty(model.con_h_expr_e) else casadi_length(model.con_h_expr_e)
 
         if constraints.uh_e.shape[0] != nh_e or constraints.lh_e.shape[0] != nh_e:
             raise ValueError('inconsistent dimension nh_e, regarding lh_e, uh_e, con_h_expr_e.')
