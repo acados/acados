@@ -27,7 +27,7 @@ Here, an OCP solver (`AcadosOcpSolver`) is used to compute the control inputs an
 
 `acados` supports general nonlinear cost, but can also exploit particular cost structures such as (non)linear least-squares costs and convex-over-nonlinear costs.
 
-- [Python](examples/acados_python/pendulum_on_cart/ocp/ocp_example_cost_formulations.py)
+- [Python](https://github.com/acados/acados/blob/main/examples/acados_python/pendulum_on_cart/ocp/ocp_example_cost_formulations.py)
 
 
 ### Soft constraints
