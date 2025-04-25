@@ -83,7 +83,8 @@ html_context = {
 # ones.
 extensions = ['sphinx.ext.mathjax', 'breathe', 'recommonmark', 'sphinx.ext.autodoc', 'sphinx.ext.graphviz', 'sphinx_markdown_tables',
     'sphinx.ext.intersphinx',
-    'sphinxcontrib.youtube'
+    'sphinxcontrib.youtube',
+    'sphinxemoji.sphinxemoji',
 ]
 
 

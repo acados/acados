@@ -8,7 +8,7 @@ This page shows some real-world examples enabled by `acados`.
 The list is not complete and is meant to show a variety of domains and applications.
 It is intended to inspire and impress.
 If you have awesome videos with `acados`-based controllers in action, reach out to get featured.
-Enjoy!
+Enjoy! |:popcorn:|
 
 ..    Check this documentation for embedding YouTube videos:
 ..    https://sphinxcontrib-youtube.readthedocs.io/en/latest/usage.html
