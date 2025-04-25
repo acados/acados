@@ -4,10 +4,10 @@
 Real-world examples
 ==================
 
-This page shows some real-world examples enabled by `acados`.
+This page shows some real-world examples enabled by ``acados``.
 The list is not complete and is meant to show a variety of domains and applications.
 It is intended to inspire and impress.
-If you have awesome videos with `acados`-based controllers in action, reach out to get featured.
+If you have awesome videos with ``acados``-based controllers in action, reach out to get featured.
 Enjoy! |:popcorn:|
 
 ..    Check this documentation for embedding YouTube videos:
@@ -19,7 +19,7 @@ Drone racing: Quadrotor control
    :width: 40%
    :url_parameters: ?start=86
 
-Driving assistance: `acados` is used within `openpilot`
+Driving assistance: ``acados`` is used within ``openpilot``
 -------------------------------------------------------
 .. youtube:: 0aq4Wi2rsOk
    :width: 40%
