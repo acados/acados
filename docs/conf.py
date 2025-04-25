@@ -81,7 +81,10 @@ html_context = {
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.mathjax', 'breathe', 'recommonmark', 'sphinx.ext.autodoc', 'sphinx.ext.graphviz', 'sphinx_markdown_tables']
+extensions = ['sphinx.ext.mathjax', 'breathe', 'recommonmark', 'sphinx.ext.autodoc', 'sphinx.ext.graphviz', 'sphinx_markdown_tables',
+    'sphinx.ext.intersphinx',
+    'sphinxcontrib.youtube'
+]
 
 
 # Add any paths that contain templates here, relative to this directory.

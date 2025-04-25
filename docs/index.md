@@ -91,6 +91,7 @@ Documentation latest build: |today|
     :maxdepth: 2
 
     Home<self>
+    real_world_examples/index
     citing/index
     installation/index
     list_of_projects/index

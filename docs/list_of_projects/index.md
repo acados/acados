@@ -1,32 +1,5 @@
 <!-- # Publications and Projects that feature `acados`. -->
-# Other Projects that feature `acados`
-
-## Videos
-### Time-Optimal Online Replanning for Agile Quadrotor Flight
-```eval_rst
-..  youtube:: zBVpx3bgI6E
-```
-### Agile perching maneuvers in birds and morphing-wing drones
-```eval_rst
-..  youtube:: Mv3I3Bv8UyQ
-```
-### Swinging up a Custom-Made Furuta Pendulum with NMPC using acados (Slow Motion)
-```eval_rst
-.. youtube:: Mk2ld31JKyI
-```
-
-### Flying Hand: End-Effector-Centric Framework for Versatile Aerial Manipulation Teleoperation and Policy Learning
-<!-- TODO: maybe pick another video from this page: -->
-<!-- https://lecar-lab.github.io/flying_hand/ -->
-```eval_rst
-.. raw:: html
-
-    <video width="640" height="360" controls>
-      <source src="https://lecar-lab.github.io/flying_hand/static/videos/teaser.mp4" type="video/mp4">
-      Your browser does not support the video tag.
-    </video>
-```
-
+# Related Projects
 <!-- just simulation -->
 <!-- ### Dynamic Objective MPC for Motion Planning of Seamless Docking Maneuvers
 https://www.youtube.com/watch?v=28X5zaHW6bs -->
