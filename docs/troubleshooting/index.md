@@ -7,6 +7,10 @@ Next, check the NLP residuals by calling `solver.print_statistics()` in Python a
 
 In order to asses the QP solver status, you need to check the corresponding QP solver status definitions. For `HPIPM`, they are given [here](https://github.com/giaf/hpipm/blob/deb7808e49a3cc2b1bdb721cba23f13869c0a35c/include/hpipm_common.h#L57).
 
+### Solver initialization
+Use the `set` method of `AcadosOcpSolver` to provide different initializations.
+Are all problem functions defined at the initial guess?
+`NaN` errors can often be mitigated by solver initializations.
 
 ### QP diagnostics
 - [Python](examples/acados_python/pendulum_on_cart/solution_sensitivities/policy_gradient_example.py)
