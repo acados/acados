@@ -24,20 +24,23 @@ Enjoy! |:popcorn:|
 
 .. rubric:: Driving assistance: acados is used within openpilot
 See blog post `here <https://blog.comma.ai/0810release/>`_
+
 .. youtube:: 0aq4Wi2rsOk
    :width: 50%
    :url_parameters: ?start=152
 
 
 .. rubric:: Bird-like drones
-  |:linked_paperclips:| `Wüest et al. (2024) <https://www.nature.com/articles/s41467-024-52369-4>`_
+|:linked_paperclips:| `Wüest et al. (2024) <https://www.nature.com/articles/s41467-024-52369-4>`_
+
 .. youtube:: Mv3I3Bv8UyQ
    :width: 50%
    :url_parameters: ?start=116
 
 
 .. rubric:: Flying Hand: End-Effector-Centric Framework for Versatile Aerial Manipulation Teleoperation and Policy Learning
-  |:linked_paperclips:| `He et al. (2024) <https://arxiv.org/abs/2504.10334>`_
+|:linked_paperclips:| `He et al. (2024) <https://arxiv.org/abs/2504.10334>`_
+
 .. raw:: html
 
     <style>
