@@ -13,37 +13,36 @@ Enjoy! |:popcorn:|
 ..    Check this documentation for embedding YouTube videos:
 ..    https://sphinxcontrib-youtube.readthedocs.io/en/latest/usage.html
 
-Drone racing: Quadrotor control
---------------------------------
+
+.. rubric:: Drone racing: Quadrotor control
+|:linked_paperclips:| `Romero et al. (2022) <https://arxiv.org/abs/2203.09839>`_
+
 .. youtube:: zBVpx3bgI6E
-   :width: 40%
+   :width: 50%
    :url_parameters: ?start=86
 
-Driving assistance: ``acados`` is used within ``openpilot``
--------------------------------------------------------
+
+.. rubric:: Driving assistance: acados is used within openpilot
+See blog post `here <https://blog.comma.ai/0810release/>`_
 .. youtube:: 0aq4Wi2rsOk
-   :width: 40%
+   :width: 50%
    :url_parameters: ?start=152
 
-Bird-like drones
------------------
+
+.. rubric:: Bird-like drones
+  |:linked_paperclips:| `Wüest et al. (2024) <https://www.nature.com/articles/s41467-024-52369-4>`_
 .. youtube:: Mv3I3Bv8UyQ
-   :width: 40%
+   :width: 50%
    :url_parameters: ?start=116
 
-Swinging up a Custom-Made Furuta Pendulum with NMPC using acados (Slow Motion)
-------------------------------------------------------------------------------
-.. youtube:: oJYyD5beMqM
-   :width: 30%
-   :aspect: 9:16
 
-Flying Hand: End-Effector-Centric Framework for Versatile Aerial Manipulation Teleoperation and Policy Learning
-----------------------------------------------------------------------------------------------------------------
+.. rubric:: Flying Hand: End-Effector-Centric Framework for Versatile Aerial Manipulation Teleoperation and Policy Learning
+  |:linked_paperclips:| `He et al. (2024) <https://arxiv.org/abs/2504.10334>`_
 .. raw:: html
 
     <style>
     .video-wrapper {
-        max-width: 100%;
+        max-width: 50%;
         margin: 1em 0;
     }
     .video-wrapper .responsive-video {
@@ -71,3 +70,8 @@ Flying Hand: End-Effector-Centric Framework for Versatile Aerial Manipulation Te
       </div>
     </div>
 ````
+
+.. rubric:: Swinging up a Custom-Made Furuta Pendulum with NMPC using acados (Slow Motion)
+.. youtube:: oJYyD5beMqM
+   :width: 30%
+   :aspect: 9:16
