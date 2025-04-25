@@ -99,7 +99,6 @@ Documentation latest build: |today|
    citing/index
    installation/index
    list_of_projects/index
-   developer_guide/index
 
 .. toctree::
    :maxdepth: 2
@@ -108,7 +107,6 @@ Documentation latest build: |today|
    interfaces/index
    python_interface/index
    matlab_octave_interface/index
-   embedded_workflow/index
 
 .. toctree::
    :maxdepth: 2
@@ -117,3 +115,10 @@ Documentation latest build: |today|
    problem_formulation/index
    troubleshooting/index
    features/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Advanced
+
+   developer_guide/index
+   embedded_workflow/index
