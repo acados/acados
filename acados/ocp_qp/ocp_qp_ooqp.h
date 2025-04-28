@@ -133,7 +133,7 @@ int ocp_qp_ooqp(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_
 //
 void ocp_qp_ooqp_destroy(void *mem_, void *work);
 //
-void ocp_qp_ooqp_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
+void ocp_qp_ooqp_eval_forw_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
 //
 void ocp_qp_ooqp_memory_reset(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_);
 //

@@ -72,8 +72,8 @@ typedef struct
     int (*evaluate)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
     void (*solver_get)(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, const char *field, int stage, void* value, int size1, int size2);
     void (*memory_reset)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
-    void (*eval_sens)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
-    void (*eval_adj_sens)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
+    void (*eval_forw_sens)(void *config, void *qp_in, void *seed, void *qp_out, void *opts, void *mem, void *work);
+    void (*eval_adj_sens)(void *config, void *qp_in, void *seed, void *qp_out, void *opts, void *mem, void *work);
     void (*terminate)(void *config, void *mem, void *work);
 } qp_solver_config;
 #endif
@@ -98,6 +98,7 @@ typedef struct
     acados_size_t (*workspace_calculate_size)(void *dims, void *opts);
     int (*condensing)(void *qp_in, void *x_cond_qp_in, void *opts, void *mem, void *work);
     int (*condense_rhs)(void *qp_in, void *x_cond_qp_in, void *opts, void *mem, void *work);
+    int (*condense_rhs_res)(void *qp_in, void *qp_res, void *xcond_qp_res, void *opts, void *mem, void *work);
     int (*condense_lhs)(void *qp_in, void *x_cond_qp_in, void *opts, void *mem, void *work);
     int (*condense_qp_out)(void *qp_in, void *x_cond_qp_in, void *qp_out, void *p_cond_qp_out, void *opts, void *mem, void *work);
     int (*expansion)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);

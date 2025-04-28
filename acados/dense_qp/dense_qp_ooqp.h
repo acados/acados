@@ -114,7 +114,7 @@ int dense_qp_ooqp(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
 //
 void dense_qp_ooqp_destroy(void *mem_, void *work);
 //
-void dense_qp_ooqp_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
+void dense_qp_ooqp_eval_forw_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
 //
 void dense_qp_ooqp_memory_reset(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
 //

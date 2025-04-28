@@ -316,12 +316,12 @@ acados_size_t ocp_qp_full_condensing_memory_calculate_size(void *dims_, void *op
     size += sizeof(ocp_qp_full_condensing_memory);
 
     size += dense_qp_in_calculate_size(dims->fcond_dims);
-
     size += dense_qp_out_calculate_size(dims->fcond_dims);
+    size += dense_qp_res_calculate_size(dims->fcond_dims);
 
     size += ocp_qp_in_calculate_size(dims->red_dims);
-
     size += ocp_qp_out_calculate_size(dims->red_dims);
+    size += ocp_qp_res_calculate_size(dims->red_dims);
 
     size += sizeof(struct d_cond_qp_ws);
     size += d_cond_qp_ws_memsize(dims->red_dims, opts->hpipm_cond_opts);
@@ -374,11 +374,17 @@ void *ocp_qp_full_condensing_memory_assign(void *dims_, void *opts_, void *raw_m
     mem->fcond_qp_out = dense_qp_out_assign(dims->fcond_dims, c_ptr);
     c_ptr += dense_qp_out_calculate_size(dims->fcond_dims);
 
+    mem->fcond_qp_res = dense_qp_res_assign(dims->fcond_dims, c_ptr);
+    c_ptr += dense_qp_res_calculate_size(dims->fcond_dims);
+
     mem->red_qp = ocp_qp_in_assign(dims->red_dims, c_ptr);
     c_ptr += ocp_qp_in_calculate_size(dims->red_dims);
 
     mem->red_sol = ocp_qp_out_assign(dims->red_dims, c_ptr);
     c_ptr += ocp_qp_out_calculate_size(dims->red_dims);
+
+    mem->red_res = ocp_qp_res_assign(dims->red_dims, c_ptr);
+    c_ptr += ocp_qp_res_calculate_size(dims->red_dims);
 
     mem->qp_out_info = (qp_info *) mem->fcond_qp_out->misc;
 
@@ -402,6 +408,11 @@ void ocp_qp_full_condensing_memory_get(void *config_, void *mem_, const char *fi
     {
         dense_qp_out **ptr = value;
         *ptr = mem->fcond_qp_out;
+    }
+    else if(!strcmp(field, "xcond_qp_res"))
+    {
+        dense_qp_res **ptr = value;
+        *ptr = mem->fcond_qp_res;
     }
     else if(!strcmp(field, "qp_out_info"))
     {
@@ -557,6 +568,31 @@ int ocp_qp_full_condensing_condense_rhs(void *qp_in_, void *fcond_qp_in_, void *
 }
 
 
+int ocp_qp_full_condensing_condense_rhs_res(void *qp_in_, void *qp_res, void *pcond_res, void *opts_, void *mem_, void *work)
+{
+    ocp_qp_in *qp_in = qp_in_;
+    ocp_qp_full_condensing_opts *opts = opts_;
+    ocp_qp_full_condensing_memory *mem = mem_;
+
+    acados_timer timer;
+
+    // start timer
+    acados_tic(&timer);
+
+    // save pointers to ocp_qp_in in memory (needed for expansion)
+    mem->ptr_qp_in = qp_in;
+
+    // reduce eq constr DOF: residual
+    d_ocp_qp_reduce_eq_dof_res(qp_in, qp_res, mem->red_res, opts->hpipm_red_opts, mem->hpipm_red_work);
+
+    // convert to fully condensed qp structure
+    d_cond_qp_cond_res(mem->red_qp, mem->red_res, pcond_res, opts->hpipm_cond_opts, mem->hpipm_cond_work);
+
+    // stop timer
+    mem->time_qp_xcond += acados_toc(&timer);
+
+    return ACADOS_SUCCESS;
+}
 
 
 int ocp_qp_full_expansion(void *fcond_qp_out_, void *qp_out_, void *opts_, void *mem_, void *work)
@@ -607,6 +643,7 @@ void ocp_qp_full_condensing_config_initialize_default(void *config_)
     config->workspace_calculate_size = &ocp_qp_full_condensing_workspace_calculate_size;
     config->condensing = &ocp_qp_full_condensing;
     config->condense_rhs = &ocp_qp_full_condensing_condense_rhs;
+    config->condense_rhs_res = &ocp_qp_full_condensing_condense_rhs_res;
     config->condense_lhs = &ocp_qp_full_condensing_condense_lhs;
     config->condense_qp_out = &ocp_qp_full_condensing_condense_qp_out;
     config->expansion = &ocp_qp_full_expansion;

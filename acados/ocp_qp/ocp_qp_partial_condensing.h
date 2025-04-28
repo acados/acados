@@ -76,8 +76,10 @@ typedef struct ocp_qp_partial_condensing_memory_
     // in memory
     ocp_qp_in *pcond_qp_in;
     ocp_qp_out *pcond_qp_out;
+    ocp_qp_res *pcond_qp_res;
     ocp_qp_in *red_qp; // reduced qp
     ocp_qp_out *red_sol; // reduced qp sol
+    ocp_qp_res *red_res; // reduced qp res
     // only pointer
     ocp_qp_in *ptr_qp_in;
     ocp_qp_in *ptr_pcond_qp_in;
