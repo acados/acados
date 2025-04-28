@@ -81,14 +81,15 @@ The main design paradigms of ``acados`` are:
 Fields of applications
 ----------------------
 
-A non-exhaustive list of projects featuring ``acados`` is available `here <https://docs.acados.org/list_of_projects/index.html>`_.
-Contributions to this list are very welcome and allow increasing the visibility of your work among other ``acados`` users.
-
+``acados`` is used in a wide range of applications. Some examples include:
 - **Robotics**: Real-time NMPC for quadrotors, legged locomotion, and agile robotic platforms.
 - **Autonomous Vehicles**: Used in projects like openpilot in driving assistance systems.
 - **Energy Systems**: Optimization-based control for microgrids and wind turbines.
 - **Biomechanics**: Optimal control in biomechanics through libraries like bioptim.
 - **Aerospace**: Applications in trajectory optimization and control for drones and morphing-wing aircraft.
+
+Please also check this non-exhaustive `list of projects <https://docs.acados.org/list_of_projects/index.html>`_ featuring ``acados``.
+Contributions to this list are very welcome and allow increasing the visibility of your work among other ``acados`` users.
 
 Documentation page overview
 ---------------------------
