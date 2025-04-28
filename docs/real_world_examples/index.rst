@@ -78,3 +78,11 @@ See blog post `here <https://blog.comma.ai/0810release/>`_
 .. youtube:: oJYyD5beMqM
    :width: 30%
    :aspect: 9:16
+
+
+.. rubric:: Flight Control: Overactuated Tiltable-Quadrotors
+|:linked_paperclips:| `Li et al. (2024) <https://arxiv.org/abs/2405.09871>`_
+
+.. youtube:: 8_pYdeuQnC0
+   :width: 50%
+   :url_parameters: ?start=59
