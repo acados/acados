@@ -458,11 +458,6 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
         suffix_name_value_sens = "_cost_ext_cost_e_grad_p"
         ext_cost = model.cost_expr_ext_cost_e
         custom_hess = model.cost_expr_ext_cost_custom_hess_e
-        # Last stage cannot depend on u and z
-        if any(ca.which_depends(ext_cost, model.u)):
-            raise ValueError("terminal cost cannot depend on u.")
-        if any(ca.which_depends(ext_cost, model.z)):
-            raise ValueError("terminal cost cannot depend on z.")
         # create dummy u, z
         u = symbol("u", 0, 0)
         z = symbol("z", 0, 0)
@@ -538,10 +533,7 @@ def generate_c_code_nls_cost(context: GenerateContext, model: AcadosModel, stage
     if stage_type == 'terminal':
         middle_name = '_cost_y_e'
         y_expr = model.cost_y_expr_e
-        if any(ca.which_depends(y_expr, model.u)):
-            raise ValueError("terminal cost cannot depend on u.")
-        if any(ca.which_depends(y_expr, model.z)):
-            raise ValueError("terminal cost cannot depend on z.")
+
         # create dummy u, z
         u = symbol("u", 0, 0)
         z = symbol("z", 0, 0)
@@ -605,15 +597,11 @@ def generate_c_code_conl_cost(context: GenerateContext, model: AcadosModel, stag
         inner_expr = model.cost_y_expr_e - yref
         outer_expr = model.cost_psi_expr_e
         res_expr = model.cost_r_in_psi_expr_e
+        custom_hess = model.cost_conl_custom_outer_hess_e
 
         suffix_name_fun = '_conl_cost_e_fun'
         suffix_name_fun_jac_hess = '_conl_cost_e_fun_jac_hess'
 
-        custom_hess = model.cost_conl_custom_outer_hess_e
-        if any(ca.which_depends(inner_expr, model.u)):
-            raise ValueError("terminal cost cannot depend on u.")
-        if any(ca.which_depends(inner_expr, model.z)):
-            raise ValueError("terminal cost cannot depend on z.")
         # create dummy u, z
         u = symbol("u", 0, 0)
         z = symbol("z", 0, 0)
@@ -704,10 +692,7 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
         constr_type = constraints.constr_type_e
         con_h_expr = model.con_h_expr_e
         con_phi_expr = model.con_phi_expr_e
-        if any(ca.which_depends(con_h_expr, model.u)) or any(ca.which_depends(con_phi_expr, model.u)):
-            raise ValueError("terminal constraints cannot depend on u.")
-        if any(ca.which_depends(con_h_expr, model.z)) or any(ca.which_depends(con_phi_expr, model.z)):
-            raise ValueError("terminal constraints cannot depend on z.")
+
         # create dummy u, z
         u = symbol('u', 0, 0)
         z = symbol('z', 0, 0)
