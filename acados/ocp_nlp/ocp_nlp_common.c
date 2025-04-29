@@ -42,6 +42,7 @@
 // hpipm
 #include "hpipm/include/hpipm_d_ocp_qp_dim.h"
 #include "hpipm/include/hpipm_d_ocp_qp_res.h"
+#include "hpipm/include/hpipm_d_ocp_qp_seed.h"
 // acados
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
@@ -2137,11 +2138,13 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
         }
     }
 
-    // qp_res
-    size += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
+    // qp_seed
+    size += ocp_qp_seed_calculate_size(dims->qp_solver->orig_dims);
 
     if (opts->ext_qp_res)
     {
+        // qp_res
+        size += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
         // qp_res_ws
         size += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
     }
@@ -2390,12 +2393,15 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
         }
     }
 
-    // qp res
-    work->qp_res = ocp_qp_res_assign(dims->qp_solver->orig_dims, c_ptr);
-    c_ptr += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
+    // qp seed
+    work->qp_seed = ocp_qp_seed_assign(dims->qp_solver->orig_dims, c_ptr);
+    c_ptr += ocp_qp_seed_calculate_size(dims->qp_solver->orig_dims);
 
     if (opts->ext_qp_res)
     {
+        // qp res
+        work->qp_res = ocp_qp_res_assign(dims->qp_solver->orig_dims, c_ptr);
+        c_ptr += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
         // qp res ws
         work->qp_res_ws = ocp_qp_res_workspace_assign(dims->qp_solver->orig_dims, c_ptr);
         c_ptr += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
@@ -3659,32 +3665,30 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
     struct blasfeo_dmat *jac_dyn_p_global = mem->jac_dyn_p_global;
 
     ocp_qp_out *tmp_qp_out = work->tmp_qp_out;
-    ocp_qp_res *qp_res = work->qp_res;
-    d_ocp_qp_res_set_zero(qp_res);
+    ocp_qp_seed *qp_seed = work->qp_seed;
+    d_ocp_qp_seed_set_zero(qp_seed);
 
     if ((!strcmp("ex", field)) && (stage==0))
     {
         int tmp_nbu;
         config->constraints[0]->dims_get(config->constraints[0], dims->constraints[0], "nbu", &tmp_nbu);
-        BLASFEO_DVECEL(qp_res->res_d+0, tmp_nbu+index) = 1.0;
-        BLASFEO_DVECEL(qp_res->res_d+0, tmp_nbu+index+nb[0]+ng[0]+ni_nl[0]) = -1.0; // sign flip only for res API
+        BLASFEO_DVECEL(qp_seed->seed_d+0, tmp_nbu+index) = 1.0;
+        BLASFEO_DVECEL(qp_seed->seed_d+0, tmp_nbu+index+nb[0]+ng[0]+ni_nl[0]) = 1.0;
     }
     else if (!strcmp("p_global", field))
     {
         for (i = 0; i <= N; i++)
         {
             // stationarity
-            blasfeo_dcolex(nv[i], &jac_lag_stat_p_global[i], 0, index, &qp_res->res_g[i], 0);
+            blasfeo_dcolex(nv[i], &jac_lag_stat_p_global[i], 0, index, &qp_seed->seed_g[i], 0);
             // dynamics
             if (i < N)
-                blasfeo_dcolex(nx[i+1], &jac_dyn_p_global[i], 0, index, &qp_res->res_b[i], 0);
+                blasfeo_dcolex(nx[i+1], &jac_dyn_p_global[i], 0, index, &qp_seed->seed_b[i], 0);
             // inequalities
-            blasfeo_dcolex(ni_nl[i], &jac_ineq_p_global[i], 0, index, &qp_res->res_d[i], nb[i]+ng[i]);
-            blasfeo_dvecsc(ni_nl[i], -1.0, &qp_res->res_d[i], nb[i]+ng[i]);
-            blasfeo_daxpy(ni_nl[i], -1.0, &qp_res->res_d[i], nb[i]+ng[i], &qp_res->res_d[i], 2*(nb[i]+ng[i])+ni_nl[i],
-                                                                         &qp_res->res_d[i], 2*(nb[i]+ng[i])+ni_nl[i]);
-            // sign flip only for res API
-            blasfeo_dvecsc(nb[i]+ng[i]+ni_nl[i], -1.0, &qp_res->res_d[i], nb[i]+ng[i]+ni_nl[i]);
+            blasfeo_dcolex(ni_nl[i], &jac_ineq_p_global[i], 0, index, &qp_seed->seed_d[i], nb[i]+ng[i]);
+            blasfeo_dvecsc(ni_nl[i], -1.0, &qp_seed->seed_d[i], nb[i]+ng[i]);
+            blasfeo_daxpy(ni_nl[i], -1.0, &qp_seed->seed_d[i], nb[i]+ng[i], &qp_seed->seed_d[i], 2*(nb[i]+ng[i])+ni_nl[i],
+                                                                         &qp_seed->seed_d[i], 2*(nb[i]+ng[i])+ni_nl[i]);
         }
     }
     else
@@ -3694,8 +3698,8 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
     }
 
     // d_ocp_qp_print(tmp_qp_in->dim, tmp_qp_in);
-    // d_ocp_qp_res_print(qp_res->dim, qp_res);
-    config->qp_solver->eval_forw_sens(config->qp_solver, dims->qp_solver, mem->qp_in, qp_res, tmp_qp_out,
+    // d_ocp_qp_seed_print(qp_seed->dim, qp_seed);
+    config->qp_solver->eval_forw_sens(config->qp_solver, dims->qp_solver, mem->qp_in, qp_seed, tmp_qp_out,
                             opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
     // d_ocp_qp_sol_print(tmp_qp_out->dim, tmp_qp_out);
 
@@ -3738,14 +3742,14 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
     struct blasfeo_dmat *jac_ineq_p_global = mem->jac_ineq_p_global;
     struct blasfeo_dmat *jac_dyn_p_global = mem->jac_dyn_p_global;
 
-    ocp_qp_res *qp_res = work->qp_res;
+    ocp_qp_seed *qp_seed = work->qp_seed;
     ocp_qp_out *tmp_qp_out = work->tmp_qp_out;
-    d_ocp_qp_res_set_zero(qp_res);
+    d_ocp_qp_seed_set_zero(qp_seed);
 
-    /* copy sens_nlp_out to qp_res */
+    /* copy sens_nlp_out to qp_seed */
     for (i = 0; i <= N; i++)
     {
-        blasfeo_dveccp(nv[i], sens_nlp_out->ux + i, 0, qp_res->res_g + i, 0);
+        blasfeo_dveccp(nv[i], sens_nlp_out->ux + i, 0, qp_seed->seed_g + i, 0);
         // NOTE: noone needs sensitivities in adj dir pi, lam, t wrt. p
         // if (i < N)
         //     blasfeo_dveccp(nx[i + 1], sens_nlp_out->pi + i, 0, tmp_qp_in->b + i, 0);
@@ -3753,7 +3757,7 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
         // blasfeo_dveccp(2 * ni[i], sens_nlp_out->t + i, ?);
     }
 
-    config->qp_solver->eval_adj_sens(config->qp_solver, dims->qp_solver, mem->qp_in, qp_res, tmp_qp_out,
+    config->qp_solver->eval_adj_sens(config->qp_solver, dims->qp_solver, mem->qp_in, qp_seed, tmp_qp_out,
                             opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
 
     if (!strcmp("p_global", field))

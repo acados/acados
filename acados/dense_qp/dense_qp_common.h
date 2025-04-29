@@ -48,6 +48,7 @@ typedef struct d_dense_qp dense_qp_in;
 typedef struct d_dense_qp_sol dense_qp_out;
 typedef struct d_dense_qp_res dense_qp_res;
 typedef struct d_dense_qp_res_ws dense_qp_res_ws;
+typedef struct d_dense_qp_seed dense_qp_seed;
 
 
 
@@ -136,6 +137,12 @@ void dense_qp_compute_t(dense_qp_in *qp_in, dense_qp_out *qp_out);
 void dense_qp_res_compute(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res *qp_res, dense_qp_res_ws *res_ws);
 //
 void dense_qp_res_compute_nrm_inf(dense_qp_res *qp_res, double res[4]);
+
+/* res */
+//
+acados_size_t dense_qp_seed_calculate_size(dense_qp_dims *dims);
+//
+dense_qp_seed *dense_qp_seed_assign(dense_qp_dims *dims, void *raw_memory);
 
 /* misc */
 //

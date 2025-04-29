@@ -51,6 +51,7 @@ typedef struct d_ocp_qp ocp_qp_in;
 typedef struct d_ocp_qp_sol ocp_qp_out;
 typedef struct d_ocp_qp_res ocp_qp_res;
 typedef struct d_ocp_qp_res_ws ocp_qp_res_ws;
+typedef struct d_ocp_qp_seed ocp_qp_seed;
 
 
 
@@ -98,7 +99,7 @@ typedef struct
     acados_size_t (*workspace_calculate_size)(void *dims, void *opts);
     int (*condensing)(void *qp_in, void *x_cond_qp_in, void *opts, void *mem, void *work);
     int (*condense_rhs)(void *qp_in, void *x_cond_qp_in, void *opts, void *mem, void *work);
-    int (*condense_rhs_res)(void *qp_in, void *qp_res, void *xcond_qp_res, void *opts, void *mem, void *work);
+    int (*condense_rhs_seed)(void *qp_in, void *seed, void *xcond_seed, void *opts, void *mem, void *work);
     int (*condense_lhs)(void *qp_in, void *x_cond_qp_in, void *opts, void *mem, void *work);
     int (*condense_qp_out)(void *qp_in, void *x_cond_qp_in, void *qp_out, void *p_cond_qp_out, void *opts, void *mem, void *work);
     int (*expansion)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);
@@ -173,7 +174,11 @@ void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
 //
 void ocp_qp_res_compute_nrm_inf(ocp_qp_res *qp_res, double res[4]);
 
-
+/* seed */
+//
+acados_size_t ocp_qp_seed_calculate_size(ocp_qp_dims *dims);
+//
+ocp_qp_seed *ocp_qp_seed_assign(ocp_qp_dims *dims, void *raw_memory);
 
 /* misc */
 //

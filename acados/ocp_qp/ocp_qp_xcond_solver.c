@@ -371,7 +371,7 @@ void *ocp_qp_xcond_solver_memory_assign(void *config_, ocp_qp_xcond_solver_dims 
 
     xcond->memory_get(xcond, mem->xcond_memory, "xcond_qp_in", &mem->xcond_qp_in);
     xcond->memory_get(xcond, mem->xcond_memory, "xcond_qp_out", &mem->xcond_qp_out);
-    xcond->memory_get(xcond, mem->xcond_memory, "xcond_qp_res", &mem->xcond_qp_res);
+    xcond->memory_get(xcond, mem->xcond_memory, "xcond_seed", &mem->xcond_seed);
 
     assert((char *) raw_memory + ocp_qp_xcond_solver_memory_calculate_size(config_, dims, opts_) >= c_ptr);
 
@@ -657,7 +657,7 @@ int ocp_qp_xcond_condense_rhs_and_solve(void *config_, ocp_qp_xcond_solver_dims 
 
 
 
-void ocp_qp_xcond_solver_eval_forw_sens(void *config_, ocp_qp_xcond_solver_dims *dims, ocp_qp_in *param_qp_in, ocp_qp_res *seed, ocp_qp_out *sens_qp_out,
+void ocp_qp_xcond_solver_eval_forw_sens(void *config_, ocp_qp_xcond_solver_dims *dims, ocp_qp_in *param_qp_in, ocp_qp_seed *seed, ocp_qp_out *sens_qp_out,
         void *opts_, void *mem_, void *work_)
 {
     ocp_qp_xcond_solver_config *config = config_;
@@ -673,10 +673,10 @@ void ocp_qp_xcond_solver_eval_forw_sens(void *config_, ocp_qp_xcond_solver_dims 
     cast_workspace(config_, dims, opts, memory, work);
 
     // condensing
-    xcond->condense_rhs_res(param_qp_in, seed, memory->xcond_qp_res, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
+    xcond->condense_rhs_seed(param_qp_in, seed, memory->xcond_seed, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
 
     // qp evaluate sensitivity
-    qp_solver->eval_forw_sens(qp_solver, memory->xcond_qp_in, memory->xcond_qp_res, memory->xcond_qp_out, opts->qp_solver_opts, memory->solver_memory, work->qp_solver_work);
+    qp_solver->eval_forw_sens(qp_solver, memory->xcond_qp_in, memory->xcond_seed, memory->xcond_qp_out, opts->qp_solver_opts, memory->solver_memory, work->qp_solver_work);
 
     // expansion
     xcond->expansion(memory->xcond_qp_out, sens_qp_out, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
@@ -684,7 +684,7 @@ void ocp_qp_xcond_solver_eval_forw_sens(void *config_, ocp_qp_xcond_solver_dims 
     return;
 }
 
-void ocp_qp_xcond_solver_eval_adj_sens(void *config_, ocp_qp_xcond_solver_dims *dims, ocp_qp_in *param_qp_in, ocp_qp_res *seed, ocp_qp_out *sens_qp_out,
+void ocp_qp_xcond_solver_eval_adj_sens(void *config_, ocp_qp_xcond_solver_dims *dims, ocp_qp_in *param_qp_in, ocp_qp_seed *seed, ocp_qp_out *sens_qp_out,
         void *opts_, void *mem_, void *work_)
 {
     ocp_qp_xcond_solver_config *config = config_;
@@ -700,10 +700,10 @@ void ocp_qp_xcond_solver_eval_adj_sens(void *config_, ocp_qp_xcond_solver_dims *
     cast_workspace(config_, dims, opts, memory, work);
 
     // condensing
-    xcond->condense_rhs_res(param_qp_in, seed, memory->xcond_qp_res, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
+    xcond->condense_rhs_seed(param_qp_in, seed, memory->xcond_seed, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
 
     // qp evaluate sensitivity
-    qp_solver->eval_adj_sens(qp_solver, memory->xcond_qp_in, memory->xcond_qp_res, memory->xcond_qp_out, opts->qp_solver_opts, memory->solver_memory, work->qp_solver_work);
+    qp_solver->eval_adj_sens(qp_solver, memory->xcond_qp_in, memory->xcond_seed, memory->xcond_qp_out, opts->qp_solver_opts, memory->solver_memory, work->qp_solver_work);
 
     // expansion
     xcond->expansion(memory->xcond_qp_out, sens_qp_out, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
