@@ -42,7 +42,6 @@ def main(qp_solver_ric_alg: int, generate_solvers=True, plot_trajectory=False):
     x0 = np.array([0.0, np.pi / 2, 0.0, 0.0])
 
     nx = len(x0)
-    nu = 1
 
     N_horizon = 20
     T_horizon = 2.0
@@ -95,7 +94,11 @@ def main(qp_solver_ric_alg: int, generate_solvers=True, plot_trajectory=False):
 
 
 
-def solve_and_compare_fwd_and_adj(ocp_solver: AcadosOcpSolver, sensitivity_solver, x0, p_val, with_parametric_constraint):
+def solve_and_compare_fwd_and_adj(ocp_solver: AcadosOcpSolver,
+                                  sensitivity_solver: AcadosOcpSolver,
+                                  x0: np.ndarray,
+                                  p_val: np.ndarray,
+                                  with_parametric_constraint: bool):
 
     N_horizon = ocp_solver.N
     nx = ocp_solver.acados_ocp.dims.nx
@@ -170,7 +173,6 @@ def solve_and_compare_fwd_and_adj(ocp_solver: AcadosOcpSolver, sensitivity_solve
         print(f"{adj_p=} {adj_p_ref=}")
         if not np.allclose(adj_p, adj_p_ref, atol=TOL):
             test_failure_message("adj_p and adj_p_ref should match.")
-            # print("ERROR: adj_p and adj_p_ref should match.")
         else:
             print("Success: adj_p and adj_p_ref match!")
 
@@ -211,7 +213,6 @@ def solve_and_compare_fwd_and_adj(ocp_solver: AcadosOcpSolver, sensitivity_solve
             test_failure_message(f"adj_p_vec and adj_p_mat[{i}, :] should match.")
         else:
             print(f"Success: adj_p_vec and adj_p_mat[{i}, :] match!")
-
 
 
 def test_failure_message(msg):
