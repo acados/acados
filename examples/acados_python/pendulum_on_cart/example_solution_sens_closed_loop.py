@@ -129,7 +129,7 @@ def main():
 
     acados_ocp_solver = create_ocp_solver()
     acados_integrator = create_integrator()
-    print("Please check the documentation fo eval_solution_sensitivities() for the requirements on exact solution sensitivities with acados.")
+    print("Please check the documentation of eval_solution_sensitivities() for the requirements on exact solution sensitivities with acados.")
     # NOTE: the correct computation of solution sensitivities requires an exact Hessian.
     # The formulation here uses the Gauss-Newton Hessian approximation,
     # which is exact as a linear dynamics and constraints are used
