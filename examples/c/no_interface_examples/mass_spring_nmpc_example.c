@@ -61,6 +61,7 @@
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_noreg.h"
+#include "acados/ocp_nlp/ocp_nlp_globalization_fixed_step.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 
 // temp
