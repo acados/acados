@@ -447,7 +447,6 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
     u = model.u
     z = model.z
     p_global = model.p_global
-    symbol = model.get_casadi_symbol()
 
     symbol = model.get_casadi_symbol()
 
@@ -619,7 +618,6 @@ def generate_c_code_conl_cost(context: GenerateContext, model: AcadosModel, stag
 
         suffix_name_fun = '_conl_cost_0_fun'
         suffix_name_fun_jac_hess = '_conl_cost_0_fun_jac_hess'
-
 
     elif stage_type == 'path':
 
