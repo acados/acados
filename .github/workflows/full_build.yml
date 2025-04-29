@@ -211,6 +211,9 @@ jobs:
         python ocp_example_cost_formulations.py
         cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart
         python example_solution_sens_closed_loop.py
+        cd ${{runner.workspace}}/acados/examples/acados_python/chain_mass/
+        python solution_sensitivity_example.py
+
 
 
     - name: Python Furuta pendulum timeout test
