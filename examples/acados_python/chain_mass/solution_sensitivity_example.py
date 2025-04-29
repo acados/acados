@@ -376,6 +376,7 @@ def main_parametric(qp_solver_ric_alg: int = 0,
                     generate_code: bool = True,
                     ext_fun_compile_flags: Optional[str] = None,
                     np_test: int = 20,
+                    generate_plots: bool = True,
                     ) -> None:
     if discrete_dyn_type == "EULER":
         print("Warning: OCP solver does not converge with EULER integrator.")
@@ -539,77 +540,77 @@ def main_parametric(qp_solver_ric_alg: int = 0,
             print(np.abs(sens_adj- out_dict['sens_u']))
             # assert np.allclose(sens_adj, out_dict['sens_u'])
 
-    timings_common = {
-        "NLP solve (S1)": timings_solve_ocp_solver * 1e3,
-        "store \& load iterates": timings_store_load * 1e3,
-        "parameter update": timings_parameter_update * 1e3,
-        "setup exact Lagrange Hessian (S2)": timings_lin_exact_hessian_qp * 1e3,
-        "factorize exact Lagrange Hessian (S3)": timings_lin_and_factorize * 1e3,
-        r"evaluate $J_\star$ (S4)": timings_lin_params * 1e3,
-    }
-    timing_results_forward = timings_common.copy()
-    timing_results_adjoint = timings_common.copy()
-    timing_results_adj_uforw = timings_common.copy()
-    timing_results_adj_all_primals = timings_common.copy()
+    if generate_plots:
+        timings_common = {
+            "NLP solve (S1)": timings_solve_ocp_solver * 1e3,
+            "store \& load iterates": timings_store_load * 1e3,
+            "parameter update": timings_parameter_update * 1e3,
+            "setup exact Lagrange Hessian (S2)": timings_lin_exact_hessian_qp * 1e3,
+            "factorize exact Lagrange Hessian (S3)": timings_lin_and_factorize * 1e3,
+            r"evaluate $J_\star$ (S4)": timings_lin_params * 1e3,
+        }
+        timing_results_forward = timings_common.copy()
+        timing_results_adjoint = timings_common.copy()
+        timing_results_adj_uforw = timings_common.copy()
+        timing_results_adj_all_primals = timings_common.copy()
 
-    backsolve_label = "sensitivity solve given factorization (S5)"
-    timing_results_forward[backsolve_label] = timings_solve_params * 1e3
-    timing_results_adjoint[backsolve_label] = timings_solve_params_adj * 1e3
+        backsolve_label = "sensitivity solve given factorization (S5)"
+        timing_results_forward[backsolve_label] = timings_solve_params * 1e3
+        timing_results_adjoint[backsolve_label] = timings_solve_params_adj * 1e3
 
-    timings_list = [timing_results_forward, timing_results_adjoint]
-    labels = [r'$\frac{\partial w^\star}{\partial \theta}$ via forward', r'$\nu^\top \frac{\partial w^\star}{\partial \theta}$ via adjoint']
+        timings_list = [timing_results_forward, timing_results_adjoint]
+        labels = [r'$\frac{\partial w^\star}{\partial \theta}$ via forward', r'$\nu^\top \frac{\partial w^\star}{\partial \theta}$ via adjoint']
 
-    if with_more_adjoints:
-        timing_results_adj_uforw[backsolve_label] = timings_solve_params_adj_uforw * 1e3
-        timing_results_adj_all_primals[backsolve_label] = timings_solve_params_adj_all_primals * 1e3
-        timings_list += [timing_results_adj_uforw, timing_results_adj_all_primals]
-        labels += [r'$\frac{\partial u_0^\star}{\partial \theta}$ via adjoints', r'$\frac{\partial z^\star}{\partial \theta} $ via adjoints']
+        if with_more_adjoints:
+            timing_results_adj_uforw[backsolve_label] = timings_solve_params_adj_uforw * 1e3
+            timing_results_adj_all_primals[backsolve_label] = timings_solve_params_adj_all_primals * 1e3
+            timings_list += [timing_results_adj_uforw, timing_results_adj_all_primals]
+            labels += [r'$\frac{\partial u_0^\star}{\partial \theta}$ via adjoints', r'$\frac{\partial z^\star}{\partial \theta} $ via adjoints']
 
 
-    print_timings(timing_results_forward, metric="median")
-    print_timings(timing_results_forward, metric="min")
+        print_timings(timing_results_forward, metric="median")
+        print_timings(timing_results_forward, metric="min")
 
-    u_opt = np.vstack(u_opt)
-    sens_u = np.vstack(sens_u)
+        u_opt = np.vstack(u_opt)
+        sens_u = np.vstack(sens_u)
 
-    # Compare to numerical gradients
-    sens_u_fd = np.gradient(u_opt, p_var, axis=0)
-    u_opt_reconstructed_fd = np.cumsum(sens_u_fd, axis=0) * delta_p + u_opt[0, :]
-    u_opt_reconstructed_fd += u_opt[0, :] - u_opt_reconstructed_fd[0, :]
+        # Compare to numerical gradients
+        sens_u_fd = np.gradient(u_opt, p_var, axis=0)
+        u_opt_reconstructed_fd = np.cumsum(sens_u_fd, axis=0) * delta_p + u_opt[0, :]
+        u_opt_reconstructed_fd += u_opt[0, :] - u_opt_reconstructed_fd[0, :]
 
-    u_opt_reconstructed_acados = np.cumsum(sens_u, axis=0) * delta_p + u_opt[0, :]
-    u_opt_reconstructed_acados += u_opt[0, :] - u_opt_reconstructed_acados[0, :]
+        u_opt_reconstructed_acados = np.cumsum(sens_u, axis=0) * delta_p + u_opt[0, :]
+        u_opt_reconstructed_acados += u_opt[0, :] - u_opt_reconstructed_acados[0, :]
 
-    # TODO move to plot utils
-    plt.figure(figsize=(7, 7))
-    for col in range(3):
-        plt.subplot(4, 1, col + 1)
-        plt.plot(p_var, u_opt[:, col], label=f"$u^*_{col}$")
-        plt.plot(p_var, u_opt_reconstructed_fd[:, col], label=f"$u^*_{col}$, reconstructed with fd gradients", linestyle="--")
-        plt.plot(
-            p_var, u_opt_reconstructed_acados[:, col], label=f"$u^*_{col}$, reconstructed with acados gradients", linestyle=":"
-        )
-        plt.ylabel(f"$u^*_{col}$")
+        plt.figure(figsize=(7, 7))
+        for col in range(3):
+            plt.subplot(4, 1, col + 1)
+            plt.plot(p_var, u_opt[:, col], label=f"$u^*_{col}$")
+            plt.plot(p_var, u_opt_reconstructed_fd[:, col], label=f"$u^*_{col}$, reconstructed with fd gradients", linestyle="--")
+            plt.plot(
+                p_var, u_opt_reconstructed_acados[:, col], label=f"$u^*_{col}$, reconstructed with acados gradients", linestyle=":"
+            )
+            plt.ylabel(f"$u^*_{col}$")
+            plt.grid(True)
+            plt.legend()
+            plt.xlim(p_var[0], p_var[-1])
+
+        for col in range(3):
+            plt.subplot(4, 1, 4)
+            plt.plot(p_var, np.abs(sens_u[:, col] - sens_u_fd[:, col]), label=f"$u^*_{col}$", linestyle="--")
+
+        plt.ylabel("abs difference")
         plt.grid(True)
         plt.legend()
+        plt.yscale("log")
+        plt.xlabel(p_label)
         plt.xlim(p_var[0], p_var[-1])
+        plt.tight_layout()
+        plt.savefig("chain_adj_fwd_sens.pdf")
 
-    for col in range(3):
-        plt.subplot(4, 1, 4)
-        plt.plot(p_var, np.abs(sens_u[:, col] - sens_u_fd[:, col]), label=f"$u^*_{col}$", linestyle="--")
+        plot_timings(timings_list, labels, figure_filename="timing_adj_fwd_sens_chain.png", t_max=10, horizontal=True, figsize=(12, 3), with_patterns=True)
 
-    plt.ylabel("abs difference")
-    plt.grid(True)
-    plt.legend()
-    plt.yscale("log")
-    plt.xlabel(p_label)
-    plt.xlim(p_var[0], p_var[-1])
-    plt.tight_layout()
-    plt.savefig("chain_adj_fwd_sens.pdf")
-
-    plot_timings(timings_list, labels, figure_filename="timing_adj_fwd_sens_chain.png", t_max=10, horizontal=True, figsize=(12, 3), with_patterns=True)
-
-    plt.show()
+        plt.show()
 
 
 def print_timings(timing_results: dict, metric: str = "median"):
@@ -642,6 +643,7 @@ def main_test():
                     with_more_adjoints=False,
                     ext_fun_compile_flags="",
                     np_test=2,
+                    generate_plots=False,
                     )
 
 def main_experiment():
