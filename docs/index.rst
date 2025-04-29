@@ -4,7 +4,7 @@ acados
 .. meta::
    :description: acados is an open-source software package for fast and embedded nonlinear model predictive control (MPC) and moving horizon estimation (MHE). It is written in C and has interfaces to Python, MATLAB, Octave, and Simulink. The software is designed for real-time applications and is used in various fields such as robotics, autonomous vehicles, energy systems, biomechanics, and aerospace.
    :keywords: optimal control, nonlinear programming, nonlinear model predictive control, embedded optimization, real-time optimization, moving horizon estimation, open-source software, software library, C library, Python interface, MATLAB interface, Octave interface, Simulink
-
+   :google-site-verification: otz_joxGlxsY8wbpkkqOty47dLxqqWPa9JCC5HeyCg8
 .. |github-workflow-full-build| image:: https://github.com/acados/acados/actions/workflows/full_build.yml/badge.svg
    :target: https://github.com/acados/acados/actions/workflows/full_build.yml
    :alt: Github workflow status
