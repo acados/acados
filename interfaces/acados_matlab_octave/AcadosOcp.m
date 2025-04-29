@@ -859,11 +859,11 @@ classdef AcadosOcp < handle
             end
 
             if opts.N_horizon == 0
-                cost_types_to_check = [strcmp(cost.cost_type_e, {'LINEAR_LS', 'NONLINEAR_LS'})]
+                cost_types_to_check = [strcmp(cost.cost_type_e, {'LINEAR_LS', 'NONLINEAR_LS'})];
             else
                 cost_types_to_check = [strcmp(cost.cost_type, {'LINEAR_LS', 'NONLINEAR_LS'}) ...
                                             strcmp(cost.cost_type_0, {'LINEAR_LS', 'NONLINEAR_LS'}) ...
-                                            strcmp(cost.cost_type_e, {'LINEAR_LS', 'NONLINEAR_LS'})]
+                                            strcmp(cost.cost_type_e, {'LINEAR_LS', 'NONLINEAR_LS'})];
             end
             if (opts.as_rti_level == 1 || opts.as_rti_level == 2) && any(cost_types_to_check)
                 error('as_rti_level in [1, 2] not supported for LINEAR_LS and NONLINEAR_LS cost type.');
@@ -983,6 +983,18 @@ classdef AcadosOcp < handle
                     error('ZORO only supported for N_horizon > 0.');
                 end
                 self.zoro_description.process();
+            end
+
+            % check terminal stage
+            fields = {'cost_expr_ext_cost_e', 'cost_expr_ext_cost_custom_hess_e', ...
+                      'cost_y_expr_e', 'cost_psi_expr_e', 'cost_conl_custom_outer_hess_e', ...
+                      'con_h_expr_e', 'con_phi_expr_e', 'con_r_expr_e'};
+            for i = 1:length(fields)
+                field = fields{i};
+                val = model.(field);
+                if ~isempty(val) && (depends_on(val, model.u) || depends_on(val, model.z))
+                    error([field ' can not depend on u or z.'])
+                end
             end
         end
 

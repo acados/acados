@@ -330,26 +330,24 @@ class AcadosOcp:
             if isinstance(cost.W_e, (ca.SX, ca.MX, ca.DM)):
                 raise Exception("W_e should be numpy array, symbolics are only supported before solver creation, to allow reformulating costs, e.g. using translate_cost_to_external_cost().")
 
-        if cost.cost_type_e == 'LINEAR_LS':
             ny_e = cost.W_e.shape[0]
             check_if_square(cost.W_e, 'W_e')
-            if cost.Vx_e.shape[0] != ny_e:
-                raise ValueError('inconsistent dimension ny_e: regarding W_e, cost_y_expr_e.' + \
-                    f'\nGot W_e[{cost.W_e.shape}], Vx_e[{cost.Vx_e.shape}]')
-            if cost.Vx_e.shape[1] != dims.nx and ny_e != 0:
-                raise ValueError('inconsistent dimension: Vx_e should have nx columns.')
-            if cost.yref_e.shape[0] != ny_e:
-                raise ValueError('inconsistent dimension: regarding W_e, yref_e.')
             dims.ny_e = ny_e
 
-        elif cost.cost_type_e == 'NONLINEAR_LS':
-            ny_e = cost.W_e.shape[0]
-            check_if_square(cost.W_e, 'W_e')
-            if (is_empty(model.cost_y_expr_e) and ny_e != 0) or casadi_length(model.cost_y_expr_e) != ny_e or cost.yref_e.shape[0] != ny_e:
-                raise ValueError('inconsistent dimension ny_e: regarding W_e, cost_y_expr.' +
-                                f'\nGot W_e[{cost.W_e.shape}], yref_e[{cost.yref_e.shape}], ',
-                                f'cost_y_expr_e [{casadi_length(model.cost_y_expr_e)}]\n')
-            dims.ny_e = ny_e
+            if cost.cost_type_e == 'LINEAR_LS':
+                if cost.Vx_e.shape[0] != ny_e:
+                    raise ValueError('inconsistent dimension ny_e: regarding W_e, cost_y_expr_e.' + \
+                        f'\nGot W_e[{cost.W_e.shape}], Vx_e[{cost.Vx_e.shape}]')
+                if cost.Vx_e.shape[1] != dims.nx and ny_e != 0:
+                    raise ValueError('inconsistent dimension: Vx_e should have nx columns.')
+                if cost.yref_e.shape[0] != ny_e:
+                    raise ValueError('inconsistent dimension: regarding W_e, yref_e.')
+
+            elif cost.cost_type_e == 'NONLINEAR_LS':
+                if (is_empty(model.cost_y_expr_e) and ny_e != 0) or casadi_length(model.cost_y_expr_e) != ny_e or cost.yref_e.shape[0] != ny_e:
+                    raise ValueError('inconsistent dimension ny_e: regarding W_e, cost_y_expr.' +
+                                    f'\nGot W_e[{cost.W_e.shape}], yref_e[{cost.yref_e.shape}], ',
+                                    f'cost_y_expr_e [{casadi_length(model.cost_y_expr_e)}]\n')
 
         elif cost.cost_type_e == 'CONVEX_OVER_NONLINEAR':
             if is_empty(model.cost_y_expr_e):
@@ -388,9 +386,9 @@ class AcadosOcp:
             return
 
         nbx_0 = constraints.idxbx_0.shape[0]
+        dims.nbx_0 = nbx_0
         if constraints.ubx_0.shape[0] != nbx_0 or constraints.lbx_0.shape[0] != nbx_0:
             raise ValueError('inconsistent dimension nbx_0, regarding idxbx_0, ubx_0, lbx_0.')
-        dims.nbx_0 = nbx_0
         if any(constraints.idxbx_0 >= dims.nx):
             raise ValueError(f'idxbx_0 = {constraints.idxbx_0} contains value >= nx = {dims.nx}.')
 
@@ -404,10 +402,7 @@ class AcadosOcp:
         if any(constraints.idxbxe_0 >= dims.nbx_0):
             raise ValueError(f'idxbxe_0 = {constraints.idxbxe_0} contains value >= nbx_0 = {dims.nbx_0}.')
 
-        if not is_empty(model.con_h_expr_0):
-            nh_0 = casadi_length(model.con_h_expr_0)
-        else:
-            nh_0 = 0
+        nh_0 = 0 if is_empty(model.con_h_expr_0) else casadi_length(model.con_h_expr_0)
 
         if constraints.uh_0.shape[0] != nh_0 or constraints.lh_0.shape[0] != nh_0:
             raise ValueError('inconsistent dimension nh_0, regarding lh_0, uh_0, con_h_expr_0.')
@@ -505,10 +500,7 @@ class AcadosOcp:
         else:
             dims.ng_e = ng_e
 
-        if not is_empty(model.con_h_expr_e):
-            nh_e = casadi_length(model.con_h_expr_e)
-        else:
-            nh_e = 0
+        nh_e = 0 if is_empty(model.con_h_expr_e) else casadi_length(model.con_h_expr_e)
 
         if constraints.uh_e.shape[0] != nh_e or constraints.lh_e.shape[0] != nh_e:
             raise ValueError('inconsistent dimension nh_e, regarding lh_e, uh_e, con_h_expr_e.')
@@ -588,22 +580,10 @@ class AcadosOcp:
             else:
                 raise ValueError("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided and cannot be inferred from other fields.\n")
 
-        wrong_fields = []
-        if cost.Zl_0.shape[0] != ns_0:
-            wrong_fields += ["Zl_0"]
-            dim = cost.Zl_0.shape[0]
-        elif cost.Zu_0.shape[0] != ns_0:
-            wrong_fields += ["Zu_0"]
-            dim = cost.Zu_0.shape[0]
-        elif cost.zl_0.shape[0] != ns_0:
-            wrong_fields += ["zl_0"]
-            dim = cost.zl_0.shape[0]
-        elif cost.zu_0.shape[0] != ns_0:
-            wrong_fields += ["zu_0"]
-            dim = cost.zu_0.shape[0]
-
-        if wrong_fields != []:
-            raise ValueError(f'Inconsistent size for fields {", ".join(wrong_fields)}, with dimension {dim}, \n\t'
+        for field in ("Zl_0", "Zu_0", "zl_0", "zu_0"):
+            dim = getattr(cost, field).shape[0]
+            if dim != ns_0:
+                raise Exception(f'Inconsistent size for fields {field}, with dimension {dim}, \n\t'\
                 + f'Detected ns_0 = {ns_0} = nsbu + nsg + nsh_0 + nsphi_0.\n\t'\
                 + f'With nsbu = {nsbu}, nsg = {nsg}, nsh_0 = {nsh_0}, nsphi_0 = {nsphi_0}.')
         dims.ns_0 = ns_0
@@ -697,24 +677,12 @@ class AcadosOcp:
         dims.nsg = nsg
 
         ns = nsbx + nsbu + nsh + nsg + nsphi
-        wrong_fields = []
-        if cost.Zl.shape[0] != ns:
-            wrong_fields += ["Zl"]
-            dim = cost.Zl.shape[0]
-        elif cost.Zu.shape[0] != ns:
-            wrong_fields += ["Zu"]
-            dim = cost.Zu.shape[0]
-        elif cost.zl.shape[0] != ns:
-            wrong_fields += ["zl"]
-            dim = cost.zl.shape[0]
-        elif cost.zu.shape[0] != ns:
-            wrong_fields += ["zu"]
-            dim = cost.zu.shape[0]
-
-        if wrong_fields != []:
-            raise ValueError(f'Inconsistent size for fields {", ".join(wrong_fields)}, with dimension {dim}, \n\t'
-                + f'Detected ns = {ns} = nsbx + nsbu + nsg + nsh + nsphi.\n\t'\
-                + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh = {nsh}, nsphi = {nsphi}.')
+        for field in ("Zl", "Zu", "zl", "zu"):
+            dim = getattr(cost, field).shape[0]
+            if dim != ns:
+                raise Exception(f'Inconsistent size for fields {field}, with dimension {dim}, \n\t'\
+                    + f'Detected ns = {ns} = nsbx + nsbu + nsg + nsh + nsphi.\n\t'\
+                    + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh = {nsh}, nsphi = {nsphi}.')
         dims.ns = ns
 
 
@@ -788,22 +756,10 @@ class AcadosOcp:
 
         # terminal
         ns_e = nsbx_e + nsh_e + nsg_e + nsphi_e
-        wrong_field = ""
-        if cost.Zl_e.shape[0] != ns_e:
-            wrong_field = "Zl_e"
-            dim = cost.Zl_e.shape[0]
-        elif cost.Zu_e.shape[0] != ns_e:
-            wrong_field = "Zu_e"
-            dim = cost.Zu_e.shape[0]
-        elif cost.zl_e.shape[0] != ns_e:
-            wrong_field = "zl_e"
-            dim = cost.zl_e.shape[0]
-        elif cost.zu_e.shape[0] != ns_e:
-            wrong_field = "zu_e"
-            dim = cost.zu_e.shape[0]
-
-        if wrong_field != "":
-            raise ValueError(f'Inconsistent size for field {wrong_field}, with dimension {dim}, \n\t'
+        for field in ("Zl_e", "Zu_e", "zl_e", "zu_e"):
+            dim = getattr(cost, field).shape[0]
+            if dim != ns_e:
+                raise Exception(f'Inconsistent size for fields {field}, with dimension {dim}, \n\t'\
                 + f'Detected ns_e = {ns_e} = nsbx_e + nsg_e + nsh_e + nsphi_e.\n\t'\
                 + f'With nsbx_e = {nsbx_e}, nsg_e = {nsg_e}, nsh_e = {nsh_e}, nsphi_e = {nsphi_e}.')
 
@@ -1077,6 +1033,7 @@ class AcadosOcp:
                 raise ValueError('DDP only supports initial state constraints, got terminal constraints.')
 
         ddp_with_merit_or_funnel = opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' or (opts.nlp_solver_type == "DDP" and opts.globalization == 'MERIT_BACKTRACKING')
+
         # Set default parameters for globalization
         if opts.globalization_alpha_min is None:
             if ddp_with_merit_or_funnel:
@@ -1135,6 +1092,15 @@ class AcadosOcp:
         # nlp_solver_warm_start_first_qp_from_nlp
         if opts.nlp_solver_warm_start_first_qp_from_nlp and (opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon):
             raise NotImplementedError('nlp_solver_warm_start_first_qp_from_nlp only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N.')
+
+        # check terminal stage
+        for field in ('cost_expr_ext_cost_e', 'cost_expr_ext_cost_custom_hess_e',
+                      'cost_y_expr_e', 'cost_psi_expr_e', 'cost_conl_custom_outer_hess_e',
+                      'con_h_expr_e', 'con_phi_expr_e', 'con_r_expr_e',):
+            val = getattr(model, field)
+            if not is_empty(val) and (ca.depends_on(val, model.u) or ca.depends_on(val, model.z)):
+                raise ValueError(f'{field} can not depend on u or z.')
+
         return
 
 
