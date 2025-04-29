@@ -626,8 +626,7 @@ void dense_qp_ooqp_destroy(void *mem_, void *work)
 }
 
 
-
-void dense_qp_ooqp_eval_forw_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+void dense_qp_ooqp_eval_forw_sens(void *config_, void *qp_in, void *seed, void *qp_out, void *opts_, void *mem_, void *work_)
 {
     printf("\nerror: dense_qp_ooqp_eval_forw_sens: not implemented yet\n");
     exit(1);

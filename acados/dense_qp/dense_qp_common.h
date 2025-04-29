@@ -138,7 +138,7 @@ void dense_qp_res_compute(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res
 //
 void dense_qp_res_compute_nrm_inf(dense_qp_res *qp_res, double res[4]);
 
-/* res */
+/* seed */
 //
 acados_size_t dense_qp_seed_calculate_size(dense_qp_dims *dims);
 //

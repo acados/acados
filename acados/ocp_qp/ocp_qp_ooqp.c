@@ -1176,7 +1176,7 @@ void ocp_qp_ooqp_solver_get(void *config_, void *qp_in_, void *qp_out_, void *op
 }
 
 
-void ocp_qp_ooqp_eval_forw_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+void ocp_qp_ooqp_eval_forw_sens(void *config_, void *qp_in, void *seed, void *qp_out, void *opts_, void *mem_, void *work_)
 {
     printf("\nerror: ocp_qp_ooqp_eval_forw_sens: not implemented yet\n");
     exit(1);

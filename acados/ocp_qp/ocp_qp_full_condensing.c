@@ -568,9 +568,11 @@ int ocp_qp_full_condensing_condense_rhs(void *qp_in_, void *fcond_qp_in_, void *
 }
 
 
-int ocp_qp_full_condensing_condense_rhs_seed(void *qp_in_, void *qp_seed, void *pcond_res, void *opts_, void *mem_, void *work)
+int ocp_qp_full_condensing_condense_rhs_seed(void *qp_in_, void *qp_seed, void *dense_seed_, void *opts_, void *mem_, void *work)
 {
     ocp_qp_in *qp_in = qp_in_;
+    dense_qp_seed *dense_seed = dense_seed_;
+
     ocp_qp_full_condensing_opts *opts = opts_;
     ocp_qp_full_condensing_memory *mem = mem_;
 
@@ -586,7 +588,7 @@ int ocp_qp_full_condensing_condense_rhs_seed(void *qp_in_, void *qp_seed, void *
     d_ocp_qp_reduce_eq_dof_seed(qp_in, qp_seed, mem->red_seed, opts->hpipm_red_opts, mem->hpipm_red_work);
 
     // convert to fully condensed qp structure
-    d_cond_qp_cond_seed(mem->red_qp, mem->red_seed, pcond_res, opts->hpipm_cond_opts, mem->hpipm_cond_work);
+    d_cond_qp_cond_seed(mem->red_qp, mem->red_seed, dense_seed, opts->hpipm_cond_opts, mem->hpipm_cond_work);
 
     // stop timer
     mem->time_qp_xcond += acados_toc(&timer);
