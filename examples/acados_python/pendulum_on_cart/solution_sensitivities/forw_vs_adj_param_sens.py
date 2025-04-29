@@ -40,7 +40,6 @@ def main(qp_solver_ric_alg: int, generate_solvers=True, plot_trajectory=False):
     """
     p_nominal = 1.0
     x0 = np.array([0.0, np.pi / 2, 0.0, 0.0])
-    p_test = p_nominal + 0.2
 
     nx = len(x0)
     nu = 1
@@ -50,7 +49,7 @@ def main(qp_solver_ric_alg: int, generate_solvers=True, plot_trajectory=False):
     p_test = p_nominal + 0.3
     Fmax = 80.0
 
-    cost_scale_as_param = True # test with 2 parameters
+    cost_scale_as_param = True
     with_parametric_constraint = True
     with_nonlinear_constraint = True
 
@@ -61,16 +60,48 @@ def main(qp_solver_ric_alg: int, generate_solvers=True, plot_trajectory=False):
     ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, hessian_approx='EXACT', qp_solver_ric_alg=qp_solver_ric_alg, cost_scale_as_param=cost_scale_as_param, with_parametric_constraint=with_parametric_constraint, with_nonlinear_constraint=with_nonlinear_constraint)
     ocp.model.name = 'sensitivity_solver'
     ocp.code_export_directory = f'c_generated_code_{ocp.model.name}'
-
-    # undo some settings that are not needed for HP sens solver
     sensitivity_solver = AcadosOcpSolver(ocp, json_file=f"{ocp.model.name}.json", generate=generate_solvers, build=generate_solvers)
 
-    # set parameter value
     if cost_scale_as_param:
-        p_val = np.array([p_test, 1.0])
+        p_vals = [
+            np.array([p_nominal, 1.0]),
+            np.array([p_nominal + 0.2, 1.0]),
+            np.array([p_nominal + 0.3, 1.0]),
+            np.array([p_nominal + 0.4, 1.0]),
+        ]
     else:
-        p_val = np.array([p_test])
+        p_vals = np.array([p_test])
 
+    for p_val in p_vals:
+        print(f"Testing with p_val = {p_val}")
+
+        # solve and compare forward and adjoint
+        solve_and_compare_fwd_and_adj(ocp_solver, sensitivity_solver, x0, p_val, with_parametric_constraint)
+
+    if plot_trajectory:
+        nx = ocp.dims.nx
+        nu = ocp.dims.nu
+        simX = np.zeros((N_horizon+1, nx))
+        simU = np.zeros((N_horizon, nu))
+
+        # get solution
+        for i in range(N_horizon):
+            simX[i,:] = ocp_solver.get(i, "x")
+            simU[i,:] = ocp_solver.get(i, "u")
+        simX[N_horizon,:] = ocp_solver.get(N_horizon, "x")
+
+        plot_pendulum(ocp.solver_options.shooting_nodes, Fmax, simU, simX, latexify=True, time_label=ocp.model.t_label, x_labels=ocp.model.x_labels, u_labels=ocp.model.u_labels)
+
+
+
+
+def solve_and_compare_fwd_and_adj(ocp_solver: AcadosOcpSolver, sensitivity_solver, x0, p_val, with_parametric_constraint):
+
+    N_horizon = ocp_solver.N
+    nx = ocp_solver.acados_ocp.dims.nx
+    nu = ocp_solver.acados_ocp.dims.nu
+
+    # set parameter value
     ocp_solver.set_p_global_and_precompute_dependencies(p_val)
     sensitivity_solver.set_p_global_and_precompute_dependencies(p_val)
 
@@ -84,7 +115,7 @@ def main(qp_solver_ric_alg: int, generate_solvers=True, plot_trajectory=False):
         for i in range(1, N_horizon):
             lam_ = ocp_solver.get(i, "lam")
             lambdas[i-1] = np.array([lam_[1], lam_[3]])
-        print(f"lambdas of parametric constraints: {lambdas}\n")
+        # print(f"lambdas of parametric constraints: {lambdas}\n")
         max_lam = np.max(np.abs(lambdas))
         print(f"max lambda of parametric constraints: {max_lam:.2f}\n")
 
@@ -181,19 +212,6 @@ def main(qp_solver_ric_alg: int, generate_solvers=True, plot_trajectory=False):
         else:
             print(f"Success: adj_p_vec and adj_p_mat[{i}, :] match!")
 
-    if plot_trajectory:
-        nx = ocp.dims.nx
-        nu = ocp.dims.nu
-        simX = np.zeros((N_horizon+1, nx))
-        simU = np.zeros((N_horizon, nu))
-
-        # get solution
-        for i in range(N_horizon):
-            simX[i,:] = ocp_solver.get(i, "x")
-            simU[i,:] = ocp_solver.get(i, "u")
-        simX[N_horizon,:] = ocp_solver.get(N_horizon, "x")
-
-        plot_pendulum(ocp.solver_options.shooting_nodes, Fmax, simU, simX, latexify=True, time_label=ocp.model.t_label, x_labels=ocp.model.x_labels, u_labels=ocp.model.u_labels)
 
 
 def test_failure_message(msg):
@@ -201,4 +219,4 @@ def test_failure_message(msg):
     raise Exception(msg)
 
 if __name__ == "__main__":
-    main(qp_solver_ric_alg=0, generate_solvers=False, plot_trajectory=False)
+    main(qp_solver_ric_alg=0, generate_solvers=True, plot_trajectory=False)
