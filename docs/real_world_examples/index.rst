@@ -86,3 +86,9 @@ See blog post `here <https://blog.comma.ai/0810release/>`_
 .. youtube:: 8_pYdeuQnC0
    :width: 50%
    :url_parameters: ?start=59
+
+.. rubric:: MPC of an Autonomous Warehouse Vehicle with Tricycle Kinematic
+|:linked_paperclips:| `Subash et al. (2024) <https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=10802822>`_
+.. youtube:: NDta6AD5WCA
+   :width: 50%
+   :url_parameters: ?start=0

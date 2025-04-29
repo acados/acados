@@ -1,6 +1,10 @@
 acados
 ======
 
+.. meta::
+   :description: acados is an open-source software package for fast and embedded nonlinear model predictive control (MPC) and moving horizon estimation (MHE). It is written in C and has interfaces to Python, MATLAB, Octave, and Simulink. The software is designed for real-time applications and is used in various fields such as robotics, autonomous vehicles, energy systems, biomechanics, and aerospace.
+   :keywords: optimal control, nonlinear programming, nonlinear model predictive control, embedded optimization, real-time optimization, moving horizon estimation, open-source software, software library, C library, Python interface, MATLAB interface, Octave interface, Simulink
+   :google-site-verification: otz_joxGlxsY8wbpkkqOty47dLxqqWPa9JCC5HeyCg8
 .. |github-workflow-full-build| image:: https://github.com/acados/acados/actions/workflows/full_build.yml/badge.svg
    :target: https://github.com/acados/acados/actions/workflows/full_build.yml
    :alt: Github workflow status
@@ -77,14 +81,15 @@ The main design paradigms of ``acados`` are:
 Fields of applications
 ----------------------
 
-A non-exhaustive list of projects featuring ``acados`` is available `here <https://docs.acados.org/list_of_projects/index.html>`_.
-Contributions to this list are very welcome and allow increasing the visibility of your work among other ``acados`` users.
-
+``acados`` is used in a wide range of applications. Some examples include:
 - **Robotics**: Real-time NMPC for quadrotors, legged locomotion, and agile robotic platforms.
 - **Autonomous Vehicles**: Used in projects like openpilot in driving assistance systems.
 - **Energy Systems**: Optimization-based control for microgrids and wind turbines.
 - **Biomechanics**: Optimal control in biomechanics through libraries like bioptim.
 - **Aerospace**: Applications in trajectory optimization and control for drones and morphing-wing aircraft.
+
+Please also check this non-exhaustive `list of projects <https://docs.acados.org/list_of_projects/index.html>`_ featuring ``acados``.
+Contributions to this list are very welcome and allow increasing the visibility of your work among other ``acados`` users.
 
 Documentation page overview
 ---------------------------
