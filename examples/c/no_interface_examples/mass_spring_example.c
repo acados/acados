@@ -188,9 +188,9 @@ int main() {
 //        bool ok = false;
 //        if (ok == true) config++; // dummy command to shut up Werror in Release
 
-#ifdef ACADOS_WITH_QPDUNES
-        int clipping;
-#endif
+// #ifdef ACADOS_WITH_QPDUNES
+//         int clipping;
+// #endif
 
 #ifdef SOFT_CONSTRAINTS
         double mu0 = 1e2;

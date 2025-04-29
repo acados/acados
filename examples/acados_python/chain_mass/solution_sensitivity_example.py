@@ -47,17 +47,28 @@ from plot_utils import plot_timings
 import time
 
 
-def export_discrete_erk4_integrator_step(f_expl: SX, x: SX, u: SX, p: ssymStruct, h: float, n_stages: int = 2) -> ca.SX:
+def export_discrete_erk4_integrator_step(f_expl: SX, x: SX, u: SX, p: ssymStruct, h: float, n_steps: int = 2) -> ca.SX:
     """Define ERK4 integrator for continuous dynamics."""
-    dt = h / n_stages
+    dt = h / n_steps
     ode = ca.Function("f", [x, u, p], [f_expl])
     xnext = x
-    for _ in range(n_stages):
+    for _ in range(n_steps):
         k1 = ode(xnext, u, p)
         k2 = ode(xnext + dt / 2 * k1, u, p)
         k3 = ode(xnext + dt / 2 * k2, u, p)
         k4 = ode(xnext + dt * k3, u, p)
         xnext = xnext + dt / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
+
+    return xnext
+
+def export_discrete_euler_integrator_step(f_expl: SX, x: SX, u: SX, p: ssymStruct, h: float, n_steps: int = 2) -> ca.SX:
+    """Define Euler integrator for continuous dynamics."""
+    dt = h / n_steps
+    ode = ca.Function("f", [x, u, p], [f_expl])
+    xnext = x
+    for _ in range(n_steps):
+        k1 = ode(xnext, u, p)
+        xnext = xnext + dt * k1
 
     return xnext
 
@@ -97,7 +108,7 @@ def find_idx_for_labels(sub_vars: SX, sub_label: str) -> list[int]:
     return [i for i, label in enumerate(sub_vars.str().strip("[]").split(", ")) if sub_label in label]
 
 
-def export_chain_mass_model(n_mass: int, Ts: float = 0.2, disturbance: bool = False) -> Tuple[AcadosModel, DMStruct]:
+def export_chain_mass_model(n_mass: int, Ts: float = 0.2, disturbance: bool = False, discrete_dyn_type: str = "RK4") -> Tuple[AcadosModel, DMStruct]:
     """Export chain mass model for acados."""
     x0 = np.array([0, 0, 0])  # fix mass (at wall)
 
@@ -170,7 +181,12 @@ def export_chain_mass_model(n_mass: int, Ts: float = 0.2, disturbance: bool = Fa
 
     f_expl = vertcat(xvel, u, f)
     f_impl = xdot - f_expl
-    f_disc = export_discrete_erk4_integrator_step(f_expl, x, u, p, Ts)
+    if discrete_dyn_type == "RK4":
+        f_disc = export_discrete_erk4_integrator_step(f_expl, x, u, p, Ts)
+    elif discrete_dyn_type == "EULER":
+        f_disc = export_discrete_euler_integrator_step(f_expl, x, u, p, Ts)
+    else:
+        raise ValueError("discrete_dyn_type must be either 'RK4' or 'EULER'")
 
     model = AcadosModel()
 
@@ -239,6 +255,7 @@ def export_parametric_ocp(
     hessian_approx: str = "GAUSS_NEWTON",
     integrator_type: str = "IRK",
     nlp_solver_type: str = "SQP",
+    discrete_dyn_type: str = "RK4",
     nlp_iter: int = 50,
     nlp_tol: float = 1e-5,
     random_scale: dict = {"m": 0.0, "D": 0.0, "L": 0.0, "C": 0.0},
@@ -248,7 +265,7 @@ def export_parametric_ocp(
     ocp.solver_options.N_horizon = chain_params_["N"]
 
     # export model
-    ocp.model, p = export_chain_mass_model(n_mass=chain_params_["n_mass"], Ts=chain_params_["Ts"], disturbance=True)
+    ocp.model, p = export_chain_mass_model(n_mass=chain_params_["n_mass"], Ts=chain_params_["Ts"], disturbance=True, discrete_dyn_type=discrete_dyn_type)
 
     # parameters
     np.random.seed(chain_params_["seed"])
@@ -349,11 +366,17 @@ def export_parametric_ocp(
     return ocp, p
 
 
-def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_params(), generate_code: bool = True) -> None:
+def main_parametric(qp_solver_ric_alg: int = 0,
+                    discrete_dyn_type: str = "RK4",
+                    chain_params_: dict = get_chain_params(),
+                    with_more_adjoints = True,
+                    generate_code: bool = True) -> None:
+    if discrete_dyn_type == "EULER":
+        print("Warning: OCP solver does not converge with EULER integrator.")
     ocp, parameter_values = export_parametric_ocp(
         chain_params_=chain_params_, qp_solver_ric_alg=qp_solver_ric_alg, integrator_type="DISCRETE",
+        discrete_dyn_type=discrete_dyn_type
     )
-    with_more_adjoints = True
     ocp_json_file = "acados_ocp_" + ocp.model.name + ".json"
 
     # Check if json_file exists
@@ -592,4 +615,4 @@ def print_timings(timing_results: dict, metric: str = "median"):
 if __name__ == "__main__":
     chain_params = get_chain_params()
     chain_params["n_mass"] = 3
-    main_parametric(qp_solver_ric_alg=0, chain_params_=chain_params, generate_code=True)
+    main_parametric(qp_solver_ric_alg=0, discrete_dyn_type="RK4", chain_params_=chain_params, generate_code=True, with_more_adjoints=True)
