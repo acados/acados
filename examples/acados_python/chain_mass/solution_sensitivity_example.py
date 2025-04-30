@@ -518,10 +518,15 @@ def main_parametric(qp_solver_ric_alg: int = 0,
         # print(f"{sens_u_=}")
         # print(f"{sens_x_=}")
 
-        test_tol = 1e-5
+        test_tol = 1e-9
         diff_sens_adj_vs_ref = np.max(np.abs(sens_adj_ref.ravel() -  sens_adj))
         if diff_sens_adj_vs_ref > test_tol:
             raise_test_failure_message(f"diff_sens_adj_vs_ref = {diff_sens_adj_vs_ref} should be < {test_tol}")
+        else:
+            print(f"Success: diff_sens_adj_vs_ref = {diff_sens_adj_vs_ref} < {test_tol}")
+
+        # assert not all zero
+        assert np.max(np.abs(sens_adj)) > 1.0
 
         sens_u.append(sens_u_[:, p_idx])
 
@@ -537,7 +542,12 @@ def main_parametric(qp_solver_ric_alg: int = 0,
             print(f"i {i} {timings_solve_params_adj[i]*1e3:.5f} \t {timings_solve_params[i]*1e3:.5f} \t {timings_solve_params_adj_uforw[i]*1e3:.5f} \t {timings_solve_params_adj_all_primals[i]*1e3:.5f}")
 
             # check wrt forward
-            print(np.abs(sens_adj- out_dict['sens_u']))
+            diff_sens_u_vs_via_adj = np.max(np.abs(sens_adj- out_dict['sens_u']))
+            if diff_sens_u_vs_via_adj > test_tol:
+                raise_test_failure_message(f"diff_sens_u_vs_via_adj = {diff_sens_u_vs_via_adj} should be < {test_tol}")
+            else:
+                print(f"Success: diff_sens_u_vs_via_adj = {diff_sens_u_vs_via_adj} < {test_tol}")
+
             # assert np.allclose(sens_adj, out_dict['sens_u'])
 
     if generate_plots:
