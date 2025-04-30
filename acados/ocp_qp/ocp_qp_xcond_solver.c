@@ -679,7 +679,7 @@ void ocp_qp_xcond_solver_eval_forw_sens(void *config_, ocp_qp_xcond_solver_dims 
     qp_solver->eval_forw_sens(qp_solver, memory->xcond_qp_in, memory->xcond_seed, memory->xcond_qp_out, opts->qp_solver_opts, memory->solver_memory, work->qp_solver_work);
 
     // expansion
-    xcond->expansion(memory->xcond_qp_out, sens_qp_out, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
+    xcond->expand_sol_seed(memory->xcond_qp_out, sens_qp_out, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
 
     return;
 }
@@ -706,7 +706,7 @@ void ocp_qp_xcond_solver_eval_adj_sens(void *config_, ocp_qp_xcond_solver_dims *
     qp_solver->eval_adj_sens(qp_solver, memory->xcond_qp_in, memory->xcond_seed, memory->xcond_qp_out, opts->qp_solver_opts, memory->solver_memory, work->qp_solver_work);
 
     // expansion
-    xcond->expansion(memory->xcond_qp_out, sens_qp_out, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
+    xcond->expand_sol_seed(memory->xcond_qp_out, sens_qp_out, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
 
     return;
 }

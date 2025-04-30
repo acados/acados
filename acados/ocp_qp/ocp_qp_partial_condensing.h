@@ -83,6 +83,7 @@ typedef struct ocp_qp_partial_condensing_memory_
     // only pointer
     ocp_qp_in *ptr_qp_in;
     ocp_qp_in *ptr_pcond_qp_in;
+    ocp_qp_seed *ptr_qp_seed;
     qp_info *qp_out_info; // info in pcond_qp_in
     ocp_qp_partial_condensing_dims *dims;
     double time_qp_xcond;

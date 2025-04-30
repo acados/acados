@@ -583,6 +583,7 @@ int ocp_qp_full_condensing_condense_rhs_seed(void *qp_in_, void *qp_seed, void *
 
     // save pointers to ocp_qp_in in memory (needed for expansion)
     mem->ptr_qp_in = qp_in;
+    mem->ptr_qp_seed = qp_seed;
 
     // reduce eq constr DOF: residual
     d_ocp_qp_reduce_eq_dof_seed(qp_in, qp_seed, mem->red_seed, opts->hpipm_red_opts, mem->hpipm_red_work);
@@ -615,15 +616,36 @@ int ocp_qp_full_expansion(void *fcond_qp_out_, void *qp_out_, void *opts_, void 
     // restore solution
     d_ocp_qp_restore_eq_dof(mem->ptr_qp_in, mem->red_sol, qp_out, opts->hpipm_red_opts, mem->hpipm_red_work);
 
-//d_ocp_qp_sol_print(mem->red_sol->dim, mem->red_sol);
-//d_ocp_qp_sol_print(qp_out->dim, qp_out);
-//exit(1);
     // stop timer
     mem->time_qp_xcond += acados_toc(&timer);
 
     return ACADOS_SUCCESS;
 }
 
+
+int ocp_qp_full_condensing_expand_sol_seed(void *fcond_qp_out_, void *qp_out_, void *opts_, void *mem_, void *work)
+{
+    dense_qp_out *fcond_qp_out = fcond_qp_out_;
+    ocp_qp_out *qp_out = qp_out_;
+    ocp_qp_full_condensing_opts *opts = opts_;
+    ocp_qp_full_condensing_memory *mem = mem_;
+
+    acados_timer timer;
+
+    // start timer
+    acados_tic(&timer);
+
+    // expand solution
+    d_part_cond_qp_expand_sol_seed(mem->red_qp, mem->red_seed, fcond_qp_out, mem->red_sol, opts->hpipm_cond_opts, mem->hpipm_cond_work);
+
+    // restore solution
+    d_ocp_qp_restore_eq_dof_seed(mem->ptr_qp_in, mem->ptr_qp_seed, mem->red_sol, qp_out, opts->hpipm_red_opts, mem->hpipm_red_work);
+
+    // stop timer
+    mem->time_qp_xcond += acados_toc(&timer);
+
+    return ACADOS_SUCCESS;
+}
 
 
 void ocp_qp_full_condensing_config_initialize_default(void *config_)
@@ -649,6 +671,7 @@ void ocp_qp_full_condensing_config_initialize_default(void *config_)
     config->condense_lhs = &ocp_qp_full_condensing_condense_lhs;
     config->condense_qp_out = &ocp_qp_full_condensing_condense_qp_out;
     config->expansion = &ocp_qp_full_expansion;
+    config->expand_sol_seed = &ocp_qp_full_condensing_expand_sol_seed;
 
     return;
 }

@@ -80,6 +80,7 @@ typedef struct ocp_qp_full_condensing_memory_
     ocp_qp_seed *red_seed;
     // only pointer
     ocp_qp_in *ptr_qp_in;
+    ocp_qp_seed *ptr_qp_seed;
     qp_info *qp_out_info; // info in fcond_qp_in
     double time_qp_xcond;
 } ocp_qp_full_condensing_memory;

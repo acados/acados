@@ -103,6 +103,7 @@ typedef struct
     int (*condense_lhs)(void *qp_in, void *x_cond_qp_in, void *opts, void *mem, void *work);
     int (*condense_qp_out)(void *qp_in, void *x_cond_qp_in, void *qp_out, void *p_cond_qp_out, void *opts, void *mem, void *work);
     int (*expansion)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);
+    int (*expand_sol_seed)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);
 } ocp_qp_xcond_config;
 
 
