@@ -636,7 +636,7 @@ int ocp_qp_full_condensing_expand_sol_seed(void *fcond_qp_out_, void *qp_out_, v
     acados_tic(&timer);
 
     // expand solution
-    d_part_cond_qp_expand_sol_seed(mem->red_qp, mem->red_seed, fcond_qp_out, mem->red_sol, opts->hpipm_cond_opts, mem->hpipm_cond_work);
+    d_cond_qp_expand_sol_seed(mem->red_qp, mem->red_seed, fcond_qp_out, mem->red_sol, opts->hpipm_cond_opts, mem->hpipm_cond_work);
 
     // restore solution
     d_ocp_qp_restore_eq_dof_seed(mem->ptr_qp_in, mem->ptr_qp_seed, mem->red_sol, qp_out, opts->hpipm_red_opts, mem->hpipm_red_work);
