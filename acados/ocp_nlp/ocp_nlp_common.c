@@ -1964,6 +1964,17 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
     // tmp_qp_out
     size += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
 
+    // qp_seed
+    size += ocp_qp_seed_calculate_size(dims->qp_solver->orig_dims);
+
+    if (opts->ext_qp_res)
+    {
+        // qp_res
+        size += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
+        // qp_res_ws
+        size += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
+    }
+
     // blasfeo_dvec
     int nv_max = 0;
     int nx_max = 0;
@@ -2138,17 +2149,6 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
         }
     }
 
-    // qp_seed
-    size += ocp_qp_seed_calculate_size(dims->qp_solver->orig_dims);
-
-    if (opts->ext_qp_res)
-    {
-        // qp_res
-        size += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
-        // qp_res_ws
-        size += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
-    }
-
     size += 64; // ext_fun_workspace_size align
     size += ext_fun_workspace_size;
 
@@ -2223,6 +2223,20 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     // weight_merit_fun
     work->weight_merit_fun = ocp_nlp_out_assign(config, dims, c_ptr);
     c_ptr += ocp_nlp_out_calculate_size(config, dims);
+
+    // qp seed
+    work->qp_seed = ocp_qp_seed_assign(dims->qp_solver->orig_dims, c_ptr);
+    c_ptr += ocp_qp_seed_calculate_size(dims->qp_solver->orig_dims);
+
+    if (opts->ext_qp_res)
+    {
+        // qp res
+        work->qp_res = ocp_qp_res_assign(dims->qp_solver->orig_dims, c_ptr);
+        c_ptr += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
+        // qp res ws
+        work->qp_res_ws = ocp_qp_res_workspace_assign(dims->qp_solver->orig_dims, c_ptr);
+        c_ptr += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
+    }
 
     assign_and_advance_double(nv_max, &work->tmp_nv_double, &c_ptr);
 
@@ -2391,20 +2405,6 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
             dynamics[i]->set_external_fun_workspaces(dynamics[i], dims->dynamics[i], opts->dynamics[i], nlp_in->dynamics[i], c_ptr);
             c_ptr += dynamics[i]->get_external_fun_workspace_requirement(dynamics[i], dims->dynamics[i], opts->dynamics[i], nlp_in->dynamics[i]);
         }
-    }
-
-    // qp seed
-    work->qp_seed = ocp_qp_seed_assign(dims->qp_solver->orig_dims, c_ptr);
-    c_ptr += ocp_qp_seed_calculate_size(dims->qp_solver->orig_dims);
-
-    if (opts->ext_qp_res)
-    {
-        // qp res
-        work->qp_res = ocp_qp_res_assign(dims->qp_solver->orig_dims, c_ptr);
-        c_ptr += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
-        // qp res ws
-        work->qp_res_ws = ocp_qp_res_workspace_assign(dims->qp_solver->orig_dims, c_ptr);
-        c_ptr += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
     }
 
     assert((char *) work + mem->workspace_size >= c_ptr);
