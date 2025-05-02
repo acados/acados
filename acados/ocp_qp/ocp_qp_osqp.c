@@ -1788,13 +1788,13 @@ int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
 
 
 
-void ocp_qp_osqp_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+void ocp_qp_osqp_eval_forw_sens(void *config_, void *qp_in, void *seed, void *qp_out, void *opts_, void *mem_, void *work_)
 {
-    printf("\nerror: ocp_qp_osqp_eval_sens: not implemented yet\n");
+    printf("\nerror: ocp_qp_osqp_eval_forw_sens: not implemented yet\n");
     exit(1);
 }
 
-void ocp_qp_osqp_eval_adj_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+void ocp_qp_osqp_eval_adj_sens(void *config_, void *qp_in, void *seed, void *qp_out, void *opts_, void *mem_, void *work_)
 {
     printf("\nerror: ocp_qp_osqp_eval_adj_sens: not implemented yet\n");
     exit(1);
@@ -1824,7 +1824,7 @@ void ocp_qp_osqp_config_initialize_default(void *config_)
     config->workspace_calculate_size = &ocp_qp_osqp_workspace_calculate_size;
     config->evaluate = &ocp_qp_osqp;
     config->terminate = &ocp_qp_osqp_terminate;
-    config->eval_sens = &ocp_qp_osqp_eval_sens;
+    config->eval_forw_sens = &ocp_qp_osqp_eval_forw_sens;
     config->eval_adj_sens = &ocp_qp_osqp_eval_adj_sens;
     config->memory_reset = &ocp_qp_osqp_memory_reset;
     config->solver_get = &ocp_qp_osqp_solver_get;

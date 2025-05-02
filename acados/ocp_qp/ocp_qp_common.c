@@ -278,6 +278,33 @@ double ocp_qp_out_compute_primal_nrm_inf(ocp_qp_out* qp_out)
     return res;
 }
 
+/************************************************
+ * seed
+ ************************************************/
+
+acados_size_t ocp_qp_seed_calculate_size(ocp_qp_dims *dims)
+{
+    acados_size_t size = sizeof(ocp_qp_seed);
+    size += d_ocp_qp_seed_memsize(dims);
+    return size;
+}
+
+
+
+ocp_qp_seed *ocp_qp_seed_assign(ocp_qp_dims *dims, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_qp_seed *qp_seed = (ocp_qp_seed *) c_ptr;
+    c_ptr += sizeof(ocp_qp_seed);
+
+    d_ocp_qp_seed_create(dims, qp_seed, c_ptr);
+    c_ptr += d_ocp_qp_seed_memsize(dims);
+
+    assert((char *) raw_memory + ocp_qp_seed_calculate_size(dims) == c_ptr);
+
+    return qp_seed;
+}
 
 
 /************************************************

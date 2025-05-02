@@ -202,6 +202,7 @@ jobs:
         python policy_gradient_example.py
         python test_solution_sens_and_exact_hess.py
         python forw_vs_adj_param_sens.py
+        python smooth_policy_gradients.py
         cd ${{runner.workspace}}/acados/examples/acados_python/solution_sensitivities_convex_example
         python value_gradient_example_linear.py
         python batch_adjoint_solution_sensitivity_example.py

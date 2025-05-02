@@ -74,10 +74,13 @@ typedef struct ocp_qp_full_condensing_memory_
     // in memory
     dense_qp_in *fcond_qp_in;
     dense_qp_out *fcond_qp_out;
+    dense_qp_seed *fcond_qp_seed;
     ocp_qp_in *red_qp; // reduced qp
     ocp_qp_out *red_sol; // reduced qp sol
+    ocp_qp_seed *red_seed;
     // only pointer
     ocp_qp_in *ptr_qp_in;
+    ocp_qp_seed *ptr_qp_seed;
     qp_info *qp_out_info; // info in fcond_qp_in
     double time_qp_xcond;
 } ocp_qp_full_condensing_memory;

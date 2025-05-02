@@ -483,6 +483,9 @@ typedef struct ocp_nlp_workspace
     ocp_qp_res *qp_res;
     ocp_qp_res_ws *qp_res_ws;
 
+    // qp seed (for solution sensitivities)
+    ocp_qp_seed *qp_seed;
+
     // for globalization: -> move to module?!
     ocp_nlp_out *tmp_nlp_out;
     ocp_nlp_out *weight_merit_fun;
