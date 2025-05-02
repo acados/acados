@@ -1,5 +1,5 @@
 
-# Trouble shooting
+# Troubleshooting
 
 As a first step, check the [solver status](https://docs.acados.org/python_interface/index.html#acados_template.acados_ocp_solver.AcadosOcpSolver.get_status) which is returned by `solve()` in Python and can be obtained with `solver.get_status()` and `solver.get('status')` in Python and MATLAB/Octave, respectively.
 
@@ -13,16 +13,16 @@ Are all problem functions defined at the initial guess?
 `NaN` errors can often be mitigated by solver initializations.
 
 ### QP diagnostics
-- [Python](examples/acados_python/pendulum_on_cart/solution_sensitivities/policy_gradient_example.py)
+- [Python](https://github.com/acados/acados/blob/main/examples/acados_python/pendulum_on_cart/solution_sensitivities/policy_gradient_example.py)
 - [MATLAB/Octave](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/getting_started/extensive_example_ocp.m)
 
 
 ### Store iterates
 One can always get the last iterate using `solver.get()`, see
-- [Python](examples/acados_python/linear_mass_model/linear_mass_test_problem.py)
+- [Python](https://github.com/acados/acados/blob/main/examples/acados_python/linear_mass_model/linear_mass_test_problem.py)
 - [MATLAB/Octave](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/getting_started/extensive_example_ocp.m)
 
 In addition, one can set the solver option [`store_iterates`](https://docs.acados.org/python_interface/index.html#acados_template.acados_ocp_options.AcadosOcpOptions.store_iterates) to store all intermediate NLP solver iterates and get them after a solver call.
-- [Python](examples/acados_python/convex_ocp_with_onesided_constraints/main_convex_onesided.py)
+- [Python](https://github.com/acados/acados/blob/main/examples/acados_python/convex_ocp_with_onesided_constraints/main_convex_onesided.py)
 - [MATLAB/Octave](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/getting_started/extensive_example_ocp.m)
 
