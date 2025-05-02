@@ -34,7 +34,7 @@ function acados_install_windows(varargin)
     % Read the mex C compiler configuration and extract the location
     cCompilerConfig = mex.getCompilerConfigurations('C');
     pathToCompilerLocation = cCompilerConfig.Location;
-    % Modify the environment PATH variable for this Matlab session such that
+    % Modify the environment PATH variable for this MATLAB session such that
     % the mex C compiler takes priority ensuring calls to gcc uses the
     % configured mex compiler
     setenv('PATH', [fullfile(pathToCompilerLocation,'bin') ';' origEnvPath]);

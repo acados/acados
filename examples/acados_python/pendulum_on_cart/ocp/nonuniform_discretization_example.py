@@ -56,7 +56,7 @@ def main(discretization='shooting_nodes'):
 
     if integrator_type == 'GNSF':
         acados_dae_model_json_dump(model)
-        # structure detection in Matlab/Octave -> produces 'pendulum_ode_gnsf_functions.json'
+        # structure detection in MATLAB/Octave -> produces 'pendulum_ode_gnsf_functions.json'
         status = os.system('octave detect_gnsf_from_json.m')
         # load gnsf from json
         with open(model.name + '_gnsf_functions.json', 'r') as f:

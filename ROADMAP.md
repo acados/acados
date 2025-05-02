@@ -3,7 +3,7 @@
 - [ ] Test OOQP
 - [ ] More flexible solution sensitivities?
 - [ ] get_optimal_value_hessian() - at least for HPIPM and exact Hessians
-- [ ] remove old layer in Matlab interface
+- [ ] remove old layer in MATLAB interface
 
 #### core
 - [x] propagate cost in integrator for NLS+IRK

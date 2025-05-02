@@ -33,7 +33,7 @@ classdef AcadosSimSolver < handle
 
     properties
         t_sim % templated solver
-        sim % Matlab class AcadosSim describing the initial value problem
+        sim % MATLAB class AcadosSim describing the initial value problem
     end % properties
 
 

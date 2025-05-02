@@ -113,13 +113,13 @@ cd /mnt/c/Users/Documents/
 
 For the installation of Python/MATLAB/Octave interfaces, please refer to the [Interfaces](../interfaces/index.md) page.
 
-## Windows (for use with Matlab)
+## Windows (for use with MATLAB)
 
 Disclaimer: The high-level interfaces on Windows are not tested on Github Actions.
 
 ### Prerequisites
 You should have the following software installed on your machine.
-- Recent Matlab version
+- Recent MATLAB version
 - CMake for Windows
 - [Windows Git Client](https://git-scm.com/download/win)
 
@@ -139,7 +139,7 @@ git submodule update --recursive --init
 - You can check whether the modification to `PATH` variable is in effect by executing in cmd `echo %PATH%` or in PowerShell `echo $env:path`.
 
 ### Automatic build of acados (minGW)
-Run the following in Matlab in the folder `<acados_root_folder>/interfaces/acados_matlab_octave`:
+Run the following in MATLAB in the folder `<acados_root_folder>/interfaces/acados_matlab_octave`:
 ```
 acados_install_windows()
 ```
@@ -175,8 +175,8 @@ mingw32-make.exe -j4
 mingw32-make.exe install
 ```
 
-### Try a Matlab example
-- Open Matlab
+### Try a MATLAB example
+- Open MATLAB
 - select MinGW compiler using `mex`
 - go to `<acados_root_folder>/examples/acados_matlab_octave`
 - run `acados_env_variables_windows`
@@ -195,5 +195,5 @@ cmake -G "Visual Studio 15 2017 Win64" -DBLASFEO_TARGET=GENERIC -DACADOS_INSTALL
 # cmake -G "Visual Studio 16 2019" -DBLASFEO_TARGET=GENERIC -DACADOS_INSTALL_DIR=.. -DBUILD_SHARED_LIBS=OFF ..
 cmake --build . -j10 --target INSTALL --config Release
 ```
-- In Matlab, run `mex -setup C` and select the same `MSVC` version.
-- Try a Matlab example (see above).
+- In MATLAB, run `mex -setup C` and select the same `MSVC` version.
+- Try a MATLAB example (see above).

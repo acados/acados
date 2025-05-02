@@ -816,7 +816,7 @@ classdef AcadosOcp < handle
                 end
             end
 
-            % TODO: add checks for solution sensitivities when brining them to Matlab
+            % TODO: add checks for solution sensitivities when brining them to MATLAB
 
             % check if qp_solver_cond_N is set
             if isempty(opts.qp_solver_cond_N)
