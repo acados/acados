@@ -57,7 +57,7 @@ The templates mentioned [above](#templates) also contain templated S-functions a
 
 A basic Simulink example can be found in [`<acados_root>/examples/acados_python/getting_started/simulink_example.m`](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/getting_started/simulink_example.m)
 
-A more advanced Simulink example which showcases how to customize the inputs and outputs of the Simulink block corresponding to the solver can be found in [`<acados_root>/examples/acados_python/getting_started/simulink_example.m`](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/getting_started/simulink_example_advanced.m)
+A more advanced Simulink example which showcases how to customize the inputs and outputs of the Simulink block corresponding to the solver can be found in [`<acados_root>/examples/acados_python/getting_started/simulink_example_advanced.m`](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/getting_started/simulink_example_advanced.m)
 
 ### List of possible inputs
 This is a list of possible inputs to the Simulink block of an OCP solver which can be activated by setting the corresponding values in the acados Simulink options.
