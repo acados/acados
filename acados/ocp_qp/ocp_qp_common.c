@@ -277,7 +277,7 @@ double ocp_qp_out_compute_primal_nrm_inf(ocp_qp_out* qp_out)
     for (int i = 0; i <= N; i++)
     {
         blasfeo_dvecnrm_inf(nx[i]+nu[i]+2*ns[i], qp_out->ux+i, 0, &res_stage);
-        res += res_stage;
+        res = res > res_stage ? res : res_stage;
     }
     return res;
 }
