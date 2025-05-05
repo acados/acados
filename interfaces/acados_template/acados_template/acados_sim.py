@@ -140,7 +140,11 @@ class AcadosSimOptions:
         """Collocation type: relevant for implicit integrators
         -- string in {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA'}.
 
-        Default: GAUSS_LEGENDRE
+        Default: GAUSS_LEGENDRE.
+
+        .. note:: GAUSS_LEGENDRE tableaus yield integration methods that are A-stable, but not L-stable and have order `2 * num_stages`,
+        .. note:: GAUSS_RADAU_IIA tableaus yield integration methods that are L-stable and have order `2 * num_stages - 1`.
+        .. note:: EXPLICIT_RUNGE_KUTTA tableaus can be used for comparisons of ERK and IRK to ensure correctness, but are only recommended with ERK for users.
         """
         return self.__collocation_type
 
