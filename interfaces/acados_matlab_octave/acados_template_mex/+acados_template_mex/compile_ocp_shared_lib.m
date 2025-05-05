@@ -43,7 +43,7 @@ function compile_ocp_shared_lib(export_dir)
                     status, result);
             end
         else
-            % use CMake build system, has issues on Linux with Matlab, see https://github.com/acados/acados/issues/1209
+            % use CMake build system, has issues on Linux with MATLAB, see https://github.com/acados/acados/issues/1209
             [ status, result ] = system('cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_OCP_SOLVER_LIB=ON -S . -B .');
             if status
                 cd(return_dir);

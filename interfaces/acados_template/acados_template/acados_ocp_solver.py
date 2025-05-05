@@ -62,8 +62,8 @@ class AcadosOcpSolver:
     """
     Class to interact with the acados ocp solver C object.
 
-        :param acados_ocp: type :py:class:`~acados_template.acados_ocp.AcadosOcp` or :py:class:`~acados_template.acados_multiphase_ocp.AcadosMultiphaseOcp` - description of the OCP for acados
-        :param json_file: name for the json file used to render the templated code - default: acados_ocp_nlp.json
+    :param acados_ocp: type :py:class:`~acados_template.acados_ocp.AcadosOcp` or :py:class:`~acados_template.acados_multiphase_ocp.AcadosMultiphaseOcp` - description of the OCP for acados
+    :param json_file: name for the json file used to render the templated code - default: acados_ocp_nlp.json
     """
     if os.name == 'nt':
         dlclose = DllLoader('kernel32', use_last_error=True).FreeLibrary
@@ -93,14 +93,15 @@ class AcadosOcpSolver:
     def generate(cls, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, simulink_opts=None, cmake_builder: CMakeBuilder = None, verbose=True):
         """
         Generates the code for an acados OCP solver, given the description in acados_ocp.
-            :param acados_ocp: type Union[AcadosOcp, AcadosMultiphaseOcp] - description of the OCP for acados
-            :param json_file: name for the json file used to render the templated code - default: `acados_ocp_nlp.json`
-            :param simulink_opts: Options to configure Simulink S-function blocks, mainly to activate possible inputs and
-                   outputs; default: `None`
-            :param cmake_builder: type :py:class:`~acados_template.builders.CMakeBuilder` generate a `CMakeLists.txt` and use
-                   the `CMake` pipeline instead of a `Makefile` (`CMake` seems to be the better option in conjunction with
-                   `MS Visual Studio`); default: `None`
-            :param verbose: indicating if warnings are printed
+
+        :param acados_ocp: type Union[AcadosOcp, AcadosMultiphaseOcp] - description of the OCP for acados
+        :param json_file: name for the json file used to render the templated code - default: `acados_ocp_nlp.json`
+        :param simulink_opts: Options to configure Simulink S-function blocks, mainly to activate possible inputs and
+               outputs; default: `None`
+        :param cmake_builder: type :py:class:`~acados_template.builders.CMakeBuilder` generate a `CMakeLists.txt` and use
+               the `CMake` pipeline instead of a `Makefile` (`CMake` seems to be the better option in conjunction with
+               `MS Visual Studio`); default: `None`
+        :param verbose: indicating if warnings are printed
         """
         acados_ocp.code_export_directory = os.path.abspath(acados_ocp.code_export_directory)
 
@@ -142,13 +143,14 @@ class AcadosOcpSolver:
     @classmethod
     def build(cls, code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose: bool = True):
         """
-        Builds the code for an acados OCP solver, that has been generated in code_export_dir
-            :param code_export_dir: directory in which acados OCP solver has been generated, see generate()
-            :param with_cython: option indicating if the cython interface is build, default: False.
-            :param cmake_builder: type :py:class:`~acados_template.builders.CMakeBuilder` generate a `CMakeLists.txt` and use
+        Builds the code for an acados OCP solver, that has been generated in code_export_dir.
+
+        :param code_export_dir: directory in which acados OCP solver has been generated, see generate()
+        :param with_cython: option indicating if the cython interface is build, default: False.
+        :param cmake_builder: type :py:class:`~acados_template.builders.CMakeBuilder` generate a `CMakeLists.txt` and use
                    the `CMake` pipeline instead of a `Makefile` (`CMake` seems to be the better option in conjunction with
                    `MS Visual Studio`); default: `None`
-            :param verbose: indicating if build command is printed
+        :param verbose: indicating if build command is printed
         """
         code_export_dir = os.path.abspath(code_export_dir)
 
@@ -543,11 +545,11 @@ class AcadosOcpSolver:
         Set new time steps.
         Recreates the solver if N changes.
 
-            :param new_time_steps: 1 dimensional np array of new time steps for the solver
+        :param new_time_steps: 1 dimensional np array of new time steps for the solver
 
-            .. note:: This allows for different use-cases: either set a new size of time_steps or a new distribution of
-                      the shooting nodes without changing the number, e.g., to reach a different final time. Both cases
-                      do not require a new code export and compilation.
+        .. note:: This allows for different use-cases: either set a new size of time_steps or a new distribution of
+                  the shooting nodes without changing the number, e.g., to reach a different final time. Both cases
+                  do not require a new code export and compilation.
         """
         if self.__problem_class == "MOCP":
             raise ValueError('This function can only be used for single phase OCPs!')
@@ -592,13 +594,13 @@ class AcadosOcpSolver:
         This function is relevant for code reuse, i.e., if either `set_new_time_steps(...)` is used or
         the influence of a different `qp_solver_cond_N` is studied without code export and compilation.
 
-            :param qp_solver_cond_N: new number of condensing stages for the solver
+        :param qp_solver_cond_N: new number of condensing stages for the solver
 
-            .. note:: This function can only be used in combination with a partial condensing QP solver.
+        .. note:: This function can only be used in combination with a partial condensing QP solver.
 
-            .. note:: After `set_new_time_steps(...)` is used and depending on the new number of time steps it might be
-                      necessary to change `qp_solver_cond_N` as well (using this function), i.e., typically
-                      `qp_solver_cond_N < N`.
+        .. note:: After `set_new_time_steps(...)` is used and depending on the new number of time steps it might be
+                  necessary to change `qp_solver_cond_N` as well (using this function), i.e., typically
+                  `qp_solver_cond_N < N`.
         """
         if self.__problem_class == "MOCP":
             raise ValueError('This function can only be used for single phase OCPs!')
@@ -626,9 +628,10 @@ class AcadosOcpSolver:
         """
         Returns the gradient of the optimal value function w.r.t. what is specified in `with_respect_to`.
 
-        Disclaimer: This function only returns reasonable values if the solver has converged for the current problem instance.
+        .. note:: This function only returns reasonable values if the solver has converged for the current problem instance.
 
         Notes:
+
         - for field `initial_state`, the gradient is the Lagrange multiplier of the initial state constraint.
         The gradient computation consists of adding the Lagrange multipliers corresponding to the upper and lower bound of the initial state.
 
@@ -718,32 +721,28 @@ class AcadosOcpSolver:
         """
         Evaluate the sensitivity of the current solution x_i, u_i with respect to the initial state or the parameters for all stages i in `stages`.
 
-            :param stages: stages for which the sensitivities are returned, int or list of int
-            :param with_respect_to: string in ["initial_state", "p_global"]
-            :param return_sens_x: Flag indicating whether sensitivities of x should be returned. Default: True.
-            :param return_sens_u: Flag indicating whether sensitivities of u should be returned. Default: True.
-            :param return_sens_pi: Flag indicating whether sensitivities of pi should be returned. Default: False.
-            :param return_sens_lam: Flag indicating whether sensitivities of lam should be returned. Default: False.
-            :param return_sens_su: Flag indicating whether sensitivities of su should be returned. Default: False.
-            :param return_sens_sl: Flag indicating whether sensitivities of sl should be returned. Default: False.
-            :param sanity_checks : bool - whether to perform sanity checks, turn off for minimal overhead, default: True
+        :param stages: stages for which the sensitivities are returned, int or list of int
+        :param with_respect_to: string in ["initial_state", "p_global"]
+        :param return_sens_x: Flag indicating whether sensitivities of x should be returned. Default: True.
+        :param return_sens_u: Flag indicating whether sensitivities of u should be returned. Default: True.
+        :param return_sens_pi: Flag indicating whether sensitivities of pi should be returned. Default: False.
+        :param return_sens_lam: Flag indicating whether sensitivities of lam should be returned. Default: False.
+        :param return_sens_su: Flag indicating whether sensitivities of su should be returned. Default: False.
+        :param return_sens_sl: Flag indicating whether sensitivities of sl should be returned. Default: False.
+        :param sanity_checks: bool - whether to perform sanity checks, turn off for minimal overhead, default: True
 
-            :returns: A dictionary with the solution sensitivities with fields sens_x, sens_u, sens_pi, sens_lam, sens_su, sens_sl if corresponding flags were set.
-                    If stages is a list, sens_x, sens_lam, sens_su, sens_sl is a list of the same length.
-                    For sens_u, sens_pi, the list has length len(stages) or len(stages)-1 depending on whether N is included or not.
-                    If stages is a scalar, the returned sensitivities are np.ndarrays of shape (nfield[stages], ngrad).
+        :return: A dictionary with the solution sensitivities with fields sens_x, sens_u, sens_pi, sens_lam, sens_su, sens_sl if corresponding flags were set.
+                  If stages is a list, sens_x, sens_lam, sens_su, sens_sl is a list of the same length.
+                  For sens_u, sens_pi, the list has length len(stages) or len(stages)-1 depending on whether N is included or not.
+                  If stages is a scalar, the returned sensitivities are np.ndarrays of shape (nfield[stages], ngrad).
 
-        .. note::  Correct computation of sensitivities requires \n
-
-        (1) HPIPM as QP solver, \n
-
-        (2) the usage of an exact Hessian, \n
-
-        (3) positive definiteness of the full-space Hessian if the square-root version of the Riccati recursion is used
-            OR positive definiteness of the reduced Hessian if the classic Riccati recursion is used (compare: `solver_options.qp_solver_ric_alg`), \n
-
-        (4) the last interaction before calling this function should involve the solution of the QP at the NLP solution.
-            This can happen as call to `solve()` with at least 1 QP being solved or `setup_qp_matrices_and_factorize()`, \n
+        .. note::  Correct computation of sensitivities requires: \n
+            (1) HPIPM as QP solver, \n
+            (2) the usage of an exact Hessian, \n
+            (3) positive definiteness of the full-space Hessian if the square-root version of the Riccati recursion is used
+                OR positive definiteness of the reduced Hessian if the classic Riccati recursion is used (compare: `solver_options.qp_solver_ric_alg`), \n
+            (4) the last interaction before calling this function should involve the solution of the QP at the NLP solution.
+                This can happen as call to `solve()` with at least 1 QP being solved or `setup_qp_matrices_and_factorize()`, \n
 
         .. note:: Timing of the sensitivities computation consists of time_solution_sens_lin, time_solution_sens_solve.
         .. note:: Solution sensitivities with respect to parameters are currently implemented assuming the parameter vector p is global within the OCP, i.e. p=p_i with i=0, ..., N.
@@ -876,14 +875,15 @@ class AcadosOcpSolver:
                                           ) -> np.ndarray:
         """
         Evaluate the adjoint sensitivity of the solution with respect to the parameters.
-            :param seed_x : Sequence of tuples of the form (stage: int, seed_vec: np.ndarray).
-                    The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the states at that stage with shape (nx, n_seeds)
-            :param seed_u : Sequence of tuples of the form (stage: int, seed_vec: np.ndarray).
-                    The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the controls at that stage with shape (nu, n_seeds).
-            :param with_respect_to : string in ["p_global"]
-            :param sanity_checks : bool - whether to perform sanity checks, turn off for minimal overhead, default: True
 
-            The correct computation of solution of adjoint sensitivities has the same requirements as the computation of solution sensitivities, see the documentation of `eval_solution_sensitivity`.
+        :param seed_x: Sequence of tuples of the form (stage: int, seed_vec: np.ndarray).
+                The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the states at that stage with shape (nx, n_seeds)
+        :param seed_u: Sequence of tuples of the form (stage: int, seed_vec: np.ndarray).
+                The stage is the stage at which the seed_vec is applied, and seed_vec is the seed for the controls at that stage with shape (nu, n_seeds).
+        :param with_respect_to: string in ["p_global"]
+        :param sanity_checks: bool - whether to perform sanity checks, turn off for minimal overhead, default: True
+
+        The correct computation of solution of adjoint sensitivities has the same requirements as the computation of solution sensitivities, see the documentation of `eval_solution_sensitivity`.
         """
 
         # get n_seeds
@@ -976,7 +976,7 @@ class AcadosOcpSolver:
             OR positive definiteness of the reduced Hessian if the classic Riccati recursion is used (compare: `solver_options.qp_solver_ric_alg`),
         (4) the solution of at least one QP in advance to evaluation of the sensitivities as the factorization is reused.
 
-            :param index: integer corresponding to initial state index in range(nx)
+        :param index: integer corresponding to initial state index in range(nx)
         """
 
         print("WARNING: eval_param_sens() is deprecated. Please use eval_solution_sensitivity() instead!")
@@ -1010,17 +1010,17 @@ class AcadosOcpSolver:
 
     def get(self, stage_: int, field_: str):
         """
-        Get the last solution of the solver:
+        Get the last solution of the solver.
 
-            :param stage: integer corresponding to shooting node
-            :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'sens_u', 'sens_pi', 'sens_x', 'sens_lam', 'sens_sl', 'sens_su']
+        :param stage: integer corresponding to shooting node
+        :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'sens_u', 'sens_pi', 'sens_x', 'sens_lam', 'sens_sl', 'sens_su']
 
-            .. note:: regarding lam: \n
-                    the inequalities are internally organized in the following order: \n
-                    [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
-                      lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
+        .. note:: regarding lam: \n
+                the inequalities are internally organized in the following order: \n
+                [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
+                lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
 
-            .. note:: pi: multipliers for dynamics equality constraints \n
+        .. note:: pi: multipliers for dynamics equality constraints \n
                       lam: multipliers for inequalities \n
                       t: slack variables corresponding to evaluation of all inequalities (at the solution) \n
                       sl: slack variables of soft lower inequality constraints \n
@@ -1066,10 +1066,10 @@ class AcadosOcpSolver:
         """
         Get concatenation of all stages of last solution of the solver.
 
-            :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'p_global']
+        :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'p_global']
 
-            .. note:: The parameter 'p_global' has no stage-wise structure and is processed in a memory saving manner by default. \n
-                  In order to read the 'p_global' parameter, the option 'save_p_global' must be set to 'True' upon instantiation. \n
+        .. note:: The parameter 'p_global' has no stage-wise structure and is processed in a memory saving manner by default. \n
+                In order to read the 'p_global' parameter, the option 'save_p_global' must be set to 'True' upon instantiation. \n
         """
         if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'p_global']:
             raise ValueError(f'AcadosOcpSolver.get_flat(field={field_}): \'{field_}\' is an invalid argument.')
@@ -1095,7 +1095,7 @@ class AcadosOcpSolver:
         """
         Set concatenation solver initialization .
 
-            :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']
+        :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']
         """
         field = field_.encode('utf-8')
         if field_ not in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']:
@@ -1233,8 +1233,8 @@ class AcadosOcpSolver:
         Stores the current iterate of the OCP solver in a json file.
         Note: This does not contain the iterate of the integrators, and the parameters.
 
-            :param filename: if not set, use f'{self.name}_iterate.json'
-            :param overwrite: if false and filename exists add timestamp to filename
+        :param filename: if not set, use f'{self.name}_iterate.json'
+        :param overwrite: if false and filename exists add timestamp to filename
         """
         if filename == '':
             filename = f'{self.name}_iterate.json'
@@ -1363,8 +1363,8 @@ class AcadosOcpSolver:
         """
         Dumps the latest QP data into a json file
 
-            :param filename: if not set, use name + timestamp + '.json'
-            :param overwrite: if false and filename exists add timestamp to filename
+        :param filename: if not set, use name + timestamp + '.json'
+        :param overwrite: if false and filename exists add timestamp to filename
         """
         if filename == '':
             filename = f'{self.name}_QP.json'
@@ -1527,9 +1527,9 @@ class AcadosOcpSolver:
         """
         Get the information of the last solver call.
 
-            :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'nlp_iter', 'sqp_iter', 'residuals', 'qp_iter', 'alpha']
+        :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'nlp_iter', 'sqp_iter', 'residuals', 'qp_iter', 'alpha']
 
-        Available fileds:
+        Available fields:
             - time_tot: total CPU time previous call
             - time_lin: CPU time for linearization
             - time_sim: CPU time for integrator
@@ -1771,15 +1771,15 @@ class AcadosOcpSolver:
         """
         Set numerical data inside the solver.
 
-            :param stage: integer corresponding to shooting node
-            :param field: string in ['x', 'u', 'pi', 'lam', 'p', 'xdot_guess', 'z_guess', 'sens_x', 'sens_u']
+        :param stage: integer corresponding to shooting node
+        :param field: string in ['x', 'u', 'pi', 'lam', 'p', 'xdot_guess', 'z_guess', 'sens_x', 'sens_u']
 
-            .. note:: regarding lam: \n
+        .. note:: regarding lam: \n
                     the inequalities are internally organized in the following order: \n
                     [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
                       lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
 
-            .. note:: pi: multipliers for dynamics equality constraints \n
+        .. note:: pi: multipliers for dynamics equality constraints \n
                       lam: multipliers for inequalities \n
                       t: slack variables corresponding to evaluation of all inequalities (at the solution) \n
                       sl: slack variables of soft lower inequality constraints \n
@@ -1854,8 +1854,8 @@ class AcadosOcpSolver:
         """
         Get numerical data in the cost module of the solver.
 
-            :param stage: integer corresponding to shooting node
-            :param field: string in ['yref', 'W', 'ext_cost_num_hess', 'zl', 'zu', 'Zl', 'Zu', 'scaling']
+        :param stage: integer corresponding to shooting node
+        :param field: string in ['yref', 'W', 'ext_cost_num_hess', 'zl', 'zu', 'Zl', 'Zu', 'scaling']
         """
 
         if not isinstance(stage_, int):
@@ -1891,9 +1891,9 @@ class AcadosOcpSolver:
         """
         Set numerical data in the cost module of the solver.
 
-            :param stage: integer corresponding to shooting node
-            :param field: string, e.g. 'yref', 'W', 'ext_cost_num_hess', 'zl', 'zu', 'Zl', 'Zu', 'scaling'
-            :param value: of appropriate size
+        :param stage: integer corresponding to shooting node
+        :param field: string, e.g. 'yref', 'W', 'ext_cost_num_hess', 'zl', 'zu', 'Zl', 'Zu', 'scaling'
+        :param value: of appropriate size
 
         Note: by default the cost is scaled with the time step, and the terminal cost term scaled with 1.
         This can be overwritten by setting the 'scaling' field.
@@ -1961,8 +1961,8 @@ class AcadosOcpSolver:
         """
         Get numerical data in the constraint module of the solver.
 
-            :param stage: integer corresponding to shooting node
-            :param field: string in ['lbx', 'ubx', 'lbu', 'ubu', 'lg', 'ug', 'lh', 'uh', 'uphi', 'C', 'D']
+        :param stage: integer corresponding to shooting node
+        :param field: string in ['lbx', 'ubx', 'lbu', 'ubu', 'lg', 'ug', 'lh', 'uh', 'uphi', 'C', 'D']
         """
 
         if not isinstance(stage_, int):
@@ -1998,9 +1998,9 @@ class AcadosOcpSolver:
         """
         Set numerical data in the constraint module of the solver.
 
-            :param stage: integer corresponding to shooting node
-            :param field: string in ['lbx', 'ubx', 'lbu', 'ubu', 'lg', 'ug', 'lh', 'uh', 'uphi', 'C', 'D']
-            :param value: of appropriate size
+        :param stage: integer corresponding to shooting node
+        :param field: string in ['lbx', 'ubx', 'lbu', 'ubu', 'lg', 'ug', 'lh', 'uh', 'uphi', 'C', 'D']
+        :param value: of appropriate size
         """
         # cast value_ to avoid conversion issues
         if isinstance(value_, (float, int)):
@@ -2079,8 +2079,8 @@ class AcadosOcpSolver:
         """
         Get numerical data from the current QP.
 
-            :param stage: integer corresponding to shooting node
-            :param field: string in ['A', 'B', 'b', 'Q', 'R', 'S', 'q', 'r', 'C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
+        :param stage: integer corresponding to shooting node
+        :param field: string in ['A', 'B', 'b', 'Q', 'R', 'S', 'q', 'r', 'C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
 
         Note:
         - additional supported fields are ['P', 'K', 'Lr'], which can be extracted form QP solver PARTIAL_CONDENSING_HPIPM.
@@ -2209,7 +2209,7 @@ class AcadosOcpSolver:
         """
         Set options of the solver.
 
-            :param field: string, possible values are:
+        :param field: string, possible values are:
                 'print_level', 'rti_phase', 'nlp_solver_max_iter, 'as_rti_level',
                 'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp',
                 'qp_tol_stat', 'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min',
@@ -2223,7 +2223,7 @@ class AcadosOcpSolver:
                 'adaptive_levenberg_marquardt_lam', 'adaptive_levenberg_marquardt_mu_min', 'adaptive_levenberg_marquardt_mu0',
                 'tau_min'
 
-            :param value: of type int, float, string, bool
+        :param value: of type int, float, string, bool
 
             - qp_tol_stat: QP solver tolerance stationarity
             - qp_tol_eq: QP solver tolerance equalities
@@ -2332,9 +2332,9 @@ class AcadosOcpSolver:
         Pseudo: solver.param[idx_values] = param_values;
         Parameters:
 
-            :param stage: integer corresponding to shooting node
-            :param idx_values: 0 based np array (or iterable) of integers: indices of parameter to be set
-            :param param_values: new parameter values as numpy array
+        :param stage: integer corresponding to shooting node
+        :param idx_values: 0 based np array (or iterable) of integers: indices of parameter to be set
+        :param param_values: new parameter values as numpy array
         """
 
         if not isinstance(stage_, int):

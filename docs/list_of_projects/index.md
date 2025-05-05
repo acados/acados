@@ -28,9 +28,9 @@ It uses the `Cython` wrapper to the `acados` OCP solver in its software stack.
 - [acados-STM32 - acados Nonlinear MPC example (inverted pendulum control) using HPIPM on STM32H7 device (Cortex-M7 @ 400 MHz)](https://github.com/mindThomas/acados-STM32)
 
 - [OpenOCL](https://github.com/OpenOCL/OpenOCL)
-is an open-source Matlab toolbox for modeling and solving optimal control problems.
+is an open-source MATLAB toolbox for modeling and solving optimal control problems.
 It can use `CasADi` with IPOPT as a solver.
-It also provides a higher level interface to `acados`, which is based on the Matlab interface of `acados`.
+It also provides a higher level interface to `acados`, which is based on the MATLAB interface of `acados`.
 
 ## Papers featuring `acados`
 ### with embedded deployment

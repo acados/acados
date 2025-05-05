@@ -386,7 +386,7 @@ def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir
 
     # set up expressions
     # if the model uses ca.MX because of cost/constraints
-    # the DAE can be exported as ca.SX -> detect GNSF in Matlab
+    # the DAE can be exported as ca.SX -> detect GNSF in MATLAB
     # -> evaluated ca.SX GNSF functions with ca.MX.
     u = model.u
     symbol = model.get_casadi_symbol()

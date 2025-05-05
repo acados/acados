@@ -32,7 +32,7 @@
 classdef AcadosOcpSolver < handle
 
     properties (Access = public)
-        ocp % Matlab class AcadosOcp describing the OCP formulation
+        ocp % MATLAB class AcadosOcp describing the OCP formulation
     end % properties
 
     properties (Access = private)
@@ -156,7 +156,7 @@ classdef AcadosOcpSolver < handle
 
         % TODO: remove this! in v.0.5.0!
         function generate_c_code(obj, simulink_opts)
-            warning('acados_ocp will be deprecated in the future. Use AcadosOcpSolver instead. For more information on the major acados Matlab interface overhaul, see https://github.com/acados/acados/releases/tag/v0.4.0');
+            warning('acados_ocp will be deprecated in the future. Use AcadosOcpSolver instead. For more information on the major acados MATLAB interface overhaul, see https://github.com/acados/acados/releases/tag/v0.4.0');
             if nargin < 2
                 warning("Code is generated in the constructor of AcadosOcpSolver.")
             else

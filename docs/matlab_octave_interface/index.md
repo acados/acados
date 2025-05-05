@@ -1,10 +1,10 @@
-# Matlab + Simulink and Octave Interface
+# MATLAB + Simulink and Octave Interface
 
-In order to use `acados` from Octave or Matlab, you need to create the `acados` shared libraries using either the `CMake` or `Make` build system, as described [on the installation page](../installation/index.md).
+In order to use `acados` from Octave or MATLAB, you need to create the `acados` shared libraries using either the `CMake` or `Make` build system, as described [on the installation page](../installation/index.md).
 
 ## Getting started
-Check out the examples [`minimal_example_ocp.m`](https://github.com/acados/acados/tree/main/examples/acados_matlab_octave/getting_started/minimal_example_ocp.m) and [`minimal_example_sim.m`](https://github.com/acados/acados/tree/main/examples/acados_matlab_octave/getting_started/minimal_example_sim.m) to get started with the Matlab interface of `acados`.
-Note that `acados` currently supports both an old Matlab interface (< v0.4.0) as well as the new one (>= v0.4.0).
+Check out the examples [`minimal_example_ocp.m`](https://github.com/acados/acados/tree/main/examples/acados_matlab_octave/getting_started/minimal_example_ocp.m) and [`minimal_example_sim.m`](https://github.com/acados/acados/tree/main/examples/acados_matlab_octave/getting_started/minimal_example_sim.m) to get started with the MATLAB interface of `acados`.
+Note that `acados` currently supports both an old MATLAB interface (< v0.4.0) as well as the new one (>= v0.4.0).
 Unfortunately, not all MATLAB examples have been ported to the new interface yet.
 If you are new to `acados` please start with [those examples](https://github.com/acados/acados/issues/1196#issuecomment-2311822122) that use the new interface already.
 
@@ -20,7 +20,7 @@ The problem formulation is stated in [this PDF](https://github.com/acados/acados
 ## Export environment variables
 In order to run the examples, some environment variables need to be exported.
 Instead of running the scripts below, you can modify an `rc` file, like `.bashrc` when launching MATLAB from bash,
-[`.matlab7rc.sh`](https://discourse.acados.org/t/matlab-mex-more-elegant-way-to-setup-env-sh/62/4) or `startup.m` to always have those environment variables defined when starting `Matlab`.
+[`.matlab7rc.sh`](https://discourse.acados.org/t/matlab-mex-more-elegant-way-to-setup-env-sh/62/4) or `startup.m` to always have those environment variables defined when starting `MATLAB`.
 
 ### Linux / macOS
 Navigate into the folder of the example you want to run and execute the following command:
@@ -31,12 +31,12 @@ source env.sh # Which can be found in the folder of one of the examples
 If you want to run an `acados` example from another folder, you need to export the environment variable `ACADOS_INSTALL_DIR` properly.
 In the `env.sh` file it is assumed that `ACADOS_INSTALL_DIR` is two folders above the directory, in which the example is located.
 
-Afterwards, launch `Matlab` or `Octave` from the same shell.
+Afterwards, launch `MATLAB` or `Octave` from the same shell.
 
 If you want to run the examples in a different folder, please close the current shell and open a new one to repeat the procedure: this ensures the correct setting of the environment variables.
 
 ### Windows
-1. Open `Matlab` and navigate into [`<acados_root>/examples/acados_matlab_octave`](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave).
+1. Open `MATLAB` and navigate into [`<acados_root>/examples/acados_matlab_octave`](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave).
 2. Run [`acados_env_variables_windows`](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/acados_env_variables_windows.m) to export the environment variable `ACADOS_INSTALL_DIR`.
 3. Navigate into [`<acados_root>/examples/acados_matlab_octave/getting_started`](https://github.com/acados/acados/tree/main/examples/acados_matlab_octave/getting_started) and run one of the examples.
 
@@ -50,14 +50,14 @@ In addition to a `MEX` wrapper it contains all the `C` code that is needed for e
 These templates can be found in [`<acados_root>/interfaces/acados_template/acados_template/c_templates_tera`](https://github.com/acados/acados/tree/main/interfaces/acados_template/acados_template/c_templates_tera).
 
 ## Options documentation
-For the template based part of the `Matlab` interface, we refer to [the docstring based documentation of the Python interface](../python_interface/index.md).
+For the template based part of the `MATLAB` interface, we refer to [the docstring based documentation of the Python interface](../python_interface/index.md).
 
 ## Simulink
 The templates mentioned [above](#templates) also contain templated S-functions and corresponding make functions for both the OCP solver and the acados integrator.
 
 A basic Simulink example can be found in [`<acados_root>/examples/acados_python/getting_started/simulink_example.m`](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/getting_started/simulink_example.m)
 
-A more advanced Simulink example which showcases how to customize the inputs and outputs of the Simulink block corresponding to the solver can be found in [`<acados_root>/examples/acados_python/getting_started/simulink_example.m`](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/getting_started/simulink_example_advanced.m)
+A more advanced Simulink example which showcases how to customize the inputs and outputs of the Simulink block corresponding to the solver can be found in [`<acados_root>/examples/acados_python/getting_started/simulink_example_advanced.m`](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/getting_started/simulink_example_advanced.m)
 
 ### List of possible inputs
 This is a list of possible inputs to the Simulink block of an OCP solver which can be activated by setting the corresponding values in the acados Simulink options.
@@ -156,12 +156,12 @@ To use the mask command just copy-paste it in the "icon drawing commands" field,
 
 ## Setup CasADi
 To create external function for your problem, we suggest to use `CasADi` from the folder `<acados_root_folder>/external`.
-Depending on the environment you want to use to generate `CasADi` functions from, proceed with the corresponding paragraph (Matlab, Octave).
+Depending on the environment you want to use to generate `CasADi` functions from, proceed with the corresponding paragraph (MATLAB, Octave).
 
 Any CasADi version between 3.4.0 and 3.6.7 should work.
 If you don't have CasADi yet, you can install it as described below.
 
-### **Matlab**
+### **MATLAB**
 Download and extract the `CasADi` binaries into `<acados_root_folder>/external/casadi-matlab`:
 ```
 cd external
