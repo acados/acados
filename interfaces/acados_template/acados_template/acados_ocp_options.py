@@ -599,7 +599,10 @@ class AcadosOcpOptions:
     @property
     def with_anderson_acceleration(self):
         """
-        Decided if Anderson acceleration is performed, superted values: 0, 1
+        Determines if Anderson acceleration is performed.
+        Only supported for globalization == 'FIXED_STEP'.
+
+        Type: bool
         Default: 0
         """
         return self.__with_anderson_acceleration
@@ -1792,10 +1795,9 @@ class AcadosOcpOptions:
 
     @with_anderson_acceleration.setter
     def with_anderson_acceleration(self, with_anderson_acceleration):
-        if with_anderson_acceleration in [0, 1]:
-            self.__with_anderson_acceleration = with_anderson_acceleration
-        else:
-            raise Exception('Invalid with_anderson_acceleration value, must be in [0, 1].')
+        if not isinstance(with_anderson_acceleration, bool):
+            raise Exception('Invalid with_anderson_acceleration value, must be bool.')
+        self.__with_anderson_acceleration = with_anderson_acceleration
 
     @as_rti_level.setter
     def as_rti_level(self, as_rti_level):
