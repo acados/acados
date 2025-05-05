@@ -198,10 +198,14 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
         }
         // store prev qp step
         ocp_qp_out_copy(qp_out, nlp_mem->prev_qp_out);
-        // step norm: TODO, make sure this is done properly!
+        // step norm
         if (nlp_opts->log_primal_step_norm)
         {
             nlp_mem->primal_step_norm[nlp_mem->iter] = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->anderson_step);
+        }
+        if (nlp_opts->log_dual_step_norm)
+        {
+            nlp_mem->dual_step_norm[nlp_mem->iter] = ocp_qp_out_compute_dual_nrm_inf(nlp_mem->anderson_step);
         }
     }
     else
