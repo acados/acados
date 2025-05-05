@@ -1436,7 +1436,7 @@ class AcadosOcp:
         :param p_global_values: numpy array with the same shape as p_global providing initial global parameter values.
         :param W_0, W, W_e: Optional CasADi expressions which should be used instead of the numerical values provided by the cost module, shapes should be (ny_0, ny_0), (ny, ny), (ny_e, ny_e).
         :param yref_0, yref, yref_e: Optional CasADi expressions which should be used instead of the numerical values provided by the cost module, shapes should be (ny_0, 1), (ny, 1), (ny_e, 1).
-        cost_hessian: 'EXACT' or 'GAUSS_NEWTON', determines how the cost hessian is computed.
+        :param cost_hessian: 'EXACT' or 'GAUSS_NEWTON', determines how the cost hessian is computed.
         """
         if cost_hessian not in ['EXACT', 'GAUSS_NEWTON']:
             raise ValueError(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")

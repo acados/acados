@@ -1529,7 +1529,7 @@ class AcadosOcpSolver:
 
         :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'nlp_iter', 'sqp_iter', 'residuals', 'qp_iter', 'alpha']
 
-        Available fileds:
+        Available fields:
             - time_tot: total CPU time previous call
             - time_lin: CPU time for linearization
             - time_sim: CPU time for integrator
@@ -2224,7 +2224,7 @@ class AcadosOcpSolver:
                 'tau_min'
 
         :param value: of type int, float, string, bool
-
+        
             - qp_tol_stat: QP solver tolerance stationarity
             - qp_tol_eq: QP solver tolerance equalities
             - qp_tol_ineq: QP solver tolerance inequalities
