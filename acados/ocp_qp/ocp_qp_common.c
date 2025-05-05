@@ -361,25 +361,40 @@ void ocp_qp_out_axpy(double alpha, ocp_qp_out* x, ocp_qp_out* y, ocp_qp_out* z)
 }
 
 
-double ocp_qp_out_ddot(ocp_qp_out *x, ocp_qp_out *y)
+double ocp_qp_out_ddot(ocp_qp_out *x, ocp_qp_out *y, struct blasfeo_dvec *work_tmp_2ni)
 {
     ocp_qp_dims *dims = x->dim;
     int N = dims->N;
     int *nx = dims->nx;
     int *nu = dims->nu;
+    int *nbx = dims->nbx;
+    int *nbu = dims->nbu;
+    int *ng = dims->ng;
     int *ns = dims->ns;
-    int ni_stage;
+    int tmp_nbg;
     double out = 0.0;
+
     for (int i = 0; i <= N; i++)
     {
-        ni_stage = ocp_qp_dims_get_ni(dims, i);
+        // primal
         out += blasfeo_ddot(nx[i]+nu[i]+2*ns[i], x->ux+i, 0, y->ux+i, 0);
-        out += blasfeo_ddot(2*ni_stage, x->lam+i, 0, y->lam+i, 0);
+        // dual
+        tmp_nbg = nbu[i]+nbx[i]+ng[i];
+        /* setup multipliers as lower - upper bound */
+        // work_tmp_2ni = x.lam_lower - x.lam_upper
+        blasfeo_daxpy(tmp_nbg, -1.0, x->lam+i, tmp_nbg, x->lam+i, 0, work_tmp_2ni, 0);
+        // work_tmp_2ni[nbg:] = y.lam_lower - y.lam_upper
+        blasfeo_daxpy(tmp_nbg, -1.0, y->lam+i, tmp_nbg, y->lam+i, 0, work_tmp_2ni, tmp_nbg);
+        /* compute ddot of split multipliers*/
+        // add dot product
+        out += blasfeo_ddot(tmp_nbg, work_tmp_2ni, 0, work_tmp_2ni, tmp_nbg);
+        // multipliers wrt slack bounds
+        out += blasfeo_ddot(2*ns[i], x->lam+i, 2*tmp_nbg, y->lam+i, 2*tmp_nbg);
+
         if (i < N)
         {
             out += blasfeo_ddot(nx[i+1], x->pi+i, 0, y->pi+i, 0);
         }
-        // out += blasfeo_ddot(2*ni_stage, x->t+i, 0, y->t+i, 0);
     }
     return out;
 }

@@ -185,7 +185,7 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
             // tmp_qp_out = d_{k+1} - d_k: qp_step - prev_qp_out
             ocp_qp_out_axpy(-1.0, nlp_mem->prev_qp_out, qp_out, nlp_work->tmp_qp_out);
             // compute gamma
-            double gamma = ocp_nlp_sqp_compute_anderson_gamma(qp_out, nlp_work->tmp_qp_out);
+            double gamma = ocp_nlp_compute_anderson_gamma(nlp_work, qp_out, nlp_work->tmp_qp_out);
             /* update anderson_step */
             // anderson_step *= -gamma
             ocp_qp_out_sc(-gamma, nlp_mem->anderson_step);

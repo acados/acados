@@ -3160,10 +3160,10 @@ void ocp_nlp_initialize_qp_from_nlp(ocp_nlp_config *config, ocp_nlp_dims *dims, 
 }
 
 
-double ocp_nlp_sqp_compute_anderson_gamma(ocp_qp_out *new_qp_step, ocp_qp_out *new_minus_old_qp_step)
+double ocp_nlp_compute_anderson_gamma(ocp_nlp_workspace *work, ocp_qp_out *new_qp_step, ocp_qp_out *new_minus_old_qp_step)
 {
-    double gamma = ocp_qp_out_ddot(new_qp_step, new_minus_old_qp_step) /
-                        ocp_qp_out_ddot(new_minus_old_qp_step, new_minus_old_qp_step);
+    double gamma = ocp_qp_out_ddot(new_qp_step, new_minus_old_qp_step, &work->tmp_2ni) /
+                        ocp_qp_out_ddot(new_minus_old_qp_step, new_minus_old_qp_step, &work->tmp_2ni);
     return gamma;
 }
 
