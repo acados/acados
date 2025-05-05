@@ -310,6 +310,31 @@ ocp_qp_seed *ocp_qp_seed_assign(ocp_qp_dims *dims, void *raw_memory)
     return qp_seed;
 }
 
+double ocp_qp_out_compute_dual_nrm_inf(ocp_qp_out* qp_out)
+{
+    double res = 0;
+    double res_stage = 0;
+    ocp_qp_dims *dims = qp_out->dim;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+
+    for (int i = 0; i < N; i++)
+    {
+        blasfeo_dvecnrm_inf(nx[i+1], qp_out->pi+i, 0, &res_stage);
+        res = res > res_stage ? res : res_stage;
+    }
+    for (int i = 0; i <= N; i++)
+    {
+        int ni_stage = ocp_qp_dims_get_ni(dims, i);
+        blasfeo_dvecnrm_inf(2*ni_stage, qp_out->lam+i, 0, &res_stage);
+        res = res > res_stage ? res : res_stage;
+    }
+    return res;
+}
+
+
 void ocp_qp_out_copy(ocp_qp_out* from, ocp_qp_out* to)
 {
     d_ocp_qp_sol_copy_all(from, to);
