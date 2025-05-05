@@ -1976,9 +1976,6 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
     // weight_merit_fun
     size += ocp_nlp_out_calculate_size(config, dims);
 
-    // tmp_qp_in
-    size += ocp_qp_in_calculate_size(dims->qp_solver->orig_dims);
-
     // tmp_qp_out
     size += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
 
@@ -2229,10 +2226,6 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     // tmp_nlp_out
     work->tmp_nlp_out = ocp_nlp_out_assign(config, dims, c_ptr);
     c_ptr += ocp_nlp_out_calculate_size(config, dims);
-
-    // tmp qp in
-    work->tmp_qp_in = ocp_qp_in_assign(dims->qp_solver->orig_dims, c_ptr);
-    c_ptr += ocp_qp_in_calculate_size(dims->qp_solver->orig_dims);
 
     // tmp qp out
     work->tmp_qp_out = ocp_qp_out_assign(dims->qp_solver->orig_dims, c_ptr);
@@ -3841,7 +3834,6 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
         exit(1);
     }
 
-    // d_ocp_qp_print(tmp_qp_in->dim, tmp_qp_in);
     // d_ocp_qp_seed_print(qp_seed->dim, qp_seed);
     config->qp_solver->eval_forw_sens(config->qp_solver, dims->qp_solver, mem->qp_in, qp_seed, tmp_qp_out,
                             opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
@@ -3896,7 +3888,7 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
         blasfeo_dveccp(nv[i], sens_nlp_out->ux + i, 0, qp_seed->seed_g + i, 0);
         // NOTE: noone needs sensitivities in adj dir pi, lam, t wrt. p
         // if (i < N)
-        //     blasfeo_dveccp(nx[i + 1], sens_nlp_out->pi + i, 0, tmp_qp_in->b + i, 0);
+        //     blasfeo_dveccp(nx[i + 1], sens_nlp_out->pi + i, 0, qp_seed->b + i, 0);
         // blasfeo_dveccp(2 * ni[i], sens_nlp_out->lam + i, ?);
         // blasfeo_dveccp(2 * ni[i], sens_nlp_out->t + i, ?);
     }
