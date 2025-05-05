@@ -635,7 +635,7 @@ class AcadosOcpSolver:
         - for field `initial_state`, the gradient is the Lagrange multiplier of the initial state constraint.
         The gradient computation consists of adding the Lagrange multipliers corresponding to the upper and lower bound of the initial state.
 
-        - for field `initial_control`, the gradient is the Lagrange multiplier of the initial control constraint. 
+        - for field `initial_control`, the gradient is the Lagrange multiplier of the initial control constraint.
         The gradient computation consists of adding the Lagrange multipliers corresponding to the upper and lower bound of the initial control.
         This requires the OCP to have control bounds with lbu = ubu at the first stage, i.e. the gradient of the state-action value function or Q-function is computed.
 
@@ -720,7 +720,7 @@ class AcadosOcpSolver:
                 -> Dict:
         """
         Evaluate the sensitivity of the current solution x_i, u_i with respect to the initial state or the parameters for all stages i in `stages`.
-        
+
         :param stages: stages for which the sensitivities are returned, int or list of int
         :param with_respect_to: string in ["initial_state", "p_global"]
         :param return_sens_x: Flag indicating whether sensitivities of x should be returned. Default: True.
@@ -2224,7 +2224,7 @@ class AcadosOcpSolver:
                 'tau_min'
 
         :param value: of type int, float, string, bool
-        
+
             - qp_tol_stat: QP solver tolerance stationarity
             - qp_tol_eq: QP solver tolerance equalities
             - qp_tol_ineq: QP solver tolerance inequalities
