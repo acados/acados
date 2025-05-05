@@ -797,7 +797,7 @@ class AcadosModel():
     def u_labels(self):
         """Contains list of labels for the controls. Default: :code:`None`"""
         if self.__u_labels is None:
-            return [f"x{i}" for i in range(self.x.size()[0])]
+            return [f"u{i}" for i in range(self.u.size()[0])]
         else:
             return self.__u_labels
 
