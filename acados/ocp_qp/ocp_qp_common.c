@@ -168,7 +168,7 @@ void ocp_qp_dims_get(void *config_, void *dims, int stage, const char *field, in
 
 static int ocp_qp_dims_get_ni(ocp_qp_dims *dims, int stage)
 {
-    return dims->nbu[stage] + dims->nbx[stage] + dims->ng[stage];
+    return dims->nbu[stage] + dims->nbx[stage] + dims->ng[stage] + dims->ns[stage];
 }
 
 
