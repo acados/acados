@@ -1494,7 +1494,7 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         }
         else if (!strcmp(field, "with_anderson_acceleration"))
         {
-            int* with_anderson_acceleration = (int *) value;
+            bool* with_anderson_acceleration = (bool *) value;
             opts->with_anderson_acceleration = *with_anderson_acceleration;
         }
         else

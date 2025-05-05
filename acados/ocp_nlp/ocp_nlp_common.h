@@ -333,7 +333,7 @@ typedef struct ocp_nlp_opts
 
     bool store_iterates; // flag indicating whether intermediate iterates should be stored
 
-    int with_anderson_acceleration;  // 0-false or 1-true
+    bool with_anderson_acceleration;
 
 } ocp_nlp_opts;
 
