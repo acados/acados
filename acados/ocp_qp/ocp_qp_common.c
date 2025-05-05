@@ -379,7 +379,7 @@ double ocp_qp_out_ddot(ocp_qp_out *x, ocp_qp_out *y)
         {
             out += blasfeo_ddot(nx[i+1], x->pi+i, 0, y->pi+i, 0);
         }
-        out += blasfeo_ddot(2*ni_stage, x->t+i, 0, y->t+i, 0);
+        // out += blasfeo_ddot(2*ni_stage, x->t+i, 0, y->t+i, 0);
     }
     return out;
 }
