@@ -317,8 +317,6 @@ double ocp_qp_out_compute_dual_nrm_inf(ocp_qp_out* qp_out)
     ocp_qp_dims *dims = qp_out->dim;
     int N = dims->N;
     int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *ns = dims->ns;
 
     for (int i = 0; i < N; i++)
     {
