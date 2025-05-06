@@ -110,6 +110,12 @@ function generate_c_code_nonlinear_constr(context, model, target_dir, stage_type
     elseif strcmp(stage_type, 'terminal')
         % NOTE: terminal node has no u, z
         h_e = model.con_h_expr_e;
+        if any(which_depends(h_e, model.u))
+            error('terminal constraints cannot depend on u.');
+        end
+        if any(which_depends(h_e, model.z))
+            error('terminal constraints cannot depend on z.');
+        end
         % multipliers for hessian
         nh_e = length(h_e);
         if isSX

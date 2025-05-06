@@ -30,7 +30,7 @@
 
 function solver = acados_ocp(model, opts, simulink_opts)
 
-    warning('acados_ocp will be deprecated in the future. Use AcadosOcpSolver instead. For more information on the major acados Matlab interface overhaul, see https://github.com/acados/acados/releases/tag/v0.4.0');
+    warning('acados_ocp will be deprecated in the future. Use AcadosOcpSolver instead. For more information on the major acados MATLAB interface overhaul, see https://github.com/acados/acados/releases/tag/v0.4.0');
 
     if nargin < 3
         simulink_opts = get_acados_simulink_opts();

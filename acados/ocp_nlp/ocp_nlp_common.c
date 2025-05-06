@@ -41,6 +41,8 @@
 #include "blasfeo_d_blas.h"
 // hpipm
 #include "hpipm/include/hpipm_d_ocp_qp_dim.h"
+#include "hpipm/include/hpipm_d_ocp_qp_res.h"
+#include "hpipm/include/hpipm_d_ocp_qp_seed.h"
 // acados
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
@@ -1224,6 +1226,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->print_level = 0;
     opts->levenberg_marquardt = 0.0;
     opts->log_primal_step_norm = 0;
+    opts->log_dual_step_norm = 0;
     opts->max_iter = 1;
 
     /* submodules opts */
@@ -1458,6 +1461,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             int* log_primal_step_norm = (int *) value;
             opts->log_primal_step_norm = *log_primal_step_norm;
         }
+        else if (!strcmp(field, "log_dual_step_norm"))
+        {
+            int* log_dual_step_norm = (int *) value;
+            opts->log_dual_step_norm = *log_dual_step_norm;
+        }
         else if (!strcmp(field, "max_iter"))
         {
             int* max_iter = (int *) value;
@@ -1659,6 +1667,16 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
     size += sizeof(struct ocp_nlp_timings);
 
     size += (N+1)*sizeof(bool); // set_sim_guess
+    // primal step norm
+    if (opts->log_primal_step_norm)
+    {
+        size += opts->max_iter*sizeof(double);
+    }
+    // dual step norm
+    if (opts->log_dual_step_norm)
+    {
+        size += opts->max_iter*sizeof(double);
+    }
 
     size += (N+1)*sizeof(struct blasfeo_dmat); // dzduxt
     size += 6*(N+1)*sizeof(struct blasfeo_dvec);  // cost_grad ineq_fun ineq_adj dyn_adj sim_guess z_alg
@@ -1848,6 +1866,20 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     // sim_guess
     assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->sim_guess, &c_ptr);
 
+    // primal step norm
+    if (opts->log_primal_step_norm)
+    {
+        mem->primal_step_norm = (double *) c_ptr;
+        c_ptr += opts->max_iter*sizeof(double);
+    }
+
+    // dual step norm
+    if (opts->log_dual_step_norm)
+    {
+        mem->dual_step_norm = (double *) c_ptr;
+        c_ptr += opts->max_iter*sizeof(double);
+    }
+
     // set_sim_guess
     assign_and_advance_bool(N+1, &mem->set_sim_guess, &c_ptr);
     for (i = 0; i <= N; ++i)
@@ -1963,6 +1995,17 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
 
     // tmp_qp_out
     size += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
+
+    // qp_seed
+    size += ocp_qp_seed_calculate_size(dims->qp_solver->orig_dims);
+
+    if (opts->ext_qp_res)
+    {
+        // qp_res
+        size += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
+        // qp_res_ws
+        size += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
+    }
 
     // blasfeo_dvec
     int nv_max = 0;
@@ -2138,15 +2181,6 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
         }
     }
 
-    if (opts->ext_qp_res)
-    {
-        // qp_res
-        size += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
-
-        // qp_res_ws
-        size += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
-    }
-
     size += 64; // ext_fun_workspace_size align
     size += ext_fun_workspace_size;
 
@@ -2221,6 +2255,20 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     // weight_merit_fun
     work->weight_merit_fun = ocp_nlp_out_assign(config, dims, c_ptr);
     c_ptr += ocp_nlp_out_calculate_size(config, dims);
+
+    // qp seed
+    work->qp_seed = ocp_qp_seed_assign(dims->qp_solver->orig_dims, c_ptr);
+    c_ptr += ocp_qp_seed_calculate_size(dims->qp_solver->orig_dims);
+
+    if (opts->ext_qp_res)
+    {
+        // qp res
+        work->qp_res = ocp_qp_res_assign(dims->qp_solver->orig_dims, c_ptr);
+        c_ptr += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
+        // qp res ws
+        work->qp_res_ws = ocp_qp_res_workspace_assign(dims->qp_solver->orig_dims, c_ptr);
+        c_ptr += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
+    }
 
     assign_and_advance_double(nv_max, &work->tmp_nv_double, &c_ptr);
 
@@ -2389,17 +2437,6 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
             dynamics[i]->set_external_fun_workspaces(dynamics[i], dims->dynamics[i], opts->dynamics[i], nlp_in->dynamics[i], c_ptr);
             c_ptr += dynamics[i]->get_external_fun_workspace_requirement(dynamics[i], dims->dynamics[i], opts->dynamics[i], nlp_in->dynamics[i]);
         }
-    }
-
-    if (opts->ext_qp_res)
-    {
-        // qp res
-        work->qp_res = ocp_qp_res_assign(dims->qp_solver->orig_dims, c_ptr);
-        c_ptr += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
-
-        // qp res ws
-        work->qp_res_ws = ocp_qp_res_workspace_assign(dims->qp_solver->orig_dims, c_ptr);
-        c_ptr += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
     }
 
     assert((char *) work + mem->workspace_size >= c_ptr);
@@ -3415,6 +3452,32 @@ void ocp_nlp_res_get_inf_norm(ocp_nlp_res *res, double *out)
 }
 
 
+double ocp_nlp_compute_delta_dual_norm_inf(ocp_nlp_dims *dims, ocp_nlp_workspace *work, ocp_nlp_out *nlp_out, ocp_qp_out *qp_out)
+{
+    /* computes the inf norm of multipliers in qp_out and nlp_out */
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+    double tmp;
+    double norm = 0.0;
+    // compute delta dual
+    for (int i = 0; i <= N; i++)
+    {
+        blasfeo_daxpy(2*ni[i], -1.0, nlp_out->lam+i, 0, qp_out->lam+i, 0, &work->tmp_2ni, 0);
+        blasfeo_dvecnrm_inf(2*ni[i], &work->tmp_2ni, 0, &tmp);
+        norm = norm > tmp ? norm : tmp;
+        if (i < N)
+        {
+            blasfeo_daxpy(nx[i+1], -1.0, nlp_out->pi+i, 0, qp_out->pi+i, 0, &work->tmp_nv, 0);
+            blasfeo_dvecnrm_inf(nx[i+1], &work->tmp_nv, 0, &tmp);
+            norm = norm > tmp ? norm : tmp;
+        }
+    }
+    return norm;
+}
+
+
+
 void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out *to)
 {
     // extract dims
@@ -3633,31 +3696,31 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
     struct blasfeo_dmat *jac_ineq_p_global = mem->jac_ineq_p_global;
     struct blasfeo_dmat *jac_dyn_p_global = mem->jac_dyn_p_global;
 
-    ocp_qp_in *tmp_qp_in = work->tmp_qp_in;
     ocp_qp_out *tmp_qp_out = work->tmp_qp_out;
-    d_ocp_qp_copy_all(mem->qp_in, tmp_qp_in);
-    d_ocp_qp_set_rhs_zero(tmp_qp_in);
+    ocp_qp_seed *qp_seed = work->qp_seed;
+    d_ocp_qp_seed_set_zero(qp_seed);
 
     if ((!strcmp("ex", field)) && (stage==0))
     {
-        double one = 1.0;
-        d_ocp_qp_set_el("lbx", stage, index, &one, tmp_qp_in);
-        d_ocp_qp_set_el("ubx", stage, index, &one, tmp_qp_in);
+        int tmp_nbu;
+        config->constraints[0]->dims_get(config->constraints[0], dims->constraints[0], "nbu", &tmp_nbu);
+        BLASFEO_DVECEL(qp_seed->seed_d+0, tmp_nbu+index) = 1.0;
+        BLASFEO_DVECEL(qp_seed->seed_d+0, tmp_nbu+index+nb[0]+ng[0]+ni_nl[0]) = 1.0;
     }
     else if (!strcmp("p_global", field))
     {
         for (i = 0; i <= N; i++)
         {
             // stationarity
-            blasfeo_dcolex(nv[i], &jac_lag_stat_p_global[i], 0, index, &tmp_qp_in->rqz[i], 0);
+            blasfeo_dcolex(nv[i], &jac_lag_stat_p_global[i], 0, index, &qp_seed->seed_g[i], 0);
             // dynamics
             if (i < N)
-                blasfeo_dcolex(nx[i+1], &jac_dyn_p_global[i], 0, index, &tmp_qp_in->b[i], 0);
+                blasfeo_dcolex(nx[i+1], &jac_dyn_p_global[i], 0, index, &qp_seed->seed_b[i], 0);
             // inequalities
-            blasfeo_dcolex(ni_nl[i], &jac_ineq_p_global[i], 0, index, &tmp_qp_in->d[i], nb[i]+ng[i]);
-            blasfeo_dvecsc(ni_nl[i], -1.0, &tmp_qp_in->d[i], nb[i]+ng[i]);
-            blasfeo_daxpy(ni_nl[i], -1.0, &tmp_qp_in->d[i], nb[i]+ng[i], &tmp_qp_in->d[i], 2*(nb[i]+ng[i])+ni_nl[i],
-                                                                         &tmp_qp_in->d[i], 2*(nb[i]+ng[i])+ni_nl[i]);
+            blasfeo_dcolex(ni_nl[i], &jac_ineq_p_global[i], 0, index, &qp_seed->seed_d[i], nb[i]+ng[i]);
+            blasfeo_dvecsc(ni_nl[i], -1.0, &qp_seed->seed_d[i], nb[i]+ng[i]);
+            blasfeo_daxpy(ni_nl[i], -1.0, &qp_seed->seed_d[i], nb[i]+ng[i], &qp_seed->seed_d[i], 2*(nb[i]+ng[i])+ni_nl[i],
+                                                                         &qp_seed->seed_d[i], 2*(nb[i]+ng[i])+ni_nl[i]);
         }
     }
     else
@@ -3667,7 +3730,8 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
     }
 
     // d_ocp_qp_print(tmp_qp_in->dim, tmp_qp_in);
-    config->qp_solver->eval_sens(config->qp_solver, dims->qp_solver, tmp_qp_in, tmp_qp_out,
+    // d_ocp_qp_seed_print(qp_seed->dim, qp_seed);
+    config->qp_solver->eval_forw_sens(config->qp_solver, dims->qp_solver, mem->qp_in, qp_seed, tmp_qp_out,
                             opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
     // d_ocp_qp_sol_print(tmp_qp_out->dim, tmp_qp_out);
 
@@ -3710,16 +3774,14 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
     struct blasfeo_dmat *jac_ineq_p_global = mem->jac_ineq_p_global;
     struct blasfeo_dmat *jac_dyn_p_global = mem->jac_dyn_p_global;
 
-    ocp_qp_in *tmp_qp_in = work->tmp_qp_in;
+    ocp_qp_seed *qp_seed = work->qp_seed;
     ocp_qp_out *tmp_qp_out = work->tmp_qp_out;
+    d_ocp_qp_seed_set_zero(qp_seed);
 
-    d_ocp_qp_copy_all(mem->qp_in, tmp_qp_in);
-    d_ocp_qp_set_rhs_zero(tmp_qp_in);
-
-    /* copy sens_nlp_out to tmp_qp_in */
+    /* copy sens_nlp_out to qp_seed */
     for (i = 0; i <= N; i++)
     {
-        blasfeo_dveccp(nv[i], sens_nlp_out->ux + i, 0, tmp_qp_in->rqz + i, 0);
+        blasfeo_dveccp(nv[i], sens_nlp_out->ux + i, 0, qp_seed->seed_g + i, 0);
         // NOTE: noone needs sensitivities in adj dir pi, lam, t wrt. p
         // if (i < N)
         //     blasfeo_dveccp(nx[i + 1], sens_nlp_out->pi + i, 0, tmp_qp_in->b + i, 0);
@@ -3727,7 +3789,7 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
         // blasfeo_dveccp(2 * ni[i], sens_nlp_out->t + i, ?);
     }
 
-    config->qp_solver->eval_adj_sens(config->qp_solver, dims->qp_solver, tmp_qp_in, tmp_qp_out,
+    config->qp_solver->eval_adj_sens(config->qp_solver, dims->qp_solver, mem->qp_in, qp_seed, tmp_qp_out,
                             opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
 
     if (!strcmp("p_global", field))
@@ -4138,6 +4200,38 @@ void ocp_nlp_memory_get(ocp_nlp_config *config, ocp_nlp_memory *nlp_mem, const c
     {
         double *value = return_value_;
         *value = nlp_mem->cost_value;
+    }
+    else if (!strcmp("primal_step_norm", field))
+    {
+        if (nlp_mem->primal_step_norm == NULL)
+        {
+            printf("\nerror: options log_primal_step_norm was not set\n");
+            exit(1);
+        }
+        else
+        {
+            double *value = return_value_;
+            for (int ii=0; ii<nlp_mem->iter; ii++)
+            {
+                value[ii] = nlp_mem->primal_step_norm[ii];
+            }
+        }
+    }
+    else if (!strcmp("dual_step_norm", field))
+    {
+        if (nlp_mem->dual_step_norm == NULL)
+        {
+            printf("\nerror: options log_dual_step_norm was not set\n");
+            exit(1);
+        }
+        else
+        {
+            double *value = return_value_;
+            for (int ii=0; ii<nlp_mem->iter; ii++)
+            {
+                value[ii] = nlp_mem->dual_step_norm[ii];
+            }
+        }
     }
     else
     {

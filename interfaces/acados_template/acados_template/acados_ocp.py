@@ -163,35 +163,16 @@ class AcadosOcp:
     def json_file(self, json_file):
         self.__json_file = json_file
 
-    def make_consistent(self, is_mocp_phase=False) -> None:
-        """
-        Detect dimensions, perform sanity checks
-        """
+
+    def _make_consistent_cost_initial(self):
         dims = self.dims
         cost = self.cost
-        constraints = self.constraints
         model = self.model
         opts = self.solver_options
+        if opts.N_horizon == 0:
+            return
 
-        model.make_consistent(dims)
-        self.name = model.name
-
-        # check if nx != nx_next
-        if not is_mocp_phase and dims.nx != dims.nx_next and opts.N_horizon > 1:
-            raise ValueError('nx_next should be equal to nx if more than one shooting interval is used.')
-
-        # parameters
-        if self.parameter_values.shape[0] != dims.np:
-            raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \
-                f'\nGot np = {dims.np}, self.parameter_values.shape = {self.parameter_values.shape[0]}\n')
-
-        # p_global_values
-        if self.p_global_values.shape[0] != dims.np_global:
-            raise ValueError('inconsistent dimension np_global, regarding model.p_global and p_global_values.' + \
-                f'\nGot np_global = {dims.np_global}, self.p_global_values.shape = {self.p_global_values.shape[0]}\n')
-
-        ## cost
-        # initial stage - if not set, copy fields from path constraints
+        # if not set, copy fields from path constraints
         if cost.cost_type_0 is None:
             self.copy_path_cost_to_stage_0()
 
@@ -259,26 +240,15 @@ class AcadosOcp:
                 if model.cost_expr_ext_cost_custom_hess_0.shape != (dims.nx+dims.nu, dims.nx+dims.nu):
                     raise ValueError('cost_expr_ext_cost_custom_hess_0 should have shape (nx+nu, nx+nu).')
 
-        # GN check
-        gn_warning_0 = (cost.cost_type_0 == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess_0))
-        gn_warning_path = (cost.cost_type == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess))
-        gn_warning_terminal = (cost.cost_type_e == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess_e))
-        if any([gn_warning_0, gn_warning_path, gn_warning_terminal]):
-            external_cost_types = []
-            if gn_warning_0:
-                external_cost_types.append('cost_type_0')
-            if gn_warning_path:
-                external_cost_types.append('cost_type')
-            if gn_warning_terminal:
-                external_cost_types.append('cost_type_e')
-            print("\nWARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not well defined!\n"
-            f"got cost_type EXTERNAL for {', '.join(external_cost_types)}, hessian_approx: 'GAUSS_NEWTON'.\n"
-            "With this setting, acados will proceed computing the exact Hessian for the cost term and no Hessian contribution from constraints and dynamics.\n"
-            "If the external cost is a linear least squares cost, this coincides with the Gauss-Newton Hessian.\n"
-            "Note: There is also the option to use the external cost module with a numerical Hessian approximation (see `ext_cost_num_hess`).\n"
-            "OR the option to provide a symbolic custom Hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n")
 
-        # path
+    def _make_consistent_cost_path(self):
+        dims = self.dims
+        cost = self.cost
+        model = self.model
+        opts = self.solver_options
+        if opts.N_horizon == 0:
+            return
+
         if cost.cost_type == 'AUTO':
             self.detect_cost_type(model, cost, dims, "path")
 
@@ -342,7 +312,14 @@ class AcadosOcp:
             if not is_empty(model.cost_expr_ext_cost_custom_hess):
                 if model.cost_expr_ext_cost_custom_hess.shape != (dims.nx+dims.nu, dims.nx+dims.nu):
                     raise ValueError('cost_expr_ext_cost_custom_hess should have shape (nx+nu, nx+nu).')
-        # terminal
+
+
+    def _make_consistent_cost_terminal(self):
+        dims = self.dims
+        cost = self.cost
+        model = self.model
+        opts = self.solver_options
+
         if cost.cost_type_e == 'AUTO':
             self.detect_cost_type(model, cost, dims, "terminal")
 
@@ -353,26 +330,24 @@ class AcadosOcp:
             if isinstance(cost.W_e, (ca.SX, ca.MX, ca.DM)):
                 raise Exception("W_e should be numpy array, symbolics are only supported before solver creation, to allow reformulating costs, e.g. using translate_cost_to_external_cost().")
 
-        if cost.cost_type_e == 'LINEAR_LS':
             ny_e = cost.W_e.shape[0]
             check_if_square(cost.W_e, 'W_e')
-            if cost.Vx_e.shape[0] != ny_e:
-                raise ValueError('inconsistent dimension ny_e: regarding W_e, cost_y_expr_e.' + \
-                    f'\nGot W_e[{cost.W_e.shape}], Vx_e[{cost.Vx_e.shape}]')
-            if cost.Vx_e.shape[1] != dims.nx and ny_e != 0:
-                raise ValueError('inconsistent dimension: Vx_e should have nx columns.')
-            if cost.yref_e.shape[0] != ny_e:
-                raise ValueError('inconsistent dimension: regarding W_e, yref_e.')
             dims.ny_e = ny_e
 
-        elif cost.cost_type_e == 'NONLINEAR_LS':
-            ny_e = cost.W_e.shape[0]
-            check_if_square(cost.W_e, 'W_e')
-            if (is_empty(model.cost_y_expr_e) and ny_e != 0) or casadi_length(model.cost_y_expr_e) != ny_e or cost.yref_e.shape[0] != ny_e:
-                raise ValueError('inconsistent dimension ny_e: regarding W_e, cost_y_expr.' +
-                                f'\nGot W_e[{cost.W_e.shape}], yref_e[{cost.yref_e.shape}], ',
-                                f'cost_y_expr_e [{casadi_length(model.cost_y_expr_e)}]\n')
-            dims.ny_e = ny_e
+            if cost.cost_type_e == 'LINEAR_LS':
+                if cost.Vx_e.shape[0] != ny_e:
+                    raise ValueError('inconsistent dimension ny_e: regarding W_e, cost_y_expr_e.' + \
+                        f'\nGot W_e[{cost.W_e.shape}], Vx_e[{cost.Vx_e.shape}]')
+                if cost.Vx_e.shape[1] != dims.nx and ny_e != 0:
+                    raise ValueError('inconsistent dimension: Vx_e should have nx columns.')
+                if cost.yref_e.shape[0] != ny_e:
+                    raise ValueError('inconsistent dimension: regarding W_e, yref_e.')
+
+            elif cost.cost_type_e == 'NONLINEAR_LS':
+                if (is_empty(model.cost_y_expr_e) and ny_e != 0) or casadi_length(model.cost_y_expr_e) != ny_e or cost.yref_e.shape[0] != ny_e:
+                    raise ValueError('inconsistent dimension ny_e: regarding W_e, cost_y_expr.' +
+                                    f'\nGot W_e[{cost.W_e.shape}], yref_e[{cost.yref_e.shape}], ',
+                                    f'cost_y_expr_e [{casadi_length(model.cost_y_expr_e)}]\n')
 
         elif cost.cost_type_e == 'CONVEX_OVER_NONLINEAR':
             if is_empty(model.cost_y_expr_e):
@@ -401,18 +376,19 @@ class AcadosOcp:
                 if model.cost_expr_ext_cost_custom_hess_e.shape != (dims.nx, dims.nx):
                     raise ValueError('cost_expr_ext_cost_custom_hess_e should have shape (nx, nx).')
 
-        # cost integration
-        supports_cost_integration = lambda type : type in ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
-        if opts.cost_discretization == 'INTEGRATOR' and \
-            any([not supports_cost_integration(cost) for cost in [cost.cost_type_0, cost.cost_type]]):
-            raise ValueError('cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs.')
 
-        ## constraints
-        # initial
+    def _make_consistent_constraints_initial(self):
+        constraints = self.constraints
+        dims = self.dims
+        model = self.model
+        opts = self.solver_options
+        if opts.N_horizon == 0:
+            return
+
         nbx_0 = constraints.idxbx_0.shape[0]
+        dims.nbx_0 = nbx_0
         if constraints.ubx_0.shape[0] != nbx_0 or constraints.lbx_0.shape[0] != nbx_0:
             raise ValueError('inconsistent dimension nbx_0, regarding idxbx_0, ubx_0, lbx_0.')
-        dims.nbx_0 = nbx_0
         if any(constraints.idxbx_0 >= dims.nx):
             raise ValueError(f'idxbx_0 = {constraints.idxbx_0} contains value >= nx = {dims.nx}.')
 
@@ -426,10 +402,7 @@ class AcadosOcp:
         if any(constraints.idxbxe_0 >= dims.nbx_0):
             raise ValueError(f'idxbxe_0 = {constraints.idxbxe_0} contains value >= nbx_0 = {dims.nbx_0}.')
 
-        if not is_empty(model.con_h_expr_0):
-            nh_0 = casadi_length(model.con_h_expr_0)
-        else:
-            nh_0 = 0
+        nh_0 = 0 if is_empty(model.con_h_expr_0) else casadi_length(model.con_h_expr_0)
 
         if constraints.uh_0.shape[0] != nh_0 or constraints.lh_0.shape[0] != nh_0:
             raise ValueError('inconsistent dimension nh_0, regarding lh_0, uh_0, con_h_expr_0.')
@@ -447,7 +420,15 @@ class AcadosOcp:
             else:
                 dims.nr_0 = casadi_length(model.con_r_expr_0)
 
-        # path
+
+    def _make_consistent_constraints_path(self):
+        constraints = self.constraints
+        dims = self.dims
+        model = self.model
+        opts = self.solver_options
+        if opts.N_horizon == 0:
+            return
+
         nbx = constraints.idxbx.shape[0]
         if constraints.ubx.shape[0] != nbx or constraints.lbx.shape[0] != nbx:
             raise ValueError('inconsistent dimension nbx, regarding idxbx, ubx, lbx.')
@@ -500,7 +481,11 @@ class AcadosOcp:
                 dims.nr = casadi_length(model.con_r_expr)
 
 
-        # terminal
+    def _make_consistent_constraints_terminal(self):
+        dims = self.dims
+        constraints = self.constraints
+        model = self.model
+
         nbx_e = constraints.idxbx_e.shape[0]
         if constraints.ubx_e.shape[0] != nbx_e or constraints.lbx_e.shape[0] != nbx_e:
             raise ValueError('inconsistent dimension nbx_e, regarding idxbx_e, ubx_e, lbx_e.')
@@ -515,10 +500,7 @@ class AcadosOcp:
         else:
             dims.ng_e = ng_e
 
-        if not is_empty(model.con_h_expr_e):
-            nh_e = casadi_length(model.con_h_expr_e)
-        else:
-            nh_e = 0
+        nh_e = 0 if is_empty(model.con_h_expr_e) else casadi_length(model.con_h_expr_e)
 
         if constraints.uh_e.shape[0] != nh_e or constraints.lh_e.shape[0] != nh_e:
             raise ValueError('inconsistent dimension nh_e, regarding lh_e, uh_e, con_h_expr_e.')
@@ -536,7 +518,89 @@ class AcadosOcp:
             else:
                 dims.nr_e = casadi_length(model.con_r_expr_e)
 
-        # Slack dimensions
+
+    def _make_consistent_slacks_initial(self):
+        constraints = self.constraints
+        dims = self.dims
+        opts = self.solver_options
+        cost = self.cost
+        if opts.N_horizon == 0:
+            return
+
+        nh_0 = dims.nh_0
+        nsbu = dims.nsbu
+        nsg = dims.nsg
+        ns = dims.ns
+        nsh_0 = constraints.idxsh_0.shape[0]
+        if nsh_0 > nh_0:
+            raise ValueError(f'inconsistent dimension nsh_0 = {nsh_0}. Is greater than nh_0 = {nh_0}.')
+        if any(constraints.idxsh_0 >= nh_0):
+            raise ValueError(f'idxsh_0 = {constraints.idxsh_0} contains value >= nh_0 = {nh_0}.')
+        if is_empty(constraints.lsh_0):
+            constraints.lsh_0 = np.zeros((nsh_0,))
+        elif constraints.lsh_0.shape[0] != nsh_0:
+            raise ValueError('inconsistent dimension nsh_0, regarding idxsh_0, lsh_0.')
+        if is_empty(constraints.ush_0):
+            constraints.ush_0 = np.zeros((nsh_0,))
+        elif constraints.ush_0.shape[0] != nsh_0:
+            raise ValueError('inconsistent dimension nsh_0, regarding idxsh_0, ush_0.')
+        dims.nsh_0 = nsh_0
+
+        nsphi_0 = constraints.idxsphi_0.shape[0]
+        if nsphi_0 > dims.nphi_0:
+            raise ValueError(f'inconsistent dimension nsphi_0 = {nsphi_0}. Is greater than nphi_0 = {dims.nphi_0}.')
+        if any(constraints.idxsphi_0 >= dims.nphi_0):
+            raise ValueError(f'idxsphi_0 = {constraints.idxsphi_0} contains value >= nphi_0 = {dims.nphi_0}.')
+        if is_empty(constraints.lsphi_0):
+            constraints.lsphi_0 = np.zeros((nsphi_0,))
+        elif constraints.lsphi_0.shape[0] != nsphi_0:
+            raise ValueError('inconsistent dimension nsphi_0, regarding idxsphi_0, lsphi_0.')
+        if is_empty(constraints.usphi_0):
+            constraints.usphi_0 = np.zeros((nsphi_0,))
+        elif constraints.usphi_0.shape[0] != nsphi_0:
+            raise ValueError('inconsistent dimension nsphi_0, regarding idxsphi_0, usphi_0.')
+        dims.nsphi_0 = nsphi_0
+
+        # Note: at stage 0 bounds on x are not slacked!
+        ns_0 = nsbu + nsg + nsphi_0 + nsh_0  # NOTE: nsbx not supported at stage 0
+
+        if cost.zl_0 is None and cost.zu_0 is None and cost.Zl_0 is None and cost.Zu_0 is None:
+            if ns_0 == 0:
+                cost.zl_0 = np.array([])
+                cost.zu_0 = np.array([])
+                cost.Zl_0 = np.array([])
+                cost.Zu_0 = np.array([])
+            elif ns_0 == ns:
+                cost.zl_0 = cost.zl
+                cost.zu_0 = cost.zu
+                cost.Zl_0 = cost.Zl
+                cost.Zu_0 = cost.Zu
+                print("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided.")
+                print("Using entries [zl, zu, Zl, Zu] at initial node for slack penalties.\n")
+            else:
+                raise ValueError("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided and cannot be inferred from other fields.\n")
+
+        for field in ("Zl_0", "Zu_0", "zl_0", "zu_0"):
+            dim = getattr(cost, field).shape[0]
+            if dim != ns_0:
+                raise Exception(f'Inconsistent size for fields {field}, with dimension {dim}, \n\t'\
+                + f'Detected ns_0 = {ns_0} = nsbu + nsg + nsh_0 + nsphi_0.\n\t'\
+                + f'With nsbu = {nsbu}, nsg = {nsg}, nsh_0 = {nsh_0}, nsphi_0 = {nsphi_0}.')
+        dims.ns_0 = ns_0
+
+
+    def _make_consistent_slacks_path(self):
+        constraints = self.constraints
+        dims = self.dims
+        opts = self.solver_options
+        cost = self.cost
+        if opts.N_horizon == 0:
+            return
+
+        nbx = dims.nbx
+        nbu = dims.nbu
+        nh = dims.nh
+        ng = dims.ng
         nsbx = constraints.idxsbx.shape[0]
         if nsbx > nbx:
             raise ValueError(f'inconsistent dimension nsbx = {nsbx}. Is greater than nbx = {nbx}.')
@@ -613,97 +677,23 @@ class AcadosOcp:
         dims.nsg = nsg
 
         ns = nsbx + nsbu + nsh + nsg + nsphi
-        wrong_fields = []
-        if cost.Zl.shape[0] != ns:
-            wrong_fields += ["Zl"]
-            dim = cost.Zl.shape[0]
-        elif cost.Zu.shape[0] != ns:
-            wrong_fields += ["Zu"]
-            dim = cost.Zu.shape[0]
-        elif cost.zl.shape[0] != ns:
-            wrong_fields += ["zl"]
-            dim = cost.zl.shape[0]
-        elif cost.zu.shape[0] != ns:
-            wrong_fields += ["zu"]
-            dim = cost.zu.shape[0]
-
-        if wrong_fields != []:
-            raise ValueError(f'Inconsistent size for fields {", ".join(wrong_fields)}, with dimension {dim}, \n\t'
-                + f'Detected ns = {ns} = nsbx + nsbu + nsg + nsh + nsphi.\n\t'\
-                + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh = {nsh}, nsphi = {nsphi}.')
+        for field in ("Zl", "Zu", "zl", "zu"):
+            dim = getattr(cost, field).shape[0]
+            if dim != ns:
+                raise Exception(f'Inconsistent size for fields {field}, with dimension {dim}, \n\t'\
+                    + f'Detected ns = {ns} = nsbx + nsbu + nsg + nsh + nsphi.\n\t'\
+                    + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh = {nsh}, nsphi = {nsphi}.')
         dims.ns = ns
 
-        # slack dimensions at initial node
-        nsh_0 = constraints.idxsh_0.shape[0]
-        if nsh_0 > nh_0:
-            raise ValueError(f'inconsistent dimension nsh_0 = {nsh_0}. Is greater than nh_0 = {nh_0}.')
-        if any(constraints.idxsh_0 >= nh_0):
-            raise ValueError(f'idxsh_0 = {constraints.idxsh_0} contains value >= nh_0 = {nh_0}.')
-        if is_empty(constraints.lsh_0):
-            constraints.lsh_0 = np.zeros((nsh_0,))
-        elif constraints.lsh_0.shape[0] != nsh_0:
-            raise ValueError('inconsistent dimension nsh_0, regarding idxsh_0, lsh_0.')
-        if is_empty(constraints.ush_0):
-            constraints.ush_0 = np.zeros((nsh_0,))
-        elif constraints.ush_0.shape[0] != nsh_0:
-            raise ValueError('inconsistent dimension nsh_0, regarding idxsh_0, ush_0.')
-        dims.nsh_0 = nsh_0
 
-        nsphi_0 = constraints.idxsphi_0.shape[0]
-        if nsphi_0 > dims.nphi_0:
-            raise ValueError(f'inconsistent dimension nsphi_0 = {nsphi_0}. Is greater than nphi_0 = {dims.nphi_0}.')
-        if any(constraints.idxsphi_0 >= dims.nphi_0):
-            raise ValueError(f'idxsphi_0 = {constraints.idxsphi_0} contains value >= nphi_0 = {dims.nphi_0}.')
-        if is_empty(constraints.lsphi_0):
-            constraints.lsphi_0 = np.zeros((nsphi_0,))
-        elif constraints.lsphi_0.shape[0] != nsphi_0:
-            raise ValueError('inconsistent dimension nsphi_0, regarding idxsphi_0, lsphi_0.')
-        if is_empty(constraints.usphi_0):
-            constraints.usphi_0 = np.zeros((nsphi_0,))
-        elif constraints.usphi_0.shape[0] != nsphi_0:
-            raise ValueError('inconsistent dimension nsphi_0, regarding idxsphi_0, usphi_0.')
-        dims.nsphi_0 = nsphi_0
+    def _make_consistent_slacks_terminal(self):
+        constraints = self.constraints
+        dims = self.dims
+        cost = self.cost
 
-        # Note: at stage 0 bounds on x are not slacked!
-        ns_0 = nsbu + nsg + nsphi_0 + nsh_0  # NOTE: nsbx not supported at stage 0
-
-        if cost.zl_0 is None and cost.zu_0 is None and cost.Zl_0 is None and cost.Zu_0 is None:
-            if ns_0 == 0:
-                cost.zl_0 = np.array([])
-                cost.zu_0 = np.array([])
-                cost.Zl_0 = np.array([])
-                cost.Zu_0 = np.array([])
-            elif ns_0 == ns:
-                cost.zl_0 = cost.zl
-                cost.zu_0 = cost.zu
-                cost.Zl_0 = cost.Zl
-                cost.Zu_0 = cost.Zu
-                print("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided.")
-                print("Using entries [zl, zu, Zl, Zu] at intial node for slack penalties.\n")
-            else:
-                raise ValueError("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided and cannot be inferred from other fields.\n")
-
-        wrong_fields = []
-        if cost.Zl_0.shape[0] != ns_0:
-            wrong_fields += ["Zl_0"]
-            dim = cost.Zl_0.shape[0]
-        elif cost.Zu_0.shape[0] != ns_0:
-            wrong_fields += ["Zu_0"]
-            dim = cost.Zu_0.shape[0]
-        elif cost.zl_0.shape[0] != ns_0:
-            wrong_fields += ["zl_0"]
-            dim = cost.zl_0.shape[0]
-        elif cost.zu_0.shape[0] != ns_0:
-            wrong_fields += ["zu_0"]
-            dim = cost.zu_0.shape[0]
-
-        if wrong_fields != []:
-            raise ValueError(f'Inconsistent size for fields {", ".join(wrong_fields)}, with dimension {dim}, \n\t'
-                + f'Detected ns_0 = {ns_0} = nsbu + nsg + nsh_0 + nsphi_0.\n\t'\
-                + f'With nsbu = {nsbu}, nsg = {nsg}, nsh_0 = {nsh_0}, nsphi_0 = {nsphi_0}.')
-        dims.ns_0 = ns_0
-
-        # slacks at terminal node
+        nbx_e = dims.nbx_e
+        nh_e = dims.nh_e
+        ng_e = dims.ng_e
         nsbx_e = constraints.idxsbx_e.shape[0]
         if nsbx_e > nbx_e:
             raise ValueError(f'inconsistent dimension nsbx_e = {nsbx_e}. Is greater than nbx_e = {nbx_e}.')
@@ -766,45 +756,22 @@ class AcadosOcp:
 
         # terminal
         ns_e = nsbx_e + nsh_e + nsg_e + nsphi_e
-        wrong_field = ""
-        if cost.Zl_e.shape[0] != ns_e:
-            wrong_field = "Zl_e"
-            dim = cost.Zl_e.shape[0]
-        elif cost.Zu_e.shape[0] != ns_e:
-            wrong_field = "Zu_e"
-            dim = cost.Zu_e.shape[0]
-        elif cost.zl_e.shape[0] != ns_e:
-            wrong_field = "zl_e"
-            dim = cost.zl_e.shape[0]
-        elif cost.zu_e.shape[0] != ns_e:
-            wrong_field = "zu_e"
-            dim = cost.zu_e.shape[0]
-
-        if wrong_field != "":
-            raise ValueError(f'Inconsistent size for field {wrong_field}, with dimension {dim}, \n\t'
+        for field in ("Zl_e", "Zu_e", "zl_e", "zu_e"):
+            dim = getattr(cost, field).shape[0]
+            if dim != ns_e:
+                raise Exception(f'Inconsistent size for fields {field}, with dimension {dim}, \n\t'\
                 + f'Detected ns_e = {ns_e} = nsbx_e + nsg_e + nsh_e + nsphi_e.\n\t'\
                 + f'With nsbx_e = {nsbx_e}, nsg_e = {nsg_e}, nsh_e = {nsh_e}, nsphi_e = {nsphi_e}.')
 
         dims.ns_e = ns_e
 
-        # check for ACADOS_INFTY
-        if opts.qp_solver not in ["PARTIAL_CONDENSING_HPIPM", "FULL_CONDENSING_HPIPM", "FULL_CONDENSING_DAQP"]:
-            # loop over all bound vectors
-            for field in ['lbx_0', 'ubx_0', 'lbx', 'ubx', 'lbx_e', 'ubx_e', 'lg', 'ug', 'lg_e', 'ug_e', 'lh', 'uh', 'lh_e', 'uh_e', 'lbu', 'ubu', 'lphi', 'uphi', 'lphi_e', 'uphi_e']:
-                bound = getattr(constraints, field)
-                if any(bound >= ACADOS_INFTY) or any(bound <= -ACADOS_INFTY):
-                    raise ValueError(f"Field {field} contains values outside the interval (-ACADOS_INFTY, ACADOS_INFTY) with ACADOS_INFTY = {ACADOS_INFTY:.2e}. One-sided constraints are not supported by the chosen QP solver {opts.qp_solver}.")
 
-        # discretization
-        if opts.N_horizon is None and dims.N is None:
-            raise ValueError('N_horizon not provided.')
-        elif opts.N_horizon is None and dims.N is not None:
-            opts.N_horizon = dims.N
-            print("field AcadosOcpDims.N has been migrated to AcadosOcpOptions.N_horizon. setting AcadosOcpOptions.N_horizon = N. For future comppatibility, please use AcadosOcpOptions.N_horizon directly.")
-        elif opts.N_horizon is not None and dims.N is not None and opts.N_horizon != dims.N:
-            raise ValueError(f'Inconsistent dimension N, regarding N = {dims.N}, N_horizon = {opts.N_horizon}.')
-        else:
-            dims.N = opts.N_horizon
+    def _make_consistent_discretization(self):
+        opts = self.solver_options
+        if opts.N_horizon == 0:
+            opts.shooting_nodes = np.array([0.])
+            opts.time_steps = np.array([])
+            return
 
         if not isinstance(opts.tf, (float, int)):
             raise TypeError(f'Time horizon tf should be float provided, got tf = {opts.tf}.')
@@ -841,11 +808,11 @@ class AcadosOcp:
             raise ValueError(f'Inconsistent discretization: {opts.tf}'
                 f' = tf != sum(opts.time_steps) = {tf}.')
 
-        # cost scaling
-        if opts.cost_scaling is None:
-            opts.cost_scaling = np.append(opts.time_steps, 1.0)
-        if opts.cost_scaling.shape[0] != opts.N_horizon + 1:
-            raise ValueError(f'cost_scaling should be of length N+1 = {opts.N_horizon+1}, got {opts.cost_scaling.shape[0]}.')
+
+    def _make_consistent_simulation(self):
+        opts = self.solver_options
+        if opts.N_horizon == 0:
+            return
 
         # set integrator time automatically
         opts.Tsim = opts.time_steps[0]
@@ -886,53 +853,168 @@ class AcadosOcp:
         else:
             raise ValueError("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
 
+
+    def make_consistent(self, is_mocp_phase: bool=False, verbose: bool=True) -> None:
+        """
+        Detect dimensions, perform sanity checks
+        """
+        dims = self.dims
+        cost = self.cost
+        constraints = self.constraints
+        model = self.model
+        opts = self.solver_options
+
+        model.make_consistent(dims)
+        self.name = model.name
+
+        if opts.N_horizon is None and dims.N is None:
+            raise ValueError('N_horizon not provided.')
+        elif opts.N_horizon is None and dims.N is not None:
+            opts.N_horizon = dims.N
+            print("field AcadosOcpDims.N has been migrated to AcadosOcpOptions.N_horizon. setting AcadosOcpOptions.N_horizon = N. For future comppatibility, please use AcadosOcpOptions.N_horizon directly.")
+        elif opts.N_horizon is not None and dims.N is not None and opts.N_horizon != dims.N:
+            raise ValueError(f'Inconsistent dimension N, regarding N = {dims.N}, N_horizon = {opts.N_horizon}.')
+        else:
+            dims.N = opts.N_horizon
+
+        # check if nx != nx_next
+        if not is_mocp_phase and dims.nx != dims.nx_next and opts.N_horizon > 1:
+            raise ValueError('nx_next should be equal to nx if more than one shooting interval is used.')
+
+        # parameters
+        if self.parameter_values.shape[0] != dims.np:
+            raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \
+                f'\nGot np = {dims.np}, self.parameter_values.shape = {self.parameter_values.shape[0]}\n')
+
+        # p_global_values
+        if self.p_global_values.shape[0] != dims.np_global:
+            raise ValueError('inconsistent dimension np_global, regarding model.p_global and p_global_values.' + \
+                f'\nGot np_global = {dims.np_global}, self.p_global_values.shape = {self.p_global_values.shape[0]}\n')
+
+        ## cost
+        self._make_consistent_cost_initial()
+        self._make_consistent_cost_path()
+        self._make_consistent_cost_terminal()
+
+        # GN check
+        if verbose:
+            gn_warning_0 = (opts.N_horizon > 0 and cost.cost_type_0 == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess_0))
+            gn_warning_path = (opts.N_horizon > 0 and cost.cost_type == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess))
+            gn_warning_terminal = (cost.cost_type_e == 'EXTERNAL' and opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and is_empty(model.cost_expr_ext_cost_custom_hess_e))
+            if any([gn_warning_0, gn_warning_path, gn_warning_terminal]):
+                external_cost_types = []
+                if gn_warning_0:
+                    external_cost_types.append('cost_type_0')
+                if gn_warning_path:
+                    external_cost_types.append('cost_type')
+                if gn_warning_terminal:
+                    external_cost_types.append('cost_type_e')
+                print("\nWARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not well defined!\n"
+                f"got cost_type EXTERNAL for {', '.join(external_cost_types)}, hessian_approx: 'GAUSS_NEWTON'.\n"
+                "With this setting, acados will proceed computing the exact Hessian for the cost term and no Hessian contribution from constraints and dynamics.\n"
+                "If the external cost is a linear least squares cost, this coincides with the Gauss-Newton Hessian.\n"
+                "Note: There is also the option to use the external cost module with a numerical Hessian approximation (see `ext_cost_num_hess`).\n"
+                "OR the option to provide a symbolic custom Hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n")
+
+        # cost integration
+        if opts.N_horizon > 0:
+            supports_cost_integration = lambda type : type in ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
+            if opts.cost_discretization == 'INTEGRATOR' and \
+                any([not supports_cost_integration(cost) for cost in [cost.cost_type_0, cost.cost_type]]):
+                raise ValueError('cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs.')
+
+        ## constraints
+        self._make_consistent_constraints_initial()
+        self._make_consistent_constraints_path()
+        self._make_consistent_constraints_terminal()
+
+        self._make_consistent_slacks_path()
+        self._make_consistent_slacks_initial()
+        self._make_consistent_slacks_terminal()
+
+        # check for ACADOS_INFTY
+        if opts.qp_solver not in ["PARTIAL_CONDENSING_HPIPM", "FULL_CONDENSING_HPIPM", "FULL_CONDENSING_DAQP"]:
+            # loop over all bound vectors
+            if opts.N_horizon > 0:
+                fields_to_check = ['lbx_0', 'ubx_0', 'lbx', 'ubx', 'lbx_e', 'ubx_e', 'lg', 'ug', 'lg_e', 'ug_e', 'lh', 'uh', 'lh_e', 'uh_e', 'lbu', 'ubu', 'lphi', 'uphi', 'lphi_e', 'uphi_e']
+            else:
+                fields_to_check = ['lbx_0', 'ubx_0', 'lbx_e', 'ubx_e', 'lg_e', 'ug_e', 'lh_e', 'uh_e''lphi_e', 'uphi_e']
+            for field in fields_to_check:
+                bound = getattr(constraints, field)
+                if any(bound >= ACADOS_INFTY) or any(bound <= -ACADOS_INFTY):
+                    raise ValueError(f"Field {field} contains values outside the interval (-ACADOS_INFTY, ACADOS_INFTY) with ACADOS_INFTY = {ACADOS_INFTY:.2e}. One-sided constraints are not supported by the chosen QP solver {opts.qp_solver}.")
+
+        self._make_consistent_discretization()
+
+        # cost scaling
+        if opts.cost_scaling is None:
+            opts.cost_scaling = np.append(opts.time_steps, 1.0)
+        if opts.cost_scaling.shape[0] != opts.N_horizon + 1:
+            raise ValueError(f'cost_scaling should be of length N+1 = {opts.N_horizon+1}, got {opts.cost_scaling.shape[0]}.')
+
+        self._make_consistent_simulation()
+
+        if opts.qp_solver == 'PARTIAL_CONDENSING_QPDUNES':
+            self.remove_x0_elimination()
+
         # fixed hessian
         if opts.fixed_hess:
             if opts.hessian_approx == 'EXACT':
                 raise ValueError('fixed_hess is not compatible with hessian_approx == EXACT.')
-            if cost.cost_type != "LINEAR_LS":
+            if cost.cost_type != "LINEAR_LS" and opts.N_horizon > 0:
                 raise ValueError('fixed_hess is only compatible LINEAR_LS cost_type.')
-            if cost.cost_type_0 != "LINEAR_LS":
+            if cost.cost_type_0 != "LINEAR_LS" and opts.N_horizon > 0:
                 raise ValueError('fixed_hess is only compatible LINEAR_LS cost_type_0.')
             if cost.cost_type_e != "LINEAR_LS":
                 raise ValueError('fixed_hess is only compatible LINEAR_LS cost_type_e.')
 
         # solution sensitivities
-        bgp_type_constraint_pairs = [
-            ("path", model.con_phi_expr), ("initial", model.con_phi_expr_0), ("terminal", model.con_phi_expr_e),
-            ("path", model.con_r_expr), ("initial", model.con_r_expr_0), ("terminal", model.con_r_expr_e)
-        ]
-        bgh_type_constraint_pairs = [
-            ("path", model.con_h_expr), ("initial", model.con_h_expr_0), ("terminal", model.con_h_expr_e),
-        ]
+        if opts.N_horizon > 0:
+            bgp_type_constraint_pairs = [
+                ("path", model.con_phi_expr), ("initial", model.con_phi_expr_0), ("terminal", model.con_phi_expr_e),
+                ("path", model.con_r_expr), ("initial", model.con_r_expr_0), ("terminal", model.con_r_expr_e)
+            ]
+            cost_types_to_check = [cost.cost_type, cost.cost_type_0, cost.cost_type_e]
+            suffix = f", got cost_types {cost.cost_type_0, cost.cost_type, cost.cost_type_e}."
+        else:
+            bgp_type_constraint_pairs = [
+                ("terminal", model.con_phi_expr_e), ("terminal", model.con_r_expr_e)
+            ]
+            cost_types_to_check = [cost.cost_type_e]
+            suffix = f", got cost_type_e {cost.cost_type_e}."
 
         if opts.with_solution_sens_wrt_params:
             if dims.np_global == 0:
                 raise ValueError('with_solution_sens_wrt_params is only compatible if global parameters `p_global` are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got emty p_global.')
-            if any([cost_type not in ["EXTERNAL", "LINEAR_LS"] for cost_type in [cost.cost_type, cost.cost_type_0, cost.cost_type_e]]):
-                raise ValueError(f'with_solution_sens_wrt_params is only compatible with EXTERNAL and LINEAR_LS cost_type, got cost_types {cost.cost_type_0, cost.cost_type, cost.cost_type_e}.')
-            if opts.integrator_type != "DISCRETE":
+            if any([cost_type not in ["EXTERNAL", "LINEAR_LS"] for cost_type in cost_types_to_check]):
+                raise ValueError('with_solution_sens_wrt_params is only compatible with EXTERNAL and LINEAR_LS cost_type' + suffix)
+            if opts.N_horizon > 0 and opts.integrator_type != "DISCRETE":
                 raise NotImplementedError('with_solution_sens_wrt_params is only compatible with DISCRETE dynamics.')
             for horizon_type, constraint in bgp_type_constraint_pairs:
                 if constraint is not None and any(ca.which_depends(constraint, model.p_global)):
                     raise NotImplementedError(f"with_solution_sens_wrt_params is not supported for BGP constraints that depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
+            if opts.qp_solver_cond_N != opts.N_horizon or opts.qp_solver.startswith("FULL_CONDENSING"):
+                if opts.qp_solver_cond_ric_alg != 0:
+                    print("Warning: Parametric sensitivities with condensing should be used with qp_solver_cond_ric_alg=0, as otherwise the full space Hessian needs to be factorized and the algorithm cannot handle indefinite ones.")
 
         if opts.with_value_sens_wrt_params:
             if dims.np_global == 0:
                 raise ValueError('with_value_sens_wrt_params is only compatible if global parameters `p_global` are provided. Sensitivities wrt parameters have been refactored to use p_global instead of p in https://github.com/acados/acados/pull/1316. Got emty p_global.')
-            if any([cost_type not in ["EXTERNAL", "LINEAR_LS"] for cost_type in [cost.cost_type, cost.cost_type_0, cost.cost_type_e]]):
-                raise ValueError('with_value_sens_wrt_params is only compatible with EXTERNAL cost_type.')
-            if opts.integrator_type != "DISCRETE":
+            if any([cost_type not in ["EXTERNAL", "LINEAR_LS"] for cost_type in cost_types_to_check]):
+                raise ValueError('with_value_sens_wrt_params is only compatible with EXTERNAL cost_type' + suffix)
+            if opts.N_horizon > 0 and opts.integrator_type != "DISCRETE":
                 raise NotImplementedError('with_value_sens_wrt_params is only compatible with DISCRETE dynamics.')
             for horizon_type, constraint in bgp_type_constraint_pairs:
                 if constraint is not None and any(ca.which_depends(constraint, model.p_global)):
                     raise NotImplementedError(f"with_value_sens_wrt_params is not supported for BGP constraints that depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
 
+        if opts.tau_min > 0 and "HPIPM" not in opts.qp_solver:
+            raise ValueError('tau_min > 0 is only compatible with HPIPM.')
+
         if opts.qp_solver_cond_N is None:
             opts.qp_solver_cond_N = opts.N_horizon
-
-        if opts.tau_min > 0 and not "HPIPM" in opts.qp_solver:
-            raise ValueError('tau_min > 0 is only compatible with HPIPM.')
+        if opts.qp_solver_cond_N > opts.N_horizon:
+            raise ValueError("qp_solver_cond_N > N_horizon is not supported.")
 
         if opts.qp_solver_cond_block_size is not None:
             if sum(opts.qp_solver_cond_block_size) != opts.N_horizon:
@@ -941,6 +1023,8 @@ class AcadosOcp:
                 raise ValueError(f'qp_solver_cond_block_size = {opts.qp_solver_cond_block_size} should have length qp_solver_cond_N+1 = {opts.qp_solver_cond_N+1}.')
 
         if opts.nlp_solver_type == "DDP":
+            if opts.N_horizon == 0:
+                raise ValueError("DDP solver only supported for N_horizon > 0.")
             if opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon:
                 raise ValueError(f'DDP solver only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N, got qp solver {opts.qp_solver} and qp_solver_cond_N {opts.qp_solver_cond_N}, N {opts.N_horizon}.')
             if any([dims.nbu, dims.nbx, dims.ng, dims.nh, dims.nphi]):
@@ -949,6 +1033,7 @@ class AcadosOcp:
                 raise ValueError('DDP only supports initial state constraints, got terminal constraints.')
 
         ddp_with_merit_or_funnel = opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' or (opts.nlp_solver_type == "DDP" and opts.globalization == 'MERIT_BACKTRACKING')
+
         # Set default parameters for globalization
         if opts.globalization_alpha_min is None:
             if ddp_with_merit_or_funnel:
@@ -981,7 +1066,7 @@ class AcadosOcp:
                 opts.globalization_full_step_dual = 0
 
         # AS-RTI
-        if opts.as_rti_level in [1, 2] and any([cost.cost_type.endswith('LINEAR_LS'), cost.cost_type_0.endswith('LINEAR_LS'), cost.cost_type_e.endswith('LINEAR_LS')]):
+        if opts.as_rti_level in [1, 2] and any([cost_type.endswith("LINEAR_LS") for cost_type in cost_types_to_check]):
             raise NotImplementedError('as_rti_level in [1, 2] not supported for LINEAR_LS and NONLINEAR_LS cost type.')
 
         # sanity check for Funnel globalization and SQP
@@ -989,7 +1074,7 @@ class AcadosOcp:
             raise NotImplementedError('FUNNEL_L1PEN_LINESEARCH only supports SQP.')
 
         # termination
-        if opts.nlp_solver_tol_min_step_norm == None:
+        if opts.nlp_solver_tol_min_step_norm is None:
             if ddp_with_merit_or_funnel:
                 opts.nlp_solver_tol_min_step_norm = 1e-12
             else:
@@ -997,6 +1082,8 @@ class AcadosOcp:
 
         # zoRO
         if self.zoro_description is not None:
+            if opts.N_horizon == 0:
+                raise ValueError('zoRO only supported for N_horizon > 0.')
             if not isinstance(self.zoro_description, ZoroDescription):
                 raise TypeError('zoro_description should be of type ZoroDescription or None')
             else:
@@ -1005,17 +1092,28 @@ class AcadosOcp:
         # nlp_solver_warm_start_first_qp_from_nlp
         if opts.nlp_solver_warm_start_first_qp_from_nlp and (opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon):
             raise NotImplementedError('nlp_solver_warm_start_first_qp_from_nlp only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N.')
+
+        # check terminal stage
+        for field in ('cost_expr_ext_cost_e', 'cost_expr_ext_cost_custom_hess_e',
+                      'cost_y_expr_e', 'cost_psi_expr_e', 'cost_conl_custom_outer_hess_e',
+                      'con_h_expr_e', 'con_phi_expr_e', 'con_r_expr_e',):
+            val = getattr(model, field)
+            if not is_empty(val) and (ca.depends_on(val, model.u) or ca.depends_on(val, model.z)):
+                raise ValueError(f'{field} can not depend on u or z.')
+
         return
 
 
     def _get_external_function_header_templates(self, ) -> list:
         dims = self.dims
         name = self.model.name
+        opts = self.solver_options
         template_list = []
 
         # dynamics
-        model_dir = os.path.join(self.code_export_directory, f'{name}_model')
-        template_list.append(('model.in.h', f'{name}_model.h', model_dir))
+        if opts.N_horizon > 0:
+            model_dir = os.path.join(self.code_export_directory, f'{name}_model')
+            template_list.append(('model.in.h', f'{name}_model.h', model_dir))
         # constraints
         if any(np.array([dims.nh, dims.nh_e, dims.nh_0, dims.nphi, dims.nphi_e, dims.nphi_0]) > 0):
             constraints_dir = os.path.join(self.code_export_directory, f'{name}_constraints')
@@ -1036,6 +1134,7 @@ class AcadosOcp:
         (input_filename, output_filname, output_directory)
         """
         name = self.model.name
+        opts = self.solver_options
         template_list = []
 
         template_list.append(('main.in.c', f'main_{name}.c'))
@@ -1048,7 +1147,7 @@ class AcadosOcp:
             template_list.append(('Makefile.in', 'Makefile'))
 
         # sim
-        if self.solver_options.integrator_type != 'DISCRETE':
+        if opts.N_horizon > 0 and self.solver_options.integrator_type != 'DISCRETE':
             template_list.append(('acados_sim_solver.in.c', f'acados_sim_solver_{name}.c'))
             template_list.append(('acados_sim_solver.in.h', f'acados_sim_solver_{name}.h'))
             template_list.append(('main_sim.in.c', f'main_sim_{name}.c'))
@@ -1156,6 +1255,50 @@ class AcadosOcp:
 
         model = self.model
         constraints = self.constraints
+        opts = self.solver_options
+
+        check_casadi_version()
+        self._setup_code_generation_context_dynamics(context)
+
+        if opts.N_horizon > 0:
+            if ignore_initial and ignore_terminal:
+                stage_type_indices = [1]
+            elif ignore_initial:
+                stage_type_indices = [1, 2]
+            elif ignore_terminal:
+                stage_type_indices = [0, 1]
+            else:
+                stage_type_indices = [0, 1, 2]
+        else:
+            stage_type_indices = [2]
+
+        stage_types = [val for i, val in enumerate(['initial', 'path', 'terminal']) if i in stage_type_indices]
+        nhs = [val for i, val in enumerate(['nh_0', 'nh', 'nh_e']) if i in stage_type_indices]
+        nphis = [val for i, val in enumerate(['nphi_0', 'nphi', 'nphi_e']) if i in stage_type_indices]
+        cost_types = [val for i, val in enumerate(['cost_type_0', 'cost_type', 'cost_type_e']) if i in stage_type_indices]
+
+        for attr_nh, attr_nphi, stage_type in zip(nhs, nphis, stage_types):
+            if getattr(self.dims, attr_nh) > 0 or getattr(self.dims, attr_nphi) > 0:
+                generate_c_code_constraint(context, model, constraints, stage_type)
+
+        for attr, stage_type in zip(cost_types, stage_types):
+            if getattr(self.cost, attr) == 'NONLINEAR_LS':
+                generate_c_code_nls_cost(context, model, stage_type)
+            elif getattr(self.cost, attr) == 'CONVEX_OVER_NONLINEAR':
+                generate_c_code_conl_cost(context, model, stage_type)
+            elif getattr(self.cost, attr) == 'EXTERNAL':
+                generate_c_code_external_cost(context, model, stage_type)
+            # TODO: generic
+
+        return context
+
+
+    def _setup_code_generation_context_dynamics(self, context: GenerateContext):
+        opts = self.solver_options
+        model = self.model
+
+        if opts.N_horizon == 0:
+            return
 
         code_gen_opts = context.opts
 
@@ -1164,7 +1307,6 @@ class AcadosOcp:
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
 
-        check_casadi_version()
         if self.model.dyn_ext_fun_type == 'casadi':
             if self.solver_options.integrator_type == 'ERK':
                 generate_c_code_explicit_ode(context, model, model_dir)
@@ -1186,34 +1328,6 @@ class AcadosOcp:
             shutil.copyfile(model.dyn_generic_source, target_location)
             context.add_external_function_file(model.dyn_generic_source, target_dir)
 
-        if ignore_initial and ignore_terminal:
-            stage_type_indices = [1]
-        elif ignore_initial:
-            stage_type_indices = [1, 2]
-        elif ignore_terminal:
-            stage_type_indices = [0, 1]
-        else:
-            stage_type_indices = [0, 1, 2]
-
-        stage_types = [val for i, val in enumerate(['initial', 'path', 'terminal']) if i in stage_type_indices]
-        nhs = [val for i, val in enumerate(['nh_0', 'nh', 'nh_e']) if i in stage_type_indices]
-        nphis = [val for i, val in enumerate(['nphi_0', 'nphi', 'nphi_e']) if i in stage_type_indices]
-        cost_types = [val for i, val in enumerate(['cost_type_0', 'cost_type', 'cost_type_e']) if i in stage_type_indices]
-
-        for attr_nh, attr_nphi, stage_type in zip(nhs, nphis, stage_types):
-            if getattr(self.dims, attr_nh) > 0 or getattr(self.dims, attr_nphi) > 0:
-                generate_c_code_constraint(context, model, constraints, stage_type)
-
-        for attr, stage_type in zip(cost_types, stage_types):
-            if getattr(self.cost, attr) == 'NONLINEAR_LS':
-                generate_c_code_nls_cost(context, model, stage_type)
-            elif getattr(self.cost, attr) == 'CONVEX_OVER_NONLINEAR':
-                generate_c_code_conl_cost(context, model, stage_type)
-            elif getattr(self.cost, attr) == 'EXTERNAL':
-                generate_c_code_external_cost(context, model, stage_type)
-            # TODO: generic
-
-        return context
 
     def remove_x0_elimination(self) -> None:
         """Remove the elimination of x0 from the constraints, bounds on x0 are handled as general bounds on x."""
@@ -1322,7 +1436,7 @@ class AcadosOcp:
         :param p_global_values: numpy array with the same shape as p_global providing initial global parameter values.
         :param W_0, W, W_e: Optional CasADi expressions which should be used instead of the numerical values provided by the cost module, shapes should be (ny_0, ny_0), (ny, ny), (ny_e, ny_e).
         :param yref_0, yref, yref_e: Optional CasADi expressions which should be used instead of the numerical values provided by the cost module, shapes should be (ny_0, 1), (ny, 1), (ny_e, 1).
-        cost_hessian: 'EXACT' or 'GAUSS_NEWTON', determines how the cost hessian is computed.
+        :param cost_hessian: 'EXACT' or 'GAUSS_NEWTON', determines how the cost hessian is computed.
         """
         if cost_hessian not in ['EXACT', 'GAUSS_NEWTON']:
             raise ValueError(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
@@ -1356,12 +1470,12 @@ class AcadosOcp:
             self.model.p_global = ca.vertcat(self.model.p_global, p_global)
             self.p_global_values = np.concatenate((self.p_global_values, p_global_values))
 
-        self.translate_intial_cost_term_to_external(yref_0, W_0, cost_hessian)
+        self.translate_initial_cost_term_to_external(yref_0, W_0, cost_hessian)
         self.translate_intermediate_cost_term_to_external(yref, W, cost_hessian)
         self.translate_terminal_cost_term_to_external(yref_e, W_e, cost_hessian)
 
 
-    def translate_intial_cost_term_to_external(self, yref_0: Optional[Union[ca.SX, ca.MX]] = None, W_0: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
+    def translate_initial_cost_term_to_external(self, yref_0: Optional[Union[ca.SX, ca.MX]] = None, W_0: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
 
         if cost_hessian not in ['EXACT', 'GAUSS_NEWTON']:
             raise Exception(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")

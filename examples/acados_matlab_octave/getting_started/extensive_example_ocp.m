@@ -83,6 +83,8 @@ ocp.solver_options.exact_hess_cost = 1;
 ocp.solver_options.exact_hess_constr = 1;
 ocp.solver_options.print_level = 1;
 ocp.solver_options.store_iterates = true;
+ocp.solver_options.log_dual_step_norm = true;
+ocp.solver_options.log_primal_step_norm = true;
 
 % can vary for integrators
 sim_method_num_stages = 1 * ones(N,1);
@@ -253,6 +255,13 @@ su = ocp_solver.get('su', N);
 
 % get cost value
 cost_val_ocp = ocp_solver.get_cost();
+
+primal_step_norm = ocp_solver.get('primal_step_norm');
+dual_step_norm = ocp_solver.get('dual_step_norm');
+disp('primal step norms')
+disp(primal_step_norm);
+disp('dual step norms')
+disp(dual_step_norm);
 
 %% get QP matrices:
 % See https://docs.acados.org/problem_formulation

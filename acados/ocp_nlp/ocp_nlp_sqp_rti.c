@@ -191,6 +191,11 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_,
             int* rti_log_only_available_residuals = (int *) value;
             opts->rti_log_only_available_residuals = *rti_log_only_available_residuals;
         }
+        else if (!strcmp(field, "warm_start_first_qp_from_nlp"))
+        {
+            bool* warm_start_first_qp_from_nlp = (bool *) value;
+            opts->warm_start_first_qp_from_nlp = *warm_start_first_qp_from_nlp;
+        }
         else if (!strcmp(field, "as_rti_level"))
         {
             int* as_rti_level = (int *) value;

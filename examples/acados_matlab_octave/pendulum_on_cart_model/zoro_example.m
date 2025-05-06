@@ -136,7 +136,7 @@ max_zoro_iter = 100;
 zoro_tol = 1e-6;
 
 % sample disturbances
-% NOTE: this requires statistics addon in Matlab and octave -> just load
+% NOTE: this requires statistics addon in MATLAB and octave -> just load
 % some data instead
 % dist_samples = mvnrnd(zeros(nx, 1), zoro_description.W_mat, Nsim);
 load('dist_samples.mat')

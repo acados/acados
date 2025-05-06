@@ -60,8 +60,6 @@ typedef struct
     double tol_comp;
     double tol_unbounded; // exit threshold when objective function seems to be unbounded
     double tol_min_step_norm; // exit tolerance for small step
-    int max_iter;
-    int log_primal_step_norm; // compute and log the max norm of the primal steps
     bool log_pi_norm_inf; // compute and log the max norm of the pi multipliers
     bool log_lam_norm_inf; // compute and log the max norm of the lam multipliers
     bool warm_start_first_qp;
@@ -101,7 +99,6 @@ typedef struct
     ocp_nlp_memory *nlp_mem;
 
     double alpha;
-    double *primal_step_norm;
 
     int *nns;  // number of non-slacked constraints in NLP
     int **idxns;  // indices of non-slacked constraints in NLP
@@ -127,7 +124,7 @@ typedef struct
     int watchdog_zero_slacks_counter; // counts number of consecutive BYRD_OMOJOKUN iter with slack sum == 0
     int absolute_nns; // sum of all nns[i]
 
-    int qps_solved_in_sqp_iter;
+    int qps_solved_in_iter;
 
     // QP solver with always feasible QPs
     ocp_qp_xcond_solver relaxed_qp_solver;

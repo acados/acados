@@ -597,5 +597,5 @@ class AcadosOcpDims:
 
     @N.setter
     def N(self, N):
-        check_int_value("N", N, positive=True)
+        check_int_value("N", N, nonnegative=True)
         self.__N = N

@@ -202,12 +202,19 @@ jobs:
         python policy_gradient_example.py
         python test_solution_sens_and_exact_hess.py
         python forw_vs_adj_param_sens.py
+        python smooth_policy_gradients.py
         cd ${{runner.workspace}}/acados/examples/acados_python/solution_sensitivities_convex_example
         python value_gradient_example_linear.py
         python batch_adjoint_solution_sensitivity_example.py
         python non_ocp_example.py
         cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/ocp
+        python initialization_test.py
         python ocp_example_cost_formulations.py
+        cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart
+        python example_solution_sens_closed_loop.py
+        cd ${{runner.workspace}}/acados/examples/acados_python/chain_mass/
+        python solution_sensitivity_example.py
+
 
 
     - name: Python Furuta pendulum timeout test
@@ -272,7 +279,7 @@ jobs:
         cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
         source env.sh
 
-    - name: Run Matlab tests
+    - name: Run MATLAB tests
       uses: matlab-actions/run-command@v2
       if: always()
       with:
@@ -331,7 +338,7 @@ jobs:
         cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
         source env.sh
 
-    - name: Run Matlab tests
+    - name: Run MATLAB tests
       uses: matlab-actions/run-command@v2
       if: always()
       with:
@@ -392,7 +399,7 @@ jobs:
         cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
         source env.sh
 
-    - name: Run Matlab examples
+    - name: Run MATLAB examples
       uses: matlab-actions/run-command@v2
       if: always()
       with:

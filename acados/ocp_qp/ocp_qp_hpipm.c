@@ -450,7 +450,7 @@ void ocp_qp_hpipm_solver_get(void *config_, void *qp_in_, void *qp_out_, void *o
 }
 
 
-void ocp_qp_hpipm_eval_sens(void *config_, void *param_qp_in_, void *sens_qp_out_, void *opts_, void *mem_, void *work_)
+void ocp_qp_hpipm_eval_forw_sens(void *config_, void *param_qp_in_, void *seed, void *sens_qp_out_, void *opts_, void *mem_, void *work_)
 {
     ocp_qp_in *param_qp_in = param_qp_in_;
     ocp_qp_out *sens_qp_out = sens_qp_out_;
@@ -458,13 +458,13 @@ void ocp_qp_hpipm_eval_sens(void *config_, void *param_qp_in_, void *sens_qp_out
     ocp_qp_hpipm_opts *opts = opts_;
     ocp_qp_hpipm_memory *mem = mem_;
 
-    d_ocp_qp_ipm_sens(param_qp_in, sens_qp_out, opts->hpipm_opts, mem->hpipm_workspace);
+    d_ocp_qp_ipm_sens_frw(param_qp_in, seed, sens_qp_out, opts->hpipm_opts, mem->hpipm_workspace);
 
     return;
 }
 
 
-void ocp_qp_hpipm_eval_adj_sens(void *config_, void *param_qp_in_, void *sens_qp_out_, void *opts_, void *mem_, void *work_)
+void ocp_qp_hpipm_eval_adj_sens(void *config_, void *param_qp_in_, void *seed, void *sens_qp_out_, void *opts_, void *mem_, void *work_)
 {
     ocp_qp_in *param_qp_in = param_qp_in_;
     ocp_qp_out *sens_qp_out = sens_qp_out_;
@@ -472,7 +472,7 @@ void ocp_qp_hpipm_eval_adj_sens(void *config_, void *param_qp_in_, void *sens_qp
     ocp_qp_hpipm_opts *opts = opts_;
     ocp_qp_hpipm_memory *mem = mem_;
 
-    d_ocp_qp_ipm_sens_adj(param_qp_in, sens_qp_out, opts->hpipm_opts, mem->hpipm_workspace);
+    d_ocp_qp_ipm_sens_adj(param_qp_in, seed, sens_qp_out, opts->hpipm_opts, mem->hpipm_workspace);
 
     return;
 }
@@ -504,7 +504,7 @@ void ocp_qp_hpipm_config_initialize_default(void *config_)
     config->evaluate = &ocp_qp_hpipm;
     config->solver_get = &ocp_qp_hpipm_solver_get;
     config->memory_reset = &ocp_qp_hpipm_memory_reset;
-    config->eval_sens = &ocp_qp_hpipm_eval_sens;
+    config->eval_forw_sens = &ocp_qp_hpipm_eval_forw_sens;
     config->eval_adj_sens = &ocp_qp_hpipm_eval_adj_sens;
     config->terminate = &ocp_qp_hpipm_terminate;
 

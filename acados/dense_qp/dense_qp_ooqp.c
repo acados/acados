@@ -626,10 +626,9 @@ void dense_qp_ooqp_destroy(void *mem_, void *work)
 }
 
 
-
-void dense_qp_ooqp_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+void dense_qp_ooqp_eval_forw_sens(void *config_, void *qp_in, void *seed, void *qp_out, void *opts_, void *mem_, void *work_)
 {
-    printf("\nerror: dense_qp_ooqp_eval_sens: not implemented yet\n");
+    printf("\nerror: dense_qp_ooqp_eval_forw_sens: not implemented yet\n");
     exit(1);
 }
 
@@ -678,7 +677,7 @@ void dense_qp_ooqp_config_initialize_default(void *config_)
     config->workspace_calculate_size =
         (acados_size_t (*)(void *, void *, void *)) & dense_qp_ooqp_workspace_calculate_size;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & dense_qp_ooqp;
-    config->eval_sens = &dense_qp_ooqp_eval_sens;
+    config->eval_forw_sens = &dense_qp_ooqp_eval_forw_sens;
     config->eval_adj_sens = &dense_qp_ooqp_eval_adj_sens;
     config->memory_reset = &dense_qp_ooqp_memory_reset;
     config->solver_get = &dense_qp_ooqp_solver_get;

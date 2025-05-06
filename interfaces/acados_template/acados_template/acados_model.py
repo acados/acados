@@ -797,7 +797,7 @@ class AcadosModel():
     def u_labels(self):
         """Contains list of labels for the controls. Default: :code:`None`"""
         if self.__u_labels is None:
-            return [f"x{i}" for i in range(self.x.size()[0])]
+            return [f"u{i}" for i in range(self.u.size()[0])]
         else:
             return self.__u_labels
 
@@ -850,31 +850,23 @@ class AcadosModel():
 
         # nu
         if is_empty(self.u):
-            dims.nu = 0
             self.u = casadi_symbol('u', 0, 1)
-        else:
-            dims.nu = casadi_length(self.u)
+        dims.nu = casadi_length(self.u)
 
         # nz
         if is_empty(self.z):
-            dims.nz = 0
             self.z = casadi_symbol('z', 0, 1)
-        else:
-            dims.nz = casadi_length(self.z)
+        dims.nz = casadi_length(self.z)
 
         # np
         if is_empty(self.p):
-            dims.np = 0
             self.p = casadi_symbol('p', 0, 1)
-        else:
-            dims.np = casadi_length(self.p)
+        dims.np = casadi_length(self.p)
 
         # np_global
         if is_empty(self.p_global):
-            dims.np_global = 0
             self.p_global = casadi_symbol('p_global', 0, 1)
-        else:
-            dims.np_global = casadi_length(self.p_global)
+        dims.np_global = casadi_length(self.p_global)
 
         # sanity checks
         for symbol, name in [(self.x, 'x'), (self.xdot, 'xdot'), (self.u, 'u'), (self.z, 'z'), (self.p, 'p'), (self.p_global, 'p_global')]:

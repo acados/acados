@@ -320,7 +320,7 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
 
 
 
-void dense_qp_hpipm_eval_sens(void *config_, void *param_qp_in_, void *sens_qp_out_, void *opts_, void *mem_, void *work_)
+void dense_qp_hpipm_eval_forw_sens(void *config_, void *param_qp_in_, void *seed, void *sens_qp_out_, void *opts_, void *mem_, void *work_)
 {
     dense_qp_in *param_qp_in = param_qp_in_;
     dense_qp_out *sens_qp_out = sens_qp_out_;
@@ -328,13 +328,13 @@ void dense_qp_hpipm_eval_sens(void *config_, void *param_qp_in_, void *sens_qp_o
     dense_qp_hpipm_opts *opts = opts_;
     dense_qp_hpipm_memory *memory = mem_;
 
-    d_dense_qp_ipm_sens(param_qp_in, sens_qp_out, opts->hpipm_opts, memory->hpipm_workspace);
+    d_dense_qp_ipm_sens_frw(param_qp_in, seed, sens_qp_out, opts->hpipm_opts, memory->hpipm_workspace);
 
     return;
 }
 
 
-void dense_qp_hpipm_eval_adj_sens(void *config_, void *param_qp_in_, void *sens_qp_out_, void *opts_, void *mem_, void *work_)
+void dense_qp_hpipm_eval_adj_sens(void *config_, void *param_qp_in_, void *seed, void *sens_qp_out_, void *opts_, void *mem_, void *work_)
 {
     dense_qp_in *param_qp_in = param_qp_in_;
     dense_qp_out *sens_qp_out = sens_qp_out_;
@@ -342,7 +342,7 @@ void dense_qp_hpipm_eval_adj_sens(void *config_, void *param_qp_in_, void *sens_
     dense_qp_hpipm_opts *opts = opts_;
     dense_qp_hpipm_memory *memory = mem_;
 
-    d_dense_qp_ipm_sens_adj(param_qp_in, sens_qp_out, opts->hpipm_opts, memory->hpipm_workspace);
+    d_dense_qp_ipm_sens_adj(param_qp_in, seed, sens_qp_out, opts->hpipm_opts, memory->hpipm_workspace);
 
     return;
 }
@@ -384,7 +384,7 @@ void dense_qp_hpipm_config_initialize_default(void *config_)
     config->memory_get = &dense_qp_hpipm_memory_get;
     config->workspace_calculate_size = &dense_qp_hpipm_workspace_calculate_size;
     config->evaluate = &dense_qp_hpipm;
-    config->eval_sens = &dense_qp_hpipm_eval_sens;
+    config->eval_forw_sens = &dense_qp_hpipm_eval_forw_sens;
     config->eval_adj_sens = &dense_qp_hpipm_eval_adj_sens;
     config->memory_reset = &dense_qp_hpipm_memory_reset;
     config->solver_get = &dense_qp_hpipm_solver_get;

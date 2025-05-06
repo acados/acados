@@ -124,7 +124,7 @@ classdef acados_ocp_opts < handle
 
 
         function obj = set(obj, field, value)
-            % convert Matlab strings to char arrays
+            % convert MATLAB strings to char arrays
             if isstring(value)
                 value = char(value);
             end

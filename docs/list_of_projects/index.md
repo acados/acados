@@ -1,5 +1,8 @@
 <!-- # Publications and Projects that feature `acados`. -->
-# Other Projects that feature `acados`
+# Related Projects
+<!-- just simulation -->
+<!-- ### Dynamic Objective MPC for Motion Planning of Seamless Docking Maneuvers
+https://www.youtube.com/watch?v=28X5zaHW6bs -->
 
 ## Software interfaced with `acados`
 - [Rockit (Rapid Optimal Control kit)](https://gitlab.kuleuven.be/meco-software/rockit)
@@ -25,9 +28,9 @@ It uses the `Cython` wrapper to the `acados` OCP solver in its software stack.
 - [acados-STM32 - acados Nonlinear MPC example (inverted pendulum control) using HPIPM on STM32H7 device (Cortex-M7 @ 400 MHz)](https://github.com/mindThomas/acados-STM32)
 
 - [OpenOCL](https://github.com/OpenOCL/OpenOCL)
-is an open-source Matlab toolbox for modeling and solving optimal control problems.
+is an open-source MATLAB toolbox for modeling and solving optimal control problems.
 It can use `CasADi` with IPOPT as a solver.
-It also provides a higher level interface to `acados`, which is based on the Matlab interface of `acados`.
+It also provides a higher level interface to `acados`, which is based on the MATLAB interface of `acados`.
 
 ## Papers featuring `acados`
 ### with embedded deployment
@@ -39,7 +42,6 @@ It also provides a higher level interface to `acados`, which is based on the Mat
 - [NMPC for Racing Using a Singularity-Free Path-Parametric Model with Obstacle Avoidance](https://cdn.syscop.de/publications/Kloeser2020.pdf)
 
 - [Mobility-enhanced MPC for Legged Locomotion on Rough Terrain](https://arxiv.org/abs/2105.05998)
-    - [Video to Mobility-enhanced MPC for Legged Locomotion on Rough Terrain](https://www.dropbox.com/sh/mkr4pftcug6jlo7/AABNqu1AsGED2WSR8IqvaiUla?dl=0)
 
 - [Continuous Control Set Nonlinear Model Predictive Control of Reluctance Synchronous Machines - IEEE Transactions on Control System Technology](https://ieeexplore.ieee.org/document/9360312)
 

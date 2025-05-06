@@ -122,8 +122,10 @@ def main_batch(Xinit, simU, tol, num_threads_in_batch_solve=1):
 
     N_batch = Xinit.shape[0] - 1
     ocp = setup_ocp(tol)
-    batch_solver = AcadosOcpBatchSolver(ocp, N_batch, num_threads_in_batch_solve=num_threads_in_batch_solve, verbose=False)
-    
+    N_batch_max = N_batch + 3 # to test with more than N_batch
+
+    batch_solver = AcadosOcpBatchSolver(ocp, N_batch_max, num_threads_in_batch_solve=num_threads_in_batch_solve, verbose=False)
+
     assert batch_solver.num_threads_in_batch_solve == num_threads_in_batch_solve
     batch_solver.num_threads_in_batch_solve = 1337
     assert batch_solver.num_threads_in_batch_solve == 1337
@@ -144,16 +146,24 @@ def main_batch(Xinit, simU, tol, num_threads_in_batch_solve=1):
 
     # solve
     t0 = time.time()
-    batch_solver.solve()
+    batch_solver.solve(N_batch)
     t_elapsed = 1e3 * (time.time() - t0)
 
     print(f"main_batch: with {num_threads_in_batch_solve} threads, solve: {t_elapsed:.3f}ms")
 
-    U_batch = batch_solver.get_flat("u")
+    U_batch = batch_solver.get_flat("u", N_batch)
 
     for n in range(N_batch):
-        if not np.linalg.norm(U_batch[n, :ocp.dims.nu] -simU[n]) < tol*10:
-            raise Exception(f"solution should match sequential call up to {tol*10} got error {np.linalg.norm(u-simU[n])} for {n}th batch solve")
+        if not np.linalg.norm(U_batch[n, :ocp.dims.nu] - simU[n]) < tol*10:
+            raise Exception(f"solution should match sequential call up to {tol*10} got error {np.linalg.norm(U_batch[n, :ocp.dims.nu] - simU[n])} for {n}th batch solve")
+
+    # test N_batch_max is respected
+    try:
+        batch_solver.get_flat("x", N_batch_max+1)
+    except Exception as e:
+        print(f"error raised correctly: {e}")
+    else:
+        raise Exception("using n_batch > N_batch_max should raise an error")
 
 
 if __name__ == "__main__":
