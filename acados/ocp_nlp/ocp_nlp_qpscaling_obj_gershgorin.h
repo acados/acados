@@ -60,14 +60,24 @@ extern "C" {
 /************************************************
  * options
  ************************************************/
+typedef struct
+{
+    double ub_max_abs_eig; // upper bound
+    double ub_norm_inf_grad_obj; // upper bound
+    double lb_norm_inf_grad_obj; // lower bound
 
+    bool scale_qp_objective;
+    bool scale_qp_dynamics;
+    bool scale_qp_constraints;
+} ocp_nlp_qpscaling_obj_gershgorin_opts;
 // use all functions just through config pointers
 
 
 typedef struct {
     double obj_factor;
+    struct blasfeo_dvec *dynamics_scaling_vec;
+    struct blasfeo_dvec *constraints_scaling_vec;
 } ocp_nlp_qpscaling_obj_gershgorin_memory;
-
 
 //
 void ocp_nlp_qpscaling_obj_gershgorin_config_initialize_default(ocp_nlp_qpscaling_config *config);

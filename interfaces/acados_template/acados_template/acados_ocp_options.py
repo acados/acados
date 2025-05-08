@@ -112,6 +112,9 @@ class AcadosOcpOptions:
         self.__qpscaling_ub_max_abs_eig = 1e5
         self.__qpscaling_ub_norm_inf_grad_obj = 1e2
         self.__qpscaling_lb_norm_inf_grad_obj = 1e-4
+        self.__qpscaling_scale_qp_objective = False
+        self.__qpscaling_scale_qp_dynamics = False
+        self.__qpscaling_scale_qp_constraints = False
         self.__ext_cost_num_hess = 0
         self.__globalization_use_SOC = 0
         self.__globalization_alpha_min = None
@@ -390,6 +393,33 @@ class AcadosOcpOptions:
         Default: 1e-4.
         """
         return self.__qpscaling_lb_norm_inf_grad_obj
+
+    @property
+    def qpscaling_scale_qp_objective(self):
+        """
+        If qpscaling_type == 'OBJECTIVE_GERSHGORIN', this flag indicates whether the qp objective should be scaled.
+        Type: bool.
+        Default: False.
+        """
+        return self.__qpscaling_scale_qp_objective
+
+    @property
+    def qpscaling_scale_qp_dynamics(self):
+        """
+        If qpscaling_type == 'OBJECTIVE_GERSHGORIN', this flag indicates whether the qp dynamics should be scaled.
+        Type: bool.
+        Default: False.
+        """
+        return self.__qpscaling_scale_qp_dynamics
+
+    @property
+    def qpscaling_scale_qp_constraints(self):
+        """
+        If qpscaling_type == 'OBJECTIVE_GERSHGORIN', this flag indicates whether the qp constraints should be scaled.
+        Type: bool.
+        Default: False.
+        """
+        return self.__qpscaling_scale_qp_constraints
 
     @property
     def nlp_solver_step_length(self):
@@ -1276,7 +1306,7 @@ class AcadosOcpOptions:
         Default: 1.
         """
         return self.__num_threads_in_batch_solve
-    
+
     @property
     def with_batch_functionality(self):
         """
@@ -1721,6 +1751,27 @@ class AcadosOcpOptions:
             self.__qpscaling_lb_norm_inf_grad_obj = qpscaling_lb_norm_inf_grad_obj
         else:
             raise Exception('Invalid qpscaling_lb_norm_inf_grad_obj value. qpscaling_lb_norm_inf_grad_obj must be a positive float.')
+
+    @qpscaling_scale_qp_objective.setter
+    def qpscaling_scale_qp_objective(self, qpscaling_scale_qp_objective):
+        if isinstance(qpscaling_scale_qp_objective, bool):
+            self.__qpscaling_scale_qp_objective = qpscaling_scale_qp_objective
+        else:
+            raise Exception('Invalid qpscaling_scale_qp_objective value. qpscaling_scale_qp_objective must be a bool.')
+
+    @qpscaling_scale_qp_dynamics.setter
+    def qpscaling_scale_qp_dynamics(self, qpscaling_scale_qp_dynamics):
+        if isinstance(qpscaling_scale_qp_dynamics, bool):
+            self.__qpscaling_scale_qp_dynamics = qpscaling_scale_qp_dynamics
+        else:
+            raise Exception('Invalid qpscaling_scale_qp_objective value. qpscaling_scale_qp_objective must be a bool.')
+
+    @qpscaling_scale_qp_constraints.setter
+    def qpscaling_scale_qp_constraints(self, qpscaling_scale_qp_constraints):
+        if isinstance(qpscaling_scale_qp_constraints, bool):
+            self.__qpscaling_scale_qp_constraints = qpscaling_scale_qp_constraints
+        else:
+            raise Exception('Invalid qpscaling_scale_qp_objective value. qpscaling_scale_qp_objective must be a bool.')
 
     @nlp_solver_step_length.setter
     def nlp_solver_step_length(self, nlp_solver_step_length):

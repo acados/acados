@@ -2521,6 +2521,15 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     double qpscaling_lb_norm_inf_grad_obj = {{ solver_options.qpscaling_lb_norm_inf_grad_obj }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qpscaling_lb_norm_inf_grad_obj", &qpscaling_lb_norm_inf_grad_obj);
 
+    bool qpscaling_scale_qp_objective = {{ solver_options.qpscaling_scale_qp_objective }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qpscaling_scale_qp_objective", &qpscaling_scale_qp_objective);
+
+    bool qpscaling_scale_qp_dynamics = {{ solver_options.qpscaling_scale_qp_dynamics }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qpscaling_scale_qp_dynamics", &qpscaling_scale_qp_dynamics);
+
+    bool qpscaling_scale_qp_constraints = {{ solver_options.qpscaling_scale_qp_constraints }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qpscaling_scale_qp_constraints", &qpscaling_scale_qp_constraints);
+
 {%- if solver_options.nlp_solver_type == "SQP" and solver_options.timeout_max_time > 0 %}
     double timeout_max_time = {{ solver_options.timeout_max_time }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "timeout_max_time", &timeout_max_time);

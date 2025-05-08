@@ -54,6 +54,7 @@ typedef struct
     int *nx;
     int *nu;
     int N;
+    int *ni;
 } ocp_nlp_qpscaling_dims;
 
 //
@@ -66,7 +67,6 @@ void ocp_nlp_qpscaling_dims_set(void *config_, ocp_nlp_qpscaling_dims *dims, int
 
 
 /* config */
-
 typedef struct
 {
     /* dims */
