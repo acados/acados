@@ -69,7 +69,7 @@ acados_size_t ocp_nlp_qpscaling_dims_calculate_size(int N)
 {
     acados_size_t size = sizeof(ocp_nlp_qpscaling_dims);
 
-    size += 2*(N+1)*sizeof(int); // nx nu
+    size += 3*(N+1)*sizeof(int); // nx nu ng
 
     return size;
 }
