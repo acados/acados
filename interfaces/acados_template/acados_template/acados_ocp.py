@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from typing import Optional, Union
+from typing import Optional, Union, Tuple
 import numpy as np
 
 from scipy.linalg import block_diag
@@ -2122,3 +2122,159 @@ class AcadosOcp:
                 cost.cost_type_0 = 'EXTERNAL'
 
         print('--------------------------------------------------------------')
+
+    def create_casadi_nlp_formulation(self) -> Tuple[dict, dict]:
+        """
+        Creates an equivalent CasADi NLP formulation of the OCP.
+        Experimental, not fully implemented yet.
+
+        :return: nlp_dict, bounds_dict
+        """
+        self.make_consistent()
+
+        # unpack
+        model = self.model
+        dims = self.dims
+        cost = self.cost
+        constraints = self.constraints
+        solver_options = self.solver_options
+
+        # create variables
+        ca_symbol = model.get_casadi_symbol()
+        xtraj = ca_symbol('x', dims.nx, solver_options.N_horizon+1)
+        utraj = ca_symbol('u', dims.nu, solver_options.N_horizon)
+        if dims.nz > 0:
+            raise NotImplementedError("CasADi NLP formulation not implemented for models with algebraic variables (z).")
+        # parameters
+        ptraj = ca_symbol('p', dims.np, solver_options.N_horizon+1)
+
+        ### Constraints: bounds
+        # setup state bounds
+        lb_xtraj = -np.inf * ca.DM.ones((dims.nx, solver_options.N_horizon+1))
+        ub_xtraj = np.inf * ca.DM.ones((dims.nx, solver_options.N_horizon+1))
+        lb_xtraj[constraints.idxbx_0, 0] = constraints.lbx_0
+        ub_xtraj[constraints.idxbx_0, 0] = constraints.ubx_0
+        for i in range(1, solver_options.N_horizon):
+            lb_xtraj[constraints.idxbx, i] = constraints.lbx
+            ub_xtraj[constraints.idxbx, i] = constraints.ubx
+        lb_xtraj[constraints.idxbx_e, -1] = constraints.lbx_e
+        ub_xtraj[constraints.idxbx_e, -1] = constraints.ubx_e
+        # setup control bounds
+        lb_utraj = -np.inf * ca.DM.ones((dims.nu, solver_options.N_horizon))
+        ub_utraj = np.inf * ca.DM.ones((dims.nu, solver_options.N_horizon))
+        for i in range(solver_options.N_horizon):
+            lb_utraj[constraints.idxbu, i] = constraints.lbu
+            ub_utraj[constraints.idxbu, i] = constraints.ubu
+
+        ### Nonlinear constraints
+        g = []
+        lbg = []
+        ubg = []
+        # dynamics
+        if solver_options.integrator_type == "DISCRETE":
+            f_discr_fun = ca.Function('f_discr_fun', [model.x, model.u, model.p, model.p_global], [model.disc_dyn_expr])
+        elif solver_options.integrator_type == "ERK":
+            ca_expl_ode = ca.Function('ca_expl_ode', [model.x, model.u], [model.f_expl_expr])
+                                    #   , model.p, model.p_global]
+            f_discr_fun = ca.simpleRK(ca_expl_ode, solver_options.sim_method_num_steps[0], solver_options.sim_method_num_stages[0])
+        else:
+            raise NotImplementedError(f"Integrator type {solver_options.integrator_type} not supported.")
+
+        for i in range(solver_options.N_horizon):
+            # add dynamics constraints
+            if solver_options.integrator_type == "DISCRETE":
+                g.append(xtraj[:, i+1] - f_discr_fun(xtraj[:, i], utraj[:, i], ptraj[:, i], model.p_global))
+            elif solver_options.integrator_type == "ERK":
+                g.append(xtraj[:, i+1] - f_discr_fun(xtraj[:, i], utraj[:, i], solver_options.time_steps[i]))
+            lbg.append(np.zeros((dims.nx, 1)))
+            ubg.append(np.zeros((dims.nx, 1)))
+
+        # nonlinear constraints -- initial stage
+        h0_fun = ca.Function('h0_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr_0])
+        g.append(h0_fun(xtraj[:, 0], utraj[:, 0], ptraj[:, 0], model.p_global))
+        lbg.append(constraints.lh_0)
+        ubg.append(constraints.uh_0)
+
+        if dims.nphi_0 > 0:
+            conl_constr_expr_0 = ca.substitute(model.con_phi_expr_0, model.con_r_in_phi_0, model.con_r_expr_0)
+            conl_constr_0_fun = ca.Function('conl_constr_0_fun', [model.x, model.u, model.p, model.p_global], [conl_constr_expr_0])
+            g.append(conl_constr_0_fun(xtraj[:, 0], utraj[:, 0], ptraj[:, 0], model.p_global))
+            lbg.append(constraints.lphi_0)
+            ubg.append(constraints.uphi_0)
+
+        # nonlinear constraints -- intermediate stages
+        h_fun = ca.Function('h_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr])
+
+        if dims.nphi > 0:
+            conl_constr_expr = ca.substitute(model.con_phi_expr, model.con_r_in_phi, model.con_r_expr)
+            conl_constr_fun = ca.Function('conl_constr_fun', [model.x, model.u, model.p, model.p_global], [conl_constr_expr])
+
+        for i in range(1, solver_options.N_horizon):
+            g.append(h_fun(xtraj[:, i], utraj[:, i], ptraj[:, i], model.p_global))
+            lbg.append(constraints.lh)
+            ubg.append(constraints.uh)
+
+            if dims.nphi > 0:
+                g.append(conl_constr_fun(xtraj[:, i], utraj[:, i], ptraj[:, i], model.p_global))
+                lbg.append(constraints.lphi)
+                ubg.append(constraints.uphi)
+
+        # nonlinear constraints -- terminal stage
+        h_e_fun = ca.Function('h_e_fun', [model.x, model.p, model.p_global], [model.con_h_expr_e])
+
+        g.append(h_e_fun(xtraj[:, -1], ptraj[:, -1], model.p_global))
+        lbg.append(constraints.lh_e)
+        ubg.append(constraints.uh_e)
+
+        if dims.nphi_e > 0:
+            conl_constr_expr_e = ca.substitute(model.con_phi_expr_e, model.con_r_in_phi_e, model.con_r_expr_e)
+            conl_constr_e_fun = ca.Function('conl_constr_e_fun', [model.x, model.p, model.p_global], [conl_constr_expr_e])
+            g.append(conl_constr_e_fun(xtraj[:, -1], ptraj[:, -1], model.p_global))
+            lbg.append(constraints.lphi_e)
+            ubg.append(constraints.uphi_e)
+
+        ### Cost
+        # initial cost term
+        nlp_cost = 0
+        self.translate_cost_to_external_cost()
+        if cost.cost_type_0 == "EXTERNAL":
+            cost_expr_0 = model.cost_expr_ext_cost_0
+        else:
+            raise NotImplementedError(f"Cost type {cost.cost_type_0} not supported for initial cost term.")
+        cost_fun_0 = ca.Function('cost_fun_0', [model.x, model.u, model.p, model.p_global], [cost_expr_0])
+        nlp_cost += solver_options.cost_scaling[0] * cost_fun_0(xtraj[:, 0], utraj[:, 0], ptraj[:, 0], model.p_global)
+
+        # intermediate cost term
+        if cost.cost_type == "EXTERNAL":
+            cost_expr = model.cost_expr_ext_cost
+        else:
+            raise NotImplementedError(f"Cost type {cost.cost_type} not supported for intermediate cost term.")
+        cost_fun = ca.Function('cost_fun', [model.x, model.u, model.p, model.p_global], [cost_expr])
+        for i in range(1, solver_options.N_horizon):
+            nlp_cost += solver_options.cost_scaling[i] * cost_fun(xtraj[:, i], utraj[:, i], ptraj[:, i], model.p_global)
+
+        # terminal cost term
+        if cost.cost_type_e == "EXTERNAL":
+            cost_expr_e = model.cost_expr_ext_cost_e
+        else:
+            raise NotImplementedError(f"Cost type {cost.cost_type_e} not supported for terminal cost term.")
+        cost_fun_e = ca.Function('cost_fun_e', [model.x, model.p, model.p_global], [cost_expr_e])
+        nlp_cost += solver_options.cost_scaling[-1] * cost_fun_e(xtraj[:, -1], ptraj[:, -1], model.p_global)
+
+        # call w all primal variables
+        def casadi_flatten(x):
+            size = x.shape
+            len = size[0] * size[1]
+            x = ca.reshape(x, len, 1)
+            return x
+
+        w = ca.vertcat(casadi_flatten(xtraj), casadi_flatten(utraj))
+        lbw = ca.vertcat(casadi_flatten(lb_xtraj), casadi_flatten(lb_utraj))
+        ubw = ca.vertcat(casadi_flatten(ub_xtraj), casadi_flatten(ub_utraj))
+        p_nlp = ca.vertcat(casadi_flatten(ptraj), model.p_global)
+
+        # create NLP
+        nlp = {"x": w, "p": p_nlp, "g": ca.vertcat(*g), "f": nlp_cost}
+        bounds = {"lbx": lbw, "ubx": ubw, "lbg": ca.vertcat(*lbg), "ubg": ca.vertcat(*ubg)}
+
+        return nlp, bounds
