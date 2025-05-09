@@ -77,7 +77,7 @@ class AcadosCostConstraintEvaluator:
         self.__parameter_values = np.tile(ocp.parameter_values, (ocp.dims.np, ocp.dims.N))
         self.__p_global_values = ocp.p_global_values
 
-        self.time_steps = ocp.solver_options.time_steps
+        self.cost_scaling = ocp.solver_options.cost_scaling
 
         # setup casadi functions for constraints and cost
         cost_expr = ocp.get_path_cost_expression()
@@ -283,7 +283,7 @@ class AcadosCostConstraintEvaluator:
         cost_fun_args = [x, u, parameter_values, p_global_values]
 
         # evaluate cost
-        cost_without_slacks = self.cost_fun(*cost_fun_args).full() * self.time_steps[step]
+        cost_without_slacks = self.cost_fun(*cost_fun_args).full() * self.cost_scaling[step]
 
         # evaluate constraints
         lower_violation, upper_violation, lower_slack, upper_slack = (
@@ -306,7 +306,7 @@ class AcadosCostConstraintEvaluator:
         if self.__ocp.cost.zu.size > 0:
             upper_slack_cost += self.__ocp.cost.zu @ upper_slack.full()
 
-        slack_cost = (lower_slack_cost + upper_slack_cost) * self.time_steps[step]
+        slack_cost = (lower_slack_cost + upper_slack_cost) * self.cost_scaling[step]
 
         if len(slack_cost) == 0:
             cost = cost_without_slacks
