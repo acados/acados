@@ -339,6 +339,7 @@ class AcadosCostConstraintEvaluator:
         cost = 0
 
         # the cost on the first step is different in the OCP
+        # TODO: this is not correct, since the cost on the first step might be different!
         step = 0
         result = self.evaluate(acados_ocp_iterate.x_traj[0], acados_ocp_iterate.u_traj[0], step=step)
         cost += result['cost_without_slacks']
