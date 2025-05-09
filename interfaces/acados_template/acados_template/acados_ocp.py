@@ -1528,11 +1528,11 @@ class AcadosOcp:
     def translate_intermediate_cost_term_to_external(self, yref: Optional[Union[ca.SX, ca.MX]] = None, W: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
 
         if cost_hessian not in ['EXACT', 'GAUSS_NEWTON']:
-            raise Exception(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
+            raise ValueError(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
 
         if cost_hessian == 'GAUSS_NEWTON':
             if self.cost.cost_type not in ['LINEAR_LS', 'NONLINEAR_LS']:
-                raise Exception(f"cost_hessian 'GAUSS_NEWTON' is only supported for LINEAR_LS, NONLINEAR_LS cost types, got cost_type = {self.cost.cost_type}.")
+                raise ValueError(f"cost_hessian 'GAUSS_NEWTON' is only supported for LINEAR_LS, NONLINEAR_LS cost types, got cost_type = {self.cost.cost_type}.")
 
         casadi_symbolics_type = type(self.model.x)
 
@@ -1540,19 +1540,19 @@ class AcadosOcp:
             yref = self.cost.yref
         else:
             if yref.shape[0] != self.cost.yref.shape[0]:
-                raise Exception(f"yref has wrong shape, got {yref.shape}, expected {self.cost.yref.shape}.")
+                raise ValueError(f"yref has wrong shape, got {yref.shape}, expected {self.cost.yref.shape}.")
 
             if not isinstance(yref, casadi_symbolics_type):
-                raise Exception(f"yref has wrong type, got {type(yref)}, expected {casadi_symbolics_type}.")
+                raise TypeError(f"yref has wrong type, got {type(yref)}, expected {casadi_symbolics_type}.")
 
         if W is None:
             W = self.cost.W
         else:
             if W.shape != self.cost.W.shape:
-                raise Exception(f"W has wrong shape, got {W.shape}, expected {self.cost.W.shape}.")
+                raise ValueError(f"W has wrong shape, got {W.shape}, expected {self.cost.W.shape}.")
 
             if not isinstance(W, casadi_symbolics_type):
-                raise Exception(f"W has wrong type, got {type(W)}, expected {casadi_symbolics_type}.")
+                raise TypeError(f"W has wrong type, got {type(W)}, expected {casadi_symbolics_type}.")
 
         if self.cost.cost_type == "LINEAR_LS":
             self.model.cost_expr_ext_cost = \
@@ -1575,11 +1575,11 @@ class AcadosOcp:
 
     def translate_terminal_cost_term_to_external(self, yref_e: Optional[Union[ca.SX, ca.MX]] = None, W_e: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
         if cost_hessian not in ['EXACT', 'GAUSS_NEWTON']:
-            raise Exception(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
+            raise ValueError(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
 
         if cost_hessian == 'GAUSS_NEWTON':
             if self.cost.cost_type_e not in ['LINEAR_LS', 'NONLINEAR_LS']:
-                raise Exception(f"cost_hessian 'GAUSS_NEWTON' is only supported for LINEAR_LS, NONLINEAR_LS cost types, got cost_type_e = {self.cost.cost_type_e}.")
+                raise ValueError(f"cost_hessian 'GAUSS_NEWTON' is only supported for LINEAR_LS, NONLINEAR_LS cost types, got cost_type_e = {self.cost.cost_type_e}.")
 
         casadi_symbolics_type = type(self.model.x)
 
@@ -1587,19 +1587,19 @@ class AcadosOcp:
             yref_e = self.cost.yref_e
         else:
             if yref_e.shape[0] != self.cost.yref_e.shape[0]:
-                raise Exception(f"yref_e has wrong shape, got {yref_e.shape}, expected {self.cost.yref_e.shape}.")
+                raise ValueError(f"yref_e has wrong shape, got {yref_e.shape}, expected {self.cost.yref_e.shape}.")
 
             if not isinstance(yref_e, casadi_symbolics_type):
-                raise Exception(f"yref_e has wrong type, got {type(yref_e)}, expected {casadi_symbolics_type}.")
+                raise TypeError(f"yref_e has wrong type, got {type(yref_e)}, expected {casadi_symbolics_type}.")
 
         if W_e is None:
             W_e = self.cost.W_e
         else:
             if W_e.shape != self.cost.W_e.shape:
-                raise Exception(f"W_e has wrong shape, got {W_e.shape}, expected {self.cost.W_e.shape}.")
+                raise ValueError(f"W_e has wrong shape, got {W_e.shape}, expected {self.cost.W_e.shape}.")
 
             if not isinstance(W_e, casadi_symbolics_type):
-                raise Exception(f"W_e has wrong type, got {type(W_e)}, expected {casadi_symbolics_type}.")
+                raise TypeError(f"W_e has wrong type, got {type(W_e)}, expected {casadi_symbolics_type}.")
 
         if self.cost.cost_type_e == "LINEAR_LS":
             self.model.cost_expr_ext_cost_e = \
