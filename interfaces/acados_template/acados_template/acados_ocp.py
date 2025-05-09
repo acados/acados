@@ -2208,6 +2208,8 @@ class AcadosOcp:
         :return: nlp_dict, bounds_dict
         """
         self.make_consistent()
+        if any([dims.ns_0, dims.ns, dims.ns_e]):
+            raise NotImplementedError("CasADi NLP formulation not implemented for formulations with soft constraints yet.")
 
         # unpack
         model = self.model
