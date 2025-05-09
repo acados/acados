@@ -43,6 +43,7 @@
 
 #include "blasfeo_d_aux.h"
 #include "blasfeo_d_blas.h"
+#include "blasfeo_d_aux_ext_dep.h"
 
 
 /************************************************
@@ -226,97 +227,56 @@ void *ocp_nlp_qpscaling_obj_gershgorin_memory_assign(void *config_, ocp_nlp_qpsc
     return mem;
 }
 
+/************************************************
+ * helper functions
+ ************************************************/
+static double norm_inf_matrix_row(int row, int n_col,  struct blasfeo_dmat *A)
+{
+    double norm = 0.0;
+    for (int j = 0; j < n_col; ++j)
+    {
+        double tmp = BLASFEO_DMATEL(A, row, j);
+        norm = fmax(norm, fabs(tmp));
+    }
+    return norm;
+}
 
+static double norm_2_matrix_row(int row, int n_col, struct blasfeo_dmat *A)
+{
+    double norm = 0.0;
+    for (int j = 0; j < n_col; ++j)
+    {
+        double tmp = BLASFEO_DMATEL(A, row, j);
+        norm += tmp * tmp;
+    }
+    return sqrt(norm);
+}
+
+static void scale_matrix_row(int row, int n_col, struct blasfeo_dmat *A, double scaling_factor)
+{
+    for (int j = 0; j < n_col; ++j)
+    {
+        BLASFEO_DMATEL(A, row, j) = BLASFEO_DMATEL(A, row, j) / scaling_factor;
+    }
+}
+
+static void scale_pi_duals(ocp_qp_out *qp_out, ocp_nlp_qpscaling_obj_gershgorin_memory *mem)
+{
+    int *nx = qp_out->dim->nx;
+    int N = qp_out->dim->N;
+
+    for (int i = 0; i < N; i++)
+    {
+        for (int j = 0; j < nx[i]; ++j)
+        {
+            BLASFEO_DVECEL(qp_out->pi+i, j) *= BLASFEO_DVECEL(mem->dynamics_scaling_vec+i, j);
+        }
+    }
+}
 
 /************************************************
  * functions
  ************************************************/
-// /*
-// Calculates the QP l1 infeasibility by explicitely evaluating the QP constraints.
-// */
-// static double calculate_qp_l1_infeasibility_manually(ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_sqp_wfqp_workspace *work, ocp_nlp_sqp_wfqp_opts* opts, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
-// {
-//     int N = dims->N;
-//     int *nx = dims->nx;
-//     int *nu = dims->nu;
-//     int *ns = dims->ns;
-//     int *nns = mem->nns;
-
-//     int *nb = qp_in->dim->nb;
-//     int *ng = qp_in->dim->ng;
-
-//     double l1_inf = 0.0;
-//     int i, j;
-//     double tmp, tmp_bound, mask_value;
-
-//     for (i = 0; i <= N; i++)
-//     {
-//         // bounds on states and controls
-//         for (j=0; j<nb[i]; ++j)
-//         {
-//             tmp = BLASFEO_DVECEL(qp_out->ux+i, qp_in->idxb[i][j]);
-//             blasfeo_dvecin1(tmp, &work->nlp_work->tmp_2ni, j);
-//             blasfeo_dvecin1(tmp, &work->nlp_work->tmp_2ni, nb[i]+ng[i]+j);
-//         }
-//         // general linear / linearized!
-//         // tmp_ni = D * u + C * x
-//         // lower bounds --> this seems to be correct and in accordance with slack variables
-//         blasfeo_dgemv_t(nu[i]+nx[i], ng[i], 1.0, qp_in->DCt+i, 0, 0, qp_out->ux+i, 0,
-//                         0.0, qp_in->d+i, nb[i], &work->nlp_work->tmp_2ni, nb[i]);
-//         blasfeo_dveccp(ng[i], &work->nlp_work->tmp_2ni, nb[i], &work->nlp_work->tmp_2ni, 2*nb[i]+ng[i]);
-
-//         // add slack contributions
-//         // d[nb:nb+ng] += slack[idx]
-//         // qp_in->idxs_rev
-//         if (ns[i]>0)
-//         {
-//             for (j = 0; j < nb[i]+ng[i]; j++)
-//             {
-//                 int slack_index = qp_in->idxs_rev[i][j];
-//                 // maybe we need <=?
-//                 if (slack_index >= 0 && slack_index < ns[i])
-//                 {
-//                     // add slack contribution for lower and upper constraint
-//                     // lower
-//                     BLASFEO_DVECEL(&work->nlp_work->tmp_2ni, j) +=
-//                             BLASFEO_DVECEL(qp_out->ux+i, slack_index+nx[i]+nu[i]);
-//                     // upper
-//                     BLASFEO_DVECEL(&work->nlp_work->tmp_2ni, j+nb[i]+ng[i]) -=
-//                             BLASFEO_DVECEL(qp_out->ux+i, slack_index+nx[i]+nu[i]+ns[i]+nns[i]);
-//                 }
-//             }
-//         }
-
-//         // upper bounds
-//         for (j=0; j<2*nb[i]+2*ng[i]; ++j)
-//         {
-//             mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, j);
-//             if (mask_value == 1.0)
-//             {
-//                 tmp = BLASFEO_DVECEL(&work->nlp_work->tmp_2ni, j);
-//                 tmp_bound = BLASFEO_DVECEL(qp_in->d+i, j);
-//                 if (j < nb[i] + ng[i])
-//                 {
-//                     // maximum(0, lower_bound - value)
-//                     l1_inf += fmax(0.0, tmp_bound-tmp);
-//                     // printf("lower bounds: bound: %.4e, value: %.4e, result: %.4e\n", tmp_bound, tmp, fmax(0.0, tmp_bound-tmp));
-//                 }
-//                 else
-//                 {
-//                     // upper bounds have the wrong sign!
-//                     // it is lower_bounds <= value <= -upper_bounds, therefore plus below
-//                     // printf("upper bounds: value: %.4e, value: %.4e, result: %.4e\n", tmp_bound, tmp, fmax(0.0, tmp_bound+tmp));
-//                     l1_inf += fmax(0.0, tmp_bound+tmp);
-//                 }
-//             }
-//         }
-//     }
-//     assert(l1_inf > -opts->tol_ineq);
-//     return l1_inf;
-// }
-
-
-
 void ocp_nlp_qpscaling_scale_qp_objective(void *config, ocp_nlp_qpscaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in)
 {
     double max_abs_eig = 0.0;
@@ -373,7 +333,36 @@ void ocp_nlp_qpscaling_scale_qp_objective(void *config, ocp_nlp_qpscaling_dims *
 
 void ocp_nlp_qpscaling_scale_qp_dynamics(void *config, ocp_nlp_qpscaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in)
 {
-    printf("TBD");
+    int *nx = qp_in->dim->nx;
+    int *nu = qp_in->dim->nu;
+    int N = dims->N;
+    int i, j;
+    ocp_nlp_qpscaling_obj_gershgorin_memory *memory = mem_;
+    // ocp_nlp_qpscaling_obj_gershgorin_opts *opts = opts_; // option for what norm to be used
+    double row_norm, scaling_factor;
+
+    // printf("Here in scale dynamics, before loop\n");
+    for (i = 0; i < N; i++)
+    {
+        // printf("in loop, i=%d\n", i);
+        for (j = 0; j < nx[i+1]; j++)
+        {
+            // printf("before nu+nx\n");
+            row_norm = norm_inf_matrix_row(j, nu[i]+nx[i],  &qp_in->BAbt[i]);
+
+            // calculate scaling factor from row norm and
+            scaling_factor = fmax(1.0, fmax(fabs(BLASFEO_DVECEL(qp_in->b+i, j)), row_norm));
+
+            // store scaling factor in memory
+            BLASFEO_DVECEL(memory->dynamics_scaling_vec+i, j) = scaling_factor;
+
+            // scale the row
+            scale_matrix_row(j, nu[i]+nx[i],  &qp_in->BAbt[i], scaling_factor);
+
+            // scale right hand side bounds
+            BLASFEO_DVECEL(qp_in->b+i, j) = BLASFEO_DVECEL(qp_in->b+i, j) / scaling_factor;
+        }
+    }
 }
 
 void ocp_nlp_qpscaling_scale_qp_constraints(void *config, ocp_nlp_qpscaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in)
@@ -410,6 +399,10 @@ void ocp_nlp_qpscaling_obj_gershgorin_rescale_solution(void *config, ocp_nlp_qps
     {
         ocp_qp_out_scale_duals(qp_out, 1/memory->obj_factor);
         ocp_qp_scale_objective(qp_in, 1/memory->obj_factor);
+    }
+    if (opts->scale_qp_dynamics)
+    {
+        scale_pi_duals(qp_out, memory);
     }
     // printf("ocp_nlp_qpscaling_obj_gershgorin_rescale_solution: qp_out after rescaling\n");
     // print_ocp_qp_out(qp_out);
