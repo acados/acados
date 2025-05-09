@@ -3557,6 +3557,8 @@ void ocp_nlp_res_get_inf_norm(ocp_nlp_res *res, double *out)
 }
 
 
+/* Helper functions */
+
 double ocp_nlp_compute_delta_dual_norm_inf(ocp_nlp_dims *dims, ocp_nlp_workspace *work, ocp_nlp_out *nlp_out, ocp_qp_out *qp_out)
 {
     /* computes the inf norm of multipliers in qp_out and nlp_out */
