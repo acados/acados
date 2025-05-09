@@ -44,6 +44,7 @@ from .acados_ocp_cost import AcadosOcpCost
 from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions
+from .acados_ocp_iterate import AcadosOcpIterate
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
                     get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square,
@@ -2278,3 +2279,38 @@ class AcadosOcp:
         bounds = {"lbx": lbw, "ubx": ubw, "lbg": ca.vertcat(*lbg), "ubg": ca.vertcat(*ubg)}
 
         return nlp, bounds
+
+
+    def create_default_initial_iterate(self) -> AcadosOcpIterate:
+        """
+        Create a default initial iterate for the OCP.
+        """
+        self.make_consistent()
+        dims = self.dims
+
+        if self.constraints.has_x0:
+            x_traj = (self.solver_options.N_horizon+1) * [self.constraints.x0]
+        else:
+            x_traj = (self.solver_options.N_horizon+1) * [np.zeros(dims.nx)]
+        u_traj = self.solver_options.N_horizon * [np.zeros(self.dims.nu)]
+        z_traj = self.solver_options.N_horizon * [np.zeros(self.dims.nz)]
+        sl_traj = [np.zeros(self.dims.ns_0)] + (self.solver_options.N_horizon-1) * [np.zeros(self.dims.ns)] + [np.zeros(self.dims.ns_e)]
+        su_traj = [np.zeros(self.dims.ns_0)] + (self.solver_options.N_horizon-1) * [np.zeros(self.dims.ns)] + [np.zeros(self.dims.ns_e)]
+
+        pi_traj = self.solver_options.N_horizon * [np.zeros(self.dims.nx)]
+
+        ni_0 = dims.nbu + dims.nbx_0 + dims.nh_0 + dims.nphi_0 + dims.ng
+        ni = dims.nbu + dims.nbx + dims.nh + dims.nphi + dims.ng
+        ni_e = dims.nbx_e + dims.nh_e + dims.nphi_e + dims.ng_e
+        lam_traj = [np.zeros(2*ni_0)] + (self.solver_options.N_horizon-1) * [np.zeros(2*ni)] + [np.zeros(2*ni_e)]
+
+        iterate = AcadosOcpIterate(
+            x_traj=x_traj,
+            u_traj=u_traj,
+            z_traj=z_traj,
+            sl_traj=sl_traj,
+            su_traj=su_traj,
+            pi_traj=pi_traj,
+            lam_traj=lam_traj,
+        )
+        return iterate
