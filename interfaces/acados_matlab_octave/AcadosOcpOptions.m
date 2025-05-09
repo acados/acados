@@ -87,6 +87,9 @@ classdef AcadosOcpOptions < handle
         qpscaling_ub_max_abs_eig
         qpscaling_ub_norm_inf_grad_obj
         qpscaling_lb_norm_inf_grad_obj
+        qpscaling_scale_qp_objective
+        qpscaling_scale_qp_dynamics
+        qpscaling_scale_qp_constraints
         exact_hess_cost
         exact_hess_dyn
         exact_hess_constr
@@ -193,9 +196,12 @@ classdef AcadosOcpOptions < handle
             obj.cost_discretization = 'EULER';
             obj.regularize_method = 'NO_REGULARIZE';
             obj.qpscaling_type = 'NO_SCALING';
-            obj.qpscaling_ub_max_abs_eig = 1e5
-            obj.qpscaling_ub_norm_inf_grad_obj = 1e2
-            obj.qpscaling_lb_norm_inf_grad_obj = 1e-4
+            obj.qpscaling_ub_max_abs_eig = 1e5;
+            obj.qpscaling_ub_norm_inf_grad_obj = 1e2;
+            obj.qpscaling_lb_norm_inf_grad_obj = 1e-4;
+            obj.qpscaling_scale_qp_objective = false;
+            obj.qpscaling_scale_qp_dynamics = false;
+            obj.qpscaling_scale_qp_constraints = false;
             obj.reg_epsilon = 1e-4;
             obj.reg_adaptive_eps = false;
             obj.reg_max_cond_block = 1e7;
