@@ -205,6 +205,15 @@ def casadi_length(x):
         raise TypeError("casadi_length expects one of the following types: casadi.MX, casadi.SX."
                         + " Got: " + str(type(x)))
 
+def casadi_flatten(x):
+    if not isinstance(x, (MX, SX, DM)):
+        raise TypeError(f"casadi_flatten expects one of the following types: casadi.MX, casadi.SX, casadi.DM. Got: {type(x)}")
+    size = x.shape
+    len = size[0] * size[1]
+    x = ca.reshape(x, len, 1)
+    return x
+
+
 def get_shared_lib_ext():
     if sys.platform == 'darwin':
         return '.dylib'

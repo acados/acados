@@ -48,7 +48,7 @@ from .acados_ocp_iterate import AcadosOcpIterate
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
                     get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square,
-                    check_casadi_version, ACADOS_INFTY)
+                    check_casadi_version, casadi_flatten, ACADOS_INFTY)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
 from .zoro_description import ZoroDescription, process_zoro_description
@@ -2125,12 +2125,38 @@ class AcadosOcp:
         print('--------------------------------------------------------------')
 
 
+    def get_initial_cost_expression(self):
+        model = self.model
+        if self.cost.cost_type == "LINEAR_LS":
+            y = self.cost.Vx_0 @ model.x + self.cost.Vu_0 @ model.u
+
+            if not is_empty(self.cost.Vz_0):
+                y += self.cost.Vz @ model.z
+            residual = y - self.cost.yref_0
+            cost_dot = 0.5 * (residual.T @ self.cost.W_0 @ residual)
+
+        elif self.cost.cost_type == "NONLINEAR_LS":
+            residual = model.cost_y_expr_0 - self.cost.yref_0
+            cost_dot = 0.5 * (residual.T @ self.cost.W_0 @ residual)
+
+        elif self.cost.cost_type == "EXTERNAL":
+            cost_dot = model.cost_expr_ext_cost_0
+
+        elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+            cost_dot = ca.substitute(
+            model.cost_psi_expr_0, model.cost_r_in_psi_expr_0, model.cost_y_expr_0)
+        else:
+            raise ValueError("create_model_with_cost_state: Unknown cost type.")
+
+        return cost_dot
+
+
     def get_path_cost_expression(self):
         model = self.model
         if self.cost.cost_type == "LINEAR_LS":
             y = self.cost.Vx @ model.x + self.cost.Vu @ model.u
 
-            if casadi_length(model.z) > 0:
+            if not is_empty(self.cost.Vz):
                 y += self.cost.Vz @ model.z
             residual = y - self.cost.yref
             cost_dot = 0.5 * (residual.T @ self.cost.W @ residual)
@@ -2149,6 +2175,7 @@ class AcadosOcp:
             raise ValueError("create_model_with_cost_state: Unknown cost type.")
 
         return cost_dot
+
 
     def get_terminal_cost_expression(self):
         model = self.model
@@ -2172,6 +2199,7 @@ class AcadosOcp:
 
         return cost_dot
 
+
     def create_casadi_nlp_formulation(self) -> Tuple[dict, dict]:
         """
         Creates an equivalent CasADi NLP formulation of the OCP.
@@ -2179,13 +2207,11 @@ class AcadosOcp:
 
         :return: nlp_dict, bounds_dict
         """
-        self.translate_cost_to_external_cost()
         self.make_consistent()
 
         # unpack
         model = self.model
         dims = self.dims
-        cost = self.cost
         constraints = self.constraints
         solver_options = self.solver_options
 
@@ -2286,37 +2312,22 @@ class AcadosOcp:
         ### Cost
         # initial cost term
         nlp_cost = 0
-        if cost.cost_type_0 == "EXTERNAL":
-            cost_expr_0 = model.cost_expr_ext_cost_0
-        else:
-            raise NotImplementedError(f"Cost type {cost.cost_type_0} not supported for initial cost term.")
+        cost_expr_0 = self.get_initial_cost_expression()
         cost_fun_0 = ca.Function('cost_fun_0', [model.x, model.u, model.p, model.p_global], [cost_expr_0])
         nlp_cost += solver_options.cost_scaling[0] * cost_fun_0(xtraj[:, 0], utraj[:, 0], ptraj[:, 0], model.p_global)
 
         # intermediate cost term
-        if cost.cost_type == "EXTERNAL":
-            cost_expr = model.cost_expr_ext_cost
-        else:
-            raise NotImplementedError(f"Cost type {cost.cost_type} not supported for intermediate cost term.")
+        cost_expr = self.get_path_cost_expression()
         cost_fun = ca.Function('cost_fun', [model.x, model.u, model.p, model.p_global], [cost_expr])
         for i in range(1, solver_options.N_horizon):
             nlp_cost += solver_options.cost_scaling[i] * cost_fun(xtraj[:, i], utraj[:, i], ptraj[:, i], model.p_global)
 
         # terminal cost term
-        if cost.cost_type_e == "EXTERNAL":
-            cost_expr_e = model.cost_expr_ext_cost_e
-        else:
-            raise NotImplementedError(f"Cost type {cost.cost_type_e} not supported for terminal cost term.")
+        cost_expr_e = self.get_terminal_cost_expression()
         cost_fun_e = ca.Function('cost_fun_e', [model.x, model.p, model.p_global], [cost_expr_e])
         nlp_cost += solver_options.cost_scaling[-1] * cost_fun_e(xtraj[:, -1], ptraj[:, -1], model.p_global)
 
         # call w all primal variables
-        def casadi_flatten(x):
-            size = x.shape
-            len = size[0] * size[1]
-            x = ca.reshape(x, len, 1)
-            return x
-
         w = ca.vertcat(casadi_flatten(xtraj), casadi_flatten(utraj))
         lbw = ca.vertcat(casadi_flatten(lb_xtraj), casadi_flatten(lb_utraj))
         ubw = ca.vertcat(casadi_flatten(ub_xtraj), casadi_flatten(ub_utraj))
