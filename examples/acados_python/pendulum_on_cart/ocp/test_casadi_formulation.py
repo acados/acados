@@ -29,8 +29,13 @@ def main():
     xtraj = xtraj.T
     utraj = utraj.T
 
-    # solve with acados
+    initial_iterate = ocp.create_default_initial_iterate()
+
+    # create acados solver
     ocp_solver = AcadosOcpSolver(ocp, verbose=False)
+    # initialize solver
+    ocp_solver.load_iterate_from_obj(initial_iterate)
+    # solve with acados
     status = ocp_solver.solve()
     # get solution
     simX = np.zeros((N_horizon+1, ocp.dims.nx))
