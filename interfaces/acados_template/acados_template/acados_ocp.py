@@ -2130,6 +2130,7 @@ class AcadosOcp:
 
         :return: nlp_dict, bounds_dict
         """
+        self.translate_cost_to_external_cost()
         self.make_consistent()
 
         # unpack
@@ -2236,7 +2237,6 @@ class AcadosOcp:
         ### Cost
         # initial cost term
         nlp_cost = 0
-        self.translate_cost_to_external_cost()
         if cost.cost_type_0 == "EXTERNAL":
             cost_expr_0 = model.cost_expr_ext_cost_0
         else:
