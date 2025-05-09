@@ -2124,6 +2124,54 @@ class AcadosOcp:
 
         print('--------------------------------------------------------------')
 
+
+    def get_path_cost_expression(self):
+        model = self.model
+        if self.cost.cost_type == "LINEAR_LS":
+            y = self.cost.Vx @ model.x + self.cost.Vu @ model.u
+
+            if casadi_length(model.z) > 0:
+                y += self.cost.Vz @ model.z
+            residual = y - self.cost.yref
+            cost_dot = 0.5 * (residual.T @ self.cost.W @ residual)
+
+        elif self.cost.cost_type == "NONLINEAR_LS":
+            residual = model.cost_y_expr - self.cost.yref
+            cost_dot = 0.5 * (residual.T @ self.cost.W @ residual)
+
+        elif self.cost.cost_type == "EXTERNAL":
+            cost_dot = model.cost_expr_ext_cost
+
+        elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+            cost_dot = ca.substitute(
+            model.cost_psi_expr, model.cost_r_in_psi_expr, model.cost_y_expr)
+        else:
+            raise ValueError("create_model_with_cost_state: Unknown cost type.")
+
+        return cost_dot
+
+    def get_terminal_cost_expression(self):
+        model = self.model
+        if self.cost.cost_type_e == "LINEAR_LS":
+            y = self.cost.Vx_e @ model.x
+            residual = y - self.cost.yref_e
+            cost_dot = 0.5 * (residual.T @ self.cost.W_e @ residual)
+
+        elif self.cost.cost_type == "NONLINEAR_LS":
+            residual = model.cost_y_expr_e - self.cost.yref_e
+            cost_dot = 0.5 * (residual.T @ self.cost.W_e @ residual)
+
+        elif self.cost.cost_type == "EXTERNAL":
+            cost_dot = model.cost_expr_ext_cost_e
+
+        elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+            cost_dot = ca.substitute(
+            model.cost_psi_expr_e, model.cost_r_in_psi_expr_e, model.cost_y_expr_e)
+        else:
+            raise ValueError("create_model_with_cost_state: Unknown terminal cost type.")
+
+        return cost_dot
+
     def create_casadi_nlp_formulation(self) -> Tuple[dict, dict]:
         """
         Creates an equivalent CasADi NLP formulation of the OCP.

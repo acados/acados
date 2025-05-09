@@ -28,7 +28,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.;
 #
-from array import array
+
 from copy import deepcopy
 from typing import Tuple, Optional
 import casadi as ca
@@ -80,8 +80,8 @@ class AcadosCostConstraintEvaluator:
         self.time_steps = ocp.solver_options.time_steps
 
         # setup casadi functions for constraints and cost
-        cost_expr = get_path_cost_expression(ocp)
-        cost_expr_e = get_terminal_cost_expression(ocp)
+        cost_expr = ocp.get_path_cost_expression()
+        cost_expr_e = ocp.get_terminal_cost_expression()
 
         p_global = ocp.model.p_global
         cost_fun_args = [ocp.model.x, ocp.model.u, ocp.model.p, p_global]
@@ -308,7 +308,6 @@ class AcadosCostConstraintEvaluator:
 
         slack_cost = (lower_slack_cost + upper_slack_cost) * self.time_steps[step]
 
-
         if len(slack_cost) == 0:
             cost = cost_without_slacks
         else:
@@ -390,55 +389,6 @@ class AcadosCostConstraintEvaluator:
         return cost[0][0]
 
 
-def get_path_cost_expression(ocp: AcadosOcp):
-    model = ocp.model
-    if ocp.cost.cost_type == "LINEAR_LS":
-        y = ocp.cost.Vx @ model.x + ocp.cost.Vu @ model.u
-
-        if casadi_length(model.z) > 0:
-            y += ocp.cost.Vz @ model.z
-        residual = y - ocp.cost.yref
-        cost_dot = 0.5 * (residual.T @ ocp.cost.W @ residual)
-
-    elif ocp.cost.cost_type == "NONLINEAR_LS":
-        residual = model.cost_y_expr - ocp.cost.yref
-        cost_dot = 0.5 * (residual.T @ ocp.cost.W @ residual)
-
-    elif ocp.cost.cost_type == "EXTERNAL":
-        cost_dot = model.cost_expr_ext_cost
-
-    elif ocp.cost.cost_type == "CONVEX_OVER_NONLINEAR":
-        cost_dot = ca.substitute(
-           model.cost_psi_expr, model.cost_r_in_psi_expr, model.cost_y_expr)
-    else:
-        raise ValueError("create_model_with_cost_state: Unknown cost type.")
-
-    return cost_dot
-
-
-def get_terminal_cost_expression(ocp: AcadosOcp):
-    model = ocp.model
-    if ocp.cost.cost_type_e == "LINEAR_LS":
-        y = ocp.cost.Vx_e @ model.x
-        residual = y - ocp.cost.yref_e
-        cost_dot = 0.5 * (residual.T @ ocp.cost.W_e @ residual)
-
-    elif ocp.cost.cost_type == "NONLINEAR_LS":
-        residual = model.cost_y_expr_e - ocp.cost.yref_e
-        cost_dot = 0.5 * (residual.T @ ocp.cost.W_e @ residual)
-
-    elif ocp.cost.cost_type == "EXTERNAL":
-        cost_dot = model.cost_expr_ext_cost_e
-
-    elif ocp.cost.cost_type == "CONVEX_OVER_NONLINEAR":
-        cost_dot = ca.substitute(
-           model.cost_psi_expr_e, model.cost_r_in_psi_expr_e, model.cost_y_expr_e)
-    else:
-        raise ValueError("create_model_with_cost_state: Unknown terminal cost type.")
-
-    return cost_dot
-
-
 def create_model_with_cost_state(ocp: AcadosOcp) -> Tuple[AcadosModel, np.ndarray]:
     """
     Creates a new AcadosModel with an extra state `cost_state`,
@@ -455,7 +405,7 @@ def create_model_with_cost_state(ocp: AcadosOcp) -> Tuple[AcadosModel, np.ndarra
     cost_state = symbol("cost_state")
     cost_state_dot = symbol("cost_state_dot")
 
-    cost_dot = get_path_cost_expression(ocp)
+    cost_dot = ocp.get_path_cost_expression()
 
     i_slack = 0
     for ibu in ocp.constraints.idxsbu:
