@@ -1622,11 +1622,11 @@ class AcadosOcp:
     @staticmethod
     def __translate_ls_cost_to_external_cost(x, u, z, Vx, Vu, Vz, yref, W):
         res = 0
-        if Vx is not None:
+        if not is_empty(Vx):
             res += Vx @ x
-        if Vu is not None and casadi_length(u) > 0:
+        if not is_empty(Vu):
             res += Vu @ u
-        if Vz is not None and casadi_length(z) > 0:
+        if not is_empty(Vz):
             res += Vz @ z
         res -= yref
 
