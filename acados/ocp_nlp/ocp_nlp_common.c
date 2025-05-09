@@ -722,6 +722,8 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
 
         // regularization
         config->regularize->dims_set(config->regularize, dims->regularize, i, "ng", &ng_qp_solver);
+        // qpscaling
+        config->qpscaling->dims_set(config->qpscaling, dims->qpscaling, i, "ng", &ng_qp_solver);
     }
     else if ( (!strcmp(field, "nsg")) || (!strcmp(field, "nsh")) || (!strcmp(field, "nsphi")))
     {

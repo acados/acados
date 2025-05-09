@@ -54,7 +54,7 @@ typedef struct
     int *nx;
     int *nu;
     int N;
-    int *ni;
+    int *ng; // number of two-sided general constraints
 } ocp_nlp_qpscaling_dims;
 
 //

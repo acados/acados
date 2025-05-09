@@ -89,6 +89,9 @@ ocp_nlp_qpscaling_dims *ocp_nlp_qpscaling_dims_assign(int N, void *raw_memory)
     // nu
     dims->nu = (int *) c_ptr;
     c_ptr += (N+1)*sizeof(int);
+    // ng
+    dims->ng = (int *) c_ptr;
+    c_ptr += (N+1)*sizeof(int);
 
     dims->N = N;
 
@@ -110,7 +113,6 @@ ocp_nlp_qpscaling_dims *ocp_nlp_qpscaling_dims_assign(int N, void *raw_memory)
 
 void ocp_nlp_qpscaling_dims_set(void *config_, ocp_nlp_qpscaling_dims *dims, int stage, char *field, int* value)
 {
-
     if (!strcmp(field, "nx"))
     {
         dims->nx[stage] = *value;
@@ -118,6 +120,10 @@ void ocp_nlp_qpscaling_dims_set(void *config_, ocp_nlp_qpscaling_dims *dims, int
     else if (!strcmp(field, "nu"))
     {
         dims->nu[stage] = *value;
+    }
+    else if (!strcmp(field, "ng"))
+    {
+        dims->ng[stage] = *value;
     }
     else
     {
