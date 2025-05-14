@@ -35,7 +35,6 @@ from typing import Union, Tuple
 
 import numpy as np
 from .acados_ocp import AcadosOcp
-from .utils import casadi_flatten
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
 
 
@@ -173,10 +172,10 @@ class AcadosCasadiOcpSolver:
         nlp_cost += solver_options.cost_scaling[-1] * cost_fun_e(xtraj[:, -1], ptraj[:, -1], model.p_global)
 
         # call w all primal variables
-        w = ca.vertcat(casadi_flatten(xtraj), casadi_flatten(utraj))
-        lbw = ca.vertcat(casadi_flatten(lb_xtraj), casadi_flatten(lb_utraj))
-        ubw = ca.vertcat(casadi_flatten(ub_xtraj), casadi_flatten(ub_utraj))
-        p_nlp = ca.vertcat(casadi_flatten(ptraj), model.p_global)
+        w = ca.vertcat(ca.vec(xtraj), ca.vec(utraj))
+        lbw = ca.vertcat(ca.vec(lb_xtraj), ca.vec(lb_utraj))
+        ubw = ca.vertcat(ca.vec(ub_xtraj), ca.vec(ub_utraj))
+        p_nlp = ca.vertcat(ca.vec(ptraj), model.p_global)
 
         # create NLP
         nlp = {"x": w, "p": p_nlp, "g": ca.vertcat(*g), "f": nlp_cost}
