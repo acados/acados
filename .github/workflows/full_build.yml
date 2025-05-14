@@ -191,6 +191,8 @@ jobs:
         source ${{runner.workspace}}/acados/acadosenv/bin/activate
         cd ${{runner.workspace}}/acados/examples/acados_python/tests
         python test_rti_sqp_residuals.py
+        cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/ocp
+        python test_casadi_formulation.py
 
     - name: Python sensitivity examples
       working-directory: ${{runner.workspace}}/acados/build

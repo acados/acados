@@ -1880,7 +1880,8 @@ void ocp_nlp_set(ocp_nlp_solver *solver, int stage, const char *field, void *val
         int nx = dims->nx[stage];
         double *double_values = value;
         blasfeo_pack_dvec(nz, double_values, 1, mem->sim_guess + stage, nx);
-        mem->set_sim_guess[stage] = true;
+        if (nz > 0)
+            mem->set_sim_guess[stage] = true;
         // printf("set z_guess\n");
         // blasfeo_print_exp_dvec(nz, mem->sim_guess+stage, nx);
     }
