@@ -290,6 +290,7 @@ static void scale_lam_duals(ocp_qp_out *qp_out, ocp_nlp_qpscaling_obj_gershgorin
     int N = qp_out->dim->N;
     double scaling_factor;
 
+
     for (int i = 0; i <= N; i++)
     {
         for (int j = 0; j < ng[i]; ++j)
@@ -297,10 +298,12 @@ static void scale_lam_duals(ocp_qp_out *qp_out, ocp_nlp_qpscaling_obj_gershgorin
             scaling_factor = BLASFEO_DVECEL(mem->constraints_scaling_vec+i, j);
 
             // scale lower bound
-            BLASFEO_DVECEL(qp_out->lam+i, nb[i]+j) *= scaling_factor;
+            double tmp = BLASFEO_DVECEL(qp_out->lam+i, nb[i]+j);
+            printf("unscaled lam: %.2e\n", tmp);
+            BLASFEO_DVECEL(qp_out->lam+i, nb[i]+j) *= 1.0/scaling_factor;
 
             // scale upper bound
-            BLASFEO_DVECEL(qp_out->lam+i, 2*nb[i]+ng[i]+j) *= scaling_factor;
+            BLASFEO_DVECEL(qp_out->lam+i, 2*nb[i]+ng[i]+j) *= 1.0/scaling_factor;
 
             // we need to scale slack variables as well to be consistent with problem
         }
