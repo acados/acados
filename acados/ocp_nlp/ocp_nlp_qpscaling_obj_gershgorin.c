@@ -278,7 +278,7 @@ static void scale_pi_duals(ocp_qp_out *qp_out, ocp_nlp_qpscaling_obj_gershgorin_
     {
         for (int j = 0; j < nx[i+i]; ++j)
         {
-            BLASFEO_DVECEL(qp_out->pi+i, j) *= BLASFEO_DVECEL(mem->dynamics_scaling_vec+i, j);
+            BLASFEO_DVECEL(qp_out->pi+i, j) *= 1.0/BLASFEO_DVECEL(mem->dynamics_scaling_vec+i, j);
         }
     }
 }
@@ -290,7 +290,6 @@ static void scale_lam_duals(ocp_qp_out *qp_out, ocp_nlp_qpscaling_obj_gershgorin
     int N = qp_out->dim->N;
     double scaling_factor;
 
-
     for (int i = 0; i <= N; i++)
     {
         for (int j = 0; j < ng[i]; ++j)
@@ -298,8 +297,6 @@ static void scale_lam_duals(ocp_qp_out *qp_out, ocp_nlp_qpscaling_obj_gershgorin
             scaling_factor = BLASFEO_DVECEL(mem->constraints_scaling_vec+i, j);
 
             // scale lower bound
-            double tmp = BLASFEO_DVECEL(qp_out->lam+i, nb[i]+j);
-            printf("unscaled lam: %.2e\n", tmp);
             BLASFEO_DVECEL(qp_out->lam+i, nb[i]+j) *= 1.0/scaling_factor;
 
             // scale upper bound
@@ -308,6 +305,8 @@ static void scale_lam_duals(ocp_qp_out *qp_out, ocp_nlp_qpscaling_obj_gershgorin
             // we need to scale slack variables as well to be consistent with problem
         }
     }
+
+    // scale slack variables here!!!!
 }
 
 /************************************************
@@ -442,6 +441,7 @@ void ocp_nlp_qpscaling_scale_qp_constraints(void *config, ocp_nlp_qpscaling_dims
             mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, nb[i]+j);
             if (mask_value == 1.0)
             {
+                printf("scale lower bound\n");
                 BLASFEO_DVECEL(qp_in->d+i, nb[i]+j) = BLASFEO_DVECEL(qp_in->d+i, nb[i]+j) / scaling_factor;
             }
 
@@ -449,6 +449,7 @@ void ocp_nlp_qpscaling_scale_qp_constraints(void *config, ocp_nlp_qpscaling_dims
             mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, 2*nb[i]+ng[i]+j);
             if (mask_value == 1.0)
             {
+                printf("scale upper bound\n");
                 BLASFEO_DVECEL(qp_in->d+i, 2*nb[i]+ng[i]+j) = BLASFEO_DVECEL(qp_in->d+i, 2*nb[i]+ng[i]+j) / scaling_factor;
             }
         }

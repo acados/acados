@@ -997,6 +997,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
         // regularize Hessian
         acados_tic(&timer_qp);
         config->qpscaling->scale_qp(config->qpscaling, dims->qpscaling, nlp_opts->qpscaling, nlp_mem->qpscaling, qp_in);
+        // we need to scale the right hand side of the feasibility QP as well!
         config->regularize->regularize(config->regularize, dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
         nlp_timings->time_reg += acados_toc(&timer_qp);
     }
