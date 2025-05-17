@@ -291,6 +291,7 @@ bool is_funnel_sufficient_decrease_satisfied(ocp_nlp_globalization_funnel_memory
 
 bool is_switching_condition_satisfied(ocp_nlp_globalization_funnel_opts *opts, double pred_optimality, double step_size, double pred_infeasibility)
 {
+    // if (step_size * pred_optimality >= opts->fraction_switching_condition * pred_infeasibility)
     // if (step_size * pred_optimality >= opts->fraction_switching_condition * pred_infeasibility * pred_infeasibility)
     if (step_size * pred_optimality >= opts->fraction_switching_condition * pred_infeasibility)
     {
@@ -338,6 +339,12 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
     print_debug_output_double("trial objective", trial_objective, nlp_opts->print_level, 2);
     print_debug_output_double("trial infeasibility", trial_infeasibility, nlp_opts->print_level, 2);
     print_debug_output_double("pred", pred, nlp_opts->print_level, 2);
+
+    printf("pred: %.4e\n", pred);
+    if (pred < 0)
+    {
+        printf("pred is negative!\n");
+    }
 
     if (opts->use_merit_fun_only) // We only check the penalty method but not the funnel!
     {
