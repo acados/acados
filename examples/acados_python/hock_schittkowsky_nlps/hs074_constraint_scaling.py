@@ -36,8 +36,8 @@ from itertools import product
 
 def main():
     # run test cases
-    solve_problem_with_constraint_scaling(False)
     solve_problem_with_constraint_scaling(True)
+    solve_problem_with_constraint_scaling(False)
 
 def solve_problem_with_constraint_scaling(scale_constraints):
 
@@ -46,33 +46,39 @@ def solve_problem_with_constraint_scaling(scale_constraints):
 
     # set model
     model = AcadosModel()
-    x = SX.sym('x', 2)
+    x = SX.sym('x', 4)
 
     # dynamics: identity
     model.disc_dyn_expr = x
     model.x = x
-    model.name = f'hs_016'
+    model.name = f'hs_074'
     ocp.model = model
 
+    a = 0.55
 
     # cost
     ocp.cost.cost_type_e = 'EXTERNAL'
-    ocp.model.cost_expr_ext_cost_e = 100*(x[1] - x[0]**2)**2 + (1 - x[0])**2
+    ocp.model.cost_expr_ext_cost_e = 3*x[0] + 1.0e-6*x[0]**3 + 2*x[1] + 2.0e-6*x[1]**3/3
 
     # constraints
-    ocp.model.con_h_expr_e = vertcat(x[0]**2 + x[1], x[0] + x[1]**2)
-    ocp.constraints.lh_e = np.array([0.0, 0.0])
-    ocp.constraints.uh_e = np.array([ACADOS_INFTY, ACADOS_INFTY])
+    g = SX.zeros(4, 1)
+    g[0] =  x[3] - x[2]
+    g[1] = x[0]  - 1000*sin(-x[2] - 0.25) - 1000*sin(-x[3] - 0.25)
+    g[2] = x[1]  - 1000*sin(x[2] - 0.25) - 1000*sin(x[2]-x[3] - 0.25)
+    g[3] = 1000*sin(x[3] - 0.25) + 1000*sin(x[3] - x[2] - 0.25)
+
+    ocp.model.con_h_expr_e = g
+    ocp.constraints.lh_e = np.array([-a, 894.8, 894.8, -1294.8])
+    ocp.constraints.uh_e = np.array([a, 894.8, 894.8, -1294.8])
 
     # add bounds on x;
-    ocp.constraints.idxbx_e = np.arange(2)
-    ocp.constraints.ubx_e = np.array([0.5, 1.0])
-    ocp.constraints.lbx_e = np.array([-0.5, -ACADOS_INFTY])
+    ocp.constraints.idxbx_e = np.arange(4)
+    ocp.constraints.ubx_e = np.array([1200, 1200, a, a])
+    ocp.constraints.lbx_e = np.array([0.0, 0.0, -a, -a])
 
     # set options
     ocp.solver_options.N_horizon = 0
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-    # ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM' # Leads to segfault!
     ocp.solver_options.qp_solver_mu0 = 1e3
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.regularize_method = 'MIRROR'
@@ -97,25 +103,16 @@ def solve_problem_with_constraint_scaling(scale_constraints):
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
 
     # initialize solver
-    xinit = np.array([-2, 1])
+    xinit = np.zeros(4)
     ocp_solver.set(0, "x", xinit)
 
     # solve
     status = ocp_solver.solve()
 
-    # get solution
-    solution = ocp_solver.get(0, "x")
-    cost = ocp_solver.get_cost()
-
     if ocp.solver_options.qpscaling_scale_qp_constraints:
         assert status == 0, "Scaling of the constraints was not succesful!"
     else:
-        assert status == 0, "Problem should be solvable without scaling!"
-
-    # assert np.allclose(exact_solution, solution), "Converged to different solution!"
-    # assert np.allclose(optimal_objective, cost), "Converged to different objective value!"
-
-
+        assert status == 4, "Problem should not be solvable without scaling!"
 
 if __name__ == '__main__':
     main()
