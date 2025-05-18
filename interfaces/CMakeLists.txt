@@ -233,7 +233,7 @@ add_test(NAME py_sqp_wfqp_inconsistent_linearization
         python inconsistent_qp_linearization_test.py)
 
 add_test(NAME py_sqp_wfqp_problem_hs015
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/hock_schittkowsky_nlps/nlp_hs015
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/hock_schittkowsky_nlps
         python hs015_test.py)
 
 # CMake test
