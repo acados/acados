@@ -99,7 +99,7 @@ class GenerateContext:
                 fun = ca.Function(name, inputs, outputs, self.__casadi_fun_opts)
                 # print(f"Generating function {name} with inputs {inputs}")
             except RuntimeError as e:
-                print(f"\nError while creating function {name} with inputs {inputs} and outputs {outputs}")
+                print(f"\nError while creating function {name} with inputs \n{inputs} \n and outputs \n {outputs}")
                 print(e)
                 raise e
 
