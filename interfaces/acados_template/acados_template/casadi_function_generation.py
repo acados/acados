@@ -170,9 +170,15 @@ class GenerateContext:
             for sym, expr in zip(symbols_to_add, param_expr_to_add):
                 precompute_pairs.append([sym, expr])
 
-        global_data_sym_list = [input for input, _ in precompute_pairs]
+        global_data_sym_list = [ca.vec(input) for input, _ in precompute_pairs]
+        global_data_expr_list = [ca.vec(output) for _, output in precompute_pairs]
+
         self.global_data_sym = ca.vertcat(*global_data_sym_list)
-        self.global_data_expr = ca.cse(ca.vertcat(*[output for _, output in precompute_pairs]))
+        self.global_data_expr = ca.cse(ca.vertcat(*global_data_expr_list))
+
+        # make sure global_data is dense -> convert to dense only taking the non-zero elements into account.
+        self.global_data_expr = ca.sparsity_cast(self.global_data_expr, ca.Sparsity.dense(self.global_data_expr.nnz()))
+        self.global_data_sym = ca.sparsity_cast(self.global_data_sym, ca.Sparsity.dense(self.global_data_sym.nnz()))
 
         assert casadi_length(self.global_data_expr) == casadi_length(self.global_data_sym), f"Length mismatch: {casadi_length(self.global_data_expr)} != {casadi_length(self.global_data_sym)}"
 
