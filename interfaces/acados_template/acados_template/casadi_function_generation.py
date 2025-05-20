@@ -177,8 +177,9 @@ class GenerateContext:
         self.global_data_expr = ca.cse(ca.vertcat(*global_data_expr_list))
 
         # make sure global_data is dense -> convert to dense only taking the non-zero elements into account.
-        self.global_data_expr = ca.sparsity_cast(self.global_data_expr, ca.Sparsity.dense(self.global_data_expr.nnz()))
-        self.global_data_sym = ca.sparsity_cast(self.global_data_sym, ca.Sparsity.dense(self.global_data_sym.nnz()))
+        if casadi_length(self.global_data_expr) > 0:
+            self.global_data_expr = ca.sparsity_cast(self.global_data_expr, ca.Sparsity.dense(self.global_data_expr.nnz()))
+            self.global_data_sym = ca.sparsity_cast(self.global_data_sym, ca.Sparsity.dense(self.global_data_sym.nnz()))
 
         assert casadi_length(self.global_data_expr) == casadi_length(self.global_data_sym), f"Length mismatch: {casadi_length(self.global_data_expr)} != {casadi_length(self.global_data_sym)}"
 

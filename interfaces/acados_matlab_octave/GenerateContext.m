@@ -196,8 +196,10 @@ classdef GenerateContext < handle
             self.global_data_expr = cse(vertcat(global_data_expr_list{:}));
 
             % make sure global_data is dense
-            self.global_data_expr = sparsity_cast(self.global_data_expr, Sparsity.dense(self.global_data_expr.nnz()));
-            self.global_data_sym = sparsity_cast(self.global_data_sym, Sparsity.dense(self.global_data_sym.nnz()));
+            if length(self.global_data_expr) > 0
+                self.global_data_expr = sparsity_cast(self.global_data_expr, Sparsity.dense(self.global_data_expr.nnz()));
+                self.global_data_sym = sparsity_cast(self.global_data_sym, Sparsity.dense(self.global_data_sym.nnz()));
+            end
 
             % Assert length match
             assert(length(self.global_data_expr) == length(self.global_data_sym), ...
