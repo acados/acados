@@ -36,7 +36,6 @@ from typing import Union, Tuple
 import numpy as np
 from .acados_ocp import AcadosOcp
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
-from itertools import zip_longest
 
 class AcadosCasadiOcpSolver:
 
@@ -61,22 +60,19 @@ class AcadosCasadiOcpSolver:
 
         # create variables indexed by shooting nodes, vectorize in the end
         ca_symbol = model.get_casadi_symbol()
-        xtraj = ca_symbol('x', dims.nx, solver_options.N_horizon+1)
-        xtraj_node = [xtraj[:, i] for i in range(xtraj.shape[-1])]
-        utraj = ca_symbol('u', dims.nu, solver_options.N_horizon)
-        utraj_node = [utraj[:, i] for i in range(utraj.shape[-1])]
+        xtraj_node = [ca_symbol(f'x{i}', dims.nx, 1) for i in range(solver_options.N_horizon+1)]
+        utraj_node = [ca_symbol(f'u{i}', dims.nu, 1) for i in range(solver_options.N_horizon)]
         if dims.nz > 0:
             raise NotImplementedError("CasADi NLP formulation not implemented for models with algebraic variables (z).")
         # parameters
-        ptraj = ca_symbol('p', dims.np, solver_options.N_horizon+1)
-        ptraj_node = [ptraj[:, i] for i in range(ptraj.shape[-1])]
+        ptraj_node = [ca_symbol(f'p{i}', dims.np, 1) for i in range(solver_options.N_horizon)]
 
         ### Constraints: bounds
         # setup state bounds
         lb_xtraj_node = [-np.inf * ca.DM.ones((dims.nx, 1)) for _ in range(solver_options.N_horizon+1)]
         ub_xtraj_node = [np.inf * ca.DM.ones((dims.nx, 1)) for _ in range(solver_options.N_horizon+1)]
-        lb_xtraj_node[0][constraints.idxbx_0]=constraints.lbx_0
-        ub_xtraj_node[0][constraints.idxbx_0]=constraints.ubx_0
+        lb_xtraj_node[0][constraints.idxbx_0] = constraints.lbx_0
+        ub_xtraj_node[0][constraints.idxbx_0] = constraints.ubx_0
         for i in range(1, solver_options.N_horizon):
             lb_xtraj_node[i][constraints.idxbx] = constraints.lbx
             ub_xtraj_node[i][constraints.idxbx] = constraints.ubx
@@ -177,14 +173,26 @@ class AcadosCasadiOcpSolver:
 
         ### Formulation
         # interleave primary variables w and bounds
-        w_interleaved = [x for pair in zip_longest(xtraj_node, utraj_node) for x in pair if x is not None]
+        w_interleaved = []
+        lbw_interleaved = []
+        ubw_interleaved = []
+        for i in range(solver_options.N_horizon):
+            w_interleaved.append(xtraj_node[i])
+            lbw_interleaved.append(lb_xtraj_node[i])
+            ubw_interleaved.append(ub_xtraj_node[i])
+            w_interleaved.append(utraj_node[i])
+            lbw_interleaved.append(lb_utraj_node[i])
+            ubw_interleaved.append(ub_utraj_node[i])
+        w_interleaved.append(xtraj_node[-1])
+        lbw_interleaved.append(lb_xtraj_node[-1])
+        ubw_interleaved.append(ub_xtraj_node[-1])
+
+        # vectorize
         w = ca.vertcat(*w_interleaved)
-        lbw_interleaved = [x for pair in zip_longest(lb_xtraj_node, lb_utraj_node) for x in pair if x is not None]
         lbw = ca.vertcat(*lbw_interleaved)
-        ubw_interleaved = [x for pair in zip_longest(ub_xtraj_node, ub_utraj_node) for x in pair if x is not None]
         ubw = ca.vertcat(*ubw_interleaved)
         p_nlp = ca.vertcat(*ptraj_node, model.p_global)
-
+        
         # create NLP
         nlp = {"x": w, "p": p_nlp, "g": ca.vertcat(*g), "f": nlp_cost}
         bounds = {"lbx": lbw, "ubx": ubw, "lbg": ca.vertcat(*lbg), "ubg": ca.vertcat(*ubg)}
@@ -214,7 +222,7 @@ class AcadosCasadiOcpSolver:
         :return: status of the solver
         """
         self.nlp_sol = self.casadi_solver(lbx=self.bounds['lbx'], ubx=self.bounds['ubx'], lbg=self.bounds['lbg'], ubg=self.bounds['ubg'])
-
+        self.nlp_sol_x = self.nlp_sol['x'].full()
         # TODO: return correct status
         return 0
 
@@ -255,11 +263,9 @@ class AcadosCasadiOcpSolver:
         pivot = stage*(dims.nx+dims.nu)
 
         if field == 'x':
-            sol_w = self.nlp_sol['x']
-            return sol_w[pivot:pivot+dims.nx].full().flatten()
+            return self.nlp_sol_x[pivot:pivot+dims.nx].flatten()
         elif field == 'u':
-            sol_w = self.nlp_sol['x']
-            return sol_w[pivot+dims.nx:pivot+dims.nx+dims.nu].full().flatten()
+            return self.nlp_sol_x[pivot+dims.nx:pivot+dims.nx+dims.nu].flatten()
         else:
             raise NotImplementedError(f"Field '{field}' is not implemented in AcadosCasadiOcpSolver")
 
