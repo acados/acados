@@ -111,7 +111,7 @@ classdef AcadosOcpSolver < handle
 
             %% generate
             if solver_creation_opts.generate
-                obj.generate(ocp);
+                obj.generate();
             end
 
             %% load json, store options in object
@@ -134,7 +134,7 @@ classdef AcadosOcpSolver < handle
 
             %% compile problem specific shared library
             if solver_creation_opts.build
-                obj.compile_ocp_shared_lib(code_export_directory)
+                obj.compile_ocp_shared_lib(code_export_directory);
             end
 
             %% create solver

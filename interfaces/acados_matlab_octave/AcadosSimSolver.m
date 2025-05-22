@@ -98,11 +98,11 @@ classdef AcadosSimSolver < handle
             end
 
             % compile mex sim interface if needed
-            obj.compile_mex_sim_interface_if_needed(solver_creation_opts)
+            obj.compile_mex_sim_interface_if_needed(solver_creation_opts);
 
             %% generate
             if solver_creation_opts.generate
-                obj.generate(sim)
+                obj.generate();
             end
 
             % load json: TODO!?
@@ -112,7 +112,7 @@ classdef AcadosSimSolver < handle
 
             %% compile problem specific shared library
             if solver_creation_opts.build
-                obj.compile_sim_shared_lib(code_export_directory)
+                obj.compile_sim_shared_lib(code_export_directory);
             end
 
             %% create solver
