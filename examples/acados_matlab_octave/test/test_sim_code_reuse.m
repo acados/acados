@@ -15,7 +15,7 @@
 % this list of conditions and the following disclaimer in the documentation
 % and/or other materials provided with the distribution.
 %
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS'
 % AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 % IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 % ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -27,47 +27,46 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
+import casadi.*
 
-assert(1+1==2)
+check_acados_requirements()
+creation_modes = {'standard', 'precompiled', 'no_sim'};
+for i = 1:length(creation_modes)
 
-disp('assertation works')
+    % simulation parameters
+    N_sim = 100;
+    x0 = [0; 1e-1; 0; 0]; % initial state
+    u0 = 0; % control input
 
-disp('checking environment variables')
+    sim_solver = create_sim_solver_code_reuse(creation_modes{i});
+    nx = length(sim_solver.get('x', 0));
 
-disp('MATLABPATH')
-disp(getenv('MATLABPATH'))
+    %% simulate system in loop
+    x_sim = zeros(nx, N_sim+1);
+    x_sim(:,1) = x0;
 
-disp('MODEL_FOLDER')
-disp(getenv('MODEL_FOLDER'))
+    for ii=1:N_sim
 
+        % set initial state
+        sim_solver.set('x', x_sim(:,ii));
+        sim_solver.set('u', u0);
 
-disp('ENV_RUN')
-disp(getenv('ENV_RUN'))
+        % solve
+        sim_solver.solve();
 
-disp('LD_LIBRARY_PATH')
-disp(getenv('LD_LIBRARY_PATH'))
+        % get simulated state
+        x_sim(:,ii+1) = sim_solver.get('xn');
+    end
 
-disp('pwd')
-disp(pwd)
+    % forward sensitivities ( dxn_d[x0,u] )
+    S_forw = sim_solver.get('S_forw');
 
-disp('running tests')
+    if i == 1
+        S_forw_ref = S_forw;
+    elseif max(abs(S_forw-S_forw_ref)) > 1e-6
+        error('solvers should have the same output independent of compilation options');
+    end
+    S_forw
 
-%% run all tests
-test_names = [
-    "test_code_reuse",
-    "test_sim_code_reuse",
-    "run_test_dim_check",
-"run_test_ocp_mass_spring",
-% "run_test_ocp_pendulum",
-"run_test_ocp_wtnx6",
-% "run_test_sim_adj",
-"run_test_sim_dae",
-% "run_test_sim_forw",
-"run_test_sim_hess",
-"param_test",
-];
-
-for k = 1:length(test_names)
-    disp(strcat("running test ", test_names(k)));
-    run(test_names(k))
+    clear sim_solver
 end

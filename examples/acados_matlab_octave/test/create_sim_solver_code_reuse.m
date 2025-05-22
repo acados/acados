@@ -15,7 +15,7 @@
 % this list of conditions and the following disclaimer in the documentation
 % and/or other materials provided with the distribution.
 %
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS'
 % AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 % IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 % ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -28,46 +28,35 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 
 
-assert(1+1==2)
+function sim_solver = create_sim_solver_code_reuse(creation_mode)
 
-disp('assertation works')
+    addpath('../pendulum_on_cart_model')
 
-disp('checking environment variables')
+    check_acados_requirements()
 
-disp('MATLABPATH')
-disp(getenv('MATLABPATH'))
+    json_file = 'pendulum_ocp.json';
+    solver_creation_opts = struct();
+    solver_creation_opts.json_file = json_file;
+    if strcmp(creation_mode, 'standard')
+        disp('Standard creation mode');
+    elseif strcmp(creation_mode, 'precompiled') || strcmp(creation_mode, 'no_sim')
+        solver_creation_opts.generate = false;
+        solver_creation_opts.build = false;
+        solver_creation_opts.compile_mex_wrapper = false;
+    else
+        error('Invalid creation mode')
+    end
 
-disp('MODEL_FOLDER')
-disp(getenv('MODEL_FOLDER'))
+    if strcmp(creation_mode, 'no_sim')
+        sim = [];
+    else
+        model = get_pendulum_on_cart_model();
+        sim = AcadosSim();
+        sim.model = model;
+        sim.solver_options.Tsim = 0.1; % simulation time
+        sim.solver_options.integrator_type = 'ERK';
+    end
 
-
-disp('ENV_RUN')
-disp(getenv('ENV_RUN'))
-
-disp('LD_LIBRARY_PATH')
-disp(getenv('LD_LIBRARY_PATH'))
-
-disp('pwd')
-disp(pwd)
-
-disp('running tests')
-
-%% run all tests
-test_names = [
-    "test_code_reuse",
-    "test_sim_code_reuse",
-    "run_test_dim_check",
-"run_test_ocp_mass_spring",
-% "run_test_ocp_pendulum",
-"run_test_ocp_wtnx6",
-% "run_test_sim_adj",
-"run_test_sim_dae",
-% "run_test_sim_forw",
-"run_test_sim_hess",
-"param_test",
-];
-
-for k = 1:length(test_names)
-    disp(strcat("running test ", test_names(k)));
-    run(test_names(k))
+    %% create integrator
+    sim_solver = AcadosSimSolver(sim, solver_creation_opts);
 end
