@@ -53,7 +53,7 @@ classdef AcadosOcpSolver < handle
 
         function obj = AcadosOcpSolver(ocp, varargin)
             %% optional arguments:
-            % varagin{1}: solver_creation_opts: this is a struct in which some of the fields can be defined to overwrite the default values.
+            % varargin{1}: solver_creation_opts: this is a struct in which some of the fields can be defined to overwrite the default values.
             % The fields are:
             % - json_file: path to the json file containing the ocp description
             % - build: boolean, if true, the problem specific shared library is compiled
@@ -91,7 +91,7 @@ classdef AcadosOcpSolver < handle
             if isempty(ocp)
                 json_file = solver_creation_opts.json_file;
             else
-                % OCP / MOCP provided
+                % formulation provided
                 if ~isempty(solver_creation_opts.json_file)
                     ocp.json_file = solver_creation_opts.json_file;
                 end
@@ -132,7 +132,7 @@ classdef AcadosOcpSolver < handle
 
             %% compile problem specific shared library
             if solver_creation_opts.build
-                acados_template_mex.compile_ocp_shared_lib(code_export_directory)
+                obj.compile_ocp_shared_lib(code_export_directory)
             end
 
             %% create solver
@@ -508,7 +508,72 @@ classdef AcadosOcpSolver < handle
                 disp('found compiled acados MEX interface')
             end
         end
-    end
+
+
+        function compile_ocp_shared_lib(self, export_dir)
+            return_dir = pwd;
+            cd(export_dir);
+            if isunix
+                %% old code for make
+                if ~is_octave()
+                    % use Make build system
+                    [ status, result ] = system('make ocp_shared_lib');
+                    if status
+                        cd(return_dir);
+                        error('Building templated code as shared library failed.\nGot status %d, result: %s',...
+                            status, result);
+                    end
+                else
+                    % use CMake build system, has issues on Linux with MATLAB, see https://github.com/acados/acados/issues/1209
+                    [ status, result ] = system('cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_OCP_SOLVER_LIB=ON -S . -B .');
+                    if status
+                        cd(return_dir);
+                        error('Generating buildsystem failed.\nGot status %d, result: %s',...
+                            status, result);
+                    end
+                    [ status, result ] = system('cmake --build . --config Release');
+                    if status
+                        cd(return_dir);
+                        error('Building templated code as shared library failed.\nGot status %d, result: %s',...
+                            status, result);
+                    end
+                end
+            else
+                % check compiler
+                use_msvc = false;
+                if ~is_octave()
+                    mexOpts = mex.getCompilerConfigurations('C', 'Selected');
+                    if contains(mexOpts.ShortName, 'MSVC')
+                        use_msvc = true;
+                    end
+                end
+                % compile on Windows platform
+                if use_msvc
+                    % get env vars for MSVC
+                    % msvc_env = fullfile(mexOpts.Location, 'VC\Auxiliary\Build\vcvars64.bat');
+                    % assert(isfile(msvc_env), 'Cannot find definition of MSVC env vars.');
+                    % detect MSVC version
+                    msvc_ver_str = "Visual Studio " + mexOpts.Version(1:2) + " " + mexOpts.Name(22:25);
+                    [ status, result ] = system(['cmake -G "' + msvc_ver_str + '" -A x64 -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_OCP_SOLVER_LIB=ON -S . -B .']);
+                else
+                    [ status, result ] = system('cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_OCP_SOLVER_LIB=ON -S . -B .');
+                end
+                if status
+                    cd(return_dir);
+                    error('Generating buildsystem failed.\nGot status %d, result: %s',...
+                        status, result);
+                end
+                [ status, result ] = system('cmake --build . --config Release');
+                if status
+                    cd(return_dir);
+                    error('Building templated code as shared library failed.\nGot status %d, result: %s',...
+                        status, result);
+                end
+            end
+            cd(return_dir);
+        end
+
+    end % private methods
 
 end % class
 
