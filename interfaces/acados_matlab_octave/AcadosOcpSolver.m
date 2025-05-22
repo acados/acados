@@ -102,6 +102,8 @@ classdef AcadosOcpSolver < handle
                 if ~isempty(ocp.solver_options.compile_interface)
                     solver_creation_opts.compile_interface = ocp.solver_options.compile_interface;
                 end
+                % make consistent
+                ocp.make_consistent();
             end
 
             %% compile mex interface if needed
@@ -443,8 +445,6 @@ classdef AcadosOcpSolver < handle
 
     methods (Access = private)
         function generate(obj)
-            % detect dimensions & sanity checks
-            obj.ocp.make_consistent()
 
             % generate
             check_dir_and_create(fullfile(pwd, obj.ocp.code_export_directory));
