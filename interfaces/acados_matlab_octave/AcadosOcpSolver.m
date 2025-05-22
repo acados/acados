@@ -90,7 +90,6 @@ classdef AcadosOcpSolver < handle
 
             if isempty(ocp)
                 json_file = solver_creation_opts.json_file;
-
             else
                 % OCP / MOCP provided
                 if ~isempty(solver_creation_opts.json_file)
@@ -103,9 +102,7 @@ classdef AcadosOcpSolver < handle
                 if ~isempty(ocp.solver_options.compile_interface)
                     solver_creation_opts.compile_interface = ocp.solver_options.compile_interface;
                 end
-
             end
-
 
             %% compile mex interface if needed
             obj.compile_mex_interface_if_needed(solver_creation_opts);
@@ -445,16 +442,16 @@ classdef AcadosOcpSolver < handle
     end % methods
 
     methods (Access = private)
-        function generate(obj, ocp)
+        function generate(obj)
             % detect dimensions & sanity checks
             obj.ocp.make_consistent()
 
             % generate
-            check_dir_and_create(fullfile(pwd, ocp.code_export_directory));
-            context = ocp.generate_external_functions();
+            check_dir_and_create(fullfile(pwd, obj.ocp.code_export_directory));
+            context = obj.ocp.generate_external_functions();
 
-            ocp.dump_to_json()
-            ocp.render_templates()
+            obj.ocp.dump_to_json()
+            obj.ocp.render_templates()
         end
 
         function compile_mex_interface_if_needed(obj, solver_creation_opts)
