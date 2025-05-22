@@ -55,7 +55,7 @@ classdef AcadosSim < handle
             obj.acados_include_path = [];
             obj.acados_lib_path = [];
             obj.shared_lib_ext = [];
-            obj.json_file = [];
+            obj.json_file = 'acados_sim.json';
             obj.cython_include_dirs = [];
             obj.code_export_directory = [];
 

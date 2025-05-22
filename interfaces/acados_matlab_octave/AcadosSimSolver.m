@@ -31,12 +31,14 @@
 
 classdef AcadosSimSolver < handle
 
-    properties
-        t_sim % templated solver
+    properties (Access = public)
         sim % MATLAB class AcadosSim describing the initial value problem
+    end
+
+    properties (Access = private)
+        t_sim % templated solver
+        name
     end % properties
-
-
 
     methods
 
@@ -91,6 +93,8 @@ classdef AcadosSimSolver < handle
                 if ~isempty(sim.solver_options.compile_interface)
                     solver_creation_opts.compile_interface = sim.solver_options.compile_interface;
                 end
+                % make consistent
+                sim.make_consistent();
             end
 
             % compile mex sim interface if needed
@@ -102,7 +106,9 @@ classdef AcadosSimSolver < handle
             end
 
             % load json: TODO!?
-            code_export_directory = sim.code_export_directory;
+            acados_sim_struct = loadjson(fileread(json_file), 'SimplifyCell', 0);
+            obj.name = acados_sim_struct.model.name;
+            code_export_directory = acados_sim_struct.code_export_directory;
 
             %% compile problem specific shared library
             if solver_creation_opts.build
@@ -111,9 +117,9 @@ classdef AcadosSimSolver < handle
 
             %% create solver
             return_dir = pwd();
-            cd(obj.sim.code_export_directory)
+            cd(code_export_directory)
 
-            mex_sim_solver = str2func(sprintf('%s_mex_sim_solver', obj.sim.model.name));
+            mex_sim_solver = str2func(sprintf('%s_mex_sim_solver', obj.name));
             obj.t_sim = mex_sim_solver();
             addpath(pwd());
 
@@ -146,9 +152,6 @@ classdef AcadosSimSolver < handle
 
     methods (Access = private)
         function generate(obj)
-            % detect dimensions & sanity checks
-            obj.sim.make_consistent()
-
             % generate
             check_dir_and_create(fullfile(pwd, obj.sim.code_export_directory));
             obj.sim.generate_external_functions();
