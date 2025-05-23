@@ -219,15 +219,13 @@ classdef AcadosSim < handle
             model.gnsf_nontrivial_f_LO = self.model.gnsf_nontrivial_f_LO;
             model.gnsf_purely_linear = self.model.gnsf_purely_linear;
             self.model = model;
-            %% post process numerical data (mostly cast scalars to 1-dimensional cells)
-            dims = self.dims;
-
-            %% load JSON layout
+            % jsonlab
             acados_folder = getenv('ACADOS_INSTALL_DIR');
             addpath(fullfile(acados_folder, 'external', 'jsonlab'))
 
+            %% post process numerical data (mostly cast scalars to 1-dimensional cells)
             % parameter values
-            self.parameter_values = reshape(num2cell(self.parameter_values), [1, dims.np]);
+            self.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);
 
             %% dump JSON file
             sim_json_struct = self.struct();
