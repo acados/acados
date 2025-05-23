@@ -15,7 +15,7 @@
 % this list of conditions and the following disclaimer in the documentation
 % and/or other materials provided with the distribution.
 %
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS'
 % AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 % IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 % ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -28,10 +28,35 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 
 
-function solver = acados_sim(model, opts)
+function sim_solver = create_sim_solver_code_reuse(creation_mode)
 
-    sim = setup_AcadosSim_from_legacy_sim_description(model, opts);
-    solver = AcadosSimSolver(sim, struct('output_dir', opts.opts_struct.output_dir));
-    % warning('In acados v0.4.0, many changes to the MATLAB/Octave interface of acados have been introduced.', ...
-    % 'We recommend directly using the new AcadosSimSolver and to check the examples for the intended use.')
+    addpath('../pendulum_on_cart_model')
+
+    check_acados_requirements()
+
+    json_file = 'pendulum_ocp.json';
+    solver_creation_opts = struct();
+    solver_creation_opts.json_file = json_file;
+    if strcmp(creation_mode, 'standard')
+        disp('Standard creation mode');
+    elseif strcmp(creation_mode, 'precompiled') || strcmp(creation_mode, 'no_sim')
+        solver_creation_opts.generate = false;
+        solver_creation_opts.build = false;
+        solver_creation_opts.compile_mex_wrapper = false;
+    else
+        error('Invalid creation mode')
+    end
+
+    if strcmp(creation_mode, 'no_sim')
+        sim = [];
+    else
+        model = get_pendulum_on_cart_model();
+        sim = AcadosSim();
+        sim.model = model;
+        sim.solver_options.Tsim = 0.1; % simulation time
+        sim.solver_options.integrator_type = 'ERK';
+    end
+
+    %% create integrator
+    sim_solver = AcadosSimSolver(sim, solver_creation_opts);
 end

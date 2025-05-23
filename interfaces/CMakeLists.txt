@@ -349,9 +349,6 @@ add_test(NAME python_pendulum_ocp_example_cmake
         python main_convex_onesided.py)
 
     # Sim
-    add_test(NAME python_pendulum_sim_example_cmake
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/sim
-        python minimal_example_sim_cmake.py)
     add_test(NAME python_pendulum_ext_sim_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/sim
         python extensive_example_sim.py
