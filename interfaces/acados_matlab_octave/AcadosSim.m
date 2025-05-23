@@ -163,7 +163,7 @@ classdef AcadosSim < handle
                 % options for code generation
                 code_gen_opts = struct();
                 code_gen_opts.generate_hess = self.solver_options.sens_hess;
-                code_gen_opts.code_export_directory = 'c_generated_code'; % TODO: for OCP this is part of OCP class
+                code_gen_opts.code_export_directory = self.code_export_directory;
                 code_gen_opts.ext_fun_expand_dyn = self.solver_options.ext_fun_expand_dyn;
                 code_gen_opts.ext_fun_expand_cost = false;
                 code_gen_opts.ext_fun_expand_constr = false;
@@ -270,7 +270,7 @@ classdef AcadosSim < handle
             %% render templates
             matlab_template_path = 'matlab_templates';
             main_dir = pwd;
-            chdir('c_generated_code');
+            chdir(self.code_export_directory);
 
             % cell array with entries (template_file, output file)
             template_list = { ...
