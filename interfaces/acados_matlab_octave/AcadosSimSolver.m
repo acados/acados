@@ -106,6 +106,8 @@ classdef AcadosSimSolver < handle
             end
 
             % load json: TODO!?
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
+            addpath(fullfile(acados_folder, 'external', 'jsonlab'));
             acados_sim_struct = loadjson(fileread(json_file), 'SimplifyCell', 0);
             obj.name = acados_sim_struct.model.name;
             code_export_directory = acados_sim_struct.code_export_directory;
