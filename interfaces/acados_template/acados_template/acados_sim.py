@@ -341,6 +341,9 @@ class AcadosSim:
         """Path to where code will be exported. Default: `c_generated_code`."""
         self.shared_lib_ext = get_shared_lib_ext()
 
+        self.simulink_opts = None
+        """Options to configure Simulink S-function blocks, if not None, MATLAB related files will be generated. More options may be added in the future, similar to OCP interface"""
+
         # get cython paths
         from sysconfig import get_paths
         self.cython_include_dirs = [np.get_include(), get_paths()['include']]
@@ -394,16 +397,32 @@ class AcadosSim:
     def render_templates(self, json_file, cmake_options: CMakeBuilder = None):
         # setting up loader and environment
         json_path = os.path.join(os.getcwd(), json_file)
+        name = self.model.name
 
         if not os.path.exists(json_path):
             raise FileNotFoundError(f"{json_path} not found!")
 
         template_list = [
-            ('acados_sim_solver.in.c', f'acados_sim_solver_{self.model.name}.c'),
-            ('acados_sim_solver.in.h', f'acados_sim_solver_{self.model.name}.h'),
+            ('acados_sim_solver.in.c', f'acados_sim_solver_{name}.c'),
+            ('acados_sim_solver.in.h', f'acados_sim_solver_{name}.h'),
             ('acados_sim_solver.in.pxd', 'acados_sim_solver.pxd'),
-            ('main_sim.in.c', f'main_sim_{self.model.name}.c'),
+            ('main_sim.in.c', f'main_sim_{name}.c'),
         ]
+        if self.simulink_opts is not None:
+            template_file = os.path.join('matlab_templates', 'mex_sim_solver.in.m')
+            template_list.append((template_file, f'{name}_mex_sim_solver.m'))
+            template_file = os.path.join('matlab_templates', 'make_mex_sim.in.m')
+            template_list.append((template_file, f'make_mex_sim_{name}.m'))
+            template_file = os.path.join('matlab_templates', 'acados_sim_create.in.c')
+            template_list.append((template_file, f'acados_sim_create_{name}.c'))
+            template_file = os.path.join('matlab_templates', 'acados_sim_free.in.c')
+            template_list.append((template_file, f'acados_sim_free_{name}.c'))
+            template_file = os.path.join('matlab_templates', 'acados_sim_set.in.c')
+            template_list.append((template_file, f'acados_sim_set_{name}.c'))
+            template_file = os.path.join('matlab_templates', 'acados_sim_solver_sfun.in.c')
+            template_list.append((template_file, f'acados_sim_solver_sfunction_{name}.c'))
+            template_file = os.path.join('matlab_templates', 'make_sfun_sim.in.m')
+            template_list.append((template_file, f'make_sfun_sim_{name}.m'))
 
         # Builder
         if cmake_options is not None:
