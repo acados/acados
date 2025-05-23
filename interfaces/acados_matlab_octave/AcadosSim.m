@@ -192,7 +192,8 @@ classdef AcadosSim < handle
                     case 'GNSF'
                         generate_c_code_gnsf(context, self.model, model_dir);
                     case 'DISCRETE'
-                        generate_c_code_discrete_dynamics(context, self.model, model_dir);
+                        error('Discrete dynamics not supported in AcadosSim yet.')
+                        % generate_c_code_discrete_dynamics(context, self.model, model_dir);
                     otherwise
                         error('Unknown integrator type.')
                 end

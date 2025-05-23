@@ -175,7 +175,7 @@ class AcadosSimOptions:
         Default: 1.
         """
         return self.__num_threads_in_batch_solve
-    
+
     @property
     def with_batch_functionality(self):
         """
@@ -470,6 +470,9 @@ class AcadosSim:
             generate_c_code_implicit_ode(context, self.model, model_dir)
         elif integrator_type == 'GNSF':
             generate_c_code_gnsf(context, self.model, model_dir)
+        else:
+            raise ValueError('Invalid integrator_type value. Possible values are:\n\n' \
+                    + ',\n'.join(['ERK', 'IRK', 'GNSF']) + '.\n\nYou have: ' + integrator_type + '.\n\n')
 
         context.finalize()
         self.__external_function_files_model = context.get_external_function_file_list(ocp_specific=False)
