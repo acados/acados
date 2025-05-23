@@ -88,6 +88,7 @@ class AcadosOcpOptions:
         self.__print_level = 0
         self.__cost_discretization = 'EULER'
         self.__regularize_method = 'NO_REGULARIZE'
+        self.__qpscaling_type = 'NO_SCALING'
         self.__reg_epsilon = 1e-4
         self.__reg_max_cond_block = 1e7
         self.__reg_adaptive_eps = False
@@ -108,6 +109,12 @@ class AcadosOcpOptions:
         self.__globalization_funnel_initial_penalty_parameter = 1.0
         self.__globalization_funnel_use_merit_fun_only = False
         self.__globalization_fixed_step_length = 1.0
+        self.__qpscaling_ub_max_abs_eig = 1e5
+        self.__qpscaling_ub_norm_inf_grad_obj = 1e2
+        self.__qpscaling_lb_norm_inf_grad_obj = 1e-4
+        self.__qpscaling_scale_qp_objective = False
+        self.__qpscaling_scale_qp_dynamics = False
+        self.__qpscaling_scale_qp_constraints = False
         self.__ext_cost_num_hess = 0
         self.__globalization_use_SOC = 0
         self.__globalization_alpha_min = None
@@ -343,6 +350,15 @@ class AcadosOcpOptions:
         return self.__regularize_method
 
     @property
+    def qpscaling_type(self):
+        """QP scaling type.
+        String in ('NO_SCALING', 'OBJECTIVE_GERSHGORIN')
+
+        Default: 'NO_SCALING'
+        """
+        return self.__qpscaling_type
+
+    @property
     def globalization_fixed_step_length(self):
         """
         Fixed Newton step length, used if globalization == "FIXED_STEP"
@@ -350,6 +366,60 @@ class AcadosOcpOptions:
         Default: 1.0.
         """
         return self.__globalization_fixed_step_length
+
+    @property
+    def qpscaling_ub_max_abs_eig(self):
+        """
+        Maximum allowed upper bound for eigenvalues in qp scaling.
+        Type: float >= 0.
+        Default: 1e5.
+        """
+        return self.__qpscaling_ub_max_abs_eig
+
+    @property
+    def qpscaling_ub_norm_inf_grad_obj(self):
+        """
+        Maximum allowed upper bound for inf norm of qp gradient in qp scaling.
+        Type: float >= 0.
+        Default: 1e2.
+        """
+        return self.__qpscaling_ub_norm_inf_grad_obj
+
+    @property
+    def qpscaling_lb_norm_inf_grad_obj(self):
+        """
+        Minimum allowed lower bound for inf norm of qp gradient in qp scaling.
+        Type: float >= 0.
+        Default: 1e-4.
+        """
+        return self.__qpscaling_lb_norm_inf_grad_obj
+
+    @property
+    def qpscaling_scale_qp_objective(self):
+        """
+        If qpscaling_type == 'OBJECTIVE_GERSHGORIN', this flag indicates whether the qp objective should be scaled.
+        Type: bool.
+        Default: False.
+        """
+        return self.__qpscaling_scale_qp_objective
+
+    @property
+    def qpscaling_scale_qp_dynamics(self):
+        """
+        If qpscaling_type == 'OBJECTIVE_GERSHGORIN', this flag indicates whether the qp dynamics should be scaled.
+        Type: bool.
+        Default: False.
+        """
+        return self.__qpscaling_scale_qp_dynamics
+
+    @property
+    def qpscaling_scale_qp_constraints(self):
+        """
+        If qpscaling_type == 'OBJECTIVE_GERSHGORIN', this flag indicates whether the qp constraints should be scaled.
+        Type: bool.
+        Default: False.
+        """
+        return self.__qpscaling_scale_qp_constraints
 
     @property
     def nlp_solver_step_length(self):
@@ -1236,7 +1306,7 @@ class AcadosOcpOptions:
         Default: 1.
         """
         return self.__num_threads_in_batch_solve
-    
+
     @property
     def with_batch_functionality(self):
         """
@@ -1269,6 +1339,15 @@ class AcadosOcpOptions:
         else:
             raise ValueError('Invalid regularize_method value. Possible values are:\n\n' \
                     + ',\n'.join(regularize_methods) + '.\n\nYou have: ' + regularize_method + '.\n\n')
+
+    @qpscaling_type.setter
+    def qpscaling_type(self, qpscaling_type):
+        qpscaling_types = ('NO_SCALING', 'OBJECTIVE_GERSHGORIN')
+        if qpscaling_type in qpscaling_types:
+            self.__qpscaling_type = qpscaling_type
+        else:
+            raise Exception('Invalid qpscaling_type value. Possible values are:\n\n' \
+                    + ',\n'.join(qpscaling_types) + '.\n\nYou have: ' + qpscaling_type + '.\n\n')
 
     @collocation_type.setter
     def collocation_type(self, collocation_type):
@@ -1651,6 +1730,48 @@ class AcadosOcpOptions:
             self.__globalization_fixed_step_length = globalization_fixed_step_length
         else:
             raise ValueError('Invalid globalization_fixed_step_length value. globalization_fixed_step_length must be a positive float.')
+
+    @qpscaling_ub_max_abs_eig.setter
+    def qpscaling_ub_max_abs_eig(self, qpscaling_ub_max_abs_eig):
+        if isinstance(qpscaling_ub_max_abs_eig, float) and qpscaling_ub_max_abs_eig >= 0.:
+            self.__qpscaling_ub_max_abs_eig = qpscaling_ub_max_abs_eig
+        else:
+            raise Exception('Invalid globalization_fixed_step_length value. globalization_fixed_step_length must be a positive float.')
+
+    @qpscaling_ub_norm_inf_grad_obj.setter
+    def qpscaling_ub_norm_inf_grad_obj(self, qpscaling_ub_norm_inf_grad_obj):
+        if isinstance(qpscaling_ub_norm_inf_grad_obj, float) and qpscaling_ub_norm_inf_grad_obj >= 0.:
+            self.__qpscaling_ub_norm_inf_grad_obj = qpscaling_ub_norm_inf_grad_obj
+        else:
+            raise Exception('Invalid qpscaling_ub_norm_inf_grad_obj value. qpscaling_ub_norm_inf_grad_obj must be a positive float.')
+
+    @qpscaling_lb_norm_inf_grad_obj.setter
+    def qpscaling_lb_norm_inf_grad_obj(self, qpscaling_lb_norm_inf_grad_obj):
+        if isinstance(qpscaling_lb_norm_inf_grad_obj, float) and qpscaling_lb_norm_inf_grad_obj >= 0.:
+            self.__qpscaling_lb_norm_inf_grad_obj = qpscaling_lb_norm_inf_grad_obj
+        else:
+            raise Exception('Invalid qpscaling_lb_norm_inf_grad_obj value. qpscaling_lb_norm_inf_grad_obj must be a positive float.')
+
+    @qpscaling_scale_qp_objective.setter
+    def qpscaling_scale_qp_objective(self, qpscaling_scale_qp_objective):
+        if isinstance(qpscaling_scale_qp_objective, bool):
+            self.__qpscaling_scale_qp_objective = qpscaling_scale_qp_objective
+        else:
+            raise Exception('Invalid qpscaling_scale_qp_objective value. qpscaling_scale_qp_objective must be a bool.')
+
+    @qpscaling_scale_qp_dynamics.setter
+    def qpscaling_scale_qp_dynamics(self, qpscaling_scale_qp_dynamics):
+        if isinstance(qpscaling_scale_qp_dynamics, bool):
+            self.__qpscaling_scale_qp_dynamics = qpscaling_scale_qp_dynamics
+        else:
+            raise Exception('Invalid qpscaling_scale_qp_objective value. qpscaling_scale_qp_objective must be a bool.')
+
+    @qpscaling_scale_qp_constraints.setter
+    def qpscaling_scale_qp_constraints(self, qpscaling_scale_qp_constraints):
+        if isinstance(qpscaling_scale_qp_constraints, bool):
+            self.__qpscaling_scale_qp_constraints = qpscaling_scale_qp_constraints
+        else:
+            raise Exception('Invalid qpscaling_scale_qp_objective value. qpscaling_scale_qp_objective must be a bool.')
 
     @nlp_solver_step_length.setter
     def nlp_solver_step_length(self, nlp_solver_step_length):
