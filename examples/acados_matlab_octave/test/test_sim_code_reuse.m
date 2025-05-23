@@ -39,7 +39,7 @@ for i = 1:length(creation_modes)
     u0 = 0; % control input
 
     sim_solver = create_sim_solver_code_reuse(creation_modes{i});
-    nx = length(sim_solver.get('x', 0));
+    nx = length(x0);
 
     %% simulate system in loop
     x_sim = zeros(nx, N_sim+1);
