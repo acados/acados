@@ -57,7 +57,7 @@ classdef AcadosSim < handle
             obj.shared_lib_ext = [];
             obj.json_file = 'acados_sim.json';
             obj.cython_include_dirs = [];
-            obj.code_export_directory = [];
+            obj.code_export_directory = 'c_generated_code';
 
             obj.dims = AcadosSimDims();
             obj.model = AcadosModel();
@@ -80,10 +80,6 @@ classdef AcadosSim < handle
             end
             if isempty(self.json_file)
                 self.json_file = 'acados_sim.json';
-            end
-
-            if isempty(self.code_export_directory)
-                self.code_export_directory = fullfile(pwd(), 'c_generated_code');
             end
 
             % model

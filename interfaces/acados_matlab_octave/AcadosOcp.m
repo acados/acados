@@ -481,7 +481,7 @@ classdef AcadosOcp < handle
             constraints = self.constraints;
             dims = self.dims;
             cost = self.cost;
-            
+
             nsbx_e = length(constraints.idxsbx_e);
             nsg_e = length(constraints.idxsg_e);
             nsh_e = length(constraints.idxsh_e);
