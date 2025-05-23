@@ -163,6 +163,20 @@ typedef struct ocp_nlp_dims
     int n_global_data;  // size of global_data; expressions that only depend on p_global; detected automatically during code generation
     int N;    // number of shooting nodes
 
+    // total dimensions
+    int nx_total;  // total number of states
+    int nu_total;  // total number of controls
+    int ns_total;  // total number of slack variables
+    int nz_total;  // total number of algebraic variables
+    // int npi_total; // = nx_total - nx_0
+    int ni_total;  // total number of inequalities
+    int np_total;  // total number of parameters
+    int nbx_total;  // total number of state bounds
+    int nbu_total;  // total number of control bounds
+    int ng_total;  // total number of general linear constraints
+    int nh_total;  // total number of nonlinear inequalities
+    int nphi_total;  // total number of nonlinear inequalities
+
     void *raw_memory; // Pointer to allocated memory, to be used for freeing
 } ocp_nlp_dims;
 
