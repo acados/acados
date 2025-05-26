@@ -584,7 +584,7 @@ classdef AcadosOcp < handle
         end
 
         function make_consistent_simulation(self)
-            opts = self.solver_options
+            opts = self.solver_options;
             if opts.N_horizon == 0
                 return
             end
@@ -1000,7 +1000,7 @@ classdef AcadosOcp < handle
 
         function [] = detect_cost_and_constraints(self)
             % detect cost type
-            N = self.solver_options.N_horizon
+            N = self.solver_options.N_horizon;
             if N == 0
                 if strcmp(self.cost.cost_type_e, 'AUTO')
                     detect_cost_type(self.model, self.cost, self.dims, 'terminal');
