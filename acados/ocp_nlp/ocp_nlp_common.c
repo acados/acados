@@ -3154,7 +3154,7 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
 {
     int N = dims->N;
     int status = ACADOS_SUCCESS;
-    int ii;
+    int ii, tmp;
 
     for (ii = 0; ii <= N; ii++)
     {
@@ -3167,6 +3167,63 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
             exit(1);
         }
     }
+
+    // compute total dimensions
+    dims->nx_total = 0;
+    for (ii = 0; ii < N+1; ii++)
+    {
+        dims->nx_total += dims->nx[ii];
+    }
+    dims->nu_total = 0;
+    for (ii = 0; ii < N; ii++)
+    {
+        dims->nu_total += dims->nu[ii];
+    }
+    dims->nz_total = 0;
+    for (ii = 0; ii < N; ii++)
+    {
+        dims->nz_total += dims->nz[ii];
+    }
+    dims->ni_total = 0;
+    for (ii = 0; ii < N+1; ii++)
+    {
+        dims->ni_total += dims->ni[ii];
+    }
+    dims->ns_total = 0;
+    for (ii = 0; ii < N+1; ii++)
+    {
+        dims->ns_total += dims->ns[ii];
+    }
+    dims->np_total = 0;
+    for (ii = 0; ii < N+1; ii++)
+    {
+        dims->np_total += dims->np[ii];
+    }
+    dims->nbx_total = 0;
+    for (ii = 0; ii < N+1; ii++)
+    {
+        config->constraints[ii]->dims_get(config->constraints[ii], dims->constraints[ii], "nbx", &tmp);
+        dims->nbx_total += tmp;
+    }
+    dims->nbu_total = 0;
+    for (ii = 0; ii < N; ii++)
+    {
+        config->constraints[ii]->dims_get(config->constraints[ii], dims->constraints[ii], "nbu", &tmp);
+        dims->nbu_total += tmp;
+    }
+    dims->ng_total = 0;
+    for (ii = 0; ii < N+1; ii++)
+    {
+        dims->ng_total += dims->ng[ii];
+    }
+    dims->nh_total = 0;
+    for (ii = 0; ii < N+1; ii++)
+    {
+        config->constraints[ii]->dims_get(config->constraints[ii], dims->constraints[ii],
+            "nh", &tmp);
+        dims->nh_total += tmp;
+    }
+
 
     // precompute
     for (ii = 0; ii < N; ii++)

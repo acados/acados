@@ -215,6 +215,10 @@ void ocp_nlp_constraints_bgp_dims_get(void *config_, void *dims_, const char *fi
     {
         *value = dims->ng;
     }
+    else if (!strcmp(field, "nh"))
+    {
+        *value = 0;
+    }
     else if (!strcmp(field, "nphi"))
     {
         *value = dims->nphi;
