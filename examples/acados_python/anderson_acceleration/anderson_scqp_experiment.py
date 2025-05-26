@@ -1,7 +1,38 @@
+#
+# Copyright (c) The acados authors.
+#
+# This file is part of acados.
+#
+# The 2-Clause BSD License
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.;
+#
+
+
 from dataclasses import dataclass
 import casadi as ca
 import numpy as np
-from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver, AcadosOcpFlattenedIterate, AcadosCasadiOcpSolver, ACADOS_INFTY, latexify_plot
+from acados_template import AcadosOcpSolver, AcadosOcpFlattenedIterate, AcadosCasadiOcpSolver, ACADOS_INFTY, latexify_plot
 
 from typing import Optional
 
@@ -70,7 +101,7 @@ def solve_with_acados(settings: ExperimentAcadosSettings,
                                 )
     N_horizon = ocp.solver_options.N_horizon
 
-    acados_solver = AcadosOcpSolver(ocp)
+    acados_solver = AcadosOcpSolver(ocp, verbose=False)
     if initial_guess is not None:
         acados_solver.load_iterate_from_flat_obj(initial_guess)
     else:
@@ -106,23 +137,24 @@ def solve_acados_formulation_with_ipopt(initial_guess: AcadosOcpFlattenedIterate
     ocp = build_acados_test_problem(mode="EXACT")
 
     N_horizon = ocp.solver_options.N_horizon
-    casadi_nlp, bounds = AcadosCasadiOcpSolver.create_casadi_nlp_formulation(ocp)
+    solver = AcadosCasadiOcpSolver(ocp)
 
-    casadi_solver = ca.nlpsol("nlp_solver", 'ipopt', casadi_nlp)
-                            #   {'ipopt': {'print_level': 1}, 'print_time': False})
+    # TODO: refactor this with acados iterate!!!
     if initial_guess is not None:
-        x0 = np.concatenate((initial_guess.x, initial_guess.u))
-        nlp_sol = casadi_solver(x0=x0, lbx=bounds['lbx'], ubx=bounds['ubx'], lbg=bounds['lbg'], ubg=bounds['ubg'])
-    else:
-        nlp_sol = casadi_solver(lbx=bounds['lbx'], ubx=bounds['ubx'], lbg=bounds['lbg'], ubg=bounds['ubg'])
+        for i in range(N_horizon):
+            solver.set(i, "x", initial_guess.x[i*ocp.dims.nx:(i+1)*ocp.dims.nx])
+            solver.set(i, "u", initial_guess.u[i*ocp.dims.nu:(i+1)*ocp.dims.nu])
+        solver.set(N_horizon, "x", initial_guess.x[N_horizon*ocp.dims.nx:])
+    solver.solve()
 
+    # get solution
+    xtraj = np.zeros((N_horizon+1, ocp.dims.nx))
+    utraj = np.zeros((N_horizon, ocp.dims.nu))
+    for i in range(N_horizon):
+        xtraj[i,:] = solver.get(i, "x")
+        utraj[i,:] = solver.get(i, "u")
+    xtraj[N_horizon,:] = solver.get(N_horizon, "x")
 
-    sol_w = nlp_sol['x']
-    xtraj = sol_w[:ocp.dims.nx*(N_horizon+1)].reshape((ocp.dims.nx, N_horizon+1)).full()
-    utraj = sol_w[ocp.dims.nx*(N_horizon+1):].reshape((ocp.dims.nu, N_horizon)).full()
-
-    xtraj = xtraj.T
-    utraj = utraj.T
     results = ExperimentResults(kkt_norms=None, sol=None, xtraj=xtraj, utraj=utraj)
     return results
 
@@ -145,6 +177,7 @@ def main_acados():
     )
 
     ipopt_res = solve_acados_formulation_with_ipopt(initial_guess=sol)
+    # ipopt_res = solve_acados_formulation_with_ipopt()
 
     # setup acados guess to match ipopt solution
     acados_guess.x = ipopt_res.xtraj.flatten()
@@ -203,6 +236,29 @@ def main_acados():
         results.append(res)
     plot_convergence([r.kkt_norms for r in results], labels)
 
+    # asserts to check behavior
+    res_anderson = results[-1]
+    res_exact = results[0]
+    res_scqp = results[-2]
+
+    def assert_convergence_iterations(res, min_iter: int, max_iter: int, method: str):
+        n_iter = len(res.kkt_norms)
+        assert n_iter <= max_iter, f"Number of iterations {n_iter} exceeds {max_iter} for {method} "
+        assert n_iter >= min_iter, f"Number of iterations {n_iter} exceeds {min_iter} for {method} "
+
+    assert_convergence_iterations(res_anderson, 11, 12, "Anderson")
+    assert_convergence_iterations(res_exact, 4, 5, "Exact")
+    assert_convergence_iterations(res_scqp, 35, 39, "SCQP")
+    breakpoint
+    # assert all solutions are the same
+    ref_sol = results[0].sol
+    for i, res in enumerate(results[1:]):
+        diff_x = np.linalg.norm(ref_sol.x - res.sol.x)
+        diff_u = np.linalg.norm(ref_sol.u - res.sol.u)
+        print(f"diff x for {labels[i+1]}: ", diff_x)
+        print(f"diff u for {labels[i+1]}: ", diff_u)
+        assert diff_x < 1e-6, f"Solution x for {labels[i+1]} is not the same as reference"
+        assert diff_u < 1e-6, f"Solution u for {labels[i+1]} is not the same as reference"
 
 if __name__ == "__main__":
     main_acados()
