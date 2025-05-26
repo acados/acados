@@ -2180,6 +2180,8 @@ class AcadosOcp:
     def get_terminal_cost_expression(self):
         model = self.model
         if self.cost.cost_type_e == "LINEAR_LS":
+            if is_empty(self.cost.Vx_e):
+                return 0.0
             y = self.cost.Vx_e @ model.x
             residual = y - self.cost.yref_e
             cost_dot = 0.5 * (residual.T @ self.cost.W_e @ residual)

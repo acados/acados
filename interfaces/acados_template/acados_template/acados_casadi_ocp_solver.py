@@ -40,12 +40,12 @@ from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFl
 class AcadosCasadiOcpSolver:
 
     @classmethod
-    def create_casadi_nlp_formulation(cls, ocp: AcadosOcp) -> Tuple[dict, dict]:
+    def create_casadi_nlp_formulation(cls, ocp: AcadosOcp) -> Tuple[dict, dict, np.ndarray]:
         """
         Creates an equivalent CasADi NLP formulation of the OCP.
         Experimental, not fully implemented yet.
 
-        :return: nlp_dict, bounds_dict
+        :return: nlp_dict, bounds_dict, w0 (initial guess)
         """
         ocp.make_consistent()
 
@@ -78,7 +78,7 @@ class AcadosCasadiOcpSolver:
             ub_xtraj_node[i][constraints.idxbx] = constraints.ubx
         lb_xtraj_node[-1][constraints.idxbx_e] = constraints.lbx_e
         ub_xtraj_node[-1][constraints.idxbx_e] = constraints.ubx_e
-        
+
         # setup control bounds
         lb_utraj_node = [-np.inf * ca.DM.ones((dims.nu, 1)) for _ in range(solver_options.N_horizon)]
         ub_utraj_node = [np.inf * ca.DM.ones((dims.nu, 1)) for _ in range(solver_options.N_horizon)]
@@ -173,31 +173,42 @@ class AcadosCasadiOcpSolver:
 
         ### Formulation
         # interleave primary variables w and bounds
-        w_interleaved = []
-        lbw_interleaved = []
-        ubw_interleaved = []
+        # w = [x0, u0, x1, u1, ...]
+        w_sym_list = []
+        lbw_list = []
+        ubw_list = []
+        w0_list = []
+        x_guess = ocp.constraints.x0 if ocp.constraints.has_x0 else np.zeros((dims.nx,))
         for i in range(solver_options.N_horizon):
-            w_interleaved.append(xtraj_node[i])
-            lbw_interleaved.append(lb_xtraj_node[i])
-            ubw_interleaved.append(ub_xtraj_node[i])
-            w_interleaved.append(utraj_node[i])
-            lbw_interleaved.append(lb_utraj_node[i])
-            ubw_interleaved.append(ub_utraj_node[i])
-        w_interleaved.append(xtraj_node[-1])
-        lbw_interleaved.append(lb_xtraj_node[-1])
-        ubw_interleaved.append(ub_xtraj_node[-1])
+            # add x
+            w_sym_list.append(xtraj_node[i])
+            lbw_list.append(lb_xtraj_node[i])
+            ubw_list.append(ub_xtraj_node[i])
+            w0_list.append(x_guess)
+            # add u
+            w_sym_list.append(utraj_node[i])
+            lbw_list.append(lb_utraj_node[i])
+            ubw_list.append(ub_utraj_node[i])
+            w0_list.append(np.zeros((dims.nu,)))
+        ## terminal stage
+        # add x
+        w_sym_list.append(xtraj_node[-1])
+        lbw_list.append(lb_xtraj_node[-1])
+        ubw_list.append(ub_xtraj_node[-1])
+        w0_list.append(x_guess)
 
         # vectorize
-        w = ca.vertcat(*w_interleaved)
-        lbw = ca.vertcat(*lbw_interleaved)
-        ubw = ca.vertcat(*ubw_interleaved)
+        w = ca.vertcat(*w_sym_list)
+        lbw = ca.vertcat(*lbw_list)
+        ubw = ca.vertcat(*ubw_list)
         p_nlp = ca.vertcat(*ptraj_node, model.p_global)
-        
+
         # create NLP
         nlp = {"x": w, "p": p_nlp, "g": ca.vertcat(*g), "f": nlp_cost}
         bounds = {"lbx": lbw, "ubx": ubw, "lbg": ca.vertcat(*lbg), "ubg": ca.vertcat(*ubg)}
+        w0 = np.concatenate(w0_list)
 
-        return nlp, bounds
+        return nlp, bounds, w0
 
 
     def __init__(self, acados_ocp: AcadosOcp, solver: str = "ipopt", verbose=True):
@@ -206,7 +217,7 @@ class AcadosCasadiOcpSolver:
             raise TypeError('acados_ocp should be of type AcadosOcp.')
 
         self.acados_ocp = acados_ocp
-        self.casadi_nlp, self.bounds = self.create_casadi_nlp_formulation(acados_ocp)
+        self.casadi_nlp, self.bounds, self.w0 = self.create_casadi_nlp_formulation(acados_ocp)
         self.casadi_solver = ca.nlpsol("nlp_solver", solver, self.casadi_nlp)
         self.nlp_sol = None
 
@@ -221,7 +232,9 @@ class AcadosCasadiOcpSolver:
 
         :return: status of the solver
         """
-        self.nlp_sol = self.casadi_solver(lbx=self.bounds['lbx'], ubx=self.bounds['ubx'], lbg=self.bounds['lbg'], ubg=self.bounds['ubg'])
+        self.nlp_sol = self.casadi_solver(x0=self.w0,
+                                          lbx=self.bounds['lbx'], ubx=self.bounds['ubx'],
+                                          lbg=self.bounds['lbg'], ubg=self.bounds['ubg'])
         self.nlp_sol_x = self.nlp_sol['x'].full()
         # TODO: return correct status
         return 0
@@ -260,12 +273,12 @@ class AcadosCasadiOcpSolver:
         if self.nlp_sol is None:
             raise ValueError('No solution available. Please call solve() first.')
         dims = self.acados_ocp.dims
-        pivot = stage*(dims.nx+dims.nu)
+        offset = stage*(dims.nx+dims.nu)
 
         if field == 'x':
-            return self.nlp_sol_x[pivot:pivot+dims.nx].flatten()
+            return self.nlp_sol_x[offset:offset+dims.nx].flatten()
         elif field == 'u':
-            return self.nlp_sol_x[pivot+dims.nx:pivot+dims.nx+dims.nu].flatten()
+            return self.nlp_sol_x[offset+dims.nx:offset+dims.nx+dims.nu].flatten()
         else:
             raise NotImplementedError(f"Field '{field}' is not implemented in AcadosCasadiOcpSolver")
 
@@ -311,8 +324,14 @@ class AcadosCasadiOcpSolver:
     def get_cost(self) -> float:
         raise NotImplementedError()
 
-    def set(self, stage_: int, field_: str, value_: np.ndarray):
-        raise NotImplementedError()
+    def set(self, stage: int, field: str, value_: np.ndarray):
+        dims = self.acados_ocp.dims
+        offset = stage*(dims.nx+dims.nu)
+
+        if field == 'x':
+            self.w0[offset:offset+dims.nx] = value_.flatten()
+        elif field == 'u':
+            self.w0[offset+dims.nx:offset+dims.nx+dims.nu] = value_.flatten()
 
     def cost_get(self, stage_: int, field_: str) -> np.ndarray:
         raise NotImplementedError()
