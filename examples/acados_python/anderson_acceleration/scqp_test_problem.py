@@ -94,7 +94,7 @@ def build_acados_test_problem(mode='GN', with_anderson_acceleration=False, globa
     ocp.solver_options.nlp_solver_max_iter = 400
     ocp.solver_options.qp_solver_iter_max = 1000
     ocp.solver_options.nlp_solver_type = 'SQP'
-    ocp.solver_options.sim_method_num_steps = 20
+    ocp.solver_options.sim_method_num_steps = 5
     ocp.solver_options.sim_method_num_stages = 4
     ocp.solver_options.N_horizon = N_horizon
     ocp.solver_options.tf = dt*N_horizon
