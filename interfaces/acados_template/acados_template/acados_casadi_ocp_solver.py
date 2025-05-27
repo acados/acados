@@ -219,6 +219,7 @@ class AcadosCasadiOcpSolver:
         self.acados_ocp = acados_ocp
         self.casadi_nlp, self.bounds, self.w0 = self.create_casadi_nlp_formulation(acados_ocp)
         self.casadi_solver = ca.nlpsol("nlp_solver", solver, self.casadi_nlp)
+        self.last_iterate = None
         self.nlp_sol = None
 
 
@@ -232,9 +233,18 @@ class AcadosCasadiOcpSolver:
 
         :return: status of the solver
         """
-        self.nlp_sol = self.casadi_solver(x0=self.w0,
-                                          lbx=self.bounds['lbx'], ubx=self.bounds['ubx'],
-                                          lbg=self.bounds['lbg'], ubg=self.bounds['ubg'])
+        if  self.last_iterate is not None:
+            self.nlp_sol = self.casadi_solver(
+                                            x0=self.last_iterate['x'], 
+                                            lam_x0=self.last_iterate['lam_x'],
+                                            lam_g0=self.last_iterate['lam_g'],
+                                            lbx=self.bounds['lbx'], ubx=self.bounds['ubx'],
+                                            lbg=self.bounds['lbg'], ubg=self.bounds['ubg']
+                                            )
+        else:
+            self.nlp_sol = self.casadi_solver(x0=self.w0,
+                                            lbx=self.bounds['lbx'], ubx=self.bounds['ubx'],
+                                            lbg=self.bounds['lbg'], ubg=self.bounds['ubg'])
         self.nlp_sol_x = self.nlp_sol['x'].full()
         # TODO: return correct status
         return 0
@@ -248,25 +258,15 @@ class AcadosCasadiOcpSolver:
 
         raise NotImplementedError()
 
-
+    ## Casadi output x as a vector (N*(nx+nu) + nx, 1), any need to distinguish flat or not?
 
     def get(self, stage: int, field: str):
         """
         Get the last solution of the solver.
 
         :param stage: integer corresponding to shooting node
-        :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'sens_u', 'sens_pi', 'sens_x', 'sens_lam', 'sens_sl', 'sens_su']
+        :param field: string in ['x', 'u', 'lam']
 
-        .. note:: regarding lam: \n
-                the inequalities are internally organized in the following order: \n
-                [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
-                lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
-
-        .. note:: pi: multipliers for dynamics equality constraints \n
-                      lam: multipliers for inequalities \n
-                      t: slack variables corresponding to evaluation of all inequalities (at the solution) \n
-                      sl: slack variables of soft lower inequality constraints \n
-                      su: slack variables of soft upper inequality constraints \n
         """
         if not isinstance(stage, int):
             raise TypeError('stage should be integer.')
@@ -286,36 +286,71 @@ class AcadosCasadiOcpSolver:
         """
         Get concatenation of all stages of last solution of the solver.
 
-        :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'p_global']
+        :param field: string in ['x', 'u', 'lam', 'p', 'p_global']
 
         .. note:: The parameter 'p_global' has no stage-wise structure and is processed in a memory saving manner by default. \n
                 In order to read the 'p_global' parameter, the option 'save_p_global' must be set to 'True' upon instantiation. \n
         """
-        raise NotImplementedError()
+        if self.nlp_sol is None:
+            raise ValueError('No solution available. Please call solve() first.')
+        result = []
 
+        if field_ == 'x':
+            result = self.nlp_sol_x.flatten()
+            return result
+        elif field_ == 'lam_g':
+            result = self.nlp_sol['lam_g'].full().flatten()
+            return result
+        elif field_ == 'lam_x':
+            result = self.nlp_sol['lam_x'].full().flatten()
+            return result
+        elif field_ == 'lam_p':
+            result = self.nlp_sol['lam_p'].full().flatten()
+            return result
+        else:
+            raise NotImplementedError(f"Field '{field_}' is not implemented in get_flat().")
 
     def set_flat(self, field_: str, value_: np.ndarray) -> None:
         """
         Set concatenation solver initialization.
 
-        :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']
+        :param field: string in ['x', 'u', 'pi', 'lam', 'p']
+        :value_:
         """
         raise NotImplementedError()
-
 
     def load_iterate(self, filename:str, verbose: bool = True):
         raise NotImplementedError()
 
-    def store_iterate_to_obj(self) -> AcadosOcpIterate:
-        raise NotImplementedError()
+    def store_iterate_to_obj(self) -> dict:
+        """
+        Returns the current iterate of the OCP solver as an dictionary.
+        """
+        self.last_iterate = dict()
+        self.last_iterate['x'] = self.get_flat('x')
+        self.last_iterate['lam_x'] = self.get_flat('lam_x')
+        self.last_iterate['lam_g'] = self.get_flat('lam_g')
+        self.last_iterate['lam_p'] = self.get_flat('lam_p')
+        return self.last_iterate
 
-    def load_iterate_from_obj(self, iterate: AcadosOcpIterate):
-        raise NotImplementedError()
+    def load_iterate_from_obj(self, iterate: dict) -> None:
+        """
+        Loads the provided iterate into the OCP solver.
+        Note: The iterate object does not contain the the parameters.
+        """
+        self.last_iterate = iterate
 
     def store_iterate_to_flat_obj(self) -> AcadosOcpFlattenedIterate:
+        """
+        Returns the current iterate of the OCP solver as an AcadosOcpFlattenedIterate.
+        """
         raise NotImplementedError()
 
     def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedIterate) -> None:
+        """
+        Loads the provided iterate into the OCP solver.
+        Note: The iterate object does not contain the the parameters.
+        """
         raise NotImplementedError()
 
     def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
@@ -325,14 +360,27 @@ class AcadosCasadiOcpSolver:
         raise NotImplementedError()
 
     def set(self, stage: int, field: str, value_: np.ndarray):
+        """
+        Set solver initialization to stages.
+        
+        :param stage: integer corresponding to shooting node
+        :param field: string in ['x', 'u', 'lam', 'p']
+        :value_: np.ndarray with shape (dims.nx,) for 'x' and (dims.nu,) for 'u'
+        """
         dims = self.acados_ocp.dims
         offset = stage*(dims.nx+dims.nu)
 
         if field == 'x':
-            self.w0[offset:offset+dims.nx] = value_.flatten()
+            if value_.size == dims.nx:
+                self.w0[offset:offset+dims.nx] = value_.flatten()
+            else:
+                raise ValueError(f"Expected {dims.nx} values for 'x', got {value_.size}")
         elif field == 'u':
-            self.w0[offset+dims.nx:offset+dims.nx+dims.nu] = value_.flatten()
-
+            if value_.size == dims.nu:
+                self.w0[offset+dims.nx:offset+dims.nx+dims.nu] = value_.flatten()
+            else:
+                raise ValueError(f"Expected {dims.nu} values for 'u', got {value_.size}")
+            
     def cost_get(self, stage_: int, field_: str) -> np.ndarray:
         raise NotImplementedError()
 
