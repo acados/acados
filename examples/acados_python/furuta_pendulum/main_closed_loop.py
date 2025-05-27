@@ -37,7 +37,7 @@ import numpy as np
 import scipy.linalg
 from casadi import vertcat
 
-def setup(x0, umax, dt_0, N_horizon, Tf, RTI=False, timeout_max_time=0, heuristic="ZERO"):
+def setup_ocp_solver(x0, umax, dt_0, N_horizon, Tf, RTI=False, timeout_max_time=0, heuristic="ZERO"):
     ocp = AcadosOcp()
 
     model = get_furuta_model()
@@ -94,17 +94,17 @@ def setup(x0, umax, dt_0, N_horizon, Tf, RTI=False, timeout_max_time=0, heuristi
     solver_json = 'acados_ocp_' + model.name + '.json'
     ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)
 
-    # setup plant simulator
+    return ocp_solver
+
+
+def get_plant_integrator_settings():
     integrator_settings = IntegratorSetting(integrator_type="IRK",
                                             num_stages=2,
                                             num_steps=2,
                                             newton_iter=20,
                                             newton_tol=1e-10,
                                             )
-    integrator = setup_acados_integrator(model, dt_0, integrator_settings)
-
-    return ocp_solver, integrator
-
+    return integrator_settings
 
 def main(use_RTI=False, timeout_max_time=0., heuristic="ZERO"):
 
@@ -115,7 +115,11 @@ def main(use_RTI=False, timeout_max_time=0., heuristic="ZERO"):
     N_horizon = 8   # number of shooting intervals
     dt_0 = 0.025    # sampling time = length of first shooting interval
 
-    ocp_solver, integrator = setup(x0, umax, dt_0, N_horizon, Tf, use_RTI, timeout_max_time, heuristic)
+    ocp_solver = setup_ocp_solver(x0, umax, dt_0, N_horizon, Tf, use_RTI, timeout_max_time, heuristic)
+    # setup plant simulator
+    integrator_settings = get_plant_integrator_settings()
+    model = get_furuta_model()
+    integrator = setup_acados_integrator(model, dt_0, integrator_settings)
 
     nx = ocp_solver.acados_ocp.dims.nx
     nu = ocp_solver.acados_ocp.dims.nu
