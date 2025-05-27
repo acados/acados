@@ -245,7 +245,7 @@ class AcadosCasadiOcpSolver:
             self.nlp_sol = self.casadi_solver(x0=self.w0,
                                             lbx=self.bounds['lbx'], ubx=self.bounds['ubx'],
                                             lbg=self.bounds['lbg'], ubg=self.bounds['ubg'])
-        self.nlp_sol_x = self.nlp_sol['x'].full()
+        self.nlp_sol_w = self.nlp_sol['x'].full()
         # TODO: return correct status
         return 0
 
@@ -276,9 +276,9 @@ class AcadosCasadiOcpSolver:
         offset = stage*(dims.nx+dims.nu)
 
         if field == 'x':
-            return self.nlp_sol_x[offset:offset+dims.nx].flatten()
+            return self.nlp_sol_w[offset:offset+dims.nx].flatten()
         elif field == 'u':
-            return self.nlp_sol_x[offset+dims.nx:offset+dims.nx+dims.nu].flatten()
+            return self.nlp_sol_w[offset+dims.nx:offset+dims.nx+dims.nu].flatten()
         else:
             raise NotImplementedError(f"Field '{field}' is not implemented in AcadosCasadiOcpSolver")
 
@@ -296,7 +296,8 @@ class AcadosCasadiOcpSolver:
         result = []
 
         if field_ == 'x':
-            result = self.nlp_sol_x.flatten()
+            # TODO: here should be just u
+            result = self.nlp_sol_w.flatten()
             return result
         elif field_ == 'lam_g':
             result = self.nlp_sol['lam_g'].full().flatten()
