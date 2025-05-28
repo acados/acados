@@ -1105,6 +1105,16 @@ classdef AcadosOcp < handle
                 self.zoro_description.process();
             end
 
+            % Anderson acceleration
+            if opts.with_anderson_acceleration
+                if strcmp(opts.nlp_solver_type, "DDP")
+                    error('Anderson acceleration not supported for DDP solver.');
+                end
+                if ~strcmp(opts.globalization, "FIXED_STEP")
+                    error('Anderson acceleration only supported for FIXED_STEP globalization for now.');
+                end
+            end
+
             % check terminal stage
             fields = {'cost_expr_ext_cost_e', 'cost_expr_ext_cost_custom_hess_e', ...
                       'cost_y_expr_e', 'cost_psi_expr_e', 'cost_conl_custom_outer_hess_e', ...
