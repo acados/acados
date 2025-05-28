@@ -48,6 +48,19 @@ class AcadosOcpFlattenedIterate:
     pi: np.ndarray
     lam: np.ndarray
 
+    def allclose(self, other, rtol=1e-5, atol=1e-8) -> bool:
+        if not isinstance(other, AcadosOcpFlattenedIterate):
+            raise TypeError(f"Expected AcadosOcpFlattenedIterate, got {type(other)}")
+        return (
+            np.allclose(self.x, other.x, rtol=rtol, atol=atol) and
+            np.allclose(self.u, other.u, rtol=rtol, atol=atol) and
+            np.allclose(self.z, other.z, rtol=rtol, atol=atol) and
+            np.allclose(self.sl, other.sl, rtol=rtol, atol=atol) and
+            np.allclose(self.su, other.su, rtol=rtol, atol=atol) and
+            np.allclose(self.pi, other.pi, rtol=rtol, atol=atol) and
+            np.allclose(self.lam, other.lam, rtol=rtol, atol=atol)
+        )
+
 
 @dataclass
 class AcadosOcpFlattenedBatchIterate:
