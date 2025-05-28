@@ -350,7 +350,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 acados_size = ocp_nlp_dims_get_total_from_attr(config, dims, out, field_name);
                 MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
                 offset = 0;
-                for (ii=0; ii<=N; ii++) // TODO implement set_all
+                for (ii=0; ii<=N; ii++)
                 {
                     ocp_nlp_cost_model_set(config, dims, in, ii, field_name, value+offset);
                     tmp_int = ocp_nlp_dims_get_from_attr(config, dims, out, ii, field_name);
@@ -399,93 +399,99 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "init_z")||!strcmp(field, "z"))
     {
-        sim_solver_plan_t sim_plan = plan->sim_solver_plan[0];
+        sim_solver_plan_t sim_plan = plan->sim_solver_plan[s0];
         sim_solver_t type = sim_plan.sim_solver;
-        if (type == IRK)
+        if (nrhs == min_nrhs)
         {
-            if (nrhs == min_nrhs)
+            {% if problem_class == "MOCP" %}
+            MEX_SETTER_NO_ALL_STAGES_SUPPORT(fun_name, field)
+            {% else %}
+            int nz = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "z");
+            acados_size = N*nz;
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            for (ii=0; ii<N; ii++)
             {
-                acados_size = ocp_nlp_dims_get_total_from_attr(config, dims, out, "z");
-                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-                ocp_nlp_set_all(solver, in, out, "z", value);
+                ocp_nlp_set(solver, ii, "z_guess", value+ii*nz);
             }
-            else // (nrhs == min_nrhs+1)
+            {% endif %}
+        }
+        else // nrhs == min_nrhs+1)
+        {
+            if (type == IRK)
             {
                 acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "z");
                 MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
                 ocp_nlp_set(solver, s0, "z_guess", value);
             }
-        }
-        else
-        {
-            MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, "init_z", "irk")
+            else
+            {
+                MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, "init_z", "irk")
+            }
         }
     }
     else if (!strcmp(field, "init_xdot")||!strcmp(field, "xdot"))
     {
-{% if problem_class == "MOCP" %}
-        MEX_FIELD_NOT_SUPPORTED(fun_name, field);
-{% else %}
-        sim_solver_plan_t sim_plan = plan->sim_solver_plan[0];
+        sim_solver_plan_t sim_plan = plan->sim_solver_plan[s0];
         sim_solver_t type = sim_plan.sim_solver;
-        if (type == IRK)
+        if (nrhs == min_nrhs)
         {
+            {% if problem_class == "MOCP" %}
+            MEX_SETTER_NO_ALL_STAGES_SUPPORT(fun_name, field)
+            {% else %}
             int nx = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "x");
-            if (nrhs == min_nrhs)
+            acados_size = N*nx;
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            for (ii=0; ii<N; ii++)
             {
-                acados_size = N*nx;
-                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-                for (ii=0; ii<N; ii++)
-                {
-                    ocp_nlp_set(solver, ii, "xdot_guess", value+ii*nx);
-                }
+                ocp_nlp_set(solver, ii, "xdot_guess", value+ii*nx);
             }
-            else // nrhs == min_nrhs+1)
+            {% endif %}
+        }
+        else // nrhs == min_nrhs+1)
+        {
+            if (type == IRK)
             {
-                acados_size = nx;
+                acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "x");
                 MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
                 ocp_nlp_set(solver, s0, "xdot_guess", value);
             }
+            else
+            {
+                MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, "init_xdot", "irk")
+            }
         }
-        else
-        {
-            MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, "init_z", "irk")
-        }
-{% endif %}
-
     }
     else if (!strcmp(field, "init_gnsf_phi")||!strcmp(field, "gnsf_phi"))
     {
-{% if problem_class == "MOCP" %}
-        MEX_FIELD_NOT_SUPPORTED(fun_name, field);
-{% else %}
-        sim_solver_plan_t sim_plan = plan->sim_solver_plan[0];
+        sim_solver_plan_t sim_plan = plan->sim_solver_plan[s0];
         sim_solver_t type = sim_plan.sim_solver;
-        if (type == GNSF)
+        if (nrhs == min_nrhs)
         {
+            {% if problem_class == "MOCP" %}
+            MEX_SETTER_NO_ALL_STAGES_SUPPORT(fun_name, field)
+            {% else %}
             int nout = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "init_gnsf_phi");
-
-            if (nrhs == min_nrhs)
+            acados_size = N*nout;
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            for (ii=0; ii<N; ii++)
             {
-                acados_size = N*nout;
-                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-                for (ii=0; ii<N; ii++)
-                {
-                    ocp_nlp_set(solver, ii, "gnsf_phi_guess", value+ii*nout);
-                }
+                ocp_nlp_set(solver, ii, "gnsf_phi_guess", value+ii*nout);
             }
-            else // (nrhs == min_nrhs+1)
+            {% endif %}
+        }
+        else // nrhs == min_nrhs+1)
+        {
+            if (type == GNSF)
             {
-                acados_size = nout;
+                acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "init_gnsf_phi");
                 MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
                 ocp_nlp_set(solver, s0, "gnsf_phi_guess", value);
             }
+            else
+            {
+                MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, "init_gnsf_phi", "irk_gnsf")
+            }
         }
-        else
-        {
-            MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, "init_gnsf_phi", "irk_gnsf")
-        }
-{% endif %}
     }
     else if (!strcmp(field, "init_pi")||!strcmp(field, "pi"))
     {
