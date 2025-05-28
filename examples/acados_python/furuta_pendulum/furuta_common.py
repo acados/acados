@@ -119,7 +119,6 @@ def setup_ocp_solver(x0, umax, dt_0, N_horizon, Tf, RTI=False, timeout_max_time=
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'ERK'
-    # ocp.solver_options.with_anderson_acceleration = True
 
     # NOTE we use a nonuniform grid!
     ocp.solver_options.time_steps = np.array([dt_0] + [(Tf-dt_0)/(N_horizon-1)]*(N_horizon-1))
