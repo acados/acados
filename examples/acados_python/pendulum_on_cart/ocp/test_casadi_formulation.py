@@ -32,6 +32,7 @@ def main():
     casadi_ocp_solver = AcadosCasadiOcpSolver(ocp, verbose=False)
     casadi_ocp_solver.solve()
     x_casadi_sol, u_casadi_sol = get_x_u_traj(casadi_ocp_solver, N_horizon)
+    pi_casadi_flat = casadi_ocp_solver.get_flat("pi")
 
     initial_iterate = ocp.create_default_initial_iterate()
 
@@ -44,14 +45,15 @@ def main():
     status = ocp_solver.solve()
     # get solution
     simX, simU = get_x_u_traj(ocp_solver, N_horizon)
-
+    pi_acados_flat = ocp_solver.get_flat("pi")
 
     # evaluate difference
     diff_x = np.linalg.norm(x_casadi_sol - simX)
     print(f"Difference between casadi and acados solution: {diff_x}")
     diff_u = np.linalg.norm(u_casadi_sol - simU)
     print(f"Difference between casadi and acados solution: {diff_u}")
-
+    diff_pi = np.linalg.norm(pi_casadi_flat - pi_acados_flat)
+    print(f"Difference between casadi and acados solution: {diff_pi}")
     # TODO: set solver tolerance and reduce it here.
     test_tol = 5e-5
     if diff_x > test_tol or diff_u > test_tol:
