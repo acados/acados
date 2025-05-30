@@ -181,6 +181,7 @@ class AcadosCasadiOcpSolver:
         x_guess = ocp.constraints.x0 if ocp.constraints.has_x0 else np.zeros((dims.nx,))
         for i in range(solver_options.N_horizon):
             # add x
+            # TODO: create index vectors while creating w.
             w_sym_list.append(xtraj_node[i])
             lbw_list.append(lb_xtraj_node[i])
             ubw_list.append(ub_xtraj_node[i])
@@ -283,6 +284,8 @@ class AcadosCasadiOcpSolver:
         offset_lam = stage*dims.nx
 
         if field == 'x':
+            # self.idx_x_in_w: List of indices of x in w
+            # return self.nlp_sol_w[self.idx_x_in_w[stage]].flatten()
             return self.nlp_sol_w[offset_w:offset_w+dims.nx].flatten()
         elif field == 'u':
             return self.nlp_sol_w[offset_w+dims.nx:offset_w+dims.nx+dims.nu].flatten()

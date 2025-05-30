@@ -62,5 +62,14 @@ def main():
     plot_pendulum(ocp.solver_options.shooting_nodes, ocp.constraints.ubu, u_casadi_sol, x_casadi_sol, latexify=False)
 
 
+    # to test set:
+    # casadi_ocp_solver.load_iterate_from_obj(initial_iterate)
+    # casadi_ocp_solver.solve()
+    # # assert: casadi_ocp_solver took > 10 iterations.
+    # casadi_ocp_solver.load_iterate_from_obj(acados_solution)
+    # casadi_ocp_solver.solve()
+    # # assert: very little amount of iterations are needed < 3.
+    # assert that acados_soltuion and casadi_solution are close.
+
 if __name__ == "__main__":
     main()
