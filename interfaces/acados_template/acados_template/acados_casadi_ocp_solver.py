@@ -103,9 +103,9 @@ class AcadosCasadiOcpSolver:
         for i in range(solver_options.N_horizon):
             # add dynamics constraints
             if solver_options.integrator_type == "DISCRETE":
-                g.append(xtraj_node[i+1] - f_discr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global))
+                g.append(f_discr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global) - xtraj_node[i+1])
             elif solver_options.integrator_type == "ERK":
-                g.append(xtraj_node[i+1] - f_discr_fun(xtraj_node[i], utraj_node[i], solver_options.time_steps[i]))
+                g.append(f_discr_fun(xtraj_node[i], utraj_node[i], solver_options.time_steps[i]) - xtraj_node[i+1])
             lbg.append(np.zeros((dims.nx, 1)))
             ubg.append(np.zeros((dims.nx, 1)))
 
@@ -291,7 +291,7 @@ class AcadosCasadiOcpSolver:
         elif field == 'lam_g':
             return self.nlp_sol_lam_g[offset_w:offset_w+dims.nx+dims.nu].flatten()
         elif field == 'pi':
-            return -self.nlp_sol_lam_g[offset_lam:offset_lam+dims.nx].flatten()
+            return self.nlp_sol_lam_g[offset_lam:offset_lam+dims.nx].flatten()
         elif field == 'lam':
             offset_lam_g = dims.nx*dims.N+stage
             # get the lamda of (ubx-lbx), (ubu-lbu) and (ug-lg), (uphi-lphi)
