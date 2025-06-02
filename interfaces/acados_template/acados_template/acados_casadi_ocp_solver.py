@@ -54,6 +54,8 @@ class AcadosCasadiOcpSolver:
         dims = ocp.dims
         constraints = ocp.constraints
         solver_options = ocp.solver_options
+        index_map = {'x': [], 'u': [], 
+                    'lam_g_dynamic': [], 'lam_g_constraint': []}
 
         if any([dims.ns_0, dims.ns, dims.ns_e]):
             raise NotImplementedError("CasADi NLP formulation not implemented for formulations with soft constraints yet.")
@@ -73,6 +75,7 @@ class AcadosCasadiOcpSolver:
         ub_xtraj_node = [np.inf * ca.DM.ones((dims.nx, 1)) for _ in range(solver_options.N_horizon+1)]
         lb_xtraj_node[0][constraints.idxbx_0] = constraints.lbx_0
         ub_xtraj_node[0][constraints.idxbx_0] = constraints.ubx_0
+        offset = 0
         for i in range(1, solver_options.N_horizon):
             lb_xtraj_node[i][constraints.idxbx] = constraints.lbx
             ub_xtraj_node[i][constraints.idxbx] = constraints.ubx
@@ -90,6 +93,7 @@ class AcadosCasadiOcpSolver:
         g = []
         lbg = []
         ubg = []
+        offset = 0
         # dynamics
         if solver_options.integrator_type == "DISCRETE":
             f_discr_fun = ca.Function('f_discr_fun', [model.x, model.u, model.p, model.p_global], [model.disc_dyn_expr])
@@ -108,12 +112,16 @@ class AcadosCasadiOcpSolver:
                 g.append(f_discr_fun(xtraj_node[i], utraj_node[i], solver_options.time_steps[i]) - xtraj_node[i+1])
             lbg.append(np.zeros((dims.nx, 1)))
             ubg.append(np.zeros((dims.nx, 1)))
+            index_map['lam_g_dynamic'].append(list(range(offset, offset+dims.nx)))
+            offset += dims.nx
 
         # nonlinear constraints -- initial stage
         h0_fun = ca.Function('h0_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr_0])
         g.append(h0_fun(xtraj_node[0], utraj_node[0], ptraj_node[0], model.p_global))
         lbg.append(constraints.lh_0)
         ubg.append(constraints.uh_0)
+        index_map['lam_g_constraint'].append(list(range(offset, offset + dims.nh_0)))
+        offset += dims.nh_0
 
         if dims.nphi_0 > 0:
             conl_constr_expr_0 = ca.substitute(model.con_phi_expr_0, model.con_r_in_phi_0, model.con_r_expr_0)
@@ -121,6 +129,8 @@ class AcadosCasadiOcpSolver:
             g.append(conl_constr_0_fun(xtraj_node[0], utraj_node[0], ptraj_node[0], model.p_global))
             lbg.append(constraints.lphi_0)
             ubg.append(constraints.uphi_0)
+            index_map['lam_g_constraint'].append(list(range(offset, offset + dims.nphi_0)))
+            offset += dims.nphi_0
 
         # nonlinear constraints -- intermediate stages
         h_fun = ca.Function('h_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr])
@@ -133,11 +143,15 @@ class AcadosCasadiOcpSolver:
             g.append(h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global))
             lbg.append(constraints.lh)
             ubg.append(constraints.uh)
+            index_map['lam_g_constraint'].append(list(range(offset, offset + dims.nh)))
+            offset += dims.nh
 
             if dims.nphi > 0:
                 g.append(conl_constr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global))
                 lbg.append(constraints.lphi)
                 ubg.append(constraints.uphi)
+                index_map['lam_g_constraint'].append(list(range(offset, offset + dims.nphi)))
+                offset += dims.nphi
 
         # nonlinear constraints -- terminal stage
         h_e_fun = ca.Function('h_e_fun', [model.x, model.p, model.p_global], [model.con_h_expr_e])
@@ -145,6 +159,8 @@ class AcadosCasadiOcpSolver:
         g.append(h_e_fun(xtraj_node[-1], ptraj_node[-1], model.p_global))
         lbg.append(constraints.lh_e)
         ubg.append(constraints.uh_e)
+        index_map['lam_g_constraint'].append(list(range(offset, offset + dims.nh_e)))
+        offset += dims.nh_e
 
         if dims.nphi_e > 0:
             conl_constr_expr_e = ca.substitute(model.con_phi_expr_e, model.con_r_in_phi_e, model.con_r_expr_e)
@@ -152,6 +168,8 @@ class AcadosCasadiOcpSolver:
             g.append(conl_constr_e_fun(xtraj_node[-1], ptraj_node[-1], model.p_global))
             lbg.append(constraints.lphi_e)
             ubg.append(constraints.uphi_e)
+            index_map['lam_g_constraint'].append(list(range(offset, offset + dims.nphi_e)))
+            offset += dims.nphi_e
 
         ### Cost
         # initial cost term
@@ -178,25 +196,31 @@ class AcadosCasadiOcpSolver:
         lbw_list = []
         ubw_list = []
         w0_list = []
+        offset = 0
         x_guess = ocp.constraints.x0 if ocp.constraints.has_x0 else np.zeros((dims.nx,))
         for i in range(solver_options.N_horizon):
             # add x
-            # TODO: create index vectors while creating w.
             w_sym_list.append(xtraj_node[i])
             lbw_list.append(lb_xtraj_node[i])
             ubw_list.append(ub_xtraj_node[i])
             w0_list.append(x_guess)
+            index_map['x'].append(list(range(offset, offset + dims.nx)))
+            offset += dims.nx
             # add u
             w_sym_list.append(utraj_node[i])
             lbw_list.append(lb_utraj_node[i])
             ubw_list.append(ub_utraj_node[i])
             w0_list.append(np.zeros((dims.nu,)))
+            index_map['u'].append(list(range(offset, offset + dims.nu)))
+            offset += dims.nu
         ## terminal stage
         # add x
         w_sym_list.append(xtraj_node[-1])
         lbw_list.append(lb_xtraj_node[-1])
         ubw_list.append(ub_xtraj_node[-1])
         w0_list.append(x_guess)
+        index_map['x'].append(list(range(offset, offset + dims.nx)))
+        offset += dims.nx
 
         # vectorize
         w = ca.vertcat(*w_sym_list)
@@ -209,7 +233,7 @@ class AcadosCasadiOcpSolver:
         bounds = {"lbx": lbw, "ubx": ubw, "lbg": ca.vertcat(*lbg), "ubg": ca.vertcat(*ubg)}
         w0 = np.concatenate(w0_list)
 
-        return nlp, bounds, w0
+        return nlp, bounds, w0, index_map
 
 
     def __init__(self, acados_ocp: AcadosOcp, solver: str = "ipopt", verbose=True):
@@ -218,7 +242,7 @@ class AcadosCasadiOcpSolver:
             raise TypeError('acados_ocp should be of type AcadosOcp.')
 
         self.acados_ocp = acados_ocp
-        self.casadi_nlp, self.bounds, self.w0 = self.create_casadi_nlp_formulation(acados_ocp)
+        self.casadi_nlp, self.bounds, self.w0, self.index_map = self.create_casadi_nlp_formulation(acados_ocp)
         self.casadi_solver = ca.nlpsol("nlp_solver", solver, self.casadi_nlp)
         self.lam_x0 = None
         self.lam_g0 = None
@@ -280,45 +304,32 @@ class AcadosCasadiOcpSolver:
         if self.nlp_sol is None:
             raise ValueError('No solution available. Please call solve() first.')
         dims = self.acados_ocp.dims
-        offset_w = stage*(dims.nx+dims.nu)
-        offset_lam = stage*dims.nx
-
         if field == 'x':
-            # self.idx_x_in_w: List of indices of x in w
-            # return self.nlp_sol_w[self.idx_x_in_w[stage]].flatten()
-            return self.nlp_sol_w[offset_w:offset_w+dims.nx].flatten()
+            return self.nlp_sol_w[self.index_map['x'][stage]].flatten()
         elif field == 'u':
-            return self.nlp_sol_w[offset_w+dims.nx:offset_w+dims.nx+dims.nu].flatten()
-        elif field == 'lam_x':
-            return self.nlp_sol_lam_x[offset_w:offset_w+dims.nx+dims.nu].flatten()
-        elif field == 'lam_g':
-            return self.nlp_sol_lam_g[offset_w:offset_w+dims.nx+dims.nu].flatten()
+            return self.nlp_sol_w[self.index_map['u'][stage]].flatten()
         elif field == 'pi':
-            return self.nlp_sol_lam_g[offset_lam:offset_lam+dims.nx].flatten()
+            return self.nlp_sol_lam_g[self.index_map['lam_g_dynamic'][stage]].flatten()
         elif field == 'lam':
-            offset_lam_g = dims.nx*dims.N+stage
             # get the lamda of (ubx-lbx), (ubu-lbu) and (ug-lg), (uphi-lphi)
             if stage == 0:
                 bx_length = self.acados_ocp.constraints.lbx_0.size
                 bu_length = self.acados_ocp.constraints.lbu.size
-
-                bx_lam = self.nlp_sol_lam_x[offset_w:offset_w+bx_length]
-                bu_lam = self.nlp_sol_lam_x[offset_w+dims.nx:offset_w+dims.nx+bu_length]
-                g_lam = self.nlp_sol_lam_g[offset_lam_g:offset_lam_g+dims.nh_0+dims.nphi_0]
+                bx_lam = self.nlp_sol_lam_x[self.index_map['x'][stage]] if bx_length else np.empty((0, 1))
+                bu_lam = self.nlp_sol_lam_x[self.index_map['u'][stage]] if bu_length else np.empty((0, 1))
+                g_lam = self.nlp_sol_lam_g[self.index_map['lam_g_constraint'][stage]]
             elif stage < dims.N:
                 bx_length = self.acados_ocp.constraints.lbx.size
                 bu_length = self.acados_ocp.constraints.lbu.size
-
-                bx_lam = self.nlp_sol_lam_x[offset_w:offset_w+bx_length]
-                bu_lam = self.nlp_sol_lam_x[offset_w+dims.nx:offset_w+dims.nx+bu_length]
-                g_lam = self.nlp_sol_lam_g[offset_lam_g:offset_lam_g+dims.nh+dims.nphi]
+                bx_lam = self.nlp_sol_lam_x[self.index_map['x'][stage]] if bx_length else np.empty((0, 1))
+                bu_lam = self.nlp_sol_lam_x[self.index_map['u'][stage]] if bu_length else np.empty((0, 1))
+                g_lam = self.nlp_sol_lam_g[self.index_map['lam_g_constraint'][stage]]
             elif stage == dims.N:
                 bx_length = self.acados_ocp.constraints.lbx_e.size
                 bu_length = self.acados_ocp.constraints.lbu.size
-
-                bx_lam = self.nlp_sol_lam_x[offset_w:offset_w+bx_length]
-                bu_lam = self.nlp_sol_lam_x[offset_w+dims.nx:offset_w+dims.nx+bu_length]
-                g_lam = self.nlp_sol_lam_g[offset_lam_g:offset_lam_g+dims.nh+dims.nphi_e]
+                bx_lam = self.nlp_sol_lam_x[self.index_map['x'][stage]] if bx_length else np.empty((0, 1))
+                bu_lam = self.nlp_sol_lam_x[self.index_map['u'][stage]] if bu_length else np.empty((0, 1))
+                g_lam = self.nlp_sol_lam_g[self.index_map['lam_g_constraint'][stage]]
 
             lbx_lam = np.maximum(0,-bx_lam)
             lbu_lam = np.maximum(0,-bu_lam)

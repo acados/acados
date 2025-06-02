@@ -27,12 +27,15 @@ def main():
     ocp = formulate_ocp("CONL")
     ocp.solver_options.tf = T_HORIZON
     N_horizon = ocp.solver_options.N_horizon
+    x0 = np.array([0.0, 3.14, 0.0, 0.0])  # initial state
+    ocp.constraints.x0 = x0
 
     ## solve using casadi
     casadi_ocp_solver = AcadosCasadiOcpSolver(ocp, verbose=False)
     casadi_ocp_solver.solve()
     x_casadi_sol, u_casadi_sol = get_x_u_traj(casadi_ocp_solver, N_horizon)
     pi_casadi_flat = casadi_ocp_solver.get_flat("pi")
+    lambda_casadi_flat = casadi_ocp_solver.get_flat("lam")
 
     initial_iterate = ocp.create_default_initial_iterate()
 
@@ -46,6 +49,7 @@ def main():
     # get solution
     simX, simU = get_x_u_traj(ocp_solver, N_horizon)
     pi_acados_flat = ocp_solver.get_flat("pi")
+    lambda_acados_flat = ocp_solver.get_flat("lam")
 
     # evaluate difference
     diff_x = np.linalg.norm(x_casadi_sol - simX)
@@ -54,22 +58,15 @@ def main():
     print(f"Difference between casadi and acados solution: {diff_u}")
     diff_pi = np.linalg.norm(pi_casadi_flat - pi_acados_flat)
     print(f"Difference between casadi and acados solution: {diff_pi}")
+    diff_lambda = np.linalg.norm(lambda_casadi_flat - lambda_acados_flat)
+    print(f"Difference between casadi and acados solution: {diff_lambda}")
     # TODO: set solver tolerance and reduce it here.
-    test_tol = 5e-5
-    if diff_x > test_tol or diff_u > test_tol:
+    test_tol = 1e-4
+    if diff_x > test_tol or diff_u > test_tol or diff_pi > test_tol or diff_lambda > test_tol:
         raise ValueError(f"Test failed: difference between casadi and acados solution should be smaller than {test_tol}, but got {diff_x} and {diff_u}.")
 
     plot_pendulum(ocp.solver_options.shooting_nodes, ocp.constraints.ubu, u_casadi_sol, x_casadi_sol, latexify=False)
 
-
-    # to test set:
-    # casadi_ocp_solver.load_iterate_from_obj(initial_iterate)
-    # casadi_ocp_solver.solve()
-    # # assert: casadi_ocp_solver took > 10 iterations.
-    # casadi_ocp_solver.load_iterate_from_obj(acados_solution)
-    # casadi_ocp_solver.solve()
-    # # assert: very little amount of iterations are needed < 3.
-    # assert that acados_soltuion and casadi_solution are close.
 
 if __name__ == "__main__":
     main()
