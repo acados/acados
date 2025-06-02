@@ -39,6 +39,8 @@ from typing import Optional
 from scqp_test_problem import build_acados_test_problem
 import matplotlib.pyplot as plt
 
+np.random.seed(0)
+
 def plot_convergence(list_data: list,
                     list_labels: list,
                     xlim: Optional[int] = None,
