@@ -28,11 +28,10 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, ACADOS_INFTY
+from acados_template import AcadosOcp, AcadosOcpSolver, ACADOS_INFTY
 import numpy as np
 import scipy.linalg
-from linear_mass_model import *
-from itertools import product
+from linear_mass_model import export_linear_mass_model, plot_linear_mass_system_X_state_space
 
 # an OCP to test the behavior of the SQP_WITH_FEASIBLE_QP functionalities
 
