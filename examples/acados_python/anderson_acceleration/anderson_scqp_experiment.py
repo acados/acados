@@ -30,46 +30,14 @@
 
 
 from dataclasses import dataclass
-import casadi as ca
 import numpy as np
-from acados_template import AcadosOcpSolver, AcadosOcpFlattenedIterate, AcadosCasadiOcpSolver, ACADOS_INFTY, latexify_plot
-
-from typing import Optional
+from acados_template import AcadosOcpSolver, AcadosOcpFlattenedIterate, AcadosCasadiOcpSolver, plot_convergence
 
 from scqp_test_problem import build_acados_test_problem
-import matplotlib.pyplot as plt
 
 np.random.seed(0)
 
-def plot_convergence(list_data: list,
-                    list_labels: list,
-                    xlim: Optional[int] = None,
-                    ylim: tuple=None,
-                    save_name: str = None):
-    latexify_plot()
 
-    assert len(list_data) == len(list_labels), f"Lists of data and labels do not have the same length, got {len(list_data)} and {len(list_labels)}"
-
-    plt.figure(figsize=(4.5, 3.0))
-    plt.clf()
-    for i in range(len(list_data)):
-        iters = np.arange(0, len(list_data[i]))
-        data = np.array(list_data[i]).squeeze()
-        plt.semilogy(iters, data, label=list_labels[i])
-    plt.legend(loc='best')
-    plt.xlabel("iteration number")
-    plt.ylabel("KKT residual norm")
-    if ylim is not None:
-        plt.ylim(ylim)
-    if xlim is not None:
-        plt.xlim(0, xlim)
-    else:
-        plt.xlim(0, max([len(data) for data in list_data]))
-    if save_name is not None:
-        plt.savefig(save_name+".pdf", dpi=300, bbox_inches='tight', pad_inches=0.01)
-    plt.tight_layout()
-    plt.grid()
-    plt.show()
 
 @dataclass
 class ExperimentAcadosSettings:

@@ -32,48 +32,9 @@
 from furuta_common import setup_ocp_solver
 import numpy as np
 
-from acados_template import AcadosOcpFlattenedIterate, latexify_plot
+from acados_template import AcadosOcpFlattenedIterate, plot_convergence, plot_contraction_rates
 from typing import Tuple
 import matplotlib.pyplot as plt
-
-def plot_convergence(list_data: list,
-                    list_labels: list,
-                    fig_filename: str = None):
-    latexify_plot()
-
-    assert len(list_data) == len(list_labels), f"Lists of data and labels do not have the same length, got {len(list_data)} and {len(list_labels)}"
-
-    plt.figure(figsize=(4.5, 3.0))
-    for i in range(len(list_data)):
-        iters = np.arange(0, len(list_data[i]))
-        data = np.array(list_data[i]).squeeze()
-        plt.semilogy(iters, data, label=list_labels[i])
-    plt.legend(loc='best')
-    plt.xlabel("iteration number")
-    plt.ylabel("KKT residual norm")
-    plt.xlim(0, max([len(data) for data in list_data]))
-    if fig_filename is not None:
-        plt.savefig(fig_filename, dpi=300, bbox_inches='tight', pad_inches=0.01)
-    plt.tight_layout()
-    plt.grid()
-
-def plot_contraction_rates(list_data: list,
-                          list_labels: list,
-                          fig_filename: str = None):
-    latexify_plot()
-    plt.figure(figsize=(4.5, 3.0))
-    for rates, label in zip(list_data, list_labels):
-        iters = np.arange(0, len(rates))
-        plt.plot(iters, rates, label=label)
-    plt.legend(loc='best')
-    plt.xlabel("iteration number")
-    plt.ylabel("empirical contraction rate")
-    plt.xlim(0, max([len(data) for data in list_data]))
-    if fig_filename is not None:
-        plt.savefig(fig_filename, dpi=300, bbox_inches='tight', pad_inches=0.01)
-    plt.ylim(0, 1.1)
-    plt.tight_layout()
-    plt.grid()
 
 
 def test_solver(with_anderson_acceleration: bool) -> Tuple[AcadosOcpFlattenedIterate, np.ndarray]:
@@ -131,13 +92,13 @@ def main():
 
     # plot results
     plot_convergence(
-        list_data=kkt_norm_list,
-        list_labels=labels,
+        kkt_norm_list,
+        labels,
         # fig_filename="convergence_furuta_pendulum.png"
     )
     plot_contraction_rates(
-        list_data=contraction_rates_list,
-        list_labels=labels,
+        contraction_rates_list,
+        labels,
         # fig_filename="contraction_rates_furuta_pendulum.png"
     )
     plt.show()
