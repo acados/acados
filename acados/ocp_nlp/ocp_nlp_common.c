@@ -3210,16 +3210,12 @@ void ocp_nlp_update_variables_sqp_delta_primal_dual(ocp_nlp_config *config, ocp_
         // step in primal variables
         blasfeo_daxpy(nv[i], alpha, step->ux+i, 0, out->ux+i, 0, out->ux+i, 0);
 
-        // update duals with alpha step
         blasfeo_daxpy(2*ni[i], alpha, step->lam+i, 0, out->lam+i, 0, out->lam+i, 0);
         if (i < N)
         {
+            // update duals with alpha step
             blasfeo_daxpy(nx[i+1], alpha, step->pi+i, 0, out->pi+i, 0, out->pi+i, 0);
-        }
-
-        // linear update of algebraic variables using state and input sensitivity
-        if (i < N)
-        {
+            // linear update of algebraic variables using state and input sensitivity
             // out->z = mem->z_alg + alpha * dzdux * qp_out->ux
             blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0,
                     step->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0);
