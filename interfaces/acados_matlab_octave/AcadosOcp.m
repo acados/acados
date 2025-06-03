@@ -365,7 +365,7 @@ classdef AcadosOcp < handle
             dims.nh_e = nh_e;
         end
 
-        function make_consistent_slack_dimensions_path(self)
+        function make_consistent_slacks_path(self)
             constraints = self.constraints;
             dims = self.dims;
             cost = self.cost;
@@ -426,7 +426,7 @@ classdef AcadosOcp < handle
             dims.nsphi = nsphi;
         end
 
-        function make_consistent_slack_dimensions_initial(self)
+        function make_consistent_slacks_initial(self)
             constraints = self.constraints;
             dims = self.dims;
             cost = self.cost;
@@ -477,7 +477,7 @@ classdef AcadosOcp < handle
             dims.nsphi_0 = nsphi_0;
         end
 
-        function make_consistent_slack_dimensions_terminal(self)
+        function make_consistent_slacks_terminal(self)
             constraints = self.constraints;
             dims = self.dims;
             cost = self.cost;
@@ -747,9 +747,9 @@ classdef AcadosOcp < handle
             self.make_consistent_constraints_terminal();
 
             %% slack dimensions
-            self.make_consistent_slack_dimensions_path();
-            self.make_consistent_slack_dimensions_initial();
-            self.make_consistent_slack_dimensions_terminal();
+            self.make_consistent_slacks_path();
+            self.make_consistent_slacks_initial();
+            self.make_consistent_slacks_terminal();
 
             % check for ACADOS_INFTY
             if ~ismember(opts.qp_solver, {'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_DAQP'})
