@@ -30,13 +30,6 @@ def main():
     x0 = np.array([0.0, 3.14, 0.0, 0.0])  # initial state
     ocp.constraints.x0 = x0
 
-    ## solve using casadi
-    casadi_ocp_solver = AcadosCasadiOcpSolver(ocp, verbose=False)
-    casadi_ocp_solver.solve()
-    x_casadi_sol, u_casadi_sol = get_x_u_traj(casadi_ocp_solver, N_horizon)
-    pi_casadi_flat = casadi_ocp_solver.get_flat("pi")
-    lambda_casadi_flat = casadi_ocp_solver.get_flat("lam")
-
     initial_iterate = ocp.create_default_initial_iterate()
 
     ## solve using acados
@@ -47,9 +40,18 @@ def main():
     # solve with acados
     status = ocp_solver.solve()
     # get solution
+    reuslt_acados = ocp_solver.store_iterate_to_obj()
     simX, simU = get_x_u_traj(ocp_solver, N_horizon)
     pi_acados_flat = ocp_solver.get_flat("pi")
     lambda_acados_flat = ocp_solver.get_flat("lam")
+
+    ## solve using casadi
+    casadi_ocp_solver = AcadosCasadiOcpSolver(ocp, verbose=False)
+    casadi_ocp_solver.load_iterate_from_obj(reuslt_acados)
+    casadi_ocp_solver.solve()
+    x_casadi_sol, u_casadi_sol = get_x_u_traj(casadi_ocp_solver, N_horizon)
+    pi_casadi_flat = casadi_ocp_solver.get_flat("pi")
+    lambda_casadi_flat = casadi_ocp_solver.get_flat("lam")
 
     # evaluate difference
     diff_x = np.linalg.norm(x_casadi_sol - simX)
