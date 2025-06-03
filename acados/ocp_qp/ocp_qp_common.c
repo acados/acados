@@ -347,6 +347,10 @@ void ocp_qp_out_axpy(double alpha, ocp_qp_out* x, ocp_qp_out* y, ocp_qp_out* z)
     int *nu = dims->nu;
     int *ns = dims->ns;
     int ni_stage;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
     for (int i = 0; i <= N; i++)
     {
         ni_stage = ocp_qp_dims_get_ni(dims, i);
@@ -374,6 +378,9 @@ double ocp_qp_out_ddot(ocp_qp_out *x, ocp_qp_out *y, struct blasfeo_dvec *work_t
     int tmp_nbg;
     double out = 0.0;
 
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
     for (int i = 0; i <= N; i++)
     {
         // primal
@@ -408,6 +415,10 @@ void ocp_qp_out_set_to_zero(ocp_qp_out* x)
     int *nu = dims->nu;
     int *ns = dims->ns;
     int ni_stage;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
     for (int i = 0; i <= N; i++)
     {
         ni_stage = ocp_qp_dims_get_ni(dims, i);
@@ -430,6 +441,10 @@ void ocp_qp_out_sc(double alpha, ocp_qp_out* x)
     int *nu = dims->nu;
     int *ns = dims->ns;
     int ni_stage;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
     for (int i = 0; i <= N; i++)
     {
         ni_stage = ocp_qp_dims_get_ni(dims, i);
@@ -453,6 +468,10 @@ void ocp_qp_out_add(double alpha, ocp_qp_out* x, ocp_qp_out* y)
     int *nu = dims->nu;
     int *ns = dims->ns;
     int ni_stage;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
     for (int i = 0; i <= N; i++)
     {
         ni_stage = ocp_qp_dims_get_ni(dims, i);
