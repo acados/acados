@@ -1796,7 +1796,7 @@ class AcadosOcpOptions:
     @with_anderson_acceleration.setter
     def with_anderson_acceleration(self, with_anderson_acceleration):
         if not isinstance(with_anderson_acceleration, bool):
-            raise Exception('Invalid with_anderson_acceleration value, must be bool.')
+            raise TypeError('Invalid with_anderson_acceleration value, must be bool.')
         self.__with_anderson_acceleration = with_anderson_acceleration
 
     @as_rti_level.setter
@@ -2032,7 +2032,7 @@ class AcadosOcpOptions:
         if isinstance(with_batch_functionality, bool):
             self.__with_batch_functionality = with_batch_functionality
         else:
-            raise Exception('Invalid with_batch_functionality value. Expected bool.')
+            raise TypeError('Invalid with_batch_functionality value. Expected bool.')
 
 
     def set(self, attr, value):
