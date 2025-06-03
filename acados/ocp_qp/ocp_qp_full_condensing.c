@@ -157,11 +157,7 @@ acados_size_t ocp_qp_full_condensing_opts_calculate_size(void *dims_)
     // populate dimensions of reduced qp
     d_ocp_qp_dim_reduce_eq_dof(dims->orig_dims, dims->red_dims);
     // populate dimensions of new dense_qp
-//    d_cond_qp_compute_dim(dims->orig_dims, dims->fcond_dims);
     d_cond_qp_compute_dim(dims->red_dims, dims->fcond_dims);
-//d_ocp_qp_dim_print(dims->orig_dims);
-//d_ocp_qp_dim_print(dims->red_dims);
-//exit(1);
 
     acados_size_t size = 0;
 
@@ -304,12 +300,10 @@ acados_size_t ocp_qp_full_condensing_memory_calculate_size(void *dims_, void *op
     ocp_qp_full_condensing_dims *dims = dims_;
     ocp_qp_full_condensing_opts *opts = opts_;
 
-    // TODO needed ???
     // populate dimensions of reduced qp
-//    d_ocp_qp_dim_reduce_eq_dof(dims->orig_dims, dims->red_dims);
+    d_ocp_qp_dim_reduce_eq_dof(dims->orig_dims, dims->red_dims);
     // populate dimensions of new dense_qp
-//    d_cond_qp_compute_dim(dims->orig_dims, dims->fcond_dims);
-//    d_cond_qp_compute_dim(dims->red_dims, dims->fcond_dims);
+    d_cond_qp_compute_dim(dims->red_dims, dims->fcond_dims);
 
     acados_size_t size = 0;
 

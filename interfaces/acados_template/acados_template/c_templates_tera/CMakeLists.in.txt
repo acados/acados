@@ -34,7 +34,7 @@
     {%- set qp_solver = "FULL_CONDENSING_HPIPM" %}
 {%- endif %}
 
-{%- if solver_options.N_horizon %}
+{% if problem_class != "SIM" %}
     {%- set N_horizon = solver_options.N_horizon %}
 {%- else %}
     {%- set N_horizon = 1 %}
