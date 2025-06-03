@@ -145,7 +145,7 @@ class AcadosOcpOptions:
         self.__custom_update_copy = True
         self.__num_threads_in_batch_solve: int = 1
         self.__with_batch_functionality: bool = False
-        self.__with_anderson_acceleration = 0
+        self.__with_anderson_acceleration: bool = False
 
 
     @property
@@ -603,7 +603,7 @@ class AcadosOcpOptions:
         Only supported for globalization == 'FIXED_STEP'.
 
         Type: bool
-        Default: 0
+        Default: False
         """
         return self.__with_anderson_acceleration
 
@@ -1249,7 +1249,7 @@ class AcadosOcpOptions:
         Default: 1.
         """
         return self.__num_threads_in_batch_solve
-    
+
     @property
     def with_batch_functionality(self):
         """
