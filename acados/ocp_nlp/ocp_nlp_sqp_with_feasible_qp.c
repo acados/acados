@@ -968,6 +968,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
     int qp_status = ACADOS_SUCCESS;
 
+    printf("\nprepare_and_solve_QP: solve_feasibility_qp %d\n", solve_feasibility_qp);
     // warm start of first QP
     if (nlp_mem->iter == 0)
     {
@@ -993,9 +994,17 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
             ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, opts->nlp_opts, nlp_mem, nlp_work, mem->alpha, nlp_mem->iter, qp_in);
         }
 
-        // regularize Hessian
         acados_tic(&timer_qp);
-        config->regularize->regularize(config->regularize, dims->regularize, nlp_opts->regularize, nlp_mem->regularize);
+        // scale the qp: includes constraints and objective
+        // config->qpscaling->scale_qp(config->qpscaling, dims->qpscaling, nlp_opts->qpscaling, nlp_mem->qpscaling, qp_in);
+        // if (! solve_feasibility_qp)
+        // {
+        //     ocp_nlp_sqp_wfqp_approximate_feasibility_qp_constraint_vectors(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
+        // }
+        // printf("We are inside where the scaling takes place...\n");
+        // we need to scale the right hand side of the feasibility QP as well!
+        // regularize Hessian
+        config->regularize->regularize(config->regularize, dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
         nlp_timings->time_reg += acados_toc(&timer_qp);
     }
 
@@ -1659,6 +1668,15 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             mem->l1_infeasibility = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
         }
+
+        /* Scale the QP */
+        acados_tic(&timer1);
+        // scale the qp: includes constraints and objective
+        config->qpscaling->scale_qp(config->qpscaling, dims->qpscaling, nlp_opts->qpscaling, nlp_mem->qpscaling, nominal_qp_in);
+        ocp_nlp_sqp_wfqp_approximate_feasibility_qp_constraint_vectors(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work); // ensures relaxed_qp->d is scaled
+        if (opts->use_constraint_hessian_in_feas_qp)
+            config->qpscaling->scale_qp(config->qpscaling, dims->qpscaling, nlp_opts->qpscaling, nlp_mem->qpscaling, mem->relaxed_qp_in); // ensures feasibility constraint Hessian is scaled
+        nlp_timings->time_qp_scaling += acados_toc(&timer1);
 
         /* Search Direction Computation */
         search_direction_status = calculate_search_direction(dims, config, opts, nlp_opts, nlp_in, nlp_out, mem, work, timer_tot);
