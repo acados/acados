@@ -331,6 +331,8 @@ class AcadosCasadiOcpSolver:
             ug_lam = np.maximum(0, g_lam)
             lam = np.concatenate((lbu_lam, lbx_lam, lg_lam, ubu_lam, ubx_lam, ug_lam))
             return lam.flatten()
+        elif field in ['sl', 'su', 'z']:
+            return np.empty((0, 1))  # Only empty is supported for now. TODO: extend.
         else:
             raise NotImplementedError(f"Field '{field}' is not implemented in AcadosCasadiOcpSolver")
 
@@ -338,7 +340,7 @@ class AcadosCasadiOcpSolver:
         """
         Get concatenation of all stages of last solution of the solver.
 
-        :param field: string in ['x', 'u', 'pi','lam']
+        :param field: string in ['x', 'u', 'pi', 'lam', 'z', 'sl', 'su']
 
         .. note:: The parameter 'p_global' has no stage-wise structure and is processed in a memory saving manner by default. \n
                 In order to read the 'p_global' parameter, the option 'save_p_global' must be set to 'True' upon instantiation. \n
@@ -348,22 +350,15 @@ class AcadosCasadiOcpSolver:
         dims = self.acados_ocp.dims
         result = []
 
-        if field_ == 'x':
+        if field_ in ['x', 'lam', 'sl', 'su']:
             for i in range(dims.N+1):
-                result.append(self.get(i, 'x'))
+                result.append(self.get(i, field_))
             return np.concatenate(result)
-        elif field_ == 'u':
+        elif field_ in ['u', 'pi', 'z']:
             for i in range(dims.N):
-                result.append(self.get(i, 'u'))
+                result.append(self.get(i, field_))
             return np.concatenate(result)
-        elif field_ == 'lam':
-            for i in range(dims.N+1):
-                result.append(self.get(i, 'lam'))
-            return np.concatenate(result)
-        elif field_ == 'pi':
-            for i in range(dims.N):
-                result.append(self.get(i, 'pi'))
-            return np.concatenate(result)
+        # casadi variables. TODO: maybe remove this.
         elif field_ == 'lam_x':
             return self.nlp_sol_lam_x.flatten()
         elif field_ == 'lam_g':
@@ -421,10 +416,10 @@ class AcadosCasadiOcpSolver:
         Returns the current iterate of the OCP solver as an AcadosOcpIterate.
         """
         d = {}
-        for field in ["x", "u", "pi", "lam"]:
+        for field in ["x", "u", "z", "sl", "su", "pi", "lam"]:
             traj = []
             for n in range(self.acados_ocp.dims.N+1):
-                if n < self.acados_ocp.dims.N or not (field in ["u", "pi"]):
+                if n < self.acados_ocp.dims.N or not (field in ["u", "pi", "z"]):
                     traj.append(self.get(n, field))
 
             d[f"{field}_traj"] = traj
@@ -436,6 +431,7 @@ class AcadosCasadiOcpSolver:
         Loads the provided iterate into the OCP solver.
         Note: The iterate object does not contain the the parameters.
         """
+        # TODO: add slacks
         for key, traj in iterate.__dict__.items():
             field = key.replace('_traj', '')
 
@@ -450,7 +446,10 @@ class AcadosCasadiOcpSolver:
         return AcadosOcpFlattenedIterate(x = self.get_flat("x"),
                                          u = self.get_flat("u"),
                                          pi = self.get_flat("pi"),
-                                         lam = self.get_flat("lam"))
+                                         lam = self.get_flat("lam"),
+                                         sl = self.get_flat("sl"),
+                                         su = self.get_flat("su"),
+                                         z = self.get_flat("z"))
 
     def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedIterate) -> None:
         """
@@ -514,6 +513,11 @@ class AcadosCasadiOcpSolver:
             else:
                 self.lam_x0[self.index_map['x'][stage]] = ubx_lam-lbx_lam
                 self.lam_g0[self.index_map['lam_g_constraint'][stage]] = ug_lam-lg_lam
+        elif field in ['sl', 'su']:
+            # do nothing for now, only empty is supported
+            pass
+        else:
+            raise NotImplementedError(f"Field '{field}' is not yet implemented in set().")
 
     def cost_get(self, stage_: int, field_: str) -> np.ndarray:
         raise NotImplementedError()
