@@ -764,104 +764,62 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
 
 int ocp_nlp_dims_get_total_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out, const char *field)
 {
-    int N = dims->N;
-
-    int size = 0;
-    int stage;
     if (!strcmp(field, "x"))
     {
-        for (stage = 0; stage < N+1; stage++)
-        {
-            size += dims->nx[stage];
-        }
+        return dims->nx_total;
     }
     else if (!strcmp(field, "u"))
     {
-        for (stage = 0; stage < N; stage++)
-        {
-            size += dims->nu[stage];
-        }
+        return dims->nu_total;
     }
     else if (!strcmp(field, "sl") || !strcmp(field, "su") ||
              !strcmp(field, "zl") || !strcmp(field, "zu") ||
              !strcmp(field, "Zl") || !strcmp(field, "Zu") ||
              !strcmp(field, "cost_z") || !strcmp(field, "cost_Z"))
     {
-        for (stage = 0; stage < N+1; stage++)
-        {
-            size += dims->ns[stage];
-        }
+        return dims->ns_total;
     }
     else if (!strcmp(field, "s"))
     {
-        for (stage = 0; stage < N+1; stage++)
-        {
-            size += 2*dims->ns[stage];
-        }
+        return 2*dims->ns_total;
     }
     else if (!strcmp(field, "z"))
     {
-        for (stage = 0; stage < N+1; stage++)
-        {
-            size += dims->nz[stage];
-        }
+        return dims->nz_total;
     }
     else if (!strcmp(field, "pi"))
     {
-        for (stage = 0; stage < N; stage++)
-        {
-            size += dims->nx[stage+1];
-        }
+        return dims->nx_total - dims->nx[0];
     }
     else if (!strcmp(field, "lam"))
     {
-        for (stage = 0; stage < N+1; stage++)
-        {
-            size += 2*dims->ni[stage];
-        }
+        return 2*dims->ni_total;
     }
     else if (!strcmp(field, "p"))
     {
-        for (stage = 0; stage < N+1; stage++)
-        {
-            size += dims->np[stage];
-        }
+        return dims->np_total;
     }
     else if (!strcmp(field, "lbx") || !strcmp(field, "ubx") || !strcmp(field, "nbx"))
     {
-        for (stage = 0; stage < N+1; stage++)
-        {
-            size += ocp_nlp_dims_get_from_attr(config, dims, out, stage, "lbx");
-        }
+        return dims->nbx_total;
     }
     else if (!strcmp(field, "lbu") || !strcmp(field, "ubu") || !strcmp(field, "nbu"))
     {
-        for (stage = 0; stage < N; stage++)
-        {
-            size += ocp_nlp_dims_get_from_attr(config, dims, out, stage, "lbu");
-        }
+        return dims->nbu_total;
     }
     else if (!strcmp(field, "lg") || !strcmp(field, "ug") || !strcmp(field, "ng"))
     {
-        for (stage = 0; stage < N+1; stage++)
-        {
-            size += ocp_nlp_dims_get_from_attr(config, dims, out, stage, "lg");
-        }
+        return dims->ng_total;
     }
     else if (!strcmp(field, "lh") || !strcmp(field, "uh") || !strcmp(field, "nh"))
     {
-        for (stage = 0; stage < N+1; stage++)
-        {
-            size += ocp_nlp_dims_get_from_attr(config, dims, out, stage, "lh");
-        }
+        return dims->nh_total;
     }
     else
     {
         printf("\nerror: ocp_nlp_dims_get_total_from_attr: field %s not available\n", field);
         exit(1);
     }
-
-    return size;
 }
 
 
@@ -1899,7 +1857,8 @@ void ocp_nlp_set(ocp_nlp_solver *solver, int stage, const char *field, void *val
         int nx = dims->nx[stage];
         double *double_values = value;
         blasfeo_pack_dvec(nz, double_values, 1, mem->sim_guess + stage, nx);
-        mem->set_sim_guess[stage] = true;
+        if (nz > 0)
+            mem->set_sim_guess[stage] = true;
         // printf("set z_guess\n");
         // blasfeo_print_exp_dvec(nz, mem->sim_guess+stage, nx);
     }

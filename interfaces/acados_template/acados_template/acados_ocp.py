@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from typing import Optional, Union
+from typing import Optional, Union, Tuple
 import numpy as np
 
 from scipy.linalg import block_diag
@@ -44,6 +44,7 @@ from .acados_ocp_cost import AcadosOcpCost
 from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions
+from .acados_ocp_iterate import AcadosOcpIterate
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
                     get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square,
@@ -1528,11 +1529,11 @@ class AcadosOcp:
     def translate_intermediate_cost_term_to_external(self, yref: Optional[Union[ca.SX, ca.MX]] = None, W: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
 
         if cost_hessian not in ['EXACT', 'GAUSS_NEWTON']:
-            raise Exception(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
+            raise ValueError(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
 
         if cost_hessian == 'GAUSS_NEWTON':
             if self.cost.cost_type not in ['LINEAR_LS', 'NONLINEAR_LS']:
-                raise Exception(f"cost_hessian 'GAUSS_NEWTON' is only supported for LINEAR_LS, NONLINEAR_LS cost types, got cost_type = {self.cost.cost_type}.")
+                raise ValueError(f"cost_hessian 'GAUSS_NEWTON' is only supported for LINEAR_LS, NONLINEAR_LS cost types, got cost_type = {self.cost.cost_type}.")
 
         casadi_symbolics_type = type(self.model.x)
 
@@ -1540,19 +1541,19 @@ class AcadosOcp:
             yref = self.cost.yref
         else:
             if yref.shape[0] != self.cost.yref.shape[0]:
-                raise Exception(f"yref has wrong shape, got {yref.shape}, expected {self.cost.yref.shape}.")
+                raise ValueError(f"yref has wrong shape, got {yref.shape}, expected {self.cost.yref.shape}.")
 
             if not isinstance(yref, casadi_symbolics_type):
-                raise Exception(f"yref has wrong type, got {type(yref)}, expected {casadi_symbolics_type}.")
+                raise TypeError(f"yref has wrong type, got {type(yref)}, expected {casadi_symbolics_type}.")
 
         if W is None:
             W = self.cost.W
         else:
             if W.shape != self.cost.W.shape:
-                raise Exception(f"W has wrong shape, got {W.shape}, expected {self.cost.W.shape}.")
+                raise ValueError(f"W has wrong shape, got {W.shape}, expected {self.cost.W.shape}.")
 
             if not isinstance(W, casadi_symbolics_type):
-                raise Exception(f"W has wrong type, got {type(W)}, expected {casadi_symbolics_type}.")
+                raise TypeError(f"W has wrong type, got {type(W)}, expected {casadi_symbolics_type}.")
 
         if self.cost.cost_type == "LINEAR_LS":
             self.model.cost_expr_ext_cost = \
@@ -1575,11 +1576,11 @@ class AcadosOcp:
 
     def translate_terminal_cost_term_to_external(self, yref_e: Optional[Union[ca.SX, ca.MX]] = None, W_e: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
         if cost_hessian not in ['EXACT', 'GAUSS_NEWTON']:
-            raise Exception(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
+            raise ValueError(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
 
         if cost_hessian == 'GAUSS_NEWTON':
             if self.cost.cost_type_e not in ['LINEAR_LS', 'NONLINEAR_LS']:
-                raise Exception(f"cost_hessian 'GAUSS_NEWTON' is only supported for LINEAR_LS, NONLINEAR_LS cost types, got cost_type_e = {self.cost.cost_type_e}.")
+                raise ValueError(f"cost_hessian 'GAUSS_NEWTON' is only supported for LINEAR_LS, NONLINEAR_LS cost types, got cost_type_e = {self.cost.cost_type_e}.")
 
         casadi_symbolics_type = type(self.model.x)
 
@@ -1587,19 +1588,19 @@ class AcadosOcp:
             yref_e = self.cost.yref_e
         else:
             if yref_e.shape[0] != self.cost.yref_e.shape[0]:
-                raise Exception(f"yref_e has wrong shape, got {yref_e.shape}, expected {self.cost.yref_e.shape}.")
+                raise ValueError(f"yref_e has wrong shape, got {yref_e.shape}, expected {self.cost.yref_e.shape}.")
 
             if not isinstance(yref_e, casadi_symbolics_type):
-                raise Exception(f"yref_e has wrong type, got {type(yref_e)}, expected {casadi_symbolics_type}.")
+                raise TypeError(f"yref_e has wrong type, got {type(yref_e)}, expected {casadi_symbolics_type}.")
 
         if W_e is None:
             W_e = self.cost.W_e
         else:
             if W_e.shape != self.cost.W_e.shape:
-                raise Exception(f"W_e has wrong shape, got {W_e.shape}, expected {self.cost.W_e.shape}.")
+                raise ValueError(f"W_e has wrong shape, got {W_e.shape}, expected {self.cost.W_e.shape}.")
 
             if not isinstance(W_e, casadi_symbolics_type):
-                raise Exception(f"W_e has wrong type, got {type(W_e)}, expected {casadi_symbolics_type}.")
+                raise TypeError(f"W_e has wrong type, got {type(W_e)}, expected {casadi_symbolics_type}.")
 
         if self.cost.cost_type_e == "LINEAR_LS":
             self.model.cost_expr_ext_cost_e = \
@@ -1622,11 +1623,11 @@ class AcadosOcp:
     @staticmethod
     def __translate_ls_cost_to_external_cost(x, u, z, Vx, Vu, Vz, yref, W):
         res = 0
-        if Vx is not None:
+        if not is_empty(Vx):
             res += Vx @ x
-        if Vu is not None and casadi_length(u) > 0:
+        if not is_empty(Vu):
             res += Vu @ u
-        if Vz is not None and casadi_length(z) > 0:
+        if not is_empty(Vz):
             res += Vz @ z
         res -= yref
 
@@ -2122,3 +2123,115 @@ class AcadosOcp:
                 cost.cost_type_0 = 'EXTERNAL'
 
         print('--------------------------------------------------------------')
+
+
+    def get_initial_cost_expression(self):
+        model = self.model
+        if self.cost.cost_type == "LINEAR_LS":
+            y = self.cost.Vx_0 @ model.x + self.cost.Vu_0 @ model.u
+
+            if not is_empty(self.cost.Vz_0):
+                y += self.cost.Vz @ model.z
+            residual = y - self.cost.yref_0
+            cost_dot = 0.5 * (residual.T @ self.cost.W_0 @ residual)
+
+        elif self.cost.cost_type == "NONLINEAR_LS":
+            residual = model.cost_y_expr_0 - self.cost.yref_0
+            cost_dot = 0.5 * (residual.T @ self.cost.W_0 @ residual)
+
+        elif self.cost.cost_type == "EXTERNAL":
+            cost_dot = model.cost_expr_ext_cost_0
+
+        elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+            cost_dot = ca.substitute(
+            model.cost_psi_expr_0, model.cost_r_in_psi_expr_0, model.cost_y_expr_0)
+        else:
+            raise ValueError("create_model_with_cost_state: Unknown cost type.")
+
+        return cost_dot
+
+
+    def get_path_cost_expression(self):
+        model = self.model
+        if self.cost.cost_type == "LINEAR_LS":
+            y = self.cost.Vx @ model.x + self.cost.Vu @ model.u
+
+            if not is_empty(self.cost.Vz):
+                y += self.cost.Vz @ model.z
+            residual = y - self.cost.yref
+            cost_dot = 0.5 * (residual.T @ self.cost.W @ residual)
+
+        elif self.cost.cost_type == "NONLINEAR_LS":
+            residual = model.cost_y_expr - self.cost.yref
+            cost_dot = 0.5 * (residual.T @ self.cost.W @ residual)
+
+        elif self.cost.cost_type == "EXTERNAL":
+            cost_dot = model.cost_expr_ext_cost
+
+        elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+            cost_dot = ca.substitute(
+            model.cost_psi_expr, model.cost_r_in_psi_expr, model.cost_y_expr)
+        else:
+            raise ValueError("create_model_with_cost_state: Unknown cost type.")
+
+        return cost_dot
+
+
+    def get_terminal_cost_expression(self):
+        model = self.model
+        if self.cost.cost_type_e == "LINEAR_LS":
+            if is_empty(self.cost.Vx_e):
+                return 0.0
+            y = self.cost.Vx_e @ model.x
+            residual = y - self.cost.yref_e
+            cost_dot = 0.5 * (residual.T @ self.cost.W_e @ residual)
+
+        elif self.cost.cost_type == "NONLINEAR_LS":
+            residual = model.cost_y_expr_e - self.cost.yref_e
+            cost_dot = 0.5 * (residual.T @ self.cost.W_e @ residual)
+
+        elif self.cost.cost_type == "EXTERNAL":
+            cost_dot = model.cost_expr_ext_cost_e
+
+        elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+            cost_dot = ca.substitute(
+            model.cost_psi_expr_e, model.cost_r_in_psi_expr_e, model.cost_y_expr_e)
+        else:
+            raise ValueError("create_model_with_cost_state: Unknown terminal cost type.")
+
+        return cost_dot
+
+
+    def create_default_initial_iterate(self) -> AcadosOcpIterate:
+        """
+        Create a default initial iterate for the OCP.
+        """
+        self.make_consistent()
+        dims = self.dims
+
+        if self.constraints.has_x0:
+            x_traj = (self.solver_options.N_horizon+1) * [self.constraints.x0]
+        else:
+            x_traj = (self.solver_options.N_horizon+1) * [np.zeros(dims.nx)]
+        u_traj = self.solver_options.N_horizon * [np.zeros(self.dims.nu)]
+        z_traj = self.solver_options.N_horizon * [np.zeros(self.dims.nz)]
+        sl_traj = [np.zeros(self.dims.ns_0)] + (self.solver_options.N_horizon-1) * [np.zeros(self.dims.ns)] + [np.zeros(self.dims.ns_e)]
+        su_traj = [np.zeros(self.dims.ns_0)] + (self.solver_options.N_horizon-1) * [np.zeros(self.dims.ns)] + [np.zeros(self.dims.ns_e)]
+
+        pi_traj = self.solver_options.N_horizon * [np.zeros(self.dims.nx)]
+
+        ni_0 = dims.nbu + dims.nbx_0 + dims.nh_0 + dims.nphi_0 + dims.ng
+        ni = dims.nbu + dims.nbx + dims.nh + dims.nphi + dims.ng
+        ni_e = dims.nbx_e + dims.nh_e + dims.nphi_e + dims.ng_e
+        lam_traj = [np.zeros(2*ni_0)] + (self.solver_options.N_horizon-1) * [np.zeros(2*ni)] + [np.zeros(2*ni_e)]
+
+        iterate = AcadosOcpIterate(
+            x_traj=x_traj,
+            u_traj=u_traj,
+            z_traj=z_traj,
+            sl_traj=sl_traj,
+            su_traj=su_traj,
+            pi_traj=pi_traj,
+            lam_traj=lam_traj,
+        )
+        return iterate

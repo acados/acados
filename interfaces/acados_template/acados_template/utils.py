@@ -205,6 +205,7 @@ def casadi_length(x):
         raise TypeError("casadi_length expects one of the following types: casadi.MX, casadi.SX."
                         + " Got: " + str(type(x)))
 
+
 def get_shared_lib_ext():
     if sys.platform == 'darwin':
         return '.dylib'

@@ -365,7 +365,7 @@ classdef AcadosOcp < handle
             dims.nh_e = nh_e;
         end
 
-        function make_consistent_slack_dimensions_path(self)
+        function make_consistent_slacks_path(self)
             constraints = self.constraints;
             dims = self.dims;
             cost = self.cost;
@@ -373,11 +373,65 @@ classdef AcadosOcp < handle
                 return
             end
 
+            nbx = dims.nbx;
             nsbx = length(constraints.idxsbx);
+            if nsbx > nbx
+                error(['inconsistent dimension nsbx = ', num2str(nsbx), '. Is greater than nbx = ', num2str(nbx), '.']);
+            end
+            if any(constraints.idxsbx >= nbx)
+                error(['idxsbx = [', num2str(constraints.idxsbx(:).'), '] contains value >= nbx = ', num2str(nbx), '.']);
+            end
+            if any(constraints.idxsbx < 0)
+                error(['idxsbx = [', num2str(constraints.idxsbx(:).'), '] contains value < 0.']);
+            end
+
             nsbu = length(constraints.idxsbu);
+            nbu = dims.nbu;
+            if nsbu > nbu
+                error(['inconsistent dimension nsbu = ', num2str(nsbu), '. Is greater than nbu = ', num2str(nbu), '.']);
+            end
+            if any(constraints.idxsbu >= nbu)
+                error(['idxsbu = [', num2str(constraints.idxsbu(:).'), '] contains value >= nbu = ', num2str(nbu), '.']);
+            end
+            if any(constraints.idxsbu < 0)
+                error(['idxsbu = [', num2str(constraints.idxsbu(:).'), '] contains value < 0.']);
+            end
+
             nsg = length(constraints.idxsg);
+            ng = dims.ng;
+            if nsg > ng
+                error(['inconsistent dimension nsg = ', num2str(nsg), '. Is greater than ng = ', num2str(ng), '.']);
+            end
+            if any(constraints.idxsg >= ng)
+                error(['idxsg = [', num2str(constraints.idxsg(:).'), '] contains value >= ng = ', num2str(ng), '.']);
+            end
+            if any(constraints.idxsg < 0)
+                error(['idxsg = [', num2str(constraints.idxsg(:).'), '] contains value < 0.']);
+            end
+
             nsh = length(constraints.idxsh);
+            nh = dims.nh;
+            if nsh > nh
+                error(['inconsistent dimension nsh = ', num2str(nsh), '. Is greater than nh = ', num2str(nh), '.']);
+            end
+            if any(constraints.idxsh >= nh)
+                error(['idxsh = [', num2str(constraints.idxsh(:).'), '] contains value >= nh = ', num2str(nh), '.']);
+            end
+            if any(constraints.idxsh < 0)
+                error(['idxsh = [', num2str(constraints.idxsh(:).'), '] contains value < 0.']);
+            end
+
             nsphi = length(constraints.idxsphi);
+            nphi = dims.nphi;
+            if nsphi > nphi
+                error(['inconsistent dimension nsphi = ', num2str(nsphi), '. Is greater than nphi = ', num2str(nphi), '.']);
+            end
+            if any(constraints.idxsphi >= nphi)
+                error(['idxsphi = [', num2str(constraints.idxsphi(:).'), '] contains value >= nphi = ', num2str(nphi), '.']);
+            end
+            if any(constraints.idxsphi < 0)
+                error(['idxsphi = [', num2str(constraints.idxsphi(:).'), '] contains value < 0.']);
+            end
 
             ns = nsbx + nsbu + nsg + nsh + nsphi;
             wrong_field = '';
@@ -426,7 +480,7 @@ classdef AcadosOcp < handle
             dims.nsphi = nsphi;
         end
 
-        function make_consistent_slack_dimensions_initial(self)
+        function make_consistent_slacks_initial(self)
             constraints = self.constraints;
             dims = self.dims;
             cost = self.cost;
@@ -436,8 +490,29 @@ classdef AcadosOcp < handle
                 return
             end
 
+            nh_0 = dims.nh_0;
             nsh_0 = length(constraints.idxsh_0);
+            if nsh_0 > nh_0
+                error(['inconsistent dimension nsh_0 = ', num2str(nsh_0), '. Is greater than nh_0 = ', num2str(nh_0), '.']);
+            end
+            if any(constraints.idxsh_0 >= nh_0)
+                error(['idxsh_0 = [', num2str(constraints.idxsh_0(:).'), '] contains value >= nh_0 = ', num2str(nh_0), '.']);
+            end
+            if any(constraints.idxsh_0 < 0)
+                error(['idxsh_0 = [', num2str(constraints.idxsh_0(:).'), '] contains value < 0.']);
+            end
+
+            nphi_0 = dims.nphi_0;
             nsphi_0 = length(constraints.idxsphi_0);
+            if nsphi_0 > nphi_0
+                error(['inconsistent dimension nsphi_0 = ', num2str(nsphi_0), '. Is greater than nphi_0 = ', num2str(nphi_0), '.']);
+            end
+            if any(constraints.idxsphi_0 >= nphi_0)
+                error(['idxsphi_0 = [', num2str(constraints.idxsphi_0(:).'), '] contains value >= nphi_0 = ', num2str(nphi_0), '.']);
+            end
+            if any(constraints.idxsphi_0 < 0)
+                error(['idxsphi_0 = [', num2str(constraints.idxsphi_0(:).'), '] contains value < 0.']);
+            end
 
             ns_0 = nsbu + nsg + nsh_0 + nsphi_0;
             wrong_field = '';
@@ -477,15 +552,60 @@ classdef AcadosOcp < handle
             dims.nsphi_0 = nsphi_0;
         end
 
-        function make_consistent_slack_dimensions_terminal(self)
+        function make_consistent_slacks_terminal(self)
             constraints = self.constraints;
             dims = self.dims;
             cost = self.cost;
-            
+
+            nbx_e = dims.nbx_e;
             nsbx_e = length(constraints.idxsbx_e);
+            if nsbx_e > nbx_e
+                error(['inconsistent dimension nsbx_e = ', num2str(nsbx_e), '. Is greater than nbx_e = ', num2str(nbx_e), '.']);
+            end
+            if any(constraints.idxsbx_e >= nbx_e)
+                error(['idxsbx_e = [', num2str(constraints.idxsbx_e(:).'), '] contains value >= nbx_e = ', num2str(nbx_e), '.']);
+            end
+            if any(constraints.idxsbx_e < 0)
+                error(['idxsbx_e = [', num2str(constraints.idxsbx_e(:).'), '] contains value < 0.']);
+            end
+
+            ng_e = dims.ng_e;
             nsg_e = length(constraints.idxsg_e);
+            if nsg_e > ng_e
+                error(['inconsistent dimension nsg_e = ', num2str(nsg_e), '. Is greater than ng_e = ', num2str(ng_e), '.']);
+            end
+            if any(constraints.idxsg_e >= ng_e)
+                error(['idxsg_e = [', num2str(constraints.idxsg_e(:).'), '] contains value >= ng_e = ', num2str(ng_e), '.']);
+            end
+            if any(constraints.idxsg_e < 0)
+                error(['idxsg_e = [', num2str(constraints.idxsg_e(:).'), '] contains value < 0.']);
+            end
+
+            nh_e = dims.nh_e;
             nsh_e = length(constraints.idxsh_e);
+            if nsh_e > nh_e
+                error(['inconsistent dimension nsh_e = ', num2str(nsh_e), '. Is greater than nh_e = ', num2str(nh_e), '.']);
+            end
+            if any(constraints.idxsh_e >= nh_e)
+                error(['idxsh_e = [', num2str(constraints.idxsh_e(:).'), '] contains value >= nh_e = ', num2str(nh_e), '.']);
+            end
+            if any(constraints.idxsh_e < 0)
+                error(['idxsh_e = [', num2str(constraints.idxsh_e(:).'), '] contains value < 0.']);
+            end
+
+
+            nphi_e = dims.nphi_e;
             nsphi_e = length(constraints.idxsphi_e);
+            if nsphi_e > nphi_e
+                error(['inconsistent dimension nsphi_e = ', num2str(nsphi_e), '. Is greater than nphi_e = ', num2str(nphi_e), '.']);
+            end
+            if any(constraints.idxsphi_e >= nphi_e)
+                error(['idxsphi_e = [', num2str(constraints.idxsphi_e(:).'), '] contains value >= nphi_e = ', num2str(nphi_e), '.']);
+            end
+            if any(constraints.idxsphi_e < 0)
+                error(['idxsphi_e = [', num2str(constraints.idxsphi_e(:).'), '] contains value < 0.']);
+            end
+
 
             ns_e = nsbx_e + nsg_e + nsh_e + nsphi_e;
             wrong_field = '';
@@ -584,7 +704,7 @@ classdef AcadosOcp < handle
         end
 
         function make_consistent_simulation(self)
-            opts = self.solver_options
+            opts = self.solver_options;
             if opts.N_horizon == 0
                 return
             end
@@ -747,9 +867,9 @@ classdef AcadosOcp < handle
             self.make_consistent_constraints_terminal();
 
             %% slack dimensions
-            self.make_consistent_slack_dimensions_path();
-            self.make_consistent_slack_dimensions_initial();
-            self.make_consistent_slack_dimensions_terminal();
+            self.make_consistent_slacks_path();
+            self.make_consistent_slacks_initial();
+            self.make_consistent_slacks_terminal();
 
             % check for ACADOS_INFTY
             if ~ismember(opts.qp_solver, {'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_DAQP'})
@@ -1000,7 +1120,7 @@ classdef AcadosOcp < handle
 
         function [] = detect_cost_and_constraints(self)
             % detect cost type
-            N = self.solver_options.N_horizon
+            N = self.solver_options.N_horizon;
             if N == 0
                 if strcmp(self.cost.cost_type_e, 'AUTO')
                     detect_cost_type(self.model, self.cost, self.dims, 'terminal');

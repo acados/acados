@@ -156,6 +156,9 @@ class AcadosSimSolver:
             print("Warning: An AcadosSimSolver is created from an AcadosOcp description.",
                   "This only works if you created an AcadosOcpSolver before with the same description."
                   "Otherwise it leads to undefined behavior. Using an AcadosSim description is recommended.")
+            if acados_sim.dims.np_global > 0:
+                raise ValueError("AcadosSimSolver: AcadosOcp with np_global > 0 is not supported.")
+
             self.__T = acados_sim.solver_options.Tsim
         else:
             self.__T = acados_sim.solver_options.T

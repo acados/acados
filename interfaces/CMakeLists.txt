@@ -233,8 +233,13 @@ add_test(NAME py_sqp_wfqp_inconsistent_linearization
         python inconsistent_qp_linearization_test.py)
 
 add_test(NAME py_sqp_wfqp_problem_hs015
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/hock_schittkowsky_nlps
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/hock_schittkowsky
         python hs015_test.py)
+
+
+add_test(NAME py_sqp_wfqp_problem_hs016
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/hock_schittkowsky
+        python hs016_test.py)
 
 # CMake test
 add_test(NAME python_pendulum_ocp_example_cmake
@@ -349,9 +354,6 @@ add_test(NAME python_pendulum_ocp_example_cmake
         python main_convex_onesided.py)
 
     # Sim
-    add_test(NAME python_pendulum_sim_example_cmake
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/sim
-        python minimal_example_sim_cmake.py)
     add_test(NAME python_pendulum_ext_sim_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/sim
         python extensive_example_sim.py
