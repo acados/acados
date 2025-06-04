@@ -158,7 +158,7 @@ class AcadosCasadiOcpSolver:
         lbg.append(constraints.lh_e)
         ubg.append(constraints.uh_e)
         index_map['lam_g_constraint'].append(list(range(offset, offset+dims.nh_e)))
-        
+
         if dims.nphi_e > 0:
             conl_constr_expr_e = ca.substitute(model.con_phi_expr_e, model.con_r_in_phi_e, model.con_r_expr_e)
             conl_constr_e_fun = ca.Function('conl_constr_e_fun', [model.x, model.p, model.p_global], [conl_constr_expr_e])
@@ -310,9 +310,9 @@ class AcadosCasadiOcpSolver:
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_g_constraint'][stage]]
             elif stage == dims.N:
                 bx_length = self.acados_ocp.constraints.lbx_e.size
-                bu_length = self.acados_ocp.constraints.lbu.size
+                bu_length = 0
                 bx_lam = self.nlp_sol_lam_x[self.index_map['x'][stage]] if bx_length else np.empty((0,1))
-                bu_lam = self.nlp_sol_lam_x[self.index_map['u'][stage]] if bu_length else np.empty((0,1))
+                bu_lam = np.empty((0,1))
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_g_constraint'][stage]]
 
             lbx_lam = np.maximum(0,-bx_lam)
@@ -349,7 +349,7 @@ class AcadosCasadiOcpSolver:
                 result.append(self.get(i, 'u'))
             return np.concatenate(result)
         elif field_ == 'lam':
-            for i in range(dims.N):
+            for i in range(dims.N+1):
                 result.append(self.get(i, 'lam'))
             return np.concatenate(result)
         elif field_ == 'pi':
@@ -370,10 +370,8 @@ class AcadosCasadiOcpSolver:
         Set concatenation solver initialization.
 
         :param field: string in ['x', 'u', 'lam', pi]
-        :value_:
         """
         dims = self.acados_ocp.dims
-
         if field_ == 'x':
             for i in range(dims.N+1):
                 self.set(i, 'x', value_[i*dims.nx:(i+1)*dims.nx])
@@ -384,8 +382,8 @@ class AcadosCasadiOcpSolver:
             for i in range(dims.N):
                 self.set(i, 'pi', value_[i*dims.nx:(i+1)*dims.nx])
         elif field_ == 'lam':
-            for i in range(dims.N):
-                offset = 0
+            offset = 0
+            for i in range(dims.N+1):
                 if i == 0:
                     bx_length = self.acados_ocp.constraints.lbx_0.size
                     bu_length = self.acados_ocp.constraints.lbu.size
@@ -400,12 +398,12 @@ class AcadosCasadiOcpSolver:
                     offset += 2 * (bx_length + bu_length + h_length)
                 elif i == dims.N:
                     bx_length = self.acados_ocp.constraints.lbx_e.size
-                    bu_length = self.acados_ocp.constraints.lbu.size
+                    bu_length = 0
                     h_length = self.acados_ocp.constraints.lh_e.size + self.acados_ocp.constraints.lphi_e.size
                     self.set(i, 'lam', value_[offset:offset+2*(bx_length+bu_length+h_length)])
                     offset += 2 * (bx_length + bu_length + h_length)
         else:
-            raise NotImplementedError(f"Field '{field_}' is not implemented in set_flat().")
+            raise NotImplementedError(f"Field '{field_}' is not yet implemented in set_flat().")
 
     def load_iterate(self, filename:str, verbose: bool = True):
         raise NotImplementedError()
@@ -417,8 +415,8 @@ class AcadosCasadiOcpSolver:
         d = {}
         for field in ["x", "u", "pi", "lam"]:
             traj = []
-            for n in range(self.N+1):
-                if n < self.N or not (field in ["u", "pi", "z"]):
+            for n in range(self.acados_ocp.dims.N+1):
+                if n < self.acados_ocp.dims.N or not (field in ["u", "pi"]):
                     traj.append(self.get(n, field))
 
             d[f"{field}_traj"] = traj
@@ -484,16 +482,14 @@ class AcadosCasadiOcpSolver:
                 bu_length = self.acados_ocp.constraints.lbu.size
                 h_length = self.acados_ocp.constraints.lh_0.size + self.acados_ocp.constraints.lphi_0.size
                 g_length = dims.nh_0 + dims.nphi_0
-
             elif stage < dims.N:
                 bx_length = self.acados_ocp.constraints.lbx.size
                 bu_length = self.acados_ocp.constraints.lbu.size
                 h_length = self.acados_ocp.constraints.lh.size + self.acados_ocp.constraints.lphi.size
                 g_length = dims.nh + dims.nphi
-
             elif stage == dims.N:
                 bx_length = self.acados_ocp.constraints.lbx_e.size
-                bu_length = self.acados_ocp.constraints.lbu.size
+                bu_length = 0
                 h_length = self.acados_ocp.constraints.lh_e.size + self.acados_ocp.constraints.lphi_e.size
                 g_length = dims.nh_e + dims.nphi_e
 
@@ -504,7 +500,6 @@ class AcadosCasadiOcpSolver:
             ubu_lam = value_[offset_u:offset_u+bu_length] if bu_length else np.empty((dims.nu,))
             ubx_lam = value_[offset_u+bu_length:offset_u+bu_length+bx_length] if bx_length else np.empty((dims.nx,))
             ug_lam = value_[offset_u+bu_length+bx_length:offset_u+bu_length+bx_length+h_length] if h_length else np.empty((g_length,))
-
             if stage != dims.N:
                 self.lam_x0[self.index_map['x'][stage]+self.index_map['u'][stage]] = np.concatenate((ubx_lam-lbx_lam, ubu_lam-lbu_lam))
                 self.lam_g0[self.index_map['lam_g_constraint'][stage]] =  ug_lam-lg_lam
