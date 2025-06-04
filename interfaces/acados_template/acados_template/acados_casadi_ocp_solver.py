@@ -485,11 +485,11 @@ class AcadosCasadiOcpSolver:
         dims = self.acados_ocp.dims
 
         if field == 'x':
-                self.w0[self.index_map['x_in_w'][stage]] = value_.flatten()
+            self.w0[self.index_map['x_in_w'][stage]] = value_.flatten()
         elif field == 'u':
-                self.w0[self.index_map['u_in_w'][stage]] = value_.flatten()
+            self.w0[self.index_map['u_in_w'][stage]] = value_.flatten()
         elif field == 'pi':
-                self.lam_g0[self.index_map['pi_in_lam_g'][stage]] = value_.flatten()
+            self.lam_g0[self.index_map['pi_in_lam_g'][stage]] = value_.flatten()
         elif field == 'lam':
             if stage == 0:
                 bx_length = self.acados_ocp.constraints.lbx_0.size
