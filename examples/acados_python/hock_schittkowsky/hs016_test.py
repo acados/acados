@@ -35,7 +35,7 @@ from matplotlib import pyplot as plt
 from itertools import product
 
 
-def solve_problem(qp_solver: str = 'FULL_CONDENSING_HPIPM'):
+def solve_problem(qp_solver: str = 'FULL_CONDENSING_HPIPM', scale_qp_constraints: bool = False):
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -83,6 +83,14 @@ def solve_problem(qp_solver: str = 'FULL_CONDENSING_HPIPM'):
     ocp.solver_options.globalization_full_step_dual = True
     ocp.solver_options.globalization_funnel_use_merit_fun_only = False
 
+    # Scaling
+    if scale_qp_constraints:
+        # Scaling
+        ocp.solver_options.qpscaling_type = 'OBJECTIVE_GERSHGORIN'
+        ocp.solver_options.qpscaling_scale_qp_objective = False
+        ocp.solver_options.qpscaling_scale_qp_dynamics = False
+        ocp.solver_options.qpscaling_scale_qp_constraints = True
+
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
 
     # initialize solver
@@ -113,6 +121,9 @@ def main():
             raise ValueError(f"Solution does not match reference close enough!")
         else:
             print(f"Solution {i+1} matches reference solution.")
+
+    print(f"Solving with PARTIAL_CONDENSING_HPIPM and constraint scaling")
+    sol = solve_problem('PARTIAL_CONDENSING_HPIPM', True)
 
 if __name__ == '__main__':
     main()
