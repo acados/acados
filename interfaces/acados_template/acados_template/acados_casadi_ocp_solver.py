@@ -325,8 +325,7 @@ class AcadosCasadiOcpSolver:
                 bu_lam = self.nlp_sol_lam_x[self.index_map['u_in_w'][stage]] if dims.nbu else np.empty((0, 1))
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
             elif stage == dims.N:
-                nbx = self.acados_ocp.constraints.lbx_e.size
-                bx_lam = self.nlp_sol_lam_x[self.index_map['x_in_w'][stage]] if nbx else np.empty((0, 1))
+                bx_lam = self.nlp_sol_lam_x[self.index_map['x_in_w'][stage]] if dims.nbx_e else np.empty((0, 1))
                 bu_lam = np.empty((0, 1))
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
 
@@ -395,23 +394,14 @@ class AcadosCasadiOcpSolver:
             offset = 0
             for i in range(dims.N+1):
                 if i == 0:
-                    bx_length = self.acados_ocp.constraints.lbx_0.size
-                    bu_length = self.acados_ocp.constraints.lbu.size
-                    h_length = self.acados_ocp.constraints.lh_0.size + self.acados_ocp.constraints.lphi_0.size
-                    self.set(i, 'lam', value_[offset:offset+2*(bx_length+bu_length+h_length)])
-                    offset += 2 * (bx_length + bu_length + h_length)
+                    self.set(i, 'lam', value_[offset:offset+2*(dims.nbx_0+dims.nbu+dims.ng+dims.nh_0+dims.nphi_0)])
+                    offset += 2 * (dims.nbx_0+dims.nbu+dims.ng+dims.nh_0+dims.nphi_0)
                 elif i < dims.N:
-                    bx_length = self.acados_ocp.constraints.lbx.size
-                    bu_length = self.acados_ocp.constraints.lbu.size
-                    h_length = self.acados_ocp.constraints.lh.size + self.acados_ocp.constraints.lphi.size
-                    self.set(i, 'lam', value_[offset:offset+2*(bx_length+bu_length+h_length)])
-                    offset += 2 * (bx_length + bu_length + h_length)
+                    self.set(i, 'lam', value_[offset:offset+2*(dims.nbx+dims.nbu+dims.ng+dims.nh+dims.nphi)])
+                    offset += 2 * (dims.nbx_0+dims.nbu+dims.ng+dims.nh_0+dims.nphi_0)
                 elif i == dims.N:
-                    bx_length = self.acados_ocp.constraints.lbx_e.size
-                    bu_length = 0
-                    h_length = self.acados_ocp.constraints.lh_e.size + self.acados_ocp.constraints.lphi_e.size
-                    self.set(i, 'lam', value_[offset:offset+2*(bx_length+bu_length+h_length)])
-                    offset += 2 * (bx_length + bu_length + h_length)
+                    self.set(i, 'lam', value_[offset:offset+2*(dims.nbx_e+dims.ng_e+dims.nh_e+dims.nphi_e)])
+                    offset += 2 * (dims.nbx_0+dims.nbu+dims.ng+dims.nh_0+dims.nphi_0)
         else:
             raise NotImplementedError(f"Field '{field_}' is not yet implemented in set_flat().")
 
@@ -492,28 +482,25 @@ class AcadosCasadiOcpSolver:
             self.lam_g0[self.index_map['pi_in_lam_g'][stage]] = value_.flatten()
         elif field == 'lam':
             if stage == 0:
-                bx_length = self.acados_ocp.constraints.lbx_0.size
-                bu_length = self.acados_ocp.constraints.lbu.size
-                h_length = self.acados_ocp.constraints.lh_0.size + self.acados_ocp.constraints.lphi_0.size
-                g_length = dims.nh_0 + dims.nphi_0
+                bx_length = dims.nbx_0
+                bu_length = dims.nbu
+                h_length = dims.ng + dims.nh_0 + dims.nphi_0
             elif stage < dims.N:
-                bx_length = self.acados_ocp.constraints.lbx.size
-                bu_length = self.acados_ocp.constraints.lbu.size
-                h_length = self.acados_ocp.constraints.lh.size + self.acados_ocp.constraints.lphi.size
-                g_length = dims.nh + dims.nphi
+                bx_length = dims.nbx
+                bu_length = dims.nbu
+                h_length = dims.ng + dims.nh + dims.nphi
             elif stage == dims.N:
-                bx_length = self.acados_ocp.constraints.lbx_e.size
+                bx_length = dims.nbx_e
                 bu_length = 0
-                h_length = self.acados_ocp.constraints.lh_e.size + self.acados_ocp.constraints.lphi_e.size
-                g_length = dims.nh_e + dims.nphi_e
+                h_length = dims.ng_e + dims.nh_e + dims.nphi_e
 
             offset_u = (bx_length+bu_length+h_length)
             lbu_lam = value_[:bu_length] if bu_length else np.empty((dims.nu,))
             lbx_lam = value_[bu_length:bu_length+bx_length] if bx_length else np.empty((dims.nx,))
-            lg_lam = value_[bu_length+bx_length:bu_length+bx_length+h_length] if h_length else np.empty((g_length,))
+            lg_lam = value_[bu_length+bx_length:bu_length+bx_length+h_length]
             ubu_lam = value_[offset_u:offset_u+bu_length] if bu_length else np.empty((dims.nu,))
             ubx_lam = value_[offset_u+bu_length:offset_u+bu_length+bx_length] if bx_length else np.empty((dims.nx,))
-            ug_lam = value_[offset_u+bu_length+bx_length:offset_u+bu_length+bx_length+h_length] if h_length else np.empty((g_length,))
+            ug_lam = value_[offset_u+bu_length+bx_length:offset_u+bu_length+bx_length+h_length]
             if stage != dims.N:
                 self.lam_x0[self.index_map['x_in_w'][stage]+self.index_map['u_in_w'][stage]] = np.concatenate((ubx_lam-lbx_lam, ubu_lam-lbu_lam))
                 self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] =  ug_lam-lg_lam
