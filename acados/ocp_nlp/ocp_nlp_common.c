@@ -4305,6 +4305,7 @@ void ocp_nlp_timings_reset(ocp_nlp_timings *timings)
     timings->time_qp_sol = 0.0;
     timings->time_qp_solver_call = 0.0;
     timings->time_qp_xcond = 0.0;
+    timings->time_qp_scaling = 0.0;
     timings->time_lin = 0.0;
     timings->time_reg = 0.0;
     timings->time_glob = 0.0;

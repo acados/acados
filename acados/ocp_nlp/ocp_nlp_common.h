@@ -389,6 +389,7 @@ typedef struct ocp_nlp_timings
     double time_qp_sol;
     double time_qp_solver_call;
     double time_qp_xcond;
+    double time_qp_scaling;
     double time_lin;
     double time_reg;
     double time_tot;
