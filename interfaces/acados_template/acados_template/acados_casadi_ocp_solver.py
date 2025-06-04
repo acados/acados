@@ -55,6 +55,27 @@ class AcadosCasadiOcpSolver:
         constraints = ocp.constraints
         solver_options = ocp.solver_options
 
+        # check what is not supported yet
+        if any([dims.ns_0, dims.ns, dims.ns_e]):
+            raise NotImplementedError("AcadosCasadiOcpSolver does not support soft constraints yet.")
+        if dims.nz > 0:
+            raise NotImplementedError("AcadosCasadiOcpSolver does not support algebraic variables (z) yet.")
+        if any([dims.ng, dims.ng_e]):
+            raise NotImplementedError("AcadosCasadiOcpSolver does not support general nonlinear constraints (g) yet.")
+        if ocp.solver_options.integrator_type not in ["DISCRETE", "ERK"]:
+            raise NotImplementedError(f"AcadosCasadiOcpSolver does not support integrator type {ocp.solver_options.integrator_type} yet.")
+
+        # create index map for variables
+        index_map = {
+            # indices of variables within w
+            'x_in_w': [],
+            'u_in_w': [],
+            # indices of dynamic constraints within g in casadi formulation
+            'pi_in_lam_g': [],
+            # indicies to [g, h, phi] in acados formulation within lam_g in casadi formulation
+            'lam_gnl_in_lam_g': []
+        }
+
         if any([dims.ns_0, dims.ns, dims.ns_e]):
             raise NotImplementedError("CasADi NLP formulation not implemented for formulations with soft constraints yet.")
 
@@ -64,6 +85,7 @@ class AcadosCasadiOcpSolver:
         utraj_node = [ca_symbol(f'u{i}', dims.nu, 1) for i in range(solver_options.N_horizon)]
         if dims.nz > 0:
             raise NotImplementedError("CasADi NLP formulation not implemented for models with algebraic variables (z).")
+
         # parameters
         ptraj_node = [ca_symbol(f'p{i}', dims.np, 1) for i in range(solver_options.N_horizon)]
 
@@ -73,6 +95,7 @@ class AcadosCasadiOcpSolver:
         ub_xtraj_node = [np.inf * ca.DM.ones((dims.nx, 1)) for _ in range(solver_options.N_horizon+1)]
         lb_xtraj_node[0][constraints.idxbx_0] = constraints.lbx_0
         ub_xtraj_node[0][constraints.idxbx_0] = constraints.ubx_0
+        offset = 0
         for i in range(1, solver_options.N_horizon):
             lb_xtraj_node[i][constraints.idxbx] = constraints.lbx
             ub_xtraj_node[i][constraints.idxbx] = constraints.ubx
@@ -90,6 +113,7 @@ class AcadosCasadiOcpSolver:
         g = []
         lbg = []
         ubg = []
+        offset = 0
         # dynamics
         if solver_options.integrator_type == "DISCRETE":
             f_discr_fun = ca.Function('f_discr_fun', [model.x, model.u, model.p, model.p_global], [model.disc_dyn_expr])
@@ -103,17 +127,20 @@ class AcadosCasadiOcpSolver:
         for i in range(solver_options.N_horizon):
             # add dynamics constraints
             if solver_options.integrator_type == "DISCRETE":
-                g.apppend(xtraj_node[i+1] - f_discr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global))
+                g.append(f_discr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global) - xtraj_node[i+1])
             elif solver_options.integrator_type == "ERK":
-                g.append(xtraj_node[i+1] - f_discr_fun(xtraj_node[i], utraj_node[i], solver_options.time_steps[i]))
+                g.append(f_discr_fun(xtraj_node[i], utraj_node[i], solver_options.time_steps[i]) - xtraj_node[i+1])
             lbg.append(np.zeros((dims.nx, 1)))
             ubg.append(np.zeros((dims.nx, 1)))
+            index_map['pi_in_lam_g'].append(list(range(offset, offset+dims.nx)))
+            offset += dims.nx
 
         # nonlinear constraints -- initial stage
         h0_fun = ca.Function('h0_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr_0])
         g.append(h0_fun(xtraj_node[0], utraj_node[0], ptraj_node[0], model.p_global))
         lbg.append(constraints.lh_0)
         ubg.append(constraints.uh_0)
+        index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset+dims.nh_0)))
 
         if dims.nphi_0 > 0:
             conl_constr_expr_0 = ca.substitute(model.con_phi_expr_0, model.con_r_in_phi_0, model.con_r_expr_0)
@@ -121,6 +148,8 @@ class AcadosCasadiOcpSolver:
             g.append(conl_constr_0_fun(xtraj_node[0], utraj_node[0], ptraj_node[0], model.p_global))
             lbg.append(constraints.lphi_0)
             ubg.append(constraints.uphi_0)
+            index_map['lam_gnl_in_lam_g'][-1]=list(range(offset, offset+dims.nh_0+dims.nphi_0))
+        offset += dims.nh_0 + dims.nphi_0
 
         # nonlinear constraints -- intermediate stages
         h_fun = ca.Function('h_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr])
@@ -133,11 +162,14 @@ class AcadosCasadiOcpSolver:
             g.append(h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global))
             lbg.append(constraints.lh)
             ubg.append(constraints.uh)
+            index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh)))
 
             if dims.nphi > 0:
                 g.append(conl_constr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global))
                 lbg.append(constraints.lphi)
                 ubg.append(constraints.uphi)
+                index_map['lam_gnl_in_lam_g'][-1] = list(range(offset, offset+dims.nh+dims.nphi))
+            offset += dims.nphi + dims.nh
 
         # nonlinear constraints -- terminal stage
         h_e_fun = ca.Function('h_e_fun', [model.x, model.p, model.p_global], [model.con_h_expr_e])
@@ -145,6 +177,7 @@ class AcadosCasadiOcpSolver:
         g.append(h_e_fun(xtraj_node[-1], ptraj_node[-1], model.p_global))
         lbg.append(constraints.lh_e)
         ubg.append(constraints.uh_e)
+        index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset+dims.nh_e)))
 
         if dims.nphi_e > 0:
             conl_constr_expr_e = ca.substitute(model.con_phi_expr_e, model.con_r_in_phi_e, model.con_r_expr_e)
@@ -152,6 +185,8 @@ class AcadosCasadiOcpSolver:
             g.append(conl_constr_e_fun(xtraj_node[-1], ptraj_node[-1], model.p_global))
             lbg.append(constraints.lphi_e)
             ubg.append(constraints.uphi_e)
+            index_map['lam_gnl_in_lam_g'][-1] = list(range(offset, offset+dims.nh_e+dims.nphi_e))
+        offset += dims.nh_e + dims.nphi_e
 
         ### Cost
         # initial cost term
@@ -178,6 +213,7 @@ class AcadosCasadiOcpSolver:
         lbw_list = []
         ubw_list = []
         w0_list = []
+        offset = 0
         x_guess = ocp.constraints.x0 if ocp.constraints.has_x0 else np.zeros((dims.nx,))
         for i in range(solver_options.N_horizon):
             # add x
@@ -185,17 +221,23 @@ class AcadosCasadiOcpSolver:
             lbw_list.append(lb_xtraj_node[i])
             ubw_list.append(ub_xtraj_node[i])
             w0_list.append(x_guess)
+            index_map['x_in_w'].append(list(range(offset, offset + dims.nx)))
+            offset += dims.nx
             # add u
             w_sym_list.append(utraj_node[i])
             lbw_list.append(lb_utraj_node[i])
             ubw_list.append(ub_utraj_node[i])
             w0_list.append(np.zeros((dims.nu,)))
+            index_map['u_in_w'].append(list(range(offset, offset + dims.nu)))
+            offset += dims.nu
         ## terminal stage
         # add x
         w_sym_list.append(xtraj_node[-1])
         lbw_list.append(lb_xtraj_node[-1])
         ubw_list.append(ub_xtraj_node[-1])
         w0_list.append(x_guess)
+        index_map['x_in_w'].append(list(range(offset, offset + dims.nx)))
+        offset += dims.nx
 
         # vectorize
         w = ca.vertcat(*w_sym_list)
@@ -208,7 +250,7 @@ class AcadosCasadiOcpSolver:
         bounds = {"lbx": lbw, "ubx": ubw, "lbg": ca.vertcat(*lbg), "ubg": ca.vertcat(*ubg)}
         w0 = np.concatenate(w0_list)
 
-        return nlp, bounds, w0
+        return nlp, bounds, w0, index_map
 
 
     def __init__(self, acados_ocp: AcadosOcp, solver: str = "ipopt", verbose=True):
@@ -217,13 +259,15 @@ class AcadosCasadiOcpSolver:
             raise TypeError('acados_ocp should be of type AcadosOcp.')
 
         self.acados_ocp = acados_ocp
-        self.casadi_nlp, self.bounds, self.w0 = self.create_casadi_nlp_formulation(acados_ocp)
+        self.casadi_nlp, self.bounds, self.w0, self.index_map = self.create_casadi_nlp_formulation(acados_ocp)
         self.casadi_solver = ca.nlpsol("nlp_solver", solver, self.casadi_nlp)
+        self.lam_x0 = np.empty(self.casadi_nlp['x'].shape).flatten()
+        self.lam_g0 = np.empty(self.casadi_nlp['g'].shape).flatten()
         self.nlp_sol = None
 
 
     def solve_for_x0(self, x0_bar, fail_on_nonzero_status=True, print_stats_on_failure=True):
-         raise NotImplementedError()
+        raise NotImplementedError()
 
 
     def solve(self) -> int:
@@ -233,9 +277,13 @@ class AcadosCasadiOcpSolver:
         :return: status of the solver
         """
         self.nlp_sol = self.casadi_solver(x0=self.w0,
+                                          lam_g0=self.lam_g0, lam_x0=self.lam_x0,
                                           lbx=self.bounds['lbx'], ubx=self.bounds['ubx'],
-                                          lbg=self.bounds['lbg'], ubg=self.bounds['ubg'])
-        self.nlp_sol_x = self.nlp_sol['x'].full()
+                                          lbg=self.bounds['lbg'], ubg=self.bounds['ubg']
+                                          )
+        self.nlp_sol_w = self.nlp_sol['x'].full()
+        self.nlp_sol_lam_g = self.nlp_sol['lam_g'].full()
+        self.nlp_sol_lam_x = self.nlp_sol['lam_x'].full()
         # TODO: return correct status
         return 0
 
@@ -248,37 +296,49 @@ class AcadosCasadiOcpSolver:
 
         raise NotImplementedError()
 
-
-
     def get(self, stage: int, field: str):
         """
         Get the last solution of the solver.
 
         :param stage: integer corresponding to shooting node
-        :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'sens_u', 'sens_pi', 'sens_x', 'sens_lam', 'sens_sl', 'sens_su']
+        :param field: string in ['x', 'u', 'pi', 'lam']
 
-        .. note:: regarding lam: \n
-                the inequalities are internally organized in the following order: \n
-                [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
-                lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
-
-        .. note:: pi: multipliers for dynamics equality constraints \n
-                      lam: multipliers for inequalities \n
-                      t: slack variables corresponding to evaluation of all inequalities (at the solution) \n
-                      sl: slack variables of soft lower inequality constraints \n
-                      su: slack variables of soft upper inequality constraints \n
         """
         if not isinstance(stage, int):
             raise TypeError('stage should be integer.')
         if self.nlp_sol is None:
             raise ValueError('No solution available. Please call solve() first.')
         dims = self.acados_ocp.dims
-        offset = stage*(dims.nx+dims.nu)
-
         if field == 'x':
-            return self.nlp_sol_x[offset:offset+dims.nx].flatten()
+            return self.nlp_sol_w[self.index_map['x_in_w'][stage]].flatten()
         elif field == 'u':
-            return self.nlp_sol_x[offset+dims.nx:offset+dims.nx+dims.nu].flatten()
+            return self.nlp_sol_w[self.index_map['u_in_w'][stage]].flatten()
+        elif field == 'pi':
+            return self.nlp_sol_lam_g[self.index_map['pi_in_lam_g'][stage]].flatten()
+        elif field == 'lam':
+            if stage == 0:
+                bx_lam = self.nlp_sol_lam_x[self.index_map['x_in_w'][stage]] if dims.nbx_0 else np.empty((0, 1))
+                bu_lam = self.nlp_sol_lam_x[self.index_map['u_in_w'][stage]] if dims.nbu else np.empty((0, 1))
+                g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
+            elif stage < dims.N:
+                bx_lam = self.nlp_sol_lam_x[self.index_map['x_in_w'][stage]] if dims.nbx else np.empty((0, 1))
+                bu_lam = self.nlp_sol_lam_x[self.index_map['u_in_w'][stage]] if dims.nbu else np.empty((0, 1))
+                g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
+            elif stage == dims.N:
+                bx_lam = self.nlp_sol_lam_x[self.index_map['x_in_w'][stage]] if dims.nbx_e else np.empty((0, 1))
+                bu_lam = np.empty((0, 1))
+                g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
+
+            lbx_lam = np.maximum(0, -bx_lam)
+            lbu_lam = np.maximum(0, -bu_lam)
+            lg_lam = np.maximum(0, -g_lam)
+            ubx_lam = np.maximum(0, bx_lam)
+            ubu_lam = np.maximum(0, bu_lam)
+            ug_lam = np.maximum(0, g_lam)
+            lam = np.concatenate((lbu_lam, lbx_lam, lg_lam, ubu_lam, ubx_lam, ug_lam))
+            return lam.flatten()
+        elif field in ['sl', 'su', 'z']:
+            return np.empty((0, 1))  # Only empty is supported for now. TODO: extend.
         else:
             raise NotImplementedError(f"Field '{field}' is not implemented in AcadosCasadiOcpSolver")
 
@@ -286,37 +346,117 @@ class AcadosCasadiOcpSolver:
         """
         Get concatenation of all stages of last solution of the solver.
 
-        :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'p_global']
+        :param field: string in ['x', 'u', 'pi', 'lam', 'z', 'sl', 'su']
 
         .. note:: The parameter 'p_global' has no stage-wise structure and is processed in a memory saving manner by default. \n
                 In order to read the 'p_global' parameter, the option 'save_p_global' must be set to 'True' upon instantiation. \n
         """
-        raise NotImplementedError()
+        if self.nlp_sol is None:
+            raise ValueError('No solution available. Please call solve() first.')
+        dims = self.acados_ocp.dims
+        result = []
 
+        if field_ in ['x', 'lam', 'sl', 'su']:
+            for i in range(dims.N+1):
+                result.append(self.get(i, field_))
+            return np.concatenate(result)
+        elif field_ in ['u', 'pi', 'z']:
+            for i in range(dims.N):
+                result.append(self.get(i, field_))
+            return np.concatenate(result)
+        # casadi variables. TODO: maybe remove this.
+        elif field_ == 'lam_x':
+            return self.nlp_sol_lam_x.flatten()
+        elif field_ == 'lam_g':
+            return self.nlp_sol_lam_g.flatten()
+        elif field_ == 'lam_p':
+            return self.nlp_sol['lam_p'].full().flatten()
+        else:
+            raise NotImplementedError(f"Field '{field_}' is not implemented in get_flat().")
 
     def set_flat(self, field_: str, value_: np.ndarray) -> None:
         """
         Set concatenation solver initialization.
 
-        :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p']
+        :param field: string in ['x', 'u', 'lam', pi]
         """
-        raise NotImplementedError()
-
+        dims = self.acados_ocp.dims
+        if field_ == 'x':
+            for i in range(dims.N+1):
+                self.set(i, 'x', value_[i*dims.nx:(i+1)*dims.nx])
+        elif field_ == 'u':
+            for i in range(dims.N):
+                self.set(i, 'u', value_[i*dims.nu:(i+1)*dims.nu])
+        elif field_ == 'pi':
+            for i in range(dims.N):
+                self.set(i, 'pi', value_[i*dims.nx:(i+1)*dims.nx])
+        elif field_ == 'lam':
+            offset = 0
+            for i in range(dims.N+1):
+                if i == 0:
+                    self.set(i, 'lam', value_[offset:offset+2*(dims.nbx_0+dims.nbu+dims.ng+dims.nh_0+dims.nphi_0)])
+                    offset += 2 * (dims.nbx_0+dims.nbu+dims.ng+dims.nh_0+dims.nphi_0)
+                elif i < dims.N:
+                    self.set(i, 'lam', value_[offset:offset+2*(dims.nbx+dims.nbu+dims.ng+dims.nh+dims.nphi)])
+                    offset += 2 * (dims.nbx_0+dims.nbu+dims.ng+dims.nh_0+dims.nphi_0)
+                elif i == dims.N:
+                    self.set(i, 'lam', value_[offset:offset+2*(dims.nbx_e+dims.ng_e+dims.nh_e+dims.nphi_e)])
+                    offset += 2 * (dims.nbx_0+dims.nbu+dims.ng+dims.nh_0+dims.nphi_0)
+        else:
+            raise NotImplementedError(f"Field '{field_}' is not yet implemented in set_flat().")
 
     def load_iterate(self, filename:str, verbose: bool = True):
         raise NotImplementedError()
 
     def store_iterate_to_obj(self) -> AcadosOcpIterate:
-        raise NotImplementedError()
+        """
+        Returns the current iterate of the OCP solver as an AcadosOcpIterate.
+        """
+        d = {}
+        for field in ["x", "u", "z", "sl", "su", "pi", "lam"]:
+            traj = []
+            for n in range(self.acados_ocp.dims.N+1):
+                if n < self.acados_ocp.dims.N or not (field in ["u", "pi", "z"]):
+                    traj.append(self.get(n, field))
 
-    def load_iterate_from_obj(self, iterate: AcadosOcpIterate):
-        raise NotImplementedError()
+            d[f"{field}_traj"] = traj
+
+        return AcadosOcpIterate(**d)
+
+    def load_iterate_from_obj(self, iterate: AcadosOcpIterate) -> None:
+        """
+        Loads the provided iterate into the OCP solver.
+        Note: The iterate object does not contain the the parameters.
+        """
+        # TODO: add slacks
+        for key, traj in iterate.__dict__.items():
+            field = key.replace('_traj', '')
+
+            for n, val in enumerate(traj):
+                if field in ['x', 'u', 'pi', 'lam']:
+                    self.set(n, field, val)
 
     def store_iterate_to_flat_obj(self) -> AcadosOcpFlattenedIterate:
-        raise NotImplementedError()
+        """
+        Returns the current iterate of the OCP solver as an AcadosOcpFlattenedIterate.
+        """
+        return AcadosOcpFlattenedIterate(x = self.get_flat("x"),
+                                         u = self.get_flat("u"),
+                                         pi = self.get_flat("pi"),
+                                         lam = self.get_flat("lam"),
+                                         sl = self.get_flat("sl"),
+                                         su = self.get_flat("su"),
+                                         z = self.get_flat("z"))
 
     def load_iterate_from_flat_obj(self, iterate: AcadosOcpFlattenedIterate) -> None:
-        raise NotImplementedError()
+        """
+        Loads the provided iterate into the OCP solver.
+        Note: The iterate object does not contain the the parameters.
+        """
+        self.set_flat("x", iterate.x)
+        self.set_flat("u", iterate.u)
+        self.set_flat("pi", iterate.pi)
+        self.set_flat("lam", iterate.lam)
 
     def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
         raise NotImplementedError()
@@ -325,13 +465,53 @@ class AcadosCasadiOcpSolver:
         raise NotImplementedError()
 
     def set(self, stage: int, field: str, value_: np.ndarray):
+        """
+        Set solver initialization to stages.
+
+        :param stage: integer corresponding to shooting node
+        :param field: string in ['x', 'u', 'pi', 'lam']
+        :value_:
+        """
         dims = self.acados_ocp.dims
-        offset = stage*(dims.nx+dims.nu)
 
         if field == 'x':
-            self.w0[offset:offset+dims.nx] = value_.flatten()
+            self.w0[self.index_map['x_in_w'][stage]] = value_.flatten()
         elif field == 'u':
-            self.w0[offset+dims.nx:offset+dims.nx+dims.nu] = value_.flatten()
+            self.w0[self.index_map['u_in_w'][stage]] = value_.flatten()
+        elif field == 'pi':
+            self.lam_g0[self.index_map['pi_in_lam_g'][stage]] = value_.flatten()
+        elif field == 'lam':
+            if stage == 0:
+                bx_length = dims.nbx_0
+                bu_length = dims.nbu
+                h_length = dims.ng + dims.nh_0 + dims.nphi_0
+            elif stage < dims.N:
+                bx_length = dims.nbx
+                bu_length = dims.nbu
+                h_length = dims.ng + dims.nh + dims.nphi
+            elif stage == dims.N:
+                bx_length = dims.nbx_e
+                bu_length = 0
+                h_length = dims.ng_e + dims.nh_e + dims.nphi_e
+
+            offset_u = (bx_length+bu_length+h_length)
+            lbu_lam = value_[:bu_length] if bu_length else np.empty((dims.nu,))
+            lbx_lam = value_[bu_length:bu_length+bx_length] if bx_length else np.empty((dims.nx,))
+            lg_lam = value_[bu_length+bx_length:bu_length+bx_length+h_length]
+            ubu_lam = value_[offset_u:offset_u+bu_length] if bu_length else np.empty((dims.nu,))
+            ubx_lam = value_[offset_u+bu_length:offset_u+bu_length+bx_length] if bx_length else np.empty((dims.nx,))
+            ug_lam = value_[offset_u+bu_length+bx_length:offset_u+bu_length+bx_length+h_length]
+            if stage != dims.N:
+                self.lam_x0[self.index_map['x_in_w'][stage]+self.index_map['u_in_w'][stage]] = np.concatenate((ubx_lam-lbx_lam, ubu_lam-lbu_lam))
+                self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] =  ug_lam-lg_lam
+            else:
+                self.lam_x0[self.index_map['x_in_w'][stage]] = ubx_lam-lbx_lam
+                self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] = ug_lam-lg_lam
+        elif field in ['sl', 'su']:
+            # do nothing for now, only empty is supported
+            pass
+        else:
+            raise NotImplementedError(f"Field '{field}' is not yet implemented in set().")
 
     def cost_get(self, stage_: int, field_: str) -> np.ndarray:
         raise NotImplementedError()

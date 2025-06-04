@@ -11,27 +11,9 @@ from ocp_example_cost_formulations import formulate_ocp, T_HORIZON
 
 from utils import plot_pendulum
 
-def get_x_u_traj(ocp_solver: Union[AcadosOcpSolver, AcadosCasadiOcpSolver], N_horizon: int):
-    ocp = ocp_solver.acados_ocp
-    simX = np.zeros((N_horizon+1, ocp.dims.nx))
-    simU = np.zeros((N_horizon, ocp.dims.nu))
-    for i in range(N_horizon):
-        simX[i,:] = ocp_solver.get(i, "x")
-        simU[i,:] = ocp_solver.get(i, "u")
-    simX[N_horizon,:] = ocp_solver.get(N_horizon, "x")
-
-    return simX, simU
-
-
 def main():
     ocp = formulate_ocp("CONL")
     ocp.solver_options.tf = T_HORIZON
-    N_horizon = ocp.solver_options.N_horizon
-
-    ## solve using casadi
-    casadi_ocp_solver = AcadosCasadiOcpSolver(ocp, verbose=False)
-    casadi_ocp_solver.solve()
-    x_casadi_sol, u_casadi_sol = get_x_u_traj(casadi_ocp_solver, N_horizon)
 
     initial_iterate = ocp.create_default_initial_iterate()
 
@@ -43,21 +25,26 @@ def main():
     # solve with acados
     status = ocp_solver.solve()
     # get solution
-    simX, simU = get_x_u_traj(ocp_solver, N_horizon)
+    result_acados = ocp_solver.store_iterate_to_obj()
+    result_acados_flat = ocp_solver.store_iterate_to_flat_obj()
 
+    ## solve using casadi
+    casadi_ocp_solver = AcadosCasadiOcpSolver(ocp, verbose=False)
+    casadi_ocp_solver.load_iterate_from_obj(result_acados)
+    casadi_ocp_solver.solve()
+    result_casadi = casadi_ocp_solver.store_iterate_to_obj()
+    result_casadi_flat = casadi_ocp_solver.store_iterate_to_flat_obj()
 
     # evaluate difference
-    diff_x = np.linalg.norm(x_casadi_sol - simX)
-    print(f"Difference between casadi and acados solution: {diff_x}")
-    diff_u = np.linalg.norm(u_casadi_sol - simU)
-    print(f"Difference between casadi and acados solution: {diff_u}")
-
     # TODO: set solver tolerance and reduce it here.
     test_tol = 5e-5
-    if diff_x > test_tol or diff_u > test_tol:
-        raise ValueError(f"Test failed: difference between casadi and acados solution should be smaller than {test_tol}, but got {diff_x} and {diff_u}.")
+    for field in ["x", "u", "pi", "lam"]:
+        diff = np.linalg.norm(getattr(result_acados_flat, field) - getattr(result_casadi_flat, field))
+        print(f"Difference between acados and casadi solution for {field:4}: {diff:.3e}")
+        if diff > test_tol:
+            raise ValueError(f"Test failed: difference between acados and casadi solution for {field} should be smaller than {test_tol}, but got {diff}.")
 
-    plot_pendulum(ocp.solver_options.shooting_nodes, ocp.constraints.ubu, u_casadi_sol, x_casadi_sol, latexify=False)
+    # plot_pendulum(ocp.solver_options.shooting_nodes, ocp.constraints.ubu, u_casadi_sol, x_casadi_sol, latexify=False)
 
 
 if __name__ == "__main__":
