@@ -54,7 +54,7 @@ class AcadosCasadiOcpSolver:
         dims = ocp.dims
         constraints = ocp.constraints
         solver_options = ocp.solver_options
-        index_map = {'x': [], 'u': [], 
+        index_map = {'x': [], 'u': [],
                     'lam_g_dynamic': [], 'lam_g_constraint': []}
 
         if any([dims.ns_0, dims.ns, dims.ns_e]):
@@ -121,7 +121,7 @@ class AcadosCasadiOcpSolver:
         lbg.append(constraints.lh_0)
         ubg.append(constraints.uh_0)
         index_map['lam_g_constraint'].append(list(range(offset, offset+dims.nh_0)))
-        
+
         if dims.nphi_0 > 0:
             conl_constr_expr_0 = ca.substitute(model.con_phi_expr_0, model.con_r_in_phi_0, model.con_r_expr_0)
             conl_constr_0_fun = ca.Function('conl_constr_0_fun', [model.x, model.u, model.p, model.p_global], [conl_constr_expr_0])
@@ -458,10 +458,10 @@ class AcadosCasadiOcpSolver:
     def set(self, stage: int, field: str, value_: np.ndarray):
         """
         Set solver initialization to stages.
-        
+
         :param stage: integer corresponding to shooting node
         :param field: string in ['x', 'u', 'pi', 'lam']
-        :value_: 
+        :value_:
         """
         dims = self.acados_ocp.dims
 
