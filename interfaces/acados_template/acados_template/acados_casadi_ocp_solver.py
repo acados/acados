@@ -66,8 +66,15 @@ class AcadosCasadiOcpSolver:
             raise NotImplementedError(f"AcadosCasadiOcpSolver does not support integrator type {ocp.solver_options.integrator_type} yet.")
 
         # create index map for variables
-        index_map = {'x_in_w': [], 'u_in_w': [],
-                    'pi_in_lam_g': [], 'lam_gnl_in_lam_g': []}
+        index_map = {
+            # indices of variables within w
+            'x_in_w': [],
+            'u_in_w': [],
+            # indices of dynamic constraints within g in casadi formulation
+            'pi_in_lam_g': [],
+            # indicies to [g, h, phi] in acados formulation within lam_g in casadi formulation
+            'lam_gnl_in_lam_g': []
+        }
 
         if any([dims.ns_0, dims.ns, dims.ns_e]):
             raise NotImplementedError("CasADi NLP formulation not implemented for formulations with soft constraints yet.")
