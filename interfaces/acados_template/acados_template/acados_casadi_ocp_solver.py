@@ -54,6 +54,18 @@ class AcadosCasadiOcpSolver:
         dims = ocp.dims
         constraints = ocp.constraints
         solver_options = ocp.solver_options
+
+        # check what is not supported yet
+        if any([dims.ns_0, dims.ns, dims.ns_e]):
+            raise NotImplementedError("AcadosCasadiOcpSolver does not support soft constraints yet.")
+        if dims.nz > 0:
+            raise NotImplementedError("AcadosCasadiOcpSolver does not support algebraic variables (z) yet.")
+        if any([dims.ng, dims.ng_e]):
+            raise NotImplementedError("AcadosCasadiOcpSolver does not support general nonlinear constraints (g) yet.")
+        if ocp.solver_options.integrator_type not in ["DISCRETE", "ERK"]:
+            raise NotImplementedError(f"AcadosCasadiOcpSolver does not support integrator type {ocp.solver_options.integrator_type} yet.")
+
+        # create index map for variables
         index_map = {'x': [], 'u': [],
                     'lam_g_dynamic': [], 'lam_g_constraint': []}
 
