@@ -297,21 +297,16 @@ class AcadosCasadiOcpSolver:
             return self.nlp_sol_lam_g[self.index_map['lam_g_dynamic'][stage]].flatten()
         elif field == 'lam':
             if stage == 0:
-                bx_length = self.acados_ocp.constraints.lbx_0.size
-                bu_length = self.acados_ocp.constraints.lbu.size
-                bx_lam = self.nlp_sol_lam_x[self.index_map['x'][stage]] if bx_length else np.empty((0,1))
-                bu_lam = self.nlp_sol_lam_x[self.index_map['u'][stage]] if bu_length else np.empty((0,1))
+                bx_lam = self.nlp_sol_lam_x[self.index_map['x'][stage]] if dims.nbx_0 else np.empty((0,1))
+                bu_lam = self.nlp_sol_lam_x[self.index_map['u'][stage]] if dims.nbu else np.empty((0,1))
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_g_constraint'][stage]]
             elif stage < dims.N:
-                bx_length = self.acados_ocp.constraints.lbx.size
-                bu_length = self.acados_ocp.constraints.lbu.size
-                bx_lam = self.nlp_sol_lam_x[self.index_map['x'][stage]] if bx_length else np.empty((0,1))
-                bu_lam = self.nlp_sol_lam_x[self.index_map['u'][stage]] if bu_length else np.empty((0,1))
+                bx_lam = self.nlp_sol_lam_x[self.index_map['x'][stage]] if dims.nbx else np.empty((0,1))
+                bu_lam = self.nlp_sol_lam_x[self.index_map['u'][stage]] if dims.nbu else np.empty((0,1))
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_g_constraint'][stage]]
             elif stage == dims.N:
-                bx_length = self.acados_ocp.constraints.lbx_e.size
-                bu_length = 0
-                bx_lam = self.nlp_sol_lam_x[self.index_map['x'][stage]] if bx_length else np.empty((0,1))
+                nbx = self.acados_ocp.constraints.lbx_e.size
+                bx_lam = self.nlp_sol_lam_x[self.index_map['x'][stage]] if nbx else np.empty((0,1))
                 bu_lam = np.empty((0,1))
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_g_constraint'][stage]]
 
