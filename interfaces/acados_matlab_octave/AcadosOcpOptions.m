@@ -88,7 +88,6 @@ classdef AcadosOcpOptions < handle
         qpscaling_ub_norm_inf_grad_obj
         qpscaling_lb_norm_inf_grad_obj
         qpscaling_scale_qp_objective
-        qpscaling_scale_qp_dynamics
         qpscaling_scale_qp_constraints
         exact_hess_cost
         exact_hess_dyn
@@ -200,7 +199,6 @@ classdef AcadosOcpOptions < handle
             obj.qpscaling_ub_norm_inf_grad_obj = 1e2;
             obj.qpscaling_lb_norm_inf_grad_obj = 1e-4;
             obj.qpscaling_scale_qp_objective = false;
-            obj.qpscaling_scale_qp_dynamics = false;
             obj.qpscaling_scale_qp_constraints = false;
             obj.reg_epsilon = 1e-4;
             obj.reg_adaptive_eps = false;

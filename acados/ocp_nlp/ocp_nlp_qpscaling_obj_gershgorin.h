@@ -67,7 +67,6 @@ typedef struct
     double lb_norm_inf_grad_obj; // lower bound
 
     bool scale_qp_objective;
-    bool scale_qp_dynamics;
     bool scale_qp_constraints;
 } ocp_nlp_qpscaling_obj_gershgorin_opts;
 // use all functions just through config pointers

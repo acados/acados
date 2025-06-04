@@ -2524,9 +2524,6 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     bool qpscaling_scale_qp_objective = {{ solver_options.qpscaling_scale_qp_objective }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qpscaling_scale_qp_objective", &qpscaling_scale_qp_objective);
 
-    bool qpscaling_scale_qp_dynamics = {{ solver_options.qpscaling_scale_qp_dynamics }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qpscaling_scale_qp_dynamics", &qpscaling_scale_qp_dynamics);
-
     bool qpscaling_scale_qp_constraints = {{ solver_options.qpscaling_scale_qp_constraints }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qpscaling_scale_qp_constraints", &qpscaling_scale_qp_constraints);
 

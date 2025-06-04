@@ -113,7 +113,6 @@ class AcadosOcpOptions:
         self.__qpscaling_ub_norm_inf_grad_obj = 1e2
         self.__qpscaling_lb_norm_inf_grad_obj = 1e-4
         self.__qpscaling_scale_qp_objective = False
-        self.__qpscaling_scale_qp_dynamics = False
         self.__qpscaling_scale_qp_constraints = False
         self.__ext_cost_num_hess = 0
         self.__globalization_use_SOC = 0
@@ -402,15 +401,6 @@ class AcadosOcpOptions:
         Default: False.
         """
         return self.__qpscaling_scale_qp_objective
-
-    @property
-    def qpscaling_scale_qp_dynamics(self):
-        """
-        If qpscaling_type == 'OBJECTIVE_GERSHGORIN', this flag indicates whether the qp dynamics should be scaled.
-        Type: bool.
-        Default: False.
-        """
-        return self.__qpscaling_scale_qp_dynamics
 
     @property
     def qpscaling_scale_qp_constraints(self):
@@ -1756,13 +1746,6 @@ class AcadosOcpOptions:
     def qpscaling_scale_qp_objective(self, qpscaling_scale_qp_objective):
         if isinstance(qpscaling_scale_qp_objective, bool):
             self.__qpscaling_scale_qp_objective = qpscaling_scale_qp_objective
-        else:
-            raise Exception('Invalid qpscaling_scale_qp_objective value. qpscaling_scale_qp_objective must be a bool.')
-
-    @qpscaling_scale_qp_dynamics.setter
-    def qpscaling_scale_qp_dynamics(self, qpscaling_scale_qp_dynamics):
-        if isinstance(qpscaling_scale_qp_dynamics, bool):
-            self.__qpscaling_scale_qp_dynamics = qpscaling_scale_qp_dynamics
         else:
             raise Exception('Invalid qpscaling_scale_qp_objective value. qpscaling_scale_qp_objective must be a bool.')
 
