@@ -232,10 +232,12 @@ class AcadosCasadiOcpSolver:
                     if with_hessian:
                         lam_phi_0 = ca_symbol(f'lam_phi_0', dims.nphi_0, 1)
                         lam_g.append(lam_phi_0)
-                        # always use CONL Hessian approximation here, disregarding inner derivative
-                        hess = ca.vertcat(*[ca.hessian(model.con_phi_expr_0[i], model.con_r_in_phi_0)[0] for i in range(dims.nphi_0)])
-                        hess = ca.substitute(hess, model.con_r_in_phi_0, model.con_r_expr_0)
-                        hess_l += hess
+                        # always use CONL Hessian approximation here, disregarding inner second derivative
+                        outer_hess_r = ca.vertcat(*[ca.hessian(model.con_phi_expr_0[i], model.con_r_in_phi_0)[0] for i in range(dims.nphi_0)])
+                        outer_hess_r = ca.substitute(outer_hess_r, model.con_r_in_phi_0, model.con_r_expr_0)
+                        r_in_nlp = ca.substitute(model.con_r_expr_0, model.x, xtraj_node[-1])
+                        dr_dw = ca.jacobian(r_in_nlp, w)
+                        hess_l += dr_dw.T @ outer_hess_r @ dr_dw
 
                 index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh_0 + dims.nphi_0)))
                 offset += dims.nh_0 + dims.nphi_0
@@ -260,10 +262,12 @@ class AcadosCasadiOcpSolver:
                     if with_hessian:
                         lam_phi = ca_symbol(f'lam_phi', dims.nphi, 1)
                         lam_g.append(lam_phi)
-                        # always use CONL Hessian approximation here, disregarding inner derivative
-                        hess = ca.vertcat(*[ca.hessian(model.con_phi_expr[i], model.con_r_in_phi)[0] for i in range(dims.nphi)])
-                        hess = ca.substitute(hess, model.con_r_in_phi, model.con_r_expr)
-                        hess_l += hess
+                        # always use CONL Hessian approximation here, disregarding inner second derivative
+                        outer_hess_r = ca.vertcat(*[ca.hessian(model.con_phi_expr[i], model.con_r_in_phi)[0] for i in range(dims.nphi)])
+                        outer_hess_r = ca.substitute(outer_hess_r, model.con_r_in_phi, model.con_r_expr)
+                        r_in_nlp = ca.substitute(model.con_r_expr, model.x, xtraj_node[-1])
+                        dr_dw = ca.jacobian(r_in_nlp, w)
+                        hess_l += dr_dw.T @ outer_hess_r @ dr_dw
 
                 index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh + dims.nphi)))
                 offset += dims.nphi + dims.nh
@@ -289,10 +293,12 @@ class AcadosCasadiOcpSolver:
                     if with_hessian:
                         lam_phi_e = ca_symbol(f'lam_phi_e', dims.nphi_e, 1)
                         lam_g.append(lam_phi_e)
-                        # always use CONL Hessian approximation here, disregarding inner derivative
-                        hess = ca.vertcat(*[ca.hessian(model.con_phi_expr_e[i], model.con_r_in_phi_e)[0] for i in range(dims.nphi_e)])
-                        hess = ca.substitute(hess, model.con_r_in_phi_e, model.con_r_expr_e)
-                        hess_l += hess
+                        # always use CONL Hessian approximation here, disregarding inner second derivative
+                        outer_hess_r = ca.vertcat(*[ca.hessian(model.con_phi_expr_e[i], model.con_r_in_phi_e)[0] for i in range(dims.nphi_e)])
+                        outer_hess_r = ca.substitute(outer_hess_r, model.con_r_in_phi_e, model.con_r_expr_e)
+                        r_in_nlp = ca.substitute(model.con_r_expr_e, model.x, xtraj_node[-1])
+                        dr_dw = ca.jacobian(r_in_nlp, w)
+                        hess_l += dr_dw.T @ outer_hess_r @ dr_dw
 
                 index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh_e + dims.nphi_e)))
                 offset += dims.nh_e + dims.nphi_e
