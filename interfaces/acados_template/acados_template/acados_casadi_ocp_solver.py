@@ -129,9 +129,9 @@ class AcadosCasadiOcpSolver:
         for i in range(solver_options.N_horizon):
             # add dynamics constraints
             if solver_options.integrator_type == "DISCRETE":
-                g.append(f_discr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global) - xtraj_node[i+1])
+                g.append(xtraj_node[i+1] - f_discr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global))
             elif solver_options.integrator_type == "ERK":
-                g.append(f_discr_fun(xtraj_node[i], utraj_node[i], solver_options.time_steps[i]) - xtraj_node[i+1])
+                g.append(xtraj_node[i+1] - f_discr_fun(xtraj_node[i], utraj_node[i], solver_options.time_steps[i]))
             lbg.append(np.zeros((dims.nx, 1)))
             ubg.append(np.zeros((dims.nx, 1)))
             index_map['pi_in_lam_g'].append(list(range(offset, offset+dims.nx)))
@@ -330,7 +330,7 @@ class AcadosCasadiOcpSolver:
         elif field == 'u':
             return self.nlp_sol_w[self.index_map['u_in_w'][stage]].flatten()
         elif field == 'pi':
-            return self.nlp_sol_lam_g[self.index_map['pi_in_lam_g'][stage]].flatten()
+            return -self.nlp_sol_lam_g[self.index_map['pi_in_lam_g'][stage]].flatten()
         elif field == 'lam':
             if stage == 0:
                 bx_lam = self.nlp_sol_lam_x[self.index_map['x_in_w'][stage]] if dims.nbx_0 else np.empty((0, 1))
@@ -495,7 +495,7 @@ class AcadosCasadiOcpSolver:
         elif field == 'u':
             self.w0[self.index_map['u_in_w'][stage]] = value_.flatten()
         elif field == 'pi':
-            self.lam_g0[self.index_map['pi_in_lam_g'][stage]] = value_.flatten()
+            self.lam_g0[self.index_map['pi_in_lam_g'][stage]] = -value_.flatten()
         elif field == 'lam':
             if stage == 0:
                 bx_length = dims.nbx_0
