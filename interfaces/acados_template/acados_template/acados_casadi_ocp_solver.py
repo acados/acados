@@ -34,6 +34,8 @@ import casadi as ca
 from typing import Union, Tuple
 
 import numpy as np
+
+from .utils import casadi_length
 from .acados_ocp import AcadosOcp
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
 
@@ -253,14 +255,28 @@ class AcadosCasadiOcpSolver:
         return nlp, bounds, w0, index_map
 
 
-    def __init__(self, acados_ocp: AcadosOcp, solver: str = "ipopt", verbose=True):
+    def __init__(self, acados_ocp: AcadosOcp, solver: str = "ipopt", verbose=True,
+                 casadi_nlp_opts: dict = None):
 
         if not isinstance(acados_ocp, AcadosOcp):
             raise TypeError('acados_ocp should be of type AcadosOcp.')
 
         self.acados_ocp = acados_ocp
+
+        # create casadi NLP formulation
         self.casadi_nlp, self.bounds, self.w0, self.index_map = self.create_casadi_nlp_formulation(acados_ocp)
-        self.casadi_solver = ca.nlpsol("nlp_solver", solver, self.casadi_nlp)
+
+        # create NLP solver
+        if casadi_nlp_opts is None:
+            casadi_nlp_opts = {}
+
+        if solver == "fatrop":
+            pi_in_lam_g_flat = [idx for sublist in self.index_map['pi_in_lam_g'] for idx in sublist]
+            is_equality_array = [True if i in pi_in_lam_g_flat else False for i in range(casadi_length(self.casadi_nlp['g']))]
+            casadi_nlp_opts['equality'] = is_equality_array
+        self.casadi_solver = ca.nlpsol("nlp_solver", solver, self.casadi_nlp, casadi_nlp_opts)
+
+        # create solution and initial guess
         self.lam_x0 = np.empty(self.casadi_nlp['x'].shape).flatten()
         self.lam_g0 = np.empty(self.casadi_nlp['g'].shape).flatten()
         self.nlp_sol = None
