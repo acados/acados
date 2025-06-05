@@ -388,8 +388,15 @@ class AcadosCasadiOcpSolver:
         self.nlp_sol_w = self.nlp_sol['x'].full()
         self.nlp_sol_lam_g = self.nlp_sol['lam_g'].full()
         self.nlp_sol_lam_x = self.nlp_sol['lam_x'].full()
-        # TODO: return correct status
-        return 0
+
+        # statistics
+        solver_stats = self.casadi_solver.stats()
+        # timing = solver_stats['t_proc_total']
+        self.status = solver_stats['return_status']
+        self.nlp_iter = solver_stats['iter_count']
+        # nlp_res = ca.norm_inf(sol['g']).full()[0][0]
+        # cost_val = ca.norm_inf(sol['f']).full()[0][0]
+        return self.status
 
     def get_dim_flat(self, field: str):
         """
@@ -563,7 +570,11 @@ class AcadosCasadiOcpSolver:
         self.set_flat("lam", iterate.lam)
 
     def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
-        raise NotImplementedError()
+
+        if field_ == "nlp_iter":
+            return self.nlp_iter
+        else:
+            raise NotImplementedError()
 
     def get_cost(self) -> float:
         raise NotImplementedError()
