@@ -109,12 +109,8 @@ def solve_acados_formulation_with_ipopt(initial_guess: AcadosOcpFlattenedIterate
     N_horizon = ocp.solver_options.N_horizon
     solver = AcadosCasadiOcpSolver(ocp)
 
-    # TODO: refactor this with acados iterate!!!
     if initial_guess is not None:
-        for i in range(N_horizon):
-            solver.set(i, "x", initial_guess.x[i*ocp.dims.nx:(i+1)*ocp.dims.nx])
-            solver.set(i, "u", initial_guess.u[i*ocp.dims.nu:(i+1)*ocp.dims.nu])
-        solver.set(N_horizon, "x", initial_guess.x[N_horizon*ocp.dims.nx:])
+        solver.load_iterate_from_flat_obj(initial_guess)
     solver.solve()
 
     # get solution
