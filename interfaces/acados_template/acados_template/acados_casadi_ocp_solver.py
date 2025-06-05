@@ -596,25 +596,25 @@ class AcadosCasadiOcpSolver:
             self.lam_g0[self.index_map['pi_in_lam_g'][stage]] = -value_.flatten()
         elif field == 'lam':
             if stage == 0:
-                bx_length = dims.nbx_0
-                bu_length = dims.nbu
-                h_length = dims.ng + dims.nh_0 + dims.nphi_0
+                nbx = dims.nbx_0
+                nbu = dims.nbu
+                n_ghphi = dims.ng + dims.nh_0 + dims.nphi_0
             elif stage < dims.N:
-                bx_length = dims.nbx
-                bu_length = dims.nbu
-                h_length = dims.ng + dims.nh + dims.nphi
+                nbx = dims.nbx
+                nbu = dims.nbu
+                n_ghphi = dims.ng + dims.nh + dims.nphi
             elif stage == dims.N:
-                bx_length = dims.nbx_e
-                bu_length = 0
-                h_length = dims.ng_e + dims.nh_e + dims.nphi_e
+                nbx = dims.nbx_e
+                nbu = 0
+                n_ghphi = dims.ng_e + dims.nh_e + dims.nphi_e
 
-            offset_u = (bx_length+bu_length+h_length)
-            lbu_lam = value_[:bu_length] if bu_length else np.empty((dims.nu,))
-            lbx_lam = value_[bu_length:bu_length+bx_length] if bx_length else np.empty((dims.nx,))
-            lg_lam = value_[bu_length+bx_length:bu_length+bx_length+h_length]
-            ubu_lam = value_[offset_u:offset_u+bu_length] if bu_length else np.empty((dims.nu,))
-            ubx_lam = value_[offset_u+bu_length:offset_u+bu_length+bx_length] if bx_length else np.empty((dims.nx,))
-            ug_lam = value_[offset_u+bu_length+bx_length:offset_u+bu_length+bx_length+h_length]
+            offset_u = (nbx+nbu+n_ghphi)
+            lbu_lam = value_[:nbu] if nbu else np.empty((dims.nu,))
+            lbx_lam = value_[nbu:nbu+nbx] if nbx else np.empty((dims.nx,))
+            lg_lam = value_[nbu+nbx:nbu+nbx+n_ghphi]
+            ubu_lam = value_[offset_u:offset_u+nbu] if nbu else np.empty((dims.nu,))
+            ubx_lam = value_[offset_u+nbu:offset_u+nbu+nbx] if nbx else np.empty((dims.nx,))
+            ug_lam = value_[offset_u+nbu+nbx:offset_u+nbu+nbx+n_ghphi]
             if stage != dims.N:
                 self.lam_x0[self.index_map['x_in_w'][stage]+self.index_map['u_in_w'][stage]] = np.concatenate((ubx_lam-lbx_lam, ubu_lam-lbu_lam))
                 self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] =  ug_lam-lg_lam
