@@ -33,15 +33,10 @@ from dataclasses import dataclass
 
 import os, warnings
 import casadi as ca
-from .utils import is_empty, casadi_length, check_casadi_version_supports_p_global, print_casadi_expression, set_directory
+from .utils import is_empty, casadi_length, check_casadi_version_supports_p_global, print_casadi_expression, set_directory, is_casadi_SX
 from .acados_model import AcadosModel
 from .acados_ocp_constraints import AcadosOcpConstraints
 
-
-def is_casadi_SX(x):
-    if isinstance(x, ca.SX):
-        return True
-    return False
 
 @dataclass
 class AcadosCodegenOptions:
