@@ -74,12 +74,13 @@ typedef struct
 
 typedef struct {
     double obj_factor;
-    struct blasfeo_dvec *dynamics_scaling_vec;
     struct blasfeo_dvec *constraints_scaling_vec;
 } ocp_nlp_qpscaling_obj_gershgorin_memory;
 
 //
 void ocp_nlp_qpscaling_obj_gershgorin_config_initialize_default(ocp_nlp_qpscaling_config *config);
+//
+void *ocp_nlp_qpscaling_obj_gershgorin_get_constraints_scaling_ptr(void *memory_, void* opts_);
 
 
 

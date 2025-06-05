@@ -97,7 +97,13 @@ void *ocp_nlp_qpscaling_noscale_memory_assign(void *config_, ocp_nlp_qpscaling_d
     return raw_memory;
 }
 
-
+/************************************************
+ * getter functions
+ ************************************************/
+void *ocp_nlp_qpscaling_noscale_get_constraints_scaling_ptr(void *memory_, void* opts_)
+{
+    return NULL;
+}
 
 /************************************************
  * functions
@@ -134,5 +140,7 @@ void ocp_nlp_qpscaling_noscale_config_initialize_default(ocp_nlp_qpscaling_confi
     // functions
     config->scale_qp = &ocp_nlp_qpscaling_noscale_scale_qp;
     config->rescale_solution = &ocp_nlp_qpscaling_noscale_rescale_solution;
+    // getters
+    config->get_constraints_scaling_ptr = &ocp_nlp_qpscaling_noscale_get_constraints_scaling_ptr;
 }
 

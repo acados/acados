@@ -84,6 +84,8 @@ typedef struct
     /* functions */
     void (*scale_qp)(void *config, ocp_nlp_qpscaling_dims *dims, void *opts, void *memory, ocp_qp_in *qp_in);
     void (*rescale_solution)(void *config, ocp_nlp_qpscaling_dims *dims, void *opts, void *memory, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
+    /* getters */
+    void *(*get_constraints_scaling_ptr)(void *memory_, void* opts_);
 } ocp_nlp_qpscaling_config;
 
 //

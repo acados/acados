@@ -66,6 +66,8 @@ extern "C" {
 
 //
 void ocp_nlp_qpscaling_noscale_config_initialize_default(ocp_nlp_qpscaling_config *config);
+//
+void *ocp_nlp_qpscaling_noscale_get_constraints_scaling_ptr(void *memory_, void* opts_);
 
 
 

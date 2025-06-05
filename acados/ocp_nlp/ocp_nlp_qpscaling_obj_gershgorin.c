@@ -151,7 +151,6 @@ acados_size_t ocp_nlp_qpscaling_obj_gershgorin_memory_calculate_size(void *confi
             size += 1 * blasfeo_memsize_dvec(2 * dims->ng[i]);
     }
     size += 1 * (N + 1) * sizeof(struct blasfeo_dvec);  // constraints_scaling_vec
-    size += 1 * N * sizeof(struct blasfeo_dvec);  // dynamics_scaling_vec
 
     return size;
 }
@@ -195,6 +194,19 @@ void *ocp_nlp_qpscaling_obj_gershgorin_memory_assign(void *config_, ocp_nlp_qpsc
 }
 
 /************************************************
+ * getter functions
+ ************************************************/
+void *ocp_nlp_qpscaling_obj_gershgorin_get_constraints_scaling_ptr(void *memory_, void* opts_)
+{
+    ocp_nlp_qpscaling_obj_gershgorin_memory *mem = memory_;
+    ocp_nlp_qpscaling_obj_gershgorin_opts *opts = opts_;
+    if (opts->scale_qp_constraints)
+        return mem->constraints_scaling_vec;
+    else
+        return NULL;
+}
+
+/************************************************
  * helper functions
  ************************************************/
 /*
@@ -233,20 +245,6 @@ static void scale_matrix_row(int row, int n_col, struct blasfeo_dmat *At, double
     for (int j = 0; j < n_col; ++j)
     {
         BLASFEO_DMATEL(At, j, row) = BLASFEO_DMATEL(At, j, row) / scaling_factor;
-    }
-}
-
-static void scale_pi_duals(ocp_qp_out *qp_out, ocp_nlp_qpscaling_obj_gershgorin_memory *mem)
-{
-    int *nx = qp_out->dim->nx;
-    int N = qp_out->dim->N;
-
-    for (int i = 0; i < N; i++)
-    {
-        for (int j = 0; j < nx[i+i]; ++j)
-        {
-            BLASFEO_DVECEL(qp_out->pi+i, j) *= 1.0/BLASFEO_DVECEL(mem->dynamics_scaling_vec+i, j);
-        }
     }
 }
 
@@ -438,5 +436,7 @@ void ocp_nlp_qpscaling_obj_gershgorin_config_initialize_default(ocp_nlp_qpscalin
     // functions
     config->scale_qp = &ocp_nlp_qpscaling_obj_gershgorin_scale_qp;
     config->rescale_solution = &ocp_nlp_qpscaling_obj_gershgorin_rescale_solution;
+    // getters
+    config->get_constraints_scaling_ptr = &ocp_nlp_qpscaling_obj_gershgorin_get_constraints_scaling_ptr;
 }
 
