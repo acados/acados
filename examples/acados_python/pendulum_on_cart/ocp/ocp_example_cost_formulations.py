@@ -49,7 +49,7 @@ NX = 4
 NU = 1
 FMAX = 80
 
-def formulate_ocp(cost_version: str) -> AcadosOcp:
+def formulate_ocp(cost_version: str, constraint_version="bu") -> AcadosOcp:
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -233,10 +233,18 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
         raise Exception('Unknown cost_version.')
 
     # set constraints
-    ocp.constraints.lbu = np.array([-FMAX])
-    ocp.constraints.ubu = np.array([+FMAX])
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
-    ocp.constraints.idxbu = np.array([0])
+    if constraint_version == "bu":
+        ocp.constraints.lbu = np.array([-FMAX])
+        ocp.constraints.ubu = np.array([+FMAX])
+        ocp.constraints.idxbu = np.array([0])
+    elif constraint_version == "h":
+        ocp.constraints.lh = np.array([-FMAX])
+        ocp.constraints.uh = np.array([+FMAX])
+        ocp.model.con_h_expr = ocp.model.u[0]  # h = u[0]
+        ocp.constraints.lh_0 = np.array([-FMAX])
+        ocp.constraints.uh_0 = np.array([+FMAX])
+        ocp.model.con_h_expr_0 = ocp.model.u[0]  # h = u[0]
 
     return ocp
 
