@@ -66,4 +66,4 @@ if __name__ == "__main__":
     main(cost_version="CONL", constraint_version='bu')
     main(cost_version="CONL", constraint_version='h')
     main(cost_version="CONL", constraint_version='bu', casadi_solver_name="fatrop")
-    # main(cost_version="CONL", constraint_version='h', casadi_solver_name="fatrop")
+    main(cost_version="CONL", constraint_version='h', casadi_solver_name="fatrop")
