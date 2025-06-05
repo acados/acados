@@ -83,6 +83,8 @@ def solve_problem(qp_solver: str = 'FULL_CONDENSING_HPIPM'):
     ocp.solver_options.globalization_full_step_dual = True
     ocp.solver_options.globalization_funnel_use_merit_fun_only = False
 
+    ocp.code_export_directory = f'c_generated_code_{model.name}'
+
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
 
     # initialize solver
