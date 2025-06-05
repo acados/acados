@@ -279,7 +279,6 @@ class AcadosCasadiOcpSolver:
                     lam_h_e = ca_symbol(f'lam_h_e', dims.nh_e, 1)
                     lam_g.append(lam_h_e)
                     if ocp.solver_options.hessian_approx == 'EXACT' and ocp.solver_options.exact_hess_constr:
-                        breakpoint()
                         adj = ca.jtimes(h_e_nlp_expr, w, lam_h_e, True)
                         hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
 
