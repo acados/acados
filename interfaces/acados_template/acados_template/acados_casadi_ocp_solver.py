@@ -292,7 +292,9 @@ class AcadosCasadiOcpSolver:
                         # always use CONL Hessian approximation here, disregarding inner derivative
                         hess = ca.vertcat(*[ca.hessian(model.con_phi_expr_e[i], model.con_r_in_phi_e)[0] for i in range(dims.nphi_e)])
                         hess = ca.substitute(hess, model.con_r_in_phi_e, model.con_r_expr_e)
-                        hess_l += hess
+                        r_in_nlp = ca.substitute(model.con_r_expr_e, model.x, xtraj_node[-1])
+                        dr_dw = ca.jacobian(r_in_nlp, w)
+                        hess_l += dr_dw.T @ hess @ dr_dw
 
                 index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh_e + dims.nphi_e)))
                 offset += dims.nh_e + dims.nphi_e
