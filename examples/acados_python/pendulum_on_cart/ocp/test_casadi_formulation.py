@@ -15,7 +15,7 @@ def raise_test_failure_message(msg: str):
     # print(f"ERROR: {msg}")
     raise Exception(msg)
 
-def main(cost_version="CONL", constraint_version='h', casadi_solver_name="ipopt"):
+def main(cost_version="LS", constraint_version='h', casadi_solver_name="ipopt", use_acados_hessian=False):
     ocp = formulate_ocp(cost_version=cost_version, constraint_version=constraint_version)
     ocp.solver_options.tf = T_HORIZON
 
@@ -42,11 +42,20 @@ def main(cost_version="CONL", constraint_version='h', casadi_solver_name="ipopt"
         casadi_solver_opts["fatrop"] = {"mu_init": 0.1}
         casadi_solver_opts["structure_detection"] = "auto"
         casadi_solver_opts["debug"] = True
-    casadi_ocp_solver = AcadosCasadiOcpSolver(ocp, verbose=False, solver=casadi_solver_name, casadi_solver_opts=casadi_solver_opts)
-    # casadi_ocp_solver.load_iterate_from_obj(result_acados)
-    casadi_ocp_solver.solve()
+
+    if use_acados_hessian:
+        # ocp.solver_options.hessian_approx = "EXACT"
+        ocp.solver_options.fixed_hess = False
+
+    casadi_ocp_solver = AcadosCasadiOcpSolver(ocp, verbose=False, solver=casadi_solver_name, casadi_solver_opts=casadi_solver_opts, use_acados_hessian=use_acados_hessian)
+    casadi_ocp_solver.load_iterate_from_obj(result_acados)
+    status = casadi_ocp_solver.solve()
+    print(f"casadi solver returned status {status}.")
     result_casadi = casadi_ocp_solver.store_iterate_to_obj()
     result_casadi_flat = casadi_ocp_solver.store_iterate_to_flat_obj()
+
+    nlp_iter_ca = casadi_ocp_solver.get_stats("nlp_iter")
+    print(f"Casadi solver finished after {nlp_iter_ca} iterations.")
 
     # evaluate difference
     # TODO: set solver tolerance and reduce it here.
@@ -57,13 +66,24 @@ def main(cost_version="CONL", constraint_version='h', casadi_solver_name="ipopt"
         if diff > test_tol:
             raise_test_failure_message(f"Test failed: difference between acados and casadi solution for {field} should be smaller than {test_tol}, but got {diff}.")
 
+    # additional checks:
+    if cost_version == "LS" and constraint_version == "h":
+        if use_acados_hessian:
+            if nlp_iter_ca < 10:
+                raise_test_failure_message(f"Expected more iterations for casadi solver with acados (GN) Hessian, but got {nlp_iter_ca} iterations.")
+        else:
+            if nlp_iter_ca > 10:
+                raise_test_failure_message(f"Expected less iterations for casadi solver with Hessian, but got {nlp_iter_ca} iterations.")
+
     # plot_pendulum(ocp.solver_options.shooting_nodes, FMAX,
     #               np.array(result_casadi.u_traj), np.array(result_casadi.x_traj), latexify=False)
     del ocp_solver, casadi_ocp_solver
 
 
 if __name__ == "__main__":
-    main(cost_version="CONL", constraint_version='bu')
-    main(cost_version="CONL", constraint_version='h')
-    main(cost_version="CONL", constraint_version='bu', casadi_solver_name="fatrop")
-    main(cost_version="CONL", constraint_version='h', casadi_solver_name="fatrop")
+    # TODO: refactor to create acados solver only once fore each fomulation version.
+    main(cost_version="LS", constraint_version='bu')
+    main(cost_version="LS", constraint_version='h', casadi_solver_name="ipopt", use_acados_hessian=True)
+    main(cost_version="LS", constraint_version='h', casadi_solver_name="ipopt", use_acados_hessian=False)
+    main(cost_version="LS", constraint_version='bu', casadi_solver_name="fatrop")
+    main(cost_version="LS", constraint_version='h', casadi_solver_name="fatrop")
