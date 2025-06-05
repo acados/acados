@@ -156,6 +156,12 @@ def get_simulink_default_opts() -> dict:
     return simulink_default_opts
 
 
+def is_casadi_SX(x):
+    if isinstance(x, ca.SX):
+        return True
+    return False
+
+
 def is_column(x):
     if isinstance(x, np.ndarray):
         if x.ndim == 1:

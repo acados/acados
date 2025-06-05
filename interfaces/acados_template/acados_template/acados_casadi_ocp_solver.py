@@ -35,14 +35,14 @@ from typing import Union, Tuple, Optional
 
 import numpy as np
 
-from .utils import casadi_length
+from .utils import casadi_length, is_casadi_SX
 from .acados_ocp import AcadosOcp
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
 
 class AcadosCasadiOcpSolver:
 
     @classmethod
-    def create_casadi_nlp_formulation(cls, ocp: AcadosOcp) -> Tuple[dict, dict, np.ndarray]:
+    def create_casadi_nlp_formulation(cls, ocp: AcadosOcp, with_hessian=False) -> Tuple[dict, dict, np.ndarray, dict, Optional[ca.Function]]:
         """
         Creates an equivalent CasADi NLP formulation of the OCP.
         Experimental, not fully implemented yet.
@@ -56,6 +56,7 @@ class AcadosCasadiOcpSolver:
         dims = ocp.dims
         constraints = ocp.constraints
         solver_options = ocp.solver_options
+        N_horizon = solver_options.N_horizon
 
         # check what is not supported yet
         if any([dims.ns_0, dims.ns, dims.ns_e]):
@@ -81,142 +82,36 @@ class AcadosCasadiOcpSolver:
         if any([dims.ns_0, dims.ns, dims.ns_e]):
             raise NotImplementedError("CasADi NLP formulation not implemented for formulations with soft constraints yet.")
 
-        # create variables indexed by shooting nodes, vectorize in the end
+        # create primal variables indexed by shooting nodes
         ca_symbol = model.get_casadi_symbol()
-        xtraj_node = [ca_symbol(f'x{i}', dims.nx, 1) for i in range(solver_options.N_horizon+1)]
-        utraj_node = [ca_symbol(f'u{i}', dims.nu, 1) for i in range(solver_options.N_horizon)]
+        xtraj_node = [ca_symbol(f'x{i}', dims.nx, 1) for i in range(N_horizon+1)]
+        utraj_node = [ca_symbol(f'u{i}', dims.nu, 1) for i in range(N_horizon)]
         if dims.nz > 0:
             raise NotImplementedError("CasADi NLP formulation not implemented for models with algebraic variables (z).")
 
         # parameters
-        ptraj_node = [ca_symbol(f'p{i}', dims.np, 1) for i in range(solver_options.N_horizon)]
+        ptraj_node = [ca_symbol(f'p{i}', dims.np, 1) for i in range(N_horizon)]
 
-        ### Constraints: bounds
         # setup state bounds
-        lb_xtraj_node = [-np.inf * ca.DM.ones((dims.nx, 1)) for _ in range(solver_options.N_horizon+1)]
-        ub_xtraj_node = [np.inf * ca.DM.ones((dims.nx, 1)) for _ in range(solver_options.N_horizon+1)]
+        lb_xtraj_node = [-np.inf * ca.DM.ones((dims.nx, 1)) for _ in range(N_horizon+1)]
+        ub_xtraj_node = [np.inf * ca.DM.ones((dims.nx, 1)) for _ in range(N_horizon+1)]
         lb_xtraj_node[0][constraints.idxbx_0] = constraints.lbx_0
         ub_xtraj_node[0][constraints.idxbx_0] = constraints.ubx_0
         offset = 0
-        for i in range(1, solver_options.N_horizon):
+        for i in range(1, N_horizon):
             lb_xtraj_node[i][constraints.idxbx] = constraints.lbx
             ub_xtraj_node[i][constraints.idxbx] = constraints.ubx
         lb_xtraj_node[-1][constraints.idxbx_e] = constraints.lbx_e
         ub_xtraj_node[-1][constraints.idxbx_e] = constraints.ubx_e
 
         # setup control bounds
-        lb_utraj_node = [-np.inf * ca.DM.ones((dims.nu, 1)) for _ in range(solver_options.N_horizon)]
-        ub_utraj_node = [np.inf * ca.DM.ones((dims.nu, 1)) for _ in range(solver_options.N_horizon)]
-        for i in range(solver_options.N_horizon):
+        lb_utraj_node = [-np.inf * ca.DM.ones((dims.nu, 1)) for _ in range(N_horizon)]
+        ub_utraj_node = [np.inf * ca.DM.ones((dims.nu, 1)) for _ in range(N_horizon)]
+        for i in range(N_horizon):
             lb_utraj_node[i][constraints.idxbu] = constraints.lbu
             ub_utraj_node[i][constraints.idxbu] = constraints.ubu
 
-        ### Nonlinear constraints
-        g = []
-        lbg = []
-        ubg = []
-        offset = 0
-
-        # create constraint functions
-        # dynamics
-        if solver_options.integrator_type == "DISCRETE":
-            f_discr_fun = ca.Function('f_discr_fun', [model.x, model.u, model.p, model.p_global], [model.disc_dyn_expr])
-        elif solver_options.integrator_type == "ERK":
-            ca_expl_ode = ca.Function('ca_expl_ode', [model.x, model.u], [model.f_expl_expr])
-                                    #   , model.p, model.p_global]
-            f_discr_fun = ca.simpleRK(ca_expl_ode, solver_options.sim_method_num_steps[0], solver_options.sim_method_num_stages[0])
-        else:
-            raise NotImplementedError(f"Integrator type {solver_options.integrator_type} not supported.")
-
-        # initial
-        h0_fun = ca.Function('h0_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr_0])
-
-        # intermediate
-        h_fun = ca.Function('h_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr])
-        if dims.nphi > 0:
-            conl_constr_expr = ca.substitute(model.con_phi_expr, model.con_r_in_phi, model.con_r_expr)
-            conl_constr_fun = ca.Function('conl_constr_fun', [model.x, model.u, model.p, model.p_global], [conl_constr_expr])
-
-        # terminal
-        h_e_fun = ca.Function('h_e_fun', [model.x, model.p, model.p_global], [model.con_h_expr_e])
-        if dims.nphi_e > 0:
-            conl_constr_expr_e = ca.substitute(model.con_phi_expr_e, model.con_r_in_phi_e, model.con_r_expr_e)
-            conl_constr_e_fun = ca.Function('conl_constr_e_fun', [model.x, model.p, model.p_global], [conl_constr_expr_e])
-
-        for i in range(solver_options.N_horizon+1):
-            # add dynamics constraints
-            if i < solver_options.N_horizon:
-                if solver_options.integrator_type == "DISCRETE":
-                    g.append(xtraj_node[i+1] - f_discr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global))
-                elif solver_options.integrator_type == "ERK":
-                    g.append(xtraj_node[i+1] - f_discr_fun(xtraj_node[i], utraj_node[i], solver_options.time_steps[i]))
-                lbg.append(np.zeros((dims.nx, 1)))
-                ubg.append(np.zeros((dims.nx, 1)))
-                index_map['pi_in_lam_g'].append(list(range(offset, offset+dims.nx)))
-                offset += dims.nx
-
-            # nonlinear constraints
-            # initial stage
-            if i == 0 and solver_options.N_horizon > 0:
-                g.append(h0_fun(xtraj_node[0], utraj_node[0], ptraj_node[0], model.p_global))
-                lbg.append(constraints.lh_0)
-                ubg.append(constraints.uh_0)
-                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset+dims.nh_0)))
-
-                if dims.nphi_0 > 0:
-                    conl_constr_expr_0 = ca.substitute(model.con_phi_expr_0, model.con_r_in_phi_0, model.con_r_expr_0)
-                    conl_constr_0_fun = ca.Function('conl_constr_0_fun', [model.x, model.u, model.p, model.p_global], [conl_constr_expr_0])
-                    g.append(conl_constr_0_fun(xtraj_node[0], utraj_node[0], ptraj_node[0], model.p_global))
-                    lbg.append(constraints.lphi_0)
-                    ubg.append(constraints.uphi_0)
-                    index_map['lam_gnl_in_lam_g'][-1]=list(range(offset, offset+dims.nh_0+dims.nphi_0))
-                offset += dims.nh_0 + dims.nphi_0
-            elif i < solver_options.N_horizon:
-                g.append(h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global))
-                lbg.append(constraints.lh)
-                ubg.append(constraints.uh)
-                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh)))
-
-                if dims.nphi > 0:
-                    g.append(conl_constr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global))
-                    lbg.append(constraints.lphi)
-                    ubg.append(constraints.uphi)
-                    index_map['lam_gnl_in_lam_g'][-1] = list(range(offset, offset+dims.nh+dims.nphi))
-                offset += dims.nphi + dims.nh
-            else:
-                # terminal stage
-                g.append(h_e_fun(xtraj_node[-1], ptraj_node[-1], model.p_global))
-                lbg.append(constraints.lh_e)
-                ubg.append(constraints.uh_e)
-                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset+dims.nh_e)))
-
-                if dims.nphi_e > 0:
-                    g.append(conl_constr_e_fun(xtraj_node[-1], ptraj_node[-1], model.p_global))
-                    lbg.append(constraints.lphi_e)
-                    ubg.append(constraints.uphi_e)
-                    index_map['lam_gnl_in_lam_g'][-1] = list(range(offset, offset+dims.nh_e+dims.nphi_e))
-                offset += dims.nh_e + dims.nphi_e
-
-        ### Cost
-        # initial cost term
-        nlp_cost = 0
-        cost_expr_0 = ocp.get_initial_cost_expression()
-        cost_fun_0 = ca.Function('cost_fun_0', [model.x, model.u, model.p, model.p_global], [cost_expr_0])
-        nlp_cost += solver_options.cost_scaling[0] * cost_fun_0(xtraj_node[0], utraj_node[0], ptraj_node[0], model.p_global)
-
-        # intermediate cost term
-        cost_expr = ocp.get_path_cost_expression()
-        cost_fun = ca.Function('cost_fun', [model.x, model.u, model.p, model.p_global], [cost_expr])
-        for i in range(1, solver_options.N_horizon):
-            nlp_cost += solver_options.cost_scaling[i] * cost_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
-
-        # terminal cost term
-        cost_expr_e = ocp.get_terminal_cost_expression()
-        cost_fun_e = ca.Function('cost_fun_e', [model.x, model.p, model.p_global], [cost_expr_e])
-        nlp_cost += solver_options.cost_scaling[-1] * cost_fun_e(xtraj_node[-1], ptraj_node[-1], model.p_global)
-
-        ### Formulation
-        # interleave primary variables w and bounds
+        ### Concatenate primal variables and bounds
         # w = [x0, u0, x1, u1, ...]
         w_sym_list = []
         lbw_list = []
@@ -224,7 +119,7 @@ class AcadosCasadiOcpSolver:
         w0_list = []
         offset = 0
         x_guess = ocp.constraints.x0 if ocp.constraints.has_x0 else np.zeros((dims.nx,))
-        for i in range(solver_options.N_horizon):
+        for i in range(N_horizon):
             # add x
             w_sym_list.append(xtraj_node[i])
             lbw_list.append(lb_xtraj_node[i])
@@ -248,22 +143,205 @@ class AcadosCasadiOcpSolver:
         index_map['x_in_w'].append(list(range(offset, offset + dims.nx)))
         offset += dims.nx
 
+        nw = offset  # number of primal variables
+
         # vectorize
         w = ca.vertcat(*w_sym_list)
         lbw = ca.vertcat(*lbw_list)
         ubw = ca.vertcat(*ubw_list)
         p_nlp = ca.vertcat(*ptraj_node, model.p_global)
 
+        ### Nonlinear constraints
+        # dynamics
+        if solver_options.integrator_type == "DISCRETE":
+            f_discr_fun = ca.Function('f_discr_fun', [model.x, model.u, model.p, model.p_global], [model.disc_dyn_expr])
+        elif solver_options.integrator_type == "ERK":
+            ca_expl_ode = ca.Function('ca_expl_ode', [model.x, model.u], [model.f_expl_expr])
+                                    #   , model.p, model.p_global]
+            f_discr_fun = ca.simpleRK(ca_expl_ode, solver_options.sim_method_num_steps[0], solver_options.sim_method_num_stages[0])
+        else:
+            raise NotImplementedError(f"Integrator type {solver_options.integrator_type} not supported.")
+
+        # initial
+        h_0_fun = ca.Function('h_0_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr_0])
+
+        # intermediate
+        h_fun = ca.Function('h_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr])
+        if dims.nphi > 0:
+            conl_constr_expr = ca.substitute(model.con_phi_expr, model.con_r_in_phi, model.con_r_expr)
+            conl_constr_fun = ca.Function('conl_constr_fun', [model.x, model.u, model.p, model.p_global], [conl_constr_expr])
+
+        # terminal
+        h_e_fun = ca.Function('h_e_fun', [model.x, model.p, model.p_global], [model.con_h_expr_e])
+        if dims.nphi_e > 0:
+            conl_constr_expr_e = ca.substitute(model.con_phi_expr_e, model.con_r_in_phi_e, model.con_r_expr_e)
+            conl_constr_e_fun = ca.Function('conl_constr_e_fun', [model.x, model.p, model.p_global], [conl_constr_expr_e])
+
+        # create nonlinear constraints
+        g = []
+        lbg = []
+        ubg = []
+        offset = 0
+        if with_hessian:
+            lam_g = []
+            hess_l = ca.DM.zeros((nw, nw))
+
+        for i in range(N_horizon+1):
+            # add dynamics constraints
+            if i < N_horizon:
+                if solver_options.integrator_type == "DISCRETE":
+                    dyn_equality = xtraj_node[i+1] - f_discr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
+                elif solver_options.integrator_type == "ERK":
+                    dyn_equality = xtraj_node[i+1] - f_discr_fun(xtraj_node[i], utraj_node[i], solver_options.time_steps[i])
+                g.append(dyn_equality)
+                lbg.append(np.zeros((dims.nx, 1)))
+                ubg.append(np.zeros((dims.nx, 1)))
+                index_map['pi_in_lam_g'].append(list(range(offset, offset+dims.nx)))
+                offset += dims.nx
+
+                if with_hessian:
+                    # add hessian of dynamics constraints
+                    lam_g_dyn = ca_symbol(f'lam_g_dyn{i}', dims.nx, 1)
+                    lam_g.append(lam_g_dyn)
+                    if ocp.solver_options.hessian_approx == 'EXACT' and ocp.solver_options.exact_hess_dyn:
+                        adj = ca.jtimes(dyn_equality, w, lam_g_dyn, True)
+                        hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
+
+            # nonlinear constraints
+            # initial stage
+            if i == 0 and N_horizon > 0:
+                # h_0
+                h_0_nlp_expr = h_0_fun(xtraj_node[0], utraj_node[0], ptraj_node[0], model.p_global)
+                g.append(h_0_nlp_expr)
+                lbg.append(constraints.lh_0)
+                ubg.append(constraints.uh_0)
+                if with_hessian and dims.nh_0 > 0:
+                    lam_h_0 = ca_symbol(f'lam_h_0', dims.nh_0, 1)
+                    lam_g.append(lam_h_0)
+                    # add hessian contribution
+                    if ocp.solver_options.hessian_approx == 'EXACT' and ocp.solver_options.exact_hess_constr:
+                        adj = ca.jtimes(h_0_nlp_expr, w, lam_h_0, True)
+                        hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
+
+                if dims.nphi_0 > 0:
+                    conl_constr_expr_0 = ca.substitute(model.con_phi_expr_0, model.con_r_in_phi_0, model.con_r_expr_0)
+                    conl_constr_0_fun = ca.Function('conl_constr_0_fun', [model.x, model.u, model.p, model.p_global], [conl_constr_expr_0])
+                    g.append(conl_constr_0_fun(xtraj_node[0], utraj_node[0], ptraj_node[0], model.p_global))
+                    lbg.append(constraints.lphi_0)
+                    ubg.append(constraints.uphi_0)
+                    if with_hessian:
+                        lam_phi_0 = ca_symbol(f'lam_phi_0', dims.nphi_0, 1)
+                        lam_g.append(lam_phi_0)
+                        # always use CONL Hessian approximation here, disregarding inner derivative
+                        hess = ca.vertcat(*[ca.hessian(model.con_phi_expr_0[i], model.con_r_in_phi_0)[0] for i in range(dims.nphi_0)])
+                        hess = ca.substitute(hess, model.con_r_in_phi_0, model.con_r_expr_0)
+                        hess_l += hess
+
+                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh_0 + dims.nphi_0)))
+                offset += dims.nh_0 + dims.nphi_0
+
+            elif i < N_horizon:
+                h_i_nlp_expr = h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
+                g.append(h_i_nlp_expr)
+                lbg.append(constraints.lh)
+                ubg.append(constraints.uh)
+                if with_hessian and dims.nh > 0:
+                    # add hessian contribution
+                    lam_h = ca_symbol(f'lam_h_{i}', dims.nh, 1)
+                    lam_g.append(lam_h)
+                    if ocp.solver_options.hessian_approx == 'EXACT' and ocp.solver_options.exact_hess_constr:
+                        adj = ca.jtimes(h_i_nlp_expr, w, lam_h, True)
+                        hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
+
+                if dims.nphi > 0:
+                    g.append(conl_constr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global))
+                    lbg.append(constraints.lphi)
+                    ubg.append(constraints.uphi)
+                    if with_hessian:
+                        lam_phi = ca_symbol(f'lam_phi', dims.nphi, 1)
+                        lam_g.append(lam_phi)
+                        # always use CONL Hessian approximation here, disregarding inner derivative
+                        hess = ca.vertcat(*[ca.hessian(model.con_phi_expr[i], model.con_r_in_phi)[0] for i in range(dims.nphi)])
+                        hess = ca.substitute(hess, model.con_r_in_phi, model.con_r_expr)
+                        hess_l += hess
+
+                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh + dims.nphi)))
+                offset += dims.nphi + dims.nh
+
+            else:
+                # terminal stage
+                h_e_nlp_expr = h_e_fun(xtraj_node[-1], ptraj_node[-1], model.p_global)
+                g.append(h_e_nlp_expr)
+                lbg.append(constraints.lh_e)
+                ubg.append(constraints.uh_e)
+                if with_hessian and dims.nh_e > 0:
+                    # add hessian contribution
+                    lam_h_e = ca_symbol(f'lam_h_e', dims.nh_e, 1)
+                    lam_g.append(lam_h_e)
+                    if ocp.solver_options.hessian_approx == 'EXACT' and ocp.solver_options.exact_hess_constr:
+                        breakpoint()
+                        adj = ca.jtimes(h_e_nlp_expr, w, lam_h_e, True)
+                        hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
+
+                if dims.nphi_e > 0:
+                    g.append(conl_constr_e_fun(xtraj_node[-1], ptraj_node[-1], model.p_global))
+                    lbg.append(constraints.lphi_e)
+                    ubg.append(constraints.uphi_e)
+                    if with_hessian:
+                        lam_phi_e = ca_symbol(f'lam_phi_e', dims.nphi_e, 1)
+                        lam_g.append(lam_phi_e)
+                        # always use CONL Hessian approximation here, disregarding inner derivative
+                        hess = ca.vertcat(*[ca.hessian(model.con_phi_expr_e[i], model.con_r_in_phi_e)[0] for i in range(dims.nphi_e)])
+                        hess = ca.substitute(hess, model.con_r_in_phi_e, model.con_r_expr_e)
+                        hess_l += hess
+
+                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh_e + dims.nphi_e)))
+                offset += dims.nh_e + dims.nphi_e
+
+        ### Cost
+        # initial cost term
+        nlp_cost = 0
+        cost_expr_0 = ocp.get_initial_cost_expression()
+        cost_fun_0 = ca.Function('cost_fun_0', [model.x, model.u, model.p, model.p_global], [cost_expr_0])
+        nlp_cost += solver_options.cost_scaling[0] * cost_fun_0(xtraj_node[0], utraj_node[0], ptraj_node[0], model.p_global)
+
+        # intermediate cost term
+        cost_expr = ocp.get_path_cost_expression()
+        cost_fun = ca.Function('cost_fun', [model.x, model.u, model.p, model.p_global], [cost_expr])
+        for i in range(1, N_horizon):
+            nlp_cost += solver_options.cost_scaling[i] * cost_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
+
+        # terminal cost term
+        cost_expr_e = ocp.get_terminal_cost_expression()
+        cost_fun_e = ca.Function('cost_fun_e', [model.x, model.p, model.p_global], [cost_expr_e])
+        nlp_cost += solver_options.cost_scaling[-1] * cost_fun_e(xtraj_node[-1], ptraj_node[-1], model.p_global)
+
+        if with_hessian:
+            lam_f = ca_symbol('lam_f', 1, 1)
+            if ocp.solver_options.hessian_approx == 'EXACT' or \
+                (ocp.cost.cost_type == "LINEAR_LS" and ocp.cost.cost_type_0 == "LINEAR_LS" and ocp.cost.cost_type_e == "LINEAR_LS"):
+                hess_l += lam_f * ca.hessian(nlp_cost, w)[0]
+            else:
+                raise NotImplementedError("Hessian approximation not implemented for this cost type.")
+            lam_g_vec = ca.vertcat(*lam_g)
+            nlp_hess_l_custom = ca.Function('nlp_hess_l', [w, p_nlp, lam_f, lam_g_vec], [ca.triu(hess_l)])
+            assert casadi_length(lam_g_vec) == casadi_length(ca.vertcat(*g)), f"Number of nonlinear constraints does not match the expected number, got {casadi_length(lam_g_vec)} != {casadi_length(ca.vertcat(*g))}."
+        else:
+            nlp_hess_l_custom = None
+
+        # sanity check
+
         # create NLP
         nlp = {"x": w, "p": p_nlp, "g": ca.vertcat(*g), "f": nlp_cost}
         bounds = {"lbx": lbw, "ubx": ubw, "lbg": ca.vertcat(*lbg), "ubg": ca.vertcat(*ubg)}
         w0 = np.concatenate(w0_list)
 
-        return nlp, bounds, w0, index_map
+        return nlp, bounds, w0, index_map, nlp_hess_l_custom
 
 
     def __init__(self, acados_ocp: AcadosOcp, solver: str = "ipopt", verbose=True,
-                 casadi_solver_opts: Optional[dict] = None):
+                 casadi_solver_opts: Optional[dict] = None,
+                 use_acados_hessian: bool = False):
 
         if not isinstance(acados_ocp, AcadosOcp):
             raise TypeError('acados_ocp should be of type AcadosOcp.')
@@ -271,7 +349,7 @@ class AcadosCasadiOcpSolver:
         self.acados_ocp = acados_ocp
 
         # create casadi NLP formulation
-        self.casadi_nlp, self.bounds, self.w0, self.index_map = self.create_casadi_nlp_formulation(acados_ocp)
+        self.casadi_nlp, self.bounds, self.w0, self.index_map, self.nlp_hess_l_custom = self.create_casadi_nlp_formulation(acados_ocp, with_hessian=use_acados_hessian)
 
         # create NLP solver
         if casadi_solver_opts is None:
@@ -281,6 +359,9 @@ class AcadosCasadiOcpSolver:
             pi_in_lam_g_flat = [idx for sublist in self.index_map['pi_in_lam_g'] for idx in sublist]
             is_equality_array = [True if i in pi_in_lam_g_flat else False for i in range(casadi_length(self.casadi_nlp['g']))]
             casadi_solver_opts['equality'] = is_equality_array
+
+        if use_acados_hessian:
+            casadi_solver_opts["cache"] = {"nlp_hess_l": self.nlp_hess_l_custom}
         self.casadi_solver = ca.nlpsol("nlp_solver", solver, self.casadi_nlp, casadi_solver_opts)
 
         # create solution and initial guess
