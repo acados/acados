@@ -36,13 +36,13 @@ def main(cost_version="CONL", constraint_version='h', casadi_solver_name="ipopt"
     result_acados_flat = ocp_solver.store_iterate_to_flat_obj()
 
     ## solve using casadi
-    casadi_nlp_opts = {}
+    casadi_solver_opts = {}
     if casadi_solver_name == "fatrop":
-        casadi_nlp_opts["expand"] = True
-        casadi_nlp_opts["fatrop"] = {"mu_init": 0.1}
-        casadi_nlp_opts["structure_detection"] = "auto"
-        casadi_nlp_opts["debug"] = True
-    casadi_ocp_solver = AcadosCasadiOcpSolver(ocp, verbose=False, solver=casadi_solver_name, casadi_nlp_opts=casadi_nlp_opts)
+        casadi_solver_opts["expand"] = True
+        casadi_solver_opts["fatrop"] = {"mu_init": 0.1}
+        casadi_solver_opts["structure_detection"] = "auto"
+        casadi_solver_opts["debug"] = True
+    casadi_ocp_solver = AcadosCasadiOcpSolver(ocp, verbose=False, solver=casadi_solver_name, casadi_solver_opts=casadi_solver_opts)
     # casadi_ocp_solver.load_iterate_from_obj(result_acados)
     casadi_ocp_solver.solve()
     result_casadi = casadi_ocp_solver.store_iterate_to_obj()
