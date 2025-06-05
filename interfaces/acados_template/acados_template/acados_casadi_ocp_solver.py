@@ -505,14 +505,13 @@ class AcadosCasadiOcpSolver:
             offset = 0
             for i in range(dims.N+1):
                 if i == 0:
-                    self.set(i, 'lam', value_[offset:offset+2*(dims.nbx_0+dims.nbu+dims.ng+dims.nh_0+dims.nphi_0)])
-                    offset += 2 * (dims.nbx_0+dims.nbu+dims.ng+dims.nh_0+dims.nphi_0)
+                    n_lam_i = 2 * (dims.nbx_0 + dims.nbu + dims.ng + dims.nh_0 + dims.nphi_0)
                 elif i < dims.N:
-                    self.set(i, 'lam', value_[offset:offset+2*(dims.nbx+dims.nbu+dims.ng+dims.nh+dims.nphi)])
-                    offset += 2 * (dims.nbx_0+dims.nbu+dims.ng+dims.nh_0+dims.nphi_0)
+                    n_lam_i = 2 * (dims.nbx + dims.nbu + dims.ng + dims.nh + dims.nphi)
                 elif i == dims.N:
-                    self.set(i, 'lam', value_[offset:offset+2*(dims.nbx_e+dims.ng_e+dims.nh_e+dims.nphi_e)])
-                    offset += 2 * (dims.nbx_0+dims.nbu+dims.ng+dims.nh_0+dims.nphi_0)
+                    n_lam_i = 2 * (dims.nbx_e + dims.ng_e + dims.nh_e + dims.nphi_e)
+                self.set(i, 'lam', value_[offset : offset + n_lam_i])
+                offset += n_lam_i
         else:
             raise NotImplementedError(f"Field '{field_}' is not yet implemented in set_flat().")
 
