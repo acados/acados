@@ -232,10 +232,12 @@ class AcadosCasadiOcpSolver:
                     if with_hessian:
                         lam_phi_0 = ca_symbol(f'lam_phi_0', dims.nphi_0, 1)
                         lam_g.append(lam_phi_0)
-                        # always use CONL Hessian approximation here, disregarding inner derivative
-                        hess = ca.vertcat(*[ca.hessian(model.con_phi_expr_0[i], model.con_r_in_phi_0)[0] for i in range(dims.nphi_0)])
-                        hess = ca.substitute(hess, model.con_r_in_phi_0, model.con_r_expr_0)
-                        hess_l += hess
+                        # always use CONL Hessian approximation here, disregarding inner second derivative
+                        outer_hess_r = ca.vertcat(*[ca.hessian(model.con_phi_expr_0[i], model.con_r_in_phi_0)[0] for i in range(dims.nphi_0)])
+                        outer_hess_r = ca.substitute(outer_hess_r, model.con_r_in_phi_0, model.con_r_expr_0)
+                        r_in_nlp = ca.substitute(model.con_r_expr_0, model.x, xtraj_node[-1])
+                        dr_dw = ca.jacobian(r_in_nlp, w)
+                        hess_l += dr_dw.T @ outer_hess_r @ dr_dw
 
                 index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh_0 + dims.nphi_0)))
                 offset += dims.nh_0 + dims.nphi_0
@@ -260,10 +262,12 @@ class AcadosCasadiOcpSolver:
                     if with_hessian:
                         lam_phi = ca_symbol(f'lam_phi', dims.nphi, 1)
                         lam_g.append(lam_phi)
-                        # always use CONL Hessian approximation here, disregarding inner derivative
-                        hess = ca.vertcat(*[ca.hessian(model.con_phi_expr[i], model.con_r_in_phi)[0] for i in range(dims.nphi)])
-                        hess = ca.substitute(hess, model.con_r_in_phi, model.con_r_expr)
-                        hess_l += hess
+                        # always use CONL Hessian approximation here, disregarding inner second derivative
+                        outer_hess_r = ca.vertcat(*[ca.hessian(model.con_phi_expr[i], model.con_r_in_phi)[0] for i in range(dims.nphi)])
+                        outer_hess_r = ca.substitute(outer_hess_r, model.con_r_in_phi, model.con_r_expr)
+                        r_in_nlp = ca.substitute(model.con_r_expr, model.x, xtraj_node[-1])
+                        dr_dw = ca.jacobian(r_in_nlp, w)
+                        hess_l += dr_dw.T @ outer_hess_r @ dr_dw
 
                 index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh + dims.nphi)))
                 offset += dims.nphi + dims.nh
@@ -279,7 +283,6 @@ class AcadosCasadiOcpSolver:
                     lam_h_e = ca_symbol(f'lam_h_e', dims.nh_e, 1)
                     lam_g.append(lam_h_e)
                     if ocp.solver_options.hessian_approx == 'EXACT' and ocp.solver_options.exact_hess_constr:
-                        breakpoint()
                         adj = ca.jtimes(h_e_nlp_expr, w, lam_h_e, True)
                         hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
 
@@ -290,10 +293,12 @@ class AcadosCasadiOcpSolver:
                     if with_hessian:
                         lam_phi_e = ca_symbol(f'lam_phi_e', dims.nphi_e, 1)
                         lam_g.append(lam_phi_e)
-                        # always use CONL Hessian approximation here, disregarding inner derivative
-                        hess = ca.vertcat(*[ca.hessian(model.con_phi_expr_e[i], model.con_r_in_phi_e)[0] for i in range(dims.nphi_e)])
-                        hess = ca.substitute(hess, model.con_r_in_phi_e, model.con_r_expr_e)
-                        hess_l += hess
+                        # always use CONL Hessian approximation here, disregarding inner second derivative
+                        outer_hess_r = ca.vertcat(*[ca.hessian(model.con_phi_expr_e[i], model.con_r_in_phi_e)[0] for i in range(dims.nphi_e)])
+                        outer_hess_r = ca.substitute(outer_hess_r, model.con_r_in_phi_e, model.con_r_expr_e)
+                        r_in_nlp = ca.substitute(model.con_r_expr_e, model.x, xtraj_node[-1])
+                        dr_dw = ca.jacobian(r_in_nlp, w)
+                        hess_l += dr_dw.T @ outer_hess_r @ dr_dw
 
                 index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh_e + dims.nphi_e)))
                 offset += dims.nh_e + dims.nphi_e
@@ -505,14 +510,13 @@ class AcadosCasadiOcpSolver:
             offset = 0
             for i in range(dims.N+1):
                 if i == 0:
-                    self.set(i, 'lam', value_[offset:offset+2*(dims.nbx_0+dims.nbu+dims.ng+dims.nh_0+dims.nphi_0)])
-                    offset += 2 * (dims.nbx_0+dims.nbu+dims.ng+dims.nh_0+dims.nphi_0)
+                    n_lam_i = 2 * (dims.nbx_0 + dims.nbu + dims.ng + dims.nh_0 + dims.nphi_0)
                 elif i < dims.N:
-                    self.set(i, 'lam', value_[offset:offset+2*(dims.nbx+dims.nbu+dims.ng+dims.nh+dims.nphi)])
-                    offset += 2 * (dims.nbx_0+dims.nbu+dims.ng+dims.nh_0+dims.nphi_0)
+                    n_lam_i = 2 * (dims.nbx + dims.nbu + dims.ng + dims.nh + dims.nphi)
                 elif i == dims.N:
-                    self.set(i, 'lam', value_[offset:offset+2*(dims.nbx_e+dims.ng_e+dims.nh_e+dims.nphi_e)])
-                    offset += 2 * (dims.nbx_0+dims.nbu+dims.ng+dims.nh_0+dims.nphi_0)
+                    n_lam_i = 2 * (dims.nbx_e + dims.ng_e + dims.nh_e + dims.nphi_e)
+                self.set(i, 'lam', value_[offset : offset + n_lam_i])
+                offset += n_lam_i
         else:
             raise NotImplementedError(f"Field '{field_}' is not yet implemented in set_flat().")
 
@@ -597,25 +601,25 @@ class AcadosCasadiOcpSolver:
             self.lam_g0[self.index_map['pi_in_lam_g'][stage]] = -value_.flatten()
         elif field == 'lam':
             if stage == 0:
-                bx_length = dims.nbx_0
-                bu_length = dims.nbu
-                h_length = dims.ng + dims.nh_0 + dims.nphi_0
+                nbx = dims.nbx_0
+                nbu = dims.nbu
+                n_ghphi = dims.ng + dims.nh_0 + dims.nphi_0
             elif stage < dims.N:
-                bx_length = dims.nbx
-                bu_length = dims.nbu
-                h_length = dims.ng + dims.nh + dims.nphi
+                nbx = dims.nbx
+                nbu = dims.nbu
+                n_ghphi = dims.ng + dims.nh + dims.nphi
             elif stage == dims.N:
-                bx_length = dims.nbx_e
-                bu_length = 0
-                h_length = dims.ng_e + dims.nh_e + dims.nphi_e
+                nbx = dims.nbx_e
+                nbu = 0
+                n_ghphi = dims.ng_e + dims.nh_e + dims.nphi_e
 
-            offset_u = (bx_length+bu_length+h_length)
-            lbu_lam = value_[:bu_length] if bu_length else np.empty((dims.nu,))
-            lbx_lam = value_[bu_length:bu_length+bx_length] if bx_length else np.empty((dims.nx,))
-            lg_lam = value_[bu_length+bx_length:bu_length+bx_length+h_length]
-            ubu_lam = value_[offset_u:offset_u+bu_length] if bu_length else np.empty((dims.nu,))
-            ubx_lam = value_[offset_u+bu_length:offset_u+bu_length+bx_length] if bx_length else np.empty((dims.nx,))
-            ug_lam = value_[offset_u+bu_length+bx_length:offset_u+bu_length+bx_length+h_length]
+            offset_u = (nbx+nbu+n_ghphi)
+            lbu_lam = value_[:nbu] if nbu else np.empty((dims.nu,))
+            lbx_lam = value_[nbu:nbu+nbx] if nbx else np.empty((dims.nx,))
+            lg_lam = value_[nbu+nbx:nbu+nbx+n_ghphi]
+            ubu_lam = value_[offset_u:offset_u+nbu] if nbu else np.empty((dims.nu,))
+            ubx_lam = value_[offset_u+nbu:offset_u+nbu+nbx] if nbx else np.empty((dims.nx,))
+            ug_lam = value_[offset_u+nbu+nbx:offset_u+nbu+nbx+n_ghphi]
             if stage != dims.N:
                 self.lam_x0[self.index_map['x_in_w'][stage]+self.index_map['u_in_w'][stage]] = np.concatenate((ubx_lam-lbx_lam, ubu_lam-lbu_lam))
                 self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] =  ug_lam-lg_lam
