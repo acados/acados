@@ -145,6 +145,8 @@ class AcadosOcpOptions:
         self.__custom_update_copy = True
         self.__num_threads_in_batch_solve: int = 1
         self.__with_batch_functionality: bool = False
+        self.__with_anderson_acceleration: bool = False
+
 
     @property
     def qp_solver(self):
@@ -593,6 +595,17 @@ class AcadosOcpOptions:
         Default: 1
         """
         return self.__as_rti_iter
+
+    @property
+    def with_anderson_acceleration(self):
+        """
+        Determines if Anderson acceleration is performed.
+        Only supported for globalization == 'FIXED_STEP'.
+
+        Type: bool
+        Default: False
+        """
+        return self.__with_anderson_acceleration
 
 
     @property
@@ -1236,7 +1249,7 @@ class AcadosOcpOptions:
         Default: 1.
         """
         return self.__num_threads_in_batch_solve
-    
+
     @property
     def with_batch_functionality(self):
         """
@@ -1780,6 +1793,12 @@ class AcadosOcpOptions:
         else:
             raise ValueError('Invalid as_rti_iter value. as_rti_iter must be a nonnegative int.')
 
+    @with_anderson_acceleration.setter
+    def with_anderson_acceleration(self, with_anderson_acceleration):
+        if not isinstance(with_anderson_acceleration, bool):
+            raise TypeError('Invalid with_anderson_acceleration value, must be bool.')
+        self.__with_anderson_acceleration = with_anderson_acceleration
+
     @as_rti_level.setter
     def as_rti_level(self, as_rti_level):
         if as_rti_level in [0, 1, 2, 3, 4]:
@@ -2013,7 +2032,7 @@ class AcadosOcpOptions:
         if isinstance(with_batch_functionality, bool):
             self.__with_batch_functionality = with_batch_functionality
         else:
-            raise Exception('Invalid with_batch_functionality value. Expected bool.')
+            raise TypeError('Invalid with_batch_functionality value. Expected bool.')
 
 
     def set(self, attr, value):

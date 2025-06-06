@@ -1690,6 +1690,12 @@ class AcadosOcpSolver:
             else:
                 raise KeyError(f"res_comp_all is not available for nlp_solver_type {self.__solver_options['nlp_solver_type']}.")
 
+        elif field_ == 'res_all':
+            return np.concatenate((np.atleast_2d(self.get_stats('res_stat_all')),
+                                   np.atleast_2d(self.get_stats('res_eq_all')),
+                                   np.atleast_2d(self.get_stats('res_ineq_all')),
+                                   np.atleast_2d(self.get_stats('res_comp_all'))), axis=0).transpose()
+
         else:
             raise ValueError(f'AcadosOcpSolver.get_stats(): \'{field}\' is not a valid argument.'
                     + f'\n Possible values are {fields}.')

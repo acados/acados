@@ -29,82 +29,19 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosOcp, AcadosOcpSolver
 from utils import plot_furuta_pendulum, plot_time_per_solve
-from furuta_model import get_furuta_model
+from furuta_common import get_furuta_model, setup_ocp_solver
 from integrator_experiment import setup_acados_integrator, IntegratorSetting
 import numpy as np
-import scipy.linalg
-from casadi import vertcat
 
-def setup(x0, umax, dt_0, N_horizon, Tf, RTI=False, timeout_max_time=0, heuristic="ZERO"):
-    ocp = AcadosOcp()
-
-    model = get_furuta_model()
-    ocp.model = model
-
-    nx = model.x.rows()
-    nu = model.u.rows()
-    ny = nx + nu
-    ny_e = nx
-
-    ocp.solver_options.N_horizon = N_horizon
-
-    # set cost module
-    ocp.cost.cost_type = 'NONLINEAR_LS'
-    ocp.cost.cost_type_e = 'NONLINEAR_LS'
-
-    Q_mat = np.diag([50., 500., 1., 1.])
-    R_mat = np.diag([1e3])
-
-    ocp.cost.W = scipy.linalg.block_diag(Q_mat, R_mat)
-    ocp.cost.W_e = Q_mat
-
-    ocp.model.cost_y_expr = vertcat(model.x, model.u)
-    ocp.model.cost_y_expr_e = model.x
-    ocp.cost.yref = np.zeros((ny, ))
-    ocp.cost.yref_e = np.zeros((ny_e, ))
-
-    # set constraints
-    ocp.constraints.lbu = np.array([-umax])
-    ocp.constraints.ubu = np.array([+umax])
-    ocp.constraints.idxbu = np.array([0])
-
-    ocp.constraints.x0 = x0
-
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
-    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
-    ocp.solver_options.integrator_type = 'ERK'
-
-    # NOTE we use a nonuniform grid!
-    ocp.solver_options.time_steps = np.array([dt_0] + [(Tf-dt_0)/(N_horizon-1)]*(N_horizon-1))
-    ocp.solver_options.sim_method_num_steps = np.array([1] + [2]*(N_horizon-1))
-    ocp.solver_options.levenberg_marquardt = 1e-6
-    ocp.solver_options.nlp_solver_max_iter = 20
-
-    ocp.solver_options.nlp_solver_type = 'SQP_RTI' if RTI else 'SQP'
-    ocp.solver_options.qp_solver_cond_N = N_horizon
-
-    ocp.solver_options.tf = Tf
-
-    # timeout
-    ocp.solver_options.timeout_max_time = timeout_max_time
-    ocp.solver_options.timeout_heuristic = heuristic
-
-    solver_json = 'acados_ocp_' + model.name + '.json'
-    ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)
-
-    # setup plant simulator
+def get_plant_integrator_settings():
     integrator_settings = IntegratorSetting(integrator_type="IRK",
                                             num_stages=2,
                                             num_steps=2,
                                             newton_iter=20,
                                             newton_tol=1e-10,
                                             )
-    integrator = setup_acados_integrator(model, dt_0, integrator_settings)
-
-    return ocp_solver, integrator
-
+    return integrator_settings
 
 def main(use_RTI=False, timeout_max_time=0., heuristic="ZERO"):
 
@@ -115,7 +52,11 @@ def main(use_RTI=False, timeout_max_time=0., heuristic="ZERO"):
     N_horizon = 8   # number of shooting intervals
     dt_0 = 0.025    # sampling time = length of first shooting interval
 
-    ocp_solver, integrator = setup(x0, umax, dt_0, N_horizon, Tf, use_RTI, timeout_max_time, heuristic)
+    ocp_solver = setup_ocp_solver(x0, umax, dt_0, N_horizon, Tf, use_RTI, timeout_max_time, heuristic)
+    # setup plant simulator
+    integrator_settings = get_plant_integrator_settings()
+    model = get_furuta_model()
+    integrator = setup_acados_integrator(model, dt_0, integrator_settings)
 
     nx = ocp_solver.acados_ocp.dims.nx
     nu = ocp_solver.acados_ocp.dims.nu
@@ -161,7 +102,6 @@ def main(use_RTI=False, timeout_max_time=0., heuristic="ZERO"):
         else:
             # solve ocp and get next control input
             simU[i,:] = ocp_solver.solve_for_x0(x0_bar = simX[i, :], fail_on_nonzero_status=False)
-
             t[i] = ocp_solver.get_stats('time_tot')
 
         # simulate system
@@ -190,10 +130,10 @@ def main(use_RTI=False, timeout_max_time=0., heuristic="ZERO"):
 
 if __name__ == '__main__':
     main(use_RTI=False, timeout_max_time=0.)
-    main(use_RTI=False, timeout_max_time=1*1e-3, heuristic="ZERO")
-    main(use_RTI=False, timeout_max_time=1*1e-3, heuristic="LAST")
-    main(use_RTI=False, timeout_max_time=1*1e-3, heuristic="MAX_CALL")
-    main(use_RTI=False, timeout_max_time=1*1e-3, heuristic="MAX_OVERALL")
+    # main(use_RTI=False, timeout_max_time=1*1e-3, heuristic="ZERO")
+    # main(use_RTI=False, timeout_max_time=1*1e-3, heuristic="LAST")
+    # main(use_RTI=False, timeout_max_time=1*1e-3, heuristic="MAX_CALL")
+    # main(use_RTI=False, timeout_max_time=1*1e-3, heuristic="MAX_OVERALL")
 
-    main(use_RTI=True) # timeout not implemented for RTI
+    # main(use_RTI=True) # timeout not implemented for RTI
 
