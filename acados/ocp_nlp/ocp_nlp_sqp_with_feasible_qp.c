@@ -1023,6 +1023,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
             ocp_nlp_initialize_qp_from_nlp(config, dims, qp_in, nlp_out, qp_out);
         }
     }
+    printf("Iter after solve nominal: %d\n", nlp_mem->iter);
 
     if (mem->qps_solved_in_iter < 2 && (!solve_feasibility_qp || opts->use_constraint_hessian_in_feas_qp))
     {
@@ -1099,11 +1100,8 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
 #endif
 
     // exit conditions on QP status
-    if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
+    if (qp_status!=ACADOS_SUCCESS)
     {
-        // increment nlp_mem->iter to return full statistics and improve output below.
-        nlp_mem->iter++;
-
         if (nlp_opts->print_level > 1)
         {
             printf("\n Failed to solve the following QP:\n");
@@ -1530,11 +1528,13 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
         }
         search_direction_status = byrd_omojokun_direction_computation(dims, config, opts, nlp_opts, nlp_in, nlp_out, mem, work, timer_tot);
 
+        printf("iter before rescale: %d\n", mem->nlp_mem->iter);
         // rescale the slacks such that predicted infeasibility reduction correctly calculated!
         rescale_feasibility_qp_slack_variables(config, dims, mem, opts, mem->relaxed_qp_out);
-
+        printf("iter after rescale: %d\n", mem->nlp_mem->iter);
 
         double l1_inf_QP_feasibility = calculate_qp_l1_infeasibility(dims, mem, work, opts, mem->relaxed_qp_in, mem->relaxed_qp_out);
+        printf("l1_inf_QP_feasibility: %.4e\n", l1_inf_QP_feasibility);
         if (config->globalization->needs_objective_value() == 1)
         {
             mem->pred_l1_inf_QP = calculate_pred_l1_inf(opts, mem, l1_inf_QP_feasibility);
