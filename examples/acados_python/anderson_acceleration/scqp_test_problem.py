@@ -31,7 +31,8 @@
 
 import casadi as ca
 import numpy as np
-from acados_template import AcadosModel, AcadosOcp, ACADOS_INFTY
+from acados_template import AcadosModel, AcadosOcp, ACADOS_INFTY, latexify_plot
+import matplotlib.pyplot as plt
 
 
 NX = 4
@@ -146,3 +147,71 @@ def build_acados_test_problem(mode='GN', with_anderson_acceleration=False, globa
         ocp.solver_options.print_level = 4
 
     return ocp
+
+
+
+def plot_pendulum(shooting_nodes, U, X_true, X_est=None, Y_measured=None, latexify=True, plt_show=True, X_true_label=None,
+    time_label='$t$', x_labels=['$x$', r'$\theta$', '$v$', r'$\dot{\theta}$'],
+    title = None
+                  ):
+    """
+    Params:
+        shooting_nodes: time values of the discretization
+        u_max: maximum absolute value of u
+        U: arrray with shape (N_sim-1, nu) or (N_sim, nu)
+        X_true: arrray with shape (N_sim, nx)
+        X_est: arrray with shape (N_sim-N_mhe, nx)
+        Y_measured: array with shape (N_sim, ny)
+        latexify: latex style plots
+    """
+
+    if latexify:
+        latexify_plot()
+
+    WITH_ESTIMATION = X_est is not None and Y_measured is not None
+
+    N_sim = X_true.shape[0]
+    nx = X_true.shape[1]
+
+    Tf = shooting_nodes[N_sim-1]
+    t = shooting_nodes
+
+    Ts = t[1] - t[0]
+    if WITH_ESTIMATION:
+        N_mhe = N_sim - X_est.shape[0]
+        t_mhe = np.linspace(N_mhe * Ts, Tf, N_sim-N_mhe)
+
+    plt.figure()
+    plt.subplot(nx+1, 1, 1)
+    line, = plt.step(t, np.append([U[0]], U))
+    if X_true_label is not None:
+        line.set_label(X_true_label)
+    else:
+        line.set_color('r')
+    if title is not None:
+        plt.title(title)
+    plt.ylabel('$u$')
+    plt.xlabel(time_label)
+    plt.grid()
+
+
+    for i in range(nx):
+        plt.subplot(nx+1, 1, i+2)
+        line, = plt.plot(t, X_true[:, i], label='true')
+        if X_true_label is not None:
+            line.set_label(X_true_label)
+
+        if WITH_ESTIMATION:
+            plt.plot(t_mhe, X_est[:, i], '--', label='estimated')
+            plt.plot(t, Y_measured[:, i], 'x', label='measured')
+
+        plt.ylabel(x_labels[i])
+        plt.xlabel('$t$')
+        plt.grid()
+        plt.legend(loc=1)
+
+    plt.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace=0.4)
+
+    if plt_show:
+        plt.show()
+    return

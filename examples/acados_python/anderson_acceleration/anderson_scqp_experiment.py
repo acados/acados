@@ -33,11 +33,11 @@ from dataclasses import dataclass
 import numpy as np
 from acados_template import AcadosOcpSolver, AcadosOcpFlattenedIterate, AcadosCasadiOcpSolver, plot_convergence
 
-from scqp_test_problem import build_acados_test_problem
+from scqp_test_problem import build_acados_test_problem, plot_pendulum
+
+import matplotlib.pyplot as plt
 
 np.random.seed(0)
-
-
 
 @dataclass
 class ExperimentAcadosSettings:
@@ -84,8 +84,8 @@ def solve_with_acados(settings: ExperimentAcadosSettings,
     kkt_norms = np.linalg.norm(res_all, axis=1)
     sol = acados_solver.store_iterate_to_flat_obj()
     acados_solver.dump_last_qp_to_json("qp.json", overwrite=True)
-    qp_diag = acados_solver.qp_diagnostics()
-    print("qp_diag: ", qp_diag)
+    # qp_diag = acados_solver.qp_diagnostics()
+    # print("qp_diag: ", qp_diag)
 
     # get solution
     xtraj = np.zeros((N_horizon+1, ocp.dims.nx))
@@ -103,11 +103,12 @@ def solve_with_acados(settings: ExperimentAcadosSettings,
     return results
 
 
-def solve_acados_formulation_with_ipopt(initial_guess: AcadosOcpFlattenedIterate = None):
-    ocp = build_acados_test_problem(mode="EXACT")
+def solve_acados_formulation_with_ipopt(initial_guess: AcadosOcpFlattenedIterate = None,
+                                        mode="EXACT"):
+    ocp = build_acados_test_problem(mode=mode)
 
     N_horizon = ocp.solver_options.N_horizon
-    solver = AcadosCasadiOcpSolver(ocp)
+    solver = AcadosCasadiOcpSolver(ocp, use_acados_hessian=True)
 
     if initial_guess is not None:
         solver.load_iterate_from_flat_obj(initial_guess)
@@ -125,10 +126,10 @@ def solve_acados_formulation_with_ipopt(initial_guess: AcadosOcpFlattenedIterate
     return results
 
 def raise_test_failure_message(msg: str):
-    print(f"ERROR: {msg}")
-    # raise Exception(msg)
+    # print(f"ERROR: {msg}")
+    raise Exception(msg)
 
-def main():
+def main(plot_sol=False):
     ref_settings = ExperimentAcadosSettings(method='SCQP', with_anderson_acceleration=False, globalization='MERIT_BACKTRACKING')
     ref_res = solve_with_acados(ref_settings)
 
@@ -145,8 +146,16 @@ def main():
         lam = np.abs(sol.lam + 1 * np.random.randn(sol.lam.shape[0])),
     )
 
-    ipopt_res = solve_acados_formulation_with_ipopt(initial_guess=sol)
-    # ipopt_res = solve_acados_formulation_with_ipopt()
+    # ipopt_res = solve_acados_formulation_with_ipopt(initial_guess=sol, mode='EXACT')
+    # NOTE: the above converges to a worse local optimum.
+    ipopt_res = solve_acados_formulation_with_ipopt(initial_guess=sol, mode='SCQP')
+
+    if plot_sol:
+        ocp = build_acados_test_problem()
+        ocp.make_consistent()
+        plot_pendulum(ocp.solver_options.shooting_nodes,
+                    ipopt_res.utraj, ipopt_res.xtraj, plt_show=False)
+        plt.show()
 
     # setup acados guess to match ipopt solution
     acados_guess.x = ipopt_res.xtraj.flatten()
@@ -180,15 +189,6 @@ def main():
         lam = np.abs(sol.lam + 1 * np.random.randn(sol.lam.shape[0])),
     )
 
-    # plot solution
-    # plot_pendulum(np.linspace(0, ocp_problem.dt*ocp_problem.N, ocp_problem.N+1),
-    #               ref_res.utraj, ref_res.xtraj, show=False)
-    # plot_pendulum(np.linspace(0, ocp_problem.dt*ocp_problem.N, ocp_problem.N+1),
-    #               ipopt_res.utraj, ipopt_res.xtraj, show=False)
-    # plot_pendulum(np.linspace(0, ocp_problem.dt*ocp_problem.N, ocp_problem.N+1),
-    #             ref_res_2.utraj, ref_res_2.xtraj, show=False)
-    # plt.show()
-
     # Experiment
     settings = [
         ExperimentAcadosSettings(method='EXACT', with_anderson_acceleration=False, max_iter=100),
@@ -215,9 +215,9 @@ def main():
         if n_iter > max_iter or n_iter < min_iter:
             raise_test_failure_message(f"Number of iterations {n_iter} not in expected range [{min_iter}, {max_iter}] for {method}")
 
-    assert_convergence_iterations(res_anderson, 11, 24, "Anderson")
+    assert_convergence_iterations(res_anderson, 8, 12, "Anderson")
     assert_convergence_iterations(res_exact, 4, 6, "Exact")
-    assert_convergence_iterations(res_scqp, 36, 42, "SCQP")
+    assert_convergence_iterations(res_scqp, 25, 35, "SCQP")
 
     # assert all solutions are the same
     ref_sol = results[0].sol
