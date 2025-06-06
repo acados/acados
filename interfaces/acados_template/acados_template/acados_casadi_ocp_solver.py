@@ -31,18 +31,17 @@
 
 import casadi as ca
 
-from typing import Union, Tuple, Optional
+from typing import Union, Optional
 
 import numpy as np
 
 from .utils import casadi_length, is_casadi_SX
 from .acados_ocp import AcadosOcp
-from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
+from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpFlattenedIterate
 
-class AcadosCasadiOcpSolver:
+class AcadosCasadiOcp:
 
-    @classmethod
-    def create_casadi_nlp_formulation(cls, ocp: AcadosOcp, with_hessian=False) -> Tuple[dict, dict, np.ndarray, dict, Optional[ca.Function]]:
+    def __init__(self, ocp: AcadosOcp, with_hessian=False):
         """
         Creates an equivalent CasADi NLP formulation of the OCP.
         Experimental, not fully implemented yet.
@@ -50,6 +49,17 @@ class AcadosCasadiOcpSolver:
         :return: nlp_dict, bounds_dict, w0 (initial guess)
         """
         ocp.make_consistent()
+
+        # create index map for variables
+        index_map = {
+            # indices of variables within w
+            'x_in_w': [],
+            'u_in_w': [],
+            # indices of dynamic constraints within g in casadi formulation
+            'pi_in_lam_g': [],
+            # indicies to [g, h, phi] in acados formulation within lam_g in casadi formulation
+            'lam_gnl_in_lam_g': []
+        }
 
         # unpack
         model = ocp.model
@@ -67,18 +77,6 @@ class AcadosCasadiOcpSolver:
             raise NotImplementedError("AcadosCasadiOcpSolver does not support general nonlinear constraints (g) yet.")
         if ocp.solver_options.integrator_type not in ["DISCRETE", "ERK"]:
             raise NotImplementedError(f"AcadosCasadiOcpSolver does not support integrator type {ocp.solver_options.integrator_type} yet.")
-
-        # create index map for variables
-        index_map = {
-            # indices of variables within w
-            'x_in_w': [],
-            'u_in_w': [],
-            # indices of dynamic constraints within g in casadi formulation
-            'pi_in_lam_g': [],
-            # indicies to [g, h, phi] in acados formulation within lam_g in casadi formulation
-            'lam_gnl_in_lam_g': []
-        }
-
         if any([dims.ns_0, dims.ns, dims.ns_e]):
             raise NotImplementedError("CasADi NLP formulation not implemented for formulations with soft constraints yet.")
 
@@ -333,6 +331,7 @@ class AcadosCasadiOcpSolver:
             assert casadi_length(lam_g_vec) == casadi_length(ca.vertcat(*g)), f"Number of nonlinear constraints does not match the expected number, got {casadi_length(lam_g_vec)} != {casadi_length(ca.vertcat(*g))}."
         else:
             nlp_hess_l_custom = None
+            hess_l = None
 
         # sanity check
 
@@ -341,20 +340,80 @@ class AcadosCasadiOcpSolver:
         bounds = {"lbx": lbw, "ubx": ubw, "lbg": ca.vertcat(*lbg), "ubg": ca.vertcat(*ubg)}
         w0 = np.concatenate(w0_list)
 
-        return nlp, bounds, w0, index_map, nlp_hess_l_custom
+        self.__nlp = nlp
+        self.__bounds = bounds
+        self.__w0 = w0
+        self.__index_map = index_map
+        self.__nlp_hess_l_custom = nlp_hess_l_custom
+        self.__hess_approx_expr = hess_l
 
+    @property
+    def nlp(self):
+        """
+        Dict containing all symbolics needed to create a `casadi.nlpsol` solver.
+        """
+        return self.__nlp
 
-    def __init__(self, acados_ocp: AcadosOcp, solver: str = "ipopt", verbose=True,
+    @property
+    def w0(self):
+        """
+        Default initial guess for primal variable vector w for given NLP.
+        """
+        return self.__w0
+
+    @property
+    def bounds(self):
+        """
+        Dict containing all bounds needed to call a `casadi.nlpsol` solver.
+        """
+        return self.__bounds
+
+    @property
+    def index_map(self):
+        """
+        Dict containing indices corresponding to stage-wise values of the original OCP, specifically:
+        - 'x_in_w': indices of x variables within primal variable vector w
+        - 'u_in_w': indices of u variables within primal variable vector w
+        - 'pi_in_lam_g': indices of dynamic constraints within g in casadi formulation
+        - 'lam_gnl_in_lam_g' indicies to [g, h, phi] in acados formulation within lam_g in casadi formulation
+        """
+        return self.__index_map
+
+    @property
+    def nlp_hess_l_custom(self):
+        """
+        CasADi Function that computes the Hessian approximation of the Lagrangian in the format required by `casadi.nlpsol`, i.e. as upper triangular matrix.
+        The Hessian is set up to match the Hessian that would be used in acados and depends on the solver options.
+        """
+        return self.__nlp_hess_l_custom
+
+    @property
+    def hess_approx_expr(self):
+        """
+        CasADi expression corresponding to the Hessian approximation of the Lagrangian.
+        Expression corresponding to what is output by the `nlp_hess_l_custom` function.
+        """
+        return self.__hess_approx_expr
+
+class AcadosCasadiOcpSolver:
+
+    def __init__(self, ocp: AcadosOcp, solver: str = "ipopt", verbose=True,
                  casadi_solver_opts: Optional[dict] = None,
                  use_acados_hessian: bool = False):
 
-        if not isinstance(acados_ocp, AcadosOcp):
-            raise TypeError('acados_ocp should be of type AcadosOcp.')
+        if not isinstance(ocp, AcadosOcp):
+            raise TypeError('ocp should be of type AcadosOcp.')
 
-        self.acados_ocp = acados_ocp
+        self.ocp = ocp
 
         # create casadi NLP formulation
-        self.casadi_nlp, self.bounds, self.w0, self.index_map, self.nlp_hess_l_custom = self.create_casadi_nlp_formulation(acados_ocp, with_hessian=use_acados_hessian)
+        casadi_nlp_obj = AcadosCasadiOcp(ocp, with_hessian=use_acados_hessian)
+
+        self.casadi_nlp = casadi_nlp_obj.nlp
+        self.bounds = casadi_nlp_obj.bounds
+        self.w0 = casadi_nlp_obj.w0
+        self.index_map = casadi_nlp_obj.index_map
+        self.nlp_hess_l_custom = casadi_nlp_obj.nlp_hess_l_custom
 
         # create NLP solver
         if casadi_solver_opts is None:
@@ -424,7 +483,7 @@ class AcadosCasadiOcpSolver:
             raise TypeError('stage should be integer.')
         if self.nlp_sol is None:
             raise ValueError('No solution available. Please call solve() first.')
-        dims = self.acados_ocp.dims
+        dims = self.ocp.dims
         if field == 'x':
             return self.nlp_sol_w[self.index_map['x_in_w'][stage]].flatten()
         elif field == 'u':
@@ -469,7 +528,7 @@ class AcadosCasadiOcpSolver:
         """
         if self.nlp_sol is None:
             raise ValueError('No solution available. Please call solve() first.')
-        dims = self.acados_ocp.dims
+        dims = self.ocp.dims
         result = []
 
         if field_ in ['x', 'lam', 'sl', 'su']:
@@ -496,7 +555,7 @@ class AcadosCasadiOcpSolver:
 
         :param field: string in ['x', 'u', 'lam', pi]
         """
-        dims = self.acados_ocp.dims
+        dims = self.ocp.dims
         if field_ == 'x':
             for i in range(dims.N+1):
                 self.set(i, 'x', value_[i*dims.nx:(i+1)*dims.nx])
@@ -530,8 +589,8 @@ class AcadosCasadiOcpSolver:
         d = {}
         for field in ["x", "u", "z", "sl", "su", "pi", "lam"]:
             traj = []
-            for n in range(self.acados_ocp.dims.N+1):
-                if n < self.acados_ocp.dims.N or not (field in ["u", "pi", "z"]):
+            for n in range(self.ocp.dims.N+1):
+                if n < self.ocp.dims.N or not (field in ["u", "pi", "z"]):
                     traj.append(self.get(n, field))
 
             d[f"{field}_traj"] = traj
@@ -591,7 +650,7 @@ class AcadosCasadiOcpSolver:
         :param field: string in ['x', 'u', 'pi', 'lam']
         :value_:
         """
-        dims = self.acados_ocp.dims
+        dims = self.ocp.dims
 
         if field == 'x':
             self.w0[self.index_map['x_in_w'][stage]] = value_.flatten()
