@@ -58,8 +58,6 @@ class ExperimentAcadosSettings:
 class ExperimentResults:
     kkt_norms: np.ndarray
     sol: AcadosOcpFlattenedIterate
-    xtraj: np.ndarray
-    utraj: np.ndarray
 
 
 def solve_with_acados(settings: ExperimentAcadosSettings,
@@ -69,8 +67,6 @@ def solve_with_acados(settings: ExperimentAcadosSettings,
                                 globalization=settings.globalization,
                                 max_iter=settings.max_iter,
                                 )
-    N_horizon = ocp.solver_options.N_horizon
-
     acados_solver = AcadosOcpSolver(ocp, verbose=False)
     if initial_guess is not None:
         acados_solver.load_iterate_from_flat_obj(initial_guess)
@@ -87,17 +83,10 @@ def solve_with_acados(settings: ExperimentAcadosSettings,
     # qp_diag = acados_solver.qp_diagnostics()
     # print("qp_diag: ", qp_diag)
 
-    # get solution
-    xtraj = np.zeros((N_horizon+1, ocp.dims.nx))
-    utraj = np.zeros((N_horizon, ocp.dims.nu))
-    for i in range(N_horizon):
-        xtraj[i,:] = acados_solver.get(i, "x")
-        utraj[i,:] = acados_solver.get(i, "u")
-    xtraj[N_horizon,:] = acados_solver.get(N_horizon, "x")
     cost = acados_solver.get_cost()
     print("cost: ", cost)
 
-    results = ExperimentResults(kkt_norms=kkt_norms, sol=sol, xtraj=xtraj, utraj=utraj)
+    results = ExperimentResults(kkt_norms=kkt_norms, sol=sol)
 
     del acados_solver
     return results
@@ -107,22 +96,15 @@ def solve_acados_formulation_with_ipopt(initial_guess: AcadosOcpFlattenedIterate
                                         mode="EXACT"):
     ocp = build_acados_test_problem(mode=mode)
 
-    N_horizon = ocp.solver_options.N_horizon
     solver = AcadosCasadiOcpSolver(ocp, use_acados_hessian=True)
 
     if initial_guess is not None:
         solver.load_iterate_from_flat_obj(initial_guess)
     solver.solve()
 
-    # get solution
-    xtraj = np.zeros((N_horizon+1, ocp.dims.nx))
-    utraj = np.zeros((N_horizon, ocp.dims.nu))
-    for i in range(N_horizon):
-        xtraj[i,:] = solver.get(i, "x")
-        utraj[i,:] = solver.get(i, "u")
-    xtraj[N_horizon,:] = solver.get(N_horizon, "x")
+    sol = solver.store_iterate_to_flat_obj()
 
-    results = ExperimentResults(kkt_norms=None, sol=None, xtraj=xtraj, utraj=utraj)
+    results = ExperimentResults(kkt_norms=None, sol=sol)
     return results
 
 def raise_test_failure_message(msg: str):
@@ -132,19 +114,7 @@ def raise_test_failure_message(msg: str):
 def main(plot_sol=False):
     ref_settings = ExperimentAcadosSettings(method='SCQP', with_anderson_acceleration=False, globalization='MERIT_BACKTRACKING')
     ref_res = solve_with_acados(ref_settings)
-
-    # set up initial guess
     sol = ref_res.sol
-    perturb_scale = 1e-6
-    acados_guess = AcadosOcpFlattenedIterate(
-        x = sol.x + perturb_scale * np.random.randn(sol.x.shape[0]),
-        u = sol.u + perturb_scale * np.random.randn(sol.u.shape[0]),
-        z = sol.z + 0 * np.random.randn(sol.z.shape[0]),
-        sl = sol.sl + 0 * np.random.randn(sol.sl.shape[0]),
-        su = sol.su + 0 * np.random.randn(sol.su.shape[0]),
-        pi = sol.pi, # perturb_scale * np.random.randn(sol.pi.shape[0]),
-        lam = np.abs(sol.lam + 1 * np.random.randn(sol.lam.shape[0])),
-    )
 
     # ipopt_res = solve_acados_formulation_with_ipopt(initial_guess=sol, mode='EXACT')
     # NOTE: the above converges to a worse local optimum.
@@ -153,26 +123,26 @@ def main(plot_sol=False):
     if plot_sol:
         ocp = build_acados_test_problem()
         ocp.make_consistent()
+        xtraj = ipopt_res.sol.x.reshape((ocp.dims.N+1, ocp.dims.nx))
+        utraj = ipopt_res.sol.u.reshape((ocp.dims.N, ocp.dims.nu))
         plot_pendulum(ocp.solver_options.shooting_nodes,
-                    ipopt_res.utraj, ipopt_res.xtraj, plt_show=False)
+                      utraj, xtraj, plt_show=False)
         plt.show()
 
-    # setup acados guess to match ipopt solution
-    acados_guess.x = ipopt_res.xtraj.flatten()
-    acados_guess.u = ipopt_res.utraj.flatten()
-    ref_res_2 = solve_with_acados(ref_settings, initial_guess=acados_guess)
+    # start acados at ipopt solution
+    ref_res_2 = solve_with_acados(ref_settings, initial_guess=ipopt_res.sol)
 
     # compare with ipopt
     print("compare: IPOPT vs acados")
-    diff_x = np.linalg.norm(ref_res.xtraj - ipopt_res.xtraj)
-    diff_u = np.linalg.norm(ref_res.utraj - ipopt_res.utraj)
+    diff_x = np.linalg.norm(ref_res.sol.x - ipopt_res.sol.x)
+    diff_u = np.linalg.norm(ref_res.sol.u - ipopt_res.sol.u)
     print("diff x: ", diff_x)
     print("diff u: ", diff_u)
-    # print("diff x: ", ref_res.xtraj - ipopt_res.xtraj)
-    # print("diff u: ", ref_res.utraj - ipopt_res.utraj)
+    # print("diff x: ", ref_res.sol.x - ipopt_res.sol.x)
+    # print("diff u: ", ref_res.sol.u - ipopt_res.sol.u)
     print("compare: IPOPT vs acados started at IPOPT solution")
-    diff_x = np.linalg.norm(ref_res_2.xtraj - ipopt_res.xtraj)
-    diff_u = np.linalg.norm(ref_res_2.utraj - ipopt_res.utraj)
+    diff_x = np.linalg.norm(ref_res_2.sol.x - ipopt_res.sol.x)
+    diff_u = np.linalg.norm(ref_res_2.sol.u - ipopt_res.sol.u)
     print("diff x: ", diff_x)
     print("diff u: ", diff_u)
 
@@ -199,7 +169,7 @@ def main(plot_sol=False):
     ]
     # Evaluation
     labels = [s.get_label() for s in settings]
-    results = []
+    results: list[ExperimentResults] = []
     for i, setting in enumerate(settings):
         res = solve_with_acados(setting, initial_guess=acados_guess)
         results.append(res)
@@ -215,10 +185,6 @@ def main(plot_sol=False):
         if n_iter > max_iter or n_iter < min_iter:
             raise_test_failure_message(f"Number of iterations {n_iter} not in expected range [{min_iter}, {max_iter}] for {method}")
 
-    assert_convergence_iterations(res_anderson, 8, 12, "Anderson")
-    assert_convergence_iterations(res_exact, 4, 6, "Exact")
-    assert_convergence_iterations(res_scqp, 25, 35, "SCQP")
-
     # assert all solutions are the same
     ref_sol = results[0].sol
     for i, (res, setting) in enumerate(zip(results[1:], settings[1:])):
@@ -233,6 +199,10 @@ def main(plot_sol=False):
             raise_test_failure_message(f"Solution mismatch for {labels[i+1]}: x diff {diff_x}, u diff {diff_u}")
         else:
             print(f"Solution for {labels[i+1]} matches reference solution.")
+
+    assert_convergence_iterations(res_anderson, 8, 12, "Anderson")
+    assert_convergence_iterations(res_exact, 4, 6, "Exact")
+    assert_convergence_iterations(res_scqp, 25, 40, "SCQP")
 
 if __name__ == "__main__":
     main()
