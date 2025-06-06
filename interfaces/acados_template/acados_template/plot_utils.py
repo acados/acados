@@ -82,18 +82,18 @@ def plot_convergence(residuals: list,
         plt.savefig(fig_filename, dpi=300, bbox_inches='tight', pad_inches=0.01)
     plt.show()
 
-def plot_contraction_rates(rates: list,
+def plot_contraction_rates(rates_list: list,
                           labels: list,
                           fig_filename: str = None):
     latexify_plot()
     plt.figure(figsize=(4.5, 3.0))
-    for rates, label in zip(rates, labels):
+    for rates, label in zip(rates_list, labels):
         iters = np.arange(0, len(rates))
         plt.plot(iters, rates, label=label)
     plt.legend(loc='best')
     plt.xlabel("iteration number")
     plt.ylabel("empirical contraction rate")
-    plt.xlim(0, max([len(data) for data in rates]))
+    plt.xlim(0, max([len(data) for data in rates_list]))
     plt.ylim(0, 1.1)
     plt.tight_layout()
     plt.grid()
