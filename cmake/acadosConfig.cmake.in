@@ -37,6 +37,7 @@ set(ACADOS_WITH_QPDUNES @ACADOS_WITH_QPDUNES@)
 set(ACADOS_WITH_OSQP @ACADOS_WITH_OSQP@)
 set(ACADOS_WITH_OOQP @ACADOS_WITH_OOQP@)
 set(ACADOS_WITH_DAQP @ACADOS_WITH_DAQP@)
+set(ACADOS_WITH_CLARABEL @ACADOS_WITH_CLARABEL@)
 
 # Add acados CMake folder to CMake prefix and module path
 set(CMAKE_MODULE_PATH_save "${CMAKE_MODULE_PATH}")
@@ -87,6 +88,10 @@ endif()
 
 if(ACADOS_WITH_DAQP)
     find_package(daqp)
+endif()
+
+if(ACADOS_WITH_CLARABEL)
+    find_package(clarabel_c)
 endif()
 
 if(ACADOS_WITH_OSQP)
