@@ -34,10 +34,6 @@ from casadi import *
 from matplotlib import pyplot as plt
 from itertools import product
 
-def main():
-    # run test cases
-    solve_problem_with_constraint_scaling(True)
-    solve_problem_with_constraint_scaling(False)
 
 def solve_problem_with_constraint_scaling(scale_constraints):
 
@@ -112,6 +108,11 @@ def solve_problem_with_constraint_scaling(scale_constraints):
         assert status == 0, "Scaling of the constraints was not succesful!"
     else:
         assert status == 4, "Problem should not be solvable without scaling!"
+
+def main():
+    # run test cases
+    solve_problem_with_constraint_scaling(True)
+    solve_problem_with_constraint_scaling(False)
 
 if __name__ == '__main__':
     main()
