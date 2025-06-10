@@ -30,9 +30,7 @@
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, ACADOS_INFTY
 import numpy as np
-from casadi import *
-from matplotlib import pyplot as plt
-from itertools import product
+import casadi as ca
 
 
 def solve_problem_with_constraint_scaling(scale_constraints):
@@ -42,7 +40,7 @@ def solve_problem_with_constraint_scaling(scale_constraints):
 
     # set model
     model = AcadosModel()
-    x = SX.sym('x', 4)
+    x = ca.SX.sym('x', 4)
 
     # dynamics: identity
     model.disc_dyn_expr = x
@@ -57,11 +55,11 @@ def solve_problem_with_constraint_scaling(scale_constraints):
     ocp.model.cost_expr_ext_cost_e = 3*x[0] + 1.0e-6*x[0]**3 + 2*x[1] + 2.0e-6*x[1]**3/3
 
     # constraints
-    g = SX.zeros(4, 1)
+    g = ca.SX.zeros(4, 1)
     g[0] =  x[3] - x[2]
-    g[1] = x[0]  - 1000*sin(-x[2] - 0.25) - 1000*sin(-x[3] - 0.25)
-    g[2] = x[1]  - 1000*sin(x[2] - 0.25) - 1000*sin(x[2]-x[3] - 0.25)
-    g[3] = 1000*sin(x[3] - 0.25) + 1000*sin(x[3] - x[2] - 0.25)
+    g[1] = x[0]  - 1000*ca.sin(-x[2] - 0.25) - 1000*ca.sin(-x[3] - 0.25)
+    g[2] = x[1]  - 1000*ca.sin(x[2] - 0.25) - 1000*ca.sin(x[2]-x[3] - 0.25)
+    g[3] = 1000*ca.sin(x[3] - 0.25) + 1000*ca.sin(x[3] - x[2] - 0.25)
 
     ocp.model.con_h_expr_e = g
     ocp.constraints.lh_e = np.array([-a, 894.8, 894.8, -1294.8])
@@ -92,10 +90,10 @@ def solve_problem_with_constraint_scaling(scale_constraints):
 
     # Scaling
     ocp.solver_options.qpscaling_type = 'OBJECTIVE_GERSHGORIN'
-    ocp.solver_options.qpscaling_scale_qp_objective = False
+    ocp.solver_options.qpscaling_scale_qp_objective = True
     ocp.solver_options.qpscaling_scale_qp_constraints = scale_constraints
 
-    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
+    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json', verbose = False)
 
     # initialize solver
     xinit = np.zeros(4)
@@ -104,15 +102,23 @@ def solve_problem_with_constraint_scaling(scale_constraints):
     # solve
     status = ocp_solver.solve()
 
+    # checks
+    obj_scale = ocp_solver.get_qp_scaling_cost()
+    print(f"Objective scaling: {obj_scale:.4e}")
+    if scale_constraints:
+        constr_scale = ocp_solver.get_qp_scaling_constraints(stage=0)
+        print(f"Constraints scaling: {constr_scale}")
+
     if ocp.solver_options.qpscaling_scale_qp_constraints:
         assert status == 0, "Scaling of the constraints was not succesful!"
     else:
         assert status == 4, "Problem should not be solvable without scaling!"
+    del ocp_solver
 
 def main():
     # run test cases
-    solve_problem_with_constraint_scaling(True)
-    solve_problem_with_constraint_scaling(False)
+    solve_problem_with_constraint_scaling(scale_constraints=True)
+    solve_problem_with_constraint_scaling(scale_constraints=False)
 
 if __name__ == '__main__':
     main()
