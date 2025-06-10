@@ -86,19 +86,19 @@ void ocp_nlp_qpscaling_obj_gershgorin_opts_set(void *config_, void *opts_, const
     {
         double *d_ptr = value;
         opts->ub_max_abs_eig = *d_ptr;
-        printf("ub_max_eig_abs: %2.e\n", opts->ub_max_abs_eig);
+        // printf("ub_max_eig_abs: %2.e\n", opts->ub_max_abs_eig);
     }
     else if (!strcmp(field, "ub_norm_inf_grad_obj"))
     {
         double *d_ptr = value;
         opts->ub_norm_inf_grad_obj = *d_ptr;
-        printf("ub_norm_inf_grad_obj : %2.e\n", opts->ub_norm_inf_grad_obj);
+        // printf("ub_norm_inf_grad_obj : %2.e\n", opts->ub_norm_inf_grad_obj);
     }
     else if (!strcmp(field, "lb_norm_inf_grad_obj"))
     {
         double *d_ptr = value;
         opts->lb_norm_inf_grad_obj = *d_ptr;
-        printf("lb_norm_inf_grad_obj : %2.e\n", opts->lb_norm_inf_grad_obj);
+        // printf("lb_norm_inf_grad_obj : %2.e\n", opts->lb_norm_inf_grad_obj);
     }
     else if (!strcmp(field, "scale_qp_objective"))
     {
@@ -347,8 +347,8 @@ void ocp_nlp_qpscaling_scale_qp_objective(void *config, ocp_nlp_qpscaling_dims *
 
     if (memory->obj_factor*nrm_inf_grad_obj <= opts->lb_norm_inf_grad_obj)
     {
-        printf("lb_norm_inf_grad_obj violated! %.2e\n", opts->lb_norm_inf_grad_obj);
-        printf("Gradient is very small! %.2e\n", memory->obj_factor*nrm_inf_grad_obj);
+        // printf("lb_norm_inf_grad_obj violated! %.2e\n", opts->lb_norm_inf_grad_obj);
+        // printf("Gradient is very small! %.2e\n", memory->obj_factor*nrm_inf_grad_obj);
     }
     // printf("AFTER SCALING\n");
     // print_ocp_qp_in(qp_in);
@@ -368,22 +368,19 @@ void ocp_nlp_qpscaling_scale_qp_constraints(void *config, ocp_nlp_qpscaling_dims
     // ocp_nlp_qpscaling_obj_gershgorin_opts *opts = opts_; // option for what norm to be used
     double row_norm, scaling_factor;
 
-    printf("Here in scale constraints, before loop\n");
     for (i = 0; i <= N; i++)
     {
-        printf("in loop, i=%d, ng[i]=%d\n", i, ng[i]);
 
         for (j = 0; j < ng[i]; j++)
         {
-            // printf("before nu+nx\n");
             row_norm = norm_inf_matrix_row(j, nu[i]+nx[i],  &qp_in->DCt[i]);
-            printf("j = %d, row_norm = %.3e\n", j, row_norm);
+            // printf("j = %d, row_norm = %.3e\n", j, row_norm);
 
             // calculate scaling factor from row norm and
             double bound_max = fmax(fabs(BLASFEO_DVECEL(qp_in->d+i, nb[i]+j)), fabs(BLASFEO_DVECEL(qp_in->d+i, 2*nb[i]+ng[i]+j)));
-            printf("---- bound_max = %.3e\n", bound_max);
+            // printf("---- bound_max = %.3e\n", bound_max);
             scaling_factor = fmax(1.0, fmax(bound_max, row_norm));
-            printf("---- scaling_factor = %.3e\n", scaling_factor);
+            // printf("---- scaling_factor = %.3e\n", scaling_factor);
 
             // store scaling factor in memory
             BLASFEO_DVECEL(memory->constraints_scaling_vec+i, j) = scaling_factor;
@@ -395,7 +392,7 @@ void ocp_nlp_qpscaling_scale_qp_constraints(void *config, ocp_nlp_qpscaling_dims
             mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, nb[i]+j);
             if (mask_value == 1.0)
             {
-                printf("scale lower bound\n");
+                // printf("scale lower bound\n");
                 BLASFEO_DVECEL(qp_in->d+i, nb[i]+j) = BLASFEO_DVECEL(qp_in->d+i, nb[i]+j) / scaling_factor;
             }
 
@@ -403,7 +400,7 @@ void ocp_nlp_qpscaling_scale_qp_constraints(void *config, ocp_nlp_qpscaling_dims
             mask_value = BLASFEO_DVECEL(qp_in->d_mask+i, 2*nb[i]+ng[i]+j);
             if (mask_value == 1.0)
             {
-                printf("scale upper bound\n");
+                // printf("scale upper bound\n");
                 BLASFEO_DVECEL(qp_in->d+i, 2*nb[i]+ng[i]+j) = BLASFEO_DVECEL(qp_in->d+i, 2*nb[i]+ng[i]+j) / scaling_factor;
             }
         }
