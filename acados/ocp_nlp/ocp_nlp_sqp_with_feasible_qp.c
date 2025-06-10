@@ -1006,7 +1006,7 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
     int qp_status = ACADOS_SUCCESS;
 
-    printf("\nprepare_and_solve_QP: solve_feasibility_qp %d\n", solve_feasibility_qp);
+    // printf("\nprepare_and_solve_QP: solve_feasibility_qp %d\n", solve_feasibility_qp);
     // warm start of first QP
     if (nlp_mem->iter == 0)
     {
@@ -1023,7 +1023,6 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
             ocp_nlp_initialize_qp_from_nlp(config, dims, qp_in, nlp_out, qp_out);
         }
     }
-    printf("Iter after solve nominal: %d\n", nlp_mem->iter);
 
     if (mem->qps_solved_in_iter < 2 && (!solve_feasibility_qp || opts->use_constraint_hessian_in_feas_qp))
     {

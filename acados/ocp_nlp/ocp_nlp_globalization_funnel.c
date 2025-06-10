@@ -340,12 +340,6 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
     print_debug_output_double("trial infeasibility", trial_infeasibility, nlp_opts->print_level, 2);
     print_debug_output_double("pred", pred, nlp_opts->print_level, 2);
 
-    printf("pred: %.4e\n", pred);
-    if (pred < 0)
-    {
-        printf("pred is negative!\n");
-    }
-
     if (opts->use_merit_fun_only) // We only check the penalty method but not the funnel!
     {
         mem->funnel_penalty_mode = true;
@@ -588,7 +582,6 @@ int ocp_nlp_globalization_funnel_needs_objective_value()
     return 1;
 }
 
-// QP objective value! Do not delete :D
 int ocp_nlp_globalization_funnel_needs_qp_objective_value()
 {
     return 1;
@@ -597,8 +590,8 @@ int ocp_nlp_globalization_funnel_needs_qp_objective_value()
 // TODO(David): maybe rename to initialize
 void ocp_nlp_globalization_funnel_initialize_memory(void *config_, void *dims_, void *nlp_mem_, void *nlp_opts_)
 {
-    printf("Note: The funnel globalization is still under development.\n");
-    printf("If you encouter problems or bugs, please report to the acados developers!\n");
+    // printf("Note: The funnel globalization is still under development.\n");
+    // printf("If you encouter problems or bugs, please report to the acados developers!\n");
 
     ocp_nlp_config* config = config_;
     ocp_nlp_dims* dims = dims_;
