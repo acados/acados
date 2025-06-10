@@ -1519,6 +1519,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             int* with_value_sens_wrt_params = (int *) value;
             opts->with_value_sens_wrt_params = *with_value_sens_wrt_params;
         }
+        else if (!strcmp(field, "with_anderson_acceleration"))
+        {
+            bool* with_anderson_acceleration = (bool *) value;
+            opts->with_anderson_acceleration = *with_anderson_acceleration;
+        }
         else
         {
             printf("\nerror: ocp_nlp_opts_set: wrong field: %s\n", field);
@@ -1595,13 +1600,18 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
 
     acados_size_t size = sizeof(ocp_nlp_memory);
 
-    // qp in
+    // qp_in
     size += ocp_qp_in_calculate_size(dims->qp_solver->orig_dims);
 
-    // qp out
+    // qp_out
     size += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
 
-    // qp solver
+    if (opts->with_anderson_acceleration)
+    {
+        size += 2*ocp_qp_out_calculate_size(dims->qp_solver->orig_dims); // prev_qp_out, anderson_step
+    }
+
+    // qp_solver
     size += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
     // relaxed qp solver memory in sqp_with_feasible_qp.c
@@ -1772,6 +1782,14 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     // qp out
     mem->qp_out = ocp_qp_out_assign(dims->qp_solver->orig_dims, c_ptr);
     c_ptr += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
+
+    if (opts->with_anderson_acceleration)
+    {
+        mem->prev_qp_out = ocp_qp_out_assign(dims->qp_solver->orig_dims, c_ptr);
+        c_ptr += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
+        mem->anderson_step = ocp_qp_out_assign(dims->qp_solver->orig_dims, c_ptr);
+        c_ptr += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
+    }
 
     // QP solver
     mem->qp_solver_mem = qp_solver->memory_assign(qp_solver, dims->qp_solver, opts->qp_solver_opts, c_ptr);
@@ -1991,9 +2009,6 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
 
     // weight_merit_fun
     size += ocp_nlp_out_calculate_size(config, dims);
-
-    // tmp_qp_in
-    size += ocp_qp_in_calculate_size(dims->qp_solver->orig_dims);
 
     // tmp_qp_out
     size += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
@@ -2245,10 +2260,6 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     // tmp_nlp_out
     work->tmp_nlp_out = ocp_nlp_out_assign(config, dims, c_ptr);
     c_ptr += ocp_nlp_out_calculate_size(config, dims);
-
-    // tmp qp in
-    work->tmp_qp_in = ocp_qp_in_assign(dims->qp_solver->orig_dims, c_ptr);
-    c_ptr += ocp_qp_in_calculate_size(dims->qp_solver->orig_dims);
 
     // tmp qp out
     work->tmp_qp_out = ocp_qp_out_assign(dims->qp_solver->orig_dims, c_ptr);
@@ -3183,6 +3194,71 @@ void ocp_nlp_initialize_qp_from_nlp(ocp_nlp_config *config, ocp_nlp_dims *dims, 
 }
 
 
+double ocp_nlp_compute_anderson_gamma(ocp_nlp_workspace *work, ocp_qp_out *new_qp_step, ocp_qp_out *new_minus_old_qp_step)
+{
+    double gamma = ocp_qp_out_ddot(new_qp_step, new_minus_old_qp_step, &work->tmp_2ni) /
+                        ocp_qp_out_ddot(new_minus_old_qp_step, new_minus_old_qp_step, &work->tmp_2ni);
+    return gamma;
+}
+
+
+void ocp_nlp_convert_primaldelta_absdual_step_to_delta_step(ocp_nlp_config *config, ocp_nlp_dims *dims,
+        ocp_nlp_out *out, ocp_qp_out *step)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        // for all x in delta format: convert as x_step = x_step - x_iterate
+        // dual variables
+        blasfeo_dvecad(2*ni[i], -1.0, out->lam+i, 0, step->lam+i, 0);
+        if (i < N)
+        {
+            blasfeo_dvecad(nx[i+1], -1.0, out->pi+i, 0, step->pi+i, 0);
+        }
+    }
+}
+
+
+void ocp_nlp_update_variables_sqp_delta_primal_dual(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work, double alpha, ocp_qp_out *step)
+{
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ni = dims->ni;
+    int *nz = dims->nz;
+
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        // step in primal variables
+        blasfeo_daxpy(nv[i], alpha, step->ux+i, 0, out->ux+i, 0, out->ux+i, 0);
+
+        blasfeo_daxpy(2*ni[i], alpha, step->lam+i, 0, out->lam+i, 0, out->lam+i, 0);
+        if (i < N)
+        {
+            // update duals with alpha step
+            blasfeo_daxpy(nx[i+1], alpha, step->pi+i, 0, out->pi+i, 0, out->pi+i, 0);
+            // linear update of algebraic variables using state and input sensitivity
+            // out->z = mem->z_alg + alpha * dzdux * qp_out->ux
+            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0,
+                    step->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0);
+        }
+    }
+}
+
+
+
 int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
@@ -3511,6 +3587,8 @@ void ocp_nlp_res_get_inf_norm(ocp_nlp_res *res, double *out)
 }
 
 
+/* Helper functions */
+
 double ocp_nlp_compute_delta_dual_norm_inf(ocp_nlp_dims *dims, ocp_nlp_workspace *work, ocp_nlp_out *nlp_out, ocp_qp_out *qp_out)
 {
     /* computes the inf norm of multipliers in qp_out and nlp_out */
@@ -3788,7 +3866,6 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
         exit(1);
     }
 
-    // d_ocp_qp_print(tmp_qp_in->dim, tmp_qp_in);
     // d_ocp_qp_seed_print(qp_seed->dim, qp_seed);
     config->qp_solver->eval_forw_sens(config->qp_solver, dims->qp_solver, mem->qp_in, qp_seed, tmp_qp_out,
                             opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
@@ -3843,7 +3920,7 @@ void ocp_nlp_common_eval_solution_sens_adj_p(ocp_nlp_config *config, ocp_nlp_dim
         blasfeo_dveccp(nv[i], sens_nlp_out->ux + i, 0, qp_seed->seed_g + i, 0);
         // NOTE: noone needs sensitivities in adj dir pi, lam, t wrt. p
         // if (i < N)
-        //     blasfeo_dveccp(nx[i + 1], sens_nlp_out->pi + i, 0, tmp_qp_in->b + i, 0);
+        //     blasfeo_dveccp(nx[i + 1], sens_nlp_out->pi + i, 0, qp_seed->b + i, 0);
         // blasfeo_dveccp(2 * ni[i], sens_nlp_out->lam + i, ?);
         // blasfeo_dveccp(2 * ni[i], sens_nlp_out->t + i, ?);
     }

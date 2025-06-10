@@ -819,12 +819,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             if (nlp_opts->log_primal_step_norm)
                 nlp_mem->primal_step_norm[nlp_mem->iter] = mem->step_norm;
         }
-        if (nlp_opts->log_dual_step_norm)
+        if (nlp_opts->log_dual_step_norm && !nlp_opts->with_anderson_acceleration)
         {
-            if (nlp_opts->log_dual_step_norm)
-            {
-                nlp_mem->dual_step_norm[nlp_mem->iter] = ocp_nlp_compute_delta_dual_norm_inf(dims, nlp_work, nlp_out, qp_out);
-            }
+            nlp_mem->dual_step_norm[nlp_mem->iter] = ocp_nlp_compute_delta_dual_norm_inf(dims, nlp_work, nlp_out, qp_out);
         }
         /* end solve QP */
 

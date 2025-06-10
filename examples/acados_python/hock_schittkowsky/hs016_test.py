@@ -89,6 +89,7 @@ def solve_problem(qp_solver: str = 'FULL_CONDENSING_HPIPM', scale_qp_constraints
         ocp.solver_options.qpscaling_type = 'OBJECTIVE_GERSHGORIN'
         ocp.solver_options.qpscaling_scale_qp_objective = False
         ocp.solver_options.qpscaling_scale_qp_constraints = True
+    ocp.code_export_directory = f'c_generated_code_{model.name}'
 
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
 

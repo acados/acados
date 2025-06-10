@@ -78,7 +78,7 @@ class AcadosSimOptions:
 
     @property
     def num_stages(self):
-        """Number of stages in the integrator. Default: 1"""
+        """Number of stages in the integrator. Default: 4"""
         return self.__sim_method_num_stages
 
     @property

@@ -1094,6 +1094,13 @@ class AcadosOcp:
         if opts.nlp_solver_warm_start_first_qp_from_nlp and (opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon):
             raise NotImplementedError('nlp_solver_warm_start_first_qp_from_nlp only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N.')
 
+        # Anderson acceleration
+        if opts.with_anderson_acceleration:
+            if opts.nlp_solver_type == "DDP":
+                raise NotImplementedError('Anderson acceleration not supported for DDP solver.')
+            if opts.globalization != "FIXED_STEP":
+                raise NotImplementedError('Anderson acceleration only supported for FIXED_STEP globalization for now.')
+
         # check terminal stage
         for field in ('cost_expr_ext_cost_e', 'cost_expr_ext_cost_custom_hess_e',
                       'cost_y_expr_e', 'cost_psi_expr_e', 'cost_conl_custom_outer_hess_e',

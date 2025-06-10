@@ -1024,7 +1024,6 @@ class AcadosOcpSolver:
 
         .. note:: pi: multipliers for dynamics equality constraints \n
                       lam: multipliers for inequalities \n
-                      t: slack variables corresponding to evaluation of all inequalities (at the solution) \n
                       sl: slack variables of soft lower inequality constraints \n
                       su: slack variables of soft upper inequality constraints \n
         """
@@ -1692,6 +1691,12 @@ class AcadosOcpSolver:
                     raise ValueError("res_comp_all is not available for SQP_RTI if rti_log_residuals is not enabled.")
             else:
                 raise KeyError(f"res_comp_all is not available for nlp_solver_type {self.__solver_options['nlp_solver_type']}.")
+
+        elif field_ == 'res_all':
+            return np.concatenate((np.atleast_2d(self.get_stats('res_stat_all')),
+                                   np.atleast_2d(self.get_stats('res_eq_all')),
+                                   np.atleast_2d(self.get_stats('res_ineq_all')),
+                                   np.atleast_2d(self.get_stats('res_comp_all'))), axis=0).transpose()
 
         else:
             raise ValueError(f'AcadosOcpSolver.get_stats(): \'{field}\' is not a valid argument.'
