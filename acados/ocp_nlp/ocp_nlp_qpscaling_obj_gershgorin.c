@@ -138,10 +138,12 @@ acados_size_t ocp_nlp_qpscaling_obj_gershgorin_memory_calculate_size(void *confi
     size += sizeof(ocp_nlp_qpscaling_obj_gershgorin_memory);
 
     // scaling vectors
-    for (i = 0; i <= N; i++)
+    if (opts->scale_qp_constraints)
     {
-        if (opts->scale_qp_constraints)
+        for (i = 0; i <= N; i++)
+        {
             size += 1 * blasfeo_memsize_dvec(2 * dims->ng[i]);
+        }
     }
     size += 1 * (N + 1) * sizeof(struct blasfeo_dvec);  // constraints_scaling_vec
 
@@ -164,23 +166,11 @@ void *ocp_nlp_qpscaling_obj_gershgorin_memory_assign(void *config_, ocp_nlp_qpsc
     if (opts->scale_qp_constraints)
     {
         assign_and_advance_blasfeo_dvec_structs(dims->N + 1, &mem->constraints_scaling_vec, &c_ptr);
-    }
-
-    if (opts->scale_qp_constraints)
-    {
         for (int i = 0; i <= dims->N; ++i)
         {
             assign_and_advance_blasfeo_dvec_mem(2 * dims->ng[i], mem->constraints_scaling_vec + i, &c_ptr);
-        }
-    }
-
-    if (opts->scale_qp_constraints)
-    {
-        for(int i=0; i<dims->N; i++)
-        {
             blasfeo_dvecse(dims->ng[i], 1.0, mem->constraints_scaling_vec+i, 0);
         }
-        blasfeo_dvecse(dims->ng[N], 1.0, mem->constraints_scaling_vec+N, 0);
     }
 
     return mem;
@@ -229,7 +219,7 @@ void ocp_nlp_qpscaling_obj_gershgorin_memory_get(void *config_, ocp_nlp_qpscalin
 /*
 The interesting matrices are stored transposed
 */
- static double norm_inf_matrix_row(int row, int n_col,  struct blasfeo_dmat *At)
+static double norm_inf_matrix_row(int row, int n_col,  struct blasfeo_dmat *At)
 {
     double norm = 0.0;
     for (int j = 0; j < n_col; ++j)
@@ -375,7 +365,6 @@ void ocp_nlp_qpscaling_scale_qp_constraints(void *config, ocp_nlp_qpscaling_dims
 
     for (i = 0; i <= N; i++)
     {
-
         for (j = 0; j < ng[i]; j++)
         {
             row_norm = norm_inf_matrix_row(j, nu[i]+nx[i],  &qp_in->DCt[i]);
