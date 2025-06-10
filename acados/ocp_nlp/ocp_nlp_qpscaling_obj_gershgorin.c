@@ -343,6 +343,15 @@ void ocp_nlp_qpscaling_scale_qp_objective(void *config, ocp_nlp_qpscaling_dims *
     }
     // printf("Scaling factor objective: %.2e\n",memory->obj_factor);
 
+    if (memory->obj_factor*nrm_inf_grad_obj <= opts->lb_norm_inf_grad_obj)
+    {
+        // printf("lb_norm_inf_grad_obj violated! %.2e\n", opts->lb_norm_inf_grad_obj);
+        // printf("Gradient is very small! %.2e\n", memory->obj_factor*nrm_inf_grad_obj);
+        tmp = opts->lb_norm_inf_grad_obj / nrm_inf_grad_obj;
+        memory->obj_factor = fmax(memory->obj_factor, tmp);
+        // TODO: return some status code here?
+    }
+
     // scale QP cost
     // print_ocp_qp_in(qp_in);
     if (memory->obj_factor != 1.0)
