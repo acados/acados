@@ -65,7 +65,7 @@ def formulate_ocp(opts: AcadosOcpOptions) -> AcadosOcp:
 
     model = export_free_time_pendulum_ode_model()
 
-    if opts.qpscaling_scale_qp_objective:
+    if opts.qpscaling_scale_objective:
         model.name += "scaled_objective"
     else:
         model.name += "no_scaling"
@@ -132,9 +132,9 @@ def main(scale_objective: bool):
     # Scaling
     opts.qpscaling_type = 'OBJECTIVE_GERSHGORIN'
     if scale_objective:
-        opts.qpscaling_scale_qp_objective = True
+        opts.qpscaling_scale_objective = True
     else:
-        opts.qpscaling_scale_qp_objective = False
+        opts.qpscaling_scale_objective = False
 
     ocp = formulate_ocp(opts)
 

@@ -58,7 +58,7 @@ extern "C" {
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
-#include "acados/ocp_nlp/ocp_nlp_qpscaling_common.h"
+#include "acados/ocp_nlp/ocp_nlp_qpscaling.h"
 #include "acados/ocp_nlp/ocp_nlp_globalization_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_xcond_solver.h"
@@ -123,7 +123,6 @@ typedef struct ocp_nlp_config
     ocp_nlp_cost_config **cost;
     ocp_nlp_constraints_config **constraints;
     ocp_nlp_reg_config *regularize;
-    ocp_nlp_qpscaling_config *qpscaling;
     ocp_nlp_globalization_config *globalization;
 
 } ocp_nlp_config;

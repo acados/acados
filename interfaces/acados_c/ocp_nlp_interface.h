@@ -97,14 +97,6 @@ typedef enum
 } ocp_nlp_reg_t;
 
 
-/// QP scaling types
-typedef enum
-{
-    NO_SCALING,
-    OBJECTIVE_GERSHGORIN,
-} ocp_nlp_qpscaling_t;
-
-
 /// Globalization types
 typedef enum
 {
@@ -130,9 +122,6 @@ typedef struct ocp_nlp_plan_t
 
     /// Regularization type, defaults to no regularization.
     ocp_nlp_reg_t regularization;
-
-    /// QP scaling type, defaults to no scaling.
-    ocp_nlp_qpscaling_t qpscaling;
 
     /// Globalization type, defaults to fixed step.
     ocp_nlp_globalization_t globalization;

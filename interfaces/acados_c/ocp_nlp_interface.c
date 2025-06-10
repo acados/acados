@@ -53,8 +53,7 @@
 #include "acados/ocp_nlp/ocp_nlp_reg_project.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_project_reduc_hess.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_noreg.h"
-#include "acados/ocp_nlp/ocp_nlp_qpscaling_noscale.h"
-#include "acados/ocp_nlp/ocp_nlp_qpscaling_obj_gershgorin.h"
+#include "acados/ocp_nlp/ocp_nlp_qpscaling.h"
 #include "acados/ocp_nlp/ocp_nlp_globalization_fixed_step.h"
 #include "acados/ocp_nlp/ocp_nlp_globalization_merit_backtracking.h"
 #include "acados/ocp_nlp/ocp_nlp_globalization_funnel.h"
@@ -146,9 +145,6 @@ static void ocp_nlp_plan_initialize_default(ocp_nlp_plan_t *plan)
 
     // regularization: no reg by default
     plan->regularization = NO_REGULARIZE;
-
-    // QP scaling: no scale by default
-    plan->qpscaling = NO_SCALING;
 
     // globalization: fixed step by default
     plan->globalization = FIXED_STEP;
@@ -251,20 +247,6 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
             break;
         default:
             printf("\nerror: ocp_nlp_config_create: unsupported plan->regularization\n");
-            exit(1);
-    }
-
-    // QP scaling
-    switch (plan.qpscaling)
-    {
-        case NO_SCALING:
-            ocp_nlp_qpscaling_noscale_config_initialize_default(config->qpscaling);
-            break;
-        case OBJECTIVE_GERSHGORIN:
-            ocp_nlp_qpscaling_obj_gershgorin_config_initialize_default(config->qpscaling);
-            break;
-        default:
-            printf("\nerror: ocp_nlp_config_create: unsupported plan->qpscaling\n");
             exit(1);
     }
 
@@ -1617,7 +1599,7 @@ void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, 
         else if ( ptr_module!=NULL && (!strcmp(ptr_module, "qpscaling")) )
         {
             field_name_getter = field+module_length+1;
-            config->qpscaling->memory_get(config->qpscaling, dims->qpscaling, nlp_mem->qpscaling,
+            ocp_nlp_qpscaling_memory_get(dims->qpscaling, nlp_mem->qpscaling,
                 field_name_getter, stage, value);
         }
         else

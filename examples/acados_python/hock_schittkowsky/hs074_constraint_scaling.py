@@ -89,9 +89,9 @@ def solve_problem_with_constraint_scaling(scale_constraints):
     ocp.solver_options.globalization_funnel_use_merit_fun_only = False
 
     # Scaling
-    ocp.solver_options.qpscaling_type = 'OBJECTIVE_GERSHGORIN'
-    ocp.solver_options.qpscaling_scale_qp_objective = True
-    ocp.solver_options.qpscaling_scale_qp_constraints = scale_constraints
+    ocp.solver_options.qpscaling_scale_objective = 'OBJECTIVE_GERSHGORIN'
+    if scale_constraints:
+        ocp.solver_options.qpscaling_scale_constraints = 'INF_NORM'
 
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json', verbose = False)
 
@@ -109,7 +109,7 @@ def solve_problem_with_constraint_scaling(scale_constraints):
         constr_scale = ocp_solver.get_qp_scaling_constraints(stage=0)
         print(f"Constraints scaling: {constr_scale}")
 
-    if ocp.solver_options.qpscaling_scale_qp_constraints:
+    if ocp.solver_options.qpscaling_scale_constraints:
         assert status == 0, "Scaling of the constraints was not succesful!"
     else:
         assert status == 4, "Problem should not be solvable without scaling!"

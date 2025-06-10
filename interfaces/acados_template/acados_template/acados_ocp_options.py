@@ -88,7 +88,6 @@ class AcadosOcpOptions:
         self.__print_level = 0
         self.__cost_discretization = 'EULER'
         self.__regularize_method = 'NO_REGULARIZE'
-        self.__qpscaling_type = 'NO_SCALING'
         self.__reg_epsilon = 1e-4
         self.__reg_max_cond_block = 1e7
         self.__reg_adaptive_eps = False
@@ -112,8 +111,8 @@ class AcadosOcpOptions:
         self.__qpscaling_ub_max_abs_eig = 1e5
         self.__qpscaling_ub_norm_inf_grad_obj = 1e2
         self.__qpscaling_lb_norm_inf_grad_obj = 1e-4
-        self.__qpscaling_scale_qp_objective = False
-        self.__qpscaling_scale_qp_constraints = False
+        self.__qpscaling_scale_objective = "NO_COST_SCALING"
+        self.__qpscaling_scale_constraints = "NO_CONSTRAINT_SCALING"
         self.__ext_cost_num_hess = 0
         self.__globalization_use_SOC = 0
         self.__globalization_alpha_min = None
@@ -351,15 +350,6 @@ class AcadosOcpOptions:
         return self.__regularize_method
 
     @property
-    def qpscaling_type(self):
-        """QP scaling type.
-        String in ('NO_SCALING', 'OBJECTIVE_GERSHGORIN')
-
-        Default: 'NO_SCALING'
-        """
-        return self.__qpscaling_type
-
-    @property
     def globalization_fixed_step_length(self):
         """
         Fixed Newton step length, used if globalization == "FIXED_STEP"
@@ -396,22 +386,20 @@ class AcadosOcpOptions:
         return self.__qpscaling_lb_norm_inf_grad_obj
 
     @property
-    def qpscaling_scale_qp_objective(self):
+    def qpscaling_scale_objective(self):
         """
-        If qpscaling_type == 'OBJECTIVE_GERSHGORIN', this flag indicates whether the qp objective should be scaled.
-        Type: bool.
-        Default: False.
+        String in ["NO_COST_SCALING", "OBJECTIVE_GERSHGORIN"]
+        Default: "NO_COST_SCALING".
         """
-        return self.__qpscaling_scale_qp_objective
+        return self.__qpscaling_scale_objective
 
     @property
-    def qpscaling_scale_qp_constraints(self):
+    def qpscaling_scale_constraints(self):
         """
-        If qpscaling_type == 'OBJECTIVE_GERSHGORIN', this flag indicates whether the qp constraints should be scaled.
-        Type: bool.
-        Default: False.
+        String in ["NO_CONSTRAINT_SCALING", "INF_NORM"]
+        Default: "NO_CONSTRAINT_SCALING".
         """
-        return self.__qpscaling_scale_qp_constraints
+        return self.__qpscaling_scale_constraints
 
     @property
     def nlp_solver_step_length(self):
@@ -1343,15 +1331,6 @@ class AcadosOcpOptions:
             raise ValueError('Invalid regularize_method value. Possible values are:\n\n' \
                     + ',\n'.join(regularize_methods) + '.\n\nYou have: ' + regularize_method + '.\n\n')
 
-    @qpscaling_type.setter
-    def qpscaling_type(self, qpscaling_type):
-        qpscaling_types = ('NO_SCALING', 'OBJECTIVE_GERSHGORIN')
-        if qpscaling_type in qpscaling_types:
-            self.__qpscaling_type = qpscaling_type
-        else:
-            raise Exception('Invalid qpscaling_type value. Possible values are:\n\n' \
-                    + ',\n'.join(qpscaling_types) + '.\n\nYou have: ' + qpscaling_type + '.\n\n')
-
     @collocation_type.setter
     def collocation_type(self, collocation_type):
         if collocation_type in COLLOCATION_TYPES:
@@ -1739,35 +1718,35 @@ class AcadosOcpOptions:
         if isinstance(qpscaling_ub_max_abs_eig, float) and qpscaling_ub_max_abs_eig >= 0.:
             self.__qpscaling_ub_max_abs_eig = qpscaling_ub_max_abs_eig
         else:
-            raise Exception('Invalid globalization_fixed_step_length value. globalization_fixed_step_length must be a positive float.')
+            raise ValueError('Invalid qpscaling_ub_max_abs_eig value. qpscaling_ub_max_abs_eig must be a positive float.')
 
     @qpscaling_ub_norm_inf_grad_obj.setter
     def qpscaling_ub_norm_inf_grad_obj(self, qpscaling_ub_norm_inf_grad_obj):
         if isinstance(qpscaling_ub_norm_inf_grad_obj, float) and qpscaling_ub_norm_inf_grad_obj >= 0.:
             self.__qpscaling_ub_norm_inf_grad_obj = qpscaling_ub_norm_inf_grad_obj
         else:
-            raise Exception('Invalid qpscaling_ub_norm_inf_grad_obj value. qpscaling_ub_norm_inf_grad_obj must be a positive float.')
+            raise ValueError('Invalid qpscaling_ub_norm_inf_grad_obj value. qpscaling_ub_norm_inf_grad_obj must be a positive float.')
 
     @qpscaling_lb_norm_inf_grad_obj.setter
     def qpscaling_lb_norm_inf_grad_obj(self, qpscaling_lb_norm_inf_grad_obj):
         if isinstance(qpscaling_lb_norm_inf_grad_obj, float) and qpscaling_lb_norm_inf_grad_obj >= 0.:
             self.__qpscaling_lb_norm_inf_grad_obj = qpscaling_lb_norm_inf_grad_obj
         else:
-            raise Exception('Invalid qpscaling_lb_norm_inf_grad_obj value. qpscaling_lb_norm_inf_grad_obj must be a positive float.')
+            raise ValueError('Invalid qpscaling_lb_norm_inf_grad_obj value. qpscaling_lb_norm_inf_grad_obj must be a positive float.')
 
-    @qpscaling_scale_qp_objective.setter
-    def qpscaling_scale_qp_objective(self, qpscaling_scale_qp_objective):
-        if isinstance(qpscaling_scale_qp_objective, bool):
-            self.__qpscaling_scale_qp_objective = qpscaling_scale_qp_objective
-        else:
-            raise Exception('Invalid qpscaling_scale_qp_objective value. qpscaling_scale_qp_objective must be a bool.')
+    @qpscaling_scale_objective.setter
+    def qpscaling_scale_objective(self, qpscaling_scale_objective):
+        qpscaling_scale_objective_types = ["NO_COST_SCALING", "OBJECTIVE_GERSHGORIN"]
+        if not qpscaling_scale_objective in qpscaling_scale_objective_types:
+            raise ValueError(f'Invalid qpscaling_scale_objective value. Must be in {qpscaling_scale_objective_types}, got {qpscaling_scale_objective}.')
+        self.__qpscaling_scale_objective = qpscaling_scale_objective
 
-    @qpscaling_scale_qp_constraints.setter
-    def qpscaling_scale_qp_constraints(self, qpscaling_scale_qp_constraints):
-        if isinstance(qpscaling_scale_qp_constraints, bool):
-            self.__qpscaling_scale_qp_constraints = qpscaling_scale_qp_constraints
-        else:
-            raise Exception('Invalid qpscaling_scale_qp_objective value. qpscaling_scale_qp_objective must be a bool.')
+    @qpscaling_scale_constraints.setter
+    def qpscaling_scale_constraints(self, qpscaling_scale_constraints):
+        qpscaling_scale_constraints_types = ["NO_CONSTRAINT_SCALING", "INF_NORM"]
+        if not qpscaling_scale_constraints in qpscaling_scale_constraints_types:
+            raise ValueError(f'Invalid qpscaling_scale_constraints value. Must be in {qpscaling_scale_constraints_types}, got {qpscaling_scale_constraints}.')
+        self.__qpscaling_scale_constraints = qpscaling_scale_constraints
 
     @nlp_solver_step_length.setter
     def nlp_solver_step_length(self, nlp_solver_step_length):

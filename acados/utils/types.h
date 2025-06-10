@@ -113,6 +113,23 @@ enum search_direction_mode
     FEASIBILITY_QP = 2,
 };
 
+
+/// QP scaling types
+typedef enum
+{
+    NO_COST_SCALING,
+    OBJECTIVE_GERSHGORIN,
+} qpscaling_scale_objective_type;
+
+/// QP scaling types
+typedef enum
+{
+    NO_CONSTRAINT_SCALING,
+    INF_NORM,
+} ocp_nlp_qpscaling_constraint_type;
+
+
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
