@@ -414,6 +414,12 @@ void ocp_nlp_qpscaling_obj_gershgorin_scale_qp(void *config, ocp_nlp_qpscaling_d
     {
         ocp_nlp_qpscaling_scale_qp_objective(config, dims, opts_, mem_, qp_in);
     }
+    else
+    {
+        // set the obj_factor to 1.0, for consinstency
+        ocp_nlp_qpscaling_obj_gershgorin_memory *memory = mem_;
+        memory->obj_factor = 1.0;
+    }
     if (opts->scale_qp_constraints)
     {
         ocp_nlp_qpscaling_scale_qp_constraints(config, dims, opts_, mem_, qp_in);
