@@ -137,15 +137,15 @@ acados_size_t ocp_nlp_qpscaling_obj_gershgorin_memory_calculate_size(void *confi
 
     size += sizeof(ocp_nlp_qpscaling_obj_gershgorin_memory);
 
-    // scaling vectors
+    // constraints_scaling_vec
     if (opts->scale_qp_constraints)
     {
+        size += (N + 1) * sizeof(struct blasfeo_dvec);  // constraints_scaling_vec
         for (i = 0; i <= N; i++)
         {
-            size += 1 * blasfeo_memsize_dvec(2 * dims->ng[i]);
+            size += blasfeo_memsize_dvec(dims->ng[i]);
         }
     }
-    size += 1 * (N + 1) * sizeof(struct blasfeo_dvec);  // constraints_scaling_vec
 
     return size;
 }
@@ -168,7 +168,7 @@ void *ocp_nlp_qpscaling_obj_gershgorin_memory_assign(void *config_, ocp_nlp_qpsc
         assign_and_advance_blasfeo_dvec_structs(dims->N + 1, &mem->constraints_scaling_vec, &c_ptr);
         for (int i = 0; i <= dims->N; ++i)
         {
-            assign_and_advance_blasfeo_dvec_mem(2 * dims->ng[i], mem->constraints_scaling_vec + i, &c_ptr);
+            assign_and_advance_blasfeo_dvec_mem(dims->ng[i], mem->constraints_scaling_vec + i, &c_ptr);
             blasfeo_dvecse(dims->ng[i], 1.0, mem->constraints_scaling_vec+i, 0);
         }
     }
@@ -209,7 +209,6 @@ void ocp_nlp_qpscaling_obj_gershgorin_memory_get(void *config_, ocp_nlp_qpscalin
         printf("\nerror: ocp_nlp_qpscaling_obj_gershgorin_memory_get: field %s not available\n", field);
         exit(1);
     }
-
 }
 
 
@@ -278,7 +277,7 @@ static void scale_lam_duals(ocp_qp_out *qp_out, ocp_nlp_qpscaling_obj_gershgorin
         }
     }
 
-    // scale slack variables here!!!!
+    // TODO: scale slack variables here!!!!
 }
 
 /************************************************
@@ -321,7 +320,6 @@ void ocp_nlp_qpscaling_scale_qp_objective(void *config, ocp_nlp_qpscaling_dims *
     }
     else
     {
-        // dividing by max_value helps that gradient does not get too small
         memory->obj_factor = opts->ub_max_abs_eig / max_abs_eig;
     }
     // printf("Scaling factor objective: %.2e\n",memory->obj_factor);
@@ -368,16 +366,13 @@ void ocp_nlp_qpscaling_scale_qp_constraints(void *config, ocp_nlp_qpscaling_dims
         for (j = 0; j < ng[i]; j++)
         {
             row_norm = norm_inf_matrix_row(j, nu[i]+nx[i],  &qp_in->DCt[i]);
-            // printf("j = %d, row_norm = %.3e\n", j, row_norm);
             mask_value_lower = BLASFEO_DVECEL(qp_in->d_mask+i, nb[i]+j);
             mask_value_upper = BLASFEO_DVECEL(qp_in->d_mask+i, 2*nb[i]+ng[i]+j);
 
             // calculate scaling factor from row norm
             double bound_max = fmax(fabs(mask_value_lower * BLASFEO_DVECEL(qp_in->d+i, nb[i]+j)),
                                     fabs(mask_value_upper * BLASFEO_DVECEL(qp_in->d+i, 2*nb[i]+ng[i]+j)));
-            // printf("---- bound_max = %.3e\n", bound_max);
             scaling_factor = 1 / fmax(1.0, fmax(bound_max, row_norm));
-            // printf("---- scaling_factor = %.3e\n", scaling_factor);
 
             // store scaling factor in memory
             BLASFEO_DVECEL(memory->constraints_scaling_vec+i, j) = scaling_factor;
@@ -388,14 +383,12 @@ void ocp_nlp_qpscaling_scale_qp_constraints(void *config, ocp_nlp_qpscaling_dims
             // scale lower bound
             if (mask_value_lower == 1.0)
             {
-                // printf("scale lower bound\n");
                 BLASFEO_DVECEL(qp_in->d+i, nb[i]+j) = BLASFEO_DVECEL(qp_in->d+i, nb[i]+j) * scaling_factor;
             }
 
             // scale upper bound
             if (mask_value_upper == 1.0)
             {
-                // printf("scale upper bound\n");
                 BLASFEO_DVECEL(qp_in->d+i, 2*nb[i]+ng[i]+j) = BLASFEO_DVECEL(qp_in->d+i, 2*nb[i]+ng[i]+j) * scaling_factor;
             }
         }
