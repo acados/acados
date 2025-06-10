@@ -301,6 +301,12 @@ static void scale_lam_duals(ocp_qp_out *qp_out, ocp_nlp_qpscaling_obj_gershgorin
 /************************************************
  * functions
  ************************************************/
+/**
+ * @brief Scales the objective function of an OCP QP using Gershgorin eigenvalue estimates.
+ *
+ * - estimate max. abs. eigenvalue using gershgorin circles as max_abs_eig
+ * - obj_factor = min(1.0, ub_max_abs_eig/max_abs_eig)
+ */
 void ocp_nlp_qpscaling_scale_qp_objective(void *config, ocp_nlp_qpscaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in)
 {
     double max_abs_eig = 0.0;
@@ -322,21 +328,20 @@ void ocp_nlp_qpscaling_scale_qp_objective(void *config, ocp_nlp_qpscaling_dims *
         max_abs_eig = fmax(max_abs_eig, tmp);
 
         // norm gradient
-        blasfeo_dvecnrm_inf(nx[stage]+nu[stage], qp_in->rqz+stage, 0, &tmp);
+        blasfeo_dvecnrm_inf(nx[stage]+nu[stage]+2*ns[stage], qp_in->rqz+stage, 0, &tmp);
         nrm_inf_grad_obj = fmax(nrm_inf_grad_obj, fabs(tmp));
     }
 
     if (max_abs_eig < opts->ub_max_abs_eig)
     {
-        max_abs_eig = 1.0;
+        memory->obj_factor = 1.0;
     }
     else
     {
         // dividing by max_value helps that gradient does not get too small
-        max_abs_eig = max_abs_eig/opts->ub_max_abs_eig;
+        memory->obj_factor = opts->ub_max_abs_eig / max_abs_eig;
     }
-    memory->obj_factor = 1.0 / (max_abs_eig);
-    printf("Scaling factor objective: %.2e\n",memory->obj_factor);
+    // printf("Scaling factor objective: %.2e\n",memory->obj_factor);
 
     // scale QP cost
     // print_ocp_qp_in(qp_in);
