@@ -206,6 +206,30 @@ void *ocp_nlp_qpscaling_obj_gershgorin_get_constraints_scaling_ptr(void *memory_
         return NULL;
 }
 
+
+void ocp_nlp_qpscaling_obj_gershgorin_memory_get(void *config_, ocp_nlp_qpscaling_dims *dims, void *mem_, const char *field, int stage, void* value)
+{
+    ocp_nlp_qpscaling_obj_gershgorin_memory *mem = mem_;
+
+    if (!strcmp(field, "constr"))
+    {
+        double *ptr = value;
+        blasfeo_unpack_dvec(dims->ng[stage], mem->constraints_scaling_vec + stage, 0, ptr, 1);
+    }
+    else if (!strcmp(field, "obj"))
+    {
+        double *ptr = value;
+        *ptr = mem->obj_factor;
+    }
+    else
+    {
+        printf("\nerror: ocp_nlp_qpscaling_obj_gershgorin_memory_get: field %s not available\n", field);
+        exit(1);
+    }
+
+}
+
+
 /************************************************
  * helper functions
  ************************************************/
@@ -438,5 +462,6 @@ void ocp_nlp_qpscaling_obj_gershgorin_config_initialize_default(ocp_nlp_qpscalin
     config->rescale_solution = &ocp_nlp_qpscaling_obj_gershgorin_rescale_solution;
     // getters
     config->get_constraints_scaling_ptr = &ocp_nlp_qpscaling_obj_gershgorin_get_constraints_scaling_ptr;
+    config->memory_get = &ocp_nlp_qpscaling_obj_gershgorin_memory_get;
 }
 

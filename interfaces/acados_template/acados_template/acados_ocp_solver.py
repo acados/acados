@@ -331,6 +331,8 @@ class AcadosOcpSolver:
         self.__relaxed_qp_constraint_int_fields = {f'relaxed_{field}' for field in self.__qp_constraint_int_fields}
         self.__all_relaxed_qp_fields = self.__relaxed_qp_dynamics_fields | self.__relaxed_qp_cost_fields | self.__relaxed_qp_constraint_fields | self.__relaxed_qp_constraint_int_fields
 
+        self.__qp_scaling_fields = {'qpscaling_constr', 'qpscaling_obj'}
+
         # set arg and res types
         self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
         self.__acados_lib.ocp_nlp_dims_get_from_attr.restype = c_int
@@ -2133,6 +2135,44 @@ class AcadosOcpSolver:
 
         return out
 
+
+    def get_qp_scaling_constraints(self, stage: int) -> np.ndarray:
+        """
+        If the solver performs QP scaling, this function returns the scaling factors for the constraints.
+        Bounds are not scaled, so the dimension is ng + nh + nphi
+        """
+        if self.__solver_options["qpscaling_type"] == "NO_SCALING" or not self.__solver_options["qpscaling_scale_qp_constraints"]:
+            raise ValueError(f"get_qp_scaling_constraints: only works for QP solvers with qpscaling_type != NO_SCALING and qpscaling_scale_qp_constraints = True.")
+
+        # call getter
+        field_ = "qpscaling_constr"
+        field = field_.encode('utf-8')
+        dims = self.dims_get(field_, stage)
+        out = np.zeros((dims,), dtype=np.float64, order="C")
+        out_data = cast(out.ctypes.data, POINTER(c_double))
+        out_data_p = cast((out_data), c_void_p)
+        self.__acados_lib.ocp_nlp_get_at_stage(self.nlp_solver, stage, field, out_data_p)
+
+        return out
+
+
+    def get_qp_scaling_cost(self) -> float:
+        """
+        Returns the cost scaling value corresponding to the previous QP solution.
+        Only available if qpscaling_type != NO_SCALING.
+        """
+        if self.__solver_options["qpscaling_type"] == "NO_SCALING":
+            raise ValueError("get_qp_scaling_cost: only works for QP solvers with qpscaling_type != NO_SCALING.")
+
+        # create output array
+        out = np.zeros((1,), dtype=np.float64, order="C")
+        out_data = cast(out.ctypes.data, POINTER(c_double))
+
+        # call getter
+        field = "qpscaling_obj".encode('utf-8')
+        self.__acados_lib.ocp_nlp_get_at_stage(self.nlp_solver, 0, field, out_data)
+
+        return out[0]
 
     def __ocp_nlp_get_from_iterate(self, iteration_, stage_, field_):
         stage = c_int(stage_)

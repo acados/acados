@@ -81,6 +81,7 @@ typedef struct
     /* memory */
     acados_size_t (*memory_calculate_size)(void *config, ocp_nlp_qpscaling_dims *dims, void *opts);
     void *(*memory_assign)(void *config, ocp_nlp_qpscaling_dims *dims, void *opts, void *raw_memory);
+    void (*memory_get)(void *config, ocp_nlp_qpscaling_dims *dims, void *mem, const char *field, int stage, void* value);
     /* functions */
     void (*scale_qp)(void *config, ocp_nlp_qpscaling_dims *dims, void *opts, void *memory, ocp_qp_in *qp_in);
     void (*rescale_solution)(void *config, ocp_nlp_qpscaling_dims *dims, void *opts, void *memory, ocp_qp_in *qp_in, ocp_qp_out *qp_out);

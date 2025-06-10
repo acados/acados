@@ -913,6 +913,13 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
                                             "nh", &dims_value);
         return dims_value;
     }
+    else if (!strcmp(field, "qpscaling_constr"))
+    {
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
+                                            "ng", &dims_value);
+        dims_value += dims->ni_nl[stage];
+        return dims_value;
+    }
     // ocp_nlp_cost_dims
     else if (!strcmp(field, "y_ref") || !strcmp(field, "yref") || !strcmp(field, "ny"))
     {
@@ -1600,17 +1607,24 @@ void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, 
         char module[MAX_STR_LEN];
         extract_module_name(field, module, &module_length, &ptr_module);
         ocp_qp_in *qp_in;
-        const char *qp_field_name = field;
+        const char *field_name_getter = field;
         if ( ptr_module!=NULL && (!strcmp(ptr_module, "relaxed")) )
         {
             ocp_nlp_get(solver, "relaxed_qp_in", &qp_in);
-            qp_field_name = field+module_length+1;
+            field_name_getter = field+module_length+1;
+            get_from_qp_in(qp_in, stage, field_name_getter, value);
+        }
+        else if ( ptr_module!=NULL && (!strcmp(ptr_module, "qpscaling")) )
+        {
+            field_name_getter = field+module_length+1;
+            config->qpscaling->memory_get(config->qpscaling, dims->qpscaling, nlp_mem->qpscaling,
+                field_name_getter, stage, value);
         }
         else
         {
             qp_in = nlp_mem->qp_in;
+            get_from_qp_in(qp_in, stage, field_name_getter, value);
         }
-        get_from_qp_in(qp_in, stage, qp_field_name, value);
     }
 }
 

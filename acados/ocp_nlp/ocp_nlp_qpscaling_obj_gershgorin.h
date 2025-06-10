@@ -29,11 +29,6 @@
  */
 
 
-/// \addtogroup ocp_nlp
-/// @{
-/// \addtogroup ocp_nlp_reg
-/// @{
-
 #ifndef ACADOS_OCP_NLP_OCP_NLP_qpscaling_OBJECTIVE_GERSHGORIN_H_
 #define ACADOS_OCP_NLP_OCP_NLP_qpscaling_OBJECTIVE_GERSHGORIN_H_
 
@@ -83,12 +78,8 @@ void ocp_nlp_qpscaling_obj_gershgorin_config_initialize_default(ocp_nlp_qpscalin
 void *ocp_nlp_qpscaling_obj_gershgorin_get_constraints_scaling_ptr(void *memory_, void* opts_);
 
 
-
 #ifdef __cplusplus
 }
 #endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_qpscaling_OBJECTIVE_GERSHGORIN_H_
-
-/// @}
-/// @}
