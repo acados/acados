@@ -132,17 +132,10 @@ acados_size_t ocp_nlp_qpscaling_obj_gershgorin_memory_calculate_size(void *confi
     int N = dims->N;
     int i;
     ocp_nlp_qpscaling_obj_gershgorin_opts *opts = opts_;
-    // int *nx = dims->nx;
-    // int *nu = dims->nu;
 
     acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_qpscaling_obj_gershgorin_memory);
-
-    // What is this used for?
-    size += (2*(N+1)+N)*sizeof(struct blasfeo_dmat *); // RSQrq BAbt DCt
-    size += (3*(N+1)+2*N)*sizeof(struct blasfeo_dvec *); // rq b ux pi lam
-    size += (N+1)*sizeof(int *); // idxb
 
     // scaling vectors
     for (i = 0; i <= N; i++)
