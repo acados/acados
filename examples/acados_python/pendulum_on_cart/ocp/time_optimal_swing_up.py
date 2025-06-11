@@ -32,10 +32,9 @@
 import sys
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosMultiphaseOcp, ACADOS_INFTY, AcadosOcpOptions
+from acados_template import AcadosOcp, AcadosOcpSolver, ACADOS_INFTY, AcadosOcpOptions
 from pendulum_model import export_free_time_pendulum_ode_model
 import numpy as np
-import scipy.linalg
 from utils import plot_pendulum
 import casadi as ca
 from casadi.tools import entry, struct_symSX
@@ -92,16 +91,11 @@ def formulate_ocp(opts: AcadosOcpOptions) -> AcadosOcp:
     ocp.constraints.ubx_e = np.array([ACADOS_INFTY, theta_f, dx1_f, dtheta_f])
     ocp.constraints.idxbx_e = np.array([0, 2, 3, 4])
 
-    ###########################################################################
     # Define objective function
-    ###########################################################################
     ocp.cost.cost_type_e = 'EXTERNAL'
     ocp.model.cost_expr_ext_cost_e = model.x[0]
 
-
-    ###########################################################################
     # set solver options
-    ###########################################################################
     ocp.solver_options = opts
     ocp.solver_options.N_horizon = N
     ocp.solver_options.tf = Tf
@@ -121,7 +115,6 @@ def main(scale_objective: bool):
     opts.nlp_solver_max_iter = 1000
     opts.qp_solver_iter_max = 1000
 
-    # Search direction
     opts.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'#'SQP'#
 
     # Globalization
@@ -130,34 +123,36 @@ def main(scale_objective: bool):
     opts.globalization_funnel_use_merit_fun_only = False
 
     # Scaling
-    opts.qpscaling_type = 'OBJECTIVE_GERSHGORIN'
     if scale_objective:
-        opts.qpscaling_scale_objective = True
+        opts.qpscaling_scale_objective = "OBJECTIVE_GERSHGORIN"
     else:
-        opts.qpscaling_scale_objective = False
+        opts.qpscaling_scale_objective = "NO_COST_SCALING"
 
     ocp = formulate_ocp(opts)
 
     N = ocp.solver_options.N_horizon
-    nx = ocp.model.x.shape[0]
-    nu = ocp.model.u.shape[0]
 
     # create solver
     ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
+    # intialize
     T0 = 1.0
-
     for i in range(N):
         ocp_solver.set(i, "x", np.array([T0, 0.0, np.pi, 0.0, 0.0]))
         ocp_solver.set(i, "u", np.array([0.0]))
     ocp_solver.set(N, "x", np.array([T0, 0.0, np.pi, 0.0, 0.0]))
 
+    # solve
     status = ocp_solver.solve()
 
     if scale_objective:
-        assert status == 0, "Objective scaling should make the problem solvable!"
+        if status != 0:
+            raise ValueError("Objective scaling should make the problem solvable!")
+        print(f"Objective scaling worked, status: {status}.")
     else:
-        assert status != 0, "In Byrd-Omojokun equations, the multipliers should get too large which makes HPIPM fail!"
+        if status == 0:
+            raise ValueError("In Byrd-Omojokun equations, the multipliers should get too large which makes HPIPM fail!")
+        print("Problem not solvable without objective scaling, as expected.")
 
 if __name__ == "__main__":
     main(scale_objective=False)
