@@ -257,7 +257,6 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
         plot_linear_mass_system_U(shooting_nodes, simU)
         # plot_linear_mass_system_X(shooting_nodes, simX)
 
-    # import pdb; pdb.set_trace()
     print(f"\n\n----------------------\n")
 
 if __name__ == '__main__':

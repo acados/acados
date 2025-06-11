@@ -35,22 +35,6 @@ from linear_mass_model import export_linear_mass_model, plot_linear_mass_system_
 
 # an OCP to test the behavior of the SQP_WITH_FEASIBLE_QP functionalities
 
-def main_test():
-
-    # SETTINGS:
-    soften_controls = True
-    soften_obstacle = False
-    soften_terminal = True
-    plot = True
-    ocp, ocp_solver1 = create_solver("1", soften_obstacle, soften_terminal, soften_controls)
-    standard_test(ocp, ocp_solver1, soften_obstacle, soften_terminal, soften_controls, plot)
-
-    soften_controls = False
-    soften_obstacle = False
-    soften_terminal = False
-    plot = True
-    ocp, ocp_solver2 = create_solver("2", soften_obstacle, soften_terminal, soften_controls)
-    standard_test(ocp, ocp_solver2, soften_obstacle, soften_terminal, soften_controls, plot)
 
 def feasible_qp_dims_test(soften_obstacle, soften_terminal, soften_controls, N, ocp_solver: AcadosOcpSolver):
     """
@@ -125,10 +109,7 @@ def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', allo
     solver_options.N_horizon = N
     solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     qp_tol = 5e-7
-    solver_options.qp_solver_tol_stat = qp_tol
-    solver_options.qp_solver_tol_eq = qp_tol
-    solver_options.qp_solver_tol_ineq = qp_tol
-    solver_options.qp_solver_tol_comp = qp_tol
+    solver_options.qp_tol = qp_tol
     solver_options.qp_solver_ric_alg = 1
     solver_options.qp_solver_mu0 = 1e4
     solver_options.qp_solver_warm_start = 1
@@ -153,7 +134,7 @@ def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', allo
 
 def create_solver(solver_name: str, soften_obstacle: bool, soften_terminal: bool,
                   soften_controls: bool, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP',
-                  allow_switches: bool = True):
+                  allow_switching_modes: bool = True):
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -248,7 +229,8 @@ def create_solver(solver_name: str, soften_obstacle: bool, soften_terminal: bool
         ocp.cost.Zu_e = np.concatenate((ocp.cost.Zu_e, Zh))
 
     # load options
-    ocp.solver_options = create_solver_opts(N, Tf, nlp_solver_type, allow_switches)
+    ocp.solver_options = create_solver_opts(N, Tf, nlp_solver_type, allow_switching_modes)
+
     # create ocp solver
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_{solver_name}_ocp.json', verbose=False)
 
@@ -274,7 +256,6 @@ def standard_test(ocp: AcadosOcp, ocp_solver: AcadosOcpSolver, soften_obstacle: 
 
     # get solution
     sol_X = np.array([ocp_solver.get(i,"x") for i in range(N+1)])
-
 
     # print summary
     print(f"cost function value = {ocp_solver.get_cost()} after {sqp_iter} SQP iterations")
@@ -308,6 +289,14 @@ def test_same_behavior_sqp_and_sqp_wfqp():
     res_solver2 = ocp_solver2.get_residuals()
     assert np.array_equal(res_solver1, res_solver2), "both solvers should have identical residual stats"
 
+    # check solutions
+    sol_1 = ocp_solver1.store_iterate_to_flat_obj()
+    sol_2 = ocp_solver2.store_iterate_to_flat_obj()
+    if sol_1.allclose(sol_2):
+        print("Both solvers have the same solution.")
+    else:
+        raise ValueError("Solutions of solvers differ!")
+
     print(f"\n\n----------------------\n")
 
 def sqp_wfqp_test_same_matrices():
@@ -317,7 +306,7 @@ def sqp_wfqp_test_same_matrices():
     soften_terminal = False
 
     # SQP solver
-    _, ocp_solver1 = create_solver("v1", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type='SQP_WITH_FEASIBLE_QP', allow_switches=False)
+    _, ocp_solver1 = create_solver("v1", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type='SQP_WITH_FEASIBLE_QP', allow_switching_modes=False)
     _ = ocp_solver1.solve()
 
     qp = ocp_solver1.get_last_qp()
@@ -339,6 +328,24 @@ def sqp_wfqp_test_same_matrices():
             assert np.equal(qp[prefix+str(i)], relaxed_qp['relaxed_'+prefix+str(i)]).all(), f" matrices do not coincide for {prefix}{i},"
 
     print(f"\n\n----------------------\n")
+
+
+def main_test():
+    # SETTINGS:
+    soften_controls = True
+    soften_obstacle = False
+    soften_terminal = True
+    plot = True
+    ocp, ocp_solver1 = create_solver("1", soften_obstacle, soften_terminal, soften_controls)
+    standard_test(ocp, ocp_solver1, soften_obstacle, soften_terminal, soften_controls, plot)
+
+    soften_controls = False
+    soften_obstacle = False
+    soften_terminal = False
+    plot = True
+    ocp, ocp_solver2 = create_solver("2", soften_obstacle, soften_terminal, soften_controls)
+    standard_test(ocp, ocp_solver2, soften_obstacle, soften_terminal, soften_controls, plot)
+
 
 if __name__ == '__main__':
     main_test()
