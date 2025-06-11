@@ -93,6 +93,7 @@ def solve_problem_with_constraint_scaling(scale_constraints):
     if scale_constraints:
         ocp.solver_options.qpscaling_scale_constraints = 'INF_NORM'
 
+    ocp.code_export_directory = f'c_generated_code_{model.name}'
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json', verbose = False)
 
     # initialize solver
@@ -107,9 +108,9 @@ def solve_problem_with_constraint_scaling(scale_constraints):
     print(f"Objective scaling: {obj_scale:.4e}")
     if scale_constraints:
         constr_scale = ocp_solver.get_qp_scaling_constraints(stage=0)
-        print(f"Constraints scaling: {constr_scale}")
+        print(f"Constraints scaling factors: {constr_scale}")
 
-    if ocp.solver_options.qpscaling_scale_constraints:
+    if scale_constraints:
         assert status == 0, "Scaling of the constraints was not succesful!"
     else:
         assert status == 4, "Problem should not be solvable without scaling!"
