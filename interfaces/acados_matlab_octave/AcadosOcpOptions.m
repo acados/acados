@@ -85,7 +85,6 @@ classdef AcadosOcpOptions < handle
         reg_adaptive_eps
         qpscaling_type
         qpscaling_ub_max_abs_eig
-        qpscaling_ub_norm_inf_grad_obj
         qpscaling_lb_norm_inf_grad_obj
         qpscaling_scale_objective
         qpscaling_scale_constraints
@@ -197,7 +196,6 @@ classdef AcadosOcpOptions < handle
             obj.regularize_method = 'NO_REGULARIZE';
             obj.qpscaling_type = 'NO_SCALING';
             obj.qpscaling_ub_max_abs_eig = 1e5;
-            obj.qpscaling_ub_norm_inf_grad_obj = 1e2;
             obj.qpscaling_lb_norm_inf_grad_obj = 1e-4;
             obj.qpscaling_scale_objective = false;
             obj.qpscaling_scale_constraints = false;

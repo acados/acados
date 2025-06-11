@@ -109,7 +109,6 @@ class AcadosOcpOptions:
         self.__globalization_funnel_use_merit_fun_only = False
         self.__globalization_fixed_step_length = 1.0
         self.__qpscaling_ub_max_abs_eig = 1e5
-        self.__qpscaling_ub_norm_inf_grad_obj = 1e2
         self.__qpscaling_lb_norm_inf_grad_obj = 1e-4
         self.__qpscaling_scale_objective = "NO_COST_SCALING"
         self.__qpscaling_scale_constraints = "NO_CONSTRAINT_SCALING"
@@ -361,7 +360,7 @@ class AcadosOcpOptions:
     @property
     def qpscaling_ub_max_abs_eig(self):
         """
-        Maximum allowed upper bound for eigenvalues in qp scaling.
+        Maximum upper bound for eigenvalues of Hessian after QP scaling.
         Type: float >= 0.
         Default: 1e5.
         """
@@ -370,7 +369,7 @@ class AcadosOcpOptions:
     @property
     def qpscaling_ub_norm_inf_grad_obj(self):
         """
-        Maximum allowed upper bound for inf norm of qp gradient in qp scaling.
+        Maximum inf norm of cost gradient after QP scaling.
         Type: float >= 0.
         Default: 1e2.
         """
@@ -379,7 +378,7 @@ class AcadosOcpOptions:
     @property
     def qpscaling_lb_norm_inf_grad_obj(self):
         """
-        Minimum allowed lower bound for inf norm of qp gradient in qp scaling.
+        Minimum allowed lower bound for inf norm of qp gradient in QP scaling.
         Type: float >= 0.
         Default: 1e-4.
         """
@@ -1719,13 +1718,6 @@ class AcadosOcpOptions:
             self.__qpscaling_ub_max_abs_eig = qpscaling_ub_max_abs_eig
         else:
             raise ValueError('Invalid qpscaling_ub_max_abs_eig value. qpscaling_ub_max_abs_eig must be a positive float.')
-
-    @qpscaling_ub_norm_inf_grad_obj.setter
-    def qpscaling_ub_norm_inf_grad_obj(self, qpscaling_ub_norm_inf_grad_obj):
-        if isinstance(qpscaling_ub_norm_inf_grad_obj, float) and qpscaling_ub_norm_inf_grad_obj >= 0.:
-            self.__qpscaling_ub_norm_inf_grad_obj = qpscaling_ub_norm_inf_grad_obj
-        else:
-            raise ValueError('Invalid qpscaling_ub_norm_inf_grad_obj value. qpscaling_ub_norm_inf_grad_obj must be a positive float.')
 
     @qpscaling_lb_norm_inf_grad_obj.setter
     def qpscaling_lb_norm_inf_grad_obj(self, qpscaling_lb_norm_inf_grad_obj):

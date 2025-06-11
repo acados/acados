@@ -142,7 +142,6 @@ void ocp_nlp_qpscaling_opts_initialize_default(ocp_nlp_qpscaling_dims *dims, voi
     ocp_nlp_qpscaling_opts *opts = opts_;
 
     opts->lb_norm_inf_grad_obj = 1e-4;
-    opts->ub_norm_inf_grad_obj = 1e2;
     opts->ub_max_abs_eig = 1e5;
 
     opts->scale_qp_objective = NO_COST_SCALING;
@@ -161,12 +160,6 @@ void ocp_nlp_qpscaling_opts_set(void *opts_, const char *field, void* value)
         double *d_ptr = value;
         opts->ub_max_abs_eig = *d_ptr;
         // printf("ub_max_eig_abs: %2.e\n", opts->ub_max_abs_eig);
-    }
-    else if (!strcmp(field, "ub_norm_inf_grad_obj"))
-    {
-        double *d_ptr = value;
-        opts->ub_norm_inf_grad_obj = *d_ptr;
-        // printf("ub_norm_inf_grad_obj : %2.e\n", opts->ub_norm_inf_grad_obj);
     }
     else if (!strcmp(field, "lb_norm_inf_grad_obj"))
     {

@@ -63,9 +63,8 @@ void ocp_nlp_qpscaling_dims_set(ocp_nlp_qpscaling_dims *dims, int stage, char *f
  ************************************************/
 typedef struct
 {
-    double ub_max_abs_eig; // upper bound
-    double ub_norm_inf_grad_obj; // upper bound
-    double lb_norm_inf_grad_obj; // lower bound
+    double ub_max_abs_eig;
+    double lb_norm_inf_grad_obj;
 
     qpscaling_scale_objective_type scale_qp_objective;
     ocp_nlp_qpscaling_constraint_type scale_qp_constraints;

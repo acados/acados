@@ -2514,9 +2514,6 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     double qpscaling_ub_max_abs_eig = {{ solver_options.qpscaling_ub_max_abs_eig }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qpscaling_ub_max_abs_eig", &qpscaling_ub_max_abs_eig);
 
-    double qpscaling_ub_norm_inf_grad_obj = {{ solver_options.qpscaling_ub_norm_inf_grad_obj }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qpscaling_ub_norm_inf_grad_obj", &qpscaling_ub_norm_inf_grad_obj);
-
     double qpscaling_lb_norm_inf_grad_obj = {{ solver_options.qpscaling_lb_norm_inf_grad_obj }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qpscaling_lb_norm_inf_grad_obj", &qpscaling_lb_norm_inf_grad_obj);
 
