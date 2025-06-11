@@ -2144,10 +2144,11 @@ class AcadosOcpSolver:
     def get_qp_scaling_constraints(self, stage: int) -> np.ndarray:
         """
         If the solver performs QP scaling, this function returns the scaling factors for the constraints.
-        Bounds are not scaled, so the dimension is ng + nh + nphi
+        Bounds are not scaled, so the dimension is ng + nh + nphi.
+        Only available if qpscaling_scale_constraints != NO_CONSTRAINT_SCALING.
         """
-        if self.__solver_options["qpscaling_type"] == "NO_SCALING" or not self.__solver_options["qpscaling_scale_constraints"]:
-            raise ValueError(f"get_qp_scaling_constraints: only works for QP solvers with qpscaling_type != NO_SCALING and qpscaling_scale_constraints = True.")
+        if self.__solver_options["qpscaling_scale_constraints"] == "NO_CONSTRAINT_SCALING":
+            raise ValueError(f"get_qp_scaling_constraints: only works if qpscaling_scale_constraints != NO_CONSTRAINT_SCALING.")
 
         # call getter
         field_ = "qpscaling_constr"
@@ -2164,10 +2165,10 @@ class AcadosOcpSolver:
     def get_qp_scaling_cost(self) -> float:
         """
         Returns the cost scaling value corresponding to the previous QP solution.
-        Only available if qpscaling_type != NO_SCALING.
+        Only available if qpscaling_scale_objective != NO_COST_SCALING.
         """
-        if self.__solver_options["qpscaling_type"] == "NO_SCALING":
-            raise ValueError("get_qp_scaling_cost: only works for QP solvers with qpscaling_type != NO_SCALING.")
+        if self.__solver_options["qpscaling_scale_objective"] == "NO_COST_SCALING":
+            raise ValueError("get_qp_scaling_cost: only works for QP solvers with qpscaling_scale_objective != NO_COST_SCALING.")
 
         # create output array
         out = np.zeros((1,), dtype=np.float64, order="C")
