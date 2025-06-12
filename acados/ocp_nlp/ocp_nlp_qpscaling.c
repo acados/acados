@@ -37,6 +37,7 @@
 
 #include "acados/utils/math.h"
 #include "acados/utils/mem.h"
+#include "acados/utils/print.h"
 
 #include "acados/ocp_nlp/ocp_nlp_qpscaling.h"
 
@@ -337,10 +338,10 @@ static void rescale_solution_constraint_scaling(ocp_qp_in *qp_in, ocp_qp_out *qp
         {
             scaling_factor = BLASFEO_DVECEL(mem->constraints_scaling_vec+i, j);
 
-            // scale lower bound
+            // scale lam of lower bound
             BLASFEO_DVECEL(qp_out->lam+i, nb[i]+j) *= scaling_factor;
 
-            // scale upper bound
+            // scale lam of upper bound
             BLASFEO_DVECEL(qp_out->lam+i, 2*nb[i]+ng[i]+j) *= scaling_factor;
 
             s_idx = qp_in->idxs_rev[i][nb[i] + j];  // index of slack corresponding to this constraint
