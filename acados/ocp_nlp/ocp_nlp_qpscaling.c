@@ -535,9 +535,32 @@ void ocp_nlp_qpscaling_scale_constraints(ocp_nlp_qpscaling_dims *dims, void *opt
     }
 }
 
+
+static void print_qp_scaling_factors(ocp_nlp_qpscaling_dims *dims, ocp_nlp_qpscaling_opts *opts, ocp_nlp_qpscaling_memory *mem)
+{
+    if (opts->scale_qp_constraints)
+    {
+        printf("Scaling factors for constraints:\n");
+        for (int i = 0; i <= dims->N; i++)
+        {
+            printf("Stage %d: ", i);
+            for (int j = 0; j < dims->ng[i]; j++)
+            {
+                printf("%.2e ", BLASFEO_DVECEL(mem->constraints_scaling_vec+i, j));
+            }
+            printf("\n");
+        }
+    }
+    else
+    {
+        printf("No scaling factors for constraints.\n");
+    }
+}
+
 void ocp_nlp_qpscaling_scale_qp(ocp_nlp_qpscaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in)
 {
     ocp_nlp_qpscaling_opts *opts = opts_;
+    ocp_nlp_qpscaling_memory *mem = mem_;
 
     // printf("qp_in BEFORE SCALING\n");
     // print_ocp_qp_in(qp_in);
@@ -548,15 +571,15 @@ void ocp_nlp_qpscaling_scale_qp(ocp_nlp_qpscaling_dims *dims, void *opts_, void 
     else
     {
         // set the obj_factor to 1.0, for consinstency
-        ocp_nlp_qpscaling_memory *memory = mem_;
-        memory->obj_factor = 1.0;
+        mem->obj_factor = 1.0;
     }
     if (opts->scale_qp_constraints)
     {
         ocp_nlp_qpscaling_scale_constraints(dims, opts_, mem_, qp_in);
+        // print_qp_scaling_factors(dims, opts, mem);
     }
-//     printf("qp_in AFTER SCALING\n");
-//     print_ocp_qp_in(qp_in);
+    // printf("qp_in AFTER SCALING\n");
+    // print_ocp_qp_in(qp_in);
 }
 
 
@@ -573,7 +596,11 @@ void ocp_nlp_qpscaling_rescale_solution(ocp_nlp_qpscaling_dims *dims, void *opts
     if (opts->scale_qp_constraints)
     {
         rescale_solution_constraint_scaling(qp_in, qp_out, memory);
+        qp_info *info = (qp_info *) qp_out->misc;
+        info->t_computed = 0;  // t needs to be recomputed if needed.
     }
+    // printf("qp_out AFTER RESCALING\n");
+    // print_ocp_qp_out(qp_out);
 
     return;
 }
