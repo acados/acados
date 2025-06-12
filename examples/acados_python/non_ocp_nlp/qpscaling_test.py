@@ -98,7 +98,7 @@ def create_solver(solver_name: str, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP
     # solver_options.print_level = 1
     # solver_options.nlp_solver_max_iter = 2
     solver_options.use_constraint_hessian_in_feas_qp = False
-    solver_options.nlp_solver_ext_qp_res = 1
+    solver_options.nlp_solver_ext_qp_res = 0
 
     if not allow_switching_modes:
         solver_options.search_direction_mode = 'BYRD_OMOJOKUN'
@@ -118,7 +118,7 @@ def create_solver(solver_name: str, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP
 def check_qp_scaling(ocp_solver: AcadosOcpSolver):
     if ocp_solver.acados_ocp.solver_options.qpscaling_scale_constraints == "NO_CONSTRAINT_SCALING":
         try:
-            constraint_scaling = ocp_solver.get_qp_scaling_constraints(i)
+            constraint_scaling = ocp_solver.get_qp_scaling_constraints(0)
         except Exception as e:
             print(f"constraint scaling not done as expected.")
             return
@@ -126,6 +126,8 @@ def check_qp_scaling(ocp_solver: AcadosOcpSolver):
     for i in range(ocp_solver.N+1):
         constraint_scaling = ocp_solver.get_qp_scaling_constraints(i)
         print(f"Constraint scaling at stage {i}: {constraint_scaling}")
+        if not np.all(constraint_scaling != 1.0):
+            raise ValueError(f"Constraint scaling should have non-unit to actually test the functionality")
     objective_scaling = ocp_solver.get_qp_scaling_cost()
     print(f"Objective scaling: {objective_scaling}")
 
@@ -146,15 +148,16 @@ def call_solver(ocp_solver: AcadosOcpSolver) -> AcadosOcpFlattenedIterate:
 
 
 def test_qp_scaling(soft_h: bool = True):
+    nlp_solver_type = "SQP"
     # test QP scaling
     print("Testing QP scaling with SQP solver...")
-    ocp_1, ocp_solver_1 = create_solver("1", nlp_solver_type="SQP", allow_switching_modes=False, use_qp_scaling=True, soft_h=soft_h)
+    ocp_1, ocp_solver_1 = create_solver("1", nlp_solver_type=nlp_solver_type, allow_switching_modes=False, use_qp_scaling=True, soft_h=soft_h)
     sol_1 = call_solver(ocp_solver_1)
     check_qp_scaling(ocp_solver_1)
 
     # test without QP scaling
     print("Reference ...")
-    ocp_2, ocp_solver_2 = create_solver("2", nlp_solver_type="SQP", allow_switching_modes=False, use_qp_scaling=False, soft_h=soft_h)
+    ocp_2, ocp_solver_2 = create_solver("2", nlp_solver_type=nlp_solver_type, allow_switching_modes=False, use_qp_scaling=False, soft_h=soft_h)
     sol_2 = call_solver(ocp_solver_2)
     check_qp_scaling(ocp_solver_2)
     print(f"Reference solution: {sol_2}")
@@ -167,9 +170,15 @@ def test_qp_scaling(soft_h: bool = True):
             print(f"Field {field} differs: max diff = {np.max(np.abs(v1 - v2))}")
             print(f"got difference {v1 - v2}")
         else:
-            print(f"Solutions match in field {field}.")
+            # print(f"Solutions match in field {field}.")
             pass
     print(f"{sol_1}")
+
+    if soft_h:
+        if np.all(sol_1.su > 1e-1):
+            print("checked with active soft constraints.")
+        else:
+            raise ValueError("Soft constraints should be active, but are not.")
 
     if sol_1.allclose(sol_2):
         print("Both solvers have the same solution.")
