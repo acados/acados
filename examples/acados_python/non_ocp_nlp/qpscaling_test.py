@@ -64,6 +64,12 @@ def create_solver(solver_name: str, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP
     ocp.constraints.lbx_e = -xmax * np.ones((nx,))
     ocp.constraints.ubx_e = +xmax * np.ones((nx,))
     ocp.constraints.idxbx_e = np.arange(nx)
+    # soften the bounds
+    # ocp.constraints.idxsbx_e = np.array([0, 1])
+    # ocp.cost.zl_e = np.array([1.0, 1.0])
+    # ocp.cost.zu_e = np.array([1e0, 1e0])
+    # ocp.cost.Zl_e = np.array([1.0, 1.0])
+    # ocp.cost.Zu_e = np.array([1e0, 1e0])
 
     # define soft nonlinear constraint
     scale_h = 1.0
@@ -76,10 +82,10 @@ def create_solver(solver_name: str, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP
     # soften
     if soft_h:
         ocp.constraints.idxsh_e = np.array([0])
-        ocp.cost.zl_e = np.array([1.0])
-        ocp.cost.zu_e = np.array([1e0])
-        ocp.cost.Zl_e = np.array([1.0])
-        ocp.cost.Zu_e = np.array([1e0])
+        ocp.cost.zl_e = np.concatenate((ocp.cost.zl_e, np.array([1.0])))
+        ocp.cost.zu_e = np.concatenate((ocp.cost.zu_e, np.array([1e0])))
+        ocp.cost.Zl_e = np.concatenate((ocp.cost.Zl_e, np.array([1.0])))
+        ocp.cost.Zu_e = np.concatenate((ocp.cost.Zu_e, np.array([1e0])))
 
     # set options
     solver_options = ocp.solver_options
@@ -170,12 +176,12 @@ def test_qp_scaling(soft_h: bool = True):
             print(f"Field {field} differs: max diff = {np.max(np.abs(v1 - v2))}")
             print(f"got difference {v1 - v2}")
         else:
-            # print(f"Solutions match in field {field}.")
+            print(f"Solutions match in field {field}.")
             pass
     print(f"{sol_1}")
 
     if soft_h:
-        if np.all(sol_1.su > 1e-1):
+        if np.any(sol_1.su > 1e-1):
             print("checked with active soft constraints.")
         else:
             raise ValueError("Soft constraints should be active, but are not.")
