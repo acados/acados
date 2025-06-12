@@ -103,6 +103,13 @@ class AcadosOcpIterate:
             lam=np.concatenate(self.lam_traj),
         )
 
+    def allclose(self, other, rtol=1e-5, atol=1e-8) -> bool:
+        if not isinstance(other, AcadosOcpIterate):
+            raise TypeError(f"Expected AcadosOcpIterate, got {type(other)}")
+        s = self.flatten()
+        o = other.flatten()
+        return s.allclose(o, rtol=rtol, atol=atol)
+
 @dataclass
 class AcadosOcpIterates:
     """
