@@ -243,27 +243,10 @@ class AcadosOcpSolver:
             self.__has_x0 = acados_ocp_json['constraints']['has_x0']
             self.__nsbu_0 = acados_ocp_json['dims']['nsbu']
             self.__nbxe_0 = acados_ocp_json['dims']['nbxe_0']
-            has_custom_hess = not (is_empty(acados_ocp_json['model']['cost_expr_ext_cost_custom_hess_0']) and
-                                   is_empty(acados_ocp_json['model']['cost_expr_ext_cost_custom_hess']) and
-                                   is_empty(acados_ocp_json['model']['cost_expr_ext_cost_custom_hess_e']))
         elif self.__problem_class == "MOCP":
             self.__has_x0 = acados_ocp_json['constraints'][0]['has_x0']
             self.__nsbu_0 = acados_ocp_json['phases_dims'][0]['nsbu']
             self.__nbxe_0 = acados_ocp_json['phases_dims'][0]['nbxe_0']
-            has_custom_hess = any([not (is_empty(model['cost_expr_ext_cost_custom_hess_0']) and
-                                   is_empty(model['cost_expr_ext_cost_custom_hess']) and
-                                   is_empty(model['cost_expr_ext_cost_custom_hess_e'])) for model in acados_ocp_json['model']])
-
-        self.__uses_exact_hessian = (
-            self.__solver_options["hessian_approx"] == 'EXACT' and
-            self.__solver_options["regularize_method"] == 'NO_REGULARIZE' and
-            self.__solver_options["levenberg_marquardt"] == 0 and
-            self.__solver_options["exact_hess_constr"] == 1 and
-            self.__solver_options["exact_hess_cost"] == 1 and
-            self.__solver_options["exact_hess_dyn"] == 1 and
-            self.__solver_options["fixed_hess"] == 0 and
-            not has_custom_hess
-        )
 
         acados_lib_path = acados_ocp_json['acados_lib_path']
         code_export_directory = acados_ocp_json['code_export_directory']
@@ -690,16 +673,11 @@ class AcadosOcpSolver:
         return self.eval_and_get_optimal_value_gradient(with_respect_to)
 
 
-    def _sanity_check_solution_sensitivities(self, parametric=True) -> None:
-        if not (self.__solver_options["qp_solver"] == 'FULL_CONDENSING_HPIPM' or
-                self.__solver_options["qp_solver"] == 'PARTIAL_CONDENSING_HPIPM'):
-            raise NotImplementedError("Parametric sensitivities are only available with HPIPM as QP solver.")
+    def _ensure_solution_sensitivities_available(self, parametric=True) -> None:
+        if self.__problem_class == "MOCP":
+            raise ValueError("Solution sensitivities are not implemented for multiphase OCPs.")
 
-        if not self.__uses_exact_hessian:
-            raise ValueError("Parametric sensitivities are only correct if an exact Hessian is used!")
-
-        if parametric and not self.__solver_options["with_solution_sens_wrt_params"]:
-            raise ValueError("Parametric sensitivities are only available if with_solution_sens_wrt_params is set to True.")
+        self.acados_ocp.ensure_solution_sensitivities_available(parametric=parametric)  # type: ignore
 
 
     def eval_solution_sensitivity(self,
@@ -772,14 +750,14 @@ class AcadosOcpSolver:
             ngrad = nx
             field = "ex"
             if sanity_checks:
-                self._sanity_check_solution_sensitivities(parametric=False)
+                self._ensure_solution_sensitivities_available(parametric=False)
 
         elif with_respect_to == "p_global":
             np_global = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p_global".encode('utf-8'))
             ngrad = np_global
             field = "p_global"
             if sanity_checks:
-                self._sanity_check_solution_sensitivities()
+                self._ensure_solution_sensitivities_available()
 
             # compute jacobians wrt params in all modules
             t0 = time.time()
@@ -911,7 +889,7 @@ class AcadosOcpSolver:
             n_seeds = seed_u[0][1].shape[1]
 
         if sanity_checks:
-            self._sanity_check_solution_sensitivities()
+            self._ensure_solution_sensitivities_available()
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
             nu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "u".encode('utf-8'))
 
@@ -977,7 +955,7 @@ class AcadosOcpSolver:
 
         print("WARNING: eval_param_sens() is deprecated. Please use eval_solution_sensitivity() instead!")
 
-        self._sanity_check_solution_sensitivities(False)
+        self._ensure_solution_sensitivities_available(False)
 
         field = field.encode('utf-8')
 
