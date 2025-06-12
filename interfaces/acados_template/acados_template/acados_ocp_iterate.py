@@ -95,11 +95,11 @@ class AcadosOcpIterate:
     def flatten(self) -> AcadosOcpFlattenedIterate:
         return AcadosOcpFlattenedIterate(
             x=np.concatenate(self.x_traj),
-            u=np.concatenate(self.u_traj),
-            z=np.concatenate(self.z_traj),
+            u=np.concatenate(self.u_traj) if len(self.u_traj) > 0 else np.array([]),
+            z=np.concatenate(self.z_traj) if len(self.z_traj) > 0 else np.array([]),
             sl=np.concatenate(self.sl_traj),
             su=np.concatenate(self.su_traj),
-            pi=np.concatenate(self.pi_traj),
+            pi=np.concatenate(self.pi_traj) if len(self.pi_traj) > 0 else np.array([]),
             lam=np.concatenate(self.lam_traj),
         )
 
