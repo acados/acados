@@ -1,0 +1,185 @@
+#
+# Copyright (c) The acados authors.
+#
+# This file is part of acados.
+#
+# The 2-Clause BSD License
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.;
+#
+
+from acados_template import AcadosOcp, AcadosOcpSolver, ACADOS_INFTY, AcadosOcpFlattenedIterate
+import numpy as np
+import casadi as ca
+
+
+def create_solver(solver_name: str, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP',
+                  allow_switching_modes: bool = True,
+                  use_qp_scaling: bool = False,
+                  soft_h: bool = True):
+
+    # create ocp object to formulate the OCP
+    ocp = AcadosOcp()
+
+    nx = 2
+    # set model
+    ocp.model.name = f"qp_{solver_name}"
+    ocp.model.x = ca.SX.sym('x', nx, 1)
+
+    ny = nx
+
+    # discretization
+    N = 0
+
+    ocp.cost.W_e = 2*np.diag([1e1, 1e1])
+
+    ocp.cost.cost_type = 'LINEAR_LS'
+    ocp.cost.cost_type_e = 'LINEAR_LS'
+
+    ocp.cost.Vx_e = np.eye((nx))
+    ocp.cost.yref_e = np.ones((ny, ))
+
+    # set constraints
+    xmax = 2.0
+    ocp.constraints.lbx_e = -xmax * np.ones((nx,))
+    ocp.constraints.ubx_e = +xmax * np.ones((nx,))
+    ocp.constraints.idxbx_e = np.arange(nx)
+
+    # define soft nonlinear constraint
+    scale_h = 1.0
+    radius = 1.0
+    ocp.model.con_h_expr_e = scale_h * (ocp.model.x[0]**2 + ocp.model.x[1]**2)
+    ocp.constraints.lh_e = -1000 * np.ones((1,))
+    ocp.constraints.lh_e = -ACADOS_INFTY * np.ones((1,))
+    ocp.constraints.uh_e = scale_h * radius**2 * np.ones((1,))
+
+    # soften
+    if soft_h:
+        ocp.constraints.idxsh_e = np.array([0])
+        ocp.cost.zl_e = np.array([0.0])
+        ocp.cost.zu_e = np.array([1e4])
+        ocp.cost.Zl_e = np.array([0.0])
+        ocp.cost.Zu_e = np.array([1e2])
+
+    # set options
+    solver_options = ocp.solver_options
+    solver_options.N_horizon = N
+
+    solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    qp_tol = 5e-9
+    solver_options.qp_tol = qp_tol
+    solver_options.qp_solver_tol_eq = qp_tol
+    solver_options.qp_solver_tol_ineq = qp_tol
+    solver_options.qp_solver_tol_comp = qp_tol
+    solver_options.qp_solver_ric_alg = 1
+    solver_options.qp_solver_mu0 = 1e4
+    solver_options.qp_solver_warm_start = 1
+    solver_options.qp_solver_iter_max = 400
+    solver_options.hessian_approx = 'GAUSS_NEWTON'
+    solver_options.nlp_solver_type = nlp_solver_type
+    solver_options.globalization = 'FUNNEL_L1PEN_LINESEARCH'
+    solver_options.globalization_full_step_dual = True
+    # solver_options.print_level = 1
+    solver_options.nlp_solver_max_iter = 20
+    solver_options.use_constraint_hessian_in_feas_qp = False
+    solver_options.nlp_solver_ext_qp_res = 1
+
+    if not allow_switching_modes:
+        solver_options.search_direction_mode = 'BYRD_OMOJOKUN'
+        solver_options.allow_direction_mode_switch_to_nominal = False
+
+    if use_qp_scaling:
+        # ocp.solver_options.qpscaling_scale_constraints = "INF_NORM"
+        ocp.solver_options.qpscaling_scale_objective = "OBJECTIVE_GERSHGORIN"
+
+    # create ocp solver
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
+
+    return ocp, ocp_solver
+
+
+
+def check_qp_scaling(ocp_solver: AcadosOcpSolver):
+    if ocp_solver.acados_ocp.solver_options.qpscaling_scale_constraints == "NO_CONSTRAINT_SCALING":
+        try:
+            constraint_scaling = ocp_solver.get_qp_scaling_constraints(i)
+        except Exception as e:
+            print(f"constraint scaling not done as expected.")
+            return
+
+    for i in range(ocp_solver.N+1):
+        constraint_scaling = ocp_solver.get_qp_scaling_constraints(i)
+        print(f"Constraint scaling at stage {i}: {constraint_scaling}")
+    objective_scaling = ocp_solver.get_qp_scaling_cost()
+    print(f"Objective scaling: {objective_scaling}")
+
+
+def call_solver(ocp_solver: AcadosOcpSolver) -> AcadosOcpFlattenedIterate:
+    # solve
+    status = ocp_solver.solve()
+    ocp_solver.print_statistics()
+
+    sqp_iter = ocp_solver.get_stats('sqp_iter')
+    if status != 0:
+        # raise RuntimeError(f"acados returned status {status} after {sqp_iter} SQP iterations.")
+        print(f'acados returned status {status}.')
+
+    print(f"cost function value = {ocp_solver.get_cost()} after {sqp_iter} SQP iterations")
+    sol = ocp_solver.store_iterate_to_flat_obj()
+    return sol
+
+
+def test_qp_scaling():
+    # test QP scaling
+    print("Testing QP scaling with SQP solver...")
+    ocp_1, ocp_solver_1 = create_solver("1", nlp_solver_type="SQP", allow_switching_modes=False, use_qp_scaling=True, soft_h=False)
+    sol_1 = call_solver(ocp_solver_1)
+    check_qp_scaling(ocp_solver_1)
+
+    # test without QP scaling
+    print("Reference ...")
+    ocp_2, ocp_solver_2 = create_solver("2", nlp_solver_type="SQP", allow_switching_modes=False, use_qp_scaling=False, soft_h=False)
+    sol_2 = call_solver(ocp_solver_2)
+    check_qp_scaling(ocp_solver_2)
+
+    # check solutions
+    for field in ["x", "u", "sl", "su", "lam", "pi"]:
+        v1 = getattr(sol_1, field)
+        v2 = getattr(sol_2, field)
+        if not np.allclose(v1, v2, atol=1e-6):
+            print(f"Field {field} differs: max diff = {np.max(np.abs(v1 - v2))}")
+            print(f"got difference {v1 - v2}")
+        else:
+            pass
+                # print(f"Field {field} is the same at index {i}.")
+    print(f"{sol_1}")
+
+    if sol_1.allclose(sol_2):
+        print("Both solvers have the same solution.")
+    else:
+        raise ValueError("Solutions of solvers differ!")
+
+
+if __name__ == '__main__':
+    test_qp_scaling()
+
