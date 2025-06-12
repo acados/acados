@@ -1398,6 +1398,7 @@ static void external_function_external_param_casadi_set_global_data_pointer(void
 
     if (!fun->args_dense[fun->idx_in_global_data])
     {
+        // NOTE: sparsity is removed in MATLAB/Python interface
         printf("\nexternal_function_external_param_casadi_set_global_data_pointer: sparse global_data not supported!\n");
         exit(1);
     }

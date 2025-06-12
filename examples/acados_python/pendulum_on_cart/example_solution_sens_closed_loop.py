@@ -129,7 +129,11 @@ def main():
 
     acados_ocp_solver = create_ocp_solver()
     acados_integrator = create_integrator()
-    print("Please check the documentation fo eval_solution_sensitivities() for the requirements on exact solution sensitivities with acados.")
+    print("Please check the documentation of eval_solution_sensitivities() for the requirements on exact solution sensitivities with acados.")
+    # NOTE: the correct computation of solution sensitivities requires an exact Hessian.
+    # The formulation here uses the Gauss-Newton Hessian approximation,
+    # which is exact as a linear dynamics and constraints are used
+    # and the cost function is of linear least squares type.
 
     nx = acados_ocp_solver.acados_ocp.dims.nx
     nu = acados_ocp_solver.acados_ocp.dims.nu
@@ -163,7 +167,7 @@ def main():
             u_lin = simU[i,:]
             x_lin = xcurrent
 
-            out_dict = acados_ocp_solver.eval_solution_sensitivity(0, with_respect_to="initial_state", return_sens_u=True, return_sens_x=False)
+            out_dict = acados_ocp_solver.eval_solution_sensitivity(0, with_respect_to="initial_state", return_sens_u=True, return_sens_x=False, sanity_checks=False)
             sens_u = out_dict['sens_u']
 
         else:

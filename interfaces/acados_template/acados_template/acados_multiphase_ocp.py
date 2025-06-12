@@ -256,7 +256,7 @@ class AcadosMultiphaseOcp:
 
         return
 
-    def make_consistent(self) -> None:
+    def make_consistent(self, verbose: bool = True) -> None:
 
         self.N_horizon = sum(self.N_list)
         self.solver_options.N_horizon = self.N_horizon # NOTE: to not change options when making ocp consistent
@@ -330,7 +330,7 @@ class AcadosMultiphaseOcp:
                     print(f"Phase {i} contains non-default initial fields: {nondefault_fields}, which will be ignored.")
 
             print(f"Calling make_consistent for phase {i}.")
-            ocp.make_consistent(is_mocp_phase=True)
+            ocp.make_consistent(is_mocp_phase=True, verbose=verbose)
 
             self.dummy_ocp_list.append(ocp)
 

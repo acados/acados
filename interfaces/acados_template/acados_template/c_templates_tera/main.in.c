@@ -77,6 +77,7 @@ int main()
     ocp_nlp_solver *nlp_solver = {{ name }}_acados_get_nlp_solver(acados_ocp_capsule);
     void *nlp_opts = {{ name }}_acados_get_nlp_opts(acados_ocp_capsule);
 
+{%- if dims.nbx_0 > 0 %}
     // initial condition
     double lbx0[NBX0];
     double ubx0[NBX0];
@@ -87,6 +88,7 @@ int main()
 
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "lbx", lbx0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "ubx", ubx0);
+{%- endif %}
 
     // initialization for state values
     double x_init[NX];

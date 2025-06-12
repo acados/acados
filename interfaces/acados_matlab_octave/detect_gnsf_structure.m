@@ -44,7 +44,7 @@ function detect_gnsf_structure(model, dims, transcribe_opts)
     % functions, which were made part of the linear output system of the gnsf,
     % have changed signs.
 
-    % Options: transcribe_opts is a Matlab struct consisting of booleans:
+    % Options: transcribe_opts is a MATLAB struct consisting of booleans:
     %   print_info: if extensive information on how the model is processed
     %       is printed to the console.
     %   check_E_invertibility: if the transcription method should check if the

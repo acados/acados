@@ -58,12 +58,12 @@ class AcadosSimSolver:
     """
     Class to interact with the acados integrator C object.
 
-        :param acados_sim: type :py:class:`~acados_template.acados_ocp.AcadosOcp` (takes values to generate an instance :py:class:`~acados_template.acados_sim.AcadosSim`) or :py:class:`~acados_template.acados_sim.AcadosSim`
-        :param json_file: Default: 'acados_sim.json'
-        :param build: Default: True
-        :param cmake_builder: type :py:class:`~acados_template.utils.CMakeBuilder` generate a `CMakeLists.txt` and use
-            the `CMake` pipeline instead of a `Makefile` (`CMake` seems to be the better option in conjunction with
-            `MS Visual Studio`); default: `None`
+    :param acados_sim: type :py:class:`~acados_template.acados_ocp.AcadosOcp` (takes values to generate an instance :py:class:`~acados_template.acados_sim.AcadosSim`) or :py:class:`~acados_template.acados_sim.AcadosSim`
+    :param json_file: Default: 'acados_sim.json'
+    :param build: Default: True
+    :param cmake_builder: type :py:class:`~acados_template.utils.CMakeBuilder` generate a `CMakeLists.txt` and use
+        the `CMake` pipeline instead of a `Makefile` (`CMake` seems to be the better option in conjunction with
+        `MS Visual Studio`); default: `None`
     """
     if sys.platform=="win32":
         dlclose = DllLoader('kernel32', use_last_error=True).FreeLibrary
@@ -156,6 +156,9 @@ class AcadosSimSolver:
             print("Warning: An AcadosSimSolver is created from an AcadosOcp description.",
                   "This only works if you created an AcadosOcpSolver before with the same description."
                   "Otherwise it leads to undefined behavior. Using an AcadosSim description is recommended.")
+            if acados_sim.dims.np_global > 0:
+                raise ValueError("AcadosSimSolver: AcadosOcp with np_global > 0 is not supported.")
+
             self.__T = acados_sim.solver_options.Tsim
         else:
             self.__T = acados_sim.solver_options.T
@@ -277,7 +280,7 @@ class AcadosSimSolver:
         """
         Get the last solution of the solver.
 
-            :param str field: string in ['x', 'u', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic', 'CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
+        :param field: string in ['x', 'u', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic', 'CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
         """
         field = field_.encode('utf-8')
 
@@ -324,8 +327,8 @@ class AcadosSimSolver:
         """
         Set numerical data inside the solver.
 
-            :param field: string in ['x', 'u', 'p', 'xdot', 'z', 'seed_adj', 'T', 't0']
-            :param value: the value with appropriate size.
+        :param field: string in ['x', 'u', 'p', 'xdot', 'z', 'seed_adj', 'T', 't0']
+        :param value: the value with appropriate size.
         """
         settable = ['x', 'u', 'p', 'xdot', 'z', 'seed_adj', 'T', 't0'] # S_forw
 
@@ -383,8 +386,8 @@ class AcadosSimSolver:
         """
         Set solver options
 
-            :param field: string in ['sens_forw', 'sens_adj', 'sens_hess']
-            :param value: Boolean
+        :param field: string in ['sens_forw', 'sens_adj', 'sens_hess']
+        :param value: Boolean
         """
         fields = ['sens_forw', 'sens_adj', 'sens_hess']
         if field_ not in fields:

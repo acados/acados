@@ -11,10 +11,10 @@ It is recommended to instead look at the header files in [`interfaces/acados_c/`
 
 
 ## Examples
-Note that the `Matlab` and `Python` interfaces can be used to code generate `C` examples which are cleaner than some of the plain C examples in [`examples/c`](https://github.com/acados/acados/tree/main/examples/c).
+Note that the `MATLAB` and `Python` interfaces can be used to code generate `C` examples which are cleaner than some of the plain C examples in [`examples/c`](https://github.com/acados/acados/tree/main/examples/c).
 A recommended workflow is thus to prototype an NMPC controller from one of the high-level interfaces and deploy the generated code with minor modifications in a `C`, `C++` or `ROS` framework.
 
-A very important resource are the templated `C` files used by the template based interfaces (`Python` and code generation for `Matlab` and `Octave`), which show how to use the `C` interface properly.
+A very important resource are the templated `C` files used by the template based interfaces (`Python` and code generation for `MATLAB` and `Octave`), which show how to use the `C` interface properly.
 These templates are actively maintained and tested using CI.
 The templates can be found in [`interfaces/acados_template/acados_template/c_templates_tera`](https://github.com/acados/acados/tree/main/interfaces/acados_template/acados_template/c_templates_tera).
 

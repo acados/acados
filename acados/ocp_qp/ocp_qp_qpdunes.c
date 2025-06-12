@@ -925,13 +925,13 @@ int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, v
 
 
 
-void ocp_qp_qpdunes_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+void ocp_qp_qpdunes_eval_forw_sens(void *config_, void *qp_in, void *seed, void *qp_out, void *opts_, void *mem_, void *work_)
 {
-    printf("\nerror: ocp_qp_qpdunes_eval_sens: not implemented yet\n");
+    printf("\nerror: ocp_qp_qpdunes_eval_forw_sens: not implemented yet\n");
     exit(1);
 }
 
-void ocp_qp_qpdunes_eval_adj_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+void ocp_qp_qpdunes_eval_adj_sens(void *config_, void *qp_in, void *seed, void *qp_out, void *opts_, void *mem_, void *work_)
 {
     printf("\nerror: ocp_qp_qpdunes_eval_adj_sens: not implemented yet\n");
     exit(1);
@@ -971,7 +971,7 @@ void ocp_qp_qpdunes_config_initialize_default(void *config_)
     config->workspace_calculate_size =
         (acados_size_t (*)(void *, void *, void *)) & ocp_qp_qpdunes_workspace_calculate_size;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & ocp_qp_qpdunes;
-    config->eval_sens = &ocp_qp_qpdunes_eval_sens;
+    config->eval_forw_sens = &ocp_qp_qpdunes_eval_forw_sens;
     config->eval_adj_sens = &ocp_qp_qpdunes_eval_adj_sens;
     config->solver_get = &ocp_qp_qpdunes_solver_get;
     config->terminate = &ocp_qp_qpdunes_terminate;

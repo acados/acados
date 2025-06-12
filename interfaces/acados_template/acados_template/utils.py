@@ -156,6 +156,12 @@ def get_simulink_default_opts() -> dict:
     return simulink_default_opts
 
 
+def is_casadi_SX(x):
+    if isinstance(x, ca.SX):
+        return True
+    return False
+
+
 def is_column(x):
     if isinstance(x, np.ndarray):
         if x.ndim == 1:
@@ -204,6 +210,7 @@ def casadi_length(x):
     else:
         raise TypeError("casadi_length expects one of the following types: casadi.MX, casadi.SX."
                         + " Got: " + str(type(x)))
+
 
 def get_shared_lib_ext():
     if sys.platform == 'darwin':

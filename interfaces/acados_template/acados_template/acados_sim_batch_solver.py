@@ -70,7 +70,8 @@ class AcadosSimBatchSolver():
                                               json_file=json_file,
                                               build=n==0 if build else False,
                                               generate=n==0 if generate else False,
-                                              verbose=verbose)
+                                              verbose=verbose if n==0 else False,
+                                              )
                               for n in range(self.N_batch)]
 
         self.__shared_lib = self.sim_solvers[0].shared_lib

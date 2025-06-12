@@ -114,7 +114,7 @@ def create_ocp_description(hessian_approx, linearized_dynamics=False, discrete=F
     ocp.solver_options.qp_solver_iter_max = 500
     ocp.solver_options.nlp_solver_max_iter = 1000
     if hessian_approx == 'EXACT':
-        ocp.solver_options.nlp_solver_step_length = 0.5
+        ocp.solver_options.globalization_fixed_step_length = 0.5
         ocp.solver_options.nlp_solver_max_iter = 1
         ocp.solver_options.tol = 1e-14
     # set prediction horizon
@@ -242,14 +242,14 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
     for i, p0 in enumerate(p_vals):
         x0[idxp] = p0
         u0 = acados_ocp_solver_gn.solve_for_x0(x0)
-        u0_values[i] = u0
+        u0_values[i] = u0[0]
 
     du0_dp_finite_diff = np.gradient(u0_values, p_vals[1]-p_vals[0])
     for i, p0 in enumerate(p_vals):
         x0[idxp] = p0
         u0 = acados_ocp_solver_gn.solve_for_x0(x0)
-        acados_ocp_solver_gn.store_iterate(filename='iterate.json', overwrite=True, verbose=False)
-        acados_ocp_solver_exact.load_iterate(filename='iterate.json', verbose=False)
+        iterate = acados_ocp_solver_gn.store_iterate_to_flat_obj()
+        acados_ocp_solver_exact.load_iterate_from_flat_obj(iterate)
         acados_ocp_solver_exact.set(0, 'u', u0+1e-7)
         acados_ocp_solver_exact.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
 
@@ -260,8 +260,7 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
         exact_hessian_status[i] = acados_ocp_solver_exact.get_stats('qp_stat')[-1]
 
         residuals = acados_ocp_solver_exact.get_stats("residuals")
-        print(f"residuals sensitivity_solver {residuals}")
-
+        # print(f"residuals sensitivity_solver {residuals}")
 
         # solve with casadi and compare hessians
         nlp_sol = casadi_solver(p=x0, lbg=lbg, ubg=ubg)
@@ -281,9 +280,13 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
     if max_hess_error > 1e-4:
         raise Exception(f"Hessian error {max_hess_error} > 1e-4 when comparing to casadi.")
 
-    solution_sens_mean_diff = np.mean(np.abs(du0_dp_values -du0_dp_finite_diff))
+    solution_sens_mean_diff = np.mean(np.abs(du0_dp_values - du0_dp_finite_diff))
+    solution_sens_median_diff = np.median(np.abs(du0_dp_values - du0_dp_finite_diff))
+    print(f"Difference of solution sensitivity difference wrt finite differences: mean: {solution_sens_mean_diff:.2e} median: {solution_sens_median_diff:.2e}")
     if solution_sens_mean_diff > 1.0:
         raise Exception(f"Mean of solution sensitivity difference wrt finite differences {solution_sens_mean_diff} > 1.0.")
+    if solution_sens_median_diff > 0.1:
+        raise Exception(f"Median of solution sensitivity difference wrt finite differences {solution_sens_median_diff} > 0.1.")
 
     # plot_tangents(p_vals, u0_values, du0_dp_values)
     # Finite difference comparison
@@ -392,8 +395,8 @@ def run_hessian_comparison(linearized_dynamics=False, discrete=False):
     casadi_hess_l = lag_hess_fun(x=nlp_sol['x'], p=x0, lam_f=1.0, lam_g=nlp_sol['lam_g'])['triu_hess_gamma_x_x']
     casadi_hess = ca.triu2symm(ca.triu(casadi_hess_l)).full()
     acados_ocp_solver_gn.solve_for_x0(x0)
-    acados_ocp_solver_gn.store_iterate(filename='iterate.json', overwrite=True)
-    acados_ocp_solver_exact.load_iterate(filename='iterate.json')
+    iterate = acados_ocp_solver_gn.store_iterate_to_flat_obj()
+    acados_ocp_solver_exact.load_iterate_from_flat_obj(iterate)
     acados_ocp_solver_exact.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
 
     _ = compare_hessian(casadi_hess, acados_ocp_solver_exact)

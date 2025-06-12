@@ -33,15 +33,10 @@ from dataclasses import dataclass
 
 import os, warnings
 import casadi as ca
-from .utils import is_empty, casadi_length, check_casadi_version_supports_p_global, print_casadi_expression, set_directory
+from .utils import is_empty, casadi_length, check_casadi_version_supports_p_global, print_casadi_expression, set_directory, is_casadi_SX
 from .acados_model import AcadosModel
 from .acados_ocp_constraints import AcadosOcpConstraints
 
-
-def is_casadi_SX(x):
-    if isinstance(x, ca.SX):
-        return True
-    return False
 
 @dataclass
 class AcadosCodegenOptions:
@@ -99,7 +94,7 @@ class GenerateContext:
                 fun = ca.Function(name, inputs, outputs, self.__casadi_fun_opts)
                 # print(f"Generating function {name} with inputs {inputs}")
             except RuntimeError as e:
-                print(f"\nError while creating function {name} with inputs {inputs} and outputs {outputs}")
+                print(f"\nError while creating function {name} with inputs \n{inputs} \n and outputs \n {outputs}")
                 print(e)
                 raise e
 
@@ -170,9 +165,16 @@ class GenerateContext:
             for sym, expr in zip(symbols_to_add, param_expr_to_add):
                 precompute_pairs.append([sym, expr])
 
-        global_data_sym_list = [input for input, _ in precompute_pairs]
+        global_data_sym_list = [ca.vec(input) for input, _ in precompute_pairs]
+        global_data_expr_list = [ca.vec(output) for _, output in precompute_pairs]
+
         self.global_data_sym = ca.vertcat(*global_data_sym_list)
-        self.global_data_expr = ca.cse(ca.vertcat(*[output for _, output in precompute_pairs]))
+        self.global_data_expr = ca.cse(ca.vertcat(*global_data_expr_list))
+
+        # make sure global_data is dense -> convert to dense only taking the non-zero elements into account.
+        if casadi_length(self.global_data_expr) > 0:
+            self.global_data_expr = ca.sparsity_cast(self.global_data_expr, ca.Sparsity.dense(self.global_data_expr.nnz()))
+            self.global_data_sym = ca.sparsity_cast(self.global_data_sym, ca.Sparsity.dense(self.global_data_sym.nnz()))
 
         assert casadi_length(self.global_data_expr) == casadi_length(self.global_data_sym), f"Length mismatch: {casadi_length(self.global_data_expr)} != {casadi_length(self.global_data_sym)}"
 
@@ -344,7 +346,6 @@ def generate_c_code_implicit_ode(context: GenerateContext, model: AcadosModel, m
     jac_z = ca.jacobian(f_impl, z)
 
     # Set up functions
-    p = model.p
     fun_name = model_name + '_impl_dae_fun'
     context.add_function_definition(fun_name, [x, xdot, u, z, t, p], [f_impl], model_dir, 'dyn')
 
@@ -387,7 +388,7 @@ def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir
 
     # set up expressions
     # if the model uses ca.MX because of cost/constraints
-    # the DAE can be exported as ca.SX -> detect GNSF in Matlab
+    # the DAE can be exported as ca.SX -> detect GNSF in MATLAB
     # -> evaluated ca.SX GNSF functions with ca.MX.
     u = model.u
     symbol = model.get_casadi_symbol()
@@ -399,7 +400,7 @@ def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir
     x1dot = symbol("gnsf_x1dot", gnsf_nx1, 1)
     z1 = symbol("gnsf_z1", gnsf_nz1, 1)
     dummy = symbol("gnsf_dummy", 1, 1)
-    empty_var = symbol("gnsf_empty_var", 0, 0)
+    empty_var = symbol("gnsf_empty_var", 0, 1)
 
     ## generate C code
     fun_name = model_name + '_gnsf_phi_fun'
@@ -448,6 +449,7 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
     u = model.u
     z = model.z
     p_global = model.p_global
+
     symbol = model.get_casadi_symbol()
 
     if stage_type == 'terminal':
@@ -458,9 +460,10 @@ def generate_c_code_external_cost(context: GenerateContext, model: AcadosModel, 
         suffix_name_value_sens = "_cost_ext_cost_e_grad_p"
         ext_cost = model.cost_expr_ext_cost_e
         custom_hess = model.cost_expr_ext_cost_custom_hess_e
-        # Last stage cannot depend on u and z
-        u = symbol("u", 0, 0)
-        z = symbol("z", 0, 0)
+
+        # create dummy u, z
+        u = symbol("u", 0, 1)
+        z = symbol("z", 0, 1)
 
     elif stage_type == 'path':
         suffix_name = "_cost_ext_cost_fun"
@@ -532,8 +535,11 @@ def generate_c_code_nls_cost(context: GenerateContext, model: AcadosModel, stage
 
     if stage_type == 'terminal':
         middle_name = '_cost_y_e'
-        u = symbol('u', 0, 0)
         y_expr = model.cost_y_expr_e
+
+        # create dummy u, z
+        u = symbol("u", 0, 1)
+        z = symbol("z", 0, 1)
 
     elif stage_type == 'initial':
         middle_name = '_cost_y_0'
@@ -580,52 +586,51 @@ def generate_c_code_conl_cost(context: GenerateContext, model: AcadosModel, stag
 
     opts = context.opts
     x = model.x
+    u = model.u
     z = model.z
     p = model.p
     p_global = model.p_global
     t = model.t
+    u = model.u
 
     symbol = model.get_casadi_symbol()
-    p_global = symbol('p_global', 0, 0)
 
     if stage_type == 'terminal':
-        u = symbol('u', 0, 0)
 
         yref = model.cost_r_in_psi_expr_e
         inner_expr = model.cost_y_expr_e - yref
         outer_expr = model.cost_psi_expr_e
         res_expr = model.cost_r_in_psi_expr_e
+        custom_hess = model.cost_conl_custom_outer_hess_e
 
         suffix_name_fun = '_conl_cost_e_fun'
         suffix_name_fun_jac_hess = '_conl_cost_e_fun_jac_hess'
 
-        custom_hess = model.cost_conl_custom_outer_hess_e
+        # create dummy u, z
+        u = symbol("u", 0, 1)
+        z = symbol("z", 0, 1)
 
     elif stage_type == 'initial':
-        u = model.u
 
         yref = model.cost_r_in_psi_expr_0
         inner_expr = model.cost_y_expr_0 - yref
         outer_expr = model.cost_psi_expr_0
         res_expr = model.cost_r_in_psi_expr_0
+        custom_hess = model.cost_conl_custom_outer_hess_0
 
         suffix_name_fun = '_conl_cost_0_fun'
         suffix_name_fun_jac_hess = '_conl_cost_0_fun_jac_hess'
 
-        custom_hess = model.cost_conl_custom_outer_hess_0
-
     elif stage_type == 'path':
-        u = model.u
 
         yref = model.cost_r_in_psi_expr
         inner_expr = model.cost_y_expr - yref
         outer_expr = model.cost_psi_expr
         res_expr = model.cost_r_in_psi_expr
+        custom_hess = model.cost_conl_custom_outer_hess
 
         suffix_name_fun = '_conl_cost_fun'
         suffix_name_fun_jac_hess = '_conl_cost_fun_jac_hess'
-
-        custom_hess = model.cost_conl_custom_outer_hess
 
     # set up function names
     fun_name_cost_fun = model.name + suffix_name_fun
@@ -645,13 +650,13 @@ def generate_c_code_conl_cost(context: GenerateContext, model: AcadosModel, stag
     outer_hess_fun = ca.Function('outer_hess', [res_expr, t, p, p_global], [hess])
     outer_hess_expr = outer_hess_fun(inner_expr, t, p, p_global)
     outer_hess_is_diag = outer_hess_expr.sparsity().is_diag()
+
     if casadi_length(res_expr) <= 4:
         outer_hess_is_diag = 0
 
     Jt_ux_expr = ca.jacobian(inner_expr, ca.vertcat(u, x)).T
     Jt_z_expr = ca.jacobian(inner_expr, z).T
 
-    # change directory
     cost_dir = os.path.abspath(os.path.join(opts.code_export_directory, f'{model.name}_cost'))
 
     context.add_function_definition(
@@ -688,9 +693,11 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
         constr_type = constraints.constr_type_e
         con_h_expr = model.con_h_expr_e
         con_phi_expr = model.con_phi_expr_e
+
         # create dummy u, z
-        u = symbol('u', 0, 0)
-        z = symbol('z', 0, 0)
+        u = symbol('u', 0, 1)
+        z = symbol('z', 0, 1)
+
     elif stage_type == 'initial':
         constr_type = constraints.constr_type_0
         con_h_expr = model.con_h_expr_0
@@ -706,12 +713,6 @@ def generate_c_code_constraint(context: GenerateContext, model: AcadosModel, con
     if (is_empty(con_h_expr) and is_empty(con_phi_expr)):
         # both empty -> nothing to generate
         return
-
-    if is_empty(p):
-        p = symbol('p', 0, 0)
-
-    if is_empty(z):
-        z = symbol('z', 0, 0)
 
     # multipliers for hessian
     nh = casadi_length(con_h_expr)

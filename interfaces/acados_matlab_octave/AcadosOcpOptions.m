@@ -119,6 +119,7 @@ classdef AcadosOcpOptions < handle
         log_dual_step_norm
         store_iterates
         eval_residual_at_max_iter
+        with_anderson_acceleration
 
         timeout_max_time
         timeout_heuristic
@@ -232,6 +233,7 @@ classdef AcadosOcpOptions < handle
             obj.log_dual_step_norm = 0;
             obj.store_iterates = false;
             obj.eval_residual_at_max_iter = [];
+            obj.with_anderson_acceleration = 0;
             obj.timeout_max_time = 0.;
             obj.timeout_heuristic = 'ZERO';
 

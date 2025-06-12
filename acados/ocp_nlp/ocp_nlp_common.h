@@ -163,6 +163,20 @@ typedef struct ocp_nlp_dims
     int n_global_data;  // size of global_data; expressions that only depend on p_global; detected automatically during code generation
     int N;    // number of shooting nodes
 
+    // total dimensions
+    int nx_total;  // total number of states
+    int nu_total;  // total number of controls
+    int ns_total;  // total number of slack variables
+    int nz_total;  // total number of algebraic variables
+    // int npi_total; // = nx_total - nx_0
+    int ni_total;  // total number of inequalities
+    int np_total;  // total number of parameters
+    int nbx_total;  // total number of state bounds
+    int nbu_total;  // total number of control bounds
+    int ng_total;  // total number of general linear constraints
+    int nh_total;  // total number of nonlinear inequalities
+    int nphi_total;  // total number of nonlinear inequalities
+
     void *raw_memory; // Pointer to allocated memory, to be used for freeing
 } ocp_nlp_dims;
 
@@ -319,6 +333,7 @@ typedef struct ocp_nlp_opts
 
     bool store_iterates; // flag indicating whether intermediate iterates should be stored
 
+    bool with_anderson_acceleration;
 
 } ocp_nlp_opts;
 
@@ -417,6 +432,10 @@ typedef struct ocp_nlp_memory
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
 
+    // for Anderson acceleration
+    ocp_qp_out *prev_qp_out;
+    ocp_qp_out *anderson_step;
+
     // QP stuff not entering the qp_in struct
     struct blasfeo_dmat *dzduxt; // dzdux transposed
     struct blasfeo_dvec *z_alg; // z_alg, output algebraic variables
@@ -475,13 +494,15 @@ typedef struct ocp_nlp_workspace
     void **cost;         // cost_workspace
     void **constraints;  // constraints_workspace
 
-    // temp QP in & out (to be used as workspace in param sens) and merit line search
-    ocp_qp_in *tmp_qp_in;
+    // temp QP out
     ocp_qp_out *tmp_qp_out;
 
     // qp residuals
     ocp_qp_res *qp_res;
     ocp_qp_res_ws *qp_res_ws;
+
+    // qp seed (for solution sensitivities)
+    ocp_qp_seed *qp_seed;
 
     // for globalization: -> move to module?!
     ocp_nlp_out *tmp_nlp_out;
@@ -537,6 +558,11 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
 void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
             void *in_, void *out_, void *opts_, void *mem_, void *work_,
             void *out_destination_, void *solver_mem, double alpha, bool full_step_dual);
+//
+void ocp_nlp_convert_primaldelta_absdual_step_to_delta_step(ocp_nlp_config *config, ocp_nlp_dims *dims,
+        ocp_nlp_out *out, ocp_qp_out *step);
+//
+double ocp_nlp_compute_anderson_gamma(ocp_nlp_workspace *work, ocp_qp_out *new_qp_step, ocp_qp_out *new_minus_old_qp_step);
 //
 int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
@@ -607,6 +633,8 @@ void ocp_nlp_dump_qp_in_to_file(ocp_qp_in *qp_in, int sqp_iter, int soc);
 void ocp_nlp_common_print_iteration_header();
 void ocp_nlp_common_print_iteration(int iter_count, ocp_nlp_res *nlp_res);
 
+void ocp_nlp_update_variables_sqp_delta_primal_dual(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work, double alpha, ocp_qp_out *step);
 
 #ifdef __cplusplus
 } /* extern "C" */

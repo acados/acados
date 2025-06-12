@@ -78,7 +78,7 @@ class AcadosSimOptions:
 
     @property
     def num_stages(self):
-        """Number of stages in the integrator. Default: 1"""
+        """Number of stages in the integrator. Default: 4"""
         return self.__sim_method_num_stages
 
     @property
@@ -140,7 +140,11 @@ class AcadosSimOptions:
         """Collocation type: relevant for implicit integrators
         -- string in {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA'}.
 
-        Default: GAUSS_LEGENDRE
+        Default: GAUSS_LEGENDRE.
+
+        .. note:: GAUSS_LEGENDRE tableaus yield integration methods that are A-stable, but not L-stable and have order `2 * num_stages`,
+        .. note:: GAUSS_RADAU_IIA tableaus yield integration methods that are L-stable and have order `2 * num_stages - 1`.
+        .. note:: EXPLICIT_RUNGE_KUTTA tableaus can be used for comparisons of ERK and IRK to ensure correctness, but are only recommended with ERK for users.
         """
         return self.__collocation_type
 
@@ -171,7 +175,7 @@ class AcadosSimOptions:
         Default: 1.
         """
         return self.__num_threads_in_batch_solve
-    
+
     @property
     def with_batch_functionality(self):
         """
@@ -337,6 +341,9 @@ class AcadosSim:
         """Path to where code will be exported. Default: `c_generated_code`."""
         self.shared_lib_ext = get_shared_lib_ext()
 
+        self.simulink_opts = None
+        """Options to configure Simulink S-function blocks, if not None, MATLAB related files will be generated. More options may be added in the future, similar to OCP interface"""
+
         # get cython paths
         from sysconfig import get_paths
         self.cython_include_dirs = [np.get_include(), get_paths()['include']]
@@ -390,16 +397,32 @@ class AcadosSim:
     def render_templates(self, json_file, cmake_options: CMakeBuilder = None):
         # setting up loader and environment
         json_path = os.path.join(os.getcwd(), json_file)
+        name = self.model.name
 
         if not os.path.exists(json_path):
             raise FileNotFoundError(f"{json_path} not found!")
 
         template_list = [
-            ('acados_sim_solver.in.c', f'acados_sim_solver_{self.model.name}.c'),
-            ('acados_sim_solver.in.h', f'acados_sim_solver_{self.model.name}.h'),
+            ('acados_sim_solver.in.c', f'acados_sim_solver_{name}.c'),
+            ('acados_sim_solver.in.h', f'acados_sim_solver_{name}.h'),
             ('acados_sim_solver.in.pxd', 'acados_sim_solver.pxd'),
-            ('main_sim.in.c', f'main_sim_{self.model.name}.c'),
+            ('main_sim.in.c', f'main_sim_{name}.c'),
         ]
+        if self.simulink_opts is not None:
+            template_file = os.path.join('matlab_templates', 'mex_sim_solver.in.m')
+            template_list.append((template_file, f'{name}_mex_sim_solver.m'))
+            template_file = os.path.join('matlab_templates', 'make_mex_sim.in.m')
+            template_list.append((template_file, f'make_mex_sim_{name}.m'))
+            template_file = os.path.join('matlab_templates', 'acados_sim_create.in.c')
+            template_list.append((template_file, f'acados_sim_create_{name}.c'))
+            template_file = os.path.join('matlab_templates', 'acados_sim_free.in.c')
+            template_list.append((template_file, f'acados_sim_free_{name}.c'))
+            template_file = os.path.join('matlab_templates', 'acados_sim_set.in.c')
+            template_list.append((template_file, f'acados_sim_set_{name}.c'))
+            template_file = os.path.join('matlab_templates', 'acados_sim_solver_sfun.in.c')
+            template_list.append((template_file, f'acados_sim_solver_sfunction_{name}.c'))
+            template_file = os.path.join('matlab_templates', 'make_sfun_sim.in.m')
+            template_list.append((template_file, f'make_sfun_sim_{name}.m'))
 
         # Builder
         if cmake_options is not None:
@@ -447,6 +470,9 @@ class AcadosSim:
             generate_c_code_implicit_ode(context, self.model, model_dir)
         elif integrator_type == 'GNSF':
             generate_c_code_gnsf(context, self.model, model_dir)
+        else:
+            raise ValueError('Invalid integrator_type value. Possible values are:\n\n' \
+                    + ',\n'.join(['ERK', 'IRK', 'GNSF']) + '.\n\nYou have: ' + integrator_type + '.\n\n')
 
         context.finalize()
         self.__external_function_files_model = context.get_external_function_file_list(ocp_specific=False)

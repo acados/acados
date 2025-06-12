@@ -174,15 +174,25 @@ jobs:
       run: |
         ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
 
-    - name: Run Python tests that need new CasADi
+    - name: Run Python tests that need new CasADi & test py2matlab
       working-directory: ${{runner.workspace}}/acados/build
       shell: bash
       run: |
         source ${{runner.workspace}}/acados/acadosenv/bin/activate
         cd ${{runner.workspace}}/acados/examples/acados_python/p_global_example
         python example_p_global.py
-        echo "\nPython run done; testing tranfer to Octave\n"
+        echo "\nPython run done; testing OCP tranfer to Octave\n"
         octave code_reuse_py2matlab.m
+
+    - name: Run Python to Octave sim transfer test
+      working-directory: ${{runner.workspace}}/acados/build
+      shell: bash
+      run: |
+        source ${{runner.workspace}}/acados/acadosenv/bin/activate
+        cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/sim
+        python minimal_example_sim_cmake.py
+        echo "\nPython run done; testing SIM tranfer to Octave\n"
+        octave code_reuse_py2matlab_sim.m
 
     - name: Run more Python tests
       working-directory: ${{runner.workspace}}/acados/build
@@ -191,6 +201,8 @@ jobs:
         source ${{runner.workspace}}/acados/acadosenv/bin/activate
         cd ${{runner.workspace}}/acados/examples/acados_python/tests
         python test_rti_sqp_residuals.py
+        cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/ocp
+        python test_casadi_formulation.py
 
     - name: Python sensitivity examples
       working-directory: ${{runner.workspace}}/acados/build
@@ -202,12 +214,19 @@ jobs:
         python policy_gradient_example.py
         python test_solution_sens_and_exact_hess.py
         python forw_vs_adj_param_sens.py
+        python smooth_policy_gradients.py
         cd ${{runner.workspace}}/acados/examples/acados_python/solution_sensitivities_convex_example
         python value_gradient_example_linear.py
         python batch_adjoint_solution_sensitivity_example.py
         python non_ocp_example.py
         cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/ocp
+        python initialization_test.py
         python ocp_example_cost_formulations.py
+        cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart
+        python example_solution_sens_closed_loop.py
+        cd ${{runner.workspace}}/acados/examples/acados_python/chain_mass/
+        python solution_sensitivity_example.py
+
 
 
     - name: Python Furuta pendulum timeout test
@@ -217,6 +236,7 @@ jobs:
         source ${{runner.workspace}}/acados/acadosenv/bin/activate
         cd ${{runner.workspace}}/acados/examples/acados_python/furuta_pendulum
         python main_closed_loop.py
+        python convergence_experiment.py
 
     - name: Python evaluator test
       working-directory: ${{runner.workspace}}/acados/build
@@ -272,7 +292,7 @@ jobs:
         cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
         source env.sh
 
-    - name: Run Matlab tests
+    - name: Run MATLAB tests
       uses: matlab-actions/run-command@v2
       if: always()
       with:
@@ -331,7 +351,7 @@ jobs:
         cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
         source env.sh
 
-    - name: Run Matlab tests
+    - name: Run MATLAB tests
       uses: matlab-actions/run-command@v2
       if: always()
       with:
@@ -392,7 +412,7 @@ jobs:
         cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
         source env.sh
 
-    - name: Run Matlab examples
+    - name: Run MATLAB examples
       uses: matlab-actions/run-command@v2
       if: always()
       with:
