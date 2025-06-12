@@ -2162,13 +2162,13 @@ class AcadosOcpSolver:
         return out
 
 
-    def get_qp_scaling_cost(self) -> float:
+    def get_qp_scaling_objective(self) -> float:
         """
         Returns the cost scaling value corresponding to the previous QP solution.
         Only available if qpscaling_scale_objective != NO_OBJECTIVE_SCALING.
         """
         if self.__solver_options["qpscaling_scale_objective"] == "NO_OBJECTIVE_SCALING":
-            raise ValueError("get_qp_scaling_cost: only works for QP solvers with qpscaling_scale_objective != NO_OBJECTIVE_SCALING.")
+            raise ValueError("get_qp_scaling_objective: only works for QP solvers with qpscaling_scale_objective != NO_OBJECTIVE_SCALING.")
 
         # create output array
         out = np.zeros((1,), dtype=np.float64, order="C")

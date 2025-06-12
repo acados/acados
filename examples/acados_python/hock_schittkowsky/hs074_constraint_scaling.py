@@ -104,7 +104,7 @@ def solve_problem_with_constraint_scaling(scale_constraints):
     status = ocp_solver.solve()
 
     # checks
-    obj_scale = ocp_solver.get_qp_scaling_cost()
+    obj_scale = ocp_solver.get_qp_scaling_objective()
     print(f"Objective scaling: {obj_scale:.4e}")
     if scale_constraints:
         constr_scale = ocp_solver.get_qp_scaling_constraints(stage=0)

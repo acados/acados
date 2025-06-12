@@ -197,7 +197,7 @@ def check_qp_scaling(ocp_solver: AcadosOcpSolver):
         print(f"Constraint scaling at stage {i}: {constraint_scaling}")
 
     if ocp_solver.acados_ocp.solver_options.qpscaling_scale_objective != "NO_OBJECTIVE_SCALING":
-        objective_scaling = ocp_solver.get_qp_scaling_cost()
+        objective_scaling = ocp_solver.get_qp_scaling_objective()
         print(f"Objective scaling: {objective_scaling}")
 
 

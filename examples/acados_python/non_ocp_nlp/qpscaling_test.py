@@ -38,7 +38,6 @@ def create_solver(solver_name: str, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP
                   use_qp_scaling: bool = False,
                   soft_h: bool = True):
 
-    # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
     nx = 2
@@ -134,7 +133,7 @@ def check_qp_scaling(ocp_solver: AcadosOcpSolver):
         print(f"Constraint scaling at stage {i}: {constraint_scaling}")
         if not np.all(constraint_scaling != 1.0):
             raise ValueError(f"Constraint scaling should have non-unit to actually test the functionality")
-    objective_scaling = ocp_solver.get_qp_scaling_cost()
+    objective_scaling = ocp_solver.get_qp_scaling_objective()
     print(f"Objective scaling: {objective_scaling}")
 
 
