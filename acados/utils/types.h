@@ -117,7 +117,7 @@ enum search_direction_mode
 /// QP scaling types
 typedef enum
 {
-    NO_COST_SCALING,
+    NO_OBJECTIVE_SCALING,
     OBJECTIVE_GERSHGORIN,
 } qpscaling_scale_objective_type;
 

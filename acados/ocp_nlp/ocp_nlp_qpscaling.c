@@ -145,7 +145,7 @@ void ocp_nlp_qpscaling_opts_initialize_default(ocp_nlp_qpscaling_dims *dims, voi
     opts->lb_norm_inf_grad_obj = 1e-4;
     opts->ub_max_abs_eig = 1e5;
 
-    opts->scale_qp_objective = NO_COST_SCALING;
+    opts->scale_qp_objective = NO_OBJECTIVE_SCALING;
     opts->scale_qp_constraints = NO_CONSTRAINT_SCALING;
 
     return;

@@ -126,7 +126,7 @@ def main(scale_objective: bool):
     if scale_objective:
         opts.qpscaling_scale_objective = "OBJECTIVE_GERSHGORIN"
     else:
-        opts.qpscaling_scale_objective = "NO_COST_SCALING"
+        opts.qpscaling_scale_objective = "NO_OBJECTIVE_SCALING"
 
     ocp = formulate_ocp(opts)
 

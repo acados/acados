@@ -110,7 +110,7 @@ class AcadosOcpOptions:
         self.__globalization_fixed_step_length = 1.0
         self.__qpscaling_ub_max_abs_eig = 1e5
         self.__qpscaling_lb_norm_inf_grad_obj = 1e-4
-        self.__qpscaling_scale_objective = "NO_COST_SCALING"
+        self.__qpscaling_scale_objective = "NO_OBJECTIVE_SCALING"
         self.__qpscaling_scale_constraints = "NO_CONSTRAINT_SCALING"
         self.__ext_cost_num_hess = 0
         self.__globalization_use_SOC = 0
@@ -379,8 +379,8 @@ class AcadosOcpOptions:
     @property
     def qpscaling_scale_objective(self):
         """
-        String in ["NO_COST_SCALING", "OBJECTIVE_GERSHGORIN"]
-        Default: "NO_COST_SCALING".
+        String in ["NO_OBJECTIVE_SCALING", "OBJECTIVE_GERSHGORIN"]
+        Default: "NO_OBJECTIVE_SCALING".
         """
         return self.__qpscaling_scale_objective
 
@@ -1720,7 +1720,7 @@ class AcadosOcpOptions:
 
     @qpscaling_scale_objective.setter
     def qpscaling_scale_objective(self, qpscaling_scale_objective):
-        qpscaling_scale_objective_types = ["NO_COST_SCALING", "OBJECTIVE_GERSHGORIN"]
+        qpscaling_scale_objective_types = ["NO_OBJECTIVE_SCALING", "OBJECTIVE_GERSHGORIN"]
         if not qpscaling_scale_objective in qpscaling_scale_objective_types:
             raise ValueError(f'Invalid qpscaling_scale_objective value. Must be in {qpscaling_scale_objective_types}, got {qpscaling_scale_objective}.')
         self.__qpscaling_scale_objective = qpscaling_scale_objective
