@@ -51,7 +51,7 @@ def create_solver(solver_name: str, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP
     # discretization
     N = 0
 
-    ocp.cost.W_e = 2*np.diag([1e1, 1e1])
+    ocp.cost.W_e = 2*np.diag([1e3, 1e3])
 
     ocp.cost.cost_type = 'LINEAR_LS'
     ocp.cost.cost_type_e = 'LINEAR_LS'
@@ -76,10 +76,10 @@ def create_solver(solver_name: str, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP
     # soften
     if soft_h:
         ocp.constraints.idxsh_e = np.array([0])
-        ocp.cost.zl_e = np.array([0.0])
-        ocp.cost.zu_e = np.array([1e4])
-        ocp.cost.Zl_e = np.array([0.0])
-        ocp.cost.Zu_e = np.array([1e2])
+        ocp.cost.zl_e = np.array([1.0])
+        ocp.cost.zu_e = np.array([1e0])
+        ocp.cost.Zl_e = np.array([1.0])
+        ocp.cost.Zu_e = np.array([1e0])
 
     # set options
     solver_options = ocp.solver_options
@@ -88,19 +88,15 @@ def create_solver(solver_name: str, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP
     solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     qp_tol = 5e-9
     solver_options.qp_tol = qp_tol
-    solver_options.qp_solver_tol_eq = qp_tol
-    solver_options.qp_solver_tol_ineq = qp_tol
-    solver_options.qp_solver_tol_comp = qp_tol
     solver_options.qp_solver_ric_alg = 1
     solver_options.qp_solver_mu0 = 1e4
-    solver_options.qp_solver_warm_start = 1
     solver_options.qp_solver_iter_max = 400
     solver_options.hessian_approx = 'GAUSS_NEWTON'
     solver_options.nlp_solver_type = nlp_solver_type
     solver_options.globalization = 'FUNNEL_L1PEN_LINESEARCH'
     solver_options.globalization_full_step_dual = True
     # solver_options.print_level = 1
-    solver_options.nlp_solver_max_iter = 20
+    # solver_options.nlp_solver_max_iter = 2
     solver_options.use_constraint_hessian_in_feas_qp = False
     solver_options.nlp_solver_ext_qp_res = 1
 
@@ -109,7 +105,7 @@ def create_solver(solver_name: str, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP
         solver_options.allow_direction_mode_switch_to_nominal = False
 
     if use_qp_scaling:
-        # ocp.solver_options.qpscaling_scale_constraints = "INF_NORM"
+        ocp.solver_options.qpscaling_scale_constraints = "INF_NORM"
         ocp.solver_options.qpscaling_scale_objective = "OBJECTIVE_GERSHGORIN"
 
     # create ocp solver
@@ -149,18 +145,19 @@ def call_solver(ocp_solver: AcadosOcpSolver) -> AcadosOcpFlattenedIterate:
     return sol
 
 
-def test_qp_scaling():
+def test_qp_scaling(soft_h: bool = True):
     # test QP scaling
     print("Testing QP scaling with SQP solver...")
-    ocp_1, ocp_solver_1 = create_solver("1", nlp_solver_type="SQP", allow_switching_modes=False, use_qp_scaling=True, soft_h=False)
+    ocp_1, ocp_solver_1 = create_solver("1", nlp_solver_type="SQP", allow_switching_modes=False, use_qp_scaling=True, soft_h=soft_h)
     sol_1 = call_solver(ocp_solver_1)
     check_qp_scaling(ocp_solver_1)
 
     # test without QP scaling
     print("Reference ...")
-    ocp_2, ocp_solver_2 = create_solver("2", nlp_solver_type="SQP", allow_switching_modes=False, use_qp_scaling=False, soft_h=False)
+    ocp_2, ocp_solver_2 = create_solver("2", nlp_solver_type="SQP", allow_switching_modes=False, use_qp_scaling=False, soft_h=soft_h)
     sol_2 = call_solver(ocp_solver_2)
     check_qp_scaling(ocp_solver_2)
+    print(f"Reference solution: {sol_2}")
 
     # check solutions
     for field in ["x", "u", "sl", "su", "lam", "pi"]:
@@ -170,8 +167,8 @@ def test_qp_scaling():
             print(f"Field {field} differs: max diff = {np.max(np.abs(v1 - v2))}")
             print(f"got difference {v1 - v2}")
         else:
+            print(f"Solutions match in field {field}.")
             pass
-                # print(f"Field {field} is the same at index {i}.")
     print(f"{sol_1}")
 
     if sol_1.allclose(sol_2):
@@ -181,5 +178,6 @@ def test_qp_scaling():
 
 
 if __name__ == '__main__':
-    test_qp_scaling()
+    test_qp_scaling(False)
+    test_qp_scaling(True)
 
