@@ -367,18 +367,10 @@ class AcadosOcpOptions:
         return self.__qpscaling_ub_max_abs_eig
 
     @property
-    def qpscaling_ub_norm_inf_grad_obj(self):
-        """
-        Maximum inf norm of cost gradient after QP scaling.
-        Type: float >= 0.
-        Default: 1e2.
-        """
-        return self.__qpscaling_ub_norm_inf_grad_obj
-
-    @property
     def qpscaling_lb_norm_inf_grad_obj(self):
         """
         Minimum allowed lower bound for inf norm of qp gradient in QP scaling.
+        Is attempted to be respected, respecting qpscaling_ub_max_abs_eig is prioritized.
         Type: float >= 0.
         Default: 1e-4.
         """

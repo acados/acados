@@ -420,24 +420,31 @@ void ocp_nlp_qpscaling_scale_objective(ocp_nlp_qpscaling_dims *dims, void *opts_
         nrm_inf_grad_obj = fmax(nrm_inf_grad_obj, fabs(tmp));
     }
 
+    double max_upscale_factor, lb_grad_norm_factor;
     if (max_abs_eig < opts->ub_max_abs_eig)
     {
         memory->obj_factor = 1.0;
+        max_upscale_factor = opts->ub_max_abs_eig / max_abs_eig;
     }
     else
     {
+        // scale objective down
         memory->obj_factor = opts->ub_max_abs_eig / max_abs_eig;
+        max_upscale_factor = memory->obj_factor;
     }
-    // printf("Scaling factor objective: %.2e\n",memory->obj_factor);
+    // printf("Scaling factor objective: %.2e based on ub_max_abs_eig\n", memory->obj_factor);
 
     if (memory->obj_factor*nrm_inf_grad_obj <= opts->lb_norm_inf_grad_obj)
     {
+        // grad norm would become too small -> upscale cost
         // printf("lb_norm_inf_grad_obj violated! %.2e\n", opts->lb_norm_inf_grad_obj);
         // printf("Gradient is very small! %.2e\n", memory->obj_factor*nrm_inf_grad_obj);
-        tmp = opts->lb_norm_inf_grad_obj / nrm_inf_grad_obj;
+        lb_grad_norm_factor = opts->lb_norm_inf_grad_obj / nrm_inf_grad_obj;
+        tmp = fmin(max_upscale_factor, lb_grad_norm_factor);
         memory->obj_factor = fmax(memory->obj_factor, tmp);
         // TODO: return some status code here?
     }
+    // printf("Scaling factor objective: %.2e\n", memory->obj_factor);
 
     // scale QP cost
     // print_ocp_qp_in(qp_in);
