@@ -465,10 +465,6 @@ void ocp_nlp_qpscaling_scale_objective(ocp_nlp_qpscaling_dims *dims, void *opts_
     {
         ocp_qp_scale_objective(qp_in, memory->obj_factor);
     }
-
-    // printf("AFTER SCALING\n");
-    // print_ocp_qp_in(qp_in);
-    // printf("ocp_nlp_qpscaling_scale_qp: computed obj_factor = %e\n", memory->obj_factor);
 }
 
 
