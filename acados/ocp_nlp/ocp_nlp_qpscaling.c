@@ -320,12 +320,16 @@ static void scale_matrix_row(int row, int n_col, struct blasfeo_dmat *At, double
     }
 }
 
-static void scale_lam_duals(ocp_qp_out *qp_out, ocp_nlp_qpscaling_memory *mem)
+static void rescale_solution_constraint_scaling(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_nlp_qpscaling_memory *mem)
 {
     int *nb = qp_out->dim->nb;
     int *ng = qp_out->dim->ng;
+    int *nx = qp_out->dim->nx;
+    int *nu = qp_out->dim->nu;
+    int *ns = qp_out->dim->ns;
     int N = qp_out->dim->N;
     double scaling_factor;
+    int s_idx;
 
     for (int i = 0; i <= N; i++)
     {
@@ -339,12 +343,20 @@ static void scale_lam_duals(ocp_qp_out *qp_out, ocp_nlp_qpscaling_memory *mem)
             // scale upper bound
             BLASFEO_DVECEL(qp_out->lam+i, 2*nb[i]+ng[i]+j) *= scaling_factor;
 
-            // we need to scale slack variables as well to be consistent with problem
+            s_idx = qp_in->idxs_rev[i][nb[i] + j];  // index of slack corresponding to this constraint
+            if (s_idx >= 0)
+            {
+                // scale slack bound multipliers
+                BLASFEO_DVECEL(qp_out->lam+i, 2*nb[i]+2*ng[i]+s_idx) *= scaling_factor;
+                BLASFEO_DVECEL(qp_out->lam+i, 2*nb[i]+2*ng[i]+ns[i]+s_idx) *= scaling_factor;
+                // scale slack variables
+                BLASFEO_DVECEL(qp_out->ux+i, nx[i]+nu[i]+s_idx) /= scaling_factor;
+                BLASFEO_DVECEL(qp_out->ux+i, nx[i]+nu[i]+ns[i]+s_idx) /= scaling_factor;
+            }
         }
     }
-
-    // TODO: scale slack variables here!!!!
 }
+
 
 static void ocp_qp_scale_objective(ocp_qp_in *qp_in, double factor)
 {
@@ -467,8 +479,9 @@ void ocp_nlp_qpscaling_scale_constraints(ocp_nlp_qpscaling_dims *dims, void *opt
     int *nu = qp_in->dim->nu;
     int *nb = qp_in->dim->nb;
     int *ng = qp_in->dim->ng;
+    int *ns = qp_in->dim->ns;
     int N = dims->N;
-    int i, j;
+    int i, j, s_idx;
     double mask_value_lower, mask_value_upper;
     ocp_nlp_qpscaling_memory *memory = mem_;
     // ocp_nlp_qpscaling_opts *opts = opts_; // option for what norm to be used
@@ -493,6 +506,19 @@ void ocp_nlp_qpscaling_scale_constraints(ocp_nlp_qpscaling_dims *dims, void *opt
             // scale the row
             scale_matrix_row(j, nu[i]+nx[i],  &qp_in->DCt[i], scaling_factor);
 
+            s_idx = qp_in->idxs_rev[i][nb[i] + j];  // index of slack corresponding to this constraint
+            if (s_idx != -1)
+            {
+                // printf("Scaling slack %d for constraint %d at stage %d with factor %.2e\n", s_idx, j, i, scaling_factor);
+                // scale associated slack cost
+                // lower
+                BLASFEO_DVECEL(qp_in->rqz+i, nu[i]+nx[i]+s_idx) *= 1/scaling_factor;
+                BLASFEO_DVECEL(qp_in->Z+i, s_idx) *= 1/(scaling_factor*scaling_factor);
+                // upper
+                BLASFEO_DVECEL(qp_in->rqz+i, nu[i]+nx[i]+ns[i]+s_idx) *= 1/scaling_factor;
+                BLASFEO_DVECEL(qp_in->Z+i, ns[i]+s_idx) *= 1/(scaling_factor*scaling_factor);
+            }
+
             // scale lower bound
             if (mask_value_lower == 1.0)
             {
@@ -511,6 +537,9 @@ void ocp_nlp_qpscaling_scale_constraints(ocp_nlp_qpscaling_dims *dims, void *opt
 void ocp_nlp_qpscaling_scale_qp(ocp_nlp_qpscaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in)
 {
     ocp_nlp_qpscaling_opts *opts = opts_;
+
+    // printf("qp_in BEFORE SCALING\n");
+    // print_ocp_qp_in(qp_in);
     if (opts->scale_qp_objective)
     {
         ocp_nlp_qpscaling_scale_objective(dims, opts_, mem_, qp_in);
@@ -525,6 +554,8 @@ void ocp_nlp_qpscaling_scale_qp(ocp_nlp_qpscaling_dims *dims, void *opts_, void 
     {
         ocp_nlp_qpscaling_scale_constraints(dims, opts_, mem_, qp_in);
     }
+//     printf("qp_in AFTER SCALING\n");
+//     print_ocp_qp_in(qp_in);
 }
 
 
@@ -540,7 +571,7 @@ void ocp_nlp_qpscaling_rescale_solution(ocp_nlp_qpscaling_dims *dims, void *opts
     }
     if (opts->scale_qp_constraints)
     {
-        scale_lam_duals(qp_out, memory);
+        rescale_solution_constraint_scaling(qp_in, qp_out, memory);
     }
 
     return;
