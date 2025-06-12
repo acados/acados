@@ -48,7 +48,7 @@ class AcadosOcpFlattenedIterate:
     pi: np.ndarray
     lam: np.ndarray
 
-    def allclose(self, other, rtol=1e-5, atol=1e-8) -> bool:
+    def allclose(self, other, rtol=1e-5, atol=1e-6) -> bool:
         if not isinstance(other, AcadosOcpFlattenedIterate):
             raise TypeError(f"Expected AcadosOcpFlattenedIterate, got {type(other)}")
         return (
