@@ -96,6 +96,7 @@ typedef enum
     INVALID_REGULARIZE,
 } ocp_nlp_reg_t;
 
+
 /// Globalization types
 typedef enum
 {

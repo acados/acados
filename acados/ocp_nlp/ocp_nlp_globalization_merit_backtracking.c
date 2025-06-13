@@ -693,7 +693,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
 
     // compute correct dual solution in case of Hessian regularization
     config->regularize->correct_dual_sol(config->regularize, dims->regularize,
-                                        nlp_opts->regularize, nlp_mem->regularize);
+                                        nlp_opts->regularize, nlp_mem->regularize_mem);
 
     // ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
     // int qp_iter = qp_info_->num_iter;
