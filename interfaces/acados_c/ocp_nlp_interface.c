@@ -1027,7 +1027,7 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         dims_out[0] = 1;
         dims_out[1] = dims->nx[stage];
     }
-    else if (!strcmp(field, "idxs_rev"))
+    else if (!strcmp(field, "idxs_rev") || !strcmp(field, "relaxed_idxs_rev"))
     {
         dims_out[0] = 1;
         dims_out[1] = dims->nb[stage] + dims->ng[stage] + dims->ni_nl[stage];
