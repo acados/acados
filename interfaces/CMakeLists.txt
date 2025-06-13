@@ -389,7 +389,7 @@ add_test(NAME python_pendulum_ocp_example_cmake
 
     add_test(NAME py_qp_scaling_time_opt_swingup
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
-        time_optimal_swing_up.py)
+        python time_optimal_swing_up.py)
 
     # CMake and solver=DISCRETE test
     add_test(NAME python_example_ocp_dynamics_formulations_cmake
