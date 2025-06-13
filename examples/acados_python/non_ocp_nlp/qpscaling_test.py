@@ -42,7 +42,7 @@ def create_solver(solver_name: str, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP
 
     nx = 2
     # set model
-    ocp.model.name = f"qp_{solver_name}"
+    ocp.model.name = f"dense_nlp_{solver_name}"
     ocp.model.x = ca.SX.sym('x', nx, 1)
 
     ny = nx
