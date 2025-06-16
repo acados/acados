@@ -381,6 +381,9 @@ class AcadosOcpOptions:
         """
         String in ["NO_OBJECTIVE_SCALING", "OBJECTIVE_GERSHGORIN"]
         Default: "NO_OBJECTIVE_SCALING".
+
+        - NO_OBJECTIVE_SCALING: no scaling of the objective
+        - OBJECTIVE_GERSHGORIN: estimate max. abs. eigenvalue using Gershgorin circles as `max_abs_eig`, then sets the objective scaling factor as `obj_factor = min(1.0, qpscaling_ub_max_abs_eig/max_abs_eig)`
         """
         return self.__qpscaling_scale_objective
 
@@ -389,6 +392,11 @@ class AcadosOcpOptions:
         """
         String in ["NO_CONSTRAINT_SCALING", "INF_NORM"]
         Default: "NO_CONSTRAINT_SCALING".
+
+        - NO_CONSTRAINT_SCALING: no scaling of the constraints
+        - INF_NORM: scales each constraint except simple bounds by factor `1.0 / max(inf_norm_coeff, inf_norm_constraint_bound)`, such that the inf-norm of the constraint coefficients and bounds is <= 1.0.
+        Slack penalties are adjusted accordingly to get an equivalent solution.
+        First, the cost is scaled, then the constraints.
         """
         return self.__qpscaling_scale_constraints
 
