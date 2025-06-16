@@ -4080,8 +4080,11 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
     acados_tic(&timer);
     config->regularize->correct_dual_sol(config->regularize, dims->regularize,
                                             nlp_opts->regularize, nlp_mem->regularize_mem);
-    ocp_nlp_qpscaling_rescale_solution(dims->qpscaling, nlp_opts->qpscaling, nlp_mem->qpscaling, qp_in, qp_out);
     nlp_timings->time_reg += acados_toc(&timer);
+
+    acados_tic(&timer);
+    ocp_nlp_qpscaling_rescale_solution(dims->qpscaling, nlp_opts->qpscaling, nlp_mem->qpscaling, qp_in, qp_out);
+    nlp_timings->time_qpscaling += acados_toc(&timer);
 
     // reset regularize pointers if necessary
     if (qp_in_ != NULL)
@@ -4192,6 +4195,10 @@ void ocp_nlp_timings_get(ocp_nlp_config *config, ocp_nlp_timings *timings, const
     else if (!strcmp("time_qp_solver", field) || !strcmp("time_qp_solver_call", field))
     {
         *value = timings->time_qp_solver_call;
+    }
+    else if (!strcmp("time_qpscaling", field))
+    {
+        *value = timings->time_qpscaling;
     }
     else if (!strcmp("time_qp_xcond", field))
     {
@@ -4374,7 +4381,7 @@ void ocp_nlp_timings_reset(ocp_nlp_timings *timings)
     timings->time_qp_sol = 0.0;
     timings->time_qp_solver_call = 0.0;
     timings->time_qp_xcond = 0.0;
-    timings->time_qp_scaling = 0.0;
+    timings->time_qpscaling = 0.0;
     timings->time_lin = 0.0;
     timings->time_reg = 0.0;
     timings->time_glob = 0.0;
