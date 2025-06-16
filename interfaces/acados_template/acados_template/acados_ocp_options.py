@@ -2104,3 +2104,22 @@ class AcadosOcpOptions:
 
     def set(self, attr, value):
         setattr(self, attr, value)
+
+    def _ensure_solution_sensitivities_available(self, parametric: bool = True, has_custom_hess: bool = False):
+        if not self.qp_solver in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM']:
+            raise NotImplementedError("Parametric sensitivities are only available with HPIPM as QP solver.")
+
+        if not (
+            self.hessian_approx == 'EXACT' and
+            self.regularize_method == 'NO_REGULARIZE' and
+            self.levenberg_marquardt == 0 and
+            self.exact_hess_constr == 1 and
+            self.exact_hess_cost == 1 and
+            self.exact_hess_dyn == 1 and
+            self.fixed_hess == 0 and
+            has_custom_hess is False
+        ):
+            raise ValueError("Parametric sensitivities are only correct if an exact Hessian is used!")
+
+        if parametric and not self.with_solution_sens_wrt_params:
+            raise ValueError("Parametric sensitivities are only available if with_solution_sens_wrt_params is set to True.")

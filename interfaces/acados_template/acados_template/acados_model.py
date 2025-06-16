@@ -960,3 +960,9 @@ class AcadosModel():
         self.name = self.name + f"_d{degree}"
 
         return evaluate_polynomial_u_fun
+
+
+    def _has_custom_hess(self) -> bool:
+        return not (is_empty(self.cost_expr_ext_cost_custom_hess_0) and
+                    is_empty(self.cost_expr_ext_cost_custom_hess) and 
+                    is_empty(self.cost_expr_ext_cost_custom_hess_e))

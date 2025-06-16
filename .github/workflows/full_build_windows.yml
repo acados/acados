@@ -71,7 +71,7 @@ jobs:
       with:
           release: R2021a
           products: Simulink Simulink_Test
-          cache: true
+          cache: false
 
     - name: Setup MATLAB with MinGW Compiler
       uses: matlab-actions/run-command@v2

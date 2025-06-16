@@ -2131,6 +2131,21 @@ class AcadosOcp:
 
         print('--------------------------------------------------------------')
 
+    def ensure_solution_sensitivities_available(self, parametric=True) -> None:
+        """
+        Check if the options are set correctly for calculating sensitivities.
+
+        :param parametric: if True, check also if parametric sensitivities are available.
+
+        :raises NotImplementedError: if the QP solver is not HPIPM.
+        :raises ValueError: if the Hessian approximation or regularization method is not set correctly for parametric sensitivities.
+        """
+        has_custom_hess = self.model._has_custom_hess()
+
+        self.solver_options._ensure_solution_sensitivities_available(
+            parametric,
+            has_custom_hess
+        )
 
     def get_initial_cost_expression(self):
         model = self.model
