@@ -1506,7 +1506,7 @@ class AcadosOcpSolver:
         """
         Get the information of the last solver call.
 
-        :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'nlp_iter', 'sqp_iter', 'residuals', 'qp_iter', 'alpha']
+        :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg',  'time_qpscaling', 'nlp_iter', 'sqp_iter', 'residuals', 'qp_iter', 'alpha']
 
         Available fields:
             - time_tot: total CPU time previous call
@@ -1517,6 +1517,7 @@ class AcadosOcpSolver:
             - time_qp: CPU time qp solution
             - time_qp_solver_call: CPU time inside qp solver (without converting the QP)
             - time_qp_xcond: time_glob: CPU time globalization
+            - time_qpscaling: CPU time for QP scaling
             - time_solution_sensitivities: CPU time for previous call to eval_param_sens
             - time_solution_sens_lin: CPU time for linearization in eval_param_sens
             - time_solution_sens_solve: CPU time for solving in eval_solution_sensitivity
@@ -1547,6 +1548,7 @@ class AcadosOcpSolver:
                   'time_qp',
                   'time_qp_solver_call',
                   'time_qp_xcond',
+                  'time_qpscaling',
                   'time_glob',
                   'time_solution_sensitivities',
                   'time_reg',
