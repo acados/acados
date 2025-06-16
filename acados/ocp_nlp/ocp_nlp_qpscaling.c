@@ -509,11 +509,11 @@ void ocp_nlp_qpscaling_scale_constraints(ocp_nlp_qpscaling_dims *dims, void *opt
                 // printf("Scaling slack %d for constraint %d at stage %d with factor %.2e\n", s_idx, j, i, scaling_factor);
                 // scale associated slack cost
                 // lower
-                BLASFEO_DVECEL(qp_in->rqz+i, nu[i]+nx[i]+s_idx) *= 1/scaling_factor;
-                BLASFEO_DVECEL(qp_in->Z+i, s_idx) *= 1/(scaling_factor*scaling_factor);
+                BLASFEO_DVECEL(qp_in->rqz+i, nu[i]+nx[i]+s_idx) *= 1.0/scaling_factor;
+                BLASFEO_DVECEL(qp_in->Z+i, s_idx) *= 1.0/(scaling_factor*scaling_factor);
                 // upper
-                BLASFEO_DVECEL(qp_in->rqz+i, nu[i]+nx[i]+ns[i]+s_idx) *= 1/scaling_factor;
-                BLASFEO_DVECEL(qp_in->Z+i, ns[i]+s_idx) *= 1/(scaling_factor*scaling_factor);
+                BLASFEO_DVECEL(qp_in->rqz+i, nu[i]+nx[i]+ns[i]+s_idx) *= 1.0/scaling_factor;
+                BLASFEO_DVECEL(qp_in->Z+i, ns[i]+s_idx) *= 1.0/(scaling_factor*scaling_factor);
             }
 
             // scale lower bound
@@ -586,8 +586,8 @@ void ocp_nlp_qpscaling_rescale_solution(ocp_nlp_qpscaling_dims *dims, void *opts
 
     if (memory->obj_factor != 1.0 && opts->scale_qp_objective)
     {
-        ocp_qp_out_scale_duals(qp_out, 1/memory->obj_factor);
-        ocp_qp_scale_objective(qp_in, 1/memory->obj_factor);
+        ocp_qp_out_scale_duals(qp_out, 1.0/memory->obj_factor);
+        ocp_qp_scale_objective(qp_in, 1.0/memory->obj_factor);
     }
     if (opts->scale_qp_constraints)
     {
