@@ -455,20 +455,21 @@ void ocp_nlp_qpscaling_scale_constraints(ocp_nlp_qpscaling_dims *dims, void *opt
     double mask_value_lower, mask_value_upper;
     ocp_nlp_qpscaling_memory *memory = mem_;
     // ocp_nlp_qpscaling_opts *opts = opts_; // option for what norm to be used
-    double row_norm, scaling_factor;
+    double coeff_norm, scaling_factor;
 
     for (i = 0; i <= N; i++)
     {
         for (j = 0; j < ng[i]; j++)
         {
-            row_norm = norm_inf_matrix_col(j, nu[i]+nx[i], &qp_in->DCt[i]);
+            coeff_norm = norm_inf_matrix_col(j, nu[i]+nx[i], &qp_in->DCt[i]);
             mask_value_lower = BLASFEO_DVECEL(qp_in->d_mask+i, nb[i]+j);
             mask_value_upper = BLASFEO_DVECEL(qp_in->d_mask+i, 2*nb[i]+ng[i]+j);
 
             // calculate scaling factor from row norm
             double bound_max = fmax(fabs(mask_value_lower * BLASFEO_DVECEL(qp_in->d+i, nb[i]+j)),
                                     fabs(mask_value_upper * BLASFEO_DVECEL(qp_in->d+i, 2*nb[i]+ng[i]+j)));
-            scaling_factor = 1 / fmax(1.0, fmax(bound_max, row_norm));
+            // only scale down.
+            scaling_factor = 1 / fmax(1.0, fmax(bound_max, coeff_norm));
 
             // store scaling factor in memory
             BLASFEO_DVECEL(memory->constraints_scaling_vec+i, j) = scaling_factor;
