@@ -296,30 +296,6 @@ static double norm_inf_matrix_row(int row, int n_col,  struct blasfeo_dmat *At)
     return norm;
 }
 
-/*
-The interesting matrices are stored transposed
-*/
-// static double norm_2_matrix_row(int row, int n_col, struct blasfeo_dmat *At)
-// {
-//     double norm = 0.0;
-//     for (int j = 0; j < n_col; ++j)
-//     {
-//         double tmp = BLASFEO_DMATEL(At, j, row);
-//         norm += tmp * tmp;
-//     }
-//     return sqrt(norm);
-// }
-
-/*
-The interesting matrices are stored transposed
-*/
-static void scale_matrix_row(int row, int n_col, struct blasfeo_dmat *At, double scaling_factor)
-{
-    for (int j = 0; j < n_col; ++j)
-    {
-        BLASFEO_DMATEL(At, j, row) = BLASFEO_DMATEL(At, j, row) * scaling_factor;
-    }
-}
 
 static void rescale_solution_constraint_scaling(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_nlp_qpscaling_memory *mem)
 {
@@ -501,7 +477,7 @@ void ocp_nlp_qpscaling_scale_constraints(ocp_nlp_qpscaling_dims *dims, void *opt
             BLASFEO_DVECEL(memory->constraints_scaling_vec+i, j) = scaling_factor;
 
             // scale the row
-            scale_matrix_row(j, nu[i]+nx[i],  &qp_in->DCt[i], scaling_factor);
+            blasfeo_dgesc(nu[i]+nx[i], 1, scaling_factor, &qp_in->DCt[i], 0, j);
 
             s_idx = qp_in->idxs_rev[i][nb[i] + j];  // index of slack corresponding to this constraint
             if (s_idx != -1)
