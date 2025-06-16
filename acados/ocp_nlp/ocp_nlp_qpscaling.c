@@ -282,15 +282,12 @@ void ocp_nlp_qpscaling_memory_get(ocp_nlp_qpscaling_dims *dims, void *mem_, cons
 /************************************************
  * helper functions
  ************************************************/
-/*
-The interesting matrices are stored transposed
-*/
-static double norm_inf_matrix_row(int row, int n_col,  struct blasfeo_dmat *At)
+static double norm_inf_matrix_col(int col_idx, int col_length,  struct blasfeo_dmat *At)
 {
     double norm = 0.0;
-    for (int j = 0; j < n_col; ++j)
+    for (int j = 0; j < col_length; ++j)
     {
-        double tmp = BLASFEO_DMATEL(At, j, row);
+        double tmp = BLASFEO_DMATEL(At, j, col_idx);
         norm = fmax(norm, fabs(tmp));
     }
     return norm;
@@ -445,7 +442,7 @@ void ocp_nlp_qpscaling_scale_objective(ocp_nlp_qpscaling_dims *dims, void *opts_
 
 
 // calculate scaling factors for all inequality constraints (except bounds) of the QP.
-// The scaling factor is calculated as the maximum of the row norm and the maximum of the bounds.
+// The scaling factor is calculated as the maximum of the linear coefficients of the constraint and the maximum of the bounds.
 void ocp_nlp_qpscaling_scale_constraints(ocp_nlp_qpscaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in)
 {
     int *nx = qp_in->dim->nx;
@@ -464,7 +461,7 @@ void ocp_nlp_qpscaling_scale_constraints(ocp_nlp_qpscaling_dims *dims, void *opt
     {
         for (j = 0; j < ng[i]; j++)
         {
-            row_norm = norm_inf_matrix_row(j, nu[i]+nx[i],  &qp_in->DCt[i]);
+            row_norm = norm_inf_matrix_col(j, nu[i]+nx[i], &qp_in->DCt[i]);
             mask_value_lower = BLASFEO_DVECEL(qp_in->d_mask+i, nb[i]+j);
             mask_value_upper = BLASFEO_DVECEL(qp_in->d_mask+i, 2*nb[i]+ng[i]+j);
 
@@ -476,7 +473,7 @@ void ocp_nlp_qpscaling_scale_constraints(ocp_nlp_qpscaling_dims *dims, void *opt
             // store scaling factor in memory
             BLASFEO_DVECEL(memory->constraints_scaling_vec+i, j) = scaling_factor;
 
-            // scale the row
+            // scale the constraint
             blasfeo_dgesc(nu[i]+nx[i], 1, scaling_factor, &qp_in->DCt[i], 0, j);
 
             s_idx = qp_in->idxs_rev[i][nb[i] + j];  // index of slack corresponding to this constraint
