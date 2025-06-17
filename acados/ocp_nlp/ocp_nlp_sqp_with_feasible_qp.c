@@ -315,6 +315,8 @@ acados_size_t ocp_nlp_sqp_wfqp_memory_calculate_size(void *config_, void *dims_,
     size += ocp_qp_xcond_solver_workspace_calculate_size(config->relaxed_qp_solver, dims->relaxed_qp_solver, opts->nlp_opts->qp_solver_opts);
     size += ocp_qp_in_calculate_size(dims->relaxed_qp_solver->orig_dims);
     size += ocp_qp_out_calculate_size(dims->relaxed_qp_solver->orig_dims);
+    // relaxed qpscaling
+    size += ocp_nlp_qpscaling_memory_calculate_size(dims->qpscaling, nlp_opts->qpscaling, dims->relaxed_qp_solver->orig_dims);
 
     // stat
     int stat_m = opts->nlp_opts->max_iter+1;
@@ -412,6 +414,10 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     c_ptr += ocp_qp_in_calculate_size(dims->relaxed_qp_solver->orig_dims);
     mem->relaxed_qp_out = ocp_qp_out_assign(dims->relaxed_qp_solver->orig_dims, c_ptr);
     c_ptr += ocp_qp_out_calculate_size(dims->relaxed_qp_solver->orig_dims);
+    // qpscaling
+    mem->relaxed_qpscaling_mem = ocp_nlp_qpscaling_memory_assign(dims->relaxed_qpscaling, opts->nlp_opts->qpscaling, dims->relaxed_qp_solver->orig_dims, c_ptr);
+    c_ptr += ocp_nlp_qpscaling_memory_calculate_size(dims->relaxed_qpscaling, opts->nlp_opts->qpscaling, dims->relaxed_qp_solver->orig_dims);
+
     // nominal
     mem->relaxed_qp_solver.config = config->relaxed_qp_solver;
     mem->relaxed_qp_solver.dims = dims->relaxed_qp_solver;
@@ -844,9 +850,11 @@ static double calculate_qp_l1_infeasibility_manually(ocp_nlp_dims *dims, ocp_nlp
     return l1_inf;
 }
 
+
+// TODO: @David: can this function be removed?
 void rescale_feasibility_qp_slack_variables(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory *mem,
-                                            ocp_nlp_sqp_wfqp_opts* opts, ocp_qp_out *qp_out)
-{
+    ocp_nlp_sqp_wfqp_opts* opts, ocp_qp_out *qp_out)
+    {
     struct blasfeo_dvec *constraints_scaling_vec = (struct blasfeo_dvec *) ocp_nlp_qpscaling_get_constraints_scaling_ptr(mem->nlp_mem->qpscaling, opts->nlp_opts->qpscaling);
     if (constraints_scaling_vec == NULL)
     {
@@ -854,6 +862,7 @@ void rescale_feasibility_qp_slack_variables(ocp_nlp_config *config, ocp_nlp_dims
         return;
     }
 
+    // TODO: David clarify comment.
     // we need to calculate pred from here, otherwise it will not be correct!
     opts->use_QP_l1_inf_from_slacks = true;
 
@@ -1922,6 +1931,10 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
     }
 
     ocp_nlp_precompute_common(config, dims, nlp_in, nlp_out, opts->nlp_opts, nlp_mem, nlp_work);
+
+    ocp_nlp_qpscaling_precompute(dims->relaxed_qpscaling, opts->nlp_opts->qpscaling, mem->relaxed_qpscaling_mem, mem->relaxed_qp_in, mem->relaxed_qp_out);
+    ocp_nlp_qpscaling_memory_get(dims->relaxed_qpscaling, mem->relaxed_qpscaling_mem, "scaled_qp_in", 0, &mem->relaxed_scaled_qp_in);
+    ocp_nlp_qpscaling_memory_get(dims->relaxed_qpscaling, mem->relaxed_qpscaling_mem, "scaled_qp_out", 0, &mem->relaxed_scaled_qp_out);
 
     // overwrite output pointers normally set in ocp_nlp_alias_memory_to_submodules
     for (int stage = 0; stage <= dims->N; stage++)

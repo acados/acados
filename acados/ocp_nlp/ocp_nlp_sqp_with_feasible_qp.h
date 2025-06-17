@@ -133,6 +133,10 @@ typedef struct
     // qp in & out
     ocp_qp_in *relaxed_qp_in;
     ocp_qp_out *relaxed_qp_out;
+    void *relaxed_qpscaling_mem;
+    // only pointers
+    ocp_qp_in *relaxed_scaled_qp_in;
+    ocp_qp_out *relaxed_scaled_qp_out;
 
 } ocp_nlp_sqp_wfqp_memory;
 
