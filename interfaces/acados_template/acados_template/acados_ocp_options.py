@@ -2131,3 +2131,6 @@ class AcadosOcpOptions:
 
         if parametric and not self.with_solution_sens_wrt_params:
             raise ValueError("Parametric sensitivities are only available if with_solution_sens_wrt_params is set to True.")
+
+        if self.qpscaling_scale_constraints != "NO_CONSTRAINT_SCALING" or self.qpscaling_scale_objective != "NO_OBJECTIVE_SCALING":
+            raise ValueError("Parametric sensitivities are only available if no scaling is applied to the QP.")
