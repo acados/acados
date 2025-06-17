@@ -561,6 +561,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_qp_in *qp_in = nlp_mem->qp_in;
     ocp_qp_out *qp_out = nlp_mem->qp_out;
 
+    qp_info *qp_info_;
+    ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
+
     // zero timers
     ocp_nlp_timings_reset(nlp_timings);
 
@@ -589,7 +592,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     nlp_mem->iter = 0;
     double prev_levenberg_marquardt = 0.0;
     int globalization_status;
-    qp_info *qp_info_;
 
     double timeout_previous_time_tot = 0.;
     double timeout_time_prev_iter = 0.;
@@ -617,7 +619,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             {
                 ocp_nlp_get_cost_value_from_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
             }
-            ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, nlp_mem->iter, nlp_mem->qp_in);
+            ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, nlp_mem->iter, qp_in);
             nlp_timings->time_lin += acados_toc(&timer1);
 
             // compute nlp residuals
@@ -756,7 +758,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         ocp_nlp_dump_qp_out_to_file(qp_out, nlp_mem->iter, 0);
 #endif
 
-        ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
         qp_iter = qp_info_->num_iter;
 
         // save statistics of last qp solver call
