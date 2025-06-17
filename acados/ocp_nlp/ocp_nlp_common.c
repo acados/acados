@@ -280,7 +280,7 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     dims->regularize = ocp_nlp_reg_dims_assign(N, c_ptr);
     c_ptr += ocp_nlp_reg_dims_calculate_size(N);
 
-    // regularization
+    // qpscaling
     dims->qpscaling = ocp_nlp_qpscaling_dims_assign(N, c_ptr);
     c_ptr += ocp_nlp_qpscaling_dims_calculate_size(N);
 

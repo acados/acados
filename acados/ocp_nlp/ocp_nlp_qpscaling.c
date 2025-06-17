@@ -195,7 +195,6 @@ void ocp_nlp_qpscaling_opts_set(void *opts_, const char *field, void* value)
 
 acados_size_t ocp_nlp_qpscaling_memory_calculate_size(ocp_nlp_qpscaling_dims *dims, void *opts_)
 {
-
     int N = dims->N;
     int i;
     ocp_nlp_qpscaling_opts *opts = opts_;
