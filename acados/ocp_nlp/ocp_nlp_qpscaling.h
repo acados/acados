@@ -44,19 +44,13 @@ extern "C" {
 // same as qp_dims
 typedef struct
 {
-    int *nx;
-    int *nu;
-    int N;
-    int *ng; // number of two-sided general constraints
+    ocp_qp_dims *qp_dim;
 } ocp_nlp_qpscaling_dims;
 
 //
 acados_size_t ocp_nlp_qpscaling_dims_calculate_size(int N);
 //
 ocp_nlp_qpscaling_dims *ocp_nlp_qpscaling_dims_assign(int N, void *raw_memory);
-//
-void ocp_nlp_qpscaling_dims_set(ocp_nlp_qpscaling_dims *dims, int stage, char *field, int* value);
-
 
 /************************************************
  * options
@@ -75,6 +69,8 @@ typedef struct
 typedef struct {
     double obj_factor;
     struct blasfeo_dvec *constraints_scaling_vec;
+    ocp_qp_in *scaled_qp_in;
+    ocp_qp_out *scaled_qp_out;
 } ocp_nlp_qpscaling_memory;
 
 acados_size_t ocp_nlp_qpscaling_opts_calculate_size(void);
@@ -88,8 +84,8 @@ void ocp_nlp_qpscaling_opts_set(void *opts_, const char *field, void* value);
  * memory
  ************************************************/
 
-acados_size_t ocp_nlp_qpscaling_memory_calculate_size(ocp_nlp_qpscaling_dims *dims, void *opts_);
-void *ocp_nlp_qpscaling_memory_assign(ocp_nlp_qpscaling_dims *dims, void *opts_, void *raw_memory);
+acados_size_t ocp_nlp_qpscaling_memory_calculate_size(ocp_nlp_qpscaling_dims *dims, void *opts_, ocp_qp_dims *orig_qp_dim);
+void *ocp_nlp_qpscaling_memory_assign(ocp_nlp_qpscaling_dims *dims, void *opts_, ocp_qp_dims *orig_qp_dim, void *raw_memory);
 void *ocp_nlp_qpscaling_get_constraints_scaling_ptr(void *memory_, void* opts_);
 void ocp_nlp_qpscaling_memory_get(ocp_nlp_qpscaling_dims *dims, void *mem_, const char *field, int stage, void* value);
 
@@ -97,6 +93,7 @@ void ocp_nlp_qpscaling_memory_get(ocp_nlp_qpscaling_dims *dims, void *mem_, cons
 /************************************************
  * functionality
  ************************************************/
+void ocp_nlp_qpscaling_precompute(ocp_nlp_qpscaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
 //
 void ocp_nlp_qpscaling_scale_qp(ocp_nlp_qpscaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in);
 

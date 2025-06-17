@@ -475,11 +475,6 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
         {
             config->regularize->dims_set(config->regularize, dims->regularize, i, "nx", &int_array[i]);
         }
-        // qpscaling
-        for (int i = 0; i <= N; i++)
-        {
-            ocp_nlp_qpscaling_dims_set(dims->qpscaling, i, "nx", &int_array[i]);
-        }
     }
     else if (!strcmp(field, "nu"))
     {
@@ -528,11 +523,6 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
         for (int i = 0; i <= N; i++)
         {
             config->regularize->dims_set(config->regularize, dims->regularize, i, "nu", &int_array[i]);
-        }
-        // qpscaling
-        for (int i = 0; i <= N; i++)
-        {
-            ocp_nlp_qpscaling_dims_set(dims->qpscaling, i, "nu", &int_array[i]);
         }
     }
     else if (!strcmp(field, "nz"))
@@ -715,8 +705,6 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
 
         // regularization
         config->regularize->dims_set(config->regularize, dims->regularize, i, "ng", &ng_qp_solver);
-        // qpscaling
-        ocp_nlp_qpscaling_dims_set(dims->qpscaling, i, "ng", &ng_qp_solver);
     }
     else if ( (!strcmp(field, "nsg")) || (!strcmp(field, "nsh")) || (!strcmp(field, "nsphi")))
     {
@@ -1612,7 +1600,7 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
     size += config->regularize->memory_calculate_size(config->regularize, dims->regularize, opts->regularize);
 
     // qpscaling
-    size += ocp_nlp_qpscaling_memory_calculate_size(dims->qpscaling, opts->qpscaling);
+    size += ocp_nlp_qpscaling_memory_calculate_size(dims->qpscaling, opts->qpscaling, dims->qp_solver->orig_dims);
 
     // globalization
     size += config->globalization->memory_calculate_size(config->globalization, dims);
@@ -1798,8 +1786,8 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     c_ptr += config->globalization->memory_calculate_size(config->globalization, dims);
 
     // qpscaling
-    mem->qpscaling = ocp_nlp_qpscaling_memory_assign(dims->qpscaling, opts->qpscaling, c_ptr);
-    c_ptr += ocp_nlp_qpscaling_memory_calculate_size(dims->qpscaling, opts->qpscaling);
+    mem->qpscaling = ocp_nlp_qpscaling_memory_assign(dims->qpscaling, opts->qpscaling, dims->qp_solver->orig_dims, c_ptr);
+    c_ptr += ocp_nlp_qpscaling_memory_calculate_size(dims->qpscaling, opts->qpscaling, dims->qp_solver->orig_dims);
 
     int i;
     // dynamics
@@ -3326,7 +3314,6 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
         dims->nh_total += tmp;
     }
 
-
     // precompute
     for (ii = 0; ii < N; ii++)
     {
@@ -3356,6 +3343,8 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
         for (ii=0; ii<=N; ii++)
             config->cost[ii]->opts_set(config->cost[ii], opts->cost[ii], "compute_hess", &mem->compute_hess);
     }
+
+    ocp_nlp_qpscaling_precompute(dims->qpscaling, opts->qpscaling, mem->qpscaling, mem->qp_in, mem->qp_out);
 
     return status;
 }
