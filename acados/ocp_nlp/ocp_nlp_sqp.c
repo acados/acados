@@ -770,7 +770,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // compute external QP residuals (for debugging)
         if (nlp_opts->ext_qp_res)
         {
-            ocp_qp_res_compute(qp_in, qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
+            ocp_qp_res_compute(nlp_mem->scaled_qp_in, nlp_mem->scaled_qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
             if (nlp_mem->iter+1 < mem->stat_m)
                 ocp_qp_res_compute_nrm_inf(nlp_work->qp_res, mem->stat+(mem->stat_n*(nlp_mem->iter+1)+7));
         }

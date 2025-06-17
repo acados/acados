@@ -185,6 +185,9 @@ static acados_size_t ocp_nlp_dims_calculate_size_self(int N)
     // qpscaling
     size += ocp_nlp_qpscaling_dims_calculate_size(N);
 
+    // relaxed_qpscaling
+    size += ocp_nlp_qpscaling_dims_calculate_size(N);
+
     size += sizeof(ocp_nlp_reg_dims);
 
     size += 8;  // initial align
@@ -282,6 +285,10 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
 
     // qpscaling
     dims->qpscaling = ocp_nlp_qpscaling_dims_assign(N, c_ptr);
+    c_ptr += ocp_nlp_qpscaling_dims_calculate_size(N);
+
+    // relaxed_qpscaling
+    dims->relaxed_qpscaling = ocp_nlp_qpscaling_dims_assign(N, c_ptr);
     c_ptr += ocp_nlp_qpscaling_dims_calculate_size(N);
 
     // N
@@ -3346,6 +3353,10 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
 
     ocp_nlp_qpscaling_precompute(dims->qpscaling, opts->qpscaling, mem->qpscaling, mem->qp_in, mem->qp_out);
 
+    // alias from qp scaling memory (has to be after qpscaling precompute)
+    ocp_nlp_qpscaling_memory_get(dims->qpscaling, mem->qpscaling, "scaled_qp_in", 0, &mem->scaled_qp_in);
+    ocp_nlp_qpscaling_memory_get(dims->qpscaling, mem->qpscaling, "scaled_qp_out", 0, &mem->scaled_qp_out);
+
     return status;
 }
 
@@ -4017,11 +4028,11 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
         qp_work = xcond_solver->work;
     }
 
-    // qp_in_, qp_out_ are "optional", if NULL is given use nlp_mem->qp_in, nlp_mem->qp_out
+    // qp_in_, qp_out_ are "optional", if NULL is given use nlp_mem->scaled_qp_in, nlp_mem->scaled_qp_out
     ocp_qp_in *qp_in;
     if (qp_in_ == NULL)
     {
-        qp_in = nlp_mem->qp_in;
+        qp_in = nlp_mem->scaled_qp_in;
     }
     else
     {
@@ -4032,7 +4043,7 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
     ocp_qp_out *qp_out = nlp_mem->qp_out;
     if (qp_out_ == NULL)
     {
-        qp_out = nlp_mem->qp_out;
+        qp_out = nlp_mem->scaled_qp_out;
     }
     else
     {

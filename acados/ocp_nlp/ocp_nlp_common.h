@@ -148,6 +148,7 @@ typedef struct ocp_nlp_dims
     ocp_qp_xcond_solver_dims *relaxed_qp_solver;  // xcond solver instead ??
     ocp_nlp_reg_dims *regularize;
     ocp_nlp_qpscaling_dims *qpscaling;
+    ocp_nlp_qpscaling_dims *relaxed_qpscaling;
 
     int *nv;  // number of primal variables (states+controls+slacks)
     int *nx;  // number of differential states
@@ -436,6 +437,10 @@ typedef struct ocp_nlp_memory
     // qp in & out
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
+
+    // scaled qp in & out (just pointers)
+    ocp_qp_in *scaled_qp_in;
+    ocp_qp_out *scaled_qp_out;
 
     // for Anderson acceleration
     ocp_qp_out *prev_qp_out;
