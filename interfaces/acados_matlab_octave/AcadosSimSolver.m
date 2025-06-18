@@ -176,7 +176,7 @@ classdef AcadosSimSolver < handle
                 error('acados_sim_solver for model %s returned status %d.', obj.model_name, status);
             end
 
-            x_next = obj.get('x');
+            x_next = obj.get('xn');
         end
 
 

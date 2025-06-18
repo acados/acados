@@ -198,6 +198,10 @@ for i=1:N_sim
     % get simulated state
     x_sim(:,i+1) = sim_solver.get('xn');
     u_sim(:,i) = u0;
+
+    % alternative one-step simulation
+    x_sim(:,i+1) = sim_solver.simulate(x0, u0);
+    u_sim(:,i) = u0;
 end
 
 
