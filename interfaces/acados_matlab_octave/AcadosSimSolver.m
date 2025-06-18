@@ -157,7 +157,7 @@ classdef AcadosSimSolver < handle
                 obj.set('u', u);
             end
 
-            if strcmp(obj.acados_sim.solver_options.integrator_type, 'IRK')
+            if strcmp(obj.sim.solver_options.integrator_type, 'IRK')
                 if nargin >= 4 && ~isempty(z)
                     obj.set('z', z);
                 end
@@ -173,7 +173,7 @@ classdef AcadosSimSolver < handle
             status = obj.solve();
 
             if status ~= 0
-                error('acados_sim_solver for model %s returned status %d.', obj.model_name, status);
+                error('AcadosSimSolver for model %s returned status %d.', obj.name, status);
             end
 
             x_next = obj.get('xn');
