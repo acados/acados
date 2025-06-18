@@ -646,6 +646,8 @@ void ocp_nlp_common_print_iteration(int iter_count, ocp_nlp_res *nlp_res);
 void ocp_nlp_update_variables_sqp_delta_primal_dual(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work, double alpha, ocp_qp_out *step);
 
+void ocp_nlp_cp_qp_out(ocp_nlp_dims *dims, ocp_qp_out *out_start, ocp_qp_out *out_destination);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

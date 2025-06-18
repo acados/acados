@@ -523,7 +523,7 @@ void ocp_nlp_qpscaling_scale_constraints(ocp_nlp_qpscaling_dims *dims, void *opt
             double bound_max = fmax(fabs(mask_value_lower * BLASFEO_DVECEL(qp_in->d+i, nb[i]+j)),
                                     fabs(mask_value_upper * BLASFEO_DVECEL(qp_in->d+i, 2*nb[i]+ng[i]+j)));
             // only scale down.
-            scaling_factor = 1 / fmax(1.0, fmax(bound_max, coeff_norm));
+            scaling_factor = 1.0 / fmax(1.0, fmax(bound_max, coeff_norm));
 
             // store scaling factor
             BLASFEO_DVECEL(mem->constraints_scaling_vec+i, j) = scaling_factor;
@@ -545,12 +545,14 @@ void ocp_nlp_qpscaling_scale_constraints(ocp_nlp_qpscaling_dims *dims, void *opt
             }
 
             // scale lower bound
+            blasfeo_dveccp(nb[i], qp_in->d+i, 0, mem->scaled_qp_in->d+i, 0);
             if (mask_value_lower == 1.0)
             {
                 BLASFEO_DVECEL(mem->scaled_qp_in->d+i, nb[i]+j) = BLASFEO_DVECEL(qp_in->d+i, nb[i]+j) * scaling_factor;
             }
 
             // scale upper bound
+            blasfeo_dveccp(nb[i], qp_in->d+i, nb[i]+ng[i], mem->scaled_qp_in->d+i, nb[i]+ng[i]);
             if (mask_value_upper == 1.0)
             {
                 BLASFEO_DVECEL(mem->scaled_qp_in->d+i, 2*nb[i]+ng[i]+j) = BLASFEO_DVECEL(qp_in->d+i, 2*nb[i]+ng[i]+j) * scaling_factor;

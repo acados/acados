@@ -3158,6 +3158,30 @@ void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
     }
 }
 
+
+void ocp_nlp_cp_qp_out(ocp_nlp_dims *dims, ocp_qp_out *out_start, ocp_qp_out *out_destination)
+{
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        // step in primal variables
+        blasfeo_dveccp(nv[i], out_start->ux + i, 0, out_destination->ux + i, 0);
+
+        blasfeo_dveccp(2*ni[i], out_start->lam+i, 0, out_destination->lam+i, 0);
+        if (i < N)
+        {
+            blasfeo_dveccp(nx[i+1], out_start->pi+i, 0, out_destination->pi+i, 0);
+        }
+    }
+}
+
 void ocp_nlp_initialize_qp_from_nlp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_qp_in *qp_in,
             ocp_nlp_out *out, ocp_qp_out *qp_out)
 {
@@ -4085,6 +4109,12 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
     acados_tic(&timer);
     ocp_nlp_qpscaling_rescale_solution(dims->qpscaling, nlp_opts->qpscaling, nlp_mem->qpscaling, qp_in, qp_out);
     nlp_timings->time_qpscaling += acados_toc(&timer);
+
+    // copy scaled_qp_out to qp_out
+    if (qp_out_ == NULL)
+    {
+        ocp_nlp_cp_qp_out(dims, nlp_mem->scaled_qp_out, nlp_mem->qp_out);
+    }
 
     // reset regularize pointers if necessary
     if (qp_in_ != NULL)
