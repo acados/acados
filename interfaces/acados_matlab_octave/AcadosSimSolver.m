@@ -144,6 +144,42 @@ classdef AcadosSimSolver < handle
         end
 
 
+        function x_next = simulate(obj, x, u, z, xdot, p)
+        % Simulate the system forward for the given x, u, p and return x_next.
+        % The values xdot, z are used as initial guesses for implicit integrators, if provided.
+        % Wrapper around solve() taking care of setting/getting inputs/outputs.
+        % Fields which are set to an empty array or not provided will not be set.
+
+            if nargin >= 2 && ~isempty(x)
+                obj.set('x', x);
+            end
+            if nargin >= 3 && ~isempty(u)
+                obj.set('u', u);
+            end
+
+            if strcmp(obj.acados_sim.solver_options.integrator_type, 'IRK')
+                if nargin >= 4 && ~isempty(z)
+                    obj.set('z', z);
+                end
+                if nargin >= 5 && ~isempty(xdot)
+                    obj.set('xdot', xdot);
+                end
+            end
+
+            if nargin >= 6 && ~isempty(p)
+                obj.set('p', p);
+            end
+
+            status = obj.solve();
+
+            if status ~= 0
+                error('acados_sim_solver for model %s returned status %d.', obj.model_name, status);
+            end
+
+            x_next = obj.get('x');
+        end
+
+
         % function delete(obj)
         %     Use default implementation.
         %     MATLAB destroys the property values after the destruction of the object.
