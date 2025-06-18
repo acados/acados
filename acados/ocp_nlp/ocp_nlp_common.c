@@ -1248,6 +1248,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     // adaptive Levenberg-Marquardt options
     opts->adaptive_levenberg_marquardt_mu_min = 1e-16;
     opts->adaptive_levenberg_marquardt_lam = 5.0;
+    opts->adaptive_levenberg_marquardt_obj_scalar = 2.0;
     opts->with_adaptive_levenberg_marquardt = false;
 
     opts->ext_qp_res = 0;
@@ -1389,6 +1390,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             double* adaptive_levenberg_marquardt_mu0 = (double *) value;
             opts->adaptive_levenberg_marquardt_mu0 = *adaptive_levenberg_marquardt_mu0;
+        }
+        else if (!strcmp(field, "adaptive_levenberg_marquardt_obj_scalar"))
+        {
+            double* adaptive_levenberg_marquardt_obj_scalar = (double *) value;
+            opts->adaptive_levenberg_marquardt_obj_scalar = *adaptive_levenberg_marquardt_obj_scalar;
         }
         else if (!strcmp(field, "solution_sens_qp_t_lam_min"))
         {
@@ -2778,7 +2784,7 @@ void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *
     if (opts->with_adaptive_levenberg_marquardt)
     {
         adaptive_levenberg_marquardt_update_mu(iter, alpha, opts, mem);
-        double reg_param = 2*mem->cost_value*mem->adaptive_levenberg_marquardt_mu;
+        double reg_param = opts->adaptive_levenberg_marquardt_obj_scalar*mem->cost_value*mem->adaptive_levenberg_marquardt_mu;
         opts->levenberg_marquardt = reg_param;
     }
     // Only add the Levenberg-Marquardt term when it is bigger than zero

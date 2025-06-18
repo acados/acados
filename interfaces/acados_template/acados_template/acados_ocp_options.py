@@ -124,6 +124,7 @@ class AcadosOcpOptions:
         self.__adaptive_levenberg_marquardt_lam = 5.0
         self.__adaptive_levenberg_marquardt_mu_min = 1e-16
         self.__adaptive_levenberg_marquardt_mu0 = 1e-3
+        self.__adaptive_levenberg_marquardt_obj_scalar = 2.0
         self.__log_primal_step_norm: bool = False
         self.__log_dual_step_norm: bool = False
         self.__store_iterates: bool = False
@@ -663,6 +664,18 @@ class AcadosOcpOptions:
         type: float
         """
         return self.__adaptive_levenberg_marquardt_mu0
+
+    @property
+    def adaptive_levenberg_marquardt_obj_scalar(self):
+        """
+        So far: Only relevant for DDP
+        Flag defining the value of the scalar that is multiplied with the NLP
+        objective function in the adaptive levenberg_marquardt.
+        Must be > 0.
+        Default: 2.0
+        type: float
+        """
+        return self.__adaptive_levenberg_marquardt_obj_scalar
 
     @property
     def log_primal_step_norm(self):
@@ -1752,6 +1765,13 @@ class AcadosOcpOptions:
             self.__adaptive_levenberg_marquardt_mu0 = adaptive_levenberg_marquardt_mu0
         else:
             raise ValueError('Invalid adaptive_levenberg_marquardt_mu0 value. adaptive_levenberg_marquardt_mu0 must be a positive float.')
+
+    @adaptive_levenberg_marquardt_obj_scalar.setter
+    def adaptive_levenberg_marquardt_obj_scalar(self, adaptive_levenberg_marquardt_obj_scalar):
+        if isinstance(adaptive_levenberg_marquardt_obj_scalar, float) and adaptive_levenberg_marquardt_obj_scalar >= 0.0:
+            self.__adaptive_levenberg_marquardt_obj_scalar = adaptive_levenberg_marquardt_obj_scalar
+        else:
+            raise ValueError('Invalid adaptive_levenberg_marquardt_obj_scalar value. adaptive_levenberg_marquardt_obj_scalar must be a positive float.')
 
     @log_primal_step_norm.setter
     def log_primal_step_norm(self, val):

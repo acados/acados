@@ -115,6 +115,7 @@ classdef AcadosOcpOptions < handle
         adaptive_levenberg_marquardt_lam
         adaptive_levenberg_marquardt_mu_min
         adaptive_levenberg_marquardt_mu0
+        adaptive_levenberg_marquardt_obj_scalar
         log_primal_step_norm
         log_dual_step_norm
         store_iterates
@@ -229,6 +230,7 @@ classdef AcadosOcpOptions < handle
             obj.adaptive_levenberg_marquardt_lam = 5.0;
             obj.adaptive_levenberg_marquardt_mu_min = 1e-16;
             obj.adaptive_levenberg_marquardt_mu0 = 1e-3;
+            obj.adaptive_levenberg_marquardt_obj_scalar = 2.0;
             obj.log_primal_step_norm = 0;
             obj.log_dual_step_norm = 0;
             obj.store_iterates = false;
