@@ -55,6 +55,10 @@ class AcadosCasadiOcp:
             # indices of variables within w
             'x_in_w': [],
             'u_in_w': [],
+            # indices of state bounds within lam_x(lam_w) in casadi formulation
+            'lam_x_in_lam_w':[],
+            # indices of control bounds within lam_x(lam_w) in casadi formulation
+            'lam_u_in_lam_w': [],
             # indices of dynamic constraints within g in casadi formulation
             'pi_in_lam_g': [],
             # indicies to [g, h, phi] in acados formulation within lam_g in casadi formulation
@@ -96,18 +100,28 @@ class AcadosCasadiOcp:
         lb_xtraj_node[0][constraints.idxbx_0] = constraints.lbx_0
         ub_xtraj_node[0][constraints.idxbx_0] = constraints.ubx_0
         offset = 0
+        index_map['lam_x_in_lam_w'].append(list(offset + constraints.idxbx_0))
+        offset += dims.nbx_0 +dims.nbu
         for i in range(1, N_horizon):
             lb_xtraj_node[i][constraints.idxbx] = constraints.lbx
             ub_xtraj_node[i][constraints.idxbx] = constraints.ubx
+            index_map['lam_x_in_lam_w'].append(list(offset + constraints.idxbx))
+            offset += dims.nx + dims.nbu
         lb_xtraj_node[-1][constraints.idxbx_e] = constraints.lbx_e
         ub_xtraj_node[-1][constraints.idxbx_e] = constraints.ubx_e
+        index_map['lam_x_in_lam_w'].append(list(offset + constraints.idxbx_e))
+        offset += dims.nx
 
         # setup control bounds
         lb_utraj_node = [-np.inf * ca.DM.ones((dims.nu, 1)) for _ in range(N_horizon)]
         ub_utraj_node = [np.inf * ca.DM.ones((dims.nu, 1)) for _ in range(N_horizon)]
+        offset = 0
         for i in range(N_horizon):
             lb_utraj_node[i][constraints.idxbu] = constraints.lbu
             ub_utraj_node[i][constraints.idxbu] = constraints.ubu
+            offset += dims.nx
+            index_map['lam_u_in_lam_w'].append(list(offset + constraints.idxbu))
+            offset += dims.nu
 
         ### Concatenate primal variables and bounds
         # w = [x0, u0, x1, u1, ...]
@@ -492,15 +506,15 @@ class AcadosCasadiOcpSolver:
             return -self.nlp_sol_lam_g[self.index_map['pi_in_lam_g'][stage]].flatten()
         elif field == 'lam':
             if stage == 0:
-                bx_lam = self.nlp_sol_lam_x[self.index_map['x_in_w'][stage]] if dims.nbx_0 else np.empty((0, 1))
-                bu_lam = self.nlp_sol_lam_x[self.index_map['u_in_w'][stage]] if dims.nbu else np.empty((0, 1))
+                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_x_in_lam_w'][stage]]
+                bu_lam = self.nlp_sol_lam_x[self.index_map['lam_u_in_lam_w'][stage]]
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
             elif stage < dims.N:
-                bx_lam = self.nlp_sol_lam_x[self.index_map['x_in_w'][stage]] if dims.nbx else np.empty((0, 1))
-                bu_lam = self.nlp_sol_lam_x[self.index_map['u_in_w'][stage]] if dims.nbu else np.empty((0, 1))
+                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_x_in_lam_w'][stage]]
+                bu_lam = self.nlp_sol_lam_x[self.index_map['lam_u_in_lam_w'][stage]]
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
             elif stage == dims.N:
-                bx_lam = self.nlp_sol_lam_x[self.index_map['x_in_w'][stage]] if dims.nbx_e else np.empty((0, 1))
+                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_x_in_lam_w'][stage]]
                 bu_lam = np.empty((0, 1))
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
 
@@ -673,17 +687,17 @@ class AcadosCasadiOcpSolver:
                 n_ghphi = dims.ng_e + dims.nh_e + dims.nphi_e
 
             offset_u = (nbx+nbu+n_ghphi)
-            lbu_lam = value_[:nbu] if nbu else np.empty((dims.nu,))
-            lbx_lam = value_[nbu:nbu+nbx] if nbx else np.empty((dims.nx,))
+            lbu_lam = value_[:nbu]
+            lbx_lam = value_[nbu:nbu+nbx]
             lg_lam = value_[nbu+nbx:nbu+nbx+n_ghphi]
-            ubu_lam = value_[offset_u:offset_u+nbu] if nbu else np.empty((dims.nu,))
-            ubx_lam = value_[offset_u+nbu:offset_u+nbu+nbx] if nbx else np.empty((dims.nx,))
+            ubu_lam = value_[offset_u:offset_u+nbu]
+            ubx_lam = value_[offset_u+nbu:offset_u+nbu+nbx]
             ug_lam = value_[offset_u+nbu+nbx:offset_u+nbu+nbx+n_ghphi]
             if stage != dims.N:
-                self.lam_x0[self.index_map['x_in_w'][stage]+self.index_map['u_in_w'][stage]] = np.concatenate((ubx_lam-lbx_lam, ubu_lam-lbu_lam))
+                self.lam_x0[self.index_map['lam_x_in_lam_w'][stage]+self.index_map['lam_u_in_lam_w'][stage]] = np.concatenate((ubx_lam-lbx_lam, ubu_lam-lbu_lam))
                 self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] =  ug_lam-lg_lam
             else:
-                self.lam_x0[self.index_map['x_in_w'][stage]] = ubx_lam-lbx_lam
+                self.lam_x0[self.index_map['lam_x_in_lam_w'][stage]] = ubx_lam-lbx_lam
                 self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] = ug_lam-lg_lam
         elif field in ['sl', 'su']:
             # do nothing for now, only empty is supported
