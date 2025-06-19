@@ -309,7 +309,7 @@ static void rescale_solution_constraint_scaling(ocp_nlp_qpscaling_opts *opts, oc
     for (int i = 0; i <= N; i++)
     {
         // copy ux;
-        blasfeo_dveccp(nx[i]+nx[i]+2*ns[i], mem->scaled_qp_out->ux, 0, qp_out->ux, 0);
+        blasfeo_dveccp(nx[i]+nx[i]+2*ns[i], mem->scaled_qp_out->ux+i, 0, qp_out->ux+i, 0);
 
         if (opts->scale_qp_objective == NO_OBJECTIVE_SCALING)
         {
@@ -425,7 +425,12 @@ void ocp_nlp_qpscaling_precompute(ocp_nlp_qpscaling_dims *dims, void *opts_, voi
         mem->scaled_qp_in->idxe = qp_in->idxe;
         mem->scaled_qp_in->idxs_rev = qp_in->idxs_rev;
         mem->scaled_qp_in->m = qp_in->m;
-        // NOT aliased: rqz, RSQrq, Z, d, DCt
+        // NOT aliased: rqz, Z, d, DCt
+        if (opts->scale_qp_objective == NO_OBJECTIVE_SCALING)
+        {
+            // alias RSQrq, otherwise it is set up in objective scaling
+            mem->scaled_qp_in->RSQrq = qp_in->RSQrq;
+        }
 
         /* qp_out */
         mem->scaled_qp_out->misc = qp_out->misc;
@@ -508,14 +513,24 @@ void ocp_nlp_qpscaling_scale_constraints(ocp_nlp_qpscaling_dims *dims, void *opt
     int i, j, s_idx;
     double mask_value_lower, mask_value_upper;
     ocp_nlp_qpscaling_memory *mem = mem_;
-    // ocp_nlp_qpscaling_opts *opts = opts_; // option for what norm to be used
+    ocp_nlp_qpscaling_opts *opts = opts_;
     double coeff_norm, scaling_factor;
+    ocp_qp_in *scaled_qp_in = mem->scaled_qp_in;
 
     for (i = 0; i <= N; i++)
     {
+        // setup all non-aliased stuff
+        blasfeo_dveccp(2*(nb[i]+ng[i]+ns[i]), qp_in->d+i, 0, scaled_qp_in->d+i, 0);
+        // copy cost, if not already done via cost scaling
+        if (opts->scale_qp_objective == NO_OBJECTIVE_SCALING)
+        {
+            blasfeo_dveccp(nx[i]+nu[i]+2*ns[i], qp_in->rqz+i, 0, scaled_qp_in->rqz+i, 0);
+            blasfeo_dveccp(2*ns[i], qp_in->Z+i, 0, scaled_qp_in->Z+i, 0);
+        }
+        // setup DCt, modify d in place
         for (j = 0; j < ng[i]; j++)
         {
-            coeff_norm = norm_inf_matrix_col(j, nu[i]+nx[i], qp_in->DCt+i);
+            coeff_norm = norm_inf_matrix_col(j, nu[i]+nx[i], scaled_qp_in->DCt+i);
             mask_value_lower = BLASFEO_DVECEL(qp_in->d_mask+i, nb[i]+j);
             mask_value_upper = BLASFEO_DVECEL(qp_in->d_mask+i, 2*nb[i]+ng[i]+j);
 
@@ -537,23 +552,23 @@ void ocp_nlp_qpscaling_scale_constraints(ocp_nlp_qpscaling_dims *dims, void *opt
                 // printf("Scaling slack %d for constraint %d at stage %d with factor %.2e\n", s_idx, j, i, scaling_factor);
                 // scale associated slack cost
                 // lower
-                BLASFEO_DVECEL(mem->scaled_qp_in->rqz+i, nu[i]+nx[i]+s_idx) = BLASFEO_DVECEL(qp_in->rqz+i, nu[i]+nx[i]+s_idx) / scaling_factor;
-                BLASFEO_DVECEL(mem->scaled_qp_in->Z+i, s_idx) = BLASFEO_DVECEL(qp_in->Z+i, s_idx) / (scaling_factor*scaling_factor);
+                BLASFEO_DVECEL(mem->scaled_qp_in->rqz+i, nu[i]+nx[i]+s_idx) /= scaling_factor;
+                BLASFEO_DVECEL(mem->scaled_qp_in->Z+i, s_idx) /= (scaling_factor*scaling_factor);
                 // upper
-                BLASFEO_DVECEL(mem->scaled_qp_in->rqz+i, nu[i]+nx[i]+ns[i]+s_idx) = BLASFEO_DVECEL(qp_in->rqz+i, nu[i]+nx[i]+ns[i]+s_idx) / scaling_factor;
-                BLASFEO_DVECEL(mem->scaled_qp_in->Z+i, ns[i]+s_idx) = BLASFEO_DVECEL(qp_in->Z+i, ns[i]+s_idx) / (scaling_factor*scaling_factor);
+                BLASFEO_DVECEL(mem->scaled_qp_in->rqz+i, nu[i]+nx[i]+ns[i]+s_idx) /= scaling_factor;
+                BLASFEO_DVECEL(mem->scaled_qp_in->Z+i, ns[i]+s_idx) /= (scaling_factor*scaling_factor);
             }
 
             // scale lower bound
             if (mask_value_lower == 1.0)
             {
-                BLASFEO_DVECEL(mem->scaled_qp_in->d+i, nb[i]+j) = BLASFEO_DVECEL(qp_in->d+i, nb[i]+j) * scaling_factor;
+                BLASFEO_DVECEL(mem->scaled_qp_in->d+i, nb[i]+j) *= scaling_factor;
             }
 
             // scale upper bound
             if (mask_value_upper == 1.0)
             {
-                BLASFEO_DVECEL(mem->scaled_qp_in->d+i, 2*nb[i]+ng[i]+j) = BLASFEO_DVECEL(qp_in->d+i, 2*nb[i]+ng[i]+j) * scaling_factor;
+                BLASFEO_DVECEL(mem->scaled_qp_in->d+i, 2*nb[i]+ng[i]+j) *= scaling_factor;
             }
         }
     }
