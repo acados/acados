@@ -148,7 +148,7 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config, void *dims, void *opts_, void
 void ocp_nlp_sqp_wfqp_memory_reset_qp_solver(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     void *opts_, void *mem_, void *work_);
 //
-void set_relaxed_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp_qp_in *qp_in);
+void set_relaxed_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem);
 
 /************************************************
  * workspace

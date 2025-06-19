@@ -425,7 +425,7 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     mem->relaxed_qp_solver.mem = mem->relaxed_qp_solver_mem;
     mem->relaxed_qp_solver.work = mem->relaxed_qp_solver_work;
 
-    set_relaxed_qp_in_matrix_pointers(mem, mem->nlp_mem->qp_in);
+    set_relaxed_qp_in_matrix_pointers(mem);
 
     // Z_cost_module
     assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->Z_cost_module, &c_ptr);
@@ -1294,15 +1294,31 @@ Feasibility QP and nominal QP share many entries.
 - Constraint bounds are different
 Where we point to the same memory for both QPs is given below.
 */
-void set_relaxed_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem, ocp_qp_in *qp_in)
+void set_relaxed_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem)
 {
+    ocp_qp_in *qp_in = mem->nlp_mem->qp_in;
+
     // dynamics
     mem->relaxed_qp_in->BAbt = qp_in->BAbt; // dynamics matrix & vector work space
-    mem->relaxed_qp_in->b = qp_in->b; // dynamics vector work space
+    mem->relaxed_qp_in->b = qp_in->b; // dynamics vector
+
     // constraint defintitions
     mem->relaxed_qp_in->DCt = qp_in->DCt; // inequality constraints matrix
     mem->relaxed_qp_in->idxb = qp_in->idxb;
     mem->relaxed_qp_in->idxe = qp_in->idxe;
+}
+
+static void set_relaxed_scaled_qp_in_matrix_pointers(ocp_nlp_sqp_wfqp_memory *mem)
+{
+    ocp_qp_in *scaled_qp_in = mem->nlp_mem->scaled_qp_in;
+
+    // dynamics
+    mem->relaxed_scaled_qp_in->BAbt = scaled_qp_in->BAbt;
+    mem->relaxed_scaled_qp_in->b = scaled_qp_in->b;
+    // constraint defintitions
+    mem->relaxed_scaled_qp_in->DCt = scaled_qp_in->DCt;
+    mem->relaxed_scaled_qp_in->idxb = scaled_qp_in->idxb;
+    mem->relaxed_scaled_qp_in->idxe = scaled_qp_in->idxe;
 }
 
 /*
@@ -1312,11 +1328,21 @@ update QP rhs for feasibility QP (step prim var, abs dual var)
 */
 void ocp_nlp_sqp_wfqp_approximate_feasibility_qp_constraint_vectors(ocp_nlp_config *config,
     ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
-    ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work)
+    ocp_nlp_sqp_wfqp_memory *mem, ocp_nlp_workspace *work, bool scaled)
 {
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-    ocp_qp_in *nominal_qp_in = nlp_mem->qp_in;
-    ocp_qp_in *relaxed_qp_in = mem->relaxed_qp_in;
+    ocp_qp_in *nominal_qp_in;
+    ocp_qp_in *relaxed_qp_in;
+    if (scaled)
+    {
+        nominal_qp_in = nlp_mem->scaled_qp_in;
+        relaxed_qp_in = mem->relaxed_scaled_qp_in;
+    }
+    else
+    {
+        nominal_qp_in = nlp_mem->qp_in;
+        relaxed_qp_in = mem->relaxed_qp_in;
+    }
     int N = dims->N;
 
     int *ns = dims->ns;
@@ -1616,16 +1642,18 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             // relaxed QP solver
             // matrices for relaxed QP solver evaluated in nominal QP solver
-            ocp_nlp_sqp_wfqp_approximate_feasibility_qp_constraint_vectors(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
+            ocp_nlp_sqp_wfqp_approximate_feasibility_qp_constraint_vectors(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, false);
 
             if (nlp_opts->with_adaptive_levenberg_marquardt || config->globalization->needs_objective_value() == 1)
             {
                 ocp_nlp_get_cost_value_from_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
             }
 
+            // setup relaxed QP
             setup_hessian_matrices_for_qps(config, dims, nlp_in, nlp_out, opts, mem, nlp_work);
             //
             nlp_timings->time_lin += acados_toc(&timer1);
+
             // compute nlp residuals
             ocp_nlp_res_compute(dims, nlp_opts, nlp_in, nlp_out, nlp_res, nlp_mem, nlp_work);
             ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
@@ -1676,7 +1704,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // scale the qp: includes constraints and objective
         ocp_nlp_qpscaling_scale_qp(dims->qpscaling, nlp_opts->qpscaling, nlp_mem->qpscaling, nominal_qp_in);
         nlp_timings->time_qpscaling += acados_toc(&timer1);
-        ocp_nlp_sqp_wfqp_approximate_feasibility_qp_constraint_vectors(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work); // ensures relaxed_qp->d is scaled
+        ocp_nlp_sqp_wfqp_approximate_feasibility_qp_constraint_vectors(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, true);
 
         if (opts->use_constraint_hessian_in_feas_qp)
         {
@@ -1896,6 +1924,8 @@ int ocp_nlp_sqp_wfqp_precompute(void *config_, void *dims_, void *nlp_in_, void 
     ocp_nlp_qpscaling_precompute(dims->relaxed_qpscaling, opts->nlp_opts->qpscaling, mem->relaxed_qpscaling_mem, mem->relaxed_qp_in, mem->relaxed_qp_out);
     ocp_nlp_qpscaling_memory_get(dims->relaxed_qpscaling, mem->relaxed_qpscaling_mem, "scaled_qp_in", 0, &mem->relaxed_scaled_qp_in);
     ocp_nlp_qpscaling_memory_get(dims->relaxed_qpscaling, mem->relaxed_qpscaling_mem, "scaled_qp_out", 0, &mem->relaxed_scaled_qp_out);
+
+    set_relaxed_scaled_qp_in_matrix_pointers(mem);
 
     // overwrite output pointers normally set in ocp_nlp_alias_memory_to_submodules
     for (int stage = 0; stage <= dims->N; stage++)
