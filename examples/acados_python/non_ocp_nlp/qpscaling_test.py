@@ -151,7 +151,7 @@ def call_solver(ocp_solver: AcadosOcpSolver) -> AcadosOcpFlattenedIterate:
     sol = ocp_solver.store_iterate_to_flat_obj()
     return sol
 
-def check_solutions(sol_1, sol_2, soft_h):
+def check_solutions(sol_1: AcadosOcpFlattenedIterate, sol_2: AcadosOcpFlattenedIterate, soft_h: bool):
     # check solutions
     for field in ["x", "u", "sl", "su", "lam", "pi"]:
         v1 = getattr(sol_1, field)
