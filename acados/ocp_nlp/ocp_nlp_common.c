@@ -2781,6 +2781,7 @@ void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
     ocp_nlp_workspace *work, double alpha, int iter, ocp_qp_in *qp_in)
 {
+    double scaling_factor;
     if (opts->with_adaptive_levenberg_marquardt)
     {
         adaptive_levenberg_marquardt_update_mu(iter, alpha, opts, mem);
@@ -2795,18 +2796,10 @@ void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *
         int *nu = dims->nu;
         for (int i = 0; i <= N; i++)
         {
-            if (i < N)
-            {
-                // Levenberg Marquardt term: Ts[i] * levenberg_marquardt * eye()
-                blasfeo_ddiare(nu[i] + nx[i], in->Ts[i] * opts->levenberg_marquardt,
-                                mem->qp_in->RSQrq+i, 0, 0);
-            }
-            else
-            {
-                // Levenberg Marquardt term: 1.0 * levenberg_marquardt * eye()
-                blasfeo_ddiare(nu[i] + nx[i], opts->levenberg_marquardt,
-                                mem->qp_in->RSQrq+i, 0, 0);
-            }
+            config->cost[i]->model_get(config->cost[i], dims->cost[i], in->cost[i], "scaling", &scaling_factor);
+            // Levenberg Marquardt term: scaling_factor * levenberg_marquardt * eye()
+            blasfeo_ddiare(nu[i] + nx[i], scaling_factor * opts->levenberg_marquardt,
+                            mem->qp_in->RSQrq+i, 0, 0);
         }
     } // else: do nothing
 }
