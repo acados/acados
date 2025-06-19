@@ -102,28 +102,25 @@ class AcadosCasadiOcp:
         offset = 0
         for i in range(0, N_horizon+1):
             if i == 0:
-                lb_xtraj_node[0][constraints.idxbx_0] = constraints.lbx_0
-                ub_xtraj_node[0][constraints.idxbx_0] = constraints.ubx_0
+                lb_xtraj_node[i][constraints.idxbx_0] = constraints.lbx_0
+                ub_xtraj_node[i][constraints.idxbx_0] = constraints.ubx_0
                 index_map['lam_bx_in_lam_w'].append(list(offset + constraints.idxbx_0))
                 offset += dims.nx
-                lb_utraj_node[i][constraints.idxbu] = constraints.lbu
-                ub_utraj_node[i][constraints.idxbu] = constraints.ubu
-                index_map['lam_bu_in_lam_w'].append(list(offset + constraints.idxbu))
-                offset += dims.nu
             elif i < N_horizon:
                 lb_xtraj_node[i][constraints.idxbx] = constraints.lbx
                 ub_xtraj_node[i][constraints.idxbx] = constraints.ubx
                 index_map['lam_bx_in_lam_w'].append(list(offset + constraints.idxbx))
                 offset += dims.nx
-                lb_utraj_node[i][constraints.idxbu] = constraints.lbu
-                ub_utraj_node[i][constraints.idxbu] = constraints.ubu
-                index_map['lam_bu_in_lam_w'].append(list(offset + constraints.idxbu))
-                offset += dims.nu
             elif i == N_horizon:
                 lb_xtraj_node[-1][constraints.idxbx_e] = constraints.lbx_e
                 ub_xtraj_node[-1][constraints.idxbx_e] = constraints.ubx_e
                 index_map['lam_bx_in_lam_w'].append(list(offset + constraints.idxbx_e))
                 offset += dims.nx
+            if i < N_horizon:
+                lb_utraj_node[i][constraints.idxbu] = constraints.lbu
+                ub_utraj_node[i][constraints.idxbu] = constraints.ubu
+                index_map['lam_bu_in_lam_w'].append(list(offset + constraints.idxbu))
+                offset += dims.nu
 
         ### Concatenate primal variables and bounds
         # w = [x0, u0, x1, u1, ...]

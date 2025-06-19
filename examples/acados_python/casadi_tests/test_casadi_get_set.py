@@ -25,6 +25,8 @@ def formulate_ocp(Tf: float = 1.0, N: int = 20)-> AcadosOcp:
 
     # set model
     model = export_pendulum_ode_model()
+    # add dummy control
+    model.u = ca.vertcat(model.u, ca.SX.sym('dummy_u'))
     ocp.model = model
 
     # set h constraints
@@ -41,7 +43,7 @@ def formulate_ocp(Tf: float = 1.0, N: int = 20)-> AcadosOcp:
 
     # cost matrices
     Q_mat = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
-    R_mat = 2*np.diag([1e-2])
+    R_mat = 2*np.diag([1e-2, 1e-2])
 
     # path cost
     ocp.cost.cost_type = 'NONLINEAR_LS'
