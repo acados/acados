@@ -236,10 +236,13 @@ add_test(NAME py_sqp_wfqp_problem_hs015
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/hock_schittkowsky
         python hs015_test.py)
 
-
 add_test(NAME py_sqp_wfqp_problem_hs016
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/hock_schittkowsky
         python hs016_test.py)
+
+add_test(NAME py_sqp_wfqp_problem_hs074_constraint_scaling
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/hock_schittkowsky
+        python hs074_constraint_scaling.py)
 
 # CMake test
 add_test(NAME python_pendulum_ocp_example_cmake
@@ -275,6 +278,10 @@ add_test(NAME python_pendulum_ocp_example_cmake
     add_test(NAME python_test_adaptive_reg
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/non_ocp_nlp
         python adaptive_eps_reg_test.py)
+
+    add_test(NAME py_qp_scaling_non_ocp
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/non_ocp_nlp
+        python qpscaling_test.py)
 
     # Convex test problem where full step SQP does not converge, but globalized SQP does
     add_test(NAME python_convex_test_problem_globalization
@@ -384,6 +391,10 @@ add_test(NAME python_pendulum_ocp_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=GNSF)
 
+    add_test(NAME py_qp_scaling_time_opt_swingup
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
+        python time_optimal_swing_up.py)
+
     # CMake and solver=DISCRETE test
     add_test(NAME python_example_ocp_dynamics_formulations_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
@@ -433,6 +444,7 @@ add_test(NAME python_pendulum_ocp_example_cmake
 
     # Directory non_ocp_nlp
     set_tests_properties(python_maratos_test_problem_globalization PROPERTIES DEPENDS python_test_adaptive_reg)
+    set_tests_properties(python_test_adaptive_reg PROPERTIES DEPENDS py_qp_scaling_non_ocp)
 
     # Directory acados_python/tests
     set_tests_properties(python_test_cython_vs_ctypes PROPERTIES DEPENDS python_test_reset)
@@ -482,6 +494,7 @@ add_test(NAME python_pendulum_ocp_example_cmake
     set_tests_properties(python_pendulum_ocp_IRK PROPERTIES DEPENDS python_pendulum_ocp_ERK)
     set_tests_properties(python_pendulum_ocp_ERK PROPERTIES DEPENDS python_pendulum_ocp_GNSF)
     set_tests_properties(python_pendulum_ocp_GNSF PROPERTIES DEPENDS python_example_ocp_dynamics_formulations_cmake)
+    set_tests_properties(python_example_ocp_dynamics_formulations_cmake PROPERTIES DEPENDS py_qp_scaling_time_opt_swingup)
 
     if(ACADOS_WITH_QPDUNES)
     set_tests_properties(python_example_ocp_dynamics_formulations_cmake PROPERTIES DEPENDS python_qpDUNES_test)

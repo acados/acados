@@ -291,6 +291,7 @@ bool is_funnel_sufficient_decrease_satisfied(ocp_nlp_globalization_funnel_memory
 
 bool is_switching_condition_satisfied(ocp_nlp_globalization_funnel_opts *opts, double pred_optimality, double step_size, double pred_infeasibility)
 {
+    // if (step_size * pred_optimality >= opts->fraction_switching_condition * pred_infeasibility)
     // if (step_size * pred_optimality >= opts->fraction_switching_condition * pred_infeasibility * pred_infeasibility)
     if (step_size * pred_optimality >= opts->fraction_switching_condition * pred_infeasibility)
     {
@@ -581,7 +582,6 @@ int ocp_nlp_globalization_funnel_needs_objective_value()
     return 1;
 }
 
-// QP objective value! Do not delete :D
 int ocp_nlp_globalization_funnel_needs_qp_objective_value()
 {
     return 1;
@@ -590,8 +590,8 @@ int ocp_nlp_globalization_funnel_needs_qp_objective_value()
 // TODO(David): maybe rename to initialize
 void ocp_nlp_globalization_funnel_initialize_memory(void *config_, void *dims_, void *nlp_mem_, void *nlp_opts_)
 {
-    printf("Note: The funnel globalization is still under development.\n");
-    printf("If you encouter problems or bugs, please report to the acados developers!\n");
+    // printf("Note: The funnel globalization is still under development.\n");
+    // printf("If you encouter problems or bugs, please report to the acados developers!\n");
 
     ocp_nlp_config* config = config_;
     ocp_nlp_dims* dims = dims_;

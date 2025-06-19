@@ -879,19 +879,19 @@ void ocp_qp_compute_t(ocp_qp_in *qp_in, ocp_qp_out *qp_out)
 
     for (ii = 0; ii <= N; ii++)
     {
-        // compute slacks for bounds
+        // compute t slacks for bounds
         blasfeo_dvecex_sp(nb[ii], 1.0, idxb[ii], ux + ii, 0, t+ii, nb[ii] + ng[ii]);
         blasfeo_daxpby(nb[ii], 1.0, t + ii, nb[ii] + ng[ii], -1.0, d + ii, 0, t + ii, 0);
         blasfeo_daxpby(nb[ii], -1.0, t + ii, nb[ii] + ng[ii], -1.0, d + ii, nb[ii] + ng[ii], t + ii,
             nb[ii] + ng[ii]);
 
-        // compute slacks for general constraints
+        // compute t slacks for general constraints
         blasfeo_dgemv_t(nu[ii] + nx[ii], ng[ii], 1.0, DCt + ii, 0, 0, ux + ii, 0, -1.0, d + ii, nb[ii],
                         t + ii, nb[ii]);
         blasfeo_dgemv_t(nu[ii] + nx[ii], ng[ii], -1.0, DCt + ii, 0, 0, ux + ii, 0, -1.0, d + ii,
                         2 * nb[ii] + ng[ii], t + ii, 2 * nb[ii] + ng[ii]);
 
-        // compute slacks for soft constraints
+        // compute t slacks for bounds on slack variables constraints
         for(int jj=0; jj<nb[ii]+ng[ii]; jj++)
         {
             int idx = qp_in->idxs_rev[ii][jj];
