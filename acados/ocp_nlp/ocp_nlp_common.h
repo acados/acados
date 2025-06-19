@@ -625,7 +625,7 @@ double ocp_nlp_get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, 
 //
 int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *nlp_opts,
                      ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work,
-                     bool precondensed_lhs, ocp_qp_in *qp_in_, ocp_qp_out *qp_out_,
+                     bool precondensed_lhs, ocp_qp_in *scaled_qp_in_, ocp_qp_in *qp_in_, ocp_qp_out *scaled_qp_out_,ocp_qp_out *qp_out_,
                      ocp_qp_xcond_solver *xcond_solver);
 //
 int ocp_nlp_solve_qp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *nlp_opts,

@@ -1005,7 +1005,7 @@ static void setup_hessian_matrices_for_qps(ocp_nlp_config *config,
 /*
 Solves the QP. Either solves feasibility QP or nominal QP
 */
-static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* opts, ocp_qp_in* qp_in, ocp_qp_out* qp_out,
+static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* opts, ocp_qp_in* qp_in, ocp_qp_out* scaled_qp_out, ocp_qp_out* qp_out,
                     ocp_nlp_dims *dims, ocp_nlp_sqp_wfqp_memory* mem, ocp_nlp_in* nlp_in, ocp_nlp_out* nlp_out,
                     ocp_nlp_memory* nlp_mem, ocp_nlp_workspace* nlp_work, bool solve_feasibility_qp,
                     acados_timer timer_tot)
@@ -1059,27 +1059,29 @@ static int prepare_and_solve_QP(ocp_nlp_config* config, ocp_nlp_sqp_wfqp_opts* o
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
     ocp_nlp_dump_qp_in_to_file(qp_in, nlp_mem->iter, 0);
 #endif
-
+    // TODO:
+    ocp_qp_in *scaled_qp_in = qp_in;
     if (solve_feasibility_qp)
     {
         if (opts->use_constraint_hessian_in_feas_qp)
         {
             qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts,
                 nlp_mem, nlp_work, false,
-                qp_in, qp_out, &mem->relaxed_qp_solver);
+                scaled_qp_in, qp_in, scaled_qp_out, qp_out, &mem->relaxed_qp_solver);
         }
         else
         {
             // dont regularize Hessian for feasibility QP
             qp_status = ocp_nlp_solve_qp(config, dims, nlp_opts,
-                nlp_mem, nlp_work, qp_in, qp_out, &mem->relaxed_qp_solver);
+                nlp_mem, nlp_work, scaled_qp_in, scaled_qp_out, &mem->relaxed_qp_solver);
+            // TODO: rescale
         }
     }
     else
     {
         qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts,
                                                     nlp_mem, nlp_work, false,
-                                                    NULL, NULL, NULL);
+                                                    NULL, NULL, NULL, NULL, NULL);
     }
     mem->qps_solved_in_iter += 1;
 
@@ -1228,6 +1230,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
 
     ocp_qp_in *nominal_qp_in = nlp_mem->qp_in;
     ocp_qp_out *nominal_qp_out = nlp_mem->qp_out;
+    ocp_qp_out *nominal_scaled_qp_out = nlp_mem->scaled_qp_out;
     ocp_qp_in *relaxed_qp_in = mem->relaxed_qp_in;
     ocp_qp_out *relaxed_qp_out = mem->relaxed_qp_out;
 
@@ -1239,7 +1242,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
 
     /* Solve Feasibility QP: Objective: Only constraint Hessian/Identity AND only gradient of slack variables */
     print_debug_output("Solve Feasibility QP!\n", nlp_opts->print_level, 2);
-    qp_status = prepare_and_solve_QP(config, opts, relaxed_qp_in, relaxed_qp_out, dims, mem, nlp_in, nlp_out,
+    qp_status = prepare_and_solve_QP(config, opts, relaxed_qp_in, mem->relaxed_scaled_qp_out, relaxed_qp_out, dims, mem, nlp_in, nlp_out,
                 nlp_mem, nlp_work, true, timer_tot);
     ocp_qp_out_get(relaxed_qp_out, "qp_info", &qp_info_);
     qp_iter = qp_info_->num_iter;
@@ -1261,7 +1264,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
     print_debug_output("Solve Nominal QP!\n", nlp_opts->print_level, 2);
     setup_byrd_omojokun_bounds(dims, nlp_mem, mem, work, opts);
     // solve_feasibility_qp --> false in prepare_and_solve_QP
-    qp_status = prepare_and_solve_QP(config, opts, nominal_qp_in, nominal_qp_out, dims, mem, nlp_in, nlp_out,
+    qp_status = prepare_and_solve_QP(config, opts, nominal_qp_in, nominal_scaled_qp_out, nominal_qp_out, dims, mem, nlp_in, nlp_out,
                                      nlp_mem, nlp_work, false, timer_tot);
     ocp_qp_out_get(nominal_qp_out, "qp_info", &qp_info_);
     qp_iter = qp_info_->num_iter;
@@ -1486,7 +1489,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
     {
         // if the QP can be solved and the status is good, we return 0
         // otherwise, we change the mode to Byrd-Omojokun and we continue.
-        search_direction_status = prepare_and_solve_QP(config, opts, nlp_mem->qp_in, nlp_mem->qp_out,
+        search_direction_status = prepare_and_solve_QP(config, opts, nlp_mem->qp_in, nlp_mem->scaled_qp_out, nlp_mem->qp_out,
                         dims, mem, nlp_in, nlp_out, nlp_mem, work->nlp_work,
                         false, timer_tot);
         ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
