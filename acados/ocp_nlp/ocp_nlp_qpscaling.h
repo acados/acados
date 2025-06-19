@@ -38,6 +38,7 @@ extern "C" {
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 
+
 /* dims */
 
 // same as qp_dims
