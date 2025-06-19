@@ -2713,10 +2713,6 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
     // set pointer to dmask in qp_in to dmask in nlp_in
     nlp_mem->qp_in->d_mask = nlp_in->dmask;
 
-    // alias to regularize memory
-    ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, nlp_mem->qp_in);
-    ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, nlp_mem->qp_out);
-
     // copy sampling times into dynamics model
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp for nowait
@@ -3356,6 +3352,9 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
     // alias from qp scaling memory (has to be after qpscaling precompute)
     ocp_nlp_qpscaling_memory_get(dims->qpscaling, mem->qpscaling, "scaled_qp_in", 0, &mem->scaled_qp_in);
     ocp_nlp_qpscaling_memory_get(dims->qpscaling, mem->qpscaling, "scaled_qp_out", 0, &mem->scaled_qp_out);
+    // alias to regularize memory
+    ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, mem->regularize_mem, mem->scaled_qp_in);
+    ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, mem->regularize_mem, mem->scaled_qp_out);
 
     return status;
 }
@@ -4107,14 +4106,14 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
     nlp_timings->time_qpscaling += acados_toc(&timer);
 
     // reset regularize pointers if necessary // TODO: check how to do this best with qpscaling
-    // if (qp_in_ != NULL)
-    // {
-        ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, nlp_mem->qp_in);
-    // }
-    // if (qp_out_ != NULL)
-    // {
-        ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, nlp_mem->qp_out);
-    // }
+    if (scaled_qp_in_ != NULL)
+    {
+        ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, nlp_mem->scaled_qp_in);
+    }
+    if (scaled_qp_out_ != NULL)
+    {
+        ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, nlp_mem->scaled_qp_out);
+    }
 
     // printf("ocp_nlp_solve_qp_and_correct_dual: qp_out:\n");
     // print_ocp_qp_out(qp_out);
