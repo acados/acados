@@ -2242,9 +2242,9 @@ class AcadosOcp:
 
         pi_traj = self.solver_options.N_horizon * [np.zeros(self.dims.nx)]
 
-        ni_0 = dims.nbu + dims.nbx_0 + dims.nh_0 + dims.nphi_0 + dims.ng
-        ni = dims.nbu + dims.nbx + dims.nh + dims.nphi + dims.ng
-        ni_e = dims.nbx_e + dims.nh_e + dims.nphi_e + dims.ng_e
+        ni_0 = dims.nbu + dims.nbx_0 + dims.nh_0 + dims.nphi_0 + dims.ng + dims.ns_0
+        ni = dims.nbu + dims.nbx + dims.nh + dims.nphi + dims.ng + dims.ns
+        ni_e = dims.nbx_e + dims.nh_e + dims.nphi_e + dims.ng_e + dims.ns_e
         lam_traj = [np.zeros(2*ni_0)] + (self.solver_options.N_horizon-1) * [np.zeros(2*ni)] + [np.zeros(2*ni_e)]
 
         iterate = AcadosOcpIterate(
