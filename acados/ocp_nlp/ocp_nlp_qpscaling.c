@@ -530,7 +530,7 @@ void ocp_nlp_qpscaling_scale_constraints(ocp_nlp_qpscaling_dims *dims, void *opt
         // setup DCt, modify d in place
         for (j = 0; j < ng[i]; j++)
         {
-            coeff_norm = norm_inf_matrix_col(j, nu[i]+nx[i], scaled_qp_in->DCt+i);
+            coeff_norm = norm_inf_matrix_col(j, nu[i]+nx[i], qp_in->DCt+i);
             mask_value_lower = BLASFEO_DVECEL(qp_in->d_mask+i, nb[i]+j);
             mask_value_upper = BLASFEO_DVECEL(qp_in->d_mask+i, 2*nb[i]+ng[i]+j);
 
@@ -538,7 +538,7 @@ void ocp_nlp_qpscaling_scale_constraints(ocp_nlp_qpscaling_dims *dims, void *opt
             double bound_max = fmax(fabs(mask_value_lower * BLASFEO_DVECEL(qp_in->d+i, nb[i]+j)),
                                     fabs(mask_value_upper * BLASFEO_DVECEL(qp_in->d+i, 2*nb[i]+ng[i]+j)));
             // only scale down.
-            scaling_factor = 1 / fmax(1.0, fmax(bound_max, coeff_norm));
+            scaling_factor = 1.0 / fmax(1.0, fmax(bound_max, coeff_norm));
 
             // store scaling factor
             BLASFEO_DVECEL(mem->constraints_scaling_vec+i, j) = scaling_factor;
