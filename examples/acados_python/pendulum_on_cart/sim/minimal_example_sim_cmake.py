@@ -92,6 +92,6 @@ if __name__ == "__main__":
     # reuse code
     main(build=False, generate=False)
     # reuse code, but build with make
-    main(build=True, generate=False, use_cmake=False)
+    main(build=True, generate=False, use_cmake=True)
     # test cython wrapper
-    main(build=True, generate=True, use_cmake=False, use_cython=True)
+    # main(build=True, generate=True, use_cmake=True, use_cython=True)

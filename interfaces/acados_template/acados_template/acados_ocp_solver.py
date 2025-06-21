@@ -156,6 +156,10 @@ class AcadosOcpSolver:
 
         with set_directory(code_export_dir):
             if os.name == 'nt':
+                # Automatically use CMakeBuilder on Windows if not provided
+                if cmake_builder is None:
+                    cmake_builder = CMakeBuilder()  # use default options
+                cmake_builder.exec(code_export_dir, verbose)
                 make_cmd = 'mingw32-make'
             else:
                 make_cmd = 'make'
