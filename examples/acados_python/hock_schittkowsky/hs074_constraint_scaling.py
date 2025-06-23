@@ -118,8 +118,12 @@ def solve_problem_with_constraint_scaling(scale_constraints):
 
 def main():
     # run test cases
-    solve_problem_with_constraint_scaling(scale_constraints=True)
+    print("\nTest standard unscaled version, HPIPM should fail:")
     solve_problem_with_constraint_scaling(scale_constraints=False)
+    print("\n\n----------------------------------------------")
+    print("\nTest constraint scaling version, HPIPM should fail:")
+    solve_problem_with_constraint_scaling(scale_constraints=True)
+    print("\n\n----------------------------------------------")
 
 if __name__ == '__main__':
     main()
