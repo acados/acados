@@ -473,6 +473,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ocp_nlp_get(solver, "status", &status);
         *mat_ptr = (double) status;
     }
+    else if (!strcmp(field, "cost"))
+    {
+        plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+        double *out_data = mxGetPr( plhs[0] );
+        ocp_nlp_eval_cost(solver, in, out);
+        ocp_nlp_get(solver, "cost_value", out_data);
+    }
     else if (!strcmp(field, "sqp_iter") || !strcmp(field, "nlp_iter"))
     {
         plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
