@@ -129,13 +129,11 @@ void ocp_nlp_qpscaling_opts_set(void *opts_, const char *field, void* value)
     {
         double *d_ptr = value;
         opts->ub_max_abs_eig = *d_ptr;
-        // printf("ub_max_eig_abs: %2.e\n", opts->ub_max_abs_eig);
     }
     else if (!strcmp(field, "lb_norm_inf_grad_obj"))
     {
         double *d_ptr = value;
         opts->lb_norm_inf_grad_obj = *d_ptr;
-        // printf("lb_norm_inf_grad_obj : %2.e\n", opts->lb_norm_inf_grad_obj);
     }
     else if (!strcmp(field, "scale_objective"))
     {
@@ -206,6 +204,8 @@ void *ocp_nlp_qpscaling_memory_assign(ocp_nlp_qpscaling_dims *dims, void *opts_,
     ocp_nlp_qpscaling_memory *mem = (ocp_nlp_qpscaling_memory *) c_ptr;
     c_ptr += sizeof(ocp_nlp_qpscaling_memory);
 
+    mem->status = ACADOS_SUCCESS;
+
     if (opts->scale_qp_objective != NO_OBJECTIVE_SCALING ||
         opts->scale_qp_constraints != NO_CONSTRAINT_SCALING)
     {
@@ -271,6 +271,11 @@ void ocp_nlp_qpscaling_memory_get(ocp_nlp_qpscaling_dims *dims, void *mem_, cons
     {
         struct blasfeo_dvec **ptr = value;
         *ptr = mem->constraints_scaling_vec + stage;
+    }
+    else if (!strcmp(field, "status"))
+    {
+        int *ptr = value;
+        *ptr = mem->status;
     }
     else
     {
@@ -488,13 +493,13 @@ void ocp_nlp_qpscaling_compute_obj_scaling_factor(ocp_nlp_qpscaling_dims *dims, 
 
     if (mem->obj_factor*nrm_inf_grad_obj <= opts->lb_norm_inf_grad_obj)
     {
-        // grad norm would become too small -> upscale cost
+        // grad norm would become too small -> scale cost up
         // printf("lb_norm_inf_grad_obj violated! %.2e\n", opts->lb_norm_inf_grad_obj);
         // printf("Gradient is very small! %.2e\n", mem->obj_factor*nrm_inf_grad_obj);
         lb_grad_norm_factor = opts->lb_norm_inf_grad_obj / nrm_inf_grad_obj;
         tmp = fmin(max_upscale_factor, lb_grad_norm_factor);
         mem->obj_factor = fmax(mem->obj_factor, tmp);
-        // TODO: return some status code here?
+        mem->status = ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED;
     }
     // printf("Scaling factor objective: %.2e\n", mem->obj_factor);
 }
@@ -601,8 +606,7 @@ void ocp_nlp_qpscaling_scale_qp(ocp_nlp_qpscaling_dims *dims, void *opts_, void 
     ocp_nlp_qpscaling_opts *opts = opts_;
     ocp_nlp_qpscaling_memory *mem = mem_;
 
-    // printf("qp_in BEFORE SCALING\n");
-    // print_ocp_qp_in(qp_in);
+    mem->status = ACADOS_SUCCESS;
     if (opts->scale_qp_objective)
     {
         ocp_nlp_qpscaling_compute_obj_scaling_factor(dims, opts_, mem_, qp_in);

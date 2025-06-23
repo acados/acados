@@ -81,6 +81,7 @@ enum return_values
     ACADOS_READY = 5,
     ACADOS_UNBOUNDED = 6,
     ACADOS_TIMEOUT = 7,
+    ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED = 8,
 };
 
 

@@ -67,6 +67,7 @@ typedef struct
 
 
 typedef struct {
+    int status;
     double obj_factor;
     struct blasfeo_dvec *constraints_scaling_vec;
     ocp_qp_in *scaled_qp_in;
