@@ -314,8 +314,6 @@ class AcadosOcpSolver:
         self.__relaxed_qp_constraint_int_fields = {f'relaxed_{field}' for field in self.__qp_constraint_int_fields}
         self.__all_relaxed_qp_fields = self.__relaxed_qp_dynamics_fields | self.__relaxed_qp_cost_fields | self.__relaxed_qp_constraint_fields | self.__relaxed_qp_constraint_int_fields
 
-        self.__qp_scaling_fields = {'qpscaling_constr', 'qpscaling_obj'}
-
         # set arg and res types
         self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
         self.__acados_lib.ocp_nlp_dims_get_from_attr.restype = c_int

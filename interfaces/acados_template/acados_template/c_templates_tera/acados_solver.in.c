@@ -2511,6 +2511,7 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     bool eval_residual_at_max_iter = {{ solver_options.eval_residual_at_max_iter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "eval_residual_at_max_iter", &eval_residual_at_max_iter);
 
+    // QP scaling
     double qpscaling_ub_max_abs_eig = {{ solver_options.qpscaling_ub_max_abs_eig }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qpscaling_ub_max_abs_eig", &qpscaling_ub_max_abs_eig);
 
