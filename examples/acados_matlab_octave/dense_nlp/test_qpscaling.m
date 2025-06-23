@@ -6,7 +6,7 @@ function test_qpscaling()
 
     % create solver
     nlp_solver_type = 'SQP';
-    use_qp_scaling = false;
+    use_qp_scaling = true;
     soft_h = true;
     ocp_solver = create_solver(solver_name, nlp_solver_type, use_qp_scaling, soft_h);
 
@@ -16,8 +16,10 @@ function test_qpscaling()
     if use_qp_scaling
         constraints_scaling = ocp_solver.get_qp_scaling_constraints(0);
         objective_scaling = ocp_solver.get_qp_scaling_objective();
+        qpscaling_status = ocp_solver.get('qpscaling_status');
         fprintf('constraints scaling: %f\n', constraints_scaling);
         fprintf('objective scaling: %f\n', objective_scaling);
+        fprintf('QP scaling status: %d\n', qpscaling_status);
     end
 
     % print solution

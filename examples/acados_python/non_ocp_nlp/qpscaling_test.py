@@ -121,6 +121,12 @@ def create_solver(solver_name: str, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP
 
 
 def check_qp_scaling(ocp_solver: AcadosOcpSolver):
+    qpscaling_status = ocp_solver.get_stats("qpscaling_status")
+    if qpscaling_status == 0:
+        print("QP scaling reported no issues.")
+    else:
+        print(f"QP scaling reported issues with status {qpscaling_status}.")
+
     if ocp_solver.acados_ocp.solver_options.qpscaling_scale_constraints == "NO_CONSTRAINT_SCALING":
         try:
             constraint_scaling = ocp_solver.get_qp_scaling_constraints(0)
