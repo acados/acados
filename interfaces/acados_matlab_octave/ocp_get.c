@@ -109,6 +109,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                                strcmp(field, "qp_zl") &&
                                strcmp(field, "qp_zu") &&
                                strcmp(field, "qp_Zl") &&
+                               strcmp(field, "qpscaling_obj") &&
+                               strcmp(field, "qpscaling_constr") &&
                                strcmp(field, "qp_Zu"))
         {
             sprintf(buffer, "\nocp_get: invalid stage index, got stage = %d = N, field = %s, field not available at final shooting node\n", stage, field);
@@ -521,6 +523,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         plhs[0] = mxCreateNumericMatrix(nlp_iter, 1, mxDOUBLE_CLASS, mxREAL);
         double *mat_ptr = mxGetPr( plhs[0] );
         ocp_nlp_get(solver, field, mat_ptr);
+    }
+    else if (!strcmp(field, "qpscaling_constr"))
+    {
+        int size = ocp_nlp_dims_get_from_attr(config, dims, out, stage, "qpscaling_constr");
+        plhs[0] = mxCreateNumericMatrix(size, 1, mxDOUBLE_CLASS, mxREAL);
+        double *mat_ptr = mxGetPr( plhs[0] );
+        ocp_nlp_get_at_stage(solver, stage, field, mat_ptr);
+    }
+    else if (!strcmp(field, "qpscaling_obj"))
+    {
+        int size = 1;
+        plhs[0] = mxCreateNumericMatrix(size, 1, mxDOUBLE_CLASS, mxREAL);
+        double *mat_ptr = mxGetPr( plhs[0] );
+        ocp_nlp_get_at_stage(solver, stage, field, mat_ptr);
     }
     else if (!strcmp(field, "residuals"))
     {
