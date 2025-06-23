@@ -605,11 +605,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int out_dims[2];
         if (nrhs==2)
         {
-            mxArray *cell_array = mxCreateCellMatrix(N, 1);
+            // fields that dont exist at last node
+            int cell_size;
+            if (!strcmp(field, "qp_A") || !strcmp(field, "qp_B") || !strcmp(field, "qp_R") || !strcmp(field, "qp_S") ||
+                !strcmp(field, "qp_r") || !strcmp(field, "qp_lbu") || !strcmp(field, "qp_ubu"))
+            {
+                cell_size = N;
+            }
+            else
+            {
+                cell_size = N+1;
+            }
+            mxArray *cell_array = mxCreateCellMatrix(cell_size, 1);
             plhs[0] = cell_array;
             mxArray *tmp_mat;
-
-            for (ii=0; ii<N; ii++)
+            for (ii=0; ii<cell_size; ii++)
             {
                 ocp_nlp_qp_dims_get_from_attr(config, dims, out, ii, &field[3], out_dims);
                 tmp_mat = mxCreateNumericMatrix(out_dims[0], out_dims[1], mxDOUBLE_CLASS, mxREAL);
