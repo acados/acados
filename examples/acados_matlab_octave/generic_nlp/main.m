@@ -68,7 +68,7 @@ ocp.parameter_values = zeros(length(model.p),1);
 %% solver options
 ocp.solver_options.N_horizon = 0;
 ocp.solver_options.nlp_solver_type = 'SQP';
-ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'; %TODO: Change after PARTIAL_CONDENSING_HPIPM fix 
+ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
 
 %% create the solver
 ocp_solver = AcadosOcpSolver(ocp);
@@ -85,7 +85,10 @@ ocp_solver.set('p', p_value);
 % solve and time
 tic
 ocp_solver.solve();
-total_time = toc;
+time_external = toc;
+% internal timing
+total_time = ocp_solver.get('time_tot');
+
 
 % check status
 status = ocp_solver.get('status');
@@ -97,7 +100,8 @@ end
 x_opt = ocp_solver.get('x', 0);
 disp('Optimal solution:')  % should be [1;1] for p = [1;1]
 disp(x_opt)
-disp(['Total time: ', num2str(1e3*total_time), ' ms'])
+disp(['Total time (internal): ', num2str(1e3*total_time), ' ms'])
+disp(['Total time (external): ', num2str(1e3*time_external), ' ms'])
 
 % compare with the expected solution
 if all(p_value == [1;1])
