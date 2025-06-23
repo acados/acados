@@ -1033,9 +1033,12 @@ class AcadosOcp:
             if any([dims.ng_e, dims.nphi_e, dims.nh_e]):
                 raise ValueError('DDP only supports initial state constraints, got terminal constraints.')
 
-        ddp_with_merit_or_funnel = opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' or (opts.nlp_solver_type == "DDP" and opts.globalization == 'MERIT_BACKTRACKING')
+        if opts.qpscaling_scale_constraints != "NO_CONSTRAINT_SCALING" or opts.qpscaling_scale_objective != "NO_OBJECTIVE_SCALING":
+            if opts.nlp_solver_type == "SQP_RTI":
+                raise NotImplementedError('qpscaling_scale_constraints and qpscaling_scale_objective not supported for SQP_RTI solver.')
 
         # Set default parameters for globalization
+        ddp_with_merit_or_funnel = opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' or (opts.nlp_solver_type == "DDP" and opts.globalization == 'MERIT_BACKTRACKING')
         if opts.globalization_alpha_min is None:
             if ddp_with_merit_or_funnel:
                 opts.globalization_alpha_min = 1e-17
