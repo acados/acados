@@ -989,7 +989,7 @@ classdef AcadosOcp < handle
                 error('as_rti_level in [1, 2] not supported for LINEAR_LS and NONLINEAR_LS cost type.');
             end
 
-            if ~strcmp(opts.qpscaling_scale_constraints, "NO_CONSTRAINT_SCALING") || ~strcmp(opts.qpscaling_scale_objective, "NO_OBJECTIVE_SCALING")
+            if strcmp(opts.qpscaling_scale_constraints, "NO_CONSTRAINT_SCALING") || strcmp(opts.qpscaling_scale_objective, "NO_OBJECTIVE_SCALING")
                 if strcmp(opts.nlp_solver_type, "SQP_RTI")
                     error('qpscaling_scale_constraints and qpscaling_scale_objective not supported for SQP_RTI solver.');
                 end
