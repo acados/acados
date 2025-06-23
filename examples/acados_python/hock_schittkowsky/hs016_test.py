@@ -110,9 +110,9 @@ def solve_problem(qp_solver: str = 'FULL_CONDENSING_HPIPM', scale_qp_constraints
 def main():
     sol_list = []
     for qp_solver in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM']:
-        print(f"Solving with {qp_solver}...")
-        sol = solve_problem(qp_solver)
-        sol_list.append(sol)
+        for scaling in [False, True]:
+            sol = solve_problem(qp_solver, scaling)
+            sol_list.append(sol)
 
     ref_sol = sol_list[0]
     for i, sol in enumerate(sol_list[1:]):
@@ -120,9 +120,6 @@ def main():
             raise ValueError(f"Solution does not match reference close enough!")
         else:
             print(f"Solution {i+1} matches reference solution.")
-
-    print(f"Solving with PARTIAL_CONDENSING_HPIPM and constraint scaling")
-    sol = solve_problem('PARTIAL_CONDENSING_HPIPM', True)
 
 if __name__ == '__main__':
     main()
