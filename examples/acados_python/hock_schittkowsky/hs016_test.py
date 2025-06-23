@@ -36,6 +36,7 @@ from itertools import product
 
 
 def solve_problem(qp_solver: str = 'FULL_CONDENSING_HPIPM', scale_qp_constraints: bool = False):
+    print(f"Solving with {qp_solver} and scale_qp_constraints={scale_qp_constraints}")
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -89,7 +90,7 @@ def solve_problem(qp_solver: str = 'FULL_CONDENSING_HPIPM', scale_qp_constraints
         ocp.solver_options.qpscaling_scale_constraints = 'INF_NORM'
     ocp.code_export_directory = f'c_generated_code_{model.name}'
 
-    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
+    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json', verbose=False)
 
     # initialize solver
     xinit = np.array([-2, 1])
