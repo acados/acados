@@ -304,7 +304,7 @@ disp(['condition_number_global: ', num2str(result.condition_number_global)])
 
 % get second SQP iterate
 % iteration index is 0-based with iterate 0 corresponding to the initial guess
-iteration = 0;
+iteration = 1;
 iterate = ocp_solver.get_iterate(iteration);
 iterates = ocp_solver.get_iterates();
 x_traj = iterates.as_array('x');
