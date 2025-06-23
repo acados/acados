@@ -473,7 +473,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ocp_nlp_get(solver, "status", &status);
         *mat_ptr = (double) status;
     }
-    else if (!strcmp(field, "cost"))
+    else if (!strcmp(field, "cost_value"))
     {
         plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
         double *out_data = mxGetPr( plhs[0] );
