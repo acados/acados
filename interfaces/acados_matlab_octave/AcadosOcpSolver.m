@@ -256,6 +256,28 @@ classdef AcadosOcpSolver < handle
             obj.t_ocp.load_iterate(filename);
         end
 
+        function [] = load_iterate_from_obj(obj, iterate)
+            %%%  Loads the iterate from an AcadosOcpIterate object.
+            %%% param1: iterate: AcadosOcpIterate object containing the iterate to load
+
+            if ~isa(iterate, 'AcadosOcpIterate')
+                error('load_iterate_from_obj: iterate needs to be of type AcadosOcpIterate');
+            end
+
+            for i = 1:obj.solver_options.N_horizon + 1
+                obj.t_ocp.set('x', iterate.x_traj{i, 1}, i-1);
+                obj.t_ocp.set('sl', iterate.sl_traj{i, 1}, i-1);
+                obj.t_ocp.set('su', iterate.su_traj{i, 1}, i-1);
+                obj.t_ocp.set('lam', iterate.lam_traj{i, 1}, i-1);
+            end
+            for i = 1:obj.solver_options.N_horizon
+                obj.t_ocp.set('u', iterate.u_traj{i, 1}, i-1);
+                obj.t_ocp.set('pi', iterate.pi_traj{i, 1}, i-1);
+                if ~isempty(iterate.z_traj{i, 1})
+                    obj.t_ocp.set('z', iterate.z_traj{i, 1}, i-1);
+                end
+            end
+        end
         function iterate = get_iterate(obj, iteration)
             if iteration > obj.get('nlp_iter')
                 error("iteration needs to be nonnegative and <= nlp_iter.");
