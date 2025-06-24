@@ -819,6 +819,15 @@ classdef AcadosOcp < handle
                 error(['Invalid search_direction_mode: ', opts.search_direction_mode, '. Available options are: ', strjoin(search_direction_modes, ', ')]);
             end
 
+            qpscaling_scale_constraints_types = {'INF_NORM', 'NO_CONSTRAINT_SCALING'};
+            if ~ismember(opts.qpscaling_scale_constraints, qpscaling_scale_constraints_types)
+                error(['Invalid qpscaling_scale_constraints: ', opts.qpscaling_scale_constraints, '. Available options are: ', strjoin(qpscaling_scale_constraints_types, ', ')]);
+            end
+
+            qpscaling_scale_objective_types = {'OBJECTIVE_GERSHGORIN', 'NO_OBJECTIVE_SCALING'};
+            if ~ismember(opts.qpscaling_scale_objective, qpscaling_scale_objective_types)
+                error(['Invalid qpscaling_scale_objective: ', opts.qpscaling_scale_objective, '. Available options are: ', strjoin(qpscaling_scale_objective_types, ', ')]);
+            end
             % OCP name
             self.name = model.name;
 
