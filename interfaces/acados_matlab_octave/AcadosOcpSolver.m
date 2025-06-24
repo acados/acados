@@ -175,6 +175,20 @@ classdef AcadosOcpSolver < handle
             value = obj.t_ocp.evaluate_constraints_and_get_violation();
         end
 
+        function violation_idx = get_constraint_indices_with_violation(obj, tol)
+            % returns the indices of the constraints that are violated with respect to the given tolerance
+            % returns matrix with stage and constraint index, i.e. [stage, constraint_index], both zero -based.
+            ineq_fun = obj.evaluate_constraints_and_get_violation();
+            if nargin < 2
+                tol = obj.solver_options.nlp_solver_tol_ineq;
+            end
+            violation_idx = [];
+            for i=1:length(ineq_fun)
+                idx_i = find(ineq_fun{i} >= tol);
+                violation_idx = [violation_idx; [(i-1)*ones(length(idx_i), 1), idx_i-1]];
+            end
+        end
+
         function set(obj, field, value, varargin)
             obj.t_ocp.set(field, value, varargin{:});
         end
