@@ -171,6 +171,10 @@ classdef AcadosOcpSolver < handle
             value = obj.t_ocp.get_cost();
         end
 
+        function value = evaluate_constraints_and_get_violation(obj)
+            value = obj.t_ocp.evaluate_constraints_and_get_violation();
+        end
+
         function set(obj, field, value, varargin)
             obj.t_ocp.set(field, value, varargin{:});
         end

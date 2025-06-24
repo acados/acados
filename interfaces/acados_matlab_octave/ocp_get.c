@@ -480,6 +480,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ocp_nlp_eval_cost(solver, in, out);
         ocp_nlp_get(solver, "cost_value", out_data);
     }
+    else if (!strcmp(field, "constraint_violation"))
+    {
+        int out_dims[2];
+        plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+        double *out_data = mxGetPr( plhs[0] );
+        // evaluate
+        ocp_nlp_eval_constraints(solver, in, out);
+        // create output
+        mxArray *cell_array = mxCreateCellMatrix(N+1, 1);
+        plhs[0] = cell_array;
+        mxArray *tmp_mat;
+        for (ii=0; ii<N+1; ii++)
+        {
+            ocp_nlp_constraint_dims_get_from_attr(config, dims, out, ii, "ineq_fun", out_dims);
+            tmp_mat = mxCreateNumericMatrix(out_dims[0], out_dims[1], mxDOUBLE_CLASS, mxREAL);
+            double *mat_ptr = mxGetPr( tmp_mat );
+            ocp_nlp_get_at_stage(solver, ii, "ineq_fun", mat_ptr);
+            mxSetCell(cell_array, ii, tmp_mat);
+        }
+    }
     else if (!strcmp(field, "sqp_iter") || !strcmp(field, "nlp_iter"))
     {
         plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
