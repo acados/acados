@@ -913,7 +913,7 @@ void ocp_nlp_constraint_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims 
         int stage, const char *field, int *dims_out)
 {
     // vectors first
-    dims_out[1] = 0;
+    dims_out[1] = 1;
     // ocp_nlp_constraints_dims
     if (!strcmp(field, "lbx") || !strcmp(field, "ubx") || !strcmp(field, "nbx"))
     {
