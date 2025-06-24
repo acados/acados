@@ -195,8 +195,8 @@ classdef AcadosOcpOptions < handle
             obj.regularize_method = 'NO_REGULARIZE';
             obj.qpscaling_ub_max_abs_eig = 1e5;
             obj.qpscaling_lb_norm_inf_grad_obj = 1e-4;
-            obj.qpscaling_scale_objective = false;
-            obj.qpscaling_scale_constraints = false;
+            obj.qpscaling_scale_objective = 'NO_OBJECTIVE_SCALING';
+            obj.qpscaling_scale_constraints = 'NO_CONSTRAINT_SCALING';
             obj.reg_epsilon = 1e-4;
             obj.reg_adaptive_eps = false;
             obj.reg_max_cond_block = 1e7;

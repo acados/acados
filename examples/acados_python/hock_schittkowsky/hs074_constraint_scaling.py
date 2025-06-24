@@ -79,8 +79,6 @@ def solve_problem_with_constraint_scaling(scale_constraints):
     ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_max_iter = 1000
     ocp.solver_options.qp_solver_iter_max = 1000
-
-    # Search direction
     ocp.solver_options.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'
 
     # Globalization

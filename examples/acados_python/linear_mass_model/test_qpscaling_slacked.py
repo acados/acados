@@ -236,7 +236,6 @@ def test_qp_scaling():
     sol_2 = ocp_solver2.store_iterate_to_obj()
     ocp_solver2.get_from_qp_in(1, "idxs_rev")
 
-    breakpoint()
     # check solutions
     for field in ["x_traj", "u_traj", "sl_traj", "su_traj", "lam_traj", "pi_traj"]:
         v1 = getattr(sol_1, field)
@@ -249,13 +248,11 @@ def test_qp_scaling():
                 pass
                 # print(f"Field {field} is the same at index {i}.")
 
-
-    if sol_1.allclose(sol_2):
+    # equivalent check
+    if sol_1.allclose(sol_2, atol=1e-6):
         print("Both solvers have the same solution.")
     else:
         raise ValueError("Solutions of solvers differ!")
-
-    # breakpoint()
 
 
 if __name__ == '__main__':
