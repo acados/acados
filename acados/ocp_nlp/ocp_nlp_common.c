@@ -4359,14 +4359,26 @@ void ocp_nlp_memory_get(ocp_nlp_config *config, ocp_nlp_memory *nlp_mem, const c
 
 void ocp_nlp_memory_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_memory *nlp_mem, int stage, const char *field, void *return_value_)
 {
-    int *nb = dims->nb;
-    int *ng = dims->ng;
+    // int *nb = dims->nb;
+    // int *ng = dims->ng;
     int *ni = dims->ni;
-    int *ni_nl = dims->ni_nl;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    // int *ni_nl = dims->ni_nl;
     if (!strcmp("ineq_fun", field))
     {
         double *value = return_value_;
         blasfeo_unpack_dvec(2 * ni[stage], nlp_mem->ineq_fun + stage, 0, value, 1);
+    }
+    else if (!strcmp("res_stat", field))
+    {
+        double *value = return_value_;
+        blasfeo_unpack_dvec(nv[stage], nlp_mem->nlp_res->res_stat + stage, 0, value, 1);
+    }
+    else if (!strcmp("res_eq", field))
+    {
+        double *value = return_value_;
+        blasfeo_unpack_dvec(nx[stage+1], nlp_mem->nlp_res->res_eq + stage, 0, value, 1);
     }
     else
     {

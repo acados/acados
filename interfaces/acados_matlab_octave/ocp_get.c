@@ -483,8 +483,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else if (!strcmp(field, "constraint_violation"))
     {
         int out_dims[2];
-        plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
-        double *out_data = mxGetPr( plhs[0] );
         // evaluate
         ocp_nlp_eval_constraints(solver, in, out);
         // create output
@@ -497,6 +495,36 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             tmp_mat = mxCreateNumericMatrix(out_dims[0], out_dims[1], mxDOUBLE_CLASS, mxREAL);
             double *mat_ptr = mxGetPr( tmp_mat );
             ocp_nlp_get_at_stage(solver, ii, "ineq_fun", mat_ptr);
+            mxSetCell(cell_array, ii, tmp_mat);
+        }
+    }
+    else if (!strcmp(field, "res_stat_all"))
+    {
+        int nv;
+        mxArray *cell_array = mxCreateCellMatrix(N+1, 1);
+        plhs[0] = cell_array;
+        mxArray *tmp_mat;
+        for (ii=0; ii<N+1; ii++)
+        {
+            nv = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "nv");
+            tmp_mat = mxCreateNumericMatrix(nv, 1, mxDOUBLE_CLASS, mxREAL);
+            double *mat_ptr = mxGetPr( tmp_mat );
+            ocp_nlp_get_at_stage(solver, ii, "res_stat", mat_ptr);
+            mxSetCell(cell_array, ii, tmp_mat);
+        }
+    }
+    else if (!strcmp(field, "res_eq_all"))
+    {
+        int npi;
+        mxArray *cell_array = mxCreateCellMatrix(N, 1);
+        plhs[0] = cell_array;
+        mxArray *tmp_mat;
+        for (ii=0; ii<N; ii++)
+        {
+            npi = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "pi");
+            tmp_mat = mxCreateNumericMatrix(npi, 1, mxDOUBLE_CLASS, mxREAL);
+            double *mat_ptr = mxGetPr( tmp_mat );
+            ocp_nlp_get_at_stage(solver, ii, "res_eq", mat_ptr);
             mxSetCell(cell_array, ii, tmp_mat);
         }
     }

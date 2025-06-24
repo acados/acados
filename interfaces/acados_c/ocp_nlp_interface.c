@@ -819,6 +819,10 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
     {
         return dims->nx[stage+1];
     }
+    else if (!strcmp(field, "nv"))
+    {
+        return dims->nv[stage];
+    }
     else if (!strcmp(field, "u") || !strcmp(field, "nu"))
     {
         return dims->nu[stage];
@@ -1567,7 +1571,7 @@ void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, 
         }
         xcond_solver_config->solver_get(xcond_solver_config, nlp_mem->qp_in, nlp_mem->qp_out, nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, field, stage, value, size1, size2);
     }
-    else if (!strcmp(field, "ineq_fun"))
+    else if (!strcmp(field, "ineq_fun") || !strcmp(field, "res_stat") || !strcmp(field, "res_eq"))
     {
         ocp_nlp_memory_get_at_stage(config, dims, nlp_mem, stage, field, value);
     }
