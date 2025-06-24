@@ -79,7 +79,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     // field
     char *field = mxArrayToString( prhs[1] );
-    // mexPrintf("\nin ocp_get: field%s\n", field);
+    // mexPrintf("\nin ocp_get: field %s\n", field);
+    if (field == NULL)
+    {
+        mexErrMsgTxt("got NULL pointer for field, maybe you put in a \" instead of \' in MATLAB.\n");
+    }
 
     int N = dims->N;
     int stage;
