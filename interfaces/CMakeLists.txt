@@ -297,6 +297,10 @@ add_test(NAME python_pendulum_ocp_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/linear_mass_model
         python linear_mass_test_problem.py)
 
+    add_test(NAME py_qpscaling_slacked
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/linear_mass_model
+        python test_qpscaling_slacked.py)
+
     # Armijo test problem
     add_test(NAME python_armijo_test
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
@@ -479,6 +483,9 @@ add_test(NAME python_pendulum_ocp_example_cmake
     # Directory time_varying
     set_tests_properties(python_time_varying_irk PROPERTIES DEPENDS test_polynomial_controls_and_penalties)
     set_tests_properties(test_polynomial_controls_and_penalties PROPERTIES DEPENDS py_mocp_qp_test)
+
+    # Directory linear_mass_model
+    set_tests_properties(python_OCP_maratos_test_problem_globalization PROPERTIES DEPENDS py_qpscaling_slacked)
 
     # Directory pendulum_on_cart/ocp
     set_tests_properties(python_pendulum_ocp_example_reuse_code PROPERTIES DEPENDS python_nonuniform_discretization_ocp_example)
