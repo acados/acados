@@ -234,6 +234,7 @@ for i=1:n_executions
     end
 end
 
+% test constraint evaluation
 stat_mat = ocp_solver.get('stat');
 res_ineq = stat_mat(:, 4);
 flag_test = 0;
@@ -279,6 +280,54 @@ end
 if ~flag_test
     error('constraint violation index test was not done');
 end
+
+% test res_stat getter
+res_stat_all = ocp_solver.get('res_stat_all');
+res_stat_norm = stat_mat(end, 2);
+max_res_stat = zeros(1, length(res_stat_all));
+if length(res_stat_all) ~= N+1
+    error('length of res_stat_all does not match N+1');
+end
+flag_test = 0;
+for i=1:length(res_stat_all)
+    max_res_stat(i) = max(res_stat_all{i});
+    if max_res_stat(i) > res_stat_norm
+        error('max res_stat is larger than res_stat_norm');
+    elseif max_res_stat(i) == res_stat_norm
+        flag_test = 1;
+    end
+end
+
+if ~flag_test
+    error('did not find max res_stat equal to res_stat_norm');
+else
+    disp('Found max res_stat equal to res_stat_norm');
+end
+
+% test res_eq getter
+res_eq_all = ocp_solver.get('res_eq_all');
+res_eq_norm = stat_mat(end, 3);
+max_res_eq = zeros(1, length(res_eq_all));
+if length(res_eq_all) ~= N
+    error('length of res_eq_all does not match N');
+end
+flag_test = 0;
+for i=1:length(res_eq_all)
+    max_res_eq(i) = max(res_eq_all{i});
+    if max_res_eq(i) > res_eq_norm
+        error('max res_eq is larger than res_eq_norm');
+    elseif max_res_eq(i) == res_eq_norm
+        flag_test = 1;
+    end
+end
+
+if ~flag_test
+    error('did not find max res_eq equal to res_eq_norm');
+else
+    disp('Found max res_eq equal to res_eq_norm');
+end
+
+
 
 %% Plot trajectories
 if 0
