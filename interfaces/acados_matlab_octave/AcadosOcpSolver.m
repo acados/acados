@@ -172,12 +172,17 @@ classdef AcadosOcpSolver < handle
         end
 
         function value = evaluate_constraints_and_get_violation(obj)
+            % returns the constraint violations for all stages in a cell array.
+            % values > 0 indicate a violation of the constraints.
             value = obj.t_ocp.evaluate_constraints_and_get_violation();
         end
 
         function violation_idx = get_constraint_indices_with_violation(obj, tol)
-            % returns the indices of the constraints that are violated with respect to the given tolerance
-            % returns matrix with stage and constraint index, i.e. [stage, constraint_index], both zero -based.
+            % computes the indices of the constraints that are violated with respect to the given tolerance, in the form
+            % `[stage_index_0, constraint_index_0,
+            % stage_index_1, constraint_index_1,
+            % ....]
+            % all indices are zero -based.
             ineq_fun = obj.evaluate_constraints_and_get_violation();
             if nargin < 2
                 tol = obj.solver_options.nlp_solver_tol_ineq;
