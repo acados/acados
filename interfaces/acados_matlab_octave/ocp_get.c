@@ -492,7 +492,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         for (ii=0; ii<N+1; ii++)
         {
             ocp_nlp_constraint_dims_get_from_attr(config, dims, out, ii, "ineq_fun", out_dims);
-            tmp_mat = mxCreateNumericMatrix(out_dims[0], out_dims[1], mxDOUBLE_CLASS, mxREAL);
+            tmp_mat = mxCreateNumericMatrix(out_dims[0], 1, mxDOUBLE_CLASS, mxREAL);
             double *mat_ptr = mxGetPr( tmp_mat );
             ocp_nlp_get_at_stage(solver, ii, "ineq_fun", mat_ptr);
             mxSetCell(cell_array, ii, tmp_mat);
