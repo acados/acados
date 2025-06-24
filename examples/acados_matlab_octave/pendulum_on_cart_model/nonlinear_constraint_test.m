@@ -97,7 +97,7 @@ otherwise
 end
 
 %% MODEL
-model = get_pendulum_on_cart_model(T/N);
+model = get_pendulum_on_cart_model();
 ocp.model = model;
 
 % dimensions
