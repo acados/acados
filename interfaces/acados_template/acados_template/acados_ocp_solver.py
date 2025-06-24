@@ -1495,6 +1495,7 @@ class AcadosOcpSolver:
             - 5: Solver created (ACADOS_READY)
             - 6: Problem unbounded (ACADOS_UNBOUNDED)
             - 7: Solver timeout (ACADOS_TIMEOUT)
+            - 8: QP scaling could not satisfy bounds (ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED); NOTE: this status is typically not returned by the solver, but can be checked via `get_stats('qpscaling_status')`
 
         See `return_values` in https://github.com/acados/acados/blob/main/acados/utils/types.h
         """
