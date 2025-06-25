@@ -38,7 +38,7 @@ function set_up_t_renderer(t_renderer_location, varargin)
     elseif isunix()
         suffix = '-linux-amd64';
     elseif ispc()
-        suffix = '-windows-amd64';
+        suffix = '-windows-amd64.exe';
     end
     acados_root_dir = getenv('ACADOS_INSTALL_DIR');
 
