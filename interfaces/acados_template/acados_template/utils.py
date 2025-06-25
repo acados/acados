@@ -48,7 +48,7 @@ import casadi as ca
 from contextlib import contextmanager
 
 
-TERA_VERSION = "0.0.4"
+TERA_VERSION = "0.2.0"
 
 PLATFORM2TERA = {
     "linux": "linux",
@@ -243,9 +243,9 @@ def get_architecture_amd64_arm64():
     current_arch = platform.machine()
     amd64_compatible = ["i3", "i6", "amd", "x86"]
     arm64_compatible = ["arm", "aarch"]
-    if any([current_arch.startswith(arch) for arch in amd64_compatible]):
+    if any([current_arch.lower().startswith(arch) for arch in amd64_compatible]):
         return "amd64"
-    elif any([current_arch.startswith(arch) for arch in arm64_compatible]):
+    elif any([current_arch.lower().startswith(arch) for arch in arm64_compatible]):
         return "arm64"
     return None
 
@@ -264,7 +264,7 @@ def get_tera() -> str:
         sys.exit(1)
 
     binary_ext = get_binary_ext()
-    repo_url = "https://github.com/xoiga123/tera_renderer/releases"
+    repo_url = "https://github.com/acados/tera_renderer/releases"
     url = "{}/download/v{}/t_renderer-v{}-{}-{}{}".format(
         repo_url, TERA_VERSION, TERA_VERSION, PLATFORM2TERA[sys.platform], arch, binary_ext)
 
