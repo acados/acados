@@ -124,23 +124,16 @@ def main(p_in_constraint=True, p_in_cost=True):
     casadi_ocp_solver = AcadosCasadiOcpSolver(ocp, verbose=False)
     casadi_ocp_solver.load_iterate_from_obj(result)
     casadi_ocp_solver.solve()
-    
-    acados_u = np.array([ocp_solver.get(i, "u") for i in range(N)])
-    acados_x = np.array([ocp_solver.get(i, "x") for i in range(N+1)])
-    casadi_u = np.array([casadi_ocp_solver.get(i, "u") for i in range(N)])
-    casadi_x = np.array([casadi_ocp_solver.get(i, "x") for i in range(N+1)])
-                         
-    diff_x = np.linalg.norm(casadi_x - acados_x)
-    print(f"Difference between casadi and acados solution in x: {diff_x}")
-    diff_u = np.linalg.norm(casadi_u - acados_u)
-    print(f"Difference between casadi and acados solution in u: {diff_u}")
-    
-    test_tol = 1e-4
-    if diff_x > test_tol or diff_u > test_tol:
-        raise ValueError(f"Test failed: difference between casadi and acados solution should be smaller than {test_tol}, but got {diff_x} and {diff_u}.")
+    result_casadi = casadi_ocp_solver.store_iterate_to_obj()
+
+    result.flatten().allclose(other=result_casadi.flatten())
     
     Fmax = 80
-    if PLOT:
+    if PLOT: 
+        acados_u = np.array([ocp_solver.get(i, "u") for i in range(N)])
+        acados_x = np.array([ocp_solver.get(i, "x") for i in range(N+1)])
+        casadi_u = np.array([casadi_ocp_solver.get(i, "u") for i in range(N)])
+        casadi_x = np.array([casadi_ocp_solver.get(i, "x") for i in range(N+1)])
         plot_pendulum(np.linspace(0, Tf, N+1), Fmax, acados_u, acados_x, latexify=False)
         plot_pendulum(np.linspace(0, Tf, N+1), Fmax, casadi_u, casadi_x, latexify=False)
 

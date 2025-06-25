@@ -394,9 +394,9 @@ class AcadosCasadiOcp:
         return self.__w0
 
     @property
-    def p(self):
+    def p_nlp_values(self):
         """
-        Default initial guess for parameter vector p_nlp for given NLP.
+        Default parameter vector p_nlp in the form of [p_0,..., p_N, p_global] for given NLP.
         """
         return self.__p
     
@@ -451,7 +451,7 @@ class AcadosCasadiOcpSolver:
         self.casadi_nlp = casadi_nlp_obj.nlp
         self.bounds = casadi_nlp_obj.bounds
         self.w0 = casadi_nlp_obj.w0
-        self.p = casadi_nlp_obj.p
+        self.p = casadi_nlp_obj.p_nlp_values
         self.index_map = casadi_nlp_obj.index_map
         self.nlp_hess_l_custom = casadi_nlp_obj.nlp_hess_l_custom
 
@@ -516,7 +516,7 @@ class AcadosCasadiOcpSolver:
         Get the last solution of the solver.
 
         :param stage: integer corresponding to shooting node
-        :param field: string in ['x', 'u', 'pi', 'lam']
+        :param field: string in ['x', 'u', 'pi', 'p', 'lam']
 
         """
         if not isinstance(stage, int):
@@ -563,7 +563,7 @@ class AcadosCasadiOcpSolver:
         """
         Get concatenation of all stages of last solution of the solver.
 
-        :param field: string in ['x', 'u', 'pi', 'lam', 'z', 'sl', 'su']
+        :param field: string in ['x', 'u', 'pi', 'lam', 'p', 'p_global', 'z', 'sl', 'su']
 
         .. note:: The parameter 'p_global' has no stage-wise structure and is processed in a memory saving manner by default. \n
                 In order to read the 'p_global' parameter, the option 'save_p_global' must be set to 'True' upon instantiation. \n
@@ -581,6 +581,8 @@ class AcadosCasadiOcpSolver:
             for i in range(dims.N):
                 result.append(self.get(i, field_))
             return np.concatenate(result)
+        elif field_ == 'p_global':
+            return self.p[self.index_map['p_global_in_p_nlp']].flatten()
         # casadi variables. TODO: maybe remove this.
         elif field_ == 'lam_x':
             return self.nlp_sol_lam_x.flatten()

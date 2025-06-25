@@ -38,7 +38,6 @@ import casadi as ca
 import time
 
 PLOT = False
-np.random.seed(1)
 
 def export_pendulum_ode_model() -> AcadosModel:
     # constants
@@ -97,14 +96,13 @@ def export_pendulum_ode_model() -> AcadosModel:
     return model
 
 
-def ocp_formulation(use_p_global=True) -> AcadosOcp:
+def ocp_formulation() -> AcadosOcp:
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
     # set model
     model = export_pendulum_ode_model()
-    model.name += f'_p_global_{use_p_global}'
     ocp.model = model
 
     # dimensions
@@ -137,20 +135,15 @@ def ocp_formulation(use_p_global=True) -> AcadosOcp:
 
     ocp.parameter_values = np.array([9.81])
     ocp.p_global_values = np.array([0.1, 0.8])
-
-    if not use_p_global:
-        model.p = ca.vertcat(model.p, model.p_global)
-        ocp.parameter_values = np.concatenate([ocp.parameter_values, ocp.p_global_values])
-        model.p_global = MX.sym('p_global', 0, 1)
-
+    
     return ocp
 
 
-def main(use_p_global=True, stage_varying=True):
+def main(stage_varying=True):
 
-    print(f"\n\nRunning example with use_p_global={use_p_global}, stage_varying_p={stage_varying}")
+    print(f"\n\nRunning example with stage_varying_p={stage_varying}")
     # create ocp
-    ocp = ocp_formulation(use_p_global=use_p_global)
+    ocp = ocp_formulation()
 
     Tf = 1.0
     N_horizon = 20
@@ -168,7 +161,7 @@ def main(use_p_global=True, stage_varying=True):
 
     # create acados solver
     print(f"Creating ocp solver with p_global = {ocp.model.p_global}, p = {ocp.model.p}")
-    ocp_solver = AcadosOcpSolver(ocp, generate=True, build=True, verbose=False, save_p_global=use_p_global)
+    ocp_solver = AcadosOcpSolver(ocp, generate=True, build=True, verbose=False, save_p_global=True)
     if stage_varying:
         for i in range(0, N_horizon+1):
             ocp_solver.set(stage_= i, field_= 'p', value_=np.array([9.81+i*0.3]))
@@ -184,25 +177,18 @@ def main(use_p_global=True, stage_varying=True):
             casadi_ocp_solver.set(stage= i, field= 'p', value_=np.array([9.81+i*0.3]))
     casadi_ocp_solver.load_iterate_from_obj(result)
     casadi_ocp_solver.solve()
+    result_casadi = casadi_ocp_solver.store_iterate_to_obj()
 
-    acados_u = np.array([ocp_solver.get(i, "u") for i in range(N_horizon)])
-    acados_x = np.array([ocp_solver.get(i, "x") for i in range(N_horizon+1)])
-    casadi_u = np.array([casadi_ocp_solver.get(i, "u") for i in range(N_horizon)])
-    casadi_x = np.array([casadi_ocp_solver.get(i, "x") for i in range(N_horizon+1)])
-
-    diff_x = np.linalg.norm(casadi_x - acados_x)
-    print(f"Difference between casadi and acados solution in x: {diff_x}")
-    diff_u = np.linalg.norm(casadi_u - acados_u)
-    print(f"Difference between casadi and acados solution in u: {diff_u}")
-
-    test_tol = 1e-4
-    if diff_x > test_tol or diff_u > test_tol:
-        raise ValueError(f"Test failed: difference between casadi and acados solution should be smaller than {test_tol}, but got {diff_x} and {diff_u}.")
+    result.flatten().allclose(other=result_casadi.flatten())
 
     if PLOT:
+        acados_u = np.array([ocp_solver.get(i, "u") for i in range(N_horizon)])
+        acados_x = np.array([ocp_solver.get(i, "x") for i in range(N_horizon+1)])
+        casadi_u = np.array([casadi_ocp_solver.get(i, "u") for i in range(N_horizon)])
+        casadi_x = np.array([casadi_ocp_solver.get(i, "x") for i in range(N_horizon+1)])
         plot_pendulum(ocp.solver_options.shooting_nodes, ocp.constraints.ubu[0], acados_u, acados_x, x_labels=ocp.model.x_labels, u_labels=ocp.model.u_labels)
         plot_pendulum(ocp.solver_options.shooting_nodes, ocp.constraints.ubu[0], casadi_u, casadi_x, x_labels=ocp.model.x_labels, u_labels=ocp.model.u_labels)
 
 if __name__ == "__main__":
-    main(use_p_global=True, stage_varying=False)
-    main(use_p_global=True, stage_varying=True)
+    main(stage_varying=False)
+    main(stage_varying=True)
