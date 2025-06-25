@@ -34,14 +34,14 @@ import scipy.linalg
 from linear_mass_model import export_linear_mass_model
 
 
-def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', allow_switching_modes=True):
+def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', allow_switching_modes=True, globalization= 'FUNNEL_L1PEN_LINESEARCH'):
 
     solver_options = AcadosOcp().solver_options
 
     # set options
     solver_options.N_horizon = N
     solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-    solver_options.qp_tol = 5e-7
+    solver_options.qp_tol = 1e-9
     solver_options.qp_solver_ric_alg = 1
     solver_options.qp_solver_mu0 = 1e4
     solver_options.qp_solver_warm_start = 1
@@ -49,9 +49,9 @@ def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', allo
     solver_options.hessian_approx = 'GAUSS_NEWTON'
     solver_options.integrator_type = 'ERK'
     solver_options.nlp_solver_type = nlp_solver_type
-    solver_options.globalization = 'MERIT_BACKTRACKING'
+    solver_options.globalization = globalization
     solver_options.globalization_full_step_dual = True
-    # solver_options.print_level = 1
+    solver_options.print_level = 1
     solver_options.nlp_solver_max_iter = 30
     solver_options.use_constraint_hessian_in_feas_qp = False
     solver_options.nlp_solver_ext_qp_res = 0
@@ -67,6 +67,7 @@ def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', allo
 
 def create_solver(solver_name: str, soften_obstacle: bool, soften_terminal: bool,
                   soften_controls: bool, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP',
+                  globalization= 'FUNNEL_L1PEN_LINESEARCH',
                   allow_switching_modes: bool = True,
                   use_qp_scaling: bool = False):
 
@@ -168,10 +169,10 @@ def create_solver(solver_name: str, soften_obstacle: bool, soften_terminal: bool
         ocp.cost.Zu_e = np.concatenate((ocp.cost.Zu_e, Zh))
 
     # load options
-    ocp.solver_options = create_solver_opts(N, Tf, nlp_solver_type, allow_switching_modes)
+    ocp.solver_options = create_solver_opts(N, Tf, nlp_solver_type, allow_switching_modes, globalization)
     if use_qp_scaling:
         ocp.solver_options.qpscaling_scale_constraints = "INF_NORM"
-        # ocp.solver_options.qpscaling_scale_objective = "OBJECTIVE_GERSHGORIN"
+        ocp.solver_options.qpscaling_scale_objective = "OBJECTIVE_GERSHGORIN"
 
     # create ocp solver
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_{solver_name}_ocp.json', verbose=False)
@@ -216,25 +217,47 @@ def call_solver(ocp: AcadosOcp, ocp_solver: AcadosOcpSolver, soften_obstacle: bo
     print(f"cost function value = {ocp_solver.get_cost()} after {sqp_iter} SQP iterations")
     print(f"solved sqp_wfqp problem with settings soften_obstacle = {soften_obstacle},soften_terminal = {soften_terminal}, SOFTEN_CONTROL = {soften_controls}")
 
+def check_residual_solutions(stat1: np.ndarray, stat2: np.ndarray):
+    n_rows1 = len(stat1[0])
+    n_rows2 = len(stat2[0])
 
-def test_qp_scaling():
+    assert n_rows1 == n_rows2, f"Both solvers should take the same number of iterations!, got {n_rows1} for solver 1, and {n_rows2} for solver 2"
+
+    for jj in range(n_rows1):
+        # res_stat
+        assert np.allclose(stat1[1][jj], stat2[1][jj]), f"res_stat differs in iter {jj}"
+        # res_eq
+        assert np.allclose(stat1[2][jj], stat2[2][jj]), f"res_eq differs in iter {jj}"
+        # res_ineq
+        assert np.allclose(stat1[3][jj], stat2[3][jj]), f"res_ineq differs in iter {jj}"
+        # res_comp
+        assert np.allclose(stat1[4][jj], stat2[4][jj]), f"res_comp differs in iter {jj}"
+
+def test_qp_scaling(nlp_solver_type = 'SQP', globalization= 'FUNNEL_L1PEN_LINESEARCH'):
+    print(f"\n\nTesting solver={nlp_solver_type} with globalization={globalization}")
     # SETTINGS:
     soften_controls = True
     soften_obstacle = True
     soften_terminal = True
+    nlp_solver_type = 'SQP'
 
     # create solver
-    ocp_1, ocp_solver1 = create_solver("1", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type="SQP", allow_switching_modes=False, use_qp_scaling=False)
+    ocp_1, ocp_solver1 = create_solver("1", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type=nlp_solver_type, globalization=globalization, allow_switching_modes=False, use_qp_scaling=False)
     sol_1 = call_solver(ocp_1, ocp_solver1, soften_obstacle, soften_terminal, soften_controls, plot=False)
     check_qp_scaling(ocp_solver1)
     sol_1 = ocp_solver1.store_iterate_to_obj()
+    stats1 = ocp_solver1.get_stats("statistics")
+
 
     # test QP scaling
-    ocp_2, ocp_solver2 = create_solver("2", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type="SQP", allow_switching_modes=False, use_qp_scaling=True)
+    ocp_2, ocp_solver2 = create_solver("2", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type=nlp_solver_type, allow_switching_modes=False, use_qp_scaling=True)
     sol_2 = call_solver(ocp_2, ocp_solver2, soften_obstacle, soften_terminal, soften_controls, plot=False)
     check_qp_scaling(ocp_solver2)
     sol_2 = ocp_solver2.store_iterate_to_obj()
     ocp_solver2.get_from_qp_in(1, "idxs_rev")
+    stats2 = ocp_solver2.get_stats("statistics")
+
+    check_residual_solutions(stats1, stats2)
 
     # check solutions
     for field in ["x_traj", "u_traj", "sl_traj", "su_traj", "lam_traj", "pi_traj"]:
@@ -254,7 +277,11 @@ def test_qp_scaling():
     else:
         raise ValueError("Solutions of solvers differ!")
 
+    print("\n\n---------------------------------------------------------")
 
 if __name__ == '__main__':
-    test_qp_scaling()
+    test_qp_scaling(nlp_solver_type = 'SQP')
+    test_qp_scaling(nlp_solver_type = 'SQP', globalization= 'MERIT_BACKTRACKING')
+    test_qp_scaling(nlp_solver_type = 'SQP_WITH_FEASIBLE_QP')
+    test_qp_scaling(nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', globalization= 'MERIT_BACKTRACKING')
 
