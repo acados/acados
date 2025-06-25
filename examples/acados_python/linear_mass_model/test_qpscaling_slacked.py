@@ -210,8 +210,8 @@ def call_solver(ocp: AcadosOcp, ocp_solver: AcadosOcpSolver, soften_obstacle: bo
 
     sqp_iter = ocp_solver.get_stats('sqp_iter')
     if status != 0:
-        # raise RuntimeError(f"acados returned status {status} after {sqp_iter} SQP iterations.")
-        print(f'acados returned status {status}.')
+        raise RuntimeError(f"acados returned status {status} after {sqp_iter} SQP iterations.")
+        # print(f'acados returned status {status}.')
 
     # print summary
     print(f"cost function value = {ocp_solver.get_cost()} after {sqp_iter} SQP iterations")
