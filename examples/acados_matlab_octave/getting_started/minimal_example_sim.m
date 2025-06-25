@@ -77,6 +77,9 @@ for ii=1:N_sim
 
     % get simulated state
     x_sim(:,ii+1) = sim_solver.get('xn');
+
+    % one can also use:
+    % x_sim(:,ii+1) = sim_solver.simulate(x_sim(:,ii), u0);
 end
 
 % forward sensitivities ( dxn_d[x0,u] )

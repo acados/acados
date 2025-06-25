@@ -1959,7 +1959,7 @@ class AcadosOcpSolver:
         dims_ = np.zeros((2,), dtype=np.intc, order="C")
         dims_data = cast(dims_.ctypes.data, POINTER(c_int))
 
-        self.__acados_lib.ocp_nlp_cost_dims_get_from_attr(self.nlp_config, \
+        self.__acados_lib.ocp_nlp_constraint_dims_get_from_attr(self.nlp_config, \
             self.nlp_dims, self.nlp_out, stage_, field, dims_data)
 
         # check whether field is vector-valued
