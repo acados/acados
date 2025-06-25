@@ -247,7 +247,8 @@ def get_architecture_amd64_arm64():
         return "amd64"
     elif any([current_arch.lower().startswith(arch) for arch in arm64_compatible]):
         return "arm64"
-    return None
+    else:
+        raise RuntimeError(f"Your detected architecture {current_arch} may not be compatible with amd64 or arm64.")
 
 def get_tera() -> str:
     tera_path = get_tera_exec_path()
@@ -257,9 +258,10 @@ def get_tera() -> str:
     if os.path.exists(tera_path) and os.access(tera_path, os.X_OK):
         return tera_path
 
-    arch = get_architecture_amd64_arm64()
-    if arch is None:
-        print(f"Your detected architecture {arch} may not be compatible with prebuilt binaries for amd64 and arm64.")
+    try:
+        arch = get_architecture_amd64_arm64()
+    except RuntimeError as e:
+        print(e)
         print("Try building tera_renderer from source at https://github.com/acados/tera_renderer")
         sys.exit(1)
 
