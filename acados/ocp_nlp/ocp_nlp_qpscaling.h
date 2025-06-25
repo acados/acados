@@ -59,6 +59,7 @@ typedef struct
 {
     double ub_max_abs_eig;
     double lb_norm_inf_grad_obj;
+    int print_level;
 
     qpscaling_scale_objective_type scale_qp_objective;
     ocp_nlp_qpscaling_constraint_type scale_qp_constraints;

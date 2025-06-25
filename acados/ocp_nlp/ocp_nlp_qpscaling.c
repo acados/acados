@@ -113,6 +113,7 @@ void ocp_nlp_qpscaling_opts_initialize_default(ocp_nlp_qpscaling_dims *dims, voi
 
     opts->lb_norm_inf_grad_obj = 1e-4;
     opts->ub_max_abs_eig = 1e5;
+    opts->print_level = 0;
 
     opts->scale_qp_objective = NO_OBJECTIVE_SCALING;
     opts->scale_qp_constraints = NO_CONSTRAINT_SCALING;
@@ -494,14 +495,20 @@ void ocp_nlp_qpscaling_compute_obj_scaling_factor(ocp_nlp_qpscaling_dims *dims, 
     if (mem->obj_factor*nrm_inf_grad_obj <= opts->lb_norm_inf_grad_obj)
     {
         // grad norm would become too small -> scale cost up
-        // printf("lb_norm_inf_grad_obj violated! %.2e\n", opts->lb_norm_inf_grad_obj);
-        // printf("Gradient is very small! %.2e\n", mem->obj_factor*nrm_inf_grad_obj);
+        if (opts->print_level > 0)
+        {
+            printf("lb_norm_inf_grad_obj violated! %.2e\n", opts->lb_norm_inf_grad_obj);
+            printf("Gradient is very small! %.2e\n", mem->obj_factor*nrm_inf_grad_obj);
+        }
         lb_grad_norm_factor = opts->lb_norm_inf_grad_obj / nrm_inf_grad_obj;
         tmp = fmin(max_upscale_factor, lb_grad_norm_factor);
         mem->obj_factor = fmax(mem->obj_factor, tmp);
         mem->status = ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED;
     }
-    // printf("Scaling factor objective: %.2e\n", mem->obj_factor);
+    if (opts->print_level > 0)
+    {
+        printf("Scaling factor objective: %.2e\n", mem->obj_factor);
+    }
 }
 
 
@@ -580,26 +587,22 @@ void ocp_nlp_qpscaling_scale_constraints(ocp_nlp_qpscaling_dims *dims, void *opt
 }
 
 
-// static void print_qp_scaling_factors(ocp_nlp_qpscaling_dims *dims, ocp_nlp_qpscaling_opts *opts, ocp_nlp_qpscaling_memory *mem)
-// {
-//     if (opts->scale_qp_constraints)
-//     {
-//         printf("Scaling factors for constraints:\n");
-//         for (int i = 0; i <= dims->qp_dim->N; i++)
-//         {
-//             printf("Stage %d: ", i);
-//             for (int j = 0; j < dims->qp_dim->ng[i]; j++)
-//             {
-//                 printf("%.2e ", BLASFEO_DVECEL(mem->constraints_scaling_vec+i, j));
-//             }
-//             printf("\n");
-//         }
-//     }
-//     else
-//     {
-//         printf("No scaling factors for constraints.\n");
-//     }
-// }
+static void print_qp_scaling_factors_constr(ocp_nlp_qpscaling_dims *dims, ocp_nlp_qpscaling_opts *opts, ocp_nlp_qpscaling_memory *mem)
+{
+    if (opts->scale_qp_constraints)
+    {
+        printf("Scaling factors for constraints:\n");
+        for (int i = 0; i <= dims->qp_dim->N; i++)
+        {
+            printf("Stage %d: ", i);
+            for (int j = 0; j < dims->qp_dim->ng[i]; j++)
+            {
+                printf("%.2e ", BLASFEO_DVECEL(mem->constraints_scaling_vec+i, j));
+            }
+            printf("\n");
+        }
+    }
+}
 
 void ocp_nlp_qpscaling_scale_qp(ocp_nlp_qpscaling_dims *dims, void *opts_, void *mem_, ocp_qp_in *qp_in)
 {
@@ -621,6 +624,10 @@ void ocp_nlp_qpscaling_scale_qp(ocp_nlp_qpscaling_dims *dims, void *opts_, void 
     if (opts->scale_qp_constraints)
     {
         ocp_nlp_qpscaling_scale_constraints(dims, opts_, mem_, qp_in);
+    }
+    if (opts->print_level > 0)
+    {
+        print_qp_scaling_factors_constr(dims, opts, mem);
     }
     // printf("qp_in AFTER SCALING\n");
     // print_ocp_qp_in(qp_in);
