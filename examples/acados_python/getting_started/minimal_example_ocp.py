@@ -28,11 +28,10 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosOcp, AcadosOcpSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, plot_trajectories
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import casadi as ca
-from utils import plot_pendulum
 
 def main():
     # create ocp object to formulate the OCP
@@ -102,7 +101,24 @@ def main():
         simU[i,:] = ocp_solver.get(i, "u")
     simX[N,:] = ocp_solver.get(N, "x")
 
-    plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=True, time_label=model.t_label, x_labels=model.x_labels, u_labels=model.u_labels)
+
+    plot_trajectories(
+        x_traj_list=[simX],
+        u_traj_list=[simU],
+        time_traj_list=[np.linspace(0, Tf, N+1)],
+        time_label=model.t_label,
+        labels_list=['OCP result'],
+        x_labels=model.x_labels,
+        u_labels=model.u_labels,
+        idxbu=ocp.constraints.idxbu,
+        lbu=ocp.constraints.lbu,
+        ubu=ocp.constraints.ubu,
+        X_ref=None,
+        U_ref=None,
+        fig_filename='pendulum_ocp.png',
+        x_min=None,
+        x_max=None,
+    )
 
 
 if __name__ == '__main__':
