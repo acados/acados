@@ -239,25 +239,23 @@ def test_qp_scaling(nlp_solver_type = 'SQP', globalization= 'FUNNEL_L1PEN_LINESE
     soften_controls = True
     soften_obstacle = True
     soften_terminal = True
-    nlp_solver_type = 'SQP'
 
     # create solver
-    ocp_1, ocp_solver1 = create_solver("1", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type=nlp_solver_type, globalization=globalization, allow_switching_modes=False, use_qp_scaling=False)
-    sol_1 = call_solver(ocp_1, ocp_solver1, soften_obstacle, soften_terminal, soften_controls, plot=False)
-    check_qp_scaling(ocp_solver1)
-    sol_1 = ocp_solver1.store_iterate_to_obj()
-    stats1 = ocp_solver1.get_stats("statistics")
-
+    ocp_1, ocp_solver_1 = create_solver("1", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type=nlp_solver_type, globalization=globalization, allow_switching_modes=False, use_qp_scaling=False)
+    sol_1 = call_solver(ocp_1, ocp_solver_1, soften_obstacle, soften_terminal, soften_controls, plot=False)
+    check_qp_scaling(ocp_solver_1)
+    sol_1 = ocp_solver_1.store_iterate_to_obj()
+    stats_1 = ocp_solver_1.get_stats("statistics")
 
     # test QP scaling
-    ocp_2, ocp_solver2 = create_solver("2", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type=nlp_solver_type, allow_switching_modes=False, use_qp_scaling=True)
-    sol_2 = call_solver(ocp_2, ocp_solver2, soften_obstacle, soften_terminal, soften_controls, plot=False)
-    check_qp_scaling(ocp_solver2)
-    sol_2 = ocp_solver2.store_iterate_to_obj()
-    ocp_solver2.get_from_qp_in(1, "idxs_rev")
-    stats2 = ocp_solver2.get_stats("statistics")
+    ocp_2, ocp_solver_2 = create_solver("2", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type=nlp_solver_type, allow_switching_modes=False, use_qp_scaling=True)
+    sol_2 = call_solver(ocp_2, ocp_solver_2, soften_obstacle, soften_terminal, soften_controls, plot=False)
+    check_qp_scaling(ocp_solver_2)
+    sol_2 = ocp_solver_2.store_iterate_to_obj()
+    ocp_solver_2.get_from_qp_in(1, "idxs_rev")
+    stats_2 = ocp_solver_2.get_stats("statistics")
 
-    check_residual_solutions(stats1, stats2)
+    check_residual_solutions(stats_1, stats_2)
 
     # check solutions
     for field in ["x_traj", "u_traj", "sl_traj", "su_traj", "lam_traj", "pi_traj"]:
