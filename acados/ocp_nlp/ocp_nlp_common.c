@@ -4114,18 +4114,6 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
         ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, nlp_mem->scaled_qp_out);
     }
 
-    // printf("ocp_nlp_solve_qp_and_correct_dual: qp_out:\n");
-    // print_ocp_qp_out(qp_out);
-    // printf("ocp_nlp_solve_qp_and_correct_dual: scaled_qp_out:\n");
-    // print_ocp_qp_out(scaled_qp_out);
-
-    // printf("ocp_nlp_solve_qp_and_correct_dual: qp_in:\n");
-    // print_ocp_qp_in(qp_in);
-    // printf("ocp_nlp_solve_qp_and_correct_dual: scaled_qp_in:\n");
-    // print_ocp_qp_in(scaled_qp_in);
-
-    // exit(1);
-
     return qp_status;
 }
 
