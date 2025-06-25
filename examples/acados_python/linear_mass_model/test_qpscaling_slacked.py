@@ -233,14 +233,14 @@ def check_residual_solutions(stat1: np.ndarray, stat2: np.ndarray):
         # res_comp
         assert np.allclose(stat1[4][jj], stat2[4][jj]), f"res_comp differs in iter {jj}"
 
-def test_qp_scaling(nlp_solver_type = 'SQP', globalization= 'FUNNEL_L1PEN_LINESEARCH'):
+def test_qp_scaling(nlp_solver_type = 'SQP', globalization = 'FUNNEL_L1PEN_LINESEARCH'):
     print(f"\n\nTesting solver={nlp_solver_type} with globalization={globalization}")
     # SETTINGS:
     soften_controls = True
     soften_obstacle = True
     soften_terminal = True
 
-    # create solver
+    # reference
     ocp_1, ocp_solver_1 = create_solver("1", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type=nlp_solver_type, globalization=globalization, allow_switching_modes=False, use_qp_scaling=False)
     sol_1 = call_solver(ocp_1, ocp_solver_1, soften_obstacle, soften_terminal, soften_controls, plot=False)
     check_qp_scaling(ocp_solver_1)
@@ -278,8 +278,8 @@ def test_qp_scaling(nlp_solver_type = 'SQP', globalization= 'FUNNEL_L1PEN_LINESE
     print("\n\n---------------------------------------------------------")
 
 if __name__ == '__main__':
-    test_qp_scaling(nlp_solver_type = 'SQP')
+    test_qp_scaling(nlp_solver_type = 'SQP', globalization = 'FUNNEL_L1PEN_LINESEARCH')
     test_qp_scaling(nlp_solver_type = 'SQP', globalization= 'MERIT_BACKTRACKING')
-    test_qp_scaling(nlp_solver_type = 'SQP_WITH_FEASIBLE_QP')
+    test_qp_scaling(nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', globalization = 'FUNNEL_L1PEN_LINESEARCH')
     test_qp_scaling(nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', globalization= 'MERIT_BACKTRACKING')
 
