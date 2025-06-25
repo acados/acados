@@ -393,11 +393,12 @@ void print_ocp_qp_out(ocp_qp_out *qp_out)
         blasfeo_print_tran_dvec(nu[ii] + nx[ii] + 2 * ns[ii], &qp_out->ux[ii], 0);
 
     printf("pi =\n");
-    for (ii = 0; ii < N; ii++) blasfeo_print_tran_dvec(nx[ii + 1], &qp_out->pi[ii], 0);
+    for (ii = 0; ii < N; ii++)
+        blasfeo_print_tran_dvec(nx[ii + 1], &qp_out->pi[ii], 0);
 
     printf("lam =\n");
     for (ii = 0; ii <= N; ii++)
-        blasfeo_print_tran_dvec(2 * nb[ii] + 2 * ng[ii] + 2 * ns[ii], &qp_out->lam[ii], 0);
+        blasfeo_print_exp_tran_dvec(2 * nb[ii] + 2 * ng[ii] + 2 * ns[ii], &qp_out->lam[ii], 0);
 
     printf("t =\n");
     for (ii = 0; ii <= N; ii++)

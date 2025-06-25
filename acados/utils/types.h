@@ -81,6 +81,7 @@ enum return_values
     ACADOS_READY = 5,
     ACADOS_UNBOUNDED = 6,
     ACADOS_TIMEOUT = 7,
+    ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED = 8,
 };
 
 
@@ -112,6 +113,23 @@ enum search_direction_mode
     BYRD_OMOJOKUN = 1,
     FEASIBILITY_QP = 2,
 };
+
+
+/// QP scaling types
+typedef enum
+{
+    NO_OBJECTIVE_SCALING,
+    OBJECTIVE_GERSHGORIN,
+} qpscaling_scale_objective_type;
+
+/// QP scaling types
+typedef enum
+{
+    NO_CONSTRAINT_SCALING,
+    INF_NORM,
+} ocp_nlp_qpscaling_constraint_type;
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */

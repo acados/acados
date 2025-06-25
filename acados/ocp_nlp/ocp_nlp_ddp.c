@@ -728,7 +728,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // NOTE: this is done before termination, such that we can get the QP at the stationary point that is actually solved, if we exit with success.
         acados_tic(&timer1);
         config->regularize->regularize(config->regularize, dims->regularize,
-                                               nlp_opts->regularize, nlp_mem->regularize);
+                                               nlp_opts->regularize, nlp_mem->regularize_mem);
         nlp_timings->time_reg += acados_toc(&timer1);
 
         // Termination
@@ -767,7 +767,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             print_ocp_qp_in(qp_in);
         }
 
-        qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, NULL, NULL);
+        qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, NULL, NULL, NULL, NULL);
 
         // restore default warm start
         if (ddp_iter==0)

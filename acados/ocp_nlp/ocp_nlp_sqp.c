@@ -561,6 +561,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_qp_in *qp_in = nlp_mem->qp_in;
     ocp_qp_out *qp_out = nlp_mem->qp_out;
 
+    qp_info *qp_info_;
+    ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
+
     // zero timers
     ocp_nlp_timings_reset(nlp_timings);
 
@@ -589,7 +592,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     nlp_mem->iter = 0;
     double prev_levenberg_marquardt = 0.0;
     int globalization_status;
-    qp_info *qp_info_;
 
     double timeout_previous_time_tot = 0.;
     double timeout_time_prev_iter = 0.;
@@ -617,7 +619,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             {
                 ocp_nlp_get_cost_value_from_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
             }
-            ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, nlp_mem->iter, nlp_mem->qp_in);
+            ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, nlp_mem->iter, qp_in);
             nlp_timings->time_lin += acados_toc(&timer1);
 
             // compute nlp residuals
@@ -647,11 +649,16 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
         prev_levenberg_marquardt = nlp_opts->levenberg_marquardt;
 
+        // QP scaling
+        acados_tic(&timer1);
+        ocp_nlp_qpscaling_scale_qp(dims->qpscaling, nlp_opts->qpscaling, nlp_mem->qpscaling, qp_in);
+        nlp_timings->time_qpscaling += acados_toc(&timer1);
+
         // regularize Hessian
         // NOTE: this is done before termination, such that we can get the QP at the stationary point that is actually solved, if we exit with success.
         acados_tic(&timer1);
         config->regularize->regularize(config->regularize, dims->regularize,
-                                               nlp_opts->regularize, nlp_mem->regularize);
+                                               nlp_opts->regularize, nlp_mem->regularize_mem);
         nlp_timings->time_reg += acados_toc(&timer1);
 
         // update timeout memory based on chosen heuristic
@@ -733,7 +740,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
         ocp_nlp_dump_qp_in_to_file(qp_in, nlp_mem->iter, 0);
 #endif
-        qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, NULL, NULL);
+        qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, NULL, NULL, NULL, NULL);
 
         // restore default warm start
         if (nlp_mem->iter==0)
@@ -751,7 +758,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         ocp_nlp_dump_qp_out_to_file(qp_out, nlp_mem->iter, 0);
 #endif
 
-        ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
         qp_iter = qp_info_->num_iter;
 
         // save statistics of last qp solver call
@@ -764,7 +770,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // compute external QP residuals (for debugging)
         if (nlp_opts->ext_qp_res)
         {
-            ocp_qp_res_compute(qp_in, qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
+            ocp_qp_res_compute(nlp_mem->scaled_qp_in, nlp_mem->scaled_qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
             if (nlp_mem->iter+1 < mem->stat_m)
                 ocp_qp_res_compute_nrm_inf(nlp_work->qp_res, mem->stat+(mem->stat_n*(nlp_mem->iter+1)+7));
         }

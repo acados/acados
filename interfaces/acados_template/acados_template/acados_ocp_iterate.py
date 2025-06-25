@@ -48,7 +48,7 @@ class AcadosOcpFlattenedIterate:
     pi: np.ndarray
     lam: np.ndarray
 
-    def allclose(self, other, rtol=1e-5, atol=1e-8) -> bool:
+    def allclose(self, other, rtol=1e-5, atol=1e-6) -> bool:
         if not isinstance(other, AcadosOcpFlattenedIterate):
             raise TypeError(f"Expected AcadosOcpFlattenedIterate, got {type(other)}")
         return (
@@ -95,13 +95,20 @@ class AcadosOcpIterate:
     def flatten(self) -> AcadosOcpFlattenedIterate:
         return AcadosOcpFlattenedIterate(
             x=np.concatenate(self.x_traj),
-            u=np.concatenate(self.u_traj),
-            z=np.concatenate(self.z_traj),
+            u=np.concatenate(self.u_traj) if len(self.u_traj) > 0 else np.array([]),
+            z=np.concatenate(self.z_traj) if len(self.z_traj) > 0 else np.array([]),
             sl=np.concatenate(self.sl_traj),
             su=np.concatenate(self.su_traj),
-            pi=np.concatenate(self.pi_traj),
+            pi=np.concatenate(self.pi_traj) if len(self.pi_traj) > 0 else np.array([]),
             lam=np.concatenate(self.lam_traj),
         )
+
+    def allclose(self, other, rtol=1e-5, atol=1e-8) -> bool:
+        if not isinstance(other, AcadosOcpIterate):
+            raise TypeError(f"Expected AcadosOcpIterate, got {type(other)}")
+        s = self.flatten()
+        o = other.flatten()
+        return s.allclose(o, rtol=rtol, atol=atol)
 
 @dataclass
 class AcadosOcpIterates:

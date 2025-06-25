@@ -154,10 +154,16 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
         ocp.constraints.idxsh_e = np.array([0])
         Zh = 1e6 * np.ones(1)
         zh = 1e4 * np.ones(1)
-        ocp.cost.zl = zh
-        ocp.cost.zu = zh
-        ocp.cost.Zl = Zh
-        ocp.cost.Zu = Zh
+        # initial: no obstacle constraint, no addtional slack
+        ocp.cost.zl_0 = ocp.cost.zl
+        ocp.cost.zu_0 = ocp.cost.zu
+        ocp.cost.Zl_0 = ocp.cost.Zl
+        ocp.cost.Zu_0 = ocp.cost.Zu
+        # path & terminal: slacked obstacle constraint
+        ocp.cost.zl = np.concatenate((ocp.cost.zl, zh))
+        ocp.cost.zu = np.concatenate((ocp.cost.zu, zh))
+        ocp.cost.Zl = np.concatenate((ocp.cost.Zl, Zh))
+        ocp.cost.Zu = np.concatenate((ocp.cost.Zu, Zh))
         ocp.cost.zl_e = np.concatenate((ocp.cost.zl_e, zh))
         ocp.cost.zu_e = np.concatenate((ocp.cost.zu_e, zh))
         ocp.cost.Zl_e = np.concatenate((ocp.cost.Zl_e, Zh))
@@ -257,7 +263,6 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
         plot_linear_mass_system_U(shooting_nodes, simU)
         # plot_linear_mass_system_X(shooting_nodes, simX)
 
-    # import pdb; pdb.set_trace()
     print(f"\n\n----------------------\n")
 
 if __name__ == '__main__':
