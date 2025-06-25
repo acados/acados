@@ -118,8 +118,6 @@ def create_solver(solver_name: str, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP
 
     return ocp, ocp_solver
 
-
-
 def check_qp_scaling(ocp_solver: AcadosOcpSolver):
     qpscaling_status = ocp_solver.get_stats("qpscaling_status")
     if qpscaling_status == 0:
@@ -181,23 +179,43 @@ def check_solutions(sol_1: AcadosOcpFlattenedIterate, sol_2: AcadosOcpFlattenedI
     else:
         raise ValueError("Solutions of solvers differ!")
 
+def check_residual_solutions(stat1: np.ndarray, stat2: np.ndarray):
+    n_rows1 = len(stat1[0])
+    n_rows2 = len(stat2[0])
+
+    assert n_rows1 == n_rows2, f"Both solvers should take the same number of iterations!, got {n_rows1} for solver 1, and {n_rows2} for solver 2"
+
+    for jj in range(n_rows1):
+        # res_stat
+        assert np.allclose(stat1[1][jj], stat2[1][jj]), f"res_stat differs in iter {jj}"
+        # res_eq
+        assert np.allclose(stat1[2][jj], stat2[2][jj]), f"res_eq differs in iter {jj}"
+        # res_ineq
+        assert np.allclose(stat1[3][jj], stat2[3][jj]), f"res_ineq differs in iter {jj}"
+        # res_comp
+        assert np.allclose(stat1[4][jj], stat2[4][jj]), f"res_comp differs in iter {jj}"
+
 def test_qp_scaling(soft_h: bool = True):
     nlp_solver_type = "SQP"
     # nlp_solver_type = "SQP_WITH_FEASIBLE_QP"
 
     # test without QP scaling
     print("Reference ...")
-    ocp_2, ocp_solver_2 = create_solver("2", nlp_solver_type=nlp_solver_type, allow_switching_modes=True, use_qp_scaling=False, soft_h=soft_h)
+    _, ocp_solver_2 = create_solver("2", nlp_solver_type=nlp_solver_type, allow_switching_modes=True, use_qp_scaling=False, soft_h=soft_h)
     sol_2 = call_solver(ocp_solver_2)
+    stats2 = ocp_solver_2.get_stats("statistics")
+
     check_qp_scaling(ocp_solver_2)
     print(f"Reference solution: {sol_2}")
 
     # test QP scaling
     print("Testing QP scaling with SQP solver...")
-    ocp_1, ocp_solver_1 = create_solver("1", nlp_solver_type=nlp_solver_type, allow_switching_modes=True, use_qp_scaling=True, soft_h=soft_h)
+    _, ocp_solver_1 = create_solver("1", nlp_solver_type=nlp_solver_type, allow_switching_modes=True, use_qp_scaling=True, soft_h=soft_h)
     sol_1 = call_solver(ocp_solver_1)
     check_qp_scaling(ocp_solver_1)
+    stats1 = ocp_solver_1.get_stats("statistics")
 
+    check_residual_solutions(stats1, stats2)
     check_solutions(sol_1, sol_2, soft_h)
 
 def test_sanity_check(soft_h: bool = True, use_qp_scaling: bool = True):
@@ -205,27 +223,32 @@ def test_sanity_check(soft_h: bool = True, use_qp_scaling: bool = True):
 
     # test without QP scaling
     print("Solving with SQP")
-    ocp_2, ocp_solver_2 = create_solver("2", nlp_solver_type="SQP", allow_switching_modes=True, use_qp_scaling=use_qp_scaling, soft_h=soft_h)
+    _, ocp_solver_2 = create_solver("2", nlp_solver_type="SQP", allow_switching_modes=True, use_qp_scaling=use_qp_scaling, soft_h=soft_h)
     sol_2 = call_solver(ocp_solver_2)
     check_qp_scaling(ocp_solver_2)
+    stats2 = ocp_solver_2.get_stats("statistics")
     print(f"Reference solution: {sol_2}")
 
     # test QP scaling
     print("Solving with SQP_WITH_FEASIBLE_QP")
-    ocp_1, ocp_solver_1 = create_solver("1", nlp_solver_type="SQP_WITH_FEASIBLE_QP", allow_switching_modes=True, use_qp_scaling=use_qp_scaling, soft_h=soft_h)
+    _, ocp_solver_1 = create_solver("1", nlp_solver_type="SQP_WITH_FEASIBLE_QP", allow_switching_modes=True, use_qp_scaling=use_qp_scaling, soft_h=soft_h)
     sol_1 = call_solver(ocp_solver_1)
+    stats1 = ocp_solver_1.get_stats("statistics")
     check_qp_scaling(ocp_solver_1)
 
+    check_residual_solutions(stats1, stats2)
     check_solutions(sol_1, sol_2, soft_h)
+    print("\n")
 
 
 if __name__ == '__main__':
+    # Sanity Checks
+    test_sanity_check(soft_h=False, use_qp_scaling=False) # overall solver sanity check
+    test_sanity_check(soft_h=True, use_qp_scaling=False) # overall solver sanity check
+    test_sanity_check(soft_h=False, use_qp_scaling=True)
+    test_sanity_check(soft_h=True, use_qp_scaling=True)
+
     test_qp_scaling(soft_h=False)
     test_qp_scaling(soft_h=True)
 
-    # Sanity Checks
-    # test_sanity_check(soft_h=False, use_qp_scaling=False) # overall solver sanity check
-    # test_sanity_check(soft_h=True, use_qp_scaling=False) # overall solver sanity check slacked constraints
-    # test_sanity_check(soft_h=False, use_qp_scaling=True)
-    # test_sanity_check(soft_h=True, use_qp_scaling=True)
 
