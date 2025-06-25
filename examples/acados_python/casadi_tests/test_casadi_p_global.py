@@ -29,49 +29,27 @@
 #
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, AcadosCasadiOcpSolver
 import numpy as np
-import scipy.linalg
 import sys
-sys.path.insert(0, '/home/jingtao/acados/examples/acados_python/p_global_example')
+sys.path.insert(0, '../getting_started')
 from utils import plot_pendulum
 
 from casadi import MX, vertcat, sin, cos
 import casadi as ca
 import time
 
-# NOTE: This example requires CasADi version nightly-se2 or later.
-# Furthermore, this example uses additional flags for the CasADi code generation,
-# cf. the solver option ext_fun_compile_flags, which you might need to adapt based
-# on your compiler and operating system.
-
-LARGE_SCALE = False
-PLOT = True
+PLOT = False
 np.random.seed(1)
 
-if LARGE_SCALE:
-    knots = [np.arange(200),np.arange(200)]
-    data = np.random.random((38416,)).ravel(order='F')
-else:
-    knots = [np.arange(20),np.arange(20)]
-    data = 0.1 + 0.*np.random.random((256,)).ravel(order='F')
-
-def create_p_global():
-    m = MX.sym("m")
-    l = MX.sym("l")
-    p_global = [m, l]
-    p_global_values = np.array([0.1, 0.8])
-
-    p_global = ca.vcat(p_global)
-
-    return p_global, m, l, p_global_values
-
-
-def export_pendulum_ode_model(p_global, m, l) -> AcadosModel:
+def export_pendulum_ode_model() -> AcadosModel:
     # constants
     m_cart = 1. # mass of the cart [kg]
 
     # parameters
     g = MX.sym("g")
     p = g
+    m = MX.sym("m")
+    l = MX.sym("l")
+    p_global = ca.vertcat(m,l)
 
     # set up states & controls
     x1      = MX.sym('x1')
@@ -119,14 +97,13 @@ def export_pendulum_ode_model(p_global, m, l) -> AcadosModel:
     return model
 
 
-def ocp_formulation(p_global, m, l, use_p_global=True) -> AcadosOcp:
+def ocp_formulation(use_p_global=True) -> AcadosOcp:
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
     # set model
-    model = export_pendulum_ode_model(p_global, m, l,)
-    model.p_global = p_global
+    model = export_pendulum_ode_model()
     model.name += f'_p_global_{use_p_global}'
     ocp.model = model
 
@@ -159,26 +136,21 @@ def ocp_formulation(p_global, m, l, use_p_global=True) -> AcadosOcp:
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
     ocp.parameter_values = np.array([9.81])
+    ocp.p_global_values = np.array([0.1, 0.8])
 
     if not use_p_global:
-        model.p = ca.vertcat(model.p, p_global)
+        model.p = ca.vertcat(model.p, model.p_global)
+        ocp.parameter_values = np.concatenate([ocp.parameter_values, ocp.p_global_values])
         model.p_global = MX.sym('p_global', 0, 1)
 
     return ocp
 
 
-def main(lut=True, use_p_global=True):
+def main(use_p_global=True, stage_varying=True):
 
-    print(f"\n\nRunning example with use_p_global={use_p_global}")
-    p_global, m, l, p_global_values = create_p_global()
-
+    print(f"\n\nRunning example with use_p_global={use_p_global}, stage_varying_p={stage_varying}")
     # create ocp
-    ocp = ocp_formulation(p_global, m, l, use_p_global=use_p_global)
-
-    if not use_p_global:
-        ocp.parameter_values = np.concatenate([ocp.parameter_values, p_global_values])
-    else:
-        ocp.p_global_values = p_global_values
+    ocp = ocp_formulation(use_p_global=use_p_global)
 
     Tf = 1.0
     N_horizon = 20
@@ -197,31 +169,40 @@ def main(lut=True, use_p_global=True):
     # create acados solver
     print(f"Creating ocp solver with p_global = {ocp.model.p_global}, p = {ocp.model.p}")
     ocp_solver = AcadosOcpSolver(ocp, generate=True, build=True, verbose=False, save_p_global=use_p_global)
+    if stage_varying:
+        for i in range(0, N_horizon+1):
+            ocp_solver.set(stage_= i, field_= 'p', value_=np.array([9.81+i*0.3]))
     status = ocp_solver.solve()
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')
+    result = ocp_solver.store_iterate_to_obj()
 
     casadi_ocp_solver = AcadosCasadiOcpSolver(ocp, verbose=False)
+    if stage_varying:
+        for i in range(0, N_horizon+1):
+            casadi_ocp_solver.set(stage= i, field= 'p', value_=np.array([9.81+i*0.3]))
+    casadi_ocp_solver.load_iterate_from_obj(result)
     casadi_ocp_solver.solve()
 
-    # plot results
-    u_traj_acados = np.array([ocp_solver.get(i, "u") for i in range(N_horizon)])
-    x_traj_acados = np.array([ocp_solver.get(i, "x") for i in range(N_horizon+1)])
-    
-    u_traj_casadi = np.array([casadi_ocp_solver.get(i, "u") for i in range(N_horizon)])
-    x_traj_casadi = np.array([casadi_ocp_solver.get(i, "x") for i in range(N_horizon+1)])
+    acados_u = np.array([ocp_solver.get(i, "u") for i in range(N_horizon)])
+    acados_x = np.array([ocp_solver.get(i, "x") for i in range(N_horizon+1)])
+    casadi_u = np.array([casadi_ocp_solver.get(i, "u") for i in range(N_horizon)])
+    casadi_x = np.array([casadi_ocp_solver.get(i, "x") for i in range(N_horizon+1)])
+
+    diff_x = np.linalg.norm(casadi_x - acados_x)
+    print(f"Difference between casadi and acados solution in x: {diff_x}")
+    diff_u = np.linalg.norm(casadi_u - acados_u)
+    print(f"Difference between casadi and acados solution in u: {diff_u}")
+
+    test_tol = 1e-4
+    if diff_x > test_tol or diff_u > test_tol:
+        raise ValueError(f"Test failed: difference between casadi and acados solution should be smaller than {test_tol}, but got {diff_x} and {diff_u}.")
 
     if PLOT:
-        plot_pendulum(ocp.solver_options.shooting_nodes, ocp.constraints.ubu[0], u_traj_acados, x_traj_acados, x_labels=ocp.model.x_labels, u_labels=ocp.model.u_labels)
-    
-    return x_traj_acados, u_traj_acados, x_traj_casadi, u_traj_casadi
-
+        plot_pendulum(ocp.solver_options.shooting_nodes, ocp.constraints.ubu[0], acados_u, acados_x, x_labels=ocp.model.x_labels, u_labels=ocp.model.u_labels)
+        plot_pendulum(ocp.solver_options.shooting_nodes, ocp.constraints.ubu[0], casadi_u, casadi_x, x_labels=ocp.model.x_labels, u_labels=ocp.model.u_labels)
 
 if __name__ == "__main__":
-    x_acdos, u_acados, x_casadi, u_casadi = main(use_p_global=True)
-
-    diff_x = np.linalg.norm(x_acdos - x_casadi)
-    print(f"Difference between acados and casadi x: {diff_x}")
-    diff_u = np.linalg.norm(u_acados - u_casadi)
-    print(f"Difference between acados and casadi u: {diff_u}")
+    main(use_p_global=True, stage_varying=False)
+    main(use_p_global=True, stage_varying=True)

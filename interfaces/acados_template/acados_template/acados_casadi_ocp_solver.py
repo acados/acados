@@ -131,7 +131,7 @@ class AcadosCasadiOcp:
         lbw_list = []
         ubw_list = []
         w0_list = []
-        p0_list = []
+        p_list = []
         offset = 0
         offset_p = 0
         x_guess = ocp.constraints.x0 if ocp.constraints.has_x0 else np.zeros((dims.nx,))
@@ -151,7 +151,7 @@ class AcadosCasadiOcp:
             index_map['u_in_w'].append(list(range(offset, offset + dims.nu)))
             offset += dims.nu
             # add parameters
-            p0_list.append(ocp.parameter_values)
+            p_list.append(ocp.parameter_values)
             index_map['p_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np)))
             offset_p += dims.np
         ## terminal stage
@@ -163,10 +163,10 @@ class AcadosCasadiOcp:
         index_map['x_in_w'].append(list(range(offset, offset + dims.nx)))
         offset += dims.nx
         # add parameters
-        p0_list.append(ocp.parameter_values)
+        p_list.append(ocp.parameter_values)
         index_map['p_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np)))
         offset_p += dims.np
-        p0_list.append(ocp.p_global_values)
+        p_list.append(ocp.p_global_values)
         index_map['p_global_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np_global)))
         offset_p += dims.np_global
 
@@ -369,12 +369,12 @@ class AcadosCasadiOcp:
         nlp = {"x": w, "p": p_nlp, "g": ca.vertcat(*g), "f": nlp_cost}
         bounds = {"lbx": lbw, "ubx": ubw, "lbg": ca.vertcat(*lbg), "ubg": ca.vertcat(*ubg)}
         w0 = np.concatenate(w0_list)
-        p0 = np.concatenate(p0_list)
+        p = np.concatenate(p_list)
 
         self.__nlp = nlp
         self.__bounds = bounds
         self.__w0 = w0
-        self.__p0 = p0
+        self.__p = p
         self.__index_map = index_map
         self.__nlp_hess_l_custom = nlp_hess_l_custom
         self.__hess_approx_expr = hess_l
@@ -394,11 +394,11 @@ class AcadosCasadiOcp:
         return self.__w0
 
     @property
-    def p0(self):
+    def p(self):
         """
         Default initial guess for parameter vector p_nlp for given NLP.
         """
-        return self.__p0
+        return self.__p
     
     @property
     def bounds(self):
@@ -451,7 +451,7 @@ class AcadosCasadiOcpSolver:
         self.casadi_nlp = casadi_nlp_obj.nlp
         self.bounds = casadi_nlp_obj.bounds
         self.w0 = casadi_nlp_obj.w0
-        self.p0 = casadi_nlp_obj.p0
+        self.p = casadi_nlp_obj.p
         self.index_map = casadi_nlp_obj.index_map
         self.nlp_hess_l_custom = casadi_nlp_obj.nlp_hess_l_custom
 
@@ -484,7 +484,7 @@ class AcadosCasadiOcpSolver:
 
         :return: status of the solver
         """
-        self.nlp_sol = self.casadi_solver(x0=self.w0, p = self.p0,
+        self.nlp_sol = self.casadi_solver(x0=self.w0, p=self.p,
                                           lam_g0=self.lam_g0, lam_x0=self.lam_x0,
                                           lbx=self.bounds['lbx'], ubx=self.bounds['ubx'],
                                           lbg=self.bounds['lbg'], ubg=self.bounds['ubg']
@@ -530,6 +530,8 @@ class AcadosCasadiOcpSolver:
             return self.nlp_sol_w[self.index_map['u_in_w'][stage]].flatten()
         elif field == 'pi':
             return -self.nlp_sol_lam_g[self.index_map['pi_in_lam_g'][stage]].flatten()
+        elif field == 'p':
+            return self.p[self.index_map['p_in_p_nlp'][stage]].flatten()
         elif field == 'lam':
             if stage == 0:
                 bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]]
@@ -571,7 +573,7 @@ class AcadosCasadiOcpSolver:
         dims = self.ocp.dims
         result = []
 
-        if field_ in ['x', 'lam', 'sl', 'su']:
+        if field_ in ['x', 'lam', 'sl', 'su', 'p']:
             for i in range(dims.N+1):
                 result.append(self.get(i, field_))
             return np.concatenate(result)
@@ -680,7 +682,7 @@ class AcadosCasadiOcpSolver:
             raise NotImplementedError()
 
     def get_cost(self) -> float:
-        raise NotImplementedError()
+        return self.nlp_sol['f'].full().item()
 
     def set(self, stage: int, field: str, value_: np.ndarray):
         """
@@ -699,7 +701,7 @@ class AcadosCasadiOcpSolver:
         elif field == 'pi':
             self.lam_g0[self.index_map['pi_in_lam_g'][stage]] = -value_.flatten()
         elif field == 'p':
-            self.p0[self.index_map['p_in_p_nlp'][stage]] = value_.flatten()
+            self.p[self.index_map['p_in_p_nlp'][stage]] = value_.flatten()
         elif field == 'lam':
             if stage == 0:
                 nbx = dims.nbx_0
