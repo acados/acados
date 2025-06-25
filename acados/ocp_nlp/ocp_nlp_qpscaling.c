@@ -315,7 +315,7 @@ static void rescale_solution_constraint_scaling(ocp_nlp_qpscaling_opts *opts, oc
     for (int i = 0; i <= N; i++)
     {
         // copy ux;
-        blasfeo_dveccp(nx[i]+nx[i]+2*ns[i], mem->scaled_qp_out->ux+i, 0, qp_out->ux+i, 0);
+        blasfeo_dveccp(nx[i]+nu[i]+2*ns[i], mem->scaled_qp_out->ux+i, 0, qp_out->ux+i, 0);
 
         if (opts->scale_qp_objective == NO_OBJECTIVE_SCALING)
         {
@@ -656,6 +656,5 @@ void ocp_nlp_qpscaling_rescale_solution(ocp_nlp_qpscaling_dims *dims, void *opts
     }
     // printf("qp_out AFTER RESCALING\n");
     // print_ocp_qp_out(qp_out);
-
     return;
 }
