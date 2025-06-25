@@ -3089,7 +3089,7 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
     // - adjoint call for inequalities as for dynamics
 }
 
-
+#if defined(ACADOS_DEVELOPER_DEBUG_CHECKS)
 static int sanity_check_nlp_slack_nonnegativity(ocp_nlp_dims *dims, ocp_nlp_out *out)
 {
     int N = dims->N;
@@ -3103,14 +3103,12 @@ static int sanity_check_nlp_slack_nonnegativity(ocp_nlp_dims *dims, ocp_nlp_out 
             if (BLASFEO_DVECEL(out->ux+i, nx[i]+nu[i]+jj) < 0.0)
             {
                 printf("found slack value %e < 0 at %d %d\n", BLASFEO_DVECEL(out->ux+i, nx[i]+nu[i]+jj), i, jj);
-
-                return 1;
+                exit(1);
             }
         }
     }
-    return 0;
 }
-
+#endif
 
 /*
 calculates new iterate or trial iterate in 'out_destination' with step 'mem->qp_out',
@@ -3173,7 +3171,9 @@ void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
                     mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out_destination->z+i, 0);
         }
     }
-    assert(sanity_check_nlp_slack_nonnegativity(dims, out_destination) == 0);
+#if defined(ACADOS_DEVELOPER_DEBUG_CHECKS)
+    sanity_check_nlp_slack_nonnegativity(dims, out_destination);
+#endif
 
 }
 
@@ -3260,7 +3260,10 @@ void ocp_nlp_update_variables_sqp_delta_primal_dual(ocp_nlp_config *config, ocp_
                     step->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0);
         }
     }
-    assert(sanity_check_nlp_slack_nonnegativity(dims, out) == 0);
+#if defined(ACADOS_DEVELOPER_DEBUG_CHECKS)
+    sanity_check_nlp_slack_nonnegativity(dims, out);
+#endif
+
 }
 
 
