@@ -99,6 +99,9 @@ def get_tera_exec_path():
     TERA_PATH = os.environ.get('TERA_PATH')
     if not TERA_PATH:
         TERA_PATH = os.path.join(get_acados_path(), 'bin', 't_renderer') + get_binary_ext()
+
+    # convert to absolute path
+    TERA_PATH = os.path.abspath(TERA_PATH)
     return TERA_PATH
 
 
