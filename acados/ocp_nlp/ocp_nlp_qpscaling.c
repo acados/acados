@@ -321,7 +321,10 @@ static void rescale_solution_constraint_scaling(ocp_nlp_qpscaling_opts *opts, oc
         {
             // setup multipliers
             blasfeo_dveccp(2*nb[i]+2*ng[i]+2*ns[i], mem->scaled_qp_out->lam+i, 0, qp_out->lam+i, 0);
-            blasfeo_dveccp(nx[i+1], mem->scaled_qp_out->pi+i, 0, qp_out->pi+i, 0);
+            if (i < N)
+            {
+                blasfeo_dveccp(nx[i+1], mem->scaled_qp_out->pi+i, 0, qp_out->pi+i, 0);
+            }
         }
 
         // scale constraint multipliers
@@ -374,7 +377,9 @@ static void ocp_qp_out_scale_duals(ocp_nlp_qpscaling_memory *mem, ocp_qp_out *qp
     {
         blasfeo_dveccpsc(2*(qp_dim->nb[i]+qp_dim->ng[i]+qp_dim->ns[i]), factor, mem->scaled_qp_out->lam+i, 0, qp_out->lam+i, 0);
         if (i < qp_dim->N)
+        {
             blasfeo_dveccpsc(qp_dim->nx[i+1], factor, mem->scaled_qp_out->pi+i, 0, qp_out->pi+i, 0);
+        }
     }
 }
 
