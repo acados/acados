@@ -574,6 +574,9 @@ void ocp_nlp_qpscaling_scale_constraints(ocp_nlp_qpscaling_dims *dims, void *opt
                 // upper
                 BLASFEO_DVECEL(mem->scaled_qp_in->rqz+i, nu[i]+nx[i]+ns[i]+s_idx) /= scaling_factor;
                 BLASFEO_DVECEL(mem->scaled_qp_in->Z+i, ns[i]+s_idx) /= (scaling_factor*scaling_factor);
+                // scale slack bounds
+                BLASFEO_DVECEL(mem->scaled_qp_in->d+i, 2*(nb[i]+ng[i])+s_idx) *= scaling_factor;
+                BLASFEO_DVECEL(mem->scaled_qp_in->d+i, 2*(nb[i]+ng[i])+ns[i]+s_idx) *= scaling_factor;
             }
 
             // scale lower bound
