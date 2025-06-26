@@ -696,7 +696,13 @@ static double calculate_qp_l1_infeasibility_from_slacks(ocp_nlp_dims *dims, ocp_
             l1_inf += fmax(0.0, tmp2);
         }
     }
-    assert(l1_inf > -opts->nlp_opts->tol_ineq);
+#if defined(ACADOS_DEVELOPER_DEBUG_CHECKS)
+    if (l1_inf < -opts->nlp_opts->tol_ineq)
+    {
+        printf("calculate_qp_l1_infeasibility_from_slacks: got negative l1 infeasibility!\n");
+        exit(1);
+    }
+#endif
     return l1_inf;
 }
 
@@ -782,7 +788,13 @@ static double calculate_qp_l1_infeasibility_manually(ocp_nlp_dims *dims, ocp_nlp
             }
         }
     }
-    assert(l1_inf > -opts->nlp_opts->tol_ineq);
+#if defined(ACADOS_DEVELOPER_DEBUG_CHECKS)
+    if (l1_inf < -opts->nlp_opts->tol_ineq)
+    {
+        printf("calculate_qp_l1_infeasibility_manually: got negative l1 infeasibility!\n");
+        exit(1);
+    }
+#endif
     return l1_inf;
 }
 
