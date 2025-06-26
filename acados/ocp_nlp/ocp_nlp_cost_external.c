@@ -330,6 +330,11 @@ int ocp_nlp_cost_external_model_get(void *config_, void *dims_, void *model_,
     return status;
 }
 
+double *ocp_nlp_cost_external_model_get_scaling_ptr(void *in_)
+{
+    ocp_nlp_cost_external_model *model = in_;
+    return &model->scaling;
+}
 
 /************************************************
  * options
@@ -1091,6 +1096,7 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_, int stage)
     config->model_assign = &ocp_nlp_cost_external_model_assign;
     config->model_set = &ocp_nlp_cost_external_model_set;
     config->model_get = &ocp_nlp_cost_external_model_get;
+    config->model_get_scaling_ptr = &ocp_nlp_cost_external_model_get_scaling_ptr;
     config->opts_calculate_size = &ocp_nlp_cost_external_opts_calculate_size;
     config->opts_assign = &ocp_nlp_cost_external_opts_assign;
     config->opts_initialize_default = &ocp_nlp_cost_external_opts_initialize_default;

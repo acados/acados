@@ -510,6 +510,14 @@ struct blasfeo_dvec *ocp_nlp_cost_conl_memory_get_grad_ptr(void *memory_)
 }
 
 
+double *ocp_nlp_cost_conl_model_get_scaling_ptr(void *in_)
+{
+    ocp_nlp_cost_conl_model *model = in_;
+
+    return &model->scaling;
+}
+
+
 
 struct blasfeo_dvec *ocp_nlp_cost_conl_model_get_y_ref_ptr(void *in_)
 {
@@ -1062,6 +1070,7 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_, int stage)
     config->get_outer_hess_is_diag_ptr = &ocp_nlp_cost_conl_get_outer_hess_is_diag_ptr;
     config->memory_get_W_chol_diag_ptr = &ocp_nlp_cost_conl_memory_get_W_chol_diag_ptr;
     config->model_get_y_ref_ptr = &ocp_nlp_cost_conl_model_get_y_ref_ptr;
+    config->model_get_scaling_ptr = &ocp_nlp_cost_conl_model_get_scaling_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_cost_conl_memory_set_ux_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_cost_conl_memory_set_z_alg_ptr;
     config->memory_set_dzdux_tran_ptr = &ocp_nlp_cost_conl_memory_set_dzdux_tran_ptr;
