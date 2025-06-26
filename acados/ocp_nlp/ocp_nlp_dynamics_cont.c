@@ -845,7 +845,25 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
         blasfeo_dveccp(nx1, mem->pi, 0, &mem->adj, nu+nx);
     }
 
-    // hessian
+    /* Hessian */
+    int cost_computation;
+    sim_opts_get(config->sim_solver, opts->sim_solver, "cost_computation", &cost_computation);
+    if (cost_computation > 0)
+    {
+        // NOTE: add cost hessian here; fun and gradient need slack component added in cost module
+        struct blasfeo_dmat *cost_hess;
+        config->sim_solver->memory_get(config->sim_solver, work->sim_in->dims,
+                            mem->sim_solver, "cost_hess", &cost_hess);
+        // printf("dynamics: RSQrq before cost contribution\n");
+        // blasfeo_print_exp_dmat(nx+nu, nx+nu, mem->RSQrq, 0, 0);
+        blasfeo_dgecpsc(nx+nu, nx+nu, model->T, cost_hess, 0, 0, mem->RSQrq, 0, 0);
+
+        // printf("dynamics: cost contribution\n");
+        // blasfeo_print_exp_dmat(nx+nu, nx+nu, cost_hess, 0, 0);
+        // printf("dynamics: RSQrq after cost contribution\n");
+        // blasfeo_print_exp_dmat(nx+nu, nx+nu, mem->RSQrq, 0, 0);
+    }
+
     if (opts->compute_hess)
     {
 
@@ -862,23 +880,6 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
         blasfeo_dgead(nx+nu, nx+nu, 1.0, &work->hess, 0, 0, mem->RSQrq, 0, 0);
     }
 
-    int cost_computation;
-    sim_opts_get(config->sim_solver, opts->sim_solver, "cost_computation", &cost_computation);
-    if (cost_computation > 0)
-    {
-        // NOTE: add cost hessian here; fun and gradient need slack component added in cost module
-        struct blasfeo_dmat *cost_hess;
-        config->sim_solver->memory_get(config->sim_solver, work->sim_in->dims,
-                            mem->sim_solver, "cost_hess", &cost_hess);
-        // printf("dynamics: RSQrq before cost contribution\n");
-        // blasfeo_print_exp_dmat(nx+nu, nx+nu, mem->RSQrq, 0, 0);
-        blasfeo_dgead(nx+nu, nx+nu, model->T, cost_hess, 0, 0, mem->RSQrq, 0, 0);
-
-        // printf("dynamics: cost contribution\n");
-        // blasfeo_print_exp_dmat(nx+nu, nx+nu, cost_hess, 0, 0);
-        // printf("dynamics: RSQrq after cost contribution\n");
-        // blasfeo_print_exp_dmat(nx+nu, nx+nu, mem->RSQrq, 0, 0);
-    }
 
     return;
 }

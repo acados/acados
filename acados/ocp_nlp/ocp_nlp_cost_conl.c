@@ -803,7 +803,7 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
         }
         // RSQrq += scaling * tmp_nv_ny * tmp_nv_ny^T
         blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
-                        1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+                        0.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
     }
 
     // slack update gradient

@@ -718,7 +718,7 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
         model->ext_cost_fun_jac->evaluate(model->ext_cost_fun_jac, ext_fun_type_in,
                                             ext_fun_in, ext_fun_type_out, ext_fun_out);
         // custom hessian
-        blasfeo_dgead(nx+nu, nx+nu, model->scaling, &model->numerical_hessian, 0, 0, memory->RSQrq, 0, 0);
+        blasfeo_dgecpsc(nx+nu, nx+nu, model->scaling, &model->numerical_hessian, 0, 0, memory->RSQrq, 0, 0);
     }
     else
     {
@@ -735,7 +735,7 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
                                             ext_fun_in, ext_fun_type_out, ext_fun_out);
 
         // hessian contribution from xu with scaling
-        blasfeo_dgead(nx+nu, nx+nu, model->scaling, &work->tmp_nunx_nunx, 0, 0, memory->RSQrq, 0, 0);
+        blasfeo_dgecpsc(nx+nu, nx+nu, model->scaling, &work->tmp_nunx_nunx, 0, 0, memory->RSQrq, 0, 0);
 
         if (nz > 0)
         {

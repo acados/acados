@@ -2854,22 +2854,23 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
 #endif
     for (int i = 0; i <= N; i++)
     {
-        // init Hessian to 0
-        if (mem->compute_hess)
-        {
-            blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->qp_in->RSQrq+i, 0, 0);
-        }
-
-        if (i < N)
-        {
-            // dynamics
-            config->dynamics[i]->update_qp_matrices(config->dynamics[i], dims->dynamics[i],
-                    in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
-        }
+        // // init Hessian to 0
+        // if (mem->compute_hess)
+        // {
+        //     blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->qp_in->RSQrq+i, 0, 0);
+        // }
+        // NOTE: removed init and directly write cost contribution into Hessian
 
         // cost
         config->cost[i]->update_qp_matrices(config->cost[i], dims->cost[i], in->cost[i],
-                opts->cost[i], mem->cost[i], work->cost[i]);
+            opts->cost[i], mem->cost[i], work->cost[i]);
+
+        // dynamics
+        if (i < N)
+        {
+            config->dynamics[i]->update_qp_matrices(config->dynamics[i], dims->dynamics[i],
+                    in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+        }
 
         // constraints
         config->constraints[i]->update_qp_matrices(config->constraints[i], dims->constraints[i],
