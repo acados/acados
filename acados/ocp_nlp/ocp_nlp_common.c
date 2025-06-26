@@ -1265,6 +1265,25 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->qp_warm_start = 0;
     opts->store_iterates = false;
 
+    opts->warm_start_first_qp = false;
+    opts->warm_start_first_qp_from_nlp = false;
+    opts->eval_residual_at_max_iter = false;
+
+    // tolerances
+    opts->tol_stat = 1e-8;
+    opts->tol_eq   = 1e-8;
+    opts->tol_ineq = 1e-8;
+    opts->tol_comp = 1e-8;
+    opts->tol_unbounded = -1e10;
+    opts->tol_min_step_norm = 1e-12;
+
+    // overwrite default submodules opts
+    // qp tolerance
+    qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_stat", &opts->tol_stat);
+    qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_eq", &opts->tol_eq);
+    qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_ineq", &opts->tol_ineq);
+    qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_comp", &opts->tol_comp);
+
     return;
 }
 
@@ -1516,6 +1535,54 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             bool* with_anderson_acceleration = (bool *) value;
             opts->with_anderson_acceleration = *with_anderson_acceleration;
+        }
+        else if (!strcmp(field, "tol_stat"))
+        {
+            double* tol_stat = (double *) value;
+            opts->tol_stat = *tol_stat;
+            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
+            config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_stat", value);
+        }
+        else if (!strcmp(field, "tol_eq"))
+        {
+            double* tol_eq = (double *) value;
+            opts->tol_eq = *tol_eq;
+            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
+            config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_eq", value);
+        }
+        else if (!strcmp(field, "tol_ineq"))
+        {
+            double* tol_ineq = (double *) value;
+            opts->tol_ineq = *tol_ineq;
+            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
+            config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_ineq", value);
+        }
+        else if (!strcmp(field, "tol_comp"))
+        {
+            double* tol_comp = (double *) value;
+            opts->tol_comp = *tol_comp;
+            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
+            config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_comp", value);
+        }
+        else if (!strcmp(field, "tol_min_step_norm"))
+        {
+            double* tol_min_step_norm = (double *) value;
+            opts->tol_min_step_norm = *tol_min_step_norm;
+        }
+        else if (!strcmp(field, "warm_start_first_qp"))
+        {
+            bool* warm_start_first_qp = (bool *) value;
+            opts->warm_start_first_qp = *warm_start_first_qp;
+        }
+        else if (!strcmp(field, "warm_start_first_qp_from_nlp"))
+        {
+            bool* warm_start_first_qp_from_nlp = (bool *) value;
+            opts->warm_start_first_qp_from_nlp = *warm_start_first_qp_from_nlp;
+        }
+        else if (!strcmp(field, "eval_residual_at_max_iter"))
+        {
+            bool* eval_residual_at_max_iter = (bool *) value;
+            opts->eval_residual_at_max_iter = *eval_residual_at_max_iter;
         }
         else
         {
