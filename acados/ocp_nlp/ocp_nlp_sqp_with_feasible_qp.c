@@ -897,13 +897,10 @@ static void set_pointers_for_hessian_evaluation(ocp_nlp_config *config,
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
+    // init constraint Hessians to 0
     for (int i = 0; i <= N; i++)
     {
-        // init Hessians to 0
-
-        // TODO: avoid setting qp_in->RSQ to zero in ocp_nlp_approximate_qp_matrices?
         blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->RSQ_constr+i, 0, 0);
-        blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->RSQ_cost+i, 0, 0);
     }
 
     for (int i = 0; i < N; i++)
