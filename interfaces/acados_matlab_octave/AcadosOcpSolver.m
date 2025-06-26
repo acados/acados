@@ -179,6 +179,16 @@ classdef AcadosOcpSolver < handle
             status = obj.t_ocp.custom_update(data);
         end
 
+        function value = get_qp_scaling_constraints(obj, stage)
+            % returns the qp scaling constraints for the given stage
+            value = obj.t_ocp.get('qpscaling_constr', stage);
+        end
+
+        function value = get_qp_scaling_objective(obj)
+            % returns the qp scaling objective
+            value = obj.t_ocp.get('qpscaling_obj');
+        end
+
         function value = get(obj, field, varargin)
 
             if strcmp('hess_block', field)

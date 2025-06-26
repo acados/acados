@@ -55,6 +55,9 @@ class AcadosCasadiOcp:
             # indices of variables within w
             'x_in_w': [],
             'u_in_w': [],
+            # indices of parameters within p_nlp
+            'p_in_p_nlp': [],
+            'p_global_in_p_nlp': [],
             # indices of state bounds within lam_x(lam_w) in casadi formulation
             'lam_bx_in_lam_w':[],
             # indices of control bounds within lam_x(lam_w) in casadi formulation
@@ -92,7 +95,7 @@ class AcadosCasadiOcp:
             raise NotImplementedError("CasADi NLP formulation not implemented for models with algebraic variables (z).")
 
         # parameters
-        ptraj_node = [ca_symbol(f'p{i}', dims.np, 1) for i in range(N_horizon)]
+        ptraj_node = [ca_symbol(f'p{i}', dims.np, 1) for i in range(N_horizon+1)]
 
         # setup state and control bounds
         lb_xtraj_node = [-np.inf * ca.DM.ones((dims.nx, 1)) for _ in range(N_horizon+1)]
@@ -128,7 +131,9 @@ class AcadosCasadiOcp:
         lbw_list = []
         ubw_list = []
         w0_list = []
+        p_list = []
         offset = 0
+        offset_p = 0
         x_guess = ocp.constraints.x0 if ocp.constraints.has_x0 else np.zeros((dims.nx,))
         for i in range(N_horizon):
             # add x
@@ -145,6 +150,10 @@ class AcadosCasadiOcp:
             w0_list.append(np.zeros((dims.nu,)))
             index_map['u_in_w'].append(list(range(offset, offset + dims.nu)))
             offset += dims.nu
+            # add parameters
+            p_list.append(ocp.parameter_values)
+            index_map['p_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np)))
+            offset_p += dims.np
         ## terminal stage
         # add x
         w_sym_list.append(xtraj_node[-1])
@@ -153,6 +162,13 @@ class AcadosCasadiOcp:
         w0_list.append(x_guess)
         index_map['x_in_w'].append(list(range(offset, offset + dims.nx)))
         offset += dims.nx
+        # add parameters
+        p_list.append(ocp.parameter_values)
+        index_map['p_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np)))
+        offset_p += dims.np
+        p_list.append(ocp.p_global_values)
+        index_map['p_global_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np_global)))
+        offset_p += dims.np_global
 
         nw = offset  # number of primal variables
 
@@ -167,8 +183,8 @@ class AcadosCasadiOcp:
         if solver_options.integrator_type == "DISCRETE":
             f_discr_fun = ca.Function('f_discr_fun', [model.x, model.u, model.p, model.p_global], [model.disc_dyn_expr])
         elif solver_options.integrator_type == "ERK":
-            ca_expl_ode = ca.Function('ca_expl_ode', [model.x, model.u], [model.f_expl_expr])
-                                    #   , model.p, model.p_global]
+            para = ca.vertcat(model.u, model.p, model.p_global)
+            ca_expl_ode = ca.Function('ca_expl_ode', [model.x, para], [model.f_expl_expr])
             f_discr_fun = ca.simpleRK(ca_expl_ode, solver_options.sim_method_num_steps[0], solver_options.sim_method_num_stages[0])
         else:
             raise NotImplementedError(f"Integrator type {solver_options.integrator_type} not supported.")
@@ -203,7 +219,8 @@ class AcadosCasadiOcp:
                 if solver_options.integrator_type == "DISCRETE":
                     dyn_equality = xtraj_node[i+1] - f_discr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
                 elif solver_options.integrator_type == "ERK":
-                    dyn_equality = xtraj_node[i+1] - f_discr_fun(xtraj_node[i], utraj_node[i], solver_options.time_steps[i])
+                    para = ca.vertcat(utraj_node[i], ptraj_node[i], model.p_global)
+                    dyn_equality = xtraj_node[i+1] - f_discr_fun(xtraj_node[i], para, solver_options.time_steps[i])
                 g.append(dyn_equality)
                 lbg.append(np.zeros((dims.nx, 1)))
                 ubg.append(np.zeros((dims.nx, 1)))
@@ -352,10 +369,12 @@ class AcadosCasadiOcp:
         nlp = {"x": w, "p": p_nlp, "g": ca.vertcat(*g), "f": nlp_cost}
         bounds = {"lbx": lbw, "ubx": ubw, "lbg": ca.vertcat(*lbg), "ubg": ca.vertcat(*ubg)}
         w0 = np.concatenate(w0_list)
+        p = np.concatenate(p_list)
 
         self.__nlp = nlp
         self.__bounds = bounds
         self.__w0 = w0
+        self.__p = p
         self.__index_map = index_map
         self.__nlp_hess_l_custom = nlp_hess_l_custom
         self.__hess_approx_expr = hess_l
@@ -374,6 +393,13 @@ class AcadosCasadiOcp:
         """
         return self.__w0
 
+    @property
+    def p_nlp_values(self):
+        """
+        Default parameter vector p_nlp in the form of [p_0,..., p_N, p_global] for given NLP.
+        """
+        return self.__p
+    
     @property
     def bounds(self):
         """
@@ -425,6 +451,7 @@ class AcadosCasadiOcpSolver:
         self.casadi_nlp = casadi_nlp_obj.nlp
         self.bounds = casadi_nlp_obj.bounds
         self.w0 = casadi_nlp_obj.w0
+        self.p = casadi_nlp_obj.p_nlp_values
         self.index_map = casadi_nlp_obj.index_map
         self.nlp_hess_l_custom = casadi_nlp_obj.nlp_hess_l_custom
 
@@ -457,7 +484,7 @@ class AcadosCasadiOcpSolver:
 
         :return: status of the solver
         """
-        self.nlp_sol = self.casadi_solver(x0=self.w0,
+        self.nlp_sol = self.casadi_solver(x0=self.w0, p=self.p,
                                           lam_g0=self.lam_g0, lam_x0=self.lam_x0,
                                           lbx=self.bounds['lbx'], ubx=self.bounds['ubx'],
                                           lbg=self.bounds['lbg'], ubg=self.bounds['ubg']
@@ -489,7 +516,7 @@ class AcadosCasadiOcpSolver:
         Get the last solution of the solver.
 
         :param stage: integer corresponding to shooting node
-        :param field: string in ['x', 'u', 'pi', 'lam']
+        :param field: string in ['x', 'u', 'pi', 'p', 'lam']
 
         """
         if not isinstance(stage, int):
@@ -503,6 +530,8 @@ class AcadosCasadiOcpSolver:
             return self.nlp_sol_w[self.index_map['u_in_w'][stage]].flatten()
         elif field == 'pi':
             return -self.nlp_sol_lam_g[self.index_map['pi_in_lam_g'][stage]].flatten()
+        elif field == 'p':
+            return self.p[self.index_map['p_in_p_nlp'][stage]].flatten()
         elif field == 'lam':
             if stage == 0:
                 bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]]
@@ -534,7 +563,7 @@ class AcadosCasadiOcpSolver:
         """
         Get concatenation of all stages of last solution of the solver.
 
-        :param field: string in ['x', 'u', 'pi', 'lam', 'z', 'sl', 'su']
+        :param field: string in ['x', 'u', 'pi', 'lam', 'p', 'p_global', 'z', 'sl', 'su']
 
         .. note:: The parameter 'p_global' has no stage-wise structure and is processed in a memory saving manner by default. \n
                 In order to read the 'p_global' parameter, the option 'save_p_global' must be set to 'True' upon instantiation. \n
@@ -544,7 +573,7 @@ class AcadosCasadiOcpSolver:
         dims = self.ocp.dims
         result = []
 
-        if field_ in ['x', 'lam', 'sl', 'su']:
+        if field_ in ['x', 'lam', 'sl', 'su', 'p']:
             for i in range(dims.N+1):
                 result.append(self.get(i, field_))
             return np.concatenate(result)
@@ -552,6 +581,8 @@ class AcadosCasadiOcpSolver:
             for i in range(dims.N):
                 result.append(self.get(i, field_))
             return np.concatenate(result)
+        elif field_ == 'p_global':
+            return self.p[self.index_map['p_global_in_p_nlp']].flatten()
         # casadi variables. TODO: maybe remove this.
         elif field_ == 'lam_x':
             return self.nlp_sol_lam_x.flatten()
@@ -653,7 +684,7 @@ class AcadosCasadiOcpSolver:
             raise NotImplementedError()
 
     def get_cost(self) -> float:
-        raise NotImplementedError()
+        return self.nlp_sol['f'].full().item()
 
     def set(self, stage: int, field: str, value_: np.ndarray):
         """
@@ -671,6 +702,8 @@ class AcadosCasadiOcpSolver:
             self.w0[self.index_map['u_in_w'][stage]] = value_.flatten()
         elif field == 'pi':
             self.lam_g0[self.index_map['pi_in_lam_g'][stage]] = -value_.flatten()
+        elif field == 'p':
+            self.p[self.index_map['p_in_p_nlp'][stage]] = value_.flatten()
         elif field == 'lam':
             if stage == 0:
                 nbx = dims.nbx_0

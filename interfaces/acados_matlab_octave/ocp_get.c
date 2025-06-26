@@ -109,6 +109,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                                strcmp(field, "qp_zl") &&
                                strcmp(field, "qp_zu") &&
                                strcmp(field, "qp_Zl") &&
+                               strcmp(field, "qpscaling_obj") &&
+                               strcmp(field, "qpscaling_constr") &&
                                strcmp(field, "qp_Zu"))
         {
             sprintf(buffer, "\nocp_get: invalid stage index, got stage = %d = N, field = %s, field not available at final shooting node\n", stage, field);
@@ -473,15 +475,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ocp_nlp_get(solver, "status", &status);
         *mat_ptr = (double) status;
     }
-    else if (!strcmp(field, "sqp_iter") || !strcmp(field, "nlp_iter"))
+    else if (!strcmp(field, "sqp_iter") || !strcmp(field, "nlp_iter") || !strcmp(field, "qpscaling_status"))  // int fields
     {
         plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
         double *mat_ptr = mxGetPr( plhs[0] );
-        int nlp_iter;
-        ocp_nlp_get(solver, "nlp_iter", &nlp_iter);
-        *mat_ptr = (double) nlp_iter;
+        int value;
+        ocp_nlp_get(solver, field, &value);
+        *mat_ptr = (double) value;
     }
-    else if (!strcmp(field, "time_tot") || !strcmp(field, "time_lin") || !strcmp(field, "time_glob") || !strcmp(field, "time_reg") || !strcmp(field, "time_qp_sol") || !strcmp(field, "time_qp_solver_call") || !strcmp(field, "time_qp_solver") || !strcmp(field, "time_qp_xcond") || !strcmp(field, "time_sim") || !strcmp(field, "time_sim_la") || !strcmp(field, "time_sim_ad"))
+    else if (!strcmp(field, "time_tot") || !strcmp(field, "time_lin") || !strcmp(field, "time_glob") || !strcmp(field, "time_reg") || !strcmp(field, "time_qp_sol") || !strcmp(field, "time_qp_solver_call") || !strcmp(field, "time_qp_solver") || !strcmp(field, "time_qp_xcond") || !strcmp(field, "time_sim") || !strcmp(field, "time_sim_la") || !strcmp(field, "time_sim_ad") || !strcmp(field, "time_qp_scaling"))
     {
         plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
         double *mat_ptr = mxGetPr( plhs[0] );
@@ -521,6 +523,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         plhs[0] = mxCreateNumericMatrix(nlp_iter, 1, mxDOUBLE_CLASS, mxREAL);
         double *mat_ptr = mxGetPr( plhs[0] );
         ocp_nlp_get(solver, field, mat_ptr);
+    }
+    else if (!strcmp(field, "qpscaling_constr"))
+    {
+        int size = ocp_nlp_dims_get_from_attr(config, dims, out, stage, "qpscaling_constr");
+        plhs[0] = mxCreateNumericMatrix(size, 1, mxDOUBLE_CLASS, mxREAL);
+        double *mat_ptr = mxGetPr( plhs[0] );
+        ocp_nlp_get_at_stage(solver, stage, field, mat_ptr);
+    }
+    else if (!strcmp(field, "qpscaling_obj"))
+    {
+        int size = 1;
+        plhs[0] = mxCreateNumericMatrix(size, 1, mxDOUBLE_CLASS, mxREAL);
+        double *mat_ptr = mxGetPr( plhs[0] );
+        ocp_nlp_get_at_stage(solver, stage, field, mat_ptr);
     }
     else if (!strcmp(field, "residuals"))
     {

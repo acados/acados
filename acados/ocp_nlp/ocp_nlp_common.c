@@ -182,6 +182,12 @@ static acados_size_t ocp_nlp_dims_calculate_size_self(int N)
     // regularization
     size += ocp_nlp_reg_dims_calculate_size(N);
 
+    // qpscaling
+    size += ocp_nlp_qpscaling_dims_calculate_size(N);
+
+    // relaxed_qpscaling
+    size += ocp_nlp_qpscaling_dims_calculate_size(N);
+
     size += sizeof(ocp_nlp_reg_dims);
 
     size += 8;  // initial align
@@ -277,16 +283,13 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     dims->regularize = ocp_nlp_reg_dims_assign(N, c_ptr);
     c_ptr += ocp_nlp_reg_dims_calculate_size(N);
 
-    /* initialize qp_solver dimensions */
-//    dims->qp_solver->N = N;
-//    for (int i = 0; i <= N; i++)
-//    {
-        // TODO(dimitris): values below are needed for reformulation of QP when soft constraints
-        //   are not supported. Make this a bit more transparent as it clushes with nbx/nbu above.
-//        dims->qp_solver->nsbx[i] = 0;
-//        dims->qp_solver->nsbu[i] = 0;
-//        dims->qp_solver->nsg[i] = 0;
-//    }
+    // qpscaling
+    dims->qpscaling = ocp_nlp_qpscaling_dims_assign(N, c_ptr);
+    c_ptr += ocp_nlp_qpscaling_dims_calculate_size(N);
+
+    // relaxed_qpscaling
+    dims->relaxed_qpscaling = ocp_nlp_qpscaling_dims_assign(N, c_ptr);
+    c_ptr += ocp_nlp_qpscaling_dims_calculate_size(N);
 
     // N
     dims->N = N;
@@ -1083,6 +1086,7 @@ acados_size_t ocp_nlp_opts_calculate_size(void *config_, void *dims_)
     size += qp_solver->opts_calculate_size(qp_solver, dims->qp_solver);
 
     size += config->regularize->opts_calculate_size();
+    size += ocp_nlp_qpscaling_opts_calculate_size();
 
     size += config->globalization->opts_calculate_size(config, dims);
 
@@ -1148,6 +1152,9 @@ void *ocp_nlp_opts_assign(void *config_, void *dims_, void *raw_memory)
 
     opts->regularize = config->regularize->opts_assign(c_ptr);
     c_ptr += config->regularize->opts_calculate_size();
+
+    opts->qpscaling = ocp_nlp_qpscaling_opts_assign(c_ptr);
+    c_ptr += ocp_nlp_qpscaling_opts_calculate_size();
 
     opts->globalization = config->globalization->opts_assign(config, dims, c_ptr);
     c_ptr += config->globalization->opts_calculate_size(config, dims);
@@ -1223,6 +1230,9 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
 
     // globalization
     globalization->opts_initialize_default(globalization, dims, opts->globalization);
+
+    // qpscaling
+    ocp_nlp_qpscaling_opts_initialize_default(dims->qpscaling, opts->qpscaling);
 
     // dynamics
     for (int i = 0; i < N; i++)
@@ -1323,6 +1333,10 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
     {
         config->regularize->opts_set(config->regularize, opts->regularize,
                                     field+module_length+1, value);
+    }
+    else if ( ptr_module!=NULL && (!strcmp(ptr_module, "qpscaling")) )
+    {
+        ocp_nlp_qpscaling_opts_set(opts->qpscaling, field+module_length+1, value);
     }
     else if ( ptr_module!=NULL && (!strcmp(ptr_module, "globalization")) )
     {
@@ -1598,6 +1612,9 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
     // regularization
     size += config->regularize->memory_calculate_size(config->regularize, dims->regularize, opts->regularize);
 
+    // qpscaling
+    size += ocp_nlp_qpscaling_memory_calculate_size(dims->qpscaling, opts->qpscaling, dims->qp_solver->orig_dims);
+
     // globalization
     size += config->globalization->memory_calculate_size(config->globalization, dims);
 
@@ -1772,7 +1789,7 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     c_ptr += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
     // regularization
-    mem->regularize = config->regularize->memory_assign(config->regularize, dims->regularize,
+    mem->regularize_mem = config->regularize->memory_assign(config->regularize, dims->regularize,
                                                             opts->regularize, c_ptr);
     c_ptr += config->regularize->memory_calculate_size(config->regularize, dims->regularize,
                                                        opts->regularize);
@@ -1780,6 +1797,10 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     // globalization
     mem->globalization = config->globalization->memory_assign(config->globalization, dims, c_ptr);
     c_ptr += config->globalization->memory_calculate_size(config->globalization, dims);
+
+    // qpscaling
+    mem->qpscaling = ocp_nlp_qpscaling_memory_assign(dims->qpscaling, opts->qpscaling, dims->qp_solver->orig_dims, c_ptr);
+    c_ptr += ocp_nlp_qpscaling_memory_calculate_size(dims->qpscaling, opts->qpscaling, dims->qp_solver->orig_dims);
 
     int i;
     // dynamics
@@ -2698,10 +2719,6 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
     // set pointer to dmask in qp_in to dmask in nlp_in
     nlp_mem->qp_in->d_mask = nlp_in->dmask;
 
-    // alias to regularize memory
-    ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, nlp_mem->regularize, nlp_mem->qp_in);
-    ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, nlp_mem->regularize, nlp_mem->qp_out);
-
     // copy sampling times into dynamics model
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp for nowait
@@ -3299,7 +3316,6 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
         dims->nh_total += tmp;
     }
 
-
     // precompute
     for (ii = 0; ii < N; ii++)
     {
@@ -3329,6 +3345,15 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
         for (ii=0; ii<=N; ii++)
             config->cost[ii]->opts_set(config->cost[ii], opts->cost[ii], "compute_hess", &mem->compute_hess);
     }
+
+    ocp_nlp_qpscaling_precompute(dims->qpscaling, opts->qpscaling, mem->qpscaling, mem->qp_in, mem->qp_out);
+
+    // alias from qp scaling memory (has to be after qpscaling precompute)
+    ocp_nlp_qpscaling_memory_get(dims->qpscaling, mem->qpscaling, "scaled_qp_in", 0, &mem->scaled_qp_in);
+    ocp_nlp_qpscaling_memory_get(dims->qpscaling, mem->qpscaling, "scaled_qp_out", 0, &mem->scaled_qp_out);
+    // alias to regularize memory
+    ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, mem->regularize_mem, mem->scaled_qp_in);
+    ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, mem->regularize_mem, mem->scaled_qp_out);
 
     return status;
 }
@@ -3706,7 +3731,7 @@ int ocp_nlp_common_setup_qp_matrices_and_factorize(ocp_nlp_config *config, ocp_n
     config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "lam0_min", &tmp_double);
 
     // QP solve
-    qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, NULL, NULL);
+    qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, NULL, NULL, NULL, NULL);
 
     // reset QP solver settings
     qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &nlp_opts->qp_warm_start);
@@ -3973,7 +3998,7 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *nlp_opts,
                      ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work,
-                     bool precondensed_lhs, ocp_qp_in *qp_in_, ocp_qp_out *qp_out_,
+                     bool precondensed_lhs, ocp_qp_in *scaled_qp_in_, ocp_qp_in *qp_in_, ocp_qp_out *scaled_qp_out_, ocp_qp_out *qp_out_,
                      ocp_qp_xcond_solver *xcond_solver)
 {
     acados_timer timer;
@@ -4001,7 +4026,7 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
         qp_work = xcond_solver->work;
     }
 
-    // qp_in_, qp_out_ are "optional", if NULL is given use nlp_mem->qp_in, nlp_mem->qp_out
+    // qp_in_, qp_out_, scaled_qp_out_ are "optional", if NULL is given use nlp_mem->scaled_qp_in, nlp_mem->qp_out, nlp_mem->scaled_qp_out
     ocp_qp_in *qp_in;
     if (qp_in_ == NULL)
     {
@@ -4010,8 +4035,18 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
     else
     {
         qp_in = qp_in_;
-        ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, nlp_mem->regularize, qp_in);
     }
+
+    ocp_qp_in *scaled_qp_in;
+    if (scaled_qp_in_ == NULL)
+    {
+        scaled_qp_in = nlp_mem->scaled_qp_in;
+    }
+    else
+    {
+        scaled_qp_in = scaled_qp_in_;
+    }
+    ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, scaled_qp_in);
 
     ocp_qp_out *qp_out = nlp_mem->qp_out;
     if (qp_out_ == NULL)
@@ -4021,8 +4056,18 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
     else
     {
         qp_out = qp_out_;
-        ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, nlp_mem->regularize, qp_out);
     }
+
+    ocp_qp_out *scaled_qp_out;
+    if (scaled_qp_out_ == NULL)
+    {
+        scaled_qp_out = nlp_mem->scaled_qp_out;
+    }
+    else
+    {
+        scaled_qp_out = scaled_qp_out_;
+    }
+    ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, scaled_qp_out);
 
     ocp_nlp_timings *nlp_timings = nlp_mem->nlp_timings;
 
@@ -4034,12 +4079,12 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
     if (precondensed_lhs)
     {
         qp_status = qp_solver->condense_rhs_and_solve(qp_solver, qp_dims,
-                qp_in, qp_out, qp_opts, qp_mem, qp_work);
+                scaled_qp_in, scaled_qp_out, qp_opts, qp_mem, qp_work);
     }
     else
     {
         qp_status = qp_solver->evaluate(qp_solver, qp_dims,
-                qp_in, qp_out, qp_opts, qp_mem, qp_work);
+                scaled_qp_in, scaled_qp_out, qp_opts, qp_mem, qp_work);
     }
     // add qp timings
     nlp_timings->time_qp_sol += acados_toc(&timer);
@@ -4052,17 +4097,21 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
     // compute correct dual solution in case of Hessian regularization
     acados_tic(&timer);
     config->regularize->correct_dual_sol(config->regularize, dims->regularize,
-                                            nlp_opts->regularize, nlp_mem->regularize);
+                                            nlp_opts->regularize, nlp_mem->regularize_mem);
     nlp_timings->time_reg += acados_toc(&timer);
 
-    // reset regularize pointers if necessary
-    if (qp_in_ != NULL)
+    acados_tic(&timer);
+    ocp_nlp_qpscaling_rescale_solution(dims->qpscaling, nlp_opts->qpscaling, nlp_mem->qpscaling, qp_in, qp_out);
+    nlp_timings->time_qpscaling += acados_toc(&timer);
+
+    // reset regularize pointers if necessary // TODO: check how to do this best with qpscaling
+    if (scaled_qp_in_ != NULL)
     {
-        ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, nlp_mem->regularize, nlp_mem->qp_in);
+        ocp_nlp_regularize_set_qp_in_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, nlp_mem->scaled_qp_in);
     }
-    if (qp_out_ != NULL)
+    if (scaled_qp_out_ != NULL)
     {
-        ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, nlp_mem->regularize, nlp_mem->qp_out);
+        ocp_nlp_regularize_set_qp_out_ptrs(config->regularize, dims->regularize, nlp_mem->regularize_mem, nlp_mem->scaled_qp_out);
     }
 
     return qp_status;
@@ -4164,6 +4213,10 @@ void ocp_nlp_timings_get(ocp_nlp_config *config, ocp_nlp_timings *timings, const
     else if (!strcmp("time_qp_solver", field) || !strcmp("time_qp_solver_call", field))
     {
         *value = timings->time_qp_solver_call;
+    }
+    else if (!strcmp("time_qpscaling", field))
+    {
+        *value = timings->time_qpscaling;
     }
     else if (!strcmp("time_qp_xcond", field))
     {
@@ -4276,6 +4329,10 @@ void ocp_nlp_memory_get(ocp_nlp_config *config, ocp_nlp_memory *nlp_mem, const c
         config->qp_solver->memory_get(config->qp_solver,
             nlp_mem->qp_solver_mem, "tau_iter", return_value_);
     }
+    else if (!strcmp("qpscaling_status", field))
+    {
+        ocp_nlp_qpscaling_memory_get(NULL, nlp_mem->qpscaling, "status", 0, return_value_);
+    }
     else if (!strcmp("res_stat", field))
     {
         double *value = return_value_;
@@ -4346,6 +4403,7 @@ void ocp_nlp_timings_reset(ocp_nlp_timings *timings)
     timings->time_qp_sol = 0.0;
     timings->time_qp_solver_call = 0.0;
     timings->time_qp_xcond = 0.0;
+    timings->time_qpscaling = 0.0;
     timings->time_lin = 0.0;
     timings->time_reg = 0.0;
     timings->time_glob = 0.0;
