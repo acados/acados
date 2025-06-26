@@ -363,7 +363,7 @@ add_test(NAME python_pendulum_ocp_example_cmake
     add_test(NAME python_convex_ocp_with_onesided_constraints
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/convex_ocp_with_onesided_constraints
         python main_convex_onesided.py)
-    
+
     add_test(NAME python_casadi_get_set_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/casadi_tests
         python test_casadi_get_set.py)
@@ -447,6 +447,10 @@ add_test(NAME python_pendulum_ocp_example_cmake
     # TODO use unique object file names to allow full parallization, and remove  forced serialization section below
     # Directory zoRO_example
     set_tests_properties(python_fast_zoro_example PROPERTIES DEPENDS python_zoro_diff_drive_example)
+
+    # casadi_tests
+    set_tests_properties(python_casadi_get_set_example PROPERTIES DEPENDS test_casadi_p_in_constraint_and_cost)
+    set_tests_properties(test_casadi_p_in_constraint_and_cost PROPERTIES DEPENDS test_casadi_parametric)
 
     # Directory getting_started
     set_tests_properties(python_pendulum_sim_example PROPERTIES DEPENDS python_pendulum_ocp_example)

@@ -57,8 +57,9 @@ Currently, Python >= 3.8 is tested.
 
 5. Optional: Can be done automatically through the interface:
     In order to be able to successfully render C code templates, you need to download the `t_renderer` binaries for your platform from <https://github.com/acados/tera_renderer/releases/> and place them in `<acados_root>/bin`
-    Please strip the version and platform from the binaries (e.g.`t_renderer-v0.0.34 -> t_renderer`).
-    Notice that you might need to make `t_renderer` executable.
+    Please strip the version, platform and architecture from the binaries (e.g.`t_renderer-V-P-A -> t_renderer`).
+    On Linux/MacOS, you might need to make `t_renderer` executable.
+    On Windows, make sure you append `.exe` extension to the end (`t_renderer.exe`).
     Run `export ACADOS_SOURCE_DIR=<acados_root>` such that the location of acados will be known to the Python package at run time.
 
 6. Optional: Set `acados_lib_path`, `acados_include_path`.

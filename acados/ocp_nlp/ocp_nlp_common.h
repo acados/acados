@@ -336,9 +336,20 @@ typedef struct ocp_nlp_opts
     int ext_qp_res;
     int qp_warm_start;
 
+    bool warm_start_first_qp; // to set qp_warm_start in first iteration
+    bool warm_start_first_qp_from_nlp;  // if True first QP will be initialized using values from NLP iterate, otherwise from previous QP solution.
+    bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
     bool store_iterates; // flag indicating whether intermediate iterates should be stored
 
     bool with_anderson_acceleration;
+
+    // termination tolerances
+    double tol_stat;     // exit tolerance on stationarity condition
+    double tol_eq;       // exit tolerance on equality constraints
+    double tol_ineq;     // exit tolerance on inequality constraints
+    double tol_comp;     // exit tolerance on complementarity condition
+    double tol_unbounded; // exit threshold when objective function seems to be unbounded
+    double tol_min_step_norm; // exit tolerance for small step
 
 } ocp_nlp_opts;
 
