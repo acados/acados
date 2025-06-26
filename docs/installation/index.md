@@ -50,6 +50,7 @@ Adjust these options based on your requirements.
 | `ACADOS_NUM_THREADS`           | Number of threads for OpenMP parallelization within one NLP solver. If not set, `omp_get_max_threads` will be used to determine the number of threads. If multiple solves should be parallelized, e.g. with an `AcadosOcpBatchSolver` or `AcadosSimBatchSolver`, set this to 1. | Not set |
 | `ACADOS_SILENT`                | No console status output                                      | `OFF`             |
 | `ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE` | Print QP inputs and outputs to file in SQP                    | `OFF`             |
+| `ACADOS_DEVELOPER_DEBUG_CHECKS` | Enable developer debug checks                 | `OFF`             |
 | `CMAKE_BUILD_TYPE`             | Build type (e.g., Release, Debug, etc.)                              | `Release`         |
 | `ACADOS_UNIT_TESTS`            | Compile unit tests                                            | `OFF`             |
 | `ACADOS_EXAMPLES`              | Compile C examples                                              | `OFF`             |

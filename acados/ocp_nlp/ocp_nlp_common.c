@@ -3156,6 +3156,26 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
     // - adjoint call for inequalities as for dynamics
 }
 
+#if defined(ACADOS_DEVELOPER_DEBUG_CHECKS)
+static void sanity_check_nlp_slack_nonnegativity(ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_out *out)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    for (int i = 0; i <= N; i++)
+    {
+        for (int jj = 0; jj < 2*ns[i]; jj++)
+        {
+            if (BLASFEO_DVECEL(out->ux+i, nx[i]+nu[i]+jj) < -opts->tol_ineq)
+            {
+                printf("found slack value %e < 0 at i=%d j=%d\n", BLASFEO_DVECEL(out->ux+i, nx[i]+nu[i]+jj), i, jj);
+                exit(1);
+            }
+        }
+    }
+}
+#endif
 
 /*
 calculates new iterate or trial iterate in 'out_destination' with step 'mem->qp_out',
@@ -3179,9 +3199,9 @@ void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
     int *ni = dims->ni;
     int *nz = dims->nz;
 
-#if defined(ACADOS_WITH_OPENMP)
+    #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
-#endif
+    #endif
     for (int i = 0; i <= N; i++)
     {
         // step in primal variables
@@ -3215,9 +3235,14 @@ void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
         {
             // out->z = mem->z_alg + alpha * dzdux * qp_out->ux
             blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0,
-                    mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out_destination->z+i, 0);
+                mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out_destination->z+i, 0);
+            }
         }
-    }
+#if defined(ACADOS_DEVELOPER_DEBUG_CHECKS)
+    ocp_nlp_opts *opts = opts_;
+    sanity_check_nlp_slack_nonnegativity(dims, opts, out_destination);
+#endif
+
 }
 
 void ocp_nlp_initialize_qp_from_nlp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_qp_in *qp_in,
@@ -3284,7 +3309,6 @@ void ocp_nlp_update_variables_sqp_delta_primal_dual(ocp_nlp_config *config, ocp_
     int *ni = dims->ni;
     int *nz = dims->nz;
 
-
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
@@ -3304,6 +3328,10 @@ void ocp_nlp_update_variables_sqp_delta_primal_dual(ocp_nlp_config *config, ocp_
                     step->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0);
         }
     }
+#if defined(ACADOS_DEVELOPER_DEBUG_CHECKS)
+    sanity_check_nlp_slack_nonnegativity(dims, opts, out);
+#endif
+
 }
 
 
