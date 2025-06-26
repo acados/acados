@@ -1357,7 +1357,7 @@ void ocp_nlp_sqp_wfqp_approximate_feasibility_qp_constraint_vectors(ocp_nlp_conf
         blasfeo_dveccp(2*n_nominal_ineq_nlp+ns[i], nominal_qp_in->d + i, 0, relaxed_qp_in->d + i, 0);
         blasfeo_dveccp(ns[i], nominal_qp_in->d + i, 2*n_nominal_ineq_nlp+ns[i], relaxed_qp_in->d + i, 2*n_nominal_ineq_nlp+ns[i]+nns[i]);
     }
-    // setup d_mask; TODO: this is only needed at the start of each NLP solve
+    // setup d_mask
     if (nlp_mem->iter == 0)
     {
         int offset_dmask;
@@ -1365,7 +1365,7 @@ void ocp_nlp_sqp_wfqp_approximate_feasibility_qp_constraint_vectors(ocp_nlp_conf
         {
             offset_dmask = 2*(dims->nb[i]+dims->ng[i]+dims->ni_nl[i]);
             blasfeo_dveccp(offset_dmask, nominal_qp_in->d_mask+i, 0, relaxed_qp_in->d_mask+i, 0);
-            blasfeo_dvecse(2*relaxed_qp_in->dim->ns[i], 1.0, relaxed_qp_in->d_mask+i,offset_dmask);
+            blasfeo_dvecse(2*relaxed_qp_in->dim->ns[i], 1.0, relaxed_qp_in->d_mask+i, offset_dmask);
         }
     }
 }
