@@ -76,7 +76,7 @@ endif()
 option(ACADOS_WITH_OPENMP "OpenMP Parallelization" OFF)
 option(ACADOS_SILENT "No console status output" OFF)
 option(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE "Print QP inputs and outputs to file in SQP" OFF)
-option(ACADOS_DEVELOPER_DEBUG_CHECKS "Print QP inputs and outputs to file in SQP" OFF)
+option(ACADOS_DEVELOPER_DEBUG_CHECKS "Enable developer debug sanity checks. Avoids asserts" OFF)
 
 # Additional targets
 option(ACADOS_UNIT_TESTS "Compile Unit tests" OFF)
