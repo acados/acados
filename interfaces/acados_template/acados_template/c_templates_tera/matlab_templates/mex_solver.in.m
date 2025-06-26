@@ -125,7 +125,6 @@ classdef {{ name }}_mex_solver < handle
             ocp_eval_param_sens(obj.C_ocp, field, stage, index);
         end
 
-        % get -- borrowed from MEX interface
         function value = get(varargin)
             % usage:
             % obj.get(field, value, [stage])

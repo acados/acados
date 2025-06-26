@@ -303,7 +303,7 @@ class AcadosOcpSolver:
         self.__qp_dynamics_fields = {'A', 'B', 'b'}
         self.__qp_cost_fields = {'Q', 'R', 'S', 'q', 'r', 'zl', 'zu', 'Zl', 'Zu'}
         self.__qp_constraint_fields = {'C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu'}
-        self.__qp_constraint_int_fields = {'idxs', 'idxb'}
+        self.__qp_constraint_int_fields = {'idxs', 'idxb', 'idxs_rev'}
         self.__qp_pc_hpipm_fields = {'P', 'K', 'Lr', 'p'}
         self.__qp_pc_fields = {'pcond_Q', 'pcond_R', 'pcond_S'}
         self.__all_qp_fields = self.__qp_dynamics_fields | self.__qp_cost_fields | self.__qp_constraint_fields | self.__qp_constraint_int_fields | self.__qp_pc_hpipm_fields | self.__qp_pc_fields
@@ -1495,6 +1495,7 @@ class AcadosOcpSolver:
             - 5: Solver created (ACADOS_READY)
             - 6: Problem unbounded (ACADOS_UNBOUNDED)
             - 7: Solver timeout (ACADOS_TIMEOUT)
+            - 8: QP scaling could not satisfy bounds (ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED); NOTE: this status is typically not returned by the solver, but can be checked via `get_stats('qpscaling_status')`
 
         See `return_values` in https://github.com/acados/acados/blob/main/acados/utils/types.h
         """
@@ -1504,7 +1505,7 @@ class AcadosOcpSolver:
         """
         Get the information of the last solver call.
 
-        :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'nlp_iter', 'sqp_iter', 'residuals', 'qp_iter', 'alpha']
+        :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg',  'time_qpscaling', 'nlp_iter', 'sqp_iter', 'residuals', 'qp_iter', 'alpha']
 
         Available fields:
             - time_tot: total CPU time previous call
@@ -1515,6 +1516,7 @@ class AcadosOcpSolver:
             - time_qp: CPU time qp solution
             - time_qp_solver_call: CPU time inside qp solver (without converting the QP)
             - time_qp_xcond: time_glob: CPU time globalization
+            - time_qpscaling: CPU time for QP scaling
             - time_solution_sensitivities: CPU time for previous call to eval_param_sens
             - time_solution_sens_lin: CPU time for linearization in eval_param_sens
             - time_solution_sens_solve: CPU time for solving in eval_solution_sensitivity
@@ -1523,8 +1525,9 @@ class AcadosOcpSolver:
             - time_feedback: CPU time for last feedback phase, relevant for (AS-)RTI, otherwise returns total compuation time.
             - sqp_iter: number of SQP iterations
             - nlp_iter: number of NLP solver iterations (DDP or SQP)
-            - qp_stat: status of QP solver
-            - qp_iter: vector of QP iterations for last SQP call
+            - qp_stat: vector of QP solver status for last NLP solver call
+            - qp_iter: vector of QP iterations for last NLP solver call
+            - qpscaling_status: status of last call to qpscaling module
             - statistics: table with info about last iteration
             - stat_m: number of rows in statistics matrix
             - stat_n: number of columns in statistics matrix
@@ -1545,6 +1548,7 @@ class AcadosOcpSolver:
                   'time_qp',
                   'time_qp_solver_call',
                   'time_qp_xcond',
+                  'time_qpscaling',
                   'time_glob',
                   'time_solution_sensitivities',
                   'time_reg',
@@ -1552,15 +1556,11 @@ class AcadosOcpSolver:
                   'time_feedback',
                   'qp_tau_iter',
         ]
-        fields = double_fields + [
-                  'sqp_iter',
-                  'ddp_iter',
-                  'nlp_iter',
+        int_fields = ['ddp_iter', 'sqp_iter', 'nlp_iter', 'stat_m', 'stat_n', 'qpscaling_status']
+        fields = double_fields + int_fields + [
                   'qp_stat',
                   'qp_iter',
                   'statistics',
-                  'stat_m',
-                  'stat_n',
                   'residuals',
                   'alpha',
                   'res_eq_all',
@@ -1569,7 +1569,7 @@ class AcadosOcpSolver:
 
         field = field_.encode('utf-8')
 
-        if field_ in ['ddp_iter', 'sqp_iter', 'nlp_iter', 'stat_m', 'stat_n']:
+        if field_ in int_fields:
             out = c_int(0)
             self.__acados_lib.ocp_nlp_get(self.nlp_solver, field, byref(out))
             return out.value
@@ -2116,6 +2116,45 @@ class AcadosOcpSolver:
 
         return out
 
+
+    def get_qp_scaling_constraints(self, stage: int) -> np.ndarray:
+        """
+        If the solver performs QP scaling, this function returns the scaling factors for the constraints.
+        Bounds are not scaled, so the dimension is ng + nh + nphi.
+        Only available if qpscaling_scale_constraints != NO_CONSTRAINT_SCALING.
+        """
+        if self.__solver_options["qpscaling_scale_constraints"] == "NO_CONSTRAINT_SCALING":
+            raise ValueError(f"get_qp_scaling_constraints: only works if qpscaling_scale_constraints != NO_CONSTRAINT_SCALING.")
+
+        # call getter
+        field_ = "qpscaling_constr"
+        field = field_.encode('utf-8')
+        dims = self.dims_get(field_, stage)
+        out = np.zeros((dims,), dtype=np.float64, order="C")
+        out_data = cast(out.ctypes.data, POINTER(c_double))
+        out_data_p = cast((out_data), c_void_p)
+        self.__acados_lib.ocp_nlp_get_at_stage(self.nlp_solver, stage, field, out_data_p)
+
+        return out
+
+
+    def get_qp_scaling_objective(self) -> float:
+        """
+        Returns the cost scaling value corresponding to the previous QP solution.
+        Only available if qpscaling_scale_objective != NO_OBJECTIVE_SCALING.
+        """
+        if self.__solver_options["qpscaling_scale_objective"] == "NO_OBJECTIVE_SCALING":
+            raise ValueError("get_qp_scaling_objective: only works for QP solvers with qpscaling_scale_objective != NO_OBJECTIVE_SCALING.")
+
+        # create output array
+        out = np.zeros((1,), dtype=np.float64, order="C")
+        out_data = cast(out.ctypes.data, POINTER(c_double))
+
+        # call getter
+        field = "qpscaling_obj".encode('utf-8')
+        self.__acados_lib.ocp_nlp_get_at_stage(self.nlp_solver, 0, field, out_data)
+
+        return out[0]
 
     def __ocp_nlp_get_from_iterate(self, iteration_, stage_, field_):
         stage = c_int(stage_)

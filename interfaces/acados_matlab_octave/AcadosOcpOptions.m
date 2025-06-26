@@ -83,6 +83,10 @@ classdef AcadosOcpOptions < handle
         reg_max_cond_block
         reg_min_epsilon
         reg_adaptive_eps
+        qpscaling_ub_max_abs_eig
+        qpscaling_lb_norm_inf_grad_obj
+        qpscaling_scale_objective
+        qpscaling_scale_constraints
         exact_hess_cost
         exact_hess_dyn
         exact_hess_constr
@@ -102,6 +106,8 @@ classdef AcadosOcpOptions < handle
         globalization_funnel_fraction_switching_condition
         globalization_funnel_initial_penalty_parameter
         globalization_funnel_use_merit_fun_only
+
+
         search_direction_mode
         use_constraint_hessian_in_feas_qp
         allow_direction_mode_switch_to_nominal
@@ -188,6 +194,10 @@ classdef AcadosOcpOptions < handle
             obj.print_level = 0;
             obj.cost_discretization = 'EULER';
             obj.regularize_method = 'NO_REGULARIZE';
+            obj.qpscaling_ub_max_abs_eig = 1e5;
+            obj.qpscaling_lb_norm_inf_grad_obj = 1e-4;
+            obj.qpscaling_scale_objective = 'NO_OBJECTIVE_SCALING';
+            obj.qpscaling_scale_constraints = 'NO_CONSTRAINT_SCALING';
             obj.reg_epsilon = 1e-4;
             obj.reg_adaptive_eps = false;
             obj.reg_max_cond_block = 1e7;
@@ -205,6 +215,7 @@ classdef AcadosOcpOptions < handle
             obj.globalization_use_SOC = 0;
             obj.globalization_full_step_dual = [];
             obj.globalization_eps_sufficient_descent = [];
+
 
             % funnel options
             obj.globalization_funnel_init_increase_factor = 15;

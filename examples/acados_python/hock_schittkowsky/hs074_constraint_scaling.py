@@ -28,55 +28,57 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, ACADOS_INFTY, AcadosOcpFlattenedIterate
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, ACADOS_INFTY
 import numpy as np
-from casadi import *
-from matplotlib import pyplot as plt
-from itertools import product
+import casadi as ca
 
 
-def solve_problem(qp_solver: str = 'FULL_CONDENSING_HPIPM', scale_qp_constraints: bool = False):
-    print(f"Solving with {qp_solver} and scale_qp_constraints={scale_qp_constraints}")
+def solve_problem_with_constraint_scaling(scale_constraints):
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
     # set model
     model = AcadosModel()
-    x = SX.sym('x', 2)
+    x = ca.SX.sym('x', 4)
 
     # dynamics: identity
     model.disc_dyn_expr = x
     model.x = x
-    model.name = f'hs_016'
+    model.name = f'hs_074'
     ocp.model = model
 
+    a = 0.55
 
     # cost
     ocp.cost.cost_type_e = 'EXTERNAL'
-    ocp.model.cost_expr_ext_cost_e = 100*(x[1] - x[0]**2)**2 + (1 - x[0])**2
+    ocp.model.cost_expr_ext_cost_e = 3*x[0] + 1.0e-6*x[0]**3 + 2*x[1] + 2.0e-6*x[1]**3/3
 
     # constraints
-    ocp.model.con_h_expr_e = vertcat(x[0]**2 + x[1], x[0] + x[1]**2)
-    ocp.constraints.lh_e = np.array([0.0, 0.0])
-    ocp.constraints.uh_e = np.array([ACADOS_INFTY, ACADOS_INFTY])
+    g = ca.SX.zeros(4, 1)
+    g[0] =  x[3] - x[2]
+    g[1] = x[0]  - 1000*ca.sin(-x[2] - 0.25) - 1000*ca.sin(-x[3] - 0.25)
+    g[2] = x[1]  - 1000*ca.sin(x[2] - 0.25) - 1000*ca.sin(x[2]-x[3] - 0.25)
+    g[3] = 1000*ca.sin(x[3] - 0.25) + 1000*ca.sin(x[3] - x[2] - 0.25)
+
+    ocp.model.con_h_expr_e = g
+    ocp.constraints.lh_e = np.array([-a, 894.8, 894.8, -1294.8])
+    ocp.constraints.uh_e = np.array([a, 894.8, 894.8, -1294.8])
 
     # add bounds on x;
-    ocp.constraints.idxbx_e = np.arange(2)
-    ocp.constraints.ubx_e = np.array([0.5, 1.0])
-    ocp.constraints.lbx_e = np.array([-0.5, -ACADOS_INFTY])
+    ocp.constraints.idxbx_e = np.arange(4)
+    ocp.constraints.ubx_e = np.array([1200, 1200, a, a])
+    ocp.constraints.lbx_e = np.array([0.0, 0.0, -a, -a])
 
     # set options
     ocp.solver_options.N_horizon = 0
-    ocp.solver_options.qp_solver = qp_solver
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.qp_solver_mu0 = 1e3
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.regularize_method = 'MIRROR'
     ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_max_iter = 1000
     ocp.solver_options.qp_solver_iter_max = 1000
-
-    # Search direction
     ocp.solver_options.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'
 
     # Globalization
@@ -85,41 +87,41 @@ def solve_problem(qp_solver: str = 'FULL_CONDENSING_HPIPM', scale_qp_constraints
     ocp.solver_options.globalization_funnel_use_merit_fun_only = False
 
     # Scaling
-    if scale_qp_constraints:
-        ocp.solver_options.qpscaling_scale_objective = 'OBJECTIVE_GERSHGORIN'
+    ocp.solver_options.qpscaling_scale_objective = 'OBJECTIVE_GERSHGORIN'
+    if scale_constraints:
         ocp.solver_options.qpscaling_scale_constraints = 'INF_NORM'
-    ocp.code_export_directory = f'c_generated_code_{model.name}'
 
-    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json', verbose=False)
+    ocp.code_export_directory = f'c_generated_code_{model.name}'
+    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json', verbose = False)
 
     # initialize solver
-    xinit = np.array([-2, 1])
+    xinit = np.zeros(4)
     ocp_solver.set(0, "x", xinit)
 
     # solve
     status = ocp_solver.solve()
 
-    # get solution
-    assert status == 0, f"Solver failed with status {status}"
+    # checks
+    obj_scale = ocp_solver.get_qp_scaling_objective()
+    print(f"Objective scaling: {obj_scale:.4e}")
+    if scale_constraints:
+        constr_scale = ocp_solver.get_qp_scaling_constraints(stage=0)
+        print(f"Constraints scaling factors: {constr_scale}")
 
-    sol = ocp_solver.store_iterate_to_flat_obj()
-
-    return sol
-
+    if scale_constraints:
+        assert status == 0, "Scaling of the constraints was not succesful!"
+    else:
+        assert status == 4, "Problem should not be solvable without scaling!"
+    del ocp_solver
 
 def main():
-    sol_list = []
-    for qp_solver in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM']:
-        for scaling in [False, True]:
-            sol = solve_problem(qp_solver, scaling)
-            sol_list.append(sol)
-
-    ref_sol = sol_list[0]
-    for i, sol in enumerate(sol_list[1:]):
-        if not AcadosOcpFlattenedIterate.allclose(ref_sol, sol):
-            raise ValueError(f"Solution does not match reference close enough!")
-        else:
-            print(f"Solution {i+1} matches reference solution.")
+    # run test cases
+    print("\nTest standard unscaled version, HPIPM should fail:")
+    solve_problem_with_constraint_scaling(scale_constraints=False)
+    print("\n\n----------------------------------------------")
+    print("\nTest constraint scaling version, HPIPM should fail:")
+    solve_problem_with_constraint_scaling(scale_constraints=True)
+    print("\n\n----------------------------------------------")
 
 if __name__ == '__main__':
     main()

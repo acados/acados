@@ -57,7 +57,7 @@ targets = {
     '../mocp_transition_example/main_multiphase_ocp.m';
     '../legacy_interface/getting_started/extensive_example_ocp.m';
     '../legacy_interface/simple_dae_model/example_ocp.m';
-    '../convex_problem_globalization_needed/convex_problem_globalization_necessary.m';
+    '../dense_nlp/convex_problem_globalization_necessary.m';
 };
 
 

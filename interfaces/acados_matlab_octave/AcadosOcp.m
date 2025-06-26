@@ -819,6 +819,15 @@ classdef AcadosOcp < handle
                 error(['Invalid search_direction_mode: ', opts.search_direction_mode, '. Available options are: ', strjoin(search_direction_modes, ', ')]);
             end
 
+            qpscaling_scale_constraints_types = {'INF_NORM', 'NO_CONSTRAINT_SCALING'};
+            if ~ismember(opts.qpscaling_scale_constraints, qpscaling_scale_constraints_types)
+                error(['Invalid qpscaling_scale_constraints: ', opts.qpscaling_scale_constraints, '. Available options are: ', strjoin(qpscaling_scale_constraints_types, ', ')]);
+            end
+
+            qpscaling_scale_objective_types = {'OBJECTIVE_GERSHGORIN', 'NO_OBJECTIVE_SCALING'};
+            if ~ismember(opts.qpscaling_scale_objective, qpscaling_scale_objective_types)
+                error(['Invalid qpscaling_scale_objective: ', opts.qpscaling_scale_objective, '. Available options are: ', strjoin(qpscaling_scale_objective_types, ', ')]);
+            end
             % OCP name
             self.name = model.name;
 
@@ -987,6 +996,12 @@ classdef AcadosOcp < handle
             end
             if (opts.as_rti_level == 1 || opts.as_rti_level == 2) && any(cost_types_to_check)
                 error('as_rti_level in [1, 2] not supported for LINEAR_LS and NONLINEAR_LS cost type.');
+            end
+
+            if ~strcmp(opts.qpscaling_scale_constraints, "NO_CONSTRAINT_SCALING") || ~strcmp(opts.qpscaling_scale_objective, "NO_OBJECTIVE_SCALING")
+                if strcmp(opts.nlp_solver_type, "SQP_RTI")
+                    error('qpscaling_scale_constraints and qpscaling_scale_objective not supported for SQP_RTI solver.');
+                end
             end
 
             % Set default parameters for globalization

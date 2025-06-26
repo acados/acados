@@ -165,3 +165,57 @@ def export_augmented_pendulum_model():
 
     return model
 
+def export_free_time_pendulum_ode_model() -> AcadosModel:
+
+    model_name = 'free_time_pendulum'
+
+    m_cart = 1.0 # mass of the cart [kg]
+    m = 0.1 # mass of the ball [kg]
+    g = 9.81 # gravity constant [m/s^2]
+    l = 0.8 # length of the rod [m]
+
+    # set up states & controls
+    T = SX.sym('T')
+    x1      = SX.sym('x1')
+    theta   = SX.sym('theta')
+    v1      = SX.sym('v1')
+    dtheta  = SX.sym('dtheta')
+
+    x = vertcat(T, x1, theta, v1, dtheta)
+
+    F = SX.sym('F')
+    u = vertcat(F)
+
+    # xdot
+    T_dot       = SX.sym('T_dot')
+    x1_dot      = SX.sym('x1_dot')
+    theta_dot   = SX.sym('theta_dot')
+    v1_dot      = SX.sym('v1_dot')
+    dtheta_dot  = SX.sym('dtheta_dot')
+
+    xdot = vertcat(T_dot, x1_dot, theta_dot, v1_dot, dtheta_dot)
+
+    # dynamics
+    cos_theta = cos(theta)
+    sin_theta = sin(theta)
+    denominator = m_cart + m - m*cos_theta*cos_theta
+    f_expl = vertcat(0,
+                        T*v1,
+                        T*dtheta,
+                        T*((-m*l*sin_theta*dtheta*dtheta + m*g*cos_theta*sin_theta+F)/denominator),
+                        T*((-m*l*cos_theta*sin_theta*dtheta*dtheta + F*cos_theta+(m_cart+m)*g*sin_theta)/(l*denominator))
+                        )
+
+    f_impl = xdot - f_expl
+
+    model = AcadosModel()
+
+    model.f_impl_expr = f_impl
+    model.f_expl_expr = f_expl
+    model.x = x
+    model.xdot = xdot
+    model.u = u
+    model.name = model_name
+
+    return model
+

@@ -58,6 +58,7 @@ extern "C" {
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
+#include "acados/ocp_nlp/ocp_nlp_qpscaling.h"
 #include "acados/ocp_nlp/ocp_nlp_globalization_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_xcond_solver.h"
@@ -146,6 +147,8 @@ typedef struct ocp_nlp_dims
     ocp_qp_xcond_solver_dims *qp_solver;  // xcond solver instead ??
     ocp_qp_xcond_solver_dims *relaxed_qp_solver;  // xcond solver instead ??
     ocp_nlp_reg_dims *regularize;
+    ocp_nlp_qpscaling_dims *qpscaling;
+    ocp_nlp_qpscaling_dims *relaxed_qpscaling;
 
     int *nv;  // number of primal variables (states+controls+slacks)
     int *nx;  // number of differential states
@@ -303,6 +306,7 @@ typedef struct ocp_nlp_opts
 {
     ocp_qp_xcond_solver_opts *qp_solver_opts; // xcond solver opts instead ???
     void *regularize;
+    void *qpscaling;
     void *globalization;  // globalization_opts
     void **dynamics;     // dynamics_opts
     void **cost;         // cost_opts
@@ -332,9 +336,20 @@ typedef struct ocp_nlp_opts
     int ext_qp_res;
     int qp_warm_start;
 
+    bool warm_start_first_qp; // to set qp_warm_start in first iteration
+    bool warm_start_first_qp_from_nlp;  // if True first QP will be initialized using values from NLP iterate, otherwise from previous QP solution.
+    bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
     bool store_iterates; // flag indicating whether intermediate iterates should be stored
 
     bool with_anderson_acceleration;
+
+    // termination tolerances
+    double tol_stat;     // exit tolerance on stationarity condition
+    double tol_eq;       // exit tolerance on equality constraints
+    double tol_ineq;     // exit tolerance on inequality constraints
+    double tol_comp;     // exit tolerance on complementarity condition
+    double tol_unbounded; // exit threshold when objective function seems to be unbounded
+    double tol_min_step_norm; // exit tolerance for small step
 
 } ocp_nlp_opts;
 
@@ -387,6 +402,7 @@ typedef struct ocp_nlp_timings
     double time_qp_sol;
     double time_qp_solver_call;
     double time_qp_xcond;
+    double time_qpscaling;
     double time_lin;
     double time_reg;
     double time_tot;
@@ -414,7 +430,8 @@ typedef struct ocp_nlp_memory
 {
 //    void *qp_solver_mem; // xcond solver mem instead ???
     ocp_qp_xcond_solver_memory *qp_solver_mem; // xcond solver mem instead ???
-    void *regularize;
+    void *regularize_mem;
+    void *qpscaling;
     void *globalization; // globalization memory
     void **dynamics;     // dynamics memory
     void **cost;         // cost memory
@@ -432,6 +449,10 @@ typedef struct ocp_nlp_memory
     // qp in & out
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
+
+    // scaled qp in & out (just pointers)
+    ocp_qp_in *scaled_qp_in;
+    ocp_qp_out *scaled_qp_out;
 
     // for Anderson acceleration
     ocp_qp_out *prev_qp_out;
@@ -621,7 +642,7 @@ double ocp_nlp_get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, 
 //
 int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *nlp_opts,
                      ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work,
-                     bool precondensed_lhs, ocp_qp_in *qp_in_, ocp_qp_out *qp_out_,
+                     bool precondensed_lhs, ocp_qp_in *scaled_qp_in_, ocp_qp_in *qp_in_, ocp_qp_out *scaled_qp_out_,ocp_qp_out *qp_out_,
                      ocp_qp_xcond_solver *xcond_solver);
 //
 int ocp_nlp_solve_qp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *nlp_opts,

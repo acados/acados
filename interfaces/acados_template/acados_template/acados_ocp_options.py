@@ -108,6 +108,10 @@ class AcadosOcpOptions:
         self.__globalization_funnel_initial_penalty_parameter = 1.0
         self.__globalization_funnel_use_merit_fun_only = False
         self.__globalization_fixed_step_length = 1.0
+        self.__qpscaling_ub_max_abs_eig = 1e5
+        self.__qpscaling_lb_norm_inf_grad_obj = 1e-4
+        self.__qpscaling_scale_objective = "NO_OBJECTIVE_SCALING"
+        self.__qpscaling_scale_constraints = "NO_CONSTRAINT_SCALING"
         self.__ext_cost_num_hess = 0
         self.__globalization_use_SOC = 0
         self.__globalization_alpha_min = None
@@ -353,6 +357,49 @@ class AcadosOcpOptions:
         Default: 1.0.
         """
         return self.__globalization_fixed_step_length
+
+    @property
+    def qpscaling_ub_max_abs_eig(self):
+        """
+        Maximum upper bound for eigenvalues of Hessian after QP scaling.
+        Type: float >= 0.
+        Default: 1e5.
+        """
+        return self.__qpscaling_ub_max_abs_eig
+
+    @property
+    def qpscaling_lb_norm_inf_grad_obj(self):
+        """
+        Minimum allowed lower bound for inf norm of qp gradient in QP scaling.
+        Is attempted to be respected, respecting qpscaling_ub_max_abs_eig is prioritized.
+        Type: float >= 0.
+        Default: 1e-4.
+        """
+        return self.__qpscaling_lb_norm_inf_grad_obj
+
+    @property
+    def qpscaling_scale_objective(self):
+        """
+        String in ["NO_OBJECTIVE_SCALING", "OBJECTIVE_GERSHGORIN"]
+        Default: "NO_OBJECTIVE_SCALING".
+
+        - NO_OBJECTIVE_SCALING: no scaling of the objective
+        - OBJECTIVE_GERSHGORIN: estimate max. abs. eigenvalue using Gershgorin circles as `max_abs_eig`, then sets the objective scaling factor as `obj_factor = min(1.0, qpscaling_ub_max_abs_eig/max_abs_eig)`
+        """
+        return self.__qpscaling_scale_objective
+
+    @property
+    def qpscaling_scale_constraints(self):
+        """
+        String in ["NO_CONSTRAINT_SCALING", "INF_NORM"]
+        Default: "NO_CONSTRAINT_SCALING".
+
+        - NO_CONSTRAINT_SCALING: no scaling of the constraints
+        - INF_NORM: scales each constraint except simple bounds by factor `1.0 / max(inf_norm_coeff, inf_norm_constraint_bound)`, such that the inf-norm of the constraint coefficients and bounds is <= 1.0.
+        Slack penalties are adjusted accordingly to get an equivalent solution.
+        First, the cost is scaled, then the constraints.
+        """
+        return self.__qpscaling_scale_constraints
 
     @property
     def nlp_solver_step_length(self):
@@ -1678,6 +1725,34 @@ class AcadosOcpOptions:
         else:
             raise ValueError('Invalid globalization_fixed_step_length value. globalization_fixed_step_length must be a positive float.')
 
+    @qpscaling_ub_max_abs_eig.setter
+    def qpscaling_ub_max_abs_eig(self, qpscaling_ub_max_abs_eig):
+        if isinstance(qpscaling_ub_max_abs_eig, float) and qpscaling_ub_max_abs_eig >= 0.:
+            self.__qpscaling_ub_max_abs_eig = qpscaling_ub_max_abs_eig
+        else:
+            raise ValueError('Invalid qpscaling_ub_max_abs_eig value. qpscaling_ub_max_abs_eig must be a positive float.')
+
+    @qpscaling_lb_norm_inf_grad_obj.setter
+    def qpscaling_lb_norm_inf_grad_obj(self, qpscaling_lb_norm_inf_grad_obj):
+        if isinstance(qpscaling_lb_norm_inf_grad_obj, float) and qpscaling_lb_norm_inf_grad_obj >= 0.:
+            self.__qpscaling_lb_norm_inf_grad_obj = qpscaling_lb_norm_inf_grad_obj
+        else:
+            raise ValueError('Invalid qpscaling_lb_norm_inf_grad_obj value. qpscaling_lb_norm_inf_grad_obj must be a positive float.')
+
+    @qpscaling_scale_objective.setter
+    def qpscaling_scale_objective(self, qpscaling_scale_objective):
+        qpscaling_scale_objective_types = ["NO_OBJECTIVE_SCALING", "OBJECTIVE_GERSHGORIN"]
+        if not qpscaling_scale_objective in qpscaling_scale_objective_types:
+            raise ValueError(f'Invalid qpscaling_scale_objective value. Must be in {qpscaling_scale_objective_types}, got {qpscaling_scale_objective}.')
+        self.__qpscaling_scale_objective = qpscaling_scale_objective
+
+    @qpscaling_scale_constraints.setter
+    def qpscaling_scale_constraints(self, qpscaling_scale_constraints):
+        qpscaling_scale_constraints_types = ["NO_CONSTRAINT_SCALING", "INF_NORM"]
+        if not qpscaling_scale_constraints in qpscaling_scale_constraints_types:
+            raise ValueError(f'Invalid qpscaling_scale_constraints value. Must be in {qpscaling_scale_constraints_types}, got {qpscaling_scale_constraints}.')
+        self.__qpscaling_scale_constraints = qpscaling_scale_constraints
+
     @nlp_solver_step_length.setter
     def nlp_solver_step_length(self, nlp_solver_step_length):
         print("The option nlp_solver_step_length is deprecated and has new name: globalization_fixed_step_length")
@@ -2076,3 +2151,6 @@ class AcadosOcpOptions:
 
         if parametric and not self.with_solution_sens_wrt_params:
             raise ValueError("Parametric sensitivities are only available if with_solution_sens_wrt_params is set to True.")
+
+        if self.qpscaling_scale_constraints != "NO_CONSTRAINT_SCALING" or self.qpscaling_scale_objective != "NO_OBJECTIVE_SCALING":
+            raise ValueError("Parametric sensitivities are only available if no scaling is applied to the QP.")
