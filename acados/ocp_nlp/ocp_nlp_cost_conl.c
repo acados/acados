@@ -818,7 +818,7 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
     memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->ux, nu+nx);
 
     // scale
-    if(model->scaling!=1.0)
+    if (model->scaling!=1.0)
     {
         blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
         memory->fun *= model->scaling;

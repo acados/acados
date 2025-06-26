@@ -866,9 +866,6 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
 
     if (opts->compute_hess)
     {
-
-//        d_print_mat(nu+nx, nu+nx, work->sim_out->S_hess, nu+nx);
-
         // unpack d*_d2u
         blasfeo_pack_dmat(nu, nu, &work->sim_out->S_hess[(nx+nu)*nx + nx], nx+nu, &work->hess, 0, 0);
         // unpack d*_dux: mem-hess: nx x nu
