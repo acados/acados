@@ -117,6 +117,7 @@ typedef struct
 {
     bool gauss_newton_hess;  // gauss-newton hessian approximation
     int integrator_cost; // > 0 indicating that cost is propagated within integrator instead of cost module, only add slack contributions
+    int add_hess_contribution;
 } ocp_nlp_cost_nls_opts;
 
 //

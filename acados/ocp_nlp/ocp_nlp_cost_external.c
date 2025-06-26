@@ -410,6 +410,11 @@ void ocp_nlp_cost_external_opts_set(void *config_, void *opts_, const char *fiel
         int *opt_val = (int *) value;
         opts->use_numerical_hessian = *opt_val;
     }
+    else if (!strcmp(field, "add_hess_contribution"))
+    {
+        int* int_ptr = value;
+        opts->add_hess_contribution = *int_ptr;
+    }
     else if(!strcmp(field, "with_solution_sens_wrt_params"))
     {
         int *opt_val = (int *) value;
@@ -723,7 +728,14 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
         model->ext_cost_fun_jac->evaluate(model->ext_cost_fun_jac, ext_fun_type_in,
                                             ext_fun_in, ext_fun_type_out, ext_fun_out);
         // custom hessian
-        blasfeo_dgecpsc(nx+nu, nx+nu, model->scaling, &model->numerical_hessian, 0, 0, memory->RSQrq, 0, 0);
+        if (opts->add_hess_contribution)
+        {
+            blasfeo_dgead(nx+nu, nx+nu, model->scaling, &model->numerical_hessian, 0, 0, memory->RSQrq, 0, 0);
+        }
+        else
+        {
+            blasfeo_dgecpsc(nx+nu, nx+nu, model->scaling, &model->numerical_hessian, 0, 0, memory->RSQrq, 0, 0);
+        }
     }
     else
     {
@@ -740,7 +752,16 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
                                             ext_fun_in, ext_fun_type_out, ext_fun_out);
 
         // hessian contribution from xu with scaling
-        blasfeo_dgecpsc(nx+nu, nx+nu, model->scaling, &work->tmp_nunx_nunx, 0, 0, memory->RSQrq, 0, 0);
+        if (opts->add_hess_contribution)
+        {
+            // add to RSQrq
+            blasfeo_dgead(nx+nu, nx+nu, model->scaling, &work->tmp_nunx_nunx, 0, 0, memory->RSQrq, 0, 0);
+        }
+        else
+        {
+            // copy to RSQrq
+            blasfeo_dgecpsc(nx+nu, nx+nu, model->scaling, &work->tmp_nunx_nunx, 0, 0, memory->RSQrq, 0, 0);
+        }
 
         if (nz > 0)
         {

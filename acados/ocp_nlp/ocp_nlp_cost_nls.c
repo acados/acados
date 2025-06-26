@@ -469,6 +469,11 @@ void ocp_nlp_cost_nls_opts_set(void *config_, void *opts_, const char *field, vo
             opts->gauss_newton_hess = 0;
         }
     }
+    else if (!strcmp(field, "add_hess_contribution"))
+    {
+        int* int_ptr = value;
+        opts->add_hess_contribution = *int_ptr;
+    }
     else if(!strcmp(field, "integrator_cost"))
     {
         int *opt_val = (int *) value;
@@ -838,6 +843,12 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     struct blasfeo_dvec_args x_in;  // input x of external fun;
     struct blasfeo_dvec_args u_in;  // input u of external fun;
 
+    double prev_RSQ_factor = 0.0;
+    if (opts->add_hess_contribution)
+    {
+        prev_RSQ_factor = 1.0;
+    }
+
     if (opts->integrator_cost == 0)
     {
         x_in.x = memory->ux;
@@ -939,7 +950,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         {
             // RSQrq = scaling * tmp_nv_ny * tmp_nv_ny^T
             blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
-                            0.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+                            prev_RSQ_factor, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
         }
         else
         {
@@ -967,7 +978,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 
             // RSQrq = scaling * (tmp_nv_nv + tmp_nv_ny * tmp_nv_ny^T)
             blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
-                            0.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+                            prev_RSQ_factor, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
             blasfeo_dgead(nu+nx, nu+nx, model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
         }
     } // end if (opts->integrator_cost == 0)

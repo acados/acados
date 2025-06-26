@@ -392,6 +392,11 @@ void ocp_nlp_cost_conl_opts_set(void *config_, void *opts_, const char *field, v
         int *opt_val = (int *) value;
         opts->integrator_cost = *opt_val;
     }
+    else if (!strcmp(field, "add_hess_contribution"))
+    {
+        int* int_ptr = value;
+        opts->add_hess_contribution = *int_ptr;
+    }
     else if(!strcmp(field, "with_solution_sens_wrt_params"))
     {
         // not implemented yet
@@ -697,6 +702,12 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
 
     ocp_nlp_cost_conl_cast_workspace(config_, dims, opts_, work_);
 
+    double prev_RSQ_factor = 0.0;
+    if (opts->add_hess_contribution)
+    {
+        prev_RSQ_factor = 1.0;
+    }
+
     int nx = dims->nx;
     int nz = dims->nz;
     int nu = dims->nu;
@@ -809,7 +820,7 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
         }
         // RSQrq += scaling * tmp_nv_ny * tmp_nv_ny^T
         blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
-                        0.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+                        prev_RSQ_factor, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
     }
 
     // slack update gradient

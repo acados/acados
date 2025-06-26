@@ -1418,13 +1418,25 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         else if (!strcmp(field, "exact_hess"))
         {
             int N = config->N;
+            int *exact_hess_ptr = (int *) value;
+            int exact_hess = *exact_hess_ptr;
+            int add_hess_contribution;
             // cost
             for (int i=0; i<=N; i++)
+            {
                 config->cost[i]->opts_set(config->cost[i], opts->cost[i], "exact_hess", value);
+            }
             // dynamics
             for (int i=0; i<N; i++)
+            {
                 config->dynamics[i]->opts_set(config->dynamics[i], opts->dynamics[i],
-                                               "compute_hess", value);
+                    "compute_hess", value);
+                if (!exact_hess)
+                {
+                    add_hess_contribution = 0;
+                    config->cost[i]->opts_set(config->cost[i], opts->cost[i], "add_hess_contribution", &add_hess_contribution);
+                }
+            }
             // constraints
             for (int i=0; i<=N; i++)
                 config->constraints[i]->opts_set(config->constraints[i], opts->constraints[i],
@@ -1440,9 +1452,19 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         else if (!strcmp(field, "exact_hess_dyn"))
         {
             int N = config->N;
+            int *exact_hess_ptr = (int *) value;
+            int exact_hess = *exact_hess_ptr;
+            int add_hess_contribution;
             for (int i=0; i<N; i++)
+            {
                 config->dynamics[i]->opts_set(config->dynamics[i], opts->dynamics[i],
-                                               "compute_hess", value);
+                    "compute_hess", value);
+                if (!exact_hess)
+                {
+                    add_hess_contribution = 0;
+                    config->cost[i]->opts_set(config->cost[i], opts->cost[i], "add_hess_contribution", &add_hess_contribution);
+                }
+            }
         }
         else if (!strcmp(field, "exact_hess_constr"))
         {
@@ -2863,16 +2885,16 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
         // }
         // NOTE: removed init and directly write cost contribution into Hessian
 
-        // cost
-        config->cost[i]->update_qp_matrices(config->cost[i], dims->cost[i], in->cost[i],
-            opts->cost[i], mem->cost[i], work->cost[i]);
-
-        // dynamics
+        // dynamics: NOTE: has to be first, as it computes z, which is used in cost and constraints.
         if (i < N)
         {
             config->dynamics[i]->update_qp_matrices(config->dynamics[i], dims->dynamics[i],
-                    in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+                in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
         }
+
+        // cost
+        config->cost[i]->update_qp_matrices(config->cost[i], dims->cost[i], in->cost[i],
+                    opts->cost[i], mem->cost[i], work->cost[i]);
 
         // constraints
         config->constraints[i]->update_qp_matrices(config->constraints[i], dims->constraints[i],

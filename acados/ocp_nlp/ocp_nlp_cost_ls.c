@@ -522,11 +522,16 @@ void ocp_nlp_cost_ls_opts_set(void *config_, void *opts_, const char *field, voi
         int* int_ptr = value;
         opts->compute_hess = *int_ptr;
     }
-    else if(!strcmp(field, "with_solution_sens_wrt_params"))
+    else if (!strcmp(field, "with_solution_sens_wrt_params"))
     {
         // not implemented yet
         // int *opt_val = (int *) value;
         // opts->with_solution_sens_wrt_params = *opt_val;
+    }
+    else if (!strcmp(field, "add_hess_contribution"))
+    {
+        int* int_ptr = value;
+        opts->add_hess_contribution = *int_ptr;
     }
     else
     {
@@ -881,6 +886,9 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     struct blasfeo_dmat *Cyt = &model->Cyt;
     ocp_nlp_cost_ls_opts *opts = opts_;
 
+
+
+
     if (nz > 0)
     { // eliminate algebraic variables and update Cyt and y_ref
 
@@ -909,11 +917,16 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         }
 
         // add hessian of the cost contribution
+        double prev_RSQ_factor = 0.0;
+        if (opts->add_hess_contribution)
+        {
+            prev_RSQ_factor = 1.0;
+        }
         if (opts->compute_hess)
         {
             // RSQrq = scaling * tmp_nv_ny * tmp_nv_ny^T
             blasfeo_dsyrk_ln(nu + nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny,
-                                0, 0, 0.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+                                0, 0, prev_RSQ_factor, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
         }
 
         // compute gradient, function
@@ -928,8 +941,16 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     {
         if (opts->compute_hess)
         {
-            // write cost contribution into hessian
-            blasfeo_dgecpsc(nx + nu, nx + nu, 1.0, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
+            if (opts->add_hess_contribution)
+            {
+                // add
+                blasfeo_dgead(nx + nu, nx + nu, 1.0, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
+            }
+            else
+            {
+                // write cost contribution into hessian
+                blasfeo_dgecp(nx + nu, nx + nu, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
+            }
         }
 
         // compute gradient, function
