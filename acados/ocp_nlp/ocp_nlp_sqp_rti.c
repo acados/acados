@@ -113,8 +113,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_,
     ocp_nlp_opts_initialize_default(config, dims, nlp_opts);
 
     // SQP RTI opts
-    opts->warm_start_first_qp = false;
-    opts->warm_start_first_qp_from_nlp = true;
+    opts->nlp_opts->warm_start_first_qp_from_nlp = true;
     opts->rti_phase = 0;
     opts->as_rti_level = STANDARD_RTI;
     opts->as_rti_advancement_strategy = SIMULATE_ADVANCE;
@@ -160,12 +159,7 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_,
     }
     else // nlp opts
     {
-        if (!strcmp(field, "warm_start_first_qp"))
-        {
-            bool* warm_start_first_qp = (bool *) value;
-            opts->warm_start_first_qp = *warm_start_first_qp;
-        }
-        else if (!strcmp(field, "rti_phase"))
+        if (!strcmp(field, "rti_phase"))
         {
             int* rti_phase = (int *) value;
             if (*rti_phase < 0 || *rti_phase > 2)
@@ -190,11 +184,6 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_,
         {
             int* rti_log_only_available_residuals = (int *) value;
             opts->rti_log_only_available_residuals = *rti_log_only_available_residuals;
-        }
-        else if (!strcmp(field, "warm_start_first_qp_from_nlp"))
-        {
-            bool* warm_start_first_qp_from_nlp = (bool *) value;
-            opts->warm_start_first_qp_from_nlp = *warm_start_first_qp_from_nlp;
         }
         else if (!strcmp(field, "as_rti_level"))
         {
@@ -571,13 +560,13 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     // set QP warm start
     if (mem->is_first_call)
     {
-        if (!opts->warm_start_first_qp)
+        if (!nlp_opts->warm_start_first_qp)
         {
             int tmp_int = 0;
             config->qp_solver->opts_set(config->qp_solver,
                 opts->nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
         }
-        else if (opts->warm_start_first_qp_from_nlp)
+        else if (nlp_opts->warm_start_first_qp_from_nlp)
         {
             int tmp_bool = true;
             config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "initialize_next_xcond_qp_from_qp_out", &tmp_bool);
