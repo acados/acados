@@ -3167,7 +3167,7 @@ static void sanity_check_nlp_slack_nonnegativity(ocp_nlp_dims *dims, ocp_nlp_opt
     {
         for (int jj = 0; jj < 2*ns[i]; jj++)
         {
-            if (BLASFEO_DVECEL(out->ux+i, nx[i]+nu[i]+jj) < -1e-6)
+            if (BLASFEO_DVECEL(out->ux+i, nx[i]+nu[i]+jj) < -opts->tol_ineq)
             {
                 printf("found slack value %e < 0 at i=%d j=%d\n", BLASFEO_DVECEL(out->ux+i, nx[i]+nu[i]+jj), i, jj);
                 exit(1);
