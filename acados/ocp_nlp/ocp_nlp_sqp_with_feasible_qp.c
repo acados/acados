@@ -899,7 +899,6 @@ static void set_pointers_for_hessian_evaluation(ocp_nlp_config *config,
 #endif
     for (int i = 0; i <= N; i++)
     {
-        // TODO: first compute cost hessian (without adding) and avoid setting everything to zero?
         // init Hessians to 0
 
         // TODO: avoid setting qp_in->RSQ to zero in ocp_nlp_approximate_qp_matrices?
