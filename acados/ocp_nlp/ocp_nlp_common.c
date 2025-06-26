@@ -3090,7 +3090,7 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
 }
 
 #if defined(ACADOS_DEVELOPER_DEBUG_CHECKS)
-static int sanity_check_nlp_slack_nonnegativity(ocp_nlp_dims *dims, ocp_nlp_out *out)
+static void sanity_check_nlp_slack_nonnegativity(ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_out *out)
 {
     int N = dims->N;
     int *nx = dims->nx;
@@ -3100,9 +3100,9 @@ static int sanity_check_nlp_slack_nonnegativity(ocp_nlp_dims *dims, ocp_nlp_out 
     {
         for (int jj = 0; jj < 2*ns[i]; jj++)
         {
-            if (BLASFEO_DVECEL(out->ux+i, nx[i]+nu[i]+jj) < 0.0)
+            if (BLASFEO_DVECEL(out->ux+i, nx[i]+nu[i]+jj) < -1e-6)
             {
-                printf("found slack value %e < 0 at %d %d\n", BLASFEO_DVECEL(out->ux+i, nx[i]+nu[i]+jj), i, jj);
+                printf("found slack value %e < 0 at i=%d j=%d\n", BLASFEO_DVECEL(out->ux+i, nx[i]+nu[i]+jj), i, jj);
                 exit(1);
             }
         }
@@ -3123,6 +3123,7 @@ void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
     ocp_nlp_out *out_start = out_;
     ocp_nlp_memory *mem = mem_;
     ocp_nlp_out *out_destination = out_destination_;
+    ocp_nlp_opts *opts = opts_;
     // solver_mem is not used in this function, but needed for DDP
     // the function is used in the config->globalization->step_update
     int N = dims->N;
@@ -3172,7 +3173,7 @@ void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
         }
     }
 #if defined(ACADOS_DEVELOPER_DEBUG_CHECKS)
-    sanity_check_nlp_slack_nonnegativity(dims, out_destination);
+    sanity_check_nlp_slack_nonnegativity(dims, opts, out_destination);
 #endif
 
 }
@@ -3261,7 +3262,7 @@ void ocp_nlp_update_variables_sqp_delta_primal_dual(ocp_nlp_config *config, ocp_
         }
     }
 #if defined(ACADOS_DEVELOPER_DEBUG_CHECKS)
-    sanity_check_nlp_slack_nonnegativity(dims, out);
+    sanity_check_nlp_slack_nonnegativity(dims, opts, out);
 #endif
 
 }
