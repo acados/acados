@@ -696,7 +696,7 @@ static double calculate_qp_l1_infeasibility_from_slacks(ocp_nlp_dims *dims, ocp_
             l1_inf += fmax(0.0, tmp2);
         }
     }
-    assert(l1_inf > -opts->tol_ineq);
+    assert(l1_inf > -opts->nlp_opts->tol_ineq);
     return l1_inf;
 }
 
@@ -782,7 +782,7 @@ static double calculate_qp_l1_infeasibility_manually(ocp_nlp_dims *dims, ocp_nlp
             }
         }
     }
-    assert(l1_inf > -opts->tol_ineq);
+    assert(l1_inf > -opts->nlp_opts->tol_ineq);
     return l1_inf;
 }
 
