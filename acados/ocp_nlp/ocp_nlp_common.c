@@ -3190,7 +3190,6 @@ void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
     ocp_nlp_out *out_start = out_;
     ocp_nlp_memory *mem = mem_;
     ocp_nlp_out *out_destination = out_destination_;
-    ocp_nlp_opts *opts = opts_;
     // solver_mem is not used in this function, but needed for DDP
     // the function is used in the config->globalization->step_update
     int N = dims->N;
@@ -3200,9 +3199,9 @@ void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
     int *ni = dims->ni;
     int *nz = dims->nz;
 
-#if defined(ACADOS_WITH_OPENMP)
+    #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
-#endif
+    #endif
     for (int i = 0; i <= N; i++)
     {
         // step in primal variables
@@ -3236,10 +3235,11 @@ void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
         {
             // out->z = mem->z_alg + alpha * dzdux * qp_out->ux
             blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0,
-                    mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out_destination->z+i, 0);
+                mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out_destination->z+i, 0);
+            }
         }
-    }
 #if defined(ACADOS_DEVELOPER_DEBUG_CHECKS)
+    ocp_nlp_opts *opts = opts_;
     sanity_check_nlp_slack_nonnegativity(dims, opts, out_destination);
 #endif
 
