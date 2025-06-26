@@ -986,8 +986,16 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     // scale
     if (model->scaling!=1.0)
     {
-        blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
-        memory->fun *= model->scaling;
+        if (opts->integrator_cost == 0)
+        {
+            blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
+            memory->fun *= model->scaling;
+        }
+        else
+        {
+            // only scale the slack gradient
+            blasfeo_dvecsc(2*ns, model->scaling, &memory->grad, nu+nx);
+        }
     }
     // printf("cost_fun: %e\n", memory->fun);
 
@@ -1095,7 +1103,7 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
     memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, ux, nu+nx);
 
     // scale
-    if (model->scaling!=1.0)
+    if (model->scaling!=1.0 && opts->integrator_cost == 0)
     {
         memory->fun *= model->scaling;
     }

@@ -513,10 +513,8 @@ struct blasfeo_dvec *ocp_nlp_cost_conl_memory_get_grad_ptr(void *memory_)
 double *ocp_nlp_cost_conl_model_get_scaling_ptr(void *in_)
 {
     ocp_nlp_cost_conl_model *model = in_;
-
     return &model->scaling;
 }
-
 
 
 struct blasfeo_dvec *ocp_nlp_cost_conl_model_get_y_ref_ptr(void *in_)
@@ -828,8 +826,16 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
     // scale
     if (model->scaling!=1.0)
     {
-        blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
-        memory->fun *= model->scaling;
+        if (opts->integrator_cost == 0)
+        {
+            blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
+            memory->fun *= model->scaling;
+        }
+        else
+        {
+            // only scale the slack gradient
+            blasfeo_dvecsc(2*ns, model->scaling, &memory->grad, nu+nx);
+        }
     }
 
     return;
@@ -929,9 +935,18 @@ void ocp_nlp_cost_conl_compute_gradient(void *config_, void *dims_, void *model_
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
 
     // scale
-    if(model->scaling!=1.0)
+    if (model->scaling!=1.0)
     {
-        blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
+        if (opts->integrator_cost == 0)
+        {
+            // scale the whole gradient
+            blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
+        }
+        else
+        {
+            // only scale the slack gradient
+            blasfeo_dvecsc(2*ns, model->scaling, &memory->grad, nu+nx);
+        }
     }
 
     return;
@@ -999,7 +1014,7 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
     memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, ux, nu+nx);
 
     // scale
-    if (model->scaling!=1.0)
+    if (model->scaling!=1.0 && opts->integrator_cost == 0)
     {
         memory->fun *= model->scaling;
     }
