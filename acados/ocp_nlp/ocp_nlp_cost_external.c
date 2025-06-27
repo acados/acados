@@ -378,6 +378,7 @@ void ocp_nlp_cost_external_opts_initialize_default(void *config_, void *dims_, v
 
     opts->use_numerical_hessian = 0;
     opts->with_solution_sens_wrt_params = 0;
+    opts->add_hess_contribution = 0;
 
     return;
 }

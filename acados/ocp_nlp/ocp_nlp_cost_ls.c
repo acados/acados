@@ -493,6 +493,7 @@ void ocp_nlp_cost_ls_opts_initialize_default(void *config_,
 {
     ocp_nlp_cost_ls_opts *opts = opts_;
     opts->compute_hess = 1;
+    opts->add_hess_contribution = 0;
 
     return;
 }

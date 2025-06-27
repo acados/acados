@@ -431,6 +431,7 @@ void ocp_nlp_cost_nls_opts_initialize_default(void *config_, void *dims_, void *
     ocp_nlp_cost_nls_opts *opts = opts_;
 
     opts->gauss_newton_hess = 1;
+    opts->add_hess_contribution = 0;
 
     return;
 }
