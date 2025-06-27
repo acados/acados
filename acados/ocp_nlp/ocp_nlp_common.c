@@ -1420,7 +1420,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             int N = config->N;
             int *exact_hess_ptr = (int *) value;
             int exact_hess = *exact_hess_ptr;
-            int add_hess_contribution;
+            int add_cost_hess_contribution = 1;
+            if (!exact_hess)
+            {
+                add_cost_hess_contribution = 0;
+            }
             // cost
             for (int i=0; i<=N; i++)
             {
@@ -1431,11 +1435,7 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             {
                 config->dynamics[i]->opts_set(config->dynamics[i], opts->dynamics[i],
                     "compute_hess", value);
-                if (!exact_hess)
-                {
-                    add_hess_contribution = 0;
-                    config->cost[i]->opts_set(config->cost[i], opts->cost[i], "add_hess_contribution", &add_hess_contribution);
-                }
+                config->cost[i]->opts_set(config->cost[i], opts->cost[i], "add_hess_contribution", &add_cost_hess_contribution);
             }
             // constraints
             for (int i=0; i<=N; i++)
