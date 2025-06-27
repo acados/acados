@@ -265,7 +265,7 @@ for iteration = 1:3
     end
     violation_idx = ocp_solver.get_constraint_indices_with_violation(max_violation);
     if max_violation ~= 0.0
-        if size(violation_idx) ~= [1, 2]
+        if ~isequal(size(violation_idx), [1, 2])
             error('expected violation index to be of size [1, 2], got %d, %d', size(violation_idx));
         end
         if ineq_fun{violation_idx(1)+1}(violation_idx(2)+1) ~= max_violation
