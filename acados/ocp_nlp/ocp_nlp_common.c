@@ -2599,7 +2599,7 @@ double ocp_nlp_compute_dual_lam_norm_inf(ocp_nlp_dims *dims, ocp_nlp_out *nlp_ou
     double norm_lam = 0.0;
 
     // compute inf norm of lam
-    for (i = 0; i < N; i++)
+    for (i = 0; i <= N; i++)
     {
         for (j=0; j<2*dims->ni[i]; j++)
         {
