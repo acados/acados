@@ -610,7 +610,7 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
     // ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_disc_dims *dims = dims_;
     ocp_nlp_dynamics_disc_opts *opts = opts_;
-    ocp_nlp_dynamics_disc_workspace *work = work_;
+    // ocp_nlp_dynamics_disc_workspace *work = work_;
     ocp_nlp_dynamics_disc_memory *memory = mem_;
     ocp_nlp_dynamics_disc_model *model = model_;
 
@@ -648,11 +648,6 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
         pi_in.x = memory->pi;
         pi_in.xi = 0;
 
-        struct blasfeo_dmat_args hess_out;
-        hess_out.A = &work->tmp_nv_nv;
-        hess_out.ai = 0;
-        hess_out.aj = 0;
-
         ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
         ext_fun_in[0] = &x_in;
         ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
@@ -664,15 +659,12 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
         ext_fun_out[0] = &fun_out;  // fun: nx1
         ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
         ext_fun_out[1] = &jac_out;  // jac': (nu+nx) * nx1
-        ext_fun_type_out[2] = BLASFEO_DMAT_ARGS;
-        ext_fun_out[2] = &hess_out;  // hess*pi: (nu+nx)*(nu+nx)
+        ext_fun_type_out[2] = BLASFEO_DMAT;
+        ext_fun_out[2] = memory->RSQrq;  // hess*pi: (nu+nx)*(nu+nx)
 
         // call external function
         model->disc_dyn_fun_jac_hess->evaluate(model->disc_dyn_fun_jac_hess, ext_fun_type_in, ext_fun_in,
                 ext_fun_type_out, ext_fun_out);
-
-        // Add hessian contribution
-        blasfeo_dgead(nx+nu, nx+nu, 1.0, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
     }
     else
     {

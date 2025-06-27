@@ -851,6 +851,19 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     }
 
     /* Hessian */
+    if (opts->compute_hess)
+    {
+        // unpack d*_d2u
+        blasfeo_pack_dmat(nu, nu, &work->sim_out->S_hess[(nx+nu)*nx + nx], nx+nu, &work->hess, 0, 0);
+        // unpack d*_dux: mem-hess: nx x nu
+        blasfeo_pack_dmat(nx, nu, &work->sim_out->S_hess[(nx + nu)*nx], nx+nu, &work->hess, nu, 0);
+        // unpack d*_d2x
+        blasfeo_pack_dmat(nx, nx, &work->sim_out->S_hess[0], nx+nu, &work->hess, nu, nu);
+
+        // Write hessian contribution
+        blasfeo_dgecp(nx+nu, nx+nu, &work->hess, 0, 0, mem->RSQrq, 0, 0);
+    }
+
     int cost_computation;
     sim_opts_get(config->sim_solver, opts->sim_solver, "cost_computation", &cost_computation);
     if (cost_computation > 0)
@@ -861,25 +874,13 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
                             mem->sim_solver, "cost_hess", &cost_hess);
         // printf("dynamics: RSQrq before cost contribution\n");
         // blasfeo_print_exp_dmat(nx+nu, nx+nu, mem->RSQrq, 0, 0);
+        // Add hessian contribution
         blasfeo_dgecpsc(nx+nu, nx+nu, mem->cost_scaling_ptr[0], cost_hess, 0, 0, mem->RSQrq, 0, 0);
 
         // printf("dynamics: cost contribution\n");
         // blasfeo_print_exp_dmat(nx+nu, nx+nu, cost_hess, 0, 0);
         // printf("dynamics: RSQrq after cost contribution\n");
         // blasfeo_print_exp_dmat(nx+nu, nx+nu, mem->RSQrq, 0, 0);
-    }
-
-    if (opts->compute_hess)
-    {
-        // unpack d*_d2u
-        blasfeo_pack_dmat(nu, nu, &work->sim_out->S_hess[(nx+nu)*nx + nx], nx+nu, &work->hess, 0, 0);
-        // unpack d*_dux: mem-hess: nx x nu
-        blasfeo_pack_dmat(nx, nu, &work->sim_out->S_hess[(nx + nu)*nx], nx+nu, &work->hess, nu, 0);
-        // unpack d*_d2x
-        blasfeo_pack_dmat(nx, nx, &work->sim_out->S_hess[0], nx+nu, &work->hess, nu, nu);
-
-        // Add hessian contribution
-        blasfeo_dgead(nx+nu, nx+nu, 1.0, &work->hess, 0, 0, mem->RSQrq, 0, 0);
     }
 
 

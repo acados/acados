@@ -1435,6 +1435,7 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             {
                 config->dynamics[i]->opts_set(config->dynamics[i], opts->dynamics[i],
                     "compute_hess", value);
+                // if no dynamics Hessian, then cost module should write its Hessian instead of adding.
                 config->cost[i]->opts_set(config->cost[i], opts->cost[i], "add_hess_contribution", &add_cost_hess_contribution);
             }
             // constraints
