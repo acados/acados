@@ -553,6 +553,10 @@ void ocp_nlp_dynamics_cont_memory_set(void *config_, void *dims_, void *mem_, co
         mem->cost_scaling_ptr = value;
         sim->memory_set(sim, dims->sim, mem->sim_solver, field, value);
     }
+    else if (!strcmp(field, "add_cost_hess_contribution_ptr"))
+    {
+        mem->add_cost_hess_contribution_ptr = value;
+    }
     else
     {
         printf("\nerror: ocp_nlp_dynamics_cont_memory_set: field %s not available\n", field);
@@ -874,8 +878,15 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
                             mem->sim_solver, "cost_hess", &cost_hess);
         // printf("dynamics: RSQrq before cost contribution\n");
         // blasfeo_print_exp_dmat(nx+nu, nx+nu, mem->RSQrq, 0, 0);
-        // Add hessian contribution
-        blasfeo_dgecpsc(nx+nu, nx+nu, mem->cost_scaling_ptr[0], cost_hess, 0, 0, mem->RSQrq, 0, 0);
+        if (*mem->add_cost_hess_contribution_ptr)
+        {
+            // Add hessian contribution
+            blasfeo_dgead(nx+nu, nx+nu, mem->cost_scaling_ptr[0], cost_hess, 0, 0, mem->RSQrq, 0, 0);
+        }
+        else
+        {
+            blasfeo_dgecpsc(nx+nu, nx+nu, mem->cost_scaling_ptr[0], cost_hess, 0, 0, mem->RSQrq, 0, 0);
+        }
 
         // printf("dynamics: cost contribution\n");
         // blasfeo_print_exp_dmat(nx+nu, nx+nu, cost_hess, 0, 0);

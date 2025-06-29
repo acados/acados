@@ -497,6 +497,14 @@ void ocp_nlp_cost_nls_opts_set(void *config_, void *opts_, const char *field, vo
 }
 
 
+int* ocp_nlp_cost_nls_opts_get_add_hess_contribution_ptr(void *config_, void *opts_)
+{
+    ocp_nlp_cost_nls_opts *opts = opts_;
+
+    return &opts->add_hess_contribution;
+}
+
+
 
 /************************************************
  * memory
@@ -1184,6 +1192,7 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_, int stage)
     config->opts_initialize_default = &ocp_nlp_cost_nls_opts_initialize_default;
     config->opts_update = &ocp_nlp_cost_nls_opts_update;
     config->opts_set = &ocp_nlp_cost_nls_opts_set;
+    config->opts_get_add_hess_contribution_ptr = &ocp_nlp_cost_nls_opts_get_add_hess_contribution_ptr;
     config->memory_calculate_size = &ocp_nlp_cost_nls_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_nls_memory_assign;
     config->memory_get_fun_ptr = &ocp_nlp_cost_nls_memory_get_fun_ptr;

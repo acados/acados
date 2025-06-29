@@ -115,6 +115,7 @@ typedef struct
     struct blasfeo_dvec *z_alg;         // pointer to output z at t = 0
     bool *set_sim_guess;                 // indicate if initialization for integrator is set from outside
     double *cost_scaling_ptr;  // pointer to cost scaling factor
+    int *add_cost_hess_contribution_ptr; // pointer to cost module option
     struct blasfeo_dvec *sim_guess;     // initializations for integrator
     // struct blasfeo_dvec *z;             // pointer to (input) z in nlp_out at current stage
     struct blasfeo_dmat *dzduxt;        // pointer to dzdux transposed
