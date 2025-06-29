@@ -1265,6 +1265,25 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->qp_warm_start = 0;
     opts->store_iterates = false;
 
+    opts->warm_start_first_qp = false;
+    opts->warm_start_first_qp_from_nlp = false;
+    opts->eval_residual_at_max_iter = false;
+
+    // tolerances
+    opts->tol_stat = 1e-8;
+    opts->tol_eq   = 1e-8;
+    opts->tol_ineq = 1e-8;
+    opts->tol_comp = 1e-8;
+    opts->tol_unbounded = -1e10;
+    opts->tol_min_step_norm = 1e-12;
+
+    // overwrite default submodules opts
+    // qp tolerance
+    qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_stat", &opts->tol_stat);
+    qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_eq", &opts->tol_eq);
+    qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_ineq", &opts->tol_ineq);
+    qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_comp", &opts->tol_comp);
+
     return;
 }
 
@@ -1539,6 +1558,54 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             bool* with_anderson_acceleration = (bool *) value;
             opts->with_anderson_acceleration = *with_anderson_acceleration;
+        }
+        else if (!strcmp(field, "tol_stat"))
+        {
+            double* tol_stat = (double *) value;
+            opts->tol_stat = *tol_stat;
+            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
+            config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_stat", value);
+        }
+        else if (!strcmp(field, "tol_eq"))
+        {
+            double* tol_eq = (double *) value;
+            opts->tol_eq = *tol_eq;
+            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
+            config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_eq", value);
+        }
+        else if (!strcmp(field, "tol_ineq"))
+        {
+            double* tol_ineq = (double *) value;
+            opts->tol_ineq = *tol_ineq;
+            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
+            config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_ineq", value);
+        }
+        else if (!strcmp(field, "tol_comp"))
+        {
+            double* tol_comp = (double *) value;
+            opts->tol_comp = *tol_comp;
+            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
+            config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_comp", value);
+        }
+        else if (!strcmp(field, "tol_min_step_norm"))
+        {
+            double* tol_min_step_norm = (double *) value;
+            opts->tol_min_step_norm = *tol_min_step_norm;
+        }
+        else if (!strcmp(field, "warm_start_first_qp"))
+        {
+            bool* warm_start_first_qp = (bool *) value;
+            opts->warm_start_first_qp = *warm_start_first_qp;
+        }
+        else if (!strcmp(field, "warm_start_first_qp_from_nlp"))
+        {
+            bool* warm_start_first_qp_from_nlp = (bool *) value;
+            opts->warm_start_first_qp_from_nlp = *warm_start_first_qp_from_nlp;
+        }
+        else if (!strcmp(field, "eval_residual_at_max_iter"))
+        {
+            bool* eval_residual_at_max_iter = (bool *) value;
+            opts->eval_residual_at_max_iter = *eval_residual_at_max_iter;
         }
         else
         {
@@ -2555,7 +2622,7 @@ double ocp_nlp_compute_dual_lam_norm_inf(ocp_nlp_dims *dims, ocp_nlp_out *nlp_ou
     double norm_lam = 0.0;
 
     // compute inf norm of lam
-    for (i = 0; i < N; i++)
+    for (i = 0; i <= N; i++)
     {
         for (j=0; j<2*dims->ni[i]; j++)
         {
@@ -3117,6 +3184,26 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
     // - adjoint call for inequalities as for dynamics
 }
 
+#if defined(ACADOS_DEVELOPER_DEBUG_CHECKS)
+static void sanity_check_nlp_slack_nonnegativity(ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_out *out)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    for (int i = 0; i <= N; i++)
+    {
+        for (int jj = 0; jj < 2*ns[i]; jj++)
+        {
+            if (BLASFEO_DVECEL(out->ux+i, nx[i]+nu[i]+jj) < -opts->tol_ineq)
+            {
+                printf("found slack value %e < 0 at i=%d j=%d\n", BLASFEO_DVECEL(out->ux+i, nx[i]+nu[i]+jj), i, jj);
+                exit(1);
+            }
+        }
+    }
+}
+#endif
 
 /*
 calculates new iterate or trial iterate in 'out_destination' with step 'mem->qp_out',
@@ -3140,9 +3227,9 @@ void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
     int *ni = dims->ni;
     int *nz = dims->nz;
 
-#if defined(ACADOS_WITH_OPENMP)
+    #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
-#endif
+    #endif
     for (int i = 0; i <= N; i++)
     {
         // step in primal variables
@@ -3176,9 +3263,14 @@ void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
         {
             // out->z = mem->z_alg + alpha * dzdux * qp_out->ux
             blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0,
-                    mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out_destination->z+i, 0);
+                mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out_destination->z+i, 0);
+            }
         }
-    }
+#if defined(ACADOS_DEVELOPER_DEBUG_CHECKS)
+    ocp_nlp_opts *opts = opts_;
+    sanity_check_nlp_slack_nonnegativity(dims, opts, out_destination);
+#endif
+
 }
 
 void ocp_nlp_initialize_qp_from_nlp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_qp_in *qp_in,
@@ -3245,7 +3337,6 @@ void ocp_nlp_update_variables_sqp_delta_primal_dual(ocp_nlp_config *config, ocp_
     int *ni = dims->ni;
     int *nz = dims->nz;
 
-
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
@@ -3265,6 +3356,10 @@ void ocp_nlp_update_variables_sqp_delta_primal_dual(ocp_nlp_config *config, ocp_
                     step->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0);
         }
     }
+#if defined(ACADOS_DEVELOPER_DEBUG_CHECKS)
+    sanity_check_nlp_slack_nonnegativity(dims, opts, out);
+#endif
+
 }
 
 

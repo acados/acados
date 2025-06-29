@@ -54,18 +54,8 @@ extern "C" {
 typedef struct
 {
     ocp_nlp_opts *nlp_opts;
-    double tol_stat;
-    double tol_eq;
-    double tol_ineq;
-    double tol_comp;
-    double tol_unbounded; // exit threshold when objective function seems to be unbounded
-    double tol_min_step_norm; // exit tolerance for small step
     bool log_pi_norm_inf; // compute and log the max norm of the pi multipliers
     bool log_lam_norm_inf; // compute and log the max norm of the lam multipliers
-    bool warm_start_first_qp;
-    bool warm_start_first_qp_from_nlp;
-    bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
-
     bool use_constraint_hessian_in_feas_qp; // Either use exact Hessian or identity matrix in feasibility QP
     bool use_QP_l1_inf_from_slacks; // True: sums up the slack variable values from qp_out; False: compute manually; Should give the same result.
     int search_direction_mode; // determines how the QPs should be solved

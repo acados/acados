@@ -104,29 +104,11 @@ void ocp_nlp_ddp_opts_initialize_default(void *config_, void *dims_, void *opts_
     ocp_nlp_ddp_opts *opts = opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
 
-    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
-
     // this first !!!
     ocp_nlp_opts_initialize_default(config, dims, nlp_opts);
 
     // DDP opts
     opts->nlp_opts->max_iter = 20;
-    opts->tol_stat = 1e-8;
-    opts->tol_eq   = 1e-8;
-    opts->tol_ineq = 1e-8;
-    opts->tol_comp = 1e-8;
-    opts->tol_zero_res = 1e-12;
-
-    opts->warm_start_first_qp = false;
-    opts->warm_start_first_qp_from_nlp = false;
-    opts->eval_residual_at_max_iter = false;
-
-    // overwrite default submodules opts
-    // qp tolerance
-    qp_solver->opts_set(qp_solver, opts->nlp_opts->qp_solver_opts, "tol_stat", &opts->tol_stat);
-    qp_solver->opts_set(qp_solver, opts->nlp_opts->qp_solver_opts, "tol_eq", &opts->tol_eq);
-    qp_solver->opts_set(qp_solver, opts->nlp_opts->qp_solver_opts, "tol_ineq", &opts->tol_ineq);
-    qp_solver->opts_set(qp_solver, opts->nlp_opts->qp_solver_opts, "tol_comp", &opts->tol_comp);
 
     return;
 }
@@ -165,53 +147,7 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
     }
     else // nlp opts
     {
-        if (!strcmp(field, "tol_stat"))
-        {
-            double* tol_stat = (double *) value;
-            opts->tol_stat = *tol_stat;
-            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
-            config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts, "tol_stat", value);
-        }
-        else if (!strcmp(field, "tol_eq"))
-        {
-            double* tol_eq = (double *) value;
-            opts->tol_eq = *tol_eq;
-            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
-            config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts, "tol_eq", value);
-        }
-        else if (!strcmp(field, "tol_ineq"))
-        {
-            double* tol_ineq = (double *) value;
-            opts->tol_ineq = *tol_ineq;
-            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
-            config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts, "tol_ineq", value);
-        }
-        else if (!strcmp(field, "tol_comp"))
-        {
-            double* tol_comp = (double *) value;
-            opts->tol_comp = *tol_comp;
-            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
-            config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts, "tol_comp", value);
-        }
-        else if (!strcmp(field, "warm_start_first_qp"))
-        {
-            bool* warm_start_first_qp = (bool *) value;
-            opts->warm_start_first_qp = *warm_start_first_qp;
-        }
-        else if (!strcmp(field, "warm_start_first_qp_from_nlp"))
-        {
-            bool* warm_start_first_qp_from_nlp = (bool *) value;
-            opts->warm_start_first_qp_from_nlp = *warm_start_first_qp_from_nlp;
-        }
-        else if (!strcmp(field, "eval_residual_at_max_iter"))
-        {
-            bool* eval_residual_at_max_iter = (bool *) value;
-            opts->eval_residual_at_max_iter = *eval_residual_at_max_iter;
-        }
-        else
-        {
-            ocp_nlp_opts_set(config, nlp_opts, field, value);
-        }
+        ocp_nlp_opts_set(config, nlp_opts, field, value);
     }
 
     return;
@@ -499,6 +435,7 @@ void ocp_nlp_ddp_compute_trial_iterate(void *config_, void *dims_,
 static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_memory *mem, ocp_nlp_ddp_opts *opts)
 {
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
     // check for nans
     if (isnan(nlp_res->inf_norm_res_stat) || isnan(nlp_res->inf_norm_res_eq) ||
             isnan(nlp_res->inf_norm_res_ineq))
@@ -513,12 +450,12 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
 
     // We do not need to check for the complementarity condition and for the
     // inequalities since we have an unconstrainted OCP
-    if (nlp_res->inf_norm_res_eq < opts->tol_eq)
+    if (nlp_res->inf_norm_res_eq < nlp_opts->tol_eq)
     { // Check that iterate must be dynamically feasible
-        if (nlp_res->inf_norm_res_stat < opts->tol_stat)
+        if (nlp_res->inf_norm_res_stat < nlp_opts->tol_stat)
         {// Check Stationarity
             nlp_mem->status = ACADOS_SUCCESS;
-            if (opts->nlp_opts->print_level > 0)
+            if (nlp_opts->print_level > 0)
             {
                 printf("Optimal Solution found! Converged to KKT point.\n");
             }
@@ -526,10 +463,10 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
         }
 
         // Check for zero-residual solution of a least-squares problem
-        if (opts->nlp_opts->with_adaptive_levenberg_marquardt && (nlp_mem->cost_value < opts->tol_zero_res))
+        if (nlp_opts->with_adaptive_levenberg_marquardt && (nlp_mem->cost_value < opts->tol_zero_res))
         {
             nlp_mem->status = ACADOS_SUCCESS;
-            if (opts->nlp_opts->print_level > 0)
+            if (nlp_opts->print_level > 0)
             {
                 printf("Optimal Solution found! Converged To Zero Residual Solution.\n");
             }
@@ -538,11 +475,11 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
     }
 
     // Check for small step
-    if ((ddp_iter > 0) && (mem->step_norm < opts->tol_eq))
+    if ((ddp_iter > 0) && (mem->step_norm < nlp_opts->tol_eq))
     {
-        if (opts->nlp_opts->print_level > 0)
+        if (nlp_opts->print_level > 0)
         {
-            if (nlp_res->inf_norm_res_eq < opts->tol_eq)
+            if (nlp_res->inf_norm_res_eq < nlp_opts->tol_eq)
             {
                 printf("Stopped: Converged To Feasible Point. Step size is < tol_eq.\n");
             }
@@ -556,10 +493,10 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
     }
 
     // Check for maximum iterations
-    if (ddp_iter >= opts->nlp_opts->max_iter)
+    if (ddp_iter >= nlp_opts->max_iter)
     {
         nlp_mem->status = ACADOS_MAXITER;
-        if (opts->nlp_opts->print_level > 0){
+        if (nlp_opts->print_level > 0){
             printf("Stopped: Maximum Iterations Reached.\n");
         }
         return true;
@@ -672,7 +609,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // We always evaluate the residuals until the last iteration
         // If the option "eval_residual_at_max_iter" is set, then we will also
         // evaluate the data after the last iteration was performed
-        if (ddp_iter != opts->nlp_opts->max_iter || opts->eval_residual_at_max_iter)
+        if (ddp_iter != opts->nlp_opts->max_iter || nlp_opts->eval_residual_at_max_iter)
         {
             /* Prepare the QP data */
             // linearize NLP, update QP matrices, and add Levenberg-Marquardt term
@@ -705,7 +642,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // Check if initial guess was infeasible
-        if ((infeasible_initial_guess == true) && (nlp_res->inf_norm_res_eq > opts->tol_eq))
+        if ((infeasible_initial_guess == true) && (nlp_res->inf_norm_res_eq > nlp_opts->tol_eq))
         {
             if (nlp_opts->print_level > 0)
             {
@@ -747,13 +684,13 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // warm start of first QP
         if (ddp_iter == 0)
         {
-            if (!opts->warm_start_first_qp)
+            if (!nlp_opts->warm_start_first_qp)
             {
                 // (typically) no warm start at first iteration
                 int tmp_int = 0;
                 qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
             }
-            else if (opts->warm_start_first_qp_from_nlp)
+            else if (nlp_opts->warm_start_first_qp_from_nlp)
             {
                 int tmp_bool = true;
                 qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "initialize_next_xcond_qp_from_qp_out", &tmp_bool);

@@ -80,8 +80,6 @@ typedef struct
 {
     ocp_nlp_opts *nlp_opts;
     int compute_dual_sol;
-    bool warm_start_first_qp; // to set qp_warm_start in first iteration
-    bool warm_start_first_qp_from_nlp;
     rti_phase_t rti_phase;
     as_rti_level_t as_rti_level;
     as_rti_advancement_strategy_t as_rti_advancement_strategy;

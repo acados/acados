@@ -34,6 +34,7 @@ import json
 import os
 import shutil
 import sys
+import platform
 import urllib.request
 from subprocess import DEVNULL, STDOUT, call
 if os.name == 'nt':
@@ -47,7 +48,7 @@ import casadi as ca
 from contextlib import contextmanager
 
 
-TERA_VERSION = "0.0.34"
+TERA_VERSION = "0.2.0"
 
 PLATFORM2TERA = {
     "linux": "linux",
@@ -97,9 +98,7 @@ def get_python_interface_path():
 def get_tera_exec_path():
     TERA_PATH = os.environ.get('TERA_PATH')
     if not TERA_PATH:
-        TERA_PATH = os.path.join(get_acados_path(), 'bin', 't_renderer')
-        if os.name == 'nt':
-            TERA_PATH += '.exe'
+        TERA_PATH = os.path.join(get_acados_path(), 'bin', 't_renderer') + get_binary_ext()
     return TERA_PATH
 
 
@@ -232,6 +231,25 @@ def get_shared_lib_prefix():
     else:
         return 'lib'
 
+def get_binary_ext():
+    if os.name == 'nt':
+        return '.exe'
+    else:
+        return ''
+
+def get_architecture_amd64_arm64():
+    # common uname -m results
+    # https://en.wikipedia.org/wiki/Uname
+    current_arch = platform.machine()
+    amd64_compatible = ["i3", "i6", "amd", "x86"]
+    arm64_compatible = ["arm", "aarch"]
+    if any([current_arch.lower().startswith(arch) for arch in amd64_compatible]):
+        return "amd64"
+    elif any([current_arch.lower().startswith(arch) for arch in arm64_compatible]):
+        return "arm64"
+    else:
+        raise RuntimeError(f"Your detected architecture {current_arch} may not be compatible with amd64 or arm64.")
+
 def get_tera() -> str:
     tera_path = get_tera_exec_path()
     acados_path = get_acados_path()
@@ -240,15 +258,23 @@ def get_tera() -> str:
     if os.path.exists(tera_path) and os.access(tera_path, os.X_OK):
         return tera_path
 
+    try:
+        arch = get_architecture_amd64_arm64()
+    except RuntimeError as e:
+        print(e)
+        print("Try building tera_renderer from source at https://github.com/acados/tera_renderer")
+        sys.exit(1)
+
+    binary_ext = get_binary_ext()
     repo_url = "https://github.com/acados/tera_renderer/releases"
-    url = "{}/download/v{}/t_renderer-v{}-{}".format(
-        repo_url, TERA_VERSION, TERA_VERSION, PLATFORM2TERA[sys.platform])
+    url = "{}/download/v{}/t_renderer-v{}-{}-{}{}".format(
+        repo_url, TERA_VERSION, TERA_VERSION, PLATFORM2TERA[sys.platform], arch, binary_ext)
 
     manual_install = 'For manual installation follow these instructions:\n'
     manual_install += '1 Download binaries from {}\n'.format(url)
     manual_install += '2 Copy them in {}/bin\n'.format(acados_path)
-    manual_install += '3 Strip the version and platform from the binaries: '
-    manual_install += 'as t_renderer-v0.0.34-X -> t_renderer)\n'
+    manual_install += '3 Strip the version and platform and architecture from the binaries: '
+    manual_install += f'as t_renderer-v{TERA_VERSION}-P-A{binary_ext} -> t_renderer{binary_ext})\n'
     manual_install += '4 Enable execution privilege on the file "t_renderer" with:\n'
     manual_install += '"chmod +x {}"\n\n'.format(tera_path)
 
@@ -276,7 +302,7 @@ def get_tera() -> str:
         os.makedirs(tera_dir)
 
     # Download tera
-    print(f"Dowloading {url}")
+    print(f"Downloading {url}")
     with urllib.request.urlopen(url) as response, open(tera_path, 'wb') as out_file:
         shutil.copyfileobj(response, out_file)
     print("Successfully downloaded t_renderer.")

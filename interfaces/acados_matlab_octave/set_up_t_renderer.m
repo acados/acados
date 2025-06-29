@@ -26,13 +26,19 @@ function set_up_t_renderer(t_renderer_location, varargin)
         end
     end
 
-    t_renderer_version = 'v0.0.34';
+    t_renderer_version = 'v0.2.0';
     if ismac()
-        suffix = '-osx';
+        [~,result] = system('uname -v');
+        if any(strfind(result,'ARM64'))
+            suffix = '-osx-arm64';
+        else
+            % failsafe, newer mac users can always use rosetta with this
+            suffix = '-osx-amd64';
+        end
     elseif isunix()
-        suffix = '-linux';
+        suffix = '-linux-amd64';
     elseif ispc()
-        suffix = '-windows';
+        suffix = '-windows-amd64.exe';
     end
     acados_root_dir = getenv('ACADOS_INSTALL_DIR');
 
