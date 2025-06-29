@@ -84,8 +84,6 @@ class AcadosCasadiOcp:
             raise NotImplementedError("AcadosCasadiOcpSolver does not support general nonlinear constraints (g) yet.")
         if ocp.solver_options.integrator_type not in ["DISCRETE", "ERK"]:
             raise NotImplementedError(f"AcadosCasadiOcpSolver does not support integrator type {ocp.solver_options.integrator_type} yet.")
-        if any([dims.ns_0, dims.ns, dims.ns_e]):
-            raise NotImplementedError("CasADi NLP formulation not implemented for formulations with soft constraints yet.")
 
         # create primal variables indexed by shooting nodes
         ca_symbol = model.get_casadi_symbol()
@@ -399,7 +397,7 @@ class AcadosCasadiOcp:
         Default parameter vector p_nlp in the form of [p_0,..., p_N, p_global] for given NLP.
         """
         return self.__p
-    
+
     @property
     def bounds(self):
         """
