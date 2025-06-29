@@ -842,9 +842,6 @@ static void set_pointers_for_hessian_evaluation(ocp_nlp_config *config,
         exit(1);
     }
 
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
     // init terminal constraint Hessians to 0, as dynamics do not write into them.
     // NOTE: one can implement add_hess_contribution to avoid set
     blasfeo_dgese(nu[N] + nx[N], nu[N] + nx[N], 0.0, mem->RSQ_constr+N, 0, 0);
