@@ -95,7 +95,9 @@ D(1, 1) = 1;
 D(2, 2) = if_else(theta == 0, hess_tan, grad_tan / theta);
 
 custom_hess_x = J' * D * J;
-
+if is_octave()
+    error("This example does not work in Octave, somehow blkdiag doesn't work with symbolic matrices. If you happen to know how to fix this, please open a pull request.");
+end
 cost_expr_ext_cost_custom_hess = blkdiag(custom_hess_u, custom_hess_x);
 cost_expr_ext_cost_custom_hess_e = custom_hess_x;
 

@@ -171,6 +171,29 @@ classdef AcadosOcpSolver < handle
             value = obj.t_ocp.get_cost();
         end
 
+        function value = evaluate_constraints_and_get_violation(obj)
+            % returns the constraint violations for all stages in a cell array.
+            % values > 0 indicate a violation of the constraints.
+            value = obj.t_ocp.evaluate_constraints_and_get_violation();
+        end
+
+        function violation_idx = get_constraint_indices_with_violation(obj, tol)
+            % computes the indices of the constraints that are violated with respect to the given tolerance, in the form
+            % `[stage_index_0, constraint_index_0,
+            % stage_index_1, constraint_index_1,
+            % ....]
+            % all indices are zero -based.
+            ineq_fun = obj.evaluate_constraints_and_get_violation();
+            if nargin < 2
+                tol = obj.solver_options.nlp_solver_tol_ineq;
+            end
+            violation_idx = [];
+            for i=1:length(ineq_fun)
+                idx_i = find(ineq_fun{i} >= tol);
+                violation_idx = [violation_idx; [(i-1)*ones(length(idx_i), 1), idx_i-1]];
+            end
+        end
+
         function set(obj, field, value, varargin)
             obj.t_ocp.set(field, value, varargin{:});
         end
@@ -266,6 +289,28 @@ classdef AcadosOcpSolver < handle
             obj.t_ocp.load_iterate(filename);
         end
 
+        function [] = load_iterate_from_obj(obj, iterate)
+            %%%  Loads the iterate from an AcadosOcpIterate object.
+            %%% param1: iterate: AcadosOcpIterate object containing the iterate to load
+
+            if ~isa(iterate, 'AcadosOcpIterate')
+                error('load_iterate_from_obj: iterate needs to be of type AcadosOcpIterate');
+            end
+
+            for i = 1:obj.solver_options.N_horizon + 1
+                obj.t_ocp.set('x', iterate.x_traj{i, 1}, i-1);
+                obj.t_ocp.set('sl', iterate.sl_traj{i, 1}, i-1);
+                obj.t_ocp.set('su', iterate.su_traj{i, 1}, i-1);
+                obj.t_ocp.set('lam', iterate.lam_traj{i, 1}, i-1);
+            end
+            for i = 1:obj.solver_options.N_horizon
+                obj.t_ocp.set('u', iterate.u_traj{i, 1}, i-1);
+                obj.t_ocp.set('pi', iterate.pi_traj{i, 1}, i-1);
+                if ~isempty(iterate.z_traj{i, 1})
+                    obj.t_ocp.set('z', iterate.z_traj{i, 1}, i-1);
+                end
+            end
+        end
         function iterate = get_iterate(obj, iteration)
             if iteration > obj.get('nlp_iter')
                 error("iteration needs to be nonnegative and <= nlp_iter.");

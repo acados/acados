@@ -32,22 +32,15 @@ clear all; clc;
 
 check_acados_requirements()
 
-
 %% OCP DESCRIPTION
 ocp = AcadosOcp();
 
 %% SOLVER OPTIONS
 
 %% discretization
-N = 40;
+N = 10; % 40
 T = 2.0; % time horizon length
 h = T/N;
-
-% nonuniform time grid
-% N1 = 5;
-% N2 = N - N1;
-% time_steps = [( 1 * ones(N1,1)); 3 * ones(N2,1)];
-% time_steps = T/sum(time_steps) * time_steps;
 
 % uniform time grid
 time_steps = T/N * ones(N,1);
@@ -70,17 +63,12 @@ ocp.solver_options.nlp_solver_tol_eq = 1e-8;
 ocp.solver_options.nlp_solver_tol_ineq = 1e-8;
 ocp.solver_options.nlp_solver_tol_comp = 1e-8;
 ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
-% FULL_CONDENSING_HPIPM, PARTIAL_CONDENSING_HPIPM
-% FULL_CONDENSING_QPOASES, PARTIAL_CONDENSING_OSQP
 ocp.solver_options.qp_solver_cond_N = 5; % for partial condensing
 ocp.solver_options.qp_solver_cond_ric_alg = 0;
 ocp.solver_options.qp_solver_ric_alg = 0;
 ocp.solver_options.qp_solver_warm_start = 1; % 0: cold, 1: warm, 2: hot
 ocp.solver_options.qp_solver_iter_max = 1000; % default is 50; OSQP needs a lot sometimes.
 ocp.solver_options.qp_solver_mu0 = 1e4;
-ocp.solver_options.exact_hess_dyn = 1;
-ocp.solver_options.exact_hess_cost = 1;
-ocp.solver_options.exact_hess_constr = 1;
 ocp.solver_options.print_level = 1;
 ocp.solver_options.store_iterates = true;
 ocp.solver_options.log_dual_step_norm = true;
@@ -109,7 +97,7 @@ otherwise
 end
 
 %% MODEL
-model = get_pendulum_on_cart_model(T/N);
+model = get_pendulum_on_cart_model();
 ocp.model = model;
 
 % dimensions
@@ -178,22 +166,23 @@ constraint_formulation_nonlinear = 0;
 lbu = -80*ones(nu, 1);
 ubu =  80*ones(nu, 1);
 
-ocp.constraints.constr_type = 'AUTO';
-ocp.constraints.constr_type_0 = 'AUTO';
-ocp.constraints.constr_type_e = 'AUTO';
 
-if constraint_formulation_nonlinear % formulate constraint via h
-    model.con_h_expr_0 = model.u;
-    ocp.constraints.lh_0 = lbu;
-    ocp.constraints.uh_0 = ubu;
-    ocp.model.con_h_expr = model.u;
-    ocp.constraints.lh = lbu;
-    ocp.constraints.uh = ubu;
-else % formulate constraint as bound on u
-    ocp.constraints.idxbu = [0];
-    ocp.constraints.lbu = lbu;
-    ocp.constraints.ubu = ubu;
-end
+% bound on u
+ocp.constraints.idxbu = [0];
+ocp.constraints.lbu = lbu;
+ocp.constraints.ubu = ubu;
+
+ocp.constraints.idxbx = [0];
+ocp.constraints.lbx = -3;
+ocp.constraints.ubx = 3;
+
+% nonlinear constraint
+infty = get_acados_infty();
+ocp.model.con_h_expr = model.u*(model.x(1)+3.5);
+ocp.constraints.lh = -infty;
+% ocp.constraints.lh = lbu;
+ocp.constraints.uh = ubu;
+
 
 % initial state
 x0 = [0; pi; 0; 0];
@@ -241,115 +230,123 @@ for i=1:n_executions
     time_qp_sol(i) = ocp_solver.get('time_qp_sol');
 
     if i == 1 || i == n_executions
-        ocp_solver.print('stat')
+        ocp_solver.print('stat');
     end
 end
 
-% get slack values
-for i = 0:N-1
-    sl = ocp_solver.get('sl', i);
-    su = ocp_solver.get('su', i);
-end
-sl = ocp_solver.get('sl', N);
-su = ocp_solver.get('su', N);
+% test constraint evaluation
+stat_mat = ocp_solver.get('stat');
+res_ineq = stat_mat(:, 4);
+flag_test = 0;
+for iteration = 1:3
+    % load iterate
+    iterate = ocp_solver.get_iterate(iteration);
+    ocp_solver.load_iterate_from_obj(iterate);
 
-% get cost value
-cost_val_ocp = ocp_solver.get_cost();
+    % expected infeasibility
+    ineq_res_as_iter = res_ineq(iteration+1);
 
-primal_step_norm = ocp_solver.get('primal_step_norm');
-dual_step_norm = ocp_solver.get('dual_step_norm');
-disp('primal step norms')
-disp(primal_step_norm);
-disp('dual step norms')
-disp(dual_step_norm);
-
-%% get QP matrices:
-% See https://docs.acados.org/problem_formulation
-%        |----- dynamics -----|------ cost --------|---------------------------- constraints ------------------------|
-fields = {'qp_A','qp_B','qp_b','qp_R','qp_Q','qp_r','qp_C','qp_D','qp_lg','qp_ug','qp_lbx','qp_ubx','qp_lbu','qp_ubu'};
-
-% either stage-wise ...
-for stage = [0,N-1]
-    for k = 1:length(fields)
-        field = fields{k};
-        disp(strcat(field, " at stage ", num2str(stage), " = "));
-        ocp_solver.get(field, stage)
+    % evaluate constraints
+    ineq_fun = ocp_solver.evaluate_constraints_and_get_violation();
+    violations = zeros(N+1, 1);
+    for i=1:length(ineq_fun)
+        violations(i) = max([ineq_fun{i}; 0]);
+    end
+    for i=2:N
+        if ineq_fun{i}(3) ~= 0.0 % 3 is lh index
+            error('inequality value corresponding to masked constraint should be 0.0.');
+        end
+    end
+    [max_violation, index] = max(violations);
+    if abs(max_violation - ineq_res_as_iter) > 1e-6
+        error('inequality constraint violation does not match expected value');
+    else
+        fprintf('inequality constraint violation matches expected value: %f\n', max_violation);
+    end
+    violation_idx = ocp_solver.get_constraint_indices_with_violation(max_violation);
+    if max_violation ~= 0.0
+        if ~isequal(size(violation_idx), [1, 2])
+            error('expected violation index to be of size [1, 2], got %d, %d', size(violation_idx));
+        end
+        if ineq_fun{violation_idx(1)+1}(violation_idx(2)+1) ~= max_violation
+            error('inequality constraint violation does not match expected value');
+        else
+            fprintf('max. constraint violation index correctly identified as: %d %d\n', violation_idx(1), violation_idx(2));
+        end
+        flag_test = 1;
     end
 end
 
-stage = N;
-field = 'qp_Q';
-disp(strcat(field, " at stage ", num2str(stage), " = "));
-ocp_solver.get(field, stage)
-
-... or for all stages.
-qp_Q = ocp_solver.get('qp_Q');
-cond_H = ocp_solver.get('qp_solver_cond_H');
-
-disp('QP diagnostics of last QP before condensing')
-result = ocp_solver.qp_diagnostics(false);
-disp(['min eigenvalues of blocks are in [', num2str(min(result.min_eigv_stage)), ', ', num2str(max(result.min_eigv_stage)), ']'])
-disp(['max eigenvalues of blocks are in [', num2str(min(result.max_eigv_stage)), ', ', num2str(max(result.max_eigv_stage)), ']'])
-disp(['condition_number_stage: '])
-disp(result.condition_number_stage)
-disp(['condition_number_global: ', num2str(result.condition_number_global)])
-
-disp('QP diagnostics of last QP after partial condensing')
-result = ocp_solver.qp_diagnostics(true);
-disp(['min eigenvalues of blocks are in [', num2str(min(result.min_eigv_stage)), ', ', num2str(max(result.min_eigv_stage)), ']'])
-disp(['max eigenvalues of blocks are in [', num2str(min(result.max_eigv_stage)), ', ', num2str(max(result.max_eigv_stage)), ']'])
-disp(['condition_number_stage: '])
-disp(result.condition_number_stage)
-disp(['condition_number_global: ', num2str(result.condition_number_global)])
-
-% get second SQP iterate
-% iteration index is 0-based with iterate 0 corresponding to the initial guess
-iteration = 1;
-iterate = ocp_solver.get_iterate(iteration);
-iterates = ocp_solver.get_iterates();
-x_traj = iterates.as_array('x');
-
-if ~(all(reshape(x_traj(iteration+1, end-1, :), 1, []) == reshape(iterate.x_traj{end-1}, 1, [])))
-    error("iterates don't match");
+if ~flag_test
+    error('constraint violation index test was not done');
 end
 
-disp(['u iterate at iteration = ' num2str(iteration)]);
-disp(cell2mat(iterate.u_traj)');
+% test res_stat getter
+res_stat_all = ocp_solver.get('res_stat_all');
+res_stat_norm = stat_mat(end, 2);
+max_res_stat = zeros(1, length(res_stat_all));
+if length(res_stat_all) ~= N+1
+    error('length of res_stat_all does not match N+1');
+end
+flag_test = 0;
+for i=1:length(res_stat_all)
+    max_res_stat(i) = max(res_stat_all{i});
+    if max_res_stat(i) > res_stat_norm
+        error('max res_stat is larger than res_stat_norm');
+    elseif max_res_stat(i) == res_stat_norm
+        flag_test = 1;
+    end
+end
+
+if ~flag_test
+    error('did not find max res_stat equal to res_stat_norm');
+else
+    disp('Found max res_stat equal to res_stat_norm');
+end
+
+% test res_eq getter
+res_eq_all = ocp_solver.get('res_eq_all');
+res_eq_norm = stat_mat(end, 3);
+max_res_eq = zeros(1, length(res_eq_all));
+if length(res_eq_all) ~= N
+    error('length of res_eq_all does not match N');
+end
+flag_test = 0;
+for i=1:length(res_eq_all)
+    max_res_eq(i) = max(res_eq_all{i});
+    if max_res_eq(i) > res_eq_norm
+        error('max res_eq is larger than res_eq_norm');
+    elseif max_res_eq(i) == res_eq_norm
+        flag_test = 1;
+    end
+end
+
+if ~flag_test
+    error('did not find max res_eq equal to res_eq_norm');
+else
+    disp('Found max res_eq equal to res_eq_norm');
+end
+
+
 
 %% Plot trajectories
-figure; hold on;
-States = {'p', 'theta', 'v', 'dtheta'};
-for i=1:length(States)
-    subplot(length(States), 1, i);
-    plot(shooting_nodes, xtraj(i,:)); grid on;
-    ylabel(States{i});
+if 0
+    figure; hold on;
+    States = {'p', 'theta', 'v', 'dtheta'};
+    for i=1:length(States)
+        subplot(length(States), 1, i);
+        plot(shooting_nodes, xtraj(i,:)); grid on;
+        ylabel(States{i});
+        xlabel('t [s]')
+    end
+
+    figure
+    stairs(shooting_nodes, [utraj'; utraj(end)])
+
+    ylabel('F [N]')
     xlabel('t [s]')
+    grid on
+    if is_octave()
+        waitforbuttonpress;
+    end
 end
-
-figure
-stairs(shooting_nodes, [utraj'; utraj(end)])
-
-ylabel('F [N]')
-xlabel('t [s]')
-grid on
-if is_octave()
-    waitforbuttonpress;
-end
-
-%% plot average compuation times
-% if ~is_octave()
-%     time_total = sum(time_tot);
-%     time_linearize = sum(time_lin);
-%     time_regulariz = sum(time_reg);
-%     time_qp_solution = sum(time_qp_sol);
-%
-%     figure;
-%
-%     bar_vals = 1000 * [time_linearize; time_regulariz; time_qp_solution; ...
-%         time_total - time_linearize - time_regulariz - time_qp_solution] / n_executions;
-%     bar([1; nan], [bar_vals, nan(size(bar_vals))]' ,'stacked')
-%     legend('linearization', 'regularization', 'qp solution', 'remaining')
-%     ylabel('time in [ms]')
-%     title( [ strrep(cost_type, '_',' '), ' , sim: ' strrep(sim_method, '_',' '), ...
-%        ';  ', strrep(qp_solver, '_', ' ')] )
-% end

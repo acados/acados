@@ -420,6 +420,9 @@ ACADOS_SYMBOL_EXPORT int ocp_nlp_precompute(ocp_nlp_solver *solver, ocp_nlp_in *
 ACADOS_SYMBOL_EXPORT void ocp_nlp_eval_cost(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
 
 
+ACADOS_SYMBOL_EXPORT void ocp_nlp_eval_constraints(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
+
+
 /// Computes jacobian wrt params in all modules (preparation for solution sensitivities).
 ///
 /// \param solver The solver struct.

@@ -14,7 +14,7 @@ env:
   ACADOS_ON_CI: ON
 
 jobs:
-  core_build:
+  test_matlab_windows:
     runs-on: windows-latest
 
     steps:

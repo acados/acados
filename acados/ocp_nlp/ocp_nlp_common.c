@@ -3021,7 +3021,7 @@ void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config,
         config->constraints[i]->update_qp_vectors(config->constraints[i], dims->constraints[i],
             in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
 
-        // copy ineq function value into nlp mem, then into QP
+        // copy ineq function value into mem, then into QP
         struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
         blasfeo_dveccp(2 * ni[i], ineq_fun, 0, mem->ineq_fun + i, 0);
 
@@ -3774,6 +3774,22 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 }
 
 
+void ocp_nlp_eval_constraints_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    int N = dims->N;
+
+    for (int i = 0; i <= N; i++)
+    {
+        config->constraints[i]->compute_fun(config->constraints[i], dims->constraints[i],
+                                            in->constraints[i], opts->constraints[i],
+                                            mem->constraints[i], work->constraints[i]);
+        // copy ineq function value into mem
+        struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
+        blasfeo_dveccp(2 * dims->ni[i], ineq_fun, 0, mem->ineq_fun + i, 0);
+    }
+}
+
 
 int ocp_nlp_common_setup_qp_matrices_and_factorize(ocp_nlp_config *config, ocp_nlp_dims *dims_, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
                 ocp_nlp_opts *nlp_opts, ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work)
@@ -4492,6 +4508,36 @@ void ocp_nlp_memory_get(ocp_nlp_config *config, ocp_nlp_memory *nlp_mem, const c
     }
 }
 
+
+void ocp_nlp_memory_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_memory *nlp_mem, int stage, const char *field, void *return_value_)
+{
+    // int *nb = dims->nb;
+    // int *ng = dims->ng;
+    int *ni = dims->ni;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    // int *ni_nl = dims->ni_nl;
+    if (!strcmp("ineq_fun", field))
+    {
+        double *value = return_value_;
+        blasfeo_unpack_dvec(2 * ni[stage], nlp_mem->ineq_fun + stage, 0, value, 1);
+    }
+    else if (!strcmp("res_stat", field))
+    {
+        double *value = return_value_;
+        blasfeo_unpack_dvec(nv[stage], nlp_mem->nlp_res->res_stat + stage, 0, value, 1);
+    }
+    else if (!strcmp("res_eq", field))
+    {
+        double *value = return_value_;
+        blasfeo_unpack_dvec(nx[stage+1], nlp_mem->nlp_res->res_eq + stage, 0, value, 1);
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_memory_get_at_stage\n", field);
+        exit(1);
+    }
+}
 
 void ocp_nlp_timings_reset(ocp_nlp_timings *timings)
 {

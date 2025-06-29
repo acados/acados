@@ -820,6 +820,10 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
     {
         return dims->nx[stage+1];
     }
+    else if (!strcmp(field, "nv"))
+    {
+        return dims->nv[stage];
+    }
     else if (!strcmp(field, "u") || !strcmp(field, "nu"))
     {
         return dims->nu[stage];
@@ -952,6 +956,12 @@ void ocp_nlp_constraint_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims 
         config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
                                             "nh", &dims_out[0]);
         return;
+    }
+    else if (!strcmp(field, "ineq_fun"))
+    {
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
+                                            "ni", &dims_out[0]);
+        dims_out[0] *= 2;
     }
     // matrices
     else if (!strcmp(field, "C"))
@@ -1371,6 +1381,21 @@ void ocp_nlp_eval_cost(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *
     ocp_nlp_cost_compute(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 }
 
+void ocp_nlp_eval_constraints(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
+{
+    ocp_nlp_config *config = solver->config;
+    ocp_nlp_memory *nlp_mem;
+    ocp_nlp_opts *nlp_opts;
+    ocp_nlp_workspace *nlp_work;
+    ocp_nlp_dims *dims = solver->dims;
+
+    config->get(config, solver->dims, solver->mem, "nlp_mem", &nlp_mem);
+    config->opts_get(config, solver->dims, solver->opts, "nlp_opts", &nlp_opts);
+    config->work_get(config, solver->dims, solver->work, "nlp_work", &nlp_work);
+
+    ocp_nlp_eval_constraints_common(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+}
+
 
 void ocp_nlp_eval_params_jac(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
 {
@@ -1563,6 +1588,10 @@ void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, 
             size2 = dims->nu[stage];
         }
         xcond_solver_config->solver_get(xcond_solver_config, nlp_mem->qp_in, nlp_mem->qp_out, nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, field, stage, value, size1, size2);
+    }
+    else if (!strcmp(field, "ineq_fun") || !strcmp(field, "res_stat") || !strcmp(field, "res_eq"))
+    {
+        ocp_nlp_memory_get_at_stage(config, dims, nlp_mem, stage, field, value);
     }
     else if (!strcmp(field, "pcond_Q"))
     {

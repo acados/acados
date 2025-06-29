@@ -114,7 +114,11 @@ classdef {{ name }}_mex_solver < handle
         end
 
         function value = get_cost(obj)
-            value = ocp_get_cost(obj.C_ocp);
+            value = ocp_get(obj.C_ocp, 'cost_value');
+        end
+
+        function value = evaluate_constraints_and_get_violation(obj)
+            value = ocp_get(obj.C_ocp, 'constraint_violation');
         end
 
         function eval_param_sens(obj, field, stage, index)
