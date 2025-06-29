@@ -154,6 +154,9 @@ COMPDEFINES = [ COMPDEFINES, ' -DACADOS_WITH_QPOASES ' ];
 {%- elif solver_options.qp_solver is containing("OSQP") %}
 CFLAGS = [ CFLAGS, ' -DACADOS_WITH_OSQP ' ];
 COMPDEFINES = [ COMPDEFINES, ' -DACADOS_WITH_OSQP ' ];
+{%- elif solver_options.qp_solver is containing("CLARABEL") %}
+CFLAGS = [ CFLAGS, ' -DACADOS_WITH_CLARABEL ' ];
+COMPDEFINES = [ COMPDEFINES, ' -DACADOS_WITH_CLARABEL ' ];
 {%- elif solver_options.qp_solver is containing("QPDUNES") %}
 CFLAGS = [ CFLAGS, ' -DACADOS_WITH_QPDUNES ' ];
 COMPDEFINES = [ COMPDEFINES, ' -DACADOS_WITH_QPDUNES ' ];
