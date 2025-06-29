@@ -920,9 +920,11 @@ class AcadosOcp:
         # cost integration
         if opts.N_horizon > 0:
             supports_cost_integration = lambda type : type in ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
-            if opts.cost_discretization == 'INTEGRATOR' and \
-                any([not supports_cost_integration(cost) for cost in [cost.cost_type_0, cost.cost_type]]):
-                raise ValueError('cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs.')
+            if opts.cost_discretization == 'INTEGRATOR':
+                if any([not supports_cost_integration(cost) for cost in [cost.cost_type_0, cost.cost_type]]):
+                    raise ValueError('cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs.')
+                if opts.nlp_solver_type == "SQP_WITH_FEASIBLE_QP":
+                    raise ValueError('cost_discretization == INTEGRATOR is not compatible with SQP_WITH_FEASIBLE_QP yet.')
 
         ## constraints
         self._make_consistent_constraints_initial()

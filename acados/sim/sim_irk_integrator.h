@@ -166,6 +166,8 @@ typedef struct
 
     double *cost_fun;
     double *outer_hess_is_diag;
+    double *cost_scaling_ptr;
+
     struct blasfeo_dmat *W_chol;  // cholesky factor of weight matrix
     struct blasfeo_dvec *W_chol_diag;
     struct blasfeo_dvec *y_ref;  // y_ref for NLS cost

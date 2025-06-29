@@ -215,7 +215,7 @@ sqp_time = ocp_solver.get('time_tot');
 %end
 
 format short e
-% get solution for initialization of next NLP
+% get solution, e.g. for initialization of next NLP
 x_traj = ocp_solver.get('x');
 u_traj = ocp_solver.get('u');
 pi_traj = ocp_solver.get('pi');
