@@ -897,19 +897,33 @@ static void set_pointers_for_hessian_evaluation(ocp_nlp_config *config,
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
-    // init constraint Hessians to 0
-    for (int i = 0; i <= N; i++)
-    {
-        blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->RSQ_constr+i, 0, 0);
-    }
+    // init terminal constraint Hessians to 0, as dynamics do not write into them.
+    // NOTE: one can implement add_hess_contribution to avoid set
+    blasfeo_dgese(nu[N] + nx[N], nu[N] + nx[N], 0.0, mem->RSQ_constr+N, 0, 0);
 
+    // in Hessian computation modules are called in order:
+    // dyn, cost, constr.
+    int dyn_compute_hess;
     for (int i = 0; i < N; i++)
     {
         config->dynamics[i]->memory_set_RSQrq_ptr(mem->RSQ_constr+i, nlp_mem->dynamics[i]);
+        // dynamics always write into hess directly, if hess is computed
+        config->dynamics[i]->opts_get(config->dynamics[i], opts->dynamics[i], "compute_hess", &dyn_compute_hess);
+        if (!dyn_compute_hess)
+        {
+            // if dynamics do not compute Hessian, we set it to 0
+            blasfeo_dgese(nx[i] + nu[i], nx[i] + nu[i], 0.0, mem->RSQ_constr+i, 0, 0);
+        }
+    }
+    // write cost hess contribution to RSQ_cost
+    int add_cost_hess_contribution = 0;
+    for (int i = 0; i <= N; i++)
+    {
+        config->cost[i]->opts_set(config->cost[i], opts->cost[i], "add_hess_contribution", &add_cost_hess_contribution);
+        config->cost[i]->memory_set_RSQrq_ptr(mem->RSQ_cost+i, nlp_mem->cost[i]);
     }
     for (int i = 0; i <= N; i++)
     {
-        config->cost[i]->memory_set_RSQrq_ptr(mem->RSQ_cost+i, nlp_mem->cost[i]);
         config->constraints[i]->memory_set_RSQrq_ptr(mem->RSQ_constr+i, nlp_mem->constraints[i]);
     }
     return;
