@@ -506,7 +506,7 @@ void ocp_nlp_qpscaling_compute_obj_scaling_factor(ocp_nlp_qpscaling_dims *dims, 
             printf("Gradient is very small! %.2e\n", mem->obj_factor*nrm_inf_grad_obj);
         }
         lb_grad_norm_factor = opts->lb_norm_inf_grad_obj / nrm_inf_grad_obj;
-        tmp = fmin(max_upscale_factor, lb_grad_norm_factor);
+        tmp = MIN(max_upscale_factor, lb_grad_norm_factor);
         mem->obj_factor = MAX(mem->obj_factor, tmp);
         mem->status = ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED;
     }
