@@ -68,9 +68,9 @@ def formulate_ocp(Tf: float = 1.0, N: int = 20)-> AcadosOcp:
     ocp.constraints.lg = np.array([-5])
     ocp.constraints.ug = np.array([5])
 
-    # x_1 at the end of the horizon should be 0.5
+    # set x_1 at the end of the horizon
     ocp.constraints.C_e = np.array([[1, 0, 0, 0]])
-    ocp.constraints.lg_e = np.array([0.5])
+    ocp.constraints.lg_e = np.array([0.3])
     ocp.constraints.ug_e = np.array([0.5])
 
     # set h constraints
@@ -125,7 +125,7 @@ def main():
     print(f"Difference between casadi and acados solution in pi: {diff_pi}")
 
     test_tol = 1e-4
-    if diff_x > test_tol or diff_u > test_tol or diff_pi > test_tol:
+    if diff_x > test_tol or diff_u > test_tol or diff_lam > test_tol or diff_pi > test_tol:
         raise ValueError(f"Test failed: difference between casadi and acados solution should be smaller than {test_tol}, but got {diff_x} and {diff_u} and {diff_lam} and {diff_pi}.")
 
     if PLOT:
