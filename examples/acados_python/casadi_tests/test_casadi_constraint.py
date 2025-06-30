@@ -10,17 +10,6 @@ from utils import plot_pendulum
 
 PLOT = False
 
-def get_x_u_traj(ocp_solver: Union[AcadosOcpSolver, AcadosCasadiOcpSolver], N_horizon: int):
-    ocp = ocp_solver.acados_ocp if isinstance(ocp_solver, AcadosOcpSolver) else ocp_solver.ocp
-    simX = np.zeros((N_horizon+1, ocp.dims.nx))
-    simU = np.zeros((N_horizon, ocp.dims.nu))
-    for i in range(N_horizon):
-        simX[i,:] = ocp_solver.get(i, "x")
-        simU[i,:] = ocp_solver.get(i, "u")
-    simX[N_horizon,:] = ocp_solver.get(N_horizon, "x")
-
-    return simX, simU
-
 def formulate_ocp(Tf: float = 1.0, N: int = 20)-> AcadosOcp:
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -100,33 +89,19 @@ def main():
     ocp_solver.load_iterate_from_obj(initial_iterate)
     # solve with acados
     status = ocp_solver.solve()
+    if status != 0:
+        raise Exception(f'acados returned status {status}.')
     # get solution
-    simX, simU = get_x_u_traj(ocp_solver, N_horizon)
     result = ocp_solver.store_iterate_to_obj()
-    lam = ocp_solver.get_flat("lam")
-    pi = ocp_solver.get_flat("pi")
 
     # ## solve using casadi
     casadi_ocp_solver = AcadosCasadiOcpSolver(ocp=ocp,solver="ipopt",verbose=False)
     casadi_ocp_solver.load_iterate_from_obj(result)
     casadi_ocp_solver.solve()
-    x_casadi_sol, u_casadi_sol = get_x_u_traj(casadi_ocp_solver, N_horizon)
-    lam_casadi = casadi_ocp_solver.get_flat("lam")
-    pi_casadi = casadi_ocp_solver.get_flat("pi")
+    result_casadi = casadi_ocp_solver.store_iterate_to_obj()
 
     # evaluate difference
-    diff_x = np.linalg.norm(x_casadi_sol - simX)
-    print(f"Difference between casadi and acados solution in x: {diff_x}")
-    diff_u = np.linalg.norm(u_casadi_sol - simU)
-    print(f"Difference between casadi and acados solution in u: {diff_u}")
-    diff_lam = np.linalg.norm(lam_casadi - lam)
-    print(f"Difference between casadi and acados solution in lam: {diff_lam}")
-    diff_pi = np.linalg.norm(pi_casadi - pi)
-    print(f"Difference between casadi and acados solution in pi: {diff_pi}")
-
-    test_tol = 1e-4
-    if diff_x > test_tol or diff_u > test_tol or diff_lam > test_tol or diff_pi > test_tol:
-        raise ValueError(f"Test failed: difference between casadi and acados solution should be smaller than {test_tol}, but got {diff_x} and {diff_u} and {diff_lam} and {diff_pi}.")
+    result.flatten().allclose(other=result_casadi.flatten())
 
     if PLOT:
         Fmax = 80
