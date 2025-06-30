@@ -49,6 +49,7 @@
 // acados
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
+#include "acados/utils/math.h"
 
 
 /************************************************
@@ -226,7 +227,7 @@ void *ocp_nlp_globalization_funnel_memory_assign(void *config_, void *dims_, voi
 
 void initialize_funnel_width(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double initial_infeasibility)
 {
-    mem->funnel_width = fmax(opts->initialization_upper_bound,
+    mem->funnel_width = MAX(opts->initialization_upper_bound,
                             opts->initialization_increase_factor*initial_infeasibility);
 }
 
@@ -251,7 +252,7 @@ void update_funnel_penalty_parameter(ocp_nlp_globalization_funnel_memory *mem,
     }
     if (mem->penalty_parameter * pred_optimality + pred_infeasibility < opts->penalty_eta * pred_infeasibility)
     {
-        mem->penalty_parameter = fmax(0.0, //objective multiplier should always be >= 0!
+        mem->penalty_parameter = MAX(0.0, //objective multiplier should always be >= 0!
                                         fmin(opts->penalty_contraction * mem->penalty_parameter,
                                         ((1-opts->penalty_eta) * pred_infeasibility) / (-pred_optimality + 1e-9))
                                      );
@@ -308,7 +309,7 @@ bool is_f_type_armijo_condition_satisfied(ocp_nlp_globalization_opts *globalizat
                                                     double pred,
                                                     double alpha)
 {
-    if (negative_ared <= fmin(globalization_opts->eps_sufficient_descent * alpha * fmax(pred, 0) + 1e-18, 0))
+    if (negative_ared <= fmin(globalization_opts->eps_sufficient_descent * alpha * MAX(pred, 0) + 1e-18, 0))
     {
         return true;
     }

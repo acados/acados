@@ -46,6 +46,7 @@
 // acados
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
+#include "acados/utils/math.h"
 #include "acados/utils/strsep.h"
 // openmp
 #if defined(ACADOS_WITH_OPENMP)
@@ -2586,7 +2587,7 @@ double ocp_nlp_compute_dual_pi_norm_inf(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out
     {
         for (j=0; j<nx[i+1]; j++)
         {
-            norm_pi = fmax(norm_pi, fabs(BLASFEO_DVECEL(nlp_out->pi+i, j)));
+            norm_pi = MAX(norm_pi, fabs(BLASFEO_DVECEL(nlp_out->pi+i, j)));
         }
     }
     return norm_pi;
@@ -2603,7 +2604,7 @@ double ocp_nlp_compute_dual_lam_norm_inf(ocp_nlp_dims *dims, ocp_nlp_out *nlp_ou
     {
         for (j=0; j<2*dims->ni[i]; j++)
         {
-            norm_lam = fmax(norm_lam, fabs(BLASFEO_DVECEL(nlp_out->lam+i, j)));
+            norm_lam = MAX(norm_lam, fabs(BLASFEO_DVECEL(nlp_out->lam+i, j)));
         }
     }
     return norm_lam;
@@ -2850,13 +2851,13 @@ static void adaptive_levenberg_marquardt_update_mu(double iter, double step_size
         if (step_size == 1.0)
         {
             double mu_tmp = mem->adaptive_levenberg_marquardt_mu;
-            mem->adaptive_levenberg_marquardt_mu = fmax(opts->adaptive_levenberg_marquardt_mu_min,
+            mem->adaptive_levenberg_marquardt_mu = MAX(opts->adaptive_levenberg_marquardt_mu_min,
                             mem->adaptive_levenberg_marquardt_mu_bar/(opts->adaptive_levenberg_marquardt_lam));
             mem->adaptive_levenberg_marquardt_mu_bar = mu_tmp;
         }
         else
         {
-            mem->adaptive_levenberg_marquardt_mu = fmin(opts->adaptive_levenberg_marquardt_lam * mem->adaptive_levenberg_marquardt_mu, 1.0);
+            mem->adaptive_levenberg_marquardt_mu = MIN(opts->adaptive_levenberg_marquardt_lam * mem->adaptive_levenberg_marquardt_mu, 1.0);
         }
     }
 }

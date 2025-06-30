@@ -44,6 +44,7 @@
 #include "acados/ocp_nlp/ocp_nlp_globalization_common.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/utils/mem.h"
+#include "acados/utils/math.h"
 
 // blasfeo
 #include "blasfeo_d_aux.h"
@@ -945,7 +946,7 @@ static int ocp_nlp_ddp_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_
 
         negative_ared = trial_cost - nlp_mem->cost_value;
         // Check Armijo sufficient decrease condition
-        if (negative_ared <= fmin(-globalization_opts->eps_sufficient_descent*alpha* fmax(pred, 0) + 1e-18, 0))
+        if (negative_ared <= fmin(-globalization_opts->eps_sufficient_descent*alpha* MAX(pred, 0) + 1e-18, 0))
         {
             // IF step accepted: update x
             // reset evaluation point to SQP iterate
