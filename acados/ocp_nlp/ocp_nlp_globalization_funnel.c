@@ -253,7 +253,7 @@ void update_funnel_penalty_parameter(ocp_nlp_globalization_funnel_memory *mem,
     if (mem->penalty_parameter * pred_optimality + pred_infeasibility < opts->penalty_eta * pred_infeasibility)
     {
         mem->penalty_parameter = MAX(0.0, //objective multiplier should always be >= 0!
-                                        fmin(opts->penalty_contraction * mem->penalty_parameter,
+                                        MIN(opts->penalty_contraction * mem->penalty_parameter,
                                         ((1-opts->penalty_eta) * pred_infeasibility) / (-pred_optimality + 1e-9))
                                      );
     }
@@ -309,7 +309,7 @@ bool is_f_type_armijo_condition_satisfied(ocp_nlp_globalization_opts *globalizat
                                                     double pred,
                                                     double alpha)
 {
-    if (negative_ared <= fmin(globalization_opts->eps_sufficient_descent * alpha * MAX(pred, 0) + 1e-18, 0))
+    if (negative_ared <= MIN(globalization_opts->eps_sufficient_descent * alpha * MAX(pred, 0) + 1e-18, 0))
     {
         return true;
     }
