@@ -373,6 +373,9 @@ add_test(NAME python_pendulum_ocp_example_cmake
     add_test(NAME test_casadi_p_in_constraint_and_cost
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/casadi_tests
         python test_casadi_p_in_constraint_and_cost.py)
+    add_test(NAME test_casadi_constraint
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/casadi_tests
+        python test_casadi_constraint.py)
 
     # Sim
     add_test(NAME python_pendulum_ext_sim_example
@@ -451,6 +454,7 @@ add_test(NAME python_pendulum_ocp_example_cmake
     # casadi_tests
     set_tests_properties(python_casadi_get_set_example PROPERTIES DEPENDS test_casadi_p_in_constraint_and_cost)
     set_tests_properties(test_casadi_p_in_constraint_and_cost PROPERTIES DEPENDS test_casadi_parametric)
+    set_tests_properties(test_casadi_constraint PROPERTIES DEPENDS python_casadi_get_set_example)
 
     # Directory getting_started
     set_tests_properties(python_pendulum_sim_example PROPERTIES DEPENDS python_pendulum_ocp_example)
