@@ -1149,7 +1149,7 @@ void compute_gershgorin_min_eig_estimate(int n, struct blasfeo_dmat *A, double *
         }
         a = BLASFEO_DMATEL(A, ii, ii);
         lam_i = a - r_i;
-        lam = fmin(lam, lam_i);
+        lam = MIN(lam, lam_i);
     }
     *out = lam;
 }

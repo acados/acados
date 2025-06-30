@@ -295,7 +295,7 @@ static double norm_inf_matrix_col(int col_idx, int col_length,  struct blasfeo_d
     for (int j = 0; j < col_length; ++j)
     {
         double tmp = BLASFEO_DMATEL(At, j, col_idx);
-        norm = fmax(norm, fabs(tmp));
+        norm = MAX(norm, fabs(tmp));
     }
     return norm;
 }
@@ -475,14 +475,14 @@ void ocp_nlp_qpscaling_compute_obj_scaling_factor(ocp_nlp_qpscaling_dims *dims, 
     for (int stage = 0; stage <= dim->N; stage++)
     {
         compute_gershgorin_max_abs_eig_estimate(nx[stage]+nu[stage], RSQrq+stage, &tmp);
-        max_abs_eig = fmax(max_abs_eig, tmp);
+        max_abs_eig = MAX(max_abs_eig, tmp);
         // take Z into account
         blasfeo_dvecnrm_inf(2*ns[stage], qp_in->Z+stage, 0, &tmp);
-        max_abs_eig = fmax(max_abs_eig, tmp);
+        max_abs_eig = MAX(max_abs_eig, tmp);
 
         // norm gradient
         blasfeo_dvecnrm_inf(nx[stage]+nu[stage]+2*ns[stage], qp_in->rqz+stage, 0, &tmp);
-        nrm_inf_grad_obj = fmax(nrm_inf_grad_obj, fabs(tmp));
+        nrm_inf_grad_obj = MAX(nrm_inf_grad_obj, fabs(tmp));
     }
 
     if (max_abs_eig < opts->ub_max_abs_eig)
@@ -507,7 +507,7 @@ void ocp_nlp_qpscaling_compute_obj_scaling_factor(ocp_nlp_qpscaling_dims *dims, 
         }
         lb_grad_norm_factor = opts->lb_norm_inf_grad_obj / nrm_inf_grad_obj;
         tmp = fmin(max_upscale_factor, lb_grad_norm_factor);
-        mem->obj_factor = fmax(mem->obj_factor, tmp);
+        mem->obj_factor = MAX(mem->obj_factor, tmp);
         mem->status = ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED;
     }
     if (opts->print_level > 0)
@@ -552,10 +552,10 @@ void ocp_nlp_qpscaling_scale_constraints(ocp_nlp_qpscaling_dims *dims, void *opt
             mask_value_upper = BLASFEO_DVECEL(qp_in->d_mask+i, 2*nb[i]+ng[i]+j);
 
             // calculate scaling factor from row norm
-            double bound_max = fmax(fabs(mask_value_lower * BLASFEO_DVECEL(qp_in->d+i, nb[i]+j)),
+            double bound_max = MAX(fabs(mask_value_lower * BLASFEO_DVECEL(qp_in->d+i, nb[i]+j)),
                                     fabs(mask_value_upper * BLASFEO_DVECEL(qp_in->d+i, 2*nb[i]+ng[i]+j)));
             // only scale down.
-            scaling_factor = 1.0 / fmax(1.0, fmax(bound_max, coeff_norm));
+            scaling_factor = 1.0 / MAX(1.0, MAX(bound_max, coeff_norm));
 
             // store scaling factor
             BLASFEO_DVECEL(mem->constraints_scaling_vec+i, j) = scaling_factor;
