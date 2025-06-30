@@ -80,12 +80,8 @@ class AcadosCasadiOcp:
             raise NotImplementedError("AcadosCasadiOcpSolver does not support soft constraints yet.")
         if dims.nz > 0:
             raise NotImplementedError("AcadosCasadiOcpSolver does not support algebraic variables (z) yet.")
-        if any([dims.ng, dims.ng_e]):
-            raise NotImplementedError("AcadosCasadiOcpSolver does not support general nonlinear constraints (g) yet.")
         if ocp.solver_options.integrator_type not in ["DISCRETE", "ERK"]:
             raise NotImplementedError(f"AcadosCasadiOcpSolver does not support integrator type {ocp.solver_options.integrator_type} yet.")
-        if any([dims.ns_0, dims.ns, dims.ns_e]):
-            raise NotImplementedError("CasADi NLP formulation not implemented for formulations with soft constraints yet.")
 
         # create primal variables indexed by shooting nodes
         ca_symbol = model.get_casadi_symbol()
@@ -238,18 +234,27 @@ class AcadosCasadiOcp:
             # nonlinear constraints
             # initial stage
             if i == 0 and N_horizon > 0:
-                # h_0
-                h_0_nlp_expr = h_0_fun(xtraj_node[0], utraj_node[0], ptraj_node[0], model.p_global)
-                g.append(h_0_nlp_expr)
-                lbg.append(constraints.lh_0)
-                ubg.append(constraints.uh_0)
-                if with_hessian and dims.nh_0 > 0:
-                    lam_h_0 = ca_symbol(f'lam_h_0', dims.nh_0, 1)
-                    lam_g.append(lam_h_0)
-                    # add hessian contribution
-                    if ocp.solver_options.hessian_approx == 'EXACT' and ocp.solver_options.exact_hess_constr:
-                        adj = ca.jtimes(h_0_nlp_expr, w, lam_h_0, True)
-                        hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
+                if dims.ng > 0:
+                    C = constraints.C
+                    D = constraints.D
+                    linear_constr_expr = ca.mtimes(C, xtraj_node[0]) + ca.mtimes(D, utraj_node[0])
+                    g.append(linear_constr_expr)
+                    lbg.append(constraints.lg)
+                    ubg.append(constraints.ug)
+
+                if dims.nh_0 > 0:
+                    # h_0
+                    h_0_nlp_expr = h_0_fun(xtraj_node[0], utraj_node[0], ptraj_node[0], model.p_global)
+                    g.append(h_0_nlp_expr)
+                    lbg.append(constraints.lh_0)
+                    ubg.append(constraints.uh_0)
+                    if with_hessian:
+                        lam_h_0 = ca_symbol(f'lam_h_0', dims.nh_0, 1)
+                        lam_g.append(lam_h_0)
+                        # add hessian contribution
+                        if ocp.solver_options.hessian_approx == 'EXACT' and ocp.solver_options.exact_hess_constr:
+                            adj = ca.jtimes(h_0_nlp_expr, w, lam_h_0, True)
+                            hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
 
                 if dims.nphi_0 > 0:
                     conl_constr_expr_0 = ca.substitute(model.con_phi_expr_0, model.con_r_in_phi_0, model.con_r_expr_0)
@@ -267,21 +272,31 @@ class AcadosCasadiOcp:
                         dr_dw = ca.jacobian(r_in_nlp, w)
                         hess_l += dr_dw.T @ outer_hess_r @ dr_dw
 
-                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh_0 + dims.nphi_0)))
-                offset += dims.nh_0 + dims.nphi_0
-
+                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.ng + dims.nh_0 + dims.nphi_0)))
+                offset += dims.ng + dims.nh_0 + dims.nphi_0
+            
+            # intermediate stages
             elif i < N_horizon:
-                h_i_nlp_expr = h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
-                g.append(h_i_nlp_expr)
-                lbg.append(constraints.lh)
-                ubg.append(constraints.uh)
-                if with_hessian and dims.nh > 0:
-                    # add hessian contribution
-                    lam_h = ca_symbol(f'lam_h_{i}', dims.nh, 1)
-                    lam_g.append(lam_h)
-                    if ocp.solver_options.hessian_approx == 'EXACT' and ocp.solver_options.exact_hess_constr:
-                        adj = ca.jtimes(h_i_nlp_expr, w, lam_h, True)
-                        hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
+                if dims.ng > 0:
+                    C = constraints.C
+                    D = constraints.D
+                    linear_constr_expr = ca.mtimes(C, xtraj_node[i]) + ca.mtimes(D, utraj_node[i])
+                    g.append(linear_constr_expr)
+                    lbg.append(constraints.lg)
+                    ubg.append(constraints.ug)
+
+                if dims.nh > 0:
+                    h_i_nlp_expr = h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
+                    g.append(h_i_nlp_expr)
+                    lbg.append(constraints.lh)
+                    ubg.append(constraints.uh)
+                    if with_hessian and dims.nh > 0:
+                        # add hessian contribution
+                        lam_h = ca_symbol(f'lam_h_{i}', dims.nh, 1)
+                        lam_g.append(lam_h)
+                        if ocp.solver_options.hessian_approx == 'EXACT' and ocp.solver_options.exact_hess_constr:
+                            adj = ca.jtimes(h_i_nlp_expr, w, lam_h, True)
+                            hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
 
                 if dims.nphi > 0:
                     g.append(conl_constr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global))
@@ -297,22 +312,30 @@ class AcadosCasadiOcp:
                         dr_dw = ca.jacobian(r_in_nlp, w)
                         hess_l += dr_dw.T @ outer_hess_r @ dr_dw
 
-                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh + dims.nphi)))
-                offset += dims.nphi + dims.nh
-
+                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.ng + dims.nh + dims.nphi)))
+                offset += dims.ng + dims.nphi + dims.nh
+            
+            # terminal stage
             else:
-                # terminal stage
-                h_e_nlp_expr = h_e_fun(xtraj_node[-1], ptraj_node[-1], model.p_global)
-                g.append(h_e_nlp_expr)
-                lbg.append(constraints.lh_e)
-                ubg.append(constraints.uh_e)
-                if with_hessian and dims.nh_e > 0:
-                    # add hessian contribution
-                    lam_h_e = ca_symbol(f'lam_h_e', dims.nh_e, 1)
-                    lam_g.append(lam_h_e)
-                    if ocp.solver_options.hessian_approx == 'EXACT' and ocp.solver_options.exact_hess_constr:
-                        adj = ca.jtimes(h_e_nlp_expr, w, lam_h_e, True)
-                        hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
+                if dims.ng_e > 0:
+                    C_e = constraints.C_e
+                    linear_constr_expr_e = ca.mtimes(C_e, xtraj_node[-1])
+                    g.append(linear_constr_expr_e)
+                    lbg.append(constraints.lg_e)
+                    ubg.append(constraints.ug_e)
+
+                if dims.nh_e > 0:
+                    h_e_nlp_expr = h_e_fun(xtraj_node[-1], ptraj_node[-1], model.p_global)
+                    g.append(h_e_nlp_expr)
+                    lbg.append(constraints.lh_e)
+                    ubg.append(constraints.uh_e)
+                    if with_hessian and dims.nh_e > 0:
+                        # add hessian contribution
+                        lam_h_e = ca_symbol(f'lam_h_e', dims.nh_e, 1)
+                        lam_g.append(lam_h_e)
+                        if ocp.solver_options.hessian_approx == 'EXACT' and ocp.solver_options.exact_hess_constr:
+                            adj = ca.jtimes(h_e_nlp_expr, w, lam_h_e, True)
+                            hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
 
                 if dims.nphi_e > 0:
                     g.append(conl_constr_e_fun(xtraj_node[-1], ptraj_node[-1], model.p_global))
@@ -328,8 +351,8 @@ class AcadosCasadiOcp:
                         dr_dw = ca.jacobian(r_in_nlp, w)
                         hess_l += dr_dw.T @ outer_hess_r @ dr_dw
 
-                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh_e + dims.nphi_e)))
-                offset += dims.nh_e + dims.nphi_e
+                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.ng_e + dims.nh_e + dims.nphi_e)))
+                offset += dims.ng_e + dims.nh_e + dims.nphi_e
 
         ### Cost
         # initial cost term
