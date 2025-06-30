@@ -266,6 +266,11 @@ void ocp_nlp_dynamics_disc_opts_get(void *config_, void *opts_, const char *fiel
         int *int_ptr = value;
         *int_ptr = opts->cost_computation;
     }
+    else if (!strcmp(field, "compute_hess"))
+    {
+        int *int_ptr = value;
+        *int_ptr = opts->compute_hess;
+    }
     else
     {
         printf("\nerror: field %s not available in ocp_nlp_dynamics_disc_opts_get\n", field);
