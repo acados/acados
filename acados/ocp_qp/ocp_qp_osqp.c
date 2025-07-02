@@ -38,6 +38,7 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_osqp.h"
 #include "acados/utils/mem.h"
+#include "acados/utils/math.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
@@ -1026,8 +1027,8 @@ void ocp_qp_osqp_opts_set(void *config_, void *opts_, const char *field, void *v
         // opts->osqp_opts->eps_rel = *tol;
         // opts->osqp_opts->eps_dual_inf = *tol;
 
-        opts->osqp_opts->eps_rel = fmax(*tol, 1e-5);
-        opts->osqp_opts->eps_dual_inf = fmax(*tol, 1e-5);
+        opts->osqp_opts->eps_rel = MAX(*tol, 1e-5);
+        opts->osqp_opts->eps_dual_inf = MAX(*tol, 1e-5);
 
         if (*tol <= 1e-3)
         {

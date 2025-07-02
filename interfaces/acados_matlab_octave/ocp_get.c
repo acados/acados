@@ -79,7 +79,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     // field
     char *field = mxArrayToString( prhs[1] );
-    // mexPrintf("\nin ocp_get: field%s\n", field);
+    // mexPrintf("\nin ocp_get: field %s\n", field);
+    if (field == NULL)
+    {
+        mexErrMsgTxt("got NULL pointer for field, maybe you put in a \" instead of \' in MATLAB.\n");
+    }
 
     int N = dims->N;
     int stage;
@@ -475,6 +479,61 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ocp_nlp_get(solver, "status", &status);
         *mat_ptr = (double) status;
     }
+    else if (!strcmp(field, "cost_value"))
+    {
+        plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+        double *out_data = mxGetPr( plhs[0] );
+        ocp_nlp_eval_cost(solver, in, out);
+        ocp_nlp_get(solver, "cost_value", out_data);
+    }
+    else if (!strcmp(field, "constraint_violation"))
+    {
+        int out_dims[2];
+        // evaluate
+        ocp_nlp_eval_constraints(solver, in, out);
+        // create output
+        mxArray *cell_array = mxCreateCellMatrix(N+1, 1);
+        plhs[0] = cell_array;
+        mxArray *tmp_mat;
+        for (ii=0; ii<N+1; ii++)
+        {
+            ocp_nlp_constraint_dims_get_from_attr(config, dims, out, ii, "ineq_fun", out_dims);
+            tmp_mat = mxCreateNumericMatrix(out_dims[0], 1, mxDOUBLE_CLASS, mxREAL);
+            double *mat_ptr = mxGetPr( tmp_mat );
+            ocp_nlp_get_at_stage(solver, ii, "ineq_fun", mat_ptr);
+            mxSetCell(cell_array, ii, tmp_mat);
+        }
+    }
+    else if (!strcmp(field, "res_stat_all"))
+    {
+        int nv;
+        mxArray *cell_array = mxCreateCellMatrix(N+1, 1);
+        plhs[0] = cell_array;
+        mxArray *tmp_mat;
+        for (ii=0; ii<N+1; ii++)
+        {
+            nv = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "nv");
+            tmp_mat = mxCreateNumericMatrix(nv, 1, mxDOUBLE_CLASS, mxREAL);
+            double *mat_ptr = mxGetPr( tmp_mat );
+            ocp_nlp_get_at_stage(solver, ii, "res_stat", mat_ptr);
+            mxSetCell(cell_array, ii, tmp_mat);
+        }
+    }
+    else if (!strcmp(field, "res_eq_all"))
+    {
+        int npi;
+        mxArray *cell_array = mxCreateCellMatrix(N, 1);
+        plhs[0] = cell_array;
+        mxArray *tmp_mat;
+        for (ii=0; ii<N; ii++)
+        {
+            npi = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "pi");
+            tmp_mat = mxCreateNumericMatrix(npi, 1, mxDOUBLE_CLASS, mxREAL);
+            double *mat_ptr = mxGetPr( tmp_mat );
+            ocp_nlp_get_at_stage(solver, ii, "res_eq", mat_ptr);
+            mxSetCell(cell_array, ii, tmp_mat);
+        }
+    }
     else if (!strcmp(field, "sqp_iter") || !strcmp(field, "nlp_iter") || !strcmp(field, "qpscaling_status"))  // int fields
     {
         plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
@@ -614,11 +673,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int out_dims[2];
         if (nrhs==2)
         {
-            mxArray *cell_array = mxCreateCellMatrix(N, 1);
+            // fields that dont exist at last node
+            int cell_size;
+            if (!strcmp(field, "qp_A") || !strcmp(field, "qp_B") || !strcmp(field, "qp_R") || !strcmp(field, "qp_S") ||
+                !strcmp(field, "qp_r") || !strcmp(field, "qp_lbu") || !strcmp(field, "qp_ubu"))
+            {
+                cell_size = N;
+            }
+            else
+            {
+                cell_size = N+1;
+            }
+            mxArray *cell_array = mxCreateCellMatrix(cell_size, 1);
             plhs[0] = cell_array;
             mxArray *tmp_mat;
-
-            for (ii=0; ii<N; ii++)
+            for (ii=0; ii<cell_size; ii++)
             {
                 ocp_nlp_qp_dims_get_from_attr(config, dims, out, ii, &field[3], out_dims);
                 tmp_mat = mxCreateNumericMatrix(out_dims[0], out_dims[1], mxDOUBLE_CLASS, mxREAL);

@@ -198,12 +198,11 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
     ocp.solver_options.qp_solver_tol_ineq = qp_tol
     ocp.solver_options.qp_solver_tol_comp = qp_tol
     ocp.solver_options.qp_solver_ric_alg = 1
-    # ocp.solver_options.qp_solver_cond_ric_alg = 1
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
-    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_ocp.json')
+    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_ocp.json', verbose=False)
 
     if globalization == "FUNNEL_L1PEN_LINESEARCH":
         # Test the options setters
@@ -217,8 +216,6 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
         ocp_solver.options_set('globalization_line_search_use_sufficient_descent', globalization_line_search_use_sufficient_descent)
         ocp_solver.options_set('globalization_use_SOC', globalization_use_SOC)
         ocp_solver.options_set('globalization_full_step_dual', 1)
-    else:
-        ocp
 
     if INITIALIZE:# initialize solver
         # [ocp_solver.set(i, "x", x0 + (i/N) * (x_goal-x0)) for i in range(N+1)]
@@ -237,8 +234,6 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
     simX = np.array([ocp_solver.get(i,"x") for i in range(N+1)])
     simU = np.array([ocp_solver.get(i,"u") for i in range(N)])
     pi_multiplier = [ocp_solver.get(i, "pi") for i in range(N)]
-    print(f"cost function value = {ocp_solver.get_cost()}")
-
 
     # print summary
     print(f"solved Maratos test problem with settings {setting}")
@@ -261,8 +256,6 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
     if PLOT:
         plot_linear_mass_system_X_state_space(simX, circle=circle, x_goal=x_goal)
         plot_linear_mass_system_U(shooting_nodes, simU)
-        # plot_linear_mass_system_X(shooting_nodes, simX)
-
     print(f"\n\n----------------------\n")
 
 if __name__ == '__main__':

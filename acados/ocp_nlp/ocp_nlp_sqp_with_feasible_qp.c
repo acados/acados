@@ -56,6 +56,7 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+#include "acados/utils/math.h"
 #include "acados_c/ocp_qp_interface.h"
 
 /************************************************
@@ -656,7 +657,7 @@ static double calculate_pred_l1_inf(ocp_nlp_sqp_wfqp_opts* opts, ocp_nlp_sqp_wfq
     }
     else
     {
-        if (mem->l1_infeasibility < fmin(opts->nlp_opts->tol_ineq, opts->nlp_opts->tol_eq))
+        if (mem->l1_infeasibility < MIN(opts->nlp_opts->tol_ineq, opts->nlp_opts->tol_eq))
         {
             return 0.0;
         }
@@ -689,11 +690,11 @@ static double calculate_qp_l1_infeasibility_from_slacks(ocp_nlp_dims *dims, ocp_
         {
             // Add lower slack
             tmp1 = BLASFEO_DVECEL(qp_out->ux + i, nx[i]+nu[i]+ns[i] + j);
-            l1_inf += fmax(0.0, tmp1);
+            l1_inf += MAX(0.0, tmp1);
 
             // Add upper slack
             tmp2 = BLASFEO_DVECEL(qp_out->ux + i, nx[i]+nu[i]+2*ns[i]+nns[i] + j);
-            l1_inf += fmax(0.0, tmp2);
+            l1_inf += MAX(0.0, tmp2);
         }
     }
 #if defined(ACADOS_DEVELOPER_DEBUG_CHECKS)
@@ -775,15 +776,15 @@ static double calculate_qp_l1_infeasibility_manually(ocp_nlp_dims *dims, ocp_nlp
                 if (j < nb[i] + ng[i])
                 {
                     // maximum(0, lower_bound - value)
-                    l1_inf += fmax(0.0, tmp_bound-tmp);
-                    // printf("lower bounds: bound: %.4e, value: %.4e, result: %.4e\n", tmp_bound, tmp, fmax(0.0, tmp_bound-tmp));
+                    l1_inf += MAX(0.0, tmp_bound-tmp);
+                    // printf("lower bounds: bound: %.4e, value: %.4e, result: %.4e\n", tmp_bound, tmp, MAX(0.0, tmp_bound-tmp));
                 }
                 else
                 {
                     // upper bounds have the wrong sign!
                     // it is lower_bounds <= value <= -upper_bounds, therefore plus below
-                    // printf("upper bounds: value: %.4e, value: %.4e, result: %.4e\n", tmp_bound, tmp, fmax(0.0, tmp_bound+tmp));
-                    l1_inf += fmax(0.0, tmp_bound+tmp);
+                    // printf("upper bounds: value: %.4e, value: %.4e, result: %.4e\n", tmp_bound, tmp, MAX(0.0, tmp_bound+tmp));
+                    l1_inf += MAX(0.0, tmp_bound+tmp);
                 }
             }
         }
@@ -1482,7 +1483,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
             mem->pred_l1_inf_QP = calculate_pred_l1_inf(opts, mem, l1_inf_QP_feasibility);
         }
 
-        if (l1_inf_QP_feasibility/(fmax(1.0, (double) mem->absolute_nns)) < nlp_opts->tol_ineq)
+        if (l1_inf_QP_feasibility/(MAX(1.0, (double) mem->absolute_nns)) < nlp_opts->tol_ineq)
         {
             mem->watchdog_zero_slacks_counter += 1;
         }

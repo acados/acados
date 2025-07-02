@@ -61,7 +61,7 @@ def solve_problem_with_setting(setting):
     ocp.solver_options.qp_tol = 5e-7
 
     ocp.solver_options.nlp_solver_max_iter = 100
-    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
+    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json', verbose=False)
 
     # initialize solver
     xinit = np.array([1.5])
