@@ -867,6 +867,9 @@ classdef AcadosOcp < handle
                 if ~(strcmp(cost.cost_type_0, "NONLINEAR_LS") || strcmp(cost.cost_type_0, "CONVEX_OVER_NONLINEAR"))
                     error('INTEGRATOR cost discretization requires CONVEX_OVER_NONLINEAR or NONLINEAR_LS cost type for initial cost.')
                 end
+                if strcmp(opts.nlp_solver_type, 'SQP_WITH_FEASIBLE_QP')
+                    error('cost_discretization == INTEGRATOR is not compatible with SQP_WITH_FEASIBLE_QP yet.')
+                end
             end
 
 

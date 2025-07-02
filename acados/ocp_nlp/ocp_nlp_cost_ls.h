@@ -138,6 +138,7 @@ int ocp_nlp_cost_ls_model_get(void *config_, void *dims_, void *model_,
 typedef struct
 {
     int compute_hess;
+    int add_hess_contribution;
 } ocp_nlp_cost_ls_opts;
 
 //

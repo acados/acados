@@ -365,6 +365,7 @@ void ocp_nlp_cost_conl_opts_initialize_default(void *config_, void *dims_, void 
     ocp_nlp_cost_conl_opts *opts = opts_;
 
     opts->gauss_newton_hess = 1;
+    opts->add_hess_contribution = 0;
 
     return;
 }
@@ -392,6 +393,11 @@ void ocp_nlp_cost_conl_opts_set(void *config_, void *opts_, const char *field, v
         int *opt_val = (int *) value;
         opts->integrator_cost = *opt_val;
     }
+    else if (!strcmp(field, "add_hess_contribution"))
+    {
+        int* int_ptr = value;
+        opts->add_hess_contribution = *int_ptr;
+    }
     else if(!strcmp(field, "with_solution_sens_wrt_params"))
     {
         // not implemented yet
@@ -405,6 +411,14 @@ void ocp_nlp_cost_conl_opts_set(void *config_, void *opts_, const char *field, v
     }
 
     return;
+}
+
+
+int* ocp_nlp_cost_conl_opts_get_add_hess_contribution_ptr(void *config_, void *opts_)
+{
+    ocp_nlp_cost_conl_opts *opts = opts_;
+
+    return &opts->add_hess_contribution;
 }
 
 
@@ -509,6 +523,12 @@ struct blasfeo_dvec *ocp_nlp_cost_conl_memory_get_grad_ptr(void *memory_)
     return &memory->grad;
 }
 
+
+double *ocp_nlp_cost_conl_model_get_scaling_ptr(void *in_)
+{
+    ocp_nlp_cost_conl_model *model = in_;
+    return &model->scaling;
+}
 
 
 struct blasfeo_dvec *ocp_nlp_cost_conl_model_get_y_ref_ptr(void *in_)
@@ -691,6 +711,12 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
 
     ocp_nlp_cost_conl_cast_workspace(config_, dims, opts_, work_);
 
+    double prev_RSQ_factor = 0.0;
+    if (opts->add_hess_contribution)
+    {
+        prev_RSQ_factor = 1.0;
+    }
+
     int nx = dims->nx;
     int nz = dims->nz;
     int nu = dims->nu;
@@ -803,7 +829,7 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
         }
         // RSQrq += scaling * tmp_nv_ny * tmp_nv_ny^T
         blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
-                        1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+                        prev_RSQ_factor, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
     }
 
     // slack update gradient
@@ -818,10 +844,18 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
     memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->ux, nu+nx);
 
     // scale
-    if(model->scaling!=1.0)
+    if (model->scaling!=1.0)
     {
-        blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
-        memory->fun *= model->scaling;
+        if (opts->integrator_cost == 0)
+        {
+            blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
+            memory->fun *= model->scaling;
+        }
+        else
+        {
+            // only scale the slack gradient
+            blasfeo_dvecsc(2*ns, model->scaling, &memory->grad, nu+nx);
+        }
     }
 
     return;
@@ -907,25 +941,13 @@ void ocp_nlp_cost_conl_compute_gradient(void *config_, void *dims_, void *model_
             // grad = Jt_ux_tilde * tmp_ny
             blasfeo_dgemv_n(nu+nx, ny, 1.0, &work->Jt_ux_tilde, 0, 0, &work->tmp_ny, 0,
                             0.0, &memory->grad, 0, &memory->grad, 0);
-
-            // // tmp_nv_ny = Jt_ux_tilde * W_chol
-            // blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0,
-            //                 &work->Jt_ux_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
         }
         else
         {
             // grad = Jt_ux * tmp_ny
             blasfeo_dgemv_n(nu+nx, ny, 1.0, &work->Jt_ux, 0, 0, &work->tmp_ny, 0,
                             0.0, &memory->grad, 0, &memory->grad, 0);
-
-            // // tmp_nv_ny = Jt_ux * W_chol, where W_chol is lower triangular
-            // blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &work->Jt_ux, 0, 0,
-            //                     &work->tmp_nv_ny, 0, 0);
-
         }
-        // // RSQrq += scaling * tmp_nv_ny * tmp_nv_ny^T
-        // blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
-        //                 1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
     }
 
     // slack update gradient
@@ -933,9 +955,18 @@ void ocp_nlp_cost_conl_compute_gradient(void *config_, void *dims_, void *model_
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
 
     // scale
-    if(model->scaling!=1.0)
+    if (model->scaling!=1.0)
     {
-        blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
+        if (opts->integrator_cost == 0)
+        {
+            // scale the whole gradient
+            blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
+        }
+        else
+        {
+            // only scale the slack gradient
+            blasfeo_dvecsc(2*ns, model->scaling, &memory->grad, nu+nx);
+        }
     }
 
     return;
@@ -1003,7 +1034,7 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
     memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, ux, nu+nx);
 
     // scale
-    if (model->scaling!=1.0)
+    if (model->scaling!=1.0 && opts->integrator_cost == 0)
     {
         memory->fun *= model->scaling;
     }
@@ -1066,6 +1097,7 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_, int stage)
     config->opts_initialize_default = &ocp_nlp_cost_conl_opts_initialize_default;
     config->opts_update = &ocp_nlp_cost_conl_opts_update;
     config->opts_set = &ocp_nlp_cost_conl_opts_set;
+    config->opts_get_add_hess_contribution_ptr = &ocp_nlp_cost_conl_opts_get_add_hess_contribution_ptr;
     config->memory_calculate_size = &ocp_nlp_cost_conl_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_conl_memory_assign;
     config->memory_get_fun_ptr = &ocp_nlp_cost_conl_memory_get_fun_ptr;
@@ -1074,6 +1106,7 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_, int stage)
     config->get_outer_hess_is_diag_ptr = &ocp_nlp_cost_conl_get_outer_hess_is_diag_ptr;
     config->memory_get_W_chol_diag_ptr = &ocp_nlp_cost_conl_memory_get_W_chol_diag_ptr;
     config->model_get_y_ref_ptr = &ocp_nlp_cost_conl_model_get_y_ref_ptr;
+    config->model_get_scaling_ptr = &ocp_nlp_cost_conl_model_get_scaling_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_cost_conl_memory_set_ux_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_cost_conl_memory_set_z_alg_ptr;
     config->memory_set_dzdux_tran_ptr = &ocp_nlp_cost_conl_memory_set_dzdux_tran_ptr;

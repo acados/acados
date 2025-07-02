@@ -843,26 +843,33 @@ static void set_pointers_for_hessian_evaluation(ocp_nlp_config *config,
         exit(1);
     }
 
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
-    for (int i = 0; i <= N; i++)
-    {
-        // TODO: first compute cost hessian (without adding) and avoid setting everything to zero?
-        // init Hessians to 0
+    // init terminal constraint Hessians to 0, as dynamics do not write into them.
+    // NOTE: one can implement add_hess_contribution to avoid set
+    blasfeo_dgese(nu[N] + nx[N], nu[N] + nx[N], 0.0, mem->RSQ_constr+N, 0, 0);
 
-        // TODO: avoid setting qp_in->RSQ to zero in ocp_nlp_approximate_qp_matrices?
-        blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->RSQ_constr+i, 0, 0);
-        blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->RSQ_cost+i, 0, 0);
-    }
-
+    // in Hessian computation modules are called in order:
+    // dyn, cost, constr.
+    int dyn_compute_hess;
     for (int i = 0; i < N; i++)
     {
         config->dynamics[i]->memory_set_RSQrq_ptr(mem->RSQ_constr+i, nlp_mem->dynamics[i]);
+        // dynamics always write into hess directly, if hess is computed
+        config->dynamics[i]->opts_get(config->dynamics[i], opts->dynamics[i], "compute_hess", &dyn_compute_hess);
+        if (!dyn_compute_hess)
+        {
+            // if dynamics do not compute Hessian, we set it to 0
+            blasfeo_dgese(nx[i] + nu[i], nx[i] + nu[i], 0.0, mem->RSQ_constr+i, 0, 0);
+        }
+    }
+    // write cost hess contribution to RSQ_cost
+    int add_cost_hess_contribution = 0;
+    for (int i = 0; i <= N; i++)
+    {
+        config->cost[i]->opts_set(config->cost[i], opts->cost[i], "add_hess_contribution", &add_cost_hess_contribution);
+        config->cost[i]->memory_set_RSQrq_ptr(mem->RSQ_cost+i, nlp_mem->cost[i]);
     }
     for (int i = 0; i <= N; i++)
     {
-        config->cost[i]->memory_set_RSQrq_ptr(mem->RSQ_cost+i, nlp_mem->cost[i]);
         config->constraints[i]->memory_set_RSQrq_ptr(mem->RSQ_constr+i, nlp_mem->constraints[i]);
     }
     return;
@@ -1310,7 +1317,7 @@ void ocp_nlp_sqp_wfqp_approximate_feasibility_qp_constraint_vectors(ocp_nlp_conf
         blasfeo_dveccp(2*n_nominal_ineq_nlp+ns[i], nominal_qp_in->d + i, 0, relaxed_qp_in->d + i, 0);
         blasfeo_dveccp(ns[i], nominal_qp_in->d + i, 2*n_nominal_ineq_nlp+ns[i], relaxed_qp_in->d + i, 2*n_nominal_ineq_nlp+ns[i]+nns[i]);
     }
-    // setup d_mask; TODO: this is only needed at the start of each NLP solve
+    // setup d_mask
     if (nlp_mem->iter == 0)
     {
         int offset_dmask;
@@ -1318,7 +1325,7 @@ void ocp_nlp_sqp_wfqp_approximate_feasibility_qp_constraint_vectors(ocp_nlp_conf
         {
             offset_dmask = 2*(dims->nb[i]+dims->ng[i]+dims->ni_nl[i]);
             blasfeo_dveccp(offset_dmask, nominal_qp_in->d_mask+i, 0, relaxed_qp_in->d_mask+i, 0);
-            blasfeo_dvecse(2*relaxed_qp_in->dim->ns[i], 1.0, relaxed_qp_in->d_mask+i,offset_dmask);
+            blasfeo_dvecse(2*relaxed_qp_in->dim->ns[i], 1.0, relaxed_qp_in->d_mask+i, offset_dmask);
         }
     }
 }
@@ -1585,8 +1592,8 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             }
             /* Prepare the QP data */
             // linearize NLP and update QP matrices
-            set_pointers_for_hessian_evaluation(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
             acados_tic(&timer1);
+            set_pointers_for_hessian_evaluation(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work);
             // nominal QP solver
             ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
             ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
