@@ -2219,18 +2219,18 @@ class AcadosOcp:
             residual = y - self.cost.yref_e
             cost_dot = 0.5 * (residual.T @ self.cost.W_e @ residual)
 
-        elif self.cost.cost_type == "NONLINEAR_LS":
+        elif self.cost.cost_type_e == "NONLINEAR_LS":
             residual = model.cost_y_expr_e - self.cost.yref_e
             cost_dot = 0.5 * (residual.T @ self.cost.W_e @ residual)
 
-        elif self.cost.cost_type == "EXTERNAL":
+        elif self.cost.cost_type_e == "EXTERNAL":
             cost_dot = model.cost_expr_ext_cost_e
 
-        elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+        elif self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
             cost_dot = ca.substitute(
             model.cost_psi_expr_e, model.cost_r_in_psi_expr_e, model.cost_y_expr_e)
         else:
-            raise ValueError("create_model_with_cost_state: Unknown terminal cost type.")
+            raise ValueError(f"create_model_with_cost_state: Unknown terminal cost type {self.cost.cost_type_e}.")
 
         return cost_dot
 
