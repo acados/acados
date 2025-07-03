@@ -2155,6 +2155,9 @@ class AcadosOcp:
     def get_initial_cost_expression(self):
         model = self.model
         if self.cost.cost_type == "LINEAR_LS":
+            if is_empty(self.cost.Vx_0):
+                return 0
+
             y = self.cost.Vx_0 @ model.x + self.cost.Vu_0 @ model.u
 
             if not is_empty(self.cost.Vz_0):
@@ -2181,6 +2184,9 @@ class AcadosOcp:
     def get_path_cost_expression(self):
         model = self.model
         if self.cost.cost_type == "LINEAR_LS":
+            if is_empty(self.cost.Vx):
+                return 0
+
             y = self.cost.Vx @ model.x + self.cost.Vu @ model.u
 
             if not is_empty(self.cost.Vz):
