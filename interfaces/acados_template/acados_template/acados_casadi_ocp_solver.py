@@ -471,6 +471,8 @@ class AcadosCasadiOcpSolver:
         # create casadi NLP formulation
         casadi_nlp_obj = AcadosCasadiOcp(ocp, with_hessian=use_acados_hessian)
 
+        self.acados_casadi_ocp = casadi_nlp_obj
+
         self.casadi_nlp = casadi_nlp_obj.nlp
         self.bounds = casadi_nlp_obj.bounds
         self.w0 = casadi_nlp_obj.w0
