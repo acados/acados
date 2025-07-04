@@ -33,7 +33,7 @@
 #include <string.h>
 
 // clarabel
-#include "Clarabel.cpp/include/Clarabel.h"
+#include "Clarabel.cpp/include/clarabel.h"
 
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
@@ -1256,11 +1256,11 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
 
     if (!mem->first_run)
     {
-        ClarabelDefaultInfo tmp_info;
-        tmp_info = clarabel_DefaultSolver_update_P(mem->solver, mem->P_nzval, mem->P_nnz);
-        tmp_info = clarabel_DefaultSolver_update_A(mem->solver, mem->A_nzval, mem->A_nnz);
-        tmp_info = clarabel_DefaultSolver_update_q(mem->solver, mem->q, mem->q_nnz);
-        tmp_info = clarabel_DefaultSolver_update_b(mem->solver, mem->b, mem->b_nnz);
+        // ClarabelDefaultInfo tmp_info;
+        clarabel_DefaultSolver_update_P(mem->solver, mem->P_nzval, mem->P_nnz);
+        clarabel_DefaultSolver_update_A(mem->solver, mem->A_nzval, mem->A_nnz);
+        clarabel_DefaultSolver_update_q(mem->solver, mem->q, mem->q_nnz);
+        clarabel_DefaultSolver_update_b(mem->solver, mem->b, mem->b_nnz);
     }
     else
     {

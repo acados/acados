@@ -38,7 +38,7 @@ extern "C" {
 
 // clarabel
 // #include "clarabel/Clarabel.h"
-#include "Clarabel.cpp/include/Clarabel.h"
+#include "Clarabel.cpp/include/clarabel.h"
 
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
