@@ -250,6 +250,7 @@ def solve_ocp(modification=1, constraint_formulation="BGH", hessian_approx="EXAC
     ocp.solver_options.qp_solver_mu0 = 1e3
     ocp.solver_options.store_iterates = True
     ocp.solver_options.eval_residual_at_max_iter = True
+    ocp.solver_options.nlp_solver_ext_qp_res = 1
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -268,6 +269,10 @@ def solve_ocp(modification=1, constraint_formulation="BGH", hessian_approx="EXAC
     # Solve the problem
     ocp_solver.solve()
     ocp_solver.print_statistics()
+
+    qp_res_ineq = ocp_solver.get_stats("qp_res_ineq")
+    if qp_res_ineq[-1] > 1e-6:
+        raise ValueError(f"qp_res_ineq at last iteration is {qp_res_ineq[-1]}, which is larger than 1e-6.")
 
     # get solution
     for i in range(N):
