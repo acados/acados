@@ -42,7 +42,7 @@ extern "C" {
 #endif
 
 // blasfeo
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_common.h"
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_globalization_common.h"
@@ -89,14 +89,7 @@ void *ocp_nlp_globalization_merit_backtracking_memory_assign(void *config, void 
 /************************************************
  * functions
  ************************************************/
-//
-double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims,
-                                  ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
-                                  ocp_nlp_memory *mem, ocp_nlp_workspace *work);
-//
-int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
-            int sqp_iter, double *alpha_ref);
+
 //
 double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
           ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
@@ -112,14 +105,8 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate_for_ddp(voi
 void ocp_nlp_globalization_merit_backtracking_print_iteration_header();
 //
 void ocp_nlp_globalization_merit_backtracking_print_iteration(double objective_value,
-                                                            int iter_count,
-                                                            void *nlp_res_,
-                                                            double step_norm,
-                                                            double reg_param,
-                                                            int qp_status,
-                                                            int qp_iter,
-                                                            void* nlp_opts_,
-                                                            void* mem_);
+                                                                void* nlp_opts_,
+                                                                void* mem_);
 //
 int ocp_nlp_globalization_merit_backtracking_needs_objective_value();
 //

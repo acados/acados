@@ -1,14 +1,10 @@
 <!-- # Publications and Projects that feature `acados`. -->
-# Other Projects that feature `acados`
+# Related Projects
+<!-- just simulation -->
+<!-- ### Dynamic Objective MPC for Motion Planning of Seamless Docking Maneuvers
+https://www.youtube.com/watch?v=28X5zaHW6bs -->
 
 ## Software interfaced with `acados`
-
-- [openpilot](https://github.com/commaai/openpilot/)
-is an open source driver assistance system.
-[It has over 150 supported car makes and models.](https://github.com/commaai/openpilot/blob/master/docs/CARS.md)
-`acados` is used within openpilot for lateral and longitudinal MPC.
-It uses the `Cython` wrapper to the `acados` OCP solver in its software stack.
-
 - [Rockit (Rapid Optimal Control kit)](https://gitlab.kuleuven.be/meco-software/rockit)
 is a software framework to quickly prototype optimal control problems.
 Notably, the software allows free end-time problems and multi-stage optimal problems.
@@ -17,12 +13,24 @@ The software is currently focused on direct methods and relies heavily on `CasAD
 
 - [TuneMPC - a Python package for economic tuning of nonlinear model predictive control (NMPC) problems.](https://github.com/jdeschut/tunempc/)
 
-- [OpenOCL](https://github.com/OpenOCL/OpenOCL)
-is an open-source Matlab toolbox for modeling and solving optimal control problems.
-It can use `CasADi` with IPOPT as a solver.
-It also provides a higher level interface to `acados`, which is based on the Matlab interface of `acados`.
+- [leap-c (Learning Predictive Control)](https://github.com/leap-c/leap-c)
+
+- [openpilot](https://github.com/commaai/openpilot/)
+is an open source driver assistance system.
+[It has over 150 supported car makes and models.](https://github.com/commaai/openpilot/blob/master/docs/CARS.md)
+`acados` is used within openpilot for lateral and longitudinal MPC.
+It uses the `Cython` wrapper to the `acados` OCP solver in its software stack.
+
+- [COFLEX - COntrol scheme for large and FLEXible wind turbines](https://github.com/TUDelft-DataDrivenControl/COFLEX)
 
 - [bioptim - a Python library for optimal control in biomechanics.](https://github.com/pyomeca/bioptim)
+
+- [acados-STM32 - acados Nonlinear MPC example (inverted pendulum control) using HPIPM on STM32H7 device (Cortex-M7 @ 400 MHz)](https://github.com/mindThomas/acados-STM32)
+
+- [OpenOCL](https://github.com/OpenOCL/OpenOCL)
+is an open-source MATLAB toolbox for modeling and solving optimal control problems.
+It can use `CasADi` with IPOPT as a solver.
+It also provides a higher level interface to `acados`, which is based on the MATLAB interface of `acados`.
 
 ## Papers featuring `acados`
 ### with embedded deployment
@@ -34,7 +42,6 @@ It also provides a higher level interface to `acados`, which is based on the Mat
 - [NMPC for Racing Using a Singularity-Free Path-Parametric Model with Obstacle Avoidance](https://cdn.syscop.de/publications/Kloeser2020.pdf)
 
 - [Mobility-enhanced MPC for Legged Locomotion on Rough Terrain](https://arxiv.org/abs/2105.05998)
-    - [Video to Mobility-enhanced MPC for Legged Locomotion on Rough Terrain](https://www.dropbox.com/sh/mkr4pftcug6jlo7/AABNqu1AsGED2WSR8IqvaiUla?dl=0)
 
 - [Continuous Control Set Nonlinear Model Predictive Control of Reluctance Synchronous Machines - IEEE Transactions on Control System Technology](https://ieeexplore.ieee.org/document/9360312)
 
@@ -43,6 +50,7 @@ It also provides a higher level interface to `acados`, which is based on the Mat
 
 - [Real-Time Neural MPC: Deep Learning Model Predictive Control for Quadrotors and Agile Robotic Platforms](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=10049101)
 
+- [Agile perching maneuvers in birds and morphing-wing drones](https://www.nature.com/articles/s41467-024-52369-4)
 
 ### other
 - [Contraction Properties of the Advanced Step Real-Time Iteration for NMPC — IFAC World Congress 2020](https://cdn.syscop.de/publications/Nurkanovic2020b.pdf)

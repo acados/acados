@@ -1,6 +1,6 @@
 branches:
   only:
-    - master
+    - main
 
 cache:
   - c:\dev\Eigen3\

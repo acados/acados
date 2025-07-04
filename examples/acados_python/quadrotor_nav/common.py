@@ -66,8 +66,6 @@ Ct  = 3.25e-4       # [N/krpm^2] Thrust coefficient
 dq  = 92e-3         # [m] distance between motors' center
 l   = dq/2          # [m] distance between motors' center and the axis of rotation
 
-INF = 1e5
-
 # timing parameters
 T_del = 0.02               # time between steps in seconds
 N = 50                     # number of shooting nodes
@@ -143,30 +141,6 @@ def quat2rpy(qoid):
 
     return [r_d, p_d, y_d]
 
-def get_norm_2(diff):
-
-    norm = ca.sqrt(diff.T @ diff)
-
-    return norm
-
-def get_2norm_2(diff):
-
-    norm = (diff.T @ diff)
-
-    return norm
-
-def get_2norm_W(diff, W):
-
-    norm = (diff.T @ W @diff)
-
-    return norm
-
-
-def get_norm_W(diff, W):
-
-    norm = ca.sqrt(diff.T @ W @diff)
-
-    return norm
 
 def InterpolLuT(s: Union[ca.MX, float]):
     ''' 3rd bspline interpolation of curve x, y, zeta based on longitudinal progress (s)
@@ -214,15 +188,15 @@ def projFrenSerretBasis(s: Union[ca.MX, float]):
     etBar_MX = d2Gamma_ds2
     enBar_MX = (1/ kap**3) * (kap**2 * d3Gamma_ds3 - d2Gamma_ds2 @ d3Gamma_ds3.T @ d2Gamma_ds2)
     ebBar_MX = (1/ kap) * ca.cross(dGamma_ds, d3Gamma_ds3)
-    tau_MX =  ca.dot(en_MX, ebBar_MX) 
+    tau_MX =  ca.dot(en_MX, ebBar_MX)
     tauBar_MX =  ca.jacobian(tau_MX, s)
 
     return kap, tau_MX, et_MX, en_MX, eb_MX, kapBar_MX, tauBar_MX, etBar_MX, enBar_MX, ebBar_MX
 
 def evalFrenSerretBasis(s: ca.MX, kap_MX, tau_MX, et_MX, en_MX, eb_MX):
     '''evaluation functions for curve in Frenet Serret space
-    <-- kap_fun, tau_fun : Curvature, torsion casADi functions
-    <-- et_fun, en_fun, eb_fun : tangent , normal , binormal casADi functions '''
+    <-- kap_fun, tau_fun : Curvature, torsion CasADi functions
+    <-- et_fun, en_fun, eb_fun : tangent , normal , binormal CasADi functions '''
 
     tau_fun = ca.Function('tau', [s], [tau_MX])
     kap_fun = ca.Function('kap', [s], [kap_MX])
@@ -234,8 +208,8 @@ def evalFrenSerretBasis(s: ca.MX, kap_MX, tau_MX, et_MX, en_MX, eb_MX):
 
 def evalFrenSerretDerv(s: ca.MX, kapBar, tauBar):
     '''evaluation functions for curve in Frenet Serret space
-    <-- kap_fun, tau_fun : Curvature, torsion casADi functions
-    <-- et_fun, en_fun, eb_fun : tangent , normal , binormal casADi functions '''
+    <-- kap_fun, tau_fun : Curvature, torsion CasADi functions
+    <-- et_fun, en_fun, eb_fun : tangent , normal , binormal CasADi functions '''
 
     tauBar_fun = ca.Function('tau', [s], [kapBar])
     kapBar_fun = ca.Function('kap', [s], [tauBar])

@@ -51,6 +51,7 @@ typedef struct d_ocp_qp ocp_qp_in;
 typedef struct d_ocp_qp_sol ocp_qp_out;
 typedef struct d_ocp_qp_res ocp_qp_res;
 typedef struct d_ocp_qp_res_ws ocp_qp_res_ws;
+typedef struct d_ocp_qp_seed ocp_qp_seed;
 
 
 
@@ -64,6 +65,7 @@ typedef struct
     void (*opts_initialize_default)(void *config, void *dims, void *opts);
     void (*opts_update)(void *config, void *dims, void *opts);
     void (*opts_set)(void *config_, void *opts_, const char *field, void* value);
+    void (*opts_get)(void *config_, void *opts_, const char *field, void* value);
     acados_size_t (*memory_calculate_size)(void *config, void *dims, void *opts);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     void (*memory_get)(void *config_, void *mem_, const char *field, void* value);
@@ -71,7 +73,8 @@ typedef struct
     int (*evaluate)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
     void (*solver_get)(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, const char *field, int stage, void* value, int size1, int size2);
     void (*memory_reset)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
-    void (*eval_sens)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
+    void (*eval_forw_sens)(void *config, void *qp_in, void *seed, void *qp_out, void *opts, void *mem, void *work);
+    void (*eval_adj_sens)(void *config, void *qp_in, void *seed, void *qp_out, void *opts, void *mem, void *work);
     void (*terminate)(void *config, void *mem, void *work);
 } qp_solver_config;
 #endif
@@ -94,10 +97,13 @@ typedef struct
     void *(*memory_assign)(void *dims, void *opts, void *raw_memory);
     void (*memory_get)(void *config, void *mem, const char *field, void* value);
     acados_size_t (*workspace_calculate_size)(void *dims, void *opts);
-    int (*condensing)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);
-    int (*condense_rhs)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);
-    int (*condense_lhs)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);
+    int (*condensing)(void *qp_in, void *x_cond_qp_in, void *opts, void *mem, void *work);
+    int (*condense_rhs)(void *qp_in, void *x_cond_qp_in, void *opts, void *mem, void *work);
+    int (*condense_rhs_seed)(void *qp_in, void *seed, void *xcond_seed, void *opts, void *mem, void *work);
+    int (*condense_lhs)(void *qp_in, void *x_cond_qp_in, void *opts, void *mem, void *work);
+    int (*condense_qp_out)(void *qp_in, void *x_cond_qp_in, void *qp_out, void *p_cond_qp_out, void *opts, void *mem, void *work);
     int (*expansion)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);
+    int (*expand_sol_seed)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);
 } ocp_qp_xcond_config;
 
 
@@ -154,6 +160,18 @@ acados_size_t ocp_qp_out_calculate_size(ocp_qp_dims *dims);
 ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory);
 //
 double ocp_qp_out_compute_primal_nrm_inf(ocp_qp_out* qp_out);
+//
+double ocp_qp_out_compute_dual_nrm_inf(ocp_qp_out* qp_out);
+//
+void ocp_qp_out_copy(ocp_qp_out* from, ocp_qp_out* to);
+//
+void ocp_qp_out_axpy(double alpha, ocp_qp_out* x, ocp_qp_out* y, ocp_qp_out* z);
+//
+void ocp_qp_out_set_to_zero(ocp_qp_out* qp_out);
+void ocp_qp_out_add(double alpha, ocp_qp_out* x, ocp_qp_out* y);
+void ocp_qp_out_sc(double alpha, ocp_qp_out* x);
+double ocp_qp_out_ddot(ocp_qp_out *x, ocp_qp_out *y, struct blasfeo_dvec *work_tmp_2ni);
+
 
 /* res */
 //
@@ -169,7 +187,11 @@ void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
 //
 void ocp_qp_res_compute_nrm_inf(ocp_qp_res *qp_res, double res[4]);
 
-
+/* seed */
+//
+acados_size_t ocp_qp_seed_calculate_size(ocp_qp_dims *dims);
+//
+ocp_qp_seed *ocp_qp_seed_assign(ocp_qp_dims *dims, void *raw_memory);
 
 /* misc */
 //

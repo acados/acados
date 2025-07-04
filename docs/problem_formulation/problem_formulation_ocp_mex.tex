@@ -43,7 +43,7 @@
 \newcommand{\str}[1]{\texttt{'#1'}}
 \newcommand{\casadi}{\texttt{CasADi}}
 \newcommand{\acados}{\texttt{acados}}
-\newcommand{\matlab}{\textsc{Matlab}}
+\newcommand{\matlab}{\textsc{MATLAB}}
 \newcommand{\python}{\textsc{Python}}
 \newcommand{\tran}{^\top}
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
@@ -317,8 +317,6 @@ In this case \acados{} detects if the cost function specified is a linear least 
 Otherwise, it is formulated using the external cost module.
 Table~\ref{tab:cost:auto} shows the available options.
 
-\textbf{Note.} The cost type \code{'AUTO'} is only available from the \matlab{} interface.
-
 %
 \begin{table}[ht!]
     \centering
@@ -330,7 +328,7 @@ Table~\ref{tab:cost:auto} shows the available options.
         $ m $ & \code{AcadosModel.cost\_expr\_ext\_cost\_e}    & \casadi~expression  & \optional \\
         \bottomrule
     \end{tabular}
-    \caption{Cost module \code{'AUTO'} options. The cost type \code{'AUTO'} is only available from the \matlab{} interface.} \label{tab:cost:auto}
+    \caption{Cost module \code{'AUTO'} options.} \label{tab:cost:auto}
 \end{table}
 %
 

@@ -64,8 +64,8 @@ if ("${CMAKE_HOST_SYSTEM_PROCESSOR}" STREQUAL "aarch64")
 else()
     set(BLASFEO_TARGET "X64_AUTOMATIC" CACHE STRING "BLASFEO Target architecture")
 endif()
-set(HPIPM_TARGET "X64_AUTOMATIC" CACHE STRING "HPIPM Target architecture")
 set(LA "HIGH_PERFORMANCE" CACHE STRING "Linear algebra optimization level")
+set(HPIPM_TARGET "GENERIC" CACHE STRING "HPIPM Target architecture")
 
 if (CMAKE_SYSTEM_NAME MATCHES "Windows")
     set(BUILD_SHARED_LIBS OFF CACHE STRING "Build shared libraries")
@@ -76,6 +76,7 @@ endif()
 option(ACADOS_WITH_OPENMP "OpenMP Parallelization" OFF)
 option(ACADOS_SILENT "No console status output" OFF)
 option(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE "Print QP inputs and outputs to file in SQP" OFF)
+option(ACADOS_DEVELOPER_DEBUG_CHECKS "Enable developer debug sanity checks. Avoids asserts" OFF)
 
 # Additional targets
 option(ACADOS_UNIT_TESTS "Compile Unit tests" OFF)
@@ -93,7 +94,12 @@ option(ACADOS_WITH_CLARABEL "Clarabel solver" OFF)
 # Interfaces
 option(ACADOS_OCTAVE "Octave Interface tests" OFF)
 option(ACADOS_PYTHON "Python Interface tests" OFF)
-
+# Options to use libraries found via find_package
+option(ACADOS_WITH_SYSTEM_BLASFEO "If ON, use blasfeo found via find_package(blasfeo) instead of compiling it" OFF)
+mark_as_advanced(ACADOS_WITH_SYSTEM_BLASFEO)
+if(ACADOS_WITH_SYSTEM_BLASFEO)
+    message(WARNING "The ACADOS_WITH_SYSTEM_BLASFEO option is enabled. ACADOS is tested by its developers only with ACADOS_WITH_SYSTEM_BLASFEO=OFF, when using an external blasfeo may sure that everything works as expected.")
+endif()
 
 # Set custom path
 set(EXTERNAL_SRC_DIR ${PROJECT_SOURCE_DIR}/external)
@@ -116,7 +122,7 @@ endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_SYSTEM_NAME MATCHES "Windows")
     # MinGW: remove prefix and change suffix to match MSVC
-    # (such that Matlab mex recognizes the libraries)
+    # (such that MATLAB mex recognizes the libraries)
     set(CMAKE_SHARED_LIBRARY_PREFIX "")
     set(CMAKE_IMPORT_LIBRARY_SUFFIX ".lib")
     set(CMAKE_IMPORT_LIBRARY_PREFIX "")
@@ -186,6 +192,12 @@ if(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
     message(STATUS "ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE is ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE")
+endif()
+
+if(ACADOS_DEVELOPER_DEBUG_CHECKS)
+    message(STATUS "ACADOS_DEVELOPER_DEBUG_CHECKS is ON")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DACADOS_DEVELOPER_DEBUG_CHECKS")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DACADOS_DEVELOPER_DEBUG_CHECKS")
 endif()
 
 # uninstall

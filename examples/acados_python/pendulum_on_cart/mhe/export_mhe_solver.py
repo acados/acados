@@ -48,10 +48,10 @@ def export_mhe_solver(model: AcadosModel, N: int, h, Q, Q0, R) -> AcadosOcpSolve
     nu = u.rows()
     nparam = model.p.rows()
 
-    ny_0 = 3*nx     # h(x), w and arrival cost
+    ny_0 = 3*nx   # h(x), w and arrival cost
     ny = 2*nx     # h(x), w
 
-    ocp_mhe.dims.N = N
+    ocp_mhe.solver_options.N_horizon = N
 
     ## set cost
     ocp_mhe.cost.cost_type_0 = 'NONLINEAR_LS' # 'LINEAR_LS'
@@ -89,6 +89,7 @@ def export_mhe_solver(model: AcadosModel, N: int, h, Q, Q0, R) -> AcadosOcpSolve
     ocp_mhe.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
     ocp_mhe.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp_mhe.solver_options.integrator_type = 'ERK'
+    ocp_mhe.solver_options.cost_scaling = np.ones((N+1,)) # we do not want to scale with the time step
 
     # set prediction horizon
     ocp_mhe.solver_options.tf = N*h

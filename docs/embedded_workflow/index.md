@@ -15,7 +15,7 @@ In the next section another workflow for DS1401 and DS1403 is also explained.
 ### Prerequisites
 - you were able to install `acados` and dSPACE on your system
 - you were able to generate S-Functions with acados, which also work in your Simulink simulation `'Simulation_Model_Name'.slx`.
-Thus, you have a folder `c_generated_code` with your S-Functions, a `make_sfun.m` Matlab script (and a `make_sfun_sim.m` script, if needed) and the corresponding C files.
+Thus, you have a folder `c_generated_code` with your S-Functions, a `make_sfun.m` MATLAB script (and a `make_sfun_sim.m` script, if needed) and the corresponding C files.
 - you have prepared a Simulink model with the name `'dSPACE_Model_Name'.slx`, which does not contain the S-Functions yet and you were able to compile it for your dSPACE Platform.
 During the compilation process, the dSPACE Makefile `'dSPACE_Model_Name'_usr.mk` was created, which can be found in the same directory as the dSPACE Simulink model.
 
@@ -52,14 +52,14 @@ These are the folders you need to deploy `acados` on your dSPACE Platform.
 ### Step 3: Create a dSPACE build folder, prepare Simulink model
 1. Create a new folder `'dSPACE_Build_Folder_Name'` (anywhere) and copy your Simulink model `'dSPACE_Model_Name'.slx`, the dSPACE Makefile `'dSPACE_Model_Name'_usr.mk` and the `acados` S-Function folder `c_generated_code` to this folder.
 2. Copy the two folders `lib` and `include`, which you created in the cross-compiling process (Step 2), to this folder too.
-3. Add the folders `c_generated_code` and `lib` to the Matlab search path.
+3. Add the folders `c_generated_code` and `lib` to the MATLAB search path.
 4. Open the Simulink model `'dSPACE_Model_Name'.slx`, and copy the `acados` S-Function(s) from the Simulink simulation file `'Simulation_Model_Name'.slx` into the dSPACE Simulink model.
 Make sure the S-Function(s) get the correct inputs (Ctrl+D to check).
 
 ### Step 4: Adapt the dSPACE Makefile
 Adapt the dSPACE Makefile in order to include the `acados` headers, libraries and additional C code source files.
 1. Your `acados` S-Function(s) are based on C code source files.
-These files are listed as `SOURCES` in the Matlab script `make_sfun.m` (and `make_sfun_sim.m` if the simulation S-Function is used too).
+These files are listed as `SOURCES` in the MATLAB script `make_sfun.m` (and `make_sfun_sim.m` if the simulation S-Function is used too).
 Open the dSPACE Makefile `'dSPACE_Model_Name'_usr.mk` and list all source files needed for the S-Functions, except for the ones which have the same name as the S-Functions.
 
     **Example:**
@@ -119,18 +119,18 @@ For the example in the previous step the entry in the dSPACE Makefile would look
 5. Save the dSPACE Makefile.
 
 ### Step 5: Compile your dSPACE Simulink model for dSPACE
-In order to compile your dSPACE Simulink model `'dSPACE_Model_Name'.slx` use the `rtwbuild` command in Matlab or press Ctrl+B in Simulink.
+In order to compile your dSPACE Simulink model `'dSPACE_Model_Name'.slx` use the `rtwbuild` command in MATLAB or press Ctrl+B in Simulink.
 The Makefile should now integrate all the necessary files for the compilation of the `acados` S-Functions.
 
 ## dSPACE DS1401 and DS1403
 Here, an alternative workflow for the deployment of `acados` on a dSPACE Platform is described.
-This has been successfully tested with Matlab / Simulink R2018b on the DS1401 MicroAutobox-II (MABX2) and the DS1403 MicroAutobox-III (MABX3).
+This has been successfully tested with MATLAB / Simulink R2018b on the DS1401 MicroAutobox-II (MABX2) and the DS1403 MicroAutobox-III (MABX3).
 
 With some adaptation this method could also work with different dSPACE Platforms.
 ### Prerequisites
 - you were able to install `acados` and dSPACE on your system
 - you were able to generate S-Functions with acados, which also work in your Simulink simulation `'Simulation_Model_Name'.slx`.
-Thus, you have a folder `c_generated_code` with your S-Functions, a `make_sfun.m` Matlab script (and a `make_sfun_sim.m` script, if needed) and the corresponding C files.
+Thus, you have a folder `c_generated_code` with your S-Functions, a `make_sfun.m` MATLAB script (and a `make_sfun_sim.m` script, if needed) and the corresponding C files.
 - you have prepared a Simulink model with the name `'dSPACE_Model_Name'.slx`, which does not contain the S-Functions yet and you were able to compile it for your dSPACE Platform.
 - your dSPACE installation, and your project folder, do not contain spaces in their paths (all the paths you will use in the next steps should not contain any space).
 It is usually sufficient to copy-paste the compiler folder to a new one without spaces in it, without re-installing the whole dSPACE software suite)
@@ -162,7 +162,7 @@ If all these steps worked, you will find the two folders `lib` and `include` in 
 These are the folders you need to deploy `acados` on your dSPACE Platform.
 
 ### Step 3: Prepare and build Simulink model
-1. Add `c_generated_code` folder to Matlab path.
+1. Add `c_generated_code` folder to MATLAB path.
 2. Open Simulink model configuration parameters, and under Code Generation / Custom Code / Additional build info, add the following paths:
 - Include directories:
     all the include directories in the `buildDS1401/install/include` (or `buildDS1403/install/include`) folder as in this example:

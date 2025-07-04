@@ -15,7 +15,7 @@ function set_up_t_renderer(t_renderer_location, varargin)
 
     message = ['\nDear acados user, we could not find t_renderer binaries,',...
         '\n which are needed to export templated C code from ',...
-        'Matlab.\n Press any key to proceed setting up the t_renderer automatically.',...
+        'MATLAB.\n Press any key to proceed setting up the t_renderer automatically.',...
         '\n Press "n" or "N" to exit, if you wish to set up t_renderer yourself.\n',...
         '\n https://github.com/acados/tera_renderer/releases'];
 
@@ -26,13 +26,19 @@ function set_up_t_renderer(t_renderer_location, varargin)
         end
     end
 
-    t_renderer_version = 'v0.0.34';
+    t_renderer_version = 'v0.2.0';
     if ismac()
-        suffix = '-osx';
+        [~,result] = system('uname -v');
+        if any(strfind(result,'ARM64'))
+            suffix = '-osx-arm64';
+        else
+            % failsafe, newer mac users can always use rosetta with this
+            suffix = '-osx-amd64';
+        end
     elseif isunix()
-        suffix = '-linux';
+        suffix = '-linux-amd64';
     elseif ispc()
-        suffix = '-windows';
+        suffix = '-windows-amd64.exe';
     end
     acados_root_dir = getenv('ACADOS_INSTALL_DIR');
 

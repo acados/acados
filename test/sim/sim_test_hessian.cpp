@@ -47,8 +47,8 @@
 #include "acados_c/external_function_interface.h"
 #include "acados_c/sim_interface.h"
 
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_aux_ext_dep.h"
 
 // pendulum_model
 #include "examples/c/pendulum_model/pendulum_model.h"

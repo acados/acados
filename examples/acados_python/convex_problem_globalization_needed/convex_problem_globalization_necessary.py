@@ -3,7 +3,7 @@ import numpy as np
 from casadi import *
 import casadi as cs
 from itertools import product
-# Simplest NLP with Marathos effect
+# Simplest Convex NLP where full-step SQP fails
 #
 # min log(exp(x) + exp(-x))
 #
@@ -13,8 +13,7 @@ TOL = 1e-6
 
 def main():
     # run test cases
-    # params = {'globalization': ['FIXED_STEP', 'FUNNEL_L1PEN_LINESEARCH', 'MERIT_BACKTRACKING']}
-    params = {'globalization': ['FIXED_STEP']}#, 'FUNNEL_L1PEN_LINESEARCH', 'MERIT_BACKTRACKING']}
+    params = {'globalization': ['FIXED_STEP', 'FUNNEL_L1PEN_LINESEARCH', 'MERIT_BACKTRACKING']}
 
     keys, values = zip(*params.items())
     for combination in product(*values):
@@ -33,11 +32,9 @@ def solve_problem_with_setting(setting):
     model = AcadosModel()
     x = SX.sym('x')
 
-    # dynamics: identity
+    # dynamics: identity, no control input
     model.disc_dyn_expr = x
     model.x = x
-    model.u = SX.sym('u', 0, 0)
-    model.p = []
     model.name = f'convex_globalization_problem'
     ocp.model = model
 
@@ -64,18 +61,17 @@ def solve_problem_with_setting(setting):
     ocp.solver_options.qp_tol = 5e-7
 
     ocp.solver_options.nlp_solver_max_iter = 100
-    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
+    ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json', verbose=False)
 
     # initialize solver
     xinit = np.array([1.5])
-    [ocp_solver.set(i, "x", xinit) for i in range(N+1)]
+    for i in range(N+1):
+        ocp_solver.set(i, "x", xinit)
 
-    print(f"solved convex globalization test problem with settings {setting}")
     # solve
-    ocp_solver.solve()
+    status = ocp_solver.solve()
 
-    status = ocp_solver.get_status()
-
+    print(f"solved convex globalization test problem with settings {setting}, got status {status}")
     # get solution
     solution = ocp_solver.get(0, "x")
 
@@ -87,7 +83,7 @@ def solve_problem_with_setting(setting):
         assert status == 0, f'{globalization} did not converge. Algorithm should converge!'
         assert sol_err <= TOL*1e1, f"numerical solutions do not match to analytical solution with tolerance {TOL}"
     else:
-        assert status != 0, 'Fixed step converged. Theoretically impossible!'
+        assert status == 1, 'Fixed step should run into NaN, i.e. status 1'
 
 if __name__ == '__main__':
     main()

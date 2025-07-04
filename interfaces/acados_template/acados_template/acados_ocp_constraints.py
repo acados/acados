@@ -30,7 +30,7 @@
 #
 
 import numpy as np
-from .utils import J_to_idx, print_J_to_idx_note, J_to_idx_slack, check_if_nparray_and_flatten, check_if_2d_nparray
+from .utils import J_to_idx, print_J_to_idx_note, J_to_idx_slack, check_if_nparray_and_flatten, check_if_2d_nparray, is_empty
 
 class AcadosOcpConstraints:
     """
@@ -188,6 +188,11 @@ class AcadosOcpConstraints:
         """Indices of bounds on x0 that are equalities -- can be set automatically via :py:attr:`x0`.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxbxe_0
+
+    def remove_x0_elimination(self):
+        """Remove the elimination of x0 from the constraints, bounds on x0 are handled as general bounds on x."""
+        self.__has_x0 = False
+        self.idxbxe_0 = np.array([])
 
     # bounds on x
     @property
@@ -774,7 +779,7 @@ class AcadosOcpConstraints:
         if constr_type in constr_types:
             self.__constr_type = constr_type
         else:
-            raise Exception('Invalid constr_type value. Possible values are:\n\n' \
+            raise ValueError('Invalid constr_type value. Possible values are:\n\n' \
                     + ',\n'.join(constr_types) + '.\n\nYou have: ' + constr_type + '.\n\n')
 
     @constr_type_0.setter
@@ -783,7 +788,7 @@ class AcadosOcpConstraints:
         if constr_type_0 in constr_types:
             self.__constr_type_0 = constr_type_0
         else:
-            raise Exception('Invalid constr_type_0 value. Possible values are:\n\n' \
+            raise ValueError('Invalid constr_type_0 value. Possible values are:\n\n' \
                     + ',\n'.join(constr_types) + '.\n\nYou have: ' + constr_type_0 + '.\n\n')
 
     @constr_type_e.setter
@@ -792,7 +797,7 @@ class AcadosOcpConstraints:
         if constr_type_e in constr_types:
             self.__constr_type_e = constr_type_e
         else:
-            raise Exception('Invalid constr_type_e value. Possible values are:\n\n' \
+            raise ValueError('Invalid constr_type_e value. Possible values are:\n\n' \
                     + ',\n'.join(constr_types) + '.\n\nYou have: ' + constr_type_e + '.\n\n')
 
     # initial x
@@ -816,7 +821,7 @@ class AcadosOcpConstraints:
         if isinstance(Jbx_0, np.ndarray):
             self.__idxbx_0 = J_to_idx(Jbx_0)
         else:
-            raise Exception('Invalid Jbx_0 value.')
+            raise ValueError('Invalid Jbx_0 value.')
 
     @idxbxe_0.setter
     def idxbxe_0(self, idxbxe_0):
@@ -825,12 +830,19 @@ class AcadosOcpConstraints:
 
     @x0.setter
     def x0(self, x0):
-        x0 = check_if_nparray_and_flatten(x0, "x0")
-        self.__lbx_0 = x0
-        self.__ubx_0 = x0
-        self.__idxbx_0 = np.arange(x0.size)
-        self.__idxbxe_0 = np.arange(x0.size)
-        self.__has_x0 = True
+        if is_empty(x0):
+            self.__has_x0 = False
+            self.__lbx_0 = np.array([])
+            self.__ubx_0 = np.array([])
+            self.__idxbx_0 = np.array([])
+            self.__idxbxe_0 = np.array([])
+        else:
+            x0 = check_if_nparray_and_flatten(x0, "x0")
+            self.__lbx_0 = x0
+            self.__ubx_0 = x0
+            self.__idxbx_0 = np.arange(x0.size)
+            self.__idxbxe_0 = np.arange(x0.size)
+            self.__has_x0 = True
 
     # bounds on x
     @lbx.setter
@@ -853,7 +865,7 @@ class AcadosOcpConstraints:
         if isinstance(Jbx, np.ndarray):
             self.__idxbx = J_to_idx(Jbx)
         else:
-            raise Exception('Invalid Jbx value.')
+            raise ValueError('Invalid Jbx value.')
 
     # bounds on u
     @lbu.setter
@@ -876,7 +888,7 @@ class AcadosOcpConstraints:
         if isinstance(Jbu, np.ndarray):
             self.__idxbu = J_to_idx(Jbu)
         else:
-            raise Exception('Invalid Jbu value.')
+            raise ValueError('Invalid Jbu value.')
 
     # bounds on x at shooting node N
     @lbx_e.setter
@@ -899,7 +911,7 @@ class AcadosOcpConstraints:
         if isinstance(Jbx_e, np.ndarray):
             self.__idxbx_e = J_to_idx(Jbx_e)
         else:
-            raise Exception('Invalid Jbx_e value.')
+            raise ValueError('Invalid Jbx_e value.')
 
     # polytopic constraints
     @D.setter
@@ -1022,7 +1034,7 @@ class AcadosOcpConstraints:
         if isinstance(Jsbx, np.ndarray):
             self.__idxsbx = J_to_idx_slack(Jsbx)
         else:
-            raise Exception('Invalid Jsbx value, expected numpy array.')
+            raise TypeError('Invalid Jsbx value, expected numpy array.')
 
     # soft bounds on u
     @lsbu.setter
@@ -1045,7 +1057,7 @@ class AcadosOcpConstraints:
         if isinstance(Jsbu, np.ndarray):
             self.__idxsbu = J_to_idx_slack(Jsbu)
         else:
-            raise Exception('Invalid Jsbu value.')
+            raise ValueError('Invalid Jsbu value.')
 
     # soft bounds on x at shooting node N
     @lsbx_e.setter
@@ -1068,7 +1080,7 @@ class AcadosOcpConstraints:
         if isinstance(Jsbx_e, np.ndarray):
             self.__idxsbx_e = J_to_idx_slack(Jsbx_e)
         else:
-            raise Exception('Invalid Jsbx_e value.')
+            raise ValueError('Invalid Jsbx_e value.')
 
     # soft bounds on general linear constraints
     @lsg.setter
@@ -1091,7 +1103,7 @@ class AcadosOcpConstraints:
         if isinstance(Jsg, np.ndarray):
             self.__idxsg = J_to_idx_slack(Jsg)
         else:
-            raise Exception('Invalid Jsg value, expected numpy array.')
+            raise TypeError('Invalid Jsg value, expected numpy array.')
 
     # soft bounds on nonlinear constraints
     @lsh.setter
@@ -1115,7 +1127,7 @@ class AcadosOcpConstraints:
         if isinstance(Jsh, np.ndarray):
             self.__idxsh = J_to_idx_slack(Jsh)
         else:
-            raise Exception('Invalid Jsh value, expected numpy array.')
+            raise TypeError('Invalid Jsh value, expected numpy array.')
 
     # soft bounds on convex-over-nonlinear constraints
     @lsphi.setter
@@ -1138,7 +1150,7 @@ class AcadosOcpConstraints:
         if isinstance(Jsphi, np.ndarray):
             self.__idxsphi = J_to_idx_slack(Jsphi)
         else:
-            raise Exception('Invalid Jsphi value, expected numpy array.')
+            raise TypeError('Invalid Jsphi value, expected numpy array.')
 
     # soft bounds on general linear constraints at shooting node N
     @lsg_e.setter
@@ -1161,7 +1173,7 @@ class AcadosOcpConstraints:
         if isinstance(Jsg_e, np.ndarray):
             self.__idxsg_e = J_to_idx_slack(Jsg_e)
         else:
-            raise Exception('Invalid Jsg_e value, expected numpy array.')
+            raise TypeError('Invalid Jsg_e value, expected numpy array.')
 
     # soft bounds on nonlinear constraints at shooting node N
     @lsh_e.setter
@@ -1184,7 +1196,7 @@ class AcadosOcpConstraints:
         if isinstance(Jsh_e, np.ndarray):
             self.__idxsh_e = J_to_idx_slack(Jsh_e)
         else:
-            raise Exception('Invalid Jsh_e value, expected numpy array.')
+            raise TypeError('Invalid Jsh_e value, expected numpy array.')
 
 
     # soft bounds on convex-over-nonlinear constraints at shooting node N
@@ -1208,7 +1220,7 @@ class AcadosOcpConstraints:
         if isinstance(Jsphi_e, np.ndarray):
             self.__idxsphi_e = J_to_idx_slack(Jsphi_e)
         else:
-            raise Exception('Invalid Jsphi_e value.')
+            raise ValueError('Invalid Jsphi_e value.')
 
     # soft constraints at shooting node 0
     @lsh_0.setter
@@ -1231,7 +1243,7 @@ class AcadosOcpConstraints:
         if isinstance(Jsh_0, np.ndarray):
             self.__idxsh_0 = J_to_idx_slack(Jsh_0)
         else:
-            raise Exception('Invalid Jsh_0 value, expected numpy array.')
+            raise TypeError('Invalid Jsh_0 value, expected numpy array.')
 
     @lsphi_0.setter
     def lsphi_0(self, value):
@@ -1253,7 +1265,7 @@ class AcadosOcpConstraints:
         if isinstance(Jsphi_0, np.ndarray):
             self.__idxsphi_0 = J_to_idx_slack(Jsphi_0)
         else:
-            raise Exception('Invalid Jsphi_0 value.')
+            raise ValueError('Invalid Jsphi_0 value.')
 
     def set(self, attr, value):
         setattr(self, attr, value)

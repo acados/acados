@@ -36,4 +36,5 @@ function settings = get_example_settings()
     settings.L2_COST_V = 1e-1;
     settings.L2_COST_P = 1e0;
     settings.L2_COST_A = 1e-3;
+    settings.WITH_X_BOUNDS = true;
 end

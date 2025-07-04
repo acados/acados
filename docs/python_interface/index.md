@@ -15,11 +15,11 @@ One can interact with the generated solver using the Python wrapper.
 There is a `ctypes` based wrapper which is the default and a `cython` based wrapper which allows for faster interaction with the C code, to allow deployment of the `acados` solver in a Python framework with less overhead.
 
 ## Examples
-Examples for Python can be found in the [folder `examples/acados_python` of the `acados` repository](https://github.com/acados/acados/tree/master/examples/acados_python).
+Examples for Python can be found in the [folder `examples/acados_python` of the `acados` repository](https://github.com/acados/acados/tree/main/examples/acados_python).
 
 
 ## Optimal Control Problem description
-The Python interface relies on the same problem formulation as the MATLAB interface [see here](https://github.com/acados/acados/blob/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf).
+The Python interface relies on the same problem formulation as the MATLAB interface [see here](https://github.com/acados/acados/blob/main/docs/problem_formulation/problem_formulation_ocp_mex.pdf).
 Currently, Python >= 3.8 is tested.
 
 ## Installation
@@ -57,8 +57,9 @@ Currently, Python >= 3.8 is tested.
 
 5. Optional: Can be done automatically through the interface:
     In order to be able to successfully render C code templates, you need to download the `t_renderer` binaries for your platform from <https://github.com/acados/tera_renderer/releases/> and place them in `<acados_root>/bin`
-    Please strip the version and platform from the binaries (e.g.`t_renderer-v0.0.34 -> t_renderer`).
-    Notice that you might need to make `t_renderer` executable.
+    Please strip the version, platform and architecture from the binaries (e.g.`t_renderer-V-P-A -> t_renderer`).
+    On Linux/MacOS, you might need to make `t_renderer` executable.
+    On Windows, make sure you append `.exe` extension to the end (`t_renderer.exe`).
     Run `export ACADOS_SOURCE_DIR=<acados_root>` such that the location of acados will be known to the Python package at run time.
 
 6. Optional: Set `acados_lib_path`, `acados_include_path`.
@@ -162,6 +163,15 @@ The cython based wrapper is called [`AcadosOcpSolverCython`](#acados_template.ac
     :private-members:
     :exclude-members:
 ```
+
+### OCP iterate classes
+``` eval_rst
+.. automodule:: acados_template.acados_ocp_iterate
+    :members:
+    :private-members:
+    :exclude-members:
+```
+
 
 
 ### `AcadosModel`

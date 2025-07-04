@@ -38,8 +38,8 @@
 #include <math.h>
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
 // acados
 #include "acados/utils/mem.h"
 
@@ -330,6 +330,66 @@ int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_,
 }
 
 
+int ocp_nlp_cost_nls_model_get(void *config_, void *dims_, void *model_,
+                                         const char *field, void *value_)
+{
+    int status = ACADOS_SUCCESS;
+
+    if ( !config_ || !dims_ || !model_ || !value_ )
+    {
+        printf("ocp_nlp_cost_nls_model_set: got NULL pointer \n");
+        exit(1);
+    }
+
+    ocp_nlp_cost_nls_dims *dims = dims_;
+    ocp_nlp_cost_nls_model *model = model_;
+
+    int ny = dims->ny;
+    int ns = dims->ns;
+
+    double * value = (double *) value_;
+
+    if (!strcmp(field, "W"))
+    {
+        blasfeo_unpack_dmat(ny, ny, &model->W, 0, 0, value, ny);
+    }
+    else if (!strcmp(field, "y_ref") || !strcmp(field, "yref"))
+    {
+        blasfeo_unpack_dvec(ny, &model->y_ref, 0, value, 1);
+    }
+    else if (!strcmp(field, "Zl"))
+    {
+        blasfeo_unpack_dvec(ns, &model->Z, 0, value, 1);
+    }
+    else if (!strcmp(field, "Zu"))
+    {
+        blasfeo_unpack_dvec(ns, &model->Z, ns, value, 1);
+    }
+    else if (!strcmp(field, "zl"))
+    {
+        blasfeo_unpack_dvec(ns, &model->z, 0, value, 1);
+    }
+    else if (!strcmp(field, "zu"))
+    {
+        blasfeo_unpack_dvec(ns, &model->z, ns, value, 1);
+    }
+    else if (!strcmp(field, "scaling"))
+    {
+        value[0] = model->scaling;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_cost_nls_model_get\n", field);
+        exit(1);
+    }
+    return status;
+}
+
+double *ocp_nlp_cost_nls_model_get_scaling_ptr(void *in_)
+{
+    ocp_nlp_cost_nls_model *model = in_;
+    return &model->scaling;
+}
 
 /************************************************
  * options
@@ -371,6 +431,7 @@ void ocp_nlp_cost_nls_opts_initialize_default(void *config_, void *dims_, void *
     ocp_nlp_cost_nls_opts *opts = opts_;
 
     opts->gauss_newton_hess = 1;
+    opts->add_hess_contribution = 0;
 
     return;
 }
@@ -409,6 +470,11 @@ void ocp_nlp_cost_nls_opts_set(void *config_, void *opts_, const char *field, vo
             opts->gauss_newton_hess = 0;
         }
     }
+    else if (!strcmp(field, "add_hess_contribution"))
+    {
+        int* int_ptr = value;
+        opts->add_hess_contribution = *int_ptr;
+    }
     else if(!strcmp(field, "integrator_cost"))
     {
         int *opt_val = (int *) value;
@@ -428,6 +494,14 @@ void ocp_nlp_cost_nls_opts_set(void *config_, void *opts_, const char *field, vo
 
     return;
 
+}
+
+
+int* ocp_nlp_cost_nls_opts_get_add_hess_contribution_ptr(void *config_, void *opts_)
+{
+    ocp_nlp_cost_nls_opts *opts = opts_;
+
+    return &opts->add_hess_contribution;
 }
 
 
@@ -778,6 +852,12 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     struct blasfeo_dvec_args x_in;  // input x of external fun;
     struct blasfeo_dvec_args u_in;  // input u of external fun;
 
+    double prev_RSQ_factor = 0.0;
+    if (opts->add_hess_contribution)
+    {
+        prev_RSQ_factor = 1.0;
+    }
+
     if (opts->integrator_cost == 0)
     {
         x_in.x = memory->ux;
@@ -877,9 +957,9 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         /* hessian */
         if (opts->gauss_newton_hess)
         {
-            // RSQrq += scaling * tmp_nv_ny * tmp_nv_ny^T
+            // RSQrq = scaling * tmp_nv_ny * tmp_nv_ny^T
             blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
-                            1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+                            prev_RSQ_factor, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
         }
         else
         {
@@ -905,9 +985,9 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
             model->nls_y_hess->evaluate(model->nls_y_hess, ext_fun_type_in, ext_fun_in,
                                     ext_fun_type_out, ext_fun_out);
 
-            // RSQrq += scaling * (tmp_nv_nv + tmp_nv_ny * tmp_nv_ny^T)
+            // RSQrq = scaling * (tmp_nv_nv + tmp_nv_ny * tmp_nv_ny^T)
             blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
-                            1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+                            prev_RSQ_factor, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
             blasfeo_dgead(nu+nx, nu+nx, model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
         }
     } // end if (opts->integrator_cost == 0)
@@ -926,8 +1006,16 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     // scale
     if (model->scaling!=1.0)
     {
-        blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
-        memory->fun *= model->scaling;
+        if (opts->integrator_cost == 0)
+        {
+            blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
+            memory->fun *= model->scaling;
+        }
+        else
+        {
+            // only scale the slack gradient
+            blasfeo_dvecsc(2*ns, model->scaling, &memory->grad, nu+nx);
+        }
     }
     // printf("cost_fun: %e\n", memory->fun);
 
@@ -1035,7 +1123,7 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
     memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, ux, nu+nx);
 
     // scale
-    if (model->scaling!=1.0)
+    if (model->scaling!=1.0 && opts->integrator_cost == 0)
     {
         memory->fun *= model->scaling;
     }
@@ -1097,11 +1185,14 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_, int stage)
     config->model_calculate_size = &ocp_nlp_cost_nls_model_calculate_size;
     config->model_assign = &ocp_nlp_cost_nls_model_assign;
     config->model_set = &ocp_nlp_cost_nls_model_set;
+    config->model_get = &ocp_nlp_cost_nls_model_get;
+    config->model_get_scaling_ptr = &ocp_nlp_cost_nls_model_get_scaling_ptr;
     config->opts_calculate_size = &ocp_nlp_cost_nls_opts_calculate_size;
     config->opts_assign = &ocp_nlp_cost_nls_opts_assign;
     config->opts_initialize_default = &ocp_nlp_cost_nls_opts_initialize_default;
     config->opts_update = &ocp_nlp_cost_nls_opts_update;
     config->opts_set = &ocp_nlp_cost_nls_opts_set;
+    config->opts_get_add_hess_contribution_ptr = &ocp_nlp_cost_nls_opts_get_add_hess_contribution_ptr;
     config->memory_calculate_size = &ocp_nlp_cost_nls_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_nls_memory_assign;
     config->memory_get_fun_ptr = &ocp_nlp_cost_nls_memory_get_fun_ptr;

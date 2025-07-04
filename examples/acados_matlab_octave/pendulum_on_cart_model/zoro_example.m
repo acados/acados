@@ -40,7 +40,7 @@ x0 = [0.0, 0.15*pi, 0.0, 0.0];
 
 
 %% model dynamics
-model = get_pendulum_on_cart_AcadosModel();
+model = get_pendulum_on_cart_model();
 nx = length(model.x); % state size
 nu = length(model.u); % input size
 
@@ -136,7 +136,7 @@ max_zoro_iter = 100;
 zoro_tol = 1e-6;
 
 % sample disturbances
-% NOTE: this requires statistics addon in Matlab and octave -> just load
+% NOTE: this requires statistics addon in MATLAB and octave -> just load
 % some data instead
 % dist_samples = mvnrnd(zeros(nx, 1), zoro_description.W_mat, Nsim);
 load('dist_samples.mat')

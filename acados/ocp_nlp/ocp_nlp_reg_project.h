@@ -44,7 +44,7 @@ extern "C" {
 
 
 // blasfeo
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_common.h"
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
@@ -64,6 +64,9 @@ extern "C" {
 typedef struct
 {
     double epsilon;
+    double min_epsilon;
+    bool adaptive_eps;
+    double max_cond_block;
 } ocp_nlp_reg_project_opts;
 
 //

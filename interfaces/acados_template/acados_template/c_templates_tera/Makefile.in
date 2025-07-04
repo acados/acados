@@ -35,6 +35,12 @@
 	{%- set qp_solver = "FULL_CONDENSING_HPIPM" %}
 {%- endif %}
 
+{% if problem_class != "SIM" %}
+	{%- set N_horizon = solver_options.N_horizon %}
+{%- else %}
+	{%- set N_horizon = 1 %}
+{%- endif %}
+
 {%- if solver_options.hessian_approx %}
 	{%- set hessian_approx = solver_options.hessian_approx %}
 {%- elif solver_options.sens_hess %}
@@ -107,7 +113,7 @@ OCP_OBJ := $(OCP_SRC:.c=.o)
 	{%- endif %}
 
 
-{%- if solver_options.integrator_type != "DISCRETE" %}
+{%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
 # for sim solver
 SIM_SRC= acados_sim_solver_{{ model.name }}.c
 SIM_OBJ := $(SIM_SRC:.c=.o)
@@ -129,7 +135,7 @@ EX_EXE := $(EX_SRC:.c=)
 # combine model, (potentially) sim and ocp object files
 OBJ=
 OBJ+= $(MODEL_OBJ)
-{%- if solver_options.integrator_type != "DISCRETE" %}
+{%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
 OBJ+= $(SIM_OBJ)
 {%- endif %}
 
@@ -178,7 +184,7 @@ CPPFLAGS+= -I $(INCLUDE_PATH)/daqp/include
 {# c-compiler flags #}
 # define the c-compiler flags for make's implicit rules
 CFLAGS = -fPIC -std=c99 {{ openmp_flag }} {{ solver_options.ext_fun_compile_flags }}#-fno-diagnostics-show-line-numbers -g
-{% if solver_options.num_threads_in_batch_solve > 1%}
+{% if solver_options.with_batch_functionality %}
 CFLAGS += -fopenmp
 {%- endif %}
 # # Debugging
@@ -186,7 +192,7 @@ CFLAGS += -fopenmp
 
 # linker flags
 LDFLAGS+= -L$(LIB_PATH)
-{% if solver_options.num_threads_in_batch_solve > 1 %}
+{% if solver_options.with_batch_functionality %}
 LDFLAGS += -fopenmp
 {%- endif %}
 
@@ -200,7 +206,7 @@ LDLIBS+= {{ link_libs }}
 # libraries
 LIBACADOS_SOLVER=libacados_solver_{{ model.name }}{{ shared_lib_ext }}
 LIBACADOS_OCP_SOLVER=libacados_ocp_solver_{{ model.name }}{{ shared_lib_ext }}
-{%- if solver_options.integrator_type != "DISCRETE" %}
+{%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
 LIBACADOS_SIM_SOLVER=lib$(SIM_SRC:.c={{ shared_lib_ext }})
 {%- endif %}
 
@@ -212,8 +218,13 @@ LIBACADOS_SIM_SOLVER=lib$(SIM_SRC:.c={{ shared_lib_ext }})
 all: clean example
 shared_lib: ocp_shared_lib
 {%- else %}
+	{% if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 -%}
 all: clean example_sim example
 shared_lib: bundled_shared_lib ocp_shared_lib sim_shared_lib
+	{%-else %}
+all: clean example
+shared_lib: bundled_shared_lib ocp_shared_lib
+	{%- endif %}
 {%- endif %}
 	{%-else %}
 all: clean example_sim
@@ -227,7 +238,7 @@ example: $(EX_OBJ) $(OBJ)
 	$(CC) $^ -o $(EX_EXE) $(LDFLAGS) $(LDLIBS)
 {%- endif %}
 
-{% if solver_options.integrator_type != "DISCRETE" -%}
+{% if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 -%}
 example_sim: $(EX_SIM_OBJ) $(MODEL_OBJ) $(SIM_OBJ)
 	$(CC) $^ -o $(EX_SIM_EXE) $(LDFLAGS) $(LDLIBS)
 
@@ -274,7 +285,7 @@ ocp_cython: ocp_cython_o
 {%- endif %}
 
 
-{% if solver_options.integrator_type != "DISCRETE" -%}
+{% if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 -%}
 # Sim Cython targets
 sim_cython_c: sim_shared_lib
 	cython \
@@ -324,7 +335,7 @@ clean_ocp_cython:
 	del \Q acados_ocp_solver_pyx.o 2>nul
 {%- endif %}
 
-{% if solver_options.integrator_type != "DISCRETE" -%}
+{% if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 -%}
 clean_sim_cython:
 	del \Q libacados_sim_solver_{{ model.name }}{{ shared_lib_ext }} 2>nul
 	del \Q acados_sim_solver_{{ model.name }}.o 2>nul
@@ -335,7 +346,7 @@ clean_sim_cython:
 {%- else %}
 
 clean:
-{%- if solver_options.integrator_type != "DISCRETE" %}
+{%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
 	$(RM) $(OBJ) $(EX_OBJ) $(EX_SIM_OBJ)
 	$(RM) $(LIBACADOS_SOLVER) $(LIBACADOS_OCP_SOLVER) $(LIBACADOS_SIM_SOLVER)
 	$(RM) $(EX_EXE) $(EX_SIM_EXE)
@@ -357,7 +368,7 @@ clean_ocp_cython:
 	$(RM) acados_ocp_solver_pyx.o
 {%- endif %}
 
-{% if solver_options.integrator_type != "DISCRETE" -%}
+{% if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 -%}
 clean_sim_cython:
 	$(RM) libacados_sim_solver_{{ model.name }}{{ shared_lib_ext }}
 	$(RM) acados_sim_solver_{{ model.name }}.o

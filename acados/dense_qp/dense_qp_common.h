@@ -48,6 +48,7 @@ typedef struct d_dense_qp dense_qp_in;
 typedef struct d_dense_qp_sol dense_qp_out;
 typedef struct d_dense_qp_res dense_qp_res;
 typedef struct d_dense_qp_res_ws dense_qp_res_ws;
+typedef struct d_dense_qp_seed dense_qp_seed;
 
 
 
@@ -61,6 +62,7 @@ typedef struct
     void (*opts_initialize_default)(void *config, void *dims, void *args);
     void (*opts_update)(void *config, void *dims, void *args);
     void (*opts_set)(void *config_, void *opts_, const char *field, void* value);
+    void (*opts_get)(void *config_, void *opts_, const char *field, void* value);
     acados_size_t (*memory_calculate_size)(void *config, void *dims, void *args);
     void *(*memory_assign)(void *config, void *dims, void *args, void *raw_memory);
     void (*memory_get)(void *config_, void *mem_, const char *field, void* value);
@@ -68,7 +70,8 @@ typedef struct
     int (*evaluate)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
     void (*solver_get)(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, const char *field, int stage, void* value, int size1, int size2);
     void (*memory_reset)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
-    void (*eval_sens)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
+    void (*eval_forw_sens)(void *config, void *qp_in, void *seed, void *qp_out, void *opts, void *mem, void *work);
+    void (*eval_adj_sens)(void *config, void *qp_in, void *seed, void *qp_out, void *opts, void *mem, void *work);
     void (*terminate)(void *config, void *mem, void *work);
 } qp_solver_config;
 #endif
@@ -134,6 +137,12 @@ void dense_qp_compute_t(dense_qp_in *qp_in, dense_qp_out *qp_out);
 void dense_qp_res_compute(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res *qp_res, dense_qp_res_ws *res_ws);
 //
 void dense_qp_res_compute_nrm_inf(dense_qp_res *qp_res, double res[4]);
+
+/* seed */
+//
+acados_size_t dense_qp_seed_calculate_size(dense_qp_dims *dims);
+//
+dense_qp_seed *dense_qp_seed_assign(dense_qp_dims *dims, void *raw_memory);
 
 /* misc */
 //

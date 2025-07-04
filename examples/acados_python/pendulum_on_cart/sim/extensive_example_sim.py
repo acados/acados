@@ -30,6 +30,8 @@
 #
 
 import sys, json
+import time
+
 sys.path.insert(0, '../common')
 
 from acados_template import AcadosSim, AcadosSimSolver, acados_dae_model_json_dump, sim_get_default_cmake_builder
@@ -114,8 +116,6 @@ simX[0,:] = x0
 
 
 ## Single test call
-import time
-
 t0 = time.time()
 acados_integrator.set("seed_adj", np.ones((nx, 1)))
 acados_integrator.set("x", x0)

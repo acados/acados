@@ -43,6 +43,7 @@ nu = 3;
 
 %% create ocp solver
 ocp_solver = acados_ocp(ocp_model, ocp_opts, simulink_opts);
+ocp_solver.reset();
 
 % solver initial guess
 x_traj_init = rand(nx, N+1);
@@ -99,40 +100,34 @@ for itest = [1, 2, 3]
     disp('checking KKT residual')
     kkt_signal = out_sim.logsout.getElement('KKT_residual');
     if any(kkt_signal.Values.data > 1e-6)
-        disp('failed');
-        quit(1);
+        error('failed');
     end
 
     sqp_iter_signal = out_sim.logsout.getElement('sqp_iter');
     sqp_iter_simulink = sqp_iter_signal.Values.Data;
     disp('checking SQP iter, QP should take 1 SQP iter.')
     if any(sqp_iter_simulink ~= 1)
-        disp('failed');
-        quit(1);
+        error('failed');
     end
 
     status_signal = out_sim.logsout.getElement('status');
     disp('checking status.')
     if any(status_signal.Values.Data)
-        disp('failed. got status values:');
-        disp(status_signal.Values.Data);
-        % quit(1);
+        error(['failed. got status values:' mat2str(status_signal.Values.Data)]);
     end
 
     utraj_signal = out_sim.logsout.getElement('utraj');
     u_simulink = utraj_signal.Values.Data(1, :);
     disp('checking u values.')
     if any(abs(u_simulink(:) - utraj(:)) > 1e-8)
-        disp('failed');
-        quit(1);
+        error('failed');
     end
 
     xtraj_signal = out_sim.logsout.getElement('xtraj');
     x_simulink = xtraj_signal.Values.Data(1, :);
     disp('checking x values.')
     if any(abs(x_simulink(:) - xtraj(:)) > 1e-8)
-        disp('failed');
-        quit(1);
+        error('failed');
     end
 end
 %% Run with different initialization
@@ -146,16 +141,13 @@ sqp_iter_signal = out_sim.logsout.getElement('sqp_iter');
 sqp_iter_simulink = sqp_iter_signal.Values.Data;
 disp('checking SQP iter, QP should take 1 SQP iter.')
 if any(sqp_iter_simulink ~= 1)
-    disp('failed');
-    quit(1);
+    error('failed');
 end
 
 status_signal = out_sim.logsout.getElement('status');
 disp('checking status.')
 if any(status_signal.Values.Data)
-    disp('failed. got status values:');
-    disp(status_signal.Values.Data);
-    quit(1);
+    error(['failed. got status values:' mat2str(status_signal.Values.Data)]);
 end
 
 %% Run with different initialization
@@ -173,18 +165,15 @@ disp(sqp_iter_simulink)
 
 fprintf('should require one SQP iteration in first instance.\n')
 if sqp_iter_simulink(1) ~= 1
-    disp('failed');
-    quit(1);
+    error('failed');
 end
 fprintf('should require 0 SQP iterations if initialized at solution.\n')
 if any(sqp_iter_simulink(2:n_sim))
-    disp('failed');
-    quit(1);
+    error('failed');
 end
 
 status_signal = out_sim.logsout.getElement('status');
 disp('checking status.')
 if any(status_signal.Values.Data)
-    disp('failed');
-    quit(1);
+    error('failed');
 end

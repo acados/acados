@@ -35,5 +35,5 @@ function exit_with_error(error)
     disp(error.message)
     fprintf(error.message);
     fprintf('\nRUN_TEST: FAIL -> exit\n');
-    quit(1);
+    error('')
 end

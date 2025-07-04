@@ -41,13 +41,14 @@
 #include "hpipm/include/hpipm_d_dense_qp_ipm.h"
 #include "hpipm/include/hpipm_d_dense_qp_kkt.h"
 #include "hpipm/include/hpipm_d_dense_qp_res.h"
+#include "hpipm/include/hpipm_d_dense_qp_seed.h"
 #include "hpipm/include/hpipm_d_dense_qp_sol.h"
 #include "hpipm/include/hpipm_d_dense_qp_dim.h"
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_blas.h"
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/types.h"
@@ -228,6 +229,35 @@ void dense_qp_out_get(dense_qp_out *out, const char *field, void *value)
     return;
 }
 
+/************************************************
+ * seed
+ ************************************************/
+
+acados_size_t dense_qp_seed_calculate_size(dense_qp_dims *dims)
+{
+    acados_size_t size = sizeof(dense_qp_seed);
+    size += d_dense_qp_seed_memsize(dims);
+
+    make_int_multiple_of(8, &size);
+    return size;
+}
+
+
+
+dense_qp_seed *dense_qp_seed_assign(dense_qp_dims *dims, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    dense_qp_seed *qp_seed = (dense_qp_seed *) c_ptr;
+    c_ptr += sizeof(dense_qp_seed);
+
+    align_char_to(8, &c_ptr);
+    d_dense_qp_seed_create(dims, qp_seed, c_ptr);
+    c_ptr += d_dense_qp_seed_memsize(dims);
+    assert((char *) raw_memory + dense_qp_seed_calculate_size(dims) >= c_ptr);
+
+    return qp_seed;
+}
 
 
 /************************************************
@@ -350,6 +380,20 @@ void dense_qp_res_compute(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res
 
     // compute residuals
     d_dense_qp_res_compute(qp_in, qp_out, qp_res, res_ws);
+
+    // mask out disregarded constraints
+    int nb = qp_res->dim->nb;
+    int nv = qp_res->dim->nv;
+    int ng = qp_res->dim->ng;
+    int ns = qp_res->dim->ns;
+    int ni = nb + ng + ns;
+
+    // stationarity wrt slacks
+    blasfeo_dvecmul(2*ns, qp_in->d_mask, 2*nb+2*ng, qp_res->res_g, nv, qp_res->res_g, nv);
+    // ineq
+    blasfeo_dvecmul(2*ni, qp_in->d_mask, 0, qp_res->res_d, 0, qp_res->res_d, 0);
+    // comp
+    blasfeo_dvecmul(2*ni, qp_in->d_mask, 0, qp_res->res_m, 0, qp_res->res_m, 0);
 }
 
 

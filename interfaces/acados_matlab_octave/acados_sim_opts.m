@@ -66,12 +66,13 @@ classdef acados_sim_opts < handle
             else
                 obj.opts_struct.ext_fun_compile_flags = env_var;
             end
+            obj.opts_struct.ext_fun_expand_dyn = false;
             obj.opts_struct.parameter_values = [];
         end
 
 
         function obj = set(obj, field, value)
-            % convert Matlab strings to char arrays
+            % convert MATLAB strings to char arrays
             if isstring(value)
                 value = char(value);
             end
@@ -80,6 +81,8 @@ classdef acados_sim_opts < handle
                 obj.opts_struct.compile_interface = value;
             elseif (strcmp(field, 'ext_fun_compile_flags'))
                 obj.opts_struct.ext_fun_compile_flags = value;
+            elseif (strcmp(field, 'ext_fun_expand') || strcmp(field, 'ext_fun_expand_dyn'))
+                obj.opts_struct.ext_fun_expand_dyn = value;
             elseif (strcmp(field, 'codgen_model'))
                 warning('codgen_model is deprecated and has no effect.');
             elseif (strcmp(field, 'compile_model'))

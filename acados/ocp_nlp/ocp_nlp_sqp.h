@@ -56,17 +56,7 @@ extern "C" {
 typedef struct
 {
     ocp_nlp_opts *nlp_opts;
-    double tol_stat;     // exit tolerance on stationarity condition
-    double tol_eq;       // exit tolerance on equality constraints
-    double tol_ineq;     // exit tolerance on inequality constraints
-    double tol_comp;     // exit tolerance on complementarity condition
-    double tol_unbounded; // exit threshold when objective function seems to be unbounded
-    double tol_min_step_norm; // exit tolerance for small step
-    int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
     int log_primal_step_norm; // compute and log the max norm of the primal steps
-    int qp_warm_start;   // qp_warm_start in all but the first sqp iterations
-    bool warm_start_first_qp; // to set qp_warm_start in first iteration
-    bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
     double timeout_max_time; // maximum time the solve may require before timeout is triggered. No timeout if 0.
     ocp_nlp_timeout_heuristic_t timeout_heuristic; // type of heuristic used to predict solve time of next QP
 } ocp_nlp_sqp_opts;

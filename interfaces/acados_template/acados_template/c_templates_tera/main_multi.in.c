@@ -45,7 +45,7 @@
 #include "acados_solver_{{ name }}.h"
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_aux_ext_dep.h"
 
 {%- set nx_values = [] -%}
 {%- for jj in range(end=n_phases) %}
@@ -107,10 +107,10 @@ int main()
         // initialize solution
         for (int i = 0; i < N; i++)
         {
-            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "x", x_init);
-            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "u", u_init);
+            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "x", x_init);
+            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, i, "u", u_init);
         }
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, N, "x", x_init);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, nlp_in, N, "x", x_init);
         status = {{ name }}_acados_solve(acados_ocp_capsule);
         ocp_nlp_get(nlp_solver, "time_tot", &elapsed_time);
 

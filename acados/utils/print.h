@@ -66,7 +66,6 @@ void ocp_nlp_out_print(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out);
 void ocp_nlp_res_print(ocp_nlp_dims *dims, ocp_nlp_res *nlp_res);
 
 // ocp qp
-// TODO: move printing routines below that print qp structures to HPIPM!
 void print_ocp_qp_dims(ocp_qp_dims *dims);
 
 // void print_dense_qp_dims(dense_qp_dims *dims);
@@ -102,6 +101,10 @@ void print_qp_info(qp_info *info);
 
 // blasfeo
 // void print_blasfeo_target();
+
+void print_debug_output(char* message, int print_level, int required_print_level);
+//
+void print_debug_output_double(char* message, double value, int print_level, int required_print_level);
 
 #ifdef __cplusplus
 } /* extern "C" */

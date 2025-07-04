@@ -37,8 +37,8 @@
 #include <string.h>
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
 // acados
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
@@ -277,6 +277,65 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
 
 
 
+int ocp_nlp_cost_external_model_get(void *config_, void *dims_, void *model_,
+                                         const char *field, void *value_)
+{
+    int status = ACADOS_SUCCESS;
+
+    if ( !config_ || !dims_ || !model_ || !value_ )
+    {
+        printf("ocp_nlp_cost_external_model_set: got Null pointer \n");
+        exit(1);
+    }
+
+    ocp_nlp_cost_external_dims *dims = dims_;
+    ocp_nlp_cost_external_model *model = model_;
+
+    int ns = dims->ns;
+    int nx = dims->nx;
+    int nu = dims->nu;
+
+    double * value = (double *) value_;
+
+    if (!strcmp(field, "ext_cost_num_hess"))
+    {
+        printf("in cost_get numerical hessian\n");
+        blasfeo_unpack_dmat(nx+nu, nx+nu, &model->numerical_hessian, 0, 0, value, nx+nu);
+    }
+    else if (!strcmp(field, "Zl"))
+    {
+        blasfeo_unpack_dvec(ns, &model->Z, 0, value, 1);
+    }
+    else if (!strcmp(field, "Zu"))
+    {
+        blasfeo_unpack_dvec(ns, &model->Z, ns, value, 1);
+    }
+    else if (!strcmp(field, "zl"))
+    {
+        blasfeo_unpack_dvec(ns, &model->z, 0, value, 1);
+    }
+    else if (!strcmp(field, "zu"))
+    {
+        blasfeo_unpack_dvec(ns, &model->z, ns, value, 1);
+    }
+    else if (!strcmp(field, "scaling"))
+    {
+        value[0] = model->scaling;
+    }
+    else
+    {
+        printf("\nerror: %s not available in module ocp_nlp_cost_external_model_get\n", field);
+        exit(1);
+    }
+    return status;
+}
+
+double *ocp_nlp_cost_external_model_get_scaling_ptr(void *in_)
+{
+    ocp_nlp_cost_external_model *model = in_;
+    return &model->scaling;
+}
+
 /************************************************
  * options
  ************************************************/
@@ -319,6 +378,7 @@ void ocp_nlp_cost_external_opts_initialize_default(void *config_, void *dims_, v
 
     opts->use_numerical_hessian = 0;
     opts->with_solution_sens_wrt_params = 0;
+    opts->add_hess_contribution = 0;
 
     return;
 }
@@ -351,6 +411,11 @@ void ocp_nlp_cost_external_opts_set(void *config_, void *opts_, const char *fiel
         int *opt_val = (int *) value;
         opts->use_numerical_hessian = *opt_val;
     }
+    else if (!strcmp(field, "add_hess_contribution"))
+    {
+        int* int_ptr = value;
+        opts->add_hess_contribution = *int_ptr;
+    }
     else if(!strcmp(field, "with_solution_sens_wrt_params"))
     {
         int *opt_val = (int *) value;
@@ -366,7 +431,12 @@ void ocp_nlp_cost_external_opts_set(void *config_, void *opts_, const char *fiel
 
 }
 
+int* ocp_nlp_cost_external_opts_get_add_hess_contribution_ptr(void *config_, void *opts_)
+{
+    ocp_nlp_cost_external_opts *opts = opts_;
 
+    return &opts->add_hess_contribution;
+}
 
 /************************************************
  * memory
@@ -664,7 +734,14 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
         model->ext_cost_fun_jac->evaluate(model->ext_cost_fun_jac, ext_fun_type_in,
                                             ext_fun_in, ext_fun_type_out, ext_fun_out);
         // custom hessian
-        blasfeo_dgead(nx+nu, nx+nu, model->scaling, &model->numerical_hessian, 0, 0, memory->RSQrq, 0, 0);
+        if (opts->add_hess_contribution)
+        {
+            blasfeo_dgead(nx+nu, nx+nu, model->scaling, &model->numerical_hessian, 0, 0, memory->RSQrq, 0, 0);
+        }
+        else
+        {
+            blasfeo_dgecpsc(nx+nu, nx+nu, model->scaling, &model->numerical_hessian, 0, 0, memory->RSQrq, 0, 0);
+        }
     }
     else
     {
@@ -681,7 +758,16 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
                                             ext_fun_in, ext_fun_type_out, ext_fun_out);
 
         // hessian contribution from xu with scaling
-        blasfeo_dgead(nx+nu, nx+nu, model->scaling, &work->tmp_nunx_nunx, 0, 0, memory->RSQrq, 0, 0);
+        if (opts->add_hess_contribution)
+        {
+            // add to RSQrq
+            blasfeo_dgead(nx+nu, nx+nu, model->scaling, &work->tmp_nunx_nunx, 0, 0, memory->RSQrq, 0, 0);
+        }
+        else
+        {
+            // copy to RSQrq
+            blasfeo_dgecpsc(nx+nu, nx+nu, model->scaling, &work->tmp_nunx_nunx, 0, 0, memory->RSQrq, 0, 0);
+        }
 
         if (nz > 0)
         {
@@ -706,6 +792,7 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     }
 
     // slack update gradient
+    // grad_s (z_QP) = z_NLP + Z_NLP * slack
     blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
 
@@ -1035,11 +1122,14 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_, int stage)
     config->model_calculate_size = &ocp_nlp_cost_external_model_calculate_size;
     config->model_assign = &ocp_nlp_cost_external_model_assign;
     config->model_set = &ocp_nlp_cost_external_model_set;
+    config->model_get = &ocp_nlp_cost_external_model_get;
+    config->model_get_scaling_ptr = &ocp_nlp_cost_external_model_get_scaling_ptr;
     config->opts_calculate_size = &ocp_nlp_cost_external_opts_calculate_size;
     config->opts_assign = &ocp_nlp_cost_external_opts_assign;
     config->opts_initialize_default = &ocp_nlp_cost_external_opts_initialize_default;
     config->opts_update = &ocp_nlp_cost_external_opts_update;
     config->opts_set = &ocp_nlp_cost_external_opts_set;
+    config->opts_get_add_hess_contribution_ptr = &ocp_nlp_cost_external_opts_get_add_hess_contribution_ptr;
     config->memory_calculate_size = &ocp_nlp_cost_external_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_external_memory_assign;
     config->memory_get_fun_ptr = &ocp_nlp_cost_external_memory_get_fun_ptr;

@@ -14,7 +14,7 @@ env:
   ACADOS_ON_CI: ON
 
 jobs:
-  core_build:
+  test_matlab_windows:
     runs-on: windows-latest
 
     steps:
@@ -71,7 +71,7 @@ jobs:
       with:
           release: R2021a
           products: Simulink Simulink_Test
-          cache: true
+          cache: false
 
     - name: Setup MATLAB with MinGW Compiler
       uses: matlab-actions/run-command@v2

@@ -111,7 +111,9 @@ def export_pendulum_ode_model_with_mass_as_p_global(dt) -> AcadosModel:
 def export_parametric_ocp(
     x0=np.array([0.0, np.pi / 6, 0.0, 0.0]), N_horizon=50, T_horizon=2.0, Fmax=80.0,
     hessian_approx = "GAUSS_NEWTON", qp_solver_ric_alg=1,
-    cost_scale_as_param=False
+    cost_scale_as_param=False,
+    with_parametric_constraint=True,
+    with_nonlinear_constraint=True
 ) -> AcadosOcp:
 
     ocp = AcadosOcp()
@@ -147,6 +149,14 @@ def export_parametric_ocp(
     ocp.constraints.ubu = np.array([+Fmax])
     ocp.constraints.idxbu = np.array([0])
 
+    if with_parametric_constraint:
+        if with_nonlinear_constraint:
+            ocp.model.con_h_expr = -ocp.model.x[0] * ocp.model.p_global[0]**2
+        else:
+            ocp.model.con_h_expr = -ocp.model.x[0] * ocp.model.p_global[0]
+        ocp.constraints.lh = np.array([-1.5])
+        ocp.constraints.uh = np.array([1.5])
+
     ocp.constraints.x0 = x0
 
     ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"
@@ -157,48 +167,62 @@ def export_parametric_ocp(
     ocp.solver_options.tf = T_horizon
 
     ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg
+    ocp.solver_options.qp_solver_cond_ric_alg = qp_solver_ric_alg
+    ocp.solver_options.qp_solver_mu0 = 1e3  # makes HPIPM converge more robustly
     ocp.solver_options.hessian_approx = hessian_approx
-    if hessian_approx == 'EXACT':
-        ocp.solver_options.globalization_fixed_step_length = 0.0
-        ocp.solver_options.nlp_solver_max_iter = 1
-        ocp.solver_options.qp_solver_iter_max = 200
-        ocp.solver_options.tol = 1e-10
-        ocp.solver_options.with_solution_sens_wrt_params = True
-        ocp.solver_options.with_value_sens_wrt_params = True
-    else:
-        ocp.solver_options.nlp_solver_max_iter = 400
-        ocp.solver_options.tol = 1e-8
+    ocp.solver_options.nlp_solver_max_iter = 400
+    ocp.solver_options.tol = 1e-8
+    # ocp.solver_options.globalization = "MERIT_BACKTRACKING"
+
+    # if hessian_approx == 'EXACT':
+        # sensitivity solver settings!
+    ocp.solver_options.with_solution_sens_wrt_params = True
+    ocp.solver_options.with_value_sens_wrt_params = True
 
     return ocp
 
-def plot_cost_gradient_results(p_test, cost_values, acados_cost_grad, np_cost_grad, cost_reconstructed_np_grad):
+def plot_cost_gradient_results(p_test, cost_values, acados_cost_grad, np_cost_grad,
+                               cost_reconstructed_np_grad, cost_reconstructed_acados=None,
+                               y_scale_log=True, xlabel=None, title=None):
     _, ax = plt.subplots(nrows=4, ncols=1, sharex=True, figsize=(9,9))
 
     ax[0].plot(p_test, cost_values, label='cost acados', color='k')
     ax[0].plot(p_test, cost_reconstructed_np_grad, "--", label='reconstructed from finite diff')
+    if cost_reconstructed_acados is not None:
+        ax[0].plot(p_test, cost_reconstructed_acados, ":", label='reconstructed from acados derivatives')
     ax[0].set_ylabel(r"cost")
 
-    ax[1].plot(p_test, np_cost_grad, "--", label='finite diff')
-    ax[1].plot(p_test, acados_cost_grad, "--", label='acados')
-    ax[1].set_ylabel(r"$\partial_p V^*$")
-    ax[1].set_yscale("log")
+    ax[1].plot(p_test, np.abs(np_cost_grad), "--", label='finite diff')
+    ax[1].plot(p_test, np.abs(acados_cost_grad), ":", label='acados')
+    ax[1].set_ylabel(r"$|\partial_p V^*|$")
+
+    if y_scale_log:
+        ax[1].set_yscale("log")
 
     # plot differences
     isub = 2
     ax[isub].plot(p_test, np.abs(acados_cost_grad - np_cost_grad), "--", label='acados vs. finite diff')
-    ax[isub].set_ylabel(r"difference $\partial_p V^*$")
-    ax[isub].set_yscale("log")
+    ax[isub].set_ylabel(r"abs diff $\partial_p V^*$")
+
+    if y_scale_log:
+        ax[isub].set_yscale("log")
 
     isub += 1
     ax[isub].plot(p_test, np.abs(acados_cost_grad - np_cost_grad) / np.abs(np_cost_grad), "--", label='acados vs. finite diff')
     ax[isub].set_ylabel(r"rel. diff. $\partial_p V^*$")
-    ax[isub].set_yscale("log")
+
+    if y_scale_log:
+        ax[isub].set_yscale("log")
 
     for i in range(isub+1):
         ax[i].grid()
         ax[i].legend()
 
-    ax[-1].set_xlabel(f"mass")
+    if xlabel is not None:
+        ax[-1].set_xlabel(xlabel)
+
+    if title is not None:
+        ax[0].set_title(title)
     ax[-1].set_xlim([p_test[0], p_test[-1]])
 
     fig_filename = f"cost_gradient.pdf"
@@ -207,33 +231,67 @@ def plot_cost_gradient_results(p_test, cost_values, acados_cost_grad, np_cost_gr
     plt.show()
 
 
-def plot_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, sens_u, np_grad,
+def plot_solution_sensitivities_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, sens_u, np_grad,
                  min_eig_full=None, min_eig_proj_hess=None, min_eig_P=None,
                  min_abs_eig_full=None, min_abs_eig_proj_hess=None, min_abs_eig_P=None,
-                 eigen_analysis=False, qp_solver_ric_alg=1, parameter_name=""):
+                 eigen_analysis=False, title=None, parameter_name="",
+                 max_lam_parametric_constraint=None, sum_lam_parametric_constraint=None,
+                 multipliers_bu=None, multipliers_h=None, plot_reconstructed=True,
+                 figsize=None,
+                 ):
 
     nsub = 5 if eigen_analysis else 3
 
-    _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=(9,9))
+    with_multiplier_subplot = max_lam_parametric_constraint is not None or sum_lam_parametric_constraint is not None or multipliers_bu is not None or multipliers_h is not None
+    if with_multiplier_subplot:
+        nsub += 1
+
+    if figsize is None:
+        figsize = (9, 9)
+    _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=figsize)
 
     isub = 0
-    ax[isub].plot(p_test, pi, label='acados', color='k')
-    ax[isub].plot(p_test, pi_reconstructed_acados, "--", label='reconstructed from acados')
-    ax[isub].plot(p_test, pi_reconstructed_np_grad, "--", label='reconstructed from finite diff')
-    ax[isub].set_ylabel(r"$u$")
-    ax[isub].set_title(f'qp_solver_ric_alg {qp_solver_ric_alg}')
+    ax[isub].plot(p_test, pi, label='solution acados', color='k')
+    if plot_reconstructed:
+        ax[isub].plot(p_test, pi_reconstructed_acados, "--", label='reconstructed from acados solution sens.')
+        ax[isub].plot(p_test, pi_reconstructed_np_grad, "--", label='reconstructed from finite diff.')
+    ax[isub].set_ylabel(r"$u_0$")
+    if title is not None:
+        ax[isub].set_title(title)
 
     isub += 1
     ax[isub].plot(p_test, sens_u, label="acados")
-    ax[isub].plot(p_test, np_grad, "--", label="finite diff")
+    ax[isub].plot(p_test, np_grad, "--", label="finite diff.")
     ax[isub].set_xlim([p_test[0], p_test[-1]])
-    ax[isub].set_ylabel(r"$\partial_p u$")
+    ax[isub].set_ylabel(r"$\partial_\theta u_0$")
 
     isub += 1
-    ax[isub].plot(p_test, np.abs(sens_u- np_grad), "--", label='acados - finite diff')
-    ax[isub].set_ylabel(r"diff $\partial_p u$")
+    ax[isub].plot(p_test, np.abs(sens_u- np_grad), "--", label='acados - finite diff.')
+    ax[isub].set_ylabel(r"difference $\partial_\theta u_0$")
     ax[isub].set_yscale("log")
 
+    if with_multiplier_subplot:
+        isub += 1
+        isub_multipliers = isub
+        if max_lam_parametric_constraint is not None:
+            ax[isub].plot(p_test, max_lam_parametric_constraint, label=r'max $\lambda$ parametric constraint')
+        # ax[isub].set_ylabel("max lam parametric constraint")
+        # ax[isub].set_yscale("log")
+        if sum_lam_parametric_constraint is not None:
+            ax[isub].plot(p_test, sum_lam_parametric_constraint, label=r'sum $\lambda$ parametric constraint')
+
+        legend_elements = []
+        if multipliers_bu is not None:
+            for lam in multipliers_bu:
+                ax[isub].plot(p_test, lam, linestyle='--', color='C0', alpha=.6)
+            legend_elements += [plt.Line2D([0], [0], color='C0', linestyle='--', label='multipliers control bounds')]
+        if multipliers_h is not None:
+            for lam in multipliers_h:
+                ax[isub].plot(p_test, lam, linestyle='--', color='C1', alpha=.6)
+            legend_elements += [plt.Line2D([0], [0], color='C1', linestyle='--', label='multipliers $h$')]
+        ax[isub].legend(handles=legend_elements, ncol=2)
+        ax[isub].set_ylim([0, 14])
+        ax[isub].set_ylabel("multipliers")
     if eigen_analysis:
         isub += 1
         ax[isub].plot(p_test, np.sign(min_eig_full), linestyle="-", alpha=.6, label='full Hessian')
@@ -248,16 +306,95 @@ def plot_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, 
         ax[isub].set_ylabel("min abs eig")
         ax[isub].set_yscale("log")
 
-    for i in range(isub+1):
-        ax[i].grid()
-        ax[i].legend()
+    for isub in range(nsub):
+        ax[isub].grid()
+        if isub != isub_multipliers:
+            ax[isub].legend()
 
     ax[-1].set_xlabel(f"{parameter_name}")
 
-    fig_filename = f"solution_sens_{qp_solver_ric_alg}.pdf"
+    plt.tight_layout()
+
+    fig_filename = f"solution_sens_{title}.pdf"
     plt.savefig(fig_filename)
     print(f"stored figure as {fig_filename}")
     plt.show()
+
+
+def plot_smoothed_solution_sensitivities_results(p_test, pi_label_pairs, sens_pi_label_pairs,
+                 title=None, parameter_name="",
+                 multipliers_bu=None, multipliers_h=None,
+                 figsize=None,
+                 fig_filename=None,
+                 horizontal_plot=False,
+                 ):
+
+    nsub = 2
+
+    with_multiplier_subplot = multipliers_bu is not None or multipliers_h is not None
+    if with_multiplier_subplot:
+        nsub += 1
+
+    if figsize is None:
+        figsize = (9, 9)
+    if not horizontal_plot:
+        _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=figsize)
+    else:
+        _, ax = plt.subplots(nrows=1, ncols=nsub, sharex=False, figsize=figsize)
+
+    linestyles = ["-", "--", "-.", ":", "-", "--", "-.", ":"]
+
+    isub = 0
+    for i, (pi, label) in enumerate(pi_label_pairs):
+        ax[isub].plot(p_test, pi, label=label, linestyle=linestyles[i])
+    ax[isub].set_ylabel(r"$u_0$")
+    if title is not None:
+        ax[isub].set_title(title)
+    ax[isub].legend()
+    ax[isub].legend(handlelength=1.2)
+
+    isub += 1
+    for i, (sens_pi, label) in enumerate(sens_pi_label_pairs):
+        ax[isub].plot(p_test, sens_pi, label=label, linestyle=linestyles[i])
+    ax[isub].set_ylabel(r"$\partial_\theta u_0$")
+    if horizontal_plot:
+        ax[isub].legend(loc = 'upper left', handlelength=1.2, ncol=2, columnspacing=0.5, labelspacing=0.2)
+    else:
+        ax[isub].legend(loc = 'upper left', handlelength=1.2)
+
+    if with_multiplier_subplot:
+        isub += 1
+        legend_elements = []
+        if multipliers_bu is not None:
+            for lam in multipliers_bu:
+                ax[isub].plot(p_test, lam, linestyle='--', color='C0', alpha=.6)
+            legend_elements += [plt.Line2D([0], [0], color='C0', linestyle='--', label='multipliers control bounds')]
+        if multipliers_h is not None:
+            for lam in multipliers_h:
+                ax[isub].plot(p_test, lam, linestyle='--', color='C1', alpha=.6)
+            legend_elements += [plt.Line2D([0], [0], color='C1', linestyle='--', label='multipliers $h$')]
+        if horizontal_plot:
+            ax[isub].legend(handles=legend_elements, ncol=1, handlelength=1.2)
+        else:
+            ax[isub].legend(handles=legend_elements, ncol=2)
+        ax[isub].set_ylim([0, 14])
+        ax[isub].set_ylabel("multipliers")
+
+    for isub in range(nsub):
+        ax[isub].grid()
+        ax[isub].set_xlim([p_test[0], p_test[-1]])
+
+        if horizontal_plot:
+            ax[isub].set_xlabel(f"{parameter_name}")
+
+    ax[-1].set_xlabel(f"{parameter_name}")
+
+    plt.tight_layout()
+    if fig_filename is not None:
+        plt.savefig(fig_filename)
+        print(f"stored figure as {fig_filename}")
+    plt.show()
+
 
 
 

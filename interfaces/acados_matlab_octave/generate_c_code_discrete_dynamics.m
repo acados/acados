@@ -66,10 +66,10 @@ function generate_c_code_discrete_dynamics(context, model, model_dir)
     % generate hessian
     hess_ux = jacobian(adj_ux, [u; x], struct('symmetric', isSX));
 
-    context.add_function_definition([model.name,'_dyn_disc_phi_fun'], {x, u, p}, {phi}, model_dir);
-    context.add_function_definition([model.name,'_dyn_disc_phi_fun_jac'], {x, u, p}, {phi, jac_ux'}, model_dir);
+    context.add_function_definition([model.name,'_dyn_disc_phi_fun'], {x, u, p}, {phi}, model_dir, 'dyn');
+    context.add_function_definition([model.name,'_dyn_disc_phi_fun_jac'], {x, u, p}, {phi, jac_ux'}, model_dir, 'dyn');
     if context.opts.generate_hess
-        context.add_function_definition([model.name,'_dyn_disc_phi_fun_jac_hess'], {x, u, lam, p}, {phi, jac_ux', hess_ux}, model_dir);
+        context.add_function_definition([model.name,'_dyn_disc_phi_fun_jac_hess'], {x, u, lam, p}, {phi, jac_ux', hess_ux}, model_dir, 'dyn');
     end
 
 end

@@ -46,7 +46,7 @@ extern "C" {
 #endif
 
 // blasfeo
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_common.h"
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
@@ -114,6 +114,7 @@ typedef struct
 {
     bool gauss_newton_hess;  // dummy options, we always use a gauss-newton hessian
     int integrator_cost; // > 0 indicating that cost is propagated within integrator instead of cost module, only add slack contributions
+    int add_hess_contribution;
 } ocp_nlp_cost_conl_opts;
 
 //

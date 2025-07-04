@@ -160,6 +160,16 @@ void dense_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void
 }
 
 
+void dense_qp_hpipm_opts_get(void *config_, void *opts_, const char *field, void *value)
+{
+    dense_qp_hpipm_opts *opts = opts_;
+
+    d_dense_qp_ipm_arg_get((char *) field, opts->hpipm_opts, value);
+
+    return;
+}
+
+
 
 /************************************************
  * memory
@@ -310,34 +320,33 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
 
 
 
-void dense_qp_hpipm_eval_sens(void *config_, void *param_qp_in_, void *sens_qp_out_, void *opts_, void *mem_, void *work_)
+void dense_qp_hpipm_eval_forw_sens(void *config_, void *param_qp_in_, void *seed, void *sens_qp_out_, void *opts_, void *mem_, void *work_)
 {
-//    printf("\nerror: dense_qp_hpipm_eval_sens: not implemented yet\n");
-//    exit(1);
     dense_qp_in *param_qp_in = param_qp_in_;
     dense_qp_out *sens_qp_out = sens_qp_out_;
 
-//    qp_info *info = sens_qp_out->misc;
-//    acados_timer tot_timer, qp_timer;
-
-//    acados_tic(&tot_timer);
-    // cast data structures
     dense_qp_hpipm_opts *opts = opts_;
     dense_qp_hpipm_memory *memory = mem_;
 
-    // solve ipm
-//    acados_tic(&qp_timer);
-    // print_ocp_qp_in(param_qp_in);
-    d_dense_qp_ipm_sens(param_qp_in, sens_qp_out, opts->hpipm_opts, memory->hpipm_workspace);
-
-//    info->solve_QP_time = acados_toc(&qp_timer);
-//    info->interface_time = 0;  // there are no conversions for hpipm
-//    info->total_time = acados_toc(&tot_timer);
-//    info->num_iter = memory->hpipm_workspace->iter;
-//    info->t_computed = 1;
+    d_dense_qp_ipm_sens_frw(param_qp_in, seed, sens_qp_out, opts->hpipm_opts, memory->hpipm_workspace);
 
     return;
 }
+
+
+void dense_qp_hpipm_eval_adj_sens(void *config_, void *param_qp_in_, void *seed, void *sens_qp_out_, void *opts_, void *mem_, void *work_)
+{
+    dense_qp_in *param_qp_in = param_qp_in_;
+    dense_qp_out *sens_qp_out = sens_qp_out_;
+
+    dense_qp_hpipm_opts *opts = opts_;
+    dense_qp_hpipm_memory *memory = mem_;
+
+    d_dense_qp_ipm_sens_adj(param_qp_in, seed, sens_qp_out, opts->hpipm_opts, memory->hpipm_workspace);
+
+    return;
+}
+
 
 
 void dense_qp_hpipm_memory_reset(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work)
@@ -369,12 +378,14 @@ void dense_qp_hpipm_config_initialize_default(void *config_)
     config->opts_initialize_default = &dense_qp_hpipm_opts_initialize_default;
     config->opts_update = &dense_qp_hpipm_opts_update;
     config->opts_set = &dense_qp_hpipm_opts_set;
+    config->opts_get = &dense_qp_hpipm_opts_get;
     config->memory_calculate_size = &dense_qp_hpipm_memory_calculate_size;
     config->memory_assign = &dense_qp_hpipm_memory_assign;
     config->memory_get = &dense_qp_hpipm_memory_get;
     config->workspace_calculate_size = &dense_qp_hpipm_workspace_calculate_size;
     config->evaluate = &dense_qp_hpipm;
-    config->eval_sens = &dense_qp_hpipm_eval_sens;
+    config->eval_forw_sens = &dense_qp_hpipm_eval_forw_sens;
+    config->eval_adj_sens = &dense_qp_hpipm_eval_adj_sens;
     config->memory_reset = &dense_qp_hpipm_memory_reset;
     config->solver_get = &dense_qp_hpipm_solver_get;
     config->terminate = &dense_qp_hpipm_terminate;

@@ -35,7 +35,9 @@ jobs:
     - name: Configure CMake
       shell: bash
       working-directory: ${{runner.workspace}}/acados/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=$ACADOS_PYTHON -DACADOS_OCTAVE=OFF
+      run: |
+        cmake --version
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=$ACADOS_PYTHON -DACADOS_OCTAVE=OFF -DACADOS_WITH_OPENMP=ON -DACADOS_NUM_THREADS=1 -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 
     - name: Build & Install
       working-directory: ${{runner.workspace}}/acados/build
@@ -110,7 +112,7 @@ jobs:
         source ${{runner.workspace}}/acados/acadosenv/bin/activate
         ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
 
-  python_interface_new_casadi:
+  python_interface_new_casadi_and_py2octave:
     needs: core_build
     runs-on: ubuntu-22.04
 
@@ -144,18 +146,53 @@ jobs:
       shell: bash
       run: ${{runner.workspace}}/acados/.github/linux/install_simde.sh''
 
-    - name: Install new CasADi Python
+    # - name: Install new CasADi Python
+    #   working-directory: ${{runner.workspace}}/acados
+    #   shell: bash
+    #   run: ${{runner.workspace}}/acados/.github/linux/install_new_casadi_python.sh''
+
+    - name: Prepare Octave
+      working-directory: ${{runner.workspace}}/acados/external
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install liboctave-dev -y --fix-missing
+        octave --version
+        ${{runner.workspace}}/acados/.github/linux/install_new_casadi_octave.sh
+
+    # just needed for blasfeo_target.h in MEX interface
+    - name: Configure CMake
+      shell: bash
+      working-directory: ${{runner.workspace}}/acados/build
+      run: |
+        cmake --version
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
+
+    - name: Export Paths for octave
       working-directory: ${{runner.workspace}}/acados
       shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_new_casadi_python.sh''
+      run: |
+        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
 
-    - name: Run Python tests that need new CasADi
+    - name: Run Python tests that need new CasADi & test py2matlab
       working-directory: ${{runner.workspace}}/acados/build
       shell: bash
       run: |
         source ${{runner.workspace}}/acados/acadosenv/bin/activate
         cd ${{runner.workspace}}/acados/examples/acados_python/p_global_example
         python example_p_global.py
+        echo "\nPython run done; testing OCP tranfer to Octave\n"
+        octave code_reuse_py2matlab.m
+
+    - name: Run Python to Octave sim transfer test
+      working-directory: ${{runner.workspace}}/acados/build
+      shell: bash
+      run: |
+        source ${{runner.workspace}}/acados/acadosenv/bin/activate
+        cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/sim
+        python minimal_example_sim_cmake.py
+        echo "\nPython run done; testing SIM tranfer to Octave\n"
+        octave code_reuse_py2matlab_sim.m
 
     - name: Run more Python tests
       working-directory: ${{runner.workspace}}/acados/build
@@ -164,6 +201,8 @@ jobs:
         source ${{runner.workspace}}/acados/acadosenv/bin/activate
         cd ${{runner.workspace}}/acados/examples/acados_python/tests
         python test_rti_sqp_residuals.py
+        cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/ocp
+        python test_casadi_formulation.py
 
     - name: Python sensitivity examples
       working-directory: ${{runner.workspace}}/acados/build
@@ -175,6 +214,20 @@ jobs:
         python policy_gradient_example.py
         python test_solution_sens_and_exact_hess.py
         python forw_vs_adj_param_sens.py
+        python smooth_policy_gradients.py
+        cd ${{runner.workspace}}/acados/examples/acados_python/solution_sensitivities_convex_example
+        python value_gradient_example_linear.py
+        python batch_adjoint_solution_sensitivity_example.py
+        python non_ocp_example.py
+        cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/ocp
+        python initialization_test.py
+        python ocp_example_cost_formulations.py
+        cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart
+        python example_solution_sens_closed_loop.py
+        cd ${{runner.workspace}}/acados/examples/acados_python/chain_mass/
+        python solution_sensitivity_example.py
+
+
 
     - name: Python Furuta pendulum timeout test
       working-directory: ${{runner.workspace}}/acados/build
@@ -183,6 +236,15 @@ jobs:
         source ${{runner.workspace}}/acados/acadosenv/bin/activate
         cd ${{runner.workspace}}/acados/examples/acados_python/furuta_pendulum
         python main_closed_loop.py
+        python convergence_experiment.py
+
+    - name: Python evaluator test
+      working-directory: ${{runner.workspace}}/acados/build
+      shell: bash
+      run: |
+        source ${{runner.workspace}}/acados/acadosenv/bin/activate
+        cd ${{runner.workspace}}/acados/examples/acados_python/evaluation
+        python minimal_example_evaluation.py
 
   MATLAB_test:
     needs: core_build
@@ -215,11 +277,13 @@ jobs:
           release: R2021a
           cache: true
 
-    # just needed for blasfeo_target.h
+    # just needed for blasfeo_target.h in MEX interface
     - name: Configure CMake
       shell: bash
       working-directory: ${{runner.workspace}}/acados/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
+      run: |
+        cmake --version
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
 
     - name: Configure MATLAB workspace
       shell: bash
@@ -228,7 +292,7 @@ jobs:
         cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
         source env.sh
 
-    - name: Run Matlab tests
+    - name: Run MATLAB tests
       uses: matlab-actions/run-command@v2
       if: always()
       with:
@@ -272,11 +336,13 @@ jobs:
           products: Simulink Simulink_Test
           cache: true
 
-    # just needed for blasfeo_target.h
+    # just needed for blasfeo_target.h in MEX interface
     - name: Configure CMake
       shell: bash
       working-directory: ${{runner.workspace}}/acados/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
+      run: |
+        cmake --version
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
 
     - name: Configure MATLAB workspace
       shell: bash
@@ -285,7 +351,7 @@ jobs:
         cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
         source env.sh
 
-    - name: Run Matlab tests
+    - name: Run MATLAB tests
       uses: matlab-actions/run-command@v2
       if: always()
       with:
@@ -331,11 +397,13 @@ jobs:
           products: Simulink Simulink_Test
           cache: true
 
-    # just needed for blasfeo_target.h
+    # just needed for blasfeo_target.h in MEX interface
     - name: Configure CMake
       shell: bash
       working-directory: ${{runner.workspace}}/acados/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
+      run: |
+        cmake --version
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
 
     - name: Configure MATLAB workspace
       shell: bash
@@ -344,7 +412,7 @@ jobs:
         cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
         source env.sh
 
-    - name: Run Matlab examples
+    - name: Run MATLAB examples
       uses: matlab-actions/run-command@v2
       if: always()
       with:
@@ -384,11 +452,13 @@ jobs:
         products: Simulink Simulink_Test
         cache: true
 
-    # just needed for blasfeo_target.h
+    # just needed for blasfeo_target.h in MEX interface
     - name: Configure CMake
       shell: bash
       working-directory: ${{runner.workspace}}/acados/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
+      run: |
+        cmake --version
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
 
     - name: Run Simulink closed-loop test
       uses: matlab-actions/run-command@v2
@@ -448,7 +518,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install liboctave-dev -y --fix-missing
         octave --version
-        ${{runner.workspace}}/acados/.github/linux/install_casadi_octave.sh
+        ${{runner.workspace}}/acados/.github/linux/install_new_casadi_octave.sh
 
     - name: Install Tera
       working-directory: ${{runner.workspace}}/acados
@@ -464,7 +534,7 @@ jobs:
     - name: Configure CMake
       shell: bash
       working-directory: ${{runner.workspace}}/acados/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=$ACADOS_OCTAVE
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=$ACADOS_OCTAVE
 
     - name: Run CMake Octave tests (ctest)
       working-directory: ${{runner.workspace}}/acados/build

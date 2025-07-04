@@ -37,7 +37,7 @@ extern "C" {
 #endif
 
 // blasfeo
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_common.h"
 
 // daqp
 #include "daqp/include/types.h"
@@ -96,8 +96,6 @@ void *dense_qp_daqp_memory_assign(void *config, dense_qp_dims *dims, void *opts_
 //
 // functions
 int dense_qp_daqp(void *config, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_, void *memory_, void *work_);
-//
-void dense_qp_daqp_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
 //
 void dense_qp_daqp_memory_reset(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
 //

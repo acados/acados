@@ -53,6 +53,7 @@ Thumbs.db
 *.synctex
 *.fdb_latexmk
 *.fls
+*.pdf
 
 # dSpace #
 ##########
@@ -82,7 +83,7 @@ Thumbs.db
 *download_software
 *download_matlab
 
-# Matlab #
+# MATLAB #
 *.m~
 
 # Python #
@@ -92,7 +93,7 @@ env/
 
 # Examples #
 c_generated_code
-*_generated_code
+*_generated_code*
 
 # Misc #
 ########
@@ -131,3 +132,5 @@ qp_in*.txt
 qp_out*.txt
 
 figures
+examples/**/*.pdf
+examples/**/*.png

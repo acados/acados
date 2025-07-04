@@ -39,7 +39,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-{%- if solver_options.num_threads_in_batch_solve > 1 %}
+{%- if solver_options.with_batch_functionality %}
 // openmp
 #include <omp.h>
 {%- endif %}
@@ -417,25 +417,27 @@ int {{ model.name }}_acados_sim_solve({{ model.name }}_sim_solver_capsule *capsu
 }
 
 
-void {{ model.name }}_acados_sim_batch_solve({{ model.name }}_sim_solver_capsule ** capsules, int N_batch)
+{% if solver_options.with_batch_functionality %}
+void {{ model.name }}_acados_sim_batch_solve({{ model.name }}_sim_solver_capsule ** capsules, int N_batch, int num_threads_in_batch_solve)
 {
-{% if solver_options.num_threads_in_batch_solve > 1 %}
-    int num_threads_bkp = omp_get_num_threads();
-    omp_set_num_threads({{ solver_options.num_threads_in_batch_solve }});
+    int num_threads_bkp;
+    if (num_threads_in_batch_solve > 1){
+        num_threads_bkp = omp_get_num_threads();
+        omp_set_num_threads({{ solver_options.num_threads_in_batch_solve }});
+    }
 
     #pragma omp parallel for
-{%- endif %}
     for (int i = 0; i < N_batch; i++)
     {
         sim_solve(capsules[i]->acados_sim_solver, capsules[i]->acados_sim_in, capsules[i]->acados_sim_out);
     }
 
-{% if solver_options.num_threads_in_batch_solve > 1 %}
-    omp_set_num_threads( num_threads_bkp );
-{%- endif %}
+    if (num_threads_in_batch_solve > 1){
+        omp_set_num_threads( num_threads_bkp );
+    }
     return;
 }
-
+{%- endif %}
 
 int {{ model.name }}_acados_sim_free({{ model.name }}_sim_solver_capsule *capsule)
 {

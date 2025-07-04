@@ -36,8 +36,8 @@
 #include <string.h>
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
 
 // hpipm
 #include "hpipm/include/hpipm_d_ocp_qp.h"
@@ -132,6 +132,14 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
     d_ocp_qp_dim_create(N, dims, c_ptr);
     c_ptr += d_ocp_qp_dim_memsize(N);
 
+    for (int i=0; i<=N; i++)
+    {
+        dims->nsbu[i] = 0;
+        dims->nsbx[i] = 0;
+        dims->nsg[i] = 0;
+        dims->ns[i] = 0;
+    }
+
     assert((char *) raw_memory + ocp_qp_dims_calculate_size(N) >= c_ptr);
 
     return dims;
@@ -159,6 +167,10 @@ void ocp_qp_dims_get(void *config_, void *dims, int stage, const char *field, in
 }
 
 
+static int ocp_qp_dims_get_ni(ocp_qp_dims *dims, int stage)
+{
+    return dims->nbu[stage] + dims->nbx[stage] + dims->ng[stage] + dims->ns[stage];
+}
 
 /************************************************
  * in
@@ -265,9 +277,212 @@ double ocp_qp_out_compute_primal_nrm_inf(ocp_qp_out* qp_out)
     for (int i = 0; i <= N; i++)
     {
         blasfeo_dvecnrm_inf(nx[i]+nu[i]+2*ns[i], qp_out->ux+i, 0, &res_stage);
-        res += res_stage;
+        res = res > res_stage ? res : res_stage;
     }
     return res;
+}
+
+/************************************************
+ * seed
+ ************************************************/
+
+acados_size_t ocp_qp_seed_calculate_size(ocp_qp_dims *dims)
+{
+    acados_size_t size = sizeof(ocp_qp_seed);
+    size += d_ocp_qp_seed_memsize(dims);
+    return size;
+}
+
+
+
+ocp_qp_seed *ocp_qp_seed_assign(ocp_qp_dims *dims, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_qp_seed *qp_seed = (ocp_qp_seed *) c_ptr;
+    c_ptr += sizeof(ocp_qp_seed);
+
+    d_ocp_qp_seed_create(dims, qp_seed, c_ptr);
+    c_ptr += d_ocp_qp_seed_memsize(dims);
+
+    assert((char *) raw_memory + ocp_qp_seed_calculate_size(dims) == c_ptr);
+
+    return qp_seed;
+}
+
+double ocp_qp_out_compute_dual_nrm_inf(ocp_qp_out* qp_out)
+{
+    double res = 0;
+    double res_stage = 0;
+    ocp_qp_dims *dims = qp_out->dim;
+    int N = dims->N;
+    int *nx = dims->nx;
+
+    for (int i = 0; i < N; i++)
+    {
+        blasfeo_dvecnrm_inf(nx[i+1], qp_out->pi+i, 0, &res_stage);
+        res = res > res_stage ? res : res_stage;
+    }
+    for (int i = 0; i <= N; i++)
+    {
+        int ni_stage = ocp_qp_dims_get_ni(dims, i);
+        blasfeo_dvecnrm_inf(2*ni_stage, qp_out->lam+i, 0, &res_stage);
+        res = res > res_stage ? res : res_stage;
+    }
+    return res;
+}
+
+
+void ocp_qp_out_copy(ocp_qp_out* from, ocp_qp_out* to)
+{
+    d_ocp_qp_sol_copy_all(from, to);
+}
+
+
+void ocp_qp_out_axpy(double alpha, ocp_qp_out* x, ocp_qp_out* y, ocp_qp_out* z)
+{
+    ocp_qp_dims *dims = x->dim;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    int ni_stage;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        ni_stage = ocp_qp_dims_get_ni(dims, i);
+        blasfeo_daxpy(nx[i]+nu[i]+2*ns[i], alpha, x->ux+i, 0, y->ux+i, 0, z->ux+i, 0);
+        blasfeo_daxpy(2*ni_stage, alpha, x->lam+i, 0, y->lam+i, 0, z->lam+i, 0);
+        if (i < N)
+        {
+            blasfeo_daxpy(nx[i+1], alpha, x->pi+i, 0, y->pi+i, 0, z->pi+i, 0);
+        }
+        blasfeo_daxpy(2*ni_stage, alpha, x->t+i, 0, y->t+i, 0, z->t+i, 0);
+    }
+}
+
+
+double ocp_qp_out_ddot(ocp_qp_out *x, ocp_qp_out *y, struct blasfeo_dvec *work_tmp_2ni)
+{
+    ocp_qp_dims *dims = x->dim;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *nbx = dims->nbx;
+    int *nbu = dims->nbu;
+    int *ng = dims->ng;
+    int *ns = dims->ns;
+    int tmp_nbg;
+    double out = 0.0;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        // primal
+        out += blasfeo_ddot(nx[i]+nu[i]+2*ns[i], x->ux+i, 0, y->ux+i, 0);
+        // dual
+        tmp_nbg = nbu[i]+nbx[i]+ng[i];
+        /* setup multipliers as lower - upper bound */
+        // work_tmp_2ni = x.lam_lower - x.lam_upper
+        blasfeo_daxpy(tmp_nbg, -1.0, x->lam+i, tmp_nbg, x->lam+i, 0, work_tmp_2ni, 0);
+        // work_tmp_2ni[nbg:] = y.lam_lower - y.lam_upper
+        blasfeo_daxpy(tmp_nbg, -1.0, y->lam+i, tmp_nbg, y->lam+i, 0, work_tmp_2ni, tmp_nbg);
+        /* compute ddot of split multipliers*/
+        // add dot product
+        out += blasfeo_ddot(tmp_nbg, work_tmp_2ni, 0, work_tmp_2ni, tmp_nbg);
+        // multipliers wrt slack bounds
+        out += blasfeo_ddot(2*ns[i], x->lam+i, 2*tmp_nbg, y->lam+i, 2*tmp_nbg);
+
+        if (i < N)
+        {
+            out += blasfeo_ddot(nx[i+1], x->pi+i, 0, y->pi+i, 0);
+        }
+    }
+    return out;
+}
+
+
+void ocp_qp_out_set_to_zero(ocp_qp_out* x)
+{
+    ocp_qp_dims *dims = x->dim;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    int ni_stage;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        ni_stage = ocp_qp_dims_get_ni(dims, i);
+        blasfeo_dvecse(nx[i]+nu[i]+2*ns[i], 0.0, x->ux+i, 0);
+        blasfeo_dvecse(2*ni_stage, 0.0, x->lam+i, 0);
+        if (i < N)
+        {
+            blasfeo_dvecse(nx[i+1], 0.0, x->pi+i, 0);
+        }
+        blasfeo_dvecse(2*ni_stage, 0.0, x->t+i, 0);
+    }
+}
+
+
+void ocp_qp_out_sc(double alpha, ocp_qp_out* x)
+{
+    ocp_qp_dims *dims = x->dim;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    int ni_stage;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        ni_stage = ocp_qp_dims_get_ni(dims, i);
+        blasfeo_dvecsc(nx[i]+nu[i]+2*ns[i], alpha, x->ux+i, 0);
+        blasfeo_dvecsc(2*ni_stage, alpha, x->lam+i, 0);
+        if (i < N)
+        {
+            blasfeo_dvecsc(nx[i+1], alpha, x->pi+i, 0);
+        }
+        blasfeo_dvecsc(2*ni_stage, alpha, x->t+i, 0);
+    }
+}
+
+
+// y += alpha * x
+void ocp_qp_out_add(double alpha, ocp_qp_out* x, ocp_qp_out* y)
+{
+    ocp_qp_dims *dims = x->dim;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    int ni_stage;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        ni_stage = ocp_qp_dims_get_ni(dims, i);
+        blasfeo_dvecad(nx[i]+nu[i]+2*ns[i], alpha, x->ux+i, 0, y->ux+i, 0);
+        blasfeo_dvecad(2*ni_stage, alpha, x->lam+i, 0, y->lam+i, 0);
+        if (i < N)
+        {
+            blasfeo_dvecad(nx[i+1], alpha, x->pi+i, 0, y->pi+i, 0);
+        }
+        blasfeo_dvecad(2*ni_stage, alpha, x->t+i, 0, y->t+i, 0);
+    }
 }
 
 
@@ -331,6 +546,13 @@ ocp_qp_res_ws *ocp_qp_res_workspace_assign(ocp_qp_dims *dims, void *raw_memory)
 void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res,
                         ocp_qp_res_ws *res_ws)
 {
+    int *nx = qp_res->dim->nx;
+    int *nu = qp_res->dim->nu;
+    int *nb = qp_res->dim->nb;
+    int *ng = qp_res->dim->ng;
+    int *ns = qp_res->dim->ns;
+    int ni_stage;
+
     qp_info *info = (qp_info *) qp_out->misc;
 
     if (info->t_computed == 0)
@@ -341,6 +563,17 @@ void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
 
     d_ocp_qp_res_compute(qp_in, qp_out, qp_res, res_ws);
 
+    // mask out disregarded constraints
+    for (int ii = 0; ii <= qp_res->dim->N; ii++)
+    {
+        ni_stage = ocp_qp_dims_get_ni(qp_res->dim, ii);
+        // stationarity wrt slacks
+        blasfeo_dvecmul(2*ns[ii], qp_in->d_mask+ii, 2*nb[ii]+2*ng[ii], &qp_res->res_g[ii], nx[ii]+nu[ii], &qp_res->res_g[ii], nx[ii]+nu[ii]);
+        // ineq
+        blasfeo_dvecmul(2*ni_stage, qp_in->d_mask+ii, 0, &qp_res->res_d[ii], 0, &qp_res->res_d[ii], 0);
+        // comp
+        blasfeo_dvecmul(2*ni_stage, qp_in->d_mask+ii, 0, &qp_res->res_m[ii], 0, &qp_res->res_m[ii], 0);
+    }
     return;
 }
 
@@ -361,6 +594,7 @@ void ocp_qp_res_compute_nrm_inf(ocp_qp_res *qp_res, double res[4])
 
 #if 1
 
+    // compute infinity norms of residuals
     double tmp;
 
     res[0] = 0.0;
@@ -645,19 +879,19 @@ void ocp_qp_compute_t(ocp_qp_in *qp_in, ocp_qp_out *qp_out)
 
     for (ii = 0; ii <= N; ii++)
     {
-        // compute slacks for bounds
+        // compute t slacks for bounds
         blasfeo_dvecex_sp(nb[ii], 1.0, idxb[ii], ux + ii, 0, t+ii, nb[ii] + ng[ii]);
         blasfeo_daxpby(nb[ii], 1.0, t + ii, nb[ii] + ng[ii], -1.0, d + ii, 0, t + ii, 0);
         blasfeo_daxpby(nb[ii], -1.0, t + ii, nb[ii] + ng[ii], -1.0, d + ii, nb[ii] + ng[ii], t + ii,
             nb[ii] + ng[ii]);
 
-        // compute slacks for general constraints
+        // compute t slacks for general constraints
         blasfeo_dgemv_t(nu[ii] + nx[ii], ng[ii], 1.0, DCt + ii, 0, 0, ux + ii, 0, -1.0, d + ii, nb[ii],
                         t + ii, nb[ii]);
         blasfeo_dgemv_t(nu[ii] + nx[ii], ng[ii], -1.0, DCt + ii, 0, 0, ux + ii, 0, -1.0, d + ii,
                         2 * nb[ii] + ng[ii], t + ii, 2 * nb[ii] + ng[ii]);
 
-        // compute slacks for soft constraints
+        // compute t slacks for bounds on slack variables constraints
         for(int jj=0; jj<nb[ii]+ng[ii]; jj++)
         {
             int idx = qp_in->idxs_rev[ii][jj];

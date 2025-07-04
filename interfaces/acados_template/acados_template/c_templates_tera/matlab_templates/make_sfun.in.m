@@ -76,7 +76,7 @@
     {% set_global ns_total = ns_total + (end_idx[jj] - cost_start_idx[jj]) * phases_dims[jj].ns %}
     {% set_global nx_total = nx_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nx %}
     {% set_global nbx_total = nbx_total + (end_idx[jj] - cost_start_idx[jj]) * phases_dims[jj].nbx %}
-    {% set_global nh_total = nh_total + (end_idx[jj] - cost_start_idx[jj]) * phases_dims[jj].nbx %}
+    {% set_global nh_total = nh_total + (end_idx[jj] - cost_start_idx[jj]) * phases_dims[jj].nh %}
     {% set_global nu_total = nu_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nu %}
     {% set_global nbu_total = nbu_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nbu %}
     {% set_global nz_total = nz_total + (end_idx[jj] - start_idx[jj]) * phases_dims[jj].nz %}
@@ -430,6 +430,12 @@ i_in = i_in + 1;
 {%- if simulink_opts.inputs.rti_phase %}  {#- rti_phase #}
 input_note = strcat(input_note, num2str(i_in), ') rti_phase, size [1]\n ');
 sfun_input_names = [sfun_input_names; 'rti_phase [1]'];
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if simulink_opts.inputs.levenberg_marquardt %}  {#- levenberg_marquardt #}
+input_note = strcat(input_note, num2str(i_in), ') levenberg_marquardt, size [1]\n ');
+sfun_input_names = [sfun_input_names; 'levenberg_marquardt [1]'];
 i_in = i_in + 1;
 {%- endif %}
 

@@ -42,7 +42,7 @@ extern "C" {
 #endif
 
 // blasfeo
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_common.h"
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_globalization_common.h"
@@ -67,6 +67,7 @@ typedef struct
     double penalty_eta; // fraction in penalty update
     double penalty_contraction; // penalty contraction factor
     bool type_switching_condition; // which type of switching condition do we use?
+    bool use_merit_fun_only;
 } ocp_nlp_globalization_funnel_opts;
 
 //
@@ -101,16 +102,14 @@ void *ocp_nlp_globalization_funnel_memory_assign(void *config, void *dims, void 
 /************************************************
  * functions
  ************************************************/
-
-void debug_output(ocp_nlp_opts *opts, char* message, int print_level);
-//
-void debug_output_double(ocp_nlp_opts *opts, char* message, double value, int print_level);
 //
 void initialize_funnel_width(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double initial_infeasibility);
 //
 void update_funnel_penalty_parameter(ocp_nlp_globalization_funnel_memory *mem,
-                                            ocp_nlp_globalization_funnel_opts *opts,
-                                            double pred_f, double pred_h);
+                                     ocp_nlp_globalization_funnel_opts *opts,
+                                     ocp_nlp_opts *nlp_opts,
+                                     double pred_optimality,
+                                     double pred_infeasibility);
 //
 void decrease_funnel(ocp_nlp_globalization_funnel_memory *mem, ocp_nlp_globalization_funnel_opts *opts, double trial_infeasibility, double current_infeasibility);
 //
@@ -134,7 +133,8 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
                                             double trial_objective,
                                             double current_merit,
                                             double trial_merit,
-                                            double pred_merit);
+                                            double pred_merit,
+                                            double pred_infeasibility);
 //
 int backtracking_line_search(ocp_nlp_config *config,
                             ocp_nlp_dims *dims,
@@ -151,14 +151,8 @@ int ocp_nlp_globalization_funnel_find_acceptable_iterate(void *nlp_config_, void
 void ocp_nlp_globalization_funnel_print_iteration_header();
 //
 void ocp_nlp_globalization_funnel_print_iteration(double objective_value,
-                                                int iter_count,
-                                                void* nlp_res_,
-                                                double step_norm,
-                                                double reg_param,
-                                                int qp_status,
-                                                int qp_iter,
-                                                void* nlp_opts_,
-                                                void* mem_);
+                                                    void* nlp_opts_,
+                                                    void* mem_);
 //
 int ocp_nlp_globalization_funnel_needs_objective_value();
 //

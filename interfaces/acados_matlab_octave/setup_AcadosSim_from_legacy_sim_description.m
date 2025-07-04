@@ -166,6 +166,7 @@ function sim = setup_AcadosSim_from_legacy_sim_description(model_old, opts_old)
     sim.solver_options.output_z = str2bool(opts.output_z);
     sim.solver_options.jac_reuse = str2bool(opts.jac_reuse);
     sim.solver_options.ext_fun_compile_flags = opts.ext_fun_compile_flags;
+    sim.solver_options.ext_fun_expand_dyn = opts.ext_fun_expand_dyn;
 
 end
 

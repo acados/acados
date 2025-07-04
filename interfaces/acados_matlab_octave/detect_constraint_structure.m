@@ -36,7 +36,7 @@
 % nsg;  // number of softened general linear constraints
 % nsh;  // number of softened nonlinear constraints
 
-function model = detect_constr(model, constraints, stage_type)
+function model = detect_constraint_structure(model, constraints, stage_type)
 
     import casadi.*
 
@@ -46,7 +46,6 @@ function model = detect_constr(model, constraints, stage_type)
 
     nx = length(x);
     nu = length(u);
-    nz = length(z);
 
     if isa(x, 'casadi.SX')
         isSX = true;
@@ -77,7 +76,7 @@ function model = detect_constr(model, constraints, stage_type)
         expr_constr = SX.sym('con_h_expr', 0, 0);
     end
 
-    if ~(isa(expr_constr, 'casadi.SX') || isa(expr_constr, 'casadi.SX'))
+    if ~(isa(expr_constr, 'casadi.SX') || isa(expr_constr, 'casadi.MX'))
         disp('expr_constr =')
         disp(expr_constr)
         error("Constraint type detection require definition of constraints as CasADi SX or MX.")
@@ -104,7 +103,7 @@ function model = detect_constr(model, constraints, stage_type)
     % loop over CasADi formulated constraints
     for ii = 1:length(expr_constr)
         c = expr_constr(ii);
-        if any(c.which_depends(z)) || ~c.is_linear([ x; u ]) || any(c.which_depends(model.p))
+        if any(c.which_depends(z)) || ~c.is_linear([ x; u ]) || any(c.which_depends(model.p)) || any(c.which_depends(model.p_global))
             % external constraint
             constr_expr_h = vertcat(constr_expr_h, c);
             lh = [ lh; LB(ii)];

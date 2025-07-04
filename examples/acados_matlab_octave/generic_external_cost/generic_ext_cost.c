@@ -15,7 +15,7 @@ int ext_cost(void **in, void **out, void *params)
     const int nx = 4;
     const int nu = 1;
 
-    // Inspired from https://github.com/acados/acados/blob/master/examples/c/no_interface_examples/mass_spring_nmpc_example.c#L158-L262
+    // Inspired from https://github.com/acados/acados/blob/main/examples/c/no_interface_examples/mass_spring_nmpc_example.c#L158-L262
     // Manual implementation of weighted least squares
     // fun = 0.5 * (x'*Q*x + u'*R*u)
     // grad_x = Q*x
@@ -85,7 +85,7 @@ int ext_costN(void **in, void **out, void *params)
     const int nx = 4;
     const int nu = 0; // because of terminal cost
 
-    // Inspired from https://github.com/acados/acados/blob/master/examples/c/no_interface_examples/mass_spring_nmpc_example.c#L158-L262
+    // Inspired from https://github.com/acados/acados/blob/main/examples/c/no_interface_examples/mass_spring_nmpc_example.c#L158-L262
     // Manual implementation of weighted least squares
     // fun = 0.5 * (x'*Q*x + u'*R*u)
     // grad_x = Q*x

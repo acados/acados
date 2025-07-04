@@ -33,9 +33,9 @@
 #include <vector>
 // #include <xmmintrin.h>
 
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_blas.h"
 
 // acados
 #include "acados/sim/sim_common.h"

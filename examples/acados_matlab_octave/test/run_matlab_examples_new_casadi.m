@@ -34,9 +34,12 @@ clearvars; clc; close all;
 
 % list the examples you would like to test
 targets = {
+    '../p_global_example/test_p_global_without_dependencies.m';
     '../p_global_example/main.m';
     '../p_global_example/simulink_test_p_global.m';
     '../mocp_transition_example/main_parametric_mocp.m';
+    '../pendulum_on_cart_model/nonlinear_constraint_test.m';
+    '../dense_nlp/test_qpscaling.m';
 };
 
 

@@ -56,7 +56,7 @@ def detect_gnsf_structure(acados_ocp, transcribe_opts=None):
     # functions, which were made part of the linear output system of the gnsf,
     # have changed signs.
 
-    # Options: transcribe_opts is a Matlab struct consisting of booleans:
+    # Options: transcribe_opts is a MATLAB struct consisting of booleans:
     #   print_info: if extensive information on how the model is processed
     #       is printed to the console.
     #   generate_gnsf_model: if the neccessary C functions to simulate the gnsf
@@ -73,7 +73,7 @@ def detect_gnsf_structure(acados_ocp, transcribe_opts=None):
     # acados_root_dir = getenv('ACADOS_INSTALL_DIR')
 
     if not is_empty(acados_ocp.model.p_global) and depends_on(acados_ocp.model.f_impl_expr, acados_ocp.model.p_global):
-        Exception("GNSF does not support global parameters")
+        NotImplementedError("GNSF does not support global parameters")
 
     ## load transcribe_opts
     if transcribe_opts is None:

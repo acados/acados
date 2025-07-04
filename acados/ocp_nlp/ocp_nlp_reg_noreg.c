@@ -39,8 +39,8 @@
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
 #include "acados/utils/math.h"
 
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
 
 
 

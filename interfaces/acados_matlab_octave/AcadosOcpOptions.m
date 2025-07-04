@@ -37,7 +37,7 @@ classdef AcadosOcpOptions < handle
         N_horizon
 
         nlp_solver_type        %  NLP solver
-        nlp_solver_step_length
+        nlp_solver_step_length % TODO: is deprecated, remove in future release
         nlp_solver_tol_stat
         nlp_solver_tol_eq
         nlp_solver_tol_ineq
@@ -45,6 +45,7 @@ classdef AcadosOcpOptions < handle
         nlp_solver_max_iter
         nlp_solver_ext_qp_res
         nlp_solver_warm_start_first_qp
+        nlp_solver_warm_start_first_qp_from_nlp
         nlp_solver_tol_min_step_norm
         globalization
         levenberg_marquardt
@@ -56,6 +57,8 @@ classdef AcadosOcpOptions < handle
         sim_method_jac_reuse
         sim_method_detect_gnsf
         time_steps
+        shooting_nodes
+        cost_scaling
         Tsim
         qp_solver              %  qp solver to be used in the NLP solver
         qp_solver_tol_stat
@@ -69,13 +72,21 @@ classdef AcadosOcpOptions < handle
         qp_solver_cond_ric_alg
         qp_solver_ric_alg
         qp_solver_mu0
+        qp_solver_t0_init
+        tau_min
         rti_log_residuals
         rti_log_only_available_residuals
         print_level
         cost_discretization
         regularize_method
         reg_epsilon
-        shooting_nodes
+        reg_max_cond_block
+        reg_min_epsilon
+        reg_adaptive_eps
+        qpscaling_ub_max_abs_eig
+        qpscaling_lb_norm_inf_grad_obj
+        qpscaling_scale_objective
+        qpscaling_scale_constraints
         exact_hess_cost
         exact_hess_dyn
         exact_hess_constr
@@ -88,30 +99,51 @@ classdef AcadosOcpOptions < handle
         globalization_use_SOC
         globalization_full_step_dual
         globalization_eps_sufficient_descent
+        globalization_funnel_init_increase_factor
+        globalization_funnel_init_upper_bound
+        globalization_funnel_sufficient_decrease_factor
+        globalization_funnel_kappa
+        globalization_funnel_fraction_switching_condition
+        globalization_funnel_initial_penalty_parameter
+        globalization_funnel_use_merit_fun_only
+
+
+        search_direction_mode
+        use_constraint_hessian_in_feas_qp
+        allow_direction_mode_switch_to_nominal
         hpipm_mode
         with_solution_sens_wrt_params
         with_value_sens_wrt_params
+        solution_sens_qp_t_lam_min
         as_rti_iter
         as_rti_level
         with_adaptive_levenberg_marquardt
         adaptive_levenberg_marquardt_lam
         adaptive_levenberg_marquardt_mu_min
         adaptive_levenberg_marquardt_mu0
+        adaptive_levenberg_marquardt_obj_scalar
         log_primal_step_norm
+        log_dual_step_norm
         store_iterates
         eval_residual_at_max_iter
+        with_anderson_acceleration
 
         timeout_max_time
         timeout_heuristic
 
         ext_fun_compile_flags
+        ext_fun_expand_dyn
+        ext_fun_expand_cost
+        ext_fun_expand_constr
+        ext_fun_expand_precompute
+
         model_external_shared_lib_dir
         model_external_shared_lib_name
         custom_update_filename
         custom_update_header_filename
         custom_templates
         custom_update_copy
-        num_threads_in_batch_solve
+        with_batch_functionality
 
         compile_interface
 
@@ -122,7 +154,7 @@ classdef AcadosOcpOptions < handle
             obj.integrator_type = 'ERK';
             obj.tf = [];
             obj.N_horizon = [];
-            obj.nlp_solver_type = 'SQP_RTI';
+            obj.nlp_solver_type = 'SQP';
             obj.globalization_fixed_step_length = 1.0;
             obj.nlp_solver_step_length = [];
             obj.nlp_solver_tol_stat = 1e-6;
@@ -133,6 +165,7 @@ classdef AcadosOcpOptions < handle
             obj.nlp_solver_max_iter = 100;
             obj.nlp_solver_ext_qp_res = 0;
             obj.nlp_solver_warm_start_first_qp = false;
+            obj.nlp_solver_warm_start_first_qp_from_nlp = false;
             obj.globalization = 'FIXED_STEP';
             obj.levenberg_marquardt = 0.0;
             obj.collocation_type = 'GAUSS_LEGENDRE';
@@ -154,13 +187,23 @@ classdef AcadosOcpOptions < handle
             obj.qp_solver_cond_ric_alg = 1;
             obj.qp_solver_ric_alg = 1;
             obj.qp_solver_mu0 = 0;
+            obj.qp_solver_t0_init = 2;
+            obj.tau_min = 0;
             obj.rti_log_residuals = 0;
             obj.rti_log_only_available_residuals = 0;
             obj.print_level = 0;
             obj.cost_discretization = 'EULER';
             obj.regularize_method = 'NO_REGULARIZE';
+            obj.qpscaling_ub_max_abs_eig = 1e5;
+            obj.qpscaling_lb_norm_inf_grad_obj = 1e-4;
+            obj.qpscaling_scale_objective = 'NO_OBJECTIVE_SCALING';
+            obj.qpscaling_scale_constraints = 'NO_CONSTRAINT_SCALING';
             obj.reg_epsilon = 1e-4;
+            obj.reg_adaptive_eps = false;
+            obj.reg_max_cond_block = 1e7;
+            obj.reg_min_epsilon = 1e-8;
             obj.shooting_nodes = [];
+            obj.cost_scaling = [];
             obj.exact_hess_cost = 1;
             obj.exact_hess_dyn = 1;
             obj.exact_hess_constr = 1;
@@ -172,18 +215,38 @@ classdef AcadosOcpOptions < handle
             obj.globalization_use_SOC = 0;
             obj.globalization_full_step_dual = [];
             obj.globalization_eps_sufficient_descent = [];
+
+
+            % funnel options
+            obj.globalization_funnel_init_increase_factor = 15;
+            obj.globalization_funnel_init_upper_bound = 1.0;
+            obj.globalization_funnel_sufficient_decrease_factor = 0.9;
+            obj.globalization_funnel_kappa = 0.9;
+            obj.globalization_funnel_fraction_switching_condition = 1e-3;
+            obj.globalization_funnel_initial_penalty_parameter = 1.0;
+            obj.globalization_funnel_use_merit_fun_only = false;
+
+            % SQP_WITH_FEASIBLE_QP options
+            obj.search_direction_mode = 'NOMINAL_QP';
+            obj.use_constraint_hessian_in_feas_qp = false;
+            obj.allow_direction_mode_switch_to_nominal = true;
+
             obj.hpipm_mode = 'BALANCE';
             obj.with_solution_sens_wrt_params = 0;
             obj.with_value_sens_wrt_params = 0;
+            obj.solution_sens_qp_t_lam_min = 1e-9;
             obj.as_rti_iter = 1;
             obj.as_rti_level = 4;
             obj.with_adaptive_levenberg_marquardt = 0;
             obj.adaptive_levenberg_marquardt_lam = 5.0;
             obj.adaptive_levenberg_marquardt_mu_min = 1e-16;
             obj.adaptive_levenberg_marquardt_mu0 = 1e-3;
+            obj.adaptive_levenberg_marquardt_obj_scalar = 2.0;
             obj.log_primal_step_norm = 0;
+            obj.log_dual_step_norm = 0;
             obj.store_iterates = false;
             obj.eval_residual_at_max_iter = [];
+            obj.with_anderson_acceleration = 0;
             obj.timeout_max_time = 0.;
             obj.timeout_heuristic = 'ZERO';
 
@@ -194,6 +257,10 @@ classdef AcadosOcpOptions < handle
             else
                 obj.ext_fun_compile_flags = env_var;
             end
+            obj.ext_fun_expand_dyn = false;
+            obj.ext_fun_expand_cost = false;
+            obj.ext_fun_expand_constr = false;
+            obj.ext_fun_expand_precompute = false;
 
             obj.model_external_shared_lib_dir = [];
             obj.model_external_shared_lib_name = [];
@@ -201,7 +268,7 @@ classdef AcadosOcpOptions < handle
             obj.custom_update_header_filename = '';
             obj.custom_templates = [];
             obj.custom_update_copy = true;
-            obj.num_threads_in_batch_solve = 1;
+            obj.with_batch_functionality = false;
 
             obj.compile_interface = []; % corresponds to automatic detection, possible values: true, false, []
         end
@@ -220,7 +287,7 @@ classdef AcadosOcpOptions < handle
 
         function s = convert_to_struct_for_json_dump(self, N)
             s = self.struct();
-            s = prepare_struct_for_json_dump(s, {'time_steps', 'shooting_nodes', 'sim_method_num_stages', 'sim_method_num_steps', 'sim_method_jac_reuse', 'custom_templates'}, {});
+            s = prepare_struct_for_json_dump(s, {'time_steps', 'shooting_nodes', 'cost_scaling', 'sim_method_num_stages', 'sim_method_num_steps', 'sim_method_jac_reuse', 'custom_templates'}, {});
         end
     end
 end

@@ -41,7 +41,6 @@ from itertools import product
 
 # Settings
 PLOT = False
-FOR_LOOPING = False # call solver in for loop to get all iterates
 TOL = 1e-6
 
 def main():
@@ -63,6 +62,12 @@ def main():
             pass
         else:
             solve_maratos_problem_with_setting(setting)
+            # exit(1)
+            # pass
+    # setting = {"globalization": "MERIT_BACKTRACKING",
+            #   "line_search_use_sufficient_descent": 0,
+            #   "globalization_use_SOC": 1}
+    # solve_maratos_problem_with_setting(setting)
 
 
 def solve_maratos_problem_with_setting(setting):
@@ -71,61 +76,72 @@ def solve_maratos_problem_with_setting(setting):
     line_search_use_sufficient_descent = setting['line_search_use_sufficient_descent']
     globalization_use_SOC = setting['globalization_use_SOC']
 
+    print(f"running maratos test problem with settings {setting}")
+
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
     # set model
-    model = AcadosModel()
     x1 = SX.sym('x1')
     x2 = SX.sym('x2')
     x = vertcat(x1, x2)
 
     # dynamics: identity
-    model.disc_dyn_expr = x
-    model.x = x
-    model.u = SX.sym('u', 0, 0) # [] / None doesnt work
-    model.p = []
-    model.name = f'maratos_problem'
-    ocp.model = model
+    ocp.model.x = x
+    ocp.model.name = f'maratos_problem'
 
     # discretization
-    Tf = 1
     N = 1
     ocp.solver_options.N_horizon = N
-    ocp.solver_options.tf = Tf
 
-    # cost
-    ocp.cost.cost_type_e = 'EXTERNAL'
-    ocp.model.cost_expr_ext_cost_e = x1
+    if N == 0:
+        # cost
+        ocp.cost.cost_type_e = 'EXTERNAL'
+        ocp.model.cost_expr_ext_cost_e = x1
 
-    # constarints
-    ocp.model.con_h_expr_0 = x1 ** 2 + x2 ** 2
-    ocp.constraints.lh_0 = np.array([1.0])
-    ocp.constraints.uh_0 = np.array([1.0])
+        # constraints
+        ocp.model.con_h_expr_e = x1 ** 2 + x2 ** 2
+        ocp.constraints.lh_e = np.array([1.0])
+        ocp.constraints.uh_e = np.array([1.0])
+    elif N == 1:
+        # dynamics: identity
+        ocp.model.disc_dyn_expr = x
+        ocp.model.u = SX.sym('u', 0, 0) # [] / None doesnt work
+
+        # discretization
+        ocp.solver_options.tf = 1.0
+        ocp.solver_options.integrator_type = 'DISCRETE'
+
+        # cost
+        ocp.cost.cost_type_e = 'EXTERNAL'
+        ocp.model.cost_expr_ext_cost_e = x1
+
+        # constarints
+        ocp.model.con_h_expr_0 = x1 ** 2 + x2 ** 2
+        ocp.constraints.lh_0 = np.array([1.0])
+        ocp.constraints.uh_0 = np.array([1.0])
+    else:
+        raise NotImplementedError('N > 1 not implemented')
     # # soften
-    # ocp.constraints.idxsh = np.array([0])
-    # ocp.cost.zl = 1e5 * np.array([1])
-    # ocp.cost.zu = 1e5 * np.array([1])
-    # ocp.cost.Zl = 1e5 * np.array([1])
-    # ocp.cost.Zu = 1e5 * np.array([1])
+    # ocp.constraints.idxsh_e = np.array([0])
+    # ocp.cost.zl_e = 1e5 * np.array([1])
+    # ocp.cost.zu_e = 1e5 * np.array([1])
+    # ocp.cost.Zl_e = 1e5 * np.array([1])
+    # ocp.cost.Zu_e = 1e5 * np.array([1])
 
     # add bounds on x
     # nx = 2
-    # ocp.constraints.idxbx_0 = np.array(range(nx))
-    # ocp.constraints.lbx_0 = -2 * np.ones((nx))
-    # ocp.constraints.ubx_0 = 2 * np.ones((nx))
+    # ocp.constraints.idxbx_e = np.array(range(nx))
+    # ocp.constraints.lbx_e = -2 * np.ones((nx))
+    # ocp.constraints.ubx_e = 2 * np.ones((nx))
 
     # set options
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
-    # PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM,
-    # PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # TODO: check difference wrt FULL_CONDENSING
     ocp.solver_options.hessian_approx = 'EXACT'
-    ocp.solver_options.integrator_type = 'DISCRETE'
-    if globalization == 'FUNNEL_L1PEN_LINESEARCH':
-        ocp.solver_options.print_level = 1
+    # ocp.solver_options.print_level = 2
     ocp.solver_options.tol = TOL
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
-    ocp.solver_options.levenberg_marquardt = 1e-1
+    ocp.solver_options.levenberg_marquardt = 1e-1 # / (N+1)
     SQP_max_iter = 300
     ocp.solver_options.qp_solver_iter_max = 400
     ocp.solver_options.qp_tol = 5e-7
@@ -136,13 +152,10 @@ def solve_maratos_problem_with_setting(setting):
     ocp.solver_options.globalization_line_search_use_sufficient_descent = line_search_use_sufficient_descent
     ocp.solver_options.globalization_use_SOC = globalization_use_SOC
     ocp.solver_options.globalization_eps_sufficient_descent = 1e-1
+    ocp.solver_options.store_iterates = True
 
-    if FOR_LOOPING: # call solver in for loop to get all iterates
-        ocp.solver_options.nlp_solver_max_iter = 1
-        ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
-    else:
-        ocp.solver_options.nlp_solver_max_iter = SQP_max_iter
-        ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
+    ocp.solver_options.nlp_solver_max_iter = SQP_max_iter
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
     # initialize solver
     rad_init = 0.1 #0.1 #np.pi / 4
@@ -151,34 +164,18 @@ def solve_maratos_problem_with_setting(setting):
     [ocp_solver.set(i, "x", xinit) for i in range(N+1)]
 
     # solve
-    if FOR_LOOPING: # call solver in for loop to get all iterates
-        iterates = np.zeros((SQP_max_iter+1, 2))
-        iterates[0, :] = xinit
-        alphas = np.zeros((SQP_max_iter,))
-        qp_iters = np.zeros((SQP_max_iter,))
-        iter = SQP_max_iter
-        residuals = np.zeros((4, SQP_max_iter))
-
-        # solve
-        for i in range(SQP_max_iter):
-            status = ocp_solver.solve()
-            ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
-            # print(f'acados returned status {status}.')
-            iterates[i+1, :] = ocp_solver.get(0, "x")
-            if status in [0, 4]:
-                iter = i
-                break
-            alphas[i] = ocp_solver.get_stats('alpha')[1]
-            qp_iters[i] = ocp_solver.get_stats('qp_iter')[1]
-            residuals[:, i] = ocp_solver.get_stats('residuals')
-
-    else:
-        ocp_solver.solve()
-        ocp_solver.print_statistics()
-        iter = ocp_solver.get_stats('sqp_iter')
-        alphas = ocp_solver.get_stats('alpha')[1:]
-        qp_iters = ocp_solver.get_stats('qp_iter')
-        residuals = ocp_solver.get_stats('statistics')[1:5,1:iter]
+    ocp_solver.solve()
+    ocp_solver.print_statistics()
+    iter = ocp_solver.get_stats('sqp_iter')
+    alphas = ocp_solver.get_stats('alpha')[1:]
+    qp_iters = ocp_solver.get_stats('qp_iter')
+    residuals = ocp_solver.get_stats('statistics')[1:5,1:iter]
+    iterates = ocp_solver.get_iterates()
+    x_iterates = iterates.as_array('x')
+    if N > 0:
+        xdiff = x_iterates[:, 0, :] - x_iterates[:, 1, :]
+        xdiff = np.linalg.norm(xdiff, axis=1)
+        print(f"xdiff = {xdiff}")
 
     # get solution
     solution = ocp_solver.get(0, "x")
@@ -197,7 +194,7 @@ def solve_maratos_problem_with_setting(setting):
 
     # checks
     if sol_err > TOL*1e1:
-        raise Exception(f"error of numerical solution wrt exact solution = {sol_err} > tol = {TOL*1e1}")
+        print(f"error of numerical solution wrt exact solution = {sol_err} > tol = {TOL*1e1}")
     else:
         print(f"matched analytical solution with tolerance {TOL}")
 
@@ -212,9 +209,9 @@ def solve_maratos_problem_with_setting(setting):
         elif globalization == 'MERIT_BACKTRACKING':
             if max_infeasibility > 0.5:
                 raise Exception(f"Expected max_infeasibility < 0.5 when using globalized SQP on Maratos problem")
-            if globalization_use_SOC == 0:
-                if FOR_LOOPING and iter != 57:
-                    raise Exception(f"Expected 57 SQP iterations when using globalized SQP without SOC on Maratos problem, got {iter}")
+            elif globalization_use_SOC == 0:
+                if iter not in range(56, 61):
+                    raise Exception(f"Expected 56 to 60 SQP iterations when using globalized SQP without SOC on Maratos problem, got {iter}")
             elif line_search_use_sufficient_descent == 1:
                 if iter not in range(29, 37):
                     # NOTE: got 29 locally and 36 on Github actions.
@@ -228,13 +225,12 @@ def solve_maratos_problem_with_setting(setting):
                     raise Exception(f"Expected 16 SQP iterations when using globalized SQP with SOC on Maratos problem, got {iter}")
         elif globalization == 'FUNNEL_L1PEN_LINESEARCH':
             if iter > 12:
-                    raise Exception(f"Expected not more than 12 SQP iterations when using Funnel Method SQP, got {iter}")
+                raise Exception(f"Expected not more than 12 SQP iterations when using Funnel Method SQP, got {iter}")
 
     except Exception as inst:
-        if FOR_LOOPING and globalization == "MERIT_BACKTRACKING":
-            print("\nAcados globalized OCP solver behaves different when for looping due to different merit function weights.",
-            "Following exception is not raised\n")
-            print(inst, "\n")
+        if N == 0:
+            print(f"Exceptions in this file are tailored to formulation with N=1, difference should be investigated.")
+            print(f"got Exception {inst} in test with settings {setting}")
         else:
             raise(inst)
 
@@ -242,10 +238,9 @@ def solve_maratos_problem_with_setting(setting):
         plt.figure()
         axs = plt.plot(solution[0], solution[1], 'x', label='solution')
 
-        if FOR_LOOPING: # call solver in for loop to get all iterates
-            cm = plt.cm.get_cmap('RdYlBu')
-            axs = plt.scatter(iterates[:iter+1,0], iterates[:iter+1,1], c=range(iter+1), s=35, cmap=cm, label='iterates')
-            plt.colorbar(axs)
+        cm = plt.cm.get_cmap('RdYlBu')
+        axs = plt.scatter(x_iterates[:iter+1, 0, 0], x_iterates[:iter+1, 0, 1], c=range(iter+1), s=35, cmap=cm, label='iterates')
+        plt.colorbar(axs)
 
         ts = np.linspace(0,2*np.pi,100)
         plt.plot(1 * np.cos(ts)+0,1 * np.sin(ts)-0, 'r')

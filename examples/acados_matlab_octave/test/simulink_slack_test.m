@@ -83,23 +83,19 @@ element_names = out_sim.logsout.getElementNames();
 status_signal = out_sim.logsout.getElement('status');
 disp('checking status, should be 0.')
 if any(status_signal.Values.Data ~= 0)
-    disp('failed. got status values:');
-    disp(status_signal.Values.Data);
-    % quit(1);
+    error(['failed. got status values:' mat2str(status_signal.Values.Data)]);
 end
 
 utraj_signal = out_sim.logsout.getElement('utraj');
 u_simulink = utraj_signal.Values.Data(1, :);
 disp('checking u values.')
 if any(abs(u_simulink(:) - utraj(:)) > 1e-8)
-    disp('failed');
-    quit(1);
+    error('failed');
 end
 
 xtraj_signal = out_sim.logsout.getElement('xtraj');
 x_simulink = xtraj_signal.Values.Data(1, :);
 disp('checking x values.')
 if any(abs(x_simulink(:) - xtraj(:)) > 1e-8)
-    disp('failed');
-    quit(1);
+    error('failed');
 end

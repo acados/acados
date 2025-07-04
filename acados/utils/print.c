@@ -44,9 +44,9 @@
 #include <string.h>
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_i_aux_ext_dep.h"
 
 // hpipm
 #include "hpipm/include/hpipm_d_ocp_qp.h"
@@ -198,12 +198,13 @@ void print_ocp_qp_dims(ocp_qp_dims *dims)
 {
     int N = dims->N;
 
-    printf("k\tnx\tnu\tnb\tnbx\tnbu\tng\tns\n");
+    printf("k\tnx\tnu\tnb\tnbx\tnbu\tng\tnsbu\tnsbx\tnsg\tns\tnbxe\tnbue\tnge\n");
 
     for (int kk = 0; kk < N + 1; kk++)
     {
-        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t\n", kk, dims->nx[kk], dims->nu[kk], dims->nb[kk],
-               dims->nbx[kk], dims->nbu[kk], dims->ng[kk], dims->ns[kk]);
+        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t\n", kk, dims->nx[kk], dims->nu[kk], dims->nb[kk],
+               dims->nbx[kk], dims->nbu[kk], dims->ng[kk], dims->nsbu[kk], dims->nsbx[kk], dims->nsg[kk], dims->ns[kk],
+            dims->nbxe[kk], dims->nbue[kk], dims->nge[kk]);
     }
 }
 
@@ -225,6 +226,9 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
     int *nb = qp_in->dim->nb;
     int *ng = qp_in->dim->ng;
     int *ns = qp_in->dim->ns;
+    int *nbxe = qp_in->dim->nbxe;
+    int *nbue = qp_in->dim->nbue;
+    int *nge = qp_in->dim->nge;
 
 #if 1
     printf("BAbt =\n");
@@ -245,10 +249,10 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
         blasfeo_print_dmat(nu[ii] + nx[ii] + 1, nu[ii] + nx[ii], &qp_in->RSQrq[ii], 0, 0);
     }
 
-    printf("rq =\n");
+    printf("rqz =\n");
     for (int ii = 0; ii < N + 1; ii++)
     {
-        blasfeo_print_tran_dvec(nu[ii] + nx[ii], &qp_in->rqz[ii], 0);
+        blasfeo_print_tran_dvec(nu[ii] + nx[ii] + 2 * ns[ii], &qp_in->rqz[ii], 0);
     }
 
     printf("d =\n");
@@ -257,10 +261,22 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
         blasfeo_print_tran_dvec(2 * nb[ii] + 2 * ng[ii], &qp_in->d[ii], 0);
     }
 
+    printf("d_mask =\n");
+    for (int ii = 0; ii <= N; ii++)
+    {
+        blasfeo_print_tran_dvec(2 * nb[ii] + 2 * ng[ii], &qp_in->d_mask[ii], 0);
+    }
+
     printf("idxb =\n");
     for (int ii = 0; ii < N + 1; ii++)
     {
         int_print_mat(1, nb[ii], qp_in->idxb[ii], 1);
+    }
+
+    printf("idxe =\n");
+    for (int ii = 0; ii < N + 1; ii++)
+    {
+        int_print_mat(1, nbue[ii]+nbxe[ii]+nge[ii], qp_in->idxe[ii], 1);
     }
 
     printf("DCt =\n");
@@ -277,10 +293,22 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
             blasfeo_print_tran_dvec(2 * ns[ii], &qp_in->d[ii], 2 * nb[ii] + 2 * ng[ii]);
     }
 
+    printf("d_mask_s =\n");
+    for (int ii = 0; ii <= N; ii++)
+    {
+        blasfeo_print_tran_dvec(2 * ns[ii], &qp_in->d_mask[ii], 2 * nb[ii] + 2 * ng[ii]);
+    }
+
     printf("idxs_rev =\n");
     for (int ii = 0; ii <= N; ii++)
     {
         int_print_mat(1, nb[ii]+ng[ii], qp_in->idxs_rev[ii], 1);
+    }
+
+    printf("idxe =\n");
+    for (int ii = 0; ii <= N; ii++)
+    {
+        int_print_mat(1, nbxe[ii]+nbue[ii]+nge[ii], qp_in->idxe[ii], 1);
     }
 
     printf("Z =\n");
@@ -365,11 +393,12 @@ void print_ocp_qp_out(ocp_qp_out *qp_out)
         blasfeo_print_tran_dvec(nu[ii] + nx[ii] + 2 * ns[ii], &qp_out->ux[ii], 0);
 
     printf("pi =\n");
-    for (ii = 0; ii < N; ii++) blasfeo_print_tran_dvec(nx[ii + 1], &qp_out->pi[ii], 0);
+    for (ii = 0; ii < N; ii++)
+        blasfeo_print_tran_dvec(nx[ii + 1], &qp_out->pi[ii], 0);
 
     printf("lam =\n");
     for (ii = 0; ii <= N; ii++)
-        blasfeo_print_tran_dvec(2 * nb[ii] + 2 * ng[ii] + 2 * ns[ii], &qp_out->lam[ii], 0);
+        blasfeo_print_exp_tran_dvec(2 * nb[ii] + 2 * ng[ii] + 2 * ns[ii], &qp_out->lam[ii], 0);
 
     printf("t =\n");
     for (ii = 0; ii <= N; ii++)
@@ -905,3 +934,18 @@ void print_qp_info(qp_info *info)
 // #endif
 //     printf("\n");
 // }
+
+void print_debug_output(char* message, int print_level, int required_print_level)
+{
+    if (print_level > required_print_level)
+    {
+        printf("%s", message); //debugging output
+    }
+}
+void print_debug_output_double(char* message, double value, int print_level, int required_print_level)
+{
+    if (print_level > required_print_level)
+    {
+        printf("%s: %.5e\n", message, value); //debugging output
+    }
+}

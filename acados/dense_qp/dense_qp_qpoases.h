@@ -37,7 +37,7 @@ extern "C" {
 #endif
 
 // blasfeo
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_common.h"
 
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
@@ -112,8 +112,6 @@ void *dense_qp_qpoases_memory_assign(void *config, dense_qp_dims *dims, void *op
 acados_size_t dense_qp_qpoases_workspace_calculate_size(void *config, dense_qp_dims *dims, void *opts_);
 //
 int dense_qp_qpoases(void *config, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_, void *memory_, void *work_);
-//
-void dense_qp_qpoases_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
 //
 void dense_qp_qpoases_memory_reset(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
 //

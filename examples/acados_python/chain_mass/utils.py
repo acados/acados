@@ -32,6 +32,7 @@ import casadi as ca
 from export_chain_mass_model import export_chain_mass_model
 
 
+# TODO this should be a dataclass
 def get_chain_params():
     params = dict()
 

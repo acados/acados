@@ -39,8 +39,8 @@
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
 #include "acados/utils/math.h"
 
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
 
 
 
@@ -67,6 +67,9 @@ void ocp_nlp_reg_project_opts_initialize_default(void *config_, ocp_nlp_reg_dims
     ocp_nlp_reg_project_opts *opts = opts_;
 
     opts->epsilon = 1e-4;
+    opts->min_epsilon = 1e-8;
+    opts->adaptive_eps = false;
+    opts->max_cond_block = 1e7;
 
     return;
 }
@@ -82,6 +85,21 @@ void ocp_nlp_reg_project_opts_set(void *config_, void *opts_, const char *field,
     {
         double *d_ptr = value;
         opts->epsilon = *d_ptr;
+    }
+    else if (!strcmp(field, "min_epsilon"))
+    {
+        double *d_ptr = value;
+        opts->min_epsilon = *d_ptr;
+    }
+    else if (!strcmp(field, "max_cond_block"))
+    {
+        double *d_ptr = value;
+        opts->max_cond_block = *d_ptr;
+    }
+    else if (!strcmp(field, "adaptive_eps"))
+    {
+        bool *b_ptr = value;
+        opts->adaptive_eps = *b_ptr;
     }
     else
     {
@@ -284,7 +302,14 @@ void ocp_nlp_reg_project_regularize(void *config, ocp_nlp_reg_dims *dims, void *
 
         // regularize
         blasfeo_unpack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->reg_hess, nu[ii]+nx[ii]);
-        acados_project(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e, opts->epsilon);
+        if (opts->adaptive_eps)
+        {
+            acados_project_adaptive_eps(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e, opts->max_cond_block, opts->min_epsilon);
+        }
+        else
+        {
+            acados_project(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e, opts->epsilon);
+        }
         blasfeo_pack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->reg_hess, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0);
     }
 }

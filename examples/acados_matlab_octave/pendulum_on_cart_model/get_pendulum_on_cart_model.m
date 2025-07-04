@@ -27,7 +27,7 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-function model = get_pendulum_on_cart_AcadosModel()
+function model = get_pendulum_on_cart_model()
 
     import casadi.*
 

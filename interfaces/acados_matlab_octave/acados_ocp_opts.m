@@ -61,7 +61,7 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.nlp_solver_tol_ineq = 1e-6;
             obj.opts_struct.nlp_solver_tol_comp = 1e-6;
             obj.opts_struct.nlp_solver_ext_qp_res = 0; % compute QP residuals at each NLP iteration
-            obj.opts_struct.nlp_solver_step_length = 1.0; % fixed step length in SQP algorithm
+            obj.opts_struct.globalization_fixed_step_length = 1.0;
             obj.opts_struct.qp_solver = 'partial_condensing_hpipm';
             % globalization
             obj.opts_struct.globalization = 'fixed_step';
@@ -71,18 +71,11 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.globalization_use_SOC = 0;
             obj.opts_struct.globalization_full_step_dual = 0;
             obj.opts_struct.globalization_eps_sufficient_descent = 1e-4;
-            % for completeness and for keeping old interface stuff working
-            obj.opts_struct.alpha_min = 0.05;
-            obj.opts_struct.alpha_reduction = 0.7;
-            obj.opts_struct.line_search_use_sufficient_descent = 0;
-            obj.opts_struct.full_step_dual = 0;
-            obj.opts_struct.eps_sufficient_descent = 1e-4;
 
             obj.opts_struct.qp_solver_iter_max = 50;
             obj.opts_struct.qp_solver_mu0 = 0;
             obj.opts_struct.store_iterates = false;
 
-            % obj.opts_struct.qp_solver_cond_N = 5; % New horizon after partial condensing
             obj.opts_struct.qp_solver_cond_ric_alg = 1; % 0: dont factorize hessian in the condensing; 1: factorize
             obj.opts_struct.qp_solver_ric_alg = 1; % HPIPM specific
             obj.opts_struct.qp_solver_warm_start = 0;
@@ -117,6 +110,10 @@ classdef acados_ocp_opts < handle
             else
                 obj.opts_struct.ext_fun_compile_flags = env_var;
             end
+            obj.opts_struct.ext_fun_expand_constr = false;
+            obj.opts_struct.ext_fun_expand_cost = false;
+            obj.opts_struct.ext_fun_expand_precompute = false;
+            obj.opts_struct.ext_fun_expand_dyn = false;
 
             obj.opts_struct.output_dir = fullfile(pwd, 'build');
             obj.opts_struct.json_file = 'acados_ocp_nlp.json';
@@ -127,7 +124,7 @@ classdef acados_ocp_opts < handle
 
 
         function obj = set(obj, field, value)
-            % convert Matlab strings to char arrays
+            % convert MATLAB strings to char arrays
             if isstring(value)
                 value = char(value);
             end
@@ -172,8 +169,8 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.nlp_solver_tol_comp = value;
             elseif (strcmp(field, 'nlp_solver_ext_qp_res'))
                 obj.opts_struct.nlp_solver_ext_qp_res = value;
-            elseif (strcmp(field, 'nlp_solver_step_length'))
-                obj.opts_struct.nlp_solver_step_length = value;
+            elseif (strcmp(field, 'globalization_fixed_step_length') || strcmp(field, 'nlp_solver_step_length'))
+                obj.opts_struct.globalization_fixed_step_length = value;
             elseif (strcmp(field, 'nlp_solver_warm_start_first_qp'))
                 obj.opts_struct.nlp_solver_warm_start_first_qp = value;
             elseif (strcmp(field, 'qp_solver'))
@@ -226,27 +223,17 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.print_level = value;
             elseif (strcmp(field, 'levenberg_marquardt'))
                 obj.opts_struct.levenberg_marquardt = value;
-            elseif (strcmp(field, 'globalization_alpha_min'))
+            elseif (strcmp(field, 'globalization_alpha_min') || strcmp(field, 'alpha_min'))
                 obj.opts_struct.globalization_alpha_min = value;
-            elseif (strcmp(field, 'globalization_alpha_reduction'))
-                obj.opts_struct.alpha_reduction = value;
-            elseif (strcmp(field, 'globalization_line_search_use_sufficient_descent'))
+            elseif (strcmp(field, 'globalization_alpha_reduction') || strcmp(field, 'alpha_reduction'))
+                obj.opts_struct.globalization_alpha_reduction = value;
+            elseif (strcmp(field, 'globalization_line_search_use_sufficient_descent') || strcmp(field, 'line_search_use_sufficient_descent'))
                 obj.opts_struct.globalization_line_search_use_sufficient_descent = value;
             elseif (strcmp(field, 'globalization_use_SOC'))
                 obj.opts_struct.globalization_use_SOC = value;
-            elseif (strcmp(field, 'globalization_full_step_dual'))
+            elseif (strcmp(field, 'globalization_full_step_dual') || strcmp(field, 'full_step_dual'))
                 obj.opts_struct.globalization_full_step_dual = value;
-            elseif (strcmp(field, 'globalization_eps_sufficient_descent'))
-                obj.opts_struct.globalization_eps_sufficient_descent = value;
-            elseif (strcmp(field, 'alpha_min'))
-                obj.opts_struct.globalization_alpha_min = value;
-            elseif (strcmp(field, 'alpha_reduction'))
-                obj.opts_struct.alpha_reduction = value;
-            elseif (strcmp(field, 'line_search_use_sufficient_descent'))
-                obj.opts_struct.globalization_line_search_use_sufficient_descent = value;
-            elseif (strcmp(field, 'full_step_dual'))
-                obj.opts_struct.globalization_full_step_dual = value;
-            elseif (strcmp(field, 'eps_sufficient_descent'))
+            elseif (strcmp(field, 'globalization_eps_sufficient_descent') || strcmp(field, 'eps_sufficient_descent'))
                 obj.opts_struct.globalization_eps_sufficient_descent = value;
             elseif (strcmp(field, 'globalization'))
                 obj.opts_struct.globalization = value;
@@ -258,6 +245,19 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.store_iterates = value;
             elseif (strcmp(field, 'ext_fun_compile_flags'))
                 obj.opts_struct.ext_fun_compile_flags = value;
+            elseif (strcmp(field, 'ext_fun_expand'))
+                obj.opts_struct.ext_fun_expand_constr = value;
+                obj.opts_struct.ext_fun_expand_cost = value;
+                obj.opts_struct.ext_fun_expand_dyn = value;
+            elseif (strcmp(field, 'ext_fun_expand_constr'))
+                obj.opts_struct.ext_fun_expand_constr = value;
+            elseif (strcmp(field, 'ext_fun_expand_cost'))
+                obj.opts_struct.ext_fun_expand_cost = value;
+            elseif (strcmp(field, 'ext_fun_expand_dyn'))
+                obj.opts_struct.ext_fun_expand_dyn = value;
+            elseif (strcmp(field, 'ext_fun_expand_precompute'))
+                obj.opts_struct.ext_fun_expand_precompute = value;
+
             elseif (strcmp(field, 'json_file'))
                 obj.opts_struct.json_file = value;
             elseif (strcmp(field, 'timeout_max_time'))

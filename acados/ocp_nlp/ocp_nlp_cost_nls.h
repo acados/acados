@@ -45,7 +45,7 @@ extern "C" {
 #endif
 
 // blasfeo
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_common.h"
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
@@ -105,6 +105,7 @@ acados_size_t ocp_nlp_cost_nls_model_calculate_size(void *config, void *dims);
 void *ocp_nlp_cost_nls_model_assign(void *config, void *dims, void *raw_memory);
 //
 int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_, const char *field, void *value_);
+int ocp_nlp_cost_nls_model_get(void *config_, void *dims_, void *model_, const char *field, void *value_);
 
 
 
@@ -116,6 +117,7 @@ typedef struct
 {
     bool gauss_newton_hess;  // gauss-newton hessian approximation
     int integrator_cost; // > 0 indicating that cost is propagated within integrator instead of cost module, only add slack contributions
+    int add_hess_contribution;
 } ocp_nlp_cost_nls_opts;
 
 //

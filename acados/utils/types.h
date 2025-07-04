@@ -73,14 +73,15 @@ typedef int (*casadi_function_t)(const double** arg, double** res, int* iw, doub
 // enum of return values
 enum return_values
 {
-    ACADOS_SUCCESS,
-    ACADOS_NAN_DETECTED,
-    ACADOS_MAXITER,
-    ACADOS_MINSTEP,
-    ACADOS_QP_FAILURE,
-    ACADOS_READY,
-    ACADOS_UNBOUNDED,
-    ACADOS_TIMEOUT,
+    ACADOS_SUCCESS = 0,
+    ACADOS_NAN_DETECTED = 1,
+    ACADOS_MAXITER = 2,
+    ACADOS_MINSTEP = 3,
+    ACADOS_QP_FAILURE = 4,
+    ACADOS_READY = 5,
+    ACADOS_UNBOUNDED = 6,
+    ACADOS_TIMEOUT = 7,
+    ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED = 8,
 };
 
 
@@ -104,6 +105,29 @@ typedef enum
   AVERAGE,
   ZERO,
 } ocp_nlp_timeout_heuristic_t;
+
+// Types of modes for calculating the search direction in SQP_WITH_FEASIBLE_QP
+enum search_direction_mode
+{
+    NOMINAL_QP = 0,
+    BYRD_OMOJOKUN = 1,
+    FEASIBILITY_QP = 2,
+};
+
+
+/// QP scaling types
+typedef enum
+{
+    NO_OBJECTIVE_SCALING,
+    OBJECTIVE_GERSHGORIN,
+} qpscaling_scale_objective_type;
+
+/// QP scaling types
+typedef enum
+{
+    NO_CONSTRAINT_SCALING,
+    INF_NORM,
+} ocp_nlp_qpscaling_constraint_type;
 
 
 

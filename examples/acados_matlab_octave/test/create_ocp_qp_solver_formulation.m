@@ -36,7 +36,7 @@ Vu = zeros(ny,nu); Vu(nx+1:ny,:) = eye(nu);     % input-to-output matrix in lagr
 Vx_e = zeros(ny_e,nx); Vx_e(1:nx,:) = eye(nx);  % state-to-output matrix in mayer term
 W = eye(ny);
 W_e = 5 * W(1:ny_e,1:ny_e);                         % cost weights in mayer term
-y_ref = zeros(ny,1);                            % set intial references
+y_ref = zeros(ny,1);                            % set initial references
 y_ref_e = zeros(ny_e,1);
 
 % cost

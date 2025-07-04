@@ -44,7 +44,7 @@
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
 
-#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo_d_aux.h"
 
 #include "simple_dae_model/simple_dae_model.h"
 #include "simple_dae_model/simple_dae_constr.h"
@@ -293,6 +293,8 @@ int main() {
 		c_ptr += external_function_param_casadi_calculate_size(impl_ode_jac_x_xdot_u_z+ii, 0, &ext_fun_opts);
 	}
 
+    // ocp_nlp_out, ocp_nlp_in
+	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 	ocp_nlp_in *nlp_in = ocp_nlp_in_create(config, dims);
 
 	for (int i = 0; i < N; ++i)
@@ -333,8 +335,8 @@ int main() {
 	// bounds
 	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", x0);
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", x0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, 0, "ubx", x0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, 0, "lbx", x0);
     constraints[0]->idxb = idxb_0;
 
     if (FORMULATION == 2) {
@@ -349,14 +351,14 @@ int main() {
             nl_constr_h_fun_jac[ii].casadi_n_in         = &simple_dae_constr_h_fun_jac_ut_xt_n_in;
             nl_constr_h_fun_jac[ii].casadi_n_out        = &simple_dae_constr_h_fun_jac_ut_xt_n_out;
             external_function_param_casadi_create(&nl_constr_h_fun_jac[ii], 0, &ext_fun_opts);
-            ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "lh", lh);
-            ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "uh", uh);
-			ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "nl_constr_h_fun_jac", &nl_constr_h_fun_jac[ii]);
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, ii, "lh", lh);
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, ii, "uh", uh);
+			ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, ii, "nl_constr_h_fun_jac", &nl_constr_h_fun_jac[ii]);
         }
     } else {
 		for (int ii = 1; ii < N; ++ii) {
-			ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "ubx", uh);
-			ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "lbx", lh);
+			ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, ii, "ubx", uh);
+			ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, ii, "lbx", lh);
 			constraints[ii]->idxb = idxb;
 		}
 	}
@@ -392,7 +394,6 @@ int main() {
 		ocp_nlp_solver_opts_set(config, nlp_opts, "qp_cond_N", &N2);
 	}
 
-	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 	for (int i = 0; i <= N; ++i) {
 		blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_out->ux+i, 0);
 		blasfeo_dvecse(2, 0.0, nlp_out->ux+i, 0);

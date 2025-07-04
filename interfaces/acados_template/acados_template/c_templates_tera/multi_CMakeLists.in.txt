@@ -82,7 +82,7 @@ option(BUILD_EXAMPLE "Should the example main_{{ name }} be build?" OFF)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_SYSTEM_NAME MATCHES "Windows")
     # MinGW: remove prefix and change suffix to match MSVC
-    # (such that Matlab mex recognizes the libraries)
+    # (such that MATLAB mex recognizes the libraries)
     set(CMAKE_SHARED_LIBRARY_PREFIX "")
     set(CMAKE_IMPORT_LIBRARY_SUFFIX ".lib")
     set(CMAKE_IMPORT_LIBRARY_PREFIX "")
@@ -267,7 +267,7 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model_e.name }}_cost/{{ cost_e.cost_source_ext_cost_e }}
     {%- endif %}
 {%- endif %}
-{%- if dims_0.np_global > 0 %}
+{%- if dims_0.n_global_data > 0 %}
         {{ name }}_p_global_precompute_fun.c
 {%- endif %}
         acados_solver_{{ name }}.c)

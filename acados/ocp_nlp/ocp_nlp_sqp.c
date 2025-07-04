@@ -42,9 +42,9 @@
 #endif
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_blas.h"
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
@@ -107,33 +107,13 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     ocp_nlp_sqp_opts *opts = opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
 
-    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
-
     // this first !!!
     ocp_nlp_opts_initialize_default(config, dims, nlp_opts);
 
     // SQP opts
     opts->nlp_opts->max_iter = 20;
-    opts->tol_stat = 1e-8;
-    opts->tol_eq   = 1e-8;
-    opts->tol_ineq = 1e-8;
-    opts->tol_comp = 1e-8;
-    opts->tol_unbounded = -1e10;
-    opts->tol_min_step_norm = 1e-12;
-
-    opts->qp_warm_start = 0;
-    opts->warm_start_first_qp = false;
-    opts->eval_residual_at_max_iter = false;
-
     opts->timeout_heuristic = ZERO;
     opts->timeout_max_time = 0; // corresponds to no timeout
-
-    // overwrite default submodules opts
-    // qp tolerance
-    qp_solver->opts_set(qp_solver, opts->nlp_opts->qp_solver_opts, "tol_stat", &opts->tol_stat);
-    qp_solver->opts_set(qp_solver, opts->nlp_opts->qp_solver_opts, "tol_eq", &opts->tol_eq);
-    qp_solver->opts_set(qp_solver, opts->nlp_opts->qp_solver_opts, "tol_ineq", &opts->tol_ineq);
-    qp_solver->opts_set(qp_solver, opts->nlp_opts->qp_solver_opts, "tol_comp", &opts->tol_comp);
 
     return;
 }
@@ -169,59 +149,10 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
     {
         ocp_nlp_opts_set(config, nlp_opts, field, value);
-
-        if (!strcmp(field, "qp_warm_start"))
-        {
-            int* i_ptr = (int *) value;
-            opts->qp_warm_start = *i_ptr;
-        }
     }
     else // nlp opts
     {
-        if (!strcmp(field, "tol_stat"))
-        {
-            double* tol_stat = (double *) value;
-            opts->tol_stat = *tol_stat;
-            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
-            config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts, "tol_stat", value);
-        }
-        else if (!strcmp(field, "tol_eq"))
-        {
-            double* tol_eq = (double *) value;
-            opts->tol_eq = *tol_eq;
-            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
-            config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts, "tol_eq", value);
-        }
-        else if (!strcmp(field, "tol_ineq"))
-        {
-            double* tol_ineq = (double *) value;
-            opts->tol_ineq = *tol_ineq;
-            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
-            config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts, "tol_ineq", value);
-        }
-        else if (!strcmp(field, "tol_comp"))
-        {
-            double* tol_comp = (double *) value;
-            opts->tol_comp = *tol_comp;
-            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
-            config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts, "tol_comp", value);
-        }
-        else if (!strcmp(field, "tol_min_step_norm"))
-        {
-            double* tol_min_step_norm = (double *) value;
-            opts->tol_min_step_norm = *tol_min_step_norm;
-        }
-        else if (!strcmp(field, "warm_start_first_qp"))
-        {
-            bool* warm_start_first_qp = (bool *) value;
-            opts->warm_start_first_qp = *warm_start_first_qp;
-        }
-        else if (!strcmp(field, "eval_residual_at_max_iter"))
-        {
-            bool* eval_residual_at_max_iter = (bool *) value;
-            opts->eval_residual_at_max_iter = *eval_residual_at_max_iter;
-        }
-        else if (!strcmp(field, "timeout_max_time"))
+        if (!strcmp(field, "timeout_max_time"))
         {
             double* timeout_max_time = (double *) value;
             opts->timeout_max_time = *timeout_max_time;
@@ -288,11 +219,6 @@ acados_size_t ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void
     // nlp mem
     size += ocp_nlp_memory_calculate_size(config, dims, nlp_opts, in);
 
-    // primal step norm
-    if (opts->nlp_opts->log_primal_step_norm)
-    {
-        size += opts->nlp_opts->max_iter*sizeof(double);
-    }
     // stat
     int stat_m = opts->nlp_opts->max_iter+1;
     int stat_n = 7;
@@ -334,12 +260,7 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *i
     mem->nlp_mem = ocp_nlp_memory_assign(config, dims, nlp_opts, in, c_ptr);
     c_ptr += ocp_nlp_memory_calculate_size(config, dims, nlp_opts, in);
 
-    // primal step norm
-    if (opts->nlp_opts->log_primal_step_norm)
-    {
-        mem->primal_step_norm = (double *) c_ptr;
-        c_ptr += opts->nlp_opts->max_iter*sizeof(double);
-    }
+
 
     // stat
     mem->stat = (double *) c_ptr;
@@ -381,15 +302,6 @@ acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, v
     // nlp
     size += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts, in);
 
-    if (nlp_opts->ext_qp_res)
-    {
-        // qp res
-        size += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
-
-        // qp res ws
-        size += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
-    }
-
     return size;
 }
 
@@ -408,17 +320,6 @@ static void ocp_nlp_sqp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dim
     // nlp
     work->nlp_work = ocp_nlp_workspace_assign(config, dims, nlp_opts, in, nlp_mem, c_ptr);
     c_ptr += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts, in);
-
-    if (nlp_opts->ext_qp_res)
-    {
-        // qp res
-        work->nlp_work->qp_res = ocp_qp_res_assign(dims->qp_solver->orig_dims, c_ptr);
-        c_ptr += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
-
-        // qp res ws
-        work->nlp_work->qp_res_ws = ocp_qp_res_workspace_assign(dims->qp_solver->orig_dims, c_ptr);
-        c_ptr += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
-    }
 
     assert((char *) work + ocp_nlp_sqp_workspace_calculate_size(config, dims, opts, in) >= c_ptr);
 
@@ -450,13 +351,14 @@ void ocp_nlp_sqp_work_get(void *config_, void *dims_, void *work_,
 static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts)
 {
     // ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
 
     // check for nans
     if (isnan(nlp_res->inf_norm_res_stat) || isnan(nlp_res->inf_norm_res_eq) ||
         isnan(nlp_res->inf_norm_res_ineq) || isnan(nlp_res->inf_norm_res_comp))
     {
         mem->nlp_mem->status = ACADOS_NAN_DETECTED;
-        if (opts->nlp_opts->print_level > 0)
+        if (nlp_opts->print_level > 0)
         {
             printf("Stopped: NaN detected in iterate.\n");
         }
@@ -464,42 +366,42 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
     }
 
     // check for maximum iterations
-    if (!opts->eval_residual_at_max_iter && n_iter >= opts->nlp_opts->max_iter)
+    if (!nlp_opts->eval_residual_at_max_iter && n_iter >= nlp_opts->max_iter)
     {
         mem->nlp_mem->status = ACADOS_MAXITER;
-        if (opts->nlp_opts->print_level > 0)
+        if (nlp_opts->print_level > 0)
         {
-            printf("Stopped: Maximum Iterations Reached.\n");
+            printf("Stopped: Maximum iterations reached.\n");
         }
         return true;
     }
 
     // check if solved to tolerance
-    if ((nlp_res->inf_norm_res_stat < opts->tol_stat) &&
-        (nlp_res->inf_norm_res_eq < opts->tol_eq) &&
-        (nlp_res->inf_norm_res_ineq < opts->tol_ineq) &&
-        (nlp_res->inf_norm_res_comp < opts->tol_comp))
+    if ((nlp_res->inf_norm_res_stat < nlp_opts->tol_stat) &&
+        (nlp_res->inf_norm_res_eq < nlp_opts->tol_eq) &&
+        (nlp_res->inf_norm_res_ineq < nlp_opts->tol_ineq) &&
+        (nlp_res->inf_norm_res_comp < nlp_opts->tol_comp))
     {
         mem->nlp_mem->status = ACADOS_SUCCESS;
-        if (opts->nlp_opts->print_level > 0)
+        if (nlp_opts->print_level > 0)
         {
-            printf("Optimal Solution found! Converged to KKT point.\n");
+            printf("Optimal solution found! Converged to KKT point.\n");
         }
         return true;
     }
 
     // check for small step
-    if (opts->tol_min_step_norm > 0.0 && (n_iter > 0) && (mem->step_norm < opts->tol_min_step_norm))
+    if (nlp_opts->tol_min_step_norm > 0.0 && (n_iter > 0) && (mem->step_norm < nlp_opts->tol_min_step_norm))
     {
-        if (opts->nlp_opts->print_level > 0)
+        if (nlp_opts->print_level > 0)
         {
-            if (nlp_res->inf_norm_res_eq < opts->tol_eq && nlp_res->inf_norm_res_ineq < opts->tol_ineq)
+            if (nlp_res->inf_norm_res_eq < nlp_opts->tol_eq && nlp_res->inf_norm_res_ineq < nlp_opts->tol_ineq)
             {
-                printf("Stopped: Converged to Feasible Point. Step size is < tol_eq.\n");
+                printf("Stopped: Converged to feasible point. Step size is < tol_eq.\n");
             }
             else
             {
-                printf("Stopped: Converged to Infeasible Point. Step size is < tol_eq.\n");
+                printf("Stopped: Converged to infeasible point. Step size is < tol_eq.\n");
             }
         }
         mem->nlp_mem->status = ACADOS_MINSTEP;
@@ -507,10 +409,10 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
     }
 
     // check for unbounded problem
-    if (mem->nlp_mem->cost_value <= opts->tol_unbounded)
+    if (mem->nlp_mem->cost_value <= nlp_opts->tol_unbounded)
     {
         mem->nlp_mem->status = ACADOS_UNBOUNDED;
-        if (opts->nlp_opts->print_level > 0)
+        if (nlp_opts->print_level > 0)
         {
             printf("Stopped: Problem seems to be unbounded.\n");
         }
@@ -518,12 +420,12 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
     }
 
     // check for maximum iterations
-    if (n_iter >= opts->nlp_opts->max_iter)
+    if (n_iter >= nlp_opts->max_iter)
     {
         mem->nlp_mem->status = ACADOS_MAXITER;
-        if (opts->nlp_opts->print_level > 0)
+        if (nlp_opts->print_level > 0)
         {
-            printf("Stopped: Maximum Iterations Reached.\n");
+            printf("Stopped: Maximum iterations reached.\n");
         }
         return true;
     }
@@ -538,6 +440,29 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         }
     }
     return false;
+}
+
+
+/************************************************
+ * output
+ ************************************************/
+static void print_iteration(int iter, ocp_nlp_config *config, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memory *mem,
+                            ocp_nlp_opts *nlp_opts, double prev_levenberg_marquardt, int qp_status, int qp_iter)
+{
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    // print iteration header
+    if (iter % 10 == 0)
+    {
+        ocp_nlp_common_print_iteration_header();
+        printf("%7s   %7s  %9s   %8s  ", "qp_stat", "qp_iter", "step_norm", "lm_reg.");
+        config->globalization->print_iteration_header();
+        printf("\n");
+    }
+    // print iteration
+    ocp_nlp_common_print_iteration(iter, nlp_res);
+    printf("%7d   %7d   %8.2e   %8.2e  ", qp_status, qp_iter, mem->step_norm, prev_levenberg_marquardt);
+    config->globalization->print_iteration(nlp_mem->cost_value, nlp_opts->globalization, nlp_mem->globalization);
+    printf("\n");
 }
 
 
@@ -570,6 +495,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_qp_in *qp_in = nlp_mem->qp_in;
     ocp_qp_out *qp_out = nlp_mem->qp_out;
 
+    qp_info *qp_info_;
+    ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
+
     // zero timers
     ocp_nlp_timings_reset(nlp_timings);
 
@@ -577,7 +505,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     int qp_iter = 0;
     mem->alpha = 0.0;
     mem->step_norm = 0.0;
-    mem->nlp_mem->status = ACADOS_SUCCESS;
+    nlp_mem->status = ACADOS_SUCCESS;
+    nlp_mem->objective_multiplier = 1.0;
 
     if (opts->timeout_heuristic != MAX_OVERALL)
         mem->timeout_estimated_per_iteration_time = 0;
@@ -594,74 +523,70 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     /************************************************
      * main sqp loop
      ************************************************/
-    int sqp_iter = 0;
+    nlp_mem->iter = 0;
     double prev_levenberg_marquardt = 0.0;
     int globalization_status;
-    qp_info *qp_info_;
 
     double timeout_previous_time_tot = 0.;
     double timeout_time_prev_iter = 0.;
 
-    for (; sqp_iter <= opts->nlp_opts->max_iter; sqp_iter++) // <= needed such that after last iteration KKT residuals are checked before max_iter is thrown.
+    for (; nlp_mem->iter <= opts->nlp_opts->max_iter; nlp_mem->iter++) // <= needed such that after last iteration KKT residuals are checked before max_iter is thrown.
     {
         // We always evaluate the residuals until the last iteration
         // If the option "eval_residual_at_max_iter" is set, we also
         // evaluate the residuals after the last iteration.
-        if (sqp_iter != opts->nlp_opts->max_iter || opts->eval_residual_at_max_iter)
+        if (nlp_mem->iter != opts->nlp_opts->max_iter || nlp_opts->eval_residual_at_max_iter)
         {
             // store current iterate
             if (nlp_opts->store_iterates)
             {
-                copy_ocp_nlp_out(dims, nlp_out, nlp_mem->iterates[sqp_iter]);
+                copy_ocp_nlp_out(dims, nlp_out, nlp_mem->iterates[nlp_mem->iter]);
             }
             /* Prepare the QP data */
             // linearize NLP and update QP matrices
             acados_tic(&timer1);
             ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+            // update QP rhs for SQP (step prim var, abs dual var)
+            ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+
             if (nlp_opts->with_adaptive_levenberg_marquardt || config->globalization->needs_objective_value() == 1)
             {
                 ocp_nlp_get_cost_value_from_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
             }
-            ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter);
-
-            // update QP rhs for SQP (step prim var, abs dual var)
-            ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+            ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, nlp_mem->iter, qp_in);
             nlp_timings->time_lin += acados_toc(&timer1);
 
             // compute nlp residuals
-            ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
+            ocp_nlp_res_compute(dims, nlp_opts, nlp_in, nlp_out, nlp_res, nlp_mem, nlp_work);
             ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
         }
 
         // Initialize globalization strategies (do not move outside the SQP loop)
-        if (sqp_iter == 0)
+        if (nlp_mem->iter == 0)
         {
             config->globalization->initialize_memory(config, dims, nlp_mem, nlp_opts);
         }
 
         // save statistics
-        if (sqp_iter < mem->stat_m)
+        if (nlp_mem->iter < mem->stat_m)
         {
-            mem->stat[mem->stat_n*sqp_iter+0] = nlp_res->inf_norm_res_stat;
-            mem->stat[mem->stat_n*sqp_iter+1] = nlp_res->inf_norm_res_eq;
-            mem->stat[mem->stat_n*sqp_iter+2] = nlp_res->inf_norm_res_ineq;
-            mem->stat[mem->stat_n*sqp_iter+3] = nlp_res->inf_norm_res_comp;
+            mem->stat[mem->stat_n*nlp_mem->iter+0] = nlp_res->inf_norm_res_stat;
+            mem->stat[mem->stat_n*nlp_mem->iter+1] = nlp_res->inf_norm_res_eq;
+            mem->stat[mem->stat_n*nlp_mem->iter+2] = nlp_res->inf_norm_res_ineq;
+            mem->stat[mem->stat_n*nlp_mem->iter+3] = nlp_res->inf_norm_res_comp;
         }
 
         // Output
         if (nlp_opts->print_level > 0)
         {
-            config->globalization->print_iteration(nlp_mem->cost_value,
-                                                   sqp_iter,
-                                                   nlp_res,
-                                                   mem->step_norm,
-                                                   prev_levenberg_marquardt,
-                                                   qp_status,
-                                                   qp_iter,
-                                                   nlp_opts,
-                                                   nlp_mem->globalization);
+            print_iteration(nlp_mem->iter, config, nlp_res, mem, nlp_opts, prev_levenberg_marquardt, qp_status, qp_iter);
         }
         prev_levenberg_marquardt = nlp_opts->levenberg_marquardt;
+
+        // QP scaling
+        acados_tic(&timer1);
+        ocp_nlp_qpscaling_scale_qp(dims->qpscaling, nlp_opts->qpscaling, nlp_mem->qpscaling, qp_in);
+        nlp_timings->time_qpscaling += acados_toc(&timer1);
 
         // regularize Hessian
         // NOTE: this is done before termination, such that we can get the QP at the stationary point that is actually solved, if we exit with success.
@@ -675,7 +600,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             nlp_timings->time_tot = acados_toc(&timer0);
 
-            if (sqp_iter > 0)
+            if (nlp_mem->iter > 0)
             {
                 timeout_time_prev_iter = nlp_timings->time_tot - timeout_previous_time_tot;
 
@@ -689,7 +614,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                         mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter > mem->timeout_estimated_per_iteration_time ? timeout_time_prev_iter : mem->timeout_estimated_per_iteration_time;
                         break;
                     case AVERAGE:
-                        if (sqp_iter == 0)
+                        if (nlp_mem->iter == 0)
                         {
                             mem->timeout_estimated_per_iteration_time = timeout_time_prev_iter;
                         }
@@ -711,69 +636,77 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // Termination
-        if (check_termination(sqp_iter, dims, nlp_res, mem, opts))
+        if (check_termination(nlp_mem->iter, dims, nlp_res, mem, opts))
         {
 #if defined(ACADOS_WITH_OPENMP)
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
 #endif
-            nlp_mem->iter = sqp_iter;
             nlp_timings->time_tot = acados_toc(&timer0);
-            return mem->nlp_mem->status;
+            return nlp_mem->status;
         }
 
 
         /* solve QP */
-        // (typically) no warm start at first iteration
-        if (sqp_iter == 0 && !opts->warm_start_first_qp)
+        // warm start of first QP
+        if (nlp_mem->iter == 0)
         {
-            int tmp_int = 0;
-            qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
+            if (!nlp_opts->warm_start_first_qp)
+            {
+                // (typically) no warm start at first iteration
+                int tmp_int = 0;
+                qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
+            }
+            else if (nlp_opts->warm_start_first_qp_from_nlp)
+            {
+                int tmp_bool = true;
+                qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "initialize_next_xcond_qp_from_qp_out", &tmp_bool);
+                ocp_nlp_initialize_qp_from_nlp(config, dims, qp_in, nlp_out, qp_out);
+            }
         }
         // Show input to QP
         if (nlp_opts->print_level > 3)
         {
-            printf("\n\nSQP: ocp_qp_in at iteration %d\n", sqp_iter);
+            printf("\n\nSQP: ocp_qp_in at iteration %d\n", nlp_mem->iter);
             print_ocp_qp_in(qp_in);
         }
 
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
-        ocp_nlp_dump_qp_in_to_file(qp_in, sqp_iter, 0);
+        ocp_nlp_dump_qp_in_to_file(qp_in, nlp_mem->iter, 0);
 #endif
-        qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, NULL);
+        qp_status = ocp_nlp_solve_qp_and_correct_dual(config, dims, nlp_opts, nlp_mem, nlp_work, false, NULL, NULL, NULL, NULL, NULL);
 
         // restore default warm start
-        if (sqp_iter==0)
+        if (nlp_mem->iter==0)
         {
-            qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &opts->qp_warm_start);
+            qp_solver->opts_set(qp_solver, nlp_opts->qp_solver_opts, "warm_start", &nlp_opts->qp_warm_start);
         }
 
         if (nlp_opts->print_level > 3)
         {
-            printf("\n\nSQP: ocp_qp_out at iteration %d\n", sqp_iter);
+            printf("\n\nSQP: ocp_qp_out at iteration %d\n", nlp_mem->iter);
             print_ocp_qp_out(qp_out);
         }
 
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
-        ocp_nlp_dump_qp_out_to_file(qp_out, sqp_iter, 0);
+        ocp_nlp_dump_qp_out_to_file(qp_out, nlp_mem->iter, 0);
 #endif
 
-        ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
         qp_iter = qp_info_->num_iter;
 
         // save statistics of last qp solver call
-        if (sqp_iter+1 < mem->stat_m)
+        if (nlp_mem->iter+1 < mem->stat_m)
         {
-            mem->stat[mem->stat_n*(sqp_iter+1)+4] = qp_status;
-            mem->stat[mem->stat_n*(sqp_iter+1)+5] = qp_iter;
+            mem->stat[mem->stat_n*(nlp_mem->iter+1)+4] = qp_status;
+            mem->stat[mem->stat_n*(nlp_mem->iter+1)+5] = qp_iter;
         }
 
         // compute external QP residuals (for debugging)
         if (nlp_opts->ext_qp_res)
         {
-            ocp_qp_res_compute(qp_in, qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
-            if (sqp_iter+1 < mem->stat_m)
-                ocp_qp_res_compute_nrm_inf(nlp_work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+7));
+            ocp_qp_res_compute(nlp_mem->scaled_qp_in, nlp_mem->scaled_qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
+            if (nlp_mem->iter+1 < mem->stat_m)
+                ocp_qp_res_compute_nrm_inf(nlp_work->qp_res, mem->stat+(mem->stat_n*(nlp_mem->iter+1)+7));
         }
 
         // exit conditions on QP status
@@ -781,17 +714,17 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             if (nlp_opts->print_level > 0)
             {
-                printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_res->inf_norm_res_stat,
+                printf("%i\t%e\t%e\t%e\t%e.\n", nlp_mem->iter, nlp_res->inf_norm_res_stat,
                     nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq,
                     nlp_res->inf_norm_res_comp );
                 printf("\n\n");
             }
-            // increment sqp_iter to return full statistics and improve output below.
-            sqp_iter++;
+            // increment nlp_mem->iter to return full statistics and improve output below.
+            nlp_mem->iter++;
 
 #ifndef ACADOS_SILENT
             printf("\nQP solver returned error status %d in SQP iteration %d, QP iteration %d.\n",
-                   qp_status, sqp_iter, qp_iter);
+                   qp_status, nlp_mem->iter, qp_iter);
 #endif
 #if defined(ACADOS_WITH_OPENMP)
             // restore number of threads
@@ -804,25 +737,30 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                     print_ocp_qp_in(qp_in);
             }
 
-            mem->nlp_mem->status = ACADOS_QP_FAILURE;
-            nlp_mem->iter = sqp_iter;
+            nlp_mem->status = ACADOS_QP_FAILURE;
             nlp_timings->time_tot = acados_toc(&timer0);
 
-            return mem->nlp_mem->status;
+            return nlp_mem->status;
         }
 
         // Calculate optimal QP objective (needed for globalization)
         if (config->globalization->needs_qp_objective_value() == 1)
         {
             nlp_mem->qp_cost_value = ocp_nlp_compute_qp_objective_value(dims, qp_in, qp_out, nlp_work);
+            nlp_mem->predicted_infeasibility_reduction = ocp_nlp_get_l1_infeasibility(config, dims, nlp_mem);
+            nlp_mem->predicted_optimality_reduction = -ocp_nlp_compute_gradient_directional_derivative(dims, qp_in, qp_out);
         }
 
         // Compute the step norm
-        if (opts->tol_min_step_norm > 0.0 || nlp_opts->log_primal_step_norm)
+        if (nlp_opts->tol_min_step_norm > 0.0 || nlp_opts->log_primal_step_norm || nlp_opts->print_level > 0)
         {
-            mem->step_norm = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->qp_out);
+            mem->step_norm = ocp_qp_out_compute_primal_nrm_inf(qp_out);
             if (nlp_opts->log_primal_step_norm)
-                mem->primal_step_norm[sqp_iter] = mem->step_norm;
+                nlp_mem->primal_step_norm[nlp_mem->iter] = mem->step_norm;
+        }
+        if (nlp_opts->log_dual_step_norm && !nlp_opts->with_anderson_acceleration)
+        {
+            nlp_mem->dual_step_norm[nlp_mem->iter] = ocp_nlp_compute_delta_dual_norm_inf(dims, nlp_work, nlp_out, qp_out);
         }
         /* end solve QP */
 
@@ -830,8 +768,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // NOTE on timings: currently all within globalization is accounted for within time_glob.
         //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
         acados_tic(&timer1);
-
         globalization_status = config->globalization->find_acceptable_iterate(config, dims, nlp_in, nlp_out, nlp_mem, mem, nlp_work, nlp_opts, &mem->alpha);
+        nlp_timings->time_glob += acados_toc(&timer1);
 
         if (globalization_status != ACADOS_SUCCESS)
         {
@@ -839,17 +777,16 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             {
                 printf("\nFailure in globalization, got status %d!\n", globalization_status);
             }
-            mem->nlp_mem->status = globalization_status;
-            nlp_mem->iter = sqp_iter;
+            nlp_mem->status = globalization_status;
             nlp_timings->time_tot = acados_toc(&timer0);
 #if defined(ACADOS_WITH_OPENMP)
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
 #endif
-            return mem->nlp_mem->status;
+            return nlp_mem->status;
         }
-        mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
-        nlp_timings->time_glob += acados_toc(&timer1);
+        if (nlp_mem->iter+1 < mem->stat_m)
+            mem->stat[mem->stat_n*(nlp_mem->iter+1)+6] = mem->alpha;
 
     }  // end SQP loop
 
@@ -861,7 +798,18 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // restore number of threads
     omp_set_num_threads(num_threads_bkp);
 #endif
-    return mem->nlp_mem->status;
+    return nlp_mem->status;
+}
+
+
+int ocp_nlp_sqp_setup_qp_matrices_and_factorize(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
+                void *opts_, void *mem_, void *work_)
+{
+    ocp_nlp_sqp_opts *opts = opts_;
+    ocp_nlp_sqp_memory *mem = mem_;
+    ocp_nlp_sqp_workspace *work = work_;
+
+    return ocp_nlp_common_setup_qp_matrices_and_factorize(config_, dims_, nlp_in_, nlp_out_, opts->nlp_opts, mem->nlp_mem, work->nlp_work);
 }
 
 
@@ -882,7 +830,7 @@ void ocp_nlp_sqp_eval_kkt_residual(void *config_, void *dims_, void *nlp_in_, vo
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
     ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
     ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-    ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem);
+    ocp_nlp_res_compute(dims, nlp_opts, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem, nlp_work);
 }
 
 
@@ -989,12 +937,12 @@ void ocp_nlp_sqp_eval_solution_sens_adj_p(void *config_, void *dims_,
 }
 
 
-// TODO: write getter for things in nlp_mem
 void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_)
 {
     ocp_nlp_config *config = config_;
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_sqp_memory *mem = mem_;
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
     char *ptr_module = NULL;
     int module_length = 0;
@@ -1004,32 +952,16 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "time")) )
     {
         // call timings getter
-        ocp_nlp_timings_get(config, mem->nlp_mem->nlp_timings, field, return_value_);
+        ocp_nlp_timings_get(config, nlp_mem->nlp_timings, field, return_value_);
     }
     else if (!strcmp("stat", field))
     {
         double **value = return_value_;
         *value = mem->stat;
     }
-    else if (!strcmp("primal_step_norm", field))
-    {
-        if (mem->primal_step_norm == NULL)
-        {
-            printf("\nerror: options log_primal_step_norm was not set\n");
-            exit(1);
-        }
-        else
-        {
-            double *value = return_value_;
-            for (int ii=0; ii<mem->nlp_mem->iter; ii++)
-            {
-                value[ii] = mem->primal_step_norm[ii];
-            }
-        }
-    }
     else if (!strcmp("statistics", field))
     {
-        int n_row = mem->stat_m<mem->nlp_mem->iter+1 ? mem->stat_m : mem->nlp_mem->iter+1;
+        int n_row = mem->stat_m<nlp_mem->iter+1 ? mem->stat_m : nlp_mem->iter+1;
         double *value = return_value_;
         for (int ii=0; ii<n_row; ii++)
         {
@@ -1055,7 +987,7 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
     }
     else
     {
-        ocp_nlp_memory_get(config, mem->nlp_mem, field, return_value_);
+        ocp_nlp_memory_get(config, nlp_mem, field, return_value_);
     }
 }
 
@@ -1088,6 +1020,7 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->memory_assign = &ocp_nlp_sqp_memory_assign;
     config->workspace_calculate_size = &ocp_nlp_sqp_workspace_calculate_size;
     config->evaluate = &ocp_nlp_sqp;
+    config->setup_qp_matrices_and_factorize = &ocp_nlp_sqp_setup_qp_matrices_and_factorize;
     config->memory_reset_qp_solver = &ocp_nlp_sqp_memory_reset_qp_solver;
     config->eval_param_sens = &ocp_nlp_sqp_eval_param_sens;
     config->eval_lagr_grad_p = &ocp_nlp_sqp_eval_lagr_grad_p;

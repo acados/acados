@@ -37,7 +37,7 @@ extern "C" {
 #endif
 
 // blasfeo
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_common.h"
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
@@ -99,6 +99,7 @@ typedef struct
 {
     int use_numerical_hessian;  // > 0 indicating custom hessian is used instead of CasADi evaluation
     int with_solution_sens_wrt_params;
+    int add_hess_contribution;
 } ocp_nlp_cost_external_opts;
 
 //

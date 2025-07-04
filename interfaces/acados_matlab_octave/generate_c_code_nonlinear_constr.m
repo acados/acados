@@ -69,10 +69,10 @@ function generate_c_code_nonlinear_constr(context, model, target_dir, stage_type
         hess_z_0 = jacobian(adj_z_0, z, struct('symmetric', isSX));
 
         % add functions to context
-        context.add_function_definition([model.name,'_constr_h_0_fun'], {x, u, z, p}, {h_0}, target_dir);
-        context.add_function_definition([model.name,'_constr_h_0_fun_jac_uxt_zt'], {x, u, z, p}, {h_0, jac_ux_0', jac_z_0'}, target_dir);
+        context.add_function_definition([model.name,'_constr_h_0_fun'], {x, u, z, p}, {h_0}, target_dir, 'constr');
+        context.add_function_definition([model.name,'_constr_h_0_fun_jac_uxt_zt'], {x, u, z, p}, {h_0, jac_ux_0', jac_z_0'}, target_dir, 'constr');
         if context.opts.generate_hess
-            context.add_function_definition([model.name,'_constr_h_0_fun_jac_uxt_zt_hess'], {x, u, lam_h_0, z, p}, {h_0, jac_ux_0', hess_ux_0, jac_z_0', hess_z_0}, target_dir);
+            context.add_function_definition([model.name,'_constr_h_0_fun_jac_uxt_zt_hess'], {x, u, lam_h_0, z, p}, {h_0, jac_ux_0', hess_ux_0, jac_z_0', hess_z_0}, target_dir, 'constr');
         end
 
     elseif strcmp(stage_type, 'path')
@@ -99,17 +99,23 @@ function generate_c_code_nonlinear_constr(context, model, target_dir, stage_type
         hess_z = jacobian(adj_z, z, struct('symmetric', isSX));
 
         % add functions to context
-        context.add_function_definition([model.name,'_constr_h_fun'], {x, u, z, p}, {h}, target_dir);
-        context.add_function_definition([model.name,'_constr_h_fun_jac_uxt_zt'], {x, u, z, p}, {h, jac_ux', jac_z'}, target_dir);
+        context.add_function_definition([model.name,'_constr_h_fun'], {x, u, z, p}, {h}, target_dir, 'constr');
+        context.add_function_definition([model.name,'_constr_h_fun_jac_uxt_zt'], {x, u, z, p}, {h, jac_ux', jac_z'}, target_dir, 'constr');
 
         if context.opts.generate_hess
             context.add_function_definition([model.name,'_constr_h_fun_jac_uxt_zt_hess'],...
-                                    {x, u, lam_h, z, p}, {h, jac_ux', hess_ux, jac_z', hess_z}, target_dir);
+                                    {x, u, lam_h, z, p}, {h, jac_ux', hess_ux, jac_z', hess_z}, target_dir, 'constr');
         end
 
     elseif strcmp(stage_type, 'terminal')
         % NOTE: terminal node has no u, z
         h_e = model.con_h_expr_e;
+        if any(which_depends(h_e, model.u))
+            error('terminal constraints cannot depend on u.');
+        end
+        if any(which_depends(h_e, model.z))
+            error('terminal constraints cannot depend on z.');
+        end
         % multipliers for hessian
         nh_e = length(h_e);
         if isSX
@@ -124,11 +130,11 @@ function generate_c_code_nonlinear_constr(context, model, target_dir, stage_type
         % generate hessian
         hess_ux_e = jacobian(adj_ux_e, x, struct('symmetric', isSX));
         % add functions to context
-        context.add_function_definition([model.name,'_constr_h_e_fun'], {x, p}, {h_e}, target_dir);
-        context.add_function_definition([model.name,'_constr_h_e_fun_jac_uxt_zt'], {x, p}, {h_e, jac_x_e'}, target_dir);
+        context.add_function_definition([model.name,'_constr_h_e_fun'], {x, p}, {h_e}, target_dir, 'constr');
+        context.add_function_definition([model.name,'_constr_h_e_fun_jac_uxt_zt'], {x, p}, {h_e, jac_x_e'}, target_dir, 'constr');
 
         if context.opts.generate_hess
-            context.add_function_definition([model.name,'_constr_h_e_fun_jac_uxt_zt_hess'], {x, lam_h_e, p}, {h_e, jac_x_e', hess_ux_e}, target_dir);
+            context.add_function_definition([model.name,'_constr_h_e_fun_jac_uxt_zt_hess'], {x, lam_h_e, p}, {h_e, jac_x_e', hess_ux_e}, target_dir, 'constr');
         end
     end
 end

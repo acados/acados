@@ -40,8 +40,8 @@
 #include <string.h>
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_aux_ext_dep.h"
 
 // acados
 #include "acados/utils/mem.h"
@@ -262,6 +262,16 @@ void ocp_qp_qpdunes_opts_set(void *config_, void *opts_, const char *field, void
 
     return;
 }
+
+
+void ocp_qp_qpdunes_opts_get(void *config_, void *opts_, const char *field, void *value)
+{
+    // ocp_qp_qpdunes_opts *opts = opts_;
+    printf("\nerror: ocp_qp_qpdunes_opts_get: not implemented for field %s\n", field);
+    exit(1);
+}
+
+
 
 
 
@@ -915,11 +925,18 @@ int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, v
 
 
 
-void ocp_qp_qpdunes_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+void ocp_qp_qpdunes_eval_forw_sens(void *config_, void *qp_in, void *seed, void *qp_out, void *opts_, void *mem_, void *work_)
 {
-    printf("\nerror: ocp_qp_qpdunes_eval_sens: not implemented yet\n");
+    printf("\nerror: ocp_qp_qpdunes_eval_forw_sens: not implemented yet\n");
     exit(1);
 }
+
+void ocp_qp_qpdunes_eval_adj_sens(void *config_, void *qp_in, void *seed, void *qp_out, void *opts_, void *mem_, void *work_)
+{
+    printf("\nerror: ocp_qp_qpdunes_eval_adj_sens: not implemented yet\n");
+    exit(1);
+}
+
 
 void ocp_qp_qpdunes_solver_get(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, const char *field, int stage, void* value, int size1, int size2)
 {
@@ -944,6 +961,7 @@ void ocp_qp_qpdunes_config_initialize_default(void *config_)
         (void (*)(void *, void *, void *)) & ocp_qp_qpdunes_opts_initialize_default;
     config->opts_update = (void (*)(void *, void *, void *)) & ocp_qp_qpdunes_opts_update;
     config->opts_set = &ocp_qp_qpdunes_opts_set;
+    config->opts_get = &ocp_qp_qpdunes_opts_get;
     config->memory_calculate_size =
         (acados_size_t (*)(void *, void *, void *)) & ocp_qp_qpdunes_memory_calculate_size;
     config->memory_assign =
@@ -953,7 +971,8 @@ void ocp_qp_qpdunes_config_initialize_default(void *config_)
     config->workspace_calculate_size =
         (acados_size_t (*)(void *, void *, void *)) & ocp_qp_qpdunes_workspace_calculate_size;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & ocp_qp_qpdunes;
-    config->eval_sens = &ocp_qp_qpdunes_eval_sens;
+    config->eval_forw_sens = &ocp_qp_qpdunes_eval_forw_sens;
+    config->eval_adj_sens = &ocp_qp_qpdunes_eval_adj_sens;
     config->solver_get = &ocp_qp_qpdunes_solver_get;
     config->terminate = &ocp_qp_qpdunes_terminate;
     return;

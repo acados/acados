@@ -1110,6 +1110,51 @@ void acados_eigen_decomposition(int dim, double *A, double *V, double *d, double
 }
 
 
+void compute_gershgorin_max_abs_eig_estimate(int n, struct blasfeo_dmat *A, double *out)
+{
+    double max_abs_eig = 0.0;
+    double r_i, lam, rho, a;
+    for (int ii = 0; ii < n; ii++)
+    {
+        r_i = 0.0;
+        for (int jj = 0; jj < n; jj++)
+        {
+            if (jj != ii)
+            {
+                r_i += fabs(BLASFEO_DMATEL(A, ii, jj));
+            }
+        }
+        a = BLASFEO_DMATEL(A, ii, ii);
+        lam = a - r_i;
+        rho = a + r_i;
+        max_abs_eig = fmax(max_abs_eig, fmax(fabs(lam), fabs(rho)));
+    }
+    *out = max_abs_eig;
+}
+
+void compute_gershgorin_min_eig_estimate(int n, struct blasfeo_dmat *A, double *out)
+{
+    // returns a lower bound for the minimum eigenvalue of A
+    double lam = ACADOS_INFTY;
+    double a, r_i, lam_i;
+    for (int ii = 0; ii < n; ii++)
+    {
+        r_i = 0.0;
+        for (int jj = 0; jj < n; jj++)
+        {
+            if (jj != ii)
+            {
+                r_i += fabs(BLASFEO_DMATEL(A, ii, jj));
+            }
+        }
+        a = BLASFEO_DMATEL(A, ii, ii);
+        lam_i = a - r_i;
+        lam = MIN(lam, lam_i);
+    }
+    *out = lam;
+}
+
+
 
 double minimum_of_doubles(double *x, int n)
 {

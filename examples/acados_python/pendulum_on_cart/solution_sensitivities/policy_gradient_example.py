@@ -31,7 +31,7 @@
 
 import numpy as np
 from acados_template import AcadosOcpSolver
-from sensitivity_utils import plot_results, export_parametric_ocp, plot_pendulum
+from sensitivity_utils import plot_solution_sensitivities_results, export_parametric_ocp, plot_pendulum
 
 
 def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=False, plot_trajectory=False):
@@ -44,24 +44,34 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
 
     p_nominal = 1.0
     x0 = np.array([0.0, np.pi / 2, 0.0, 0.0])
-    delta_p = 0.002
-    p_test = np.arange(p_nominal - 0.5, p_nominal + 0.5, delta_p)
+    delta_p = 0.001
+    p_test = np.arange(p_nominal + 0.1, p_nominal + 0.5, delta_p)
 
     np_test = p_test.shape[0]
     N_horizon = 50
     T_horizon = 2.0
     Fmax = 80.0
+    with_parametric_constraint = True
+    with_nonlinear_constraint = False
+    plot_reconstructed = False
 
-    ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, qp_solver_ric_alg=1)
+    ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, qp_solver_ric_alg=1, with_parametric_constraint=with_parametric_constraint, with_nonlinear_constraint=with_nonlinear_constraint)
+
+    # solver creation arguments
+    verbose = True
+    build = True
+    generate = True
+
+    # create nominal solver
     if use_cython:
         AcadosOcpSolver.generate(ocp, json_file="parameter_augmented_acados_ocp.json")
         AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
         ocp_solver = AcadosOcpSolver.create_cython_solver("parameter_augmented_acados_ocp.json")
     else:
-        ocp_solver = AcadosOcpSolver(ocp, json_file="parameter_augmented_acados_ocp.json")
+        ocp_solver = AcadosOcpSolver(ocp, build=build, generate=generate, json_file="parameter_augmented_acados_ocp.json", verbose=verbose)
 
     # create sensitivity solver
-    ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, hessian_approx='EXACT', qp_solver_ric_alg=qp_solver_ric_alg)
+    ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, hessian_approx='EXACT', qp_solver_ric_alg=qp_solver_ric_alg, with_parametric_constraint=with_parametric_constraint, with_nonlinear_constraint=with_nonlinear_constraint)
     ocp.model.name = 'sensitivity_solver'
     ocp.code_export_directory = f'c_generated_code_{ocp.model.name}'
     if use_cython:
@@ -69,7 +79,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
         AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
         sensitivity_solver = AcadosOcpSolver.create_cython_solver(f"{ocp.model.name}.json")
     else:
-        sensitivity_solver = AcadosOcpSolver(ocp, json_file=f"{ocp.model.name}.json")
+        sensitivity_solver = AcadosOcpSolver(ocp, build=build, generate=generate, json_file=f"{ocp.model.name}.json", verbose=verbose)
 
     if eigen_analysis:
         min_eig_full = np.zeros(np_test)
@@ -83,6 +93,12 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
 
     sens_u = np.zeros(np_test)
     u_opt = np.zeros(np_test)
+    if with_parametric_constraint:
+        max_lam_parametric_constraint = np.zeros(np_test)
+        sum_lam_parametric_constraint = np.zeros(np_test)
+        n_lam_total = ocp_solver.get_flat('lam').shape[0]
+        lambda_flat = np.zeros((np_test, n_lam_total))
+
     for i, p in enumerate(p_test):
         p_val = np.array([p])
 
@@ -93,26 +109,34 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
         iterate = ocp_solver.store_iterate_to_flat_obj()
 
         sensitivity_solver.load_iterate_from_flat_obj(iterate)
-        sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
-        # residuals = sensitivity_solver.get_stats("residuals")
-        # print(f"residuals sensitivity_solver {residuals} status {sensitivity_solver.status}")
+        sensitivity_solver.setup_qp_matrices_and_factorize()
 
-        if sensitivity_solver.get_status() not in [0, 2]:
-            breakpoint()
+        for j in range(1, N_horizon):
+            lam = ocp_solver.get(j, "lam")
+            # 1, 3 are indices of upper and lower multiplier for the parametric constraints
+            max_lam_parametric_constraint[i] = max(max_lam_parametric_constraint[i], lam[1], lam[3])
+            sum_lam_parametric_constraint[i] += lam[1] + lam[3]
+            lambda_flat[i, :] = ocp_solver.get_flat('lam')
 
         if eigen_analysis:
             full_hessian_diagnostics = sensitivity_solver.qp_diagnostics("FULL_HESSIAN")
             projected_hessian_diagnostics = sensitivity_solver.qp_diagnostics("PROJECTED_HESSIAN")
-            min_eig_full[i] = full_hessian_diagnostics['min_eigv_total']
-            min_abs_eig_full[i] = full_hessian_diagnostics['min_abs_eigv_total']
-            min_abs_eig_proj_hess[i]= projected_hessian_diagnostics['min_abs_eigv_total']
-            min_eig_proj_hess[i] = projected_hessian_diagnostics['min_eigv_total']
-            min_eig_P[i] = projected_hessian_diagnostics['min_eig_P']
-            min_abs_eig_P[i] = projected_hessian_diagnostics['min_abs_eig_P']
+            min_eig_full[i] = full_hessian_diagnostics['min_eigv_global']
+            min_abs_eig_full[i] = full_hessian_diagnostics['min_abs_eigv_global']
+            min_abs_eig_proj_hess[i]= projected_hessian_diagnostics['min_abs_eigv_global']
+            min_eig_proj_hess[i] = projected_hessian_diagnostics['min_eigv_global']
+            min_eig_P[i] = projected_hessian_diagnostics['min_eigv_P_global']
+            min_abs_eig_P[i] = projected_hessian_diagnostics['min_abs_eigv_P_global']
 
+        if ocp_solver.get_status() not in [0]:
+            print(f"OCP solver returned status {ocp_solver.get_status()}.")
+            breakpoint()
+        if sensitivity_solver.get_status() not in [0, 2]:
+            print(f"sensitivity solver returned status {sensitivity_solver.get_status()}.")
+            # breakpoint()
         # Calculate the policy gradient
-        _, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "p_global")
-        sens_u[i] = sens_u_.item()
+        out_dict = sensitivity_solver.eval_solution_sensitivity(0, "p_global", return_sens_x=False)
+        sens_u[i] = out_dict['sens_u'].item()
 
     # Compare to numerical gradients
     sens_u_fd = np.gradient(u_opt, delta_p)
@@ -122,10 +146,38 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
     u_opt_reconstructed_acados = np.cumsum(sens_u) * delta_p + u_opt[0]
     u_opt_reconstructed_acados += u_opt[0] - u_opt_reconstructed_acados[0]
 
-    plot_results(p_test, u_opt, u_opt_reconstructed_acados, u_opt_reconstructed_fd, sens_u, sens_u_fd,
+    # for multiplier plot
+    multipliers_bu = []
+    multipliers_h = []
+    nbu = ocp.dims.nbu
+    nx = ocp.dims.nx
+    x0_lam_idx = [*range(nbu, nx+nbu)] + [*range(2*nbu+nx, 2*nx+2*nbu)]
+    n_lam_0 = ocp_solver.get(0, "lam").shape[0]
+    bu_lam_idx = [*range(n_lam_0, n_lam_total, 2)]
+    h_lam_idx = [*range(n_lam_0+1, n_lam_total, 2)]
+
+    for i in range(n_lam_total):
+        if np.max(np.abs(lambda_flat[:, i])) > 1e-2 and i not in x0_lam_idx:
+            if i in bu_lam_idx:
+                multipliers_bu += [lambda_flat[:, i]]
+            elif i in h_lam_idx:
+                multipliers_h += [lambda_flat[:, i]]
+            else:
+                print(f"found multiplier with index {i} that is not in x0_lam_idx, bu_lam_idx or h_lam_idx.")
+
+            print(f"Multiplier {i} has non-zero values.")
+    print(f"Multipliers with absolute value > 1e-2: bu {len(multipliers_bu)}, h {len(multipliers_h)}")
+
+    plot_solution_sensitivities_results(p_test, u_opt, u_opt_reconstructed_acados, u_opt_reconstructed_fd, sens_u, sens_u_fd,
                  min_eig_full, min_eig_proj_hess, min_eig_P,
                  min_abs_eig_full, min_abs_eig_proj_hess, min_abs_eig_P,
-                 eigen_analysis, qp_solver_ric_alg, parameter_name="mass")
+                 eigen_analysis, title=None, parameter_name=r"$\theta$",
+                 multipliers_bu=multipliers_bu, multipliers_h=multipliers_h,
+                 figsize=(7, 9),
+                 plot_reconstructed=plot_reconstructed,
+                #  max_lam_parametric_constraint=max_lam_parametric_constraint,
+                #  sum_lam_parametric_constraint=sum_lam_parametric_constraint
+                 )
 
     test_tol = 1e-2
     median_diff = np.median(np.abs(sens_u - sens_u_fd))

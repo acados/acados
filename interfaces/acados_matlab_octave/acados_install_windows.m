@@ -6,7 +6,7 @@ function acados_install_windows(varargin)
 
     switch(nargin)
         case 0
-            cmakeConfigString='-DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=OFF';
+            cmakeConfigString='-DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=OFF -DCMAKE_POLICY_VERSION_MINIMUM=3.5';
         case 1
             cmakeConfigString=varargin{1};
         otherwise
@@ -21,6 +21,8 @@ function acados_install_windows(varargin)
     [folderPath,~,~]=fileparts(folderPath);
     [acadosPath,~,~]=fileparts(folderPath);
 
+    % backward to forward slashes
+    acadosPath = strrep(acadosPath, '\', '/');
     acadosBuildPath=fullfile(acadosPath,'build');
 
     %% Acados installation instructions:
@@ -32,7 +34,7 @@ function acados_install_windows(varargin)
     % Read the mex C compiler configuration and extract the location
     cCompilerConfig = mex.getCompilerConfigurations('C');
     pathToCompilerLocation = cCompilerConfig.Location;
-    % Modify the environment PATH variable for this Matlab session such that
+    % Modify the environment PATH variable for this MATLAB session such that
     % the mex C compiler takes priority ensuring calls to gcc uses the
     % configured mex compiler
     setenv('PATH', [fullfile(pathToCompilerLocation,'bin') ';' origEnvPath]);
@@ -46,6 +48,8 @@ function acados_install_windows(varargin)
     mkdir(acadosBuildPath);
     cd(acadosBuildPath);
 
+    disp(['ACADOS_INSTALL_DIR is' acadosPath]);
+
     %% Acados installation instructions:
     % cmake.exe -G "MinGW Makefiles" -DACADOS_INSTALL_DIR="$ACADOS_INSTALL_DIR" -DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=ON ..
     % # useful options to add above:
@@ -53,10 +57,13 @@ function acados_install_windows(varargin)
     % # -DBLASFEO_TARGET=GENERIC -DHPIPM_TARGET=GENERIC
     % # NOTE: check the output of cmake: -- Installation directory: should be <acados_root_folder>,
     % #     if this is not the case, set -DACADOS_INSTALL_DIR=<acados_root_folder> explicitly above.
-    fprintf('Executing cmake configuration\n');
     % Command slightly modified to work with CMD instead of PowerShell
     cmake_cmd = sprintf('cmake.exe -G "MinGW Makefiles" -DACADOS_INSTALL_DIR=%%ACADOS_INSTALL_DIR%% %s ..',cmakeConfigString);
 
+    % print cmake command
+    fprintf('Executing cmake configuration\n');
+    disp(cmake_cmd);
+    % Execute cmake command
     status=system(cmake_cmd);
     if (status~=0)
         error('cmake command failed. Command was:\n%s\n', cmake_cmd);

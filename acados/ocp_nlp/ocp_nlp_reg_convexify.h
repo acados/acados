@@ -44,7 +44,7 @@ extern "C" {
 
 
 // blasfeo
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_common.h"
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
@@ -120,7 +120,7 @@ typedef struct {
 } ocp_nlp_reg_convexify_memory;
 
 //
-acados_size_t ocp_nlp_reg_convexify_calculate_memory_size(void *config, ocp_nlp_reg_dims *dims, void *opts);
+acados_size_t ocp_nlp_reg_convexify_memory_calculate_size(void *config, ocp_nlp_reg_dims *dims, void *opts);
 //
 void *ocp_nlp_reg_convexify_assign_memory(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);
 

@@ -42,7 +42,7 @@ extern "C" {
 #endif
 
 // blasfeo
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_common.h"
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_globalization_common.h"
@@ -90,14 +90,8 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
 void ocp_nlp_globalization_fixed_step_print_iteration_header();
 //
 void ocp_nlp_globalization_fixed_step_print_iteration(double objective_value,
-                                                int iter_count,
-                                                void* nlp_res_,
-                                                double step_norm,
-                                                double reg_param,
-                                                int qp_status,
-                                                int qp_iter,
-                                                void* nlp_opts_,
-                                                void* mem_);
+                                                    void* nlp_opts_,
+                                                    void* mem_);
 //
 int ocp_nlp_globalization_fixed_step_needs_objective_value();
 //

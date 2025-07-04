@@ -72,7 +72,7 @@ typedef struct {{ name }}_solver_capsule
     ocp_nlp_config *nlp_config;
     ocp_nlp_dims *nlp_dims;
 
-{% if phases_dims[0].np_global > 0 %}
+{% if phases_dims[0].n_global_data > 0 %}
     external_function_casadi p_global_precompute_fun;
 {%- endif %}
 
@@ -119,6 +119,12 @@ typedef struct {{ name }}_solver_capsule
     external_function_external_param_casadi *nl_constr_h_fun_{{ jj }};
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi *nl_constr_h_fun_jac_hess_{{ jj }};
+{%- endif %}
+{% if solver_options.with_solution_sens_wrt_params %}
+    external_function_external_param_casadi *nl_constr_h_jac_p_hess_xu_p_{{ jj }};
+{%- endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+    external_function_external_param_casadi *nl_constr_h_adj_p_{{ jj }};
 {%- endif %}
 {%- endif %}
 
@@ -172,6 +178,12 @@ typedef struct {{ name }}_solver_capsule
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi nl_constr_h_0_fun_jac_hess;
 {%- endif %}
+{% if solver_options.with_solution_sens_wrt_params %}
+    external_function_external_param_casadi nl_constr_h_0_jac_p_hess_xu_p;
+{%- endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+    external_function_external_param_casadi nl_constr_h_0_adj_p;
+{%- endif %}
 {%- endif %}
 
 {% if cost_e.cost_type_e == "NONLINEAR_LS" %}
@@ -202,6 +214,12 @@ typedef struct {{ name }}_solver_capsule
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_external_param_casadi nl_constr_h_e_fun_jac_hess;
 {%- endif %}
+{% if solver_options.with_solution_sens_wrt_params %}
+    external_function_external_param_casadi nl_constr_h_e_jac_p_hess_xu_p;
+{%- endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+    external_function_external_param_casadi nl_constr_h_e_adj_p;
+{%- endif %}
 {%- endif %}
 
 
@@ -225,6 +243,9 @@ ACADOS_SYMBOL_EXPORT int {{ name }}_acados_update_params_sparse({{ name }}_solve
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_set_p_global_and_precompute_dependencies({{ name }}_solver_capsule* capsule, double* data, int data_len);
 
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_solve({{ name }}_solver_capsule * capsule);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_setup_qp_matrices_and_factorize({{ name }}_solver_capsule* capsule);
+
+
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_free({{ name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT void {{ name }}_acados_print_stats({{ name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_custom_update({{ name }}_solver_capsule* capsule, double* data, int data_len);

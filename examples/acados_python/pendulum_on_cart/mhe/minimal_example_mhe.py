@@ -51,7 +51,6 @@ Fmax = 80
 # ocp model and solver
 model = export_pendulum_ode_model()
 
-nx = model.x.rows()
 nu = model.u.rows()
 
 Q_ocp = np.diag([1e3, 1e3, 1e-2, 1e-2])
@@ -67,16 +66,13 @@ nw = model_mhe.u.rows()
 ny = nx
 
 Q0_mhe = 100*np.eye((nx))
-Q_mhe  = 0.1*np.eye(nx)
-R_mhe  = 0.1*np.eye(nx)
-# Q_mhe = np.zeros((nx, nx))
-# Q0_mhe = np.diag([0.01, 1, 1, 1])
-# R_mhe  = np.diag([0.1, 10, 10, 10])
+Q_mhe  = 0.1*np.eye(nw)
+R_mhe  = 0.1*np.eye(ny)
+
 acados_solver_mhe = export_mhe_solver(model_mhe, N, h, Q_mhe, Q0_mhe, R_mhe)
 
 # simulation
 v_stds = [0.1, 0.01, 0.01, 0.01]
-v_stds = [0, 0, 0, 0]
 
 simX = np.zeros((N+1, nx))
 simU = np.zeros((N, nu))
@@ -88,7 +84,7 @@ simWest = np.zeros((N, nx))
 # arrival cost mean
 x0_bar = np.array([0.0, np.pi, 0.0, 0.0])
 
-# solve ocp problem
+# solve OCP
 status = acados_solver_ocp.solve()
 
 if status != 0:
@@ -109,17 +105,15 @@ yref_0[:nx] = simY[0, :]
 yref_0[2*nx:] = x0_bar
 acados_solver_mhe.set(0, "yref", yref_0)
 acados_solver_mhe.set(0, "p", simU[0,:])
-#acados_solver_mhe.set(0, "x", simX[0,:])
 
 yref = np.zeros((2*nx, ))
+
 for j in range(1,N):
     yref[:nx] = simY[j, :]
     acados_solver_mhe.set(j, "yref", yref)
     acados_solver_mhe.set(j, "p", simU[j,:])
-    # acados_solver_mhe.set(j, "x", simX[j,:])
 
-
-# solve mhe problem
+# solve MHE problem
 status = acados_solver_mhe.solve()
 
 if status != 0 and status != 2:

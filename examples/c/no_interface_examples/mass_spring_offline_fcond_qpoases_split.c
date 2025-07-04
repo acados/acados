@@ -46,9 +46,9 @@
 #include "acados/utils/timing.h"
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_blas.h"
 
 // NOTE(nielsvd): required to cast memory etc. should go.
 #include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
@@ -162,8 +162,9 @@ int main() {
 
 	if(OFFLINE_CONDENSING == 1)
     {
-        cond_opts->cond_hess = 0;
-		cond_opts->expand_dual_sol = 0;
+        int tmp_int = 0;
+        ocp_qp_full_condensing_opts_set(cond_opts, "dual_sol", tmp_int);
+        ocp_qp_full_condensing_opts_set(cond_opts, "hess", tmp_int);
 
         ocp_qp_full_condensing_opts_update(qp_in->dim, cond_opts);
         ocp_qp_full_condensing_opts_update(qp_in->dim, cond_opts);

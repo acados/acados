@@ -68,11 +68,6 @@ def setup_solver(N: int, dt: float, u_max: float = 60):
     ocp.constraints.lbu = np.array([-u_max])
     ocp.constraints.ubu = np.array([+u_max])
     ocp.constraints.idxbu = np.array([0])
-    ocp.cost.zl = np.array([[200]])
-    ocp.cost.zu = np.array([[200]])
-    ocp.cost.Zl = np.array([[0.5]])
-    ocp.cost.Zu = np.array([[0.5]])
-    ocp.constraints.idxsbu = np.array([0])
 
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
@@ -107,19 +102,41 @@ def main():
         x0[1] = tau*thetas[-1]
         ocp_solver.set(n, 'x', x0)
 
+    # state value function gradient
     for k, theta in enumerate(thetas):
         print(f'Solving OCP for {theta=}')
 
         x0[1] = theta
         _ = ocp_solver.solve_for_x0(x0)
         optimal_value_fun[k] = ocp_solver.get_cost()
-        optimal_value_grad[k] = ocp_solver.eval_and_get_optimal_value_gradient()[1]
+        optimal_value_grad[k] = ocp_solver.eval_and_get_optimal_value_gradient(with_respect_to='initial_state')[1]
 
     cd_optimal_value_grad = (optimal_value_fun[2:]-optimal_value_fun[:-2])/(thetas[2:]-thetas[:-2])
 
     assert np.allclose(optimal_value_grad[1:-1], cd_optimal_value_grad, rtol=1e-2, atol=1e-2)
 
-    _, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
+
+    # state-action value function gradient (aka Q-function)
+    u = ocp_solver.get(0, 'u').item()
+    us = np.linspace(0.9*u, 1.1*u, num_grid)
+
+    Q_fun = np.zeros((num_grid,))
+    Q_grad = np.zeros((num_grid,))
+
+    for k, u0 in enumerate(us):
+        print(f'Solving OCP for {u0=}')
+
+        ocp_solver.constraints_set(0, 'lbu', u0)
+        ocp_solver.constraints_set(0, 'ubu', u0)
+        status = ocp_solver.solve()
+        Q_fun[k] = ocp_solver.get_cost()
+        Q_grad[k] = ocp_solver.eval_and_get_optimal_value_gradient(with_respect_to='initial_control')[0]
+
+    cd_Q_grad = (Q_fun[2:]-Q_fun[:-2])/(us[2:]-us[:-2])
+
+    assert np.allclose(Q_grad[1:-1], cd_Q_grad, rtol=1e-2, atol=1e-2)
+
+    _, axes = plt.subplots(nrows=4, ncols=1, figsize=(3, 8))
 
     axes[0].plot(thetas, optimal_value_fun)
     axes[1].plot(thetas, optimal_value_grad, label='exact')
@@ -127,12 +144,29 @@ def main():
     axes[1].plot(thetas[1:-1], cd_optimal_value_grad, label='central differences')
     axes[0].set_ylabel(r'optimal value $V^*(\bar{x}_0(\theta))$')
     axes[1].set_ylabel(r'$\nabla_{\theta} V^*(\bar{x}_0(\theta))$')
+    axes[0].set_xlabel(r'$\theta$')
     axes[1].set_xlabel(r'$\theta$')
 
+    axes[2].plot(us, Q_fun)
+    axes[3].plot(us, Q_grad, label='exact')
+
+    axes[3].plot(us[1:-1], cd_Q_grad, label='central differences')
+    axes[2].set_ylabel(r'optimal state-action value $Q(\bar{x}_0, \bar{u}_0)$')
+    axes[3].set_ylabel(r'$\nabla_{\theta} Q(\bar{x}_0, \bar{u}_0)$')
+    axes[2].set_xlabel(r'$u$')
+    axes[3].set_xlabel(r'$u$')
+
+    for i in range(4):
+        axes[i].grid()
     axes[1].legend()
-    axes[0].grid()
-    axes[1].grid()
+    axes[3].legend()
+
     axes[0].set_xlim(thetas[0], thetas[-1])
+    axes[1].set_xlim(thetas[0], thetas[-1])
+    axes[2].set_xlim(us[0], us[-1])
+    axes[3].set_xlim(us[0], us[-1])
+
+    plt.tight_layout()
 
     plt.show()
 

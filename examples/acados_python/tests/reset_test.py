@@ -170,7 +170,11 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
             if ext_cost_use_num_hess:
                 for i in range(N):
                     ocp_solver.cost_set(i, "ext_cost_num_hess", np.diag([0.04, 4000, 4000, 0.04, 0.04, ]))
-                ocp_solver.cost_set(N, "ext_cost_num_hess", np.diag([4000, 4000, 0.04, 0.04, ]))
+                hess_e = np.diag([4000, 4000, 0.04, 0.04, ])
+                ocp_solver.cost_set(N, "ext_cost_num_hess", hess_e)
+                # test getter
+                assert np.allclose(hess_e, ocp_solver.cost_get(N, "ext_cost_num_hess"))
+
 
         simX = np.zeros((N+1, nx))
         simU = np.zeros((N, nu))

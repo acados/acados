@@ -50,6 +50,7 @@ OBJS += ocp_nlp_globalization_fixed_step.o
 OBJS += ocp_nlp_globalization_funnel.o
 OBJS += ocp_nlp_globalization_merit_backtracking.o
 OBJS += ocp_nlp_sqp.o
+OBJS += ocp_nlp_sqp_with_feasible_qp.o
 OBJS += ocp_nlp_ddp.o
 OBJS += ocp_nlp_sqp_rti.o
 OBJS += ocp_nlp_reg_common.o

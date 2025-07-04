@@ -45,7 +45,7 @@ extern "C" {
 
 
 // blasfeo
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_common.h"
 
 // acados
 #include "acados/sim/sim_common.h"

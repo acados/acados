@@ -34,6 +34,12 @@
     {%- set qp_solver = "FULL_CONDENSING_HPIPM" %}
 {%- endif %}
 
+{% if problem_class != "SIM" %}
+    {%- set N_horizon = solver_options.N_horizon %}
+{%- else %}
+    {%- set N_horizon = 1 %}
+{%- endif %}
+
 {%- if solver_options.hessian_approx %}
     {%- set hessian_approx = solver_options.hessian_approx %}
 {%- elif solver_options.sens_hess %}
@@ -85,7 +91,7 @@ option(BUILD_EXAMPLE "Should the example main_{{ model.name }} be build?" OFF)
 {%- endif %}
 
 
-{%- if solver_options.integrator_type != "DISCRETE" %}
+{%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
 option(BUILD_SIM_EXAMPLE "Should the simulation example main_sim_{{ model.name }} be build?" OFF)
 option(BUILD_ACADOS_SIM_SOLVER_LIB "Should the simulation solver library acados_sim_solver_{{ model.name }} be build?" OFF)
 {%- endif %}
@@ -93,7 +99,7 @@ option(BUILD_ACADOS_SIM_SOLVER_LIB "Should the simulation solver library acados_
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_SYSTEM_NAME MATCHES "Windows")
     # MinGW: remove prefix and change suffix to match MSVC
-    # (such that Matlab mex recognizes the libraries)
+    # (such that MATLAB mex recognizes the libraries)
     set(CMAKE_SHARED_LIBRARY_PREFIX "")
     set(CMAKE_IMPORT_LIBRARY_SUFFIX ".lib")
     set(CMAKE_IMPORT_LIBRARY_PREFIX "")
@@ -110,12 +116,15 @@ endif()
 
 
 # object target names
+{%- if problem_class == "SIM" or solver_options.N_horizon > 0 %}
 set(MODEL_OBJ model_{{ model.name }})
+{%- endif %}
 set(OCP_OBJ ocp_{{ model.name }})
-{%- if solver_options.integrator_type != "DISCRETE" %}
+{%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
 set(SIM_OBJ sim_{{ model.name }})
 {%- endif %}
 
+{%- if problem_class == "SIM" or solver_options.N_horizon > 0 %}
 # model
 set(MODEL_SRC
 {%- for filename in external_function_files_model %}
@@ -123,7 +132,7 @@ set(MODEL_SRC
 {%- endfor %}
 )
 add_library(${MODEL_OBJ} OBJECT ${MODEL_SRC} )
-
+{%- endif %}
 
 {% if problem_class != "SIM" %}
 # optimal control problem - mostly CasADi exports
@@ -143,10 +152,10 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
 endif()
 {%- endif %}
 
-{%- if solver_options.integrator_type != "DISCRETE" %}
+{%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
 # for sim solver
 if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_EXAMPLE}
-    {%- if solver_options.integrator_type != "DISCRETE" %}
+    {%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
     OR ${BUILD_SIM_EXAMPLE} OR ${BUILD_ACADOS_SIM_SOLVER_LIB}
     {%- endif -%}
     )
@@ -193,7 +202,7 @@ set(CMAKE_C_FLAGS "-fPIC -std=c99 {{ openmp_flag }} {{ solver_options.ext_fun_co
 {%- if qp_solver == "PARTIAL_CONDENSING_QPDUNES" -%}
     -DACADOS_WITH_QPDUNES
 {%- endif -%}
-{%- if solver_options.num_threads_in_batch_solve > 1 -%}
+{%- if solver_options.with_batch_functionality -%}
     -fopenmp
 {%- endif -%}
 ")
@@ -228,8 +237,12 @@ endif()
 # bundled_shared_lib
 if(${BUILD_ACADOS_SOLVER_LIB})
     set(LIB_ACADOS_SOLVER acados_solver_{{ model.name }})
-    add_library(${LIB_ACADOS_SOLVER} SHARED $<TARGET_OBJECTS:${MODEL_OBJ}> $<TARGET_OBJECTS:${OCP_OBJ}>
-    {%- if solver_options.integrator_type != "DISCRETE" %}
+    add_library(${LIB_ACADOS_SOLVER} SHARED
+    {%- if solver_options.N_horizon > 0 %}
+    $<TARGET_OBJECTS:${MODEL_OBJ}>
+    {%- endif %}
+    $<TARGET_OBJECTS:${OCP_OBJ}>
+    {%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
         $<TARGET_OBJECTS:${SIM_OBJ}>
     {%- endif -%}
     )
@@ -239,7 +252,11 @@ endif(${BUILD_ACADOS_SOLVER_LIB})
 # ocp_shared_lib
 if(${BUILD_ACADOS_OCP_SOLVER_LIB})
     set(LIB_ACADOS_OCP_SOLVER acados_ocp_solver_{{ model.name }})
-    add_library(${LIB_ACADOS_OCP_SOLVER} SHARED $<TARGET_OBJECTS:${MODEL_OBJ}> $<TARGET_OBJECTS:${OCP_OBJ}>)
+    add_library(${LIB_ACADOS_OCP_SOLVER} SHARED
+    {%- if solver_options.N_horizon > 0 %}
+    $<TARGET_OBJECTS:${MODEL_OBJ}>
+    {%- endif %}
+    $<TARGET_OBJECTS:${OCP_OBJ}>)
     # Specify libraries or flags to use when linking a given target and/or its dependents.
     target_link_libraries(${LIB_ACADOS_OCP_SOLVER} PRIVATE ${EXTERNAL_LIB})
     target_link_directories(${LIB_ACADOS_OCP_SOLVER} PRIVATE ${EXTERNAL_DIR})
@@ -248,8 +265,12 @@ endif(${BUILD_ACADOS_OCP_SOLVER_LIB})
 
 # example
 if(${BUILD_EXAMPLE})
-    add_executable(${EX_EXE} ${EX_SRC} $<TARGET_OBJECTS:${MODEL_OBJ}> $<TARGET_OBJECTS:${OCP_OBJ}>
-    {%- if solver_options.integrator_type != "DISCRETE" %}
+    add_executable(${EX_EXE} ${EX_SRC}
+    {%- if solver_options.N_horizon > 0 %}
+    $<TARGET_OBJECTS:${MODEL_OBJ}>
+    {%- endif %}
+    $<TARGET_OBJECTS:${OCP_OBJ}>
+    {%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
         $<TARGET_OBJECTS:${SIM_OBJ}>
     {%- endif -%}
     )
@@ -257,7 +278,7 @@ if(${BUILD_EXAMPLE})
 endif(${BUILD_EXAMPLE})
   {%- endif %}
 
-{% if solver_options.integrator_type != "DISCRETE" -%}
+{% if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 -%}
 # example_sim
 if(${BUILD_SIM_EXAMPLE})
     set(EX_SIM_SRC main_sim_{{ model.name }}.c)
@@ -280,7 +301,7 @@ unset(BUILD_ACADOS_SOLVER_LIB CACHE)
 unset(BUILD_ACADOS_OCP_SOLVER_LIB CACHE)
 unset(BUILD_EXAMPLE CACHE)
   {%- endif %}
-{%- if solver_options.integrator_type != "DISCRETE" %}
+{%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
 unset(BUILD_SIM_EXAMPLE CACHE)
 unset(BUILD_ACADOS_SIM_SOLVER_LIB CACHE)
 {%- endif %}

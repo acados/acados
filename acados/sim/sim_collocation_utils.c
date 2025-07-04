@@ -36,10 +36,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
-#include "blasfeo/include/blasfeo_d_kernel.h"
-#include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
+#include "blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_blas.h"
+#include "blasfeo_d_kernel.h"
+#include "blasfeo_i_aux_ext_dep.h"
 
 #include "acados/utils/print.h"
 #include "acados/utils/mem.h"

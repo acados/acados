@@ -36,8 +36,8 @@
 #include <stdlib.h>
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
+#include "blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_i_aux_ext_dep.h"
 
 // acados
 #include "acados_c/external_function_interface.h"
@@ -1148,7 +1148,13 @@ int main()
 // #endif
 
     /************************************************
-    * nlp_in
+    * ocp_nlp_out
+    ************************************************/
+
+	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
+
+    /************************************************
+    * ocp_nlp_in
     ************************************************/
 
 	ocp_nlp_in *nlp_in = ocp_nlp_in_create(config, dims);
@@ -1259,10 +1265,10 @@ int main()
 
 	// fist stage
 #if CONSTRAINTS==0 // box constraints
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbu", lb0);
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", lb0+NU);
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubu", ub0);
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", ub0+NU);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, 0, "lbu", lb0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, 0, "lbx", lb0+NU);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, 0, "ubu", ub0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, 0, "ubx", ub0+NU);
 	constraints[0]->idxb = idxb0;
 #elif CONSTRAINTS==1 // general constraints
 	double *Cu0; d_zeros(&Cu0, ng[0], nu[0]);
@@ -1275,8 +1281,8 @@ int main()
 
 	blasfeo_pack_tran_dmat(ng[0], nu[0], Cu0, ng[0], &constraints[0]->DCt, 0, 0);
 	blasfeo_pack_tran_dmat(ng[0], nx[0], Cx0, ng[0], &constraints[0]->DCt, nu[0], 0);
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lg", lb0);
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ug", ub0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, 0, "lg", lb0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, 0, "ug", ub0);
 
 	d_free(Cu0);
 	d_free(Cx0);
@@ -1288,23 +1294,23 @@ int main()
 //     ocp_nlp_constraints_bgh_model **nl_constr = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 // 	nl_constr[0]->nl_constr_h_fun_jac = &nonlin_constr_generic;
 
-// 	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lg", lb0);
-// 	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ug", ub0);
-// 	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lh", &lb0[ng[0]]);
-// 	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "uh", &ub0[ng[0]]);
+// 	ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, 0, "lg", lb0);
+// 	ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, 0, "ug", ub0);
+// 	ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, 0, "lh", &lb0[ng[0]]);
+// 	ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, 0, "uh", &ub0[ng[0]]);
 #endif
 
 	// other stages
     for (int i = 1; i < NN; i++)
 	{
-		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lbu", lb1);
-		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lbx", lb1+NU);
-		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ubu", ub1);
-		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ubx", ub1+NU);
+		ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, i, "lbu", lb1);
+		ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, i, "lbx", lb1+NU);
+		ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, i, "ubu", ub1);
+		ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, i, "ubx", ub1+NU);
         constraints[i]->idxb = idxb1;
     }
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "lbx", lbN);
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "ubx", ubN);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, NN, "lbx", lbN);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, nlp_out, NN, "ubx", ubN);
 
     constraints[NN]->idxb = idxbN;
 
@@ -1357,10 +1363,8 @@ int main()
     ocp_nlp_solver_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
 
     /************************************************
-    * ocp_nlp out
+    * ocp_nlp_solver
     ************************************************/
-
-	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 
 	ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts, nlp_in);
 	int status = ocp_nlp_precompute(solver, nlp_in, nlp_out);

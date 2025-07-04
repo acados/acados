@@ -148,7 +148,7 @@ plot_pendulum(np.linspace(0, Tf_01, N0 + 1), Fmax, simU0, simX0, latexify=False,
 # 1) now reuse the code but set a new time-steps vector, with a new number of elements
 dt1 = Tf_01 / N12
 
-new_time_steps1 = np.tile(dt1, (N12,))  # Matlab's equivalent to repmat
+new_time_steps1 = np.tile(dt1, (N12,))  # MATLAB's equivalent to repmat
 time1 = np.hstack([0, np.cumsum(new_time_steps1)])
 
 simX1 = np.zeros((N12 + 1, nx))
@@ -184,7 +184,7 @@ plot_pendulum(time1, Fmax, simU1, simX1, latexify=False, plt_show=False, X_true_
 # 2) reuse the code again, set a new time-steps vector, only with a different final time
 dt2 = Tf_2 / N12
 
-new_time_steps2 = np.tile(dt2, (N12,))  # Matlab's equivalent to repmat
+new_time_steps2 = np.tile(dt2, (N12,))  # MATLAB's equivalent to repmat
 time2 = np.hstack([0, np.cumsum(new_time_steps2)])
 
 simX2 = np.zeros((N12 + 1, nx))

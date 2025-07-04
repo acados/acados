@@ -185,18 +185,8 @@ for i=1:N_sim
     u0 = ocp_solver.get('u', 0);
     status = ocp_solver.get('status'); % 0 - success
 
-    % set initial state for the simulation
-    sim_solver.set('x', x0);
-    sim_solver.set('u', u0);
-
     % simulate one step
-    sim_status = sim_solver.solve();
-    if sim_status ~= 0
-        disp(['acados integrator returned error status ', num2str(sim_status)])
-    end
-
-    % get simulated state
-    x_sim(:,i+1) = sim_solver.get('xn');
+    x_sim(:,i+1) = sim_solver.simulate(x0, u0);
     u_sim(:,i) = u0;
 end
 

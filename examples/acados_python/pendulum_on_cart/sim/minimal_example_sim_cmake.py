@@ -63,6 +63,7 @@ def main(build=True, generate=True, use_cmake=True, use_cython=False):
         AcadosSimSolver.build(sim.code_export_directory, with_cython=True)
         acados_integrator = AcadosSimSolver.create_cython_solver('acados_sim.json')
     else:
+        sim.simulink_opts = dict()
         acados_integrator = AcadosSimSolver(sim, cmake_builder=cmake_builder, generate=generate, build=build)
 
     x0 = np.array([0.0, np.pi+1, 0.0, 0.0])

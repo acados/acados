@@ -31,7 +31,7 @@
 
 from .acados_sim_solver import AcadosSimSolver
 from .acados_sim import AcadosSim
-from typing import List
+from typing import List, Union
 from ctypes import (POINTER, c_int, c_void_p)
 
 
@@ -42,18 +42,37 @@ class AcadosSimBatchSolver():
         :param sim: type :py:class:`~acados_template.acados_sim.AcadosSim`
         :param N_batch: batch size, positive integer
         :param json_file: Default: 'acados_sim.json'
+        :param build: Flag indicating whether solver should be (re)compiled. If False an attempt is made to load an already compiled shared library for the solver. Default: True
+        :param generate: Flag indicating whether problem functions should be code generated. Default: True
         :verbose: bool, default: True
     """
 
     __sim_solvers : List[AcadosSimSolver]
 
-    def __init__(self, sim: AcadosSim, N_batch: int, json_file: str = 'acados_sim.json', verbose: bool=True):
+    def __init__(self, sim: AcadosSim, N_batch: int, num_threads_in_batch_solve: Union[int, None] = None , json_file: str = 'acados_sim.json', build: bool = True, generate: bool = True, verbose: bool=True):
 
         if not isinstance(N_batch, int) or N_batch <= 0:
-            raise Exception("AcadosSimBatchSolver: argument N_batch should be a positive integer.")
+            raise ValueError("AcadosSimBatchSolver: argument N_batch should be a positive integer.")
+        if num_threads_in_batch_solve is None:
+            num_threads_in_batch_solve = sim.solver_options.num_threads_in_batch_solve
+            print(f"Warning: num_threads_in_batch_solve is None. Using value {num_threads_in_batch_solve} set in sim.solver_options instead.")
+            print("In the future, it should be passed explicitly in the AcadosSimBatchSolver constructor.")
+        if not isinstance(num_threads_in_batch_solve, int) or num_threads_in_batch_solve <= 0:
+            raise ValueError("AcadosSimBatchSolver: argument num_threads_in_batch_solve should be a positive integer.")
+        if not sim.solver_options.with_batch_functionality:
+            print("Warning: Using AcadosSimBatchSolver, but sim.solver_options.with_batch_functionality is False.")
+            print("Attempting to compile with openmp nonetheless.")
+            sim.solver_options.with_batch_functionality = True
 
+        self.__num_threads_in_batch_solve = num_threads_in_batch_solve
         self.__N_batch = N_batch
-        self.__sim_solvers = [AcadosSimSolver(sim, json_file=json_file, build=n==0, generate=n==0, verbose=verbose) for n in range(self.N_batch)]
+        self.__sim_solvers = [AcadosSimSolver(sim,
+                                              json_file=json_file,
+                                              build=n==0 if build else False,
+                                              generate=n==0 if generate else False,
+                                              verbose=verbose if n==0 else False,
+                                              )
+                              for n in range(self.N_batch)]
 
         self.__shared_lib = self.sim_solvers[0].shared_lib
         self.__model_name = self.sim_solvers[0].model_name
@@ -62,7 +81,7 @@ class AcadosSimBatchSolver():
         for i in range(self.N_batch):
             self.__sim_solvers_pointer[i] = self.sim_solvers[i].capsule
 
-        getattr(self.__shared_lib, f"{self.__model_name}_acados_sim_batch_solve").argtypes = [POINTER(c_void_p), c_int]
+        getattr(self.__shared_lib, f"{self.__model_name}_acados_sim_batch_solve").argtypes = [POINTER(c_void_p), c_int, c_int]
         getattr(self.__shared_lib, f"{self.__model_name}_acados_sim_batch_solve").restype = c_void_p
 
         if not self.sim_solvers[0].acados_lib_uses_omp:
@@ -73,7 +92,7 @@ class AcadosSimBatchSolver():
         """
         Solve the simulation problem with current input for all `N_batch` integrators.
         """
-        getattr(self.__shared_lib, f"{self.__model_name}_acados_sim_batch_solve")(self.__sim_solvers_pointer, self.__N_batch)
+        getattr(self.__shared_lib, f"{self.__model_name}_acados_sim_batch_solve")(self.__sim_solvers_pointer, self.__N_batch, self.__num_threads_in_batch_solve)
 
 
     @property
@@ -85,4 +104,13 @@ class AcadosSimBatchSolver():
     def N_batch(self):
         """Batch size."""
         return self.__N_batch
+    
+    @property
+    def num_threads_in_batch_solve(self):
+        """Number of threads used for parallelizing the batch methods."""
+        return self.__num_threads_in_batch_solve
+    
+    @num_threads_in_batch_solve.setter
+    def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
+        self.__num_threads_in_batch_solve = num_threads_in_batch_solve
 

@@ -181,7 +181,6 @@ def create_multiphase_ocp_solver(N_list, t_horizon_1, name=None, use_cmake=False
     phase_1.model = get_transition_model()
     phase_1.cost.cost_type = 'NONLINEAR_LS'
     phase_1.model.cost_y_expr = phase_1.model.x
-    # TODO: how to choose this transition cost
     phase_1.cost.W = np.diag([L2_COST_P, 1e-1 * L2_COST_V])
     phase_1.cost.yref = np.array([0., 0.])
 

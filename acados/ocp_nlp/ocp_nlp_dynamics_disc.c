@@ -36,8 +36,8 @@
 #include <string.h>
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
 // acados
 #include "acados/utils/mem.h"
 
@@ -265,6 +265,11 @@ void ocp_nlp_dynamics_disc_opts_get(void *config_, void *opts_, const char *fiel
     {
         int *int_ptr = value;
         *int_ptr = opts->cost_computation;
+    }
+    else if (!strcmp(field, "compute_hess"))
+    {
+        int *int_ptr = value;
+        *int_ptr = opts->compute_hess;
     }
     else
     {
@@ -610,7 +615,7 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
     // ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_disc_dims *dims = dims_;
     ocp_nlp_dynamics_disc_opts *opts = opts_;
-    ocp_nlp_dynamics_disc_workspace *work = work_;
+    // ocp_nlp_dynamics_disc_workspace *work = work_;
     ocp_nlp_dynamics_disc_memory *memory = mem_;
     ocp_nlp_dynamics_disc_model *model = model_;
 
@@ -649,7 +654,7 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
         pi_in.xi = 0;
 
         struct blasfeo_dmat_args hess_out;
-        hess_out.A = &work->tmp_nv_nv;
+        hess_out.A = memory->RSQrq;
         hess_out.ai = 0;
         hess_out.aj = 0;
 
@@ -670,9 +675,6 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
         // call external function
         model->disc_dyn_fun_jac_hess->evaluate(model->disc_dyn_fun_jac_hess, ext_fun_type_in, ext_fun_in,
                 ext_fun_type_out, ext_fun_out);
-
-        // Add hessian contribution
-        blasfeo_dgead(nx+nu, nx+nu, 1.0, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
     }
     else
     {

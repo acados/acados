@@ -45,9 +45,9 @@
 
 #include "acados/sim/sim_common.h"
 
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
-#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
+#include "blasfeo_common.h"
 
 
 /************************************************
@@ -496,6 +496,10 @@ int sim_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field
     else if (!strcmp(field, "y_ref"))
     {
         mem->y_ref = value;
+    }
+    else if (!strcmp(field, "cost_scaling_ptr"))
+    {
+        mem->cost_scaling_ptr = value;
     }
     else if (!strcmp(field, "guesses_blasfeo"))
     {
@@ -1199,6 +1203,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     struct blasfeo_dvec *cost_grad = mem->cost_grad;
     struct blasfeo_dvec *nls_res = workspace->nls_res;
     struct blasfeo_dvec *tmp_ny = workspace->tmp_ny;
+    double cost_scaling;
 
     struct blasfeo_dmat *cost_hess = mem->cost_hess;
     struct blasfeo_dmat *J_y_tilde = workspace->J_y_tilde;
@@ -1315,6 +1320,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             printf("\nIRK cost_computation not implemented for nz>0!\n\n");
             exit(1);
         }
+        cost_scaling = mem->cost_scaling_ptr[0];
     }
 
     // pack
@@ -1645,7 +1651,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     }
 
                     // cost_grad += b * tmp_ny^T * tmp_ny_nux = b * tmp_ny_nux^T * tmp_ny
-                    blasfeo_dgemv_n(nx+nu, ny, b_vec[ii]/num_steps, tmp_nux_ny2, 0, 0, tmp_ny, 0,
+                    blasfeo_dgemv_n(nx+nu, ny, cost_scaling * b_vec[ii]/num_steps, tmp_nux_ny2, 0, 0, tmp_ny, 0,
                                     1.0, cost_grad, 0, cost_grad, 0);
 
                     // cost_hess += b * tmp_nux_ny_2 * tmp_nux_ny_2^T
@@ -1735,7 +1741,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         //         &workspace->Jt_z, 0, 0, 1.0, &workspace->tmp_nux_ny, 0, 0, &Jt_ux_tilde, 0, 0);
 
                         // // cost_grad += b * Jt_ux_tilde * tmp_ny
-                        // blasfeo_dgemv_n(nu+nx, ny, b_vec[ii]/num_steps, &Jt_ux_tilde, 0, 0, tmp_ny, 0,
+                        // blasfeo_dgemv_n(nu+nx, ny, cost_scaling * b_vec[ii]/num_steps, &Jt_ux_tilde, 0, 0, tmp_ny, 0,
                         //                 1.0, cost_grad, 0, cost_grad, 0);
 
                         // // tmp_nv_ny = Jt_ux_tilde * W_chol
@@ -1773,7 +1779,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         }
 
                         // cost_grad += b * J_y_tilde^T * tmp_ny
-                        blasfeo_dgemv_t(ny, nx+nu, b_vec[ii]/num_steps, J_y_tilde, 0, 0, tmp_ny, 0,
+                        blasfeo_dgemv_t(ny, nx+nu, cost_scaling * b_vec[ii]/num_steps, J_y_tilde, 0, 0, tmp_ny, 0,
                                         1.0, cost_grad, 0, cost_grad, 0);
                     }
                     // cost_hess += b * tmp_nux_ny2 * tmp_nux_ny2^T
@@ -1915,6 +1921,12 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             blasfeo_unpack_dvec(nz, K, (ns-1) * nz + ns*nx, mem->z, 1);
         }
     }  // end step loop (ss)
+
+    if (opts->cost_computation)
+    {
+        // scale cost function value
+        mem->cost_fun[0] *= cost_scaling;
+    }
 
     // extract results from forward sweep to output
     blasfeo_unpack_dvec(nx, xn, 0, x_out, 1);

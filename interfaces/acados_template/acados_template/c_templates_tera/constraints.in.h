@@ -99,6 +99,24 @@ const int *{{ model.name }}_constr_h_fun_sparsity_out(int);
 int {{ model.name }}_constr_h_fun_n_in(void);
 int {{ model.name }}_constr_h_fun_n_out(void);
 
+{% if solver_options.with_solution_sens_wrt_params %}
+int {{ model.name }}_constr_h_jac_p_hess_xu_p(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_constr_h_jac_p_hess_xu_p_work(int *, int *, int *, int *);
+const int *{{ model.name }}_constr_h_jac_p_hess_xu_p_sparsity_in(int);
+const int *{{ model.name }}_constr_h_jac_p_hess_xu_p_sparsity_out(int);
+int {{ model.name }}_constr_h_jac_p_hess_xu_p_n_in(void);
+int {{ model.name }}_constr_h_jac_p_hess_xu_p_n_out(void);
+{% endif %}
+
+{% if solver_options.with_value_sens_wrt_params %}
+int {{ model.name }}_constr_h_adj_p(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_constr_h_adj_p_work(int *, int *, int *, int *);
+const int *{{ model.name }}_constr_h_adj_p_sparsity_in(int);
+const int *{{ model.name }}_constr_h_adj_p_sparsity_out(int);
+int {{ model.name }}_constr_h_adj_p_n_in(void);
+int {{ model.name }}_constr_h_adj_p_n_out(void);
+{% endif %}
+
 {% if solver_options.hessian_approx == "EXACT" -%}
 int {{ model.name }}_constr_h_fun_jac_uxt_zt_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_constr_h_fun_jac_uxt_zt_hess_work(int *, int *, int *, int *);
@@ -123,6 +141,24 @@ const int *{{ model.name }}_constr_h_0_fun_sparsity_in(int);
 const int *{{ model.name }}_constr_h_0_fun_sparsity_out(int);
 int {{ model.name }}_constr_h_0_fun_n_in(void);
 int {{ model.name }}_constr_h_0_fun_n_out(void);
+
+{% if solver_options.with_solution_sens_wrt_params %}
+int {{ model.name }}_constr_h_0_jac_p_hess_xu_p(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_constr_h_0_jac_p_hess_xu_p_work(int *, int *, int *, int *);
+const int *{{ model.name }}_constr_h_0_jac_p_hess_xu_p_sparsity_in(int);
+const int *{{ model.name }}_constr_h_0_jac_p_hess_xu_p_sparsity_out(int);
+int {{ model.name }}_constr_h_0_jac_p_hess_xu_p_n_in(void);
+int {{ model.name }}_constr_h_0_jac_p_hess_xu_p_n_out(void);
+{% endif %}
+
+{% if solver_options.with_value_sens_wrt_params %}
+int {{ model.name }}_constr_h_0_adj_p(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_constr_h_0_adj_p_work(int *, int *, int *, int *);
+const int *{{ model.name }}_constr_h_0_adj_p_sparsity_in(int);
+const int *{{ model.name }}_constr_h_0_adj_p_sparsity_out(int);
+int {{ model.name }}_constr_h_0_adj_p_n_in(void);
+int {{ model.name }}_constr_h_0_adj_p_n_out(void);
+{% endif %}
 
 {% if solver_options.hessian_approx == "EXACT" -%}
 int {{ model.name }}_constr_h_0_fun_jac_uxt_zt_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
@@ -149,6 +185,24 @@ const int *{{ model.name }}_constr_h_e_fun_sparsity_in(int);
 const int *{{ model.name }}_constr_h_e_fun_sparsity_out(int);
 int {{ model.name }}_constr_h_e_fun_n_in(void);
 int {{ model.name }}_constr_h_e_fun_n_out(void);
+
+{% if solver_options.with_solution_sens_wrt_params %}
+int {{ model.name }}_constr_h_e_jac_p_hess_xu_p(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_constr_h_e_jac_p_hess_xu_p_work(int *, int *, int *, int *);
+const int *{{ model.name }}_constr_h_e_jac_p_hess_xu_p_sparsity_in(int);
+const int *{{ model.name }}_constr_h_e_jac_p_hess_xu_p_sparsity_out(int);
+int {{ model.name }}_constr_h_e_jac_p_hess_xu_p_n_in(void);
+int {{ model.name }}_constr_h_e_jac_p_hess_xu_p_n_out(void);
+{% endif %}
+
+{% if solver_options.with_value_sens_wrt_params %}
+int {{ model.name }}_constr_h_e_adj_p(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_constr_h_e_adj_p_work(int *, int *, int *, int *);
+const int *{{ model.name }}_constr_h_e_adj_p_sparsity_in(int);
+const int *{{ model.name }}_constr_h_e_adj_p_sparsity_out(int);
+int {{ model.name }}_constr_h_e_adj_p_n_in(void);
+int {{ model.name }}_constr_h_e_adj_p_n_out(void);
+{% endif %}
 
 {% if solver_options.hessian_approx == "EXACT" -%}
 int {{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);

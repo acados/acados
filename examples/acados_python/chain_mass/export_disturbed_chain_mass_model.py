@@ -28,7 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 
 from acados_template import AcadosModel
-from casadi import SX, vertcat, sin, cos, norm_2
+from casadi import SX, vertcat, norm_2
 
 import numpy as np
 
@@ -61,11 +61,11 @@ def export_disturbed_chain_mass_model(n_mass, m, D, L):
 
         scale = D/m*(1-L/ norm_2(dist))
         F = scale*dist
-    
+
         # mass on the right
         if i < M:
             f[i*3:(i+1)*3] -= F
-    
+
         # mass on the left
         if i > 0:
             f[(i-1)*3:i*3] += F

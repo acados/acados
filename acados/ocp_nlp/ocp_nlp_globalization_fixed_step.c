@@ -39,8 +39,8 @@
 #endif
 
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
 // acados
 #include "acados/utils/mem.h"
 
@@ -157,8 +157,8 @@ void *ocp_nlp_globalization_fixed_step_memory_assign(void *config_, void *dims_,
  ************************************************/
 int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, void *nlp_dims_, void *nlp_in_, void *nlp_out_, void *nlp_mem_, void *solver_mem, void *nlp_work_, void *nlp_opts_, double *step_size)
 {
-    ocp_nlp_config *nlp_config = nlp_config_;
-    ocp_nlp_dims *nlp_dims = nlp_dims_;
+    ocp_nlp_config *config = nlp_config_;
+    ocp_nlp_dims *dims = nlp_dims_;
     ocp_nlp_in *nlp_in = nlp_in_;
     ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_memory *nlp_mem = nlp_mem_;
@@ -166,44 +166,68 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
     ocp_nlp_opts *nlp_opts = nlp_opts_;
     ocp_nlp_globalization_fixed_step_opts *opts = nlp_opts->globalization;
 
-    nlp_config->step_update(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, opts->step_length, opts->globalization_opts->full_step_dual);
-    *step_size = opts->step_length;
+    ocp_qp_out *qp_out = nlp_mem->qp_out;
+    double alpha = opts->step_length;
+
+    if (nlp_opts->with_anderson_acceleration)
+    {
+        // convert qp_out to delta primal-dual step
+        ocp_nlp_convert_primaldelta_absdual_step_to_delta_step(config, dims, nlp_out, qp_out);
+        if (nlp_mem->iter == 0)
+        {
+            // store in anderson_step, prev_qp_out
+            ocp_qp_out_copy(qp_out, nlp_mem->anderson_step);
+            // update variables (TODO: DDP primals are different)
+            ocp_nlp_update_variables_sqp_delta_primal_dual(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha, nlp_mem->anderson_step);
+        }
+        else
+        {
+            // tmp_qp_out = d_{k+1} - d_k: qp_step - prev_qp_out
+            ocp_qp_out_axpy(-1.0, nlp_mem->prev_qp_out, qp_out, nlp_work->tmp_qp_out);
+            // compute gamma
+            double gamma = ocp_nlp_compute_anderson_gamma(nlp_work, qp_out, nlp_work->tmp_qp_out);
+            /* update anderson_step */
+            // anderson_step *= -gamma
+            ocp_qp_out_sc(-gamma, nlp_mem->anderson_step);
+            // anderson_step += alpha * gamma * prev_qp_out
+            ocp_qp_out_add(gamma*alpha, nlp_mem->prev_qp_out, nlp_mem->anderson_step);
+            // anderson_step += (alpha - alpha * gamma) * qp_out
+            ocp_qp_out_add(alpha-gamma*alpha, qp_out, nlp_mem->anderson_step);
+            // update variables (TODO: DDP primals are different)
+            ocp_nlp_update_variables_sqp_delta_primal_dual(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha, nlp_mem->anderson_step);
+        }
+        // store prev qp step
+        ocp_qp_out_copy(qp_out, nlp_mem->prev_qp_out);
+        // step norm
+        if (nlp_opts->log_primal_step_norm)
+        {
+            nlp_mem->primal_step_norm[nlp_mem->iter] = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->anderson_step);
+        }
+        if (nlp_opts->log_dual_step_norm)
+        {
+            nlp_mem->dual_step_norm[nlp_mem->iter] = ocp_qp_out_compute_dual_nrm_inf(nlp_mem->anderson_step);
+        }
+    }
+    else
+    {
+        config->step_update(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, alpha, opts->globalization_opts->full_step_dual);
+    }
+    *step_size = alpha;
 
     return ACADOS_SUCCESS;
 }
 
 void ocp_nlp_globalization_fixed_step_print_iteration_header()
 {
-    printf("# it\tstat\t\teq\t\tineq\t\tcomp\t\tqp_stat\tqp_iter\talpha\n");
+    printf("%8s   ", "alpha");
 }
 
 void ocp_nlp_globalization_fixed_step_print_iteration(double objective_value,
-                                                int iter_count,
-                                                void* nlp_res_,
-                                                double step_norm,
-                                                double reg_param,
-                                                int qp_status,
-                                                int qp_iter,
                                                 void* nlp_opts_,
                                                 void* mem_)
 {
-    ocp_nlp_res *nlp_res = nlp_res_;
-    ocp_nlp_opts *nlp_opts = nlp_opts_;
-    ocp_nlp_globalization_fixed_step_opts *opts = nlp_opts->globalization;
-    // ocp_nlp_globalization_fixed_step_memory* mem = mem_;
-
-    if ((iter_count % 10 == 0)){
-        ocp_nlp_globalization_fixed_step_print_iteration_header();
-    }
-    printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n",
-        iter_count,
-        nlp_res->inf_norm_res_stat,
-        nlp_res->inf_norm_res_eq,
-        nlp_res->inf_norm_res_ineq,
-        nlp_res->inf_norm_res_comp,
-        qp_status,
-        qp_iter,
-        opts->step_length);
+    ocp_nlp_globalization_fixed_step_opts *opts = nlp_opts_;
+    printf("%8.2e    ", opts->step_length);
 }
 
 int ocp_nlp_globalization_fixed_step_needs_objective_value()

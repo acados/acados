@@ -38,8 +38,9 @@ import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
 import casadi as ca
+from casadi.tools import entry, struct_symSX
 
-COST_VERSIONS = ['LS', 'EXTERNAL', 'EXTERNAL_Z', 'NLS', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z']
+COST_VERSIONS = ['LS', 'EXTERNAL', 'EXTERNAL_Z', 'NLS', 'NLS_TO_EXTERNAL', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z', 'AUTO']
 HESSIAN_APPROXIMATION = 'GAUSS_NEWTON' # 'GAUSS_NEWTON
 N = 20
 T_HORIZON = 1.0
@@ -48,7 +49,7 @@ NX = 4
 NU = 1
 FMAX = 80
 
-def formulate_ocp(cost_version: str) -> AcadosOcp:
+def formulate_ocp(cost_version: str, constraint_version="bu") -> AcadosOcp:
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -77,7 +78,14 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
 
     cost_W = scipy.linalg.block_diag(Q_mat, R_mat)
 
-    if cost_version in ['CONL', 'CONL_Z', 'EXTERNAL', 'EXTERNAL_Z']:
+    if cost_version in ['LS', 'NLS', 'NLS_TO_EXTERNAL', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z']:
+        ocp.cost.yref = np.zeros((ny, ))
+        ocp.cost.yref_e = np.zeros((ny_e, ))
+    if cost_version in ['LS', 'NLS', 'NLS_TO_EXTERNAL', 'NLS_Z', 'LS_Z']:
+        ocp.cost.W_e = Q_mat
+        ocp.cost.W = cost_W
+
+    if cost_version in ['CONL', 'CONL_Z', 'EXTERNAL', 'EXTERNAL_Z', 'AUTO']:
         cost_W = ca.sparsify(ca.DM(cost_W))
         Q_mat = ca.sparsify(ca.DM(Q_mat))
 
@@ -179,21 +187,64 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
         ocp.model.cost_expr_ext_cost = .5*y_expr_z.T @ cost_W @ y_expr_z
         ocp.model.cost_expr_ext_cost_e = .5*x.T @ Q_mat @ x
 
-    else:
-        raise Exception('Unknown cost_version. Possible values are \'LS\' and \'NLS\'.')
+    elif cost_version == 'AUTO':
+        ocp.cost.cost_type = 'AUTO'
+        ocp.cost.cost_type_e = 'AUTO'
+        ocp.model.cost_expr_ext_cost = .5*ca.vertcat(x, u).T @ cost_W @ ca.vertcat(x, u)
+        ocp.model.cost_expr_ext_cost_e = .5*x.T @ Q_mat @ x
 
-    if cost_version in ['LS', 'NLS', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z']:
-        ocp.cost.yref = np.zeros((ny, ))
-        ocp.cost.yref_e = np.zeros((ny_e, ))
-    if cost_version in ['LS', 'NLS', 'NLS_Z', 'LS_Z']:
-        ocp.cost.W_e = Q_mat
-        ocp.cost.W = cost_W
+    elif cost_version == 'NLS_TO_EXTERNAL':
+        ocp.cost.cost_type = 'NONLINEAR_LS'
+        ocp.cost.cost_type_e = 'NONLINEAR_LS'
+
+        ocp.model.cost_y_expr = ca.vertcat(x, u)
+        ocp.model.cost_y_expr_e = x
+        ocp.translate_cost_to_external_cost(cost_hessian='GAUSS_NEWTON')
+    elif cost_version == 'NLS_TO_EXTERNAL_P_GLOBAL':
+        ocp.cost.cost_type = 'NONLINEAR_LS'
+        ocp.cost.cost_type_e = 'NONLINEAR_LS'
+
+        p_global = struct_symSX([
+            entry('W', shape=(ny, ny)),
+            entry('yref', shape=(ny, )),
+            entry('W_e', shape=(ny_e, ny_e)),
+            entry('yref_e', shape=(ny_e, ))
+        ])
+        ocp.model.p_global = p_global.cat
+
+        ocp.cost.W = p_global['W']
+        ocp.cost.yref = p_global['yref']
+        ocp.cost.W_e = p_global['W_e']
+        ocp.cost.yref_e = p_global['yref_e']
+
+        ocp.model.cost_y_expr = ca.vertcat(x, u)
+        ocp.model.cost_y_expr_e = x
+
+        ocp.translate_cost_to_external_cost(cost_hessian='GAUSS_NEWTON')
+
+        p_global_values = p_global(0)
+        p_global_values['W'] = cost_W
+        p_global_values['yref'] = np.zeros((ny, ))
+        p_global_values['W_e'] = Q_mat
+        p_global_values['yref_e'] = np.zeros((ny_e, ))
+
+        ocp.p_global_values = p_global_values.cat.full().flatten()
+    else:
+        raise Exception('Unknown cost_version.')
 
     # set constraints
-    ocp.constraints.lbu = np.array([-FMAX])
-    ocp.constraints.ubu = np.array([+FMAX])
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
-    ocp.constraints.idxbu = np.array([0])
+    if constraint_version == "bu":
+        ocp.constraints.lbu = np.array([-FMAX])
+        ocp.constraints.ubu = np.array([+FMAX])
+        ocp.constraints.idxbu = np.array([0])
+    elif constraint_version == "h":
+        ocp.constraints.lh = np.array([-FMAX])
+        ocp.constraints.uh = np.array([+FMAX])
+        ocp.model.con_h_expr = ocp.model.u[0]  # h = u[0]
+        ocp.constraints.lh_0 = np.array([-FMAX])
+        ocp.constraints.uh_0 = np.array([+FMAX])
+        ocp.model.con_h_expr_0 = ocp.model.u[0]  # h = u[0]
 
     return ocp
 
@@ -247,10 +298,17 @@ def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', refor
 
     if reformulate_to_external:
         ocp.solver_options.fixed_hess = 0
-        ocp.translate_cost_to_external_cost(parametric_yref=True)
+        if cost_version in ['LS', 'NLS', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z']:
+            p = ca.SX.sym('yref', ocp.cost.yref.shape[0])
+            p_values = ocp.cost.yref
+            yref = p
+            yref_e = p[:ocp.cost.yref_e.shape[0]]
+        else:
+            p = p_values = yref= yref_e = None
+        ocp.translate_cost_to_external_cost(p=p, p_values=p_values, yref=yref, yref_e=yref_e)
 
     # create solver
-    ocp_solver = AcadosOcpSolver(ocp)
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
     # NOTE: hessian is wrt [u,x]
     if ext_cost_use_num_hess and cost_version in  ['EXTERNAL', 'EXTERNAL_Z']:
@@ -288,6 +346,29 @@ def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', refor
     if rel_diff_cost > 1e-6:
         raise Exception(f"Cost value is not correct: rel_diff_cost = {rel_diff_cost:.2e} > {1e-6}.")
 
+    # test getter
+    if formulation_type == 'mocp':
+        cost = ocp.cost[0]
+        cost_e = ocp.cost[-1]
+    else:
+        cost = cost_e = ocp.cost
+
+    if cost.cost_type in ['LINEAR_LS', 'NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']:
+        yref_ = ocp_solver.cost_get(1, 'yref')
+        assert np.allclose(yref_, cost.yref)
+
+    if cost.cost_type in ['LINEAR_LS', 'NONLINEAR_LS']:
+        W_ = ocp_solver.cost_get(1, 'W')
+        assert np.allclose(W_, cost.W)
+
+    if cost_e.cost_type_e in ['LINEAR_LS', 'NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']:
+        yref_e_ = ocp_solver.cost_get(ocp.solver_options.N_horizon, 'yref')
+        assert np.allclose(yref_e_, cost_e.yref_e)
+
+    if cost.cost_type in ['LINEAR_LS', 'NONLINEAR_LS']:
+        W_e_ = ocp_solver.cost_get(ocp.solver_options.N_horizon, 'W')
+        assert np.allclose(W_e_, cost_e.W_e)
+
     # plot results
     if plot:
         plot_pendulum(np.linspace(0, T_HORIZON, N+1), FMAX, simU, simX, latexify=False)
@@ -302,6 +383,7 @@ if __name__ == "__main__":
             print(f"cost version: {cost_version}, formulation type: {formulation_type}")
             main(cost_version=cost_version, formulation_type=formulation_type, plot=False)
 
+    for cost_version in ["NLS_TO_EXTERNAL_P_GLOBAL"]:
         print(f"cost version: {cost_version} reformulated as EXTERNAL cost")
         main(cost_version=cost_version, formulation_type='ocp', plot=False, reformulate_to_external=True)
 

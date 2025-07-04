@@ -257,12 +257,12 @@ static int casadi_is_dense(const int *sparsity)
                 if (idxcol[jj + 1] - idxcol[jj] != nrow)
                 {
                     // printf("casadi_is_dense: REAL sparse!\n");
-                    // printf("idxco[jj+1] = %d idxcol[jj] %d nrow %d\n", idxcol[jj + 1], idxcol[jj], nrow);
+                    // printf("idxcol[jj+1] = %d idxcol[jj] %d nrow %d\n", idxcol[jj + 1], idxcol[jj], nrow);
                     return 0;
                 }
                 for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
                 {
-                    if (row[idx]+jj*ncol != idx)
+                    if (row[idx]+jj*nrow != idx)
                     {
                         // printf("casadi_is_dense: REAL sparse!\n");
                         // printf("row[idx] %d != idx = %d, nrow %d ncol %d, jj %d\n", row[idx], idx, nrow, ncol, jj);
@@ -430,12 +430,15 @@ static void d_cvt_dmat_to_casadi(struct blasfeo_dmat *in, double *out, int *spar
 
 
 
-// column vector: assume sparsity_in[1] = 1 !!! or empty vector;
 static void d_cvt_casadi_to_dvec(double *in, int *sparsity_in, struct blasfeo_dvec *out, int is_dense)
 {
     int idx;
 
-    assert((sparsity_in[1] == 1) | (sparsity_in[0] == 0) | (sparsity_in[1] == 0));
+    if (!((sparsity_in[1] == 1) | (sparsity_in[0] == 0) | (sparsity_in[1] == 0)))
+    {
+        printf("\nd_cvt_casadi_to_dvec: expected column vector or empty vector. Exiting.\n\n");
+        exit(1);
+    }
 
     int n = sparsity_in[0];
 
@@ -466,13 +469,15 @@ static void d_cvt_casadi_to_dvec(double *in, int *sparsity_in, struct blasfeo_dv
 
 
 
-// column vector: assume sparsity_in[1] = 1 !!! or empty vector;
 static void d_cvt_dvec_to_casadi(struct blasfeo_dvec *in, double *out, int *sparsity_out, int is_dense)
 {
     int idx;
 
-    assert((sparsity_out[1] == 1) | (sparsity_out[0] == 0) | (sparsity_out[1] == 0));
-
+    if (!((sparsity_out[1] == 1) | (sparsity_out[0] == 0) | (sparsity_out[1] == 0)))
+    {
+        printf("\nd_cvt_dvec_to_casadi: expected column vector or empty vector. Exiting.\n\n");
+        exit(1);
+    }
     int n = sparsity_out[0];
 
     if (n<=0)
@@ -661,12 +666,15 @@ static void d_cvt_dmat_args_to_casadi(struct blasfeo_dmat_args *in, double *out,
 
 
 
-// column vector: assume sparsity_in[1] = 1 !!! or empty vector;
 static void d_cvt_casadi_to_dvec_args(double *in, int *sparsity_in, struct blasfeo_dvec_args *out, int is_dense)
 {
     int idx;
 
-    assert((sparsity_in[1] == 1) | (sparsity_in[0] == 0) | (sparsity_in[1] == 0));
+    if (!((sparsity_in[1] == 1) | (sparsity_in[0] == 0) | (sparsity_in[1] == 0)))
+    {
+        printf("\nd_cvt_casadi_to_dvec_args: expected column vector or empty vector. Exiting.\n\n");
+        exit(1);
+    }
 
     int n = sparsity_in[0];
 
@@ -700,13 +708,15 @@ static void d_cvt_casadi_to_dvec_args(double *in, int *sparsity_in, struct blasf
 
 
 
-// column vector: assume sparsity_in[1] = 1 !!! or empty vector;
 static void d_cvt_dvec_args_to_casadi(struct blasfeo_dvec_args *in, double *out, int *sparsity_out, int is_dense)
 {
     int idx;
 
-    assert((sparsity_out[1] == 1) | (sparsity_out[0] == 0) | (sparsity_out[1] == 0));
-
+    if (!((sparsity_out[1] == 1) | (sparsity_out[0] == 0) | (sparsity_out[1] == 0)))
+    {
+        printf("\nd_cvt_dvec_args_to_casadi: expected column vector or empty vector. Exiting.\n\n");
+        exit(1);
+    }
     int n = sparsity_out[0];
 
     if (n<=0)
@@ -965,7 +975,7 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
                                     (int *) fun->casadi_sparsity_in(ii), fun->args_dense[ii]);
         if (status)
         {
-            printf("\nexternal_function_casadi_wrapper: Unknown external function argument type %d for input %d\n\n", type_out[ii], ii);
+            printf("\nexternal_function_casadi_wrapper: Unknown external function argument type %d for input %d\n\n", type_in[ii], ii);
             exit(1);
         }
     }
@@ -1205,7 +1215,7 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
         }
         if (status)
         {
-            printf("\nexternal_function_param_casadi_wrapper: Unknown external function argument type %d for input %d\n\n", type_out[ii], ii);
+            printf("\nexternal_function_param_casadi_wrapper: Unknown external function argument type %d for input %d\n\n", type_in[ii], ii);
             exit(1);
         }
     }
@@ -1323,9 +1333,9 @@ void external_function_external_param_generic_assign(external_function_external_
     fun->ptr_ext_mem = raw_memory;
 
     // char pointer for byte advances
-    char *c_ptr = raw_memory;
+    // char *c_ptr = raw_memory;
 
-    assert((char *) raw_memory + external_function_external_param_generic_calculate_size(fun, &fun->opts) >= c_ptr);
+    assert((char *) raw_memory + external_function_external_param_generic_calculate_size(fun, &fun->opts) >= (char *) raw_memory);
 
     return;
 }
@@ -1388,6 +1398,7 @@ static void external_function_external_param_casadi_set_global_data_pointer(void
 
     if (!fun->args_dense[fun->idx_in_global_data])
     {
+        // NOTE: sparsity is removed in MATLAB/Python interface
         printf("\nexternal_function_external_param_casadi_set_global_data_pointer: sparse global_data not supported!\n");
         exit(1);
     }
@@ -1595,7 +1606,7 @@ void external_function_external_param_casadi_wrapper(void *self, ext_fun_arg_t *
                                     (int *) fun->casadi_sparsity_in(ii), fun->args_dense[ii]);
         if (status)
         {
-            printf("\nexternal_function_external_param_casadi_wrapper: Unknown external function argument type %d for input %d\n\n", type_out[ii], ii);
+            printf("\nexternal_function_external_param_casadi_wrapper: Unknown external function argument type %d for input %d\n\n", type_in[ii], ii);
             exit(1);
         }
     }

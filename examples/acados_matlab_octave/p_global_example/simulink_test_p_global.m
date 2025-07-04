@@ -67,7 +67,7 @@ ocp.simulink_opts = simulink_opts;
 % OCP solver
 ocp_solver = AcadosOcpSolver(ocp);
 
-%% Matlab test solve
+%% MATLAB test solve
 % test with ones such that update is necessary
 p_global_values_test = ones(size(p_global_values));
 if use_p_global
@@ -99,11 +99,10 @@ xtraj_val = xtraj_signal.Values.Data(1, :);
 utraj_signal = out_sim.logsout.getElement('utraj');
 utraj_val = utraj_signal.Values.Data(1, :);
 if norm(xtraj_val - xtraj) > 1e-8
-    disp('error: xtraj values in SIMULINK and MATLAB should match.')
-    quit(1);
+    error('xtraj values in SIMULINK and MATLAB should match.')
 end
 if norm(utraj_val - utraj) > 1e-8
-    disp('error: utraj values in SIMULINK and MATLAB should match.')
-    quit(1);
+    error('utraj values in SIMULINK and MATLAB should match.')
 end
-disp('Simulink p_global test: got matching trajectories in Matlab and Simulink!')
+
+disp('Simulink p_global test: got matching trajectories in MATLAB and Simulink!')

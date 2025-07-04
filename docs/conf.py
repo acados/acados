@@ -45,6 +45,24 @@ import datetime
 
 from recommonmark.transform import AutoStructify
 
+import sphinx.ext.autodoc as autodoc
+
+_original_get_doc = autodoc.Documenter.get_doc
+
+def patched_get_doc(self, *args, **kwargs):
+    try:
+        if self.directive and hasattr(self.directive, "state"):
+            doc = getattr(self.directive.state, "document", None)
+            if doc and hasattr(doc, "settings") and not hasattr(doc.settings, "tab_width"):
+                doc.settings.tab_width = 4
+    except Exception:
+        pass  # Silent fail-safe
+
+    return _original_get_doc(self, *args, **kwargs)
+
+autodoc.Documenter.get_doc = patched_get_doc
+
+
 source_suffix = {
     '.rst': 'restructuredtext',
     '.txt': 'markdown',
@@ -72,7 +90,7 @@ html_context = {
   'display_github': True,
   'github_user': 'acados',
   'github_repo': 'acados',
-  'github_version': 'master/docs/',
+  'github_version': 'main/docs/',
 }
 
 
@@ -81,7 +99,17 @@ html_context = {
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.mathjax', 'breathe', 'recommonmark', 'sphinx.ext.autodoc', 'sphinx.ext.graphviz', 'sphinx_markdown_tables']
+extensions = [
+    'sphinx.ext.mathjax',
+    'breathe',
+    'recommonmark',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.graphviz',
+    'sphinx_markdown_tables',
+    'sphinx.ext.intersphinx',
+    'sphinxcontrib.youtube',
+    'sphinxemoji.sphinxemoji',
+]
 
 
 # Add any paths that contain templates here, relative to this directory.

@@ -121,7 +121,7 @@ def reformulate_with_invertible_E_mat(gnsf, model, print_info):
                         else:
                             ind_f = np.nonzero(gnsf["C"][sub_max, :])[0]
                             if len(ind_f) != 1:
-                                raise Exception("C is assumed to be a selection matrix")
+                                raise ValueError("C is assumed to be a selection matrix")
                             else:
                                 ind_f = ind_f[0]
                             # add term to corresponding nonlinearity entry

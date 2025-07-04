@@ -46,7 +46,6 @@ acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
 
 
 mex_names = { ...
-    'ocp_get_cost', ...
     'ocp_get' ...
     'ocp_eval_param_sens', ...
 };
@@ -131,7 +130,7 @@ for ii=1:length(mex_files)
     disp(['compiling ', mex_files{ii}])
     if is_octave()
         linker_flags = ['-lacados', '-lhpipm', '-lblasfeo', acados_lib_extra];
-        % NOTE: multiple linker flags in 1 argument do not work in Matlab
+        % NOTE: multiple linker flags in 1 argument do not work in MATLAB
         mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
             acados_lib_path, linker_flags{:}, mex_files{ii})
     else

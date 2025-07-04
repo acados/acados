@@ -131,46 +131,39 @@ for itest = [1, 2, 3, 4]
     disp('checking KKT residual, should be zero just because not evaluated')
     kkt_signal = out_sim.logsout.getElement('KKT_residual');
     if any(kkt_signal.Values.data > 1e-6)
-        disp('failed');
-        quit(1);
+        error('failed');
     end
 
     sqp_iter_signal = out_sim.logsout.getElement('sqp_iter');
     disp('checking SQP iter, we set max iter to 0, so expect 0.')
     if any(sqp_iter_signal.Values.Data ~= 0)
-        disp('failed');
-        quit(1);
+        error('failed');
     end
 
     status_signal = out_sim.logsout.getElement('status');
     disp('checking status, should be 2 (max iter).')
     if any(status_signal.Values.Data ~= 2)
-        disp('failed. got status values:');
-        disp(status_signal.Values.Data);
-        quit(1);
+        error(['failed. got status values:' mat2str(status_signal.Values.Data)]);
     end
 
     utraj_signal = out_sim.logsout.getElement('utraj');
     u_simulink = utraj_signal.Values.Data(1, :);
     disp('checking u values.')
     if any(abs(u_simulink(:) - u_expected(:)) > 1e-8)
-        disp('failed');
-        quit(1);
+        error('failed');
     end
 
     xtraj_signal = out_sim.logsout.getElement('xtraj');
     x_simulink = xtraj_signal.Values.Data(1, :);
     disp('checking x values, should match initialization.')
     if any(abs(x_simulink(:) - x_expected(:)) > 1e-8)
-        disp('failed');
-        quit(1);
+        error('failed');
     end
 
     pi_signal = out_sim.logsout.getElement('pi_all');
     pi_simulink = pi_signal.Values.Data(1, :);
     disp('checking pi values, should match initialization.')
     if any(abs(pi_simulink(:) - pi_expected(:)) > 1e-8)
-        disp('failed');
-        quit(1);
+        error('failed');
     end
 end

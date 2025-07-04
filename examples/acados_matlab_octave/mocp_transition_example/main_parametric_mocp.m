@@ -84,6 +84,8 @@ ocp.solver_options.time_steps = [T_HORIZON_1 / N_list(1) * ones(1, N_list(1)), .
 ocp.solver_options.store_iterates = true;
 
 ocp_solver = AcadosOcpSolver(ocp);
+
+% set stagewise
 for i = 0:N_list(1)-1
     ocp_solver.set('p', ones(np_phase_1, 1), i);
 end
@@ -93,6 +95,10 @@ end
 for i = N_list(1)+N_list(2):N_horizon
     ocp_solver.set('p', ones(np_phase_3, 1), i);
 end
+
+% flat format setter
+p_flat = ones(np_phase_1*N_list(1) + np_phase_2*N_list(2) + np_phase_3*(N_list(3) + 1), 1);
+ocp_solver.set('p', p_flat)
 
 ocp_solver.solve();
 ocp_solver.print()

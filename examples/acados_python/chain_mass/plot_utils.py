@@ -36,28 +36,56 @@ from acados_template import latexify_plot
 latexify_plot()
 
 
-def plot_timings(results_list, keys, labels, figure_filename=None):
+def plot_timings(results_list, labels, figure_filename=None, t_max=None, horizontal=False, figsize=None, with_patterns=False):
     num_entries = len(labels)
     if num_entries != len(results_list):
         raise ValueError("Number of labels and result files do not match")
 
-    width = 0.8
-    fig, ax = plt.subplots(figsize=(7.5, 6))
+    if figsize is None:
+        figsize = (7.5, 6)
+
     bottom = np.zeros(num_entries)
+    colors = ["C0", "C1", "C4", "C3", "C6", "C5", "C2", "C7"]
+    patterns = [ "/" , "\\" , "o" , "|" , "-" , "x", None, "o", "O", ".", "*" ]
+    fig, ax = plt.subplots(figsize=figsize)
+    if not horizontal:
+        width = 0.8
 
-    for i, k in enumerate(keys):
-        vals = [np.mean(res_dict[k]) for res_dict in results_list]
-        plt.bar(labels, vals, width, label=k, bottom=bottom)
-        bottom += vals
+        for i, k in enumerate(results_list[0].keys()):
+            vals = [np.mean(res_dict[k]) for res_dict in results_list]
+            plt.bar(labels, vals, width, label=k, bottom=bottom, color=colors[i], hatch=patterns[i] if with_patterns else None)
+            bottom += vals
+        if t_max is not None:
+            plt.ylim(0, t_max)
+            for i in range(bottom.size):
+                if bottom[i] > t_max:
+                    plt.text(i, 0.95 * t_max, f"{bottom[i]:.1f}", ha="center", va="bottom")
 
-    plt.xticks(rotation=10)
-    plt.grid(axis="y")
-    plt.ylabel("Time [s]")
+        plt.xticks(rotation=10)
+        plt.grid(axis="y")
+        plt.ylabel("mean computation time [ms]")
+        ax.legend()
+    else:
+        width = 0.8
+        for i, k in enumerate(results_list[0].keys()):
+            vals = [np.mean(res_dict[k]) for res_dict in results_list]
+            plt.barh(labels, vals, width, label=k, left=bottom, color=colors[i], hatch=patterns[i] if with_patterns else None)
+            bottom += vals
+        if t_max is not None:
+            plt.xlim(0, t_max)
+            for i in range(bottom.size):
+                if bottom[i] > t_max:
+                    plt.text(0.95 * t_max, i, f"{bottom[i]:.1f}", ha="right", va="center")
+
+        plt.grid(axis="x")
+        plt.xlabel("mean computation time [ms]")
+        ax.legend(ncol=2)
+
+
     # tight layout
     plt.tight_layout()
-    ax.legend()
     if figure_filename is not None:
-        plt.savefig(figure_filename)
+        plt.savefig(figure_filename, dpi=600)
         print(f"Saved figure to {figure_filename}")
     plt.show()
 

@@ -39,8 +39,8 @@
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados/utils/mem.h"
 
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_d_blasfeo_api.h"
+#include "blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_blasfeo_api.h"
 
 
 typedef struct custom_memory
@@ -670,7 +670,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
             + backoff_scaling_gamma * sqrt(blasfeo_dgeex1(&custom_mem->temp_KPK_mat,
                 custom_mem->idxbu[{{it}}],custom_mem->idxbu[{{it}}]));
     {%- endfor %}
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbu", custom_mem->d_lbu_tightened);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "lbu", custom_mem->d_lbu_tightened);
 {%- endif %}
 {%- if zoro_description.nubu_t > 0 %}
     // backoff ubu
@@ -680,7 +680,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
             - backoff_scaling_gamma * sqrt(blasfeo_dgeex1(&custom_mem->temp_KPK_mat,
                 custom_mem->idxbu[{{it}}],custom_mem->idxbu[{{it}}]));
     {%- endfor %}
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubu", custom_mem->d_ubu_tightened);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "ubu", custom_mem->d_ubu_tightened);
 {%- endif %}
 {%- endif %}
     // Middle Stages
@@ -714,7 +714,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                 + backoff_scaling_gamma * sqrt(blasfeo_dgeex1(&custom_mem->uncertainty_matrix_buffer[ii+1],
                     custom_mem->idxbx[{{it}}],custom_mem->idxbx[{{it}}]));
         {%- endfor %}
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii+1, "lbx", custom_mem->d_lbx_tightened);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, ii+1, "lbx", custom_mem->d_lbx_tightened);
     {%- endif %}
     {% if zoro_description.nubx_t > 0 %}
         // ubx
@@ -723,7 +723,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                 - backoff_scaling_gamma * sqrt(blasfeo_dgeex1(&custom_mem->uncertainty_matrix_buffer[ii+1],
                     custom_mem->idxbx[{{it}}],custom_mem->idxbx[{{it}}]));
         {%- endfor %}
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii+1, "ubx", custom_mem->d_ubx_tightened);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, ii+1, "ubx", custom_mem->d_ubx_tightened);
     {%- endif %}
 {%- endif %}
 
@@ -739,7 +739,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                     custom_mem->idxbu[{{it}}], custom_mem->idxbu[{{it}}]));
         {%- endfor %}
 
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii+1, "lbu", custom_mem->d_lbu_tightened);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, ii+1, "lbu", custom_mem->d_lbu_tightened);
     {%- endif %}
     {%- if zoro_description.nubu_t > 0 %}
         {%- for it in zoro_description.idx_ubu_t %}
@@ -747,7 +747,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                 - backoff_scaling_gamma * sqrt(blasfeo_dgeex1(&custom_mem->temp_KPK_mat,
                     custom_mem->idxbu[{{it}}], custom_mem->idxbu[{{it}}]));
         {%- endfor %}
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii+1, "ubu", custom_mem->d_ubu_tightened);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, ii+1, "ubu", custom_mem->d_ubu_tightened);
     {%- endif %}
 {%- endif %}
 
@@ -764,7 +764,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
             = custom_mem->d_lg[{{it}}]
                 + backoff_scaling_gamma * sqrt(blasfeo_dgeex1(&custom_mem->temp_beta_mat, {{it}}, {{it}}));
         {%- endfor %}
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii+1, "lg", custom_mem->d_lg_tightened);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, ii+1, "lg", custom_mem->d_lg_tightened);
     {%- endif %}
     {%- if zoro_description.nug_t > 0 %}
         {%- for it in zoro_description.idx_ug_t %}
@@ -772,7 +772,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
             = custom_mem->d_ug[{{it}}]
                 - backoff_scaling_gamma * sqrt(blasfeo_dgeex1(&custom_mem->temp_beta_mat, {{it}}, {{it}}));
         {%- endfor %}
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii+1, "ug", custom_mem->d_ug_tightened);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, ii+1, "ug", custom_mem->d_ug_tightened);
     {%- endif %}
 {%- endif %}
 
@@ -808,14 +808,14 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
             = custom_mem->d_lh[{{it}}]
                 + backoff_scaling_gamma * sqrt(blasfeo_dgeex1(&custom_mem->temp_beta_mat, {{it}}, {{it}}));
         {%- endfor %}
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii+1, "lh", custom_mem->d_lh_tightened);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, ii+1, "lh", custom_mem->d_lh_tightened);
     {%- endif %}
     {%- if zoro_description.nuh_t > 0 %}
         {%- for it in zoro_description.idx_uh_t %}
         custom_mem->d_uh_tightened[{{it}}] = custom_mem->d_uh[{{it}}]
                         - backoff_scaling_gamma * sqrt(blasfeo_dgeex1(&custom_mem->temp_beta_mat, {{it}}, {{it}}));
         {%- endfor %}
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii+1, "uh", custom_mem->d_uh_tightened);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, ii+1, "uh", custom_mem->d_uh_tightened);
     {%- endif %}
 {%- endif %}
     }
@@ -848,7 +848,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
             + backoff_scaling_gamma * sqrt(blasfeo_dgeex1(&custom_mem->uncertainty_matrix_buffer[N],
                 custom_mem->idxbx_e[{{it}}],custom_mem->idxbx_e[{{it}}]));
     {%- endfor %}
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lbx", custom_mem->d_lbx_e_tightened);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "lbx", custom_mem->d_lbx_e_tightened);
 {%- endif %}
 {% if zoro_description.nubx_e_t > 0 %}
     // ubx_e
@@ -857,7 +857,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
             - backoff_scaling_gamma * sqrt(blasfeo_dgeex1(&custom_mem->uncertainty_matrix_buffer[N],
                 custom_mem->idxbx_e[{{it}}],custom_mem->idxbx_e[{{it}}]));
     {%- endfor %}
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ubx", custom_mem->d_ubx_e_tightened);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "ubx", custom_mem->d_ubx_e_tightened);
 {%- endif %}
 {%- endif %}
 
@@ -874,7 +874,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
         = custom_mem->d_lg_e[{{it}}]
             + backoff_scaling_gamma * sqrt(blasfeo_dgeex1(&custom_mem->temp_beta_mat, {{it}}, {{it}}));
     {%- endfor %}
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lg", custom_mem->d_lg_e_tightened);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "lg", custom_mem->d_lg_e_tightened);
 {%- endif %}
 {%- if zoro_description.nug_e_t > 0 %}
     {%- for it in zoro_description.idx_ug_e_t %}
@@ -882,7 +882,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
         = custom_mem->d_ug_e[{{it}}]
             - backoff_scaling_gamma * sqrt(blasfeo_dgeex1(&custom_mem->temp_beta_mat, {{it}}, {{it}}));
     {%- endfor %}
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ug", custom_mem->d_ug_e_tightened);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "ug", custom_mem->d_ug_e_tightened);
 {%- endif %}
 {%- endif %}
 
@@ -905,14 +905,14 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
             = custom_mem->d_lh_e[{{it}}]
                 + backoff_scaling_gamma * sqrt(blasfeo_dgeex1(&custom_mem->temp_beta_mat, {{it}}, {{it}}));
         {%- endfor %}
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", custom_mem->d_lh_e_tightened);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "lh", custom_mem->d_lh_e_tightened);
     {%- endif %}
     {%- if zoro_description.nuh_e_t > 0 %}
         {%- for it in zoro_description.idx_uh_e_t %}
         custom_mem->d_uh_e_tightened[{{it}}] = custom_mem->d_uh_e[{{it}}]
                         - backoff_scaling_gamma * sqrt(blasfeo_dgeex1(&custom_mem->temp_beta_mat, {{it}}, {{it}}));
         {%- endfor %}
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", custom_mem->d_uh_e_tightened);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "uh", custom_mem->d_uh_e_tightened);
     {%- endif %}
 {%- endif %}
 

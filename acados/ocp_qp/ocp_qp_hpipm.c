@@ -171,6 +171,16 @@ void ocp_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void *
 }
 
 
+void ocp_qp_hpipm_opts_get(void *config_, void *opts_, const char *field, void *value)
+{
+    ocp_qp_hpipm_opts *opts = opts_;
+
+    d_ocp_qp_ipm_arg_get((char *) field, opts->hpipm_opts, value);
+
+    return;
+}
+
+
 
 /************************************************
  * memory
@@ -246,6 +256,11 @@ void ocp_qp_hpipm_memory_get(void *config_, void *mem_, const char *field, void*
     {
         int *tmp_ptr = value;
         *tmp_ptr = mem->status;
+    }
+    else if (!strcmp(field, "tau_iter"))
+    {
+        double *tmp_ptr = value;
+        d_ocp_qp_ipm_get_tau_iter(mem->hpipm_workspace, tmp_ptr);
     }
     else
     {
@@ -331,6 +346,27 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
     }
 #endif
 
+    /* print HPIPM stats */
+    // int iter; d_ocp_qp_ipm_get_iter(mem->hpipm_workspace, &iter);
+    // double res_stat; d_ocp_qp_ipm_get_max_res_stat(mem->hpipm_workspace, &res_stat);
+    // double res_eq; d_ocp_qp_ipm_get_max_res_eq(mem->hpipm_workspace, &res_eq);
+    // double res_ineq; d_ocp_qp_ipm_get_max_res_ineq(mem->hpipm_workspace, &res_ineq);
+    // double res_comp; d_ocp_qp_ipm_get_max_res_comp(mem->hpipm_workspace, &res_comp);
+    // double *stat; d_ocp_qp_ipm_get_stat(mem->hpipm_workspace, &stat);
+    // int stat_m; d_ocp_qp_ipm_get_stat_m(mem->hpipm_workspace, &stat_m);
+
+    // if (mem->status != 0 && mem->status != 1)
+    // {
+    //     printf("\nipm residuals max: res_g = %e, res_b = %e, res_d = %e, res_m = %e\n", res_stat, res_eq, res_ineq, res_comp);
+
+    //     printf("\nipm iter = %d, status = %d\n", iter, mem->status);
+    //     printf("\nalpha_aff\tmu_aff\t\tsigma\t\talpha_prim\talpha_dual\tmu\t\tres_stat\tres_eq\t\tres_ineq\tres_comp\tdual_gap\tobj\t\tlq fact\t\titref pred\titref corr\tlin res stat\tlin res eq\tlin res ineq\tlin res comp\n");
+    //     d_print_exp_tran_mat(stat_m, iter+1, stat, stat_m);
+    // }
+
+    /* print HPIPM opts */
+    // d_ocp_qp_ipm_arg_print(qp_in->dim, opts->hpipm_opts);
+
     // check exit conditions
     int acados_status = mem->status;
     if (mem->status == 0) acados_status = ACADOS_SUCCESS;
@@ -414,32 +450,33 @@ void ocp_qp_hpipm_solver_get(void *config_, void *qp_in_, void *qp_out_, void *o
 }
 
 
-void ocp_qp_hpipm_eval_sens(void *config_, void *param_qp_in_, void *sens_qp_out_, void *opts_, void *mem_, void *work_)
+void ocp_qp_hpipm_eval_forw_sens(void *config_, void *param_qp_in_, void *seed, void *sens_qp_out_, void *opts_, void *mem_, void *work_)
 {
     ocp_qp_in *param_qp_in = param_qp_in_;
     ocp_qp_out *sens_qp_out = sens_qp_out_;
 
-//    qp_info *info = sens_qp_out->misc;
-//    acados_timer tot_timer, qp_timer;
-
-//    acados_tic(&tot_timer);
-    // cast data structures
     ocp_qp_hpipm_opts *opts = opts_;
     ocp_qp_hpipm_memory *mem = mem_;
 
-    // solve ipm
-//    acados_tic(&qp_timer);
-    // print_ocp_qp_in(param_qp_in);
-    d_ocp_qp_ipm_sens(param_qp_in, sens_qp_out, opts->hpipm_opts, mem->hpipm_workspace);
-
-//    info->solve_QP_time = acados_toc(&qp_timer);
-//    info->interface_time = 0;  // there are no conversions for hpipm
-//    info->total_time = acados_toc(&tot_timer);
-//    info->num_iter = mem->hpipm_workspace->iter;
-//    info->t_computed = 1;
+    d_ocp_qp_ipm_sens_frw(param_qp_in, seed, sens_qp_out, opts->hpipm_opts, mem->hpipm_workspace);
 
     return;
 }
+
+
+void ocp_qp_hpipm_eval_adj_sens(void *config_, void *param_qp_in_, void *seed, void *sens_qp_out_, void *opts_, void *mem_, void *work_)
+{
+    ocp_qp_in *param_qp_in = param_qp_in_;
+    ocp_qp_out *sens_qp_out = sens_qp_out_;
+
+    ocp_qp_hpipm_opts *opts = opts_;
+    ocp_qp_hpipm_memory *mem = mem_;
+
+    d_ocp_qp_ipm_sens_adj(param_qp_in, seed, sens_qp_out, opts->hpipm_opts, mem->hpipm_workspace);
+
+    return;
+}
+
 
 
 void ocp_qp_hpipm_terminate(void *config_, void *mem_, void *work_)
@@ -459,6 +496,7 @@ void ocp_qp_hpipm_config_initialize_default(void *config_)
     config->opts_initialize_default = &ocp_qp_hpipm_opts_initialize_default;
     config->opts_update = &ocp_qp_hpipm_opts_update;
     config->opts_set = &ocp_qp_hpipm_opts_set;
+    config->opts_get = &ocp_qp_hpipm_opts_get;
     config->memory_calculate_size = &ocp_qp_hpipm_memory_calculate_size;
     config->memory_assign = &ocp_qp_hpipm_memory_assign;
     config->memory_get = &ocp_qp_hpipm_memory_get;
@@ -466,7 +504,8 @@ void ocp_qp_hpipm_config_initialize_default(void *config_)
     config->evaluate = &ocp_qp_hpipm;
     config->solver_get = &ocp_qp_hpipm_solver_get;
     config->memory_reset = &ocp_qp_hpipm_memory_reset;
-    config->eval_sens = &ocp_qp_hpipm_eval_sens;
+    config->eval_forw_sens = &ocp_qp_hpipm_eval_forw_sens;
+    config->eval_adj_sens = &ocp_qp_hpipm_eval_adj_sens;
     config->terminate = &ocp_qp_hpipm_terminate;
 
     return;

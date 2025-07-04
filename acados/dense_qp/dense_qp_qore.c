@@ -34,8 +34,9 @@
 #include <math.h>
 #include <string.h>
 // blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_d_blas.h"
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/dense_qp/dense_qp_qore.h"
@@ -132,6 +133,15 @@ void dense_qp_qore_opts_set(void *config_, void *opts_, const char *field, void 
 
     return;
 }
+
+
+void dense_qp_qore_opts_get(void *config_, void *opts_, const char *field, void *value)
+{
+    // dense_qp_qore_opts *opts = opts_;
+    printf("\nerror: dense_qp_qore_opts_get: not implemented for field: %s\n", field);
+    exit(1);
+}
+
 
 
 
@@ -528,12 +538,8 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
             qp_out->lam->pa[2*nb + 2*ng + ns + ii] = dual_sol[nv + ns + ii] - offset_l;
     }
 
-    info->interface_time += acados_toc(&interface_timer);
-    info->total_time = acados_toc(&tot_timer);
-    info->num_iter = num_iter;
-
-    mem->time_qp_solver_call = info->solve_QP_time;
-    mem->iter = num_iter;
+    // multiply with mask to ensure that multipliers associated with masked constraints are zero
+    blasfeo_dvecmul(2*(qp_in->dim->nb + qp_in->dim->ng + qp_in->dim->ns), qp_in->d_mask, 0, qp_out->lam, 0, qp_out->lam, 0);
 
     // compute slacks
     if (opts->compute_t)
@@ -541,6 +547,13 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
         dense_qp_compute_t(qp_in, qp_out);
         info->t_computed = 1;
     }
+
+    info->interface_time += acados_toc(&interface_timer);
+    info->total_time = acados_toc(&tot_timer);
+    info->num_iter = num_iter;
+
+    mem->time_qp_solver_call = info->solve_QP_time;
+    mem->iter = num_iter;
 
     int acados_status = qore_status;
     if (qore_status == QPSOLVER_DENSE_OPTIMAL) acados_status = ACADOS_SUCCESS;
@@ -550,11 +563,18 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
 
 
 
-void dense_qp_qore_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+void dense_qp_qore_eval_forw_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
 {
-    printf("\nerror: dense_qp_qore_eval_sens: not implemented yet\n");
+    printf("\nerror: dense_qp_qore_eval_forw_sens: not implemented yet\n");
     exit(1);
 }
+
+void dense_qp_qore_eval_adj_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+{
+    printf("\nerror: dense_qp_qore_eval_adj_sens: not implemented yet\n");
+    exit(1);
+}
+
 
 void dense_qp_qore_memory_reset(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work)
 {
@@ -583,6 +603,7 @@ void dense_qp_qore_config_initialize_default(void *config_)
         (void (*)(void *, void *, void *)) & dense_qp_qore_opts_initialize_default;
     config->opts_update = (void (*)(void *, void *, void *)) & dense_qp_qore_opts_update;
     config->opts_set = &dense_qp_qore_opts_set;
+    config->opts_get = &dense_qp_qore_opts_get;
     config->memory_calculate_size =
         (acados_size_t (*)(void *, void *, void *)) & dense_qp_qore_memory_calculate_size;
     config->memory_assign =
@@ -591,7 +612,8 @@ void dense_qp_qore_config_initialize_default(void *config_)
     config->workspace_calculate_size =
         (acados_size_t (*)(void *, void *, void *)) & dense_qp_qore_workspace_calculate_size;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & dense_qp_qore;
-    config->eval_sens = &dense_qp_qore_eval_sens;
+    config->eval_forw_sens = &dense_qp_qore_eval_forw_sens;
+    config->eval_adj_sens = &dense_qp_qore_eval_adj_sens;
     config->memory_reset = &dense_qp_qore_memory_reset;
     config->solver_get = &dense_qp_qore_solver_get;
     config->terminate = &dense_qp_qore_terminate;

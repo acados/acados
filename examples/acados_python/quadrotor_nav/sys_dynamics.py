@@ -36,7 +36,7 @@ from common import *
 '''Global Symbolic variables'''
 # State variables
 
-# # Quarternion heading (body frame )
+# # Quarternion heading (body frame)
 q1 = ca.MX.sym('q1')
 q2 = ca.MX.sym('q2')
 q3 = ca.MX.sym('q3')

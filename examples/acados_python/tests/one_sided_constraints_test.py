@@ -144,10 +144,29 @@ def main(constraint_variant='one_sided',
     # if unbounded constraint is defined properly, lambda should be zero
     i_infty = 1
     if constraint_variant == 'one_sided':
-        assert lam[i_infty] == 0
+        for lam in lambdas:
+            assert lam[i_infty] == 0
     elif (constraint_variant == 'one_sided_wrong_infty' and
         qp_solver in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM']):
-        assert lam[i_infty] != 0
+        for lam in lambdas:
+            assert lam[i_infty] != 0
+
+    if constraint_variant == 'one_sided':
+        stage = 1
+        # check setting lambdas
+        ocp_solver.set(stage, "lam", np.ones(lambdas[0].shape))
+        lam = ocp_solver.get(stage, "lam")
+        assert lam[i_infty] == 0
+
+        # check updating bound
+        i_infty_new = 2 # lam is ordered as lbu, lbx, ubu, ubx
+        ocp_solver.constraints_set(stage, "lbx", -10.)
+        ocp_solver.set(stage, "lam", np.ones(lambdas[0].shape))
+        ocp_solver.constraints_set(stage, "ubu", ACADOS_INFTY)
+        lam = ocp_solver.get(stage, "lam")
+
+        assert lam[i_infty_new] == 0
+        assert lam[i_infty] == 1.
 
     if PLOT:
         plot_pendulum(np.linspace(0, Tf, N_horizon + 1), Fmax, simU0, simX0, latexify=False, plt_show=True, X_true_label=f'N={N_horizon}, Tf={Tf}')
