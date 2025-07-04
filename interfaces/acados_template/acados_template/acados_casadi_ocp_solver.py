@@ -405,7 +405,7 @@ class AcadosCasadiOcp:
     @property
     def nlp(self):
         """
-        Dict containing all symbolics needed to create a `casadi.nlpsol` solver.
+        Dict containing all symbolics needed to create a `casadi.nlpsol` solver, namely entries 'x', 'p', 'g', 'f'.
         """
         return self.__nlp
 
@@ -422,7 +422,7 @@ class AcadosCasadiOcp:
         Default parameter vector p_nlp in the form of [p_0,..., p_N, p_global] for given NLP.
         """
         return self.__p
-    
+
     @property
     def bounds(self):
         """
@@ -470,6 +470,8 @@ class AcadosCasadiOcpSolver:
 
         # create casadi NLP formulation
         casadi_nlp_obj = AcadosCasadiOcp(ocp, with_hessian=use_acados_hessian)
+
+        self.acados_casadi_ocp = casadi_nlp_obj
 
         self.casadi_nlp = casadi_nlp_obj.nlp
         self.bounds = casadi_nlp_obj.bounds

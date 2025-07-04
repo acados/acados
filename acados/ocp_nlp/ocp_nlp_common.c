@@ -1504,7 +1504,7 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             int* log_dual_step_norm = (int *) value;
             opts->log_dual_step_norm = *log_dual_step_norm;
         }
-        else if (!strcmp(field, "max_iter"))
+        else if (!strcmp(field, "max_iter") || !strcmp(field, "nlp_solver_max_iter"))
         {
             int* max_iter = (int *) value;
 

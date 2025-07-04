@@ -1079,6 +1079,10 @@ classdef AcadosOcp < handle
                 opts.globalization_fixed_step_length = opts.nlp_solver_step_length;
             end
 
+            if opts.globalization_fixed_step_length < 0.0 || opts.globalization_fixed_step_length > 1.0
+                error('globalization_fixed_step_length must be in [0, 1].');
+            end
+
             % Set default parameters for globalization
             if isempty(opts.globalization_alpha_min)
                 % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
