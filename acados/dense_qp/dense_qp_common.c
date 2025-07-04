@@ -381,19 +381,19 @@ void dense_qp_res_compute(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res
     // compute residuals
     d_dense_qp_res_compute(qp_in, qp_out, qp_res, res_ws);
 
-    // mask out disregarded constraints
-    int nb = qp_res->dim->nb;
-    int nv = qp_res->dim->nv;
-    int ng = qp_res->dim->ng;
-    int ns = qp_res->dim->ns;
-    int ni = nb + ng + ns;
+    /* mask out disregarded constraints; NOTE: not needed anymore as done in HPIPM */
+    // int nb = qp_res->dim->nb;
+    // int nv = qp_res->dim->nv;
+    // int ng = qp_res->dim->ng;
+    // int ns = qp_res->dim->ns;
+    // int ni = nb + ng + ns;
 
-    // stationarity wrt slacks
-    blasfeo_dvecmul(2*ns, qp_in->d_mask, 2*nb+2*ng, qp_res->res_g, nv, qp_res->res_g, nv);
-    // ineq
-    blasfeo_dvecmul(2*ni, qp_in->d_mask, 0, qp_res->res_d, 0, qp_res->res_d, 0);
-    // comp
-    blasfeo_dvecmul(2*ni, qp_in->d_mask, 0, qp_res->res_m, 0, qp_res->res_m, 0);
+    // // stationarity wrt slacks
+    // blasfeo_dvecmul(2*ns, qp_in->d_mask, 2*nb+2*ng, qp_res->res_g, nv, qp_res->res_g, nv);
+    // // ineq
+    // blasfeo_dvecmul(2*ni, qp_in->d_mask, 0, qp_res->res_d, 0, qp_res->res_d, 0);
+    // // comp
+    // blasfeo_dvecmul(2*ni, qp_in->d_mask, 0, qp_res->res_m, 0, qp_res->res_m, 0);
 }
 
 

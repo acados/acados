@@ -1610,6 +1610,16 @@ class AcadosOcpSolver:
             elif self.__solver_options['nlp_solver_type'] == 'SQP_RTI':
                 return full_stats[2, :]
 
+        elif field_ == "qp_res_ineq":
+            if not self.__solver_options['nlp_solver_ext_qp_res']:
+                raise ValueError("qp_res_ineq only supported if nlp_solver_ext_qp_res is enabled.")
+            full_stats = self.get_stats('statistics')
+            if self.__solver_options['nlp_solver_type'] == 'SQP':
+                return full_stats[10, :]
+            else:
+                raise ValueError("qp_res_ineq only supported for SQP solver.")
+
+
         elif field_ == 'alpha':
             full_stats = self.get_stats('statistics')
             if self.__solver_options['nlp_solver_type'] == 'SQP':
