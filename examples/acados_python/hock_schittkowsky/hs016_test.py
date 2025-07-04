@@ -31,8 +31,6 @@
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, ACADOS_INFTY, AcadosOcpFlattenedIterate
 import numpy as np
 from casadi import *
-from matplotlib import pyplot as plt
-from itertools import product
 
 
 def solve_problem(qp_solver: str = 'FULL_CONDENSING_HPIPM', scale_qp_constraints: bool = False):
@@ -50,7 +48,6 @@ def solve_problem(qp_solver: str = 'FULL_CONDENSING_HPIPM', scale_qp_constraints
     model.x = x
     model.name = f'hs_016'
     ocp.model = model
-
 
     # cost
     ocp.cost.cost_type_e = 'EXTERNAL'
