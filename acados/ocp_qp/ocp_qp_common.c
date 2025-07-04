@@ -546,12 +546,6 @@ ocp_qp_res_ws *ocp_qp_res_workspace_assign(ocp_qp_dims *dims, void *raw_memory)
 void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res,
                         ocp_qp_res_ws *res_ws)
 {
-    int *nx = qp_res->dim->nx;
-    int *nu = qp_res->dim->nu;
-    int *nb = qp_res->dim->nb;
-    int *ng = qp_res->dim->ng;
-    int *ns = qp_res->dim->ns;
-    int ni_stage;
 
     qp_info *info = (qp_info *) qp_out->misc;
 
@@ -563,17 +557,23 @@ void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
 
     d_ocp_qp_res_compute(qp_in, qp_out, qp_res, res_ws);
 
-    // mask out disregarded constraints
-    for (int ii = 0; ii <= qp_res->dim->N; ii++)
-    {
-        ni_stage = ocp_qp_dims_get_ni(qp_res->dim, ii);
-        // stationarity wrt slacks
-        blasfeo_dvecmul(2*ns[ii], qp_in->d_mask+ii, 2*nb[ii]+2*ng[ii], &qp_res->res_g[ii], nx[ii]+nu[ii], &qp_res->res_g[ii], nx[ii]+nu[ii]);
-        // ineq
-        blasfeo_dvecmul(2*ni_stage, qp_in->d_mask+ii, 0, &qp_res->res_d[ii], 0, &qp_res->res_d[ii], 0);
-        // comp
-        blasfeo_dvecmul(2*ni_stage, qp_in->d_mask+ii, 0, &qp_res->res_m[ii], 0, &qp_res->res_m[ii], 0);
-    }
+    /* mask out disregarded constraints; NOTE: not needed anymore as done in HPIPM */
+    // int *nx = qp_res->dim->nx;
+    // int *nu = qp_res->dim->nu;
+    // int *nb = qp_res->dim->nb;
+    // int *ng = qp_res->dim->ng;
+    // int *ns = qp_res->dim->ns;
+    // int ni_stage;
+    // for (int ii = 0; ii <= qp_res->dim->N; ii++)
+    // {
+    //     ni_stage = ocp_qp_dims_get_ni(qp_res->dim, ii);
+    //     // stationarity wrt slacks
+    //     blasfeo_dvecmul(2*ns[ii], qp_in->d_mask+ii, 2*nb[ii]+2*ng[ii], &qp_res->res_g[ii], nx[ii]+nu[ii], &qp_res->res_g[ii], nx[ii]+nu[ii]);
+    //     // ineq
+    //     blasfeo_dvecmul(2*ni_stage, qp_in->d_mask+ii, 0, &qp_res->res_d[ii], 0, &qp_res->res_d[ii], 0);
+    //     // comp
+    //     blasfeo_dvecmul(2*ni_stage, qp_in->d_mask+ii, 0, &qp_res->res_m[ii], 0, &qp_res->res_m[ii], 0);
+    // }
     return;
 }
 
