@@ -1184,7 +1184,7 @@ static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_clarabel
         nn += 2*nb[kk]+2*ng[kk];
     }
 
-    nn = 0;
+    //nn = 0;
     for (kk = 0; kk <= N; kk++)
     {
         blasfeo_pack_dvec(2*ns[kk], &sol->z[nn], 1, out->lam+kk, 2*nb[kk]+2*ng[kk]);
@@ -1284,6 +1284,8 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
     // // solve Clarabel
     acados_tic(&solver_call_timer);
     // Solve
+    //clarabel_DefaultSolver_print_to_file(mem->solver, "clarabel_data.txt");
+    //clarabel_DefaultSolver_save_to_file(mem->solver, "clarabel_data.txt");
     clarabel_DefaultSolver_solve(mem->solver);
     mem->time_qp_solver_call = acados_toc(&solver_call_timer);
     // mem->iter = mem->clarabel_work->info->iter;
