@@ -1277,8 +1277,8 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
         mem->solver = clarabel_DefaultSolver_new(&mem->P, mem->q, &mem->A, mem->b, 2, mem->cones, opts->clarabel_opts);
         //printf("\nafter build solver %p\n", mem->solver);
         // TODO for now always force first_run, because the updates are crashing...
-        //mem->first_run = 0; // TODO uncomments once updates work ...
-        mem->first_run = 1;
+        mem->first_run = 0; // TODO uncomments once updates work ...
+        //mem->first_run = 1;
     }
 
     // // solve Clarabel
