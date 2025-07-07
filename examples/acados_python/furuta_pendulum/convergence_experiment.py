@@ -30,22 +30,24 @@
 #
 
 from furuta_common import setup_ocp_solver
+from utils import plot_furuta_pendulum
 import numpy as np
 
 from acados_template import AcadosOcpFlattenedIterate, plot_convergence, plot_contraction_rates
 from typing import Tuple
 import matplotlib.pyplot as plt
+N_HORIZON = 8   # number of shooting intervals
+UMAX = .45
 
 
 def test_solver(with_anderson_acceleration: bool) -> Tuple[AcadosOcpFlattenedIterate, np.ndarray]:
     x0 = np.array([0.0, np.pi, 0.0, 0.0])
-    umax = .45
 
     Tf = .350       # total prediction time
-    N_horizon = 8   # number of shooting intervals
     dt_0 = 0.025    # sampling time = length of first shooting interval
 
-    solver = setup_ocp_solver(x0, umax, dt_0, N_horizon, Tf, with_anderson_acceleration=with_anderson_acceleration, nlp_solver_max_iter = 500, tol = 1e-8)
+    solver = setup_ocp_solver(x0, UMAX, dt_0, N_HORIZON, Tf, with_anderson_acceleration=with_anderson_acceleration, nlp_solver_max_iter = 500, tol = 1e-8)
+    t_grid = solver.acados_ocp.solver_options.shooting_nodes
 
     status = solver.solve()
     solver.print_statistics()
@@ -54,7 +56,7 @@ def test_solver(with_anderson_acceleration: bool) -> Tuple[AcadosOcpFlattenedIte
     res_all = solver.get_stats('res_all')
     kkt_norms = np.linalg.norm(res_all, axis=1)
 
-    return solution, kkt_norms
+    return solution, kkt_norms, t_grid
 
 def raise_test_failure_message(msg: str):
     # print(f"ERROR: {msg}")
@@ -67,7 +69,7 @@ def main():
     sol_list = []
     labels = []
     for with_anderson_acceleration in [True, False]:
-        sol, kkt_norms = test_solver(with_anderson_acceleration=with_anderson_acceleration)
+        sol, kkt_norms, t_grid = test_solver(with_anderson_acceleration=with_anderson_acceleration)
         # compute contraction rates
         contraction_rates = kkt_norms[1:-1]/kkt_norms[0:-2]
         # append results
@@ -101,6 +103,7 @@ def main():
         labels,
         # fig_filename="contraction_rates_furuta_pendulum.png"
     )
+    plot_furuta_pendulum(t_grid, ref_sol.x.reshape((N_HORIZON + 1, -1)), ref_sol.u.reshape((N_HORIZON, -1)), UMAX)
     plt.show()
 
 if __name__ == "__main__":
