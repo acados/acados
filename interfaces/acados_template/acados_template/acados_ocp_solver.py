@@ -482,8 +482,8 @@ class AcadosOcpSolver:
 
         This is only implemented for HPIPM QP solver without condensing.
         """
-        if self.__solver_options["qp_solver"] != 'PARTIAL_CONDENSING_HPIPM':
-            raise NotImplementedError('This function is only implemented for PARTIAL_CONDENSING_HPIPM!')
+        if self.__solver_options["qp_solver"] not in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM']:
+            raise NotImplementedError('This function is only implemented for PARTIAL_CONDENSING_HPIPM and FULL_CONDENSING_HPIPM!')
 
         self.status = getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize")(self.capsule)
 
@@ -627,10 +627,6 @@ class AcadosOcpSolver:
         :param with_respect_to: string in ["initial_state", "initial_control", "p_global"]
         """
 
-        if with_respect_to == "params_global":
-            print("Deprecation warning: 'params_global' is deprecated and has been renamed to 'p_global'.")
-            with_respect_to = "p_global"
-
         if with_respect_to == "initial_state":
             if not self.__has_x0:
                 raise ValueError("OCP does not have an initial state constraint.")
@@ -726,10 +722,6 @@ class AcadosOcpSolver:
         .. note:: Solution sensitivities with respect to parameters are currently implemented assuming the parameter vector p is global within the OCP, i.e. p=p_i with i=0, ..., N.
         .. note:: Solution sensitivities with respect to parameters are currently implemented only for parametric discrete dynamics, parametric external costs and parametric nonlinear constraints (h).
         """
-
-        if with_respect_to == "params_global":
-            print("Deprecation warning: 'params_global' is deprecated and has been renamed to 'p_global'.")
-            with_respect_to = "p_global"
 
         stages_is_list = isinstance(stages, list)
         stages_ = stages if stages_is_list else [stages]
