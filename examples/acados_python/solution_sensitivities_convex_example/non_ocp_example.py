@@ -36,6 +36,10 @@ import matplotlib.pyplot as plt
 latexify_plot()
 
 P_SQUARED = False
+if P_SQUARED:
+    PROBLEM_NAME = "non_ocp_p_squared"
+else:
+    PROBLEM_NAME = "non_ocp_p_linear"
 
 def export_parametric_nlp() -> AcadosOcp:
 
@@ -134,9 +138,9 @@ def main():
         sol_list.append(sol_tau)
 
     plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list,
-                 title=None, parameter_name=r"$\theta$", fig_filename="solution_sens_non_ocp.pdf")
+                 title=None, parameter_name=r"$\theta$", fig_filename=f"solution_sens_{PROBLEM_NAME}.pdf")
     plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list,
-                 title=None, parameter_name=r"$\theta$", fig_filename="solution_sens_non_ocp_transposed.pdf", horizontal_plot=True)
+                 title=None, parameter_name=r"$\theta$", fig_filename=f"solution_sens_{PROBLEM_NAME}_transposed.pdf", horizontal_plot=True)
 
 def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list, title=None, parameter_name="", fig_filename=None, horizontal_plot=False):
     p_min = p_test[0]
