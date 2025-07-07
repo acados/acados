@@ -35,12 +35,17 @@ from acados_template import AcadosOcp, AcadosModel, AcadosOcpSolver, latexify_pl
 import matplotlib.pyplot as plt
 latexify_plot()
 
-def export_parametric_ocp() -> AcadosOcp:
+P_SQUARED = False
+
+def export_parametric_nlp() -> AcadosOcp:
 
     model = AcadosModel()
     model.x = ca.SX.sym("x", 1)
     model.p_global = ca.SX.sym("p_global", 1)
-    model.cost_expr_ext_cost_e = (model.x - model.p_global**2)**2
+    if P_SQUARED:
+        model.cost_expr_ext_cost_e = (model.x - model.p_global**2)**2
+    else:
+        model.cost_expr_ext_cost_e = (model.x - model.p_global)**2
     model.name = "non_ocp"
     ocp = AcadosOcp()
     ocp.model = model
@@ -64,7 +69,7 @@ def export_parametric_ocp() -> AcadosOcp:
 def solve_and_compute_sens(p_test, tau):
     np_test = p_test.shape[0]
 
-    ocp = export_parametric_ocp()
+    ocp = export_parametric_nlp()
     ocp.solver_options.tau_min = tau
     ocp.solver_options.qp_solver_t0_init = 0
     ocp.solver_options.nlp_solver_max_iter = 2 # QP should converge in one iteration
@@ -146,10 +151,14 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
 
     isub = 0
     # plot analytic solution
-    ax[isub].plot([p_min, -1], [1, 1], "k-", linewidth=2, label="analytic")
-    ax[isub].plot([1, p_max], [1, 1], "k-", linewidth=2)
     x_vals = np.linspace(-1, 1, 100)
-    y_vals = x_vals**2
+    if P_SQUARED:
+        ax[isub].plot([p_min, -1], [1, 1], "k-", linewidth=2, label="analytic")
+        y_vals = x_vals**2
+    else:
+        ax[isub].plot([p_min, -1], [-1, -1], "k-", linewidth=2, label="analytic")
+        y_vals = x_vals
+    ax[isub].plot([1, p_max], [1, 1], "k-", linewidth=2)
     ax[isub].plot(x_vals, y_vals, "k-", linewidth=2)
 
     for i, sol in enumerate(sol_list):
@@ -165,7 +174,10 @@ def plot_solution_sensitivities_results(p_test, sol_list, sens_list, labels_list
     # plot analytic sensitivity
     ax[isub].plot([p_min, -1], [0, 0], "k-", linewidth=2, label="analytic")
     ax[isub].plot([1, p_max], [0, 0], "k-", linewidth=2)
-    ax[isub].plot([-1, 1], [-2, 2], "k-", linewidth=2)
+    if P_SQUARED:
+        ax[isub].plot([-1, 1], [-2, 2], "k-", linewidth=2)
+    else:
+        ax[isub].plot([-1, 1], [1, 1], "k-", linewidth=2)
 
     # plot numerical sensitivities
     for i, sens_x_tau in enumerate(sens_list):
