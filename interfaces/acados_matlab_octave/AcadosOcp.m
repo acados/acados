@@ -212,6 +212,7 @@ classdef AcadosOcp < handle
             constraints = self.constraints;
             model = self.model;
             if self.solver_options.N_horizon == 0
+                dims.nbxe_0 = 0;
                 return
             end
 

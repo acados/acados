@@ -384,6 +384,7 @@ class AcadosOcp:
         model = self.model
         opts = self.solver_options
         if opts.N_horizon == 0:
+            dims.nbxe_0 = 0
             return
 
         nbx_0 = constraints.idxbx_0.shape[0]
