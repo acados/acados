@@ -482,8 +482,8 @@ class AcadosOcpSolver:
 
         This is only implemented for HPIPM QP solver without condensing.
         """
-        if self.__solver_options["qp_solver"] != 'PARTIAL_CONDENSING_HPIPM':
-            raise NotImplementedError('This function is only implemented for PARTIAL_CONDENSING_HPIPM!')
+        if self.__solver_options["qp_solver"] not in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM']:
+            raise NotImplementedError('This function is only implemented for PARTIAL_CONDENSING_HPIPM and FULL_CONDENSING_HPIPM!')
 
         self.status = getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize")(self.capsule)
 
