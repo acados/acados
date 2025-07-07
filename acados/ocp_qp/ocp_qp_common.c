@@ -384,7 +384,18 @@ double ocp_qp_out_ddot(ocp_qp_out *x, ocp_qp_out *y, struct blasfeo_dvec *work_t
     for (int i = 0; i <= N; i++)
     {
         // primal
+        /* standard variant */
+#if 1
         out += blasfeo_ddot(nx[i]+nu[i]+2*ns[i], x->ux+i, 0, y->ux+i, 0);
+#else
+        // split variant
+        out += blasfeo_ddot(nx[i]+nu[i], x->ux+i, 0, y->ux+i, 0);
+        // slacks
+        blasfeo_daxpy(ns[i], -1.0, x->ux+i, nx[i]+nu[i], x->ux+i, nx[i]+nu[i]+ns[i], work_tmp_2ni, 0);
+        blasfeo_daxpy(ns[i], -1.0, y->ux+i, nx[i]+nu[i], y->ux+i, nx[i]+nu[i]+ns[i], work_tmp_2ni, ns[i]);
+        out += blasfeo_ddot(ns[i], work_tmp_2ni, 0, work_tmp_2ni, ns[i]);
+#endif
+
         // dual
         tmp_nbg = nbu[i]+nbx[i]+ng[i];
         /* setup multipliers as lower - upper bound */
@@ -396,8 +407,14 @@ double ocp_qp_out_ddot(ocp_qp_out *x, ocp_qp_out *y, struct blasfeo_dvec *work_t
         // add dot product
         out += blasfeo_ddot(tmp_nbg, work_tmp_2ni, 0, work_tmp_2ni, tmp_nbg);
         // multipliers wrt slack bounds
+#if 1
         out += blasfeo_ddot(2*ns[i], x->lam+i, 2*tmp_nbg, y->lam+i, 2*tmp_nbg);
-
+#else
+        // split variant
+        blasfeo_daxpy(ns[i], -1.0, x->lam+i, 2*tmp_nbg, x->lam+i, 2*tmp_nbg+ns[i], work_tmp_2ni, 0);
+        blasfeo_daxpy(ns[i], -1.0, y->lam+i, 2*tmp_nbg, y->lam+i, 2*tmp_nbg+ns[i], work_tmp_2ni, ns[i]);
+        out += blasfeo_ddot(ns[i], work_tmp_2ni, 0, work_tmp_2ni, ns[i]);
+#endif
         if (i < N)
         {
             out += blasfeo_ddot(nx[i+1], x->pi+i, 0, y->pi+i, 0);
