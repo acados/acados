@@ -928,6 +928,8 @@ class AcadosOcp:
                     raise ValueError('cost_discretization == INTEGRATOR is not compatible with SQP_WITH_FEASIBLE_QP yet.')
 
         ## constraints
+        if opts.qp_solver == 'PARTIAL_CONDENSING_QPDUNES':
+            self.remove_x0_elimination()
         self._make_consistent_constraints_initial()
         self._make_consistent_constraints_path()
         self._make_consistent_constraints_terminal()
@@ -957,9 +959,6 @@ class AcadosOcp:
             raise ValueError(f'cost_scaling should be of length N+1 = {opts.N_horizon+1}, got {opts.cost_scaling.shape[0]}.')
 
         self._make_consistent_simulation()
-
-        if opts.qp_solver == 'PARTIAL_CONDENSING_QPDUNES':
-            self.remove_x0_elimination()
 
         # fixed hessian
         if opts.fixed_hess:
