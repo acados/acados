@@ -132,6 +132,7 @@ if(ACADOS_OCTAVE)
         set_tests_properties(octave_test_ocp_pendulum_code_reuse PROPERTIES DEPENDS octave_test_OSQP)
     endif()
     if(ACADOS_WITH_QPDUNES)
+        set_tests_properties(octave_test_ocp_pendulum_code_reuse PROPERTIES DEPENDS octave_test_qpDUNES)
         set_tests_properties(octave_test_OSQP PROPERTIES DEPENDS octave_test_qpDUNES)
     endif()
 endif()
@@ -316,13 +317,6 @@ add_test(NAME python_pendulum_ocp_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/multiphase_nonlinear_constraints
         python main.py)
 
-    # qpDUNES example
-    if(ACADOS_WITH_QPDUNES)
-    add_test(NAME python_qpDUNES_test
-            COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
-            python example_sqp_qpDUNES.py)
-    endif()
-
     # OSQP test
     if(ACADOS_WITH_OSQP)
     add_test(NAME python_OSQP_test
@@ -397,9 +391,13 @@ add_test(NAME python_pendulum_ocp_example_cmake
     add_test(NAME python_pendulum_ocp_IRK
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=IRK)
-    add_test(NAME python_pendulum_ocp_ERK
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
-        python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=ERK)
+
+    if(ACADOS_WITH_QPDUNES)
+        add_test(NAME python_pendulum_ocp_ERK_qpDUNES
+            COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
+            python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=ERK --QP_SOLVER=PARTIAL_CONDENSING_QPDUNES)
+    endif()
+
     add_test(NAME python_pendulum_ocp_GNSF
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=GNSF)
@@ -512,13 +510,12 @@ add_test(NAME python_pendulum_ocp_example_cmake
     set_tests_properties(python_render_simulink_wrapper PROPERTIES DEPENDS python_constraints_expression_example)
     set_tests_properties(python_constraints_expression_example PROPERTIES DEPENDS pendulum_optimal_value_gradient)
     set_tests_properties(pendulum_optimal_value_gradient PROPERTIES DEPENDS python_pendulum_ocp_IRK)
-    set_tests_properties(python_pendulum_ocp_IRK PROPERTIES DEPENDS python_pendulum_ocp_ERK)
-    set_tests_properties(python_pendulum_ocp_ERK PROPERTIES DEPENDS python_pendulum_ocp_GNSF)
+    set_tests_properties(python_pendulum_ocp_IRK PROPERTIES DEPENDS python_pendulum_ocp_GNSF)
     set_tests_properties(python_pendulum_ocp_GNSF PROPERTIES DEPENDS python_example_ocp_dynamics_formulations_cmake)
     set_tests_properties(python_example_ocp_dynamics_formulations_cmake PROPERTIES DEPENDS py_qp_scaling_time_opt_swingup)
 
     if(ACADOS_WITH_QPDUNES)
-    set_tests_properties(python_example_ocp_dynamics_formulations_cmake PROPERTIES DEPENDS python_qpDUNES_test)
+    set_tests_properties(python_example_ocp_dynamics_formulations_cmake PROPERTIES DEPENDS python_pendulum_ocp_ERK_qpDUNES)
     endif()
 
 endif()

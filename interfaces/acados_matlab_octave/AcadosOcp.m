@@ -875,6 +875,11 @@ classdef AcadosOcp < handle
 
 
             %% constraints
+            % qpdunes
+            if ~isempty(strfind(opts.qp_solver, 'QPDUNES'))
+                constraints.idxbxe_0 = [];
+                dims.nbxe_0 = 0;
+            end
             self.make_consistent_constraints_initial();
             self.make_consistent_constraints_path();
             self.make_consistent_constraints_terminal();
@@ -912,12 +917,6 @@ classdef AcadosOcp < handle
             end
 
             self.make_consistent_simulation();
-
-            % qpdunes
-            if ~isempty(strfind(opts.qp_solver,'qpdunes'))
-                constraints.idxbxe_0 = [];
-                dims.nbxe_0 = 0;
-            end
 
             if strcmp(opts.qp_solver, "PARTIAL_CONDENSING_HPMPC") || ...
                 strcmp(opts.qp_solver, "PARTIAL_CONDENSING_QPDUNES") || ...
