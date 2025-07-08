@@ -565,10 +565,6 @@ static int ocp_nlp_line_search_merit_check_full_step(ocp_nlp_config *config, ocp
 static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
             ocp_nlp_out *nlp_out, ocp_nlp_opts *nlp_opts, ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work)
 {
-    int ii;
-    int N = dims->N;
-
-    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_qp_in *qp_in = nlp_mem->qp_in;
     ocp_qp_out *qp_out = nlp_mem->qp_out;
     ocp_nlp_globalization_merit_backtracking_memory *merit_mem = nlp_mem->globalization;
@@ -594,155 +590,13 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
         return false;
     }
     // else perform SOC (below)
-
-    // Second Order Correction (SOC): following Nocedal2006: p.557, eq. (18.51) -- (18.56)
-    // Paragraph: APPROACH III: S l1 QP (SEQUENTIAL l1 QUADRATIC PROGRAMMING),
-    // Section 18.8 TRUST-REGION SQP METHODS
-    //   - just no trust region radius here.
-    if (nlp_opts->print_level > 0)
-        printf("ocp_nlp_sqp: performing SOC, since prelim. line search returned %d\n\n", line_search_status);
-    int *nb = qp_in->dim->nb;
-    int *ng = qp_in->dim->ng;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *ns = dims->ns;
-    // int *nv = dims->nv;
-    // int *ni = dims->ni;
-
-    /* evaluate constraints & dynamics at new step */
-    // NOTE: setting up the new iterate and evaluating is not needed here,
-    //   since this evaluation was perfomed just before this call in the early terminated line search.
-
-    // NOTE: similar to ocp_nlp_evaluate_merit_fun
-    // update QP rhs
-    // d_i = c_i(x_k + p_k) - \nabla c_i(x_k)^T * p_k
-    struct blasfeo_dvec *tmp_fun_vec;
-
-    for (ii = 0; ii <= N; ii++)
+    int soc_status = ocp_nlp_perform_second_order_correction(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, qp_in, qp_out);
+    // line search does not care about status in soc??
+    if (soc_status == ACADOS_SUCCESS)
     {
-        if (ii < N)
-        {
-            // b -- dynamics
-            tmp_fun_vec = config->dynamics[ii]->memory_get_fun_ptr(nlp_mem->dynamics[ii]);
-            // add - \nabla c_i(x_k)^T * p_k
-            // c_i = f(x_k, u_k) - x_{k+1} (see dynamics module)
-            blasfeo_dgemv_t(nx[ii]+nu[ii], nx[ii+1], -1.0, qp_in->BAbt+ii, 0, 0,
-                            qp_out->ux+ii, 0, -1.0, tmp_fun_vec, 0, qp_in->b+ii, 0);
-            // NOTE: not sure why it is - tmp_fun_vec here!
-            blasfeo_dvecad(nx[ii+1], 1.0, qp_out->ux+ii+1, nu[ii+1], qp_in->b+ii, 0);
-        }
-
-        /* INEQUALITIES */
-        // d -- constraints
-        tmp_fun_vec = config->constraints[ii]->memory_get_fun_ptr(nlp_mem->constraints[ii]);
-        /* SOC for bounds can be skipped (because linear) */
-        // NOTE: SOC can also be skipped for truely linear constraint, i.e. ng of nlp,
-        //      now using ng of QP = (nh+ng)
-
-        // upper & lower
-        blasfeo_dveccp(ng[ii], tmp_fun_vec, nb[ii], qp_in->d+ii, nb[ii]); // lg
-        blasfeo_dveccp(ng[ii], tmp_fun_vec, 2*nb[ii]+ng[ii], qp_in->d+ii, 2*nb[ii]+ng[ii]); // ug
-        // general linear / linearized!
-        // tmp_2ni = D * u + C * x
-        blasfeo_dgemv_t(nu[ii]+nx[ii], ng[ii], 1.0, qp_in->DCt+ii, 0, 0, qp_out->ux+ii, 0,
-                        0.0, &nlp_work->tmp_2ni, 0, &nlp_work->tmp_2ni, 0);
-        // d[nb:nb+ng] += tmp_2ni (lower)
-        blasfeo_dvecad(ng[ii], 1.0, &nlp_work->tmp_2ni, 0, qp_in->d+ii, nb[ii]);
-        // d[nb:nb+ng] -= tmp_2ni
-        blasfeo_dvecad(ng[ii], -1.0, &nlp_work->tmp_2ni, 0, qp_in->d+ii, 2*nb[ii]+ng[ii]);
-
-        // add slack contributions
-        // d[nb:nb+ng] += slack[idx]
-        // qp_in->idxs_rev
-        for (int j = 0; j < nb[ii]+ng[ii]; j++)
-        {
-            int slack_index = qp_in->idxs_rev[ii][j];
-            if (slack_index >= 0)
-            {
-                // add slack contribution for lower and upper constraint
-                // lower
-                BLASFEO_DVECEL(qp_in->d+ii, j) -=
-                        BLASFEO_DVECEL(qp_out->ux+ii, slack_index+nx[ii]+nu[ii]);
-                // upper
-                BLASFEO_DVECEL(qp_in->d+ii, j+nb[ii]+ng[ii]) -=
-                        BLASFEO_DVECEL(qp_out->ux+ii, slack_index+nx[ii]+nu[ii]+ns[ii]);
-            }
-        }
-
-        // NOTE: bounds on slacks can be skipped, since they are linear.
-        // blasfeo_daxpy(2*ns[ii], -1.0, qp_out->ux+ii, nx[ii]+nu[ii], qp_in->d+ii, 2*nb[ii]+2*ng[ii], qp_in->d+ii, 2*nb[ii]+2*ng[ii]);
-
-        // printf("SOC: qp_in->d final value\n");
-        // blasfeo_print_exp_dvec(2*nb[ii]+2*ng[ii], qp_in->d+ii, 0);
-    }
-
-    if (nlp_opts->print_level > 3)
-    {
-        printf("\n\nSQP: SOC ocp_qp_in at iteration %d\n", nlp_mem->iter);
-        // print_ocp_qp_in(qp_in);
-    }
-
-#if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
-    ocp_nlp_dump_qp_in_to_file(qp_in, nlp_mem->iter, 1);
-#endif
-
-    // solve QP
-    // acados_tic(&timer1);
-    int qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
-                                    nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
-    // NOTE: QP is not timed, since this computation time is attributed to globalization.
-
-    // compute correct dual solution in case of Hessian regularization
-    config->regularize->correct_dual_sol(config->regularize, dims->regularize,
-                                        nlp_opts->regularize, nlp_mem->regularize_mem);
-
-    // ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
-    // int qp_iter = qp_info_->num_iter;
-
-    // save statistics of last qp solver call
-    // TODO: SOC QP solver call should be warm / hot started!
-    // if (nlp_mem->iter+1 < nlp_mem->stat_m)
-    // {
-    //     // mem->stat[mem->stat_n*(nlp_mem->iter+1)+4] = qp_status;
-    //     // add qp_iter; should maybe be in a seperate statistic
-    //     nlp_mem->stat[nlp_mem->stat_n*(nlp_mem->iter+1)+5] += qp_iter;
-    // }
-
-    // compute external QP residuals (for debugging)
-    // if (nlp_opts->ext_qp_res)
-    // {
-    //     ocp_qp_res_compute(qp_in, qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
-    //     if (nlp_mem->iter+1 < nlp_mem->stat_m)
-    //         ocp_qp_res_compute_nrm_inf(nlp_work->qp_res, nlp_mem->stat+(nlp_mem->stat_n*(nlp_mem->iter+1)+7));
-    // }
-
-    // if (nlp_opts->print_level > 3)
-    // {
-    //     printf("\n\nSQP: SOC ocp_qp_out at iteration %d\n", nlp_mem->iter);
-    //     print_ocp_qp_out(qp_out);
-    // }
-
-#if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
-        ocp_nlp_dump_qp_out_to_file(qp_out, nlp_mem->iter, 1);
-#endif
-
-    // exit conditions on QP status
-    if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
-    {
-#ifndef ACADOS_SILENT
-        printf("\nQP solver returned error status %d in SQP iteration %d for SOC QP.\n",
-            qp_status, nlp_mem->iter);
-#endif
-        // if (nlp_opts->print_level > 1)
-        // {
-        //     printf("\nFailed to solve the following QP:\n");
-        //     if (nlp_opts->print_level > 3)
-        //         print_ocp_qp_in(qp_in);
-        // }
-        nlp_mem->status = ACADOS_QP_FAILURE;
-
         return true;
     }
+
     return true;
 }
 

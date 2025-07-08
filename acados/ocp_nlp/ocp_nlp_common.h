@@ -640,6 +640,11 @@ double ocp_nlp_compute_dual_lam_norm_inf(ocp_nlp_dims *dims, ocp_nlp_out *nlp_ou
 //
 double ocp_nlp_get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_memory *nlp_mem);
 //
+int ocp_nlp_perform_second_order_correction(ocp_nlp_config *config, ocp_nlp_dims *dims,
+                                            ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_opts *nlp_opts,
+                                            ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work,
+                                            ocp_qp_in *qp_in, ocp_qp_out *qp_out);
+//
 int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *nlp_opts,
                      ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work,
                      bool precondensed_lhs, ocp_qp_in *scaled_qp_in_, ocp_qp_in *qp_in_, ocp_qp_out *scaled_qp_out_,ocp_qp_out *qp_out_,
