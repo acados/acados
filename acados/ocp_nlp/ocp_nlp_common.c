@@ -606,7 +606,6 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
         {
             config->dynamics[i]->dims_set(config->dynamics[i], dims->dynamics[i], "np", &int_array[i]);
         }
-        // TODO: implement np for constraints
         // // constraints
         // for (int i = 0; i <= N; i++)
         // {
