@@ -380,6 +380,9 @@ classdef AcadosOcpSolver < handle
             obj.t_ocp.print(varargin{:});
         end
 
+        function print_statistics(obj)
+            obj.t_ocp.print();
+        end
 
         function reset(obj)
             obj.t_ocp.reset();
