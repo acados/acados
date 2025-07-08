@@ -2527,6 +2527,15 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     ocp_nlp_qpscaling_constraint_type qpscaling_scale_constraints = {{ solver_options.qpscaling_scale_constraints }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qpscaling_scale_constraints", &qpscaling_scale_constraints);
 
+    ocp_nlp_qp_tol_strategy_t nlp_qp_tol_strategy = {{ solver_options.nlp_qp_tol_strategy }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "nlp_qp_tol_strategy", &nlp_qp_tol_strategy);
+
+    double nlp_qp_tol_reduction_factor = {{ solver_options.nlp_qp_tol_reduction_factor }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "nlp_qp_tol_reduction_factor", &nlp_qp_tol_reduction_factor);
+
+    double nlp_qp_tol_safety_factor = {{ solver_options.nlp_qp_tol_safety_factor }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "nlp_qp_tol_safety_factor", &nlp_qp_tol_safety_factor);
+
 {%- if solver_options.nlp_solver_type == "SQP" and solver_options.timeout_max_time > 0 %}
     double timeout_max_time = {{ solver_options.timeout_max_time }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "timeout_max_time", &timeout_max_time);

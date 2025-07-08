@@ -198,6 +198,9 @@ classdef AcadosOcpOptions < handle
             obj.qpscaling_lb_norm_inf_grad_obj = 1e-4;
             obj.qpscaling_scale_objective = 'NO_OBJECTIVE_SCALING';
             obj.qpscaling_scale_constraints = 'NO_CONSTRAINT_SCALING';
+            obj.nlp_qp_tol_strategy = "FIXED_QP_TOL";
+            obj.nlp_qp_tol_reduction_factor = 1e-1;
+            obj.nlp_qp_tol_safety_factor = 0.1;
             obj.reg_epsilon = 1e-4;
             obj.reg_adaptive_eps = false;
             obj.reg_max_cond_block = 1e7;

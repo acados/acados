@@ -112,6 +112,9 @@ class AcadosOcpOptions:
         self.__qpscaling_lb_norm_inf_grad_obj = 1e-4
         self.__qpscaling_scale_objective = "NO_OBJECTIVE_SCALING"
         self.__qpscaling_scale_constraints = "NO_CONSTRAINT_SCALING"
+        self.__nlp_qp_tol_strategy = "FIXED_QP_TOL"
+        self.__nlp_qp_tol_reduction_factor = 1e-1
+        self.__nlp_qp_tol_safety_factor = 0.1
         self.__ext_cost_num_hess = 0
         self.__globalization_use_SOC = 0
         self.__globalization_alpha_min = None
@@ -400,6 +403,42 @@ class AcadosOcpOptions:
         First, the cost is scaled, then the constraints.
         """
         return self.__qpscaling_scale_constraints
+
+    @property
+    def nlp_qp_tol_strategy(self):
+        """
+        Strategy for setting the QP tolerances in the NLP solver.
+        String in ["ADAPTIVE_CURRENT_RES_JOINT", "FIXED_QP_TOL"]
+
+        - FIXED_QP_TOL: uses the fixed QP solver tolerances set by the properties `qp_solver_tol_stat`, `qp_solver_tol_eq`, `qp_solver_tol_ineq`, `qp_solver_tol_comp`, only this was implemented in acados <= 0.5.0
+        - ADAPTIVE_CURRENT_RES_JOINT: uses the current NLP residuals to set the QP tolerances in a joint manner.
+        The QP tolerances are set as follows:
+        1) `tmp_tol_* = MIN(nlp_qp_tol_reduction_factor * inf_norm_res_*, 1e-2)`
+        2) `joint_tol = MAX(tmp_tol_* for all * in ['stat', 'eq', 'ineq', 'comp'])`
+        3) `tol_* = MAX(joint_tol, nlp_qp_tol_safety_factor * nlp_solver_tol_*)`
+
+        Default: "FIXED_QP_TOL".
+        """
+        return self.__nlp_qp_tol_strategy
+
+    @property
+    def nlp_qp_tol_reduction_factor(self):
+        """
+        Factor by which the QP tolerance is smaller compared to the NLP residuals when using the ADAPTIVE_CURRENT_RES_JOINT strategy.
+        Default: 1e-1.
+        """
+        return self.__nlp_qp_tol_reduction_factor
+
+    @property
+    def nlp_qp_tol_safety_factor(self):
+        """
+        Safety factor for the QP tolerances.
+        Used to ensure qp_tol* = nlp_qp_tol_safety_factor * nlp_solver_tol_* when approaching the NLP solution.
+        Used in the ADAPTIVE_CURRENT_RES_JOINT strategy.
+        Type: float in [0, 1].
+        Default: 0.1.
+        """
+        return self.__nlp_qp_tol_safety_factor
 
     @property
     def nlp_solver_step_length(self):
@@ -1758,6 +1797,25 @@ class AcadosOcpOptions:
         if not qpscaling_scale_constraints in qpscaling_scale_constraints_types:
             raise ValueError(f'Invalid qpscaling_scale_constraints value. Must be in {qpscaling_scale_constraints_types}, got {qpscaling_scale_constraints}.')
         self.__qpscaling_scale_constraints = qpscaling_scale_constraints
+
+    @nlp_qp_tol_strategy.setter
+    def nlp_qp_tol_strategy(self, nlp_qp_tol_strategy):
+        nlp_qp_tol_strategy_types = ["ADAPTIVE_CURRENT_RES_JOINT", "FIXED_QP_TOL"]
+        if not nlp_qp_tol_strategy in nlp_qp_tol_strategy_types:
+            raise ValueError(f'Invalid nlp_qp_tol_strategy value. Must be in {nlp_qp_tol_strategy_types}, got {nlp_qp_tol_strategy}.')
+        self.__nlp_qp_tol_strategy = nlp_qp_tol_strategy
+
+    @nlp_qp_tol_reduction_factor.setter
+    def nlp_qp_tol_reduction_factor(self, nlp_qp_tol_reduction_factor):
+        if not isinstance(nlp_qp_tol_reduction_factor, float) or nlp_qp_tol_reduction_factor < 0.0 or nlp_qp_tol_reduction_factor > 1.0:
+            raise ValueError(f'Invalid nlp_qp_tol_reduction_factor value. Must be in [0, 1], got {nlp_qp_tol_reduction_factor}.')
+        self.__nlp_qp_tol_reduction_factor = nlp_qp_tol_reduction_factor
+
+    @nlp_qp_tol_safety_factor.setter
+    def nlp_qp_tol_safety_factor(self, nlp_qp_tol_safety_factor):
+        if not isinstance(nlp_qp_tol_safety_factor, float) or nlp_qp_tol_safety_factor < 0.0 or nlp_qp_tol_safety_factor > 1.0:
+            raise ValueError(f'Invalid nlp_qp_tol_safety_factor value. Must be in [0, 1], got {nlp_qp_tol_safety_factor}.')
+        self.__nlp_qp_tol_safety_factor = nlp_qp_tol_safety_factor
 
     @nlp_solver_step_length.setter
     def nlp_solver_step_length(self, nlp_solver_step_length):
