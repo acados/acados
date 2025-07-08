@@ -87,6 +87,9 @@ classdef AcadosOcpOptions < handle
         qpscaling_lb_norm_inf_grad_obj
         qpscaling_scale_objective
         qpscaling_scale_constraints
+        nlp_qp_tol_strategy
+        nlp_qp_tol_reduction_factor
+        nlp_qp_tol_safety_factor
         exact_hess_cost
         exact_hess_dyn
         exact_hess_constr
