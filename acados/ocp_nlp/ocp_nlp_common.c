@@ -1579,30 +1579,30 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         }
         else if (!strcmp(field, "tol_stat"))
         {
+            // NOTE: NLP solver tolerances should be set before QP tolerances!
             double* tol_stat = (double *) value;
             opts->tol_stat = *tol_stat;
-            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
             config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_stat", value);
         }
         else if (!strcmp(field, "tol_eq"))
         {
+            // NOTE: NLP solver tolerances should be set before QP tolerances!
             double* tol_eq = (double *) value;
             opts->tol_eq = *tol_eq;
-            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
             config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_eq", value);
         }
         else if (!strcmp(field, "tol_ineq"))
         {
+            // NOTE: NLP solver tolerances should be set before QP tolerances!
             double* tol_ineq = (double *) value;
             opts->tol_ineq = *tol_ineq;
-            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
             config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_ineq", value);
         }
         else if (!strcmp(field, "tol_comp"))
         {
+            // NOTE: NLP solver tolerances should be set before QP tolerances!
             double* tol_comp = (double *) value;
             opts->tol_comp = *tol_comp;
-            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
             config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_comp", value);
         }
         else if (!strcmp(field, "tol_min_step_norm"))
