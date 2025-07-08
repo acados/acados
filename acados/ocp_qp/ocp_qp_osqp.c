@@ -1737,7 +1737,7 @@ int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
         osqp_update_P_A(mem->osqp_work, mem->P_x, NULL, mem->P_nnzmax, mem->A_x, NULL,
                         mem->A_nnzmax);
         osqp_update_bounds(mem->osqp_work, mem->l, mem->u);
-        // TODO(oj): update OSQP options here if they were updated?
+        cpy_osqp_settings(opts->osqp_opts, mem->osqp_work->settings);
     }
     else
     {
