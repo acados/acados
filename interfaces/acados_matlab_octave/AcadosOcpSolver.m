@@ -213,6 +213,18 @@ classdef AcadosOcpSolver < handle
         end
 
         function value = get(obj, field, varargin)
+            if strcmp('qp_iter_all', field)
+                full_stats = obj.t_ocp.get('stat');
+                if strcmp(obj.solver_options.nlp_solver_type, 'SQP')
+                    value = full_stats(:, 7);
+                    return;
+                elseif strcmp(obj.solver_options.nlp_solver_type, 'SQP_RTI')
+                    value = full_stats(:, 3);
+                    return;
+                else
+                    error("qp_iter is not available for nlp_solver_type %s.", obj.solver_options.nlp_solver_type);
+                end
+            end
 
             if strcmp('hess_block', field)
 
