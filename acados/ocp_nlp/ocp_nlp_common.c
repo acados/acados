@@ -1218,6 +1218,9 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->log_primal_step_norm = 0;
     opts->log_dual_step_norm = 0;
     opts->max_iter = 1;
+    opts->nlp_qp_tol_strategy = ADAPTIVE_CURRENT_RES_JOINT;
+    opts->nlp_qp_tol_reduction_factor = 1e-1;
+    opts->nlp_qp_tol_safety_factor = 0.1;
 
     /* submodules opts */
     // qp solver
@@ -1378,6 +1381,21 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             int* ext_qp_res = (int *) value;
             opts->ext_qp_res = *ext_qp_res;
+        }
+        else if (!strcmp(field, "nlp_qp_tol_strategy"))
+        {
+            ocp_nlp_qp_tol_strategy_t* nlp_qp_tol_strategy = (ocp_nlp_qp_tol_strategy_t *) value;
+            opts->nlp_qp_tol_strategy = *nlp_qp_tol_strategy;
+        }
+        else if (!strcmp(field, "nlp_qp_tol_reduction_factor"))
+        {
+            double* nlp_qp_tol_reduction_factor = (double *) value;
+            opts->nlp_qp_tol_reduction_factor = *nlp_qp_tol_reduction_factor;
+        }
+        else if (!strcmp(field, "nlp_qp_tol_safety_factor"))
+        {
+            double* nlp_qp_tol_safety_factor = (double *) value;
+            opts->nlp_qp_tol_safety_factor = *nlp_qp_tol_safety_factor;
         }
         else if (!strcmp(field, "store_iterates"))
         {
@@ -4373,6 +4391,35 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
 
     double tmp_time;
     int qp_status;
+
+    // update QP solver tolerances
+    if (nlp_opts->nlp_qp_tol_strategy == ADAPTIVE_CURRENT_RES_JOINT)
+    {
+        // printf("ocp_nlp_solve_qp_and_correct_dual: nlp_qp_tol_reduction_factor = %e\n", nlp_opts->nlp_qp_tol_reduction_factor);
+        double reduction_factor = nlp_opts->nlp_qp_tol_reduction_factor;
+        // double max_log_diff = (nlp_mem->nlp_res->inf_norm_res_stat / nlp_opts->tol_stat);
+
+        double tmp_tol_stat = MIN(reduction_factor * nlp_mem->nlp_res->inf_norm_res_stat, 1e-2);
+        double tmp_tol_eq = MIN(reduction_factor * nlp_mem->nlp_res->inf_norm_res_eq, 1e-2);
+        double tmp_tol_ineq = MIN(reduction_factor * nlp_mem->nlp_res->inf_norm_res_ineq, 1e-2);
+        double tmp_tol_comp = MIN(reduction_factor * nlp_mem->nlp_res->inf_norm_res_comp, 1e-2);
+
+        double joint_tol = MAX(tmp_tol_stat, MAX(tmp_tol_eq, MAX(tmp_tol_ineq, tmp_tol_comp)));
+
+        tmp_tol_stat = MAX(nlp_opts->nlp_qp_tol_safety_factor * nlp_opts->tol_stat, joint_tol);
+        tmp_tol_eq = MAX(nlp_opts->nlp_qp_tol_safety_factor * nlp_opts->tol_eq, joint_tol);
+        tmp_tol_ineq = MAX(nlp_opts->nlp_qp_tol_safety_factor * nlp_opts->tol_ineq, joint_tol);
+        tmp_tol_comp = MAX(nlp_opts->nlp_qp_tol_safety_factor * nlp_opts->tol_comp, joint_tol);
+
+        qp_solver->opts_set(qp_solver, qp_opts, "tol_stat", &tmp_tol_stat);
+        // printf("ocp_nlp_solve_qp_and_correct_dual: setting tol_stat to %e\n", tmp_tol_stat);
+        qp_solver->opts_set(qp_solver, qp_opts, "tol_eq", &tmp_tol_eq);
+        // printf("ocp_nlp_solve_qp_and_correct_dual: setting tol_eq to %e\n", tmp_tol_eq);
+        qp_solver->opts_set(qp_solver, qp_opts, "tol_ineq", &tmp_tol_ineq);
+        // printf("ocp_nlp_solve_qp_and_correct_dual: setting tol_ineq to %e\n", tmp_tol_ineq);
+        qp_solver->opts_set(qp_solver, qp_opts, "tol_comp", &tmp_tol_comp);
+        // printf("ocp_nlp_solve_qp_and_correct_dual: setting tol_comp to %e\n", tmp_tol_comp);
+    }
 
     // solve qp
     acados_tic(&timer);
