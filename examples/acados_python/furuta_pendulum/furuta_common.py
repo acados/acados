@@ -81,7 +81,7 @@ def get_furuta_model():
     return model
 
 
-def setup_ocp_solver(x0, umax, dt_0, N_horizon, Tf, RTI=False, timeout_max_time=0.0, heuristic="ZERO", with_anderson_acceleration=False, nlp_solver_max_iter = 20, tol = 1e-6):
+def setup_ocp_solver(x0, umax, dt_0, N_horizon, Tf, RTI=False, timeout_max_time=0.0, heuristic="ZERO", with_anderson_acceleration=False, nlp_solver_max_iter = 20, tol = 1e-6, with_abs_cost=False):
     ocp = AcadosOcp()
 
     model = get_furuta_model()
@@ -113,6 +113,30 @@ def setup_ocp_solver(x0, umax, dt_0, N_horizon, Tf, RTI=False, timeout_max_time=
     ocp.constraints.lbu = np.array([-umax])
     ocp.constraints.ubu = np.array([+umax])
     ocp.constraints.idxbu = np.array([0])
+
+    if with_abs_cost:
+        val = 1.4
+        # add cost term abs(x[0]-val) via slacks
+        # ocp.constraints.idxbx_e = np.array([0])
+        # ocp.constraints.lbx_e = np.array([val])
+        # ocp.constraints.ubx_e = np.array([val])
+        # ocp.constraints.idxsbx_e = np.array([0])
+
+        # ocp.cost.zl_e = 1e2 * np.array([1.0])
+        # ocp.cost.zu_e = 1e2 * np.array([1.0])
+        # ocp.cost.Zl_e = np.array([10.0])
+        # ocp.cost.Zu_e = np.array([10.0])
+
+        ocp.constraints.idxbx = np.array([0])
+        ocp.constraints.lbx = np.array([val])
+        ocp.constraints.ubx = np.array([val])
+        ocp.constraints.idxsbx = np.array([0])
+
+        ocp.cost.zl = 1e3 * np.array([1.0])
+        ocp.cost.zu = 1e3 * np.array([1.0])
+        ocp.cost.Zl = 0.0 * np.array([1.0])
+        ocp.cost.Zu = 0.0 * np.array([1.0])
+
 
     ocp.constraints.x0 = x0
 
