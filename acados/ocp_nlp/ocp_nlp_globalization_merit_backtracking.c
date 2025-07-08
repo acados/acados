@@ -591,9 +591,10 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     }
     // else perform SOC (below)
     int soc_status = ocp_nlp_perform_second_order_correction(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, qp_in, qp_out);
+    // line search does not care about status in soc??
     if (soc_status == ACADOS_SUCCESS)
     {
-        return false;
+        return true;
     }
 
     return true;
