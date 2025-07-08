@@ -115,7 +115,9 @@ class AcadosOcpBatchSolver():
 
         msg += "i.e. with the flags -DACADOS_WITH_OPENMP=ON -DACADOS_NUM_THREADS=1.\n" + \
                    "See https://github.com/acados/acados/pull/1089 for more details."
-        print(msg)
+        
+        if verbose:
+            print(msg)
 
 
     @property
