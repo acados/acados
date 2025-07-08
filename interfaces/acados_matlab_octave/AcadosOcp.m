@@ -876,7 +876,7 @@ classdef AcadosOcp < handle
 
             %% constraints
             % qpdunes
-            if ~isempty(strfind(opts.qp_solver,'qpdunes'))
+            if ~isempty(strfind(opts.qp_solver, 'QPDUNES'))
                 constraints.idxbxe_0 = [];
                 dims.nbxe_0 = 0;
             end
