@@ -28,7 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosOcp, AcadosOcpSolver, ACADOS_INFTY, AcadosOcpIterate, AcadosOcpFlattenedIterate
+from acados_template import AcadosOcp, AcadosOcpOptions, AcadosOcpSolver, ACADOS_INFTY, AcadosOcpIterate, AcadosOcpFlattenedIterate
 import numpy as np
 import scipy.linalg
 from linear_mass_model import export_linear_mass_model
@@ -36,7 +36,7 @@ from linear_mass_model import export_linear_mass_model
 
 def create_solver_opts(N=4, Tf=2, nlp_solver_type = 'SQP_WITH_FEASIBLE_QP', allow_switching_modes=True, globalization= 'FUNNEL_L1PEN_LINESEARCH'):
 
-    solver_options = AcadosOcp().solver_options
+    solver_options = AcadosOcpOptions()
 
     # set options
     solver_options.N_horizon = N
