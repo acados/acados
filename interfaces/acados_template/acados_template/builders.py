@@ -51,7 +51,8 @@ class CMakeBuilder:
         """Defines the generator, options can be found via `cmake --help` under 'Generator'. Type: string. Linux default 'Unix Makefiles', Windows 'Visual Studio 15 2017 Win64'; default value: `None`."""
         # set something for Windows
         if os.name == 'nt':
-            self.generator = 'Visual Studio 15 2017 Win64'
+            # self.generator = 'Visual Studio 15 2017 Win64'
+            self.generator = 'Visual Studio 17 2022'
         self.build_targets = None
         """A comma-separated list of the build targets, if `None` then all targets will be build; type: List of strings; default: `None`."""
         self.options_on = None
@@ -74,7 +75,7 @@ class CMakeBuilder:
     # Generate the command string for handling the build.
     def get_cmd2_build(self):
         import multiprocessing
-        cmd = f'cmake --build "{self._build_dir}" --config Release -j{multiprocessing.cpu_count()}'
+        cmd = f'cmake --build "{self._build_dir}" --config Release'
         if self.build_targets is not None:
             cmd += f' -t {self.build_targets}'
         return cmd
