@@ -55,38 +55,73 @@ class AcadosCasadiOcp:
             # indices of variables within w
             'x_in_w': [],
             'u_in_w': [],
+            # indices of slack variables within w
+            'sl_in_w': [],
+            'su_in_w': [],
             # indices of parameters within p_nlp
             'p_in_p_nlp': [],
             'p_global_in_p_nlp': [],
-            # indices of state bounds within lam_x(lam_w) in casadi formulation
+            # indices of state bounds and control bounds within lam_x(lam_w) in casadi formulation
             'lam_bx_in_lam_w':[],
-            # indices of control bounds within lam_x(lam_w) in casadi formulation
             'lam_bu_in_lam_w': [],
             # indices of dynamic constraints within g in casadi formulation
             'pi_in_lam_g': [],
             # indicies to [g, h, phi] in acados formulation within lam_g in casadi formulation
-            'lam_gnl_in_lam_g': []
+            'lam_gnl_in_lam_g': [],
+            # indices of slack variables within lam_g in casadi formulation
+            'lam_sl_in_lam_g': [],
+            'lam_su_in_lam_g': [],
         }
 
         # unpack
         model = ocp.model
         dims = ocp.dims
         constraints = ocp.constraints
+        cost = ocp.cost
         solver_options = ocp.solver_options
         N_horizon = solver_options.N_horizon
 
         # check what is not supported yet
-        if any([dims.ns_0, dims.ns, dims.ns_e]):
-            raise NotImplementedError("AcadosCasadiOcpSolver does not support soft constraints yet.")
+        if any([dims.nsbx,dims.nsbx_e, dims.nsbu]):
+            raise NotImplementedError("AcadosCasadiOcpSolver does not support slack variables (s) for variables (w) yet.")
         if dims.nz > 0:
             raise NotImplementedError("AcadosCasadiOcpSolver does not support algebraic variables (z) yet.")
         if ocp.solver_options.integrator_type not in ["DISCRETE", "ERK"]:
             raise NotImplementedError(f"AcadosCasadiOcpSolver does not support integrator type {ocp.solver_options.integrator_type} yet.")
 
-        # create primal variables indexed by shooting nodes
+        # create primal variables and slack variables
         ca_symbol = model.get_casadi_symbol()
-        xtraj_node = [ca_symbol(f'x{i}', dims.nx, 1) for i in range(N_horizon+1)]
-        utraj_node = [ca_symbol(f'u{i}', dims.nu, 1) for i in range(N_horizon)]
+        xtraj_node = []
+        utraj_node = []
+        sl_node = []
+        su_node = []
+        for i in range(N_horizon+1):
+            if i == 0:
+                xtraj_node.append(ca_symbol(f'x{i}', dims.nx, 1))
+                utraj_node.append(ca_symbol(f'u{i}', dims.nu, 1))
+                if dims.ns_0 > 0:
+                    sl_node.append(ca_symbol(f'sl_0', dims.ns_0, 1))
+                    su_node.append(ca_symbol(f'su_0', dims.ns_0, 1))
+                else:
+                    sl_node.append([])
+                    su_node.append([])
+            elif i < N_horizon:
+                xtraj_node.append(ca_symbol(f'x{i}', dims.nx, 1))
+                utraj_node.append(ca_symbol(f'u{i}', dims.nu, 1))
+                if dims.ns > 0:
+                    sl_node.append(ca_symbol(f'sl_{i}', dims.ns, 1))
+                    su_node.append(ca_symbol(f'su_{i}', dims.ns, 1))
+                else:
+                    sl_node.append([])
+                    su_node.append([])
+            else:
+                xtraj_node.append(ca_symbol(f'x_e', dims.nx, 1))
+                if dims.ns_e > 0:
+                    sl_node.append(ca_symbol(f'sl_e', dims.ns_e, 1))
+                    su_node.append(ca_symbol(f'su_e', dims.ns_e, 1))
+                else:
+                    sl_node.append([])
+                    su_node.append([])
         if dims.nz > 0:
             raise NotImplementedError("CasADi NLP formulation not implemented for models with algebraic variables (z).")
 
@@ -98,6 +133,19 @@ class AcadosCasadiOcp:
         ub_xtraj_node = [np.inf * ca.DM.ones((dims.nx, 1)) for _ in range(N_horizon+1)]
         lb_utraj_node = [-np.inf * ca.DM.ones((dims.nu, 1)) for _ in range(N_horizon)]
         ub_utraj_node = [np.inf * ca.DM.ones((dims.nu, 1)) for _ in range(N_horizon)]
+        # setup slack variabless 
+        lb_slack_node = []
+        ub_slack_node = []
+        for i in range(N_horizon+1):
+            if i == 0 and dims.ns_0:
+                lb_slack_node.append(0 * ca.DM.ones((dims.ns_0, 1)))
+                ub_slack_node.append(np.inf * ca.DM.ones((dims.ns_0, 1)))
+            elif i < N_horizon and dims.ns:
+                lb_slack_node.append(0 * ca.DM.ones((dims.ns, 1)))
+                ub_slack_node.append(np.inf * ca.DM.ones((dims.ns, 1)))
+            elif i == N_horizon and dims.ns_e:
+                lb_slack_node.append(0 * ca.DM.ones((dims.ns_e, 1)))
+                ub_slack_node.append(np.inf * ca.DM.ones((dims.ns_e, 1)))
         offset = 0
         for i in range(0, N_horizon+1):
             if i == 0:
@@ -120,6 +168,7 @@ class AcadosCasadiOcp:
                 ub_utraj_node[i][constraints.idxbu] = constraints.ubu
                 index_map['lam_bu_in_lam_w'].append(list(offset + constraints.idxbu))
                 offset += dims.nu
+                offset += 2*dims.ns_0 if i == 0 else 2*dims.ns
 
         ### Concatenate primal variables and bounds
         # w = [x0, u0, x1, u1, ...]
@@ -150,6 +199,35 @@ class AcadosCasadiOcp:
             p_list.append(ocp.parameter_values)
             index_map['p_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np)))
             offset_p += dims.np
+            # add slack variables
+            # could be improved?
+            if i == 0 and dims.ns_0:
+                w_sym_list.append(sl_node[i])
+                lbw_list.append(lb_slack_node[i])
+                ubw_list.append(ub_slack_node[i])
+                w0_list.append(np.zeros((dims.ns_0,)))
+                index_map['sl_in_w'].append(list(range(offset, offset + dims.ns_0)))
+                w_sym_list.append(su_node[i])
+                lbw_list.append(lb_slack_node[i])
+                ubw_list.append(ub_slack_node[i])
+                w0_list.append(np.zeros((dims.ns_0,)))
+                index_map['su_in_w'].append(list(range(offset + dims.ns_0, offset + 2 * dims.ns_0)))
+                offset += 2 * dims.ns_0
+            elif i!=0 and i < N_horizon and dims.ns:
+                w_sym_list.append(sl_node[i])
+                lbw_list.append(lb_slack_node[i])
+                ubw_list.append(ub_slack_node[i])
+                w0_list.append(np.zeros((dims.ns,)))
+                index_map['sl_in_w'].append(list(range(offset, offset + dims.ns)))
+                w_sym_list.append(su_node[i])
+                lbw_list.append(lb_slack_node[i])
+                ubw_list.append(ub_slack_node[i])
+                w0_list.append(np.zeros((dims.ns,)))
+                index_map['su_in_w'].append(list(range(offset + dims.ns, offset + 2 * dims.ns)))
+                offset += 2 * dims.ns
+            else:
+                index_map['sl_in_w'].append([])
+                index_map['su_in_w'].append([])
         ## terminal stage
         # add x
         w_sym_list.append(xtraj_node[-1])
@@ -165,6 +243,22 @@ class AcadosCasadiOcp:
         p_list.append(ocp.p_global_values)
         index_map['p_global_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np_global)))
         offset_p += dims.np_global
+        # add slack variables
+        if dims.ns_e:
+            w_sym_list.append(sl_node[-1])
+            lbw_list.append(lb_slack_node[-1])
+            ubw_list.append(ub_slack_node[-1])
+            w0_list.append(np.zeros((dims.ns_e,)))
+            index_map['sl_in_w'].append(list(range(offset, offset + dims.ns_e)))
+            w_sym_list.append(su_node[-1])
+            lbw_list.append(lb_slack_node[-1])
+            ubw_list.append(ub_slack_node[-1])
+            w0_list.append(np.zeros((dims.ns_e,)))
+            index_map['su_in_w'].append(list(range(offset + dims.ns_e, offset + 2 * dims.ns_e)))
+            offset += 2 * dims.ns_e
+        else:
+            index_map['sl_in_w'].append([])
+            index_map['su_in_w'].append([])
 
         nw = offset  # number of primal variables
 
@@ -243,11 +337,41 @@ class AcadosCasadiOcp:
                     ubg.append(constraints.ug)
 
                 if dims.nh_0 > 0:
-                    # h_0
-                    h_0_nlp_expr = h_0_fun(xtraj_node[0], utraj_node[0], ptraj_node[0], model.p_global)
-                    g.append(h_0_nlp_expr)
-                    lbg.append(constraints.lh_0)
-                    ubg.append(constraints.uh_0)
+                    if dims.nsh_0 > 0:
+                        # h_fun with slack variables
+                        soft_h_indices = constraints.idxsh_0  # indices of slacked control bounds
+                        hard_h_indices = [h for h in range(len(constraints.lh_0)) if h not in constraints.idxsh_0]
+
+                        h_0_nlp_expr = h_0_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
+
+                        if not hard_h_indices:
+                            index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + len(hard_h_indices))))
+                            offset += len(hard_h_indices)
+                        
+                        for j in range(len(constraints.lh_0)):
+                            if j in hard_h_indices:
+                                g.append(h_0_nlp_expr[hard_h_indices])
+                                lbg.append(constraints.lh_0[hard_h_indices])
+                                ubg.append(constraints.uh_0[hard_h_indices])
+                                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + len(hard_h_indices))))
+                                offset += len(hard_h_indices)
+                            elif j in soft_h_indices:                          
+                                g.append(h_0_nlp_expr[soft_h_indices] + sl_node[i])
+                                lbg.append(constraints.lh_0[soft_h_indices])
+                                ubg.append(np.inf * ca.DM.ones((dims.nsh_0, 1)))
+                                g.append(h_0_nlp_expr[soft_h_indices] - su_node[i])
+                                lbg.append(-np.inf * ca.DM.ones((dims.nsh_0, 1)))
+                                ubg.append(constraints.uh_0[soft_h_indices])
+                                index_map['lam_sl_in_lam_g'].append(list(range(offset, offset + dims.nsh_0)))
+                                index_map['lam_su_in_lam_g'].append(list(range(offset + dims.nsh_0, offset + 2 * dims.nsh_0)))
+                                offset += 2 * dims.nsh_0
+                    else:
+                        h_0_nlp_expr = h_0_fun(xtraj_node[0], utraj_node[0], ptraj_node[0], model.p_global)
+                        g.append(h_0_nlp_expr)
+                        lbg.append(constraints.lh_0)
+                        ubg.append(constraints.uh_0)
+                        index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh_0)))
+                        offset += dims.nh_0
                     if with_hessian:
                         lam_h_0 = ca_symbol(f'lam_h_0', dims.nh_0, 1)
                         lam_g.append(lam_h_0)
@@ -272,9 +396,11 @@ class AcadosCasadiOcp:
                         dr_dw = ca.jacobian(r_in_nlp, w)
                         hess_l += dr_dw.T @ outer_hess_r @ dr_dw
 
-                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.ng + dims.nh_0 + dims.nphi_0)))
-                offset += dims.ng + dims.nh_0 + dims.nphi_0
-            
+                if not any([dims.ng, dims.nh_0, dims.nphi_0]):
+                    # no nonlinear constraints at initial stage
+                    index_map['lam_gnl_in_lam_g'].append([])
+                    index_map['lam_sl_in_lam_g'].append([])
+                    index_map['lam_su_in_lam_g'].append([])
             # intermediate stages
             elif i < N_horizon:
                 if dims.ng > 0:
@@ -286,10 +412,42 @@ class AcadosCasadiOcp:
                     ubg.append(constraints.ug)
 
                 if dims.nh > 0:
-                    h_i_nlp_expr = h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
-                    g.append(h_i_nlp_expr)
-                    lbg.append(constraints.lh)
-                    ubg.append(constraints.uh)
+                    if dims.nsh > 0:
+                        # h_fun with slack variables
+                        soft_h_indices = constraints.idxsh  # indices of slacked control bounds
+                        hard_h_indices = [h for h in range(len(constraints.lh)) if h not in constraints.idxsh]
+
+                        h_i_nlp_expr = h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
+
+                        # dummy
+                        if not hard_h_indices:
+                            index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + len(hard_h_indices))))
+                            offset += len(hard_h_indices)
+
+                        for j in range(len(constraints.lh)):
+                            if j in hard_h_indices:
+                                g.append(h_i_nlp_expr[hard_h_indices])
+                                lbg.append(constraints.lh[hard_h_indices])
+                                ubg.append(constraints.uh[hard_h_indices])
+                                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + len(hard_h_indices))))
+                                offset += len(hard_h_indices)
+                            elif j in soft_h_indices:                          
+                                g.append(h_i_nlp_expr[soft_h_indices] + sl_node[i])
+                                lbg.append(constraints.lh[soft_h_indices])
+                                ubg.append(np.inf * ca.DM.ones((dims.nsh, 1)))
+                                g.append(h_i_nlp_expr[soft_h_indices] - su_node[i])
+                                lbg.append(-np.inf * ca.DM.ones((dims.nsh, 1)))
+                                ubg.append(constraints.uh[soft_h_indices])
+                                index_map['lam_sl_in_lam_g'].append(list(range(offset, offset + dims.nsh)))
+                                index_map['lam_su_in_lam_g'].append(list(range(offset + dims.nsh, offset + 2 * dims.nsh)))
+                                offset += 2 * dims.nsh
+                    else:
+                        h_i_nlp_expr = h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
+                        g.append(h_i_nlp_expr)
+                        lbg.append(constraints.lh)
+                        ubg.append(constraints.uh)
+                        index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh)))
+                        offset += dims.nh
                     if with_hessian and dims.nh > 0:
                         # add hessian contribution
                         lam_h = ca_symbol(f'lam_h_{i}', dims.nh, 1)
@@ -312,9 +470,11 @@ class AcadosCasadiOcp:
                         dr_dw = ca.jacobian(r_in_nlp, w)
                         hess_l += dr_dw.T @ outer_hess_r @ dr_dw
 
-                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.ng + dims.nh + dims.nphi)))
-                offset += dims.ng + dims.nphi + dims.nh
-            
+                if not any([dims.ng, dims.nh, dims.nphi]):
+                    # no nonlinear constraints at intermediate stages
+                    index_map['lam_gnl_in_lam_g'].append([])
+                    index_map['lam_sl_in_lam_g'].append([])
+                    index_map['lam_su_in_lam_g'].append([])
             # terminal stage
             else:
                 if dims.ng_e > 0:
@@ -325,10 +485,42 @@ class AcadosCasadiOcp:
                     ubg.append(constraints.ug_e)
 
                 if dims.nh_e > 0:
-                    h_e_nlp_expr = h_e_fun(xtraj_node[-1], ptraj_node[-1], model.p_global)
-                    g.append(h_e_nlp_expr)
-                    lbg.append(constraints.lh_e)
-                    ubg.append(constraints.uh_e)
+                    if dims.nsh_e > 0:
+                        # h_e_fun with slack variables
+                        soft_h_indices = constraints.idxsh_e
+                        # indices of slacked control bounds
+                        hard_h_indices = [h for h in range(len(constraints.lh_e)) if h not in constraints.idxsh_e]
+
+                        h_e_nlp_expr = h_e_fun(xtraj_node[-1], ptraj_node[-1], model.p_global)
+                        
+                        if not hard_h_indices:
+                            index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + len(hard_h_indices))))
+                            offset += len(hard_h_indices)
+
+                        for j in range(len(constraints.lh_e)):
+                            if j in hard_h_indices:
+                                g.append(h_e_nlp_expr[hard_h_indices])
+                                lbg.append(constraints.lh_e[hard_h_indices])
+                                ubg.append(constraints.uh_e[hard_h_indices])
+                                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + len(hard_h_indices))))
+                                offset += len(hard_h_indices)
+                            elif j in soft_h_indices:          
+                                g.append(h_e_nlp_expr[soft_h_indices] + sl_node[i])
+                                lbg.append(constraints.lh_e[soft_h_indices])
+                                ubg.append(np.inf * ca.DM.ones((dims.nsh_e, 1)))
+                                g.append(h_e_nlp_expr[soft_h_indices] - su_node[i])
+                                lbg.append(-np.inf * ca.DM.ones((dims.nsh_e, 1)))
+                                ubg.append(constraints.uh_e[soft_h_indices])
+                                index_map['lam_sl_in_lam_g'].append(list(range(offset, offset + dims.nsh_e)))
+                                index_map['lam_su_in_lam_g'].append(list(range(offset + dims.nsh_e, offset + 2 * dims.nsh_e)))
+                                offset += 2 * dims.nsh_e
+                    else:
+                        h_e_nlp_expr = h_e_fun(xtraj_node[-1], ptraj_node[-1], model.p_global)
+                        g.append(h_e_nlp_expr)
+                        lbg.append(constraints.lh_e)
+                        ubg.append(constraints.uh_e)
+                        index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh_e)))
+                        offset += dims.nh_e
                     if with_hessian and dims.nh_e > 0:
                         # add hessian contribution
                         lam_h_e = ca_symbol(f'lam_h_e', dims.nh_e, 1)
@@ -351,26 +543,40 @@ class AcadosCasadiOcp:
                         dr_dw = ca.jacobian(r_in_nlp, w)
                         hess_l += dr_dw.T @ outer_hess_r @ dr_dw
 
-                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.ng_e + dims.nh_e + dims.nphi_e)))
-                offset += dims.ng_e + dims.nh_e + dims.nphi_e
-
+                if not any([dims.ng_e, dims.nh_e, dims.nphi_e]):
+                    # no nonlinear constraints at terminal stage
+                    index_map['lam_gnl_in_lam_g'].append([])
+                    index_map['lam_sl_in_lam_g'].append([])
+                    index_map['lam_su_in_lam_g'].append([])
         ### Cost
         # initial cost term
         nlp_cost = 0
         cost_expr_0 = ocp.get_initial_cost_expression()
         cost_fun_0 = ca.Function('cost_fun_0', [model.x, model.u, model.p, model.p_global], [cost_expr_0])
         nlp_cost += solver_options.cost_scaling[0] * cost_fun_0(xtraj_node[0], utraj_node[0], ptraj_node[0], model.p_global)
+        if dims.ns_0:
+            penlalty_expr_0 = 0.5* ca.mtimes(sl_node[0].T, ca.mtimes(cost.Zl_0, sl_node[0])) + ca.mtimes(cost.zl_0.reshape(-1,1).T, sl_node[0]) +\
+                0.5* ca.mtimes(su_node[0].T, ca.mtimes(cost.Zu_0, su_node[0])) + ca.mtimes(cost.zu_0.reshape(-1,1).T, su_node[0])
+            nlp_cost += solver_options.cost_scaling[0] * penlalty_expr_0
 
         # intermediate cost term
         cost_expr = ocp.get_path_cost_expression()
         cost_fun = ca.Function('cost_fun', [model.x, model.u, model.p, model.p_global], [cost_expr])
         for i in range(1, N_horizon):
             nlp_cost += solver_options.cost_scaling[i] * cost_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
+            if dims.ns > 0:
+                penlalty_expr = 0.5* ca.mtimes(sl_node[i].T, ca.mtimes(cost.Zl, sl_node[i])) + ca.mtimes(cost.zl.reshape(-1,1).T, sl_node[i]) +\
+                    0.5* ca.mtimes(su_node[i].T, ca.mtimes(cost.Zu, su_node[i])) + ca.mtimes(cost.zu.reshape(-1,1).T, su_node[i])
+                nlp_cost += solver_options.cost_scaling[i] * penlalty_expr
 
         # terminal cost term
         cost_expr_e = ocp.get_terminal_cost_expression()
         cost_fun_e = ca.Function('cost_fun_e', [model.x, model.p, model.p_global], [cost_expr_e])
         nlp_cost += solver_options.cost_scaling[-1] * cost_fun_e(xtraj_node[-1], ptraj_node[-1], model.p_global)
+        if dims.ns_e:
+            penlalty_expr_e = 0.5* ca.mtimes(sl_node[-1].T, ca.mtimes(cost.Zl_e, sl_node[-1])) + ca.mtimes(cost.zl_e.reshape(-1,1).T, sl_node[-1]) +\
+                0.5* ca.mtimes(su_node[-1].T, ca.mtimes(cost.Zu_e, su_node[-1])) + ca.mtimes(cost.zu_e.reshape(-1,1).T, su_node[-1])
+            nlp_cost += solver_options.cost_scaling[-1] * penlalty_expr_e
 
         if with_hessian:
             lam_f = ca_symbol('lam_f', 1, 1)
@@ -541,7 +747,12 @@ class AcadosCasadiOcpSolver:
         Get the last solution of the solver.
 
         :param stage: integer corresponding to shooting node
-        :param field: string in ['x', 'u', 'pi', 'p', 'lam']
+        :param field: string in ['x', 'u', 'pi', 'p', 'lam', 'sl', 'su']
+
+        .. note:: regarding lam: \n
+        the inequalities are internally organized in the following order: \n
+        [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
+        lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
 
         """
         if not isinstance(stage, int):
@@ -557,6 +768,10 @@ class AcadosCasadiOcpSolver:
             return -self.nlp_sol_lam_g[self.index_map['pi_in_lam_g'][stage]].flatten()
         elif field == 'p':
             return self.p[self.index_map['p_in_p_nlp'][stage]].flatten()
+        elif field == 'sl':
+            return self.nlp_sol_w[self.index_map['sl_in_w'][stage]].flatten()
+        elif field == 'su':
+            return self.nlp_sol_w[self.index_map['su_in_w'][stage]].flatten()
         elif field == 'lam':
             if stage == 0:
                 bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]]
@@ -572,14 +787,35 @@ class AcadosCasadiOcpSolver:
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
 
             lbx_lam = np.maximum(0, -bx_lam)
-            lbu_lam = np.maximum(0, -bu_lam)
-            lg_lam = np.maximum(0, -g_lam)
             ubx_lam = np.maximum(0, bx_lam)
+            lbu_lam = np.maximum(0, -bu_lam)
             ubu_lam = np.maximum(0, bu_lam)
-            ug_lam = np.maximum(0, g_lam)
-            lam = np.concatenate((lbu_lam, lbx_lam, lg_lam, ubu_lam, ubx_lam, ug_lam))
+            if any([dims.ns_0, dims.ns, dims.ns_e]):
+                lw_soft_lam = self.nlp_sol_lam_x[self.index_map['sl_in_w'][stage]]
+                uw_soft_lam = self.nlp_sol_lam_x[self.index_map['su_in_w'][stage]]
+                lg_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_sl_in_lam_g'][stage]]
+                ug_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_su_in_lam_g'][stage]]
+                # TODO: could be improved?
+                if self.index_map['lam_gnl_in_lam_g'][stage]:
+                    if self.index_map['lam_gnl_in_lam_g'][stage] < self.index_map['lam_su_in_lam_g'][stage]: 
+                        # hard constraints before soft constraints
+                        lbg_lam = np.concatenate((np.maximum(0, -g_lam), np.abs(lg_soft_lam)))
+                        ubg_lam = np.concatenate((np.maximum(0, g_lam), np.abs(ug_soft_lam)))
+                    else:
+                        # soft constraints before hard constraints
+                        lbg_lam = np.concatenate((np.abs(lg_soft_lam), np.maximum(0, -g_lam)))
+                        ubg_lam = np.concatenate((np.abs(ug_soft_lam), np.maximum(0, g_lam)))
+                else:
+                    lbg_lam = np.abs(lg_soft_lam)
+                    ubg_lam = np.abs(ug_soft_lam)
+                lam_soft = np.concatenate((np.abs(lw_soft_lam), np.abs(uw_soft_lam)))
+            else:
+                lbg_lam = np.maximum(0, -g_lam)
+                ubg_lam = np.maximum(0, g_lam)
+                lam_soft = np.empty((0, 1))
+            lam = np.concatenate((lbu_lam, lbx_lam, lbg_lam, ubu_lam, ubx_lam, ubg_lam, lam_soft))
             return lam.flatten()
-        elif field in ['sl', 'su', 'z']:
+        elif field in ['z']:
             return np.empty((0, 1))  # Only empty is supported for now. TODO: extend.
         else:
             raise NotImplementedError(f"Field '{field}' is not implemented in AcadosCasadiOcpSolver")
@@ -716,7 +952,7 @@ class AcadosCasadiOcpSolver:
         Set solver initialization to stages.
 
         :param stage: integer corresponding to shooting node
-        :param field: string in ['x', 'u', 'pi', 'lam']
+        :param field: string in ['x', 'u', 'pi', 'lam', 'p', 'sl', 'su']
         :value_:
         """
         dims = self.ocp.dims
@@ -729,7 +965,12 @@ class AcadosCasadiOcpSolver:
             self.lam_g0[self.index_map['pi_in_lam_g'][stage]] = -value_.flatten()
         elif field == 'p':
             self.p[self.index_map['p_in_p_nlp'][stage]] = value_.flatten()
+        elif field == 'sl':
+            self.w0[self.index_map['sl_in_w'][stage]] = value_.flatten()
+        elif field == 'su':
+            self.w0[self.index_map['su_in_w'][stage]] = value_.flatten()
         elif field == 'lam':
+            # not ready for slacks yet
             if stage == 0:
                 nbx = dims.nbx_0
                 nbu = dims.nbu
@@ -756,9 +997,6 @@ class AcadosCasadiOcpSolver:
             else:
                 self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]] = ubx_lam-lbx_lam
                 self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] = ug_lam-lg_lam
-        elif field in ['sl', 'su']:
-            # do nothing for now, only empty is supported
-            pass
         else:
             raise NotImplementedError(f"Field '{field}' is not yet implemented in set().")
 
