@@ -316,6 +316,7 @@ acados_size_t ocp_nlp_constraints_bgp_model_calculate_size(void *config, void *d
     size += blasfeo_memsize_dmat(nu + nx, ng);                        // DCt
 
     size += 64;  // blasfeo_mem align
+    make_int_multiple_of(8, &size);
 
     return size;
 }
