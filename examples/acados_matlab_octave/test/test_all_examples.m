@@ -145,18 +145,20 @@ disp('Succesful tests: ')
 for idx = 1:length(targets)
     if strcmp(messages{idx},"")
         disp(targets{idx})
-    end
-end
-disp(' ')
-disp('Failed tests: ')
-for idx = 1:length(targets)
-    if ~strcmp(messages{idx},"")
-        disp(targets{idx})
-        disp(['message: ',messages{idx}])
+    else
         fail = true;
     end
 end
+disp(' ')
+
 if fail==true
+    disp('Failed tests: ')
+    for idx = 1:length(targets)
+        if ~strcmp(messages{idx},"")
+            disp(targets{idx})
+            disp(['message: ',messages{idx}])
+        end
+    end
     error('Test failure');
 end
 clearvars
