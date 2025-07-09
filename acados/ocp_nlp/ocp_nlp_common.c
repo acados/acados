@@ -1218,7 +1218,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->log_primal_step_norm = 0;
     opts->log_dual_step_norm = 0;
     opts->max_iter = 1;
-    opts->nlp_qp_tol_strategy = ADAPTIVE_CURRENT_RES_JOINT;
+    opts->nlp_qp_tol_strategy = FIXED_QP_TOL;
     opts->nlp_qp_tol_reduction_factor = 1e-1;
     opts->nlp_qp_tol_safety_factor = 0.1;
 
