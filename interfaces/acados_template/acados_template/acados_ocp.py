@@ -1039,6 +1039,10 @@ class AcadosOcp:
             if opts.nlp_solver_type == "SQP_RTI":
                 raise NotImplementedError('qpscaling_scale_constraints and qpscaling_scale_objective not supported for SQP_RTI solver.')
 
+        if opts.nlp_qp_tol_strategy == "ADAPTIVE_QPSCALING":
+            if opts.qpscaling_scale_constraints == "NO_CONSTRAINT_SCALING" and opts.qpscaling_scale_objective == "NO_OBJECTIVE_SCALING":
+                raise NotImplementedError('ADAPTIVE_QPSCALING only makes sense if QP scaling is used.')
+
         # Set default parameters for globalization
         ddp_with_merit_or_funnel = opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' or (opts.nlp_solver_type == "DDP" and opts.globalization == 'MERIT_BACKTRACKING')
         if opts.globalization_alpha_min is None:
