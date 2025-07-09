@@ -227,3 +227,28 @@ void assign_and_advance_blasfeo_dmat_mem(int m, int n, struct blasfeo_dmat *sA, 
     *ptr += sA->memsize;
 #endif
 }
+
+
+void print_pointer_alignment(char **ptr)
+{
+    if ((size_t) *ptr % 64 == 0)
+    {
+        printf("Pointer is aligned to 64 bytes\n");
+    }
+    else if ((size_t) *ptr % 32 == 0)
+    {
+        printf("Pointer is aligned to 32 bytes\n");
+    }
+    else if ((size_t) *ptr % 16 == 0)
+    {
+        printf("Pointer is aligned to 16 bytes\n");
+    }
+    else if ((size_t) *ptr % 8 == 0)
+    {
+        printf("Pointer is aligned to 8 bytes\n");
+    }
+    else
+    {
+        printf("Pointer is NOT aligned to 8 bytes\n");
+    }
+}

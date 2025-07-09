@@ -91,6 +91,9 @@ void assign_and_advance_blasfeo_dvec_mem(int n, struct blasfeo_dvec *sv, char **
 // allocate strmat and advance pointer
 void assign_and_advance_blasfeo_dmat_mem(int m, int n, struct blasfeo_dmat *sA, char **ptr);
 
+// print pointer alignment
+void print_pointer_alignment(char **ptr);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
