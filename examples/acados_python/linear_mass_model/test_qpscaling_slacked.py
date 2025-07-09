@@ -28,7 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosOcp, AcadosOcpSolver, ACADOS_INFTY, AcadosOcpIterate
+from acados_template import AcadosOcp, AcadosOcpSolver, ACADOS_INFTY, AcadosOcpIterate, AcadosOcpFlattenedIterate
 import numpy as np
 import scipy.linalg
 from linear_mass_model import export_linear_mass_model
@@ -138,10 +138,11 @@ def create_solver(solver_name: str, soften_obstacle: bool, soften_terminal: bool
 
     # add obstacle
     obs_rad = 1.0
+    prescaling = 1.0
     ocp.constraints.lh = -np.array([ACADOS_INFTY])
-    ocp.constraints.uh = -np.array([obs_rad**2])
+    ocp.constraints.uh = -prescaling * np.array([obs_rad**2])
     x_square = model.x[0] ** 2 + model.x[1] ** 2
-    ocp.model.con_h_expr = -x_square
+    ocp.model.con_h_expr = prescaling * (-x_square)
     # copy for terminal
     ocp.constraints.uh_e = ocp.constraints.uh
     ocp.constraints.lh_e = ocp.constraints.lh
@@ -217,21 +218,52 @@ def call_solver(ocp: AcadosOcp, ocp_solver: AcadosOcpSolver, soften_obstacle: bo
     print(f"cost function value = {ocp_solver.get_cost()} after {sqp_iter} SQP iterations")
     print(f"solved sqp_wfqp problem with settings soften_obstacle = {soften_obstacle},soften_terminal = {soften_terminal}, SOFTEN_CONTROL = {soften_controls}")
 
-def check_residual_solutions(stat1: np.ndarray, stat2: np.ndarray):
-    n_rows1 = len(stat1[0])
-    n_rows2 = len(stat2[0])
+def check_iteration_residual(stat_list = list[np.ndarray]):
 
-    assert n_rows1 == n_rows2, f"Both solvers should take the same number of iterations!, got {n_rows1} for solver 1, and {n_rows2} for solver 2"
+    if len(stat_list) < 2:
+        raise ValueError("At least two statistics are required for comparison.")
+    stats_ref = stat_list[0]
 
-    for jj in range(n_rows1):
-        # res_stat
-        assert np.allclose(stat1[1][jj], stat2[1][jj]), f"res_stat differs in iter {jj}"
-        # res_eq
-        assert np.allclose(stat1[2][jj], stat2[2][jj]), f"res_eq differs in iter {jj}"
-        # res_ineq
-        assert np.allclose(stat1[3][jj], stat2[3][jj]), f"res_ineq differs in iter {jj}"
-        # res_comp
-        assert np.allclose(stat1[4][jj], stat2[4][jj]), f"res_comp differs in iter {jj}"
+    n_iter_ref = stats_ref.shape[1]
+    for stat in stat_list[1:]:
+        n_iter = stat.shape[1]
+        if n_iter != n_iter_ref:
+            raise ValueError(f"Statistics have different number of rows: {n_iter} vs {n_iter_ref}")
+        for jj in range(n_iter_ref):
+            # res_stat
+            if not np.allclose(stats_ref[1, jj], stat[1, jj]):
+                raise ValueError(f"res_stat differs in iter {jj}")
+            # res_eq
+            if not np.allclose(stats_ref[2, jj], stat[2, jj]):
+                raise ValueError(f"res_eq differs in iter {jj}, got {stat[2, jj]} vs {stats_ref[2, jj]}")
+            # res_ineq
+            if not np.allclose(stats_ref[3, jj], stat[3, jj]):
+                raise ValueError(f"res_ineq differs in iter {jj}")
+            # res_comp
+            if not np.allclose(stats_ref[4, jj], stat[4, jj]):
+                raise ValueError(f"res_comp differs in iter {jj}")
+
+def check_solutions(sol_list: list[AcadosOcpFlattenedIterate]):
+    # check solutions
+    ref_sol = sol_list[0]
+    if len(sol_list) < 2:
+        raise ValueError("At least two solutions are required for comparison.")
+    # print(f"{ref_sol}")
+
+    for sol in sol_list[1:]:
+        for field in ["x", "u", "sl", "su", "lam", "pi"]:
+            v1 = getattr(ref_sol, field)
+            v2 = getattr(sol, field)
+            if not np.allclose(v1, v2, atol=1e-6):
+                print(f"Field {field} differs: max diff = {np.max(np.abs(v1 - v2))}")
+                print(f"got difference {v1 - v2}")
+            else:
+                # print(f"Solutions match in field {field}.")
+                pass
+        if ref_sol.allclose(sol):
+            print("Both solvers have the same solution.")
+        else:
+            raise ValueError("Solutions of solvers differ!")
 
 def test_qp_scaling(nlp_solver_type = 'SQP', globalization = 'FUNNEL_L1PEN_LINESEARCH'):
     print(f"\n\nTesting solver={nlp_solver_type} with globalization={globalization}")
@@ -244,38 +276,22 @@ def test_qp_scaling(nlp_solver_type = 'SQP', globalization = 'FUNNEL_L1PEN_LINES
     ocp_1, ocp_solver_1 = create_solver("1", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type=nlp_solver_type, globalization=globalization, allow_switching_modes=False, use_qp_scaling=False)
     sol_1 = call_solver(ocp_1, ocp_solver_1, soften_obstacle, soften_terminal, soften_controls, plot=False)
     check_qp_scaling(ocp_solver_1)
-    sol_1 = ocp_solver_1.store_iterate_to_obj()
+    sol_1 = ocp_solver_1.store_iterate_to_flat_obj()
     stats_1 = ocp_solver_1.get_stats("statistics")
 
     # test QP scaling
     ocp_2, ocp_solver_2 = create_solver("2", soften_obstacle, soften_terminal, soften_controls, nlp_solver_type=nlp_solver_type, allow_switching_modes=False, use_qp_scaling=True)
     sol_2 = call_solver(ocp_2, ocp_solver_2, soften_obstacle, soften_terminal, soften_controls, plot=False)
     check_qp_scaling(ocp_solver_2)
-    sol_2 = ocp_solver_2.store_iterate_to_obj()
+    sol_2 = ocp_solver_2.store_iterate_to_flat_obj()
     ocp_solver_2.get_from_qp_in(1, "idxs_rev")
     stats_2 = ocp_solver_2.get_stats("statistics")
 
-    check_residual_solutions(stats_1, stats_2)
+    check_iteration_residual([stats_1, stats_2])
 
     # check solutions
-    for field in ["x_traj", "u_traj", "sl_traj", "su_traj", "lam_traj", "pi_traj"]:
-        v1 = getattr(sol_1, field)
-        v2 = getattr(sol_2, field)
-        for i in range(len(v1)):
-            if not np.allclose(v1[i], v2[i], atol=1e-6):
-                print(f"Field {field} differs at index {i}: max diff = {np.max(np.abs(v1[i] - v2[i]))}")
-                print(f"got difference {v1[i] - v2[i]}")
-            else:
-                pass
-                # print(f"Field {field} is the same at index {i}.")
-
-    # equivalent check
-    if sol_1.allclose(sol_2, atol=1e-6):
-        print("Both solvers have the same solution.")
-    else:
-        raise ValueError("Solutions of solvers differ!")
-
-    print("\n\n---------------------------------------------------------")
+    check_solutions([sol_1, sol_2])
+    print("\n-----------------------------------------\n")
 
 if __name__ == '__main__':
     test_qp_scaling(nlp_solver_type = 'SQP', globalization = 'FUNNEL_L1PEN_LINESEARCH')
