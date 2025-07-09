@@ -4420,6 +4420,27 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
         qp_solver->opts_set(qp_solver, qp_opts, "tol_comp", &tmp_tol_comp);
         // printf("ocp_nlp_solve_qp_and_correct_dual: setting tol_comp to %e\n", tmp_tol_comp);
     }
+    else if (nlp_opts->nlp_qp_tol_strategy == ADAPTIVE_QPSCALING)
+    {
+        double min_constraint_scaling, objective_scaling_factor;
+        ocp_nlp_qpscaling_memory_get(dims->qpscaling, nlp_mem->qpscaling, "min_constraint_scaling", 0, &min_constraint_scaling);
+        ocp_nlp_qpscaling_memory_get(dims->qpscaling, nlp_mem->qpscaling, "obj", 0, &objective_scaling_factor);
+
+        //
+        double stat_factor = MIN(objective_scaling_factor, min_constraint_scaling);
+        double tmp_tol_stat = nlp_opts->nlp_qp_tol_safety_factor * nlp_opts->tol_stat * stat_factor;
+        double tmp_tol_eq = nlp_opts->nlp_qp_tol_safety_factor * nlp_opts->tol_eq * 1.0; // equalities are not scaled
+        double tmp_tol_ineq = nlp_opts->nlp_qp_tol_safety_factor * nlp_opts->tol_ineq * min_constraint_scaling;
+        double tmp_tol_comp = nlp_opts->nlp_qp_tol_safety_factor * nlp_opts->tol_comp * min_constraint_scaling;
+        qp_solver->opts_set(qp_solver, qp_opts, "tol_stat", &tmp_tol_stat);
+        // printf("ocp_nlp_solve_qp_and_correct_dual: setting tol_stat to %e\n", tmp_tol_stat);
+        qp_solver->opts_set(qp_solver, qp_opts, "tol_eq", &tmp_tol_eq);
+        // printf("ocp_nlp_solve_qp_and_correct_dual: setting tol_eq to %e\n", tmp_tol_eq);
+        qp_solver->opts_set(qp_solver, qp_opts, "tol_ineq", &tmp_tol_ineq);
+        // printf("ocp_nlp_solve_qp_and_correct_dual: setting tol_ineq to %e\n", tmp_tol_ineq);
+        qp_solver->opts_set(qp_solver, qp_opts, "tol_comp", &tmp_tol_comp);
+        // printf("ocp_nlp_solve_qp_and_correct_dual: setting tol_comp to %e\n", tmp_tol_comp);
+    }
 
     // solve qp
     acados_tic(&timer);

@@ -101,6 +101,7 @@ typedef enum
 {
     FIXED_QP_TOL,
     ADAPTIVE_CURRENT_RES_JOINT,
+    ADAPTIVE_QPSCALING,
 } ocp_nlp_qp_tol_strategy_t;
 
 
