@@ -328,6 +328,10 @@ class AcadosCasadiOcp:
             # nonlinear constraints
             # initial stage
             if i == 0 and N_horizon > 0:
+                index_map['lam_gnl_in_lam_g'].append([])
+                index_map['lam_sl_in_lam_g'].append([])
+                index_map['lam_su_in_lam_g'].append([])
+
                 if dims.ng > 0:
                     C = constraints.C
                     D = constraints.D
@@ -335,6 +339,8 @@ class AcadosCasadiOcp:
                     g.append(linear_constr_expr)
                     lbg.append(constraints.lg)
                     ubg.append(constraints.ug)
+                    index_map['lam_gnl_in_lam_g'][i].append(*list(range(offset, offset + dims.ng)))
+                    offset += dims.ng
 
                 if dims.nh_0 > 0:
                     if dims.nsh_0 > 0:
@@ -344,16 +350,13 @@ class AcadosCasadiOcp:
 
                         h_0_nlp_expr = h_0_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
 
-                        if not hard_h_indices:
-                            index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + len(hard_h_indices))))
-                            offset += len(hard_h_indices)
                         
                         for j in range(len(constraints.lh_0)):
                             if j in hard_h_indices:
                                 g.append(h_0_nlp_expr[hard_h_indices])
                                 lbg.append(constraints.lh_0[hard_h_indices])
                                 ubg.append(constraints.uh_0[hard_h_indices])
-                                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + len(hard_h_indices))))
+                                index_map['lam_gnl_in_lam_g'][i].append(*list(range(offset, offset + len(hard_h_indices))))
                                 offset += len(hard_h_indices)
                             elif j in soft_h_indices:                          
                                 g.append(h_0_nlp_expr[soft_h_indices] + sl_node[i])
@@ -362,15 +365,15 @@ class AcadosCasadiOcp:
                                 g.append(h_0_nlp_expr[soft_h_indices] - su_node[i])
                                 lbg.append(-np.inf * ca.DM.ones((dims.nsh_0, 1)))
                                 ubg.append(constraints.uh_0[soft_h_indices])
-                                index_map['lam_sl_in_lam_g'].append(list(range(offset, offset + dims.nsh_0)))
-                                index_map['lam_su_in_lam_g'].append(list(range(offset + dims.nsh_0, offset + 2 * dims.nsh_0)))
+                                index_map['lam_sl_in_lam_g'][i].append(*list(range(offset, offset + dims.nsh_0)))
+                                index_map['lam_su_in_lam_g'][i].append(*list(range(offset + dims.nsh_0, offset + 2 * dims.nsh_0)))
                                 offset += 2 * dims.nsh_0
                     else:
                         h_0_nlp_expr = h_0_fun(xtraj_node[0], utraj_node[0], ptraj_node[0], model.p_global)
                         g.append(h_0_nlp_expr)
                         lbg.append(constraints.lh_0)
                         ubg.append(constraints.uh_0)
-                        index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh_0)))
+                        index_map['lam_gnl_in_lam_g'][i].append(*list(range(offset, offset + dims.nh_0)))
                         offset += dims.nh_0
                     if with_hessian:
                         lam_h_0 = ca_symbol(f'lam_h_0', dims.nh_0, 1)
@@ -386,6 +389,8 @@ class AcadosCasadiOcp:
                     g.append(conl_constr_0_fun(xtraj_node[0], utraj_node[0], ptraj_node[0], model.p_global))
                     lbg.append(constraints.lphi_0)
                     ubg.append(constraints.uphi_0)
+                    index_map['lam_gnl_in_lam_g'][i].append(*list(range(offset, offset + dims.nphi_0)))
+                    offset += dims.nphi_0
                     if with_hessian:
                         lam_phi_0 = ca_symbol(f'lam_phi_0', dims.nphi_0, 1)
                         lam_g.append(lam_phi_0)
@@ -396,13 +401,12 @@ class AcadosCasadiOcp:
                         dr_dw = ca.jacobian(r_in_nlp, w)
                         hess_l += dr_dw.T @ outer_hess_r @ dr_dw
 
-                if not any([dims.ng, dims.nh_0, dims.nphi_0]):
-                    # no nonlinear constraints at initial stage
-                    index_map['lam_gnl_in_lam_g'].append([])
-                    index_map['lam_sl_in_lam_g'].append([])
-                    index_map['lam_su_in_lam_g'].append([])
             # intermediate stages
             elif i < N_horizon:
+                index_map['lam_gnl_in_lam_g'].append([])
+                index_map['lam_sl_in_lam_g'].append([])
+                index_map['lam_su_in_lam_g'].append([])
+                
                 if dims.ng > 0:
                     C = constraints.C
                     D = constraints.D
@@ -410,6 +414,8 @@ class AcadosCasadiOcp:
                     g.append(linear_constr_expr)
                     lbg.append(constraints.lg)
                     ubg.append(constraints.ug)
+                    index_map['lam_gnl_in_lam_g'][i].append(*list(range(offset, offset + dims.ng)))
+                    offset += dims.ng
 
                 if dims.nh > 0:
                     if dims.nsh > 0:
@@ -419,17 +425,12 @@ class AcadosCasadiOcp:
 
                         h_i_nlp_expr = h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
 
-                        # dummy
-                        if not hard_h_indices:
-                            index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + len(hard_h_indices))))
-                            offset += len(hard_h_indices)
-
                         for j in range(len(constraints.lh)):
                             if j in hard_h_indices:
                                 g.append(h_i_nlp_expr[hard_h_indices])
                                 lbg.append(constraints.lh[hard_h_indices])
                                 ubg.append(constraints.uh[hard_h_indices])
-                                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + len(hard_h_indices))))
+                                index_map['lam_gnl_in_lam_g'][i].append(*list(range(offset, offset + len(hard_h_indices))))
                                 offset += len(hard_h_indices)
                             elif j in soft_h_indices:                          
                                 g.append(h_i_nlp_expr[soft_h_indices] + sl_node[i])
@@ -438,15 +439,15 @@ class AcadosCasadiOcp:
                                 g.append(h_i_nlp_expr[soft_h_indices] - su_node[i])
                                 lbg.append(-np.inf * ca.DM.ones((dims.nsh, 1)))
                                 ubg.append(constraints.uh[soft_h_indices])
-                                index_map['lam_sl_in_lam_g'].append(list(range(offset, offset + dims.nsh)))
-                                index_map['lam_su_in_lam_g'].append(list(range(offset + dims.nsh, offset + 2 * dims.nsh)))
+                                index_map['lam_sl_in_lam_g'][i].append(*list(range(offset, offset + dims.nsh)))
+                                index_map['lam_su_in_lam_g'][i].append(*list(range(offset + dims.nsh, offset + 2 * dims.nsh)))
                                 offset += 2 * dims.nsh
                     else:
                         h_i_nlp_expr = h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
                         g.append(h_i_nlp_expr)
                         lbg.append(constraints.lh)
                         ubg.append(constraints.uh)
-                        index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh)))
+                        index_map['lam_gnl_in_lam_g'][i].append(*list(range(offset, offset + dims.nh)))
                         offset += dims.nh
                     if with_hessian and dims.nh > 0:
                         # add hessian contribution
@@ -460,6 +461,8 @@ class AcadosCasadiOcp:
                     g.append(conl_constr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global))
                     lbg.append(constraints.lphi)
                     ubg.append(constraints.uphi)
+                    index_map['lam_gnl_in_lam_g'][i].append(*list(range(offset, offset + dims.nphi)))
+                    offset += dims.nphi
                     if with_hessian:
                         lam_phi = ca_symbol(f'lam_phi', dims.nphi, 1)
                         lam_g.append(lam_phi)
@@ -469,20 +472,21 @@ class AcadosCasadiOcp:
                         r_in_nlp = ca.substitute(model.con_r_expr, model.x, xtraj_node[-1])
                         dr_dw = ca.jacobian(r_in_nlp, w)
                         hess_l += dr_dw.T @ outer_hess_r @ dr_dw
-
-                if not any([dims.ng, dims.nh, dims.nphi]):
-                    # no nonlinear constraints at intermediate stages
-                    index_map['lam_gnl_in_lam_g'].append([])
-                    index_map['lam_sl_in_lam_g'].append([])
-                    index_map['lam_su_in_lam_g'].append([])
+            
             # terminal stage
             else:
+                index_map['lam_gnl_in_lam_g'].append([])
+                index_map['lam_sl_in_lam_g'].append([])
+                index_map['lam_su_in_lam_g'].append([])
+                
                 if dims.ng_e > 0:
                     C_e = constraints.C_e
                     linear_constr_expr_e = ca.mtimes(C_e, xtraj_node[-1])
                     g.append(linear_constr_expr_e)
                     lbg.append(constraints.lg_e)
                     ubg.append(constraints.ug_e)
+                    index_map['lam_gnl_in_lam_g'][i].append(*list(range(offset, offset + dims.ng_e)))
+                    offset += dims.ng_e
 
                 if dims.nh_e > 0:
                     if dims.nsh_e > 0:
@@ -492,17 +496,13 @@ class AcadosCasadiOcp:
                         hard_h_indices = [h for h in range(len(constraints.lh_e)) if h not in constraints.idxsh_e]
 
                         h_e_nlp_expr = h_e_fun(xtraj_node[-1], ptraj_node[-1], model.p_global)
-                        
-                        if not hard_h_indices:
-                            index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + len(hard_h_indices))))
-                            offset += len(hard_h_indices)
 
                         for j in range(len(constraints.lh_e)):
                             if j in hard_h_indices:
                                 g.append(h_e_nlp_expr[hard_h_indices])
                                 lbg.append(constraints.lh_e[hard_h_indices])
                                 ubg.append(constraints.uh_e[hard_h_indices])
-                                index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + len(hard_h_indices))))
+                                index_map['lam_gnl_in_lam_g'][i].append(*list(range(offset, offset + len(hard_h_indices))))
                                 offset += len(hard_h_indices)
                             elif j in soft_h_indices:          
                                 g.append(h_e_nlp_expr[soft_h_indices] + sl_node[i])
@@ -511,15 +511,15 @@ class AcadosCasadiOcp:
                                 g.append(h_e_nlp_expr[soft_h_indices] - su_node[i])
                                 lbg.append(-np.inf * ca.DM.ones((dims.nsh_e, 1)))
                                 ubg.append(constraints.uh_e[soft_h_indices])
-                                index_map['lam_sl_in_lam_g'].append(list(range(offset, offset + dims.nsh_e)))
-                                index_map['lam_su_in_lam_g'].append(list(range(offset + dims.nsh_e, offset + 2 * dims.nsh_e)))
+                                index_map['lam_sl_in_lam_g'][i].append(*list(range(offset, offset + dims.nsh_e)))
+                                index_map['lam_su_in_lam_g'][i].append(*list(range(offset + dims.nsh_e, offset + 2 * dims.nsh_e)))
                                 offset += 2 * dims.nsh_e
                     else:
                         h_e_nlp_expr = h_e_fun(xtraj_node[-1], ptraj_node[-1], model.p_global)
                         g.append(h_e_nlp_expr)
                         lbg.append(constraints.lh_e)
                         ubg.append(constraints.uh_e)
-                        index_map['lam_gnl_in_lam_g'].append(list(range(offset, offset + dims.nh_e)))
+                        index_map['lam_gnl_in_lam_g'][i].append(*list(range(offset, offset + dims.nh_e)))
                         offset += dims.nh_e
                     if with_hessian and dims.nh_e > 0:
                         # add hessian contribution
@@ -533,6 +533,8 @@ class AcadosCasadiOcp:
                     g.append(conl_constr_e_fun(xtraj_node[-1], ptraj_node[-1], model.p_global))
                     lbg.append(constraints.lphi_e)
                     ubg.append(constraints.uphi_e)
+                    index_map['lam_gnl_in_lam_g'][i].append(*list(range(offset, offset + dims.nphi_e)))
+                    offset += dims.nphi_e
                     if with_hessian:
                         lam_phi_e = ca_symbol(f'lam_phi_e', dims.nphi_e, 1)
                         lam_g.append(lam_phi_e)
@@ -543,11 +545,6 @@ class AcadosCasadiOcp:
                         dr_dw = ca.jacobian(r_in_nlp, w)
                         hess_l += dr_dw.T @ outer_hess_r @ dr_dw
 
-                if not any([dims.ng_e, dims.nh_e, dims.nphi_e]):
-                    # no nonlinear constraints at terminal stage
-                    index_map['lam_gnl_in_lam_g'].append([])
-                    index_map['lam_sl_in_lam_g'].append([])
-                    index_map['lam_su_in_lam_g'].append([])
         ### Cost
         # initial cost term
         nlp_cost = 0
