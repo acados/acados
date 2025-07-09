@@ -540,6 +540,7 @@ class AcadosOcpOptions:
     def qp_solver_tol_stat(self):
         """
         QP solver stationarity tolerance.
+        Used if nlp_qp_tol_strategy == "FIXED_QP_TOL".
         Default: :code:`None`
         """
         return self.__qp_solver_tol_stat
@@ -548,6 +549,7 @@ class AcadosOcpOptions:
     def qp_solver_tol_eq(self):
         """
         QP solver equality tolerance.
+        Used if nlp_qp_tol_strategy == "FIXED_QP_TOL".
         Default: :code:`None`
         """
         return self.__qp_solver_tol_eq
@@ -556,6 +558,7 @@ class AcadosOcpOptions:
     def qp_solver_tol_ineq(self):
         """
         QP solver inequality.
+        Used if nlp_qp_tol_strategy == "FIXED_QP_TOL".
         Default: :code:`None`
         """
         return self.__qp_solver_tol_ineq
@@ -564,6 +567,7 @@ class AcadosOcpOptions:
     def qp_solver_tol_comp(self):
         """
         QP solver complementarity.
+        Used if nlp_qp_tol_strategy == "FIXED_QP_TOL".
         Default: :code:`None`
         """
         return self.__qp_solver_tol_comp
