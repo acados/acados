@@ -108,7 +108,6 @@ for itest = 1:2
         ocp.solver_options.nlp_qp_tol_reduction_factor = 1e-2;
         ocp.solver_options.nlp_qp_tol_safety_factor = 0.1;
     end
-    ocp.code_export_directory = ['c_generated_code', num2str(itest)];
 
     %% create solver
     ocp_solver = AcadosOcpSolver(ocp);
