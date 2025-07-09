@@ -408,7 +408,7 @@ class AcadosOcpOptions:
     def nlp_qp_tol_strategy(self):
         """
         Strategy for setting the QP tolerances in the NLP solver.
-        String in ["ADAPTIVE_CURRENT_RES_JOINT", "FIXED_QP_TOL"]
+        String in ["ADAPTIVE_CURRENT_RES_JOINT", "ADAPTIVE_QPSCALING", "FIXED_QP_TOL"]
 
         - FIXED_QP_TOL: uses the fixed QP solver tolerances set by the properties `qp_solver_tol_stat`, `qp_solver_tol_eq`, `qp_solver_tol_ineq`, `qp_solver_tol_comp`, only this was implemented in acados <= 0.5.0
         - ADAPTIVE_CURRENT_RES_JOINT: uses the current NLP residuals to set the QP tolerances in a joint manner.
@@ -434,7 +434,7 @@ class AcadosOcpOptions:
         """
         Safety factor for the QP tolerances.
         Used to ensure qp_tol* = nlp_qp_tol_safety_factor * nlp_solver_tol_* when approaching the NLP solution.
-        Used in the ADAPTIVE_CURRENT_RES_JOINT strategy.
+        Used in the ADAPTIVE_CURRENT_RES_JOINT, ADAPTIVE_QPSCALING strategies.
         Type: float in [0, 1].
         Default: 0.1.
         """
@@ -1800,7 +1800,7 @@ class AcadosOcpOptions:
 
     @nlp_qp_tol_strategy.setter
     def nlp_qp_tol_strategy(self, nlp_qp_tol_strategy):
-        nlp_qp_tol_strategy_types = ["ADAPTIVE_CURRENT_RES_JOINT", "FIXED_QP_TOL"]
+        nlp_qp_tol_strategy_types = ["ADAPTIVE_CURRENT_RES_JOINT", "ADAPTIVE_QPSCALING", "FIXED_QP_TOL"]
         if not nlp_qp_tol_strategy in nlp_qp_tol_strategy_types:
             raise ValueError(f'Invalid nlp_qp_tol_strategy value. Must be in {nlp_qp_tol_strategy_types}, got {nlp_qp_tol_strategy}.')
         self.__nlp_qp_tol_strategy = nlp_qp_tol_strategy

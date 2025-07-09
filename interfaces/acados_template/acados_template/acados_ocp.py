@@ -1079,6 +1079,11 @@ class AcadosOcp:
         if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' and opts.nlp_solver_type not in ['SQP', 'SQP_WITH_FEASIBLE_QP']:
             raise NotImplementedError('FUNNEL_L1PEN_LINESEARCH only supports SQP.')
 
+        # RTI checks
+        if opts.nlp_solver_type == "SQP_RTI":
+            if opts.nlp_qp_tol_strategy != "FIXED_QP_TOL":
+                raise NotImplementedError('SQP_RTI only supports FIXED_QP_TOL nlp_qp_tol_strategy.')
+
         # termination
         if opts.nlp_solver_tol_min_step_norm is None:
             if ddp_with_merit_or_funnel:
