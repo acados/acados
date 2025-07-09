@@ -417,6 +417,13 @@ class AcadosOcpOptions:
         2) `joint_tol = MAX(tmp_tol_* for all * in ['stat', 'eq', 'ineq', 'comp'])`
         3) `tol_* = MAX(joint_tol, nlp_qp_tol_safety_factor * nlp_solver_tol_*)`
 
+        - ADAPTIVE_QPSCALING: adapts the QP tolerances based on the QP scaling factors, such that NLP solver should converge.
+        The QP tolerances are set as follows:
+        1) `qp_tol_stat = nlp_qp_tol_safety_factor * nlp_solver_tol_stat * MIN(objective_scaling_factor, min_constraint_scaling);`
+        2) `qp_tol_eq = nlp_qp_tol_safety_factor * nlp_solver_tol_eq`
+        3) `qp_tol_ineq = nlp_qp_tol_safety_factor * nlp_solver_tol_ineq * min_constraint_scaling`
+        4) `qp_tol_comp = nlp_qp_tol_safety_factor * nlp_solver_tol_comp * min_constraint_scaling`
+
         Default: "FIXED_QP_TOL".
         """
         return self.__nlp_qp_tol_strategy
