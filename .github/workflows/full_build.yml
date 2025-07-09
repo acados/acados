@@ -262,7 +262,7 @@ jobs:
       working-directory: ${{runner.workspace}}/acados/external
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/install_casadi_matlab.sh
+        ${{runner.workspace}}/acados/.github/linux/install_new_casadi_matlab.sh
 
     - name: Export Paths
       working-directory: ${{runner.workspace}}/acados
