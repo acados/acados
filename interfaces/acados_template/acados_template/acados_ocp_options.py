@@ -423,6 +423,7 @@ class AcadosOcpOptions:
         2) `qp_tol_eq = nlp_qp_tol_safety_factor * nlp_solver_tol_eq`
         3) `qp_tol_ineq = nlp_qp_tol_safety_factor * nlp_solver_tol_ineq * min_constraint_scaling`
         4) `qp_tol_comp = nlp_qp_tol_safety_factor * nlp_solver_tol_comp * min_constraint_scaling`
+        5) cap all QP tolerances to a minimum of 1e-12.
 
         Default: "FIXED_QP_TOL".
         """

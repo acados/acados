@@ -4432,6 +4432,11 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
         double tmp_tol_eq = nlp_opts->nlp_qp_tol_safety_factor * nlp_opts->tol_eq * 1.0; // equalities are not scaled
         double tmp_tol_ineq = nlp_opts->nlp_qp_tol_safety_factor * nlp_opts->tol_ineq * min_constraint_scaling;
         double tmp_tol_comp = nlp_opts->nlp_qp_tol_safety_factor * nlp_opts->tol_comp * min_constraint_scaling;
+        double min_qp_tol = 1e-12;
+        tmp_tol_stat = MAX(tmp_tol_stat, min_qp_tol);
+        tmp_tol_eq = MAX(tmp_tol_eq, min_qp_tol);
+        tmp_tol_ineq = MAX(tmp_tol_ineq, min_qp_tol);
+        tmp_tol_comp = MAX(tmp_tol_comp, min_qp_tol);
         qp_solver->opts_set(qp_solver, qp_opts, "tol_stat", &tmp_tol_stat);
         // printf("ocp_nlp_solve_qp_and_correct_dual: setting tol_stat to %e\n", tmp_tol_stat);
         qp_solver->opts_set(qp_solver, qp_opts, "tol_eq", &tmp_tol_eq);
