@@ -82,8 +82,10 @@ class AcadosCasadiOcp:
         N_horizon = solver_options.N_horizon
 
         # check what is not supported yet
-        if any([dims.nsbx,dims.nsbx_e, dims.nsbu]):
-            raise NotImplementedError("AcadosCasadiOcpSolver does not support slack variables (s) for variables (w) yet.")
+        if any([dims.nsbx, dims.nsbx_e, dims.nsbu]):
+            raise NotImplementedError("AcadosCasadiOcpSolver does not support slack variables (s) for variables (x and u) yet.")
+        if any([dims.nsg, dims.nsg_e, dims.nsphi, dims.nsphi_e]):
+            raise NotImplementedError("AcadosCasadiOcpSolver does not support slack variables (s) for linear and compound constraints (h, phi) yet.")
         if dims.nz > 0:
             raise NotImplementedError("AcadosCasadiOcpSolver does not support algebraic variables (z) yet.")
         if ocp.solver_options.integrator_type not in ["DISCRETE", "ERK"]:
