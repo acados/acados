@@ -36,8 +36,8 @@ import casadi as ca
 from utils import plot_pendulum
 
 
-PLOT = True
-N_horizon = 3
+PLOT = False
+N_horizon = 20
 Tf = 1.0
 
 def formulate_ocp(using_soft_constraints=True):
@@ -78,7 +78,7 @@ def formulate_ocp(using_soft_constraints=True):
 
     if using_soft_constraints:
         xmax = 2
-        vmax = 2
+        vmax = 3
         Fmax = 50
         # soft bound on x, using constraint h
         v1 = ocp.model.x[2]
@@ -97,11 +97,10 @@ def formulate_ocp(using_soft_constraints=True):
         ocp.cost.Zu_0 = np.ones((1,))
 
         # intermidiate soft constraints on h
-
-        ocp.model.con_h_expr = ca.vertcat(v1, u)
-        ocp.constraints.lh = np.array([-vmax, -Fmax])
-        ocp.constraints.uh = np.array([+vmax, +Fmax])
-        ocp.constraints.idxsh = np.array([0]) # indices of slacked constraints within h
+        ocp.model.con_h_expr = ca.vertcat(x1, v1, u)
+        ocp.constraints.lh = np.array([-xmax, -vmax, -Fmax])
+        ocp.constraints.uh = np.array([+xmax, +vmax, +Fmax])
+        ocp.constraints.idxsh = np.array([1]) # indices of slacked constraints within h
         # set penalty weight for slack variables
         ocp.cost.zl = np.ones((1,))
         ocp.cost.Zl = np.ones((1,))
@@ -109,21 +108,15 @@ def formulate_ocp(using_soft_constraints=True):
         ocp.cost.Zu = np.ones((1,))
 
         # terminal soft constraint on h
-        ocp.model.con_h_expr_e = ca.vertcat(x1)
-        ocp.constraints.lh_e = np.array([-xmax])
-        ocp.constraints.uh_e = np.array([+xmax])
-        ocp.constraints.idxsh_e = np.array([0]) # indices of slacked constraints within h
+        ocp.model.con_h_expr_e = ca.vertcat(v1, x1)
+        ocp.constraints.lh_e = np.array([-vmax, -xmax])
+        ocp.constraints.uh_e = np.array([+vmax, +xmax])
+        ocp.constraints.idxsh_e = np.array([0,1]) # indices of slacked constraints within h
         # set penalty weight for terminal slack variable
-        ocp.cost.zl_e = np.ones((1,))
-        ocp.cost.Zl_e = np.ones((1,))
-        ocp.cost.zu_e = np.ones((1,))
-        ocp.cost.Zu_e = np.ones((1,))
-
-        # hard constraints on u
-        Fmax = 80
-        ocp.constraints.lbu = np.array([-Fmax])
-        ocp.constraints.ubu = np.array([+Fmax])
-        ocp.constraints.idxbu = np.array([0])
+        ocp.cost.zl_e = np.ones((2,))
+        ocp.cost.Zl_e = np.ones((2,))
+        ocp.cost.zu_e = np.ones((2,))
+        ocp.cost.Zu_e = np.ones((2,))
 
     else:
         # hard constraints on u
@@ -152,25 +145,25 @@ def main():
     if status != 0:
         raise Exception(f'acados OCP solver returned status {status}')
     result = ocp_solver.store_iterate_to_obj()
-    acados_lam= ocp_solver.get_flat('lam')
     print('acados_cost:', ocp_solver.get_cost())
 
     casadi_ocp_solver = AcadosCasadiOcpSolver(ocp)
-    # casadi_ocp_solver.load_iterate_from_obj(result)
+    casadi_ocp_solver.load_iterate_from_obj(result)
     casadi_ocp_solver.solve()
-    # casadi_ocp_solver.get(0, 'lam')
-    casadi_lam=casadi_ocp_solver.get_flat('lam')
+    result_casadi = casadi_ocp_solver.store_iterate_to_obj()
     print('casadi_cost:', casadi_ocp_solver.get_cost())
+
+    result.flatten().allclose(other=result_casadi.flatten())
 
     if PLOT:
         Fmax = 80
         N = ocp.solver_options.N_horizon
         acados_u = np.array([ocp_solver.get(i, "u") for i in range(N)])
         acados_x = np.array([ocp_solver.get(i, "x") for i in range(N+1)])
-        # casadi_u = np.array([casadi_ocp_solver.get(i, "u") for i in range(N)])
-        # casadi_x = np.array([casadi_ocp_solver.get(i, "x") for i in range(N+1)])
+        casadi_u = np.array([casadi_ocp_solver.get(i, "u") for i in range(N)])
+        casadi_x = np.array([casadi_ocp_solver.get(i, "x") for i in range(N+1)])
         plot_pendulum(np.linspace(0, Tf, N+1), Fmax, acados_u, acados_x, latexify=False)
-        # plot_pendulum(np.linspace(0, Tf, N+1), Fmax, casadi_u, casadi_x, latexify=False)
+        plot_pendulum(np.linspace(0, Tf, N+1), Fmax, casadi_u, casadi_x, latexify=False)
 
 if __name__ == '__main__':
     main()
