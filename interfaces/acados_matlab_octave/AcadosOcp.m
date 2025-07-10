@@ -829,6 +829,33 @@ classdef AcadosOcp < handle
             if ~ismember(opts.qpscaling_scale_objective, qpscaling_scale_objective_types)
                 error(['Invalid qpscaling_scale_objective: ', opts.qpscaling_scale_objective, '. Available options are: ', strjoin(qpscaling_scale_objective_types, ', ')]);
             end
+
+            nlp_qp_tol_strategy_types = {'ADAPTIVE_CURRENT_RES_JOINT', 'ADAPTIVE_QPSCALING', 'FIXED_QP_TOL'};
+            if ~ismember(opts.nlp_qp_tol_strategy, nlp_qp_tol_strategy_types)
+                error(['Invalid nlp_qp_tol_strategy: ', opts.nlp_qp_tol_strategy, '. Available options are: ', strjoin(nlp_qp_tol_strategy_types, ', ')]);
+            end
+
+            % checks on values
+            if opts.nlp_qp_tol_reduction_factor < 0.0 || opts.nlp_qp_tol_reduction_factor > 1.0
+                error(['nlp_qp_tol_reduction_factor must be in [0, 1], got: ', num2str(opts.nlp_qp_tol_reduction_factor)]);
+            end
+
+            if opts.nlp_qp_tol_safety_factor < 0.0 || opts.nlp_qp_tol_safety_factor > 1.0
+                error(['nlp_qp_tol_safety_factor must be in [0, 1], got: ', num2str(opts.nlp_qp_tol_safety_factor)]);
+            end
+
+            if strcmp(opts.nlp_qp_tol_strategy, "ADAPTIVE_QPSCALING")
+                if strcmp(opts.qpscaling_scale_constraints, "NO_CONSTRAINT_SCALING") && strcmp(opts.qpscaling_scale_objective, "NO_OBJECTIVE_SCALING")
+                    error('ADAPTIVE_QPSCALING only makes sense if QP scaling is used.');
+                end
+            end
+
+            % RTI checks
+            if strcmp(opts.nlp_solver_type, 'SQP_RTI')
+                if ~strcmp(opts.nlp_qp_tol_strategy, 'FIXED_QP_TOL')
+                    error('SQP_RTI only supports FIXED_QP_TOL nlp_qp_tol_strategy.');
+                end
+            end
             % OCP name
             self.name = model.name;
 

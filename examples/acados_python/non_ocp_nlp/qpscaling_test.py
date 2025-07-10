@@ -36,7 +36,8 @@ import casadi as ca
 def create_solver(solver_name: str, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP',
                   allow_switching_modes: bool = True,
                   use_qp_scaling: bool = False,
-                  soft_h: bool = True):
+                  soft_h: bool = True,
+                  qp_tol_scheme: str = "SUFFICIENTLY_SMALL"):
 
     ocp = AcadosOcp()
 
@@ -91,8 +92,15 @@ def create_solver(solver_name: str, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP
     solver_options.N_horizon = N
 
     solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-    qp_tol = 5e-9
-    solver_options.qp_tol = qp_tol
+    if qp_tol_scheme == "SUFFICIENTLY_SMALL":
+        qp_tol = 5e-9
+        solver_options.qp_tol = qp_tol
+        solver_options.nlp_qp_tol_strategy = "FIXED_QP_TOL"
+    elif qp_tol_scheme == "ADAPTIVE_QPSCALING":
+        solver_options.nlp_qp_tol_strategy = "ADAPTIVE_QPSCALING"
+    elif qp_tol_scheme == "NAIVE":
+        pass
+
     solver_options.qp_solver_ric_alg = 1
     solver_options.qp_solver_mu0 = 1e4
     solver_options.qp_solver_iter_max = 400
@@ -103,7 +111,7 @@ def create_solver(solver_name: str, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP
     solver_options.print_level = 1
     solver_options.nlp_solver_max_iter = 6
     solver_options.use_constraint_hessian_in_feas_qp = False
-    solver_options.nlp_solver_ext_qp_res = 0
+    solver_options.nlp_solver_ext_qp_res = 1
 
     if not allow_switching_modes:
         solver_options.search_direction_mode = 'BYRD_OMOJOKUN'
@@ -114,7 +122,7 @@ def create_solver(solver_name: str, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP
         ocp.solver_options.qpscaling_scale_objective = "OBJECTIVE_GERSHGORIN"
 
     # create ocp solver
-    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
+    ocp_solver = AcadosOcpSolver(ocp)
 
     return ocp, ocp_solver
 
@@ -155,49 +163,62 @@ def call_solver(ocp_solver: AcadosOcpSolver) -> AcadosOcpFlattenedIterate:
     sol = ocp_solver.store_iterate_to_flat_obj()
     return sol
 
-def check_solutions(sol_1: AcadosOcpFlattenedIterate, sol_2: AcadosOcpFlattenedIterate, soft_h: bool):
+def check_solutions(sol_list: list[AcadosOcpFlattenedIterate], soft_h: bool):
     # check solutions
-    for field in ["x", "u", "sl", "su", "lam", "pi"]:
-        v1 = getattr(sol_1, field)
-        v2 = getattr(sol_2, field)
-        if not np.allclose(v1, v2, atol=1e-6):
-            print(f"Field {field} differs: max diff = {np.max(np.abs(v1 - v2))}")
-            print(f"got difference {v1 - v2}")
+    ref_sol = sol_list[0]
+    if len(sol_list) < 2:
+        raise ValueError("At least two solutions are required for comparison.")
+    # print(f"{ref_sol}")
+
+    for sol in sol_list[1:]:
+        for field in ["x", "u", "sl", "su", "lam", "pi"]:
+            v1 = getattr(ref_sol, field)
+            v2 = getattr(sol, field)
+            if not np.allclose(v1, v2, atol=1e-6):
+                print(f"Field {field} differs: max diff = {np.max(np.abs(v1 - v2))}")
+                print(f"got difference {v1 - v2}")
+            else:
+                # print(f"Solutions match in field {field}.")
+                pass
+        if ref_sol.allclose(sol):
+            print("Both solvers have the same solution.")
         else:
-            print(f"Solutions match in field {field}.")
-            pass
-    print(f"{sol_1}")
+            raise ValueError("Solutions of solvers differ!")
 
     if soft_h:
-        if np.any(sol_1.su > 1e-1):
+        if np.any(ref_sol.su > 1e-1):
             print("checked with active soft constraints.")
         else:
             raise ValueError("Soft constraints should be active, but are not.")
 
-    if sol_1.allclose(sol_2):
-        print("Both solvers have the same solution.")
-    else:
-        raise ValueError("Solutions of solvers differ!")
 
-def check_residual_solutions(stat1: np.ndarray, stat2: np.ndarray):
-    n_rows1 = len(stat1[0])
-    n_rows2 = len(stat2[0])
+def check_iteration_residual(stat_list = list[np.ndarray]):
 
-    assert n_rows1 == n_rows2, f"Both solvers should take the same number of iterations!, got {n_rows1} for solver 1, and {n_rows2} for solver 2"
+    if len(stat_list) < 2:
+        raise ValueError("At least two statistics are required for comparison.")
+    stats_ref = stat_list[0]
 
-    for jj in range(n_rows1):
-        # res_stat
-        assert np.allclose(stat1[1][jj], stat2[1][jj]), f"res_stat differs in iter {jj}"
-        # res_eq
-        assert np.allclose(stat1[2][jj], stat2[2][jj]), f"res_eq differs in iter {jj}"
-        # res_ineq
-        assert np.allclose(stat1[3][jj], stat2[3][jj]), f"res_ineq differs in iter {jj}"
-        # res_comp
-        assert np.allclose(stat1[4][jj], stat2[4][jj]), f"res_comp differs in iter {jj}"
+    n_iter_ref = stats_ref.shape[1]
+    for stat in stat_list[1:]:
+        n_iter = stat.shape[1]
+        if n_iter != n_iter_ref:
+            raise ValueError(f"Statistics have different number of rows: {n_iter} vs {n_iter_ref}")
+        for jj in range(n_iter_ref):
+            # res_stat
+            if not np.allclose(stats_ref[1, jj], stat[1, jj]):
+                raise ValueError(f"res_stat differs in iter {jj}")
+            # res_eq
+            if not np.allclose(stats_ref[2, jj], stat[2, jj]):
+                raise ValueError(f"res_eq differs in iter {jj}, got {stat[2, jj]} vs {stats_ref[2, jj]}")
+            # res_ineq
+            if not np.allclose(stats_ref[3, jj], stat[3, jj]):
+                raise ValueError(f"res_ineq differs in iter {jj}")
+            # res_comp
+            if not np.allclose(stats_ref[4, jj], stat[4, jj]):
+                raise ValueError(f"res_comp differs in iter {jj}")
 
 def test_qp_scaling(soft_h: bool = True):
     nlp_solver_type = "SQP"
-    # nlp_solver_type = "SQP_WITH_FEASIBLE_QP"
 
     # test without QP scaling
     print("Reference ...")
@@ -215,8 +236,21 @@ def test_qp_scaling(soft_h: bool = True):
     check_qp_scaling(ocp_solver_1)
     stats1 = ocp_solver_1.get_stats("statistics")
 
-    check_residual_solutions(stats1, stats2)
-    check_solutions(sol_1, sol_2, soft_h)
+    print("Testing QP scaling with SQP solver...")
+    _, ocp_solver_3 = create_solver("3", nlp_solver_type=nlp_solver_type, allow_switching_modes=True, use_qp_scaling=True, soft_h=soft_h, qp_tol_scheme="NAIVE")
+    sol_3 = call_solver(ocp_solver_3)
+    check_qp_scaling(ocp_solver_3)
+    stats3 = ocp_solver_3.get_stats("statistics")
+
+    check_solutions([sol_1, sol_2, sol_3], soft_h)
+    check_iteration_residual([stats1, stats2])
+
+    try:
+        check_iteration_residual([stats1, stats3])
+    except ValueError as e:
+        print(f"Got different iterations when using different QP tolerances, as expected.")
+    else:
+        raise ValueError("Iteration residuals should differ when using different QP tolerances, but they do not.")
 
 def test_sanity_check(soft_h: bool = True, use_qp_scaling: bool = True):
     print("Sanity Check SQP and SQP_WITH_FEASIBLE_QP solver...")
@@ -236,8 +270,8 @@ def test_sanity_check(soft_h: bool = True, use_qp_scaling: bool = True):
     stats1 = ocp_solver_1.get_stats("statistics")
     check_qp_scaling(ocp_solver_1)
 
-    check_residual_solutions(stats1, stats2)
-    check_solutions(sol_1, sol_2, soft_h)
+    check_iteration_residual([stats1, stats2])
+    check_solutions([sol_1, sol_2], soft_h)
     print("\n")
 
 

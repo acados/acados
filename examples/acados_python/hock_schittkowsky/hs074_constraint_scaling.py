@@ -33,7 +33,7 @@ import numpy as np
 import casadi as ca
 
 
-def solve_problem_with_constraint_scaling(scale_constraints):
+def solve_problem_with_constraint_scaling(scale_constraints, nlp_solver_type):
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -79,7 +79,8 @@ def solve_problem_with_constraint_scaling(scale_constraints):
     ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_max_iter = 1000
     ocp.solver_options.qp_solver_iter_max = 1000
-    ocp.solver_options.nlp_solver_type = 'SQP_WITH_FEASIBLE_QP'
+    ocp.solver_options.nlp_solver_type = nlp_solver_type
+    ocp.solver_options.nlp_solver_ext_qp_res = 1
 
     # Globalization
     ocp.solver_options.globalization = 'FUNNEL_L1PEN_LINESEARCH'
@@ -101,6 +102,8 @@ def solve_problem_with_constraint_scaling(scale_constraints):
     # solve
     status = ocp_solver.solve()
 
+    ocp_solver.print_statistics()
+
     # checks
     obj_scale = ocp_solver.get_qp_scaling_objective()
     print(f"Objective scaling: {obj_scale:.4e}")
@@ -116,12 +119,13 @@ def solve_problem_with_constraint_scaling(scale_constraints):
 
 def main():
     # run test cases
-    print("\nTest standard unscaled version, HPIPM should fail:")
-    solve_problem_with_constraint_scaling(scale_constraints=False)
-    print("\n\n----------------------------------------------")
-    print("\nTest constraint scaling version, HPIPM should fail:")
-    solve_problem_with_constraint_scaling(scale_constraints=True)
-    print("\n\n----------------------------------------------")
+    for nlp_solver_type in ['SQP_WITH_FEASIBLE_QP', 'SQP']:
+        print("\nTest standard unscaled version, HPIPM should fail:")
+        solve_problem_with_constraint_scaling(scale_constraints=False, nlp_solver_type=nlp_solver_type)
+        print("\n\n----------------------------------------------")
+        print("\nTest constraint scaling version, HPIPM should succeed:")
+        solve_problem_with_constraint_scaling(scale_constraints=True, nlp_solver_type=nlp_solver_type)
+        print("\n\n----------------------------------------------")
 
 if __name__ == '__main__':
     main()

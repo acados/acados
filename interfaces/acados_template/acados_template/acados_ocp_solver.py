@@ -1601,6 +1601,8 @@ class AcadosOcpSolver:
                 return full_stats[6, :]
             elif self.__solver_options['nlp_solver_type'] == 'SQP_RTI':
                 return full_stats[2, :]
+            else:
+                raise ValueError(f"qp_iter is not available for nlp_solver_type {self.__solver_options['nlp_solver_type']}.")
 
         elif field_ == "qp_res_ineq":
             if not self.__solver_options['nlp_solver_ext_qp_res']:

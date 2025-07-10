@@ -2386,6 +2386,15 @@ ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "allow_direction_mode_switch_to_no
     ocp_nlp_qpscaling_constraint_type qpscaling_scale_constraints = {{ solver_options.qpscaling_scale_constraints }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qpscaling_scale_constraints", &qpscaling_scale_constraints);
 
+    ocp_nlp_qp_tol_strategy_t nlp_qp_tol_strategy = {{ solver_options.nlp_qp_tol_strategy }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "nlp_qp_tol_strategy", &nlp_qp_tol_strategy);
+
+    double nlp_qp_tol_reduction_factor = {{ solver_options.nlp_qp_tol_reduction_factor }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "nlp_qp_tol_reduction_factor", &nlp_qp_tol_reduction_factor);
+
+    double nlp_qp_tol_safety_factor = {{ solver_options.nlp_qp_tol_safety_factor }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "nlp_qp_tol_safety_factor", &nlp_qp_tol_safety_factor);
+
 {%- if solver_options.nlp_solver_type == "SQP" and solver_options.timeout_max_time > 0 %}
     double timeout_max_time = {{ solver_options.timeout_max_time }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "timeout_max_time", &timeout_max_time);
@@ -2414,7 +2423,7 @@ ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "allow_direction_mode_switch_to_no
     int qp_solver_iter_max = {{ solver_options.qp_solver_iter_max }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_iter_max", &qp_solver_iter_max);
 
-{# NOTE: qp_solver tolerances must be set after NLP ones, since the setter for NLP tolerances sets the QP tolerances to the sam values. #}
+{# NOTE: qp_solver tolerances must be set after NLP ones, since the setter for NLP tolerances sets the QP tolerances to the same values. #}
     {%- if solver_options.qp_solver_tol_stat %}
     double qp_solver_tol_stat = {{ solver_options.qp_solver_tol_stat }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_tol_stat", &qp_solver_tol_stat);

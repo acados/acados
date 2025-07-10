@@ -50,6 +50,7 @@ targets = {
     '../pendulum_dae/example_sim.m';
     '../pendulum_on_cart_model/example_ocp.m';
     '../pendulum_on_cart_model/zoro_example.m';
+    '../pendulum_on_cart_model/example_ocp_qp_tol.m';
     '../race_cars/main.m';
     '../simple_dae_model/example_ocp.m';
     '../swarming/example_ocp.m';
@@ -144,18 +145,20 @@ disp('Succesful tests: ')
 for idx = 1:length(targets)
     if strcmp(messages{idx},"")
         disp(targets{idx})
-    end
-end
-disp(' ')
-disp('Failed tests: ')
-for idx = 1:length(targets)
-    if ~strcmp(messages{idx},"")
-        disp(targets{idx})
-        disp(['message: ',messages{idx}])
+    else
         fail = true;
     end
 end
+disp(' ')
+
 if fail==true
+    disp('Failed tests: ')
+    for idx = 1:length(targets)
+        if ~strcmp(messages{idx},"")
+            disp(targets{idx})
+            disp(['message: ',messages{idx}])
+        end
+    end
     error('Test failure');
 end
 clearvars
