@@ -410,20 +410,21 @@ class AcadosOcpOptions:
         Strategy for setting the QP tolerances in the NLP solver.
         String in ["ADAPTIVE_CURRENT_RES_JOINT", "ADAPTIVE_QPSCALING", "FIXED_QP_TOL"]
 
-        - FIXED_QP_TOL: uses the fixed QP solver tolerances set by the properties `qp_solver_tol_stat`, `qp_solver_tol_eq`, `qp_solver_tol_ineq`, `qp_solver_tol_comp`, only this was implemented in acados <= 0.5.0
+        - FIXED_QP_TOL: uses the fixed QP solver tolerances set by the properties `qp_solver_tol_stat`, `qp_solver_tol_eq`, `qp_solver_tol_ineq`, `qp_solver_tol_comp`, only this was implemented in acados <= v0.5.0.
+
         - ADAPTIVE_CURRENT_RES_JOINT: uses the current NLP residuals to set the QP tolerances in a joint manner.
         The QP tolerances are set as follows:
-        1) `tmp_tol_* = MIN(nlp_qp_tol_reduction_factor * inf_norm_res_*, 1e-2)`
-        2) `joint_tol = MAX(tmp_tol_* for all * in ['stat', 'eq', 'ineq', 'comp'])`
-        3) `tol_* = MAX(joint_tol, nlp_qp_tol_safety_factor * nlp_solver_tol_*)`
+            1) `tmp_tol_* = MIN(nlp_qp_tol_reduction_factor * inf_norm_res_*, 1e-2)`
+            2) `joint_tol = MAX(tmp_tol_* for all * in ['stat', 'eq', 'ineq', 'comp'])`
+            3) `tol_* = MAX(joint_tol, nlp_qp_tol_safety_factor * nlp_solver_tol_*)`
 
-        - ADAPTIVE_QPSCALING: adapts the QP tolerances based on the QP scaling factors, such that NLP solver should converge.
+        - ADAPTIVE_QPSCALING: adapts the QP tolerances based on the QP scaling factors, to make NLP residuals converge to desired tolerances, if it can be achieved.
         The QP tolerances are set as follows:
-        1) `qp_tol_stat = nlp_qp_tol_safety_factor * nlp_solver_tol_stat * MIN(objective_scaling_factor, min_constraint_scaling);`
-        2) `qp_tol_eq = nlp_qp_tol_safety_factor * nlp_solver_tol_eq`
-        3) `qp_tol_ineq = nlp_qp_tol_safety_factor * nlp_solver_tol_ineq * min_constraint_scaling`
-        4) `qp_tol_comp = nlp_qp_tol_safety_factor * nlp_solver_tol_comp * min_constraint_scaling`
-        5) cap all QP tolerances to a minimum of 1e-12.
+            1) `qp_tol_stat = nlp_qp_tol_safety_factor * nlp_solver_tol_stat * MIN(objective_scaling_factor, min_constraint_scaling);`
+            2) `qp_tol_eq = nlp_qp_tol_safety_factor * nlp_solver_tol_eq`
+            3) `qp_tol_ineq = nlp_qp_tol_safety_factor * nlp_solver_tol_ineq * min_constraint_scaling`
+            4) `qp_tol_comp = nlp_qp_tol_safety_factor * nlp_solver_tol_comp * min_constraint_scaling`
+            5) cap all QP tolerances to a minimum of 1e-12.
 
         Default: "FIXED_QP_TOL".
         """
@@ -442,6 +443,7 @@ class AcadosOcpOptions:
         """
         Safety factor for the QP tolerances.
         Used to ensure qp_tol* = nlp_qp_tol_safety_factor * nlp_solver_tol_* when approaching the NLP solution.
+        Often QPs should be solved to a higher accuracy than the NLP solver tolerances, to ensure convergence of the NLP solver.
         Used in the ADAPTIVE_CURRENT_RES_JOINT, ADAPTIVE_QPSCALING strategies.
         Type: float in [0, 1].
         Default: 0.1.
