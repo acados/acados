@@ -440,13 +440,13 @@ int backtracking_line_search(ocp_nlp_config *config,
     double current_infeasibility = mem->l1_infeasibility;
     double current_cost = nlp_mem->cost_value;
 
-    // do the penalty parameter update here .... might be changed later
     mem->penalty_parameter = nlp_mem->objective_multiplier;
-    print_debug_output_double("pred_optimality", pred_optimality, nlp_opts->print_level, 2);
-    print_debug_output_double("pred_infeasibility", pred_infeasibility, nlp_opts->print_level, 2);
     update_funnel_penalty_parameter(mem, opts, nlp_opts, pred_optimality, pred_infeasibility);
     double current_merit = mem->penalty_parameter*current_cost + current_infeasibility; // Shouldn't this be the update below??
     nlp_mem->objective_multiplier = mem->penalty_parameter;
+
+    print_debug_output_double("pred_optimality", pred_optimality, nlp_opts->print_level, 2);
+    print_debug_output_double("pred_infeasibility", pred_infeasibility, nlp_opts->print_level, 2);
 
     int i;
 
@@ -506,7 +506,7 @@ int backtracking_line_search(ocp_nlp_config *config,
         ///////////////////////////////////////////////////////////////////////
         // Evaluate merit function at trial point
         double trial_merit = mem->penalty_parameter*trial_cost + trial_infeasibility;
-        pred_merit = mem->penalty_parameter * pred_optimality + current_infeasibility;
+        pred_merit = mem->penalty_parameter * pred_optimality + pred_infeasibility;
         ared = nlp_mem->cost_value - trial_cost;
 
         // Funnel globalization
