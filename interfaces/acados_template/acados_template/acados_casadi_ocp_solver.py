@@ -200,7 +200,6 @@ class AcadosCasadiOcp:
             index_map['p_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np)))
             offset_p += dims.np
             # add slack variables
-            # could be improved?
             if i == 0 and dims.ns_0:
                 w_sym_list.append(sl_node[i])
                 lbw_list.append(lb_slack_node[i])
@@ -279,21 +278,6 @@ class AcadosCasadiOcp:
         else:
             raise NotImplementedError(f"Integrator type {solver_options.integrator_type} not supported.")
 
-        # initial
-        h_0_fun = ca.Function('h_0_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr_0])
-
-        # intermediate
-        h_fun = ca.Function('h_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr])
-        if dims.nphi > 0:
-            conl_constr_expr = ca.substitute(model.con_phi_expr, model.con_r_in_phi, model.con_r_expr)
-            conl_constr_fun = ca.Function('conl_constr_fun', [model.x, model.u, model.p, model.p_global], [conl_constr_expr])
-
-        # terminal
-        h_e_fun = ca.Function('h_e_fun', [model.x, model.p, model.p_global], [model.con_h_expr_e])
-        if dims.nphi_e > 0:
-            conl_constr_expr_e = ca.substitute(model.con_phi_expr_e, model.con_r_in_phi_e, model.con_r_expr_e)
-            conl_constr_e_fun = ca.Function('conl_constr_e_fun', [model.x, model.p, model.p_global], [conl_constr_expr_e])
-
         # create nonlinear constraints
         g = []
         lbg = []
@@ -328,25 +312,41 @@ class AcadosCasadiOcp:
             # nonlinear constraints
             # initial stage
             if i == 0 and N_horizon > 0:
-                lh, uh = constraints.lh_0, constraints.uh_0
-                lg, ug = constraints.lg, constraints.ug
+                lg, ug, lh, uh, lphi, uphi = constraints.lg, constraints.ug, constraints.lh_0, constraints.uh_0, constraints.lphi_0, constraints.uphi_0
                 ng, nh, nphi = dims.ng, dims.nh_0, dims.nphi_0
-                nsg, nsh, nphi, idxsh = dims.nsg, dims.nsh_0, dims.nphi_0, constraints.idxsh_0
+                nsg, nsh, nsphi, idxsh = dims.nsg, dims.nsh_0, dims.nsphi_0, constraints.idxsh_0
+                # nonlinear function
+                h_0_fun = ca.Function('h_0_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr_0])
                 h_i_nlp_expr = h_0_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
+                # compound nonlinear constraints
+                if dims.nphi_0 > 0:
+                    conl_constr_expr = ca.substitute(model.con_phi_expr_0, model.con_r_in_phi_0, model.con_r_expr_0)
+                    conl_constr_fun = ca.Function('conl_constr_0_fun', [model.x, model.u, model.p, model.p_global], [conl_constr_expr])
             # intermediate stages
             elif i < N_horizon:
-                lh, uh = constraints.lh, constraints.uh
-                lg, ug = constraints.lg, constraints.ug
+                # constraints
+                lg, ug, lh, uh, lphi, uphi = constraints.lg, constraints.ug, constraints.lh, constraints.uh, constraints.lphi, constraints.uphi
                 ng, nh, nphi = dims.ng, dims.nh, dims.nphi
-                nsg, nsh, nphi, idxsh = dims.nsg, dims.nsh, dims.nphi, constraints.idxsh
+                nsg, nsh, nsphi, idxsh = dims.nsg, dims.nsh, dims.nsphi, constraints.idxsh
+                # nonlinear function
+                h_fun = ca.Function('h_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr])
                 h_i_nlp_expr = h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
+                # compound nonlinear constraints
+                if dims.nphi > 0:
+                    conl_constr_expr = ca.substitute(model.con_phi_expr, model.con_r_in_phi, model.con_r_expr)
+                    conl_constr_fun = ca.Function('conl_constr_fun', [model.x, model.u, model.p, model.p_global], [conl_constr_expr])
             # terminal stage
             else:
-                lh, uh = constraints.lh_e, constraints.uh_e
-                lg, ug = constraints.lg_e, constraints.ug_e
+                lg, ug, lh, uh, lphi, uphi = constraints.lg_e, constraints.ug_e, constraints.lh_e, constraints.uh_e, constraints.lphi_e, constraints.uphi_e
                 ng, nh, nphi = dims.ng_e, dims.nh_e, dims.nphi_e
-                nsg, nsh, nphi, idxsh = dims.nsg_e, dims.nsh_e, dims.nphi_e, constraints.idxsh_e
+                nsg, nsh, nsphi, idxsh = dims.nsg_e, dims.nsh_e, dims.nsphi_e, constraints.idxsh_e
+                # nonlinear function
+                h_e_fun = ca.Function('h_e_fun', [model.x, model.p, model.p_global], [model.con_h_expr_e])
                 h_i_nlp_expr = h_e_fun(xtraj_node[i], ptraj_node[i], model.p_global)
+                # compound nonlinear constraints
+                if dims.nphi_e > 0:
+                    conl_constr_expr_e = ca.substitute(model.con_phi_expr_e, model.con_r_in_phi_e, model.con_r_expr_e)
+                    conl_constr_fun = ca.Function('conl_constr_e_fun', [model.x, model.p, model.p_global], [conl_constr_expr_e])
 
             index_map['lam_gnl_in_lam_g'].append([])
             index_map['lam_sl_in_lam_g'].append([])
@@ -403,12 +403,12 @@ class AcadosCasadiOcp:
 
             if nphi > 0:
                 g.append(conl_constr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global))
-                lbg.append(constraints.lphi)
-                ubg.append(constraints.uphi)
-                index_map['lam_gnl_in_lam_g'][i].append(*list(range(offset, offset + dims.nphi)))
-                offset += dims.nphi
+                lbg.append(lphi)
+                ubg.append(uphi)
+                index_map['lam_gnl_in_lam_g'][i].append(*list(range(offset, offset + nphi)))
+                offset += nphi
                 if with_hessian:
-                    lam_phi = ca_symbol(f'lam_phi', dims.nphi, 1)
+                    lam_phi = ca_symbol(f'lam_phi', nphi, 1)
                     lam_g.append(lam_phi)
                     # always use CONL Hessian approximation here, disregarding inner second derivative
                     outer_hess_r = ca.vertcat(*[ca.hessian(model.con_phi_expr[i], model.con_r_in_phi)[0] for i in range(dims.nphi)])
