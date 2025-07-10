@@ -329,18 +329,21 @@ class AcadosCasadiOcp:
             # initial stage
             if i == 0 and N_horizon > 0:
                 lh, uh = constraints.lh_0, constraints.uh_0
+                lg, ug = constraints.lg, constraints.ug
                 ng, nh, nphi = dims.ng, dims.nh_0, dims.nphi_0
                 nsg, nsh, nphi, idxsh = dims.nsg, dims.nsh_0, dims.nphi_0, constraints.idxsh_0
                 h_i_nlp_expr = h_0_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
             # intermediate stages
             elif i < N_horizon:
                 lh, uh = constraints.lh, constraints.uh
+                lg, ug = constraints.lg, constraints.ug
                 ng, nh, nphi = dims.ng, dims.nh, dims.nphi
                 nsg, nsh, nphi, idxsh = dims.nsg, dims.nsh, dims.nphi, constraints.idxsh
                 h_i_nlp_expr = h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
             # terminal stage
             else:
                 lh, uh = constraints.lh_e, constraints.uh_e
+                lg, ug = constraints.lg_e, constraints.ug_e
                 ng, nh, nphi = dims.ng_e, dims.nh_e, dims.nphi_e
                 nsg, nsh, nphi, idxsh = dims.nsg_e, dims.nsh_e, dims.nphi_e, constraints.idxsh_e
                 h_i_nlp_expr = h_e_fun(xtraj_node[i], ptraj_node[i], model.p_global)
@@ -351,10 +354,13 @@ class AcadosCasadiOcp:
             if ng > 0:
                     C = constraints.C
                     D = constraints.D
-                    linear_constr_expr = ca.mtimes(C, xtraj_node[i]) + ca.mtimes(D, utraj_node[i])
+                    if i< N_horizon:
+                        linear_constr_expr = ca.mtimes(C, xtraj_node[i]) + ca.mtimes(D, utraj_node[i])
+                    else:
+                        linear_constr_expr = ca.mtimes(C, xtraj_node[i])
                     g.append(linear_constr_expr)
-                    lbg.append(constraints.lg)
-                    ubg.append(constraints.ug)
+                    lbg.append(lg)
+                    ubg.append(ug)
                     index_map['lam_gnl_in_lam_g'][i].extend(list(range(offset, offset + ng)))
                     offset += ng
 
@@ -382,11 +388,10 @@ class AcadosCasadiOcp:
                             index_map['lam_gnl_in_lam_g'][i].append(offset)
                             offset += 1
                 else:
-                    h_i_nlp_expr = h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
                     g.append(h_i_nlp_expr)
-                    lbg.append(constraints.lh)
-                    ubg.append(constraints.uh)
-                    index_map['lam_gnl_in_lam_g'][i] = list(range(offset, offset + nh))
+                    lbg.append(lh)
+                    ubg.append(uh)
+                    index_map['lam_gnl_in_lam_g'][i].extend(list(range(offset, offset + nh)))
                     offset += nh
                 if with_hessian:
                     # add hessian contribution
