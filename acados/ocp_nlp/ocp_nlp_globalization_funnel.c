@@ -304,12 +304,11 @@ bool is_switching_condition_satisfied(ocp_nlp_globalization_funnel_opts *opts, d
     }
 }
 
-bool is_f_type_armijo_condition_satisfied(ocp_nlp_globalization_opts *globalization_opts,
-                                                    double negative_ared,
-                                                    double pred,
-                                                    double alpha)
+bool is_armijo_condition_satisfied(ocp_nlp_globalization_opts *globalization_opts,
+                                    double ared, double pred, double alpha)
 {
-    if (negative_ared <= MIN(globalization_opts->eps_sufficient_descent * alpha * MAX(pred, 0) + 1e-18, 0))
+    // if (-ared <= MIN(-globalization_opts->eps_sufficient_descent * alpha * MAX(pred, 0) + 1e-18, 0))
+    if (ared >= globalization_opts->eps_sufficient_descent * alpha * MAX(0.0, pred-1e-9))
     {
         return true;
     }
@@ -342,6 +341,8 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
     print_debug_output_double("trial objective", trial_objective, nlp_opts->print_level, 2);
     print_debug_output_double("trial infeasibility", trial_infeasibility, nlp_opts->print_level, 2);
     print_debug_output_double("pred_optimality", pred_optimality, nlp_opts->print_level, 2);
+    print_debug_output_double("pred_infeasibility", pred_infeasibility, nlp_opts->print_level, 2);
+    print_debug_output_double("pred_merit", pred_merit, nlp_opts->print_level, 2);
 
     if (opts->use_merit_fun_only) // We only check the penalty method but not the funnel!
     {
@@ -357,7 +358,7 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
             if (is_switching_condition_satisfied(opts, pred_optimality, alpha, pred_infeasibility))
             {
                 print_debug_output("Switching condition IS satisfied!\n", nlp_opts->print_level, 1);
-                if (is_f_type_armijo_condition_satisfied(globalization_opts, -ared_optimality, pred_optimality, alpha))
+                if (is_armijo_condition_satisfied(globalization_opts, ared_optimality, pred_optimality, alpha))
                 {
                     print_debug_output("f-type step: Armijo condition satisfied\n", nlp_opts->print_level, 1);
                     accept_step = true;
@@ -381,8 +382,7 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
             {
                 print_debug_output("Switching condition is NOT satisfied!\n", nlp_opts->print_level, 1);
                 print_debug_output("Entered penalty check!\n", nlp_opts->print_level, 1);
-                //TODO move to function and test more
-                if (trial_merit <= current_merit + globalization_opts->eps_sufficient_descent * alpha * pred_merit)
+                if (is_armijo_condition_satisfied(globalization_opts, current_merit-trial_merit, pred_merit, alpha))
                 {
                     print_debug_output("Penalty Function accepted\n", nlp_opts->print_level, 1);
                     accept_step = true;
@@ -394,7 +394,7 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
         else
         {
             print_debug_output("Penalty mode active\n", nlp_opts->print_level,1);
-            if (trial_merit <= current_merit + globalization_opts->eps_sufficient_descent * alpha * pred_merit)
+            if (is_armijo_condition_satisfied(globalization_opts, current_merit-trial_merit, pred_merit, alpha))
             {
                 print_debug_output("p-type step: accepted iterate\n", nlp_opts->print_level, 1);
                 accept_step = true;
@@ -446,9 +446,6 @@ int backtracking_line_search(ocp_nlp_config *config,
     update_funnel_penalty_parameter(mem, opts, nlp_opts, pred_optimality, pred_infeasibility);
     double current_merit = mem->penalty_parameter*current_cost + current_infeasibility; // Shouldn't this be the update below??
     nlp_mem->objective_multiplier = mem->penalty_parameter;
-
-    print_debug_output_double("pred_optimality", pred_optimality, nlp_opts->print_level, 2);
-    print_debug_output_double("pred_infeasibility", pred_infeasibility, nlp_opts->print_level, 2);
 
     int i;
 
