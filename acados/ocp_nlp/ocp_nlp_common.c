@@ -1253,8 +1253,10 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
         constraints[i]->opts_initialize_default(constraints[i], dims->constraints[i], opts->constraints[i]);
     }
 
+    // solution sens
     opts->with_solution_sens_wrt_params = 0;
     opts->with_value_sens_wrt_params = 0;
+    opts->solution_sens_qp_t_lam_min = 1e-9;
 
     // adaptive Levenberg-Marquardt options
     opts->adaptive_levenberg_marquardt_mu_min = 1e-16;
