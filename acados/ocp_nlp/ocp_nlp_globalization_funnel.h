@@ -126,7 +126,9 @@ bool is_f_type_armijo_condition_satisfied(ocp_nlp_globalization_opts *globalizat
 //
 bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *mem,
                                             ocp_nlp_opts *nlp_opts,
-                                            double pred, double ared, double alpha,
+                                            double pred_optimality,
+                                            double ared_optimality,
+                                            double alpha,
                                             double current_infeasibility,
                                             double trial_infeasibility,
                                             double current_objective,

@@ -321,15 +321,17 @@ bool is_f_type_armijo_condition_satisfied(ocp_nlp_globalization_opts *globalizat
 
 bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *mem,
                                            ocp_nlp_opts *nlp_opts,
-                                                  double pred, double ared, double alpha,
-                                                  double current_infeasibility,
-                                                  double trial_infeasibility,
-                                                  double current_objective,
-                                                  double trial_objective,
-                                                  double current_merit,
-                                                  double trial_merit,
-                                                  double pred_merit,
-                                                  double pred_infeasibility)
+                                            double pred_optimality,
+                                            double ared_optimality,
+                                            double alpha,
+                                            double current_infeasibility,
+                                            double trial_infeasibility,
+                                            double current_objective,
+                                            double trial_objective,
+                                            double current_merit,
+                                            double trial_merit,
+                                            double pred_merit,
+                                            double pred_infeasibility)
 {
     ocp_nlp_globalization_funnel_opts *opts = nlp_opts->globalization;
     ocp_nlp_globalization_opts *globalization_opts = opts->globalization_opts;
@@ -339,7 +341,7 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
     print_debug_output_double("current infeasibility", current_infeasibility, nlp_opts->print_level, 2);
     print_debug_output_double("trial objective", trial_objective, nlp_opts->print_level, 2);
     print_debug_output_double("trial infeasibility", trial_infeasibility, nlp_opts->print_level, 2);
-    print_debug_output_double("pred", pred, nlp_opts->print_level, 2);
+    print_debug_output_double("pred_optimality", pred_optimality, nlp_opts->print_level, 2);
 
     if (opts->use_merit_fun_only) // We only check the penalty method but not the funnel!
     {
@@ -352,10 +354,10 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
         if (!mem->funnel_penalty_mode)
         {
             print_debug_output("Penalty Mode not active!\n", nlp_opts->print_level, 1);
-            if (is_switching_condition_satisfied(opts, pred, alpha, pred_infeasibility))
+            if (is_switching_condition_satisfied(opts, pred_optimality, alpha, pred_infeasibility))
             {
                 print_debug_output("Switching condition IS satisfied!\n", nlp_opts->print_level, 1);
-                if (is_f_type_armijo_condition_satisfied(globalization_opts, -ared, pred, alpha))
+                if (is_f_type_armijo_condition_satisfied(globalization_opts, -ared_optimality, pred_optimality, alpha))
                 {
                     print_debug_output("f-type step: Armijo condition satisfied\n", nlp_opts->print_level, 1);
                     accept_step = true;
@@ -429,13 +431,13 @@ int backtracking_line_search(ocp_nlp_config *config,
     ocp_nlp_globalization_funnel_memory *mem = nlp_mem->globalization;
 
     int N = dims->N;
-    double pred_merit = 0.0; // Calculate this here
+    double pred_merit = 0.0; // Initialize this here
     double pred_optimality = nlp_mem->predicted_optimality_reduction;
     double pred_infeasibility = nlp_mem->predicted_infeasibility_reduction;
     double alpha = 1.0;
     double trial_cost;
     double trial_infeasibility = 0.0;
-    double ared;
+    double ared_optimality;
     bool accept_step;
     double current_infeasibility = mem->l1_infeasibility;
     double current_cost = nlp_mem->cost_value;
@@ -507,11 +509,11 @@ int backtracking_line_search(ocp_nlp_config *config,
         // Evaluate merit function at trial point
         double trial_merit = mem->penalty_parameter*trial_cost + trial_infeasibility;
         pred_merit = mem->penalty_parameter * pred_optimality + pred_infeasibility;
-        ared = nlp_mem->cost_value - trial_cost;
+        ared_optimality = nlp_mem->cost_value - trial_cost;
 
         // Funnel globalization
         accept_step = is_trial_iterate_acceptable_to_funnel(mem, nlp_opts,
-                                                            pred_optimality, ared,
+                                                            pred_optimality, ared_optimality,
                                                             alpha, current_infeasibility,
                                                             trial_infeasibility, current_cost,
                                                             trial_cost, current_merit, trial_merit,
