@@ -307,7 +307,6 @@ bool is_switching_condition_satisfied(ocp_nlp_globalization_funnel_opts *opts, d
 bool is_armijo_condition_satisfied(ocp_nlp_globalization_opts *globalization_opts,
                                     double ared, double pred, double alpha)
 {
-    // if (-ared <= MIN(-globalization_opts->eps_sufficient_descent * alpha * MAX(pred, 0) + 1e-18, 0))
     if (ared >= globalization_opts->eps_sufficient_descent * alpha * MAX(0.0, pred-1e-9))
     {
         return true;
