@@ -292,8 +292,6 @@ bool is_funnel_sufficient_decrease_satisfied(ocp_nlp_globalization_funnel_memory
 
 bool is_switching_condition_satisfied(ocp_nlp_globalization_funnel_opts *opts, double pred_optimality, double step_size, double pred_infeasibility)
 {
-    // if (step_size * pred_optimality >= opts->fraction_switching_condition * pred_infeasibility)
-    // if (step_size * pred_optimality >= opts->fraction_switching_condition * pred_infeasibility * pred_infeasibility)
     if (step_size * pred_optimality >= opts->fraction_switching_condition * pred_infeasibility)
     {
         return true;
