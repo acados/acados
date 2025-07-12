@@ -365,7 +365,6 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
                 {
                     print_debug_output("f-type step: Armijo condition NOT satisfied\n", nlp_opts->print_level, 1);
                 }
-
             }
             else if (is_funnel_sufficient_decrease_satisfied(mem, opts, trial_infeasibility))
             {
@@ -379,7 +378,7 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
             {
                 print_debug_output("Switching condition is NOT satisfied!\n", nlp_opts->print_level, 1);
                 print_debug_output("Entered penalty check!\n", nlp_opts->print_level, 1);
-                if (is_armijo_condition_satisfied(globalization_opts, current_merit-trial_merit, pred_merit, alpha))
+                if (trial_infeasibility < current_infeasibility && is_armijo_condition_satisfied(globalization_opts, current_merit-trial_merit, pred_merit, alpha))
                 {
                     print_debug_output("Penalty Function accepted\n", nlp_opts->print_level, 1);
                     accept_step = true;
