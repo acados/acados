@@ -234,6 +234,7 @@ for i=1:n_executions
 
     % evaluation
     status = ocp_solver.get('status');
+    assert(status == 0, sprintf('solver failed with status %d', status))
     sqp_iter = ocp_solver.get('sqp_iter');
     time_tot(i) = ocp_solver.get('time_tot');
     time_lin(i) = ocp_solver.get('time_lin');
