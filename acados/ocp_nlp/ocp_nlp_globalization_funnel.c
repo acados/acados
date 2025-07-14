@@ -341,11 +341,6 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
     print_debug_output_double("predicted_reduction_infeasibility", predicted_reduction_infeasibility, nlp_opts->print_level, 2);
     print_debug_output_double("predicted_reduction_merit", predicted_reduction_merit, nlp_opts->print_level, 2);
 
-    if (alpha < 1.0 && trial_infeasibility > current_infeasibility)
-    {
-        printf("IPOPT would trigger SOC!\n");
-    }
-
     if (opts->use_merit_fun_only) // We only check the penalty method but not the funnel!
     {
         mem->funnel_penalty_mode = true;
