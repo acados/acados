@@ -332,7 +332,7 @@ static void ocp_nlp_ddp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dim
  ************************************************/
 
 void ocp_nlp_ddp_compute_trial_iterate(void *config_, void *dims_,
-            void *in_, void *out_, void *opts_, void *mem_,
+            void *in_, void *out_, void *qp_out_, void *opts_, void *mem_,
             void *work_, void *out_destination_,
             void *solver_mem, double alpha, bool full_step_dual)
 {
@@ -340,6 +340,7 @@ void ocp_nlp_ddp_compute_trial_iterate(void *config_, void *dims_,
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_in *in = in_;
     ocp_nlp_out *out = out_;
+    ocp_qp_out *qp_out = qp_out_;
     ocp_nlp_opts *opts = opts_;
     ocp_nlp_memory *mem = mem_;
     ocp_nlp_workspace *work = work_;
@@ -359,7 +360,7 @@ void ocp_nlp_ddp_compute_trial_iterate(void *config_, void *dims_,
 
     // compute x_0
     int i = 0;
-    blasfeo_daxpy(nx[i], alpha, mem->qp_out->ux + i, nu[i],
+    blasfeo_daxpy(nx[i], alpha, qp_out->ux + i, nu[i],
                 out->ux + i, nu[i], out_destination->ux + i, nu[i]);
 
     // compute u_i, x_{i+1}
@@ -369,11 +370,11 @@ void ocp_nlp_ddp_compute_trial_iterate(void *config_, void *dims_,
         // compute u   // (if i < N?)
         /* u_i = \bar{u}_i + alpha * k_i + K_i * (x_i - \bar{x}_i) */
         // get K
-        xcond_solver_config->solver_get(xcond_solver_config, mem->qp_in, mem->qp_out, opts->qp_solver_opts, mem->qp_solver_mem, "K", i, ddp_mem->tmp_nu_times_nx, nu[i], nx[i]);
+        xcond_solver_config->solver_get(xcond_solver_config, mem->qp_in, qp_out, opts->qp_solver_opts, mem->qp_solver_mem, "K", i, ddp_mem->tmp_nu_times_nx, nu[i], nx[i]);
         blasfeo_pack_dmat(nu[i], nx[i], ddp_mem->tmp_nu_times_nx, nu[i], &ddp_mem->K_mat, 0, 0);
 
         // get k = tmp_nv;
-        xcond_solver_config->solver_get(xcond_solver_config, mem->qp_in, mem->qp_out, opts->qp_solver_opts, mem->qp_solver_mem, "k", i, work->tmp_nv_double, nu[i], 1);
+        xcond_solver_config->solver_get(xcond_solver_config, mem->qp_in, qp_out, opts->qp_solver_opts, mem->qp_solver_mem, "k", i, work->tmp_nv_double, nu[i], 1);
         blasfeo_pack_dvec(nu[i], work->tmp_nv_double, 1, &work->tmp_nv, 0);
 
         // compute delta_u = alpha * k_i + K_i * (x_i - \bar{x}_i)
@@ -400,21 +401,21 @@ void ocp_nlp_ddp_compute_trial_iterate(void *config_, void *dims_,
         // update dual variables
         if (globalization_opts->full_step_dual)
         {
-            blasfeo_dveccp(2*ni[i], mem->qp_out->lam+i, 0, out_destination->lam+i, 0);
+            blasfeo_dveccp(2*ni[i], qp_out->lam+i, 0, out_destination->lam+i, 0);
             if (i < N)
             {
-                blasfeo_dveccp(nx[i+1], mem->qp_out->pi+i, 0, out_destination->pi+i, 0);
+                blasfeo_dveccp(nx[i+1], qp_out->pi+i, 0, out_destination->pi+i, 0);
             }
         }
         else
         {
             // update duals with alpha step
             blasfeo_dvecsc(2*ni[i], 1.0-alpha, out_destination->lam+i, 0);
-            blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->lam+i, 0, out_destination->lam+i, 0, out_destination->lam+i, 0);
+            blasfeo_daxpy(2*ni[i], alpha, qp_out->lam+i, 0, out_destination->lam+i, 0, out_destination->lam+i, 0);
             if (i < N)
             {
                 blasfeo_dvecsc(nx[i+1], 1.0-alpha, out_destination->pi+i, 0);
-                blasfeo_daxpy(nx[i+1], alpha, mem->qp_out->pi+i, 0, out_destination->pi+i, 0, out_destination->pi+i, 0);
+                blasfeo_daxpy(nx[i+1], alpha, qp_out->pi+i, 0, out_destination->pi+i, 0, out_destination->pi+i, 0);
             }
         }
 
@@ -423,7 +424,7 @@ void ocp_nlp_ddp_compute_trial_iterate(void *config_, void *dims_,
         {
             // out_destination->z = mem->z_alg + alpha * dzdux * qp_out->ux
             blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0,
-                    mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out_destination->z+i, 0);
+                    qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out_destination->z+i, 0);
         }
     }
     return;
@@ -781,7 +782,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             // Accept the forward simulation to get feasible initial guess
             mem->alpha = 1.0;  // full step to obtain feasible initial guess
-            ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_work->tmp_nlp_out, mem, mem->alpha, 1.0);
+            ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, qp_out, nlp_opts, nlp_mem, nlp_work, nlp_work->tmp_nlp_out, mem, mem->alpha, 1.0);
             copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
             infeasible_initial_guess = false;
         }
