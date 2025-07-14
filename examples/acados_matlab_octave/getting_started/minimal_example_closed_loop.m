@@ -59,6 +59,7 @@ ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
 % FULL_CONDENSING_QPOASES, PARTIAL_CONDENSING_OSQP
 ocp.solver_options.qp_solver_cond_N = 5; % for partial condensing
 ocp.solver_options.globalization = 'MERIT_BACKTRACKING'; % turns on globalization
+ocp.solver_options.nlp_solver_max_iter = 200;
 
 % we add some model-plant mismatch by choosing different integration
 % methods for model (within the OCP) and plant:
@@ -184,6 +185,7 @@ for i=1:N_sim
     % get solution
     u0 = ocp_solver.get('u', 0);
     status = ocp_solver.get('status'); % 0 - success
+    assert(status == 0, sprintf('solver failed with status %d', status))
 
     % simulate one step
     x_sim(:,i+1) = sim_solver.simulate(x0, u0);
