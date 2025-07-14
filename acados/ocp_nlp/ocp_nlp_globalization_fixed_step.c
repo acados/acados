@@ -210,7 +210,7 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
     }
     else
     {
-        config->step_update(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, alpha, opts->globalization_opts->full_step_dual);
+        config->step_update(config, dims, nlp_in, nlp_out, qp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, alpha, opts->globalization_opts->full_step_dual);
     }
     *step_size = alpha;
 

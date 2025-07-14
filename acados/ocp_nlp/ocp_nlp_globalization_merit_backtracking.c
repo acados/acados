@@ -773,8 +773,8 @@ static int ocp_nlp_ddp_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_
     while (true)
     {
         // Do the DDP forward sweep to get the trial iterate
-        config->step_update(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem,
-                                     nlp_work, nlp_work->tmp_nlp_out, solver_mem, alpha, globalization_opts->full_step_dual);
+        config->step_update(config, dims, nlp_in, nlp_out, nlp_mem->qp_out, nlp_opts, nlp_mem,
+                            nlp_work, nlp_work->tmp_nlp_out, solver_mem, alpha, globalization_opts->full_step_dual);
 
         ///////////////////////////////////////////////////////////////////////
         // Evaluate cost function at trial iterate
@@ -890,7 +890,7 @@ int ocp_nlp_globalization_merit_backtracking_find_acceptable_iterate(void *nlp_c
     }
 
     // update variables
-    nlp_config->step_update(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, mem->alpha, globalization_opts->full_step_dual);
+    nlp_config->step_update(nlp_config, nlp_dims, nlp_in, nlp_out, nlp_mem->qp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, solver_mem, mem->alpha, globalization_opts->full_step_dual);
     *step_size = mem->alpha;
     return ACADOS_SUCCESS;
 }

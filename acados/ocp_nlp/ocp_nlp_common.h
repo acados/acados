@@ -99,7 +99,7 @@ typedef struct ocp_nlp_config
                         void *opts_, void *mem_, void *work_, void *sens_nlp_out,
                         const char *field, int stage, void *grad_p);
     void (*step_update)(void *config, void *dims, void *in,
-            void *out_start, void *opts, void *mem, void *work,
+            void *out_start, void *qp_out, void *opts, void *mem, void *work,
             void *out_destination, void* solver_mem, double alpha, bool full_step_dual);
     // prepare memory
     int (*precompute)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
@@ -580,7 +580,7 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
     ocp_nlp_memory *mem, ocp_nlp_workspace *work);
 //
 void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
-            void *in_, void *out_, void *opts_, void *mem_, void *work_,
+            void *in_, void *out_, void *qp_out_, void *opts_, void *mem_, void *work_,
             void *out_destination_, void *solver_mem, double alpha, bool full_step_dual);
 //
 void ocp_nlp_convert_primaldelta_absdual_step_to_delta_step(ocp_nlp_config *config, ocp_nlp_dims *dims,

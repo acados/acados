@@ -341,11 +341,6 @@ bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *
     print_debug_output_double("predicted_reduction_infeasibility", predicted_reduction_infeasibility, nlp_opts->print_level, 2);
     print_debug_output_double("predicted_reduction_merit", predicted_reduction_merit, nlp_opts->print_level, 2);
 
-    if (alpha < 1.0 && trial_infeasibility > current_infeasibility)
-    {
-        printf("IPOPT would trigger SOC!\n");
-    }
-
     if (opts->use_merit_fun_only) // We only check the penalty method but not the funnel!
     {
         mem->funnel_penalty_mode = true;
@@ -453,8 +448,8 @@ int backtracking_line_search(ocp_nlp_config *config,
     while (true)
     {
         // Calculate trial iterate: trial_iterate = current_iterate + alpha * direction
-        config->step_update(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem,
-                                     nlp_work, nlp_work->tmp_nlp_out, solver_mem, alpha, globalization_opts->full_step_dual);
+        config->step_update(config, dims, nlp_in, nlp_out, nlp_mem->qp_out, nlp_opts, nlp_mem,
+                            nlp_work, nlp_work->tmp_nlp_out, solver_mem, alpha, globalization_opts->full_step_dual);
 
         ///////////////////////////////////////////////////////////////////////
         // Evaluate cost function at trial iterate
