@@ -338,6 +338,10 @@ typedef struct ocp_nlp_opts
     ocp_nlp_qp_tol_strategy_t nlp_qp_tol_strategy; // strategy for setting the QP tolerances
     double nlp_qp_tol_reduction_factor;
     double nlp_qp_tol_safety_factor;
+    double nlp_qp_tol_min_stat;
+    double nlp_qp_tol_min_eq;
+    double nlp_qp_tol_min_ineq;
+    double nlp_qp_tol_min_comp;
 
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
     bool warm_start_first_qp_from_nlp;  // if True first QP will be initialized using values from NLP iterate, otherwise from previous QP solution.
