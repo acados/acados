@@ -90,6 +90,10 @@ classdef AcadosOcpOptions < handle
         nlp_qp_tol_strategy
         nlp_qp_tol_reduction_factor
         nlp_qp_tol_safety_factor
+        nlp_qp_tol_min_stat
+        nlp_qp_tol_min_eq
+        nlp_qp_tol_min_ineq
+        nlp_qp_tol_min_comp
         exact_hess_cost
         exact_hess_dyn
         exact_hess_constr
@@ -204,6 +208,10 @@ classdef AcadosOcpOptions < handle
             obj.nlp_qp_tol_strategy = 'FIXED_QP_TOL';
             obj.nlp_qp_tol_reduction_factor = 1e-1;
             obj.nlp_qp_tol_safety_factor = 0.1;
+            obj.nlp_qp_tol_min_stat = 1e-9;
+            obj.nlp_qp_tol_min_eq = 1e-10;
+            obj.nlp_qp_tol_min_ineq = 1e-10;
+            obj.nlp_qp_tol_min_comp = 1e-11;
             obj.reg_epsilon = 1e-4;
             obj.reg_adaptive_eps = false;
             obj.reg_max_cond_block = 1e7;

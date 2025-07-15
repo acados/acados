@@ -112,9 +112,15 @@ class AcadosOcpOptions:
         self.__qpscaling_lb_norm_inf_grad_obj = 1e-4
         self.__qpscaling_scale_objective = "NO_OBJECTIVE_SCALING"
         self.__qpscaling_scale_constraints = "NO_CONSTRAINT_SCALING"
+
         self.__nlp_qp_tol_strategy = "FIXED_QP_TOL"
         self.__nlp_qp_tol_reduction_factor = 1e-1
         self.__nlp_qp_tol_safety_factor = 0.1
+        self.__nlp_qp_tol_min_stat = 1e-9
+        self.__nlp_qp_tol_min_eq = 1e-10
+        self.__nlp_qp_tol_min_ineq = 1e-10
+        self.__nlp_qp_tol_min_comp = 1e-11
+
         self.__ext_cost_num_hess = 0
         self.__globalization_use_SOC = 0
         self.__globalization_alpha_min = None
@@ -424,7 +430,7 @@ class AcadosOcpOptions:
             2) `qp_tol_eq = nlp_qp_tol_safety_factor * nlp_solver_tol_eq`
             3) `qp_tol_ineq = nlp_qp_tol_safety_factor * nlp_solver_tol_ineq * min_constraint_scaling`
             4) `qp_tol_comp = nlp_qp_tol_safety_factor * nlp_solver_tol_comp * min_constraint_scaling`
-            5) cap all QP tolerances to a minimum of 1e-12.
+            5) cap all QP tolerances to a minimum of `nlp_qp_tol_min_*`.
 
         Default: "FIXED_QP_TOL".
         """
@@ -449,6 +455,42 @@ class AcadosOcpOptions:
         Default: 0.1.
         """
         return self.__nlp_qp_tol_safety_factor
+
+    @property
+    def nlp_qp_tol_min_stat(self):
+        """
+        Minimum value to be set in the QP solver stationarity tolerance by `nlp_qp_tol_strategy`, used in `ADAPTIVE_QPSCALING`.
+        Type: float > 0.
+        Default: 1e-9.
+        """
+        return self.__nlp_qp_tol_min_stat
+
+    @property
+    def nlp_qp_tol_min_eq(self):
+        """
+        Minimum value to be set in the QP solver equality tolerance by `nlp_qp_tol_strategy`, used in `ADAPTIVE_QPSCALING`.
+        Type: float > 0.
+        Default: 1e-10.
+        """
+        return self.__nlp_qp_tol_min_eq
+
+    @property
+    def nlp_qp_tol_min_ineq(self):
+        """
+        Minimum value to be set in the QP solver inequality tolerance by `nlp_qp_tol_strategy`, used in `ADAPTIVE_QPSCALING`.
+        Type: float > 0.
+        Default: 1e-10.
+        """
+        return self.__nlp_qp_tol_min_ineq
+
+    @property
+    def nlp_qp_tol_min_comp(self):
+        """
+        Minimum value to be set in the QP solver complementarity tolerance by `nlp_qp_tol_strategy`, used in `ADAPTIVE_QPSCALING`.
+        Type: float > 0.
+        Default: 1e-11.
+        """
+        return self.__nlp_qp_tol_min_comp
 
     @property
     def nlp_solver_step_length(self):

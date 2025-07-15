@@ -2527,6 +2527,7 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     ocp_nlp_qpscaling_constraint_type qpscaling_scale_constraints = {{ solver_options.qpscaling_scale_constraints }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qpscaling_scale_constraints", &qpscaling_scale_constraints);
 
+    // NLP QP tol strategy
     ocp_nlp_qp_tol_strategy_t nlp_qp_tol_strategy = {{ solver_options.nlp_qp_tol_strategy }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "nlp_qp_tol_strategy", &nlp_qp_tol_strategy);
 
@@ -2535,6 +2536,18 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
 
     double nlp_qp_tol_safety_factor = {{ solver_options.nlp_qp_tol_safety_factor }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "nlp_qp_tol_safety_factor", &nlp_qp_tol_safety_factor);
+
+    double nlp_qp_tol_min_stat = {{ solver_options.nlp_qp_tol_min_stat }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "nlp_qp_tol_min_stat", &nlp_qp_tol_min_stat);
+
+    double nlp_qp_tol_min_eq = {{ solver_options.nlp_qp_tol_min_eq }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "nlp_qp_tol_min_eq", &nlp_qp_tol_min_eq);
+
+    double nlp_qp_tol_min_ineq = {{ solver_options.nlp_qp_tol_min_ineq }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "nlp_qp_tol_min_ineq", &nlp_qp_tol_min_ineq);
+
+    double nlp_qp_tol_min_comp = {{ solver_options.nlp_qp_tol_min_comp }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "nlp_qp_tol_min_comp", &nlp_qp_tol_min_comp);
 
 {%- if solver_options.nlp_solver_type == "SQP" and solver_options.timeout_max_time > 0 %}
     double timeout_max_time = {{ solver_options.timeout_max_time }};
