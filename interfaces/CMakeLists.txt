@@ -358,6 +358,7 @@ add_test(NAME python_pendulum_ocp_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/convex_ocp_with_onesided_constraints
         python main_convex_onesided.py)
 
+    # casadi_examples
     add_test(NAME python_casadi_get_set_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/casadi_tests
         python test_casadi_get_set.py)
@@ -370,6 +371,9 @@ add_test(NAME python_pendulum_ocp_example_cmake
     add_test(NAME test_casadi_constraint
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/casadi_tests
         python test_casadi_constraint.py)
+    add_test(NAME test_casadi_slack_in_h
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/casadi_tests
+        python test_casadi_slack_in_h.py)
 
     # Sim
     add_test(NAME python_pendulum_ext_sim_example
@@ -453,6 +457,7 @@ add_test(NAME python_pendulum_ocp_example_cmake
     set_tests_properties(python_casadi_get_set_example PROPERTIES DEPENDS test_casadi_p_in_constraint_and_cost)
     set_tests_properties(test_casadi_p_in_constraint_and_cost PROPERTIES DEPENDS test_casadi_parametric)
     set_tests_properties(test_casadi_constraint PROPERTIES DEPENDS python_casadi_get_set_example)
+    set_tests_properties(test_casadi_slack_in_h PROPERTIES DEPENDS test_casadi_constraint)
 
     # Directory getting_started
     set_tests_properties(python_pendulum_sim_example PROPERTIES DEPENDS python_pendulum_ocp_example)

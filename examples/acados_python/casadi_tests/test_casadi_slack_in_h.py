@@ -33,10 +33,8 @@ from acados_template import AcadosOcp, AcadosOcpSolver, AcadosCasadiOcpSolver
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import casadi as ca
-from utils import plot_pendulum
 
 
-PLOT = False
 N_horizon = 20
 Tf = 1.0
 
@@ -154,16 +152,6 @@ def main():
     print('casadi_cost:', casadi_ocp_solver.get_cost())
 
     result.flatten().allclose(other=result_casadi.flatten())
-
-    if PLOT:
-        Fmax = 80
-        N = ocp.solver_options.N_horizon
-        acados_u = np.array([ocp_solver.get(i, "u") for i in range(N)])
-        acados_x = np.array([ocp_solver.get(i, "x") for i in range(N+1)])
-        casadi_u = np.array([casadi_ocp_solver.get(i, "u") for i in range(N)])
-        casadi_x = np.array([casadi_ocp_solver.get(i, "x") for i in range(N+1)])
-        plot_pendulum(np.linspace(0, Tf, N+1), Fmax, acados_u, acados_x, latexify=False)
-        plot_pendulum(np.linspace(0, Tf, N+1), Fmax, casadi_u, casadi_x, latexify=False)
 
 if __name__ == '__main__':
     main()
