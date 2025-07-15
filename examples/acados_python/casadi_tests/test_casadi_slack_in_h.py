@@ -29,6 +29,7 @@
 #
 
 import sys
+sys.path.insert(0, '../getting_started')
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosCasadiOcpSolver
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
