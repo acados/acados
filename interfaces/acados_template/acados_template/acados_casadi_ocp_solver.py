@@ -224,8 +224,15 @@ class AcadosCasadiOcp:
         ubw = ca.vertcat(*ubw_list)
         p_nlp = ca.vertcat(*ptraj_node, model.p_global)
 
-        ### Nonlinear constraints
-        # dynamics
+        ### Create Constraints
+        g = []
+        lbg = []
+        ubg = []
+        offset = 0
+        if with_hessian:
+            lam_g = []
+            hess_l = ca.DM.zeros((nw, nw))
+        # dynamics constraints
         if solver_options.integrator_type == "DISCRETE":
             f_discr_fun = ca.Function('f_discr_fun', [model.x, model.u, model.p, model.p_global], [model.disc_dyn_expr])
         elif solver_options.integrator_type == "ERK":
@@ -234,15 +241,6 @@ class AcadosCasadiOcp:
             f_discr_fun = ca.simpleRK(ca_expl_ode, solver_options.sim_method_num_steps[0], solver_options.sim_method_num_stages[0])
         else:
             raise NotImplementedError(f"Integrator type {solver_options.integrator_type} not supported.")
-
-        # create nonlinear constraints
-        g = []
-        lbg = []
-        ubg = []
-        offset = 0
-        if with_hessian:
-            lam_g = []
-            hess_l = ca.DM.zeros((nw, nw))
 
         for i in range(N_horizon+1):
             # add dynamics constraints
@@ -267,51 +265,16 @@ class AcadosCasadiOcp:
                         adj = ca.jtimes(dyn_equality, w, lam_g_dyn, True)
                         hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
 
-            # nonlinear constraints
+            # Nonlinear Constraints
             # initial stage
-            if i == 0 and N_horizon > 0:
-                lg, ug, lh, uh, lphi, uphi = constraints.lg, constraints.ug, constraints.lh_0, constraints.uh_0, constraints.lphi_0, constraints.uphi_0
-                ng, nh, nphi = dims.ng, dims.nh_0, dims.nphi_0
-                nsg, nsh, nsphi, idxsh = dims.nsg, dims.nsh_0, dims.nsphi_0, constraints.idxsh_0
-                # nonlinear function
-                h_0_fun = ca.Function('h_0_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr_0])
-                h_i_nlp_expr = h_0_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
-                # compound nonlinear constraints
-                if dims.nphi_0 > 0:
-                    conl_constr_expr = ca.substitute(model.con_phi_expr_0, model.con_r_in_phi_0, model.con_r_expr_0)
-                    conl_constr_fun = ca.Function('conl_constr_0_fun', [model.x, model.u, model.p, model.p_global], [conl_constr_expr])
-            # intermediate stages
-            elif i < N_horizon:
-                # constraints
-                lg, ug, lh, uh, lphi, uphi = constraints.lg, constraints.ug, constraints.lh, constraints.uh, constraints.lphi, constraints.uphi
-                ng, nh, nphi = dims.ng, dims.nh, dims.nphi
-                nsg, nsh, nsphi, idxsh = dims.nsg, dims.nsh, dims.nsphi, constraints.idxsh
-                # nonlinear function
-                h_fun = ca.Function('h_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr])
-                h_i_nlp_expr = h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
-                # compound nonlinear constraints
-                if dims.nphi > 0:
-                    conl_constr_expr = ca.substitute(model.con_phi_expr, model.con_r_in_phi, model.con_r_expr)
-                    conl_constr_fun = ca.Function('conl_constr_fun', [model.x, model.u, model.p, model.p_global], [conl_constr_expr])
-            # terminal stage
-            else:
-                lg, ug, lh, uh, lphi, uphi = constraints.lg_e, constraints.ug_e, constraints.lh_e, constraints.uh_e, constraints.lphi_e, constraints.uphi_e
-                ng, nh, nphi = dims.ng_e, dims.nh_e, dims.nphi_e
-                nsg, nsh, nsphi, idxsh = dims.nsg_e, dims.nsh_e, dims.nsphi_e, constraints.idxsh_e
-                # nonlinear function
-                h_e_fun = ca.Function('h_e_fun', [model.x, model.p, model.p_global], [model.con_h_expr_e])
-                h_i_nlp_expr = h_e_fun(xtraj_node[i], ptraj_node[i], model.p_global)
-                # compound nonlinear constraints
-                if dims.nphi_e > 0:
-                    conl_constr_expr_e = ca.substitute(model.con_phi_expr_e, model.con_r_in_phi_e, model.con_r_expr_e)
-                    conl_constr_fun = ca.Function('conl_constr_e_fun', [model.x, model.p, model.p_global], [conl_constr_expr_e])
+            lg, ug, lh, uh, lphi, uphi, ng, nh, nphi, nsg, nsh, nsphi, idxsh, C, D, h_i_nlp_expr, conl_constr_fun =\
+            self._get_constraint_node(i, N_horizon, xtraj_node, utraj_node, ptraj_node, model, constraints, dims)
 
             index_map['lam_gnl_in_lam_g'].append([])
             index_map['lam_sl_in_lam_g'].append([])
             index_map['lam_su_in_lam_g'].append([])
+            # add linear constraints
             if ng > 0:
-                C = constraints.C
-                D = constraints.D
                 if i< N_horizon:
                     linear_constr_expr = ca.mtimes(C, xtraj_node[i]) + ca.mtimes(D, utraj_node[i])
                 else:
@@ -323,10 +286,11 @@ class AcadosCasadiOcp:
                 index_map['lam_gnl_in_lam_g'][i].extend(list(range(offset, offset + ng)))
                 offset += ng
 
+            # add nonlinear constraints
             if nh > 0:
                 if nsh > 0:
                     # h_fun with slack variables
-                    soft_h_indices = idxsh  # indices of slacked control bounds
+                    soft_h_indices = idxsh
                     hard_h_indices = np.array([h for h in range(len(lh)) if h not in idxsh])
                     for index_in_nh in range(nh):
                         if index_in_nh in soft_h_indices:
@@ -364,6 +328,7 @@ class AcadosCasadiOcp:
                         adj = ca.jtimes(h_i_nlp_expr, w, lam_h, True)
                         hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
 
+            # add compound nonlinear constraints
             if nphi > 0:
                 self._append_constraints(g, lbg, ubg,
                                          g_expr = conl_constr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global),
@@ -380,32 +345,12 @@ class AcadosCasadiOcp:
                     r_in_nlp = ca.substitute(model.con_r_expr, model.x, xtraj_node[-1])
                     dr_dw = ca.jacobian(r_in_nlp, w)
                     hess_l += dr_dw.T @ outer_hess_r @ dr_dw
+
         ### Cost
         nlp_cost = 0
         for i in range(N_horizon+1):
-            if i == 0:
-                xtraj_node_i = xtraj_node[0]
-                utraj_node_i = utraj_node[0]
-                ptraj_node_i = ptraj_node[0]
-                sl_node_i = sl_node[0]
-                su_node_i = su_node[0]
-                cost_expr_i = ocp.get_initial_cost_expression()
-                ns, zl, Zl, zu, Zu = dims.ns_0, cost.zl_0, cost.Zl_0, cost.zu_0, cost.Zu_0
-            elif i < N_horizon:
-                xtraj_node_i = xtraj_node[i]
-                utraj_node_i = utraj_node[i]
-                ptraj_node_i = ptraj_node[i]
-                sl_node_i = sl_node[i]
-                su_node_i = su_node[i]
-                cost_expr_i = ocp.get_path_cost_expression()
-                ns, zl, Zl, zu, Zu= dims.ns, cost.zl, cost.Zl, cost.zu, cost.Zu
-            else:
-                xtraj_node_i = xtraj_node[-1]
-                ptraj_node_i = ptraj_node[-1]
-                sl_node_i = sl_node[-1]
-                su_node_i = su_node[-1]
-                cost_expr_i = ocp.get_terminal_cost_expression()
-                ns, zl, Zl, zu, Zu = dims.ns_e, cost.zl_e, cost.Zl_e, cost.zu_e, cost.Zu_e
+            xtraj_node_i, utraj_node_i, ptraj_node_i, sl_node_i, su_node_i, cost_expr_i, ns, zl, Zl, zu, Zu = \
+            self._get_cost_node(i, N_horizon, xtraj_node, utraj_node, ptraj_node, sl_node, su_node, ocp, dims, cost)
 
             cost_fun_i = ca.Function(f'cost_fun_{i}', [model.x, model.u, model.p, model.p_global], [cost_expr_i])
             nlp_cost += solver_options.cost_scaling[i] * cost_fun_i(xtraj_node_i, utraj_node_i, ptraj_node_i, model.p_global)
@@ -485,9 +430,9 @@ class AcadosCasadiOcp:
         ubw_list.append(ub_utraj_node[i])
         w0_list.append(np.zeros((dims.nu,)))
     
-    def _add_slack_variables(self, w_sym_list, lbw_list, ubw_list, w0_list, 
-                               sl_node, su_node, lb_slack_node, ub_slack_node, 
-                               i, dims):
+    def _add_slack_variables(self, w_sym_list, lbw_list, ubw_list, w0_list,
+                             sl_node, su_node, lb_slack_node, ub_slack_node, 
+                             i, dims):
         """
         Helper function to add slack variables to the NLP formulation.
         """
@@ -512,6 +457,93 @@ class AcadosCasadiOcp:
         g.append(g_expr)
         lbg.append(lbg_expr)
         ubg.append(ubg_expr)
+
+    def _get_cost_node(self, i, N_horizon, xtraj_node, utraj_node, ptraj_node, sl_node, su_node, ocp, dims, cost):
+        if i == 0:
+            return (xtraj_node[0],
+                    utraj_node[0],
+                    ptraj_node[0],
+                    sl_node[0],
+                    su_node[0],
+                    ocp.get_initial_cost_expression(),
+                    dims.ns_0, cost.zl_0, cost.Zl_0, cost.zu_0, cost.Zu_0)
+        elif i < N_horizon:
+            return (xtraj_node[i],
+                    utraj_node[i],
+                    ptraj_node[i],
+                    sl_node[i],
+                    su_node[i],
+                    ocp.get_path_cost_expression(),
+                    dims.ns, cost.zl, cost.Zl, cost.zu, cost.Zu)
+        else:
+            return (xtraj_node[-1], 
+                    [], 
+                    ptraj_node[-1], 
+                    sl_node[-1], 
+                    su_node[-1],
+                    ocp.get_terminal_cost_expression(),
+                    dims.ns_e, cost.zl_e, cost.Zl_e, cost.zu_e, cost.Zu_e)
+
+    def _get_constraint_node(self, i, N_horizon, xtraj_node, utraj_node, ptraj_node, model, constraints, dims):
+        if i == 0 and N_horizon > 0:
+            lg, ug = constraints.lg, constraints.ug
+            lh, uh = constraints.lh_0, constraints.uh_0
+            lphi, uphi = constraints.lphi_0, constraints.uphi_0
+            ng, nh, nphi = dims.ng, dims.nh_0, dims.nphi_0
+            nsg, nsh, nsphi, idxsh = dims.nsg, dims.nsh_0, dims.nsphi_0, constraints.idxsh_0
+
+            # linear function
+            C, D = constraints.C, constraints.D
+            # nonlinear function
+            h_fun = ca.Function('h_0_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr_0])
+            h_i_nlp_expr = h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
+            # compound nonlinear constraint
+            conl_constr_fun = None
+            if dims.nphi_0 > 0:
+                conl_expr = ca.substitute(model.con_phi_expr_0, model.con_r_in_phi_0, model.con_r_expr_0)
+                conl_constr_fun = ca.Function('conl_constr_0_fun', [model.x, model.u, model.p, model.p_global], [conl_expr])
+
+        elif i < N_horizon:
+            lg, ug = constraints.lg, constraints.ug
+            lh, uh = constraints.lh, constraints.uh
+            lphi, uphi = constraints.lphi, constraints.uphi
+            ng, nh, nphi = dims.ng, dims.nh, dims.nphi
+            nsg, nsh, nsphi, idxsh = dims.nsg, dims.nsh, dims.nsphi, constraints.idxsh
+
+            C, D = constraints.C, constraints.D
+            h_fun = ca.Function('h_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr])
+            h_i_nlp_expr = h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
+            conl_constr_fun = None
+            if dims.nphi > 0:
+                conl_expr = ca.substitute(model.con_phi_expr, model.con_r_in_phi, model.con_r_expr)
+                conl_constr_fun = ca.Function('conl_constr_fun', [model.x, model.u, model.p, model.p_global], [conl_expr])
+
+        else:
+            lg, ug = constraints.lg_e, constraints.ug_e
+            lh, uh = constraints.lh_e, constraints.uh_e
+            lphi, uphi = constraints.lphi_e, constraints.uphi_e
+            ng, nh, nphi = dims.ng_e, dims.nh_e, dims.nphi_e
+            nsg, nsh, nsphi, idxsh = dims.nsg_e, dims.nsh_e, dims.nsphi_e, constraints.idxsh_e
+
+            C, D = constraints.C_e, None
+            h_fun = ca.Function('h_e_fun', [model.x, model.p, model.p_global], [model.con_h_expr_e])
+            h_i_nlp_expr = h_fun(xtraj_node[i], ptraj_node[i], model.p_global)
+            conl_constr_fun = None
+            if dims.nphi_e > 0:
+                conl_expr = ca.substitute(model.con_phi_expr_e, model.con_r_in_phi_e, model.con_r_expr_e)
+                conl_constr_fun = ca.Function('conl_constr_e_fun', [model.x, model.p, model.p_global], [conl_expr])
+
+        return (
+            lg, ug,
+            lh, uh,
+            lphi, uphi,
+            ng, nh, nphi,
+            nsg, nsh, nsphi,
+            idxsh,
+            C, D,
+            h_i_nlp_expr,
+            conl_constr_fun
+        )
 
     @property
     def nlp(self):
@@ -810,12 +842,11 @@ class AcadosCasadiOcpSolver:
         Loads the provided iterate into the OCP solver.
         Note: The iterate object does not contain the the parameters.
         """
-        # TODO: add slacks
         for key, traj in iterate.__dict__.items():
             field = key.replace('_traj', '')
 
             for n, val in enumerate(traj):
-                if field in ['x', 'u', 'pi', 'lam']:
+                if field in ['x', 'u', 'pi', 'lam', 'sl', 'su']:
                     self.set(n, field, val)
 
     def store_iterate_to_flat_obj(self) -> AcadosOcpFlattenedIterate:
@@ -839,6 +870,8 @@ class AcadosCasadiOcpSolver:
         self.set_flat("u", iterate.u)
         self.set_flat("pi", iterate.pi)
         self.set_flat("lam", iterate.lam)
+        self.set_flat("sl", iterate.sl)
+        self.set_flat("su", iterate.su)
 
     def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
 
