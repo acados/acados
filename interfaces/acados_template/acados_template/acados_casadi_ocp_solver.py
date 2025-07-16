@@ -111,7 +111,7 @@ class AcadosCasadiOcp:
         ub_xtraj_node = [np.inf * ca.DM.ones((dims.nx, 1)) for _ in range(N_horizon+1)]
         lb_utraj_node = [-np.inf * ca.DM.ones((dims.nu, 1)) for _ in range(N_horizon)]
         ub_utraj_node = [np.inf * ca.DM.ones((dims.nu, 1)) for _ in range(N_horizon)]
-        # setup slack variables 
+        # setup slack variables
         # TODO: speicify different bounds for lsbu, lsbx, lsg, lsh ,lsphi
         lb_slack_node = ([0 * ca.DM.ones((dims.ns_0, 1))] if dims.ns_0 else []) + \
                         ([0* ca.DM.ones((dims.ns, 1)) for _ in range(N_horizon-1)] if dims.ns else []) + \
@@ -327,7 +327,7 @@ class AcadosCasadiOcp:
         elif i < dims.N:
             ns = dims.ns
         else:
-            ns = dims.ns_e 
+            ns = dims.ns_e
         xtraj_node.append(ca_symbol(f'x{i}', dims.nx, 1))
         utraj_node.append(ca_symbol(f'u{i}', dims.nu, 1))
         if ns > 0:
@@ -439,7 +439,7 @@ class AcadosCasadiOcp:
                 self.offset_gnl += 1
 
     def _get_cost_node(self, i, N_horizon, xtraj_node, utraj_node, ptraj_node, sl_node, su_node, ocp, dims, cost):
-        """ 
+        """
         Helper function to get the cost node for a given stage.
         """
         if i == 0:
@@ -459,10 +459,10 @@ class AcadosCasadiOcp:
                     ocp.get_path_cost_expression(),
                     dims.ns, cost.zl, cost.Zl, cost.zu, cost.Zu)
         else:
-            return (xtraj_node[-1], 
-                    [], 
-                    ptraj_node[-1], 
-                    sl_node[-1], 
+            return (xtraj_node[-1],
+                    [],
+                    ptraj_node[-1],
+                    sl_node[-1],
                     su_node[-1],
                     ocp.get_terminal_cost_expression(),
                     dims.ns_e, cost.zl_e, cost.Zl_e, cost.zu_e, cost.Zu_e)
@@ -529,7 +529,7 @@ class AcadosCasadiOcp:
             if dims.nphi_e > 0:
                 conl_expr = ca.substitute(model.con_phi_expr_e, model.con_r_in_phi_e, model.con_r_expr_e)
                 conl_constr_fun = ca.Function('conl_constr_e_fun', [model.x, model.p, model.p_global], [conl_expr])
-        
+
         self._index_map['lam_gnl_in_lam_g'].append([])
         self._index_map['lam_sl_in_lam_g'].append([])
         self._index_map['lam_su_in_lam_g'].append([])
@@ -631,6 +631,7 @@ class AcadosCasadiOcpSolver:
         if solver == "fatrop":
             pi_in_lam_g_flat = [idx for sublist in self.index_map['pi_in_lam_g'] for idx in sublist]
             is_equality_array = [True if i in pi_in_lam_g_flat else False for i in range(casadi_length(self.casadi_nlp['g']))]
+            casadi_solver_opts['structure_detection'] = 'auto'
             casadi_solver_opts['equality'] = is_equality_array
 
         if use_acados_hessian:
@@ -934,7 +935,7 @@ class AcadosCasadiOcpSolver:
             soft_lam = value_[offset_soft:offset_soft + 2 * ns]
 
             g_indices = np.array(self.index_map['lam_gnl_in_lam_g'][stage]+\
-                                self.index_map['lam_sl_in_lam_g'][stage]) 
+                                self.index_map['lam_sl_in_lam_g'][stage])
             sorted = np.sort(g_indices)
             gnl_indices = [i for i, x in enumerate(sorted) if x in self.index_map['lam_gnl_in_lam_g'][stage]]
             sl_indices = [i for i, x in enumerate(sorted) if x in self.index_map['lam_sl_in_lam_g'][stage]]
@@ -942,7 +943,7 @@ class AcadosCasadiOcpSolver:
             lg_lam_soft = lg_lam[sl_indices]
             ug_lam_hard = ug_lam[gnl_indices]
             ug_lam_soft = ug_lam[sl_indices]
-            
+
             if stage != dims.N:
                 self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]+self.index_map['lam_bu_in_lam_w'][stage]] = np.concatenate((ubx_lam-lbx_lam, ubu_lam-lbu_lam))
                 self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] =  ug_lam_hard-lg_lam_hard
