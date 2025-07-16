@@ -51,7 +51,7 @@ class AcadosCasadiOcp:
         ocp.make_consistent()
 
         # create index map for variables
-        index_map = {
+        self._index_map = {
             # indices of variables within w
             'x_in_w': [],
             'u_in_w': [],
@@ -72,6 +72,9 @@ class AcadosCasadiOcp:
             'lam_sl_in_lam_g': [],
             'lam_su_in_lam_g': [],
         }
+        self.offset_w = 0  # offset for the indices in index_map
+        self.offset_gnl = 0
+        self.offset_lam = 0
 
         # unpack
         model = ocp.model
@@ -85,7 +88,7 @@ class AcadosCasadiOcp:
         if any([dims.nsbx, dims.nsbx_e, dims.nsbu]):
             raise NotImplementedError("AcadosCasadiOcpSolver does not support slack variables (s) for variables (x and u) yet.")
         if any([dims.nsg, dims.nsg_e, dims.nsphi, dims.nsphi_e]):
-            raise NotImplementedError("AcadosCasadiOcpSolver does not support slack variables (s) for linear and compound constraints (h, phi) yet.")
+            raise NotImplementedError("AcadosCasadiOcpSolver does not support slack variables (s)  for general linear and convex-over-nonlinear constraints (g, phi).")
         if dims.nz > 0:
             raise NotImplementedError("AcadosCasadiOcpSolver does not support algebraic variables (z) yet.")
         if ocp.solver_options.integrator_type not in ["DISCRETE", "ERK"]:
@@ -98,12 +101,7 @@ class AcadosCasadiOcp:
         sl_node = []
         su_node = []
         for i in range(N_horizon+1):
-            if i == 0:
-                self._append_node(ca_symbol, xtraj_node, utraj_node, sl_node, su_node, i, dims, )
-            elif i < N_horizon:
-                self._append_node(ca_symbol, xtraj_node, utraj_node, sl_node, su_node, i, dims)
-            else:
-                self._append_node(ca_symbol, xtraj_node, utraj_node, sl_node, su_node, i, dims)
+            self._append_node(ca_symbol, xtraj_node, utraj_node, sl_node, su_node, i, dims)
 
         # parameters
         ptraj_node = [ca_symbol(f'p{i}', dims.np, 1) for i in range(N_horizon+1)]
@@ -113,42 +111,16 @@ class AcadosCasadiOcp:
         ub_xtraj_node = [np.inf * ca.DM.ones((dims.nx, 1)) for _ in range(N_horizon+1)]
         lb_utraj_node = [-np.inf * ca.DM.ones((dims.nu, 1)) for _ in range(N_horizon)]
         ub_utraj_node = [np.inf * ca.DM.ones((dims.nu, 1)) for _ in range(N_horizon)]
-        # setup slack variables
-        lb_slack_node = []
-        ub_slack_node = []
-        for i in range(N_horizon+1):
-            if i == 0 and dims.ns_0:
-                lb_slack_node.append(0 * ca.DM.ones((dims.ns_0, 1)))
-                ub_slack_node.append(np.inf * ca.DM.ones((dims.ns_0, 1)))
-            elif i < N_horizon and dims.ns:
-                lb_slack_node.append(0 * ca.DM.ones((dims.ns, 1)))
-                ub_slack_node.append(np.inf * ca.DM.ones((dims.ns, 1)))
-            elif i == N_horizon and dims.ns_e:
-                lb_slack_node.append(0 * ca.DM.ones((dims.ns_e, 1)))
-                ub_slack_node.append(np.inf * ca.DM.ones((dims.ns_e, 1)))
-        offset = 0
+        # setup slack variables 
+        # TODO: speicify different bounds for lsbu, lsbx, lsg, lsh ,lsphi
+        lb_slack_node = ([0 * ca.DM.ones((dims.ns_0, 1))] if dims.ns_0 else []) + \
+                        ([0* ca.DM.ones((dims.ns, 1)) for _ in range(N_horizon-1)] if dims.ns else []) + \
+                        ([0 * ca.DM.ones((dims.ns_e, 1))] if dims.ns_e else [])
+        ub_slack_node = ([np.inf * ca.DM.ones((dims.ns, 1))] if dims.ns_0 else []) + \
+                        ([np.inf * ca.DM.ones((dims.ns, 1)) for _ in range(N_horizon-1)] if dims.ns else []) + \
+                        ([np.inf * ca.DM.ones((dims.ns_e, 1))] if dims.ns_e else [])
         for i in range(0, N_horizon+1):
-            if i == 0:
-                lb_xtraj_node[i][constraints.idxbx_0] = constraints.lbx_0
-                ub_xtraj_node[i][constraints.idxbx_0] = constraints.ubx_0
-                index_map['lam_bx_in_lam_w'].append(list(offset + constraints.idxbx_0))
-                offset += dims.nx
-            elif i < N_horizon:
-                lb_xtraj_node[i][constraints.idxbx] = constraints.lbx
-                ub_xtraj_node[i][constraints.idxbx] = constraints.ubx
-                index_map['lam_bx_in_lam_w'].append(list(offset + constraints.idxbx))
-                offset += dims.nx
-            elif i == N_horizon:
-                lb_xtraj_node[-1][constraints.idxbx_e] = constraints.lbx_e
-                ub_xtraj_node[-1][constraints.idxbx_e] = constraints.ubx_e
-                index_map['lam_bx_in_lam_w'].append(list(offset + constraints.idxbx_e))
-                offset += dims.nx
-            if i < N_horizon:
-                lb_utraj_node[i][constraints.idxbu] = constraints.lbu
-                ub_utraj_node[i][constraints.idxbu] = constraints.ubu
-                index_map['lam_bu_in_lam_w'].append(list(offset + constraints.idxbu))
-                offset += dims.nu
-                offset += 2*dims.ns_0 if i == 0 else 2*dims.ns
+            self._set_bounds_indices(i, lb_xtraj_node, ub_xtraj_node, lb_utraj_node, ub_utraj_node, constraints, dims)
 
         ### Concatenate primal variables and bounds
         # w = [x0, u0, sl0, su0, x1, u1, ...]
@@ -157,66 +129,36 @@ class AcadosCasadiOcp:
         ubw_list = []
         w0_list = []
         p_list = []
-        offset = 0
         offset_p = 0
         x_guess = ocp.constraints.x0 if ocp.constraints.has_x0 else np.zeros((dims.nx,))
         for i in range(N_horizon+1):
-            # TODO: internally: offset_w += len(sym)
             if i < N_horizon:
                 # add x
-                self._add_primal_variable_x(w_sym_list, lbw_list, ubw_list, w0_list, xtraj_node, lb_xtraj_node, ub_xtraj_node, i, x_guess)
-                index_map['x_in_w'].append(list(range(offset, offset + dims.nx)))
-                offset += dims.nx
+                self._append_variables_and_bounds('x', w_sym_list, lbw_list, ubw_list, w0_list, xtraj_node, lb_xtraj_node, ub_xtraj_node, i, dims, x_guess)
                 # add u
-                self._add_primal_variable_u(w_sym_list, lbw_list, ubw_list, w0_list, utraj_node, lb_utraj_node, ub_utraj_node, i, dims)
-                index_map['u_in_w'].append(list(range(offset, offset + dims.nu)))
-                offset += dims.nu
+                self._append_variables_and_bounds('u',w_sym_list, lbw_list, ubw_list, w0_list, utraj_node, lb_utraj_node, ub_utraj_node, i, dims, x_guess)
+                # add slack variables
+                self._append_variables_and_bounds('slack', w_sym_list, lbw_list, ubw_list, w0_list, [sl_node, su_node], lb_slack_node, ub_slack_node, i, dims, x_guess)
                 # add parameters
                 p_list.append(ocp.parameter_values)
-                index_map['p_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np)))
+                self._index_map['p_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np)))
                 offset_p += dims.np
-                # add slack variables
-                if i == 0 and dims.ns_0:
-                    self._add_slack_variables(w_sym_list, lbw_list, ubw_list, w0_list, 
-                                              sl_node, su_node, lb_slack_node, ub_slack_node, i, dims)
-                    index_map['sl_in_w'].append(list(range(offset, offset + dims.ns_0)))
-                    index_map['su_in_w'].append(list(range(offset + dims.ns_0, offset + 2 * dims.ns_0)))
-                    offset += 2 * dims.ns_0
-                elif i!=0 and i < N_horizon and dims.ns:
-                    self._add_slack_variables(w_sym_list, lbw_list, ubw_list, w0_list,
-                                              sl_node, su_node, lb_slack_node, ub_slack_node, i, dims)
-                    index_map['sl_in_w'].append(list(range(offset, offset + dims.ns)))
-                    index_map['su_in_w'].append(list(range(offset + dims.ns, offset + 2 * dims.ns)))
-                    offset += 2 * dims.ns
-                else:
-                    index_map['sl_in_w'].append([])
-                    index_map['su_in_w'].append([])
             else:
                 ## terminal stage
                 # add x
-                self._add_primal_variable_x(w_sym_list, lbw_list, ubw_list, w0_list, xtraj_node, lb_xtraj_node, ub_xtraj_node, i, x_guess)
-                index_map['x_in_w'].append(list(range(offset, offset + dims.nx)))
-                offset += dims.nx
+                self._append_variables_and_bounds('x', w_sym_list, lbw_list, ubw_list, w0_list, xtraj_node, lb_xtraj_node, ub_xtraj_node, i, dims, x_guess)
+                # add slack variables
+                self._append_variables_and_bounds('slack', w_sym_list, lbw_list, ubw_list, w0_list, [sl_node, su_node], lb_slack_node, ub_slack_node, i, dims, x_guess)
                 # add parameters
                 p_list.append(ocp.parameter_values)
-                index_map['p_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np)))
+                self._index_map['p_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np)))
                 offset_p += dims.np
                 # add global parameters
                 p_list.append(ocp.p_global_values)
-                index_map['p_global_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np_global)))
+                self._index_map['p_global_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np_global)))
                 offset_p += dims.np_global
-                # add slack variables
-                if dims.ns_e:
-                    self._add_slack_variables(w_sym_list, lbw_list, ubw_list, w0_list,
-                                              sl_node, su_node, lb_slack_node, ub_slack_node, i, dims)
-                    index_map['sl_in_w'].append(list(range(offset, offset + dims.ns_e)))
-                    index_map['su_in_w'].append(list(range(offset + dims.ns_e, offset + 2 * dims.ns_e)))
-                    offset += 2 * dims.ns_e
-                else:
-                    index_map['sl_in_w'].append([])
-                    index_map['su_in_w'].append([])
 
-        nw = offset  # number of primal variables
+        nw = self.offset_w  # number of primal variables
 
         # vectorize
         w = ca.vertcat(*w_sym_list)
@@ -228,7 +170,6 @@ class AcadosCasadiOcp:
         g = []
         lbg = []
         ubg = []
-        offset = 0
         if with_hessian:
             lam_g = []
             hess_l = ca.DM.zeros((nw, nw))
@@ -250,13 +191,11 @@ class AcadosCasadiOcp:
                 elif solver_options.integrator_type == "ERK":
                     para = ca.vertcat(utraj_node[i], ptraj_node[i], model.p_global)
                     dyn_equality = xtraj_node[i+1] - f_discr_fun(xtraj_node[i], para, solver_options.time_steps[i])
-                self._append_constraints(g, lbg, ubg,
+                self._append_constraints(i, 'dyn', g, lbg, ubg,
                                          g_expr = dyn_equality,
                                          lbg_expr = np.zeros((dims.nx, 1)),
-                                         ubg_expr = np.zeros((dims.nx, 1)))
-                index_map['pi_in_lam_g'].append(list(range(offset, offset+dims.nx)))
-                offset += dims.nx
-
+                                         ubg_expr = np.zeros((dims.nx, 1)),
+                                         cons_dim=dims.nx)
                 if with_hessian:
                     # add hessian of dynamics constraints
                     lam_g_dyn = ca_symbol(f'lam_g_dyn{i}', dims.nx, 1)
@@ -267,24 +206,16 @@ class AcadosCasadiOcp:
 
             # Nonlinear Constraints
             # initial stage
-            lg, ug, lh, uh, lphi, uphi, ng, nh, nphi, nsg, nsh, nsphi, idxsh, C, D, h_i_nlp_expr, conl_constr_fun =\
+            lg, ug, lh, uh, lphi, uphi, ng, nh, nphi, nsg, nsh, nsphi, idxsh, linear_constr_expr, h_i_nlp_expr, conl_constr_fun =\
             self._get_constraint_node(i, N_horizon, xtraj_node, utraj_node, ptraj_node, model, constraints, dims)
 
-            index_map['lam_gnl_in_lam_g'].append([])
-            index_map['lam_sl_in_lam_g'].append([])
-            index_map['lam_su_in_lam_g'].append([])
             # add linear constraints
             if ng > 0:
-                if i< N_horizon:
-                    linear_constr_expr = ca.mtimes(C, xtraj_node[i]) + ca.mtimes(D, utraj_node[i])
-                else:
-                    linear_constr_expr = ca.mtimes(C, xtraj_node[i])
-                self._append_constraints(g, lbg, ubg,
+                self._append_constraints(i, 'gnl', g, lbg, ubg,
                                          g_expr = linear_constr_expr,
                                          lbg_expr = lg,
-                                         ubg_expr = ug)
-                index_map['lam_gnl_in_lam_g'][i].extend(list(range(offset, offset + ng)))
-                offset += ng
+                                         ubg_expr = ug,
+                                         cons_dim=ng)
 
             # add nonlinear constraints
             if nh > 0:
@@ -295,31 +226,30 @@ class AcadosCasadiOcp:
                     for index_in_nh in range(nh):
                         if index_in_nh in soft_h_indices:
                             index_in_soft = soft_h_indices.tolist().index(index_in_nh)
-                            self._append_constraints(g, lbg, ubg,
+                            self._append_constraints(i, 'gnl', g, lbg, ubg,
                                                      g_expr = h_i_nlp_expr[index_in_nh] + sl_node[i][index_in_soft],
                                                      lbg_expr = lh[index_in_nh],
-                                                     ubg_expr = np.inf * ca.DM.ones((1, 1)))
-                            self._append_constraints(g, lbg, ubg,
+                                                     ubg_expr = np.inf * ca.DM.ones((1, 1)),
+                                                     cons_dim=1,
+                                                     sl=True)
+                            self._append_constraints(i, 'gnl', g, lbg, ubg,
                                                      g_expr = h_i_nlp_expr[index_in_nh] - su_node[i][index_in_soft],
                                                      lbg_expr = -np.inf * ca.DM.ones((1, 1)),
-                                                     ubg_expr = uh[index_in_nh])
-                            index_map['lam_sl_in_lam_g'][i].append(offset)
-                            index_map['lam_su_in_lam_g'][i].append(offset+1)
-                            offset += 2
+                                                     ubg_expr = uh[index_in_nh],
+                                                     cons_dim=1,
+                                                     su=True)
                         elif index_in_nh in hard_h_indices:
-                            self._append_constraints(g, lbg, ubg,
+                            self._append_constraints(i, 'gnl', g, lbg, ubg,
                                                      g_expr = h_i_nlp_expr[index_in_nh],
                                                      lbg_expr = lh[index_in_nh],
-                                                     ubg_expr = uh[index_in_nh])
-                            index_map['lam_gnl_in_lam_g'][i].append(offset)
-                            offset += 1
+                                                     ubg_expr = uh[index_in_nh],
+                                                     cons_dim=1)
                 else:
-                    self._append_constraints(g, lbg, ubg,
+                    self._append_constraints(i, 'gnl', g, lbg, ubg,
                                              g_expr = h_i_nlp_expr,
                                              lbg_expr = lh,
-                                             ubg_expr = uh)
-                    index_map['lam_gnl_in_lam_g'][i].extend(list(range(offset, offset + nh)))
-                    offset += nh
+                                             ubg_expr = uh,
+                                             cons_dim=nh)
                 if with_hessian:
                     # add hessian contribution
                     lam_h = ca_symbol(f'lam_h_{i}', dims.nh, 1)
@@ -330,12 +260,11 @@ class AcadosCasadiOcp:
 
             # add compound nonlinear constraints
             if nphi > 0:
-                self._append_constraints(g, lbg, ubg,
+                self._append_constraints(i, 'gnl', g, lbg, ubg,
                                          g_expr = conl_constr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global),
                                          lbg_expr = lphi,
-                                         ubg_expr = uphi)
-                index_map['lam_gnl_in_lam_g'][i].append(*list(range(offset, offset + nphi)))
-                offset += nphi
+                                         ubg_expr = uphi,
+                                         cons_dim=nphi)
                 if with_hessian:
                     lam_phi = ca_symbol(f'lam_phi', nphi, 1)
                     lam_g.append(lam_phi)
@@ -385,7 +314,7 @@ class AcadosCasadiOcp:
         self.__bounds = bounds
         self.__w0 = w0
         self.__p = p
-        self.__index_map = index_map
+        self.__index_map = self._index_map
         self.__nlp_hess_l_custom = nlp_hess_l_custom
         self.__hess_approx_expr = hess_l
 
@@ -408,57 +337,111 @@ class AcadosCasadiOcp:
             sl_node.append([])
             su_node.append([])
 
-    def _add_primal_variable_x(self, w_sym_list, lbw_list, ubw_list, w0_list, 
-                               xtraj_node, lb_xtraj_node, ub_xtraj_node, 
-                               i, x_guess):
+    def _set_bounds_indices(self, i, lb_xtraj_node, ub_xtraj_node, lb_utraj_node, ub_utraj_node, constraints, dims):
         """
-        Helper function to add a primal variable to the NLP formulation.
+        Helper function to set bounds and indices for the primal variables.
         """
-        w_sym_list.append(xtraj_node[i])
-        lbw_list.append(lb_xtraj_node[i])
-        ubw_list.append(ub_xtraj_node[i])
-        w0_list.append(x_guess)
-    
-    def _add_primal_variable_u(self, w_sym_list, lbw_list, ubw_list, w0_list, 
-                               utraj_node, lb_utraj_node, ub_utraj_node, 
-                               i, dims):
-        """
-        Helper function to add a primal variable for control to the NLP formulation.
-        """
-        w_sym_list.append(utraj_node[i])
-        lbw_list.append(lb_utraj_node[i])
-        ubw_list.append(ub_utraj_node[i])
-        w0_list.append(np.zeros((dims.nu,)))
-    
-    def _add_slack_variables(self, w_sym_list, lbw_list, ubw_list, w0_list,
-                             sl_node, su_node, lb_slack_node, ub_slack_node, 
-                             i, dims):
-        """
-        Helper function to add slack variables to the NLP formulation.
-        """
-        if i == 0 and dims.ns_0:
-            ns = dims.ns_0
-        elif i < dims.N and dims.ns:
-            ns = dims.ns
-        elif i == dims.N and dims.ns_e:
-            ns = dims.ns_e
+        if i == 0:
+            lb_xtraj_node[i][constraints.idxbx_0] = constraints.lbx_0
+            ub_xtraj_node[i][constraints.idxbx_0] = constraints.ubx_0
+            self._index_map['lam_bx_in_lam_w'].append(list(self.offset_lam + constraints.idxbx_0))
+            self.offset_lam += dims.nx
+        elif i < dims.N:
+            lb_xtraj_node[i][constraints.idxbx] = constraints.lbx
+            ub_xtraj_node[i][constraints.idxbx] = constraints.ubx
+            self._index_map['lam_bx_in_lam_w'].append(list(self.offset_lam + constraints.idxbx))
+            self.offset_lam += dims.nx
+        elif i == dims.N:
+            lb_xtraj_node[-1][constraints.idxbx_e] = constraints.lbx_e
+            ub_xtraj_node[-1][constraints.idxbx_e] = constraints.ubx_e
+            self._index_map['lam_bx_in_lam_w'].append(list(self.offset_lam + constraints.idxbx_e))
+            self.offset_lam += dims.nx
+        if i < dims.N:
+            lb_utraj_node[i][constraints.idxbu] = constraints.lbu
+            ub_utraj_node[i][constraints.idxbu] = constraints.ubu
+            self._index_map['lam_bu_in_lam_w'].append(list(self.offset_lam + constraints.idxbu))
+            self.offset_lam += dims.nu
+            self.offset_lam += 2*dims.ns_0 if i == 0 else 2*dims.ns
 
-        w_sym_list.append(sl_node[i])
-        lbw_list.append(lb_slack_node[i])
-        ubw_list.append(ub_slack_node[i])
-        w0_list.append(np.zeros((ns,)))
+    def _append_variables_and_bounds(self, _field, w_sym_list, lbw_list, ubw_list, w0_list,
+                                     node_list, lb_node_list, ub_node_list, i, dims, x_guess):
+        """
+        Unified helper function to add a primal or slack variable to the NLP formulation.
+        """
+        if _field == "x":
+            # Add state variable
+            w_sym_list.append(node_list[i])
+            lbw_list.append(lb_node_list[i])
+            ubw_list.append(ub_node_list[i])
+            w0_list.append(x_guess)
+            self._index_map['x_in_w'].append(list(range(self.offset_w, self.offset_w + dims.nx)))
+            self.offset_w += dims.nx
 
-        w_sym_list.append(su_node[i])
-        lbw_list.append(lb_slack_node[i])
-        ubw_list.append(ub_slack_node[i])
-        w0_list.append(np.zeros((ns,)))
-    
-    def _append_constraints(self, g, lbg, ubg, g_expr, lbg_expr, ubg_expr):
+        elif _field == "u":
+            # Add control variable
+            w_sym_list.append(node_list[i])
+            lbw_list.append(lb_node_list[i])
+            ubw_list.append(ub_node_list[i])
+            w0_list.append(np.zeros((dims.nu,)))
+            self._index_map['u_in_w'].append(list(range(self.offset_w, self.offset_w + dims.nu)))
+            self.offset_w += dims.nu
+
+        elif _field == "slack":
+            # Add slack variables (sl and su)
+            if i == 0 and dims.ns_0:
+                ns = dims.ns_0
+            elif i < dims.N and dims.ns:
+                ns = dims.ns
+            elif i == dims.N and dims.ns_e:
+                ns = dims.ns_e
+            else:
+                self._index_map['sl_in_w'].append([])
+                self._index_map['su_in_w'].append([])
+                return
+
+            # Add sl
+            w_sym_list.append(node_list[0][i])
+            lbw_list.append(lb_node_list[i])
+            ubw_list.append(ub_node_list[i])
+            w0_list.append(np.zeros((ns,)))
+            # Add su
+            w_sym_list.append(node_list[1][i])
+            lbw_list.append(lb_node_list[i])
+            ubw_list.append(ub_node_list[i])
+            w0_list.append(np.zeros((ns,)))
+
+            self._index_map['sl_in_w'].append(list(range(self.offset_w, self.offset_w + ns)))
+            self._index_map['su_in_w'].append(list(range(self.offset_w + ns, self.offset_w + 2 * ns)))
+            self.offset_w += 2 * ns
+
+        else:
+            raise ValueError(f"Unsupported for: {_field}")
+
+    def _append_constraints(self, i, _field, g, lbg, ubg, g_expr, lbg_expr, ubg_expr, cons_dim, sl=False, su=False):
+        """
+        Helper function to append constraints to the NLP formulation.
+        """
         g.append(g_expr)
         lbg.append(lbg_expr)
         ubg.append(ubg_expr)
+        if _field == 'dyn':
+            self._index_map['pi_in_lam_g'].append(list(range(self.offset_gnl, self.offset_gnl + cons_dim)))
+            self.offset_gnl += cons_dim
+        elif _field == 'gnl':
+            if not sl and not su:
+                self._index_map['lam_gnl_in_lam_g'][i].extend(list(range(self.offset_gnl, self.offset_gnl + cons_dim)))
+                self.offset_gnl += cons_dim
+            elif sl:
+                self._index_map['lam_sl_in_lam_g'][i].append(self.offset_gnl)
+                self.offset_gnl += 1
+            elif su:
+                self._index_map['lam_su_in_lam_g'][i].append(self.offset_gnl)
+                self.offset_gnl += 1
 
     def _get_cost_node(self, i, N_horizon, xtraj_node, utraj_node, ptraj_node, sl_node, su_node, ocp, dims, cost):
+        """ 
+        Helper function to get the cost node for a given stage.
+        """
         if i == 0:
             return (xtraj_node[0],
                     utraj_node[0],
@@ -485,6 +468,9 @@ class AcadosCasadiOcp:
                     dims.ns_e, cost.zl_e, cost.Zl_e, cost.zu_e, cost.Zu_e)
 
     def _get_constraint_node(self, i, N_horizon, xtraj_node, utraj_node, ptraj_node, model, constraints, dims):
+        """
+        Helper function to get the constraint node for a given stage.
+        """
         if i == 0 and N_horizon > 0:
             lg, ug = constraints.lg, constraints.ug
             lh, uh = constraints.lh_0, constraints.uh_0
@@ -493,7 +479,11 @@ class AcadosCasadiOcp:
             nsg, nsh, nsphi, idxsh = dims.nsg, dims.nsh_0, dims.nsphi_0, constraints.idxsh_0
 
             # linear function
-            C, D = constraints.C, constraints.D
+            linear_constr_expr = None
+            if dims.ng > 0:
+                C = constraints.C
+                D = constraints.D
+                linear_constr_expr = ca.mtimes(C, xtraj_node[i]) + ca.mtimes(D, utraj_node[i])
             # nonlinear function
             h_fun = ca.Function('h_0_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr_0])
             h_i_nlp_expr = h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
@@ -510,7 +500,11 @@ class AcadosCasadiOcp:
             ng, nh, nphi = dims.ng, dims.nh, dims.nphi
             nsg, nsh, nsphi, idxsh = dims.nsg, dims.nsh, dims.nsphi, constraints.idxsh
 
-            C, D = constraints.C, constraints.D
+            linear_constr_expr = None
+            if dims.ng > 0:
+                C = constraints.C
+                D = constraints.D
+                linear_constr_expr = ca.mtimes(C, xtraj_node[i]) + ca.mtimes(D, utraj_node[i])
             h_fun = ca.Function('h_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr])
             h_i_nlp_expr = h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
             conl_constr_fun = None
@@ -525,13 +519,20 @@ class AcadosCasadiOcp:
             ng, nh, nphi = dims.ng_e, dims.nh_e, dims.nphi_e
             nsg, nsh, nsphi, idxsh = dims.nsg_e, dims.nsh_e, dims.nsphi_e, constraints.idxsh_e
 
-            C, D = constraints.C_e, None
+            linear_constr_expr = None
+            if dims.ng_e > 0:
+                C = constraints.C_e
+                linear_constr_expr = ca.mtimes(C, xtraj_node[i])
             h_fun = ca.Function('h_e_fun', [model.x, model.p, model.p_global], [model.con_h_expr_e])
             h_i_nlp_expr = h_fun(xtraj_node[i], ptraj_node[i], model.p_global)
             conl_constr_fun = None
             if dims.nphi_e > 0:
                 conl_expr = ca.substitute(model.con_phi_expr_e, model.con_r_in_phi_e, model.con_r_expr_e)
                 conl_constr_fun = ca.Function('conl_constr_e_fun', [model.x, model.p, model.p_global], [conl_expr])
+        
+        self._index_map['lam_gnl_in_lam_g'].append([])
+        self._index_map['lam_sl_in_lam_g'].append([])
+        self._index_map['lam_su_in_lam_g'].append([])
 
         return (
             lg, ug,
@@ -540,7 +541,7 @@ class AcadosCasadiOcp:
             ng, nh, nphi,
             nsg, nsh, nsphi,
             idxsh,
-            C, D,
+            linear_constr_expr,
             h_i_nlp_expr,
             conl_constr_fun
         )
