@@ -115,7 +115,7 @@ class AcadosOcpOptions:
         self.__ext_cost_num_hess = 0
         self.__globalization_use_SOC = 0
         self.__globalization_alpha_min = None
-        self.__globalization_alpha_reduction = None
+        self.__globalization_alpha_reduction = 0.7
         self.__globalization_line_search_use_sufficient_descent = 0
         self.__globalization_full_step_dual = None
         self.__globalization_eps_sufficient_descent = None
@@ -893,15 +893,11 @@ class AcadosOcpOptions:
 
     @property
     def globalization_alpha_reduction(self):
-        """Step size reduction factor for globalization MERIT_BACKTRACKING,
+        """Step size reduction factor for globalization MERIT_BACKTRACKING and
+        FUNNEL_L1PEN_LINESEARCH
 
         Type: float
-        Default: None.
-
-        If None is given:
-        - in case of FUNNEL_L1PEN_LINESEARCH, value is set to 0.5.
-        - in case of MERIT_BACKTRACKING, value is set to 0.7.
-        default: 0.7.
+        Default: 0.7.
         """
         return self.__globalization_alpha_reduction
 

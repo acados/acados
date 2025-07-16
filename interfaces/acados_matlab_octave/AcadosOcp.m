@@ -1019,15 +1019,6 @@ classdef AcadosOcp < handle
                 end
             end
 
-            if isempty(opts.globalization_alpha_reduction)
-                % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                if ddp_with_merit_or_funnel
-                    opts.globalization_alpha_reduction = 0.5;
-                else
-                    opts.globalization_alpha_reduction = 0.7;
-                end
-            end
-
             if isempty(opts.globalization_eps_sufficient_descent)
                 % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
                 if ddp_with_merit_or_funnel
@@ -1090,15 +1081,6 @@ classdef AcadosOcp < handle
                     opts.globalization_alpha_min = 1e-17;
                 else
                     opts.globalization_alpha_min = 0.05;
-                end
-            end
-
-            if isempty(opts.globalization_alpha_reduction)
-                % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                if ddp_with_merit_or_funnel
-                    opts.globalization_alpha_reduction = 0.5;
-                else
-                    opts.globalization_alpha_reduction = 0.7;
                 end
             end
 

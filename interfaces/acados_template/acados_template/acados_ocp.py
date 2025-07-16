@@ -1047,12 +1047,6 @@ class AcadosOcp:
             else:
                 opts.globalization_alpha_min = 0.05
 
-        if opts.globalization_alpha_reduction is None:
-            if ddp_with_merit_or_funnel:
-                opts.globalization_alpha_reduction = 0.5
-            else:
-                opts.globalization_alpha_reduction = 0.7
-
         if opts.globalization_eps_sufficient_descent is None:
             if ddp_with_merit_or_funnel:
                 opts.globalization_eps_sufficient_descent = 1e-6
