@@ -28,10 +28,9 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, ACADOS_INFTY
+from acados_template import AcadosOcp, AcadosOcpOptions, AcadosOcpSolver, AcadosModel, ACADOS_INFTY
 import numpy as np
 from casadi import *
-from matplotlib import pyplot as plt
 from itertools import product
 
 # Problem with infeasible linearization
@@ -118,7 +117,7 @@ def create_solver_opts(N=1,
                        max_iter: int = 20,
                        search_direction_mode='NOMINAL_QP'):
 
-    solver_options = AcadosOcp().solver_options
+    solver_options = AcadosOcpOptions()
 
     # set options
     solver_options.N_horizon = N

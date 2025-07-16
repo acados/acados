@@ -273,6 +273,22 @@ void ocp_nlp_qpscaling_memory_get(ocp_nlp_qpscaling_dims *dims, void *mem_, cons
         struct blasfeo_dvec **ptr = value;
         *ptr = mem->constraints_scaling_vec + stage;
     }
+    else if (!strcmp(field, "min_constraint_scaling"))
+    {
+        double min = 1.0;
+        double tmp;
+        for (int i = 0; i < dims->qp_dim->N; i++)
+        {
+            for (int j = 0; j < dims->qp_dim->ng[i]; j++)
+            {
+                tmp = BLASFEO_DVECEL(mem->constraints_scaling_vec+i, j);
+                if (tmp < min)
+                    min = tmp;
+            }
+        }
+        double *ptr = value;
+        *ptr = min;
+    }
     else if (!strcmp(field, "status"))
     {
         int *ptr = value;
@@ -292,9 +308,10 @@ void ocp_nlp_qpscaling_memory_get(ocp_nlp_qpscaling_dims *dims, void *mem_, cons
 static double norm_inf_matrix_col(int col_idx, int col_length,  struct blasfeo_dmat *At)
 {
     double norm = 0.0;
+    double tmp;
     for (int j = 0; j < col_length; ++j)
     {
-        double tmp = BLASFEO_DMATEL(At, j, col_idx);
+        tmp = BLASFEO_DMATEL(At, j, col_idx);
         norm = MAX(norm, fabs(tmp));
     }
     return norm;

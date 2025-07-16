@@ -112,6 +112,15 @@ class AcadosOcpOptions:
         self.__qpscaling_lb_norm_inf_grad_obj = 1e-4
         self.__qpscaling_scale_objective = "NO_OBJECTIVE_SCALING"
         self.__qpscaling_scale_constraints = "NO_CONSTRAINT_SCALING"
+
+        self.__nlp_qp_tol_strategy = "FIXED_QP_TOL"
+        self.__nlp_qp_tol_reduction_factor = 1e-1
+        self.__nlp_qp_tol_safety_factor = 0.1
+        self.__nlp_qp_tol_min_stat = 1e-9
+        self.__nlp_qp_tol_min_eq = 1e-10
+        self.__nlp_qp_tol_min_ineq = 1e-10
+        self.__nlp_qp_tol_min_comp = 1e-11
+
         self.__ext_cost_num_hess = 0
         self.__globalization_use_SOC = 0
         self.__globalization_alpha_min = None
@@ -402,6 +411,88 @@ class AcadosOcpOptions:
         return self.__qpscaling_scale_constraints
 
     @property
+    def nlp_qp_tol_strategy(self):
+        """
+        Strategy for setting the QP tolerances in the NLP solver.
+        String in ["ADAPTIVE_CURRENT_RES_JOINT", "ADAPTIVE_QPSCALING", "FIXED_QP_TOL"]
+
+        - FIXED_QP_TOL: uses the fixed QP solver tolerances set by the properties `qp_solver_tol_stat`, `qp_solver_tol_eq`, `qp_solver_tol_ineq`, `qp_solver_tol_comp`, only this was implemented in acados <= v0.5.0.
+
+        - ADAPTIVE_CURRENT_RES_JOINT: uses the current NLP residuals to set the QP tolerances in a joint manner.
+        The QP tolerances are set as follows:
+            1) `tmp_tol_* = MIN(nlp_qp_tol_reduction_factor * inf_norm_res_*, 1e-2)`
+            2) `joint_tol = MAX(tmp_tol_* for all * in ['stat', 'eq', 'ineq', 'comp'])`
+            3) `tol_* = MAX(joint_tol, nlp_qp_tol_safety_factor * nlp_solver_tol_*)`
+
+        - ADAPTIVE_QPSCALING: adapts the QP tolerances based on the QP scaling factors, to make NLP residuals converge to desired tolerances, if it can be achieved.
+        The QP tolerances are set as follows:
+            1) `qp_tol_stat = nlp_qp_tol_safety_factor * nlp_solver_tol_stat * MIN(objective_scaling_factor, min_constraint_scaling);`
+            2) `qp_tol_eq = nlp_qp_tol_safety_factor * nlp_solver_tol_eq`
+            3) `qp_tol_ineq = nlp_qp_tol_safety_factor * nlp_solver_tol_ineq * min_constraint_scaling`
+            4) `qp_tol_comp = nlp_qp_tol_safety_factor * nlp_solver_tol_comp * min_constraint_scaling`
+            5) cap all QP tolerances to a minimum of `nlp_qp_tol_min_*`.
+
+        Default: "FIXED_QP_TOL".
+        """
+        return self.__nlp_qp_tol_strategy
+
+    @property
+    def nlp_qp_tol_reduction_factor(self):
+        """
+        Factor by which the QP tolerance is smaller compared to the NLP residuals when using the ADAPTIVE_CURRENT_RES_JOINT strategy.
+        Default: 1e-1.
+        """
+        return self.__nlp_qp_tol_reduction_factor
+
+    @property
+    def nlp_qp_tol_safety_factor(self):
+        """
+        Safety factor for the QP tolerances.
+        Used to ensure qp_tol* = nlp_qp_tol_safety_factor * nlp_solver_tol_* when approaching the NLP solution.
+        Often QPs should be solved to a higher accuracy than the NLP solver tolerances, to ensure convergence of the NLP solver.
+        Used in the ADAPTIVE_CURRENT_RES_JOINT, ADAPTIVE_QPSCALING strategies.
+        Type: float in [0, 1].
+        Default: 0.1.
+        """
+        return self.__nlp_qp_tol_safety_factor
+
+    @property
+    def nlp_qp_tol_min_stat(self):
+        """
+        Minimum value to be set in the QP solver stationarity tolerance by `nlp_qp_tol_strategy`, used in `ADAPTIVE_QPSCALING`.
+        Type: float > 0.
+        Default: 1e-9.
+        """
+        return self.__nlp_qp_tol_min_stat
+
+    @property
+    def nlp_qp_tol_min_eq(self):
+        """
+        Minimum value to be set in the QP solver equality tolerance by `nlp_qp_tol_strategy`, used in `ADAPTIVE_QPSCALING`.
+        Type: float > 0.
+        Default: 1e-10.
+        """
+        return self.__nlp_qp_tol_min_eq
+
+    @property
+    def nlp_qp_tol_min_ineq(self):
+        """
+        Minimum value to be set in the QP solver inequality tolerance by `nlp_qp_tol_strategy`, used in `ADAPTIVE_QPSCALING`.
+        Type: float > 0.
+        Default: 1e-10.
+        """
+        return self.__nlp_qp_tol_min_ineq
+
+    @property
+    def nlp_qp_tol_min_comp(self):
+        """
+        Minimum value to be set in the QP solver complementarity tolerance by `nlp_qp_tol_strategy`, used in `ADAPTIVE_QPSCALING`.
+        Type: float > 0.
+        Default: 1e-11.
+        """
+        return self.__nlp_qp_tol_min_comp
+
+    @property
     def nlp_solver_step_length(self):
         """
         This option is deprecated and has new name: globalization_fixed_step_length
@@ -494,6 +585,7 @@ class AcadosOcpOptions:
     def qp_solver_tol_stat(self):
         """
         QP solver stationarity tolerance.
+        Used if nlp_qp_tol_strategy == "FIXED_QP_TOL".
         Default: :code:`None`
         """
         return self.__qp_solver_tol_stat
@@ -502,6 +594,7 @@ class AcadosOcpOptions:
     def qp_solver_tol_eq(self):
         """
         QP solver equality tolerance.
+        Used if nlp_qp_tol_strategy == "FIXED_QP_TOL".
         Default: :code:`None`
         """
         return self.__qp_solver_tol_eq
@@ -510,6 +603,7 @@ class AcadosOcpOptions:
     def qp_solver_tol_ineq(self):
         """
         QP solver inequality.
+        Used if nlp_qp_tol_strategy == "FIXED_QP_TOL".
         Default: :code:`None`
         """
         return self.__qp_solver_tol_ineq
@@ -518,6 +612,7 @@ class AcadosOcpOptions:
     def qp_solver_tol_comp(self):
         """
         QP solver complementarity.
+        Used if nlp_qp_tol_strategy == "FIXED_QP_TOL".
         Default: :code:`None`
         """
         return self.__qp_solver_tol_comp
@@ -1754,6 +1849,25 @@ class AcadosOcpOptions:
         if not qpscaling_scale_constraints in qpscaling_scale_constraints_types:
             raise ValueError(f'Invalid qpscaling_scale_constraints value. Must be in {qpscaling_scale_constraints_types}, got {qpscaling_scale_constraints}.')
         self.__qpscaling_scale_constraints = qpscaling_scale_constraints
+
+    @nlp_qp_tol_strategy.setter
+    def nlp_qp_tol_strategy(self, nlp_qp_tol_strategy):
+        nlp_qp_tol_strategy_types = ["ADAPTIVE_CURRENT_RES_JOINT", "ADAPTIVE_QPSCALING", "FIXED_QP_TOL"]
+        if not nlp_qp_tol_strategy in nlp_qp_tol_strategy_types:
+            raise ValueError(f'Invalid nlp_qp_tol_strategy value. Must be in {nlp_qp_tol_strategy_types}, got {nlp_qp_tol_strategy}.')
+        self.__nlp_qp_tol_strategy = nlp_qp_tol_strategy
+
+    @nlp_qp_tol_reduction_factor.setter
+    def nlp_qp_tol_reduction_factor(self, nlp_qp_tol_reduction_factor):
+        if not isinstance(nlp_qp_tol_reduction_factor, float) or nlp_qp_tol_reduction_factor < 0.0 or nlp_qp_tol_reduction_factor > 1.0:
+            raise ValueError(f'Invalid nlp_qp_tol_reduction_factor value. Must be in [0, 1], got {nlp_qp_tol_reduction_factor}.')
+        self.__nlp_qp_tol_reduction_factor = nlp_qp_tol_reduction_factor
+
+    @nlp_qp_tol_safety_factor.setter
+    def nlp_qp_tol_safety_factor(self, nlp_qp_tol_safety_factor):
+        if not isinstance(nlp_qp_tol_safety_factor, float) or nlp_qp_tol_safety_factor < 0.0 or nlp_qp_tol_safety_factor > 1.0:
+            raise ValueError(f'Invalid nlp_qp_tol_safety_factor value. Must be in [0, 1], got {nlp_qp_tol_safety_factor}.')
+        self.__nlp_qp_tol_safety_factor = nlp_qp_tol_safety_factor
 
     @nlp_solver_step_length.setter
     def nlp_solver_step_length(self, nlp_solver_step_length):

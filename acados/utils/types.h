@@ -96,6 +96,15 @@ typedef enum
 } ocp_nlp_cost_t;
 
 
+/// Types of the cost function.
+typedef enum
+{
+    FIXED_QP_TOL,
+    ADAPTIVE_CURRENT_RES_JOINT,
+    ADAPTIVE_QPSCALING,
+} ocp_nlp_qp_tol_strategy_t;
+
+
 /// Types of the timeout heuristic.
 typedef enum
 {

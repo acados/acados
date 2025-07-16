@@ -1203,7 +1203,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     struct blasfeo_dvec *cost_grad = mem->cost_grad;
     struct blasfeo_dvec *nls_res = workspace->nls_res;
     struct blasfeo_dvec *tmp_ny = workspace->tmp_ny;
-    double cost_scaling;
+    double cost_scaling = 0.0;
 
     struct blasfeo_dmat *cost_hess = mem->cost_hess;
     struct blasfeo_dmat *J_y_tilde = workspace->J_y_tilde;

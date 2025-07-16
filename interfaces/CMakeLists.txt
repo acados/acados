@@ -245,6 +245,11 @@ add_test(NAME py_sqp_wfqp_problem_hs074_constraint_scaling
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/hock_schittkowsky
         python hs074_constraint_scaling.py)
 
+add_test(NAME py_hs099_tol_test
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/hock_schittkowsky
+        python hs099.py)
+
+
 # CMake test
 add_test(NAME python_pendulum_ocp_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
