@@ -371,6 +371,12 @@ acados_size_t ocp_qp_partial_condensing_memory_calculate_size(void *dims_, void 
 
     d_part_cond_qp_compute_dim(dims->red_dims, dims->block_size, dims->pcond_dims);
 
+    // printf("\n\ndimensions of partially condensed QP:\n");
+    // print_ocp_qp_dims(dims->pcond_dims);
+
+    // printf("\n\ndimensions of original QP:\n");
+    // print_ocp_qp_dims(dims->orig_dims);
+
     acados_size_t size = 0;
 
     size += sizeof(ocp_qp_partial_condensing_memory);
