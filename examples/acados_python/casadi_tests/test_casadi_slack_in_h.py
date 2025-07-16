@@ -154,5 +154,12 @@ def main():
 
     result.flatten().allclose(other=result_casadi.flatten())
 
+    casadi_sqp_ocp_solver = AcadosCasadiOcpSolver(ocp, solver="sqpmethod", verbose=False)
+    casadi_sqp_ocp_solver.load_iterate_from_obj(result)
+    casadi_sqp_ocp_solver.solve()
+    iteration = casadi_sqp_ocp_solver.get_stats('nlp_iter')
+    if iteration > 1:
+        raise Exception(f'casadi SQP solver returned {iteration} iterations, expected less than 1.')
+
 if __name__ == '__main__':
     main()
