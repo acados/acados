@@ -419,9 +419,10 @@ classdef AcadosOcpSolver < handle
             result.max_eigv_stage = zeros(num_blocks, 1);
             result.condition_number_stage = zeros(num_blocks, 1);
             min_abs_val = inf;
-            max_abs_val = -inf;
+            max_abs_eig_val = -inf;
             max_ev = -inf;
             min_ev = inf;
+            max_abs_hess_val = -inf;
 
             for n=1:num_blocks
                 if partially_condensed_qp
@@ -431,18 +432,25 @@ classdef AcadosOcpSolver < handle
                 end
                 eigvals = eig(hess_block);
                 max_ev = max(max_ev, max(eigvals));
-                max_abs_val = max(max_abs_val, max(abs(eigvals)));
+                max_abs_eig_val = max(max_abs_eig_val, max(abs(eigvals)));
                 min_ev = min(min_ev, min(eigvals));
                 min_abs_val = min(min_abs_val, min(abs(eigvals)));
+                max_abs_hess_val = max(max_abs_hess_val, max(max(abs(hess_block))));
                 result.min_eigv_stage(n) = min(eigvals);
                 result.max_eigv_stage(n) = max(eigvals);
                 result.condition_number_stage(n) = max(eigvals) / min(eigvals);
             end
-            result.condition_number_global = max_abs_val / min_abs_val;
+            % Zl, Zu don't change in partial condensing.
+            for n=1:obj.N_horizon+1
+                max_abs_hess_val = max(max_abs_hess_val, max(abs(obj.get('qp_Zl', n-1))));
+                max_abs_hess_val = max(max_abs_hess_val, max(abs(obj.get('qp_Zu', n-1))));
+            end
+            result.condition_number_global = max_abs_eig_val / min_abs_val;
             result.max_eigv_global = max_ev;
-            result.max_abs_eigv_global = max_abs_val;
+            result.max_abs_eigv_global = max_abs_eig_val;
             result.min_eigv_global = min_ev;
             result.min_abs_eigv_global = min_abs_val;
+            result.max_abs_hess_val = max_abs_hess_val;
         end
 
 
