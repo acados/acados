@@ -1026,11 +1026,12 @@ class AcadosCasadiOcpSolver:
         for i in active_ineq:
             lb_lam = lam[i]
             ub_lam = lam[i + offset]
-            if abs(lb_lam)> tol and abs(ub_lam) > tol:
-                pass
+            if abs(lb_lam)> tol and abs(ub_lam) < tol:
+                return True
+            elif abs(ub_lam) > tol and abs(lb_lam) < tol:
+                return True
             else:
                 return False
-        return True
 
     def check_strict_complementarity(self, tol: float = 1e-6) -> bool:
         """
