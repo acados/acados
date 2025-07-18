@@ -523,6 +523,8 @@ class AcadosCasadiOcpSolver:
         # timing = solver_stats['t_proc_total']
         self.status = solver_stats['return_status']
         self.nlp_iter = solver_stats['iter_count']
+        self.time_total = solver_stats['t_wall_total']
+        self.solver_stats = solver_stats
         # nlp_res = ca.norm_inf(sol['g']).full()[0][0]
         # cost_val = ca.norm_inf(sol['f']).full()[0][0]
         return self.status
@@ -705,6 +707,8 @@ class AcadosCasadiOcpSolver:
 
         if field_ == "nlp_iter":
             return self.nlp_iter
+        elif field_ == "time_tot":
+            return self.time_total
         else:
             raise NotImplementedError()
 
