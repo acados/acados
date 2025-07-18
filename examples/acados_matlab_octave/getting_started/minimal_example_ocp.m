@@ -131,6 +131,7 @@ utraj = ocp_solver.get('u');
 xtraj = ocp_solver.get('x');
 
 status = ocp_solver.get('status'); % 0 - success
+assert(status == 0, sprintf('solver failed with status %d', status))
 ocp_solver.print('stat')
 
 %% plots

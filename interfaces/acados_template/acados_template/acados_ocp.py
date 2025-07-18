@@ -384,6 +384,7 @@ class AcadosOcp:
         model = self.model
         opts = self.solver_options
         if opts.N_horizon == 0:
+            dims.nbxe_0 = 0
             return
 
         nbx_0 = constraints.idxbx_0.shape[0]
@@ -927,6 +928,8 @@ class AcadosOcp:
                     raise ValueError('cost_discretization == INTEGRATOR is not compatible with SQP_WITH_FEASIBLE_QP yet.')
 
         ## constraints
+        if opts.qp_solver == 'PARTIAL_CONDENSING_QPDUNES':
+            self.remove_x0_elimination()
         self._make_consistent_constraints_initial()
         self._make_consistent_constraints_path()
         self._make_consistent_constraints_terminal()
@@ -956,9 +959,6 @@ class AcadosOcp:
             raise ValueError(f'cost_scaling should be of length N+1 = {opts.N_horizon+1}, got {opts.cost_scaling.shape[0]}.')
 
         self._make_consistent_simulation()
-
-        if opts.qp_solver == 'PARTIAL_CONDENSING_QPDUNES':
-            self.remove_x0_elimination()
 
         # fixed hessian
         if opts.fixed_hess:
@@ -1039,6 +1039,10 @@ class AcadosOcp:
             if opts.nlp_solver_type == "SQP_RTI":
                 raise NotImplementedError('qpscaling_scale_constraints and qpscaling_scale_objective not supported for SQP_RTI solver.')
 
+        if opts.nlp_qp_tol_strategy == "ADAPTIVE_QPSCALING":
+            if opts.qpscaling_scale_constraints == "NO_CONSTRAINT_SCALING" and opts.qpscaling_scale_objective == "NO_OBJECTIVE_SCALING":
+                raise NotImplementedError('ADAPTIVE_QPSCALING only makes sense if QP scaling is used.')
+
         # Set default parameters for globalization
         ddp_with_merit_or_funnel = opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' or (opts.nlp_solver_type == "DDP" and opts.globalization == 'MERIT_BACKTRACKING')
         if opts.globalization_alpha_min is None:
@@ -1046,12 +1050,6 @@ class AcadosOcp:
                 opts.globalization_alpha_min = 1e-17
             else:
                 opts.globalization_alpha_min = 0.05
-
-        if opts.globalization_alpha_reduction is None:
-            if ddp_with_merit_or_funnel:
-                opts.globalization_alpha_reduction = 0.5
-            else:
-                opts.globalization_alpha_reduction = 0.7
 
         if opts.globalization_eps_sufficient_descent is None:
             if ddp_with_merit_or_funnel:
@@ -1078,6 +1076,11 @@ class AcadosOcp:
         # sanity check for Funnel globalization and SQP
         if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' and opts.nlp_solver_type not in ['SQP', 'SQP_WITH_FEASIBLE_QP']:
             raise NotImplementedError('FUNNEL_L1PEN_LINESEARCH only supports SQP.')
+
+        # RTI checks
+        if opts.nlp_solver_type == "SQP_RTI":
+            if opts.nlp_qp_tol_strategy != "FIXED_QP_TOL":
+                raise NotImplementedError('SQP_RTI only supports FIXED_QP_TOL nlp_qp_tol_strategy.')
 
         # termination
         if opts.nlp_solver_tol_min_step_norm is None:
@@ -1895,10 +1898,10 @@ class AcadosOcp:
             for i in range(casadi_length(constr_expr)):
                 self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper_bound[i], lower_bound=lower_bound[i])
 
-        model.con_h_expr = None
-        model.con_phi_expr = None
-        model.con_r_expr = None
-        model.con_r_in_phi = None
+        model.con_h_expr = []
+        model.con_phi_expr = []
+        model.con_r_expr = []
+        model.con_r_in_phi = []
 
         # formulate **terminal** constraints as L2 penalties
         expr_bound_list_e = [
@@ -1915,10 +1918,10 @@ class AcadosOcp:
             for i in range(casadi_length(constr_expr)):
                 self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper_bound[i], lower_bound=lower_bound[i], constraint_type="terminal")
 
-        model.con_h_expr_e = None
-        model.con_phi_expr_e = None
-        model.con_r_expr_e = None
-        model.con_r_in_phi_e = None
+        model.con_h_expr_e = []
+        model.con_phi_expr_e = []
+        model.con_r_expr_e = []
+        model.con_r_in_phi_e = []
 
         # Convert initial conditions to l2 penalty
         # Expressions for control constraints on u
@@ -1953,10 +1956,10 @@ class AcadosOcp:
             for i in range(casadi_length(constr_expr)):
                 self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper_bound[i], lower_bound=lower_bound[i], constraint_type="initial")
 
-        model.con_h_expr_0 = None
-        model.con_phi_expr_0 = None
-        model.con_r_expr_0 = None
-        model.con_r_in_phi_0 = None
+        model.con_h_expr_0 = []
+        model.con_phi_expr_0 = []
+        model.con_r_expr_0 = []
+        model.con_r_in_phi_0 = []
 
         # delete constraint fromulation from constraints object
         self.constraints = new_constraints
@@ -2155,6 +2158,9 @@ class AcadosOcp:
     def get_initial_cost_expression(self):
         model = self.model
         if self.cost.cost_type == "LINEAR_LS":
+            if is_empty(self.cost.Vx_0):
+                return 0
+
             y = self.cost.Vx_0 @ model.x + self.cost.Vu_0 @ model.u
 
             if not is_empty(self.cost.Vz_0):
@@ -2181,6 +2187,9 @@ class AcadosOcp:
     def get_path_cost_expression(self):
         model = self.model
         if self.cost.cost_type == "LINEAR_LS":
+            if is_empty(self.cost.Vx):
+                return 0
+
             y = self.cost.Vx @ model.x + self.cost.Vu @ model.u
 
             if not is_empty(self.cost.Vz):
@@ -2213,18 +2222,18 @@ class AcadosOcp:
             residual = y - self.cost.yref_e
             cost_dot = 0.5 * (residual.T @ self.cost.W_e @ residual)
 
-        elif self.cost.cost_type == "NONLINEAR_LS":
+        elif self.cost.cost_type_e == "NONLINEAR_LS":
             residual = model.cost_y_expr_e - self.cost.yref_e
             cost_dot = 0.5 * (residual.T @ self.cost.W_e @ residual)
 
-        elif self.cost.cost_type == "EXTERNAL":
+        elif self.cost.cost_type_e == "EXTERNAL":
             cost_dot = model.cost_expr_ext_cost_e
 
-        elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+        elif self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
             cost_dot = ca.substitute(
             model.cost_psi_expr_e, model.cost_r_in_psi_expr_e, model.cost_y_expr_e)
         else:
-            raise ValueError("create_model_with_cost_state: Unknown terminal cost type.")
+            raise ValueError(f"create_model_with_cost_state: Unknown terminal cost type {self.cost.cost_type_e}.")
 
         return cost_dot
 

@@ -143,7 +143,7 @@ void ocp_nlp_ddp_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_, voi
 void ocp_nlp_ddp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_);
 //
 void ocp_nlp_ddp_compute_trial_iterate(void *config_, void *dims_,
-            void *in_, void *out_, void *opts_, void *mem_,
+            void *in_, void *out_, void *qp_out_, void *opts_, void *mem_,
             void *work_, void *out_destination_, void *solver_mem,
             double alpha, bool full_step_dual);
 

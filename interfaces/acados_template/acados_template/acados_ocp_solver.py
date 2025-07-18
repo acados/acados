@@ -478,12 +478,12 @@ class AcadosOcpSolver:
         The t and lambda values are clipped according to `solution_sens_qp_t_lam_min` to avoid ill-conditioning.
         Then the Hessian matrix is factorized.
 
-        If a two-solver approach is used to obtain solution sensitivities from acados, this function should be called before calling `eval_solution_sensitivity`, or `eval_adjoint_solution_sensitivity()`.
+        To obtain accurate solution sensitivities from acados, this function should be called before calling `eval_solution_sensitivity`, or `eval_adjoint_solution_sensitivity()`.
 
         This is only implemented for HPIPM QP solver without condensing.
         """
-        if self.__solver_options["qp_solver"] != 'PARTIAL_CONDENSING_HPIPM':
-            raise NotImplementedError('This function is only implemented for PARTIAL_CONDENSING_HPIPM!')
+        if self.__solver_options["qp_solver"] not in ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM']:
+            raise NotImplementedError('This function is only implemented for PARTIAL_CONDENSING_HPIPM and FULL_CONDENSING_HPIPM!')
 
         self.status = getattr(self.shared_lib, f"{self.name}_acados_setup_qp_matrices_and_factorize")(self.capsule)
 
@@ -627,10 +627,6 @@ class AcadosOcpSolver:
         :param with_respect_to: string in ["initial_state", "initial_control", "p_global"]
         """
 
-        if with_respect_to == "params_global":
-            print("Deprecation warning: 'params_global' is deprecated and has been renamed to 'p_global'.")
-            with_respect_to = "p_global"
-
         if with_respect_to == "initial_state":
             if not self.__has_x0:
                 raise ValueError("OCP does not have an initial state constraint.")
@@ -726,10 +722,6 @@ class AcadosOcpSolver:
         .. note:: Solution sensitivities with respect to parameters are currently implemented assuming the parameter vector p is global within the OCP, i.e. p=p_i with i=0, ..., N.
         .. note:: Solution sensitivities with respect to parameters are currently implemented only for parametric discrete dynamics, parametric external costs and parametric nonlinear constraints (h).
         """
-
-        if with_respect_to == "params_global":
-            print("Deprecation warning: 'params_global' is deprecated and has been renamed to 'p_global'.")
-            with_respect_to = "p_global"
 
         stages_is_list = isinstance(stages, list)
         stages_ = stages if stages_is_list else [stages]
@@ -1609,6 +1601,18 @@ class AcadosOcpSolver:
                 return full_stats[6, :]
             elif self.__solver_options['nlp_solver_type'] == 'SQP_RTI':
                 return full_stats[2, :]
+            else:
+                raise ValueError(f"qp_iter is not available for nlp_solver_type {self.__solver_options['nlp_solver_type']}.")
+
+        elif field_ == "qp_res_ineq":
+            if not self.__solver_options['nlp_solver_ext_qp_res']:
+                raise ValueError("qp_res_ineq only supported if nlp_solver_ext_qp_res is enabled.")
+            full_stats = self.get_stats('statistics')
+            if self.__solver_options['nlp_solver_type'] == 'SQP':
+                return full_stats[10, :]
+            else:
+                raise ValueError("qp_res_ineq only supported for SQP solver.")
+
 
         elif field_ == 'alpha':
             full_stats = self.get_stats('statistics')
@@ -2325,7 +2329,6 @@ class AcadosOcpSolver:
         if (field_ == 'max_iter' or field_ == 'nlp_solver_max_iter') and value_ > self.__solver_options['nlp_solver_max_iter']:
             raise ValueError('AcadosOcpSolver.options_set() cannot increase nlp_solver_max_iter' \
                     f' above initial value {self.__nlp_solver_max_iter} (you have {value_})')
-            return
 
         if field_ == 'rti_phase':
             if value_ < 0 or value_ > 2:

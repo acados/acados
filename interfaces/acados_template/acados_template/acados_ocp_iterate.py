@@ -61,6 +61,38 @@ class AcadosOcpFlattenedIterate:
             np.allclose(self.lam, other.lam, rtol=rtol, atol=atol)
         )
 
+    def __add__(self, other):
+        if not isinstance(other, AcadosOcpFlattenedIterate):
+            raise TypeError(f"Expected AcadosOcpFlattenedIterate, got {type(other)}")
+        return AcadosOcpFlattenedIterate(
+            x=self.x + other.x,
+            u=self.u + other.u,
+            z=self.z + other.z,
+            sl=self.sl + other.sl,
+            su=self.su + other.su,
+            pi=self.pi + other.pi,
+            lam=self.lam + other.lam
+        )
+
+    def __sub__(self, other):
+        if not isinstance(other, AcadosOcpFlattenedIterate):
+            raise TypeError(f"Expected AcadosOcpFlattenedIterate, got {type(other)}")
+        return AcadosOcpFlattenedIterate(
+            x=self.x - other.x,
+            u=self.u - other.u,
+            z=self.z - other.z,
+            sl=self.sl - other.sl,
+            su=self.su - other.su,
+            pi=self.pi - other.pi,
+            lam=self.lam - other.lam
+        )
+
+    def inf_norm(self) -> float:
+        """
+        Returns the infinity norm of the iterate, which is the maximum absolute value of its elements.
+        """
+        return np.max(np.abs(np.concatenate((self.x, self.u, self.z, self.sl, self.su, self.pi, self.lam))))
+
 
 @dataclass
 class AcadosOcpFlattenedBatchIterate:

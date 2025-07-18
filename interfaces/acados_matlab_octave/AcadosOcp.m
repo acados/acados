@@ -212,6 +212,7 @@ classdef AcadosOcp < handle
             constraints = self.constraints;
             model = self.model;
             if self.solver_options.N_horizon == 0
+                dims.nbxe_0 = 0;
                 return
             end
 
@@ -828,6 +829,33 @@ classdef AcadosOcp < handle
             if ~ismember(opts.qpscaling_scale_objective, qpscaling_scale_objective_types)
                 error(['Invalid qpscaling_scale_objective: ', opts.qpscaling_scale_objective, '. Available options are: ', strjoin(qpscaling_scale_objective_types, ', ')]);
             end
+
+            nlp_qp_tol_strategy_types = {'ADAPTIVE_CURRENT_RES_JOINT', 'ADAPTIVE_QPSCALING', 'FIXED_QP_TOL'};
+            if ~ismember(opts.nlp_qp_tol_strategy, nlp_qp_tol_strategy_types)
+                error(['Invalid nlp_qp_tol_strategy: ', opts.nlp_qp_tol_strategy, '. Available options are: ', strjoin(nlp_qp_tol_strategy_types, ', ')]);
+            end
+
+            % checks on values
+            if opts.nlp_qp_tol_reduction_factor < 0.0 || opts.nlp_qp_tol_reduction_factor > 1.0
+                error(['nlp_qp_tol_reduction_factor must be in [0, 1], got: ', num2str(opts.nlp_qp_tol_reduction_factor)]);
+            end
+
+            if opts.nlp_qp_tol_safety_factor < 0.0 || opts.nlp_qp_tol_safety_factor > 1.0
+                error(['nlp_qp_tol_safety_factor must be in [0, 1], got: ', num2str(opts.nlp_qp_tol_safety_factor)]);
+            end
+
+            if strcmp(opts.nlp_qp_tol_strategy, "ADAPTIVE_QPSCALING")
+                if strcmp(opts.qpscaling_scale_constraints, "NO_CONSTRAINT_SCALING") && strcmp(opts.qpscaling_scale_objective, "NO_OBJECTIVE_SCALING")
+                    error('ADAPTIVE_QPSCALING only makes sense if QP scaling is used.');
+                end
+            end
+
+            % RTI checks
+            if strcmp(opts.nlp_solver_type, 'SQP_RTI')
+                if ~strcmp(opts.nlp_qp_tol_strategy, 'FIXED_QP_TOL')
+                    error('SQP_RTI only supports FIXED_QP_TOL nlp_qp_tol_strategy.');
+                end
+            end
             % OCP name
             self.name = model.name;
 
@@ -874,6 +902,11 @@ classdef AcadosOcp < handle
 
 
             %% constraints
+            % qpdunes
+            if ~isempty(strfind(opts.qp_solver, 'QPDUNES'))
+                constraints.idxbxe_0 = [];
+                dims.nbxe_0 = 0;
+            end
             self.make_consistent_constraints_initial();
             self.make_consistent_constraints_path();
             self.make_consistent_constraints_terminal();
@@ -911,12 +944,6 @@ classdef AcadosOcp < handle
             end
 
             self.make_consistent_simulation();
-
-            % qpdunes
-            if ~isempty(strfind(opts.qp_solver,'qpdunes'))
-                constraints.idxbxe_0 = [];
-                dims.nbxe_0 = 0;
-            end
 
             if strcmp(opts.qp_solver, "PARTIAL_CONDENSING_HPMPC") || ...
                 strcmp(opts.qp_solver, "PARTIAL_CONDENSING_QPDUNES") || ...
@@ -1019,15 +1046,6 @@ classdef AcadosOcp < handle
                 end
             end
 
-            if isempty(opts.globalization_alpha_reduction)
-                % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                if ddp_with_merit_or_funnel
-                    opts.globalization_alpha_reduction = 0.5;
-                else
-                    opts.globalization_alpha_reduction = 0.7;
-                end
-            end
-
             if isempty(opts.globalization_eps_sufficient_descent)
                 % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
                 if ddp_with_merit_or_funnel
@@ -1079,6 +1097,10 @@ classdef AcadosOcp < handle
                 opts.globalization_fixed_step_length = opts.nlp_solver_step_length;
             end
 
+            if opts.globalization_fixed_step_length < 0.0 || opts.globalization_fixed_step_length > 1.0
+                error('globalization_fixed_step_length must be in [0, 1].');
+            end
+
             % Set default parameters for globalization
             if isempty(opts.globalization_alpha_min)
                 % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
@@ -1086,15 +1108,6 @@ classdef AcadosOcp < handle
                     opts.globalization_alpha_min = 1e-17;
                 else
                     opts.globalization_alpha_min = 0.05;
-                end
-            end
-
-            if isempty(opts.globalization_alpha_reduction)
-                % if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
-                if ddp_with_merit_or_funnel
-                    opts.globalization_alpha_reduction = 0.5;
-                else
-                    opts.globalization_alpha_reduction = 0.7;
                 end
             end
 

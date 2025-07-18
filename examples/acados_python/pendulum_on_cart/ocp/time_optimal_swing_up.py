@@ -37,7 +37,6 @@ from pendulum_model import export_free_time_pendulum_ode_model
 import numpy as np
 from utils import plot_pendulum
 import casadi as ca
-from casadi.tools import entry, struct_symSX
 
 def formulate_ocp(opts: AcadosOcpOptions) -> AcadosOcp:
     # create ocp object to formulate the OCP

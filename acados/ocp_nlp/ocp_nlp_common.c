@@ -606,7 +606,6 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
         {
             config->dynamics[i]->dims_set(config->dynamics[i], dims->dynamics[i], "np", &int_array[i]);
         }
-        // TODO: implement np for constraints
         // // constraints
         // for (int i = 0; i <= N; i++)
         // {
@@ -1219,6 +1218,13 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->log_primal_step_norm = 0;
     opts->log_dual_step_norm = 0;
     opts->max_iter = 1;
+    opts->nlp_qp_tol_strategy = FIXED_QP_TOL;
+    opts->nlp_qp_tol_reduction_factor = 1e-1;
+    opts->nlp_qp_tol_safety_factor = 0.1;
+    opts->nlp_qp_tol_min_stat = 1e-9;
+    opts->nlp_qp_tol_min_eq = 1e-10;
+    opts->nlp_qp_tol_min_ineq = 1e-10;
+    opts->nlp_qp_tol_min_comp = 1e-11;
 
     /* submodules opts */
     // qp solver
@@ -1253,8 +1259,10 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
         constraints[i]->opts_initialize_default(constraints[i], dims->constraints[i], opts->constraints[i]);
     }
 
+    // solution sens
     opts->with_solution_sens_wrt_params = 0;
     opts->with_value_sens_wrt_params = 0;
+    opts->solution_sens_qp_t_lam_min = 1e-9;
 
     // adaptive Levenberg-Marquardt options
     opts->adaptive_levenberg_marquardt_mu_min = 1e-16;
@@ -1380,6 +1388,41 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             int* ext_qp_res = (int *) value;
             opts->ext_qp_res = *ext_qp_res;
         }
+        else if (!strcmp(field, "nlp_qp_tol_strategy"))
+        {
+            ocp_nlp_qp_tol_strategy_t* nlp_qp_tol_strategy = (ocp_nlp_qp_tol_strategy_t *) value;
+            opts->nlp_qp_tol_strategy = *nlp_qp_tol_strategy;
+        }
+        else if (!strcmp(field, "nlp_qp_tol_reduction_factor"))
+        {
+            double* nlp_qp_tol_reduction_factor = (double *) value;
+            opts->nlp_qp_tol_reduction_factor = *nlp_qp_tol_reduction_factor;
+        }
+        else if (!strcmp(field, "nlp_qp_tol_safety_factor"))
+        {
+            double* nlp_qp_tol_safety_factor = (double *) value;
+            opts->nlp_qp_tol_safety_factor = *nlp_qp_tol_safety_factor;
+        }
+        else if (!strcmp(field, "nlp_qp_tol_min_stat"))
+        {
+            double* nlp_qp_tol_min_stat = (double *) value;
+            opts->nlp_qp_tol_min_stat = *nlp_qp_tol_min_stat;
+        }
+        else if (!strcmp(field, "nlp_qp_tol_min_eq"))
+        {
+            double* nlp_qp_tol_min_eq = (double *) value;
+            opts->nlp_qp_tol_min_eq = *nlp_qp_tol_min_eq;
+        }
+        else if (!strcmp(field, "nlp_qp_tol_min_ineq"))
+        {
+            double* nlp_qp_tol_min_ineq = (double *) value;
+            opts->nlp_qp_tol_min_ineq = *nlp_qp_tol_min_ineq;
+        }
+        else if (!strcmp(field, "nlp_qp_tol_min_comp"))
+        {
+            double* nlp_qp_tol_min_comp = (double *) value;
+            opts->nlp_qp_tol_min_comp = *nlp_qp_tol_min_comp;
+        }
         else if (!strcmp(field, "store_iterates"))
         {
             bool* store_iterates = (bool *) value;
@@ -1504,7 +1547,7 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             int* log_dual_step_norm = (int *) value;
             opts->log_dual_step_norm = *log_dual_step_norm;
         }
-        else if (!strcmp(field, "max_iter"))
+        else if (!strcmp(field, "max_iter") || !strcmp(field, "nlp_solver_max_iter"))
         {
             int* max_iter = (int *) value;
 
@@ -1562,30 +1605,30 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         }
         else if (!strcmp(field, "tol_stat"))
         {
+            // NOTE: NLP solver tolerances should be set before QP tolerances!
             double* tol_stat = (double *) value;
             opts->tol_stat = *tol_stat;
-            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
             config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_stat", value);
         }
         else if (!strcmp(field, "tol_eq"))
         {
+            // NOTE: NLP solver tolerances should be set before QP tolerances!
             double* tol_eq = (double *) value;
             opts->tol_eq = *tol_eq;
-            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
             config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_eq", value);
         }
         else if (!strcmp(field, "tol_ineq"))
         {
+            // NOTE: NLP solver tolerances should be set before QP tolerances!
             double* tol_ineq = (double *) value;
             opts->tol_ineq = *tol_ineq;
-            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
             config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_ineq", value);
         }
         else if (!strcmp(field, "tol_comp"))
         {
+            // NOTE: NLP solver tolerances should be set before QP tolerances!
             double* tol_comp = (double *) value;
             opts->tol_comp = *tol_comp;
-            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
             config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_comp", value);
         }
         else if (!strcmp(field, "tol_min_step_norm"))
@@ -3211,11 +3254,12 @@ calculates new iterate or trial iterate in 'out_destination' with step 'mem->qp_
 step size 'alpha', and current iterate 'out_start'.
  */
 void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
-            void *in_, void *out_, void *opts_, void *mem_,
+            void *in_, void *out_, void *qp_out_, void *opts_, void *mem_,
             void *work_, void *out_destination_,
             void *solver_mem, double alpha, bool full_step_dual)
 {
     ocp_nlp_dims *dims = dims_;
+    ocp_qp_out *qp_out = qp_out_;
     ocp_nlp_out *out_start = out_;
     ocp_nlp_memory *mem = mem_;
     ocp_nlp_out *out_destination = out_destination_;
@@ -3234,28 +3278,24 @@ void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
     for (int i = 0; i <= N; i++)
     {
         // step in primal variables
-        blasfeo_daxpy(nv[i], alpha, mem->qp_out->ux + i, 0, out_start->ux + i, 0, out_destination->ux + i, 0);
+        blasfeo_daxpy(nv[i], alpha, qp_out->ux + i, 0, out_start->ux + i, 0, out_destination->ux + i, 0);
 
         // update dual variables
         if (full_step_dual)
         {
-            blasfeo_dveccp(2*ni[i], mem->qp_out->lam+i, 0, out_destination->lam+i, 0);
+            blasfeo_dveccp(2*ni[i], qp_out->lam+i, 0, out_destination->lam+i, 0);
             if (i < N)
             {
-                blasfeo_dveccp(nx[i+1], mem->qp_out->pi+i, 0, out_destination->pi+i, 0);
+                blasfeo_dveccp(nx[i+1], qp_out->pi+i, 0, out_destination->pi+i, 0);
             }
         }
         else
         {
             // update duals with alpha step
-            blasfeo_daxpby(2*ni[i], 1.0-alpha, out_start->lam+i, 0, alpha, mem->qp_out->lam+i, 0, out_destination->lam+i, 0);
-            // blasfeo_dvecsc(2*ni[i], 1.0-alpha, out->lam+i, 0);
-            // blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->lam+i, 0, out->lam+i, 0, out->lam+i, 0);
+            blasfeo_daxpby(2*ni[i], 1.0-alpha, out_start->lam+i, 0, alpha, qp_out->lam+i, 0, out_destination->lam+i, 0);
             if (i < N)
             {
-                // blasfeo_dvecsc(nx[i+1], 1.0-alpha, out->pi+i, 0);
-                // blasfeo_daxpy(nx[i+1], alpha, mem->qp_out->pi+i, 0, out->pi+i, 0, out->pi+i, 0);
-                blasfeo_daxpby(nx[i+1], 1.0-alpha, out_start->pi+i, 0, alpha, mem->qp_out->pi+i, 0, out_destination->pi+i, 0);
+                blasfeo_daxpby(nx[i+1], 1.0-alpha, out_start->pi+i, 0, alpha, qp_out->pi+i, 0, out_destination->pi+i, 0);
             }
         }
 
@@ -3264,7 +3304,7 @@ void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
         {
             // out->z = mem->z_alg + alpha * dzdux * qp_out->ux
             blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0,
-                mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out_destination->z+i, 0);
+                qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out_destination->z+i, 0);
             }
         }
 #if defined(ACADOS_DEVELOPER_DEBUG_CHECKS)
@@ -4135,6 +4175,167 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
     }
 }
 
+int ocp_nlp_perform_second_order_correction(ocp_nlp_config *config, ocp_nlp_dims *dims,
+                                            ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_opts *nlp_opts,
+                                            ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work,
+                                            ocp_qp_in *qp_in, ocp_qp_out *qp_out)
+{
+    // Second Order Correction (SOC): following Nocedal2006: p.557, eq. (18.51) -- (18.56)
+    // Paragraph: APPROACH III: S l1 QP (SEQUENTIAL l1 QUADRATIC PROGRAMMING),
+    // Section 18.8 TRUST-REGION SQP METHODS
+    //   - just no trust region radius here.
+    if (nlp_opts->print_level > 0)
+    {
+        printf("performing SOC\n\n");
+    }
+    int ii;
+    int *nb = qp_in->dim->nb;
+    int *ng = qp_in->dim->ng;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    int N = dims->N;
+    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    // int *nv = dims->nv;
+    // int *ni = dims->ni;
+
+    /* evaluate constraints & dynamics at new step */
+    // NOTE: setting up the new iterate and evaluating is not needed here,
+    //   since this evaluation was perfomed just before this call in the early terminated line search.
+
+    // NOTE: similar to ocp_nlp_evaluate_merit_fun
+    // update QP rhs
+    // d_i = c_i(x_k + p_k) - \nabla c_i(x_k)^T * p_k
+    struct blasfeo_dvec *tmp_fun_vec;
+
+    for (ii = 0; ii <= N; ii++)
+    {
+        if (ii < N)
+        {
+            // b -- dynamics
+            tmp_fun_vec = config->dynamics[ii]->memory_get_fun_ptr(nlp_mem->dynamics[ii]);
+            // add - \nabla c_i(x_k)^T * p_k
+            // c_i = f(x_k, u_k) - x_{k+1} (see dynamics module)
+            blasfeo_dgemv_t(nx[ii]+nu[ii], nx[ii+1], -1.0, qp_in->BAbt+ii, 0, 0,
+                            qp_out->ux+ii, 0, -1.0, tmp_fun_vec, 0, qp_in->b+ii, 0);
+            // NOTE: not sure why it is - tmp_fun_vec here!
+            blasfeo_dvecad(nx[ii+1], 1.0, qp_out->ux+ii+1, nu[ii+1], qp_in->b+ii, 0);
+        }
+
+        /* INEQUALITIES */
+        // d -- constraints
+        tmp_fun_vec = config->constraints[ii]->memory_get_fun_ptr(nlp_mem->constraints[ii]);
+        /* SOC for bounds can be skipped (because linear) */
+        // NOTE: SOC can also be skipped for truely linear constraint, i.e. ng of nlp,
+        //      now using ng of QP = (nh+ng)
+
+        // upper & lower
+        blasfeo_dveccp(ng[ii], tmp_fun_vec, nb[ii], qp_in->d+ii, nb[ii]); // lg
+        blasfeo_dveccp(ng[ii], tmp_fun_vec, 2*nb[ii]+ng[ii], qp_in->d+ii, 2*nb[ii]+ng[ii]); // ug
+        // general linear / linearized!
+        // tmp_2ni = D * u + C * x
+        blasfeo_dgemv_t(nu[ii]+nx[ii], ng[ii], 1.0, qp_in->DCt+ii, 0, 0, qp_out->ux+ii, 0,
+                        0.0, &nlp_work->tmp_2ni, 0, &nlp_work->tmp_2ni, 0);
+        // d[nb:nb+ng] += tmp_2ni (lower)
+        blasfeo_dvecad(ng[ii], 1.0, &nlp_work->tmp_2ni, 0, qp_in->d+ii, nb[ii]);
+        // d[nb:nb+ng] -= tmp_2ni
+        blasfeo_dvecad(ng[ii], -1.0, &nlp_work->tmp_2ni, 0, qp_in->d+ii, 2*nb[ii]+ng[ii]);
+
+        // add slack contributions
+        // d[nb:nb+ng] += slack[idx]
+        // qp_in->idxs_rev
+        for (int j = 0; j < nb[ii]+ng[ii]; j++)
+        {
+            int slack_index = qp_in->idxs_rev[ii][j];
+            if (slack_index >= 0)
+            {
+                // add slack contribution for lower and upper constraint
+                // lower
+                BLASFEO_DVECEL(qp_in->d+ii, j) -=
+                        BLASFEO_DVECEL(qp_out->ux+ii, slack_index+nx[ii]+nu[ii]);
+                // upper
+                BLASFEO_DVECEL(qp_in->d+ii, j+nb[ii]+ng[ii]) -=
+                        BLASFEO_DVECEL(qp_out->ux+ii, slack_index+nx[ii]+nu[ii]+ns[ii]);
+            }
+        }
+
+        // NOTE: bounds on slacks can be skipped, since they are linear.
+        // blasfeo_daxpy(2*ns[ii], -1.0, qp_out->ux+ii, nx[ii]+nu[ii], qp_in->d+ii, 2*nb[ii]+2*ng[ii], qp_in->d+ii, 2*nb[ii]+2*ng[ii]);
+
+        // printf("SOC: qp_in->d final value\n");
+        // blasfeo_print_exp_dvec(2*nb[ii]+2*ng[ii], qp_in->d+ii, 0);
+    }
+
+    if (nlp_opts->print_level > 3)
+    {
+        printf("\n\nSQP: SOC ocp_qp_in at iteration %d\n", nlp_mem->iter);
+        // print_ocp_qp_in(qp_in);
+    }
+
+#if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
+    ocp_nlp_dump_qp_in_to_file(qp_in, nlp_mem->iter, 1);
+#endif
+
+    // solve QP
+    // acados_tic(&timer1);
+    int qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
+                                    nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
+    // NOTE: QP is not timed, since this computation time is attributed to globalization.
+
+    // compute correct dual solution in case of Hessian regularization
+    config->regularize->correct_dual_sol(config->regularize, dims->regularize,
+                                        nlp_opts->regularize, nlp_mem->regularize_mem);
+
+    // ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
+    // int qp_iter = qp_info_->num_iter;
+
+    // save statistics of last qp solver call
+    // TODO: SOC QP solver call should be warm / hot started!
+    // if (nlp_mem->iter+1 < nlp_mem->stat_m)
+    // {
+    //     // mem->stat[mem->stat_n*(nlp_mem->iter+1)+4] = qp_status;
+    //     // add qp_iter; should maybe be in a seperate statistic
+    //     nlp_mem->stat[nlp_mem->stat_n*(nlp_mem->iter+1)+5] += qp_iter;
+    // }
+
+    // compute external QP residuals (for debugging)
+    // if (nlp_opts->ext_qp_res)
+    // {
+    //     ocp_qp_res_compute(qp_in, qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
+    //     if (nlp_mem->iter+1 < nlp_mem->stat_m)
+    //         ocp_qp_res_compute_nrm_inf(nlp_work->qp_res, nlp_mem->stat+(nlp_mem->stat_n*(nlp_mem->iter+1)+7));
+    // }
+
+    // if (nlp_opts->print_level > 3)
+    // {
+    //     printf("\n\nSQP: SOC ocp_qp_out at iteration %d\n", nlp_mem->iter);
+    //     print_ocp_qp_out(qp_out);
+    // }
+
+#if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
+        ocp_nlp_dump_qp_out_to_file(qp_out, nlp_mem->iter, 1);
+#endif
+
+    // exit conditions on QP status
+    if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
+    {
+#ifndef ACADOS_SILENT
+        printf("\nQP solver returned error status %d in SQP iteration %d for SOC QP.\n",
+            qp_status, nlp_mem->iter);
+#endif
+        // if (nlp_opts->print_level > 1)
+        // {
+        //     printf("\nFailed to solve the following QP:\n");
+        //     if (nlp_opts->print_level > 3)
+        //         print_ocp_qp_in(qp_in);
+        // }
+        nlp_mem->status = ACADOS_QP_FAILURE;
+
+        return 1;
+    }
+
+    return 0;
+}
 
 int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *nlp_opts,
                      ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work,
@@ -4213,6 +4414,60 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
 
     double tmp_time;
     int qp_status;
+
+    // update QP solver tolerances
+    if (nlp_opts->nlp_qp_tol_strategy == ADAPTIVE_CURRENT_RES_JOINT)
+    {
+        // printf("ocp_nlp_solve_qp_and_correct_dual: nlp_qp_tol_reduction_factor = %e\n", nlp_opts->nlp_qp_tol_reduction_factor);
+        double reduction_factor = nlp_opts->nlp_qp_tol_reduction_factor;
+        // double max_log_diff = (nlp_mem->nlp_res->inf_norm_res_stat / nlp_opts->tol_stat);
+
+        double tmp_tol_stat = MIN(reduction_factor * nlp_mem->nlp_res->inf_norm_res_stat, 1e-2);
+        double tmp_tol_eq = MIN(reduction_factor * nlp_mem->nlp_res->inf_norm_res_eq, 1e-2);
+        double tmp_tol_ineq = MIN(reduction_factor * nlp_mem->nlp_res->inf_norm_res_ineq, 1e-2);
+        double tmp_tol_comp = MIN(reduction_factor * nlp_mem->nlp_res->inf_norm_res_comp, 1e-2);
+
+        double joint_tol = MAX(tmp_tol_stat, MAX(tmp_tol_eq, MAX(tmp_tol_ineq, tmp_tol_comp)));
+
+        tmp_tol_stat = MAX(nlp_opts->nlp_qp_tol_safety_factor * nlp_opts->tol_stat, joint_tol);
+        tmp_tol_eq = MAX(nlp_opts->nlp_qp_tol_safety_factor * nlp_opts->tol_eq, joint_tol);
+        tmp_tol_ineq = MAX(nlp_opts->nlp_qp_tol_safety_factor * nlp_opts->tol_ineq, joint_tol);
+        tmp_tol_comp = MAX(nlp_opts->nlp_qp_tol_safety_factor * nlp_opts->tol_comp, joint_tol);
+
+        qp_solver->opts_set(qp_solver, qp_opts, "tol_stat", &tmp_tol_stat);
+        // printf("ocp_nlp_solve_qp_and_correct_dual: setting tol_stat to %e\n", tmp_tol_stat);
+        qp_solver->opts_set(qp_solver, qp_opts, "tol_eq", &tmp_tol_eq);
+        // printf("ocp_nlp_solve_qp_and_correct_dual: setting tol_eq to %e\n", tmp_tol_eq);
+        qp_solver->opts_set(qp_solver, qp_opts, "tol_ineq", &tmp_tol_ineq);
+        // printf("ocp_nlp_solve_qp_and_correct_dual: setting tol_ineq to %e\n", tmp_tol_ineq);
+        qp_solver->opts_set(qp_solver, qp_opts, "tol_comp", &tmp_tol_comp);
+        // printf("ocp_nlp_solve_qp_and_correct_dual: setting tol_comp to %e\n", tmp_tol_comp);
+    }
+    else if (nlp_opts->nlp_qp_tol_strategy == ADAPTIVE_QPSCALING)
+    {
+        double min_constraint_scaling, objective_scaling_factor;
+        ocp_nlp_qpscaling_memory_get(dims->qpscaling, nlp_mem->qpscaling, "min_constraint_scaling", 0, &min_constraint_scaling);
+        ocp_nlp_qpscaling_memory_get(dims->qpscaling, nlp_mem->qpscaling, "obj", 0, &objective_scaling_factor);
+
+        //
+        double stat_factor = MIN(objective_scaling_factor, min_constraint_scaling);
+        double tmp_tol_stat = nlp_opts->nlp_qp_tol_safety_factor * nlp_opts->tol_stat * stat_factor;
+        double tmp_tol_eq = nlp_opts->nlp_qp_tol_safety_factor * nlp_opts->tol_eq * 1.0; // equalities are not scaled
+        double tmp_tol_ineq = nlp_opts->nlp_qp_tol_safety_factor * nlp_opts->tol_ineq * min_constraint_scaling;
+        double tmp_tol_comp = nlp_opts->nlp_qp_tol_safety_factor * nlp_opts->tol_comp * min_constraint_scaling;
+        tmp_tol_stat = MAX(tmp_tol_stat, nlp_opts->nlp_qp_tol_min_stat);
+        tmp_tol_eq = MAX(tmp_tol_eq, nlp_opts->nlp_qp_tol_min_eq);
+        tmp_tol_ineq = MAX(tmp_tol_ineq, nlp_opts->nlp_qp_tol_min_ineq);
+        tmp_tol_comp = MAX(tmp_tol_comp, nlp_opts->nlp_qp_tol_min_comp);
+        qp_solver->opts_set(qp_solver, qp_opts, "tol_stat", &tmp_tol_stat);
+        // printf("ocp_nlp_solve_qp_and_correct_dual: setting tol_stat to %e\n", tmp_tol_stat);
+        qp_solver->opts_set(qp_solver, qp_opts, "tol_eq", &tmp_tol_eq);
+        // printf("ocp_nlp_solve_qp_and_correct_dual: setting tol_eq to %e\n", tmp_tol_eq);
+        qp_solver->opts_set(qp_solver, qp_opts, "tol_ineq", &tmp_tol_ineq);
+        // printf("ocp_nlp_solve_qp_and_correct_dual: setting tol_ineq to %e\n", tmp_tol_ineq);
+        qp_solver->opts_set(qp_solver, qp_opts, "tol_comp", &tmp_tol_comp);
+        // printf("ocp_nlp_solve_qp_and_correct_dual: setting tol_comp to %e\n", tmp_tol_comp);
+    }
 
     // solve qp
     acados_tic(&timer);

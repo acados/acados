@@ -99,7 +99,7 @@ typedef struct ocp_nlp_config
                         void *opts_, void *mem_, void *work_, void *sens_nlp_out,
                         const char *field, int stage, void *grad_p);
     void (*step_update)(void *config, void *dims, void *in,
-            void *out_start, void *opts, void *mem, void *work,
+            void *out_start, void *qp_out, void *opts, void *mem, void *work,
             void *out_destination, void* solver_mem, double alpha, bool full_step_dual);
     // prepare memory
     int (*precompute)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
@@ -335,6 +335,13 @@ typedef struct ocp_nlp_opts
 
     int ext_qp_res;
     int qp_warm_start;
+    ocp_nlp_qp_tol_strategy_t nlp_qp_tol_strategy; // strategy for setting the QP tolerances
+    double nlp_qp_tol_reduction_factor;
+    double nlp_qp_tol_safety_factor;
+    double nlp_qp_tol_min_stat;
+    double nlp_qp_tol_min_eq;
+    double nlp_qp_tol_min_ineq;
+    double nlp_qp_tol_min_comp;
 
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
     bool warm_start_first_qp_from_nlp;  // if True first QP will be initialized using values from NLP iterate, otherwise from previous QP solution.
@@ -580,7 +587,7 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
     ocp_nlp_memory *mem, ocp_nlp_workspace *work);
 //
 void ocp_nlp_update_variables_sqp(void *config_, void *dims_,
-            void *in_, void *out_, void *opts_, void *mem_, void *work_,
+            void *in_, void *out_, void *qp_out_, void *opts_, void *mem_, void *work_,
             void *out_destination_, void *solver_mem, double alpha, bool full_step_dual);
 //
 void ocp_nlp_convert_primaldelta_absdual_step_to_delta_step(ocp_nlp_config *config, ocp_nlp_dims *dims,
@@ -639,6 +646,11 @@ double ocp_nlp_compute_dual_pi_norm_inf(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out
 double ocp_nlp_compute_dual_lam_norm_inf(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out);
 //
 double ocp_nlp_get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_memory *nlp_mem);
+//
+int ocp_nlp_perform_second_order_correction(ocp_nlp_config *config, ocp_nlp_dims *dims,
+                                            ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_opts *nlp_opts,
+                                            ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work,
+                                            ocp_qp_in *qp_in, ocp_qp_out *qp_out);
 //
 int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *nlp_opts,
                      ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work,

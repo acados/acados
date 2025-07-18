@@ -119,14 +119,14 @@ bool is_funnel_sufficient_decrease_satisfied(ocp_nlp_globalization_funnel_memory
 //
 bool is_switching_condition_satisfied(ocp_nlp_globalization_funnel_opts *opts, double pred_optimality, double step_size, double pred_infeasibility);
 //
-bool is_f_type_armijo_condition_satisfied(ocp_nlp_globalization_opts *globalization_opts,
-                                        double negative_ared,
-                                        double pred,
-                                        double alpha);
+bool is_armijo_condition_satisfied(ocp_nlp_globalization_opts *globalization_opts,
+                                    double ared, double pred, double alpha);
 //
 bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_globalization_funnel_memory *mem,
                                             ocp_nlp_opts *nlp_opts,
-                                            double pred, double ared, double alpha,
+                                            double pred_optimality,
+                                            double ared_optimality,
+                                            double alpha,
                                             double current_infeasibility,
                                             double trial_infeasibility,
                                             double current_objective,

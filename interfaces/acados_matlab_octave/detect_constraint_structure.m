@@ -50,7 +50,7 @@ function model = detect_constraint_structure(model, constraints, stage_type)
     if isa(x, 'casadi.SX')
         isSX = true;
     else
-        error('constraint detection only works for casadi.SX!');
+        error('Constraint detection only works for casadi.SX!');
     end
 
     if strcmp(stage_type, 'initial')
@@ -79,7 +79,7 @@ function model = detect_constraint_structure(model, constraints, stage_type)
     if ~(isa(expr_constr, 'casadi.SX') || isa(expr_constr, 'casadi.MX'))
         disp('expr_constr =')
         disp(expr_constr)
-        error("Constraint type detection require definition of constraints as CasADi SX or MX.")
+        error("Constraint type detection requires definition of constraints as CasADi SX or MX.")
     end
 
     % initialize
@@ -108,8 +108,9 @@ function model = detect_constraint_structure(model, constraints, stage_type)
             constr_expr_h = vertcat(constr_expr_h, c);
             lh = [ lh; LB(ii)];
             uh = [ uh; UB(ii)];
-            disp(['constraint ', num2str(ii), ' is kept as nonlinear constraint.']);
-            disp(c);
+            disp(['Constraint ', num2str(ii), ' is kept as a nonlinear constraint.']);
+            disp('Constraint expression: ');
+            disp(c)
             disp(' ')
         else % c is linear in x and u
             Jc_fun = Function('Jc_fun', {x(1)}, {jacobian(c, [x;u])});
@@ -124,9 +125,10 @@ function model = detect_constraint_structure(model, constraints, stage_type)
                     Jbx(end, idb) = 1;
                     lbx = [lbx; LB(ii)/Jc(idb)];
                     ubx = [ubx; UB(ii)/Jc(idb)];
-                    disp(['constraint ', num2str(ii),...
-                          ' is reformulated as bound on x.']);
-                    disp(c);
+                    disp(['Constraint ', num2str(ii),...
+                          ' is reformulated as a bound on x.']);
+                    disp('Constraint expression: ');
+                    disp(c)
                     disp(' ')
                 else
                     % bound on u;
@@ -134,9 +136,10 @@ function model = detect_constraint_structure(model, constraints, stage_type)
                     Jbu(end, idb-nx) = 1;
                     lbu = [lbu; LB(ii)/Jc(idb)];
                     ubu = [ubu; UB(ii)/Jc(idb)];
-                    disp(['constraint ', num2str(ii),...
-                          ' is reformulated as bound on u.']);
-                    disp(c);
+                    disp(['Constraint ', num2str(ii),...
+                          ' is reformulated as a bound on u.']);
+                    disp('Constraint expression: ');
+                    disp(c)
                     disp(' ')
                 end
             else
@@ -145,9 +148,10 @@ function model = detect_constraint_structure(model, constraints, stage_type)
                 D = [D; Jc(nx+1:end)];
                 lg = [ lg; LB(ii)];
                 ug = [ ug; UB(ii)];
-                disp(['constraint ', num2str(ii),...
-                      ' is reformulated as general linear constraint.']);
-                disp(c);
+                disp(['Constraint ', num2str(ii),...
+                      ' is reformulated as a general linear constraint.']);
+                disp('Constraint expression: ');
+                disp(c)
                 disp(' ')
             end
         end
@@ -157,7 +161,7 @@ function model = detect_constraint_structure(model, constraints, stage_type)
     if strcmp(stage_type, 'terminal')
         % checks
         if any(expr_constr.which_depends(u)) || ~isempty(lbu) || (~isempty(D) && any(D))
-            error('terminal constraint may not depend on control input.');
+            error('Terminal constraint may not depend on control input.');
         end
         % h
         constraints.constr_type_e = 'BGH';

@@ -371,6 +371,12 @@ acados_size_t ocp_qp_partial_condensing_memory_calculate_size(void *dims_, void 
 
     d_part_cond_qp_compute_dim(dims->red_dims, dims->block_size, dims->pcond_dims);
 
+    // printf("\n\ndimensions of partially condensed QP:\n");
+    // print_ocp_qp_dims(dims->pcond_dims);
+
+    // printf("\n\ndimensions of original QP:\n");
+    // print_ocp_qp_dims(dims->orig_dims);
+
     acados_size_t size = 0;
 
     size += sizeof(ocp_qp_partial_condensing_memory);
@@ -532,13 +538,13 @@ int ocp_qp_partial_condensing(void *qp_in_, void *pcond_qp_in_, void *opts_, voi
     // start timer
     acados_tic(&timer);
 
-//d_ocp_qp_dim_print(qp_in->dim);
-//d_ocp_qp_dim_print(mem->red_qp->dim);
     // reduce eq constr DOF
     d_ocp_qp_reduce_eq_dof(qp_in, mem->red_qp, opts->hpipm_red_opts, mem->hpipm_red_work);
-//d_ocp_qp_print(qp_in->dim, qp_in);
-//d_ocp_qp_print(mem->red_qp->dim, mem->red_qp);
-//exit(1);
+
+    // d_ocp_qp_codegen("orig_ocp_qp.c", "w", qp_in->dim, qp_in);
+    // d_ocp_qp_codegen("pcond_ocp_qp.c", "w", pcond_qp_in->dim, pcond_qp_in);
+    // d_ocp_qp_print(qp_in->dim, qp_in);
+    // d_ocp_qp_print(pcond_qp_in->dim, pcond_qp_in);
 
     // convert to partially condensed qp structure
     d_part_cond_qp_cond(mem->red_qp, pcond_qp_in, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
