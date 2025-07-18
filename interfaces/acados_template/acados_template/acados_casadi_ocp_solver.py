@@ -660,8 +660,9 @@ class AcadosCasadiOcpSolver:
                                           lbg=self.bounds['lbg'], ubg=self.bounds['ubg']
                                           )
         self.nlp_sol_w = self.nlp_sol['x'].full()
+        self.nlp_sol_g = self.nlp_sol['g'].full()
         self.nlp_sol_lam_g = self.nlp_sol['lam_g'].full()
-        self.nlp_sol_lam_x = self.nlp_sol['lam_x'].full()
+        self.nlp_sol_lam_w = self.nlp_sol['lam_x'].full()
 
         # statistics
         solver_stats = self.casadi_solver.stats()
@@ -715,15 +716,15 @@ class AcadosCasadiOcpSolver:
             return self.nlp_sol_w[self.index_map['su_in_w'][stage]].flatten()
         elif field == 'lam':
             if stage == 0:
-                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]]
-                bu_lam = self.nlp_sol_lam_x[self.index_map['lam_bu_in_lam_w'][stage]]
+                bx_lam = self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]]
+                bu_lam = self.nlp_sol_lam_w[self.index_map['lam_bu_in_lam_w'][stage]]
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
             elif stage < dims.N:
-                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]]
-                bu_lam = self.nlp_sol_lam_x[self.index_map['lam_bu_in_lam_w'][stage]]
+                bx_lam = self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]]
+                bu_lam = self.nlp_sol_lam_w[self.index_map['lam_bu_in_lam_w'][stage]]
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
             elif stage == dims.N:
-                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]]
+                bx_lam = self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]]
                 bu_lam = np.empty((0, 1))
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
 
@@ -732,8 +733,8 @@ class AcadosCasadiOcpSolver:
             lbu_lam = np.maximum(0, -bu_lam)
             ubu_lam = np.maximum(0, bu_lam)
             if any([dims.ns_0, dims.ns, dims.ns_e]):
-                lw_soft_lam = self.nlp_sol_lam_x[self.index_map['sl_in_w'][stage]]
-                uw_soft_lam = self.nlp_sol_lam_x[self.index_map['su_in_w'][stage]]
+                lw_soft_lam = self.nlp_sol_lam_w[self.index_map['sl_in_w'][stage]]
+                uw_soft_lam = self.nlp_sol_lam_w[self.index_map['su_in_w'][stage]]
                 lg_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_sl_in_lam_g'][stage]]
                 ug_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_su_in_lam_g'][stage]]
                 if self.index_map['lam_su_in_lam_g'][stage]:
@@ -785,7 +786,7 @@ class AcadosCasadiOcpSolver:
             return self.p[self.index_map['p_global_in_p_nlp']].flatten()
         # casadi variables. TODO: maybe remove this.
         elif field_ == 'lam_x':
-            return self.nlp_sol_lam_x.flatten()
+            return self.nlp_sol_lam_w.flatten()
         elif field_ == 'lam_g':
             return self.nlp_sol_lam_g.flatten()
         elif field_ == 'lam_p':
@@ -968,3 +969,83 @@ class AcadosCasadiOcpSolver:
 
     def cost_set(self, stage_: int, field_: str, value_):
         raise NotImplementedError()
+
+    def get_constraint_and_violation(self, stage: int, _field='all'):
+        """
+        Evaluate the constraints and return the maximum violation.
+        """
+        if self.nlp_sol is None:
+            raise ValueError('No solution available. Please call solve() first.')
+
+        # constraint values in [bu, bx, bg, bh, bphi]
+        g_value = np.concatenate((self.nlp_sol_w[self.index_map['u_in_w'][stage]],
+                                  self.nlp_sol_w[self.index_map['x_in_w'][stage]],
+                                  self.nlp_sol_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
+        lbg = np.concatenate((self.bounds['lbx'][self.index_map['u_in_w'][stage]],
+                              self.bounds['lbx'][self.index_map['x_in_w'][stage]],
+                              self.bounds['lbg'][self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
+        ubg = np.concatenate((self.bounds['ubx'][self.index_map['u_in_w'][stage]],
+                              self.bounds['ubx'][self.index_map['x_in_w'][stage]],
+                              self.bounds['ubg'][self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
+        if _field == 'eq':
+            indices = [i for i, (a, b) in enumerate(zip(lbg, ubg)) if a == b]
+        elif _field == 'ineq':
+            indices = [i for i, (a, b) in enumerate(zip(lbg, ubg)) if a != b]
+        elif _field == 'all':
+            indices = list(range(len(lbg)))
+
+        # calculate violations
+        violations_lb = lbg - g_value
+        violations_ub = g_value - ubg
+        return g_value, violations_lb, violations_ub, indices
+
+    def check_strict_complementarity_stage(self, stage, tol: float = 1e-6) -> bool:
+        """
+        Check if the solution satisfies strict complementarity conditions.
+        """
+        if self.nlp_sol is None:
+            raise ValueError('No solution available. Please call solve() first.')
+        dims = self.ocp.dims
+        g_value, vio_lb, vio_ub, indices = self.get_constraint_and_violation(stage, 'ineq')
+
+        # get active inequality indices
+        active_ineq = np.where( (np.abs(vio_lb[indices]-0) < tol) | (np.abs(vio_ub[indices]-0) < tol) )[0]
+
+        lam = self.get(stage, 'lam')
+        if stage == 0:
+            nbx = dims.nbx_0
+            nbu = dims.nbu
+            n_ghphi = dims.ng + dims.nh_0 + dims.nphi_0
+        elif stage < dims.N:
+            nbx = dims.nbx
+            nbu = dims.nbu
+            n_ghphi = dims.ng + dims.nh + dims.nphi
+        elif stage == dims.N:
+            nbx = dims.nbx_e
+            nbu = 0
+            n_ghphi = dims.ng_e + dims.nh_e + dims.nphi_e
+        offset = (nbx + nbu + n_ghphi)
+
+        # if lambda for active inequalities is zero, then strict complementarity is not satisfied
+        for i in active_ineq:
+            lb_lam = lam[i]
+            ub_lam = lam[i + offset]
+            if abs(lb_lam)> tol and abs(ub_lam) < tol:
+                return True
+            elif abs(ub_lam) > tol and abs(lb_lam) < tol:
+                return True
+            else:
+                return False
+
+    def check_strict_complementarity(self, tol: float = 1e-6) -> bool:
+        """
+        Check if the solution satisfies strict complementarity conditions for all stages.
+        """
+        if self.nlp_sol is None:
+            raise ValueError('No solution available. Please call solve() first.')
+        dims = self.ocp.dims
+        complementarity = []
+
+        for stage in range(dims.N + 1):
+                complementarity.append(self.check_strict_complementarity_stage(stage, tol))
+        return complementarity
