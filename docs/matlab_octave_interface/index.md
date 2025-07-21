@@ -92,13 +92,14 @@ This is a list of possible inputs to the Simulink block of an OCP solver which c
 | `cost_zu`         | Cost `zu` for all nodes 0 to N                                                                | `sum(ns_i) for i = 0,..., N`     | Yes          |
 | `cost_Zl`         | Cost `Zl` for all nodes 0 to N                                                                | `sum(ns_i) for i = 0,..., N`     | Yes          |
 | `cost_Zu`         | Cost `Zu` for all nodes 0 to N                                                                | `sum(ns_i) for i = 0,..., N`     | Yes          |
-| `reset_solver`    | Determines if the solver's iterate is set to all zeros before other initializations            | `1`                   | Yes          |
-| `ignore_inits`    | Determines if initialization (`x_init`, `u_init`, `pi_init`, `slacks_init`) is set (0) or ignored (1) | `1`                   | Yes          |
+| `reset_solver`    | Determines if the solver's iterate is set to all zeros before other initializations           | `1`                   | Yes          |
+| `ignore_inits`    | Determines if initialization (`x_init`, `u_init`, `pi_init`, `slacks_init`) is set (0) or ignored (1) | `1`           | Yes          |
 | `x_init`          | Initialization of x for all stages                                                            | `sum(nx_i), i=0,..., N`            | Yes          |
 | `u_init`          | Initialization of u for stages 0 to N-1                                                       | `sum(nu_i), i=0,..., N-1`            | Yes          |
 | `pi_init`         | Initialization of pi for stages 0 to N-1                                                      | `sum(npi_i), i=0,..., N-1`           | Yes          |
 | `slacks_init`     | Initialization of slack values for all stages (0 to N)                                        | `2 * ns_total`        | Yes          |
 | `rti_phase`       | Real-time iteration phase                                                                     | `1`                   | Yes          |
+| `levenberg_marquardt` | Factor for LM regularization                                                              | `1`                   | Yes          |
 
 
 ### List of possible outputs

@@ -56,5 +56,7 @@
         "rti_phase": 0,
         "levenberg_marquardt": 0
     },
-    "samplingtime": "t0"
+    "samplingtime": "t0",
+    "generate_simulink_block": 1,
+    "show_port_info": 1
 }
