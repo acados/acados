@@ -966,72 +966,78 @@ class AcadosCasadiOcpSolver:
     def cost_set(self, stage_: int, field_: str, value_):
         raise NotImplementedError()
 
-    def get_constraint_and_violation(self, stage: int, _field='all'):
+    def get_full_constraints_and_bounds(self, stage: int):
         """
-        Evaluate the constraints and return the maximum violation.
+        Get the full constraints [bx, bu, dyn, bg, bh, bphi] and bounds for a given stage.
         """
+        if not isinstance(stage, int):
+            raise TypeError('stage should be integer.')
         if self.nlp_sol is None:
             raise ValueError('No solution available. Please call solve() first.')
 
-        # constraint values in [bu, bx, bg, bh, bphi]
-        g_value = np.concatenate((self.nlp_sol_w[self.index_map['u_in_w'][stage]],
-                                  self.nlp_sol_w[self.index_map['x_in_w'][stage]],
-                                  self.nlp_sol_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
-        lbg = np.concatenate((self.bounds['lbx'][self.index_map['u_in_w'][stage]],
-                              self.bounds['lbx'][self.index_map['x_in_w'][stage]],
-                              self.bounds['lbg'][self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
-        ubg = np.concatenate((self.bounds['ubx'][self.index_map['u_in_w'][stage]],
-                              self.bounds['ubx'][self.index_map['x_in_w'][stage]],
-                              self.bounds['ubg'][self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
-        if _field == 'eq':
-            indices = [i for i, (a, b) in enumerate(zip(lbg, ubg)) if a == b]
-        elif _field == 'ineq':
-            indices = [i for i, (a, b) in enumerate(zip(lbg, ubg)) if a != b]
-        elif _field == 'all':
-            indices = list(range(len(lbg)))
-
-        # calculate violations
-        violations_lb = lbg - g_value
-        violations_ub = g_value - ubg
-        return g_value, violations_lb, violations_ub, indices
+        # create full constraints
+        # constraints = ca.vertcat(self.casadi_nlp['g'][self.index_map['x_in_w'][stage]],
+        #                          self.casadi_nlp['g'][self.index_map['u_in_w'][stage]],
+        #                          self.casadi_nlp['g'][self.index_map['pi_in_lam_g'][stage]],
+        #                          self.casadi_nlp['g'][self.index_map['lam_gnl_in_lam_g'][stage]])
+        if stage < self.ocp.dims.N:
+            constraints_value = np.concatenate((self.nlp_sol_w[self.index_map['x_in_w'][stage]],
+                                                self.nlp_sol_w[self.index_map['u_in_w'][stage]],
+                                                self.nlp_sol_g[self.index_map['pi_in_lam_g'][stage]],
+                                                self.nlp_sol_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
+            lambda_values = np.concatenate((self.nlp_sol_lam_w[self.index_map['x_in_w'][stage]],
+                                            self.nlp_sol_lam_w[self.index_map['u_in_w'][stage]],
+                                            self.nlp_sol_lam_g[self.index_map['pi_in_lam_g'][stage]],
+                                            self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
+            lb = ca.vertcat(self.bounds['lbx'][self.index_map['x_in_w'][stage]],
+                            self.bounds['lbx'][self.index_map['u_in_w'][stage]],
+                            self.bounds['lbg'][self.index_map['pi_in_lam_g'][stage]],
+                            self.bounds['lbg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
+            ub = ca.vertcat(self.bounds['ubx'][self.index_map['x_in_w'][stage]],
+                            self.bounds['ubx'][self.index_map['u_in_w'][stage]],
+                            self.bounds['ubg'][self.index_map['pi_in_lam_g'][stage]],
+                            self.bounds['ubg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
+        elif stage == self.ocp.dims.N:
+            constraints_value = np.concatenate((self.nlp_sol_w[self.index_map['x_in_w'][stage]],
+                                                self.nlp_sol_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
+            lambda_values = np.concatenate((self.nlp_sol_lam_w[self.index_map['x_in_w'][stage]],
+                                            self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
+            lb = ca.vertcat(self.bounds['lbx'][self.index_map['x_in_w'][stage]],
+                            self.bounds['lbg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
+            ub = ca.vertcat(self.bounds['ubx'][self.index_map['x_in_w'][stage]],
+                            self.bounds['ubg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
+        return  constraints_value, lambda_values, lb, ub
 
     def check_strict_complementarity_stage(self, stage, tol: float = 1e-6) -> bool:
         """
-        Check if the solution satisfies strict complementarity conditions.
+        Check if the solution satisfies strict complementarity conditions for a given stage.
+        This checks that the Lagrange multipliers for active inequality constraints are strictly positive.
         """
         if self.nlp_sol is None:
             raise ValueError('No solution available. Please call solve() first.')
-        dims = self.ocp.dims
-        g_value, vio_lb, vio_ub, indices = self.get_constraint_and_violation(stage, 'ineq')
 
+        constraints_value, lambda_value, lb, ub = self.get_full_constraints_and_bounds(stage)
+        # distinguish between equality and inequality constraints
+        ineq_indices = [i for i, (a, b) in enumerate(zip(lb, ub)) if a != b]
+        # get the inequality violations
+        violations_ineq_lb = constraints_value[ineq_indices] - lb[ineq_indices]
+        violations_ineq_ub = ub[ineq_indices] - constraints_value[ineq_indices]
+        # any negative value in violations means infeasible constraint, raise an error
+        if np.any(violations_ineq_lb < -1e-4) or np.any(violations_ineq_ub < -1e-4):
+            raise ValueError('Constraints are violated. Please check the solution.')
         # get active inequality indices
-        active_ineq = np.where( (np.abs(vio_lb[indices]-0) < tol) | (np.abs(vio_ub[indices]-0) < tol) )[0]
+        active_ineq_lb_indices = np.where(violations_ineq_lb < 1e-6)[0]
+        active_ineq_ub_indices = np.where(violations_ineq_ub < 1e-6)[0]
 
-        lam = self.get(stage, 'lam')
-        if stage == 0:
-            nbx = dims.nbx_0
-            nbu = dims.nbu
-            n_ghphi = dims.ng + dims.nh_0 + dims.nphi_0
-        elif stage < dims.N:
-            nbx = dims.nbx
-            nbu = dims.nbu
-            n_ghphi = dims.ng + dims.nh + dims.nphi
-        elif stage == dims.N:
-            nbx = dims.nbx_e
-            nbu = 0
-            n_ghphi = dims.ng_e + dims.nh_e + dims.nphi_e
-        offset = (nbx + nbu + n_ghphi)
-
-        # if lambda for active inequalities is zero, then strict complementarity is not satisfied
-        for i in active_ineq:
-            lb_lam = lam[i]
-            ub_lam = lam[i + offset]
-            if abs(lb_lam)> tol and abs(ub_lam) < tol:
-                return True
-            elif abs(ub_lam) > tol and abs(lb_lam) < tol:
-                return True
-            else:
+        for i in active_ineq_lb_indices:
+            lam = np.maximum(0, -lambda_value[i])
+            if lam < 1e-6:
                 return False
+        for i in active_ineq_ub_indices:
+            lam = np.maximum(0, lambda_value[i])
+            if lam < 1e-6:
+                return False
+        return True
 
     def check_strict_complementarity(self, tol: float = 1e-6) -> bool:
         """
@@ -1045,3 +1051,6 @@ class AcadosCasadiOcpSolver:
         for stage in range(dims.N + 1):
                 complementarity.append(self.check_strict_complementarity_stage(stage, tol))
         return complementarity
+
+    def check_LICQ_stage(self, stage, tol):
+        raise NotImplementedError("LICQ check is not implemented yet.")
