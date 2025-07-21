@@ -110,37 +110,6 @@ sfun_sim_output_names = [sfun_sim_output_names; 'x1 [{{ dims.nx }}]'];
 
 fprintf(output_note)
 
-{%- if simulink_opts.generate_simulink_block == 1 %}
-modelName = 'acados_sim_simulink_block';
-new_system(modelName);
-open_system(modelName);
-
-blockPath = [modelName '/acados sim solver'];
-add_block('simulink/User-Defined Functions/S-Function', blockPath);
-set_param(blockPath, 'FunctionName', 'acados_sim_solver_sfunction_{{ name }}');
-
-Simulink.Mask.create(blockPath);
-{%- if simulink_opts.show_port_info == 1 %}
-mask_str = sprintf([ ...
-    'global sfun_sim_input_names sfun_sim_output_names\n' ...
-    'for i = 1:length(sfun_sim_input_names)\n' ...
-    '    port_label(''input'', i, sfun_sim_input_names{i})\n' ...
-    'end\n' ...
-    'for i = 1:length(sfun_sim_output_names)\n' ...
-    '    port_label(''output'', i, sfun_sim_output_names{i})\n' ...
-    'end\n' ...
-    'disp("acados sim")' ...
-]);
-{%- else %}
-mask_str = sprintf('disp("acados sim")');
-{%- endif %}
-mask = Simulink.Mask.get(blockPath);
-mask.Display = mask_str;
-
-save_system(modelName);
-close_system(modelName);
-disp([newline, 'Created the sim solver Simulink block in: ', modelName])
-{%- endif %}
 
 % The mask drawing command is:
 % ---
