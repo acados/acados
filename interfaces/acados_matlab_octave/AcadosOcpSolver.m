@@ -203,12 +203,18 @@ classdef AcadosOcpSolver < handle
         end
 
         function value = get_qp_scaling_constraints(obj, stage)
+            if strcmp(obj.solver_options.qpscaling_scale_constraints, 'NO_CONSTRAINT_SCALING')
+                error("QP scaling constraints are not enabled.");
+            end
             % returns the qp scaling constraints for the given stage
             value = obj.t_ocp.get('qpscaling_constr', stage);
         end
 
         function value = get_qp_scaling_objective(obj)
             % returns the qp scaling objective
+            if strcmp(obj.solver_options.qpscaling_scale_objective, 'NO_OBJECTIVE_SCALING')
+                error("QP scaling objective is not enabled.");
+            end
             value = obj.t_ocp.get('qpscaling_obj');
         end
 
