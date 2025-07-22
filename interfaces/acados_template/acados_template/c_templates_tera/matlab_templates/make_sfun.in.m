@@ -569,6 +569,38 @@ sfun_output_names = [sfun_output_names; 'parameter_traj [{{ np_total }}]'];
 
 fprintf(output_note)
 
+{%- if simulink_opts.generate_simulink_block == 1 %}
+modelName = '{{ name }}_ocp_solver_simulink_block';
+new_system(modelName);
+open_system(modelName);
+
+blockPath = [modelName '/{{ name }}_ocp_solver'];
+add_block('simulink/User-Defined Functions/S-Function', blockPath);
+set_param(blockPath, 'FunctionName', 'acados_solver_sfunction_{{ name }}');
+
+Simulink.Mask.create(blockPath);
+{%- if simulink_opts.show_port_info == 1 %}
+mask_str = sprintf([ ...
+    'global sfun_input_names sfun_output_names\n' ...
+    'for i = 1:length(sfun_input_names)\n' ...
+    '    port_label(''input'', i, sfun_input_names{i})\n' ...
+    'end\n' ...
+    'for i = 1:length(sfun_output_names)\n' ...
+    '    port_label(''output'', i, sfun_output_names{i})\n' ...
+    'end\n' ...
+    'disp("acados OCP")' ...
+]);
+{%- else %}
+mask_str = sprintf('disp("acados OCP")');
+{%- endif %}
+mask = Simulink.Mask.get(blockPath);
+mask.Display = mask_str;
+
+save_system(modelName);
+close_system(modelName);
+disp([newline, 'Created the OCP solver Simulink block in: ', modelName])
+{%- endif %}
+
 % The mask drawing command is:
 % ---
 % global sfun_input_names sfun_output_names

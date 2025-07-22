@@ -111,6 +111,34 @@ sfun_sim_output_names = [sfun_sim_output_names; 'x1 [{{ dims.nx }}]'];
 fprintf(output_note)
 
 
+% create the Simulink block for the integrator
+modelName = '{{ model.name }}_sim_solver_simulink_block';
+new_system(modelName);
+open_system(modelName);
+
+blockPath = [modelName '/{{ model.name }}_sim_solver'];
+add_block('simulink/User-Defined Functions/S-Function', blockPath);
+set_param(blockPath, 'FunctionName', 'acados_sim_solver_sfunction_{{ model.name }}');
+
+Simulink.Mask.create(blockPath);
+mask_str = sprintf([ ...
+    'global sfun_sim_input_names sfun_sim_output_names\n' ...
+    'for i = 1:length(sfun_sim_input_names)\n' ...
+    '    port_label(''input'', i, sfun_sim_input_names{i})\n' ...
+    'end\n' ...
+    'for i = 1:length(sfun_sim_output_names)\n' ...
+    '    port_label(''output'', i, sfun_sim_output_names{i})\n' ...
+    'end\n' ...
+    'disp("acados sim")' ...
+]);
+mask = Simulink.Mask.get(blockPath);
+mask.Display = mask_str;
+
+save_system(modelName);
+close_system(modelName);
+disp([newline, 'Created the sim solver Simulink block in: ', modelName])
+
+
 % The mask drawing command is:
 % ---
 % global sfun_sim_input_names sfun_sim_output_names
@@ -122,4 +150,4 @@ fprintf(output_note)
 % end
 % ---
 % It can be used by copying it in sfunction/Mask/Edit mask/Icon drawing commands
-%   (you can access it wirth ctrl+M on the s-function)
+%   (you can access it with ctrl+M on the s-function)
