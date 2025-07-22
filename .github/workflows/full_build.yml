@@ -33,6 +33,9 @@ jobs:
       working-directory: ${{runner.workspace}}
       run: cmake -E make_directory ${{runner.workspace}}/acados/build
 
+    - name: Install Eigen3, for clarabel
+      run: sudo apt-get update && sudo apt-get install -y libeigen3-dev
+
     - name: Configure CMake
       shell: bash
       working-directory: ${{runner.workspace}}/acados/build
