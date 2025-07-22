@@ -112,13 +112,13 @@ fprintf(output_note)
 
 
 % create the Simulink block for the integrator
-modelName = '{{ name }}_sim_solver_simulink_block';
+modelName = '{{ model.name }}_sim_solver_simulink_block';
 new_system(modelName);
 open_system(modelName);
 
-blockPath = [modelName '/{{ name }}_sim_solver'];
+blockPath = [modelName '/{{ model.name }}_sim_solver'];
 add_block('simulink/User-Defined Functions/S-Function', blockPath);
-set_param(blockPath, 'FunctionName', 'acados_sim_solver_sfunction_{{ name }}');
+set_param(blockPath, 'FunctionName', 'acados_sim_solver_sfunction_{{ model.name }}');
 
 Simulink.Mask.create(blockPath);
 mask_str = sprintf([ ...
