@@ -966,59 +966,53 @@ class AcadosCasadiOcpSolver:
     def cost_set(self, stage_: int, field_: str, value_):
         raise NotImplementedError()
 
-    def get_full_constraints_and_bounds(self, stage: int):
+    def get_constraints_value(self, stage: int):
         """
-        Get the full constraints [bx, bu, dyn, bg, bh, bphi] and bounds for a given stage.
+        Get the constraints values and lambda for a given stage.
         """
         if not isinstance(stage, int):
             raise TypeError('stage should be integer.')
         if self.nlp_sol is None:
             raise ValueError('No solution available. Please call solve() first.')
 
-        # create full constraints
-        # constraints = ca.vertcat(self.casadi_nlp['g'][self.index_map['x_in_w'][stage]],
-        #                          self.casadi_nlp['g'][self.index_map['u_in_w'][stage]],
-        #                          self.casadi_nlp['g'][self.index_map['pi_in_lam_g'][stage]],
-        #                          self.casadi_nlp['g'][self.index_map['lam_gnl_in_lam_g'][stage]])
+        # create constraints value and lambda in the order as [bx, bu, bg, bh, bphi]
         if stage < self.ocp.dims.N:
-            constraints_value = np.concatenate((self.nlp_sol_w[self.index_map['x_in_w'][stage]],
-                                                self.nlp_sol_w[self.index_map['u_in_w'][stage]],
+            constraints_value = np.concatenate((self.nlp_sol_w[self.index_map['lam_bx_in_lam_w'][stage]],
+                                                self.nlp_sol_w[self.index_map['lam_bu_in_lam_w'][stage]],
                                                 self.nlp_sol_g[self.index_map['pi_in_lam_g'][stage]],
                                                 self.nlp_sol_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
-            lambda_values = np.concatenate((self.nlp_sol_lam_w[self.index_map['x_in_w'][stage]],
-                                            self.nlp_sol_lam_w[self.index_map['u_in_w'][stage]],
+            lambda_values = np.concatenate((self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]],
+                                            self.nlp_sol_lam_w[self.index_map['lam_bu_in_lam_w'][stage]],
                                             self.nlp_sol_lam_g[self.index_map['pi_in_lam_g'][stage]],
                                             self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
-            lb = ca.vertcat(self.bounds['lbx'][self.index_map['x_in_w'][stage]],
-                            self.bounds['lbx'][self.index_map['u_in_w'][stage]],
+            lb = ca.vertcat(self.bounds['lbx'][self.index_map['lam_bx_in_lam_w'][stage]],
+                            self.bounds['lbx'][self.index_map['lam_bu_in_lam_w'][stage]],
                             self.bounds['lbg'][self.index_map['pi_in_lam_g'][stage]],
                             self.bounds['lbg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
-            ub = ca.vertcat(self.bounds['ubx'][self.index_map['x_in_w'][stage]],
-                            self.bounds['ubx'][self.index_map['u_in_w'][stage]],
+            ub = ca.vertcat(self.bounds['ubx'][self.index_map['lam_bx_in_lam_w'][stage]],
+                            self.bounds['ubx'][self.index_map['lam_bu_in_lam_w'][stage]],
                             self.bounds['ubg'][self.index_map['pi_in_lam_g'][stage]],
                             self.bounds['ubg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
         elif stage == self.ocp.dims.N:
-            constraints_value = np.concatenate((self.nlp_sol_w[self.index_map['x_in_w'][stage]],
+            constraints_value = np.concatenate((self.nlp_sol_w[self.index_map['lam_bx_in_lam_w'][stage]],
                                                 self.nlp_sol_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
-            lambda_values = np.concatenate((self.nlp_sol_lam_w[self.index_map['x_in_w'][stage]],
+            lambda_values = np.concatenate((self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]],
                                             self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
-            lb = ca.vertcat(self.bounds['lbx'][self.index_map['x_in_w'][stage]],
+            lb = ca.vertcat(self.bounds['lbx'][self.index_map['lam_bx_in_lam_w'][stage]],
                             self.bounds['lbg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
-            ub = ca.vertcat(self.bounds['ubx'][self.index_map['x_in_w'][stage]],
+            ub = ca.vertcat(self.bounds['ubx'][self.index_map['lam_bx_in_lam_w'][stage]],
                             self.bounds['ubg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
         return  constraints_value, lambda_values, lb, ub
-
-    def check_strict_complementarity_stage(self, stage, tol: float = 1e-6) -> bool:
+    
+    def get_constraints_indices(self, stage: int):
+        """ 
+        Get the indices of the constraints for a given stage.
+        This function distinguishes between inequality and equality constraints and returns their indices.
         """
-        Check if the solution satisfies strict complementarity conditions for a given stage.
-        This checks that the Lagrange multipliers for active inequality constraints are strictly positive.
-        """
-        if self.nlp_sol is None:
-            raise ValueError('No solution available. Please call solve() first.')
-
-        constraints_value, lambda_value, lb, ub = self.get_full_constraints_and_bounds(stage)
+        constraints_value, _, lb, ub = self.get_constraints_value(stage)
         # distinguish between equality and inequality constraints
         ineq_indices = [i for i, (a, b) in enumerate(zip(lb, ub)) if a != b]
+        eq_indices = [i for i, (a, b) in enumerate(zip(lb, ub)) if a == b]
         # get the inequality violations
         violations_ineq_lb = constraints_value[ineq_indices] - lb[ineq_indices]
         violations_ineq_ub = ub[ineq_indices] - constraints_value[ineq_indices]
@@ -1028,6 +1022,20 @@ class AcadosCasadiOcpSolver:
         # get active inequality indices
         active_ineq_lb_indices = np.where(violations_ineq_lb < 1e-6)[0]
         active_ineq_ub_indices = np.where(violations_ineq_ub < 1e-6)[0]
+        return ineq_indices, eq_indices, active_ineq_lb_indices, active_ineq_ub_indices
+
+    def check_strict_complementarity_stage(self, stage, tol: float = 1e-6) -> bool:
+        """
+        Check if the solution satisfies strict complementarity conditions for a given stage.
+        This checks that the Lagrange multipliers for active inequality constraints are strictly positive.
+        """
+        if self.nlp_sol is None:
+            raise ValueError('No solution available. Please call solve() first.')
+
+        constraints_value, lambda_value, lb, ub = self.get_constraints_value(stage)
+        ineq_indices, eq_indices, active_lb_indices, active_ub_indices = self.get_constraints_indices(stage)
+        active_ineq_lb_indices = [ineq_indices[i] for i in active_lb_indices]
+        active_ineq_ub_indices = [ineq_indices[i] for i in active_ub_indices]
 
         for i in active_ineq_lb_indices:
             lam = np.maximum(0, -lambda_value[i])
@@ -1053,4 +1061,56 @@ class AcadosCasadiOcpSolver:
         return complementarity
 
     def check_LICQ_stage(self, stage, tol):
-        raise NotImplementedError("LICQ check is not implemented yet.")
+        """
+        Check if the solution satisfies the Linear Independence Constraint Qualification (LICQ) for a given stage.
+        """
+        if self.nlp_sol is None:
+            raise ValueError('No solution available. Please call solve() first.')
+
+        ineq_indices, eq_indices, active_lb_indices, active_ub_indices = self.get_constraints_indices(stage)
+        active_ineq_lb_indices = [ineq_indices[i] for i in active_lb_indices]
+        active_ineq_ub_indices = [ineq_indices[i] for i in active_ub_indices]
+
+        if stage < self.ocp.dims.N:
+            w = ca.vertcat(self.casadi_nlp['x'][self.index_map['x_in_w'][stage]],
+                        self.casadi_nlp['x'][self.index_map['u_in_w'][stage]])
+            w_value = np.concatenate((self.nlp_sol_w[self.index_map['x_in_w'][stage]],
+                                    self.nlp_sol_w[self.index_map['u_in_w'][stage]])).flatten()
+            constraints_expr_stage = ca.vertcat(self.casadi_nlp['x'][self.index_map['lam_bx_in_lam_w'][stage]],
+                                                self.casadi_nlp['x'][self.index_map['lam_bu_in_lam_w'][stage]],
+                                                self.casadi_nlp['g'][self.index_map['pi_in_lam_g'][stage]],
+                                                self.casadi_nlp['g'][self.index_map['lam_gnl_in_lam_g'][stage]])
+        elif stage == self.ocp.dims.N:
+            w = self.casadi_nlp['x'][self.index_map['x_in_w'][stage]]
+            w_value = self.nlp_sol_w[self.index_map['x_in_w'][stage]].flatten()
+            constraints_expr_stage = ca.vertcat(self.casadi_nlp['x'][self.index_map['lam_bx_in_lam_w'][stage]],
+                                                self.casadi_nlp['g'][self.index_map['lam_gnl_in_lam_g'][stage]])
+
+        eq_constraints = constraints_expr_stage[eq_indices] if len(eq_indices) != 0 else ca.vertcat()
+        active_ineq_lb_constraints = constraints_expr_stage[active_ineq_lb_indices] if len(active_ineq_lb_indices) != 0 else ca.vertcat()
+        active_ineq_ub_constraints = constraints_expr_stage[active_ineq_ub_indices] if len(active_ineq_ub_indices) != 0 else ca.vertcat()
+        constraint_matrix = ca.vertcat(eq_constraints,
+                                       -active_ineq_lb_constraints,
+                                       active_ineq_ub_constraints)
+        constraint_jac_expr = ca.Function('constraint_jac', [w], [ca.jacobian(constraint_matrix, w)])
+        constraint_jac_value = constraint_jac_expr(w_value).full()
+
+        # Check if the Jacobian of the constraints is full rank
+        rank = np.linalg.matrix_rank(constraint_jac_value) if constraint_jac_value.any() else 0
+        if rank == constraint_jac_value.shape[0]:
+            return True
+        else:
+            return False
+
+    def check_LICQ(self, tol: float = 1e-6) -> bool:
+        """
+        Check if the solution satisfies the Linear Independence Constraint Qualification (LICQ) for all stages.
+        """
+        if self.nlp_sol is None:
+            raise ValueError('No solution available. Please call solve() first.')
+        dims = self.ocp.dims
+        LICQ = []
+
+        for stage in range(dims.N + 1):
+            LICQ.append(self.check_LICQ_stage(stage, tol))
+        return LICQ
