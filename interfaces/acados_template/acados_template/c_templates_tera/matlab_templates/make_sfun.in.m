@@ -570,11 +570,11 @@ sfun_output_names = [sfun_output_names; 'parameter_traj [{{ np_total }}]'];
 fprintf(output_note)
 
 {%- if simulink_opts.generate_simulink_block == 1 %}
-modelName = 'acados_ocp_simulink_block';
+modelName = '{{ name }}_ocp_solver_simulink_block';
 new_system(modelName);
 open_system(modelName);
 
-blockPath = [modelName '/acados OCP solver'];
+blockPath = [modelName '/{{ name }}_ocp_solver'];
 add_block('simulink/User-Defined Functions/S-Function', blockPath);
 set_param(blockPath, 'FunctionName', 'acados_solver_sfunction_{{ name }}');
 
