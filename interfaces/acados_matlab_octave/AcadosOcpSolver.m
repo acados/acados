@@ -655,6 +655,7 @@ classdef AcadosOcpSolver < handle
                 end
             end
             cd(return_dir);
+            disp('problem specific shared library compiled successfully');
         end
 
     end % private methods
