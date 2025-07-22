@@ -1028,6 +1028,7 @@ class AcadosCasadiOcpSolver:
         """
         Check if the solution satisfies strict complementarity conditions for a given stage.
         This checks that the Lagrange multipliers for active inequality constraints are strictly positive.
+        Not tested yet.
         """
         if self.nlp_sol is None:
             raise ValueError('No solution available. Please call solve() first.')
@@ -1039,17 +1040,18 @@ class AcadosCasadiOcpSolver:
 
         for i in active_ineq_lb_indices:
             lam = np.maximum(0, -lambda_value[i])
-            if lam < 1e-6:
+            if lam < tol:
                 return False
         for i in active_ineq_ub_indices:
             lam = np.maximum(0, lambda_value[i])
-            if lam < 1e-6:
+            if lam < tol:
                 return False
         return True
 
     def check_strict_complementarity(self, tol: float = 1e-6) -> bool:
         """
         Check if the solution satisfies strict complementarity conditions for all stages.
+        Not tested yet.
         """
         if self.nlp_sol is None:
             raise ValueError('No solution available. Please call solve() first.')
@@ -1060,7 +1062,7 @@ class AcadosCasadiOcpSolver:
                 complementarity.append(self.check_strict_complementarity_stage(stage, tol))
         return complementarity
 
-    def check_LICQ_stage(self, stage, tol):
+    def check_LICQ_stage(self, stage):
         """
         Check if the solution satisfies the Linear Independence Constraint Qualification (LICQ) for a given stage.
         """
@@ -1071,7 +1073,17 @@ class AcadosCasadiOcpSolver:
         active_ineq_lb_indices = [ineq_indices[i] for i in active_lb_indices]
         active_ineq_ub_indices = [ineq_indices[i] for i in active_ub_indices]
 
-        if stage < self.ocp.dims.N:
+        if stage == 0:
+            w = ca.vertcat(self.casadi_nlp['x'][self.index_map['x_in_w'][stage]],
+                           self.casadi_nlp['x'][self.index_map['u_in_w'][stage]])
+            w_value = np.concatenate((self.nlp_sol_w[self.index_map['x_in_w'][stage]],
+                                      self.nlp_sol_w[self.index_map['u_in_w'][stage]])).flatten()
+            constraints_expr_stage = ca.vertcat(self.casadi_nlp['x'][self.index_map['lam_bx_in_lam_w'][stage]],
+                                                self.casadi_nlp['x'][self.index_map['lam_bu_in_lam_w'][stage]],
+                                                self.casadi_nlp['g'][self.index_map['pi_in_lam_g'][stage]],
+                                                self.casadi_nlp['g'][self.index_map['lam_gnl_in_lam_g'][stage]])
+            eq_indices = np.setdiff1d(eq_indices, self.ocp.constraints.idxbxe_0.tolist()) if self.ocp.constraints.idxbxe_0.tolist() and len(eq_indices) != 0 else eq_indices
+        elif stage < self.ocp.dims.N:
             w = ca.vertcat(self.casadi_nlp['x'][self.index_map['x_in_w'][stage]],
                         self.casadi_nlp['x'][self.index_map['u_in_w'][stage]])
             w_value = np.concatenate((self.nlp_sol_w[self.index_map['x_in_w'][stage]],
@@ -1112,5 +1124,5 @@ class AcadosCasadiOcpSolver:
         LICQ = []
 
         for stage in range(dims.N + 1):
-            LICQ.append(self.check_LICQ_stage(stage, tol))
+            LICQ.append(self.check_LICQ_stage(stage))
         return LICQ
