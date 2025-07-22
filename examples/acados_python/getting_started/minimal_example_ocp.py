@@ -85,7 +85,6 @@ def main():
     ocp.solver_options.globalization = 'MERIT_BACKTRACKING' # turns on globalization
     ocp.solver_options.qp_solver_iter_max = 1000
     ocp.solver_options.nlp_solver_ext_qp_res = 1
-    ocp.solver_options.nlp_solver_max_iter = 2
 
     ocp_solver = AcadosOcpSolver(ocp)
 
