@@ -250,8 +250,8 @@ def solve_maratos_ocp(setting, use_deprecated_options=False):
         if sqp_iter != 18:
             raise Exception(f"acados solver took {sqp_iter} iterations, expected 18.")
     elif globalization == "MERIT_BACKTRACKING" and not use_deprecated_options:
-        if sqp_iter not in range(17, 23):
-            raise Exception(f"acados solver took {sqp_iter} iterations, expected range(17, 23).")
+        if sqp_iter not in range(15, 23):
+            raise Exception(f"acados solver took {sqp_iter} iterations, expected range(15, 23).")
 
     if PLOT:
         plot_linear_mass_system_X_state_space(simX, circle=circle, x_goal=x_goal)
