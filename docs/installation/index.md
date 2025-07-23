@@ -191,7 +191,7 @@ Note: this workflow is preliminary and not thoroughly tested.
 - clone acados (see above)
 - use the `Developer Command Prompt for VS`, navigate to `<acados_root_folder>/build` and run
 ```
-cmake -G "Visual Studio 15 2017 Win64" -DBLASFEO_TARGET=GENERIC -DACADOS_INSTALL_DIR=.. -DBUILD_SHARED_LIBS=OFF ..
+cmake -G "Visual Studio 17 2022" -DBLASFEO_TARGET=GENERIC -DACADOS_INSTALL_DIR=.. -DBUILD_SHARED_LIBS=OFF ..
 # respectively for MVSC 2019
 # cmake -G "Visual Studio 16 2019" -DBLASFEO_TARGET=GENERIC -DACADOS_INSTALL_DIR=.. -DBUILD_SHARED_LIBS=OFF ..
 cmake --build . -j10 --target INSTALL --config Release
