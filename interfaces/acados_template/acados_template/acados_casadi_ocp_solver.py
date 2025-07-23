@@ -1055,9 +1055,7 @@ class AcadosCasadiOcpSolver:
             raise ValueError('No solution available. Please call solve() first.')
 
         _, lambda_value, _, _ = self.get_constraints_value(stage)
-        ineq_indices, _, _, active_lb_indices, active_ub_indices = self.get_constraints_indices(stage)
-        active_ineq_lb_indices = [ineq_indices[i] for i in active_lb_indices]
-        active_ineq_ub_indices = [ineq_indices[i] for i in active_ub_indices]
+        _, _, _, active_ineq_lb_indices, active_ineq_ub_indices = self.get_constraints_indices(stage)
 
         for i in active_ineq_lb_indices:
             lam = np.maximum(0, -lambda_value[i])
