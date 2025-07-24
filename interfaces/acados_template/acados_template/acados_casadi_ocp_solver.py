@@ -1048,7 +1048,7 @@ class AcadosCasadiOcpSolver:
         active_ineq_ub_indices = np.take(ineq_indices, np.where(violations_ineq_ub < tol)[0])
         return ineq_indices, eq_indices_bounds, eq_indices_ca_g, active_ineq_lb_indices, active_ineq_ub_indices
 
-    def check_strict_complementarity_stage(self, stage, tol: float) -> bool:
+    def satisfies_strict_complementarity_stage_wise(self, stage: int, tol: float) -> bool:
         """
         Check if the solution satisfies strict complementarity conditions for a given stage.
         This checks that the Lagrange multipliers for active inequality constraints are strictly positive.
@@ -1071,20 +1071,28 @@ class AcadosCasadiOcpSolver:
                 return False
         return True
 
-    def check_strict_complementarity(self, tol: float) -> bool:
+    def satisfies_strict_complementarity_stages(self, tol: float) -> bool:
         """
         Check if the solution satisfies strict complementarity conditions for all stages.
         Not tested yet.
         """
         tol = self.ocp.solver_options.nlp_solver_tol_ineq
-        if self.nlp_sol is None:
-            raise ValueError('No solution available. Please call solve() first.')
         dims = self.ocp.dims
         complementarity = []
-
         for stage in range(dims.N + 1):
             complementarity.append(self.check_strict_complementarity_stage(stage, tol))
         return complementarity
+
+    def check_strict_complementarity(self) -> bool:
+        """ 
+        Check if the solution satisfies strict complementarity conditions for all stages.
+        Not tested yet.
+        """
+        stage_wise_complementarity = self.satisfies_strict_complementarity_stages(self.ocp.solver_options.nlp_solver_tol_ineq)
+        if all(stage_wise_complementarity):
+            return True
+        else:
+            return False
 
     def satisfies_LICQ_stage_wise(self, stage) -> bool:
         """
@@ -1118,8 +1126,6 @@ class AcadosCasadiOcpSolver:
         Check if the solution satisfies the Linear Independence Constraint Qualification (LICQ) for all stages.
         return a list of booleans, each indicating whether LICQ is satisfied for the corresponding stage.
         """
-        if self.nlp_sol is None:
-            raise ValueError('No solution available. Please call solve() first.')
         dims = self.ocp.dims
         stage_wise_LICQ = []
         for stage in range(dims.N + 1):
@@ -1131,8 +1137,6 @@ class AcadosCasadiOcpSolver:
         Check if the solution satisfies the Linear Independence Constraint Qualification (LICQ) for all stages.
         return True if LICQ is satisfied for all stages, otherwise False.
         """
-        if self.nlp_sol is None:
-            raise ValueError('No solution available. Please call solve() first.')
         stage_wise_LICQ = self.satisfies_LICQ_stages()
         if all(stage_wise_LICQ):
             return True
