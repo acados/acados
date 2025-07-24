@@ -1642,41 +1642,6 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
 {%- endif %}
 
     /* constraints that are the same for initial and intermediate */
-{%- if dims.nsbx > 0 %}
-{# TODO: introduce nsbx0 & move this block down!! #}
-    // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "idxsbx", idxsbx);
-    // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "lsbx", lsbx);
-    // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "usbx", usbx);
-
-    // soft bounds on x
-    int* idxsbx = malloc(NSBX * sizeof(int));
-    {%- for i in range(end=dims.nsbx) %}
-    idxsbx[{{ i }}] = {{ constraints.idxsbx[i] }};
-    {%- endfor %}
-
-    double* lusbx = calloc(2*NSBX, sizeof(double));
-    double* lsbx = lusbx;
-    double* usbx = lusbx + NSBX;
-    {%- for i in range(end=dims.nsbx) %}
-        {%- if constraints.lsbx[i] != 0 %}
-    lsbx[{{ i }}] = {{ constraints.lsbx[i] }};
-        {%- endif %}
-        {%- if constraints.usbx[i] != 0 %}
-    usbx[{{ i }}] = {{ constraints.usbx[i] }};
-        {%- endif %}
-    {%- endfor %}
-
-    for (int i = 1; i < N; i++)
-    {
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "idxsbx", idxsbx);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "lsbx", lsbx);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "usbx", usbx);
-    }
-    free(idxsbx);
-    free(lusbx);
-{%- endif %}
-
-
 {%- if dims.nbu > 0 %}
     // u
     int* idxbu = malloc(NBU * sizeof(int));
@@ -1704,6 +1669,55 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     free(idxbu);
     free(lubu);
 {%- endif %}
+
+{% if dims.ng > 0 %}
+    // set up general constraints for stage 0 to N-1
+    double* D = calloc(NG*NU, sizeof(double));
+    double* C = calloc(NG*NX, sizeof(double));
+    double* lug = calloc(2*NG, sizeof(double));
+    double* lg = lug;
+    double* ug = lug + NG;
+
+    {%- for j in range(end=dims.ng) -%}
+        {% for k in range(end=dims.nu) %}
+            {%- if constraints.D[j][k] != 0 %}
+    D[{{ j }}+NG * {{ k }}] = {{ constraints.D[j][k] }};
+            {%- endif %}
+        {%- endfor %}
+    {%- endfor %}
+
+    {%- for j in range(end=dims.ng) -%}
+        {% for k in range(end=dims.nx) %}
+            {%- if constraints.C[j][k] != 0 %}
+    C[{{ j }}+NG * {{ k }}] = {{ constraints.C[j][k] }};
+            {%- endif %}
+        {%- endfor %}
+    {%- endfor %}
+
+    {%- for i in range(end=dims.ng) %}
+        {%- if constraints.lg[i] != 0 %}
+    lg[{{ i }}] = {{ constraints.lg[i] }};
+        {%- endif %}
+    {%- endfor %}
+
+    {%- for i in range(end=dims.ng) %}
+        {%- if constraints.ug[i] != 0 %}
+    ug[{{ i }}] = {{ constraints.ug[i] }};
+        {%- endif %}
+    {%- endfor %}
+
+    for (int i = 0; i < N; i++)
+    {
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "D", D);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "C", C);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "lg", lg);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "ug", ug);
+    }
+    free(D);
+    free(C);
+    free(lug);
+{%- endif %}
+
 
 {%- if dims.nsbu > 0 %}
     // set up soft bounds for u
@@ -1760,62 +1774,8 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     free(lusg);
 {%- endif %}
 
-{% if dims.nsh > 0 %}
-    // set up soft bounds for nonlinear constraints
-    int* idxsh = malloc(NSH * sizeof(int));
-    {%- for i in range(end=dims.nsh) %}
-    idxsh[{{ i }}] = {{ constraints.idxsh[i] }};
-    {%- endfor %}
-    double* lush = calloc(2*NSH, sizeof(double));
-    double* lsh = lush;
-    double* ush = lush + NSH;
-    {%- for i in range(end=dims.nsh) %}
-        {%- if constraints.lsh[i] != 0 %}
-    lsh[{{ i }}] = {{ constraints.lsh[i] }};
-        {%- endif %}
-        {%- if constraints.ush[i] != 0 %}
-    ush[{{ i }}] = {{ constraints.ush[i] }};
-        {%- endif %}
-    {%- endfor %}
 
-    for (int i = 1; i < N; i++)
-    {
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "idxsh", idxsh);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "lsh", lsh);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "ush", ush);
-    }
-    free(idxsh);
-    free(lush);
-{%- endif %}
-
-{% if dims.nsphi > 0 %}
-    // set up soft bounds for convex-over-nonlinear constraints
-    int* idxsphi = malloc(NSPHI * sizeof(int));
-    {%- for i in range(end=dims.nsphi) %}
-    idxsphi[{{ i }}] = {{ constraints.idxsphi[i] }};
-    {%- endfor %}
-    double* lusphi = calloc(2*NSPHI, sizeof(double));
-    double* lsphi = lusphi;
-    double* usphi = lusphi + NSPHI;
-    {%- for i in range(end=dims.nsphi) %}
-        {%- if constraints.lsphi[i] != 0 %}
-    lsphi[{{ i }}] = {{ constraints.lsphi[i] }};
-        {%- endif %}
-        {%- if constraints.usphi[i] != 0 %}
-    usphi[{{ i }}] = {{ constraints.usphi[i] }};
-        {%- endif %}
-    {%- endfor %}
-
-    for (int i = 1; i < N; i++)
-    {
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "idxsphi", idxsphi);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "lsphi", lsphi);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "usphi", usphi);
-    }
-    free(idxsphi);
-    free(lusphi);
-{%- endif %}
-
+    /* Path constraints */
 {% if dims.nbx > 0 %}
     // x
     int* idxbx = malloc(NBX * sizeof(int));
@@ -1842,54 +1802,6 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     }
     free(idxbx);
     free(lubx);
-{%- endif %}
-
-{% if dims.ng > 0 %}
-    // set up general constraints for stage 0 to N-1
-    double* D = calloc(NG*NU, sizeof(double));
-    double* C = calloc(NG*NX, sizeof(double));
-    double* lug = calloc(2*NG, sizeof(double));
-    double* lg = lug;
-    double* ug = lug + NG;
-
-    {%- for j in range(end=dims.ng) -%}
-        {% for k in range(end=dims.nu) %}
-            {%- if constraints.D[j][k] != 0 %}
-    D[{{ j }}+NG * {{ k }}] = {{ constraints.D[j][k] }};
-            {%- endif %}
-        {%- endfor %}
-    {%- endfor %}
-
-    {%- for j in range(end=dims.ng) -%}
-        {% for k in range(end=dims.nx) %}
-            {%- if constraints.C[j][k] != 0 %}
-    C[{{ j }}+NG * {{ k }}] = {{ constraints.C[j][k] }};
-            {%- endif %}
-        {%- endfor %}
-    {%- endfor %}
-
-    {%- for i in range(end=dims.ng) %}
-        {%- if constraints.lg[i] != 0 %}
-    lg[{{ i }}] = {{ constraints.lg[i] }};
-        {%- endif %}
-    {%- endfor %}
-
-    {%- for i in range(end=dims.ng) %}
-        {%- if constraints.ug[i] != 0 %}
-    ug[{{ i }}] = {{ constraints.ug[i] }};
-        {%- endif %}
-    {%- endfor %}
-
-    for (int i = 0; i < N; i++)
-    {
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "D", D);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "C", C);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "lg", lg);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "ug", ug);
-    }
-    free(D);
-    free(C);
-    free(lug);
 {%- endif %}
 
 {% if dims.nh > 0 %}
@@ -1962,6 +1874,96 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     }
     free(luphi);
 {%- endif %}
+
+{%- if dims.nsbx > 0 %}
+{# TODO: introduce nsbx0 #}
+    // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "idxsbx", idxsbx);
+    // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "lsbx", lsbx);
+    // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "usbx", usbx);
+
+    // soft bounds on x
+    int* idxsbx = malloc(NSBX * sizeof(int));
+    {%- for i in range(end=dims.nsbx) %}
+    idxsbx[{{ i }}] = {{ constraints.idxsbx[i] }};
+    {%- endfor %}
+
+    double* lusbx = calloc(2*NSBX, sizeof(double));
+    double* lsbx = lusbx;
+    double* usbx = lusbx + NSBX;
+    {%- for i in range(end=dims.nsbx) %}
+        {%- if constraints.lsbx[i] != 0 %}
+    lsbx[{{ i }}] = {{ constraints.lsbx[i] }};
+        {%- endif %}
+        {%- if constraints.usbx[i] != 0 %}
+    usbx[{{ i }}] = {{ constraints.usbx[i] }};
+        {%- endif %}
+    {%- endfor %}
+
+    for (int i = 1; i < N; i++)
+    {
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "idxsbx", idxsbx);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "lsbx", lsbx);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "usbx", usbx);
+    }
+    free(idxsbx);
+    free(lusbx);
+{%- endif %}
+
+{% if dims.nsh > 0 %}
+    // set up soft bounds for nonlinear constraints
+    int* idxsh = malloc(NSH * sizeof(int));
+    {%- for i in range(end=dims.nsh) %}
+    idxsh[{{ i }}] = {{ constraints.idxsh[i] }};
+    {%- endfor %}
+    double* lush = calloc(2*NSH, sizeof(double));
+    double* lsh = lush;
+    double* ush = lush + NSH;
+    {%- for i in range(end=dims.nsh) %}
+        {%- if constraints.lsh[i] != 0 %}
+    lsh[{{ i }}] = {{ constraints.lsh[i] }};
+        {%- endif %}
+        {%- if constraints.ush[i] != 0 %}
+    ush[{{ i }}] = {{ constraints.ush[i] }};
+        {%- endif %}
+    {%- endfor %}
+
+    for (int i = 1; i < N; i++)
+    {
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "idxsh", idxsh);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "lsh", lsh);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "ush", ush);
+    }
+    free(idxsh);
+    free(lush);
+{%- endif %}
+
+{% if dims.nsphi > 0 %}
+    // set up soft bounds for convex-over-nonlinear constraints
+    int* idxsphi = malloc(NSPHI * sizeof(int));
+    {%- for i in range(end=dims.nsphi) %}
+    idxsphi[{{ i }}] = {{ constraints.idxsphi[i] }};
+    {%- endfor %}
+    double* lusphi = calloc(2*NSPHI, sizeof(double));
+    double* lsphi = lusphi;
+    double* usphi = lusphi + NSPHI;
+    {%- for i in range(end=dims.nsphi) %}
+        {%- if constraints.lsphi[i] != 0 %}
+    lsphi[{{ i }}] = {{ constraints.lsphi[i] }};
+        {%- endif %}
+        {%- if constraints.usphi[i] != 0 %}
+    usphi[{{ i }}] = {{ constraints.usphi[i] }};
+        {%- endif %}
+    {%- endfor %}
+
+    for (int i = 1; i < N; i++)
+    {
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "idxsphi", idxsphi);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "lsphi", lsphi);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "usphi", usphi);
+    }
+    free(idxsphi);
+    free(lusphi);
+{%- endif %}
 {%- endif %}{# solver_options.N_horizon > 0 #}
 
     /* terminal constraints */
@@ -1989,6 +1991,99 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     free(idxbx_e);
     free(lubx_e);
 {%- endif %}
+
+{% if dims.ng_e > 0 %}
+    // set up general constraints for last stage
+    double* C_e = calloc(NGN*NX, sizeof(double));
+    double* lug_e = calloc(2*NGN, sizeof(double));
+    double* lg_e = lug_e;
+    double* ug_e = lug_e + NGN;
+
+    {%- for j in range(end=dims.ng_e) %}
+        {%- for k in range(end=dims.nx) %}
+            {%- if constraints.C_e[j][k] != 0 %}
+    C_e[{{ j }}+NGN * {{ k }}] = {{ constraints.C_e[j][k] }};
+            {%- endif %}
+        {%- endfor %}
+    {%- endfor %}
+
+    {%- for i in range(end=dims.ng_e) %}
+        {%- if constraints.lg_e[i] != 0 %}
+    lg_e[{{ i }}] = {{ constraints.lg_e[i] }};
+        {%- endif %}
+        {%- if constraints.ug_e[i] != 0 %}
+    ug_e[{{ i }}] = {{ constraints.ug_e[i] }};
+        {%- endif %}
+    {%- endfor %}
+
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "C", C_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "lg", lg_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "ug", ug_e);
+    free(C_e);
+    free(lug_e);
+{%- endif %}
+
+{% if dims.nh_e > 0 %}
+    // set up nonlinear constraints for last stage
+    double* luh_e = calloc(2*NHN, sizeof(double));
+    double* lh_e = luh_e;
+    double* uh_e = luh_e + NHN;
+    {%- for i in range(end=dims.nh_e) %}
+        {%- if constraints.lh_e[i] != 0 %}
+    lh_e[{{ i }}] = {{ constraints.lh_e[i] }};
+        {%- endif %}
+    {%- endfor %}
+
+    {%- for i in range(end=dims.nh_e) %}
+        {%- if constraints.uh_e[i] != 0 %}
+    uh_e[{{ i }}] = {{ constraints.uh_e[i] }};
+        {%- endif %}
+    {%- endfor %}
+
+    ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &capsule->nl_constr_h_e_fun_jac);
+    ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun", &capsule->nl_constr_h_e_fun);
+    {% if solver_options.hessian_approx == "EXACT" %}
+    ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac_hess",
+                                  &capsule->nl_constr_h_e_fun_jac_hess);
+    {% endif %}
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "lh", lh_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "uh", uh_e);
+    {% if solver_options.with_solution_sens_wrt_params %}
+    ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_jac_p_hess_xu_p",
+                                  &capsule->nl_constr_h_e_jac_p_hess_xu_p);
+    {% endif %}
+    {% if solver_options.with_value_sens_wrt_params %}
+    ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_adj_p",
+                                  &capsule->nl_constr_h_e_adj_p);
+    {% endif %}
+    free(luh_e);
+{%- elif dims.nphi_e > 0 and constraints.constr_type_e == "BGP" %}
+    // set up convex-over-nonlinear constraints for last stage
+    double* luphi_e = calloc(2*NPHIN, sizeof(double));
+    double* lphi_e = luphi_e;
+    double* uphi_e = luphi_e + NPHIN;
+    {%- for i in range(end=dims.nphi_e) %}
+        {%- if constraints.lphi_e[i] != 0 %}
+    lphi_e[{{ i }}] = {{ constraints.lphi_e[i] }};
+        {%- endif %}
+        {%- if constraints.uphi_e[i] != 0 %}
+    uphi_e[{{ i }}] = {{ constraints.uphi_e[i] }};
+        {%- endif %}
+    {%- endfor %}
+
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "lphi", lphi_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "uphi", uphi_e);
+    ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N,
+                                  "nl_constr_phi_o_r_fun", &capsule->phi_e_constraint_fun);
+    ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N,
+                                  "nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux", &capsule->phi_e_constraint_fun_jac_hess);
+    free(luphi_e);
+{% endif %}
+
+
+{% if dims.ns_e > 0 %}
+    /* terminal soft constraints */
+{% endif %}
 
 {% if dims.nsg_e > 0 %}
     // set up soft bounds for general linear constraints
@@ -2088,94 +2183,6 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "usbx", usbx_e);
     free(idxsbx_e);
     free(lusbx_e);
-{% endif %}
-
-{% if dims.ng_e > 0 %}
-    // set up general constraints for last stage
-    double* C_e = calloc(NGN*NX, sizeof(double));
-    double* lug_e = calloc(2*NGN, sizeof(double));
-    double* lg_e = lug_e;
-    double* ug_e = lug_e + NGN;
-
-    {%- for j in range(end=dims.ng_e) %}
-        {%- for k in range(end=dims.nx) %}
-            {%- if constraints.C_e[j][k] != 0 %}
-    C_e[{{ j }}+NGN * {{ k }}] = {{ constraints.C_e[j][k] }};
-            {%- endif %}
-        {%- endfor %}
-    {%- endfor %}
-
-    {%- for i in range(end=dims.ng_e) %}
-        {%- if constraints.lg_e[i] != 0 %}
-    lg_e[{{ i }}] = {{ constraints.lg_e[i] }};
-        {%- endif %}
-        {%- if constraints.ug_e[i] != 0 %}
-    ug_e[{{ i }}] = {{ constraints.ug_e[i] }};
-        {%- endif %}
-    {%- endfor %}
-
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "C", C_e);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "lg", lg_e);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "ug", ug_e);
-    free(C_e);
-    free(lug_e);
-{%- endif %}
-
-{% if dims.nh_e > 0 %}
-    // set up nonlinear constraints for last stage
-    double* luh_e = calloc(2*NHN, sizeof(double));
-    double* lh_e = luh_e;
-    double* uh_e = luh_e + NHN;
-    {%- for i in range(end=dims.nh_e) %}
-        {%- if constraints.lh_e[i] != 0 %}
-    lh_e[{{ i }}] = {{ constraints.lh_e[i] }};
-        {%- endif %}
-    {%- endfor %}
-
-    {%- for i in range(end=dims.nh_e) %}
-        {%- if constraints.uh_e[i] != 0 %}
-    uh_e[{{ i }}] = {{ constraints.uh_e[i] }};
-        {%- endif %}
-    {%- endfor %}
-
-    ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &capsule->nl_constr_h_e_fun_jac);
-    ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun", &capsule->nl_constr_h_e_fun);
-    {% if solver_options.hessian_approx == "EXACT" %}
-    ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac_hess",
-                                  &capsule->nl_constr_h_e_fun_jac_hess);
-    {% endif %}
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "lh", lh_e);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "uh", uh_e);
-    {% if solver_options.with_solution_sens_wrt_params %}
-    ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_jac_p_hess_xu_p",
-                                  &capsule->nl_constr_h_e_jac_p_hess_xu_p);
-    {% endif %}
-    {% if solver_options.with_value_sens_wrt_params %}
-    ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_adj_p",
-                                  &capsule->nl_constr_h_e_adj_p);
-    {% endif %}
-    free(luh_e);
-{%- elif dims.nphi_e > 0 and constraints.constr_type_e == "BGP" %}
-    // set up convex-over-nonlinear constraints for last stage
-    double* luphi_e = calloc(2*NPHIN, sizeof(double));
-    double* lphi_e = luphi_e;
-    double* uphi_e = luphi_e + NPHIN;
-    {%- for i in range(end=dims.nphi_e) %}
-        {%- if constraints.lphi_e[i] != 0 %}
-    lphi_e[{{ i }}] = {{ constraints.lphi_e[i] }};
-        {%- endif %}
-        {%- if constraints.uphi_e[i] != 0 %}
-    uphi_e[{{ i }}] = {{ constraints.uphi_e[i] }};
-        {%- endif %}
-    {%- endfor %}
-
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "lphi", lphi_e);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "uphi", uphi_e);
-    ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N,
-                                  "nl_constr_phi_o_r_fun", &capsule->phi_e_constraint_fun);
-    ocp_nlp_constraints_model_set_external_param_fun(nlp_config, nlp_dims, nlp_in, N,
-                                  "nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux", &capsule->phi_e_constraint_fun_jac_hess);
-    free(luphi_e);
 {% endif %}
 }
 
