@@ -1071,7 +1071,7 @@ class AcadosCasadiOcpSolver:
                 return False
         return True
 
-    def satisfies_strict_complementarity_stages(self, tol: float) -> bool:
+    def satisfies_strict_complementarity_stages(self, tol: float) -> list[bool]:
         """
         Check if the solution satisfies strict complementarity conditions for all stages.
         Not tested yet.
@@ -1083,8 +1083,8 @@ class AcadosCasadiOcpSolver:
             complementarity.append(self.check_strict_complementarity_stage(stage, tol))
         return complementarity
 
-    def check_strict_complementarity(self) -> bool:
-        """ 
+    def satisfies_strict_complementarity(self) -> bool:
+        """
         Check if the solution satisfies strict complementarity conditions for all stages.
         Not tested yet.
         """
