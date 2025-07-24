@@ -576,6 +576,12 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
             config->cost[i]->dims_set(config->cost[i],
                                       dims->cost[i], "ns", &int_array[i]);
         }
+        // constraints
+        for (int i = 0; i <= N; i++)
+        {
+            config->constraints[i]->dims_set(config->constraints[i],
+                                      dims->constraints[i], "ns", &int_array[i]);
+        }
         // qp solver
         // if (!config->with_feasible_qp)
         // {
@@ -3480,7 +3486,8 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
         dims->nh_total += tmp;
     }
 
-    // precompute
+    /* precompute submodules */
+    // dyn
     for (ii = 0; ii < N; ii++)
     {
         // set T
@@ -3493,11 +3500,17 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
         if (status != ACADOS_SUCCESS)
             return status;
     }
+    // cost
     for (ii = 0; ii <= N; ii++)
     {
-        // cost precompute
         config->cost[ii]->precompute(config->cost[ii], dims->cost[ii], in->cost[ii],
                                      opts->cost[ii], mem->cost[ii], work->cost[ii]);
+    }
+    // constraints
+    for (ii = 0; ii <= N; ii++)
+    {
+        config->constraints[ii]->precompute(config->constraints[ii], dims->constraints[ii], in->constraints[ii],
+                                     opts->constraints[ii], mem->constraints[ii], work->constraints[ii]);
     }
 
     ocp_nlp_alias_memory_to_submodules(config, dims, in, out, opts, mem, work);
