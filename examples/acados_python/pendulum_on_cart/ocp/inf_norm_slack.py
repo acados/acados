@@ -72,6 +72,7 @@ def main(formulation='s_slack'):
     # initial condition
     ocp.constraints.x0 = np.array([0.0, 0.2 * np.pi, 0.0, 0.0])
 
+    print(f"using formulation {formulation}")
     # add cost term min(x[0], x[2]) to cost
     # via slack: s <= x[0], s <= x[2]
     if formulation == 'u_slack':
@@ -141,6 +142,9 @@ def main(formulation='s_slack'):
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'IRK'
     ocp.solver_options.nlp_solver_type = 'SQP'
+    ocp.solver_options.print_level = 5
+    ocp.solver_options.nlp_solver_max_iter = 2
+
     # ocp.solver_options.globalization = 'MERIT_BACKTRACKING' # turns on globalization
 
     nx = model.x.rows()
