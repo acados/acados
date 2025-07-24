@@ -1044,16 +1044,17 @@ class AcadosCasadiOcpSolver:
         if np.any(violations_ineq_lb < -tol) or np.any(violations_ineq_ub < -tol):
             raise ValueError('Constraints are violated. Please check the solution.')
         # get active inequality indices from inequality constraints
-        active_ineq_lb_indices = np.take(ineq_indices, np.where(violations_ineq_lb < 1e-6)[0])
-        active_ineq_ub_indices = np.take(ineq_indices, np.where(violations_ineq_ub < 1e-6)[0])
+        active_ineq_lb_indices = np.take(ineq_indices, np.where(violations_ineq_lb < tol)[0])
+        active_ineq_ub_indices = np.take(ineq_indices, np.where(violations_ineq_ub < tol)[0])
         return ineq_indices, eq_indices_bounds, eq_indices_ca_g, active_ineq_lb_indices, active_ineq_ub_indices
 
-    def check_strict_complementarity_stage(self, stage, tol: float = 1e-6) -> bool:
+    def check_strict_complementarity_stage(self, stage, tol: float) -> bool:
         """
         Check if the solution satisfies strict complementarity conditions for a given stage.
         This checks that the Lagrange multipliers for active inequality constraints are strictly positive.
         Not tested yet.
         """
+        tol = self.ocp.solver_options.nlp_solver_tol_ineq
         if self.nlp_sol is None:
             raise ValueError('No solution available. Please call solve() first.')
 
@@ -1070,11 +1071,12 @@ class AcadosCasadiOcpSolver:
                 return False
         return True
 
-    def check_strict_complementarity(self, tol: float = 1e-6) -> bool:
+    def check_strict_complementarity(self, tol: float) -> bool:
         """
         Check if the solution satisfies strict complementarity conditions for all stages.
         Not tested yet.
         """
+        tol = self.ocp.solver_options.nlp_solver_tol_ineq
         if self.nlp_sol is None:
             raise ValueError('No solution available. Please call solve() first.')
         dims = self.ocp.dims
@@ -1120,7 +1122,6 @@ class AcadosCasadiOcpSolver:
             raise ValueError('No solution available. Please call solve() first.')
         dims = self.ocp.dims
         stage_wise_LICQ = []
-
         for stage in range(dims.N + 1):
             stage_wise_LICQ.append(self.satisfies_LICQ_stage_wise(stage))
         return stage_wise_LICQ
