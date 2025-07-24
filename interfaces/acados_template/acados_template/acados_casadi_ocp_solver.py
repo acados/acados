@@ -1080,7 +1080,7 @@ class AcadosCasadiOcpSolver:
         dims = self.ocp.dims
         complementarity = []
         for stage in range(dims.N + 1):
-            complementarity.append(self.check_strict_complementarity_stage(stage, tol))
+            complementarity.append(self.satisfies_strict_complementarity_stage_wise(stage, tol))
         return complementarity
 
     def satisfies_strict_complementarity(self) -> bool:
