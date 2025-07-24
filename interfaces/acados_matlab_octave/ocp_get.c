@@ -625,6 +625,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if (plan->ocp_qp_solver_plan.qp_solver==FULL_CONDENSING_DAQP)
             solver_type=2;
 #endif
+#if defined(ACADOS_WITH_CLARABEL)
+        if (plan->ocp_qp_solver_plan.qp_solver==PARTIAL_CONDENSING_CLARABEL)
+            solver_type=1;
+#endif
         // ocp solver (not dense)
         if (solver_type==1)
         {
