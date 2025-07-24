@@ -43,7 +43,9 @@ def formulate_ocp(Tf: float = 1.0, N: int = 20)-> AcadosOcp:
     ocp.constraints.ubu = np.array([+Fmax])
     ocp.constraints.idxbu = np.array([0])
 
-    ocp.constraints.x0 = np.array([0, np.pi, 0, 0])  # initial state
+    # set initial bounds and state
+    ocp.constraints.lbx_0 = np.array([0, np.pi, -0.2, 0])
+    ocp.constraints.ubx_0 = np.array([0, np.pi, 0.2, 0])
     ocp.constraints.idxbx_0 = np.array([0, 1, 2, 3])
 
     # set linear constraints 
@@ -86,10 +88,10 @@ def main():
     casadi_ocp_solver = AcadosCasadiOcpSolver(ocp=ocp,solver="ipopt",verbose=False)
     casadi_ocp_solver.load_iterate_from_obj(result)
     casadi_ocp_solver.solve()
-    LICQ = casadi_ocp_solver.check_LICQ()
+    licq = casadi_ocp_solver.satisfies_LICQ()
 
-    # if there is no False in LICQ, then rasise an error
-    if all(LICQ):
+    # Check for violation of specific stage, at least one stage should violate LICQ
+    if licq:
         raise ValueError("LICQ condition is not violated in the solution.")
 
 if __name__ == "__main__":
