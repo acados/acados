@@ -463,7 +463,6 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
         offset = 0;
         blasfeo_pack_dvec(nbu, value, 1, &model->d, offset);
         ocp_nlp_constraints_bgh_update_mask_lower(model, nbu, offset);
-
     }
     else if (!strcmp(field, "ubu"))
     {
@@ -484,14 +483,12 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
         offset = nb;
         blasfeo_pack_dvec(ng, value, 1, &model->d, offset);
         ocp_nlp_constraints_bgh_update_mask_lower(model, ng, offset);
-
     }
     else if (!strcmp(field, "ug"))
     {
         offset = 2*nb+ng+nh;
         blasfeo_pack_dvec(ng, value, 1, &model->d, offset);
         ocp_nlp_constraints_bgh_update_mask_upper(model, ng, offset);
-
     }
     else if (!strcmp(field, "nl_constr_h_fun"))
     {
@@ -560,7 +557,6 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
         offset = 2*nb+2*ng+2*nh+ns+nsbu;
         blasfeo_pack_dvec(nsbx, value, 1, &model->d, offset);
         ocp_nlp_constraints_bgh_update_mask_lower(model, nsbx, offset);
-
     }
     else if (!strcmp(field, "idxsg"))
     {

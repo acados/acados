@@ -3418,7 +3418,7 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
         config->constraints[ii]->dims_get(config->constraints[ii], dims->constraints[ii], "ns", &module_val);
         if (dims->ns[ii] != module_val)
         {
-            printf("ocp_nlp_sqp_precompute: inconsistent dimension ns for stage %d with constraint module, got %d, module: %d.",
+            printf("ocp_nlp_precompute_common: inconsistent dimension ns for stage %d with constraint module, got %d, module: %d.",
                    ii, dims->ns[ii], module_val);
             exit(1);
         }
