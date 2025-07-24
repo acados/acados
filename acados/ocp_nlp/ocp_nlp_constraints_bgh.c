@@ -1406,12 +1406,19 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
         // adj += DCt * tmp_ni[nb:]
         blasfeo_dgemv_n(nu+nx, ng+nh, 1.0, memory->DCt, 0, 0, &work->tmp_ni, nb, 1.0, &memory->adj, 0, &memory->adj, 0);
         // soft
-        // adj[nu+nx:nu+nx+ns] = lam[idxs]
-        // TODO:
-        // max of lam corresponding to each slack
-        blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, 0, &memory->adj, nu+nx);
-        // adj[nu+nx+ns : nu+nx+2*ns] = lam[idxs + nb+ng+nh]
-        blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, nb+ng+nh, &memory->adj, nu+nx+ns);
+        if (model->use_idxs_rev)
+        {
+            printf("TODO: computing adjoint still wrong with idxs_rev probably!\n");
+            // TODO:
+            // max of lam corresponding to each slack?
+        }
+        else
+        {
+            // adj[nu+nx:nu+nx+ns] = lam[idxs]
+            blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, 0, &memory->adj, nu+nx);
+            // adj[nu+nx+ns : nu+nx+2*ns] = lam[idxs + nb+ng+nh]
+            blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, nb+ng+nh, &memory->adj, nu+nx+ns);
+        }
         // adj[nu+nx: ] += lam[2*nb+2*ng+2*nh :]
         blasfeo_daxpy(2*ns, 1.0, memory->lam, 2*nb+2*ng+2*nh, &memory->adj, nu+nx, &memory->adj, nu+nx);
     }
@@ -1514,8 +1521,15 @@ void ocp_nlp_constraints_bgh_compute_fun(void *config_, void *dims_, void *model
     // soft
     // subtract slacks from softened constraints
     // fun_i = fun_i - slack_i for i \in I_slacked
-    blasfeo_dvecad_sp(ns, -1.0, ux, nu+nx, model->idxs, &memory->fun, 0);
-    blasfeo_dvecad_sp(ns, -1.0, ux, nu+nx+ns, model->idxs, &memory->fun, nb+ng+nh);
+    if (model->use_idxs_rev)
+    {
+        printf("IN ocp_nlp_constraints_bgh_compute_fun: TODO: not implemented for idxs_rev yet!\n!!");
+    }
+    else
+    {
+        blasfeo_dvecad_sp(ns, -1.0, ux, nu+nx, model->idxs, &memory->fun, 0);
+        blasfeo_dvecad_sp(ns, -1.0, ux, nu+nx+ns, model->idxs, &memory->fun, nb+ng+nh);
+    }
 
     // fun[2*ni : 2*(ni+ns)] = - slack + slack_bounds
     blasfeo_daxpy(2*ns, -1.0, ux, nu+nx, &model->d, 2*nb+2*ng+2*nh, &memory->fun, 2*nb+2*ng+2*nh);
@@ -1555,8 +1569,15 @@ void ocp_nlp_constraints_bgh_update_qp_vectors(void *config_, void *dims_, void 
     // soft
     // subtract slacks from softened constraints
     // fun_i = fun_i - slack_i for i \in I_slacked
-    blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu+nx, model->idxs, &memory->fun, 0);
-    blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu+nx+ns, model->idxs, &memory->fun, nb+ng+nh);
+    if (model->use_idxs_rev)
+    {
+        printf("IN ocp_nlp_constraints_bgh_update_qp_vectors: TODO: not implemented for idxs_rev yet!\n!!");
+    }
+    else
+    {
+        blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu+nx, model->idxs, &memory->fun, 0);
+        blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu+nx+ns, model->idxs, &memory->fun, nb+ng+nh);
+    }
 
     // fun[2*ni : 2*(ni+ns)] = - slack + slack_bounds
     blasfeo_daxpy(2*ns, -1.0, memory->ux, nu+nx, &model->d, 2*nb+2*ng+2*nh, &memory->fun, 2*nb+2*ng+2*nh);
