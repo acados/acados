@@ -207,13 +207,13 @@ class AcadosCasadiOcp:
                                             lbg_expr = np.zeros((dims.nx, 1)),
                                             ubg_expr = np.zeros((dims.nx, 1)),
                                             cons_dim=dims.nx)
-                if with_hessian:
-                    # add hessian of dynamics constraints
-                    lam_g_dyn = ca_symbol(f'lam_g_dyn{i}', dims.nx, 1)
-                    lam_g.append(lam_g_dyn)
-                    if ocp.solver_options.hessian_approx == 'EXACT' and ocp.solver_options.exact_hess_dyn:
-                        adj = ca.jtimes(dyn_equality, w, lam_g_dyn, True)
-                        hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
+                    if with_hessian:
+                        # add hessian of dynamics constraints
+                        lam_g_dyn = ca_symbol(f'lam_g_dyn{i}', dims.nx, 1)
+                        lam_g.append(lam_g_dyn)
+                        if ocp.solver_options.hessian_approx == 'EXACT' and ocp.solver_options.exact_hess_dyn:
+                            adj = ca.jtimes(dyn_equality, w, lam_g_dyn, True)
+                            hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
             else:
                 if i < N_horizon:
                     x_current = xtraj_node[i]
