@@ -161,7 +161,7 @@ class AcadosOcpSolver:
                 make_cmd = 'make'
 
             if with_cython:
-                verbose_system_call([make_cmd, 'clean_all'], verbose)
+                verbose_system_call([make_cmd, 'clean_ocp_cython'], verbose)
                 verbose_system_call([make_cmd, 'ocp_cython'], verbose)
             else:
                 if cmake_builder is not None:
