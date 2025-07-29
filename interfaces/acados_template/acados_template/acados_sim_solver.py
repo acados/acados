@@ -46,7 +46,7 @@ import numpy as np
 from .acados_ocp import AcadosOcp
 from .acados_sim import AcadosSim
 
-from .builders import CMakeBuilder
+from .builders import CMakeBuilder,sim_get_default_cmake_builder
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
                     set_up_imported_gnsf_model,
@@ -150,6 +150,7 @@ class AcadosSimSolver:
 
         # reuse existing json and casadi functions, when creating integrator from ocp
         if generate and not isinstance(acados_sim, AcadosOcp):
+            cmake_builder = sim_get_default_cmake_builder()
             self.generate(acados_sim, json_file=json_file, cmake_builder=cmake_builder)
 
         if isinstance(acados_sim, AcadosOcp):
