@@ -107,7 +107,7 @@ class AcadosCasadiOcp:
                 self._append_node('sl', ca_symbol, sl_node, i, dims)
                 self._append_node('su', ca_symbol, su_node, i, dims)
         else:
-            self._append_node('x', ca_symbol, xtraj_node, 0, dims)
+            self._x_traj_fun = []
             for i in range(N_horizon):
                 self._append_node('u', ca_symbol, utraj_node, i, dims)
                 self._append_node('sl', ca_symbol, sl_node, i, dims)
@@ -134,7 +134,6 @@ class AcadosCasadiOcp:
                 self._set_bounds_indices('x', i, lb_xtraj_node, ub_xtraj_node, constraints, dims)
                 self._set_bounds_indices('u', i, lb_utraj_node, ub_utraj_node, constraints, dims)
         else:
-            self._set_bounds_indices('x', 0, lb_xtraj_node, ub_xtraj_node, constraints, dims)
             for i in range(0, N_horizon):
                 self._set_bounds_indices('u', i, lb_utraj_node, ub_utraj_node, constraints, dims)
 
@@ -157,9 +156,11 @@ class AcadosCasadiOcp:
                 self._index_map['p_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np)))
                 offset_p += dims.np
         else:
-            self._append_variables_and_bounds('x', w_sym_list, lbw_list, ubw_list, w0_list, xtraj_node, lb_xtraj_node, ub_xtraj_node, 0, dims, x_guess)
-            for i in range(N_horizon):
-                self._append_variables_and_bounds('u', w_sym_list, lbw_list, ubw_list, w0_list, utraj_node, lb_utraj_node, ub_utraj_node, i, dims, x_guess)
+            xtraj_node.append(x_guess)
+            self._x_traj_fun.append(x_guess)
+            for i in range(N_horizon+1):
+                if i < N_horizon:
+                    self._append_variables_and_bounds('u', w_sym_list, lbw_list, ubw_list, w0_list, utraj_node, lb_utraj_node, ub_utraj_node, i, dims, x_guess)
                 self._append_variables_and_bounds('slack', w_sym_list, lbw_list, ubw_list, w0_list, [sl_node, su_node], lb_slack_node, ub_slack_node, i, dims, x_guess)
                 p_list.append(ocp.parameter_values)
                 self._index_map['p_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np)))
@@ -187,8 +188,8 @@ class AcadosCasadiOcp:
         if solver_options.integrator_type == "DISCRETE":
             f_discr_fun = ca.Function('f_discr_fun', [model.x, model.u, model.p, model.p_global], [model.disc_dyn_expr])
         elif solver_options.integrator_type == "ERK":
-            para = ca.vertcat(model.u, model.p, model.p_global)
-            ca_expl_ode = ca.Function('ca_expl_ode', [model.x, para], [model.f_expl_expr])
+            param = ca.vertcat(model.u, model.p, model.p_global)
+            ca_expl_ode = ca.Function('ca_expl_ode', [model.x, param], [model.f_expl_expr])
             f_discr_fun = ca.simpleRK(ca_expl_ode, solver_options.sim_method_num_steps[0], solver_options.sim_method_num_stages[0])
         else:
             raise NotImplementedError(f"Integrator type {solver_options.integrator_type} not supported.")
@@ -200,8 +201,8 @@ class AcadosCasadiOcp:
                     if solver_options.integrator_type == "DISCRETE":
                         dyn_equality = xtraj_node[i+1] - f_discr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
                     elif solver_options.integrator_type == "ERK":
-                        para = ca.vertcat(utraj_node[i], ptraj_node[i], model.p_global)
-                        dyn_equality = xtraj_node[i+1] - f_discr_fun(xtraj_node[i], para, solver_options.time_steps[i])
+                        param = ca.vertcat(utraj_node[i], ptraj_node[i], model.p_global)
+                        dyn_equality = xtraj_node[i+1] - f_discr_fun(xtraj_node[i], param, solver_options.time_steps[i])
                     self._append_constraints(i, 'dyn', g, lbg, ubg,
                                             g_expr = dyn_equality,
                                             lbg_expr = np.zeros((dims.nx, 1)),
@@ -220,10 +221,10 @@ class AcadosCasadiOcp:
                     if solver_options.integrator_type == "DISCRETE":
                         x_next = f_discr_fun(x_current, utraj_node[i], ptraj_node[i], model.p_global)
                     elif solver_options.integrator_type == "ERK":
-                        para = ca.vertcat(utraj_node[i], ptraj_node[i], model.p_global)
-                        x_next = f_discr_fun(x_current, para, solver_options.time_steps[i])
+                        param = ca.vertcat(utraj_node[i], ptraj_node[i], model.p_global)
+                        x_next = f_discr_fun(x_current, param, solver_options.time_steps[i])
                     xtraj_node.append(x_next)
-
+                    self._x_traj_fun.append(f_discr_fun)
             # Nonlinear Constraints
             # initial stage
             lg, ug, lh, uh, lphi, uphi, ng, nh, nphi, nsg, nsh, nsphi, idxsh, linear_constr_expr, h_i_nlp_expr, conl_constr_fun =\
@@ -652,7 +653,7 @@ class AcadosCasadiOcpSolver:
             raise TypeError('ocp should be of type AcadosOcp.')
 
         self.ocp = ocp
-
+        self.single_shooting = use_single_shooting
         # create casadi NLP formulation
         casadi_nlp_obj = AcadosCasadiOcp(ocp = ocp,
                                          with_hessian = use_acados_hessian,
@@ -667,6 +668,8 @@ class AcadosCasadiOcpSolver:
         self.p = casadi_nlp_obj.p_nlp_values
         self.index_map = casadi_nlp_obj.index_map
         self.nlp_hess_l_custom = casadi_nlp_obj.nlp_hess_l_custom
+        if use_single_shooting:
+            self.x_traj_fun = casadi_nlp_obj._x_traj_fun
 
         # create NLP solver
         if casadi_solver_opts is None:
@@ -706,6 +709,16 @@ class AcadosCasadiOcpSolver:
         self.nlp_sol_w = self.nlp_sol['x'].full()
         self.nlp_sol_lam_g = self.nlp_sol['lam_g'].full()
         self.nlp_sol_lam_x = self.nlp_sol['lam_x'].full()
+        if self.single_shooting:
+            self.nlp_sol_x = [self.x_traj_fun[0]]
+            for i in range(0, self.ocp.dims.N):
+                x_current = self.nlp_sol_x[i]
+                if self.ocp.solver_options.integrator_type == "DISCRETE":
+                    x_next = self.x_traj_fun[i+1](x_current, self.nlp_sol_w[i], self.ocp.parameter_values, self.ocp.p_global_values)
+                elif self.ocp.solver_options.integrator_type == "ERK":
+                    param = np.concatenate([self.nlp_sol_w[i], self.ocp.parameter_values, self.ocp.p_global_values])
+                    x_next = self.x_traj_fun[i+1](x_current, param, self.ocp.solver_options.time_steps[i])
+                self.nlp_sol_x.append(x_next.full())
 
         # statistics
         solver_stats = self.casadi_solver.stats()
@@ -745,12 +758,16 @@ class AcadosCasadiOcpSolver:
         if self.nlp_sol is None:
             raise ValueError('No solution available. Please call solve() first.')
         dims = self.ocp.dims
-        if field == 'x':
+        if field == 'x' and not self.single_shooting:
             return self.nlp_sol_w[self.index_map['x_in_w'][stage]].flatten()
+        elif field == 'x' and self.single_shooting:
+            return self.nlp_sol_x[stage].flatten()
         elif field == 'u':
             return self.nlp_sol_w[self.index_map['u_in_w'][stage]].flatten()
-        elif field == 'pi':
+        elif field == 'pi' and not self.single_shooting:
             return -self.nlp_sol_lam_g[self.index_map['pi_in_lam_g'][stage]].flatten()
+        elif field == 'pi' and self.single_shooting:
+            return []
         elif field == 'p':
             return self.p[self.index_map['p_in_p_nlp'][stage]].flatten()
         elif field == 'sl':
@@ -759,20 +776,20 @@ class AcadosCasadiOcpSolver:
             return self.nlp_sol_w[self.index_map['su_in_w'][stage]].flatten()
         elif field == 'lam':
             if stage == 0:
-                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]]
+                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]] if not self.single_shooting else []
                 bu_lam = self.nlp_sol_lam_x[self.index_map['lam_bu_in_lam_w'][stage]]
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
             elif stage < dims.N:
-                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]]
+                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]] if not self.single_shooting else []
                 bu_lam = self.nlp_sol_lam_x[self.index_map['lam_bu_in_lam_w'][stage]]
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
             elif stage == dims.N:
-                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]]
+                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]] if not self.single_shooting else []
                 bu_lam = np.empty((0, 1))
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
 
-            lbx_lam = np.maximum(0, -bx_lam)
-            ubx_lam = np.maximum(0, bx_lam)
+            lbx_lam = np.maximum(0, -bx_lam) if not self.single_shooting else np.empty((0, 1))
+            ubx_lam = np.maximum(0, bx_lam) if not self.single_shooting else np.empty((0, 1))
             lbu_lam = np.maximum(0, -bu_lam)
             ubu_lam = np.maximum(0, bu_lam)
             if any([dims.ns_0, dims.ns, dims.ns_e]):
@@ -943,12 +960,16 @@ class AcadosCasadiOcpSolver:
         """
         dims = self.ocp.dims
 
-        if field == 'x':
+        if field == 'x' and not self.single_shooting:
             self.w0[self.index_map['x_in_w'][stage]] = value_.flatten()
+        elif field == 'x' and self.single_shooting:
+            pass
         elif field == 'u':
             self.w0[self.index_map['u_in_w'][stage]] = value_.flatten()
-        elif field == 'pi':
+        elif field == 'pi' and not self.single_shooting:
             self.lam_g0[self.index_map['pi_in_lam_g'][stage]] = -value_.flatten()
+        elif field == 'pi' and self.single_shooting:
+            pass
         elif field == 'p':
             self.p[self.index_map['p_in_p_nlp'][stage]] = value_.flatten()
         elif field == 'sl':
@@ -957,17 +978,17 @@ class AcadosCasadiOcpSolver:
             self.w0[self.index_map['su_in_w'][stage]] = value_.flatten()
         elif field == 'lam':
             if stage == 0:
-                nbx = dims.nbx_0
+                nbx = dims.nbx_0 if not self.single_shooting else 0
                 nbu = dims.nbu
                 n_ghphi = dims.ng + dims.nh_0 + dims.nphi_0
                 ns = dims.ns_0
             elif stage < dims.N:
-                nbx = dims.nbx
+                nbx = dims.nbx if not self.single_shooting else 0
                 nbu = dims.nbu
                 n_ghphi = dims.ng + dims.nh + dims.nphi
                 ns = dims.ns
             elif stage == dims.N:
-                nbx = dims.nbx_e
+                nbx = dims.nbx_e if not self.single_shooting else 0
                 nbu = 0
                 n_ghphi = dims.ng_e + dims.nh_e + dims.nphi_e
                 ns = dims.ns_e
@@ -993,13 +1014,17 @@ class AcadosCasadiOcpSolver:
             ug_lam_soft = ug_lam[sl_indices]
 
             if stage != dims.N:
-                self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]+self.index_map['lam_bu_in_lam_w'][stage]] = np.concatenate((ubx_lam-lbx_lam, ubu_lam-lbu_lam))
+                if not self.single_shooting:
+                    self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]+self.index_map['lam_bu_in_lam_w'][stage]] = np.concatenate((ubx_lam-lbx_lam, ubu_lam-lbu_lam))
+                else:
+                    self.lam_x0[self.index_map['lam_bu_in_lam_w'][stage]] = ubu_lam-lbu_lam
                 self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] =  ug_lam_hard-lg_lam_hard
                 self.lam_g0[self.index_map['lam_sl_in_lam_g'][stage]] = -lg_lam_soft
                 self.lam_g0[self.index_map['lam_su_in_lam_g'][stage]] = ug_lam_soft
                 self.lam_x0[self.index_map['sl_in_w'][stage]+self.index_map['su_in_w'][stage]] = -soft_lam
             else:
-                self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]] = ubx_lam-lbx_lam
+                if not self.single_shooting:
+                    self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]] = ubx_lam-lbx_lam
                 self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] = ug_lam_hard-lg_lam_hard
                 self.lam_g0[self.index_map['lam_sl_in_lam_g'][stage]] = -lg_lam_soft
                 self.lam_g0[self.index_map['lam_su_in_lam_g'][stage]] = ug_lam_soft
