@@ -50,23 +50,6 @@ def formulate_ocp(Tf: float = 1.0, N: int = 20)-> AcadosOcp:
     ocp.constraints.x0 = np.array([0, np.pi, 0, 0])  # initial state
     ocp.constraints.idxbx_0 = np.array([0, 1, 2, 3])
 
-    # set linear constraints 
-    # -5 <= x_1 + u*0.1 <= 5
-    ocp.constraints.C = np.array([[1, 0, 0, 0]])
-    ocp.constraints.D = np.array([[0.1]])
-    ocp.constraints.lg = np.array([-5])
-    ocp.constraints.ug = np.array([5])
-
-    # set x_1 at the end of the horizon
-    ocp.constraints.C_e = np.array([[1, 0, 0, 0]])
-    ocp.constraints.lg_e = np.array([0.3])
-    ocp.constraints.ug_e = np.array([0.5])
-
-    # set h constraints
-    ocp.model.con_h_expr_0 = ca.norm_2(model.x)
-    ocp.constraints.lh_0 = np.array([0])
-    ocp.constraints.uh_0 = np.array([3.16])
-
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON' # 'GAUSS_NEWTON', 'EXACT'
@@ -91,19 +74,25 @@ def main():
     status = ocp_solver.solve()
     if status != 0:
         raise Exception(f'acados returned status {status}.')
+    result = ocp_solver.store_iterate_to_obj()
 
     # ## solve using casadi
     casadi_ocp_solver = AcadosCasadiOcpSolver(ocp=ocp, solver="alpaqa", use_single_shooting=True, verbose=False)
+    casadi_ocp_solver.load_iterate_from_obj(result)
     casadi_ocp_solver.solve()
 
     # evaluate difference
+    acados_x = np.array([ocp_solver.get(i, "x") for i in range(N_horizon + 1)])
+    casadi_x = np.array([casadi_ocp_solver.get(i, "x") for i in range(N_horizon + 1)])
     acados_u = np.array([ocp_solver.get(i, "u") for i in range(N_horizon)])
     casadi_u = np.array([casadi_ocp_solver.get(i, "u") for i in range(N_horizon)])
 
     diff_u = np.linalg.norm(acados_u - casadi_u)
+    diff_x = np.linalg.norm(acados_x - casadi_x)
+    print(f"Difference in states: {diff_x}")
     print(f"Difference in control inputs: {diff_u}")
-    if diff_u > 1e-4:
-        raise Exception("Control inputs differ significantly between acados and casadi.")
+    if diff_u > 1e-5 or diff_x > 1e-5:
+        raise Exception("result differ significantly between acados and casadi.")
 
 if __name__ == "__main__":
     main()
