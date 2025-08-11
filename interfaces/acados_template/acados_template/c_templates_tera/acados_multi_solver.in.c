@@ -516,13 +516,13 @@ void {{ name }}_acados_create_setup_functions({{ name }}_solver_capsule* capsule
     }
     {% endif %}
     {%- if solver_options.with_solution_sens_wrt_params %}
-    capsule->nl_constr_h_jac_p_hess_xu_p_{ jj } = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*(N-1));
+    capsule->nl_constr_h_jac_p_hess_xu_p_{ jj } = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*n_cost_path);
     for (int i = 0; i < n_cost_path; i++) {
         MAP_CASADI_FNC(nl_constr_h_jac_p_hess_xu_p_{{ jj }}[i], {{ model[jj].name }}_constr_h_jac_p_hess_xu_p);
     }
     {%- endif %}
     {%- if solver_options.with_value_sens_wrt_params %}
-    capsule->nl_constr_h_adj_p_{ jj } = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*(N-1));
+    capsule->nl_constr_h_adj_p_{ jj } = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*n_cost_path);
     for (int i = 0; i < n_cost_path; i++) {
         MAP_CASADI_FNC(nl_constr_h_adj_p_{{ jj }}[i], {{ model[jj].name }}_constr_h_adj_p);
     }
