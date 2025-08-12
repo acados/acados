@@ -41,7 +41,7 @@ from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpFlattenedIterate
 
 class AcadosCasadiOcp:
 
-    def __init__(self, ocp: AcadosOcp, with_hessian=False):
+    def __init__(self, ocp: AcadosOcp, with_hessian=False, multiple_shooting=True):
         """
         Creates an equivalent CasADi NLP formulation of the OCP.
         Experimental, not fully implemented yet.
@@ -96,31 +96,46 @@ class AcadosCasadiOcp:
 
         # create primal variables and slack variables
         ca_symbol = model.get_casadi_symbol()
-        xtraj_node = []
-        utraj_node = []
-        sl_node = []
-        su_node = []
-        for i in range(N_horizon+1):
-            self._append_node(ca_symbol, xtraj_node, utraj_node, sl_node, su_node, i, dims)
+        xtraj_nodes = []
+        utraj_nodes = []
+        sl_nodes = []
+        su_nodes = []
+        if multiple_shooting:
+            for i in range(N_horizon+1):
+                self._append_node('x', ca_symbol, xtraj_nodes, i, dims)
+                self._append_node('u', ca_symbol, utraj_nodes, i, dims)
+                self._append_node('sl', ca_symbol, sl_nodes, i, dims)
+                self._append_node('su', ca_symbol, su_nodes, i, dims)
+        else: # single_shooting
+            self._x_traj_fun = []
+            for i in range(N_horizon):
+                self._append_node('u', ca_symbol, utraj_nodes, i, dims)
+                self._append_node('sl', ca_symbol, sl_nodes, i, dims)
+                self._append_node('su', ca_symbol, su_nodes, i, dims)
 
         # parameters
-        ptraj_node = [ca_symbol(f'p{i}', dims.np, 1) for i in range(N_horizon+1)]
+        ptraj_nodes = [ca_symbol(f'p{i}', dims.np, 1) for i in range(N_horizon+1)]
 
         # setup state and control bounds
-        lb_xtraj_node = [-np.inf * ca.DM.ones((dims.nx, 1)) for _ in range(N_horizon+1)]
-        ub_xtraj_node = [np.inf * ca.DM.ones((dims.nx, 1)) for _ in range(N_horizon+1)]
-        lb_utraj_node = [-np.inf * ca.DM.ones((dims.nu, 1)) for _ in range(N_horizon)]
-        ub_utraj_node = [np.inf * ca.DM.ones((dims.nu, 1)) for _ in range(N_horizon)]
+        lb_xtraj_nodes = [-np.inf * ca.DM.ones((dims.nx, 1)) for _ in range(N_horizon+1)]
+        ub_xtraj_nodes = [np.inf * ca.DM.ones((dims.nx, 1)) for _ in range(N_horizon+1)]
+        lb_utraj_nodes = [-np.inf * ca.DM.ones((dims.nu, 1)) for _ in range(N_horizon)]
+        ub_utraj_nodes = [np.inf * ca.DM.ones((dims.nu, 1)) for _ in range(N_horizon)]
         # setup slack variables
         # TODO: speicify different bounds for lsbu, lsbx, lsg, lsh ,lsphi
-        lb_slack_node = ([0 * ca.DM.ones((dims.ns_0, 1))] if dims.ns_0 else []) + \
+        lb_slack_nodes = ([0 * ca.DM.ones((dims.ns_0, 1))] if dims.ns_0 else []) + \
                         ([0* ca.DM.ones((dims.ns, 1)) for _ in range(N_horizon-1)] if dims.ns else []) + \
                         ([0 * ca.DM.ones((dims.ns_e, 1))] if dims.ns_e else [])
-        ub_slack_node = ([np.inf * ca.DM.ones((dims.ns, 1))] if dims.ns_0 else []) + \
+        ub_slack_nodes = ([np.inf * ca.DM.ones((dims.ns, 1))] if dims.ns_0 else []) + \
                         ([np.inf * ca.DM.ones((dims.ns, 1)) for _ in range(N_horizon-1)] if dims.ns else []) + \
                         ([np.inf * ca.DM.ones((dims.ns_e, 1))] if dims.ns_e else [])
-        for i in range(0, N_horizon+1):
-            self._set_bounds_indices(i, lb_xtraj_node, ub_xtraj_node, lb_utraj_node, ub_utraj_node, constraints, dims)
+        if multiple_shooting:
+            for i in range(0, N_horizon+1):
+                self._set_bounds_indices('x', i, lb_xtraj_nodes, ub_xtraj_nodes, constraints, dims)
+                self._set_bounds_indices('u', i, lb_utraj_nodes, ub_utraj_nodes, constraints, dims)
+        else: # single_shooting
+            for i in range(0, N_horizon):
+                self._set_bounds_indices('u', i, lb_utraj_nodes, ub_utraj_nodes, constraints, dims)
 
         ### Concatenate primal variables and bounds
         # w = [x0, u0, sl0, su0, x1, u1, ...]
@@ -131,32 +146,28 @@ class AcadosCasadiOcp:
         p_list = []
         offset_p = 0
         x_guess = ocp.constraints.x0 if ocp.constraints.has_x0 else np.zeros((dims.nx,))
-        for i in range(N_horizon+1):
-            if i < N_horizon:
-                # add x
-                self._append_variables_and_bounds('x', w_sym_list, lbw_list, ubw_list, w0_list, xtraj_node, lb_xtraj_node, ub_xtraj_node, i, dims, x_guess)
-                # add u
-                self._append_variables_and_bounds('u',w_sym_list, lbw_list, ubw_list, w0_list, utraj_node, lb_utraj_node, ub_utraj_node, i, dims, x_guess)
-                # add slack variables
-                self._append_variables_and_bounds('slack', w_sym_list, lbw_list, ubw_list, w0_list, [sl_node, su_node], lb_slack_node, ub_slack_node, i, dims, x_guess)
-                # add parameters
+        if multiple_shooting:
+            for i in range(N_horizon+1):
+                self._append_variables_and_bounds('x', w_sym_list, lbw_list, ubw_list, w0_list, xtraj_nodes, lb_xtraj_nodes, ub_xtraj_nodes, i, dims, x_guess)
+                if i < N_horizon:
+                    self._append_variables_and_bounds('u',w_sym_list, lbw_list, ubw_list, w0_list, utraj_nodes, lb_utraj_nodes, ub_utraj_nodes, i, dims, x_guess)
+                self._append_variables_and_bounds('slack', w_sym_list, lbw_list, ubw_list, w0_list, [sl_nodes, su_nodes], lb_slack_nodes, ub_slack_nodes, i, dims, x_guess)
                 p_list.append(ocp.parameter_values)
                 self._index_map['p_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np)))
                 offset_p += dims.np
-            else:
-                ## terminal stage
-                # add x
-                self._append_variables_and_bounds('x', w_sym_list, lbw_list, ubw_list, w0_list, xtraj_node, lb_xtraj_node, ub_xtraj_node, i, dims, x_guess)
-                # add slack variables
-                self._append_variables_and_bounds('slack', w_sym_list, lbw_list, ubw_list, w0_list, [sl_node, su_node], lb_slack_node, ub_slack_node, i, dims, x_guess)
-                # add parameters
+        else: # single_shooting
+            xtraj_nodes.append(x_guess)
+            self._x_traj_fun.append(x_guess)
+            for i in range(N_horizon+1):
+                if i < N_horizon:
+                    self._append_variables_and_bounds('u', w_sym_list, lbw_list, ubw_list, w0_list, utraj_nodes, lb_utraj_nodes, ub_utraj_nodes, i, dims, x_guess)
+                self._append_variables_and_bounds('slack', w_sym_list, lbw_list, ubw_list, w0_list, [sl_nodes, su_nodes], lb_slack_nodes, ub_slack_nodes, i, dims, x_guess)
                 p_list.append(ocp.parameter_values)
                 self._index_map['p_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np)))
                 offset_p += dims.np
-                # add global parameters
-                p_list.append(ocp.p_global_values)
-                self._index_map['p_global_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np_global)))
-                offset_p += dims.np_global
+        p_list.append(ocp.p_global_values)
+        self._index_map['p_global_in_p_nlp'].append(list(range(offset_p, offset_p+dims.np_global)))
+        offset_p += dims.np_global
 
         nw = self.offset_w  # number of primal variables
 
@@ -164,7 +175,7 @@ class AcadosCasadiOcp:
         w = ca.vertcat(*w_sym_list)
         lbw = ca.vertcat(*lbw_list)
         ubw = ca.vertcat(*ubw_list)
-        p_nlp = ca.vertcat(*ptraj_node, model.p_global)
+        p_nlp = ca.vertcat(*ptraj_nodes, model.p_global)
 
         ### Create Constraints
         g = []
@@ -177,37 +188,47 @@ class AcadosCasadiOcp:
         if solver_options.integrator_type == "DISCRETE":
             f_discr_fun = ca.Function('f_discr_fun', [model.x, model.u, model.p, model.p_global], [model.disc_dyn_expr])
         elif solver_options.integrator_type == "ERK":
-            para = ca.vertcat(model.u, model.p, model.p_global)
-            ca_expl_ode = ca.Function('ca_expl_ode', [model.x, para], [model.f_expl_expr])
+            param = ca.vertcat(model.u, model.p, model.p_global)
+            ca_expl_ode = ca.Function('ca_expl_ode', [model.x, param], [model.f_expl_expr])
             f_discr_fun = ca.simpleRK(ca_expl_ode, solver_options.sim_method_num_steps[0], solver_options.sim_method_num_stages[0])
         else:
             raise NotImplementedError(f"Integrator type {solver_options.integrator_type} not supported.")
 
         for i in range(N_horizon+1):
             # add dynamics constraints
-            if i < N_horizon:
-                if solver_options.integrator_type == "DISCRETE":
-                    dyn_equality = xtraj_node[i+1] - f_discr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global)
-                elif solver_options.integrator_type == "ERK":
-                    para = ca.vertcat(utraj_node[i], ptraj_node[i], model.p_global)
-                    dyn_equality = xtraj_node[i+1] - f_discr_fun(xtraj_node[i], para, solver_options.time_steps[i])
-                self._append_constraints(i, 'dyn', g, lbg, ubg,
-                                         g_expr = dyn_equality,
-                                         lbg_expr = np.zeros((dims.nx, 1)),
-                                         ubg_expr = np.zeros((dims.nx, 1)),
-                                         cons_dim=dims.nx)
-                if with_hessian:
-                    # add hessian of dynamics constraints
-                    lam_g_dyn = ca_symbol(f'lam_g_dyn{i}', dims.nx, 1)
-                    lam_g.append(lam_g_dyn)
-                    if ocp.solver_options.hessian_approx == 'EXACT' and ocp.solver_options.exact_hess_dyn:
-                        adj = ca.jtimes(dyn_equality, w, lam_g_dyn, True)
-                        hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
-
+            if multiple_shooting:
+                if i < N_horizon:
+                    if solver_options.integrator_type == "DISCRETE":
+                        dyn_equality = xtraj_nodes[i+1] - f_discr_fun(xtraj_nodes[i], utraj_nodes[i], ptraj_nodes[i], model.p_global)
+                    elif solver_options.integrator_type == "ERK":
+                        param = ca.vertcat(utraj_nodes[i], ptraj_nodes[i], model.p_global)
+                        dyn_equality = xtraj_nodes[i+1] - f_discr_fun(xtraj_nodes[i], param, solver_options.time_steps[i])
+                    self._append_constraints(i, 'dyn', g, lbg, ubg,
+                                            g_expr = dyn_equality,
+                                            lbg_expr = np.zeros((dims.nx, 1)),
+                                            ubg_expr = np.zeros((dims.nx, 1)),
+                                            cons_dim=dims.nx)
+                    if with_hessian:
+                        # add hessian of dynamics constraints
+                        lam_g_dyn = ca_symbol(f'lam_g_dyn{i}', dims.nx, 1)
+                        lam_g.append(lam_g_dyn)
+                        if ocp.solver_options.hessian_approx == 'EXACT' and ocp.solver_options.exact_hess_dyn:
+                            adj = ca.jtimes(dyn_equality, w, lam_g_dyn, True)
+                            hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
+            else: # single_shooting
+                if i < N_horizon:
+                    x_current = xtraj_nodes[i]
+                    if solver_options.integrator_type == "DISCRETE":
+                        x_next = f_discr_fun(x_current, utraj_nodes[i], ptraj_nodes[i], model.p_global)
+                    elif solver_options.integrator_type == "ERK":
+                        param = ca.vertcat(utraj_nodes[i], ptraj_nodes[i], model.p_global)
+                        x_next = f_discr_fun(x_current, param, solver_options.time_steps[i])
+                    xtraj_nodes.append(x_next)
+                    self._x_traj_fun.append(f_discr_fun)
             # Nonlinear Constraints
             # initial stage
             lg, ug, lh, uh, lphi, uphi, ng, nh, nphi, nsg, nsh, nsphi, idxsh, linear_constr_expr, h_i_nlp_expr, conl_constr_fun =\
-            self._get_constraint_node(i, N_horizon, xtraj_node, utraj_node, ptraj_node, model, constraints, dims)
+            self._get_constraint_node(i, N_horizon, xtraj_nodes, utraj_nodes, ptraj_nodes, model, constraints, dims)
 
             # add linear constraints
             if ng > 0:
@@ -227,13 +248,13 @@ class AcadosCasadiOcp:
                         if index_in_nh in soft_h_indices:
                             index_in_soft = soft_h_indices.tolist().index(index_in_nh)
                             self._append_constraints(i, 'gnl', g, lbg, ubg,
-                                                     g_expr = h_i_nlp_expr[index_in_nh] + sl_node[i][index_in_soft],
+                                                     g_expr = h_i_nlp_expr[index_in_nh] + sl_nodes[i][index_in_soft],
                                                      lbg_expr = lh[index_in_nh],
                                                      ubg_expr = np.inf * ca.DM.ones((1, 1)),
                                                      cons_dim=1,
                                                      sl=True)
                             self._append_constraints(i, 'gnl', g, lbg, ubg,
-                                                     g_expr = h_i_nlp_expr[index_in_nh] - su_node[i][index_in_soft],
+                                                     g_expr = h_i_nlp_expr[index_in_nh] - su_nodes[i][index_in_soft],
                                                      lbg_expr = -np.inf * ca.DM.ones((1, 1)),
                                                      ubg_expr = uh[index_in_nh],
                                                      cons_dim=1,
@@ -258,10 +279,10 @@ class AcadosCasadiOcp:
                         adj = ca.jtimes(h_i_nlp_expr, w, lam_h, True)
                         hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
 
-            # add compound nonlinear constraints
+            # add convex-over-nonlinear constraints
             if nphi > 0:
                 self._append_constraints(i, 'gnl', g, lbg, ubg,
-                                         g_expr = conl_constr_fun(xtraj_node[i], utraj_node[i], ptraj_node[i], model.p_global),
+                                         g_expr = conl_constr_fun(xtraj_nodes[i], utraj_nodes[i], ptraj_nodes[i], model.p_global),
                                          lbg_expr = lphi,
                                          ubg_expr = uphi,
                                          cons_dim=nphi)
@@ -271,7 +292,7 @@ class AcadosCasadiOcp:
                     # always use CONL Hessian approximation here, disregarding inner second derivative
                     outer_hess_r = ca.vertcat(*[ca.hessian(model.con_phi_expr[i], model.con_r_in_phi)[0] for i in range(dims.nphi)])
                     outer_hess_r = ca.substitute(outer_hess_r, model.con_r_in_phi, model.con_r_expr)
-                    r_in_nlp = ca.substitute(model.con_r_expr, model.x, xtraj_node[-1])
+                    r_in_nlp = ca.substitute(model.con_r_expr, model.x, xtraj_nodes[-1])
                     dr_dw = ca.jacobian(r_in_nlp, w)
                     hess_l += dr_dw.T @ outer_hess_r @ dr_dw
 
@@ -279,7 +300,7 @@ class AcadosCasadiOcp:
         nlp_cost = 0
         for i in range(N_horizon+1):
             xtraj_node_i, utraj_node_i, ptraj_node_i, sl_node_i, su_node_i, cost_expr_i, ns, zl, Zl, zu, Zu = \
-            self._get_cost_node(i, N_horizon, xtraj_node, utraj_node, ptraj_node, sl_node, su_node, ocp, dims, cost)
+            self._get_cost_node(i, N_horizon, xtraj_nodes, utraj_nodes, ptraj_nodes, sl_nodes, su_nodes, ocp, dims, cost)
 
             cost_fun_i = ca.Function(f'cost_fun_{i}', [model.x, model.u, model.p, model.p_global], [cost_expr_i])
             nlp_cost += solver_options.cost_scaling[i] * cost_fun_i(xtraj_node_i, utraj_node_i, ptraj_node_i, model.p_global)
@@ -318,7 +339,7 @@ class AcadosCasadiOcp:
         self.__nlp_hess_l_custom = nlp_hess_l_custom
         self.__hess_approx_expr = hess_l
 
-    def _append_node(self, ca_symbol, xtraj_node:list, utraj_node:list, sl_node:list, su_node:list, i, dims):
+    def _append_node(self, _field, ca_symbol, node:list, i, dims):
         """
         Helper function to append a node to the NLP formulation.
         """
@@ -328,40 +349,60 @@ class AcadosCasadiOcp:
             ns = dims.ns
         else:
             ns = dims.ns_e
-        xtraj_node.append(ca_symbol(f'x{i}', dims.nx, 1))
-        utraj_node.append(ca_symbol(f'u{i}', dims.nu, 1))
-        if ns > 0:
-            sl_node.append(ca_symbol(f'sl_0', ns, 1))
-            su_node.append(ca_symbol(f'su_0', ns, 1))
-        else:
-            sl_node.append([])
-            su_node.append([])
+        if _field == 'x':
+            node.append(ca_symbol(f'x{i}', dims.nx, 1))
+        elif _field == 'u':
+            node.append(ca_symbol(f'u{i}', dims.nu, 1))
+        elif _field == 'sl':
+            if ns > 0:
+                node.append(ca_symbol(f'sl{i}', ns, 1))
+            else:
+                node.append([])
+        elif _field == 'su':
+            if ns > 0:
+                node.append(ca_symbol(f'su{i}', ns, 1))
+            else:
+                node.append([])
 
-    def _set_bounds_indices(self, i, lb_xtraj_node, ub_xtraj_node, lb_utraj_node, ub_utraj_node, constraints, dims):
+    def _set_bounds_indices(self, _field, i, lb_node, ub_node, constraints, dims):
         """
         Helper function to set bounds and indices for the primal variables.
         """
         if i == 0:
-            lb_xtraj_node[i][constraints.idxbx_0] = constraints.lbx_0
-            ub_xtraj_node[i][constraints.idxbx_0] = constraints.ubx_0
-            self._index_map['lam_bx_in_lam_w'].append(list(self.offset_lam + constraints.idxbx_0))
-            self.offset_lam += dims.nx
+            idxbx = constraints.idxbx_0
+            idxbu = constraints.idxbu
+            lbx = constraints.lbx_0
+            ubx = constraints.ubx_0
+            lbu = constraints.lbu
+            ubu = constraints.ubu
         elif i < dims.N:
-            lb_xtraj_node[i][constraints.idxbx] = constraints.lbx
-            ub_xtraj_node[i][constraints.idxbx] = constraints.ubx
-            self._index_map['lam_bx_in_lam_w'].append(list(self.offset_lam + constraints.idxbx))
-            self.offset_lam += dims.nx
+            idxbx = constraints.idxbx
+            idxbu = constraints.idxbu
+            lbx = constraints.lbx
+            ubx = constraints.ubx
+            lbu = constraints.lbu
+            ubu = constraints.ubu
         elif i == dims.N:
-            lb_xtraj_node[-1][constraints.idxbx_e] = constraints.lbx_e
-            ub_xtraj_node[-1][constraints.idxbx_e] = constraints.ubx_e
-            self._index_map['lam_bx_in_lam_w'].append(list(self.offset_lam + constraints.idxbx_e))
-            self.offset_lam += dims.nx
+            idxbx = constraints.idxbx_e
+            lbx = constraints.lbx_e
+            ubx = constraints.ubx_e
         if i < dims.N:
-            lb_utraj_node[i][constraints.idxbu] = constraints.lbu
-            ub_utraj_node[i][constraints.idxbu] = constraints.ubu
-            self._index_map['lam_bu_in_lam_w'].append(list(self.offset_lam + constraints.idxbu))
-            self.offset_lam += dims.nu
-            self.offset_lam += 2*dims.ns_0 if i == 0 else 2*dims.ns
+            if _field == 'x':
+                lb_node[i][idxbx] = lbx
+                ub_node[i][idxbx] = ubx
+                self._index_map['lam_bx_in_lam_w'].append(list(self.offset_lam + idxbx))
+                self.offset_lam += dims.nx
+            elif _field == 'u':
+                lb_node[i][idxbu] = lbu
+                ub_node[i][idxbu] = ubu
+                self._index_map['lam_bu_in_lam_w'].append(list(self.offset_lam + idxbu))
+                self.offset_lam += dims.nu
+        elif i == dims.N:
+            if _field == 'x':
+                lb_node[i][idxbx] = lbx
+                ub_node[i][idxbx] = ubx
+                self._index_map['lam_bx_in_lam_w'].append(list(self.offset_lam + idxbx))
+                self.offset_lam += dims.nx
 
     def _append_variables_and_bounds(self, _field, w_sym_list, lbw_list, ubw_list, w0_list,
                                      node_list, lb_node_list, ub_node_list, i, dims, x_guess):
@@ -605,15 +646,19 @@ class AcadosCasadiOcpSolver:
 
     def __init__(self, ocp: AcadosOcp, solver: str = "ipopt", verbose=True,
                  casadi_solver_opts: Optional[dict] = None,
-                 use_acados_hessian: bool = False):
+                 use_acados_hessian: bool = False,
+                 use_single_shooting: bool = False):
 
         if not isinstance(ocp, AcadosOcp):
             raise TypeError('ocp should be of type AcadosOcp.')
 
         self.ocp = ocp
-
+        self.multiple_shooting = not use_single_shooting
         # create casadi NLP formulation
-        casadi_nlp_obj = AcadosCasadiOcp(ocp, with_hessian=use_acados_hessian)
+        casadi_nlp_obj = AcadosCasadiOcp(ocp = ocp,
+                                         with_hessian = use_acados_hessian,
+                                         multiple_shooting= self.multiple_shooting
+                                        )
 
         self.acados_casadi_ocp = casadi_nlp_obj
 
@@ -623,6 +668,8 @@ class AcadosCasadiOcpSolver:
         self.p = casadi_nlp_obj.p_nlp_values
         self.index_map = casadi_nlp_obj.index_map
         self.nlp_hess_l_custom = casadi_nlp_obj.nlp_hess_l_custom
+        if use_single_shooting:
+            self.x_traj_fun = casadi_nlp_obj._x_traj_fun
 
         # create NLP solver
         if casadi_solver_opts is None:
@@ -639,8 +686,8 @@ class AcadosCasadiOcpSolver:
         self.casadi_solver = ca.nlpsol("nlp_solver", solver, self.casadi_nlp, casadi_solver_opts)
 
         # create solution and initial guess
-        self.lam_x0 = np.empty(self.casadi_nlp['x'].shape).flatten()
-        self.lam_g0 = np.empty(self.casadi_nlp['g'].shape).flatten()
+        self.lam_x0 = np.zeros(self.casadi_nlp['x'].shape).flatten()
+        self.lam_g0 = np.zeros(self.casadi_nlp['g'].shape).flatten()
         self.nlp_sol = None
 
 
@@ -662,13 +709,23 @@ class AcadosCasadiOcpSolver:
         self.nlp_sol_w = self.nlp_sol['x'].full()
         self.nlp_sol_lam_g = self.nlp_sol['lam_g'].full()
         self.nlp_sol_lam_x = self.nlp_sol['lam_x'].full()
+        if not self.multiple_shooting:
+            self.nlp_sol_x = [self.x_traj_fun[0]]
+            for i in range(0, self.ocp.dims.N):
+                x_current = self.nlp_sol_x[i]
+                if self.ocp.solver_options.integrator_type == "DISCRETE":
+                    x_next = self.x_traj_fun[i+1](x_current, self.nlp_sol_w[i], self.ocp.parameter_values, self.ocp.p_global_values)
+                elif self.ocp.solver_options.integrator_type == "ERK":
+                    param = np.concatenate([self.nlp_sol_w[i], self.ocp.parameter_values, self.ocp.p_global_values])
+                    x_next = self.x_traj_fun[i+1](x_current, param, self.ocp.solver_options.time_steps[i])
+                self.nlp_sol_x.append(x_next.full())
 
         # statistics
         solver_stats = self.casadi_solver.stats()
-        # timing = solver_stats['t_proc_total']
-        self.status = solver_stats['return_status']
-        self.nlp_iter = solver_stats['iter_count']
-        self.time_total = solver_stats['t_wall_total']
+        # timing = solver_stats['t_proc_total'] 
+        self.status = solver_stats['return_status'] if 'return_status' in solver_stats else solver_stats['success']
+        self.nlp_iter = solver_stats['iter_count'] if 'iter_count' in solver_stats else None
+        self.time_total = solver_stats['t_wall_total'] if 't_wall_total' in solver_stats else None
         self.solver_stats = solver_stats
         # nlp_res = ca.norm_inf(sol['g']).full()[0][0]
         # cost_val = ca.norm_inf(sol['f']).full()[0][0]
@@ -701,12 +758,16 @@ class AcadosCasadiOcpSolver:
         if self.nlp_sol is None:
             raise ValueError('No solution available. Please call solve() first.')
         dims = self.ocp.dims
-        if field == 'x':
+        if field == 'x' and self.multiple_shooting:
             return self.nlp_sol_w[self.index_map['x_in_w'][stage]].flatten()
+        elif field == 'x' and not self.multiple_shooting:
+            return self.nlp_sol_x[stage].flatten()
         elif field == 'u':
             return self.nlp_sol_w[self.index_map['u_in_w'][stage]].flatten()
-        elif field == 'pi':
+        elif field == 'pi' and self.multiple_shooting:
             return -self.nlp_sol_lam_g[self.index_map['pi_in_lam_g'][stage]].flatten()
+        elif field == 'pi' and not self.multiple_shooting:
+            return []
         elif field == 'p':
             return self.p[self.index_map['p_in_p_nlp'][stage]].flatten()
         elif field == 'sl':
@@ -715,20 +776,20 @@ class AcadosCasadiOcpSolver:
             return self.nlp_sol_w[self.index_map['su_in_w'][stage]].flatten()
         elif field == 'lam':
             if stage == 0:
-                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]]
+                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]] if self.multiple_shooting else []
                 bu_lam = self.nlp_sol_lam_x[self.index_map['lam_bu_in_lam_w'][stage]]
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
             elif stage < dims.N:
-                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]]
+                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]] if self.multiple_shooting else []
                 bu_lam = self.nlp_sol_lam_x[self.index_map['lam_bu_in_lam_w'][stage]]
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
             elif stage == dims.N:
-                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]]
+                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]] if self.multiple_shooting else []
                 bu_lam = np.empty((0, 1))
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
 
-            lbx_lam = np.maximum(0, -bx_lam)
-            ubx_lam = np.maximum(0, bx_lam)
+            lbx_lam = np.maximum(0, -bx_lam) if self.multiple_shooting else np.empty((0, 1))
+            ubx_lam = np.maximum(0, bx_lam) if self.multiple_shooting else np.empty((0, 1))
             lbu_lam = np.maximum(0, -bu_lam)
             ubu_lam = np.maximum(0, bu_lam)
             if any([dims.ns_0, dims.ns, dims.ns_e]):
@@ -899,12 +960,16 @@ class AcadosCasadiOcpSolver:
         """
         dims = self.ocp.dims
 
-        if field == 'x':
+        if field == 'x' and self.multiple_shooting:
             self.w0[self.index_map['x_in_w'][stage]] = value_.flatten()
+        elif field == 'x' and not self.multiple_shooting:
+            pass
         elif field == 'u':
             self.w0[self.index_map['u_in_w'][stage]] = value_.flatten()
-        elif field == 'pi':
+        elif field == 'pi' and self.multiple_shooting:
             self.lam_g0[self.index_map['pi_in_lam_g'][stage]] = -value_.flatten()
+        elif field == 'pi' and not self.multiple_shooting:
+            pass
         elif field == 'p':
             self.p[self.index_map['p_in_p_nlp'][stage]] = value_.flatten()
         elif field == 'sl':
@@ -913,17 +978,17 @@ class AcadosCasadiOcpSolver:
             self.w0[self.index_map['su_in_w'][stage]] = value_.flatten()
         elif field == 'lam':
             if stage == 0:
-                nbx = dims.nbx_0
+                nbx = dims.nbx_0 if self.multiple_shooting else 0
                 nbu = dims.nbu
                 n_ghphi = dims.ng + dims.nh_0 + dims.nphi_0
                 ns = dims.ns_0
             elif stage < dims.N:
-                nbx = dims.nbx
+                nbx = dims.nbx if self.multiple_shooting else 0
                 nbu = dims.nbu
                 n_ghphi = dims.ng + dims.nh + dims.nphi
                 ns = dims.ns
             elif stage == dims.N:
-                nbx = dims.nbx_e
+                nbx = dims.nbx_e if self.multiple_shooting else 0
                 nbu = 0
                 n_ghphi = dims.ng_e + dims.nh_e + dims.nphi_e
                 ns = dims.ns_e
@@ -949,13 +1014,17 @@ class AcadosCasadiOcpSolver:
             ug_lam_soft = ug_lam[sl_indices]
 
             if stage != dims.N:
-                self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]+self.index_map['lam_bu_in_lam_w'][stage]] = np.concatenate((ubx_lam-lbx_lam, ubu_lam-lbu_lam))
+                if self.multiple_shooting:
+                    self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]+self.index_map['lam_bu_in_lam_w'][stage]] = np.concatenate((ubx_lam-lbx_lam, ubu_lam-lbu_lam))
+                else:
+                    self.lam_x0[self.index_map['lam_bu_in_lam_w'][stage]] = ubu_lam-lbu_lam
                 self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] =  ug_lam_hard-lg_lam_hard
                 self.lam_g0[self.index_map['lam_sl_in_lam_g'][stage]] = -lg_lam_soft
                 self.lam_g0[self.index_map['lam_su_in_lam_g'][stage]] = ug_lam_soft
                 self.lam_x0[self.index_map['sl_in_w'][stage]+self.index_map['su_in_w'][stage]] = -soft_lam
             else:
-                self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]] = ubx_lam-lbx_lam
+                if self.multiple_shooting:
+                    self.lam_x0[self.index_map['lam_bx_in_lam_w'][stage]] = ubx_lam-lbx_lam
                 self.lam_g0[self.index_map['lam_gnl_in_lam_g'][stage]] = ug_lam_hard-lg_lam_hard
                 self.lam_g0[self.index_map['lam_sl_in_lam_g'][stage]] = -lg_lam_soft
                 self.lam_g0[self.index_map['lam_su_in_lam_g'][stage]] = ug_lam_soft
