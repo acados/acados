@@ -134,9 +134,6 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
 
     for (int i=0; i<=N; i++)
     {
-        dims->nsbu[i] = 0;
-        dims->nsbx[i] = 0;
-        dims->nsg[i] = 0;
         dims->ns[i] = 0;
     }
 
@@ -673,6 +670,8 @@ void ocp_qp_res_compute_nrm_inf(ocp_qp_res *qp_res, double res[4])
 }
 
 
+/*
+ocp_qp_stack_slacks -> not used anymore, broken when migrating to idxs_rev
 
 void ocp_qp_stack_slacks_dims(ocp_qp_dims *in, ocp_qp_dims *out)
 {
@@ -871,6 +870,7 @@ void ocp_qp_stack_slacks(ocp_qp_in *in, ocp_qp_in *out)
         }
     }
 }
+*/
 
 
 
