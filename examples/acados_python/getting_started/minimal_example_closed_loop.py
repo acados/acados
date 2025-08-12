@@ -92,7 +92,10 @@ def setup(x0, Fmax, N_horizon, Tf, RTI=False):
 
 
     solver_json = 'acados_ocp_' + model.name + '.json'
-    acados_ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)
+
+    builder = ocp_get_default_cmake_builder()
+
+    acados_ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json,cmake_builder=builder)
 
     # create an integrator with the same settings as used in the OCP solver.
     acados_integrator = AcadosSimSolver(ocp, json_file = solver_json)
