@@ -1057,15 +1057,15 @@ class AcadosOcp:
                 if not is_empty(idxs_val):
                     raise ValueError(f"Mixing idxs_rev and idxs_* formulations for initial and intermediate nodes is not supported. Found non empty idxs_rev or idxs_rev_0 and non empty {idxs_name}")
 
-        if is_empty(constraints.idxs_rev_0):
-            self._make_consistent_slacks_initial()
-        else:
-            self._make_consistent_slacks_rev_initial()
-
         if is_empty(constraints.idxs_rev):
             self._make_consistent_slacks_path()
         else:
             self._make_consistent_slacks_rev_path()
+
+        if is_empty(constraints.idxs_rev_0):
+            self._make_consistent_slacks_initial()
+        else:
+            self._make_consistent_slacks_rev_initial()
 
         if is_empty(constraints.idxs_rev_e):
             self._make_consistent_slacks_terminal()
