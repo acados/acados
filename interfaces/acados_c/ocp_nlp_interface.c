@@ -1167,42 +1167,27 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
     }
     else if (!strcmp(field, "pcond_C"))
     {
-        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ng", &dims_out[0]);
-        dims_out[1] = dims->nx[stage];
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_ng", &dims_out[0]);
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nx", &dims_out[1]);
     }
     else if (!strcmp(field, "pcond_D"))
     {
-        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ng", &dims_out[0]);
-        dims_out[1] = dims->nu[stage];
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_ng", &dims_out[0]);
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nu", &dims_out[1]);
     }
-    else if (!strcmp(field, "pcond_lg"))
+    else if (!strcmp(field, "pcond_lg") || !strcmp(field, "pcond_ug"))
     {
-        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ng", &dims_out[0]);
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_ng", &dims_out[0]);
         dims_out[1] = 1;
     }
-    else if (!strcmp(field, "pcond_ug"))
+    else if (!strcmp(field, "pcond_lbx") || !strcmp(field, "pcond_ubx"))
     {
-        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ng", &dims_out[0]);
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nbx", &dims_out[0]);
         dims_out[1] = 1;
     }
-    else if (!strcmp(field, "pcond_lbx"))
+    else if (!strcmp(field, "pcond_lbu") || !strcmp(field, "pcond_ubu"))
     {
-        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbx", &dims_out[0]);
-        dims_out[1] = 1;
-    }
-    else if (!strcmp(field, "pcond_ubx"))
-    {
-        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbx", &dims_out[0]);
-        dims_out[1] = 1;
-    }
-    else if (!strcmp(field, "pcond_lbu"))
-    {
-        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbu", &dims_out[0]);
-        dims_out[1] = 1;
-    }
-    else if (!strcmp(field, "pcond_ubu"))
-    {
-        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbu", &dims_out[0]);
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nbu", &dims_out[0]);
         dims_out[1] = 1;
     }
     else
