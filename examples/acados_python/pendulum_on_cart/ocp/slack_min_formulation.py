@@ -150,10 +150,10 @@ def main(formulation='s_slack', plot_traj=True):
     nx = model.x.rows()
     nu = model.u.rows()
 
-    ocp_solver = AcadosOcpSolver(ocp)
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
-    simX = np.zeros((N+1, nx))
-    simU = np.zeros((N, nu))
+    xtraj = np.zeros((N+1, nx))
+    utraj = np.zeros((N, nu))
 
     status = ocp_solver.solve()
     ocp_solver.print_statistics()
@@ -163,33 +163,33 @@ def main(formulation='s_slack', plot_traj=True):
 
     # get solution
     for i in range(N):
-        simX[i,:] = ocp_solver.get(i, "x")
-        simU[i,:] = ocp_solver.get(i, "u")
-    simX[N,:] = ocp_solver.get(N, "x")
+        xtraj[i,:] = ocp_solver.get(i, "x")
+        utraj[i,:] = ocp_solver.get(i, "u")
+    xtraj[N,:] = ocp_solver.get(N, "x")
 
-    min_x_vals = np.minimum(simX[:, 0], simX[:, 3])
+    min_x_vals = np.minimum(xtraj[:, 0], xtraj[:, 3])
     if formulation == 'u_slack':
-        slack_vals = simU[:, 1]
+        slack_vals = utraj[:, 1]
         assert np.allclose(min_x_vals[:-1], slack_vals, atol=1e-6)
     elif formulation == 'u_slack2':
-        slack_vals = simU[:, 1]
+        slack_vals = utraj[:, 1]
         assert np.allclose(min_x_vals[:-1], -slack_vals, atol=1e-6)
     elif formulation == 's_slack':
         slack_vals = np.zeros((N, ))
         unused_slack_vals = np.zeros((N, ))
         for i in range(N):
-            slack_vals[i] = ocp_solver.get(i, "sl")
-            unused_slack_vals[i] = ocp_solver.get(i, "su")
+            slack_vals[i] = ocp_solver.get(i, "sl")[0]
+            unused_slack_vals[i] = ocp_solver.get(i, "su")[0]
         assert np.allclose(min_x_vals[:-1], -slack_vals, atol=1e-6)
         print(f"{unused_slack_vals=}")
         # plot slacks
-        simU = np.append(simU, np.atleast_2d(slack_vals).transpose(), axis=1)
+        utraj = np.append(utraj, np.atleast_2d(slack_vals).transpose(), axis=1)
         model.u_labels.append('slack')
 
     if plot_traj:
         plot_trajectories(
-            x_traj_list=[simX],
-            u_traj_list=[simU],
+            x_traj_list=[xtraj],
+            u_traj_list=[utraj],
             time_traj_list=[np.linspace(0, Tf, N+1)],
             time_label=model.t_label,
             labels_list=['OCP result'],
@@ -205,9 +205,19 @@ def main(formulation='s_slack', plot_traj=True):
             x_max=None,
         )
 
+    return xtraj
+
 
 if __name__ == '__main__':
     formulations = ['u_slack', 'u_slack2', 's_slack']
     # formulations = ['s_slack']
-    for formulation in formulations:
-        main(formulation, plot_traj=False)
+    xtraj_list = []
+    for i, formulation in enumerate(formulations):
+        xtraj = main(formulation, plot_traj=False)
+        if i == 0:
+            xtraj_ref = xtraj
+        else:
+            diff_x = np.max(np.abs(xtraj - xtraj_ref))
+            print(f"diff xtraj {formulation} vs ref: {diff_x}")
+            if diff_x > 1e-6:
+                raise Exception(f"xtraj {formulation} differs from reference by {diff_x}, expected to be close to zero.")
