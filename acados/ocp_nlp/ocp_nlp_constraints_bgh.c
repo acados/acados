@@ -1408,9 +1408,19 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
         // soft
         if (model->use_idxs_rev)
         {
-            printf("TODO: computing adjoint still wrong with idxs_rev probably!\n");
-            // TODO:
+            int is;
             // max of lam corresponding to each slack?
+            // adj[nu+nx : nu+nx+2*ns] = 0.0
+            blasfeo_dvecse(2*ns, 0.0, &memory->adj, nu+nx);
+            for (int ii = 0; ii < nb+ng+nh; ii++)
+            {
+                is = memory->idxs_rev[ii];
+                if (is >= 0)
+                {
+                    BLASFEO_DVECEL(&memory->adj, nu+nx+is) += BLASFEO_DVECEL(memory->lam, ii);
+                    BLASFEO_DVECEL(&memory->adj, nu+nx+ns+is) += BLASFEO_DVECEL(memory->lam, nb+ng+nh+ii);
+                }
+            }
         }
         else
         {
@@ -1523,7 +1533,16 @@ void ocp_nlp_constraints_bgh_compute_fun(void *config_, void *dims_, void *model
     // fun_i = fun_i - slack_i for i \in I_slacked
     if (model->use_idxs_rev)
     {
-        printf("IN ocp_nlp_constraints_bgh_compute_fun: TODO: not implemented for idxs_rev yet!\n!!");
+        int is;
+        for (int ii = 0; ii < nb+ng+nh; ii++)
+        {
+            is = memory->idxs_rev[ii];
+            if (is >= 0)
+            {
+                BLASFEO_DVECEL(&memory->fun, ii) -= BLASFEO_DVECEL(memory->ux, nu+nx+is);
+                BLASFEO_DVECEL(&memory->fun, nb+ng+nh+ii) -= BLASFEO_DVECEL(memory->ux, nu+nx+ns+is);
+            }
+        }
     }
     else
     {
@@ -1571,7 +1590,16 @@ void ocp_nlp_constraints_bgh_update_qp_vectors(void *config_, void *dims_, void 
     // fun_i = fun_i - slack_i for i \in I_slacked
     if (model->use_idxs_rev)
     {
-        printf("IN ocp_nlp_constraints_bgh_update_qp_vectors: TODO: not implemented for idxs_rev yet!\n!!");
+        int is;
+        for (int ii = 0; ii < nb+ng+nh; ii++)
+        {
+            is = memory->idxs_rev[ii];
+            if (is >= 0)
+            {
+                BLASFEO_DVECEL(&memory->fun, ii) -= BLASFEO_DVECEL(memory->ux, nu+nx+is);
+                BLASFEO_DVECEL(&memory->fun, nb+ng+nh+ii) -= BLASFEO_DVECEL(memory->ux, nu+nx+ns+is);
+            }
+        }
     }
     else
     {
