@@ -36,7 +36,7 @@ from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import casadi as ca
 
-def main(formulation='s_slack'):
+def main(formulation='s_slack', plot_traj=True):
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -136,7 +136,7 @@ def main(formulation='s_slack'):
         ocp.constraints.idxs_rev_0 = np.array((nbx_0+nbu) * [-1] + [0, 0])
         ocp.constraints.ls_0 = ocp.constraints.ls
         ocp.constraints.us_0 = ocp.constraints.us
-    # ocp.solver_options.qp_solver_t0_init = 0
+    ocp.solver_options.qp_solver_t0_init = 0
 
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
@@ -186,27 +186,28 @@ def main(formulation='s_slack'):
         simU = np.append(simU, np.atleast_2d(slack_vals).transpose(), axis=1)
         model.u_labels.append('slack')
 
-    plot_trajectories(
-        x_traj_list=[simX],
-        u_traj_list=[simU],
-        time_traj_list=[np.linspace(0, Tf, N+1)],
-        time_label=model.t_label,
-        labels_list=['OCP result'],
-        x_labels=model.x_labels,
-        u_labels=model.u_labels,
-        idxbu=ocp.constraints.idxbu,
-        lbu=ocp.constraints.lbu,
-        ubu=ocp.constraints.ubu,
-        X_ref=None,
-        U_ref=None,
-        # fig_filename='pendulum_ocp.png',
-        x_min=None,
-        x_max=None,
-    )
+    if plot_traj:
+        plot_trajectories(
+            x_traj_list=[simX],
+            u_traj_list=[simU],
+            time_traj_list=[np.linspace(0, Tf, N+1)],
+            time_label=model.t_label,
+            labels_list=['OCP result'],
+            x_labels=model.x_labels,
+            u_labels=model.u_labels,
+            idxbu=ocp.constraints.idxbu,
+            lbu=ocp.constraints.lbu,
+            ubu=ocp.constraints.ubu,
+            X_ref=None,
+            U_ref=None,
+            # fig_filename='pendulum_ocp.png',
+            x_min=None,
+            x_max=None,
+        )
 
 
 if __name__ == '__main__':
     formulations = ['u_slack', 'u_slack2', 's_slack']
     # formulations = ['s_slack']
     for formulation in formulations:
-        main(formulation)
+        main(formulation, plot_traj=False)
