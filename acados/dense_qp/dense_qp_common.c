@@ -422,6 +422,7 @@ void dense_qp_stack_slacks_dims_upperbound(dense_qp_dims *in, dense_qp_dims *out
 }
 
 
+// TODO: generalize this to handle real idxs_rev.
 void dense_qp_stack_slacks_recover_nsb_nsg_from_idxs_rev(dense_qp_dims *in, int *idxs_rev, int* nsb, int *nsg)
 {
     // recover nsb, nsg from idxs_rev
