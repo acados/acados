@@ -121,8 +121,8 @@ def main(formulation='s_slack'):
         ocp.constraints.us = 0 * np.ones((ns, ))
         ocp.cost.zl = np.array([1.0])
         ocp.cost.Zl = np.array([-0.0])
-        ocp.cost.zu = np.array([0.0])
-        ocp.cost.Zu = np.array([1e-1])
+        ocp.cost.zu = np.array([1.0])
+        ocp.cost.Zu = np.array([0.0])
 
         ocp.model.con_h_expr_0 = ocp.model.con_h_expr
         ocp.constraints.uh_0 = ocp.constraints.uh
@@ -136,7 +136,7 @@ def main(formulation='s_slack'):
         ocp.constraints.idxs_rev_0 = np.array((nbx_0+nbu) * [-1] + [0, 0])
         ocp.constraints.ls_0 = ocp.constraints.ls
         ocp.constraints.us_0 = ocp.constraints.us
-    ocp.solver_options.qp_solver_t0_init = 0
+    # ocp.solver_options.qp_solver_t0_init = 0
 
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
@@ -176,9 +176,12 @@ def main(formulation='s_slack'):
         assert np.allclose(min_x_vals[:-1], -slack_vals, atol=1e-6)
     elif formulation == 's_slack':
         slack_vals = np.zeros((N, ))
+        unused_slack_vals = np.zeros((N, ))
         for i in range(N):
             slack_vals[i] = ocp_solver.get(i, "sl")
+            unused_slack_vals[i] = ocp_solver.get(i, "su")
         assert np.allclose(min_x_vals[:-1], -slack_vals, atol=1e-6)
+        print(f"{unused_slack_vals=}")
         # plot slacks
         simU = np.append(simU, np.atleast_2d(slack_vals).transpose(), axis=1)
         model.u_labels.append('slack')
