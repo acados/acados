@@ -376,9 +376,6 @@ static ocp_nlp_dims* {{ model.name }}_acados_create_setup_dimensions({{ model.na
     ocp_nlp_dims_set_cost(nlp_config, nlp_dims, N, "ny", &ny[N]);
 {%- endif %}
 
-    // TODO: this needs to be done as setting ns* changes ns in QP solver.
-    ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "ns", ns);
-
 {%- if solver_options.N_horizon > 0 %}
 {%- if solver_options.integrator_type == "GNSF" -%}
     // GNSF specific dimensions
