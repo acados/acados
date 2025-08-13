@@ -136,16 +136,16 @@ def main(formulation='s_slack'):
         ocp.constraints.idxs_rev_0 = np.array((nbx_0+nbu) * [-1] + [0, 0])
         ocp.constraints.ls_0 = ocp.constraints.ls
         ocp.constraints.us_0 = ocp.constraints.us
+    ocp.solver_options.qp_solver_t0_init = 0
 
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'IRK'
     ocp.solver_options.nlp_solver_type = 'SQP'
-    ocp.solver_options.print_level = 5
-    ocp.solver_options.nlp_solver_max_iter = 2
+    # ocp.solver_options.print_level = 5
+    # ocp.solver_options.nlp_solver_max_iter = 2
 
-    # ocp.solver_options.globalization = 'MERIT_BACKTRACKING' # turns on globalization
 
     nx = model.x.rows()
     nu = model.u.rows()
@@ -156,7 +156,7 @@ def main(formulation='s_slack'):
     simU = np.zeros((N, nu))
 
     status = ocp_solver.solve()
-    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+    ocp_solver.print_statistics()
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')
@@ -167,10 +167,21 @@ def main(formulation='s_slack'):
         simU[i,:] = ocp_solver.get(i, "u")
     simX[N,:] = ocp_solver.get(N, "x")
 
+    min_x_vals = np.minimum(simX[:, 0], simX[:, 3])
     if formulation == 'u_slack':
-        min_x_vals = np.minimum(simX[:, 0], simX[:, 3])
         slack_vals = simU[:, 1]
         assert np.allclose(min_x_vals[:-1], slack_vals, atol=1e-6)
+    elif formulation == 'u_slack2':
+        slack_vals = simU[:, 1]
+        assert np.allclose(min_x_vals[:-1], -slack_vals, atol=1e-6)
+    elif formulation == 's_slack':
+        slack_vals = np.zeros((N, ))
+        for i in range(N):
+            slack_vals[i] = ocp_solver.get(i, "sl")
+        assert np.allclose(min_x_vals[:-1], -slack_vals, atol=1e-6)
+        # plot slacks
+        simU = np.append(simU, np.atleast_2d(slack_vals).transpose(), axis=1)
+        model.u_labels.append('slack')
 
     plot_trajectories(
         x_traj_list=[simX],
@@ -192,4 +203,7 @@ def main(formulation='s_slack'):
 
 
 if __name__ == '__main__':
-    main()
+    formulations = ['u_slack', 'u_slack2', 's_slack']
+    # formulations = ['s_slack']
+    for formulation in formulations:
+        main(formulation)
