@@ -1074,6 +1074,16 @@ classdef AcadosOcp < handle
                 end
             end
 
+            % Check idxs_rev formulation compatibility
+            if any([~isempty(constraints.idxs_rev_0), ~isempty(constraints.idxs_rev), ~isempty(constraints.idxs_rev_e)])
+                if isempty(strfind(opts.qp_solver, 'HPIPM'))
+                    error(['idxs_rev formulation is only supported with HPIPM QP solvers yet, got ', opts.qp_solver, '.']);
+                end
+                if strcmp(opts.nlp_solver_type, 'SQP_WITH_FEASIBLE_QP')
+                    error('idxs_rev formulation is not compatible with SQP_WITH_FEASIBLE_QP yet.');
+                end
+            end
+
             %% slack dimensions
             if isempty(constraints.idxs_rev)
                 self.make_consistent_slacks_path();

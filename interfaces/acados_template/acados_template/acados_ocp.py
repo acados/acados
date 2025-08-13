@@ -1057,6 +1057,12 @@ class AcadosOcp:
                 if not is_empty(idxs_val):
                     raise ValueError(f"Mixing idxs_rev and idxs_* formulations for initial and intermediate nodes is not supported. Found non empty idxs_rev or idxs_rev_0 and non empty {idxs_name}")
 
+        if any([not is_empty(idxs_rev) for idxs_rev in [constraints.idxs_rev_0, constraints.idxs_rev, constraints.idxs_rev_e]]):
+            if not "HPIPM" in opts.qp_solver:
+                raise ValueError(f"idxs_rev formulation is only supported with HPIPM QP solvers yet, got {opts.qp_solver}.")
+            if opts.nlp_solver_type == "SQP_WITH_FEASIBLE_QP":
+                raise ValueError("idxs_rev formulation is not compatible with SQP_WITH_FEASIBLE_QP yet.")
+
         if is_empty(constraints.idxs_rev):
             self._make_consistent_slacks_path()
         else:
