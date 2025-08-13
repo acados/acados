@@ -707,8 +707,9 @@ class AcadosCasadiOcpSolver:
                                           lbg=self.bounds['lbg'], ubg=self.bounds['ubg']
                                           )
         self.nlp_sol_w = self.nlp_sol['x'].full()
+        self.nlp_sol_g = self.nlp_sol['g'].full()
         self.nlp_sol_lam_g = self.nlp_sol['lam_g'].full()
-        self.nlp_sol_lam_x = self.nlp_sol['lam_x'].full()
+        self.nlp_sol_lam_w = self.nlp_sol['lam_x'].full()
         if not self.multiple_shooting:
             self.nlp_sol_x = [self.x_traj_fun[0]]
             for i in range(0, self.ocp.dims.N):
@@ -776,15 +777,15 @@ class AcadosCasadiOcpSolver:
             return self.nlp_sol_w[self.index_map['su_in_w'][stage]].flatten()
         elif field == 'lam':
             if stage == 0:
-                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]] if self.multiple_shooting else []
-                bu_lam = self.nlp_sol_lam_x[self.index_map['lam_bu_in_lam_w'][stage]]
+                bx_lam = self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]] if self.multiple_shooting else []
+                bu_lam = self.nlp_sol_lam_w[self.index_map['lam_bu_in_lam_w'][stage]]
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
             elif stage < dims.N:
-                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]] if self.multiple_shooting else []
-                bu_lam = self.nlp_sol_lam_x[self.index_map['lam_bu_in_lam_w'][stage]]
+                bx_lam = self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]] if self.multiple_shooting else []
+                bu_lam = self.nlp_sol_lam_w[self.index_map['lam_bu_in_lam_w'][stage]]
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
             elif stage == dims.N:
-                bx_lam = self.nlp_sol_lam_x[self.index_map['lam_bx_in_lam_w'][stage]] if self.multiple_shooting else []
+                bx_lam = self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]] if self.multiple_shooting else []
                 bu_lam = np.empty((0, 1))
                 g_lam = self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]]
 
@@ -793,8 +794,8 @@ class AcadosCasadiOcpSolver:
             lbu_lam = np.maximum(0, -bu_lam)
             ubu_lam = np.maximum(0, bu_lam)
             if any([dims.ns_0, dims.ns, dims.ns_e]):
-                lw_soft_lam = self.nlp_sol_lam_x[self.index_map['sl_in_w'][stage]]
-                uw_soft_lam = self.nlp_sol_lam_x[self.index_map['su_in_w'][stage]]
+                lw_soft_lam = self.nlp_sol_lam_w[self.index_map['sl_in_w'][stage]]
+                uw_soft_lam = self.nlp_sol_lam_w[self.index_map['su_in_w'][stage]]
                 lg_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_sl_in_lam_g'][stage]]
                 ug_soft_lam = self.nlp_sol_lam_g[self.index_map['lam_su_in_lam_g'][stage]]
                 if self.index_map['lam_su_in_lam_g'][stage]:
@@ -846,7 +847,7 @@ class AcadosCasadiOcpSolver:
             return self.p[self.index_map['p_global_in_p_nlp']].flatten()
         # casadi variables. TODO: maybe remove this.
         elif field_ == 'lam_x':
-            return self.nlp_sol_lam_x.flatten()
+            return self.nlp_sol_lam_w.flatten()
         elif field_ == 'lam_g':
             return self.nlp_sol_lam_g.flatten()
         elif field_ == 'lam_p':
@@ -1037,3 +1038,213 @@ class AcadosCasadiOcpSolver:
 
     def cost_set(self, stage_: int, field_: str, value_):
         raise NotImplementedError()
+
+    def get_constraints_value(self, stage: int):
+        """
+        Get the constraints values and lambda for a given stage.
+        """
+        if not isinstance(stage, int):
+            raise TypeError('stage should be integer.')
+        if self.nlp_sol is None:
+            raise ValueError('No solution available. Please call solve() first.')
+
+        # create constraints value and lambda in the order as [bx, bu, bg, bh, bphi]
+        if stage < self.ocp.dims.N:
+            constraints_value = np.concatenate((self.nlp_sol_w[self.index_map['lam_bx_in_lam_w'][stage]],
+                                                self.nlp_sol_w[self.index_map['lam_bu_in_lam_w'][stage]],
+                                                self.nlp_sol_g[self.index_map['pi_in_lam_g'][stage]],
+                                                self.nlp_sol_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
+            lambda_values = np.concatenate((self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]],
+                                            self.nlp_sol_lam_w[self.index_map['lam_bu_in_lam_w'][stage]],
+                                            self.nlp_sol_lam_g[self.index_map['pi_in_lam_g'][stage]],
+                                            self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
+            lb = ca.vertcat(self.bounds['lbx'][self.index_map['lam_bx_in_lam_w'][stage]],
+                            self.bounds['lbx'][self.index_map['lam_bu_in_lam_w'][stage]],
+                            self.bounds['lbg'][self.index_map['pi_in_lam_g'][stage]],
+                            self.bounds['lbg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
+            ub = ca.vertcat(self.bounds['ubx'][self.index_map['lam_bx_in_lam_w'][stage]],
+                            self.bounds['ubx'][self.index_map['lam_bu_in_lam_w'][stage]],
+                            self.bounds['ubg'][self.index_map['pi_in_lam_g'][stage]],
+                            self.bounds['ubg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
+        elif stage == self.ocp.dims.N:
+            constraints_value = np.concatenate((self.nlp_sol_w[self.index_map['lam_bx_in_lam_w'][stage]],
+                                                self.nlp_sol_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
+            lambda_values = np.concatenate((self.nlp_sol_lam_w[self.index_map['lam_bx_in_lam_w'][stage]],
+                                            self.nlp_sol_lam_g[self.index_map['lam_gnl_in_lam_g'][stage]])).flatten()
+            lb = ca.vertcat(self.bounds['lbx'][self.index_map['lam_bx_in_lam_w'][stage]],
+                            self.bounds['lbg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
+            ub = ca.vertcat(self.bounds['ubx'][self.index_map['lam_bx_in_lam_w'][stage]],
+                            self.bounds['ubg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
+        return  constraints_value, lambda_values, lb, ub
+    
+    def get_constraints_indices(self, stage: int):
+        """ 
+        Get the indices of the constraints for a given stage.
+        This function distinguishes between inequality and equality constraints
+        returns indices of
+        (inequality, equality for decision variables, equality for dynamic and gnl, lower active inequality, upper active inequality).
+        """
+        constraints_value, _, lb, ub = self.get_constraints_value(stage)
+        tol = self.ocp.solver_options.nlp_solver_tol_ineq
+        # distinguish between equality and inequality constraints
+        if stage == 0:
+            nbx = self.ocp.dims.nbx_0
+            nbu = self.ocp.dims.nbu
+        elif stage < self.ocp.dims.N:
+            nbx = self.ocp.dims.nbx
+            nbu = self.ocp.dims.nbu
+        elif stage == self.ocp.dims.N:
+            nbx = self.ocp.dims.nbx_e
+            nbu = 0
+
+        ineq_indices = []
+        eq_indices_bounds = []
+        eq_indices_ca_g = []
+
+        for i in range(len(lb)):
+            if lb[i] != ub[i]:
+                ineq_indices.append(i)
+            else:
+                #distinguish between equality in decision variables and in constraints
+                if i in range(nbx + nbu):
+                    eq_indices_bounds.append(i)
+                else:
+                    eq_indices_ca_g.append(i)
+        # get the inequality violations
+        violations_ineq_lb = constraints_value[ineq_indices] - lb[ineq_indices]
+        violations_ineq_ub = ub[ineq_indices] - constraints_value[ineq_indices]
+        # any negative value in violations means infeasible constraint, raise an error
+        if np.any(violations_ineq_lb < -tol) or np.any(violations_ineq_ub < -tol):
+            raise ValueError('Constraints are violated. Please check the solution.')
+        # get active inequality indices from inequality constraints
+        active_ineq_lb_indices = np.take(ineq_indices, np.where(violations_ineq_lb < tol)[0])
+        active_ineq_ub_indices = np.take(ineq_indices, np.where(violations_ineq_ub < tol)[0])
+        return ineq_indices, eq_indices_bounds, eq_indices_ca_g, active_ineq_lb_indices, active_ineq_ub_indices
+
+    def satisfies_strict_complementarity_stage_wise(self, stage: int, tol: float) -> bool:
+        """
+        Check if the solution satisfies strict complementarity conditions for a given stage.
+        This checks that the Lagrange multipliers for active inequality constraints are strictly positive.
+        Not tested yet.
+        """
+        tol = self.ocp.solver_options.nlp_solver_tol_ineq
+        if self.nlp_sol is None:
+            raise ValueError('No solution available. Please call solve() first.')
+
+        _, lambda_value, _, _ = self.get_constraints_value(stage)
+        _, _, _, active_ineq_lb_indices, active_ineq_ub_indices = self.get_constraints_indices(stage)
+
+        for i in active_ineq_lb_indices:
+            lam = np.maximum(0, -lambda_value[i])
+            if lam < tol:
+                return False
+        for i in active_ineq_ub_indices:
+            lam = np.maximum(0, lambda_value[i])
+            if lam < tol:
+                return False
+        return True
+
+    def satisfies_strict_complementarity_stages(self, tol: float) -> list[bool]:
+        """
+        Check if the solution satisfies strict complementarity conditions for all stages.
+        Not tested yet.
+        """
+        tol = self.ocp.solver_options.nlp_solver_tol_ineq
+        dims = self.ocp.dims
+        complementarity = []
+        for stage in range(dims.N + 1):
+            complementarity.append(self.satisfies_strict_complementarity_stage_wise(stage, tol))
+        return complementarity
+
+    def satisfies_strict_complementarity(self) -> bool:
+        """
+        Check if the solution satisfies strict complementarity conditions for all stages.
+        Not tested yet.
+        """
+        stage_wise_complementarity = self.satisfies_strict_complementarity_stages(self.ocp.solver_options.nlp_solver_tol_ineq)
+        if all(stage_wise_complementarity):
+            return True
+        else:
+            return False
+
+    def satisfies_LICQ_stage_wise(self, stage) -> bool:
+        """
+        Check if the solution satisfies the Linear Independence Constraint Qualification (LICQ) for a given stage.
+        """
+        if self.nlp_sol is None:
+            raise ValueError('No solution available. Please call solve() first.')
+
+        _, eq_indices_bounds, eq_indices_ca_g, active_ineq_lb_indices, active_ineq_ub_indices = self.get_constraints_indices(stage)
+
+        w, w_value, constraints_expr_stage, eq_indices = self._get_w_and_constraints_for_LICQ(stage, eq_indices_bounds, eq_indices_ca_g)
+
+        eq_constraints = constraints_expr_stage[eq_indices] if len(eq_indices) != 0 else ca.vertcat()
+        active_ineq_lb_constraints = constraints_expr_stage[active_ineq_lb_indices] if len(active_ineq_lb_indices) != 0 else ca.vertcat()
+        active_ineq_ub_constraints = constraints_expr_stage[active_ineq_ub_indices] if len(active_ineq_ub_indices) != 0 else ca.vertcat()
+        constraint_matrix = ca.vertcat(eq_constraints,
+                                       -active_ineq_lb_constraints,
+                                       active_ineq_ub_constraints)
+        constraint_jac_expr = ca.Function('constraint_jac', [w], [ca.jacobian(constraint_matrix, w)])
+        constraint_jac_value = constraint_jac_expr(w_value).full()
+
+        # Check if the Jacobian of the constraints is full rank
+        rank = np.linalg.matrix_rank(constraint_jac_value) if constraint_jac_value.any() else 0
+        if rank == constraint_jac_value.shape[0]:
+            return True
+        else:
+            return False
+
+    def satisfies_LICQ_stages(self) -> list[bool]:
+        """
+        Check if the solution satisfies the Linear Independence Constraint Qualification (LICQ) for all stages.
+        return a list of booleans, each indicating whether LICQ is satisfied for the corresponding stage.
+        """
+        dims = self.ocp.dims
+        stage_wise_LICQ = []
+        for stage in range(dims.N + 1):
+            stage_wise_LICQ.append(self.satisfies_LICQ_stage_wise(stage))
+        return stage_wise_LICQ
+
+    def satisfies_LICQ(self) -> bool:
+        """
+        Check if the solution satisfies the Linear Independence Constraint Qualification (LICQ) for all stages.
+        return True if LICQ is satisfied for all stages, otherwise False.
+        """
+        stage_wise_LICQ = self.satisfies_LICQ_stages()
+        if all(stage_wise_LICQ):
+            return True
+        else:
+            return False
+
+    def _get_w_and_constraints_for_LICQ(self, stage: int, eq_indices_bounds, eq_indices_ca_g):
+        """
+        Helper function to get the w vector and constraints expression for a given stage.
+        This is used to compute the Jacobian of the constraints for checking LICQ.
+        """
+        if stage == 0:
+            w = ca.vertcat(self.casadi_nlp['x'][self.index_map['x_in_w'][stage]],
+                           self.casadi_nlp['x'][self.index_map['u_in_w'][stage]])
+            w_value = np.concatenate((self.nlp_sol_w[self.index_map['x_in_w'][stage]],
+                                      self.nlp_sol_w[self.index_map['u_in_w'][stage]])).flatten()
+            constraints_expr_stage = ca.vertcat(self.casadi_nlp['x'][self.index_map['lam_bx_in_lam_w'][stage]],
+                                                self.casadi_nlp['x'][self.index_map['lam_bu_in_lam_w'][stage]],
+                                                self.casadi_nlp['g'][self.index_map['pi_in_lam_g'][stage]],
+                                                self.casadi_nlp['g'][self.index_map['lam_gnl_in_lam_g'][stage]])
+            eq_indices = eq_indices_ca_g
+        elif stage < self.ocp.dims.N:
+            w = ca.vertcat(self.casadi_nlp['x'][self.index_map['x_in_w'][stage]],
+                        self.casadi_nlp['x'][self.index_map['u_in_w'][stage]])
+            w_value = np.concatenate((self.nlp_sol_w[self.index_map['x_in_w'][stage]],
+                                    self.nlp_sol_w[self.index_map['u_in_w'][stage]])).flatten()
+            constraints_expr_stage = ca.vertcat(self.casadi_nlp['x'][self.index_map['lam_bx_in_lam_w'][stage]],
+                                                self.casadi_nlp['x'][self.index_map['lam_bu_in_lam_w'][stage]],
+                                                self.casadi_nlp['g'][self.index_map['pi_in_lam_g'][stage]],
+                                                self.casadi_nlp['g'][self.index_map['lam_gnl_in_lam_g'][stage]])
+            eq_indices = eq_indices_bounds + eq_indices_ca_g
+        elif stage == self.ocp.dims.N:
+            w = self.casadi_nlp['x'][self.index_map['x_in_w'][stage]]
+            w_value = self.nlp_sol_w[self.index_map['x_in_w'][stage]].flatten()
+            constraints_expr_stage = ca.vertcat(self.casadi_nlp['x'][self.index_map['lam_bx_in_lam_w'][stage]],
+                                                self.casadi_nlp['g'][self.index_map['lam_gnl_in_lam_g'][stage]])
+            eq_indices = eq_indices_bounds + eq_indices_ca_g
+        return w, w_value, constraints_expr_stage, eq_indices
