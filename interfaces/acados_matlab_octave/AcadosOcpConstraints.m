@@ -86,6 +86,19 @@ classdef AcadosOcpConstraints < handle
         lphi_e
         uphi_e
 
+        % idxs_rev slack formulation
+        idxs_rev_0
+        idxs_rev
+        idxs_rev_e
+
+        ls_0
+        ls
+        ls_e
+
+        us_0
+        us
+        us_e
+
         %  SLACKS
         % bounds on slacks corresponding to softened bounds on x and u
         lsbx    % lower bounds on slacks corresponding to soft lower bounds on x
@@ -185,6 +198,18 @@ classdef AcadosOcpConstraints < handle
             obj.lphi_e = [];
             obj.uphi_e = [];
 
+            % idxs_rev formulation
+            obj.idxs_rev_0 = [];
+            obj.idxs_rev = [];
+            obj.idxs_rev_e = [];
+
+            obj.ls_0 = [];
+            obj.ls = [];
+            obj.ls_e = [];
+
+            obj.us_0 = [];
+            obj.us = [];
+            obj.us_e = [];
             % SLACKS
             obj.lsbx = [];
             obj.usbx = [];
