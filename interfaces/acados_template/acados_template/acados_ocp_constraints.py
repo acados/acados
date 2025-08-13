@@ -41,7 +41,7 @@ class AcadosOcpConstraints:
     2) via idxs_rev, ls, us and *_0, *_e variants
 
     Option 1) is what was implemented in acados <= 0.5.1
-    Option 2) is the new way of formulating soft constraints, which is more flexible.
+    Option 2) is the new way of formulating soft constraints, which is more flexible, as one slack variable can be used for multiple constraints.
     """
     def __init__(self):
         self.__constr_type_0 = 'BGH'
@@ -472,7 +472,7 @@ class AcadosOcpConstraints:
 
     @property
     def idxs_rev(self):
-        """Indices of slack variables associated with each constraint at shooting nodes (0 to N-1), zero-based.
+        """Indices of slack variables associated with each constraint at shooting nodes (1 to N-1), zero-based.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__idxs_rev
@@ -493,7 +493,7 @@ class AcadosOcpConstraints:
 
     @property
     def ls(self):
-        """Lower bounds on slacks associated with lower bound constraints at shooting nodes (0 to N-1).
+        """Lower bounds on slacks associated with lower bound constraints at shooting nodes (1 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__ls
@@ -514,7 +514,7 @@ class AcadosOcpConstraints:
 
     @property
     def us(self):
-        """Lower bounds on slacks associated with upper bound constraints at shooting nodes (0 to N-1).
+        """Lower bounds on slacks associated with upper bound constraints at shooting nodes (1 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__us
