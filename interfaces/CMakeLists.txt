@@ -268,6 +268,10 @@ add_test(NAME python_pendulum_ocp_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python ocp_example_h_init_contraints.py)
 
+    add_test(NAME python_slack_min_formulation
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
+        python slack_min_formulation.py)
+
     add_test(NAME python_chain_ocp
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/chain_mass
         python main.py)
@@ -518,7 +522,8 @@ add_test(NAME python_pendulum_ocp_example_cmake
     set_tests_properties(python_nonuniform_discretization_ocp_example PROPERTIES DEPENDS python_rti_loop_ocp_example)
     set_tests_properties(python_rti_loop_ocp_example PROPERTIES DEPENDS python_render_simulink_wrapper)
     set_tests_properties(python_render_simulink_wrapper PROPERTIES DEPENDS python_constraints_expression_example)
-    set_tests_properties(python_constraints_expression_example PROPERTIES DEPENDS pendulum_optimal_value_gradient)
+    set_tests_properties(python_constraints_expression_example PROPERTIES DEPENDS python_slack_min_formulation)
+    set_tests_properties(python_slack_min_formulation PROPERTIES DEPENDS pendulum_optimal_value_gradient)
     set_tests_properties(pendulum_optimal_value_gradient PROPERTIES DEPENDS python_pendulum_ocp_IRK)
     set_tests_properties(python_pendulum_ocp_IRK PROPERTIES DEPENDS python_pendulum_ocp_GNSF)
     set_tests_properties(python_pendulum_ocp_GNSF PROPERTIES DEPENDS python_example_ocp_dynamics_formulations_cmake)
