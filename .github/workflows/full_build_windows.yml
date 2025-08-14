@@ -123,6 +123,18 @@ jobs:
             cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/p_global_example
             main
 
+    - name: MATLAB idxs_rev example
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: |
+            cd ${{runner.workspace}}/acados/.github/windows
+            setup_mingw
+            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave
+            acados_env_variables_windows
+            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/pendulum_on_cart_model
+            main_slack_min_formulations
+
     # This fails undeterministically on Github actions:
     # Two actions with the same commit, 1 fail, 1 success.
     # https://github.com/sandmaennchen/acados/actions/runs/11783596401/job/32821083440
