@@ -31,7 +31,7 @@
 
 import casadi as ca
 
-from typing import Union, Optional
+from typing import Union, Optional, List
 
 import numpy as np
 
@@ -1144,7 +1144,7 @@ class AcadosCasadiOcpSolver:
                 return False
         return True
 
-    def satisfies_strict_complementarity_stages(self, tol: float) -> list[bool]:
+    def satisfies_strict_complementarity_stages(self, tol: float) -> List[bool]:
         """
         Check if the solution satisfies strict complementarity conditions for all stages.
         Not tested yet.
@@ -1194,7 +1194,7 @@ class AcadosCasadiOcpSolver:
         else:
             return False
 
-    def satisfies_LICQ_stages(self) -> list[bool]:
+    def satisfies_LICQ_stages(self) -> List[bool]:
         """
         Check if the solution satisfies the Linear Independence Constraint Qualification (LICQ) for all stages.
         return a list of booleans, each indicating whether LICQ is satisfied for the corresponding stage.
