@@ -1644,8 +1644,23 @@ void ocp_nlp_constraints_bgh_precompute(void *config_, void *dims_, void *model_
             printf("Got ns = %d != dims->ns_derived = %d, nsbu = %d, nsbx = %d, nsg = %d, nsh = %d\n", dims->ns, dims->ns_derived, dims->nsbu, dims->nsbx, dims->nsg, dims->nsh);
             exit(1);
         }
+        // use idxs_rev algorithm internally;
+        for(int ii=0; ii<dims->nb+dims->ng+dims->nh; ii++)
+        {
+            model->idxs_rev[ii] = -1;
+        }
+        for(int ii=0; ii<dims->ns; ii++)
+        {
+            model->idxs_rev[model->idxs[ii]] = ii;
+        }
+        model->use_idxs_rev = 1;
+        // printf("BGH precompute: forcing idxs_rev implementation: \nidxs_rev =\n");
+        // for(int ii=0; ii<dims->nb+dims->ng+dims->nh; ii++)
+        // {
+        //     printf("%d ", model->idxs_rev[ii]);
+        // }
+        // printf("\n");
     }
-
 }
 
 
