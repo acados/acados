@@ -195,11 +195,12 @@ ocp_qp_seed *ocp_qp_seed_assign(ocp_qp_dims *dims, void *raw_memory);
 
 /* misc */
 //
-void ocp_qp_stack_slacks_dims(ocp_qp_dims *in, ocp_qp_dims *out);
-//
-void ocp_qp_stack_slacks(ocp_qp_in *in, ocp_qp_in *out);
-//
 void ocp_qp_compute_t(ocp_qp_in *qp_in, ocp_qp_out *qp_out);
+//
+// ocp_qp_stack_slacks -> not used anymore, broken when migrating to idxs_rev
+// void ocp_qp_stack_slacks_dims(ocp_qp_dims *in, ocp_qp_dims *out);
+// //
+// void ocp_qp_stack_slacks(ocp_qp_in *in, ocp_qp_in *out);
 
 #ifdef __cplusplus
 } /* extern "C" */

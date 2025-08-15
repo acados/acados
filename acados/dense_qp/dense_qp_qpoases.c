@@ -215,20 +215,32 @@ acados_size_t dense_qp_qpoases_memory_calculate_size(void *config_, dense_qp_dim
 {
     dense_qp_dims dims_stacked;
 
-    int nv  = dims->nv;
-    int ne  = dims->ne;
-    int ng  = dims->ng;
-    int nb  = dims->nb;
-    int nsb = dims->nsb;
-    // int nsg = dims->nsg;
-    int ns  = dims->ns;
+    int nv = dims->nv;
+    int ne = dims->ne;
+    int ng = dims->ng;
+    int nb = dims->nb;
+    int ns = dims->ns;
 
-    int nv2 = nv + 2*ns;
-    int ng2 = (ns > 0) ? ng + nsb : ng;
-    int nb2 = nb - nsb + 2 * ns;
+    int ng2, nv2, nb2;
 
     // size in bytes
     acados_size_t size = sizeof(dense_qp_qpoases_memory);
+
+    if (ns > 0)
+    {
+        dense_qp_stack_slacks_dims_upperbound(dims, &dims_stacked);
+        size += dense_qp_in_calculate_size(&dims_stacked);
+        ng2 = dims_stacked.ng;
+        nv2 = dims_stacked.nv;
+        nb2 = dims_stacked.nb;
+    }
+    else
+    {
+        ng2 = ng;
+        nv2 = nv;
+        nb2 = nb;
+    }
+    // same logic as in dense_qp_stack_slacks_dims_upperbound, but no memory to call the function here.
 
     size += 1 * nv * nv * sizeof(double);      // H
     size += 1 * nv2 * nv2 * sizeof(double);    // HH
@@ -245,16 +257,11 @@ acados_size_t dense_qp_qpoases_memory_calculate_size(void *config_, dense_qp_dim
     size += 2 * ng2 * sizeof(double);          // d_lg d_ug
     size += 1 * nb * sizeof(int);              // idxb
     size += 1 * nb2 * sizeof(int);             // idxb_stacked
+    size += 1 * (nb+ng) * sizeof(int); // idxs_rev
     size += 1 * ns * sizeof(int);              // idxs
     size += 1 * nv2 * sizeof(double);          // prim_sol
     size += 1 * (nv2 + ng2) * sizeof(double);  // dual_sol
     size += 6 * ns * sizeof(double);           // Zl, Zu, zl, zu, d_ls, d_us
-
-    if (ns > 0)
-    {
-        dense_qp_stack_slacks_dims(dims, &dims_stacked);
-        size += dense_qp_in_calculate_size(&dims_stacked);
-    }
 
     if (ng > 0 || ns > 0)  // QProblem
         size += QProblem_calculateMemorySize(nv2, ng2);
@@ -274,17 +281,13 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
     dense_qp_qpoases_memory *mem;
     dense_qp_dims dims_stacked;
 
-    int nv  = dims->nv;
-    int ne  = dims->ne;
-    int ng  = dims->ng;
-    int nb  = dims->nb;
-    int nsb = dims->nsb;
-    // int nsg = dims->nsg;
-    int ns  = dims->ns;
+    int nv = dims->nv;
+    int ne = dims->ne;
+    int ng = dims->ng;
+    int nb = dims->nb;
+    int ns = dims->ns;
 
-    int nv2 = nv + 2*ns;
-    int ng2 = (ns > 0) ? ng + nsb : ng;
-    int nb2 = nb - nsb + 2 * ns;
+    int ng2, nv2, nb2;
 
     // char pointer
     char *c_ptr = (char *) raw_memory;
@@ -296,13 +299,19 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
 
     if (ns > 0)
     {
-        dense_qp_stack_slacks_dims(dims, &dims_stacked);
+        dense_qp_stack_slacks_dims_upperbound(dims, &dims_stacked);
         mem->qp_stacked = dense_qp_in_assign(&dims_stacked, c_ptr);
         c_ptr += dense_qp_in_calculate_size(&dims_stacked);
+        ng2 = dims_stacked.ng;
+        nv2 = dims_stacked.nv;
+        nb2 = dims_stacked.nb;
     }
     else
     {
         mem->qp_stacked = NULL;
+        ng2 = ng;
+        nv2 = nv;
+        nb2 = nb;
     }
 
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
@@ -350,6 +359,7 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
     assign_and_advance_int(nb, &mem->idxb, &c_ptr);
     assign_and_advance_int(nb2, &mem->idxb_stacked, &c_ptr);
     assign_and_advance_int(ns, &mem->idxs, &c_ptr);
+    assign_and_advance_int(nb+ng, &mem->idxs_rev, &c_ptr);
 
     assert((char *) raw_memory + dense_qp_qpoases_memory_calculate_size(config_, dims, opts_) >=
            c_ptr);
@@ -444,6 +454,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     int *idxb = memory->idxb;
     int *idxb_stacked = memory->idxb_stacked;
     int *idxs = memory->idxs;
+    int *idxs_rev = memory->idxs_rev;
     double *prim_sol = memory->prim_sol;
     double *dual_sol = memory->dual_sol;
     QProblemB *QPB = memory->QPB;
@@ -451,24 +462,34 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     dense_qp_in *qp_stacked = memory->qp_stacked;
 
     // extract dense qp size
-    int nv  = qp_in->dim->nv;
-    // int ne  = qp_in->dim->ne;
-    int ng  = qp_in->dim->ng;
-    int nb  = qp_in->dim->nb;
-    int nsb = qp_in->dim->nsb;
-    // int nsg = qp_in->dim->nsg;
-    int ns  = qp_in->dim->ns;
+    int nv = qp_in->dim->nv;
+    // int ne = qp_in->dim->ne;
+    int ng = qp_in->dim->ng;
+    int nb = qp_in->dim->nb;
+    int ns = qp_in->dim->ns;
 
-    int nv2 = nv + 2*ns;
-    int ng2 = (ns > 0) ? ng + nsb : ng;
-    int nb2 = nb - nsb + 2 * ns;
+    int ng2, nv2, nb2;
 
     // fill in the upper triangular of H in dense_qp
     blasfeo_dtrtr_l(nv, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
 
     // extract data from qp_in in row-major
     d_dense_qp_get_all_rowmaj(qp_in, H, g, A, b, idxb, d_lb0, d_ub0, C, d_lg0, d_ug0,
-                                 Zl, Zu, zl, zu, idxs, d_ls, d_us);
+                                 Zl, Zu, zl, zu, idxs, idxs_rev, d_ls, d_us);
+
+    if (ns > 0)
+    {
+        dense_qp_stack_slacks_dims_from_idxs_rev(qp_in->dim, idxs_rev, qp_stacked->dim);
+        ng2 = qp_stacked->dim->ng;
+        nv2 = qp_stacked->dim->nv;
+        nb2 = qp_stacked->dim->nb;
+    }
+    else
+    {
+        ng2 = ng;
+        nv2 = nv;
+        nb2 = nb;
+    }
 
     // reorder box constraints bounds
     for (int ii = 0; ii < nv2; ii++)
@@ -481,7 +502,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     {
         dense_qp_stack_slacks(qp_in, qp_stacked);
         d_dense_qp_get_all_rowmaj(qp_stacked, HH, gg, A, b, idxb_stacked, d_lb0, d_ub0, CC, d_lg,
-            d_ug, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+            d_ug, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
         for (int ii = 0; ii < nb2; ii++)
         {

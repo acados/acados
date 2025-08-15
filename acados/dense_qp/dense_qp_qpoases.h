@@ -84,6 +84,7 @@ typedef struct dense_qp_qpoases_memory_
     int *idxb;
     int *idxb_stacked;
     int *idxs;
+    int *idxs_rev;
     double *prim_sol;
     double *dual_sol;
     void *QPB;       // NOTE(giaf): cast to QProblemB to use

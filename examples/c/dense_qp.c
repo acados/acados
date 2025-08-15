@@ -96,12 +96,10 @@ int main() {
     dims.nb = 2;
     dims.ng = 2;
     dims.ns = 3;
-    dims.nsb = 1;
-    dims.nsg = 2;
 
     dense_qp_in *qp_in = dense_qp_in_create(config, &dims);
 
-    d_dense_qp_set_all(H, g, NULL, NULL, idxb, d_lb, d_ub, C, d_lg, d_ug, Zl, Zu, zl, zu, idxs, d_ls, d_us, qp_in);
+    d_dense_qp_set_all(H, g, NULL, NULL, idxb, d_lb, d_ub, C, d_lg, d_ug, Zl, Zu, zl, zu, idxs, NULL, d_ls, d_us, qp_in);
 
     print_dense_qp_in(qp_in);
 

@@ -88,6 +88,7 @@ typedef struct
     void (*set_external_fun_workspaces)(void *config, void *dims, void *opts_, void *in, void *work_);
     void (*initialize)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     //
+    void (*precompute)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*update_qp_matrices)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*update_qp_vectors)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*compute_fun)(void *config, void *dims, void *model, void *opts, void *mem, void *work);

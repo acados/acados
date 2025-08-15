@@ -424,6 +424,11 @@ def J_to_idx_slack(J):
     return idx
 
 
+def ns_from_idxs_rev(idxs_rev) -> int:
+    if is_empty(idxs_rev):
+        return 0
+    return int(np.max(idxs_rev) + 1)
+
 def check_if_nparray_and_flatten(val, name) -> np.ndarray:
     if not isinstance(val, np.ndarray):
         raise TypeError(f"{name} must be a numpy array, got {type(val)}")
