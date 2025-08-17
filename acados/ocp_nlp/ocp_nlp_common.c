@@ -576,6 +576,12 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
             config->cost[i]->dims_set(config->cost[i],
                                       dims->cost[i], "ns", &int_array[i]);
         }
+        // constraints
+        for (int i = 0; i <= N; i++)
+        {
+            config->constraints[i]->dims_set(config->constraints[i],
+                                      dims->constraints[i], "ns", &int_array[i]);
+        }
         // qp solver
         // if (!config->with_feasible_qp)
         // {
@@ -622,19 +628,30 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
 
 
 
-static void ocp_nlp_update_qp_solver_ns_from_qp_solver_nsbxug(void *config_, void *dims_, int stage)
+static void ocp_nlp_update_relaxed_qp_solver_ns_from_constraints_module(void *config_, void *dims_, int stage)
 {
     ocp_nlp_config *config = config_;
     ocp_nlp_dims *dims = dims_;
 
-    int tmp_int;
-    int ns = 0;
-    config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "nsbu", &tmp_int);
-    ns += tmp_int;
-    config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "nsbx", &tmp_int);
-    ns += tmp_int;
-    config->relaxed_qp_solver->dims_get(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "nsg", &tmp_int);
-    ns += tmp_int;
+    int ng_qp_solver, nsbu, nsbx;
+    config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
+            "ng_qp_solver", &ng_qp_solver);
+
+    config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
+            "nsbu", &nsbu);
+
+    if (stage == 0)
+    {
+            config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
+                    "nsbx", &nsbx);
+    }
+    else
+    {
+        // slack all x constraints
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
+                    "nbx", &nsbx);
+    }
+    int ns = ng_qp_solver + nsbu + nsbx;
     config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, stage, "ns", &ns);
 }
 
@@ -648,7 +665,6 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
 
     int *int_value = (int *) value_;
     int i = stage;
-    int tmp_int;
 
     // set in constraint module
     config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i],
@@ -668,34 +684,18 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
     {
         config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
         config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, field, int_value);
-        if ((!strcmp(field, "nbx")) && (stage != 0))
-        {
-            config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, "nsbx", int_value);
-        }
-        ocp_nlp_update_qp_solver_ns_from_qp_solver_nsbxug(config, dims, stage);
+        ocp_nlp_update_relaxed_qp_solver_ns_from_constraints_module(config, dims, stage);
 
         // regularization
         config->regularize->dims_set(config->regularize, dims->regularize, i, (char *) field, int_value);
     }
     else if (!strcmp(field, "nsbx"))
     {
-        // qp solver
-        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
-        // relaxed_qp_solver
-        if (stage == 0)
-        {
-            config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsbx", &tmp_int);
-            config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, field, &tmp_int);
-        }
-        ocp_nlp_update_qp_solver_ns_from_qp_solver_nsbxug(config, dims, stage);
+        ocp_nlp_update_relaxed_qp_solver_ns_from_constraints_module(config, dims, stage);
     }
     else if (!strcmp(field, "nsbu"))
     {
-        // qp solver
-        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
-        // relaxed_qp_solver: nsbu = nsbu
-        config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, field, int_value);
-        ocp_nlp_update_qp_solver_ns_from_qp_solver_nsbxug(config, dims, stage);
+        ocp_nlp_update_relaxed_qp_solver_ns_from_constraints_module(config, dims, stage);
     }
     else if ( (!strcmp(field, "ng")) || (!strcmp(field, "nh")) || (!strcmp(field, "nphi")))
     {
@@ -707,19 +707,10 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
         config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "ng", &ng_qp_solver);
         // relaxed qp solver: nsg = ng;
         config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, "ng", &ng_qp_solver);
-        config->relaxed_qp_solver->dims_set(config->relaxed_qp_solver, dims->relaxed_qp_solver, i, "nsg", &ng_qp_solver);
-        ocp_nlp_update_qp_solver_ns_from_qp_solver_nsbxug(config, dims, stage);
+        ocp_nlp_update_relaxed_qp_solver_ns_from_constraints_module(config, dims, stage);
 
         // regularization
         config->regularize->dims_set(config->regularize, dims->regularize, i, "ng", &ng_qp_solver);
-    }
-    else if ( (!strcmp(field, "nsg")) || (!strcmp(field, "nsh")) || (!strcmp(field, "nsphi")))
-    {
-        int nsg_qp_solver;
-        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsg_qp_solver", &nsg_qp_solver);
-
-        // qp solver
-        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nsg", &nsg_qp_solver);
     }
     else if (!strcmp(field, "nbxe"))
     {
@@ -3480,7 +3471,8 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
         dims->nh_total += tmp;
     }
 
-    // precompute
+    /* precompute submodules */
+    // dyn
     for (ii = 0; ii < N; ii++)
     {
         // set T
@@ -3493,11 +3485,17 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
         if (status != ACADOS_SUCCESS)
             return status;
     }
+    // cost
     for (ii = 0; ii <= N; ii++)
     {
-        // cost precompute
         config->cost[ii]->precompute(config->cost[ii], dims->cost[ii], in->cost[ii],
                                      opts->cost[ii], mem->cost[ii], work->cost[ii]);
+    }
+    // constraints
+    for (ii = 0; ii <= N; ii++)
+    {
+        config->constraints[ii]->precompute(config->constraints[ii], dims->constraints[ii], in->constraints[ii],
+                                     opts->constraints[ii], mem->constraints[ii], work->constraints[ii]);
     }
 
     ocp_nlp_alias_memory_to_submodules(config, dims, in, out, opts, mem, work);

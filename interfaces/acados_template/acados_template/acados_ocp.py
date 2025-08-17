@@ -47,7 +47,7 @@ from .acados_ocp_options import AcadosOcpOptions
 from .acados_ocp_iterate import AcadosOcpIterate
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
-                    get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square,
+                    get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
                     check_casadi_version, ACADOS_INFTY)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
@@ -521,6 +521,45 @@ class AcadosOcp:
                 dims.nr_e = casadi_length(model.con_r_expr_e)
 
 
+    def _make_consistent_slacks_rev_initial(self):
+        constraints = self.constraints
+        dims = self.dims
+        opts = self.solver_options
+        cost = self.cost
+        if opts.N_horizon == 0:
+            return
+
+        ni_no_s = dims.nbu + dims.nbx_0 + dims.nh_0 + dims.ng + dims.nphi_0 # constraints that are not slack bounds
+
+        # sanity checks
+        if constraints.idxs_rev_0.shape[0] != ni_no_s:
+            raise ValueError(f'inconsistent dimension idxs_rev_0 = {constraints.idxs_rev_0.shape[0]}. Should be equal to ni_no_s = {ni_no_s}.')
+        possible_vals = np.arange(-1, ni_no_s)
+        if any([i not in possible_vals for i in constraints.idxs_rev_0]):
+            raise ValueError(f'idxs_rev_0 = {constraints.idxs_rev_0} contains value not in range -1:{ni_no_s-1}.')
+
+        ns_0 = ns_from_idxs_rev(constraints.idxs_rev_0)
+
+        # slack bounds
+        if is_empty(constraints.ls_0):
+            constraints.ls_0 = np.zeros((ns_0,))
+        elif constraints.ls_0.shape[0] != ns_0:
+            raise ValueError('inconsistent dimension ns_0, regarding idxs_rev_0, ls_0.')
+        if is_empty(constraints.us_0):
+            constraints.us_0 = np.zeros((ns_0,))
+        elif constraints.us_0.shape[0] != ns_0:
+            raise ValueError('inconsistent dimension ns_0, regarding idxs_rev_0, us_0.')
+
+        # check cost penalty
+        for field in ("Zl_0", "Zu_0", "zl_0", "zu_0"):
+            dim = getattr(cost, field).shape[0]
+            if dim != ns_0:
+                raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
+                    + f'Detected ns_0 = {ns_0}.')
+
+        dims.ns_0 = ns_0
+
+
     def _make_consistent_slacks_initial(self):
         constraints = self.constraints
         dims = self.dims
@@ -565,6 +604,7 @@ class AcadosOcp:
 
         # Note: at stage 0 bounds on x are not slacked!
         ns_0 = nsbu + nsg + nsphi_0 + nsh_0  # NOTE: nsbx not supported at stage 0
+        dims.ns_0 = ns_0
 
         if cost.zl_0 is None and cost.zu_0 is None and cost.Zl_0 is None and cost.Zu_0 is None:
             if ns_0 == 0:
@@ -585,10 +625,49 @@ class AcadosOcp:
         for field in ("Zl_0", "Zu_0", "zl_0", "zu_0"):
             dim = getattr(cost, field).shape[0]
             if dim != ns_0:
-                raise Exception(f'Inconsistent size for fields {field}, with dimension {dim}, \n\t'\
+                raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
                 + f'Detected ns_0 = {ns_0} = nsbu + nsg + nsh_0 + nsphi_0.\n\t'\
                 + f'With nsbu = {nsbu}, nsg = {nsg}, nsh_0 = {nsh_0}, nsphi_0 = {nsphi_0}.')
-        dims.ns_0 = ns_0
+
+
+    def _make_consistent_slacks_rev_path(self):
+        constraints = self.constraints
+        dims = self.dims
+        opts = self.solver_options
+        cost = self.cost
+
+        if opts.N_horizon == 0:
+            return
+
+        ni_no_s = dims.nbu + dims.nbx + dims.nh + dims.ng + dims.nphi # constraints that are not slack bounds
+
+        # sanity checks
+        if constraints.idxs_rev.shape[0] != ni_no_s:
+            raise ValueError(f'inconsistent dimension idxs_rev = {constraints.idxs_rev.shape[0]}. Should be equal to ni_no_s = {ni_no_s}.')
+        possible_vals = np.arange(-1, ni_no_s)
+        if any([i not in possible_vals for i in constraints.idxs_rev]):
+            raise ValueError(f'idxs_rev = {constraints.idxs_rev} contains value not in range -1:{ni_no_s-1}.')
+
+        ns = ns_from_idxs_rev(constraints.idxs_rev)
+
+        # slack bounds
+        if is_empty(constraints.ls):
+            constraints.ls = np.zeros((ns,))
+        elif constraints.ls.shape[0] != ns:
+            raise ValueError('inconsistent dimension ns, regarding idxs_rev, ls.')
+        if is_empty(constraints.us):
+            constraints.us = np.zeros((ns,))
+        elif constraints.us.shape[0] != ns:
+            raise ValueError('inconsistent dimension ns, regarding idxs_rev, us.')
+
+        # check cost penalty
+        for field in ("Zl", "Zu", "zl", "zu"):
+            dim = getattr(cost, field).shape[0]
+            if dim != ns:
+                raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
+                    + f'Detected ns = {ns}.')
+
+        dims.ns = ns
 
 
     def _make_consistent_slacks_path(self):
@@ -682,10 +761,47 @@ class AcadosOcp:
         for field in ("Zl", "Zu", "zl", "zu"):
             dim = getattr(cost, field).shape[0]
             if dim != ns:
-                raise Exception(f'Inconsistent size for fields {field}, with dimension {dim}, \n\t'\
+                raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
                     + f'Detected ns = {ns} = nsbx + nsbu + nsg + nsh + nsphi.\n\t'\
                     + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh = {nsh}, nsphi = {nsphi}.')
         dims.ns = ns
+
+
+
+    def _make_consistent_slacks_rev_terminal(self):
+        constraints = self.constraints
+        dims = self.dims
+        cost = self.cost
+
+        ni_no_s = dims.nbx_e + dims.nh_e + dims.ng_e + dims.nphi_e # constraints that are not slack bounds
+
+        # sanity checks
+        if constraints.idxs_rev_e.shape[0] != ni_no_s:
+            raise ValueError(f'inconsistent dimension idxs_rev_e = {constraints.idxs_rev_e.shape[0]}. Should be equal to ni_no_s = {ni_no_s}.')
+        possible_vals = np.arange(-1, ni_no_s)
+        if any([i not in possible_vals for i in constraints.idxs_rev_e]):
+            raise ValueError(f'idxs_rev_e = {constraints.idxs_rev_e} contains value not in range -1:{ni_no_s-1}.')
+
+        ns_e = ns_from_idxs_rev(constraints.idxs_rev_e)
+
+        # slack bounds
+        if is_empty(constraints.ls_e):
+            constraints.ls_e = np.zeros((ns_e,))
+        elif constraints.ls_e.shape[0] != ns_e:
+            raise ValueError('inconsistent dimension ns_e, regarding idxs_rev_e, ls_e.')
+        if is_empty(constraints.us_e):
+            constraints.us_e = np.zeros((ns_e,))
+        elif constraints.us_e.shape[0] != ns_e:
+            raise ValueError('inconsistent dimension ns_e, regarding idxs_rev_e, us_e.')
+
+        # check cost penalty
+        for field in ("Zl_e", "Zu_e", "zl_e", "zu_e"):
+            dim = getattr(cost, field).shape[0]
+            if dim != ns_e:
+                raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
+                    + f'Detected ns_e = {ns_e}.')
+
+        dims.ns_e = ns_e
 
 
     def _make_consistent_slacks_terminal(self):
@@ -761,7 +877,7 @@ class AcadosOcp:
         for field in ("Zl_e", "Zu_e", "zl_e", "zu_e"):
             dim = getattr(cost, field).shape[0]
             if dim != ns_e:
-                raise Exception(f'Inconsistent size for fields {field}, with dimension {dim}, \n\t'\
+                raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
                 + f'Detected ns_e = {ns_e} = nsbx_e + nsg_e + nsh_e + nsphi_e.\n\t'\
                 + f'With nsbx_e = {nsbx_e}, nsg_e = {nsg_e}, nsh_e = {nsh_e}, nsphi_e = {nsphi_e}.')
 
@@ -934,9 +1050,33 @@ class AcadosOcp:
         self._make_consistent_constraints_path()
         self._make_consistent_constraints_terminal()
 
-        self._make_consistent_slacks_path()
-        self._make_consistent_slacks_initial()
-        self._make_consistent_slacks_terminal()
+        # if idxs_rev formulation is used at initial or path, no idxs* should be defined
+        if not is_empty(constraints.idxs_rev_0) or not is_empty(constraints.idxs_rev):
+            for idxs_name in ['idxsbx', 'idxsbu', 'idxsg', 'idxsh_0', 'idxsh', 'idxsphi_0', 'idxsphi']:
+                idxs_val = getattr(constraints, idxs_name)
+                if not is_empty(idxs_val):
+                    raise ValueError(f"Mixing idxs_rev and idxs_* formulations for initial and intermediate nodes is not supported. Found non empty idxs_rev or idxs_rev_0 and non empty {idxs_name}")
+
+        if any([not is_empty(idxs_rev) for idxs_rev in [constraints.idxs_rev_0, constraints.idxs_rev, constraints.idxs_rev_e]]):
+            if not "HPIPM" in opts.qp_solver:
+                raise ValueError(f"idxs_rev formulation is only supported with HPIPM QP solvers yet, got {opts.qp_solver}.")
+            if opts.nlp_solver_type == "SQP_WITH_FEASIBLE_QP":
+                raise ValueError("idxs_rev formulation is not compatible with SQP_WITH_FEASIBLE_QP yet.")
+
+        if is_empty(constraints.idxs_rev):
+            self._make_consistent_slacks_path()
+        else:
+            self._make_consistent_slacks_rev_path()
+
+        if is_empty(constraints.idxs_rev_0):
+            self._make_consistent_slacks_initial()
+        else:
+            self._make_consistent_slacks_rev_initial()
+
+        if is_empty(constraints.idxs_rev_e):
+            self._make_consistent_slacks_terminal()
+        else:
+            self._make_consistent_slacks_rev_terminal()
 
         # check for ACADOS_INFTY
         if opts.qp_solver not in ["PARTIAL_CONDENSING_HPIPM", "FULL_CONDENSING_HPIPM", "FULL_CONDENSING_DAQP"]:

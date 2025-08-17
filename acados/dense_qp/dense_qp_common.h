@@ -145,8 +145,11 @@ acados_size_t dense_qp_seed_calculate_size(dense_qp_dims *dims);
 dense_qp_seed *dense_qp_seed_assign(dense_qp_dims *dims, void *raw_memory);
 
 /* misc */
+void dense_qp_stack_slacks_dims_upperbound(dense_qp_dims *in, dense_qp_dims *out);
 //
-void dense_qp_stack_slacks_dims(dense_qp_dims *in, dense_qp_dims *out);
+void dense_qp_stack_slacks_dims_from_idxs_rev(dense_qp_dims *in, int *idxs_rev, dense_qp_dims *out);
+//
+void dense_qp_stack_slacks_recover_nsb_nsg_from_idxs_rev(dense_qp_dims *in, int *idxs_rev, int* nsb, int *nsg);
 //
 void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out);
 //

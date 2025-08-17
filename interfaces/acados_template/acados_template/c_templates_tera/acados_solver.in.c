@@ -1594,6 +1594,36 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     free(luphi_0);
 {% endif %}
 
+
+{% set_global n_idxs_rev_0 = constraints.idxs_rev_0 | length %}
+{% if n_idxs_rev_0 > 0 %}{# idxs* formulation initial #}
+
+    {% set ni_no_s = dims.nbu + dims.nbx_0 + dims.ng + dims.nh_0 + dims.nphi_0 %}
+    int* idxs_rev_0 = malloc( {{ ni_no_s }} * sizeof(int));
+    {%- for i in range(end=ni_no_s) %}
+    idxs_rev_0[{{ i }}] = {{ constraints.idxs_rev_0[i] }};
+    {%- endfor %}
+
+    double* lus_0 = calloc(2*NS0, sizeof(double));
+    double* ls_0 = lus_0;
+    double* us_0 = lus_0 + NS0;
+    {%- for i in range(end=dims.ns_0) %}
+        {%- if constraints.ls_0[i] != 0 %}
+    ls_0[{{ i }}] = {{ constraints.ls_0[i] }};
+        {%- endif %}
+        {%- if constraints.us_0[i] != 0 %}
+    us_0[{{ i }}] = {{ constraints.us_0[i] }};
+        {%- endif %}
+    {%- endfor %}
+
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "idxs_rev", idxs_rev_0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "ls", ls_0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "us", us_0);
+    free(idxs_rev_0);
+    free(lus_0);
+
+{% else %}{# idxs* formulation initial #}
+
 {% if dims.nsh_0 > 0 %}
     // set up soft bounds for nonlinear constraints
     int* idxsh_0 = malloc(NSH0 * sizeof(int));
@@ -1643,6 +1673,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     free(idxsphi_0);
     free(lusphi_0);
 {%- endif %}
+{%- endif %}{# idxs* formulation initial #}
 
     /* constraints that are the same for initial and intermediate */
 {%- if dims.nbu > 0 %}
@@ -1878,6 +1909,37 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     free(luphi);
 {%- endif %}
 
+
+{% set_global n_idxs_rev = constraints.idxs_rev | length %}
+{% if n_idxs_rev > 0 %}
+    {% set ni_no_s = dims.nbu + dims.nbx + dims.ng + dims.nh + dims.nphi %}
+    int* idxs_rev = malloc( {{ ni_no_s }} * sizeof(int));
+    {%- for i in range(end=ni_no_s) %}
+    idxs_rev[{{ i }}] = {{ constraints.idxs_rev[i] }};
+    {%- endfor %}
+
+    double* lus = calloc(2*NS0, sizeof(double));
+    double* ls = lus;
+    double* us = lus + NS0;
+    {%- for i in range(end=dims.ns) %}
+        {%- if constraints.ls[i] != 0 %}
+    ls[{{ i }}] = {{ constraints.ls[i] }};
+        {%- endif %}
+        {%- if constraints.us[i] != 0 %}
+    us[{{ i }}] = {{ constraints.us[i] }};
+        {%- endif %}
+    {%- endfor %}
+
+    for (int i = 1; i < N; i++)
+    {
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "idxs_rev", idxs_rev);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "ls", ls);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, i, "us", us);
+    }
+    free(idxs_rev);
+    free(lus);
+
+{% else %}{# idxs* formulation intermediate #}
 {%- if dims.nsbx > 0 %}
 {# TODO: introduce nsbx0 #}
     // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "idxsbx", idxsbx);
@@ -1967,6 +2029,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     free(idxsphi);
     free(lusphi);
 {%- endif %}
+{%- endif %}{# idxs* formulation intermediate #}
 {%- endif %}{# solver_options.N_horizon > 0 #}
 
     /* terminal constraints */
@@ -2088,6 +2151,35 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     /* terminal soft constraints */
 {% endif %}
 
+{% set_global n_idxs_rev_e = constraints.idxs_rev_e | length %}
+{% if n_idxs_rev_e > 0 %}
+
+    {% set ni_no_s = dims.nbx_e + dims.ng_e + dims.nh_e + dims.nphi_e %}
+    int* idxs_rev_e = malloc( {{ ni_no_s }} * sizeof(int));
+    {%- for i in range(end=ni_no_s) %}
+    idxs_rev_e[{{ i }}] = {{ constraints.idxs_rev_e[i] }};
+    {%- endfor %}
+
+    double* lus_e = calloc(2*NSN, sizeof(double));
+    double* ls_e = lus_e;
+    double* us_e = lus_e + NSN;
+    {%- for i in range(end=dims.ns_e) %}
+        {%- if constraints.ls_e[i] != 0 %}
+    ls_e[{{ i }}] = {{ constraints.ls_e[i] }};
+        {%- endif %}
+        {%- if constraints.us_e[i] != 0 %}
+    us_e[{{ i }}] = {{ constraints.us_e[i] }};
+        {%- endif %}
+    {%- endfor %}
+
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "idxs_rev", idxs_rev_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "ls", ls_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "us", us_e);
+    free(idxs_rev_e);
+    free(lus_e);
+
+{% else %}{# idxs* formulation #}
+
 {% if dims.nsg_e > 0 %}
     // set up soft bounds for general linear constraints
     int* idxsg_e = calloc(NSGN, sizeof(int));
@@ -2187,6 +2279,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     free(idxsbx_e);
     free(lusbx_e);
 {% endif %}
+{% endif %}{# idxs* formulation #}
 }
 
 

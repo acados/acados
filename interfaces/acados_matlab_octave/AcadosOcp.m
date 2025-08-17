@@ -366,6 +366,58 @@ classdef AcadosOcp < handle
             dims.nh_e = nh_e;
         end
 
+        function make_consistent_slacks_rev_path(self)
+            constraints = self.constraints;
+            dims = self.dims;
+            opts = self.solver_options;
+            cost = self.cost;
+
+            if opts.N_horizon == 0
+                return
+            end
+
+            % constraints that are not slack bounds
+            ni_no_s = dims.nbu + dims.nbx + dims.nh + dims.ng + dims.nphi;
+
+            % sanity checks
+            if length(constraints.idxs_rev) ~= ni_no_s
+                error(['inconsistent dimension idxs_rev = ', num2str(length(constraints.idxs_rev)), ...
+                    '. Should be equal to ni_no_s = ', num2str(ni_no_s), '.']);
+            end
+            possible_vals = -1:(ni_no_s-1);
+            if any(~ismember(constraints.idxs_rev, possible_vals))
+                error(['idxs_rev = [', num2str(constraints.idxs_rev(:).'), ...
+                    '] contains value not in range -1:', num2str(ni_no_s-1), '.']);
+            end
+
+            ns = ns_from_idxs_rev(constraints.idxs_rev);
+
+            % slack bounds
+            if isempty(constraints.ls)
+                constraints.ls = zeros(ns, 1);
+            elseif length(constraints.ls) ~= ns
+                error('inconsistent dimension ns, regarding idxs_rev, ls.');
+            end
+            if isempty(constraints.us)
+                constraints.us = zeros(ns, 1);
+            elseif length(constraints.us) ~= ns
+                error('inconsistent dimension ns, regarding idxs_rev, us.');
+            end
+
+            % check cost penalty
+            fields = {'Zl', 'Zu', 'zl', 'zu'};
+            for i = 1:length(fields)
+                field = fields{i};
+                dim = size(cost.(field), 1);
+                if dim ~= ns
+                    error(['Inconsistent size for field ', field, ', with dimension ', num2str(dim), ...
+                        ', Detected ns = ', num2str(ns), '.']);
+                end
+            end
+
+            dims.ns = ns;
+        end
+
         function make_consistent_slacks_path(self)
             constraints = self.constraints;
             dims = self.dims;
@@ -481,6 +533,57 @@ classdef AcadosOcp < handle
             dims.nsphi = nsphi;
         end
 
+        function make_consistent_slacks_rev_initial(self)
+            constraints = self.constraints;
+            dims = self.dims;
+            opts = self.solver_options;
+            cost = self.cost;
+            if opts.N_horizon == 0
+                return
+            end
+
+            % constraints that are not slack bounds
+            ni_no_s = dims.nbu + dims.nbx_0 + dims.nh_0 + dims.ng + dims.nphi_0;
+
+            % sanity checks
+            if length(constraints.idxs_rev_0) ~= ni_no_s
+                error(['inconsistent dimension idxs_rev_0 = ', num2str(length(constraints.idxs_rev_0)), ...
+                    '. Should be equal to ni_no_s = ', num2str(ni_no_s), '.']);
+            end
+            possible_vals = -1:(ni_no_s-1);
+            if any(~ismember(constraints.idxs_rev_0, possible_vals))
+                error(['idxs_rev_0 = [', num2str(constraints.idxs_rev_0(:).'), ...
+                    '] contains value not in range -1:', num2str(ni_no_s-1), '.']);
+            end
+
+            ns_0 = ns_from_idxs_rev(constraints.idxs_rev_0);
+
+            % slack bounds
+            if isempty(constraints.ls_0)
+                constraints.ls_0 = zeros(ns_0, 1);
+            elseif length(constraints.ls_0) ~= ns_0
+                error('inconsistent dimension ns_0, regarding idxs_rev_0, ls_0.');
+            end
+            if isempty(constraints.us_0)
+                constraints.us_0 = zeros(ns_0, 1);
+            elseif length(constraints.us_0) ~= ns_0
+                error('inconsistent dimension ns_0, regarding idxs_rev_0, us_0.');
+            end
+
+            % check cost penalty
+            fields = {'Zl_0', 'Zu_0', 'zl_0', 'zu_0'};
+            for i = 1:length(fields)
+                field = fields{i};
+                dim = size(cost.(field), 1);
+                if dim ~= ns_0
+                    error(['Inconsistent size for field ', field, ', with dimension ', num2str(dim), ...
+                        ', Detected ns_0 = ', num2str(ns_0), '.']);
+                end
+            end
+
+            dims.ns_0 = ns_0;
+        end
+
         function make_consistent_slacks_initial(self)
             constraints = self.constraints;
             dims = self.dims;
@@ -552,6 +655,54 @@ classdef AcadosOcp < handle
             dims.nsh_0 = nsh_0;
             dims.nsphi_0 = nsphi_0;
         end
+
+        function make_consistent_slacks_rev_terminal(self)
+            constraints = self.constraints;
+            dims = self.dims;
+            cost = self.cost;
+
+            % constraints that are not slack bounds
+            ni_no_s = dims.nbx_e + dims.nh_e + dims.ng_e + dims.nphi_e;
+
+            % sanity checks
+            if length(constraints.idxs_rev_e) ~= ni_no_s
+                error(['inconsistent dimension idxs_rev_e = ', num2str(length(constraints.idxs_rev_e)), ...
+                    '. Should be equal to ni_no_s = ', num2str(ni_no_s), '.']);
+            end
+            possible_vals = -1:(ni_no_s-1);
+            if any(~ismember(constraints.idxs_rev_e, possible_vals))
+                error(['idxs_rev_e = [', num2str(constraints.idxs_rev_e(:).'), ...
+                    '] contains value not in range -1:', num2str(ni_no_s-1), '.']);
+            end
+
+            ns_e = ns_from_idxs_rev(constraints.idxs_rev_e);
+
+            % slack bounds
+            if isempty(constraints.ls_e)
+                constraints.ls_e = zeros(ns_e, 1);
+            elseif length(constraints.ls_e) ~= ns_e
+                error('inconsistent dimension ns_e, regarding idxs_rev_e, ls_e.');
+            end
+            if isempty(constraints.us_e)
+                constraints.us_e = zeros(ns_e, 1);
+            elseif length(constraints.us_e) ~= ns_e
+                error('inconsistent dimension ns_e, regarding idxs_rev_e, us_e.');
+            end
+
+            % check cost penalty
+            fields = {'Zl_e', 'Zu_e', 'zl_e', 'zu_e'};
+            for i = 1:length(fields)
+                field = fields{i};
+                dim = size(cost.(field), 1);
+                if dim ~= ns_e
+                    error(['Inconsistent size for field ', field, ', with dimension ', num2str(dim), ...
+                        ', Detected ns_e = ', num2str(ns_e), '.']);
+                end
+            end
+
+            dims.ns_e = ns_e;
+        end
+
 
         function make_consistent_slacks_terminal(self)
             constraints = self.constraints;
@@ -911,10 +1062,46 @@ classdef AcadosOcp < handle
             self.make_consistent_constraints_path();
             self.make_consistent_constraints_terminal();
 
+            % if idxs_rev formulation is used at initial or path, no idxs* should be defined
+            if ~isempty(constraints.idxs_rev_0) || ~isempty(constraints.idxs_rev)
+                idxs_names = {'idxsbx', 'idxsbu', 'idxsg', 'idxsh_0', 'idxsh', 'idxsphi_0', 'idxsphi'};
+                for i = 1:length(idxs_names)
+                    idxs_name = idxs_names{i};
+                    idxs_val = constraints.(idxs_name);
+                    if ~isempty(idxs_val)
+                        error(['Mixing idxs_rev and idxs_* formulations for initial and intermediate nodes is not supported. Found non empty idxs_rev or idxs_rev_0 and non empty ', idxs_name]);
+                    end
+                end
+            end
+
+            % Check idxs_rev formulation compatibility
+            if any([~isempty(constraints.idxs_rev_0), ~isempty(constraints.idxs_rev), ~isempty(constraints.idxs_rev_e)])
+                if isempty(strfind(opts.qp_solver, 'HPIPM'))
+                    error(['idxs_rev formulation is only supported with HPIPM QP solvers yet, got ', opts.qp_solver, '.']);
+                end
+                if strcmp(opts.nlp_solver_type, 'SQP_WITH_FEASIBLE_QP')
+                    error('idxs_rev formulation is not compatible with SQP_WITH_FEASIBLE_QP yet.');
+                end
+            end
+
             %% slack dimensions
-            self.make_consistent_slacks_path();
-            self.make_consistent_slacks_initial();
-            self.make_consistent_slacks_terminal();
+            if isempty(constraints.idxs_rev)
+                self.make_consistent_slacks_path();
+            else
+                self.make_consistent_slacks_rev_path();
+            end
+
+            if isempty(constraints.idxs_rev_0)
+                self.make_consistent_slacks_initial();
+            else
+                self.make_consistent_slacks_rev_initial();
+            end
+
+            if isempty(constraints.idxs_rev_e)
+                self.make_consistent_slacks_terminal();
+            else
+                self.make_consistent_slacks_rev_terminal();
+            end
 
             % check for ACADOS_INFTY
             if ~ismember(opts.qp_solver, {'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_DAQP'})

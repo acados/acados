@@ -34,7 +34,14 @@ from .utils import J_to_idx, print_J_to_idx_note, J_to_idx_slack, check_if_nparr
 
 class AcadosOcpConstraints:
     """
-    class containing the description of the constraints
+    Class containing the description of the constraints.
+
+    Soft constraints can be formulated in two ways:
+    1) via idxsbu, idxsbx, idxsg, idxsh, idxsphi, lsbu, usbu, lsbx, usbx, lsg, usg, lsh, ush, lsphi, usphi
+    2) via idxs_rev, ls, us and *_0, *_e variants
+
+    Option 1) is what was implemented in acados <= 0.5.1
+    Option 2) is the new way of formulating soft constraints, which is more flexible, as one slack variable can be used for multiple constraints.
     """
     def __init__(self):
         self.__constr_type_0 = 'BGH'
@@ -83,6 +90,20 @@ class AcadosOcpConstraints:
         self.__uphi    = np.array([])
         self.__lphi_e = np.array([])
         self.__uphi_e = np.array([])
+
+        # idxs_rev slack formulation
+        self.__idxs_rev_0 = np.array([])
+        self.__idxs_rev = np.array([])
+        self.__idxs_rev_e = np.array([])
+
+        self.__ls_0 = np.array([])
+        self.__ls = np.array([])
+        self.__ls_e = np.array([])
+
+        self.__us_0 = np.array([])
+        self.__us = np.array([])
+        self.__us_e = np.array([])
+
         # SLACK BOUNDS
         # soft bounds on x
         self.__lsbx   = np.array([])
@@ -95,7 +116,7 @@ class AcadosOcpConstraints:
         # soft bounds on x at shooting node N
         self.__lsbx_e  = np.array([])
         self.__usbx_e  = np.array([])
-        self.__idxsbx_e= np.array([])
+        self.__idxsbx_e = np.array([])
         # soft bounds on general linear constraints
         self.__lsg    = np.array([])
         self.__usg    = np.array([])
@@ -439,6 +460,71 @@ class AcadosOcpConstraints:
         """
         return self.__uphi_0
 
+
+    # SLACK formulation
+    # idxs_rev slack formulation
+    @property
+    def idxs_rev_0(self):
+        """Indices of slack variables associated with each constraint at initial shooting node 0, zero-based.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
+        """
+        return self.__idxs_rev_0
+
+    @property
+    def idxs_rev(self):
+        """Indices of slack variables associated with each constraint at shooting nodes (1 to N-1), zero-based.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
+        """
+        return self.__idxs_rev
+
+    @property
+    def idxs_rev_e(self):
+        """Indices of slack variables associated with each constraint at terminal shooting node N, zero-based.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
+        """
+        return self.__idxs_rev_e
+
+    @property
+    def ls_0(self):
+        """Lower bounds on slacks associated with lower bound constraints at initial shooting node 0.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
+        """
+        return self.__ls_0
+
+    @property
+    def ls(self):
+        """Lower bounds on slacks associated with lower bound constraints at shooting nodes (1 to N-1).
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
+        """
+        return self.__ls
+
+    @property
+    def ls_e(self):
+        """Lower bounds on slacks associated with lower bound constraints at terminal shooting node N.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
+        """
+        return self.__ls_e
+
+    @property
+    def us_0(self):
+        """Lower bounds on slacks associated with upper bound constraints at initial shooting node 0.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
+        """
+        return self.__us_0
+
+    @property
+    def us(self):
+        """Lower bounds on slacks associated with upper bound constraints at shooting nodes (1 to N-1).
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
+        """
+        return self.__us
+
+    @property
+    def us_e(self):
+        """Lower bounds on slacks associated with upper bound constraints at terminal shooting node N.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
+        """
+        return self.__us_e
 
     # SLACK bounds
     # soft bounds on x
@@ -1011,6 +1097,52 @@ class AcadosOcpConstraints:
     def uphi_0(self, value):
         value = check_if_nparray_and_flatten(value, 'uphi_0')
         self.__uphi_0 = value
+
+    # idxs_rev slack formulation
+    @idxs_rev_0.setter
+    def idxs_rev_0(self, idxs_rev_0):
+        idxs_rev_0 = check_if_nparray_and_flatten(idxs_rev_0, "idxs_rev_0")
+        self.__idxs_rev_0 = idxs_rev_0
+
+    @idxs_rev.setter
+    def idxs_rev(self, idxs_rev):
+        idxs_rev = check_if_nparray_and_flatten(idxs_rev, "idxs_rev")
+        self.__idxs_rev = idxs_rev
+
+    @idxs_rev_e.setter
+    def idxs_rev_e(self, idxs_rev_e):
+        idxs_rev_e = check_if_nparray_and_flatten(idxs_rev_e, "idxs_rev_e")
+        self.__idxs_rev_e = idxs_rev_e
+
+    @ls_0.setter
+    def ls_0(self, ls_0):
+        ls_0 = check_if_nparray_and_flatten(ls_0, "ls_0")
+        self.__ls_0 = ls_0
+
+    @ls.setter
+    def ls(self, ls):
+        ls = check_if_nparray_and_flatten(ls, "ls")
+        self.__ls = ls
+
+    @ls_e.setter
+    def ls_e(self, ls_e):
+        ls_e = check_if_nparray_and_flatten(ls_e, "ls_e")
+        self.__ls_e = ls_e
+
+    @us_0.setter
+    def us_0(self, us_0):
+        us_0 = check_if_nparray_and_flatten(us_0, "us_0")
+        self.__us_0 = us_0
+
+    @us.setter
+    def us(self, us):
+        us = check_if_nparray_and_flatten(us, "us")
+        self.__us = us
+
+    @us_e.setter
+    def us_e(self, us_e):
+        us_e = check_if_nparray_and_flatten(us_e, "us_e")
+        self.__us_e = us_e
 
     # SLACK bounds
     # soft bounds on x
