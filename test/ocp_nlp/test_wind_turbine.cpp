@@ -968,6 +968,18 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     ocp_nlp_solver_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
     ocp_nlp_solver_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
 
+    double qp_tol_stat = 0.5 * tol_stat;
+    double qp_tol_eq   = 0.5 * tol_eq;
+    double qp_tol_ineq = 0.5 * tol_ineq;
+    double qp_tol_comp = 0.5 * tol_comp;
+    ocp_nlp_solver_opts_set(config, nlp_opts, "qp_tol_stat", &qp_tol_stat);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "qp_tol_eq", &qp_tol_eq);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "qp_tol_ineq", &qp_tol_ineq);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "qp_tol_comp", &qp_tol_comp);
+
+    int print_level = 0;
+    ocp_nlp_solver_opts_set(config, nlp_opts, "print_level", &print_level);
+
 
     // partial condensing
     if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
@@ -1093,7 +1105,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
         printf("electrical power = %f\n", electrical_power);
         printf("Max residuals = %e\n", max_res);
 
-        REQUIRE((status == 0 || status == 1 && MAX_SQP_ITERS == 1));
+        REQUIRE(status == 0);
         REQUIRE(max_res <= TOL);
 
         // shift trajectories

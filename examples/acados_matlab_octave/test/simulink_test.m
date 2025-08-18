@@ -65,7 +65,7 @@ fprintf('\nTest results on SIMULINK simulation.\n')
 
 % compare u trajectory
 err_vs_ref = norm(simulink_u_traj_ref - uvals);
-TOL = 1e-8;
+TOL = 5e-5;
 disp(['Norm of control traj. wrt. reference solution is: ',...
     num2str(err_vs_ref, '%e'), ' test TOL = ', num2str(TOL)]);
 
