@@ -111,16 +111,18 @@ def solve_problem_with_constraint_scaling(scale_constraints, nlp_solver_type):
         constr_scale = ocp_solver.get_qp_scaling_constraints(stage=0)
         print(f"Constraints scaling factors: {constr_scale}")
 
-    if scale_constraints:
-        assert status == 0, "Scaling of the constraints was not succesful!"
-    else:
-        assert status == 4, "Problem should not be solvable without scaling!"
+    # NOTE: with HPIPM update in https://github.com/acados/acados/pull/1611 this became solvable without scaling
+    assert status == 0
+    # if scale_constraints:
+    #     assert status == 0, "Scaling of the constraints was not succesful!"
+    # else:
+    #     assert status == 4, "Problem should not be solvable without scaling!"
     del ocp_solver
 
 def main():
     # run test cases
     for nlp_solver_type in ['SQP_WITH_FEASIBLE_QP', 'SQP']:
-        print("\nTest standard unscaled version, HPIPM should fail:")
+        print("\nTest standard unscaled version:")
         solve_problem_with_constraint_scaling(scale_constraints=False, nlp_solver_type=nlp_solver_type)
         print("\n\n----------------------------------------------")
         print("\nTest constraint scaling version, HPIPM should succeed:")
