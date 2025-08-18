@@ -95,7 +95,7 @@ ocp.solver_options.nlp_solver_ext_qp_res = 1
 ocp.solver_options.nlp_qp_tol_strategy = 'ADAPTIVE_CURRENT_RES_JOINT'
 ocp.solver_options.qp_solver_iter_max = 1000
 ocp.solver_options.nlp_qp_tol_reduction_factor = 1e-2
-
+ocp.solver_options.qp_solver_mu0 = 1e1
 # set prediction horizon
 ocp.solver_options.tf = Tf
 
