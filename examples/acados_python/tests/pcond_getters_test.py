@@ -92,22 +92,16 @@ if __name__ == "__main__":
     solver.solve()
     cond_N = ocp.solver_options.qp_solver_cond_N
 
-    FIELDS_PCOND = [
-        "pcond_A", "pcond_B", "pcond_b",
-        "pcond_Q", "pcond_R", "pcond_S", "pcond_q", "pcond_r",
-        "pcond_C", "pcond_D", "pcond_lg", "pcond_ug",
-        "pcond_lbx", "pcond_ubx", "pcond_lbu", "pcond_ubu"
-            ]
+    dyn_fields = ["A", "B", "b"]
+    cost_constr_fields = ["Q", "R", "S", "q", "r", "C", "D", "lg", "ug", "lbx", "ubx", "lbu", "ubu"]
+    fields = dyn_fields + cost_constr_fields
     qp = {"N": cond_N, "stages": []}
     for k in range(cond_N + 1):
         stage = {}
-        for field in FIELDS_PCOND:
-            print(f"trying to get {field} at stage {k}")
-            try:
-                arr = solver.get_from_qp_in(k, field)
-                stage[field.split("_", 1)[1]] = np.array(arr).tolist()
-            except Exception as e:
-                print(f"[warn] stage {k}: couldn't get {field}: {e}")
+        for field in fields:
+            if not (k == cond_N and field in dyn_fields):
+                arr = solver.get_from_qp_in(k, "pcond_" + field)
+                stage[field] = np.array(arr).tolist()
         qp["stages"].append(stage)
 
 
