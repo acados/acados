@@ -39,7 +39,6 @@ if __name__ == "__main__":
     ocp.model.f_expl_expr = xdot
     ocp.model.f_impl_expr = xdot
 
-
     # Bounds
     ocp.constraints.x0 = x0
     ocp.constraints.idxbu = np.array([0], dtype=int)
@@ -78,15 +77,11 @@ if __name__ == "__main__":
 
     ocp.solver_options.qp_solver_cond_N = cond_N
 
-    # This works for example for N=40, cond_N=20 but not for N=40, cond_N=10 and most other combinations
-    # These produce all kinds of segfaults and memory errors as described
     ocp.solver_options.qp_solver_cond_block_size = (cond_N) * [N // ((cond_N))] + [N - (cond_N * (N // cond_N))]
-    # This seems to work for all combinations of N and cond_N
     # ocp.solver_options.qp_solver_cond_block_size = (cond_N) * [1] + [N-((cond_N))]
 
     uniq = f"double_integrator_{os.getpid()}"
     ocp.code_export_directory = f"c_generated_code/{uniq}"
-    ocp.shared_lib_name = f"libacados_ocp_solver_{uniq}.so"
     json_path = f".solver_files/ACADOS_SOLVER_{uniq}.json"
 
     os.makedirs(os.path.dirname(ocp.code_export_directory), exist_ok=True)
@@ -97,10 +92,12 @@ if __name__ == "__main__":
     solver.solve()
     cond_N = ocp.solver_options.qp_solver_cond_N
 
-    FIELDS_PCOND = ["pcond_A", "pcond_B", "pcond_b",
-                    "pcond_Q", "pcond_R", "pcond_S", "pcond_q", "pcond_r",
-                    "pcond_C", "pcond_D", "pcond_lg", "pcond_ug",
-                    "pcond_lbx", "pcond_ubx", "pcond_lbu", "pcond_ubu"]
+    FIELDS_PCOND = [
+        "pcond_A", "pcond_B", "pcond_b",
+        "pcond_Q", "pcond_R", "pcond_S", "pcond_q", "pcond_r",
+        "pcond_C", "pcond_D", "pcond_lg", "pcond_ug",
+        "pcond_lbx", "pcond_ubx", "pcond_lbu", "pcond_ubu"
+            ]
     qp = {"N": cond_N, "stages": []}
     for k in range(cond_N + 1):
         stage = {}
