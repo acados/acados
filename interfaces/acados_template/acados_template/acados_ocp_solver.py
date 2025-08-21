@@ -90,7 +90,10 @@ class AcadosOcpSolver:
         return self.__shared_lib
 
     @classmethod
-    def generate(cls, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, simulink_opts=None, cmake_builder: CMakeBuilder = None, verbose=True):
+    def generate(cls, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp],
+                 json_file: str,
+                 simulink_opts: Optional[dict]=None,
+                 cmake_builder: Optional[CMakeBuilder] = None, verbose=True):
         """
         Generates the code for an acados OCP solver, given the description in acados_ocp.
 
