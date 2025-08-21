@@ -85,7 +85,9 @@ project({{ model.name }})
 {% if problem_class != "SIM" %}
 option(BUILD_ACADOS_SOLVER_LIB "Should the solver library acados_solver_{{ model.name }} be build?" OFF)
 option(BUILD_ACADOS_OCP_SOLVER_LIB "Should the OCP solver library acados_ocp_solver_{{ model.name }} be build?" OFF)
+option(BUILD_ACADOS_OCP_SOLVER_STATIC_LIB "Should the static OCP solver library acados_ocp_solver_{{ model.name }}_static be built?" OFF)
 option(BUILD_EXAMPLE "Should the example main_{{ model.name }} be build?" OFF)
+option(BUILD_EXAMPLE_STATIC "Should the example main_{{ model.name }} be build linking to the static OCP solver library?" OFF)
 {%- endif %}
 
 
@@ -134,7 +136,7 @@ add_library(${MODEL_OBJ} OBJECT ${MODEL_SRC} )
 
 {% if problem_class != "SIM" %}
 # optimal control problem - mostly CasADi exports
-if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMPLE})
+if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_STATIC_LIB} OR ${BUILD_EXAMPLE})
     set(OCP_SRC
 {% for filename in external_function_files_ocp %}
         {{ filename }}
@@ -258,6 +260,20 @@ if(${BUILD_ACADOS_OCP_SOLVER_LIB})
     install(TARGETS ${LIB_ACADOS_OCP_SOLVER} DESTINATION ${CMAKE_INSTALL_PREFIX})
 endif(${BUILD_ACADOS_OCP_SOLVER_LIB})
 
+# ocp_static_lib
+if(${BUILD_ACADOS_OCP_SOLVER_STATIC_LIB})
+    set(LIB_ACADOS_OCP_SOLVER_STATIC acados_ocp_solver_{{ model.name }}_static)
+    add_library(${LIB_ACADOS_OCP_SOLVER_STATIC} STATIC
+    {%- if solver_options.N_horizon > 0 %}
+        $<TARGET_OBJECTS:${MODEL_OBJ}>
+    {%- endif %}
+        $<TARGET_OBJECTS:${OCP_OBJ}>
+    )
+    target_link_libraries(${LIB_ACADOS_OCP_SOLVER_STATIC} PRIVATE ${EXTERNAL_LIB})
+    target_link_directories(${LIB_ACADOS_OCP_SOLVER_STATIC} PRIVATE ${EXTERNAL_DIR})
+    install(TARGETS ${LIB_ACADOS_OCP_SOLVER_STATIC} DESTINATION ${CMAKE_INSTALL_PREFIX})
+endif(${BUILD_ACADOS_OCP_SOLVER_STATIC_LIB})
+
 # example
 if(${BUILD_EXAMPLE})
     add_executable(${EX_EXE} ${EX_SRC}
@@ -271,6 +287,14 @@ if(${BUILD_EXAMPLE})
     )
     install(TARGETS ${EX_EXE} DESTINATION ${CMAKE_INSTALL_PREFIX})
 endif(${BUILD_EXAMPLE})
+
+# example linking to static lib
+if(${BUILD_EXAMPLE_STATIC})
+    add_executable(${EX_EXE} ${EX_SRC}
+    )
+    install(TARGETS ${EX_EXE} DESTINATION ${CMAKE_INSTALL_PREFIX})
+    target_link_libraries(${EX_EXE} PRIVATE ${LIB_ACADOS_OCP_SOLVER_STATIC} ${EXTERNAL_LIB})
+endif(${BUILD_EXAMPLE_STATIC})
   {%- endif %}
 
 {% if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 -%}
@@ -294,7 +318,9 @@ endif(${BUILD_ACADOS_SIM_SOLVER_LIB})
   {%- if problem_class != "SIM" %}
 unset(BUILD_ACADOS_SOLVER_LIB CACHE)
 unset(BUILD_ACADOS_OCP_SOLVER_LIB CACHE)
+unset(BUILD_ACADOS_OCP_SOLVER_STATIC_LIB CACHE)
 unset(BUILD_EXAMPLE CACHE)
+unset(BUILD_EXAMPLE_STATIC CACHE)
   {%- endif %}
 {%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
 unset(BUILD_SIM_EXAMPLE CACHE)
