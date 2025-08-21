@@ -305,7 +305,7 @@ class AcadosOcpSolver:
         self.__qp_constraint_fields = {'C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu'}
         self.__qp_constraint_int_fields = {'idxs', 'idxb', 'idxs_rev'}
         self.__qp_pc_hpipm_fields = {'P', 'K', 'Lr', 'p'}
-        self.__qp_pc_fields = {'pcond_Q', 'pcond_R', 'pcond_S'}
+        self.__qp_pc_fields = {'pcond_Q', 'pcond_R', 'pcond_S', 'pcond_A', 'pcond_B', 'pcond_b', 'pcond_q', 'pcond_r', 'pcond_C', 'pcond_D', 'pcond_lg', 'pcond_ug', 'pcond_lbx', 'pcond_ubx', 'pcond_lbu', 'pcond_ubu'}
         self.__all_qp_fields = self.__qp_dynamics_fields | self.__qp_cost_fields | self.__qp_constraint_fields | self.__qp_constraint_int_fields | self.__qp_pc_hpipm_fields | self.__qp_pc_fields
 
         self.__relaxed_qp_dynamics_fields = {f'relaxed_{field}' for field in self.__qp_dynamics_fields}
@@ -2071,7 +2071,7 @@ class AcadosOcpSolver:
 
         Note:
         - additional supported fields are ['P', 'K', 'Lr'], which can be extracted form QP solver PARTIAL_CONDENSING_HPIPM.
-        - for PARTIAL_CONDENSING_* QP solvers, the following additional fields are available: ['pcond_Q', 'pcond_R', 'pcond_S']
+        - for PARTIAL_CONDENSING_* QP solvers, the following additional fields are available: ['pcond_Q', 'pcond_R', 'pcond_S', 'pcond_A', 'pcond_B', 'pcond_b', 'pcond_q', 'pcond_r', 'pcond_C', 'pcond_D', 'pcond_lg', 'pcond_ug', 'pcond_lbx', 'pcond_ubx', 'pcond_lbu', 'pcond_ubu']
         """
         if not isinstance(stage_, int):
             raise TypeError("stage should be int")
@@ -2086,8 +2086,13 @@ class AcadosOcpSolver:
                 raise ValueError(f"field {field_} only works for PARTIAL_CONDENSING_HPIPM QP solver with qp_solver_cond_N == N.")
             if field_ in ["P", "K", "p"] and stage_ == 0 and self.__nbxe_0 > 0:
                 raise ValueError(f"getting field {field_} at stage 0 only works without x0 elimination (see nbxe_0).")
-        if field_ in self.__qp_pc_fields and not self.__solver_options["qp_solver"].startswith("PARTIAL_CONDENSING"):
-            raise ValueError(f"field {field_} only works for PARTIAL_CONDENSING QP solvers.")
+        if field_ in self.__qp_pc_fields:
+            if not self.__solver_options["qp_solver"].startswith("PARTIAL_CONDENSING"):
+                raise ValueError(f"field {field_} only works for PARTIAL_CONDENSING QP solvers.")
+            if field_.split("_", 1)[1] in self.__qp_dynamics_fields and stage_ >= self.__solver_options["qp_solver_cond_N"]:
+                raise ValueError(f"dynamics field {field_} not available at last stage of partial condensing")
+            elif stage_ > self.__solver_options["qp_solver_cond_N"]:
+                raise ValueError(f"stage should be <= qp_solver_cond_N for partial condensing fields")
         if field_ in self.__all_relaxed_qp_fields and not self.__solver_options["nlp_solver_type"] == "SQP_WITH_FEASIBLE_QP":
             raise ValueError(f"field {field_} only works for SQP_WITH_FEASIBLE_QP nlp_solver_type.")
 

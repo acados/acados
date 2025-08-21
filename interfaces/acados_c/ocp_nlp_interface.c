@@ -1140,6 +1140,56 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nu", &dims_out[0]);
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nx", &dims_out[1]);
     }
+    else if (!strcmp(field, "pcond_A"))
+    {
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage+1, "pcond_nx", &dims_out[0]);
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nx", &dims_out[1]);
+    }
+    else if (!strcmp(field, "pcond_B"))
+    {
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage+1, "pcond_nx", &dims_out[0]);
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nu", &dims_out[1]);
+    }
+    else if (!strcmp(field, "pcond_b"))
+    {
+        dims_out[0] = 1;
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage+1, "pcond_nx", &dims_out[1]);
+    }
+    else if (!strcmp(field, "pcond_q"))
+    {
+        dims_out[0] = 1;
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nx", &dims_out[1]);
+    }
+    else if (!strcmp(field, "pcond_r"))
+    {
+        dims_out[0] = 1;
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nu", &dims_out[1]);
+    }
+    else if (!strcmp(field, "pcond_C"))
+    {
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_ng", &dims_out[0]);
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nx", &dims_out[1]);
+    }
+    else if (!strcmp(field, "pcond_D"))
+    {
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_ng", &dims_out[0]);
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nu", &dims_out[1]);
+    }
+    else if (!strcmp(field, "pcond_lg") || !strcmp(field, "pcond_ug"))
+    {
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_ng", &dims_out[0]);
+        dims_out[1] = 1;
+    }
+    else if (!strcmp(field, "pcond_lbx") || !strcmp(field, "pcond_ubx"))
+    {
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nbx", &dims_out[0]);
+        dims_out[1] = 1;
+    }
+    else if (!strcmp(field, "pcond_lbu") || !strcmp(field, "pcond_ubu"))
+    {
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nbu", &dims_out[0]);
+        dims_out[1] = 1;
+    }
     else
     {
         printf("\nerror: ocp_nlp_qp_dims_get_from_attr: field %s not available\n", field);
@@ -1610,6 +1660,84 @@ void ocp_nlp_get_at_stage(ocp_nlp_solver *solver, int stage, const char *field, 
         ocp_qp_in *pcond_qp_in;
         ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
         d_ocp_qp_get_S(stage, pcond_qp_in, value);
+    }
+    else if (!strcmp(field, "pcond_A"))
+    {
+        ocp_qp_in *pcond_qp_in;
+        ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
+        d_ocp_qp_get_A(stage, pcond_qp_in, value);
+    }
+    else if (!strcmp(field, "pcond_B"))
+    {
+        ocp_qp_in *pcond_qp_in;
+        ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
+        d_ocp_qp_get_B(stage, pcond_qp_in, value);
+    }
+    else if (!strcmp(field, "pcond_b"))
+    {
+        ocp_qp_in *pcond_qp_in;
+        ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
+        d_ocp_qp_get_b(stage, pcond_qp_in, value);
+    }
+    else if (!strcmp(field, "pcond_q"))
+    {
+        ocp_qp_in *pcond_qp_in;
+        ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
+        d_ocp_qp_get_q(stage, pcond_qp_in, value);
+    }
+    else if (!strcmp(field, "pcond_r"))
+    {
+        ocp_qp_in *pcond_qp_in;
+        ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
+        d_ocp_qp_get_r(stage, pcond_qp_in, value);
+    }
+    else if (!strcmp(field, "pcond_C"))
+    {
+        ocp_qp_in *pcond_qp_in;
+        ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
+        d_ocp_qp_get_C(stage, pcond_qp_in, value);
+    }
+    else if (!strcmp(field, "pcond_D"))
+    {
+        ocp_qp_in *pcond_qp_in;
+        ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
+        d_ocp_qp_get_D(stage, pcond_qp_in, value);
+    }
+    else if (!strcmp(field, "pcond_lg"))
+    {
+        ocp_qp_in *pcond_qp_in;
+        ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
+        d_ocp_qp_get_lg(stage, pcond_qp_in, value);
+    }
+    else if (!strcmp(field, "pcond_ug"))
+    {
+        ocp_qp_in *pcond_qp_in;
+        ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
+        d_ocp_qp_get_ug(stage, pcond_qp_in, value);
+    }
+    else if (!strcmp(field, "pcond_lbx"))
+    {
+        ocp_qp_in *pcond_qp_in;
+        ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
+        d_ocp_qp_get_lbx(stage, pcond_qp_in, value);
+    }
+    else if (!strcmp(field, "pcond_ubx"))
+    {
+        ocp_qp_in *pcond_qp_in;
+        ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
+        d_ocp_qp_get_ubx(stage, pcond_qp_in, value);
+    }
+    else if (!strcmp(field, "pcond_lbu"))
+    {
+        ocp_qp_in *pcond_qp_in;
+        ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
+        d_ocp_qp_get_lbu(stage, pcond_qp_in, value);
+    }
+    else if (!strcmp(field, "pcond_ubu"))
+    {
+        ocp_qp_in *pcond_qp_in;
+        ocp_nlp_get(solver, "qp_xcond_in", &pcond_qp_in);
+        d_ocp_qp_get_ubu(stage, pcond_qp_in, value);
     }
     else
     {
