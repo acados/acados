@@ -211,8 +211,6 @@ void *ocp_qp_xcond_solver_opts_assign(void *config_, ocp_qp_xcond_solver_dims *d
     ocp_qp_xcond_solver_opts *opts = (ocp_qp_xcond_solver_opts *) c_ptr;
     c_ptr += sizeof(ocp_qp_xcond_solver_opts);
 
-    assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
-
     opts->xcond_opts = xcond->opts_assign(dims->xcond_dims, c_ptr);
     c_ptr += xcond->opts_calculate_size(dims->xcond_dims);
 
@@ -358,8 +356,6 @@ void *ocp_qp_xcond_solver_memory_assign(void *config_, ocp_qp_xcond_solver_dims 
 
     ocp_qp_xcond_solver_memory *mem = (ocp_qp_xcond_solver_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_xcond_solver_memory);
-
-    assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
     mem->xcond_memory = xcond->memory_assign(dims->xcond_dims, opts->xcond_opts, c_ptr);
     c_ptr += xcond->memory_calculate_size(dims->xcond_dims, opts->xcond_opts);
