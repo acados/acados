@@ -396,7 +396,7 @@ acados_size_t ocp_qp_partial_condensing_memory_calculate_size(void *dims_, void 
     size += sizeof(struct d_ocp_qp_reduce_eq_dof_ws);
     size += d_ocp_qp_reduce_eq_dof_ws_memsize(dims->orig_dims);
 
-    size += 2*8;
+    size += 3*8;  // aligns
     make_int_multiple_of(8, &size);
 
     return size;
