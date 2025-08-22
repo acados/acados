@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 def plot_qp_sparsity(qp, fig_filename=None, title=None, with_legend=True):
     latexify_plot()
 
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(4.0, 4.0))
     nx_total = 0
     nu_total = 0
     for stage in qp["stages"]:
@@ -37,15 +37,17 @@ def plot_qp_sparsity(qp, fig_filename=None, title=None, with_legend=True):
     plt.spy(H_xu, markersize=5, label='$S$', color='C2')
     plt.spy(H_x, markersize=5, label='$Q$', color='C0')
     plt.spy(H_u, markersize=5, label='$R$', color='C1')
+    # remove xticks
+    plt.xticks([])
     if with_legend:
-        plt.legend()
+        plt.legend(handletextpad=0.3)
     if title is not None:
         plt.title(title)
     if fig_filename is not None:
         plt.savefig(fig_filename, bbox_inches='tight')
     plt.show()
 
-def main(N=20, cond_N=10, qp_solver_cond_block_size=None, fig_title=None, with_legend=True, fig_filename=None):
+def main(N=20, cond_N=10, qp_solver_cond_block_size=None, x0_elimination=True, fig_title=None, with_legend=True, fig_filename=None):
     N = 20
     Tf = 10.0
 
@@ -77,7 +79,12 @@ def main(N=20, cond_N=10, qp_solver_cond_block_size=None, fig_title=None, with_l
     ocp.model.f_expl_expr = f_expl_expr
 
     # Bounds
-    ocp.constraints.x0 = x0
+    if x0_elimination:
+        ocp.constraints.x0 = x0
+    else:
+        ocp.constraints.lbx_0 = x0
+        ocp.constraints.ubx_0 = x0
+        ocp.constraints.idxbx_0 = np.arange(nx)
     ocp.constraints.idxbu = np.arange(nu)
     ocp.constraints.lbu = lbu
     ocp.constraints.ubu = ubu
@@ -147,9 +154,9 @@ def main(N=20, cond_N=10, qp_solver_cond_block_size=None, fig_title=None, with_l
     plot_qp_sparsity(qp, fig_filename=fig_filename, title=fig_title, with_legend=with_legend)
 
 if __name__ == "__main__":
-    # main(N=20, cond_N=20, fig_title="No condensing", fig_filename="sparsity_no_condensing.pdf")
-    # main(N=20, cond_N=5, with_legend=False, fig_title="Condensing $N=20$, $N_{\mathrm{cond}}=5$", fig_filename="sparsity_pcond.pdf")
-    # main(N=20, cond_N=5, qp_solver_cond_block_size=[6, 5, 4, 2, 2, 1], with_legend=False, fig_title="Condensing $N=20$, $N_{\mathrm{cond}}=5$, custom block sizes", fig_filename="sparsity_pcond_custom_block_sizes.pdf")
-    # main(N=20, cond_N=1, with_legend=False, fig_title="Condensing $N=20$, $N_{\mathrm{cond}}=1$ (fully condensed)", fig_filename="sparsity_fcond.pdf")
+    # main(N=20, cond_N=20, x0_elimination=False, fig_title="Original QP $N=20$ -- no condensing", fig_filename="sparsity_no_condensing.pdf")
+    # main(N=20, cond_N=1, with_legend=False, fig_title="Condensing, $N_{\mathrm{cond}}=1$ (fully condensed)", fig_filename="sparsity_fcond.pdf")
+    # main(N=20, cond_N=5, with_legend=False, fig_title="Partial condensing, $N_{\mathrm{cond}}=5$", fig_filename="sparsity_pcond.pdf")
+    # main(N=20, cond_N=5, qp_solver_cond_block_size=[6, 5, 4, 3, 2, 0], with_legend=False, fig_title="Condensing, $N_{\mathrm{cond}}=5$, custom block sizes", fig_filename="sparsity_pcond_custom_block_sizes.pdf")
 
     main(N=20, cond_N=5, qp_solver_cond_block_size=[6, 5, 4, 2, 2, 1])
