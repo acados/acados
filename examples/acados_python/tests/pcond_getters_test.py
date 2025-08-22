@@ -1,23 +1,62 @@
 import os
 import numpy as np
 import casadi as ca
-from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
+from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver, latexify_plot
+import matplotlib.pyplot as plt
 
 
+def plot_qp_sparsity(qp, fig_filename=None, title=None, with_legend=True):
+    latexify_plot()
 
-if __name__ == "__main__":
-    N = 40
+    plt.figure(figsize=(10, 6))
+    nx_total = 0
+    nu_total = 0
+    for stage in qp["stages"]:
+        # cost Hessian
+        nx = stage["Q"].shape[0]
+        nu = stage["R"].shape[0]
+        nx_total += nx
+        nu_total += nu
+    nv_total = nx_total + nu_total
+
+    H_x = np.zeros((nv_total, nv_total))
+    H_u = np.zeros((nv_total, nv_total))
+    H_xu = np.zeros((nv_total, nv_total))
+
+    offset = 0
+    for stage in qp["stages"]:
+        nx = stage["Q"].shape[0]
+        nu = stage["R"].shape[0]
+
+        H_x[offset:offset + nx, offset:offset + nx] = stage["Q"]
+        H_u[offset + nx:offset + nx + nu, offset + nx:offset + nx + nu] = stage["R"]
+        if nx > 0 and nu > 0:
+            H_xu[offset+nx:offset + nx + nu, offset:offset + nx] = stage["S"]
+            H_xu[offset:offset + nx, offset+nx:offset + nx + nu] = stage["S"].T
+        offset += nx + nu
+    plt.spy(H_xu, markersize=5, label='$S$', color='C2')
+    plt.spy(H_x, markersize=5, label='$Q$', color='C0')
+    plt.spy(H_u, markersize=5, label='$R$', color='C1')
+    if with_legend:
+        plt.legend()
+    if title is not None:
+        plt.title(title)
+    if fig_filename is not None:
+        plt.savefig(fig_filename, bbox_inches='tight')
+    plt.show()
+
+def main(N=20, cond_N=10, qp_solver_cond_block_size=None, fig_title=None, with_legend=True, fig_filename=None):
+    N = 20
     Tf = 10.0
-    cond_N = 10
 
     # Problem data
-    nx, nu = 2, 1
-    Q = np.diag([5.0, 1.0])
-    R = np.diag([0.2])
+    nx, nu = 5, 2
+    Q = np.diag([float(i+1) for i in range(nx)])
+    R = np.diag([float(i+1) for i in range(nu)])
     x0 = np.zeros(nx)
-    x_ref = np.array([10.0, 0.0])
-    lbu = np.array([-5.5])
-    ubu = np.array([5.5])
+    x_ref = np.ones(nx)
+    lbu = -np.ones(nu)
+    ubu = -lbu
 
     # Build OCP
     ocp = AcadosOcp()
@@ -25,23 +64,21 @@ if __name__ == "__main__":
     ocp.solver_options.N_horizon = N
 
     ocp.model = AcadosModel()
-    ocp.model.name = "double_integrator"
 
-    s, v = ca.SX.sym("s"), ca.SX.sym("v")
-    a = ca.SX.sym("a")
-    x = ca.vertcat(s, v)
-    u = ca.vertcat(a)
-    xdot = ca.vertcat(v, a)
+    A = np.eye(nx) + 0.1 * np.ones((nx, nx))
+    B = np.ones((nx, nu))
+    u = ca.SX.sym('u', nu, 1)
+    x = ca.SX.sym('x', nx, 1)
+    f_expl_expr = A @ x + B @ u
 
     ocp.model.x = x
     ocp.model.u = u
-    ocp.model.xdot = xdot
-    ocp.model.f_expl_expr = xdot
-    ocp.model.f_impl_expr = xdot
+    ocp.model.name = 'model'
+    ocp.model.f_expl_expr = f_expl_expr
 
     # Bounds
     ocp.constraints.x0 = x0
-    ocp.constraints.idxbu = np.array([0], dtype=int)
+    ocp.constraints.idxbu = np.arange(nu)
     ocp.constraints.lbu = lbu
     ocp.constraints.ubu = ubu
 
@@ -50,6 +87,9 @@ if __name__ == "__main__":
     W = np.zeros((ny, ny))
     W[:nx, :nx] = Q
     W[nx:, nx:] = R
+    S = 1e-3 * np.ones((nx, nu))
+    W[:nx, nx:] = S
+    W[nx:, :nx] = S.T
 
     ocp.cost.cost_type = "LINEAR_LS"
     ocp.cost.cost_type_0 = "LINEAR_LS"
@@ -77,8 +117,8 @@ if __name__ == "__main__":
 
     ocp.solver_options.qp_solver_cond_N = cond_N
 
-    ocp.solver_options.qp_solver_cond_block_size = (cond_N) * [N // ((cond_N))] + [N - (cond_N * (N // cond_N))]
-    # ocp.solver_options.qp_solver_cond_block_size = (cond_N) * [1] + [N-((cond_N))]
+    if qp_solver_cond_block_size is not None:
+        ocp.solver_options.qp_solver_cond_block_size = qp_solver_cond_block_size
 
     uniq = f"double_integrator_{os.getpid()}"
     ocp.code_export_directory = f"c_generated_code/{uniq}"
@@ -101,9 +141,15 @@ if __name__ == "__main__":
         for field in fields:
             if not (k == cond_N and field in dyn_fields):
                 arr = solver.get_from_qp_in(k, "pcond_" + field)
-                stage[field] = np.array(arr).tolist()
+                stage[field] = np.array(arr)
         qp["stages"].append(stage)
 
+    plot_qp_sparsity(qp, fig_filename=fig_filename, title=fig_title, with_legend=with_legend)
 
-    from pprint import pprint
-    pprint(qp["stages"])
+if __name__ == "__main__":
+    # main(N=20, cond_N=20, fig_title="No condensing", fig_filename="sparsity_no_condensing.pdf")
+    # main(N=20, cond_N=5, with_legend=False, fig_title="Condensing $N=20$, $N_{\mathrm{cond}}=5$", fig_filename="sparsity_pcond.pdf")
+    # main(N=20, cond_N=5, qp_solver_cond_block_size=[6, 5, 4, 2, 2, 1], with_legend=False, fig_title="Condensing $N=20$, $N_{\mathrm{cond}}=5$, custom block sizes", fig_filename="sparsity_pcond_custom_block_sizes.pdf")
+    # main(N=20, cond_N=1, with_legend=False, fig_title="Condensing $N=20$, $N_{\mathrm{cond}}=1$ (fully condensed)", fig_filename="sparsity_fcond.pdf")
+
+    main(N=20, cond_N=5, qp_solver_cond_block_size=[6, 5, 4, 2, 2, 1])
