@@ -354,7 +354,7 @@ class AcadosCasadiOcp:
             cost_y_expr = model.cost_y_expr_e
             cost_psi_expr, cost_r_in_psi_expr = model.cost_psi_expr_e, model.cost_r_in_psi_expr_e
             cost_expr_ext_cost = model.cost_expr_ext_cost_e
-            W, Vx = ocp.cost.W_e, ocp.cost.Vx_e
+            W, Vx, Vu = ocp.cost.W_e, ocp.cost.Vx_e, 0
 
         if ocp.cost.cost_type == "LINEAR_LS":
             if is_empty(Vx):
