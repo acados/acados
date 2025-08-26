@@ -345,7 +345,7 @@ class AcadosCasadiOcp:
             cost_psi_expr, cost_r_in_psi_expr = model.cost_psi_expr_0, model.cost_r_in_psi_expr_0
             cost_expr_ext_cost = model.cost_expr_ext_cost_0
             W, Vx, Vu = ocp.cost.W_0, ocp.cost.Vx_0, ocp.cost.Vu_0
-        if stage < ocp.dims.N:
+        elif stage < ocp.dims.N:
             cost_y_expr = model.cost_y_expr
             cost_psi_expr, cost_r_in_psi_expr = model.cost_psi_expr, model.cost_r_in_psi_expr
             cost_expr_ext_cost = model.cost_expr_ext_cost
@@ -1116,6 +1116,12 @@ class AcadosCasadiOcpSolver:
             self.p[self.index_map['yref_in_p_nlp'][stage]] = value_.flatten()
         else:
             raise NotImplementedError(f"Field '{field}' is not yet implemented in set().")
+
+    def set_params_sparse(self, stage_: int, idx_values_: np.ndarray, param_values_: np.ndarray):
+        if not isinstance(stage_, int):
+            raise TypeError('stage should be integer.')
+        index = np.asarray(self.index_map['p_in_p_nlp'][stage_])[idx_values_]
+        self.p[index] = param_values_.flatten()
 
     def cost_get(self, stage_: int, field_: str) -> np.ndarray:
         raise NotImplementedError()
