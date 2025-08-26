@@ -94,8 +94,8 @@ ocp.solver_options.nlp_solver_type = 'SQP'
 ocp.solver_options.nlp_solver_ext_qp_res = 1
 ocp.solver_options.nlp_qp_tol_strategy = 'ADAPTIVE_CURRENT_RES_JOINT'
 ocp.solver_options.qp_solver_iter_max = 1000
-ocp.solver_options.nlp_qp_tol_reduction_factor = 1e-2
-
+ocp.solver_options.nlp_qp_tol_reduction_factor = 1e-3
+ocp.solver_options.qp_solver_mu0 = 1e2
 # set prediction horizon
 ocp.solver_options.tf = Tf
 
@@ -112,12 +112,13 @@ status = ocp_solver.solve()
 sum_qp_iter = sum(ocp_solver.get_stats("qp_iter"))
 nlp_iter = ocp_solver.get_stats("nlp_iter")
 print(f'nlp_iter: {nlp_iter}, total qp_iter: {sum_qp_iter}')
+ocp_solver.print_statistics()
 
-if sum_qp_iter > 66:
-    raise Exception(f'number of qp iterations {sum_qp_iter} is too high, expected <= 66.')
+if sum_qp_iter > 75:
+    raise Exception(f'number of qp iterations {sum_qp_iter} is too high, expected <= 75.')
 
 if status != 0:
-    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+    ocp_solver.print_statistics()
     raise Exception(f'acados returned status {status}.')
 
 # get solution
@@ -126,6 +127,5 @@ for i in range(N):
     simU[i,:] = ocp_solver.get(i, "u")
 simX[N,:] = ocp_solver.get(N, "x")
 
-ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
 
 plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=True)
