@@ -46,9 +46,10 @@ from utils import plot_pendulum
 # * non-linear constraint expression + relaxing the initial state constraints
 # * state bounds constraint
 CONSTRAINT_VERSIONS = ['nl', 'nl_relxd','bound']
+EXPECTED_STATUS_LIST = [0, 0, 0]
 
 def test_initial_h_constraints(constraint_version: str):
-    print(f'#################################################################################### {constraint_version} constraint ####################################################################################')
+    print(f'############### {constraint_version} constraint ###############')
     ocp = AcadosOcp()
 
     ocp.model = export_pendulum_ode_model()
@@ -144,7 +145,7 @@ def test_initial_h_constraints(constraint_version: str):
     ocp.solver_options.tf = Tf
     ocp.solver_options.nlp_solver_type = 'SQP'
 
-    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
     simX = np.zeros((N+1, nx))
     simU = np.zeros((N, nu))
@@ -153,9 +154,7 @@ def test_initial_h_constraints(constraint_version: str):
     if status != 0:
         print(f'acados returned status {status}.')
 
-    # for debugging
-    # ocp_solver.print_statistics()
-    # ocp_solver.dump_last_qp_to_json(f'{constraint_version}_last_qp.json', overwrite=True)
+    ocp_solver.print_statistics()
 
     # get solution
     for i in range(N):
@@ -170,9 +169,10 @@ def test_initial_h_constraints(constraint_version: str):
 
 if __name__ == "__main__":
     # we expect that the OCP with nl constraints will fail because it contains two active constraints at the initial node.
-    expected_status = [2, 0, 0]
     for constraint_version in CONSTRAINT_VERSIONS:
-        if test_initial_h_constraints(constraint_version=constraint_version) != expected_status[CONSTRAINT_VERSIONS.index(constraint_version)]:
-            raise Exception(f'constraint {constraint_version} failed!')
+        status = test_initial_h_constraints(constraint_version=constraint_version)
+        expected_status = EXPECTED_STATUS_LIST[CONSTRAINT_VERSIONS.index(constraint_version)]
+        if expected_status != status:
+            raise ValueError(f'constraint {constraint_version} returned status {status}, expected {expected_status}.')
         else:
             print(f'constraint {constraint_version} passed!')
