@@ -2119,7 +2119,7 @@ class AcadosOcpSolver:
         # call getter
         self.__acados_lib.ocp_nlp_get_at_stage(self.nlp_solver, stage, field, out_data_p)
 
-        if field_ in ["Q", "R", "relaxed_Q", "relaxed_R"]:
+        if field_.endswith(("Q", "R")):
             # make symmetric: copy lower triangular part to upper triangular part
             out = np.tril(out) + np.tril(out, -1).T
 
