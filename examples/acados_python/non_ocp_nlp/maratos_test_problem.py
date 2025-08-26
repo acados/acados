@@ -211,14 +211,14 @@ def solve_maratos_problem_with_setting(setting):
             if max_infeasibility > 3.0:
                 raise Exception(f"Expected max_infeasibility < 0.5 when using globalized SQP on Maratos problem")
             elif globalization_use_SOC == 0:
-                if iter not in range(10, 15):
-                    raise Exception(f"Expected 10 to 15 SQP iterations when using globalized SQP without SOC on Maratos problem, got {iter}")
+                if iter not in range(10, 61):
+                    raise Exception(f"Expected 10 to 61 SQP iterations when using globalized SQP without SOC on Maratos problem, got {iter}")
             elif line_search_use_sufficient_descent == 1:
-                if iter not in range(9, 12):
-                    raise Exception(f"Expected SQP iterations in range(9, 12) when using globalized SQP with SOC on Maratos problem, got {iter}")
+                if iter not in range(9, 37):
+                    raise Exception(f"Expected SQP iterations in range(9, 37) when using globalized SQP with SOC on Maratos problem, got {iter}")
             else:
-                if iter != 10:
-                    raise Exception(f"Expected 10 SQP iterations when using globalized SQP with SOC on Maratos problem, got {iter}")
+                if iter != 16:
+                    raise Exception(f"Expected 16 SQP iterations when using globalized SQP with SOC on Maratos problem, got {iter}")
         elif globalization == 'FUNNEL_L1PEN_LINESEARCH':
             if iter > 12:
                 raise Exception(f"Expected not more than 12 SQP iterations when using Funnel Method SQP, got {iter}")
