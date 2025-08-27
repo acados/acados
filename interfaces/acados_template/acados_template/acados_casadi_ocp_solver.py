@@ -96,28 +96,24 @@ class AcadosCasadiOcp:
         if ocp.solver_options.integrator_type not in ["DISCRETE", "ERK"]:
             raise NotImplementedError(f"AcadosCasadiOcpSolver does not support integrator type {ocp.solver_options.integrator_type} yet.")
 
-        # create primal variables, parameter and slack variables
+        # create primal variables and slack variables
         ca_symbol = model.get_casadi_symbol()
         xtraj_nodes = []
         utraj_nodes = []
-        ptraj_nodes = []
         sl_nodes = []
         su_nodes = []
         if multiple_shooting:
             for i in range(N_horizon+1):
-                self._append_node('x', ca_symbol, xtraj_nodes, i, dims)
-                self._append_node('u', ca_symbol, utraj_nodes, i, dims)
-                self._append_node('p', ca_symbol, ptraj_nodes, i, dims)
-                self._append_node('sl', ca_symbol, sl_nodes, i, dims)
-                self._append_node('su', ca_symbol, su_nodes, i, dims)
+                self._append_node_for_variables('x', ca_symbol, xtraj_nodes, i, dims)
+                self._append_node_for_variables('u', ca_symbol, utraj_nodes, i, dims)
+                self._append_node_for_variables('sl', ca_symbol, sl_nodes, i, dims)
+                self._append_node_for_variables('su', ca_symbol, su_nodes, i, dims)
         else: # single_shooting
             self._x_traj_fun = []
             for i in range(N_horizon):
-                self._append_node('p', ca_symbol, ptraj_nodes, i, dims)
-                self._append_node('u', ca_symbol, utraj_nodes, i, dims)
-                self._append_node('sl', ca_symbol, sl_nodes, i, dims)
-                self._append_node('su', ca_symbol, su_nodes, i, dims)
-            self._append_node('p', ca_symbol, ptraj_nodes, N_horizon, dims)
+                self._append_node_for_variables('u', ca_symbol, utraj_nodes, i, dims)
+                self._append_node_for_variables('sl', ca_symbol, sl_nodes, i, dims)
+                self._append_node_for_variables('su', ca_symbol, su_nodes, i, dims)
 
         # setup state and control bounds
         lb_xtraj_nodes = [-np.inf * ca.DM.ones((dims.nx, 1)) for _ in range(N_horizon+1)]
@@ -146,7 +142,6 @@ class AcadosCasadiOcp:
         lbw_list = []
         ubw_list = []
         w0_list = []
-        p_list = []
         x_guess = ocp.constraints.x0 if ocp.constraints.has_x0 else np.zeros((dims.nx,))
         if multiple_shooting:
             for i in range(N_horizon+1):
@@ -154,7 +149,6 @@ class AcadosCasadiOcp:
                 if i < N_horizon:
                     self._append_variables_and_bounds('u',w_sym_list, lbw_list, ubw_list, w0_list, utraj_nodes, lb_utraj_nodes, ub_utraj_nodes, i, dims, x_guess)
                 self._append_variables_and_bounds('slack', w_sym_list, lbw_list, ubw_list, w0_list, [sl_nodes, su_nodes], lb_slack_nodes, ub_slack_nodes, i, dims, x_guess)
-                self._append_values_in_param(p_list, i, ocp)
         else: # single_shooting
             xtraj_nodes.append(x_guess)
             self._x_traj_fun.append(x_guess)
@@ -162,12 +156,17 @@ class AcadosCasadiOcp:
                 if i < N_horizon:
                     self._append_variables_and_bounds('u', w_sym_list, lbw_list, ubw_list, w0_list, utraj_nodes, lb_utraj_nodes, ub_utraj_nodes, i, dims, x_guess)
                 self._append_variables_and_bounds('slack', w_sym_list, lbw_list, ubw_list, w0_list, [sl_nodes, su_nodes], lb_slack_nodes, ub_slack_nodes, i, dims, x_guess)
-                self._append_values_in_param(p_list, i, ocp)
+
+        nw = self.offset_w  # number of primal variables
+
+        # setup parameter nodes and value
+        ptraj_nodes = []
+        p_list = []
+        for i in range(N_horizon+1):
+            self._append_node_and_value_for_params(ca_symbol, p_list, ptraj_nodes, i, ocp)
         p_list.append(ocp.p_global_values)
         self._index_map['p_global_in_p_nlp'].append(list(range(self.offset_p, self.offset_p+dims.np_global)))
         self.offset_p += dims.np_global
-
-        nw = self.offset_w  # number of primal variables
 
         # vectorize
         w = ca.vertcat(*w_sym_list)
@@ -298,7 +297,7 @@ class AcadosCasadiOcp:
         nlp_cost = 0
         for i in range(N_horizon+1):
             xtraj_node_i, utraj_node_i, ptraj_node_i, sl_node_i, su_node_i, cost_expr_i, p_for_model, ns, zl, Zl, zu, Zu = \
-            self._get_cost_node(i, N_horizon, xtraj_nodes, utraj_nodes, ptraj_nodes, sl_nodes, su_nodes, ocp, dims, cost)
+            self._get_cost_node(i, N_horizon, xtraj_nodes, utraj_nodes, p_nlp, sl_nodes, su_nodes, ocp, dims, cost)
 
             cost_fun_i = ca.Function(f'cost_fun_{i}', [model.x, model.u, p_for_model, model.p_global], [cost_expr_i])
             cost_i = cost_fun_i(xtraj_node_i, utraj_node_i, ptraj_node_i, model.p_global)
@@ -338,66 +337,27 @@ class AcadosCasadiOcp:
         self.__nlp_hess_l_custom = nlp_hess_l_custom
         self.__hess_approx_expr = hess_l
 
-    def get_cost_expression(self, ocp: AcadosOcp, yref_nodes, stage):
-        model = ocp.model
-        if stage == 0:
-            cost_y_expr = model.cost_y_expr_0
-            cost_psi_expr, cost_r_in_psi_expr = model.cost_psi_expr_0, model.cost_r_in_psi_expr_0
-            cost_expr_ext_cost = model.cost_expr_ext_cost_0
-            W, Vx, Vu = ocp.cost.W_0, ocp.cost.Vx_0, ocp.cost.Vu_0
-        elif stage < ocp.dims.N:
-            cost_y_expr = model.cost_y_expr
-            cost_psi_expr, cost_r_in_psi_expr = model.cost_psi_expr, model.cost_r_in_psi_expr
-            cost_expr_ext_cost = model.cost_expr_ext_cost
-            W, Vx, Vu = ocp.cost.W, ocp.cost.Vx, ocp.cost.Vu
-        elif stage == ocp.dims.N:
-            cost_y_expr = model.cost_y_expr_e
-            cost_psi_expr, cost_r_in_psi_expr = model.cost_psi_expr_e, model.cost_r_in_psi_expr_e
-            cost_expr_ext_cost = model.cost_expr_ext_cost_e
-            W, Vx, Vu = ocp.cost.W_e, ocp.cost.Vx_e, 0
-
-        if ocp.cost.cost_type == "LINEAR_LS":
-            if is_empty(Vx):
-                return 0
-            y = Vx @ model.x + Vu @ model.u
-
-            if not is_empty(ocp.cost.Vz):
-                y += ocp.cost.Vz @ model.z
-            residual = y - yref_nodes
-            cost_dot = 0.5 * (residual.T @ W @ residual)
-
-        elif ocp.cost.cost_type == "NONLINEAR_LS":
-            residual = cost_y_expr - yref_nodes
-            cost_dot = 0.5 * (residual.T @ W @ residual)
-
-        elif ocp.cost.cost_type == "EXTERNAL":
-            cost_dot = cost_expr_ext_cost
-
-        elif ocp.cost.cost_type == "CONVEX_OVER_NONLINEAR":
-            cost_dot = ca.substitute(
-                cost_psi_expr, cost_r_in_psi_expr, cost_y_expr)
-        else:
-            raise ValueError("create_model_with_cost_state: Unknown cost type.")
-
-        return cost_dot
-
-    def _append_node(self, _field, ca_symbol, node:list, i, dims):
+    def _append_node_for_variables(self, _field, ca_symbol, node:list, i, dims):
         """
         Helper function to append a node to the NLP formulation.
         """
         if i == 0:
             ns = dims.ns_0
-            ny = dims.ny_0
+            nx = dims.nx
+            nu = dims.nu
         elif i < dims.N:
             ns = dims.ns
-            ny = dims.ny
+            nx = dims.nx
+            nu = dims.nu
         else:
             ns = dims.ns_e
-            ny = dims.ny_e
+            nx = dims.nx
+            nu = 0
+
         if _field == 'x':
-            node.append(ca_symbol(f'x{i}', dims.nx, 1))
+            node.append(ca_symbol(f'x{i}', nx, 1))
         elif _field == 'u':
-            node.append(ca_symbol(f'u{i}', dims.nu, 1))
+            node.append(ca_symbol(f'u{i}', nu, 1))
         elif _field == 'sl':
             if ns > 0:
                 node.append(ca_symbol(f'sl{i}', ns, 1))
@@ -408,8 +368,28 @@ class AcadosCasadiOcp:
                 node.append(ca_symbol(f'su{i}', ns, 1))
             else:
                 node.append([])
-        elif _field == 'p':
-            node.append(ca.vertcat(ca_symbol(f'p{i}', dims.np, 1), ca_symbol(f'yref{i}', ny, 1)))
+
+    def _append_node_and_value_for_params(self, ca_symbol, p_list, node, stage, ocp:AcadosOcp):
+        """
+        Helper function to append parameter values to the NLP formulation.
+        """
+        if stage == 0:
+            ny = ocp.dims.ny_0
+            yref = ocp.cost.yref_0
+        elif stage < ocp.solver_options.N_horizon:
+            ny = ocp.dims.ny
+            yref = ocp.cost.yref
+        else:
+            ny = ocp.dims.ny_e
+            yref = ocp.cost.yref_e
+
+        node.append(ca.vertcat(ca_symbol(f'p{stage}', ocp.dims.np, 1), ca_symbol(f'yref{stage}', ny, 1)))
+        p_list.append(ocp.parameter_values)
+        self._index_map['p_in_p_nlp'].append(list(range(self.offset_p, self.offset_p + ocp.dims.np)))
+        self.offset_p += ocp.dims.np
+        p_list.append(yref)
+        self._index_map['yref_in_p_nlp'].append(list(range(self.offset_p, self.offset_p + ny)))
+        self.offset_p += ny
 
     def _set_bounds_indices(self, _field, i, lb_node, ub_node, constraints, dims):
         """
@@ -505,27 +485,6 @@ class AcadosCasadiOcp:
         else:
             raise ValueError(f"Unsupported for: {_field}")
 
-    def _append_values_in_param(self, p_list, stage, ocp:AcadosOcp):
-        """
-        Helper function to append parameter values to the NLP formulation.
-        """
-        if stage == 0:
-            ny = ocp.dims.ny_0
-            yref = ocp.cost.yref_0
-        elif stage < ocp.solver_options.N_horizon:
-            ny = ocp.dims.ny
-            yref = ocp.cost.yref
-        else:
-            ny = ocp.dims.ny_e
-            yref = ocp.cost.yref_e
-
-        p_list.append(ocp.parameter_values)
-        self._index_map['p_in_p_nlp'].append(list(range(self.offset_p, self.offset_p + ocp.dims.np)))
-        self.offset_p += ocp.dims.np
-        p_list.append(yref)
-        self._index_map['yref_in_p_nlp'].append(list(range(self.offset_p, self.offset_p + ny)))
-        self.offset_p += ny
-
     def _append_constraints(self, i, _field, g, lbg, ubg, g_expr, lbg_expr, ubg_expr, cons_dim, sl=False, su=False):
         """
         Helper function to append constraints to the NLP formulation.
@@ -547,36 +506,42 @@ class AcadosCasadiOcp:
                 self._index_map['lam_su_in_lam_g'][i].append(self.offset_gnl)
                 self.offset_gnl += 1
 
-    def _get_cost_node(self, i, N_horizon, xtraj_node, utraj_node, ptraj_node, sl_node, su_node, ocp: AcadosOcp, dims, cost):
+    def _get_cost_node(self, i, N_horizon, xtraj_node, utraj_node, p_nlp, sl_node, su_node, ocp: AcadosOcp, dims, cost):
         """
         Helper function to get the cost node for a given stage.
         """
         if i == 0:
+            p_index = self._index_map['p_in_p_nlp'][0]
+            yref_index = self._index_map['yref_in_p_nlp'][0]
             return (xtraj_node[0],
                     utraj_node[0],
-                    ptraj_node[0],
+                    p_nlp[p_index + yref_index],
                     sl_node[0],
                     su_node[0],
-                    self.get_cost_expression(ocp, ptraj_node[0][dims.np:dims.ny+dims.np], i),
-                    ca.vertcat(ocp.model.p, ptraj_node[0][dims.np:dims.np+dims.ny]),
+                    ocp.get_initial_cost_expression(p_nlp[yref_index]),
+                    ca.vertcat(ocp.model.p, p_nlp[yref_index]),
                     dims.ns_0, cost.zl_0, cost.Zl_0, cost.zu_0, cost.Zu_0)
         elif i < N_horizon:
+            p_index = self._index_map['p_in_p_nlp'][i]
+            yref_index = self._index_map['yref_in_p_nlp'][i]
             return (xtraj_node[i],
                     utraj_node[i],
-                    ptraj_node[i],
+                    p_nlp[p_index + yref_index],
                     sl_node[i],
                     su_node[i],
-                    self.get_cost_expression(ocp, ptraj_node[i][dims.np:dims.ny+dims.np], i),
-                    ca.vertcat(ocp.model.p, ptraj_node[i][dims.np:dims.np+dims.ny]),
+                    ocp.get_path_cost_expression(p_nlp[yref_index]),
+                    ca.vertcat(ocp.model.p, p_nlp[yref_index]),
                     dims.ns, cost.zl, cost.Zl, cost.zu, cost.Zu)
         else:
+            p_index = self._index_map['p_in_p_nlp'][-1]
+            yref_index = self._index_map['yref_in_p_nlp'][-1]
             return (xtraj_node[-1],
                     [],
-                    ptraj_node[-1],
+                    p_nlp[p_index + yref_index],
                     sl_node[-1],
                     su_node[-1],
-                    self.get_cost_expression(ocp, ptraj_node[-1][dims.np:(dims.nx if dims.ny else 0)+dims.np], i),
-                    ca.vertcat(ocp.model.p, ptraj_node[-1][dims.np:(dims.nx if dims.ny else 0)+dims.np]),
+                    ocp.get_terminal_cost_expression(p_nlp[yref_index]),
+                    ca.vertcat(ocp.model.p, p_nlp[yref_index]),
                     dims.ns_e, cost.zl_e, cost.Zl_e, cost.zu_e, cost.Zu_e)
 
     def _get_constraint_node(self, i, N_horizon, xtraj_node, utraj_node, ptraj_node, model, constraints, dims):
