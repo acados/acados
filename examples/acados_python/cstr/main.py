@@ -37,15 +37,19 @@ from setup_acados_ocp_solver import (
     setup_acados_ocp_solver,
     AcadosOcpSolver,
 )
+from setup_acados_casadi_ocp_solver import (
+    setup_acados_casadi_ocp_solver,
+    AcadosCasadiOcpSolver
+)
 from setup_acados_integrator import setup_acados_integrator, AcadosSimSolver
 import numpy as np
 import casadi as ca
 from cstr_utils import plot_cstr
-from typing import Optional
+from typing import Union
 
 
 def simulate(
-    controller: Optional[AcadosOcpSolver],
+    controller: Union[AcadosOcpSolver, AcadosCasadiOcpSolver, None],
     plant: AcadosSimSolver,
     x0: np.ndarray,
     Nsim: int,
@@ -64,6 +68,8 @@ def simulate(
 
     # closed loop
     xcurrent = x0
+    if controller is not None:
+        ocp = controller.acados_ocp if isinstance(controller, AcadosOcpSolver) else controller.ocp
     X[0, :] = xcurrent
 
     for i in range(Nsim):
@@ -73,14 +79,14 @@ def simulate(
         else:
             if with_reference_profile:
                 t0 = i * plant.acados_sim.solver_options.T
-                for stage, dt in enumerate(controller.acados_ocp.solver_options.shooting_nodes):
+                for stage, dt in enumerate(ocp.solver_options.shooting_nodes):
                     t = t0 + dt
                     controller.set_params_sparse(stage, np.array([1]), np.array([t]))
             else:
                 yref = np.concatenate((X_ref[i, :], U_ref[i, :]))
-                for stage in range(controller.acados_ocp.solver_options.N_horizon):
+                for stage in range(ocp.solver_options.N_horizon):
                     controller.set(stage, "yref", yref)
-                controller.set(controller.acados_ocp.solver_options.N_horizon, "yref", X_ref[i, :])
+                controller.set(ocp.solver_options.N_horizon, "yref", X_ref[i, :])
 
             # solve ocp
             U[i, :] = controller.solve_for_x0(xcurrent)
@@ -96,15 +102,18 @@ def simulate(
 
 def main():
     with_nmpc = True
+    with_nmpc_ipopt = True
     with_timevar_ref_nmpc = True
+    with_timevar_ref_nmpc_ipopt = True
     with_linear_mpc = True
     with_nmpc_rti = True
 
     Tsim = 25
     dt_plant = 0.25  # [min]
+    N_horizon = 10
 
     cstr_params = CstrParameters()
-    mpc_params = MpcCstrParameters(xs=cstr_params.xs, us=cstr_params.us)
+    mpc_params = MpcCstrParameters(xs=cstr_params.xs, us=cstr_params.us, N=N_horizon, Tf=N_horizon*dt_plant)
     model = setup_cstr_model(cstr_params)
     linearized_model = setup_linearized_model(model, cstr_params, mpc_params)
     plant_model = setup_cstr_model(cstr_params)
@@ -137,11 +146,13 @@ def main():
     U_all = []
     labels_all = []
     timings_solver_all = []
+    diff_all = []
 
     # simulation with constant reference input
     label = "constant reference input"
     print(f"\n\nRunning simulation with {label}\n\n")
     X, U, timings_solver, _ = simulate(None, integrator, x0, Nsim, X_ref, U_ref)
+    diff_all.append('----')
     X_all.append(X)
     U_all.append(U)
     timings_solver_all.append(timings_solver)
@@ -156,6 +167,23 @@ def main():
         X, U, timings_solver, _ = simulate(
             ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
         )
+        diff_all.append('----')
+        X_all.append(X)
+        U_all.append(U)
+        timings_solver_all.append(timings_solver)
+        labels_all.append(label)
+        ocp_solver = None
+
+    # simulation with NMPC controller (IPOPT)
+    if with_nmpc_ipopt:
+        label = "NMPC with IPOPT"
+        print(f"\n\nRunning simulation with {label}\n\n")
+        ocp_solver = setup_acados_casadi_ocp_solver(model, mpc_params, cstr_params=cstr_params, solver='ipopt')
+
+        X, U, timings_solver, _ = simulate(
+            ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
+        )
+        diff_all.append(np.linalg.norm(X - X_all[-1]))
         X_all.append(X)
         U_all.append(U)
         timings_solver_all.append(timings_solver)
@@ -166,22 +194,46 @@ def main():
     if with_timevar_ref_nmpc:
         label = "NMPC with time-varying reference"
         ocp_model = setup_cstr_model(cstr_params)
-        ocp_model.t = ca.SX.sym("t")
-        t0 = ca.SX.sym("t0")
-        ocp_model.p = ca.vertcat(ocp_model.p, t0)
-        t = t0 + ocp_model.t
+        ocp_model.p = ca.vertcat(ocp_model.p, ca.SX.sym("t"))
 
         tjump1 = Njump * dt_plant
         tjump2 = 2 * Njump * dt_plant
-        reference_profile = ca.if_else(t < tjump1, ca.vertcat(xs, us), ca.vertcat(xs2, us2))
-        reference_profile = ca.if_else(t < tjump2, reference_profile, ca.vertcat(xs, us))
+        reference_profile = ca.if_else(ocp_model.p[-1] < tjump1, ca.vertcat(xs, us), ca.vertcat(xs2, us2))
+        reference_profile = ca.if_else(ocp_model.p[-1] < tjump2, reference_profile, ca.vertcat(xs, us))
         print(f"\n\nRunning simulation with {label}\n\n")
 
-        ocp_solver = setup_acados_ocp_solver(ocp_model, mpc_params, cstr_params=cstr_params, reference_profile=reference_profile, cost_integration=True)
+        ocp_solver = setup_acados_ocp_solver(ocp_model, mpc_params, 
+                                             cstr_params=cstr_params, reference_profile=reference_profile, cost_integration=True)
 
         X, U, timings_solver, _ = simulate(
             ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref, with_reference_profile=True
         )
+        diff_all.append('----')
+        X_all.append(X)
+        U_all.append(U)
+        timings_solver_all.append(timings_solver)
+        labels_all.append(label)
+        ocp_solver = None
+
+    # simulation with time varying reference NMPC controller (IPOPT)
+    if with_timevar_ref_nmpc_ipopt:
+        label = "NMPC with time-varying reference with IPOPT"
+        ocp_model = setup_cstr_model(cstr_params)
+        ocp_model.p = ca.vertcat(ocp_model.p, ca.SX.sym("t"))
+
+        tjump1 = Njump * dt_plant
+        tjump2 = 2 * Njump * dt_plant
+        reference_profile = ca.if_else(ocp_model.p[-1] < tjump1, ca.vertcat(xs, us), ca.vertcat(xs2, us2))
+        reference_profile = ca.if_else(ocp_model.p[-1] < tjump2, reference_profile, ca.vertcat(xs, us))
+        print(f"\n\nRunning simulation with {label}\n\n")
+
+        ocp_solver = setup_acados_casadi_ocp_solver(ocp_model, mpc_params, 
+                                                    cstr_params=cstr_params, reference_profile=reference_profile, cost_integration=True)
+
+        X, U, timings_solver, _ = simulate(
+            ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref, with_reference_profile=True
+        )
+        diff_all.append(np.linalg.norm(X - X_all[-1]))
         X_all.append(X)
         U_all.append(U)
         timings_solver_all.append(timings_solver)
@@ -201,6 +253,7 @@ def main():
         X, U, timings_solver, _ = simulate(
             ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
         )
+        diff_all.append('----')
         X_all.append(X)
         U_all.append(U)
         timings_solver_all.append(timings_solver)
@@ -218,6 +271,7 @@ def main():
         X, U, timings_solver, _ = simulate(
             ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
         )
+        diff_all.append('----')
         X_all.append(X)
         U_all.append(U)
         timings_solver_all.append(timings_solver)
@@ -226,13 +280,14 @@ def main():
 
     # Evaluation
     max_label_length = max([len(l) for l in labels_all])
-    print(f"\n{'Timings in ms':{max_label_length}}  | {'miniumum':<8} | {'mean':<8} | {'maximum':<8} \n------------------")
+    print(f"\n{'Timings in ms':{max_label_length}}  | {'miniumum':<8} | {'mean':<8} | {'maximum':<8} | {'ipopt diff':<8}\n------------------")
 
     for i in range(len(labels_all)):
         label = labels_all[i]
         timings_solver = timings_solver_all[i] * 1e3  # scale to milliseconds
+        difference = diff_all[i] if isinstance(diff_all[i], str) else f"{diff_all[i]:.3f}"
         print(
-            f"{label:{max_label_length}}   {f'{np.min(timings_solver):.3f}':>10} {f'{np.mean(timings_solver):.3f}':>10} {f'{np.max(timings_solver):.3f}':>10}"
+            f"{label:{max_label_length}}   {f'{np.min(timings_solver):.3f}':>10} {f'{np.mean(timings_solver):.3f}':>10} {f'{np.max(timings_solver):.3f}':>10} {f'{difference}':>10}"
         )
 
     # plot results
