@@ -108,17 +108,6 @@ ACADOS_INSTALL_DIR="$( cd "$( dirname "$0" )" && pwd )"
 
 echo "Starte die Installation von acados..."
 
-if [ -d "$ACADOS_INSTALL_DIR/acados" ]; then
-    read -p "Das Verzeichnis 'acados' existiert bereits. Löschen und neu beginnen? (j/n) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Jj]$ ]]; then
-        rm -rf "$ACADOS_INSTALL_DIR/acados"
-    else
-        echo "Installation abgebrochen."
-        exit 1
-    fi
-fi
-
 # 1. Acados klonen
 git submodule update --init --recursive
 
