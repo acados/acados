@@ -76,4 +76,3 @@ def plot_pendulum(t, u_max, U, X_true, latexify=False, plt_show=True, time_label
 
     if plt_show:
         plt.show()
-    plt.savefig("pendulum_plot.png")
