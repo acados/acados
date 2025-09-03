@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver, AcadosSim
 from pendulum_model import export_pendulum_ode_model
 from utils import plot_pendulum
 import numpy as np
@@ -39,10 +39,12 @@ from casadi import vertcat
 def setup(x0, Fmax, N_horizon, Tf):
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
+    sim = AcadosSim()
 
     # set model
     model = export_pendulum_ode_model()
     ocp.model = model
+    sim.model = model # Use the same model as for the ocp
 
     nx = model.x.rows()
     nu = model.u.rows()
@@ -75,16 +77,23 @@ def setup(x0, Fmax, N_horizon, Tf):
     ocp.solver_options.N_horizon = N_horizon
     ocp.solver_options.tf = Tf
 
-    # set options
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    # set simulation time
+    sim.solver_options.T = Tf/N_horizon
+
+    # set ocp options
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
-    ocp.solver_options.integrator_type = 'ERK'
+    ocp.solver_options.qp_tol = 1e-8
+ 
+    # set sim options
+    sim.solver_options.num_steps = 2 # Make extra integrator more precise than ocp-internal integrator 
 
     solver_json = 'acados_ocp_' + model.name + '.json'
+    ocp.code_export_directory = 'c_generated_code_ocp'
     acados_ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)
 
-    # create an integrator with the same settings as used in the OCP solver.
-    acados_integrator = AcadosSimSolver(ocp, json_file = solver_json)
+    sim_json = 'acados_sim_' + model.name + '.json'
+    sim.code_export_directory = 'c_generated_code_sim'
+    acados_integrator = AcadosSimSolver(sim, json_file = sim_json)
 
     return acados_ocp_solver, acados_integrator
 
