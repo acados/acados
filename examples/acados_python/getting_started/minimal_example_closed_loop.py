@@ -36,15 +36,13 @@ import numpy as np
 import scipy.linalg
 from casadi import vertcat
 
-def setup(x0, Fmax, N_horizon, Tf):
+def setup_ocp_solver(x0, Fmax, N_horizon, Tf):
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
-    sim = AcadosSim()
 
     # set model
     model = export_pendulum_ode_model()
     ocp.model = model
-    sim.model = model # Use the same model as for the ocp
 
     nx = model.x.rows()
     nu = model.u.rows()
@@ -77,25 +75,25 @@ def setup(x0, Fmax, N_horizon, Tf):
     ocp.solver_options.N_horizon = N_horizon
     ocp.solver_options.tf = Tf
 
-    # set simulation time
-    sim.solver_options.T = Tf/N_horizon
-
     # set ocp options
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.qp_tol = 1e-8
- 
-    # set sim options
-    sim.solver_options.num_steps = 2 # Make extra integrator more precise than ocp-internal integrator 
 
-    solver_json = 'acados_ocp_' + model.name + '.json'
     ocp.code_export_directory = 'c_generated_code_ocp'
-    acados_ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)
+    acados_ocp_solver = AcadosOcpSolver(ocp)
 
-    sim_json = 'acados_sim_' + model.name + '.json'
+    return acados_ocp_solver
+
+
+def setup_integrator(dt):
+    sim = AcadosSim()
+    sim.model = export_pendulum_ode_model()
+
+    sim.solver_options.T = dt # simulation time
+    sim.solver_options.num_steps = 2 # Make extra integrator more precise than ocp-internal integrator
     sim.code_export_directory = 'c_generated_code_sim'
-    acados_integrator = AcadosSimSolver(sim, json_file = sim_json)
-
-    return acados_ocp_solver, acados_integrator
+    acados_integrator = AcadosSimSolver(sim)
+    return acados_integrator
 
 
 def main():
@@ -106,7 +104,8 @@ def main():
     Tf = .8
     N_horizon = 40
 
-    ocp_solver, integrator = setup(x0, Fmax, N_horizon, Tf)
+    ocp_solver = setup_ocp_solver(x0, Fmax, N_horizon, Tf)
+    integrator = setup_integrator(Tf/N_horizon)
 
     nx = ocp_solver.acados_ocp.dims.nx
     nu = ocp_solver.acados_ocp.dims.nu
