@@ -76,17 +76,9 @@ def setup(x0, Fmax, N_horizon, Tf):
     ocp.solver_options.N_horizon = N_horizon
     ocp.solver_options.tf = Tf
 
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
-    ocp.solver_options.integrator_type = 'IRK'
-    ocp.solver_options.sim_method_newton_iter = 10
-
-    ocp.solver_options.nlp_solver_type = 'SQP'
-    ocp.solver_options.globalization = 'MERIT_BACKTRACKING' # turns on globalization
-    ocp.solver_options.nlp_solver_max_iter = 150
-
-    ocp.solver_options.qp_solver_cond_N = N_horizon
-
+    ocp.solver_options.integrator_type = 'ERK'
 
     solver_json = 'acados_ocp_' + model.name + '.json'
     acados_ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)
