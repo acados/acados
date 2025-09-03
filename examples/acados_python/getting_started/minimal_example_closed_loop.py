@@ -49,8 +49,7 @@ def setup(x0, Fmax, N_horizon, Tf):
     ny = nx + nu
     ny_e = nx
 
-
-    # set cost module
+    # set cost
     ocp.cost.cost_type = 'NONLINEAR_LS'
     ocp.cost.cost_type_e = 'NONLINEAR_LS'
 
@@ -62,7 +61,7 @@ def setup(x0, Fmax, N_horizon, Tf):
 
     ocp.model.cost_y_expr = vertcat(model.x, model.u)
     ocp.model.cost_y_expr_e = model.x
-    ocp.cost.yref  = np.zeros((ny, ))
+    ocp.cost.yref = np.zeros((ny, ))
     ocp.cost.yref_e = np.zeros((ny_e, ))
 
     # set constraints
@@ -76,6 +75,7 @@ def setup(x0, Fmax, N_horizon, Tf):
     ocp.solver_options.N_horizon = N_horizon
     ocp.solver_options.tf = Tf
 
+    # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'ERK'
