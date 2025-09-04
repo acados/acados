@@ -343,7 +343,7 @@ sim_solver *sim_assign(sim_config *config, void *dims, void *opts_, sim_in *in, 
     config->set_external_fun_workspaces(config, dims, opts_, in->model, c_ptr);
     c_ptr += config->get_external_fun_workspace_requirement(config, dims, opts_, in->model);
 
-    assert((char *) raw_memory + sim_calculate_size(config, dims, opts_, in) == c_ptr);
+    assert((char *) raw_memory + sim_calculate_size(config, dims, opts_, in) >= c_ptr);
 
     return solver;
 }

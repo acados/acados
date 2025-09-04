@@ -84,7 +84,6 @@ class AcadosSimSolver:
         """`T` - Simulation time."""
         return self.__T
 
-    # TODO move this to AcadosSim
     @classmethod
     def generate(self, acados_sim: AcadosSim, json_file='acados_sim.json', cmake_builder: CMakeBuilder = None):
         """

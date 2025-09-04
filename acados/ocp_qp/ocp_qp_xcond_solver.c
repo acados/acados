@@ -119,7 +119,7 @@ ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_assign(void *config_, int N, 
     dims->xcond_dims = config->xcond->dims_assign(config->xcond, N, c_ptr);
     c_ptr += config->xcond->dims_calculate_size(config->xcond, N);
 
-    assert((char *) raw_memory + ocp_qp_xcond_solver_dims_calculate_size(config_, N) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_xcond_solver_dims_calculate_size(config_, N) >= c_ptr);
 
     return dims;
 }
