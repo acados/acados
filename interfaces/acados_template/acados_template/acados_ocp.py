@@ -1289,10 +1289,24 @@ class AcadosOcp:
     def _get_ros_template_list(self) -> list:
         template_list = []
         package_dir = os.path.join(self.code_export_directory, self.ros_opts.package_info.name)
-        template_file = os.path.join('ros_templates', 'CMakeLists_ros.in.txt')
+        include_dir = os.path.join(package_dir, 'include', self.ros_opts.package_info.name)
+        src_dir = os.path.join(package_dir, 'src')
+        template_file = os.path.join('ros_templates', 'README.in.md')
+        template_list.append((template_file, 'README.md', package_dir))
+        template_file = os.path.join('ros_templates', 'CMakeLists.in.txt')
         template_list.append((template_file, 'CMakeLists.txt', package_dir))
-        template_file = os.path.join('ros_templates', 'package_ros.in.xml')
+        template_file = os.path.join('ros_templates', 'package.in.xml')
         template_list.append((template_file, 'package.xml', package_dir))
+        template_file = os.path.join('ros_templates', 'config.in.hpp')
+        template_list.append((template_file, 'config.hpp', include_dir))
+        template_file = os.path.join('ros_templates', 'utils.in.hpp')
+        template_list.append((template_file, 'utils.hpp', include_dir))
+        template_file = os.path.join('ros_templates', 'marker_publisher.in.hpp')
+        template_list.append((template_file, 'marker_publisher.hpp', include_dir))
+        template_file = os.path.join('ros_templates', 'node.in.h')
+        template_list.append((template_file, 'node.h', include_dir))
+        # template_file = os.path.join('ros_templates', 'node.in.cpp')
+        # template_list.append((template_file, 'node.cpp', src_dir))
         return template_list
 
 
