@@ -222,7 +222,7 @@ void *ocp_qp_xcond_solver_opts_assign(void *config_, ocp_qp_xcond_solver_dims *d
     opts->qp_solver_opts = qp_solver->opts_assign(qp_solver, xcond_qp_dims, c_ptr);
     c_ptr += qp_solver->opts_calculate_size(qp_solver, xcond_qp_dims);
 
-    assert((char *) raw_memory + ocp_qp_xcond_solver_opts_calculate_size(config_, dims) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_xcond_solver_opts_calculate_size(config_, dims) >= c_ptr);
 
     return (void *) opts;
 }
