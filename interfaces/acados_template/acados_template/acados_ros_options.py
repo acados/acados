@@ -31,12 +31,7 @@ import os
 
 from enum import Enum
 from typing import Any
-# from .utils import check_if_nparray_and_flatten
 
-
-class TopicDirection(str, Enum):
-    IN = "in"
-    OUT = "out"
     
 class ParamType(str, Enum):
     DOUBLE = "double"
@@ -44,6 +39,8 @@ class ParamType(str, Enum):
     INT = "int"
     BOOL = "bool"
     STRING = "str"
+    DOUBLE_VECTOR = "std::vector<double>"
+    INT_VECTOR = "std::vector<int>"
     
 class ControlLoopExec(str, Enum):
     TOPIC = "topic"
@@ -54,46 +51,38 @@ class ControlLoopExec(str, Enum):
 # --- Ros Topic ---
 class AcadosRosTopic:
     def __init__(self):
-        self.__name: str = "cmd_vel"
-        self.__msg_type: str = "std_msgs/msg/String"
-        self.__direction: str = TopicDirection.IN.value
-        self.__field_map: dict = {}
-        self.__qos_profile: str = "default"
+        self.__name: str            = ""
+        self.__msg_type: str        = ""
+        self.__qos_profile: str     = "default"
+        self.__description: str     = ""
         
     @property
     def name(self):
         """Name of the topic.
-        Default: 'cmd_vel'.
+        Default: ''.
         """
         return self.__name
     
     @property
     def msg_type(self):
         """Message type of the topic.
-        Default: 'std_msgs/msg/String'.
+        Default: ''.
         """
         return self.__msg_type
-
-    @property
-    def direction(self):
-        """Direction of the topic (as str or TopicDirection enum).
-        Default: 'in'.
-        """
-        return self.__direction
-
-    @property
-    def field_map(self):
-        """Field map of the topic.
-        Default: {}.
-        """
-        return self.__field_map
-
+    
     @property
     def qos_profile(self):
         """QoS profile of the topic.
         Default: 'default'.
         """
         return self.__qos_profile
+    
+    @property
+    def description(self):
+        """Description of the topic.
+        Default: 'default'.
+        """
+        return self.__description
     
     @name.setter
     def name(self, name: str):
@@ -106,43 +95,88 @@ class AcadosRosTopic:
         if not isinstance(msg_type, str):
             raise TypeError('Invalid msg_type value, expected str.\n')
         self.__msg_type = msg_type
-        
-    @direction.setter
-    def direction(self, direction: TopicDirection | str):
-        if isinstance(direction, TopicDirection):
-            self.__direction = direction.value
-        elif isinstance(direction, str) and direction in [e.value for e in TopicDirection]:
-            self.__direction = direction
-        else:
-            raise TypeError('Invalid direction value, expected TopicDirection enum or str.\n')
-
-    @field_map.setter
-    def field_map(self, field_map: dict):
-        if not isinstance(field_map, dict):
-            raise TypeError('Invalid field_map value, expected dict.\n')
-        self.__field_map = field_map
 
     @qos_profile.setter
     def qos_profile(self, qos_profile: str):
         if not isinstance(qos_profile, str):
             raise TypeError('Invalid qos_profile value, expected str.\n')
         self.__qos_profile = qos_profile
+        
+    @description.setter
+    def description(self, description: str):
+        if not isinstance(description, str):
+            raise TypeError('Invalid description value, expected str.\n')
+        self.__description = description
 
     def __repr__(self) -> str:
-        return (f"AcadosRosTopic(name={self.name!r}, msg_type={self.msg_type!r}, "
-                f"direction={self.direction!r}, qos_profile={self.qos_profile!r}, "
-                f"field_map={self.field_map!r})")
+        return (f"{self.__class__.__name__}(name={self.name!r}, msg_type={self.msg_type!r}, "
+                f"qos_profile={self.qos_profile!r}, description={self.description!r})")
 
     def __str__(self) -> str:
-        return (f"Topic '{self.name}': type={self.msg_type}, dir={self.direction}, "
-                f"qos={self.qos_profile}, fields={self.field_map}")
+        return f"Topic '{self.name}': type={self.msg_type}"
+        
+    def to_dict(self) -> dict:
+        if not self.name or not self.msg_type or not self.qos_profile:
+            raise ValueError("Topic name, msg_type, and qos_profile must be set.")
+
+        return {
+            "name": self.name,
+            "msg_type": self.msg_type,
+            "qos_profile": self.qos_profile,
+            "description": self.description
+        }
+        
+
+# --- Ros Publisher ---
+class AcadosRosPublisher(AcadosRosTopic):
+    def __init__(self):
+        super().__init__()
+        self.__queue_size: str = 10
+        
+    @property
+    def queue_size(self):
+        """Queue size of the publisher.
+        Default: 10.
+        """
+        return self.__queue_size
+    
+    @queue_size.setter
+    def queue_size(self, queue_size: int):
+        if not isinstance(queue_size, int):
+            raise TypeError('Invalid queue_size value, expected int.\n')
+        self.__queue_size = queue_size
+        
+    def __repr__(self) -> str:
+        return (super().__repr__()[:-1] +
+                f", queue_size={self.queue_size!r})")
+    
+    def __str__(self) -> str:
+        return f"Publisher '{self.name}': type={self.msg_type}"
+        
+    def to_dict(self) -> dict:
+        return super().to_dict() | {
+            "queue_size": self.queue_size
+        }
+    
+    
+# --- Ros Subscriber ---
+class AcadosRosSubscriber(AcadosRosTopic):
+    def __init__(self):
+        super().__init__()
+
+    def __str__(self) -> str:
+        return f"Subscriber '{self.name}': type={self.msg_type}"
+        
+    def to_dict(self) -> dict:
+        return super().to_dict()
+    
         
 # --- Ros Services ---
 class AcadosRosService:
     def __init__(self):
         self.__name: str = "srv_name"
         self.__srv_type: str = "srv_type"
-        self.__purpose: str = "purpose"
+        self.__description: str = ""
         self.__template_hint: str = "template_hint"
 
     @property
@@ -162,9 +196,9 @@ class AcadosRosService:
     @property
     def purpose(self):
         """Purpose/description of the service.
-        Default: 'purpose'.
+        Default: ''.
         """
-        return self.__purpose
+        return self.__description
 
     @property
     def template_hint(self):
@@ -189,7 +223,7 @@ class AcadosRosService:
     def purpose(self, purpose: str):
         if not isinstance(purpose, str):
             raise TypeError('Invalid purpose value, expected str.\n')
-        self.__purpose = purpose
+        self.__description = purpose
 
     @template_hint.setter
     def template_hint(self, template_hint: str):
@@ -198,32 +232,40 @@ class AcadosRosService:
         self.__template_hint = template_hint
 
     def __repr__(self) -> str:
-        return (f"AcadosRosService(name={self.name!r}, srv_type={self.srv_type!r}, "
+        return (f"{self.__class__.__name__}(name={self.name!r}, srv_type={self.srv_type!r}, "
                 f"purpose={self.purpose!r}, template_hint={self.template_hint!r})")
 
     def __str__(self) -> str:
         return (f"Service '{self.name}': type={self.srv_type}, purpose={self.purpose}")
+    
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "srv_type": self.srv_type,
+            "purpose": self.purpose,
+            "template_hint": self.template_hint
+        }
 
 
 # --- Ros Parameters ---
 class AcadosRosParameter:
     def __init__(self):
-        self.__name: str = "param_name"
+        self.__name: str = ""
         self.__p_type: str = ParamType.STRING.value
-        self.__default: str = "default_value"
-        self.__description: str = "parameter_description"
+        self.__default: str = ""
+        self.__description: str = ""
 
     @property
     def name(self):
         """Name of the parameter.
-        Default: 'param_name'.
+        Default: ''.
         """
         return self.__name
 
     @property
     def p_type(self):
         """Parameter type (as str or ParamType enum).
-        Default: 'string'.
+        Default: ''.
         """
         return self.__p_type
 
@@ -236,7 +278,7 @@ class AcadosRosParameter:
     @property
     def description(self):
         """Description of the parameter.
-        Default: 'parameter_description'.
+        Default: ''.
         """
         return self.__description
 
@@ -267,11 +309,21 @@ class AcadosRosParameter:
         self.__description = description
 
     def __repr__(self) -> str:
-        return (f"AcadosRosParameter(name={self.name!r}, p_type={self.p_type!r}, "
+        return (f"{self.__class__.__name__}(name={self.name!r}, p_type={self.p_type!r}, "
                 f"default={self.default!r}, description={self.description!r})")
 
     def __str__(self) -> str:
         return (f"Parameter '{self.name}': type={self.p_type}, default={self.default}")
+    
+    def to_dict(self) -> dict:
+        if not self.name or not self.p_type:
+            raise ValueError("Parameter name and p_type must be set.")
+        return {
+            "name": self.name,
+            "type": self.p_type,
+            "default": self.default,
+            "description": self.description
+        }
         
 # --- Ros Package ---
 class AcadosRosPackage:
@@ -281,7 +333,7 @@ class AcadosRosPackage:
         self.__description: str         = "ACADOS ROS 2 Interface"
         self.__author_name: str         = "Your Name"
         self.__author_email: str        = "your.name@email.com"
-        self.__license: str             = "MIT"
+        self.__license: str             = "MY LICENSE"
         
     @property
     def package_name(self):
@@ -321,7 +373,7 @@ class AcadosRosPackage:
     @property
     def license(self):
         """License of the package.
-        Default: 'MIT'.
+        Default: 'MY LICENSE'.
         """
         return self.__license
     
@@ -362,12 +414,22 @@ class AcadosRosPackage:
         self.__license = license
 
     def __repr__(self) -> str:
-        return (f"AcadosRosPackage(name={self.package_name!r}, version={self.version!r}, "
+        return (f"{self.__class__.__name__}(name={self.package_name!r}, version={self.version!r}, "
                 f"author={self.author_name!r}, email={self.author_email!r}, "
                 f"license={self.license!r})")
 
     def __str__(self) -> str:
         return (f"Package {self.package_name} v{self.version} by {self.author_name} <{self.author_email}>")
+    
+    def to_dict(self) -> dict:
+        return {
+            "package_name": self.package_name,
+            "version": self.version,
+            "description": self.description,
+            "author_name": self.author_name,
+            "author_email": self.author_email,
+            "license": self.license
+        }
 
 # --- Ros Options ---
 class AcadosRosOptions:
@@ -375,7 +437,8 @@ class AcadosRosOptions:
         self.__package: AcadosRosPackage = AcadosRosPackage()
         self.__node_name: str = "acados_solver_node"
         self.__namespace: str = ""
-        self.__topics: list[AcadosRosTopic] = []
+        self.__publishers: list[AcadosRosPublisher] = []
+        self.__subscribers: list[AcadosRosSubscriber] = []
         self.__services: list[AcadosRosService] = []
         self.__parameters: list[AcadosRosParameter] = []
         self.__control_loop_executor: str = ControlLoopExec.TIMER.value
@@ -395,8 +458,12 @@ class AcadosRosOptions:
         return self.__namespace
 
     @property
-    def topics(self) -> list[AcadosRosTopic]:
-        return self.__topics
+    def publishers(self) -> list[AcadosRosPublisher]:
+        return self.__publishers
+    
+    @property
+    def subscribers(self) -> list[AcadosRosSubscriber]:
+        return self.__subscribers
 
     @property
     def services(self) -> list[AcadosRosService]:
@@ -436,11 +503,17 @@ class AcadosRosOptions:
             raise TypeError('Invalid namespace value, expected str.\n')
         self.__namespace = namespace
 
-    @topics.setter
-    def topics(self, topics: list[AcadosRosTopic]):
-        if not all(isinstance(t, AcadosRosTopic) for t in topics):
-            raise TypeError('Invalid topics value, expected iterable of AcadosRosTopic.\n')
-        self.__topics = topics
+    @publishers.setter
+    def publishers(self, publishers: list[AcadosRosPublisher]):
+        if not all(isinstance(p, AcadosRosPublisher) for p in publishers):
+            raise TypeError('Invalid publishers value, expected iterable of AcadosRosPublisher.\n')
+        self.__publishers = publishers
+        
+    @subscribers.setter
+    def subscribers(self, subscribers: list[AcadosRosSubscriber]):
+        if not all(isinstance(s, AcadosRosSubscriber) for s in subscribers):
+            raise TypeError('Invalid subscribers value, expected iterable of AcadosRosSubscriber.\n')
+        self.__subscribers = subscribers
 
     @services.setter
     def services(self, services: list[AcadosRosService]):
@@ -480,24 +553,27 @@ class AcadosRosOptions:
         includes = sorted(list(self.extra_include_dirs)) if self.extra_include_dirs else []
         links = sorted(list(self.extra_link_libs)) if self.extra_link_libs else []
         return (
-            f"AcadosRosOptions(package={pkg_name!r}, node_name={self.node_name!r}, "
-            f"namespace={self.namespace!r}, topics={len(self.topics)}, "
-            f"services={len(self.services)}, parameters={len(self.parameters)}, "
-            f"control_loop_executor={self.control_loop_executor!r}, "
+            f"{self.__class__.__name__}(package={pkg_name!r}, node_name={self.node_name!r}, "
+            f"namespace={self.namespace!r}, publishers={len(self.publishers)}, "
+            f"subscribers={len(self.subscribers)}, services={len(self.services)}, "
+            f"parameters={len(self.parameters)}, control_loop_executor={self.control_loop_executor!r}, "
             f"include_dirs={includes!r}, link_libs={links!r})"
         )
 
     def __str__(self) -> str:
-        lines = [f"AcadosRosOptions:",
+        lines = [f"{self.__class__.__name__}:",
                  f"  package: {self.package}",
                  f"  node: {self.node_name}",
                  f"  namespace: {self.namespace}",
                  f"  control_loop_executor: {self.control_loop_executor}",
                  f"  include_dirs: {sorted(self.extra_include_dirs)}",
                  f"  link_libs: {sorted(self.extra_link_libs)}",
-                 f"  topics:"]
-        for t in self.topics:
-            lines.append(f"    - {t}")
+                 f"  publishers:"]
+        for p in self.publishers:
+            lines.append(f"    - {p}")
+        lines.append("  subscribers:")
+        for s in self.subscribers:
+            lines.append(f"    - {s}")
         lines.append("  services:")
         for s in self.services:
             lines.append(f"    - {s}")
@@ -505,17 +581,37 @@ class AcadosRosOptions:
         for p in self.parameters:
             lines.append(f"    - {p}")
         return "\n".join(lines)
+    
+    def to_dict(self) -> dict:
+        return {
+            "package": self.package.to_dict() if hasattr(self.package, 'to_dict') else str(self.package),
+            "node_name": self.node_name,
+            "namespace": self.namespace,
+            "publishers": [p.to_dict() for p in self.publishers],
+            "subscribers": [s.to_dict() for s in self.subscribers],
+            "services": [s.to_dict() for s in self.services],
+            "parameters": [p.to_dict() for p in self.parameters],
+            "control_loop_executor": self.control_loop_executor,
+            "extra_include_dirs": sorted(list(self.extra_include_dirs)),
+            "extra_link_libs": sorted(list(self.extra_link_libs))
+        }
 
 
 if __name__ == "__main__":
     ros_opt = AcadosRosOptions()
     
     ros_opt.node_name = "my_node"
-    ros_opt.topics = [AcadosRosTopic(), AcadosRosTopic()]
-    ros_opt.services = [AcadosRosService(), AcadosRosService()]
-    ros_opt.parameters = [AcadosRosParameter(), AcadosRosParameter()]
+    ros_opt.publishers = [AcadosRosPublisher()]
+    ros_opt.subscribers = [AcadosRosSubscriber()]
     ros_opt.control_loop_executor = ControlLoopExec.TIMER
     ros_opt.extra_include_dirs = ["include", "2"]
     ros_opt.extra_link_libs = ["libacados.so"]
+    
+    ros_opt.publishers[0].name = "pub1"
+    ros_opt.publishers[0].msg_type = "std_msgs/msg/Float64"
+    ros_opt.publishers[0].queue_size = 5
+    
+    ros_opt.subscribers[0].name = "sub1"
+    ros_opt.subscribers[0].msg_type = "std_msgs/msg/Float64"
 
-    print(ros_opt)
+    print(ros_opt.to_dict())
