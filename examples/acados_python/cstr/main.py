@@ -36,9 +36,6 @@ from setup_acados_ocp_solver import (
     MpcCstrParameters,
     setup_acados_ocp_solver,
     AcadosOcpSolver,
-)
-from setup_acados_casadi_ocp_solver import (
-    setup_acados_casadi_ocp_solver,
     AcadosCasadiOcpSolver
 )
 from setup_acados_integrator import setup_acados_integrator, AcadosSimSolver
@@ -152,7 +149,7 @@ def main():
     label = "constant reference input"
     print(f"\n\nRunning simulation with {label}\n\n")
     X, U, timings_solver, _ = simulate(None, integrator, x0, Nsim, X_ref, U_ref)
-    diff_all.append('----')
+    diff_all.append(None)
     X_all.append(X)
     U_all.append(U)
     timings_solver_all.append(timings_solver)
@@ -162,12 +159,12 @@ def main():
     if with_nmpc:
         label = "NMPC"
         print(f"\n\nRunning simulation with {label}\n\n")
-        ocp_solver = setup_acados_ocp_solver(model, mpc_params, cstr_params=cstr_params)
+        ocp_solver = setup_acados_ocp_solver(model, solver_type='SQP', mpc_params=mpc_params, cstr_params=cstr_params)
 
         X, U, timings_solver, _ = simulate(
             ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
         )
-        diff_all.append('----')
+        diff_all.append(None)
         X_all.append(X)
         U_all.append(U)
         timings_solver_all.append(timings_solver)
@@ -178,7 +175,7 @@ def main():
     if with_nmpc_ipopt:
         label = "NMPC with IPOPT"
         print(f"\n\nRunning simulation with {label}\n\n")
-        ocp_solver = setup_acados_casadi_ocp_solver(model, mpc_params, cstr_params=cstr_params, solver='ipopt')
+        ocp_solver = setup_acados_ocp_solver(model, solver_type='IPOPT', mpc_params=mpc_params, cstr_params=cstr_params)
 
         X, U, timings_solver, _ = simulate(
             ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
@@ -202,13 +199,13 @@ def main():
         reference_profile = ca.if_else(ocp_model.p[-1] < tjump2, reference_profile, ca.vertcat(xs, us))
         print(f"\n\nRunning simulation with {label}\n\n")
 
-        ocp_solver = setup_acados_ocp_solver(ocp_model, mpc_params, 
-                                             cstr_params=cstr_params, reference_profile=reference_profile, cost_integration=True)
+        ocp_solver = setup_acados_ocp_solver(ocp_model, solver_type='SQP', mpc_params=mpc_params, 
+                                             cstr_params=cstr_params, reference_profile=reference_profile)
 
         X, U, timings_solver, _ = simulate(
             ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref, with_reference_profile=True
         )
-        diff_all.append('----')
+        diff_all.append(None)
         X_all.append(X)
         U_all.append(U)
         timings_solver_all.append(timings_solver)
@@ -218,17 +215,10 @@ def main():
     # simulation with time varying reference NMPC controller (IPOPT)
     if with_timevar_ref_nmpc_ipopt:
         label = "NMPC with time-varying reference with IPOPT"
-        ocp_model = setup_cstr_model(cstr_params)
-        ocp_model.p = ca.vertcat(ocp_model.p, ca.SX.sym("t"))
-
-        tjump1 = Njump * dt_plant
-        tjump2 = 2 * Njump * dt_plant
-        reference_profile = ca.if_else(ocp_model.p[-1] < tjump1, ca.vertcat(xs, us), ca.vertcat(xs2, us2))
-        reference_profile = ca.if_else(ocp_model.p[-1] < tjump2, reference_profile, ca.vertcat(xs, us))
         print(f"\n\nRunning simulation with {label}\n\n")
 
-        ocp_solver = setup_acados_casadi_ocp_solver(ocp_model, mpc_params, 
-                                                    cstr_params=cstr_params, reference_profile=reference_profile, cost_integration=True)
+        ocp_solver = setup_acados_ocp_solver(ocp_model, solver_type='IPOPT', mpc_params=mpc_params,
+                                              cstr_params=cstr_params, reference_profile=reference_profile)
 
         X, U, timings_solver, _ = simulate(
             ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref, with_reference_profile=True
@@ -246,14 +236,14 @@ def main():
         print(f"\n\nRunning simulation with {label}\n\n")
         mpc_params.linear_mpc = True
         ocp_solver = setup_acados_ocp_solver(
-            linearized_model, mpc_params, cstr_params=cstr_params, use_rti=True
+            linearized_model, solver_type='SQP_RTI', mpc_params=mpc_params, cstr_params=cstr_params
         )
         mpc_params.linear_mpc = False
 
         X, U, timings_solver, _ = simulate(
             ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
         )
-        diff_all.append('----')
+        diff_all.append(None)
         X_all.append(X)
         U_all.append(U)
         timings_solver_all.append(timings_solver)
@@ -265,13 +255,13 @@ def main():
         label = "NMPC-RTI"
         print(f"\n\nRunning simulation with {label}\n\n")
         ocp_solver = setup_acados_ocp_solver(
-            model, mpc_params, cstr_params=cstr_params, use_rti=True
+            model, solver_type='SQP_RTI', mpc_params=mpc_params, cstr_params=cstr_params
         )
 
         X, U, timings_solver, _ = simulate(
             ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
         )
-        diff_all.append('----')
+        diff_all.append(None)
         X_all.append(X)
         U_all.append(U)
         timings_solver_all.append(timings_solver)
@@ -280,15 +270,22 @@ def main():
 
     # Evaluation
     max_label_length = max([len(l) for l in labels_all])
-    print(f"\n{'Timings in ms':{max_label_length}}  | {'miniumum':<8} | {'mean':<8} | {'maximum':<8} | {'ipopt diff':<8}\n------------------")
+    print(f"\n{'Timings in ms':{max_label_length}}  | {'miniumum':<8} | {'mean':<8} | {'maximum':<8} \n------------------")
 
     for i in range(len(labels_all)):
         label = labels_all[i]
         timings_solver = timings_solver_all[i] * 1e3  # scale to milliseconds
-        difference = diff_all[i] if isinstance(diff_all[i], str) else f"{diff_all[i]:.3f}"
         print(
-            f"{label:{max_label_length}}   {f'{np.min(timings_solver):.3f}':>10} {f'{np.mean(timings_solver):.3f}':>10} {f'{np.max(timings_solver):.3f}':>10} {f'{difference}':>10}"
+            f"{label:{max_label_length}}   {f'{np.min(timings_solver):.3f}':>10} {f'{np.mean(timings_solver):.3f}':>10} {f'{np.max(timings_solver):.3f}':>10}"
         )
+
+    print(f"\n{'Differences in result between IPOPT and ACADOS:'} \n------------------")
+    for i in range(len(labels_all)):
+        label = labels_all[i]
+        if diff_all[i] is None:
+            pass
+        else:
+            print(f"{label:{max_label_length}}   {f'{diff_all[i]:.3f}':>10}")
 
     # plot results
     plot_cstr(
