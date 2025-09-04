@@ -28,6 +28,7 @@
 #
 
 import os
+import re
 
 from enum import Enum
 from typing import Any
@@ -45,8 +46,34 @@ class ParamType(str, Enum):
 class ControlLoopExec(str, Enum):
     TOPIC = "topic"
     TIMER = "timer"
-
     
+class StdMsgTypes(str, Enum):
+    DOUBLE = "std_msgs/msg/Float64"
+    FLOAT = "std_msgs/msg/Float32"
+    INT = "std_msgs/msg/Int32"
+    BOOL = "std_msgs/msg/Bool"
+    STRING = "std_msgs/msg/String"
+    DOUBLE_VECTOR = "std_msgs/msg/Float64MultiArray"
+    INT_VECTOR = "std_msgs/msg/Int32MultiArray"
+    
+class GeoMsgTypes(str, Enum):
+    POSE = "geometry_msgs/msg/Pose"
+    POSE_STAMPED = "geometry_msgs/msg/PoseStamped"
+    TWIST = "geometry_msgs/msg/Twist"
+    TWIST_STAMPED = "geometry_msgs/msg/TwistStamped"
+    VECTOR3 = "geometry_msgs/msg/Vector3"
+    POINT = "geometry_msgs/msg/Point"
+    QUATERNION = "geometry_msgs/msg/Quaternion"
+    POSE_WITH_COVARIANCE = "geometry_msgs/msg/PoseWithCovariance"
+    TWIST_WITH_COVARIANCE = "geometry_msgs/msg/TwistWithCovariance"
+    ACCELERATION = "geometry_msgs/msg/Accel"
+    ACCELERATION_STAMPED = "geometry_msgs/msg/AccelStamped"
+    ACCELERATION_WITH_COVARIANCE = "geometry_msgs/msg/AccelWithCovariance"
+    INERTIAL = "geometry_msgs/msg/Inertia"
+    WRENCH = "geometry_msgs/msg/Wrench"
+    WRENCH_STAMPED = "geometry_msgs/msg/WrenchStamped"
+    
+
 
 # --- Ros Topic ---
 class AcadosRosTopic:
@@ -326,9 +353,9 @@ class AcadosRosParameter:
         }
         
 # --- Ros Package ---
-class AcadosRosPackage:
+class AcadosRosPackageInfo:
     def __init__(self):
-        self.__package_name: str        = "acados_solver"
+        self.__name: str                = "acados_solver"
         self.__version: str             = "0.1.0"
         self.__description: str         = "ACADOS ROS 2 Interface"
         self.__author_name: str         = "Your Name"
@@ -336,11 +363,11 @@ class AcadosRosPackage:
         self.__license: str             = "MY LICENSE"
         
     @property
-    def package_name(self):
+    def name(self):
         """Name of the package.
         Default: 'acados_solver'.
         """
-        return self.__package_name
+        return self.__name
 
     @property
     def version(self):
@@ -377,11 +404,11 @@ class AcadosRosPackage:
         """
         return self.__license
     
-    @package_name.setter
-    def package_name(self, package_name: str):
-        if not isinstance(package_name, str):
-            raise TypeError('Invalid package_name value, expected str.\n')
-        self.__package_name = package_name
+    @name.setter
+    def name(self, name: str):
+        if not isinstance(name, str):
+            raise TypeError('Invalid package name value, expected str.\n')
+        self.__name = name
 
     @version.setter
     def version(self, version: str):
@@ -414,16 +441,16 @@ class AcadosRosPackage:
         self.__license = license
 
     def __repr__(self) -> str:
-        return (f"{self.__class__.__name__}(name={self.package_name!r}, version={self.version!r}, "
+        return (f"{self.__class__.__name__}(name={self.name!r}, version={self.version!r}, "
                 f"author={self.author_name!r}, email={self.author_email!r}, "
                 f"license={self.license!r})")
 
     def __str__(self) -> str:
-        return (f"Package {self.package_name} v{self.version} by {self.author_name} <{self.author_email}>")
+        return (f"Package {self.name} v{self.version} by {self.author_name} <{self.author_email}>")
     
     def to_dict(self) -> dict:
         return {
-            "package_name": self.package_name,
+            "name": self.name,
             "version": self.version,
             "description": self.description,
             "author_name": self.author_name,
@@ -434,20 +461,20 @@ class AcadosRosPackage:
 # --- Ros Options ---
 class AcadosRosOptions:
     def __init__(self):
-        self.__package: AcadosRosPackage = AcadosRosPackage()
+        self.__package_info: AcadosRosPackageInfo = AcadosRosPackageInfo()
         self.__node_name: str = "acados_solver_node"
         self.__namespace: str = ""
-        self.__publishers: list[AcadosRosPublisher] = []
-        self.__subscribers: list[AcadosRosSubscriber] = []
-        self.__services: list[AcadosRosService] = []
-        self.__parameters: list[AcadosRosParameter] = []
+        self.__publishers: list[AcadosRosPublisher] = list()
+        self.__subscribers: list[AcadosRosSubscriber] = list()
+        self.__services: list[AcadosRosService] = list()
+        self.__parameters: list[AcadosRosParameter] = list()
         self.__control_loop_executor: str = ControlLoopExec.TIMER.value
-        self.__extra_include_dirs: set[str] = set()
-        self.__extra_link_libs: set[str] = set()
+        self.__dependencies: set[str] = set()
+        self.__header_includes: set[str] = set()
 
     @property
-    def package(self) -> AcadosRosPackage:
-        return self.__package
+    def package_info(self) -> AcadosRosPackageInfo:
+        return self.__package_info
 
     @property
     def node_name(self) -> str:
@@ -476,20 +503,12 @@ class AcadosRosOptions:
     @property
     def control_loop_executor(self) -> str:
         return self.__control_loop_executor
-
-    @property
-    def extra_include_dirs(self) -> set[str]:
-        return self.__extra_include_dirs
-
-    @property
-    def extra_link_libs(self) -> set[str]:
-        return self.__extra_link_libs
     
-    @package.setter
-    def package(self, package: str):
-        if not isinstance(package, str):
-            raise TypeError('Invalid package value, expected str.\n')
-        self.__package = package
+    @package_info.setter
+    def package_info(self, package_info: AcadosRosPackageInfo):
+        if not isinstance(package_info, AcadosRosPackageInfo):
+            raise TypeError('Invalid package_info value, expected AcadosRosPackageInfo.\n')
+        self.__package_info = package_info
         
     @node_name.setter
     def node_name(self, node_name: str):
@@ -535,39 +554,22 @@ class AcadosRosOptions:
             self.__control_loop_executor = control_loop_executor
         else:
             raise TypeError('Invalid control_loop_executor value, expected ControlLoopExec or str.\n')
-
-    @extra_include_dirs.setter
-    def extra_include_dirs(self, extra_include_dirs: set[str]):
-        if not all(isinstance(d, str) for d in extra_include_dirs):
-            raise TypeError('Invalid extra_include_dirs value, expected iterable of str.\n')
-        self.__extra_include_dirs = set(extra_include_dirs)
-
-    @extra_link_libs.setter
-    def extra_link_libs(self, extra_link_libs: set[str]):
-        if not all(isinstance(l, str) for l in extra_link_libs):
-            raise TypeError('Invalid extra_link_libs value, expected iterable of str.\n')
-        self.__extra_link_libs = set(extra_link_libs)
         
     def __repr__(self):
-        pkg_name = self.package.package_name if hasattr(self.package, 'package_name') else repr(self.package)
-        includes = sorted(list(self.extra_include_dirs)) if self.extra_include_dirs else []
-        links = sorted(list(self.extra_link_libs)) if self.extra_link_libs else []
+        pkg_name = self.package_info.name if hasattr(self.package_info, 'name') else repr(self.package_info)
         return (
             f"{self.__class__.__name__}(package={pkg_name!r}, node_name={self.node_name!r}, "
             f"namespace={self.namespace!r}, publishers={len(self.publishers)}, "
             f"subscribers={len(self.subscribers)}, services={len(self.services)}, "
             f"parameters={len(self.parameters)}, control_loop_executor={self.control_loop_executor!r}, "
-            f"include_dirs={includes!r}, link_libs={links!r})"
         )
 
     def __str__(self) -> str:
         lines = [f"{self.__class__.__name__}:",
-                 f"  package: {self.package}",
+                 f"  package: {self.package_info}",
                  f"  node: {self.node_name}",
                  f"  namespace: {self.namespace}",
                  f"  control_loop_executor: {self.control_loop_executor}",
-                 f"  include_dirs: {sorted(self.extra_include_dirs)}",
-                 f"  link_libs: {sorted(self.extra_link_libs)}",
                  f"  publishers:"]
         for p in self.publishers:
             lines.append(f"    - {p}")
@@ -583,8 +585,9 @@ class AcadosRosOptions:
         return "\n".join(lines)
     
     def to_dict(self) -> dict:
+        self.finalize()
         return {
-            "package": self.package.to_dict() if hasattr(self.package, 'to_dict') else str(self.package),
+            "package_info": self.package_info.to_dict(),
             "node_name": self.node_name,
             "namespace": self.namespace,
             "publishers": [p.to_dict() for p in self.publishers],
@@ -592,9 +595,65 @@ class AcadosRosOptions:
             "services": [s.to_dict() for s in self.services],
             "parameters": [p.to_dict() for p in self.parameters],
             "control_loop_executor": self.control_loop_executor,
-            "extra_include_dirs": sorted(list(self.extra_include_dirs)),
-            "extra_link_libs": sorted(list(self.extra_link_libs))
+            "dependencies": sorted(list(self.__dependencies)),
+            "header_includes": sorted(list(self.__header_includes)),
         }
+        
+    def add_publisher(self, publisher: AcadosRosPublisher):
+        if not isinstance(publisher, AcadosRosPublisher):
+            raise TypeError('Invalid publisher value, expected AcadosRosPublisher.\n')
+        self.__publishers.append(publisher)
+        
+    def add_subscriber(self, subscriber: AcadosRosSubscriber):
+        if not isinstance(subscriber, AcadosRosSubscriber):
+            raise TypeError('Invalid subscriber value, expected AcadosRosSubscriber.\n')
+        self.__subscribers.append(subscriber)
+        
+    def add_service(self, service: AcadosRosService):
+        if not isinstance(service, AcadosRosService):
+            raise TypeError('Invalid service value, expected AcadosRosService.\n')
+        self.__services.append(service)
+        
+    def add_parameter(self, parameter: AcadosRosParameter):
+        if not isinstance(parameter, AcadosRosParameter):
+            raise TypeError('Invalid parameter value, expected AcadosRosParameter.\n')
+        self.__parameters.append(parameter)
+        
+    @staticmethod
+    def __camel_to_snake(name: str) -> str:
+        s1 = re.sub(r'(.)([A-Z][a-z]+)', r'\1_\2', name)
+        return re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+        
+    def finalize(self):
+        def add_types(msg_type: str):
+            if "/" in msg_type:
+                splitted = msg_type.split("/")
+                self.__header_includes.add(f'{splitted[0]}/msg/{self.__camel_to_snake(splitted[-1])}.hpp')
+                self.__dependencies.add(splitted[0])
+            elif "::" in msg_type:
+                splitted = msg_type.split("::")
+                self.__header_includes.add(f'{splitted[0]}/msg/{self.__camel_to_snake(splitted[-1])}.hpp')
+                self.__dependencies.add(splitted[0])
+
+        for i, pub in enumerate(self.publishers):
+            add_types(pub.msg_type)
+            if "/" in pub.msg_type:
+                splitted = pub.msg_type.split("/")
+            elif "::" in pub.msg_type:
+                splitted = pub.msg_type.split("::")
+            else:
+                raise ValueError(f"Invalid msg_type format for publisher {pub.name}: {pub.msg_type}")
+            self.publishers[i].msg_type = f'{splitted[0]}::msg::{splitted[-1]}'
+
+        for i, sub in enumerate(self.subscribers):
+            add_types(sub.msg_type)
+            if "/" in sub.msg_type:
+                splitted = sub.msg_type.split("/")
+            elif "::" in sub.msg_type:
+                splitted = sub.msg_type.split("::")
+            else:
+                raise ValueError(f"Invalid msg_type format for subscriber {sub.name}: {sub.msg_type}")
+            self.subscribers[i].msg_type = f'{splitted[0]}::msg::{splitted[-1]}'
 
 
 if __name__ == "__main__":
@@ -604,8 +663,6 @@ if __name__ == "__main__":
     ros_opt.publishers = [AcadosRosPublisher()]
     ros_opt.subscribers = [AcadosRosSubscriber()]
     ros_opt.control_loop_executor = ControlLoopExec.TIMER
-    ros_opt.extra_include_dirs = ["include", "2"]
-    ros_opt.extra_link_libs = ["libacados.so"]
     
     ros_opt.publishers[0].name = "pub1"
     ros_opt.publishers[0].msg_type = "std_msgs/msg/Float64"
@@ -613,5 +670,5 @@ if __name__ == "__main__":
     
     ros_opt.subscribers[0].name = "sub1"
     ros_opt.subscribers[0].msg_type = "std_msgs/msg/Float64"
-
+    
     print(ros_opt.to_dict())

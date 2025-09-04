@@ -45,6 +45,7 @@ from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions
 from .acados_ocp_iterate import AcadosOcpIterate
+from .acados_ros_options import AcadosRosOptions
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
                     get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
@@ -120,6 +121,9 @@ class AcadosOcp:
 
         self.simulink_opts = None
         """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
+        
+        self.ros_opts: AcadosRosOptions | None = None
+        """Options to configure ROS 2 nodes and topics."""
 
 
     @property
@@ -1280,6 +1284,16 @@ class AcadosOcp:
             template_list.append(('cost.in.h', f'{name}_cost.h', cost_dir))
 
         return template_list
+    
+    
+    def _get_ros_template_list(self) -> list:
+        template_list = []
+        package_dir = os.path.join(self.code_export_directory, self.ros_opts.package_info.name)
+        template_file = os.path.join('ros_templates', 'CMakeLists_ros.in.txt')
+        template_list.append((template_file, 'CMakeLists.txt', package_dir))
+        template_file = os.path.join('ros_templates', 'package_ros.in.xml')
+        template_list.append((template_file, 'package.xml', package_dir))
+        return template_list
 
 
     def __get_template_list(self, cmake_builder=None) -> list:
@@ -1318,6 +1332,10 @@ class AcadosOcp:
         if self.simulink_opts is not None:
             template_list += self._get_matlab_simulink_template_list(name)
             template_list += self._get_integrator_simulink_template_list(name)
+            
+        # ROS
+        if self.ros_opts is not None:
+            template_list += self._get_ros_template_list()
 
         return template_list
 
@@ -1496,7 +1514,9 @@ class AcadosOcp:
         # convert acados classes to dicts
         for key, v in ocp_dict.items():
             if isinstance(v, (AcadosModel, AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, ZoroDescription)):
-                ocp_dict[key]=dict(getattr(self, key).__dict__)
+                ocp_dict[key] = dict(getattr(self, key).__dict__)
+            if isinstance(v, AcadosRosOptions) and v is not None:
+                ocp_dict[key] = v.to_dict()
 
         ocp_dict = format_class_dict(ocp_dict)
         return ocp_dict

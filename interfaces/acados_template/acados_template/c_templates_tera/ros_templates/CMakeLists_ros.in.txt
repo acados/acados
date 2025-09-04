@@ -1,0 +1,117 @@
+cmake_minimum_required(VERSION 3.8)
+project({{ ros_opts.package_info.name }})
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# --- ROS DEPENDENCIES ---
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(OpenMP REQUIRED)
+{% for dep in ros_opts.dependencies %}
+find_package({{ dep }} REQUIRED)
+{% endfor %}
+
+# --- ACADOS PATHS ---
+set(ACADOS_INCLUDE_PATH {{ acados_include_path }})
+set(ACADOS_LIB_DIR {{ acados_lib_path }})
+set(ACADOS_GENERATED_LIB {{ code_export_directory }}.libacados_ocp_solver_{{ model.name | lower }}{{ shared_lib_ext }})
+
+# --- EXECUTABLE ---
+add_executable({{ ros_opts.node_name }} 
+    src/{{ ros_opts.node_name }}.cpp
+)
+
+# --- INCLUDE DIRECTORIES ---
+include_directories(
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+    {{ code_export_directory }}
+    ${ACADOS_INCLUDE_PATH}
+    ${ACADOS_INCLUDE_PATH}/acados
+    ${ACADOS_INCLUDE_PATH}/blasfeo/include
+    ${ACADOS_INCLUDE_PATH}/hpipm/include
+    ${ACADOS_INCLUDE_PATH}/osqp
+    ${ACADOS_INCLUDE_PATH}/qpOASES_e
+)
+
+# Include Directories
+target_include_directories({{ ros_opts.node_name }} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+# Link Libraries
+target_link_libraries({{ ros_opts.node_name }} 
+    ${ACADOS_GENERATED_LIB}
+    ${ACADOS_LIB_DIR}/libacados.so
+    ${ACADOS_LIB_DIR}/libblasfeo.so
+    ${ACADOS_LIB_DIR}/libhpipm.so
+    ${ACADOS_LIB_DIR}/libosqp.so
+    ${ACADOS_LIB_DIR}/libqpOASES_e.so
+    m
+    OpenMP::OpenMP_CXX
+)
+
+# --- DEPENDENCIES ---
+set(COMMON_DEPENDENCIES 
+    rclcpp
+    {% for dep in ros_opts.dependencies %}
+    {{ dep }}
+    {% endfor %}
+)
+
+ament_target_dependencies({{ ros_opts.node_name }} ${COMMON_DEPENDENCIES})
+
+# --- INSTALLATIONS ---
+install(FILES 
+    ${ACADOS_GENERATED_LIB}
+    DESTINATION lib
+)
+
+install(DIRECTORY 
+    ${ACADOS_GENERATED_CODE_DIR}/
+    DESTINATION include/${PROJECT_NAME}/generated_acados
+)
+
+# install(DIRECTORY
+#     launch
+#     DESTINATION share/${PROJECT_NAME}
+# )
+
+# install(DIRECTORY
+#     config
+#     DESTINATION share/${PROJECT_NAME}
+# )
+
+install(DIRECTORY 
+    include/
+    DESTINATION include
+)
+
+install(TARGETS 
+    {{ ros_opts.node_name }}
+    RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
+# --- EXPORTS ---
+ament_export_include_directories(
+    "include"
+    ${ACADOS_INCLUDE_PATH}
+    ${ACADOS_INCLUDE_PATH}/acados
+    ${ACADOS_INCLUDE_PATH}/acados_c
+    ${ACADOS_INCLUDE_PATH}/blasfeo/include
+    ${ACADOS_INCLUDE_PATH}/hpipm/include
+    ${ACADOS_INCLUDE_PATH}/osqp
+    ${ACADOS_INCLUDE_PATH}/qpOASES_e
+)
+
+ament_export_libraries(
+    acados_ocp_solver_{{ model.name | lower }}
+    ${ACADOS_LIB_DIR}/libacados.so
+    ${ACADOS_LIB_DIR}/libblasfeo.so
+    ${ACADOS_LIB_DIR}/libhpipm.so
+    ${ACADOS_LIB_DIR}/libosqp.so
+    ${ACADOS_LIB_DIR}/libqpOASES_e.so
+)
+ament_package()
