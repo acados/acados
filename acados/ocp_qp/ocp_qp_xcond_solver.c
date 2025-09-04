@@ -191,6 +191,8 @@ acados_size_t ocp_qp_xcond_solver_opts_calculate_size(void *config_, ocp_qp_xcon
     size += xcond->opts_calculate_size(dims->xcond_dims);
 
     size += qp_solver->opts_calculate_size(qp_solver, xcond_qp_dims);
+    size += 8;
+    make_int_multiple_of(8, &size);
 
     return size;
 }
@@ -210,6 +212,7 @@ void *ocp_qp_xcond_solver_opts_assign(void *config_, ocp_qp_xcond_solver_dims *d
 
     ocp_qp_xcond_solver_opts *opts = (ocp_qp_xcond_solver_opts *) c_ptr;
     c_ptr += sizeof(ocp_qp_xcond_solver_opts);
+    align_char_to(8, &c_ptr);
 
     opts->xcond_opts = xcond->opts_assign(dims->xcond_dims, c_ptr);
     c_ptr += xcond->opts_calculate_size(dims->xcond_dims);
