@@ -496,6 +496,9 @@ class AcadosOcp:
         if any(constraints.idxbx_e >= dims.nx):
             raise ValueError(f'idxbx_e = {constraints.idxbx_e} contains value >= nx = {dims.nx}.')
 
+        if dims.nbxe_e is None:
+            dims.nbxe_e = 0
+
         ng_e = constraints.lg_e.shape[0]
         if constraints.ug_e.shape[0] != ng_e or constraints.C_e.shape[0] != ng_e:
             raise ValueError('inconsistent dimension ng_e, regarding_e lg_e, ug_e, C_e.')
