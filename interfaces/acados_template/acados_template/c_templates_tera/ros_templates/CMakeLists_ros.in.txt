@@ -16,7 +16,8 @@ find_package({{ dep }} REQUIRED)
 # --- ACADOS PATHS ---
 set(ACADOS_INCLUDE_PATH {{ acados_include_path }})
 set(ACADOS_LIB_DIR {{ acados_lib_path }})
-set(ACADOS_GENERATED_LIB {{ code_export_directory }}.libacados_ocp_solver_{{ model.name | lower }}{{ shared_lib_ext }})
+set(ACADOS_GENERATED_CODE_DIR {{ code_export_directory }})
+set(ACADOS_GENERATED_LIB ${ACADOS_GENERATED_CODE_DIR}/libacados_ocp_solver_{{ model.name | lower }}{{ shared_lib_ext }})
 
 # --- EXECUTABLE ---
 add_executable({{ ros_opts.node_name }} 
@@ -27,7 +28,7 @@ add_executable({{ ros_opts.node_name }}
 include_directories(
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
-    {{ code_export_directory }}
+    ${ACADOS_GENERATED_CODE_DIR}
     ${ACADOS_INCLUDE_PATH}
     ${ACADOS_INCLUDE_PATH}/acados
     ${ACADOS_INCLUDE_PATH}/blasfeo/include
