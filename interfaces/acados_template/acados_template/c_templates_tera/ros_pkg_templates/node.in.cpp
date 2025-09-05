@@ -1,4 +1,4 @@
-#include "{{ ros_opts.package_info.name }}/{{ ros_opts.node_name }}.h"
+#include "{{ ros_opts.package_info.name }}/node.h"
 
 namespace {{ ros_opts.package_info.name }}
 {
@@ -42,7 +42,7 @@ namespace {{ ros_opts.package_info.name }}
     {%- else %}
     {%- set state_topic = "/state" %}
     {%- endif %}
-    state_sub_ = this->create_subscription<{{ ros_opts.package_info.name }}::msg::State>(
+    state_sub_ = this->create_subscription<{{ ros_opts.package_info.name }}_interface::msg::State>(
         "{{ state_topic }}", 10,
         std::bind(&{{ ClassName }}::state_callback, this, std::placeholders::_1));
 
@@ -53,7 +53,7 @@ namespace {{ ros_opts.package_info.name }}
     {%- else %}
     {%- set input_topic = "/control_input" %}
     {%- endif %}
-    control_input_pub_ = this->create_publisher<{{ ros_opts.package_info.name }}::msg::Input>(
+    control_input_pub_ = this->create_publisher<{{ ros_opts.package_info.name }}_interface::msg::ControlInput>(
         "{{ input_topic }}", 10);
 
     // --- Init solver ---
@@ -170,21 +170,21 @@ void {{ ClassName }}::control_loop() {
 
 
 // --- ROS Callbacks ---
-void {{ ClassName }}::state_callback(const {{ ros_opts.package_info.name }}::msg::State::SharedPtr msg) {
+void {{ ClassName }}::state_callback(const {{ ros_opts.package_info.name }}_interface::msg::State::SharedPtr msg) {
     std::scoped_lock lock(data_mutex_);
     if (msg->x.size() == {{ dims.nx }}) {
         {%- for i in range(end=dims.nx) %} 
         current_x_[{{ i }}] = msg->x[{{ i }}];
         {%- endfor %}
     } else {
-        RCLCPP_ERROR(this->get_logger(), "Received state message of wrong dimension. Expected: %d, got: %d", {{ dims.nx }}, msg->x.size());
+        RCLCPP_ERROR(this->get_logger(), "Received state message of wrong dimension. Expected: %d, got: %ld", {{ dims.nx }}, msg->x.size());
     }
 }
 
 
 // --- ROS Publisher ---
 void {{ ClassName }}::publish_input(const std::array<double, {{ model.name | upper }}_NU>& u0) {
-    auto control_input = std::make_unique<{{ ros_opts.package_info.name }}::msg::ControlInput>();
+    auto control_input = std::make_unique<{{ ros_opts.package_info.name }}_interface::msg::ControlInput>();
     {%- for i in range(end=dims.nu) %} 
     control_input->u[{{ i }}] = u0[{{ i }}];
     {%- endfor %}
@@ -196,7 +196,7 @@ void {{ ClassName }}::publish_input(const std::array<double, {{ model.name | upp
 void {{ ClassName }}::setup_parameter_handlers() {
     // Constraints
     {%- for field, param in constraints %}
-    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) %}
+    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and ('bx_0' not in field) %}
     parameter_handlers_["{{ ros_opts.package_info.name }}.constraints.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             update_param_array(p, this->config_.constraints.{{ field }}, res);
@@ -243,7 +243,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
 void {{ ClassName }}::declare_parameters() {
     // Constraints
     {%- for field, param in constraints %}
-    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) %}
+    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and ('bx_0' not in field) %}
     this->declare_parameter("{{ ros_opts.package_info.name }}.constraints.{{ field }}", std::vector<double>{ {{- param | join(sep=', ') -}} });
     {%- endif %}
     {%- endfor %}
@@ -266,7 +266,7 @@ void {{ ClassName }}::declare_parameters() {
     {%- for field, param in cost %}
     {%- set field_l = field | lower %}
     {%- if param and (field_l is starting_with('z')) %}
-    this->declare_parameter("{{ ros_opts.package_info.name }}.slacks.{{ field }}", std::vector<double>{ {{ param | join(sep=', ') }} });
+    this->declare_parameter("{{ ros_opts.package_info.name }}.slacks.{{ field }}", std::vector<double>{ {{- param | join(sep=', ') -}} });
     {%- endif %}
     {%- endfor %}
     {%- endif %}
@@ -278,7 +278,7 @@ void {{ ClassName }}::declare_parameters() {
 void {{ ClassName }}::load_parameters() {
     // Constraints
     {%- for field, param in constraints %}
-    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) %}
+    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and ('bx_0' not in field) %}
     get_and_check_array_param(this, "{{ ros_opts.package_info.name }}.constraints.{{ field }}", config_.constraints.{{ field }});
     {%- endif %}
     {%- endfor %}
@@ -311,7 +311,7 @@ void {{ ClassName }}::log_parameters() {
     ss << "\n----- {{ model.name | upper }} MPC Configuration -----";
     // Constraints
     {%- for field, param in constraints %}
-    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) %}
+    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and ('bx_0' not in field) %}
     ss << "\n" << std::left << std::setw(label_width) << "{{ field }}" << " = " << config_.constraints.{{ field }};
     {%- endif %}
     {%- endfor %}
@@ -424,10 +424,7 @@ void {{ ClassName }}::set_x0(double* x0) {
     ocp_nlp_constraints_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, ocp_nlp_out_, 0, "lbx", x0);
     ocp_nlp_constraints_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, ocp_nlp_out_, 0, "ubx", x0);
 }
-{%- if dims.ns_0 > 0 or dims.ns > 0 or dims.ns_e > 0 %}
 
-
-{%- endif %}
 {%- if dims.ny_0 > 0 %}
 void {{ ClassName }}::set_yref0(double* yref0) {
     ocp_nlp_cost_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, 0, "yref", yref0);
@@ -438,6 +435,12 @@ void {{ ClassName }}::set_yref0(double* yref0) {
 
 void {{ ClassName }}::set_yref(double* yref, int stage) {
     ocp_nlp_cost_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, stage, "yref", yref);
+}
+
+void {{ ClassName }}::set_yrefs(double* yref) {
+    for (int i = 1; i < {{ model.name | upper }}_N; i++) {
+        this->set_yref(yref, i);
+    }
 }
 {%- endif %}
 {%- if dims.ny_e > 0 %}
@@ -488,9 +491,9 @@ void {{ ClassName }}::set_slack_weights() {
     ocp_nlp_cost_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, 0, "{{ field }}", config_.slacks.{{ field }}.data());
     {%- endif %}
     {%- endfor %}
+
     {%- endif %}
     {%- if dims.ns > 0 %}
-
     // Stage Slacks
     for (int i = 1; i < {{ model.name | upper }}_N; i++) {
         {%- for field, param in cost %}
@@ -515,20 +518,20 @@ void {{ ClassName }}::set_slack_weights() {
 {%- endif %}
 
 void {{ ClassName }}::set_constraints() {
-    {%- if dims.nbx_0 > 0 or dims.nh_0 > 0 or dims.nphi_0 > 0  or dims.nsbx_0 > 0 or dims.nsh_0 > 0 or dims.nsphi_0 > 0 %}
+    {%- if dims.nh_0 > 0 or dims.nphi_0 > 0 or dims.nsh_0 > 0 or dims.nsphi_0 > 0 %}
     // Initial Constraints
-    {%- for field, param in cost %}
-    {%- if param and ((field_l is starting_with('l')) or (field_l is starting_with('u'))) and (field is ending_with('_0')) %}
+    {%- for field, param in constraints %}
+    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and (field is ending_with('_0')) and ('bx_0' not in field) %}
     ocp_nlp_constraints_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, ocp_nlp_out_, 0, "{{ field }}", config_.constraints.{{ field }}.data());
     {%- endif %}
     {%- endfor %}
-    {%- endif %}
-    {%- if constraints.has_stage %}
 
+    {%- endif %}
+    {%- if dims.nbu > 0 or dims.nbx > 0 or dims.ng > 0 or dims.nh > 0 or dims.nphi > 0 or dims.nsbx > 0 or dims.nsg > 0 or dims.nsh > 0 or dims.nsphi > 0 %}
     // Stage Constraints
     for (int i=1; i < {{ model.name | upper }}_N; i++) {
-        {%- for field, param in cost %}
-        {%- if param and ((field_l is starting_with('l')) or (field_l is starting_with('u'))) and (field is not ending_with('_0')) and (field is not ending_with('_e')) %}
+        {%- for field, param in constraints %}
+        {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and (field is not ending_with('_0')) and (field is not ending_with('_e')) %}
         ocp_nlp_constraints_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, ocp_nlp_out_, i, "{{ field }}", config_.constraints.{{ field }}.data());
         {%- endif %}
         {%- endfor %}
@@ -537,8 +540,8 @@ void {{ ClassName }}::set_constraints() {
     {%- if dims.nbx_e > 0 or dims.ng_e > 0 or dims.nh_e > 0 or dims.nphi_e > 0 or dims.nsbx_e > 0 or dims.nsg_e > 0 or dims.nsh_e > 0 or dims.nsphi_e > 0 %}
 
     // Terminal Constraints
-    {%- for field, param in cost %}
-    {%- if param and ((field_l is starting_with('l')) or (field_l is starting_with('u'))) and (field is ending_with('_e')) %}
+    {%- for field, param in constraints %}
+    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and (field is ending_with('_e')) %}
     ocp_nlp_constraints_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, ocp_nlp_out_, {{ model.name | upper }}_N, "{{ field }}", config_.constraints.{{ field }}.data());
     {%- endif %}
     {%- endfor %}

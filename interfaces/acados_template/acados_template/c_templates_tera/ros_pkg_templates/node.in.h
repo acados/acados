@@ -1,6 +1,5 @@
-// #ifndef {{ ros_opts.node_name | upper }}_H
-// #define {{ ros_opts.node_name | upper }}_H
-#pragma once 
+#ifndef {{ ros_opts.node_name | upper }}_H
+#define {{ ros_opts.node_name | upper }}_H
 
 #include <rclcpp/rclcpp.hpp>
 #include <mutex>
@@ -9,8 +8,8 @@
 #include <unordered_map>
 
 // ROS2 message includes 
-#include "{{ ros_opts.package_info.name }}/msg/state.hpp"
-#include "{{ ros_opts.package_info.name }}/msg/control_input.hpp"
+#include "{{ ros_opts.package_info.name }}_interface/msg/state.hpp"
+#include "{{ ros_opts.package_info.name }}_interface/msg/control_input.hpp"
 #include "std_msgs/msg/header.hpp"
 
 // Acados includes
@@ -35,10 +34,10 @@ namespace {{ ros_opts.package_info.name }}
 class {{ ClassName }} : public rclcpp::Node {
 private:
     // --- ROS Subscriptions ---
-    rclcpp::Subscription<{{ ros_opts.package_info.name }}::msg::State>::SharedPtr state_sub_;
+    rclcpp::Subscription<{{ ros_opts.package_info.name }}_interface::msg::State>::SharedPtr state_sub_;
 
     // --- ROS Publishers ---
-    rclcpp::Publisher<{{ ros_opts.package_info.name }}::msg::Input>::SharedPtr control_input_pub_;
+    rclcpp::Publisher<{{ ros_opts.package_info.name }}_interface::msg::ControlInput>::SharedPtr control_input_pub_;
 
     // --- ROS Params and Timer
     rclcpp::TimerBase::SharedPtr control_timer_;
@@ -82,7 +81,7 @@ private:
     void control_loop();
 
     // --- ROS Callbacks ---
-    void state_callback(const {{ ros_opts.package_info.name }}::msg::State::SharedPtr msg);
+    void state_callback(const {{ ros_opts.package_info.name }}_interface::msg::State::SharedPtr msg);
 
     // --- ROS Publisher ---
     void publish_input(const std::array<double, {{ model.name | upper }}_NU>& u0);
@@ -101,24 +100,19 @@ private:
     {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
     int prepare_rti_solve();
     int feedback_rti_solve();
-    {%- else %}
-    int ocp_solve();
     {%- endif %}
+    int ocp_solve();
 
     void get_input(double* u, int stage);
     void get_state(double* x, int stage);
     
-    void set_cost_weights();
-    {%- if dims.ns_0 > 0 or dims.ns > 0 or dims.ns_e > 0 %}
-    void set_slack_weights();
-    {%- endif %}
-    void set_constraints();
     void set_x0(double* x0);
     {%- if dims.ny_0 > 0 %}
     void set_yref0(double* yref0);
     {%- endif %}
     {%- if dims.ny > 0 %}
     void set_yref(double* yref, int stage);
+    void set_yrefs(double* yref);
     {%- endif %}
     {%- if dims.ny_e > 0 %}
     void set_yref_e(double* yref_e);
@@ -127,6 +121,12 @@ private:
     void set_ocp_parameter(double* p, size_t np, int stage);
     void set_ocp_parameters(double* p, size_t np);
     {%- endif %}
+
+    void set_cost_weights();
+    {%- if dims.ns_0 > 0 or dims.ns > 0 or dims.ns_e > 0 %}
+    void set_slack_weights();
+    {%- endif %}
+    void set_constraints();
 };
 
 } // namespace {{ ros_opts.package_info.name }}

@@ -1289,50 +1289,61 @@ class AcadosOcp:
     def _get_ros_template_list(self) -> list:
         template_list = []
 
-        # General Package 
-        package_dir = os.path.join(self.code_export_directory, self.ros_opts.package_info.name)
-        template_file = os.path.join('ros_templates', 'README.in.md')
-        template_list.append((template_file, 'README.md', package_dir))
-        template_file = os.path.join('ros_templates', 'CMakeLists.in.txt')
-        template_list.append((template_file, 'CMakeLists.txt', package_dir))
-        template_file = os.path.join('ros_templates', 'package.in.xml')
-        template_list.append((template_file, 'package.xml', package_dir))
+        # --- Interface Package --- 
+        ros_interface_dir = 'ros_interface_templates'
+        interface_dir = os.path.join(os.path.dirname(self.code_export_directory), f'{self.ros_opts.package_info.name}_interface')
+        template_file = os.path.join(ros_interface_dir, 'README.in.md')
+        template_list.append((template_file, 'README.md', interface_dir))
+        template_file = os.path.join(ros_interface_dir, 'CMakeLists.in.txt')
+        template_list.append((template_file, 'CMakeLists.txt', interface_dir))
+        template_file = os.path.join(ros_interface_dir, 'package.in.xml')
+        template_list.append((template_file, 'package.xml', interface_dir))
 
         # Messages
-        msg_dir = os.path.join(package_dir, 'msg')
-        template_file = os.path.join('ros_templates', 'State.in.msg')
+        msg_dir = os.path.join(interface_dir, 'msg')
+        template_file = os.path.join(ros_interface_dir, 'State.in.msg')
         template_list.append((template_file, 'State.msg', msg_dir))
-        template_file = os.path.join('ros_templates', 'ControlInput.in.msg')
+        template_file = os.path.join(ros_interface_dir, 'ControlInput.in.msg')
         template_list.append((template_file, 'ControlInput.msg', msg_dir))
-        template_file = os.path.join('ros_templates', 'Parameter.in.msg')
+        template_file = os.path.join(ros_interface_dir, 'Parameter.in.msg')
         template_list.append((template_file, 'Parameter.msg', msg_dir))
 
         # Services
         # TODO: No node implementation yet
         # srv_dir = os.path.join(package_dir, 'srv')
-        # template_file = os.path.join('ros_templates', 'SolveOCP.in.srv')
+        # template_file = os.path.join(ros_interface_dir, 'SolveOCP.in.srv')
         # template_list.append((template_file, 'SolveOCP.srv', srv_dir))
 
         # Actions
         # TODO: No Template yet and no node implementation
         # action_dir = os.path.join(package_dir, 'action')
-        # template_file = os.path.join('ros_templates', 'SolveOCP.in.action')
+        # template_file = os.path.join(ros_interface_dir, 'SolveOCP.in.action')
         # template_list.append((template_file, 'SolveOCP.action', action_dir))
+
+        # --- Solver Package --- 
+        ros_pkg_dir = 'ros_pkg_templates'
+        package_dir = os.path.join(os.path.dirname(self.code_export_directory), self.ros_opts.package_info.name)
+        template_file = os.path.join(ros_pkg_dir, 'README.in.md')
+        template_list.append((template_file, 'README.md', package_dir))
+        template_file = os.path.join(ros_pkg_dir, 'CMakeLists.in.txt')
+        template_list.append((template_file, 'CMakeLists.txt', package_dir))
+        template_file = os.path.join(ros_pkg_dir, 'package.in.xml')
+        template_list.append((template_file, 'package.xml', package_dir))
 
         # Header
         include_dir = os.path.join(package_dir, 'include', self.ros_opts.package_info.name)
-        template_file = os.path.join('ros_templates', 'config.in.hpp')
+        template_file = os.path.join(ros_pkg_dir, 'config.in.hpp')
         template_list.append((template_file, 'config.hpp', include_dir))
-        template_file = os.path.join('ros_templates', 'utils.in.hpp')
+        template_file = os.path.join(ros_pkg_dir, 'utils.in.hpp')
         template_list.append((template_file, 'utils.hpp', include_dir))
-        template_file = os.path.join('ros_templates', 'marker_publisher.in.hpp')
+        template_file = os.path.join(ros_pkg_dir, 'marker_publisher.in.hpp')
         template_list.append((template_file, 'marker_publisher.hpp', include_dir))
-        template_file = os.path.join('ros_templates', 'node.in.h')
+        template_file = os.path.join(ros_pkg_dir, 'node.in.h')
         template_list.append((template_file, 'node.h', include_dir))
 
         # Source
         src_dir = os.path.join(package_dir, 'src')
-        template_file = os.path.join('ros_templates', 'node.in.cpp')
+        template_file = os.path.join(ros_pkg_dir, 'node.in.cpp')
         template_list.append((template_file, 'node.cpp', src_dir))
         return template_list
 

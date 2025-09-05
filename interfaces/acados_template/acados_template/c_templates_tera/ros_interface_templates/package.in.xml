@@ -1,19 +1,15 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-    <name>{{ ros_opts.package_info.name }}</name>
+    <name>{{ ros_opts.package_info.name }}_interface</name>
     <version>{{ ros_opts.package_info.version }}</version>
-    <description>{{ ros_opts.package_info.description }}</description>
+    <description>Interface of {{ ros_opts.package_info.description }}</description>
     <maintainer email="{{ ros_opts.package_info.author_email }}">{{ ros_opts.package_info.author_name }}</maintainer>
     <license>{{ ros_opts.package_info.license }}</license>
 
     <buildtool_depend>ament_cmake</buildtool_depend>
 
-    <depend>rclcpp</depend>
     <depend>std_msgs</depend>
-    {% for dep in ros_opts.dependencies %}
-    <depend>{{ dep }}</depend>
-    {% endfor %}
     
     <build_depend>rosidl_default_generators</build_depend>
     <exec_depend>rosidl_default_runtime</exec_depend>
