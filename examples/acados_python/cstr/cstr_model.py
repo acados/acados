@@ -30,7 +30,7 @@
 #
 
 import numpy as np
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from acados_template import AcadosModel
 from casadi import SX, vertcat, exp
 from cstr_utils import compute_lqr_gain
@@ -51,8 +51,8 @@ class CstrParameters:
     dH: float = -5 * 1e4  # kJ / kmol
     # to avoid division by zero
     eps: float = 1e-5  # m
-    xs: np.ndarray = np.array([0.878, 324.5, 0.659])
-    us: np.ndarray = np.array([300, 0.1])
+    xs: np.ndarray = field(default_factory=lambda: np.array([0.878, 324.5, 0.659]))
+    us: np.ndarray = field(default_factory=lambda: np.array([300, 0.1]))
 
 
 def setup_cstr_model(params: CstrParameters):
