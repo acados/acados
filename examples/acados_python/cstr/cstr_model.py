@@ -29,8 +29,6 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-# authors: Katrin Baumgaertner, Jonathan Frey
-
 import numpy as np
 from dataclasses import dataclass
 from acados_template import AcadosModel

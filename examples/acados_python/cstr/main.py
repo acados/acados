@@ -29,8 +29,6 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-# authors: Katrin Baumgaertner, Jonathan Frey
-
 from cstr_model import CstrParameters, setup_cstr_model, setup_linearized_model
 from setup_acados_ocp_solver import (
     MpcCstrParameters,
@@ -180,7 +178,10 @@ def main():
         X, U, timings_solver, _ = simulate(
             ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
         )
-        diff_all.append(np.linalg.norm(X - X_all[-1]))
+        if with_nmpc:
+            diff_all.append(np.linalg.norm(X - X_all[-1]))
+        else:
+            diff_all.append(None)
         X_all.append(X)
         U_all.append(U)
         timings_solver_all.append(timings_solver)
@@ -199,7 +200,7 @@ def main():
         reference_profile = ca.if_else(ocp_model.p[-1] < tjump2, reference_profile, ca.vertcat(xs, us))
         print(f"\n\nRunning simulation with {label}\n\n")
 
-        ocp_solver = setup_acados_ocp_solver(ocp_model, solver_type='SQP', mpc_params=mpc_params, 
+        ocp_solver = setup_acados_ocp_solver(ocp_model, solver_type='SQP', mpc_params=mpc_params,
                                              cstr_params=cstr_params, reference_profile=reference_profile)
 
         X, U, timings_solver, _ = simulate(
@@ -223,7 +224,10 @@ def main():
         X, U, timings_solver, _ = simulate(
             ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref, with_reference_profile=True
         )
-        diff_all.append(np.linalg.norm(X - X_all[-1]))
+        if with_timevar_ref_nmpc:
+            diff_all.append(np.linalg.norm(X - X_all[-1]))
+        else:
+            diff_all.append(None)
         X_all.append(X)
         U_all.append(U)
         timings_solver_all.append(timings_solver)
@@ -279,12 +283,10 @@ def main():
             f"{label:{max_label_length}}   {f'{np.min(timings_solver):.3f}':>10} {f'{np.mean(timings_solver):.3f}':>10} {f'{np.max(timings_solver):.3f}':>10}"
         )
 
-    print(f"\n{'Differences in result between IPOPT and ACADOS:'} \n------------------")
+    print(f"\n{'Differences in x trajectory between IPOPT and acados:'} \n------------------")
     for i in range(len(labels_all)):
         label = labels_all[i]
-        if diff_all[i] is None:
-            pass
-        else:
+        if diff_all[i] is not None:
             print(f"{label:{max_label_length}}   {f'{diff_all[i]:.3f}':>10}")
 
     # plot results
