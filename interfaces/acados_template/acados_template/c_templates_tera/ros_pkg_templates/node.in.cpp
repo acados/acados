@@ -1,6 +1,6 @@
-#include "{{ ros_opts.package_info.name }}/node.h"
+#include "{{ ros_opts.package_name }}/node.h"
 
-namespace {{ ros_opts.package_info.name }}
+namespace {{ ros_opts.package_name }}
 {
 
 {%- set ClassName = ros_opts.node_name | replace(from="_", to=" ") | title | replace(from=" ", to="") %}
@@ -42,7 +42,7 @@ namespace {{ ros_opts.package_info.name }}
     {%- else %}
     {%- set state_topic = "/state" %}
     {%- endif %}
-    state_sub_ = this->create_subscription<{{ ros_opts.package_info.name }}_interface::msg::State>(
+    state_sub_ = this->create_subscription<{{ ros_opts.package_name }}_interface::msg::State>(
         "{{ state_topic }}", 10,
         std::bind(&{{ ClassName }}::state_callback, this, std::placeholders::_1));
     {%- if ns %}
@@ -50,7 +50,7 @@ namespace {{ ros_opts.package_info.name }}
     {%- else %}
     {%- set references_topic = "/references" %}
     {%- endif %}
-    references_sub_ = this->create_subscription<{{ ros_opts.package_info.name }}_interface::msg::References>(
+    references_sub_ = this->create_subscription<{{ ros_opts.package_name }}_interface::msg::References>(
         "{{ references_topic }}", 10,
         std::bind(&{{ ClassName }}::references_callback, this, std::placeholders::_1));
     {%- if ns %}
@@ -58,7 +58,7 @@ namespace {{ ros_opts.package_info.name }}
     {%- else %}
     {%- set parameters_topic = "/parameters" %}
     {%- endif %}
-    parameters_sub_ = this->create_subscription<{{ ros_opts.package_info.name }}_interface::msg::Parameters>(
+    parameters_sub_ = this->create_subscription<{{ ros_opts.package_name }}_interface::msg::Parameters>(
         "{{ parameters_topic }}", 10,
         std::bind(&{{ ClassName }}::parameters_callback, this, std::placeholders::_1));
 
@@ -69,7 +69,7 @@ namespace {{ ros_opts.package_info.name }}
     {%- else %}
     {%- set input_topic = "/control_input" %}
     {%- endif %}
-    control_input_pub_ = this->create_publisher<{{ ros_opts.package_info.name }}_interface::msg::ControlInput>(
+    control_input_pub_ = this->create_publisher<{{ ros_opts.package_name }}_interface::msg::ControlInput>(
         "{{ input_topic }}", 10);
 
     // --- Init solver ---
@@ -186,12 +186,12 @@ void {{ ClassName }}::control_loop() {
 
 
 // --- ROS Callbacks ---
-void {{ ClassName }}::state_callback(const {{ ros_opts.package_info.name }}_interface::msg::State::SharedPtr msg) {
+void {{ ClassName }}::state_callback(const {{ ros_opts.package_name }}_interface::msg::State::SharedPtr msg) {
     std::scoped_lock lock(data_mutex_);
     std::copy_n(msg->x.begin(), {{ model.name | upper }}_NX, current_x_.begin());
 }
 
-void {{ ClassName }}::references_callback(const {{ ros_opts.package_info.name }}_interface::msg::References::SharedPtr msg) {
+void {{ ClassName }}::references_callback(const {{ ros_opts.package_name }}_interface::msg::References::SharedPtr msg) {
     std::scoped_lock lock(data_mutex_);
     {%- if dims.ny_0 > 0 %}
     std::copy_n(msg->yref_0.begin(), {{ model.name | upper }}_NY0, current_yref_0_.begin());
@@ -205,7 +205,7 @@ void {{ ClassName }}::references_callback(const {{ ros_opts.package_info.name }}
 }
 {%- if dims.np > 0 %}
 
-void {{ ClassName }}::parameters_callback(const {{ ros_opts.package_info.name }}_interface::msg::Parameters::SharedPtr msg) {
+void {{ ClassName }}::parameters_callback(const {{ ros_opts.package_name }}_interface::msg::Parameters::SharedPtr msg) {
     std::scoped_lock lock(data_mutex_);
     std::copy_n(msg->p.begin(), {{ model.name | upper }}_NP, current_p_.begin());
 }
@@ -214,7 +214,7 @@ void {{ ClassName }}::parameters_callback(const {{ ros_opts.package_info.name }}
 
 // --- ROS Publisher ---
 void {{ ClassName }}::publish_input(const std::array<double, {{ model.name | upper }}_NU>& u0) {
-    auto control_input = std::make_unique<{{ ros_opts.package_info.name }}_interface::msg::ControlInput>();
+    auto control_input = std::make_unique<{{ ros_opts.package_name }}_interface::msg::ControlInput>();
     {%- for i in range(end=dims.nu) %} 
     control_input->u[{{ i }}] = u0[{{ i }}];
     {%- endfor %}
@@ -227,7 +227,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     // Constraints
     {%- for field, param in constraints %}
     {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and ('bx_0' not in field) %}
-    parameter_handlers_["{{ ros_opts.package_info.name }}.constraints.{{ field }}"] =
+    parameter_handlers_["{{ ros_opts.package_name }}.constraints.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             update_param_array(p, this->config_.constraints.{{ field }}, res);
         };
@@ -237,7 +237,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     // Weights
     {%- for field, param in cost %}
     {%- if param and (field is starting_with('W')) %}
-    parameter_handlers_["{{ ros_opts.package_info.name }}.weights.{{ field }}"] =
+    parameter_handlers_["{{ ros_opts.package_name }}.weights.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             update_param_array(p, this->config_.weights.{{ field }}, res);
         };
@@ -249,7 +249,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- for field, param in cost %}
     {%- set field_l = field | lower %}
     {%- if param and (field_l is starting_with('z')) %}
-    parameter_handlers_["{{ ros_opts.package_info.name }}.slacks.{{ field }}"] =
+    parameter_handlers_["{{ ros_opts.package_name }}.slacks.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             update_param_array(p, this->config_.slacks.{{ field }}, res);
         };
@@ -258,7 +258,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- endif %}
 
     // Solver Options
-    parameter_handlers_["{{ ros_opts.package_info.name }}.solver_options.Tsim"] =
+    parameter_handlers_["{{ ros_opts.package_name }}.solver_options.Tsim"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             this->config_.solver_options.Tsim = p.as_double();
             try {
@@ -274,14 +274,14 @@ void {{ ClassName }}::declare_parameters() {
     // Constraints
     {%- for field, param in constraints %}
     {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and ('bx_0' not in field) %}
-    this->declare_parameter("{{ ros_opts.package_info.name }}.constraints.{{ field }}", std::vector<double>{ {{- param | join(sep=', ') -}} });
+    this->declare_parameter("{{ ros_opts.package_name }}.constraints.{{ field }}", std::vector<double>{ {{- param | join(sep=', ') -}} });
     {%- endif %}
     {%- endfor %}
 
     // Weights
     {%- for field, param in cost %}
     {%- if param and (field is starting_with('W')) %}
-    this->declare_parameter("{{ ros_opts.package_info.name }}.weights.{{ field }}", std::vector<double>{
+    this->declare_parameter("{{ ros_opts.package_name }}.weights.{{ field }}", std::vector<double>{
         {%- set n_diag = param | length -%}
         {%- for i in range(end=n_diag) -%}
             {{- param[i][i] -}}
@@ -296,27 +296,27 @@ void {{ ClassName }}::declare_parameters() {
     {%- for field, param in cost %}
     {%- set field_l = field | lower %}
     {%- if param and (field_l is starting_with('z')) %}
-    this->declare_parameter("{{ ros_opts.package_info.name }}.slacks.{{ field }}", std::vector<double>{ {{- param | join(sep=', ') -}} });
+    this->declare_parameter("{{ ros_opts.package_name }}.slacks.{{ field }}", std::vector<double>{ {{- param | join(sep=', ') -}} });
     {%- endif %}
     {%- endfor %}
     {%- endif %}
 
     // Solver Options
-    this->declare_parameter("{{ ros_opts.package_info.name }}.solver_options.Tsim", {{ solver_options.Tsim }});
+    this->declare_parameter("{{ ros_opts.package_name }}.solver_options.Tsim", {{ solver_options.Tsim }});
 }
 
 void {{ ClassName }}::load_parameters() {
     // Constraints
     {%- for field, param in constraints %}
     {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and ('bx_0' not in field) %}
-    get_and_check_array_param(this, "{{ ros_opts.package_info.name }}.constraints.{{ field }}", config_.constraints.{{ field }});
+    get_and_check_array_param(this, "{{ ros_opts.package_name }}.constraints.{{ field }}", config_.constraints.{{ field }});
     {%- endif %}
     {%- endfor %}
 
     // Weights
     {%- for field, param in cost %}
     {%- if param and (field is starting_with('W')) %}
-    get_and_check_array_param(this, "{{ ros_opts.package_info.name }}.weights.{{ field }}", config_.weights.{{ field }});
+    get_and_check_array_param(this, "{{ ros_opts.package_name }}.weights.{{ field }}", config_.weights.{{ field }});
     {%- endif %}
     {%- endfor %}
     {%- if has_slack %}
@@ -325,13 +325,13 @@ void {{ ClassName }}::load_parameters() {
     {%- for field, param in cost %}
     {%- set field_l = field | lower %}
     {%- if param and (field_l is starting_with('z')) %}
-    get_and_check_array_param(this, "{{ ros_opts.package_info.name }}.slacks.{{ field }}", config_.slacks.{{ field }});
+    get_and_check_array_param(this, "{{ ros_opts.package_name }}.slacks.{{ field }}", config_.slacks.{{ field }});
     {%- endif %}
     {%- endfor %}
     {%- endif %}
 
     // Solver Options
-    this->get_parameter("{{ ros_opts.package_info.name }}.solver_options.Tsim", config_.solver_options.Tsim);
+    this->get_parameter("{{ ros_opts.package_name }}.solver_options.Tsim", config_.solver_options.Tsim);
 }
 
 void {{ ClassName }}::log_parameters() {
@@ -578,13 +578,13 @@ void {{ ClassName }}::set_constraints() {
     {%- endif %}
 }
 
-} // namespace {{ ros_opts.package_info.name }}
+} // namespace {{ ros_opts.package_name }}
 
 
 // --- Main Funktion ---
 int main(int argc, char **argv) {
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<{{ ros_opts.package_info.name }}::{{ ClassName }}>();
+    auto node = std::make_shared<{{ ros_opts.package_name }}::{{ ClassName }}>();
     rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;

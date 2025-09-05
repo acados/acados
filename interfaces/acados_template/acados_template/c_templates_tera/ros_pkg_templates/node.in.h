@@ -8,10 +8,10 @@
 #include <unordered_map>
 
 // ROS2 message includes 
-#include "{{ ros_opts.package_info.name }}_interface/msg/state.hpp"
-#include "{{ ros_opts.package_info.name }}_interface/msg/control_input.hpp"
-#include "{{ ros_opts.package_info.name }}_interface/msg/references.hpp"
-#include "{{ ros_opts.package_info.name }}_interface/msg/parameters.hpp"
+#include "{{ ros_opts.package_name }}_interface/msg/state.hpp"
+#include "{{ ros_opts.package_name }}_interface/msg/control_input.hpp"
+#include "{{ ros_opts.package_name }}_interface/msg/references.hpp"
+#include "{{ ros_opts.package_name }}_interface/msg/parameters.hpp"
 #include "std_msgs/msg/header.hpp"
 
 // Acados includes
@@ -25,23 +25,23 @@
 #include "acados_solver_{{ model.name }}.h"
 
 // Package includes
-#include "{{ ros_opts.package_info.name }}/utils.hpp"
-#include "{{ ros_opts.package_info.name }}/config.hpp"
+#include "{{ ros_opts.package_name }}/utils.hpp"
+#include "{{ ros_opts.package_name }}/config.hpp"
 
 
-namespace {{ ros_opts.package_info.name }}
+namespace {{ ros_opts.package_name }}
 {
 
 {%- set ClassName = ros_opts.node_name | replace(from="_", to=" ") | title | replace(from=" ", to="") %}
 class {{ ClassName }} : public rclcpp::Node {
 private:
     // --- ROS Subscriptions ---
-    rclcpp::Subscription<{{ ros_opts.package_info.name }}_interface::msg::State>::SharedPtr state_sub_;
-    rclcpp::Subscription<{{ ros_opts.package_info.name }}_interface::msg::References>::SharedPtr references_sub_;
-    rclcpp::Subscription<{{ ros_opts.package_info.name }}_interface::msg::Parameters>::SharedPtr parameters_sub_;
+    rclcpp::Subscription<{{ ros_opts.package_name }}_interface::msg::State>::SharedPtr state_sub_;
+    rclcpp::Subscription<{{ ros_opts.package_name }}_interface::msg::References>::SharedPtr references_sub_;
+    rclcpp::Subscription<{{ ros_opts.package_name }}_interface::msg::Parameters>::SharedPtr parameters_sub_;
 
     // --- ROS Publishers ---
-    rclcpp::Publisher<{{ ros_opts.package_info.name }}_interface::msg::ControlInput>::SharedPtr control_input_pub_;
+    rclcpp::Publisher<{{ ros_opts.package_name }}_interface::msg::ControlInput>::SharedPtr control_input_pub_;
 
     // --- ROS Params and Timer
     rclcpp::TimerBase::SharedPtr control_timer_;
@@ -85,9 +85,9 @@ private:
     void control_loop();
 
     // --- ROS Callbacks ---
-    void state_callback(const {{ ros_opts.package_info.name }}_interface::msg::State::SharedPtr msg);
-    void references_callback(const {{ ros_opts.package_info.name }}_interface::msg::References::SharedPtr msg);
-    void parameters_callback(const {{ ros_opts.package_info.name }}_interface::msg::Parameters::SharedPtr msg);
+    void state_callback(const {{ ros_opts.package_name }}_interface::msg::State::SharedPtr msg);
+    void references_callback(const {{ ros_opts.package_name }}_interface::msg::References::SharedPtr msg);
+    void parameters_callback(const {{ ros_opts.package_name }}_interface::msg::Parameters::SharedPtr msg);
 
     // --- ROS Publisher ---
     void publish_input(const std::array<double, {{ model.name | upper }}_NU>& u0);
@@ -135,6 +135,6 @@ private:
     void set_constraints();
 };
 
-} // namespace {{ ros_opts.package_info.name }}
+} // namespace {{ ros_opts.package_name }}
 
 #endif // {{ ros_opts.node_name | upper }}_H

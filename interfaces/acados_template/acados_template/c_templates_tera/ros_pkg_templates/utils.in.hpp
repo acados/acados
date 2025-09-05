@@ -1,5 +1,5 @@
-#ifndef {{ ros_opts.package_info.name | upper }}_UTILS_HPP
-#define {{ ros_opts.package_info.name | upper }}_UTILS_HPP
+#ifndef {{ ros_opts.package_name | upper }}_UTILS_HPP
+#define {{ ros_opts.package_name | upper }}_UTILS_HPP
 
 #include <rclcpp/rclcpp.hpp>
 #include <ostream>
@@ -112,4 +112,4 @@ inline std::array<T, N> create_repeating_array(const std::array<T, K>& pattern_v
     return alternated;
 }
 
-#endif // {{ ros_opts.package_info.name | upper }}_UTILS_HPP
+#endif // {{ ros_opts.package_name | upper }}_UTILS_HPP

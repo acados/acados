@@ -8,7 +8,7 @@
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <geometry_msgs/msg/point.hpp>
 
-namespace {{ ros_opts.package_info.name }} 
+namespace {{ ros_opts.package_name }}
 {
 
 typedef struct {
@@ -79,6 +79,6 @@ inline void publish_marker_array(
     marker_publisher->publish(marker_array_msg);
 }
 
-} // namespace {{ ros_opts.package_info.name }}
+} // namespace {{ ros_opts.package_name }}
 
 #endif

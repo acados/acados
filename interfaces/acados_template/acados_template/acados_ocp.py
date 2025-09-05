@@ -45,7 +45,7 @@ from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions
 from .acados_ocp_iterate import AcadosOcpIterate
-from .acados_ros_options import AcadosRosOptions
+from .acados_ocp_ros import AcadosOcpRos
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
                     get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
@@ -122,7 +122,7 @@ class AcadosOcp:
         self.simulink_opts = None
         """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
         
-        self.ros_opts: Optional[AcadosRosOptions] = None
+        self.ros_opts: Optional[AcadosOcpRos] = None
         """Options to configure ROS 2 nodes and topics."""
 
 
@@ -1291,7 +1291,7 @@ class AcadosOcp:
 
         # --- Interface Package --- 
         ros_interface_dir = 'ros_interface_templates'
-        interface_dir = os.path.join(os.path.dirname(self.code_export_directory), f'{self.ros_opts.package_info.name}_interface')
+        interface_dir = os.path.join(os.path.dirname(self.code_export_directory), f'{self.ros_opts.package_name}_interface')
         template_file = os.path.join(ros_interface_dir, 'README.in.md')
         template_list.append((template_file, 'README.md', interface_dir))
         template_file = os.path.join(ros_interface_dir, 'CMakeLists.in.txt')
@@ -1324,7 +1324,7 @@ class AcadosOcp:
 
         # --- Solver Package --- 
         ros_pkg_dir = 'ros_pkg_templates'
-        package_dir = os.path.join(os.path.dirname(self.code_export_directory), self.ros_opts.package_info.name)
+        package_dir = os.path.join(os.path.dirname(self.code_export_directory), self.ros_opts.package_name)
         template_file = os.path.join(ros_pkg_dir, 'README.in.md')
         template_list.append((template_file, 'README.md', package_dir))
         template_file = os.path.join(ros_pkg_dir, 'CMakeLists.in.txt')
@@ -1333,7 +1333,7 @@ class AcadosOcp:
         template_list.append((template_file, 'package.xml', package_dir))
 
         # Header
-        include_dir = os.path.join(package_dir, 'include', self.ros_opts.package_info.name)
+        include_dir = os.path.join(package_dir, 'include', self.ros_opts.package_name)
         template_file = os.path.join(ros_pkg_dir, 'config.in.hpp')
         template_list.append((template_file, 'config.hpp', include_dir))
         template_file = os.path.join(ros_pkg_dir, 'utils.in.hpp')
@@ -1569,7 +1569,7 @@ class AcadosOcp:
         for key, v in ocp_dict.items():
             if isinstance(v, (AcadosModel, AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, ZoroDescription)):
                 ocp_dict[key] = dict(getattr(self, key).__dict__)
-            if isinstance(v, AcadosRosOptions) and v is not None:
+            if isinstance(v, AcadosOcpRos) and v is not None:
                 ocp_dict[key] = v.to_dict()
 
         ocp_dict = format_class_dict(ocp_dict)

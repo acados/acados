@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project({{ ros_opts.package_info.name }})
+project({{ ros_opts.package_name }})
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -9,17 +9,17 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
-find_package({{ ros_opts.package_info.name }}_interface REQUIRED)
+find_package({{ ros_opts.package_name }}_interface REQUIRED)
 find_package(OpenMP REQUIRED)
 
 # --- ACADOS PATHS ---
 set(ACADOS_INCLUDE_PATH {{ acados_include_path }})
 set(ACADOS_LIB_DIR {{ acados_lib_path }})
 set(ACADOS_GENERATED_CODE_DIR {{ code_export_directory }})
-set(ACADOS_GENERATED_LIB ${ACADOS_GENERATED_CODE_DIR}/libacados_ocp_solver_{{ model.name | lower }}{{ shared_lib_ext }})
+set(ACADOS_GENERATED_LIB ${ACADOS_GENERATED_CODE_DIR}/libacados_ocp_solver_{{ name }}{{ shared_lib_ext }})
 
 # --- EXECUTABLE ---
-add_executable({{ ros_opts.node_name }} 
+add_executable({{ ros_opts.node_name }}
     src/node.cpp
 )
 
@@ -57,7 +57,7 @@ target_link_libraries({{ ros_opts.node_name }}
 set(COMMON_DEPENDENCIES 
     rclcpp
     std_msgs
-    {{ ros_opts.package_info.name }}_interface
+    {{ ros_opts.package_name }}_interface
 )
 
 ament_target_dependencies({{ ros_opts.node_name }} ${COMMON_DEPENDENCIES})
@@ -96,7 +96,7 @@ ament_export_include_directories(
 )
 
 ament_export_libraries(
-    acados_ocp_solver_{{ model.name | lower }}
+    acados_ocp_solver_{{ name }}
     ${ACADOS_LIB_DIR}/libacados.so
     ${ACADOS_LIB_DIR}/libblasfeo.so
     ${ACADOS_LIB_DIR}/libhpipm.so

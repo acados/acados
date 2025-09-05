@@ -1,5 +1,5 @@
-#ifndef {{ ros_opts.node_name | upper }}_CONFIG_H
-#define {{ ros_opts.node_name | upper }}_CONFIG_H
+#ifndef {{ ros_opts.package_name | upper }}_CONFIG_H
+#define {{ ros_opts.package_name | upper }}_CONFIG_H
 
 #include <array>
 #include <vector>
@@ -7,7 +7,7 @@
 #include "acados_solver_{{ model.name }}.h"
 
 
-namespace {{ ros_opts.package_info.name }}
+namespace {{ ros_opts.package_name }}
 {
 {%- set ClassName = ros_opts.node_name | replace(from="_", to=" ") | title | replace(from=" ", to="") %}
 
@@ -194,6 +194,6 @@ struct {{ ClassName }}Config {
     std::array<double, {{ model.name | upper }}_NP>  parameter_values{};
 };
 
-} // namespace {{ ros_opts.package_info.name }} 
+} // namespace {{ ros_opts.package_name }}
 
-#endif // {{ ros_opts.node_name | upper }}_CONFIG_H
+#endif // {{ ros_opts.package_name | upper }}_CONFIG_H
