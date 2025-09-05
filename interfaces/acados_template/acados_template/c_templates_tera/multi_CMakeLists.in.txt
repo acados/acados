@@ -328,10 +328,12 @@ link_directories(${ACADOS_LIB_PATH})
 
 # link to libraries
 if(UNIX)
-    link_libraries(acados hpipm blasfeo m {{ link_libs }})
+    set(ACADOS_LINK_LIBS acados hpipm blasfeo m {{ link_libs }} CACHE STRING "Define what libs to link with acados solver")
 else()
-    link_libraries(acados hpipm blasfeo {{ link_libs }})
+    set(ACADOS_LINK_LIBS acados hpipm blasfeo {{ link_libs }} CACHE STRING "Define what libs to link with acados solver")
 endif()
+
+link_libraries(${ACADOS_LINK_LIBS})
 
 # the targets
 
