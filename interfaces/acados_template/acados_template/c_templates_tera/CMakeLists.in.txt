@@ -242,7 +242,7 @@ if(${BUILD_ACADOS_SOLVER_LIB})
     {%- endif %}
     $<TARGET_OBJECTS:${OCP_OBJ}>
     {%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
-        $<TARGET_OBJECTS:${SIM_OBJ}>
+    $<TARGET_OBJECTS:${SIM_OBJ}>
     {%- endif -%}
     )
     install(TARGETS ${LIB_ACADOS_SOLVER} DESTINATION ${CMAKE_INSTALL_PREFIX})
