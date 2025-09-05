@@ -95,4 +95,21 @@ inline std::array<T, N * N> diag_from_vec(const std::array<T, N>& v) noexcept
     return mat;
 }
 
+/**
+ * @brief Create an alternating array, which takes a pattern of two values and expands it to a larger size.
+ *
+ * @tparam T element type
+ * @tparam N vector dimension (N)
+ * @param pattern_values flat pattern vector storage of size 2
+ * @return std::array<T, N>
+ */
+template<typename T, size_t N, size_t K>
+inline std::array<T, N> create_repeating_array(const std::array<T, K>& pattern_values) {
+    std::array<T, N> alternated{};
+    for (size_t i = 0; i < N; ++i) {
+        alternated[i] = pattern_values[i % K];
+    }
+    return alternated;
+}
+
 #endif // {{ ros_opts.package_info.name | upper }}_UTILS_HPP

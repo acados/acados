@@ -8,10 +8,28 @@ endif()
 # --- ROS DEPENDENCIES ---
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 find_package(OpenMP REQUIRED)
 {% for dep in ros_opts.dependencies %}
 find_package({{ dep }} REQUIRED)
 {% endfor %}
+
+# --- INTERFACES (Generic State/Input + Service) ---
+set(MSG_FILES
+  "msg/State.msg"
+  "msg/ControlInput.msg"
+)
+
+set(SRV_FILES
+  "srv/SolveOCP.srv"
+)
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  ${MSG_FILES}
+  ${SRV_FILES}
+  DEPENDENCIES std_msgs
+)
 
 # --- ACADOS PATHS ---
 set(ACADOS_INCLUDE_PATH {{ acados_include_path }})
@@ -57,12 +75,18 @@ target_link_libraries({{ ros_opts.node_name }}
 # --- DEPENDENCIES ---
 set(COMMON_DEPENDENCIES 
     rclcpp
+    std_msgs
+    rosidl_default_runtime
     {% for dep in ros_opts.dependencies %}
     {{ dep }}
     {% endfor %}
 )
 
 ament_target_dependencies({{ ros_opts.node_name }} ${COMMON_DEPENDENCIES})
+
+add_dependencies({{ ros_opts.node_name }}
+    ${PROJECT_NAME}_rosidl_generated_interfaces
+)
 
 # --- INSTALLATIONS ---
 install(FILES 
@@ -74,16 +98,6 @@ install(DIRECTORY
     ${ACADOS_GENERATED_CODE_DIR}/
     DESTINATION include/${PROJECT_NAME}/generated_acados
 )
-
-# install(DIRECTORY
-#     launch
-#     DESTINATION share/${PROJECT_NAME}
-# )
-
-# install(DIRECTORY
-#     config
-#     DESTINATION share/${PROJECT_NAME}
-# )
 
 install(DIRECTORY 
     include/
@@ -115,4 +129,6 @@ ament_export_libraries(
     ${ACADOS_LIB_DIR}/libosqp.so
     ${ACADOS_LIB_DIR}/libqpOASES_e.so
 )
+
+ament_export_dependencies(rosidl_default_runtime std_msgs)
 ament_package()

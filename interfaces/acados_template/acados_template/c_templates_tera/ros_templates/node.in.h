@@ -1,5 +1,6 @@
-#ifndef {{ ros_opts.node_name | upper }}_H
-#define {{ ros_opts.node_name | upper }}_H
+// #ifndef {{ ros_opts.node_name | upper }}_H
+// #define {{ ros_opts.node_name | upper }}_H
+#pragma once 
 
 #include <rclcpp/rclcpp.hpp>
 #include <mutex>
@@ -8,9 +9,9 @@
 #include <unordered_map>
 
 // ROS2 message includes 
-{%- for incl in ros_opts.header_includes %}
-#include "{{ incl }}"
-{%- endfor %}
+#include "{{ ros_opts.package_info.name }}/msg/state.hpp"
+#include "{{ ros_opts.package_info.name }}/msg/control_input.hpp"
+#include "std_msgs/msg/header.hpp"
 
 // Acados includes
 #include "acados/utils/print.h"
@@ -34,14 +35,12 @@ namespace {{ ros_opts.package_info.name }}
 class {{ ClassName }} : public rclcpp::Node {
 private:
     // --- ROS Subscriptions ---
-    {%- for sub in ros_opts.subscribers %}
-    rclcpp::Subscription<{{ sub.msg_type }}>::SharedPtr {{ (sub.name | lower | replace(from=' ', to='_') | replace(from='/', to='_')) }}_sub_;
-    {%- endfor %}
+    rclcpp::Subscription<{{ ros_opts.package_info.name }}::msg::State>::SharedPtr state_sub_;
 
     // --- ROS Publishers ---
-    {%- for pub in ros_opts.publishers %}
-    rclcpp::Publisher<{{ pub.msg_type }}>::SharedPtr {{ (pub.name | lower | replace(from=' ', to='_') | replace(from='/', to='_')) }}_pub_;
-    {%- endfor %}
+    rclcpp::Publisher<{{ ros_opts.package_info.name }}::msg::Input>::SharedPtr control_input_pub_;
+
+    // --- ROS Params and Timer
     rclcpp::TimerBase::SharedPtr control_timer_;
     OnSetParametersCallbackHandle::SharedPtr param_callback_handle_;
     using ParamHandler = std::function<void(const rclcpp::Parameter&, rcl_interfaces::msg::SetParametersResult&)>;
@@ -55,10 +54,9 @@ private:
     ocp_nlp_out* ocp_nlp_out_;
     void* ocp_nlp_opts_;
 
-    // --- Daten und Zustände ---
+    // --- Data and States ---
     std::mutex data_mutex_;
     {{ ClassName }}Config config_;
-    bool first_solve_;
     std::array<double, {{ model.name | upper }}_NU> u0_default_;
     std::array<double, {{ model.name | upper }}_NX> current_x_;
     {%- if dims.ny_0 > 0 %}
@@ -84,10 +82,7 @@ private:
     void control_loop();
 
     // --- ROS Callbacks ---
-    {%- for sub in ros_opts.subscribers %}
-    {% set callback_name = sub.name ~ '_callback' %}
-    void {{ callback_name | replace(from=' ', to='_') | replace(from='/', to='_') }}(const {{ sub.msg_type }}::SharedPtr msg);
-    {%- endfor %}
+    void state_callback(const {{ ros_opts.package_info.name }}::msg::State::SharedPtr msg);
 
     // --- ROS Publisher ---
     void publish_input(const std::array<double, {{ model.name | upper }}_NU>& u0);
@@ -128,7 +123,6 @@ private:
     {%- if dims.ny_e > 0 %}
     void set_yref_e(double* yref_e);
     {%- endif %}
-    void set_yrefs(double* yref);
     {%- if dims.np > 0 %}
     void set_ocp_parameter(double* p, size_t np, int stage);
     void set_ocp_parameters(double* p, size_t np);

@@ -163,8 +163,8 @@ struct {{ ClassName }}Slacks {
     std::array<double, {{ model.name | upper }}_NS0> {{ field }}{};
     {%- endif %}
     {%- endfor %}
+    
     {%- endif %}
-
     {%- if dims.ns > 0 %}
     // Stage Slacks
     {%- for field, param in cost %}
@@ -174,8 +174,8 @@ struct {{ ClassName }}Slacks {
     {%- endif %}
     {%- endfor %}
     {%- endif %}
-
     {%- if dims.ns_e > 0 %}
+    
     // Terminal Slacks
     {%- for field, param in cost %}
     {%- set field_l = field | lower %}

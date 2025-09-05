@@ -122,7 +122,7 @@ class AcadosOcp:
         self.simulink_opts = None
         """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
         
-        self.ros_opts: AcadosRosOptions | None = None
+        self.ros_opts: Optional[AcadosRosOptions] = None
         """Options to configure ROS 2 nodes and topics."""
 
 
@@ -1288,15 +1288,39 @@ class AcadosOcp:
     
     def _get_ros_template_list(self) -> list:
         template_list = []
+
+        # General Package 
         package_dir = os.path.join(self.code_export_directory, self.ros_opts.package_info.name)
-        include_dir = os.path.join(package_dir, 'include', self.ros_opts.package_info.name)
-        src_dir = os.path.join(package_dir, 'src')
         template_file = os.path.join('ros_templates', 'README.in.md')
         template_list.append((template_file, 'README.md', package_dir))
         template_file = os.path.join('ros_templates', 'CMakeLists.in.txt')
         template_list.append((template_file, 'CMakeLists.txt', package_dir))
         template_file = os.path.join('ros_templates', 'package.in.xml')
         template_list.append((template_file, 'package.xml', package_dir))
+
+        # Messages
+        msg_dir = os.path.join(package_dir, 'msg')
+        template_file = os.path.join('ros_templates', 'State.in.msg')
+        template_list.append((template_file, 'State.msg', msg_dir))
+        template_file = os.path.join('ros_templates', 'ControlInput.in.msg')
+        template_list.append((template_file, 'ControlInput.msg', msg_dir))
+        template_file = os.path.join('ros_templates', 'Parameter.in.msg')
+        template_list.append((template_file, 'Parameter.msg', msg_dir))
+
+        # Services
+        # TODO: No node implementation yet
+        # srv_dir = os.path.join(package_dir, 'srv')
+        # template_file = os.path.join('ros_templates', 'SolveOCP.in.srv')
+        # template_list.append((template_file, 'SolveOCP.srv', srv_dir))
+
+        # Actions
+        # TODO: No Template yet and no node implementation
+        # action_dir = os.path.join(package_dir, 'action')
+        # template_file = os.path.join('ros_templates', 'SolveOCP.in.action')
+        # template_list.append((template_file, 'SolveOCP.action', action_dir))
+
+        # Header
+        include_dir = os.path.join(package_dir, 'include', self.ros_opts.package_info.name)
         template_file = os.path.join('ros_templates', 'config.in.hpp')
         template_list.append((template_file, 'config.hpp', include_dir))
         template_file = os.path.join('ros_templates', 'utils.in.hpp')
@@ -1305,8 +1329,11 @@ class AcadosOcp:
         template_list.append((template_file, 'marker_publisher.hpp', include_dir))
         template_file = os.path.join('ros_templates', 'node.in.h')
         template_list.append((template_file, 'node.h', include_dir))
-        # template_file = os.path.join('ros_templates', 'node.in.cpp')
-        # template_list.append((template_file, 'node.cpp', src_dir))
+
+        # Source
+        src_dir = os.path.join(package_dir, 'src')
+        template_file = os.path.join('ros_templates', 'node.in.cpp')
+        template_list.append((template_file, 'node.cpp', src_dir))
         return template_list
 
 
