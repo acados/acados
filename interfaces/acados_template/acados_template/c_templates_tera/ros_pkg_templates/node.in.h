@@ -10,6 +10,8 @@
 // ROS2 message includes 
 #include "{{ ros_opts.package_info.name }}_interface/msg/state.hpp"
 #include "{{ ros_opts.package_info.name }}_interface/msg/control_input.hpp"
+#include "{{ ros_opts.package_info.name }}_interface/msg/references.hpp"
+#include "{{ ros_opts.package_info.name }}_interface/msg/parameters.hpp"
 #include "std_msgs/msg/header.hpp"
 
 // Acados includes
@@ -35,6 +37,8 @@ class {{ ClassName }} : public rclcpp::Node {
 private:
     // --- ROS Subscriptions ---
     rclcpp::Subscription<{{ ros_opts.package_info.name }}_interface::msg::State>::SharedPtr state_sub_;
+    rclcpp::Subscription<{{ ros_opts.package_info.name }}_interface::msg::References>::SharedPtr references_sub_;
+    rclcpp::Subscription<{{ ros_opts.package_info.name }}_interface::msg::Parameters>::SharedPtr parameters_sub_;
 
     // --- ROS Publishers ---
     rclcpp::Publisher<{{ ros_opts.package_info.name }}_interface::msg::ControlInput>::SharedPtr control_input_pub_;
@@ -82,6 +86,8 @@ private:
 
     // --- ROS Callbacks ---
     void state_callback(const {{ ros_opts.package_info.name }}_interface::msg::State::SharedPtr msg);
+    void references_callback(const {{ ros_opts.package_info.name }}_interface::msg::References::SharedPtr msg);
+    void parameters_callback(const {{ ros_opts.package_info.name }}_interface::msg::Parameters::SharedPtr msg);
 
     // --- ROS Publisher ---
     void publish_input(const std::array<double, {{ model.name | upper }}_NU>& u0);

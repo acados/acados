@@ -14,6 +14,8 @@ find_package(rosidl_default_generators REQUIRED)
 set(MSG_FILES
   "msg/State.msg"
   "msg/ControlInput.msg"
+  "msg/References.msg"
+  "msg/Parameters.msg"
 )
 
 # set(SRV_FILES

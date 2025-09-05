@@ -45,6 +45,22 @@ namespace {{ ros_opts.package_info.name }}
     state_sub_ = this->create_subscription<{{ ros_opts.package_info.name }}_interface::msg::State>(
         "{{ state_topic }}", 10,
         std::bind(&{{ ClassName }}::state_callback, this, std::placeholders::_1));
+    {%- if ns %}
+    {%- set references_topic = "/" ~ ros_opts.namespace ~ "/references" %}
+    {%- else %}
+    {%- set references_topic = "/references" %}
+    {%- endif %}
+    references_sub_ = this->create_subscription<{{ ros_opts.package_info.name }}_interface::msg::References>(
+        "{{ references_topic }}", 10,
+        std::bind(&{{ ClassName }}::references_callback, this, std::placeholders::_1));
+    {%- if ns %}
+    {%- set parameters_topic = "/" ~ ros_opts.namespace ~ "/parameters" %}
+    {%- else %}
+    {%- set parameters_topic = "/parameters" %}
+    {%- endif %}
+    parameters_sub_ = this->create_subscription<{{ ros_opts.package_info.name }}_interface::msg::Parameters>(
+        "{{ parameters_topic }}", 10,
+        std::bind(&{{ ClassName }}::parameters_callback, this, std::placeholders::_1));
 
 
     // --- Publisher ---
@@ -172,14 +188,28 @@ void {{ ClassName }}::control_loop() {
 // --- ROS Callbacks ---
 void {{ ClassName }}::state_callback(const {{ ros_opts.package_info.name }}_interface::msg::State::SharedPtr msg) {
     std::scoped_lock lock(data_mutex_);
-    if (msg->x.size() == {{ dims.nx }}) {
-        {%- for i in range(end=dims.nx) %} 
-        current_x_[{{ i }}] = msg->x[{{ i }}];
-        {%- endfor %}
-    } else {
-        RCLCPP_ERROR(this->get_logger(), "Received state message of wrong dimension. Expected: %d, got: %ld", {{ dims.nx }}, msg->x.size());
-    }
+    std::copy_n(msg->x.begin(), {{ model.name | upper }}_NX, current_x_.begin());
 }
+
+void {{ ClassName }}::references_callback(const {{ ros_opts.package_info.name }}_interface::msg::References::SharedPtr msg) {
+    std::scoped_lock lock(data_mutex_);
+    {%- if dims.ny_0 > 0 %}
+    std::copy_n(msg->yref_0.begin(), {{ model.name | upper }}_NY0, current_yref_0_.begin());
+    {%- endif %}
+    {%- if dims.ny > 0 %}
+    std::copy_n(msg->yref.begin(), {{ model.name | upper }}_NY, current_yref_.begin());
+    {%- endif %}
+    {%- if dims.ny_e > 0 %}
+    std::copy_n(msg->yref_e.begin(), {{ model.name | upper }}_NYN, current_yref_e_.begin());
+    {%- endif %}
+}
+{%- if dims.np > 0 %}
+
+void {{ ClassName }}::parameters_callback(const {{ ros_opts.package_info.name }}_interface::msg::Parameters::SharedPtr msg) {
+    std::scoped_lock lock(data_mutex_);
+    std::copy_n(msg->p.begin(), {{ model.name | upper }}_NP, current_p_.begin());
+}
+{%- endif %}
 
 
 // --- ROS Publisher ---

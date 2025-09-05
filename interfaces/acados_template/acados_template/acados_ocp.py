@@ -1303,10 +1303,12 @@ class AcadosOcp:
         msg_dir = os.path.join(interface_dir, 'msg')
         template_file = os.path.join(ros_interface_dir, 'State.in.msg')
         template_list.append((template_file, 'State.msg', msg_dir))
+        template_file = os.path.join(ros_interface_dir, 'References.in.msg')
+        template_list.append((template_file, 'References.msg', msg_dir))
+        template_file = os.path.join(ros_interface_dir, 'Parameters.in.msg')
+        template_list.append((template_file, 'Parameters.msg', msg_dir))
         template_file = os.path.join(ros_interface_dir, 'ControlInput.in.msg')
         template_list.append((template_file, 'ControlInput.msg', msg_dir))
-        template_file = os.path.join(ros_interface_dir, 'Parameter.in.msg')
-        template_list.append((template_file, 'Parameter.msg', msg_dir))
 
         # Services
         # TODO: No node implementation yet
