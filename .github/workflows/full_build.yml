@@ -105,6 +105,12 @@ jobs:
       shell: bash
       run: ${{runner.workspace}}/acados/.github/linux/install_tera.sh
 
+    - name: Run CMake python tests (ctest)
+      working-directory: ${{runner.workspace}}/acados/build
+      shell: bash
+      run: |
+        source ${{runner.workspace}}/acados/acadosenv/bin/activate
+        ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
 
   ros2_humble_test:
     needs: core_build
@@ -178,7 +184,6 @@ jobs:
         else
           echo "Test failed: Node exited before Timeout (Exit-Code ${EXIT_CODE})"
         fi
-
 
   python_interface_new_casadi_and_py2octave:
     needs: core_build
