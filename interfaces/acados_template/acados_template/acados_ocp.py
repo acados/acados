@@ -45,6 +45,7 @@ from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions
 from .acados_ocp_iterate import AcadosOcpIterate
+from .acados_ocp_ros import AcadosOcpRos
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
                     get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
@@ -120,6 +121,9 @@ class AcadosOcp:
 
         self.simulink_opts = None
         """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
+        
+        self.ros_opts: Optional[AcadosOcpRos] = None
+        """Options to configure ROS 2 nodes and topics."""
 
 
     @property
@@ -1280,6 +1284,70 @@ class AcadosOcp:
             template_list.append(('cost.in.h', f'{name}_cost.h', cost_dir))
 
         return template_list
+    
+    
+    def _get_ros_template_list(self) -> list:
+        template_list = []
+
+        # --- Interface Package --- 
+        ros_interface_dir = 'ros_interface_templates'
+        interface_dir = os.path.join(os.path.dirname(self.code_export_directory), f'{self.ros_opts.package_name}_interface')
+        template_file = os.path.join(ros_interface_dir, 'README.in.md')
+        template_list.append((template_file, 'README.md', interface_dir))
+        template_file = os.path.join(ros_interface_dir, 'CMakeLists.in.txt')
+        template_list.append((template_file, 'CMakeLists.txt', interface_dir))
+        template_file = os.path.join(ros_interface_dir, 'package.in.xml')
+        template_list.append((template_file, 'package.xml', interface_dir))
+
+        # Messages
+        msg_dir = os.path.join(interface_dir, 'msg')
+        template_file = os.path.join(ros_interface_dir, 'State.in.msg')
+        template_list.append((template_file, 'State.msg', msg_dir))
+        template_file = os.path.join(ros_interface_dir, 'References.in.msg')
+        template_list.append((template_file, 'References.msg', msg_dir))
+        template_file = os.path.join(ros_interface_dir, 'Parameters.in.msg')
+        template_list.append((template_file, 'Parameters.msg', msg_dir))
+        template_file = os.path.join(ros_interface_dir, 'ControlInput.in.msg')
+        template_list.append((template_file, 'ControlInput.msg', msg_dir))
+
+        # Services
+        # TODO: No node implementation yet
+        # srv_dir = os.path.join(package_dir, 'srv')
+        # template_file = os.path.join(ros_interface_dir, 'SolveOCP.in.srv')
+        # template_list.append((template_file, 'SolveOCP.srv', srv_dir))
+
+        # Actions
+        # TODO: No Template yet and no node implementation
+        # action_dir = os.path.join(package_dir, 'action')
+        # template_file = os.path.join(ros_interface_dir, 'SolveOCP.in.action')
+        # template_list.append((template_file, 'SolveOCP.action', action_dir))
+
+        # --- Solver Package --- 
+        ros_pkg_dir = 'ros_pkg_templates'
+        package_dir = os.path.join(os.path.dirname(self.code_export_directory), self.ros_opts.package_name)
+        template_file = os.path.join(ros_pkg_dir, 'README.in.md')
+        template_list.append((template_file, 'README.md', package_dir))
+        template_file = os.path.join(ros_pkg_dir, 'CMakeLists.in.txt')
+        template_list.append((template_file, 'CMakeLists.txt', package_dir))
+        template_file = os.path.join(ros_pkg_dir, 'package.in.xml')
+        template_list.append((template_file, 'package.xml', package_dir))
+
+        # Header
+        include_dir = os.path.join(package_dir, 'include', self.ros_opts.package_name)
+        template_file = os.path.join(ros_pkg_dir, 'config.in.hpp')
+        template_list.append((template_file, 'config.hpp', include_dir))
+        template_file = os.path.join(ros_pkg_dir, 'utils.in.hpp')
+        template_list.append((template_file, 'utils.hpp', include_dir))
+        template_file = os.path.join(ros_pkg_dir, 'marker_publisher.in.hpp')
+        template_list.append((template_file, 'marker_publisher.hpp', include_dir))
+        template_file = os.path.join(ros_pkg_dir, 'node.in.h')
+        template_list.append((template_file, 'node.h', include_dir))
+
+        # Source
+        src_dir = os.path.join(package_dir, 'src')
+        template_file = os.path.join(ros_pkg_dir, 'node.in.cpp')
+        template_list.append((template_file, 'node.cpp', src_dir))
+        return template_list
 
 
     def __get_template_list(self, cmake_builder=None) -> list:
@@ -1318,6 +1386,10 @@ class AcadosOcp:
         if self.simulink_opts is not None:
             template_list += self._get_matlab_simulink_template_list(name)
             template_list += self._get_integrator_simulink_template_list(name)
+            
+        # ROS
+        if self.ros_opts is not None:
+            template_list += self._get_ros_template_list()
 
         return template_list
 
@@ -1496,7 +1568,9 @@ class AcadosOcp:
         # convert acados classes to dicts
         for key, v in ocp_dict.items():
             if isinstance(v, (AcadosModel, AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, ZoroDescription)):
-                ocp_dict[key]=dict(getattr(self, key).__dict__)
+                ocp_dict[key] = dict(getattr(self, key).__dict__)
+            if isinstance(v, AcadosOcpRos) and v is not None:
+                ocp_dict[key] = v.to_dict()
 
         ocp_dict = format_class_dict(ocp_dict)
         return ocp_dict
