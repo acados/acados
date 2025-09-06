@@ -13,7 +13,6 @@ namespace {{ ros_opts.package_name }}
 
     // --- default values ---
     config_ = {{ ClassName }}Config();
-    u0_default_ = {};
     {%- if dims.ny_0 > 0 %}
     current_yref_0_ = { {{- cost.yref_0 | join(sep=', ') -}} };
     {%- endif %}
@@ -109,9 +108,9 @@ void {{ ClassName }}::initialize_solver() {
 
     this->set_cost_weights();
     this->set_constraints();
-    {% if has_slack %}
+    {%- if has_slack %}
     void set_slack_weights();
-    {% endif %}
+    {%- endif %}
 
     RCLCPP_INFO(this->get_logger(), "Acados solver initialized successfully.");
 }
@@ -166,22 +165,37 @@ void {{ ClassName }}::control_loop() {
     {%- endif %}
 
     // Solve OCP
-    {%- if solver_options.nlp_solver_type == "SQP_RTI" %} 
-    int status = this->feedback_rti_solve();
+    {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
+    int status;
+    if (first_solve_) {
+        this->warmstart_solver_states(x0.data());
+        status = this->ocp_solve();
+    }
+    else {
+        status = this->feedback_rti_solve();
+    }
+
     {%- else %}
     int status = this->ocp_solve();
     {%- endif %}
-    if (status == ACADOS_SUCCESS) {
-        std::array<double, {{ model.name | upper }}_NU> u0;
-        this->get_input(u0.data(), 0);
-        this->publish_input(u0);
-    } else {
-        this->publish_input(u0_default_);
-    }
-    {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
+    this->solver_status_behaviour(status);
+}
 
-    this->prepare_rti_solve();
-    {%- endif %}
+void {{ ClassName }}::solver_status_behaviour(int status) {
+    if (status == ACADOS_SUCCESS) {
+        this->get_input(u0_.data(), 0);
+        this->publish_input(u0_, status);
+        {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
+        first_solve_ = false;
+        this->prepare_rti_solve();
+        {%- endif %}
+    } else {
+        this->publish_input(u0_default_, status);
+        if (status == ACADOS_NAN_DETECTED) agilex_acados_reset(ocp_capsule_, 1);
+        {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
+        first_solve_ = true;
+        {%- endif %}
+    }
 }
 
 
@@ -213,11 +227,12 @@ void {{ ClassName }}::parameters_callback(const {{ ros_opts.package_name }}_inte
 
 
 // --- ROS Publisher ---
-void {{ ClassName }}::publish_input(const std::array<double, {{ model.name | upper }}_NU>& u0) {
+void {{ ClassName }}::publish_input(const std::array<double, {{ model.name | upper }}_NU>& u0, int status) {
     auto control_input = std::make_unique<{{ ros_opts.package_name }}_interface::msg::ControlInput>();
-    {%- for i in range(end=dims.nu) %} 
-    control_input->u[{{ i }}] = u0[{{ i }}];
-    {%- endfor %}
+    control_input->header.stamp = this->get_clock()->now();
+    control_input->header.frame_id = "{{ ros_opts.node_name }}_control_input";
+    control_input->status = status;
+    std::copy_n(u0.begin(), {{ model.name | upper }}_NU, control_input->u.begin());
     control_input_pub_->publish(std::move(control_input));
 }
 
@@ -400,24 +415,30 @@ rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(
 
 
 // --- Helpers ---
-void {{ ClassName }}::start_control_timer(double rate_hz) {
-    if (rate_hz <= 0.0) rate_hz = 50.0;
+void {{ ClassName }}::start_control_timer(double period_seconds) {
+    if (period_seconds <= 0.0) period_seconds = 0.02;
     auto period = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::duration<double>(1.0 / rate_hz));
+        std::chrono::duration<double>(period_seconds));
     control_timer_ = this->create_wall_timer(
         period,
-        std::bind(&{{ ClassName }}::control_loop, this)
-    );
+        std::bind(&{{ ClassName }}::control_loop, this));
 }
 
 
 // --- Acados Helpers ---
 {%- if solver_options.nlp_solver_type == 'SQP_RTI' %}
+void {{ ClassName }}::warmstart_solver_states(double *x0) {
+    for (int i = 1; i <= AGILEX_N; ++i) {
+        ocp_nlp_out_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_out_, ocp_nlp_in_, i, "x", x0);
+    }
+}
+
 int {{ ClassName }}::prepare_rti_solve() {
     int phase = PREPARATION;
     ocp_nlp_sqp_rti_opts_set(ocp_nlp_config_, ocp_nlp_opts_, "rti_phase", &phase);
     int status = {{ model.name }}_acados_solve(ocp_capsule_);
     if (status != ACADOS_SUCCESS && status != ACADOS_READY) {
+        first_solve_ = true;
         RCLCPP_ERROR(this->get_logger(), "Solver failed at preperation phase: %d", status);
     }
     return status;

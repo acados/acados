@@ -60,7 +60,12 @@ private:
     // --- Data and States ---
     std::mutex data_mutex_;
     {{ ClassName }}Config config_;
-    std::array<double, {{ model.name | upper }}_NU> u0_default_;
+    const std::array<double, {{ model.name | upper }}_NU> u0_default_{};
+
+    {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
+    bool first_solve_{true};
+    {%- endif %}
+    std::array<double, {{ model.name | upper }}_NU> u0_;
     std::array<double, {{ model.name | upper }}_NX> current_x_;
     {%- if dims.ny_0 > 0 %}
     std::array<double, {{ model.name | upper }}_NY0> current_yref_0_;
@@ -83,6 +88,7 @@ private:
     // --- Core Methods ---
     void initialize_solver();
     void control_loop();
+    void solver_status_behaviour(int status);
 
     // --- ROS Callbacks ---
     void state_callback(const {{ ros_opts.package_name }}_interface::msg::State::SharedPtr msg);
@@ -90,7 +96,7 @@ private:
     void parameters_callback(const {{ ros_opts.package_name }}_interface::msg::Parameters::SharedPtr msg);
 
     // --- ROS Publisher ---
-    void publish_input(const std::array<double, {{ model.name | upper }}_NU>& u0);
+    void publish_input(const std::array<double, {{ model.name | upper }}_NU>& u0, int status);
 
     // --- Parameter Handling Methods ---
     void setup_parameter_handlers();
@@ -100,10 +106,11 @@ private:
     rcl_interfaces::msg::SetParametersResult on_parameter_update(const std::vector<rclcpp::Parameter>& params);
 
     // --- Helpers ---
-    void start_control_timer(double rate_hz = 50.0);
+    void start_control_timer(double period_seconds = 0.02);
 
     // --- Acados Helpers ---
     {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
+    void warmstart_solver_states(double *x0);
     int prepare_rti_solve();
     int feedback_rti_solve();
     {%- endif %}
