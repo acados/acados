@@ -93,12 +93,12 @@ jobs:
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+        ${{runner.workspace}}/acados/.github/linux/export_paths.sh ${{runner.workspace}}
 
     - name: Install Python interface
       working-directory: ${{runner.workspace}}/acados
       shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_python.sh''
+      run: ${{runner.workspace}}/acados/.github/linux/install_python.sh
 
     - name: Install Tera
       working-directory: ${{runner.workspace}}/acados
@@ -129,12 +129,12 @@ jobs:
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+        ${{runner.workspace}}/acados/.github/linux/export_paths.sh ${{runner.workspace}}
 
     - name: Install Python interface
       working-directory: ${{runner.workspace}}/acados
       shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_python.sh''
+      run: ${{runner.workspace}}/acados/.github/linux/install_python.sh
 
     - name: Install Tera
       working-directory: ${{runner.workspace}}/acados
@@ -144,12 +144,12 @@ jobs:
     - name: Install simde
       working-directory: ${{runner.workspace}}/acados
       shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_simde.sh''
+      run: ${{runner.workspace}}/acados/.github/linux/install_simde.sh
 
     - name: Install Ros2 Humble
       working-directory: ${{runner.workspace}}/acados
       shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_ros2_humble.sh''
+      run: ${{runner.workspace}}/acados/.github/linux/install_ros2_humble.sh
 
     - name: Run Cart Pendulum Ros2 tests
       working-directory: ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/ros2
@@ -202,12 +202,12 @@ jobs:
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+        ${{runner.workspace}}/acados/.github/linux/export_paths.sh ${{runner.workspace}}
 
     - name: Install Python interface
       working-directory: ${{runner.workspace}}/acados
       shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_python.sh''
+      run: ${{runner.workspace}}/acados/.github/linux/install_python.sh
 
     - name: Install Tera
       working-directory: ${{runner.workspace}}/acados
@@ -217,12 +217,12 @@ jobs:
     - name: Install simde
       working-directory: ${{runner.workspace}}/acados
       shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_simde.sh''
+      run: ${{runner.workspace}}/acados/.github/linux/install_simde.sh
 
     # - name: Install new CasADi Python
     #   working-directory: ${{runner.workspace}}/acados
     #   shell: bash
-    #   run: ${{runner.workspace}}/acados/.github/linux/install_new_casadi_python.sh''
+    #   run: ${{runner.workspace}}/acados/.github/linux/install_new_casadi_python.sh
 
     - name: Prepare Octave
       working-directory: ${{runner.workspace}}/acados/external
@@ -245,7 +245,7 @@ jobs:
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+        ${{runner.workspace}}/acados/.github/linux/export_paths.sh ${{runner.workspace}}
 
     - name: Run Python tests that need new CasADi & test py2matlab
       working-directory: ${{runner.workspace}}/acados/build
@@ -341,7 +341,7 @@ jobs:
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+        ${{runner.workspace}}/acados/.github/linux/export_paths.sh ${{runner.workspace}}
 
     - name: Install MATLAB
       uses: matlab-actions/setup-matlab@v2
@@ -393,13 +393,13 @@ jobs:
     - name: Install simde
       working-directory: ${{runner.workspace}}/acados
       shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_simde.sh''
+      run: ${{runner.workspace}}/acados/.github/linux/install_simde.sh
 
     - name: Export Paths
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+        ${{runner.workspace}}/acados/.github/linux/export_paths.sh ${{runner.workspace}}
 
     - name: Install MATLAB
       uses: matlab-actions/setup-matlab@v2
@@ -460,7 +460,7 @@ jobs:
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+        ${{runner.workspace}}/acados/.github/linux/export_paths.sh ${{runner.workspace}}
 
     - name: Install MATLAB
       uses: matlab-actions/setup-matlab@v2
@@ -515,7 +515,7 @@ jobs:
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+        ${{runner.workspace}}/acados/.github/linux/export_paths.sh ${{runner.workspace}}
 
     - name: Install MATLAB
       uses: matlab-actions/setup-matlab@v2
@@ -596,13 +596,13 @@ jobs:
     - name: Install Tera
       working-directory: ${{runner.workspace}}/acados
       shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_tera.sh''
+      run: ${{runner.workspace}}/acados/.github/linux/install_tera.sh
 
     - name: Export Paths
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+        ${{runner.workspace}}/acados/.github/linux/export_paths.sh ${{runner.workspace}}
 
     - name: Configure CMake
       shell: bash
