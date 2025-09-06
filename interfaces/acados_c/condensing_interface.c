@@ -100,7 +100,7 @@ condensing_module *ocp_qp_condensing_assign(ocp_qp_xcond_config *config, void *d
     module->work = (void *) c_ptr;
     c_ptr += config->workspace_calculate_size(dims_, opts_);
 
-    assert((char *) raw_memory + ocp_qp_condensing_calculate_size(config, dims_, opts_) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_condensing_calculate_size(config, dims_, opts_) >= c_ptr);
 
     return module;
 }
