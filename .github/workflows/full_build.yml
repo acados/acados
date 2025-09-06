@@ -145,13 +145,21 @@ jobs:
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: ${{runner.workspace}}/acados/.github/linux/install_simde.sh
+  
+    - name: Cache apt packages for ROS 2
+      uses: actions/cache@v4
+      with:
+        path: /var/cache/apt
+        key: ${{ runner.os }}-apt-ros-humble-${{ hashFiles('**/install_ros2_humble.sh') }}
+        restore-keys: |
+          ${{ runner.os }}-apt-ros-humble-
 
     - name: Install Ros2 Humble
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: ${{runner.workspace}}/acados/.github/linux/install_ros2_humble.sh
 
-    - name: Run Cart Pendulum Ros2 tests
+    - name: Run Cart Pendulum Ros2 smoke tests
       working-directory: ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/ros2
       shell: bash
       run: |
