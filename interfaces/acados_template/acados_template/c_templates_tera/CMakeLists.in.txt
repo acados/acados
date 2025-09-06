@@ -223,10 +223,12 @@ link_directories(${ACADOS_LIB_PATH})
 
 # link to libraries
 if(UNIX)
-    link_libraries(acados hpipm blasfeo m {{ link_libs }})
+    set(ACADOS_LINK_LIBS acados hpipm blasfeo m {{ link_libs }} CACHE STRING "Define what libs to link with acados solver")
 else()
-    link_libraries(acados hpipm blasfeo {{ link_libs }})
+    set(ACADOS_LINK_LIBS acados hpipm blasfeo {{ link_libs }} CACHE STRING "Define what libs to link with acados solver")
 endif()
+
+link_libraries(${ACADOS_LINK_LIBS})
 
 # the targets
 
@@ -240,7 +242,7 @@ if(${BUILD_ACADOS_SOLVER_LIB})
     {%- endif %}
     $<TARGET_OBJECTS:${OCP_OBJ}>
     {%- if solver_options.integrator_type != "DISCRETE" and N_horizon > 0 %}
-        $<TARGET_OBJECTS:${SIM_OBJ}>
+    $<TARGET_OBJECTS:${SIM_OBJ}>
     {%- endif -%}
     )
     install(TARGETS ${LIB_ACADOS_SOLVER} DESTINATION ${CMAKE_INSTALL_PREFIX})

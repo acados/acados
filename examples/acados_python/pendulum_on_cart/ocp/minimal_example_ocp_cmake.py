@@ -38,94 +38,123 @@ import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
 
-# create ocp object to formulate the OCP
-ocp = AcadosOcp()
-
-# set model
-model = export_pendulum_ode_model()
-ocp.model = model
-
-Tf = 1.0
-nx = model.x.rows()
-nu = model.u.rows()
-ny = nx + nu
-ny_e = nx
+FMAX = 80
+T_HORIZON = 1.0
 N = 20
 
-# set dimensions
-ocp.solver_options.N_horizon = N
+def create_ocp() -> AcadosOcp:
+    # create ocp object to formulate the OCP
+    ocp = AcadosOcp()
 
-# set cost
-Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
-R = 2*np.diag([1e-2])
+    # set model
+    model = export_pendulum_ode_model()
+    ocp.model = model
 
-ocp.cost.W_e = Q
-ocp.cost.W = scipy.linalg.block_diag(Q, R)
+    nx = model.x.rows()
+    nu = model.u.rows()
+    ny = nx + nu
+    ny_e = nx
 
-ocp.cost.cost_type = 'LINEAR_LS'
-ocp.cost.cost_type_e = 'LINEAR_LS'
+    # set dimensions
+    ocp.solver_options.N_horizon = N
 
-ocp.cost.Vx = np.zeros((ny, nx))
-ocp.cost.Vx[:nx,:nx] = np.eye(nx)
+    # set cost
+    Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
+    R = 2*np.diag([1e-2])
 
-Vu = np.zeros((ny, nu))
-Vu[4,0] = 1.0
-ocp.cost.Vu = Vu
+    ocp.cost.W_e = Q
+    ocp.cost.W = scipy.linalg.block_diag(Q, R)
 
-ocp.cost.Vx_e = np.eye(nx)
+    ocp.cost.cost_type = 'LINEAR_LS'
+    ocp.cost.cost_type_e = 'LINEAR_LS'
 
-ocp.cost.yref  = np.zeros((ny, ))
-ocp.cost.yref_e = np.zeros((ny_e, ))
+    ocp.cost.Vx = np.zeros((ny, nx))
+    ocp.cost.Vx[:nx,:nx] = np.eye(nx)
 
-# set constraints
-Fmax = 80
-ocp.constraints.lbu = np.array([-Fmax])
-ocp.constraints.ubu = np.array([+Fmax])
-ocp.constraints.idxbu = np.array([0])
+    Vu = np.zeros((ny, nu))
+    Vu[4,0] = 1.0
+    ocp.cost.Vu = Vu
 
-ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
+    ocp.cost.Vx_e = np.eye(nx)
 
-# set options
-ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
-# ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_OSQP'
-ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
-ocp.solver_options.integrator_type = 'ERK'
-ocp.solver_options.nlp_solver_type = 'SQP'
-ocp.solver_options.nlp_solver_ext_qp_res = 1
-ocp.solver_options.nlp_qp_tol_strategy = 'ADAPTIVE_CURRENT_RES_JOINT'
-ocp.solver_options.qp_solver_iter_max = 1000
-ocp.solver_options.nlp_qp_tol_reduction_factor = 1e-3
-ocp.solver_options.qp_solver_mu0 = 1e2
-# set prediction horizon
-ocp.solver_options.tf = Tf
+    ocp.cost.yref  = np.zeros((ny, ))
+    ocp.cost.yref_e = np.zeros((ny_e, ))
 
-# use the CMake build pipeline
-cmake_builder = ocp_get_default_cmake_builder()
+    # set constraints
+    ocp.constraints.lbu = np.array([-FMAX])
+    ocp.constraints.ubu = np.array([+FMAX])
+    ocp.constraints.idxbu = np.array([0])
 
-ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json', cmake_builder=cmake_builder)
+    ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
-simX = np.zeros((N+1, nx))
-simU = np.zeros((N, nu))
+    # set options
+    ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
+    # ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_OSQP'
+    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+    ocp.solver_options.integrator_type = 'ERK'
+    ocp.solver_options.nlp_solver_type = 'SQP'
+    ocp.solver_options.nlp_solver_ext_qp_res = 1
+    ocp.solver_options.nlp_qp_tol_strategy = 'ADAPTIVE_CURRENT_RES_JOINT'
+    ocp.solver_options.qp_solver_iter_max = 1000
+    ocp.solver_options.nlp_qp_tol_reduction_factor = 1e-3
+    ocp.solver_options.qp_solver_mu0 = 1e2
+    # set prediction horizon
+    ocp.solver_options.tf = T_HORIZON
 
-status = ocp_solver.solve()
+    return ocp
 
-sum_qp_iter = sum(ocp_solver.get_stats("qp_iter"))
-nlp_iter = ocp_solver.get_stats("nlp_iter")
-print(f'nlp_iter: {nlp_iter}, total qp_iter: {sum_qp_iter}')
-ocp_solver.print_statistics()
 
-if sum_qp_iter > 75:
-    raise Exception(f'number of qp iterations {sum_qp_iter} is too high, expected <= 75.')
+def test_cmake_link_libs():
+    ocp = create_ocp()
 
-if status != 0:
+    cmake_builder = ocp_get_default_cmake_builder()
+    # do not link against blasfeo, hpipm, m -> this should fail
+    cmake_builder.additional_cmake_options = '-DACADOS_LINK_LIBS=""'
+    try:
+        ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json', cmake_builder=cmake_builder)
+        raise Exception('should have failed')
+    except Exception as e:
+        print(f'expected exception: {e}')
+        # remove codegen dir, to get rid of cmake cache
+        import shutil
+        shutil.rmtree('c_generated_code')
+
+
+def test_cmake():
+    ocp = create_ocp()
+
+    # use the CMake build pipeline
+    cmake_builder = ocp_get_default_cmake_builder()
+    ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json', cmake_builder=cmake_builder)
+
+    nx = ocp.model.x.rows()
+    nu = ocp.model.u.rows()
+    simX = np.zeros((N+1, nx))
+    simU = np.zeros((N, nu))
+
+    status = ocp_solver.solve()
+
+    sum_qp_iter = sum(ocp_solver.get_stats("qp_iter"))
+    nlp_iter = ocp_solver.get_stats("nlp_iter")
+    print(f'nlp_iter: {nlp_iter}, total qp_iter: {sum_qp_iter}')
     ocp_solver.print_statistics()
-    raise Exception(f'acados returned status {status}.')
 
-# get solution
-for i in range(N):
-    simX[i,:] = ocp_solver.get(i, "x")
-    simU[i,:] = ocp_solver.get(i, "u")
-simX[N,:] = ocp_solver.get(N, "x")
+    if sum_qp_iter > 75:
+        raise Exception(f'number of qp iterations {sum_qp_iter} is too high, expected <= 75.')
+
+    if status != 0:
+        ocp_solver.print_statistics()
+        raise Exception(f'acados returned status {status}.')
+
+    # get solution
+    for i in range(N):
+        simX[i,:] = ocp_solver.get(i, "x")
+        simU[i,:] = ocp_solver.get(i, "u")
+    simX[N,:] = ocp_solver.get(N, "x")
+
+    plot_pendulum(np.linspace(0, T_HORIZON, N+1), FMAX, simU, simX, latexify=True)
 
 
-plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=True)
+if __name__ == "__main__":
+    test_cmake_link_libs()
+    test_cmake()
