@@ -14,8 +14,12 @@ find_package(rosidl_default_generators REQUIRED)
 set(MSG_FILES
   "msg/State.msg"
   "msg/ControlInput.msg"
+  {%- if dims.ny > 0 or dims.ny_0 > 0 or dims.ny_e > 0 %}
   "msg/References.msg"
+  {%- endif %}
+  {%- if dims.np > 0 %}
   "msg/Parameters.msg"
+  {%- endif %}
 )
 
 # set(SRV_FILES

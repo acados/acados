@@ -57,9 +57,11 @@ namespace {{ ros_opts.package_name }}
     {%- else %}
     {%- set parameters_topic = "/parameters" %}
     {%- endif %}
+    {%- if dims.np > 0 %}
     parameters_sub_ = this->create_subscription<{{ ros_opts.package_name }}_interface::msg::Parameters>(
         "{{ parameters_topic }}", 10,
         std::bind(&{{ ClassName }}::parameters_callback, this, std::placeholders::_1));
+    {%- endif %}
 
 
     // --- Publisher ---
@@ -191,7 +193,7 @@ void {{ ClassName }}::solver_status_behaviour(int status) {
         {%- endif %}
     } else {
         this->publish_input(u0_default_, status);
-        if (status == ACADOS_NAN_DETECTED) agilex_acados_reset(ocp_capsule_, 1);
+        if (status == ACADOS_NAN_DETECTED) {{ model.name }}_acados_reset(ocp_capsule_, 1);
         {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
         first_solve_ = true;
         {%- endif %}
@@ -428,7 +430,7 @@ void {{ ClassName }}::start_control_timer(double period_seconds) {
 // --- Acados Helpers ---
 {%- if solver_options.nlp_solver_type == 'SQP_RTI' %}
 void {{ ClassName }}::warmstart_solver_states(double *x0) {
-    for (int i = 1; i <= AGILEX_N; ++i) {
+    for (int i = 1; i <= {{ model.name | upper }}_N; ++i) {
         ocp_nlp_out_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_out_, ocp_nlp_in_, i, "x", x0);
     }
 }
@@ -439,7 +441,7 @@ int {{ ClassName }}::prepare_rti_solve() {
     int status = {{ model.name }}_acados_solve(ocp_capsule_);
     if (status != ACADOS_SUCCESS && status != ACADOS_READY) {
         first_solve_ = true;
-        RCLCPP_ERROR(this->get_logger(), "Solver failed at preperation phase: %d", status);
+        RCLCPP_ERROR(this->get_logger(), "Solver failed at preparation phase: %d", status);
     }
     return status;
 }

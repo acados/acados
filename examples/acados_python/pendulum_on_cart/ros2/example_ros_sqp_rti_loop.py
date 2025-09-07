@@ -28,13 +28,16 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import sys
-sys.path.insert(0, '../common')
-
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosOcpRos
-from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
+
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosOcpRos
+
+import sys
+from pathlib import Path
+script_dir = Path(__file__).resolve().parent
+sys.path.insert(0, str(script_dir.parent / 'common'))
+from pendulum_model import export_pendulum_ode_model
 from utils import plot_pendulum
 
 def main():
@@ -110,6 +113,7 @@ def main():
     ocp.ros_opts.package_name = "pendulum_on_cart"
     ocp.ros_opts.node_name = "pendulum_on_cart_node"
 
+    ocp.code_export_directory = str(script_dir / 'generated' / "c_generated_code")
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
     simX = np.zeros((N+1, nx))
