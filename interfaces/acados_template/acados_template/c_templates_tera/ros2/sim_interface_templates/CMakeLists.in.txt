@@ -1,0 +1,34 @@
+cmake_minimum_required(VERSION 3.8)
+project({{ ros_opts.package_name }}_interface)
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# --- ROS DEPENDENCIES ---
+find_package(ament_cmake REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+
+# --- INTERFACES ---
+set(MSG_FILES
+  "msg/State.msg"
+  "msg/ControlInput.msg"
+)
+
+# set(SRV_FILES
+#   "srv/SolveOCP.srv"
+# )
+
+# set(ACTION_FILES
+#   "srv/SolveOCP.srv"
+# )
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  ${MSG_FILES}
+#   ${SRV_FILES}
+#   ${ACTION_FILES}
+  DEPENDENCIES std_msgs
+)
+
+ament_package()
