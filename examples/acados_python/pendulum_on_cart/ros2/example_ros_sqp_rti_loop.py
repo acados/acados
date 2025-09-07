@@ -31,7 +31,7 @@
 import sys
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosOcpRos
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
@@ -106,6 +106,7 @@ def main():
     ocp.solver_options.tf = Tf
 
     # Ros stuff
+    ocp.ros_opts = AcadosOcpRos()
     ocp.ros_opts.package_name = "pendulum_on_cart"
     ocp.ros_opts.node_name = "pendulum_on_cart_node"
 
