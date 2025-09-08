@@ -41,7 +41,7 @@ from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFl
 
 from .acados_sim import AcadosSim, AcadosSimOptions
 from .acados_multiphase_ocp import AcadosMultiphaseOcp
-from .acados_ocp_ros import AcadosOcpRos
+from .ros2.ocp_node import AcadosOcpRos
 
 from .acados_ocp_solver import AcadosOcpSolver
 from .acados_casadi_ocp_solver import AcadosCasadiOcpSolver, AcadosCasadiOcp
