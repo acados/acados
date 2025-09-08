@@ -18,43 +18,13 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
       with:
-        submodules: 'recursive'
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
 
-    - name: Download lib artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: lib-${{ needs.call_core_build.outputs.artifact-name-prefix }}
-        path: ${{ github.workspace }}/lib
-
-    - name: Download build artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: build-${{ needs.call_core_build.outputs.artifact-name-prefix }}
-        path: ${{ github.workspace }}/build
-
-    - name: Download include artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: include-${{ needs.call_core_build.outputs.artifact-name-prefix }}
-        path: ${{ github.workspace }}/include
-
-    - name: Export Paths
-      working-directory: ${{ github.workspace }}
-      shell: bash
-      run: |
-        ${{ github.workspace }}/.github/linux/export_paths.sh ${{ github.workspace }}
-
-    - name: Install Python interface
-      working-directory: ${{ github.workspace }}
-      shell: bash
-      run: ${{ github.workspace }}/.github/linux/install_python.sh
-
-    - name: Install Tera
-      working-directory: ${{ github.workspace }}
-      shell: bash
-      run: ${{ github.workspace }}/.github/linux/install_tera.sh
+    - name: Setup Python Environment
+      uses: ./.github/actions/setup-python-environment
 
     - name: Run CMake python tests (ctest)
       working-directory: ${{ github.workspace }}/build
@@ -68,39 +38,23 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
       with:
-        submodules: 'recursive'
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
 
-    - uses: actions/download-artifact@v4
-      with:
-        path: ${{ github.workspace }}
-
-    - name: Export Paths
-      working-directory: ${{ github.workspace }}
-      shell: bash
-      run: |
-        ${{ github.workspace }}/.github/linux/export_paths.sh ${{ github.workspace }}
-
-    - name: Install Python interface
-      working-directory: ${{ github.workspace }}
-      shell: bash
-      run: ${{ github.workspace }}/.github/linux/install_python.sh''
-
-    - name: Install Tera
-      working-directory: ${{ github.workspace }}
-      shell: bash
-      run: ${{ github.workspace }}/.github/linux/install_tera.sh
+    - name: Setup Python Environment
+      uses: ./.github/actions/setup-python-environment
 
     - name: Install simde
       working-directory: ${{ github.workspace }}
       shell: bash
-      run: ${{ github.workspace }}/.github/linux/install_simde.sh''
+      run: ${{ github.workspace }}/.github/linux/install_simde.sh
 
     # - name: Install new CasADi Python
     #   working-directory: ${{ github.workspace }}
     #   shell: bash
-    #   run: ${{ github.workspace }}/.github/linux/install_new_casadi_python.sh''
+    #   run: ${{ github.workspace }}/.github/linux/install_new_casadi_python.sh
 
     - name: Prepare Octave
       working-directory: ${{ github.workspace }}/external
@@ -200,14 +154,12 @@ jobs:
   MATLAB_test:
     needs: call_core_build
     runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: 'recursive'
 
-    - uses: actions/download-artifact@v4
+    steps:
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
       with:
-        path: ${{ github.workspace }}
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
 
     - name: Install Casadi MATLAB
       working-directory: ${{ github.workspace }}/external
@@ -253,14 +205,12 @@ jobs:
   MATLAB_examples_new_casadi:
     needs: call_core_build
     runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: 'recursive'
 
-    - uses: actions/download-artifact@v4
+    steps:
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
       with:
-        path: ${{ github.workspace }}
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
 
     - name: Install Casadi MATLAB
       working-directory: ${{ github.workspace }}/external
@@ -319,14 +269,12 @@ jobs:
   MATLAB_examples:
     needs: call_core_build
     runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: 'recursive'
 
-    - uses: actions/download-artifact@v4
+    steps:
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
       with:
-        path: ${{ github.workspace }}
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
 
     - name: Install Casadi MATLAB
       working-directory: ${{ github.workspace }}/external
@@ -375,13 +323,10 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
       with:
-        submodules: 'recursive'
-
-    - uses: actions/download-artifact@v4
-      with:
-        path: ${{ github.workspace }}
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
 
     - name: Install Casadi MATLAB
       working-directory: ${{ github.workspace }}/external
@@ -453,14 +398,10 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-
-    - uses: actions/checkout@v4
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
       with:
-        submodules: 'recursive'
-
-    - uses: actions/download-artifact@v4
-      with:
-        path: ${{ github.workspace }}
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
 
     - name: Prepare Octave
       working-directory: ${{ github.workspace }}/external

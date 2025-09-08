@@ -21,43 +21,13 @@ jobs:
       image: osrf/ros:humble-desktop
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
       with:
-        submodules: 'recursive'
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
 
-    - name: Download lib artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: lib-${{ needs.call_core_build.outputs.artifact-name-prefix }}
-        path: ${{ github.workspace }}/lib
-
-    - name: Download build artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: build-${{ needs.call_core_build.outputs.artifact-name-prefix }}
-        path: ${{ github.workspace }}/build
-
-    - name: Download include artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: include-${{ needs.call_core_build.outputs.artifact-name-prefix }}
-        path: ${{ github.workspace }}/include
-
-    - name: Export Paths
-      working-directory: ${{ github.workspace }}
-      shell: bash
-      run: |
-        ${{ github.workspace }}/.github/linux/export_paths.sh ${{ github.workspace }}
-
-    - name: Install Python interface
-      working-directory: ${{ github.workspace }}
-      shell: bash
-      run: ${{ github.workspace }}/.github/linux/install_python.sh
-
-    - name: Install Tera
-      working-directory: ${{ github.workspace }}
-      shell: bash
-      run: ${{ github.workspace }}/.github/linux/install_tera.sh
+    - name: Setup Python Environment
+      uses: ./.github/actions/setup-python-environment
 
     - name: Run Cart Pendulum Ros2 smoke tests
       working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2
