@@ -17,15 +17,34 @@ jobs:
     needs: call_core_build
     runs-on: ubuntu-22.04
 
-    container:
-      image: osrf/ros:humble-desktop
-
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
           submodules: 'recursive'
-          
+        
+    - name: Cache ROS installation
+      uses: actions/cache@v4
+      with:
+        path: /opt/ros/humble
+        key: ${{ runner.os }}-ros-humble
+      
+    - name: Install ROS2 Humble
+      run: |
+        if [ ! -d "/opt/ros/humble/setup.bash" ]; then
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository universe
+          sudo apt-get update && sudo apt-get install -y curl
+          sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y ros-humble-desktop
+        else
+          echo "ROS found in cache."
+        fi
+      shell: bash
+
     - name: Setup Test Environment
       uses: ./.github/actions/setup-test-environment
       with:
@@ -33,7 +52,7 @@ jobs:
 
     - name: Setup Python Environment
       uses: ./.github/actions/setup-python-environment
-
+      
     - name: Run Cart Pendulum Ros2 smoke tests
       working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2
       shell: bash
