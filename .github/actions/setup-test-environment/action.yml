@@ -1,5 +1,5 @@
 name: 'Setup Test Environment'
-description: 'Checks out the repository and downloads build artifacts (lib, build, include).'
+description: 'Downloads build artifacts (lib, build, include).'
 
 inputs:
   artifact-name-prefix:

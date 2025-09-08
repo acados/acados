@@ -34,6 +34,9 @@ jobs:
       run: ${{ github.workspace }}/.github/linux/install_ros2_humble.sh
       shell: bash
 
+    - name: Install System Dependencies
+      uses: ./.github/actions/setup-system-dependencies
+
     - name: Setup Test Environment
       uses: ./.github/actions/setup-test-environment
       with:

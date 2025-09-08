@@ -38,10 +38,7 @@ jobs:
       run: echo "PREFIX=build-${{ github.run_id }}-${{ github.run_attempt }}" >> $GITHUB_OUTPUT
 
     - name: Install System Dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libblas-dev liblapack-dev
-      shell: bash
+      uses: ./.github/actions/setup-system-dependencies
 
     - name: Create Build Environment & Configure
       run: |
