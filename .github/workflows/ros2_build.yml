@@ -49,8 +49,10 @@ jobs:
       working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2
       shell: bash
       run: |
-        source ${{ github.workspace }}/acadosenv/bin/activate
-        python example_ros_sqp_rti_loop.py
+        (
+          source ${{ github.workspace }}/acadosenv/bin/activate
+          python example_ros_sqp_rti_loop.py
+        )
         echo "\nTesting OCP ROS2 Humble\n"
         source /opt/ros/humble/setup.bash
 
