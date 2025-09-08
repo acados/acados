@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-# 1. System-Setup
+# system update
 sudo apt update
 sudo apt install -y locales
 sudo locale-gen en_US en_US.UTF-8
@@ -38,16 +38,16 @@ export LANG=en_US.UTF-8
 sudo apt install -y software-properties-common
 sudo add-apt-repository universe
 
-# 2. ROS 2 Repository hinzufügen (offizielle, stabile Methode)
+# add ros 2 repo
 sudo apt install -y curl
 sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
 
-# 3. ROS 2 installieren
+# install ros 2
 sudo apt update
 sudo apt install -y ros-humble-ros-base ros-dev-tools
 
-# 4. Fehlender, aber kritischer Schritt: rosdep initialisieren
+# install and initialize rosdep
 sudo apt install -y python3-rosdep
 sudo rosdep init
 rosdep update

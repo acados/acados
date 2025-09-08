@@ -168,7 +168,7 @@ jobs:
         echo "\nTesting OCP ROS2 Humble\n"
         source /opt/ros/humble/setup.bash
 
-        # Kleine isolierte Build-Umgebung:
+        # small isolated build environment
         WS=${{ runner.workspace }}/ros_pendulum_ws
         mkdir -p $WS/src
         rsync -a . $WS/src/pendulum_on_cart
