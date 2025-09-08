@@ -27,35 +27,35 @@ jobs:
 
     - uses: actions/download-artifact@v4
       with:
-        path: ${{runner.workspace}}/acados
+        path: ${{ github.workspace }}
 
     - name: Export Paths
-      working-directory: ${{runner.workspace}}/acados
+      working-directory: ${{ github.workspace }}
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+        ${{ github.workspace }}/.github/linux/export_paths.sh ${{ github.workspace }}
 
     - name: Install Python interface
-      working-directory: ${{runner.workspace}}/acados
+      working-directory: ${{ github.workspace }}
       shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_python.sh''
+      run: ${{ github.workspace }}/.github/linux/install_python.sh
 
     - name: Install Tera
-      working-directory: ${{runner.workspace}}/acados
+      working-directory: ${{ github.workspace }}
       shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_tera.sh
+      run: ${{ github.workspace }}/.github/linux/install_tera.sh
 
     - name: Run Cart Pendulum Ros2 smoke tests
-      working-directory: ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/ros2
+      working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2
       shell: bash
       run: |
-        source ${{runner.workspace}}/acados/acadosenv/bin/activate
+        source ${{ github.workspace }}/acadosenv/bin/activate
         python example_ros_sqp_rti_loop.py
         echo "\nTesting OCP ROS2 Humble\n"
         source /opt/ros/humble/setup.bash
 
         # small isolated build environment
-        WS=${{ runner.workspace }}/ros_pendulum_ws
+        WS=${{ github.workspace }}/ros_pendulum_ws
         mkdir -p $WS/src
         rsync -a . $WS/src/pendulum_on_cart
 

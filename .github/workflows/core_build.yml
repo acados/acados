@@ -38,8 +38,8 @@ jobs:
 
     - name: Create Build Environment & Configure
       run: |
-        cmake -E make_directory ${{runner.workspace}}/acados/build
-        cd ${{runner.workspace}}/acados/build
+        cmake -E make_directory ${{ github.workspace }}/build
+        cd ${{ github.workspace }}/build
         cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
             -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES \
             -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP \
@@ -51,7 +51,7 @@ jobs:
             -DACADOS_NUM_THREADS=1
 
     - name: Build & Install
-      working-directory: ${{runner.workspace}}/acados/build
+      working-directory: ${{ github.workspace }}/build
       run: |
         cmake --build . --config $BUILD_TYPE
         make install -j4
@@ -60,18 +60,18 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: lib-${{ steps.vars.outputs.PREFIX }}
-        path: ${{runner.workspace}}/acados/lib/
+        path: ${{ github.workspace }}/lib/
 
     - name: Store build scripts (/build)
       uses: actions/upload-artifact@v4
       with:
         name: build-${{ steps.vars.outputs.PREFIX }}
         path: |
-          ${{runner.workspace}}/acados/build/
-          !${{runner.workspace}}/**/*.dir
+          ${{ github.workspace }}/build/
+          !${{ github.workspace }}/**/*.dir
 
     - name: Store include directory (/include)
       uses: actions/upload-artifact@v4
       with:
         name: include-${{ steps.vars.outputs.PREFIX }}
-        path: ${{runner.workspace}}/acados/include/
+        path: ${{ github.workspace }}/include/
