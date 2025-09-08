@@ -141,11 +141,6 @@ jobs:
       shell: bash
       run: ${{runner.workspace}}/acados/.github/linux/install_tera.sh
 
-    - name: Install simde
-      working-directory: ${{runner.workspace}}/acados
-      shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_simde.sh''
-  
     - name: Cache apt packages for ROS 2
       uses: actions/cache@v4
       with:
