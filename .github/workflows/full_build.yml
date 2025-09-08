@@ -22,9 +22,23 @@ jobs:
       with:
         submodules: 'recursive'
 
-    - uses: actions/download-artifact@v4
+    - name: Download lib artifact
+      uses: actions/download-artifact@v4
       with:
-        path: ${{ github.workspace }}
+        name: lib-${{ needs.call_core_build.outputs.artifact-name-prefix }}
+        path: ${{ github.workspace }}/lib
+
+    - name: Download build artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: build-${{ needs.call_core_build.outputs.artifact-name-prefix }}
+        path: ${{ github.workspace }}/build
+
+    - name: Download include artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: include-${{ needs.call_core_build.outputs.artifact-name-prefix }}
+        path: ${{ github.workspace }}/include
 
     - name: Export Paths
       working-directory: ${{ github.workspace }}
