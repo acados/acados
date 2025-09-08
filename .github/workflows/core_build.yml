@@ -37,6 +37,12 @@ jobs:
       id: vars
       run: echo "PREFIX=build-${{ github.run_id }}-${{ github.run_attempt }}" >> $GITHUB_OUTPUT
 
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libblas-dev liblapack-dev
+      shell: bash
+
     - name: Create Build Environment & Configure
       run: |
         cmake -E make_directory ${{ github.workspace }}/build
