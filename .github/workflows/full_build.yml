@@ -13,6 +13,8 @@ jobs:
   call_core_build:
     uses: ./.github/workflows/core_build.yml
     
+
+# ===== PYTHON TESTS =====
   python_interface:
     needs: call_core_build
     runs-on: ubuntu-22.04
@@ -161,6 +163,7 @@ jobs:
         cd ${{ github.workspace }}/examples/acados_python/evaluation
         python minimal_example_evaluation.py
 
+# ===== MATLAB TESTS =====
   MATLAB_test:
     needs: call_core_build
     runs-on: ubuntu-22.04
@@ -343,6 +346,7 @@ jobs:
         command: |
               cd ${{ github.workspace }}/examples/acados_matlab_octave/test; test_all_examples;
 
+# ===== SIMULINK TESTS =====
   simulink_test:
     needs: call_core_build
     runs-on: ubuntu-22.04
