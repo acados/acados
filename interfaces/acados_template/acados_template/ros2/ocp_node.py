@@ -47,6 +47,8 @@ if __name__ == "__main__":
     ros_opt = AcadosOcpRos()
     
     ros_opt.node_name = "my_node"
+    ros_opt.package_name = "that_package"
+    ros_opt.namespace = "/my_namespace"
     ros_opt.control_loop_executor = ControlLoopExec.TIMER
     ros_opt.archtype = ArchType.LIFECYCLE_NODE
     

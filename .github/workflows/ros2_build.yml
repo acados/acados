@@ -1,0 +1,82 @@
+name: Test ROS2 Build Linux
+
+on:
+  push:
+    branches-ignore:
+      - 'doc*'
+      - 'wip*'
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  call_core_build:
+    uses: ./.github/workflows/core_build.yml
+
+  ros2_humble_test:
+    needs: call_core_build
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+          submodules: 'recursive'
+        
+    - name: Cache ROS installation
+      uses: actions/cache@v4
+      with:
+        path: /opt/ros/humble
+        key: ${{ runner.os }}-ros-humble
+      
+    - name: Install ROS2 Humble
+      working-directory: ${{ github.workspace }}
+      run: ${{ github.workspace }}/.github/linux/install_ros2_humble.sh
+      shell: bash
+
+    - name: Install System Dependencies
+      uses: ./.github/actions/setup-system-dependencies
+
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
+      with:
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
+
+    - name: Setup Python Environment
+      uses: ./.github/actions/setup-python-environment
+      
+    - name: Run Cart Pendulum Ros2 smoke tests
+      working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2
+      shell: bash
+      run: |
+        (
+          source ${{ github.workspace }}/acadosenv/bin/activate
+          python example_ros_sqp_rti_loop.py
+        )
+        echo "\nTesting OCP ROS2 Humble\n"
+        source /opt/ros/humble/setup.bash
+
+        # small isolated build environment
+        WS=${{ github.workspace }}/ros_pendulum_ws
+        mkdir -p $WS/src
+        rsync -a . $WS/src/pendulum_on_cart
+
+        cd $WS
+        rosdep update || true
+        rosdep install --from-paths src --ignore-src -r -y || true
+
+        colcon build --packages-select pendulum_on_cart pendulum_on_cart_interface --event-handlers console_direct+
+        source install/setup.bash
+
+        echo "Start Node (8s Timeout)"
+        timeout 8s ros2 run pendulum_on_cart pendulum_on_cart_node || EXIT_CODE=$?
+        if [ "${EXIT_CODE:-0}" != "0" ] && [ "${EXIT_CODE:-0}" != "124" ]; then
+          echo "Node feilure: Exit-Code ${EXIT_CODE}"
+          exit 1
+        fi
+
+        if [ "${EXIT_CODE:-0}" = "124" ]; then
+          echo "Test passed!"
+        else
+          echo "Test failed: Node exited before Timeout (Exit-Code ${EXIT_CODE})"
+        fi

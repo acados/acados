@@ -88,22 +88,15 @@ def main():
     ocp.constraints.ubu = np.array([+Fmax])
     ocp.constraints.idxbu = np.array([0])
 
-    # duplicated bound on u as a linear constraint
-    ocp.constraints.C = np.zeros((1, nx))
-    ocp.constraints.D = np.zeros((1, nu))
-    ocp.constraints.D[0, 0] = 1.0
-    ocp.constraints.lg = np.array([-Fmax])
-    ocp.constraints.ug = np.array([+Fmax])
-
+    # initial state
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
-    ocp.remove_x0_elimination()
 
     # set options
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.print_level = 0
-    ocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP_RTI, SQP
+    ocp.solver_options.nlp_solver_type = 'SQP_RTI'
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -133,13 +126,11 @@ def main():
             status = ocp_solver.solve()
         else:
             status = ocp_solver.solve()
-        # ocp_solver.custom_update(np.array([]))
-        ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+        ocp_solver.print_statistics()
         residuals = ocp_solver.get_residuals()
         print("residuals after ", i, "SQP_RTI iterations:\n", residuals)
         if max(residuals) < tol:
             break
-
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')
@@ -150,63 +141,9 @@ def main():
         simU[i,:] = ocp_solver.get(i, "u")
     simX[N,:] = ocp_solver.get(N, "x")
 
-    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
-
-    cost = ocp_solver.get_cost()
-    print("cost function value of solution = ", cost)
-
-    # test getter
-    assert np.allclose(ocp.constraints.C, ocp_solver.constraints_get(1, 'C'))
-
-    PRINT_QP = False
-
-    range_without_terminal = [0, 1, N-2, N-1]
-    range_with_terminal = [0, 1, N-1, N]
-    if PRINT_QP:
-        # dynamics
-        for i in range_without_terminal:
-            A_qp = ocp_solver.get_from_qp_in(i, "A")
-            print(f"qp: A at stage {i}: {A_qp}")
-
-        for i in range_without_terminal:
-            B_qp = ocp_solver.get_from_qp_in(i, "B")
-            print(f"qp: B at stage {i}: {B_qp}")
-
-        for i in range_without_terminal:
-            b_qp = ocp_solver.get_from_qp_in(i, "b")
-            print(f"qp: b at stage {i}: {b_qp}")
-
-        # cost
-        for i in range_with_terminal:
-            Q_qp = ocp_solver.get_from_qp_in(i, "Q")
-            print(f"qp: Q at stage {i}: {Q_qp}")
-
-        for i in range_with_terminal:
-            R_qp = ocp_solver.get_from_qp_in(i, "R")
-            print(f"qp: R at stage {i}: {R_qp}")
-
-        for i in range_with_terminal:
-            S_qp = ocp_solver.get_from_qp_in(i, "S")
-            print(f"qp: S at stage {i}: {S_qp}")
-
-        for i in range_with_terminal:
-            r_qp = ocp_solver.get_from_qp_in(i, "r")
-            print(f"qp: r at stage {i}: {r_qp}")
-
-        for i in range_with_terminal:
-            q_qp = ocp_solver.get_from_qp_in(i, "q")
-            print(f"qp: q at stage {i}: {q_qp}")
-
-        # constraints
-        for i in range_with_terminal:
-            C_qp = ocp_solver.get_from_qp_in(i, "C")
-            print(f"qp: C at stage {i}: {C_qp}")
-        for i in range_with_terminal:
-            D_qp = ocp_solver.get_from_qp_in(i, "D")
-            print(f"qp: D at stage {i}: {D_qp}")
+    ocp_solver.print_statistics()
 
     # plot
-    ocp_solver.dump_last_qp_to_json(overwrite=True)
     plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
 
 

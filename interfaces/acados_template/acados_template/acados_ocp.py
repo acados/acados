@@ -115,15 +115,13 @@ class AcadosOcp:
         self.__p_global_values = np.array([])
         self.__problem_class = 'OCP'
         self.__json_file = "acados_ocp.json"
+        self.__ros_opts: Optional[AcadosOcpRos] = None
 
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
 
         self.simulink_opts = None
         """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
-        
-        self.ros_opts: Optional[AcadosOcpRos] = None
-        """Options to configure ROS 2 nodes and topics."""
 
 
     @property
@@ -164,10 +162,20 @@ class AcadosOcp:
         """Name of the json file where the problem description is stored."""
         return self.__json_file
 
+    @property
+    def ros_opts(self) -> Optional[AcadosOcpRos]:
+        """Options to configure ROS 2 nodes and topics."""
+        return self.__ros_opts
+
     @json_file.setter
     def json_file(self, json_file):
         self.__json_file = json_file
-
+        
+    @ros_opts.setter
+    def ros_opts(self, ros_opts: AcadosOcpRos):
+        if not isinstance(ros_opts, AcadosOcpRos):
+            raise TypeError('Invalid ros_opts value, expected AcadosOcpRos.\n')
+        self.__ros_opts = ros_opts
 
     def _make_consistent_cost_initial(self):
         dims = self.dims
