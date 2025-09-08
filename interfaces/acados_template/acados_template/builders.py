@@ -56,6 +56,8 @@ class CMakeBuilder:
         """A comma-separated list of the build targets, if `None` then all targets will be build; type: List of strings; default: `None`."""
         self.options_on = None
         """List of strings as CMake options which are translated to '-D Opt[0]=ON -D Opt[1]=ON ...'; default: `None`."""
+        self.additional_cmake_options = None
+        """Additional cmake options as a single string, e.g. '-D CMAKE_CXX_FLAGS="-O3 -Wall"'; default: `None`."""
 
     # Generate the command string for handling the cmake command.
     def get_cmd1_cmake(self):
@@ -69,7 +71,7 @@ class CMakeBuilder:
         host_str = ''
         if self.host is not None:
             host_str = f' -A"{self.host}"'
-        return f'cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="{self._source_dir}"{defines_str}{generator_str}{host_str} -Wdev -S"{self._source_dir}" -B"{self._build_dir}"'
+        return f'cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="{self._source_dir}"{defines_str} {self.additional_cmake_options} {generator_str}{host_str} -Wdev -S"{self._source_dir}" -B"{self._build_dir}"'
 
     # Generate the command string for handling the build.
     def get_cmd2_build(self):

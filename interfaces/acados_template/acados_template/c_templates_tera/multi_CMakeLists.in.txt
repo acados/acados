@@ -310,7 +310,7 @@ set(CMAKE_C_FLAGS "-fPIC -std=c99 {{ openmp_flag }} {{ solver_options.ext_fun_co
 ")
 #-fno-diagnostics-show-line-numbers -g
 
-include_directories(
+set(ACADOS_INCLUDE_PATHS
    ${ACADOS_INCLUDE_PATH}
    ${ACADOS_INCLUDE_PATH}/acados
    ${ACADOS_INCLUDE_PATH}/blasfeo/include
@@ -323,15 +323,19 @@ include_directories(
 {%- endif %}
 )
 
+include_directories(${ACADOS_INCLUDE_PATHS})
+
 # linker flags
 link_directories(${ACADOS_LIB_PATH})
 
 # link to libraries
 if(UNIX)
-    link_libraries(acados hpipm blasfeo m {{ link_libs }})
+    set(ACADOS_LINK_LIBS acados hpipm blasfeo m {{ link_libs }} CACHE STRING "Define what libs to link with acados solver")
 else()
-    link_libraries(acados hpipm blasfeo {{ link_libs }})
+    set(ACADOS_LINK_LIBS acados hpipm blasfeo {{ link_libs }} CACHE STRING "Define what libs to link with acados solver")
 endif()
+
+link_libraries(${ACADOS_LINK_LIBS})
 
 # the targets
 

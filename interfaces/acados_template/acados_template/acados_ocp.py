@@ -2367,7 +2367,7 @@ class AcadosOcp:
             has_custom_hess
         )
 
-    def get_initial_cost_expression(self):
+    def get_initial_cost_expression(self, yref: Optional[ca.SX]=None):
         model = self.model
         if self.cost.cost_type == "LINEAR_LS":
             if is_empty(self.cost.Vx_0):
@@ -2377,11 +2377,11 @@ class AcadosOcp:
 
             if not is_empty(self.cost.Vz_0):
                 y += self.cost.Vz @ model.z
-            residual = y - self.cost.yref_0
+            residual = y - (self.cost.yref_0 if yref is None else yref)
             cost_dot = 0.5 * (residual.T @ self.cost.W_0 @ residual)
 
         elif self.cost.cost_type == "NONLINEAR_LS":
-            residual = model.cost_y_expr_0 - self.cost.yref_0
+            residual = model.cost_y_expr_0 - (self.cost.yref_0 if yref is None else yref)
             cost_dot = 0.5 * (residual.T @ self.cost.W_0 @ residual)
 
         elif self.cost.cost_type == "EXTERNAL":
@@ -2396,7 +2396,7 @@ class AcadosOcp:
         return cost_dot
 
 
-    def get_path_cost_expression(self):
+    def get_path_cost_expression(self, yref: Optional[ca.SX]=None):
         model = self.model
         if self.cost.cost_type == "LINEAR_LS":
             if is_empty(self.cost.Vx):
@@ -2406,11 +2406,11 @@ class AcadosOcp:
 
             if not is_empty(self.cost.Vz):
                 y += self.cost.Vz @ model.z
-            residual = y - self.cost.yref
+            residual = y - (self.cost.yref if yref is None else yref)
             cost_dot = 0.5 * (residual.T @ self.cost.W @ residual)
 
         elif self.cost.cost_type == "NONLINEAR_LS":
-            residual = model.cost_y_expr - self.cost.yref
+            residual = model.cost_y_expr - (self.cost.yref if yref is None else yref)
             cost_dot = 0.5 * (residual.T @ self.cost.W @ residual)
 
         elif self.cost.cost_type == "EXTERNAL":
@@ -2425,17 +2425,17 @@ class AcadosOcp:
         return cost_dot
 
 
-    def get_terminal_cost_expression(self):
+    def get_terminal_cost_expression(self, yref: Optional[ca.SX]=None):
         model = self.model
         if self.cost.cost_type_e == "LINEAR_LS":
             if is_empty(self.cost.Vx_e):
                 return 0.0
             y = self.cost.Vx_e @ model.x
-            residual = y - self.cost.yref_e
+            residual = y - (self.cost.yref_e if yref is None else yref)
             cost_dot = 0.5 * (residual.T @ self.cost.W_e @ residual)
 
         elif self.cost.cost_type_e == "NONLINEAR_LS":
-            residual = model.cost_y_expr_e - self.cost.yref_e
+            residual = model.cost_y_expr_e - (self.cost.yref_e if yref is None else yref)
             cost_dot = 0.5 * (residual.T @ self.cost.W_e @ residual)
 
         elif self.cost.cost_type_e == "EXTERNAL":
