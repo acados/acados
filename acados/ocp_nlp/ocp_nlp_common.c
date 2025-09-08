@@ -897,6 +897,7 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
 
     // ** doubles **
     // Ts
+    printf("before assign_and_advance_double(N, &in->Ts, &c_ptr);");
     assign_and_advance_double(N, &in->Ts, &c_ptr);
 
     // double pointers
@@ -906,12 +907,14 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
     // parameter values
     for (int i = 0; i <= N; i++)
     {
+        printf("before assign_and_advance_double(dims->np[i], &in->parameter_values[i], &c_ptr);");
         assign_and_advance_double(dims->np[i], &in->parameter_values[i], &c_ptr);
         for (int ip = 0; ip < dims->np[i]; ip++)
         {
             in->parameter_values[i][ip] = 0.0;
         }
     }
+    printf("before assign_and_advance_double(dims->n_global_data, &in->global_data, &c_ptr);");
     assign_and_advance_double(dims->n_global_data, &in->global_data, &c_ptr);
 
     // blasfeo_mem align
@@ -2401,6 +2404,7 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
         c_ptr += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
     }
 
+    printf("before assign_and_advance_double(nv_max, &work->tmp_nv_double, &c_ptr);");
     assign_and_advance_double(nv_max, &work->tmp_nv_double, &c_ptr);
 
     assign_and_advance_int(ni_max+ns_max, &work->tmp_nins, &c_ptr);

@@ -960,14 +960,23 @@ void *ocp_qp_ooqp_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, v
 
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
+    printf("before assign_and_advance_double(nx, &mem->c, &c_ptr);");
     assign_and_advance_double(nx, &mem->c, &c_ptr);
+    printf("before assign_and_advance_double(nnzQ, &mem->dQ, &c_ptr);");
     assign_and_advance_double(nnzQ, &mem->dQ, &c_ptr);
+    printf("before assign_and_advance_double(nx, &mem->xlow, &c_ptr);");
     assign_and_advance_double(nx, &mem->xlow, &c_ptr);
+    printf("before assign_and_advance_double(nx, &mem->xupp, &c_ptr);");
     assign_and_advance_double(nx, &mem->xupp, &c_ptr);
+    printf("before assign_and_advance_double(nnzA, &mem->dA, &c_ptr);");
     assign_and_advance_double(nnzA, &mem->dA, &c_ptr);
+    printf("before assign_and_advance_double(my, &mem->bA, &c_ptr);");
     assign_and_advance_double(my, &mem->bA, &c_ptr);
+    printf("before assign_and_advance_double(nnzC, &mem->dC, &c_ptr);");
     assign_and_advance_double(nnzC, &mem->dC, &c_ptr);
+    printf("before assign_and_advance_double(mz, &mem->clow, &c_ptr);");
     assign_and_advance_double(mz, &mem->clow, &c_ptr);
+    printf("before assign_and_advance_double(mz, &mem->cupp, &c_ptr);");
     assign_and_advance_double(mz, &mem->cupp, &c_ptr);
 
     assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");

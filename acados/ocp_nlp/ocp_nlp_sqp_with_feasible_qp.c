@@ -376,6 +376,7 @@ void *ocp_nlp_sqp_wfqp_memory_assign(void *config_, void *dims_, void *opts_, vo
     mem->stat_m = opts->nlp_opts->max_iter+1;
     mem->stat_n = 13;
     mem->stat = (double *) c_ptr;
+    printf("before assign_and_advance_double(mem->stat_m*mem->stat_n, &mem->stat, &c_ptr);");
     assign_and_advance_double(mem->stat_m*mem->stat_n, &mem->stat, &c_ptr);
 
     align_char_to(8, &c_ptr);
