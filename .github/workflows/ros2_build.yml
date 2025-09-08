@@ -45,7 +45,7 @@ jobs:
     - name: Setup Python Environment
       uses: ./.github/actions/setup-python-environment
       
-    - name: Run Cart Pendulum Ros2 smoke tests
+    - name: Build and Test ROS2 Node
       working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2
       shell: bash
       run: |
@@ -67,16 +67,7 @@ jobs:
 
         colcon build --packages-select pendulum_on_cart pendulum_on_cart_interface --event-handlers console_direct+
         source install/setup.bash
-
-        echo "Start Node (8s Timeout)"
-        timeout 8s ros2 run pendulum_on_cart pendulum_on_cart_node || EXIT_CODE=$?
-        if [ "${EXIT_CODE:-0}" != "0" ] && [ "${EXIT_CODE:-0}" != "124" ]; then
-          echo "Node feilure: Exit-Code ${EXIT_CODE}"
-          exit 1
-        fi
-
-        if [ "${EXIT_CODE:-0}" = "124" ]; then
-          echo "Test passed!"
-        else
-          echo "Test failed: Node exited before Timeout (Exit-Code ${EXIT_CODE})"
-        fi
+        colcon test --packages-select pendulum_on_cart \
+          --event-handlers console_direct+ \
+          --return-code-on-failure \
+          --pytest-args "--reruns 5 --reruns-delay 1"

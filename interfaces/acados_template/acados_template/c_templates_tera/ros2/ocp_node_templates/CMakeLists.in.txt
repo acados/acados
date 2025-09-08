@@ -83,6 +83,12 @@ install(TARGETS
     RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
+# --- TESTS ---
+if(BUILD_TESTING)
+    find_package(launch_testing_ament_cmake REQUIRED)
+    add_launch_test(test/test_pendulum_on_cart.launch.py)
+endif()
+
 # --- EXPORTS ---
 ament_export_include_directories(
     "include"
@@ -93,15 +99,6 @@ ament_export_include_directories(
     ${ACADOS_INCLUDE_PATH}/hpipm/include
     ${ACADOS_INCLUDE_PATH}/osqp
     ${ACADOS_INCLUDE_PATH}/qpOASES_e
-)
-
-ament_export_libraries(
-    acados_ocp_solver_{{ name }}
-    ${ACADOS_LIB_DIR}/libacados.so
-    ${ACADOS_LIB_DIR}/libblasfeo.so
-    ${ACADOS_LIB_DIR}/libhpipm.so
-    ${ACADOS_LIB_DIR}/libosqp.so
-    ${ACADOS_LIB_DIR}/libqpOASES_e.so
 )
 
 ament_package()

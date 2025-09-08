@@ -1353,6 +1353,11 @@ class AcadosOcp:
         src_dir = os.path.join(package_dir, 'src')
         template_file = os.path.join(ros_pkg_dir, 'node.in.cpp')
         template_list.append((template_file, 'node.cpp', src_dir))
+        
+        # Test
+        test_dir = os.path.join(package_dir, 'test')
+        template_file = os.path.join(ros_pkg_dir, 'test.launch.in.py')
+        template_list.append((template_file, f'test.launch.py', test_dir))
         return template_list
 
 
