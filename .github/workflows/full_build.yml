@@ -43,6 +43,14 @@ jobs:
         source ${{ github.workspace }}/acadosenv/bin/activate
         ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
 
+    - name: Display test logs on failure
+      if: steps.ctest.outcome == 'failure'
+      working-directory: ${{ github.workspace }}/build
+      shell: bash
+      run: |
+        echo "--- CTest failed. Displaying LastTest.log for details: ---"
+        cat ./Testing/Temporary/LastTest.log
+
   python_interface_new_casadi_and_py2octave:
     needs: call_core_build
     runs-on: ubuntu-22.04
