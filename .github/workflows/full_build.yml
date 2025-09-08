@@ -18,6 +18,11 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+          submodules: 'recursive'
+
     - name: Setup Test Environment
       uses: ./.github/actions/setup-test-environment
       with:
@@ -38,6 +43,11 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+          submodules: 'recursive'
+
     - name: Setup Test Environment
       uses: ./.github/actions/setup-test-environment
       with:
@@ -156,6 +166,11 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+          submodules: 'recursive'
+
     - name: Setup Test Environment
       uses: ./.github/actions/setup-test-environment
       with:
@@ -207,6 +222,11 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+          submodules: 'recursive'
+
     - name: Setup Test Environment
       uses: ./.github/actions/setup-test-environment
       with:
@@ -271,6 +291,11 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+          submodules: 'recursive'
+
     - name: Setup Test Environment
       uses: ./.github/actions/setup-test-environment
       with:
@@ -323,6 +348,11 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+          submodules: 'recursive'
+
     - name: Setup Test Environment
       uses: ./.github/actions/setup-test-environment
       with:
@@ -398,6 +428,11 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+          submodules: 'recursive'
+
     - name: Setup Test Environment
       uses: ./.github/actions/setup-test-environment
       with:

@@ -21,6 +21,11 @@ jobs:
       image: osrf/ros:humble-desktop
 
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+          submodules: 'recursive'
+          
     - name: Setup Test Environment
       uses: ./.github/actions/setup-test-environment
       with:
