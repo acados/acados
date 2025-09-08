@@ -44,7 +44,7 @@ jobs:
         ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
 
     - name: Display test logs on failure
-      if: steps.ctest.outcome == 'failure'
+      if: failure()
       working-directory: ${{ github.workspace }}/build
       shell: bash
       run: |
