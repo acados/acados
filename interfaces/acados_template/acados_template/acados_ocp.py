@@ -45,7 +45,7 @@ from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions
 from .acados_ocp_iterate import AcadosOcpIterate
-from .acados_ocp_ros import AcadosOcpRos
+from .ros2.ocp_node import AcadosOcpRos
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
                     get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
@@ -1290,7 +1290,7 @@ class AcadosOcp:
         template_list = []
 
         # --- Interface Package --- 
-        ros_interface_dir = 'ros_interface_templates'
+        ros_interface_dir = os.path.join('ros2', 'ocp_interface_templates')
         interface_dir = os.path.join(os.path.dirname(self.code_export_directory), f'{self.ros_opts.package_name}_interface')
         template_file = os.path.join(ros_interface_dir, 'README.in.md')
         template_list.append((template_file, 'README.md', interface_dir))
@@ -1323,7 +1323,7 @@ class AcadosOcp:
         # template_list.append((template_file, 'SolveOCP.action', action_dir))
 
         # --- Solver Package --- 
-        ros_pkg_dir = 'ros_pkg_templates'
+        ros_pkg_dir = os.path.join('ros2', 'ocp_node_templates')
         package_dir = os.path.join(os.path.dirname(self.code_export_directory), self.ros_opts.package_name)
         template_file = os.path.join(ros_pkg_dir, 'README.in.md')
         template_list.append((template_file, 'README.md', package_dir))
@@ -1338,8 +1338,6 @@ class AcadosOcp:
         template_list.append((template_file, 'config.hpp', include_dir))
         template_file = os.path.join(ros_pkg_dir, 'utils.in.hpp')
         template_list.append((template_file, 'utils.hpp', include_dir))
-        template_file = os.path.join(ros_pkg_dir, 'marker_publisher.in.hpp')
-        template_list.append((template_file, 'marker_publisher.hpp', include_dir))
         template_file = os.path.join(ros_pkg_dir, 'node.in.h')
         template_list.append((template_file, 'node.h', include_dir))
 
