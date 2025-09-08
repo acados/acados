@@ -43,6 +43,16 @@ jobs:
         source ${{ github.workspace }}/acadosenv/bin/activate
         ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
 
+    - name: Rerun failed tests with verbose output
+      if: failure()
+      working-directory: ${{ github.workspace }}/build
+      shell: bash
+      run: |
+        echo "--- CTest failed. Re-running all failing tests with verbose output: ---"
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        ctest -C Release --rerun-failed -V
+        exit 1
+
     - name: Display test logs on failure
       if: failure()
       working-directory: ${{ github.workspace }}/build
