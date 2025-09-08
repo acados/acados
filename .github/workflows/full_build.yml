@@ -53,14 +53,6 @@ jobs:
         ctest -C Release --rerun-failed -V
         exit 1
 
-    - name: Display test logs on failure
-      if: failure()
-      working-directory: ${{ github.workspace }}/build
-      shell: bash
-      run: |
-        echo "--- CTest failed. Displaying LastTest.log for details: ---"
-        cat ./Testing/Temporary/LastTest.log
-
   python_interface_new_casadi_and_py2octave:
     needs: call_core_build
     runs-on: ubuntu-22.04
