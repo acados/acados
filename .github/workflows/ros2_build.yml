@@ -1,0 +1,142 @@
+name: Test ROS2 Build Linux
+
+on:
+  push:
+    branches-ignore:
+      - 'doc*'
+      - 'wip*'
+  pull_request:
+    branches:
+      - '*'
+
+env:
+  BUILD_TYPE: Release
+  ACADOS_PYTHON: ON
+  ACADOS_OCTAVE: ON
+  ACADOS_WITH_OSQP: ON
+  ACADOS_WITH_QPOASES: ON
+  ACADOS_WITH_DAQP: ON
+  ACADOS_WITH_QPDUNES: ON
+  ACADOS_ON_CI: ON
+
+jobs:
+  ros_core_build:
+    runs-on: ubuntu-22.04
+    container:
+      image: osrf/ros:humble-desktop
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - name: Create Build Environment
+      working-directory: ${{runner.workspace}}
+      run: cmake -E make_directory ${{runner.workspace}}/acados/build
+
+    - name: Configure CMake
+      shell: bash
+      working-directory: ${{runner.workspace}}/acados/build
+      run: |
+        cmake --version
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=$ACADOS_PYTHON -DACADOS_OCTAVE=OFF -DACADOS_WITH_OPENMP=ON -DACADOS_NUM_THREADS=1
+
+    - name: Build & Install
+      working-directory: ${{runner.workspace}}/acados/build
+      shell: bash
+      run: |
+        cmake --build . --config $BUILD_TYPE
+        make install -j4
+
+    - name: Store shared libs (/lib)
+      uses: actions/upload-artifact@v4
+      with:
+        name: lib
+        if-no-files-found: error
+        path: ${{runner.workspace}}/acados/lib/
+        compression-level: 0
+        overwrite: true
+
+    - name: Store build scripts (/build)
+      uses: actions/upload-artifact@v4
+      with:
+        name: build
+        if-no-files-found: error
+        path: |
+          ${{runner.workspace}}/acados/build/
+          !${{runner.workspace}}/**/*.dir
+        compression-level: 0
+        overwrite: true
+        # exclude object files in .dir directories
+
+    - name: Store include directory (/include)
+      uses: actions/upload-artifact@v4
+      with:
+        name: include
+        if-no-files-found: error
+        path: ${{runner.workspace}}/acados/include/
+        compression-level: 0
+        overwrite: true
+
+  ros2_humble_test:
+    needs: ros_core_build
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - uses: actions/download-artifact@v4
+      with:
+        path: ${{runner.workspace}}/acados
+
+    - name: Export Paths
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: |
+        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+
+    - name: Install Python interface
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: ${{runner.workspace}}/acados/.github/linux/install_python.sh''
+
+    - name: Install Tera
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: ${{runner.workspace}}/acados/.github/linux/install_tera.sh
+
+    - name: Run Cart Pendulum Ros2 smoke tests
+      working-directory: ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/ros2
+      shell: bash
+      run: |
+        source ${{runner.workspace}}/acados/acadosenv/bin/activate
+        python example_ros_sqp_rti_loop.py
+        echo "\nTesting OCP ROS2 Humble\n"
+        source /opt/ros/humble/setup.bash
+
+        # small isolated build environment
+        WS=${{ runner.workspace }}/ros_pendulum_ws
+        mkdir -p $WS/src
+        rsync -a . $WS/src/pendulum_on_cart
+
+        cd $WS
+        rosdep update || true
+        rosdep install --from-paths src --ignore-src -r -y || true
+
+        colcon build --packages-select pendulum_on_cart pendulum_on_cart_interface
+        source install/setup.bash
+
+        echo "Start Node (8s Timeout)"
+        timeout 8s ros2 run pendulum_on_cart pendulum_on_cart_node || EXIT_CODE=$?
+        if [ "${EXIT_CODE:-0}" != "0" ] && [ "${EXIT_CODE:-0}" != "124" ]; then
+          echo "Node feilure: Exit-Code ${EXIT_CODE}"
+          exit 1
+        fi
+
+        if [ "${EXIT_CODE:-0}" = "124" ]; then
+          echo "Test passed!"
+        else
+          echo "Test failed: Node exited before Timeout (Exit-Code ${EXIT_CODE})"
+        fi

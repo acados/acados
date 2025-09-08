@@ -112,81 +112,81 @@ jobs:
         source ${{runner.workspace}}/acados/acadosenv/bin/activate
         ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
 
-  ros2_humble_test:
-    needs: core_build
-    runs-on: ubuntu-22.04
+  # ros2_humble_test:
+  #   needs: core_build
+  #   runs-on: ubuntu-22.04
 
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: 'recursive'
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #     with:
+  #       submodules: 'recursive'
 
-    - uses: actions/download-artifact@v4
-      with:
-        path: ${{runner.workspace}}/acados
+  #   - uses: actions/download-artifact@v4
+  #     with:
+  #       path: ${{runner.workspace}}/acados
 
-    - name: Export Paths
-      working-directory: ${{runner.workspace}}/acados
-      shell: bash
-      run: |
-        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+  #   - name: Export Paths
+  #     working-directory: ${{runner.workspace}}/acados
+  #     shell: bash
+  #     run: |
+  #       ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
 
-    - name: Install Python interface
-      working-directory: ${{runner.workspace}}/acados
-      shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_python.sh''
+  #   - name: Install Python interface
+  #     working-directory: ${{runner.workspace}}/acados
+  #     shell: bash
+  #     run: ${{runner.workspace}}/acados/.github/linux/install_python.sh''
 
-    - name: Install Tera
-      working-directory: ${{runner.workspace}}/acados
-      shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_tera.sh
+  #   - name: Install Tera
+  #     working-directory: ${{runner.workspace}}/acados
+  #     shell: bash
+  #     run: ${{runner.workspace}}/acados/.github/linux/install_tera.sh
 
-    - name: Cache apt packages for ROS 2
-      uses: actions/cache@v4
-      with:
-        path: /var/cache/apt
-        key: ${{ runner.os }}-apt-ros-humble-${{ hashFiles('**/install_ros2_humble.sh') }}
-        restore-keys: |
-          ${{ runner.os }}-apt-ros-humble-
+  #   - name: Cache apt packages for ROS 2
+  #     uses: actions/cache@v4
+  #     with:
+  #       path: /var/cache/apt
+  #       key: ${{ runner.os }}-apt-ros-humble-${{ hashFiles('**/install_ros2_humble.sh') }}
+  #       restore-keys: |
+  #         ${{ runner.os }}-apt-ros-humble-
 
-    - name: Install Ros2 Humble
-      working-directory: ${{runner.workspace}}/acados
-      shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_ros2_humble.sh
+  #   - name: Install Ros2 Humble
+  #     working-directory: ${{runner.workspace}}/acados
+  #     shell: bash
+  #     run: ${{runner.workspace}}/acados/.github/linux/install_ros2_humble.sh
 
-    - name: Run Cart Pendulum Ros2 smoke tests
-      working-directory: ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/ros2
-      shell: bash
-      run: |
-        source ${{runner.workspace}}/acados/acadosenv/bin/activate
-        python example_ros_sqp_rti_loop.py
-        echo "\nTesting OCP ROS2 Humble\n"
-        source /opt/ros/humble/setup.bash
+  #   - name: Run Cart Pendulum Ros2 smoke tests
+  #     working-directory: ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/ros2
+  #     shell: bash
+  #     run: |
+  #       source ${{runner.workspace}}/acados/acadosenv/bin/activate
+  #       python example_ros_sqp_rti_loop.py
+  #       echo "\nTesting OCP ROS2 Humble\n"
+  #       source /opt/ros/humble/setup.bash
 
-        # small isolated build environment
-        WS=${{ runner.workspace }}/ros_pendulum_ws
-        mkdir -p $WS/src
-        rsync -a . $WS/src/pendulum_on_cart
+  #       # small isolated build environment
+  #       WS=${{ runner.workspace }}/ros_pendulum_ws
+  #       mkdir -p $WS/src
+  #       rsync -a . $WS/src/pendulum_on_cart
 
-        cd $WS
-        rosdep update || true
-        rosdep install --from-paths src --ignore-src -r -y || true
+  #       cd $WS
+  #       rosdep update || true
+  #       rosdep install --from-paths src --ignore-src -r -y || true
 
-        colcon build --packages-select pendulum_on_cart
-        source install/setup.bash
+  #       colcon build --packages-select pendulum_on_cart
+  #       source install/setup.bash
 
-        echo "Start Node (8s Timeout)"
-        timeout 8s ros2 run pendulum_on_cart pendulum_on_cart_node || EXIT_CODE=$?
-        if [ "${EXIT_CODE:-0}" != "0" ] && [ "${EXIT_CODE:-0}" != "124" ]; then
-          echo "Node feilure: Exit-Code ${EXIT_CODE}"
-          exit 1
-        fi
+  #       echo "Start Node (8s Timeout)"
+  #       timeout 8s ros2 run pendulum_on_cart pendulum_on_cart_node || EXIT_CODE=$?
+  #       if [ "${EXIT_CODE:-0}" != "0" ] && [ "${EXIT_CODE:-0}" != "124" ]; then
+  #         echo "Node feilure: Exit-Code ${EXIT_CODE}"
+  #         exit 1
+  #       fi
 
-        if [ "${EXIT_CODE:-0}" = "124" ]; then
-          echo "Test passed!"
-        else
-          echo "Test failed: Node exited before Timeout (Exit-Code ${EXIT_CODE})"
-        fi
+  #       if [ "${EXIT_CODE:-0}" = "124" ]; then
+  #         echo "Test passed!"
+  #       else
+  #         echo "Test failed: Node exited before Timeout (Exit-Code ${EXIT_CODE})"
+  #       fi
 
   python_interface_new_casadi_and_py2octave:
     needs: core_build
