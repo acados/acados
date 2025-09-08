@@ -1,0 +1,77 @@
+name: Reusable Core Build
+
+on:
+  workflow_call:
+    # Wir definieren einen Output auf Workflow-Ebene.
+    # So kann der aufrufende Workflow den Wert empfangen.
+    outputs:
+      artifact-name-prefix:
+        description: "The unique prefix for artifact names for this run"
+        value: ${{ jobs.core_build.outputs.artifact-name-prefix }}
+
+env:
+  BUILD_TYPE: Release
+  ACADOS_PYTHON: ON
+  ACADOS_OCTAVE: ON
+  ACADOS_WITH_OSQP: ON
+  ACADOS_WITH_QPOASES: ON
+  ACADOS_WITH_DAQP: ON
+  ACADOS_WITH_QPDUNES: ON
+  ACADOS_ON_CI: ON
+
+
+jobs:
+  core_build:
+    runs-on: ubuntu-22.04
+
+    outputs:
+      artifact-name-prefix: ${{ steps.vars.outputs.PREFIX }}
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+        
+    - name: Set up variables
+      id: vars
+      run: echo "PREFIX=build-${{ github.run_id }}-${{ github.run_attempt }}" >> $GITHUB_OUTPUT
+
+    - name: Create Build Environment & Configure
+      run: |
+        cmake -E make_directory ${{runner.workspace}}/acados/build
+        cd ${{runner.workspace}}/acados/build
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+            -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES \
+            -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP \
+            -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES \
+            -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP \
+            -DACADOS_PYTHON=$ACADOS_PYTHON \
+            -DACADOS_OCTAVE=OFF \
+            -DACADOS_WITH_OPENMP=ON \
+            -DACADOS_NUM_THREADS=1
+
+    - name: Build & Install
+      working-directory: ${{runner.workspace}}/acados/build
+      run: |
+        cmake --build . --config $BUILD_TYPE
+        make install -j4
+
+    - name: Store shared libs (/lib)
+      uses: actions/upload-artifact@v4
+      with:
+        name: lib-${{ steps.vars.outputs.PREFIX }}
+        path: ${{runner.workspace}}/acados/lib/
+
+    - name: Store build scripts (/build)
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-${{ steps.vars.outputs.PREFIX }}
+        path: |
+          ${{runner.workspace}}/acados/build/
+          !${{runner.workspace}}/**/*.dir
+
+    - name: Store include directory (/include)
+      uses: actions/upload-artifact@v4
+      with:
+        name: include-${{ steps.vars.outputs.PREFIX }}
+        path: ${{runner.workspace}}/acados/include/
