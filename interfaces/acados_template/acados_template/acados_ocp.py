@@ -1357,7 +1357,7 @@ class AcadosOcp:
         # Test
         test_dir = os.path.join(package_dir, 'test')
         template_file = os.path.join(ros_pkg_dir, 'test.launch.in.py')
-        template_list.append((template_file, f'test.launch.py', test_dir))
+        template_list.append((template_file, f'test_{self.ros_opts.package_name}.launch.py', test_dir))
         return template_list
 
 
