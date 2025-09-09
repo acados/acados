@@ -48,12 +48,8 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-a
 sudo apt-get update
 
 # 4. check if ROS 2 is already installed (cached), if not install it
-if [ -f "/opt/ros/humble/setup.bash" ]; then
-    echo "ROS 2 base found in cache. Skipping installation."
-else
-    echo "ROS 2 not found in cache. Installing ros-humble-ros-base..."
-    sudo apt-get install -y ros-humble-ros-base
-fi
+echo "Installing ros-humble-ros-base..."
+sudo apt-get install -y ros-humble-ros-base
 
 # 5. rosdep init and update
 echo "Initializing and updating rosdep..."

@@ -13,12 +13,10 @@
     <depend>std_msgs</depend>
     <depend>{{ ros_opts.package_name }}_interface</depend>
 
-    <exec_depend>python3-lark-parser</exec_depend>
-    <exec_depend>python3-numpy</exec_depend>
 
     <test_depend>launch_testing</test_depend>
     <test_depend>launch_testing_ament_cmake</test_depend>
-    <test_depend>python3-pytest</test_depend>
+    <test_depend>pytest</test_depend>
 
     <export>
         <build_type>ament_cmake</build_type>
