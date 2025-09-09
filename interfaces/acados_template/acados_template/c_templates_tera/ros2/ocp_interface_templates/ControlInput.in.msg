@@ -1,7 +1,7 @@
 # Generic state message
 std_msgs/Header header
 
-# State vector
+# control vector
 float64[{{ dims.nu }}] u
 
 # Status, 0 = OK

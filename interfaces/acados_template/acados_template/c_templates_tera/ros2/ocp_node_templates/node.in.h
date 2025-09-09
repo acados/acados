@@ -7,7 +7,7 @@
 #include <vector>
 #include <unordered_map>
 
-// ROS2 message includes 
+// ROS2 message includes
 #include "{{ ros_opts.package_name }}_interface/msg/state.hpp"
 #include "{{ ros_opts.package_name }}_interface/msg/control_input.hpp"
 #include "{{ ros_opts.package_name }}_interface/msg/references.hpp"
@@ -52,7 +52,7 @@ private:
     OnSetParametersCallbackHandle::SharedPtr param_callback_handle_;
     using ParamHandler = std::function<void(const rclcpp::Parameter&, rcl_interfaces::msg::SetParametersResult&)>;
     std::unordered_map<std::string, ParamHandler> parameter_handlers_;
-    
+
     // --- Acados Solver ---
     {{ model.name }}_solver_capsule *ocp_capsule_;
     ocp_nlp_config* ocp_nlp_config_;
@@ -124,7 +124,7 @@ private:
 
     void get_input(double* u, int stage);
     void get_state(double* x, int stage);
-    
+
     void set_x0(double* x0);
     {%- if dims.ny_0 > 0 %}
     void set_yref0(double* yref0);

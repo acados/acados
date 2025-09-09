@@ -49,14 +49,17 @@ namespace {{ ros_opts.package_name }}
     {%- else %}
     {%- set references_topic = "/references" %}
     {%- endif %}
+
     references_sub_ = this->create_subscription<{{ ros_opts.package_name }}_interface::msg::References>(
         "{{ references_topic }}", 10,
         std::bind(&{{ ClassName }}::references_callback, this, std::placeholders::_1));
+
     {%- if ns %}
     {%- set parameters_topic = "/" ~ ros_opts.namespace ~ "/parameters" %}
     {%- else %}
     {%- set parameters_topic = "/parameters" %}
     {%- endif %}
+
     {%- if dims.np > 0 %}
     parameters_sub_ = this->create_subscription<{{ ros_opts.package_name }}_interface::msg::Parameters>(
         "{{ parameters_topic }}", 10,
@@ -107,6 +110,7 @@ void {{ ClassName }}::initialize_solver() {
     ocp_nlp_in_ = {{ model.name }}_acados_get_nlp_in(ocp_capsule_);
     ocp_nlp_out_ = {{ model.name }}_acados_get_nlp_out(ocp_capsule_);
     ocp_nlp_opts_ = {{ model.name }}_acados_get_nlp_opts(ocp_capsule_);
+    RCLCPP_INFO(this->get_logger(), "acados solver created successfully.");
 
     this->set_cost_weights();
     this->set_constraints();
@@ -114,14 +118,14 @@ void {{ ClassName }}::initialize_solver() {
     void set_slack_weights();
     {%- endif %}
 
-    RCLCPP_INFO(this->get_logger(), "Acados solver initialized successfully.");
+    RCLCPP_INFO(this->get_logger(), "acados solver initialized successfully.");
 }
 
 void {{ ClassName }}::control_loop() {
     // TODO: check for received msgs first
-    std::array<double, {{ model.name | upper }}_NX> x0{}; 
+    std::array<double, {{ model.name | upper }}_NX> x0{};
     {%- if dims.ny_0 > 0 %}
-    std::array<double, {{ model.name | upper }}_NY0> yref0{}; 
+    std::array<double, {{ model.name | upper }}_NY0> yref0{};
     {%- endif %}
     {%- if dims.ny > 0 %}
     std::array<double, {{ model.name | upper }}_NY> yref{};
@@ -148,8 +152,8 @@ void {{ ClassName }}::control_loop() {
         {%- if dims.np > 0 %}
         p = current_p_;
         {%- endif %}
-    } 
-    
+    }
+
     // Update solver
     this->set_x0(x0.data());
 
@@ -379,7 +383,7 @@ void {{ ClassName }}::log_parameters() {
     {%- endif %}
     {%- endfor %}
     {%- endif %}
-    
+
     // Solver Options
     ss << "\n" << std::left << std::setw(label_width) << "Tsim" << " = " << config_.solver_options.Tsim;
     ss << "\n" << "--------------------------------------";
@@ -578,8 +582,8 @@ void {{ ClassName }}::set_constraints() {
     ocp_nlp_constraints_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, ocp_nlp_out_, 0, "{{ field }}", config_.constraints.{{ field }}.data());
     {%- endif %}
     {%- endfor %}
-
     {%- endif %}
+
     {%- if dims.nbu > 0 or dims.nbx > 0 or dims.ng > 0 or dims.nh > 0 or dims.nphi > 0 or dims.nsbx > 0 or dims.nsg > 0 or dims.nsh > 0 or dims.nsphi > 0 %}
     // Stage Constraints
     for (int i=1; i < {{ model.name | upper }}_N; i++) {
@@ -590,6 +594,7 @@ void {{ ClassName }}::set_constraints() {
         {%- endfor %}
     }
     {%- endif %}
+
     {%- if dims.nbx_e > 0 or dims.ng_e > 0 or dims.nh_e > 0 or dims.nphi_e > 0 or dims.nsbx_e > 0 or dims.nsg_e > 0 or dims.nsh_e > 0 or dims.nsphi_e > 0 %}
 
     // Terminal Constraints
@@ -604,7 +609,7 @@ void {{ ClassName }}::set_constraints() {
 } // namespace {{ ros_opts.package_name }}
 
 
-// --- Main Funktion ---
+// --- Main ---
 int main(int argc, char **argv) {
     rclcpp::init(argc, argv);
     auto node = std::make_shared<{{ ros_opts.package_name }}::{{ ClassName }}>();

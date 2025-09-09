@@ -12,7 +12,7 @@ on:
 jobs:
   call_core_build:
     uses: ./.github/workflows/core_build.yml
-    
+
 
 # ===== PYTHON TESTS =====
   python_interface:
@@ -23,8 +23,8 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-          submodules: 'recursive'
-    
+        submodules: 'recursive'
+
     - name: Install System Dependencies
       uses: ./.github/actions/setup-system-dependencies
 
@@ -61,8 +61,8 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-          submodules: 'recursive'
-    
+        submodules: 'recursive'
+
     - name: Install System Dependencies
       uses: ./.github/actions/setup-system-dependencies
 
@@ -188,8 +188,8 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-          submodules: 'recursive'
-    
+        submodules: 'recursive'
+
     - name: Install System Dependencies
       uses: ./.github/actions/setup-system-dependencies
 
@@ -247,8 +247,8 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-          submodules: 'recursive'
-    
+        submodules: 'recursive'
+
     - name: Install System Dependencies
       uses: ./.github/actions/setup-system-dependencies
 
@@ -319,8 +319,8 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-          submodules: 'recursive'
-    
+        submodules: 'recursive'
+
     - name: Install System Dependencies
       uses: ./.github/actions/setup-system-dependencies
 
@@ -380,8 +380,8 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-          submodules: 'recursive'
-    
+        submodules: 'recursive'
+
     - name: Install System Dependencies
       uses: ./.github/actions/setup-system-dependencies
 
@@ -463,8 +463,8 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-          submodules: 'recursive'
-    
+        submodules: 'recursive'
+
     - name: Install System Dependencies
       uses: ./.github/actions/setup-system-dependencies
 

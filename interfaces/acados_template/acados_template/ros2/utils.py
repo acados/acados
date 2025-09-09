@@ -1,20 +1,20 @@
 import re
 
 from enum import Enum
-from typing import Optional, Union
+from typing import Union
 
 
 class ControlLoopExec(str, Enum):
     TOPIC = "topic"
     TIMER = "timer"
-    
+
 class ArchType(str, Enum):
     NODE = "node"
     LIFECYCLE_NODE = "lifecycle_node"
     ROS2_CONTROLLER = "ros2_controller"
     NAV2_CONTROLLER = "nav2_controller"
-    
-    
+
+
 class AcadosRosBase:
     def __init__(self):
         self._package_name: str = "acados_base"
@@ -42,13 +42,13 @@ class AcadosRosBase:
     @property
     def control_loop_executor(self) -> str:
         return self._control_loop_executor
-    
+
     @package_name.setter
     def package_name(self, package_name: str):
         if not isinstance(package_name, str):
             raise TypeError('Invalid package_name value, expected str.\n')
         self._package_name = package_name
-        
+
     @node_name.setter
     def node_name(self, node_name: str):
         if not isinstance(node_name, str):
@@ -84,7 +84,7 @@ class AcadosRosBase:
         self._archtype = archtype_enum.value
 
     @control_loop_executor.setter
-    def control_loop_executor(self, control_loop_executor: Union[ControlLoopExec, str]):
+    def control_loop_executor(self, control_loop_executor: Union[ControlLoopExec, str]) -> None:
         try:
             if isinstance(control_loop_executor, ControlLoopExec):
                 control_loop_executor_enum = control_loop_executor
@@ -96,7 +96,7 @@ class AcadosRosBase:
             valid_types = [e.value for e in ControlLoopExec]
             raise TypeError(f"Invalid control_loop_executor. Expected one of {valid_types} or a ControlLoopExec enum member.")
         self._control_loop_executor = control_loop_executor_enum.value
-    
+
     def to_dict(self) -> dict:
         package_name_snake  = self.__camel_to_snake(self.package_name)
         node_name_snake     = self.__camel_to_snake(self.node_name)
@@ -108,7 +108,7 @@ class AcadosRosBase:
             "archtype":                 self.archtype,
             "control_loop_executor":    self.control_loop_executor
         }
-        
+
     @staticmethod
     def __camel_to_snake(name: str) -> str:
         s1 = re.sub(r'(.)([A-Z][a-z]+)', r'\1_\2', name)
