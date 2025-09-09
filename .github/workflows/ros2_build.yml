@@ -48,6 +48,6 @@ jobs:
     - name: Test ROS2 Packages
       uses: ./.github/actions/test-ros2-package
       with:
-        package-file-path: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_sqp_rti_loop.py
+        python-file-path: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_sqp_rti_loop.py
         package-name: pendulum_on_cart
         ros-distro: humble
