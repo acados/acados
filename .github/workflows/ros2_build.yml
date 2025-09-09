@@ -44,13 +44,6 @@ jobs:
 
     - name: Setup Python Environment
       uses: ./.github/actions/setup-python-environment
-
-    - name: Generate Codes
-      working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2
-      shell: bash
-      run: |
-        source ${{ github.workspace }}/acadosenv/bin/activate
-        python example_ros_sqp_rti_loop.py
       
     - name: Test ROS2 Packages
       uses: ./.github/actions/test-ros2-package
