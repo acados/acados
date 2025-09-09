@@ -14,32 +14,29 @@ inputs:
     required: false
     default: 'humble'
   source-paths:
-    description: 'Additional source paths to include in the workspace (comma-separated).'
+    description: 'A multiline string of all source directories to be symlinked into the workspace.'
     required: false
     default: ''
 
 runs:
   using: 'composite'
   steps:
-    - name: Set up Workspace
+    - name: Set up Workspace with Symbolic Links
       shell: bash
       run: |
         set -e
-        WS=${{ github.workspace }}/${{ inputs.package-name }}_ws
-        echo "Creating workspace at $WS"
-        mkdir -p $WS/src
-        cp -r ${{ inputs.python-file-path }} $WS/src/
-        ls -la $WS/src
-
-    - name: Copy source paths
-      if: ${{ inputs.source-paths != '' }}
-      shell: bash
-      run: |
-        IFS=',' read -ra PATHS <<< "${{ inputs.source-paths }}"
-        for PATH in "${PATHS[@]}"; do
-          echo "Copying source path: $PATH"
-          ln -s "${{ github.workspace }}/$PATH" "$WS/src/"
+        WS_PATH="${{ github.workspace }}/${{ inputs.package-name }}_ws"
+        mkdir -p $WS_PATH/src
+        
+        echo "Creating symbolic links for all specified source paths..."
+        for path in ${{ inputs.source-paths }}; do
+          echo "- Linking '$path'..."
+          # Erstellt einen Symlink vom originalen Repo-Pfad in den Workspace-src-Ordner
+          ln -s "${{ github.workspace }}/$path" "$WS_PATH/src/"
         done
+        
+        echo "Workspace source content (note: these are links):"
+        ls -la $WS_PATH/src
 
     - name: Generate Code with Python Script
       shell: bash
@@ -50,7 +47,7 @@ runs:
         source ${{ github.workspace }}/acadosenv/bin/activate
         python $SCRIPT_NAME
 
-    - name: Install Dependencies
+    - name: Build and Test Package
       shell: bash
       working-directory: ${{ github.workspace }}/${{ inputs.package-name }}_ws
       run: |
@@ -59,13 +56,6 @@ runs:
         rosdep update || echo "rosdep update failed but continuing."
         rosdep install --from-paths src --ignore-src -r -y
 
-    - name: Build and Test Package
-      shell: bash
-      working-directory: ${{ github.workspace }}/${{ inputs.package-name }}_ws
-      run: |
-        set -e
-        source /opt/ros/${{ inputs.ros-distro }}/setup.bash
-        
         echo "Building and testing '${{ inputs.package-name }}'..."
         colcon test \
           --packages-up-to ${{ inputs.package-name }} \
