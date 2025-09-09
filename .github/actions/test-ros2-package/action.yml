@@ -35,13 +35,13 @@ runs:
         echo "Creating symbolic links for all specified source paths..."
         for path in ${{ inputs.source-link-paths }}; do
           echo "- Linking '$path'..."
-          ln -s "${{ github.workspace }}/$path" "$WS_PATH/src/"
+          ln -s "$path" "$WS_PATH/src/"
         done
 
         echo "Creating copies for all specified source paths..."
         for path in ${{ inputs.source-file-paths }}; do
           echo "- Copying '$path'..."
-          cp "${{ github.workspace }}/$path" "$WS_PATH/src/"
+          cp "$path" "$WS_PATH/src/"
         done
 
         echo "Workspace source content (partially links):"
