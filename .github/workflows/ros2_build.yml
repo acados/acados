@@ -24,6 +24,7 @@ jobs:
           submodules: 'recursive'
         
     - name: Cache ROS installation
+      id: cache-ros
       uses: actions/cache@v4
       with:
         path: /opt/ros/humble
