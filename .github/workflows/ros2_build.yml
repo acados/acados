@@ -68,6 +68,6 @@ jobs:
         colcon build --packages-select pendulum_on_cart pendulum_on_cart_interface --event-handlers console_direct+
         source install/setup.bash
         colcon test --packages-select pendulum_on_cart \
+          --return-code-on-test-failure \
           --event-handlers console_direct+ \
-          --return-code-on-failure \
           --pytest-args "--reruns 5 --reruns-delay 1"
