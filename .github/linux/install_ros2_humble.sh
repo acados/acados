@@ -26,33 +26,37 @@
 # INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.;
+# POSSIBILITY OF SUCH DAMAGE.
 #
+
+set -e
+
+# 1. install dependencies for ROS 2 Humble
+echo "Setting up system locales and ROS 2 package sources..."
+sudo apt-get update
+sudo apt-get install -y locales software-properties-common curl
+sudo locale-gen en_US en_US.UTF-8
+sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+export LANG=en_US.UTF-8
+sudo add-apt-repository universe -y
+
+# 2. add the ROS 2 GPG key and repository
+sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+
+# 3. update package index
+sudo apt-get update
+
+# 4. check if ROS 2 is already installed (cached), if not install it
 if [ -f "/opt/ros/humble/setup.bash" ]; then
-    echo "ROS 2 already installed"
+    echo "ROS 2 base found in cache. Skipping installation."
 else
-    echo "ROS 2 not found in cache. Starting fresh installation."
-    # system update
-    sudo apt update
-    sudo apt install -y locales
-    sudo locale-gen en_US en_US.UTF-8
-    sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
-    export LANG=en_US.UTF-8
-    sudo apt install -y software-properties-common
-    sudo add-apt-repository universe
-
-    # add ros 2 repo
-    sudo apt install -y curl
-    sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
-
-    # install ros 2
-    sudo apt update
-    sudo apt install -y ros-humble-ros-base ros-dev-tools
+    echo "ROS 2 not found in cache. Installing ros-humble-ros-base..."
+    sudo apt-get install -y ros-humble-ros-base
 fi
 
+# 5. rosdep init and update
 echo "Initializing and updating rosdep..."
-sudo apt-get update
-sudo apt-get install -y python3-rosdep
+sudo apt-get install -y python3-rosdep ros-dev-tools
 sudo rosdep init || echo "rosdep already initialized."
 rosdep update
