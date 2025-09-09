@@ -81,7 +81,7 @@ runs:
         set -e
         source /opt/ros/${{ inputs.ros-distro }}/setup.bash
         rosdep update || echo "rosdep update failed but continuing."
-        rosdep install --from-paths src --ignore-src -r -y
+        rosdep install --from-paths src --ignore-src -r -y --rosdistro ${{ inputs.ros-distro }}
 
         echo "Building and testing ROS2 packages..."
         colcon build
