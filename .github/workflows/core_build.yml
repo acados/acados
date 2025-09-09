@@ -62,8 +62,6 @@ jobs:
             'cmake/**/*.cmake',
             'acados/**'
           ) }}
-        restore-keys: |
-          ${{ runner.os }}-${{ env.BUILD_TYPE }}-acados-
 
     - name: Install System Dependencies
       uses: ./.github/actions/setup-system-dependencies
