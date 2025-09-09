@@ -13,6 +13,10 @@ inputs:
     description: 'The ROS2 distribution to use (e.g., humble, iron).'
     required: false
     default: 'humble'
+  source-paths:
+    description: 'Additional source paths to include in the workspace (comma-separated).'
+    required: false
+    default: ''
 
 runs:
   using: 'composite'
@@ -26,6 +30,16 @@ runs:
         mkdir -p $WS/src
         cp -r ${{ inputs.python-file-path }} $WS/src/
         ls -la $WS/src
+
+    - name: Copy source paths
+      if: ${{ inputs.source-paths != '' }}
+      shell: bash
+      run: |
+        IFS=',' read -ra PATHS <<< "${{ inputs.source-paths }}"
+        for PATH in "${PATHS[@]}"; do
+          echo "Copying source path: $PATH"
+          ln -s "${{ github.workspace }}/$PATH" "$WS/src/"
+        done
 
     - name: Generate Code with Python Script
       shell: bash
