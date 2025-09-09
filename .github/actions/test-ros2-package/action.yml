@@ -6,17 +6,14 @@ inputs:
     description: 'Path to the Python script to run for code generation.'
     required: true
     default: ''
-  package-name:
-    description: 'The name of the ROS2 package to build and test.'
-    required: true
-  ros-distro:
-    description: 'The ROS2 distribution to use (e.g., humble, iron).'
-    required: false
-    default: 'humble'
   source-paths:
     description: 'A multiline string of all source directories to be symlinked into the workspace.'
     required: false
     default: ''
+  ros-distro:
+    description: 'The ROS2 distribution to use (e.g., humble, iron).'
+    required: false
+    default: 'humble'
 
 runs:
   using: 'composite'
@@ -25,8 +22,11 @@ runs:
       shell: bash
       run: |
         set -e
-        WS_PATH="${{ github.workspace }}/${{ inputs.package-name }}_ws"
+        WS_PATH="${{ github.workspace }}/ros2_test_ws"
         mkdir -p $WS_PATH/src
+        
+        echo "Copying python script to workspace..."
+        cp "${{ inputs.python-file-path }}" "$WS_PATH/src/"
         
         echo "Creating symbolic links for all specified source paths..."
         for path in ${{ inputs.source-paths }}; do
@@ -34,13 +34,13 @@ runs:
           # Erstellt einen Symlink vom originalen Repo-Pfad in den Workspace-src-Ordner
           ln -s "${{ github.workspace }}/$path" "$WS_PATH/src/"
         done
-        
-        echo "Workspace source content (note: these are links):"
+
+        echo "Workspace source content (partially links):"
         ls -la $WS_PATH/src
 
     - name: Generate Code with Python Script
       shell: bash
-      working-directory: ${{ github.workspace }}/${{ inputs.package-name }}_ws/src
+      working-directory: ${{ github.workspace }}/ros2_test_ws/src
       run: |
         SCRIPT_NAME=$(basename ${{ inputs.python-file-path }})
         echo "Running Python code generator: $SCRIPT_NAME"
@@ -49,17 +49,16 @@ runs:
 
     - name: Build and Test Package
       shell: bash
-      working-directory: ${{ github.workspace }}/${{ inputs.package-name }}_ws
+      working-directory: ${{ github.workspace }}/ros2_test_ws
       run: |
         set -e
         source /opt/ros/${{ inputs.ros-distro }}/setup.bash
         rosdep update || echo "rosdep update failed but continuing."
         rosdep install --from-paths src --ignore-src -r -y
 
-        echo "Building and testing '${{ inputs.package-name }}'..."
+        echo "Building and testing ROS2 packages..."
+        colcon build
         colcon test \
-          --packages-up-to ${{ inputs.package-name }} \
-          --packages-select ${{ inputs.package-name }} \
           --return-code-on-failure \
           --event-handlers console_direct+ \
           --pytest-args "--reruns 3 --reruns-delay 1"
@@ -69,4 +68,4 @@ runs:
       shell: bash
       run: |
         echo "Cleaning up workspace..."
-        rm -rf ${{ github.workspace }}/${{ inputs.package-name }}_ws
+        rm -rf ${{ github.workspace }}/ros2_test_ws
