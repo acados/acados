@@ -33,15 +33,15 @@ runs:
         cp "${{ inputs.python-file-path }}" "$WS_PATH/src/"
         
         echo "Creating symbolic links for all specified source paths..."
-        for path in ${{ inputs.source-link-paths }}; do
-          echo "- Linking '$path'..."
-          ln -s "$path" "$WS_PATH/src/"
+        for link_path in ${{ inputs.source-link-paths }}; do
+          echo "- Linking '$link_path'..."
+          ln -s "$link_path" "$WS_PATH/src/"
         done
 
         echo "Creating copies for all specified source paths..."
-        for path in ${{ inputs.source-file-paths }}; do
-          echo "- Copying '$path'..."
-          cp "$path" "$WS_PATH/src/"
+        for copy_path in ${{ inputs.source-file-paths }}; do
+          echo "- Copying '$copy_path'..."
+          cp "$copy_path" "$WS_PATH/src/"
         done
 
         echo "Workspace source content (partially links):"
