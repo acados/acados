@@ -12,8 +12,10 @@
     <depend>rclcpp</depend>
     <depend>std_msgs</depend>
     <depend>{{ ros_opts.package_name }}_interface</depend>
-    <depend>rosidl_pycommon</depend>
 
+    <exec_depend>python3-lark</exec_depend>
+    <exec_depend>python3-numpy</exec_depend>
+    
     <test_depend>launch_testing</test_depend>
     <test_depend>launch_testing_ament_cmake</test_depend>
     <test_depend>python3-pytest</test_depend>
