@@ -1,0 +1,68 @@
+name: 'Test ROS2 Package'
+description: 'Sources ROS, creates an isolated workspace, then builds and tests a specific ROS2 package.'
+
+inputs:
+  python-file-path:
+    description: 'Path to the Python script to run for code generation.'
+    required: true
+    default: ''
+  package-name:
+    description: 'The name of the ROS2 package to build and test.'
+    required: true
+  ros-distro:
+    description: 'The ROS2 distribution to use (e.g., humble, iron).'
+    required: false
+    default: 'humble'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Workspace
+      shell: bash
+      run: |
+        set -e
+        WS=${{ github.workspace }}/${{ inputs.package-name }}_ws
+        echo "Creating workspace at $WS"
+        mkdir -p $WS/src
+        cp -r ${{ inputs.python-file-path }} $WS/src/
+        ls -la $WS/src
+
+    - name: Generate Code with Python Script
+      shell: bash
+      working-directory: ${{ github.workspace }}/${{ inputs.package-name }}_ws/src
+      run: |
+        SCRIPT_NAME=$(basename ${{ inputs.python-file-path }})
+        echo "Running Python code generator: $SCRIPT_NAME"
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python $SCRIPT_NAME
+
+    - name: Install Dependencies
+      shell: bash
+      working-directory: ${{ github.workspace }}/${{ inputs.package-name }}_ws
+      run: |
+        set -e
+        source /opt/ros/${{ inputs.ros-distro }}/setup.bash
+        rosdep update || echo "rosdep update failed but continuing."
+        rosdep install --from-paths src --ignore-src -r -y
+
+    - name: Build and Test Package
+      shell: bash
+      working-directory: ${{ github.workspace }}/${{ inputs.package-name }}_ws
+      run: |
+        set -e
+        source /opt/ros/${{ inputs.ros-distro }}/setup.bash
+        
+        echo "Building and testing '${{ inputs.package-name }}'..."
+        colcon test \
+          --packages-up-to ${{ inputs.package-name }} \
+          --packages-select ${{ inputs.package-name }} \
+          --return-code-on-failure \
+          --event-handlers console_direct+ \
+          --pytest-args "--reruns 3 --reruns-delay 1"
+
+    - name: Tear down Workspace
+      if: always()
+      shell: bash
+      run: |
+        echo "Cleaning up workspace..."
+        rm -rf ${{ github.workspace }}/${{ inputs.package-name }}_ws

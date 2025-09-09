@@ -44,30 +44,17 @@ jobs:
 
     - name: Setup Python Environment
       uses: ./.github/actions/setup-python-environment
-      
-    - name: Build and Test ROS2 Node
+
+    - name: Generate Codes
       working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2
       shell: bash
       run: |
-        (
-          source ${{ github.workspace }}/acadosenv/bin/activate
-          python example_ros_sqp_rti_loop.py
-        )
-        echo "\nTesting OCP ROS2 Humble\n"
-        source /opt/ros/humble/setup.bash
-
-        # small isolated build environment
-        WS=${{ github.workspace }}/ros_pendulum_ws
-        mkdir -p $WS/src
-        rsync -a . $WS/src/pendulum_on_cart
-
-        cd $WS
-        rosdep update || true
-        rosdep install --from-paths src --ignore-src -r -y || true
-
-        colcon build --packages-select pendulum_on_cart pendulum_on_cart_interface --event-handlers console_direct+
-        source install/setup.bash
-        colcon test --packages-select pendulum_on_cart \
-          --return-code-on-test-failure \
-          --event-handlers console_direct+ \
-          --pytest-args "--reruns 5 --reruns-delay 1"
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python example_ros_sqp_rti_loop.py
+      
+    - name: Test ROS2 Packages
+      uses: ./.github/actions/test-ros2-package
+      with:
+        package-file-path: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_sqp_rti_loop.py
+        package-name: pendulum_on_cart
+        ros-distro: humble
