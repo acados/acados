@@ -49,5 +49,6 @@ jobs:
       uses: ./.github/actions/test-ros2-package
       with:
         python-file-path: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_sqp_rti_loop.py
-        source-file-paths: |
+        source-link-paths: |
           '${{ github.workspace }}/examples/acados_python/pendulum_on_cart/common/pendulum_model.py'
+          '${{ github.workspace }}/examples/acados_python/pendulum_on_cart/common/utils.py'

@@ -37,6 +37,17 @@ jobs:
       id: vars
       run: echo "PREFIX=build-${{ github.run_id }}-${{ github.run_attempt }}" >> $GITHUB_OUTPUT
 
+    - name: Submodule fingerprint
+      id: submods
+      run: |
+        set -euo pipefail
+        git submodule status --recursive \
+          | awk '{print $1 " " $2}' \
+          | sed 's/^[-+ ]*//' \
+          | sort -k2,2 \
+          | sha256sum | cut -d' ' -f1 > submods.sha
+        echo "sha=$(cat submods.sha)" >> "$GITHUB_OUTPUT"
+
     - name: Cache Build Artifacts
       id: cache-build
       uses: actions/cache@v4
@@ -45,7 +56,8 @@ jobs:
           ${{ github.workspace }}/build
           ${{ github.workspace }}/lib
           ${{ github.workspace }}/include
-        key: ${{ runner.os }}-${{ env.BUILD_TYPE }}-acados-${{ hashFiles(
+        key: ${{ runner.os }}-${{ env.BUILD_TYPE }}-acados-${{ steps.submods.outputs.sha }}-${{ hashFiles(
+            '.gitmodules',
             'CMakeLists.txt',
             'cmake/**/*.cmake',
             'acados/**'
