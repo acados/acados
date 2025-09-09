@@ -48,7 +48,7 @@ jobs:
         key: ${{ runner.os }}-${{ env.BUILD_TYPE }}-acados-${{ hashFiles(
             'CMakeLists.txt',
             'cmake/**/*.cmake',
-            'acados/**',
+            'acados/**'
           ) }}
         restore-keys: |
           ${{ runner.os }}-${{ env.BUILD_TYPE }}-acados-
