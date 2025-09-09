@@ -28,7 +28,9 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.;
 #
-if [ ! -d "/opt/ros/humble/setup.bash" ]; then
+if [ -f "/opt/ros/humble/setup.bash" ]; then
+    echo "ROS 2 already installed"
+else
     echo "ROS 2 not found in cache. Starting fresh installation."
     # system update
     sudo apt update
@@ -47,8 +49,6 @@ if [ ! -d "/opt/ros/humble/setup.bash" ]; then
     # install ros 2
     sudo apt update
     sudo apt install -y ros-humble-ros-base ros-dev-tools
-else
-    echo "ROS 2 already installed"
 fi
 
 echo "Initializing and updating rosdep..."

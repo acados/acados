@@ -27,7 +27,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: /opt/ros/humble
-        key: ${{ runner.os }}-ros-humble
+        key: ${{ runner.os }}-ros-humble-${{ hashFiles('.github/linux/install_ros2_humble.sh') }}
       
     - name: Install ROS2 Humble
       working-directory: ${{ github.workspace }}
