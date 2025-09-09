@@ -31,25 +31,39 @@ runs:
         
         echo "Copying python script to workspace..."
         cp "${{ inputs.python-file-path }}" "$WS_PATH/src/"
-        
+
+    - name: Create Symbolic Links
+      if: ${{ inputs.source-link-paths != '' }}
+      shell: bash
+      working-directory: ${{ github.workspace }}/ros2_test_ws/src
+      run: |
         echo "Creating symbolic links for all specified source paths..."
         echo "${{ inputs.source-link-paths }}" | while IFS= read -r link_path; do
           if [ -n "$link_path" ]; then
             echo "- Linking '$link_path'..."
-            ln -s "$link_path" "$WS_PATH/src/"
+            ln -s "$link_path" "."
           fi
         done
 
+    - name: Create Copies of Source Files
+      if: ${{ inputs.source-file-paths != '' }}
+      shell: bash
+      working-directory: ${{ github.workspace }}/ros2_test_ws/src
+      run: |
         echo "Creating copies for all specified source paths..."
         echo "${{ inputs.source-file-paths }}" | while IFS= read -r copy_path; do
           if [ -n "$copy_path" ]; then
             echo "- Copying '$copy_path'..."
-            cp "$copy_path" "$WS_PATH/src/"
+            cp "$copy_path" "."
           fi
         done
 
-        echo "Workspace source content (partially links):"
-        ls -la $WS_PATH/src
+    - name: Verify Workspace Setup
+      shell: bash
+      working-directory: ${{ github.workspace }}/ros2_test_ws/src
+      run: |
+        echo "Workspace source content:"
+        ls -la 
 
     - name: Generate Code with Python Script
       shell: bash
