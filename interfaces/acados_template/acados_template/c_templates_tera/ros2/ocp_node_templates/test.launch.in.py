@@ -109,18 +109,18 @@ class GeneratedNodeTest(unittest.TestCase):
     def test_subscribing(self, proc_info):
         """Test if the node subscribes to all expected topics."""
         try:
-            self.wait_for_subscription('{{ state_topic }}', timeout={{ solver_options.Tsim }} + 1.0)
+            self.wait_for_subscription('{{ state_topic }}', timeout={{ solver_options.Tsim }})
         except TimeoutError:
             self.fail("Node has NOT subscribed to '{{ state_topic }}'.")
 
         try:
-            self.wait_for_subscription('{{ references_topic }}', timeout={{ solver_options.Tsim }} + 1.0)
+            self.wait_for_subscription('{{ references_topic }}', timeout={{ solver_options.Tsim }})
         except TimeoutError:
             self.fail("Node has NOT subscribed to '{{ references_topic }}'.")
 
         {%- if dims.np > 0 %}
         try:
-            self.wait_for_subscription('{{ parameter_topic }}', timeout={{ solver_options.Tsim }} + 1.0)
+            self.wait_for_subscription('{{ parameter_topic }}', timeout={{ solver_options.Tsim }})
         except TimeoutError:
             self.fail("Node has NOT subscribed to '{{ parameter_topic }}'.")
         {%- endif %}
@@ -128,12 +128,12 @@ class GeneratedNodeTest(unittest.TestCase):
     def test_publishing(self, proc_info):
         """Test if the node publishes to all expected topics."""
         try:
-            self.wait_for_publisher('{{ control_input_topic }}', timeout={{ solver_options.Tsim }} + 1.0)
+            self.wait_for_publisher('{{ control_input_topic }}', timeout={{ solver_options.Tsim }})
         except TimeoutError:
             self.fail("Node has NOT published to '{{ control_input_topic }}'.")
 
-    def wait_for_subscription(self, topic: str, timeout: float = 1.0):
-        end_time = time.time() + timeout
+    def wait_for_subscription(self, topic: str, timeout: float = 1.0, threshold: float = 0.5):
+        end_time = time.time() + timeout + threshold
         while time.time() < end_time:
             subs = self.node.get_subscriptions_info_by_topic(topic)
             if subs:
@@ -141,8 +141,8 @@ class GeneratedNodeTest(unittest.TestCase):
             time.sleep(0.05)
         raise TimeoutError(f"No subscriber found on {topic} within {timeout}s")
 
-    def wait_for_publisher(self, topic: str, timeout: float = 1.0):
-        end_time = time.time() + timeout
+    def wait_for_publisher(self, topic: str, timeout: float = 1.0, threshold: float = 0.5):
+        end_time = time.time() + timeout + threshold
         while time.time() < end_time:
             pubs = self.node.get_publishers_info_by_topic(topic)
             if pubs:
