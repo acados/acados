@@ -6,8 +6,12 @@ inputs:
     description: 'Path to the Python script to run for code generation.'
     required: true
     default: ''
-  source-paths:
+  source-link-paths:
     description: 'A multiline string of all source directories to be symlinked into the workspace.'
+    required: false
+    default: ''
+  source-file-paths:
+    description: 'A multiline string of all source files to be copied into the workspace.'
     required: false
     default: ''
   ros-distro:
@@ -29,10 +33,15 @@ runs:
         cp "${{ inputs.python-file-path }}" "$WS_PATH/src/"
         
         echo "Creating symbolic links for all specified source paths..."
-        for path in ${{ inputs.source-paths }}; do
+        for path in ${{ inputs.source-link-paths }}; do
           echo "- Linking '$path'..."
-          # Erstellt einen Symlink vom originalen Repo-Pfad in den Workspace-src-Ordner
           ln -s "${{ github.workspace }}/$path" "$WS_PATH/src/"
+        done
+
+        echo "Creating copies for all specified source paths..."
+        for path in ${{ inputs.source-file-paths }}; do
+          echo "- Copying '$path'..."
+          cp "${{ github.workspace }}/$path" "$WS_PATH/src/"
         done
 
         echo "Workspace source content (partially links):"
