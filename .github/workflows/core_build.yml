@@ -45,7 +45,15 @@ jobs:
           ${{ github.workspace }}/build
           ${{ github.workspace }}/lib
           ${{ github.workspace }}/include
-        key: ${{ runner.os }}-${{ env.BUILD_TYPE }}-acados-${{ hashFiles('CMakeLists.txt', 'cmake/**', 'acados/**', 'interfaces/**', 'external/**') }}
+        key: ${{ runner.os }}-${{ env.BUILD_TYPE }}-acados-${{ hashFiles(
+            'CMakeLists.txt',
+            'cmake/**/*.cmake',
+            'acados/**',
+            'external/**',
+            '!**/.github/**',
+            '!**/.git/**',
+            '!**/build/**'
+          ) }}
         restore-keys: |
           ${{ runner.os }}-${{ env.BUILD_TYPE }}-acados-
 
