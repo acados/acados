@@ -62,6 +62,7 @@ typedef struct
     int watchdog_zero_slacks_max; // number of consecutive BYRD_OMOJOKUN iterations with zero slacks before switching back to NOMINAL_QP
     bool allow_direction_mode_switch_to_nominal; // if true, mode can switch from Byrd-Omojokun to nominal mode
     double feasibility_qp_hessian_scalar; // multiplication factor of feasibility QP Hessian
+    double byrd_omojokon_slack_relaxation_factor; // multiplication factor of slack variables in Byrd-Omojokun bound factor
 } ocp_nlp_sqp_wfqp_opts;
 
 

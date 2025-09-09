@@ -97,6 +97,7 @@ class AcadosOcpOptions:
         self.__exact_hess_constr = 1
         self.__eval_residual_at_max_iter = None
         self.__use_constraint_hessian_in_feas_qp = False
+        self.__byrd_omojokon_slack_relaxation_factor = 1.00001
         self.__search_direction_mode = 'NOMINAL_QP'
         self.__allow_direction_mode_switch_to_nominal = True
         self.__fixed_hess = 0
@@ -1154,6 +1155,16 @@ class AcadosOcpOptions:
         return self.__use_constraint_hessian_in_feas_qp
 
     @property
+    def byrd_omojokon_slack_relaxation_factor(self):
+        """
+        Multiplication factor in Byrd-Omojokun bounds setup. Reduces ill-conditioning,
+        but can allow convergence to unwanted infeasible stationary points.
+        Type: double, >=1
+        Default: 1.00001
+        """
+        return self.__byrd_omojokon_slack_relaxation_factor
+
+    @property
     def search_direction_mode(self):
         """
         Determines how the search direction should be calculated in the initial
@@ -1728,6 +1739,16 @@ class AcadosOcpOptions:
             self.__use_constraint_hessian_in_feas_qp = use_constraint_hessian_in_feas_qp
         else:
             raise TypeError(f'Invalid datatype for use_constraint_hessian_in_feas_qp. Should be bool, got {type(use_constraint_hessian_in_feas_qp)}')
+
+    @byrd_omojokon_slack_relaxation_factor.setter
+    def byrd_omojokon_slack_relaxation_factor(self, byrd_omojokon_slack_relaxation_factor):
+        if isinstance(byrd_omojokon_slack_relaxation_factor, float):
+            if byrd_omojokon_slack_relaxation_factor >= 1.0:
+                self.__byrd_omojokon_slack_relaxation_factor = byrd_omojokon_slack_relaxation_factor
+            else:
+                raise ValueError(f'Invalid float for byrd_omojokon_slack_relaxation_factor. Must be >=1.0, got {byrd_omojokon_slack_relaxation_factor}')
+        else:
+            raise TypeError(f'Invalid datatype for search_direction_mode. Should be float, got {type(byrd_omojokon_slack_relaxation_factor)}')
 
     @search_direction_mode.setter
     def search_direction_mode(self, search_direction_mode):

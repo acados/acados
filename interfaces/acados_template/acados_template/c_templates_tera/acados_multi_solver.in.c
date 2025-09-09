@@ -2427,6 +2427,9 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
 {%- endif %}
 
 {%- if solver_options.nlp_solver_type == "SQP_WITH_FEASIBLE_QP" %}
+double byrd_omojokon_slack_relaxation_factor = {{ solver_options.byrd_omojokon_slack_relaxation_factor }};
+ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "byrd_omojokon_slack_relaxation_factor", &byrd_omojokon_slack_relaxation_factor);
+
 bool use_constraint_hessian_in_feas_qp = {{ solver_options.use_constraint_hessian_in_feas_qp }};
 ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "use_constraint_hessian_in_feas_qp", &use_constraint_hessian_in_feas_qp);
 
