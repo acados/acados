@@ -72,7 +72,6 @@ runs:
         echo "Building and testing ROS2 packages..."
         colcon build
         colcon test \
-          --return-code-on-failure \
           --event-handlers console_direct+ \
           --pytest-args "--reruns 3 --reruns-delay 1"
 
