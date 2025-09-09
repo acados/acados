@@ -98,7 +98,6 @@ void {{ ClassName }}::initialize_solver() {
     ocp_nlp_in_ = {{ model.name }}_acados_get_nlp_in(ocp_capsule_);
     ocp_nlp_out_ = {{ model.name }}_acados_get_nlp_out(ocp_capsule_);
     ocp_nlp_opts_ = {{ model.name }}_acados_get_nlp_opts(ocp_capsule_);
-    RCLCPP_INFO(this->get_logger(), "acados solver created successfully.");
 
     this->set_cost_weights();
     this->set_constraints();
