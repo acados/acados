@@ -31,11 +31,11 @@
 
 # authors: Katrin Baumgaertner, Jonathan Frey
 
-from acados_template import AcadosOcp, AcadosOcpSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosCasadiOcpSolver
 from scipy.linalg import block_diag
 import numpy as np
 from casadi import vertcat
-
+from typing import Union
 
 class MpcCstrParameters:
     def __init__(self, xs: np.ndarray, us: np.ndarray, dt: float = 0.25, linear_mpc: bool = False, N: int = 16, Tf: float = 4.0):
@@ -58,10 +58,13 @@ class MpcCstrParameters:
 def setup_acados_ocp_solver(
     model, mpc_params: MpcCstrParameters,
     cstr_params,
-    use_rti=False,
     reference_profile=None,
-    cost_integration=False
-):
+    solver_type: str = "SQP",
+) -> Union[AcadosOcpSolver, AcadosCasadiOcpSolver]:
+
+    # sanity checks
+    if solver_type not in ["SQP", "SQP_RTI", "IPOPT"]:
+        raise ValueError(f"solver_type '{solver_type}' not supported. Choose 'SQP', 'SQP_RTI' or 'IPOPT'.")
 
     ocp = AcadosOcp()
 
@@ -94,8 +97,6 @@ def setup_acados_ocp_solver(
         ocp.model.cost_y_expr -= reference_profile
         ocp.model.cost_y_expr_e -= reference_profile[:nx]
         ocp.parameter_values = np.concatenate((ocp.parameter_values, np.array([0.0])))
-    if cost_integration:
-        ocp.solver_options.cost_discretization = "INTEGRATOR"
 
     ocp.cost.yref = np.zeros((nx + nu,))
     ocp.cost.yref_e = np.zeros((nx,))
@@ -107,32 +108,31 @@ def setup_acados_ocp_solver(
 
     ocp.constraints.x0 = cstr_params.xs
 
-    # set options
-    ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"  # FULL_CONDENSING_QPOASES
-    # PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM,
-    # PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP
-    # ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
-    ocp.solver_options.qp_solver_cond_N = mpc_params.N  # for partial condensing
-
-    ocp.solver_options.hessian_approx = "GAUSS_NEWTON"
-    # ocp.solver_options.print_level = 1
-    if use_rti:
-        ocp.solver_options.nlp_solver_type = "SQP_RTI"  # SQP_RTI, SQP
-    else:
-        ocp.solver_options.nlp_solver_type = "SQP"  # SQP_RTI, SQP
-
+    # discretization options
     if mpc_params.linear_mpc:
         ocp.solver_options.integrator_type = "DISCRETE"
     else:
-        ocp.solver_options.integrator_type = "IRK"
+        ocp.solver_options.integrator_type = "ERK"
         ocp.solver_options.sim_method_num_stages = 4
         ocp.solver_options.sim_method_num_steps = 1  # 5
 
+    # solver options
+    ocp.solver_options.qp_solver_cond_N = mpc_params.N  # for partial condensing
+    ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"
+
+    ocp.solver_options.hessian_approx = "GAUSS_NEWTON"
+    # ocp.solver_options.print_level = 1
+    if solver_type == "SQP_RTI":
+        ocp.solver_options.nlp_solver_type = "SQP_RTI"
+    else:
+        ocp.solver_options.nlp_solver_type = "SQP"
     ocp.solver_options.levenberg_marquardt = 1e-5
-    # ocp.solver_options.tol = 1e-3
 
     # create
-    ocp_solver = AcadosOcpSolver(ocp, json_file="acados_ocp.json")
+    if solver_type == "IPOPT":
+        ocp_solver = AcadosCasadiOcpSolver(ocp)
+    else:
+        ocp_solver = AcadosOcpSolver(ocp)
 
     return ocp_solver
 

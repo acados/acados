@@ -157,6 +157,9 @@ if(ACADOS_PYTHON)
     add_test(NAME python_test_reset
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python reset_test.py)
+    add_test(NAME python_test_static_lib
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
+        python static_lib_test.py)
     add_test(NAME python_test_reset_timing
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/timing_example
         python reset_timing.py)
@@ -393,6 +396,9 @@ add_test(NAME python_pendulum_ocp_example_cmake
     add_test(NAME python_test_casadi_LICQ_violation
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/casadi_tests
         python test_casadi_LICQ_violation.py)
+    add_test(NAME python_test_casadi_closed_loop
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/casadi_tests
+        python test_casadi_closed_loop.py)
 
     # Sim
     add_test(NAME python_pendulum_ext_sim_example
@@ -479,6 +485,7 @@ add_test(NAME python_pendulum_ocp_example_cmake
     set_tests_properties(python_test_casadi_slack_in_h PROPERTIES DEPENDS python_test_casadi_constraint)
     set_tests_properties(python_test_casadi_single_shooting PROPERTIES DEPENDS python_test_casadi_slack_in_h)
     set_tests_properties(python_test_casadi_LICQ_violation PROPERTIES DEPENDS python_test_casadi_single_shooting)
+    set_tests_properties(python_test_casadi_closed_loop PROPERTIES DEPENDS python_test_casadi_LICQ_violation)
 
     # Directory getting_started
     set_tests_properties(python_pendulum_sim_example PROPERTIES DEPENDS python_pendulum_ocp_example)
@@ -502,6 +509,8 @@ add_test(NAME python_pendulum_ocp_example_cmake
     set_tests_properties(python_regularization_test PROPERTIES DEPENDS python_test_sim_dae)
     set_tests_properties(python_test_sim_dae PROPERTIES DEPENDS python_sparse_param_test)
     set_tests_properties(python_sparse_param_test PROPERTIES DEPENDS python_test_detect_constraints)
+    set_tests_properties(python_test_detect_constraints PROPERTIES DEPENDS python_test_static_lib)
+    set_tests_properties(python_test_static_lib PROPERTIES DEPENDS python_pcond_getters_test)
 
     if(ACADOS_WITH_OSQP)
         set_tests_properties(python_test_detect_constraints PROPERTIES DEPENDS python_OSQP_test)

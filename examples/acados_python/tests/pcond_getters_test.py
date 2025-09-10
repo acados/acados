@@ -34,9 +34,10 @@ def plot_qp_sparsity(qp, fig_filename=None, title=None, with_legend=True):
             H_xu[offset+nx:offset + nx + nu, offset:offset + nx] = stage["S"]
             H_xu[offset:offset + nx, offset+nx:offset + nx + nu] = stage["S"].T
         offset += nx + nu
-    plt.spy(H_xu, markersize=5, label='$S$', color='C2')
-    plt.spy(H_x, markersize=5, label='$Q$', color='C0')
-    plt.spy(H_u, markersize=5, label='$R$', color='C1')
+    markersize = 5 * (40 / nv_total)
+    plt.spy(H_xu, markersize=markersize, label='$S$', color='C2')
+    plt.spy(H_x, markersize=markersize, label='$Q$', color='C0')
+    plt.spy(H_u, markersize=markersize, label='$R$', color='C1')
     # remove xticks
     plt.xticks([])
     if with_legend:

@@ -29,8 +29,6 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-# authors: Katrin Baumgaertner, Jonathan Frey
-
 import matplotlib.pyplot as plt
 import numpy as np
 from acados_template import latexify_plot
