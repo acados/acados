@@ -445,9 +445,6 @@ void {{ ClassName }}::apply_all_parameters_to_solver() {
     for (auto & kv : parameter_handlers_) {
         const auto & name = kv.first;
         if (!this->has_parameter(name)) continue;
-        RCLCPP_ERROR(this->get_logger(),
-                "Trying to set param '%s'",
-                name.c_str());
         auto param = this->get_parameter(name);
         kv.second(param, res);
         if (!res.successful) {
