@@ -1,2 +1,2 @@
-from .ocp_node import AcadosOcpRos
+from .ocp_node import AcadosOcpRosOptions
 from .utils import ArchType, ControlLoopExec

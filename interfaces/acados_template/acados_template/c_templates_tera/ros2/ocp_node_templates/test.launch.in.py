@@ -1,4 +1,3 @@
-import os
 import re
 from typing import Union
 from unittest import result
@@ -9,10 +8,8 @@ import time
 import launch_testing
 import pytest
 import subprocess
-from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
 
-# Platzhalter für die Nachrichten-Typen
 from {{ ros_opts.package_name }}_interface.msg import State, ControlInput, References
 {%- if dims.np > 0 -%}
 , Parameters
@@ -77,7 +74,7 @@ class GeneratedNodeTest(unittest.TestCase):
         # --- Weights ---
         {%- for field, param in cost %}
         {%- if param and (field is starting_with('W')) %}
-        param_name = "{{ ros_opts.package_name }}.weights.{{ field }}"
+        param_name = "{{ ros_opts.package_name }}.cost.{{ field }}"
         expected_value = [
         {%- set n_diag = param | length -%}
         {%- for i in range(end=n_diag) -%}
@@ -94,7 +91,7 @@ class GeneratedNodeTest(unittest.TestCase):
         {%- for field, param in cost %}
         {%- set field_l = field | lower %}
         {%- if param and (field_l is starting_with('z')) %}
-        param_name = "{{ ros_opts.package_name }}.slacks.{{ field }}"
+        param_name = "{{ ros_opts.package_name }}.cost.{{ field }}"
         expected_value = [{{- param | join(sep=', ') -}}]
         self.__check_parameter_set(param_name, expected_value)
         {%- endif %}
@@ -102,7 +99,7 @@ class GeneratedNodeTest(unittest.TestCase):
         {%- endif %}
 
         # --- Solver Options ---
-        param_name = "{{ ros_opts.package_name }}.solver_options.Tsim"
+        param_name = "{{ ros_opts.package_name }}.ts"
         expected_value = {{ solver_options.Tsim }}
         self.__check_parameter_set(param_name, expected_value)
 

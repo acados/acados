@@ -27,14 +27,14 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from .utils import ControlLoopExec, ArchType, AcadosRosBase
+from .utils import ControlLoopExec, ArchType, AcadosRosBaseOptions
 
 # --- Ros Options ---
-class AcadosOcpRos(AcadosRosBase):
+class AcadosOcpRosOptions(AcadosRosBaseOptions):
     def __init__(self):
         super().__init__()
         self._package_name: str = "acados_ocp"
-        self._node_name: str = "acados_ocp_node"
+        self._node_name: str = ""
         self._namespace: str = ""
         self._archtype: str = ArchType.NODE.value
         self._control_loop_executor: str = ControlLoopExec.TIMER.value
@@ -44,7 +44,7 @@ class AcadosOcpRos(AcadosRosBase):
 
 
 if __name__ == "__main__":
-    ros_opt = AcadosOcpRos()
+    ros_opt = AcadosOcpRosOptions()
 
     ros_opt.node_name = "my_node"
     ros_opt.package_name = "that_package"

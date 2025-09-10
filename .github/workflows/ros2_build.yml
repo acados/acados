@@ -23,21 +23,10 @@ jobs:
       with:
         submodules: 'recursive'
 
-    # Does not work, because of dependencies not correctly installed/cached
-    # - name: Cache ROS installation
-    #   id: cache-ros
-    #   uses: actions/cache@v4
-    #   with:
-    #     path: /opt/ros/humble
-    #     key: ${{ runner.os }}-ros-humble-${{ hashFiles('.github/linux/install_ros2_humble.sh') }}
-      
     - name: Install ROS2 Humble
       working-directory: ${{ github.workspace }}
       run: ${{ github.workspace }}/.github/linux/install_ros2_humble.sh
       shell: bash
-
-    - name: Install System Dependencies
-      uses: ./.github/actions/setup-system-dependencies
 
     - name: Setup Test Environment
       uses: ./.github/actions/setup-test-environment

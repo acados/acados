@@ -4,7 +4,7 @@
     <name>{{ ros_opts.package_name }}</name>
     <version>0.1.0</version>
     <description>A Generic ROS2 node for the acados solver</description>
-    <maintainer email="acados.ros@email.com"> Acados Ros</maintainer>
+    <maintainer email="josua.lindemann@outlook.de">Josua Lindemann</maintainer>
     <license>MIT</license>
 
     <buildtool_depend>ament_cmake</buildtool_depend>
@@ -12,7 +12,6 @@
     <depend>rclcpp</depend>
     <depend>std_msgs</depend>
     <depend>{{ ros_opts.package_name }}_interface</depend>
-
 
     <test_depend>launch_testing</test_depend>
     <test_depend>launch_testing_ament_cmake</test_depend>
