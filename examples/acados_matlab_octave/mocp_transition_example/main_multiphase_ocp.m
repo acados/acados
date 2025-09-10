@@ -37,7 +37,7 @@ N_horizon = sum(N_list);
 % create_multiphase_ocp_solver
 ocp = AcadosMultiphaseOcp(N_list);
 
-phase_1 = formulate_double_integrator_ocp(settings);
+phase_1 = formulate_double_integrator_ocp(settings, 1);
 ocp.set_phase(phase_1, 1);
 
 phase_2 = AcadosOcp();
@@ -50,7 +50,7 @@ phase_2.cost.W = diag([settings.L2_COST_P, 1e-1 * settings.L2_COST_V]);
 phase_2.cost.yref = zeros(2, 1);
 ocp.set_phase(phase_2, 2);
 
-phase_3 = formulate_single_integrator_ocp(settings);
+phase_3 = formulate_single_integrator_ocp(settings, 1);
 ocp.set_phase(phase_3, 3);
 
 % set mocp specific options
