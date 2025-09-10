@@ -17,13 +17,8 @@
 #include "std_msgs/msg/header.hpp"
 
 // Acados includes
-#include "acados/utils/print.h"
-#include "acados/utils/math.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados_c/ocp_nlp_interface.h"
-#include "acados_c/external_function_interface.h"
-#include "blasfeo_d_aux_ext_dep.h"
 #include "acados_solver_{{ model.name }}.h"
 
 // Package includes
