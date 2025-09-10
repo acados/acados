@@ -5,6 +5,17 @@ namespace {{ ros_opts.package_name }}
 
 {%- set ClassName = ros_opts.node_name | replace(from="_", to=" ") | title | replace(from=" ", to="") %}
 {%- set ns = ros_opts.namespace | lower | trim(chars='/') | replace(from=" ", to="_") %}
+{%- if ns %}
+{%- set control_input_topic = "/" ~ ros_opts.namespace ~ "/control_input" %}
+{%- set state_topic = "/" ~ ros_opts.namespace ~ "/state" %}
+{%- set references_topic = "/" ~ ros_opts.namespace ~ "/references" %}
+{%- set parameters_topic = "/" ~ ros_opts.namespace ~ "/parameters" %}
+{%- else %}
+{%- set control_input_topic = "/control_input" %}
+{%- set state_topic = "/state" %}
+{%- set references_topic = "/references" %}
+{%- set parameters_topic = "/parameters" %}
+{%- endif %}
 {%- set has_slack = dims.ns > 0 or dims.ns_0 > 0 or dims.ns_e > 0 %}
 {{ ClassName }}::{{ ClassName }}()
     : Node("{{ ros_opts.node_name }}")
@@ -27,53 +38,33 @@ namespace {{ ros_opts.package_name }}
     {%- endif %}
 
     // --- Parameters ---
-    this->setup_parameter_handlers();
     this->declare_parameters();
-    this->load_parameters();
-    this->log_parameters();
+    this->setup_parameter_handlers();
     param_callback_handle_ = this->add_on_set_parameters_callback(
-        std::bind(&{{ ClassName }}::on_parameter_update, this, std::placeholders::_1)
-    );
+        std::bind(&{{ ClassName }}::on_parameter_update, this, std::placeholders::_1));
+    this->load_parameters();
 
     // --- Subscriber ---
-    {%- if ns %}
-    {%- set state_topic = "/" ~ ros_opts.namespace ~ "/state" %}
-    {%- else %}
-    {%- set state_topic = "/state" %}
-    {%- endif %}
     state_sub_ = this->create_subscription<{{ ros_opts.package_name }}_interface::msg::State>(
         "{{ state_topic }}", 10,
         std::bind(&{{ ClassName }}::state_callback, this, std::placeholders::_1));
-    {%- if ns %}
-    {%- set references_topic = "/" ~ ros_opts.namespace ~ "/references" %}
-    {%- else %}
-    {%- set references_topic = "/references" %}
-    {%- endif %}
     references_sub_ = this->create_subscription<{{ ros_opts.package_name }}_interface::msg::References>(
         "{{ references_topic }}", 10,
         std::bind(&{{ ClassName }}::references_callback, this, std::placeholders::_1));
-    {%- if ns %}
-    {%- set parameters_topic = "/" ~ ros_opts.namespace ~ "/parameters" %}
-    {%- else %}
-    {%- set parameters_topic = "/parameters" %}
-    {%- endif %}
+    {%- if dims.np > 0 %}
     parameters_sub_ = this->create_subscription<{{ ros_opts.package_name }}_interface::msg::Parameters>(
         "{{ parameters_topic }}", 10,
         std::bind(&{{ ClassName }}::parameters_callback, this, std::placeholders::_1));
-
+    {%- endif %}
 
     // --- Publisher ---
-    {%- if ns %}
-    {%- set input_topic = "/" ~ ros_opts.namespace ~ "/control_input" %}
-    {%- else %}
-    {%- set input_topic = "/control_input" %}
-    {%- endif %}
     control_input_pub_ = this->create_publisher<{{ ros_opts.package_name }}_interface::msg::ControlInput>(
-        "{{ input_topic }}", 10);
+        "{{ control_input_topic }}", 10);
 
     // --- Init solver ---
     this->initialize_solver();
-    this->start_control_timer({{ solver_options.Tsim }});
+    this->apply_all_parameters_to_solver();
+    this->start_control_timer(config_.ts);
 }
 
 {{ ClassName }}::~{{ ClassName }}() {
@@ -106,20 +97,14 @@ void {{ ClassName }}::initialize_solver() {
     ocp_nlp_out_ = {{ model.name }}_acados_get_nlp_out(ocp_capsule_);
     ocp_nlp_opts_ = {{ model.name }}_acados_get_nlp_opts(ocp_capsule_);
 
-    this->set_cost_weights();
-    this->set_constraints();
-    {%- if has_slack %}
-    void set_slack_weights();
-    {%- endif %}
-
-    RCLCPP_INFO(this->get_logger(), "Acados solver initialized successfully.");
+    RCLCPP_INFO(this->get_logger(), "acados solver initialized successfully.");
 }
 
 void {{ ClassName }}::control_loop() {
     // TODO: check for received msgs first
-    std::array<double, {{ model.name | upper }}_NX> x0{}; 
+    std::array<double, {{ model.name | upper }}_NX> x0{};
     {%- if dims.ny_0 > 0 %}
-    std::array<double, {{ model.name | upper }}_NY0> yref0{}; 
+    std::array<double, {{ model.name | upper }}_NY0> yref0{};
     {%- endif %}
     {%- if dims.ny > 0 %}
     std::array<double, {{ model.name | upper }}_NY> yref{};
@@ -146,8 +131,8 @@ void {{ ClassName }}::control_loop() {
         {%- if dims.np > 0 %}
         p = current_p_;
         {%- endif %}
-    } 
-    
+    }
+
     // Update solver
     this->set_x0(x0.data());
 
@@ -182,20 +167,25 @@ void {{ ClassName }}::control_loop() {
 }
 
 void {{ ClassName }}::solver_status_behaviour(int status) {
+    // publish u0 also if the solver failed
+    this->get_input(u0_.data(), 0);
+    this->publish_input(u0_, status);
+    
+    {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
+    // prepare for next iteration
     if (status == ACADOS_SUCCESS) {
-        this->get_input(u0_.data(), 0);
-        this->publish_input(u0_, status);
-        {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
         first_solve_ = false;
         this->prepare_rti_solve();
-        {%- endif %}
-    } else {
-        this->publish_input(u0_default_, status);
-        if (status == ACADOS_NAN_DETECTED) agilex_acados_reset(ocp_capsule_, 1);
-        {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
+    } 
+    else {
         first_solve_ = true;
-        {%- endif %}
     }
+    {%- endif %}
+
+    // reset solver if nan is detected
+    if (status == ACADOS_NAN_DETECTED) {
+        {{ model.name }}_acados_reset(ocp_capsule_, 1);
+    } 
 }
 
 
@@ -239,45 +229,165 @@ void {{ ClassName }}::publish_input(const std::array<double, {{ model.name | upp
 
 // --- Parameter Handling Methods ---
 void {{ ClassName }}::setup_parameter_handlers() {
-    // Constraints
+    {%- if dims.nh_0 > 0 or dims.nphi_0 > 0 or dims.nsh_0 > 0 or dims.nsphi_0 > 0 %}
+    // Initial Constraints
     {%- for field, param in constraints %}
-    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and ('bx_0' not in field) %}
+    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and (field is ending_with('_0')) and ('bx_0' not in field) %}
+    {%- set suffix = "" %}
+    {%- if "h" in field and "s" not in field %}
+        {%- set suffix = "_NH0" %}
+    {%- elif "phi" in field and "s" not in field %}
+        {%- set suffix = "_NPHI0" %}
+    {%- elif "h" in field and "s" in field %}
+        {%- set suffix = "_NSH0" %}
+    {%- elif "phi" in field and "s" in field %}
+        {%- set suffix = "_NSPHI0" %}
+    {%- endif %}
+    {%- set constraint_size = model.name ~ suffix | upper %}
     parameter_handlers_["{{ ros_opts.package_name }}.constraints.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            update_param_array(p, this->config_.constraints.{{ field }}, res);
+            this->update_constraint<{{ constraint_size }}>(p, res, "{{ field }}", std::vector<int>{0});
         };
     {%- endif %}
     {%- endfor %}
+    {%- endif %}
+    {%- if dims.nbu > 0 or dims.nbx > 0 or dims.ng > 0 or dims.nh > 0 or dims.nphi > 0 or dims.nsbx > 0 or dims.nsg > 0 or dims.nsh > 0 or dims.nsphi > 0 %}
+
+    // Stage Constraints
+    {%- for field, param in constraints %}
+    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and (field is not ending_with('_0')) and (field is not ending_with('_e')) %}
+    {%- set suffix = "" %}
+    {%- if "x" in field and "s" not in field %}
+        {%- set suffix = "_NBX" %}
+    {%- elif "u" in field and "s" not in field %}
+        {%- set suffix = "_NBU" %}
+    {%- elif "h" in field and "s" not in field %}
+        {%- set suffix = "_NH" %}
+    {%- elif "phi" in field and "s" not in field %}
+        {%- set suffix = "_NPHI" %}
+    {%- elif "g" in field and "s" not in field %}
+        {%- set suffix = "_NG" %}
+    {%- elif "x" in field and "s" in field %}
+        {%- set suffix = "_NSBX" %}
+    {%- elif "u" in field and "s" in field %}
+        {%- set suffix = "_NSBU" %}
+    {%- elif "h" in field and "s" in field %}
+        {%- set suffix = "_NSH" %}
+    {%- elif "phi" in field and "s" in field %}
+        {%- set suffix = "_NSPHI" %}
+    {%- elif "g" in field and "s" in field %}
+        {%- set suffix = "_NSG" %}
+    {%- endif %}
+    {%- set constraint_size = model.name ~ suffix | upper %}
+    parameter_handlers_["{{ ros_opts.package_name }}.constraints.{{ field }}"] =
+        [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
+            auto stages = range(1, {{ model.name | upper }}_N);
+            this->update_constraint<{{ constraint_size }}>(p, res, "{{ field }}", stages);
+        };
+    {%- endif %}
+    {%- endfor %}
+    {%- endif %}
+    {%- if dims.nbx_e > 0 or dims.ng_e > 0 or dims.nh_e > 0 or dims.nphi_e > 0 or dims.nsbx_e > 0 or dims.nsg_e > 0 or dims.nsh_e > 0 or dims.nsphi_e > 0 %}
+
+    // Terminal Constraints
+    {%- for field, param in constraints %}
+    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and (field is ending_with('_e')) %}
+    {%- set suffix = "" %}
+    {%- if "x" in field and "s" not in field %}
+        {%- set suffix = "_NBXN" %}
+    {%- elif "h" in field and "s" not in field %}
+        {%- set suffix = "_NHN" %}
+    {%- elif "phi" in field and "s" not in field %}
+        {%- set suffix = "_NPHIN" %}
+    {%- elif "g" in field and "s" not in field %}
+        {%- set suffix = "_NGN" %}
+    {%- elif "x" in field and "s" in field %}
+        {%- set suffix = "_NSBXN" %}
+    {%- elif "h" in field and "s" in field %}
+        {%- set suffix = "_NSHN" %}
+    {%- elif "phi" in field and "s" in field %}
+        {%- set suffix = "_NSPHIN" %}
+    {%- elif "g" in field and "s" in field %}
+        {%- set suffix = "_NSGN" %}
+    {%- endif %}
+    {%- set constraint_size = model.name ~ suffix | upper %}
+    parameter_handlers_["{{ ros_opts.package_name }}.constraints.{{ field }}"] =
+        [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
+            this->update_constraint<{{ constraint_size }}>(p, res, "{{ field }}", std::vector<int>{ {{- model.name | upper -}}_N});
+        };
+    {%- endif %}
+    {%- endfor %}
+    {%- endif %}
 
     // Weights
-    {%- for field, param in cost %}
-    {%- if param and (field is starting_with('W')) %}
-    parameter_handlers_["{{ ros_opts.package_name }}.weights.{{ field }}"] =
+    {%- if dims.ny_0 > 0 %}
+    parameter_handlers_["{{ ros_opts.package_name }}.cost.W_0"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            update_param_array(p, this->config_.weights.{{ field }}, res);
+            this->update_cost<{{ model.name | upper }}_NY0>(p, res, "W", std::vector<int>{0});
         };
     {%- endif %}
-    {%- endfor %}
+    {%- if dims.ny > 0 %}
+    parameter_handlers_["{{ ros_opts.package_name }}.cost.W"] =
+        [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
+            auto stages = range(1, {{ model.name | upper }}_N);
+            this->update_cost<{{ model.name | upper }}_NY>(p, res, "W", stages);
+        };
+    {%- endif %}
+    {%- if dims.ny_e > 0 %}
+    parameter_handlers_["{{ ros_opts.package_name }}.cost.W_e"] =
+        [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
+            this->update_cost<{{ model.name | upper }}_NYN>(p, res, "W", std::vector<int>{ {{- model.name | upper -}}_N});
+        };
+    {%- endif %}
     {%- if has_slack %}
 
-    // Slacks
+    {%- if dims.ns_0 > 0 %}
+    // Initial Slacks
     {%- for field, param in cost %}
     {%- set field_l = field | lower %}
-    {%- if param and (field_l is starting_with('z')) %}
-    parameter_handlers_["{{ ros_opts.package_name }}.slacks.{{ field }}"] =
+    {%- if param and (field_l is starting_with('z')) and (field is ending_with('_0')) %}
+    parameter_handlers_["{{ ros_opts.package_name }}.cost.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            update_param_array(p, this->config_.slacks.{{ field }}, res);
+            this->update_cost<{{ model.name | upper }}_NS0>(p, res, "{{ field }}", std::vector<int>{0});
         };
     {%- endif %}
     {%- endfor %}
+
+    {%- endif %}
+    {%- if dims.ns > 0 %}
+    // Stage Slacks
+    {%- for field, param in cost %}
+    {%- set field_l = field | lower %}
+    {%- if param and (field_l is starting_with('z')) and (field is not ending_with('_0')) and (field is not ending_with('_e')) %}
+    parameter_handlers_["{{ ros_opts.package_name }}.cost.{{ field }}"] =
+        [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
+            auto stages = range(1, {{ model.name | upper }}_N);
+            this->update_cost<{{ model.name | upper }}_NS>(p, res, "{{ field }}", stages);
+        };
+    {%- endif %}
+    {%- endfor %}
+    {%- endif %}
+    {%- if dims.ns_e > 0 %}
+
+    // Terminal Slacks
+    {%- for field, param in cost %}
+    {%- set field_l = field | lower %}
+    {%- if param and (field_l is starting_with('z')) and (field is ending_with('_e')) %}
+    parameter_handlers_["{{ ros_opts.package_name }}.cost.{{ field }}"] =
+        [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
+            this->update_cost<{{ model.name | upper }}_NSN>(p, res, "{{ field }}", std::vector<int>{ {{- model.name | upper -}}_N});
+        };
+    {%- endif %}
+    {%- endfor %}
+    {%- endif %}
     {%- endif %}
 
     // Solver Options
-    parameter_handlers_["{{ ros_opts.package_name }}.solver_options.Tsim"] =
+    parameter_handlers_["{{ ros_opts.package_name }}.ts"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            this->config_.solver_options.Tsim = p.as_double();
+            this->config_.ts = p.as_double();
             try {
-                this->start_control_timer(this->config_.solver_options.Tsim);
+                this->start_control_timer(this->config_.ts);
             } catch (const std::exception& e) {
                 res.reason = "Failed to start control timer, while setting parameter '" + p.get_name() + "': " + e.what();
                 res.successful = false;
@@ -296,7 +406,7 @@ void {{ ClassName }}::declare_parameters() {
     // Weights
     {%- for field, param in cost %}
     {%- if param and (field is starting_with('W')) %}
-    this->declare_parameter("{{ ros_opts.package_name }}.weights.{{ field }}", std::vector<double>{
+    this->declare_parameter("{{ ros_opts.package_name }}.cost.{{ field }}", std::vector<double>{
         {%- set n_diag = param | length -%}
         {%- for i in range(end=n_diag) -%}
             {{- param[i][i] -}}
@@ -311,78 +421,44 @@ void {{ ClassName }}::declare_parameters() {
     {%- for field, param in cost %}
     {%- set field_l = field | lower %}
     {%- if param and (field_l is starting_with('z')) %}
-    this->declare_parameter("{{ ros_opts.package_name }}.slacks.{{ field }}", std::vector<double>{ {{- param | join(sep=', ') -}} });
+    this->declare_parameter("{{ ros_opts.package_name }}.cost.{{ field }}", std::vector<double>{ {{- param | join(sep=', ') -}} });
     {%- endif %}
     {%- endfor %}
     {%- endif %}
 
     // Solver Options
-    this->declare_parameter("{{ ros_opts.package_name }}.solver_options.Tsim", {{ solver_options.Tsim }});
+    this->declare_parameter("{{ ros_opts.package_name }}.ts", {{ solver_options.Tsim }});
 }
 
 void {{ ClassName }}::load_parameters() {
-    // Constraints
-    {%- for field, param in constraints %}
-    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and ('bx_0' not in field) %}
-    get_and_check_array_param(this, "{{ ros_opts.package_name }}.constraints.{{ field }}", config_.constraints.{{ field }});
-    {%- endif %}
-    {%- endfor %}
-
-    // Weights
-    {%- for field, param in cost %}
-    {%- if param and (field is starting_with('W')) %}
-    get_and_check_array_param(this, "{{ ros_opts.package_name }}.weights.{{ field }}", config_.weights.{{ field }});
-    {%- endif %}
-    {%- endfor %}
-    {%- if has_slack %}
-
-    // Slacks
-    {%- for field, param in cost %}
-    {%- set field_l = field | lower %}
-    {%- if param and (field_l is starting_with('z')) %}
-    get_and_check_array_param(this, "{{ ros_opts.package_name }}.slacks.{{ field }}", config_.slacks.{{ field }});
-    {%- endif %}
-    {%- endfor %}
-    {%- endif %}
-
-    // Solver Options
-    this->get_parameter("{{ ros_opts.package_name }}.solver_options.Tsim", config_.solver_options.Tsim);
+    this->get_parameter("{{ ros_opts.package_name }}.ts", config_.ts);
 }
 
-void {{ ClassName }}::log_parameters() {
-    const int label_width = 25;
-    std::stringstream ss;
+void {{ ClassName }}::apply_all_parameters_to_solver() {
+    if (!ocp_capsule_) {
+        RCLCPP_WARN(this->get_logger(), "apply_all_parameters_to_solver() called before solver init.");
+        return;
+    }
+    rcl_interfaces::msg::SetParametersResult res;
+    res.successful = true;
 
-    ss << "\n----- {{ model.name | upper }} MPC Configuration -----";
-    // Constraints
-    {%- for field, param in constraints %}
-    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and ('bx_0' not in field) %}
-    ss << "\n" << std::left << std::setw(label_width) << "{{ field }}" << " = " << config_.constraints.{{ field }};
-    {%- endif %}
-    {%- endfor %}
-
-    // Weights
-    {%- for field, param in cost %}
-    {%- if param and (field is starting_with('W')) %}
-    ss << "\n" << std::left << std::setw(label_width) << "{{ field }}" << " = " << config_.weights.{{ field }};
-    {%- endif %}
-    {%- endfor %}
-    {%- if has_slack %}
-
-    // Slacks
-    {%- for field, param in cost %}
-    {%- set field_l = field | lower %}
-    {%- if param and (field_l is starting_with('z')) %}
-    ss << "\n" << std::left << std::setw(label_width) << "{{ field }}" << " = " << config_.slacks.{{ field }};
-    {%- endif %}
-    {%- endfor %}
-    {%- endif %}
-    
-    // Solver Options
-    ss << "\n" << std::left << std::setw(label_width) << "Tsim" << " = " << config_.solver_options.Tsim;
-    ss << "\n" << "--------------------------------------";
-
-    RCLCPP_DEBUG(this->get_logger(), "%s", ss.str().c_str());
+    for (auto & kv : parameter_handlers_) {
+        const auto & name = kv.first;
+        if (!this->has_parameter(name)) continue;
+        RCLCPP_ERROR(this->get_logger(),
+                "Trying to set param '%s'",
+                name.c_str());
+        auto param = this->get_parameter(name);
+        kv.second(param, res);
+        if (!res.successful) {
+            RCLCPP_ERROR(this->get_logger(),
+                "Failed to apply initial parameter '%s': %s",
+                name.c_str(), res.reason.c_str());
+            // reset flag for next parameter
+            res.successful = true;
+            res.reason.clear();
+        }
+    }
 }
 
 rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(
@@ -396,23 +472,115 @@ rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(
 
         if (parameter_handlers_.count(param_name)) {
             parameter_handlers_.at(param_name)(param, result);
+            if (!result.successful) break;
         } else {
             result.reason = "Update for unknown parameter '%s' received.", param_name.c_str();
             result.successful = false;
         }
     }
-
-    if (result.successful){
-        this->set_constraints();
-        this->set_cost_weights();
-        {% if has_slack %}
-        this->set_slack_weights();
-        {% endif %}
-        this->log_parameters();
-    }
     return result;
 }
 
+template <size_t N>
+void {{ ClassName }}::get_and_check_array_param(
+    const std::string& param_name, 
+    std::array<double, N>& destination
+) {
+    auto param_value = this->get_parameter(param_name).as_double_array();
+
+    if (param_value.size() != N) {
+        RCLCPP_ERROR(this->get_logger(), "Parameter '%s' has the wrong size. Expected: %ld, got: %ld",
+                     param_name.c_str(), N, param_value.size());
+        return;
+    }
+    std::copy_n(param_value.begin(), N, destination.begin());
+}
+
+template <size_t N>
+void {{ ClassName }}::update_param_array(
+    const rclcpp::Parameter& param, 
+    std::array<double, N>& destination_array,
+    rcl_interfaces::msg::SetParametersResult& result
+) {
+    auto values = param.as_double_array();
+
+    if (values.size() != N) {
+        result.successful = false;
+        result.reason = "Parameter '" + param.get_name() + "' has size " +
+                        std::to_string(values.size()) + ", but expected is " + std::to_string(N) + ".";
+        return;
+    }
+
+    std::copy_n(values.begin(), N, destination_array.begin());
+}
+
+template<size_t N>
+void {{ ClassName }}::update_constraint(
+    const rclcpp::Parameter& param,
+    rcl_interfaces::msg::SetParametersResult& result,
+    const char* field,
+    const std::vector<int>& stages
+) {
+    auto values = param.as_double_array();
+
+    if (values.size() != N) {
+        result.successful = false;
+        result.reason = "Constraint '" + std::string(param.get_name()) + "' has size " +
+                      std::to_string(values.size()) + ", but expected is " + std::to_string(N) + ".";
+        return;
+    }
+    
+    std::array<double, N> vec{};
+    std::copy_n(values.begin(), N, vec.begin());
+
+    for (int stage : stages) {
+        int status = ocp_nlp_constraints_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, ocp_nlp_out_, stage, field, vec.data());
+        
+        if (status != ACADOS_SUCCESS) {
+            result.successful = false;
+            result.reason = "Acados solver failed to set cost field '" + std::string(field) + 
+                          "' for stage " + std::to_string(stage) + " (error code: " + std::to_string(status) + ")";
+            return;
+        }
+    }
+}
+
+template<size_t N>
+void {{ ClassName }}::update_cost(
+    const rclcpp::Parameter& param,
+    rcl_interfaces::msg::SetParametersResult& result,
+    const char* field,
+    const std::vector<int>& stages
+) {
+    auto values = param.as_double_array();
+    
+    if (values.size() != N) {
+        result.successful = false;
+        result.reason = "Cost '" + std::string(param.get_name()) + "' has size " +
+                      std::to_string(values.size()) + ", but expected is " + std::to_string(N) + ".";
+        return;
+    }
+
+    std::array<double, N> vec;
+    std::copy_n(values.begin(), N, vec.begin());
+    double* data_ptr = vec.data();
+
+    if (strcmp(field, "W") == 0) {
+        auto mat = diag_from_vec(vec);
+        data_ptr = mat.data();
+    }
+
+    for (int stage : stages) {
+        int status = ocp_nlp_cost_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, stage, field, data_ptr);
+        
+        if (status != ACADOS_SUCCESS) {
+            result.successful = false;
+            result.reason = "Acados solver failed to set cost field '" + std::string(field) + 
+                          "' for stage " + std::to_string(stage) + " (error code: " + std::to_string(status) + ")";
+            return;
+        }
+    }
+}
 
 // --- Helpers ---
 void {{ ClassName }}::start_control_timer(double period_seconds) {
@@ -428,7 +596,7 @@ void {{ ClassName }}::start_control_timer(double period_seconds) {
 // --- Acados Helpers ---
 {%- if solver_options.nlp_solver_type == 'SQP_RTI' %}
 void {{ ClassName }}::warmstart_solver_states(double *x0) {
-    for (int i = 1; i <= AGILEX_N; ++i) {
+    for (int i = 1; i <= {{ model.name | upper }}_N; ++i) {
         ocp_nlp_out_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_out_, ocp_nlp_in_, i, "x", x0);
     }
 }
@@ -439,7 +607,7 @@ int {{ ClassName }}::prepare_rti_solve() {
     int status = {{ model.name }}_acados_solve(ocp_capsule_);
     if (status != ACADOS_SUCCESS && status != ACADOS_READY) {
         first_solve_ = true;
-        RCLCPP_ERROR(this->get_logger(), "Solver failed at preperation phase: %d", status);
+        RCLCPP_ERROR(this->get_logger(), "Solver failed at preparation phase: %d", status);
     }
     return status;
 }
@@ -513,96 +681,10 @@ void {{ ClassName }}::set_ocp_parameters(double* p, size_t np) {
 }
 {%- endif %}
 
-void {{ ClassName }}::set_cost_weights() {
-    {%- if dims.ny_0 > 0 %}
-    auto W_0 = diag_from_vec(config_.weights.W_0);
-    ocp_nlp_cost_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, 0, "W", W_0.data());
-    {%- endif %}
-    {%- if dims.ny > 0 %}
-
-    auto W = diag_from_vec(config_.weights.W);
-    for (int i = 1; i < {{ model.name | upper }}_N; i++) {
-        ocp_nlp_cost_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, i, "W", W.data());
-    }
-    {%- endif %}
-    {%- if dims.ny_e > 0 %}
-
-    auto W_e = diag_from_vec(config_.weights.W_e);
-    ocp_nlp_cost_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, {{ model.name | upper }}_N, "W", W_e.data());
-    {%- endif %}
-}
-
-{%- if has_slack %}
-void {{ ClassName }}::set_slack_weights() {
-    {%- if dims.ns_0 > 0 %}
-    // Initial Slacks
-    {%- for field, param in cost %}
-    {%- set field_l = field | lower %}
-    {%- if param and (field_l is starting_with('z')) and (field is ending_with('_0')) %}
-    ocp_nlp_cost_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, 0, "{{ field }}", config_.slacks.{{ field }}.data());
-    {%- endif %}
-    {%- endfor %}
-
-    {%- endif %}
-    {%- if dims.ns > 0 %}
-    // Stage Slacks
-    for (int i = 1; i < {{ model.name | upper }}_N; i++) {
-        {%- for field, param in cost %}
-        {%- set field_l = field | lower %}
-        {%- if param and (field_l is starting_with('z')) and (field is not ending_with('_0')) and (field is not ending_with('_e')) %}
-        ocp_nlp_cost_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, i,  "{{ field }}", config_.slacks.{{ field }}.data());
-        {%- endif %}
-        {%- endfor %}
-    }
-    {%- endif %}
-    {%- if dims.ns_e > 0 %}
-
-    // Terminal Slacks
-    {%- for field, param in cost %}
-    {%- set field_l = field | lower %}
-    {%- if param and (field_l is starting_with('z')) and (field is ending_with('_e')) %}
-    ocp_nlp_cost_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, 0, "{{ field }}", config_.slacks.{{ field }}.data());
-    {%- endif %}
-    {%- endfor %}
-    {%- endif %}
-}
-{%- endif %}
-
-void {{ ClassName }}::set_constraints() {
-    {%- if dims.nh_0 > 0 or dims.nphi_0 > 0 or dims.nsh_0 > 0 or dims.nsphi_0 > 0 %}
-    // Initial Constraints
-    {%- for field, param in constraints %}
-    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and (field is ending_with('_0')) and ('bx_0' not in field) %}
-    ocp_nlp_constraints_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, ocp_nlp_out_, 0, "{{ field }}", config_.constraints.{{ field }}.data());
-    {%- endif %}
-    {%- endfor %}
-
-    {%- endif %}
-    {%- if dims.nbu > 0 or dims.nbx > 0 or dims.ng > 0 or dims.nh > 0 or dims.nphi > 0 or dims.nsbx > 0 or dims.nsg > 0 or dims.nsh > 0 or dims.nsphi > 0 %}
-    // Stage Constraints
-    for (int i=1; i < {{ model.name | upper }}_N; i++) {
-        {%- for field, param in constraints %}
-        {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and (field is not ending_with('_0')) and (field is not ending_with('_e')) %}
-        ocp_nlp_constraints_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, ocp_nlp_out_, i, "{{ field }}", config_.constraints.{{ field }}.data());
-        {%- endif %}
-        {%- endfor %}
-    }
-    {%- endif %}
-    {%- if dims.nbx_e > 0 or dims.ng_e > 0 or dims.nh_e > 0 or dims.nphi_e > 0 or dims.nsbx_e > 0 or dims.nsg_e > 0 or dims.nsh_e > 0 or dims.nsphi_e > 0 %}
-
-    // Terminal Constraints
-    {%- for field, param in constraints %}
-    {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and (field is ending_with('_e')) %}
-    ocp_nlp_constraints_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, ocp_nlp_out_, {{ model.name | upper }}_N, "{{ field }}", config_.constraints.{{ field }}.data());
-    {%- endif %}
-    {%- endfor %}
-    {%- endif %}
-}
-
 } // namespace {{ ros_opts.package_name }}
 
 
-// --- Main Funktion ---
+// --- Main ---
 int main(int argc, char **argv) {
     rclcpp::init(argc, argv);
     auto node = std::make_shared<{{ ros_opts.package_name }}::{{ ClassName }}>();

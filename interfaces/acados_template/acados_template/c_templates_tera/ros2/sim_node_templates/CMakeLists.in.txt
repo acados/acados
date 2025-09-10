@@ -1,8 +1,13 @@
-cmake_minimum_required(VERSION 3.8)
-project({{ ros_opts.package_name }})
+{%- if solver_options.qp_solver %}
+    {%- set qp_solver = solver_options.qp_solver %}
+{%- else %}
+    {%- set qp_solver = "FULL_CONDENSING_HPIPM" %}
+{%- endif -%}
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+cmake_minimum_required(VERSION 3.16)
+project({{ ros_opts.package_name }})
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.27)
+    cmake_policy(SET CMP0148 OLD)
 endif()
 
 # --- ROS DEPENDENCIES ---
@@ -10,21 +15,23 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package({{ ros_opts.package_name }}_interface REQUIRED)
-find_package(OpenMP REQUIRED)
 
 # --- ACADOS PATHS ---
 set(ACADOS_INCLUDE_PATH {{ acados_include_path }})
 set(ACADOS_LIB_DIR {{ acados_lib_path }})
 set(ACADOS_GENERATED_CODE_DIR {{ code_export_directory }})
-set(ACADOS_GENERATED_LIB ${ACADOS_GENERATED_CODE_DIR}/libacados_ocp_solver_{{ name }}{{ shared_lib_ext }})
 
 # --- EXECUTABLE ---
 add_executable({{ ros_opts.node_name }}
     src/node.cpp
 )
 
-# --- INCLUDE DIRECTORIES ---
-include_directories(
+# --- TARGET CONFIGURATION ---
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_compile_options({{ ros_opts.node_name }} PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+target_include_directories({{ ros_opts.node_name }} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
     ${ACADOS_GENERATED_CODE_DIR}
@@ -32,45 +39,27 @@ include_directories(
     ${ACADOS_INCLUDE_PATH}/acados
     ${ACADOS_INCLUDE_PATH}/blasfeo/include
     ${ACADOS_INCLUDE_PATH}/hpipm/include
-    ${ACADOS_INCLUDE_PATH}/osqp
-    ${ACADOS_INCLUDE_PATH}/qpOASES_e
 )
 
-# Include Directories
-target_include_directories({{ ros_opts.node_name }} PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-# Link Libraries
 target_link_libraries({{ ros_opts.node_name }} 
-    ${ACADOS_GENERATED_LIB}
+    ${ACADOS_GENERATED_CODE_DIR}/libacados_sim_solver_{{ name }}{{ shared_lib_ext }}
     ${ACADOS_LIB_DIR}/libacados.so
     ${ACADOS_LIB_DIR}/libblasfeo.so
     ${ACADOS_LIB_DIR}/libhpipm.so
-    ${ACADOS_LIB_DIR}/libosqp.so
-    ${ACADOS_LIB_DIR}/libqpOASES_e.so
     m
-    OpenMP::OpenMP_CXX
 )
 
 # --- DEPENDENCIES ---
-set(COMMON_DEPENDENCIES 
+ament_target_dependencies({{ ros_opts.node_name }} 
     rclcpp
     std_msgs
     {{ ros_opts.package_name }}_interface
 )
 
-ament_target_dependencies({{ ros_opts.node_name }} ${COMMON_DEPENDENCIES})
-
 # --- INSTALLATIONS ---
-install(FILES 
-    ${ACADOS_GENERATED_LIB}
-    DESTINATION lib
-)
-
-install(DIRECTORY 
-    ${ACADOS_GENERATED_CODE_DIR}/
-    DESTINATION include/${PROJECT_NAME}/generated_acados
+install(TARGETS 
+    {{ ros_opts.node_name }}
+    RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 install(DIRECTORY 
@@ -78,30 +67,15 @@ install(DIRECTORY
     DESTINATION include
 )
 
-install(TARGETS 
-    {{ ros_opts.node_name }}
-    RUNTIME DESTINATION lib/${PROJECT_NAME}
+install(FILES 
+    ${ACADOS_GENERATED_CODE_DIR}/libacados_sim_solver_{{ name }}{{ shared_lib_ext }}
+    DESTINATION lib
 )
 
-# --- EXPORTS ---
-ament_export_include_directories(
-    "include"
-    ${ACADOS_INCLUDE_PATH}
-    ${ACADOS_INCLUDE_PATH}/acados
-    ${ACADOS_INCLUDE_PATH}/acados_c
-    ${ACADOS_INCLUDE_PATH}/blasfeo/include
-    ${ACADOS_INCLUDE_PATH}/hpipm/include
-    ${ACADOS_INCLUDE_PATH}/osqp
-    ${ACADOS_INCLUDE_PATH}/qpOASES_e
-)
-
-ament_export_libraries(
-    acados_ocp_solver_{{ name }}
-    ${ACADOS_LIB_DIR}/libacados.so
-    ${ACADOS_LIB_DIR}/libblasfeo.so
-    ${ACADOS_LIB_DIR}/libhpipm.so
-    ${ACADOS_LIB_DIR}/libosqp.so
-    ${ACADOS_LIB_DIR}/libqpOASES_e.so
-)
+# --- TESTS ---
+if(BUILD_TESTING)
+    find_package(launch_testing_ament_cmake REQUIRED)
+    add_launch_test(test/test_pendulum_on_cart.launch.py)
+endif()
 
 ament_package()

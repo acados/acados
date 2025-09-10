@@ -29,35 +29,6 @@ std::ostream& operator<<(std::ostream& os, const std::array<T, N>& arr) {
     return os;
 }
 
-template <size_t N>
-inline void get_and_check_array_param(rclcpp::Node* node, const std::string& param_name, std::array<double, N>& destination) {
-    auto param_value = node->get_parameter(param_name).as_double_array();
-
-    if (param_value.size() != N) {
-        RCLCPP_ERROR(node->get_logger(), "Parameter '%s' has the wrong size. Expected: %ld, got: %ld",
-                     param_name.c_str(), N, param_value.size());
-        return;
-    }
-    std::copy_n(param_value.begin(), N, destination.begin());
-}
-
-template <size_t N>
-inline void update_param_array(const rclcpp::Parameter& param, 
-                        std::array<double, N>& destination_array,
-                        rcl_interfaces::msg::SetParametersResult& result)
-{
-    auto values = param.as_double_array();
-
-    if (values.size() != N) {
-        result.successful = false;
-        result.reason = "Parameter '" + param.get_name() + "' has size " +
-                        std::to_string(values.size()) + ", but expected is " + std::to_string(N) + ".";
-        return;
-    }
-
-    std::copy_n(values.begin(), N, destination_array.begin());
-}
-
 /**
  * @brief Extract the diagonal of a square matrix stored as a flat row-major std::array.
  *
@@ -110,6 +81,17 @@ inline std::array<T, N> create_repeating_array(const std::array<T, K>& pattern_v
         alternated[i] = pattern_values[i % K];
     }
     return alternated;
+}
+
+
+inline std::vector<int> range(int start, int end) {
+    std::vector<int> result;
+    if (end <= start) return result;
+    result.reserve(end - start);
+    for (int i = start; i < end; ++i) {
+        result.push_back(i);
+    }
+    return result;
 }
 
 #endif // {{ ros_opts.package_name | upper }}_UTILS_HPP

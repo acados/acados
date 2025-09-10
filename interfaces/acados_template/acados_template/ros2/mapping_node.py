@@ -28,7 +28,7 @@
 #
 
 from typing import Optional, Union
-from .utils import ArchType, AcadosRosBase, ControlLoopExec
+from .utils import ArchType, ControlLoopExec, AcadosRosBaseOptions
 
 
 class RosTopicMsg:
@@ -89,11 +89,11 @@ class RosTopicMsg:
         }
 
 
-class RosTopicMapper(AcadosRosBase):
+class RosTopicMapper(AcadosRosBaseOptions):
     def __init__(self):
         super().__init__()
         self._package_name: str = "ros_mapper"
-        self._node_name: str = "ros_mapper_node"
+        self._node_name: str = ""
         self._namespace: str = ""
         self._archtype: str = ArchType.NODE.value
         self._control_loop_executor: str = ControlLoopExec.TOPIC.value

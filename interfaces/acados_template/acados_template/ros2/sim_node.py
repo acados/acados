@@ -27,15 +27,15 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from .utils import ControlLoopExec, ArchType, AcadosRosBase
+from .utils import ControlLoopExec, ArchType, AcadosRosBaseOptions
 
 
 # --- Ros Options ---
-class AcadosSimRos(AcadosRosBase):
+class AcadosSimRos(AcadosRosBaseOptions):
     def __init__(self):
         super().__init__()
         self._package_name: str = "acados_sim"
-        self._node_name: str = "acados_sim_node"
+        self._node_name: str = ""
         self._namespace: str = ""
         self._archtype: str = ArchType.NODE.value
         self._control_loop_executor: str = ControlLoopExec.TIMER.value
