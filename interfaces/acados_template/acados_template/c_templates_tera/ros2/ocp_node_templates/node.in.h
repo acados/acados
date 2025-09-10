@@ -110,6 +110,15 @@ private:
     void log_parameters();
     rcl_interfaces::msg::SetParametersResult on_parameter_update(const std::vector<rclcpp::Parameter>& params);
 
+    template <size_t N>
+    void get_and_check_array_param(const std::string& param_name, 
+                                   std::array<double, N>& destination);
+
+    template <size_t N>
+    void update_param_array(const rclcpp::Parameter& param,
+                            std::array<double, N>& destination_array,
+                            rcl_interfaces::msg::SetParametersResult& result);
+
     // --- Helpers ---
     void start_control_timer(double period_seconds = 0.02);
 

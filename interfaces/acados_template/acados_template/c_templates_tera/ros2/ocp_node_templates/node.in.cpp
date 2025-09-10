@@ -242,7 +242,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and ('bx_0' not in field) %}
     parameter_handlers_["{{ ros_opts.package_name }}.constraints.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            update_param_array(p, this->config_.constraints.{{ field }}, res);
+            this->update_param_array(p, this->config_.constraints.{{ field }}, res);
         };
     {%- endif %}
     {%- endfor %}
@@ -252,7 +252,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- if param and (field is starting_with('W')) %}
     parameter_handlers_["{{ ros_opts.package_name }}.weights.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            update_param_array(p, this->config_.weights.{{ field }}, res);
+            this->update_param_array(p, this->config_.weights.{{ field }}, res);
         };
     {%- endif %}
     {%- endfor %}
@@ -264,7 +264,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- if param and (field_l is starting_with('z')) %}
     parameter_handlers_["{{ ros_opts.package_name }}.slacks.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            update_param_array(p, this->config_.slacks.{{ field }}, res);
+            this->update_param_array(p, this->config_.slacks.{{ field }}, res);
         };
     {%- endif %}
     {%- endfor %}
@@ -322,14 +322,14 @@ void {{ ClassName }}::load_parameters() {
     // Constraints
     {%- for field, param in constraints %}
     {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and ('bx_0' not in field) %}
-    get_and_check_array_param(this, "{{ ros_opts.package_name }}.constraints.{{ field }}", config_.constraints.{{ field }});
+    this->get_and_check_array_param("{{ ros_opts.package_name }}.constraints.{{ field }}", config_.constraints.{{ field }});
     {%- endif %}
     {%- endfor %}
 
     // Weights
     {%- for field, param in cost %}
     {%- if param and (field is starting_with('W')) %}
-    get_and_check_array_param(this, "{{ ros_opts.package_name }}.weights.{{ field }}", config_.weights.{{ field }});
+    this->get_and_check_array_param("{{ ros_opts.package_name }}.weights.{{ field }}", config_.weights.{{ field }});
     {%- endif %}
     {%- endfor %}
     {%- if has_slack %}
@@ -338,7 +338,7 @@ void {{ ClassName }}::load_parameters() {
     {%- for field, param in cost %}
     {%- set field_l = field | lower %}
     {%- if param and (field_l is starting_with('z')) %}
-    get_and_check_array_param(this, "{{ ros_opts.package_name }}.slacks.{{ field }}", config_.slacks.{{ field }});
+    this->get_and_check_array_param("{{ ros_opts.package_name }}.slacks.{{ field }}", config_.slacks.{{ field }});
     {%- endif %}
     {%- endfor %}
     {%- endif %}
@@ -409,6 +409,39 @@ rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(
         this->log_parameters();
     }
     return result;
+}
+
+template <size_t N>
+void {{ ClassName }}::get_and_check_array_param(
+    const std::string& param_name, 
+    std::array<double, N>& destination
+) {
+    auto param_value = this->get_parameter(param_name).as_double_array();
+
+    if (param_value.size() != N) {
+        RCLCPP_ERROR(this->get_logger(), "Parameter '%s' has the wrong size. Expected: %ld, got: %ld",
+                     param_name.c_str(), N, param_value.size());
+        return;
+    }
+    std::copy_n(param_value.begin(), N, destination.begin());
+}
+
+template <size_t N>
+void {{ ClassName }}::update_param_array(
+    const rclcpp::Parameter& param, 
+    std::array<double, N>& destination_array,
+    rcl_interfaces::msg::SetParametersResult& result
+) {
+    auto values = param.as_double_array();
+
+    if (values.size() != N) {
+        result.successful = false;
+        result.reason = "Parameter '" + param.get_name() + "' has size " +
+                        std::to_string(values.size()) + ", but expected is " + std::to_string(N) + ".";
+        return;
+    }
+
+    std::copy_n(values.begin(), N, destination_array.begin());
 }
 
 
