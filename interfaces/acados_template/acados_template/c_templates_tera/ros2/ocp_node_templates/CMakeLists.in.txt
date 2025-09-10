@@ -4,13 +4,8 @@
     {%- set qp_solver = "FULL_CONDENSING_HPIPM" %}
 {%- endif -%}
 
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 project({{ ros_opts.package_name }})
-
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
-
 
 # --- ROS DEPENDENCIES ---
 find_package(ament_cmake REQUIRED)
@@ -20,7 +15,6 @@ find_package({{ ros_opts.package_name }}_interface REQUIRED)
 {%- if solver_options.with_batch_functionality %}
 find_package(OpenMP REQUIRED)
 {%- endif %}
-
 
 # --- ACADOS PATHS ---
 set(ACADOS_INCLUDE_PATH {{ acados_include_path }})
@@ -33,6 +27,11 @@ add_executable({{ ros_opts.node_name }}
 )
 
 # --- TARGET CONFIGURATION ---
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    # Dies bindet die Optionen direkt an den Node und ist die moderne Variante
+    target_compile_options({{ ros_opts.node_name }} PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
 target_include_directories({{ ros_opts.node_name }} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
@@ -49,6 +48,7 @@ target_include_directories({{ ros_opts.node_name }} PUBLIC
     ${ACADOS_INCLUDE_PATH}/osqp
     {%- endif %}
 )
+
 target_link_libraries({{ ros_opts.node_name }} 
     ${ACADOS_GENERATED_CODE_DIR}/libacados_ocp_solver_{{ name }}{{ shared_lib_ext }}
     ${ACADOS_LIB_DIR}/libacados.so
@@ -79,10 +79,12 @@ install(TARGETS
     {{ ros_opts.node_name }}
     RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
+
 install(DIRECTORY 
     include/
     DESTINATION include
 )
+
 install(FILES 
     ${ACADOS_GENERATED_CODE_DIR}/libacados_ocp_solver_{{ name }}{{ shared_lib_ext }}
     DESTINATION lib
