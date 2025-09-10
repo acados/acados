@@ -259,7 +259,7 @@ classdef AcadosModel < handle
                     error(['model.' var_name ' must be casadi.MX or casadi.SX, got ' class(symbol)]);
                 end
                 if ~symbol.is_valid_input()
-                    error(['model.' var_name ' must be valid CasADi symbol, got ' str(symbol)]);
+                    error(['model.' var_name ' must be valid CasADi symbol to be used as input for functions, got ' str(symbol)]);
                 end
             end
 
