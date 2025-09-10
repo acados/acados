@@ -45,7 +45,7 @@ from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions
 from .acados_ocp_iterate import AcadosOcpIterate
-from .ros2.ocp_node import AcadosOcpRos
+from .ros2.ocp_node import AcadosOcpRosOptions
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
                     get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
@@ -115,7 +115,7 @@ class AcadosOcp:
         self.__p_global_values = np.array([])
         self.__problem_class = 'OCP'
         self.__json_file = "acados_ocp.json"
-        self.__ros_opts: Optional[AcadosOcpRos] = None
+        self.__ros_opts: Optional[AcadosOcpRosOptions] = None
 
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
@@ -163,7 +163,7 @@ class AcadosOcp:
         return self.__json_file
 
     @property
-    def ros_opts(self) -> Optional[AcadosOcpRos]:
+    def ros_opts(self) -> Optional[AcadosOcpRosOptions]:
         """Options to configure ROS 2 nodes and topics."""
         return self.__ros_opts
 
@@ -172,8 +172,8 @@ class AcadosOcp:
         self.__json_file = json_file
         
     @ros_opts.setter
-    def ros_opts(self, ros_opts: AcadosOcpRos):
-        if not isinstance(ros_opts, AcadosOcpRos):
+    def ros_opts(self, ros_opts: AcadosOcpRosOptions):
+        if not isinstance(ros_opts, AcadosOcpRosOptions):
             raise TypeError('Invalid ros_opts value, expected AcadosOcpRos.\n')
         self.__ros_opts = ros_opts
 
@@ -1574,7 +1574,7 @@ class AcadosOcp:
         for key, v in ocp_dict.items():
             if isinstance(v, (AcadosModel, AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, ZoroDescription)):
                 ocp_dict[key] = dict(getattr(self, key).__dict__)
-            if isinstance(v, AcadosOcpRos):
+            if isinstance(v, AcadosOcpRosOptions):
                 ocp_dict[key] = v.to_dict()
 
         ocp_dict = format_class_dict(ocp_dict)

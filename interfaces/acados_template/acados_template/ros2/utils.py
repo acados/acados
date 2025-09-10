@@ -15,7 +15,7 @@ class ArchType(str, Enum):
     NAV2_CONTROLLER = "nav2_controller"
 
 
-class AcadosRosBase:
+class AcadosRosBaseOptions:
     def __init__(self):
         self._package_name: str = "acados_base"
         self._node_name: str = "acados_base_node"
