@@ -104,7 +104,6 @@ def main():
     # Ros stuff
     ocp.ros_opts = AcadosOcpRosOptions()
     ocp.ros_opts.package_name = "pendulum_on_cart"
-    ocp.ros_opts.node_name = "pendulum_on_cart_node"
 
     ocp.code_export_directory = str(script_dir / 'generated' / "c_generated_code")
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')

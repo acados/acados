@@ -98,6 +98,8 @@ class AcadosRosBaseOptions:
         self._control_loop_executor = control_loop_executor_enum.value
 
     def to_dict(self) -> dict:
+        if self.node_name == "":
+            self.node_name = self.package_name + "_node"
         package_name_snake  = self.__camel_to_snake(self.package_name)
         node_name_snake     = self.__camel_to_snake(self.node_name)
         namespace_snake     = self.__camel_to_snake(self.namespace)
