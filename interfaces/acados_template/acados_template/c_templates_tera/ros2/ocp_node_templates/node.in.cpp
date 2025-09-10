@@ -63,6 +63,7 @@ namespace {{ ros_opts.package_name }}
 
     // --- Init solver ---
     this->initialize_solver();
+    this->apply_all_parameters_to_solver();
     this->start_control_timer(config_.ts);
 }
 
@@ -280,7 +281,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- set constraint_size = model.name ~ suffix | upper %}
     parameter_handlers_["{{ ros_opts.package_name }}.constraints.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            auto stages = range(1, {{ model.name | upper }}_N + 1);
+            auto stages = range(1, {{ model.name | upper }}_N);
             this->update_constraint<{{ constraint_size }}>(p, res, "{{ field }}", stages);
         };
     {%- endif %}
@@ -328,7 +329,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- if dims.ny > 0 %}
     parameter_handlers_["{{ ros_opts.package_name }}.cost.W"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            auto stages = range(1, {{ model.name | upper }}_N + 1);
+            auto stages = range(1, {{ model.name | upper }}_N);
             this->update_cost<{{ model.name | upper }}_NY>(p, res, "W", stages);
         };
     {%- endif %}
@@ -360,7 +361,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- if param and (field_l is starting_with('z')) and (field is not ending_with('_0')) and (field is not ending_with('_e')) %}
     parameter_handlers_["{{ ros_opts.package_name }}.cost.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            auto stages = range(1, {{ model.name | upper }}_N + 1);
+            auto stages = range(1, {{ model.name | upper }}_N);
             this->update_cost<{{ model.name | upper }}_NS>(p, res, "{{ field }}", stages);
         };
     {%- endif %}
@@ -433,6 +434,33 @@ void {{ ClassName }}::load_parameters() {
     this->get_parameter("{{ ros_opts.package_name }}.ts", config_.ts);
 }
 
+void {{ ClassName }}::apply_all_parameters_to_solver() {
+    if (!ocp_capsule_) {
+        RCLCPP_WARN(this->get_logger(), "apply_all_parameters_to_solver() called before solver init.");
+        return;
+    }
+    rcl_interfaces::msg::SetParametersResult res;
+    res.successful = true;
+
+    for (auto & kv : parameter_handlers_) {
+        const auto & name = kv.first;
+        if (!this->has_parameter(name)) continue;
+        RCLCPP_ERROR(this->get_logger(),
+                "Trying to set param '%s'",
+                name.c_str());
+        auto param = this->get_parameter(name);
+        kv.second(param, res);
+        if (!res.successful) {
+            RCLCPP_ERROR(this->get_logger(),
+                "Failed to apply initial parameter '%s': %s",
+                name.c_str(), res.reason.c_str());
+            // reset flag for next parameter
+            res.successful = true;
+            res.reason.clear();
+        }
+    }
+}
+
 rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(
     const std::vector<rclcpp::Parameter>& params
 ) {
@@ -444,6 +472,7 @@ rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(
 
         if (parameter_handlers_.count(param_name)) {
             parameter_handlers_.at(param_name)(param, result);
+            if (!result.successful) break;
         } else {
             result.reason = "Update for unknown parameter '%s' received.", param_name.c_str();
             result.successful = false;
