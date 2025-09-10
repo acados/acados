@@ -22,18 +22,8 @@ set(MSG_FILES
   {%- endif %}
 )
 
-# set(SRV_FILES
-#   "srv/SolveOCP.srv"
-# )
-
-# set(ACTION_FILES
-#   "srv/SolveOCP.srv"
-# )
-
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${MSG_FILES}
-#   ${SRV_FILES}
-#   ${ACTION_FILES}
   DEPENDENCIES std_msgs
 )
 

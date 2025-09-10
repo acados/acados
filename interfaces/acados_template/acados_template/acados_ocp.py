@@ -1320,15 +1320,9 @@ class AcadosOcp:
 
         # Services
         # TODO: No node implementation yet
-        # srv_dir = os.path.join(package_dir, 'srv')
-        # template_file = os.path.join(ros_interface_dir, 'SolveOCP.in.srv')
-        # template_list.append((template_file, 'SolveOCP.srv', srv_dir))
 
         # Actions
         # TODO: No Template yet and no node implementation
-        # action_dir = os.path.join(package_dir, 'action')
-        # template_file = os.path.join(ros_interface_dir, 'SolveOCP.in.action')
-        # template_list.append((template_file, 'SolveOCP.action', action_dir))
 
         # --- Solver Package --- 
         ros_pkg_dir = os.path.join('ros2', 'ocp_node_templates')
