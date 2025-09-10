@@ -227,9 +227,6 @@ classdef AcadosModel < handle
                 error('model.p_global should be column vector.');
             end
 
-            if dims.np_global > 0 && ~(isa(obj.p_global, 'casadi.MX') || isa(obj.p_global, 'casadi.SX'))
-                error('model.p_global needs to be casadi.MX or casadi.SX')
-            end
             if isempty(obj.xdot)
                 obj.xdot = empty_var;
             elseif ~(isa(obj.xdot, 'casadi.SX') == isSX && length(obj.xdot) == 0) && (~iscolumn(obj.xdot) || size(obj.xdot, 1) ~= dims.nx)
@@ -251,6 +248,19 @@ classdef AcadosModel < handle
                 dims.nu = size(obj.u, 1);
             else
                 error('model.u should be column vector.');
+            end
+
+            % sanity checks
+            vars_and_names = {obj.x, 'x'; obj.xdot, 'xdot'; obj.u, 'u'; obj.z, 'z'; obj.p, 'p'; obj.p_global, 'p_global'};
+            for i = 1:size(vars_and_names, 1)
+                symbol = vars_and_names{i, 1};
+                var_name = vars_and_names{i, 2};
+                if ~(isa(symbol, 'casadi.MX') || isa(symbol, 'casadi.SX'))
+                    error(['model.' var_name ' must be casadi.MX or casadi.SX, got ' class(symbol)]);
+                end
+                if ~symbol.is_valid_input()
+                    error(['model.' var_name ' must be valid CasADi symbol, got ' str(symbol)]);
+                end
             end
 
             % model output dimension nx_next: dimension of the next state
