@@ -64,7 +64,6 @@ private:
     // --- Data and States ---
     std::mutex data_mutex_;
     {{ ClassName }}Config config_;
-    const std::array<double, {{ model.name | upper }}_NU> u0_default_{};
 
     {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
     bool first_solve_{true};

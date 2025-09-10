@@ -175,20 +175,25 @@ void {{ ClassName }}::control_loop() {
 }
 
 void {{ ClassName }}::solver_status_behaviour(int status) {
+    // publish u0 also if the solver failed
+    this->get_input(u0_.data(), 0);
+    this->publish_input(u0_, status);
+    
+    {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
+    // prepare for next iteration
     if (status == ACADOS_SUCCESS) {
-        this->get_input(u0_.data(), 0);
-        this->publish_input(u0_, status);
-        {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
         first_solve_ = false;
         this->prepare_rti_solve();
-        {%- endif %}
-    } else {
-        this->publish_input(u0_default_, status);
-        if (status == ACADOS_NAN_DETECTED) {{ model.name }}_acados_reset(ocp_capsule_, 1);
-        {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
+    } 
+    else {
         first_solve_ = true;
-        {%- endif %}
     }
+    {%- endif %}
+
+    // reset solver if nan is detected
+    if (status == ACADOS_NAN_DETECTED) {
+        {{ model.name }}_acados_reset(ocp_capsule_, 1);
+    } 
 }
 
 
