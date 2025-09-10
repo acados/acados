@@ -1574,7 +1574,7 @@ class AcadosOcp:
         for key, v in ocp_dict.items():
             if isinstance(v, (AcadosModel, AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, ZoroDescription)):
                 ocp_dict[key] = dict(getattr(self, key).__dict__)
-            if isinstance(v, AcadosOcpRos) and v is not None:
+            if isinstance(v, AcadosOcpRos):
                 ocp_dict[key] = v.to_dict()
 
         ocp_dict = format_class_dict(ocp_dict)
