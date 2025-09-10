@@ -1,18 +1,13 @@
-import os
 import re
 from typing import Union
-from unittest import result
 import rclpy
 import unittest
 import launch
 import time
-import launch_testing
 import pytest
 import subprocess
-from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
 
-# Platzhalter für die Nachrichten-Typen
 from {{ ros_opts.package_name }}_interface.msg import State, ControlInput, References
 {%- if dims.np > 0 -%}
 , Parameters
