@@ -19,6 +19,8 @@
 // Acados includes
 #include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados_c/ocp_nlp_interface.h"
+#include "acados_c/external_function_interface.h"
 #include "acados_solver_{{ model.name }}.h"
 
 // Package includes
@@ -102,17 +104,28 @@ private:
     void setup_parameter_handlers();
     void declare_parameters();
     void load_parameters();
-    void log_parameters();
     rcl_interfaces::msg::SetParametersResult on_parameter_update(const std::vector<rclcpp::Parameter>& params);
-
     template <size_t N>
-    void get_and_check_array_param(const std::string& param_name, 
-                                   std::array<double, N>& destination);
-
+    void get_and_check_array_param(
+        const std::string& param_name, 
+        std::array<double, N>& destination);
     template <size_t N>
-    void update_param_array(const rclcpp::Parameter& param,
-                            std::array<double, N>& destination_array,
-                            rcl_interfaces::msg::SetParametersResult& result);
+    void update_param_array(
+        const rclcpp::Parameter& param,
+        std::array<double, N>& destination_array,
+        rcl_interfaces::msg::SetParametersResult& result);
+    template<size_t N>
+    void update_constraint(
+        const rclcpp::Parameter& param,
+        rcl_interfaces::msg::SetParametersResult& result,
+        const char* field,
+        const std::vector<int>& stages);
+    template<size_t N>
+    void update_cost(
+        const rclcpp::Parameter& param,
+        rcl_interfaces::msg::SetParametersResult& result,
+        const char* field,
+        const std::vector<int>& stages);
 
     // --- Helpers ---
     void start_control_timer(double period_seconds = 0.02);
@@ -143,12 +156,6 @@ private:
     void set_ocp_parameter(double* p, size_t np, int stage);
     void set_ocp_parameters(double* p, size_t np);
     {%- endif %}
-
-    void set_cost_weights();
-    {%- if dims.ns_0 > 0 or dims.ns > 0 or dims.ns_e > 0 %}
-    void set_slack_weights();
-    {%- endif %}
-    void set_constraints();
 };
 
 } // namespace {{ ros_opts.package_name }}

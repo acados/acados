@@ -83,4 +83,15 @@ inline std::array<T, N> create_repeating_array(const std::array<T, K>& pattern_v
     return alternated;
 }
 
+
+inline std::vector<int> range(int start, int end) {
+    std::vector<int> result;
+    if (end <= start) return result;
+    result.reserve(end - start);
+    for (int i = start; i < end; ++i) {
+        result.push_back(i);
+    }
+    return result;
+}
+
 #endif // {{ ros_opts.package_name | upper }}_UTILS_HPP
