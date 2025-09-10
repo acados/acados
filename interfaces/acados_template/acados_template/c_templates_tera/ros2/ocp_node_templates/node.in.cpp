@@ -5,6 +5,17 @@ namespace {{ ros_opts.package_name }}
 
 {%- set ClassName = ros_opts.node_name | replace(from="_", to=" ") | title | replace(from=" ", to="") %}
 {%- set ns = ros_opts.namespace | lower | trim(chars='/') | replace(from=" ", to="_") %}
+{%- if ns %}
+{%- set control_input_topic = "/" ~ ros_opts.namespace ~ "/control_input" %}
+{%- set state_topic = "/" ~ ros_opts.namespace ~ "/state" %}
+{%- set references_topic = "/" ~ ros_opts.namespace ~ "/references" %}
+{%- set parameters_topic = "/" ~ ros_opts.namespace ~ "/parameters" %}
+{%- else %}
+{%- set control_input_topic = "/control_input" %}
+{%- set state_topic = "/state" %}
+{%- set references_topic = "/references" %}
+{%- set parameters_topic = "/parameters" %}
+{%- endif %}
 {%- set has_slack = dims.ns > 0 or dims.ns_0 > 0 or dims.ns_e > 0 %}
 {{ ClassName }}::{{ ClassName }}()
     : Node("{{ ros_opts.node_name }}")
@@ -36,30 +47,12 @@ namespace {{ ros_opts.package_name }}
     );
 
     // --- Subscriber ---
-    {%- if ns %}
-    {%- set state_topic = "/" ~ ros_opts.namespace ~ "/state" %}
-    {%- else %}
-    {%- set state_topic = "/state" %}
-    {%- endif %}
     state_sub_ = this->create_subscription<{{ ros_opts.package_name }}_interface::msg::State>(
         "{{ state_topic }}", 10,
         std::bind(&{{ ClassName }}::state_callback, this, std::placeholders::_1));
-    {%- if ns %}
-    {%- set references_topic = "/" ~ ros_opts.namespace ~ "/references" %}
-    {%- else %}
-    {%- set references_topic = "/references" %}
-    {%- endif %}
-
     references_sub_ = this->create_subscription<{{ ros_opts.package_name }}_interface::msg::References>(
         "{{ references_topic }}", 10,
         std::bind(&{{ ClassName }}::references_callback, this, std::placeholders::_1));
-
-    {%- if ns %}
-    {%- set parameters_topic = "/" ~ ros_opts.namespace ~ "/parameters" %}
-    {%- else %}
-    {%- set parameters_topic = "/parameters" %}
-    {%- endif %}
-
     {%- if dims.np > 0 %}
     parameters_sub_ = this->create_subscription<{{ ros_opts.package_name }}_interface::msg::Parameters>(
         "{{ parameters_topic }}", 10,
@@ -68,13 +61,8 @@ namespace {{ ros_opts.package_name }}
 
 
     // --- Publisher ---
-    {%- if ns %}
-    {%- set input_topic = "/" ~ ros_opts.namespace ~ "/control_input" %}
-    {%- else %}
-    {%- set input_topic = "/control_input" %}
-    {%- endif %}
     control_input_pub_ = this->create_publisher<{{ ros_opts.package_name }}_interface::msg::ControlInput>(
-        "{{ input_topic }}", 10);
+        "{{ control_input_topic }}", 10);
 
     // --- Init solver ---
     this->initialize_solver();
@@ -110,7 +98,6 @@ void {{ ClassName }}::initialize_solver() {
     ocp_nlp_in_ = {{ model.name }}_acados_get_nlp_in(ocp_capsule_);
     ocp_nlp_out_ = {{ model.name }}_acados_get_nlp_out(ocp_capsule_);
     ocp_nlp_opts_ = {{ model.name }}_acados_get_nlp_opts(ocp_capsule_);
-    RCLCPP_INFO(this->get_logger(), "acados solver created successfully.");
 
     this->set_cost_weights();
     this->set_constraints();
