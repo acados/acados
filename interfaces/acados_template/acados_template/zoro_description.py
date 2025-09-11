@@ -28,6 +28,7 @@
 
 from dataclasses import dataclass, field
 import numpy as np
+from .acados_dims import AcadosOcpDims
 
 
 @dataclass
@@ -89,47 +90,61 @@ class ZoroDescription:
     output_P_matrices: bool = False
     """Determines if the matrices P_k are outputs of the custom update function"""
 
+    data_size: int = 0
+    """size of data vector when calling custom update, computed automatically"""
 
-def process_zoro_description(zoro_description: ZoroDescription):
-    zoro_description.nw, _ = zoro_description.W_mat.shape
-    if zoro_description.unc_jac_G_mat is None:
-        zoro_description.unc_jac_G_mat = np.eye(zoro_description.nw)
-    zoro_description.nlbx_t = len(zoro_description.idx_lbx_t)
-    zoro_description.nubx_t = len(zoro_description.idx_ubx_t)
-    zoro_description.nlbx_e_t = len(zoro_description.idx_lbx_e_t)
-    zoro_description.nubx_e_t = len(zoro_description.idx_ubx_e_t)
-    zoro_description.nlbu_t = len(zoro_description.idx_lbu_t)
-    zoro_description.nubu_t = len(zoro_description.idx_ubu_t)
-    zoro_description.nlg_t = len(zoro_description.idx_lg_t)
-    zoro_description.nug_t = len(zoro_description.idx_ug_t)
-    zoro_description.nlg_e_t = len(zoro_description.idx_lg_e_t)
-    zoro_description.nug_e_t = len(zoro_description.idx_ug_e_t)
-    zoro_description.nlh_t = len(zoro_description.idx_lh_t)
-    zoro_description.nuh_t = len(zoro_description.idx_uh_t)
-    zoro_description.nlh_e_t = len(zoro_description.idx_lh_e_t)
-    zoro_description.nuh_e_t = len(zoro_description.idx_uh_e_t)
 
-    if zoro_description.input_P0_diag and zoro_description.input_P0:
-        raise ValueError("Only one of input_P0_diag and input_P0 can be True")
+    def make_consistent(self, dims: AcadosOcpDims) -> None:
+        self.nw, _ = self.W_mat.shape
+        if self.unc_jac_G_mat is None:
+            self.unc_jac_G_mat = np.eye(self.nw)
+        self.nlbx_t = len(self.idx_lbx_t)
+        self.nubx_t = len(self.idx_ubx_t)
+        self.nlbx_e_t = len(self.idx_lbx_e_t)
+        self.nubx_e_t = len(self.idx_ubx_e_t)
+        self.nlbu_t = len(self.idx_lbu_t)
+        self.nubu_t = len(self.idx_ubu_t)
+        self.nlg_t = len(self.idx_lg_t)
+        self.nug_t = len(self.idx_ug_t)
+        self.nlg_e_t = len(self.idx_lg_e_t)
+        self.nug_e_t = len(self.idx_ug_e_t)
+        self.nlh_t = len(self.idx_lh_t)
+        self.nuh_t = len(self.idx_uh_t)
+        self.nlh_e_t = len(self.idx_lh_e_t)
+        self.nuh_e_t = len(self.idx_uh_e_t)
 
-    # Print input note:
-    print(f"\nThe data of the generated custom update function consists of the concatenation of:")
-    i_component = 1
-    if zoro_description.input_P0_diag:
-        print(f"{i_component}) input: diag(P0)")
-        i_component += 1
-    if zoro_description.input_P0:
-        print(f"{i_component}) input: P0; full matrix in column-major format")
-        i_component += 1
-    if zoro_description.input_W_diag:
-        print(f"{i_component}) input: diag(W)")
-        i_component += 1
-    if zoro_description.input_W_add_diag:
-        print(f"{i_component}) input: concatenation of diag(W_gp^k) for i=0,...,N-1")
-        i_component += 1
-    if zoro_description.output_P_matrices:
-        print(f"{i_component}) output: concatenation of colmaj(P^k) for i=0,...,N")
-        i_component += 1
-    print("\n")
+        if self.input_P0_diag and self.input_P0:
+            raise Exception("Only one of input_P0_diag and input_P0 can be True")
 
-    return zoro_description
+        # Print input note:
+        print(f"\nThe data of the generated custom update function consists of the concatenation of:")
+        i_component = 1
+        data_size = 0
+        if self.input_P0_diag:
+            size_i = dims.nx
+            print(f"{i_component}) input: diag(P0), size: [nx] = {size_i}")
+            i_component += 1
+            data_size += size_i
+        if self.input_P0:
+            size_i = dims.nx ** 2
+            print(f"{i_component}) input: P0; full matrix in column-major format, size: [nx*nx] = {size_i}")
+            i_component += 1
+            data_size += size_i
+        if self.input_W_diag:
+            size_i = self.nw
+            print(f"{i_component}) input: diag(W), size: [nw] = {size_i}")
+            i_component += 1
+            data_size += size_i
+        if self.input_W_add_diag:
+            size_i = dims.N * self.nw
+            print(f"{i_component}) input: concatenation of diag(W_gp^k) for i=0,...,N-1, size: [N * nw] = {size_i}")
+            i_component += 1
+            data_size += size_i
+        if self.output_P_matrices:
+            size_i = dims.nx * dims.nx * (dims.N+1)
+            print(f"{i_component}) output: concatenation of colmaj(P^k) for i=0,...,N, size: [nx*nx*(N+1)] = {size_i}")
+            i_component += 1
+            data_size += size_i
+
+        self.data_size = data_size
+        print("\n")
