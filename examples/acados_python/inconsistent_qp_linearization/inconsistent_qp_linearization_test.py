@@ -139,6 +139,7 @@ def create_solver_opts(N=1,
     solver_options.search_direction_mode = search_direction_mode
     solver_options.use_constraint_hessian_in_feas_qp = False
     solver_options.store_iterates = True
+    solver_options.byrd_omojokon_slack_relaxation_factor = 1.0
 
     # set prediction horizon
     solver_options.tf = Tf
