@@ -13,11 +13,10 @@
 #include "std_msgs/msg/header.hpp"
 
 // Acados includes
-#include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
-#include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados_c/ocp_nlp_interface.h"
+#include "acados/sim/sim_common.h"
+#include "acados_c/sim_interface.h"
 #include "acados_c/external_function_interface.h"
-#include "acados_solver_{{ model.name }}.h"
+#include "acados_sim_solver_{{ model.name }}.h"
 
 // Package includes
 #include "{{ ros_opts.package_name }}/utils.hpp"
@@ -37,25 +36,25 @@ private:
     rclcpp::Publisher<{{ ros_opts.package_name }}_interface::msg::State>::SharedPtr state_pub_;
 
     // --- ROS Params and Timer
-    rclcpp::TimerBase::SharedPtr control_timer_;
+    rclcpp::TimerBase::SharedPtr integration_timer_;
     OnSetParametersCallbackHandle::SharedPtr param_callback_handle_;
     using ParamHandler = std::function<void(const rclcpp::Parameter&, rcl_interfaces::msg::SetParametersResult&)>;
     std::unordered_map<std::string, ParamHandler> parameter_handlers_;
 
     // --- Acados Solver ---
-    {{ model.name }}_solver_capsule *ocp_capsule_;
-    ocp_nlp_config* ocp_nlp_config_;
-    ocp_nlp_dims* ocp_nlp_dims_;
-    ocp_nlp_in* ocp_nlp_in_;
-    ocp_nlp_out* ocp_nlp_out_;
-    void* ocp_nlp_opts_;
+    {{ model.name }}_sim_solver_capsule *sim_capsule_;
+    sim_config* sim_config_;
+    void* sim_dims_;
+    sim_in* sim_in_;
+    sim_out* sim_out_;
+    sim_opts* sim_opts_;
 
     // --- Data and States ---
     std::mutex data_mutex_;
     {{ ClassName }}Config config_;
 
-    std::array<double, {{ model.name | upper }}_NU> u0_;
-    std::array<double, {{ model.name | upper }}_NX> current_x_;
+    std::array<double, {{ model.name | upper }}_NX> xn_;
+    std::array<double, {{ model.name | upper }}_NU> current_u_;
 
 public:
     {{ ClassName }}();
@@ -64,14 +63,14 @@ public:
 private:
     // --- Core Methods ---
     void initialize_simulator();
-    void simulation_loop();
+    void integration_step();
     void sim_status_behaviour(int status);
 
     // --- ROS Callbacks ---
     void control_callback(const {{ ros_opts.package_name }}_interface::msg::ControlInput::SharedPtr msg);
 
     // --- ROS Publisher ---
-    void publish_state(const std::array<double, {{ model.name | upper }}_NX>& x0, int status);
+    void publish_state(const std::array<double, {{ model.name | upper }}_NX>& xn, int status);
 
     // --- Parameter Handling Methods ---
     void setup_parameter_handlers();
@@ -80,14 +79,12 @@ private:
     rcl_interfaces::msg::SetParametersResult on_parameter_update(const std::vector<rclcpp::Parameter>& params);
 
     // --- Helpers ---
-    void start_simulation_timer(double period_seconds = 0.02);
+    void start_integration_timer(double period_seconds = 0.02);
 
     // --- Acados Helpers ---
     int sim_solve();
-
-    void get_input(double* u, int stage);
-    void get_state(double* x, int stage);
-    void set_x0(double* x0);
+    void get_next_state(double* xn);
+    void set_u(double* u);
 };
 
 } // namespace {{ ros_opts.package_name }}

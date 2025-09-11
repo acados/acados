@@ -103,10 +103,11 @@ def main():
 
     # Ros stuff
     ocp.ros_opts = AcadosOcpRosOptions()
-    ocp.ros_opts.package_name = "pendulum_on_cart"
+    ocp.ros_opts.package_name = "pendulum_on_cart_ocp"
 
-    ocp.code_export_directory = str(script_dir / 'generated' / "c_generated_code")
-    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+    export_code = script_dir / 'generated_ocp'
+    ocp.code_export_directory = str(export_code / "c_generated_code")
+    ocp_solver = AcadosOcpSolver(ocp, json_file = str(export_code / 'acados_ocp.json'))
 
     simX = np.zeros((N+1, nx))
     simU = np.zeros((N, nu))

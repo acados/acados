@@ -36,10 +36,17 @@ jobs:
     - name: Setup Python Environment
       uses: ./.github/actions/setup-python-environment
       
-    - name: Test ROS2 Packages
+    - name: Test ROS2 OCP Package
       uses: ./.github/actions/test-ros2-package
       with:
-        python-file-path: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_sqp_rti_loop.py
+        python-file-path: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_minimal_ocp.py
         source-file-paths: |
           ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/common/pendulum_model.py
           ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/common/utils.py
+
+    - name: Test ROS2 Simulation Package
+      uses: ./.github/actions/test-ros2-package
+      with:
+        python-file-path: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_minimal_sim.py
+        source-file-paths: |
+          ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/common/pendulum_model.py

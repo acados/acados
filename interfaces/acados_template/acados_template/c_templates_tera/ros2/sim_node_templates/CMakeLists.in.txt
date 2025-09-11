@@ -1,9 +1,3 @@
-{%- if solver_options.qp_solver %}
-    {%- set qp_solver = solver_options.qp_solver %}
-{%- else %}
-    {%- set qp_solver = "FULL_CONDENSING_HPIPM" %}
-{%- endif -%}
-
 cmake_minimum_required(VERSION 3.16)
 project({{ ros_opts.package_name }})
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.27)
@@ -75,7 +69,7 @@ install(FILES
 # --- TESTS ---
 if(BUILD_TESTING)
     find_package(launch_testing_ament_cmake REQUIRED)
-    add_launch_test(test/test_pendulum_on_cart.launch.py)
+    add_launch_test(test/test_{{ ros_opts.package_name }}.launch.py)
 endif()
 
 ament_package()

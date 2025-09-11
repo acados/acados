@@ -31,7 +31,7 @@ from .utils import ControlLoopExec, ArchType, AcadosRosBaseOptions
 
 
 # --- Ros Options ---
-class AcadosSimRos(AcadosRosBaseOptions):
+class AcadosSimRosOptions(AcadosRosBaseOptions):
     def __init__(self):
         super().__init__()
         self._package_name: str = "acados_sim"
