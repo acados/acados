@@ -297,7 +297,7 @@ class AcadosCasadiOcp:
         nlp_cost = 0
         residual_list = []
         for i in range(N_horizon+1):
-            xtraj_node_i, utraj_node_i, ptraj_node_i, sl_node_i, su_node_i, cost_expr_i, residual_expr_i, p_for_model, ns, weight, zl, Zl, zu, Zu = \
+            xtraj_node_i, utraj_node_i, ptraj_node_i, sl_node_i, su_node_i, cost_expr_i, residual_expr_i, p_for_model, ns, W_mat, zl, Zl, zu, Zu = \
             self._get_cost_node(i, N_horizon, xtraj_nodes, utraj_nodes, p_nlp, sl_nodes, su_nodes, ocp)
 
             cost_fun_i = ca.Function(f'cost_fun_{i}', [model.x, model.u, p_for_model, model.p_global], [cost_expr_i])
@@ -306,7 +306,7 @@ class AcadosCasadiOcp:
 
             if residual_expr_i is not None:
                 residual_fun_i = ca.Function(f'residual_fun_{i}', [model.x, model.u, p_for_model, model.p_global], [residual_expr_i])
-                residual_i =  ca.sqrt(solver_options.cost_scaling[i]) * ca.sqrt(weight) @ residual_fun_i(xtraj_node_i, utraj_node_i, ptraj_node_i, model.p_global)
+                residual_i = ca.sqrt(solver_options.cost_scaling[i]) * ca.sqrt(W_mat) @ residual_fun_i(xtraj_node_i, utraj_node_i, ptraj_node_i, model.p_global)
                 residual_list.append(residual_i)
             if ns:
                 penalty_expr_i = 0.5 * ca.mtimes(sl_node_i.T, ca.mtimes(np.diag(Zl), sl_node_i)) + \
@@ -527,10 +527,10 @@ class AcadosCasadiOcp:
         dims = ocp.dims
         model = ocp.model
         cost = ocp.cost
+        p_index = self._index_map['p_in_p_nlp'][i]
+        yref_index = self._index_map['yref_in_p_nlp'][i]
+        yref = p_nlp[yref_index]
         if i == 0:
-            p_index = self._index_map['p_in_p_nlp'][0]
-            yref_index = self._index_map['yref_in_p_nlp'][0]
-            yref = p_nlp[yref_index]
             if cost.cost_type_0 == "NONLINEAR_LS":
                 y = ocp.model.cost_y_expr_0
                 residual_expr = y - yref
@@ -549,9 +549,6 @@ class AcadosCasadiOcp:
                     ca.vertcat(ocp.model.p, yref),
                     dims.ns_0, cost.W_0, cost.zl_0, cost.Zl_0, cost.zu_0, cost.Zu_0)
         elif i < N_horizon:
-            p_index = self._index_map['p_in_p_nlp'][i]
-            yref_index = self._index_map['yref_in_p_nlp'][i]
-            yref = p_nlp[yref_index]
             if cost.cost_type_0 == "NONLINEAR_LS":
                 y = ocp.model.cost_y_expr
                 residual_expr = y - yref
@@ -570,9 +567,6 @@ class AcadosCasadiOcp:
                     ca.vertcat(ocp.model.p, yref),
                     dims.ns, cost.W, cost.zl, cost.Zl, cost.zu, cost.Zu)
         else:
-            p_index = self._index_map['p_in_p_nlp'][-1]
-            yref_index = self._index_map['yref_in_p_nlp'][-1]
-            yref = p_nlp[yref_index]
             if cost.cost_type_0 == "NONLINEAR_LS":
                 y = ocp.model.cost_y_expr_e
                 residual_expr = y - yref
