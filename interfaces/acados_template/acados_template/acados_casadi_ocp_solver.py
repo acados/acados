@@ -293,15 +293,21 @@ class AcadosCasadiOcp:
                     dr_dw = ca.jacobian(r_in_nlp, w)
                     hess_l += dr_dw.T @ outer_hess_r @ dr_dw
 
-        ### Cost
+        ### Cost and residual
         nlp_cost = 0
+        residual_list = []
         for i in range(N_horizon+1):
-            xtraj_node_i, utraj_node_i, ptraj_node_i, sl_node_i, su_node_i, cost_expr_i, p_for_model, ns, zl, Zl, zu, Zu = \
-            self._get_cost_node(i, N_horizon, xtraj_nodes, utraj_nodes, p_nlp, sl_nodes, su_nodes, ocp, dims, cost)
+            xtraj_node_i, utraj_node_i, ptraj_node_i, sl_node_i, su_node_i, cost_expr_i, residual_expr_i, p_for_model, ns, W_mat, zl, Zl, zu, Zu = \
+            self._get_cost_node(i, N_horizon, xtraj_nodes, utraj_nodes, p_nlp, sl_nodes, su_nodes, ocp)
 
             cost_fun_i = ca.Function(f'cost_fun_{i}', [model.x, model.u, p_for_model, model.p_global], [cost_expr_i])
             cost_i = cost_fun_i(xtraj_node_i, utraj_node_i, ptraj_node_i, model.p_global)
             nlp_cost += solver_options.cost_scaling[i] * cost_i
+
+            if residual_expr_i is not None:
+                residual_fun_i = ca.Function(f'residual_fun_{i}', [model.x, model.u, p_for_model, model.p_global], [residual_expr_i])
+                residual_i = ca.sqrt(solver_options.cost_scaling[i]) * ca.sqrt(W_mat) @ residual_fun_i(xtraj_node_i, utraj_node_i, ptraj_node_i, model.p_global)
+                residual_list.append(residual_i)
             if ns:
                 penalty_expr_i = 0.5 * ca.mtimes(sl_node_i.T, ca.mtimes(np.diag(Zl), sl_node_i)) + \
                     ca.mtimes(zl.reshape(-1, 1).T, sl_node_i) + \
@@ -311,9 +317,17 @@ class AcadosCasadiOcp:
 
         if with_hessian:
             lam_f = ca_symbol('lam_f', 1, 1)
-            if ocp.solver_options.hessian_approx == 'EXACT' or \
-                (ocp.cost.cost_type == "LINEAR_LS" and ocp.cost.cost_type_0 == "LINEAR_LS" and ocp.cost.cost_type_e == "LINEAR_LS"):
+            if (ocp.cost.cost_type == "LINEAR_LS" and ocp.cost.cost_type_0 == "LINEAR_LS" and ocp.cost.cost_type_e == "LINEAR_LS"):
                 hess_l += lam_f * ca.hessian(nlp_cost, w)[0]
+            elif (ocp.cost.cost_type == "NONLINEAR_LS" and ocp.cost.cost_type_0 == "NONLINEAR_LS" and ocp.cost.cost_type_e == "NONLINEAR_LS"):
+                if  ocp.solver_options.hessian_approx == 'EXACT':
+                    hess_l += lam_f * ca.hessian(nlp_cost, w)[0]
+                elif ocp.solver_options.hessian_approx == 'GAUSS_NEWTON':
+                    Gauss_Newton = 0
+                    for i in range(len(residual_list)):
+                        dr_dw = ca.jacobian(residual_list[i], w)
+                        Gauss_Newton += dr_dw.T @ dr_dw
+                    hess_l += lam_f * Gauss_Newton
             else:
                 raise NotImplementedError("Hessian approximation not implemented for this cost type.")
             lam_g_vec = ca.vertcat(*lam_g)
@@ -506,43 +520,70 @@ class AcadosCasadiOcp:
                 self._index_map['lam_su_in_lam_g'][i].append(self.offset_gnl)
                 self.offset_gnl += 1
 
-    def _get_cost_node(self, i, N_horizon, xtraj_node, utraj_node, p_nlp, sl_node, su_node, ocp: AcadosOcp, dims, cost):
+    def _get_cost_node(self, i, N_horizon, xtraj_node, utraj_node, p_nlp, sl_node, su_node, ocp: AcadosOcp):
         """
         Helper function to get the cost node for a given stage.
         """
+        dims = ocp.dims
+        model = ocp.model
+        cost = ocp.cost
+        p_index = self._index_map['p_in_p_nlp'][i]
+        yref_index = self._index_map['yref_in_p_nlp'][i]
+        yref = p_nlp[yref_index]
         if i == 0:
-            p_index = self._index_map['p_in_p_nlp'][0]
-            yref_index = self._index_map['yref_in_p_nlp'][0]
+            if cost.cost_type_0 == "NONLINEAR_LS":
+                y = ocp.model.cost_y_expr_0
+                residual_expr = y - yref
+            elif cost.cost_type_0 == "LINEAR_LS":
+                y = cost.Vx_0 @ model.x + cost.Vu_0 @ model.u
+                residual_expr = y - yref
+            else:
+                residual_expr = None
             return (xtraj_node[0],
                     utraj_node[0],
                     p_nlp[p_index + yref_index],
                     sl_node[0],
                     su_node[0],
-                    ocp.get_initial_cost_expression(p_nlp[yref_index]),
-                    ca.vertcat(ocp.model.p, p_nlp[yref_index]),
-                    dims.ns_0, cost.zl_0, cost.Zl_0, cost.zu_0, cost.Zu_0)
+                    ocp.get_initial_cost_expression(yref),
+                    residual_expr,
+                    ca.vertcat(ocp.model.p, yref),
+                    dims.ns_0, cost.W_0, cost.zl_0, cost.Zl_0, cost.zu_0, cost.Zu_0)
         elif i < N_horizon:
-            p_index = self._index_map['p_in_p_nlp'][i]
-            yref_index = self._index_map['yref_in_p_nlp'][i]
+            if cost.cost_type_0 == "NONLINEAR_LS":
+                y = ocp.model.cost_y_expr
+                residual_expr = y - yref
+            elif cost.cost_type_0 == "LINEAR_LS":
+                y = cost.Vx @ model.x + cost.Vu @ model.u
+                residual_expr = y - yref
+            else:
+                residual_expr = None
             return (xtraj_node[i],
                     utraj_node[i],
                     p_nlp[p_index + yref_index],
                     sl_node[i],
                     su_node[i],
-                    ocp.get_path_cost_expression(p_nlp[yref_index]),
-                    ca.vertcat(ocp.model.p, p_nlp[yref_index]),
-                    dims.ns, cost.zl, cost.Zl, cost.zu, cost.Zu)
+                    ocp.get_path_cost_expression(yref),
+                    residual_expr,
+                    ca.vertcat(ocp.model.p, yref),
+                    dims.ns, cost.W, cost.zl, cost.Zl, cost.zu, cost.Zu)
         else:
-            p_index = self._index_map['p_in_p_nlp'][-1]
-            yref_index = self._index_map['yref_in_p_nlp'][-1]
+            if cost.cost_type_0 == "NONLINEAR_LS":
+                y = ocp.model.cost_y_expr_e
+                residual_expr = y - yref
+            elif cost.cost_type_0 == "LINEAR_LS":
+                y = cost.Vx_e @ model.x
+                residual_expr = y - yref
+            else:
+                residual_expr = None
             return (xtraj_node[-1],
                     [],
                     p_nlp[p_index + yref_index],
                     sl_node[-1],
                     su_node[-1],
-                    ocp.get_terminal_cost_expression(p_nlp[yref_index]),
-                    ca.vertcat(ocp.model.p, p_nlp[yref_index]),
-                    dims.ns_e, cost.zl_e, cost.Zl_e, cost.zu_e, cost.Zu_e)
+                    ocp.get_terminal_cost_expression(yref),
+                    residual_expr,
+                    ca.vertcat(ocp.model.p, yref),
+                    dims.ns_e, cost.W_e, cost.zl_e, cost.Zl_e, cost.zu_e, cost.Zu_e)
 
     def _get_constraint_node(self, i, N_horizon, xtraj_node, utraj_node, ptraj_node, model, constraints, dims):
         """
