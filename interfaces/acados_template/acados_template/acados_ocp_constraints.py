@@ -61,6 +61,7 @@ class AcadosOcpConstraints:
         self.__lbx_e   = np.array([])
         self.__ubx_e   = np.array([])
         self.__idxbx_e = np.array([])
+        self.__idxbxe_e = np.array([])
         # bounds on u
         self.__lbu     = np.array([])
         self.__ubu     = np.array([])
@@ -209,6 +210,12 @@ class AcadosOcpConstraints:
         """Indices of bounds on x0 that are equalities -- can be set automatically via :py:attr:`x0`.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxbxe_0
+
+    @property
+    def idxbxe_e(self):
+        """Indices of bounds on x0 that are equalities -- can be set automatically via :py:attr:`x0`.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
+        return self.__idxbxe_e
 
     def remove_x0_elimination(self):
         """Remove the elimination of x0 from the constraints, bounds on x0 are handled as general bounds on x."""
@@ -913,6 +920,11 @@ class AcadosOcpConstraints:
     def idxbxe_0(self, idxbxe_0):
         idxbxe_0 = check_if_nparray_and_flatten(idxbxe_0, "idxbxe_0")
         self.__idxbxe_0 = idxbxe_0
+
+    @idxbxe_e.setter
+    def idxbxe_e(self, idxbxe_e):
+        idxbxe_e = check_if_nparray_and_flatten(idxbxe_e, "idxbxe_e")
+        self.__idxbxe_e = idxbxe_e
 
     @x0.setter
     def x0(self, x0):
