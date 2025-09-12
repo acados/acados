@@ -159,7 +159,7 @@ class GeneratedNodeTest(unittest.TestCase):
         output = get_parameter(param_name)
         numbers = [float(x) for x in re.findall(r"[-+]?\d*\.\d+|\d+", output)]
         if isinstance(expected_value, list):
-            self.assertEqual(numbers, expected_value, f"Parameter {param_name} has the wrong value! Got {numbers}")
+            self.assertListEqual(numbers, expected_value, f"Parameter {param_name} has the wrong value! Got {numbers}")
         else:
             self.assertEqual(numbers[0], expected_value, f"Parameter {param_name} has the wrong value! Got {numbers[0]}")
 

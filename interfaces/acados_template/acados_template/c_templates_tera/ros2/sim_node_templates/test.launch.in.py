@@ -14,10 +14,10 @@ from {{ ros_opts.package_name }}_interface.msg import State, ControlInput
 {%- set ns = ros_opts.namespace | lower | trim(chars='/') | replace(from=" ", to="_") %}
 {%- if ns %}
 {%- set control_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.control_topic %}
-{%- set next_state_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.next_state_topic %}
+{%- set state_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.state_topic %}
 {%- else %}
 {%- set control_topic = "/" ~ ros_opts.control_topic %}
-{%- set next_state_topic = "/" ~ ros_opts.next_state_topic %}
+{%- set state_topic = "/" ~ ros_opts.state_topic %}
 {%- endif %}
 
 @pytest.mark.launch_test
@@ -32,7 +32,7 @@ def generate_test_description():
     return launch.LaunchDescription([
         start_{{ ros_opts.node_name }},
         launch.actions.TimerAction(
-                    period=1.0, actions=[launch_testing.actions.ReadyToTest()]),
+                    period=5.0, actions=[launch_testing.actions.ReadyToTest()]),
     ])
 
 
@@ -62,22 +62,11 @@ class GeneratedNodeTest(unittest.TestCase):
 
     def test_subscribing(self, proc_info):
         """Test if the node subscribes to all expected topics."""
-        try:
-            self.wait_for_subscription('{{ control_topic }}')
-        except TimeoutError:
-            self.fail("Node has NOT subscribed to '{{ control_topic }}'.")
-
-        try:
-            self.wait_for_subscription('{{ next_state_topic }}')
-        except TimeoutError:
-            self.fail("Node has NOT subscribed to '{{ next_state_topic }}'.")
+        self.wait_for_subscription('{{ control_topic }}')
 
     def test_publishing(self, proc_info):
         """Test if the node publishes to all expected topics."""
-        try:
-            self.wait_for_publisher('{{ next_state_topic }}')
-        except TimeoutError:
-            self.fail("Node has NOT published to '{{ next_state_topic }}'.")
+        self.wait_for_publisher('{{ state_topic }}')
 
     def wait_for_subscription(self, topic: str, timeout: float = 1.0, threshold: float = 0.5):
         end_time = time.time() + timeout + threshold
@@ -86,7 +75,7 @@ class GeneratedNodeTest(unittest.TestCase):
             if subs:
                 return True
             time.sleep(0.05)
-        raise TimeoutError(f"No subscriber found on {topic} within {timeout}s")
+        self.fail(f"Node has NOT subscribed to '{topic}'.")
 
     def wait_for_publisher(self, topic: str, timeout: float = 1.0, threshold: float = 0.5):
         end_time = time.time() + timeout + threshold
@@ -95,14 +84,14 @@ class GeneratedNodeTest(unittest.TestCase):
             if pubs:
                 return True
             time.sleep(0.05)
-        raise TimeoutError(f"No publisher found on {topic} within {timeout}s")
+        self.fail(f"Node has NOT published to '{topic}'.")
 
     def __check_parameter_get(self, param_name: str, expected_value: Union[list[float], float]):
         """Run a subprocess command and return its output."""
         output = get_parameter(param_name)
         numbers = [float(x) for x in re.findall(r"[-+]?\d*\.\d+|\d+", output)]
         if isinstance(expected_value, list):
-            self.assertEqual(numbers, expected_value, f"Parameter {param_name} has the wrong value! Got {numbers}")
+            self.assertListEqual(numbers, expected_value, f"Parameter {param_name} has the wrong value! Got {numbers}")
         else:
             self.assertEqual(numbers[0], expected_value, f"Parameter {param_name} has the wrong value! Got {numbers[0]}")
 

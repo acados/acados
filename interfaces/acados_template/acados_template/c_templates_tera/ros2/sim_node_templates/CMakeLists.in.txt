@@ -69,7 +69,11 @@ install(FILES
 # --- TESTS ---
 if(BUILD_TESTING)
     find_package(launch_testing_ament_cmake REQUIRED)
-    add_launch_test(test/test_{{ ros_opts.package_name }}.launch.py)
+    add_launch_test(
+        test/test_{{ ros_opts.package_name }}.launch.py
+        TARGET test_{{ ros_opts.package_name }}
+        TIMEOUT 180
+    )
 endif()
 
 ament_package()

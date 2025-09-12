@@ -7,10 +7,10 @@ namespace {{ ros_opts.package_name }}
 {%- set ns = ros_opts.namespace | lower | trim(chars='/') | replace(from=" ", to="_") %}
 {%- if ns %}
 {%- set control_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.control_topic %}
-{%- set next_state_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.next_state_topic %}
+{%- set state_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.state_topic %}
 {%- else %}
 {%- set control_topic = "/" ~ ros_opts.control_topic %}
-{%- set next_state_topic = "/" ~ ros_opts.next_state_topic %}
+{%- set state_topic = "/" ~ ros_opts.state_topic %}
 {%- endif %}
 {{ ClassName }}::{{ ClassName }}()
     : Node("{{ ros_opts.node_name }}")
@@ -34,7 +34,7 @@ namespace {{ ros_opts.package_name }}
 
     // --- Publisher ---
     state_pub_ = this->create_publisher<{{ ros_opts.package_name }}_interface::msg::State>(
-        "{{ next_state_topic }}", 10);
+        "{{ state_topic }}", 10);
 
     // --- Init simulator ---
     this->initialize_simulator();

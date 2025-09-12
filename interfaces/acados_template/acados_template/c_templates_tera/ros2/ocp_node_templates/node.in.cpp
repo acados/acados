@@ -6,12 +6,12 @@ namespace {{ ros_opts.package_name }}
 {%- set ClassName = ros_opts.node_name | replace(from="_", to=" ") | title | replace(from=" ", to="") %}
 {%- set ns = ros_opts.namespace | lower | trim(chars='/') | replace(from=" ", to="_") %}
 {%- if ns %}
-{%- set control_input_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.control_topic %}
+{%- set control_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.control_topic %}
 {%- set state_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.state_topic %}
 {%- set references_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.reference_topic %}
 {%- set parameters_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.parameters_topic %}
 {%- else %}
-{%- set control_input_topic = "/" ~ ros_opts.control_topic %}
+{%- set control_topic = "/" ~ ros_opts.control_topic %}
 {%- set state_topic = "/" ~ ros_opts.state_topic %}
 {%- set references_topic = "/" ~ ros_opts.reference_topic %}
 {%- set parameters_topic = "/" ~ ros_opts.parameters_topic %}
@@ -59,7 +59,7 @@ namespace {{ ros_opts.package_name }}
 
     // --- Publisher ---
     control_input_pub_ = this->create_publisher<{{ ros_opts.package_name }}_interface::msg::ControlInput>(
-        "{{ control_input_topic }}", 10);
+        "{{ control_topic }}", 10);
 
     // --- Init solver ---
     this->initialize_solver();
