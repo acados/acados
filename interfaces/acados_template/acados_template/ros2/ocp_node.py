@@ -33,11 +33,11 @@ from .utils import ControlLoopExec, ArchType, AcadosRosBaseOptions
 class AcadosOcpRosOptions(AcadosRosBaseOptions):
     def __init__(self):
         super().__init__()
-        self._package_name: str = "acados_ocp"
-        self._node_name: str = ""
-        self._namespace: str = ""
-        self._archtype: str = ArchType.NODE.value
-        self._control_loop_executor: str = ControlLoopExec.TIMER.value
+        self.package_name: str = "acados_ocp"
+        self.node_name: str = ""
+        self.namespace: str = ""
+        self.archtype: str = ArchType.NODE.value
+        self.control_loop_executor: str = ControlLoopExec.TIMER.value
 
     def to_dict(self) -> dict:
         return super().to_dict()
@@ -46,10 +46,10 @@ class AcadosOcpRosOptions(AcadosRosBaseOptions):
 if __name__ == "__main__":
     ros_opt = AcadosOcpRosOptions()
 
-    ros_opt.node_name = "my_node"
+    # ros_opt.node_name = "my_node"
     ros_opt.package_name = "that_package"
     ros_opt.namespace = "/my_namespace"
-    ros_opt.control_loop_executor = ControlLoopExec.TIMER
-    ros_opt.archtype = ArchType.LIFECYCLE_NODE
+    # ros_opt.control_loop_executor = ControlLoopExec.TOPIC
+    # ros_opt.archtype = ArchType.LIFECYCLE_NODE
 
     print(ros_opt.to_dict())
