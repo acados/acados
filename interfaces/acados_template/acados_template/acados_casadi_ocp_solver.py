@@ -901,7 +901,7 @@ class AcadosCasadiOcpSolver:
             lam = np.concatenate((lbu_lam, lbx_lam, lbg_lam, ubu_lam, ubx_lam, ubg_lam, lam_soft))
             return lam.flatten()
         elif field in ['z']:
-            return np.empty((0, 1))  # Only empty is supported for now. TODO: extend.
+            return np.empty((0,))  # Only empty is supported for now. TODO: extend.
         else:
             raise NotImplementedError(f"Field '{field}' is not implemented in AcadosCasadiOcpSolver")
 
