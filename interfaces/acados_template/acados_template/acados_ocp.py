@@ -51,7 +51,7 @@ from .utils import (get_acados_path, format_class_dict, make_object_json_dumpabl
                     check_casadi_version, ACADOS_INFTY)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
-from .zoro_description import ZoroDescription, process_zoro_description
+from .zoro_description import ZoroDescription
 from .casadi_function_generation import (
     GenerateContext, AcadosCodegenOptions,
     generate_c_code_conl_cost, generate_c_code_nls_cost, generate_c_code_external_cost,
@@ -1236,7 +1236,7 @@ class AcadosOcp:
             if not isinstance(self.zoro_description, ZoroDescription):
                 raise TypeError('zoro_description should be of type ZoroDescription or None')
             else:
-                self.zoro_description = process_zoro_description(self.zoro_description)
+                self.zoro_description.make_consistent(dims)
 
         # nlp_solver_warm_start_first_qp_from_nlp
         if opts.nlp_solver_warm_start_first_qp_from_nlp and (opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon):
