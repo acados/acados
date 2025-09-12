@@ -85,5 +85,7 @@ if __name__ == "__main__":
     main(cost_version="LS", constraint_version='bu')
     main(cost_version="LS", constraint_version='h', casadi_solver_name="ipopt", use_acados_hessian=True)
     main(cost_version="LS", constraint_version='h', casadi_solver_name="ipopt", use_acados_hessian=False)
+    main(cost_version="NLS", constraint_version='h', casadi_solver_name="ipopt", use_acados_hessian=True)
+    main(cost_version="NLS", constraint_version='h', casadi_solver_name="ipopt", use_acados_hessian=False)
     main(cost_version="LS", constraint_version='bu', casadi_solver_name="fatrop")
     main(cost_version="LS", constraint_version='h', casadi_solver_name="fatrop")
