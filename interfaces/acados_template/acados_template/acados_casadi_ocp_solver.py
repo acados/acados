@@ -966,6 +966,18 @@ class AcadosCasadiOcpSolver:
                     n_lam_i = 2 * (dims.nbx_e + dims.ng_e + dims.nh_e + dims.nphi_e)
                 self.set(i, 'lam', value_[offset : offset + n_lam_i])
                 offset += n_lam_i
+        elif field_ in ['sl', 'su']:
+            offset = 0
+            for i in range(dims.N+1):
+                if i == 0:
+                    ns_i = dims.ns_0
+                elif i < dims.N:
+                    ns_i = dims.ns
+                elif i == dims.N:
+                    ns_i = dims.ns_e
+                if ns_i > 0:
+                    self.set(i, field_, value_[offset : offset + ns_i])
+                    offset += ns_i
         else:
             raise NotImplementedError(f"Field '{field_}' is not yet implemented in set_flat().")
 
