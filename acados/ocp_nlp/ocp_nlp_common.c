@@ -869,6 +869,7 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
 
     // dmask
     assign_and_advance_blasfeo_dvec_structs(N + 1, &in->dmask, &c_ptr);
+    assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
     // dynamics
     for (int i = 0; i < N; i++)
@@ -877,6 +878,8 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
             config->dynamics[i]->model_assign(config->dynamics[i], dims->dynamics[i], c_ptr);
         c_ptr +=
             config->dynamics[i]->model_calculate_size(config->dynamics[i], dims->dynamics[i]);
+        printf("after dynamics model assign %d\n", i);
+        assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
     }
 
     // cost
@@ -884,6 +887,8 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
     {
         in->cost[i] = config->cost[i]->model_assign(config->cost[i], dims->cost[i], c_ptr);
         c_ptr += config->cost[i]->model_calculate_size(config->cost[i], dims->cost[i]);
+        printf("after cost model assign %d\n", i);
+        assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
     }
 
     // constraints
@@ -893,10 +898,13 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
                                                                     dims->constraints[i], c_ptr);
         c_ptr += config->constraints[i]->model_calculate_size(config->constraints[i],
                                                                dims->constraints[i]);
+        printf("after constraints model assign %d\n", i);
+        assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
     }
 
     // ** doubles **
     // Ts
+    printf("before assign_and_advance_double(N, &in->Ts, &c_ptr);");
     assign_and_advance_double(N, &in->Ts, &c_ptr);
 
     // double pointers
@@ -906,12 +914,14 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
     // parameter values
     for (int i = 0; i <= N; i++)
     {
+        printf("before assign_and_advance_double(dims->np[i], &in->parameter_values[i], &c_ptr);");
         assign_and_advance_double(dims->np[i], &in->parameter_values[i], &c_ptr);
         for (int ip = 0; ip < dims->np[i]; ip++)
         {
             in->parameter_values[i][ip] = 0.0;
         }
     }
+    printf("before assign_and_advance_double(dims->n_global_data, &in->global_data, &c_ptr);");
     assign_and_advance_double(dims->n_global_data, &in->global_data, &c_ptr);
 
     // blasfeo_mem align
@@ -2401,6 +2411,7 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
         c_ptr += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
     }
 
+    printf("before assign_and_advance_double(nv_max, &work->tmp_nv_double, &c_ptr);");
     assign_and_advance_double(nv_max, &work->tmp_nv_double, &c_ptr);
 
     assign_and_advance_int(ni_max+ns_max, &work->tmp_nins, &c_ptr);

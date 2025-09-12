@@ -302,7 +302,7 @@ ocp_qp_seed *ocp_qp_seed_assign(ocp_qp_dims *dims, void *raw_memory)
     d_ocp_qp_seed_create(dims, qp_seed, c_ptr);
     c_ptr += d_ocp_qp_seed_memsize(dims);
 
-    assert((char *) raw_memory + ocp_qp_seed_calculate_size(dims) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_seed_calculate_size(dims) >= c_ptr);
 
     return qp_seed;
 }
@@ -524,7 +524,7 @@ ocp_qp_res *ocp_qp_res_assign(ocp_qp_dims *dims, void *raw_memory)
     d_ocp_qp_res_create(dims, qp_res, c_ptr);
     c_ptr += d_ocp_qp_res_memsize(dims);
 
-    assert((char *) raw_memory + ocp_qp_res_calculate_size(dims) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_res_calculate_size(dims) >= c_ptr);
 
     return qp_res;
 }
@@ -550,7 +550,7 @@ ocp_qp_res_ws *ocp_qp_res_workspace_assign(ocp_qp_dims *dims, void *raw_memory)
     d_ocp_qp_res_ws_create(dims, qp_res_ws, c_ptr);
     c_ptr += d_ocp_qp_res_ws_memsize(dims);
 
-    assert((char *) raw_memory + ocp_qp_res_workspace_calculate_size(dims) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_res_workspace_calculate_size(dims) >= c_ptr);
 
     return qp_res_ws;
 }

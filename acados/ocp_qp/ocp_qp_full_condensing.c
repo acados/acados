@@ -323,7 +323,7 @@ acados_size_t ocp_qp_full_condensing_memory_calculate_size(void *dims_, void *op
     size += sizeof(struct d_ocp_qp_reduce_eq_dof_ws);
     size += d_ocp_qp_reduce_eq_dof_ws_memsize(dims->orig_dims);
 
-    size += 2*8;
+    size += 3*8;
 
     return size;
 }
@@ -352,8 +352,8 @@ void *ocp_qp_full_condensing_memory_assign(void *dims_, void *opts_, void *raw_m
     mem->hpipm_red_work = (struct d_ocp_qp_reduce_eq_dof_ws *) c_ptr;
     c_ptr += sizeof(struct d_ocp_qp_reduce_eq_dof_ws);
 
-//    align_char_to(8, &c_ptr);
-//    assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+    // align before calling assign functions
+    align_char_to(8, &c_ptr);
 
     // hpipm_cond_work
     d_cond_qp_ws_create(dims->red_dims, opts->hpipm_cond_opts, mem->hpipm_cond_work, c_ptr);

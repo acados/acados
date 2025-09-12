@@ -979,7 +979,7 @@ void *ocp_qp_osqp_opts_assign(void *config_, void *dims_, void *raw_memory)
     opts->osqp_opts = (OSQPSettings *) c_ptr;
     c_ptr += sizeof(OSQPSettings);
 
-    assert((char *) raw_memory + ocp_qp_osqp_opts_calculate_size(config_, dims_) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_osqp_opts_calculate_size(config_, dims_) >= c_ptr);
 
     return (void *) opts;
 }

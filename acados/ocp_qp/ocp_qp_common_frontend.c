@@ -407,25 +407,42 @@ char *assign_colmaj_ocp_qp_res(ocp_qp_dims *dims, colmaj_ocp_qp_res **qp_res, vo
     // assign pointers to QP solution
     for (int k = 0; k < N + 1; k++)
     {
+        printf("before assign_and_advance_double(nu[k], &(*qp_res)->res_r[k], &c_ptr);");
         assign_and_advance_double(nu[k], &(*qp_res)->res_r[k], &c_ptr);
+        printf("before assign_and_advance_double(nx[k], &(*qp_res)->res_q[k], &c_ptr);");
         assign_and_advance_double(nx[k], &(*qp_res)->res_q[k], &c_ptr);
+        printf("before assign_and_advance_double(ns[k], &(*qp_res)->res_ls[k], &c_ptr);");
         assign_and_advance_double(ns[k], &(*qp_res)->res_ls[k], &c_ptr);
+        printf("before assign_and_advance_double(ns[k], &(*qp_res)->res_us[k], &c_ptr);");
         assign_and_advance_double(ns[k], &(*qp_res)->res_us[k], &c_ptr);
 
-        if (k < N) assign_and_advance_double(nx[k + 1], &(*qp_res)->res_b[k], &c_ptr);
+        if (k < N) printf("before assign_and_advance_double(nx[k + 1], &(*qp_res)->res_b[k], &c_ptr);");
+ assign_and_advance_double(nx[k + 1], &(*qp_res)->res_b[k], &c_ptr);
 
+        printf("before assign_and_advance_double(nb[k], &(*qp_res)->res_d_lb[k], &c_ptr);");
         assign_and_advance_double(nb[k], &(*qp_res)->res_d_lb[k], &c_ptr);
+        printf("before assign_and_advance_double(nb[k], &(*qp_res)->res_d_ub[k], &c_ptr);");
         assign_and_advance_double(nb[k], &(*qp_res)->res_d_ub[k], &c_ptr);
+        printf("before assign_and_advance_double(ng[k], &(*qp_res)->res_d_lg[k], &c_ptr);");
         assign_and_advance_double(ng[k], &(*qp_res)->res_d_lg[k], &c_ptr);
+        printf("before assign_and_advance_double(ng[k], &(*qp_res)->res_d_ug[k], &c_ptr);");
         assign_and_advance_double(ng[k], &(*qp_res)->res_d_ug[k], &c_ptr);
+        printf("before assign_and_advance_double(ns[k], &(*qp_res)->res_d_ls[k], &c_ptr);");
         assign_and_advance_double(ns[k], &(*qp_res)->res_d_ls[k], &c_ptr);
+        printf("before assign_and_advance_double(ns[k], &(*qp_res)->res_d_us[k], &c_ptr);");
         assign_and_advance_double(ns[k], &(*qp_res)->res_d_us[k], &c_ptr);
 
+        printf("before assign_and_advance_double(nb[k], &(*qp_res)->res_m_lb[k], &c_ptr);");
         assign_and_advance_double(nb[k], &(*qp_res)->res_m_lb[k], &c_ptr);
+        printf("before assign_and_advance_double(nb[k], &(*qp_res)->res_m_ub[k], &c_ptr);");
         assign_and_advance_double(nb[k], &(*qp_res)->res_m_ub[k], &c_ptr);
+        printf("before assign_and_advance_double(ng[k], &(*qp_res)->res_m_lg[k], &c_ptr);");
         assign_and_advance_double(ng[k], &(*qp_res)->res_m_lg[k], &c_ptr);
+        printf("before assign_and_advance_double(ng[k], &(*qp_res)->res_m_ug[k], &c_ptr);");
         assign_and_advance_double(ng[k], &(*qp_res)->res_m_ug[k], &c_ptr);
+        printf("before assign_and_advance_double(ns[k], &(*qp_res)->res_m_ls[k], &c_ptr);");
         assign_and_advance_double(ns[k], &(*qp_res)->res_m_ls[k], &c_ptr);
+        printf("before assign_and_advance_double(ns[k], &(*qp_res)->res_m_us[k], &c_ptr);");
         assign_and_advance_double(ns[k], &(*qp_res)->res_m_us[k], &c_ptr);
     }
 
