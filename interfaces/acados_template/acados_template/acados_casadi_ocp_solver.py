@@ -807,7 +807,7 @@ class AcadosCasadiOcpSolver:
 
         # statistics
         solver_stats = self.casadi_solver.stats()
-        # timing = solver_stats['t_proc_total'] 
+        # timing = solver_stats['t_proc_total']
         self.status = solver_stats['return_status'] if 'return_status' in solver_stats else solver_stats['success']
         self.nlp_iter = solver_stats['iter_count'] if 'iter_count' in solver_stats else None
         self.time_total = solver_stats['t_wall_total'] if 't_wall_total' in solver_stats else None
@@ -1172,9 +1172,9 @@ class AcadosCasadiOcpSolver:
             ub = ca.vertcat(self.bounds['ubx'][self.index_map['lam_bx_in_lam_w'][stage]],
                             self.bounds['ubg'][self.index_map['lam_gnl_in_lam_g'][stage]]).full().flatten()
         return  constraints_value, lambda_values, lb, ub
-    
+
     def get_constraints_indices(self, stage: int):
-        """ 
+        """
         Get the indices of the constraints for a given stage.
         This function distinguishes between inequality and equality constraints
         returns indices of
