@@ -16,15 +16,15 @@ from {{ ros_opts.package_name }}_interface.msg import State, ControlInput, Refer
 {%- endif %}
 {%- set ns = ros_opts.namespace | lower | trim(chars='/') | replace(from=" ", to="_") %}
 {%- if ns %}
-{%- set control_input_topic = "/" ~ ros_opts.namespace ~ "/control_input" %}
-{%- set state_topic = "/" ~ ros_opts.namespace ~ "/state" %}
-{%- set references_topic = "/" ~ ros_opts.namespace ~ "/references" %}
-{%- set parameter_topic = "/" ~ ros_opts.namespace ~ "/parameters" %}
+{%- set control_input_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.control_topic %}
+{%- set state_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.state_topic %}
+{%- set references_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.reference_topic %}
+{%- set parameters_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.parameters_topic %}
 {%- else %}
-{%- set control_input_topic = "/control_input" %}
-{%- set state_topic = "/state" %}
-{%- set references_topic = "/references" %}
-{%- set parameter_topic = "/parameters" %}
+{%- set control_input_topic = "/" ~ ros_opts.control_topic %}
+{%- set state_topic = "/" ~ ros_opts.state_topic %}
+{%- set references_topic = "/" ~ ros_opts.reference_topic %}
+{%- set parameters_topic = "/" ~ ros_opts.parameters_topic %}
 {%- endif %}
 
 @pytest.mark.launch_test
@@ -39,7 +39,7 @@ def generate_test_description():
     return launch.LaunchDescription([
         start_{{ ros_opts.node_name }},
         launch.actions.TimerAction(
-                    period=2.0, actions=[launch_testing.actions.ReadyToTest()]),
+                    period=5.0, actions=[launch_testing.actions.ReadyToTest()]),
     ])
 
 
@@ -58,11 +58,10 @@ class GeneratedNodeTest(unittest.TestCase):
     def tearDown(self):
         self.node.destroy_node()
 
-    def test_parameters_set(self, proc_info):
+    def test_set_constraints(self, proc_info):
         """
-        Test if all compile-time declared default parameters.
+        Test if constraints compile-time declared default parameters.
         """
-        # --- Constraints ---
         {%- for field, param in constraints %}
         {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and ('bx_0' not in field) %}
         param_name = "{{ ros_opts.package_name }}.constraints.{{ field }}"
@@ -71,6 +70,10 @@ class GeneratedNodeTest(unittest.TestCase):
         {%- endif %}
         {%- endfor %}
 
+    def test_set_cost(self, proc_info):
+        """
+        Test if cost compile-time declared default parameters.
+        """
         # --- Weights ---
         {%- for field, param in cost %}
         {%- if param and (field is starting_with('W')) %}
@@ -98,6 +101,10 @@ class GeneratedNodeTest(unittest.TestCase):
         {%- endfor %}
         {%- endif %}
 
+    def test_set_solver_options(self, proc_info):
+        """
+        Test if solver options compile-time declared default parameters.
+        """
         # --- Solver Options ---
         param_name = "{{ ros_opts.package_name }}.ts"
         expected_value = {{ solver_options.Tsim }}
@@ -106,26 +113,26 @@ class GeneratedNodeTest(unittest.TestCase):
     def test_subscribing(self, proc_info):
         """Test if the node subscribes to all expected topics."""
         try:
-            self.wait_for_subscription('{{ state_topic }}', timeout={{ solver_options.Tsim }})
+            self.wait_for_subscription('{{ state_topic }}')
         except TimeoutError:
             self.fail("Node has NOT subscribed to '{{ state_topic }}'.")
 
         try:
-            self.wait_for_subscription('{{ references_topic }}', timeout={{ solver_options.Tsim }})
+            self.wait_for_subscription('{{ references_topic }}')
         except TimeoutError:
             self.fail("Node has NOT subscribed to '{{ references_topic }}'.")
 
         {%- if dims.np > 0 %}
         try:
-            self.wait_for_subscription('{{ parameter_topic }}', timeout={{ solver_options.Tsim }})
+            self.wait_for_subscription('{{ parameters_topic }}')
         except TimeoutError:
-            self.fail("Node has NOT subscribed to '{{ parameter_topic }}'.")
+            self.fail("Node has NOT subscribed to '{{ parameters_topic }}'.")
         {%- endif %}
         
     def test_publishing(self, proc_info):
         """Test if the node publishes to all expected topics."""
         try:
-            self.wait_for_publisher('{{ control_input_topic }}', timeout={{ solver_options.Tsim }})
+            self.wait_for_publisher('{{ control_input_topic }}')
         except TimeoutError:
             self.fail("Node has NOT published to '{{ control_input_topic }}'.")
 

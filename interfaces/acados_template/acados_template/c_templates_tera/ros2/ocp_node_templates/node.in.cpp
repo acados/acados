@@ -6,15 +6,15 @@ namespace {{ ros_opts.package_name }}
 {%- set ClassName = ros_opts.node_name | replace(from="_", to=" ") | title | replace(from=" ", to="") %}
 {%- set ns = ros_opts.namespace | lower | trim(chars='/') | replace(from=" ", to="_") %}
 {%- if ns %}
-{%- set control_input_topic = "/" ~ ros_opts.namespace ~ "/control_input" %}
-{%- set state_topic = "/" ~ ros_opts.namespace ~ "/state" %}
-{%- set references_topic = "/" ~ ros_opts.namespace ~ "/references" %}
-{%- set parameters_topic = "/" ~ ros_opts.namespace ~ "/parameters" %}
+{%- set control_input_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.control_topic %}
+{%- set state_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.state_topic %}
+{%- set references_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.reference_topic %}
+{%- set parameters_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.parameters_topic %}
 {%- else %}
-{%- set control_input_topic = "/control_input" %}
-{%- set state_topic = "/state" %}
-{%- set references_topic = "/references" %}
-{%- set parameters_topic = "/parameters" %}
+{%- set control_input_topic = "/" ~ ros_opts.control_topic %}
+{%- set state_topic = "/" ~ ros_opts.state_topic %}
+{%- set references_topic = "/" ~ ros_opts.reference_topic %}
+{%- set parameters_topic = "/" ~ ros_opts.parameters_topic %}
 {%- endif %}
 {%- set has_slack = dims.ns > 0 or dims.ns_0 > 0 or dims.ns_e > 0 %}
 {{ ClassName }}::{{ ClassName }}()
@@ -238,9 +238,9 @@ void {{ ClassName }}::setup_parameter_handlers() {
         {%- set suffix = "_NH0" %}
     {%- elif "phi" in field and "s" not in field %}
         {%- set suffix = "_NPHI0" %}
-    {%- elif "h" in field and "s" in field %}
+    {%- elif "sh" in field %}
         {%- set suffix = "_NSH0" %}
-    {%- elif "phi" in field and "s" in field %}
+    {%- elif "sphi" in field %}
         {%- set suffix = "_NSPHI0" %}
     {%- endif %}
     {%- set constraint_size = model.name ~ suffix | upper %}
@@ -257,9 +257,9 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- for field, param in constraints %}
     {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and (field is not ending_with('_0')) and (field is not ending_with('_e')) %}
     {%- set suffix = "" %}
-    {%- if "x" in field and "s" not in field %}
+    {%- if "bx" in field and "s" not in field %}
         {%- set suffix = "_NBX" %}
-    {%- elif "u" in field and "s" not in field %}
+    {%- elif "bu" in field and "s" not in field %}
         {%- set suffix = "_NBU" %}
     {%- elif "h" in field and "s" not in field %}
         {%- set suffix = "_NH" %}
@@ -267,15 +267,15 @@ void {{ ClassName }}::setup_parameter_handlers() {
         {%- set suffix = "_NPHI" %}
     {%- elif "g" in field and "s" not in field %}
         {%- set suffix = "_NG" %}
-    {%- elif "x" in field and "s" in field %}
+    {%- elif "sbx" in field %}
         {%- set suffix = "_NSBX" %}
-    {%- elif "u" in field and "s" in field %}
+    {%- elif "sbu" in field %}
         {%- set suffix = "_NSBU" %}
-    {%- elif "h" in field and "s" in field %}
+    {%- elif "sh" in field %}
         {%- set suffix = "_NSH" %}
-    {%- elif "phi" in field and "s" in field %}
+    {%- elif "sphi" in field %}
         {%- set suffix = "_NSPHI" %}
-    {%- elif "g" in field and "s" in field %}
+    {%- elif "sg" in field %}
         {%- set suffix = "_NSG" %}
     {%- endif %}
     {%- set constraint_size = model.name ~ suffix | upper %}
@@ -293,21 +293,21 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- for field, param in constraints %}
     {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and (field is ending_with('_e')) %}
     {%- set suffix = "" %}
-    {%- if "x" in field and "s" not in field %}
+    {%- if "bx" in field and "s" not in field %}
         {%- set suffix = "_NBXN" %}
-    {%- elif "h" in field and "s" not in field %}
+    {%- elif "bh" in field and "s" not in field %}
         {%- set suffix = "_NHN" %}
     {%- elif "phi" in field and "s" not in field %}
         {%- set suffix = "_NPHIN" %}
     {%- elif "g" in field and "s" not in field %}
         {%- set suffix = "_NGN" %}
-    {%- elif "x" in field and "s" in field %}
+    {%- elif "sbx" in field %}
         {%- set suffix = "_NSBXN" %}
-    {%- elif "h" in field and "s" in field %}
+    {%- elif "sh" in field %}
         {%- set suffix = "_NSHN" %}
-    {%- elif "phi" in field and "s" in field %}
+    {%- elif "sphi" in field %}
         {%- set suffix = "_NSPHIN" %}
-    {%- elif "g" in field and "s" in field %}
+    {%- elif "sg" in field %}
         {%- set suffix = "_NSGN" %}
     {%- endif %}
     {%- set constraint_size = model.name ~ suffix | upper %}
@@ -479,21 +479,6 @@ rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(
 }
 
 template <size_t N>
-void {{ ClassName }}::get_and_check_array_param(
-    const std::string& param_name, 
-    std::array<double, N>& destination
-) {
-    auto param_value = this->get_parameter(param_name).as_double_array();
-
-    if (param_value.size() != N) {
-        RCLCPP_ERROR(this->get_logger(), "Parameter '%s' has the wrong size. Expected: %ld, got: %ld",
-                     param_name.c_str(), N, param_value.size());
-        return;
-    }
-    std::copy_n(param_value.begin(), N, destination.begin());
-}
-
-template <size_t N>
 void {{ ClassName }}::update_param_array(
     const rclcpp::Parameter& param, 
     std::array<double, N>& destination_array,
@@ -549,7 +534,7 @@ void {{ ClassName }}::update_cost(
     const char* field,
     const std::vector<int>& stages
 ) {
-    auto values = param.as_double_array();
+    const auto values = param.as_double_array();
     
     if (values.size() != N) {
         result.successful = false;
@@ -559,17 +544,22 @@ void {{ ClassName }}::update_cost(
     }
 
     std::array<double, N> vec;
+    std::array<double, N * N> mat{};
     std::copy_n(values.begin(), N, vec.begin());
-    double* data_ptr = vec.data();
+    double* data_ptr = nullptr;
 
-    if (strcmp(field, "W") == 0) {
-        auto mat = diag_from_vec(vec);
+    const bool is_weight = std::strcmp(field, "W") == 0;
+    if (is_weight) {
+        mat = diag_from_vec(vec);
         data_ptr = mat.data();
+        RCLCPP_INFO_STREAM(this->get_logger(), "update cost field '" << field << "' mat(flat) = " << mat);
+    } else {
+        data_ptr = vec.data();
+        RCLCPP_INFO_STREAM(this->get_logger(), "update cost field '" << field << "' values = " << vec);
     }
 
     for (int stage : stages) {
         int status = ocp_nlp_cost_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, stage, field, data_ptr);
-        
         if (status != ACADOS_SUCCESS) {
             result.successful = false;
             result.reason = "Acados solver failed to set cost field '" + std::string(field) + 

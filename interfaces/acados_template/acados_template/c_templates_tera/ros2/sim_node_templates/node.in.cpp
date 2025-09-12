@@ -6,11 +6,11 @@ namespace {{ ros_opts.package_name }}
 {%- set ClassName = ros_opts.node_name | replace(from="_", to=" ") | title | replace(from=" ", to="") %}
 {%- set ns = ros_opts.namespace | lower | trim(chars='/') | replace(from=" ", to="_") %}
 {%- if ns %}
-{%- set control_topic = "/" ~ ros_opts.namespace ~ "/sim_control" %}
-{%- set next_state_topic = "/" ~ ros_opts.namespace ~ "/next_state" %}
+{%- set control_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.control_topic %}
+{%- set next_state_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.next_state_topic %}
 {%- else %}
-{%- set control_topic = "/sim_control" %}
-{%- set next_state_topic = "/next_state" %}
+{%- set control_topic = "/" ~ ros_opts.control_topic %}
+{%- set next_state_topic = "/" ~ ros_opts.next_state_topic %}
 {%- endif %}
 {{ ClassName }}::{{ ClassName }}()
     : Node("{{ ros_opts.node_name }}")

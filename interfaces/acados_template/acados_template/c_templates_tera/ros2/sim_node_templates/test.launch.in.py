@@ -13,11 +13,11 @@ from launch_ros.actions import Node
 from {{ ros_opts.package_name }}_interface.msg import State, ControlInput
 {%- set ns = ros_opts.namespace | lower | trim(chars='/') | replace(from=" ", to="_") %}
 {%- if ns %}
-{%- set control_topic = "/" ~ ros_opts.namespace ~ "/sim_control" %}
-{%- set next_state_topic = "/" ~ ros_opts.namespace ~ "/next_state" %}
+{%- set control_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.control_topic %}
+{%- set next_state_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.next_state_topic %}
 {%- else %}
-{%- set control_topic = "/sim_control" %}
-{%- set next_state_topic = "/next_state" %}
+{%- set control_topic = "/" ~ ros_opts.control_topic %}
+{%- set next_state_topic = "/" ~ ros_opts.next_state_topic %}
 {%- endif %}
 
 @pytest.mark.launch_test
@@ -63,15 +63,19 @@ class GeneratedNodeTest(unittest.TestCase):
     def test_subscribing(self, proc_info):
         """Test if the node subscribes to all expected topics."""
         try:
-            self.wait_for_subscription('{{ control_topic }}', timeout={{ solver_options.Tsim }})
+            self.wait_for_subscription('{{ control_topic }}')
         except TimeoutError:
             self.fail("Node has NOT subscribed to '{{ control_topic }}'.")
 
-        
+        try:
+            self.wait_for_subscription('{{ next_state_topic }}')
+        except TimeoutError:
+            self.fail("Node has NOT subscribed to '{{ next_state_topic }}'.")
+
     def test_publishing(self, proc_info):
         """Test if the node publishes to all expected topics."""
         try:
-            self.wait_for_publisher('{{ next_state_topic }}', timeout={{ solver_options.Tsim }})
+            self.wait_for_publisher('{{ next_state_topic }}')
         except TimeoutError:
             self.fail("Node has NOT published to '{{ next_state_topic }}'.")
 

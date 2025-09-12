@@ -39,8 +39,58 @@ class AcadosOcpRosOptions(AcadosRosBaseOptions):
         self.archtype: str = ArchType.NODE.value
         self.control_loop_executor: str = ControlLoopExec.TIMER.value
 
+        self.__control_topic = "ocp_control"
+        self.__state_topic = "ocp_state"
+        self.__parameters_topic = "ocp_params"
+        self.__reference_topic = "ocp_reference"
+
+    @property
+    def control_topic(self) -> str:
+        return self.__control_topic
+
+    @property
+    def state_topic(self) -> str:
+        return self.__state_topic
+
+    @property
+    def parameters_topic(self) -> str:
+        return self.__parameters_topic
+
+    @property
+    def reference_topic(self) -> str:
+        return self.__reference_topic
+
+    @control_topic.setter
+    def control_topic(self, value: str):
+        if not isinstance(value, str):
+            raise TypeError('Invalid control_topic value, expected str.\n')
+        self.__control_topic = value
+
+    @state_topic.setter
+    def state_topic(self, value: str):
+        if not isinstance(value, str):
+            raise TypeError('Invalid state_topic value, expected str.\n')
+        self.__state_topic = value
+
+    @parameters_topic.setter
+    def parameters_topic(self, value: str):
+        if not isinstance(value, str):
+            raise TypeError('Invalid parameters_topic value, expected str.\n')
+        self.__parameters_topic = value
+
+    @reference_topic.setter
+    def reference_topic(self, value: str):
+        if not isinstance(value, str):
+            raise TypeError('Invalid reference_topic value, expected str.\n')
+        self.__reference_topic = value
+
     def to_dict(self) -> dict:
-        return super().to_dict()
+        return super().to_dict() | {
+            "control_topic": self.control_topic,
+            "state_topic": self.state_topic,
+            "parameters_topic": self.parameters_topic,
+            "reference_topic": self.reference_topic,
+        }
 
 
 if __name__ == "__main__":
