@@ -1,0 +1,28 @@
+name: 'Setup Test Environment'
+description: 'Downloads build artifacts (lib, build, include).'
+
+inputs:
+  artifact-name-prefix:
+    description: 'The unique prefix of the artifacts to download.'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Download lib artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: lib-${{ inputs.artifact-name-prefix }}
+        path: ${{ github.workspace }}/lib
+
+    - name: Download build artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: build-${{ inputs.artifact-name-prefix }}
+        path: ${{ github.workspace }}/build
+
+    - name: Download include artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: include-${{ inputs.artifact-name-prefix }}
+        path: ${{ github.workspace }}/include

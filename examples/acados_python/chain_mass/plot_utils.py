@@ -221,7 +221,7 @@ def plot_chain_position_3D(X, xPosFirstMass, XNames=None):
         XNames = [XNames]
 
     fig = plt.figure()
-    ax = fig.gca(projection='3d')
+    ax = fig.add_subplot(projection='3d')
     ax.plot(xPosFirstMass[0], xPosFirstMass[1], xPosFirstMass[2], 'rx')
     for i, x in enumerate(X):
 

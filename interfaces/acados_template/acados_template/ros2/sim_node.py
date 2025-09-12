@@ -1,5 +1,3 @@
-#!/bin/bash
-#
 # Copyright (c) The acados authors.
 #
 # This file is part of acados.
@@ -29,10 +27,44 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-echo "ACADOS_SOURCE_DIR=$1" >> $GITHUB_ENV
-echo "ACADOS_INSTALL_DIR=$1" >> $GITHUB_ENV
-echo "LD_LIBRARY_PATH=$1/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-echo "MATLABPATH=$MATLABPATH:$1/interfaces/acados_matlab_octave:$1//interfaces/acados_matlab_octave/acados_template_mex:${1}/external/casadi-matlab" >> $GITHUB_ENV
-echo "OCTAVE_PATH=$OCTAVE_PATH:${1}/interfaces/acados_matlab_octave:${1}/interfaces/acados_matlab_octave/acados_template_mex:${1}/external/casadi-octave" >> $GITHUB_ENV
-echo "LD_RUN_PATH=${1}/examples/acados_matlab_octave/test/c_generated_code:${1}/examples/acados_matlab_octave/pendulum_on_cart_model/c_generated_code:${1}/examples/acados_matlab_octave/getting_started/c_generated_code:${1}/examples/acados_matlab_octave/mocp_transition_example/c_generated_code:${1}/examples/acados_matlab_octave/simple_dae_model/c_generated_code:${1}/examples/acados_matlab_octave/lorentz/c_generated_code:${1}/examples/acados_python/p_global_example/c_generated_code:${1}/examples/acados_python/p_global_example/c_generated_code_single_phase:${1}/examples/acados_python/pendulum_on_cart/sim/c_generated_code" >> $GITHUB_ENV
-echo "ENV_RUN=true" >> $GITHUB_ENV
+from .utils import ControlLoopExec, ArchType, AcadosRosBaseOptions
+
+
+# --- Ros Options ---
+class AcadosSimRosOptions(AcadosRosBaseOptions):
+    def __init__(self):
+        super().__init__()
+        self.package_name: str = "acados_sim"
+        self.node_name: str = ""
+        self.namespace: str = ""
+        self.archtype: str = ArchType.NODE.value
+        self.control_loop_executor: str = ControlLoopExec.TIMER.value
+
+        self.__control_topic = "sim_control"
+        self.__state_topic = "sim_state"
+
+    @property
+    def control_topic(self) -> str:
+        return self.__control_topic
+
+    @property
+    def state_topic(self) -> str:
+        return self.__state_topic
+
+    @control_topic.setter
+    def control_topic(self, value: str):
+        if not isinstance(value, str):
+            raise TypeError('Invalid control_topic value, expected str.\n')
+        self.__control_topic = value
+
+    @state_topic.setter
+    def state_topic(self, value: str):
+        if not isinstance(value, str):
+            raise TypeError('Invalid state_topic value, expected str.\n')
+        self.__state_topic = value
+        
+    def to_dict(self) -> dict:
+        return super().to_dict() | {
+            "control_topic": self.control_topic,
+            "state_topic": self.state_topic,
+        }

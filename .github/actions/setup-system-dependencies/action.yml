@@ -1,0 +1,11 @@
+name: 'Setup System Dependencies'
+description: 'Installs system dependencies like BLAS and LAPACK.'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install BLAS and LAPACK
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libblas-dev liblapack-dev
+      shell: bash

@@ -1,0 +1,97 @@
+name: 'Test ROS2 Package'
+description: 'Sources ROS, creates an isolated workspace, then builds and tests a specific ROS2 package.'
+
+inputs:
+  python-file-path:
+    description: 'Path to the Python script to run for code generation.'
+    required: true
+    default: ''
+  source-link-paths:
+    description: 'A multiline string of all source directories to be symlinked into the workspace.'
+    required: false
+    default: ''
+  source-file-paths:
+    description: 'A multiline string of all source files to be copied into the workspace.'
+    required: false
+    default: ''
+  ros-distro:
+    description: 'The ROS2 distribution to use (e.g., humble, iron).'
+    required: false
+    default: 'humble'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Workspace with Symbolic Links
+      shell: bash
+      run: |
+        set -e
+        WS_PATH="${{ github.workspace }}/ros2_test_ws"
+        mkdir -p $WS_PATH/src
+        
+        echo "Copying python script to workspace..."
+        cp "${{ inputs.python-file-path }}" "$WS_PATH/src/"
+
+    - name: Create Symbolic Links
+      if: ${{ inputs.source-link-paths != '' }}
+      shell: bash
+      working-directory: ${{ github.workspace }}/ros2_test_ws/src
+      run: |
+        echo "Creating symbolic links for all specified source paths..."
+        echo "${{ inputs.source-link-paths }}" | while IFS= read -r link_path; do
+          if [ -n "$link_path" ]; then
+            echo "- Linking '$link_path'..."
+            ln -s "$link_path" "."
+          fi
+        done
+
+    - name: Create Copies of Source Files
+      if: ${{ inputs.source-file-paths != '' }}
+      shell: bash
+      working-directory: ${{ github.workspace }}/ros2_test_ws/src
+      run: |
+        echo "Creating copies for all specified source paths..."
+        echo "${{ inputs.source-file-paths }}" | while IFS= read -r copy_path; do
+          if [ -n "$copy_path" ]; then
+            echo "- Copying '$copy_path'..."
+            cp "$copy_path" "."
+          fi
+        done
+
+    - name: Verify Workspace Setup
+      shell: bash
+      working-directory: ${{ github.workspace }}/ros2_test_ws/src
+      run: |
+        echo "Workspace source content:"
+        ls -la 
+
+    - name: Generate Code with Python Script
+      shell: bash
+      working-directory: ${{ github.workspace }}/ros2_test_ws/src
+      run: |
+        SCRIPT_NAME=$(basename ${{ inputs.python-file-path }})
+        echo "Running Python code generator: $SCRIPT_NAME"
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python $SCRIPT_NAME
+
+    - name: Build and Test Package
+      shell: bash
+      working-directory: ${{ github.workspace }}/ros2_test_ws
+      run: |
+        set -e
+        source /opt/ros/${{ inputs.ros-distro }}/setup.bash
+        rosdep update || echo "rosdep update failed but continuing."
+        rosdep install --from-paths src --ignore-src -r -y --rosdistro ${{ inputs.ros-distro }}
+
+        echo "Building and testing ROS2 packages..."
+        colcon build
+        colcon test \
+          --event-handlers console_direct+ \
+          --pytest-args "--reruns 3 --reruns-delay 1"
+
+    - name: Tear down Workspace
+      if: always()
+      shell: bash
+      run: |
+        echo "Cleaning up workspace..."
+        rm -rf ${{ github.workspace }}/ros2_test_ws
