@@ -108,7 +108,6 @@ class AcadosOcpCost:
         self.__cost_source_ext_cost_e = None # TODO add property, only required for generic
         self.__cost_function_ext_cost_e = None # TODO add property, only required for generic
 
-
     # initial stage
     @property
     def cost_type_0(self):
@@ -525,3 +524,101 @@ class AcadosOcpCost:
 
     def set(self, attr, value):
         setattr(self, attr, value)
+
+    @classmethod
+    def _allowed_keys(cls):
+        """Return the set of public property names that have setters."""
+        return {
+            name for name, prop in cls.__dict__.items()
+            if isinstance(prop, property) and prop.fset is not None
+        }
+
+    @classmethod
+    def _keys_2d(cls):
+        """Keys that must be interpreted as 2D arrays (weights/selection matrices)."""
+        return {
+            'W', 'W_0', 'W_e',
+            'Vx', 'Vx_0', 'Vx_e',
+            'Vu', 'Vu_0',
+            'Vz', 'Vz_0',
+        }
+
+    @classmethod
+    def _keys_flat(cls):
+        """Keys that are flattened 1D arrays."""
+        return {
+            'yref', 'yref_0', 'yref_e',
+            'Zl', 'Zu', 'zl', 'zu',
+            'Zl_0', 'Zu_0', 'zl_0', 'zu_0',
+            'Zl_e', 'Zu_e', 'zl_e', 'zu_e',
+        }
+
+    @staticmethod
+    def _to_2d_array(value):
+        """Convert lists to 2D numpy arrays. If 1D, make it a single-row 2D array."""
+        if isinstance(value, (list, tuple)):
+            arr = np.array(value)
+        elif isinstance(value, np.ndarray):
+            arr = value
+        else:
+            return value
+        # Normalize empty to (0, 0) matrix
+        if arr.size == 0:
+            return np.zeros((0, 0))
+        if arr.ndim == 1:
+            arr = arr.reshape(1, -1)
+        return arr
+
+    @staticmethod
+    def _to_flat_array(value):
+        """Convert lists to numpy arrays and flatten to 1D."""
+        if isinstance(value, (list, tuple)):
+            arr = np.array(value)
+        elif isinstance(value, np.ndarray):
+            arr = value
+        else:
+            return value
+        return arr.reshape(-1)
+        
+    @classmethod
+    def from_dict(cls, data, strict=True, allow_none=False):
+        """Create an AcadosOcpCost object from a dictionary with array coercion rules.
+
+        See update_from_dict for details on array conversion.
+        
+        Parameters
+        ----------
+        data : dict
+            Dictionary containing cost entries.
+        strict : bool, optional
+            If True, raise KeyError for unknown keys; otherwise, unknown keys are ignored. Default True.
+        allow_none : bool, optional
+            If False, None values are skipped; if True, None is assigned. Default False.
+
+        Returns
+        -------
+        AcadosOcpCost
+            The created instance with values loaded from the dictionary.
+        """
+        obj = cls()
+        if not isinstance(data, dict):
+            raise TypeError("data must be a dict")
+        allowed = obj._allowed_keys()
+        keys_2d = obj._keys_2d()
+        keys_flat = obj._keys_flat()
+        for key, value in data.items():
+            if value is None and not allow_none:
+                continue
+            if key not in allowed:
+                if strict:
+                    raise KeyError("Invalid key '{}' for {}.".format(key, cls.__name__))
+                else:
+                    continue
+            if key in keys_2d:
+                prepared = obj._to_2d_array(value)
+            elif key in keys_flat:
+                prepared = obj._to_flat_array(value)
+            else:
+                prepared = value
+            setattr(obj, key, prepared)
+        return obj

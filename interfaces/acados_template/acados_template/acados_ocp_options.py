@@ -30,6 +30,7 @@
 #
 
 import os
+import numpy as np
 
 from .utils import check_if_nparray_and_flatten
 
@@ -2291,3 +2292,64 @@ class AcadosOcpOptions:
 
         if self.qpscaling_scale_constraints != "NO_CONSTRAINT_SCALING" or self.qpscaling_scale_objective != "NO_OBJECTIVE_SCALING":
             raise ValueError("Parametric sensitivities are only available if no scaling is applied to the QP.")
+
+    @classmethod
+    def from_dict(cls, data, strict=False, allow_none=True):
+        """Create an instance from a dictionary by setting properties via their setters.
+
+        Parameters
+        ----------
+        data: dict
+            Mapping of option names to values; keys must match property names  
+            (deprecated aliases like `alpha_min`, `alpha_reduction`, etc. are accepted).
+        strict: bool
+            If True, raise on unknown keys or on setter errors; if False, ignore them.
+        allow_none: bool
+            If False, skip keys with value None.
+
+        Returns
+        -------
+        AcadosOcpOptions 
+            The created instance with values loaded from the dictionary.
+        """
+        if not isinstance(data, dict):
+            raise TypeError(f"AcadosOcpOptions.from_dict expects dict, got {type(data)}")
+
+        obj = cls()
+
+        # Set horizon first if present (some options depend on N)
+        if 'N_horizon' in data and (data['N_horizon'] is not None or allow_none):
+            try:
+                obj.N_horizon = data['N_horizon']
+            except Exception:
+                if strict:
+                    raise
+                # ignore in best-effort mode
+        N = obj.N_horizon
+
+        per_stage_keys = {'sim_method_num_steps', 'sim_method_num_stages', 'sim_method_jac_reuse'}
+
+        for key, value in data.items():
+            if value is None and not allow_none:
+                continue
+            # accept only keys that map to a property on the class
+            if not hasattr(cls, key):
+                if strict:
+                    raise KeyError(f"Invalid key '{key}' for {cls.__name__}")
+                continue
+            # Coerce list inputs for per-stage simulation fields to numpy arrays
+            if key in per_stage_keys and isinstance(value, list):
+                try:
+                    value = np.array(value)
+                except Exception:
+                    # leave as-is; setter/consistency will raise if invalid
+                    pass
+            try:
+                setattr(obj, key, value)
+            except Exception as e:
+                if strict:
+                    raise
+                # best-effort mode: ignore problematic keys
+                continue
+
+        return obj

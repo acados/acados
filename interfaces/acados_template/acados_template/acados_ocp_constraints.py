@@ -1401,3 +1401,123 @@ class AcadosOcpConstraints:
 
     def set(self, attr, value):
         setattr(self, attr, value)
+
+
+    @classmethod
+    def _allowed_keys(cls):
+        """Return the set of public property names that have setters."""
+        return {
+            name for name, prop in cls.__dict__.items()
+            if isinstance(prop, property) and prop.fset is not None
+        }
+
+    @classmethod
+    def _keys_2d(cls):
+        """Keys that are interpreted as 2D arrays (matrices)."""
+        return {
+            'C', 'D', 'C_e',
+            'Jbx', 'Jbx_0', 'Jbx_e',
+            'Jbu', 'Jsg', 'Jsg_e',
+            'Jsh', 'Jsh_0', 'Jsh_e',
+            'Jsbu', 'Jsbx', 'Jsbx_e',
+            'Jsphi', 'Jsphi_0', 'Jsphi_e',
+        }
+
+    @classmethod
+    def _ignored_keys(cls):
+        """Keys present in serialized dicts that should be ignored on load (read-only/derived)."""
+        return {
+            'has_x0',
+        }
+
+    @staticmethod
+    def _to_2d_array(value):
+        if isinstance(value, (list, tuple)):
+            arr = np.array(value)
+        elif isinstance(value, np.ndarray):
+            arr = value
+        else:
+            return value
+        # Normalize empty to (0, 0) matrix
+        if arr.size == 0:
+            return np.zeros((0, 0))
+        if arr.ndim == 1:
+            arr = arr.reshape(1, -1)
+        return arr
+
+    @staticmethod
+    def _to_flat_array(value):
+        if isinstance(value, (list, tuple)):
+            arr = np.array(value)
+        elif isinstance(value, np.ndarray):
+            arr = value
+        else:
+            return value
+        return arr.reshape(-1)
+
+
+    @classmethod
+    def from_dict(cls, data: dict, strict=True, allow_none=False):
+        """Create an AcadosOcpConstraints object from a dictionary with array coercion.
+
+        Parameters
+        ----------
+        data : dict
+            Dictionary containing constraint entries.
+        strict : bool, optional
+            If True, raise KeyError for unknown keys; otherwise, unknown keys are ignored. Default True.
+        allow_none : bool, optional
+            If False, None values are skipped; if True, None is assigned. Default False.
+            
+        Returns
+        -------
+        AcadosOcpConstraints
+            The created instance with values loaded from the dictionary.
+        """
+        obj = cls()
+        if not isinstance(data, dict):
+            raise TypeError("data must be a dict")
+        allowed = obj._allowed_keys()
+        ignored = obj._ignored_keys()
+        keys_2d = obj._keys_2d()
+        for key, value in data.items():
+            if key in ignored:
+                continue
+            if value is None and not allow_none:
+                continue
+            if key not in allowed:
+                if strict:
+                    raise KeyError("Invalid key '{}' for {}.".format(key, cls.__name__))
+                else:
+                    continue
+            if key in keys_2d:
+                prepared = obj._to_2d_array(value)
+            else:
+                prepared = obj._to_flat_array(value)
+            setattr(obj, key, prepared)
+        # infer has_x0 from loaded fields (ignore serialized flag); set via x0 setter if detected
+        try:
+            lbx0 = getattr(obj, 'lbx_0')
+            ubx0 = getattr(obj, 'ubx_0')
+            idxbx0 = getattr(obj, 'idxbx_0')
+            idxbxe0 = getattr(obj, 'idxbxe_0')
+            n = lbx0.shape[0] if isinstance(lbx0, np.ndarray) else 0
+            cond = (
+                isinstance(lbx0, np.ndarray)
+                and isinstance(ubx0, np.ndarray)
+                and isinstance(idxbx0, np.ndarray)
+                and isinstance(idxbxe0, np.ndarray)
+                and n > 0
+                and ubx0.shape == lbx0.shape == (n,)
+                and idxbx0.shape == (n,)
+                and idxbxe0.shape == (n,)
+                and np.array_equal(lbx0, ubx0)
+                and np.array_equal(np.sort(idxbx0.astype(int, copy=False)), np.arange(n))
+                and np.array_equal(np.sort(idxbxe0.astype(int, copy=False)), np.arange(n))
+            )
+            if cond:
+                obj.x0 = lbx0
+        except Exception:
+            # best-effort: ignore if fields missing or invalid
+            pass
+        return obj

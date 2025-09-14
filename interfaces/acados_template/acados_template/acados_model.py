@@ -33,7 +33,7 @@ from typing import Union
 import casadi as ca
 import numpy as np
 
-from casadi import MX, SX
+from casadi import MX, SX, DM
 
 from .utils import is_empty, casadi_length
 from .acados_dims import AcadosOcpDims, AcadosSimDims
@@ -966,3 +966,76 @@ class AcadosModel():
         return not (is_empty(self.cost_expr_ext_cost_custom_hess_0) and
                     is_empty(self.cost_expr_ext_cost_custom_hess) and 
                     is_empty(self.cost_expr_ext_cost_custom_hess_e))
+
+
+    @classmethod
+    def _allowed_keys(cls):
+        """Return the set of public property names that have setters."""
+        return {
+            name for name, prop in cls.__dict__.items()
+            if isinstance(prop, property) and prop.fset is not None
+        }
+
+    @staticmethod
+    def _deserialize_casadi(value):
+        """Attempt to deserialize CasADi SX/MX/DM objects from strings or lists.
+
+        - If value is a string, try SX.deserialize, then MX.deserialize, then DM.deserialize.
+        - If value is a list/tuple, apply recursively to elements.
+        - If value is a dict, apply recursively to values.
+        - Otherwise, return value unchanged.
+        """
+        # strings: try the three CasADi types
+        if isinstance(value, str):
+            for typ in (SX, MX, DM):
+                try:
+                    return typ.deserialize(value)
+                except Exception:
+                    pass
+            return value
+        # lists/tuples: element-wise
+        if isinstance(value, (list, tuple)):
+            conv = [AcadosModel._deserialize_casadi(v) for v in value]
+            return type(value)(conv) if not isinstance(value, list) else conv
+        # dicts: value-wise (keys assumed to be plain strings)
+        if isinstance(value, dict):
+            return {k: AcadosModel._deserialize_casadi(v) for k, v in value.items()}
+        # pass-through
+        return value
+
+    @classmethod
+    def from_dict(cls, data: dict, *, strict: bool = True, allow_none: bool = False):
+        """Create an AcadosModel object from a dictionary.
+
+        CasADi objects serialized with `SX.serialize()`/`MX.serialize()`/`DM.serialize()`
+        are automatically deserialized.
+
+        Parameters
+        ----------
+        data : dict
+            Dictionary containing model entries (e.g. symbolic variables and expressions).
+        strict : bool, optional
+            If True, raise KeyError for unknown keys; otherwise, unknown keys are ignored. Default True.
+        allow_none : bool, optional
+            If False, None values are skipped; if True, None is assigned. Default False.
+
+        Returns
+        -------
+        AcadosModel
+            The created instance with values loaded from the dictionary.
+        """
+        obj = cls()
+        if not isinstance(data, dict):
+            raise TypeError("data must be a dict")
+        allowed = obj._allowed_keys()
+        for key, value in data.items():
+            if value is None and not allow_none:
+                continue
+            if key not in allowed:
+                if strict:
+                    raise KeyError(f"Invalid key '{key}' for {obj.__name__}.")
+                else:
+                    continue
+            prepared = AcadosModel._deserialize_casadi(value)
+            setattr(obj, key, prepared)
+        return obj
