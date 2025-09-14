@@ -47,8 +47,6 @@ class AcadosSimDims:
         self.__nu = None
         self.__nz = 0
         self.__np = 0
-<<<<<<< HEAD
-=======
         
         
     @classmethod
@@ -93,7 +91,6 @@ class AcadosSimDims:
                     continue
             setattr(obj, key, value)
         return obj
->>>>>>> 5d6078cfc (working from_dict or from_json for AcadosOcp)
 
     @property
     def nx(self):
