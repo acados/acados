@@ -48,7 +48,7 @@ from .acados_ocp_iterate import AcadosOcpIterate
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
                     get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
-                    check_casadi_version, ACADOS_INFTY)
+                    check_casadi_version, to_ndarray_if_numeric, ACADOS_INFTY)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
 from .zoro_description import ZoroDescription
@@ -2440,7 +2440,6 @@ class AcadosOcp:
         cost_dict = data.get("cost", None)
         constraints_dict = data.get("constraints", None)
         solver_options_dict = data.get("solver_options", None)
-        ros_opts_dict = data.get("ros_opts", None)
         simulink_opts_dict = data.get("simulink_opts", None)
         zoro_description_dict = data.get("zoro_description", None)
         
@@ -2454,8 +2453,6 @@ class AcadosOcp:
             ocp.constraints = AcadosOcpConstraints.from_dict(constraints_dict)
         if solver_options_dict is not None and isinstance(solver_options_dict, dict):
             ocp.solver_options = AcadosOcpOptions.from_dict(solver_options_dict)
-        if ros_opts_dict is not None and isinstance(ros_opts_dict, dict):
-            ocp.ros_opts = AcadosOcpRosOptions.from_dict(ros_opts_dict)
         if simulink_opts_dict is not None and isinstance(simulink_opts_dict, dict):
             raise NotImplementedError("json load with simulink options is not yet supported.")
         if zoro_description_dict is not None and isinstance(zoro_description_dict, dict):

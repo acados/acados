@@ -1457,7 +1457,7 @@ class AcadosOcpConstraints:
 
 
     @classmethod
-    def from_dict(cls, data: dict, strict=True, allow_none=False):
+    def from_dict(cls, data: dict, *, strict: bool = True, allow_none: bool = False):
         """Create an AcadosOcpConstraints object from a dictionary with array coercion.
 
         Parameters

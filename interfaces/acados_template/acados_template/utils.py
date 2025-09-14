@@ -35,6 +35,7 @@ import os
 import shutil
 import sys
 import platform
+from numbers import Number
 import urllib.request
 from subprocess import DEVNULL, STDOUT, call
 if os.name == 'nt':
@@ -577,3 +578,31 @@ def verbose_system_call(cmd, verbose=True, shell=False):
         stderr=None if verbose else STDOUT,
         shell=shell
     )
+
+
+def is_num(x) -> bool:
+    return isinstance(x, Number) and not isinstance(x, bool)
+
+
+def list_is_numeric(lst) -> bool:
+    return all(is_num(el) for el in lst)
+
+
+def list_is_matrix(lst) -> bool:
+    return all(isinstance(el, list) and (len(el) == 0 or list_is_numeric(el)) for el in lst)
+
+
+def to_ndarray_if_numeric(val):
+    if isinstance(val, list):
+        if len(val) == 0 or list_is_numeric(val) or list_is_matrix(val):
+            return np.array(val)
+    return val
+
+
+def can_set(obj, key: str) -> bool:
+    if not hasattr(obj, key):
+        return False
+    cls_attr = getattr(type(obj), key, None)
+    if isinstance(cls_attr, property) and cls_attr.fset is None:
+        return False
+    return True

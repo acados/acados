@@ -2294,7 +2294,7 @@ class AcadosOcpOptions:
             raise ValueError("Parametric sensitivities are only available if no scaling is applied to the QP.")
 
     @classmethod
-    def from_dict(cls, data, strict=False, allow_none=True):
+    def from_dict(cls, data: dict, *,  strict: bool = False, allow_none: bool = True):
         """Create an instance from a dictionary by setting properties via their setters.
 
         Parameters

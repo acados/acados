@@ -306,6 +306,76 @@ class AcadosSimOptions:
         else:
             raise Exception('Invalid with_batch_functionality value. Expected bool.')
 
+    @classmethod
+    def _allowed_keys(cls):
+        """Return the set of public property names that have setters."""
+        return {
+            name for name, prop in cls.__dict__.items()
+            if isinstance(prop, property) and prop.fset is not None
+        }
+        
+    @classmethod
+    def from_dict(cls, data: dict, *, strict: bool = False, allow_none: bool = True) -> "AcadosSimOptions":
+        """
+        Create an `AcadosSimOptions` instance from a dictionary.
+        
+        Parameters
+        ----------
+        data : dict
+            Dictionary containing simulation options entries.
+        strict : bool, optional
+            If True, raise KeyError for unknown keys; otherwise, unknown keys are ignored. Default True.
+        allow_none : bool, optional
+            If False, None values are skipped; if True, None is assigned. Default False.
+
+        Returns
+        -------
+        AcadosSimOptions
+            The created instance with values loaded from the dictionary.
+        """
+        if not isinstance(data, dict):
+            raise TypeError(f"AcadosSimOptions.from_dict expects dict, got {type(data)}")
+
+        obj = cls()
+
+        # Map legacy/private dump keys to public property names
+        alias_map = {
+            'Tsim': 'T',
+            'sim_method_num_stages': 'num_stages',
+            'sim_method_num_steps': 'num_steps',
+            'sim_method_newton_iter': 'newton_iter',
+            'sim_method_newton_tol': 'newton_tol',
+        }
+        allowed = obj._allowed_keys()
+
+        def coerce_and_set(k: str, v):
+            if v is None and not allow_none:
+                return
+            if k not in allowed:
+                if strict:
+                    raise KeyError(f"Invalid key '{k}' for {obj.__class__.__name__}")
+                return
+            # Type coercions for robustness
+            if k in ('num_stages', 'num_steps', 'newton_iter', 'sim_method_jac_reuse', 'num_threads_in_batch_solve'):
+                if isinstance(v, (float, int)):
+                    v = int(v)
+            elif k in ('newton_tol',):
+                if isinstance(v, (int, float)):
+                    v = float(v)
+            elif k in ('sens_forw', 'sens_adj', 'sens_algebraic', 'sens_hess', 'output_z', 'with_batch_functionality', 'ext_fun_expand_dyn'):
+                if isinstance(v, (int, np.integer)):
+                    v = bool(v)
+            setattr(obj, k, v)
+
+        # First, handle aliases explicitly to ensure T is set if Tsim is present
+        for key, value in data.items():
+            mapped = alias_map.get(key, key)
+            coerce_and_set(mapped, value)
+
+        return obj
+
+
+
 class AcadosSim:
     """
     The class has the following properties that can be modified to formulate a specific simulation problem, see below:
@@ -476,3 +546,64 @@ class AcadosSim:
 
         context.finalize()
         self.__external_function_files_model = context.get_external_function_file_list(ocp_specific=False)
+
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "AcadosSim":
+        """
+        Reconstruct the `AcadosSim` class based on the given dictionary.
+
+        This method uses the existing property setters on dims/model/options to
+        enforce type and shape checks while restoring values from a serialized dict.
+        """
+        if not isinstance(data, dict):
+            raise TypeError(f"AcadosSim.from_dict expects dict, got {type(data)}")
+
+        sim = cls()
+
+        # Top-level fields
+        if "code_export_directory" in data:
+            sim.code_export_directory = data["code_export_directory"]
+
+        # Parameters (normalize to numpy array if numeric-like)
+        if "parameter_values" in data:
+            pv = data["parameter_values"]
+            if isinstance(pv, np.ndarray):
+                sim.parameter_values = pv
+            elif isinstance(pv, (list, tuple)):
+                sim.parameter_values = np.array(pv)
+            elif isinstance(pv, (int, float)):
+                sim.parameter_values = np.array([pv])
+            elif pv is None:
+                # leave default
+                pass
+            else:
+                raise TypeError(f"parameter_values must be array-like, got {type(pv)}")
+
+        # Base components
+        dims_dict = data.get("dims")
+        model_dict = data.get("model")
+        solver_options_dict = data.get("solver_options")
+
+        if isinstance(dims_dict, dict):
+            sim.dims = AcadosSimDims.from_dict(dims_dict)
+        if isinstance(model_dict, dict):
+            sim.model = AcadosModel.from_dict(model_dict)
+        if isinstance(solver_options_dict, dict):
+            sim.solver_options = AcadosSimOptions.from_dict(solver_options_dict)
+
+        return sim
+
+
+    @classmethod
+    def from_json(cls, json_path: str) -> "AcadosSim":
+        """
+        Reconstruct the `AcadosSim` class based on the given JSON file.
+        """
+        if not os.path.exists(json_path):
+            raise FileNotFoundError(f'Path "{json_path}" not found!')
+
+        with open(json_path, "r") as f:
+            data = json.load(f)
+
+        return cls.from_dict(data)

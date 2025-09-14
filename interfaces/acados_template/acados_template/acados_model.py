@@ -1004,7 +1004,7 @@ class AcadosModel():
         return value
 
     @classmethod
-    def from_dict(cls, data: dict, *, strict: bool = True, allow_none: bool = False):
+    def from_dict(cls, data: dict, *, strict: bool = False, allow_none: bool = False):
         """Create an AcadosModel object from a dictionary.
 
         CasADi objects serialized with `SX.serialize()`/`MX.serialize()`/`DM.serialize()`
@@ -1026,14 +1026,14 @@ class AcadosModel():
         """
         obj = cls()
         if not isinstance(data, dict):
-            raise TypeError("data must be a dict")
+            raise TypeError(f"AcadosModel.from_dict expects dict, got {type(data)}")
         allowed = obj._allowed_keys()
         for key, value in data.items():
             if value is None and not allow_none:
                 continue
             if key not in allowed:
                 if strict:
-                    raise KeyError(f"Invalid key '{key}' for {obj.__name__}.")
+                    raise KeyError(f"Invalid key '{key}' for {obj.__class__.__name__}.")
                 else:
                     continue
             prepared = AcadosModel._deserialize_casadi(value)

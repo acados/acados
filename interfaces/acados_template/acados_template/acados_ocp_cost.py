@@ -581,7 +581,7 @@ class AcadosOcpCost:
         return arr.reshape(-1)
         
     @classmethod
-    def from_dict(cls, data, strict=True, allow_none=False):
+    def from_dict(cls, data: dict, *, strict: bool = True, allow_none: bool = False):
         """Create an AcadosOcpCost object from a dictionary with array coercion rules.
 
         See update_from_dict for details on array conversion.

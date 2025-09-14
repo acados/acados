@@ -47,50 +47,6 @@ class AcadosSimDims:
         self.__nu = None
         self.__nz = 0
         self.__np = 0
-        
-        
-    @classmethod
-    def _allowed_keys(cls):
-        """Return the set of public property names that have setters."""
-        return {
-            name for name, prop in cls.__dict__.items()
-            if isinstance(prop, property) and prop.fset is not None
-        }
-
-    @classmethod
-    def from_dict(cls, data: dict, *, strict: bool = True, allow_none: bool = False):
-        """Create an AcadosSimDims object from a dictionary.
-
-        This uses property setters to enforce type and value checks.
-
-        Parameters
-        ----------
-        data : dict
-            Dictionary containing dims entries such as 'nx', 'nu', 'nz', 'np'.
-        strict : bool, optional
-            If True, raise KeyError for unknown keys; otherwise, unknown keys are ignored. Default True.
-        allow_none : bool, optional
-            If False, None values are skipped; if True, None is assigned. Default False.
-
-        Returns
-        -------
-        AcadosSimDims
-            The created instance with values loaded from the dictionary.
-        """
-        obj = cls()
-        if not isinstance(data, dict):
-            raise TypeError("data must be a dict")
-        allowed = obj._allowed_keys()
-        for key, value in data.items():
-            if value is None and not allow_none:
-                continue
-            if key not in allowed:
-                if strict:
-                    raise KeyError(f"Invalid key '{key}' for {obj.__name__}.")
-                else:
-                    continue
-            setattr(obj, key, value)
-        return obj
 
     @property
     def nx(self):
@@ -131,6 +87,50 @@ class AcadosSimDims:
     def np(self, np):
         check_int_value("np", np, nonnegative=True)
         self.__np = np
+        
+        
+    @classmethod
+    def _allowed_keys(cls):
+        """Return the set of public property names that have setters."""
+        return {
+            name for name, prop in cls.__dict__.items()
+            if isinstance(prop, property) and prop.fset is not None
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict, *, strict: bool = False, allow_none: bool = False):
+        """Create an AcadosSimDims object from a dictionary.
+
+        This uses property setters to enforce type and value checks.
+
+        Parameters
+        ----------
+        data : dict
+            Dictionary containing dims entries such as 'nx', 'nu', 'nz', 'np'.
+        strict : bool, optional
+            If True, raise KeyError for unknown keys; otherwise, unknown keys are ignored. Default True.
+        allow_none : bool, optional
+            If False, None values are skipped; if True, None is assigned. Default False.
+
+        Returns
+        -------
+        AcadosSimDims
+            The created instance with values loaded from the dictionary.
+        """
+        obj = cls()
+        if not isinstance(data, dict):
+            raise TypeError("data must be a dict")
+        allowed = obj._allowed_keys()
+        for key, value in data.items():
+            if value is None and not allow_none:
+                continue
+            if key not in allowed:
+                if strict:
+                    raise KeyError(f"Invalid key '{key}' for {obj.__class__.__name__}.")
+                else:
+                    continue
+            setattr(obj, key, value)
+        return obj
 
 
 
@@ -653,7 +653,7 @@ class AcadosOcpDims:
         }
 
     @classmethod
-    def from_dict(cls, data: dict, *, strict: bool = True, allow_none: bool = False):
+    def from_dict(cls, data: dict, *, strict: bool = False, allow_none: bool = False):
         """Create an AcadosOcpDims object from a dictionary.
 
         This uses property setters to enforce type and value checks.
@@ -681,7 +681,7 @@ class AcadosOcpDims:
                 continue
             if key not in allowed:
                 if strict:
-                    raise KeyError(f"Invalid key '{key}' for {obj.__name__}.")
+                    raise KeyError(f"Invalid key '{key}' for {obj.__class__.__name__}.")
                 else:
                     continue
             setattr(obj, key, value)
