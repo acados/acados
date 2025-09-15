@@ -1299,7 +1299,7 @@ class AcadosOcp:
 
         # --- Interface Package ---
         ros_interface_dir = os.path.join('ros2', 'ocp_interface_templates')
-        interface_dir = os.path.join(os.path.dirname(self.code_export_directory), f'{self.ros_opts.package_name}_interface')
+        interface_dir = os.path.join(self.ros_opts.generated_code_dir, f'{self.ros_opts.package_name}_interface')
         template_file = os.path.join(ros_interface_dir, 'README.in.md')
         template_list.append((template_file, 'README.md', interface_dir))
         template_file = os.path.join(ros_interface_dir, 'CMakeLists.in.txt')
@@ -1318,15 +1318,9 @@ class AcadosOcp:
         template_file = os.path.join(ros_interface_dir, 'ControlInput.in.msg')
         template_list.append((template_file, 'ControlInput.msg', msg_dir))
 
-        # Services
-        # TODO: No node implementation yet
-
-        # Actions
-        # TODO: No Template yet and no node implementation
-
         # --- Solver Package ---
         ros_pkg_dir = os.path.join('ros2', 'ocp_node_templates')
-        package_dir = os.path.join(os.path.dirname(self.code_export_directory), self.ros_opts.package_name)
+        package_dir = os.path.join(self.ros_opts.generated_code_dir, self.ros_opts.package_name)
         template_file = os.path.join(ros_pkg_dir, 'README.in.md')
         template_list.append((template_file, 'README.md', package_dir))
         template_file = os.path.join(ros_pkg_dir, 'CMakeLists.in.txt')

@@ -16,12 +16,12 @@ from {{ ros_opts.package_name }}_interface.msg import State, ControlInput, Refer
 {%- endif %}
 {%- set ns = ros_opts.namespace | lower | trim(chars='/') | replace(from=" ", to="_") %}
 {%- if ns %}
-{%- set control_input_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.control_topic %}
+{%- set control_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.control_topic %}
 {%- set state_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.state_topic %}
 {%- set references_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.reference_topic %}
 {%- set parameters_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.parameters_topic %}
 {%- else %}
-{%- set control_input_topic = "/" ~ ros_opts.control_topic %}
+{%- set control_topic = "/" ~ ros_opts.control_topic %}
 {%- set state_topic = "/" ~ ros_opts.state_topic %}
 {%- set references_topic = "/" ~ ros_opts.reference_topic %}
 {%- set parameters_topic = "/" ~ ros_opts.parameters_topic %}
@@ -132,9 +132,9 @@ class GeneratedNodeTest(unittest.TestCase):
     def test_publishing(self, proc_info):
         """Test if the node publishes to all expected topics."""
         try:
-            self.wait_for_publisher('{{ control_input_topic }}')
+            self.wait_for_publisher('{{ control_topic }}')
         except TimeoutError:
-            self.fail("Node has NOT published to '{{ control_input_topic }}'.")
+            self.fail("Node has NOT published to '{{ control_topic }}'.")
 
     def wait_for_subscription(self, topic: str, timeout: float = 1.0, threshold: float = 0.5):
         end_time = time.time() + timeout + threshold

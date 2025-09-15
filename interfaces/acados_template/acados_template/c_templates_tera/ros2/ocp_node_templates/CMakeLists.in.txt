@@ -31,7 +31,6 @@ add_executable({{ ros_opts.node_name }}
 
 # --- TARGET CONFIGURATION ---
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    # Dies bindet die Optionen direkt an den Node und ist die moderne Variante
     target_compile_options({{ ros_opts.node_name }} PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
