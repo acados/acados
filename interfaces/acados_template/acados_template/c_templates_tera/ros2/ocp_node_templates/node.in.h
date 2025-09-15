@@ -106,10 +106,10 @@ private:
     void load_parameters();
     void apply_all_parameters_to_solver();
     rcl_interfaces::msg::SetParametersResult on_parameter_update(const std::vector<rclcpp::Parameter>& params);
-    
+
     template <size_t N>
     void get_and_check_array_param(
-        const std::string& param_name, 
+        const std::string& param_name,
         std::array<double, N>& destination);
     template <size_t N>
     void update_param_array(

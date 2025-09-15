@@ -170,7 +170,7 @@ class AcadosOcp:
     @json_file.setter
     def json_file(self, json_file):
         self.__json_file = json_file
-        
+
     @ros_opts.setter
     def ros_opts(self, ros_opts: AcadosOcpRosOptions):
         if not isinstance(ros_opts, AcadosOcpRosOptions):
@@ -1292,12 +1292,12 @@ class AcadosOcp:
             template_list.append(('cost.in.h', f'{name}_cost.h', cost_dir))
 
         return template_list
-    
-    
+
+
     def _get_ros_template_list(self) -> list:
         template_list = []
 
-        # --- Interface Package --- 
+        # --- Interface Package ---
         ros_interface_dir = os.path.join('ros2', 'ocp_interface_templates')
         interface_dir = os.path.join(os.path.dirname(self.code_export_directory), f'{self.ros_opts.package_name}_interface')
         template_file = os.path.join(ros_interface_dir, 'README.in.md')
@@ -1324,7 +1324,7 @@ class AcadosOcp:
         # Actions
         # TODO: No Template yet and no node implementation
 
-        # --- Solver Package --- 
+        # --- Solver Package ---
         ros_pkg_dir = os.path.join('ros2', 'ocp_node_templates')
         package_dir = os.path.join(os.path.dirname(self.code_export_directory), self.ros_opts.package_name)
         template_file = os.path.join(ros_pkg_dir, 'README.in.md')
@@ -1347,7 +1347,7 @@ class AcadosOcp:
         src_dir = os.path.join(package_dir, 'src')
         template_file = os.path.join(ros_pkg_dir, 'node.in.cpp')
         template_list.append((template_file, 'node.cpp', src_dir))
-        
+
         # Test
         test_dir = os.path.join(package_dir, 'test')
         template_file = os.path.join(ros_pkg_dir, 'test.launch.in.py')
@@ -1391,7 +1391,7 @@ class AcadosOcp:
         if self.simulink_opts is not None:
             template_list += self._get_matlab_simulink_template_list(name)
             template_list += self._get_integrator_simulink_template_list(name)
-            
+
         # ROS
         if self.ros_opts is not None:
             template_list += self._get_ros_template_list()

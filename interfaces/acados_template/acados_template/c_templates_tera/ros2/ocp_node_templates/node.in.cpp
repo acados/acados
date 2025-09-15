@@ -170,13 +170,13 @@ void {{ ClassName }}::solver_status_behaviour(int status) {
     // publish u0 also if the solver failed
     this->get_input(u0_.data(), 0);
     this->publish_input(u0_, status);
-    
+
     {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
     // prepare for next iteration
     if (status == ACADOS_SUCCESS) {
         first_solve_ = false;
         this->prepare_rti_solve();
-    } 
+    }
     else {
         first_solve_ = true;
     }
@@ -185,7 +185,7 @@ void {{ ClassName }}::solver_status_behaviour(int status) {
     // reset solver if nan is detected
     if (status == ACADOS_NAN_DETECTED) {
         {{ model.name }}_acados_reset(ocp_capsule_, 1);
-    } 
+    }
 }
 
 
@@ -480,7 +480,7 @@ rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(
 
 template <size_t N>
 void {{ ClassName }}::update_param_array(
-    const rclcpp::Parameter& param, 
+    const rclcpp::Parameter& param,
     std::array<double, N>& destination_array,
     rcl_interfaces::msg::SetParametersResult& result
 ) {
@@ -511,16 +511,16 @@ void {{ ClassName }}::update_constraint(
                       std::to_string(values.size()) + ", but expected is " + std::to_string(N) + ".";
         return;
     }
-    
+
     std::array<double, N> vec{};
     std::copy_n(values.begin(), N, vec.begin());
 
     for (int stage : stages) {
         int status = ocp_nlp_constraints_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, ocp_nlp_out_, stage, field, vec.data());
-        
+
         if (status != ACADOS_SUCCESS) {
             result.successful = false;
-            result.reason = "Acados solver failed to set cost field '" + std::string(field) + 
+            result.reason = "Acados solver failed to set cost field '" + std::string(field) +
                           "' for stage " + std::to_string(stage) + " (error code: " + std::to_string(status) + ")";
             return;
         }
@@ -535,7 +535,7 @@ void {{ ClassName }}::update_cost(
     const std::vector<int>& stages
 ) {
     const auto values = param.as_double_array();
-    
+
     if (values.size() != N) {
         result.successful = false;
         result.reason = "Cost '" + std::string(param.get_name()) + "' has size " +
@@ -562,7 +562,7 @@ void {{ ClassName }}::update_cost(
         int status = ocp_nlp_cost_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, stage, field, data_ptr);
         if (status != ACADOS_SUCCESS) {
             result.successful = false;
-            result.reason = "Acados solver failed to set cost field '" + std::string(field) + 
+            result.reason = "Acados solver failed to set cost field '" + std::string(field) +
                           "' for stage " + std::to_string(stage) + " (error code: " + std::to_string(status) + ")";
             return;
         }
