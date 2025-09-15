@@ -1,0 +1,17 @@
+name: 'Setup Python Environment'
+description: 'Exports necessary paths and installs the Python interface and Tera.'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Export Paths
+      shell: bash
+      run: ${{ github.workspace }}/.github/linux/export_paths.sh ${{ github.workspace }}
+
+    - name: Install Python interface
+      shell: bash
+      run: ${{ github.workspace }}/.github/linux/install_python.sh
+
+    - name: Install Tera
+      shell: bash
+      run: ${{ github.workspace }}/.github/linux/install_tera.sh
