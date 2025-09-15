@@ -4,7 +4,6 @@
 <!-- [![Travis Status](https://secure.travis-ci.org/acados/acados.png?branch=master)](http://travis-ci.org/acados/acados) -->
 [![Appveyor status](https://ci.appveyor.com/api/projects/status/q0b2nohk476u5clg?svg=true)](https://ci.appveyor.com/project/roversch/acados)
 [![Test Full Build Linux](https://github.com/ArgoJ/acados/actions/workflows/full_build.yml/badge.svg)](https://github.com/ArgoJ/acados/actions/workflows/full_build.yml)
-[![Test ROS2 Build Linux](https://github.com/ArgoJ/acados/actions/workflows/ros2_build.yml/badge.svg)](https://github.com/ArgoJ/acados/actions/workflows/ros2_build.yml)
 <!-- [![codecov](https://codecov.io/gh/acados/acados/branch/master/graph/badge.svg)](https://codecov.io/gh/acados/acados) -->
 
 `acados` provides fast and embedded solvers for nonlinear optimal control, specifically designed for real-time applications and embedded systems.

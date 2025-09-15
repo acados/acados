@@ -34,9 +34,10 @@ import scipy.linalg
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosOcpRosOptions
 
 import sys
-from pathlib import Path
-script_dir = Path(__file__).resolve().parent
-sys.path.insert(0, str(script_dir.parent / 'common'))
+import os
+script_dir = os.path.dirname(os.path.realpath(__file__))
+common_path = os.path.join(script_dir, '..', 'common')
+sys.path.insert(0, os.path.abspath(common_path))
 from pendulum_model import export_pendulum_ode_model
 from utils import plot_pendulum
 
@@ -105,9 +106,9 @@ def main():
     ocp.ros_opts = AcadosOcpRosOptions()
     ocp.ros_opts.package_name = "pendulum_on_cart_ocp"
 
-    export_code = script_dir / 'generated_ocp'
-    ocp.code_export_directory = str(export_code / "c_generated_code")
-    ocp_solver = AcadosOcpSolver(ocp, json_file = str(export_code / 'acados_ocp.json'))
+    export_code = os.path.join(script_dir, 'generated_ocp')
+    ocp.code_export_directory = str(os.path.join(export_code, "c_generated_code"))
+    ocp_solver = AcadosOcpSolver(ocp, json_file = str(os.path.join(export_code, 'acados_ocp.json')))
 
     simX = np.zeros((N+1, nx))
     simU = np.zeros((N, nu))

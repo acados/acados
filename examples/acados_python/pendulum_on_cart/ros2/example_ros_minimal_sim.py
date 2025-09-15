@@ -2,9 +2,10 @@ import numpy as np
 from acados_template import AcadosSim, AcadosSimSolver, AcadosSimRosOptions
 
 import sys
-from pathlib import Path
-script_dir = Path(__file__).resolve().parent
-sys.path.insert(0, str(script_dir.parent / 'common'))
+import os
+script_dir = os.path.dirname(os.path.realpath(__file__))
+common_path = os.path.join(script_dir, '..', 'common')
+sys.path.insert(0, os.path.abspath(common_path))
 from pendulum_model import export_pendulum_ode_model
 
 
@@ -28,9 +29,9 @@ def main():
     sim.ros_opts = AcadosSimRosOptions()
     sim.ros_opts.package_name = "pendulum_on_cart_sim"
 
-    export_code = script_dir / 'generated_sim'
-    sim.code_export_directory = str(export_code / "c_generated_code")
-    acados_integrator = AcadosSimSolver(sim, json_file=str(export_code / 'acados_sim.json'))
+    export_code = os.path.join(script_dir, 'generated_sim')
+    sim.code_export_directory = str( os.path.join(export_code, "c_generated_code"))
+    acados_integrator = AcadosSimSolver(sim, json_file=str(os.path.join(export_code, 'acados_sim.json')))
 
     x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
     u0 = np.array([0.0])

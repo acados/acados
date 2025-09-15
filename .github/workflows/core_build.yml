@@ -2,8 +2,6 @@ name: Reusable Core Build
 
 on:
   workflow_call:
-    # Wir definieren einen Output auf Workflow-Ebene.
-    # So kann der aufrufende Workflow den Wert empfangen.
     outputs:
       artifact-name-prefix:
         description: "The unique prefix for artifact names for this run"
@@ -60,11 +58,9 @@ jobs:
             '.gitmodules',
             'CMakeLists.txt',
             'cmake/**/*.cmake',
-            'acados/**'
+            'acados/**',
+            'interfaces/acados_c/**',
           ) }}
-
-    - name: Install System Dependencies
-      uses: ./.github/actions/setup-system-dependencies
 
     - name: Create Build Environment & Configure
       if: steps.cache-build.outputs.cache-hit != 'true'

@@ -50,6 +50,7 @@ jobs:
         ctest -C Release --rerun-failed -V
         exit 1
 
+        
   python_interface_new_casadi_and_py2octave:
     needs: call_core_build
     runs-on: ubuntu-22.04
@@ -173,6 +174,7 @@ jobs:
         cd ${{ github.workspace }}/examples/acados_python/evaluation
         python minimal_example_evaluation.py
 
+
 # ===== MATLAB TESTS =====
   MATLAB_test:
     needs: call_core_build
@@ -229,6 +231,7 @@ jobs:
       with:
         command: |
             cd ${{ github.workspace }}/examples/acados_matlab_octave/test; run_matlab_tests
+
 
   MATLAB_examples_new_casadi:
     needs: call_core_build
@@ -298,6 +301,7 @@ jobs:
       with:
         command: cd ${{ github.workspace }}/examples/acados_matlab_octave/mocp_transition_example; main_mocp_simulink
 
+
   # run selected matlab examples
   MATLAB_examples:
     needs: call_core_build
@@ -355,6 +359,7 @@ jobs:
       with:
         command: |
               cd ${{ github.workspace }}/examples/acados_matlab_octave/test; test_all_examples;
+
 
 # ===== SIMULINK TESTS =====
   simulink_test:
@@ -481,3 +486,43 @@ jobs:
       working-directory: ${{ github.workspace }}/build
       shell: bash
       run: ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
+
+
+# ===== ROS TESTS =====
+  ros2_humble_test:
+    needs: call_core_build
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - name: Install ROS2 Humble
+      working-directory: ${{ github.workspace }}
+      run: ${{ github.workspace }}/.github/linux/install_ros2_humble.sh
+      shell: bash
+
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
+      with:
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
+
+    - name: Setup Python Environment
+      uses: ./.github/actions/setup-python-environment
+      
+    - name: Test ROS2 OCP Package
+      uses: ./.github/actions/test-ros2-package
+      with:
+        python-file-path: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_minimal_ocp.py
+        source-file-paths: |
+          ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/common/pendulum_model.py
+          ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/common/utils.py
+
+    - name: Test ROS2 Simulation Package
+      uses: ./.github/actions/test-ros2-package
+      with:
+        python-file-path: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_minimal_sim.py
+        source-file-paths: |
+          ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/common/pendulum_model.py
