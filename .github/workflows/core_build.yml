@@ -59,7 +59,7 @@ jobs:
             'CMakeLists.txt',
             'cmake/**/*.cmake',
             'acados/**',
-            'interfaces/acados_c/**',
+            'interfaces/acados_c/**'
           ) }}
 
     - name: Create Build Environment & Configure
