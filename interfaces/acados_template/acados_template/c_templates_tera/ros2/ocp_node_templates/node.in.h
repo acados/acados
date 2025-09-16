@@ -57,7 +57,6 @@ private:
     ocp_nlp_in* ocp_nlp_in_;
     ocp_nlp_out* ocp_nlp_out_;
     ocp_nlp_out* ocp_nlp_sens_;
-    ocp_nlp_solver* ocp_nlp_solver_;
     ocp_nlp_config* ocp_nlp_config_;
     void* ocp_nlp_opts_;
     ocp_nlp_dims* ocp_nlp_dims_;

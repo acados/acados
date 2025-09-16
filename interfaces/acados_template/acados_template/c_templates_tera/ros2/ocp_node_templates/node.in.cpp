@@ -117,7 +117,6 @@ void {{ ClassName }}::initialize_solver() {
     ocp_nlp_in_ = {{ model.name }}_acados_get_nlp_in(ocp_capsule_);
     ocp_nlp_out_ = {{ model.name }}_acados_get_nlp_out(ocp_capsule_);
     ocp_nlp_sens_ = {{ model.name }}_acados_get_sens_out(ocp_capsule_);
-    ocp_nlp_solver_ = {{ model.name }}_acados_get_nlp_solver(ocp_capsule_);
     ocp_nlp_config_ = {{ model.name }}_acados_get_nlp_config(ocp_capsule_);
     ocp_nlp_opts_ = {{ model.name }}_acados_get_nlp_opts(ocp_capsule_);
     ocp_nlp_dims_ = {{ model.name }}_acados_get_nlp_dims(ocp_capsule_);
@@ -159,42 +158,6 @@ void {{ ClassName }}::control_loop() {
         p = current_p_;
         {%- endif %}
     }
-
-    for (double val : x0) {
-        if (std::isnan(val) || std::isinf(val)) {
-            RCLCPP_ERROR(this->get_logger(), "NaN or Inf detected in state vector x0.");
-            publish_input(std::array<double, PENDULUM_NU>{0.0}, ACADOS_QP_FAILURE);
-            return; 
-        }
-    }
-    {%- if dims.ny_0 > 0 %}
-    for (double val : yref0) {
-        if (std::isnan(val) || std::isinf(val)) {
-            RCLCPP_ERROR(this->get_logger(), "NaN or Inf detected in state vector yref0.");
-            publish_input(std::array<double, PENDULUM_NU>{0.0}, ACADOS_QP_FAILURE);
-            return; 
-        }
-    }
-    {%- endif %}
-    {%- if dims.ny > 0 %}
-    for (double val : yref) {
-        if (std::isnan(val) || std::isinf(val)) {
-            RCLCPP_ERROR(this->get_logger(), "NaN or Inf detected in state vector yref0.");
-            publish_input(std::array<double, PENDULUM_NU>{0.0}, ACADOS_QP_FAILURE);
-            return; 
-        }
-    }
-    {%- endif %}
-    {%- if dims.ny_e > 0 %}
-    for (double val : yrefN) {
-        if (std::isnan(val) || std::isinf(val)) {
-            RCLCPP_ERROR(this->get_logger(), "NaN or Inf detected in state vector yref0.");
-            publish_input(std::array<double, PENDULUM_NU>{0.0}, ACADOS_QP_FAILURE);
-            return; 
-        }
-    }
-    {%- endif %}
-
     
     {
         {%- if use_multithreading %}
@@ -811,7 +774,9 @@ void {{ ClassName }}::warmstart_solver_states(double *x0) {
     {%- if use_multithreading %}
     std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
     {%- endif %}
-    ocp_nlp_set_all(ocp_nlp_solver_, ocp_nlp_in_, ocp_nlp_out_, "x", x0);
+    for (int i = 1; i <= {{ model.name | upper }}_N; ++i) {
+        ocp_nlp_out_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_out_, ocp_nlp_in_, i, "x", x0);
+    }
 }
 {%- endif %}
 
