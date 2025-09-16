@@ -518,23 +518,6 @@ class RosTopicMapper(AcadosRosBaseOptions):
         - Skip elements that cannot be matched; map as many as possible
         """
         obj = cls()
-
-        ocp_pkg = ocp_instance.ros_opts.package_name
-        sim_pkg = sim_instance.ros_opts.package_name
-        ocp_msgs_pkg = f"{ocp_pkg}_interface"
-        sim_msgs_pkg = f"{sim_pkg}_interface"
-
-        # Topic names
-        ocp_state_topic = ocp_instance.ros_opts.state_topic
-        ocp_control_topic = ocp_instance.ros_opts.control_topic
-        sim_state_topic = sim_instance.ros_opts.state_topic
-        sim_control_topic = sim_instance.ros_opts.control_topic
-
-        # Dimensions
-        nx_ocp = _size(ocp_instance.model.x)
-        nx_sim = _size(sim_instance.model.x)
-        nu_ocp = _size(ocp_instance.model.u)
-        nu_sim = _size(sim_instance.model.u)
         
         # State and Control names
         ocp_x_names = _elem_names(ocp_instance.model.x)
@@ -543,13 +526,13 @@ class RosTopicMapper(AcadosRosBaseOptions):
         sim_u_names = _elem_names(sim_instance.model.u)
 
         # --- Build input messages ---
-        in_sim_state = build_default_state(sim_state_topic, sim_msgs_pkg, nx_sim, direction_out=False)
-        in_ocp_ctrl  = build_default_control(ocp_control_topic, ocp_msgs_pkg, nu_ocp, direction_out=False)
+        in_sim_state = build_default_state(sim_instance, direction_out=False)
+        in_ocp_ctrl  = build_default_control(ocp_instance, direction_out=False)
         obj.in_msgs = [in_sim_state, in_ocp_ctrl]
 
         # --- Build output messages ---
-        out_ocp_state = build_default_state(ocp_state_topic, ocp_msgs_pkg, nx_ocp, direction_out=True)
-        out_sim_ctrl  = build_default_control(sim_control_topic, sim_msgs_pkg, nu_sim, direction_out=True)
+        out_ocp_state = build_default_state(ocp_instance, direction_out=True)
+        out_sim_ctrl  = build_default_control(sim_instance, direction_out=True)
 
         # Map SIM x -> OCP x
         x_map_pairs = _compute_mapping(
@@ -651,21 +634,22 @@ def _compute_mapping(
 
 
 def build_default_state(
-        topic: str,
-        msg_pkg: str, 
-        nx: int,
-        direction_out: bool
+        solver_instance: Union['AcadosOcp', 'AcadosSim'],
+        direction_out: bool = False
 ) -> Union[RosTopicMsg, RosTopicMsgOutput]:
     """
     Creates a standard ocp- or sim-interface state message of an 
     in- or outgoing message, dependent on the setting.
     """
+    if not (hasattr(solver_instance, "ros_opts") and getattr(solver_instance, "ros_opts") is not None):
+        raise ValueError(f"Field 'ros_opts' is not set in the solver {solver_instance.__class__.__name__}")
+    
     m = RosTopicMsgOutput() if direction_out else RosTopicMsg()
-    m.topic_name = topic
-    m.msg_type = f"{msg_pkg}/State"
+    m.topic_name = solver_instance.ros_opts.state_topic
+    m.msg_type = f"{solver_instance.ros_opts.package_name}_interface/State"
     m.field_tree = [
         RosField(name="header", ftype="std_msgs/Header"),
-        RosField(name="x", ftype="float64", is_array=True, array_size=nx),
+        RosField(name="x", ftype="float64", is_array=True, array_size=solver_instance.model.x.rows()),
     ]
     if direction_out:
         m.field_tree.append(RosField(name="status", ftype="int8"))
@@ -674,21 +658,22 @@ def build_default_state(
 
 
 def build_default_control(
-        topic: str,
-        msg_pkg: str, 
-        nu: int,
-        direction_out: bool
+        solver_instance: Union['AcadosOcp', 'AcadosSim'],
+        direction_out: bool = False
 ) -> Union[RosTopicMsg, RosTopicMsgOutput]:
     """
     Creates a standard ocp- or sim-interface control message of an 
     in- or outgoing message, dependent on the setting.
     """
+    if not (hasattr(solver_instance, "ros_opts") and getattr(solver_instance, "ros_opts") is not None):
+        raise ValueError(f"Field 'ros_opts' is not set in the solver {solver_instance.__class__.__name__}")
+    
     m = RosTopicMsgOutput() if direction_out else RosTopicMsg()
-    m.topic_name = topic
-    m.msg_type = f"{msg_pkg}/ControlInput"
+    m.topic_name = solver_instance.ros_opts.control_topic
+    m.msg_type = f"{solver_instance.ros_opts.package_name}_interface/ControlInput"
     m.field_tree = [
         RosField(name="header", ftype="std_msgs/Header"),
-        RosField(name="u", ftype="float64", is_array=True, array_size=nu),
+        RosField(name="u", ftype="float64", is_array=True, array_size=solver_instance.model.x.rows()),
     ]
     if not direction_out:
         m.field_tree.append(RosField(name="status", ftype="int8"))

@@ -1,5 +1,6 @@
 import numpy as np
-from acados_template import AcadosSim, AcadosSimSolver, AcadosSimRosOptions
+from acados_template import AcadosSim, AcadosSimSolver
+from acados_template.ros2 import AcadosSimRosOptions
 
 import sys
 import os

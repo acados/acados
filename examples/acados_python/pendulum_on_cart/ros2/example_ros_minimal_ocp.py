@@ -31,7 +31,8 @@
 import numpy as np
 import scipy.linalg
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosOcpRosOptions
+from acados_template import AcadosOcp, AcadosOcpSolver
+from acados_template.ros2 import AcadosOcpRosOptions
 
 import sys
 import os

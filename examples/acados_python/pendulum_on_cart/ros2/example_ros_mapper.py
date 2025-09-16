@@ -57,13 +57,12 @@ def main():
     # We create all messages here that the mapper should subscribe and publish.
     # e.g. /pose.position.x -> /ocp_state.x[0] 
     #      /ocp_control.u[0] -> /cmd_vel.linear.x
-    ocp_msgs_pkg = ocp.ros_opts.package_name + "_interface"
     
     # setup control input messages
-    in_ocp_ctrl  = build_default_control(ocp.ros_opts.control_topic, ocp_msgs_pkg, ocp.model.u.rows(), direction_out=False)
+    in_ocp_ctrl  = build_default_control(ocp, direction_out=False)
     
     # setup state output messages
-    out_ocp_state = build_default_state(ocp.ros_opts.state_topic, ocp_msgs_pkg, ocp.model.x.rows(), direction_out=True)
+    out_ocp_state = build_default_state(ocp, direction_out=True)
     out_ocp_state.exec_topic = "/pose"
     out_ocp_state.mapping = [
         (f"pose.position.x", "x[0]"),
