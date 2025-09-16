@@ -9,13 +9,6 @@ namespace {{ package_name }}
 {
     RCLCPP_INFO(this->get_logger(), "Initializing {{ node_name | replace(from="_", to=" ") | title }}...");
 
-    // --- Parameters ---
-    this->declare_parameters();
-    this->setup_parameter_handlers();
-    param_callback_handle_ = this->add_on_set_parameters_callback(
-        std::bind(&{{ ClassName }}::on_parameter_update, this, std::placeholders::_1));
-    this->load_parameters();
-
     // --- Subscriptions ---
     {%- for in_msg in in_msgs %}
     {{ in_msg.topic_name }}_sub_ = this->create_subscription<{{  in_msg.msg_type }}>(

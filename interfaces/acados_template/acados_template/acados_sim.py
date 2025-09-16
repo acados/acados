@@ -354,6 +354,7 @@ class AcadosSim:
 
         self.__parameter_values = np.array([])
         self.__problem_class = 'SIM'
+        self.__json_file = "acados_sim.json"
         
         self.__ros_opts: Optional[AcadosSimRosOptions] = None
 
@@ -362,11 +363,6 @@ class AcadosSim:
         """:math:`p` - initial values for parameter - can be updated"""
         return self.__parameter_values
     
-    @property
-    def ros_opts(self) -> Optional[AcadosSimRosOptions]:
-        """Options to configure ROS 2 nodes and topics."""
-        return self.__ros_opts
-
     @parameter_values.setter
     def parameter_values(self, parameter_values):
         if isinstance(parameter_values, np.ndarray):
@@ -374,7 +370,21 @@ class AcadosSim:
         else:
             raise ValueError('Invalid parameter_values value. ' +
                             f'Expected numpy array, got {type(parameter_values)}.')
+            
+    @property
+    def json_file(self):
+        """Name of the json file where the problem description is stored."""
+        return self.__json_file
+
+    @json_file.setter
+    def json_file(self, json_file):
+        self.__json_file = json_file
         
+    @property
+    def ros_opts(self) -> Optional[AcadosSimRosOptions]:
+        """Options to configure ROS 2 nodes and topics."""
+        return self.__ros_opts
+
     @ros_opts.setter
     def ros_opts(self, ros_opts: AcadosSimRosOptions):
         if not isinstance(ros_opts, AcadosSimRosOptions):
@@ -409,8 +419,12 @@ class AcadosSim:
         return format_class_dict(sim_dict)
 
 
-    def dump_to_json(self, json_file='acados_sim.json') -> None:
-        with open(json_file, 'w') as f:
+    def dump_to_json(self) -> None:
+        dir_name = os.path.dirname(self.json_file)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
+            
+        with open(self.json_file, 'w') as f:
             json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
 
 

@@ -162,14 +162,14 @@ class AcadosOcp:
         """Name of the json file where the problem description is stored."""
         return self.__json_file
 
+    @json_file.setter
+    def json_file(self, json_file):
+        self.__json_file = json_file
+        
     @property
     def ros_opts(self) -> Optional[AcadosOcpRosOptions]:
         """Options to configure ROS 2 nodes and topics."""
         return self.__ros_opts
-
-    @json_file.setter
-    def json_file(self, json_file):
-        self.__json_file = json_file
 
     @ros_opts.setter
     def ros_opts(self, ros_opts: AcadosOcpRosOptions):
@@ -1448,6 +1448,10 @@ class AcadosOcp:
 
 
     def dump_to_json(self) -> None:
+        dir_name = os.path.dirname(self.json_file)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
+            
         with open(self.json_file, 'w') as f:
             json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         return

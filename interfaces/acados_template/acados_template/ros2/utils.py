@@ -1,7 +1,7 @@
 import re
 
 from enum import Enum
-from typing import Union, ClassVar
+from typing import Union
 
 
 class ControlLoopExec(str, Enum):

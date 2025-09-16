@@ -471,7 +471,7 @@ rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(
             parameter_handlers_.at(param_name)(param, result);
             if (!result.successful) break;
         } else {
-            result.reason = "Update for unknown parameter '%s' received.", param_name.c_str();
+            result.reason = "Update for unknown parameter '" + param_name + "' received.";
             result.successful = false;
         }
     }

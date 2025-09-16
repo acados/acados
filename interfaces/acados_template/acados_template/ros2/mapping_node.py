@@ -31,13 +31,17 @@ import json
 import os
 import re
 
-from typing import Optional, Union
+from typing import Optional, Union, TYPE_CHECKING, Literal
 from itertools import chain
+from casadi import SX, MX
 
 from .utils import ArchType, ControlLoopExec, AcadosRosBaseOptions
 from ..utils import make_object_json_dumpable, render_template
-from ..acados_ocp import AcadosOcp
-from ..acados_sim import AcadosSim
+
+# Avoid circular imports at runtime; only import these for type checking
+if TYPE_CHECKING:
+    from ..acados_ocp import AcadosOcp
+    from ..acados_sim import AcadosSim
 
 
 
@@ -280,9 +284,9 @@ class RosTopicMapper(AcadosRosBaseOptions):
         self.__in_msgs: list[RosTopicMsg] = []
         self.__out_msgs: list[RosTopicMsgOutput] = []
 
-        self.__ocp_instance: Optional[AcadosOcp] = None
-        self.__sim_instance:  Optional[AcadosSim] = None
-        self.__mapper_json_file: str = "ros_mapper.json"
+        self.__ocp_json_file: str = ""
+        self.__sim_json_file: str = ""
+        self.__mapper_json_file = "ros_mapper.json"
 
     @property
     def in_msgs(self) -> list[RosTopicMsg]:
@@ -293,12 +297,12 @@ class RosTopicMapper(AcadosRosBaseOptions):
         return self.__out_msgs
     
     @property
-    def ocp_instance(self) -> Optional[AcadosOcp]:
-        return self.__ocp_instance
+    def ocp_json_file(self) -> str:
+        return self.__ocp_json_file
 
     @property
-    def sim_instance(self) -> Optional[AcadosSim]:
-        return self.__sim_instance
+    def sim_json_file(self) -> str:
+        return self.__sim_json_file
 
     @property
     def mapper_json_file(self) -> str:
@@ -316,17 +320,17 @@ class RosTopicMapper(AcadosRosBaseOptions):
             raise TypeError('Invalid out_msg value, expected list of RosTopicMsgOutput.\n')
         self.__out_msgs = value
 
-    @ocp_instance.setter
-    def ocp_instance(self, value: Optional[AcadosOcp]):
-        if value is not None and not isinstance(value, AcadosOcp):
-            raise TypeError('Invalid ocp_instance value, expected AcadosOcp.\n')
-        self.__ocp_instance = value
+    @ocp_json_file.setter
+    def ocp_json_file(self, value: str):
+        if not isinstance(value, str):
+            raise TypeError('Invalid ocp_json_file value, expected str.\n')
+        self.__ocp_json_file = value
 
-    @sim_instance.setter
-    def sim_instance(self, value: Optional[AcadosSim]):
-        if value is not None and not isinstance(value, AcadosSim):
-            raise TypeError('Invalid sim_instance value, expected AcadosSim.\n')
-        self.__sim_instance = value
+    @sim_json_file.setter
+    def sim_json_file(self, value: str):
+        if not isinstance(value, str):
+            raise TypeError('Invalid sim_json_file value, expected str.\n')
+        self.__sim_json_file = value
 
     @mapper_json_file.setter
     def mapper_json_file(self, value: str):
@@ -377,13 +381,7 @@ class RosTopicMapper(AcadosRosBaseOptions):
                         raise ValueError(f"Destination index in '{dest['full']}' is out of bounds. Size is {dest_field_obj.array_size}.")
                     
 
-    def finalize(self):
-        self.mapper_json_file = os.path.join(self.generated_code_dir, self.mapper_json_file)
-        
-        # map ocp to sim
-        if self.ocp_instance and self.sim_instance:
-            self.map_ocp_to_sim()
-            
+    def finalize(self):            
         # topic normalize + flatten
         for msg in self.in_msgs + self.out_msgs:
             if msg.topic_name.startswith("/"):
@@ -425,8 +423,8 @@ class RosTopicMapper(AcadosRosBaseOptions):
         return super().to_dict() | {
             "in_msgs": [msg.to_dict() for msg in self.in_msgs],
             "out_msgs": [msg.to_dict() for msg in self.out_msgs],
-            "ocp_json_file": self.ocp_instance,
-            "sim_json_file": self.sim_instance,
+            "ocp_json_file": self.ocp_json_file,
+            "sim_json_file": self.sim_json_file,
             "mapper_json_file": self.mapper_json_file,
             "header_includes": list(self.__header_includes),
             "dependencies": list(self.__dependencies),
@@ -434,7 +432,10 @@ class RosTopicMapper(AcadosRosBaseOptions):
 
 
     def dump_to_json(self) -> None:
-        self.finalize()
+        dir_name = os.path.dirname(self.mapper_json_file)
+        if not dir_name:
+            self.mapper_json_file = os.path.join(self.generated_code_dir, self.mapper_json_file)
+            
         os.makedirs(os.path.dirname(self.mapper_json_file), exist_ok=True)
         with open(self.mapper_json_file, 'w') as f:
             json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
@@ -482,14 +483,86 @@ class RosTopicMapper(AcadosRosBaseOptions):
 
         if non_values:
             raise ValueError("The fields 'in_msgs' and 'out_msgs' must be non-empty. Currently missing: " + ", ".join(non_values))  
+        
+        
+    def generate(self):
+        self.finalize()
+        self.dump_to_json()
+        self.render_templates()
     
     
-    def map_ocp_to_sim(self):
+    @classmethod
+    def from_instances(cls, ocp_instance: 'AcadosOcp', sim_instance: 'AcadosSim'):
         """
-        Automatically map the states and inputs from the OCP to the simulator,
-        via the given json's.
+        Build a RosTopicMapper by automatically mapping OCP -> SIM controls (u) and
+        SIM -> OCP states (x). It uses the `{package_name}_interface` message types
+        for both systems: `State` and `ControlInput`.
+
+        Mapping logic:
+        - Prefer label-based matching (case-insensitive exact match)
+        - Fallback to index-based mapping for remaining elements
+        - Skip elements that cannot be matched; map as many as possible
         """
-        pass
+        obj = cls()
+
+        ocp_pkg = ocp_instance.ros_opts.package_name
+        sim_pkg = sim_instance.ros_opts.package_name
+        ocp_msgs_pkg = f"{ocp_pkg}_interface"
+        sim_msgs_pkg = f"{sim_pkg}_interface"
+
+        # Topic names
+        ocp_state_topic = ocp_instance.ros_opts.state_topic
+        ocp_control_topic = ocp_instance.ros_opts.control_topic
+        sim_state_topic = sim_instance.ros_opts.state_topic
+        sim_control_topic = sim_instance.ros_opts.control_topic
+
+        # Dimensions
+        nx_ocp = _size(ocp_instance.model.x)
+        nx_sim = _size(sim_instance.model.x)
+        nu_ocp = _size(ocp_instance.model.u)
+        nu_sim = _size(sim_instance.model.u)
+        
+        # State and Control names
+        ocp_x_names = _elem_names(ocp_instance.model.x)
+        sim_x_names = _elem_names(sim_instance.model.x)
+        ocp_u_names = _elem_names(ocp_instance.model.u)
+        sim_u_names = _elem_names(sim_instance.model.u)
+
+        # --- Build input messages ---
+        in_sim_state = build_default_state(sim_state_topic, sim_msgs_pkg, nx_sim, direction_out=False)
+        in_ocp_ctrl  = build_default_control(ocp_control_topic, ocp_msgs_pkg, nu_ocp, direction_out=False)
+        obj.in_msgs = [in_sim_state, in_ocp_ctrl]
+
+        # --- Build output messages ---
+        out_ocp_state = build_default_state(ocp_state_topic, ocp_msgs_pkg, nx_ocp, direction_out=True)
+        out_sim_ctrl  = build_default_control(sim_control_topic, sim_msgs_pkg, nu_sim, direction_out=True)
+
+        # Map SIM x -> OCP x
+        x_map_pairs = _compute_mapping(
+            src_topic=in_sim_state.topic_name,
+            src_name="x",
+            src_labels=sim_x_names,
+            dst_name="x",
+            dst_labels=ocp_x_names,
+        )
+        out_ocp_state.mapping = x_map_pairs
+        out_ocp_state.exec_topic = in_sim_state.topic_name
+
+        # Map OCP u -> SIM u
+        u_map_pairs = _compute_mapping(
+            src_topic=in_ocp_ctrl.topic_name,
+            src_name="u",
+            src_labels=ocp_u_names,
+            dst_name="u",
+            dst_labels=sim_u_names,
+        )
+        out_sim_ctrl.mapping = u_map_pairs
+        out_sim_ctrl.exec_topic = in_ocp_ctrl.topic_name
+
+        obj.out_msgs = [out_ocp_state, out_sim_ctrl]
+        obj.ocp_json_file = ocp_instance.json_file
+        obj.sim_json_file = sim_instance.json_file
+        return obj
     
     
     def _get_ros_template_list(self) -> list:
@@ -517,10 +590,10 @@ class RosTopicMapper(AcadosRosBaseOptions):
         template_file = os.path.join(ros_pkg_dir, 'node.in.cpp')
         template_list.append((template_file, 'node.cpp', src_dir))
         
-        # # Test
-        # test_dir = os.path.join(package_dir, 'test')
-        # template_file = os.path.join(ros_pkg_dir, 'test.launch.in.py')
-        # template_list.append((template_file, f'test_{self.package_name}.launch.py', test_dir))
+        # Test
+        test_dir = os.path.join(package_dir, 'test')
+        template_file = os.path.join(ros_pkg_dir, 'test.launch.in.py')
+        template_list.append((template_file, f'test_{self.package_name}.launch.py', test_dir))
         return template_list
         
         
@@ -530,6 +603,84 @@ class RosTopicMapper(AcadosRosBaseOptions):
         self.__dependencies.add(pkg)
         
     
+    
+# --- From Instances Helpers ---
+def _size(sym: Union[SX, MX]) -> int:
+    return int(sym.numel())
+
+
+def _elem_names(sym: Union[SX, MX]) -> list[str]:
+    n = _size(sym)
+    return [str(sym[i].name()) for i in range(n)]
+
+
+def _compute_mapping(
+        src_topic: str, 
+        src_name: str, 
+        src_labels: list[str],
+        dst_name: str, 
+        dst_labels: list[str]
+) -> list[tuple[str, str]]:
+    """Return mapping pairs [(f"{src_topic}.{src_name}[i]","{dst_name}[j]")]."""
+    if src_labels == dst_labels:
+        return [(f"{src_topic}.{src_name}", f"{dst_name}")]
+    
+    pairs: list[tuple[str, str]] = []
+
+    # Label-based match
+    for j, lbl in enumerate(dst_labels):
+        i = src_labels.get(lbl.lower())
+        if i is not None:
+            pairs.append((f"{src_topic}.{src_name}[{i}]", f"{dst_name}[{j}]"))
+
+    return pairs
+
+
+def build_default_state(
+        topic: str,
+        msg_pkg: str, 
+        nx: int,
+        direction_out: bool
+) -> Union[RosTopicMsg, RosTopicMsgOutput]:
+    """
+    Creates a standard ocp- or sim-interface state message of an 
+    in- or outgoing message, dependent on the setting.
+    """
+    m = RosTopicMsgOutput() if direction_out else RosTopicMsg()
+    m.topic_name = topic
+    m.msg_type = f"{msg_pkg}/State"
+    m.field_tree = [
+        RosField(name="header", ftype="std_msgs/Header"),
+        RosField(name="x", ftype="float64", is_array=True, array_size=nx),
+    ]
+    if direction_out:
+        m.field_tree.append(RosField(name="status", ftype="int8"))
+    m.flatten_field_tree()
+    return m
+
+
+def build_default_control(
+        topic: str,
+        msg_pkg: str, 
+        nu: int,
+        direction_out: bool
+) -> Union[RosTopicMsg, RosTopicMsgOutput]:
+    """
+    Creates a standard ocp- or sim-interface control message of an 
+    in- or outgoing message, dependent on the setting.
+    """
+    m = RosTopicMsgOutput() if direction_out else RosTopicMsg()
+    m.topic_name = topic
+    m.msg_type = f"{msg_pkg}/ControlInput"
+    m.field_tree = [
+        RosField(name="header", ftype="std_msgs/Header"),
+        RosField(name="u", ftype="float64", is_array=True, array_size=nu),
+    ]
+    if not direction_out:
+        m.field_tree.append(RosField(name="status", ftype="int8"))
+    m.flatten_field_tree()
+    return m
+
 
     
 if __name__ == "__main__":
@@ -594,5 +745,4 @@ if __name__ == "__main__":
     from pprint import pprint
     pprint(ros_mapper.to_dict())
     
-    ros_mapper.dump_to_json()
-    ros_mapper.render_templates()
+    ros_mapper.generate()

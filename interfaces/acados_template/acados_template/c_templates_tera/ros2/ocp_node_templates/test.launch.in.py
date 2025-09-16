@@ -112,47 +112,33 @@ class GeneratedNodeTest(unittest.TestCase):
 
     def test_subscribing(self, proc_info):
         """Test if the node subscribes to all expected topics."""
-        try:
-            self.wait_for_subscription('{{ state_topic }}')
-        except TimeoutError:
-            self.fail("Node has NOT subscribed to '{{ state_topic }}'.")
-
-        try:
-            self.wait_for_subscription('{{ references_topic }}')
-        except TimeoutError:
-            self.fail("Node has NOT subscribed to '{{ references_topic }}'.")
-
+        self.wait_for_subscription('{{ state_topic }}')
+        self.wait_for_subscription('{{ references_topic }}')
         {%- if dims.np > 0 %}
-        try:
-            self.wait_for_subscription('{{ parameters_topic }}')
-        except TimeoutError:
-            self.fail("Node has NOT subscribed to '{{ parameters_topic }}'.")
+        self.wait_for_subscription('{{ parameters_topic }}')
         {%- endif %}
         
     def test_publishing(self, proc_info):
         """Test if the node publishes to all expected topics."""
-        try:
-            self.wait_for_publisher('{{ control_topic }}')
-        except TimeoutError:
-            self.fail("Node has NOT published to '{{ control_topic }}'.")
+        self.wait_for_publisher('{{ control_topic }}')
 
-    def wait_for_subscription(self, topic: str, timeout: float = 1.0, threshold: float = 0.5):
-        end_time = time.time() + timeout + threshold
+    def wait_for_subscription(self, topic: str, timeout: float = 2.0):
+        end_time = time.time() + timeout
         while time.time() < end_time:
             subs = self.node.get_subscriptions_info_by_topic(topic)
             if subs:
                 return True
-            time.sleep(0.05)
-        raise TimeoutError(f"No subscriber found on {topic} within {timeout}s")
+            time.sleep(0.1)
+        self.fail(f"Node has NOT subscribed to '{topic}'.")
 
-    def wait_for_publisher(self, topic: str, timeout: float = 1.0, threshold: float = 0.5):
-        end_time = time.time() + timeout + threshold
+    def wait_for_publisher(self, topic: str, timeout: float = 2.0):
+        end_time = time.time() + timeout
         while time.time() < end_time:
             pubs = self.node.get_publishers_info_by_topic(topic)
             if pubs:
                 return True
-            time.sleep(0.05)
-        raise TimeoutError(f"No publisher found on {topic} within {timeout}s")
+            time.sleep(0.1)
+        self.fail(f"Node has NOT published to '{topic}'.")
 
     def __check_parameter_get(self, param_name: str, expected_value: Union[list[float], float]):
         """Run a subprocess command and return its output."""

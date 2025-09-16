@@ -92,6 +92,7 @@ class AcadosSimSolver:
         """
 
         acados_sim.code_export_directory = os.path.abspath(acados_sim.code_export_directory)
+        acados_sim.json_file = json_file
         acados_sim.make_consistent()
 
         # module dependent post processing
@@ -105,7 +106,7 @@ class AcadosSimSolver:
 
         # generate code for external functions
         acados_sim.generate_external_functions()
-        acados_sim.dump_to_json(json_file)
+        acados_sim.dump_to_json()
         acados_sim.render_templates(json_file, cmake_builder)
 
 

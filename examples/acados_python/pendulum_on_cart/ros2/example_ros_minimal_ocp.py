@@ -41,20 +41,18 @@ sys.path.insert(0, os.path.abspath(common_path))
 from pendulum_model import export_pendulum_ode_model
 from utils import plot_pendulum
 
-def main():
+def create_minimal_ocp(export_dir: str, N: int = 20, Tf: float = 1.0, Fmax: float = 80):
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
     # set model
     model = export_pendulum_ode_model()
     ocp.model = model
-
-    Tf = 1.0
+    
     nx = model.x.rows()
     nu = model.u.rows()
     ny = nx + nu
     ny_e = nx
-    N = 20
 
     # set dimensions
     ocp.solver_options.N_horizon = N
@@ -84,7 +82,6 @@ def main():
     # set constraints
 
     # bound on u
-    Fmax = 80
     ocp.constraints.lbu = np.array([-Fmax])
     ocp.constraints.ubu = np.array([+Fmax])
     ocp.constraints.idxbu = np.array([0])
@@ -105,13 +102,24 @@ def main():
     # Ros stuff
     ocp.ros_opts = AcadosOcpRosOptions()
     ocp.ros_opts.package_name = "pendulum_on_cart_ocp"
+    ocp.ros_opts.generated_code_dir = export_dir
 
-    export_code = os.path.join(script_dir, 'generated_ocp')
-    ocp.code_export_directory = str(os.path.join(export_code, "c_generated_code"))
-    ocp_solver = AcadosOcpSolver(ocp, json_file = str(os.path.join(export_code, 'acados_ocp.json')))
+    ocp.code_export_directory = str(os.path.join(export_dir, "c_generated_code"))
+    return ocp
 
-    simX = np.zeros((N+1, nx))
-    simU = np.zeros((N, nu))
+
+
+def main():
+    Fmax = 80
+    Tf = 1.0
+    N = 20
+    
+    export_dir = os.path.join(script_dir, 'generated_ocp')
+    ocp = create_minimal_ocp(export_dir, N, Tf, Fmax)
+    ocp_solver = AcadosOcpSolver(ocp, json_file = str(os.path.join(export_dir, 'acados_ocp.json')))
+
+    simX = np.zeros((N+1, ocp.dims.nx))
+    simU = np.zeros((N, ocp.dims.nu))
 
     # call SQP_RTI solver in the loop:
     tol = 1e-6
