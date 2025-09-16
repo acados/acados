@@ -6,6 +6,8 @@
 #include <mutex>
 #include <array>
 #include <vector>
+#include <cmath>
+#include <algorithm>
 #include <unordered_map>
 
 // ROS2 message includes

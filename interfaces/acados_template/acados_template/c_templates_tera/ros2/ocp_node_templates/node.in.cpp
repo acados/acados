@@ -25,8 +25,8 @@ namespace {{ ros_opts.package_name }}
 
     // --- default values ---
     config_ = {{ ClassName }}Config();
-    {%- if constraint.has_x0 %}
-    current_x_ = { {{- constraint.lbx_0 | join(sep=', ') -}} };
+    {%- if constraints.has_x0 %}
+    current_x_ = { {{- constraints.lbx_0 | join(sep=', ') -}} };
     {%- else %}
     current_x_.fill(0.0);
     {%- endif %}
@@ -222,6 +222,13 @@ void {{ ClassName }}::solver_status_behaviour(int status) {
 
 // --- ROS Callbacks ---
 void {{ ClassName }}::state_callback(const {{ ros_opts.package_name }}_interface::msg::State::SharedPtr msg) {
+    if (std::any_of(msg->x.begin(), msg->x.end(), [](double val){ return !std::isfinite(val); })) {
+        RCLCPP_WARN_THROTTLE(
+            this->get_logger(), *this->get_clock(), 2000,
+            "State callback received NaN/Inf in 'x'. Ignoring message.");
+        return;
+    }
+
     {%- if use_multithreading %}
     std::scoped_lock lock(data_mutex_);
     {%- endif %}
@@ -230,19 +237,51 @@ void {{ ClassName }}::state_callback(const {{ ros_opts.package_name }}_interface
 }
 
 void {{ ClassName }}::references_callback(const {{ ros_opts.package_name }}_interface::msg::References::SharedPtr msg) {
+    {%- if dims.ny_0 > 0 %}
+    if (std::any_of(msg->yref_0.begin(), msg->yref_0.end(), [](double val){ return !std::isfinite(val); })) {
+        RCLCPP_WARN_THROTTLE(
+            this->get_logger(), *this->get_clock(), 2000,
+            "Reference callback received NaN/Inf in 'yref_0'. Ignoring message.");
+        return;
+    }
+    {%- endif %}
+    {%- if dims.ny > 0 %}
+    if (std::any_of(msg->yref.begin(), msg->yref.end(), [](double val){ return !std::isfinite(val); })) {
+        RCLCPP_WARN_THROTTLE(
+            this->get_logger(), *this->get_clock(), 2000,
+            "Reference callback received NaN/Inf in 'yref'. Ignoring message.");
+        return;
+    }
+    {%- endif %}
+    {%- if dims.ny_e > 0 %}
+    if (std::any_of(msg->yref_e.begin(), msg->yref_e.end(), [](double val){ return !std::isfinite(val); })) {
+        RCLCPP_WARN_THROTTLE(
+            this->get_logger(), *this->get_clock(), 2000,
+            "Reference callback received NaN/Inf in 'yref_e'. Ignoring message.");
+        return;
+    }
+    {%- endif %}
+
     {%- if use_multithreading %}
     std::scoped_lock lock(data_mutex_);
     {%- endif %}
-    {%- if dims.ny_0 > 0 %} current_yref_0_ = msg->yref_0; {%- endif %}
-    {%- if dims.ny > 0 %}  current_yref_  = msg->yref;    {%- endif %}
-    {%- if dims.ny_e > 0 %} current_yref_e_ = msg->yref_e; {%- endif %}
-    {%- if dims.ny_0 > 0 %} RCLCPP_DEBUG_STREAM_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Refs callback: yref_0=" << current_yref_0_); {%- endif %}
-    {%- if dims.ny > 0 %}  RCLCPP_DEBUG_STREAM_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Refs callback: yref="   << current_yref_);   {%- endif %}
-    {%- if dims.ny_e > 0 %} RCLCPP_DEBUG_STREAM_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Refs callback: yref_e=" << current_yref_e_);  {%- endif %}
+    {%- if dims.ny_0 > 0 %} current_yref_0_ = msg->yref_0; {% endif %}
+    {%- if dims.ny > 0 %}  current_yref_  = msg->yref;    {% endif %}
+    {%- if dims.ny_e > 0 %} current_yref_e_ = msg->yref_e; {% endif %}
+    {%- if dims.ny_0 > 0 %} RCLCPP_DEBUG_STREAM_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Refs callback: yref_0=" << current_yref_0_); {% endif %}
+    {%- if dims.ny > 0 %}  RCLCPP_DEBUG_STREAM_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Refs callback: yref="   << current_yref_);   {% endif %}
+    {%- if dims.ny_e > 0 %} RCLCPP_DEBUG_STREAM_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Refs callback: yref_e=" << current_yref_e_);  {% endif %}
 }
 {%- if dims.np > 0 %}
 
 void {{ ClassName }}::parameters_callback(const {{ ros_opts.package_name }}_interface::msg::Parameters::SharedPtr msg) {
+    if (std::any_of(msg->p.begin(), msg->p.end(), [](double val){ return !std::isfinite(val); })) {
+        RCLCPP_WARN_THROTTLE(
+            this->get_logger(), *this->get_clock(), 2000,
+            "Parameter callback received NaN/Inf in 'p'. Ignoring message.");
+        return;
+    }
+
     {%- if use_multithreading %}
     std::scoped_lock lock(data_mutex_);
     {%- endif %}
