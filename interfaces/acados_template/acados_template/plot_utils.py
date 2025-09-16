@@ -135,6 +135,8 @@ def plot_trajectories(
     fig_filename=None,
     x_min=None,
     x_max=None,
+    t_min=None,
+    t_max=None,
     title=None,
     idxpx=None,
     idxpu=None,
@@ -202,6 +204,11 @@ def plot_trajectories(
     if title is not None:
         axes[0].set_title(title)
 
+    if t_min is None:
+        t_min = min([time_traj[0] for time_traj in time_traj_list])
+    if t_max is None:
+        t_max = max([time_traj[-1] for time_traj in time_traj_list])
+
     for i in idxpx:
         isubplot = idxpx.index(i)
         for x_traj, time_traj, label, color, linestyle, alpha in zip(x_traj_list, time_traj_list, labels_list, color_list, linestyle_list, alpha_list):
@@ -219,16 +226,19 @@ def plot_trajectories(
             )
         axes[isubplot].set_ylabel(x_labels[i])
         axes[isubplot].grid()
-        axes[isubplot].set_xlim(time_traj_list[0][0], time_traj_list[0][-1])
+
+        axes[isubplot].set_xlim(t_min, t_max)
 
         if i in idx_xlogy:
             axes[isubplot].set_yscale('log')
 
         if x_min is not None:
-            axes[isubplot].set_ylim(bottom=x_min[i])
+            if x_min[i] is not None:
+                axes[isubplot].set_ylim(bottom=x_min[i])
 
         if x_max is not None:
-            axes[isubplot].set_ylim(top=x_max[i])
+            if x_max[i] is not None:
+                axes[isubplot].set_ylim(top=x_max[i])
 
     for i in idxpu:
         if single_column:
