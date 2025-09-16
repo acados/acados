@@ -44,10 +44,11 @@ class AcadosOcpRosOptions(AcadosRosBaseOptions):
         self.archtype: str = ArchType.NODE.value
         self.control_loop_executor: str = ControlLoopExec.TIMER.value
 
-        self.__control_topic = "ocp_control"
-        self.__state_topic = "ocp_state"
-        self.__parameters_topic = "ocp_params"
-        self.__reference_topic = "ocp_reference"
+        self.__control_topic: str = "ocp_control"
+        self.__state_topic: str = "ocp_state"
+        self.__parameters_topic: str = "ocp_params"
+        self.__reference_topic: str = "ocp_reference"
+        self.__threads: int = 1
 
     @property
     def control_topic(self) -> str:
@@ -64,6 +65,10 @@ class AcadosOcpRosOptions(AcadosRosBaseOptions):
     @property
     def reference_topic(self) -> str:
         return self.__reference_topic
+    
+    @property
+    def threads(self) -> str:
+        return self.__threads
 
     @control_topic.setter
     def control_topic(self, value: str):
@@ -88,6 +93,12 @@ class AcadosOcpRosOptions(AcadosRosBaseOptions):
         if not isinstance(value, str):
             raise TypeError('Invalid reference_topic value, expected str.\n')
         self.__reference_topic = value
+        
+    @threads.setter
+    def threads(self, value: int):
+        if not isinstance(value, int):
+            raise TypeError('Invalid threads value, expected int.\n')
+        self.__threads = value
 
     def to_dict(self) -> dict:
         return super().to_dict() | {
@@ -95,6 +106,7 @@ class AcadosOcpRosOptions(AcadosRosBaseOptions):
             "state_topic": self.state_topic,
             "parameters_topic": self.parameters_topic,
             "reference_topic": self.reference_topic,
+            "threads": self.threads,
         }
 
 

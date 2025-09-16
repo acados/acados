@@ -843,7 +843,7 @@ int main(int argc, char **argv) {
     auto node = std::make_shared<{{ ros_opts.package_name }}::{{ ClassName }}>();
 {%- if use_multithreading %}
     RCLCPP_INFO(node->get_logger(), "Using MultiThreadedExecutor with %d threads.", {{ ros_opts.threads }});
-    rclcpp::executors::MultiThreadedExecutor executor(rclcpp::executor::ExecutorArgs(), number_of_threads={{ ros_opts.threads }});
+    rclcpp::executors::MultiThreadedExecutor executor(rclcpp::ExecutorOptions(), {{ ros_opts.threads }});
     executor.add_node(node);
     executor.spin();
 {%- else %}

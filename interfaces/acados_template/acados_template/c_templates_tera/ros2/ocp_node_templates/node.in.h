@@ -66,7 +66,7 @@ private:
 
     // --- Multithreading ---
     rclcpp::CallbackGroup::SharedPtr timer_group_;
-    rclcpp::CallbackGroup::SharedPtr subscriber_group_;
+    rclcpp::CallbackGroup::SharedPtr services_group_;
     std::mutex data_mutex_;
     std::recursive_mutex solver_mutex_;
     {%- endif %}
