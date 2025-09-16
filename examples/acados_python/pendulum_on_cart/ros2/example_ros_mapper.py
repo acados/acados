@@ -47,7 +47,7 @@ from example_ros_minimal_sim import create_minimal_sim
 def main():
     Fmax = 80
     Tf_ocp = 1.0
-    Tf_sim = 0.1
+    Tf_sim = 0.05
     N = 20
     export_dir = os.path.join(script_dir, 'generated')
     c_generated_code_base = os.path.join(export_dir, "c_generated_code")
