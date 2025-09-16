@@ -232,6 +232,20 @@ class RosTopicMsgOutput(RosTopicMsg):
             "exec_topic": self.exec_topic,
             "needs_publish_lock": self._needs_publish_lock}
         
+    @classmethod
+    def from_msg(
+        cls,
+        base_msg: RosTopicMsg
+    ) -> 'RosTopicMsgOutput':
+        """
+        Create a RosTopicMsgOutput instance from a base RosTopicMsg template.
+        """
+        output_msg = cls()
+        output_msg.msg_type = base_msg.msg_type
+        output_msg.field_tree = base_msg.field_tree
+        output_msg.topic_name = base_msg.topic_name
+        return output_msg
+        
     @staticmethod
     def __parse_mapping_string(map_str: str) -> dict:
         """Parses a string like 'field.name[index]' into a structured dict."""
