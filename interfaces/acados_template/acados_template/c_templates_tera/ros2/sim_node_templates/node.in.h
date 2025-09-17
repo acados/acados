@@ -89,6 +89,7 @@ private:
     int sim_solve();
     void get_next_state(double* xn);
     void set_u(double* u);
+    void set_t_sim(double T_sim);
 };
 
 } // namespace {{ ros_opts.package_name }}

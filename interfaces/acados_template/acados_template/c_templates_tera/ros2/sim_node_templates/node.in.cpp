@@ -210,7 +210,8 @@ void {{ ClassName }}::set_integration_period(double period_seconds) {
         RCLCPP_WARN(this->get_logger(),
             "Integration period must be positive, defaulting to 0.02s.");
     }
-    // TODO(anyone): should the solver sampling time be impacted?
+    // Update sim solver integration time
+    this->set_t_sim(this->config_.ts);
 }
 
 void {{ ClassName }}::start_integration_timer(double period_seconds) {
@@ -248,6 +249,9 @@ void {{ ClassName }}::set_u(double* u) {
     sim_in_set(sim_config_, sim_dims_, sim_in_, "u", u);
 }
 
+void {{ ClassName }}::set_t_sim(double T_sim) {
+    sim_in_set(sim_config_, sim_dims_, sim_in_, "T", &T_sim);
+}
 } // namespace {{ ros_opts.package_name }}
 
 
