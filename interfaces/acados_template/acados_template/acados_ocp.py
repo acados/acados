@@ -1296,27 +1296,29 @@ class AcadosOcp:
 
     def _get_ros_template_list(self) -> list:
         template_list = []
+        acados_template_path = os.path.dirname(os.path.abspath(__file__))
+        ros_template_glob = os.path.join(acados_template_path, 'ros2_templates', '**', '*')
 
         # --- Interface Package ---
-        ros_interface_dir = os.path.join('ros2', 'ocp_interface_templates')
+        ros_interface_dir = os.path.join('ocp_interface_templates')
         interface_dir = os.path.join(os.path.dirname(self.code_export_directory), f'{self.ros_opts.package_name}_interface')
         template_file = os.path.join(ros_interface_dir, 'README.in.md')
-        template_list.append((template_file, 'README.md', interface_dir))
+        template_list.append((template_file, 'README.md', interface_dir, ros_template_glob))
         template_file = os.path.join(ros_interface_dir, 'CMakeLists.in.txt')
-        template_list.append((template_file, 'CMakeLists.txt', interface_dir))
+        template_list.append((template_file, 'CMakeLists.txt', interface_dir, ros_template_glob))
         template_file = os.path.join(ros_interface_dir, 'package.in.xml')
-        template_list.append((template_file, 'package.xml', interface_dir))
+        template_list.append((template_file, 'package.xml', interface_dir, ros_template_glob))
 
         # Messages
         msg_dir = os.path.join(interface_dir, 'msg')
         template_file = os.path.join(ros_interface_dir, 'State.in.msg')
-        template_list.append((template_file, 'State.msg', msg_dir))
+        template_list.append((template_file, 'State.msg', msg_dir, ros_template_glob))
         template_file = os.path.join(ros_interface_dir, 'References.in.msg')
-        template_list.append((template_file, 'References.msg', msg_dir))
+        template_list.append((template_file, 'References.msg', msg_dir, ros_template_glob))
         template_file = os.path.join(ros_interface_dir, 'Parameters.in.msg')
-        template_list.append((template_file, 'Parameters.msg', msg_dir))
+        template_list.append((template_file, 'Parameters.msg', msg_dir, ros_template_glob))
         template_file = os.path.join(ros_interface_dir, 'ControlInput.in.msg')
-        template_list.append((template_file, 'ControlInput.msg', msg_dir))
+        template_list.append((template_file, 'ControlInput.msg', msg_dir, ros_template_glob))
 
         # Services
         # TODO: No node implementation yet
@@ -1325,33 +1327,33 @@ class AcadosOcp:
         # TODO: No Template yet and no node implementation
 
         # --- Solver Package ---
-        ros_pkg_dir = os.path.join('ros2', 'ocp_node_templates')
+        ros_pkg_dir = os.path.join('ocp_node_templates')
         package_dir = os.path.join(os.path.dirname(self.code_export_directory), self.ros_opts.package_name)
         template_file = os.path.join(ros_pkg_dir, 'README.in.md')
-        template_list.append((template_file, 'README.md', package_dir))
+        template_list.append((template_file, 'README.md', package_dir, ros_template_glob))
         template_file = os.path.join(ros_pkg_dir, 'CMakeLists.in.txt')
-        template_list.append((template_file, 'CMakeLists.txt', package_dir))
+        template_list.append((template_file, 'CMakeLists.txt', package_dir, ros_template_glob))
         template_file = os.path.join(ros_pkg_dir, 'package.in.xml')
-        template_list.append((template_file, 'package.xml', package_dir))
+        template_list.append((template_file, 'package.xml', package_dir, ros_template_glob))
 
         # Header
         include_dir = os.path.join(package_dir, 'include', self.ros_opts.package_name)
         template_file = os.path.join(ros_pkg_dir, 'config.in.hpp')
-        template_list.append((template_file, 'config.hpp', include_dir))
+        template_list.append((template_file, 'config.hpp', include_dir, ros_template_glob))
         template_file = os.path.join(ros_pkg_dir, 'utils.in.hpp')
-        template_list.append((template_file, 'utils.hpp', include_dir))
+        template_list.append((template_file, 'utils.hpp', include_dir, ros_template_glob))
         template_file = os.path.join(ros_pkg_dir, 'node.in.h')
-        template_list.append((template_file, 'node.h', include_dir))
+        template_list.append((template_file, 'node.h', include_dir, ros_template_glob))
 
         # Source
         src_dir = os.path.join(package_dir, 'src')
         template_file = os.path.join(ros_pkg_dir, 'node.in.cpp')
-        template_list.append((template_file, 'node.cpp', src_dir))
+        template_list.append((template_file, 'node.cpp', src_dir, ros_template_glob))
 
         # Test
         test_dir = os.path.join(package_dir, 'test')
         template_file = os.path.join(ros_pkg_dir, 'test.launch.in.py')
-        template_list.append((template_file, f'test_{self.ros_opts.package_name}.launch.py', test_dir))
+        template_list.append((template_file, f'test_{self.ros_opts.package_name}.launch.py', test_dir, ros_template_glob))
         return template_list
 
 
@@ -1443,7 +1445,8 @@ class AcadosOcp:
         # Render templates
         for tup in template_list:
             output_dir = self.code_export_directory if len(tup) <= 2 else tup[2]
-            render_template(tup[0], tup[1], output_dir, json_path)
+            template_glob = None if len(tup) <= 3 else tup[3]
+            render_template(tup[0], tup[1], output_dir, json_path, template_glob=template_glob)
 
         # Custom templates
         acados_template_path = os.path.dirname(os.path.abspath(__file__))
