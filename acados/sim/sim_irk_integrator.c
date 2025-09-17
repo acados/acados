@@ -272,11 +272,8 @@ void *sim_irk_opts_assign(void *config_, void *dims, void *raw_memory)
     opts->work = c_ptr;
     c_ptr += butcher_tableau_work_calculate_size(ns_max);
 
-    printf("before assign_and_advance_double(ns_max * ns_max, &opts->A_mat, &c_ptr);");
     assign_and_advance_double(ns_max * ns_max, &opts->A_mat, &c_ptr);
-    printf("before assign_and_advance_double(ns_max, &opts->b_vec, &c_ptr);");
     assign_and_advance_double(ns_max, &opts->b_vec, &c_ptr);
-    printf("before assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);");
     assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
 
     assert((char *) raw_memory + sim_irk_opts_calculate_size(config_, dims) >= c_ptr);
@@ -433,9 +430,7 @@ void *sim_irk_memory_assign(void *config, void *dims_, void *opts_, void *raw_me
     }
 
     // assign doubles
-    printf("before assign_and_advance_double(nz, &mem->z, &c_ptr);");
     assign_and_advance_double(nz, &mem->z, &c_ptr);
-    printf("before assign_and_advance_double(nx, &mem->xdot, &c_ptr);");
     assign_and_advance_double(nx, &mem->xdot, &c_ptr);
 
     if (opts->cost_computation)
@@ -844,7 +839,6 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     }
 
     if (opts->sens_algebraic || opts->output_z){
-        printf("before assign_and_advance_double(ns, &workspace->Z_work, &c_ptr);");
         assign_and_advance_double(ns, &workspace->Z_work, &c_ptr);
         assign_and_advance_int((nx + nz), &workspace->ipiv_one_stage, &c_ptr);
     }

@@ -133,13 +133,9 @@ sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
     align_char_to(8, &c_ptr);
 
     // assign doubles
-    printf("before assign_and_advance_double(nx, &in->x, &c_ptr);");
     assign_and_advance_double(nx, &in->x, &c_ptr);
-    printf("before assign_and_advance_double(nu, &in->u, &c_ptr);");
     assign_and_advance_double(nu, &in->u, &c_ptr);
-    printf("before assign_and_advance_double(nx * NF, &in->S_forw, &c_ptr);");
     assign_and_advance_double(nx * NF, &in->S_forw, &c_ptr);
-    printf("before assign_and_advance_double(NF, &in->S_adj, &c_ptr);");
     assign_and_advance_double(NF, &in->S_adj, &c_ptr);
 
     assert((char *) raw_memory + sim_in_calculate_size(config_, dims) >= c_ptr);
@@ -178,13 +174,9 @@ void sim_in_assign_and_advance(void *config_, void *dims, sim_in **sim_in_p, cha
     align_char_to(8, c_ptr);
 
     // assign doubles
-    printf("before assign_and_advance_double(nx, &in->x, c_ptr);");
     assign_and_advance_double(nx, &in->x, c_ptr);
-    printf("before assign_and_advance_double(nu, &in->u, c_ptr);");
     assign_and_advance_double(nu, &in->u, c_ptr);
-    printf("before assign_and_advance_double(nx * NF, &in->S_forw, c_ptr);");
     assign_and_advance_double(nx * NF, &in->S_forw, c_ptr);
-    printf("before assign_and_advance_double(NF, &in->S_adj, c_ptr);");
     assign_and_advance_double(NF, &in->S_adj, c_ptr);
 }
 
@@ -330,20 +322,13 @@ sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
 
     align_char_to(8, &c_ptr);
 
-    printf("before assign_and_advance_double(nx, &out->xn, &c_ptr);");
     assign_and_advance_double(nx, &out->xn, &c_ptr);
-    printf("before assign_and_advance_double(nx * NF, &out->S_forw, &c_ptr);");
     assign_and_advance_double(nx * NF, &out->S_forw, &c_ptr);
-    printf("before assign_and_advance_double(nx + nu, &out->S_adj, &c_ptr);");
     assign_and_advance_double(nx + nu, &out->S_adj, &c_ptr);
-    printf("before assign_and_advance_double(NF * NF, &out->S_hess, &c_ptr);");
     assign_and_advance_double(NF * NF, &out->S_hess, &c_ptr);
-    printf("before assign_and_advance_double(NF, &out->grad, &c_ptr);");
     assign_and_advance_double(NF, &out->grad, &c_ptr);
 
-    printf("before assign_and_advance_double(nz, &out->zn, &c_ptr);");
     assign_and_advance_double(nz, &out->zn, &c_ptr);
-    printf("before assign_and_advance_double(nz * NF, &out->S_algebraic, &c_ptr);");
     assign_and_advance_double(nz * NF, &out->S_algebraic, &c_ptr);
 
     assert((char *) raw_memory + sim_out_calculate_size(config_, dims) >= c_ptr);

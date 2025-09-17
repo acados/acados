@@ -575,29 +575,17 @@ static void ocp_qp_qpdunes_cast_workspace(ocp_qp_qpdunes_workspace *work, ocp_qp
     int nz = mem->nz;
     int nDmax = mem->nDmax;
 
-    printf("before assign_and_advance_double(nz * nz, &work->H, &c_ptr);");
     assign_and_advance_double(nz * nz, &work->H, &c_ptr);
-    printf("before assign_and_advance_double(nx * nx, &work->Q, &c_ptr);");
     assign_and_advance_double(nx * nx, &work->Q, &c_ptr);
-    printf("before assign_and_advance_double(nu * nu, &work->R, &c_ptr);");
     assign_and_advance_double(nu * nu, &work->R, &c_ptr);
-    printf("before assign_and_advance_double(nx * nu, &work->S, &c_ptr);");
     assign_and_advance_double(nx * nu, &work->S, &c_ptr);
-    printf("before assign_and_advance_double(nz, &work->g, &c_ptr);");
     assign_and_advance_double(nz, &work->g, &c_ptr);
-    printf("before assign_and_advance_double(nx * nz, &work->ABt, &c_ptr);");
     assign_and_advance_double(nx * nz, &work->ABt, &c_ptr);
-    printf("before assign_and_advance_double(nz, &work->b, &c_ptr);");
     assign_and_advance_double(nz, &work->b, &c_ptr);
-    printf("before assign_and_advance_double(nDmax * nz, &work->Ct, &c_ptr);");
     assign_and_advance_double(nDmax * nz, &work->Ct, &c_ptr);
-    printf("before assign_and_advance_double(nDmax, &work->lc, &c_ptr);");
     assign_and_advance_double(nDmax, &work->lc, &c_ptr);
-    printf("before assign_and_advance_double(nDmax, &work->uc, &c_ptr);");
     assign_and_advance_double(nDmax, &work->uc, &c_ptr);
-    printf("before assign_and_advance_double(nz, &work->zLow, &c_ptr);");
     assign_and_advance_double(nz, &work->zLow, &c_ptr);
-    printf("before assign_and_advance_double(nz, &work->zUpp, &c_ptr);");
     assign_and_advance_double(nz, &work->zUpp, &c_ptr);
 }
 

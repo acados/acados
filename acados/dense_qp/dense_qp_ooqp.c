@@ -442,23 +442,14 @@ void *dense_qp_ooqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
 
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
-    printf("before assign_and_advance_double(nv * nv, &mem->dQ, &c_ptr);");
     assign_and_advance_double(nv * nv, &mem->dQ, &c_ptr);
-    printf("before assign_and_advance_double(nv, &mem->c, &c_ptr);");
     assign_and_advance_double(nv, &mem->c, &c_ptr);
-    printf("before assign_and_advance_double(nv, &mem->xlow, &c_ptr);");
     assign_and_advance_double(nv, &mem->xlow, &c_ptr);
-    printf("before assign_and_advance_double(nv, &mem->xupp, &c_ptr);");
     assign_and_advance_double(nv, &mem->xupp, &c_ptr);
-    printf("before assign_and_advance_double(nv * ne, &mem->dA, &c_ptr);");
     assign_and_advance_double(nv * ne, &mem->dA, &c_ptr);
-    printf("before assign_and_advance_double(ne, &mem->bA, &c_ptr);");
     assign_and_advance_double(ne, &mem->bA, &c_ptr);
-    printf("before assign_and_advance_double(nv * ng, &mem->dC, &c_ptr);");
     assign_and_advance_double(nv * ng, &mem->dC, &c_ptr);
-    printf("before assign_and_advance_double(ng, &mem->clow, &c_ptr);");
     assign_and_advance_double(ng, &mem->clow, &c_ptr);
-    printf("before assign_and_advance_double(ng, &mem->cupp, &c_ptr);");
     assign_and_advance_double(ng, &mem->cupp, &c_ptr);
 
     assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");

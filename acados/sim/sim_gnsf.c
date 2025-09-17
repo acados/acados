@@ -293,11 +293,8 @@ void *sim_gnsf_opts_assign(void *config_, void *dims, void *raw_memory)
 
     align_char_to(8, &c_ptr);
 
-    printf("before assign_and_advance_double(ns_max * ns_max, &opts->A_mat, &c_ptr);");
     assign_and_advance_double(ns_max * ns_max, &opts->A_mat, &c_ptr);
-    printf("before assign_and_advance_double(ns_max, &opts->b_vec, &c_ptr);");
     assign_and_advance_double(ns_max, &opts->b_vec, &c_ptr);
-    printf("before assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);");
     assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
 
     // work
@@ -461,39 +458,24 @@ void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory)
     model->auto_import_gnsf = true;
 
     // assign model matrices
-    printf("before assign_and_advance_double((nx1 + nz1) * nx1, &model->A, &c_ptr);");
     assign_and_advance_double((nx1 + nz1) * nx1, &model->A, &c_ptr);
-    printf("before assign_and_advance_double((nx1 + nz1) * nu, &model->B, &c_ptr);");
     assign_and_advance_double((nx1 + nz1) * nu, &model->B, &c_ptr);
-    printf("before assign_and_advance_double((nx1 + nz1) * n_out, &model->C, &c_ptr);");
     assign_and_advance_double((nx1 + nz1) * n_out, &model->C, &c_ptr);
-    printf("before assign_and_advance_double((nx1 + nz1) * (nx1 + nz1), &model->E, &c_ptr);");
     assign_and_advance_double((nx1 + nz1) * (nx1 + nz1), &model->E, &c_ptr);
-    printf("before assign_and_advance_double(nx1 + nz1 , &model->c, &c_ptr);");
     assign_and_advance_double(nx1 + nz1 , &model->c, &c_ptr);
-    printf("before assign_and_advance_double(nx2 + nz2 , &model->c_LO, &c_ptr);");
     assign_and_advance_double(nx2 + nz2 , &model->c_LO, &c_ptr);
 
-    printf("before assign_and_advance_double(ny * nx1, &model->L_x, &c_ptr);");
     assign_and_advance_double(ny * nx1, &model->L_x, &c_ptr);
-    printf("before assign_and_advance_double(ny * nx1, &model->L_xdot, &c_ptr);");
     assign_and_advance_double(ny * nx1, &model->L_xdot, &c_ptr);
-    printf("before assign_and_advance_double(ny * nz1,  &model->L_z, &c_ptr);");
     assign_and_advance_double(ny * nz1,  &model->L_z, &c_ptr);
 
-    printf("before assign_and_advance_double(nuhat * nu, &model->L_u, &c_ptr);");
     assign_and_advance_double(nuhat * nu, &model->L_u, &c_ptr);
 
-    printf("before assign_and_advance_double((nx2 + nz2) * nx2, &model->A_LO, &c_ptr);");
     assign_and_advance_double((nx2 + nz2) * nx2, &model->A_LO, &c_ptr);
-    printf("before assign_and_advance_double((nx2 + nz2) * nu, &model->B_LO, &c_ptr);");
     assign_and_advance_double((nx2 + nz2) * nu, &model->B_LO, &c_ptr);
-    printf("before assign_and_advance_double((nx2 + nz2) * (nx2 + nz2), &model->E_LO, &c_ptr);");
     assign_and_advance_double((nx2 + nz2) * (nx2 + nz2), &model->E_LO, &c_ptr);
 
-    printf("before assign_and_advance_double(nx, &model->ipiv_x_double, &c_ptr);");
     assign_and_advance_double(nx, &model->ipiv_x_double, &c_ptr);
-    printf("before assign_and_advance_double(nz, &model->ipiv_z_double, &c_ptr);");
     assign_and_advance_double(nz, &model->ipiv_z_double, &c_ptr);
 
     assign_and_advance_int(nx, &model->ipiv_x, &c_ptr);
@@ -1349,14 +1331,10 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
     align_char_to(8, &c_ptr);
 
     // assign doubles
-    printf("before assign_and_advance_double(num_stages * num_stages, &mem->A_dt, &c_ptr);");
     assign_and_advance_double(num_stages * num_stages, &mem->A_dt, &c_ptr);
-    printf("before assign_and_advance_double(num_stages, &mem->b_dt, &c_ptr);");
     assign_and_advance_double(num_stages, &mem->b_dt, &c_ptr);
-    printf("before assign_and_advance_double(num_stages, &mem->c_butcher, &c_ptr);");
     assign_and_advance_double(num_stages, &mem->c_butcher, &c_ptr);
 
-    printf("before assign_and_advance_double(n_out, &mem->phi_guess, &c_ptr);");
     assign_and_advance_double(n_out, &mem->phi_guess, &c_ptr);
 
     // initialize with zeros for default initialization;
@@ -1732,7 +1710,6 @@ static void *sim_gnsf_cast_workspace(void *config, void *dims_, void *opts_, voi
     c_ptr += sizeof(gnsf_workspace);
     align_char_to(8, &c_ptr);
 
-    printf("before assign_and_advance_double(num_stages, &workspace->Z_work, &c_ptr);");
     assign_and_advance_double(num_stages, &workspace->Z_work, &c_ptr);
 
     assign_and_advance_int(nvv, &workspace->ipiv, &c_ptr);

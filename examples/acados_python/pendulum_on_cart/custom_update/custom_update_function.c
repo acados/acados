@@ -77,7 +77,6 @@ static custom_memory *custom_memory_assign(ocp_nlp_dims *nlp_dims, void *raw_mem
     c_ptr += sizeof(custom_memory);
 
     align_char_to(8, &c_ptr);
-    printf("before assign_and_advance_double(nxu*(N+1), &mem->traj_buffer, &c_ptr);");
     assign_and_advance_double(nxu*(N+1), &mem->traj_buffer, &c_ptr);
     // printf("custom_memory traj_buffer at %p\n", mem->traj_buffer);
 
