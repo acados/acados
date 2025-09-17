@@ -337,6 +337,8 @@ acados_size_t ocp_qp_xcond_solver_memory_calculate_size(void *config_, ocp_qp_xc
 
     size += qp_solver->memory_calculate_size(qp_solver, xcond_qp_dims, opts->qp_solver_opts);
 
+    size += 8;
+
     return size;
 }
 
@@ -359,6 +361,7 @@ void *ocp_qp_xcond_solver_memory_assign(void *config_, ocp_qp_xcond_solver_dims 
 
     ocp_qp_xcond_solver_memory *mem = (ocp_qp_xcond_solver_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_xcond_solver_memory);
+    align_char_to(8, &c_ptr);
 
     mem->xcond_memory = xcond->memory_assign(dims->xcond_dims, opts->xcond_opts, c_ptr);
     c_ptr += xcond->memory_calculate_size(dims->xcond_dims, opts->xcond_opts);
