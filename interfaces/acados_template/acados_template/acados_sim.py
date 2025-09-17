@@ -434,7 +434,7 @@ class AcadosSim:
         ros_template_glob = os.path.join(acados_template_path, 'ros2_templates', '**', '*')
 
         # --- Interface Package --- 
-        ros_interface_dir = os.path.join('ros2', 'sim_interface_templates')
+        ros_interface_dir = os.path.join('sim_interface_templates')
         interface_dir = os.path.join(self.ros_opts.generated_code_dir, f'{self.ros_opts.package_name}_interface')
         template_file = os.path.join(ros_interface_dir, 'README.in.md')
         template_list.append((template_file, 'README.md', interface_dir, ros_template_glob))
@@ -451,7 +451,7 @@ class AcadosSim:
         template_list.append((template_file, 'ControlInput.msg', msg_dir, ros_template_glob))
 
         # --- Simulator Package --- 
-        ros_pkg_dir = os.path.join('ros2', 'sim_node_templates')
+        ros_pkg_dir = os.path.join('sim_node_templates')
         package_dir = os.path.join(self.ros_opts.generated_code_dir, self.ros_opts.package_name)
         template_file = os.path.join(ros_pkg_dir, 'README.in.md')
         template_list.append((template_file, 'README.md', package_dir, ros_template_glob))
