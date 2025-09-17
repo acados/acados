@@ -528,7 +528,8 @@ class AcadosSim:
         # Render templates
         for tup in template_list:
             output_dir = self.code_export_directory if len(tup) <= 2 else tup[2]
-            render_template(tup[0], tup[1], output_dir, json_path)
+            template_glob = None if len(tup) <= 3 else tup[3]
+            render_template(tup[0], tup[1], output_dir, json_path, template_glob=template_glob)
 
 
     def generate_external_functions(self, ):
