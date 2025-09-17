@@ -827,7 +827,7 @@ acados_size_t ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *di
                                                              dims->constraints[i]);
     }
 
-    size += 4*8 + 64;  // aligns
+    size += 5*8 + 64;  // aligns
 
     make_int_multiple_of(8, &size);
 
@@ -869,7 +869,7 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
 
     // dmask
     assign_and_advance_blasfeo_dvec_structs(N + 1, &in->dmask, &c_ptr);
-    assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
+    align_char_to(8, &c_ptr);
 
     // dynamics
     for (int i = 0; i < N; i++)
