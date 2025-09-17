@@ -354,14 +354,14 @@ class AcadosSim:
 
         self.__parameter_values = np.array([])
         self.__problem_class = 'SIM'
-        
+
         self.__ros_opts: Optional[AcadosSimRosOptions] = None
 
     @property
     def parameter_values(self):
         """:math:`p` - initial values for parameter - can be updated"""
         return self.__parameter_values
-    
+
     @property
     def ros_opts(self) -> Optional[AcadosSimRosOptions]:
         """Options to configure ROS 2 nodes and topics."""
@@ -374,7 +374,7 @@ class AcadosSim:
         else:
             raise ValueError('Invalid parameter_values value. ' +
                             f'Expected numpy array, got {type(parameter_values)}.')
-        
+
     @ros_opts.setter
     def ros_opts(self, ros_opts: AcadosSimRosOptions):
         if not isinstance(ros_opts, AcadosSimRosOptions):
@@ -417,7 +417,7 @@ class AcadosSim:
     def _get_ros_template_list(self) -> list:
         template_list = []
 
-        # --- Interface Package --- 
+        # --- Interface Package ---
         ros_interface_dir = os.path.join('ros2', 'sim_interface_templates')
         interface_dir = os.path.join(os.path.dirname(self.code_export_directory), f'{self.ros_opts.package_name}_interface')
         template_file = os.path.join(ros_interface_dir, 'README.in.md')
@@ -440,7 +440,7 @@ class AcadosSim:
         # Actions
         # TODO: No Template yet and no node implementation
 
-        # --- Simulator Package --- 
+        # --- Simulator Package ---
         ros_pkg_dir = os.path.join('ros2', 'sim_node_templates')
         package_dir = os.path.join(os.path.dirname(self.code_export_directory), self.ros_opts.package_name)
         template_file = os.path.join(ros_pkg_dir, 'README.in.md')
@@ -463,14 +463,14 @@ class AcadosSim:
         src_dir = os.path.join(package_dir, 'src')
         template_file = os.path.join(ros_pkg_dir, 'node.in.cpp')
         template_list.append((template_file, 'node.cpp', src_dir))
-        
+
         # Test
         test_dir = os.path.join(package_dir, 'test')
         template_file = os.path.join(ros_pkg_dir, 'test.launch.in.py')
         template_list.append((template_file, f'test_{self.ros_opts.package_name}.launch.py', test_dir))
         return template_list
-    
-    
+
+
     def _get_simulink_template_list(self, name: str) -> list:
         template_list = []
         template_file = os.path.join('matlab_templates', 'mex_sim_solver.in.m')
@@ -504,7 +504,7 @@ class AcadosSim:
             ('acados_sim_solver.in.pxd', 'acados_sim_solver.pxd'),
             ('main_sim.in.c', f'main_sim_{name}.c'),
         ]
-        
+
         # Model
         model_dir = os.path.join(self.code_export_directory, self.model.name + '_model')
         template_list.append(('model.in.h', f'{self.model.name}_model.h', model_dir))
