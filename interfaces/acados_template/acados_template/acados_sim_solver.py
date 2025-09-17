@@ -107,7 +107,7 @@ class AcadosSimSolver:
         # generate code for external functions
         acados_sim.generate_external_functions()
         acados_sim.dump_to_json()
-        acados_sim.render_templates(json_file, cmake_builder)
+        acados_sim.render_templates(cmake_builder)
 
 
     @classmethod

@@ -498,9 +498,9 @@ class AcadosSim:
         return template_list
 
 
-    def render_templates(self, json_file, cmake_options: CMakeBuilder = None):
+    def render_templates(self, cmake_options: CMakeBuilder = None):
         # setting up loader and environment
-        json_path = os.path.join(os.getcwd(), json_file)
+        json_path = os.path.abspath(self.json_file)
         name = self.model.name
 
         if not os.path.exists(json_path):
