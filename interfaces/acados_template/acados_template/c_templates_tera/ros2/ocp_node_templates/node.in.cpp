@@ -385,7 +385,12 @@ void {{ ClassName }}::setup_parameter_handlers() {
     // Solver Options
     parameter_handlers_["{{ ros_opts.package_name }}.ts"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            this->config_.ts = p.as_double();
+            this->set_period(p.as_double());
+            // Restart timer with the new period
+            if (!this->is_running()) {
+                // Assumes that the node is not yet ready and that the timer will be started later
+                return;
+            }
             try {
                 this->start_control_timer(this->config_.ts);
             } catch (const std::exception& e) {
@@ -570,8 +575,32 @@ void {{ ClassName }}::update_cost(
 }
 
 // --- Helpers ---
+void {{ ClassName }}::set_period(double period_seconds) {
+    if (config_.ts == period_seconds) {
+        // Nothing to do
+        return;
+    }
+    RCLCPP_INFO_STREAM(
+        this->get_logger(), "update period 'Ts' = " << period_seconds << "s");
+    this->config_.ts = period_seconds;
+    // Check period validity
+    if (this->config_.ts <= 0.0) {
+        this->config_.ts = 0.02;
+        RCLCPP_WARN(this->get_logger(),
+            "Control period must be positive, defaulting to 0.02s.");
+    }
+    // TODO(anyone): should the solver sampling time be impacted?
+}
+
 void {{ ClassName }}::start_control_timer(double period_seconds) {
-    if (period_seconds <= 0.0) period_seconds = 0.02;
+    this->set_period(period_seconds);
+    // if timer already exists, restart with new period
+    if (this->is_running()) {
+        RCLCPP_WARN(this->get_logger(), "Control timer already running, restarting...");
+        control_timer_->cancel();
+    }
+    RCLCPP_INFO_STREAM(this->get_logger(), "Starting control loop with period " << period_seconds << "s.");
+    // create timer
     auto period = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::duration<double>(period_seconds));
     control_timer_ = this->create_wall_timer(
