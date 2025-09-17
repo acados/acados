@@ -564,33 +564,36 @@ class RosTopicMapper(AcadosRosBaseOptions):
     
     def _get_ros_template_list(self) -> list:
         template_list = []
+        
+        acados_template_path = os.path.dirname(os.path.dirname(__file__))
+        ros_template_glob = os.path.join(acados_template_path, 'ros2_templates', '**', '*')
 
         # --- Simulator Package --- 
-        ros_pkg_dir = os.path.join('ros2', 'ros_mapper_templates')
+        ros_pkg_dir = os.path.join('ros_mapper_templates')
         package_dir = os.path.join(self.generated_code_dir, self.package_name)
         template_file = os.path.join(ros_pkg_dir, 'README.in.md')
-        template_list.append((template_file, 'README.md', package_dir))
+        template_list.append((template_file, 'README.md', package_dir, ros_template_glob))
         template_file = os.path.join(ros_pkg_dir, 'CMakeLists.in.txt')
-        template_list.append((template_file, 'CMakeLists.txt', package_dir))
+        template_list.append((template_file, 'CMakeLists.txt', package_dir, ros_template_glob))
         template_file = os.path.join(ros_pkg_dir, 'package.in.xml')
-        template_list.append((template_file, 'package.xml', package_dir))
+        template_list.append((template_file, 'package.xml', package_dir, ros_template_glob))
 
         # # Header
         include_dir = os.path.join(package_dir, 'include', self.package_name)
         template_file = os.path.join(ros_pkg_dir, 'utils.in.hpp')
-        template_list.append((template_file, 'utils.hpp', include_dir))
+        template_list.append((template_file, 'utils.hpp', include_dir, ros_template_glob))
         template_file = os.path.join(ros_pkg_dir, 'node.in.h')
-        template_list.append((template_file, 'node.h', include_dir))
+        template_list.append((template_file, 'node.h', include_dir, ros_template_glob))
 
         # Source
         src_dir = os.path.join(package_dir, 'src')
         template_file = os.path.join(ros_pkg_dir, 'node.in.cpp')
-        template_list.append((template_file, 'node.cpp', src_dir))
+        template_list.append((template_file, 'node.cpp', src_dir, ros_template_glob))
         
         # Test
         test_dir = os.path.join(package_dir, 'test')
         template_file = os.path.join(ros_pkg_dir, 'test.launch.in.py')
-        template_list.append((template_file, f'test_{self.package_name}.launch.py', test_dir))
+        template_list.append((template_file, f'test_{self.package_name}.launch.py', test_dir, ros_template_glob))
         return template_list
         
         
