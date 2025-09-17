@@ -345,7 +345,7 @@ def render_template(in_file, out_file, output_dir, json_path, template_glob=None
         if status != 0:
             print(f"\nRendering file {in_file} failed.\n\n",
                   "Known issues:\n",
-                  "1) older Linux versions with default tera binaries have issues where libg6 is not found.\n",
+                  "1) older Linux versions with default tera binaries have issues where a compatible libc.so is not found.\n",
                   "To fix this. Run the following in a Python file:\n" \
                   "from acados_template import get_tera\n",
                   "get_tera(tera_version = '0.0.34', force_download=True)\n\n",
