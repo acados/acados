@@ -45,6 +45,7 @@ from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions
 from .acados_ocp_iterate import AcadosOcpIterate
+from .ros2.ocp_node import AcadosOcpRosOptions
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
                     get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
@@ -114,6 +115,7 @@ class AcadosOcp:
         self.__p_global_values = np.array([])
         self.__problem_class = 'OCP'
         self.__json_file = "acados_ocp.json"
+        self.__ros_opts: Optional[AcadosOcpRosOptions] = None
 
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
@@ -160,10 +162,20 @@ class AcadosOcp:
         """Name of the json file where the problem description is stored."""
         return self.__json_file
 
+    @property
+    def ros_opts(self) -> Optional[AcadosOcpRosOptions]:
+        """Options to configure ROS 2 nodes and topics."""
+        return self.__ros_opts
+
     @json_file.setter
     def json_file(self, json_file):
         self.__json_file = json_file
 
+    @ros_opts.setter
+    def ros_opts(self, ros_opts: AcadosOcpRosOptions):
+        if not isinstance(ros_opts, AcadosOcpRosOptions):
+            raise TypeError('Invalid ros_opts value, expected AcadosOcpRos.\n')
+        self.__ros_opts = ros_opts
 
     def _make_consistent_cost_initial(self):
         dims = self.dims
@@ -1282,6 +1294,69 @@ class AcadosOcp:
         return template_list
 
 
+    def _get_ros_template_list(self) -> list:
+        template_list = []
+        acados_template_path = os.path.dirname(os.path.abspath(__file__))
+        ros_template_glob = os.path.join(acados_template_path, 'ros2_templates', '**', '*')
+
+        # --- Interface Package ---
+        ros_interface_dir = os.path.join('ocp_interface_templates')
+        interface_dir = os.path.join(os.path.dirname(self.code_export_directory), f'{self.ros_opts.package_name}_interface')
+        template_file = os.path.join(ros_interface_dir, 'README.in.md')
+        template_list.append((template_file, 'README.md', interface_dir, ros_template_glob))
+        template_file = os.path.join(ros_interface_dir, 'CMakeLists.in.txt')
+        template_list.append((template_file, 'CMakeLists.txt', interface_dir, ros_template_glob))
+        template_file = os.path.join(ros_interface_dir, 'package.in.xml')
+        template_list.append((template_file, 'package.xml', interface_dir, ros_template_glob))
+
+        # Messages
+        msg_dir = os.path.join(interface_dir, 'msg')
+        template_file = os.path.join(ros_interface_dir, 'State.in.msg')
+        template_list.append((template_file, 'State.msg', msg_dir, ros_template_glob))
+        template_file = os.path.join(ros_interface_dir, 'References.in.msg')
+        template_list.append((template_file, 'References.msg', msg_dir, ros_template_glob))
+        template_file = os.path.join(ros_interface_dir, 'Parameters.in.msg')
+        template_list.append((template_file, 'Parameters.msg', msg_dir, ros_template_glob))
+        template_file = os.path.join(ros_interface_dir, 'ControlInput.in.msg')
+        template_list.append((template_file, 'ControlInput.msg', msg_dir, ros_template_glob))
+
+        # Services
+        # TODO: No node implementation yet
+
+        # Actions
+        # TODO: No Template yet and no node implementation
+
+        # --- Solver Package ---
+        ros_pkg_dir = os.path.join('ocp_node_templates')
+        package_dir = os.path.join(os.path.dirname(self.code_export_directory), self.ros_opts.package_name)
+        template_file = os.path.join(ros_pkg_dir, 'README.in.md')
+        template_list.append((template_file, 'README.md', package_dir, ros_template_glob))
+        template_file = os.path.join(ros_pkg_dir, 'CMakeLists.in.txt')
+        template_list.append((template_file, 'CMakeLists.txt', package_dir, ros_template_glob))
+        template_file = os.path.join(ros_pkg_dir, 'package.in.xml')
+        template_list.append((template_file, 'package.xml', package_dir, ros_template_glob))
+
+        # Header
+        include_dir = os.path.join(package_dir, 'include', self.ros_opts.package_name)
+        template_file = os.path.join(ros_pkg_dir, 'config.in.hpp')
+        template_list.append((template_file, 'config.hpp', include_dir, ros_template_glob))
+        template_file = os.path.join(ros_pkg_dir, 'utils.in.hpp')
+        template_list.append((template_file, 'utils.hpp', include_dir, ros_template_glob))
+        template_file = os.path.join(ros_pkg_dir, 'node.in.h')
+        template_list.append((template_file, 'node.h', include_dir, ros_template_glob))
+
+        # Source
+        src_dir = os.path.join(package_dir, 'src')
+        template_file = os.path.join(ros_pkg_dir, 'node.in.cpp')
+        template_list.append((template_file, 'node.cpp', src_dir, ros_template_glob))
+
+        # Test
+        test_dir = os.path.join(package_dir, 'test')
+        template_file = os.path.join(ros_pkg_dir, 'test.launch.in.py')
+        template_list.append((template_file, f'test_{self.ros_opts.package_name}.launch.py', test_dir, ros_template_glob))
+        return template_list
+
+
     def __get_template_list(self, cmake_builder=None) -> list:
         """
         returns a list of tuples in the form:
@@ -1318,6 +1393,10 @@ class AcadosOcp:
         if self.simulink_opts is not None:
             template_list += self._get_matlab_simulink_template_list(name)
             template_list += self._get_integrator_simulink_template_list(name)
+
+        # ROS
+        if self.ros_opts is not None:
+            template_list += self._get_ros_template_list()
 
         return template_list
 
@@ -1366,7 +1445,8 @@ class AcadosOcp:
         # Render templates
         for tup in template_list:
             output_dir = self.code_export_directory if len(tup) <= 2 else tup[2]
-            render_template(tup[0], tup[1], output_dir, json_path)
+            template_glob = None if len(tup) <= 3 else tup[3]
+            render_template(tup[0], tup[1], output_dir, json_path, template_glob=template_glob)
 
         # Custom templates
         acados_template_path = os.path.dirname(os.path.abspath(__file__))
@@ -1496,7 +1576,9 @@ class AcadosOcp:
         # convert acados classes to dicts
         for key, v in ocp_dict.items():
             if isinstance(v, (AcadosModel, AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, ZoroDescription)):
-                ocp_dict[key]=dict(getattr(self, key).__dict__)
+                ocp_dict[key] = dict(getattr(self, key).__dict__)
+            if isinstance(v, AcadosOcpRosOptions):
+                ocp_dict[key] = v.to_dict()
 
         ocp_dict = format_class_dict(ocp_dict)
         return ocp_dict

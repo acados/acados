@@ -31,10 +31,12 @@
 
 import os, json
 import numpy as np
+from typing import Optional
 from copy import deepcopy
 from .acados_model import AcadosModel
 from .acados_dims import AcadosSimDims
 from .builders import CMakeBuilder
+from .ros2.sim_node import AcadosSimRosOptions
 from .utils import (get_acados_path, get_shared_lib_ext, format_class_dict, check_casadi_version,
                     make_object_json_dumpable, render_template)
 from .casadi_function_generation import (
@@ -70,6 +72,8 @@ class AcadosSimOptions:
         self.__ext_fun_expand_dyn = False
         self.__num_threads_in_batch_solve: int = 1
         self.__with_batch_functionality: bool = False
+
+
 
     @property
     def integrator_type(self):
@@ -421,10 +425,17 @@ class AcadosSim:
         self.__parameter_values = np.array([])
         self.__problem_class = 'SIM'
 
+        self.__ros_opts: Optional[AcadosSimRosOptions] = None
+
     @property
     def parameter_values(self):
         """:math:`p` - initial values for parameter - can be updated"""
         return self.__parameter_values
+
+    @property
+    def ros_opts(self) -> Optional[AcadosSimRosOptions]:
+        """Options to configure ROS 2 nodes and topics."""
+        return self.__ros_opts
 
     @parameter_values.setter
     def parameter_values(self, parameter_values):
@@ -434,8 +445,15 @@ class AcadosSim:
             raise ValueError('Invalid parameter_values value. ' +
                             f'Expected numpy array, got {type(parameter_values)}.')
 
+    @ros_opts.setter
+    def ros_opts(self, ros_opts: AcadosSimRosOptions):
+        if not isinstance(ros_opts, AcadosSimRosOptions):
+            raise TypeError('Invalid ros_opts value, expected AcadosOcpRos.\n')
+        self.__ros_opts = ros_opts
+
     def make_consistent(self):
         self.model.make_consistent(self.dims)
+        self.name = self.model.name
 
         if self.parameter_values.shape[0] != self.dims.np:
             raise ValueError('inconsistent dimension np, regarding model.p and parameter_values.' + \
@@ -455,6 +473,8 @@ class AcadosSim:
             # skip non dict attributes
             if isinstance(v, (AcadosSim, AcadosSimDims, AcadosSimOptions, AcadosModel)):
                 sim_dict[key]=dict(getattr(self, key).__dict__)
+            if isinstance(v, AcadosSimRosOptions):
+                sim_dict[key] = v.to_dict()
 
         return format_class_dict(sim_dict)
 
@@ -462,6 +482,84 @@ class AcadosSim:
     def dump_to_json(self, json_file='acados_sim.json') -> None:
         with open(json_file, 'w') as f:
             json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
+
+
+    def _get_ros_template_list(self) -> list:
+        template_list = []
+        acados_template_path = os.path.dirname(os.path.abspath(__file__))
+        ros_template_glob = os.path.join(acados_template_path, 'ros2_templates', '**', '*')
+
+        # --- Interface Package ---
+        ros_interface_dir = os.path.join('sim_interface_templates')
+        interface_dir = os.path.join(os.path.dirname(self.code_export_directory), f'{self.ros_opts.package_name}_interface')
+        template_file = os.path.join(ros_interface_dir, 'README.in.md')
+        template_list.append((template_file, 'README.md', interface_dir, ros_template_glob))
+        template_file = os.path.join(ros_interface_dir, 'CMakeLists.in.txt')
+        template_list.append((template_file, 'CMakeLists.txt', interface_dir, ros_template_glob))
+        template_file = os.path.join(ros_interface_dir, 'package.in.xml')
+        template_list.append((template_file, 'package.xml', interface_dir, ros_template_glob))
+
+        # Messages
+        msg_dir = os.path.join(interface_dir, 'msg')
+        template_file = os.path.join(ros_interface_dir, 'State.in.msg')
+        template_list.append((template_file, 'State.msg', msg_dir, ros_template_glob))
+        template_file = os.path.join(ros_interface_dir, 'ControlInput.in.msg')
+        template_list.append((template_file, 'ControlInput.msg', msg_dir, ros_template_glob))
+
+        # Services
+        # TODO: No node implementation yet
+
+        # Actions
+        # TODO: No Template yet and no node implementation
+
+        # --- Simulator Package ---
+        ros_pkg_dir = os.path.join('sim_node_templates')
+        package_dir = os.path.join(os.path.dirname(self.code_export_directory), self.ros_opts.package_name)
+        template_file = os.path.join(ros_pkg_dir, 'README.in.md')
+        template_list.append((template_file, 'README.md', package_dir, ros_template_glob))
+        template_file = os.path.join(ros_pkg_dir, 'CMakeLists.in.txt')
+        template_list.append((template_file, 'CMakeLists.txt', package_dir, ros_template_glob))
+        template_file = os.path.join(ros_pkg_dir, 'package.in.xml')
+        template_list.append((template_file, 'package.xml', package_dir, ros_template_glob))
+
+        # Header
+        include_dir = os.path.join(package_dir, 'include', self.ros_opts.package_name)
+        template_file = os.path.join(ros_pkg_dir, 'config.in.hpp')
+        template_list.append((template_file, 'config.hpp', include_dir, ros_template_glob))
+        template_file = os.path.join(ros_pkg_dir, 'utils.in.hpp')
+        template_list.append((template_file, 'utils.hpp', include_dir, ros_template_glob))
+        template_file = os.path.join(ros_pkg_dir, 'node.in.h')
+        template_list.append((template_file, 'node.h', include_dir, ros_template_glob))
+
+        # Source
+        src_dir = os.path.join(package_dir, 'src')
+        template_file = os.path.join(ros_pkg_dir, 'node.in.cpp')
+        template_list.append((template_file, 'node.cpp', src_dir, ros_template_glob))
+
+        # Test
+        test_dir = os.path.join(package_dir, 'test')
+        template_file = os.path.join(ros_pkg_dir, 'test.launch.in.py')
+        template_list.append((template_file, f'test_{self.ros_opts.package_name}.launch.py', test_dir, ros_template_glob))
+        return template_list
+
+
+    def _get_simulink_template_list(self, name: str) -> list:
+        template_list = []
+        template_file = os.path.join('matlab_templates', 'mex_sim_solver.in.m')
+        template_list.append((template_file, f'{name}_mex_sim_solver.m'))
+        template_file = os.path.join('matlab_templates', 'make_mex_sim.in.m')
+        template_list.append((template_file, f'make_mex_sim_{name}.m'))
+        template_file = os.path.join('matlab_templates', 'acados_sim_create.in.c')
+        template_list.append((template_file, f'acados_sim_create_{name}.c'))
+        template_file = os.path.join('matlab_templates', 'acados_sim_free.in.c')
+        template_list.append((template_file, f'acados_sim_free_{name}.c'))
+        template_file = os.path.join('matlab_templates', 'acados_sim_set.in.c')
+        template_list.append((template_file, f'acados_sim_set_{name}.c'))
+        template_file = os.path.join('matlab_templates', 'acados_sim_solver_sfun.in.c')
+        template_list.append((template_file, f'acados_sim_solver_sfunction_{name}.c'))
+        template_file = os.path.join('matlab_templates', 'make_sfun_sim.in.m')
+        template_list.append((template_file, f'make_sfun_sim_{name}.m'))
+        return template_list
 
 
     def render_templates(self, json_file, cmake_options: CMakeBuilder = None):
@@ -478,21 +576,18 @@ class AcadosSim:
             ('acados_sim_solver.in.pxd', 'acados_sim_solver.pxd'),
             ('main_sim.in.c', f'main_sim_{name}.c'),
         ]
+
+        # Model
+        model_dir = os.path.join(self.code_export_directory, self.model.name + '_model')
+        template_list.append(('model.in.h', f'{self.model.name}_model.h', model_dir))
+
+        # Simulink
         if self.simulink_opts is not None:
-            template_file = os.path.join('matlab_templates', 'mex_sim_solver.in.m')
-            template_list.append((template_file, f'{name}_mex_sim_solver.m'))
-            template_file = os.path.join('matlab_templates', 'make_mex_sim.in.m')
-            template_list.append((template_file, f'make_mex_sim_{name}.m'))
-            template_file = os.path.join('matlab_templates', 'acados_sim_create.in.c')
-            template_list.append((template_file, f'acados_sim_create_{name}.c'))
-            template_file = os.path.join('matlab_templates', 'acados_sim_free.in.c')
-            template_list.append((template_file, f'acados_sim_free_{name}.c'))
-            template_file = os.path.join('matlab_templates', 'acados_sim_set.in.c')
-            template_list.append((template_file, f'acados_sim_set_{name}.c'))
-            template_file = os.path.join('matlab_templates', 'acados_sim_solver_sfun.in.c')
-            template_list.append((template_file, f'acados_sim_solver_sfunction_{name}.c'))
-            template_file = os.path.join('matlab_templates', 'make_sfun_sim.in.m')
-            template_list.append((template_file, f'make_sfun_sim_{name}.m'))
+            template_list += self._get_simulink_template_list(name)
+
+        # ROS2
+        if self.ros_opts is not None:
+            template_list += self._get_ros_template_list()
 
         # Builder
         if cmake_options is not None:
@@ -501,15 +596,10 @@ class AcadosSim:
             template_list.append(('Makefile.in', 'Makefile'))
 
         # Render templates
-        for (in_file, out_file) in template_list:
-            render_template(in_file, out_file, self.code_export_directory, json_path)
-
-        # folder model
-        model_dir = os.path.join(self.code_export_directory, self.model.name + '_model')
-
-        in_file = 'model.in.h'
-        out_file = f'{self.model.name}_model.h'
-        render_template(in_file, out_file, model_dir, json_path)
+        for tup in template_list:
+            output_dir = self.code_export_directory if len(tup) <= 2 else tup[2]
+            template_glob = None if len(tup) <= 3 else tup[3]
+            render_template(tup[0], tup[1], output_dir, json_path, template_glob=template_glob)
 
 
     def generate_external_functions(self, ):
