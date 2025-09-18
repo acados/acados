@@ -585,9 +585,9 @@ void {{ ClassName }}::set_period(double period_seconds) {
     this->config_.ts = period_seconds;
     // Check period validity
     if (this->config_.ts <= 0.0) {
-        this->config_.ts = 0.02;
+        this->config_.ts = {{ solver_options.time_steps[0] }};
         RCLCPP_WARN(this->get_logger(),
-            "Control period must be positive, defaulting to 0.02s.");
+            "Control period must be positive, defaulting to {{ solver_options.time_steps[0] }}s, the first time step of the OCP.");
     }
     // TODO(anyone): should the solver sampling time be impacted?
 }
