@@ -878,7 +878,6 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
             config->dynamics[i]->model_assign(config->dynamics[i], dims->dynamics[i], c_ptr);
         c_ptr +=
             config->dynamics[i]->model_calculate_size(config->dynamics[i], dims->dynamics[i]);
-        printf("after dynamics model assign %d\n", i);
         assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
     }
 
@@ -887,7 +886,6 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
     {
         in->cost[i] = config->cost[i]->model_assign(config->cost[i], dims->cost[i], c_ptr);
         c_ptr += config->cost[i]->model_calculate_size(config->cost[i], dims->cost[i]);
-        printf("after cost model assign %d\n", i);
         assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
     }
 
@@ -898,7 +896,6 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
                                                                     dims->constraints[i], c_ptr);
         c_ptr += config->constraints[i]->model_calculate_size(config->constraints[i],
                                                                dims->constraints[i]);
-        printf("after constraints model assign %d\n", i);
         assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
     }
 
