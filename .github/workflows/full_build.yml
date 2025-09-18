@@ -50,7 +50,7 @@ jobs:
         ctest -C Release --rerun-failed -V
         exit 1
 
-        
+
   python_interface_new_casadi_and_py2octave:
     needs: call_core_build
     runs-on: ubuntu-22.04
@@ -511,7 +511,7 @@ jobs:
 
     - name: Setup Python Environment
       uses: ./.github/actions/setup-python-environment
-      
+
     - name: Test ROS2 OCP Package
       uses: ./.github/actions/test-ros2-package
       with:
