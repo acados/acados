@@ -2498,7 +2498,13 @@ class AcadosOcp:
     @classmethod
     def from_dict(cls, data: dict) -> "AcadosOcp":
         """
-        Reconstruct the `AcadosOcp` class based on the given dictionary.
+        Reconstruct the :py:class:`AcadosOcp` class based on the given dictionary.
+
+        :param dict data: Source dictionary. Keys should correspond to the properties of
+            :py:class:`acados_template.acados_ocp.AcadosOcp`.
+        :returns: A new instance populated from the dictionary.
+        :rtype: :py:class:`acados_template.acados_ocp.AcadosOcp`
+        :raises TypeError: If ``data`` is not a ``dict`` or a value has an invalid type.
         """
         ocp = cls()
 
@@ -2546,7 +2552,12 @@ class AcadosOcp:
     @classmethod
     def from_json(cls, json_path: str) -> "AcadosOcp":
         """
-        Reconstruct the `AcadosOcp` class based on the given json.
+        Reconstruct the :py:class:`AcadosOcp` class based on a json file.
+
+        :param str json_path: Source path to the ocp specific file.
+        :returns: A new instance populated from the json.
+        :rtype: :py:class:`acados_template.acados_ocp.AcadosOcp`
+        :raises FileNotFoundError: If ``json_path`` is not an invalid path.
         """
         if not os.path.exists(json_path):
             raise FileNotFoundError(f'Path "{json_path}" not found!')

@@ -321,21 +321,19 @@ class AcadosSimOptions:
     @classmethod
     def from_dict(cls, data: dict, *, strict: bool = False, allow_none: bool = True) -> "AcadosSimOptions":
         """
-        Create an `AcadosSimOptions` instance from a dictionary.
-        
-        Parameters
-        ----------
-        data : dict
-            Dictionary containing simulation options entries.
-        strict : bool, optional
-            If True, raise KeyError for unknown keys; otherwise, unknown keys are ignored. Default True.
-        allow_none : bool, optional
-            If False, None values are skipped; if True, None is assigned. Default False.
+        Create an :py:class:`acados_template.acados_sim.AcadosSimOptions` from a dictionary.
 
-        Returns
-        -------
-        AcadosSimOptions
-            The created instance with values loaded from the dictionary.
+        :param dict data: Source dictionary. Keys should correspond to the properties of
+            :py:class:`~acados_template.acados_sim.AcadosSimOptions`.
+        :param bool strict: If ``True``, unknown keys raise a :py:class:`KeyError`. If ``False`` (default),
+            unknown keys are ignored.
+        :param bool allow_none: If ``False``, values equal to ``None`` are skipped instead of being passed
+            to the property setters. Default ``True``.
+        :returns: A new options instance populated from the dictionary.
+        :rtype: :py:class:`acados_template.acados_sim.AcadosSimOptions`
+        :raises TypeError: If ``data`` is not a ``dict`` or a value has an invalid type.
+        :raises ValueError: If a value fails validation inside a property setter.
+        :raises KeyError: If ``strict=True`` and an unknown key is encountered.
         """
         if not isinstance(data, dict):
             raise TypeError(f"AcadosSimOptions.from_dict expects dict, got {type(data)}")
@@ -641,10 +639,15 @@ class AcadosSim:
     @classmethod
     def from_dict(cls, data: dict) -> "AcadosSim":
         """
-        Reconstruct the `AcadosSim` class based on the given dictionary.
+        Reconstruct the :py:class:`AcadosSim` class based on the given dictionary.
+        
+        Create an :py:class:`acados_template.acados_sim.AcadosSim` from a dictionary.
 
-        This method uses the existing property setters on dims/model/options to
-        enforce type and shape checks while restoring values from a serialized dict.
+        :param dict data: Source dictionary. Keys should correspond to the properties of
+            :py:class:`acados_template.acados_sim.AcadosSim`.
+        :returns: A new instance populated from the dictionary.
+        :rtype: :py:class:`acados_template.acados_sim.AcadosSim`
+        :raises TypeError: If ``data`` is not a ``dict`` or a value has an invalid type.
         """
         if not isinstance(data, dict):
             raise TypeError(f"AcadosSim.from_dict expects dict, got {type(data)}")
@@ -688,7 +691,12 @@ class AcadosSim:
     @classmethod
     def from_json(cls, json_path: str) -> "AcadosSim":
         """
-        Reconstruct the `AcadosSim` class based on the given JSON file.
+        Reconstruct the :py:class:`AcadosSim` class based on a json file.
+
+        :param str json_path: Source path to the ocp specific file.
+        :returns: A new instance populated from the json.
+        :rtype: :py:class:`acados_template.acados_sim.AcadosSim`
+        :raises FileNotFoundError: If ``json_path`` is not an invalid path.
         """
         if not os.path.exists(json_path):
             raise FileNotFoundError(f'Path "{json_path}" not found!')
