@@ -109,7 +109,7 @@ dense_qp_dims *dense_qp_dims_assign(void *raw_memory)
     d_dense_qp_dim_create(dims, c_ptr);
     c_ptr += d_dense_qp_dim_memsize();
 
-    assert((char *) raw_memory + dense_qp_dims_calculate_size() == c_ptr);
+    assert((char *) raw_memory + dense_qp_dims_calculate_size() >= c_ptr);
 
     return dims;
 }

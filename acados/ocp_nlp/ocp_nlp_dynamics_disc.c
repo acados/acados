@@ -532,6 +532,7 @@ acados_size_t ocp_nlp_dynamics_disc_model_calculate_size(void *config_, void *di
     acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_dynamics_disc_model);
+    make_int_multiple_of(8, &size);
 
     return size;
 }

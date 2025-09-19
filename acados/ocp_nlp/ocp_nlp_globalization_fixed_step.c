@@ -130,6 +130,7 @@ acados_size_t ocp_nlp_globalization_fixed_step_memory_calculate_size(void *confi
     acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_globalization_fixed_step_memory);
+    size += 2*8; // aligns
 
     return size;
 }

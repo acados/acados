@@ -827,7 +827,7 @@ acados_size_t ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *di
                                                              dims->constraints[i]);
     }
 
-    size += 4*8 + 64;  // aligns
+    size += 5*8 + 64;  // aligns
 
     make_int_multiple_of(8, &size);
 
@@ -869,6 +869,7 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
 
     // dmask
     assign_and_advance_blasfeo_dvec_structs(N + 1, &in->dmask, &c_ptr);
+    align_char_to(8, &c_ptr);
 
     // dynamics
     for (int i = 0; i < N; i++)
@@ -877,6 +878,7 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
             config->dynamics[i]->model_assign(config->dynamics[i], dims->dynamics[i], c_ptr);
         c_ptr +=
             config->dynamics[i]->model_calculate_size(config->dynamics[i], dims->dynamics[i]);
+        assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
     }
 
     // cost
@@ -884,6 +886,7 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
     {
         in->cost[i] = config->cost[i]->model_assign(config->cost[i], dims->cost[i], c_ptr);
         c_ptr += config->cost[i]->model_calculate_size(config->cost[i], dims->cost[i]);
+        assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
     }
 
     // constraints
@@ -893,6 +896,7 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
                                                                     dims->constraints[i], c_ptr);
         c_ptr += config->constraints[i]->model_calculate_size(config->constraints[i],
                                                                dims->constraints[i]);
+        assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
     }
 
     // ** doubles **
