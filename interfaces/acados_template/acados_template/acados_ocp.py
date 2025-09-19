@@ -1353,8 +1353,8 @@ class AcadosOcp:
         # Hooks
         hooks_dir = os.path.join(package_dir, 'env-hooks')
         template_file = os.path.join(ros_pkg_dir, 'export_acados_path.sh.in')
-        # Note: still a ".in" file, because it needs to be rendered by colcon build
-        template_list.append((template_file, 'export_acados_path.sh.in', hooks_dir))
+        # Note: still a ".in" file, because it needs to be rendered by colcon
+        template_list.append((template_file, 'export_acados_path.sh.in', hooks_dir, ros_template_glob))
 
         # Test
         test_dir = os.path.join(package_dir, 'test')
