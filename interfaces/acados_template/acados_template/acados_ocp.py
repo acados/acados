@@ -49,7 +49,7 @@ from .ros2.ocp_node import AcadosOcpRosOptions
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
                     get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
-                    check_casadi_version, ACADOS_INFTY)
+                    check_casadi_version, to_ndarray_if_numeric, ACADOS_INFTY)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
 from .zoro_description import ZoroDescription
@@ -2493,3 +2493,76 @@ class AcadosOcp:
             lam_traj=lam_traj,
         )
         return iterate
+    
+    
+    @classmethod
+    def from_dict(cls, data: dict) -> "AcadosOcp":
+        """
+        Reconstruct the :py:class:`AcadosOcp` class based on the given dictionary.
+
+        :param dict data: Source dictionary. Keys should correspond to the properties of
+            :py:class:`acados_template.acados_ocp.AcadosOcp`.
+        :returns: A new instance populated from the dictionary.
+        :rtype: :py:class:`acados_template.acados_ocp.AcadosOcp`
+        :raises TypeError: If ``data`` is not a ``dict`` or a value has an invalid type.
+        """
+        ocp = cls()
+
+        # top level things
+        if "json_file" in data:
+            ocp.json_file = data["json_file"]
+        if "code_export_directory" in data:
+            ocp.code_export_directory = data["code_export_directory"]
+        if "name" in data:
+            ocp.name = data["name"]
+            
+        # parameter vectors
+        if "parameter_values" in data:
+            ocp.parameter_values = to_ndarray_if_numeric(data["parameter_values"])
+        if "p_global_values" in data:
+            ocp.p_global_values = to_ndarray_if_numeric(data["p_global_values"])
+            
+        # Base components
+        dims_dict = data.get("dims", None)
+        model_dict = data.get("model", None)
+        cost_dict = data.get("cost", None)
+        constraints_dict = data.get("constraints", None)
+        solver_options_dict = data.get("solver_options", None)
+        simulink_opts_dict = data.get("simulink_opts", None)
+        zoro_description_dict = data.get("zoro_description", None)
+        
+        if dims_dict is not None and isinstance(dims_dict, dict):
+            ocp.dims = AcadosOcpDims.from_dict(dims_dict)
+        if model_dict is not None and isinstance(model_dict, dict):
+            ocp.model = AcadosModel.from_dict(model_dict)
+        if cost_dict is not None and isinstance(cost_dict, dict):
+            ocp.cost = AcadosOcpCost.from_dict(cost_dict)
+        if constraints_dict is not None and isinstance(constraints_dict, dict):
+            ocp.constraints = AcadosOcpConstraints.from_dict(constraints_dict)
+        if solver_options_dict is not None and isinstance(solver_options_dict, dict):
+            ocp.solver_options = AcadosOcpOptions.from_dict(solver_options_dict)
+        if simulink_opts_dict is not None and isinstance(simulink_opts_dict, dict):
+            raise NotImplementedError("json load with simulink options is not yet supported.")
+        if zoro_description_dict is not None and isinstance(zoro_description_dict, dict):
+            raise NotImplementedError("json load with zoro description is not yet supported.")
+        
+        return ocp
+    
+    
+    @classmethod
+    def from_json(cls, json_path: str) -> "AcadosOcp":
+        """
+        Reconstruct the :py:class:`AcadosOcp` class based on a json file.
+
+        :param str json_path: Source path to the ocp specific file.
+        :returns: A new instance populated from the json.
+        :rtype: :py:class:`acados_template.acados_ocp.AcadosOcp`
+        :raises FileNotFoundError: If ``json_path`` is not an invalid path.
+        """
+        if not os.path.exists(json_path):
+            raise FileNotFoundError(f'Path "{json_path}" not found!')
+
+        with open(json_path, "r") as f:
+            data = json.load(f)
+
+        return cls.from_dict(data)
