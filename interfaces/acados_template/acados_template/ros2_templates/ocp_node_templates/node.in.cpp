@@ -244,7 +244,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
         {%- set suffix = "_NSPHI0" %}
     {%- endif %}
     {%- set constraint_size = model.name ~ suffix | upper %}
-    parameter_handlers_["{{ ros_opts.package_name }}.constraints.{{ field }}"] =
+    parameter_handlers_["constraints.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             this->update_constraint<{{ constraint_size }}>(p, res, "{{ field }}", std::vector<int>{0});
         };
@@ -279,7 +279,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
         {%- set suffix = "_NSG" %}
     {%- endif %}
     {%- set constraint_size = model.name ~ suffix | upper %}
-    parameter_handlers_["{{ ros_opts.package_name }}.constraints.{{ field }}"] =
+    parameter_handlers_["constraints.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             auto stages = range(1, {{ model.name | upper }}_N);
             this->update_constraint<{{ constraint_size }}>(p, res, "{{ field }}", stages);
@@ -311,7 +311,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
         {%- set suffix = "_NSGN" %}
     {%- endif %}
     {%- set constraint_size = model.name ~ suffix | upper %}
-    parameter_handlers_["{{ ros_opts.package_name }}.constraints.{{ field }}"] =
+    parameter_handlers_["constraints.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             this->update_constraint<{{ constraint_size }}>(p, res, "{{ field }}", std::vector<int>{ {{- model.name | upper -}}_N});
         };
@@ -321,20 +321,20 @@ void {{ ClassName }}::setup_parameter_handlers() {
 
     // Weights
     {%- if dims.ny_0 > 0 %}
-    parameter_handlers_["{{ ros_opts.package_name }}.cost.W_0"] =
+    parameter_handlers_["cost.W_0"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             this->update_cost<{{ model.name | upper }}_NY0>(p, res, "W", std::vector<int>{0});
         };
     {%- endif %}
     {%- if dims.ny > 0 %}
-    parameter_handlers_["{{ ros_opts.package_name }}.cost.W"] =
+    parameter_handlers_["cost.W"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             auto stages = range(1, {{ model.name | upper }}_N);
             this->update_cost<{{ model.name | upper }}_NY>(p, res, "W", stages);
         };
     {%- endif %}
     {%- if dims.ny_e > 0 %}
-    parameter_handlers_["{{ ros_opts.package_name }}.cost.W_e"] =
+    parameter_handlers_["cost.W_e"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             this->update_cost<{{ model.name | upper }}_NYN>(p, res, "W", std::vector<int>{ {{- model.name | upper -}}_N});
         };
@@ -346,7 +346,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- for field, param in cost %}
     {%- set field_l = field | lower %}
     {%- if param and (field_l is starting_with('z')) and (field is ending_with('_0')) %}
-    parameter_handlers_["{{ ros_opts.package_name }}.cost.{{ field }}"] =
+    parameter_handlers_["cost.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             this->update_cost<{{ model.name | upper }}_NS0>(p, res, "{{ field }}", std::vector<int>{0});
         };
@@ -359,7 +359,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- for field, param in cost %}
     {%- set field_l = field | lower %}
     {%- if param and (field_l is starting_with('z')) and (field is not ending_with('_0')) and (field is not ending_with('_e')) %}
-    parameter_handlers_["{{ ros_opts.package_name }}.cost.{{ field }}"] =
+    parameter_handlers_["cost.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             auto stages = range(1, {{ model.name | upper }}_N);
             this->update_cost<{{ model.name | upper }}_NS>(p, res, "{{ field }}", stages);
@@ -373,7 +373,7 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- for field, param in cost %}
     {%- set field_l = field | lower %}
     {%- if param and (field_l is starting_with('z')) and (field is ending_with('_e')) %}
-    parameter_handlers_["{{ ros_opts.package_name }}.cost.{{ field }}"] =
+    parameter_handlers_["cost.{{ field }}"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             this->update_cost<{{ model.name | upper }}_NSN>(p, res, "{{ field }}", std::vector<int>{ {{- model.name | upper -}}_N});
         };
@@ -383,9 +383,14 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- endif %}
 
     // Solver Options
-    parameter_handlers_["{{ ros_opts.package_name }}.ts"] =
+    parameter_handlers_["ts"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            this->config_.ts = p.as_double();
+            this->set_period(p.as_double());
+            // Restart timer with the new period
+            if (!this->is_running()) {
+                // Assumes that the node is not yet ready and that the timer will be started later
+                return;
+            }
             try {
                 this->start_control_timer(this->config_.ts);
             } catch (const std::exception& e) {
@@ -399,14 +404,14 @@ void {{ ClassName }}::declare_parameters() {
     // Constraints
     {%- for field, param in constraints %}
     {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and ('bx_0' not in field) %}
-    this->declare_parameter("{{ ros_opts.package_name }}.constraints.{{ field }}", std::vector<double>{ {{- param | join(sep=', ') -}} });
+    this->declare_parameter("constraints.{{ field }}", std::vector<double>{ {{- param | join(sep=', ') -}} });
     {%- endif %}
     {%- endfor %}
 
     // Weights
     {%- for field, param in cost %}
     {%- if param and (field is starting_with('W')) %}
-    this->declare_parameter("{{ ros_opts.package_name }}.cost.{{ field }}", std::vector<double>{
+    this->declare_parameter("cost.{{ field }}", std::vector<double>{
         {%- set n_diag = param | length -%}
         {%- for i in range(end=n_diag) -%}
             {{- param[i][i] -}}
@@ -421,17 +426,17 @@ void {{ ClassName }}::declare_parameters() {
     {%- for field, param in cost %}
     {%- set field_l = field | lower %}
     {%- if param and (field_l is starting_with('z')) %}
-    this->declare_parameter("{{ ros_opts.package_name }}.cost.{{ field }}", std::vector<double>{ {{- param | join(sep=', ') -}} });
+    this->declare_parameter("cost.{{ field }}", std::vector<double>{ {{- param | join(sep=', ') -}} });
     {%- endif %}
     {%- endfor %}
     {%- endif %}
 
     // Solver Options
-    this->declare_parameter("{{ ros_opts.package_name }}.ts", {{ solver_options.Tsim }});
+    this->declare_parameter("ts", {{ solver_options.Tsim }});
 }
 
 void {{ ClassName }}::load_parameters() {
-    this->get_parameter("{{ ros_opts.package_name }}.ts", config_.ts);
+    this->get_parameter("ts", config_.ts);
 }
 
 void {{ ClassName }}::apply_all_parameters_to_solver() {
@@ -570,8 +575,31 @@ void {{ ClassName }}::update_cost(
 }
 
 // --- Helpers ---
+void {{ ClassName }}::set_period(double period_seconds) {
+    if (config_.ts == period_seconds) {
+        // Nothing to do
+        return;
+    }
+    RCLCPP_INFO_STREAM(
+        this->get_logger(), "update period 'Ts' = " << period_seconds << "s");
+    this->config_.ts = period_seconds;
+    // Check period validity
+    if (this->config_.ts <= 0.0) {
+        this->config_.ts = {{ solver_options.time_steps[0] }};
+        RCLCPP_WARN(this->get_logger(),
+            "Control period must be positive, defaulting to {{ solver_options.time_steps[0] }}s, the first time step of the OCP.");
+    }
+}
+
 void {{ ClassName }}::start_control_timer(double period_seconds) {
-    if (period_seconds <= 0.0) period_seconds = 0.02;
+    this->set_period(period_seconds);
+    // if timer already exists, restart with new period
+    if (this->is_running()) {
+        RCLCPP_WARN(this->get_logger(), "Control timer already running, restarting...");
+        control_timer_->cancel();
+    }
+    RCLCPP_INFO_STREAM(this->get_logger(), "Starting control loop with period " << period_seconds << "s.");
+    // create timer
     auto period = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::duration<double>(period_seconds));
     control_timer_ = this->create_wall_timer(

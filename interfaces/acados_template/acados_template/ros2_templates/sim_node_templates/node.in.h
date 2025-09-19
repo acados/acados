@@ -79,12 +79,17 @@ private:
     rcl_interfaces::msg::SetParametersResult on_parameter_update(const std::vector<rclcpp::Parameter>& params);
 
     // --- Helpers ---
+    void set_integration_period(double period_seconds);
     void start_integration_timer(double period_seconds = 0.02);
+    bool is_running() const {
+        return integration_timer_ && !integration_timer_->is_canceled();
+    }
 
     // --- Acados Helpers ---
     int sim_solve();
     void get_next_state(double* xn);
     void set_u(double* u);
+    void set_t_sim(double T_sim);
 };
 
 } // namespace {{ ros_opts.package_name }}

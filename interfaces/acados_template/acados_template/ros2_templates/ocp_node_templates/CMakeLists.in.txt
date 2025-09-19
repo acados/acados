@@ -93,6 +93,9 @@ install(FILES
     DESTINATION lib
 )
 
+# --- EXPORT HOOKS ---
+ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/export_acados_path.sh.in")
+
 # --- TESTS ---
 if(BUILD_TESTING)
     find_package(launch_testing_ament_cmake REQUIRED)
