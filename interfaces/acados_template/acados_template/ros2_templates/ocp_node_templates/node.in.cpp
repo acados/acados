@@ -589,7 +589,6 @@ void {{ ClassName }}::set_period(double period_seconds) {
         RCLCPP_WARN(this->get_logger(),
             "Control period must be positive, defaulting to {{ solver_options.time_steps[0] }}s, the first time step of the OCP.");
     }
-    // TODO(anyone): should the solver sampling time be impacted?
 }
 
 void {{ ClassName }}::start_control_timer(double period_seconds) {
