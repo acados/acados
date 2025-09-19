@@ -12,6 +12,8 @@ namespace {{ ros_opts.package_name }}
 
 struct {{ ClassName }}Config {
     double ts{ {{ solver_options.Tsim }} };
+    int threads{ {{ ros_opts.threads | default(value=1) }} };
+    bool verbose{ false };
 };
 
 } // namespace {{ ros_opts.package_name }}

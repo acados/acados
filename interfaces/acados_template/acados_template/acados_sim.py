@@ -354,19 +354,15 @@ class AcadosSim:
 
         self.__parameter_values = np.array([])
         self.__problem_class = 'SIM'
-
+        self.__json_file = "acados_sim.json"
+        
         self.__ros_opts: Optional[AcadosSimRosOptions] = None
 
     @property
     def parameter_values(self):
         """:math:`p` - initial values for parameter - can be updated"""
         return self.__parameter_values
-
-    @property
-    def ros_opts(self) -> Optional[AcadosSimRosOptions]:
-        """Options to configure ROS 2 nodes and topics."""
-        return self.__ros_opts
-
+    
     @parameter_values.setter
     def parameter_values(self, parameter_values):
         if isinstance(parameter_values, np.ndarray):
@@ -374,6 +370,20 @@ class AcadosSim:
         else:
             raise ValueError('Invalid parameter_values value. ' +
                             f'Expected numpy array, got {type(parameter_values)}.')
+            
+    @property
+    def json_file(self):
+        """Name of the json file where the problem description is stored."""
+        return self.__json_file
+
+    @json_file.setter
+    def json_file(self, json_file):
+        self.__json_file = json_file
+        
+    @property
+    def ros_opts(self) -> Optional[AcadosSimRosOptions]:
+        """Options to configure ROS 2 nodes and topics."""
+        return self.__ros_opts
 
     @ros_opts.setter
     def ros_opts(self, ros_opts: AcadosSimRosOptions):
@@ -409,8 +419,12 @@ class AcadosSim:
         return format_class_dict(sim_dict)
 
 
-    def dump_to_json(self, json_file='acados_sim.json') -> None:
-        with open(json_file, 'w') as f:
+    def dump_to_json(self) -> None:
+        dir_name = os.path.dirname(self.json_file)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
+            
+        with open(self.json_file, 'w') as f:
             json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
 
 
@@ -419,9 +433,9 @@ class AcadosSim:
         acados_template_path = os.path.dirname(os.path.abspath(__file__))
         ros_template_glob = os.path.join(acados_template_path, 'ros2_templates', '**', '*')
 
-        # --- Interface Package ---
+        # --- Interface Package --- 
         ros_interface_dir = os.path.join('sim_interface_templates')
-        interface_dir = os.path.join(os.path.dirname(self.code_export_directory), f'{self.ros_opts.package_name}_interface')
+        interface_dir = os.path.join(self.ros_opts.generated_code_dir, f'{self.ros_opts.package_name}_interface')
         template_file = os.path.join(ros_interface_dir, 'README.in.md')
         template_list.append((template_file, 'README.md', interface_dir, ros_template_glob))
         template_file = os.path.join(ros_interface_dir, 'CMakeLists.in.txt')
@@ -436,15 +450,9 @@ class AcadosSim:
         template_file = os.path.join(ros_interface_dir, 'ControlInput.in.msg')
         template_list.append((template_file, 'ControlInput.msg', msg_dir, ros_template_glob))
 
-        # Services
-        # TODO: No node implementation yet
-
-        # Actions
-        # TODO: No Template yet and no node implementation
-
-        # --- Simulator Package ---
+        # --- Simulator Package --- 
         ros_pkg_dir = os.path.join('sim_node_templates')
-        package_dir = os.path.join(os.path.dirname(self.code_export_directory), self.ros_opts.package_name)
+        package_dir = os.path.join(self.ros_opts.generated_code_dir, self.ros_opts.package_name)
         template_file = os.path.join(ros_pkg_dir, 'README.in.md')
         template_list.append((template_file, 'README.md', package_dir, ros_template_glob))
         template_file = os.path.join(ros_pkg_dir, 'CMakeLists.in.txt')
@@ -492,9 +500,9 @@ class AcadosSim:
         return template_list
 
 
-    def render_templates(self, json_file, cmake_options: CMakeBuilder = None):
+    def render_templates(self, cmake_options: CMakeBuilder = None):
         # setting up loader and environment
-        json_path = os.path.join(os.getcwd(), json_file)
+        json_path = os.path.abspath(self.json_file)
         name = self.model.name
 
         if not os.path.exists(json_path):
