@@ -191,15 +191,6 @@ class RosTopicMsg:
 
 
 class RosTopicMsgOutput(RosTopicMsg):
-    _NOT_IMPLEMENTED_ARCHTYPES: set[ArchType] = {
-        ArchType.LIFECYCLE_NODE,
-        ArchType.ROS2_CONTROLLER,
-        ArchType.NAV2_CONTROLLER}
-    _NOT_IMPLEMENTED_EXECUTORS: set[ControlLoopExec] = {
-        ControlLoopExec.TIMER,
-        ControlLoopExec.SRV,
-        ControlLoopExec.ACTION}
-    
     def __init__(self):
         super().__init__()
         self.__mapping: list[dict] = list()
