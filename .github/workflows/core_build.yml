@@ -59,6 +59,7 @@ jobs:
             'CMakeLists.txt',
             'cmake/**/*.cmake',
             'acados/**',
+            'interfaces/CMakeLists.txt',
             'interfaces/acados_c/**'
           ) }}
 
