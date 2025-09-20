@@ -38,7 +38,7 @@ from .acados_dims import AcadosSimDims
 from .builders import CMakeBuilder
 from .ros2.sim_node import AcadosSimRosOptions
 from .utils import (get_acados_path, get_shared_lib_ext, format_class_dict, check_casadi_version,
-                    make_object_json_dumpable, render_template)
+                    make_object_json_dumpable, render_template, rebind_object_symbolics)
 from .casadi_function_generation import (
                     GenerateContext,
                     AcadosCodegenOptions,
@@ -636,6 +636,16 @@ class AcadosSim:
         self.__external_function_files_model = context.get_external_function_file_list(ocp_specific=False)
 
 
+    def _rebind_all_symbolics(self) -> None:
+        """
+        Link all CasADi symbols in model, dims, solver_options to the current CasADi instance.
+        """
+        if getattr(self, "model", None) is None:
+            return
+        name_map = self.model.symbol_name_map()
+        rebind_object_symbolics(self.model, name_map)
+            
+
     @classmethod
     def from_dict(cls, data: dict) -> "AcadosSim":
         """
@@ -685,6 +695,7 @@ class AcadosSim:
         if isinstance(solver_options_dict, dict):
             sim.solver_options = AcadosSimOptions.from_dict(solver_options_dict)
 
+        sim._rebind_all_symbolics()
         return sim
 
 

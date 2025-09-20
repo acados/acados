@@ -49,7 +49,7 @@ from .ros2.ocp_node import AcadosOcpRosOptions
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
                     get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
-                    check_casadi_version, to_ndarray_if_numeric, ACADOS_INFTY)
+                    check_casadi_version, to_ndarray_if_numeric, rebind_object_symbolics, ACADOS_INFTY)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
 from .zoro_description import ZoroDescription
@@ -2495,6 +2495,18 @@ class AcadosOcp:
         return iterate
     
     
+    def _rebind_all_symbolics(self) -> None:
+        """
+        Link all symbolic expressions in the OCP to the current model symbols.
+        """
+        if self.model is None:
+            return
+        name_map = self.model.symbol_name_map()
+        rebind_object_symbolics(self.model, name_map)
+        rebind_object_symbolics(self.cost, name_map)
+        rebind_object_symbolics(self.constraints, name_map)
+    
+    
     @classmethod
     def from_dict(cls, data: dict) -> "AcadosOcp":
         """
@@ -2546,6 +2558,7 @@ class AcadosOcp:
         if zoro_description_dict is not None and isinstance(zoro_description_dict, dict):
             raise NotImplementedError("json load with zoro description is not yet supported.")
         
+        ocp._rebind_all_symbolics()
         return ocp
     
     

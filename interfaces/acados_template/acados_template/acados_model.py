@@ -35,7 +35,7 @@ import numpy as np
 
 from casadi import MX, SX, DM
 
-from .utils import is_empty, casadi_length
+from .utils import is_empty, casadi_length, flatten_symbols
 from .acados_dims import AcadosOcpDims, AcadosSimDims
 
 
@@ -976,6 +976,7 @@ class AcadosModel():
             if isinstance(prop, property) and prop.fset is not None
         }
 
+
     @staticmethod
     def _deserialize_casadi(value):
         """Attempt to deserialize CasADi SX/MX/DM objects from strings or lists.
@@ -1003,26 +1004,32 @@ class AcadosModel():
         # pass-through
         return value
 
+
+    def symbol_name_map(self):
+        """Build a dict name -> canonical symbol from current properties."""
+        name_map = {}
+        for vec in (self.x, self.xdot, self.u, self.z, self.p, self.p_global, self.t):
+            if isinstance(vec, (SX, MX)):
+                syms = [vec] if vec.is_symbolic() and casadi_length(vec) == 1 else flatten_symbols(vec)
+                for s in syms:
+                    if isinstance(s, (SX, MX)) and s.is_symbolic():
+                        try:
+                            name_map[s.name()] = s
+                        except Exception:
+                            pass
+        return name_map
+
+
     @classmethod
     def from_dict(cls, data: dict, *, strict: bool = False, allow_none: bool = False):
-        """Create an AcadosModel object from a dictionary.
+        """
+        Reconstruct the :py:class:`AcadosModel` class based on the given dictionary.
 
-        CasADi objects serialized with `SX.serialize()`/`MX.serialize()`/`DM.serialize()`
-        are automatically deserialized.
-
-        Parameters
-        ----------
-        data : dict
-            Dictionary containing model entries (e.g. symbolic variables and expressions).
-        strict : bool, optional
-            If True, raise KeyError for unknown keys; otherwise, unknown keys are ignored. Default True.
-        allow_none : bool, optional
-            If False, None values are skipped; if True, None is assigned. Default False.
-
-        Returns
-        -------
-        AcadosModel
-            The created instance with values loaded from the dictionary.
+        :param dict data: Source dictionary. Keys should correspond to the properties of
+            :py:class:`acados_template.acados_ocp.AcadosModel`.
+        :returns: A new instance populated from the dictionary.
+        :rtype: :py:class:`acados_template.acados_model.AcadosModel`
+        :raises TypeError: If ``data`` is not a ``dict`` or a value has an invalid type.
         """
         obj = cls()
         if not isinstance(data, dict):
@@ -1038,4 +1045,5 @@ class AcadosModel():
                     continue
             prepared = AcadosModel._deserialize_casadi(value)
             setattr(obj, key, prepared)
+            
         return obj

@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from typing import Union, Optional
+from typing import Union, Optional, Dict, Any
 import json
 import os
 import shutil
@@ -620,3 +620,66 @@ def can_set(obj, key: str) -> bool:
     if isinstance(cls_attr, property) and cls_attr.fset is None:
         return False
     return True
+
+
+def flatten_symbols(v):
+    """Return a flat list of SX/MX scalars from a CasADi vector/matrix."""
+    try:
+        n = int(casadi_length(v))
+    except Exception:
+        return []
+    return [v[i] for i in range(n)]
+
+
+def _rebind_expr(expr: Any, name_map: Dict[str, Any]) -> Any:
+    if isinstance(expr, (SX, MX)):
+        try:
+            free_syms = ca.symvar(expr)
+        except Exception:
+            free_syms = []
+        if not free_syms:
+            return expr
+        olds, news = [], []
+        for s in free_syms:
+            try:
+                nm = s.name()
+            except Exception:
+                continue
+            repl = name_map.get(nm)
+            if repl is not None and (repl is not s):
+                olds.append(s)
+                news.append(repl)
+        if not olds:
+            return expr
+
+        etyp = type(expr)
+        pairs = [(o, n) for o, n in zip(olds, news) if isinstance(o, etyp) and isinstance(n, etyp)]
+        if not pairs:
+            return expr
+        olds, news = zip(*pairs)
+
+        if len(olds) == 1:
+            return ca.substitute(expr, olds[0], news[0])
+        else:
+            return ca.substitute([expr], list(olds), list(news))[0]
+    elif isinstance(expr, list):
+        return [_rebind_expr(v, name_map) for v in expr]
+    elif isinstance(expr, tuple):
+        return tuple(_rebind_expr(v, name_map) for v in expr)
+    elif isinstance(expr, dict):
+        return {k: _rebind_expr(v, name_map) for k, v in expr.items()}
+    else:
+        return expr
+
+
+def rebind_object_symbolics(obj: Any, name_map: Dict[str, Any]) -> None:
+    """
+    Replace all free symbols in a (flat) CasADi expression of an object with a name mapping.
+    Modifies obj in-place.
+    """
+    if obj is None:
+        return
+    for attr, value in list(vars(obj).items()):
+        new_val = _rebind_expr(value, name_map)
+        if new_val is not value:
+            setattr(obj, attr, new_val)
