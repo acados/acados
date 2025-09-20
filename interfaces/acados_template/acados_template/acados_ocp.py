@@ -1301,7 +1301,7 @@ class AcadosOcp:
 
         # --- Interface Package ---
         ros_interface_dir = os.path.join('ocp_interface_templates')
-        interface_dir = interface_dir = os.path.join(self.ros_opts.generated_code_dir, f'{self.ros_opts.package_name}_interface')
+        interface_dir = os.path.join(self.ros_opts.generated_code_dir, f'{self.ros_opts.package_name}_interface')
         template_file = os.path.join(ros_interface_dir, 'README.in.md')
         template_list.append((template_file, 'README.md', interface_dir, ros_template_glob))
         template_file = os.path.join(ros_interface_dir, 'CMakeLists.in.txt')

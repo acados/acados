@@ -291,7 +291,6 @@ class RosTopicMapper(AcadosRosBaseOptions):
         self.node_name: str = ""
         self.namespace: str = ""
         self.archtype: str = ArchType.NODE.value
-        self.control_loop_executor: str = ControlLoopExec.TOPIC.value
         self.__header_includes: set[str] = set()
         self.__dependencies: set[str] = set()
 

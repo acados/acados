@@ -31,18 +31,12 @@ from .utils import ControlLoopExec, ArchType, AcadosRosBaseOptions
 
 # --- Ros Options ---
 class AcadosOcpRosOptions(AcadosRosBaseOptions):
-    _NOT_IMPLEMENTED_EXECUTORS: set[ControlLoopExec] = {
-        ControlLoopExec.TOPIC,
-        ControlLoopExec.SRV,
-        ControlLoopExec.ACTION}
-
     def __init__(self):
         super().__init__()
         self.package_name: str = "acados_ocp"
         self.node_name: str = ""
         self.namespace: str = ""
         self.archtype: str = ArchType.NODE.value
-        self.control_loop_executor: str = ControlLoopExec.TIMER.value
 
         self.__control_topic: str = "ocp_control"
         self.__state_topic: str = "ocp_state"
@@ -65,7 +59,7 @@ class AcadosOcpRosOptions(AcadosRosBaseOptions):
     @property
     def reference_topic(self) -> str:
         return self.__reference_topic
-    
+
     @property
     def threads(self) -> str:
         return self.__threads
@@ -93,7 +87,7 @@ class AcadosOcpRosOptions(AcadosRosBaseOptions):
         if not isinstance(value, str):
             raise TypeError('Invalid reference_topic value, expected str.\n')
         self.__reference_topic = value
-        
+
     @threads.setter
     def threads(self, value: int):
         if not isinstance(value, int):
@@ -108,15 +102,3 @@ class AcadosOcpRosOptions(AcadosRosBaseOptions):
             "reference_topic": self.reference_topic,
             "threads": self.threads,
         }
-
-
-if __name__ == "__main__":
-    ros_opt = AcadosOcpRosOptions()
-
-    # ros_opt.node_name = "my_node"
-    ros_opt.package_name = "that_package"
-    ros_opt.namespace = "/my_namespace"
-    # ros_opt.control_loop_executor = ControlLoopExec.TOPIC
-    # ros_opt.archtype = ArchType.LIFECYCLE_NODE
-
-    print(ros_opt.to_dict())

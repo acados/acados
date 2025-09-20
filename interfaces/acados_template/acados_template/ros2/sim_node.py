@@ -32,18 +32,12 @@ from .utils import ControlLoopExec, ArchType, AcadosRosBaseOptions
 
 # --- Ros Options ---
 class AcadosSimRosOptions(AcadosRosBaseOptions):
-    _NOT_IMPLEMENTED_EXECUTORS: set[ControlLoopExec] = {
-        ControlLoopExec.TOPIC,
-        ControlLoopExec.SRV,
-        ControlLoopExec.ACTION}
-    
     def __init__(self):
         super().__init__()
         self.package_name: str = "acados_sim"
         self.node_name: str = ""
         self.namespace: str = ""
         self.archtype: str = ArchType.NODE.value
-        self.control_loop_executor: str = ControlLoopExec.TIMER.value
 
         self.__control_topic = "sim_control"
         self.__state_topic = "sim_state"

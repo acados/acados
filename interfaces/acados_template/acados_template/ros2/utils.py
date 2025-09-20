@@ -7,8 +7,6 @@ from typing import Union
 class ControlLoopExec(str, Enum):
     TOPIC = "topic"
     TIMER = "timer"
-    SRV = "srv"
-    ACTION = "action"
 
 class ArchType(str, Enum):
     NODE = "node"
@@ -22,9 +20,6 @@ class AcadosRosBaseOptions:
         ArchType.LIFECYCLE_NODE,
         ArchType.ROS2_CONTROLLER,
         ArchType.NAV2_CONTROLLER}
-    _NOT_IMPLEMENTED_EXECUTORS: set[ControlLoopExec] = {
-        ControlLoopExec.SRV,
-        ControlLoopExec.ACTION}
 
     def __init__(self):
         self.__package_name: str = "acados_base"
@@ -32,7 +27,6 @@ class AcadosRosBaseOptions:
         self.__namespace: str = ""
         self.__generated_code_dir: str = "ros_generated_code"
         self.__archtype: str = ArchType.NODE.value
-        self.__control_loop_executor: str = ControlLoopExec.TIMER.value
 
     @property
     def package_name(self) -> str:
@@ -53,10 +47,6 @@ class AcadosRosBaseOptions:
     @property
     def archtype(self) -> str:
         return self.__archtype
-
-    @property
-    def control_loop_executor(self) -> str:
-        return self.__control_loop_executor
 
     @package_name.setter
     def package_name(self, value: str):
@@ -99,23 +89,6 @@ class AcadosRosBaseOptions:
             raise NotImplementedError(f"Archtype '{archtype_enum.value}' is not implemented for {type(self).__name__} yet.")
         self.__archtype = archtype_enum.value
 
-    @control_loop_executor.setter
-    def control_loop_executor(self, value: Union[ControlLoopExec, str]) -> None:
-        try:
-            if isinstance(value, ControlLoopExec):
-                control_loop_executor_enum = value
-            elif isinstance(value, str):
-                control_loop_executor_enum = ControlLoopExec(value)
-            else:
-                raise TypeError()
-        except (ValueError, TypeError):
-            valid_types = [e.value for e in ControlLoopExec]
-            raise TypeError(f"Invalid control_loop_executor. Expected one of {valid_types} or a ControlLoopExec enum member.")
-        
-        if control_loop_executor_enum in type(self)._NOT_IMPLEMENTED_EXECUTORS:
-            raise NotImplementedError(f"Control loop executor '{control_loop_executor_enum.value}' is not implemented for {type(self).__name__} yet.")
-        self.__control_loop_executor = control_loop_executor_enum.value
-
     def to_dict(self) -> dict:
         if self.node_name == "":
             self.node_name = self.package_name + "_node"
@@ -128,7 +101,6 @@ class AcadosRosBaseOptions:
             "namespace":                namespace_snake,
             "generated_code_dir":       self.generated_code_dir,
             "archtype":                 self.archtype,
-            "control_loop_executor":    self.control_loop_executor
         }
 
     @staticmethod
