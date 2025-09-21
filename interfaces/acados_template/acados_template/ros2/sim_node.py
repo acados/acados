@@ -27,7 +27,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from .utils import ControlLoopExec, ArchType, AcadosRosBaseOptions
+from .utils import ArchType, AcadosRosBaseOptions
 
 
 # --- Ros Options ---

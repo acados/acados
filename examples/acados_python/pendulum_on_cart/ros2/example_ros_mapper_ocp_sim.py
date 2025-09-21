@@ -51,19 +51,19 @@ def main():
     N = 20
     export_dir = os.path.join(script_dir, 'generated')
     c_generated_code_base = os.path.join(export_dir, "c_generated_code")
-    
+
     ocp = create_minimal_ocp(export_dir, N, Tf_ocp, Fmax)
     ocp.code_export_directory = c_generated_code_base + "_ocp"
+    ocp_solver = AcadosOcpSolver(ocp, json_file = str(os.path.join(export_dir, 'acados_ocp.json')))
+
     sim = create_minimal_sim(export_dir, Tf_sim)
     sim.code_export_directory = c_generated_code_base + "_sim"
-    
-    ros_mapper = RosTopicMapper.from_instances(ocp, sim)
+    sim_solver = AcadosSimSolver(sim, json_file = str(os.path.join(export_dir, 'acados_sim.json')))
+
+    ros_mapper = RosTopicMapper.from_instances(ocp_solver, sim_solver)
     ros_mapper.package_name = "sim_ocp_mapper"
     ros_mapper.generated_code_dir = export_dir
-    
-    
-    AcadosOcpSolver(ocp, json_file = str(os.path.join(export_dir, 'acados_ocp.json')))
-    AcadosSimSolver(sim, json_file = str(os.path.join(export_dir, 'acados_sim.json')))
+
     ros_mapper.generate()
 
     

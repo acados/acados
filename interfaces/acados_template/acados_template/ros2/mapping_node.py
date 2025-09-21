@@ -35,13 +35,15 @@ from typing import Optional, Union, TYPE_CHECKING, Literal
 from itertools import chain
 from casadi import SX, MX
 
-from .utils import ArchType, ControlLoopExec, AcadosRosBaseOptions
+from .utils import ArchType, AcadosRosBaseOptions
 from ..utils import make_object_json_dumpable, render_template
 
 # Avoid circular imports at runtime; only import these for type checking
 if TYPE_CHECKING:
     from ..acados_ocp import AcadosOcp
     from ..acados_sim import AcadosSim
+    from ..acados_ocp_solver import AcadosOcpSolver
+    from ..acados_sim_solver import AcadosSimSolver
 
 
 
@@ -454,7 +456,8 @@ class RosTopicMapper(AcadosRosBaseOptions):
         # Render templates
         for tup in template_list:
             output_dir = self.generated_code_dir if len(tup) <= 2 else tup[2]
-            render_template(tup[0], tup[1], output_dir, self.mapper_json_file)
+            template_glob = None if len(tup) <= 3 else tup[3]
+            render_template(tup[0], tup[1], output_dir, self.mapper_json_file, template_glob=template_glob)
             
     
     def check_none_values(self):
@@ -496,33 +499,46 @@ class RosTopicMapper(AcadosRosBaseOptions):
     
     
     @classmethod
-    def from_instances(cls, ocp_instance: 'AcadosOcp', sim_instance: 'AcadosSim'):
+    def from_instances(cls, ocp_solver: 'AcadosOcpSolver', sim_solver: 'AcadosSimSolver'):
         """
-        Build a RosTopicMapper by automatically mapping OCP -> SIM controls (u) and
-        SIM -> OCP states (x). It uses the `{package_name}_interface` message types
-        for both systems: `State` and `ControlInput`.
+        Build a :py:class:`RosTopicMapper` by wiring OCP -> SIM controls (``u``) and
+        SIM -> OCP states (``x``) using the default interface message types.
 
-        Mapping logic:
-        - Prefer label-based matching (case-insensitive exact match)
-        - Fallback to index-based mapping for remaining elements
-        - Skip elements that cannot be matched; map as many as possible
+        The mapper creates two input messages (SIM ``State``, OCP ``ControlInput``)
+        and two output messages (OCP ``State``, SIM ``ControlInput``). It then derives
+        field mappings based on symbolic element names of the respective CasADi
+        vectors and assigns execution topics so that each output is published when
+        its corresponding input arrives.
+
+        :param ocp_solver: OCP solver instance whose OCP and model define the OCP side.
+        :type ocp_solver: acados_template.acados_ocp_solver.AcadosOcpSolver
+        :param sim_solver: Simulator solver instance whose simulator and model define the SIM side.
+        :type sim_solver: acados_template.acados_sim_solver.AcadosSimSolver
+        :returns: A configured topic mapper with populated inputs, outputs, mappings,
+                  and references to the OCP/SIM JSON files.
+        :rtype: RosTopicMapper
+
+        :raises ValueError: If required ROS options (e.g. ``package_name``, topics) are
+            missing in either solver, or if message field trees are incomplete at finalize-time.
         """
+        ocp = ocp_solver.acados_ocp
+        sim = sim_solver.acados_sim
         obj = cls()
         
         # State and Control names
-        ocp_x_names = _elem_names(ocp_instance.model.x)
-        sim_x_names = _elem_names(sim_instance.model.x)
-        ocp_u_names = _elem_names(ocp_instance.model.u)
-        sim_u_names = _elem_names(sim_instance.model.u)
+        ocp_x_names = _elem_names(ocp.model.x)
+        sim_x_names = _elem_names(sim.model.x)
+        ocp_u_names = _elem_names(ocp.model.u)
+        sim_u_names = _elem_names(sim.model.u)
 
         # --- Build input messages ---
-        in_sim_state = build_default_state(sim_instance, direction_out=False)
-        in_ocp_ctrl  = build_default_control(ocp_instance, direction_out=False)
+        in_sim_state = build_default_state(sim, direction_out=False)
+        in_ocp_ctrl  = build_default_control(ocp, direction_out=False)
         obj.in_msgs = [in_sim_state, in_ocp_ctrl]
 
         # --- Build output messages ---
-        out_ocp_state = build_default_state(ocp_instance, direction_out=True)
-        out_sim_ctrl  = build_default_control(sim_instance, direction_out=True)
+        out_ocp_state = build_default_state(ocp, direction_out=True)
+        out_sim_ctrl  = build_default_control(sim, direction_out=True)
 
         # Map SIM x -> OCP x
         x_map_pairs = _compute_mapping(
@@ -547,8 +563,8 @@ class RosTopicMapper(AcadosRosBaseOptions):
         out_sim_ctrl.exec_topic = in_ocp_ctrl.topic_name
 
         obj.out_msgs = [out_ocp_state, out_sim_ctrl]
-        obj.ocp_json_file = ocp_instance.json_file
-        obj.sim_json_file = sim_instance.json_file
+        obj.ocp_json_file = ocp.json_file
+        obj.sim_json_file = sim.json_file
         return obj
     
     
@@ -672,69 +688,3 @@ def build_default_control(
         m.field_tree.append(RosField(name="status", ftype="int8"))
     m.flatten_field_tree()
     return m
-
-
-    
-if __name__ == "__main__":
-    from pathlib import Path
-    ros_mapper = RosTopicMapper()
-    
-    # ros_mapper.package_name = "my_mapper_node"
-    ros_mapper.control_loop_executor = ControlLoopExec.TOPIC
-    ros_mapper.archtype = ArchType.NODE
-    
-    in_msg = RosTopicMsg()
-    in_msg.topic_name = "next_state"
-    in_msg.msg_type = "sim_package_interface/State"
-    in_msg.field_tree += [
-        RosField(name="header", ftype="std_msgs/Header"),
-        RosField(name="x", ftype="float64", is_array=True, array_size=5),
-        RosField(name="status", ftype="int8")]
-    ros_mapper.in_msgs += [in_msg]
-    
-    
-    out_msg = RosTopicMsgOutput()
-    out_msg.topic_name = "state"
-    out_msg.msg_type = "ocp_package_interface/State"
-    out_msg.field_tree += [
-        RosField(name="header", ftype="std_msgs/Header"),
-        RosField(name="x", ftype="float64", is_array=True, array_size=4)]
-    out_msg.mapping = [
-        ("next_state.x[2]", "x[0]"),
-        ("next_state.x[3]", "x[1]"),
-        ("next_state.x[4]", "x[2]"),
-        ("control_input.u[0]","x[3]")]
-    out_msg.exec_topic = "next_state"
-    ros_mapper.out_msgs += [out_msg]
-    
-    
-    in_msg = RosTopicMsg()
-    in_msg.topic_name = "control_input"
-    in_msg.msg_type = "ocp_package_interface/ControlInput"
-    in_msg.field_tree += [
-        RosField(name="header", ftype="std_msgs/Header"),
-        RosField(name="u", ftype="float64", is_array=True, array_size=2),
-        RosField(name="status", ftype="int8"),
-        RosField(name="test_val", ftype="Pose", children=[
-            RosField(name="x", ftype="float64"),
-            RosField(name="y", ftype="float64"),
-            RosField(name="z", ftype="float64")])]
-    ros_mapper.in_msgs += [in_msg]
-    
-    out_msg = RosTopicMsgOutput()
-    out_msg.topic_name = "sim_control"
-    out_msg.msg_type = "sim_package_interface/State"
-    out_msg.field_tree += [
-        RosField(name="header", ftype="std_msgs/Header"),
-        RosField(name="u", ftype="float64", is_array=True, array_size=2)]
-    out_msg.mapping = [
-        ("control_input.u", "u")]
-    out_msg.exec_topic = "control_input"
-    ros_mapper.out_msgs += [out_msg]
-    
-    ros_mapper.generated_code_dir = str(Path(__file__).resolve().parent / "generated")
-    
-    from pprint import pprint
-    pprint(ros_mapper.to_dict())
-    
-    ros_mapper.generate()

@@ -4,10 +4,6 @@ from enum import Enum
 from typing import Union
 
 
-class ControlLoopExec(str, Enum):
-    TOPIC = "topic"
-    TIMER = "timer"
-
 class ArchType(str, Enum):
     NODE = "node"
     LIFECYCLE_NODE = "lifecycle_node"
