@@ -964,5 +964,5 @@ class AcadosModel():
 
     def _has_custom_hess(self) -> bool:
         return not (is_empty(self.cost_expr_ext_cost_custom_hess_0) and
-                    is_empty(self.cost_expr_ext_cost_custom_hess) and 
+                    is_empty(self.cost_expr_ext_cost_custom_hess) and
                     is_empty(self.cost_expr_ext_cost_custom_hess_e))
