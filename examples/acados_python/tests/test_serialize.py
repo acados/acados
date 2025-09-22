@@ -141,7 +141,6 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
 
     model_from_dict = AcadosModel.from_dict(model_dict)
 
-    breakpoint()
     ocp.model = model_from_dict
 
     solver = AcadosOcpSolver(ocp, json_file=f"acados_ocp_{model.name}.json")
