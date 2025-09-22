@@ -888,18 +888,15 @@ class AcadosOcpConstraints:
     # initial x
     @lbx_0.setter
     def lbx_0(self, lbx_0):
-        lbx_0 = cast_to_1d_nparray(lbx_0, "lbx_0")
-        self.__lbx_0 = lbx_0
+        self.__lbx_0 = cast_to_1d_nparray(lbx_0, "lbx_0")
 
     @ubx_0.setter
     def ubx_0(self, ubx_0):
-        ubx_0 = cast_to_1d_nparray(ubx_0, "ubx_0")
-        self.__ubx_0 = ubx_0
+        self.__ubx_0 = cast_to_1d_nparray(ubx_0, "ubx_0")
 
     @idxbx_0.setter
     def idxbx_0(self, idxbx_0):
-        idxbx_0 = cast_to_1d_nparray(idxbx_0, "idxbx_0")
-        self.__idxbx_0 = idxbx_0
+        self.__idxbx_0 = cast_to_1d_nparray(idxbx_0, "idxbx_0")
 
     @Jbx_0.setter
     def Jbx_0(self, Jbx_0):
@@ -908,8 +905,7 @@ class AcadosOcpConstraints:
 
     @idxbxe_0.setter
     def idxbxe_0(self, idxbxe_0):
-        idxbxe_0 = cast_to_1d_nparray(idxbxe_0, "idxbxe_0")
-        self.__idxbxe_0 = idxbxe_0
+        self.__idxbxe_0 = cast_to_1d_nparray(idxbxe_0, "idxbxe_0")
 
     @x0.setter
     def x0(self, x0):
@@ -930,18 +926,15 @@ class AcadosOcpConstraints:
     # bounds on x
     @lbx.setter
     def lbx(self, lbx):
-        lbx = cast_to_1d_nparray(lbx, "lbx")
-        self.__lbx = lbx
+        self.__lbx = cast_to_1d_nparray(lbx, "lbx")
 
     @ubx.setter
     def ubx(self, ubx):
-        ubx = cast_to_1d_nparray(ubx, "ubx")
-        self.__ubx = ubx
+        self.__ubx = cast_to_1d_nparray(ubx, "ubx")
 
     @idxbx.setter
     def idxbx(self, idxbx):
-        idxbx = cast_to_1d_nparray(idxbx, "idxbx")
-        self.__idxbx = idxbx
+        self.__idxbx = cast_to_1d_nparray(idxbx, "idxbx")
 
     @Jbx.setter
     def Jbx(self, Jbx):
@@ -951,18 +944,15 @@ class AcadosOcpConstraints:
     # bounds on u
     @lbu.setter
     def lbu(self, lbu):
-        lbu = cast_to_1d_nparray(lbu, "lbu")
-        self.__lbu = lbu
+        self.__lbu = cast_to_1d_nparray(lbu, "lbu")
 
     @ubu.setter
     def ubu(self, ubu):
-        ubu = cast_to_1d_nparray(ubu, "ubu")
-        self.__ubu = ubu
+        self.__ubu = cast_to_1d_nparray(ubu, "ubu")
 
     @idxbu.setter
     def idxbu(self, idxbu):
-        idxbu = cast_to_1d_nparray(idxbu, "idxbu")
-        self.__idxbu = idxbu
+        self.__idxbu = cast_to_1d_nparray(idxbu, "idxbu")
 
     @Jbu.setter
     def Jbu(self, Jbu):
@@ -972,18 +962,15 @@ class AcadosOcpConstraints:
     # bounds on x at shooting node N
     @lbx_e.setter
     def lbx_e(self, lbx_e):
-        lbx_e = cast_to_1d_nparray(lbx_e, "lbx_e")
-        self.__lbx_e = lbx_e
+        self.__lbx_e = cast_to_1d_nparray(lbx_e, "lbx_e")
 
     @ubx_e.setter
     def ubx_e(self, ubx_e):
-        ubx_e = cast_to_1d_nparray(ubx_e, "ubx_e")
-        self.__ubx_e = ubx_e
+        self.__ubx_e = cast_to_1d_nparray(ubx_e, "ubx_e")
 
     @idxbx_e.setter
     def idxbx_e(self, idxbx_e):
-        idxbx_e = cast_to_1d_nparray(idxbx_e, "idxbx_e")
-        self.__idxbx_e = idxbx_e
+        self.__idxbx_e = cast_to_1d_nparray(idxbx_e, "idxbx_e")
 
     @Jbx_e.setter
     def Jbx_e(self, Jbx_e):
@@ -993,164 +980,133 @@ class AcadosOcpConstraints:
     # polytopic constraints
     @D.setter
     def D(self, D):
-        D = cast_to_2d_nparray(D, "D")
-        self.__D = D
+        self.__D = cast_to_2d_nparray(D, "D")
 
     @C.setter
     def C(self, C):
-        C = cast_to_2d_nparray(C, "C")
-        self.__C = C
+        self.__C = cast_to_2d_nparray(C, "C")
 
     # polytopic constraints at shooting node N
     @C_e.setter
     def C_e(self, C_e):
-        C_e = cast_to_2d_nparray(C_e, "C_e")
-        self.__C_e = C_e
+        self.__C_e = cast_to_2d_nparray(C_e, "C_e")
 
     @lg.setter
     def lg(self, value):
-        value = cast_to_1d_nparray(value, 'lg')
-        self.__lg = value
+        self.__lg = cast_to_1d_nparray(value, 'lg')
 
     @ug.setter
     def ug(self, value):
-        value = cast_to_1d_nparray(value, 'ug')
-        self.__ug = value
+        self.__ug = cast_to_1d_nparray(value, 'ug')
 
     @lg_e.setter
     def lg_e(self, value):
-        value = cast_to_1d_nparray(value, 'lg_e')
-        self.__lg_e = value
+        self.__lg_e = cast_to_1d_nparray(value, 'lg_e')
 
     @ug_e.setter
     def ug_e(self, value):
-        value = cast_to_1d_nparray(value, 'ug_e')
-        self.__ug_e = value
+        self.__ug_e = cast_to_1d_nparray(value, 'ug_e')
 
     # nonlinear constraints
     @lh.setter
     def lh(self, value):
-        value = cast_to_1d_nparray(value, 'lh')
-        self.__lh = value
+        self.__lh = cast_to_1d_nparray(value, 'lh')
 
     @uh.setter
     def uh(self, value):
-        value = cast_to_1d_nparray(value, 'uh')
-        self.__uh = value
+        self.__uh = cast_to_1d_nparray(value, 'uh')
 
     @lh_e.setter
     def lh_e(self, value):
-        value = cast_to_1d_nparray(value, 'lh_e')
-        self.__lh_e = value
+        self.__lh_e = cast_to_1d_nparray(value, 'lh_e')
 
     @uh_e.setter
     def uh_e(self, value):
-        value = cast_to_1d_nparray(value, 'uh_e')
-        self.__uh_e = value
+        self.__uh_e = cast_to_1d_nparray(value, 'uh_e')
 
     @lh_0.setter
     def lh_0(self, value):
-        value = cast_to_1d_nparray(value, 'lh_0')
-        self.__lh_0 = value
+        self.__lh_0 = cast_to_1d_nparray(value, 'lh_0')
 
     @uh_0.setter
     def uh_0(self, value):
-        value = cast_to_1d_nparray(value, 'uh_0')
-        self.__uh_0 = value
+        self.__uh_0 = cast_to_1d_nparray(value, 'uh_0')
 
     # convex-over-nonlinear constraints
     @lphi.setter
     def lphi(self, value):
-        value = cast_to_1d_nparray(value, 'lphi')
-        self.__lphi = value
+        self.__lphi = cast_to_1d_nparray(value, 'lphi')
 
     @uphi.setter
     def uphi(self, value):
-        value = cast_to_1d_nparray(value, 'uphi')
-        self.__uphi = value
+        self.__uphi = cast_to_1d_nparray(value, 'uphi')
 
     @lphi_e.setter
     def lphi_e(self, value):
-        value = cast_to_1d_nparray(value, 'lphi_e')
-        self.__lphi_e = value
+        self.__lphi_e = cast_to_1d_nparray(value, 'lphi_e')
 
     @uphi_e.setter
     def uphi_e(self, value):
-        value = cast_to_1d_nparray(value, 'uphi_e')
-        self.__uphi_e = value
+        self.__uphi_e = cast_to_1d_nparray(value, 'uphi_e')
 
     @lphi_0.setter
     def lphi_0(self, value):
-        value = cast_to_1d_nparray(value, 'lphi_0')
-        self.__lphi_0 = value
+        self.__lphi_0 = cast_to_1d_nparray(value, 'lphi_0')
 
     @uphi_0.setter
     def uphi_0(self, value):
-        value = cast_to_1d_nparray(value, 'uphi_0')
-        self.__uphi_0 = value
+        self.__uphi_0 = cast_to_1d_nparray(value, 'uphi_0')
 
     # idxs_rev slack formulation
     @idxs_rev_0.setter
     def idxs_rev_0(self, idxs_rev_0):
-        idxs_rev_0 = cast_to_1d_nparray(idxs_rev_0, "idxs_rev_0")
-        self.__idxs_rev_0 = idxs_rev_0
+        self.__idxs_rev_0 = cast_to_1d_nparray(idxs_rev_0, "idxs_rev_0")
 
     @idxs_rev.setter
     def idxs_rev(self, idxs_rev):
-        idxs_rev = cast_to_1d_nparray(idxs_rev, "idxs_rev")
-        self.__idxs_rev = idxs_rev
+        self.__idxs_rev = cast_to_1d_nparray(idxs_rev, "idxs_rev")
 
     @idxs_rev_e.setter
     def idxs_rev_e(self, idxs_rev_e):
-        idxs_rev_e = cast_to_1d_nparray(idxs_rev_e, "idxs_rev_e")
-        self.__idxs_rev_e = idxs_rev_e
+        self.__idxs_rev_e = cast_to_1d_nparray(idxs_rev_e, "idxs_rev_e")
 
     @ls_0.setter
     def ls_0(self, ls_0):
-        ls_0 = cast_to_1d_nparray(ls_0, "ls_0")
-        self.__ls_0 = ls_0
+        self.__ls_0 = cast_to_1d_nparray(ls_0, "ls_0")
 
     @ls.setter
     def ls(self, ls):
-        ls = cast_to_1d_nparray(ls, "ls")
-        self.__ls = ls
+        self.__ls = cast_to_1d_nparray(ls, "ls")
 
     @ls_e.setter
     def ls_e(self, ls_e):
-        ls_e = cast_to_1d_nparray(ls_e, "ls_e")
-        self.__ls_e = ls_e
+        self.__ls_e = cast_to_1d_nparray(ls_e, "ls_e")
 
     @us_0.setter
     def us_0(self, us_0):
-        us_0 = cast_to_1d_nparray(us_0, "us_0")
-        self.__us_0 = us_0
+        self.__us_0 = cast_to_1d_nparray(us_0, "us_0")
 
     @us.setter
     def us(self, us):
-        us = cast_to_1d_nparray(us, "us")
-        self.__us = us
+        self.__us = cast_to_1d_nparray(us, "us")
 
     @us_e.setter
     def us_e(self, us_e):
-        us_e = cast_to_1d_nparray(us_e, "us_e")
-        self.__us_e = us_e
+        self.__us_e = cast_to_1d_nparray(us_e, "us_e")
 
     # SLACK bounds
     # soft bounds on x
     @lsbx.setter
     def lsbx(self, value):
-        value = cast_to_1d_nparray(value, 'lsbx')
-        self.__lsbx = value
+        self.__lsbx = cast_to_1d_nparray(value, 'lsbx')
 
     @usbx.setter
     def usbx(self, value):
-        value = cast_to_1d_nparray(value, 'usbx')
-        self.__usbx = value
+        self.__usbx = cast_to_1d_nparray(value, 'usbx')
 
     @idxsbx.setter
     def idxsbx(self, idxsbx):
-        idxsbx = cast_to_1d_nparray(idxsbx, "idxsbx")
-        self.__idxsbx = idxsbx
+        self.__idxsbx = cast_to_1d_nparray(idxsbx, "idxsbx")
 
     @Jsbx.setter
     def Jsbx(self, Jsbx):
@@ -1160,18 +1116,15 @@ class AcadosOcpConstraints:
     # soft bounds on u
     @lsbu.setter
     def lsbu(self, value):
-        value = cast_to_1d_nparray(value, 'lsbu')
-        self.__lsbu = value
+        self.__lsbu = cast_to_1d_nparray(value, 'lsbu')
 
     @usbu.setter
     def usbu(self, value):
-        value = cast_to_1d_nparray(value, 'usbu')
-        self.__usbu = value
+        self.__usbu = cast_to_1d_nparray(value, 'usbu')
 
     @idxsbu.setter
     def idxsbu(self, idxsbu):
-        idxsbu = cast_to_1d_nparray(idxsbu, "idxsbu")
-        self.__idxsbu = idxsbu
+        self.__idxsbu = cast_to_1d_nparray(idxsbu, "idxsbu")
 
     @Jsbu.setter
     def Jsbu(self, Jsbu):
@@ -1181,18 +1134,15 @@ class AcadosOcpConstraints:
     # soft bounds on x at shooting node N
     @lsbx_e.setter
     def lsbx_e(self, value):
-        value = cast_to_1d_nparray(value, 'lsbx_e')
-        self.__lsbx_e = value
+        self.__lsbx_e = cast_to_1d_nparray(value, 'lsbx_e')
 
     @usbx_e.setter
     def usbx_e(self, value):
-        value = cast_to_1d_nparray(value, 'usbx_e')
-        self.__usbx_e = value
+        self.__usbx_e = cast_to_1d_nparray(value, 'usbx_e')
 
     @idxsbx_e.setter
     def idxsbx_e(self, idxsbx_e):
-        idxsbx_e = cast_to_1d_nparray(idxsbx_e, "idxsbx_e")
-        self.__idxsbx_e = idxsbx_e
+        self.__idxsbx_e = cast_to_1d_nparray(idxsbx_e, "idxsbx_e")
 
     @Jsbx_e.setter
     def Jsbx_e(self, Jsbx_e):
@@ -1202,18 +1152,15 @@ class AcadosOcpConstraints:
     # soft bounds on general linear constraints
     @lsg.setter
     def lsg(self, value):
-        value = cast_to_1d_nparray(value, 'lsg')
-        self.__lsg = value
+        self.__lsg = cast_to_1d_nparray(value, 'lsg')
 
     @usg.setter
     def usg(self, value):
-        value = cast_to_1d_nparray(value, 'usg')
-        self.__usg = value
+        self.__usg = cast_to_1d_nparray(value, 'usg')
 
     @idxsg.setter
     def idxsg(self, value):
-        value = cast_to_1d_nparray(value, 'idxsg')
-        self.__idxsg = value
+        self.__idxsg = cast_to_1d_nparray(value, 'idxsg')
 
     @Jsg.setter
     def Jsg(self, Jsg):
@@ -1223,18 +1170,15 @@ class AcadosOcpConstraints:
     # soft bounds on nonlinear constraints
     @lsh.setter
     def lsh(self, value):
-        value = cast_to_1d_nparray(value, 'lsh')
-        self.__lsh = value
+        self.__lsh = cast_to_1d_nparray(value, 'lsh')
 
     @ush.setter
     def ush(self, value):
-        value = cast_to_1d_nparray(value, 'ush')
-        self.__ush = value
+        self.__ush = cast_to_1d_nparray(value, 'ush')
 
     @idxsh.setter
     def idxsh(self, value):
-        value = cast_to_1d_nparray(value, 'idxsh')
-        self.__idxsh = value
+        self.__idxsh = cast_to_1d_nparray(value, 'idxsh')
 
 
     @Jsh.setter
@@ -1245,18 +1189,15 @@ class AcadosOcpConstraints:
     # soft bounds on convex-over-nonlinear constraints
     @lsphi.setter
     def lsphi(self, value):
-        value = cast_to_1d_nparray(value, 'lsphi')
-        self.__lsphi = value
+        self.__lsphi = cast_to_1d_nparray(value, 'lsphi')
 
     @usphi.setter
     def usphi(self, value):
-        value = cast_to_1d_nparray(value, 'usphi')
-        self.__usphi = value
+        self.__usphi = cast_to_1d_nparray(value, 'usphi')
 
     @idxsphi.setter
     def idxsphi(self, value):
-        value = cast_to_1d_nparray(value, 'idxsphi')
-        self.__idxsphi = value
+        self.__idxsphi = cast_to_1d_nparray(value, 'idxsphi')
 
     @Jsphi.setter
     def Jsphi(self, Jsphi):
@@ -1266,18 +1207,15 @@ class AcadosOcpConstraints:
     # soft bounds on general linear constraints at shooting node N
     @lsg_e.setter
     def lsg_e(self, value):
-        value = cast_to_1d_nparray(value, 'lsg_e')
-        self.__lsg_e = value
+        self.__lsg_e = cast_to_1d_nparray(value, 'lsg_e')
 
     @usg_e.setter
     def usg_e(self, value):
-        value = cast_to_1d_nparray(value, 'usg_e')
-        self.__usg_e = value
+        self.__usg_e = cast_to_1d_nparray(value, 'usg_e')
 
     @idxsg_e.setter
     def idxsg_e(self, value):
-        value = cast_to_1d_nparray(value, 'idxsg_e')
-        self.__idxsg_e = value
+        self.__idxsg_e = cast_to_1d_nparray(value, 'idxsg_e')
 
     @Jsg_e.setter
     def Jsg_e(self, Jsg_e):
@@ -1287,18 +1225,15 @@ class AcadosOcpConstraints:
     # soft bounds on nonlinear constraints at shooting node N
     @lsh_e.setter
     def lsh_e(self, value):
-        value = cast_to_1d_nparray(value, 'lsh_e')
-        self.__lsh_e = value
+        self.__lsh_e = cast_to_1d_nparray(value, 'lsh_e')
 
     @ush_e.setter
     def ush_e(self, value):
-        value = cast_to_1d_nparray(value, 'ush_e')
-        self.__ush_e = value
+        self.__ush_e = cast_to_1d_nparray(value, 'ush_e')
 
     @idxsh_e.setter
     def idxsh_e(self, value):
-        value = cast_to_1d_nparray(value, 'idxsh_e')
-        self.__idxsh_e = value
+        self.__idxsh_e = cast_to_1d_nparray(value, 'idxsh_e')
 
     @Jsh_e.setter
     def Jsh_e(self, Jsh_e):
@@ -1309,18 +1244,15 @@ class AcadosOcpConstraints:
     # soft bounds on convex-over-nonlinear constraints at shooting node N
     @lsphi_e.setter
     def lsphi_e(self, value):
-        value = cast_to_1d_nparray(value, 'lsphi_e')
-        self.__lsphi_e = value
+        self.__lsphi_e = cast_to_1d_nparray(value, 'lsphi_e')
 
     @usphi_e.setter
     def usphi_e(self, value):
-        value = cast_to_1d_nparray(value, 'usphi_e')
-        self.__usphi_e = value
+        self.__usphi_e = cast_to_1d_nparray(value, 'usphi_e')
 
     @idxsphi_e.setter
     def idxsphi_e(self, value):
-        value = cast_to_1d_nparray(value, 'idxsphi_e')
-        self.__idxsphi_e = value
+        self.__idxsphi_e = cast_to_1d_nparray(value, 'idxsphi_e')
 
     @Jsphi_e.setter
     def Jsphi_e(self, Jsphi_e):
@@ -1330,18 +1262,15 @@ class AcadosOcpConstraints:
     # soft constraints at shooting node 0
     @lsh_0.setter
     def lsh_0(self, value):
-        value = cast_to_1d_nparray(value, 'lsh_0')
-        self.__lsh_0 = value
+        self.__lsh_0 = cast_to_1d_nparray(value, 'lsh_0')
 
     @ush_0.setter
     def ush_0(self, value):
-        value = cast_to_1d_nparray(value, 'ush_0')
-        self.__ush_0 = value
+        self.__ush_0 = cast_to_1d_nparray(value, 'ush_0')
 
     @idxsh_0.setter
     def idxsh_0(self, value):
-        value = cast_to_1d_nparray(value, 'idxsh_0')
-        self.__idxsh_0 = value
+        self.__idxsh_0 = cast_to_1d_nparray(value, 'idxsh_0')
 
     @Jsh_0.setter
     def Jsh_0(self, Jsh_0):
@@ -1350,18 +1279,15 @@ class AcadosOcpConstraints:
 
     @lsphi_0.setter
     def lsphi_0(self, value):
-        value = cast_to_1d_nparray(value, 'lsphi_0')
-        self.__lsphi_0 = value
+        self.__lsphi_0 = cast_to_1d_nparray(value, 'lsphi_0')
 
     @usphi_0.setter
     def usphi_0(self, value):
-        value = cast_to_1d_nparray(value, 'usphi_0')
-        self.__usphi_0 = value
+        self.__usphi_0 = cast_to_1d_nparray(value, 'usphi_0')
 
     @idxsphi_0.setter
     def idxsphi_0(self, value):
-        value = cast_to_1d_nparray(value, 'idxsphi_0')
-        self.__idxsphi_0 = value
+        self.__idxsphi_0 = cast_to_1d_nparray(value, 'idxsphi_0')
 
     @Jsphi_0.setter
     def Jsphi_0(self, Jsphi_0):
