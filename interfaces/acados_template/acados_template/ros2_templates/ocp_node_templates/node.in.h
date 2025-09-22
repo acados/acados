@@ -130,7 +130,11 @@ private:
         const std::vector<int>& stages);
 
     // --- Helpers ---
-    void start_control_timer(double period_seconds = 0.02);
+    void set_period(double period_seconds);
+    void start_control_timer(double period_seconds = {{ solver_options.time_steps[0] }});
+    bool is_running() const {
+        return control_timer_ && !control_timer_->is_canceled();
+    }
 
     // --- Acados Helpers ---
     {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
