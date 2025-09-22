@@ -316,11 +316,11 @@ class AcadosOcpCost:
 
     @Zl.setter
     def Zl(self, Zl):
-        self.__Zl = cast_to_2d_nparray(Zl, "Zl")
+        self.__Zl = cast_to_1d_nparray(Zl, "Zl")
 
     @Zu.setter
     def Zu(self, Zu):
-        self.__Zu = cast_to_2d_nparray(Zu, "Zu")
+        self.__Zu = cast_to_1d_nparray(Zu, "Zu")
 
     @zl.setter
     def zl(self, zl):
@@ -455,11 +455,11 @@ class AcadosOcpCost:
 
     @Zl_e.setter
     def Zl_e(self, Zl_e):
-        self.__Zl_e = cast_to_2d_nparray(Zl_e, "Zl_e")
+        self.__Zl_e = cast_to_1d_nparray(Zl_e, "Zl_e")
 
     @Zu_e.setter
     def Zu_e(self, Zu_e):
-        self.__Zu_e = cast_to_2d_nparray(Zu_e, "Zu_e")
+        self.__Zu_e = cast_to_1d_nparray(Zu_e, "Zu_e")
 
     @zl_e.setter
     def zl_e(self, zl_e):
