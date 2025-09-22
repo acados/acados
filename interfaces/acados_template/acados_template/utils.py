@@ -400,10 +400,7 @@ def get_default_simulink_opts() -> dict:
 
 
 def J_to_idx(J):
-    if not isinstance(J, np.ndarray):
-        raise TypeError('J_to_idx: J must be a numpy array.')
-    if J.ndim != 2:
-        raise ValueError('J_to_idx: J must be a 2D numpy array.')
+    J = cast_to_2d_nparray(J, 'J')
     nrows = J.shape[0]
     idx = np.zeros((nrows, ))
     for i in range(nrows):
@@ -418,6 +415,7 @@ def J_to_idx(J):
 
 
 def J_to_idx_slack(J):
+    J = cast_to_2d_nparray(J, 'J')
     nrows = J.shape[0]
     ncol = J.shape[1]
     idx = np.zeros((ncol, ))
@@ -434,7 +432,7 @@ def J_to_idx_slack(J):
             raise ValueError('J_to_idx_slack: J matrices can only contain 1s, ' \
                  'got J(' + str(i) + ', ' + str(this_idx[0]) + ') = ' + str(J[i,this_idx[0]]) )
     if not i_idx == ncol:
-            raise ValueError('J_to_idx_slack: J must contain a 1 in every column!')
+        raise ValueError('J_to_idx_slack: J must contain a 1 in every column!')
     return idx
 
 
@@ -473,6 +471,49 @@ def check_if_2d_nparray_or_casadi_symbolic(val, name) -> None:
         raise Exception(f"{name} must be a array of type np.ndarray, casadi.SX, or casadi.MX, got {type(val)}")
     if val.ndim != 2:
         raise Exception(f"{name} must be a 2D array of type np.ndarray, casadi.SX, or casadi.MX, got shape {val.shape}")
+
+
+def cast_to_1d_nparray(val, name) -> np.ndarray:
+    try:
+        val = np.asarray(val)
+    except:
+        raise TypeError(f"Failed to cast {name} to np.array, expected array-like type got {type(val)}.")
+
+    val = np.atleast_1d(np.squeeze(val))
+
+    if val.ndim > 1:
+        raise ValueError(f"Expected vector-like array, got {val.shape}.")
+
+    return val
+
+
+def cast_to_1d_nparray_or_casadi_symbolic(val, name) -> np.ndarray:
+    if isinstance(val, (SX, MX, DM)):
+        if val.shape[0] == 1 or val.shape[1] == 1:
+            return val
+        else:
+            raise ValueError("Expected vector, got {val.shape}.")
+    else:
+        return cast_to_1d_nparray(val, name)
+
+
+def cast_to_2d_nparray(val, name) -> np.ndarray:
+    try:
+        val = np.asarray(val)
+    except:
+        raise TypeError(f"Failed to cast {name} to np.array, expected array-like type got {type(val)}.")
+
+    if val.ndim != 2:
+        raise ValueError(f"Expected two dimensional array, got {val.shape}.")
+
+    return val
+
+
+def cast_to_2d_nparray_or_casadi_symbolic(val, name) -> np.ndarray:
+    if isinstance(val, (SX, MX, DM)):
+        return val
+    else:
+        return cast_to_2d_nparray(val, name)
 
 
 def print_J_to_idx_note():
