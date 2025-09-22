@@ -475,6 +475,49 @@ def check_if_2d_nparray_or_casadi_symbolic(val, name) -> None:
         raise Exception(f"{name} must be a 2D array of type np.ndarray, casadi.SX, or casadi.MX, got shape {val.shape}")
 
 
+def cast_to_1d_nparray(val, name) -> np.ndarray:
+    try:
+        val = np.asarray(val)
+    except:
+        raise TypeError(f"Failed to cast {name} to np.array, expected array-like type got {type(val)}.")
+
+    val = np.atleast_1d(np.squeeze(val))
+
+    if val.ndim > 1:
+        raise ValueError(f"Expected vector-like array, got {val.shape}.")
+
+    return val
+
+
+def cast_to_1d_nparray_or_casadi_symbolic(val, name) -> np.ndarray:
+    if isinstance(val, (SX, MX, DM)):
+        if val.shape[0] == 1 or val.shape[1] == 1:
+            return val
+        else:
+            raise ValueError("Expected vector, got {val.shape}.")
+    else:
+        return cast_to_1d_nparray(val, name)
+
+
+def cast_to_2d_nparray(val, name) -> np.ndarray:
+    try:
+        val = np.asarray(val)
+    except:
+        raise TypeError(f"Failed to cast {name} to np.array, expected array-like type got {type(val)}.")
+
+    if val.ndim != 2:
+        raise ValueError(f"Expected two dimensional array, got {val.shape}.")
+
+    return val
+
+
+def cast_to_2d_nparray_or_casadi_symbolic(val, name) -> np.ndarray:
+    if isinstance(val, (SX, MX, DM)):
+        return val
+    else:
+        return cast_to_2d_nparray(val, name)
+
+
 def print_J_to_idx_note():
     print("NOTE: J* matrix is converted to zero based vector idx* vector, which is returned here.")
 
