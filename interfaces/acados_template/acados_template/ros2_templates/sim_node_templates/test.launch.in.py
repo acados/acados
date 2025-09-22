@@ -56,7 +56,7 @@ class GeneratedNodeTest(unittest.TestCase):
         Test if all compile-time declared default parameters.
         """
         # --- Solver Options ---
-        param_name = "{{ ros_opts.package_name }}.ts"
+        param_name = "{{ ros_opts.package_name }}.solver_options.Tsim"
         expected_value = {{ solver_options.Tsim }}
         self.__check_parameter_set(param_name, expected_value)
 
