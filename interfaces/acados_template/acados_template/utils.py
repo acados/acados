@@ -432,7 +432,7 @@ def J_to_idx_slack(J):
             raise ValueError('J_to_idx_slack: J matrices can only contain 1s, ' \
                  'got J(' + str(i) + ', ' + str(this_idx[0]) + ') = ' + str(J[i,this_idx[0]]) )
     if not i_idx == ncol:
-            raise ValueError('J_to_idx_slack: J must contain a 1 in every column!')
+        raise ValueError('J_to_idx_slack: J must contain a 1 in every column!')
     return idx
 
 
