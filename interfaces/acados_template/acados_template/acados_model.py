@@ -29,6 +29,7 @@
 #
 
 from typing import Union
+import inspect, warnings
 
 import casadi as ca
 import numpy as np
@@ -966,3 +967,78 @@ class AcadosModel():
         return not (is_empty(self.cost_expr_ext_cost_custom_hess_0) and
                     is_empty(self.cost_expr_ext_cost_custom_hess) and
                     is_empty(self.cost_expr_ext_cost_custom_hess_e))
+
+
+    def serialize(self) -> str:
+        """
+        Serialize the CasADi expressions.
+        """
+
+        serializer = ca.StringSerializer()
+        expression_names = []
+
+        for k, _ in inspect.getmembers(type(self), lambda v: isinstance(v, property)):
+            v = getattr(self, k)
+            if isinstance(v, (ca.SX, ca.MX)):
+                serializer.pack(v)
+                expression_names.append(k)
+
+        return serializer.encode(), expression_names
+
+
+    def deserialize(self, s: str, expression_names: list) -> None:
+        """
+        Deserialize the CasADi expressions.
+        """
+
+        deserializer = ca.StringDeserializer(s)
+
+        for name in expression_names:
+            setattr(self, name, deserializer.unpack())
+
+
+    def to_dict(self) -> dict:
+        """
+        Convert the AcadosModel to a dictionary.
+        """
+
+        model_dict = {}
+
+        for k, _ in inspect.getmembers(type(self), lambda v: isinstance(v, property)):
+            v = getattr(self, k)
+            if not isinstance(v, (ca.SX, ca.MX)):
+                model_dict[k] = v
+
+        model_dict['serialized_expressions'], model_dict['expression_names'] = self.serialize()
+
+        return model_dict
+
+
+    @classmethod
+    def from_dict(self, model_dict: dict) -> 'AcadosModel':
+        """
+        Create an AcadosModel from a dictionary.
+        Values that correspond to the empty list are ignored.
+
+        """
+
+        model = self()
+
+        # loop over all properties
+        for attr, _ in inspect.getmembers(type(model), lambda v: isinstance(v, property)):
+
+            value = model_dict.get(attr)
+
+            if value is None:
+                warnings.warn(f"Attribute {attr} not in dictionary.")
+            else:
+                try:
+                    # check whether value is not the empty list
+                    if not (isinstance(value, list) and not value):
+                        setattr(model, attr, value)
+                except Exception as e:
+                    Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))
+
+        model.deserialize(model_dict['serialized_expressions'], model_dict['expression_names'])
+
+        return model
