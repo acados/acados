@@ -30,7 +30,7 @@
 #
 
 import numpy as np
-from .utils import check_if_nparray_and_flatten, check_if_2d_nparray, check_if_2d_nparray_or_casadi_symbolic, check_if_nparray_or_casadi_symbolic_and_flatten
+from .utils import cast_to_2d_nparray, cast_to_2d_nparray_or_casadi_symbolic, cast_to_1d_nparray_or_casadi_symbolic, cast_to_1d_nparray
 
 class AcadosOcpCost:
     r"""
@@ -63,6 +63,9 @@ class AcadosOcpCost:
     :math:`m(x, p) = \psi^e (y^e(x,p) - y_\text{ref}^e, p)`
     """
     def __init__(self):
+        self.__cost_ext_fun_types = ('casadi', 'generic')
+        self.__cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR', 'AUTO')
+
         # initial stage
         self.__cost_type_0 = None
         self.__W_0 = None
@@ -169,35 +172,31 @@ class AcadosOcpCost:
 
     @yref_0.setter
     def yref_0(self, yref_0):
-        yref_0 = check_if_nparray_or_casadi_symbolic_and_flatten(yref_0, "yref_0")
-        self.__yref_0 = yref_0
+        self.__yref_0 = cast_to_1d_nparray_or_casadi_symbolic(yref_0, "yref_0")
 
     @W_0.setter
     def W_0(self, W_0):
-        check_if_2d_nparray_or_casadi_symbolic(W_0, "W_0")
-        self.__W_0 = W_0
+        self.__W_0 = cast_to_2d_nparray_or_casadi_symbolic(W_0, "W_0")
 
     @Vx_0.setter
     def Vx_0(self, Vx_0):
-        check_if_2d_nparray(Vx_0, "Vx_0")
-        self.__Vx_0 = Vx_0
+        self.__Vx_0 = cast_to_2d_nparray(Vx_0, "Vx_0")
 
     @Vu_0.setter
     def Vu_0(self, Vu_0):
-        check_if_2d_nparray(Vu_0, "Vu_0")
-        self.__Vu_0 = Vu_0
+        self.__Vu_0 = cast_to_2d_nparray(Vu_0, "Vu_0")
 
     @Vz_0.setter
     def Vz_0(self, Vz_0):
-        check_if_2d_nparray(Vz_0, "Vz_0")
-        self.__Vz_0 = Vz_0
+        self.__Vz_0 = cast_to_2d_nparray(Vz_0, "Vz_0")
 
     @cost_ext_fun_type_0.setter
     def cost_ext_fun_type_0(self, cost_ext_fun_type_0):
-        if cost_ext_fun_type_0 in ['casadi', 'generic']:
+        if cost_ext_fun_type_0 in self.__cost_ext_fun_types:
             self.__cost_ext_fun_type_0 = cost_ext_fun_type_0
         else:
-            raise TypeError('Invalid cost_ext_fun_type_0 value, expected numpy array.')
+            raise ValueError('Invalid cost_ext_fun_type_0 value. Possible values are:\n\n' \
+                    + ',\n'.join(self.__cost_ext_fun_types) + '.\n\nYou have: ' + cost_ext_fun_type_0 + '.\n\n')
 
     # Lagrange term
     @property
@@ -282,80 +281,62 @@ class AcadosOcpCost:
 
     @cost_type.setter
     def cost_type(self, cost_type):
-        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR', 'AUTO')
-        if cost_type in cost_types:
+        if cost_type in self.__cost_types:
             self.__cost_type = cost_type
         else:
             raise ValueError('Invalid cost_type value.')
 
     @cost_type_0.setter
     def cost_type_0(self, cost_type_0):
-        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR', 'AUTO')
-        if cost_type_0 in cost_types:
+        if cost_type_0 in self.__cost_types:
             self.__cost_type_0 = cost_type_0
         else:
             raise ValueError('Invalid cost_type_0 value.')
 
     @W.setter
     def W(self, W):
-        check_if_2d_nparray_or_casadi_symbolic(W, "W")
-        self.__W = W
+        self.__W = cast_to_2d_nparray_or_casadi_symbolic(W, "W")
 
 
     @Vx.setter
     def Vx(self, Vx):
-        check_if_2d_nparray(Vx, "Vx")
-        self.__Vx = Vx
+        self.__Vx = cast_to_2d_nparray(Vx, "Vx")
 
     @Vu.setter
     def Vu(self, Vu):
-        check_if_2d_nparray(Vu, "Vu")
-        self.__Vu = Vu
+        self.__Vu = cast_to_2d_nparray(Vu, "Vu")
 
     @Vz.setter
     def Vz(self, Vz):
-        check_if_2d_nparray(Vz, "Vz")
-        self.__Vz = Vz
+        self.__Vz = cast_to_2d_nparray(Vz, "Vz")
 
     @yref.setter
     def yref(self, yref):
-        yref = check_if_nparray_or_casadi_symbolic_and_flatten(yref, "yref")
-        self.__yref = yref
+        self.__yref = cast_to_1d_nparray_or_casadi_symbolic(yref, "yref")
 
     @Zl.setter
     def Zl(self, Zl):
-        if isinstance(Zl, np.ndarray):
-            self.__Zl = Zl
-        else:
-            raise TypeError('Invalid Zl value, expected numpy array.')
+        self.__Zl = cast_to_2d_nparray(Zl, "Zl")
 
     @Zu.setter
     def Zu(self, Zu):
-        if isinstance(Zu, np.ndarray):
-            self.__Zu = Zu
-        else:
-            raise TypeError('Invalid Zu value, expected numpy array.')
+        self.__Zu = cast_to_2d_nparray(Zu, "Zu")
 
     @zl.setter
     def zl(self, zl):
-        if isinstance(zl, np.ndarray):
-            self.__zl = zl
-        else:
-            raise TypeError('Invalid zl value, expected numpy array.')
+        self.__zl = cast_to_1d_nparray(zl, "zl")
 
     @zu.setter
     def zu(self, zu):
-        if isinstance(zu, np.ndarray):
-            self.__zu = zu
-        else:
-            raise TypeError('Invalid zu value, expected numpy array.')
+        self.__zu = cast_to_1d_nparray(zu, "zu")
 
     @cost_ext_fun_type.setter
     def cost_ext_fun_type(self, cost_ext_fun_type):
-        if cost_ext_fun_type in ['casadi', 'generic']:
+        if cost_ext_fun_type in self.__cost_ext_fun_types:
             self.__cost_ext_fun_type = cost_ext_fun_type
         else:
-            raise ValueError("Invalid cost_ext_fun_type value, expected one in ['casadi', 'generic'].")
+            raise ValueError('Invalid cost_ext_fun_type value. Possible values are:\n\n' \
+                    + ',\n'.join(self.__cost_ext_fun_types) + '.\n\nYou have: ' + cost_ext_fun_type + '.\n\n')
 
     # Mayer term
     @property
@@ -455,73 +436,62 @@ class AcadosOcpCost:
 
     @cost_type_e.setter
     def cost_type_e(self, cost_type_e):
-        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR', 'AUTO')
-        if cost_type_e in cost_types:
+        if cost_type_e in self.__cost_types:
             self.__cost_type_e = cost_type_e
         else:
             raise ValueError('Invalid cost_type_e value.')
 
     @W_e.setter
     def W_e(self, W_e):
-        check_if_2d_nparray_or_casadi_symbolic(W_e, "W_e")
-        self.__W_e = W_e
+        self.__W_e = cast_to_2d_nparray_or_casadi_symbolic(W_e, "W_e")
 
     @Vx_e.setter
     def Vx_e(self, Vx_e):
-        check_if_2d_nparray(Vx_e, "Vx_e")
-        self.__Vx_e = Vx_e
+        self.__Vx_e = cast_to_2d_nparray(Vx_e, "Vx_e")
 
     @yref_e.setter
     def yref_e(self, yref_e):
-        yref_e = check_if_nparray_or_casadi_symbolic_and_flatten(yref_e, "yref_e")
-        self.__yref_e = yref_e
+        self.__yref_e = cast_to_1d_nparray_or_casadi_symbolic(yref_e, "yref_e")
 
     @Zl_e.setter
     def Zl_e(self, Zl_e):
-        Zl_e = check_if_nparray_and_flatten(Zl_e, "Zl_e")
-        self.__Zl_e = Zl_e
+        self.__Zl_e = cast_to_2d_nparray(Zl_e, "Zl_e")
 
     @Zu_e.setter
     def Zu_e(self, Zu_e):
-        Zu_e = check_if_nparray_and_flatten(Zu_e, "Zu_e")
-        self.__Zu_e = Zu_e
+        self.__Zu_e = cast_to_2d_nparray(Zu_e, "Zu_e")
 
     @zl_e.setter
     def zl_e(self, zl_e):
-        zl_e = check_if_nparray_and_flatten(zl_e, "zl_e")
-        self.__zl_e = zl_e
+        self.__zl_e = cast_to_1d_nparray(zl_e, "zl_e")
 
     @zu_e.setter
     def zu_e(self, zu_e):
-        zu_e = check_if_nparray_and_flatten(zu_e, "zu_e")
-        self.__zu_e = zu_e
+        self.__zu_e = cast_to_1d_nparray(zu_e, "zu_e")
 
     @Zl_0.setter
     def Zl_0(self, Zl_0):
-        Zl_0 = check_if_nparray_and_flatten(Zl_0, "Zl_0")
-        self.__Zl_0 = Zl_0
+        self.__Zl_0 = cast_to_1d_nparray(Zl_0, "Zl_0")
 
     @Zu_0.setter
     def Zu_0(self, Zu_0):
-        Zu_0 = check_if_nparray_and_flatten(Zu_0, "Zu_0")
-        self.__Zu_0 = Zu_0
+        self.__Zu_0 = cast_to_1d_nparray(Zu_0, "Zu_0")
 
     @zl_0.setter
     def zl_0(self, zl_0):
-        zl_0 = check_if_nparray_and_flatten(zl_0, "zl_0")
-        self.__zl_0 = zl_0
+        self.__zl_0 = cast_to_1d_nparray(zl_0, "zl_0")
 
     @zu_0.setter
     def zu_0(self, zu_0):
-        zu_0 = check_if_nparray_and_flatten(zu_0, "zu_0")
-        self.__zu_0 = zu_0
+        self.__zu_0 = cast_to_1d_nparray(zu_0, "zu_0")
 
     @cost_ext_fun_type_e.setter
     def cost_ext_fun_type_e(self, cost_ext_fun_type_e):
-        if cost_ext_fun_type_e in ['casadi', 'generic']:
+        if cost_ext_fun_type_e in self.__cost_ext_fun_type:
             self.__cost_ext_fun_type_e = cost_ext_fun_type_e
         else:
-            raise ValueError("Invalid cost_ext_fun_type_e value, expected one in ['casadi', 'generic'].")
+            raise ValueError('Invalid cost_ext_fun_type value. Possible values are:\n\n' \
+                    + ',\n'.join(self.__cost_ext_fun_types) + '.\n\nYou have: ' + cost_ext_fun_type_e + '.\n\n')
 
     def set(self, attr, value):
         setattr(self, attr, value)
