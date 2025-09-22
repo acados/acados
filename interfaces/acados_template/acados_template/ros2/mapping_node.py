@@ -682,7 +682,7 @@ def build_default_control(
     m.msg_type = f"{solver_instance.ros_opts.package_name}_interface/ControlInput"
     m.field_tree = [
         RosField(name="header", ftype="std_msgs/Header"),
-        RosField(name="u", ftype="float64", is_array=True, array_size=solver_instance.model.x.rows()),
+        RosField(name="u", ftype="float64", is_array=True, array_size=solver_instance.model.u.rows()),
     ]
     if not direction_out:
         m.field_tree.append(RosField(name="status", ftype="int8"))
