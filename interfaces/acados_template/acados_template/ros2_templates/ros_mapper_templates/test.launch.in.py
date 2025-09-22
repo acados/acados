@@ -58,7 +58,7 @@ class GeneratedNodeTest(unittest.TestCase):
         {%- for m in out_msgs %}
         self.wait_for_publisher('{{ m.topic_name }}')
         {%- endfor %}
-        
+
     def wait_for_subscription(self, topic: str, timeout: float = 1.0, threshold: float = 0.5):
         end_time = time.time() + timeout + threshold
         while time.time() < end_time:

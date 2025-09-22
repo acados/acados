@@ -61,7 +61,7 @@ class AcadosSimRosOptions(AcadosRosBaseOptions):
         if not isinstance(value, str):
             raise TypeError('Invalid state_topic value, expected str.\n')
         self.__state_topic = value
-        
+
     def to_dict(self) -> dict:
         return super().to_dict() | {
             "control_topic": self.control_topic,

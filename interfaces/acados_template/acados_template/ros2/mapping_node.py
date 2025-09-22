@@ -50,7 +50,7 @@ if TYPE_CHECKING:
 def _parse_msg_type(msg_type: str) -> tuple[str, str]:
     msg_type = msg_type.strip()
     if "/" in msg_type:
-        # "pkg/Type"                     
+        # "pkg/Type"
         pkg, typ = msg_type.split("/", 1)
     elif "::" in msg_type:
         # "pkg::Type" oder "pkg::msg::Type"
@@ -71,11 +71,11 @@ def _cpp_msg_type(msg_type: str) -> str:
 
 class RosField:
     def __init__(
-        self, 
-        name: str, 
-        ftype: str, 
-        is_array: bool = False, 
-        array_size: Optional[int] = None, 
+        self,
+        name: str,
+        ftype: str,
+        is_array: bool = False,
+        array_size: Optional[int] = None,
         children: list['RosField'] | None = None
     ):
         if not isinstance(name, str):
@@ -112,15 +112,15 @@ class RosField:
     def flatten(self, field: Optional['RosField'] = None) -> list['RosField']:
         new_name = self.name if field is None else f"{field.name}.{self.name}"
         field_copy = RosField(new_name, self.ftype, self.is_array, self.array_size, self.children)
-        
+
         if not self.children:
             return [field_copy]
-        
+
         out: list['RosField'] = []
         for c in self.children:
             out.extend(c.flatten(field_copy))
         return out
-    
+
     @staticmethod
     def __get_cpp_type(ftype: str):
         match ftype:
@@ -134,12 +134,12 @@ class RosField:
                 return "int16_t"
             case "int32":
                 return "int32_t"
-        
+
         if "/" in ftype or "::" in ftype:
             return _cpp_msg_type(ftype)
-        
+
         return ftype
-    
+
 
 class RosTopicMsg:
     def __init__(self):
@@ -155,7 +155,7 @@ class RosTopicMsg:
     @property
     def msg_type(self) -> str:
         return self.__msg_type
-    
+
     @property
     def field_tree(self) -> list[RosField]:
         return self.__field_tree
@@ -165,7 +165,7 @@ class RosTopicMsg:
         if not isinstance(value, str):
             raise TypeError('Invalid topic_name value, expected str.\n')
         self.__topic_name = value
-        
+
     @msg_type.setter
     def msg_type(self, value: str):
         if not isinstance(value, str):
@@ -179,7 +179,7 @@ class RosTopicMsg:
         if not isinstance(value, list) or not all(isinstance(item, RosField) for item in value):
             raise TypeError('Invalid field_tree value, expected list of RosField.\n')
         self.__field_tree = value
-        
+
     def flatten_field_tree(self):
         self._flat_field_tree = list(chain.from_iterable(f.flatten() for f in self.field_tree))
 
@@ -198,7 +198,7 @@ class RosTopicMsgOutput(RosTopicMsg):
         self.__mapping: list[dict] = list()
         self.__exec_topic: str = ""
         self._needs_publish_lock: bool = False
-        
+
     @property
     def mapping(self) -> list[dict]:
         return self.__mapping
@@ -206,7 +206,7 @@ class RosTopicMsgOutput(RosTopicMsg):
     @property
     def exec_topic(self) -> str:
         return self.__exec_topic
-            
+
     @mapping.setter
     def mapping(self, value: list[tuple[str, str]]):
         if not isinstance(value, list) or not all(isinstance(item, tuple) and len(item) == 2 and all(isinstance(i, str) for i in item) for item in value):
@@ -224,7 +224,7 @@ class RosTopicMsgOutput(RosTopicMsg):
             "mapping": self.mapping,
             "exec_topic": self.exec_topic,
             "needs_publish_lock": self._needs_publish_lock}
-        
+
     @classmethod
     def from_msg(
         cls,
@@ -238,17 +238,17 @@ class RosTopicMsgOutput(RosTopicMsg):
         output_msg.field_tree = base_msg.field_tree
         output_msg.topic_name = base_msg.topic_name
         return output_msg
-        
+
     @staticmethod
     def __parse_mapping_string(map_str: str) -> dict:
         """Parses a string like 'field.name[index]' into a structured dict."""
         match = re.match(r"^(.*?)(?:\[(\d+)\])?$", map_str)
         if not match:
             raise ValueError(f"Invalid mapping format: '{map_str}'")
-        
+
         base_name, index_str = match.groups()
         index = int(index_str) if index_str is not None else None
-        
+
         return {"full_name": map_str, "base_name": base_name, "index": index}
 
     def __parse_mapping_pair(self, source_str: str, dest_str: str) -> dict:
@@ -260,7 +260,7 @@ class RosTopicMsgOutput(RosTopicMsg):
         base_split = source_parts['base_name'].split('.', 1)
         if len(base_split) != 2:
             raise ValueError(f"Source mapping '{source_str}' must be in 'topic_name.field_name' format.")
-        
+
         return {
             "source": {
                 "full": source_str,
@@ -297,11 +297,11 @@ class RosTopicMapper(AcadosRosBaseOptions):
     @property
     def in_msgs(self) -> list[RosTopicMsg]:
         return self.__in_msgs
-    
+
     @property
     def out_msgs(self) -> list[RosTopicMsgOutput]:
         return self.__out_msgs
-    
+
     @property
     def ocp_json_file(self) -> str:
         return self.__ocp_json_file
@@ -347,10 +347,10 @@ class RosTopicMapper(AcadosRosBaseOptions):
 
     def check_consistency(self):
         in_topic_index = {m.topic_name: m for m in self.in_msgs}
-        
+
         for out_msg in self.out_msgs:
             out_field_index = {f.name: f for f in out_msg._flat_field_tree}
-            
+
             for mapping in out_msg.mapping:
                 source = mapping['source']
                 dest = mapping['dest']
@@ -359,7 +359,7 @@ class RosTopicMapper(AcadosRosBaseOptions):
                 in_msg = in_topic_index.get(source['topic'])
                 if in_msg is None:
                     raise ValueError(f"Source topic '{source['topic']}' in mapping '{source['full']}' not found in input messages.")
-                
+
                 in_field_index = {f.name: f for f in in_msg._flat_field_tree}
 
                 # Check source field
@@ -385,9 +385,9 @@ class RosTopicMapper(AcadosRosBaseOptions):
                         raise ValueError(f"Destination field '{dest['field']}' is not an array, but is being indexed in '{dest['full']}'.")
                     if dest_field_obj.array_size > 0 and dest['index'] >= dest_field_obj.array_size:
                         raise ValueError(f"Destination index in '{dest['full']}' is out of bounds. Size is {dest_field_obj.array_size}.")
-                    
 
-    def finalize(self):            
+
+    def finalize(self):
         # topic normalize + flatten
         for msg in self.in_msgs + self.out_msgs:
             if msg.topic_name.startswith("/"):
@@ -395,16 +395,16 @@ class RosTopicMapper(AcadosRosBaseOptions):
             msg.flatten_field_tree()
             self.__add_types(msg.msg_type)
             msg.msg_type = _cpp_msg_type(msg.msg_type)
-            
+
         # execution topic normalize
         for om in self.out_msgs:
             if om.exec_topic.startswith("/"):
                 om.exec_topic = om.exec_topic[1:]
-        
+
         self.check_none_values()
         self.check_consistency()
-        
-        # compute if field needs_storage 
+
+        # compute if field needs_storage
         for in_msg in self.in_msgs:
             for in_field in in_msg._flat_field_tree:
                 full_field_name = f"{in_msg.topic_name}.{in_field.name}"
@@ -416,8 +416,8 @@ class RosTopicMapper(AcadosRosBaseOptions):
                     if is_used and out_msg.exec_topic != in_msg.topic_name:
                         in_field.needs_storage = True
                         break
-        
-        # compute if out msg needs lock 
+
+        # compute if out msg needs lock
         for out_msg in self.out_msgs:
             out_msg._needs_publish_lock = any(
                 m["source"]["topic"] != out_msg.exec_topic
@@ -441,12 +441,12 @@ class RosTopicMapper(AcadosRosBaseOptions):
         dir_name = os.path.dirname(self.mapper_json_file)
         if not dir_name:
             self.mapper_json_file = os.path.join(self.generated_code_dir, self.mapper_json_file)
-            
+
         os.makedirs(os.path.dirname(self.mapper_json_file), exist_ok=True)
         with open(self.mapper_json_file, 'w') as f:
             json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
-            
-    
+
+
     def render_templates(self):
         if not os.path.exists(self.mapper_json_file):
             raise FileNotFoundError(f"{self.mapper_json_file} not found!")
@@ -458,16 +458,16 @@ class RosTopicMapper(AcadosRosBaseOptions):
             output_dir = self.generated_code_dir if len(tup) <= 2 else tup[2]
             template_glob = None if len(tup) <= 3 else tup[3]
             render_template(tup[0], tup[1], output_dir, self.mapper_json_file, template_glob=template_glob)
-            
-    
+
+
     def check_none_values(self):
         non_values: list[str] = []
-        
+
         if not self.in_msgs:
             non_values.append(f"input")
         if not self.out_msgs:
             non_values.append(f"output")
-        
+
         for i, msg in enumerate(self.in_msgs):
             if not msg.topic_name:
                 non_values.append(f"input[{i}].topic_name")
@@ -489,15 +489,15 @@ class RosTopicMapper(AcadosRosBaseOptions):
                 non_values.append(f"output[{i}].exec_topic")
 
         if non_values:
-            raise ValueError("The fields 'in_msgs' and 'out_msgs' must be non-empty. Currently missing: " + ", ".join(non_values))  
-        
-        
+            raise ValueError("The fields 'in_msgs' and 'out_msgs' must be non-empty. Currently missing: " + ", ".join(non_values))
+
+
     def generate(self):
         self.finalize()
         self.dump_to_json()
         self.render_templates()
-    
-    
+
+
     @classmethod
     def from_instances(cls, ocp_solver: 'AcadosOcpSolver', sim_solver: 'AcadosSimSolver'):
         """
@@ -524,7 +524,7 @@ class RosTopicMapper(AcadosRosBaseOptions):
         ocp = ocp_solver.acados_ocp
         sim = sim_solver.acados_sim
         obj = cls()
-        
+
         # State and Control names
         ocp_x_names = _elem_names(ocp.model.x)
         sim_x_names = _elem_names(sim.model.x)
@@ -566,15 +566,15 @@ class RosTopicMapper(AcadosRosBaseOptions):
         obj.ocp_json_file = ocp.json_file
         obj.sim_json_file = sim.json_file
         return obj
-    
-    
+
+
     def _get_ros_template_list(self) -> list:
         template_list = []
-        
+
         acados_template_path = os.path.dirname(os.path.dirname(__file__))
         ros_template_glob = os.path.join(acados_template_path, 'ros2_templates', '**', '*')
 
-        # --- Simulator Package --- 
+        # --- Simulator Package ---
         ros_pkg_dir = os.path.join('ros_mapper_templates')
         package_dir = os.path.join(self.generated_code_dir, self.package_name)
         template_file = os.path.join(ros_pkg_dir, 'README.in.md')
@@ -595,21 +595,21 @@ class RosTopicMapper(AcadosRosBaseOptions):
         src_dir = os.path.join(package_dir, 'src')
         template_file = os.path.join(ros_pkg_dir, 'node.in.cpp')
         template_list.append((template_file, 'node.cpp', src_dir, ros_template_glob))
-        
+
         # Test
         test_dir = os.path.join(package_dir, 'test')
         template_file = os.path.join(ros_pkg_dir, 'test.launch.in.py')
         template_list.append((template_file, f'test_{self.package_name}.launch.py', test_dir, ros_template_glob))
         return template_list
-        
-        
+
+
     def __add_types(self, msg_type: str):
         pkg, typ = _parse_msg_type(msg_type)
         self.__header_includes.add(f"{pkg}/msg/{self.camel_to_snake(typ)}.hpp")
         self.__dependencies.add(pkg)
-        
-    
-    
+
+
+
 # --- From Instances Helpers ---
 def _size(sym: Union[SX, MX]) -> int:
     return int(sym.numel())
@@ -621,16 +621,16 @@ def _elem_names(sym: Union[SX, MX]) -> list[str]:
 
 
 def _compute_mapping(
-        src_topic: str, 
-        src_name: str, 
+        src_topic: str,
+        src_name: str,
         src_labels: list[str],
-        dst_name: str, 
+        dst_name: str,
         dst_labels: list[str]
 ) -> list[tuple[str, str]]:
     """Return mapping pairs [(f"{src_topic}.{src_name}[i]","{dst_name}[j]")]."""
     if src_labels == dst_labels:
         return [(f"{src_topic}.{src_name}", f"{dst_name}")]
-    
+
     pairs: list[tuple[str, str]] = []
 
     # Label-based match
@@ -647,12 +647,12 @@ def build_default_state(
         direction_out: bool = False
 ) -> Union[RosTopicMsg, RosTopicMsgOutput]:
     """
-    Creates a standard ocp- or sim-interface state message of an 
+    Creates a standard ocp- or sim-interface state message of an
     in- or outgoing message, dependent on the setting.
     """
     if not (hasattr(solver_instance, "ros_opts") and getattr(solver_instance, "ros_opts") is not None):
         raise ValueError(f"Field 'ros_opts' is not set in the solver {solver_instance.__class__.__name__}")
-    
+
     m = RosTopicMsgOutput() if direction_out else RosTopicMsg()
     m.topic_name = solver_instance.ros_opts.state_topic
     m.msg_type = f"{solver_instance.ros_opts.package_name}_interface/State"
@@ -671,12 +671,12 @@ def build_default_control(
         direction_out: bool = False
 ) -> Union[RosTopicMsg, RosTopicMsgOutput]:
     """
-    Creates a standard ocp- or sim-interface control message of an 
+    Creates a standard ocp- or sim-interface control message of an
     in- or outgoing message, dependent on the setting.
     """
     if not (hasattr(solver_instance, "ros_opts") and getattr(solver_instance, "ros_opts") is not None):
         raise ValueError(f"Field 'ros_opts' is not set in the solver {solver_instance.__class__.__name__}")
-    
+
     m = RosTopicMsgOutput() if direction_out else RosTopicMsg()
     m.topic_name = solver_instance.ros_opts.control_topic
     m.msg_type = f"{solver_instance.ros_opts.package_name}_interface/ControlInput"

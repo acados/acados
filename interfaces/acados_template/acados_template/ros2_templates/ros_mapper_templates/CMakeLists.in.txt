@@ -27,7 +27,7 @@ target_include_directories({{ node_name }} PUBLIC
 )
 
 # --- DEPENDENCIES ---
-ament_target_dependencies({{ node_name }} 
+ament_target_dependencies({{ node_name }}
     rclcpp
     {%- for dep in dependencies %}
     {{ dep }}
@@ -35,12 +35,12 @@ ament_target_dependencies({{ node_name }}
 )
 
 # --- INSTALLATIONS ---
-install(TARGETS 
+install(TARGETS
     {{ node_name }}
     RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-install(DIRECTORY 
+install(DIRECTORY
     include/
     DESTINATION include
 )

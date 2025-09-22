@@ -26,7 +26,7 @@ private:
     {%- for in_msg in in_msgs %}
     rclcpp::Subscription<{{ in_msg.msg_type }}>::SharedPtr {{ in_msg.topic_name }}_sub_;
     {%- endfor %}
-    
+
     // --- ROS Publishers ---
     {%- for out_msg in out_msgs %}
     rclcpp::Publisher<{{ out_msg.msg_type }}>::SharedPtr {{ out_msg.topic_name }}_pub_;

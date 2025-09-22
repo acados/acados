@@ -15,7 +15,7 @@ namespace {{ package_name }}
         "{{ in_msg.topic_name }}", 3,
         std::bind(&{{ ClassName }}::{{ in_msg.topic_name }}_callback, this, std::placeholders::_1));
     {%- endfor %}
-    
+
     // --- Publishers ---
     {%- for out_msg in out_msgs %}
     {{ out_msg.topic_name }}_pub_ = this->create_publisher<{{ out_msg.msg_type }}>(
@@ -41,12 +41,12 @@ void {{ ClassName }}::{{ in_msg.topic_name }}_callback(const {{ in_msg.msg_type 
     }
     {%- endif %}
 
-    // --- Publish msgs ---  
+    // --- Publish msgs ---
     {%- for out_msg in out_msgs %}
     {%- if out_msg.exec_topic == in_msg.topic_name %}
     {
         auto out_msg_ptr = std::make_unique<{{ out_msg.msg_type }}>();
-        
+
         {%- if out_msg.needs_publish_lock %}
         std::scoped_lock lock(data_mutex_);
         {%- endif %}

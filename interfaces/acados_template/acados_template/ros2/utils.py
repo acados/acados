@@ -35,7 +35,7 @@ class AcadosRosBaseOptions:
     @property
     def namespace(self) -> str:
         return self.__namespace
-    
+
     @property
     def generated_code_dir(self) -> str:
         return self.__generated_code_dir
