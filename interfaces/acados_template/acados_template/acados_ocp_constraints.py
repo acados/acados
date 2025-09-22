@@ -866,7 +866,7 @@ class AcadosOcpConstraints:
         if constr_type in self.__constr_types:
             self.__constr_type = constr_type
         else:
-            raise Exception('Invalid constr_type value. Possible values are:\n\n' \
+            raise ValueError('Invalid constr_type value. Possible values are:\n\n' \
                     + ',\n'.join(self.__constr_types) + '.\n\nYou have: ' + constr_type + '.\n\n')
 
     @constr_type_0.setter
@@ -874,7 +874,7 @@ class AcadosOcpConstraints:
         if constr_type_0 in self.__constr_types:
             self.__constr_type_0 = constr_type_0
         else:
-            raise Exception('Invalid constr_type_0 value. Possible values are:\n\n' \
+            raise ValueError('Invalid constr_type_0 value. Possible values are:\n\n' \
                     + ',\n'.join(self.__constr_types) + '.\n\nYou have: ' + constr_type_0 + '.\n\n')
 
     @constr_type_e.setter
@@ -882,7 +882,7 @@ class AcadosOcpConstraints:
         if constr_type_e in self.__constr_types:
             self.__constr_type_e = constr_type_e
         else:
-            raise Exception('Invalid constr_type_e value. Possible values are:\n\n' \
+            raise ValueError('Invalid constr_type_e value. Possible values are:\n\n' \
                     + ',\n'.join(self.__constr_types) + '.\n\nYou have: ' + constr_type_e + '.\n\n')
 
     # initial x
