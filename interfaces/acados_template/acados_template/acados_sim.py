@@ -401,9 +401,9 @@ class AcadosSim:
         # convert acados classes to dicts
         for key, v in sim_dict.items():
             # skip non dict attributes
-            if isinstance(v, (AcadosSim, AcadosSimDims, AcadosSimOptions, AcadosModel)):
-                sim_dict[key]=dict(getattr(self, key).__dict__)
-            if isinstance(v, AcadosSimRosOptions):
+            if isinstance(v, (AcadosSim, AcadosSimDims, AcadosSimOptions)):
+                sim_dict[key] = dict(getattr(self, key).__dict__)
+            if isinstance(v, (AcadosModel, AcadosSimRosOptions)):
                 sim_dict[key] = v.to_dict()
 
         return format_class_dict(sim_dict)
