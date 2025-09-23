@@ -1357,7 +1357,7 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
 }
 
 
-void ocp_nlp_sqp_rti_opts_get(void *config_, void *dims_, void *opts_,
+void ocp_nlp_sqp_rti_opts_get(void *config_, void *opts_,
                           const char *field, void *return_value_)
 {
     // ocp_nlp_config *config = config_;
@@ -1367,6 +1367,11 @@ void ocp_nlp_sqp_rti_opts_get(void *config_, void *dims_, void *opts_,
     {
         void **value = return_value_;
         *value = opts->nlp_opts;
+    }
+    else if (!strcmp("as_rti_level", field))
+    {
+        int *value = return_value_;
+        *value = opts->as_rti_level;
     }
     else
     {
