@@ -1015,13 +1015,13 @@ class AcadosModel():
 
 
     @classmethod
-    def from_dict(self, model_dict: dict) -> 'AcadosModel':
+    def from_dict(cls, model_dict: dict) -> 'AcadosModel':
         """
         Create an AcadosModel from a dictionary.
         Values that correspond to the empty list are ignored.
         """
 
-        model = self()
+        model = cls()
 
         expression_names =  model_dict.get('expression_names')
         serialized_expressions = model_dict.get('serialized_expressions')
