@@ -55,18 +55,18 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     nu = model.u.rows()
     ny = nx + nu
     ny_e = nx
-    N = 20
+    N_horizon = 20
 
-    ocp.solver_options.N_horizon = N
+    ocp.solver_options.N_horizon = N_horizon
 
     # set cost
-    Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
-    R = 2*np.diag([1e-2])
+    Q_mat = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
+    R_mat = 2*np.diag([1e-2])
 
     x = ocp.model.x
     u = ocp.model.u
 
-    cost_W = scipy.linalg.block_diag(Q, R)
+    cost_W = scipy.linalg.block_diag(Q_mat, R_mat)
 
     if cost_type == 'LS':
         ocp.cost.cost_type = 'LINEAR_LS'
@@ -93,7 +93,7 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
         ocp.cost.cost_type_e = 'EXTERNAL'
 
         ocp.model.cost_expr_ext_cost = vertcat(x, u).T @ cost_W @ vertcat(x, u)
-        ocp.model.cost_expr_ext_cost_e = x.T @ Q @ x
+        ocp.model.cost_expr_ext_cost_e = x.T @ Q_mat @ x
 
     else:
         raise Exception('Unknown cost_type. Possible values are \'LS\' and \'NONLINEAR_LS\'.')
@@ -101,7 +101,7 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     if cost_type in ['LS', 'NONLINEAR_LS']:
         ocp.cost.yref = np.zeros((ny, ))
         ocp.cost.yref_e = np.zeros((ny_e, ))
-        ocp.cost.W_e = Q
+        ocp.cost.W_e = Q_mat
         ocp.cost.W = cost_W
 
     # set constraints
@@ -112,7 +112,7 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     ocp.constraints.x0 = x0
     ocp.constraints.idxbu = np.array([0])
 
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.hessian_approx = hessian_approximation
     ocp.solver_options.regularize_method = 'CONVEXIFY'
     ocp.solver_options.integrator_type = integrator_type
@@ -143,8 +143,7 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
 if __name__ == '__main__':
     for integrator_type in ['GNSF', 'ERK', 'IRK']:
         for cost_type in ['EXTERNAL', 'LS', 'NONLINEAR_LS']:
-            hessian_approximation = 'GAUSS_NEWTON' # 'GAUSS_NEWTON, EXACT
+            hessian_approximation = 'GAUSS_NEWTON'
             ext_cost_use_num_hess = 1
             main(cost_type=cost_type, hessian_approximation=hessian_approximation,
                 ext_cost_use_num_hess=ext_cost_use_num_hess, integrator_type=integrator_type)
-
