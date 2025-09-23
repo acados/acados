@@ -38,17 +38,10 @@ import scipy.linalg
 from utils import plot_pendulum
 from casadi import vertcat
 
-RESET_SCENARIOS = ["NaNs", "infeasible_QP"]
 
 def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_num_hess=0,
-         integrator_type='ERK', reset_scenarios=RESET_SCENARIOS):
+         integrator_type='ERK'):
     print(f"using: cost_type {cost_type}, integrator_type {integrator_type}")
-
-    for reset_scenario in reset_scenarios:
-        if reset_scenario not in RESET_SCENARIOS:
-            raise Exception(f"Unknown reset_scenario: {reset_scenario}. Possible values are {RESET_SCENARIOS}")
-    if len(reset_scenarios) == 0:
-        raise Exception("No reset scenarios given")
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
