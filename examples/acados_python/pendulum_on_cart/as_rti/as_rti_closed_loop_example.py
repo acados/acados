@@ -177,6 +177,9 @@ def main(algorithm='RTI', as_rti_iter=1):
 
             t[i] = ocp_solver.get_stats('time_tot')
 
+        # test getting residuals
+        _ = ocp_solver.get_residuals()
+
         if status not in [0, 2, 5]:
             raise Exception(f'acados returned status {status}. Exiting.')
         # simulate system
