@@ -1283,10 +1283,10 @@ void ocp_nlp_solver_opts_set(ocp_nlp_config *config, void *opts_, const char *fi
 }
 
 
-// void ocp_nlp_solver_opts_get(ocp_nlp_config *config, void *opts_, const char *field, void *value)
-// {
-//     config->opts_get(config, opts_, field, value);
-// }
+void ocp_nlp_solver_opts_get(ocp_nlp_config *config, void *opts_, const char *field, void *value)
+{
+    config->opts_get(config, opts_, field, value);
+}
 
 
 void ocp_nlp_solver_opts_set_at_stage(ocp_nlp_config *config, void *opts_, int stage, const char *field, void *value)
