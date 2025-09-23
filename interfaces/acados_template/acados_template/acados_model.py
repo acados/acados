@@ -28,7 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from typing import Union
+from typing import Union, Tuple, List
 import inspect, warnings
 
 import casadi as ca
@@ -969,7 +969,7 @@ class AcadosModel():
                     is_empty(self.cost_expr_ext_cost_custom_hess_e))
 
 
-    def serialize(self) -> str:
+    def serialize(self) -> Tuple[str, List[str]]:
         """
         Serialize the CasADi expressions.
         """
@@ -1019,7 +1019,6 @@ class AcadosModel():
         """
         Create an AcadosModel from a dictionary.
         Values that correspond to the empty list are ignored.
-
         """
 
         model = self()

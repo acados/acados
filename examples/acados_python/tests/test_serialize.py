@@ -36,19 +36,11 @@ from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
-from casadi import vertcat
-
-RESET_SCENARIOS = ["NaNs", "infeasible_QP"]
+import casadi as ca
 
 def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_num_hess=0,
-         integrator_type='ERK', reset_scenarios=RESET_SCENARIOS):
+         integrator_type='ERK'):
     print(f"using: cost_type {cost_type}, integrator_type {integrator_type}")
-
-    for reset_scenario in reset_scenarios:
-        if reset_scenario not in RESET_SCENARIOS:
-            raise Exception(f"Unknown reset_scenario: {reset_scenario}. Possible values are {RESET_SCENARIOS}")
-    if len(reset_scenarios) == 0:
-        raise Exception("No reset scenarios given")
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -62,18 +54,18 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     nu = model.u.rows()
     ny = nx + nu
     ny_e = nx
-    N = 20
+    N_horizon = 20
 
-    ocp.solver_options.N_horizon = N
+    ocp.solver_options.N_horizon = N_horizon
 
     # set cost
-    Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
-    R = 2*np.diag([1e-2])
+    Q_mat = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
+    R_mat = 2*np.diag([1e-2])
 
     x = ocp.model.x
     u = ocp.model.u
 
-    cost_W = scipy.linalg.block_diag(Q, R)
+    cost_W = scipy.linalg.block_diag(Q_mat, R_mat)
 
     if cost_type == 'LS':
         ocp.cost.cost_type = 'LINEAR_LS'
@@ -92,15 +84,15 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
         ocp.cost.cost_type = 'NONLINEAR_LS'
         ocp.cost.cost_type_e = 'NONLINEAR_LS'
 
-        ocp.model.cost_y_expr = vertcat(x, u)
+        ocp.model.cost_y_expr = ca.vertcat(x, u)
         ocp.model.cost_y_expr_e = x
 
     elif cost_type == 'EXTERNAL':
         ocp.cost.cost_type = 'EXTERNAL'
         ocp.cost.cost_type_e = 'EXTERNAL'
 
-        ocp.model.cost_expr_ext_cost = vertcat(x, u).T @ cost_W @ vertcat(x, u)
-        ocp.model.cost_expr_ext_cost_e = x.T @ Q @ x
+        ocp.model.cost_expr_ext_cost = ca.vertcat(x, u).T @ cost_W @ ca.vertcat(x, u)
+        ocp.model.cost_expr_ext_cost_e = x.T @ Q_mat @ x
 
     else:
         raise Exception('Unknown cost_type. Possible values are \'LS\' and \'NONLINEAR_LS\'.')
@@ -108,7 +100,7 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     if cost_type in ['LS', 'NONLINEAR_LS']:
         ocp.cost.yref = np.zeros((ny, ))
         ocp.cost.yref_e = np.zeros((ny_e, ))
-        ocp.cost.W_e = Q
+        ocp.cost.W_e = Q_mat
         ocp.cost.W = cost_W
 
     # set constraints
@@ -119,7 +111,7 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     ocp.constraints.x0 = x0
     ocp.constraints.idxbu = np.array([0])
 
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.hessian_approx = hessian_approximation
     ocp.solver_options.regularize_method = 'CONVEXIFY'
     ocp.solver_options.integrator_type = integrator_type
@@ -130,17 +122,14 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
             gnsf_dict = json.load(f)
         ocp.gnsf_model = gnsf_dict
 
-    ocp.solver_options.qp_solver_cond_N = 5
-
     # set prediction horizon
     ocp.solver_options.tf = Tf
-    ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
+    ocp.solver_options.nlp_solver_type = 'SQP'
     ocp.solver_options.ext_cost_num_hess = ext_cost_use_num_hess
 
     model_dict = ocp.model.to_dict()
 
     model_from_dict = AcadosModel.from_dict(model_dict)
-
     ocp.model = model_from_dict
 
     solver = AcadosOcpSolver(ocp, json_file=f"acados_ocp_{model.name}.json")
@@ -150,8 +139,7 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
 if __name__ == '__main__':
     for integrator_type in ['GNSF', 'ERK', 'IRK']:
         for cost_type in ['EXTERNAL', 'LS', 'NONLINEAR_LS']:
-            hessian_approximation = 'GAUSS_NEWTON' # 'GAUSS_NEWTON, EXACT
+            hessian_approximation = 'GAUSS_NEWTON'
             ext_cost_use_num_hess = 1
             main(cost_type=cost_type, hessian_approximation=hessian_approximation,
                 ext_cost_use_num_hess=ext_cost_use_num_hess, integrator_type=integrator_type)
-
