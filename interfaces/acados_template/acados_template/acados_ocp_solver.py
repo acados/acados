@@ -35,6 +35,7 @@ import os
 import shutil
 import sys
 import time
+import warnings
 
 from ctypes import (POINTER, byref, c_char_p, c_double, c_int, c_bool,
                     c_void_p, cast)
@@ -1710,13 +1711,19 @@ class AcadosOcpSolver:
         Returns an array of the form [res_stat, res_eq, res_ineq, res_comp].
         The residuals has to be computed for SQP_RTI solver, since it is not available by default.
 
+        :param recompute: if True, recompute the residuals with respect to most recent problem data. Note: this can overwrite previous problem linearization in memory which are needed for AS-RTI to work properly!
+
         - res_stat: stationarity residual
         - res_eq: residual wrt equality constraints (dynamics)
         - res_ineq: residual wrt inequality constraints (constraints)
         - res_comp: residual wrt complementarity conditions
         """
         # compute residuals if RTI
-        if self.__solver_options['nlp_solver_type'] == 'SQP_RTI' or recompute:
+        if recompute:
+            if self.__solver_options['nlp_solver_type'] == 'SQP_RTI':
+                as_rti_level = self.options_get('as_rti_level')
+                if as_rti_level != 4: # not standard RTI
+                    warnings.warn(f"Calling get_residuals() with recompute==True for AS-RTI can overwrite previous problem linearization in memory which are needed for AS-RTI to work properly!")
             self.__acados_lib.ocp_nlp_eval_residuals(self.nlp_solver, self.nlp_in, self.nlp_out)
 
         # create output array
