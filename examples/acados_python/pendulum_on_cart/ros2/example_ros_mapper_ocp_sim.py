@@ -1,3 +1,4 @@
+#
 # Copyright (c) The acados authors.
 #
 # This file is part of acados.
@@ -27,43 +28,44 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from .utils import ArchType, AcadosRosBaseOptions
+import sys
+import os
+script_dir = os.path.dirname(os.path.realpath(__file__))
+common_path = os.path.join(script_dir, '..', 'common')
+sys.path.insert(0, os.path.abspath(common_path))
+
+from pprint import pprint
+
+from acados_template import AcadosOcpSolver, AcadosSimSolver
+from acados_template.ros2 import RosTopicMapper
+
+from example_ros_minimal_ocp import create_minimal_ocp
+from example_ros_minimal_sim import create_minimal_sim
 
 
-# --- Ros Options ---
-class AcadosSimRosOptions(AcadosRosBaseOptions):
-    def __init__(self):
-        super().__init__()
-        self.package_name: str = "acados_sim"
-        self.node_name: str = ""
-        self.namespace: str = ""
-        self.archtype: str = ArchType.NODE.value
 
-        self.__control_topic = "sim_control"
-        self.__state_topic = "sim_state"
+def main():
+    Fmax = 80
+    Tf_ocp = 1.0
+    Tf_sim = 0.05
+    N = 20
+    export_dir = os.path.join(script_dir, 'generated')
+    c_generated_code_base = os.path.join(export_dir, "c_generated_code")
 
-    @property
-    def control_topic(self) -> str:
-        return self.__control_topic
+    ocp = create_minimal_ocp(export_dir, N, Tf_ocp, Fmax)
+    ocp.code_export_directory = c_generated_code_base + "_ocp"
+    ocp_solver = AcadosOcpSolver(ocp, json_file = str(os.path.join(export_dir, 'acados_ocp.json')))
 
-    @property
-    def state_topic(self) -> str:
-        return self.__state_topic
+    sim = create_minimal_sim(export_dir, Tf_sim)
+    sim.code_export_directory = c_generated_code_base + "_sim"
+    sim_solver = AcadosSimSolver(sim, json_file = str(os.path.join(export_dir, 'acados_sim.json')))
 
-    @control_topic.setter
-    def control_topic(self, value: str):
-        if not isinstance(value, str):
-            raise TypeError('Invalid control_topic value, expected str.\n')
-        self.__control_topic = value
+    ros_mapper = RosTopicMapper.from_instances(ocp_solver, sim_solver)
+    ros_mapper.package_name = "sim_ocp_mapper"
+    ros_mapper.generated_code_dir = export_dir
 
-    @state_topic.setter
-    def state_topic(self, value: str):
-        if not isinstance(value, str):
-            raise TypeError('Invalid state_topic value, expected str.\n')
-        self.__state_topic = value
+    ros_mapper.generate()
 
-    def to_dict(self) -> dict:
-        return super().to_dict() | {
-            "control_topic": self.control_topic,
-            "state_topic": self.state_topic,
-        }
+    
+if __name__ == "__main__":
+    main()

@@ -17,13 +17,19 @@ namespace {{ ros_opts.package_name }}
 {%- set parameters_topic = "/" ~ ros_opts.parameters_topic %}
 {%- endif %}
 {%- set has_slack = dims.ns > 0 or dims.ns_0 > 0 or dims.ns_e > 0 %}
+{%- set use_multithreading = ros_opts.threads is defined and ros_opts.threads > 1 %}
 {{ ClassName }}::{{ ClassName }}()
-    : Node("{{ ros_opts.node_name }}")
+    : Node("{{ ros_opts.node_name }}"), control_timer_(nullptr)
 {
     RCLCPP_INFO(this->get_logger(), "Initializing {{ ros_opts.node_name | replace(from="_", to=" ") | title }}...");
 
     // --- default values ---
     config_ = {{ ClassName }}Config();
+    {%- if constraints.has_x0 %}
+    current_x_ = { {{- constraints.lbx_0 | join(sep=', ') -}} };
+    {%- else %}
+    current_x_.fill(0.0);
+    {%- endif %}
     {%- if dims.ny_0 > 0 %}
     current_yref_0_ = { {{- cost.yref_0 | join(sep=', ') -}} };
     {%- endif %}
@@ -37,6 +43,14 @@ namespace {{ ros_opts.package_name }}
     current_p_ = { {{- parameter_values | join(sep=', ') -}} };
     {%- endif %}
 
+    {%- if use_multithreading %}
+    // --- Multithreading ---
+    timer_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    services_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    auto cb_options = rclcpp::SubscriptionOptions();
+    cb_options.callback_group = services_group_;
+    {%- endif %}
+
     // --- Parameters ---
     this->declare_parameters();
     this->setup_parameter_handlers();
@@ -47,14 +61,17 @@ namespace {{ ros_opts.package_name }}
     // --- Subscriber ---
     state_sub_ = this->create_subscription<{{ ros_opts.package_name }}_interface::msg::State>(
         "{{ state_topic }}", 10,
-        std::bind(&{{ ClassName }}::state_callback, this, std::placeholders::_1));
+        std::bind(&{{ ClassName }}::state_callback, this, std::placeholders::_1)
+        {%- if use_multithreading -%}, cb_options {%- endif -%});
     references_sub_ = this->create_subscription<{{ ros_opts.package_name }}_interface::msg::References>(
         "{{ references_topic }}", 10,
-        std::bind(&{{ ClassName }}::references_callback, this, std::placeholders::_1));
+        std::bind(&{{ ClassName }}::references_callback, this, std::placeholders::_1)
+        {%- if use_multithreading -%}, cb_options {%- endif -%});
     {%- if dims.np > 0 %}
     parameters_sub_ = this->create_subscription<{{ ros_opts.package_name }}_interface::msg::Parameters>(
         "{{ parameters_topic }}", 10,
-        std::bind(&{{ ClassName }}::parameters_callback, this, std::placeholders::_1));
+        std::bind(&{{ ClassName }}::parameters_callback, this, std::placeholders::_1)
+        {%- if use_multithreading -%}, cb_options {%- endif -%});
     {%- endif %}
 
     // --- Publisher ---
@@ -68,6 +85,9 @@ namespace {{ ros_opts.package_name }}
 }
 
 {{ ClassName }}::~{{ ClassName }}() {
+    {%- if use_multithreading %}
+    std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
+    {%- endif %}
     RCLCPP_INFO(this->get_logger(), "Shutting down and freeing Acados solver memory.");
     if (ocp_capsule_) {
         int status = {{ model.name }}_acados_free(ocp_capsule_);
@@ -84,6 +104,9 @@ namespace {{ ros_opts.package_name }}
 
 // --- Core Methods ---
 void {{ ClassName }}::initialize_solver() {
+    {%- if use_multithreading %}
+    std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
+    {%- endif %}
     ocp_capsule_ = {{ model.name }}_acados_create_capsule();
     int status = {{ model.name }}_acados_create(ocp_capsule_);
     if (status) {
@@ -91,11 +114,12 @@ void {{ ClassName }}::initialize_solver() {
         rclcpp::shutdown();
     }
 
-    ocp_nlp_config_ = {{ model.name }}_acados_get_nlp_config(ocp_capsule_);
-    ocp_nlp_dims_ = {{ model.name }}_acados_get_nlp_dims(ocp_capsule_);
     ocp_nlp_in_ = {{ model.name }}_acados_get_nlp_in(ocp_capsule_);
     ocp_nlp_out_ = {{ model.name }}_acados_get_nlp_out(ocp_capsule_);
+    ocp_nlp_sens_ = {{ model.name }}_acados_get_sens_out(ocp_capsule_);
+    ocp_nlp_config_ = {{ model.name }}_acados_get_nlp_config(ocp_capsule_);
     ocp_nlp_opts_ = {{ model.name }}_acados_get_nlp_opts(ocp_capsule_);
+    ocp_nlp_dims_ = {{ model.name }}_acados_get_nlp_dims(ocp_capsule_);
 
     RCLCPP_INFO(this->get_logger(), "acados solver initialized successfully.");
 }
@@ -117,7 +141,9 @@ void {{ ClassName }}::control_loop() {
     {%- endif %}
 
     {
+        {%- if use_multithreading %}
         std::scoped_lock lock(data_mutex_);
+        {%- endif %}
         x0 = current_x_;
         {%- if dims.ny_0 > 0 %}
         yref0 = current_yref_0_;
@@ -132,38 +158,43 @@ void {{ ClassName }}::control_loop() {
         p = current_p_;
         {%- endif %}
     }
+    
+    {
+        {%- if use_multithreading %}
+        std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
 
-    // Update solver
-    this->set_x0(x0.data());
+        {%- endif %}
+        // Update solver
+        this->set_x0(x0.data());
+        {%- if dims.ny_0 > 0 %}
+        this->set_yref0(yref0.data());
+        {%- endif %}
+        {%- if dims.ny > 0 %}
+        this->set_yrefs(yref.data());
+        {%- endif %}
+        {%- if dims.ny_e > 0 %}
+        this->set_yref_e(yrefN.data());
+        {%- endif %}
+        {%- if dims.np > 0 %}
+        this->set_ocp_parameters(p.data(), p.size());
+        {%- endif %}
 
-    {%- if dims.ny_0 > 0 %}
-    this->set_yref0(yref0.data());
-    {%- endif %}
-    {%- if dims.ny > 0 %}
-    this->set_yrefs(yref.data());
-    {%- endif %}
-    {%- if dims.ny_e > 0 %}
-    this->set_yref_e(yrefN.data());
-    {%- endif %}
-    {%- if dims.np > 0 %}
-    this->set_ocp_parameters(p.data(), p.size());
-    {%- endif %}
+        // Solve OCP
+        {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
+        int status;
+        if (first_solve_) {
+            this->warmstart_solver_states(x0.data());
+            status = this->ocp_solve();
+        }
+        else {
+            status = this->feedback_rti_solve();
+        }
 
-    // Solve OCP
-    {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
-    int status;
-    if (first_solve_) {
-        this->warmstart_solver_states(x0.data());
-        status = this->ocp_solve();
+        {%- else %}
+        int status = this->ocp_solve();
+        {%- endif %}
+        this->solver_status_behaviour(status);
     }
-    else {
-        status = this->feedback_rti_solve();
-    }
-
-    {%- else %}
-    int status = this->ocp_solve();
-    {%- endif %}
-    this->solver_status_behaviour(status);
 }
 
 void {{ ClassName }}::solver_status_behaviour(int status) {
@@ -179,39 +210,83 @@ void {{ ClassName }}::solver_status_behaviour(int status) {
     }
     else {
         first_solve_ = true;
-    }
-    {%- endif %}
-
-    // reset solver if nan is detected
-    if (status == ACADOS_NAN_DETECTED) {
+        if (config_.verbose) {
+            {{ model.name }}_acados_print_stats(ocp_capsule_);
+        }
+        RCLCPP_INFO(this->get_logger(), "Resetting acados solver memory...");
         {{ model.name }}_acados_reset(ocp_capsule_, 1);
     }
+    {%- endif %}
 }
 
 
 // --- ROS Callbacks ---
 void {{ ClassName }}::state_callback(const {{ ros_opts.package_name }}_interface::msg::State::SharedPtr msg) {
+    if (std::any_of(msg->x.begin(), msg->x.end(), [](double val){ return !std::isfinite(val); })) {
+        RCLCPP_WARN_THROTTLE(
+            this->get_logger(), *this->get_clock(), 2000,
+            "State callback received NaN/Inf in 'x'. Ignoring message.");
+        return;
+    }
+
+    {%- if use_multithreading %}
     std::scoped_lock lock(data_mutex_);
-    std::copy_n(msg->x.begin(), {{ model.name | upper }}_NX, current_x_.begin());
+    {%- endif %}
+    current_x_ = msg->x;
+    RCLCPP_DEBUG_STREAM_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "State callback: x=" << current_x_);
 }
 
 void {{ ClassName }}::references_callback(const {{ ros_opts.package_name }}_interface::msg::References::SharedPtr msg) {
-    std::scoped_lock lock(data_mutex_);
     {%- if dims.ny_0 > 0 %}
-    std::copy_n(msg->yref_0.begin(), {{ model.name | upper }}_NY0, current_yref_0_.begin());
+    if (std::any_of(msg->yref_0.begin(), msg->yref_0.end(), [](double val){ return !std::isfinite(val); })) {
+        RCLCPP_WARN_THROTTLE(
+            this->get_logger(), *this->get_clock(), 2000,
+            "Reference callback received NaN/Inf in 'yref_0'. Ignoring message.");
+        return;
+    }
     {%- endif %}
     {%- if dims.ny > 0 %}
-    std::copy_n(msg->yref.begin(), {{ model.name | upper }}_NY, current_yref_.begin());
+    if (std::any_of(msg->yref.begin(), msg->yref.end(), [](double val){ return !std::isfinite(val); })) {
+        RCLCPP_WARN_THROTTLE(
+            this->get_logger(), *this->get_clock(), 2000,
+            "Reference callback received NaN/Inf in 'yref'. Ignoring message.");
+        return;
+    }
     {%- endif %}
     {%- if dims.ny_e > 0 %}
-    std::copy_n(msg->yref_e.begin(), {{ model.name | upper }}_NYN, current_yref_e_.begin());
+    if (std::any_of(msg->yref_e.begin(), msg->yref_e.end(), [](double val){ return !std::isfinite(val); })) {
+        RCLCPP_WARN_THROTTLE(
+            this->get_logger(), *this->get_clock(), 2000,
+            "Reference callback received NaN/Inf in 'yref_e'. Ignoring message.");
+        return;
+    }
     {%- endif %}
+
+    {%- if use_multithreading %}
+    std::scoped_lock lock(data_mutex_);
+    {%- endif %}
+    {%- if dims.ny_0 > 0 %} current_yref_0_ = msg->yref_0; {% endif %}
+    {%- if dims.ny > 0 %}  current_yref_  = msg->yref;    {% endif %}
+    {%- if dims.ny_e > 0 %} current_yref_e_ = msg->yref_e; {% endif %}
+    {%- if dims.ny_0 > 0 %} RCLCPP_DEBUG_STREAM_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Refs callback: yref_0=" << current_yref_0_); {% endif %}
+    {%- if dims.ny > 0 %}  RCLCPP_DEBUG_STREAM_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Refs callback: yref="   << current_yref_);   {% endif %}
+    {%- if dims.ny_e > 0 %} RCLCPP_DEBUG_STREAM_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Refs callback: yref_e=" << current_yref_e_);  {% endif %}
 }
 {%- if dims.np > 0 %}
 
 void {{ ClassName }}::parameters_callback(const {{ ros_opts.package_name }}_interface::msg::Parameters::SharedPtr msg) {
+    if (std::any_of(msg->p.begin(), msg->p.end(), [](double val){ return !std::isfinite(val); })) {
+        RCLCPP_WARN_THROTTLE(
+            this->get_logger(), *this->get_clock(), 2000,
+            "Parameter callback received NaN/Inf in 'p'. Ignoring message.");
+        return;
+    }
+
+    {%- if use_multithreading %}
     std::scoped_lock lock(data_mutex_);
-    std::copy_n(msg->p.begin(), {{ model.name | upper }}_NP, current_p_.begin());
+    {%- endif %}
+    current_p_ = msg->p;
+    RCLCPP_DEBUG_STREAM_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Params callback: p=" << current_p_);
 }
 {%- endif %}
 
@@ -220,14 +295,13 @@ void {{ ClassName }}::parameters_callback(const {{ ros_opts.package_name }}_inte
 void {{ ClassName }}::publish_input(const std::array<double, {{ model.name | upper }}_NU>& u0, int status) {
     auto control_input = std::make_unique<{{ ros_opts.package_name }}_interface::msg::ControlInput>();
     control_input->header.stamp = this->get_clock()->now();
-    control_input->header.frame_id = "{{ ros_opts.node_name }}_control_input";
     control_input->status = status;
-    std::copy_n(u0.begin(), {{ model.name | upper }}_NU, control_input->u.begin());
+    control_input->u = u0;
     control_input_pub_->publish(std::move(control_input));
 }
 
 
-// --- Parameter Handling Methods ---
+// --- ROS Parameter ---
 void {{ ClassName }}::setup_parameter_handlers() {
     {%- if dims.nh_0 > 0 or dims.nphi_0 > 0 or dims.nsh_0 > 0 or dims.nsphi_0 > 0 %}
     // Initial Constraints
@@ -383,6 +457,16 @@ void {{ ClassName }}::setup_parameter_handlers() {
     {%- endif %}
 
     // Solver Options
+    parameter_handlers_["{{ ros_opts.package_name }}.solver_options.print_level"] =
+        [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult&) {
+            {%- if use_multithreading %}
+            std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
+            {%- endif %}
+            int print_level = p.as_int();
+            ocp_nlp_solver_opts_set(ocp_nlp_config_, ocp_nlp_opts_, "print_level", &print_level);
+        };
+
+    // Ros Configs
     parameter_handlers_["{{ ros_opts.package_name }}.ts"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             this->config_.ts = p.as_double();
@@ -392,6 +476,10 @@ void {{ ClassName }}::setup_parameter_handlers() {
                 res.reason = "Failed to start control timer, while setting parameter '" + p.get_name() + "': " + e.what();
                 res.successful = false;
             }
+        };
+    parameter_handlers_["{{ ros_opts.package_name }}.verbose"] =
+        [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult&) {
+            this->config_.verbose = p.as_bool();
         };
 }
 
@@ -427,11 +515,16 @@ void {{ ClassName }}::declare_parameters() {
     {%- endif %}
 
     // Solver Options
+    this->declare_parameter("{{ ros_opts.package_name }}.solver_options.print_level", {{ 0 }});
+
+    // Ros Configs
     this->declare_parameter("{{ ros_opts.package_name }}.ts", {{ solver_options.Tsim }});
+    this->declare_parameter("{{ ros_opts.package_name }}.verbose", false);
 }
 
 void {{ ClassName }}::load_parameters() {
     this->get_parameter("{{ ros_opts.package_name }}.ts", config_.ts);
+    this->get_parameter("{{ ros_opts.package_name }}.verbose", config_.verbose);
 }
 
 void {{ ClassName }}::apply_all_parameters_to_solver() {
@@ -471,7 +564,7 @@ rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(
             parameter_handlers_.at(param_name)(param, result);
             if (!result.successful) break;
         } else {
-            result.reason = "Update for unknown parameter '%s' received.", param_name.c_str();
+            result.reason = "Update for unknown parameter '" + param_name + "' received.";
             result.successful = false;
         }
     }
@@ -515,14 +608,19 @@ void {{ ClassName }}::update_constraint(
     std::array<double, N> vec{};
     std::copy_n(values.begin(), N, vec.begin());
 
-    for (int stage : stages) {
-        int status = ocp_nlp_constraints_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, ocp_nlp_out_, stage, field, vec.data());
+    {
+        {%- if use_multithreading %}
+        std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
+        {%- endif %}
+        for (int stage : stages) {
+            int status = ocp_nlp_constraints_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, ocp_nlp_out_, stage, field, vec.data());
 
-        if (status != ACADOS_SUCCESS) {
-            result.successful = false;
-            result.reason = "Acados solver failed to set cost field '" + std::string(field) +
-                          "' for stage " + std::to_string(stage) + " (error code: " + std::to_string(status) + ")";
-            return;
+            if (status != ACADOS_SUCCESS) {
+                result.successful = false;
+                result.reason = "Acados solver failed to set cost field '" + std::string(field) +
+                            "' for stage " + std::to_string(stage) + " (error code: " + std::to_string(status) + ")";
+                return;
+            }
         }
     }
 }
@@ -558,37 +656,45 @@ void {{ ClassName }}::update_cost(
         RCLCPP_INFO_STREAM(this->get_logger(), "update cost field '" << field << "' values = " << vec);
     }
 
-    for (int stage : stages) {
-        int status = ocp_nlp_cost_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, stage, field, data_ptr);
-        if (status != ACADOS_SUCCESS) {
-            result.successful = false;
-            result.reason = "Acados solver failed to set cost field '" + std::string(field) +
-                          "' for stage " + std::to_string(stage) + " (error code: " + std::to_string(status) + ")";
-            return;
+    {
+        {%- if use_multithreading %}
+        std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
+        {%- endif %}
+        for (int stage : stages) {
+            int status = ocp_nlp_cost_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, stage, field, data_ptr);
+            if (status != ACADOS_SUCCESS) {
+                result.successful = false;
+                result.reason = "Acados solver failed to set cost field '" + std::string(field) +
+                            "' for stage " + std::to_string(stage) + " (error code: " + std::to_string(status) + ")";
+                return;
+            }
         }
     }
 }
 
-// --- Helpers ---
+// --- ROS Timer ---
 void {{ ClassName }}::start_control_timer(double period_seconds) {
-    if (period_seconds <= 0.0) period_seconds = 0.02;
+    if (control_timer_) control_timer_->cancel();
+    if (period_seconds <= 0.0) {
+        period_seconds = 0.02;
+        RCLCPP_WARN(this->get_logger(), "Non-positive control period specified. Using default: %f seconds.", period_seconds);
+    }
+
     auto period = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::duration<double>(period_seconds));
     control_timer_ = this->create_wall_timer(
         period,
-        std::bind(&{{ ClassName }}::control_loop, this));
+        std::bind(&{{ ClassName }}::control_loop, this)
+        {%- if use_multithreading %}, timer_group_{%- endif -%});
 }
 
 
-// --- Acados Helpers ---
+// --- Acados Solver ---
 {%- if solver_options.nlp_solver_type == 'SQP_RTI' %}
-void {{ ClassName }}::warmstart_solver_states(double *x0) {
-    for (int i = 1; i <= {{ model.name | upper }}_N; ++i) {
-        ocp_nlp_out_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_out_, ocp_nlp_in_, i, "x", x0);
-    }
-}
-
 int {{ ClassName }}::prepare_rti_solve() {
+    {%- if use_multithreading %}
+    std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
+    {%- endif %}
     int phase = PREPARATION;
     ocp_nlp_sqp_rti_opts_set(ocp_nlp_config_, ocp_nlp_opts_, "rti_phase", &phase);
     int status = {{ model.name }}_acados_solve(ocp_capsule_);
@@ -600,6 +706,9 @@ int {{ ClassName }}::prepare_rti_solve() {
 }
 
 int {{ ClassName }}::feedback_rti_solve() {
+    {%- if use_multithreading %}
+    std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
+    {%- endif %}
     int phase = FEEDBACK;
     ocp_nlp_sqp_rti_opts_set(ocp_nlp_config_, ocp_nlp_opts_, "rti_phase", &phase);
     int status = {{ model.name }}_acados_solve(ocp_capsule_);
@@ -611,6 +720,9 @@ int {{ ClassName }}::feedback_rti_solve() {
 
 {%- endif %}
 int {{ ClassName }}::ocp_solve() {
+    {%- if use_multithreading %}
+    std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
+    {%- endif %}
     int status = {{ model.name }}_acados_solve(ocp_capsule_);
     if (status != ACADOS_SUCCESS) {
         RCLCPP_ERROR(this->get_logger(), "Solver failed with status: %d", status);
@@ -618,32 +730,53 @@ int {{ ClassName }}::ocp_solve() {
     return status;
 }
 
+
+// --- Acados Getter ---
 void {{ ClassName }}::get_input(double* u, int stage) {
+    {%- if use_multithreading %}
+    std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
+    {%- endif %}
     ocp_nlp_out_get(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_out_, stage, "u", u);
 }
 
 void {{ ClassName }}::get_state(double* x, int stage) {
+    {%- if use_multithreading %}
+    std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
+    {%- endif %}
     ocp_nlp_out_get(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_out_, stage, "x", x);
 }
 
+
+// --- Acados Setter ---
 void {{ ClassName }}::set_x0(double* x0) {
-    ocp_nlp_constraints_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, ocp_nlp_out_, 0, "lbx", x0);
-    ocp_nlp_constraints_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, ocp_nlp_out_, 0, "ubx", x0);
+    {%- if use_multithreading %}
+    std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
+    {%- endif %}
+    int lbx_status = ocp_nlp_constraints_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, ocp_nlp_out_, 0, "lbx", x0);
+    int ubx_status = ocp_nlp_constraints_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, ocp_nlp_out_, 0, "ubx", x0);
+    check_acados_status("set_x0 (lbx)", 0, lbx_status);
+    check_acados_status("set_x0 (ubx)", 0, ubx_status);
+}
+
+void {{ ClassName }}::set_yref(double* yref, int stage) {
+    {%- if use_multithreading %}
+    std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
+    {%- endif %}
+    int status = ocp_nlp_cost_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, stage, "yref", yref);
+    check_acados_status("set_yref (yref)", stage, status);
 }
 
 {%- if dims.ny_0 > 0 %}
 void {{ ClassName }}::set_yref0(double* yref0) {
-    ocp_nlp_cost_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, 0, "yref", yref0);
+    this->set_yref(yref0, 0);
 }
-
 {%- endif %}
 {%- if dims.ny > 0 %}
 
-void {{ ClassName }}::set_yref(double* yref, int stage) {
-    ocp_nlp_cost_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, stage, "yref", yref);
-}
-
 void {{ ClassName }}::set_yrefs(double* yref) {
+    {%- if use_multithreading %}
+    std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
+    {%- endif %}
     for (int i = 1; i < {{ model.name | upper }}_N; i++) {
         this->set_yref(yref, i);
     }
@@ -652,21 +785,49 @@ void {{ ClassName }}::set_yrefs(double* yref) {
 {%- if dims.ny_e > 0 %}
 
 void {{ ClassName }}::set_yref_e(double* yrefN) {
-    ocp_nlp_cost_model_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_in_, {{ model.name | upper }}_N, "yref", yrefN);
+    this->set_yref(yrefN, {{ model.name | upper }}_N);
 }
 {%- endif %}
 {%- if dims.np > 0 %}
 
 void {{ ClassName }}::set_ocp_parameter(double* p, size_t np, int stage) {
-    {{ model.name }}_acados_update_params(ocp_capsule_, stage, p, np);
+    {%- if use_multithreading %}
+    std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
+    {%- endif %}
+    int status = {{ model.name }}_acados_update_params(ocp_capsule_, stage, p, np);
+    check_acados_status("set_ocp_parameter (p)", stage, status);
 }
 
 void {{ ClassName }}::set_ocp_parameters(double* p, size_t np) {
+    {%- if use_multithreading %}
+    std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
+    {%- endif %}
     for (int i = 0; i <= {{ model.name | upper }}_N; i++) {
         this->set_ocp_parameter(p, np, i);
     }
 }
 {%- endif %}
+{%- if solver_options.nlp_solver_type == 'SQP_RTI' %}
+
+void {{ ClassName }}::warmstart_solver_states(double *x0) {
+    {%- if use_multithreading %}
+    std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
+    {%- endif %}
+    for (int i = 1; i <= {{ model.name | upper }}_N; ++i) {
+        ocp_nlp_out_set(ocp_nlp_config_, ocp_nlp_dims_, ocp_nlp_out_, ocp_nlp_in_, i, "x", x0);
+    }
+}
+{%- endif %}
+
+
+// --- Acados Helper ---
+bool {{ ClassName }}::check_acados_status(const char* field, int stage, int status) {
+    if (status != ACADOS_SUCCESS) {
+        RCLCPP_ERROR(this->get_logger(), "%s failed at stage %d: %d", field, stage, status);
+        return false;
+    }
+    return true;
+}
 
 } // namespace {{ ros_opts.package_name }}
 
@@ -674,8 +835,21 @@ void {{ ClassName }}::set_ocp_parameters(double* p, size_t np) {
 // --- Main ---
 int main(int argc, char **argv) {
     rclcpp::init(argc, argv);
+    
+    // Suppress ROS timer logging
+    rcutils_logging_set_logger_level("rcl", RCUTILS_LOG_SEVERITY_WARN);
+    rcutils_logging_set_logger_level("rclcpp", RCUTILS_LOG_SEVERITY_WARN);
+
     auto node = std::make_shared<{{ ros_opts.package_name }}::{{ ClassName }}>();
+{%- if use_multithreading %}
+    RCLCPP_INFO(node->get_logger(), "Using MultiThreadedExecutor with %d threads.", {{ ros_opts.threads }});
+    rclcpp::executors::MultiThreadedExecutor executor(rclcpp::ExecutorOptions(), {{ ros_opts.threads }});
+    executor.add_node(node);
+    executor.spin();
+{%- else %}
+    RCLCPP_INFO(node->get_logger(), "Using SingleThreadedExecutor.");
     rclcpp::spin(node);
+{%- endif %}
     rclcpp::shutdown();
     return 0;
 }

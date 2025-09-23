@@ -158,7 +158,7 @@ rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(
 
 // template <size_t N>
 // void {{ ClassName }}::get_and_check_array_param(
-//     const std::string& param_name, 
+//     const std::string& param_name,
 //     std::array<double, N>& destination
 // ) {
 //     auto param_value = this->get_parameter(param_name).as_double_array();
@@ -173,7 +173,7 @@ rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(
 
 // template <size_t N>
 // void {{ ClassName }}::update_param_array(
-//     const rclcpp::Parameter& param, 
+//     const rclcpp::Parameter& param,
 //     std::array<double, N>& destination_array,
 //     rcl_interfaces::msg::SetParametersResult& result
 // ) {

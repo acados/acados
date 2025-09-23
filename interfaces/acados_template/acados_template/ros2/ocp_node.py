@@ -27,7 +27,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from .utils import ControlLoopExec, ArchType, AcadosRosBaseOptions
+from .utils import ArchType, AcadosRosBaseOptions
 
 # --- Ros Options ---
 class AcadosOcpRosOptions(AcadosRosBaseOptions):
@@ -37,12 +37,12 @@ class AcadosOcpRosOptions(AcadosRosBaseOptions):
         self.node_name: str = ""
         self.namespace: str = ""
         self.archtype: str = ArchType.NODE.value
-        self.control_loop_executor: str = ControlLoopExec.TIMER.value
 
-        self.__control_topic = "ocp_control"
-        self.__state_topic = "ocp_state"
-        self.__parameters_topic = "ocp_params"
-        self.__reference_topic = "ocp_reference"
+        self.__control_topic: str = "ocp_control"
+        self.__state_topic: str = "ocp_state"
+        self.__parameters_topic: str = "ocp_params"
+        self.__reference_topic: str = "ocp_reference"
+        self.__threads: int = 1
 
     @property
     def control_topic(self) -> str:
@@ -59,6 +59,10 @@ class AcadosOcpRosOptions(AcadosRosBaseOptions):
     @property
     def reference_topic(self) -> str:
         return self.__reference_topic
+
+    @property
+    def threads(self) -> str:
+        return self.__threads
 
     @control_topic.setter
     def control_topic(self, value: str):
@@ -84,22 +88,17 @@ class AcadosOcpRosOptions(AcadosRosBaseOptions):
             raise TypeError('Invalid reference_topic value, expected str.\n')
         self.__reference_topic = value
 
+    @threads.setter
+    def threads(self, value: int):
+        if not isinstance(value, int):
+            raise TypeError('Invalid threads value, expected int.\n')
+        self.__threads = value
+
     def to_dict(self) -> dict:
         return super().to_dict() | {
             "control_topic": self.control_topic,
             "state_topic": self.state_topic,
             "parameters_topic": self.parameters_topic,
             "reference_topic": self.reference_topic,
+            "threads": self.threads,
         }
-
-
-if __name__ == "__main__":
-    ros_opt = AcadosOcpRosOptions()
-
-    # ros_opt.node_name = "my_node"
-    ros_opt.package_name = "that_package"
-    ros_opt.namespace = "/my_namespace"
-    # ros_opt.control_loop_executor = ControlLoopExec.TOPIC
-    # ros_opt.archtype = ArchType.LIFECYCLE_NODE
-
-    print(ros_opt.to_dict())

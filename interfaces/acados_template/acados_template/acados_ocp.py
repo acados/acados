@@ -162,14 +162,14 @@ class AcadosOcp:
         """Name of the json file where the problem description is stored."""
         return self.__json_file
 
+    @json_file.setter
+    def json_file(self, json_file):
+        self.__json_file = json_file
+        
     @property
     def ros_opts(self) -> Optional[AcadosOcpRosOptions]:
         """Options to configure ROS 2 nodes and topics."""
         return self.__ros_opts
-
-    @json_file.setter
-    def json_file(self, json_file):
-        self.__json_file = json_file
 
     @ros_opts.setter
     def ros_opts(self, ros_opts: AcadosOcpRosOptions):
@@ -1301,7 +1301,7 @@ class AcadosOcp:
 
         # --- Interface Package ---
         ros_interface_dir = os.path.join('ocp_interface_templates')
-        interface_dir = os.path.join(os.path.dirname(self.code_export_directory), f'{self.ros_opts.package_name}_interface')
+        interface_dir = os.path.join(self.ros_opts.generated_code_dir, f'{self.ros_opts.package_name}_interface')
         template_file = os.path.join(ros_interface_dir, 'README.in.md')
         template_list.append((template_file, 'README.md', interface_dir, ros_template_glob))
         template_file = os.path.join(ros_interface_dir, 'CMakeLists.in.txt')
@@ -1320,15 +1320,9 @@ class AcadosOcp:
         template_file = os.path.join(ros_interface_dir, 'ControlInput.in.msg')
         template_list.append((template_file, 'ControlInput.msg', msg_dir, ros_template_glob))
 
-        # Services
-        # TODO: No node implementation yet
-
-        # Actions
-        # TODO: No Template yet and no node implementation
-
         # --- Solver Package ---
         ros_pkg_dir = os.path.join('ocp_node_templates')
-        package_dir = os.path.join(os.path.dirname(self.code_export_directory), self.ros_opts.package_name)
+        package_dir = os.path.join(self.ros_opts.generated_code_dir, self.ros_opts.package_name)
         template_file = os.path.join(ros_pkg_dir, 'README.in.md')
         template_list.append((template_file, 'README.md', package_dir, ros_template_glob))
         template_file = os.path.join(ros_pkg_dir, 'CMakeLists.in.txt')
@@ -1457,6 +1451,10 @@ class AcadosOcp:
 
 
     def dump_to_json(self) -> None:
+        dir_name = os.path.dirname(self.json_file)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
+            
         with open(self.json_file, 'w') as f:
             json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         return
