@@ -1024,12 +1024,19 @@ class AcadosModel():
 
         model = self()
 
+        expression_names =  model_dict.get('expression_names')
+        serialized_expressions = model_dict.get('serialized_expressions')
+
+        if expression_names is None or serialized_expressions is None:
+            raise ValueError("Dictionary does not contain serialized expressions.")
+
         # loop over all properties
         for attr, _ in inspect.getmembers(type(model), lambda v: isinstance(v, property)):
 
             value = model_dict.get(attr)
 
-            if value is None:
+            # expressions are expected to be None
+            if value is None and attr not in expression_names:
                 warnings.warn(f"Attribute {attr} not in dictionary.")
             else:
                 try:
