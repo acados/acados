@@ -36,8 +36,7 @@ from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
-from casadi import vertcat
-
+import casadi as ca
 
 def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_num_hess=0,
          integrator_type='ERK'):
@@ -85,14 +84,14 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
         ocp.cost.cost_type = 'NONLINEAR_LS'
         ocp.cost.cost_type_e = 'NONLINEAR_LS'
 
-        ocp.model.cost_y_expr = vertcat(x, u)
+        ocp.model.cost_y_expr = ca.vertcat(x, u)
         ocp.model.cost_y_expr_e = x
 
     elif cost_type == 'EXTERNAL':
         ocp.cost.cost_type = 'EXTERNAL'
         ocp.cost.cost_type_e = 'EXTERNAL'
 
-        ocp.model.cost_expr_ext_cost = vertcat(x, u).T @ cost_W @ vertcat(x, u)
+        ocp.model.cost_expr_ext_cost = ca.vertcat(x, u).T @ cost_W @ ca.vertcat(x, u)
         ocp.model.cost_expr_ext_cost_e = x.T @ Q_mat @ x
 
     else:
@@ -123,17 +122,14 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
             gnsf_dict = json.load(f)
         ocp.gnsf_model = gnsf_dict
 
-    ocp.solver_options.qp_solver_cond_N = 5
-
     # set prediction horizon
     ocp.solver_options.tf = Tf
-    ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
+    ocp.solver_options.nlp_solver_type = 'SQP'
     ocp.solver_options.ext_cost_num_hess = ext_cost_use_num_hess
 
     model_dict = ocp.model.to_dict()
 
     model_from_dict = AcadosModel.from_dict(model_dict)
-
     ocp.model = model_from_dict
 
     solver = AcadosOcpSolver(ocp, json_file=f"acados_ocp_{model.name}.json")
