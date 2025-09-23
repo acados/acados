@@ -356,8 +356,10 @@ class AcadosMultiphaseOcp:
                 ocp_dict[key]=dict(getattr(self, key).__dict__)
             if isinstance(v, list):
                 for i, item in enumerate(v):
-                    if isinstance(item, (AcadosModel, AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost)):
+                    if isinstance(item, (AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost)):
                         ocp_dict[key][i] = format_class_dict(dict(item.__dict__))
+                    if isinstance(item, (AcadosModel,)):
+                        ocp_dict[key][i] = item.to_dict()
 
         ocp_dict = format_class_dict(ocp_dict)
 
