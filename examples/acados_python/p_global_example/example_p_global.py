@@ -211,11 +211,11 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matla
     N_horizon = 20
 
     # set options
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.print_level = 0
-    ocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP_RTI, SQP
+    ocp.solver_options.nlp_solver_type = 'SQP_RTI'
     ocp.solver_options.ext_fun_compile_flags += ' -I' + ca.GlobalOptions.getCasadiIncludePath() + ' -ffast-math -march=native'
     if code_export_directory is not None:
         ocp.code_export_directory = code_export_directory
@@ -315,7 +315,7 @@ def main_mocp(lut=True, use_p_global=True, with_matlab_templates=False):
     timing = 0
     for i in range(20):
         status = ocp_solver.solve()
-        # ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+        # ocp_solver.print_statistics()
         residuals+= list(ocp_solver.get_residuals())
         timing += ocp_solver.get_stats('time_lin')
 
