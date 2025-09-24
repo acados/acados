@@ -39,9 +39,9 @@ class MPCParam():
     _n_hrzn: int=20
 
     # matrix of the cost function
-    _Q: np.ndarray=np.zeros(0)
-    _R: np.ndarray=np.zeros(0)
-    _Q_e: np.ndarray=np.zeros(0)
+    _Q: np.ndarray=field(default_factory=lambda: np.zeros(0))
+    _R: np.ndarray=field(default_factory=lambda: np.zeros(0))
+    _Q_e: np.ndarray=field(default_factory=lambda: np.zeros(0))
 
     # constraints
     _num_state_cstr: int=2
@@ -56,17 +56,17 @@ class MPCParam():
 
     # feedback matrix
     _fdbk_k: float=6.0
-    _fdbk_K_mat: np.ndarray=np.zeros(0)
+    _fdbk_K_mat: np.ndarray=field(default_factory=lambda: np.zeros(0))
 
     # uncertainty / distrubance
-    _unc_jac_G_mat: np.ndarray=np.zeros(0)
-    _W_mat: np.ndarray=np.zeros(0)
-    _P0_mat: np.ndarray=np.zeros(0)
+    _unc_jac_G_mat: np.ndarray=field(default_factory=lambda: np.zeros(0))
+    _W_mat: np.ndarray=field(default_factory=lambda: np.zeros(0))
+    _P0_mat: np.ndarray=field(default_factory=lambda: np.zeros(0))
 
     # obstacles
     _num_obs: int=3
-    _obs_radius: np.ndarray=np.array([1.0, 0.7, 0.55])
-    _obs_pos: np.ndarray=np.array([[0.0, 1.0], [3.0, 0.68], [7.0, 1.2]])
+    _obs_radius: np.ndarray=field(default_factory=lambda: np.array([1.0, 0.7, 0.55]))
+    _obs_pos: np.ndarray=field(default_factory=lambda: np.array([[0.0, 1.0], [3.0, 0.68], [7.0, 1.2]]))
 
     # zoRO
     _backoff_eps: float=1e-8
