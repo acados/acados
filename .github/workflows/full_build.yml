@@ -15,7 +15,7 @@ jobs:
 
 
 # ===== PYTHON TESTS =====
-  python_interface:
+  python_basic_tests:
     needs: call_core_build
     runs-on: ubuntu-22.04
 
@@ -33,22 +33,408 @@ jobs:
     - name: Setup Python Environment
       uses: ./.github/actions/setup-python-environment
 
-    - name: Run CMake python tests (ctest)
-      working-directory: ${{ github.workspace }}/build
+    - name: Getting started examples
+      working-directory: ${{ github.workspace }}/examples/acados_python/getting_started
       shell: bash
       run: |
         source ${{ github.workspace }}/acadosenv/bin/activate
-        ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
+        python minimal_example_closed_loop.py
+        python minimal_example_sim.py
+        python minimal_example_ocp.py
 
-    - name: Rerun failed tests with verbose output
-      if: failure()
-      working-directory: ${{ github.workspace }}/build
+    - name: Getting started examples
+      working-directory: ${{ github.workspace }}/examples/acados_python/getting_started
       shell: bash
       run: |
-        echo "--- CTest failed. Re-running all failing tests with verbose output: ---"
         source ${{ github.workspace }}/acadosenv/bin/activate
-        ctest -C Release --rerun-failed -V
-        exit 1
+        python minimal_example_closed_loop.py
+        python minimal_example_sim.py
+        python minimal_example_ocp.py
+
+    - name: tests
+      working-directory: ${{ github.workspace }}/examples/acados_python/tests
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python reset_test.py
+        python static_lib_test.py
+        python test_cython_ctypes.py
+        python main_test.py
+        python test_detect_constraints.py
+        python test_cost_integration_euler.py
+        python test_cost_integration_value.py
+        python armijo_test.py
+        python pcond_getters_test.py
+        python test_nan_globalization.py
+
+    - name: tests pt. 2
+      working-directory: ${{ github.workspace }}/examples/acados_python/tests
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python soft_constraint_test.py
+        python test_parametric_nonlinear_constraint_h.py
+        python test_sim_dae.py
+        python sparse_param_test.py
+        python regularization_test.py
+        python one_sided_constraints_test.py
+
+    - name: time varying examples
+      working-directory: ${{ github.workspace }}/examples/acados_python/time_varying
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python test_time_varying_irk.py
+        python test_polynomial_controls_and_penalties.py
+        python test_mocp_qp.py
+
+    - name: pendulum MHE
+      working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/mhe
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python minimal_example_mhe.py
+        python minimal_example_mhe_with_noisy_param.py
+        python minimal_example_mhe_with_param.py
+        python closed_loop_mhe_ocp.py
+
+
+    - name: chain
+      working-directory: ${{ github.workspace }}/examples/acados_python/chain_mass
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main.py
+        python minimal_example_sim.py
+
+
+  py_ocp_tests:
+    needs: call_core_build
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
+      with:
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
+
+    - name: Setup Python Environment
+      uses: ./.github/actions/setup-python-environment
+
+    - name: pendulum OCP
+      working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ocp
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python minimal_example_ocp_cmake.py
+        python nonuniform_discretization_example.py
+        python example_sqp_rti_loop.py
+        python simulink_example.py
+        python ocp_example_h_init_contraints.py
+        python slack_min_formulation.py
+        python minimal_example_ocp_reuse_code.py
+        python example_optimal_value_derivative.py
+        python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=IRK
+        python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=ERK --QP_SOLVER=PARTIAL_CONDENSING_QPDUNES
+        python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=GNSF
+        python time_optimal_swing_up.py
+        python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE DISCRETE --BUILD_SYSTEM cmake
+
+    - name: AcadosCasadi
+      working-directory: ${{ github.workspace }}/examples/acados_python/casadi_tests
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python test_casadi_get_set.py
+        python test_casadi_parametric.py
+        python test_casadi_p_in_constraint_and_cost.py
+        python test_casadi_constraint.py
+        python test_casadi_slack_in_h.py
+        python test_casadi_single_shooting.py
+        python test_casadi_LICQ_violation.py
+        python test_casadi_closed_loop.py
+
+  py_non_ocp:
+    needs: call_core_build
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
+      with:
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
+
+    - name: Setup Python Environment
+      uses: ./.github/actions/setup-python-environment
+
+    - name: dense NLPs
+      working-directory: ${{ github.workspace }}/examples/acados_python/non_ocp_nlp
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python maratos_test_problem.py
+        python adaptive_eps_reg_test.py
+        python qpscaling_test.py
+
+
+  py_real_examples:
+    needs: call_core_build
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
+      with:
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
+
+    - name: Setup Python Environment
+      uses: ./.github/actions/setup-python-environment
+
+    - name: pmsm
+      working-directory: ${{ github.workspace }}/examples/acados_python/pmsm_example
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main.py
+
+    - name: rsm
+      working-directory: ${{ github.workspace }}/examples/acados_python/rsm_example
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main.py
+
+    - name: quadrotor_nav
+      working-directory: ${{ github.workspace }}/examples/acados_python/quadrotor_nav
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main.py
+
+    - name: race_cars
+      working-directory: ${{ github.workspace }}/examples/acados_python/race_cars
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main.py
+
+  py_ddp_and_globalization:
+    needs: call_core_build
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
+      with:
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
+
+    - name: Setup Python Environment
+      uses: ./.github/actions/setup-python-environment
+
+    - name: DDP
+      working-directory: ${{ github.workspace }}/examples/acados_python/unconstrained_ocps/linear_dynamics_qp_ocp
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python acados_unconstrained_QP.py
+
+    - name: DDP Chen Allgöwer
+      working-directory: ${{ github.workspace }}/examples/acados_python/unconstrained_ocps/chen_allgoewer_unconstrained_ocp
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python chen_allgoewer_ocp.py
+
+    - name: Hour Glass P2P Motion
+      working-directory: ${{ github.workspace }}/examples/acados_python/unconstrained_ocps/hour_glass_p2p_motion
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python hour_glass_time_optimal_p2p_motion.py
+
+    - name: DDP Rockit Hello World
+      working-directory: ${{ github.workspace }}/examples/acados_python/unconstrained_ocps/rockit_hello_world
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python rockit_hello_world_ocp.py
+
+    # globalization
+    - name: Hock-Schittkowsky
+      working-directory: ${{ github.workspace }}/examples/acados_python/hock_schittkowsky
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python hs015_test.py
+        python hs016_test.py
+        python hs074_constraint_scaling.py
+        python hs099.py
+
+
+  python_cmake_tests:
+    needs: call_core_build
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
+      with:
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
+
+    - name: Setup Python Environment
+      uses: ./.github/actions/setup-python-environment
+
+    - name: python_custom_update_example
+      working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/custom_update
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python example_custom_rti_loop.py
+
+    - name: python_as_rti_example
+      working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/as_rti
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python as_rti_closed_loop_example.py
+
+    - name: python_fast_zoro_example
+      working-directory: ${{ github.workspace }}/examples/acados_python/zoRO_example
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python pendulum_on_cart/minimal_example_zoro.py
+
+    - name: python_zoro_diff_drive_example
+      working-directory: ${{ github.workspace }}/examples/acados_python/zoRO_example
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python diff_drive/main.py
+
+    - name: python_convex_ocp_with_onesided_constraints
+      working-directory: ${{ github.workspace }}/examples/acados_python/convex_ocp_with_onesided_constraints
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main_convex_onesided.py
+
+    - name: python_pendulum_ext_sim_example
+      working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/sim
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python extensive_example_sim.py
+
+    - name: cython_pendulum_closed_loop_example
+      working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python cython_example_closed_loop.py
+
+    - name: py_time_optimal_cython_ctypes
+      working-directory: ${{ github.workspace }}/examples/acados_python/crane
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python time_optimal_example.py
+
+    - name: python_test_generic_impl_dyn
+      working-directory: ${{ github.workspace }}/examples/acados_python/generic_impl_dyn
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python minimal_example_ocp_generic_impl_dyn.py
+
+    - name: python_test_reset_timing
+      working-directory: ${{ github.workspace }}/examples/acados_python/timing_example
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python reset_timing.py
+
+    - name: py_sqp_wfqp_linear_problem_obstacle_avoidance
+      working-directory: ${{ github.workspace }}/examples/acados_python/linear_mass_model
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python sqp_wfqp_test.py
+
+    - name: py_sqp_wfqp_inconsistent_linearization
+      working-directory: ${{ github.workspace }}/examples/acados_python/inconsistent_qp_linearization
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python inconsistent_qp_linearization_test.py
+
+    - name: python_convex_test_problem_globalization
+      working-directory: ${{ github.workspace }}/examples/acados_python/convex_problem_globalization_needed
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python convex_problem_globalization_necessary.py
+
+    - name: python_max_iter_termination_test
+      working-directory: ${{ github.workspace }}/examples/acados_python/max_iter_test
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python max_iter_test.py
+
+    - name: python_OCP_maratos_test_problem_globalization
+      working-directory: ${{ github.workspace }}/examples/acados_python/linear_mass_model
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python linear_mass_test_problem.py
+
+    - name: py_qpscaling_slacked
+      working-directory: ${{ github.workspace }}/examples/acados_python/linear_mass_model
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python test_qpscaling_slacked.py
+
+    - name: python_multiphase_nonlinear_constraints
+      working-directory: ${{ github.workspace }}/examples/acados_python/multiphase_nonlinear_constraints
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main.py
+
+    - name: python_OSQP_test
+      if: env.ACADOS_WITH_OSQP == 'ON'
+      working-directory: ${{ github.workspace }}/examples/acados_python/tests
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python test_osqp.py
 
 
   python_interface_new_casadi_and_py2octave:
