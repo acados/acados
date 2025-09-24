@@ -34,6 +34,10 @@ jobs:
       id: vars
       run: echo "PREFIX=build-${{ github.run_id }}-${{ github.run_attempt }}" >> $GITHUB_OUTPUT
 
+    - name: Check versions
+      run: |
+        cmake --version
+
     - name: Submodule fingerprint
       id: submods
       run: |
