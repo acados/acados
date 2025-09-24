@@ -249,7 +249,7 @@ def main(use_cython=False, lut=True, use_p_global=True, blazing=True, with_matla
     for i in range(20):
         status = ocp_solver.solve()
         # ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
-        residuals+= list(ocp_solver.get_residuals())
+        residuals+= list(ocp_solver.get_residuals(recompute=True))
         timing += ocp_solver.get_stats("time_lin")
 
     # plot results
@@ -316,7 +316,7 @@ def main_mocp(lut=True, use_p_global=True, with_matlab_templates=False):
     for i in range(20):
         status = ocp_solver.solve()
         # ocp_solver.print_statistics()
-        residuals+= list(ocp_solver.get_residuals())
+        residuals+= list(ocp_solver.get_residuals(recompute=True))
         timing += ocp_solver.get_stats('time_lin')
 
     return residuals, timing
