@@ -2360,7 +2360,13 @@ class AcadosOcpSolver:
         return
 
 
-    def options_get(self, field_):
+    def options_get(self, field_: str) -> Union[int, float]:
+        """
+        Get options of the solver.
+
+        :param field: string, possible values are:
+                'as_rti_level', to be extended.
+        """
         int_fields = ['as_rti_level']
         if field_ == 'as_rti_level':
             if self.__solver_options['nlp_solver_type'] != "SQP_RTI":
