@@ -360,22 +360,15 @@ def casadi_expr_to_string(expr) -> str:
         string += f"{expr[ii,:]}\n"
     return string
 
-## Conversion functions
 def make_object_json_dumpable(input):
+    '''
+    Convert numpy arrays and CasADi DM objects to lists before JSON dump.
+    NOTE: Serialization of CasADi MX and SX objects requires a StringSerializer and is now implemented in AcadosModel.
+    '''
     if isinstance(input, (np.ndarray)):
         return input.tolist()
-    elif isinstance(input, (SX)):
-        try:
-            return input.serialize()
-            # for more readable json output:
-            # return casadi_expr_to_string(input)
-        except: # for older CasADi versions
-            return ''
-    elif isinstance(input, (MX)):
-        # NOTE: MX expressions can not be serialized, only Functions.
-        return input.__str__()
     elif isinstance(input, (DM)):
-        return input.full()
+        return input.full().tolist()
     else:
         raise TypeError(f"Cannot make input of type {type(input)} dumpable.")
 

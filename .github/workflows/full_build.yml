@@ -129,6 +129,7 @@ jobs:
         source ${{ github.workspace }}/acadosenv/bin/activate
         cd ${{ github.workspace }}/examples/acados_python/tests
         python test_rti_sqp_residuals.py
+        python test_serialize.py
         cd ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ocp
         python test_casadi_formulation.py
 
