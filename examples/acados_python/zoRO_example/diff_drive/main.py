@@ -74,8 +74,8 @@ def run_closed_loop_simulation(use_custom_update: bool, n_executions: int = 1):
     track_spline = TrackSpline(spline_control_points, spline_seg_length)
     cfg_path = PathTrackingParam()
     path_tracking_solver = NominalPathTrackingSolver(track_spline, cfg_path=cfg_path, cfg_traj=cfg_zo)
-    x_init = np.array([0.0, cfg_path._v_s_0])
-    x_e    = np.array([1.0, cfg_path._v_s_e])
+    x_init = np.array([0.0, cfg_path.v_s_0])
+    x_e    = np.array([1.0, cfg_path.v_s_e])
     path_tracking_solver.solve(x_init=x_init, x_e=x_e)
 
     time_prep = []
@@ -169,8 +169,8 @@ def solve_single_zoro_problem_visualize_uncertainty():
     track_spline = TrackSpline(spline_control_points, spline_seg_length)
     cfg_path = PathTrackingParam()
     path_tracking_solver = NominalPathTrackingSolver(track_spline, cfg_path=cfg_path, cfg_traj=cfg_zo)
-    x_init = np.array([0.0, cfg_path._v_s_0])
-    x_e = np.array([1.0, cfg_path._v_s_e])
+    x_init = np.array([0.0, cfg_path.v_s_0])
+    x_e = np.array([1.0, cfg_path.v_s_e])
     path_tracking_solver.solve(x_init=x_init, x_e=x_e)
 
     # zoro solution

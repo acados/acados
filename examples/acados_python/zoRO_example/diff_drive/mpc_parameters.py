@@ -32,154 +32,58 @@ import numpy as np
 @dataclass
 class MPCParam():
     # dimensions
-    _nx: int=5
-    _nu: int=2
-    _nw: int=5
-    _delta_t: float=0.1
-    _n_hrzn: int=20
+    nx: int=5
+    nu: int=2
+    nw: int=5
+    delta_t: float=0.1
+    n_hrzn: int=20
 
     # matrix of the cost function
-    _Q: np.ndarray=field(default_factory=lambda: np.zeros(0))
-    _R: np.ndarray=field(default_factory=lambda: np.zeros(0))
-    _Q_e: np.ndarray=field(default_factory=lambda: np.zeros(0))
+    Q: np.ndarray=field(default_factory=lambda: np.zeros(0))
+    R: np.ndarray=field(default_factory=lambda: np.zeros(0))
+    Q_e: np.ndarray=field(default_factory=lambda: np.zeros(0))
 
     # constraints
-    _num_state_cstr: int=2
-    _min_forward_velocity: float=0.
-    _max_forward_velocity: float=1.0
-    _max_angular_velocity: float=1.0
-    _min_forward_acceleration: float=-1.0
-    _max_forward_acceleration: float=0.3
-    _max_angular_acceleration: float=2.84
-    _term_forward_velocity: float=0.05
-    _term_angular_velocity: float=0.05
+    num_state_cstr: int=2
+    min_forward_velocity: float=0.
+    max_forward_velocity: float=1.0
+    max_angular_velocity: float=1.0
+    min_forward_acceleration: float=-1.0
+    max_forward_acceleration: float=0.3
+    max_angular_acceleration: float=2.84
+    term_forward_velocity: float=0.05
+    term_angular_velocity: float=0.05
 
-    # feedback matrix
-    _fdbk_k: float=6.0
-    _fdbk_K_mat: np.ndarray=field(default_factory=lambda: np.zeros(0))
+    # feedback gain scalar parameter (full structured matrix defined below)
+    fdbk_k: float=6.0
 
     # uncertainty / distrubance
-    _unc_jac_G_mat: np.ndarray=field(default_factory=lambda: np.zeros(0))
-    _W_mat: np.ndarray=field(default_factory=lambda: np.zeros(0))
-    _P0_mat: np.ndarray=field(default_factory=lambda: np.zeros(0))
+    unc_jac_G_mat: np.ndarray=field(default_factory=lambda: np.zeros(0))
+    W_mat: np.ndarray=field(default_factory=lambda: np.zeros(0))
+    P0_mat: np.ndarray=field(default_factory=lambda: np.zeros(0))
 
     # obstacles
-    _num_obs: int=3
+    num_obs: int=3
     _obs_radius: np.ndarray=field(default_factory=lambda: np.array([1.0, 0.7, 0.55]))
     _obs_pos: np.ndarray=field(default_factory=lambda: np.array([[0.0, 1.0], [3.0, 0.68], [7.0, 1.2]]))
 
     # zoRO
-    _backoff_eps: float=1e-8
-    _zoRO_iter: int=2
-    _use_custom_update: bool=True
+    backoff_eps: float=1e-8
+    zoRO_iter: int=2
+    use_custom_update: bool=True
 
     def __post_init__(self):
-        self._Q: np.eye(self._nx)
-        self._R: np.eye(self._nu) * 1e-1
-        self._Q_e: np.eye(self._nx)
-
-        self._fdbk_K_mat = np.array([[0., 0., 0., self._fdbk_k, 0.], \
-            [0., 0., 0., 0., self._fdbk_k]])
-        self._unc_jac_G_mat = np.eye(self._nx)
-        self._W_mat = np.diag([2.0e-06, 2.0e-06, 4.0e-06, 1.5e-03, 7.0e-03])
-        self._P0_mat = np.diag([2.0e-06, 2.0e-06, 4.0e-06, 1.5e-03, 7.0e-03])
-
-    @property
-    def nx(self)->int:
-        return self._nx
-
-    @property
-    def nu(self)->int:
-        return self._nu
-
-    @property
-    def nw(self)->int:
-        return self._nw
-
-    @property
-    def delta_t(self)->float:
-        return self._delta_t
-
-    @property
-    def n_hrzn(self)->int:
-        return self._n_hrzn
-
-    @property
-    def Q(self)->np.ndarray:
-        return np.eye(self._nx)
-
-    @property
-    def R(self)->np.ndarray:
-        return np.eye(self._nu) * 1e-1
-
-    @property
-    def Q_e(self)->np.ndarray:
-        return np.eye(self._nx)
-
-    @property
-    def num_state_cstr(self)->int:
-        return self._num_state_cstr
-
-    @property
-    def min_forward_velocity(self)->float:
-        return self._min_forward_velocity
-
-    @property
-    def max_forward_velocity(self)->float:
-        return self._max_forward_velocity
-
-    @property
-    def max_angular_velocity(self)->float:
-        return self._max_angular_velocity
-
-    @property
-    def min_forward_acceleration(self)->float:
-        return self._min_forward_acceleration
-
-    @property
-    def max_forward_acceleration(self)->float:
-        return self._max_forward_acceleration
-
-    @property
-    def max_angular_acceleration(self)->float:
-        return self._max_angular_acceleration
-
-    @property
-    def term_forward_velocity(self)->float:
-        return self._term_forward_velocity
-
-    @property
-    def term_angular_velocity(self)->float:
-        return self._term_angular_velocity
-
-    @property
-    def fdbk_k(self)->float:
-        return self._fdbk_k
+        self.Q = np.eye(self.nx)
+        self.R = np.eye(self.nu) * 1e-1
+        self.Q_e = np.eye(self.nx)
+        self.unc_jac_G_mat = np.eye(self.nx)
+        self.W_mat = np.diag([2.0e-06, 2.0e-06, 4.0e-06, 1.5e-03, 7.0e-03])
+        self.P0_mat = np.diag([2.0e-06, 2.0e-06, 4.0e-06, 1.5e-03, 7.0e-03])
 
     @property
     def fdbk_K_mat(self)->np.ndarray:
-        return np.array([[0., 0., 0., self._fdbk_k, 0.], \
-                         [0., 0., 0., 0., self._fdbk_k]])
-
-    @property
-    def unc_jac_G_mat(self)->np.ndarray:
-        return np.eye(self._nw)
-
-    @property
-    def W_mat(self)->np.ndarray:
-        return self._W_mat
-
-    @property
-    def P0_mat(self)->np.ndarray:
-        return self._P0_mat
-
-    @property
-    def num_obs(self)->int:
-        return self._num_obs
-
-    @num_obs.setter
-    def num_obs(self, n:int):
-        self._num_obs = n
+        return np.array([[0., 0., 0., self.fdbk_k, 0.], \
+                         [0., 0., 0., 0., self.fdbk_k]])
 
     @property
     def obs_radius(self)->np.ndarray:
@@ -187,7 +91,7 @@ class MPCParam():
 
     @obs_radius.setter
     def obs_radius(self, radius: np.ndarray):
-        assert radius.size == self._num_obs
+        assert radius.size == self.num_obs
         self._obs_radius = radius
 
     @property
@@ -196,59 +100,15 @@ class MPCParam():
 
     @obs_pos.setter
     def obs_pos(self, pos: np.ndarray):
-        assert pos.size[0] == self._num_obs and  pos.size[1] == 2
+        assert pos.size[0] == self.num_obs and  pos.size[1] == 2
         self._obs_pos = pos
 
-    @property
-    def backoff_eps(self)->float:
-        return self._backoff_eps
-
-    @property
-    def zoRO_iter(self)->int:
-        return self._zoRO_iter
-
-    @zoRO_iter.setter
-    def zoRO_iter(self, n: int):
-        self._zoRO_iter = n
-
-    @property
-    def use_custom_update(self)->bool:
-        return self._use_custom_update
-
-    @use_custom_update.setter
-    def use_custom_update(self, val: bool):
-        self._use_custom_update = val
 
 @dataclass
 class PathTrackingParam:
-    _nx: int=2
-    _nu: int=1
-    _nu_wT:  int=2
-    _n_hrzn: int=500
-    _v_s_0:  float=0.001
-    _v_s_e: float=0.001
-
-
-    @property
-    def nx(self)->int:
-        return self._nx
-
-    @property
-    def nu(self)->int:
-        return self._nu
-
-    @property
-    def n_hrzn(self)->int:
-        return self._n_hrzn
-
-    @property
-    def nu_wT(self)->int:
-        return self._nu_wT
-
-    @property
-    def v_s_0(self) -> float:
-        return self._v_s_0
-
-    @property
-    def v_s_e(self) -> float:
-        return self._v_s_e
+    nx: int=2
+    nu: int=1
+    nu_wT: int=2
+    n_hrzn: int=500
+    v_s_0: float=0.001
+    v_s_e: float=0.001
