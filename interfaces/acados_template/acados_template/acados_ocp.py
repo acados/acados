@@ -1747,6 +1747,13 @@ class AcadosOcp:
                 self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
                                                           self.cost.Vx_0, self.cost.Vu_0, self.cost.Vz_0,
                                                           yref_0, W_0)
+            self.cost.Vx_0 = np.zeros((0,0))
+            self.cost.Vu_0 = np.zeros((0,0))
+            self.cost.Vz_0 = np.zeros((0,0))
+            self.cost.W_0 = np.zeros((0,0))
+            self.model.cost_y_expr_0 = []
+            self.cost.yref_0 = np.zeros((0,))
+
         elif self.cost.cost_type_0 == "NONLINEAR_LS":
             self.model.cost_expr_ext_cost_0 = \
                 self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_0, yref_0, W_0)
@@ -1754,10 +1761,18 @@ class AcadosOcp:
             if cost_hessian == 'GAUSS_NEWTON':
                 self.model.cost_expr_ext_cost_custom_hess_0 = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr_0, yref_0, W_0, self.model.x, self.model.u, self.model.z)
 
+            self.cost.W_0 = np.zeros((0,0))
+            self.model.cost_y_expr_0 = []
+            self.cost.yref_0 = np.zeros((0,))
+
         elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost_0 = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_0, self.model.cost_psi_expr_0,
                                                             self.model.cost_y_expr_0, yref_0)
+            self.model.cost_r_in_psi_expr_0 = []
+            self.model.cost_psi_expr_0 = []
+            self.model.cost_y_expr_0 = []
+            self.cost.yref_0 = np.zeros((0,))
 
         if self.cost.cost_type_0 is not None:
             self.cost.cost_type_0 = 'EXTERNAL'
@@ -1797,16 +1812,32 @@ class AcadosOcp:
                 self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
                                                           self.cost.Vx, self.cost.Vu, self.cost.Vz,
                                                           yref, W)
+            self.cost.Vx = np.zeros((0,0))
+            self.cost.Vu = np.zeros((0,0))
+            self.cost.Vz = np.zeros((0,0))
+            self.cost.W = np.zeros((0,0))
+            self.model.cost_y_expr = []
+            self.cost.yref = np.zeros((0,))
+
         elif self.cost.cost_type == "NONLINEAR_LS":
             self.model.cost_expr_ext_cost = \
                 self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr, yref, W)
             if cost_hessian == 'GAUSS_NEWTON':
                 self.model.cost_expr_ext_cost_custom_hess = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr, yref, W, self.model.x, self.model.u, self.model.z)
 
+            self.cost.W = np.zeros((0,0))
+            self.model.cost_y_expr = []
+            self.cost.yref = np.zeros((0,))
+
         elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr, self.model.cost_psi_expr,
                                                             self.model.cost_y_expr, yref)
+
+            self.model.cost_r_in_psi_expr = []
+            self.model.cost_psi_expr = []
+            self.model.cost_y_expr = []
+            self.cost.yref = np.zeros((0,))
 
         self.cost.cost_type = 'EXTERNAL'
 
@@ -1844,16 +1875,32 @@ class AcadosOcp:
                 self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
                                                           self.cost.Vx_e, None, None,
                                                           yref_e, W_e)
+
+            self.cost.Vx_e = np.zeros((0,0))
+            self.cost.W_e = np.zeros((0,0))
+            self.model.cost_y_expr_e = []
+            self.cost.yref_e = np.zeros((0,))
+
         elif self.cost.cost_type_e == "NONLINEAR_LS":
             self.model.cost_expr_ext_cost_e = \
                 self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_e, yref_e, W_e)
             if cost_hessian == 'GAUSS_NEWTON':
                 self.model.cost_expr_ext_cost_custom_hess_e = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr_e, yref_e, W_e, self.model.x, [], self.model.z)
 
+            self.cost.W_e = np.zeros((0,0))
+            self.model.cost_y_expr_e = []
+            self.cost.yref_e = np.zeros((0,))
+
         elif self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost_e = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_e, self.model.cost_psi_expr_e,
                                                             self.model.cost_y_expr_e, yref_e)
+
+            self.model.cost_r_in_psi_expr_e = []
+            self.model.cost_psi_expr_e = []
+            self.model.cost_y_expr_e = []
+            self.cost.yref_e = np.zeros((0,))
+
         self.cost.cost_type_e = 'EXTERNAL'
 
 

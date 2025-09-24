@@ -1008,6 +1008,8 @@ class AcadosModel():
             v = getattr(self, k)
             if not isinstance(v, (ca.SX, ca.MX)):
                 model_dict[k] = v
+            else:
+                model_dict[k] = "" # TODO: maybe add some human-readable string representation for debugging
 
         model_dict['serialized_expressions'], model_dict['expression_names'] = self.serialize()
 
