@@ -1006,10 +1006,10 @@ class AcadosModel():
 
         for k, _ in inspect.getmembers(type(self), lambda v: isinstance(v, property)):
             v = getattr(self, k)
-            if not isinstance(v, (ca.SX, ca.MX)):
-                model_dict[k] = v
+            if isinstance(v, (ca.SX, ca.MX)):
+                model_dict[k] = repr(v) # only for debugging
             else:
-                model_dict[k] = "" # TODO: maybe add some human-readable string representation for debugging
+                model_dict[k] = v
 
         model_dict['serialized_expressions'], model_dict['expression_names'] = self.serialize()
 
@@ -1041,8 +1041,8 @@ class AcadosModel():
                 warnings.warn(f"Attribute {attr} not in dictionary.")
             else:
                 try:
-                    # check whether value is not the empty list
-                    if not (isinstance(value, list) and not value):
+                    # check whether value is not the empty list and not a CasADi symbol/expression
+                    if not (isinstance(value, list) and not value) and not attr in expression_names:
                         setattr(model, attr, value)
                 except Exception as e:
                     Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))

@@ -372,6 +372,11 @@ class AcadosMultiphaseOcp:
 
 
     def dump_to_json(self) -> None:
+        """
+        Dumps the OCP description in JSON format to AcadosOcp.json_file.
+
+        NOTE: Please make sure to call `AcadosOcp.make_consistent()` before dumping to json.
+        """
         ocp_nlp_dict = self.to_dict()
         with open(self.json_file, 'w') as f:
             json.dump(ocp_nlp_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
