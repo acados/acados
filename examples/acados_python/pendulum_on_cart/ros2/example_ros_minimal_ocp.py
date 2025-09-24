@@ -49,7 +49,7 @@ def create_minimal_ocp(export_dir: str, N: int = 20, Tf: float = 1.0, Fmax: floa
     # set model
     model = export_pendulum_ode_model()
     ocp.model = model
-    
+
     nx = model.x.rows()
     nu = model.u.rows()
     ny = nx + nu
@@ -114,7 +114,7 @@ def main():
     Fmax = 80
     Tf = 1.0
     N = 20
-    
+
     export_dir = os.path.join(script_dir, 'generated_ocp')
     ocp = create_minimal_ocp(export_dir, N, Tf, Fmax)
     ocp_solver = AcadosOcpSolver(ocp, json_file = str(os.path.join(export_dir, 'acados_ocp.json')))
@@ -137,7 +137,7 @@ def main():
         else:
             status = ocp_solver.solve()
         ocp_solver.print_statistics()
-        residuals = ocp_solver.get_residuals()
+        residuals = ocp_solver.get_residuals(recompute=True)
         print("residuals after ", i, "SQP_RTI iterations:\n", residuals)
         if max(residuals) < tol:
             break
