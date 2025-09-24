@@ -1014,7 +1014,7 @@ void ocp_nlp_ddp_get(void *config_, void *dims_, void *mem_, const char *field, 
 }
 
 
-void ocp_nlp_ddp_opts_get(void *config_, void *dims_, void *opts_,
+void ocp_nlp_ddp_opts_get(void *config_, void *opts_,
                           const char *field, void *return_value_)
 {
     ocp_nlp_ddp_opts *opts = opts_;

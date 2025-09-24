@@ -332,6 +332,7 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_eval_solution_sens_adj_p.restype = None
 
         self.__acados_lib.ocp_nlp_solver_opts_set.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
+        self.__acados_lib.ocp_nlp_solver_opts_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
         self.__acados_lib.ocp_nlp_get.argtypes = [c_void_p, c_char_p, c_void_p]
 
         self.__acados_lib.ocp_nlp_eval_cost.argtypes = [c_void_p, c_void_p, c_void_p]
@@ -2357,6 +2358,30 @@ class AcadosOcpSolver:
             self.__acados_lib.ocp_nlp_solver_opts_set(self.nlp_config, \
                 self.nlp_opts, field, byref(value_ctypes))
         return
+
+
+    def options_get(self, field_: str) -> Union[int, float]:
+        """
+        Get options of the solver.
+
+        :param field: string, possible values are:
+                'as_rti_level', to be extended.
+        """
+        int_fields = ['as_rti_level']
+        if field_ == 'as_rti_level':
+            if self.__solver_options['nlp_solver_type'] != "SQP_RTI":
+                raise ValueError("as_rti_level only available for SQP_RTI")
+
+        if field_ in int_fields:
+            value_ctypes = c_int(0)
+        else:
+            raise RuntimeError(f"Unknown field {field_}")
+
+        field = field_.encode('utf-8')
+        self.__acados_lib.ocp_nlp_solver_opts_get(self.nlp_config, self.nlp_opts, field, byref(value_ctypes))
+
+        return value_ctypes.value
+
 
 
     def set_params_sparse(self, stage_: int, idx_values_: np.ndarray, param_values_):
