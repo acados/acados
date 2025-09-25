@@ -3218,9 +3218,6 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
         // printf("C * lam\n");
         // blasfeo_print_exp_tran_dvec(nu[i] + nx[i], &work->tmp_nv, 0);
     }
-
-    // TODO:
-    // - adjoint call for inequalities as for dynamics
 }
 
 #if defined(ACADOS_DEVELOPER_DEBUG_CHECKS)

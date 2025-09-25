@@ -345,13 +345,81 @@ void ocp_nlp_sqp_work_get(void *config_, void *dims_, void *work_,
 }
 
 
+static bool ocp_nlp_is_kkt_satisfied_after_integrator_update(ocp_nlp_config *config,
+    ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+    ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *nv = dims->nv;
+    ocp_nlp_res *nlp_res = mem->nlp_res;
+
+    /*
+    call integrator, cost, constr. fun + adj.
+    */
+   #if defined(ACADOS_WITH_OPENMP)
+   #pragma omp parallel for
+#endif
+    for (int i=0; i<N; i++)
+    {
+        // dynamics
+        config->dynamics[i]->compute_fun_and_adj(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
+                                        opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+
+        // retrieve function
+        struct blasfeo_dvec *dyn_fun = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
+        blasfeo_dveccp(nx[i + 1], dyn_fun, 0, mem->dyn_fun + i, 0);
+
+        // retrieve adj
+        struct blasfeo_dvec *dyn_adj = config->dynamics[i]->memory_get_adj_ptr(mem->dynamics[i]);
+        blasfeo_dveccp(nu[i] + nx[i], dyn_adj, 0, mem->dyn_adj + i, 0);
+    }
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i=0; i<=N; i++)
+    {
+        // nlp mem: cost_grad
+        config->cost[i]->compute_gradient(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
+        struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
+        blasfeo_dveccp(nv[i], cost_grad, 0, mem->cost_grad + i, 0);
+
+        // constraints: evaluate function and adjoint
+        // TODO: adjoint call for inequalities as for dynamics
+        config->constraints[i]->update_qp_matrices(config->constraints[i], dims->constraints[i], in->constraints[i],
+                                         opts->constraints[i], mem->constraints[i], work->constraints[i]);
+        // retrieve fun
+        struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
+        blasfeo_dveccp(2 * dims->ni[i], ineq_fun, 0, mem->ineq_fun + i, 0);
+
+        // retrieve adj
+        struct blasfeo_dvec *ineq_adj = config->constraints[i]->memory_get_adj_ptr(mem->constraints[i]);
+        blasfeo_dveccp(nv[i], ineq_adj, 0, mem->ineq_adj + i, 0);
+    }
+    // eval residuals,
+    ocp_nlp_res_compute(dims, opts, in, out, nlp_res, mem, work);
+    ocp_nlp_res_get_inf_norm(nlp_res, &out->inf_norm_res);
+
+    // check res again
+    return ((nlp_res->inf_norm_res_stat < opts->tol_stat) &&
+        (nlp_res->inf_norm_res_eq < opts->tol_eq) &&
+        (nlp_res->inf_norm_res_ineq < opts->tol_ineq) &&
+        (nlp_res->inf_norm_res_comp < opts->tol_comp));
+
+}
+
 /************************************************
  * termination criterion
  ************************************************/
-static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts)
+static bool check_termination(ocp_nlp_config *config,
+    ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_sqp_opts *opts,
+    ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_workspace *work)
 {
-    // ocp_nlp_memory *nlp_mem = mem->nlp_mem;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_nlp_res *nlp_res = nlp_mem->nlp_res;
+    int n_iter = nlp_mem->iter;
 
     // check for nans
     if (isnan(nlp_res->inf_norm_res_stat) || isnan(nlp_res->inf_norm_res_eq) ||
@@ -382,6 +450,10 @@ static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_r
         (nlp_res->inf_norm_res_ineq < nlp_opts->tol_ineq) &&
         (nlp_res->inf_norm_res_comp < nlp_opts->tol_comp))
     {
+        if (dims->nz_total > 0)
+        {
+            ocp_nlp_is_kkt_satisfied_after_integrator_update(config, dims, in, out, nlp_opts, nlp_mem, work->nlp_work);
+        }
         mem->nlp_mem->status = ACADOS_SUCCESS;
         if (nlp_opts->print_level > 0)
         {
@@ -636,7 +708,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // Termination
-        if (check_termination(nlp_mem->iter, dims, nlp_res, mem, opts))
+        if (check_termination(config, dims, nlp_in, nlp_out, opts, mem, work))
         {
 #if defined(ACADOS_WITH_OPENMP)
             // restore number of threads
