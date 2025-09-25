@@ -811,6 +811,9 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     // adjoint seed
     for(jj = 0; jj < nx + nu; jj++)
         work->sim_in->S_adj[jj] = 0.0;
+
+    // stage
+    work->sim_in->ocp_stage = config->stage;
     blasfeo_unpack_dvec(nx1, mem->pi, 0, work->sim_in->S_adj, 1);
 
     // call integrator
