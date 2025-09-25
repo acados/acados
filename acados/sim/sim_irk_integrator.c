@@ -932,13 +932,8 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
     struct blasfeo_dmat *dK_dxu = workspace->dK_dxu;
     struct blasfeo_dmat *dK_dxu_ss;
 
-    if (opts->sens_hess){
-        dK_dxu_ss = &dK_dxu[0];
-    }
-    else
-    {
-        dK_dxu_ss = dK_dxu;
-    }
+    dK_dxu_ss = dK_dxu;
+
 
     if (opts->sens_algebraic && !opts->exact_z_output)
     {

@@ -359,15 +359,18 @@ static bool ocp_nlp_is_kkt_satisfied_after_integrator_update(ocp_nlp_config *con
     /*
     call integrator, cost, constr. fun + adj.
     */
-   #if defined(ACADOS_WITH_OPENMP)
+#if defined(ACADOS_WITH_OPENMP)
    #pragma omp parallel for
 #endif
     for (int i=0; i<N; i++)
     {
         // dynamics
-        config->dynamics[i]->compute_fun_and_adj(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
-                                        opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+        // TODO: ideally we would like to call this, but yields segfaults
+        // config->dynamics[i]->compute_fun_and_adj(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
+                                        // opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
 
+        config->dynamics[i]->update_qp_matrices(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
+                                        opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
         // retrieve function
         struct blasfeo_dvec *dyn_fun = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
         blasfeo_dveccp(nx[i + 1], dyn_fun, 0, mem->dyn_fun + i, 0);

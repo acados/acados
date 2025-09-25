@@ -105,13 +105,13 @@ ocp.constraints.idxbu = idxbu;
 const_lh = -1; % current constraint in pu, lower bound
 const_uh = 5; % current constraint in pu, upper bound
 
-x0 = 0.001*ones(nx,1); % initial condition
+x0 = 0.00*ones(nx,1); % initial condition
 ocp.constraints.x0 = x0;
 ocp.model.con_h_expr = x1;
 ocp.constraints.lh = const_lh;
 ocp.constraints.uh = const_uh;
 
-ocp_N = 80;
+ocp_N = 5;
 T = ocp_N*Tpu_sampling; % Prediction horizon in time form for acados
 ocp.solver_options.tf = T;
 ocp.solver_options.N_horizon = ocp_N;
@@ -119,9 +119,10 @@ ocp.solver_options.nlp_solver_type = 'SQP';
 ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
 ocp.solver_options.integrator_type = 'IRK';
 ocp.solver_options.sim_method_num_stages = 2;
-ocp.solver_options.sim_method_num_steps = 1;
+ocp.solver_options.sim_method_num_steps = 10;
 ocp.solver_options.sim_method_newton_tol = 1e-12;
-ocp.solver_options.sim_method_newton_iter = 100;
+ocp.solver_options.sim_method_newton_iter = 20;
+ocp.solver_options.sim_method_exact_z_output = true;
 
 % create solver
 ocp_solver = AcadosOcpSolver(ocp);
@@ -160,7 +161,8 @@ if status~=0
     keyboard
 end
 
-x_traj = ocp_solver.get('x')
+x_traj = ocp_solver.get('x');
+x1 = x_traj(1, 1:end)
 u_traj = ocp_solver.get('u')
 z_traj = ocp_solver.get('z')
 
