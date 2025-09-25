@@ -1028,6 +1028,12 @@ void sim_irk_compute_z_and_algebraic_sens(sim_irk_dims *dims, sim_opts *opts, si
                 // eval polynomial through (c_jj, k_jj) at 0.
                 blasfeo_pack_dvec(1, &interpolated_value, 1, xtdot, ii);
             }
+            if (in->ocp_stage == 0)
+            {
+                printf("sim_irk_compute_z_and_algebraic_sens: output_z %d, sens_hess %d, exact_z_output %d\n", opts->output_z, opts->sens_hess, opts->exact_z_output);
+                printf("xtdot0 =\n");
+                blasfeo_print_exp_tran_dvec(nx, xtdot, 0);
+            }
             // perform extra newton iterations to get xdot0, z0 more precisely.
             for (int ii = 0; ii < opts->newton_iter; ii++)
             {
