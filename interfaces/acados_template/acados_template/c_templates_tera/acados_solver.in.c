@@ -2447,6 +2447,10 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_newton_tol", &newton_tol_val);
 
+    bool sim_method_exact_z_output = (bool) {{ solver_options.sim_method_exact_z_output }};
+    for (int i = 0; i < N; i++)
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_exact_z_output", &sim_method_exact_z_output);
+
     // set up sim_method_jac_reuse
     {%- set all_equal = true %}
     {%- set val = solver_options.sim_method_jac_reuse[0] %}

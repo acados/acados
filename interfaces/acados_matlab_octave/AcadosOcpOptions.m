@@ -56,6 +56,7 @@ classdef AcadosOcpOptions < handle
         sim_method_newton_tol
         sim_method_jac_reuse
         sim_method_detect_gnsf
+        sim_method_exact_z_output
         time_steps
         shooting_nodes
         cost_scaling
@@ -181,6 +182,7 @@ classdef AcadosOcpOptions < handle
             obj.sim_method_newton_iter = 3;
             obj.sim_method_newton_tol = 0.0;
             obj.sim_method_jac_reuse = 0;
+            obj.sim_method_exact_z_output = false;
             obj.time_steps = [];
             obj.Tsim = [];
             obj.qp_solver = 'PARTIAL_CONDENSING_HPIPM';

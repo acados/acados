@@ -64,6 +64,7 @@ class AcadosOcpOptions:
         self.__sim_method_newton_iter = 3
         self.__sim_method_newton_tol = 0.0
         self.__sim_method_jac_reuse = 0
+        self.__sim_method_exact_z_output = False
         self.__shooting_nodes = None
         self.__time_steps = None
         self.__cost_scaling = None
@@ -581,6 +582,15 @@ class AcadosOcpOptions:
         Default: 0
         """
         return self.__sim_method_jac_reuse
+
+    @property
+    def sim_method_exact_z_output(self):
+        """
+        Flag indicating whether z should be computed with Neville interpolation or the Newton iterations.
+        Type: bool.
+        Default: False. (i.e. z is computed with Neville interpolation)
+        """
+        return self.__sim_method_exact_z_output
 
     @property
     def qp_solver_tol_stat(self):
@@ -1818,6 +1828,13 @@ class AcadosOcpOptions:
     @sim_method_jac_reuse.setter
     def sim_method_jac_reuse(self, sim_method_jac_reuse):
         self.__sim_method_jac_reuse = sim_method_jac_reuse
+
+    @sim_method_exact_z_output.setter
+    def sim_method_exact_z_output(self, sim_method_exact_z_output):
+        if isinstance(sim_method_exact_z_output, bool):
+            self.__sim_method_exact_z_output = sim_method_exact_z_output
+        else:
+            raise TypeError('Invalid sim_method_exact_z_output value, expected bool.\n')
 
     @nlp_solver_type.setter
     def nlp_solver_type(self, nlp_solver_type):
