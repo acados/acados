@@ -105,7 +105,7 @@ ocp.constraints.idxbu = idxbu;
 const_lh = -1; % current constraint in pu, lower bound
 const_uh = 5; % current constraint in pu, upper bound
 
-x0 = zeros(nx,1); % initial condition
+x0 = 0.001*ones(nx,1); % initial condition
 ocp.constraints.x0 = x0;
 ocp.model.con_h_expr = x1;
 ocp.constraints.lh = const_lh;
@@ -120,7 +120,8 @@ ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
 ocp.solver_options.integrator_type = 'IRK';
 ocp.solver_options.sim_method_num_stages = 2;
 ocp.solver_options.sim_method_num_steps = 1;
-ocp.solver_options.sim_method_newton_tol = 1e-6;
+ocp.solver_options.sim_method_newton_tol = 1e-12;
+ocp.solver_options.sim_method_newton_iter = 100;
 
 % create solver
 ocp_solver = AcadosOcpSolver(ocp);
@@ -159,11 +160,13 @@ if status~=0
     keyboard
 end
 
-x_traj = ocp_solver.get('x');
-u_traj = ocp_solver.get('u');
-z_traj = ocp_solver.get('z');
+x_traj = ocp_solver.get('x')
+u_traj = ocp_solver.get('u')
+z_traj = ocp_solver.get('z')
 
 xu_product = x_traj(1, 1:end-1) .* u_traj;
 
-max_violation = max(xu_product - z_traj)
-disp(['Max violation of algebraic constraint' max_violation])
+xu_product - z_traj
+
+max_violation = max(abs(xu_product - z_traj));
+disp(['Max violation of algebraic constraint ' num2str(max_violation)])
