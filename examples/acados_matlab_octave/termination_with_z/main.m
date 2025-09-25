@@ -168,7 +168,9 @@ z_traj = ocp_solver.get('z')
 
 xu_product = x_traj(1, 1:end-1) .* u_traj;
 
-xu_product - z_traj
+diff_xu_z = xu_product - z_traj
+% TODO: this works with large num_steps, but should work with smaller too!
+
 
 max_violation = max(abs(xu_product - z_traj));
 disp(['Max violation of algebraic constraint ' num2str(max_violation)])
