@@ -85,6 +85,7 @@ typedef struct
     double T;  // simulation time
     double t0; // initial time (only relevant for time dependent dynamics)
 
+    int ocp_stage; // relevant if integrator is part of OCP solver, for debugging;
 } sim_in;
 
 

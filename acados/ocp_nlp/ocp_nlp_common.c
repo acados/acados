@@ -2980,6 +2980,7 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
     int *nv = dims->nv;
     int *nx = dims->nx;
     int *nu = dims->nu;
+    int *nz = dims->nz;
 
     /* stage-wise multiple shooting lagrangian evaluation */
 #if defined(ACADOS_WITH_OPENMP)
@@ -3000,6 +3001,7 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
             config->dynamics[i]->update_qp_matrices(config->dynamics[i], dims->dynamics[i],
                 in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
         }
+        blasfeo_dveccp(nz[i], mem->z_alg+i, 0, out->z+i, 0);
 
         // cost
         config->cost[i]->update_qp_matrices(config->cost[i], dims->cost[i], in->cost[i],
@@ -3218,9 +3220,6 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
         // printf("C * lam\n");
         // blasfeo_print_exp_tran_dvec(nu[i] + nx[i], &work->tmp_nv, 0);
     }
-
-    // TODO:
-    // - adjoint call for inequalities as for dynamics
 }
 
 #if defined(ACADOS_DEVELOPER_DEBUG_CHECKS)

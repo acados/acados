@@ -406,6 +406,8 @@ static void prepare_full_residual_computation(ocp_nlp_config *config,
 
     for (int i=0; i <= N; i++)
     {
+        // TODO: adjoint call for inequalities as for dynamics
+
         // constraints: evaluate function and adjoint
         config->constraints[i]->update_qp_matrices(config->constraints[i], dims->constraints[i], in->constraints[i],
                                          opts->constraints[i], mem->constraints[i], work->constraints[i]);

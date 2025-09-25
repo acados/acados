@@ -348,10 +348,14 @@ void ocp_nlp_sqp_work_get(void *config_, void *dims_, void *work_,
 /************************************************
  * termination criterion
  ************************************************/
-static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts)
+static bool check_termination(ocp_nlp_config *config,
+    ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_sqp_opts *opts,
+    ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_workspace *work)
 {
-    // ocp_nlp_memory *nlp_mem = mem->nlp_mem;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_nlp_res *nlp_res = nlp_mem->nlp_res;
+    int n_iter = nlp_mem->iter;
 
     // check for nans
     if (isnan(nlp_res->inf_norm_res_stat) || isnan(nlp_res->inf_norm_res_eq) ||
@@ -636,7 +640,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // Termination
-        if (check_termination(nlp_mem->iter, dims, nlp_res, mem, opts))
+        if (check_termination(config, dims, nlp_in, nlp_out, opts, mem, work))
         {
 #if defined(ACADOS_WITH_OPENMP)
             // restore number of threads
