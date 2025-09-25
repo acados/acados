@@ -352,6 +352,7 @@ static bool ocp_nlp_is_kkt_satisfied_after_integrator_update(ocp_nlp_config *con
     int N = dims->N;
     int *nx = dims->nx;
     int *nu = dims->nu;
+    int *nz = dims->nz;
     int *nv = dims->nv;
     ocp_nlp_res *nlp_res = mem->nlp_res;
 
@@ -374,6 +375,10 @@ static bool ocp_nlp_is_kkt_satisfied_after_integrator_update(ocp_nlp_config *con
         // retrieve adj
         struct blasfeo_dvec *dyn_adj = config->dynamics[i]->memory_get_adj_ptr(mem->dynamics[i]);
         blasfeo_dveccp(nu[i] + nx[i], dyn_adj, 0, mem->dyn_adj + i, 0);
+
+        // update z values with latest integrator call
+        // out->z = mem->z_alg
+        blasfeo_dveccp(nz[i], mem->z_alg+i, 0, out->z+i, 0);
     }
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
