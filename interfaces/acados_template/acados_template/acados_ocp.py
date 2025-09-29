@@ -2255,10 +2255,6 @@ class AcadosOcp:
         z = model.z
         p = model.p
 
-        # Check type
-        if not isinstance(x, ca.SX):
-            raise ValueError("Cost type detection only works for casadi.SX!")
-
         nx = casadi_length(x)
         nu = casadi_length(u)
         nz = casadi_length(z)

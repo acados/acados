@@ -39,13 +39,6 @@ function detect_cost_type(model, cost, dims, stage_type)
     z = model.z;
     p = model.p;
 
-    % check type
-    if isa(x, 'casadi.SX')
-        isSX = true;
-    else
-        error('constraint detection only works for casadi.SX!');
-    end
-
     nx = length(x);
     nu = length(u);
     nz = length(z);
