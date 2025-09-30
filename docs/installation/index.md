@@ -55,7 +55,6 @@ Adjust these options based on your requirements.
 | `ACADOS_UNIT_TESTS`            | Compile unit tests                                            | `OFF`             |
 | `ACADOS_EXAMPLES`              | Compile C examples                                              | `OFF`             |
 | `ACADOS_OCTAVE`                | Octave interface CMake tests                         | `OFF`             |
-| `ACADOS_PYTHON`                | Python interface CMake tests (Note: Python interface installation is independent of this)    | `OFF`             |
 | `BUILD_SHARED_LIBS`            | Build shared libraries             | `ON` (non-Windows)|
 <!-- Deprecated, remove everywhere? -->
 <!-- | `ACADOS_LINT`                  | Compile Lint                                                  | `OFF`             | -->

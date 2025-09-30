@@ -162,14 +162,14 @@ class AcadosOcp:
         """Name of the json file where the problem description is stored."""
         return self.__json_file
 
+    @json_file.setter
+    def json_file(self, json_file):
+        self.__json_file = json_file
+        
     @property
     def ros_opts(self) -> Optional[AcadosOcpRosOptions]:
         """Options to configure ROS 2 nodes and topics."""
         return self.__ros_opts
-
-    @json_file.setter
-    def json_file(self, json_file):
-        self.__json_file = json_file
 
     @ros_opts.setter
     def ros_opts(self, ros_opts: AcadosOcpRosOptions):
@@ -1301,7 +1301,7 @@ class AcadosOcp:
 
         # --- Interface Package ---
         ros_interface_dir = os.path.join('ocp_interface_templates')
-        interface_dir = os.path.join(os.path.dirname(self.code_export_directory), f'{self.ros_opts.package_name}_interface')
+        interface_dir = os.path.join(self.ros_opts.generated_code_dir, f'{self.ros_opts.package_name}_interface')
         template_file = os.path.join(ros_interface_dir, 'README.in.md')
         template_list.append((template_file, 'README.md', interface_dir, ros_template_glob))
         template_file = os.path.join(ros_interface_dir, 'CMakeLists.in.txt')
@@ -1320,15 +1320,9 @@ class AcadosOcp:
         template_file = os.path.join(ros_interface_dir, 'ControlInput.in.msg')
         template_list.append((template_file, 'ControlInput.msg', msg_dir, ros_template_glob))
 
-        # Services
-        # TODO: No node implementation yet
-
-        # Actions
-        # TODO: No Template yet and no node implementation
-
         # --- Solver Package ---
         ros_pkg_dir = os.path.join('ocp_node_templates')
-        package_dir = os.path.join(os.path.dirname(self.code_export_directory), self.ros_opts.package_name)
+        package_dir = os.path.join(self.ros_opts.generated_code_dir, self.ros_opts.package_name)
         template_file = os.path.join(ros_pkg_dir, 'README.in.md')
         template_list.append((template_file, 'README.md', package_dir, ros_template_glob))
         template_file = os.path.join(ros_pkg_dir, 'CMakeLists.in.txt')
@@ -1463,6 +1457,10 @@ class AcadosOcp:
 
 
     def dump_to_json(self) -> None:
+        dir_name = os.path.dirname(self.json_file)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
+            
         with open(self.json_file, 'w') as f:
             json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         return
@@ -1581,9 +1579,9 @@ class AcadosOcp:
 
         # convert acados classes to dicts
         for key, v in ocp_dict.items():
-            if isinstance(v, (AcadosModel, AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, ZoroDescription)):
+            if isinstance(v, (AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, ZoroDescription)):
                 ocp_dict[key] = dict(getattr(self, key).__dict__)
-            if isinstance(v, AcadosOcpRosOptions):
+            if isinstance(v, (AcadosOcpRosOptions, AcadosModel)):
                 ocp_dict[key] = v.to_dict()
 
         ocp_dict = format_class_dict(ocp_dict)
@@ -1753,6 +1751,13 @@ class AcadosOcp:
                 self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
                                                           self.cost.Vx_0, self.cost.Vu_0, self.cost.Vz_0,
                                                           yref_0, W_0)
+            self.cost.Vx_0 = np.zeros((0,0))
+            self.cost.Vu_0 = np.zeros((0,0))
+            self.cost.Vz_0 = np.zeros((0,0))
+            self.cost.W_0 = np.zeros((0,0))
+            self.model.cost_y_expr_0 = []
+            self.cost.yref_0 = np.zeros((0,))
+
         elif self.cost.cost_type_0 == "NONLINEAR_LS":
             self.model.cost_expr_ext_cost_0 = \
                 self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_0, yref_0, W_0)
@@ -1760,10 +1765,18 @@ class AcadosOcp:
             if cost_hessian == 'GAUSS_NEWTON':
                 self.model.cost_expr_ext_cost_custom_hess_0 = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr_0, yref_0, W_0, self.model.x, self.model.u, self.model.z)
 
+            self.cost.W_0 = np.zeros((0,0))
+            self.model.cost_y_expr_0 = []
+            self.cost.yref_0 = np.zeros((0,))
+
         elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost_0 = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_0, self.model.cost_psi_expr_0,
                                                             self.model.cost_y_expr_0, yref_0)
+            self.model.cost_r_in_psi_expr_0 = []
+            self.model.cost_psi_expr_0 = []
+            self.model.cost_y_expr_0 = []
+            self.cost.yref_0 = np.zeros((0,))
 
         if self.cost.cost_type_0 is not None:
             self.cost.cost_type_0 = 'EXTERNAL'
@@ -1803,16 +1816,32 @@ class AcadosOcp:
                 self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
                                                           self.cost.Vx, self.cost.Vu, self.cost.Vz,
                                                           yref, W)
+            self.cost.Vx = np.zeros((0,0))
+            self.cost.Vu = np.zeros((0,0))
+            self.cost.Vz = np.zeros((0,0))
+            self.cost.W = np.zeros((0,0))
+            self.model.cost_y_expr = []
+            self.cost.yref = np.zeros((0,))
+
         elif self.cost.cost_type == "NONLINEAR_LS":
             self.model.cost_expr_ext_cost = \
                 self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr, yref, W)
             if cost_hessian == 'GAUSS_NEWTON':
                 self.model.cost_expr_ext_cost_custom_hess = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr, yref, W, self.model.x, self.model.u, self.model.z)
 
+            self.cost.W = np.zeros((0,0))
+            self.model.cost_y_expr = []
+            self.cost.yref = np.zeros((0,))
+
         elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr, self.model.cost_psi_expr,
                                                             self.model.cost_y_expr, yref)
+
+            self.model.cost_r_in_psi_expr = []
+            self.model.cost_psi_expr = []
+            self.model.cost_y_expr = []
+            self.cost.yref = np.zeros((0,))
 
         self.cost.cost_type = 'EXTERNAL'
 
@@ -1850,16 +1879,32 @@ class AcadosOcp:
                 self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
                                                           self.cost.Vx_e, None, None,
                                                           yref_e, W_e)
+
+            self.cost.Vx_e = np.zeros((0,0))
+            self.cost.W_e = np.zeros((0,0))
+            self.model.cost_y_expr_e = []
+            self.cost.yref_e = np.zeros((0,))
+
         elif self.cost.cost_type_e == "NONLINEAR_LS":
             self.model.cost_expr_ext_cost_e = \
                 self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_e, yref_e, W_e)
             if cost_hessian == 'GAUSS_NEWTON':
                 self.model.cost_expr_ext_cost_custom_hess_e = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr_e, yref_e, W_e, self.model.x, [], self.model.z)
 
+            self.cost.W_e = np.zeros((0,0))
+            self.model.cost_y_expr_e = []
+            self.cost.yref_e = np.zeros((0,))
+
         elif self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost_e = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_e, self.model.cost_psi_expr_e,
                                                             self.model.cost_y_expr_e, yref_e)
+
+            self.model.cost_r_in_psi_expr_e = []
+            self.model.cost_psi_expr_e = []
+            self.model.cost_y_expr_e = []
+            self.cost.yref_e = np.zeros((0,))
+
         self.cost.cost_type_e = 'EXTERNAL'
 
 

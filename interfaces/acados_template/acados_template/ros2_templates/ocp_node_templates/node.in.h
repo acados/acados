@@ -2,9 +2,12 @@
 #define {{ ros_opts.node_name | upper }}_H
 
 #include <rclcpp/rclcpp.hpp>
+#include <rcutils/logging.h>
 #include <mutex>
 #include <array>
 #include <vector>
+#include <cmath>
+#include <algorithm>
 #include <unordered_map>
 
 // ROS2 message includes
@@ -32,6 +35,7 @@ namespace {{ ros_opts.package_name }}
 {
 
 {%- set ClassName = ros_opts.node_name | replace(from="_", to=" ") | title | replace(from=" ", to="") %}
+{%- set use_multithreading = ros_opts.threads is defined and ros_opts.threads > 1 %}
 class {{ ClassName }} : public rclcpp::Node {
 private:
     // --- ROS Subscriptions ---
@@ -52,16 +56,23 @@ private:
 
     // --- Acados Solver ---
     {{ model.name }}_solver_capsule *ocp_capsule_;
-    ocp_nlp_config* ocp_nlp_config_;
-    ocp_nlp_dims* ocp_nlp_dims_;
     ocp_nlp_in* ocp_nlp_in_;
     ocp_nlp_out* ocp_nlp_out_;
+    ocp_nlp_out* ocp_nlp_sens_;
+    ocp_nlp_config* ocp_nlp_config_;
     void* ocp_nlp_opts_;
+    ocp_nlp_dims* ocp_nlp_dims_;
+    {%- if use_multithreading %}
+
+    // --- Multithreading ---
+    rclcpp::CallbackGroup::SharedPtr timer_group_;
+    rclcpp::CallbackGroup::SharedPtr services_group_;
+    std::mutex data_mutex_;
+    std::recursive_mutex solver_mutex_;
+    {%- endif %}
 
     // --- Data and States ---
-    std::mutex data_mutex_;
     {{ ClassName }}Config config_;
-
     {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
     bool first_solve_{true};
     {%- endif %}
@@ -100,7 +111,7 @@ private:
     // --- ROS Publisher ---
     void publish_input(const std::array<double, {{ model.name | upper }}_NU>& u0, int status);
 
-    // --- Parameter Handling Methods ---
+    // --- ROS Parameter ---
     void setup_parameter_handlers();
     void declare_parameters();
     void load_parameters();
@@ -136,17 +147,18 @@ private:
         return control_timer_ && !control_timer_->is_canceled();
     }
 
-    // --- Acados Helpers ---
+    // --- Acados Solver ---
     {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
-    void warmstart_solver_states(double *x0);
     int prepare_rti_solve();
     int feedback_rti_solve();
     {%- endif %}
     int ocp_solve();
 
+    // --- Acados Getter ---
     void get_input(double* u, int stage);
     void get_state(double* x, int stage);
 
+    // --- Acados Setter ---
     void set_x0(double* x0);
     {%- if dims.ny_0 > 0 %}
     void set_yref0(double* yref0);
@@ -162,6 +174,15 @@ private:
     void set_ocp_parameter(double* p, size_t np, int stage);
     void set_ocp_parameters(double* p, size_t np);
     {%- endif %}
+    {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
+    void warmstart_solver_states(double *x0);
+    {%- endif %}
+
+    // --- Helpers ---
+    bool check_acados_status(
+        const char* field, 
+        int stage, 
+        int status);
 };
 
 } // namespace {{ ros_opts.package_name }}

@@ -35,6 +35,7 @@ import os
 import shutil
 import sys
 import time
+import warnings
 
 from ctypes import (POINTER, byref, c_char_p, c_double, c_int, c_bool,
                     c_void_p, cast)
@@ -332,6 +333,7 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_eval_solution_sens_adj_p.restype = None
 
         self.__acados_lib.ocp_nlp_solver_opts_set.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
+        self.__acados_lib.ocp_nlp_solver_opts_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
         self.__acados_lib.ocp_nlp_get.argtypes = [c_void_p, c_char_p, c_void_p]
 
         self.__acados_lib.ocp_nlp_eval_cost.argtypes = [c_void_p, c_void_p, c_void_p]
@@ -1709,13 +1711,19 @@ class AcadosOcpSolver:
         Returns an array of the form [res_stat, res_eq, res_ineq, res_comp].
         The residuals has to be computed for SQP_RTI solver, since it is not available by default.
 
+        :param recompute: if True, recompute the residuals with respect to most recent problem data. Note: this can overwrite previous problem linearization in memory which are needed for AS-RTI to work properly!
+
         - res_stat: stationarity residual
         - res_eq: residual wrt equality constraints (dynamics)
         - res_ineq: residual wrt inequality constraints (constraints)
         - res_comp: residual wrt complementarity conditions
         """
         # compute residuals if RTI
-        if self.__solver_options['nlp_solver_type'] == 'SQP_RTI' or recompute:
+        if recompute:
+            if self.__solver_options['nlp_solver_type'] == 'SQP_RTI':
+                as_rti_level = self.options_get('as_rti_level')
+                if as_rti_level != 4: # not standard RTI
+                    warnings.warn(f"Calling get_residuals() with recompute==True for AS-RTI can overwrite previous problem linearization in memory which are needed for AS-RTI to work properly!")
             self.__acados_lib.ocp_nlp_eval_residuals(self.nlp_solver, self.nlp_in, self.nlp_out)
 
         # create output array
@@ -2357,6 +2365,30 @@ class AcadosOcpSolver:
             self.__acados_lib.ocp_nlp_solver_opts_set(self.nlp_config, \
                 self.nlp_opts, field, byref(value_ctypes))
         return
+
+
+    def options_get(self, field_: str) -> Union[int, float]:
+        """
+        Get options of the solver.
+
+        :param field: string, possible values are:
+                'as_rti_level', to be extended.
+        """
+        int_fields = ['as_rti_level']
+        if field_ == 'as_rti_level':
+            if self.__solver_options['nlp_solver_type'] != "SQP_RTI":
+                raise ValueError("as_rti_level only available for SQP_RTI")
+
+        if field_ in int_fields:
+            value_ctypes = c_int(0)
+        else:
+            raise RuntimeError(f"Unknown field {field_}")
+
+        field = field_.encode('utf-8')
+        self.__acados_lib.ocp_nlp_solver_opts_get(self.nlp_config, self.nlp_opts, field, byref(value_ctypes))
+
+        return value_ctypes.value
+
 
 
     def set_params_sparse(self, stage_: int, idx_values_: np.ndarray, param_values_):

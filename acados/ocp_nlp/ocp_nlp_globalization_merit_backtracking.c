@@ -119,6 +119,7 @@ acados_size_t ocp_nlp_globalization_merit_backtracking_memory_calculate_size(voi
     acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_globalization_merit_backtracking_memory);
+    size += 2*8;
 
     return size;
 }

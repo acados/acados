@@ -118,7 +118,7 @@ def main(use_cython=False):
         status = ocp_solver.solve()
         ocp_solver.custom_update(data)
         # ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
-        residuals = ocp_solver.get_residuals()
+        residuals = ocp_solver.get_residuals(recompute=True)
         # print("residuals after ", i, "SQP_RTI iterations:\n", residuals)
         if max(residuals) < tol:
             break

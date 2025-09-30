@@ -125,8 +125,8 @@ def main():
         else:
             status = ocp_solver.solve()
         # ocp_solver.custom_update(np.array([]))
-        ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
-        residuals = ocp_solver.get_residuals()
+        ocp_solver.print_statistics()
+        residuals = ocp_solver.get_residuals(recompute=True)
         print("residuals after ", i, "SQP_RTI iterations:\n", residuals)
         if max(residuals) < tol:
             break
@@ -141,7 +141,7 @@ def main():
         simU[i,:] = ocp_solver.get(i, "u")
     simX[N,:] = ocp_solver.get(N, "x")
 
-    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+    ocp_solver.print_statistics()
 
     cost = ocp_solver.get_cost()
     print("cost function value of solution = ", cost)

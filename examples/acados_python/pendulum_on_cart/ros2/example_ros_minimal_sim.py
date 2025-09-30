@@ -1,5 +1,6 @@
 import numpy as np
-from acados_template import AcadosSim, AcadosSimSolver, AcadosSimRosOptions
+from acados_template import AcadosSim, AcadosSimSolver
+from acados_template.ros2 import AcadosSimRosOptions
 
 import sys
 import os
@@ -9,13 +10,9 @@ sys.path.insert(0, os.path.abspath(common_path))
 from pendulum_model import export_pendulum_ode_model
 
 
-def main():
+def create_minimal_sim(export_dir: str, Tf: float = 0.1):
     sim = AcadosSim()
     sim.model = export_pendulum_ode_model()
-
-    Tf = 0.1
-    nx = sim.model.x.rows()
-    N = 200
 
     # set simulation time
     sim.solver_options.T = Tf
@@ -28,11 +25,22 @@ def main():
 
     sim.ros_opts = AcadosSimRosOptions()
     sim.ros_opts.package_name = "pendulum_on_cart_sim"
+    sim.ros_opts.generated_code_dir = export_dir
+    
+    sim.code_export_directory = str( os.path.join(export_dir, "c_generated_code"))
+    return sim
+    
 
-    export_code = os.path.join(script_dir, 'generated_sim')
-    sim.code_export_directory = str( os.path.join(export_code, "c_generated_code"))
-    acados_integrator = AcadosSimSolver(sim, json_file=str(os.path.join(export_code, 'acados_sim.json')))
+def main():
+    Tf = 0.1
+    N = 200
+    
+    export_dir = os.path.join(script_dir, 'generated_sim')
+    sim = create_minimal_sim(export_dir, Tf)
+    acados_integrator = AcadosSimSolver(sim, json_file=str(os.path.join(export_dir, 'acados_sim.json')))
 
+    nx = sim.model.x.rows()
+    
     x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
     u0 = np.array([0.0])
 

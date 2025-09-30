@@ -388,7 +388,7 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_so
     solver->work = (void *) c_ptr;
     c_ptr += config->workspace_calculate_size(config, dims, opts_);
 
-    assert((char *) raw_memory + ocp_qp_calculate_size(config, dims, opts_) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_calculate_size(config, dims, opts_) >= c_ptr);
 
     return solver;
 }

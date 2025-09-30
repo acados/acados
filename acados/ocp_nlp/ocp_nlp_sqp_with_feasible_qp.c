@@ -213,7 +213,7 @@ void ocp_nlp_sqp_wfqp_opts_set_at_stage(void *config_, void *opts_, size_t stage
 
 
 
-void ocp_nlp_sqp_wfqp_opts_get(void *config_, void *dims_, void *opts_,
+void ocp_nlp_sqp_wfqp_opts_get(void *config_, void *opts_,
                           const char *field, void *return_value_)
 {
     // ocp_nlp_config *config = config_;

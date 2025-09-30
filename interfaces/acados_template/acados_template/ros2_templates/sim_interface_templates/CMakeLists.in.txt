@@ -11,13 +11,13 @@ find_package(rosidl_default_generators REQUIRED)
 
 # --- INTERFACES ---
 set(MSG_FILES
-  "msg/State.msg"
-  "msg/ControlInput.msg"
+    "msg/State.msg"
+    "msg/ControlInput.msg"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  ${MSG_FILES}
-  DEPENDENCIES std_msgs
+    ${MSG_FILES}
+    DEPENDENCIES std_msgs
 )
 
 ament_package()
