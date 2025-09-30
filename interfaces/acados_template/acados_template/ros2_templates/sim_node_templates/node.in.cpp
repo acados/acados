@@ -116,9 +116,14 @@ void {{ ClassName }}::publish_state(const std::array<double, {{ model.name | upp
 
 // --- Parameter Handling Methods ---
 void {{ ClassName }}::setup_parameter_handlers() {
-    parameter_handlers_["{{ ros_opts.package_name }}.ts"] =
+    parameter_handlers_["solver_options.Tsim"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
-            this->config_.ts = p.as_double();
+            this->set_integration_period(p.as_double());
+            // Restart timer with the new period
+            if (!this->is_running()) {
+                // Assumes that the node is not yet ready and that the timer will be started later
+                return;
+            }
             try {
                 this->start_integration_timer(this->config_.ts);
             } catch (const std::exception& e) {
@@ -129,11 +134,11 @@ void {{ ClassName }}::setup_parameter_handlers() {
 }
 
 void {{ ClassName }}::declare_parameters() {
-    this->declare_parameter("{{ ros_opts.package_name }}.ts", {{ solver_options.Tsim }});
+    this->declare_parameter("solver_options.Tsim", {{ solver_options.Tsim }});
 }
 
 void {{ ClassName }}::load_parameters() {
-    this->get_parameter("{{ ros_opts.package_name }}.ts", config_.ts);
+    this->get_parameter("solver_options.Tsim", config_.ts);
 }
 
 rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(
@@ -191,8 +196,34 @@ rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(
 
 
 // --- Helpers ---
+void {{ ClassName }}::set_integration_period(double period_seconds) {
+    if (config_.ts == period_seconds) {
+        // Nothing to do
+        return;
+    }
+    RCLCPP_INFO_STREAM(
+        this->get_logger(), "update integration period 'Ts' = " << period_seconds << "s");
+    this->config_.ts = period_seconds;
+    // Check period validity
+    if (this->config_.ts <= 0.0) {
+        this->config_.ts = 0.02;
+        RCLCPP_WARN(this->get_logger(),
+            "Integration period must be positive, defaulting to 0.02s.");
+    }
+    // Update sim solver integration time
+    this->set_t_sim(this->config_.ts);
+}
+
 void {{ ClassName }}::start_integration_timer(double period_seconds) {
-    if (period_seconds <= 0.0) period_seconds = 0.02;
+    this->set_integration_period(period_seconds);
+    // if timer already exists, restart with new period
+    if (this->is_running()) {
+        RCLCPP_WARN(this->get_logger(), "Integration timer already running, restarting...");
+        integration_timer_->cancel();
+    }
+    RCLCPP_INFO_STREAM(this->get_logger(),
+        "Starting integration loop with period " << period_seconds << "s.");
+    // create timer
     auto period = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::duration<double>(period_seconds));
     integration_timer_ = this->create_wall_timer(
@@ -218,6 +249,9 @@ void {{ ClassName }}::set_u(double* u) {
     sim_in_set(sim_config_, sim_dims_, sim_in_, "u", u);
 }
 
+void {{ ClassName }}::set_t_sim(double T_sim) {
+    sim_in_set(sim_config_, sim_dims_, sim_in_, "T", &T_sim);
+}
 } // namespace {{ ros_opts.package_name }}
 
 
