@@ -116,7 +116,7 @@ void {{ ClassName }}::publish_state(const std::array<double, {{ model.name | upp
 
 // --- Parameter Handling Methods ---
 void {{ ClassName }}::setup_parameter_handlers() {
-    parameter_handlers_["{{ ros_opts.package_name }}.solver_options.Tsim"] =
+    parameter_handlers_["solver_options.Tsim"] =
         [this](const rclcpp::Parameter& p, rcl_interfaces::msg::SetParametersResult& res) {
             this->set_integration_period(p.as_double());
             // Restart timer with the new period
@@ -134,11 +134,11 @@ void {{ ClassName }}::setup_parameter_handlers() {
 }
 
 void {{ ClassName }}::declare_parameters() {
-    this->declare_parameter("{{ ros_opts.package_name }}.solver_options.Tsim", {{ solver_options.Tsim }});
+    this->declare_parameter("solver_options.Tsim", {{ solver_options.Tsim }});
 }
 
 void {{ ClassName }}::load_parameters() {
-    this->get_parameter("{{ ros_opts.package_name }}.solver_options.Tsim", config_.ts);
+    this->get_parameter("solver_options.Tsim", config_.ts);
 }
 
 rcl_interfaces::msg::SetParametersResult {{ ClassName }}::on_parameter_update(

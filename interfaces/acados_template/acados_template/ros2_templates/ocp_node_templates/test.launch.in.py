@@ -64,7 +64,7 @@ class GeneratedNodeTest(unittest.TestCase):
         """
         {%- for field, param in constraints %}
         {%- if param and ((field is starting_with('l')) or (field is starting_with('u'))) and ('bx_0' not in field) %}
-        param_name = "{{ ros_opts.package_name }}.constraints.{{ field }}"
+        param_name = "constraints.{{ field }}"
         expected_value = [{{- param | join(sep=', ') -}}]
         self.__check_parameter_set(param_name, expected_value)
         {%- endif %}
@@ -77,7 +77,7 @@ class GeneratedNodeTest(unittest.TestCase):
         # --- Weights ---
         {%- for field, param in cost %}
         {%- if param and (field is starting_with('W')) %}
-        param_name = "{{ ros_opts.package_name }}.cost.{{ field }}"
+        param_name = "cost.{{ field }}"
         expected_value = [
         {%- set n_diag = param | length -%}
         {%- for i in range(end=n_diag) -%}
@@ -94,7 +94,7 @@ class GeneratedNodeTest(unittest.TestCase):
         {%- for field, param in cost %}
         {%- set field_l = field | lower %}
         {%- if param and (field_l is starting_with('z')) %}
-        param_name = "{{ ros_opts.package_name }}.cost.{{ field }}"
+        param_name = "cost.{{ field }}"
         expected_value = [{{- param | join(sep=', ') -}}]
         self.__check_parameter_set(param_name, expected_value)
         {%- endif %}
@@ -106,7 +106,7 @@ class GeneratedNodeTest(unittest.TestCase):
         Test if solver options compile-time declared default parameters.
         """
         # --- Solver Options ---
-        param_name = "{{ ros_opts.package_name }}.ts"
+        param_name = "ts"
         expected_value = {{ solver_options.Tsim }}
         self.__check_parameter_set(param_name, expected_value)
 
@@ -117,7 +117,7 @@ class GeneratedNodeTest(unittest.TestCase):
         {%- if dims.np > 0 %}
         self.wait_for_subscription('{{ parameters_topic }}')
         {%- endif %}
-        
+
     def test_publishing(self, proc_info):
         """Test if the node publishes to all expected topics."""
         self.wait_for_publisher('{{ control_topic }}')
