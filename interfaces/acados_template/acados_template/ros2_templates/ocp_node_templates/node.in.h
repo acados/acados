@@ -180,8 +180,8 @@ private:
 
     // --- Helpers ---
     bool check_acados_status(
-        const char* field, 
-        int stage, 
+        const char* field,
+        int stage,
         int status);
 };
 
