@@ -432,7 +432,12 @@ def J_to_idx_slack(J):
 def ns_from_idxs_rev(idxs_rev) -> int:
     if is_empty(idxs_rev):
         return 0
-    return int(np.max(idxs_rev) + 1)
+    else:
+        ns = int(np.max(idxs_rev) + 1)
+        for i in range(ns):
+            if i not in idxs_rev:
+                raise ValueError(f"Detected ns = {ns}, but i is not in idxs_rev = {idxs_rev}, the slack with index {i} is thus not contained in the problem.")
+        return ns
 
 def check_if_nparray_and_flatten(val, name) -> np.ndarray:
     if not isinstance(val, np.ndarray):
