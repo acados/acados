@@ -58,7 +58,7 @@ def export_double_integrator_model(dim_q, dt) -> AcadosModel:
 
     return model
 
-def main():
+def main(soften_h=False, qp_solver='FULL_CONDENSING_QPOASES'):
     # Horizon definition
     N = 20 # Number of time intervals
     Tf = 1.0 # Duration
@@ -143,15 +143,33 @@ def main():
     ocp.constraints.idxbu = np.arange(nu)
 
     # Set nonlinear constraint sizes and bounds
-    ocp.dims.nh = h_expr.shape[0]
     ocp.constraints.lh = h_lb
     ocp.constraints.uh = h_ub
+
+    # soften h using idxs_rev
+    if soften_h:
+        ocp.constraints.idxs_rev = np.array([-1, 0])
+        ocp.cost.zl = np.array([1.0])
+        ocp.cost.zu = np.array([1.0])
+        ocp.cost.Zl = np.array([1.0])
+        ocp.cost.Zu = np.array([1.0])
+
+        # also at terminal node:
+        # copy constraint
+        ocp.model.con_h_expr_e = ocp.model.con_h_expr
+        ocp.constraints.lh_e = ocp.constraints.lh
+        ocp.constraints.uh_e = ocp.constraints.uh
+        # soften
+        ocp.constraints.idxs_rev_e = np.array([0])
+        ocp.cost.zl_e = np.array([1.0])
+        ocp.cost.zu_e = np.array([1.0])
+        ocp.cost.Zl_e = np.array([1.0])
+        ocp.cost.Zu_e = np.array([1.0])
 
     multiphase_ocp.set_phase(ocp, phase_idx)
 
     # Set options
-    multiphase_ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
-    multiphase_ocp.solver_options.qp_solver_cond_N = N
+    multiphase_ocp.solver_options.qp_solver = qp_solver
     multiphase_ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     multiphase_ocp.solver_options.nlp_solver_type = 'SQP'
     multiphase_ocp.solver_options.tf = Tf
@@ -163,8 +181,9 @@ def main():
     ocp_solver = AcadosOcpSolver(multiphase_ocp, json_file = 'acados_ocp.json')
 
     status = ocp_solver.solve()
-    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+    ocp_solver.print_statistics()
     assert status == 0, f'acados returned status {status}'
 
 if __name__ == '__main__':
     main()
+    main(qp_solver="FULL_CONDENSING_HPIPM", soften_h=True)
