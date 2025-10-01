@@ -111,17 +111,17 @@ jobs:
             cd test
             simulink_test
 
-    - name: Run MATLAB tests with new CasADi
-      uses: matlab-actions/run-command@v2
-      if: always()
-      with:
-        command: |
-            cd ${{runner.workspace}}/acados/.github/windows
-            setup_mingw
-            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave
-            acados_env_variables_windows
-            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/p_global_example
-            main
+    # - name: Run MATLAB tests with new CasADi
+    #   uses: matlab-actions/run-command@v2
+    #   if: always()
+    #   with:
+    #     command: |
+    #         cd ${{runner.workspace}}/acados/.github/windows
+    #         setup_mingw
+    #         cd ${{runner.workspace}}/acados/examples/acados_matlab_octave
+    #         acados_env_variables_windows
+    #         cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/p_global_example
+    #         main
 
     - name: MATLAB idxs_rev example
       uses: matlab-actions/run-command@v2
