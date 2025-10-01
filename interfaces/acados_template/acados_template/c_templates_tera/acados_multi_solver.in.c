@@ -1158,9 +1158,9 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, i
     idxs_rev_0[{{ i }}] = {{ constraints_0.idxs_rev_0[i] }};
     {%- endfor %}
 
-    double* lus_0 = calloc(2*NS0, sizeof(double));
+    double* lus_0 = calloc(2*{{ dims_0.ns_0 }}, sizeof(double));
     double* ls_0 = lus_0;
-    double* us_0 = lus_0 + NS0;
+    double* us_0 = lus_0 + {{ dims_0.ns_0 }};
     {%- for i in range(end=dims_0.ns_0) %}
         {%- if constraints_0.ls_0[i] != 0 %}
     ls_0[{{ i }}] = {{ constraints_0.ls_0[i] }};
@@ -1772,9 +1772,9 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, i
     idxs_rev[{{ i }}] = {{ constraints[jj].idxs_rev[i] }};
     {%- endfor %}
 
-    double* lus = calloc(2*NS0, sizeof(double));
+    double* lus = calloc(2*{{ phases_dims[jj].ns }}, sizeof(double));
     double* ls = lus;
-    double* us = lus + NS0;
+    double* us = lus + {{ phases_dims[jj].ns }};
     {%- for i in range(end=phases_dims[jj].ns) %}
         {%- if constraints[jj].ls[i] != 0 %}
     ls[{{ i }}] = {{ constraints[jj].ls[i] }};
@@ -2122,9 +2122,9 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, i
     idxs_rev_e[{{ i }}] = {{ constraints_e.idxs_rev_e[i] }};
     {%- endfor %}
 
-    double* lus_e = calloc(2*NSN, sizeof(double));
+    double* lus_e = calloc(2*{{ dims_e.ns_e }}, sizeof(double));
     double* ls_e = lus_e;
-    double* us_e = lus_e + NSN;
+    double* us_e = lus_e + {{ dims_e.ns_e }};
     {%- for i in range(end=dims_e.ns_e) %}
         {%- if constraints_e.ls_e[i] != 0 %}
     ls_e[{{ i }}] = {{ constraints_e.ls_e[i] }};
