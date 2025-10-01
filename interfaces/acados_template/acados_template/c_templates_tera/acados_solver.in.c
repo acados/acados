@@ -1918,9 +1918,9 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     idxs_rev[{{ i }}] = {{ constraints.idxs_rev[i] }};
     {%- endfor %}
 
-    double* lus = calloc(2*NS0, sizeof(double));
+    double* lus = calloc(2*NS, sizeof(double));
     double* ls = lus;
-    double* us = lus + NS0;
+    double* us = lus + NS;
     {%- for i in range(end=dims.ns) %}
         {%- if constraints.ls[i] != 0 %}
     ls[{{ i }}] = {{ constraints.ls[i] }};
