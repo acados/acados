@@ -115,7 +115,6 @@ void ocp_qp_xcond_solver_config_initialize_from_plan(
 #endif
 #ifdef ACADOS_WITH_CLARABEL
         case PARTIAL_CONDENSING_CLARABEL:
-            printf("initializing clarabel QP solver\n");
             ocp_qp_xcond_solver_config_initialize_default(solver_config);
             ocp_qp_clarabel_config_initialize_default(solver_config->qp_solver);
             ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
