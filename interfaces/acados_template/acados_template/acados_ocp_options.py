@@ -168,6 +168,20 @@ class AcadosOcpOptions:
         """QP solver to be used in the NLP solver.
         String in ('PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP', 'FULL_CONDENSING_DAQP').
         Default: 'PARTIAL_CONDENSING_HPIPM'.
+
+        QP solver statuses are mapped to the acados status definitions.
+
+        For HPIPM the status values are mapped as below
+        | HPIPM status | acados status |
+        |------------------------------|
+        | .....
+
+
+        For qpOASES the status values are mapped as below
+        | qpOASES status | acados status |
+        |------------------------------|
+        | SUCCESSFUL_RETURN | ACADOS_SUCCESS |
+
         """
         return self.__qp_solver
 

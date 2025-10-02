@@ -369,6 +369,7 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
 
     // check exit conditions
     int acados_status = mem->status;
+    // TODO: use HPIPM enums instead of integers
     if (mem->status == 0) acados_status = ACADOS_SUCCESS;
     if (mem->status == 1) acados_status = ACADOS_MAXITER;
     if (mem->status == 2) acados_status = ACADOS_MINSTEP;

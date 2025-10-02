@@ -784,6 +784,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     int acados_status = qpoases_status;
     if (qpoases_status == SUCCESSFUL_RETURN) acados_status = ACADOS_SUCCESS;
     if (qpoases_status == RET_MAX_NWSR_REACHED) acados_status = ACADOS_MAXITER;
+    if( RET_INIT_FAILED_INFEASIBILITY) 
     return acados_status;
 }
 
