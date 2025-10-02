@@ -434,7 +434,15 @@ jobs:
       shell: bash
       run: |
         source ${{ github.workspace }}/acadosenv/bin/activate
-        python test_osqp.py
+        python test_qp_solver.py --qp_solver=PARTIAL_CONDENSING_OSQP
+
+    - name: python_CLARABEL_test
+      if: env.ACADOS_WITH_CLARABEL == 'ON'
+      working-directory: ${{ github.workspace }}/examples/acados_python/tests
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python test_qp_solver.py --qp_solver=PARTIAL_CONDENSING_CLARABEL
 
 
   python_interface_new_casadi_and_py2octave:
