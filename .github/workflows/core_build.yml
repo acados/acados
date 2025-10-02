@@ -63,6 +63,7 @@ jobs:
             'CMakeLists.txt',
             'cmake/**/*.cmake',
             'acados/**',
+            '.github/workflows/core_build.yml',
             'interfaces/acados_c/**'
           ) }}
 
