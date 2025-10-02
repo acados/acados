@@ -1299,6 +1299,12 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, i
     double* lsphi;
     double* usphi;
 
+    // slacks idxs_rev
+    int* idxs_rev;
+    double* lus;
+    double* ls;
+    double* us;
+
 {%- for jj in range(end=n_phases) %}{# phases loop !#}
 
     /*********************
@@ -1767,14 +1773,14 @@ void {{ name }}_acados_create_setup_nlp_in({{ name }}_solver_capsule* capsule, i
 {% set_global n_idxs_rev = constraints[jj].idxs_rev | length %}
 {% if n_idxs_rev > 0 %}
     {% set ni_no_s = phases_dims[jj].nbu + phases_dims[jj].nbx + phases_dims[jj].ng + phases_dims[jj].nh + phases_dims[jj].nphi %}
-    int* idxs_rev = malloc( {{ ni_no_s }} * sizeof(int));
+    idxs_rev = malloc( {{ ni_no_s }} * sizeof(int));
     {%- for i in range(end=ni_no_s) %}
     idxs_rev[{{ i }}] = {{ constraints[jj].idxs_rev[i] }};
     {%- endfor %}
 
-    double* lus = calloc(2*{{ phases_dims[jj].ns }}, sizeof(double));
-    double* ls = lus;
-    double* us = lus + {{ phases_dims[jj].ns }};
+    lus = calloc(2*{{ phases_dims[jj].ns }}, sizeof(double));
+    ls = lus;
+    us = lus + {{ phases_dims[jj].ns }};
     {%- for i in range(end=phases_dims[jj].ns) %}
         {%- if constraints[jj].ls[i] != 0 %}
     ls[{{ i }}] = {{ constraints[jj].ls[i] }};
