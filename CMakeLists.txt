@@ -93,7 +93,6 @@ option(ACADOS_WITH_OSQP "OSQP solver" OFF)
 option(ACADOS_WITH_CLARABEL "Clarabel solver" OFF)
 # Interfaces
 option(ACADOS_OCTAVE "Octave Interface tests" OFF)
-option(ACADOS_PYTHON "Python Interface tests" OFF)
 # Options to use libraries found via find_package
 option(ACADOS_WITH_SYSTEM_BLASFEO "If ON, use blasfeo found via find_package(blasfeo) instead of compiling it" OFF)
 mark_as_advanced(ACADOS_WITH_SYSTEM_BLASFEO)
@@ -267,7 +266,7 @@ if(ACADOS_LINT)
     endif()
 endif()
 
-if(ACADOS_OCTAVE OR ACADOS_PYTHON)
+if(ACADOS_OCTAVE)
     add_subdirectory(${PROJECT_SOURCE_DIR}/interfaces)
 endif()
 

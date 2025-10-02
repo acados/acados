@@ -9,270 +9,586 @@ on:
     branches:
       - '*'
 
-env:
-  BUILD_TYPE: Release
-  ACADOS_PYTHON: ON
-  ACADOS_OCTAVE: ON
-  ACADOS_WITH_OSQP: ON
-  ACADOS_WITH_QPOASES: ON
-  ACADOS_WITH_DAQP: ON
-  ACADOS_WITH_CLARABEL: ON
-  ACADOS_WITH_QPDUNES: ON
-  ACADOS_ON_CI: ON
-
 jobs:
-  core_build:
+  call_core_build:
+    uses: ./.github/workflows/core_build.yml
+
+
+# ===== PYTHON TESTS =====
+  python_basic_tests:
+    needs: call_core_build
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
       with:
         submodules: 'recursive'
 
-    - name: Create Build Environment
-      working-directory: ${{runner.workspace}}
-      run: cmake -E make_directory ${{runner.workspace}}/acados/build
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
+      with:
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
 
-    - name: Install Eigen3, for clarabel
-      run: sudo apt-get update && sudo apt-get install -y libeigen3-dev
+    - name: Setup Python Environment
+      uses: ./.github/actions/setup-python-environment
 
-    - name: Configure CMake
-      shell: bash
-      working-directory: ${{runner.workspace}}/acados/build
-      run: |
-        cmake --version
-        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_WITH_CLARABEL=$ACADOS_WITH_CLARABEL -DACADOS_PYTHON=$ACADOS_PYTHON -DACADOS_OCTAVE=OFF -DACADOS_WITH_OPENMP=ON -DACADOS_NUM_THREADS=1
-
-    - name: Build & Install
-      working-directory: ${{runner.workspace}}/acados/build
+    - name: Getting started examples
+      working-directory: ${{ github.workspace }}/examples/acados_python/getting_started
       shell: bash
       run: |
-        cmake --build . --config $BUILD_TYPE
-        make install -j4
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python minimal_example_closed_loop.py
+        python minimal_example_sim.py
+        python minimal_example_ocp.py
 
-    - name: Store shared libs (/lib)
-      uses: actions/upload-artifact@v4
-      with:
-        name: lib
-        if-no-files-found: error
-        path: ${{runner.workspace}}/acados/lib/
-        compression-level: 0
-        overwrite: true
+    - name: Getting started examples
+      working-directory: ${{ github.workspace }}/examples/acados_python/getting_started
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python minimal_example_closed_loop.py
+        python minimal_example_sim.py
+        python minimal_example_ocp.py
 
-    - name: Store build scripts (/build)
-      uses: actions/upload-artifact@v4
-      with:
-        name: build
-        if-no-files-found: error
-        path: |
-          ${{runner.workspace}}/acados/build/
-          !${{runner.workspace}}/**/*.dir
-        compression-level: 0
-        overwrite: true
-        # exclude object files in .dir directories
+    - name: tests
+      working-directory: ${{ github.workspace }}/examples/acados_python/tests
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python reset_test.py
+        python static_lib_test.py
+        python test_cython_ctypes.py
+        python main_test.py
+        python test_detect_constraints.py
+        python test_cost_integration_euler.py
+        python test_cost_integration_value.py
+        python armijo_test.py
+        python pcond_getters_test.py
+        python test_nan_globalization.py
 
-    - name: Store include directory (/include)
-      uses: actions/upload-artifact@v4
-      with:
-        name: include
-        if-no-files-found: error
-        path: ${{runner.workspace}}/acados/include/
-        compression-level: 0
-        overwrite: true
+    - name: tests pt. 2
+      working-directory: ${{ github.workspace }}/examples/acados_python/tests
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python soft_constraint_test.py
+        python test_parametric_nonlinear_constraint_h.py
+        python test_sim_dae.py
+        python sparse_param_test.py
+        python regularization_test.py
+        python one_sided_constraints_test.py
 
-  python_interface:
-    needs: core_build
+    - name: time varying examples
+      working-directory: ${{ github.workspace }}/examples/acados_python/time_varying
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python test_time_varying_irk.py
+        python test_polynomial_controls_and_penalties.py
+        python test_mocp_qp.py
+
+    - name: pendulum MHE
+      working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/mhe
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python minimal_example_mhe.py
+        python minimal_example_mhe_with_noisy_param.py
+        python minimal_example_mhe_with_param.py
+        python closed_loop_mhe_ocp.py
+
+
+    - name: chain
+      working-directory: ${{ github.workspace }}/examples/acados_python/chain_mass
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main.py
+        python minimal_example_sim.py
+
+
+  py_ocp_tests:
+    needs: call_core_build
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
       with:
         submodules: 'recursive'
 
-    - uses: actions/download-artifact@v4
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
       with:
-        path: ${{runner.workspace}}/acados
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
 
-    - name: Export Paths
-      working-directory: ${{runner.workspace}}/acados
+    - name: Setup Python Environment
+      uses: ./.github/actions/setup-python-environment
+
+    - name: pendulum OCP
+      working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ocp
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python minimal_example_ocp_cmake.py
+        python nonuniform_discretization_example.py
+        python example_sqp_rti_loop.py
+        python simulink_example.py
+        python ocp_example_h_init_contraints.py
+        python slack_min_formulation.py
+        python minimal_example_ocp_reuse_code.py
+        python example_optimal_value_derivative.py
+        python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=IRK
+        python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=ERK --QP_SOLVER=PARTIAL_CONDENSING_QPDUNES
+        python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=GNSF
+        python time_optimal_swing_up.py
+        python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE DISCRETE --BUILD_SYSTEM cmake
 
-    - name: Install Python interface
-      working-directory: ${{runner.workspace}}/acados
-      shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_python.sh''
-
-    - name: Install Tera
-      working-directory: ${{runner.workspace}}/acados
-      shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_tera.sh
-
-    - name: Run CMake python tests (ctest)
-      working-directory: ${{runner.workspace}}/acados/build
+    - name: AcadosCasadi
+      working-directory: ${{ github.workspace }}/examples/acados_python/casadi_tests
       shell: bash
       run: |
-        source ${{runner.workspace}}/acados/acadosenv/bin/activate
-        ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python test_casadi_get_set.py
+        python test_casadi_parametric.py
+        python test_casadi_p_in_constraint_and_cost.py
+        python test_casadi_constraint.py
+        python test_casadi_slack_in_h.py
+        python test_casadi_single_shooting.py
+        python test_casadi_LICQ_violation.py
+        python test_casadi_closed_loop.py
+
+  py_non_ocp:
+    needs: call_core_build
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
+      with:
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
+
+    - name: Setup Python Environment
+      uses: ./.github/actions/setup-python-environment
+
+    - name: dense NLPs
+      working-directory: ${{ github.workspace }}/examples/acados_python/non_ocp_nlp
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python maratos_test_problem.py
+        python adaptive_eps_reg_test.py
+        python qpscaling_test.py
+
+
+  py_real_examples:
+    needs: call_core_build
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
+      with:
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
+
+    - name: Setup Python Environment
+      uses: ./.github/actions/setup-python-environment
+
+    - name: pmsm
+      working-directory: ${{ github.workspace }}/examples/acados_python/pmsm_example
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main.py
+
+    - name: rsm
+      working-directory: ${{ github.workspace }}/examples/acados_python/rsm_example
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main.py
+
+    - name: quadrotor_nav
+      working-directory: ${{ github.workspace }}/examples/acados_python/quadrotor_nav
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main.py
+
+    - name: race_cars
+      working-directory: ${{ github.workspace }}/examples/acados_python/race_cars
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main.py
+
+  py_ddp_and_globalization:
+    needs: call_core_build
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
+      with:
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
+
+    - name: Setup Python Environment
+      uses: ./.github/actions/setup-python-environment
+
+    - name: DDP
+      working-directory: ${{ github.workspace }}/examples/acados_python/unconstrained_ocps/linear_dynamics_qp_ocp
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python acados_unconstrained_QP.py
+
+    - name: DDP Chen Allgöwer
+      working-directory: ${{ github.workspace }}/examples/acados_python/unconstrained_ocps/chen_allgoewer_unconstrained_ocp
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python chen_allgoewer_ocp.py
+
+    - name: Hour Glass P2P Motion
+      working-directory: ${{ github.workspace }}/examples/acados_python/unconstrained_ocps/hour_glass_p2p_motion
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python hour_glass_time_optimal_p2p_motion.py
+
+    - name: DDP Rockit Hello World
+      working-directory: ${{ github.workspace }}/examples/acados_python/unconstrained_ocps/rockit_hello_world
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python rockit_hello_world_ocp.py
+
+    # globalization
+    - name: Hock-Schittkowsky
+      working-directory: ${{ github.workspace }}/examples/acados_python/hock_schittkowsky
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python hs015_test.py
+        python hs016_test.py
+        python hs074_constraint_scaling.py
+        python hs099.py
+
+
+  python_cmake_tests:
+    needs: call_core_build
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
+      with:
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
+
+    - name: Setup Python Environment
+      uses: ./.github/actions/setup-python-environment
+
+    - name: python_custom_update_example
+      working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/custom_update
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python example_custom_rti_loop.py
+
+    - name: python_as_rti_example
+      working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/as_rti
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python as_rti_closed_loop_example.py
+
+    - name: python_fast_zoro_example
+      working-directory: ${{ github.workspace }}/examples/acados_python/zoRO_example
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python pendulum_on_cart/minimal_example_zoro.py
+
+    - name: python_zoro_diff_drive_example
+      working-directory: ${{ github.workspace }}/examples/acados_python/zoRO_example
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python diff_drive/main.py
+
+    - name: python_convex_ocp_with_onesided_constraints
+      working-directory: ${{ github.workspace }}/examples/acados_python/convex_ocp_with_onesided_constraints
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main_convex_onesided.py
+
+    - name: python_pendulum_ext_sim_example
+      working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/sim
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python extensive_example_sim.py
+
+    - name: cython_pendulum_closed_loop_example
+      working-directory: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python cython_example_closed_loop.py
+
+    - name: py_time_optimal_cython_ctypes
+      working-directory: ${{ github.workspace }}/examples/acados_python/crane
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python time_optimal_example.py
+
+    - name: python_test_generic_impl_dyn
+      working-directory: ${{ github.workspace }}/examples/acados_python/generic_impl_dyn
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python minimal_example_ocp_generic_impl_dyn.py
+
+    - name: python_test_reset_timing
+      working-directory: ${{ github.workspace }}/examples/acados_python/timing_example
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python reset_timing.py
+
+    - name: py_sqp_wfqp_linear_problem_obstacle_avoidance
+      working-directory: ${{ github.workspace }}/examples/acados_python/linear_mass_model
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python sqp_wfqp_test.py
+
+    - name: py_sqp_wfqp_inconsistent_linearization
+      working-directory: ${{ github.workspace }}/examples/acados_python/inconsistent_qp_linearization
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python inconsistent_qp_linearization_test.py
+
+    - name: python_convex_test_problem_globalization
+      working-directory: ${{ github.workspace }}/examples/acados_python/convex_problem_globalization_needed
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python convex_problem_globalization_necessary.py
+
+    - name: python_max_iter_termination_test
+      working-directory: ${{ github.workspace }}/examples/acados_python/max_iter_test
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python max_iter_test.py
+
+    - name: python_OCP_maratos_test_problem_globalization
+      working-directory: ${{ github.workspace }}/examples/acados_python/linear_mass_model
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python linear_mass_test_problem.py
+
+    - name: py_qpscaling_slacked
+      working-directory: ${{ github.workspace }}/examples/acados_python/linear_mass_model
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python test_qpscaling_slacked.py
+
+    - name: python_multiphase_nonlinear_constraints
+      working-directory: ${{ github.workspace }}/examples/acados_python/multiphase_nonlinear_constraints
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python main.py
+
+    - name: python_OSQP_test
+      if: env.ACADOS_WITH_OSQP == 'ON'
+      working-directory: ${{ github.workspace }}/examples/acados_python/tests
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python test_osqp.py
+
 
   python_interface_new_casadi_and_py2octave:
-    needs: core_build
+    needs: call_core_build
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
       with:
         submodules: 'recursive'
 
-    - uses: actions/download-artifact@v4
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
       with:
-        path: ${{runner.workspace}}/acados
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
 
-    - name: Export Paths
-      working-directory: ${{runner.workspace}}/acados
-      shell: bash
-      run: |
-        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
-
-    - name: Install Python interface
-      working-directory: ${{runner.workspace}}/acados
-      shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_python.sh''
-
-    - name: Install Tera
-      working-directory: ${{runner.workspace}}/acados
-      shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_tera.sh
+    - name: Setup Python Environment
+      uses: ./.github/actions/setup-python-environment
 
     - name: Install simde
-      working-directory: ${{runner.workspace}}/acados
+      working-directory: ${{ github.workspace }}
       shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_simde.sh''
+      run: ${{ github.workspace }}/.github/linux/install_simde.sh
 
     # - name: Install new CasADi Python
-    #   working-directory: ${{runner.workspace}}/acados
+    #   working-directory: ${{ github.workspace }}
     #   shell: bash
-    #   run: ${{runner.workspace}}/acados/.github/linux/install_new_casadi_python.sh''
+    #   run: ${{ github.workspace }}/.github/linux/install_new_casadi_python.sh
 
     - name: Prepare Octave
-      working-directory: ${{runner.workspace}}/acados/external
+      working-directory: ${{ github.workspace }}/external
       shell: bash
       run: |
         sudo apt-get update
         sudo apt-get install liboctave-dev -y --fix-missing
         octave --version
-        ${{runner.workspace}}/acados/.github/linux/install_new_casadi_octave.sh
+        ${{ github.workspace }}/.github/linux/install_new_casadi_octave.sh
 
     # just needed for blasfeo_target.h in MEX interface
     - name: Configure CMake
       shell: bash
-      working-directory: ${{runner.workspace}}/acados/build
+      working-directory: ${{ github.workspace }}/build
       run: |
         cmake --version
-        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_WITH_CLARABEL=OFF -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_WITH_CLARABEL=$ACADOS_WITH_CLARABEL -DACADOS_OCTAVE=OFF
 
     - name: Export Paths for octave
-      working-directory: ${{runner.workspace}}/acados
+      working-directory: ${{ github.workspace }}
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+        ${{ github.workspace }}/.github/linux/export_paths.sh ${{ github.workspace }}
 
     - name: Run Python tests that need new CasADi & test py2matlab
-      working-directory: ${{runner.workspace}}/acados/build
+      working-directory: ${{ github.workspace }}/build
       shell: bash
       run: |
-        source ${{runner.workspace}}/acados/acadosenv/bin/activate
-        cd ${{runner.workspace}}/acados/examples/acados_python/p_global_example
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        cd ${{ github.workspace }}/examples/acados_python/p_global_example
         python example_p_global.py
         echo "\nPython run done; testing OCP tranfer to Octave\n"
         octave code_reuse_py2matlab.m
 
     - name: Run Python to Octave sim transfer test
-      working-directory: ${{runner.workspace}}/acados/build
+      working-directory: ${{ github.workspace }}/build
       shell: bash
       run: |
-        source ${{runner.workspace}}/acados/acadosenv/bin/activate
-        cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/sim
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        cd ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/sim
         python minimal_example_sim_cmake.py
         echo "\nPython run done; testing SIM tranfer to Octave\n"
         octave code_reuse_py2matlab_sim.m
 
     - name: Run more Python tests
-      working-directory: ${{runner.workspace}}/acados/build
+      working-directory: ${{ github.workspace }}/build
       shell: bash
       run: |
-        source ${{runner.workspace}}/acados/acadosenv/bin/activate
-        cd ${{runner.workspace}}/acados/examples/acados_python/tests
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        cd ${{ github.workspace }}/examples/acados_python/tests
         python test_rti_sqp_residuals.py
-        cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/ocp
+        python test_serialize.py
+        cd ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ocp
         python test_casadi_formulation.py
 
     - name: Python sensitivity examples
-      working-directory: ${{runner.workspace}}/acados/build
+      working-directory: ${{ github.workspace }}/build
       shell: bash
       run: |
-        source ${{runner.workspace}}/acados/acadosenv/bin/activate
-        cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/solution_sensitivities
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        cd ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/solution_sensitivities
         python value_gradient_example.py
         python policy_gradient_example.py
         python test_solution_sens_and_exact_hess.py
         python forw_vs_adj_param_sens.py
         python smooth_policy_gradients.py
-        cd ${{runner.workspace}}/acados/examples/acados_python/solution_sensitivities_convex_example
+        cd ${{ github.workspace }}/examples/acados_python/solution_sensitivities_convex_example
         python value_gradient_example_linear.py
         python batch_adjoint_solution_sensitivity_example.py
         python non_ocp_example.py
-        cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart/ocp
+        cd ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ocp
         python initialization_test.py
         python ocp_example_cost_formulations.py
-        cd ${{runner.workspace}}/acados/examples/acados_python/pendulum_on_cart
+        cd ${{ github.workspace }}/examples/acados_python/pendulum_on_cart
         python example_solution_sens_closed_loop.py
-        cd ${{runner.workspace}}/acados/examples/acados_python/chain_mass/
+        cd ${{ github.workspace }}/examples/acados_python/chain_mass/
         python solution_sensitivity_example.py
 
 
 
     - name: Python Furuta pendulum timeout test
-      working-directory: ${{runner.workspace}}/acados/build
+      working-directory: ${{ github.workspace }}/build
       shell: bash
       run: |
-        source ${{runner.workspace}}/acados/acadosenv/bin/activate
-        cd ${{runner.workspace}}/acados/examples/acados_python/furuta_pendulum
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        cd ${{ github.workspace }}/examples/acados_python/furuta_pendulum
         python main_closed_loop.py
         python convergence_experiment.py
 
     - name: Python evaluator test
-      working-directory: ${{runner.workspace}}/acados/build
+      working-directory: ${{ github.workspace }}/build
       shell: bash
       run: |
-        source ${{runner.workspace}}/acados/acadosenv/bin/activate
-        cd ${{runner.workspace}}/acados/examples/acados_python/evaluation
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        cd ${{ github.workspace }}/examples/acados_python/evaluation
         python minimal_example_evaluation.py
 
+
+# ===== MATLAB TESTS =====
   MATLAB_test:
-    needs: core_build
+    needs: call_core_build
     runs-on: ubuntu-22.04
+
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
       with:
         submodules: 'recursive'
 
-    - uses: actions/download-artifact@v4
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
       with:
-        path: ${{runner.workspace}}/acados
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
 
     - name: Install Casadi MATLAB
-      working-directory: ${{runner.workspace}}/acados/external
+      working-directory: ${{ github.workspace }}/external
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/install_new_casadi_matlab.sh
+        ${{ github.workspace }}/.github/linux/install_new_casadi_matlab.sh
 
     - name: Export Paths
-      working-directory: ${{runner.workspace}}/acados
+      working-directory: ${{ github.workspace }}
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+        ${{ github.workspace }}/.github/linux/export_paths.sh ${{ github.workspace }}
 
     - name: Install MATLAB
       uses: matlab-actions/setup-matlab@v2
@@ -284,16 +600,16 @@ jobs:
     # just needed for blasfeo_target.h in MEX interface
     - name: Configure CMake
       shell: bash
-      working-directory: ${{runner.workspace}}/acados/build
+      working-directory: ${{ github.workspace }}/build
       run: |
         cmake --version
-        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP  -DACADOS_WITH_CLARABEL=OFF -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_WITH_CLARABEL=$ACADOS_WITH_CLARABEL -DACADOS_OCTAVE=OFF
 
     - name: Configure MATLAB workspace
       shell: bash
-      working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
+      working-directory: ${{ github.workspace }}/examples/acados_matlab_octave/test
       run: |
-        cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
+        cd ${{ github.workspace }}/examples/acados_matlab_octave/test
         source env.sh
 
     - name: Run MATLAB tests
@@ -301,36 +617,40 @@ jobs:
       if: always()
       with:
         command: |
-            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; run_matlab_tests
+            cd ${{ github.workspace }}/examples/acados_matlab_octave/test; run_matlab_tests
+
 
   MATLAB_examples_new_casadi:
-    needs: core_build
+    needs: call_core_build
     runs-on: ubuntu-22.04
+
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
       with:
         submodules: 'recursive'
 
-    - uses: actions/download-artifact@v4
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
       with:
-        path: ${{runner.workspace}}/acados
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
 
     - name: Install Casadi MATLAB
-      working-directory: ${{runner.workspace}}/acados/external
+      working-directory: ${{ github.workspace }}/external
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/install_new_casadi_matlab.sh
+        ${{ github.workspace }}/.github/linux/install_new_casadi_matlab.sh
 
     - name: Install simde
-      working-directory: ${{runner.workspace}}/acados
+      working-directory: ${{ github.workspace }}
       shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_simde.sh''
+      run: ${{ github.workspace }}/.github/linux/install_simde.sh''
 
     - name: Export Paths
-      working-directory: ${{runner.workspace}}/acados
+      working-directory: ${{ github.workspace }}
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+        ${{ github.workspace }}/.github/linux/export_paths.sh ${{ github.workspace }}
 
     - name: Install MATLAB
       uses: matlab-actions/setup-matlab@v2
@@ -343,16 +663,16 @@ jobs:
     # just needed for blasfeo_target.h in MEX interface
     - name: Configure CMake
       shell: bash
-      working-directory: ${{runner.workspace}}/acados/build
+      working-directory: ${{ github.workspace }}/build
       run: |
         cmake --version
-        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP  -DACADOS_WITH_CLARABEL=OFF -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_WITH_CLARABEL=$ACADOS_WITH_CLARABEL -DACADOS_OCTAVE=OFF
 
     - name: Configure MATLAB workspace
       shell: bash
-      working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
+      working-directory: ${{ github.workspace }}/examples/acados_matlab_octave/test
       run: |
-        cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
+        cd ${{ github.workspace }}/examples/acados_matlab_octave/test
         source env.sh
 
     - name: Run MATLAB tests
@@ -360,38 +680,42 @@ jobs:
       if: always()
       with:
         command: |
-            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; run_matlab_examples_new_casadi
+            cd ${{ github.workspace }}/examples/acados_matlab_octave/test; run_matlab_examples_new_casadi
 
     - name: Run Simulink MOCP test
       uses: matlab-actions/run-command@v2
       if: always()
       with:
-        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/mocp_transition_example; main_mocp_simulink
+        command: cd ${{ github.workspace }}/examples/acados_matlab_octave/mocp_transition_example; main_mocp_simulink
+
 
   # run selected matlab examples
   MATLAB_examples:
-    needs: core_build
+    needs: call_core_build
     runs-on: ubuntu-22.04
+
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
       with:
         submodules: 'recursive'
 
-    - uses: actions/download-artifact@v4
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
       with:
-        path: ${{runner.workspace}}/acados
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
 
     - name: Install Casadi MATLAB
-      working-directory: ${{runner.workspace}}/acados/external
+      working-directory: ${{ github.workspace }}/external
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/install_casadi_matlab.sh
+        ${{ github.workspace }}/.github/linux/install_casadi_matlab.sh
 
     - name: Export Paths
-      working-directory: ${{runner.workspace}}/acados
+      working-directory: ${{ github.workspace }}
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+        ${{ github.workspace }}/.github/linux/export_paths.sh ${{ github.workspace }}
 
     - name: Install MATLAB
       uses: matlab-actions/setup-matlab@v2
@@ -404,16 +728,16 @@ jobs:
     # just needed for blasfeo_target.h in MEX interface
     - name: Configure CMake
       shell: bash
-      working-directory: ${{runner.workspace}}/acados/build
+      working-directory: ${{ github.workspace }}/build
       run: |
         cmake --version
-        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_WITH_CLARABEL=OFF -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_WITH_CLARABEL=$ACADOS_WITH_CLARABEL -DACADOS_OCTAVE=OFF
 
     - name: Configure MATLAB workspace
       shell: bash
-      working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
+      working-directory: ${{ github.workspace }}/examples/acados_matlab_octave/test
       run: |
-        cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
+        cd ${{ github.workspace }}/examples/acados_matlab_octave/test
         source env.sh
 
     - name: Run MATLAB examples
@@ -421,32 +745,36 @@ jobs:
       if: always()
       with:
         command: |
-              cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; test_all_examples;
+              cd ${{ github.workspace }}/examples/acados_matlab_octave/test; test_all_examples;
 
+
+# ===== SIMULINK TESTS =====
   simulink_test:
-    needs: core_build
+    needs: call_core_build
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
       with:
         submodules: 'recursive'
 
-    - uses: actions/download-artifact@v4
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
       with:
-        path: ${{runner.workspace}}/acados
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
 
     - name: Install Casadi MATLAB
-      working-directory: ${{runner.workspace}}/acados/external
+      working-directory: ${{ github.workspace }}/external
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/install_casadi_matlab.sh
+        ${{ github.workspace }}/.github/linux/install_casadi_matlab.sh
 
     - name: Export Paths
-      working-directory: ${{runner.workspace}}/acados
+      working-directory: ${{ github.workspace }}
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+        ${{ github.workspace }}/.github/linux/export_paths.sh ${{ github.workspace }}
 
     - name: Install MATLAB
       uses: matlab-actions/setup-matlab@v2
@@ -459,88 +787,140 @@ jobs:
     # just needed for blasfeo_target.h in MEX interface
     - name: Configure CMake
       shell: bash
-      working-directory: ${{runner.workspace}}/acados/build
+      working-directory: ${{ github.workspace }}/build
       run: |
         cmake --version
-        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP  -DACADOS_WITH_CLARABEL=OFF -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_WITH_CLARABEL=$ACADOS_WITH_CLARABEL -DACADOS_OCTAVE=OFF
 
     - name: Run Simulink closed-loop test
       uses: matlab-actions/run-command@v2
       if: always()
       with:
-        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_test
+        command: cd ${{ github.workspace }}/examples/acados_matlab_octave/test; simulink_test
 
     - name: Run Simulink initialization test
       uses: matlab-actions/run-command@v2
       if: always()
       with:
-        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_init_test
+        command: cd ${{ github.workspace }}/examples/acados_matlab_octave/test; simulink_init_test
 
     - name: Run Simulink QP test
       uses: matlab-actions/run-command@v2
       if: always()
       with:
-        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_qp_test
+        command: cd ${{ github.workspace }}/examples/acados_matlab_octave/test; simulink_qp_test
 
     - name: Run Simulink slack test
       uses: matlab-actions/run-command@v2
       if: always()
       with:
-        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_slack_test
+        command: cd ${{ github.workspace }}/examples/acados_matlab_octave/test; simulink_slack_test
 
     - name: Run Simulink parameter test
       uses: matlab-actions/run-command@v2
       if: always()
       with:
-        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_param_test
+        command: cd ${{ github.workspace }}/examples/acados_matlab_octave/test; simulink_param_test
 
     - name: Run Simulink sparse parameter test
       uses: matlab-actions/run-command@v2
       if: always()
       with:
-        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_sparse_param_test
+        command: cd ${{ github.workspace }}/examples/acados_matlab_octave/test; simulink_sparse_param_test
 
 
   octave_test:
-    needs: core_build
+    needs: call_core_build
     runs-on: ubuntu-22.04
 
     steps:
-
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
       with:
         submodules: 'recursive'
 
-    - uses: actions/download-artifact@v4
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
       with:
-        path: ${{runner.workspace}}/acados
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
 
     - name: Prepare Octave
-      working-directory: ${{runner.workspace}}/acados/external
+      working-directory: ${{ github.workspace }}/external
       shell: bash
       run: |
         sudo apt-get update
         sudo apt-get install liboctave-dev -y --fix-missing
         octave --version
-        ${{runner.workspace}}/acados/.github/linux/install_new_casadi_octave.sh
+        ${{ github.workspace }}/.github/linux/install_new_casadi_octave.sh
 
     - name: Install Tera
-      working-directory: ${{runner.workspace}}/acados
+      working-directory: ${{ github.workspace }}
       shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_tera.sh''
+      run: ${{ github.workspace }}/.github/linux/install_tera.sh''
 
     - name: Export Paths
-      working-directory: ${{runner.workspace}}/acados
+      working-directory: ${{ github.workspace }}
       shell: bash
       run: |
-        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+        ${{ github.workspace }}/.github/linux/export_paths.sh ${{ github.workspace }}
 
     - name: Configure CMake
       shell: bash
-      working-directory: ${{runner.workspace}}/acados/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP  -DACADOS_WITH_CLARABEL=OFF -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=$ACADOS_OCTAVE
+      working-directory: ${{ github.workspace }}/build
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_WITH_CLARABEL=$ACADOS_WITH_CLARABEL -DACADOS_OCTAVE=$ACADOS_OCTAVE
 
     - name: Run CMake Octave tests (ctest)
-      working-directory: ${{runner.workspace}}/acados/build
+      working-directory: ${{ github.workspace }}/build
       shell: bash
       run: ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
+
+
+# ===== ROS TESTS =====
+  ros2_humble_test:
+    needs: call_core_build
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - name: Install ROS2 Humble
+      working-directory: ${{ github.workspace }}
+      run: ${{ github.workspace }}/.github/linux/install_ros2_humble.sh
+      shell: bash
+
+    - name: Setup Test Environment
+      uses: ./.github/actions/setup-test-environment
+      with:
+        artifact-name-prefix: ${{ needs.call_core_build.outputs.artifact-name-prefix }}
+
+    - name: Setup Python Environment
+      uses: ./.github/actions/setup-python-environment
+
+    - name: Test ROS2 OCP Package
+      uses: ./.github/actions/test-ros2-package
+      with:
+        python-file-path: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_minimal_ocp.py
+        source-file-paths: |
+          ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/common/pendulum_model.py
+          ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/common/utils.py
+
+    - name: Test ROS2 Simulation Package
+      uses: ./.github/actions/test-ros2-package
+      with:
+        python-file-path: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_minimal_sim.py
+        source-file-paths: |
+          ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/common/pendulum_model.py
+
+    - name: Test ROS2 Mapper Package
+      uses: ./.github/actions/test-ros2-package
+      with:
+        python-file-path: ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_minimal_sim.py
+        source-file-paths: |
+          ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/common/pendulum_model.py
+          ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/common/utils.py
+          ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_minimal_sim.py
+          ${{ github.workspace }}/examples/acados_python/pendulum_on_cart/ros2/example_ros_minimal_ocp.py
+          

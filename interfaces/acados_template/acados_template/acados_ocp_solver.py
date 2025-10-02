@@ -35,6 +35,7 @@ import os
 import shutil
 import sys
 import time
+import warnings
 
 from ctypes import (POINTER, byref, c_char_p, c_double, c_int, c_bool,
                     c_void_p, cast)
@@ -90,7 +91,10 @@ class AcadosOcpSolver:
         return self.__shared_lib
 
     @classmethod
-    def generate(cls, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, simulink_opts=None, cmake_builder: CMakeBuilder = None, verbose=True):
+    def generate(cls, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp],
+                 json_file: str,
+                 simulink_opts: Optional[dict]=None,
+                 cmake_builder: Optional[CMakeBuilder] = None, verbose=True):
         """
         Generates the code for an acados OCP solver, given the description in acados_ocp.
 
@@ -161,7 +165,7 @@ class AcadosOcpSolver:
                 make_cmd = 'make'
 
             if with_cython:
-                verbose_system_call([make_cmd, 'clean_all'], verbose)
+                verbose_system_call([make_cmd, 'clean_ocp_cython'], verbose)
                 verbose_system_call([make_cmd, 'ocp_cython'], verbose)
             else:
                 if cmake_builder is not None:
@@ -305,7 +309,7 @@ class AcadosOcpSolver:
         self.__qp_constraint_fields = {'C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu'}
         self.__qp_constraint_int_fields = {'idxs', 'idxb', 'idxs_rev'}
         self.__qp_pc_hpipm_fields = {'P', 'K', 'Lr', 'p'}
-        self.__qp_pc_fields = {'pcond_Q', 'pcond_R', 'pcond_S'}
+        self.__qp_pc_fields = {'pcond_Q', 'pcond_R', 'pcond_S', 'pcond_A', 'pcond_B', 'pcond_b', 'pcond_q', 'pcond_r', 'pcond_C', 'pcond_D', 'pcond_lg', 'pcond_ug', 'pcond_lbx', 'pcond_ubx', 'pcond_lbu', 'pcond_ubu'}
         self.__all_qp_fields = self.__qp_dynamics_fields | self.__qp_cost_fields | self.__qp_constraint_fields | self.__qp_constraint_int_fields | self.__qp_pc_hpipm_fields | self.__qp_pc_fields
 
         self.__relaxed_qp_dynamics_fields = {f'relaxed_{field}' for field in self.__qp_dynamics_fields}
@@ -329,6 +333,7 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_eval_solution_sens_adj_p.restype = None
 
         self.__acados_lib.ocp_nlp_solver_opts_set.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
+        self.__acados_lib.ocp_nlp_solver_opts_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
         self.__acados_lib.ocp_nlp_get.argtypes = [c_void_p, c_char_p, c_void_p]
 
         self.__acados_lib.ocp_nlp_eval_cost.argtypes = [c_void_p, c_void_p, c_void_p]
@@ -1706,13 +1711,19 @@ class AcadosOcpSolver:
         Returns an array of the form [res_stat, res_eq, res_ineq, res_comp].
         The residuals has to be computed for SQP_RTI solver, since it is not available by default.
 
+        :param recompute: if True, recompute the residuals with respect to most recent problem data. Note: this can overwrite previous problem linearization in memory which are needed for AS-RTI to work properly!
+
         - res_stat: stationarity residual
         - res_eq: residual wrt equality constraints (dynamics)
         - res_ineq: residual wrt inequality constraints (constraints)
         - res_comp: residual wrt complementarity conditions
         """
         # compute residuals if RTI
-        if self.__solver_options['nlp_solver_type'] == 'SQP_RTI' or recompute:
+        if recompute:
+            if self.__solver_options['nlp_solver_type'] == 'SQP_RTI':
+                as_rti_level = self.options_get('as_rti_level')
+                if as_rti_level != 4: # not standard RTI
+                    warnings.warn(f"Calling get_residuals() with recompute==True for AS-RTI can overwrite previous problem linearization in memory which are needed for AS-RTI to work properly!")
             self.__acados_lib.ocp_nlp_eval_residuals(self.nlp_solver, self.nlp_in, self.nlp_out)
 
         # create output array
@@ -2071,7 +2082,7 @@ class AcadosOcpSolver:
 
         Note:
         - additional supported fields are ['P', 'K', 'Lr'], which can be extracted form QP solver PARTIAL_CONDENSING_HPIPM.
-        - for PARTIAL_CONDENSING_* QP solvers, the following additional fields are available: ['pcond_Q', 'pcond_R', 'pcond_S']
+        - for PARTIAL_CONDENSING_* QP solvers, the following additional fields are available: ['pcond_Q', 'pcond_R', 'pcond_S', 'pcond_A', 'pcond_B', 'pcond_b', 'pcond_q', 'pcond_r', 'pcond_C', 'pcond_D', 'pcond_lg', 'pcond_ug', 'pcond_lbx', 'pcond_ubx', 'pcond_lbu', 'pcond_ubu']
         """
         if not isinstance(stage_, int):
             raise TypeError("stage should be int")
@@ -2086,8 +2097,13 @@ class AcadosOcpSolver:
                 raise ValueError(f"field {field_} only works for PARTIAL_CONDENSING_HPIPM QP solver with qp_solver_cond_N == N.")
             if field_ in ["P", "K", "p"] and stage_ == 0 and self.__nbxe_0 > 0:
                 raise ValueError(f"getting field {field_} at stage 0 only works without x0 elimination (see nbxe_0).")
-        if field_ in self.__qp_pc_fields and not self.__solver_options["qp_solver"].startswith("PARTIAL_CONDENSING"):
-            raise ValueError(f"field {field_} only works for PARTIAL_CONDENSING QP solvers.")
+        if field_ in self.__qp_pc_fields:
+            if not self.__solver_options["qp_solver"].startswith("PARTIAL_CONDENSING"):
+                raise ValueError(f"field {field_} only works for PARTIAL_CONDENSING QP solvers.")
+            if field_.split("_", 1)[1] in self.__qp_dynamics_fields and stage_ >= self.__solver_options["qp_solver_cond_N"]:
+                raise ValueError(f"dynamics field {field_} not available at last stage of partial condensing")
+            elif stage_ > self.__solver_options["qp_solver_cond_N"]:
+                raise ValueError(f"stage should be <= qp_solver_cond_N for partial condensing fields")
         if field_ in self.__all_relaxed_qp_fields and not self.__solver_options["nlp_solver_type"] == "SQP_WITH_FEASIBLE_QP":
             raise ValueError(f"field {field_} only works for SQP_WITH_FEASIBLE_QP nlp_solver_type.")
 
@@ -2114,7 +2130,7 @@ class AcadosOcpSolver:
         # call getter
         self.__acados_lib.ocp_nlp_get_at_stage(self.nlp_solver, stage, field, out_data_p)
 
-        if field_ in ["Q", "R", "relaxed_Q", "relaxed_R"]:
+        if field_.endswith(("Q", "R")):
             # make symmetric: copy lower triangular part to upper triangular part
             out = np.tril(out) + np.tril(out, -1).T
 
@@ -2349,6 +2365,30 @@ class AcadosOcpSolver:
             self.__acados_lib.ocp_nlp_solver_opts_set(self.nlp_config, \
                 self.nlp_opts, field, byref(value_ctypes))
         return
+
+
+    def options_get(self, field_: str) -> Union[int, float]:
+        """
+        Get options of the solver.
+
+        :param field: string, possible values are:
+                'as_rti_level', to be extended.
+        """
+        int_fields = ['as_rti_level']
+        if field_ == 'as_rti_level':
+            if self.__solver_options['nlp_solver_type'] != "SQP_RTI":
+                raise ValueError("as_rti_level only available for SQP_RTI")
+
+        if field_ in int_fields:
+            value_ctypes = c_int(0)
+        else:
+            raise RuntimeError(f"Unknown field {field_}")
+
+        field = field_.encode('utf-8')
+        self.__acados_lib.ocp_nlp_solver_opts_get(self.nlp_config, self.nlp_opts, field, byref(value_ctypes))
+
+        return value_ctypes.value
+
 
 
     def set_params_sparse(self, stage_: int, idx_values_: np.ndarray, param_values_):

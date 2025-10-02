@@ -49,9 +49,8 @@ def formulate_ocp(using_soft_constraints=True):
 
     nx = model.x.rows()
     nu = model.u.rows()
-    
-    # set prediction horizon
 
+    # set prediction horizon
     ocp.solver_options.N_horizon = N_horizon
     ocp.solver_options.tf = Tf
 
@@ -135,8 +134,7 @@ def formulate_ocp(using_soft_constraints=True):
 
 def main():
     ocp = formulate_ocp()
-    N = ocp.solver_options.N_horizon
-    
+
     # create solver
     ocp_solver = AcadosOcpSolver(ocp, verbose=False)
     # solve OCP

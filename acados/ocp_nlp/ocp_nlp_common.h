@@ -108,7 +108,7 @@ typedef struct ocp_nlp_config
     void (*config_initialize_default)(void *config);
     // general getter
     void (*get)(void *config_, void *dims, void *mem_, const char *field, void *return_value_);
-    void (*opts_get)(void *config_, void *dims, void *opts_, const char *field, void *return_value_);
+    void (*opts_get)(void *config_, void *opts_, const char *field, void *return_value_);
     void (*work_get)(void *config_, void *dims, void *work_, const char *field, void *return_value_);
     //
     void (*terminate)(void *config, void *mem, void *work);

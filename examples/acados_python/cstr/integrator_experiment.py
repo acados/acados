@@ -29,8 +29,6 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-# authors: Katrin Baumgaertner, Jonathan Frey
-
 from cstr_model import CstrParameters, setup_cstr_model
 from setup_acados_ocp_solver import MpcCstrParameters
 from setup_acados_integrator import setup_acados_integrator

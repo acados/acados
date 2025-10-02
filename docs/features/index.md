@@ -8,7 +8,7 @@ If you are new to `acados`, we highly recommend you to start with the `getting_s
 ### Getting started with Model Predictive Control
 In particular, the **closed-loop** examples are a great starting point to develop model predictive control (MPC) in a simulation.
 Here, an OCP solver (`AcadosOcpSolver`) is used to compute the control inputs and an integrator (`AcadosSimSolver`) is used to simulate the real system.
-- [Python](https://github.com/acados/acados/blob/main/examples/acados_python/getting_started/minimal_example_closed_loop.py)
+- Python: [minimal](https://github.com/acados/acados/blob/main/examples/acados_python/getting_started/minimal_example_closed_loop.py), [with real-time algorithms](https://github.com/acados/acados/blob/main/examples/acados_python/pendulum_on_cart/as_rti/as_rti_closed_loop_example.py)
 - [MATLAB/Octave](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/getting_started/minimal_example_closed_loop.m)
 
 ## Simulation and Sensitivity propagation

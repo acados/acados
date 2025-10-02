@@ -207,6 +207,7 @@ acados_size_t dense_qp_daqp_memory_calculate_size(void *config_, dense_qp_dims *
     int m = dims->nv + dims->ng + dims->ne;
     int ms = dims->nv;
     int nb = dims->nb;
+    int ng = dims->ng;
     int ns = dims->ns;
 
     acados_size_t size = sizeof(dense_qp_daqp_memory);
@@ -215,6 +216,7 @@ acados_size_t dense_qp_daqp_memory_calculate_size(void *config_, dense_qp_dims *
 
     size += nb * 2 * sizeof(c_float); // lb_tmp & ub_tmp
     size += nb * 1 * sizeof(int); // idbx
+    size += (nb + ng) * sizeof(int); // idxs_rev
     size += n *  1 * sizeof(int); // idxv_to_idxb;
     size += ns * 1 * sizeof(int); // idbs
     size += m  * 1 * sizeof(int); // idxdaqp_to_idxs;
@@ -355,6 +357,7 @@ void *dense_qp_daqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     int m = dims->nv + dims->ng + dims->ne;
     int ms = dims->nv;
     int nb = dims->nb;
+    int ng = dims->ng;
     int ns = dims->ns;
 
     // char pointer
@@ -379,6 +382,10 @@ void *dense_qp_daqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
 
     mem->idxb = (int *) c_ptr;
     c_ptr += nb * 1 * sizeof(int);
+
+    mem->idxs_rev = (int *) c_ptr;
+    c_ptr += (nb + ng) * sizeof(int);
+
 
     mem->idxv_to_idxb = (int *) c_ptr;
     c_ptr += n * 1 * sizeof(int);
@@ -489,7 +496,7 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
         work->qp->A+nv*ng, work->qp->bupper+nv+ng,  // equalities
         idxb, lb_tmp, ub_tmp,  // bounds
         work->qp->A, work->qp->blower+nv, work->qp->bupper+nv,  // general linear constraints
-        mem->Zl, mem->Zu, mem->zl, mem->zu, idxs, mem->d_ls, mem->d_us  // slacks
+        mem->Zl, mem->Zu, mem->zl, mem->zu, idxs, mem->idxs_rev, mem->d_ls, mem->d_us  // slacks
     );
 
     // printf("\nDAQP: matrix A\n");

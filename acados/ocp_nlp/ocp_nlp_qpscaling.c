@@ -170,6 +170,7 @@ acados_size_t ocp_nlp_qpscaling_memory_calculate_size(ocp_nlp_qpscaling_dims *di
     acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_qpscaling_memory);
+    size += 8;
 
     if (opts->scale_qp_objective != NO_OBJECTIVE_SCALING ||
         opts->scale_qp_constraints != NO_CONSTRAINT_SCALING)
@@ -181,6 +182,7 @@ acados_size_t ocp_nlp_qpscaling_memory_calculate_size(ocp_nlp_qpscaling_dims *di
     // constraints_scaling_vec
     if (opts->scale_qp_constraints)
     {
+        size += 32;
         size += (N + 1) * sizeof(struct blasfeo_dvec);  // constraints_scaling_vec
         for (i = 0; i <= N; i++)
         {
@@ -205,6 +207,8 @@ void *ocp_nlp_qpscaling_memory_assign(ocp_nlp_qpscaling_dims *dims, void *opts_,
     ocp_nlp_qpscaling_memory *mem = (ocp_nlp_qpscaling_memory *) c_ptr;
     c_ptr += sizeof(ocp_nlp_qpscaling_memory);
 
+    align_char_to(8, &c_ptr);
+
     mem->status = ACADOS_SUCCESS;
 
     if (opts->scale_qp_objective != NO_OBJECTIVE_SCALING ||
@@ -219,6 +223,8 @@ void *ocp_nlp_qpscaling_memory_assign(ocp_nlp_qpscaling_dims *dims, void *opts_,
     if (opts->scale_qp_constraints)
     {
         assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->constraints_scaling_vec, &c_ptr);
+        align_char_to(32, &c_ptr);
+
         for (int i = 0; i <= N; ++i)
         {
             assign_and_advance_blasfeo_dvec_mem(orig_qp_dim->ng[i], mem->constraints_scaling_vec + i, &c_ptr);

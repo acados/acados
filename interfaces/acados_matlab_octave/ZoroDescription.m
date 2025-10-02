@@ -45,6 +45,7 @@ classdef ZoroDescription < handle
         nuh_t
         nlh_e_t
         nuh_e_t
+        data_size
     end
 
     methods
@@ -52,7 +53,7 @@ classdef ZoroDescription < handle
             % Constructor - initialize the object if needed
         end
 
-        function obj = process(obj)
+        function obj = make_consistent(obj, dims)
             [nw, ~] = size(obj.W_mat);
             obj.nw = nw;
             if isempty(obj.unc_jac_G_mat)
@@ -77,28 +78,41 @@ classdef ZoroDescription < handle
                 error('Only one of input_P0_diag and input_P0 can be True');
             end
 
+            data_size = 0;
             % Print input note:
             fprintf('\nThe data of the generated custom update function consists of the concatenation of:\n');
             i_component = 1;
             if obj.input_P0_diag
-                fprintf('%d) input: diag(P0)\n', i_component);
+                size_i = dims.nx
+                fprintf('%d) input: diag(P0), size: [nx] = %d\n', i_component, size_i);
                 i_component = i_component + 1;
+                data_size = data_size + size_i;
             end
             if obj.input_P0
-                fprintf('%d) input: P0; full matrix in column-major format\n', i_component);
+                size_i = dims.nx * dims.nx
+                fprintf('%d) input: P0; full matrix in column-major format, size: [nx*nx] = %d\n', i_component, size_i);
                 i_component = i_component + 1;
+                data_size = data_size + size_i;
             end
             if obj.input_W_diag
-                fprintf('%d) input: diag(W)\n', i_component);
+                size_i = obj.nw
+                fprintf('%d) input: diag(W), size: [nw] = %d\n', i_component, size_i);
                 i_component = i_component + 1;
+                data_size = data_size + size_i;
             end
             if obj.input_W_add_diag
-                fprintf('%d) input: concatenation of diag(W_gp^k) for i=0,...,N-1\n', i_component);
+                size_i = dims.N * obj.nw
+                fprintf('%d) input: concatenation of diag(W_gp^k) for i=0,...,N-1, size: [N * nw] = %d\n', i_component, size_i);
                 i_component = i_component + 1;
+                data_size = data_size + size_i;
             end
             if obj.output_P_matrices
-                fprintf('%d) output: concatenation of colmaj(P^k) for i=0,...,N\n', i_component);
+                size_i = dims.nx * dims.nx * (dims.N+1)
+                fprintf('%d) output: concatenation of colmaj(P^k) for i=0,...,N, size: [nx*nx*(N+1)] = %d\n', i_component, size_i);
+                i_component = i_component + 1;
+                data_size = data_size + size_i;
             end
+            obj.data_size = data_size;
             fprintf('\n');
         end
 

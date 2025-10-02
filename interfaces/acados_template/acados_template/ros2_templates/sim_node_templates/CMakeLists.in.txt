@@ -1,0 +1,83 @@
+cmake_minimum_required(VERSION 3.16)
+project({{ ros_opts.package_name }})
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.27)
+    cmake_policy(SET CMP0148 OLD)
+endif()
+
+# --- ROS DEPENDENCIES ---
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package({{ ros_opts.package_name }}_interface REQUIRED)
+
+# --- ACADOS PATHS ---
+set(ACADOS_INCLUDE_PATH {{ acados_include_path }})
+set(ACADOS_LIB_DIR {{ acados_lib_path }})
+set(ACADOS_GENERATED_CODE_DIR {{ code_export_directory }})
+
+# --- EXECUTABLE ---
+add_executable({{ ros_opts.node_name }}
+    src/node.cpp
+)
+
+# --- TARGET CONFIGURATION ---
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_compile_options({{ ros_opts.node_name }} PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+target_include_directories({{ ros_opts.node_name }} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+    ${ACADOS_GENERATED_CODE_DIR}
+    ${ACADOS_INCLUDE_PATH}
+    ${ACADOS_INCLUDE_PATH}/acados
+    ${ACADOS_INCLUDE_PATH}/blasfeo/include
+    ${ACADOS_INCLUDE_PATH}/hpipm/include
+)
+
+target_link_libraries({{ ros_opts.node_name }} 
+    ${ACADOS_GENERATED_CODE_DIR}/libacados_sim_solver_{{ name }}{{ shared_lib_ext }}
+    ${ACADOS_LIB_DIR}/libacados.so
+    ${ACADOS_LIB_DIR}/libblasfeo.so
+    ${ACADOS_LIB_DIR}/libhpipm.so
+    m
+)
+
+# --- DEPENDENCIES ---
+ament_target_dependencies({{ ros_opts.node_name }} 
+    rclcpp
+    std_msgs
+    {{ ros_opts.package_name }}_interface
+)
+
+# --- INSTALLATIONS ---
+install(TARGETS 
+    {{ ros_opts.node_name }}
+    RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY 
+    include/
+    DESTINATION include
+)
+
+install(FILES 
+    ${ACADOS_GENERATED_CODE_DIR}/libacados_sim_solver_{{ name }}{{ shared_lib_ext }}
+    DESTINATION lib
+)
+
+# --- EXPORT HOOKS ---
+ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/export_acados_path.sh.in")
+
+
+# --- TESTS ---
+if(BUILD_TESTING)
+    find_package(launch_testing_ament_cmake REQUIRED)
+    add_launch_test(
+        test/test_{{ ros_opts.package_name }}.launch.py
+        TARGET test_{{ ros_opts.package_name }}
+        TIMEOUT 180
+    )
+endif()
+
+ament_package()

@@ -90,6 +90,7 @@ def create_solver(solver_name: str, nlp_solver_type: str = 'SQP_WITH_FEASIBLE_QP
     # set options
     solver_options = ocp.solver_options
     solver_options.N_horizon = N
+    solver_options.tol = 1e-5
 
     solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     if qp_tol_scheme == "SUFFICIENTLY_SMALL":

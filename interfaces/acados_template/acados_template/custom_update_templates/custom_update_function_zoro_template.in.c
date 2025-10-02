@@ -335,7 +335,7 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
     mem->offset_W_add_diag += nw;  // W_diag
 {% endif %}
 
-    mem->offset_P_out += mem->offset_W_add_diag;
+    mem->offset_P_out = mem->offset_W_add_diag;
 {%- if zoro_description.input_W_add_diag %}
     mem->offset_P_out += N * nw;
 {% endif %}
@@ -933,6 +933,13 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
     int nx = {{ dims.nx }};
     int nw = {{ zoro_description.nw }};
 
+{%- if zoro_description.output_P_matrices or zoro_description.input_W_diag and not zoro_description.input_W_add_diag -%}
+    if (data_len != {{ zoro_description.data_size }})
+    {
+        printf("custom_update_zoro: data_length does not match expected one. Got %d, expected {{ zoro_description.data_size }}\n", data_len);
+        exit(1);
+    }
+{%- endif %}
 
 {%- if zoro_description.input_P0_diag or zoro_description.input_P0 %}
     if (data_len > 0)

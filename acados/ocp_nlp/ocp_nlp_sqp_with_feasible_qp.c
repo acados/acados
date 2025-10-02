@@ -117,6 +117,7 @@ void ocp_nlp_sqp_wfqp_opts_initialize_default(void *config_, void *dims_, void *
     opts->search_direction_mode = NOMINAL_QP;
     opts->watchdog_zero_slacks_max = 2;
     opts->allow_direction_mode_switch_to_nominal = true;
+    opts->byrd_omojokon_slack_relaxation_factor = 1.00001;
     opts->feasibility_qp_hessian_scalar = 1e-4;
     opts->log_pi_norm_inf = true;
     opts->log_lam_norm_inf = true;
@@ -151,7 +152,6 @@ void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, vo
     char module[MAX_STR_LEN];
     char *ptr_module = NULL;
     int module_length = 0;
-
     // extract module name
     char *char_ = strchr(field, '_');
     if (char_!=NULL)
@@ -162,7 +162,6 @@ void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, vo
         module[module_length] = '\0'; // add end of string
         ptr_module = module;
     }
-
     // pass options to QP module
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
     {
@@ -174,6 +173,11 @@ void ocp_nlp_sqp_wfqp_opts_set(void *config_, void *opts_, const char *field, vo
         {
             bool* use_constraint_hessian_in_feas_qp = (bool *) value;
             opts->use_constraint_hessian_in_feas_qp = *use_constraint_hessian_in_feas_qp;
+        }
+        else if (!strcmp(field, "byrd_omojokon_slack_relaxation_factor"))
+        {
+            double* byrd_omojokon_slack_relaxation_factor = (double *) value;
+            opts->byrd_omojokon_slack_relaxation_factor = *byrd_omojokon_slack_relaxation_factor;
         }
         else if (!strcmp(field, "search_direction_mode"))
         {
@@ -209,7 +213,7 @@ void ocp_nlp_sqp_wfqp_opts_set_at_stage(void *config_, void *opts_, size_t stage
 
 
 
-void ocp_nlp_sqp_wfqp_opts_get(void *config_, void *dims_, void *opts_,
+void ocp_nlp_sqp_wfqp_opts_get(void *config_, void *opts_,
                           const char *field, void *return_value_)
 {
     // ocp_nlp_config *config = config_;
@@ -1111,7 +1115,7 @@ static void setup_byrd_omojokun_bounds(ocp_nlp_dims *dims, ocp_nlp_memory *nlp_m
             // get lower slack
             tmp_lower = BLASFEO_DVECEL(relaxed_qp_out->ux + i, nx[i]+nu[i]+slack_index);
             // lower_bound - value
-            BLASFEO_DVECEL(nominal_qp_in->d+i, constr_index) -= tmp_lower;
+            BLASFEO_DVECEL(nominal_qp_in->d+i, constr_index) -= opts->byrd_omojokon_slack_relaxation_factor*tmp_lower;
 
             // get upper slack
             tmp_upper = BLASFEO_DVECEL(relaxed_qp_out->ux + i, nx[i]+nu[i]+ns[i]+nns[i] + slack_index);
@@ -1120,7 +1124,7 @@ static void setup_byrd_omojokun_bounds(ocp_nlp_dims *dims, ocp_nlp_memory *nlp_m
             // for the slacks with upper bound we have value - slack, therefore
             // value <= -upper_bound + slack,
             // we store upper_bound - slack
-            BLASFEO_DVECEL(nominal_qp_in->d+i, nb[i] + ng[i] + ni_nl[i] + constr_index) -= tmp_upper;
+            BLASFEO_DVECEL(nominal_qp_in->d+i, nb[i] + ng[i] + ni_nl[i] + constr_index) -= opts->byrd_omojokon_slack_relaxation_factor*tmp_upper;
         }
     }
 }

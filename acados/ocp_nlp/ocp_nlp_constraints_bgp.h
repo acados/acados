@@ -61,7 +61,8 @@ typedef struct
     int nbx;
     int ng;   // number of general linear constraints
     int nphi; // dimension of convex outer part
-    int ns;   // nsbu + nsbx + nsg + nsphi
+    int ns;   // number of slack variables per side, i.e. lower + upper
+    int ns_derived;  // number of slack variables derived from nsbu + nsbx + nsg + nsphi
     int nsbu; // number of softened input bounds
     int nsbx; // number of softened state bounds
     int nsg;  // number of softened general linear constraints
@@ -85,9 +86,10 @@ void ocp_nlp_constraints_bgp_dims_get(void *config_, void *dims_, const char *fi
 
 typedef struct
 {
-    //  ocp_nlp_constraints_bgp_dims *dims;
+    int use_idxs_rev;  // flag to indicate if idxs_rev formulation is used
     int *idxb;
     int *idxs;
+    int *idxs_rev;
     int *idxe;
     struct blasfeo_dvec *dmask;  // pointer to dmask in ocp_nlp_in
     struct blasfeo_dvec d;
@@ -141,7 +143,7 @@ typedef struct
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
     struct blasfeo_dmat *dzduxt; // pointer to dzduxt in ocp_nlp memory
     int *idxb;                   // pointer to idxb[ii] in qp_in
-    int *idxs_rev;                   // pointer to idxs_rev[ii] in qp_in
+    int *idxs_rev;               // pointer to idxs_rev[ii] in qp_in
     int *idxe;                   // pointer to idxe[ii] in qp_in
 } ocp_nlp_constraints_bgp_memory;
 

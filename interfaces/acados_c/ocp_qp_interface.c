@@ -255,13 +255,6 @@ ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_create_from_ocp_qp_dims(
         ocp_qp_dims_get(config, dims, i, "ns", &tmp_int);
         ocp_qp_xcond_solver_dims_set_(config, solver_dims, i, "ns", &tmp_int);
 
-        ocp_qp_dims_get(config, dims, i, "nsbx", &tmp_int);
-        ocp_qp_xcond_solver_dims_set_(config, solver_dims, i, "nsbx", &tmp_int);
-        ocp_qp_dims_get(config, dims, i, "nsbu", &tmp_int);
-        ocp_qp_xcond_solver_dims_set_(config, solver_dims, i, "nsbu", &tmp_int);
-        ocp_qp_dims_get(config, dims, i, "nsg", &tmp_int);
-        ocp_qp_xcond_solver_dims_set_(config, solver_dims, i, "nsg", &tmp_int);
-
         ocp_qp_dims_get(config, dims, i, "nbxe", &tmp_int);
         ocp_qp_xcond_solver_dims_set_(config, solver_dims, i, "nbxe", &tmp_int);
         ocp_qp_dims_get(config, dims, i, "nbue", &tmp_int);
@@ -408,7 +401,7 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_so
     solver->work = (void *) c_ptr;
     c_ptr += config->workspace_calculate_size(config, dims, opts_);
 
-    assert((char *) raw_memory + ocp_qp_calculate_size(config, dims, opts_) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_calculate_size(config, dims, opts_) >= c_ptr);
 
     return solver;
 }

@@ -92,8 +92,6 @@ def plot_timings(timing_dict, use_custom_update: bool):
     plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
     print(f"stored figure in {fig_filename}")
 
-    plt.show()
-
 
 def plot_timing_comparison(timings_list, label_list):
     fig = plt.figure(figsize=(6.0, 1.8))
@@ -126,8 +124,6 @@ def plot_timing_comparison(timings_list, label_list):
     plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
     print(f"stored figure in {fig_filename}")
 
-    plt.show()
-
 
 def ellipsoid_surface_2D(P, n=100):
     lam, V = np.linalg.eig(P)
@@ -138,7 +134,7 @@ def ellipsoid_surface_2D(P, n=100):
 
 def plot_trajectory(cfg: MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray, P_matrices=None, closed_loop=True):
 
-    fig = plt.figure(1)
+    fig = plt.figure()
     ax = fig.add_subplot(1,1,1)
     for idx_obs in range(cfg.num_obs):
         circ_label = "Obstacles" if idx_obs == 0 else None
@@ -174,7 +170,6 @@ def plot_trajectory(cfg: MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray, P_ma
     fig_filename = os.path.join("figures", "diff_drive_sim_trajectory.pdf")
     plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
     print(f"stored figure in {fig_filename}")
-    plt.show()
 
 
 def compute_min_dis(cfg:MPCParam, s:np.ndarray) -> float:

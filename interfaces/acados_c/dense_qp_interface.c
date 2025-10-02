@@ -173,7 +173,7 @@ dense_qp_solver *dense_qp_assign(qp_solver_config *config, dense_qp_dims *dims, 
     solver->work = (void *) c_ptr;
     c_ptr += config->workspace_calculate_size(config, dims, opts_);
 
-    assert((char *) raw_memory + dense_qp_calculate_size(config, dims, opts_) == c_ptr);
+    assert((char *) raw_memory + dense_qp_calculate_size(config, dims, opts_) >= c_ptr);
 
     return solver;
 }

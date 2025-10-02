@@ -200,6 +200,7 @@ acados_size_t ocp_nlp_globalization_funnel_memory_calculate_size(void *config_, 
     acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_globalization_funnel_memory);
+    size += 2*8;
 
     return size;
 }

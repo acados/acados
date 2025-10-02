@@ -45,13 +45,14 @@ from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions
 from .acados_ocp_iterate import AcadosOcpIterate
+from .ros2.ocp_node import AcadosOcpRosOptions
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
-                    get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square,
+                    get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
                     check_casadi_version, ACADOS_INFTY)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
-from .zoro_description import ZoroDescription, process_zoro_description
+from .zoro_description import ZoroDescription
 from .casadi_function_generation import (
     GenerateContext, AcadosCodegenOptions,
     generate_c_code_conl_cost, generate_c_code_nls_cost, generate_c_code_external_cost,
@@ -114,6 +115,7 @@ class AcadosOcp:
         self.__p_global_values = np.array([])
         self.__problem_class = 'OCP'
         self.__json_file = "acados_ocp.json"
+        self.__ros_opts: Optional[AcadosOcpRosOptions] = None
 
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
@@ -163,7 +165,17 @@ class AcadosOcp:
     @json_file.setter
     def json_file(self, json_file):
         self.__json_file = json_file
+        
+    @property
+    def ros_opts(self) -> Optional[AcadosOcpRosOptions]:
+        """Options to configure ROS 2 nodes and topics."""
+        return self.__ros_opts
 
+    @ros_opts.setter
+    def ros_opts(self, ros_opts: AcadosOcpRosOptions):
+        if not isinstance(ros_opts, AcadosOcpRosOptions):
+            raise TypeError('Invalid ros_opts value, expected AcadosOcpRos.\n')
+        self.__ros_opts = ros_opts
 
     def _make_consistent_cost_initial(self):
         dims = self.dims
@@ -521,6 +533,45 @@ class AcadosOcp:
                 dims.nr_e = casadi_length(model.con_r_expr_e)
 
 
+    def _make_consistent_slacks_rev_initial(self):
+        constraints = self.constraints
+        dims = self.dims
+        opts = self.solver_options
+        cost = self.cost
+        if opts.N_horizon == 0:
+            return
+
+        ni_no_s = dims.nbu + dims.nbx_0 + dims.nh_0 + dims.ng + dims.nphi_0 # constraints that are not slack bounds
+
+        # sanity checks
+        if constraints.idxs_rev_0.shape[0] != ni_no_s:
+            raise ValueError(f'inconsistent dimension idxs_rev_0 = {constraints.idxs_rev_0.shape[0]}. Should be equal to ni_no_s = {ni_no_s}.')
+        possible_vals = np.arange(-1, ni_no_s)
+        if any([i not in possible_vals for i in constraints.idxs_rev_0]):
+            raise ValueError(f'idxs_rev_0 = {constraints.idxs_rev_0} contains value not in range -1:{ni_no_s-1}.')
+
+        ns_0 = ns_from_idxs_rev(constraints.idxs_rev_0)
+
+        # slack bounds
+        if is_empty(constraints.ls_0):
+            constraints.ls_0 = np.zeros((ns_0,))
+        elif constraints.ls_0.shape[0] != ns_0:
+            raise ValueError('inconsistent dimension ns_0, regarding idxs_rev_0, ls_0.')
+        if is_empty(constraints.us_0):
+            constraints.us_0 = np.zeros((ns_0,))
+        elif constraints.us_0.shape[0] != ns_0:
+            raise ValueError('inconsistent dimension ns_0, regarding idxs_rev_0, us_0.')
+
+        # check cost penalty
+        for field in ("Zl_0", "Zu_0", "zl_0", "zu_0"):
+            dim = getattr(cost, field).shape[0]
+            if dim != ns_0:
+                raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
+                    + f'Detected ns_0 = {ns_0}.')
+
+        dims.ns_0 = ns_0
+
+
     def _make_consistent_slacks_initial(self):
         constraints = self.constraints
         dims = self.dims
@@ -565,6 +616,7 @@ class AcadosOcp:
 
         # Note: at stage 0 bounds on x are not slacked!
         ns_0 = nsbu + nsg + nsphi_0 + nsh_0  # NOTE: nsbx not supported at stage 0
+        dims.ns_0 = ns_0
 
         if cost.zl_0 is None and cost.zu_0 is None and cost.Zl_0 is None and cost.Zu_0 is None:
             if ns_0 == 0:
@@ -585,10 +637,49 @@ class AcadosOcp:
         for field in ("Zl_0", "Zu_0", "zl_0", "zu_0"):
             dim = getattr(cost, field).shape[0]
             if dim != ns_0:
-                raise Exception(f'Inconsistent size for fields {field}, with dimension {dim}, \n\t'\
+                raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
                 + f'Detected ns_0 = {ns_0} = nsbu + nsg + nsh_0 + nsphi_0.\n\t'\
                 + f'With nsbu = {nsbu}, nsg = {nsg}, nsh_0 = {nsh_0}, nsphi_0 = {nsphi_0}.')
-        dims.ns_0 = ns_0
+
+
+    def _make_consistent_slacks_rev_path(self):
+        constraints = self.constraints
+        dims = self.dims
+        opts = self.solver_options
+        cost = self.cost
+
+        if opts.N_horizon == 0:
+            return
+
+        ni_no_s = dims.nbu + dims.nbx + dims.nh + dims.ng + dims.nphi # constraints that are not slack bounds
+
+        # sanity checks
+        if constraints.idxs_rev.shape[0] != ni_no_s:
+            raise ValueError(f'inconsistent dimension idxs_rev = {constraints.idxs_rev.shape[0]}. Should be equal to ni_no_s = {ni_no_s}.')
+        possible_vals = np.arange(-1, ni_no_s)
+        if any([i not in possible_vals for i in constraints.idxs_rev]):
+            raise ValueError(f'idxs_rev = {constraints.idxs_rev} contains value not in range -1:{ni_no_s-1}.')
+
+        ns = ns_from_idxs_rev(constraints.idxs_rev)
+
+        # slack bounds
+        if is_empty(constraints.ls):
+            constraints.ls = np.zeros((ns,))
+        elif constraints.ls.shape[0] != ns:
+            raise ValueError('inconsistent dimension ns, regarding idxs_rev, ls.')
+        if is_empty(constraints.us):
+            constraints.us = np.zeros((ns,))
+        elif constraints.us.shape[0] != ns:
+            raise ValueError('inconsistent dimension ns, regarding idxs_rev, us.')
+
+        # check cost penalty
+        for field in ("Zl", "Zu", "zl", "zu"):
+            dim = getattr(cost, field).shape[0]
+            if dim != ns:
+                raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
+                    + f'Detected ns = {ns}.')
+
+        dims.ns = ns
 
 
     def _make_consistent_slacks_path(self):
@@ -682,10 +773,47 @@ class AcadosOcp:
         for field in ("Zl", "Zu", "zl", "zu"):
             dim = getattr(cost, field).shape[0]
             if dim != ns:
-                raise Exception(f'Inconsistent size for fields {field}, with dimension {dim}, \n\t'\
+                raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
                     + f'Detected ns = {ns} = nsbx + nsbu + nsg + nsh + nsphi.\n\t'\
                     + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh = {nsh}, nsphi = {nsphi}.')
         dims.ns = ns
+
+
+
+    def _make_consistent_slacks_rev_terminal(self):
+        constraints = self.constraints
+        dims = self.dims
+        cost = self.cost
+
+        ni_no_s = dims.nbx_e + dims.nh_e + dims.ng_e + dims.nphi_e # constraints that are not slack bounds
+
+        # sanity checks
+        if constraints.idxs_rev_e.shape[0] != ni_no_s:
+            raise ValueError(f'inconsistent dimension idxs_rev_e = {constraints.idxs_rev_e.shape[0]}. Should be equal to ni_no_s = {ni_no_s}.')
+        possible_vals = np.arange(-1, ni_no_s)
+        if any([i not in possible_vals for i in constraints.idxs_rev_e]):
+            raise ValueError(f'idxs_rev_e = {constraints.idxs_rev_e} contains value not in range -1:{ni_no_s-1}.')
+
+        ns_e = ns_from_idxs_rev(constraints.idxs_rev_e)
+
+        # slack bounds
+        if is_empty(constraints.ls_e):
+            constraints.ls_e = np.zeros((ns_e,))
+        elif constraints.ls_e.shape[0] != ns_e:
+            raise ValueError('inconsistent dimension ns_e, regarding idxs_rev_e, ls_e.')
+        if is_empty(constraints.us_e):
+            constraints.us_e = np.zeros((ns_e,))
+        elif constraints.us_e.shape[0] != ns_e:
+            raise ValueError('inconsistent dimension ns_e, regarding idxs_rev_e, us_e.')
+
+        # check cost penalty
+        for field in ("Zl_e", "Zu_e", "zl_e", "zu_e"):
+            dim = getattr(cost, field).shape[0]
+            if dim != ns_e:
+                raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
+                    + f'Detected ns_e = {ns_e}.')
+
+        dims.ns_e = ns_e
 
 
     def _make_consistent_slacks_terminal(self):
@@ -761,7 +889,7 @@ class AcadosOcp:
         for field in ("Zl_e", "Zu_e", "zl_e", "zu_e"):
             dim = getattr(cost, field).shape[0]
             if dim != ns_e:
-                raise Exception(f'Inconsistent size for fields {field}, with dimension {dim}, \n\t'\
+                raise Exception(f'Inconsistent size for field {field}, with dimension {dim}, \n\t'\
                 + f'Detected ns_e = {ns_e} = nsbx_e + nsg_e + nsh_e + nsphi_e.\n\t'\
                 + f'With nsbx_e = {nsbx_e}, nsg_e = {nsg_e}, nsh_e = {nsh_e}, nsphi_e = {nsphi_e}.')
 
@@ -934,9 +1062,33 @@ class AcadosOcp:
         self._make_consistent_constraints_path()
         self._make_consistent_constraints_terminal()
 
-        self._make_consistent_slacks_path()
-        self._make_consistent_slacks_initial()
-        self._make_consistent_slacks_terminal()
+        # if idxs_rev formulation is used at initial or path, no idxs* should be defined
+        if not is_empty(constraints.idxs_rev_0) or not is_empty(constraints.idxs_rev):
+            for idxs_name in ['idxsbx', 'idxsbu', 'idxsg', 'idxsh_0', 'idxsh', 'idxsphi_0', 'idxsphi']:
+                idxs_val = getattr(constraints, idxs_name)
+                if not is_empty(idxs_val):
+                    raise ValueError(f"Mixing idxs_rev and idxs_* formulations for initial and intermediate nodes is not supported. Found non empty idxs_rev or idxs_rev_0 and non empty {idxs_name}")
+
+        if any([not is_empty(idxs_rev) for idxs_rev in [constraints.idxs_rev_0, constraints.idxs_rev, constraints.idxs_rev_e]]):
+            if not "HPIPM" in opts.qp_solver:
+                raise ValueError(f"idxs_rev formulation is only supported with HPIPM QP solvers yet, got {opts.qp_solver}.")
+            if opts.nlp_solver_type == "SQP_WITH_FEASIBLE_QP":
+                raise ValueError("idxs_rev formulation is not compatible with SQP_WITH_FEASIBLE_QP yet.")
+
+        if is_empty(constraints.idxs_rev):
+            self._make_consistent_slacks_path()
+        else:
+            self._make_consistent_slacks_rev_path()
+
+        if is_empty(constraints.idxs_rev_0):
+            self._make_consistent_slacks_initial()
+        else:
+            self._make_consistent_slacks_rev_initial()
+
+        if is_empty(constraints.idxs_rev_e):
+            self._make_consistent_slacks_terminal()
+        else:
+            self._make_consistent_slacks_rev_terminal()
 
         # check for ACADOS_INFTY
         if opts.qp_solver not in ["PARTIAL_CONDENSING_HPIPM", "FULL_CONDENSING_HPIPM", "FULL_CONDENSING_DAQP"]:
@@ -1096,7 +1248,7 @@ class AcadosOcp:
             if not isinstance(self.zoro_description, ZoroDescription):
                 raise TypeError('zoro_description should be of type ZoroDescription or None')
             else:
-                self.zoro_description = process_zoro_description(self.zoro_description)
+                self.zoro_description.make_consistent(dims)
 
         # nlp_solver_warm_start_first_qp_from_nlp
         if opts.nlp_solver_warm_start_first_qp_from_nlp and (opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon):
@@ -1142,6 +1294,69 @@ class AcadosOcp:
         return template_list
 
 
+    def _get_ros_template_list(self) -> list:
+        template_list = []
+        acados_template_path = os.path.dirname(os.path.abspath(__file__))
+        ros_template_glob = os.path.join(acados_template_path, 'ros2_templates', '**', '*')
+
+        # --- Interface Package ---
+        ros_interface_dir = os.path.join('ocp_interface_templates')
+        interface_dir = os.path.join(self.ros_opts.generated_code_dir, f'{self.ros_opts.package_name}_interface')
+        template_file = os.path.join(ros_interface_dir, 'README.in.md')
+        template_list.append((template_file, 'README.md', interface_dir, ros_template_glob))
+        template_file = os.path.join(ros_interface_dir, 'CMakeLists.in.txt')
+        template_list.append((template_file, 'CMakeLists.txt', interface_dir, ros_template_glob))
+        template_file = os.path.join(ros_interface_dir, 'package.in.xml')
+        template_list.append((template_file, 'package.xml', interface_dir, ros_template_glob))
+
+        # Messages
+        msg_dir = os.path.join(interface_dir, 'msg')
+        template_file = os.path.join(ros_interface_dir, 'State.in.msg')
+        template_list.append((template_file, 'State.msg', msg_dir, ros_template_glob))
+        template_file = os.path.join(ros_interface_dir, 'References.in.msg')
+        template_list.append((template_file, 'References.msg', msg_dir, ros_template_glob))
+        template_file = os.path.join(ros_interface_dir, 'Parameters.in.msg')
+        template_list.append((template_file, 'Parameters.msg', msg_dir, ros_template_glob))
+        template_file = os.path.join(ros_interface_dir, 'ControlInput.in.msg')
+        template_list.append((template_file, 'ControlInput.msg', msg_dir, ros_template_glob))
+
+        # --- Solver Package ---
+        ros_pkg_dir = os.path.join('ocp_node_templates')
+        package_dir = os.path.join(self.ros_opts.generated_code_dir, self.ros_opts.package_name)
+        template_file = os.path.join(ros_pkg_dir, 'README.in.md')
+        template_list.append((template_file, 'README.md', package_dir, ros_template_glob))
+        template_file = os.path.join(ros_pkg_dir, 'CMakeLists.in.txt')
+        template_list.append((template_file, 'CMakeLists.txt', package_dir, ros_template_glob))
+        template_file = os.path.join(ros_pkg_dir, 'package.in.xml')
+        template_list.append((template_file, 'package.xml', package_dir, ros_template_glob))
+
+        # Header
+        include_dir = os.path.join(package_dir, 'include', self.ros_opts.package_name)
+        template_file = os.path.join(ros_pkg_dir, 'config.in.hpp')
+        template_list.append((template_file, 'config.hpp', include_dir, ros_template_glob))
+        template_file = os.path.join(ros_pkg_dir, 'utils.in.hpp')
+        template_list.append((template_file, 'utils.hpp', include_dir, ros_template_glob))
+        template_file = os.path.join(ros_pkg_dir, 'node.in.h')
+        template_list.append((template_file, 'node.h', include_dir, ros_template_glob))
+
+        # Source
+        src_dir = os.path.join(package_dir, 'src')
+        template_file = os.path.join(ros_pkg_dir, 'node.in.cpp')
+        template_list.append((template_file, 'node.cpp', src_dir, ros_template_glob))
+
+        # Hooks
+        hooks_dir = os.path.join(package_dir, 'env-hooks')
+        template_file = os.path.join(ros_pkg_dir, 'export_acados_path.sh.in')
+        # Note: still a ".in" file, because it needs to be rendered by colcon
+        template_list.append((template_file, 'export_acados_path.sh.in', hooks_dir, ros_template_glob))
+
+        # Test
+        test_dir = os.path.join(package_dir, 'test')
+        template_file = os.path.join(ros_pkg_dir, 'test.launch.in.py')
+        template_list.append((template_file, f'test_{self.ros_opts.package_name}.launch.py', test_dir, ros_template_glob))
+        return template_list
+
+
     def __get_template_list(self, cmake_builder=None) -> list:
         """
         returns a list of tuples in the form:
@@ -1178,6 +1393,10 @@ class AcadosOcp:
         if self.simulink_opts is not None:
             template_list += self._get_matlab_simulink_template_list(name)
             template_list += self._get_integrator_simulink_template_list(name)
+
+        # ROS
+        if self.ros_opts is not None:
+            template_list += self._get_ros_template_list()
 
         return template_list
 
@@ -1226,7 +1445,8 @@ class AcadosOcp:
         # Render templates
         for tup in template_list:
             output_dir = self.code_export_directory if len(tup) <= 2 else tup[2]
-            render_template(tup[0], tup[1], output_dir, json_path)
+            template_glob = None if len(tup) <= 3 else tup[3]
+            render_template(tup[0], tup[1], output_dir, json_path, template_glob=template_glob)
 
         # Custom templates
         acados_template_path = os.path.dirname(os.path.abspath(__file__))
@@ -1237,6 +1457,10 @@ class AcadosOcp:
 
 
     def dump_to_json(self) -> None:
+        dir_name = os.path.dirname(self.json_file)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
+            
         with open(self.json_file, 'w') as f:
             json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         return
@@ -1355,8 +1579,10 @@ class AcadosOcp:
 
         # convert acados classes to dicts
         for key, v in ocp_dict.items():
-            if isinstance(v, (AcadosModel, AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, ZoroDescription)):
-                ocp_dict[key]=dict(getattr(self, key).__dict__)
+            if isinstance(v, (AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, ZoroDescription)):
+                ocp_dict[key] = dict(getattr(self, key).__dict__)
+            if isinstance(v, (AcadosOcpRosOptions, AcadosModel)):
+                ocp_dict[key] = v.to_dict()
 
         ocp_dict = format_class_dict(ocp_dict)
         return ocp_dict
@@ -1525,6 +1751,13 @@ class AcadosOcp:
                 self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
                                                           self.cost.Vx_0, self.cost.Vu_0, self.cost.Vz_0,
                                                           yref_0, W_0)
+            self.cost.Vx_0 = np.zeros((0,0))
+            self.cost.Vu_0 = np.zeros((0,0))
+            self.cost.Vz_0 = np.zeros((0,0))
+            self.cost.W_0 = np.zeros((0,0))
+            self.model.cost_y_expr_0 = []
+            self.cost.yref_0 = np.zeros((0,))
+
         elif self.cost.cost_type_0 == "NONLINEAR_LS":
             self.model.cost_expr_ext_cost_0 = \
                 self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_0, yref_0, W_0)
@@ -1532,10 +1765,18 @@ class AcadosOcp:
             if cost_hessian == 'GAUSS_NEWTON':
                 self.model.cost_expr_ext_cost_custom_hess_0 = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr_0, yref_0, W_0, self.model.x, self.model.u, self.model.z)
 
+            self.cost.W_0 = np.zeros((0,0))
+            self.model.cost_y_expr_0 = []
+            self.cost.yref_0 = np.zeros((0,))
+
         elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost_0 = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_0, self.model.cost_psi_expr_0,
                                                             self.model.cost_y_expr_0, yref_0)
+            self.model.cost_r_in_psi_expr_0 = []
+            self.model.cost_psi_expr_0 = []
+            self.model.cost_y_expr_0 = []
+            self.cost.yref_0 = np.zeros((0,))
 
         if self.cost.cost_type_0 is not None:
             self.cost.cost_type_0 = 'EXTERNAL'
@@ -1575,16 +1816,32 @@ class AcadosOcp:
                 self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
                                                           self.cost.Vx, self.cost.Vu, self.cost.Vz,
                                                           yref, W)
+            self.cost.Vx = np.zeros((0,0))
+            self.cost.Vu = np.zeros((0,0))
+            self.cost.Vz = np.zeros((0,0))
+            self.cost.W = np.zeros((0,0))
+            self.model.cost_y_expr = []
+            self.cost.yref = np.zeros((0,))
+
         elif self.cost.cost_type == "NONLINEAR_LS":
             self.model.cost_expr_ext_cost = \
                 self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr, yref, W)
             if cost_hessian == 'GAUSS_NEWTON':
                 self.model.cost_expr_ext_cost_custom_hess = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr, yref, W, self.model.x, self.model.u, self.model.z)
 
+            self.cost.W = np.zeros((0,0))
+            self.model.cost_y_expr = []
+            self.cost.yref = np.zeros((0,))
+
         elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr, self.model.cost_psi_expr,
                                                             self.model.cost_y_expr, yref)
+
+            self.model.cost_r_in_psi_expr = []
+            self.model.cost_psi_expr = []
+            self.model.cost_y_expr = []
+            self.cost.yref = np.zeros((0,))
 
         self.cost.cost_type = 'EXTERNAL'
 
@@ -1622,16 +1879,32 @@ class AcadosOcp:
                 self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
                                                           self.cost.Vx_e, None, None,
                                                           yref_e, W_e)
+
+            self.cost.Vx_e = np.zeros((0,0))
+            self.cost.W_e = np.zeros((0,0))
+            self.model.cost_y_expr_e = []
+            self.cost.yref_e = np.zeros((0,))
+
         elif self.cost.cost_type_e == "NONLINEAR_LS":
             self.model.cost_expr_ext_cost_e = \
                 self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_e, yref_e, W_e)
             if cost_hessian == 'GAUSS_NEWTON':
                 self.model.cost_expr_ext_cost_custom_hess_e = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr_e, yref_e, W_e, self.model.x, [], self.model.z)
 
+            self.cost.W_e = np.zeros((0,0))
+            self.model.cost_y_expr_e = []
+            self.cost.yref_e = np.zeros((0,))
+
         elif self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
             self.model.cost_expr_ext_cost_e = \
                 self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_e, self.model.cost_psi_expr_e,
                                                             self.model.cost_y_expr_e, yref_e)
+
+            self.model.cost_r_in_psi_expr_e = []
+            self.model.cost_psi_expr_e = []
+            self.model.cost_y_expr_e = []
+            self.cost.yref_e = np.zeros((0,))
+
         self.cost.cost_type_e = 'EXTERNAL'
 
 
@@ -2155,7 +2428,7 @@ class AcadosOcp:
             has_custom_hess
         )
 
-    def get_initial_cost_expression(self):
+    def get_initial_cost_expression(self, yref: Optional[ca.SX]=None):
         model = self.model
         if self.cost.cost_type == "LINEAR_LS":
             if is_empty(self.cost.Vx_0):
@@ -2165,11 +2438,11 @@ class AcadosOcp:
 
             if not is_empty(self.cost.Vz_0):
                 y += self.cost.Vz @ model.z
-            residual = y - self.cost.yref_0
+            residual = y - (self.cost.yref_0 if yref is None else yref)
             cost_dot = 0.5 * (residual.T @ self.cost.W_0 @ residual)
 
         elif self.cost.cost_type == "NONLINEAR_LS":
-            residual = model.cost_y_expr_0 - self.cost.yref_0
+            residual = model.cost_y_expr_0 - (self.cost.yref_0 if yref is None else yref)
             cost_dot = 0.5 * (residual.T @ self.cost.W_0 @ residual)
 
         elif self.cost.cost_type == "EXTERNAL":
@@ -2184,7 +2457,7 @@ class AcadosOcp:
         return cost_dot
 
 
-    def get_path_cost_expression(self):
+    def get_path_cost_expression(self, yref: Optional[ca.SX]=None):
         model = self.model
         if self.cost.cost_type == "LINEAR_LS":
             if is_empty(self.cost.Vx):
@@ -2194,11 +2467,11 @@ class AcadosOcp:
 
             if not is_empty(self.cost.Vz):
                 y += self.cost.Vz @ model.z
-            residual = y - self.cost.yref
+            residual = y - (self.cost.yref if yref is None else yref)
             cost_dot = 0.5 * (residual.T @ self.cost.W @ residual)
 
         elif self.cost.cost_type == "NONLINEAR_LS":
-            residual = model.cost_y_expr - self.cost.yref
+            residual = model.cost_y_expr - (self.cost.yref if yref is None else yref)
             cost_dot = 0.5 * (residual.T @ self.cost.W @ residual)
 
         elif self.cost.cost_type == "EXTERNAL":
@@ -2213,17 +2486,17 @@ class AcadosOcp:
         return cost_dot
 
 
-    def get_terminal_cost_expression(self):
+    def get_terminal_cost_expression(self, yref: Optional[ca.SX]=None):
         model = self.model
         if self.cost.cost_type_e == "LINEAR_LS":
             if is_empty(self.cost.Vx_e):
                 return 0.0
             y = self.cost.Vx_e @ model.x
-            residual = y - self.cost.yref_e
+            residual = y - (self.cost.yref_e if yref is None else yref)
             cost_dot = 0.5 * (residual.T @ self.cost.W_e @ residual)
 
         elif self.cost.cost_type_e == "NONLINEAR_LS":
-            residual = model.cost_y_expr_e - self.cost.yref_e
+            residual = model.cost_y_expr_e - (self.cost.yref_e if yref is None else yref)
             cost_dot = 0.5 * (residual.T @ self.cost.W_e @ residual)
 
         elif self.cost.cost_type_e == "EXTERNAL":
