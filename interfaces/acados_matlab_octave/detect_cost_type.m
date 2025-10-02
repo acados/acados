@@ -39,13 +39,6 @@ function detect_cost_type(model, cost, dims, stage_type)
     z = model.z;
     p = model.p;
 
-    % check type
-    if isa(x, 'casadi.SX')
-        isSX = true;
-    else
-        error('constraint detection only works for casadi.SX!');
-    end
-
     nx = length(x);
     nu = length(u);
     nz = length(z);
@@ -70,7 +63,8 @@ function detect_cost_type(model, cost, dims, stage_type)
 
 
     if expr_cost.is_quadratic(x) && expr_cost.is_quadratic(u) && expr_cost.is_quadratic(z) ...
-            && ~any(expr_cost.which_depends(p))
+            && ~any(expr_cost.which_depends(p)) && ~any(expr_cost.which_depends(model.p_global)) ...
+            && ~any(expr_cost.which_depends(model.t))
 
         if expr_cost.is_zero()
             fprintf('Cost function is zero -> Reformulating as LINEAR_LS cost.\n');
@@ -204,7 +198,7 @@ function detect_cost_type(model, cost, dims, stage_type)
 % elseif
     %  TODO: can nonLINEAR_LS be detected?!
     else
-        fprintf('\n\nCost function is not quadratic -> Using external cost\n\n');
+        fprintf('\n\nCost function is not quadratic or depends on parameters -> Using external cost\n\n');
         if strcmp(stage_type, 'terminal')
             cost.cost_type_e = 'EXTERNAL';
         elseif strcmp(stage_type, 'path')
