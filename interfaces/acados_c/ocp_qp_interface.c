@@ -74,6 +74,11 @@
 #include "acados/ocp_qp/ocp_qp_osqp.h"
 #endif
 
+#ifdef ACADOS_WITH_CLARABEL
+#include "acados/ocp_qp/ocp_qp_clarabel.h"
+#endif
+
+
 
 // TODO: no "plan" is entering, rename?!
 void ocp_qp_xcond_solver_config_initialize_from_plan(
@@ -105,6 +110,13 @@ void ocp_qp_xcond_solver_config_initialize_from_plan(
         case PARTIAL_CONDENSING_OSQP:
             ocp_qp_xcond_solver_config_initialize_default(solver_config);
             ocp_qp_osqp_config_initialize_default(solver_config->qp_solver);
+            ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
+            break;
+#endif
+#ifdef ACADOS_WITH_CLARABEL
+        case PARTIAL_CONDENSING_CLARABEL:
+            ocp_qp_xcond_solver_config_initialize_default(solver_config);
+            ocp_qp_clarabel_config_initialize_default(solver_config->qp_solver);
             ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
             break;
 #endif
@@ -154,7 +166,7 @@ void ocp_qp_xcond_solver_config_initialize_from_plan(
             exit(1);
             break;
         default:
-            printf("\nerror: ocp_qp_xcond_solver_config_initialize_from_plan: unsupported plan->qp_solver\n");
+            printf("\nerror: ocp_qp_xcond_solver_config_initialize_from_plan: unsupported plan->qp_solver %d\n", solver_name);
             printf("This might happen, if acados was not compiled with the specified QP solver.\n");
             exit(1);
     }

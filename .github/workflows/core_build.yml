@@ -14,6 +14,7 @@ env:
   ACADOS_WITH_QPOASES: ON
   ACADOS_WITH_DAQP: ON
   ACADOS_WITH_QPDUNES: ON
+  ACADOS_WITH_CLARABEL: ON
   ACADOS_ON_CI: ON
 
 
@@ -62,8 +63,13 @@ jobs:
             'CMakeLists.txt',
             'cmake/**/*.cmake',
             'acados/**',
+            '.github/workflows/core_build.yml',
             'interfaces/acados_c/**'
           ) }}
+
+    - name: Install Eigen3, for clarabel
+      if: env.ACADOS_WITH_CLARABEL == 'ON'
+      run: sudo apt-get update && sudo apt-get install -y libeigen3-dev
 
     - name: Create Build Environment & Configure
       if: steps.cache-build.outputs.cache-hit != 'true'
@@ -75,6 +81,7 @@ jobs:
             -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP \
             -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES \
             -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP \
+            -DACADOS_WITH_CLARABEL=$ACADOS_WITH_CLARABEL \
             -DACADOS_OCTAVE=OFF \
             -DACADOS_WITH_OPENMP=ON \
             -DACADOS_NUM_THREADS=1

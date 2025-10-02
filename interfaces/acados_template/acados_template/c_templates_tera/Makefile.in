@@ -64,8 +64,9 @@
 	{%- set control = ";" %}
 {%- endif %}
 
-{%- if acados_link_libs and os and os == "pc" %}{# acados linking libraries and flags #}
-	{%- set link_libs = acados_link_libs.qpoases ~ " " ~ acados_link_libs.hpmpc ~ " " ~ acados_link_libs.osqp ~ " " ~ acados_link_libs.daqp -%}
+{# acados linking libraries and flags #}
+{%- if acados_link_libs and os and os == "pc" %}
+	{%- set link_libs = acados_link_libs.qpoases ~ " " ~ acados_link_libs.hpmpc ~ " " ~ acados_link_libs.osqp ~ " " ~ acados_link_libs.daqp ~ " " ~ acados_link_libs.clarabel -%}
 	{%- set openmp_flag = acados_link_libs.openmp %}
 {%- else %}
 	{%- set openmp_flag = " " %}
@@ -73,6 +74,8 @@
 		{%- set link_libs = "-lqpOASES_e" %}
 	{%- elif qp_solver == "FULL_CONDENSING_DAQP" %}
 		{%- set link_libs = "-ldaqp" %}
+	{%- elif qp_solver == "PARTIAL_CONDENSING_CLARABEL" %}
+		{%- set link_libs = "-lclarabel_c " %}
 	{%- else %}
 		{%- set link_libs = "" %}
 	{%- endif %}
@@ -160,6 +163,9 @@ CPPFLAGS += -DACADOS_WITH_DAQP
 {%- endif %}
 {%- if qp_solver == "PARTIAL_CONDENSING_OSQP" %}
 CPPFLAGS += -DACADOS_WITH_OSQP
+{%- endif %}
+{%- if qp_solver == "PARTIAL_CONDENSING_CLARABEL" %}
+CPPFLAGS += -DACADOS_WITH_CLARABEL
 {%- endif %}
 {%- if qp_solver == "PARTIAL_CONDENSING_QPDUNES" %}
 CPPFLAGS += -DACADOS_WITH_QPDUNES

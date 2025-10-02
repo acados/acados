@@ -96,7 +96,7 @@ int main() {
 
     int acados_return = 0;
 
-    int ii_max = 9;
+    int ii_max = 10;
 
     #ifndef ACADOS_WITH_HPMPC
     ii_max--;
@@ -115,6 +115,9 @@ int main() {
     ii_max--;
     #endif
     #ifndef ACADOS_WITH_OSQP
+    ii_max--;
+    #endif
+    #ifndef ACADOS_WITH_CLARABEL
     ii_max--;
     #endif
 
@@ -148,6 +151,10 @@ int main() {
 
         #ifdef ACADOS_WITH_OSQP
         PARTIAL_CONDENSING_OSQP,
+        #endif
+
+        #ifdef ACADOS_WITH_CLARABEL
+        PARTIAL_CONDENSING_CLARABEL,
         #endif
     };
 
@@ -296,7 +303,13 @@ int main() {
                     N2 = N2_values[jj];
                     config->opts_set(config, opts, "cond_N", &N2);
                     break;
-
+#endif
+#ifdef ACADOS_WITH_CLARABEL
+                case PARTIAL_CONDENSING_CLARABEL:
+                    printf("\nPartial condensing + Clarabel (N2 = %d):\n\n", N2);
+                    N2 = N2_values[jj];
+                    config->opts_set(config, opts, "cond_N", &N2);
+                    break;
 #endif
                 case INVALID_QP_SOLVER:
                     printf("\nInvalid QP solver\n\n");
