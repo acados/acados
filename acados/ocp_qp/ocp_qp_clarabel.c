@@ -792,9 +792,9 @@ static void ocp_qp_clarabel_update_memory(const ocp_qp_in *in, const ocp_qp_clar
 }
 
 
-// /************************************************
-//  * opts
-//  ************************************************/
+/************************************************
+ * opts
+ ************************************************/
 
 acados_size_t ocp_qp_clarabel_opts_calculate_size(void *config_, void *dims_)
 {
@@ -911,6 +911,14 @@ void ocp_qp_clarabel_opts_set(void *config_, void *opts_, const char *field, voi
 
     return;
 }
+
+void ocp_qp_clarabel_opts_get(void *config_, void *opts_, const char *field, void *value)
+{
+    // ocp_qp_clarabel_opts *opts = opts_;
+    printf("\nerror: ocp_qp_clarabel_opts_get: not implemented for field %s\n", field);
+    exit(1);
+}
+
 
 
 
@@ -1323,8 +1331,6 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
     else if(clarabel_status==ClarabelMaxIterations)
         acados_status = ACADOS_MAXITER;
 
-    // // check exit conditions
-
     return acados_status;
 }
 
@@ -1370,6 +1376,7 @@ void ocp_qp_clarabel_config_initialize_default(void *config_)
     config->opts_initialize_default = &ocp_qp_clarabel_opts_initialize_default;
     config->opts_update = &ocp_qp_clarabel_opts_update;
     config->opts_set = &ocp_qp_clarabel_opts_set;
+    config->opts_get = &ocp_qp_clarabel_opts_get;
     config->memory_calculate_size = &ocp_qp_clarabel_memory_calculate_size;
     config->memory_assign = &ocp_qp_clarabel_memory_assign;
     config->memory_get = &ocp_qp_clarabel_memory_get;
