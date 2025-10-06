@@ -48,7 +48,6 @@
  * helper functions
  ************************************************/
 
-#if 0
 static void print_csc_as_dns(ClarabelCscMatrix *M)
 {
     int i, j = 0; // Predefine row index and column index
@@ -86,52 +85,6 @@ static void print_csc_as_dns(ClarabelCscMatrix *M)
 
     free(A);
 }
-#endif
-
-
-
-
-
-
-// static void print_inputs(ClarabelData *data)
-// {
-    // printf("\n----------> Clarabel INPUTS <----------\n\n");
-    // printf("NUMBER OF VARIABLES: %d\n", data->n);
-    // printf("NUMBER OF CONSTRAINTS: %d\n", data->m);
-    // printf("NUMBER OF NON-ZEROS in HESSIAN: %d\n", data->P->nzmax);
-    // printf("NUMBER OF NON-ZEROS in CONSTRAINTS: %d\n", data->A->nzmax);
-    // printf("\n-----------------------------------\n\n");
-
-    // int ii;
-
-    // printf("\nOBJECTIVE FUNCTION:\n");
-    // for (ii = 0; ii < data->P->nzmax; ii++)
-    //     printf("=====> P_x[%d] = %f, P_i[%d] = %d\n", ii + 1, data->P->x[ii], ii + 1,
-    //            data->P->i[ii]);
-
-    // for (ii = 0; ii < mem->A_nnzmax; ii++)
-    // printf("=====> A_nzval[%d] = %f, A_rowval[%d] = %d\n", ii + 1, mem->A_nzval[ii], ii+1, mem->A_rowval[ii]);
-    // print_csc_matrix(data->P, "Matrix P");
-    // for (ii = 0; ii < mem->clarabel_data->n; ii++)
-    //     printf("=====> q[%d] = %f\n", ii + 1, mem->q[ii]);
-    // for (ii = 0; ii < mem->clarabel_data->n+1; ii++)
-    //     printf("=====> P_p[%d] = %d\n", ii + 1, mem->P_p[ii]);
-
-    // print_csc_as_dns(mem->clarabel_data->P);
-
-    // printf("\nBOUNDS:\n");
-    // for (ii = 0; ii < data->m; ii++)
-    //     printf("=====> l[%d] = %f, u[%d] = %f\n", ii + 1, data->l[ii], ii + 1, data->u[ii]);
-
-    // printf("\nCONSTRAINTS MATRIX:\n");
-    // print_csc_matrix(data->A, "Matrix A");
-    // print_csc_as_dns(mem->clarabel_data->A);
-    // for (ii = 0; ii < data->A->nzmax; ii++)
-    //     printf("=====> A_nzval[%d] = %f, A_rowval[%d] = %d\n", ii + 1, data->A->x[ii], ii + 1,
-    //            data->A->i[ii]);
-    // for (ii = 0; ii < mem->clarabel_data->n+1; ii++)
-    //     printf("=====> A_col_ptr[%d] = %d\n", ii + 1, mem->A_col_ptr[ii]);
-// }
 
 
 void print_csc_matrix(ClarabelCscMatrix *M, const char *name)
@@ -737,7 +690,6 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_clarabel_memory *mem)
 
 static void clarabel_init_data(ocp_qp_clarabel_memory* mem, ocp_qp_in *qp_in)
 {
-
     //update_constraints_matrix_data(qp_in, mem);
     //update_hessian_data(qp_in, mem);
 
@@ -1118,7 +1070,7 @@ static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_clarabel
 
 
 
-// clarabel f64 printing stuff (TODO remove)
+// clarabel f64 printing stuff
 static void print_array_double(double *array, size_t n)
 {
     printf("[");
@@ -1204,7 +1156,7 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
         // uncomment above to force first_run, and investigate solver updates.
     }
 
-    // // solve Clarabel
+    // solve Clarabel
     acados_tic(&solver_call_timer);
     // Solve
     //clarabel_DefaultSolver_print_to_file(mem->solver, "clarabel_data.txt");
