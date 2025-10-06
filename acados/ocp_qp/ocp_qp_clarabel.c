@@ -508,7 +508,6 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_clarabel_
     int nn = 0;
     for (kk = 0; kk <= N; kk++)
     {
-
         // control variables
         for (jj = 0; jj < nu[kk]; jj++)
         {
@@ -534,12 +533,11 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_clarabel_
 
             // write column from D
             blasfeo_unpack_dmat(1, ng[kk], in->DCt+kk, jj, 0, mem->A_nzval+nn+ng[kk], 1);
-            for(ii=0; ii<ng[kk]; ii++)
+            for (ii=0; ii<ng[kk]; ii++)
             {
                 mem->A_nzval[nn+ii] = - mem->A_nzval[nn+ng[kk]+ii];
             }
             nn += 2*ng[kk];
-
         }
 
         // state variables
@@ -574,7 +572,7 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_clarabel_
 
             // write column from C
             blasfeo_unpack_dmat(1, ng[kk], in->DCt+kk, nu[kk]+jj, 0, mem->A_nzval+nn+ng[kk], 1);
-            for(ii=0; ii<ng[kk]; ii++)
+            for (ii=0; ii<ng[kk]; ii++)
             {
                 mem->A_nzval[nn+ii] = - mem->A_nzval[nn+ng[kk]+ii];
             }
@@ -585,7 +583,6 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_clarabel_
         // slack variables on lower inequalities
         for (jj = 0; jj < ns[kk]; jj++)
         {
-
             // soft constraint
             for (ii=0; ii<nb[kk]+ng[kk]; ii++)
             {
@@ -606,7 +603,6 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_clarabel_
         // slack variables on upper inequalities
         for (jj = 0; jj < ns[kk]; jj++)
         {
-
             // soft constraint
             for (ii=0; ii<nb[kk]+ng[kk]; ii++)
             {
@@ -706,7 +702,7 @@ static void clarabel_init_data(ocp_qp_clarabel_memory* mem, ocp_qp_in *qp_in)
     //printf("ocp_qp_clarabel: created A\n");
     //print_csc_matrix(&mem->A, "A_mat");
     //print_csc_as_dns(&mem->A);
-    //for(int ii=0; ii<=n; ii++)
+    //for (int ii=0; ii<=n; ii++)
     //{
     //    printf("col ptr %d: %d\n", ii, mem->A_col_ptr[ii]);
     //}
@@ -716,7 +712,7 @@ static void clarabel_init_data(ocp_qp_clarabel_memory* mem, ocp_qp_in *qp_in)
     //printf("ocp_qp_clarabel: created P\n");
     //print_csc_matrix(&mem->P, "P_mat");
     //print_csc_as_dns(&mem->P);
-    //for(int ii=0; ii<=n; ii++)
+    //for (int ii=0; ii<=n; ii++)
     //{
     //    printf("col ptr %d: %d\n", ii, mem->P_col_ptr[ii]);
     //}
@@ -961,12 +957,12 @@ void ocp_qp_clarabel_memory_get(void *config_, void *mem_, const char *field, vo
     // qp_solver_config *config = config_;
     ocp_qp_clarabel_memory *mem = mem_;
 
-    if(!strcmp(field, "time_qp_solver_call"))
+    if (!strcmp(field, "time_qp_solver_call"))
     {
         double *tmp_ptr = value;
         *tmp_ptr = mem->time_qp_solver_call;
     }
-    else if(!strcmp(field, "iter"))
+    else if (!strcmp(field, "iter"))
     {
         int *tmp_ptr = value;
         *tmp_ptr = mem->iter;
@@ -1142,7 +1138,7 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
     {
         //printf("\nbefore build solver\n");
         // TODO for now, need to free previous solver (and csc matrices) ...
-        if(mem->solver!=NULL)
+        if (mem->solver!=NULL)
         {
             //printf("\nfreeing solver before new\n");
             clarabel_DefaultSolver_free(mem->solver);
@@ -1174,7 +1170,7 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
     //clarabel_DefaultSolver_free(mem->solver);
     //print_solution(&mem->solution);
 
-    // // fill qp_out
+    /* fill qp_out */
     fill_in_qp_out(qp_in, qp_out, mem);
     ocp_qp_compute_t(qp_in, qp_out);
 
@@ -1224,8 +1220,6 @@ void ocp_qp_clarabel_terminate(void *config_, void *mem_, void *work_)
 {
     ocp_qp_clarabel_memory *mem = (ocp_qp_clarabel_memory *) mem_;
     // Free the matrices and the solver
-    //printf("\nfree!!!!!!!!!\n");
-    // TODO is terminate actually called ??????
     clarabel_DefaultSolver_free(mem->solver);
 }
 
