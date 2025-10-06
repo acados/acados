@@ -856,8 +856,8 @@ void ocp_qp_clarabel_opts_set(void *config_, void *opts_, const char *field, voi
 {
     ocp_qp_clarabel_opts *opts = opts_;
 
-//     // NOTE/TODO(oj): options are copied into Clarabel at first call.
-//     // Updating options through this function does not work, only before the first call!
+    // NOTE/TODO(oj): options are copied into Clarabel at first call.
+    // Updating options through this function does not work, only before the first call!
     if (!strcmp(field, "iter_max"))
     {
         int *tmp_ptr = value;
@@ -884,11 +884,13 @@ void ocp_qp_clarabel_opts_set(void *config_, void *opts_, const char *field, voi
         double *tol = value;
         opts->clarabel_opts->tol_infeas_abs = *tol;
     }
-    // else if (!strcmp(field, "tol_comp"))
-    // {
-    // }
+    else if (!strcmp(field, "tol_comp"))
+    {
+        // do nothing
+    }
     else if (!strcmp(field, "warm_start"))
     {
+        // do nothing
     }
     else
     {
@@ -1270,10 +1272,9 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
         clarabel_init_data(mem, qp_in);
         // Build solver
         mem->solver = clarabel_DefaultSolver_new(&mem->P, mem->q, &mem->A, mem->b, 2, mem->cones, opts->clarabel_opts);
-        //printf("\nafter build solver %p\n", mem->solver);
-        // TODO for now always force first_run, because the updates are crashing...
-        mem->first_run = 0; // TODO uncomments once updates work ...
-        //mem->first_run = 1;
+        mem->first_run = 0;
+        // mem->first_run = 1;
+        // uncomment above to force first_run, and investigate solver updates.
     }
 
     // // solve Clarabel
@@ -1301,17 +1302,12 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
 
     //d_ocp_qp_sol_print(qp_in->dim, qp_out);
 
-    //printf("\nreturning\n");
-    //exit(0);
-    //return 0;
-
     // info
     ClarabelDefaultInfo clarabel_info = clarabel_DefaultSolver_info(mem->solver);
     info->solve_QP_time = acados_toc(&qp_timer);
     //info->solve_QP_time = clarabel_info.solve_time;
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = clarabel_info.iterations;
-    // info->t_computed = 1;
 
     // status
     int acados_status = ACADOS_QP_FAILURE; // generic QP failure
