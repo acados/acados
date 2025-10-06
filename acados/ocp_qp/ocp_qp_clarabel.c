@@ -1163,7 +1163,6 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
     //clarabel_DefaultSolver_save_to_file(mem->solver, "clarabel_data.txt");
     clarabel_DefaultSolver_solve(mem->solver);
     mem->time_qp_solver_call = acados_toc(&solver_call_timer);
-    // mem->iter = mem->clarabel_work->info->iter;
 
 
     // Get solution
@@ -1187,13 +1186,14 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
     //info->solve_QP_time = clarabel_info.solve_time;
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = clarabel_info.iterations;
+    mem->iter = clarabel_info.iterations;
 
     // status
     int acados_status = ACADOS_QP_FAILURE; // generic QP failure
     ClarabelSolverStatus clarabel_status = mem->solution.status;
-    if(clarabel_status==ClarabelSolved)
+    if (clarabel_status==ClarabelSolved)
         acados_status = ACADOS_SUCCESS;
-    else if(clarabel_status==ClarabelMaxIterations)
+    else if (clarabel_status==ClarabelMaxIterations)
         acados_status = ACADOS_MAXITER;
 
     return acados_status;
