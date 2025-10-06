@@ -13,12 +13,7 @@ cd acados
 git submodule update --recursive --init
 ```
 
-### Build and install `acados`
-A CMake and a Makefile based build system is available in acados.
-Note that only the `CMake` build system is tested using CI and is thus recommended.
-Please choose one and proceed with the corresponding paragraph.
-
-#### **CMake** (recommended)
+### Installation via **CMake**
 Install `acados` as follows:
 ```
 mkdir -p build
@@ -27,6 +22,9 @@ cmake -DACADOS_WITH_QPOASES=ON ..
 # add more optional arguments e.g. -DACADOS_WITH_DAQP=ON, a list of CMake options is provided below
 make install -j4
 ```
+Notes:
+- If you get an error: `Specify a source directory [...]`, you probably forgot the `..` part in the `cmake` command
+- An alternative [`make` build system has been deprecated](#deprecated-make-build-system)
 
 #### CMake options:
 Below is a list of CMake options available for configuring the `acados` build.
@@ -61,20 +59,6 @@ Adjust these options based on your requirements.
 
 For more details on specific options, refer to the comments in the `CMakeLists.txt` file.
 
-#### **Make** (not recommended)
-NOTE: This build system is not actively tested and might be removed in the future! It is strongly recommended to use the `CMake` build system.
-
-Set the `BLASFEO_TARGET` in `<acados_root_folder>/Makefile.rule`.
-Since some of the `C` examples use `qpOASES`, also set `ACADOS_WITH_QPOASES = 1` in  `<acados_root_folder>/Makefile.rule`.
-For a list of supported targets, we refer to https://github.com/giaf/blasfeo/blob/master/README.md .
-Install `acados` as follows:
-```
-make shared_library
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_acados_folder>/lib
-make examples_c
-make run_examples_c
-```
-NOTE: On MacOS `DYLD_LIBRARY_PATH` should be used instead of `LD_LIBRARY_PATH`.
 
 ### Interfaces installation
 For the installation of Python/MATLAB/Octave interfaces, please refer to the [Interfaces](../interfaces/index.md) page.
@@ -197,3 +181,18 @@ cmake --build . -j10 --target INSTALL --config Release
 ```
 - In MATLAB, run `mex -setup C` and select the same `MSVC` version.
 - Try a MATLAB example (see above).
+
+
+#### Deprecated: **Make** build system
+NOTE: This build system is not actively tested and might be removed in the future! It is strongly recommended to use the `CMake` build system.
+
+Set the `BLASFEO_TARGET` in `<acados_root_folder>/Makefile.rule`.
+Since some `C` examples use `qpOASES`, also set `ACADOS_WITH_QPOASES = 1` in  `<acados_root_folder>/Makefile.rule`.
+Install `acados` as follows:
+```
+make shared_library
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_acados_folder>/lib
+make examples_c
+make run_examples_c
+```
+NOTE: On MacOS `DYLD_LIBRARY_PATH` should be used instead of `LD_LIBRARY_PATH`.
