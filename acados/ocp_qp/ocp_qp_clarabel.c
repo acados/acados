@@ -727,7 +727,7 @@ static void clarabel_init_data(ocp_qp_clarabel_memory* mem, ocp_qp_in *qp_in)
 static void ocp_qp_clarabel_update_memory(const ocp_qp_in *in, const ocp_qp_clarabel_opts *opts,
                                       ocp_qp_clarabel_memory *mem)
 {
-    if (mem->first_run)
+    if (opts->first_run)
     {
         update_hessian_structure(in, mem);
         update_constraints_matrix_structure(in, mem);
@@ -782,11 +782,8 @@ void ocp_qp_clarabel_opts_initialize_default(void *config_, void *dims_, void *o
     *opts->clarabel_opts = clarabel_DefaultSettings_default();
     opts->clarabel_opts->verbose = false;
     opts->clarabel_opts->presolve_enable = false;
-//     clarabel_set_default_settings(opts->clarabel_opts);
-//     opts->clarabel_opts->verbose = 0;
-//     opts->clarabel_opts->polish = 1;
-//     opts->clarabel_opts->check_termination = 5;
-//     opts->clarabel_opts->warm_start = 1;
+
+    opts->first_run = 1;
 
     return;
 }
@@ -804,8 +801,15 @@ void ocp_qp_clarabel_opts_set(void *config_, void *opts_, const char *field, voi
 {
     ocp_qp_clarabel_opts *opts = opts_;
 
-    // NOTE/TODO(oj): options are copied into Clarabel at first call.
     // Updating options through this function does not work, only before the first call!
+    if (!opts->first_run)
+    {
+#ifndef ACADOS_SILENT
+        printf("\nWARNING: ocp_qp_clarabel_opts_set: attempting to set field: %s. However, options cannot be changed after first run, option is NOT updated. \n", field);
+#endif
+        return;
+    }
+
     if (!strcmp(field, "iter_max"))
     {
         int *tmp_ptr = value;
@@ -914,7 +918,6 @@ void *ocp_qp_clarabel_memory_assign(void *config_, void *dims_, void *opts_, voi
     mem->P_nnzmax = P_nnzmax;
     mem->A_nnzmax = A_nnzmax;
 
-    mem->first_run = 1;
     mem->solver = NULL;
 
     align_char_to(8, &c_ptr);
@@ -1126,7 +1129,7 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
 
     acados_tic(&qp_timer);
 
-    if (!mem->first_run)
+    if (!opts->first_run)
     {
         // ClarabelDefaultInfo tmp_info;
         clarabel_DefaultSolver_update_P(mem->solver, mem->P_nzval, mem->P_nnz);
@@ -1147,8 +1150,8 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
         clarabel_init_data(mem, qp_in);
         // Build solver
         mem->solver = clarabel_DefaultSolver_new(&mem->P, mem->q, &mem->A, mem->b, 2, mem->cones, opts->clarabel_opts);
-        mem->first_run = 0;
-        // mem->first_run = 1;
+        opts->first_run = 0;
+        // opts->first_run = 1;
         // uncomment above to force first_run, and investigate solver updates.
     }
 

@@ -49,13 +49,13 @@ typedef struct ocp_qp_clarabel_opts_
     // settings *clarabel_opts;
     ClarabelDefaultSettings *clarabel_opts;
     int print_level;
+    int first_run;
+
 } ocp_qp_clarabel_opts;
 
 
 typedef struct ocp_qp_clarabel_memory_
 {
-    uintptr_t first_run;
-
     ClarabelCscMatrix P; // just upper triangular is enough
     uintptr_t P_nnzmax;
     uintptr_t *P_col_ptr;
