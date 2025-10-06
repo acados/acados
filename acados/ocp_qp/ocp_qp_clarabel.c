@@ -868,52 +868,33 @@ void ocp_qp_clarabel_opts_set(void *config_, void *opts_, const char *field, voi
         int* print_level = (int *) value;
         opts->print_level = *print_level;
     }
-//     else if (!strcmp(field, "tol_stat"))
-//     {
-//         double *tol = value;
-//         // printf("in ocp_qp_clarabel_opts_set, tol_stat %e\n", *tol);
-
-//         // opts->clarabel_opts->eps_rel = *tol;
-//         // opts->clarabel_opts->eps_dual_inf = *tol;
-
-//         opts->clarabel_opts->eps_rel = fmax(*tol, 1e-5);
-//         opts->clarabel_opts->eps_dual_inf = fmax(*tol, 1e-5);
-
-//         if (*tol <= 1e-3)
-//         {
-//             opts->clarabel_opts->polish = 1;
-//             opts->clarabel_opts->polish_refine_iter = 5;
-//         }
-//     }
-//     else if (!strcmp(field, "tol_eq"))
-//     {
-//         double *tol = value;
-//         opts->clarabel_opts->eps_prim_inf = *tol;
-//     }
-//     else if (!strcmp(field, "tol_ineq"))
-//     {
-//         double *tol = value;
-//         opts->clarabel_opts->eps_prim_inf = *tol;
-//     }
-//     else if (!strcmp(field, "tol_comp"))
-//     {
-//         // "Clarabel always satisfies complementary slackness conditions
-//         //  with machine precision by construction." - Strellato2020
-//     }
-//     else if (!strcmp(field, "warm_start"))
-//     {
-//         // XXX after the first call to the solver, this doesn't work any more, as in clarabel the settings are copied in the work !!!!!
-//         // XXX i.e. as it is, it gets permanently set to zero if warm start is disabled at the fist iteration !!!!!
-//         int *tmp_ptr = value;
-//         // int tmp_ptr[] = {1};
-//         opts->clarabel_opts->warm_start = *tmp_ptr;
-//         // printf("\nwarm start %d\n", opts->clarabel_opts->warm_start);
-//     }
-    // else
+    else if (!strcmp(field, "tol_stat"))
+    {
+        double *tol = value;
+        // printf("in ocp_qp_clarabel_opts_set, tol_stat %e\n", *tol);
+        opts->clarabel_opts->tol_gap_abs = *tol;
+    }
+    else if (!strcmp(field, "tol_eq"))
+    {
+        double *tol = value;
+        opts->clarabel_opts->tol_infeas_abs = *tol;
+    }
+    else if (!strcmp(field, "tol_ineq"))
+    {
+        double *tol = value;
+        opts->clarabel_opts->tol_infeas_abs = *tol;
+    }
+    // else if (!strcmp(field, "tol_comp"))
     // {
-    //     printf("\nerror: ocp_qp_clarabel_opts_set: wrong field: %s\n", field);
-    //     exit(1);
     // }
+    else if (!strcmp(field, "warm_start"))
+    {
+    }
+    else
+    {
+        printf("\nWARNING: ocp_qp_clarabel_opts_set: field: %s not interfaced yet. Ignoring option and \n", field);
+        exit(1);
+    }
 
     return;
 }
