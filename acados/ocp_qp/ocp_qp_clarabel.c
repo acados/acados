@@ -48,7 +48,7 @@
  * helper functions
  ************************************************/
 
-#if 1
+#if 0
 static void print_csc_as_dns(ClarabelCscMatrix *M)
 {
     int i, j = 0; // Predefine row index and column index
@@ -829,6 +829,7 @@ void *ocp_qp_clarabel_opts_assign(void *config_, void *dims_, void *raw_memory)
 void ocp_qp_clarabel_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     ocp_qp_clarabel_opts *opts = opts_;
+    opts->print_level = 0;
 
     *opts->clarabel_opts = clarabel_DefaultSettings_default();
     opts->clarabel_opts->verbose = false;
@@ -857,11 +858,16 @@ void ocp_qp_clarabel_opts_set(void *config_, void *opts_, const char *field, voi
 
 //     // NOTE/TODO(oj): options are copied into Clarabel at first call.
 //     // Updating options through this function does not work, only before the first call!
-     if (!strcmp(field, "iter_max"))
-     {
-         int *tmp_ptr = value;
-         opts->clarabel_opts->max_iter = *tmp_ptr;
-     }
+    if (!strcmp(field, "iter_max"))
+    {
+        int *tmp_ptr = value;
+        opts->clarabel_opts->max_iter = *tmp_ptr;
+    }
+    else if (!strcmp(field, "print_level"))
+    {
+        int* print_level = (int *) value;
+        opts->print_level = *print_level;
+    }
 //     else if (!strcmp(field, "tol_stat"))
 //     {
 //         double *tol = value;
@@ -903,11 +909,11 @@ void ocp_qp_clarabel_opts_set(void *config_, void *opts_, const char *field, voi
 //         opts->clarabel_opts->warm_start = *tmp_ptr;
 //         // printf("\nwarm start %d\n", opts->clarabel_opts->warm_start);
 //     }
-//     else
-//     {
-//         printf("\nerror: ocp_qp_clarabel_opts_set: wrong field: %s\n", field);
-//         exit(1);
-//     }
+    // else
+    // {
+    //     printf("\nerror: ocp_qp_clarabel_opts_set: wrong field: %s\n", field);
+    //     exit(1);
+    // }
 
     return;
 }
@@ -1301,7 +1307,10 @@ int ocp_qp_clarabel(void *config_, void *qp_in_, void *qp_out_, void *opts_, voi
 
     // Get solution
     mem->solution = clarabel_DefaultSolver_solution(mem->solver);
-    //print_solution(&mem->solution);
+    if (opts->print_level > 1)
+    {
+        print_solution(&mem->solution);
+    }
     //clarabel_DefaultSolver_free(mem->solver);
     //print_solution(&mem->solution);
 

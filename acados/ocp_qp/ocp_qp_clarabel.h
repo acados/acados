@@ -48,6 +48,7 @@ typedef struct ocp_qp_clarabel_opts_
 {
     // settings *clarabel_opts;
     ClarabelDefaultSettings *clarabel_opts;
+    int print_level;
 } ocp_qp_clarabel_opts;
 
 
