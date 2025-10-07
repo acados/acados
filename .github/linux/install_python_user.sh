@@ -39,5 +39,9 @@ virtualenv --python=python3 acadosenv;
 source acadosenv/bin/activate;
 which python;
 
-# Developer install: editable mode to reuse pre-built binaries
-pip install -e .
+# User install: regular pip install (builds C libraries automatically)
+pip install .
+
+# Update LD_LIBRARY_PATH to use the bundled libraries
+LIB_PATH=$(python -c 'from acados_template import get_lib_path; print(get_lib_path())')
+echo "LD_LIBRARY_PATH=$LIB_PATH:$LD_LIBRARY_PATH" >> $GITHUB_ENV
