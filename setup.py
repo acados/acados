@@ -32,6 +32,7 @@ import os
 import sys
 import subprocess
 import shutil
+import urllib.request
 from pathlib import Path
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
@@ -137,6 +138,64 @@ class CMakeBuild(build_ext):
                     if os.path.exists(dst):
                         shutil.rmtree(dst)
                     shutil.copytree(src, dst)
+        
+        # Download and install tera renderer
+        self.download_tera_renderer(bin_dir)
+    
+    def download_tera_renderer(self, bin_dir):
+        """Download tera renderer binary during pip install"""
+        import platform
+        import urllib.request
+        
+        TERA_VERSION = "0.2.0"
+        binary_ext = ".exe" if os.name == 'nt' else ""
+        
+        # Platform mapping
+        PLATFORM2TERA = {
+            'linux': 'linux',
+            'darwin': 'osx',
+            'win32': 'windows'
+        }
+        
+        # Get architecture
+        arch = platform.machine().lower()
+        if arch in ['x86_64', 'amd64']:
+            arch = 'amd64'
+        elif arch in ['arm64', 'aarch64']:
+            arch = 'arm64'
+        else:
+            print(f"Warning: Unsupported architecture {arch} for tera renderer. Skipping download.")
+            print("You can manually download it from https://github.com/acados/tera_renderer/releases")
+            return
+        
+        platform_name = PLATFORM2TERA.get(sys.platform)
+        if not platform_name:
+            print(f"Warning: Unsupported platform {sys.platform} for tera renderer. Skipping download.")
+            print("You can manually download it from https://github.com/acados/tera_renderer/releases")
+            return
+        
+        # Construct download URL
+        repo_url = "https://github.com/acados/tera_renderer/releases"
+        url = f"{repo_url}/download/v{TERA_VERSION}/t_renderer-v{TERA_VERSION}-{platform_name}-{arch}{binary_ext}"
+        
+        tera_path = os.path.join(bin_dir, f"t_renderer{binary_ext}")
+        
+        # Download tera
+        try:
+            print(f"Downloading tera renderer from {url}")
+            with urllib.request.urlopen(url) as response, open(tera_path, 'wb') as out_file:
+                shutil.copyfileobj(response, out_file)
+            print("Successfully downloaded t_renderer.")
+            
+            # Make executable (Unix-like systems)
+            if os.name != 'nt':
+                os.chmod(tera_path, 0o755)
+                print("Successfully made t_renderer executable.")
+        except Exception as e:
+            print(f"Warning: Failed to download tera renderer: {e}")
+            print("You can manually download it from https://github.com/acados/tera_renderer/releases")
+            print(f"Place it in: {bin_dir}")
+
 
 
 setup(
