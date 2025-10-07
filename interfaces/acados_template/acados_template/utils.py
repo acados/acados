@@ -78,12 +78,20 @@ def get_acados_path():
     ACADOS_PATH = os.environ.get('ACADOS_SOURCE_DIR')
     if not ACADOS_PATH:
         acados_template_path = os.path.dirname(os.path.abspath(__file__))
-        acados_path = os.path.join(acados_template_path, '..','..','..')
-        ACADOS_PATH = os.path.realpath(acados_path)
-        msg = 'Warning: Did not find environment variable ACADOS_SOURCE_DIR, '
-        msg += 'guessed ACADOS_PATH to be {}.\n'.format(ACADOS_PATH)
-        msg += 'Please export ACADOS_SOURCE_DIR to avoid this warning.'
-        print(msg)
+        
+        # First, check if lib directory exists in the package (pip installed)
+        bundled_lib = os.path.join(acados_template_path, 'lib')
+        if os.path.exists(bundled_lib) and os.path.isdir(bundled_lib):
+            # Use the package directory as ACADOS_PATH for pip-installed version
+            ACADOS_PATH = acados_template_path
+        else:
+            # Fall back to the traditional approach (source installation)
+            acados_path = os.path.join(acados_template_path, '..','..','..')
+            ACADOS_PATH = os.path.realpath(acados_path)
+            msg = 'Warning: Did not find environment variable ACADOS_SOURCE_DIR, '
+            msg += 'guessed ACADOS_PATH to be {}.\n'.format(ACADOS_PATH)
+            msg += 'Please export ACADOS_SOURCE_DIR to avoid this warning.'
+            print(msg)
     return ACADOS_PATH
 
 
@@ -98,7 +106,17 @@ def get_python_interface_path():
 def get_tera_exec_path():
     TERA_PATH = os.environ.get('TERA_PATH')
     if not TERA_PATH:
-        TERA_PATH = os.path.join(get_acados_path(), 'bin', 't_renderer') + get_binary_ext()
+        acados_path = get_acados_path()
+        acados_template_path = os.path.dirname(os.path.abspath(__file__))
+        
+        # Check if this is a pip-installed version (lib exists in package)
+        bundled_lib = os.path.join(acados_template_path, 'lib')
+        if os.path.exists(bundled_lib) and os.path.isdir(bundled_lib):
+            # For pip-installed version, use bin directory in package
+            TERA_PATH = os.path.join(acados_template_path, 'bin', 't_renderer') + get_binary_ext()
+        else:
+            # Traditional source installation
+            TERA_PATH = os.path.join(acados_path, 'bin', 't_renderer') + get_binary_ext()
 
     # convert to absolute path
     TERA_PATH = os.path.abspath(TERA_PATH)
