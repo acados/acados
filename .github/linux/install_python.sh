@@ -40,4 +40,6 @@ source acadosenv/bin/activate;
 which python;
 
 # Developer install: editable mode to reuse pre-built binaries from core_build
+# Install setuptools_scm first as it's needed by setup.py
+pip install setuptools_scm
 pip install -e interfaces/acados_template
