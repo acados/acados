@@ -1,7 +1,7 @@
 import re
 
 from enum import Enum
-from typing import Union
+from typing import Union, Set
 
 
 class ArchType(str, Enum):
@@ -12,7 +12,7 @@ class ArchType(str, Enum):
 
 
 class AcadosRosBaseOptions:
-    _NOT_IMPLEMENTED_ARCHTYPES: set[ArchType] = {
+    _NOT_IMPLEMENTED_ARCHTYPES: Set[ArchType] = {
         ArchType.LIFECYCLE_NODE,
         ArchType.ROS2_CONTROLLER,
         ArchType.NAV2_CONTROLLER}

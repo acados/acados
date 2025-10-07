@@ -31,7 +31,7 @@ import json
 import os
 import re
 
-from typing import Optional, Union, TYPE_CHECKING, Literal
+from typing import Optional, Union, TYPE_CHECKING, Literal, List, Tuple
 from itertools import chain
 from casadi import SX, MX
 
@@ -47,7 +47,7 @@ if TYPE_CHECKING:
 
 
 
-def _parse_msg_type(msg_type: str) -> tuple[str, str]:
+def _parse_msg_type(msg_type: str) -> Tuple[str, str]:
     msg_type = msg_type.strip()
     if "/" in msg_type:
         # "pkg/Type"
@@ -76,7 +76,7 @@ class RosField:
         ftype: str,
         is_array: bool = False,
         array_size: Optional[int] = None,
-        children: list['RosField'] | None = None
+        children: Optional[List['RosField']] = None
     ):
         if not isinstance(name, str):
             raise TypeError("RosField.name must be str")
@@ -89,7 +89,7 @@ class RosField:
         if children is None:
             children = []
         if not isinstance(children, list) or not all(isinstance(ch, RosField) for ch in children):
-            raise TypeError("RosField.children must be list[RosField]")
+            raise TypeError("RosField.children must be List[RosField]")
         self.name = name
         self.ftype = ftype
         self.is_array = is_array
@@ -109,31 +109,30 @@ class RosField:
             "children": [c.to_dict() for c in self.children],
         }
 
-    def flatten(self, field: Optional['RosField'] = None) -> list['RosField']:
+    def flatten(self, field: Optional['RosField'] = None) -> List['RosField']:
         new_name = self.name if field is None else f"{field.name}.{self.name}"
         field_copy = RosField(new_name, self.ftype, self.is_array, self.array_size, self.children)
 
         if not self.children:
             return [field_copy]
 
-        out: list['RosField'] = []
+        out: List['RosField'] = []
         for c in self.children:
             out.extend(c.flatten(field_copy))
         return out
 
     @staticmethod
     def __get_cpp_type(ftype: str):
-        match ftype:
-            case "float64":
-                return "double"
-            case "float32":
-                return "float"
-            case "int8":
-                return "int8_t"
-            case "int16":
-                return "int16_t"
-            case "int32":
-                return "int32_t"
+        if ftype == "float64":
+            return "double"
+        elif ftype == "float32":
+            return "float"
+        elif ftype == "int8":
+            return "int8_t"
+        elif ftype == "int16":
+            return "int16_t"
+        elif ftype == "int32":
+            return "int32_t"
 
         if "/" in ftype or "::" in ftype:
             return _cpp_msg_type(ftype)
@@ -145,8 +144,8 @@ class RosTopicMsg:
     def __init__(self):
         self.__topic_name: str = ""
         self.__msg_type: str = ""
-        self.__field_tree: list[RosField] = list()
-        self._flat_field_tree: list[RosField] = list()
+        self.__field_tree: List[RosField] = list()
+        self._flat_field_tree: List[RosField] = list()
 
     @property
     def topic_name(self) -> str:
@@ -157,7 +156,7 @@ class RosTopicMsg:
         return self.__msg_type
 
     @property
-    def field_tree(self) -> list[RosField]:
+    def field_tree(self) -> List[RosField]:
         return self.__field_tree
 
     @topic_name.setter
@@ -175,7 +174,7 @@ class RosTopicMsg:
         self.__msg_type = value
 
     @field_tree.setter
-    def field_tree(self, value: list[RosField]):
+    def field_tree(self, value: List[RosField]):
         if not isinstance(value, list) or not all(isinstance(item, RosField) for item in value):
             raise TypeError('Invalid field_tree value, expected list of RosField.\n')
         self.__field_tree = value
@@ -195,12 +194,12 @@ class RosTopicMsg:
 class RosTopicMsgOutput(RosTopicMsg):
     def __init__(self):
         super().__init__()
-        self.__mapping: list[dict] = list()
+        self.__mapping: List[dict] = list()
         self.__exec_topic: str = ""
         self._needs_publish_lock: bool = False
 
     @property
-    def mapping(self) -> list[dict]:
+    def mapping(self) -> List[dict]:
         return self.__mapping
 
     @property
@@ -208,7 +207,7 @@ class RosTopicMsgOutput(RosTopicMsg):
         return self.__exec_topic
 
     @mapping.setter
-    def mapping(self, value: list[tuple[str, str]]):
+    def mapping(self, value: List[Tuple[str, str]]):
         if not isinstance(value, list) or not all(isinstance(item, tuple) and len(item) == 2 and all(isinstance(i, str) for i in item) for item in value):
             raise TypeError('Invalid mapping value, expected list of tuples (str, str).\n')
         self.__mapping = [self.__parse_mapping_pair(src, dest) for src, dest in value]
@@ -220,10 +219,13 @@ class RosTopicMsgOutput(RosTopicMsg):
         self.__exec_topic = value
 
     def to_dict(self) -> dict:
-        return super().to_dict() | {
+        d = super().to_dict()
+        d.update({
             "mapping": self.mapping,
             "exec_topic": self.exec_topic,
-            "needs_publish_lock": self._needs_publish_lock}
+            "needs_publish_lock": self._needs_publish_lock
+        })
+        return d
 
     @classmethod
     def from_msg(
@@ -287,19 +289,19 @@ class RosTopicMapper(AcadosRosBaseOptions):
         self.__header_includes: set[str] = set()
         self.__dependencies: set[str] = set()
 
-        self.__in_msgs: list[RosTopicMsg] = []
-        self.__out_msgs: list[RosTopicMsgOutput] = []
+        self.__in_msgs: List[RosTopicMsg] = []
+        self.__out_msgs: List[RosTopicMsgOutput] = []
 
         self.__ocp_json_file: str = ""
         self.__sim_json_file: str = ""
         self.__mapper_json_file = "ros_mapper.json"
 
     @property
-    def in_msgs(self) -> list[RosTopicMsg]:
+    def in_msgs(self) -> List[RosTopicMsg]:
         return self.__in_msgs
 
     @property
-    def out_msgs(self) -> list[RosTopicMsgOutput]:
+    def out_msgs(self) -> List[RosTopicMsgOutput]:
         return self.__out_msgs
 
     @property
@@ -315,13 +317,13 @@ class RosTopicMapper(AcadosRosBaseOptions):
         return self.__mapper_json_file
 
     @in_msgs.setter
-    def in_msgs(self, value: list[RosTopicMsg]):
+    def in_msgs(self, value: List[RosTopicMsg]):
         if not isinstance(value, list) or not all(isinstance(item, RosTopicMsg) for item in value):
             raise TypeError('Invalid in_msg value, expected list of RosTopicMsg.\n')
         self.__in_msgs = value
 
     @out_msgs.setter
-    def out_msgs(self, value: list[RosTopicMsgOutput]):
+    def out_msgs(self, value: List[RosTopicMsgOutput]):
         if not isinstance(value, list ) or not all(isinstance(item, RosTopicMsgOutput) for item in value):
             raise TypeError('Invalid out_msg value, expected list of RosTopicMsgOutput.\n')
         self.__out_msgs = value
@@ -461,7 +463,7 @@ class RosTopicMapper(AcadosRosBaseOptions):
 
 
     def check_none_values(self):
-        non_values: list[str] = []
+        non_values: List[str] = []
 
         if not self.in_msgs:
             non_values.append(f"input")
@@ -615,7 +617,7 @@ def _size(sym: Union[SX, MX]) -> int:
     return int(sym.numel())
 
 
-def _elem_names(sym: Union[SX, MX]) -> list[str]:
+def _elem_names(sym: Union[SX, MX]) -> List[str]:
     n = _size(sym)
     return [str(sym[i].name()) for i in range(n)]
 
@@ -623,15 +625,15 @@ def _elem_names(sym: Union[SX, MX]) -> list[str]:
 def _compute_mapping(
         src_topic: str,
         src_name: str,
-        src_labels: list[str],
+        src_labels: List[str],
         dst_name: str,
-        dst_labels: list[str]
-) -> list[tuple[str, str]]:
+        dst_labels: List[str]
+) -> List[Tuple[str, str]]:
     """Return mapping pairs [(f"{src_topic}.{src_name}[i]","{dst_name}[j]")]."""
     if src_labels == dst_labels:
         return [(f"{src_topic}.{src_name}", f"{dst_name}")]
 
-    pairs: list[tuple[str, str]] = []
+    pairs: List[Tuple[str, str]] = []
 
     # Label-based match
     for j, lbl in enumerate(dst_labels):
