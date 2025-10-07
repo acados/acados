@@ -34,6 +34,8 @@ dependencies = [
     "scipy",
     "casadi",
     "matplotlib",
+    "future-fstrings",
+    "cython",
 ]
 
 [project.urls]
@@ -44,8 +46,10 @@ Repository = "https://github.com/acados/acados"
 Forum = "https://discourse.acados.org"
 
 [tool.setuptools]
-packages = ["acados_template"]
-package-dir = {"acados_template" = "interfaces/acados_template/acados_template"}
+package-dir = {"" = "interfaces/acados_template"}
+
+[tool.setuptools.packages.find]
+where = ["interfaces/acados_template"]
 
 [tool.setuptools.package-data]
 acados_template = [

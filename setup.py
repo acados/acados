@@ -103,9 +103,18 @@ class CMakeBuild(build_ext):
             ["cmake", "--install", "."], cwd=self.build_temp
         )
         
+        # Find the actual install directory (CMake might create nested directories)
+        # Look for the lib directory
+        actual_install_dir = install_dir
+        if not os.path.exists(os.path.join(actual_install_dir, "lib")):
+            # Check if it's nested in build/temp.../install
+            nested_install = os.path.join(self.build_temp, "build", os.path.basename(self.build_temp), "install")
+            if os.path.exists(nested_install):
+                actual_install_dir = nested_install
+        
         # Copy lib and include to package directory
-        install_lib = os.path.join(install_dir, "lib")
-        install_include = os.path.join(install_dir, "include")
+        install_lib = os.path.join(actual_install_dir, "lib")
+        install_include = os.path.join(actual_install_dir, "include")
         
         if os.path.exists(install_lib):
             for item in os.listdir(install_lib):
