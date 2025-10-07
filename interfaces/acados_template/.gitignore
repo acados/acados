@@ -2,3 +2,7 @@
 __pycache__
 .eggs
 dist
+acados_template/lib
+acados_template/include
+acados_template/bin
+acados_template/_version.py
