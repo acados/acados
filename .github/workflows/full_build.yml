@@ -28,6 +28,10 @@ jobs:
       shell: bash
       run: ${{ github.workspace }}/.github/linux/install_python_user.sh
 
+    - name: Install Tera
+      shell: bash
+      run: ${{ github.workspace }}/.github/linux/install_tera.sh
+
     - name: Getting started examples
       working-directory: ${{ github.workspace }}/examples/acados_python/getting_started
       shell: bash
