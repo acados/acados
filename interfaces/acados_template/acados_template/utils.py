@@ -103,6 +103,22 @@ def get_python_interface_path():
     return ACADOS_PYTHON_INTERFACE_PATH
 
 
+def get_lib_path():
+    """
+    Get the path to the acados shared libraries directory.
+    
+    This can be used to set LD_LIBRARY_PATH (Linux) or DYLD_LIBRARY_PATH (macOS).
+    
+    Example:
+        import os
+        from acados_template import get_lib_path
+        lib_path = get_lib_path()
+        os.environ['LD_LIBRARY_PATH'] = lib_path + os.pathsep + os.environ.get('LD_LIBRARY_PATH', '')
+    """
+    acados_path = get_acados_path()
+    return os.path.join(acados_path, 'lib')
+
+
 def get_tera_exec_path():
     TERA_PATH = os.environ.get('TERA_PATH')
     if not TERA_PATH:
