@@ -39,5 +39,5 @@ virtualenv --python=python3 acadosenv;
 source acadosenv/bin/activate;
 which python;
 
-# Developer install: editable mode to reuse pre-built binaries
-pip install -e .
+# Developer install: editable mode to reuse pre-built binaries from core_build
+pip install -e interfaces/acados_template
