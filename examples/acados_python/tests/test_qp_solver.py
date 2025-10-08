@@ -34,10 +34,12 @@ sys.path.insert(0, '../pendulum_on_cart/common')
 from acados_template import AcadosOcp, AcadosOcpSolver
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
+import argparse
 import scipy.linalg
 
 
-def main():
+def main(qp_solver="PARTIAL_CONDENSING_OSQP"):
+    print(f"Solving with {qp_solver}")
     ocp = AcadosOcp()
 
     # set model
@@ -85,7 +87,7 @@ def main():
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
     # set options
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_OSQP'
+    ocp.solver_options.qp_solver = qp_solver
 
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'ERK'
@@ -122,4 +124,7 @@ def main():
     # plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--qp_solver', type=str, default='PARTIAL_CONDENSING_OSQP', help='QP solver to use')
+    args = parser.parse_args()
+    main(qp_solver=args.qp_solver)

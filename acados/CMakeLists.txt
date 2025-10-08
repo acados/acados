@@ -66,6 +66,10 @@ if(NOT ACADOS_WITH_OSQP)
     list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_osqp.c")
 endif()
 
+if(NOT ACADOS_WITH_CLARABEL)
+    list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_clarabel.c")
+endif()
+
 # Define acados library
 add_library(acados ${ACADOS_SRC})
 
@@ -134,8 +138,13 @@ if(ACADOS_WITH_OSQP)
     target_link_libraries(acados PUBLIC osqp)
 
     target_compile_definitions(acados PUBLIC ACADOS_WITH_OSQP)
-    # TODO(dimitris): needed or not?
-    # target_compile_definitions(acados PUBLIC USE_ACADOS_TYPES)
+endif()
+
+if(ACADOS_WITH_CLARABEL)
+    target_link_libraries(acados PUBLIC libclarabel_c_shared)
+    # target_link_libraries(acados INTERFACE libclarabel_c)
+
+    target_compile_definitions(acados PUBLIC ACADOS_WITH_CLARABEL)
 endif()
 
 if(ACADOS_WITH_OOQP)
@@ -187,6 +196,7 @@ configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/acadosConfig.cmake.in
                                         ACADOS_WITH_DAQP
                                         ACADOS_WITH_QPDUNES
                                         ACADOS_WITH_OSQP
+                                        ACADOS_WITH_CLARABEL
                                         ACADOS_WITH_OOQP)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/acadosConfig.cmake
