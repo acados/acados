@@ -39,3 +39,6 @@
 [submodule "external/daqp"]
 	path = external/daqp
 	url = https://github.com/darnstrom/daqp.git
+[submodule "external/Clarabel.cpp"]
+	path = external/Clarabel.cpp
+	url = https://github.com/acados/Clarabel.cpp.git
