@@ -30,6 +30,7 @@
 #
 
 import os
+import warnings
 
 from .utils import check_if_nparray_and_flatten
 
@@ -2253,7 +2254,7 @@ class AcadosOcpOptions:
 
     @num_threads_in_batch_solve.setter
     def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
-        print("Warning: num_threads_in_batch_solve is deprecated, set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
+        warnings.warn("num_threads_in_batch_solve is deprecated, set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.", DeprecationWarning, stacklevel=2)
         if isinstance(num_threads_in_batch_solve, int) and num_threads_in_batch_solve > 0:
             self.__num_threads_in_batch_solve = num_threads_in_batch_solve
         else:

@@ -31,6 +31,7 @@
 
 import os, json
 import numpy as np
+import warnings
 from typing import Optional
 from copy import deepcopy
 from .acados_model import AcadosModel
@@ -297,7 +298,7 @@ class AcadosSimOptions:
 
     @num_threads_in_batch_solve.setter
     def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
-        print("Warning: num_threads_in_batch_solve is deprecated, set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
+        warnings.warn("num_threads_in_batch_solve is deprecated, set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.", DeprecationWarning, stacklevel=2)
         if isinstance(num_threads_in_batch_solve, int) and num_threads_in_batch_solve > 0:
             self.__num_threads_in_batch_solve = num_threads_in_batch_solve
         else:

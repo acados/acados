@@ -459,7 +459,7 @@ class AcadosOcpSolver:
             if fail_on_nonzero_status:
                 raise RuntimeError(f'acados acados_ocp_solver returned status {status}')
             elif print_stats_on_failure:
-                print(f'Warning: acados acados_ocp_solver returned status {status}')
+                warnings.warn(f'acados acados_ocp_solver returned status {status}')
 
         u0 = self.get(0, "u")
         return u0
@@ -674,7 +674,7 @@ class AcadosOcpSolver:
 
 
     def get_optimal_value_gradient(self, with_respect_to: str = "initial_state") -> np.ndarray:
-        print("Deprecation warning: get_optimal_value_gradient() is deprecated and has been renamed to eval_and_get_optimal_value_gradient().")
+        warnings.warn("get_optimal_value_gradient() is deprecated and has been renamed to eval_and_get_optimal_value_gradient().", DeprecationWarning, stacklevel=2)
         return self.eval_and_get_optimal_value_gradient(with_respect_to)
 
 

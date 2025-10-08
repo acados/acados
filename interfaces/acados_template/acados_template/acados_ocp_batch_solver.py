@@ -36,6 +36,7 @@ from typing import Optional, List, Tuple, Sequence, Union
 from ctypes import (POINTER, c_int, c_void_p, cast, c_double, c_char_p)
 import numpy as np
 import time
+import warnings
 
 class AcadosOcpBatchSolver():
     """
@@ -61,13 +62,11 @@ class AcadosOcpBatchSolver():
             raise ValueError("AcadosOcpBatchSolver: argument N_batch_max should be a positive integer.")
         if num_threads_in_batch_solve is None:
             num_threads_in_batch_solve = ocp.solver_options.num_threads_in_batch_solve
-            print(f"Warning: num_threads_in_batch_solve is None. Using value {num_threads_in_batch_solve} set in ocp.solver_options instead.")
-            print("In the future, it should be passed explicitly in the AcadosOcpBatchSolver constructor.")
+            warnings.warn(f"num_threads_in_batch_solve is None. Using value {num_threads_in_batch_solve} set in ocp.solver_options instead. In the future, it should be passed explicitly in the AcadosOcpBatchSolver constructor.")
         if not isinstance(num_threads_in_batch_solve, int) or num_threads_in_batch_solve <= 0:
             raise ValueError("AcadosOcpBatchSolver: argument num_threads_in_batch_solve should be a positive integer.")
         if not ocp.solver_options.with_batch_functionality:
-            print("Warning: Using AcadosOcpBatchSolver, but ocp.solver_options.with_batch_functionality is False.")
-            print("Attempting to compile with openmp nonetheless.")
+            warnings.warn("Using AcadosOcpBatchSolver, but ocp.solver_options.with_batch_functionality is False. Attempting to compile with openmp nonetheless.")
             ocp.solver_options.with_batch_functionality = True
 
         self.__num_threads_in_batch_solve = num_threads_in_batch_solve
