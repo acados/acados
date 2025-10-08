@@ -15,7 +15,16 @@ One can interact with the generated solver using the Python wrapper.
 There is a `ctypes` based wrapper which is the default and a `cython` based wrapper which allows for faster interaction with the C code, to allow deployment of the `acados` solver in a Python framework with less overhead.
 
 ## Examples
+
 Examples for Python can be found in the [folder `examples/acados_python` of the `acados` repository](https://github.com/acados/acados/tree/main/examples/acados_python).
+
+### Getting Started Tutorial
+
+For a detailed walkthrough of implementing closed-loop MPC, see the [Minimal Closed-Loop MPC Example](./minimal_example_closed_loop.md) tutorial. This guide explains step-by-step how to:
+- Set up an OCP solver for a pendulum system
+- Configure cost functions and constraints
+- Implement a closed-loop simulation with feedback
+- Analyze and visualize results
 
 
 ## Optimal Control Problem description
