@@ -1912,26 +1912,26 @@ class AcadosOcp:
     def __translate_ls_cost_to_external_cost(x, u, z, Vx, Vu, Vz, yref, W):
         res = 0
         if not is_empty(Vx):
-            res += Vx @ x
+            res += ca.sparsify(Vx) @ x
         if not is_empty(Vu):
-            res += Vu @ u
+            res += ca.sparsify(Vu) @ u
         if not is_empty(Vz):
-            res += Vz @ z
+            res += ca.sparsify(Vz) @ z
         res -= yref
 
-        return 0.5 * (res.T @ W @ res)
+        return 0.5 * (res.T @ ca.sparsify(W) @ res)
 
     @staticmethod
     def __translate_nls_cost_to_external_cost(y_expr, yref, W):
         res = y_expr - yref
-        return 0.5 * (res.T @ W @ res)
+        return 0.5 * (res.T @ ca.sparsify(W) @ res)
 
     @staticmethod
     def __get_gn_hessian_expression_from_nls_cost(y_expr, yref, W, x, u, z):
         res = y_expr - yref
         ux = ca.vertcat(u, x)
         inner_jac = ca.jacobian(res, ux)
-        gn_hess = inner_jac.T @ W @ inner_jac
+        gn_hess = inner_jac.T @ ca.sparsify(W) @ inner_jac
         return gn_hess
 
     @staticmethod
