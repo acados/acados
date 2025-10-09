@@ -1777,10 +1777,19 @@ int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
         //printf("\nOSQP solved\n");
         acados_status = ACADOS_SUCCESS;
     }
-    if (osqp_status == OSQP_MAX_ITER_REACHED)
+    else if (osqp_status == OSQP_MAX_ITER_REACHED)
     {
         //printf("\nOSQP max iter reached\n");
         acados_status = ACADOS_MAXITER;
+    }
+    else if (osqp_status == OSQP_PRIMAL_INFEASIBLE)
+    {
+        //printf("\nOSQP primal infeasible\n");
+        acados_status = ACADOS_INFEASIBLE;
+    }
+    else
+    {
+        acados_status = ACADOS_UNKNOWN;
     }
     mem->status = acados_status;
 

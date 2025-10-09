@@ -781,9 +781,14 @@ int dense_qp_daqp(void* config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
         acados_status = ACADOS_SUCCESS;
     else if (daqp_status == EXIT_ITERLIMIT)
         acados_status = ACADOS_MAXITER;
+    else if (daqp_status == EXIT_INFEASIBLE)
+        acados_status = ACADOS_INFEASIBLE;
+    else if (daqp_status == EXIT_UNBOUNDED)
+        acados_status = ACADOS_UNBOUNDED;
+    else
+        acados_status = ACADOS_UNKNOWN;
     // NOTE: There are also:
-    // EXIT_INFEASIBLE, EXIT_CYCLE, EXIT_UNBOUNDED, EXIT_NONCONVEX, EXIT_OVERDETERMINED_INITIAL
-
+    // EXIT_CYCLE, EXIT_UNBOUNDED, EXIT_NONCONVEX, EXIT_OVERDETERMINED_INITIAL
     return acados_status;
 }
 

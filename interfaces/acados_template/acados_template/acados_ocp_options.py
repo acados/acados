@@ -172,15 +172,32 @@ class AcadosOcpOptions:
         QP solver statuses are mapped to the acados status definitions.
 
         For HPIPM the status values are mapped as below
-        | HPIPM status | acados status |
-        |------------------------------|
-        | .....
-
+        | HPIPM status |   acados status   |
+        |----------------------------------|
+        | SUCCESS   0  | ACADOS_SUCCESS 0  |
+        | MAXIT     1  | ACADOS_MAXITER 2  |
+        | MINSTEP   2  | ACADOS_MINSTEP 3  |
+        | NAN       3  | ACADOS_NAN 1      |
+        |     ELSE     | ACADOS_UNKNOWN -1 |
 
         For qpOASES the status values are mapped as below
-        | qpOASES status | acados status |
-        |------------------------------|
-        | SUCCESSFUL_RETURN | ACADOS_SUCCESS |
+        |       qpOASES status |        acados status         |
+        |-----------------------------------------------------|
+        | SUCCESSFUL_RETURN    |       ACADOS_SUCCESS 0       |
+        | RET_MAX_NWSR_REACHED |       ACADOS_MAXITER 2       |
+        | RET_INIT_FAILED_UNBOUNDEDNESS | ACADOS_UNBOUNDED 6  |
+        | RET_INIT_FAILED_INFEASIBILITY | ACADOS_INFEASIBLE 9 |
+        |             ELSE              |  ACADOS_UNKNOWN -1  |
+
+        For DAQP the status values are mapped as below
+        |     DAQP status     |       acados status      |
+        |------------------------------------------------|
+        |    EXIT_OPTIMAL     |     ACADOS_SUCCESS 0     |
+        |  EXIT_SOFT_OPTIMAL  |     ACADOS_MAXITER 0     |
+        | EXIT_EXIT_ITERLIMIT |     ACADOS_MAXITER 2     |
+        |   EXIT_UNBOUNDED    |     ACADOS_UNBOUNDED 6   |
+        |   EXIT_INFEASIBLE   |    ACADOS_INFEASIBLE 9   |
+        |        ELSE         |    ACADOS_UNKNOWN -1     |
 
         """
         return self.__qp_solver
