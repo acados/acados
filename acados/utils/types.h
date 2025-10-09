@@ -73,6 +73,7 @@ typedef int (*casadi_function_t)(const double** arg, double** res, int* iw, doub
 // enum of return values
 enum return_values
 {
+    ACADOS_UNKNOWN = -1,
     ACADOS_SUCCESS = 0,
     ACADOS_NAN_DETECTED = 1,
     ACADOS_MAXITER = 2,
