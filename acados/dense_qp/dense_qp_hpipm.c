@@ -37,6 +37,7 @@
 #include "hpipm/include/hpipm_d_dense_qp.h"
 #include "hpipm/include/hpipm_d_dense_qp_ipm.h"
 #include "hpipm/include/hpipm_d_dense_qp_sol.h"
+#include "hpipm/include/hpipm_common.h"
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/dense_qp/dense_qp_hpipm.h"
@@ -312,9 +313,10 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
 
     // check exit conditions
     int acados_status = hpipm_status;
-    if (hpipm_status == 0) acados_status = ACADOS_SUCCESS;
-    if (hpipm_status == 1) acados_status = ACADOS_MAXITER;
-    if (hpipm_status == 2) acados_status = ACADOS_MINSTEP;
+    if (hpipm_status == SUCCESS) acados_status = ACADOS_SUCCESS;
+    if (hpipm_status == MAX_ITER) acados_status = ACADOS_MAXITER;
+    if (hpipm_status == MIN_STEP) acados_status = ACADOS_MINSTEP;
+    if (hpipm_status == NAN_SOL) acados_status = ACADOS_NAN_DETECTED;
     return acados_status;
 }
 
