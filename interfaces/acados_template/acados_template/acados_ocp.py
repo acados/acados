@@ -1742,10 +1742,8 @@ class AcadosOcp:
 
         if cost_hessian == 'GAUSS_NEWTON':
             allowed = ['LINEAR_LS', 'NONLINEAR_LS']
-
-            # TODO why would we allow None?
-            # if stage_type == 'initial':
-            #     allowed.append(None)
+            if stage_type == 'initial':
+                allowed.append(None)
             if cost_type not in allowed:
                 raise ValueError(f"cost_hessian 'GAUSS_NEWTON' is only supported for LINEAR_LS, NONLINEAR_LS cost types, got cost_type{suffix} = {cost_type}.")
 
