@@ -920,7 +920,7 @@ int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, v
     else
     {
         printf("\nqpDUNES: returned error not handled by acados.\n");
-        acados_status = ACADOS_QP_FAILURE;
+        acados_status = ACADOS_UNKNOWN;
     }
 
     mem->status = acados_status;

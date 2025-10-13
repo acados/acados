@@ -174,30 +174,40 @@ class AcadosOcpOptions:
         For HPIPM the status values are mapped as below
         | HPIPM status |   acados status   |
         |----------------------------------|
-        | SUCCESS   0  | ACADOS_SUCCESS 0  |
-        | MAXIT     1  | ACADOS_MAXITER 2  |
-        | MINSTEP   2  | ACADOS_MINSTEP 3  |
-        | NAN       3  | ACADOS_NAN 1      |
+        |   SUCCESS 0  | ACADOS_SUCCESS  0 |
+        |    MAXIT  1  | ACADOS_MAXITER  2 |
+        |   MINSTEP 2  | ACADOS_MINSTEP  3 |
+        |     NAN   3  |   ACADOS_NAN    1 |
         |     ELSE     | ACADOS_UNKNOWN -1 |
 
         For qpOASES the status values are mapped as below
         |       qpOASES status |        acados status         |
         |-----------------------------------------------------|
-        | SUCCESSFUL_RETURN    |       ACADOS_SUCCESS 0       |
-        | RET_MAX_NWSR_REACHED |       ACADOS_MAXITER 2       |
-        | RET_INIT_FAILED_UNBOUNDEDNESS | ACADOS_UNBOUNDED 6  |
+        |       SUCCESSFUL_RETURN       |  ACADOS_SUCCESS   0 |
+        |      RET_MAX_NWSR_REACHED     |  ACADOS_MAXITER   2 |
+        | RET_INIT_FAILED_UNBOUNDEDNESS | ACADOS_UNBOUNDED  6 |
         | RET_INIT_FAILED_INFEASIBILITY | ACADOS_INFEASIBLE 9 |
-        |             ELSE              |  ACADOS_UNKNOWN -1  |
+        |             ELSE              |  ACADOS_UNKNOWN  -1 |
 
         For DAQP the status values are mapped as below
         |     DAQP status     |       acados status      |
         |------------------------------------------------|
-        |    EXIT_OPTIMAL     |     ACADOS_SUCCESS 0     |
-        |  EXIT_SOFT_OPTIMAL  |     ACADOS_MAXITER 0     |
-        | EXIT_EXIT_ITERLIMIT |     ACADOS_MAXITER 2     |
+        |    EXIT_OPTIMAL     |     ACADOS_SUCCESS   0   |
+        |  EXIT_SOFT_OPTIMAL  |     ACADOS_MAXITER   0   |
+        | EXIT_EXIT_ITERLIMIT |     ACADOS_MAXITER   2   |
         |   EXIT_UNBOUNDED    |     ACADOS_UNBOUNDED 6   |
         |   EXIT_INFEASIBLE   |    ACADOS_INFEASIBLE 9   |
-        |        ELSE         |    ACADOS_UNKNOWN -1     |
+        |        ELSE         |     ACADOS_UNKNOWN  -1   |
+
+        For QPDUNES the status values are mapped as below
+        |             QPDUNES status            |       acados status         |
+        |---------------------------------------------------------------------|
+        |               QPDUNES_OK              |     ACADOS_SUCCESS    0     |
+        | QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND   |     ACADOS_MAXITER    0     |
+        | QPDUNES_ERR_ITERATION_LIMIT_REACHED   |     ACADOS_MAXITER    2     |
+        |    QPDUNES_ERR_DIVISION_BY_ZERO       |    ACADOS_QP_FAILURE  4     |
+        |   QPDUNES_ERR_STAGE_QP_INFEASIBLE     |    ACADOS_INFEASIBLE  9     |
+        |                  ELSE                 |     ACADOS_UNKNOWN   -1     |
 
         """
         return self.__qp_solver
