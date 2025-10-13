@@ -174,11 +174,12 @@ class AcadosOcpOptions:
         For HPIPM the status values are mapped as below
         | HPIPM status |   acados status   |
         |----------------------------------|
-        |   SUCCESS 0  | ACADOS_SUCCESS  0 |
-        |    MAXIT  1  | ACADOS_MAXITER  2 |
-        |   MINSTEP 2  | ACADOS_MINSTEP  3 |
-        |     NAN   3  |   ACADOS_NAN    1 |
-        |     ELSE     | ACADOS_UNKNOWN -1 |
+        |   SUCCESS   |  ACADOS_SUCCESS  0  |
+        |    MAXIT    |  ACADOS_MAXITER  2  |
+        |   MINSTEP   |  ACADOS_MINSTEP  3  |
+        |     NAN     |    ACADOS_NAN    1  |
+        |  INCONS_EQ  | ACADOS_INFEASIBLE 9 |
+        |     ELSE    |  ACADOS_UNKNOWN -1  |
 
         For qpOASES the status values are mapped as below
         |       qpOASES status |        acados status         |
