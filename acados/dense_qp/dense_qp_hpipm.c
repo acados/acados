@@ -312,11 +312,11 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
 #endif
 
     // check exit conditions
-    if (mem->status == SUCCESS) return ACADOS_SUCCESS;
-    if (mem->status == MAX_ITER) return ACADOS_MAXITER;
-    if (mem->status == MIN_STEP) return ACADOS_MINSTEP;
-    if (mem->status == NAN_SOL) return ACADOS_NAN_DETECTED;
-    if (mem->status == INCONS_EQ) return ACADOS_INFEASIBLE;
+    if (hpipm_status == SUCCESS) return ACADOS_SUCCESS;
+    if (hpipm_status == MAX_ITER) return ACADOS_MAXITER;
+    if (hpipm_status == MIN_STEP) return ACADOS_MINSTEP;
+    if (hpipm_status == NAN_SOL) return ACADOS_NAN_DETECTED;
+    if (hpipm_status == INCONS_EQ) return ACADOS_INFEASIBLE;
 
     return ACADOS_UNKNOWN;
 }
