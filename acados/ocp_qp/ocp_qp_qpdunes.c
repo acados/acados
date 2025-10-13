@@ -913,10 +913,14 @@ int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, v
         printf("qpDUNES seems to have really strong requirements with this regard...\n");
         acados_status = ACADOS_QP_FAILURE;
     }
+    else if (qpdunes_status == QPDUNES_ERR_STAGE_QP_INFEASIBLE)
+    {
+        acados_status = ACADOS_INFEASIBLE;
+    }
     else
     {
         printf("\nqpDUNES: returned error not handled by acados.\n");
-        acados_status = ACADOS_QP_FAILURE;
+        acados_status = ACADOS_UNKNOWN;
     }
 
     mem->status = acados_status;

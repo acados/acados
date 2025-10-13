@@ -783,7 +783,10 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
 
     int acados_status = qpoases_status;
     if (qpoases_status == SUCCESSFUL_RETURN) acados_status = ACADOS_SUCCESS;
-    if (qpoases_status == RET_MAX_NWSR_REACHED) acados_status = ACADOS_MAXITER;
+    else if (qpoases_status == RET_MAX_NWSR_REACHED) acados_status = ACADOS_MAXITER;
+    else if( qpoases_status == RET_INIT_FAILED_INFEASIBILITY) acados_status = ACADOS_INFEASIBLE;
+    else if( qpoases_status == RET_INIT_FAILED_UNBOUNDEDNESS) acados_status = ACADOS_UNBOUNDED;
+    else acados_status = ACADOS_UNKNOWN;
     return acados_status;
 }
 

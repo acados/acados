@@ -37,6 +37,7 @@
 #include "hpipm/include/hpipm_d_ocp_qp.h"
 #include "hpipm/include/hpipm_d_ocp_qp_ipm.h"
 #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
+#include "hpipm/include/hpipm_common.h"
 
 // uncomment to codegen QP
 // #include "hpipm/include/hpipm_d_ocp_qp_utils.h"
@@ -368,12 +369,13 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
     // d_ocp_qp_ipm_arg_print(qp_in->dim, opts->hpipm_opts);
 
     // check exit conditions
-    int acados_status = mem->status;
-    if (mem->status == 0) acados_status = ACADOS_SUCCESS;
-    if (mem->status == 1) acados_status = ACADOS_MAXITER;
-    if (mem->status == 2) acados_status = ACADOS_MINSTEP;
+    if (mem->status == SUCCESS) return ACADOS_SUCCESS;
+    if (mem->status == MAX_ITER) return ACADOS_MAXITER;
+    if (mem->status == MIN_STEP) return ACADOS_MINSTEP;
+    if (mem->status == NAN_SOL) return ACADOS_NAN_DETECTED;
+    if (mem->status == INCONS_EQ) return ACADOS_INFEASIBLE;
 
-    return acados_status;
+    return ACADOS_UNKNOWN;
 }
 
 
