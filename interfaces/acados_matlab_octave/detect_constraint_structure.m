@@ -231,13 +231,6 @@ function model = detect_constraint_structure(model, constraints, stage_type)
             constraints.lbu = lbu;
             constraints.ubu = ubu;
         end
-        % g
-        if ~isempty(lg)
-            model.constr_C = C;
-            model.constr_D = D;
-            constraints.lg = lg;
-            constraints.ug = ug;
-        end
     end
 end
 
