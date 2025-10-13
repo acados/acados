@@ -192,10 +192,12 @@ class AcadosCasadiOcp:
             # add dynamics constraints
             if multiple_shooting:
                 if i < N_horizon:
+                    utraj_node = utraj_nodes[i] if dims.nu > 0 else ca_symbol('dummy_u', 0, 1)
+                    ptraj_node = ptraj_nodes[i][:dims.np] if dims.np > 0 else ca_symbol('dummy_p', 0, 1)
                     if solver_options.integrator_type == "DISCRETE":
-                        dyn_equality = xtraj_nodes[i+1] - f_discr_fun(xtraj_nodes[i], utraj_nodes[i], ptraj_nodes[i][:dims.np], model.p_global)
+                        dyn_equality = xtraj_nodes[i+1] - f_discr_fun(xtraj_nodes[i], utraj_node, ptraj_node, model.p_global)
                     elif solver_options.integrator_type == "ERK":
-                        param = ca.vertcat(utraj_nodes[i], ptraj_nodes[i][:dims.np], model.p_global)
+                        param = ca.vertcat(utraj_node, ptraj_node, model.p_global)
                         dyn_equality = xtraj_nodes[i+1] - f_discr_fun(xtraj_nodes[i], param, solver_options.time_steps[i])
                     self._append_constraints(i, 'dyn', g, lbg, ubg,
                                             g_expr = dyn_equality,
@@ -211,82 +213,86 @@ class AcadosCasadiOcp:
                             hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
             else: # single_shooting
                 if i < N_horizon:
+                    utraj_node = utraj_nodes[i] if dims.nu > 0 else ca_symbol('dummy_u', 0, 1)
+                    ptraj_node = ptraj_nodes[i][:dims.np] if dims.np > 0 else ca_symbol('dummy_p', 0, 1)
                     x_current = xtraj_nodes[i]
                     if solver_options.integrator_type == "DISCRETE":
-                        x_next = f_discr_fun(x_current, utraj_nodes[i], ptraj_nodes[i][:dims.np], model.p_global)
+                        x_next = f_discr_fun(x_current, utraj_node, ptraj_node, model.p_global)
                     elif solver_options.integrator_type == "ERK":
-                        param = ca.vertcat(utraj_nodes[i], ptraj_nodes[i][:dims.np], model.p_global)
+                        param = ca.vertcat(utraj_node, ptraj_node, model.p_global)
                         x_next = f_discr_fun(x_current, param, solver_options.time_steps[i])
                     xtraj_nodes.append(x_next)
                     self._x_traj_fun.append(f_discr_fun)
+
             # Nonlinear Constraints
-            # initial stage
-            lg, ug, lh, uh, lphi, uphi, ng, nh, nphi, nsg, nsh, nsphi, idxsh, linear_constr_expr, h_i_nlp_expr, conl_constr_fun =\
-            self._get_constraint_node(i, N_horizon, xtraj_nodes, utraj_nodes, ptraj_nodes, model, constraints, dims)
+            constraint_dict = self._get_constraint_node(i, N_horizon, xtraj_nodes, utraj_nodes, ptraj_nodes, model, constraints, dims)
 
             # add linear constraints
-            if ng > 0:
+            if constraint_dict['ng'] > 0:
                 self._append_constraints(i, 'gnl', g, lbg, ubg,
-                                         g_expr = linear_constr_expr,
-                                         lbg_expr = lg,
-                                         ubg_expr = ug,
-                                         cons_dim=ng)
+                                         g_expr = constraint_dict['linear_constr_expr'],
+                                         lbg_expr = constraint_dict['lg'],
+                                         ubg_expr = constraint_dict['ug'],
+                                         cons_dim=constraint_dict['ng'])
 
-            # add nonlinear constraints
-            if nh > 0:
-                if nsh > 0:
+            # add nonlinear constraints using constraint_dict directly (no locals)
+            if constraint_dict['nh'] > 0:
+                if constraint_dict['nsh'] > 0:
                     # h_fun with slack variables
-                    soft_h_indices = idxsh
-                    hard_h_indices = np.array([h for h in range(len(lh)) if h not in idxsh])
-                    for index_in_nh in range(nh):
+                    soft_h_indices = constraint_dict['idxsh']
+                    hard_h_indices = np.array([h for h in range(len(constraint_dict['lh'])) if h not in constraint_dict['idxsh']])
+                    for index_in_nh in range(constraint_dict['nh']):
                         if index_in_nh in soft_h_indices:
                             index_in_soft = soft_h_indices.tolist().index(index_in_nh)
                             self._append_constraints(i, 'gnl', g, lbg, ubg,
-                                                     g_expr = h_i_nlp_expr[index_in_nh] + sl_nodes[i][index_in_soft],
-                                                     lbg_expr = lh[index_in_nh],
+                                                     g_expr = constraint_dict['h_i_nlp_expr'][index_in_nh] + sl_nodes[i][index_in_soft],
+                                                     lbg_expr = constraint_dict['lh'][index_in_nh],
                                                      ubg_expr = np.inf * ca.DM.ones((1, 1)),
                                                      cons_dim=1,
                                                      sl=True)
                             self._append_constraints(i, 'gnl', g, lbg, ubg,
-                                                     g_expr = h_i_nlp_expr[index_in_nh] - su_nodes[i][index_in_soft],
+                                                     g_expr = constraint_dict['h_i_nlp_expr'][index_in_nh] - su_nodes[i][index_in_soft],
                                                      lbg_expr = -np.inf * ca.DM.ones((1, 1)),
-                                                     ubg_expr = uh[index_in_nh],
+                                                     ubg_expr = constraint_dict['uh'][index_in_nh],
                                                      cons_dim=1,
                                                      su=True)
                         elif index_in_nh in hard_h_indices:
                             self._append_constraints(i, 'gnl', g, lbg, ubg,
-                                                     g_expr = h_i_nlp_expr[index_in_nh],
-                                                     lbg_expr = lh[index_in_nh],
-                                                     ubg_expr = uh[index_in_nh],
+                                                     g_expr = constraint_dict['h_i_nlp_expr'][index_in_nh],
+                                                     lbg_expr = constraint_dict['lh'][index_in_nh],
+                                                     ubg_expr = constraint_dict['uh'][index_in_nh],
                                                      cons_dim=1)
                 else:
                     self._append_constraints(i, 'gnl', g, lbg, ubg,
-                                             g_expr = h_i_nlp_expr,
-                                             lbg_expr = lh,
-                                             ubg_expr = uh,
-                                             cons_dim=nh)
+                                             g_expr = constraint_dict['h_i_nlp_expr'],
+                                             lbg_expr = constraint_dict['lh'],
+                                             ubg_expr = constraint_dict['uh'],
+                                             cons_dim=constraint_dict['nh'])
                 if with_hessian:
                     # add hessian contribution
-                    lam_h = ca_symbol(f'lam_h_{i}', dims.nh, 1)
+                    lam_h = ca_symbol(f'lam_h_{i}', constraint_dict['nh'], 1)
                     lam_g.append(lam_h)
                     if ocp.solver_options.hessian_approx == 'EXACT' and ocp.solver_options.exact_hess_constr:
-                        adj = ca.jtimes(h_i_nlp_expr, w, lam_h, True)
+                        adj = ca.jtimes(constraint_dict['h_i_nlp_expr'], w, lam_h, True)
                         hess_l += ca.jacobian(adj, w, {"symmetric": is_casadi_SX(model.x)})
 
             # add convex-over-nonlinear constraints
-            if nphi > 0:
+            if constraint_dict['nphi'] > 0:
+                conl_constr_fun = constraint_dict['conl_constr_fun']
+                utraj_node = utraj_nodes[i] if dims.nu > 0 else ca_symbol('dummy_u', 0, 1)
+                ptraj_node = ptraj_nodes[i][:dims.np] if dims.np > 0 else ca_symbol('dummy_p', 0, 1)
                 self._append_constraints(i, 'gnl', g, lbg, ubg,
-                                         g_expr = conl_constr_fun(xtraj_nodes[i], utraj_nodes[i], ptraj_nodes[i][:dims.np], model.p_global),
-                                         lbg_expr = lphi,
-                                         ubg_expr = uphi,
-                                         cons_dim=nphi)
+                                         g_expr = conl_constr_fun(xtraj_nodes[i], utraj_node, ptraj_node, model.p_global),
+                                         lbg_expr = constraint_dict['lphi'],
+                                         ubg_expr = constraint_dict['uphi'],
+                                         cons_dim=constraint_dict['nphi'])
                 if with_hessian:
-                    lam_phi = ca_symbol(f'lam_phi', nphi, 1)
+                    lam_phi = ca_symbol(f'lam_phi_{i}', constraint_dict['nphi'], 1)
                     lam_g.append(lam_phi)
                     # always use CONL Hessian approximation here, disregarding inner second derivative
-                    outer_hess_r = ca.vertcat(*[ca.hessian(model.con_phi_expr[i], model.con_r_in_phi)[0] for i in range(dims.nphi)])
-                    outer_hess_r = ca.substitute(outer_hess_r, model.con_r_in_phi, model.con_r_expr)
-                    r_in_nlp = ca.substitute(model.con_r_expr, model.x, xtraj_nodes[-1])
+                    outer_hess_r = ca.vertcat(*[ca.hessian(constraint_dict['con_phi_expr'][j], constraint_dict['con_r_in_phi'])[0] for j in range(constraint_dict['nphi'])])
+                    outer_hess_r = ca.substitute(outer_hess_r, constraint_dict['con_r_in_phi'], constraint_dict['con_r_expr'])
+                    r_in_nlp = ca.substitute(constraint_dict['con_r_expr'], model.x, xtraj_nodes[-1])
                     dr_dw = ca.jacobian(r_in_nlp, w)
                     hess_l += dr_dw.T @ outer_hess_r @ dr_dw
 
@@ -294,22 +300,21 @@ class AcadosCasadiOcp:
         nlp_cost = 0
         residual_list = []
         for i in range(N_horizon+1):
-            xtraj_node_i, utraj_node_i, ptraj_node_i, sl_node_i, su_node_i, cost_expr_i, residual_expr_i, p_for_model, ns, W_mat, zl, Zl, zu, Zu = \
-            self._get_cost_node(i, N_horizon, xtraj_nodes, utraj_nodes, p_nlp, sl_nodes, su_nodes, ocp)
+            cost_dict = self._get_cost_node(i, N_horizon, xtraj_nodes, utraj_nodes, p_nlp, sl_nodes, su_nodes, ocp)
 
-            cost_fun_i = ca.Function(f'cost_fun_{i}', [model.x, model.u, p_for_model, model.p_global], [cost_expr_i])
-            cost_i = cost_fun_i(xtraj_node_i, utraj_node_i, ptraj_node_i, model.p_global)
+            cost_fun_i = ca.Function(f'cost_fun_{i}', [model.x, model.u, cost_dict['p_for_model'], model.p_global], [cost_dict['cost_expr']])
+            cost_i = cost_fun_i(cost_dict['xtraj_node'], cost_dict['utraj_node'], cost_dict['ptraj_node'], model.p_global)
             nlp_cost += solver_options.cost_scaling[i] * cost_i
 
-            if residual_expr_i is not None:
-                residual_fun_i = ca.Function(f'residual_fun_{i}', [model.x, model.u, p_for_model, model.p_global], [residual_expr_i])
-                residual_i = ca.sqrt(solver_options.cost_scaling[i]) * ca.sqrt(W_mat) @ residual_fun_i(xtraj_node_i, utraj_node_i, ptraj_node_i, model.p_global)
+            if cost_dict['residual_expr'] is not None:
+                residual_fun_i = ca.Function(f'residual_fun_{i}', [model.x, model.u, cost_dict['p_for_model'], model.p_global], [cost_dict['residual_expr']])
+                residual_i = ca.sqrt(solver_options.cost_scaling[i]) * ca.sqrt(cost_dict['W_mat']) @ residual_fun_i(cost_dict['xtraj_node'], cost_dict['utraj_node'], cost_dict['ptraj_node'], model.p_global)
                 residual_list.append(residual_i)
-            if ns:
-                penalty_expr_i = 0.5 * ca.mtimes(sl_node_i.T, ca.mtimes(np.diag(Zl), sl_node_i)) + \
-                    ca.mtimes(zl.reshape(-1, 1).T, sl_node_i) + \
-                    0.5 * ca.mtimes(su_node_i.T, ca.mtimes(np.diag(Zu), su_node_i)) + \
-                    ca.mtimes(zu.reshape(-1, 1).T, su_node_i)
+            if cost_dict['ns'] > 0:
+                penalty_expr_i = 0.5 * ca.mtimes(cost_dict['sl_node'].T, ca.mtimes(np.diag(cost_dict['Zl']), cost_dict['sl_node'])) + \
+                    ca.mtimes(cost_dict['zl'].reshape(-1, 1).T, cost_dict['sl_node']) + \
+                    0.5 * ca.mtimes(cost_dict['su_node'].T, ca.mtimes(np.diag(cost_dict['Zu']), cost_dict['su_node'])) + \
+                    ca.mtimes(cost_dict['zu'].reshape(-1, 1).T, cost_dict['su_node'])
                 nlp_cost += solver_options.cost_scaling[i] * penalty_expr_i
 
         if with_hessian:
@@ -521,6 +526,7 @@ class AcadosCasadiOcp:
         """
         Helper function to get the cost node for a given stage.
         """
+        cost_dict = {}
         dims = ocp.dims
         model = ocp.model
         cost = ocp.cost
@@ -528,138 +534,155 @@ class AcadosCasadiOcp:
         yref_index = self._index_map['yref_in_p_nlp'][i]
         yref = p_nlp[yref_index]
         if i == 0:
-            if cost.cost_type_0 == "NONLINEAR_LS":
+            if cost.cost_type_0 == "NONLINEAR_LS" and not is_empty(ocp.model.cost_y_expr_0):
                 y = ocp.model.cost_y_expr_0
                 residual_expr = y - yref
-            elif cost.cost_type_0 == "LINEAR_LS":
+            elif cost.cost_type_0 == "LINEAR_LS" and not is_empty(cost.Vx_0) and not is_empty(cost.Vu_0):
                 y = cost.Vx_0 @ model.x + cost.Vu_0 @ model.u
                 residual_expr = y - yref
             else:
                 residual_expr = None
-            return (xtraj_node[0],
-                    utraj_node[0],
-                    p_nlp[p_index + yref_index],
-                    sl_node[0],
-                    su_node[0],
-                    ocp.get_initial_cost_expression(yref),
-                    residual_expr,
-                    ca.vertcat(ocp.model.p, yref),
-                    dims.ns_0, cost.W_0, cost.zl_0, cost.Zl_0, cost.zu_0, cost.Zu_0)
+            cost_dict['xtraj_node'] = xtraj_node[0]
+            cost_dict['utraj_node'] = utraj_node[0]
+            cost_dict['ptraj_node'] = p_nlp[p_index + yref_index]
+            cost_dict['sl_node'] = sl_node[0]
+            cost_dict['su_node'] = su_node[0]
+            cost_dict['cost_expr'] = ocp.get_initial_cost_expression(yref)
+            cost_dict['residual_expr'] = residual_expr
+            cost_dict['p_for_model'] = ca.vertcat(ocp.model.p, yref)
+            cost_dict['ns'] = dims.ns_0
+            cost_dict['W_mat'] = cost.W_0
+            cost_dict['zl'] = cost.zl_0
+            cost_dict['Zl'] = cost.Zl_0
+            cost_dict['zu'] = cost.zu_0
+            cost_dict['Zu'] = cost.Zu_0
         elif i < N_horizon:
-            if cost.cost_type_0 == "NONLINEAR_LS":
+            if cost.cost_type == "NONLINEAR_LS" and not is_empty(ocp.model.cost_y_expr):
                 y = ocp.model.cost_y_expr
                 residual_expr = y - yref
-            elif cost.cost_type_0 == "LINEAR_LS":
+            elif cost.cost_type == "LINEAR_LS" and not is_empty(cost.Vx) and not is_empty(cost.Vu):
                 y = cost.Vx @ model.x + cost.Vu @ model.u
                 residual_expr = y - yref
             else:
                 residual_expr = None
-            return (xtraj_node[i],
-                    utraj_node[i],
-                    p_nlp[p_index + yref_index],
-                    sl_node[i],
-                    su_node[i],
-                    ocp.get_path_cost_expression(yref),
-                    residual_expr,
-                    ca.vertcat(ocp.model.p, yref),
-                    dims.ns, cost.W, cost.zl, cost.Zl, cost.zu, cost.Zu)
+            cost_dict['xtraj_node'] = xtraj_node[i]
+            cost_dict['utraj_node'] = utraj_node[i]
+            cost_dict['ptraj_node'] = p_nlp[p_index + yref_index]
+            cost_dict['sl_node'] = sl_node[i]
+            cost_dict['su_node'] = su_node[i]
+            cost_dict['cost_expr'] = ocp.get_path_cost_expression(yref)
+            cost_dict['residual_expr'] = residual_expr
+            cost_dict['p_for_model'] = ca.vertcat(ocp.model.p, yref)
+            cost_dict['ns'] = dims.ns
+            cost_dict['W_mat'] = cost.W
+            cost_dict['zl'] = cost.zl
+            cost_dict['Zl'] = cost.Zl
+            cost_dict['zu'] = cost.zu
+            cost_dict['Zu'] = cost.Zu
         else:
-            if cost.cost_type_0 == "NONLINEAR_LS":
+            if cost.cost_type_e == "NONLINEAR_LS" and not is_empty(ocp.model.cost_y_expr_e):
                 y = ocp.model.cost_y_expr_e
                 residual_expr = y - yref
-            elif cost.cost_type_0 == "LINEAR_LS":
+            elif cost.cost_type_e == "LINEAR_LS" and not is_empty(cost.Vx_e):
                 y = cost.Vx_e @ model.x
                 residual_expr = y - yref
             else:
                 residual_expr = None
-            return (xtraj_node[-1],
-                    [],
-                    p_nlp[p_index + yref_index],
-                    sl_node[-1],
-                    su_node[-1],
-                    ocp.get_terminal_cost_expression(yref),
-                    residual_expr,
-                    ca.vertcat(ocp.model.p, yref),
-                    dims.ns_e, cost.W_e, cost.zl_e, cost.Zl_e, cost.zu_e, cost.Zu_e)
+            cost_dict['xtraj_node'] = xtraj_node[-1]
+            cost_dict['utraj_node'] = utraj_node[-1]
+            cost_dict['ptraj_node'] = p_nlp[p_index + yref_index]
+            cost_dict['sl_node'] = sl_node[-1]
+            cost_dict['su_node'] = su_node[-1]
+            cost_dict['cost_expr'] = ocp.get_terminal_cost_expression(yref)
+            cost_dict['residual_expr'] = residual_expr
+            cost_dict['p_for_model'] = ca.vertcat(ocp.model.p, yref)
+            cost_dict['ns'] = dims.ns_e
+            cost_dict['W_mat'] = cost.W_e
+            cost_dict['zl'] = cost.zl_e
+            cost_dict['Zl'] = cost.Zl_e
+            cost_dict['zu'] = cost.zu_e
+            cost_dict['Zu'] = cost.Zu_e
+
+        return cost_dict
 
     def _get_constraint_node(self, i, N_horizon, xtraj_node, utraj_node, ptraj_node, model, constraints, dims):
         """
         Helper function to get the constraint node for a given stage.
         """
+        # dict to store constraint function for each node
+        cons_dict = {}
         if i == 0 and N_horizon > 0:
-            lg, ug = constraints.lg, constraints.ug
-            lh, uh = constraints.lh_0, constraints.uh_0
-            lphi, uphi = constraints.lphi_0, constraints.uphi_0
-            ng, nh, nphi = dims.ng, dims.nh_0, dims.nphi_0
-            nsg, nsh, nsphi, idxsh = dims.nsg, dims.nsh_0, dims.nsphi_0, constraints.idxsh_0
+            cons_dict['lg'], cons_dict['ug'] = constraints.lg, constraints.ug
+            cons_dict['lh'], cons_dict['uh'] = constraints.lh_0, constraints.uh_0
+            cons_dict['lphi'], cons_dict['uphi'] = constraints.lphi_0, constraints.uphi_0
+            cons_dict['ng'], cons_dict['nh'], cons_dict['nphi'] = dims.ng, dims.nh_0, dims.nphi_0
+            cons_dict['nsg'], cons_dict['nsh'], cons_dict['nsphi'], cons_dict['idxsh'] = dims.nsg, dims.nsh_0, dims.nsphi_0, constraints.idxsh_0
 
             # linear function
-            linear_constr_expr = None
             if dims.ng > 0:
-                C = constraints.C
-                D = constraints.D
-                linear_constr_expr = ca.mtimes(C, xtraj_node[i]) + ca.mtimes(D, utraj_node[i])
+                cons_dict['C'] = constraints.C
+                cons_dict['D'] = constraints.D
+                cons_dict['linear_constr_expr'] = ca.mtimes(cons_dict['C'], xtraj_node[i]) + ca.mtimes(cons_dict['D'], utraj_node[i])
             # nonlinear function
-            h_fun = ca.Function('h_0_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr_0])
-            h_i_nlp_expr = h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i][:dims.np], model.p_global)
+            cons_dict['h_fun'] = ca.Function('h_0_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr_0])
+            cons_dict['h_i_nlp_expr'] = cons_dict['h_fun'](xtraj_node[i], utraj_node[i], ptraj_node[i][:dims.np], model.p_global)
             # compound nonlinear constraint
-            conl_constr_fun = None
+            cons_dict['conl_constr_fun'] = None
             if dims.nphi_0 > 0:
+                cons_dict['con_phi_expr'], cons_dict['con_r_in_phi'], cons_dict['con_r_expr'] = model.con_phi_expr_0, model.con_r_in_phi_0, model.con_r_expr_0
                 conl_expr = ca.substitute(model.con_phi_expr_0, model.con_r_in_phi_0, model.con_r_expr_0)
-                conl_constr_fun = ca.Function('conl_constr_0_fun', [model.x, model.u, model.p, model.p_global], [conl_expr])
+                cons_dict['conl_constr_fun'] = ca.Function('conl_constr_0_fun', [model.x, model.u, model.p, model.p_global], [conl_expr])
 
         elif i < N_horizon:
-            lg, ug = constraints.lg, constraints.ug
-            lh, uh = constraints.lh, constraints.uh
-            lphi, uphi = constraints.lphi, constraints.uphi
-            ng, nh, nphi = dims.ng, dims.nh, dims.nphi
-            nsg, nsh, nsphi, idxsh = dims.nsg, dims.nsh, dims.nsphi, constraints.idxsh
+            # populate cons_dict for intermediate stage (mirror initial-stage style)
+            cons_dict['lg'], cons_dict['ug'] = constraints.lg, constraints.ug
+            cons_dict['lh'], cons_dict['uh'] = constraints.lh, constraints.uh
+            cons_dict['lphi'], cons_dict['uphi'] = constraints.lphi, constraints.uphi
+            cons_dict['ng'], cons_dict['nh'], cons_dict['nphi'] = dims.ng, dims.nh, dims.nphi
+            cons_dict['nsg'], cons_dict['nsh'], cons_dict['nsphi'], cons_dict['idxsh'] = dims.nsg, dims.nsh, dims.nsphi, constraints.idxsh
 
-            linear_constr_expr = None
+            # linear function
             if dims.ng > 0:
-                C = constraints.C
-                D = constraints.D
-                linear_constr_expr = ca.mtimes(C, xtraj_node[i]) + ca.mtimes(D, utraj_node[i])
-            h_fun = ca.Function('h_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr])
-            h_i_nlp_expr = h_fun(xtraj_node[i], utraj_node[i], ptraj_node[i][:dims.np], model.p_global)
-            conl_constr_fun = None
+                cons_dict['C'] = constraints.C
+                cons_dict['D'] = constraints.D
+                cons_dict['linear_constr_expr'] = ca.mtimes(cons_dict['C'], xtraj_node[i]) + ca.mtimes(cons_dict['D'], utraj_node[i])
+            # nonlinear function
+            cons_dict['h_fun'] = ca.Function('h_fun', [model.x, model.u, model.p, model.p_global], [model.con_h_expr])
+            cons_dict['h_i_nlp_expr'] = cons_dict['h_fun'](xtraj_node[i], utraj_node[i], ptraj_node[i][:dims.np], model.p_global)
+            # compound nonlinear constraint
+            cons_dict['conl_constr_fun'] = None
             if dims.nphi > 0:
+                cons_dict['con_phi_expr'], cons_dict['con_r_in_phi'], cons_dict['con_r_expr'] = model.con_phi_expr, model.con_r_in_phi, model.con_r_expr
                 conl_expr = ca.substitute(model.con_phi_expr, model.con_r_in_phi, model.con_r_expr)
-                conl_constr_fun = ca.Function('conl_constr_fun', [model.x, model.u, model.p, model.p_global], [conl_expr])
+                cons_dict['conl_constr_fun'] = ca.Function('conl_constr_fun', [model.x, model.u, model.p, model.p_global], [conl_expr])
 
         else:
-            lg, ug = constraints.lg_e, constraints.ug_e
-            lh, uh = constraints.lh_e, constraints.uh_e
-            lphi, uphi = constraints.lphi_e, constraints.uphi_e
-            ng, nh, nphi = dims.ng_e, dims.nh_e, dims.nphi_e
-            nsg, nsh, nsphi, idxsh = dims.nsg_e, dims.nsh_e, dims.nsphi_e, constraints.idxsh_e
+            # populate cons_dict for terminal stage
+            cons_dict['lg'], cons_dict['ug'] = constraints.lg_e, constraints.ug_e
+            cons_dict['lh'], cons_dict['uh'] = constraints.lh_e, constraints.uh_e
+            cons_dict['lphi'], cons_dict['uphi'] = constraints.lphi_e, constraints.uphi_e
+            cons_dict['ng'], cons_dict['nh'], cons_dict['nphi'] = dims.ng_e, dims.nh_e, dims.nphi_e
+            cons_dict['nsg'], cons_dict['nsh'], cons_dict['nsphi'], cons_dict['idxsh'] = dims.nsg_e, dims.nsh_e, dims.nsphi_e, constraints.idxsh_e
 
-            linear_constr_expr = None
+            # linear function
             if dims.ng_e > 0:
-                C = constraints.C_e
-                linear_constr_expr = ca.mtimes(C, xtraj_node[i])
-            h_fun = ca.Function('h_e_fun', [model.x, model.p, model.p_global], [model.con_h_expr_e])
-            h_i_nlp_expr = h_fun(xtraj_node[i], ptraj_node[i][:dims.np], model.p_global)
-            conl_constr_fun = None
+                cons_dict['C'] = constraints.C_e
+                cons_dict['linear_constr_expr'] = ca.mtimes(cons_dict['C'], xtraj_node[i])
+            # nonlinear function
+            cons_dict['h_fun'] = ca.Function('h_e_fun', [model.x, model.p, model.p_global], [model.con_h_expr_e])
+            cons_dict['h_i_nlp_expr'] = cons_dict['h_fun'](xtraj_node[i], ptraj_node[i][:dims.np], model.p_global)
+            # compound nonlinear constraint
+            cons_dict['conl_constr_fun'] = None
             if dims.nphi_e > 0:
+                cons_dict['con_phi_expr'], cons_dict['con_r_in_phi'], cons_dict['con_r_expr'] = model.con_phi_expr_e, model.con_r_in_phi_e, model.con_r_expr_e
                 conl_expr = ca.substitute(model.con_phi_expr_e, model.con_r_in_phi_e, model.con_r_expr_e)
-                conl_constr_fun = ca.Function('conl_constr_e_fun', [model.x, model.p, model.p_global], [conl_expr])
+                cons_dict['conl_constr_fun'] = ca.Function('conl_constr_e_fun', [model.x, model.u, model.p, model.p_global], [conl_expr])
 
         self._index_map['lam_gnl_in_lam_g'].append([])
         self._index_map['lam_sl_in_lam_g'].append([])
         self._index_map['lam_su_in_lam_g'].append([])
 
-        return (
-            lg, ug,
-            lh, uh,
-            lphi, uphi,
-            ng, nh, nphi,
-            nsg, nsh, nsphi,
-            idxsh,
-            linear_constr_expr,
-            h_i_nlp_expr,
-            conl_constr_fun
-        )
+        return cons_dict
 
     @property
     def nlp(self):
