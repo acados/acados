@@ -1718,194 +1718,119 @@ class AcadosOcp:
 
 
     def translate_initial_cost_term_to_external(self, yref_0: Optional[Union[ca.SX, ca.MX]] = None, W_0: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
-
-        if cost_hessian not in ['EXACT', 'GAUSS_NEWTON']:
-            raise Exception(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
-
-        if cost_hessian == 'GAUSS_NEWTON':
-            if self.cost.cost_type_0 not in ['LINEAR_LS', 'NONLINEAR_LS', None]:
-                raise Exception(f"cost_hessian 'GAUSS_NEWTON' is only supported for LINEAR_LS, NONLINEAR_LS cost types, got cost_type_0 = {self.cost.cost_type_0}.")
-
-        casadi_symbolics_type = type(self.model.x)
-
-        if yref_0 is None:
-            yref_0 = self.cost.yref_0
-        else:
-            if yref_0.shape[0] != self.cost.yref_0.shape[0]:
-                raise ValueError(f"yref_0 has wrong shape, got {yref_0.shape}, expected {self.cost.yref_0.shape}.")
-
-            if not isinstance(yref_0, casadi_symbolics_type):
-                raise TypeError(f"yref_0 has wrong type, got {type(yref_0)}, expected {casadi_symbolics_type}.")
-
-        if W_0 is None:
-            W_0 = self.cost.W_0
-        else:
-            if W_0.shape != self.cost.W_0.shape:
-                raise ValueError(f"W_0 has wrong shape, got {W_0.shape}, expected {self.cost.W_0.shape}.")
-
-            if not isinstance(W_0, casadi_symbolics_type):
-                raise TypeError(f"W_0 has wrong type, got {type(W_0)}, expected {casadi_symbolics_type}.")
-
-        if self.cost.cost_type_0 == "LINEAR_LS":
-            self.model.cost_expr_ext_cost_0 = \
-                self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
-                                                          self.cost.Vx_0, self.cost.Vu_0, self.cost.Vz_0,
-                                                          yref_0, W_0)
-            self.cost.Vx_0 = np.zeros((0,0))
-            self.cost.Vu_0 = np.zeros((0,0))
-            self.cost.Vz_0 = np.zeros((0,0))
-            self.cost.W_0 = np.zeros((0,0))
-            self.model.cost_y_expr_0 = []
-            self.cost.yref_0 = np.zeros((0,))
-
-        elif self.cost.cost_type_0 == "NONLINEAR_LS":
-            self.model.cost_expr_ext_cost_0 = \
-                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_0, yref_0, W_0)
-
-            if cost_hessian == 'GAUSS_NEWTON':
-                self.model.cost_expr_ext_cost_custom_hess_0 = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr_0, yref_0, W_0, self.model.x, self.model.u, self.model.z)
-
-            self.cost.W_0 = np.zeros((0,0))
-            self.model.cost_y_expr_0 = []
-            self.cost.yref_0 = np.zeros((0,))
-
-        elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
-            self.model.cost_expr_ext_cost_0 = \
-                self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_0, self.model.cost_psi_expr_0,
-                                                            self.model.cost_y_expr_0, yref_0)
-            self.model.cost_r_in_psi_expr_0 = []
-            self.model.cost_psi_expr_0 = []
-            self.model.cost_y_expr_0 = []
-            self.cost.yref_0 = np.zeros((0,))
-
-        if self.cost.cost_type_0 is not None:
-            self.cost.cost_type_0 = 'EXTERNAL'
+        self._translate_cost_term_to_external(stage_type='initial', yref=yref_0, W=W_0, cost_hessian=cost_hessian)
 
 
     def translate_intermediate_cost_term_to_external(self, yref: Optional[Union[ca.SX, ca.MX]] = None, W: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
-
-        if cost_hessian not in ['EXACT', 'GAUSS_NEWTON']:
-            raise ValueError(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
-
-        if cost_hessian == 'GAUSS_NEWTON':
-            if self.cost.cost_type not in ['LINEAR_LS', 'NONLINEAR_LS']:
-                raise ValueError(f"cost_hessian 'GAUSS_NEWTON' is only supported for LINEAR_LS, NONLINEAR_LS cost types, got cost_type = {self.cost.cost_type}.")
-
-        casadi_symbolics_type = type(self.model.x)
-
-        if yref is None:
-            yref = self.cost.yref
-        else:
-            if yref.shape[0] != self.cost.yref.shape[0]:
-                raise ValueError(f"yref has wrong shape, got {yref.shape}, expected {self.cost.yref.shape}.")
-
-            if not isinstance(yref, casadi_symbolics_type):
-                raise TypeError(f"yref has wrong type, got {type(yref)}, expected {casadi_symbolics_type}.")
-
-        if W is None:
-            W = self.cost.W
-        else:
-            if W.shape != self.cost.W.shape:
-                raise ValueError(f"W has wrong shape, got {W.shape}, expected {self.cost.W.shape}.")
-
-            if not isinstance(W, casadi_symbolics_type):
-                raise TypeError(f"W has wrong type, got {type(W)}, expected {casadi_symbolics_type}.")
-
-        if self.cost.cost_type == "LINEAR_LS":
-            self.model.cost_expr_ext_cost = \
-                self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
-                                                          self.cost.Vx, self.cost.Vu, self.cost.Vz,
-                                                          yref, W)
-            self.cost.Vx = np.zeros((0,0))
-            self.cost.Vu = np.zeros((0,0))
-            self.cost.Vz = np.zeros((0,0))
-            self.cost.W = np.zeros((0,0))
-            self.model.cost_y_expr = []
-            self.cost.yref = np.zeros((0,))
-
-        elif self.cost.cost_type == "NONLINEAR_LS":
-            self.model.cost_expr_ext_cost = \
-                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr, yref, W)
-            if cost_hessian == 'GAUSS_NEWTON':
-                self.model.cost_expr_ext_cost_custom_hess = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr, yref, W, self.model.x, self.model.u, self.model.z)
-
-            self.cost.W = np.zeros((0,0))
-            self.model.cost_y_expr = []
-            self.cost.yref = np.zeros((0,))
-
-        elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
-            self.model.cost_expr_ext_cost = \
-                self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr, self.model.cost_psi_expr,
-                                                            self.model.cost_y_expr, yref)
-
-            self.model.cost_r_in_psi_expr = []
-            self.model.cost_psi_expr = []
-            self.model.cost_y_expr = []
-            self.cost.yref = np.zeros((0,))
-
-        self.cost.cost_type = 'EXTERNAL'
+        self._translate_cost_term_to_external(stage_type='path', yref=yref, W=W, cost_hessian=cost_hessian)
 
 
     def translate_terminal_cost_term_to_external(self, yref_e: Optional[Union[ca.SX, ca.MX]] = None, W_e: Optional[Union[ca.SX, ca.MX]] = None, cost_hessian: str = 'EXACT'):
+        self._translate_cost_term_to_external(stage_type='terminal', yref=yref_e, W=W_e, cost_hessian=cost_hessian)
+
+    def _translate_cost_term_to_external(self, stage_type: str, yref: Optional[Union[ca.SX, ca.MX]], W: Optional[Union[ca.SX, ca.MX]], cost_hessian: str):
+        """Generic helper to translate a cost term (initial/path/terminal) to EXTERNAL.
+
+        stage_type: one of 'initial', 'path', 'terminal'
+        """
         if cost_hessian not in ['EXACT', 'GAUSS_NEWTON']:
             raise ValueError(f"Invalid cost_hessian {cost_hessian}, should be 'EXACT' or 'GAUSS_NEWTON'.")
 
+        suffix = {'initial': '_0', 'path': '', 'terminal': '_e'}[stage_type]
+        # cost_type attribute
+        cost_type = getattr(self.cost, f'cost_type{suffix}')
+
         if cost_hessian == 'GAUSS_NEWTON':
-            if self.cost.cost_type_e not in ['LINEAR_LS', 'NONLINEAR_LS']:
-                raise ValueError(f"cost_hessian 'GAUSS_NEWTON' is only supported for LINEAR_LS, NONLINEAR_LS cost types, got cost_type_e = {self.cost.cost_type_e}.")
+            allowed = ['LINEAR_LS', 'NONLINEAR_LS']
+
+            # TODO why would we allow None?
+            # if stage_type == 'initial':
+            #     allowed.append(None)
+            if cost_type not in allowed:
+                raise ValueError(f"cost_hessian 'GAUSS_NEWTON' is only supported for LINEAR_LS, NONLINEAR_LS cost types, got cost_type{suffix} = {cost_type}.")
 
         casadi_symbolics_type = type(self.model.x)
 
-        if yref_e is None:
-            yref_e = self.cost.yref_e
+        # yref and W default to current values
+        yref_attr = getattr(self.cost, f'yref{suffix}')
+        W_attr = getattr(self.cost, f'W{suffix}')
+
+        if yref is None:
+            yref = yref_attr
         else:
-            if yref_e.shape[0] != self.cost.yref_e.shape[0]:
-                raise ValueError(f"yref_e has wrong shape, got {yref_e.shape}, expected {self.cost.yref_e.shape}.")
+            if yref.shape[0] != yref_attr.shape[0]:
+                raise ValueError(f"yref{suffix} has wrong shape, got {yref.shape}, expected {yref_attr.shape}.")
+            if not isinstance(yref, casadi_symbolics_type):
+                raise TypeError(f"yref{suffix} has wrong type, got {type(yref)}, expected {casadi_symbolics_type}.")
 
-            if not isinstance(yref_e, casadi_symbolics_type):
-                raise TypeError(f"yref_e has wrong type, got {type(yref_e)}, expected {casadi_symbolics_type}.")
-
-        if W_e is None:
-            W_e = self.cost.W_e
+        if W is None:
+            W = W_attr
         else:
-            if W_e.shape != self.cost.W_e.shape:
-                raise ValueError(f"W_e has wrong shape, got {W_e.shape}, expected {self.cost.W_e.shape}.")
+            if W.shape != W_attr.shape:
+                raise ValueError(f"W{suffix} has wrong shape, got {W.shape}, expected {W_attr.shape}.")
+            if not isinstance(W, casadi_symbolics_type):
+                raise TypeError(f"W{suffix} has wrong type, got {type(W)}, expected {casadi_symbolics_type}.")
 
-            if not isinstance(W_e, casadi_symbolics_type):
-                raise TypeError(f"W_e has wrong type, got {type(W_e)}, expected {casadi_symbolics_type}.")
+        # perform translation
+        if cost_type == 'LINEAR_LS':
+            Vx = getattr(self.cost, f'Vx{suffix}')
 
-        if self.cost.cost_type_e == "LINEAR_LS":
-            self.model.cost_expr_ext_cost_e = \
-                self.__translate_ls_cost_to_external_cost(self.model.x, self.model.u, self.model.z,
-                                                          self.cost.Vx_e, None, None,
-                                                          yref_e, W_e)
+            # pass default as Vu, Vz are not present at terminal state
+            Vu = getattr(self.cost, f'Vu{suffix}', None)
+            Vz = getattr(self.cost, f'Vz{suffix}', None)
 
-            self.cost.Vx_e = np.zeros((0,0))
-            self.cost.W_e = np.zeros((0,0))
-            self.model.cost_y_expr_e = []
-            self.cost.yref_e = np.zeros((0,))
+            translated = self.__translate_ls_cost_to_external_cost(
+                self.model.x, self.model.u, self.model.z, Vx, Vu, Vz, yref, W)
+            setattr(self.model, f'cost_expr_ext_cost{suffix}', translated)
 
-        elif self.cost.cost_type_e == "NONLINEAR_LS":
-            self.model.cost_expr_ext_cost_e = \
-                self.__translate_nls_cost_to_external_cost(self.model.cost_y_expr_e, yref_e, W_e)
+            # clear original cost matrices/refs if they exist
+            setattr(self.cost, f'Vx{suffix}', np.zeros((0,0)))
+            setattr(self.cost, f'yref{suffix}', np.zeros((0,)))
+            setattr(self.cost, f'W{suffix}', np.zeros((0,0)))
+
+            if stage_type != 'terminal':
+                setattr(self.cost, f'Vz{suffix}', np.zeros((0,0)))
+                setattr(self.cost, f'Vu{suffix}', np.zeros((0,0)))
+
+            setattr(self.model, f'cost_y_expr{suffix}', [])
+
+        elif cost_type == 'NONLINEAR_LS':
+            y_expr = getattr(self.model, f'cost_y_expr{suffix}')
+            translated = self.__translate_nls_cost_to_external_cost(y_expr, yref, W)
+            setattr(self.model, f'cost_expr_ext_cost{suffix}', translated)
+
             if cost_hessian == 'GAUSS_NEWTON':
-                self.model.cost_expr_ext_cost_custom_hess_e = self.__get_gn_hessian_expression_from_nls_cost(self.model.cost_y_expr_e, yref_e, W_e, self.model.x, [], self.model.z)
+                u_ = [] if stage_type == 'terminal' else self.model.u
+                hess = self.__get_gn_hessian_expression_from_nls_cost(y_expr, yref, W, self.model.x, u_)
+                # TODO: atm only the hessian in ux can be customized, add z?
+                setattr(self.model, f'cost_expr_ext_cost_custom_hess{suffix}', hess)
 
-            self.cost.W_e = np.zeros((0,0))
-            self.model.cost_y_expr_e = []
-            self.cost.yref_e = np.zeros((0,))
+            setattr(self.cost, f'W{suffix}', np.zeros((0,0)))
+            setattr(self.cost, f'yref{suffix}', np.zeros((0,)))
+            setattr(self.model, f'cost_y_expr{suffix}', [])
 
-        elif self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
-            self.model.cost_expr_ext_cost_e = \
-                self.__translate_conl_cost_to_external_cost(self.model.cost_r_in_psi_expr_e, self.model.cost_psi_expr_e,
-                                                            self.model.cost_y_expr_e, yref_e)
+        elif cost_type == 'CONVEX_OVER_NONLINEAR':
+            r = getattr(self.model, f'cost_r_in_psi_expr{suffix}')
+            psi = getattr(self.model, f'cost_psi_expr{suffix}')
+            y_expr = getattr(self.model, f'cost_y_expr{suffix}')
+            translated = self.__translate_conl_cost_to_external_cost(r, psi, y_expr, yref)
+            setattr(self.model, f'cost_expr_ext_cost{suffix}', translated)
 
-            self.model.cost_r_in_psi_expr_e = []
-            self.model.cost_psi_expr_e = []
-            self.model.cost_y_expr_e = []
-            self.cost.yref_e = np.zeros((0,))
+            if cost_hessian == 'GAUSS_NEWTON':
+                u_ = [] if stage_type == 'terminal' else self.model.u
+                custom_outer_hess = getattr(self.model, f'cost_conl_custom_outer_hess{suffix}')
+                hess = self.__get_ggn_hessian_expression_from_conl_cost(r, psi, y_expr, yref, self.model.x, u_, custom_outer_hess)
+                # TODO: atm only the hessian in ux can be customized
+                setattr(self.model, f'cost_expr_ext_cost_custom_hess{suffix}', hess)
 
-        self.cost.cost_type_e = 'EXTERNAL'
+            setattr(self.model, f'cost_r_in_psi_expr{suffix}', [])
+            setattr(self.model, f'cost_psi_expr{suffix}', [])
+            setattr(self.model, f'cost_y_expr{suffix}', [])
+            setattr(self.cost, f'yref{suffix}', np.zeros((0,)))
+
+        # set cost type to EXTERNAL if any cost was present
+        if cost_type is not None:
+            setattr(self.cost, f'cost_type{suffix}', 'EXTERNAL')
 
 
     @staticmethod
@@ -1927,7 +1852,7 @@ class AcadosOcp:
         return 0.5 * (res.T @ ca.sparsify(W) @ res)
 
     @staticmethod
-    def __get_gn_hessian_expression_from_nls_cost(y_expr, yref, W, x, u, z):
+    def __get_gn_hessian_expression_from_nls_cost(y_expr, yref, W, x, u):
         res = y_expr - yref
         ux = ca.vertcat(u, x)
         inner_jac = ca.jacobian(res, ux)
@@ -1937,6 +1862,19 @@ class AcadosOcp:
     @staticmethod
     def __translate_conl_cost_to_external_cost(r, psi, y_expr, yref):
         return ca.substitute(psi, r, y_expr - yref)
+
+    @staticmethod
+    def __get_ggn_hessian_expression_from_conl_cost(r, psi, y_expr, yref, x, u, custom_outer_hess = None):
+        res = y_expr - yref
+        ux = ca.vertcat(u, x)
+        inner_jac = ca.jacobian(res, ux)
+
+        if is_empty(custom_outer_hess):
+            outer_hess = ca.substitute(ca.hessian(psi, r)[0], r, res)
+        else:
+            outer_hess = custom_outer_hess
+        return inner_jac.T @ outer_hess @ inner_jac
+
 
     def formulate_constraint_as_L2_penalty(
         self,
