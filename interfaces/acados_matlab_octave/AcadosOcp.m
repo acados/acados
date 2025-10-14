@@ -1475,7 +1475,7 @@ classdef AcadosOcp < handle
                             generate_c_code_nonlinear_least_squares(context, ocp.model, cost_dir, stage_types{i});
 
                         case 'CONVEX_OVER_NONLINEAR'
-                            error("Convex-over-nonlinear cost is not implemented yet.")
+                            generate_c_code_conl_cost(context, ocp.model, cost_dir, stage_types{i});
 
                         case 'EXTERNAL'
                             generate_c_code_ext_cost(context, ocp.model, cost_dir, stage_types{i});

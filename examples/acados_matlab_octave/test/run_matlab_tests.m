@@ -65,6 +65,7 @@ test_names = [
 % "run_test_sim_forw",
 "run_test_sim_hess",
 "param_test",
+"test_conl_cost",
 ];
 
 for k = 1:length(test_names)
