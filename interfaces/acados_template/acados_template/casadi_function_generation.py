@@ -651,6 +651,7 @@ def generate_c_code_conl_cost(context: GenerateContext, model: AcadosModel, stag
     outer_hess_expr = outer_hess_fun(inner_expr, t, p, p_global)
     outer_hess_is_diag = outer_hess_expr.sparsity().is_diag()
 
+    # if residual dimension <= 4, do not exploit diagonal structure
     if casadi_length(res_expr) <= 4:
         outer_hess_is_diag = 0
 
