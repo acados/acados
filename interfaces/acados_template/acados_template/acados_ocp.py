@@ -1401,8 +1401,8 @@ class AcadosOcp:
         return template_list
 
 
-    @classmethod
-    def _get_matlab_simulink_template_list(cls, name: str) -> list:
+    @staticmethod
+    def _get_matlab_simulink_template_list(name: str) -> list:
         template_list = []
         template_file = os.path.join('matlab_templates', 'acados_solver_sfun.in.c')
         template_list.append((template_file, f'acados_solver_sfunction_{name}.c'))
@@ -1424,8 +1424,8 @@ class AcadosOcp:
         return template_list
 
     # dont render sim sfunctions for MOCP
-    @classmethod
-    def _get_integrator_simulink_template_list(cls, name: str) -> list:
+    @staticmethod
+    def _get_integrator_simulink_template_list(name: str) -> list:
         template_list = []
         template_file = os.path.join('matlab_templates', 'acados_sim_solver_sfun.in.c')
         template_list.append((template_file, f'acados_sim_solver_sfunction_{name}.c'))

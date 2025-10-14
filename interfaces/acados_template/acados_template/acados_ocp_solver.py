@@ -91,8 +91,8 @@ class AcadosOcpSolver:
         """`shared_lib` - solver shared library"""
         return self.__shared_lib
 
-    @classmethod
-    def generate(cls, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp],
+    @staticmethod
+    def generate(acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp],
                  json_file: str,
                  simulink_opts: Optional[dict]=None,
                  cmake_builder: Optional[CMakeBuilder] = None, verbose=True):
@@ -145,8 +145,8 @@ class AcadosOcpSolver:
             shutil.copyfile(acados_ocp.solver_options.custom_update_header_filename, target_location)
 
 
-    @classmethod
-    def build(cls, code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose: bool = True):
+    @staticmethod
+    def build(code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose: bool = True):
         """
         Builds the code for an acados OCP solver, that has been generated in code_export_dir.
 
@@ -176,8 +176,8 @@ class AcadosOcpSolver:
                     verbose_system_call([make_cmd, 'ocp_shared_lib'], verbose)
 
 
-    @classmethod
-    def create_cython_solver(cls, json_file):
+    @staticmethod
+    def create_cython_solver(json_file):
         """
         Returns an `AcadosOcpSolverCython` object.
 

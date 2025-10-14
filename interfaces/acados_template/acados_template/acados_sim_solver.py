@@ -84,8 +84,8 @@ class AcadosSimSolver:
         """`T` - Simulation time."""
         return self.__T
 
-    @classmethod
-    def generate(self, acados_sim: AcadosSim, json_file='acados_sim.json', cmake_builder: CMakeBuilder = None):
+    @staticmethod
+    def generate(acados_sim: AcadosSim, json_file='acados_sim.json', cmake_builder: CMakeBuilder = None):
         """
         Generates the code for an acados sim solver, given the description in acados_sim
         """
@@ -109,8 +109,8 @@ class AcadosSimSolver:
         acados_sim.render_templates(cmake_builder)
 
 
-    @classmethod
-    def build(self, code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose: bool = True):
+    @staticmethod
+    def build(code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose: bool = True):
 
         code_export_dir = os.path.abspath(code_export_dir)
         with set_directory(code_export_dir):
@@ -124,8 +124,8 @@ class AcadosSimSolver:
                     verbose_system_call(['make', 'sim_shared_lib'], verbose)
 
 
-    @classmethod
-    def create_cython_solver(self, json_file):
+    @staticmethod
+    def create_cython_solver(json_file):
         """
         """
         with open(json_file, 'r') as f:
