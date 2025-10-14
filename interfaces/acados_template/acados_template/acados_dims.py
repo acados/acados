@@ -29,6 +29,8 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+from deprecated.sphinx import deprecated
+
 def check_int_value(name, value, *, positive=False, nonnegative=False):
     if not isinstance(value, int):
         raise TypeError(f"Invalid {name} value: expected an integer, got {type(value).__name__}.")
@@ -387,11 +389,10 @@ class AcadosOcpDims:
         return self.__n_global_data
 
     @property
+    @deprecated(version="0.4.0", reason="Use `ocp.solver_options.N` instead.")
     def N(self):
         """
         :math:`N` - Number of shooting intervals.
-        DEPRECATED: use ocp.solver_options.N instead.
-
         Type: int; default: None"""
         return self.__N
 
