@@ -33,6 +33,7 @@ import os, json
 import numpy as np
 from typing import Optional
 from copy import deepcopy
+from deprecated.sphinx import deprecated
 from .acados_model import AcadosModel
 from .acados_dims import AcadosSimDims
 from .builders import CMakeBuilder
@@ -171,9 +172,9 @@ class AcadosSimOptions:
 
 
     @property
+    @deprecated(version="0.4.0", reason="Set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
     def num_threads_in_batch_solve(self):
         """
-        DEPRECATED, use the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.
         Integer indicating how many threads should be used within the batch solve.
         If more than one thread should be used, the sim solver is compiled with openmp.
         Default: 1.
@@ -296,8 +297,8 @@ class AcadosSimOptions:
             raise ValueError('Invalid sim_method_jac_reuse value. sim_method_jac_reuse must be 0 or 1.')
 
     @num_threads_in_batch_solve.setter
+    @deprecated(version="0.4.0", reason="Set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
     def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
-        print("Warning: num_threads_in_batch_solve is deprecated, set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
         if isinstance(num_threads_in_batch_solve, int) and num_threads_in_batch_solve > 0:
             self.__num_threads_in_batch_solve = num_threads_in_batch_solve
         else:

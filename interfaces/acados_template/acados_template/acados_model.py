@@ -33,6 +33,7 @@ import inspect, warnings
 
 import casadi as ca
 import numpy as np
+from deprecated.sphinx import deprecated
 
 from casadi import MX, SX
 
@@ -911,8 +912,8 @@ class AcadosModel():
         return
 
 
+    @deprecated(version="0.4.0", reason="Use `reformulate_with_polynomial_control()` instead.")
     def augment_model_with_polynomial_control(self, degree: int) -> None:
-        print("Deprecation warning: augment_model_with_polynomial_control() is deprecated and has been renamed to reformulate_with_polynomial_control().")
         self.reformulate_with_polynomial_control(degree=degree)
 
 

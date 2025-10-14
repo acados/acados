@@ -31,6 +31,7 @@
 
 import os
 
+from deprecated.sphinx import deprecated
 from .utils import check_if_nparray_and_flatten
 
 INTEGRATOR_TYPES = ('ERK', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK')
@@ -494,11 +495,11 @@ class AcadosOcpOptions:
         return self.__nlp_qp_tol_min_comp
 
     @property
+    @deprecated(version="0.4.0", reason="Use globalization_fixed_step_length instead.")
     def nlp_solver_step_length(self):
         """
         This option is deprecated and has new name: globalization_fixed_step_length
         """
-        print("The option nlp_solver_step_length is deprecated and has new name: globalization_fixed_step_length")
         return self.__globalization_fixed_step_length
 
     @property
@@ -940,11 +941,11 @@ class AcadosOcpOptions:
         return self.__globalization_alpha_min
 
     @property
+    @deprecated(version="0.4.0", reason="Use globalization_alpha_min instead.")
     def alpha_min(self):
         """
         The option alpha_min is deprecated and has new name: globalization_alpha_min
         """
-        print("The option alpha_min is deprecated and has new name: globalization_alpha_min")
         return self.globalization_alpha_min
 
     @property
@@ -998,11 +999,11 @@ class AcadosOcpOptions:
         return self.__globalization_alpha_reduction
 
     @property
+    @deprecated(version="0.4.0", reason="Use globalization_alpha_reduction instead.")
     def alpha_reduction(self):
         """
         The option alpha_reduction is deprecated and has new name: globalization_alpha_reduction
         """
-        print("The option alpha_reduction is deprecated and has new name: globalization_alpha_reduction")
         return self.globalization_alpha_reduction
 
     @property
@@ -1015,11 +1016,11 @@ class AcadosOcpOptions:
         return self.__globalization_line_search_use_sufficient_descent
 
     @property
+    @deprecated(version="0.4.0", reason="Use globalization_line_search_use_sufficient_descent instead.")
     def line_search_use_sufficient_descent(self):
         """
         The option line_search_use_sufficient_descent is deprecated and has new name: globalization_line_search_use_sufficient_descent
         """
-        print("The option line_search_use_sufficient_descent is deprecated and has new name: globalization_line_search_use_sufficient_descent")
         return self.globalization_line_search_use_sufficient_descent
 
     @property
@@ -1037,11 +1038,11 @@ class AcadosOcpOptions:
         return self.__globalization_eps_sufficient_descent
 
     @property
+    @deprecated(version="0.4.0", reason="Use globalization_line_search_use_sufficient_descent instead.")
     def eps_sufficient_descent(self):
         """
         The option eps_sufficient_descent is deprecated and has new name: globalization_line_search_use_sufficient_descent
         """
-        print("The option eps_sufficient_descent is deprecated and has new name: globalization_line_search_use_sufficient_descent")
         return self.globalization_line_search_use_sufficient_descent
 
     @property
@@ -1066,11 +1067,11 @@ class AcadosOcpOptions:
         return self.__globalization_full_step_dual
 
     @property
+    @deprecated(version="0.4.0", reason="Use globalization_full_step_dual instead.")
     def full_step_dual(self):
         """
         The option full_step_dual is deprecated and has new name: globalization_full_step_dual
         """
-        print("The option full_step_dual is deprecated and has new name: globalization_full_step_dual")
         return self.globalization_full_step_dual
 
     @property
@@ -1407,9 +1408,9 @@ class AcadosOcpOptions:
         return self.__with_value_sens_wrt_params
 
     @property
+    @deprecated(version="0.4.0", reason="Use with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
     def num_threads_in_batch_solve(self):
         """
-        DEPRECATED, use the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.
         Integer indicating how many threads should be used within the batch solve.
         If more than one thread should be used, the solver is compiled with openmp.
         Default: 1.
@@ -1629,8 +1630,8 @@ class AcadosOcpOptions:
         self.__globalization_alpha_min = globalization_alpha_min
 
     @alpha_min.setter
+    @deprecated(version="0.4.0", reason="Use globalization_alpha_min instead.")
     def alpha_min(self, alpha_min):
-        print("This option is deprecated and has new name: globalization_alpha_min")
         self.globalization_alpha_min = alpha_min
 
     @globalization_alpha_reduction.setter
@@ -1638,8 +1639,8 @@ class AcadosOcpOptions:
         self.__globalization_alpha_reduction = globalization_alpha_reduction
 
     @alpha_reduction.setter
+    @deprecated(version="0.4.0", reason="Use globalization_alpha_reduction instead.")
     def alpha_reduction(self, globalization_alpha_reduction):
-        print("This option is deprecated and has new name: globalization_alpha_reduction")
         self.globalization_alpha_reduction = globalization_alpha_reduction
 
     @globalization_line_search_use_sufficient_descent.setter
@@ -1650,8 +1651,8 @@ class AcadosOcpOptions:
             raise ValueError(f'Invalid value for globalization_line_search_use_sufficient_descent. Possible values are 0, 1, got {globalization_line_search_use_sufficient_descent}')
 
     @line_search_use_sufficient_descent.setter
+    @deprecated(version="0.4.0", reason="Use globalization_line_search_use_sufficient_descent instead.")
     def line_search_use_sufficient_descent(self, globalization_line_search_use_sufficient_descent):
-        print("This option is deprecated and has new name: globalization_line_search_use_sufficient_descent")
         if globalization_line_search_use_sufficient_descent in [0, 1]:
             self.__globalization_line_search_use_sufficient_descent = globalization_line_search_use_sufficient_descent
         else:
@@ -1672,8 +1673,8 @@ class AcadosOcpOptions:
             raise ValueError(f'Invalid value for globalization_full_step_dual. Possible values are 0, 1, got {globalization_full_step_dual}')
 
     @full_step_dual.setter
+    @deprecated(version="0.4.0", reason="Use globalization_full_step_dual instead.")
     def full_step_dual(self, globalization_full_step_dual):
-        print("This option is deprecated and has new name: globalization_full_step_dual")
         self.globalization_full_step_dual = globalization_full_step_dual
 
 
@@ -1776,8 +1777,8 @@ class AcadosOcpOptions:
             raise ValueError('Invalid globalization_eps_sufficient_descent value. globalization_eps_sufficient_descent must be a positive float.')
 
     @eps_sufficient_descent.setter
+    @deprecated(version="0.4.0", reason="Use globalization_eps_sufficient_descent instead.")
     def eps_sufficient_descent(self, globalization_eps_sufficient_descent):
-        print("This option is deprecated and has new name: globalization_eps_sufficient_descent")
         self.globalization_eps_sufficient_descent = globalization_eps_sufficient_descent
 
     @sim_method_num_stages.setter
@@ -1891,8 +1892,8 @@ class AcadosOcpOptions:
         self.__nlp_qp_tol_safety_factor = nlp_qp_tol_safety_factor
 
     @nlp_solver_step_length.setter
+    @deprecated(version="0.4.0", reason="Use globalization_fixed_step_length instead.")
     def nlp_solver_step_length(self, nlp_solver_step_length):
-        print("The option nlp_solver_step_length is deprecated and has new name: globalization_fixed_step_length")
         self.globalization_fixed_step_length = nlp_solver_step_length
 
     @nlp_solver_warm_start_first_qp.setter
@@ -2252,8 +2253,8 @@ class AcadosOcpOptions:
             raise ValueError('Invalid ext_cost_num_hess value. ext_cost_num_hess takes one of the values 0, 1.')
 
     @num_threads_in_batch_solve.setter
+    @deprecated(version="0.4.0", reason="Set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
     def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
-        print("Warning: num_threads_in_batch_solve is deprecated, set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
         if isinstance(num_threads_in_batch_solve, int) and num_threads_in_batch_solve > 0:
             self.__num_threads_in_batch_solve = num_threads_in_batch_solve
         else:

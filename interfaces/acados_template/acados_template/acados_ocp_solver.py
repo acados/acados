@@ -49,6 +49,7 @@ from typing import Union, Optional, List, Tuple, Sequence, Dict
 
 import numpy as np
 import scipy.linalg
+from deprecated.sphinx import deprecated
 from .builders import CMakeBuilder
 from .acados_ocp import AcadosOcp
 from .acados_multiphase_ocp import AcadosMultiphaseOcp
@@ -673,8 +674,8 @@ class AcadosOcpSolver:
         return grad
 
 
+    @deprecated(version="0.4.0", reason="Use eval_and_get_optimal_value_gradient() instead.")
     def get_optimal_value_gradient(self, with_respect_to: str = "initial_state") -> np.ndarray:
-        print("Deprecation warning: get_optimal_value_gradient() is deprecated and has been renamed to eval_and_get_optimal_value_gradient().")
         return self.eval_and_get_optimal_value_gradient(with_respect_to)
 
 
@@ -934,53 +935,6 @@ class AcadosOcpSolver:
             return grad_p
         else:
             raise NotImplementedError(f"with_respect_to {with_respect_to} not implemented.")
-
-
-
-    def eval_param_sens(self, index: int, stage: int=0, field="ex"):
-        """
-        Calculate the sensitivity of the current solution with respect to the initial state component of index.
-
-        NOTE: Correct computation of sensitivities requires
-
-        (1) HPIPM as QP solver,
-
-        (2) the usage of an exact Hessian,
-
-        (3) positive definiteness of the full-space Hessian if the square-root version of the Riccati recursion is used
-            OR positive definiteness of the reduced Hessian if the classic Riccati recursion is used (compare: `solver_options.qp_solver_ric_alg`),
-        (4) the solution of at least one QP in advance to evaluation of the sensitivities as the factorization is reused.
-
-        :param index: integer corresponding to initial state index in range(nx)
-        """
-
-        print("WARNING: eval_param_sens() is deprecated. Please use eval_solution_sensitivity() instead!")
-
-        self._ensure_solution_sensitivities_available(False)
-
-        field = field.encode('utf-8')
-
-        if not isinstance(index, int):
-            raise TypeError('AcadosOcpSolver.eval_param_sens(): index must be Integer.')
-
-        if field == "ex":
-            if not stage == 0:
-                raise NotImplementedError('AcadosOcpSolver.eval_param_sens(): only stage == 0 is supported.')
-            nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage, "x".encode('utf-8'))
-
-            if index < 0 or index > nx:
-                raise ValueError(f'AcadosOcpSolver.eval_param_sens(): index must be in [0, nx-1], got: {index}.')
-
-        elif field == "p_global":
-            nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p".encode('utf-8'))
-
-            if index < 0 or index > nparam:
-                raise IndexError(f'AcadosOcpSolver.eval_param_sens(): index must be in [0, nparam-1], got: {index}.')
-
-        # actual eval_param
-        self.__acados_lib.ocp_nlp_eval_param_sens(self.nlp_solver, field, stage, index, self.sens_out)
-
-        return
 
 
     def get(self, stage_: int, field_: str):
