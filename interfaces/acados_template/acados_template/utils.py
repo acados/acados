@@ -37,6 +37,7 @@ import sys
 import platform
 import urllib.request
 from deprecated.sphinx import deprecated
+import warnings
 from subprocess import DEVNULL, STDOUT, call
 if os.name == 'nt':
     from ctypes import wintypes
@@ -173,16 +174,16 @@ def check_casadi_version():
                         'Please use a version >= 3.4.0.')
 
     if major > 3 or (major == 3 and minor > 7): # >= 3.7
-        print(f"Warning: CasADi version {casadi_version} is not tested with acados yet.")
+        warnings.warn(f"CasADi version {casadi_version} is not tested with acados yet.")
     elif major == 3 and minor < 7:
-        print(f"Warning: Full featured acados requires CasADi version >= 3.7, got {casadi_version}.")
+        warnings.warn(f"Full featured acados requires CasADi version >= 3.7, got {casadi_version}.")
 
 
 def check_casadi_version_supports_p_global():
     try:
         from casadi import extract_parametric, cse
     except ImportError:
-        raise ImportError("CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se2 release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se2")
+        raise ImportError("CasADi version does not support extract_parametric or cse functions.\nPlease use CasADi >= 3.7.2")
 
 
 def get_simulink_default_opts() -> dict:

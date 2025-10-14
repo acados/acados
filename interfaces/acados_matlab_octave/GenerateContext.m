@@ -288,6 +288,6 @@ function check_casadi_version_supports_p_global()
         cse(dummy); % Check if cse exists
         blazing_spline('blazing_spline', {[1, 2, 3], [1, 2, 3]});
     catch
-        error('CasADi version does not support extract_parametric or cse functions, thus it is not compatible with p_global in acados. Please install nightly-main release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-main');
+        error('CasADi version does not support extract_parametric or cse functions, thus it is not compatible with p_global in acados. Please use CasADi >= 3.7.2');
     end
 end

@@ -38,6 +38,7 @@ from copy import deepcopy
 import casadi as ca
 import os, shutil
 import json
+import warnings
 
 from .acados_model import AcadosModel
 from .acados_ocp_cost import AcadosOcpCost
@@ -1150,7 +1151,7 @@ class AcadosOcp:
                     raise NotImplementedError(f"with_solution_sens_wrt_params is not supported for BGP constraints that depend on p_global. Got dependency on p_global for {horizon_type} constraint.")
             if opts.qp_solver_cond_N != opts.N_horizon or opts.qp_solver.startswith("FULL_CONDENSING"):
                 if opts.qp_solver_cond_ric_alg != 0:
-                    print("Warning: Parametric sensitivities with condensing should be used with qp_solver_cond_ric_alg=0, as otherwise the full space Hessian needs to be factorized and the algorithm cannot handle indefinite ones.")
+                    warnings.warn("Parametric sensitivities with condensing should be used with qp_solver_cond_ric_alg=0, as otherwise the full space Hessian needs to be factorized and the algorithm cannot handle indefinite ones.")
 
         if opts.with_value_sens_wrt_params:
             if dims.np_global == 0:

@@ -33,6 +33,7 @@ import importlib
 import json
 import os
 import sys
+import warnings
 from ctypes import (POINTER, byref, c_bool, c_char_p, c_double, c_int,
                     c_void_p, cast)
 if os.name == 'nt':
@@ -153,9 +154,7 @@ class AcadosSimSolver:
             self.generate(acados_sim, json_file=json_file, cmake_builder=cmake_builder)
 
         if isinstance(acados_sim, AcadosOcp):
-            print("Warning: An AcadosSimSolver is created from an AcadosOcp description.",
-                  "This only works if you created an AcadosOcpSolver before with the same description."
-                  "Otherwise it leads to undefined behavior. Using an AcadosSim description is recommended.")
+            warnings.warn("An AcadosSimSolver is created from an AcadosOcp description. This only works if you created an AcadosOcpSolver before with the same description. Otherwise it leads to undefined behavior. Using an AcadosSim description is recommended.")
             if acados_sim.dims.np_global > 0:
                 raise ValueError("AcadosSimSolver: AcadosOcp with np_global > 0 is not supported.")
 
