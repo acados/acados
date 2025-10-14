@@ -33,6 +33,7 @@ from .acados_sim_solver import AcadosSimSolver
 from .acados_sim import AcadosSim
 from typing import List, Union
 from ctypes import (POINTER, c_int, c_void_p)
+import warnings
 
 
 class AcadosSimBatchSolver():
@@ -55,13 +56,11 @@ class AcadosSimBatchSolver():
             raise ValueError("AcadosSimBatchSolver: argument N_batch should be a positive integer.")
         if num_threads_in_batch_solve is None:
             num_threads_in_batch_solve = sim.solver_options.num_threads_in_batch_solve
-            print(f"Warning: num_threads_in_batch_solve is None. Using value {num_threads_in_batch_solve} set in sim.solver_options instead.")
-            print("In the future, it should be passed explicitly in the AcadosSimBatchSolver constructor.")
+            warnings.warn(f"num_threads_in_batch_solve is None. Using value {num_threads_in_batch_solve} set in sim.solver_options instead. In the future, it should be passed explicitly in the AcadosSimBatchSolver constructor.")
         if not isinstance(num_threads_in_batch_solve, int) or num_threads_in_batch_solve <= 0:
             raise ValueError("AcadosSimBatchSolver: argument num_threads_in_batch_solve should be a positive integer.")
         if not sim.solver_options.with_batch_functionality:
-            print("Warning: Using AcadosSimBatchSolver, but sim.solver_options.with_batch_functionality is False.")
-            print("Attempting to compile with openmp nonetheless.")
+            warnings.warn("Using AcadosSimBatchSolver, but sim.solver_options.with_batch_functionality is False. Attempting to compile with openmp nonetheless.")
             sim.solver_options.with_batch_functionality = True
 
         self.__num_threads_in_batch_solve = num_threads_in_batch_solve
@@ -85,7 +84,7 @@ class AcadosSimBatchSolver():
         getattr(self.__shared_lib, f"{self.__model_name}_acados_sim_batch_solve").restype = c_void_p
 
         if not self.sim_solvers[0].acados_lib_uses_omp:
-            print("Warning: Please compile the acados shared library with openmp and the number of threads set to 1, i.e. with the flags -DACADOS_WITH_OPENMP=ON -DACADOS_NUM_THREADS=1.")
+            warnings.warn("Please compile the acados shared library with openmp and the number of threads set to 1, i.e. with the flags -DACADOS_WITH_OPENMP=ON -DACADOS_NUM_THREADS=1.")
 
 
     def solve(self):

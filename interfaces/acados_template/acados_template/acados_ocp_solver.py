@@ -460,7 +460,7 @@ class AcadosOcpSolver:
             if fail_on_nonzero_status:
                 raise RuntimeError(f'acados acados_ocp_solver returned status {status}')
             elif print_stats_on_failure:
-                print(f'Warning: acados acados_ocp_solver returned status {status}')
+                warnings.warn(f'acados acados_ocp_solver returned status {status}')
 
         u0 = self.get(0, "u")
         return u0

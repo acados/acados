@@ -30,6 +30,7 @@
 #
 
 import os
+import warnings
 
 from deprecated.sphinx import deprecated
 from .utils import check_if_nparray_and_flatten
