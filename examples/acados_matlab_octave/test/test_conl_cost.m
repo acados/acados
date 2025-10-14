@@ -42,7 +42,7 @@ nx = 2;
 nu = 1;
 N = 20;
 T = 1.0;
-x0 = [1.0; 0.0];
+x0 = [1.0; 0.5];
 ny = nx + nu;
 ny_e = nx;
 
@@ -90,22 +90,21 @@ for i = 1:2
     ocp.model.cost_y_expr = vertcat(x, u);
     ocp.model.cost_y_expr_e = x;
 
+    ocp.cost.yref_e = yref_e;
+    ocp.cost.yref = yref;
+
     if strcmp(cost_type, 'CONVEX_OVER_NONLINEAR')
         % CONVEX_OVER_NONLINEAR cost setup
         r = SX.sym('r', ny);
         r_e = SX.sym('r_e', ny_e);
         ocp.model.cost_r_in_psi_expr = r;
         ocp.model.cost_r_in_psi_expr_e = r_e;
-        ocp.model.cost_psi_expr = 0.5 * r.' * W * r;
-        ocp.model.cost_psi_expr_e = 0.5 * r_e.' * W_e * r_e;
-        ocp.cost.yref = yref;
-        ocp.cost.yref_e = yref_e;
+        ocp.model.cost_psi_expr = 0.5 * r' * W * r;
+        ocp.model.cost_psi_expr_e = 0.5 * r_e' * W_e * r_e;
     else
         % NONLINEAR_LS cost setup (equivalent to CONVEX_OVER_NONLINEAR with quadratic psi)
         ocp.cost.W = W;
         ocp.cost.W_e = W_e;
-        ocp.cost.yref = yref;
-        ocp.cost.yref_e = yref_e;
     end
 
     % Set constraints
@@ -125,6 +124,8 @@ for i = 1:2
     solver = AcadosOcpSolver(ocp);
     solver.solve();
     status = solver.get('status');
+
+    solver.print_statistics();
 
     if status ~= 0
         error(['%s solver returned status ', num2str(status)], cost_type);
