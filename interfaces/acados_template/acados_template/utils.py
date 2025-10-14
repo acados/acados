@@ -149,7 +149,7 @@ def check_casadi_version_supports_p_global():
     try:
         from casadi import extract_parametric, cse
     except ImportError:
-        raise ImportError("CasADi version does not support extract_parametric or cse functions.\nNeeds nightly-se2 release or later, see: https://github.com/casadi/casadi/releases/tag/nightly-se2")
+        raise ImportError("CasADi version does not support extract_parametric or cse functions.\nPlease use CasADi >= 3.7.2")
 
 
 def get_simulink_default_opts() -> dict:
