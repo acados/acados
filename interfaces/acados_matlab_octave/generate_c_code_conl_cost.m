@@ -53,30 +53,30 @@ function generate_c_code_conl_cost(context, model, target_dir, stage_type)
         outer_expr = model.cost_psi_expr_0;
         res_expr = model.cost_r_in_psi_expr_0;
         custom_hess = model.cost_conl_custom_outer_hess_0;
-        
+
         suffix_name_fun = '_conl_cost_0_fun';
         suffix_name_fun_jac_hess = '_conl_cost_0_fun_jac_hess';
-        
+
     elseif strcmp(stage_type, 'path')
         yref = model.cost_r_in_psi_expr;
         y_expr = model.cost_y_expr;
         outer_expr = model.cost_psi_expr;
         res_expr = model.cost_r_in_psi_expr;
         custom_hess = model.cost_conl_custom_outer_hess;
-        
+
         suffix_name_fun = '_conl_cost_fun';
         suffix_name_fun_jac_hess = '_conl_cost_fun_jac_hess';
-        
+
     elseif strcmp(stage_type, 'terminal')
         yref = model.cost_r_in_psi_expr_e;
         y_expr = model.cost_y_expr_e;
         outer_expr = model.cost_psi_expr_e;
         res_expr = model.cost_r_in_psi_expr_e;
         custom_hess = model.cost_conl_custom_outer_hess_e;
-        
+
         suffix_name_fun = '_conl_cost_e_fun';
         suffix_name_fun_jac_hess = '_conl_cost_e_fun_jac_hess';
-        
+
         % create dummy u, z for terminal stage
         if isSX
             u = SX.sym('u', 0, 0);
@@ -105,10 +105,10 @@ function generate_c_code_conl_cost(context, model, target_dir, stage_type)
     % Set up functions to be exported
     % inner_expr = y_expr - yref
     inner_expr = y_expr - yref;
-    
+
     % outer_loss_fun: psi(residual, t, p) = outer_expr
     outer_loss_fun = Function('psi', {res_expr, t, p}, {outer_expr});
-    
+
     % cost_expr = outer_loss_fun(inner_expr, t, p)
     cost_expr = outer_loss_fun(inner_expr, t, p);
 
@@ -126,10 +126,10 @@ function generate_c_code_conl_cost(context, model, target_dir, stage_type)
 
     outer_hess_fun = Function('outer_hess', {res_expr, t, p}, {hess});
     outer_hess_expr = outer_hess_fun(inner_expr, t, p);
-    
+
     % Check if hessian is diagonal
     outer_hess_is_diag = outer_hess_expr.sparsity().is_diag();
-    
+
     % if residual dimension <= 4, do not exploit diagonal structure
     ny = length(res_expr);
     if ny <= 4
