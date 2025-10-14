@@ -159,6 +159,13 @@ jobs:
         python test_casadi_LICQ_violation.py
         python test_casadi_closed_loop.py
 
+    - name: Anderson_acceleration
+      working-directory: ${{ github.workspace }}/examples/acados_python/anderson_acceleration
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python anderson_scqp_experiment.py
+
   py_non_ocp:
     needs: call_core_build
     runs-on: ubuntu-22.04
