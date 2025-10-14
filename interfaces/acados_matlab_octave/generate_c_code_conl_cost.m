@@ -119,7 +119,7 @@ function generate_c_code_conl_cost(context, model, target_dir, stage_type)
     % Compute or use custom hessian
     if isempty(custom_hess)
         % Compute hessian of outer loss w.r.t. residual
-        hess = hessian(outer_loss_fun(res_expr, t, p), res_expr);
+        [hess, ~] = hessian(outer_loss_fun(res_expr, t, p), res_expr);
     else
         hess = custom_hess;
     end
