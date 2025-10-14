@@ -57,15 +57,15 @@ test_names = [
     "test_code_reuse",
     "test_sim_code_reuse",
     "run_test_dim_check",
-"run_test_ocp_mass_spring",
-% "run_test_ocp_pendulum",
-"run_test_ocp_wtnx6",
-% "run_test_sim_adj",
-"run_test_sim_dae",
-% "run_test_sim_forw",
-"run_test_sim_hess",
-"param_test",
-"test_conl_cost",
+    "run_test_ocp_mass_spring",
+    % "run_test_ocp_pendulum",
+    "run_test_ocp_wtnx6",
+    % "run_test_sim_adj",
+    "run_test_sim_dae",
+    % "run_test_sim_forw",
+    "run_test_sim_hess",
+    "param_test",
+    "test_conl_cost"
 ];
 
 for k = 1:length(test_names)
