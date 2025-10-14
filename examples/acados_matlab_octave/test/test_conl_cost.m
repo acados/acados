@@ -54,143 +54,105 @@ W_e = diag([1.0, 1.0]);
 yref = zeros(ny, 1);
 yref_e = zeros(ny_e, 1);
 
-%% Test 1: CONVEX_OVER_NONLINEAR formulation
-fprintf('\n=== Test 1: CONVEX_OVER_NONLINEAR cost ===\n');
+%% Solve with both cost formulations
+fprintf('\n=== Testing CONVEX_OVER_NONLINEAR and NONLINEAR_LS cost formulations ===\n');
 
-x = SX.sym('x', nx);
-u = SX.sym('u', nu);
-f_expl = vertcat(x(2), u);
+cost_types = {'CONVEX_OVER_NONLINEAR', 'NONLINEAR_LS'};
+x_sols = cell(2, 1);
+u_sols = cell(2, 1);
 
-model_conl = AcadosModel();
-model_conl.name = 'conl_cost_test';
-model_conl.x = x;
-model_conl.u = u;
-model_conl.f_expl_expr = f_expl;
-
-ocp_conl = AcadosOcp();
-ocp_conl.model = model_conl;
-ocp_conl.solver_options.tf = T;
-ocp_conl.solver_options.N_horizon = N;
-
-% CONVEX_OVER_NONLINEAR cost setup
-ocp_conl.cost.cost_type = 'CONVEX_OVER_NONLINEAR';
-ocp_conl.cost.cost_type_e = 'CONVEX_OVER_NONLINEAR';
-
-ocp_conl.model.cost_y_expr = vertcat(x, u);
-ocp_conl.model.cost_y_expr_e = x;
-
-r = SX.sym('r', ny);
-r_e = SX.sym('r_e', ny_e);
-ocp_conl.model.cost_r_in_psi_expr = r;
-ocp_conl.model.cost_r_in_psi_expr_e = r_e;
-ocp_conl.model.cost_psi_expr = 0.5 * r.' * W * r;
-ocp_conl.model.cost_psi_expr_e = 0.5 * r_e.' * W_e * r_e;
-
-ocp_conl.cost.yref = yref;
-ocp_conl.cost.yref_e = yref_e;
-
-ocp_conl.constraints.x0 = x0;
-ocp_conl.constraints.lbu = -2.0;
-ocp_conl.constraints.ubu = 2.0;
-ocp_conl.constraints.idxbu = 0;
-
-ocp_conl.solver_options.nlp_solver_type = 'SQP';
-ocp_conl.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
-ocp_conl.solver_options.qp_solver_cond_N = N;
-ocp_conl.solver_options.nlp_solver_max_iter = 100;
-ocp_conl.solver_options.nlp_solver_tol_stat = 1e-6;
-
-solver_conl = AcadosOcpSolver(ocp_conl);
-solver_conl.solve();
-status_conl = solver_conl.get('status');
-
-if status_conl ~= 0
-    error(['CONVEX_OVER_NONLINEAR solver returned status ', num2str(status_conl)]);
-end
-
-% Extract solution
-x_sol_conl = zeros(nx, N+1);
-u_sol_conl = zeros(nu, N);
-for i = 0:N
-    x_sol_conl(:, i+1) = solver_conl.get('x', i);
-    if i < N
-        u_sol_conl(:, i+1) = solver_conl.get('u', i);
+for i = 1:2
+    cost_type = cost_types{i};
+    fprintf('\n--- Solving with %s cost ---\n', cost_type);
+    
+    % Create model
+    x = SX.sym('x', nx);
+    u = SX.sym('u', nu);
+    f_expl = vertcat(x(2), u);
+    
+    model = AcadosModel();
+    model.name = [lower(cost_type), '_test'];
+    model.x = x;
+    model.u = u;
+    model.f_expl_expr = f_expl;
+    
+    % Create OCP
+    ocp = AcadosOcp();
+    ocp.model = model;
+    ocp.solver_options.tf = T;
+    ocp.solver_options.N_horizon = N;
+    
+    % Set cost type
+    ocp.cost.cost_type = cost_type;
+    ocp.cost.cost_type_e = cost_type;
+    
+    % Set cost expressions
+    ocp.model.cost_y_expr = vertcat(x, u);
+    ocp.model.cost_y_expr_e = x;
+    
+    if strcmp(cost_type, 'CONVEX_OVER_NONLINEAR')
+        % CONVEX_OVER_NONLINEAR cost setup
+        r = SX.sym('r', ny);
+        r_e = SX.sym('r_e', ny_e);
+        ocp.model.cost_r_in_psi_expr = r;
+        ocp.model.cost_r_in_psi_expr_e = r_e;
+        ocp.model.cost_psi_expr = 0.5 * r.' * W * r;
+        ocp.model.cost_psi_expr_e = 0.5 * r_e.' * W_e * r_e;
+        ocp.cost.yref = yref;
+        ocp.cost.yref_e = yref_e;
+    else
+        % NONLINEAR_LS cost setup (equivalent to CONVEX_OVER_NONLINEAR with quadratic psi)
+        ocp.cost.W = W;
+        ocp.cost.W_e = W_e;
+        ocp.cost.yref = yref;
+        ocp.cost.yref_e = yref_e;
     end
-end
-
-fprintf('CONVEX_OVER_NONLINEAR solution:\n');
-fprintf('  Final state: [%.6f, %.6f]\n', x_sol_conl(1, end), x_sol_conl(2, end));
-fprintf('  Max control: %.6f\n', max(abs(u_sol_conl(:))));
-
-%% Test 2: NONLINEAR_LS formulation (equivalent quadratic cost)
-fprintf('\n=== Test 2: NONLINEAR_LS cost (for comparison) ===\n');
-
-x = SX.sym('x', nx);
-u = SX.sym('u', nu);
-f_expl = vertcat(x(2), u);
-
-model_nls = AcadosModel();
-model_nls.name = 'nls_cost_test';
-model_nls.x = x;
-model_nls.u = u;
-model_nls.f_expl_expr = f_expl;
-
-ocp_nls = AcadosOcp();
-ocp_nls.model = model_nls;
-ocp_nls.solver_options.tf = T;
-ocp_nls.solver_options.N_horizon = N;
-
-% NONLINEAR_LS cost setup (equivalent to CONVEX_OVER_NONLINEAR with quadratic psi)
-ocp_nls.cost.cost_type = 'NONLINEAR_LS';
-ocp_nls.cost.cost_type_e = 'NONLINEAR_LS';
-
-ocp_nls.model.cost_y_expr = vertcat(x, u);
-ocp_nls.model.cost_y_expr_e = x;
-
-ocp_nls.cost.W = W;
-ocp_nls.cost.W_e = W_e;
-ocp_nls.cost.yref = yref;
-ocp_nls.cost.yref_e = yref_e;
-
-ocp_nls.constraints.x0 = x0;
-ocp_nls.constraints.lbu = -2.0;
-ocp_nls.constraints.ubu = 2.0;
-ocp_nls.constraints.idxbu = 0;
-
-ocp_nls.solver_options.nlp_solver_type = 'SQP';
-ocp_nls.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
-ocp_nls.solver_options.qp_solver_cond_N = N;
-ocp_nls.solver_options.nlp_solver_max_iter = 100;
-ocp_nls.solver_options.nlp_solver_tol_stat = 1e-6;
-
-solver_nls = AcadosOcpSolver(ocp_nls);
-solver_nls.solve();
-status_nls = solver_nls.get('status');
-
-if status_nls ~= 0
-    error(['NONLINEAR_LS solver returned status ', num2str(status_nls)]);
-end
-
-% Extract solution
-x_sol_nls = zeros(nx, N+1);
-u_sol_nls = zeros(nu, N);
-for i = 0:N
-    x_sol_nls(:, i+1) = solver_nls.get('x', i);
-    if i < N
-        u_sol_nls(:, i+1) = solver_nls.get('u', i);
+    
+    % Set constraints
+    ocp.constraints.x0 = x0;
+    ocp.constraints.lbu = -2.0;
+    ocp.constraints.ubu = 2.0;
+    ocp.constraints.idxbu = 0;
+    
+    % Set solver options
+    ocp.solver_options.nlp_solver_type = 'SQP';
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
+    ocp.solver_options.qp_solver_cond_N = N;
+    ocp.solver_options.nlp_solver_max_iter = 100;
+    ocp.solver_options.nlp_solver_tol_stat = 1e-6;
+    
+    % Create solver and solve
+    solver = AcadosOcpSolver(ocp);
+    solver.solve();
+    status = solver.get('status');
+    
+    if status ~= 0
+        error(['%s solver returned status ', num2str(status)], cost_type);
     end
+    
+    % Extract solution
+    x_sol = zeros(nx, N+1);
+    u_sol = zeros(nu, N);
+    for j = 0:N
+        x_sol(:, j+1) = solver.get('x', j);
+        if j < N
+            u_sol(:, j+1) = solver.get('u', j);
+        end
+    end
+    
+    x_sols{i} = x_sol;
+    u_sols{i} = u_sol;
+    
+    fprintf('Final state: [%.6f, %.6f]\n', x_sol(1, end), x_sol(2, end));
+    fprintf('Max control: %.6f\n', max(abs(u_sol(:))));
 end
-
-fprintf('NONLINEAR_LS solution:\n');
-fprintf('  Final state: [%.6f, %.6f]\n', x_sol_nls(1, end), x_sol_nls(2, end));
-fprintf('  Max control: %.6f\n', max(abs(u_sol_nls(:))));
 
 %% Compare solutions
 fprintf('\n=== Comparing solutions ===\n');
 tol = 1e-5;
 
-x_diff = max(max(abs(x_sol_conl - x_sol_nls)));
-u_diff = max(max(abs(u_sol_conl - u_sol_nls)));
+x_diff = max(max(abs(x_sols{1} - x_sols{2})));
+u_diff = max(max(abs(u_sols{1} - u_sols{2})));
 
 fprintf('Max state difference: %.2e\n', x_diff);
 fprintf('Max control difference: %.2e\n', u_diff);
@@ -204,7 +166,7 @@ if u_diff > tol
 end
 
 % Check that final state is close to origin
-if norm(x_sol_conl(:, end)) > 1e-2
+if norm(x_sols{1}(:, end)) > 1e-2
     error('Final state is not close to origin!');
 end
 
