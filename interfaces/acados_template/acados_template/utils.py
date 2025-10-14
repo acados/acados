@@ -36,6 +36,7 @@ import shutil
 import sys
 import platform
 import urllib.request
+from deprecated.sphinx import deprecated
 from subprocess import DEVNULL, STDOUT, call
 if os.name == 'nt':
     from ctypes import wintypes
@@ -386,9 +387,8 @@ def format_class_dict(d):
         out[k.replace(k, out_key)] = v
     return out
 
+@deprecated(version="0.4.0", reason="Use get_simulink_default_opts() instead.")
 def get_default_simulink_opts() -> dict:
-    print("get_default_simulink_opts is deprecated, use get_simulink_default_opts instead."
-          + " This function will be removed in a future release.")
     return get_simulink_default_opts()
 
 
