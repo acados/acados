@@ -45,6 +45,12 @@ class ZoroDescription:
     """backoff scaling factor, for stochastic MPC"""
     fdbk_K_mat: np.ndarray = None
     """constant feedback gain matrix K"""
+    riccati_Q_mat: np.ndarray = None
+    """matrix Q for computing the riccati"""
+    riccati_R_mat: np.ndarray = None
+    """matrix R for computing the riccati"""
+    riccati_S_mat: np.ndarray = None
+    """matrix S for computing the riccati"""
     unc_jac_G_mat: np.ndarray = None    # default: an identity matrix
     """matrix G, describes how noise enters the dynamics"""
     P0_mat: np.ndarray = None
@@ -85,6 +91,7 @@ class ZoroDescription:
 
     In case this is used W_k = W + W_{add}^k.
     """
+    zoro_riccati: bool = False
 
     # Outputs:
     output_P_matrices: bool = False
@@ -115,6 +122,15 @@ class ZoroDescription:
 
         if self.input_P0_diag and self.input_P0:
             raise Exception("Only one of input_P0_diag and input_P0 can be True")
+        if self.zoro_riccati:
+            if self.riccati_Q_mat is None or self.riccati_R_mat is None or self.riccati_S_mat is None:
+                raise Exception("riccati_Q_mat, riccati_R_mat, riccati_S_mat should not be None when zoro_riccati is True")
+            if self.riccati_Q_mat.shape != (dims.nx, dims.nx):
+                raise Exception("The shape of riccati_Q_mat should be [nx*nx].")
+            if self.riccati_R_mat.shape != (dims.nu, dims.nu):
+                raise Exception("The shape of riccati_R_mat should be [nu*nu].")
+            if self.riccati_S_mat.shape != (dims.nu, dims.nx):
+                raise Exception("The shape of riccati_S_mat should be [nu*nx].")
 
         # Print input note:
         print(f"\nThe data of the generated custom update function consists of the concatenation of:")

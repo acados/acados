@@ -38,9 +38,10 @@ from track_spline import TrackSpline
 
 N_SIM = 175
 
-def run_closed_loop_simulation(use_custom_update: bool, n_executions: int = 1):
+def run_closed_loop_simulation(use_custom_update: bool, zoro_riccati: bool, n_executions: int = 1):
     cfg_zo = MPCParam()
     cfg_zo.use_custom_update = use_custom_update
+    cfg_zo.zoro_riccati = zoro_riccati
     zoroMPC = ZoroMPCSolver(cfg_zo)
 
     # Differential equation of the model
@@ -143,15 +144,16 @@ def run_closed_loop_simulation(use_custom_update: bool, n_executions: int = 1):
     }
 
 
-    results_filename = get_results_filename(use_custom_update, n_executions)
+    results_filename = get_results_filename(use_custom_update, zoro_riccati, n_executions)
     store_results(results_filename, results)
     del zoroMPC
 
 
 
-def solve_single_zoro_problem_visualize_uncertainty():
+def solve_single_zoro_problem_visualize_uncertainty(zoro_riccati:bool=True):
     cfg_zo = MPCParam()
     cfg_zo.use_custom_update = True
+    cfg_zo.zoro_riccati = zoro_riccati
     cfg_zo.zoRO_iter = 20
     zoroMPC = ZoroMPCSolver(cfg_zo, output_P_matrices=True)
 
@@ -186,51 +188,59 @@ def solve_single_zoro_problem_visualize_uncertainty():
 
     print(f"x_opt = {x_opt}")
     print(f"status = {status}")
+    if zoro_riccati:
+        fig_name_concat = "_riccati"
+    else:
+        fig_name_concat = "_fixedK"
     plot_trajectory(cfg_zo, x_ref_interp, x_opt,
-                    P_matrices=zoroMPC.ocp.zoro_description.backoff_scaling_gamma**2 * zoroMPC.P_mats, closed_loop=False)
+                    P_matrices=zoroMPC.ocp.zoro_description.backoff_scaling_gamma**2 * zoroMPC.P_mats, closed_loop=False, fig_name_concat=fig_name_concat)
 
 
-def plot_result_trajectory(n_executions: int, use_custom_update=True):
-    results_filename = get_results_filename(use_custom_update, n_executions)
+def plot_result_trajectory(n_executions: int, use_custom_update=True, zoro_riccati=True):
+    results_filename = get_results_filename(use_custom_update, zoro_riccati, n_executions)
     results = load_results(results_filename)
     plot_trajectory(results['cfg_zo'], results['ref_trajectory'], results['trajectory'])
 
-def plot_result_timings(n_executions: int, use_custom_update=True):
-    results_filename = get_results_filename(use_custom_update, n_executions)
+def plot_result_timings(n_executions: int, use_custom_update=True, zoro_riccati=True):
+    results_filename = get_results_filename(use_custom_update, zoro_riccati, n_executions)
     results = load_results(results_filename)
     plot_timings(results['timings'], use_custom_update)
 
-def compare_results(n_executions: int):
-    results1 = load_results(get_results_filename(use_custom_update=True, n_executions=n_executions))
-    results2 = load_results(get_results_filename(use_custom_update=False, n_executions=n_executions))
+def compare_results(n_executions: int, zoro_riccati=True):
+    results1 = load_results(get_results_filename(use_custom_update=True, zoro_riccati=zoro_riccati, n_executions=n_executions))
+    results2 = load_results(get_results_filename(use_custom_update=False, zoro_riccati=zoro_riccati, n_executions=n_executions))
     traj_diff = results1['trajectory'] - results2['trajectory']
     error = np.max(np.abs(traj_diff))
     print(f"trajectory diff after closed loop simulation {error:.2e}")
     tol = 1e-5
     if error > tol:
         raise Exception(f"zoRO implementations differ too much, error = {error:.2e} > tol = {tol:.2e}")
-
-
-def plot_result_timing_comparison(n_executions: int):
-    fast_timings = load_results(get_results_filename(use_custom_update=True, n_executions=n_executions))['timings']
-    slow_timings = load_results(get_results_filename(use_custom_update=False, n_executions=n_executions))['timings']
+    
+def plot_result_timing_comparison(n_executions: int, zoro_riccati=True):
+    fast_timings = load_results(get_results_filename(use_custom_update=True, zoro_riccati=zoro_riccati, n_executions=n_executions))['timings']
+    slow_timings = load_results(get_results_filename(use_custom_update=False, zoro_riccati=zoro_riccati, n_executions=n_executions))['timings']
     plot_timing_comparison([fast_timings, slow_timings], ['zoRO-24', 'zoRO-21'])
 
-def timing_comparison(n_executions: int):
-    plot_result_timings(n_executions=n_executions, use_custom_update=True)
-    plot_result_timings(n_executions=n_executions, use_custom_update=False)
+def timing_comparison(n_executions: int, zoro_riccati=True):
+    plot_result_timings(n_executions=n_executions, use_custom_update=True, zoro_riccati=zoro_riccati)
+    plot_result_timings(n_executions=n_executions, use_custom_update=False, zoro_riccati=zoro_riccati)
 
-    plot_result_timing_comparison(n_executions=n_executions)
+    plot_result_timing_comparison(n_executions=n_executions, zoro_riccati=zoro_riccati)
 
 
 if __name__ == "__main__":
     n_executions = 2
-    run_closed_loop_simulation(use_custom_update=True, n_executions=n_executions)
-    run_closed_loop_simulation(use_custom_update=False, n_executions=n_executions)
-    compare_results(n_executions=n_executions)
+    run_closed_loop_simulation(use_custom_update=True, zoro_riccati=True, n_executions=n_executions)
+    run_closed_loop_simulation(use_custom_update=True, zoro_riccati=False, n_executions=n_executions)
+    run_closed_loop_simulation(use_custom_update=False, zoro_riccati=True, n_executions=n_executions)
+    run_closed_loop_simulation(use_custom_update=False, zoro_riccati=False, n_executions=n_executions)
+    compare_results(n_executions=n_executions, zoro_riccati=True)
+    compare_results(n_executions=n_executions, zoro_riccati=False)
 
-    plot_result_trajectory(n_executions=n_executions, use_custom_update=True)
+    plot_result_trajectory(n_executions=n_executions, use_custom_update=True, zoro_riccati=True)
+    plot_result_trajectory(n_executions=n_executions, use_custom_update=True, zoro_riccati=False)
     timing_comparison(n_executions=n_executions)
 
-    solve_single_zoro_problem_visualize_uncertainty()
+    solve_single_zoro_problem_visualize_uncertainty(zoro_riccati=True)
+    solve_single_zoro_problem_visualize_uncertainty(zoro_riccati=False)
     plt.show()

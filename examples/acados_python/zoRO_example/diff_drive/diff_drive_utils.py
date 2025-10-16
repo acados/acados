@@ -38,12 +38,14 @@ latexify_plot()
 
 # RESULTS_DIR = 'results'
 
-def get_results_filename(use_custom_update: bool, n_executions: int):
+def get_results_filename(use_custom_update: bool, zoro_riccati: bool, n_executions: int):
     results_filename = 'results_'
     if use_custom_update:
         results_filename += 'custom_update'
     else:
         results_filename += 'python_prop'
+    if zoro_riccati:
+        results_filename += '_riccati'
     results_filename += f'_exec_{n_executions}'
     results_filename += '.pkl'
     return results_filename
@@ -132,7 +134,7 @@ def ellipsoid_surface_2D(P, n=100):
     return a
 
 
-def plot_trajectory(cfg: MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray, P_matrices=None, closed_loop=True):
+def plot_trajectory(cfg: MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray, P_matrices=None, closed_loop=True, fig_name_concat:str=""):
 
     fig = plt.figure()
     ax = fig.add_subplot(1,1,1)
@@ -167,7 +169,7 @@ def plot_trajectory(cfg: MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray, P_ma
     if not os.path.exists("figures"):
         os.makedirs("figures")
 
-    fig_filename = os.path.join("figures", "diff_drive_sim_trajectory.pdf")
+    fig_filename = os.path.join("figures", f"diff_drive_sim_trajectory{fig_name_concat}.pdf")
     plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
     print(f"stored figure in {fig_filename}")
 

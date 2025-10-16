@@ -56,6 +56,7 @@ class MPCParam():
 
     # feedback gain scalar parameter (full structured matrix defined below)
     fdbk_k: float=6.0
+    zoro_riccati: bool = False
 
     # uncertainty / distrubance
     unc_jac_G_mat: np.ndarray=field(default_factory=lambda: np.zeros(0))

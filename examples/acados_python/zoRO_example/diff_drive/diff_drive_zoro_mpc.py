@@ -135,6 +135,11 @@ class ZoroMPCSolver:
         zoro_description.idx_lh_e_t = list(range(0, cfg.num_obs))
         zoro_description.idx_uh_e_t = []
         zoro_description.output_P_matrices = output_P_matrices
+        zoro_description.zoro_riccati = cfg.zoro_riccati
+        # TODO: put into cfg
+        zoro_description.riccati_Q_mat = 1e-2 * np.eye(5)
+        zoro_description.riccati_R_mat = 1e-3 * np.eye(2)
+        zoro_description.riccati_S_mat = np.zeros((2, 5))
 
         ## dummy linear constraints for testing
         # self.ocp.constraints.C = np.array([[1., 0., 0., 0., 0.0], [0., 1., 0., 0., 0.]])
@@ -208,6 +213,9 @@ class ZoroMPCSolver:
         for i_stage in range(self.cfg.n_hrzn+1):
             self.acados_ocp_solver.set(i_stage,"p", obs_position)
 
+        if not self.ocp.zoro_description.zoro_riccati:
+            riccati_K = [self.cfg.fdbk_K_mat] * self.cfg.n_hrzn
+
         for i_sqp in range(self.cfg.zoRO_iter):
             # preparation rti_phase
             self.acados_ocp_solver.options_set('rti_phase', 1)
@@ -228,7 +236,9 @@ class ZoroMPCSolver:
                 self.acados_ocp_solver.print_statistics()
             else:
                 t_start = process_time()
-                self.propagate_and_update(obs_position=obs_position, obs_radius=obs_radius, p0_mat=self.cfg.P0_mat)
+                if self.ocp.zoro_description.zoro_riccati:
+                    riccati_K, _ = self.riccati_recursion()
+                self.propagate_and_update(obs_position=obs_position, obs_radius=obs_radius, p0_mat=self.cfg.P0_mat, riccati_K=riccati_K)
                 self.propagation_t += process_time() - t_start
 
             # feedback rti_phase
@@ -284,7 +294,24 @@ class ZoroMPCSolver:
         return collision_cstr_active
 
 
-    def propagate_and_update(self, obs_position, obs_radius, p0_mat):
+    def riccati_recursion(self):
+        Q = self.ocp.zoro_description.riccati_Q_mat
+        R = self.ocp.zoro_description.riccati_R_mat
+        S = self.ocp.zoro_description.riccati_S_mat
+
+        K = [None] * self.cfg.n_hrzn
+        P = [None] * (self.cfg.n_hrzn+1)
+        P[-1] = Q.copy()
+
+        for k in range(self.cfg.n_hrzn-1, -1, -1):
+            temp_A = self.acados_ocp_solver.get_from_qp_in(k, "A")
+            temp_B = self.acados_ocp_solver.get_from_qp_in(k, "B")
+            K[k] = np.linalg.solve( R + temp_B.T @ P[k+1] @ temp_B, S + temp_B.T @ P[k+1] @ temp_A )
+            P[k] = Q + temp_A.T @ P[k+1] @ temp_A - (S.T + temp_A.T @ P[k+1] @ temp_B) @ K[k]
+        return K, P
+
+
+    def propagate_and_update(self, obs_position, obs_radius, p0_mat, riccati_K):
         # debug_list = []
         lbx_tightened = np.zeros((self.cfg.num_state_cstr, ))
         ubx_tightened = np.zeros((self.cfg.num_state_cstr, ))
@@ -300,7 +327,7 @@ class ZoroMPCSolver:
             # get the A matrix
             temp_A = self.acados_ocp_solver.get_from_qp_in(i_mpc_stage, "A")
             temp_B = self.acados_ocp_solver.get_from_qp_in(i_mpc_stage, "B")
-            temp_AK = temp_A - temp_B @ self.cfg.fdbk_K_mat
+            temp_AK = temp_A - temp_B @ riccati_K[i_mpc_stage]
             temp_P_mat = temp_AK @ temp_P_mat @ temp_AK.T + self.cfg.W_mat
             i_mpc_stage += 1
             self.P_mats[i_mpc_stage,:,:] = temp_P_mat.copy()
