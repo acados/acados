@@ -60,8 +60,8 @@ def load_results(results_filename):
     return results
 
 
-def plot_timings(timing_dict, use_custom_update: bool):
-
+def plot_timings(timing_dict, use_custom_update: bool, fig_name_concat:str=""):
+    print(f"use_custom_update={use_custom_update}")
     print("timings\t\tmin\tmean\tmax\n--------------------------------")
     for k, v in timing_dict.items():
         print(f"& {k:10} & {np.min(v):.3f} & {np.mean(v):.3f} & {np.max(v):.3f} \\\\")
@@ -90,12 +90,12 @@ def plot_timings(timing_dict, use_custom_update: bool):
 
     if not os.path.exists("figures"):
         os.makedirs("figures")
-    fig_filename = os.path.join("figures", f"timings_diff_drive_{'fast' if use_custom_update else 'slow'}.pdf")
+    fig_filename = os.path.join("figures", f"timings_diff_drive_{'fast' if use_custom_update else 'slow'}{fig_name_concat}.pdf")
     plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
     print(f"stored figure in {fig_filename}")
 
 
-def plot_timing_comparison(timings_list, label_list):
+def plot_timing_comparison(timings_list, label_list, fig_name_concat:str=""):
     fig = plt.figure(figsize=(6.0, 1.8))
     ax = fig.add_subplot(111)
     colors = ['C0', 'C1']
@@ -122,7 +122,7 @@ def plot_timing_comparison(timings_list, label_list):
 
     if not os.path.exists("figures"):
         os.makedirs("figures")
-    fig_filename = os.path.join("figures", "timings_diff_drive_compare.pdf")
+    fig_filename = os.path.join("figures", f"timings_diff_drive_compare{fig_name_concat}.pdf")
     plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
     print(f"stored figure in {fig_filename}")
 

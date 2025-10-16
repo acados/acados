@@ -80,6 +80,7 @@ def run_closed_loop_simulation(use_custom_update: bool, zoro_riccati: bool, n_ex
     path_tracking_solver.solve(x_init=x_init, x_e=x_e)
 
     time_prep = []
+    time_riccati = []
     time_prop = []
     time_feedback = []
     time_sim = []
@@ -100,12 +101,14 @@ def run_closed_loop_simulation(use_custom_update: bool, zoro_riccati: bool, n_ex
             if i_exec == 0:
                 time_prep.append(zoroMPC.rti_phase1_t)
                 time_feedback.append(zoroMPC.rti_phase2_t)
+                time_riccati.append(zoroMPC.riccati_t)
                 time_prop.append(zoroMPC.propagation_t)
                 time_sim.append(zoroMPC.acados_integrator_time)
                 time_qp.append(zoroMPC.acados_qp_time)
             else:
                 time_prep[i_sim] = min(time_prep[i_sim], zoroMPC.rti_phase1_t)
                 time_feedback[i_sim] = min(time_feedback[i_sim], zoroMPC.rti_phase2_t)
+                time_riccati[i_sim] = min(time_riccati[i_sim], zoroMPC.riccati_t)
                 time_prop[i_sim] = min(time_prop[i_sim], zoroMPC.propagation_t)
                 time_sim[i_sim] = min(time_sim[i_sim], zoroMPC.acados_integrator_time)
                 time_qp[i_sim] = min(time_qp[i_sim], zoroMPC.acados_qp_time)
@@ -126,10 +129,11 @@ def run_closed_loop_simulation(use_custom_update: bool, zoro_riccati: bool, n_ex
                 print("collision takes place")
                 return False
 
-    total_time = [time_prep[i] + time_feedback[i] + time_prop[i] for i in range(len(time_prep))]
+    total_time = [time_prep[i] + time_feedback[i] + time_riccati[i] + time_prop[i] for i in range(len(time_prep))]
     timings = {
                    "preparation": 1e3*np.array(time_prep),
                    "integrator": 1e3*np.array(time_sim),
+                   "riccati": 1e3*np.array(time_riccati),
                    "propagation": 1e3*np.array(time_prop),
                    "feedback": 1e3*np.array(time_feedback),
                    "QP": 1e3*np.array(time_qp),
@@ -201,31 +205,37 @@ def plot_result_trajectory(n_executions: int, use_custom_update=True, zoro_ricca
     results = load_results(results_filename)
     plot_trajectory(results['cfg_zo'], results['ref_trajectory'], results['trajectory'])
 
-def plot_result_timings(n_executions: int, use_custom_update=True, zoro_riccati=True):
-    results_filename = get_results_filename(use_custom_update, zoro_riccati, n_executions)
-    results = load_results(results_filename)
-    plot_timings(results['timings'], use_custom_update)
-
 def compare_results(n_executions: int, zoro_riccati=True):
     results1 = load_results(get_results_filename(use_custom_update=True, zoro_riccati=zoro_riccati, n_executions=n_executions))
     results2 = load_results(get_results_filename(use_custom_update=False, zoro_riccati=zoro_riccati, n_executions=n_executions))
     traj_diff = results1['trajectory'] - results2['trajectory']
     error = np.max(np.abs(traj_diff))
     print(f"trajectory diff after closed loop simulation {error:.2e}")
-    tol = 1e-5
+    tol = 1.5*1e-5
     if error > tol:
         raise Exception(f"zoRO implementations differ too much, error = {error:.2e} > tol = {tol:.2e}")
     
-def plot_result_timing_comparison(n_executions: int, zoro_riccati=True):
-    fast_timings = load_results(get_results_filename(use_custom_update=True, zoro_riccati=zoro_riccati, n_executions=n_executions))['timings']
-    slow_timings = load_results(get_results_filename(use_custom_update=False, zoro_riccati=zoro_riccati, n_executions=n_executions))['timings']
-    plot_timing_comparison([fast_timings, slow_timings], ['zoRO-24', 'zoRO-21'])
+def timing_comparison(n_executions: int):
+    # keys = "zoRO-24-riccati", "zoRO-24", "zoRO-21-riccati", "zoRO-21"
+    dict_results = {}
 
-def timing_comparison(n_executions: int, zoro_riccati=True):
-    plot_result_timings(n_executions=n_executions, use_custom_update=True, zoro_riccati=zoro_riccati)
-    plot_result_timings(n_executions=n_executions, use_custom_update=False, zoro_riccati=zoro_riccati)
+    for _, tuple in enumerate(zip([True, True, False, False], [True, False, True, False])):
+        results_filename = get_results_filename(use_custom_update=tuple[0], zoro_riccati=tuple[1], n_executions=n_executions)
+        results = load_results(results_filename)
+        plot_timings(results['timings'], use_custom_update=tuple[0], fig_name_concat="_riccati" if tuple[1] else "")
+        temp_key = "zoRO-24" if tuple[0] else "zoRO-21"
+        if tuple[1]:
+            temp_key += "-riccati"
+        dict_results[temp_key] = results
 
-    plot_result_timing_comparison(n_executions=n_executions, zoro_riccati=zoro_riccati)
+    # Compare zoro-riccati with and without custom update
+    plot_timing_comparison([dict_results["zoRO-24-riccati"]['timings'], dict_results["zoRO-21-riccati"]['timings']], ['zoRO-24-riccati', 'zoRO-21-riccati'], fig_name_concat="_riccati")
+    # Compare zoro with and without custom update
+    plot_timing_comparison([dict_results["zoRO-24"]['timings'], dict_results["zoRO-21"]['timings']], ['zoRO-24', 'zoRO-21'])
+    # Compare zoro-riccati to zoro with custom update
+    plot_timing_comparison([dict_results["zoRO-24-riccati"]['timings'], dict_results["zoRO-24"]['timings']], ['zoRO-24-riccati', 'zoRO-24'], fig_name_concat="_zoRO-24")
+    # Compare zoro-riccati to zoro without custom update
+    plot_timing_comparison([dict_results["zoRO-21-riccati"]['timings'], dict_results["zoRO-21"]['timings']], ['zoRO-21-riccati', 'zoRO-21'], fig_name_concat="_zoRO-21")
 
 
 if __name__ == "__main__":

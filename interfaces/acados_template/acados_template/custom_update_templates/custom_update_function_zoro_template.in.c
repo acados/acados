@@ -1046,7 +1046,7 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
     int nx = {{ dims.nx }};
     int nw = {{ zoro_description.nw }};
 
-{%- if zoro_description.output_P_matrices or zoro_description.input_W_diag and not zoro_description.input_W_add_diag -%}
+{%- if zoro_description.output_P_matrices or zoro_description.output_riccati_t or zoro_description.input_W_diag and not zoro_description.input_W_add_diag -%}
     if (data_len != {{ zoro_description.data_size }})
     {
         printf("custom_update_zoro: data_length does not match expected one. Got %d, expected {{ zoro_description.data_size }}\n", data_len);
@@ -1077,7 +1077,10 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
 {%- endif %}
 
 {%- if zoro_description.zoro_riccati %}
+    acados_timer timer0;
+    acados_tic(&timer0);
     riccati_recursion(nlp_solver, custom_mem);
+    double time_riccati = acados_toc(&timer0);
 {%- endif %}
     uncertainty_propagate_and_update(nlp_solver, nlp_in, nlp_out, custom_mem, data, data_len);
 
@@ -1088,6 +1091,13 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
         blasfeo_unpack_dmat(nx, nx, &custom_mem->uncertainty_matrix_buffer[i], 0, 0,
                     &data[custom_mem->offset_P_out + i * nx * nx], nx);
     }
+    {%- if zoro_description.output_riccati_t %}
+        data[custom_mem->offset_P_out + N * nx * nx] = time_riccati;
+    {%- endif %}
+{%- else %}
+    {%- if zoro_description.output_riccati_t %}
+        data[custom_mem->offset_P_out] = time_riccati;
+    {%- endif %}
 {%- endif %}
 
     return 1;

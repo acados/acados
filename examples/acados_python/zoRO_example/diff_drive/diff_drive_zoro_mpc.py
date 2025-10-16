@@ -36,7 +36,7 @@ from diff_drive_model import export_diff_drive_model, RobotState
 from mpc_parameters import MPCParam
 
 class ZoroMPCSolver:
-    def __init__(self, cfg: MPCParam, output_P_matrices: bool = False) -> None:
+    def __init__(self, cfg: MPCParam, output_P_matrices: bool = False, output_riccati_t: bool = True) -> None:
         # import model
         self.cfg = cfg
         self.model = export_diff_drive_model(cfg)
@@ -136,9 +136,10 @@ class ZoroMPCSolver:
         zoro_description.idx_uh_e_t = []
         zoro_description.output_P_matrices = output_P_matrices
         zoro_description.zoro_riccati = cfg.zoro_riccati
+        zoro_description.output_riccati_t = output_riccati_t and cfg.zoro_riccati
         # TODO: put into cfg
         zoro_description.riccati_Q_mat = 1e-2 * np.eye(5)
-        zoro_description.riccati_R_mat = 1e-3 * np.eye(2)
+        zoro_description.riccati_R_mat = 1e-4 * np.eye(2)
         zoro_description.riccati_S_mat = np.zeros((2, 5))
 
         ## dummy linear constraints for testing
@@ -166,6 +167,7 @@ class ZoroMPCSolver:
         # timers
         self.rti_phase1_t = 0.
         self.rti_phase2_t = 0.
+        self.riccati_t = 0.
         self.propagation_t = 0.
         self.acados_integrator_time = 0.
         self.acados_qp_time = 0.
@@ -182,6 +184,7 @@ class ZoroMPCSolver:
 
         self.rti_phase1_t = 0.
         self.rti_phase2_t = 0.
+        self.riccati_t = 0.
         self.propagation_t = 0.
         self.acados_integrator_time = 0.
         self.acados_qp_time = 0.
@@ -223,23 +226,36 @@ class ZoroMPCSolver:
             self.rti_phase1_t += self.acados_ocp_solver.get_stats("time_tot")
             self.acados_integrator_time += self.acados_ocp_solver.get_stats("time_sim")
 
-            if self.cfg.use_custom_update and not self.ocp.zoro_description.output_P_matrices:
+            if self.cfg.use_custom_update:
                 t_start = process_time()
-                self.acados_ocp_solver.custom_update(self.cfg.P0_mat.flatten())
-                self.propagation_t += process_time() - t_start
-            elif self.cfg.use_custom_update and self.ocp.zoro_description.output_P_matrices:
-                t_start = process_time()
-                input_custom_update = np.ascontiguousarray(np.concatenate((self.cfg.P0_mat.flatten(), self.P_mats[:,:,:].flatten())))
+                if self.ocp.zoro_description.output_P_matrices and self.ocp.zoro_description.output_riccati_t:
+                    input_custom_update = np.ascontiguousarray(np.concatenate((self.cfg.P0_mat.flatten(), self.P_mats[:,:,:].flatten(), np.array([0.]))))
+                elif self.ocp.zoro_description.output_P_matrices and not self.ocp.zoro_description.output_riccati_t:
+                    input_custom_update = np.ascontiguousarray(np.concatenate((self.cfg.P0_mat.flatten(), self.P_mats[:,:,:].flatten())))
+                elif not self.ocp.zoro_description.output_P_matrices and self.ocp.zoro_description.output_riccati_t:
+                    input_custom_update = np.ascontiguousarray(np.concatenate((self.cfg.P0_mat.flatten(), np.array([0.]))))
+                else:
+                    input_custom_update = self.cfg.P0_mat.flatten()
                 self.acados_ocp_solver.custom_update(input_custom_update)
-                self.P_mats = input_custom_update[self.cfg.nx**2:].reshape((self.cfg.n_hrzn+1, self.cfg.nx, self.cfg.nx))
-                self.propagation_t += process_time() - t_start
-                self.acados_ocp_solver.print_statistics()
+
+                idx_output_riccati_t = self.cfg.nx**2  # self.ocp.zoro_description.input_P0 = True, thereby [0, nx**2] is reserved for P0
+                if self.ocp.zoro_description.output_P_matrices:
+                    idx_output_riccati_t += (self.cfg.n_hrzn+1) * self.cfg.nx**2
+                    self.P_mats = input_custom_update[self.cfg.nx**2:idx_output_riccati_t].reshape((self.cfg.n_hrzn+1, self.cfg.nx, self.cfg.nx))
+                tmp = input_custom_update[idx_output_riccati_t] if self.ocp.zoro_description.output_riccati_t else 0.
+                self.riccati_t += tmp
+                self.propagation_t += process_time() - t_start - tmp
+                # self.acados_ocp_solver.print_statistics()
             else:
                 t_start = process_time()
                 if self.ocp.zoro_description.zoro_riccati:
                     riccati_K, _ = self.riccati_recursion()
+                    t_riccati_complete = process_time()
+                else:
+                    t_riccati_complete = t_start
+                self.riccati_t += t_riccati_complete - t_start
                 self.propagate_and_update(obs_position=obs_position, obs_radius=obs_radius, p0_mat=self.cfg.P0_mat, riccati_K=riccati_K)
-                self.propagation_t += process_time() - t_start
+                self.propagation_t += process_time() - t_riccati_complete
 
             # feedback rti_phase
             self.acados_ocp_solver.options_set('rti_phase', 2)

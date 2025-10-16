@@ -96,6 +96,8 @@ class ZoroDescription:
     # Outputs:
     output_P_matrices: bool = False
     """Determines if the matrices P_k are outputs of the custom update function"""
+    output_riccati_t: bool = True
+    """Determines if the computation time of riccati recursion are outputs of the custom update function"""
 
     data_size: int = 0
     """size of data vector when calling custom update, computed automatically"""
@@ -161,6 +163,10 @@ class ZoroDescription:
             print(f"{i_component}) output: concatenation of colmaj(P^k) for i=0,...,N, size: [nx*nx*(N+1)] = {size_i}")
             i_component += 1
             data_size += size_i
+        if self.output_riccati_t:
+            data_size += 1
+            print(f"{i_component}) output: concatenation of riccati_time, size: [nx*nx*(N+1)] = {1}")
+            i_component += 1
 
         self.data_size = data_size
         print("\n")
