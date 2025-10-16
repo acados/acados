@@ -127,6 +127,44 @@ classdef AcadosOcp < handle
                     error('setting nonlinear least square cost: need W_0, cost_y_expr_0, at least one missing.')
                 end
                 dims.ny_0 = ny;
+            elseif strcmp(cost.cost_type_0, 'CONVEX_OVER_NONLINEAR')
+                % MATLAB interface adaptation mirroring python _make_consistent_cost_initial
+                % Required model fields: cost_y_expr_0, cost_r_in_psi_expr_0, cost_psi_expr_0
+                if isempty(model.cost_y_expr_0)
+                    error('cost_y_expr_0 not provided for CONVEX_OVER_NONLINEAR initial cost.');
+                end
+                % determine ny_0 from cost_y_expr_0 (casadi SX/MX => size); allow numeric vector too
+                try
+                    ny = length(model.cost_y_expr_0); % works for CasADi MX/SX (returns number of elements)
+                catch
+                    ny = numel(model.cost_y_expr_0);
+                end
+                if isempty(model.cost_r_in_psi_expr_0)
+                    error('cost_r_in_psi_expr_0 not provided for CONVEX_OVER_NONLINEAR initial cost.');
+                end
+                if length(model.cost_r_in_psi_expr_0) ~= ny
+                    error('inconsistent dimension ny_0: regarding cost_y_expr_0 and cost_r_in_psi_expr_0.');
+                end
+                if isempty(model.cost_psi_expr_0)
+                    error('cost_psi_expr_0 not provided for CONVEX_OVER_NONLINEAR initial cost.');
+                end
+                if length(model.cost_psi_expr_0) ~= 1
+                    error('cost_psi_expr_0 must be scalar-valued.');
+                end
+                if isempty(cost.yref_0)
+                    warning(['yref_0 not defined provided.' 10 'Using zeros(ny_0,1) by default.']);
+                    self.cost.yref_0 = zeros(ny,1);
+                end
+                if size(cost.yref_0,1) ~= ny
+                    error('inconsistent dimension: regarding yref_0 and cost_y_expr_0, cost_r_in_psi_expr_0.');
+                end
+                dims.ny_0 = ny;
+                % Hessian approximation check (mirror python): allow GAUSS_NEWTON or EXACT with exact_hess_cost == false
+                opts = self.solver_options;
+                if ~( (strcmp(opts.hessian_approx,'EXACT') && opts.exact_hess_cost == false) || strcmp(opts.hessian_approx,'GAUSS_NEWTON') )
+                    error(['With CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:' 10 ...
+                        'GAUSS_NEWTON or EXACT with exact_hess_cost == false.']);
+                end
             end
         end
 
@@ -165,6 +203,34 @@ classdef AcadosOcp < handle
                     error('setting nonlinear least square cost: need W, cost_y_expr, at least one missing.')
                 end
                 dims.ny = ny;
+            elseif strcmp(cost.cost_type, 'CONVEX_OVER_NONLINEAR')
+                if isempty(model.cost_y_expr)
+                    error('cost_y_expr not provided for CONVEX_OVER_NONLINEAR path cost.');
+                end
+                try
+                    ny = length(model.cost_y_expr);
+                catch
+                    ny = numel(model.cost_y_expr);
+                end
+                if isempty(model.cost_r_in_psi_expr) || length(model.cost_r_in_psi_expr) ~= ny
+                    error('inconsistent dimension ny: regarding cost_y_expr and cost_r_in_psi_expr.');
+                end
+                if isempty(model.cost_psi_expr) || length(model.cost_psi_expr) ~= 1
+                    error('cost_psi_expr not provided or not scalar-valued.');
+                end
+                if isempty(cost.yref)
+                    warning(['yref not defined provided.' 10 'Using zeros(ny,1) by default.']);
+                    self.cost.yref = zeros(ny,1);
+                end
+                if size(cost.yref,1) ~= ny
+                    error('inconsistent dimension: regarding yref and cost_y_expr, cost_r_in_psi_expr.');
+                end
+                dims.ny = ny;
+                opts = self.solver_options;
+                if ~( (strcmp(opts.hessian_approx,'EXACT') && opts.exact_hess_cost == false) || strcmp(opts.hessian_approx,'GAUSS_NEWTON') )
+                    error(['With CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:' 10 ...
+                        'GAUSS_NEWTON or EXACT with exact_hess_cost == false.']);
+                end
             end
         end
 
@@ -204,6 +270,34 @@ classdef AcadosOcp < handle
                     error('setting nonlinear least square cost: need W_e, cost_y_expr_e, at least one missing.')
                 end
                 dims.ny_e = ny_e;
+            elseif strcmp(cost.cost_type_e, 'CONVEX_OVER_NONLINEAR')
+                if isempty(model.cost_y_expr_e)
+                    error('cost_y_expr_e not provided for CONVEX_OVER_NONLINEAR terminal cost.');
+                end
+                try
+                    ny_e = length(model.cost_y_expr_e);
+                catch
+                    ny_e = numel(model.cost_y_expr_e);
+                end
+                if isempty(model.cost_r_in_psi_expr_e) || length(model.cost_r_in_psi_expr_e) ~= ny_e
+                    error('inconsistent dimension ny_e: regarding cost_y_expr_e and cost_r_in_psi_expr_e.');
+                end
+                if isempty(model.cost_psi_expr_e) || length(model.cost_psi_expr_e) ~= 1
+                    error('cost_psi_expr_e not provided or not scalar-valued.');
+                end
+                if isempty(cost.yref_e)
+                    warning(['yref_e not defined provided.' 10 'Using zeros(ny_e,1) by default.']);
+                    self.cost.yref_e = zeros(ny_e,1);
+                end
+                if size(cost.yref_e,1) ~= ny_e
+                    error('inconsistent dimension: regarding yref_e and cost_y_expr_e, cost_r_in_psi_expr_e.');
+                end
+                dims.ny_e = ny_e;
+                opts = self.solver_options;
+                if ~( (strcmp(opts.hessian_approx,'EXACT') && opts.exact_hess_cost == false) || strcmp(opts.hessian_approx,'GAUSS_NEWTON') )
+                    error(['With CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:' 10 ...
+                        'GAUSS_NEWTON or EXACT with exact_hess_cost == false.']);
+                end
             end
         end
 
@@ -1475,7 +1569,7 @@ classdef AcadosOcp < handle
                             generate_c_code_nonlinear_least_squares(context, ocp.model, cost_dir, stage_types{i});
 
                         case 'CONVEX_OVER_NONLINEAR'
-                            error("Convex-over-nonlinear cost is not implemented yet.")
+                            generate_c_code_conl_cost(context, ocp.model, cost_dir, stage_types{i});
 
                         case 'EXTERNAL'
                             generate_c_code_ext_cost(context, ocp.model, cost_dir, stage_types{i});
