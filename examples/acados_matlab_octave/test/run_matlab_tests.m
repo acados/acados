@@ -54,6 +54,7 @@ disp('running tests')
 
 %% run all tests
 test_names = [
+    "test_model_serialization.m",
     "test_conl_cost",
     "test_code_reuse",
     "test_sim_code_reuse",
