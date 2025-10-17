@@ -206,16 +206,9 @@ classdef AcadosSim < handle
                 json_file = self.json_file;
             end
 
-            %% remove CasADi objects from model
-            model.name = self.model.name;
-            model.dyn_ext_fun_type = self.model.dyn_ext_fun_type;
-            model.dyn_generic_source = self.model.dyn_generic_source;
-            model.dyn_disc_fun_jac_hess = self.model.dyn_disc_fun_jac_hess;
-            model.dyn_disc_fun_jac = self.model.dyn_disc_fun_jac;
-            model.dyn_disc_fun = self.model.dyn_disc_fun;
-            model.gnsf_nontrivial_f_LO = self.model.gnsf_nontrivial_f_LO;
-            model.gnsf_purely_linear = self.model.gnsf_purely_linear;
-            self.model = model;
+            %% Use convert_to_struct_for_json_dump to serialize CasADi expressions
+            model_struct = self.model.convert_to_struct_for_json_dump();
+            
             % jsonlab
             acados_folder = getenv('ACADOS_INSTALL_DIR');
             addpath(fullfile(acados_folder, 'external', 'jsonlab'))
@@ -226,6 +219,7 @@ classdef AcadosSim < handle
 
             %% dump JSON file
             sim_json_struct = self.struct();
+            sim_json_struct.model = model_struct;
             sim_json_struct.dims = self.dims.struct();
             sim_json_struct.solver_options = self.solver_options.struct();
 
