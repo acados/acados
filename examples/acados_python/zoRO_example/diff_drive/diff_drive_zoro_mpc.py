@@ -168,7 +168,7 @@ class ZoroMPCSolver:
         self.rti_phase1_t = 0.
         self.rti_phase2_t = 0.
         self.riccati_t = 0.
-        self.propagation_t = 0.
+        self.zoro_t = 0.
         self.acados_integrator_time = 0.
         self.acados_qp_time = 0.
 
@@ -185,7 +185,7 @@ class ZoroMPCSolver:
         self.rti_phase1_t = 0.
         self.rti_phase2_t = 0.
         self.riccati_t = 0.
-        self.propagation_t = 0.
+        self.zoro_t = 0.
         self.acados_integrator_time = 0.
         self.acados_qp_time = 0.
 
@@ -244,18 +244,15 @@ class ZoroMPCSolver:
                     self.P_mats = input_custom_update[self.cfg.nx**2:idx_output_riccati_t].reshape((self.cfg.n_hrzn+1, self.cfg.nx, self.cfg.nx))
                 tmp = input_custom_update[idx_output_riccati_t] if self.ocp.zoro_description.output_riccati_t else 0.
                 self.riccati_t += tmp
-                self.propagation_t += process_time() - t_start - tmp
+                self.zoro_t += process_time() - t_start
                 # self.acados_ocp_solver.print_statistics()
             else:
                 t_start = process_time()
                 if self.ocp.zoro_description.zoro_riccati:
                     riccati_K, _ = self.riccati_recursion()
-                    t_riccati_complete = process_time()
-                else:
-                    t_riccati_complete = t_start
-                self.riccati_t += t_riccati_complete - t_start
+                    self.riccati_t += process_time() - t_start
                 self.propagate_and_update(obs_position=obs_position, obs_radius=obs_radius, p0_mat=self.cfg.P0_mat, riccati_K=riccati_K)
-                self.propagation_t += process_time() - t_riccati_complete
+                self.zoro_t += process_time() - t_start
 
             # feedback rti_phase
             self.acados_ocp_solver.options_set('rti_phase', 2)

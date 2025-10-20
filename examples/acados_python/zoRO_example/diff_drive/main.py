@@ -81,7 +81,7 @@ def run_closed_loop_simulation(use_custom_update: bool, zoro_riccati: bool, n_ex
 
     time_prep = []
     time_riccati = []
-    time_prop = []
+    time_zoro = []
     time_feedback = []
     time_sim = []
     time_qp = []
@@ -102,14 +102,14 @@ def run_closed_loop_simulation(use_custom_update: bool, zoro_riccati: bool, n_ex
                 time_prep.append(zoroMPC.rti_phase1_t)
                 time_feedback.append(zoroMPC.rti_phase2_t)
                 time_riccati.append(zoroMPC.riccati_t)
-                time_prop.append(zoroMPC.propagation_t)
+                time_zoro.append(zoroMPC.zoro_t)
                 time_sim.append(zoroMPC.acados_integrator_time)
                 time_qp.append(zoroMPC.acados_qp_time)
             else:
                 time_prep[i_sim] = min(time_prep[i_sim], zoroMPC.rti_phase1_t)
                 time_feedback[i_sim] = min(time_feedback[i_sim], zoroMPC.rti_phase2_t)
                 time_riccati[i_sim] = min(time_riccati[i_sim], zoroMPC.riccati_t)
-                time_prop[i_sim] = min(time_prop[i_sim], zoroMPC.propagation_t)
+                time_zoro[i_sim] = min(time_zoro[i_sim], zoroMPC.zoro_t)
                 time_sim[i_sim] = min(time_sim[i_sim], zoroMPC.acados_integrator_time)
                 time_qp[i_sim] = min(time_qp[i_sim], zoroMPC.acados_qp_time)
 
@@ -129,12 +129,12 @@ def run_closed_loop_simulation(use_custom_update: bool, zoro_riccati: bool, n_ex
                 print("collision takes place")
                 return False
 
-    total_time = [time_prep[i] + time_feedback[i] + time_riccati[i] + time_prop[i] for i in range(len(time_prep))]
+    total_time = [time_prep[i] + time_feedback[i] + time_riccati[i] + time_zoro[i] for i in range(len(time_prep))]
     timings = {
                    "preparation": 1e3*np.array(time_prep),
                    "integrator": 1e3*np.array(time_sim),
                    "riccati": 1e3*np.array(time_riccati),
-                   "propagation": 1e3*np.array(time_prop),
+                   "zoRO": 1e3*np.array(time_zoro),
                    "feedback": 1e3*np.array(time_feedback),
                    "QP": 1e3*np.array(time_qp),
                    "total": 1e3*np.array(total_time)

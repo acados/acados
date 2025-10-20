@@ -104,7 +104,7 @@ def plot_timing_comparison(timings_list, label_list, fig_name_concat:str=""):
 
     for i in range(n_variants):
         bp[i] = ax.boxplot(
-            [timings_list[i]['total'], timings_list[i]['propagation']],
+            [timings_list[i]['total'], timings_list[i]['zoRO']],
                 vert=False, patch_artist=True, whis=[0.0, 100.],
                 boxprops={"facecolor": colors[i]},
                 showmeans=False,
@@ -112,7 +112,7 @@ def plot_timing_comparison(timings_list, label_list, fig_name_concat:str=""):
                 )
 
     ax.set_yticks([1, 2])
-    ax.set_yticklabels(['total', 'propagation'])
+    ax.set_yticklabels(['total', 'zoRO'])
     ax.legend([bp[i]["boxes"][0] for i in range(n_variants)], label_list) #, loc='center')
     ax.set_xscale('log')
 
