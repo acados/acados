@@ -45,12 +45,14 @@ class ZoroDescription:
     """backoff scaling factor, for stochastic MPC"""
     fdbk_K_mat: np.ndarray = None
     """constant feedback gain matrix K"""
-    riccati_Q_mat: np.ndarray = None
-    """matrix Q for computing the riccati"""
-    riccati_R_mat: np.ndarray = None
-    """matrix R for computing the riccati"""
-    riccati_S_mat: np.ndarray = None
-    """matrix S for computing the riccati"""
+    riccati_Qconst_mat: np.ndarray = None
+    """matrix Qconst for computing the riccati"""
+    riccati_Qconst_e_mat: np.ndarray = None
+    """matrix Qconst_e for computing the riccati"""
+    riccati_Rconst_mat: np.ndarray = None
+    """matrix Rconst for computing the riccati"""
+    riccati_Sconst_mat: np.ndarray = None
+    """matrix Sconst for computing the riccati"""
     unc_jac_G_mat: np.ndarray = None    # default: an identity matrix
     """matrix G, describes how noise enters the dynamics"""
     P0_mat: np.ndarray = None
@@ -125,14 +127,18 @@ class ZoroDescription:
         if self.input_P0_diag and self.input_P0:
             raise Exception("Only one of input_P0_diag and input_P0 can be True")
         if self.zoro_riccati:
-            if self.riccati_Q_mat is None or self.riccati_R_mat is None or self.riccati_S_mat is None:
-                raise Exception("riccati_Q_mat, riccati_R_mat, riccati_S_mat should not be None when zoro_riccati is True")
-            if self.riccati_Q_mat.shape != (dims.nx, dims.nx):
-                raise Exception("The shape of riccati_Q_mat should be [nx*nx].")
-            if self.riccati_R_mat.shape != (dims.nu, dims.nu):
-                raise Exception("The shape of riccati_R_mat should be [nu*nu].")
-            if self.riccati_S_mat.shape != (dims.nu, dims.nx):
-                raise Exception("The shape of riccati_S_mat should be [nu*nx].")
+            if self.riccati_Qconst_mat is None or self.riccati_Rconst_mat is None or self.riccati_Sconst_mat is None:
+                raise Exception("riccati_Qconst_mat, riccati_Rconst_mat, riccati_Sconst_mat should not be None when zoro_riccati is True")
+            if self.riccati_Qconst_mat.shape != (dims.nx, dims.nx):
+                raise Exception("The shape of riccati_Qconst_mat should be [nx*nx].")
+            if self.riccati_Rconst_mat.shape != (dims.nu, dims.nu):
+                raise Exception("The shape of riccati_Rconst_mat should be [nu*nu].")
+            if self.riccati_Sconst_mat.shape != (dims.nu, dims.nx):
+                raise Exception("The shape of riccati_Sconst_mat should be [nu*nx].")
+            if self.riccati_Qconst_e_mat is None:
+                self.riccati_Qconst_e_mat = self.riccati_Qconst_mat.copy()
+            if self.riccati_Qconst_e_mat.shape != (dims.nx, dims.nx):
+                raise Exception("The shape of riccati_Qconst_e_mat should be [nx*nx].")
 
         # Print input note:
         print(f"\nThe data of the generated custom update function consists of the concatenation of:")
