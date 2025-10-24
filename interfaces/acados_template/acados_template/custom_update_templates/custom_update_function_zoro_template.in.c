@@ -537,14 +537,14 @@ static void custom_val_init_function(ocp_nlp_dims *nlp_dims, ocp_nlp_in *nlp_in,
     {%- endfor %}
 {%- endfor %}
 
-{%- if not zoro_description.zoro_riccati %}
+{%- if zoro_description.zoro_riccati == -1 %}
 for (int ii = 0; ii < N; ii++)
 {
     blasfeo_dgecp(nu, nx, &custom_mem->K_mat, 0, 0, &custom_mem->riccati_K_buffer[ii], 0, 0);
 }
 {%- endif %}
 
-{%- if zoro_description.zoro_riccati %}
+{%- if zoro_description.zoro_riccati >= 0 %}
 {%- for ir in range(end=dims.nx) %}
     {%- for ic in range(end=dims.nx) %}
     blasfeo_dgein1({{zoro_description.riccati_Qconst_mat[ir][ic]}}, &custom_mem->riccati_Qconst_mat, {{ir}}, {{ic}});
@@ -911,12 +911,6 @@ d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
         + {{zoro_description.nubu_t}} + {{zoro_description.nubx_t}} + {{zoro_description.nug_t}} + {{zoro_description.nuh_t}}, 1.0, &custom_mem->riccati_Hessian_mat, 0, 0,
         &custom_mem->riccati_Hessian_scaled_mat, 0, nu, 1.0, &custom_mem->riccati_Sconst_mat, 0, 0, &custom_mem->riccati_S_mat, 0, 0);
 
-    printf("riccati_Q_mat%d:,\n", ii);
-    blasfeo_print_exp_dmat(nx, nx, &(custom_mem->riccati_Q_mat), 0, 0);
-    printf("riccati_R_mat%d:,\n", ii);
-    blasfeo_print_exp_dmat(nu, nu, &(custom_mem->riccati_R_mat), 0, 0);
-    printf("riccati_S_mat%d:,\n", ii);
-    blasfeo_print_exp_dmat(nu, nx, &(custom_mem->riccati_S_mat), 0, 0);
 }
 
 
@@ -1021,8 +1015,12 @@ static void riccati_recursion(ocp_nlp_solver* solver, ocp_nlp_memory *nlp_mem, c
     int nx = nlp_dims->nx[0];
     int nu = nlp_dims->nu[0];
 
+{%- if zoro_description.zoro_riccati >= 1 %}
     update_riccati_quad_matrices_terminal(solver, nlp_mem, custom_mem);
     blasfeo_dgecp(nx, nx, &custom_mem->riccati_Q_mat, 0, 0, &custom_mem->temp_riccati_P_plus_mat, 0, 0);
+{%- else %}
+    blasfeo_dgecp(nx, nx, &custom_mem->riccati_Qconst_e_mat, 0, 0, &custom_mem->temp_riccati_P_plus_mat, 0, 0);
+{%- endif %}
 
     for (int ii = N-1; ii >= 0; ii--)
     {
@@ -1032,7 +1030,20 @@ static void riccati_recursion(ocp_nlp_solver* solver, ocp_nlp_memory *nlp_mem, c
         ocp_nlp_get_at_stage(solver, ii, "B", custom_mem->d_B_mat);
         blasfeo_pack_dmat(nx, nu, custom_mem->d_B_mat, nx, &custom_mem->B_mat, 0, 0);
 
+    {%- if zoro_description.zoro_riccati >= 1 %}
         update_riccati_quad_matrices(solver, nlp_mem, custom_mem, ii);
+    {%- else %}
+        blasfeo_dgecp(nx, nx, &custom_mem->riccati_Qconst_mat, 0, 0, &custom_mem->riccati_Q_mat, 0, 0);
+        blasfeo_dgecp(nu, nu, &custom_mem->riccati_Rconst_mat, 0, 0, &custom_mem->riccati_R_mat, 0, 0);
+        blasfeo_dgecp(nu, nx, &custom_mem->riccati_Sconst_mat, 0, 0, &custom_mem->riccati_S_mat, 0, 0);
+    {%- endif %}
+        // printf("riccati_Q_mat%d:,\n", ii);
+        // blasfeo_print_exp_dmat(nx, nx, &(custom_mem->riccati_Q_mat), 0, 0);
+        // printf("riccati_R_mat%d:,\n", ii);
+        // blasfeo_print_exp_dmat(nu, nu, &(custom_mem->riccati_R_mat), 0, 0);
+        // printf("riccati_S_mat%d:,\n", ii);
+        // blasfeo_print_exp_dmat(nu, nx, &(custom_mem->riccati_S_mat), 0, 0);
+
         // temp_riccati_BP_mat = B^T @ P
         blasfeo_dgemm_tn(nu, nx, nx, 1.0, &custom_mem->B_mat, 0, 0, &custom_mem->temp_riccati_P_plus_mat, 0, 0,
                             0.0, &custom_mem->temp_riccati_BP_mat, 0, 0, &custom_mem->temp_riccati_BP_mat, 0, 0);
@@ -1223,9 +1234,6 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                      &custom_mem->temp_CaDKmP_mat, &custom_mem->temp_beta_mat,
                      &custom_mem->uncertainty_matrix_buffer[ii+1], nh, nx, nu);
 
-        // printf("temp_CaDKmP_mat k = %d", ii);
-        // blasfeo_print_dmat(nh, nx, &custom_mem->temp_CaDKmP_mat, 0, 0);
-
         // TODO: eval hessian(h) -> H_hess (nh*(nx+nu)**2)
         // temp_Kt_hhess = h_i_hess[:nx, :] + K^T * h_i_hess[nx:nx+nu, :]
         // tempCD = temp_CaDKmP_mat * temp_Kt_hhess
@@ -1397,7 +1405,7 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
                         &custom_mem->GWG_mat, 0, 0, &custom_mem->GWG_mat, 0, 0);
 {%- endif %}
 
-{%- if zoro_description.zoro_riccati %}
+{%- if zoro_description.zoro_riccati >= 0 %}
     acados_timer timer0;
     acados_tic(&timer0);
     riccati_recursion(nlp_solver, nlp_mem, custom_mem);
@@ -1413,7 +1421,7 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
                     &data[custom_mem->offset_P_out + i * nx * nx], nx);
     }
     {%- if zoro_description.output_riccati_t %}
-        data[custom_mem->offset_P_out + N * nx * nx] = time_riccati;
+        data[custom_mem->offset_P_out + (N+1) * nx * nx] = time_riccati;
     {%- endif %}
 {%- else %}
     {%- if zoro_description.output_riccati_t %}

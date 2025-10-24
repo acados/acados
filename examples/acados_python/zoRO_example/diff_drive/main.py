@@ -38,7 +38,7 @@ from track_spline import TrackSpline
 
 N_SIM = 175
 
-def run_closed_loop_simulation(use_custom_update: bool, zoro_riccati: bool, n_executions: int = 1):
+def run_closed_loop_simulation(use_custom_update: bool, zoro_riccati: int, n_executions: int = 1):
     cfg_zo = MPCParam()
     cfg_zo.use_custom_update = use_custom_update
     cfg_zo.zoro_riccati = zoro_riccati
@@ -154,7 +154,7 @@ def run_closed_loop_simulation(use_custom_update: bool, zoro_riccati: bool, n_ex
 
 
 
-def solve_single_zoro_problem_visualize_uncertainty(zoro_riccati:bool=True):
+def solve_single_zoro_problem_visualize_uncertainty(zoro_riccati:int=0):
     cfg_zo = MPCParam()
     cfg_zo.use_custom_update = True
     cfg_zo.zoro_riccati = zoro_riccati
@@ -192,20 +192,23 @@ def solve_single_zoro_problem_visualize_uncertainty(zoro_riccati:bool=True):
 
     print(f"x_opt = {x_opt}")
     print(f"status = {status}")
-    if zoro_riccati:
-        fig_name_concat = "_riccati"
-    else:
-        fig_name_concat = "_fixedK"
+    match zoro_riccati:
+        case -1:
+            fig_name_concat = "_fixedK"
+        case 0:
+            fig_name_concat = "_riccatiFixedQuad"
+        case 1:
+            fig_name_concat = "_riccatiHessian"
     plot_trajectory(cfg_zo, x_ref_interp, x_opt,
                     P_matrices=zoroMPC.ocp.zoro_description.backoff_scaling_gamma**2 * zoroMPC.P_mats, closed_loop=False, fig_name_concat=fig_name_concat)
 
 
-def plot_result_trajectory(n_executions: int, use_custom_update=True, zoro_riccati=True):
+def plot_result_trajectory(n_executions: int, use_custom_update=True, zoro_riccati:int=0):
     results_filename = get_results_filename(use_custom_update, zoro_riccati, n_executions)
     results = load_results(results_filename)
     plot_trajectory(results['cfg_zo'], results['ref_trajectory'], results['trajectory'])
 
-def compare_results(n_executions: int, zoro_riccati=True):
+def compare_results(n_executions: int, zoro_riccati:int=0):
     results1 = load_results(get_results_filename(use_custom_update=True, zoro_riccati=zoro_riccati, n_executions=n_executions))
     results2 = load_results(get_results_filename(use_custom_update=False, zoro_riccati=zoro_riccati, n_executions=n_executions))
     traj_diff = results1['trajectory'] - results2['trajectory']
@@ -219,7 +222,7 @@ def timing_comparison(n_executions: int):
     # keys = "zoRO-24-riccati", "zoRO-24", "zoRO-21-riccati", "zoRO-21"
     dict_results = {}
 
-    for _, tuple in enumerate(zip([True, True, False, False], [True, False, True, False])):
+    for _, tuple in enumerate(zip([True, True, False, False], [0, -1, 0, -1])):
         results_filename = get_results_filename(use_custom_update=tuple[0], zoro_riccati=tuple[1], n_executions=n_executions)
         results = load_results(results_filename)
         plot_timings(results['timings'], use_custom_update=tuple[0], fig_name_concat="_riccati" if tuple[1] else "")

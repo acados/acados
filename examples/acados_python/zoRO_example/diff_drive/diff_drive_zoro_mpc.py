@@ -136,11 +136,12 @@ class ZoroMPCSolver:
         zoro_description.idx_uh_e_t = []
         zoro_description.output_P_matrices = output_P_matrices
         zoro_description.zoro_riccati = cfg.zoro_riccati
-        zoro_description.output_riccati_t = output_riccati_t and cfg.zoro_riccati
+        zoro_description.output_riccati_t = output_riccati_t and (cfg.zoro_riccati >= 0)
         # TODO: put into cfg
-        zoro_description.riccati_Q_mat = 1e-2 * np.eye(5)
-        zoro_description.riccati_R_mat = 1e-4 * np.eye(2)
-        zoro_description.riccati_S_mat = np.zeros((2, 5))
+        zoro_description.riccati_Qconst_e_mat = 1e-1 * np.eye(5)
+        zoro_description.riccati_Qconst_mat = 1e-2 * np.eye(5)
+        zoro_description.riccati_Rconst_mat = 1e-4 * np.eye(2)
+        zoro_description.riccati_Sconst_mat = np.zeros((2, 5))
 
         ## dummy linear constraints for testing
         # self.ocp.constraints.C = np.array([[1., 0., 0., 0., 0.0], [0., 1., 0., 0., 0.]])
@@ -216,7 +217,7 @@ class ZoroMPCSolver:
         for i_stage in range(self.cfg.n_hrzn+1):
             self.acados_ocp_solver.set(i_stage,"p", obs_position)
 
-        if not self.ocp.zoro_description.zoro_riccati:
+        if self.ocp.zoro_description.zoro_riccati == -1:
             riccati_K = [self.cfg.fdbk_K_mat] * self.cfg.n_hrzn
 
         for i_sqp in range(self.cfg.zoRO_iter):
@@ -248,7 +249,7 @@ class ZoroMPCSolver:
                 # self.acados_ocp_solver.print_statistics()
             else:
                 t_start = process_time()
-                if self.ocp.zoro_description.zoro_riccati:
+                if self.ocp.zoro_description.zoro_riccati >= 0:
                     riccati_K, _ = self.riccati_recursion()
                     self.riccati_t += process_time() - t_start
                 self.propagate_and_update(obs_position=obs_position, obs_radius=obs_radius, p0_mat=self.cfg.P0_mat, riccati_K=riccati_K)
@@ -308,13 +309,13 @@ class ZoroMPCSolver:
 
 
     def riccati_recursion(self):
-        Q = self.ocp.zoro_description.riccati_Q_mat
-        R = self.ocp.zoro_description.riccati_R_mat
-        S = self.ocp.zoro_description.riccati_S_mat
+        Q = self.ocp.zoro_description.riccati_Qconst_mat
+        R = self.ocp.zoro_description.riccati_Rconst_mat
+        S = self.ocp.zoro_description.riccati_Sconst_mat
 
         K = [None] * self.cfg.n_hrzn
         P = [None] * (self.cfg.n_hrzn+1)
-        P[-1] = Q.copy()
+        P[-1] = self.ocp.zoro_description.riccati_Qconst_e_mat
 
         for k in range(self.cfg.n_hrzn-1, -1, -1):
             temp_A = self.acados_ocp_solver.get_from_qp_in(k, "A")

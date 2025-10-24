@@ -38,13 +38,13 @@ latexify_plot()
 
 # RESULTS_DIR = 'results'
 
-def get_results_filename(use_custom_update: bool, zoro_riccati: bool, n_executions: int):
+def get_results_filename(use_custom_update: bool, zoro_riccati: int, n_executions: int):
     results_filename = 'results_'
     if use_custom_update:
         results_filename += 'custom_update'
     else:
         results_filename += 'python_prop'
-    if zoro_riccati:
+    if zoro_riccati >= 0:
         results_filename += '_riccati'
     results_filename += f'_exec_{n_executions}'
     results_filename += '.pkl'

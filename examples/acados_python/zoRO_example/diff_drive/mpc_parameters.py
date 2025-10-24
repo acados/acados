@@ -56,7 +56,10 @@ class MPCParam():
 
     # feedback gain scalar parameter (full structured matrix defined below)
     fdbk_k: float=6.0
-    zoro_riccati: bool = False
+    zoro_riccati: int = -1
+    # -1: Pre-computed Feedback
+    #  0: Feedback gain computed using riccati with constant cost matrices
+    #  1: Feedback gain computed using riccati with sum of constant cost matrices and Hessian of tightened constraints weighted by 1/h**2
 
     # uncertainty / distrubance
     unc_jac_G_mat: np.ndarray=field(default_factory=lambda: np.zeros(0))

@@ -93,7 +93,7 @@ class ZoroDescription:
 
     In case this is used W_k = W + W_{add}^k.
     """
-    zoro_riccati: bool = False
+    zoro_riccati: int = -1
 
     # Outputs:
     output_P_matrices: bool = False
@@ -126,9 +126,11 @@ class ZoroDescription:
 
         if self.input_P0_diag and self.input_P0:
             raise Exception("Only one of input_P0_diag and input_P0 can be True")
-        if self.zoro_riccati:
+        if self.zoro_riccati < -1 or self.zoro_riccati > 2:
+            raise Exception("mode of zoro riccati not supported. should be {-1, 0, 1, 2}.")
+        if self.zoro_riccati >= 0:
             if self.riccati_Qconst_mat is None or self.riccati_Rconst_mat is None or self.riccati_Sconst_mat is None:
-                raise Exception("riccati_Qconst_mat, riccati_Rconst_mat, riccati_Sconst_mat should not be None when zoro_riccati is True")
+                raise Exception("riccati_Qconst_mat, riccati_Rconst_mat, riccati_Sconst_mat should not be None when zoro_riccati is enabled (>=0)")
             if self.riccati_Qconst_mat.shape != (dims.nx, dims.nx):
                 raise Exception("The shape of riccati_Qconst_mat should be [nx*nx].")
             if self.riccati_Rconst_mat.shape != (dims.nu, dims.nu):
