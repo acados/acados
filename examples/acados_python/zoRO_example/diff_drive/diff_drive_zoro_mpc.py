@@ -173,7 +173,7 @@ class ZoroMPCSolver:
         self.acados_integrator_time = 0.
         self.acados_qp_time = 0.
 
-    def solve(self, x_current, y_ref, obs_position, obs_radius, p0_mat=None, converg_thr:float=1e-7, num_nominal4init:int=0):
+    def solve(self, x_current, y_ref, obs_position, obs_radius, p0_mat=None, converg_thr:float=1e-6, num_nominal4init:int=1):
         """
         x_current: np.ndarray (nx,)
         y_ref: np.ndarray, (n_hrzn+1, nx + nu)
@@ -199,6 +199,15 @@ class ZoroMPCSolver:
             self.x_temp_sol = np.tile(x_current, (self.cfg.n_hrzn+1, 1))
             self.u_temp_sol = np.zeros((self.cfg.n_hrzn, self.cfg.nu))
 
+            if num_nominal4init > 0:
+                self.acados_ocp_solver.options_set('rti_phase', 0)
+                for i_sqp in range(num_nominal4init):
+                    self.acados_ocp_solver.solve()
+                for i_stage in range(self.cfg.n_hrzn):
+                    self.x_temp_sol[i_stage,:] = self.acados_ocp_solver.get(i_stage, "x")
+                    self.u_temp_sol[i_stage,:] = self.acados_ocp_solver.get(i_stage, "u")
+                self.x_temp_sol[self.cfg.n_hrzn,:] = self.acados_ocp_solver.get(self.cfg.n_hrzn, "x")
+
             # Initialize P matrix
             self.P_mats = np.zeros((self.cfg.n_hrzn+1, self.cfg.nx, self.cfg.nx))
             self.P_mats[0,:,:] = p0_mat.copy()
@@ -219,10 +228,6 @@ class ZoroMPCSolver:
 
         if self.ocp.zoro_description.zoro_riccati == -1:
             riccati_K = [self.cfg.fdbk_K_mat] * self.cfg.n_hrzn
-
-        self.acados_ocp_solver.options_set('rti_phase', 0)
-        for i_sqp in range(num_nominal4init):
-            self.acados_ocp_solver.solve()
 
         for i_sqp in range(self.cfg.zoRO_iter):
             # preparation rti_phase
@@ -280,7 +285,7 @@ class ZoroMPCSolver:
                 print(f"Step of the nominal trajectory is smaller than the convergence threshold after {i_sqp+1} iterations. Exit")
                 break
 
-        print(f"status of acados_ocp_solver = {status}, delta step = {step_sqp}.")
+        # print(f"status of acados_ocp_solver = {status}, delta step = {step_sqp}.")
         u_opt = self.acados_ocp_solver.get(0, "u")
 
         return u_opt, status

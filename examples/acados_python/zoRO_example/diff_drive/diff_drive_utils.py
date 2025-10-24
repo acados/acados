@@ -44,8 +44,13 @@ def get_results_filename(use_custom_update: bool, zoro_riccati: int, n_execution
         results_filename += 'custom_update'
     else:
         results_filename += 'python_prop'
-    if zoro_riccati >= 0:
-        results_filename += '_riccati'
+    match zoro_riccati:
+        case -1:
+            results_filename += "_fixedK"
+        case 0:
+            results_filename += "_riccatiFixedQuad"
+        case 1:
+            results_filename += "_riccatiHessian"
     results_filename += f'_exec_{n_executions}'
     results_filename += '.pkl'
     return results_filename

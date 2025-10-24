@@ -194,11 +194,11 @@ def solve_single_zoro_problem_visualize_uncertainty(zoro_riccati:int=0, converg_
     print(f"status = {status}")
     match zoro_riccati:
         case -1:
-            fig_name_concat = "_fixedK"
+            fig_name_concat = "_OCP_fixedK"
         case 0:
-            fig_name_concat = "_riccatiFixedQuad"
+            fig_name_concat = "_OCP_riccatiFixedQuad"
         case 1:
-            fig_name_concat = "_riccatiHessian"
+            fig_name_concat = "_OCP_riccatiHessian"
     plot_trajectory(cfg_zo, x_ref_interp, x_opt,
                     P_matrices=zoroMPC.ocp.zoro_description.backoff_scaling_gamma**2 * zoroMPC.P_mats, closed_loop=False, fig_name_concat=fig_name_concat)
 
@@ -206,7 +206,14 @@ def solve_single_zoro_problem_visualize_uncertainty(zoro_riccati:int=0, converg_
 def plot_result_trajectory(n_executions: int, use_custom_update=True, zoro_riccati:int=0):
     results_filename = get_results_filename(use_custom_update, zoro_riccati, n_executions)
     results = load_results(results_filename)
-    plot_trajectory(results['cfg_zo'], results['ref_trajectory'], results['trajectory'])
+    match zoro_riccati:
+        case -1:
+            fig_name_concat = "_MPC_fixedK"
+        case 0:
+            fig_name_concat = "_MPC_riccatiFixedQuad"
+        case 1:
+            fig_name_concat = "_MPC_riccatiHessian"
+    plot_trajectory(results['cfg_zo'], results['ref_trajectory'], results['trajectory'], fig_name_concat=fig_name_concat)
 
 def compare_results(n_executions: int, zoro_riccati:int=0):
     results1 = load_results(get_results_filename(use_custom_update=True, zoro_riccati=zoro_riccati, n_executions=n_executions))
@@ -222,19 +229,26 @@ def timing_comparison(n_executions: int):
     # keys = "zoRO-24-riccati", "zoRO-24", "zoRO-21-riccati", "zoRO-21"
     dict_results = {}
 
-    for _, tuple in enumerate(zip([True, True, False, False], [0, -1, 0, -1])):
+    for _, tuple in enumerate(zip([True, True, True, False, False], [0, -1, 1, 0, -1])):
         results_filename = get_results_filename(use_custom_update=tuple[0], zoro_riccati=tuple[1], n_executions=n_executions)
         results = load_results(results_filename)
-        plot_timings(results['timings'], use_custom_update=tuple[0], fig_name_concat="_riccati" if tuple[1] else "")
+        match tuple[1]:
+            case -1:
+                fig_name_concat = "_fixedK"
+            case 0:
+                fig_name_concat = "_riccatiFixedQuad"
+            case 1:
+                fig_name_concat = "_riccatiHessian"
+        plot_timings(results['timings'], use_custom_update=tuple[0], fig_name_concat=fig_name_concat)
         temp_key = "zoRO-24" if tuple[0] else "zoRO-21"
-        if tuple[1]:
+        if tuple[1] == 0: # FIXME
             temp_key += "-riccati"
         dict_results[temp_key] = results
 
     # Compare zoro-riccati with and without custom update
     plot_timing_comparison([dict_results["zoRO-24-riccati"]['timings'], dict_results["zoRO-21-riccati"]['timings']], ['zoRO-24-riccati', 'zoRO-21-riccati'], fig_name_concat="_riccati")
     # Compare zoro with and without custom update
-    plot_timing_comparison([dict_results["zoRO-24"]['timings'], dict_results["zoRO-21"]['timings']], ['zoRO-24', 'zoRO-21'])
+    plot_timing_comparison([dict_results["zoRO-24"]['timings'], dict_results["zoRO-21"]['timings']], ['zoRO-24', 'zoRO-21'], fig_name_concat="_fixedK")
     # Compare zoro-riccati to zoro with custom update
     plot_timing_comparison([dict_results["zoRO-24-riccati"]['timings'], dict_results["zoRO-24"]['timings']], ['zoRO-24-riccati', 'zoRO-24'], fig_name_concat="_zoRO-24")
     # Compare zoro-riccati to zoro without custom update
@@ -243,17 +257,22 @@ def timing_comparison(n_executions: int):
 
 if __name__ == "__main__":
     n_executions = 2
-    run_closed_loop_simulation(use_custom_update=True, zoro_riccati=True, n_executions=n_executions)
-    run_closed_loop_simulation(use_custom_update=True, zoro_riccati=False, n_executions=n_executions)
-    run_closed_loop_simulation(use_custom_update=False, zoro_riccati=True, n_executions=n_executions)
-    run_closed_loop_simulation(use_custom_update=False, zoro_riccati=False, n_executions=n_executions)
-    compare_results(n_executions=n_executions, zoro_riccati=True)
-    compare_results(n_executions=n_executions, zoro_riccati=False)
+    # Pre-computed Feedback
+    run_closed_loop_simulation(use_custom_update=True, zoro_riccati=-1, n_executions=n_executions)
+    run_closed_loop_simulation(use_custom_update=False, zoro_riccati=-1, n_executions=n_executions)
+    compare_results(n_executions=n_executions, zoro_riccati=-1)
+    plot_result_trajectory(n_executions=n_executions, use_custom_update=True, zoro_riccati=-1)
+    # Feedback gain computed using riccati with constant cost matrices
+    run_closed_loop_simulation(use_custom_update=True, zoro_riccati=0, n_executions=n_executions)
+    run_closed_loop_simulation(use_custom_update=False, zoro_riccati=0, n_executions=n_executions)
+    compare_results(n_executions=n_executions, zoro_riccati=0)
+    plot_result_trajectory(n_executions=n_executions, use_custom_update=True, zoro_riccati=0)
+    # Feedback gain computed using riccati with sum of constant cost matrices and Hessian of tightened constraints weighted by 1/h**2
+    run_closed_loop_simulation(use_custom_update=True, zoro_riccati=1, n_executions=n_executions)
+    plot_result_trajectory(n_executions=n_executions, use_custom_update=True, zoro_riccati=1)
 
-    plot_result_trajectory(n_executions=n_executions, use_custom_update=True, zoro_riccati=True)
-    plot_result_trajectory(n_executions=n_executions, use_custom_update=True, zoro_riccati=False)
     timing_comparison(n_executions=n_executions)
 
-    solve_single_zoro_problem_visualize_uncertainty(zoro_riccati=True)
-    solve_single_zoro_problem_visualize_uncertainty(zoro_riccati=False)
-    plt.show()
+    solve_single_zoro_problem_visualize_uncertainty(zoro_riccati=-1,)
+    solve_single_zoro_problem_visualize_uncertainty(zoro_riccati=0, )
+    solve_single_zoro_problem_visualize_uncertainty(zoro_riccati=1, )
