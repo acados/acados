@@ -173,7 +173,7 @@ class ZoroMPCSolver:
         self.acados_integrator_time = 0.
         self.acados_qp_time = 0.
 
-    def solve(self, x_current, y_ref, obs_position, obs_radius, p0_mat=None):
+    def solve(self, x_current, y_ref, obs_position, obs_radius, p0_mat=None, converg_thr:float=1e-7, num_nominal4init:int=0):
         """
         x_current: np.ndarray (nx,)
         y_ref: np.ndarray, (n_hrzn+1, nx + nu)
@@ -220,6 +220,10 @@ class ZoroMPCSolver:
         if self.ocp.zoro_description.zoro_riccati == -1:
             riccati_K = [self.cfg.fdbk_K_mat] * self.cfg.n_hrzn
 
+        self.acados_ocp_solver.options_set('rti_phase', 0)
+        for i_sqp in range(num_nominal4init):
+            self.acados_ocp_solver.solve()
+
         for i_sqp in range(self.cfg.zoRO_iter):
             # preparation rti_phase
             self.acados_ocp_solver.options_set('rti_phase', 1)
@@ -262,6 +266,8 @@ class ZoroMPCSolver:
             self.rti_phase2_t += self.acados_ocp_solver.get_stats("time_tot")
 
             # Get solution
+            x_prev_sol = self.x_temp_sol.copy()
+            u_prev_sol = self.u_temp_sol.copy()
             for i_stage in range(self.cfg.n_hrzn):
                 self.x_temp_sol[i_stage,:] = self.acados_ocp_solver.get(i_stage, "x")
                 self.u_temp_sol[i_stage,:] = self.acados_ocp_solver.get(i_stage, "u")
@@ -269,6 +275,12 @@ class ZoroMPCSolver:
 
             residuals = self.acados_ocp_solver.get_residuals()
 
+            step_sqp = max(np.linalg.norm(x_prev_sol - self.x_temp_sol, np.inf), np.linalg.norm(u_prev_sol - self.u_temp_sol, np.inf))
+            if (status==0) and (step_sqp < converg_thr):
+                print(f"Step of the nominal trajectory is smaller than the convergence threshold after {i_sqp+1} iterations. Exit")
+                break
+
+        print(f"status of acados_ocp_solver = {status}, delta step = {step_sqp}.")
         u_opt = self.acados_ocp_solver.get(0, "u")
 
         return u_opt, status

@@ -820,7 +820,7 @@ static void update_riccati_quad_matrices(ocp_nlp_solver *solver, ocp_nlp_memory 
 {%- if zoro_description.nlbu_t > 0 %}
     d_ocp_qp_get_lbu(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 {%- for it in zoro_description.idx_lbu_t %}
-    temp = 1.0 / (1e-7 + custom_mem->d_ineq_val[{{it}}] * custom_mem->d_ineq_val[{{it}}]);
+    temp = 1.0 / (1e-5 + custom_mem->d_ineq_val[{{it}}] * custom_mem->d_ineq_val[{{it}}]); //FIXME
     blasfeo_dgesc(1, nu+nx, temp, &custom_mem->riccati_Hessian_scaled_mat, ir, 0);
     ir += 1;
 {%- endfor %}
@@ -829,7 +829,7 @@ static void update_riccati_quad_matrices(ocp_nlp_solver *solver, ocp_nlp_memory 
 {%- if zoro_description.nlbx_t > 0 %}
     d_ocp_qp_get_lbx(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 {%- for it in zoro_description.idx_lbx_t %}
-    temp = 1.0 / (1e-7 + custom_mem->d_ineq_val[{{it}}] * custom_mem->d_ineq_val[{{it}}]);
+    temp = 1.0 / (1e-5 + custom_mem->d_ineq_val[{{it}}] * custom_mem->d_ineq_val[{{it}}]);
     blasfeo_dgesc(1, nu+nx, temp, &custom_mem->riccati_Hessian_scaled_mat, ir, 0);
     ir += 1;
 {%- endfor %}
@@ -845,7 +845,7 @@ static void update_riccati_quad_matrices(ocp_nlp_solver *solver, ocp_nlp_memory 
 d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 // lg
 {%- for it in zoro_description.idx_lg_t %}
-    temp = 1.0 / (1e-7 + custom_mem->d_ineq_val[{{it}}] * custom_mem->d_ineq_val[{{it}}]);
+    temp = 1.0 / (1e-5 + custom_mem->d_ineq_val[{{it}}] * custom_mem->d_ineq_val[{{it}}]);
     blasfeo_dgesc(1, nu+nx, temp, &custom_mem->riccati_Hessian_scaled_mat, ir, 0);
     ir += 1;
 {%- endfor %}
@@ -854,9 +854,9 @@ d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
     // NOTE: the d_Cgh_mat is column-major, the first ng rows are the Jacobians of the linear constraints
     blasfeo_pack_dmat(1, nu, custom_mem->d_Dgh_mat + ng + {{it}}, ng+nh, &custom_mem->riccati_Hessian_mat, 0, 0);
     blasfeo_pack_dmat(1, nu, custom_mem->d_Dgh_mat + ng + {{it}}, ng+nh, &custom_mem->riccati_Hessian_scaled_mat, 0, 0);
-    blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng + {{it}}, ng+nh, &custom_mem->riccati_Hessian_mat, ir, 0);
-    blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng + {{it}}, ng+nh, &custom_mem->riccati_Hessian_scaled_mat, ir, 0);
-    temp = 1.0 / (1e-7 + custom_mem->d_ineq_val[ng + {{it}}] * custom_mem->d_ineq_val[ng + {{it}}]);
+    blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng + {{it}}, ng+nh, &custom_mem->riccati_Hessian_mat, ir, nu);
+    blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng + {{it}}, ng+nh, &custom_mem->riccati_Hessian_scaled_mat, ir, nu);
+    temp = 1.0 / (1e-5 + custom_mem->d_ineq_val[ng + {{it}}] * custom_mem->d_ineq_val[ng + {{it}}]);
     blasfeo_dgesc(1, nu+nx, temp, &custom_mem->riccati_Hessian_scaled_mat, ir, 0);
     ir += 1;
 {%- endfor %}
@@ -866,7 +866,7 @@ d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 {%- if zoro_description.nubu_t > 0 %}
     d_ocp_qp_get_ubu(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 {%- for it in zoro_description.idx_ubu_t %}
-    temp = 1.0 / (1e-7 + custom_mem->d_ineq_val[{{it}}] * custom_mem->d_ineq_val[{{it}}]);
+    temp = 1.0 / (1e-5 + custom_mem->d_ineq_val[{{it}}] * custom_mem->d_ineq_val[{{it}}]);
     blasfeo_dgesc(1, nu+nx, temp, &custom_mem->riccati_Hessian_scaled_mat, ir, 0);
     ir += 1;
 {%- endfor %}
@@ -875,7 +875,7 @@ d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 {%- if zoro_description.nubx_t > 0 %}
     d_ocp_qp_get_ubx(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 {%- for it in zoro_description.idx_ubx_t %}
-    temp = 1.0 / (1e-7 + custom_mem->d_ineq_val[{{it}}] * custom_mem->d_ineq_val[{{it}}]);
+    temp = 1.0 / (1e-5 + custom_mem->d_ineq_val[{{it}}] * custom_mem->d_ineq_val[{{it}}]);
     blasfeo_dgesc(1, nu+nx, temp, &custom_mem->riccati_Hessian_scaled_mat, ir, 0);
     ir += 1;
 {%- endfor %}
@@ -884,7 +884,7 @@ d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 {%- if zoro_description.nug_t + zoro_description.nuh_t> 0 %}
     d_ocp_qp_get_ug(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 {%- for it in zoro_description.idx_ug_t %}
-    temp = 1.0 / (1e-7 + custom_mem->d_ineq_val[{{it}}] * custom_mem->d_ineq_val[{{it}}]);
+    temp = 1.0 / (1e-5 + custom_mem->d_ineq_val[{{it}}] * custom_mem->d_ineq_val[{{it}}]);
     blasfeo_dgesc(1, nu+nx, temp, &custom_mem->riccati_Hessian_scaled_mat, ir, 0);
     ir += 1;
 {%- endfor %}
@@ -893,9 +893,9 @@ d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
     // NOTE: the d_Cgh_mat is column-major, the first ng rows are the Jacobians of the linear constraints
     blasfeo_pack_dmat(1, nu, custom_mem->d_Dgh_mat + ng + {{it}}, ng+nh, &custom_mem->riccati_Hessian_mat, 0, 0);
     blasfeo_pack_dmat(1, nu, custom_mem->d_Dgh_mat + ng + {{it}}, ng+nh, &custom_mem->riccati_Hessian_scaled_mat, 0, 0);
-    blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng + {{it}}, ng+nh, &custom_mem->riccati_Hessian_mat, ir, 0);
-    blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng + {{it}}, ng+nh, &custom_mem->riccati_Hessian_scaled_mat, ir, 0);
-    temp = 1.0 / (1e-7 + custom_mem->d_ineq_val[ng + {{it}}] * custom_mem->d_ineq_val[ng + {{it}}]);
+    blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng + {{it}}, ng+nh, &custom_mem->riccati_Hessian_mat, ir, nu);
+    blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng + {{it}}, ng+nh, &custom_mem->riccati_Hessian_scaled_mat, ir, nu);
+    temp = 1.0 / (1e-5 + custom_mem->d_ineq_val[ng + {{it}}] * custom_mem->d_ineq_val[ng + {{it}}]);
     blasfeo_dgesc(1, nu+nx, temp, &custom_mem->riccati_Hessian_scaled_mat, ir, 0);
     ir += 1;
 {%- endfor %}
@@ -929,20 +929,13 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
         + {{zoro_description.nubx_e_t}} + {{zoro_description.nug_e_t}} + {{zoro_description.nuh_e_t}}, nx, &custom_mem->riccati_Hessian_e_mat, 0, 0,
         &custom_mem->riccati_Hessian_scaled_e_mat, 0, 0);
 
-    printf("%d, %d, %d:,\n", nbx_e, ng, nh);
-    printf("%d, %d, %d, %d, %d, %d:,\n", {{zoro_description.nlbx_e_t}},{{zoro_description.nlg_e_t}},{{zoro_description.nlh_e_t}},{{zoro_description.nubx_e_t}},{{zoro_description.nug_e_t}},{{zoro_description.nuh_e_t}});
-    printf("riccati_Hessian_e_mat%d:,\n", N);
-    blasfeo_print_exp_dmat({{zoro_description.nlbx_e_t}} + {{zoro_description.nlg_e_t}} + {{zoro_description.nlh_e_t}} + {{zoro_description.nubx_e_t}} + {{zoro_description.nug_e_t}} + {{zoro_description.nuh_e_t}}, nx, &(custom_mem->riccati_Hessian_e_mat), 0, 0);
-    printf("riccati_Hessian_scaled_e_mat%d:,\n", N);
-    blasfeo_print_exp_dmat({{zoro_description.nlbx_e_t}} + {{zoro_description.nlg_e_t}} + {{zoro_description.nlh_e_t}} + {{zoro_description.nubx_e_t}} + {{zoro_description.nug_e_t}} + {{zoro_description.nuh_e_t}}, nx, &(custom_mem->riccati_Hessian_scaled_e_mat), 0, 0);
-
     double temp;
     int ir = 0;
 // lbx_e
 {%- if zoro_description.nlbx_e_t > 0 %}
     d_ocp_qp_get_lbx(N, nlp_mem->qp_in, custom_mem->d_ineq_e_val);
 {%- for it in zoro_description.idx_lbx_e_t %}
-    temp = 1.0 / (1e-7 + custom_mem->d_ineq_e_val[{{it}}] * custom_mem->d_ineq_e_val[{{it}}]); //FIXME
+    temp = 1.0 / (1e-5 + custom_mem->d_ineq_e_val[{{it}}] * custom_mem->d_ineq_e_val[{{it}}]); //FIXME
     blasfeo_dgesc(1, nx, temp, &custom_mem->riccati_Hessian_scaled_e_mat, ir, 0);
     ir += 1;
 {%- endfor %}
@@ -957,7 +950,7 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
     d_ocp_qp_get_lg(N, nlp_mem->qp_in, custom_mem->d_ineq_e_val);
 // lg_e
 {%- for it in zoro_description.idx_lg_e_t %}
-    temp = 1.0 / (1e-7 + custom_mem->d_ineq_e_val[{{it}}] * custom_mem->d_ineq_e_val[{{it}}]);
+    temp = 1.0 / (1e-5 + custom_mem->d_ineq_e_val[{{it}}] * custom_mem->d_ineq_e_val[{{it}}]);
     blasfeo_dgesc(1, nx, temp, &custom_mem->riccati_Hessian_scaled_e_mat, ir, 0);
     ir += 1;
 {%- endfor %}
@@ -966,7 +959,7 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
     // NOTE: the d_Cgh_mat is column-major, the first ng rows are the Jacobians of the linear constraints
     blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng + {{it}}, ng+nh, &custom_mem->riccati_Hessian_e_mat, ir, 0);
     blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng + {{it}}, ng+nh, &custom_mem->riccati_Hessian_scaled_e_mat, ir, 0);
-    temp = 1.0 / (1e-7 + custom_mem->d_ineq_e_val[ng + {{it}}] * custom_mem->d_ineq_e_val[ng + {{it}}]);
+    temp = 1.0 / (1e-5 + custom_mem->d_ineq_e_val[ng + {{it}}] * custom_mem->d_ineq_e_val[ng + {{it}}]);
     blasfeo_dgesc(1, nx, temp, &custom_mem->riccati_Hessian_scaled_e_mat, ir, 0);
     ir += 1;
 {%- endfor %}
@@ -976,7 +969,7 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
 {%- if zoro_description.nubx_e_t > 0 %}
     d_ocp_qp_get_ubx(N, nlp_mem->qp_in, custom_mem->d_ineq_e_val);
 {%- for it in zoro_description.idx_ubx_e_t %}
-    temp = 1.0 / (1e-7 + custom_mem->d_ineq_e_val[{{it}}] * custom_mem->d_ineq_e_val[{{it}}]);
+    temp = 1.0 / (1e-5 + custom_mem->d_ineq_e_val[{{it}}] * custom_mem->d_ineq_e_val[{{it}}]);
     blasfeo_dgesc(1, nx, temp, &custom_mem->riccati_Hessian_scaled_e_mat, ir, 0);
     ir += 1;
 {%- endfor %}
@@ -986,7 +979,7 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
     d_ocp_qp_get_ug(N, nlp_mem->qp_in, custom_mem->d_ineq_e_val);
 // ug_e
 {%- for it in zoro_description.idx_ug_e_t %}
-    temp = 1.0 / (1e-7 + custom_mem->d_ineq_e_val[nbx_e + {{it}}] * custom_mem->d_ineq_e_val[nbx_e + {{it}}]);
+    temp = 1.0 / (1e-5 + custom_mem->d_ineq_e_val[nbx_e + {{it}}] * custom_mem->d_ineq_e_val[nbx_e + {{it}}]);
     blasfeo_dgesc(1, nx, temp, &custom_mem->riccati_Hessian_scaled_e_mat, ir, 0);
     ir += 1;
 {%- endfor %}
@@ -995,7 +988,7 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
     // NOTE: the d_Cgh_mat is column-major, the first ng rows are the Jacobians of the linear constraints
     blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng + {{it}}, ng+nh, &custom_mem->riccati_Hessian_e_mat, ir, 0);
     blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng + {{it}}, ng+nh, &custom_mem->riccati_Hessian_scaled_e_mat, ir, 0);
-    temp = 1.0 / (1e-7 + custom_mem->d_ineq_e_val[nbx_e + ng + {{it}}] * custom_mem->d_ineq_e_val[nbx_e + ng + {{it}}]);
+    temp = 1.0 / (1e-5 + custom_mem->d_ineq_e_val[nbx_e + ng + {{it}}] * custom_mem->d_ineq_e_val[nbx_e + ng + {{it}}]);
     blasfeo_dgesc(1, nx, temp, &custom_mem->riccati_Hessian_scaled_e_mat, ir, 0);
     ir += 1;
 {%- endfor %}
@@ -1003,8 +996,6 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
 
     blasfeo_dgemm_tn(nx, nx, {{zoro_description.nlbx_e_t}} + {{zoro_description.nlg_e_t}} + {{zoro_description.nlh_e_t}} + {{zoro_description.nubx_e_t}} + {{zoro_description.nug_e_t}} + {{zoro_description.nuh_e_t}}, 1.0, &custom_mem->riccati_Hessian_e_mat, 0, 0, &custom_mem->riccati_Hessian_scaled_e_mat, 0, 0, 1.0, &custom_mem->riccati_Qconst_e_mat, 0, 0, &custom_mem->riccati_Q_mat, 0, 0);
 
-    printf("riccati_Q_mat%d:,\n", N);
-    blasfeo_print_exp_dmat(nx, nx, &(custom_mem->riccati_Q_mat), 0, 0);
 }
 
 
@@ -1037,12 +1028,6 @@ static void riccati_recursion(ocp_nlp_solver* solver, ocp_nlp_memory *nlp_mem, c
         blasfeo_dgecp(nu, nu, &custom_mem->riccati_Rconst_mat, 0, 0, &custom_mem->riccati_R_mat, 0, 0);
         blasfeo_dgecp(nu, nx, &custom_mem->riccati_Sconst_mat, 0, 0, &custom_mem->riccati_S_mat, 0, 0);
     {%- endif %}
-        // printf("riccati_Q_mat%d:,\n", ii);
-        // blasfeo_print_exp_dmat(nx, nx, &(custom_mem->riccati_Q_mat), 0, 0);
-        // printf("riccati_R_mat%d:,\n", ii);
-        // blasfeo_print_exp_dmat(nu, nu, &(custom_mem->riccati_R_mat), 0, 0);
-        // printf("riccati_S_mat%d:,\n", ii);
-        // blasfeo_print_exp_dmat(nu, nx, &(custom_mem->riccati_S_mat), 0, 0);
 
         // temp_riccati_BP_mat = B^T @ P
         blasfeo_dgemm_tn(nu, nx, nx, 1.0, &custom_mem->B_mat, 0, 0, &custom_mem->temp_riccati_P_plus_mat, 0, 0,

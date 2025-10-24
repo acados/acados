@@ -154,11 +154,11 @@ def run_closed_loop_simulation(use_custom_update: bool, zoro_riccati: int, n_exe
 
 
 
-def solve_single_zoro_problem_visualize_uncertainty(zoro_riccati:int=0):
+def solve_single_zoro_problem_visualize_uncertainty(zoro_riccati:int=0, converg_thr:float=1e-7, num_nominal4init:int=0):
     cfg_zo = MPCParam()
     cfg_zo.use_custom_update = True
     cfg_zo.zoro_riccati = zoro_riccati
-    cfg_zo.zoRO_iter = 20
+    cfg_zo.zoRO_iter = 50
     zoroMPC = ZoroMPCSolver(cfg_zo, output_P_matrices=True)
 
     # Reference trajectory
@@ -183,7 +183,7 @@ def solve_single_zoro_problem_visualize_uncertainty(zoro_riccati:int=0):
     x0 = path_tracking_solver.x_robot_ref[70,:]
     x_ref_interp, u_ref_interp = path_tracking_solver.interpolate_reference_trajectory(robot_state=x0)
     u_opt, status = zoroMPC.solve(x_current=x0, y_ref = np.hstack((x_ref_interp, u_ref_interp)),
-                    obs_position=cfg_zo.obs_pos.flatten(), obs_radius=cfg_zo.obs_radius)
+                    obs_position=cfg_zo.obs_pos.flatten(), obs_radius=cfg_zo.obs_radius, converg_thr=converg_thr, num_nominal4init=num_nominal4init)
 
     # get solution
     x_opt = np.zeros((cfg_zo.n_hrzn+1, cfg_zo.nx))
