@@ -98,6 +98,17 @@ class ZoroMPCSolver:
         self.ocp.constraints.lh_e = cfg.obs_radius
         self.ocp.constraints.uh_e = 1e3 * np.ones((num_obs, ))
 
+        self.ocp.constraints.idxsh = np.arange(0, num_obs)
+        self.ocp.constraints.idxsh_e = np.arange(0, num_obs)
+        self.ocp.cost.Zl   = 1e3 * np.ones((num_obs, ))
+        self.ocp.cost.Zu   = 1e3 * np.ones((num_obs, ))
+        self.ocp.cost.zl   = 1e4 * np.ones((num_obs, ))
+        self.ocp.cost.zu   = 1e4 * np.ones((num_obs, ))
+        self.ocp.cost.Zl_e = 1e3 * np.ones((num_obs, ))
+        self.ocp.cost.Zu_e = 1e3 * np.ones((num_obs, ))
+        self.ocp.cost.zl_e = 1e4 * np.ones((num_obs, ))
+        self.ocp.cost.zu_e = 1e4 * np.ones((num_obs, ))
+
         # custom update: disturbance propagation
         self.ocp.solver_options.custom_update_filename = 'custom_update_function.c'
         self.ocp.solver_options.custom_update_header_filename = 'custom_update_function.h'
@@ -137,10 +148,10 @@ class ZoroMPCSolver:
         zoro_description.output_P_matrices = output_P_matrices
         zoro_description.zoro_riccati = cfg.zoro_riccati
         zoro_description.output_riccati_t = output_riccati_t and (cfg.zoro_riccati >= 0)
-        # TODO: put into cfg
-        zoro_description.riccati_Qconst_e_mat = 1e-1 * np.eye(5)
-        zoro_description.riccati_Qconst_mat = 1e-2 * np.eye(5)
-        zoro_description.riccati_Rconst_mat = 1e-4 * np.eye(2)
+        # Note: Align the costs with the cost for reference tracking
+        zoro_description.riccati_Qconst_e_mat = cfg.Q_e
+        zoro_description.riccati_Qconst_mat = cfg.Q * cfg.delta_t
+        zoro_description.riccati_Rconst_mat = cfg.R * cfg.delta_t
         zoro_description.riccati_Sconst_mat = np.zeros((2, 5))
 
         ## dummy linear constraints for testing
@@ -173,6 +184,27 @@ class ZoroMPCSolver:
         self.acados_integrator_time = 0.
         self.acados_qp_time = 0.
 
+    def reset_nominal_constr_bounds(self, obs_radius):
+        for idx_stage in range(0, self.cfg.n_hrzn):
+            self.acados_ocp_solver.set(idx_stage, "lbu", self.ocp.constraints.lbu)
+            self.acados_ocp_solver.set(idx_stage, "ubu", self.ocp.constraints.ubu)
+        for idx_stage in range(1, self.cfg.n_hrzn):
+            self.acados_ocp_solver.set(idx_stage, "lbx", self.ocp.constraints.lbx)
+            self.acados_ocp_solver.set(idx_stage, "ubx", self.ocp.constraints.ubx)
+            self.acados_ocp_solver.constraints_set(idx_stage, "lh", obs_radius)
+        self.acados_ocp_solver.set(self.cfg.n_hrzn, "lbx", self.ocp.constraints.lbx_e)
+        self.acados_ocp_solver.set(self.cfg.n_hrzn, "ubx", self.ocp.constraints.ubx_e)
+        self.acados_ocp_solver.constraints_set(self.cfg.n_hrzn, "lh", obs_radius)
+
+    def verify_nonpositive_slack_variables(self, thr:float=1e-6):
+        max_sl = -np.inf
+        for idx_stage in range(1, self.cfg.n_hrzn+1):
+            sl = self.acados_ocp_solver.get(idx_stage, "sl")
+            max_sl = max(max_sl, np.max(sl))
+        if not max_sl <= thr:
+            print(f"max_sl = {max_sl}")
+        return max_sl <= thr
+
     def solve(self, x_current, y_ref, obs_position, obs_radius, p0_mat=None, converg_thr:float=1e-6, num_nominal4init:int=1):
         """
         x_current: np.ndarray (nx,)
@@ -190,6 +222,20 @@ class ZoroMPCSolver:
         self.acados_integrator_time = 0.
         self.acados_qp_time = 0.
 
+        # set the current state
+        self.acados_ocp_solver.set(0, "lbx", x_current)
+        self.acados_ocp_solver.set(0, "ubx", x_current)
+        # set reference trajectory
+        for i_stage in range(self.cfg.n_hrzn):
+            self.acados_ocp_solver.cost_set(i_stage, 'yref', y_ref[i_stage,:])
+        self.acados_ocp_solver.cost_set(self.cfg.n_hrzn, 'yref', y_ref[self.cfg.n_hrzn,:self.cfg.nx])
+
+        for i_stage in range(self.cfg.n_hrzn+1):
+            self.acados_ocp_solver.set(i_stage,"p", obs_position)
+
+        if self.ocp.zoro_description.zoro_riccati == -1:
+            riccati_K = [self.cfg.fdbk_K_mat] * self.cfg.n_hrzn
+
         if not self.initialized:
             # initialize solver
             for i in range(0, self.cfg.n_hrzn):
@@ -200,6 +246,7 @@ class ZoroMPCSolver:
             self.u_temp_sol = np.zeros((self.cfg.n_hrzn, self.cfg.nu))
 
             if num_nominal4init > 0:
+                self.reset_nominal_constr_bounds(obs_radius)
                 self.acados_ocp_solver.options_set('rti_phase', 0)
                 for i_sqp in range(num_nominal4init):
                     self.acados_ocp_solver.solve()
@@ -214,20 +261,6 @@ class ZoroMPCSolver:
             for i in range(1, self.cfg.n_hrzn+1):
                 self.P_mats[i,:,:] = self.cfg.W_mat
             self.initialized = True
-
-        # set the current state
-        self.acados_ocp_solver.set(0, "lbx", x_current)
-        self.acados_ocp_solver.set(0, "ubx", x_current)
-        # set reference trajectory
-        for i_stage in range(self.cfg.n_hrzn):
-            self.acados_ocp_solver.cost_set(i_stage, 'yref', y_ref[i_stage,:])
-        self.acados_ocp_solver.cost_set(self.cfg.n_hrzn, 'yref', y_ref[self.cfg.n_hrzn,:self.cfg.nx])
-
-        for i_stage in range(self.cfg.n_hrzn+1):
-            self.acados_ocp_solver.set(i_stage,"p", obs_position)
-
-        if self.ocp.zoro_description.zoro_riccati == -1:
-            riccati_K = [self.cfg.fdbk_K_mat] * self.cfg.n_hrzn
 
         for i_sqp in range(self.cfg.zoRO_iter):
             # preparation rti_phase
@@ -279,6 +312,14 @@ class ZoroMPCSolver:
             self.x_temp_sol[self.cfg.n_hrzn,:] = self.acados_ocp_solver.get(self.cfg.n_hrzn, "x")
 
             residuals = self.acados_ocp_solver.get_residuals()
+
+            if status != 0:
+                break
+
+            if not self.verify_nonpositive_slack_variables():
+                status = -10
+                print(f"positive slack variables for state = {x_current}")
+                break
 
             step_sqp = max(np.linalg.norm(x_prev_sol - self.x_temp_sol, np.inf), np.linalg.norm(u_prev_sol - self.u_temp_sol, np.inf))
             if (status==0) and (step_sqp < converg_thr):
@@ -339,6 +380,8 @@ class ZoroMPCSolver:
             temp_B = self.acados_ocp_solver.get_from_qp_in(k, "B")
             K[k] = np.linalg.solve( R + temp_B.T @ P[k+1] @ temp_B, S + temp_B.T @ P[k+1] @ temp_A )
             P[k] = Q + temp_A.T @ P[k+1] @ temp_A - (S.T + temp_A.T @ P[k+1] @ temp_B) @ K[k]
+
+        K[0] = np.zeros_like(K[1])
         return K, P
 
 

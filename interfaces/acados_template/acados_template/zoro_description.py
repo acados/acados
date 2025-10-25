@@ -94,6 +94,7 @@ class ZoroDescription:
     In case this is used W_k = W + W_{add}^k.
     """
     zoro_riccati: int = -1
+    zoro_riccati_Hessian_tau: float = 1e-2
 
     # Outputs:
     output_P_matrices: bool = False
@@ -141,6 +142,8 @@ class ZoroDescription:
                 self.riccati_Qconst_e_mat = self.riccati_Qconst_mat.copy()
             if self.riccati_Qconst_e_mat.shape != (dims.nx, dims.nx):
                 raise Exception("The shape of riccati_Qconst_e_mat should be [nx*nx].")
+            if self.zoro_riccati_Hessian_tau <= 0:
+                raise Exception("The value of zoro_riccati_Hessian_tau should be positive.")
 
         # Print input note:
         print(f"\nThe data of the generated custom update function consists of the concatenation of:")
@@ -173,7 +176,7 @@ class ZoroDescription:
             data_size += size_i
         if self.output_riccati_t:
             data_size += 1
-            print(f"{i_component}) output: concatenation of riccati_time, size: [nx*nx*(N+1)] = {1}")
+            print(f"{i_component}) output: concatenation of riccati_time, size = {1}")
             i_component += 1
 
         self.data_size = data_size

@@ -114,12 +114,14 @@ def run_closed_loop_simulation(use_custom_update: bool, zoro_riccati: int, n_exe
                 time_qp[i_sim] = min(time_qp[i_sim], zoroMPC.acados_qp_time)
 
             if status != 0:
-                print('error status=',status,'Reset Solver')
+                print(f"error status={status}. Reset Solver.")
                 zoroMPC.initialized = False
                 zoroMPC.acados_ocp_solver.reset()
                 u_opt, status = zoroMPC.solve(x_current=traj_zo[i_sim, :], \
                     y_ref = np.hstack((x_ref_interp, u_ref_interp)), \
                     obs_position=cfg_zo.obs_pos.flatten(), obs_radius=cfg_zo.obs_radius)
+                if status != 0:
+                    print("Failure when resolving OCP.")
 
             # print(i_sim, u_opt, traj_zo[i_sim,:2])
             traj_zo[i_sim+1,:] = I(x0=traj_zo[i_sim, :], p=u_opt)['xf'].full().flatten()
@@ -154,7 +156,7 @@ def run_closed_loop_simulation(use_custom_update: bool, zoro_riccati: int, n_exe
 
 
 
-def solve_single_zoro_problem_visualize_uncertainty(zoro_riccati:int=0, converg_thr:float=1e-7, num_nominal4init:int=0):
+def solve_single_zoro_problem_visualize_uncertainty(zoro_riccati:int=0, converg_thr:float=1e-7, num_nominal4init:int=1):
     cfg_zo = MPCParam()
     cfg_zo.use_custom_update = True
     cfg_zo.zoro_riccati = zoro_riccati
@@ -198,7 +200,9 @@ def solve_single_zoro_problem_visualize_uncertainty(zoro_riccati:int=0, converg_
         case 0:
             fig_name_concat = "_OCP_riccatiFixedQuad"
         case 1:
-            fig_name_concat = "_OCP_riccatiHessian"
+            fig_name_concat = "_OCP_riccatiHessianV1"
+        case 2:
+            fig_name_concat = "_OCP_riccatiHessianV2"
     plot_trajectory(cfg_zo, x_ref_interp, x_opt,
                     P_matrices=zoroMPC.ocp.zoro_description.backoff_scaling_gamma**2 * zoroMPC.P_mats, closed_loop=False, fig_name_concat=fig_name_concat)
 
@@ -212,7 +216,9 @@ def plot_result_trajectory(n_executions: int, use_custom_update=True, zoro_ricca
         case 0:
             fig_name_concat = "_MPC_riccatiFixedQuad"
         case 1:
-            fig_name_concat = "_MPC_riccatiHessian"
+            fig_name_concat = "_MPC_riccatiHessianV1"
+        case 2:
+            fig_name_concat = "_MPC_riccatiHessianV2"
     plot_trajectory(results['cfg_zo'], results['ref_trajectory'], results['trajectory'], fig_name_concat=fig_name_concat)
 
 def compare_results(n_executions: int, zoro_riccati:int=0):
@@ -229,7 +235,7 @@ def timing_comparison(n_executions: int):
     # keys = "zoRO-24-riccati", "zoRO-24", "zoRO-21-riccati", "zoRO-21"
     dict_results = {}
 
-    for _, tuple in enumerate(zip([True, True, True, False, False], [0, -1, 1, 0, -1])):
+    for _, tuple in enumerate(zip([True, True, True, True, False, False], [0, -1, 1, 2, 0, -1])):
         results_filename = get_results_filename(use_custom_update=tuple[0], zoro_riccati=tuple[1], n_executions=n_executions)
         results = load_results(results_filename)
         match tuple[1]:
@@ -238,10 +244,12 @@ def timing_comparison(n_executions: int):
             case 0:
                 fig_name_concat = "_riccatiFixedQuad"
             case 1:
-                fig_name_concat = "_riccatiHessian"
+                fig_name_concat = "_riccatiHessianV1"
+            case 2:
+                fig_name_concat = "_riccatiHessianV2"
         plot_timings(results['timings'], use_custom_update=tuple[0], fig_name_concat=fig_name_concat)
         temp_key = "zoRO-24" if tuple[0] else "zoRO-21"
-        if tuple[1] == 0: # FIXME
+        if tuple[1] == 0:
             temp_key += "-riccati"
         dict_results[temp_key] = results
 
@@ -260,19 +268,23 @@ if __name__ == "__main__":
     # Pre-computed Feedback
     run_closed_loop_simulation(use_custom_update=True, zoro_riccati=-1, n_executions=n_executions)
     run_closed_loop_simulation(use_custom_update=False, zoro_riccati=-1, n_executions=n_executions)
-    compare_results(n_executions=n_executions, zoro_riccati=-1)
     plot_result_trajectory(n_executions=n_executions, use_custom_update=True, zoro_riccati=-1)
+    compare_results(n_executions=n_executions, zoro_riccati=-1)
     # Feedback gain computed using riccati with constant cost matrices
     run_closed_loop_simulation(use_custom_update=True, zoro_riccati=0, n_executions=n_executions)
     run_closed_loop_simulation(use_custom_update=False, zoro_riccati=0, n_executions=n_executions)
-    compare_results(n_executions=n_executions, zoro_riccati=0)
     plot_result_trajectory(n_executions=n_executions, use_custom_update=True, zoro_riccati=0)
+    compare_results(n_executions=n_executions, zoro_riccati=0)
     # Feedback gain computed using riccati with sum of constant cost matrices and Hessian of tightened constraints weighted by 1/h**2
     run_closed_loop_simulation(use_custom_update=True, zoro_riccati=1, n_executions=n_executions)
     plot_result_trajectory(n_executions=n_executions, use_custom_update=True, zoro_riccati=1)
+    # Feedback gain computed using riccati with sum of constant cost matrices and Hessian of tightened constraints weighted by -1/(h*backoff*2)
+    run_closed_loop_simulation(use_custom_update=True, zoro_riccati=2, n_executions=n_executions)
+    plot_result_trajectory(n_executions=n_executions, use_custom_update=True, zoro_riccati=2)
 
     timing_comparison(n_executions=n_executions)
 
     solve_single_zoro_problem_visualize_uncertainty(zoro_riccati=-1,)
     solve_single_zoro_problem_visualize_uncertainty(zoro_riccati=0, )
     solve_single_zoro_problem_visualize_uncertainty(zoro_riccati=1, )
+    solve_single_zoro_problem_visualize_uncertainty(zoro_riccati=2, )
