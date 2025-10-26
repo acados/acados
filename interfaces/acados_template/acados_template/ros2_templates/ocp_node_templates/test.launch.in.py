@@ -1,6 +1,5 @@
 import re
-from typing import Union
-from unittest import result
+import os
 import rclpy
 import unittest
 import launch
@@ -8,7 +7,12 @@ import time
 import launch_testing
 import pytest
 import subprocess
+import numpy as np
+
+from typing import Union
+from unittest import result
 from launch_ros.actions import Node
+
 
 from {{ ros_opts.package_name }}_interface.msg import State, Control, References
 {%- if ros_opts.publish_control_sequence -%}
@@ -129,6 +133,75 @@ class GeneratedNodeTest(unittest.TestCase):
         {%- if ros_opts.publish_control_sequence %}
         self.wait_for_publisher('{{ control_sequence_topic }}')
         {%- endif %}
+    
+    {% if ros_opts.publish_control_sequence %}
+    def test_control_sequence_values(self, proc_info):
+        """
+        Test if the node's published control sequence matches
+        the one pre-computed by the Python solver.
+        """
+        try:
+            test_script_dir = os.path.dirname(os.path.realpath(__file__))
+            expected_u_file = os.path.abspath(os.path.join(test_script_dir, '..', '..', 'expected_control_sequence.npy'))
+            expected_u_sequence = np.load(expected_u_file)
+        
+        except FileNotFoundError:
+            self.skipTest(f"Expected control sequence file not found: {expected_u_file}")
+
+        self.received_control_sequence = None  # Reset before test
+
+        # 1. Subscriber erstellen
+        sub = self.node.create_subscription(
+            ControlSequence,
+            '{{ control_sequence_topic }}',
+            self.__control_sequence_callback,
+            10
+        )
+
+        pub = self.node.create_publisher(
+            State,
+            '{{ state_topic }}',
+            10
+        )
+        time.sleep(1.0)
+
+        state_msg = State()
+        state_msg.x = [0.0, 3.1415926535, 0.0, 0.0] # ocp.constraints.x0 TODO: change accordingly
+        state_msg.u = [0.0] * {{ dims.nu }}
+        pub.publish(state_msg)
+
+        end_time = time.time() + 10.0
+        while time.time() < end_time and self.received_control_sequence is None:
+            rclpy.spin_once(self.node, timeout_sec=0.1)
+
+        self.assertIsNotNone(
+            self.received_control_sequence,
+            "TEST FAILED: Keine Nachricht auf '{{ control_sequence_topic }}' empfangen."
+        )
+        self.assertEqual(self.received_control_sequence.status, 0, "Solver-Status war nicht erfolgreich (0).")
+
+        expected_length = {{ solver_options.N_horizon }}
+        self.assertEqual(len(self.received_control_sequence.control_sequence), expected_length)
+        self.assertEqual(expected_u_sequence.shape[0], expected_length)
+
+        for i, control_msg in enumerate(self.received_control_sequence.control_sequence):
+            expected_u = expected_u_sequence[i] 
+            
+            self.assertEqual(
+                len(control_msg.u),
+                len(expected_u),
+                f"Steuervektor bei Schritt {i} hat falsche Dimension."
+            )
+
+            for j in range(len(expected_u)):
+                self.assertAlmostEqual(
+                    control_msg.u[j],
+                    expected_u[j],
+                    places=2,
+                    msg=(f"Wert-Abweichung bei sequence[{i}].u[{j}]. "
+                         f"Erhalten: {control_msg.u[j]}, Erwartet: {expected_u[j]}")
+                )
+    {% endif %}
 
     def wait_for_subscription(self, topic: str, timeout: float = 2.0):
         end_time = time.time() + timeout
@@ -167,6 +240,10 @@ class GeneratedNodeTest(unittest.TestCase):
                       f"Exit-Code: {e.returncode}\n"
                       f"Stderr: {e.stderr}\n"
                       f"Stdout: {e.stdout}")
+            
+    def __control_sequence_callback(self, msg):
+        """Callback to store the received control sequence."""
+        self.received_control_sequence = msg
 
 
 def get_parameter(param_name: str):

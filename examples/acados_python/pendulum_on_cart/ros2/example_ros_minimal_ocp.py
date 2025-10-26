@@ -126,17 +126,8 @@ def main():
     # call SQP_RTI solver in the loop:
     tol = 1e-6
 
-    SPLIT_RTI = True
     for i in range(20):
-        if SPLIT_RTI:
-            # preparation
-            ocp_solver.options_set("rti_phase", 1)
-            status = ocp_solver.solve()
-            # feedback
-            ocp_solver.options_set("rti_phase", 2)
-            status = ocp_solver.solve()
-        else:
-            status = ocp_solver.solve()
+        status = ocp_solver.solve()
         ocp_solver.print_statistics()
         residuals = ocp_solver.get_residuals(recompute=True)
         print("residuals after ", i, "SQP_RTI iterations:\n", residuals)
@@ -151,6 +142,9 @@ def main():
         simX[i,:] = ocp_solver.get(i, "x")
         simU[i,:] = ocp_solver.get(i, "u")
     simX[N,:] = ocp_solver.get(N, "x")
+
+    expected_u_file = os.path.join(export_dir, 'expected_control_sequence.npy')
+    np.save(expected_u_file, simU)
 
     ocp_solver.print_statistics()
 

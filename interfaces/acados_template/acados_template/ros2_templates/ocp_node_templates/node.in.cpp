@@ -317,7 +317,10 @@ void {{ ClassName }}::publish_control_sequence(
     auto control_sequence = std::make_unique<{{ ros_opts.package_name }}_interface::msg::ControlSequence>();
     control_sequence->header.stamp = this->get_clock()->now();
     control_sequence->status = status;
-    control_sequence->control_sequence = u_sequence;
+    
+    for (size_t i = 0; i < {{ solver_options.N_horizon }}; ++i) {
+        control_sequence->control_sequence[i].u = u_sequence[i];
+    }
     control_sequence_pub_->publish(std::move(control_sequence));
 }
 {%- endif %}
