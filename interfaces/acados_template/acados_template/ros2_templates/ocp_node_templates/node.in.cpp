@@ -10,11 +10,13 @@ namespace {{ ros_opts.package_name }}
 {%- set state_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.state_topic %}
 {%- set references_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.reference_topic %}
 {%- set parameters_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.parameters_topic %}
+{%- set control_sequence_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.control_topic ~ "_sequence" %}
 {%- else %}
 {%- set control_topic = "/" ~ ros_opts.control_topic %}
 {%- set state_topic = "/" ~ ros_opts.state_topic %}
 {%- set references_topic = "/" ~ ros_opts.reference_topic %}
 {%- set parameters_topic = "/" ~ ros_opts.parameters_topic %}
+{%- set control_sequence_topic = "/" ~ ros_opts.control_topic ~ "_sequence" %}
 {%- endif %}
 {%- set has_slack = dims.ns > 0 or dims.ns_0 > 0 or dims.ns_e > 0 %}
 {%- set use_multithreading = ros_opts.threads is defined and ros_opts.threads > 1 %}
@@ -75,8 +77,12 @@ namespace {{ ros_opts.package_name }}
     {%- endif %}
 
     // --- Publisher ---
-    control_input_pub_ = this->create_publisher<{{ ros_opts.package_name }}_interface::msg::ControlInput>(
+    control_pub_ = this->create_publisher<{{ ros_opts.package_name }}_interface::msg::Control>(
         "{{ control_topic }}", 10);
+    {%- if ros_opts.publish_control_sequence %}
+    control_sequence_pub_ = this->create_publisher<{{ ros_opts.package_name }}_interface::msg::ControlSequence>(
+        "{{ control_sequence_topic }}", 10);
+    {%- endif %}
 
     // --- Init solver ---
     this->initialize_solver();
@@ -199,8 +205,8 @@ void {{ ClassName }}::control_loop() {
 
 void {{ ClassName }}::solver_status_behaviour(int status) {
     // publish u0 also if the solver failed
-    this->get_input(u0_.data(), 0);
-    this->publish_input(u0_, status);
+    this->get_control(u0_.data(), 0);
+    this->publish_control(u0_, status);
 
     {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
     // prepare for next iteration
@@ -292,13 +298,29 @@ void {{ ClassName }}::parameters_callback(const {{ ros_opts.package_name }}_inte
 
 
 // --- ROS Publisher ---
-void {{ ClassName }}::publish_input(const std::array<double, {{ model.name | upper }}_NU>& u0, int status) {
-    auto control_input = std::make_unique<{{ ros_opts.package_name }}_interface::msg::ControlInput>();
-    control_input->header.stamp = this->get_clock()->now();
-    control_input->status = status;
-    control_input->u = u0;
-    control_input_pub_->publish(std::move(control_input));
+void {{ ClassName }}::publish_control(
+        const std::array<double, {{ model.name | upper }}_NU>& u0, 
+        int status
+) {
+    auto control = std::make_unique<{{ ros_opts.package_name }}_interface::msg::Control>();
+    control->header.stamp = this->get_clock()->now();
+    control->status = status;
+    control->u = u0;
+    control_pub_->publish(std::move(control));
 }
+{%- if ros_opts.publish_control_sequence %}
+
+void {{ ClassName }}::publish_control_sequence(
+        const std::array<std::array<double, {{ model.name | upper }}_NU>, {{ solver_options.N_horizon }}>& u_sequence, 
+        int status
+) {
+    auto control_sequence = std::make_unique<{{ ros_opts.package_name }}_interface::msg::ControlSequence>();
+    control_sequence->header.stamp = this->get_clock()->now();
+    control_sequence->status = status;
+    control_sequence->control_sequence = u_sequence;
+    control_sequence_pub_->publish(std::move(control_sequence));
+}
+{%- endif %}
 
 
 // --- ROS Parameter ---
@@ -755,7 +777,7 @@ int {{ ClassName }}::ocp_solve() {
 
 
 // --- Acados Getter ---
-void {{ ClassName }}::get_input(double* u, int stage) {
+void {{ ClassName }}::get_control(double* u, int stage) {
     {%- if use_multithreading %}
     std::lock_guard<std::recursive_mutex> lock(solver_mutex_);
     {%- endif %}

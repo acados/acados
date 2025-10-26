@@ -1,4 +1,4 @@
-# Generic state message
+# Generic control message
 std_msgs/Header header
 
 # control vector

@@ -104,6 +104,7 @@ def create_minimal_ocp(export_dir: str, N: int = 20, Tf: float = 1.0, Fmax: floa
     ocp.ros_opts = AcadosOcpRosOptions()
     ocp.ros_opts.package_name = "pendulum_on_cart_ocp"
     ocp.ros_opts.generated_code_dir = export_dir
+    ocp.ros_opts.publish_control_sequence = True
 
     ocp.code_export_directory = str(os.path.join(export_dir, "c_generated_code"))
     return ocp

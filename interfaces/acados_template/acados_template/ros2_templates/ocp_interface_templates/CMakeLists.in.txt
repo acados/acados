@@ -12,7 +12,10 @@ find_package(rosidl_default_generators REQUIRED)
 # --- INTERFACES ---
 set(MSG_FILES
   "msg/State.msg"
-  "msg/ControlInput.msg"
+  "msg/Control.msg"
+  {%- if ros_opts.publish_control_sequence %}
+  "msg/ControlSequence.msg"
+  {%- endif %}
   {%- if dims.ny > 0 or dims.ny_0 > 0 or dims.ny_e > 0 %}
   "msg/References.msg"
   {%- endif %}

@@ -19,7 +19,7 @@ class AcadosRosBaseOptions:
 
     def __init__(self):
         self.__package_name: str = "acados_base"
-        self.__node_name: str = "acados_base_node"
+        self.__node_name: str = ""
         self.__namespace: str = ""
         self.__generated_code_dir: str = "ros_generated_code"
         self.__archtype: str = ArchType.NODE.value

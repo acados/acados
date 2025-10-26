@@ -12,8 +12,11 @@
 
 // ROS2 message includes
 #include "{{ ros_opts.package_name }}_interface/msg/state.hpp"
-#include "{{ ros_opts.package_name }}_interface/msg/control_input.hpp"
+#include "{{ ros_opts.package_name }}_interface/msg/control.hpp"
 #include "{{ ros_opts.package_name }}_interface/msg/references.hpp"
+{%- if ros_opts.publish_control_sequence %}
+#include "{{ ros_opts.package_name }}_interface/msg/control_sequence.hpp"
+{%- endif %}
 {%- if dims.np > 0 %}
 #include "{{ ros_opts.package_name }}_interface/msg/parameters.hpp"
 {%- endif %}
@@ -46,7 +49,10 @@ private:
     {%- endif %}
 
     // --- ROS Publishers ---
-    rclcpp::Publisher<{{ ros_opts.package_name }}_interface::msg::ControlInput>::SharedPtr control_input_pub_;
+    rclcpp::Publisher<{{ ros_opts.package_name }}_interface::msg::Control>::SharedPtr control_pub_;
+    {%- if ros_opts.publish_control_sequence %}
+    rclcpp::Publisher<{{ ros_opts.package_name }}_interface::msg::ControlSequence>::SharedPtr control_sequence_pub_;
+    {%- endif %}
 
     // --- ROS Params and Timer
     rclcpp::TimerBase::SharedPtr control_timer_;
@@ -109,14 +115,22 @@ private:
     {%- endif %}
 
     // --- ROS Publisher ---
-    void publish_input(const std::array<double, {{ model.name | upper }}_NU>& u0, int status);
+    void publish_control(
+        const std::array<double, {{ model.name | upper }}_NU>& u0, 
+        int status);
+    {%- if ros_opts.publish_control_sequence %}
+    void publish_control_sequence(
+        const std::array<std::array<double, {{ model.name | upper }}_NU>, {{ solver_options.N_horizon }}>& u_sequence, 
+        int status);
+    {%- endif %}
 
     // --- ROS Parameter ---
     void setup_parameter_handlers();
     void declare_parameters();
     void load_parameters();
     void apply_all_parameters_to_solver();
-    rcl_interfaces::msg::SetParametersResult on_parameter_update(const std::vector<rclcpp::Parameter>& params);
+    rcl_interfaces::msg::SetParametersResult on_parameter_update(
+        const std::vector<rclcpp::Parameter>& params);
 
     template <size_t N>
     void get_and_check_array_param(
@@ -155,7 +169,7 @@ private:
     int ocp_solve();
 
     // --- Acados Getter ---
-    void get_input(double* u, int stage);
+    void get_control(double* u, int stage);
     void get_state(double* x, int stage);
 
     // --- Acados Setter ---

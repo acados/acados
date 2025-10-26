@@ -10,7 +10,10 @@ import pytest
 import subprocess
 from launch_ros.actions import Node
 
-from {{ ros_opts.package_name }}_interface.msg import State, ControlInput, References
+from {{ ros_opts.package_name }}_interface.msg import State, Control, References
+{%- if ros_opts.publish_control_sequence -%}
+, ControlSequence
+{%- endif %}
 {%- if dims.np > 0 -%}
 , Parameters
 {%- endif %}
@@ -20,11 +23,13 @@ from {{ ros_opts.package_name }}_interface.msg import State, ControlInput, Refer
 {%- set state_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.state_topic %}
 {%- set references_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.reference_topic %}
 {%- set parameters_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.parameters_topic %}
+{%- set control_sequence_topic = "/" ~ ros_opts.namespace ~ "/" ~ ros_opts.control_topic ~ "_sequence" %}
 {%- else %}
 {%- set control_topic = "/" ~ ros_opts.control_topic %}
 {%- set state_topic = "/" ~ ros_opts.state_topic %}
 {%- set references_topic = "/" ~ ros_opts.reference_topic %}
 {%- set parameters_topic = "/" ~ ros_opts.parameters_topic %}
+{%- set control_sequence_topic = "/" ~ ros_opts.control_topic ~ "_sequence" %}
 {%- endif %}
 
 @pytest.mark.launch_test
@@ -121,6 +126,9 @@ class GeneratedNodeTest(unittest.TestCase):
     def test_publishing(self, proc_info):
         """Test if the node publishes to all expected topics."""
         self.wait_for_publisher('{{ control_topic }}')
+        {%- if ros_opts.publish_control_sequence %}
+        self.wait_for_publisher('{{ control_sequence_topic }}')
+        {%- endif %}
 
     def wait_for_subscription(self, topic: str, timeout: float = 2.0):
         end_time = time.time() + timeout

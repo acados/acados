@@ -1314,12 +1314,17 @@ class AcadosOcp:
         msg_dir = os.path.join(interface_dir, 'msg')
         template_file = os.path.join(ros_interface_dir, 'State.in.msg')
         template_list.append((template_file, 'State.msg', msg_dir, ros_template_glob))
-        template_file = os.path.join(ros_interface_dir, 'References.in.msg')
-        template_list.append((template_file, 'References.msg', msg_dir, ros_template_glob))
-        template_file = os.path.join(ros_interface_dir, 'Parameters.in.msg')
-        template_list.append((template_file, 'Parameters.msg', msg_dir, ros_template_glob))
-        template_file = os.path.join(ros_interface_dir, 'ControlInput.in.msg')
-        template_list.append((template_file, 'ControlInput.msg', msg_dir, ros_template_glob))
+        template_file = os.path.join(ros_interface_dir, 'Control.in.msg')
+        template_list.append((template_file, 'Control.msg', msg_dir, ros_template_glob))
+        if self.dims.ny > 0 or self.dims.ny_0 > 0 or self.dims.ny_e > 0:
+            template_file = os.path.join(ros_interface_dir, 'References.in.msg')
+            template_list.append((template_file, 'References.msg', msg_dir, ros_template_glob))
+        if self.ros_opts.publish_control_sequence:
+            template_file = os.path.join(ros_interface_dir, 'ControlSequence.in.msg')
+            template_list.append((template_file, 'ControlSequence.msg', msg_dir, ros_template_glob))
+        if self.dims.np > 0:
+            template_file = os.path.join(ros_interface_dir, 'Parameters.in.msg')
+            template_list.append((template_file, 'Parameters.msg', msg_dir, ros_template_glob))
 
         # --- Solver Package ---
         ros_pkg_dir = os.path.join('ocp_node_templates')
