@@ -148,9 +148,8 @@ class GeneratedNodeTest(unittest.TestCase):
         except FileNotFoundError:
             self.skipTest(f"Expected control sequence file not found: {expected_u_file}")
 
-        self.received_control_sequence = None  # Reset before test
+        self.received_control_sequence = None
 
-        # 1. Subscriber erstellen
         sub = self.node.create_subscription(
             ControlSequence,
             '{{ control_sequence_topic }}',
@@ -166,8 +165,11 @@ class GeneratedNodeTest(unittest.TestCase):
         time.sleep(1.0)
 
         state_msg = State()
-        state_msg.x = [0.0, 3.1415926535, 0.0, 0.0] # ocp.constraints.x0 TODO: change accordingly
-        state_msg.u = [0.0] * {{ dims.nu }}
+        {%- if constraints.has_x0 %}
+        state_msg.x = [float(v) for v in ( {{- constraints.lbx_0 | join(sep=', ') -}} )]
+        {%- else %}
+        state_msg.x = [0.0] * {{ dims.nx }}
+        {%- endif %}
         pub.publish(state_msg)
 
         end_time = time.time() + 10.0
@@ -176,9 +178,9 @@ class GeneratedNodeTest(unittest.TestCase):
 
         self.assertIsNotNone(
             self.received_control_sequence,
-            "TEST FAILED: Keine Nachricht auf '{{ control_sequence_topic }}' empfangen."
+            "TEST FAILED: '{{ control_sequence_topic }}' message not received."
         )
-        self.assertEqual(self.received_control_sequence.status, 0, "Solver-Status war nicht erfolgreich (0).")
+        self.assertEqual(self.received_control_sequence.status, 0, "Solver status was not successful (0).")
 
         expected_length = {{ solver_options.N_horizon }}
         self.assertEqual(len(self.received_control_sequence.control_sequence), expected_length)
@@ -190,7 +192,7 @@ class GeneratedNodeTest(unittest.TestCase):
             self.assertEqual(
                 len(control_msg.u),
                 len(expected_u),
-                f"Steuervektor bei Schritt {i} hat falsche Dimension."
+                f"Control vector at step {i} has wrong dimension."
             )
 
             for j in range(len(expected_u)):
@@ -198,8 +200,8 @@ class GeneratedNodeTest(unittest.TestCase):
                     control_msg.u[j],
                     expected_u[j],
                     places=2,
-                    msg=(f"Wert-Abweichung bei sequence[{i}].u[{j}]. "
-                         f"Erhalten: {control_msg.u[j]}, Erwartet: {expected_u[j]}")
+                    msg=(f"Value deviation at sequence[{i}].u[{j}]. "
+                         f"Received: {control_msg.u[j]}, Expected: {expected_u[j]}")
                 )
     {% endif %}
 

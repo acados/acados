@@ -83,6 +83,9 @@ private:
     bool first_solve_{true};
     {%- endif %}
     std::array<double, {{ model.name | upper }}_NU> u0_;
+    {%- if ros_opts.publish_control_sequence %}
+    std::array<std::array<double, {{ model.name | upper }}_NU>, {{ solver_options.N_horizon }}> u_seq_{};
+    {%- endif %}
     std::array<double, {{ model.name | upper }}_NX> current_x_;
     {%- if dims.ny_0 > 0 %}
     std::array<double, {{ model.name | upper }}_NY0> current_yref_0_;

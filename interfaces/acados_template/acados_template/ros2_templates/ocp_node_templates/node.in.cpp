@@ -208,6 +208,14 @@ void {{ ClassName }}::solver_status_behaviour(int status) {
     this->get_control(u0_.data(), 0);
     this->publish_control(u0_, status);
 
+    {%- if ros_opts.publish_control_sequence %}
+    // publish full control sequence
+    for (size_t i = 0; i < {{ solver_options.N_horizon }}; ++i) {
+        this->get_control(u_seq_[i].data(), static_cast<int>(i));
+    }
+    this->publish_control_sequence(u_seq_, status);
+    {%- endif %}
+
     {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
     // prepare for next iteration
     if (status == ACADOS_SUCCESS) {
