@@ -31,6 +31,7 @@ import matplotlib.pyplot as plt
 import os
 import pickle
 
+from diff_drive_model import RobotState
 from mpc_parameters import MPCParam
 from acados_template import latexify_plot
 
@@ -177,6 +178,67 @@ def plot_trajectory(cfg: MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray, P_ma
         os.makedirs("figures")
 
     fig_filename = os.path.join("figures", f"diff_drive_sim_trajectory{fig_name_concat}.pdf")
+    plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
+    print(f"stored figure in {fig_filename}")
+
+
+def plot_multiple_trajectories(cfg: MPCParam, traj_ref:np.ndarray, list_traj_label_tuple:list, closed_loop=True):
+
+    list_color = ["tab:blue", "tab:orange", "tab:green", "tab:purple"]
+    list_linestyle = ["-", '--', "-.", ":"]
+
+    # Trajectories in 2D plane
+    fig = plt.figure(100)
+    ax = fig.add_subplot(1,1,1)
+    for idx_obs in range(cfg.num_obs):
+        circ_label = "Obstacles" if idx_obs == 0 else None
+        circ = plt.Circle(cfg.obs_pos[idx_obs,:], cfg.obs_radius[idx_obs],
+                          edgecolor="red", facecolor=(1,0,0,.5), label=circ_label,
+                          )
+        ax.add_artist(circ)
+
+    for idx, traj_label_tuple in enumerate(list_traj_label_tuple):
+        traj_zo = traj_label_tuple[1]
+        ax.plot(traj_zo[:, 0], traj_zo[:, 1], color=list_color[idx], linestyle=list_linestyle[idx], label=traj_label_tuple[0])
+    ax.plot(traj_ref[:, 0], traj_ref[:, 1], c='m', linestyle='-', alpha=0.5, label='Reference trajectory')
+
+    ax.set_xlabel("x [m]")
+    ax.set_ylabel("y [m]")
+    if closed_loop:
+        ax.set_xticks(np.arange(-2., 9., 2.))
+        ax.set_yticks(np.arange(0., 5., 2.))
+        ax.set_ylim([-.5, 3.6])
+    ax.set_aspect("equal")
+    ax.legend()
+    plt.tight_layout()
+    plt.grid()
+    if not os.path.exists("figures"):
+        os.makedirs("figures")
+
+    fig_filename = os.path.join("figures", f"diff_drive_sim_multiple_trajectories.pdf")
+    plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
+    print(f"stored figure in {fig_filename}")
+
+    # Velocity and acceleration over time
+    n_trajs = len(list_traj_label_tuple)
+    fig = plt.figure(101, figsize=(10, 10))
+    axes = fig.subplots(4, n_trajs, sharex=True)
+
+    axes[0][0].set_ylabel(r"lin. vel. / m s${}^{-1}$")
+    axes[1][0].set_ylabel(r"ang. vel. / rad s${}^{-1}$")
+    axes[2][0].set_ylabel(r"lin. acc. / m s${}^{-2}$")
+    axes[3][0].set_ylabel(r"ang. acc. / rad s${}^{-2}$")
+    for idx, traj_label_tuple in enumerate(list_traj_label_tuple):
+        traj_zo = traj_label_tuple[1]
+        traj_u = traj_label_tuple[2]
+        ts = np.arange(0, traj_zo.shape[0]) * cfg.delta_t
+        axes[0][idx].plot(ts, traj_zo[:, RobotState.VEL.value], color="tab:blue")
+        axes[0][idx].set_title(traj_label_tuple[0])
+        axes[1][idx].plot(ts, traj_zo[:, RobotState.OMEGA.value], color="tab:blue")
+        axes[2][idx].plot(ts, traj_u[:, 0], color="tab:blue")
+        axes[3][idx].plot(ts, traj_u[:, 1], color="tab:blue")
+
+    fig_filename = os.path.join("figures", f"diff_drive_sim_vel_acc_trajectories.pdf")
     plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
     print(f"stored figure in {fig_filename}")
 

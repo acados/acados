@@ -147,7 +147,7 @@ class ZoroMPCSolver:
         zoro_description.idx_uh_e_t = []
         zoro_description.output_P_matrices = output_P_matrices
         zoro_description.zoro_riccati = cfg.zoro_riccati
-        zoro_description.output_riccati_t = output_riccati_t and (cfg.zoro_riccati >= 0)
+        zoro_description.output_riccati_t = (output_riccati_t and (cfg.zoro_riccati >= 0))
         # Note: Align the costs with the cost for reference tracking
         zoro_description.riccati_Qconst_e_mat = cfg.Q_e
         zoro_description.riccati_Qconst_mat = cfg.Q * cfg.delta_t

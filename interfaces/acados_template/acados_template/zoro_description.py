@@ -99,7 +99,7 @@ class ZoroDescription:
     # Outputs:
     output_P_matrices: bool = False
     """Determines if the matrices P_k are outputs of the custom update function"""
-    output_riccati_t: bool = True
+    output_riccati_t: bool = False
     """Determines if the computation time of riccati recursion are outputs of the custom update function"""
 
     data_size: int = 0

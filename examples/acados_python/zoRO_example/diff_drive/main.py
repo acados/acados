@@ -32,7 +32,7 @@ import matplotlib.pyplot as plt
 
 from diff_drive_zoro_mpc import ZoroMPCSolver
 from mpc_parameters import MPCParam, PathTrackingParam
-from diff_drive_utils import plot_timings, plot_trajectory, compute_min_dis, get_results_filename, store_results, load_results, plot_timing_comparison
+from diff_drive_utils import plot_timings, plot_trajectory, compute_min_dis, get_results_filename, store_results, load_results, plot_timing_comparison, plot_multiple_trajectories
 from nominal_path_tracking_casadi import NominalPathTrackingSolver
 from track_spline import TrackSpline
 
@@ -92,6 +92,7 @@ def run_closed_loop_simulation(use_custom_update: bool, zoro_riccati: int, n_exe
         # closed loop mpc
         traj_zo = np.zeros((N_SIM+1, cfg_zo.nx))
         traj_zo[0,:] = path_tracking_solver.x_robot_ref[0,:]
+        traj_u = np.zeros((N_SIM+1, cfg_zo.nu))
         for i_sim in range(N_SIM):
             x_ref_interp, u_ref_interp = path_tracking_solver.interpolate_reference_trajectory(robot_state=traj_zo[i_sim,:])
             u_opt, status = zoroMPC.solve(x_current=traj_zo[i_sim, :], y_ref = np.hstack((x_ref_interp, u_ref_interp)), \
@@ -124,6 +125,7 @@ def run_closed_loop_simulation(use_custom_update: bool, zoro_riccati: int, n_exe
                     print("Failure when resolving OCP.")
 
             # print(i_sim, u_opt, traj_zo[i_sim,:2])
+            traj_u[i_sim, :] = u_opt
             traj_zo[i_sim+1,:] = I(x0=traj_zo[i_sim, :], p=u_opt)['xf'].full().flatten()
             traj_zo[i_sim+1,:] += process_noise[i_sim,:]
             min_dist = compute_min_dis(cfg=cfg_zo, s=traj_zo[i_sim+1,:])
@@ -145,6 +147,7 @@ def run_closed_loop_simulation(use_custom_update: bool, zoro_riccati: int, n_exe
     results = {
         "timings": timings,
         "trajectory": traj_zo,
+        "trajectory_input": traj_u,
         "ref_trajectory": path_tracking_solver.x_robot_ref,
         "cfg_zo": cfg_zo
     }
@@ -221,6 +224,33 @@ def plot_result_trajectory(n_executions: int, use_custom_update=True, zoro_ricca
             fig_name_concat = "_MPC_riccatiHessianV2"
     plot_trajectory(results['cfg_zo'], results['ref_trajectory'], results['trajectory'], fig_name_concat=fig_name_concat)
 
+
+def closed_loop_trajectories_comparison(n_executions: int, list_zoro_riccati:list):
+    list_traj_label_tuple = []
+    traj_ref = None
+    cfg_zo = None
+    for zoro_riccati in list_zoro_riccati:
+        results_filename = get_results_filename(use_custom_update=True, zoro_riccati=zoro_riccati, n_executions=n_executions)
+        results = load_results(results_filename)
+        if traj_ref is None:
+            traj_ref = results['ref_trajectory'].copy()
+            cfg_zo = results['cfg_zo']
+        else:
+            if not np.allclose(traj_ref, results['ref_trajectory']):
+                raise Exception("The reference trajectories are different.")
+        match zoro_riccati:
+            case -1:
+                label = "fixedK"
+            case 0:
+                label = "riccatiFixedQuad"
+            case 1:
+                label = "riccatiHessianV1"
+            case 2:
+                label = "riccatiHessianV2"
+        list_traj_label_tuple.append((label, results['trajectory'], results['trajectory_input']))
+    plot_multiple_trajectories(cfg_zo, traj_ref, list_traj_label_tuple, closed_loop=True)
+
+
 def compare_results(n_executions: int, zoro_riccati:int=0):
     results1 = load_results(get_results_filename(use_custom_update=True, zoro_riccati=zoro_riccati, n_executions=n_executions))
     results2 = load_results(get_results_filename(use_custom_update=False, zoro_riccati=zoro_riccati, n_executions=n_executions))
@@ -282,6 +312,7 @@ if __name__ == "__main__":
     run_closed_loop_simulation(use_custom_update=True, zoro_riccati=2, n_executions=n_executions)
     plot_result_trajectory(n_executions=n_executions, use_custom_update=True, zoro_riccati=2)
 
+    closed_loop_trajectories_comparison(n_executions=n_executions, list_zoro_riccati=[-1, 0, 1, 2])
     timing_comparison(n_executions=n_executions)
 
     solve_single_zoro_problem_visualize_uncertainty(zoro_riccati=-1,)
