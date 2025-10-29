@@ -94,7 +94,7 @@ class ZoroDescription:
     In case this is used W_k = W + W_{add}^k.
     """
     zoro_riccati: int = -1
-    zoro_riccati_Hessian_tau: float = 1e-2
+    zoro_riccati_Hessian_tau: float = 1.0
 
     # Outputs:
     output_P_matrices: bool = False
