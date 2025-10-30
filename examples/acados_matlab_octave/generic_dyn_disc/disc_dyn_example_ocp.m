@@ -28,21 +28,11 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 
 
-
-% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
-% as well as a new interface (>= v0.4.0).
-
-% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
-% with the examples that have been ported to the new interface already.
-% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
-
-
 clear all; clc;
 check_acados_requirements()
-addpath('../linear_mass_spring_model/');
 
 %% acados ocp model
-model = linear_mass_spring_model();
+model = get_linear_mass_spring_model();
 nx = length(model.x);
 nu = length(model.u);
 
