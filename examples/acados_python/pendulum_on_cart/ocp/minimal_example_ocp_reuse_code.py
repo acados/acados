@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 # Minimal example showing how to reuse the exported c-code with
 # different time-steps.
 #
