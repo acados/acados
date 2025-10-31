@@ -38,11 +38,15 @@ class AcadosOcpRosOptions(AcadosRosBaseOptions):
         self.namespace: str = ""
         self.archtype: str = ArchType.NODE.value
 
+        # Topics
         self.__control_topic: str = "ocp_control"
         self.__state_topic: str = "ocp_state"
         self.__parameters_topic: str = "ocp_params"
         self.__reference_topic: str = "ocp_reference"
+
+        # Other options
         self.__threads: int = 1
+        self.__publish_control_sequence: bool = False
 
     @property
     def control_topic(self) -> str:
@@ -63,6 +67,10 @@ class AcadosOcpRosOptions(AcadosRosBaseOptions):
     @property
     def threads(self) -> str:
         return self.__threads
+
+    @property
+    def publish_control_sequence(self) -> bool:
+        return self.__publish_control_sequence
 
     @control_topic.setter
     def control_topic(self, value: str):
@@ -94,6 +102,12 @@ class AcadosOcpRosOptions(AcadosRosBaseOptions):
             raise TypeError('Invalid threads value, expected int.\n')
         self.__threads = value
 
+    @publish_control_sequence.setter
+    def publish_control_sequence(self, value: bool):
+        if not isinstance(value, bool):
+            raise TypeError('Invalid publish_control_sequence value, expected bool.\n')
+        self.__publish_control_sequence = value
+
     def to_dict(self) -> dict:
         return super().to_dict() | {
             "control_topic": self.control_topic,
@@ -101,4 +115,5 @@ class AcadosOcpRosOptions(AcadosRosBaseOptions):
             "parameters_topic": self.parameters_topic,
             "reference_topic": self.reference_topic,
             "threads": self.threads,
+            "publish_control_sequence": self.publish_control_sequence,
         }
