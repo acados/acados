@@ -41,22 +41,29 @@ class ZoroDescription:
 
     Used to render custom updated zoRO functions in acados.
 
+    Implementation described in:
+    "Efficient Zero-Order Robust Optimization for Real-Time Model Predictive Control with acados"
+    - J. Frey, Y. Gao, F. Messerer, A. Lahr, M. N Zeilinger, M. Diehl, Proceedings of the European Control Conference (ECC) 2024
+
     Limitations:
-    - Updating C, D matrices not supported yet.
+    - Updating C, D, lg, ug matrices not supported yet.
+    - Convex-over-nonlinear constraint type (BGP) not supported yet.
 
     """
     backoff_scaling_gamma: float = 1.0
     """backoff scaling factor, for stochastic MPC"""
     fdbk_K_mat: np.ndarray = None
     """constant feedback gain matrix K"""
+
     riccati_Qconst_mat: np.ndarray = None
-    """matrix Qconst for computing the riccati"""
+    """matrix Qconst for computing the Riccati"""
     riccati_Qconst_e_mat: np.ndarray = None
-    """matrix Qconst_e for computing the riccati"""
+    """matrix Qconst_e for computing the Riccati"""
     riccati_Rconst_mat: np.ndarray = None
-    """matrix Rconst for computing the riccati"""
+    """matrix Rconst for computing the Riccati"""
     riccati_Sconst_mat: np.ndarray = None
-    """matrix Sconst for computing the riccati"""
+    """matrix Sconst for computing the Riccati"""
+
     unc_jac_G_mat: np.ndarray = None    # default: an identity matrix
     """matrix G, describes how noise enters the dynamics"""
     P0_mat: np.ndarray = None
@@ -76,13 +83,22 @@ class ZoroDescription:
     idx_ubu_t: list = field(default_factory=list)
     """Indices of constraints to be tightened within the upper bounds on u for intermediate shooting nodes 1,...,N-1"""
     idx_lg_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the upper bounds on general linear constraints for intermediate shooting nodes 1,...,N-1"""
     idx_ug_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the lower bounds on general linear constraints for intermediate shooting nodes 1,...,N-1"""
     idx_lg_e_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the lower bounds on general linear constraints for terminal node"""
     idx_ug_e_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the upper bounds on general linear constraints for terminal node"""
     idx_lh_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the lower bounds on nonlinear constraints for intermediate shooting nodes 1,...,N-1"""
     idx_uh_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the upper bounds on nonlinear constraints for intermediate shooting nodes 1,...,N-1"""
     idx_lh_e_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the lower bounds on general nonlinear constraints for terminal node"""
     idx_uh_e_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the lower bounds on upper nonlinear constraints for terminal node"""
+
     # Inputs:
     input_P0_diag: bool = False
     """Determines if diag(P0) is an input to the custom update function"""
@@ -104,7 +120,7 @@ class ZoroDescription:
     output_P_matrices: bool = False
     """Determines if the matrices P_k are outputs of the custom update function"""
     output_riccati_t: bool = False
-    """Determines if the computation time of riccati recursion are outputs of the custom update function"""
+    """Determines if the computation time of Riccati recursion are outputs of the custom update function"""
 
     data_size: int = 0
     """size of data vector when calling custom update, computed automatically"""
