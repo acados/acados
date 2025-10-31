@@ -146,8 +146,8 @@ class ZoroMPCSolver:
         zoro_description.idx_lh_e_t = list(range(0, cfg.num_obs))
         zoro_description.idx_uh_e_t = []
         zoro_description.output_P_matrices = output_P_matrices
-        zoro_description.zoro_riccati = cfg.zoro_riccati
-        zoro_description.output_riccati_t = (output_riccati_t and (cfg.zoro_riccati >= 0))
+        zoro_description.feedback_optimization_mode = cfg.feedback_optimization_mode
+        zoro_description.output_riccati_t = (output_riccati_t and (cfg.feedback_optimization_mode != "CONSTANT_FEEDBACK"))
         # Note: Align the costs with the cost for reference tracking
         zoro_description.riccati_Qconst_e_mat = cfg.Q_e
         zoro_description.riccati_Qconst_mat = cfg.Q * cfg.delta_t
@@ -233,7 +233,7 @@ class ZoroMPCSolver:
         for i_stage in range(self.cfg.n_hrzn+1):
             self.acados_ocp_solver.set(i_stage,"p", obs_position)
 
-        if self.ocp.zoro_description.zoro_riccati == -1:
+        if self.ocp.zoro_description.feedback_optimization_mode == "CONSTANT_FEEDBACK":
             riccati_K = [self.cfg.fdbk_K_mat] * self.cfg.n_hrzn
 
         if not self.initialized:
@@ -291,7 +291,7 @@ class ZoroMPCSolver:
                 # self.acados_ocp_solver.print_statistics()
             else:
                 t_start = process_time()
-                if self.ocp.zoro_description.zoro_riccati >= 0:
+                if self.ocp.zoro_description.feedback_optimization_mode != "CONSTANT_FEEDBACK":
                     riccati_K, _ = self.riccati_recursion()
                     self.riccati_t += process_time() - t_start
                 self.propagate_and_update(obs_position=obs_position, obs_radius=obs_radius, p0_mat=self.cfg.P0_mat, riccati_K=riccati_K)

@@ -38,10 +38,10 @@ from track_spline import TrackSpline
 
 N_SIM = 175
 
-def run_closed_loop_simulation(use_custom_update: bool, zoro_riccati: int, n_executions: int = 1):
+def run_closed_loop_simulation(use_custom_update: bool, feedback_optimization_mode: str, n_executions: int = 1):
     cfg_zo = MPCParam()
     cfg_zo.use_custom_update = use_custom_update
-    cfg_zo.zoro_riccati = zoro_riccati
+    cfg_zo.feedback_optimization_mode = feedback_optimization_mode
     zoroMPC = ZoroMPCSolver(cfg_zo)
 
     # Differential equation of the model
@@ -153,16 +153,16 @@ def run_closed_loop_simulation(use_custom_update: bool, zoro_riccati: int, n_exe
     }
 
 
-    results_filename = get_results_filename(use_custom_update, zoro_riccati, n_executions)
+    results_filename = get_results_filename(use_custom_update, feedback_optimization_mode, n_executions)
     store_results(results_filename, results)
     del zoroMPC
 
 
 
-def solve_single_zoro_problem_visualize_uncertainty(zoro_riccati:int=0, converg_thr:float=1e-7, num_nominal4init:int=1):
+def solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode: str="CONSTANT_FEEDBACK", converg_thr:float=1e-7, num_nominal4init:int=1):
     cfg_zo = MPCParam()
     cfg_zo.use_custom_update = True
-    cfg_zo.zoro_riccati = zoro_riccati
+    cfg_zo.feedback_optimization_mode = feedback_optimization_mode
     cfg_zo.zoRO_iter = 50
     zoroMPC = ZoroMPCSolver(cfg_zo, output_P_matrices=True)
 
@@ -197,40 +197,22 @@ def solve_single_zoro_problem_visualize_uncertainty(zoro_riccati:int=0, converg_
 
     print(f"x_opt = {x_opt}")
     print(f"status = {status}")
-    match zoro_riccati:
-        case -1:
-            fig_name_concat = "_OCP_fixedK"
-        case 0:
-            fig_name_concat = "_OCP_riccatiFixedQuad"
-        case 1:
-            fig_name_concat = "_OCP_riccatiHessianV1"
-        case 2:
-            fig_name_concat = "_OCP_riccatiHessianV2"
     plot_trajectory(cfg_zo, x_ref_interp, x_opt,
-                    P_matrices=zoroMPC.ocp.zoro_description.backoff_scaling_gamma**2 * zoroMPC.P_mats, closed_loop=False, fig_name_concat=fig_name_concat)
+                    P_matrices=zoroMPC.ocp.zoro_description.backoff_scaling_gamma**2 * zoroMPC.P_mats, closed_loop=False, fig_name_concat=f"OCP_{feedback_optimization_mode}")
 
 
-def plot_result_trajectory(n_executions: int, use_custom_update=True, zoro_riccati:int=0):
-    results_filename = get_results_filename(use_custom_update, zoro_riccati, n_executions)
+def plot_result_trajectory(n_executions: int, use_custom_update=True, feedback_optimization_mode: str="CONSTANT_FEEDBACK"):
+    results_filename = get_results_filename(use_custom_update, feedback_optimization_mode, n_executions)
     results = load_results(results_filename)
-    match zoro_riccati:
-        case -1:
-            fig_name_concat = "_MPC_fixedK"
-        case 0:
-            fig_name_concat = "_MPC_riccatiFixedQuad"
-        case 1:
-            fig_name_concat = "_MPC_riccatiHessianV1"
-        case 2:
-            fig_name_concat = "_MPC_riccatiHessianV2"
-    plot_trajectory(results['cfg_zo'], results['ref_trajectory'], results['trajectory'], fig_name_concat=fig_name_concat)
+    plot_trajectory(results['cfg_zo'], results['ref_trajectory'], results['trajectory'], fig_name_concat=f"MPC_{feedback_optimization_mode}")
 
 
-def closed_loop_trajectories_comparison(n_executions: int, list_zoro_riccati:list):
+def closed_loop_trajectories_comparison(n_executions: int, list_feedback_optimization_mode:list):
     list_traj_label_tuple = []
     traj_ref = None
     cfg_zo = None
-    for zoro_riccati in list_zoro_riccati:
-        results_filename = get_results_filename(use_custom_update=True, zoro_riccati=zoro_riccati, n_executions=n_executions)
+    for feedback_optimization_mode in list_feedback_optimization_mode:
+        results_filename = get_results_filename(use_custom_update=True, feedback_optimization_mode=feedback_optimization_mode, n_executions=n_executions)
         results = load_results(results_filename)
         if traj_ref is None:
             traj_ref = results['ref_trajectory'].copy()
@@ -238,46 +220,29 @@ def closed_loop_trajectories_comparison(n_executions: int, list_zoro_riccati:lis
         else:
             if not np.allclose(traj_ref, results['ref_trajectory']):
                 raise Exception("The reference trajectories are different.")
-        match zoro_riccati:
-            case -1:
-                label = "fixedK"
-            case 0:
-                label = "riccatiFixedQuad"
-            case 1:
-                label = "riccatiHessianV1"
-            case 2:
-                label = "riccatiHessianV2"
+        label = feedback_optimization_mode
         list_traj_label_tuple.append((label, results['trajectory'], results['trajectory_input']))
     plot_multiple_trajectories(cfg_zo, traj_ref, list_traj_label_tuple, closed_loop=True)
 
 
-def compare_results(n_executions: int, zoro_riccati:int=0):
-    results1 = load_results(get_results_filename(use_custom_update=True, zoro_riccati=zoro_riccati, n_executions=n_executions))
-    results2 = load_results(get_results_filename(use_custom_update=False, zoro_riccati=zoro_riccati, n_executions=n_executions))
+def compare_results(n_executions: int, feedback_optimization_mode:int=0):
+    results1 = load_results(get_results_filename(use_custom_update=True, feedback_optimization_mode=feedback_optimization_mode, n_executions=n_executions))
+    results2 = load_results(get_results_filename(use_custom_update=False, feedback_optimization_mode=feedback_optimization_mode, n_executions=n_executions))
     traj_diff = results1['trajectory'] - results2['trajectory']
     error = np.max(np.abs(traj_diff))
     print(f"trajectory diff after closed loop simulation {error:.2e}")
     tol = 1.5*1e-5
     if error > tol:
         raise Exception(f"zoRO implementations differ too much, error = {error:.2e} > tol = {tol:.2e}")
-    
+
 def timing_comparison(n_executions: int):
     # keys = "zoRO-24-riccati", "zoRO-24", "zoRO-21-riccati", "zoRO-21"
     dict_results = {}
 
-    for _, tuple in enumerate(zip([True, True, True, True, False, False], [0, -1, 1, 2, 0, -1])):
-        results_filename = get_results_filename(use_custom_update=tuple[0], zoro_riccati=tuple[1], n_executions=n_executions)
+    for _, tuple in enumerate(zip([True, True, True, True, False, False], ["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_FEEDBACK", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2", "RICCATI_CONSTANT_FEEDBACK", "CONSTANT_FEEDBACK"])):
+        results_filename = get_results_filename(use_custom_update=tuple[0], feedback_optimization_mode=tuple[1], n_executions=n_executions)
         results = load_results(results_filename)
-        match tuple[1]:
-            case -1:
-                fig_name_concat = "_fixedK"
-            case 0:
-                fig_name_concat = "_riccatiFixedQuad"
-            case 1:
-                fig_name_concat = "_riccatiHessianV1"
-            case 2:
-                fig_name_concat = "_riccatiHessianV2"
-        plot_timings(results['timings'], use_custom_update=tuple[0], fig_name_concat=fig_name_concat)
+        plot_timings(results['timings'], use_custom_update=tuple[0], fig_name_concat=tuple[1])
         temp_key = "zoRO-24" if tuple[0] else "zoRO-21"
         if tuple[1] == 0:
             temp_key += "-riccati"
@@ -295,27 +260,22 @@ def timing_comparison(n_executions: int):
 
 if __name__ == "__main__":
     n_executions = 2
-    # Pre-computed Feedback
-    run_closed_loop_simulation(use_custom_update=True, zoro_riccati=-1, n_executions=n_executions)
-    run_closed_loop_simulation(use_custom_update=False, zoro_riccati=-1, n_executions=n_executions)
-    plot_result_trajectory(n_executions=n_executions, use_custom_update=True, zoro_riccati=-1)
-    compare_results(n_executions=n_executions, zoro_riccati=-1)
-    # Feedback gain computed using riccati with constant cost matrices
-    run_closed_loop_simulation(use_custom_update=True, zoro_riccati=0, n_executions=n_executions)
-    run_closed_loop_simulation(use_custom_update=False, zoro_riccati=0, n_executions=n_executions)
-    plot_result_trajectory(n_executions=n_executions, use_custom_update=True, zoro_riccati=0)
-    compare_results(n_executions=n_executions, zoro_riccati=0)
-    # Feedback gain computed using riccati with sum of constant cost matrices and Hessian of tightened constraints weighted by 1/h**2
-    run_closed_loop_simulation(use_custom_update=True, zoro_riccati=1, n_executions=n_executions)
-    plot_result_trajectory(n_executions=n_executions, use_custom_update=True, zoro_riccati=1)
-    # Feedback gain computed using riccati with sum of constant cost matrices and Hessian of tightened constraints weighted by -1/(h*backoff*2)
-    run_closed_loop_simulation(use_custom_update=True, zoro_riccati=2, n_executions=n_executions)
-    plot_result_trajectory(n_executions=n_executions, use_custom_update=True, zoro_riccati=2)
+    for feedback_optimization_mode in ["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_FEEDBACK"]:
+        run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode=feedback_optimization_mode, n_executions=n_executions)
+        run_closed_loop_simulation(use_custom_update=False, feedback_optimization_mode=feedback_optimization_mode, n_executions=n_executions)
+        plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode=feedback_optimization_mode)
+        compare_results(n_executions=n_executions, feedback_optimization_mode=feedback_optimization_mode)
+    # # Feedback gain computed using riccati with sum of constant cost matrices and Hessian of tightened constraints weighted by 1/h**2
+    # run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode=1, n_executions=n_executions)
+    # plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode=1)
+    # # Feedback gain computed using riccati with sum of constant cost matrices and Hessian of tightened constraints weighted by -1/(h*backoff*2)
+    # run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode=2, n_executions=n_executions)
+    # plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode=2)
 
-    closed_loop_trajectories_comparison(n_executions=n_executions, list_zoro_riccati=[-1, 0, 1, 2])
-    timing_comparison(n_executions=n_executions)
+    # closed_loop_trajectories_comparison(n_executions=n_executions, list_feedback_optimization_mode=[-1, 0, 1, 2])
+    # timing_comparison(n_executions=n_executions)
 
-    solve_single_zoro_problem_visualize_uncertainty(zoro_riccati=-1,)
-    solve_single_zoro_problem_visualize_uncertainty(zoro_riccati=0, )
-    solve_single_zoro_problem_visualize_uncertainty(zoro_riccati=1, )
-    solve_single_zoro_problem_visualize_uncertainty(zoro_riccati=2, )
+    # solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode=-1,)
+    # solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode=0, )
+    # solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode=1, )
+    # solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode=2, )

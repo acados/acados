@@ -99,7 +99,7 @@ class AcadosOcp:
         self.solver_options = AcadosOcpOptions()
         """Solver Options, type :py:class:`acados_template.acados_ocp_options.AcadosOcpOptions`"""
 
-        self.zoro_description = None
+        self.zoro_description: Optional[ZoroDescription] = None
         """zoRO - zero order robust optimization - description: for advanced users."""
 
         self.acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/') # the replace part is important on Windows for CMake

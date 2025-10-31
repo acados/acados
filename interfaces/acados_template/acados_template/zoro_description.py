@@ -26,10 +26,13 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.;
 
+from enum import Enum
 from dataclasses import dataclass, field
 import numpy as np
 from .acados_dims import AcadosOcpDims
 
+
+FEEDBACK_OPTIMIZATION_MODES = ["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_FEEDBACK", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"]
 
 @dataclass
 class ZoroDescription:
@@ -52,6 +55,22 @@ class ZoroDescription:
     """
     backoff_scaling_gamma: float = 1.0
     """backoff scaling factor, for stochastic MPC"""
+
+
+    feedback_optimization_mode: str = "CONSTANT_FEEDBACK"
+    """Type of feedback optimization used in zoRO scheme.
+
+    String in: "CONSTANT_FEEDBACK", "RICCATI_CONSTANT_FEEDBACK", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"
+
+    - CONSTANT_FEEDBACK: constant feedback gain K
+    - RICCATI_CONSTANT_FEEDBACK: feedback gains K computed from a Riccati recursion with constant matrices
+    - RICCATI_BARRIER_1: feedback gains K computed from a Riccati recursion with barrier contributions added to the varient in RICCATI_CONSTANT_FEEDBACK, version 1
+    - RICCATI_BARRIER_2: feedback gains K computed from a Riccati recursion with barrier contributions added to the varient in RICCATI_CONSTANT_FEEDBACK, version 2
+    """
+
+    zoro_riccati_Hessian_tau: float = 1.0
+    """Barrier parameter tau used in Riccati feedback computation, only relevant if feedback_optimization_mode is RICCATI_BARRIER_1 or RICCATI_BARRIER_2."""
+
     fdbk_K_mat: np.ndarray = None
     """constant feedback gain matrix K"""
 
@@ -113,8 +132,6 @@ class ZoroDescription:
 
     In case this is used W_k = W + W_{add}^k.
     """
-    zoro_riccati: int = -1
-    zoro_riccati_Hessian_tau: float = 1.0
 
     # Outputs:
     output_P_matrices: bool = False
@@ -147,11 +164,11 @@ class ZoroDescription:
 
         if self.input_P0_diag and self.input_P0:
             raise Exception("Only one of input_P0_diag and input_P0 can be True")
-        if self.zoro_riccati < -1 or self.zoro_riccati > 2:
-            raise Exception("mode of zoro riccati not supported. should be {-1, 0, 1, 2}.")
-        if self.zoro_riccati >= 0:
+        if self.feedback_optimization_mode not in FEEDBACK_OPTIMIZATION_MODES:
+            raise Exception(f"feedback_optimization_mode should be in {', '.join(FEEDBACK_OPTIMIZATION_MODES)}, got {self.feedback_optimization_mode}.")
+        if self.feedback_optimization_mode != "CONSTANT_FEEDBACK":
             if self.riccati_Qconst_mat is None or self.riccati_Rconst_mat is None or self.riccati_Sconst_mat is None:
-                raise Exception("riccati_Qconst_mat, riccati_Rconst_mat, riccati_Sconst_mat should not be None when zoro_riccati is enabled (>=0)")
+                raise Exception("riccati_Qconst_mat, riccati_Rconst_mat, riccati_Sconst_mat should not be None when feedback_optimization_mode != CONSTANT_FEEDBACK.")
             if self.riccati_Qconst_mat.shape != (dims.nx, dims.nx):
                 raise Exception("The shape of riccati_Qconst_mat should be [nx*nx].")
             if self.riccati_Rconst_mat.shape != (dims.nu, dims.nu):

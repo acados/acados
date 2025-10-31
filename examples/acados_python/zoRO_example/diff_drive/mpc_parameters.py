@@ -56,7 +56,7 @@ class MPCParam():
 
     # feedback gain scalar parameter (full structured matrix defined below)
     fdbk_k: float=6.0
-    zoro_riccati: int = -1
+    feedback_optimization_mode: str = "CONSTANT_FEEDBACK"
     # -1: Pre-computed Feedback
     #  0: Feedback gain computed using riccati with constant cost matrices
     #  1: Feedback gain computed using riccati with sum of constant cost matrices and Hessian of tightened constraints weighted by 1/h**2
