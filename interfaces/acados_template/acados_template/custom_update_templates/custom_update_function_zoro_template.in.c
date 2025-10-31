@@ -579,81 +579,81 @@ for (int ii = 0; ii < N; ii++)
     {%- endfor %}
 {%- endfor %}
 
-// Set constant values of dct_dux (nlbu_t + nlbx_t + nlg_t + nlh_t + nubu_t + nubx_t + nug_t + nuh_t, nu + nx)
-// the gradients of u is on left of x
-blasfeo_dgese({{zoro_description.nlbu_t}} + {{zoro_description.nlbx_t}} + {{zoro_description.nlg_t}} + {{zoro_description.nlh_t}}
-        + {{zoro_description.nubu_t}} + {{zoro_description.nubx_t}} + {{zoro_description.nug_t}} + {{zoro_description.nuh_t}}, nx + nu, 0.0,
-        &custom_mem->dct_dux, 0, 0);
-blasfeo_dgese({{zoro_description.nlbx_e_t}} + {{zoro_description.nlg_e_t}} + {{zoro_description.nlh_e_t}}
-        + {{zoro_description.nubx_e_t}} + {{zoro_description.nug_e_t}} + {{zoro_description.nuh_e_t}}, nx, 0.0,
-        &custom_mem->dcet_dx, 0, 0);
-int ir = 0;
-// lbu
-{%- for it in zoro_description.idx_lbu_t %}
-blasfeo_dgein1(1.0, &custom_mem->dct_dux, ir, custom_mem->idxbu[{{it}}]);
-ir += 1;
-{%- endfor %}
-// lbx
-{%- for it in zoro_description.idx_lbx_t %}
-blasfeo_dgein1(1.0, &custom_mem->dct_dux, ir, nu + custom_mem->idxbx[{{it}}]);
-ir += 1;
-{%- endfor %}
-// lg
-{%- for it in zoro_description.idx_lg_t %}
-blasfeo_dgecp(1, nu, &custom_mem->Dg_mat, it, 0, &custom_mem->dct_dux, ir, 0);
-blasfeo_dgecp(1, nx, &custom_mem->Cg_mat, it, 0, &custom_mem->dct_dux, ir, nu);
-ir += 1;
-{%- endfor %}
-// lh
-ir += {{zoro_description.nlh_t}};
-// ubu
-{%- for it in zoro_description.idx_ubu_t %}
-blasfeo_dgein1(1.0, &custom_mem->dct_dux, ir, custom_mem->idxbu[{{it}}]);
-ir += 1;
-{%- endfor %}
-// ubx
-{%- for it in zoro_description.idx_ubx_t %}
-blasfeo_dgein1(1.0, &custom_mem->dct_dux, ir, nu + custom_mem->idxbx[{{it}}]);
-ir += 1;
-{%- endfor %}
-// ug
-{%- for it in zoro_description.idx_ug_t %}
-blasfeo_dgecp(1, nu, &custom_mem->Dg_mat, it, 0, &custom_mem->dct_dux, ir, 0);
-blasfeo_dgecp(1, nx, &custom_mem->Cg_mat, it, 0, &custom_mem->dct_dux, ir, nu);
-ir += 1;
-{%- endfor %}
+    // Set constant values of dct_dux (nlbu_t + nlbx_t + nlg_t + nlh_t + nubu_t + nubx_t + nug_t + nuh_t, nu + nx)
+    // the gradients of u is on left of x
+    blasfeo_dgese({{zoro_description.nlbu_t}} + {{zoro_description.nlbx_t}} + {{zoro_description.nlg_t}} + {{zoro_description.nlh_t}}
+            + {{zoro_description.nubu_t}} + {{zoro_description.nubx_t}} + {{zoro_description.nug_t}} + {{zoro_description.nuh_t}}, nx + nu, 0.0,
+            &custom_mem->dct_dux, 0, 0);
+    blasfeo_dgese({{zoro_description.nlbx_e_t}} + {{zoro_description.nlg_e_t}} + {{zoro_description.nlh_e_t}}
+            + {{zoro_description.nubx_e_t}} + {{zoro_description.nug_e_t}} + {{zoro_description.nuh_e_t}}, nx, 0.0,
+            &custom_mem->dcet_dx, 0, 0);
+    int ir = 0;
+    // lbu
+    {%- for it in zoro_description.idx_lbu_t %}
+    blasfeo_dgein1(1.0, &custom_mem->dct_dux, ir, custom_mem->idxbu[{{it}}]);
+    ir += 1;
+    {%- endfor %}
+    // lbx
+    {%- for it in zoro_description.idx_lbx_t %}
+    blasfeo_dgein1(1.0, &custom_mem->dct_dux, ir, nu + custom_mem->idxbx[{{it}}]);
+    ir += 1;
+    {%- endfor %}
+    // lg
+    {%- for it in zoro_description.idx_lg_t %}
+    blasfeo_dgecp(1, nu, &custom_mem->Dg_mat, it, 0, &custom_mem->dct_dux, ir, 0);
+    blasfeo_dgecp(1, nx, &custom_mem->Cg_mat, it, 0, &custom_mem->dct_dux, ir, nu);
+    ir += 1;
+    {%- endfor %}
+    // lh
+    ir += {{zoro_description.nlh_t}};
+    // ubu
+    {%- for it in zoro_description.idx_ubu_t %}
+    blasfeo_dgein1(1.0, &custom_mem->dct_dux, ir, custom_mem->idxbu[{{it}}]);
+    ir += 1;
+    {%- endfor %}
+    // ubx
+    {%- for it in zoro_description.idx_ubx_t %}
+    blasfeo_dgein1(1.0, &custom_mem->dct_dux, ir, nu + custom_mem->idxbx[{{it}}]);
+    ir += 1;
+    {%- endfor %}
+    // ug
+    {%- for it in zoro_description.idx_ug_t %}
+    blasfeo_dgecp(1, nu, &custom_mem->Dg_mat, it, 0, &custom_mem->dct_dux, ir, 0);
+    blasfeo_dgecp(1, nx, &custom_mem->Cg_mat, it, 0, &custom_mem->dct_dux, ir, nu);
+    ir += 1;
+    {%- endfor %}
 
-ir = 0;
-// lbx_e
-{%- for it in zoro_description.idx_lbx_e_t %}
-blasfeo_dgein1(1.0, &custom_mem->dcet_dx, ir, custom_mem->idxbx[{{it}}]);
-ir += 1;
-{%- endfor %}
-// lg_e
-{%- for it in zoro_description.idx_lg_e_t %}
-blasfeo_dgecp(1, nx, &custom_mem->Cg_e_mat, it, 0, &custom_mem->dcet_dx, ir, 0);
-ir += 1;
-{%- endfor %}
-// lh_e
-ir += {{zoro_description.nlh_e_t}};
-// ubx_e
-{%- for it in zoro_description.idx_ubx_e_t %}
-blasfeo_dgein1(1.0, &custom_mem->dcet_dx, ir, custom_mem->idxbx[{{it}}]);
-ir += 1;
-{%- endfor %}
-// ug_e
-{%- for it in zoro_description.idx_ug_e_t %}
-blasfeo_dgecp(1, nx, &custom_mem->Cg_e_mat, it, 0, &custom_mem->dcet_dx, ir, 0);
-ir += 1;
-{%- endfor %}
+    ir = 0;
+    // lbx_e
+    {%- for it in zoro_description.idx_lbx_e_t %}
+    blasfeo_dgein1(1.0, &custom_mem->dcet_dx, ir, custom_mem->idxbx[{{it}}]);
+    ir += 1;
+    {%- endfor %}
+    // lg_e
+    {%- for it in zoro_description.idx_lg_e_t %}
+    blasfeo_dgecp(1, nx, &custom_mem->Cg_e_mat, it, 0, &custom_mem->dcet_dx, ir, 0);
+    ir += 1;
+    {%- endfor %}
+    // lh_e (just add offset)
+    ir += {{zoro_description.nlh_e_t}};
+    // ubx_e
+    {%- for it in zoro_description.idx_ubx_e_t %}
+    blasfeo_dgein1(1.0, &custom_mem->dcet_dx, ir, custom_mem->idxbx[{{it}}]);
+    ir += 1;
+    {%- endfor %}
+    // ug_e
+    {%- for it in zoro_description.idx_ug_e_t %}
+    blasfeo_dgecp(1, nx, &custom_mem->Cg_e_mat, it, 0, &custom_mem->dcet_dx, ir, 0);
+    ir += 1;
+    {%- endfor %}
 
-// fill with some values (needed for HessianV2)
-for (int ii = 0; ii < N; ii++)
-{
-    blasfeo_dvecse(nbu + nbx + ng + nh, 1e-4, &custom_mem->ineq_backoff_sq_buffer[ii], 0);
-}
-blasfeo_dvecse(nbx_e + ng_e + nh_e, 1e-4, &custom_mem->ineq_backoff_sq_buffer[N], 0);
-{%- endif %}
+    // fill with some values (needed for HessianV2)
+    for (int ii = 0; ii < N; ii++)
+    {
+        blasfeo_dvecse(nbu + nbx + ng + nh, 1e-4, &custom_mem->ineq_backoff_sq_buffer[ii], 0);
+    }
+    blasfeo_dvecse(nbx_e + ng_e + nh_e, 1e-4, &custom_mem->ineq_backoff_sq_buffer[N], 0);
+    {%- endif %}
 }
 
 
