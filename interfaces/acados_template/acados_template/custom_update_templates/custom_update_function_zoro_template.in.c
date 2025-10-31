@@ -169,6 +169,8 @@ typedef struct custom_memory
     int offset_W_add_diag;
     int offset_P_out;
 
+    double tau;
+
     void *raw_memory; // Pointer to allocated memory, to be used for freeing
 } custom_memory;
 
@@ -419,6 +421,7 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
     mem->offset_P_out += N * nw;
 {% endif %}
 
+    mem->tau = {{zoro_description.zoro_riccati_Hessian_tau}};
 
     assert((char *) raw_memory + custom_memory_calculate_size(nlp_config, nlp_dims) >= c_ptr);
     mem->raw_memory = raw_memory;
@@ -647,7 +650,7 @@ for (int ii = 0; ii < N; ii++)
     ir += 1;
     {%- endfor %}
 
-    // fill with some values (needed for HessianV2)
+    // fill with some values, but just for very first iteration, when back-offs are not available yet.
     for (int ii = 0; ii < N; ii++)
     {
         blasfeo_dvecse(nbu + nbx + ng + nh, 1e-4, &custom_mem->ineq_backoff_sq_buffer[ii], 0);
@@ -829,8 +832,7 @@ static void update_riccati_quad_matrices(ocp_nlp_solver *solver, ocp_nlp_memory 
     int nx = {{ dims.nx }};
     int nu = {{ dims.nu }};
 
-
-    blasfeo_dgecp({{zoro_description.nlbu_t}} + {{zoro_description.nlbx_t}} + {{zoro_description.nlg_t}} + {{zoro_description.nlh_t}} 
+    blasfeo_dgecp({{zoro_description.nlbu_t}} + {{zoro_description.nlbx_t}} + {{zoro_description.nlg_t}} + {{zoro_description.nlh_t}}
         + {{zoro_description.nubu_t}} + {{zoro_description.nubx_t}} + {{zoro_description.nug_t}} + {{zoro_description.nuh_t}}, nu+nx, &custom_mem->dct_dux, 0, 0,
         &custom_mem->scaled_dct_dux, 0, 0);
 
@@ -842,9 +844,9 @@ static void update_riccati_quad_matrices(ocp_nlp_solver *solver, ocp_nlp_memory 
 {%- for it in zoro_description.idx_lbu_t %}
     temp_nominal_val = custom_mem->d_ineq_val[{{it}}] - sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, {{it}}));
 {%- if zoro_description.zoro_riccati == 1 %}
-    blasfeo_dgesc(1, nu+nx, {{zoro_description.zoro_riccati_Hessian_tau}} / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dct_dux, ir, 0);
+    blasfeo_dgesc(1, nu+nx, custom_mem->tau / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dct_dux, ir, 0);
 {%- else %}
-    blasfeo_dgesc(1, nu+nx, -1.0 * {{zoro_description.zoro_riccati_Hessian_tau}} / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, {{it}}))), &custom_mem->scaled_dct_dux, ir, 0);
+    blasfeo_dgesc(1, nu+nx, -1.0 * custom_mem->tau / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, {{it}}))), &custom_mem->scaled_dct_dux, ir, 0);
 {%- endif %}
     ir += 1;
 {%- endfor %}
@@ -855,9 +857,9 @@ static void update_riccati_quad_matrices(ocp_nlp_solver *solver, ocp_nlp_memory 
 {%- for it in zoro_description.idx_lbx_t %}
     temp_nominal_val = custom_mem->d_ineq_val[{{it}}] - sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + {{it}}));
 {%- if zoro_description.zoro_riccati == 1 %}
-    blasfeo_dgesc(1, nu+nx, {{zoro_description.zoro_riccati_Hessian_tau}} / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dct_dux, ir, 0);
+    blasfeo_dgesc(1, nu+nx, custom_mem->tau / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dct_dux, ir, 0);
 {%- else %}
-    blasfeo_dgesc(1, nu+nx, -1.0 * {{zoro_description.zoro_riccati_Hessian_tau}} / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + {{it}}))), &custom_mem->scaled_dct_dux, ir, 0);
+    blasfeo_dgesc(1, nu+nx, -1.0 * custom_mem->tau / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + {{it}}))), &custom_mem->scaled_dct_dux, ir, 0);
 {%- endif %}
     ir += 1;
 {%- endfor %}
@@ -875,9 +877,9 @@ d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 {%- for it in zoro_description.idx_lg_t %}
     temp_nominal_val = custom_mem->d_ineq_val[{{it}}] - sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + nbx + {{it}}));
 {%- if zoro_description.zoro_riccati == 1 %}
-    blasfeo_dgesc(1, nu+nx, {{zoro_description.zoro_riccati_Hessian_tau}} / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dct_dux, ir, 0);
+    blasfeo_dgesc(1, nu+nx, custom_mem->tau / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dct_dux, ir, 0);
 {%- else %}
-    blasfeo_dgesc(1, nu+nx, -1.0 * {{zoro_description.zoro_riccati_Hessian_tau}} / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + nbx + {{it}}))),  &custom_mem->scaled_dct_dux, ir, 0);
+    blasfeo_dgesc(1, nu+nx, -1.0 * custom_mem->tau / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + nbx + {{it}}))),  &custom_mem->scaled_dct_dux, ir, 0);
 {%- endif %}
     ir += 1;
 {%- endfor %}
@@ -890,9 +892,9 @@ d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
     blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng + {{it}}, ng+nh, &custom_mem->scaled_dct_dux, ir, nu);
     temp_nominal_val = custom_mem->d_ineq_val[ng + {{it}}] - sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + nbx + ng + {{it}}));
 {%- if zoro_description.zoro_riccati == 1 %}
-    blasfeo_dgesc(1, nu+nx, {{zoro_description.zoro_riccati_Hessian_tau}} / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dct_dux, ir, 0);
+    blasfeo_dgesc(1, nu+nx, custom_mem->tau / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dct_dux, ir, 0);
 {%- else %}
-    blasfeo_dgesc(1, nu+nx, -1.0 * {{zoro_description.zoro_riccati_Hessian_tau}} / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + nbx + ng + {{it}}))), &custom_mem->scaled_dct_dux, ir, 0);
+    blasfeo_dgesc(1, nu+nx, -1.0 * custom_mem->tau / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + nbx + ng + {{it}}))), &custom_mem->scaled_dct_dux, ir, 0);
 {%- endif %}
     ir += 1;
 {%- endfor %}
@@ -904,9 +906,9 @@ d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 {%- for it in zoro_description.idx_ubu_t %}
     temp_nominal_val = -custom_mem->d_ineq_val[{{it}}] - sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, {{it}}));
 {%- if zoro_description.zoro_riccati == 1 %}
-    blasfeo_dgesc(1, nu+nx, {{zoro_description.zoro_riccati_Hessian_tau}} / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dct_dux, ir, 0);
+    blasfeo_dgesc(1, nu+nx, custom_mem->tau / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dct_dux, ir, 0);
 {%- else %}
-    blasfeo_dgesc(1, nu+nx, -1.0 * {{zoro_description.zoro_riccati_Hessian_tau}} / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, {{it}}))), &custom_mem->scaled_dct_dux, ir, 0);
+    blasfeo_dgesc(1, nu+nx, -1.0 * custom_mem->tau / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, {{it}}))), &custom_mem->scaled_dct_dux, ir, 0);
 {%- endif %}
     ir += 1;
 {%- endfor %}
@@ -917,9 +919,9 @@ d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 {%- for it in zoro_description.idx_ubx_t %}
     temp_nominal_val = -custom_mem->d_ineq_val[{{it}}] - sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + {{it}}));
 {%- if zoro_description.zoro_riccati == 1 %}
-    blasfeo_dgesc(1, nu+nx, {{zoro_description.zoro_riccati_Hessian_tau}} / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dct_dux, ir, 0);
+    blasfeo_dgesc(1, nu+nx, custom_mem->tau / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dct_dux, ir, 0);
 {%- else %}
-    blasfeo_dgesc(1, nu+nx, -1.0 * {{zoro_description.zoro_riccati_Hessian_tau}} / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + {{it}}))), &custom_mem->scaled_dct_dux, ir, 0);
+    blasfeo_dgesc(1, nu+nx, -1.0 * custom_mem->tau / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + {{it}}))), &custom_mem->scaled_dct_dux, ir, 0);
 {%- endif %}
     ir += 1;
 {%- endfor %}
@@ -930,9 +932,9 @@ d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 {%- for it in zoro_description.idx_ug_t %}
     temp_nominal_val = - custom_mem->d_ineq_val[{{it}}] - sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + nbx + {{it}})) ;
 {%- if zoro_description.zoro_riccati == 1 %}
-    blasfeo_dgesc(1, nu+nx, {{zoro_description.zoro_riccati_Hessian_tau}} / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dct_dux, ir, 0);
+    blasfeo_dgesc(1, nu+nx, custom_mem->tau / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dct_dux, ir, 0);
 {%- else %}
-    blasfeo_dgesc(1, nu+nx, -1.0 * {{zoro_description.zoro_riccati_Hessian_tau}} / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + nbx + {{it}}))), &custom_mem->scaled_dct_dux, ir, 0);
+    blasfeo_dgesc(1, nu+nx, -1.0 * custom_mem->tau / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + nbx + {{it}}))), &custom_mem->scaled_dct_dux, ir, 0);
 {%- endif %}
     ir += 1;
 {%- endfor %}
@@ -945,9 +947,9 @@ d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
     blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng + {{it}}, ng+nh, &custom_mem->scaled_dct_dux, ir, nu);
     temp_nominal_val = -custom_mem->d_ineq_val[ng + {{it}}] - sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + nbx + ng + {{it}}));
 {%- if zoro_description.zoro_riccati == 1 %}
-    blasfeo_dgesc(1, nu+nx, {{zoro_description.zoro_riccati_Hessian_tau}} / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dct_dux, ir, 0);
+    blasfeo_dgesc(1, nu+nx, custom_mem->tau / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dct_dux, ir, 0);
 {%- else %}
-    blasfeo_dgesc(1, nu+nx, -1.0 * {{zoro_description.zoro_riccati_Hessian_tau}} / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + nbx + ng + {{it}}))), &custom_mem->scaled_dct_dux, ir, 0);
+    blasfeo_dgesc(1, nu+nx, -1.0 * custom_mem->tau / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + nbx + ng + {{it}}))), &custom_mem->scaled_dct_dux, ir, 0);
 {%- endif %}
     ir += 1;
 {%- endfor %}
@@ -989,9 +991,9 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
 {%- for it in zoro_description.idx_lbx_e_t %}
     temp_nominal_val = custom_mem->d_ineq_e_val[{{it}}] - sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, {{it}}));
 {%- if zoro_description.zoro_riccati == 1 %}
-    blasfeo_dgesc(1, nx, {{zoro_description.zoro_riccati_Hessian_tau}} / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dcet_dx, ir, 0);
+    blasfeo_dgesc(1, nx, custom_mem->tau / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dcet_dx, ir, 0);
 {%- else %}
-    blasfeo_dgesc(1, nx, -1.0 * {{zoro_description.zoro_riccati_Hessian_tau}} / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, {{it}}))), &custom_mem->scaled_dcet_dx, ir, 0);
+    blasfeo_dgesc(1, nx, -1.0 * custom_mem->tau / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, {{it}}))), &custom_mem->scaled_dcet_dx, ir, 0);
 {%- endif %}
     ir += 1;
 {%- endfor %}
@@ -1008,9 +1010,9 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
 {%- for it in zoro_description.idx_lg_e_t %}
     temp_nominal_val = custom_mem->d_ineq_e_val[{{it}}] - sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, nbx_e + {{it}}));
 {%- if zoro_description.zoro_riccati == 1 %}
-    blasfeo_dgesc(1, nx, {{zoro_description.zoro_riccati_Hessian_tau}} / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dcet_dx, ir, 0);
+    blasfeo_dgesc(1, nx, custom_mem->tau / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dcet_dx, ir, 0);
 {%- else %}
-    blasfeo_dgesc(1, nx, -1.0 * {{zoro_description.zoro_riccati_Hessian_tau}} / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, nbx_e + {{it}}))), &custom_mem->scaled_dcet_dx, ir, 0);
+    blasfeo_dgesc(1, nx, -1.0 * custom_mem->tau / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, nbx_e + {{it}}))), &custom_mem->scaled_dcet_dx, ir, 0);
 {%- endif %}
     ir += 1;
 {%- endfor %}
@@ -1021,9 +1023,9 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
     blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng_e + {{it}}, ng_e+nh_e, &custom_mem->scaled_dcet_dx, ir, 0);
     temp_nominal_val = custom_mem->d_ineq_e_val[ng_e + {{it}}] - sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, nbx_e + ng_e + {{it}}));
 {%- if zoro_description.zoro_riccati == 1 %}
-    blasfeo_dgesc(1, nx, {{zoro_description.zoro_riccati_Hessian_tau}} / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dcet_dx, ir, 0);
+    blasfeo_dgesc(1, nx, custom_mem->tau / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dcet_dx, ir, 0);
 {%- else %}
-    blasfeo_dgesc(1, nx, -1.0 * {{zoro_description.zoro_riccati_Hessian_tau}} / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, nbx_e + ng_e + {{it}}))), &custom_mem->scaled_dcet_dx, ir, 0);
+    blasfeo_dgesc(1, nx, -1.0 * custom_mem->tau / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, nbx_e + ng_e + {{it}}))), &custom_mem->scaled_dcet_dx, ir, 0);
 {%- endif %}
     ir += 1;
 {%- endfor %}
@@ -1035,9 +1037,9 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
 {%- for it in zoro_description.idx_ubx_e_t %}
     temp_nominal_val = -custom_mem->d_ineq_e_val[{{it}}] - sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, {{it}}));
 {%- if zoro_description.zoro_riccati == 1 %}
-    blasfeo_dgesc(1, nx, {{zoro_description.zoro_riccati_Hessian_tau}} / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dcet_dx, ir, 0);
+    blasfeo_dgesc(1, nx, custom_mem->tau / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dcet_dx, ir, 0);
 {%- else %}
-    blasfeo_dgesc(1, nx, -1.0 * {{zoro_description.zoro_riccati_Hessian_tau}} / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, {{it}}))), &custom_mem->scaled_dcet_dx, ir, 0);
+    blasfeo_dgesc(1, nx, -1.0 * custom_mem->tau / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, {{it}}))), &custom_mem->scaled_dcet_dx, ir, 0);
 {%- endif %}
     ir += 1;
 {%- endfor %}
@@ -1049,9 +1051,9 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
 {%- for it in zoro_description.idx_ug_e_t %}
     temp_nominal_val = -custom_mem->d_ineq_e_val[{{it}}] - sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, nbx_e + {{it}}));
 {%- if zoro_description.zoro_riccati == 1 %}
-    blasfeo_dgesc(1, nx, {{zoro_description.zoro_riccati_Hessian_tau}} / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dcet_dx, ir, 0);
+    blasfeo_dgesc(1, nx, custom_mem->tau / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dcet_dx, ir, 0);
 {%- else %}
-    blasfeo_dgesc(1, nx, -1.0 * {{zoro_description.zoro_riccati_Hessian_tau}} / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, nbx_e + {{it}}))), &custom_mem->scaled_dcet_dx, ir, 0);
+    blasfeo_dgesc(1, nx, -1.0 * custom_mem->tau / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, nbx_e + {{it}}))), &custom_mem->scaled_dcet_dx, ir, 0);
 {%- endif %}
     ir += 1;
 {%- endfor %}
@@ -1062,9 +1064,9 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
     blasfeo_pack_dmat(1, nx, custom_mem->d_Cgh_mat + ng_e + {{it}}, ng_e+nh_e, &custom_mem->scaled_dcet_dx, ir, 0);
     temp_nominal_val = - custom_mem->d_ineq_e_val[ng_e + {{it}}] - sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, nbx_e + ng_e + {{it}}));
 {%- if zoro_description.zoro_riccati == 1 %}
-    blasfeo_dgesc(1, nx, {{zoro_description.zoro_riccati_Hessian_tau}} / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dcet_dx, ir, 0);
+    blasfeo_dgesc(1, nx, custom_mem->tau / (temp_nominal_val * temp_nominal_val), &custom_mem->scaled_dcet_dx, ir, 0);
 {%- else %}
-    blasfeo_dgesc(1, nx, -1.0 * {{zoro_description.zoro_riccati_Hessian_tau}} / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, nbx_e + ng_e + {{it}}))), &custom_mem->scaled_dcet_dx, ir, 0);
+    blasfeo_dgesc(1, nx, -1.0 * custom_mem->tau / temp_nominal_val / (2 * sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+N, nbx_e + ng_e + {{it}}))), &custom_mem->scaled_dcet_dx, ir, 0);
 {%- endif %}
     ir += 1;
 {%- endfor %}
