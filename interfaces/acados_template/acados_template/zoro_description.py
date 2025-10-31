@@ -37,9 +37,13 @@ class ZoroDescription:
     Zero-Order Robust Optimization (zoRO) scheme.
 
     The uncertainty propagation is performed by:
-    $$P_{k+1} = (A_k + B_kK)P_k(A_k + B_kK)^\top + GWG^\top$$
+    $$P_{k+1} = (A_k + B_kK)P_k(A_k + B_kK)^\top + GWG^\top$$.
 
-    For advanced users.
+    Used to render custom updated zoRO functions in acados.
+
+    Limitations:
+    - Updating C, D matrices not supported yet.
+
     """
     backoff_scaling_gamma: float = 1.0
     """backoff scaling factor, for stochastic MPC"""
