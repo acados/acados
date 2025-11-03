@@ -242,8 +242,8 @@ static int custom_memory_calculate_size(ocp_nlp_config *nlp_config, ocp_nlp_dims
     size += blasfeo_memsize_dmat(ngh_me_max, ngh_me_max);       // temp_beta_mat
     // NOTE: Covariance matrix of the additive noise (used if input_W_add_diag)
     size += blasfeo_memsize_dmat(nw, nw);  // W_stage_mat
-    size += 2 * blasfeo_memsize_dmat(nx + nu, {{zoro_description.nlbu_t}} + {{zoro_description.nlbx_t}} + {{zoro_description.nlg_t}} + {{zoro_description.nlh_t}} + {{zoro_description.nubu_t}} + {{zoro_description.nubx_t}} + {{zoro_description.nug_t}} + {{zoro_description.nuh_t}});
-    size += 2 * blasfeo_memsize_dmat(nx, {{zoro_description.nlbx_e_t}} + {{zoro_description.nlg_e_t}} + {{zoro_description.nlh_e_t}} + {{zoro_description.nubx_e_t}} + {{zoro_description.nug_e_t}} + {{zoro_description.nuh_e_t}});
+    size += 2 * blasfeo_memsize_dmat(NCT, nx + nu);  // dct_dux, scaled_dct_dux
+    size += 2 * blasfeo_memsize_dmat(NCT_E, nx);  // dcet_dx, scaled_dcet_dx
     size += (N+1) * sizeof(struct blasfeo_dvec);                // ineq_backoff_sq_buffer
     size += N * blasfeo_memsize_dvec(nbu + nbx + ng + nh);      // ineq_backoff_sq_buffer--stage
     size += blasfeo_memsize_dvec(nbx_e + ng_e + nh_e);          // ineq_backoff_sq_buffer--terminal
@@ -1076,7 +1076,7 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
 {%- endfor %}
 {%- endif %}
 
-    blasfeo_dgemm_tn(nx, nx, {{zoro_description.nlbx_e_t}} + {{zoro_description.nlg_e_t}} + {{zoro_description.nlh_e_t}} + {{zoro_description.nubx_e_t}} + {{zoro_description.nug_e_t}} + {{zoro_description.nuh_e_t}}, 1.0, &custom_mem->dcet_dx, 0, 0, &custom_mem->scaled_dcet_dx, 0, 0, 1.0, &custom_mem->riccati_Q_const_e_mat, 0, 0, &custom_mem->riccati_Q_mat, 0, 0);
+    blasfeo_dgemm_tn(nx, nx, NCT_E, 1.0, &custom_mem->dcet_dx, 0, 0, &custom_mem->scaled_dcet_dx, 0, 0, 1.0, &custom_mem->riccati_Q_const_e_mat, 0, 0, &custom_mem->riccati_Q_mat, 0, 0);
 
 }
 
