@@ -236,7 +236,6 @@ def compare_results(n_executions: int, feedback_optimization_mode:int=0):
         raise Exception(f"zoRO implementations differ too much, error = {error:.2e} > tol = {tol:.2e}")
 
 def timing_comparison(n_executions: int):
-    # keys = "zoRO-24-riccati", "zoRO-24", "zoRO-21-riccati", "zoRO-21"
     dict_results = {}
 
     for _, tuple in enumerate(zip([True, True, True, True, False, False], ["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2", "RICCATI_CONSTANT_COST", "CONSTANT_FEEDBACK"])):
@@ -244,7 +243,7 @@ def timing_comparison(n_executions: int):
         results = load_results(results_filename)
         plot_timings(results['timings'], use_custom_update=tuple[0], fig_name_concat=tuple[1])
         temp_key = "zoRO-24" if tuple[0] else "zoRO-21"
-        if tuple[1] == 0:
+        if tuple[1] != "CONSTANT_FEEDBACK":
             temp_key += "-riccati"
         dict_results[temp_key] = results
 
@@ -274,6 +273,7 @@ if __name__ == "__main__":
     plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_2")
 
     closed_loop_trajectories_comparison(n_executions=n_executions, list_feedback_optimization_mode=["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"])
+
     timing_comparison(n_executions=n_executions)
 
     solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode="CONSTANT_FEEDBACK")
