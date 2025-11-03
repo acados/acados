@@ -183,12 +183,12 @@ CPPFLAGS+= -I $(INCLUDE_PATH)/daqp/include
 
 {# c-compiler flags #}
 # define the c-compiler flags for make's implicit rules
-CFLAGS = -fPIC -std=c99 {{ openmp_flag }} {{ solver_options.ext_fun_compile_flags }}#-fno-diagnostics-show-line-numbers -g
+CFLAGS = -fPIC -std=c99 {{ openmp_flag }} {{ solver_options.ext_fun_compile_flags }}
 {% if solver_options.with_batch_functionality %}
 CFLAGS += -fopenmp
 {%- endif %}
 # # Debugging
-# CFLAGS += -g3
+# CFLAGS += -g3 -fno-diagnostics-show-line-numbers -g
 
 # linker flags
 LDFLAGS+= -L$(LIB_PATH)
