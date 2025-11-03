@@ -1182,7 +1182,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     // NOTE: lh_0 and uh_0 are not tightened.
 {%- if zoro_description.nlbu_t + zoro_description.nubu_t > 0 %}
     compute_KPK(K_mat, &custom_mem->temp_KP_mat,
-                &custom_mem->temp_KPK_mat, &(custom_mem->uncertainty_matrix_buffer[0]), nx, nu);
+                &custom_mem->temp_KPK_mat, &custom_mem->uncertainty_matrix_buffer[0], nx, nu);
     blasfeo_ddiaex_sp(nbu, backoff_scaling_gamma*backoff_scaling_gamma, custom_mem->idxbu, &custom_mem->temp_KPK_mat, 0, 0, &custom_mem->ineq_backoff_sq_buffer[0], 0);
     blasfeo_dvecad(nbu, backoff_eps, &custom_mem->ricc_ones, 0, &custom_mem->ineq_backoff_sq_buffer[0], 0);
 
@@ -1224,8 +1224,8 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
         compute_GWG_stagewise_varying(solver, custom_mem, data, ii);
 {% endif %}
 
-        compute_next_P_matrix(&(custom_mem->uncertainty_matrix_buffer[ii]),
-                              &(custom_mem->uncertainty_matrix_buffer[ii+1]),
+        compute_next_P_matrix(&custom_mem->uncertainty_matrix_buffer[ii],
+                              &custom_mem->uncertainty_matrix_buffer[ii+1],
                               &custom_mem->A_mat, &custom_mem->B_mat,
                               K_mat, &custom_mem->GWG_mat,
                               &custom_mem->AK_mat, &custom_mem->temp_AP_mat, nx, nu);
@@ -1256,7 +1256,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
 {%- if zoro_description.nlbu_t + zoro_description.nubu_t > 0 %}
         // input constraints
         compute_KPK(K_mat, &custom_mem->temp_KP_mat,
-            &custom_mem->temp_KPK_mat, &(custom_mem->uncertainty_matrix_buffer[ii+1]), nx, nu);
+            &custom_mem->temp_KPK_mat, &custom_mem->uncertainty_matrix_buffer[ii+1], nx, nu);
         blasfeo_ddiaex_sp(nbu, backoff_scaling_gamma*backoff_scaling_gamma, custom_mem->idxbu, &custom_mem->temp_KPK_mat, 0, 0, &custom_mem->ineq_backoff_sq_buffer[ii+1], 0);
         blasfeo_dvecad(nbu, backoff_eps, &custom_mem->ricc_ones, 0, &custom_mem->ineq_backoff_sq_buffer[ii+1], 0);
 
@@ -1358,8 +1358,8 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
 {%- endif %}
 
     // AK_mat = -B*K + A
-    compute_next_P_matrix(&(custom_mem->uncertainty_matrix_buffer[N-1]),
-                        &(custom_mem->uncertainty_matrix_buffer[N]),
+    compute_next_P_matrix(&custom_mem->uncertainty_matrix_buffer[N-1],
+                        &custom_mem->uncertainty_matrix_buffer[N],
                         &custom_mem->A_mat, &custom_mem->B_mat,
                         K_mat, &custom_mem->GWG_mat,
                         &custom_mem->AK_mat, &custom_mem->temp_AP_mat, nx, nu);
@@ -1543,4 +1543,4 @@ blasfeo_print_exp_dmat(nx, nx, &custom_mem->temp_AP_mat, 0, 0);
 printf("W_mat:\n");
 blasfeo_print_exp_dmat(nx, nx, &custom_mem->W_mat, 0, 0);
 printf("P_k+1:\n");
-blasfeo_print_exp_dmat(nx, nx, &(custom_mem->uncertainty_matrix_buffer[ii+1]), 0, 0);*/
+blasfeo_print_exp_dmat(nx, nx, &custom_mem->uncertainty_matrix_buffer[ii+1], 0, 0);*/
