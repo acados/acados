@@ -1174,7 +1174,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     // NOTE: lg_0 and ug_0 are not tightened.
     // NOTE: lh_0 and uh_0 are not tightened.
 {%- if zoro_description.nlbu_t + zoro_description.nubu_t > 0 %}
-    compute_KPK(&custom_mem->&custom_mem->riccati_K_buffer[0], &custom_mem->temp_KP_mat,
+    compute_KPK(&custom_mem->riccati_K_buffer[0], &custom_mem->temp_KP_mat,
                 &custom_mem->temp_KPK_mat, &(custom_mem->uncertainty_matrix_buffer[0]), nx, nu);
     blasfeo_ddiaex_sp(nbu, backoff_scaling_gamma*backoff_scaling_gamma, custom_mem->idxbu, &custom_mem->temp_KPK_mat, 0, 0, &custom_mem->ineq_backoff_sq_buffer[0], 0);
     blasfeo_dvecad(nbu, backoff_eps, &custom_mem->ricc_ones, 0, &custom_mem->ineq_backoff_sq_buffer[0], 0);
