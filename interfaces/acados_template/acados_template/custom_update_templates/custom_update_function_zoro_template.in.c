@@ -43,6 +43,11 @@
 #include "blasfeo_d_blasfeo_api.h"
 
 
+// number of tightened path constraints
+#define NCT {{ zoro_description.nlbu_t + zoro_description.nlbx_t + zoro_description.nlg_t + zoro_description.nlh_t + zoro_description.nubu_t + zoro_description.nubx_t + zoro_description.nug_t + zoro_description.nuh_t }}
+// number of tightened terminal constraints
+#define NCT_E {{zoro_description.nlbx_e_t + zoro_description.nlg_e_t + zoro_description.nlh_e_t + zoro_description.nubx_e_t + zoro_description.nug_e_t + zoro_description.nuh_e_t}}
+
 typedef struct custom_memory
 {
     // covariance matrics
@@ -347,14 +352,10 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
     assign_and_advance_blasfeo_dmat_mem(nu, nx, &mem->temp_riccati_SaBPA_mat, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nu, nu, &mem->temp_riccati_chol_mat, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nu, nx, &mem->temp_riccati_cholinvSaBPA_mat, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem({{zoro_description.nlbu_t}} + {{zoro_description.nlbx_t}} + {{zoro_description.nlg_t}} + {{zoro_description.nlh_t}}
-        + {{zoro_description.nubu_t}} + {{zoro_description.nubx_t}} + {{zoro_description.nug_t}} + {{zoro_description.nuh_t}}, nx + nu, &mem->dct_dux, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem({{zoro_description.nlbu_t}} + {{zoro_description.nlbx_t}} + {{zoro_description.nlg_t}} + {{zoro_description.nlh_t}}
-        + {{zoro_description.nubu_t}} + {{zoro_description.nubx_t}} + {{zoro_description.nug_t}} + {{zoro_description.nuh_t}}, nx + nu, &mem->scaled_dct_dux, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem({{zoro_description.nlbx_e_t}} + {{zoro_description.nlg_e_t}} + {{zoro_description.nlh_e_t}}
-        + {{zoro_description.nubx_e_t}} + {{zoro_description.nug_e_t}} + {{zoro_description.nuh_e_t}}, nx, &mem->dcet_dx, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem({{zoro_description.nlbx_e_t}} + {{zoro_description.nlg_e_t}} + {{zoro_description.nlh_e_t}}
-        + {{zoro_description.nubx_e_t}} + {{zoro_description.nug_e_t}} + {{zoro_description.nuh_e_t}}, nx, &mem->scaled_dcet_dx, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(NCT, nx + nu, &mem->dct_dux, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(NCT, nx + nu, &mem->scaled_dct_dux, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(NCT_E, nx, &mem->dcet_dx, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(NCT_E, nx, &mem->scaled_dcet_dx, &c_ptr);
     for (int ii = 0; ii < N; ii++)
     {
         assign_and_advance_blasfeo_dvec_mem(nbu + nbx + ng + nh, &mem->ineq_backoff_sq_buffer[ii], &c_ptr);
@@ -837,9 +838,7 @@ static void update_riccati_quad_matrices(ocp_nlp_solver *solver, ocp_nlp_memory 
     int nx = {{ dims.nx }};
     int nu = {{ dims.nu }};
 
-    blasfeo_dgecp({{zoro_description.nlbu_t}} + {{zoro_description.nlbx_t}} + {{zoro_description.nlg_t}} + {{zoro_description.nlh_t}}
-        + {{zoro_description.nubu_t}} + {{zoro_description.nubx_t}} + {{zoro_description.nug_t}} + {{zoro_description.nuh_t}}, nu+nx, &custom_mem->dct_dux, 0, 0,
-        &custom_mem->scaled_dct_dux, 0, 0);
+    blasfeo_dgecp(NCT, nu+nx, &custom_mem->dct_dux, 0, 0, &custom_mem->scaled_dct_dux, 0, 0);
 
     double temp_nominal_val;
     int ir = 0;
@@ -960,14 +959,11 @@ d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 {%- endfor %}
 {%- endif %}
 
-    blasfeo_dgemm_tn(nx, nx, {{zoro_description.nlbu_t}} + {{zoro_description.nlbx_t}} + {{zoro_description.nlg_t}} + {{zoro_description.nlh_t}}
-        + {{zoro_description.nubu_t}} + {{zoro_description.nubx_t}} + {{zoro_description.nug_t}} + {{zoro_description.nuh_t}}, 1.0, &custom_mem->dct_dux, 0, nu,
+    blasfeo_dgemm_tn(nx, nx, NCT, 1.0, &custom_mem->dct_dux, 0, nu,
         &custom_mem->scaled_dct_dux, 0, nu, 1.0, &custom_mem->riccati_Q_const_mat, 0, 0, &custom_mem->riccati_Q_mat, 0, 0);
-    blasfeo_dgemm_tn(nu, nu, {{zoro_description.nlbu_t}} + {{zoro_description.nlbx_t}} + {{zoro_description.nlg_t}} + {{zoro_description.nlh_t}}
-        + {{zoro_description.nubu_t}} + {{zoro_description.nubx_t}} + {{zoro_description.nug_t}} + {{zoro_description.nuh_t}}, 1.0, &custom_mem->dct_dux, 0, 0,
+    blasfeo_dgemm_tn(nu, nu, NCT, 1.0, &custom_mem->dct_dux, 0, 0,
         &custom_mem->scaled_dct_dux, 0, 0, 1.0, &custom_mem->riccati_R_const_mat, 0, 0, &custom_mem->riccati_R_mat, 0, 0);
-    blasfeo_dgemm_tn(nu, nx, {{zoro_description.nlbu_t}} + {{zoro_description.nlbx_t}} + {{zoro_description.nlg_t}} + {{zoro_description.nlh_t}}
-        + {{zoro_description.nubu_t}} + {{zoro_description.nubx_t}} + {{zoro_description.nug_t}} + {{zoro_description.nuh_t}}, 1.0, &custom_mem->dct_dux, 0, 0,
+    blasfeo_dgemm_tn(nu, nx, NCT, 1.0, &custom_mem->dct_dux, 0, 0,
         &custom_mem->scaled_dct_dux, 0, nu, 1.0, &custom_mem->riccati_S_const_mat, 0, 0, &custom_mem->riccati_S_mat, 0, 0);
 
 }
@@ -984,9 +980,7 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
     int nx = {{ dims.nx }};
     int nu = {{ dims.nu }};
 
-    blasfeo_dgecp({{zoro_description.nlbx_e_t}} + {{zoro_description.nlg_e_t}} + {{zoro_description.nlh_e_t}}
-        + {{zoro_description.nubx_e_t}} + {{zoro_description.nug_e_t}} + {{zoro_description.nuh_e_t}}, nx, &custom_mem->dcet_dx, 0, 0,
-        &custom_mem->scaled_dcet_dx, 0, 0);
+    blasfeo_dgecp(NCT_E, nx, &custom_mem->dcet_dx, 0, 0, &custom_mem->scaled_dcet_dx, 0, 0);
 
     double temp_nominal_val;
     int ir = 0;

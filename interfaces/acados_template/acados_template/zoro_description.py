@@ -55,7 +55,6 @@ class ZoroDescription:
     backoff_scaling_gamma: float = 1.0
     """backoff scaling factor, for stochastic MPC"""
 
-
     feedback_optimization_mode: str = "CONSTANT_FEEDBACK"
     """Type of feedback optimization used in zoRO scheme.
 
