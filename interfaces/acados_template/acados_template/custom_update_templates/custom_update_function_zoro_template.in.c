@@ -871,14 +871,14 @@ static void update_riccati_quad_matrices(ocp_nlp_solver *solver, ocp_nlp_memory 
 {%- endif %}
 
 {%- if zoro_description.nlh_t + zoro_description.nuh_t > 0 %}
-// Get C_k and D_k
+    // Get C_k and D_k
     ocp_nlp_get_at_stage(solver, ii, "D", custom_mem->d_Dgh_mat);
     ocp_nlp_get_at_stage(solver, ii, "C", custom_mem->d_Cgh_mat);
 {%- endif %}
 
 {%- if zoro_description.nlg_t + zoro_description.nlh_t > 0 %}
-d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
-// lg
+    // lg
+    d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 {%- for it in zoro_description.idx_lg_t %}
     temp_nominal_val = custom_mem->d_ineq_val[{{it}}] - sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + nbx + {{it}}));
 {%- if zoro_description.feedback_optimization_mode == "RICCATI_BARRIER_1" %}
@@ -888,7 +888,7 @@ d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 {%- endif %}
     ir += 1;
 {%- endfor %}
-// lh
+    // lh
 {%- for it in zoro_description.idx_lh_t %}
     // NOTE: the d_Cgh_mat is column-major, the first ng rows are the Jacobians of the linear constraints
     blasfeo_pack_dmat(1, nu, custom_mem->d_Dgh_mat + ng + {{it}}, ng+nh, &custom_mem->dct_dux, 0, 0);
