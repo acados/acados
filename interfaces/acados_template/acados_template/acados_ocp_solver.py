@@ -1242,12 +1242,16 @@ class AcadosOcpSolver:
                     hess_block = self.get_hessian_block(i)
 
                 elif hessian_type == "PROJECTED_HESSIAN":
-                    P_mat = self.get_from_qp_in(i, 'P')
-                    B_mat = self.get_from_qp_in(i-1, 'B')
-                    # Lr: lower triangular decomposition of R within Riccati != R in qp_in!
-                    Lr = self.get_from_qp_in(i-1, 'Lr')
-                    R_ric = Lr @ Lr.T
-                    hess_block = R_ric + B_mat.T @ P_mat @ B_mat
+                    if i < N_horizon:
+                        P_mat = self.get_from_qp_in(i+1, 'P')
+                        B_mat = self.get_from_qp_in(i, 'B')
+                        # Lr: lower triangular decomposition of R within Riccati != R in qp_in!
+                        Lr = self.get_from_qp_in(i, 'Lr')
+                        R_ric = Lr @ Lr.T
+                        hess_block = R_ric + B_mat.T @ P_mat @ B_mat
+                    else:
+                        P_mat = self.get_from_qp_in(i, 'P')
+                        hess_block = P_mat
 
                     # P
                     eigv = np.linalg.eigvals(P_mat)
