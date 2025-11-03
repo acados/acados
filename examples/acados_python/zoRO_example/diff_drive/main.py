@@ -132,6 +132,7 @@ def run_closed_loop_simulation(use_custom_update: bool, feedback_optimization_mo
             if min_dist < 1e-8:
                 print("collision takes place")
                 return False
+            breakpoint()
 
     total_time = [time_prep[i] + time_feedback[i] + time_riccati[i] + time_zoro[i] for i in range(len(time_prep))]
     timings = {

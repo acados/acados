@@ -73,14 +73,14 @@ class ZoroDescription:
     fdbk_K_mat: np.ndarray = None
     """constant feedback gain matrix K"""
 
-    riccati_Qconst_mat: np.ndarray = None
-    """matrix Qconst for computing the Riccati"""
-    riccati_Qconst_e_mat: np.ndarray = None
-    """matrix Qconst_e for computing the Riccati"""
-    riccati_Rconst_mat: np.ndarray = None
-    """matrix Rconst for computing the Riccati"""
-    riccati_Sconst_mat: np.ndarray = None
-    """matrix Sconst for computing the Riccati"""
+    riccati_Q_const_mat: np.ndarray = None
+    """matrix Q_const for computing the Riccati, Hessian of the stage cost w.r.t. states, shape [nx*nx]"""
+    riccati_Q_const_e_mat: np.ndarray = None
+    """matrix Q_const_e for computing the Riccati, Hessian of the terminal cost w.r.t. states, shape [nx*nx]"""
+    riccati_R_const_mat: np.ndarray = None
+    """matrix R_const for computing the Riccati, Hessian of the stage cost w.r.t. inputs, shape [nu*nu]"""
+    riccati_S_const_mat: np.ndarray = None
+    """matrix S_const for computing the Riccati, cross term Hessian of the stage cost, shape [nu*nx]"""
 
     unc_jac_G_mat: np.ndarray = None    # default: an identity matrix
     """matrix G, describes how noise enters the dynamics"""
@@ -166,18 +166,18 @@ class ZoroDescription:
         if self.feedback_optimization_mode not in FEEDBACK_OPTIMIZATION_MODES:
             raise Exception(f"feedback_optimization_mode should be in {', '.join(FEEDBACK_OPTIMIZATION_MODES)}, got {self.feedback_optimization_mode}.")
         if self.feedback_optimization_mode != "CONSTANT_FEEDBACK":
-            if self.riccati_Qconst_mat is None or self.riccati_Rconst_mat is None or self.riccati_Sconst_mat is None:
-                raise Exception("riccati_Qconst_mat, riccati_Rconst_mat, riccati_Sconst_mat should not be None when feedback_optimization_mode != CONSTANT_FEEDBACK.")
-            if self.riccati_Qconst_mat.shape != (dims.nx, dims.nx):
-                raise Exception("The shape of riccati_Qconst_mat should be [nx*nx].")
-            if self.riccati_Rconst_mat.shape != (dims.nu, dims.nu):
-                raise Exception("The shape of riccati_Rconst_mat should be [nu*nu].")
-            if self.riccati_Sconst_mat.shape != (dims.nu, dims.nx):
-                raise Exception("The shape of riccati_Sconst_mat should be [nu*nx].")
-            if self.riccati_Qconst_e_mat is None:
-                self.riccati_Qconst_e_mat = self.riccati_Qconst_mat.copy()
-            if self.riccati_Qconst_e_mat.shape != (dims.nx, dims.nx):
-                raise Exception("The shape of riccati_Qconst_e_mat should be [nx*nx].")
+            if self.riccati_Q_const_mat is None or self.riccati_R_const_mat is None or self.riccati_S_const_mat is None:
+                raise Exception("riccati_Q_const_mat, riccati_R_const_mat, riccati_S_const_mat should not be None when feedback_optimization_mode != CONSTANT_FEEDBACK.")
+            if self.riccati_Q_const_mat.shape != (dims.nx, dims.nx):
+                raise Exception("The shape of riccati_Q_const_mat should be [nx*nx].")
+            if self.riccati_R_const_mat.shape != (dims.nu, dims.nu):
+                raise Exception("The shape of riccati_R_const_mat should be [nu*nu].")
+            if self.riccati_S_const_mat.shape != (dims.nu, dims.nx):
+                raise Exception("The shape of riccati_S_const_mat should be [nu*nx].")
+            if self.riccati_Q_const_e_mat is None:
+                self.riccati_Q_const_e_mat = self.riccati_Q_const_mat.copy()
+            if self.riccati_Q_const_e_mat.shape != (dims.nx, dims.nx):
+                raise Exception("The shape of riccati_Q_const_e_mat should be [nx*nx].")
             if self.zoro_riccati_Hessian_tau <= 0:
                 raise Exception("The value of zoro_riccati_Hessian_tau should be positive.")
 

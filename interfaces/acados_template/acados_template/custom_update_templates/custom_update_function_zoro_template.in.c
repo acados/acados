@@ -71,12 +71,12 @@ typedef struct custom_memory
     // matrices for Riccati recursion
     struct blasfeo_dmat *riccati_K_buffer;               // shape = N * (nu, nx)
     struct blasfeo_dmat riccati_Q_mat;                   // shape = (nx, nx)
-    struct blasfeo_dmat riccati_Qconst_mat;              // shape = (nx, nx)
-    struct blasfeo_dmat riccati_Qconst_e_mat;            // shape = (nx, nx)
+    struct blasfeo_dmat riccati_Q_const_mat;              // shape = (nx, nx)
+    struct blasfeo_dmat riccati_Q_const_e_mat;            // shape = (nx, nx)
     struct blasfeo_dmat riccati_R_mat;                   // shape = (nu, nu)
-    struct blasfeo_dmat riccati_Rconst_mat;              // shape = (nu, nu)
+    struct blasfeo_dmat riccati_R_const_mat;              // shape = (nu, nu)
     struct blasfeo_dmat riccati_S_mat;                   // shape = (nu, nx)
-    struct blasfeo_dmat riccati_Sconst_mat;              // shape = (nu, nx)
+    struct blasfeo_dmat riccati_S_const_mat;              // shape = (nu, nx)
 
     struct blasfeo_dmat dct_dux;             // shape = (nlbu_t + nlbx_t + nlg_t + nlh_t + nubu_t + nubx_t + nug_t + nuh_t, nx + nu)
     // Jacobian of tightened constraints wrt [u,x].
@@ -222,10 +222,10 @@ static int custom_memory_calculate_size(ocp_nlp_config *nlp_config, ocp_nlp_dims
     size += (N + 1) * blasfeo_memsize_dmat(nx, nx); // uncertainty_matrix_buffer
     size += blasfeo_memsize_dmat(nw, nw);           // W_mat
     size += 2 * blasfeo_memsize_dmat(nx, nw);       // unc_jac_G_mat, temp_GW_mat
-    size += 10 * blasfeo_memsize_dmat(nx, nx);       // GWG_mat, A_mat, AK_mat, temp_AP_mat, riccati_Q_mat, riccati_Qconst_mat, riccati_Qconst_e_mat, temp_riccati_P_mat, temp_riccati_P_plus_mat, temp_riccati_AP_mat
+    size += 10 * blasfeo_memsize_dmat(nx, nx);       // GWG_mat, A_mat, AK_mat, temp_AP_mat, riccati_Q_mat, riccati_Q_const_mat, riccati_Q_const_e_mat, temp_riccati_P_mat, temp_riccati_P_plus_mat, temp_riccati_AP_mat
     size += blasfeo_memsize_dmat(nx, nu);           // B_mat
-    size += (N + 7) * blasfeo_memsize_dmat(nu, nx); // K_mat, temp_KP_mat, riccati_S_mat, riccati_Sconst_mat, riccati_K_buffer, temp_riccati_BP_mat, temp_riccati_SaBPA_mat, temp_riccati_cholinvSaBPA_mat
-    size += 5 * blasfeo_memsize_dmat(nu, nu);       // temp_KPK_mat, riccati_R_mat, riccati_Rconst_mat, temp_riccati_RaBPB_mat, temp_riccati_chol_mat
+    size += (N + 7) * blasfeo_memsize_dmat(nu, nx); // K_mat, temp_KP_mat, riccati_S_mat, riccati_S_const_mat, riccati_K_buffer, temp_riccati_BP_mat, temp_riccati_SaBPA_mat, temp_riccati_cholinvSaBPA_mat
+    size += 5 * blasfeo_memsize_dmat(nu, nu);       // temp_KPK_mat, riccati_R_mat, riccati_R_const_mat, temp_riccati_RaBPB_mat, temp_riccati_chol_mat
     size += blasfeo_memsize_dmat(ng, nx);           // Cg_mat
     size += blasfeo_memsize_dmat(ng, nu);           // Dg_mat
     size += blasfeo_memsize_dmat(ng_e, nx);         // Cg_e_mat
@@ -324,12 +324,12 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
         assign_and_advance_blasfeo_dmat_mem(nu, nx, &mem->riccati_K_buffer[ii], &c_ptr);
     }
     assign_and_advance_blasfeo_dmat_mem(nx, nx, &mem->riccati_Q_mat, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nx, nx, &mem->riccati_Qconst_mat, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nx, nx, &mem->riccati_Qconst_e_mat, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, nx, &mem->riccati_Q_const_mat, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, nx, &mem->riccati_Q_const_e_mat, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nu, nu, &mem->riccati_R_mat, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nu, nu, &mem->riccati_Rconst_mat, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nu, nu, &mem->riccati_R_const_mat, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nu, nx, &mem->riccati_S_mat, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nu, nx, &mem->riccati_Sconst_mat, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nu, nx, &mem->riccati_S_const_mat, &c_ptr);
 
     assign_and_advance_blasfeo_dmat_mem(nx, nx, &mem->AK_mat, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nx, &mem->temp_AP_mat, &c_ptr);
@@ -568,22 +568,22 @@ for (int ii = 0; ii < N; ii++)
 {%- else %}
 {%- for ir in range(end=dims.nx) %}
     {%- for ic in range(end=dims.nx) %}
-    blasfeo_dgein1({{zoro_description.riccati_Qconst_mat[ir][ic]}}, &custom_mem->riccati_Qconst_mat, {{ir}}, {{ic}});
+    blasfeo_dgein1({{zoro_description.riccati_Q_const_mat[ir][ic]}}, &custom_mem->riccati_Q_const_mat, {{ir}}, {{ic}});
     {%- endfor %}
 {%- endfor %}
 {%- for ir in range(end=dims.nx) %}
     {%- for ic in range(end=dims.nx) %}
-    blasfeo_dgein1({{zoro_description.riccati_Qconst_e_mat[ir][ic]}}, &custom_mem->riccati_Qconst_e_mat, {{ir}}, {{ic}});
+    blasfeo_dgein1({{zoro_description.riccati_Q_const_e_mat[ir][ic]}}, &custom_mem->riccati_Q_const_e_mat, {{ir}}, {{ic}});
     {%- endfor %}
 {%- endfor %}
 {%- for ir in range(end=dims.nu) %}
     {%- for ic in range(end=dims.nu) %}
-    blasfeo_dgein1({{zoro_description.riccati_Rconst_mat[ir][ic]}}, &custom_mem->riccati_Rconst_mat, {{ir}}, {{ic}});
+    blasfeo_dgein1({{zoro_description.riccati_R_const_mat[ir][ic]}}, &custom_mem->riccati_R_const_mat, {{ir}}, {{ic}});
     {%- endfor %}
 {%- endfor %}
 {%- for ir in range(end=dims.nu) %}
     {%- for ic in range(end=dims.nx) %}
-    blasfeo_dgein1({{zoro_description.riccati_Sconst_mat[ir][ic]}}, &custom_mem->riccati_Sconst_mat, {{ir}}, {{ic}});
+    blasfeo_dgein1({{zoro_description.riccati_S_const_mat[ir][ic]}}, &custom_mem->riccati_S_const_mat, {{ir}}, {{ic}});
     {%- endfor %}
 {%- endfor %}
 
@@ -962,13 +962,13 @@ d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 
     blasfeo_dgemm_tn(nx, nx, {{zoro_description.nlbu_t}} + {{zoro_description.nlbx_t}} + {{zoro_description.nlg_t}} + {{zoro_description.nlh_t}}
         + {{zoro_description.nubu_t}} + {{zoro_description.nubx_t}} + {{zoro_description.nug_t}} + {{zoro_description.nuh_t}}, 1.0, &custom_mem->dct_dux, 0, nu,
-        &custom_mem->scaled_dct_dux, 0, nu, 1.0, &custom_mem->riccati_Qconst_mat, 0, 0, &custom_mem->riccati_Q_mat, 0, 0);
+        &custom_mem->scaled_dct_dux, 0, nu, 1.0, &custom_mem->riccati_Q_const_mat, 0, 0, &custom_mem->riccati_Q_mat, 0, 0);
     blasfeo_dgemm_tn(nu, nu, {{zoro_description.nlbu_t}} + {{zoro_description.nlbx_t}} + {{zoro_description.nlg_t}} + {{zoro_description.nlh_t}}
         + {{zoro_description.nubu_t}} + {{zoro_description.nubx_t}} + {{zoro_description.nug_t}} + {{zoro_description.nuh_t}}, 1.0, &custom_mem->dct_dux, 0, 0,
-        &custom_mem->scaled_dct_dux, 0, 0, 1.0, &custom_mem->riccati_Rconst_mat, 0, 0, &custom_mem->riccati_R_mat, 0, 0);
+        &custom_mem->scaled_dct_dux, 0, 0, 1.0, &custom_mem->riccati_R_const_mat, 0, 0, &custom_mem->riccati_R_mat, 0, 0);
     blasfeo_dgemm_tn(nu, nx, {{zoro_description.nlbu_t}} + {{zoro_description.nlbx_t}} + {{zoro_description.nlg_t}} + {{zoro_description.nlh_t}}
         + {{zoro_description.nubu_t}} + {{zoro_description.nubx_t}} + {{zoro_description.nug_t}} + {{zoro_description.nuh_t}}, 1.0, &custom_mem->dct_dux, 0, 0,
-        &custom_mem->scaled_dct_dux, 0, nu, 1.0, &custom_mem->riccati_Sconst_mat, 0, 0, &custom_mem->riccati_S_mat, 0, 0);
+        &custom_mem->scaled_dct_dux, 0, nu, 1.0, &custom_mem->riccati_S_const_mat, 0, 0, &custom_mem->riccati_S_mat, 0, 0);
 
 }
 
@@ -1077,7 +1077,7 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
 {%- endfor %}
 {%- endif %}
 
-    blasfeo_dgemm_tn(nx, nx, {{zoro_description.nlbx_e_t}} + {{zoro_description.nlg_e_t}} + {{zoro_description.nlh_e_t}} + {{zoro_description.nubx_e_t}} + {{zoro_description.nug_e_t}} + {{zoro_description.nuh_e_t}}, 1.0, &custom_mem->dcet_dx, 0, 0, &custom_mem->scaled_dcet_dx, 0, 0, 1.0, &custom_mem->riccati_Qconst_e_mat, 0, 0, &custom_mem->riccati_Q_mat, 0, 0);
+    blasfeo_dgemm_tn(nx, nx, {{zoro_description.nlbx_e_t}} + {{zoro_description.nlg_e_t}} + {{zoro_description.nlh_e_t}} + {{zoro_description.nubx_e_t}} + {{zoro_description.nug_e_t}} + {{zoro_description.nuh_e_t}}, 1.0, &custom_mem->dcet_dx, 0, 0, &custom_mem->scaled_dcet_dx, 0, 0, 1.0, &custom_mem->riccati_Q_const_e_mat, 0, 0, &custom_mem->riccati_Q_mat, 0, 0);
 
 }
 
@@ -1093,7 +1093,7 @@ static void riccati_recursion(ocp_nlp_solver* solver, ocp_nlp_memory *nlp_mem, c
     update_riccati_quad_matrices_terminal(solver, nlp_mem, custom_mem);
     blasfeo_dgecp(nx, nx, &custom_mem->riccati_Q_mat, 0, 0, &custom_mem->temp_riccati_P_plus_mat, 0, 0);
 {%- else %}
-    blasfeo_dgecp(nx, nx, &custom_mem->riccati_Qconst_e_mat, 0, 0, &custom_mem->temp_riccati_P_plus_mat, 0, 0);
+    blasfeo_dgecp(nx, nx, &custom_mem->riccati_Q_const_e_mat, 0, 0, &custom_mem->temp_riccati_P_plus_mat, 0, 0);
 {%- endif %}
 
     for (int ii = N-1; ii >= 1; ii--)
@@ -1107,9 +1107,9 @@ static void riccati_recursion(ocp_nlp_solver* solver, ocp_nlp_memory *nlp_mem, c
     {%- if zoro_description.feedback_optimization_mode is containing("BARRIER") %}
         update_riccati_quad_matrices(solver, nlp_mem, custom_mem, ii);
     {%- else %}
-        blasfeo_dgecp(nx, nx, &custom_mem->riccati_Qconst_mat, 0, 0, &custom_mem->riccati_Q_mat, 0, 0);
-        blasfeo_dgecp(nu, nu, &custom_mem->riccati_Rconst_mat, 0, 0, &custom_mem->riccati_R_mat, 0, 0);
-        blasfeo_dgecp(nu, nx, &custom_mem->riccati_Sconst_mat, 0, 0, &custom_mem->riccati_S_mat, 0, 0);
+        blasfeo_dgecp(nx, nx, &custom_mem->riccati_Q_const_mat, 0, 0, &custom_mem->riccati_Q_mat, 0, 0);
+        blasfeo_dgecp(nu, nu, &custom_mem->riccati_R_const_mat, 0, 0, &custom_mem->riccati_R_mat, 0, 0);
+        blasfeo_dgecp(nu, nx, &custom_mem->riccati_S_const_mat, 0, 0, &custom_mem->riccati_S_mat, 0, 0);
     {%- endif %}
 
         // temp_riccati_BP_mat = B^T @ P
