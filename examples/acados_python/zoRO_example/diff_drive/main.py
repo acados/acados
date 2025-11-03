@@ -259,21 +259,22 @@ def timing_comparison(n_executions: int):
 
 
 if __name__ == "__main__":
-    # n_executions = 2
-    # for feedback_optimization_mode in ["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST"]:
-    #     run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode=feedback_optimization_mode, n_executions=n_executions)
-    #     run_closed_loop_simulation(use_custom_update=False, feedback_optimization_mode=feedback_optimization_mode, n_executions=n_executions)
-    #     plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode=feedback_optimization_mode)
-    #     compare_results(n_executions=n_executions, feedback_optimization_mode=feedback_optimization_mode)
-    # # Feedback gain computed using riccati with sum of constant cost matrices and Hessian of tightened constraints weighted by 1/h**2
-    # run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_1", n_executions=n_executions)
-    # plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_1")
-    # # Feedback gain computed using riccati with sum of constant cost matrices and Hessian of tightened constraints weighted by -1/(h*backoff*2)
-    # run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode=2, n_executions=n_executions)
-    # plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode=2)
+    n_executions = 2
+    for feedback_optimization_mode in ["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST"]:
+        run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode=feedback_optimization_mode, n_executions=n_executions)
+        run_closed_loop_simulation(use_custom_update=False, feedback_optimization_mode=feedback_optimization_mode, n_executions=n_executions)
+        plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode=feedback_optimization_mode)
+        compare_results(n_executions=n_executions, feedback_optimization_mode=feedback_optimization_mode)
 
-    # closed_loop_trajectories_comparison(n_executions=n_executions, list_feedback_optimization_mode=["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"])
-    # timing_comparison(n_executions=n_executions)
+    # Feedback gain computed using riccati with sum of constant cost matrices and Hessian of tightened constraints weighted by 1/h**2
+    run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_1", n_executions=n_executions)
+    plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_1")
+    # Feedback gain computed using riccati with sum of constant cost matrices and Hessian of tightened constraints weighted by -1/(h*backoff*2)
+    run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode=2, n_executions=n_executions)
+    plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode=2)
+
+    closed_loop_trajectories_comparison(n_executions=n_executions, list_feedback_optimization_mode=["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"])
+    timing_comparison(n_executions=n_executions)
 
     solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode="CONSTANT_FEEDBACK")
     solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode="RICCATI_CONSTANT_COST")
