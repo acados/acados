@@ -239,7 +239,7 @@ def timing_comparison(n_executions: int):
     # keys = "zoRO-24-riccati", "zoRO-24", "zoRO-21-riccati", "zoRO-21"
     dict_results = {}
 
-    for _, tuple in enumerate(zip([True, True, True, True, False, False], ["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_FEEDBACK", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2", "RICCATI_CONSTANT_FEEDBACK", "CONSTANT_FEEDBACK"])):
+    for _, tuple in enumerate(zip([True, True, True, True, False, False], ["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2", "RICCATI_CONSTANT_COST", "CONSTANT_FEEDBACK"])):
         results_filename = get_results_filename(use_custom_update=tuple[0], feedback_optimization_mode=tuple[1], n_executions=n_executions)
         results = load_results(results_filename)
         plot_timings(results['timings'], use_custom_update=tuple[0], fig_name_concat=tuple[1])
@@ -260,7 +260,7 @@ def timing_comparison(n_executions: int):
 
 if __name__ == "__main__":
     n_executions = 2
-    for feedback_optimization_mode in ["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_FEEDBACK"]:
+    for feedback_optimization_mode in ["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST"]:
         run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode=feedback_optimization_mode, n_executions=n_executions)
         run_closed_loop_simulation(use_custom_update=False, feedback_optimization_mode=feedback_optimization_mode, n_executions=n_executions)
         plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode=feedback_optimization_mode)

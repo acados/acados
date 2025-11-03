@@ -26,13 +26,12 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.;
 
-from enum import Enum
 from dataclasses import dataclass, field
 import numpy as np
 from .acados_dims import AcadosOcpDims
 
 
-FEEDBACK_OPTIMIZATION_MODES = ["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_FEEDBACK", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"]
+FEEDBACK_OPTIMIZATION_MODES = ["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"]
 
 @dataclass
 class ZoroDescription:
@@ -60,12 +59,12 @@ class ZoroDescription:
     feedback_optimization_mode: str = "CONSTANT_FEEDBACK"
     """Type of feedback optimization used in zoRO scheme.
 
-    String in: "CONSTANT_FEEDBACK", "RICCATI_CONSTANT_FEEDBACK", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"
+    String in: "CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"
 
     - CONSTANT_FEEDBACK: constant feedback gain K
-    - RICCATI_CONSTANT_FEEDBACK: feedback gains K computed from a Riccati recursion with constant matrices
-    - RICCATI_BARRIER_1: feedback gains K computed from a Riccati recursion with barrier contributions added to the varient in RICCATI_CONSTANT_FEEDBACK, version 1
-    - RICCATI_BARRIER_2: feedback gains K computed from a Riccati recursion with barrier contributions added to the varient in RICCATI_CONSTANT_FEEDBACK, version 2
+    - RICCATI_CONSTANT_COST: feedback gains K computed from a Riccati recursion with constant matrices
+    - RICCATI_BARRIER_1: feedback gains K computed from a Riccati recursion with barrier contributions added to the varient in RICCATI_CONSTANT_COST, version 1
+    - RICCATI_BARRIER_2: feedback gains K computed from a Riccati recursion with barrier contributions added to the varient in RICCATI_CONSTANT_COST, version 2
     """
 
     zoro_riccati_Hessian_tau: float = 1.0
