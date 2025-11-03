@@ -587,6 +587,10 @@ for (int ii = 0; ii < N; ii++)
     blasfeo_dgein1({{zoro_description.riccati_S_const_mat[ir][ic]}}, &custom_mem->riccati_S_const_mat, {{ir}}, {{ic}});
     {%- endfor %}
 {%- endfor %}
+    // initialize riccati_Q_mat, riccati_R_mat, riccati_S_mat <- they dont change for RICCATI_CONSTANT_COST
+    blasfeo_dgecp(nx, nx, &custom_mem->riccati_Q_const_mat, 0, 0, &custom_mem->riccati_Q_mat, 0, 0);
+    blasfeo_dgecp(nu, nu, &custom_mem->riccati_R_const_mat, 0, 0, &custom_mem->riccati_R_mat, 0, 0);
+    blasfeo_dgecp(nu, nx, &custom_mem->riccati_S_const_mat, 0, 0, &custom_mem->riccati_S_mat, 0, 0);
 
     // Set constant values of dct_dux (nlbu_t + nlbx_t + nlg_t + nlh_t + nubu_t + nubx_t + nug_t + nuh_t, nu + nx)
     // the gradients of u is on left of x
@@ -1101,10 +1105,6 @@ static void riccati_recursion(ocp_nlp_solver* solver, ocp_nlp_memory *nlp_mem, c
 
     {%- if zoro_description.feedback_optimization_mode is containing("BARRIER") %}
         update_riccati_quad_matrices(solver, nlp_mem, custom_mem, ii);
-    {%- else %}
-        blasfeo_dgecp(nx, nx, &custom_mem->riccati_Q_const_mat, 0, 0, &custom_mem->riccati_Q_mat, 0, 0);
-        blasfeo_dgecp(nu, nu, &custom_mem->riccati_R_const_mat, 0, 0, &custom_mem->riccati_R_mat, 0, 0);
-        blasfeo_dgecp(nu, nx, &custom_mem->riccati_S_const_mat, 0, 0, &custom_mem->riccati_S_mat, 0, 0);
     {%- endif %}
 
         // temp_riccati_BP_mat = B^T @ P
@@ -1137,7 +1137,6 @@ static void riccati_recursion(ocp_nlp_solver* solver, ocp_nlp_memory *nlp_mem, c
                             1.0, &custom_mem->temp_riccati_P_mat, 0, 0, &custom_mem->temp_riccati_P_mat, 0, 0);
         // temp_riccati_P_plus_mat = temp_riccati_P_mat
         blasfeo_dgecp(nx, nx, &custom_mem->temp_riccati_P_mat, 0, 0, &custom_mem->temp_riccati_P_plus_mat, 0, 0);
-
     }
 
     // NOTE: K[0] is forced to be zero.
