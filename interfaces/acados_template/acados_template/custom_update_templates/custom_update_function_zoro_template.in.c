@@ -1176,7 +1176,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     K_mat = &custom_mem->uncertainty_matrix_buffer[0];
 {%- endif %}
 
-    // First Stage
+    /* First Stage */
     // NOTE: lbx_0 and ubx_0 should not be tightened.
     // NOTE: lg_0 and ug_0 are not tightened.
     // NOTE: lh_0 and uh_0 are not tightened.
@@ -1203,7 +1203,9 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, 0, "ubu", custom_mem->d_ubu_tightened);
 {%- endif %}
 {%- endif %}
-    // Middle Stages
+
+
+    /* Middle Stages */
     // constraint tightening: for next stage based on dynamics of ii stage
     // P[ii+1] = (A-B@K) @ P[ii] @ (A-B@K).T + G@W@G.T
     for (int ii = 0; ii < N-1; ii++)
