@@ -1,7 +1,17 @@
 classdef ZoroDescription < handle
     properties
         backoff_scaling_gamma = 1.0
+
+        feedback_optimization_mode = 'CONSTANT_FEEDBACK'
+        riccati_barrier_tau = 1.0
+
         fdbk_K_mat = []
+
+        riccati_Q_const_mat = []
+        riccati_Q_const_e_mat = []
+        riccati_R_const_mat = []
+        riccati_S_const_mat = []
+
         unc_jac_G_mat = []
         P0_mat = []
         W_mat = []
@@ -27,6 +37,7 @@ classdef ZoroDescription < handle
         input_W_add_diag = false
 
         output_P_matrices = false
+        output_riccati_t = false
 
     % properties (Access = private)
     % kind of private, but need to be dumped to json
@@ -76,6 +87,39 @@ classdef ZoroDescription < handle
 
             if obj.input_P0_diag && obj.input_P0
                 error('Only one of input_P0_diag and input_P0 can be True');
+            end
+
+            FEEDBACK_OPTIMIZATION_MODES = {'CONSTANT_FEEDBACK', 'RICCATI_CONSTANT_COST', 'RICCATI_BARRIER_1', 'RICCATI_BARRIER_2'};
+
+            if ~ismember(obj.feedback_optimization_mode, FEEDBACK_OPTIMIZATION_MODES)
+                error('feedback_optimization_mode should be in %s, got %s.', strjoin(FEEDBACK_OPTIMIZATION_MODES, ', '), obj.feedback_optimization_mode);
+            end
+
+            if ~strcmp(obj.feedback_optimization_mode, 'CONSTANT_FEEDBACK')
+                if isempty(obj.riccati_Q_const_mat) || isempty(obj.riccati_R_const_mat) || isempty(obj.riccati_S_const_mat)
+                    error('riccati_Q_const_mat, riccati_R_const_mat, riccati_S_const_mat should not be empty when feedback_optimization_mode ~= CONSTANT_FEEDBACK.');
+                end
+
+                if ~isequal(size(obj.riccati_Q_const_mat), [dims.nx, dims.nx])
+                    error('The shape of riccati_Q_const_mat should be [nx nx].');
+                end
+                if ~isequal(size(obj.riccati_R_const_mat), [dims.nu, dims.nu])
+                    error('The shape of riccati_R_const_mat should be [nu nu].');
+                end
+                if ~isequal(size(obj.riccati_S_const_mat), [dims.nu, dims.nx])
+                    error('The shape of riccati_S_const_mat should be [nu nx].');
+                end
+
+                if isempty(obj.riccati_Q_const_e_mat)
+                    obj.riccati_Q_const_e_mat = obj.riccati_Q_const_mat;
+                end
+                if ~isequal(size(obj.riccati_Q_const_e_mat), [dims.nx, dims.nx])
+                    error('The shape of riccati_Q_const_e_mat should be [nx nx].');
+                end
+
+                if obj.riccati_barrier_tau <= 0
+                    error('The value of riccati_barrier_tau should be positive.');
+                end
             end
 
             data_size = 0;

@@ -60,7 +60,7 @@ class MPCParam():
     # -1: Pre-computed Feedback
     #  0: Feedback gain computed using riccati with constant cost matrices
     #  1: Feedback gain computed using riccati with sum of constant cost matrices and Hessian of tightened constraints weighted by 1/h**2
-    zoro_riccati_Hessian_tau: float=1.0
+    riccati_barrier_tau: float=1.0
 
     # uncertainty / distrubance
     unc_jac_G_mat: np.ndarray=field(default_factory=lambda: np.zeros(0))
