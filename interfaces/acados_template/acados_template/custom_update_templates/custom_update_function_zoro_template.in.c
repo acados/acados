@@ -870,13 +870,13 @@ static void update_riccati_quad_matrices(ocp_nlp_solver *solver, ocp_nlp_memory 
 {%- endfor %}
 {%- endif %}
 
-{%- if zoro_description.nlh_t + zoro_description.nuh_t> 0 %}
+{%- if zoro_description.nlh_t + zoro_description.nuh_t > 0 %}
 // Get C_k and D_k
     ocp_nlp_get_at_stage(solver, ii, "D", custom_mem->d_Dgh_mat);
     ocp_nlp_get_at_stage(solver, ii, "C", custom_mem->d_Cgh_mat);
 {%- endif %}
 
-{%- if zoro_description.nlg_t + zoro_description.nlh_t> 0 %}
+{%- if zoro_description.nlg_t + zoro_description.nlh_t > 0 %}
 d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 // lg
 {%- for it in zoro_description.idx_lg_t %}
@@ -932,7 +932,7 @@ d_ocp_qp_get_lg(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 {%- endfor %}
 {%- endif %}
 // ug
-{%- if zoro_description.nug_t + zoro_description.nuh_t> 0 %}
+{%- if zoro_description.nug_t + zoro_description.nuh_t > 0 %}
     d_ocp_qp_get_ug(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
 {%- for it in zoro_description.idx_ug_t %}
     temp_nominal_val = - custom_mem->d_ineq_val[{{it}}] - sqrt(blasfeo_dvecex1(custom_mem->ineq_backoff_sq_buffer+ii, nbu + nbx + {{it}})) ;
@@ -1218,7 +1218,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                               &custom_mem->AK_mat, &custom_mem->temp_AP_mat, nx, nu);
 
         // state constraints
-{%- if zoro_description.nlbx_t + zoro_description.nubx_t> 0 %}
+{%- if zoro_description.nlbx_t + zoro_description.nubx_t > 0 %}
     blasfeo_ddiaex_sp(nbx, backoff_scaling_gamma*backoff_scaling_gamma, custom_mem->idxbx, &custom_mem->uncertainty_matrix_buffer[ii+1], 0, 0, &custom_mem->ineq_backoff_sq_buffer[ii+1], nbu);
     blasfeo_dvecad(nbx, backoff_eps, &custom_mem->ricc_ones, 0, &custom_mem->ineq_backoff_sq_buffer[ii+1], nbu);
 
@@ -1348,8 +1348,8 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                         &custom_mem->AK_mat, &custom_mem->temp_AP_mat, nx, nu);
 
     // state constraints nlbx_e_t
-{%- if zoro_description.nlbx_e_t + zoro_description.nubx_e_t> 0 %}
-    blasfeo_ddiaex_sp(nbx_e, backoff_scaling_gamma*backoff_scaling_gamma, &custom_mem->idxbx_e, &custom_mem->uncertainty_matrix_buffer[N], 0, 0, &custom_mem->ineq_backoff_sq_buffer[N], 0);
+{%- if zoro_description.nlbx_e_t + zoro_description.nubx_e_t > 0 %}
+    blasfeo_ddiaex_sp(nbx_e, backoff_scaling_gamma*backoff_scaling_gamma, custom_mem->idxbx_e, &custom_mem->uncertainty_matrix_buffer[N], 0, 0, &custom_mem->ineq_backoff_sq_buffer[N], 0);
     blasfeo_dvecad(nbx_e, backoff_eps, &custom_mem->ricc_ones, 0, &custom_mem->ineq_backoff_sq_buffer[N], 0);
 {%- if zoro_description.nlbx_e_t > 0 %}
     // lbx_e
