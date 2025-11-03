@@ -98,7 +98,7 @@ def plot_timings(timing_dict, use_custom_update: bool, fig_name_concat:str=""):
 
     ax.set_yticklabels(yticklabels)
     plt.grid()
-    plt.xlabel("computation time [ms]")
+    plt.xlabel(r"computation time in $\mathrm{s}$")
     plt.tight_layout()
     max_time = max([np.max(t) for t in timing_dict.values()])
     ax.set_xlim([0, 1.05*max_time])
