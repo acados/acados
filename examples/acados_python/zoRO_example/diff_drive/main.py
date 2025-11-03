@@ -270,7 +270,7 @@ if __name__ == "__main__":
     run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_1", n_executions=n_executions)
     plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_1")
     # Feedback gain computed using riccati with sum of constant cost matrices and Hessian of tightened constraints weighted by -1/(h*backoff*2)
-    run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode=2, n_executions=n_executions)
+    run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_2", n_executions=n_executions)
     plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_2")
 
     closed_loop_trajectories_comparison(n_executions=n_executions, list_feedback_optimization_mode=["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"])
