@@ -842,6 +842,7 @@ static void update_riccati_quad_matrices(ocp_nlp_solver *solver, ocp_nlp_memory 
 
     double temp_nominal_val;
     int ir = 0;
+    // NOTE: this could be enhanced by using blasfeo_dgecpsc instead of blasfeo_dgesc.
 // lbu
 {%- if zoro_description.nlbu_t > 0 %}
     d_ocp_qp_get_lbu(ii, nlp_mem->qp_in, custom_mem->d_ineq_val);
@@ -1092,7 +1093,7 @@ static void riccati_recursion(ocp_nlp_solver* solver, ocp_nlp_memory *nlp_mem, c
 
     for (int ii = N-1; ii >= 1; ii--)
     {
-        // TODO: is it more efficient to get A, B matrices only once and store them in custom memory?
+        // NOTE: It would be most efficient to get pointers to A, B matrices in blasfeo form directly to avoid unpacking AND packing.
         ocp_nlp_get_at_stage(solver, ii, "A", custom_mem->d_A_mat);
         blasfeo_pack_dmat(nx, nx, custom_mem->d_A_mat, nx, &custom_mem->A_mat, 0, 0);
         ocp_nlp_get_at_stage(solver, ii, "B", custom_mem->d_B_mat);
