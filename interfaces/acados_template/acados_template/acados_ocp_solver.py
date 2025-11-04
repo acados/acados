@@ -1203,8 +1203,9 @@ class AcadosOcpSolver:
     def qp_diagnostics(self, hessian_type: str = 'FULL_HESSIAN'):
             """
             Compute some diagnostic values for the last QP.
-            result = ocp_solver.qp_diagnostics(hessian_type). Possible values are
-            'FULL_HESSIAN' or 'PROJECTED_HESSIAN'
+            result = ocp_solver.qp_diagnostics(hessian_type).
+            Possible values are 'FULL_HESSIAN' or 'PROJECTED_HESSIAN'.
+            The Hessian is considered before condensing.
 
             returns a dictionary with the following fields:
             - min_eigv_stage: dict with minimum eigenvalue for each Hessian block.
