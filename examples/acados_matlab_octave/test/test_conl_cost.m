@@ -82,8 +82,6 @@ for i = 1:2
     ocp.solver_options.tf = T;
     ocp.solver_options.N_horizon = N;
 
-    ocp.json_file = ['ocp' model.name '.json'];
-
     % Set cost type
     ocp.cost.cost_type = cost_type;
     ocp.cost.cost_type_e = cost_type;

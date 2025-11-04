@@ -54,7 +54,6 @@ disp('running tests')
 
 %% run all tests
 test_names = [
-    "test_conl_cost",
     "test_code_reuse",
     "test_sim_code_reuse",
     "run_test_dim_check",
@@ -66,6 +65,7 @@ test_names = [
     % "run_test_sim_forw",
     "run_test_sim_hess",
     "param_test",
+    "test_conl_cost"
 ];
 
 for k = 1:length(test_names)
