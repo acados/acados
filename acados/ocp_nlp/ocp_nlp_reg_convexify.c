@@ -867,7 +867,7 @@ void ocp_nlp_reg_convexify_correct_dual_sol(void *config, ocp_nlp_reg_dims *dims
 #else
 
     // last stage
-    blasfeo_dveccp(nx[N], mem->rq[N], nu[N], &mem->tmp_nuxM, nu[N]);
+    blasfeo_drowex(nx[N], 1.0, &mem->original_RSQrq[N], nu[N]+nx[N], nu[N], &mem->tmp_nuxM, nu[N]);
     blasfeo_daxpy(nbu[N]+nbx[N]+ng[N], -1.0, mem->lam[N], 0, mem->lam[N], nbu[N]+nbx[N]+ng[N], &mem->tmp_nbgM, 0);
     blasfeo_dvecad_sp(nbu[N]+nbx[N], 1.0, &mem->tmp_nbgM, 0, mem->idxb[N], &mem->tmp_nuxM, 0);
     // TODO avoid to multiply by R ???
@@ -876,9 +876,10 @@ void ocp_nlp_reg_convexify_correct_dual_sol(void *config, ocp_nlp_reg_dims *dims
     blasfeo_dveccp(nx[N], &mem->tmp_nuxM, nu[N], mem->pi[N-1], 0);
 
     // middle stages
+    // TODO: change indexing.
     for(ii=0; ii<N-1; ii++)
         {
-        blasfeo_dveccp(nx[N-1-ii], mem->rq[N-1-ii], nu[N-1-ii], &mem->tmp_nuxM, nu[N-1-ii]);
+        blasfeo_drowex(nx[N-1-ii], 1.0, &mem->original_RSQrq[N-1-ii], nu[N-1-ii]+nx[N-1-ii], nu[N-1-ii], &mem->tmp_nuxM, nu[N-1-ii]);
         blasfeo_daxpy(nbu[N-1-ii]+nbx[N-1-ii]+ng[N-1-ii], -1.0, mem->lam[N-1-ii], 0, mem->lam[N-1-ii], nbu[N-1-ii]+nbx[N-1-ii]+ng[N-1-ii], &mem->tmp_nbgM, 0);
         blasfeo_dvecad_sp(nbu[N-1-ii]+nbx[N-1-ii], 1.0, &mem->tmp_nbgM, 0, mem->idxb[N-1-ii], &mem->tmp_nuxM, 0);
         // TODO avoid to multiply by R ???
