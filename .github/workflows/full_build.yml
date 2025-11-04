@@ -161,6 +161,7 @@ jobs:
         python slack_min_formulation.py
         python minimal_example_ocp_reuse_code.py
         python example_optimal_value_derivative.py
+        python example_hessian_regularization.py
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=IRK
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=ERK --QP_SOLVER=PARTIAL_CONDENSING_QPDUNES
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=GNSF
