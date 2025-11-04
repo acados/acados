@@ -72,6 +72,8 @@ def plot_timings(timing_dict, use_custom_update: bool, fig_name_concat:str=""):
     # remove keys not to plot:
     del timing_dict['integrator']
     del timing_dict['QP']
+    del timing_dict['feedback']
+    del timing_dict['preparation']
 
     # plot
     fig = plt.figure(figsize=(6.0, 2.1))
@@ -81,9 +83,14 @@ def plot_timings(timing_dict, use_custom_update: bool, fig_name_concat:str=""):
                medianprops=medianprops, showmeans=False,
                whis=[0.0, 100.],
                )
-    ax.set_yticklabels(timing_dict.keys())
+
+    yticklabels = timing_dict.keys()
+    yticklabels = ['backoff update' if s == 'zoRO' else s for s in yticklabels]
+    yticklabels = ['Riccati' if s == 'riccati' else s for s in yticklabels]
+
+    ax.set_yticklabels(yticklabels)
     plt.grid()
-    plt.xlabel("computation time [ms]")
+    plt.xlabel(r"computation time in $\mathrm{s}$")
     plt.tight_layout()
     max_time = max([np.max(t) for t in timing_dict.values()])
     ax.set_xlim([0, 1.05*max_time])
