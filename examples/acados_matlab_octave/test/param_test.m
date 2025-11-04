@@ -29,7 +29,6 @@
 
 %
 
-clear all;
 check_acados_requirements()
 
 import casadi.*
@@ -93,3 +92,5 @@ for stage = [0, 8]
     end
 end
 disp('sparse parameter setter works properly');
+
+clear ocp_solver
