@@ -1672,7 +1672,9 @@ class AcadosOcpSolver:
         Returns an array of the form [res_stat, res_eq, res_ineq, res_comp].
         The residuals has to be computed for SQP_RTI solver, since it is not available by default.
 
-        :param recompute: if True, recompute the residuals with respect to most recent problem data. Note: this can overwrite previous problem linearization in memory which are needed for AS-RTI to work properly!
+        :param recompute: if True, recompute the residuals with respect to most recent problem data.
+
+        Note: this can overwrite previous problem linearization in memory, such as values in qp_in, which are needed for AS-RTI to work properly!
 
         - res_stat: stationarity residual
         - res_eq: residual wrt equality constraints (dynamics)
