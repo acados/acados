@@ -80,6 +80,7 @@ class ZoroMPCSolver:
         self.ocp.constraints.idxbx = np.array([RobotState.VEL.value, RobotState.OMEGA.value])
         self.ocp.constraints.lbx = np.array([self.lbv, -self.ubw])
         self.ocp.constraints.ubx = np.array([self.ubv,  self.ubw])
+        self.ocp.constraints.idxsbx = np.array([0, 1])
         # initial state
         self.ocp.constraints.x0 = np.zeros((cfg.nx, ))
         # terminal state
@@ -100,10 +101,10 @@ class ZoroMPCSolver:
 
         self.ocp.constraints.idxsh = np.arange(0, num_obs)
         self.ocp.constraints.idxsh_e = np.arange(0, num_obs)
-        self.ocp.cost.Zl   = 1e3 * np.ones((num_obs, ))
-        self.ocp.cost.Zu   = 1e3 * np.ones((num_obs, ))
-        self.ocp.cost.zl   = 1e4 * np.ones((num_obs, ))
-        self.ocp.cost.zu   = 1e4 * np.ones((num_obs, ))
+        self.ocp.cost.Zl   = 1e3 * np.ones((num_obs + 2, ))
+        self.ocp.cost.Zu   = 1e3 * np.ones((num_obs + 2, ))
+        self.ocp.cost.zl   = 1e4 * np.ones((num_obs + 2, ))
+        self.ocp.cost.zu   = 1e4 * np.ones((num_obs + 2, ))
         self.ocp.cost.Zl_e = 1e3 * np.ones((num_obs, ))
         self.ocp.cost.Zu_e = 1e3 * np.ones((num_obs, ))
         self.ocp.cost.zl_e = 1e4 * np.ones((num_obs, ))
@@ -120,7 +121,7 @@ class ZoroMPCSolver:
         ]
 
         # solver options
-        self.ocp.solver_options.qp_solver = 'FULL_CONDENSING_DAQP' #'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_DAQP'
+        self.ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' #'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_DAQP'
         self.ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
         self.ocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP, SQP_RTI
         self.ocp.solver_options.qp_tol = 1e-4
@@ -151,7 +152,7 @@ class ZoroMPCSolver:
         # Note: Align the costs with the cost for reference tracking
         zoro_description.riccati_Q_const_e_mat = cfg.Q_e
         zoro_description.riccati_Q_const_mat = cfg.Q * cfg.delta_t
-        zoro_description.riccati_R_const_mat = cfg.R * cfg.delta_t
+        zoro_description.riccati_R_const_mat = cfg.R * cfg.delta_t * 1e-1
         zoro_description.riccati_S_const_mat = np.zeros((2, 5))
 
         ## dummy linear constraints for testing
@@ -319,7 +320,6 @@ class ZoroMPCSolver:
             if not self.verify_nonpositive_slack_variables():
                 status = -10
                 print(f"positive slack variables for state = {x_current}")
-                break
 
             step_sqp = max(np.linalg.norm(x_prev_sol - self.x_temp_sol, np.inf), np.linalg.norm(u_prev_sol - self.u_temp_sol, np.inf))
             if (status==0) and (step_sqp < converg_thr):

@@ -82,7 +82,7 @@ class MPCParam():
         self.R = np.eye(self.nu) * 1e-1
         self.Q_e = np.eye(self.nx)
         self.unc_jac_G_mat = np.eye(self.nx)
-        self.W_mat = np.diag([2.0e-06, 2.0e-06, 4.0e-06, 1.5e-03, 7.0e-03])
+        self.W_mat = np.diag([2.0e-06, 2.0e-06, 4.0e-06, 1.5e-03, 7.0e-03]) * 4.0
         self.P0_mat = np.diag([2.0e-06, 2.0e-06, 4.0e-06, 1.5e-03, 7.0e-03])
 
     @property
