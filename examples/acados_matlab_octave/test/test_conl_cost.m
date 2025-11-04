@@ -158,3 +158,5 @@ end
 
 fprintf('\n=== All tests passed! ===\n');
 fprintf('CONVEX_OVER_NONLINEAR and NONLINEAR_LS produce equivalent solutions.\n');
+
+clear solver
