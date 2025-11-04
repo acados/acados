@@ -1251,8 +1251,7 @@ class AcadosOcpSolver:
                         R_ric = Lr @ Lr.T
                         hess_block = R_ric + B_mat.T @ P_mat @ B_mat
                     else:
-                        P_mat = self.get_from_qp_in(i, 'P')
-                        hess_block = P_mat
+                        hess_block = None
 
                     # P
                     eigv = np.linalg.eigvals(P_mat)
@@ -1261,6 +1260,9 @@ class AcadosOcpSolver:
 
                 else:
                     raise ValueError("Wrong input given to function! Possible inputs are FULL_HESSIAN, PROJECTED_HESSIAN")
+
+                if hess_block is None:
+                    continue
 
                 eigv = np.linalg.eigvals(hess_block)
                 min_eigv = np.min(eigv)
