@@ -53,6 +53,8 @@ disp(pwd)
 disp('running tests')
 
 %% run all tests
+% IMPORTANT: the tests that are called here should NOT use clear all, but only call clear ocp_solver
+
 test_names = [
     "test_code_reuse",
     "test_sim_code_reuse",
