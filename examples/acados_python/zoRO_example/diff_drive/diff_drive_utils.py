@@ -90,7 +90,7 @@ def plot_timings(timing_dict, use_custom_update: bool, fig_name_concat:str=""):
 
     ax.set_yticklabels(yticklabels)
     plt.grid()
-    plt.xlabel(r"computation time in $\mathrm{s}$")
+    plt.xlabel(r"computation time in $\mathrm{ms}$")
     plt.tight_layout()
     max_time = max([np.max(t) for t in timing_dict.values()])
     ax.set_xlim([0, 1.05*max_time])
@@ -184,7 +184,7 @@ def plot_trajectory(cfg: MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray, P_ma
 def plot_multiple_trajectories(cfg: MPCParam, traj_ref:np.ndarray, list_traj_label_tuple:list, closed_loop=True):
 
     list_color = ["tab:blue", "tab:orange", "tab:green", "tab:purple"]
-    list_linestyle = ["-", '--', "-.", ":"]
+    list_linestyle = ["-", '-', "-", "-"]
 
     # Trajectories in 2D plane
     fig = plt.figure(100)
@@ -196,13 +196,13 @@ def plot_multiple_trajectories(cfg: MPCParam, traj_ref:np.ndarray, list_traj_lab
                           )
         ax.add_artist(circ)
 
+    ax.plot(traj_ref[:, 0], traj_ref[:, 1], c='m', linestyle='--', alpha=0.5, label='Reference trajectory')
     for idx, traj_label_tuple in enumerate(list_traj_label_tuple):
         traj_zo = traj_label_tuple[1]
         ax.plot(traj_zo[:, 0], traj_zo[:, 1], color=list_color[idx], linestyle=list_linestyle[idx], label=traj_label_tuple[0])
-    ax.plot(traj_ref[:, 0], traj_ref[:, 1], c='m', linestyle='-', alpha=0.5, label='Reference trajectory')
 
-    ax.set_xlabel("x [m]")
-    ax.set_ylabel("y [m]")
+    ax.set_xlabel(r"$p_\mathrm{x}$ in $\mathrm{m}$")
+    ax.set_ylabel(r"$p_\mathrm{y}$ in $\mathrm{m}$")
     if closed_loop:
         ax.set_xticks(np.arange(-2., 9., 2.))
         ax.set_yticks(np.arange(0., 5., 2.))
@@ -210,7 +210,7 @@ def plot_multiple_trajectories(cfg: MPCParam, traj_ref:np.ndarray, list_traj_lab
     ax.set_aspect("equal")
     ax.legend()
     plt.tight_layout()
-    plt.grid()
+    # plt.grid()
     if not os.path.exists("figures"):
         os.makedirs("figures")
 

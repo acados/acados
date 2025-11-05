@@ -220,7 +220,15 @@ def closed_loop_trajectories_comparison(n_executions: int, list_feedback_optimiz
         else:
             if not np.allclose(traj_ref, results['ref_trajectory']):
                 raise Exception("The reference trajectories are different.")
-        label = feedback_optimization_mode
+        
+        if feedback_optimization_mode == "CONSTANT_FEEDBACK":
+            label = 'ZORO, const. feedback'
+        elif feedback_optimization_mode == "RICCATI_CONSTANT_COST":
+            label = 'RZORO, const. Hessian'
+        elif feedback_optimization_mode == "RICCATI_BARRIER_1":
+            label = 'RZORO, barrier Hessian'
+        else:
+            label = feedback_optimization_mode
         list_traj_label_tuple.append((label, results['trajectory'], results['trajectory_input']))
     plot_multiple_trajectories(cfg_zo, traj_ref, list_traj_label_tuple, closed_loop=True)
 
@@ -269,14 +277,15 @@ if __name__ == "__main__":
     run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_1", n_executions=n_executions)
     plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_1")
     # Feedback gain computed using riccati with sum of constant cost matrices and Hessian of tightened constraints weighted by -1/(h*backoff*2)
-    run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_2", n_executions=n_executions)
-    plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_2")
+    # run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_2", n_executions=n_executions)
+    # plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_2")
 
-    closed_loop_trajectories_comparison(n_executions=n_executions, list_feedback_optimization_mode=["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"])
+    closed_loop_trajectories_comparison(n_executions=n_executions, list_feedback_optimization_mode=["CONSTANT_FEEDBACK", "RICCATI_BARRIER_1"])
+    # closed_loop_trajectories_comparison(n_executions=n_executions, list_feedback_optimization_mode=["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"])
 
     timing_comparison(n_executions=n_executions)
 
     solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode="CONSTANT_FEEDBACK")
     solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode="RICCATI_CONSTANT_COST")
     solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode="RICCATI_BARRIER_1")
-    solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode="RICCATI_BARRIER_2")
+    # solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode="RICCATI_BARRIER_2")
