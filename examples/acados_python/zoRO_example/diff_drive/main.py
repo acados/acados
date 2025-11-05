@@ -277,15 +277,15 @@ if __name__ == "__main__":
     run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_1", n_executions=n_executions)
     plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_1")
     # Feedback gain computed using riccati with sum of constant cost matrices and Hessian of tightened constraints weighted by -1/(h*backoff*2)
-    # run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_2", n_executions=n_executions)
-    # plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_2")
+    run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_2", n_executions=n_executions)
+    plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_2")
 
     closed_loop_trajectories_comparison(n_executions=n_executions, list_feedback_optimization_mode=["CONSTANT_FEEDBACK", "RICCATI_BARRIER_1"])
-    # closed_loop_trajectories_comparison(n_executions=n_executions, list_feedback_optimization_mode=["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"])
+    closed_loop_trajectories_comparison(n_executions=n_executions, list_feedback_optimization_mode=["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"])
 
     timing_comparison(n_executions=n_executions)
 
     solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode="CONSTANT_FEEDBACK")
     solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode="RICCATI_CONSTANT_COST")
     solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode="RICCATI_BARRIER_1")
-    # solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode="RICCATI_BARRIER_2")
+    solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode="RICCATI_BARRIER_2")
