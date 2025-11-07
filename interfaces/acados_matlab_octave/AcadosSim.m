@@ -206,9 +206,6 @@ classdef AcadosSim < handle
                 json_file = self.json_file;
             end
 
-            %% Use convert_to_struct_for_json_dump to serialize CasADi expressions
-            serialized_model_struct = self.model.convert_to_struct_for_json_dump();
-            
             % jsonlab
             acados_folder = getenv('ACADOS_INSTALL_DIR');
             addpath(fullfile(acados_folder, 'external', 'jsonlab'))
@@ -219,7 +216,7 @@ classdef AcadosSim < handle
 
             %% dump JSON file
             sim_json_struct = self.struct();
-            sim_json_struct.model = serialized_model_struct;
+            sim_json_struct.model = self.model.convert_to_struct_for_json_dump();
             sim_json_struct.dims = self.dims.struct();
             sim_json_struct.solver_options = self.solver_options.struct();
 

@@ -120,44 +120,30 @@ classdef AcadosModel < handle
         dyn_gnsf_expr_phi
         dyn_gnsf_expr_f_lo
     end
-    methods(Static)
-        function model = from_struct(model_struct)
-            % Create an AcadosModel from a struct (e.g., loaded from JSON)
-            % This is the inverse of convert_to_struct_for_json_dump
-            
-            model = AcadosModel();
-            
-            % Get expression names and serialized expressions
-            expression_names = {};
-            serialized_expressions = '';
-            if isfield(model_struct, 'expression_names')
-                expression_names = model_struct.expression_names;
-            end
-            if isfield(model_struct, 'serialized_expressions')
-                serialized_expressions = model_struct.serialized_expressions;
-            end
-            
-            if isempty(expression_names) || isempty(serialized_expressions)
-                error('Struct does not contain serialized expressions.');
-            end
-            
-            % Set non-CasADi properties
-            non_casadi_properties = {'name', 'dyn_ext_fun_type', 'dyn_generic_source', ...
-                                    'dyn_disc_fun_jac_hess', 'dyn_disc_fun_jac', 'dyn_disc_fun', ...
-                                    'dyn_impl_dae_fun_jac', 'dyn_impl_dae_jac', 'dyn_impl_dae_fun', ...
-                                    'gnsf_nontrivial_f_LO', 'gnsf_purely_linear'};
-            
-            for i = 1:length(non_casadi_properties)
-                prop_name = non_casadi_properties{i};
-                if isfield(model_struct, prop_name)
-                    model.(prop_name) = model_struct.(prop_name);
-                end
-            end
-            
-            % Deserialize CasADi expressions
-            model.deserialize(serialized_expressions, expression_names);
-        end
+
+    properties(Hidden)
+        % used for serialization / deserialization
+        non_casadi_properties = {'name', 'dyn_ext_fun_type', 'dyn_generic_source', ...
+                        'dyn_disc_fun_jac_hess', 'dyn_disc_fun_jac', 'dyn_disc_fun', ...
+                        'dyn_impl_dae_fun_jac', 'dyn_impl_dae_jac', 'dyn_impl_dae_fun', ...
+                        'gnsf_nontrivial_f_LO', 'gnsf_purely_linear'};
+
+        casadi_properties = {'x', 'xdot', 'u', 'z', 'p', 'p_global', 't', ...
+                            'f_impl_expr', 'f_expl_expr', 'disc_dyn_expr', ...
+                            'con_h_expr_0', 'con_phi_expr_0', 'con_r_expr_0', 'con_r_in_phi_0', ...
+                            'con_h_expr', 'con_phi_expr', 'con_r_expr', 'con_r_in_phi', ...
+                            'con_h_expr_e', 'con_phi_expr_e', 'con_r_expr_e', 'con_r_in_phi_e', ...
+                            'cost_y_expr_0', 'cost_y_expr', 'cost_y_expr_e', ...
+                            'cost_expr_ext_cost_0', 'cost_expr_ext_cost', 'cost_expr_ext_cost_e', ...
+                            'cost_expr_ext_cost_custom_hess_0', 'cost_expr_ext_cost_custom_hess', ...
+                            'cost_expr_ext_cost_custom_hess_e', ...
+                            'cost_psi_expr_0', 'cost_psi_expr', 'cost_psi_expr_e', ...
+                            'cost_r_in_psi_expr_0', 'cost_r_in_psi_expr', 'cost_r_in_psi_expr_e', ...
+                            'cost_conl_custom_outer_hess_0', 'cost_conl_custom_outer_hess', ...
+                            'cost_conl_custom_outer_hess_e'};
+        % TODO add gnsf properties, are they all casadi expressions? they are not part of the python model
     end
+
     methods
         function obj = AcadosModel()
             obj.name = 'acados_model';
@@ -339,52 +325,37 @@ classdef AcadosModel < handle
         function [serialized_str, expression_names] = serialize(self)
             % Serialize all CasADi expressions using CasADi's StringSerializer
             import casadi.*
-            
+
             serializer = StringSerializer();
             expression_names = {};
-            
+
             % List of all properties that could be CasADi expressions
-            casadi_properties = {'x', 'xdot', 'u', 'z', 'p', 'p_global', 't', ...
-                                'f_impl_expr', 'f_expl_expr', 'disc_dyn_expr', ...
-                                'con_h_expr_0', 'con_phi_expr_0', 'con_r_expr_0', 'con_r_in_phi_0', ...
-                                'con_h_expr', 'con_phi_expr', 'con_r_expr', 'con_r_in_phi', ...
-                                'con_h_expr_e', 'con_phi_expr_e', 'con_r_expr_e', 'con_r_in_phi_e', ...
-                                'cost_y_expr_0', 'cost_y_expr', 'cost_y_expr_e', ...
-                                'cost_expr_ext_cost_0', 'cost_expr_ext_cost', 'cost_expr_ext_cost_e', ...
-                                'cost_expr_ext_cost_custom_hess_0', 'cost_expr_ext_cost_custom_hess', ...
-                                'cost_expr_ext_cost_custom_hess_e', ...
-                                'cost_psi_expr_0', 'cost_psi_expr', 'cost_psi_expr_e', ...
-                                'cost_r_in_psi_expr_0', 'cost_r_in_psi_expr', 'cost_r_in_psi_expr_e', ...
-                                'cost_conl_custom_outer_hess_0', 'cost_conl_custom_outer_hess', ...
-                                'cost_conl_custom_outer_hess_e', ...
-                                'sym_gnsf_y', 'sym_gnsf_uhat', ...
-                                'dyn_gnsf_expr_phi', 'dyn_gnsf_expr_f_lo'};
-            
-            for i = 1:length(casadi_properties)
-                prop_name = casadi_properties{i};
+
+            for i = 1:length(self.casadi_properties)
+                prop_name = self.casadi_properties{i};
                 prop_value = self.(prop_name);
-                
+
                 % Check if the property is a CasADi expression
                 if isa(prop_value, 'casadi.SX') || isa(prop_value, 'casadi.MX')
                     serializer.pack(prop_value);
                     expression_names{end+1} = prop_name;
                 end
             end
-            
+
             serialized_str = serializer.encode();
         end
-        
+
         function deserialize(self, serialized_str, expression_names)
             % Deserialize CasADi expressions from a serialized string
             import casadi.*
-            
+
             deserializer = StringDeserializer(serialized_str);
-            
+
             % Handle both cell arrays and regular arrays
             if ~iscell(expression_names)
                 expression_names = {expression_names};
             end
-            
+
             for i = 1:length(expression_names)
                 prop_name = expression_names{i};
                 self.(prop_name) = deserializer.unpack();
@@ -393,22 +364,55 @@ classdef AcadosModel < handle
 
         function out = convert_to_struct_for_json_dump(self)
             out = struct();
-            % all but casadi expressions / variables
-            out.name = self.name;
-            out.dyn_ext_fun_type = self.dyn_ext_fun_type;
-            out.dyn_generic_source = self.dyn_generic_source;
-            out.dyn_disc_fun_jac_hess = self.dyn_disc_fun_jac_hess;
-            out.dyn_disc_fun_jac = self.dyn_disc_fun_jac;
-            out.dyn_disc_fun = self.dyn_disc_fun;
-            out.dyn_impl_dae_fun_jac = self.dyn_impl_dae_fun_jac;
-            out.dyn_impl_dae_jac = self.dyn_impl_dae_jac;
-            out.dyn_impl_dae_fun = self.dyn_impl_dae_fun;
+            % set non-CasADi properties
+            for i = 1:length(self.non_casadi_properties)
+                prop_name = self.non_casadi_properties{i};
+                out.(prop_name) = self.(prop_name);
+            end
 
-            out.gnsf_nontrivial_f_LO = self.gnsf_nontrivial_f_LO;
-            out.gnsf_purely_linear = self.gnsf_purely_linear;
-            
+            for i = 1:length(self.casadi_properties)
+                prop_name = self.casadi_properties{i};
+                expr = self.(prop_name);
+                if isempty(expr) || expr.rows() == 0
+                    out.(prop_name) = [];
+                else
+                    out.(prop_name) = expr.str();
+                end
+            end
             % Serialize all CasADi expressions
             [out.serialized_expressions, out.expression_names] = self.serialize();
+        end
+
+        function model = from_struct(self, model_struct)
+            % Create an AcadosModel from a struct (e.g., loaded from JSON)
+            % This is the inverse of convert_to_struct_for_json_dump
+
+            model = AcadosModel();
+
+            % get expression names and serialized expressions
+            expression_names = {};
+            serialized_expressions = '';
+            if isfield(model_struct, 'expression_names')
+                expression_names = model_struct.expression_names;
+            end
+            if isfield(model_struct, 'serialized_expressions')
+                serialized_expressions = model_struct.serialized_expressions;
+            end
+
+            if isempty(expression_names) || isempty(serialized_expressions)
+                error('Struct does not contain serialized expressions.');
+            end
+
+            % set non-CasADi properties
+            for i = 1:length(self.non_casadi_properties)
+                prop_name = self.non_casadi_properties{i};
+                if isfield(model_struct, prop_name)
+                    model.(prop_name) = model_struct.(prop_name);
+                end
+            end
+
+            % deserialize CasADi expressions
+            model.deserialize(serialized_expressions, expression_names);
         end
     end
 end
