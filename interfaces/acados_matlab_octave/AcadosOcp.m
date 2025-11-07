@@ -987,9 +987,10 @@ classdef AcadosOcp < handle
 
         end
 
-        function make_consistent(self, is_mocp_phase)
+        function make_consistent(self, mocp_info)
+            % mocp_info: struct with info about multi-phase OCP
             if nargin < 2
-                is_mocp_phase = false;
+                mocp_info = [];
             end
             self.model.make_consistent(self.dims);
 
@@ -999,7 +1000,7 @@ classdef AcadosOcp < handle
             constraints = self.constraints;
             opts = self.solver_options;
 
-            self.detect_cost_and_constraints();
+            self.detect_cost_and_constraints(mocp_info);
 
             if isempty(opts.N_horizon) && isempty(dims.N)
                 error('N_horizon not provided.');
@@ -1016,7 +1017,7 @@ classdef AcadosOcp < handle
             end
 
             % check if nx != nx_next
-            if ~is_mocp_phase && dims.nx ~= dims.nx_next && opts.N_horizon > 1
+            if isempty(mocp_info) && dims.nx ~= dims.nx_next && opts.N_horizon > 1
                 error(['nx_next = ', num2str(dims.nx_next), ' must be equal to nx = ', num2str(dims.nx), ' if more than one shooting interval is used.']);
             end
 
@@ -1128,9 +1129,13 @@ classdef AcadosOcp < handle
             end
 
             %% cost
-            self.make_consistent_cost_initial();
+            if isempty(mocp_info) || mocp_info.phase_idx == 0
+                self.make_consistent_cost_initial();
+            end
             self.make_consistent_cost_path();
-            self.make_consistent_cost_terminal();
+            if isempty(mocp_info) || mocp_info.phase_idx == mocp_info.n_phases - 1
+                self.make_consistent_cost_terminal();
+            end
 
             % cost integration
             if strcmp(opts.cost_discretization, "INTEGRATOR") && opts.N_horizon > 0
@@ -1152,9 +1157,13 @@ classdef AcadosOcp < handle
                 constraints.idxbxe_0 = [];
                 dims.nbxe_0 = 0;
             end
-            self.make_consistent_constraints_initial();
+            if isempty(mocp_info) || mocp_info.phase_idx == 0
+                self.make_consistent_constraints_initial();
+            end
             self.make_consistent_constraints_path();
-            self.make_consistent_constraints_terminal();
+            if isempty(mocp_info) || mocp_info.phase_idx == mocp_info.n_phases - 1
+                self.make_consistent_constraints_terminal();
+            end
 
             % if idxs_rev formulation is used at initial or path, no idxs* should be defined
             if ~isempty(constraints.idxs_rev_0) || ~isempty(constraints.idxs_rev)
@@ -1440,7 +1449,7 @@ classdef AcadosOcp < handle
             end
         end
 
-        function [] = detect_cost_and_constraints(self)
+        function [] = detect_cost_and_constraints(self, mocp_info)
             % detect cost type
             N = self.solver_options.N_horizon;
             if N == 0
@@ -1463,9 +1472,10 @@ classdef AcadosOcp < handle
             end
 
             % if initial is empty, copy path cost
-            % TODO: move this to make_consistent? should happen way before?
             if isempty(cost_types{1})
-                warning("cost_type_0 not set, using path cost");
+                if isempty(mocp_info) || mocp_info.phase_idx == 0
+                    warning("cost_type_0 not set, using path cost");
+                end
                 self.cost.cost_type_0 = self.cost.cost_type;
                 self.cost.Vx_0 = self.cost.Vx;
                 self.cost.Vu_0 = self.cost.Vu;
