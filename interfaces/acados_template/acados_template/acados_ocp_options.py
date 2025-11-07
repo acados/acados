@@ -1261,7 +1261,11 @@ class AcadosOcpOptions:
 
     @property
     def nlp_solver_ext_qp_res(self):
-        """Determines if residuals of QP are computed externally within NLP solver (for debugging)
+        """
+        Determines if residuals of QP are computed externally within NLP solver (for debugging).
+        Residuals are computed on input/output of xcond-QP solver, i.e. before condensing and after expanding the QP solution.
+        QP residuals are part of the statistics.
+        Not supported for "SQP_WITH_FEASIBLE_QP".
 
         Type: int; 0 or 1;
         Default: 0.
