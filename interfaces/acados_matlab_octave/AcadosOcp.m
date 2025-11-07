@@ -1017,7 +1017,8 @@ classdef AcadosOcp < handle
             end
 
             % check if nx != nx_next
-            if isempty(mocp_info) && dims.nx ~= dims.nx_next && opts.N_horizon > 1
+            if dims.nx ~= dims.nx_next && ...
+                ( (isempty(mocp_info) && opts.N_horizon > 1) || (~isempty(mocp_info) && mocp_info.N_list(mocp_info.phase_idx+1) > 1) )
                 error(['nx_next = ', num2str(dims.nx_next), ' must be equal to nx = ', num2str(dims.nx), ' if more than one shooting interval is used.']);
             end
 

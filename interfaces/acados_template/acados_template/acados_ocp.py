@@ -984,7 +984,7 @@ class AcadosOcp:
             raise ValueError("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
 
 
-    def make_consistent(self, is_mocp_phase: bool=False, verbose: bool=True) -> None:
+    def make_consistent(self, mocp_info: Optional[dict]=None, verbose: bool=True) -> None:
         """
         Detect dimensions, perform sanity checks
         """
@@ -1008,8 +1008,10 @@ class AcadosOcp:
             dims.N = opts.N_horizon
 
         # check if nx != nx_next
-        if not is_mocp_phase and dims.nx != dims.nx_next and opts.N_horizon > 1:
-            raise ValueError('nx_next should be equal to nx if more than one shooting interval is used.')
+        if (dims.nx != dims.nx_next):
+            if ((mocp_info is None and opts.N_horizon > 1)
+                or (mocp_info is not None and mocp_info['N_list'][mocp_info['phase_idx']] > 1)):
+                raise ValueError('nx_next should be equal to nx if more than one stage is used.')
 
         # parameters
         if self.parameter_values.shape[0] != dims.np:
@@ -1022,9 +1024,11 @@ class AcadosOcp:
                 f'\nGot np_global = {dims.np_global}, self.p_global_values.shape = {self.p_global_values.shape[0]}\n')
 
         ## cost
-        self._make_consistent_cost_initial()
+        if mocp_info is None or mocp_info['phase_idx'] == 0:
+            self._make_consistent_cost_initial()
         self._make_consistent_cost_path()
-        self._make_consistent_cost_terminal()
+        if mocp_info is None or mocp_info['phase_idx'] == mocp_info['n_phases']:
+            self._make_consistent_cost_terminal()
 
         # GN check
         if verbose:
@@ -1058,9 +1062,13 @@ class AcadosOcp:
         ## constraints
         if opts.qp_solver == 'PARTIAL_CONDENSING_QPDUNES':
             self.remove_x0_elimination()
-        self._make_consistent_constraints_initial()
+        if mocp_info is None or mocp_info['phase_idx'] == 0:
+            self._make_consistent_constraints_initial()
+
         self._make_consistent_constraints_path()
-        self._make_consistent_constraints_terminal()
+
+        if mocp_info is None or mocp_info['phase_idx'] == mocp_info['n_phases']:
+            self._make_consistent_constraints_terminal()
 
         # if idxs_rev formulation is used at initial or path, no idxs* should be defined
         if not is_empty(constraints.idxs_rev_0) or not is_empty(constraints.idxs_rev):
