@@ -4300,14 +4300,6 @@ int ocp_nlp_perform_second_order_correction(ocp_nlp_config *config, ocp_nlp_dims
     //     nlp_mem->stat[nlp_mem->stat_n*(nlp_mem->iter+1)+5] += qp_iter;
     // }
 
-    // compute external QP residuals (for debugging)
-    // if (nlp_opts->ext_qp_res)
-    // {
-    //     ocp_qp_res_compute(qp_in, qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
-    //     if (nlp_mem->iter+1 < nlp_mem->stat_m)
-    //         ocp_qp_res_compute_nrm_inf(nlp_work->qp_res, nlp_mem->stat+(nlp_mem->stat_n*(nlp_mem->iter+1)+7));
-    // }
-
     // if (nlp_opts->print_level > 3)
     // {
     //     printf("\n\nSQP: SOC ocp_qp_out at iteration %d\n", nlp_mem->iter);
@@ -4490,6 +4482,12 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
     nlp_timings->time_qp_solver_call += tmp_time;
     qp_solver->memory_get(qp_solver, qp_mem, "time_qp_xcond", &tmp_time);
     nlp_timings->time_qp_xcond += tmp_time;
+
+    // evaluate QP residual externally
+    if (nlp_opts->ext_qp_res)
+    {
+        ocp_qp_res_compute(scaled_qp_in, scaled_qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
+    }
 
     // compute correct dual solution in case of Hessian regularization
     acados_tic(&timer);
