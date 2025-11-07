@@ -74,6 +74,7 @@ def formulate_ocp(Tf: float = 1.0, N: int = 20, regularize_method: str = 'NO_REG
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.nlp_solver_type = 'SQP_RTI'
+    ocp.solver_options.nlp_solver_ext_qp_res = 1
     return ocp
 
 def main(regularize_method):
@@ -87,6 +88,7 @@ def main(regularize_method):
     tol = 1e-6
     for i in range(20):
         status = ocp_solver.solve()
+        ocp_solver.print_statistics()
         hessians_iterate = (get_iterate_hessian(ocp_solver, N))
         eigs_full = ocp_solver.qp_diagnostics('FULL_HESSIAN')
         eigs_proj = ocp_solver.qp_diagnostics('PROJECTED_HESSIAN')
