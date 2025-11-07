@@ -595,7 +595,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     // log external QP residuals
     if (nlp_opts->ext_qp_res)
     {
-        ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*1+2));
+        ocp_qp_res_compute_nrm_inf(nlp_work->qp_res, mem->stat+(mem->stat_n*1+2));
     }
     if (nlp_opts->print_level > 0) {
         printf("\n------- qp_out --------\n");
