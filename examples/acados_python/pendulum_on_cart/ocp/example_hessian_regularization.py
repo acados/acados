@@ -5,6 +5,28 @@ import numpy as np
 from acados_template import AcadosOcp, AcadosOcpSolver
 from pendulum_model import export_pendulum_ode_model
 
+def get_iterate_hessian(ocp_solver: AcadosOcpSolver, N) -> list:
+    """
+    Obtain exact Hessian from the current iterate of the ocp_solver of every stage
+    and form the block diagonal Hessian matrix.
+    """
+    exact_Hessian_list = []
+    for i in range(N+1):
+        hess_block = ocp_solver.get_hessian_block(i)
+        exact_Hessian_list.append(hess_block)
+    return exact_Hessian_list
+
+def check_positive_definite(whole_Hessian, N):
+    '''
+    check each stage Hessian positive definiteness of whole matrix by cholosky decomposition
+    '''
+    for i in range(N+1):
+        stage_Hessian = whole_Hessian[i]
+        try:
+            np.linalg.cholesky(stage_Hessian)
+        except np.linalg.LinAlgError:
+            assert False, f"Stage {i} Hessian is not positive definite. {stage_Hessian=}"
+
 def formulate_ocp(Tf: float = 1.0, N: int = 20, regularize_method: str = 'NO_REGULARIZE') -> AcadosOcp:
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -43,7 +65,6 @@ def formulate_ocp(Tf: float = 1.0, N: int = 20, regularize_method: str = 'NO_REG
     # set options
     ocp.solver_options.tf = Tf
     ocp.solver_options.N_horizon = N
-    ocp.solver_options.store_iterates = True
     ocp.solver_options.nlp_solver_max_iter = 300
     ocp.solver_options.nlp_solver_tol_stat = 1e-7
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES, PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_HPIPM
@@ -52,36 +73,30 @@ def formulate_ocp(Tf: float = 1.0, N: int = 20, regularize_method: str = 'NO_REG
     ocp.solver_options.reg_epsilon = 1e-4
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.integrator_type = 'ERK'
-    ocp.solver_options.nlp_solver_type = 'SQP'
+    ocp.solver_options.nlp_solver_type = 'SQP_RTI'
     return ocp
 
 def main(regularize_method):
     print(f"Testing regularization method: {regularize_method}")
-    N = 100
-    dt = 0.01
+    N = 10
+    dt = 0.05
     Tf = N * dt
     ocp = formulate_ocp(Tf=Tf, N=N, regularize_method=regularize_method)
     ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
-    initial_guess = ocp.create_default_initial_iterate()
-    angle_init = np.linspace(np.pi, 0, N)
-    x_traj = np.zeros((N+1, 4))
-    for i in range(N):
-        x_traj[i][1] = angle_init[i]
-    initial_guess.x_traj = x_traj
-    ocp_solver.load_iterate_from_obj(initial_guess)
-
-    ocp_solver.solve()
-    ocp_solver.print_statistics()
-
-    eigs_full = ocp_solver.qp_diagnostics('FULL_HESSIAN')
-    eigs_proj = ocp_solver.qp_diagnostics('PROJECTED_HESSIAN')
-    print(f"Full Hessian min eigenvalue: {eigs_full['min_eigv_global']}")
-    print(f"Projected Hessian min eigenvalue: {eigs_proj['min_eigv_global']}")
-
-    if regularize_method != 'NO_REGULARIZE':
-        assert eigs_full['min_eigv_global'] >= 0, "Full Hessian is indefinite!"
-        assert eigs_proj['min_eigv_global'] >= 0, "Projected Hessian is indefinite!"
+    tol = 1e-6
+    for i in range(20):
+        status = ocp_solver.solve()
+        hessians_iterate = (get_iterate_hessian(ocp_solver, N))
+        eigs_full = ocp_solver.qp_diagnostics('FULL_HESSIAN')
+        eigs_proj = ocp_solver.qp_diagnostics('PROJECTED_HESSIAN')
+        if regularize_method != 'NO_REGULARIZE':
+            check_positive_definite(hessians_iterate, N)
+            assert eigs_full['min_eigv_global'] >= 0, "Full Hessian is indefinite!"
+            assert eigs_proj['min_eigv_global'] >= 0, "Projected Hessian is indefinite!"
+        residuals = ocp_solver.get_residuals(recompute=True)
+        if max(residuals) < tol or status != 0:
+            break
     ocp_solver = None
 
 if __name__ == "__main__":
