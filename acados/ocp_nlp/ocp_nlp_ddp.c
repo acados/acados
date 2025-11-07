@@ -730,10 +730,9 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->stat[mem->stat_n*(ddp_iter+1)+5] = qp_iter;
         }
 
-        // compute external QP residuals (for debugging)
+        // log external QP residuals
         if (nlp_opts->ext_qp_res)
         {
-            ocp_qp_res_compute(qp_in, qp_out, work->qp_res, work->qp_res_ws);
             if (ddp_iter+1 < mem->stat_m)
                 ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*(ddp_iter+1)+7));
         }

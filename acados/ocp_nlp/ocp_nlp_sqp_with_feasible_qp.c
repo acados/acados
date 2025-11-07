@@ -1557,6 +1557,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->search_direction_mode = opts->search_direction_mode;
     mem->watchdog_zero_slacks_counter = 0;
     mem->l1_infeasibility = -1.0; // default, cannot be negative
+    nlp_opts->ext_qp_res = 0; // logging not supported yet.
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
