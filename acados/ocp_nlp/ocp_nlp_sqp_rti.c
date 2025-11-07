@@ -592,10 +592,9 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
         config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts, "warm_start", &nlp_opts->qp_warm_start);
     }
 
-    // compute external QP residuals (for debugging)
+    // log external QP residuals
     if (nlp_opts->ext_qp_res)
     {
-        ocp_qp_res_compute(nlp_mem->qp_in, nlp_mem->qp_out, work->qp_res, work->qp_res_ws);
         ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*1+2));
     }
     if (nlp_opts->print_level > 0) {

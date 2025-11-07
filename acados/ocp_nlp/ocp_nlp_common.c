@@ -4483,6 +4483,12 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
     qp_solver->memory_get(qp_solver, qp_mem, "time_qp_xcond", &tmp_time);
     nlp_timings->time_qp_xcond += tmp_time;
 
+    // evaluate QP residual externally
+    if (nlp_opts->ext_qp_res)
+    {
+        ocp_qp_res_compute(scaled_qp_in, scaled_qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
+    }
+
     // compute correct dual solution in case of Hessian regularization
     acados_tic(&timer);
     config->regularize->correct_dual_sol(config->regularize, dims->regularize,
