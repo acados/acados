@@ -5,28 +5,6 @@ import numpy as np
 from acados_template import AcadosOcp, AcadosOcpSolver
 from pendulum_model import export_pendulum_ode_model
 
-def get_iterate_hessian(ocp_solver: AcadosOcpSolver, N) -> list:
-    """
-    Obtain exact Hessian from the current iterate of the ocp_solver of every stage
-    and form the block diagonal Hessian matrix.
-    """
-    exact_Hessian_list = []
-    for i in range(N+1):
-        hess_block = ocp_solver.get_hessian_block(i)
-        exact_Hessian_list.append(hess_block)
-    return exact_Hessian_list
-
-def check_positive_definite(whole_Hessian, N):
-    '''
-    check each stage Hessian positive definiteness of whole matrix by cholosky decomposition
-    '''
-    for i in range(N+1):
-        stage_Hessian = whole_Hessian[i]
-        try:
-            np.linalg.cholesky(stage_Hessian)
-        except np.linalg.LinAlgError:
-            assert False, f"Stage {i} Hessian is not positive definite. {stage_Hessian=}"
-
 def formulate_ocp(Tf: float = 1.0, N: int = 20, regularize_method: str = 'NO_REGULARIZE') -> AcadosOcp:
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -74,7 +52,6 @@ def formulate_ocp(Tf: float = 1.0, N: int = 20, regularize_method: str = 'NO_REG
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.nlp_solver_type = 'SQP_RTI'
-    ocp.solver_options.nlp_solver_ext_qp_res = 1
     return ocp
 
 def main(regularize_method):
@@ -88,12 +65,9 @@ def main(regularize_method):
     tol = 1e-6
     for i in range(20):
         status = ocp_solver.solve()
-        ocp_solver.print_statistics()
-        hessians_iterate = (get_iterate_hessian(ocp_solver, N))
         eigs_full = ocp_solver.qp_diagnostics('FULL_HESSIAN')
         eigs_proj = ocp_solver.qp_diagnostics('PROJECTED_HESSIAN')
         if regularize_method != 'NO_REGULARIZE':
-            check_positive_definite(hessians_iterate, N)
             assert eigs_full['min_eigv_global'] >= 0, "Full Hessian is indefinite!"
             assert eigs_proj['min_eigv_global'] >= 0, "Projected Hessian is indefinite!"
         residuals = ocp_solver.get_residuals(recompute=True)
