@@ -1152,12 +1152,12 @@ classdef AcadosOcp < handle
             %% cost
             if isempty(mocp_info)
                 terminal_node_relevant = 1;
-                if solver_options.N_horizon > 0
+                if opts.N_horizon > 0
                     initial_node_relevant = 1;
                 else
                     initial_node_relevant = 0;
                 end
-                if solver_options.N_horizon > 1
+                if opts.N_horizon > 1
                     path_nodes_relevant = 1;
                 else
                     path_nodes_relevant = 0;
