@@ -1024,11 +1024,9 @@ class AcadosOcp:
                 f'\nGot np_global = {dims.np_global}, self.p_global_values.shape = {self.p_global_values.shape[0]}\n')
 
         ## cost
-        if mocp_info is None or mocp_info['phase_idx'] == 0:
-            self._make_consistent_cost_initial()
+        self._make_consistent_cost_initial()
         self._make_consistent_cost_path()
-        if mocp_info is None or mocp_info['phase_idx'] == mocp_info['n_phases']:
-            self._make_consistent_cost_terminal()
+        self._make_consistent_cost_terminal()
 
         # GN check
         if verbose:
@@ -1055,7 +1053,7 @@ class AcadosOcp:
             supports_cost_integration = lambda type : type in ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
             if opts.cost_discretization == 'INTEGRATOR':
                 if any([not supports_cost_integration(cost) for cost in [cost.cost_type_0, cost.cost_type]]):
-                    raise ValueError('cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs.')
+                    raise ValueError(f'cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs, got cost_type_0 {cost.cost_type_0}, cost_type {cost.cost_type}.')
                 if opts.nlp_solver_type == "SQP_WITH_FEASIBLE_QP":
                     raise ValueError('cost_discretization == INTEGRATOR is not compatible with SQP_WITH_FEASIBLE_QP yet.')
 
