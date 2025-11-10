@@ -3450,7 +3450,7 @@ void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule* capsul
         printf("stat_n_max = %d is too small, increase it in the template!\n", stat_n_max);
         exit(1);
     }
-    double stat[{{ solver_options.nlp_solver_max_iter * stat_n_max }}];
+    double stat[{{ (solver_options.nlp_solver_max_iter + 1) * stat_n_max }}];
     ocp_nlp_get(capsule->nlp_solver, "statistics", stat);
 
     int nrow = nlp_iter+1 < stat_m ? nlp_iter+1 : stat_m;

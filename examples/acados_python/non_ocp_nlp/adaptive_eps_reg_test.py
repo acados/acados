@@ -145,6 +145,8 @@ def test_reg_adaptive_eps(regularize_method='MIRROR'):
             qp_diagnostics = ocp_solver.qp_diagnostics()
             assert qp_diagnostics['condition_number_stage'][0] <= ocp.solver_options.reg_max_cond_block +1e-8, f"Condition number must be <= {ocp.solver_options.reg_max_cond_block} per stage, got {qp_diagnostics['condition_number_stage'][0]}"
             assert qp_diagnostics['condition_number_stage'][1] <= ocp.solver_options.reg_max_cond_block +1e-8, f"Condition number must be <= {ocp.solver_options.reg_max_cond_block} per stage, got {qp_diagnostics['condition_number_stage'][1]}"
+
+            print(f"computed eigenvalues: {eigvals_0}")
             if i == 0:
                 print(hess_0)
                 assert np.equal(hess_0, eps_min*np.eye(nx+nu)).all(), f"Zero matrix should be regularized to eps_min * eye for {regularize_method}"
