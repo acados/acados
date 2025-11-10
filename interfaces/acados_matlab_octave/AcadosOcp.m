@@ -91,7 +91,7 @@ classdef AcadosOcp < handle
             end
         end
 
-        function make_consistent_cost_initial(self)
+        function make_consistent_cost_initial(self, initial_node_relevant)
             cost = self.cost;
             dims = self.dims;
             model = self.model;
@@ -103,7 +103,9 @@ classdef AcadosOcp < handle
                     ny = length(cost.W_0);
 
                     if isempty(cost.yref_0)
-                        warning(['yref_0 not defined provided.' 10 'Using zeros(ny_0,1) by default.']);
+                        if initial_node_relevant
+                            warning(['yref_0 not defined provided.' 10 'Using zeros(ny_0,1) by default.']);
+                        end
                         self.cost.yref_0 = zeros(ny,1);
                     end
                     if ny ~= size(cost.Vx_0, 1) || ny ~= size(cost.Vu_0, 1) || ny ~= size(cost.yref_0, 1)
@@ -117,7 +119,9 @@ classdef AcadosOcp < handle
                 if ~isempty(cost.W_0) && ~isempty(model.cost_y_expr_0)
                     ny = length(cost.W_0);
                     if isempty(cost.yref_0)
-                        warning(['yref_0 not defined provided.' 10 'Using zeros(ny_0,1) by default.']);
+                        if initial_node_relevant
+                            warning(['yref_0 not defined provided.' 10 'Using zeros(ny_0,1) by default.']);
+                        end
                         self.cost.yref_0 = zeros(ny,1);
                     end
                     if ny ~= length(model.cost_y_expr_0) || ny ~= size(cost.yref_0, 1)
@@ -152,7 +156,9 @@ classdef AcadosOcp < handle
                     error('cost_psi_expr_0 must be scalar-valued.');
                 end
                 if isempty(cost.yref_0)
-                    warning(['yref_0 not defined provided.' 10 'Using zeros(ny_0,1) by default.']);
+                    if initial_node_relevant
+                        warning(['yref_0 not defined provided.' 10 'Using zeros(ny_0,1) by default.']);
+                    end
                     self.cost.yref_0 = zeros(ny,1);
                 end
                 if size(cost.yref_0,1) ~= ny
@@ -168,7 +174,7 @@ classdef AcadosOcp < handle
             end
         end
 
-        function make_consistent_cost_path(self)
+        function make_consistent_cost_path(self, path_nodes_relevant)
             cost = self.cost;
             dims = self.dims;
             model = self.model;
@@ -179,7 +185,9 @@ classdef AcadosOcp < handle
                 if ~isempty(cost.W) && ~isempty(cost.Vx) && ~isempty(cost.Vu)
                     ny = length(cost.W);
                     if isempty(cost.yref)
-                        warning(['yref not defined provided.' 10 'Using zeros(ny,1) by default.']);
+                        if path_nodes_relevant
+                            warning(['yref not defined provided.' 10 'Using zeros(ny,1) by default.']);
+                        end
                         self.cost.yref = zeros(ny,1);
                     end
                     if ny ~= size(cost.Vx, 1) || ny ~= size(cost.Vu, 1) || ny ~= size(cost.yref, 1)
@@ -193,7 +201,9 @@ classdef AcadosOcp < handle
                 if ~isempty(cost.W) && ~isempty(model.cost_y_expr)
                     ny = length(cost.W);
                     if isempty(cost.yref)
-                        warning(['yref not defined provided.' 10 'Using zeros(ny,1) by default.']);
+                        if path_nodes_relevant
+                            warning(['yref not defined provided.' 10 'Using zeros(ny,1) by default.']);
+                        end
                         self.cost.yref = zeros(ny,1);
                     end
                     if ny ~= length(model.cost_y_expr) || ny ~= size(cost.yref, 1)
@@ -219,7 +229,9 @@ classdef AcadosOcp < handle
                     error('cost_psi_expr not provided or not scalar-valued.');
                 end
                 if isempty(cost.yref)
-                    warning(['yref not defined provided.' 10 'Using zeros(ny,1) by default.']);
+                    if path_nodes_relevant
+                        warning(['yref not defined provided.' 10 'Using zeros(ny,1) by default.']);
+                    end
                     self.cost.yref = zeros(ny,1);
                 end
                 if size(cost.yref,1) ~= ny
@@ -234,7 +246,7 @@ classdef AcadosOcp < handle
             end
         end
 
-        function make_consistent_cost_terminal(self)
+        function make_consistent_cost_terminal(self, terminal_node_relevant)
             cost = self.cost;
             dims = self.dims;
             model = self.model;
@@ -243,7 +255,9 @@ classdef AcadosOcp < handle
                 if ~isempty(cost.W_e) && ~isempty(cost.Vx_e)
                     ny_e = length(cost.W_e);
                     if isempty(cost.yref_e)
-                        warning(['yref_e not defined provided.' 10 'Using zeros(ny_e,1) by default.']);
+                        if terminal_node_relevant
+                            warning(['yref_e not defined provided.' 10 'Using zeros(ny_e,1) by default.']);
+                        end
                         self.cost.yref_e = zeros(ny_e,1);
                     end
                     if ny_e ~= size(cost.Vx_e, 1) || ny_e ~= size(cost.yref_e, 1)
@@ -251,7 +265,9 @@ classdef AcadosOcp < handle
                     end
                 elseif ~~isempty(cost.W_e) && ~~isempty(cost.Vx_e)
                     ny_e = 0;
-                    warning('Fields W_e and Vx_e not provided. Using empty ls terminal cost.')
+                    if terminal_node_relevant
+                        warning('Fields W_e and Vx_e not provided. Using empty ls terminal cost.')
+                    end
                 else
                     error('setting linear least square cost: need W_e, Vx_e, at least one missing.')
                 end
@@ -260,7 +276,9 @@ classdef AcadosOcp < handle
                 if ~isempty(cost.W_e) && ~isempty(model.cost_y_expr_e)
                     ny_e = length(cost.W_e);
                     if isempty(cost.yref_e)
-                        warning(['yref_e not defined provided.' 10 'Using zeros(ny_e,1) by default.']);
+                        if terminal_node_relevant
+                            warning(['yref_e not defined provided.' 10 'Using zeros(ny_e,1) by default.']);
+                        end
                         self.cost.yref_e = zeros(ny_e,1);
                     end
                     if ny_e ~= length(model.cost_y_expr_e) || ny_e ~= size(cost.yref_e, 1)
@@ -286,7 +304,9 @@ classdef AcadosOcp < handle
                     error('cost_psi_expr_e not provided or not scalar-valued.');
                 end
                 if isempty(cost.yref_e)
-                    warning(['yref_e not defined provided.' 10 'Using zeros(ny_e,1) by default.']);
+                    if terminal_node_relevant
+                        warning(['yref_e not defined provided.' 10 'Using zeros(ny_e,1) by default.']);
+                    end
                     self.cost.yref_e = zeros(ny_e,1);
                 end
                 if size(cost.yref_e,1) ~= ny_e
@@ -1130,13 +1150,41 @@ classdef AcadosOcp < handle
             end
 
             %% cost
-            if isempty(mocp_info) || mocp_info.phase_idx == 0
-                self.make_consistent_cost_initial();
+            if isempty(mocp_info)
+                terminal_node_relevant = 1;
+                if solver_options.N_horizon > 0
+                    initial_node_relevant = 1;
+                else
+                    initial_node_relevant = 0;
+                end
+                if solver_options.N_horizon > 1
+                    path_nodes_relevant = 1;
+                else
+                    path_nodes_relevant = 0;
+                end                
+            else
+                % MOCP
+                if mocp_info.phase_idx == 0
+                    initial_node_relevant = 1;
+                else
+                    initial_node_relevant = 0;
+                end
+                if mocp_info.phase_idx == mocp_info.phase_idx == mocp_info.n_phases - 1
+                    terminal_node_relevant = 1;
+                else
+                    terminal_node_relevant = 0;
+                end
+                if mocp_info.N_list(mocp_info.phase_idx+1) > 1
+                    path_nodes_relevant = 1;
+                else
+                    path_nodes_relevant = 0;
+                end
             end
-            self.make_consistent_cost_path();
-            if isempty(mocp_info) || mocp_info.phase_idx == mocp_info.n_phases - 1
-                self.make_consistent_cost_terminal();
-            end
+
+            
+            self.make_consistent_cost_initial(initial_node_relevant);
+            self.make_consistent_cost_path(path_nodes_relevant);
+            self.make_consistent_cost_terminal(terminal_node_relevant);
 
             % cost integration
             if strcmp(opts.cost_discretization, "INTEGRATOR") && opts.N_horizon > 0
