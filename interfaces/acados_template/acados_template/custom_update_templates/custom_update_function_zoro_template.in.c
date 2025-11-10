@@ -1184,7 +1184,9 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     compute_KPK(K_mat, &custom_mem->temp_KP_mat,
                 &custom_mem->temp_KPK_mat, &custom_mem->uncertainty_matrix_buffer[0], nx, nu);
     blasfeo_ddiaex_sp(nbu, backoff_scaling_gamma*backoff_scaling_gamma, custom_mem->idxbu, &custom_mem->temp_KPK_mat, 0, 0, &custom_mem->ineq_backoff_sq_buffer[0], 0);
+{%- if zoro_description.feedback_optimization_mode is containing("BARRIER") %}
     blasfeo_dvecad(nbu, backoff_eps, &custom_mem->ricc_ones, 0, &custom_mem->ineq_backoff_sq_buffer[0], 0);
+{%- endif %}
 
 {%- if zoro_description.nlbu_t > 0 %}
     // backoff lbu
@@ -1233,8 +1235,9 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
         // state constraints
 {%- if zoro_description.nlbx_t + zoro_description.nubx_t > 0 %}
     blasfeo_ddiaex_sp(nbx, backoff_scaling_gamma*backoff_scaling_gamma, custom_mem->idxbx, &custom_mem->uncertainty_matrix_buffer[ii+1], 0, 0, &custom_mem->ineq_backoff_sq_buffer[ii+1], nbu);
+{%- if zoro_description.feedback_optimization_mode is containing("BARRIER") %}
     blasfeo_dvecad(nbx, backoff_eps, &custom_mem->ricc_ones, 0, &custom_mem->ineq_backoff_sq_buffer[ii+1], nbu);
-
+{%- endif %}
     {%- if zoro_description.nlbx_t > 0 %}
         // lbx
         {%- for it in zoro_description.idx_lbx_t %}
@@ -1258,8 +1261,9 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
         compute_KPK(K_mat, &custom_mem->temp_KP_mat,
             &custom_mem->temp_KPK_mat, &custom_mem->uncertainty_matrix_buffer[ii+1], nx, nu);
         blasfeo_ddiaex_sp(nbu, backoff_scaling_gamma*backoff_scaling_gamma, custom_mem->idxbu, &custom_mem->temp_KPK_mat, 0, 0, &custom_mem->ineq_backoff_sq_buffer[ii+1], 0);
+{%- if zoro_description.feedback_optimization_mode is containing("BARRIER") %}
         blasfeo_dvecad(nbu, backoff_eps, &custom_mem->ricc_ones, 0, &custom_mem->ineq_backoff_sq_buffer[ii+1], 0);
-
+{%- endif %}
     {%- if zoro_description.nlbu_t > 0 %}
         {%- for it in zoro_description.idx_lbu_t %}
         custom_mem->d_lbu_tightened[{{it}}] = custom_mem->d_lbu[{{it}}] + sqrt(blasfeo_dvecex1(&custom_mem->ineq_backoff_sq_buffer[ii+1], {{it}}));
@@ -1282,8 +1286,9 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                      &custom_mem->temp_CaDKmP_mat, &custom_mem->temp_beta_mat,
                      &custom_mem->uncertainty_matrix_buffer[ii+1], ng, nx, nu);
         blasfeo_ddiaex(ng, backoff_scaling_gamma*backoff_scaling_gamma, &custom_mem->temp_beta_mat, 0, 0, &custom_mem->ineq_backoff_sq_buffer[ii+1], nbu + nbx);
+{%- if zoro_description.feedback_optimization_mode is containing("BARRIER") %}
         blasfeo_dvecad(ng, backoff_eps, &custom_mem->ricc_ones, 0, &custom_mem->ineq_backoff_sq_buffer[ii+1], nbu + nbx);
-
+{%- endif %}
     {%- if zoro_description.nlg_t > 0 %}
         {%- for it in zoro_description.idx_lg_t %}
         custom_mem->d_lg_tightened[{{it}}]
@@ -1315,8 +1320,9 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                      &custom_mem->temp_CaDKmP_mat, &custom_mem->temp_beta_mat,
                      &custom_mem->uncertainty_matrix_buffer[ii+1], nh, nx, nu);
         blasfeo_ddiaex(nh, backoff_scaling_gamma*backoff_scaling_gamma, &custom_mem->temp_beta_mat, 0, 0, &custom_mem->ineq_backoff_sq_buffer[ii+1], nbu + nbx + ng);
+{%- if zoro_description.feedback_optimization_mode is containing("BARRIER") %}
         blasfeo_dvecad(nh, backoff_eps, &custom_mem->ricc_ones, 0, &custom_mem->ineq_backoff_sq_buffer[ii+1], nbu + nbx + ng);
-
+{%- endif %}
         // TODO: eval hessian(h) -> H_hess (nh*(nx+nu)**2)
         // temp_Kt_hhess = h_i_hess[:nx, :] + K^T * h_i_hess[nx:nx+nu, :]
         // tempCD = temp_CaDKmP_mat * temp_Kt_hhess
@@ -1367,7 +1373,9 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     // state constraints nlbx_e_t
 {%- if zoro_description.nlbx_e_t + zoro_description.nubx_e_t > 0 %}
     blasfeo_ddiaex_sp(nbx_e, backoff_scaling_gamma*backoff_scaling_gamma, custom_mem->idxbx_e, &custom_mem->uncertainty_matrix_buffer[N], 0, 0, &custom_mem->ineq_backoff_sq_buffer[N], 0);
+{%- if zoro_description.feedback_optimization_mode is containing("BARRIER") %}
     blasfeo_dvecad(nbx_e, backoff_eps, &custom_mem->ricc_ones, 0, &custom_mem->ineq_backoff_sq_buffer[N], 0);
+{%- endif %}
 {%- if zoro_description.nlbx_e_t > 0 %}
     // lbx_e
     {%- for it in zoro_description.idx_lbx_e_t %}
@@ -1393,8 +1401,9 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                     &custom_mem->temp_CaDKmP_mat, &custom_mem->temp_beta_mat,
                     &custom_mem->uncertainty_matrix_buffer[N], ng_e, nx, nu);
     blasfeo_ddiaex(ng_e, backoff_scaling_gamma*backoff_scaling_gamma, &custom_mem->temp_beta_mat, 0, 0, &custom_mem->ineq_backoff_sq_buffer[N], nbx_e);
+{%- if zoro_description.feedback_optimization_mode is containing("BARRIER") %}
     blasfeo_dvecad(ng_e, backoff_eps, &custom_mem->ricc_ones, 0, &custom_mem->ineq_backoff_sq_buffer[N], nbx_e);
-
+{%- endif %}
 {%- if zoro_description.nlg_e_t > 0 %}
     {%- for it in zoro_description.idx_lg_e_t %}
     custom_mem->d_lg_e_tightened[{{it}}]
@@ -1424,8 +1433,9 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                     &custom_mem->temp_CaDKmP_mat, &custom_mem->temp_beta_mat,
                     &custom_mem->uncertainty_matrix_buffer[N], nh_e, nx, nu);
     blasfeo_ddiaex(nh_e, backoff_scaling_gamma*backoff_scaling_gamma, &custom_mem->temp_beta_mat, 0, 0, &custom_mem->ineq_backoff_sq_buffer[N], nbx_e + ng_e);
+{%- if zoro_description.feedback_optimization_mode is containing("BARRIER") %}
     blasfeo_dvecad(nh_e, backoff_eps, &custom_mem->ricc_ones, 0, &custom_mem->ineq_backoff_sq_buffer[N], nbx_e + ng_e);
-
+{%- endif %}
     {%- if zoro_description.nlh_e_t > 0 %}
         {%- for it in zoro_description.idx_lh_e_t %}
         custom_mem->d_lh_e_tightened[{{it}}]
