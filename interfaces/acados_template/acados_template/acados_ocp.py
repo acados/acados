@@ -1060,13 +1060,10 @@ class AcadosOcp:
         ## constraints
         if opts.qp_solver == 'PARTIAL_CONDENSING_QPDUNES':
             self.remove_x0_elimination()
-        if mocp_info is None or mocp_info['phase_idx'] == 0:
-            self._make_consistent_constraints_initial()
 
+        self._make_consistent_constraints_initial()
         self._make_consistent_constraints_path()
-
-        if mocp_info is None or mocp_info['phase_idx'] == mocp_info['n_phases']:
-            self._make_consistent_constraints_terminal()
+        self._make_consistent_constraints_terminal()
 
         # if idxs_rev formulation is used at initial or path, no idxs* should be defined
         if not is_empty(constraints.idxs_rev_0) or not is_empty(constraints.idxs_rev):
