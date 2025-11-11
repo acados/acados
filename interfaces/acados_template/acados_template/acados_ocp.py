@@ -984,7 +984,7 @@ class AcadosOcp:
             raise ValueError("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
 
 
-    def make_consistent(self, is_mocp_phase: bool=False, verbose: bool=True) -> None:
+    def make_consistent(self, mocp_info: Optional[dict]=None, verbose: bool=True) -> None:
         """
         Detect dimensions, perform sanity checks
         """
@@ -1008,8 +1008,10 @@ class AcadosOcp:
             dims.N = opts.N_horizon
 
         # check if nx != nx_next
-        if not is_mocp_phase and dims.nx != dims.nx_next and opts.N_horizon > 1:
-            raise ValueError('nx_next should be equal to nx if more than one shooting interval is used.')
+        if (dims.nx != dims.nx_next):
+            if ((mocp_info is None and opts.N_horizon > 1)
+                or (mocp_info is not None and mocp_info['N_list'][mocp_info['phase_idx']] > 1)):
+                raise ValueError('nx_next should be equal to nx if more than one stage is used.')
 
         # parameters
         if self.parameter_values.shape[0] != dims.np:
@@ -1051,13 +1053,14 @@ class AcadosOcp:
             supports_cost_integration = lambda type : type in ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
             if opts.cost_discretization == 'INTEGRATOR':
                 if any([not supports_cost_integration(cost) for cost in [cost.cost_type_0, cost.cost_type]]):
-                    raise ValueError('cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs.')
+                    raise ValueError(f'cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs, got cost_type_0 {cost.cost_type_0}, cost_type {cost.cost_type}.')
                 if opts.nlp_solver_type == "SQP_WITH_FEASIBLE_QP":
                     raise ValueError('cost_discretization == INTEGRATOR is not compatible with SQP_WITH_FEASIBLE_QP yet.')
 
         ## constraints
         if opts.qp_solver == 'PARTIAL_CONDENSING_QPDUNES':
             self.remove_x0_elimination()
+
         self._make_consistent_constraints_initial()
         self._make_consistent_constraints_path()
         self._make_consistent_constraints_terminal()
