@@ -206,13 +206,20 @@ def plot_multiple_trajectories(cfg: MPCParam, traj_ref:np.ndarray, list_traj_lab
     if closed_loop:
         ax.set_xticks(np.arange(-2., 9., 2.))
         ax.set_yticks(np.arange(0., 5., 2.))
-        ax.set_ylim([-.5, 3.6])
+        # ax.set_ylim([-.5, 3.6])
+        ax.set_ylim([-.3, 2.2])
+        ax.set_xlim([-2.3, 8.1])
+        ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1), ncol=2)
+    else:
+        ax.legend()
+
     ax.set_aspect("equal")
-    ax.legend()
     plt.tight_layout()
     # plt.grid()
     if not os.path.exists("figures"):
         os.makedirs("figures")
+    # small hack to have relatively larger fontsize
+    fig.set_figwidth(fig.get_figwidth() * .9)
 
     fig_filename = os.path.join("figures", f"diff_drive_sim_multiple_trajectories.pdf")
     plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
