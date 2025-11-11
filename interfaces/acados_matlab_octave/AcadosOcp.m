@@ -1316,6 +1316,17 @@ classdef AcadosOcp < handle
 
             % TODO: add checks for solution sensitivities when brining them to MATLAB
 
+            if strcmp(opts.regularize_method, 'PROJECT_REDUC_HESS')
+                if opts.qp_solver_ric_alg ~= 0
+                    opts.qp_solver_ric_alg = 0;
+                    warning('For regularize_method PROJECT_REDUC_HESS, qp_solver_ric_alg should be 0, option was changed automatically.');
+                end
+                if opts.qp_solver_cond_ric_alg ~= 0
+                    opts.qp_solver_cond_ric_alg = 0;
+                    warning('For regularize_method PROJECT_REDUC_HESS, qp_solver_cond_ric_alg should be 0, option was changed automatically.');
+                end
+            end
+
             % check if qp_solver_cond_N is set
             if isempty(opts.qp_solver_cond_N)
                 opts.qp_solver_cond_N = opts.N_horizon;
