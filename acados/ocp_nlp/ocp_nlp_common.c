@@ -4314,8 +4314,8 @@ int ocp_nlp_perform_second_order_correction(ocp_nlp_config *config, ocp_nlp_dims
     if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
     {
 #ifndef ACADOS_SILENT
-        printf("\nQP solver returned error status %s in SQP iteration %d for SOC QP.\n",
-            status_to_string(qp_status), nlp_mem->iter);
+        printf("\nQP solver returned error status %d (%s) in SQP iteration %d for SOC QP.\n",
+            qp_status, status_to_string(qp_status), nlp_mem->iter);
 #endif
         // if (nlp_opts->print_level > 1)
         // {

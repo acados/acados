@@ -774,7 +774,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             if (nlp_opts->print_level > 1)
             {
-                printf("\nFailure in globalization, got status %d!\n", globalization_status);
+                printf("\nFailure in globalization, got status %d (%s)!\n", globalization_status, status_to_string(globalization_status));
             }
             nlp_mem->status = globalization_status;
             nlp_timings->time_tot = acados_toc(&timer0);
