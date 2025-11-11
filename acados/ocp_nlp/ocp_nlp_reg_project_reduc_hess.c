@@ -79,7 +79,7 @@ void ocp_nlp_reg_project_reduc_hess_opts_initialize_default(void *config_, ocp_n
 
 void ocp_nlp_reg_project_reduc_hess_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
-
+    // TODO: make options consistent
     ocp_nlp_reg_project_reduc_hess_opts *opts = opts_;
 
     if (!strcmp(field, "thr_eig"))
@@ -128,7 +128,7 @@ acados_size_t ocp_nlp_reg_project_reduc_hess_memory_calculate_size(void *config_
     int nuxM = nu[0]+nx[0];
     int nuM = nu[0];
     int nxM = nx[0];
-    for(ii=1; ii<=N; ii++)
+    for (ii=1; ii<=N; ii++)
     {
         nuxM = nu[ii]+nx[ii]>nuxM ? nu[ii]+nx[ii] : nuxM;
         nuM = nu[ii]>nuM ? nu[ii] : nuM;
@@ -170,7 +170,7 @@ void *ocp_nlp_reg_project_reduc_hess_memory_assign(void *config_, ocp_nlp_reg_di
     int nuxM = nu[0]+nx[0];
     int nuM = nu[0];
     int nxM = nx[0];
-    for(ii=1; ii<=N; ii++)
+    for (ii=1; ii<=N; ii++)
     {
         nuxM = nu[ii]+nx[ii]>nuxM ? nu[ii]+nx[ii] : nuxM;
         nuM = nu[ii]>nuM ? nu[ii] : nuM;
@@ -224,7 +224,7 @@ void ocp_nlp_reg_project_reduc_hess_memory_set_RSQrq_ptr(ocp_nlp_reg_dims *dims,
 
     int N = dims->N;
 
-    for(ii=0; ii<=N; ii++)
+    for (ii=0; ii<=N; ii++)
     {
         memory->RSQrq[ii] = RSQrq+ii;
     }
@@ -249,7 +249,7 @@ void ocp_nlp_reg_project_reduc_hess_memory_set_BAbt_ptr(ocp_nlp_reg_dims *dims, 
 
     int N = dims->N;
 
-    for(ii=0; ii<N; ii++)
+    for (ii=0; ii<N; ii++)
     {
         memory->BAbt[ii] = BAbt+ii;
     }
@@ -304,12 +304,12 @@ void ocp_nlp_reg_project_reduc_hess_memory_set_lam_ptr(ocp_nlp_reg_dims *dims, s
 void ocp_nlp_reg_project_reduc_hess_memory_set(void *config_, ocp_nlp_reg_dims *dims, void *memory_, char *field, void *value)
 {
 
-    if(!strcmp(field, "RSQrq_ptr"))
+    if (!strcmp(field, "RSQrq_ptr"))
     {
         struct blasfeo_dmat *RSQrq = value;
         ocp_nlp_reg_project_reduc_hess_memory_set_RSQrq_ptr(dims, RSQrq, memory_);
     }
-    else if(!strcmp(field, "BAbt_ptr"))
+    else if (!strcmp(field, "BAbt_ptr"))
     {
         struct blasfeo_dmat *BAbt = value;
         ocp_nlp_reg_project_reduc_hess_memory_set_BAbt_ptr(dims, BAbt, memory_);
@@ -352,34 +352,38 @@ void ocp_nlp_reg_project_reduc_hess_regularize(void *config, ocp_nlp_reg_dims *d
 
 
     // last + middle stages
-    for(ii=-1; ii<N-1; ii++)
+    for (ii=-1; ii<N-1; ii++)
     {
 
         ss = N-ii-1;
         // last stage
-        if(ss==N)
+        if (ss==N)
         {
+            // copy lower triangular: L = RSQ
             blasfeo_dtrcp_l(nu[ss]+nx[ss], mem->RSQrq[ss], 0, 0, L, 0, 0);
         }
         // middle stages
         else
         {
+            // AL += BA * P^T
             blasfeo_dgemm_nt(nu[ss]+nx[ss], nx[ss+1], nx[ss+1], 1.0, mem->BAbt[ss], 0, 0, P, 0, 0, 0.0, AL, 0, 0, AL, 0, 0); // TODO symm
+            // L = RSQ + AL * BA^T
             blasfeo_dsyrk_ln(nu[ss]+nx[ss], nx[ss+1], 1.0, AL, 0, 0, mem->BAbt[ss], 0, 0, 1.0, mem->RSQrq[ss], 0, 0, L, 0, 0);
         }
+        // make L symmetric
         blasfeo_dtrtr_l(nu[ss]+nx[ss], L, 0, 0, L, 0, 0); // necessary ???
 
         // backup L in L3
         blasfeo_dgese(nu[ss]+nx[ss], nu[ss]+nx[ss], 0.0, L3, 0, 0);
         blasfeo_dgecp(nu[ss]+nx[ss], nu[ss], L, 0, 0, L3, 0, 0);
 
-        // project L_R
+        // project L (Does this relate to L_R from Riccati)
         blasfeo_unpack_dmat(nu[ss], nu[ss], L, 0, 0, mem->reg_hess, nu[ss]);
         acados_eigen_decomposition(nu[ss], mem->reg_hess, mem->V, mem->d, mem->e);
         do_reg = 0;
-        for(jj=0; jj<nu[ss]; jj++)
+        for (jj=0; jj<nu[ss]; jj++)
         {
-            if(mem->d[jj]<opts->thr_eig)
+            if (mem->d[jj] < opts->thr_eig)
             {
                 mem->e[jj] = opts->min_eig - mem->d[jj];
                 do_reg = 1;
@@ -389,10 +393,14 @@ void ocp_nlp_reg_project_reduc_hess_regularize(void *config, ocp_nlp_reg_dims *d
                 mem->e[jj] = 0.0;
             }
         }
-        if(do_reg)
+        if (do_reg)
         {
+            // reg_hess = V^T * diag(e) * V
             acados_reconstruct_A(nu[ss], mem->reg_hess, mem->V, mem->e);
-            blasfeo_dgese(nu[ss]+nx[ss], nu[ss]+nx[ss], 0.0, L2, 0, 0);
+
+            // L2 = [reg_hess, 0
+            //              0, 0]
+            blasfeo_dgese(nu[ss]+nx[ss], nu[ss]+nx[ss], 0.0, L2, 0, 0);  // TODO: only use nu x nu block.?
             blasfeo_pack_dmat(nu[ss], nu[ss], mem->reg_hess, nu[ss], L2, 0, 0);
 
             // apply reg to R
@@ -408,36 +416,36 @@ void ocp_nlp_reg_project_reduc_hess_regularize(void *config, ocp_nlp_reg_dims *d
         blasfeo_dsyrk_ln_mn(nx[ss], nx[ss], nu[ss], -1.0, Ls, 0, 0, Ls, 0, 0, 0.0, L2, nu[ss], nu[ss], L2, nu[ss], nu[ss]);
 
         // compute true_schur
-        if(do_reg)
+        if (do_reg)
         {
-            for(jj=0; jj<nu[ss]; jj++)
+            for (jj=0; jj<nu[ss]; jj++)
             {
-                if(opts->pivoting)
+                if (opts->pivoting)
                 {
                     // find pivot element
                     pivot = BLASFEO_DMATEL(L3, jj, jj);
                     idx = jj;
-                    for(kk=jj+1; kk<nu[ss]; kk++)
+                    for (kk=jj+1; kk<nu[ss]; kk++)
                     {
                         tmp_el = BLASFEO_DMATEL(L3, kk, kk);
-                        if((tmp_el<pivot) & (tmp_el>-pivot))
+                        if ((tmp_el<pivot) & (tmp_el>-pivot))
                         {
                             pivot = BLASFEO_DMATEL(L3, kk, kk);
                             idx = kk;
                         }
                     }
                     // symmetric permute
-                    if(idx!=jj)
+                    if (idx!=jj)
                     {
                         // top triangle
-                        for(kk=jj; kk<idx; kk++)
+                        for (kk=jj; kk<idx; kk++)
                         {
                             tmp_el = BLASFEO_DMATEL(L3, kk, jj);
                             BLASFEO_DMATEL(L3, kk, jj) = BLASFEO_DMATEL(L3, idx-jj, idx-kk);
                             BLASFEO_DMATEL(L3, idx-jj, idx-kk) = tmp_el;
                         }
                         // bottom rectangle
-                        for(kk=idx+1; kk<nu[ss]+nx[ss]; kk++)
+                        for (kk=idx+1; kk<nu[ss]+nx[ss]; kk++)
                             {
                             tmp_el = BLASFEO_DMATEL(L3, kk, jj);
                             BLASFEO_DMATEL(L3, kk, jj) = BLASFEO_DMATEL(L3, kk, idx);
@@ -449,16 +457,16 @@ void ocp_nlp_reg_project_reduc_hess_regularize(void *config, ocp_nlp_reg_dims *d
                 pivot = BLASFEO_DMATEL(L3, jj, jj);
                 if ((pivot<opts->min_pivot) & (pivot>-opts->min_pivot))
                 {
-                    if(pivot<0.0)
+                    if (pivot<0.0)
                         pivot = opts->min_pivot;
                     else
                         pivot = - opts->min_pivot;
                 }
                 pivot = 1.0/pivot;
-                for(kk=jj+1; kk<nu[ss]+nx[ss]; kk++)
+                for (kk=jj+1; kk<nu[ss]+nx[ss]; kk++)
                 {
                     tmp_el = pivot * BLASFEO_DMATEL(L3, kk, jj);
-                    for(ll=kk; ll<nu[ss]+nx[ss]; ll++)
+                    for (ll=kk; ll<nu[ss]+nx[ss]; ll++)
                     {
                         BLASFEO_DMATEL(L3, ll, kk) -= BLASFEO_DMATEL(L3, ll, jj) * tmp_el;
                     }
@@ -466,14 +474,18 @@ void ocp_nlp_reg_project_reduc_hess_regularize(void *config, ocp_nlp_reg_dims *d
             }
         }
 
+        // L2: reg_schur
+        // L3: true_schur
+
         // apply schur to P
         blasfeo_dgecp(nx[ss], nx[ss], L, nu[ss], nu[ss], P, 0, 0);
-        if(do_reg)
-//        if(0)
+        if (do_reg)
+//        if (0)
         {
             // P
             blasfeo_dgead(nx[ss], nx[ss], 1.0, L3, nu[ss], nu[ss], P, 0, 0);
             // Q
+            // TODO: understand further..
             blasfeo_dgead(nx[ss], nx[ss], -1.0, L2, nu[ss], nu[ss], mem->RSQrq[ss], nu[ss], nu[ss]);
             blasfeo_dgead(nx[ss], nx[ss],  1.0, L3, nu[ss], nu[ss], mem->RSQrq[ss], nu[ss], nu[ss]);
         }
@@ -494,9 +506,9 @@ void ocp_nlp_reg_project_reduc_hess_regularize(void *config, ocp_nlp_reg_dims *d
     blasfeo_dtrtr_l(nu[ss]+nx[ss], L, 0, 0, L, 0, 0); // necessary ???
     blasfeo_unpack_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], L, 0, 0, mem->reg_hess, nu[ss]+nx[ss]);
     acados_eigen_decomposition(nu[ss]+nx[ss], mem->reg_hess, mem->V, mem->d, mem->e);
-    for(jj=0; jj<nu[ss]+nx[ss]; jj++)
+    for (jj=0; jj<nu[ss]+nx[ss]; jj++)
     {
-        if(mem->d[jj]<opts->thr_eig)
+        if (mem->d[jj]<opts->thr_eig)
             mem->e[jj] = opts->min_eig - mem->d[jj];
         else
             mem->e[jj] = 0.0;
@@ -507,7 +519,7 @@ void ocp_nlp_reg_project_reduc_hess_regularize(void *config, ocp_nlp_reg_dims *d
 
 
 //    printf("\nhessian after\n");
-//    for(ii=0; ii<=N; ii++)
+//    for (ii=0; ii<=N; ii++)
 //    {
 //        printf("\nii = %d\n", ii);
 //        blasfeo_print_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0);
@@ -530,8 +542,6 @@ void ocp_nlp_reg_project_reduc_hess_regularize_rhs(void *config, ocp_nlp_reg_dim
 {
     return;
 }
-
-
 
 
 void ocp_nlp_reg_project_reduc_hess_correct_dual_sol(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
