@@ -27,15 +27,6 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-
-
-% NOTE: `acados` currently supports both an old MATLAB/Octave interface (< v0.4.0)
-% as well as a new interface (>= v0.4.0).
-
-% THIS EXAMPLE still uses the OLD interface. If you are new to `acados` please start
-% with the examples that have been ported to the new interface already.
-% see https://github.com/acados/acados/issues/1196#issuecomment-2311822122)
-
 import casadi.*
 
 clear all; clc;
@@ -44,114 +35,114 @@ check_acados_requirements()
 model_path = fullfile(pwd,'..','pendulum_on_cart_model');
 addpath(model_path)
 
+%% model dynamics
+model = get_pendulum_on_cart_model();
+nx = length(model.x);
+nu = length(model.u);
+ny_0 = nu; % number of outputs in initial cost term
+ny = nx+nu; % number of outputs in lagrange term
+ny_e = nx; % number of outputs in terminal cost term
 %% discretization
 N = 20;
 T = 1; % time horizon length
-x0 = [0; pi; 0; 0];
-
-nlp_solver = 'sqp'; % sqp, sqp_rti
-qp_solver = 'partial_condensing_hpipm';
-    % full_condensing_hpipm, partial_condensing_hpipm, full_condensing_qpoases
-qp_solver_cond_N = 5; % for partial condensing
-% integrator type
-sim_method = 'erk'; % erk, irk, irk_gnsf
-
-%% model dynamics
-model = pendulum_on_cart_model();
-nx = model.nx;
-nu = model.nu;
-
-%% runtime parameters
-params = SX.sym('Qdiag', 4, 1);
-
-%% model to create the solver
-ocp_model = acados_ocp_model();
-model_name = 'pendulum';
-
 %% acados ocp model
-ocp_model.set('name', model_name);
-ocp_model.set('T', T);
+ocp = AcadosOcp();
+ocp.model = model;
+ocp.model.name = 'pendulum';
+sym_x = model.x;
+sym_u = model.u;
 
-% symbolics
-ocp_model.set('sym_x', model.sym_x);
-ocp_model.set('sym_u', model.sym_u);
-ocp_model.set('sym_xdot', model.sym_xdot);
-ocp_model.set('sym_p', params);
+params = SX.sym('Qdiag', 4, 1);
+ocp.model.p = params;
+ocp.parameter_values = zeros(size(params));% initialize to zero, change later
 
-% cost
-ocp_model.set('cost_type_0', 'ext_cost');
-ocp_model.set('cost_type', 'ext_cost');
-ocp_model.set('cost_type_e', 'ext_cost');
+ocp.solver_options.tf = T;
+ocp.solver_options.N_horizon = N;
+ocp.solver_options.nlp_solver_type = 'SQP'; % 'SQP_RTI'
+ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
+ocp.solver_options.qp_solver_cond_N = 5; % for partial condensing
+ocp.solver_options.integrator_type = 'ERK';
+
+%% cost
+% generic cost
+W_x = diag([1e3, 1e3, 1e-2, 1e-2]);
+W_u = 1e-2;
+cost_expr_ext_cost_e = 0.5 * sym_x'* W_x * sym_x;
+cost_expr_ext_cost = cost_expr_ext_cost_e + 0.5 * sym_u' * W_u * sym_u;
+cost_expr_ext_cost_0 = 0.5 * sym_u' * W_u * sym_u;
+
+% nonlinear least squares
+cost_expr_y_0 = sym_u;
+cost_W_0 = W_u;
+cost_expr_y = vertcat(sym_x, sym_u);
+cost_W = blkdiag(W_x, W_u);
+cost_expr_y_e = sym_x;
+cost_W_e = W_x;
+
+% linear least squares
+cost_Vx_0 = zeros(ny_0,nx);
+cost_Vu_0 = eye(nu);
+cost_y_ref_0 = zeros(ny_0, 1);
+
+cost_Vx = [eye(nx); zeros(nu,nx)]; % state-to-output matrix in lagrange term
+cost_Vu = [zeros(nx, nu); eye(nu)]; % input-to-output matrix in lagrange term
+cost_y_ref = zeros(ny, 1); % output reference in lagrange term
+
+cost_Vx_e = eye(ny_e, nx);
+cost_y_ref_e = zeros(ny_e, 1);
+
+ocp.cost.cost_type_0 = 'EXTERNAL';
+ocp.cost.cost_type = 'EXTERNAL';
+ocp.cost.cost_type_e = 'EXTERNAL';
 
 generic_or_casadi = 0; % 0=generic, 1=casadi, 2=mixed
 if (generic_or_casadi == 0)
     % Generic initial cost
-    ocp_model.set('cost_ext_fun_type_0', 'generic');
-    ocp_model.set('cost_source_ext_cost_0', 'generic_ext_cost.c');
-    ocp_model.set('cost_function_ext_cost_0', 'ext_cost');
+    ocp.cost.cost_ext_fun_type_0 = 'generic';
+    ocp.cost.cost_source_ext_cost_0 = 'generic_ext_cost.c';
+    ocp.cost.cost_function_ext_cost_0 =  'ext_cost';
     % Generic stage cost
-    ocp_model.set('cost_ext_fun_type', 'generic');
-    ocp_model.set('cost_source_ext_cost', 'generic_ext_cost.c');
-    ocp_model.set('cost_function_ext_cost', 'ext_cost');
+    ocp.cost.cost_ext_fun_type = 'generic';
+    ocp.cost.cost_source_ext_cost = 'generic_ext_cost.c';
+    ocp.cost.cost_function_ext_cost =  'ext_cost';
     % Generic terminal cost
-    ocp_model.set('cost_ext_fun_type_e', 'generic');
-    ocp_model.set('cost_source_ext_cost_e', 'generic_ext_cost.c');
-    ocp_model.set('cost_function_ext_cost_e', 'ext_costN');
+    ocp.cost.cost_ext_fun_type_e = 'generic';
+    ocp.cost.cost_source_ext_cost_e = 'generic_ext_cost.c';
+    ocp.cost.cost_function_ext_cost_e =  'ext_costN';
 elseif (generic_or_casadi == 1)
     % Casadi initial cost
-    ocp_model.set('cost_ext_fun_type_0', 'casadi');
-    ocp_model.set('cost_expr_ext_cost_0', model.cost_expr_ext_cost_0);
+    ocp.model.cost_expr_ext_cost_0 = cost_expr_ext_cost_0;
     % Casadi stage cost
-    ocp_model.set('cost_ext_fun_type', 'casadi');
-    ocp_model.set('cost_expr_ext_cost', model.cost_expr_ext_cost);
+    ocp.model.cost_expr_ext_cost = cost_expr_ext_cost;
     % Casadi terminal cost
-    ocp_model.set('cost_ext_fun_type_e', 'casadi');
-    ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);
+    ocp.model.cost_expr_ext_cost_e = cost_expr_ext_cost_e;
 elseif (generic_or_casadi == 2)
     % Casadi initial cost
-    ocp_model.set('cost_ext_fun_type_0', 'casadi');
-    ocp_model.set('cost_expr_ext_cost_0', model.cost_expr_ext_cost_0);
+    ocp.model.cost_expr_ext_cost_0 = cost_expr_ext_cost_0;
     % Generic stage cost
-    ocp_model.set('cost_ext_fun_type', 'generic');
-    ocp_model.set('cost_source_ext_cost', 'generic_ext_cost.c');
-    ocp_model.set('cost_function_ext_cost', 'ext_cost');
+    ocp.cost.cost_ext_fun_type = 'generic';
+    ocp.cost.cost_source_ext_cost = 'generic_ext_cost.c';
+    ocp.cost.cost_function_ext_cost =  'ext_cost';
     % Casadi terminal cost
-    ocp_model.set('cost_ext_fun_type_e', 'casadi');
-    ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);
+    ocp.model.cost_expr_ext_cost_e = cost_expr_ext_cost_e;
 end
-
-% dynamics
-if (strcmp(sim_method, 'erk'))
-    ocp_model.set('dyn_type', 'explicit');
-    ocp_model.set('dyn_expr_f', model.dyn_expr_f_expl);
-else % irk irk_gnsf
-    ocp_model.set('dyn_type', 'implicit');
-    ocp_model.set('dyn_expr_f', model.dyn_expr_f_impl);
-end
-
+%% constraints
+ocp.constraints.constr_type = 'AUTO';
+constr_expr_h_0 = sym_u;
+constr_expr_h = sym_u;
+x0 = [0; pi; 0; 0];
 % constraints
-ocp_model.set('constr_type', 'auto');
-ocp_model.set('constr_expr_h_0', model.constr_expr_h_0);
-ocp_model.set('constr_expr_h', model.constr_expr_h);
+ocp.constraints.x0 = x0;
+ocp.model.con_h_expr_0 = constr_expr_h_0;
+ocp.model.con_h_expr = constr_expr_h;
 U_max = 80;
-ocp_model.set('constr_lh_0', -U_max); % lower bound on h
-ocp_model.set('constr_uh_0', U_max);  % upper bound on h
-ocp_model.set('constr_lh', -U_max);
-ocp_model.set('constr_uh', U_max);
-
-ocp_model.set('constr_x0', x0);
-
-%% acados ocp set opts
-ocp_opts = acados_ocp_opts();
-ocp_opts.set('param_scheme_N', N);
-ocp_opts.set('nlp_solver', nlp_solver);
-ocp_opts.set('sim_method', sim_method);
-ocp_opts.set('qp_solver', qp_solver);
-ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
-ocp_opts.set('parameter_values', zeros(size(params))); % initialize to zero, change later
+ocp.constraints.lh_0 = -U_max;
+ocp.constraints.uh_0 = U_max;
+ocp.constraints.lh = -U_max;
+ocp.constraints.uh = U_max;
 
 %% create ocp solver
-ocp_solver = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = AcadosOcpSolver(ocp);
 
 x_traj_init = zeros(nx, N+1);
 u_traj_init = zeros(nu, N);
