@@ -235,7 +235,7 @@ classdef AcadosMultiphaseOcp < handle
                 end
 
                 disp(['Calling make_consistent for phase ', num2str(i), '.']);
-                ocp.make_consistent(true);
+                ocp.make_consistent(struct('phase_idx', i-1, 'n_phases', self.n_phases, 'N_list', self.N_list)); % pass 0-based index
                 % use the updated objects that are not handles
                 self.parameter_values{i} = ocp.parameter_values;
 
