@@ -50,6 +50,7 @@ class ZoroDescription:
     Limitations:
     - Updating C, D, lg, ug matrices not supported yet.
     - Convex-over-nonlinear constraint type (BGP) not supported yet.
+    - no multi-phase support.
 
     """
     backoff_scaling_gamma: float = 1.0
@@ -62,8 +63,8 @@ class ZoroDescription:
 
     - CONSTANT_FEEDBACK: constant feedback gain K
     - RICCATI_CONSTANT_COST: feedback gains K computed from a Riccati recursion with constant matrices
-    - RICCATI_BARRIER_1: feedback gains K computed from a Riccati recursion with barrier contributions added to the varient in RICCATI_CONSTANT_COST, version 1
-    - RICCATI_BARRIER_2: feedback gains K computed from a Riccati recursion with barrier contributions added to the varient in RICCATI_CONSTANT_COST, version 2
+    - RICCATI_BARRIER_1: feedback gains K computed from a Riccati recursion with barrier contributions added to the variant in RICCATI_CONSTANT_COST, version 1
+    - RICCATI_BARRIER_2: feedback gains K computed from a Riccati recursion with barrier contributions added to the variant in RICCATI_CONSTANT_COST, version 2
     """
 
     riccati_barrier_tau: float = 1.0
