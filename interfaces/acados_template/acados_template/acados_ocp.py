@@ -1198,6 +1198,14 @@ class AcadosOcp:
             if opts.qpscaling_scale_constraints == "NO_CONSTRAINT_SCALING" and opts.qpscaling_scale_objective == "NO_OBJECTIVE_SCALING":
                 raise NotImplementedError('ADAPTIVE_QPSCALING only makes sense if QP scaling is used.')
 
+        if opts.regularize_method == "PROJECT_REDUC_HESS":
+            if opts.qp_solver_ric_alg != 0:
+                opts.qp_solver_ric_alg = 0
+                warnings.warn("For regularize_method PROJECT_REDUC_HESS, qp_solver_ric_alg should be 0, option was changed automatically.")
+            if opts.qp_solver_cond_ric_alg != 0:
+                opts.qp_solver_cond_ric_alg = 0
+                warnings.warn("For regularize_method PROJECT_REDUC_HESS, qp_solver_cond_ric_alg should be 0, option was changed automatically.")
+
         # Set default parameters for globalization
         ddp_with_merit_or_funnel = opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' or (opts.nlp_solver_type == "DDP" and opts.globalization == 'MERIT_BACKTRACKING')
         if opts.globalization_alpha_min is None:
