@@ -36,7 +36,7 @@ FEEDBACK_OPTIMIZATION_MODES = ["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RI
 @dataclass
 class ZoroDescription:
     """
-    Zero-Order Robust Optimization (zoRO) scheme.
+    Description of a Zero-Order Robust Optimization (zoRO) scheme.
 
     The uncertainty propagation is performed by:
     $$P_{k+1} = (A_k + B_kK)P_k(A_k + B_kK)^\top + GWG^\top$$.
