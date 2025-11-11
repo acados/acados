@@ -609,8 +609,8 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
     {
 #ifndef ACADOS_SILENT
-        printf("\nSQP_RTI: QP solver returned error status %d QP iteration %d.\n",
-                qp_status, qp_iter);
+        printf("\nSQP_RTI: QP solver returned error status %s QP iteration %d.\n",
+                status_to_string(qp_status), qp_iter);
 #endif
         if (nlp_opts->print_level > 0)
         {

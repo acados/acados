@@ -949,3 +949,21 @@ void print_debug_output_double(char* message, double value, int print_level, int
         printf("%s: %.5e\n", message, value); //debugging output
     }
 }
+
+
+const char* status_to_string(return_values_t status) {
+    switch (status) {
+        case ACADOS_UNKNOWN: return  "ACADOS_UNKNOWN";
+        case ACADOS_SUCCESS: return  "ACADOS_SUCCESS";
+        case ACADOS_NAN_DETECTED: return  "ACADOS_NAN_DETECTED";
+        case ACADOS_MAXITER: return  "ACADOS_MAXITER";
+        case ACADOS_MINSTEP: return  "ACADOS_MINSTEP";
+        case ACADOS_QP_FAILURE: return  "ACADOS_QP_FAILURE";
+        case ACADOS_READY: return  "ACADOS_READY";
+        case ACADOS_UNBOUNDED: return  "ACADOS_UNBOUNDED";
+        case ACADOS_TIMEOUT: return  "ACADOS_TIMEOUT";
+        case ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED: return  "ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED";
+        case ACADOS_INFEASIBLE: return  "ACADOS_INFEASIBLE";
+        default:    return "UNKNOWN STATUS";
+    }
+}

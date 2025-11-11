@@ -744,8 +744,8 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             ddp_iter++;
 
 #ifndef ACADOS_SILENT
-            printf("\nQP solver returned error status %d in DDP iteration %d, QP iteration %d.\n",
-                   qp_status, ddp_iter, qp_iter);
+            printf("\nQP solver returned error status %s in DDP iteration %d, QP iteration %d.\n",
+                   status_to_string(qp_status), ddp_iter, qp_iter);
 #endif
 #if defined(ACADOS_WITH_OPENMP)
             // restore number of threads
