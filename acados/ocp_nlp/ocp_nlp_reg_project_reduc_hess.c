@@ -355,6 +355,7 @@ void ocp_nlp_reg_project_reduc_hess_regularize(void *config, ocp_nlp_reg_dims *d
     for (ii=-1; ii<N-1; ii++)
     {
 
+        // ss starts at N-2? so the case if ss==N is not needed?
         ss = N-ii-1;
         // last stage
         if (ss==N)
