@@ -3780,6 +3780,10 @@ void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out *to)
     // int *nu = dims->nu;
     int *ni = dims->ni;
     int *nz = dims->nz;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp for nowait
+#endif
     for (int i = 0; i <= N; i++)
     {
         blasfeo_dveccp(nv[i], from->ux+i, 0, to->ux+i, 0);
@@ -3787,6 +3791,9 @@ void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out *to)
         blasfeo_dveccp(2*ni[i], from->lam+i, 0, to->lam+i, 0);
     }
 
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp for nowait
+#endif
     for (int i = 0; i < N; i++)
         blasfeo_dveccp(nx[i+1], from->pi+i, 0, to->pi+i, 0);
 
