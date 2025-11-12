@@ -62,7 +62,7 @@ class ZoroDescription:
     String in: "CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"
 
     - CONSTANT_FEEDBACK: constant feedback gain K
-    - RICCATI_CONSTANT_COST: feedback gains K computed from a Riccati recursion with constant matrices
+    - RICCATI_CONSTANT_COST: feedback gains K computed from a Riccati recursion with constant matrices riccati_Q_const, riccati_R_const, riccati_S_const, riccati_Q_const_e
     - RICCATI_BARRIER_1: feedback gains K computed from a Riccati recursion with barrier contributions added to the variant in RICCATI_CONSTANT_COST, version 1
     - RICCATI_BARRIER_2: feedback gains K computed from a Riccati recursion with barrier contributions added to the variant in RICCATI_CONSTANT_COST, version 2
     """
@@ -73,13 +73,13 @@ class ZoroDescription:
     fdbk_K_mat: np.ndarray = None
     """constant feedback gain matrix K"""
 
-    riccati_Q_const_mat: np.ndarray = None
+    riccati_Q_const: np.ndarray = None
     """matrix Q_const for computing the Riccati, Hessian of the stage cost w.r.t. states, shape [nx*nx]"""
-    riccati_Q_const_e_mat: np.ndarray = None
+    riccati_Q_const_e: np.ndarray = None
     """matrix Q_const_e for computing the Riccati, Hessian of the terminal cost w.r.t. states, shape [nx*nx]"""
-    riccati_R_const_mat: np.ndarray = None
+    riccati_R_const: np.ndarray = None
     """matrix R_const for computing the Riccati, Hessian of the stage cost w.r.t. inputs, shape [nu*nu]"""
-    riccati_S_const_mat: np.ndarray = None
+    riccati_S_const: np.ndarray = None
     """matrix S_const for computing the Riccati, cross term Hessian of the stage cost, shape [nu*nx]"""
 
     unc_jac_G_mat: np.ndarray = None    # default: an identity matrix
@@ -166,18 +166,18 @@ class ZoroDescription:
         if self.feedback_optimization_mode not in FEEDBACK_OPTIMIZATION_MODES:
             raise Exception(f"feedback_optimization_mode should be in {', '.join(FEEDBACK_OPTIMIZATION_MODES)}, got {self.feedback_optimization_mode}.")
         if self.feedback_optimization_mode != "CONSTANT_FEEDBACK":
-            if self.riccati_Q_const_mat is None or self.riccati_R_const_mat is None or self.riccati_S_const_mat is None:
-                raise Exception("riccati_Q_const_mat, riccati_R_const_mat, riccati_S_const_mat should not be None when feedback_optimization_mode != CONSTANT_FEEDBACK.")
-            if self.riccati_Q_const_mat.shape != (dims.nx, dims.nx):
-                raise Exception("The shape of riccati_Q_const_mat should be [nx*nx].")
-            if self.riccati_R_const_mat.shape != (dims.nu, dims.nu):
-                raise Exception("The shape of riccati_R_const_mat should be [nu*nu].")
-            if self.riccati_S_const_mat.shape != (dims.nu, dims.nx):
-                raise Exception("The shape of riccati_S_const_mat should be [nu*nx].")
-            if self.riccati_Q_const_e_mat is None:
-                self.riccati_Q_const_e_mat = self.riccati_Q_const_mat.copy()
-            if self.riccati_Q_const_e_mat.shape != (dims.nx, dims.nx):
-                raise Exception("The shape of riccati_Q_const_e_mat should be [nx*nx].")
+            if self.riccati_Q_const is None or self.riccati_R_const is None or self.riccati_S_const is None:
+                raise Exception("riccati_Q_const, riccati_R_const, riccati_S_const should not be None when feedback_optimization_mode != CONSTANT_FEEDBACK.")
+            if self.riccati_Q_const.shape != (dims.nx, dims.nx):
+                raise Exception("The shape of riccati_Q_const should be [nx*nx].")
+            if self.riccati_R_const.shape != (dims.nu, dims.nu):
+                raise Exception("The shape of riccati_R_const should be [nu*nu].")
+            if self.riccati_S_const.shape != (dims.nu, dims.nx):
+                raise Exception("The shape of riccati_S_const should be [nu*nx].")
+            if self.riccati_Q_const_e is None:
+                self.riccati_Q_const_e = self.riccati_Q_const.copy()
+            if self.riccati_Q_const_e.shape != (dims.nx, dims.nx):
+                raise Exception("The shape of riccati_Q_const_e should be [nx*nx].")
             if self.riccati_barrier_tau <= 0:
                 raise Exception("The value of riccati_barrier_tau should be positive.")
 
