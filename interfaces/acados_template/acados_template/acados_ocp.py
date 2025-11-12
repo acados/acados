@@ -174,8 +174,8 @@ class AcadosOcp:
 
     @ros_opts.setter
     def ros_opts(self, ros_opts: AcadosOcpRosOptions):
-        if not isinstance(ros_opts, AcadosOcpRosOptions):
-            raise TypeError('Invalid ros_opts value, expected AcadosOcpRos.\n')
+        if not isinstance(ros_opts, (AcadosOcpRosOptions, None)):
+            raise TypeError('Invalid ros_opts value, expected AcadosOcpRosOptions or None.\n')
         self.__ros_opts = ros_opts
 
     def _make_consistent_cost_initial(self):
