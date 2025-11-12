@@ -129,14 +129,14 @@ def test_reg_adaptive_eps(regularize_method='MIRROR'):
 
         status = ocp_solver.solve()
         ocp_solver.print_statistics()
-        nlp_iter = ocp_solver.get_stats("nlp_iter")
+
         hess_0 = ocp_solver.get_hessian_block(0)
         hess_1 = ocp_solver.get_hessian_block(1)
 
         # check solver stats
         assert status == 0, f"acados returned status {status}"
         # check eigenvalues
-        eigvals_0 = np.real(np.linalg.eigvals(hess_0))
+        eigvals_0 = np.sort(np.real(np.linalg.eigvals(hess_0)))
         assert np.min(eigvals_0) >= eps_min*0.99, f"Eigenvalues of Hessian must be >= {eps_min} = eps_min, got {eigvals_0}"
 
         # check hessian
@@ -146,7 +146,6 @@ def test_reg_adaptive_eps(regularize_method='MIRROR'):
             assert qp_diagnostics['condition_number_stage'][0] <= ocp.solver_options.reg_max_cond_block +1e-8, f"Condition number must be <= {ocp.solver_options.reg_max_cond_block} per stage, got {qp_diagnostics['condition_number_stage'][0]}"
             assert qp_diagnostics['condition_number_stage'][1] <= ocp.solver_options.reg_max_cond_block +1e-8, f"Condition number must be <= {ocp.solver_options.reg_max_cond_block} per stage, got {qp_diagnostics['condition_number_stage'][1]}"
 
-            print(f"computed eigenvalues: {eigvals_0}")
             if i == 0:
                 print(hess_0)
                 assert np.equal(hess_0, eps_min*np.eye(nx+nu)).all(), f"Zero matrix should be regularized to eps_min * eye for {regularize_method}"
@@ -160,11 +159,11 @@ def test_reg_adaptive_eps(regularize_method='MIRROR'):
                 if regularize_method == 'MIRROR':
                     max_abs_eig = np.max(np.abs(W3_eig))
                     reg_eps = max(max_abs_eig/ocp.solver_options.reg_max_cond_block, eps_min)
-                    assert np.allclose(eigvals_0, np.array([reg_eps, max_abs_eig, reg_eps, reg_eps, reg_eps, reg_eps])), f"Something in adaptive {regularize_method} went wrong!"
+                    assert np.allclose(eigvals_0, np.sort(np.array([reg_eps, max_abs_eig, reg_eps, reg_eps, reg_eps, reg_eps]))), f"Something in adaptive {regularize_method} went wrong!"
                 elif regularize_method == 'PROJECT':
                     max_pos_eig = np.max(W3_eig)
                     reg_eps = max(max_pos_eig/ocp.solver_options.reg_max_cond_block, eps_min)
-                    assert np.allclose(eigvals_0, np.array([15, 4, reg_eps, reg_eps, reg_eps, reg_eps]), rtol=1e-03, atol=1e-3), f"Something in adaptive {regularize_method} went wrong!"
+                    assert np.allclose(eigvals_0, np.sort(np.array([15, 4, reg_eps, reg_eps, reg_eps, reg_eps])), rtol=1e-03, atol=1e-3), f"Something in adaptive {regularize_method} went wrong!"
 
         assert np.equal(hess_1, eps_min*np.eye(nx)).all(), f"Zero matrix should be regularized to eps_min * eye for {regularize_method}"
 
