@@ -3317,9 +3317,6 @@ void ocp_nlp_initialize_qp_from_nlp(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     int *nx = dims->nx;
     int *ni = dims->ni;
 
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
     for (int i = 0; i <= N; i++)
     {
         // set primal variables to zero
@@ -3643,17 +3640,12 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_in *in,
     int *nu = dims->nu;
     int *ni = dims->ni;
 
-    int i, j;
-
     double tmp_res;
     double tmp;
     ocp_qp_dims *qp_dims = mem->qp_in->dim;
 
     // res_stat
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp for private(tmp_res)
-#endif
-    for (i = 0; i <= N; i++)
+    for (int i = 0; i <= N; i++)
     {
         blasfeo_daxpy(nv[i], -1.0, mem->ineq_adj + i, 0, mem->cost_grad + i, 0,
                       res->res_stat + i, 0);
@@ -3665,10 +3657,7 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_in *in,
     blasfeo_dvecnrm_inf(N+1, &res->tmp, 0, &res->inf_norm_res_stat);
 
     // res_eq
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp for private(tmp_res)
-#endif
-    for (i = 0; i < N; i++)
+    for (int i = 0; i < N; i++)
     {
         blasfeo_dveccp(nx[i + 1], mem->dyn_fun + i, 0, res->res_eq + i, 0);
         blasfeo_dvecnrm_inf(nx[i + 1], res->res_eq + i, 0, &tmp_res);
@@ -3678,9 +3667,9 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_in *in,
 
     // res_ineq
     res->inf_norm_res_ineq = 0.0;
-    for (i = 0; i <= N; i++)
+    for (int i = 0; i <= N; i++)
     {
-        for (j = 0; j < 2 * ni[i]; j++)
+        for (int j=0; j<2*ni[i]; j++)
         {
             tmp = BLASFEO_DVECEL(mem->ineq_fun+i, j);
             if (tmp > res->inf_norm_res_ineq)
@@ -3696,13 +3685,12 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_in *in,
     {
         int ni_max = 0;
         int ne = 0;
-        for (i = 0; i <= N; i++)
+        for (int i = 0; i <= N; i++)
         {
             ni_max = ni_max > ni[i] ? ni_max : ni[i];
         }
         blasfeo_dvecse(2*ni_max, opts->tau_min, &work->tmp_2ni, 0);
-
-        for (i = 0; i <= N; i++)
+        for (int i = 0; i <= N; i++)
         {
             if (ni[i] > 0)
             {
@@ -3720,7 +3708,7 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_in *in,
 
             // zero out complementarities corresponding to equalities
             ne = qp_dims->nbue[i] + qp_dims->nbxe[i] + qp_dims->nge[i];
-            for (j = 0; j < ne; j++)
+            for (int j = 0; j < ne; j++)
             {
                 BLASFEO_DVECEL(res->res_comp+i, mem->qp_in->idxe[i][j]) = 0.0;
                 BLASFEO_DVECEL(res->res_comp+i, mem->qp_in->idxe[i][j]+ni[i]) = 0.0;
@@ -3734,12 +3722,9 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_in *in,
     }
     else
     {
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp for private(tmp_res)
-#endif
-        for (i = 0; i <= N; i++)
+        for (int i = 0; i <= N; i++)
         {
-            blasfeo_dvecmul(2 * ni[i], out->lam + i, 0, mem->ineq_fun + i, 0, res->res_comp + i, 0);
+            blasfeo_dvecmul(2 * ni[i], out->lam + i, 0, mem->ineq_fun+i, 0, res->res_comp + i, 0);
             blasfeo_dvecnrm_inf(2 * ni[i], res->res_comp + i, 0, &tmp_res);
             blasfeo_dvecse(1, tmp_res, &res->tmp, i);
         }
@@ -3795,10 +3780,6 @@ void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out *to)
     // int *nu = dims->nu;
     int *ni = dims->ni;
     int *nz = dims->nz;
-
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp for nowait
-#endif
     for (int i = 0; i <= N; i++)
     {
         blasfeo_dveccp(nv[i], from->ux+i, 0, to->ux+i, 0);
@@ -3806,9 +3787,6 @@ void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out *to)
         blasfeo_dveccp(2*ni[i], from->lam+i, 0, to->lam+i, 0);
     }
 
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp for
-#endif
     for (int i = 0; i < N; i++)
         blasfeo_dveccp(nx[i+1], from->pi+i, 0, to->pi+i, 0);
 
