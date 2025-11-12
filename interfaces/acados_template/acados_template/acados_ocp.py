@@ -174,7 +174,7 @@ class AcadosOcp:
 
     @ros_opts.setter
     def ros_opts(self, ros_opts: AcadosOcpRosOptions):
-        if not isinstance(ros_opts, (AcadosOcpRosOptions, None)):
+        if not isinstance(ros_opts, AcadosOcpRosOptions) and not ros_opts is None:
             raise TypeError('Invalid ros_opts value, expected AcadosOcpRosOptions or None.\n')
         self.__ros_opts = ros_opts
 
@@ -185,7 +185,7 @@ class AcadosOcp:
 
     @zoro_description.setter
     def zoro_description(self, zoro_description: ZoroDescription):
-        if not isinstance(zoro_description, (ZoroDescription, None)):
+        if not isinstance(zoro_description, ZoroDescription) and not zoro_description is None:
             raise TypeError('Invalid zoro_description value, expected ZoroDescription or None.\n')
         self.__zoro_description = zoro_description
 
