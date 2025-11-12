@@ -128,7 +128,11 @@ acados_size_t ocp_nlp_reg_project_memory_calculate_size(void *config_, ocp_nlp_r
     int ii;
     int numThreadWS = 1;
 #if defined(ACADOS_WITH_OPENMP)
+    #if defined(ACADOS_NUM_THREADS)
     numThreadWS = ACADOS_NUM_THREADS;
+    #else
+    numThreadWS = omp_get_max_threads();
+    #endif
 #endif
 
     int nuxM = nu[0]+nx[0];
@@ -160,7 +164,11 @@ void *ocp_nlp_reg_project_memory_assign(void *config_, ocp_nlp_reg_dims *dims, v
     int ii;
     int numThreadWS = 1;
 #if defined(ACADOS_WITH_OPENMP)
+    #if defined(ACADOS_NUM_THREADS)
     numThreadWS = ACADOS_NUM_THREADS;
+    #else
+    numThreadWS = omp_get_max_threads();
+    #endif
 #endif
 
     int nuxM = nu[0]+nx[0];
