@@ -178,6 +178,17 @@ class AcadosOcp:
             raise TypeError('Invalid ros_opts value, expected AcadosOcpRosOptions or None.\n')
         self.__ros_opts = ros_opts
 
+    @property
+    def zoro_description(self) -> Optional[ZoroDescription]:
+        """Options for zoRO algorithm."""
+        return self.__zoro_description
+
+    @zoro_description.setter
+    def zoro_description(self, zoro_description: ZoroDescription):
+        if not isinstance(zoro_description, (ZoroDescription, None)):
+            raise TypeError('Invalid zoro_description value, expected ZoroDescription or None.\n')
+        self.__zoro_description = zoro_description
+
     def _make_consistent_cost_initial(self):
         dims = self.dims
         cost = self.cost
@@ -1246,10 +1257,7 @@ class AcadosOcp:
         if self.zoro_description is not None:
             if opts.N_horizon == 0:
                 raise ValueError('zoRO only supported for N_horizon > 0.')
-            if not isinstance(self.zoro_description, ZoroDescription):
-                raise TypeError('zoro_description should be of type ZoroDescription or None')
-            else:
-                self.zoro_description.make_consistent(dims)
+            self.zoro_description.make_consistent(dims)
 
         # nlp_solver_warm_start_first_qp_from_nlp
         if opts.nlp_solver_warm_start_first_qp_from_nlp and (opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon):
