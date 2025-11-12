@@ -1173,7 +1173,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
     {
         if (nlp_opts->print_level >=1)
         {
-            printf("\nError in feasibility QP in iteration %d, got qp_status %d!\n", qp_iter, qp_status);
+            printf("\nError in feasibility QP in iteration %d, got qp_status %d (%s)!\n", qp_iter, qp_status, status_to_string(qp_status));
         }
         nlp_mem->status = ACADOS_QP_FAILURE;
         nlp_timings->time_tot = acados_toc(&timer_tot);
@@ -1197,7 +1197,7 @@ static int byrd_omojokun_direction_computation(ocp_nlp_dims *dims,
     {
         if (nlp_opts->print_level >=1)
         {
-            printf("\nError in nominal QP in iteration %d, got qp_status %d!\n", qp_iter, qp_status);
+            printf("\nError in nominal QP in iteration %d, got qp_status %d (%s)!\n", qp_iter, qp_status, status_to_string(qp_status));
         }
         nlp_mem->status = ACADOS_QP_FAILURE;
         nlp_timings->time_tot = acados_toc(&timer_tot);
@@ -1448,7 +1448,7 @@ static int calculate_search_direction(ocp_nlp_dims *dims,
         {
             if (nlp_opts->print_level >1)
             {
-                printf("\nError in nominal QP in iteration %d, got qp_status %d!\n", qp_iter, search_direction_status);
+                printf("\nError in nominal QP in iteration %d, got qp_status %d (%s)!\n", qp_iter, search_direction_status, status_to_string(search_direction_status));
                 printf("Switch to Byrd-Omojokun mode!\n");
             }
             mem->search_direction_mode = BYRD_OMOJOKUN;
@@ -1714,7 +1714,7 @@ int ocp_nlp_sqp_wfqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             if (nlp_opts->print_level > 1)
             {
-                printf("\nFailure in globalization, got status %d!\n", globalization_status);
+                printf("\nFailure in globalization, got status %d (%s)!\n", globalization_status, status_to_string(globalization_status));
             }
             nlp_mem->status = globalization_status;
             nlp_timings->time_tot = acados_toc(&timer_tot);

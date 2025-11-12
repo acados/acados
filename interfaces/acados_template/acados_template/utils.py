@@ -664,3 +664,20 @@ def verbose_system_call(cmd, verbose=True, shell=False):
         stderr=None if verbose else STDOUT,
         shell=shell
     )
+
+def status_to_str(status):
+    status_dict = {
+        -1: "ACADOS_UNKNOWN",
+        0: "ACADOS_SUCCESS",
+        1: "ACADOS_NAN_DETECTED",
+        2: "ACADOS_MAXITER",
+        3: "ACADOS_MINSTEP",
+        4: "ACADOS_QP_FAILURE",
+        5: "ACADOS_READY",
+        6: "ACADOS_UNBOUNDED",
+        7: "ACADOS_TIMEOUT",
+        8: "ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED",
+        9: "ACADOS_INFEASIBLE"
+    }
+    return status_dict.get(status, "UNKNOWN_STATUS")
+
