@@ -609,8 +609,8 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
     {
 #ifndef ACADOS_SILENT
-        printf("\nSQP_RTI: QP solver returned error status %d QP iteration %d.\n",
-                qp_status, qp_iter);
+        printf("\nSQP_RTI: QP solver returned error status %d (%s) QP iteration %d.\n",
+                qp_status, status_to_string(qp_status), qp_iter);
 #endif
         if (nlp_opts->print_level > 0)
         {
@@ -631,7 +631,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     {
         if (nlp_opts->print_level > 1)
         {
-            printf("\nFailure in globalization, got status %d!\n", globalization_status);
+            printf("\nFailure in globalization, got status %d (%s)!\n", globalization_status, status_to_string(globalization_status));
         }
     }
     mem->nlp_mem->status = ACADOS_SUCCESS;
@@ -870,7 +870,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         {
             if (nlp_opts->print_level > 1)
             {
-                printf("\n Failure in globalization, got status %d!\n", globalization_status);
+                printf("\n Failure in globalization, got status %d (%s)!\n", globalization_status, status_to_string(globalization_status));
             }
             return;
         }
@@ -917,8 +917,8 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
             {
 #ifndef ACADOS_SILENT
-                printf("\nSQP_RTI: QP solver returned error status %d QP iteration %d.\n",
-                    qp_status, qp_iter);
+                printf("\nSQP_RTI: QP solver returned error status %d (%s) QP iteration %d.\n",
+                    qp_status, status_to_string(qp_status), qp_iter);
 #endif
                 nlp_mem->status = ACADOS_QP_FAILURE;
                 return;
@@ -938,7 +938,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             {
                 if (nlp_opts->print_level > 1)
                 {
-                    printf("\nFailure in globalization, got status %d!\n", globalization_status);
+                    printf("\nFailure in globalization, got status %d (%s)!\n", globalization_status, status_to_string(globalization_status));
                 }
                 return;
             }
@@ -981,8 +981,8 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
             {
 #ifndef ACADOS_SILENT
-                printf("\nSQP_RTI: QP solver returned error status %d QP iteration %d.\n",
-                    qp_status, qp_iter);
+                printf("\nSQP_RTI: QP solver returned error status %d (%s) QP iteration %d.\n",
+                    qp_status, status_to_string(qp_status), qp_iter);
 #endif
                 nlp_mem->status = ACADOS_QP_FAILURE;
                 return;
@@ -1002,7 +1002,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             {
                 if (nlp_opts->print_level > 1)
                 {
-                    printf("\nFailure in globalization, got status %d!\n", globalization_status);
+                    printf("\nFailure in globalization, got status %d (%s)!\n", globalization_status, status_to_string(globalization_status));
                 }
                 return;
             }
@@ -1054,8 +1054,8 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
             {
 #ifndef ACADOS_SILENT
-                printf("\nSQP_RTI: QP solver returned error status %d QP iteration %d.\n",
-                    qp_status, qp_iter);
+                printf("\nSQP_RTI: QP solver returned error status %d (%s) QP iteration %d.\n",
+                    qp_status, status_to_string(qp_status), qp_iter);
 #endif
                 mem->nlp_mem->status = ACADOS_QP_FAILURE;
                 return;
@@ -1068,7 +1068,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             {
                 if (nlp_opts->print_level > 1)
                 {
-                    printf("\nFailure in globalization, got status %d!\n", globalization_status);
+                    printf("\nFailure in globalization, got status %d (%s)!\n", globalization_status, status_to_string(globalization_status));
                 }
                 return;
             }

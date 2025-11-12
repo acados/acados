@@ -49,7 +49,7 @@ from .acados_sim import AcadosSim
 from .builders import CMakeBuilder
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
-                    set_up_imported_gnsf_model,
+                    set_up_imported_gnsf_model, status_to_str,
                     verbose_system_call, acados_lib_is_compiled_with_openmp,
                     get_shared_lib, set_directory)
 
@@ -260,7 +260,7 @@ class AcadosSimSolver:
         status = self.solve()
 
         if status != 0:
-            raise RuntimeError(f'acados_sim_solver for model {self.model_name} returned status {status}.')
+            raise RuntimeError(f'AcadosSimSolver for model {self.model_name} returned status {status} ({status_to_str(status)}).')
 
         x_next = self.get('x')
         return x_next

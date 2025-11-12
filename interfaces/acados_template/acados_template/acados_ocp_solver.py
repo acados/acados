@@ -55,7 +55,7 @@ from .acados_multiphase_ocp import AcadosMultiphaseOcp
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
-                    acados_lib_is_compiled_with_openmp, is_empty, set_directory)
+                    acados_lib_is_compiled_with_openmp, set_directory, status_to_str)
 from .acados_ocp_iterate import AcadosOcpIterate, AcadosOcpIterates, AcadosOcpFlattenedIterate
 
 
@@ -457,9 +457,9 @@ class AcadosOcpSolver:
             if print_stats_on_failure:
                 self.print_statistics()
             if fail_on_nonzero_status:
-                raise RuntimeError(f'acados acados_ocp_solver returned status {status}')
+                raise RuntimeError(f'AcadosOcpSolver returned status {status} ({status_to_str(status)})')
             elif print_stats_on_failure:
-                warnings.warn(f'acados acados_ocp_solver returned status {status}')
+                warnings.warn(f'AcadosOcpSolver returned status {status} ({status_to_str(status)})')
 
         u0 = self.get(0, "u")
         return u0

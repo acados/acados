@@ -71,7 +71,7 @@ typedef int (*casadi_function_t)(const double** arg, double** res, int* iw, doub
 
 
 // enum of return values
-enum return_values
+typedef enum
 {
     ACADOS_UNKNOWN = -1,
     ACADOS_SUCCESS = 0,
@@ -84,7 +84,7 @@ enum return_values
     ACADOS_TIMEOUT = 7,
     ACADOS_QPSCALING_BOUNDS_NOT_SATISFIED = 8,
     ACADOS_INFEASIBLE = 9,
-};
+} return_values_t;
 
 
 /// Types of the cost function.
