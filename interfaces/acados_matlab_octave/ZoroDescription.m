@@ -3,7 +3,6 @@ classdef ZoroDescription < handle
         backoff_scaling_gamma = 1.0
 
         feedback_optimization_mode = 'CONSTANT_FEEDBACK'
-        riccati_barrier_tau = 1.0
 
         fdbk_K_mat = []
 
@@ -117,9 +116,6 @@ classdef ZoroDescription < handle
                     error('The shape of riccati_Q_const_e should be [nx nx].');
                 end
 
-                if obj.riccati_barrier_tau <= 0
-                    error('The value of riccati_barrier_tau should be positive.');
-                end
             end
 
             data_size = 0;

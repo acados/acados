@@ -67,9 +67,6 @@ class ZoroDescription:
     - RICCATI_BARRIER_2: feedback gains K computed from a Riccati recursion with barrier contributions added to the variant in RICCATI_CONSTANT_COST, version 2
     """
 
-    riccati_barrier_tau: float = 1.0
-    """Barrier parameter tau used in Riccati feedback computation, only relevant if feedback_optimization_mode is RICCATI_BARRIER_1 or RICCATI_BARRIER_2."""
-
     fdbk_K_mat: np.ndarray = None
     """constant feedback gain matrix K"""
 
@@ -178,8 +175,6 @@ class ZoroDescription:
                 self.riccati_Q_const_e = self.riccati_Q_const.copy()
             if self.riccati_Q_const_e.shape != (dims.nx, dims.nx):
                 raise Exception("The shape of riccati_Q_const_e should be [nx*nx].")
-            if self.riccati_barrier_tau <= 0:
-                raise Exception("The value of riccati_barrier_tau should be positive.")
 
         # Print input note:
         print(f"\nThe data of the generated custom update function consists of the concatenation of:")

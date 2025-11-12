@@ -440,7 +440,7 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
     mem->offset_P_out += N * nw;
 {% endif %}
 
-    mem->tau = {{zoro_description.riccati_barrier_tau}};
+    mem->tau = 1.0;
 
     assert((char *) raw_memory + custom_memory_calculate_size(nlp_config, nlp_dims) >= c_ptr);
     mem->raw_memory = raw_memory;

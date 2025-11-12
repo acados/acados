@@ -150,10 +150,10 @@ class ZoroMPCSolver:
         zoro_description.feedback_optimization_mode = cfg.feedback_optimization_mode
         zoro_description.output_riccati_t = (output_riccati_t and (cfg.feedback_optimization_mode != "CONSTANT_FEEDBACK"))
         # Note: Align the costs with the cost for reference tracking
-        zoro_description.riccati_Q_const_e_mat = cfg.Q_e
-        zoro_description.riccati_Q_const_mat = cfg.Q * cfg.delta_t
-        zoro_description.riccati_R_const_mat = cfg.R * cfg.delta_t * 1e-1
-        zoro_description.riccati_S_const_mat = np.zeros((2, 5))
+        zoro_description.riccati_Q_const_e = cfg.Q_e
+        zoro_description.riccati_Q_const = cfg.Q * cfg.delta_t
+        zoro_description.riccati_R_const = cfg.R * cfg.delta_t * 1e-1
+        zoro_description.riccati_S_const = np.zeros((2, 5))
 
         ## dummy linear constraints for testing
         # self.ocp.constraints.C = np.array([[1., 0., 0., 0., 0.0], [0., 1., 0., 0., 0.]])
@@ -367,13 +367,13 @@ class ZoroMPCSolver:
 
 
     def riccati_recursion(self):
-        Q = self.ocp.zoro_description.riccati_Q_const_mat
-        R = self.ocp.zoro_description.riccati_R_const_mat
-        S = self.ocp.zoro_description.riccati_S_const_mat
+        Q = self.ocp.zoro_description.riccati_Q_const
+        R = self.ocp.zoro_description.riccati_R_const
+        S = self.ocp.zoro_description.riccati_S_const
 
         K = [None] * self.cfg.n_hrzn
         P = [None] * (self.cfg.n_hrzn+1)
-        P[-1] = self.ocp.zoro_description.riccati_Q_const_e_mat
+        P[-1] = self.ocp.zoro_description.riccati_Q_const_e
 
         for k in range(self.cfg.n_hrzn-1, -1, -1):
             temp_A = self.acados_ocp_solver.get_from_qp_in(k, "A")
