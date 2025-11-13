@@ -224,9 +224,9 @@ def closed_loop_trajectories_comparison(n_executions: int, list_feedback_optimiz
         if feedback_optimization_mode == "CONSTANT_FEEDBACK":
             label = 'ZORO, const. feedback'
         elif feedback_optimization_mode == "RICCATI_CONSTANT_COST":
-            label = 'RZORO, const. Hess.'
+            label = 'RZORO, constant Hess.'
         elif feedback_optimization_mode == "RICCATI_BARRIER_1":
-            label = 'Riccati-ZORO, barrier Hess.'
+            label = 'Riccati-ZORO, adaptive Hess.'
         else:
             label = feedback_optimization_mode
         list_traj_label_tuple.append((label, results['trajectory'], results['trajectory_input']))
