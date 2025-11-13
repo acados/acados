@@ -31,20 +31,54 @@ import numpy as np
 from .acados_dims import AcadosOcpDims
 
 
+FEEDBACK_OPTIMIZATION_MODES = ["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"]
+
 @dataclass
 class ZoroDescription:
     """
-    Zero-Order Robust Optimization (zoRO) scheme.
+    Description of a Zero-Order Robust Optimization (zoRO) scheme.
 
     The uncertainty propagation is performed by:
-    $$P_{k+1} = (A_k + B_kK)P_k(A_k + B_kK)^\top + GWG^\top$$
+    $$P_{k+1} = (A_k + B_kK)P_k(A_k + B_kK)^\top + GWG^\top$$.
 
-    For advanced users.
+    Used to render custom updated zoRO functions in acados.
+
+    Implementation described in:
+    "Efficient Zero-Order Robust Optimization for Real-Time Model Predictive Control with acados"
+    - J. Frey, Y. Gao, F. Messerer, A. Lahr, M. N Zeilinger, M. Diehl, Proceedings of the European Control Conference (ECC) 2024
+
+    Limitations:
+    - Updating C, D, lg, ug matrices not supported yet.
+    - Convex-over-nonlinear constraint type (BGP) not supported yet.
+    - no multi-phase support.
+
     """
     backoff_scaling_gamma: float = 1.0
     """backoff scaling factor, for stochastic MPC"""
+
+    feedback_optimization_mode: str = "CONSTANT_FEEDBACK"
+    """Type of feedback optimization used in zoRO scheme.
+
+    String in: "CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"
+
+    - CONSTANT_FEEDBACK: constant feedback gain K
+    - RICCATI_CONSTANT_COST: feedback gains K computed from a Riccati recursion with constant matrices riccati_Q_const, riccati_R_const, riccati_S_const, riccati_Q_const_e
+    - RICCATI_BARRIER_1: feedback gains K computed from a Riccati recursion with barrier contributions added to the variant in RICCATI_CONSTANT_COST, version 1
+    - RICCATI_BARRIER_2: feedback gains K computed from a Riccati recursion with barrier contributions added to the variant in RICCATI_CONSTANT_COST, version 2
+    """
+
     fdbk_K_mat: np.ndarray = None
     """constant feedback gain matrix K"""
+
+    riccati_Q_const: np.ndarray = None
+    """matrix Q_const for computing the Riccati, Hessian of the stage cost w.r.t. states, shape [nx*nx]"""
+    riccati_Q_const_e: np.ndarray = None
+    """matrix Q_const_e for computing the Riccati, Hessian of the terminal cost w.r.t. states, shape [nx*nx]"""
+    riccati_R_const: np.ndarray = None
+    """matrix R_const for computing the Riccati, Hessian of the stage cost w.r.t. inputs, shape [nu*nu]"""
+    riccati_S_const: np.ndarray = None
+    """matrix S_const for computing the Riccati, cross term Hessian of the stage cost, shape [nu*nx]"""
+
     unc_jac_G_mat: np.ndarray = None    # default: an identity matrix
     """matrix G, describes how noise enters the dynamics"""
     P0_mat: np.ndarray = None
@@ -64,13 +98,22 @@ class ZoroDescription:
     idx_ubu_t: list = field(default_factory=list)
     """Indices of constraints to be tightened within the upper bounds on u for intermediate shooting nodes 1,...,N-1"""
     idx_lg_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the upper bounds on general linear constraints for intermediate shooting nodes 1,...,N-1"""
     idx_ug_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the lower bounds on general linear constraints for intermediate shooting nodes 1,...,N-1"""
     idx_lg_e_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the lower bounds on general linear constraints for terminal node"""
     idx_ug_e_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the upper bounds on general linear constraints for terminal node"""
     idx_lh_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the lower bounds on nonlinear constraints for intermediate shooting nodes 1,...,N-1"""
     idx_uh_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the upper bounds on nonlinear constraints for intermediate shooting nodes 1,...,N-1"""
     idx_lh_e_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the lower bounds on general nonlinear constraints for terminal node"""
     idx_uh_e_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the lower bounds on upper nonlinear constraints for terminal node"""
+
     # Inputs:
     input_P0_diag: bool = False
     """Determines if diag(P0) is an input to the custom update function"""
@@ -89,6 +132,8 @@ class ZoroDescription:
     # Outputs:
     output_P_matrices: bool = False
     """Determines if the matrices P_k are outputs of the custom update function"""
+    output_riccati_t: bool = False
+    """Determines if the computation time of Riccati recursion are outputs of the custom update function"""
 
     data_size: int = 0
     """size of data vector when calling custom update, computed automatically"""
@@ -115,6 +160,21 @@ class ZoroDescription:
 
         if self.input_P0_diag and self.input_P0:
             raise Exception("Only one of input_P0_diag and input_P0 can be True")
+        if self.feedback_optimization_mode not in FEEDBACK_OPTIMIZATION_MODES:
+            raise Exception(f"feedback_optimization_mode should be in {', '.join(FEEDBACK_OPTIMIZATION_MODES)}, got {self.feedback_optimization_mode}.")
+        if self.feedback_optimization_mode != "CONSTANT_FEEDBACK":
+            if self.riccati_Q_const is None or self.riccati_R_const is None or self.riccati_S_const is None:
+                raise Exception("riccati_Q_const, riccati_R_const, riccati_S_const should not be None when feedback_optimization_mode != CONSTANT_FEEDBACK.")
+            if self.riccati_Q_const.shape != (dims.nx, dims.nx):
+                raise Exception("The shape of riccati_Q_const should be [nx*nx].")
+            if self.riccati_R_const.shape != (dims.nu, dims.nu):
+                raise Exception("The shape of riccati_R_const should be [nu*nu].")
+            if self.riccati_S_const.shape != (dims.nu, dims.nx):
+                raise Exception("The shape of riccati_S_const should be [nu*nx].")
+            if self.riccati_Q_const_e is None:
+                self.riccati_Q_const_e = self.riccati_Q_const.copy()
+            if self.riccati_Q_const_e.shape != (dims.nx, dims.nx):
+                raise Exception("The shape of riccati_Q_const_e should be [nx*nx].")
 
         # Print input note:
         print(f"\nThe data of the generated custom update function consists of the concatenation of:")
@@ -145,6 +205,10 @@ class ZoroDescription:
             print(f"{i_component}) output: concatenation of colmaj(P^k) for i=0,...,N, size: [nx*nx*(N+1)] = {size_i}")
             i_component += 1
             data_size += size_i
+        if self.output_riccati_t:
+            data_size += 1
+            print(f"{i_component}) output: concatenation of riccati_time, size = {1}")
+            i_component += 1
 
         self.data_size = data_size
         print("\n")

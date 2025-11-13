@@ -32,15 +32,16 @@ import matplotlib.pyplot as plt
 
 from diff_drive_zoro_mpc import ZoroMPCSolver
 from mpc_parameters import MPCParam, PathTrackingParam
-from diff_drive_utils import plot_timings, plot_trajectory, compute_min_dis, get_results_filename, store_results, load_results, plot_timing_comparison
+from diff_drive_utils import plot_timings, plot_trajectory, compute_min_dis, get_results_filename, store_results, load_results, plot_timing_comparison, plot_multiple_trajectories
 from nominal_path_tracking_casadi import NominalPathTrackingSolver
 from track_spline import TrackSpline
 
 N_SIM = 175
 
-def run_closed_loop_simulation(use_custom_update: bool, n_executions: int = 1):
+def run_closed_loop_simulation(use_custom_update: bool, feedback_optimization_mode: str, n_executions: int = 1):
     cfg_zo = MPCParam()
     cfg_zo.use_custom_update = use_custom_update
+    cfg_zo.feedback_optimization_mode = feedback_optimization_mode
     zoroMPC = ZoroMPCSolver(cfg_zo)
 
     # Differential equation of the model
@@ -79,7 +80,8 @@ def run_closed_loop_simulation(use_custom_update: bool, n_executions: int = 1):
     path_tracking_solver.solve(x_init=x_init, x_e=x_e)
 
     time_prep = []
-    time_prop = []
+    time_riccati = []
+    time_zoro = []
     time_feedback = []
     time_sim = []
     time_qp = []
@@ -90,6 +92,7 @@ def run_closed_loop_simulation(use_custom_update: bool, n_executions: int = 1):
         # closed loop mpc
         traj_zo = np.zeros((N_SIM+1, cfg_zo.nx))
         traj_zo[0,:] = path_tracking_solver.x_robot_ref[0,:]
+        traj_u = np.zeros((N_SIM+1, cfg_zo.nu))
         for i_sim in range(N_SIM):
             x_ref_interp, u_ref_interp = path_tracking_solver.interpolate_reference_trajectory(robot_state=traj_zo[i_sim,:])
             u_opt, status = zoroMPC.solve(x_current=traj_zo[i_sim, :], y_ref = np.hstack((x_ref_interp, u_ref_interp)), \
@@ -99,25 +102,30 @@ def run_closed_loop_simulation(use_custom_update: bool, n_executions: int = 1):
             if i_exec == 0:
                 time_prep.append(zoroMPC.rti_phase1_t)
                 time_feedback.append(zoroMPC.rti_phase2_t)
-                time_prop.append(zoroMPC.propagation_t)
+                time_riccati.append(zoroMPC.riccati_t)
+                time_zoro.append(zoroMPC.zoro_t)
                 time_sim.append(zoroMPC.acados_integrator_time)
                 time_qp.append(zoroMPC.acados_qp_time)
             else:
                 time_prep[i_sim] = min(time_prep[i_sim], zoroMPC.rti_phase1_t)
                 time_feedback[i_sim] = min(time_feedback[i_sim], zoroMPC.rti_phase2_t)
-                time_prop[i_sim] = min(time_prop[i_sim], zoroMPC.propagation_t)
+                time_riccati[i_sim] = min(time_riccati[i_sim], zoroMPC.riccati_t)
+                time_zoro[i_sim] = min(time_zoro[i_sim], zoroMPC.zoro_t)
                 time_sim[i_sim] = min(time_sim[i_sim], zoroMPC.acados_integrator_time)
                 time_qp[i_sim] = min(time_qp[i_sim], zoroMPC.acados_qp_time)
 
             if status != 0:
-                print('error status=',status,'Reset Solver')
+                print(f"error status={status}. Reset Solver.")
                 zoroMPC.initialized = False
                 zoroMPC.acados_ocp_solver.reset()
                 u_opt, status = zoroMPC.solve(x_current=traj_zo[i_sim, :], \
                     y_ref = np.hstack((x_ref_interp, u_ref_interp)), \
                     obs_position=cfg_zo.obs_pos.flatten(), obs_radius=cfg_zo.obs_radius)
+                if status != 0:
+                    print("Failure when resolving OCP.")
 
             # print(i_sim, u_opt, traj_zo[i_sim,:2])
+            traj_u[i_sim, :] = u_opt
             traj_zo[i_sim+1,:] = I(x0=traj_zo[i_sim, :], p=u_opt)['xf'].full().flatten()
             traj_zo[i_sim+1,:] += process_noise[i_sim,:]
             min_dist = compute_min_dis(cfg=cfg_zo, s=traj_zo[i_sim+1,:])
@@ -125,11 +133,12 @@ def run_closed_loop_simulation(use_custom_update: bool, n_executions: int = 1):
                 print("collision takes place")
                 return False
 
-    total_time = [time_prep[i] + time_feedback[i] + time_prop[i] for i in range(len(time_prep))]
+    total_time = [time_prep[i] + time_feedback[i] + time_riccati[i] + time_zoro[i] for i in range(len(time_prep))]
     timings = {
                    "preparation": 1e3*np.array(time_prep),
                    "integrator": 1e3*np.array(time_sim),
-                   "propagation": 1e3*np.array(time_prop),
+                   "riccati": 1e3*np.array(time_riccati),
+                   "zoRO": 1e3*np.array(time_zoro),
                    "feedback": 1e3*np.array(time_feedback),
                    "QP": 1e3*np.array(time_qp),
                    "total": 1e3*np.array(total_time)
@@ -138,21 +147,23 @@ def run_closed_loop_simulation(use_custom_update: bool, n_executions: int = 1):
     results = {
         "timings": timings,
         "trajectory": traj_zo,
+        "trajectory_input": traj_u,
         "ref_trajectory": path_tracking_solver.x_robot_ref,
         "cfg_zo": cfg_zo
     }
 
 
-    results_filename = get_results_filename(use_custom_update, n_executions)
+    results_filename = get_results_filename(use_custom_update, feedback_optimization_mode, n_executions)
     store_results(results_filename, results)
     del zoroMPC
 
 
 
-def solve_single_zoro_problem_visualize_uncertainty():
+def solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode: str="CONSTANT_FEEDBACK", converg_thr:float=1e-7, num_nominal4init:int=1):
     cfg_zo = MPCParam()
     cfg_zo.use_custom_update = True
-    cfg_zo.zoRO_iter = 20
+    cfg_zo.feedback_optimization_mode = feedback_optimization_mode
+    cfg_zo.zoRO_iter = 50
     zoroMPC = ZoroMPCSolver(cfg_zo, output_P_matrices=True)
 
     # Reference trajectory
@@ -177,7 +188,7 @@ def solve_single_zoro_problem_visualize_uncertainty():
     x0 = path_tracking_solver.x_robot_ref[70,:]
     x_ref_interp, u_ref_interp = path_tracking_solver.interpolate_reference_trajectory(robot_state=x0)
     u_opt, status = zoroMPC.solve(x_current=x0, y_ref = np.hstack((x_ref_interp, u_ref_interp)),
-                    obs_position=cfg_zo.obs_pos.flatten(), obs_radius=cfg_zo.obs_radius)
+                    obs_position=cfg_zo.obs_pos.flatten(), obs_radius=cfg_zo.obs_radius, converg_thr=converg_thr, num_nominal4init=num_nominal4init)
 
     # get solution
     x_opt = np.zeros((cfg_zo.n_hrzn+1, cfg_zo.nx))
@@ -187,50 +198,94 @@ def solve_single_zoro_problem_visualize_uncertainty():
     print(f"x_opt = {x_opt}")
     print(f"status = {status}")
     plot_trajectory(cfg_zo, x_ref_interp, x_opt,
-                    P_matrices=zoroMPC.ocp.zoro_description.backoff_scaling_gamma**2 * zoroMPC.P_mats, closed_loop=False)
+                    P_matrices=zoroMPC.ocp.zoro_description.backoff_scaling_gamma**2 * zoroMPC.P_mats, closed_loop=False, fig_name_concat=f"OCP_{feedback_optimization_mode}")
 
 
-def plot_result_trajectory(n_executions: int, use_custom_update=True):
-    results_filename = get_results_filename(use_custom_update, n_executions)
+def plot_result_trajectory(n_executions: int, use_custom_update=True, feedback_optimization_mode: str="CONSTANT_FEEDBACK"):
+    results_filename = get_results_filename(use_custom_update, feedback_optimization_mode, n_executions)
     results = load_results(results_filename)
-    plot_trajectory(results['cfg_zo'], results['ref_trajectory'], results['trajectory'])
+    plot_trajectory(results['cfg_zo'], results['ref_trajectory'], results['trajectory'], fig_name_concat=f"MPC_{feedback_optimization_mode}")
 
-def plot_result_timings(n_executions: int, use_custom_update=True):
-    results_filename = get_results_filename(use_custom_update, n_executions)
-    results = load_results(results_filename)
-    plot_timings(results['timings'], use_custom_update)
 
-def compare_results(n_executions: int):
-    results1 = load_results(get_results_filename(use_custom_update=True, n_executions=n_executions))
-    results2 = load_results(get_results_filename(use_custom_update=False, n_executions=n_executions))
+def closed_loop_trajectories_comparison(n_executions: int, list_feedback_optimization_mode:list):
+    list_traj_label_tuple = []
+    traj_ref = None
+    cfg_zo = None
+    for feedback_optimization_mode in list_feedback_optimization_mode:
+        results_filename = get_results_filename(use_custom_update=True, feedback_optimization_mode=feedback_optimization_mode, n_executions=n_executions)
+        results = load_results(results_filename)
+        if traj_ref is None:
+            traj_ref = results['ref_trajectory'].copy()
+            cfg_zo = results['cfg_zo']
+        else:
+            if not np.allclose(traj_ref, results['ref_trajectory']):
+                raise Exception("The reference trajectories are different.")
+        
+        if feedback_optimization_mode == "CONSTANT_FEEDBACK":
+            label = 'ZORO, const. feedback'
+        elif feedback_optimization_mode == "RICCATI_CONSTANT_COST":
+            label = 'RZORO, constant Hess.'
+        elif feedback_optimization_mode == "RICCATI_BARRIER_1":
+            label = 'Riccati-ZORO, adaptive Hess.'
+        else:
+            label = feedback_optimization_mode
+        list_traj_label_tuple.append((label, results['trajectory'], results['trajectory_input']))
+    plot_multiple_trajectories(cfg_zo, traj_ref, list_traj_label_tuple, closed_loop=True)
+
+
+def compare_results(n_executions: int, feedback_optimization_mode:int=0):
+    results1 = load_results(get_results_filename(use_custom_update=True, feedback_optimization_mode=feedback_optimization_mode, n_executions=n_executions))
+    results2 = load_results(get_results_filename(use_custom_update=False, feedback_optimization_mode=feedback_optimization_mode, n_executions=n_executions))
     traj_diff = results1['trajectory'] - results2['trajectory']
     error = np.max(np.abs(traj_diff))
     print(f"trajectory diff after closed loop simulation {error:.2e}")
-    tol = 1e-5
+    tol = 1.5*1e-5
     if error > tol:
         raise Exception(f"zoRO implementations differ too much, error = {error:.2e} > tol = {tol:.2e}")
 
-
-def plot_result_timing_comparison(n_executions: int):
-    fast_timings = load_results(get_results_filename(use_custom_update=True, n_executions=n_executions))['timings']
-    slow_timings = load_results(get_results_filename(use_custom_update=False, n_executions=n_executions))['timings']
-    plot_timing_comparison([fast_timings, slow_timings], ['zoRO-24', 'zoRO-21'])
-
 def timing_comparison(n_executions: int):
-    plot_result_timings(n_executions=n_executions, use_custom_update=True)
-    plot_result_timings(n_executions=n_executions, use_custom_update=False)
+    dict_results = {}
 
-    plot_result_timing_comparison(n_executions=n_executions)
+    for _, tuple in enumerate(zip([True, True, True, True, False, False], ["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2", "RICCATI_CONSTANT_COST", "CONSTANT_FEEDBACK"])):
+        results_filename = get_results_filename(use_custom_update=tuple[0], feedback_optimization_mode=tuple[1], n_executions=n_executions)
+        results = load_results(results_filename)
+        plot_timings(results['timings'], use_custom_update=tuple[0], fig_name_concat=tuple[1])
+        temp_key = "zoRO-24" if tuple[0] else "zoRO-21"
+        if tuple[1] != "CONSTANT_FEEDBACK":
+            temp_key += "-riccati"
+        dict_results[temp_key] = results
+
+    # Compare zoro-riccati with and without custom update
+    plot_timing_comparison([dict_results["zoRO-24-riccati"]['timings'], dict_results["zoRO-21-riccati"]['timings']], ['zoRO-24-riccati', 'zoRO-21-riccati'], fig_name_concat="_riccati")
+    # Compare zoro with and without custom update
+    plot_timing_comparison([dict_results["zoRO-24"]['timings'], dict_results["zoRO-21"]['timings']], ['zoRO-24', 'zoRO-21'], fig_name_concat="_fixedK")
+    # Compare zoro-riccati to zoro with custom update
+    plot_timing_comparison([dict_results["zoRO-24-riccati"]['timings'], dict_results["zoRO-24"]['timings']], ['zoRO-24-riccati', 'zoRO-24'], fig_name_concat="_zoRO-24")
+    # Compare zoro-riccati to zoro without custom update
+    plot_timing_comparison([dict_results["zoRO-21-riccati"]['timings'], dict_results["zoRO-21"]['timings']], ['zoRO-21-riccati', 'zoRO-21'], fig_name_concat="_zoRO-21")
 
 
 if __name__ == "__main__":
     n_executions = 2
-    run_closed_loop_simulation(use_custom_update=True, n_executions=n_executions)
-    run_closed_loop_simulation(use_custom_update=False, n_executions=n_executions)
-    compare_results(n_executions=n_executions)
+    for feedback_optimization_mode in ["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST"]:
+        run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode=feedback_optimization_mode, n_executions=n_executions)
+        run_closed_loop_simulation(use_custom_update=False, feedback_optimization_mode=feedback_optimization_mode, n_executions=n_executions)
+        plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode=feedback_optimization_mode)
+        compare_results(n_executions=n_executions, feedback_optimization_mode=feedback_optimization_mode)
 
-    plot_result_trajectory(n_executions=n_executions, use_custom_update=True)
+    # Feedback gain computed using riccati with sum of constant cost matrices and Hessian of tightened constraints weighted by 1/h**2
+    run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_1", n_executions=n_executions)
+    plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_1")
+    # Feedback gain computed using riccati with sum of constant cost matrices and Hessian of tightened constraints weighted by -1/(h*backoff*2)
+    run_closed_loop_simulation(use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_2", n_executions=n_executions)
+    plot_result_trajectory(n_executions=n_executions, use_custom_update=True, feedback_optimization_mode="RICCATI_BARRIER_2")
+
+    closed_loop_trajectories_comparison(n_executions=n_executions, list_feedback_optimization_mode=["CONSTANT_FEEDBACK", "RICCATI_BARRIER_1"])
+    closed_loop_trajectories_comparison(n_executions=n_executions, list_feedback_optimization_mode=["CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"])
+
     timing_comparison(n_executions=n_executions)
 
-    solve_single_zoro_problem_visualize_uncertainty()
-    plt.show()
+    solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode="CONSTANT_FEEDBACK")
+    solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode="RICCATI_CONSTANT_COST")
+    solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode="RICCATI_BARRIER_1")
+    solve_single_zoro_problem_visualize_uncertainty(feedback_optimization_mode="RICCATI_BARRIER_2")

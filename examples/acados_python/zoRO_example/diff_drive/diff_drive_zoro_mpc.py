@@ -36,7 +36,7 @@ from diff_drive_model import export_diff_drive_model, RobotState
 from mpc_parameters import MPCParam
 
 class ZoroMPCSolver:
-    def __init__(self, cfg: MPCParam, output_P_matrices: bool = False) -> None:
+    def __init__(self, cfg: MPCParam, output_P_matrices: bool = False, output_riccati_t: bool = True) -> None:
         # import model
         self.cfg = cfg
         self.model = export_diff_drive_model(cfg)
@@ -80,6 +80,7 @@ class ZoroMPCSolver:
         self.ocp.constraints.idxbx = np.array([RobotState.VEL.value, RobotState.OMEGA.value])
         self.ocp.constraints.lbx = np.array([self.lbv, -self.ubw])
         self.ocp.constraints.ubx = np.array([self.ubv,  self.ubw])
+        self.ocp.constraints.idxsbx = np.array([0, 1])
         # initial state
         self.ocp.constraints.x0 = np.zeros((cfg.nx, ))
         # terminal state
@@ -98,6 +99,17 @@ class ZoroMPCSolver:
         self.ocp.constraints.lh_e = cfg.obs_radius
         self.ocp.constraints.uh_e = 1e3 * np.ones((num_obs, ))
 
+        self.ocp.constraints.idxsh = np.arange(0, num_obs)
+        self.ocp.constraints.idxsh_e = np.arange(0, num_obs)
+        self.ocp.cost.Zl   = 1e3 * np.ones((num_obs + 2, ))
+        self.ocp.cost.Zu   = 1e3 * np.ones((num_obs + 2, ))
+        self.ocp.cost.zl   = 1e4 * np.ones((num_obs + 2, ))
+        self.ocp.cost.zu   = 1e4 * np.ones((num_obs + 2, ))
+        self.ocp.cost.Zl_e = 1e3 * np.ones((num_obs, ))
+        self.ocp.cost.Zu_e = 1e3 * np.ones((num_obs, ))
+        self.ocp.cost.zl_e = 1e4 * np.ones((num_obs, ))
+        self.ocp.cost.zu_e = 1e4 * np.ones((num_obs, ))
+
         # custom update: disturbance propagation
         self.ocp.solver_options.custom_update_filename = 'custom_update_function.c'
         self.ocp.solver_options.custom_update_header_filename = 'custom_update_function.h'
@@ -109,7 +121,7 @@ class ZoroMPCSolver:
         ]
 
         # solver options
-        self.ocp.solver_options.qp_solver = 'FULL_CONDENSING_DAQP' #'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_DAQP'
+        self.ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' #'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_DAQP'
         self.ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
         self.ocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP, SQP_RTI
         self.ocp.solver_options.qp_tol = 1e-4
@@ -135,6 +147,13 @@ class ZoroMPCSolver:
         zoro_description.idx_lh_e_t = list(range(0, cfg.num_obs))
         zoro_description.idx_uh_e_t = []
         zoro_description.output_P_matrices = output_P_matrices
+        zoro_description.feedback_optimization_mode = cfg.feedback_optimization_mode
+        zoro_description.output_riccati_t = (output_riccati_t and (cfg.feedback_optimization_mode != "CONSTANT_FEEDBACK"))
+        # Note: Align the costs with the cost for reference tracking
+        zoro_description.riccati_Q_const_e = cfg.Q_e
+        zoro_description.riccati_Q_const = cfg.Q * cfg.delta_t
+        zoro_description.riccati_R_const = cfg.R * cfg.delta_t * 1e-1
+        zoro_description.riccati_S_const = np.zeros((2, 5))
 
         ## dummy linear constraints for testing
         # self.ocp.constraints.C = np.array([[1., 0., 0., 0., 0.0], [0., 1., 0., 0., 0.]])
@@ -161,11 +180,33 @@ class ZoroMPCSolver:
         # timers
         self.rti_phase1_t = 0.
         self.rti_phase2_t = 0.
-        self.propagation_t = 0.
+        self.riccati_t = 0.
+        self.zoro_t = 0.
         self.acados_integrator_time = 0.
         self.acados_qp_time = 0.
 
-    def solve(self, x_current, y_ref, obs_position, obs_radius, p0_mat=None):
+    def reset_nominal_constr_bounds(self, obs_radius):
+        for idx_stage in range(0, self.cfg.n_hrzn):
+            self.acados_ocp_solver.set(idx_stage, "lbu", self.ocp.constraints.lbu)
+            self.acados_ocp_solver.set(idx_stage, "ubu", self.ocp.constraints.ubu)
+        for idx_stage in range(1, self.cfg.n_hrzn):
+            self.acados_ocp_solver.set(idx_stage, "lbx", self.ocp.constraints.lbx)
+            self.acados_ocp_solver.set(idx_stage, "ubx", self.ocp.constraints.ubx)
+            self.acados_ocp_solver.constraints_set(idx_stage, "lh", obs_radius)
+        self.acados_ocp_solver.set(self.cfg.n_hrzn, "lbx", self.ocp.constraints.lbx_e)
+        self.acados_ocp_solver.set(self.cfg.n_hrzn, "ubx", self.ocp.constraints.ubx_e)
+        self.acados_ocp_solver.constraints_set(self.cfg.n_hrzn, "lh", obs_radius)
+
+    def verify_nonpositive_slack_variables(self, thr:float=1e-6):
+        max_sl = -np.inf
+        for idx_stage in range(1, self.cfg.n_hrzn+1):
+            sl = self.acados_ocp_solver.get(idx_stage, "sl")
+            max_sl = max(max_sl, np.max(sl))
+        if not max_sl <= thr:
+            print(f"max_sl = {max_sl}")
+        return max_sl <= thr
+
+    def solve(self, x_current, y_ref, obs_position, obs_radius, p0_mat=None, converg_thr:float=1e-6, num_nominal4init:int=1):
         """
         x_current: np.ndarray (nx,)
         y_ref: np.ndarray, (n_hrzn+1, nx + nu)
@@ -177,25 +218,10 @@ class ZoroMPCSolver:
 
         self.rti_phase1_t = 0.
         self.rti_phase2_t = 0.
-        self.propagation_t = 0.
+        self.riccati_t = 0.
+        self.zoro_t = 0.
         self.acados_integrator_time = 0.
         self.acados_qp_time = 0.
-
-        if not self.initialized:
-            # initialize solver
-            for i in range(0, self.cfg.n_hrzn):
-                self.acados_ocp_solver.set(i, 'x', np.array(x_current))
-                self.acados_ocp_solver.set(i, 'u', np.zeros((self.cfg.nu,)))
-            self.acados_ocp_solver.set(self.cfg.n_hrzn, 'x', np.array(x_current))
-            self.x_temp_sol = np.tile(x_current, (self.cfg.n_hrzn+1, 1))
-            self.u_temp_sol = np.zeros((self.cfg.n_hrzn, self.cfg.nu))
-
-            # Initialize P matrix
-            self.P_mats = np.zeros((self.cfg.n_hrzn+1, self.cfg.nx, self.cfg.nx))
-            self.P_mats[0,:,:] = p0_mat.copy()
-            for i in range(1, self.cfg.n_hrzn+1):
-                self.P_mats[i,:,:] = self.cfg.W_mat
-            self.initialized = True
 
         # set the current state
         self.acados_ocp_solver.set(0, "lbx", x_current)
@@ -208,6 +234,35 @@ class ZoroMPCSolver:
         for i_stage in range(self.cfg.n_hrzn+1):
             self.acados_ocp_solver.set(i_stage,"p", obs_position)
 
+        if self.ocp.zoro_description.feedback_optimization_mode == "CONSTANT_FEEDBACK":
+            riccati_K = [self.cfg.fdbk_K_mat] * self.cfg.n_hrzn
+
+        if not self.initialized:
+            # initialize solver
+            for i in range(0, self.cfg.n_hrzn):
+                self.acados_ocp_solver.set(i, 'x', np.array(x_current))
+                self.acados_ocp_solver.set(i, 'u', np.zeros((self.cfg.nu,)))
+            self.acados_ocp_solver.set(self.cfg.n_hrzn, 'x', np.array(x_current))
+            self.x_temp_sol = np.tile(x_current, (self.cfg.n_hrzn+1, 1))
+            self.u_temp_sol = np.zeros((self.cfg.n_hrzn, self.cfg.nu))
+
+            if num_nominal4init > 0:
+                self.reset_nominal_constr_bounds(obs_radius)
+                self.acados_ocp_solver.options_set('rti_phase', 0)
+                for i_sqp in range(num_nominal4init):
+                    self.acados_ocp_solver.solve()
+                for i_stage in range(self.cfg.n_hrzn):
+                    self.x_temp_sol[i_stage,:] = self.acados_ocp_solver.get(i_stage, "x")
+                    self.u_temp_sol[i_stage,:] = self.acados_ocp_solver.get(i_stage, "u")
+                self.x_temp_sol[self.cfg.n_hrzn,:] = self.acados_ocp_solver.get(self.cfg.n_hrzn, "x")
+
+            # Initialize P matrix
+            self.P_mats = np.zeros((self.cfg.n_hrzn+1, self.cfg.nx, self.cfg.nx))
+            self.P_mats[0,:,:] = p0_mat.copy()
+            for i in range(1, self.cfg.n_hrzn+1):
+                self.P_mats[i,:,:] = self.cfg.W_mat
+            self.initialized = True
+
         for i_sqp in range(self.cfg.zoRO_iter):
             # preparation rti_phase
             self.acados_ocp_solver.options_set('rti_phase', 1)
@@ -215,21 +270,33 @@ class ZoroMPCSolver:
             self.rti_phase1_t += self.acados_ocp_solver.get_stats("time_tot")
             self.acados_integrator_time += self.acados_ocp_solver.get_stats("time_sim")
 
-            if self.cfg.use_custom_update and not self.ocp.zoro_description.output_P_matrices:
+            if self.cfg.use_custom_update:
                 t_start = process_time()
-                self.acados_ocp_solver.custom_update(self.cfg.P0_mat.flatten())
-                self.propagation_t += process_time() - t_start
-            elif self.cfg.use_custom_update and self.ocp.zoro_description.output_P_matrices:
-                t_start = process_time()
-                input_custom_update = np.ascontiguousarray(np.concatenate((self.cfg.P0_mat.flatten(), self.P_mats[:,:,:].flatten())))
+                if self.ocp.zoro_description.output_P_matrices and self.ocp.zoro_description.output_riccati_t:
+                    input_custom_update = np.ascontiguousarray(np.concatenate((self.cfg.P0_mat.flatten(), self.P_mats[:,:,:].flatten(), np.array([0.]))))
+                elif self.ocp.zoro_description.output_P_matrices and not self.ocp.zoro_description.output_riccati_t:
+                    input_custom_update = np.ascontiguousarray(np.concatenate((self.cfg.P0_mat.flatten(), self.P_mats[:,:,:].flatten())))
+                elif not self.ocp.zoro_description.output_P_matrices and self.ocp.zoro_description.output_riccati_t:
+                    input_custom_update = np.ascontiguousarray(np.concatenate((self.cfg.P0_mat.flatten(), np.array([0.]))))
+                else:
+                    input_custom_update = self.cfg.P0_mat.flatten()
                 self.acados_ocp_solver.custom_update(input_custom_update)
-                self.P_mats = input_custom_update[self.cfg.nx**2:].reshape((self.cfg.n_hrzn+1, self.cfg.nx, self.cfg.nx))
-                self.propagation_t += process_time() - t_start
-                self.acados_ocp_solver.print_statistics()
+
+                idx_output_riccati_t = self.cfg.nx**2  # self.ocp.zoro_description.input_P0 = True, thereby [0, nx**2] is reserved for P0
+                if self.ocp.zoro_description.output_P_matrices:
+                    idx_output_riccati_t += (self.cfg.n_hrzn+1) * self.cfg.nx**2
+                    self.P_mats = input_custom_update[self.cfg.nx**2:idx_output_riccati_t].reshape((self.cfg.n_hrzn+1, self.cfg.nx, self.cfg.nx))
+                tmp = input_custom_update[idx_output_riccati_t] if self.ocp.zoro_description.output_riccati_t else 0.
+                self.riccati_t += tmp
+                self.zoro_t += process_time() - t_start
+                # self.acados_ocp_solver.print_statistics()
             else:
                 t_start = process_time()
-                self.propagate_and_update(obs_position=obs_position, obs_radius=obs_radius, p0_mat=self.cfg.P0_mat)
-                self.propagation_t += process_time() - t_start
+                if self.ocp.zoro_description.feedback_optimization_mode != "CONSTANT_FEEDBACK":
+                    riccati_K, _ = self.riccati_recursion()
+                    self.riccati_t += process_time() - t_start
+                self.propagate_and_update(obs_position=obs_position, obs_radius=obs_radius, p0_mat=self.cfg.P0_mat, riccati_K=riccati_K)
+                self.zoro_t += process_time() - t_start
 
             # feedback rti_phase
             self.acados_ocp_solver.options_set('rti_phase', 2)
@@ -238,6 +305,8 @@ class ZoroMPCSolver:
             self.rti_phase2_t += self.acados_ocp_solver.get_stats("time_tot")
 
             # Get solution
+            x_prev_sol = self.x_temp_sol.copy()
+            u_prev_sol = self.u_temp_sol.copy()
             for i_stage in range(self.cfg.n_hrzn):
                 self.x_temp_sol[i_stage,:] = self.acados_ocp_solver.get(i_stage, "x")
                 self.u_temp_sol[i_stage,:] = self.acados_ocp_solver.get(i_stage, "u")
@@ -245,6 +314,19 @@ class ZoroMPCSolver:
 
             residuals = self.acados_ocp_solver.get_residuals()
 
+            if status != 0:
+                break
+
+            if not self.verify_nonpositive_slack_variables():
+                status = -10
+                print(f"positive slack variables for state = {x_current}")
+
+            step_sqp = max(np.linalg.norm(x_prev_sol - self.x_temp_sol, np.inf), np.linalg.norm(u_prev_sol - self.u_temp_sol, np.inf))
+            if (status==0) and (step_sqp < converg_thr):
+                print(f"Step of the nominal trajectory is smaller than the convergence threshold after {i_sqp+1} iterations. Exit")
+                break
+
+        # print(f"status of acados_ocp_solver = {status}, delta step = {step_sqp}.")
         u_opt = self.acados_ocp_solver.get(0, "u")
 
         return u_opt, status
@@ -284,7 +366,26 @@ class ZoroMPCSolver:
         return collision_cstr_active
 
 
-    def propagate_and_update(self, obs_position, obs_radius, p0_mat):
+    def riccati_recursion(self):
+        Q = self.ocp.zoro_description.riccati_Q_const
+        R = self.ocp.zoro_description.riccati_R_const
+        S = self.ocp.zoro_description.riccati_S_const
+
+        K = [None] * self.cfg.n_hrzn
+        P = [None] * (self.cfg.n_hrzn+1)
+        P[-1] = self.ocp.zoro_description.riccati_Q_const_e
+
+        for k in range(self.cfg.n_hrzn-1, -1, -1):
+            temp_A = self.acados_ocp_solver.get_from_qp_in(k, "A")
+            temp_B = self.acados_ocp_solver.get_from_qp_in(k, "B")
+            K[k] = np.linalg.solve( R + temp_B.T @ P[k+1] @ temp_B, S + temp_B.T @ P[k+1] @ temp_A )
+            P[k] = Q + temp_A.T @ P[k+1] @ temp_A - (S.T + temp_A.T @ P[k+1] @ temp_B) @ K[k]
+
+        K[0] = np.zeros_like(K[1])
+        return K, P
+
+
+    def propagate_and_update(self, obs_position, obs_radius, p0_mat, riccati_K):
         # debug_list = []
         lbx_tightened = np.zeros((self.cfg.num_state_cstr, ))
         ubx_tightened = np.zeros((self.cfg.num_state_cstr, ))
@@ -300,7 +401,7 @@ class ZoroMPCSolver:
             # get the A matrix
             temp_A = self.acados_ocp_solver.get_from_qp_in(i_mpc_stage, "A")
             temp_B = self.acados_ocp_solver.get_from_qp_in(i_mpc_stage, "B")
-            temp_AK = temp_A - temp_B @ self.cfg.fdbk_K_mat
+            temp_AK = temp_A - temp_B @ riccati_K[i_mpc_stage]
             temp_P_mat = temp_AK @ temp_P_mat @ temp_AK.T + self.cfg.W_mat
             i_mpc_stage += 1
             self.P_mats[i_mpc_stage,:,:] = temp_P_mat.copy()

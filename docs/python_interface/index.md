@@ -183,6 +183,14 @@ The cython based wrapper is called [`AcadosOcpSolverCython`](#acados_template.ac
 ```
 
 
+### `ZoroDescription`
+``` eval_rst
+.. automodule:: acados_template.zoro_description
+    :members: ZoroDescription
+    :private-members:
+    :exclude-members:
+```
+
 
 ## `acados` integrator interface
 
