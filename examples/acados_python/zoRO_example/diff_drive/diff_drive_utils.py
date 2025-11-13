@@ -31,6 +31,7 @@ import matplotlib.pyplot as plt
 import os
 import pickle
 
+from diff_drive_model import RobotState
 from mpc_parameters import MPCParam
 from acados_template import latexify_plot
 
@@ -38,12 +39,13 @@ latexify_plot()
 
 # RESULTS_DIR = 'results'
 
-def get_results_filename(use_custom_update: bool, n_executions: int):
+def get_results_filename(use_custom_update: bool, feedback_optimization_mode: int, n_executions: int):
     results_filename = 'results_'
     if use_custom_update:
         results_filename += 'custom_update'
     else:
         results_filename += 'python_prop'
+    results_filename += f"_{feedback_optimization_mode}"
     results_filename += f'_exec_{n_executions}'
     results_filename += '.pkl'
     return results_filename
@@ -58,8 +60,8 @@ def load_results(results_filename):
     return results
 
 
-def plot_timings(timing_dict, use_custom_update: bool):
-
+def plot_timings(timing_dict, use_custom_update: bool, fig_name_concat:str=""):
+    print(f"use_custom_update={use_custom_update}")
     print("timings\t\tmin\tmean\tmax\n--------------------------------")
     for k, v in timing_dict.items():
         print(f"& {k:10} & {np.min(v):.3f} & {np.mean(v):.3f} & {np.max(v):.3f} \\\\")
@@ -70,6 +72,8 @@ def plot_timings(timing_dict, use_custom_update: bool):
     # remove keys not to plot:
     del timing_dict['integrator']
     del timing_dict['QP']
+    del timing_dict['feedback']
+    del timing_dict['preparation']
 
     # plot
     fig = plt.figure(figsize=(6.0, 2.1))
@@ -79,21 +83,26 @@ def plot_timings(timing_dict, use_custom_update: bool):
                medianprops=medianprops, showmeans=False,
                whis=[0.0, 100.],
                )
-    ax.set_yticklabels(timing_dict.keys())
+
+    yticklabels = timing_dict.keys()
+    yticklabels = ['backoff update' if s == 'zoRO' else s for s in yticklabels]
+    yticklabels = ['Riccati' if s == 'riccati' else s for s in yticklabels]
+
+    ax.set_yticklabels(yticklabels)
     plt.grid()
-    plt.xlabel("computation time [ms]")
+    plt.xlabel(r"computation time in $\mathrm{ms}$")
     plt.tight_layout()
     max_time = max([np.max(t) for t in timing_dict.values()])
     ax.set_xlim([0, 1.05*max_time])
 
     if not os.path.exists("figures"):
         os.makedirs("figures")
-    fig_filename = os.path.join("figures", f"timings_diff_drive_{'fast' if use_custom_update else 'slow'}.pdf")
+    fig_filename = os.path.join("figures", f"timings_diff_drive_{'fast' if use_custom_update else 'slow'}{fig_name_concat}.pdf")
     plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
     print(f"stored figure in {fig_filename}")
 
 
-def plot_timing_comparison(timings_list, label_list):
+def plot_timing_comparison(timings_list, label_list, fig_name_concat:str=""):
     fig = plt.figure(figsize=(6.0, 1.8))
     ax = fig.add_subplot(111)
     colors = ['C0', 'C1']
@@ -102,7 +111,7 @@ def plot_timing_comparison(timings_list, label_list):
 
     for i in range(n_variants):
         bp[i] = ax.boxplot(
-            [timings_list[i]['total'], timings_list[i]['propagation']],
+            [timings_list[i]['total'], timings_list[i]['zoRO']],
                 vert=False, patch_artist=True, whis=[0.0, 100.],
                 boxprops={"facecolor": colors[i]},
                 showmeans=False,
@@ -110,7 +119,7 @@ def plot_timing_comparison(timings_list, label_list):
                 )
 
     ax.set_yticks([1, 2])
-    ax.set_yticklabels(['total', 'propagation'])
+    ax.set_yticklabels(['total', 'zoRO'])
     ax.legend([bp[i]["boxes"][0] for i in range(n_variants)], label_list) #, loc='center')
     ax.set_xscale('log')
 
@@ -120,7 +129,7 @@ def plot_timing_comparison(timings_list, label_list):
 
     if not os.path.exists("figures"):
         os.makedirs("figures")
-    fig_filename = os.path.join("figures", "timings_diff_drive_compare.pdf")
+    fig_filename = os.path.join("figures", f"timings_diff_drive_compare{fig_name_concat}.pdf")
     plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
     print(f"stored figure in {fig_filename}")
 
@@ -132,7 +141,7 @@ def ellipsoid_surface_2D(P, n=100):
     return a
 
 
-def plot_trajectory(cfg: MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray, P_matrices=None, closed_loop=True):
+def plot_trajectory(cfg: MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray, P_matrices=None, closed_loop=True, fig_name_concat:str=""):
 
     fig = plt.figure()
     ax = fig.add_subplot(1,1,1)
@@ -167,7 +176,75 @@ def plot_trajectory(cfg: MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray, P_ma
     if not os.path.exists("figures"):
         os.makedirs("figures")
 
-    fig_filename = os.path.join("figures", "diff_drive_sim_trajectory.pdf")
+    fig_filename = os.path.join("figures", f"diff_drive_sim_trajectory{fig_name_concat}.pdf")
+    plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
+    print(f"stored figure in {fig_filename}")
+
+
+def plot_multiple_trajectories(cfg: MPCParam, traj_ref:np.ndarray, list_traj_label_tuple:list, closed_loop=True):
+
+    list_color = ["tab:blue", "tab:orange", "tab:green", "tab:purple"]
+    list_linestyle = ["-", '-', "-", "-"]
+
+    # Trajectories in 2D plane
+    fig = plt.figure(100)
+    ax = fig.add_subplot(1,1,1)
+    for idx_obs in range(cfg.num_obs):
+        circ_label = "Obstacles" if idx_obs == 0 else None
+        circ = plt.Circle(cfg.obs_pos[idx_obs,:], cfg.obs_radius[idx_obs],
+                          edgecolor="red", facecolor=(1,0,0,.5), label=circ_label,
+                          )
+        ax.add_artist(circ)
+
+    ax.plot(traj_ref[:, 0], traj_ref[:, 1], c='m', linestyle='--', alpha=0.5, label='Reference trajectory')
+    for idx, traj_label_tuple in enumerate(list_traj_label_tuple):
+        traj_zo = traj_label_tuple[1]
+        ax.plot(traj_zo[:, 0], traj_zo[:, 1], color=list_color[idx], linestyle=list_linestyle[idx], label=traj_label_tuple[0])
+
+    ax.set_xlabel(r"$p_\mathrm{x}$ in $\mathrm{m}$")
+    ax.set_ylabel(r"$p_\mathrm{y}$ in $\mathrm{m}$")
+    if closed_loop:
+        ax.set_xticks(np.arange(-2., 9., 2.))
+        ax.set_yticks(np.arange(0., 5., 2.))
+        # ax.set_ylim([-.5, 3.6])
+        ax.set_ylim([-.3, 2.2])
+        ax.set_xlim([-2.3, 8.1])
+        ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1), ncol=2)
+    else:
+        ax.legend()
+
+    ax.set_aspect("equal")
+    plt.tight_layout()
+    # plt.grid()
+    if not os.path.exists("figures"):
+        os.makedirs("figures")
+    # small hack to have relatively larger fontsize
+    fig.set_figwidth(fig.get_figwidth() * .9)
+
+    fig_filename = os.path.join("figures", f"diff_drive_sim_multiple_trajectories.pdf")
+    plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
+    print(f"stored figure in {fig_filename}")
+
+    # Velocity and acceleration over time
+    n_trajs = len(list_traj_label_tuple)
+    fig = plt.figure(101, figsize=(10, 10))
+    axes = fig.subplots(4, n_trajs, sharex=True)
+
+    axes[0][0].set_ylabel(r"lin. vel. / m s${}^{-1}$")
+    axes[1][0].set_ylabel(r"ang. vel. / rad s${}^{-1}$")
+    axes[2][0].set_ylabel(r"lin. acc. / m s${}^{-2}$")
+    axes[3][0].set_ylabel(r"ang. acc. / rad s${}^{-2}$")
+    for idx, traj_label_tuple in enumerate(list_traj_label_tuple):
+        traj_zo = traj_label_tuple[1]
+        traj_u = traj_label_tuple[2]
+        ts = np.arange(0, traj_zo.shape[0]) * cfg.delta_t
+        axes[0][idx].plot(ts, traj_zo[:, RobotState.VEL.value], color="tab:blue")
+        axes[0][idx].set_title(traj_label_tuple[0])
+        axes[1][idx].plot(ts, traj_zo[:, RobotState.OMEGA.value], color="tab:blue")
+        axes[2][idx].plot(ts, traj_u[:, 0], color="tab:blue")
+        axes[3][idx].plot(ts, traj_u[:, 1], color="tab:blue")
+
+    fig_filename = os.path.join("figures", f"diff_drive_sim_vel_acc_trajectories.pdf")
     plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
     print(f"stored figure in {fig_filename}")
 
