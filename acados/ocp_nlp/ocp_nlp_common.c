@@ -4487,6 +4487,11 @@ int ocp_nlp_solve_qp_and_correct_dual(ocp_nlp_config *config, ocp_nlp_dims *dims
     if (nlp_opts->ext_qp_res)
     {
         ocp_qp_res_compute(scaled_qp_in, scaled_qp_out, nlp_work->qp_res, nlp_work->qp_res_ws);
+        if (nlp_opts->tau_min > 0)
+        {
+            // NOTE: the high-performance why of doing it, could be done with for loop too.
+            blasfeo_daxpy(2*dims->ni_total, - nlp_opts->tau_min, scaled_qp_in->d_mask, 0, nlp_work->qp_res->res_m, 0, nlp_work->qp_res->res_m, 0);
+        }
     }
 
     // compute correct dual solution in case of Hessian regularization
