@@ -37,7 +37,7 @@ from casadi import MX, vertcat, sin, cos
 import casadi as ca
 import time
 
-# NOTE: This example requires CasADi version nightly-se2 or later.
+# NOTE: This example requires CasADi version 3.7 or later.
 # Furthermore, this example uses additional flags for the CasADi code generation,
 # cf. the solver option ext_fun_compile_flags, which you might need to adapt based
 # on your compiler and operating system.
