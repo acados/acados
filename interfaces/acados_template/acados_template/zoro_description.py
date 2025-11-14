@@ -44,8 +44,8 @@ class ZoroDescription:
     Used to render custom updated zoRO functions in acados.
 
     Implementation described in:
-    "Efficient Zero-Order Robust Optimization for Real-Time Model Predictive Control with acados"
-    - J. Frey, Y. Gao, F. Messerer, A. Lahr, M. N Zeilinger, M. Diehl, Proceedings of the European Control Conference (ECC) 2024
+    - "Efficient Zero-Order Robust Optimization for Real-Time Model Predictive Control with acados", J. Frey, Y. Gao, F. Messerer, A. Lahr, M. N Zeilinger, M. Diehl, Proceedings of the European Control Conference (ECC) 2024
+    - "Riccati-ZORO: An efficient algorithm for heuristic online optimization of internal feedback laws in robust and stochastic model predictive control", F. Messerer, Y. Gao, J. Frey, M. Diehl, https://arxiv.org/abs/2511.10473
 
     Limitations:
     - Updating C, D, lg, ug matrices not supported yet.
@@ -61,9 +61,9 @@ class ZoroDescription:
 
     String in: "CONSTANT_FEEDBACK", "RICCATI_CONSTANT_COST", "RICCATI_BARRIER_1", "RICCATI_BARRIER_2"
 
-    - CONSTANT_FEEDBACK: constant feedback gain K
-    - RICCATI_CONSTANT_COST: feedback gains K computed from a Riccati recursion with constant matrices riccati_Q_const, riccati_R_const, riccati_S_const, riccati_Q_const_e
-    - RICCATI_BARRIER_1: feedback gains K computed from a Riccati recursion with barrier contributions added to the variant in RICCATI_CONSTANT_COST, version 1
+    - CONSTANT_FEEDBACK: constant feedback gain K, corresponds to standard zoRO scheme.
+    - RICCATI_CONSTANT_COST: feedback gains K computed from a Riccati recursion with constant matrices riccati_Q_const, riccati_R_const, riccati_S_const, riccati_Q_const_e, described in "Riccati-ZORO" paper.
+    - RICCATI_BARRIER_1: feedback gains K computed from a Riccati recursion with barrier contributions added to the variant in RICCATI_CONSTANT_COST, version 1, described in "Riccati-ZORO" paper.
     - RICCATI_BARRIER_2: feedback gains K computed from a Riccati recursion with barrier contributions added to the variant in RICCATI_CONSTANT_COST, version 2
     """
 
