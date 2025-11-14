@@ -1266,6 +1266,7 @@ class AcadosOcpOptions:
         Residuals are computed on input/output of xcond-QP solver, i.e. before condensing and after expanding the QP solution.
         QP residuals are part of the statistics.
         Not supported for "SQP_WITH_FEASIBLE_QP".
+        If tau_min > 0, the complementarity residuals is computed with respect to the corresponding barrier problem.
 
         Type: int; 0 or 1;
         Default: 0.

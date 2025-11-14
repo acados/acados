@@ -1485,6 +1485,7 @@ class AcadosOcpSolver:
             - qp_stat: vector of QP solver status for last NLP solver call
             - qp_iter: vector of QP iterations for last NLP solver call
             - qpscaling_status: status of last call to qpscaling module
+            - qp_residuals: residuals of last QP solve [res_stat, res_eq, res_ineq, res_comp], only available if nlp_solver_ext_qp_res is enabled and nlp_solver_type is SQP
             - statistics: table with info about last iteration
             - stat_m: number of rows in statistics matrix
             - stat_n: number of columns in statistics matrix
@@ -1588,6 +1589,17 @@ class AcadosOcpSolver:
 
         elif field_ == 'residuals':
             return self.get_residuals()
+
+        elif field_ == 'qp_residuals':
+            if self.__solver_options['nlp_solver_ext_qp_res'] != 1 or self.__solver_options['nlp_solver_type'] != 'SQP':
+                raise ValueError("qp_residuals only supported if nlp_solver_ext_qp_res is enabled and nlp_solver_type is SQP.")
+            full_stats = self.get_stats('statistics')
+            if self.__solver_options['nlp_solver_type'] == 'SQP':
+                res_stat = full_stats[8, -1]
+                res_eq = full_stats[9, -1]
+                res_ineq = full_stats[10, -1]
+                res_comp = full_stats[11, -1]
+                return np.array([res_stat, res_eq, res_ineq, res_comp])
 
         elif field_ == 'res_eq_all':
             full_stats = self.get_stats('statistics')
