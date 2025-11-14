@@ -28,7 +28,7 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 
 
-% NOTE: This example requires CasADi version nightly-se2 or later.
+% NOTE: This example requires CasADi version 3.7 or later.
 % Furthermore, this example requires additional flags for the CasADi code generation,
 % cf. the solver option `ext_fun_compile_flags`
 
