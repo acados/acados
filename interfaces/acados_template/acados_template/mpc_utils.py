@@ -669,10 +669,15 @@ def J_to_idx(J):
 
 def create_ocp_with_control_horizon(ocp: AcadosOcp, Nc: int, Nr: int=None) -> Union[AcadosOcp, AcadosMultiphaseOcp]:
     """
-    Add control horizon to an existing OCP formulation by creating a multi-phase OCP.
+    Returns an OCP formulation with Nc shooting intervals in the control horizon and Nr shooting nodes in the remaining horizon.
 
-    Note: An intermediate shooting node is added, which has no explicit reference set.
-    Therefore, to iterate over the horizon use :code:`rng = [i for i in range(N) if i != Nc]`.
+    If Nr == 0 an AcadosOcp is returned.
+
+    Otherwise, an AcadosMultiphaseOcp is returned.
+
+    Note: An intermediate stage is added, which has no explicit reference set.
+    The control value that is applied on the remaining horizon is held constant and is a decision variable on the transition stage.
+    To set reference values, iterate over the horizon using :code:`rng = [i for i in range(N) if i != Nc]`.
 
     :param ocp: regular ocp that will be extended with an control horizon
     :param Nc: number of shooting nodes in control horizon
@@ -704,32 +709,44 @@ def create_ocp_with_control_horizon(ocp: AcadosOcp, Nc: int, Nr: int=None) -> Un
     trns_ocp.constraints.ubu = ocp.constraints.ubu
     trns_ocp.constraints.idxbu = ocp.constraints.idxbu
 
+    ca_symbol = ocp.model.get_casadi_symbol()
     nu = ocp.model.u.rows()
     aug_ocp = deepcopy(ocp)
     aug_ocp.model.x = ca.vertcat(ocp.model.x, ocp.model.u)
-    aug_ocp.model.u = ca.SX()
-    if not is_empty(ocp.model.f_expl_expr):
+    aug_ocp.model.u = ca_symbol('u_aug', 0, 0)
+    if ocp.solver_options.integrator_type == 'ERK':
         aug_ocp.model.f_expl_expr = ca.vertcat(ocp.model.f_expl_expr, ca.SX.zeros(nu))
-        if not is_empty(ocp.model.xdot) and not is_empty(ocp.model.f_impl_expr):
-            aug_ocp.model.xdot = ca.vertcat(ocp.model.xdot, ca.SX.sym('u_dot', nu))
-            aug_ocp.model.f_impl_expr = aug_ocp.model.xdot - aug_ocp.model.f_expl_expr
-    if not is_empty(ocp.model.disc_dyn_expr):
-        aug_ocp.model.disc_dyn_expr = ca.vertcat(ocp.model.disc_dyn_expr, ca.SX.ones(nu))
+    elif ocp.solver_options.integrator_type == 'IRK':
+        udot = ca_symbol('udot', nu)
+        aug_ocp.model.xdot = ca.vertcat(ocp.model.xdot, udot)
+        aug_ocp.model.f_impl_expr = ca.vertcat(ocp.model.f_impl_expr, udot)
+    elif ocp.solver_options.integrator_type == 'DISCRETE':
+        aug_ocp.model.disc_dyn_expr = ca.vertcat(ocp.model.disc_dyn_expr, ocp.model.u)
+    else:
+        raise ValueError('integrator_type not supported in create_ocp_with_control_horizon!')
 
     if ocp.cost.cost_type == 'LINEAR_LS':
         aug_ocp.cost.Vu = np.zeros((len(ocp.cost.yref), 0))
         aug_ocp.cost.Vx = np.concatenate((ocp.cost.Vx, ocp.cost.Vu), axis=1)
         aug_ocp.cost.Vx_e = np.concatenate((ocp.cost.Vx_e, np.zeros((len(ocp.cost.yref_e), nu))), axis=1)
 
+    # NOTE: other cost types do not need to be redefined as they are defined via expressions.
+    # remove initial state constraint, not relevant in second phase:
     aug_ocp.remove_x0_elimination()
+    aug_ocp.constraints.idxbx_0 = np.array([])
+    aug_ocp.constraints.lbx_0 = np.array([])
+    aug_ocp.constraints.ubx_0 = np.array([])
+    # remove input constraints, not relevant in last phase:
     aug_ocp.constraints.lbu = np.array([])
     aug_ocp.constraints.ubu = np.array([])
     aug_ocp.constraints.idxbu = np.array([])
 
+    # create MOCP
     mocp = AcadosMultiphaseOcp(N_list=[Nc, 1, Nr])
     mocp.solver_options = ocp.solver_options
     mocp.solver_options.time_steps = np.array(Nc * [Ts] + [0] + Nr * [Ts*(Np-Nc)/Nr])
     mocp.mocp_opts.integrator_type = [ocp.solver_options.integrator_type, 'DISCRETE', aug_ocp.solver_options.integrator_type]
+
     mocp.set_phase(ocp, 0)
     mocp.set_phase(trns_ocp, 1)
     mocp.set_phase(aug_ocp, 2)
