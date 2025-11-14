@@ -88,6 +88,22 @@ This paper additionally demonstrates the effectiveness of using nonuniform discr
 }
 ```
 
+### Riccati-ZORO: An efficient algorithm for heuristic online optimization of internal feedback laws in robust and stochastic model predictive control
+This feature can be used by setting `zoro_description.feedback_optimization_mode != "CONSTANT_FEEDBACK"`.
+```latex
+@Misc{Messerer2025,
+  Title                    = {Riccati-{ZORO}: An efficient algorithm for heuristic online optimization of internal feedback laws in robust and stochastic model predictive control},
+
+  Author                   = {Florian Messerer and Yunfan Gao and Jonathan Frey and Moritz Diehl},
+  Year                     = {2025},
+
+  Archiveprefix            = {arXiv},
+  Eprint                   = {2511.10473},
+  Primaryclass             = {math.OC},
+  Url                      = {https://arxiv.org/abs/2511.10473}
+}
+```
+
 ### Structure exploiting implicit Runge-Kutta method: GNSF
 The GNSF IRK integrator be used by setting the option `integrator_tpye = 'GNSF'`.
 ```latex
