@@ -151,7 +151,7 @@ sim.solver_options.num_steps = 3;
 sim.solver_options.newton_iter = 3;
 sim.solver_options.compile_interface = 'AUTO';
 
-%% acados sim
+%% acados sim solver
 % create integrator
 sim_solver = AcadosSimSolver(sim);
 

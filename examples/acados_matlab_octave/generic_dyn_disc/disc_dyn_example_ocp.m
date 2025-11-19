@@ -30,6 +30,7 @@
 
 clear all; clc;
 check_acados_requirements()
+addpath('../linear_mass_spring_model/');
 
 %% acados ocp model
 model = get_linear_mass_spring_model();

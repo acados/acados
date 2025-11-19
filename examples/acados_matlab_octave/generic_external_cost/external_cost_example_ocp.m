@@ -35,7 +35,7 @@ check_acados_requirements()
 model_path = fullfile(pwd,'..','pendulum_on_cart_model');
 addpath(model_path)
 
-%% model dynamics
+%% model
 model = get_pendulum_on_cart_model();
 nx = length(model.x);
 nu = length(model.u);
@@ -45,7 +45,7 @@ ny_e = nx; % number of outputs in terminal cost term
 %% discretization
 N = 20;
 T = 1; % time horizon length
-%% acados ocp model
+%% set up OCP
 ocp = AcadosOcp();
 ocp.model = model;
 ocp.model.name = 'pendulum';
@@ -63,7 +63,7 @@ ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
 ocp.solver_options.qp_solver_cond_N = 5; % for partial condensing
 ocp.solver_options.integrator_type = 'ERK';
 
-%% cost
+% cost
 % generic cost
 W_x = diag([1e3, 1e3, 1e-2, 1e-2]);
 W_u = 1e-2;
@@ -126,7 +126,8 @@ elseif (generic_or_casadi == 2)
     % Casadi terminal cost
     ocp.model.cost_expr_ext_cost_e = cost_expr_ext_cost_e;
 end
-%% constraints
+
+% constraints
 ocp.constraints.constr_type = 'AUTO';
 constr_expr_h_0 = sym_u;
 constr_expr_h = sym_u;

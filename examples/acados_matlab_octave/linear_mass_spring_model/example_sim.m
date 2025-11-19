@@ -34,7 +34,7 @@ check_acados_requirements();
 model = get_linear_mass_spring_model();
 nx = length(model.x);
 nu = length(model.u);
-%% acados sim model
+%% set up sim
 sim = AcadosSim();
 sim.model = model;
 sim.solver_options.Tsim = 0.5;
