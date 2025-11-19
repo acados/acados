@@ -40,7 +40,7 @@ UMAX = .45
 
 
 def test_solver(with_anderson_acceleration: bool,
-                variant='GAUSS_NEWTON') -> Tuple[AcadosOcpFlattenedIterate, np.ndarray]:
+                variant, tol) -> Tuple[AcadosOcpFlattenedIterate, np.ndarray]:
     x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
     Tf = .350       # total prediction time
@@ -52,7 +52,7 @@ def test_solver(with_anderson_acceleration: bool,
     elif variant == 'EXACT':
         hessian_approx = 'EXACT'
         regularize_method = 'PROJECT'
-    solver = setup_ocp_solver(x0, UMAX, dt_0, N_HORIZON, Tf, with_anderson_acceleration=with_anderson_acceleration, nlp_solver_max_iter = 500, tol = 1e-8, with_abs_cost=True, hessian_approx=hessian_approx, regularize_method=regularize_method)
+    solver = setup_ocp_solver(x0, UMAX, dt_0, N_HORIZON, Tf, with_anderson_acceleration=with_anderson_acceleration, nlp_solver_max_iter = 500, tol = tol, with_abs_cost=True, hessian_approx=hessian_approx, regularize_method=regularize_method)
 
     t_grid = solver.acados_ocp.solver_options.shooting_nodes
 
@@ -69,7 +69,7 @@ def raise_test_failure_message(msg: str):
     # print(f"ERROR: {msg}")
     raise Exception(msg)
 
-def main(variant: str='GAUSS_NEWTON', plot_trajectory: bool=False, store_plots: bool=False):
+def main(variant: str='GAUSS_NEWTON', plot_trajectory: bool=False, store_plots: bool=False, ignore_checks: bool=False, tol: float=1e-8):
     # test with anderson acceleration
     kkt_norm_list = []
     contraction_rates_list = []
@@ -83,7 +83,7 @@ def main(variant: str='GAUSS_NEWTON', plot_trajectory: bool=False, store_plots: 
         raise ValueError(f"Unknown variant: {variant}")
 
     for with_anderson_acceleration in [True, False]:
-        sol, kkt_norms, t_grid = test_solver(with_anderson_acceleration=with_anderson_acceleration, variant=variant)
+        sol, kkt_norms, t_grid = test_solver(with_anderson_acceleration=with_anderson_acceleration, variant=variant, tol=tol)
         # compute contraction rates
         contraction_rates = kkt_norms[1:-1]/kkt_norms[0:-2]
         # append results
@@ -94,6 +94,9 @@ def main(variant: str='GAUSS_NEWTON', plot_trajectory: bool=False, store_plots: 
         labels.append(label)
         # checks
         n_iter = len(kkt_norms)
+        if ignore_checks:
+            print("Ignoring test checks.")
+            continue
         if with_anderson_acceleration:
             if not n_iter < 30:
                 raise_test_failure_message(f"Expected less than 30 iterations with Anderson acceleration, got {n_iter}")
@@ -114,12 +117,15 @@ def main(variant: str='GAUSS_NEWTON', plot_trajectory: bool=False, store_plots: 
     plot_convergence(
         kkt_norm_list,
         labels,
-        fig_filename=f"convergence_{variant}_furuta.png" if store_plots else None
+        fig_filename=f"convergence_{variant}_{tol}_furuta.png" if store_plots else None,
+        title=f"Furuta pendulum with tolerance {tol}",
+        show_plot=False
     )
     plot_contraction_rates(
         contraction_rates_list,
         labels,
-        fig_filename=f"contraction_rates_{variant}_furuta.png" if store_plots else None
+        fig_filename=f"contraction_rates_{variant}_{tol}_furuta.png" if store_plots else None,
+        show_plot=False
     )
     if plot_trajectory:
         plot_furuta_pendulum(t_grid, ref_sol.x.reshape((N_HORIZON + 1, -1)), ref_sol.u.reshape((N_HORIZON, -1)), UMAX, plt_show=False)
@@ -132,4 +138,7 @@ if __name__ == "__main__":
     store_plots = False
     main("GAUSS_NEWTON", plot_trajectory=plot_trajectory, store_plots=store_plots)
     main("EXACT", plot_trajectory=plot_trajectory, store_plots=store_plots)
+    # Below case shows that AA with very loose tolerance can slow down convergence.
+    main("EXACT", plot_trajectory=plot_trajectory, tol=1e-1, ignore_checks=True, store_plots=store_plots)
+    plt.show()
 
