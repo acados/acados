@@ -57,7 +57,9 @@ def plot_convergence(residuals: list,
                      list_labels: list,
                      xlim: Optional[float] = None,
                      ylim: tuple = None,
-                     fig_filename: str = None):
+                     fig_filename: str = None,
+                     title: str = None,
+                     show_plot: bool = True):
     latexify_plot()
 
     assert len(residuals) == len(list_labels), f"Lists of data and labels do not have the same length, got {len(residuals)} and {len(list_labels)}"
@@ -76,15 +78,18 @@ def plot_convergence(residuals: list,
         plt.xlim(0, xlim)
     else:
         plt.xlim(0, max([len(data) for data in residuals]))
-    plt.tight_layout()
+    plt.title(title)
     plt.grid()
+    plt.tight_layout()
     if fig_filename is not None:
         plt.savefig(fig_filename, dpi=300, bbox_inches='tight', pad_inches=0.01)
-    plt.show()
+    if show_plot:
+        plt.show()
 
 def plot_contraction_rates(rates_list: list,
                           labels: list,
-                          fig_filename: str = None):
+                          fig_filename: str = None,
+                          show_plot: bool = True):
     latexify_plot()
     plt.figure(figsize=(4.5, 3.0))
     for rates, label in zip(rates_list, labels):
@@ -99,8 +104,8 @@ def plot_contraction_rates(rates_list: list,
     plt.grid()
     if fig_filename is not None:
         plt.savefig(fig_filename, dpi=300, bbox_inches='tight', pad_inches=0.01)
-    plt.show()
-
+    if show_plot:
+        plt.show()
 
 def plot_trajectories(
     x_traj_list: List[np.array],
