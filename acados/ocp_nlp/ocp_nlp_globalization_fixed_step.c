@@ -166,7 +166,7 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
     ocp_nlp_workspace *nlp_work = nlp_work_;
     ocp_nlp_opts *nlp_opts = nlp_opts_;
     ocp_nlp_globalization_fixed_step_opts *opts = nlp_opts->globalization;
-    ocp_nlp_globalization_fixed_step_memory *glob_mem = nlp_mem->globalization;
+    // ocp_nlp_globalization_fixed_step_memory *glob_mem = nlp_mem->globalization;
 
     ocp_qp_out *qp_out = nlp_mem->qp_out;
     double alpha = opts->step_length;
@@ -175,16 +175,7 @@ int ocp_nlp_globalization_fixed_step_find_acceptable_iterate(void *nlp_config_, 
     {
         // convert qp_out to delta primal-dual step
         ocp_nlp_convert_primaldelta_absdual_step_to_delta_step(config, dims, nlp_out, qp_out);
-        if (nlp_mem->iter == 0)
-        {
-            glob_mem->anderson_acceleration_activated = false;
-        }
-        else if (nlp_out->inf_norm_res < nlp_opts->anderson_activation_threshold)
-        {
-            glob_mem->anderson_acceleration_activated = true;
-            printf("iter %d, residual %e, AA is activated. Tighten your seat belt!!!\n", nlp_mem->iter, nlp_out->inf_norm_res);
-        }
-        if (!glob_mem->anderson_acceleration_activated)
+        if (nlp_mem->iter == 0 || nlp_out->inf_norm_res > nlp_opts->anderson_activation_threshold)
         {
             // store in anderson_step, prev_qp_out
             ocp_qp_out_copy(qp_out, nlp_mem->anderson_step);
