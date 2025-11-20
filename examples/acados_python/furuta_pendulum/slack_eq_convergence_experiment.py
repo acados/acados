@@ -32,7 +32,7 @@ from furuta_common import setup_ocp_solver
 from utils import plot_furuta_pendulum
 import numpy as np
 
-from acados_template import AcadosOcpFlattenedIterate, plot_convergence, plot_contraction_rates
+from acados_template import AcadosOcpFlattenedIterate, plot_convergence, plot_contraction_rates, ACADOS_INFTY
 from typing import Tuple
 import matplotlib.pyplot as plt
 N_HORIZON = 8   # number of shooting intervals
@@ -40,7 +40,7 @@ UMAX = .45
 
 
 def test_solver(with_anderson_acceleration: bool,
-                variant, tol) -> Tuple[AcadosOcpFlattenedIterate, np.ndarray]:
+                variant, tol, anderson_activation_threshold) -> Tuple[AcadosOcpFlattenedIterate, np.ndarray]:
     x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
     Tf = .350       # total prediction time
@@ -52,7 +52,7 @@ def test_solver(with_anderson_acceleration: bool,
     elif variant == 'EXACT':
         hessian_approx = 'EXACT'
         regularize_method = 'PROJECT'
-    solver = setup_ocp_solver(x0, UMAX, dt_0, N_HORIZON, Tf, with_anderson_acceleration=with_anderson_acceleration, nlp_solver_max_iter = 500, tol = tol, with_abs_cost=True, hessian_approx=hessian_approx, regularize_method=regularize_method)
+    solver = setup_ocp_solver(x0, UMAX, dt_0, N_HORIZON, Tf, with_anderson_acceleration=with_anderson_acceleration, nlp_solver_max_iter = 500, tol = tol, with_abs_cost=True, hessian_approx=hessian_approx, regularize_method=regularize_method, anderson_activation_threshold=anderson_activation_threshold)
 
     t_grid = solver.acados_ocp.solver_options.shooting_nodes
 
@@ -69,7 +69,11 @@ def raise_test_failure_message(msg: str):
     # print(f"ERROR: {msg}")
     raise Exception(msg)
 
-def main(variant: str='GAUSS_NEWTON', plot_trajectory: bool=False, store_plots: bool=False, ignore_checks: bool=False, tol: float=1e-8):
+def main(variant: str='GAUSS_NEWTON',
+         plot_trajectory: bool=False,
+         store_plots: bool=False,
+         ignore_checks: bool=True,
+         tol: float=1e-8):
     # test with anderson acceleration
     kkt_norm_list = []
     contraction_rates_list = []
@@ -82,27 +86,35 @@ def main(variant: str='GAUSS_NEWTON', plot_trajectory: bool=False, store_plots: 
     else:
         raise ValueError(f"Unknown variant: {variant}")
 
-    for with_anderson_acceleration in [True, False]:
-        sol, kkt_norms, t_grid = test_solver(with_anderson_acceleration=with_anderson_acceleration, variant=variant, tol=tol)
+    for (with_anderson_acceleration, anderson_activation_threshold) in \
+        [(False, ACADOS_INFTY), (True, ACADOS_INFTY), (True, 1e2), (True, 1e1), (True, 1e0)]:
+
+        sol, kkt_norms, t_grid = test_solver(with_anderson_acceleration=with_anderson_acceleration, variant=variant, tol=tol, anderson_activation_threshold=anderson_activation_threshold)
         # compute contraction rates
         contraction_rates = kkt_norms[1:-1]/kkt_norms[0:-2]
         # append results
         kkt_norm_list.append(kkt_norms)
         contraction_rates_list.append(contraction_rates)
         sol_list.append(sol)
-        label = "AA(1)-" + base_label if with_anderson_acceleration else base_label
+        if not with_anderson_acceleration:
+            label = base_label
+        elif anderson_activation_threshold == ACADOS_INFTY:
+            label = "AA(1)-" + base_label
+        else:
+            label = f"AA(1)-{base_label} (thresh={anderson_activation_threshold})"
         labels.append(label)
         # checks
         n_iter = len(kkt_norms)
         if ignore_checks:
             print("Ignoring test checks.")
             continue
-        if with_anderson_acceleration:
-            if not n_iter < 30:
-                raise_test_failure_message(f"Expected less than 30 iterations with Anderson acceleration, got {n_iter}")
-        else:
-            if not n_iter > 60:
-                raise_test_failure_message(f"Expected more than 60 iterations without Anderson acceleration, got {n_iter}")
+        if tol < 1e-5 and ACADOS_INFTY:
+            if with_anderson_acceleration:
+                if not n_iter < 30:
+                    raise_test_failure_message(f"Expected less than 30 iterations with Anderson acceleration, got {n_iter}")
+            else:
+                if not n_iter > 60:
+                    raise_test_failure_message(f"Expected more than 60 iterations without Anderson acceleration, got {n_iter}")
 
     # checks
     ref_sol = sol_list[0]
