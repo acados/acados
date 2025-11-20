@@ -394,7 +394,7 @@ class AcadosOcpOptions:
 
         - MIRROR: performs eigenvalue decomposition H = V^T D V and sets D_ii = max(eps, abs(D_ii))
         - PROJECT: performs eigenvalue decomposition H = V^T D V and sets D_ii = max(eps, D_ii)
-        - CONVEXIFY: Algorithm 6 from Verschueren2017, https://cdn.syscop.de/publications/Verschueren2017.pdf, does not support nonlinear constraints
+        - CONVEXIFY: Algorithm 6 from Verschueren2017, https://cdn.syscop.de/publications/Verschueren2017.pdf, experimental, might not be correct if inequality constraints are active.
         - PROJECT_REDUC_HESS: experimental, should make sure that the reduced Hessian is positive definite. Has to be used with qp_solver_ric_alg = 0 and qp_solver_cond_ric_alg = 0
         - GERSHGORIN_LEVENBERG_MARQUARDT: estimates the smallest eigenvalue of each Hessian block using Gershgorin circles and adds multiple of identity to each block, such that smallest eigenvalue after regularization is at least reg_epsilon
 
