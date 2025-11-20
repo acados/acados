@@ -787,7 +787,9 @@ class AcadosOcpOptions:
     @property
     def with_anderson_acceleration(self):
         """
-        Determines if Anderson acceleration is performed.
+        Determines if algorithm uses Anderson accelerations.
+        Only depth one is supprted.
+        Anderson accelerations are performed whenever the infinity norm of the KKT residual is < `anderson_activation_threshold `.
         Only supported for globalization == 'FIXED_STEP'.
 
         Type: bool
@@ -798,8 +800,12 @@ class AcadosOcpOptions:
     @property
     def anderson_activation_threshold(self):
         """
-        Activation threshold for Anderson acceleration.
         Only relevant if with_anderson_acceleration == True.
+        Anderson accelerations are performed whenever the infinity norm of the KKT residual is < `anderson_activation_threshold `.
+
+        In the language of [Pollock2021, Sec. 5.1], this corresponds to specifying an "initial regime", consisting of iterates with KKT residual norm > `anderson_activation_threshold ` and an (pre-)asymptotic regime, where the residual norm is <= `anderson_activation_threshold`.
+        In the initial regime, no Anderson acceleration is performed, i.e. depth $m=0$.
+        In the (pre-)asymptotic regime, Anderson acceleration with depth $m=1$ is performed.
 
         Type: float
         Default: 1e1
