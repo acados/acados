@@ -828,7 +828,10 @@ void ocp_nlp_reg_convexify_regularize_rhs(void *config, ocp_nlp_reg_dims *dims, 
 
 
 
-// TODO: check if inequality constraints case is implemented correctly
+// NOTE: inequalities are taken into account when recovering pi, as if all inequalities were active.
+// recovering of inequality multipliers is NOT done here.
+// However, [Verschueren2017 Algorithm 5] does suggest such an updated.
+// TODO: experiment doing the update for all inequality multipliers.
 void ocp_nlp_reg_convexify_correct_dual_sol(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
 {
     ocp_nlp_reg_convexify_memory *mem = mem_;
@@ -866,12 +869,17 @@ void ocp_nlp_reg_convexify_correct_dual_sol(void *config, ocp_nlp_reg_dims *dims
 
 #else
 
-    // last stage
+    /* last stage */
+    // tmp_nuxM[nu:] = r_QP  // NOTE: this gradient term is missing in Verschueren Alg. 5.
     blasfeo_drowex(nx[N], 1.0, &mem->original_RSQrq[N], nu[N]+nx[N], nu[N], &mem->tmp_nuxM, nu[N]);
+    // tmp_nbgM = -lam_lower + lam_upper
     blasfeo_daxpy(nbu[N]+nbx[N]+ng[N], -1.0, mem->lam[N], 0, mem->lam[N], nbu[N]+nbx[N]+ng[N], &mem->tmp_nbgM, 0);
+    // NOTE: missing term: gamma * G_act * x (present in Verschueren Alg. 5)
+    // tmp_nuxM[idxb] += tmp_nbgM[:nb]
     blasfeo_dvecad_sp(nbu[N]+nbx[N], 1.0, &mem->tmp_nbgM, 0, mem->idxb[N], &mem->tmp_nuxM, 0);
-    // TODO avoid to multiply by R ???
-    blasfeo_dsymv_l(nu[N]+nx[N], 1.0, &mem->original_RSQrq[N], 0, 0, mem->ux[N], 0, 1.0, &mem->tmp_nuxM, 0, &mem->tmp_nuxM, 0);
+    // recover pi
+    // tmp_nuxM += RSQ * ux
+    blasfeo_dsymv_l(nu[N]+nx[N], 1.0, &mem->original_RSQrq[N], 0, 0, mem->ux[N], 0, 1.0, &mem->tmp_nuxM, 0, &mem->tmp_nuxM, 0);  // TODO avoid to multiply by R ???
     blasfeo_dgemv_n(nx[N], ng[N], 1.0, mem->DCt[N], nu[N], 0, &mem->tmp_nbgM, nbu[N]+nbx[N], 1.0, &mem->tmp_nuxM, nu[N], &mem->tmp_nuxM, nu[N]);
     blasfeo_dveccp(nx[N], &mem->tmp_nuxM, nu[N], mem->pi[N-1], 0);
 
