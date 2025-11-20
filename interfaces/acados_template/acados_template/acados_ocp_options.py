@@ -162,6 +162,7 @@ class AcadosOcpOptions:
         self.__num_threads_in_batch_solve: int = 1
         self.__with_batch_functionality: bool = False
         self.__with_anderson_acceleration: bool = False
+        self.__anderson_activation_threshold: float = 1e1
 
 
     @property
@@ -793,6 +794,17 @@ class AcadosOcpOptions:
         Default: False
         """
         return self.__with_anderson_acceleration
+
+    @property
+    def anderson_activation_threshold(self):
+        """
+        Activation threshold for Anderson acceleration.
+        Only relevant if with_anderson_acceleration == True.
+
+        Type: float
+        Default: 1e1
+        """
+        return self.__anderson_activation_threshold
 
 
     @property
@@ -2078,6 +2090,12 @@ class AcadosOcpOptions:
         if not isinstance(with_anderson_acceleration, bool):
             raise TypeError('Invalid with_anderson_acceleration value, must be bool.')
         self.__with_anderson_acceleration = with_anderson_acceleration
+
+    @anderson_activation_threshold.setter
+    def anderson_activation_threshold(self, anderson_activation_threshold):
+        if not isinstance(anderson_activation_threshold, float):
+            raise TypeError('Invalid anderson_activation_threshold value, must be float.')
+        self.__anderson_activation_threshold = anderson_activation_threshold
 
     @as_rti_level.setter
     def as_rti_level(self, as_rti_level):
