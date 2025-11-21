@@ -803,6 +803,8 @@ class AcadosOcpOptions:
         Only relevant if with_anderson_acceleration == True.
         Anderson accelerations are performed whenever the infinity norm of the KKT residual is < `anderson_activation_threshold `.
 
+        If the KKT residual norm is larger than `anderson_activation_threshold `, no Anderson acceleration is performed.
+
         In the language of [Pollock2021, Sec. 5.1], this corresponds to specifying an "initial regime", consisting of iterates with KKT residual norm > `anderson_activation_threshold ` and an (pre-)asymptotic regime, where the residual norm is <= `anderson_activation_threshold`.
         In the initial regime, no Anderson acceleration is performed, i.e. depth $m=0$.
         In the (pre-)asymptotic regime, Anderson acceleration with depth $m=1$ is performed.
