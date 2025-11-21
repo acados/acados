@@ -232,6 +232,15 @@ classdef AcadosOcpSolver < handle
                 end
             end
 
+            if strcmp('res_all', field)
+                if ~strcmp(obj.solver_options.nlp_solver_type, 'SQP')
+                    error("res_all is only available for nlp_solver_type SQP.");
+                end
+                full_stats = obj.t_ocp.get('stat');
+                value = full_stats(:, 2:5);
+                return;
+            end
+
             if strcmp('hess_block', field)
 
                 if length(varargin) > 0
@@ -305,6 +314,30 @@ classdef AcadosOcpSolver < handle
 
         function [] = load_iterate(obj, filename)
             obj.t_ocp.load_iterate(filename);
+        end
+
+        function iterate = store_iterate_to_obj(obj)
+            % Returns the current iterate of the OCP solver as an AcadosOcpIterate.
+
+            N = obj.N_horizon;
+            fields = {'x','u','z','sl','su','pi','lam'};
+            d = struct();
+
+            for fi = 1:length(fields)
+                field = fields{fi};
+                traj = {};
+                for n = 0:N
+                    if n < N || ~ismember(field, {'u','pi','z'})
+                        val = obj.get(field, n);
+                        traj{end+1,1} = val;
+                    end
+                end
+                d.(sprintf('%s_traj', field)) = traj;
+            end
+
+            iterate = AcadosOcpIterate( ...
+                d.x_traj, d.u_traj, d.z_traj, ...
+                d.sl_traj, d.su_traj, d.pi_traj, d.lam_traj );
         end
 
         function [] = load_iterate_from_obj(obj, iterate)
