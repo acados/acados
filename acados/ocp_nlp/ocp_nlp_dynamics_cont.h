@@ -119,6 +119,7 @@ typedef struct
     struct blasfeo_dvec *sim_guess;     // initializations for integrator
     // struct blasfeo_dvec *z;             // pointer to (input) z in nlp_out at current stage
     struct blasfeo_dmat *dzduxt;        // pointer to dzdux transposed
+	struct blasfeo_dmat S_p;            // per-stage param sens [nx1 x np_eff]
     void *sim_solver;                   // sim solver memory
     acados_size_t workspace_size;
     acados_size_t sim_workspace_size;
