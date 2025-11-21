@@ -133,6 +133,14 @@ void sim_irk_dims_get(void *config_, void *dims_, const char *field, int *value)
     {
         *value = dims->nz;
     }
+	else if (!strcmp(field, "np"))
+	{
+		*value = dims->np;
+	}
+    else if (!strcmp(field, "np_global"))
+	{
+		*value = dims->np_global;
+	}
     else
     {
         printf("\nerror: sim_irk_dims_get: field not available: %s\n", field);
