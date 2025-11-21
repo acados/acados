@@ -2058,6 +2058,16 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     free(lubx_e);
 {%- endif %}
 
+{%- if dims.nbxe_e > 0 %}
+    // idxbxe_e
+    int* idxbxe_e = malloc({{ dims.nbxe_e }} * sizeof(int));
+    {%- for i in range(end=dims.nbxe_e) %}
+    idxbxe_e[{{ i }}] = {{ constraints.idxbxe_e[i] }};
+    {%- endfor %}
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, nlp_out, N, "idxbxe", idxbxe_e);
+    free(idxbxe_e);
+{%- endif %}
+
 {% if dims.ng_e > 0 %}
     // set up general constraints for last stage
     double* C_e = calloc(NGN*NX, sizeof(double));

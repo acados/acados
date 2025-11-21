@@ -143,6 +143,7 @@ class AcadosOcpDims:
         self.__nsg_e = 0
         # equalities within x bounds
         self.__nbxe_0 = None
+        self.__nbxe_e = None
         # global parameters
         self.__np_global = 0
         self.__n_global_data = 0
@@ -261,6 +262,12 @@ class AcadosOcpDims:
         """:math:`n_{be_{x0}}` - number of state bounds at initial shooting node that are equalities.
         Type: int; default: None"""
         return self.__nbxe_0
+
+    @property
+    def nbxe_e(self):
+        """:math:`n_{be_{xN}}` - number of state bounds at terminal shooting node N that are equalities.
+        Type: int; default: None"""
+        return self.__nbxe_e
 
     @property
     def nbx_0(self):
@@ -499,6 +506,13 @@ class AcadosOcpDims:
     def nbxe_0(self, nbxe_0):
         check_int_value("nbxe_0", nbxe_0, nonnegative=True)
         self.__nbxe_0 = nbxe_0
+
+    @nbxe_e.setter
+    def nbxe_e(self, nbxe_e):
+        if isinstance(nbxe_e, int) and nbxe_e > -1:
+            self.__nbxe_e = nbxe_e
+        else:
+            raise Exception('Invalid nbxe_e value, expected nonnegative integer.')
 
     @nbx_0.setter
     def nbx_0(self, nbx_0):
