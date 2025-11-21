@@ -349,6 +349,7 @@ typedef struct ocp_nlp_opts
     bool store_iterates; // flag indicating whether intermediate iterates should be stored
 
     bool with_anderson_acceleration;
+    double anderson_activation_threshold;
 
     // termination tolerances
     double tol_stat;     // exit tolerance on stationarity condition

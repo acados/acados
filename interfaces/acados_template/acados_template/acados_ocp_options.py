@@ -162,6 +162,7 @@ class AcadosOcpOptions:
         self.__num_threads_in_batch_solve: int = 1
         self.__with_batch_functionality: bool = False
         self.__with_anderson_acceleration: bool = False
+        self.__anderson_activation_threshold: float = 1e1
 
 
     @property
@@ -786,13 +787,34 @@ class AcadosOcpOptions:
     @property
     def with_anderson_acceleration(self):
         """
-        Determines if Anderson acceleration is performed.
+        Determines if algorithm uses Anderson accelerations.
+        Only depth one is supported.
+        Anderson accelerations are performed whenever the infinity norm of the KKT residual is < `anderson_activation_threshold `.
         Only supported for globalization == 'FIXED_STEP'.
 
         Type: bool
         Default: False
         """
         return self.__with_anderson_acceleration
+
+    @property
+    def anderson_activation_threshold(self):
+        """
+        Only relevant if with_anderson_acceleration == True.
+        Anderson accelerations are performed whenever the infinity norm of the KKT residual is < `anderson_activation_threshold `.
+
+        If the KKT residual norm is larger than `anderson_activation_threshold `, no Anderson acceleration is performed.
+
+        In the language of [Pollock2021, Sec. 5.1]*, this corresponds to specifying an "initial regime", consisting of iterates with KKT residual norm > `anderson_activation_threshold ` and an (pre-)asymptotic regime, where the residual norm is <= `anderson_activation_threshold`.
+        In the initial regime, no Anderson acceleration is performed, i.e. depth $m=0$.
+        In the (pre-)asymptotic regime, Anderson acceleration with depth $m=1$ is performed.
+
+        *[Pollock2021] Anderson acceleration for contractive and noncontractive operators, Sara Pollock, IMA Journal of Numerical Analysis, 2021
+
+        Type: float
+        Default: 1e1
+        """
+        return self.__anderson_activation_threshold
 
 
     @property
@@ -2078,6 +2100,12 @@ class AcadosOcpOptions:
         if not isinstance(with_anderson_acceleration, bool):
             raise TypeError('Invalid with_anderson_acceleration value, must be bool.')
         self.__with_anderson_acceleration = with_anderson_acceleration
+
+    @anderson_activation_threshold.setter
+    def anderson_activation_threshold(self, anderson_activation_threshold):
+        if not isinstance(anderson_activation_threshold, float):
+            raise TypeError('Invalid anderson_activation_threshold value, must be float.')
+        self.__anderson_activation_threshold = anderson_activation_threshold
 
     @as_rti_level.setter
     def as_rti_level(self, as_rti_level):

@@ -590,7 +590,7 @@ jobs:
         source ${{ github.workspace }}/acadosenv/bin/activate
         cd ${{ github.workspace }}/examples/acados_python/furuta_pendulum
         python main_closed_loop.py
-        python convergence_experiment.py
+        python anderson_convergence_experiment.py
 
     - name: Python evaluator test
       working-directory: ${{ github.workspace }}/build
