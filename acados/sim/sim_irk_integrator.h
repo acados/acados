@@ -46,7 +46,8 @@ typedef struct
     int nx;
     int nu;
     int nz;
-
+    int np; // total number of stage wise parameters
+    int np_global; // total number of global parameters
     int ny;  // for NLS cost propagation
 
 } sim_irk_dims;
