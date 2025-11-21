@@ -232,6 +232,15 @@ classdef AcadosOcpSolver < handle
                 end
             end
 
+            if strcmp('res_all', field)
+                if ~strcmp(obj.solver_options.nlp_solver_type, 'SQP')
+                    error("res_all is only available for nlp_solver_type SQP.");
+                end
+                full_stats = obj.t_ocp.get('stat');
+                value = full_stats(:, 2:5);
+                return;
+            end
+
             if strcmp('hess_block', field)
 
                 if length(varargin) > 0
