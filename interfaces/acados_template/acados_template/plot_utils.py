@@ -57,6 +57,7 @@ def plot_convergence(residuals: list,
                      list_labels: list,
                      xlim: Optional[float] = None,
                      ylim: tuple = None,
+                     figsize: tuple = (4.5, 3.0),
                      fig_filename: str = None,
                      title: str = None,
                      show_plot: bool = True):
@@ -64,7 +65,7 @@ def plot_convergence(residuals: list,
 
     assert len(residuals) == len(list_labels), f"Lists of data and labels do not have the same length, got {len(residuals)} and {len(list_labels)}"
 
-    plt.figure(figsize=(4.5, 3.0))
+    plt.figure(figsize=figsize)
     for i in range(len(residuals)):
         iters = np.arange(0, len(residuals[i]))
         data = np.array(residuals[i]).squeeze()

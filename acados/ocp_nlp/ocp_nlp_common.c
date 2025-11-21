@@ -1273,6 +1273,9 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->warm_start_first_qp_from_nlp = false;
     opts->eval_residual_at_max_iter = false;
 
+    opts->with_anderson_acceleration = false;
+    opts->anderson_activation_threshold = 1e1;
+
     // tolerances
     opts->tol_stat = 1e-8;
     opts->tol_eq   = 1e-8;
@@ -1597,6 +1600,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             bool* with_anderson_acceleration = (bool *) value;
             opts->with_anderson_acceleration = *with_anderson_acceleration;
+        }
+        else if (!strcmp(field, "anderson_activation_threshold"))
+        {
+            double* anderson_activation_threshold = (double *) value;
+            opts->anderson_activation_threshold = *anderson_activation_threshold;
         }
         else if (!strcmp(field, "tol_stat"))
         {

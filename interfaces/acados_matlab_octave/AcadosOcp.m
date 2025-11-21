@@ -1495,6 +1495,9 @@ classdef AcadosOcp < handle
                     error('Anderson acceleration only supported for FIXED_STEP globalization for now.');
                 end
             end
+            if length(opts.anderson_activation_threshold) ~= 1
+                error('anderson_activation_threshold must be a scalar.');
+            end
 
             % check terminal stage
             fields = {'cost_expr_ext_cost_e', 'cost_expr_ext_cost_custom_hess_e', ...

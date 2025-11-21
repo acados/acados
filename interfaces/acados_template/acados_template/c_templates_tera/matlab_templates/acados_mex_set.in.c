@@ -669,6 +669,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double qp_mu0 = (double) value[0];
         ocp_nlp_solver_opts_set(config, opts, "qp_mu0", &qp_mu0);
     }
+    else if (!strcmp(field, "anderson_activation_threshold"))
+    {
+        acados_size = 1;
+        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+        double anderson_activation_threshold = (double) value[0];
+        ocp_nlp_solver_opts_set(config, opts, "anderson_activation_threshold", &anderson_activation_threshold);
+    }
     else if (!strcmp(field, "qp_print_level"))
     {
         if (!(plan->ocp_qp_solver_plan.qp_solver == FULL_CONDENSING_HPIPM || plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM))

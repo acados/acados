@@ -2235,6 +2235,7 @@ class AcadosOcpSolver:
                 'globalization_funnel_init_upper_bound', 'globalization_funnel_sufficient_decrease_factor',
                 'globalization_funnel_kappa', 'globalization_funnel_fraction_switching_condition',
                 'globalization_funnel_initial_penalty_parameter', 'globalization_funnel_init_increase_factor',
+                'anderson_activation_threshold',
                 'levenberg_marquardt',
                 'adaptive_levenberg_marquardt_lam', 'adaptive_levenberg_marquardt_mu_min', 'adaptive_levenberg_marquardt_mu0',
                 'tau_min'
@@ -2285,7 +2286,8 @@ class AcadosOcpSolver:
                          'qp_tol_ineq',
                          'qp_tol_comp',
                          'qp_tau_min',
-                         'qp_mu0']
+                         'qp_mu0',
+                         'anderson_activation_threshold']
         string_fields = []
         bool_fields = ['with_adaptive_levenberg_marquardt', 'warm_start_first_qp_from_nlp', 'warm_start_first_qp']
 

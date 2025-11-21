@@ -134,6 +134,7 @@ classdef AcadosOcpOptions < handle
         store_iterates
         eval_residual_at_max_iter
         with_anderson_acceleration
+        anderson_activation_threshold
 
         timeout_max_time
         timeout_heuristic
@@ -261,6 +262,7 @@ classdef AcadosOcpOptions < handle
             obj.store_iterates = false;
             obj.eval_residual_at_max_iter = [];
             obj.with_anderson_acceleration = 0;
+            obj.anderson_activation_threshold = 1e1;
             obj.timeout_max_time = 0.;
             obj.timeout_heuristic = 'ZERO';
 
