@@ -158,6 +158,14 @@ void sim_gnsf_dims_get(void *config_, void *dims_, const char *field, int *value
     {
         *value = dims->nz;
     }
+    else if (!strcmp(field, "np"))
+	{
+		*value = dims->np;
+	}
+    else if (!strcmp(field, "np_global"))
+	{
+		*value = dims->np_global;
+	}
     else if (!strcmp(field, "nout") || !strcmp(field, "gnsf_nout"))
     {
         *value = dims->n_out;
