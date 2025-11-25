@@ -63,6 +63,7 @@ void *sim_erk_dims_assign(void *config_, void *raw_memory)
     dims->nx = 0;
     dims->nu = 0;
     dims->nz = 0;
+    dims->np = 0;
 
     assert((char *) raw_memory + sim_erk_dims_calculate_size() >= c_ptr);
 
@@ -94,11 +95,11 @@ void sim_erk_dims_set(void *config_, void *dims_, const char *field, const int *
     }
     else if (!strcmp(field, "np"))
     {
-        // np dimension not needed
+        dims->np = *value;
     }
-    else if (!strcmp(field, "np_global"))
+	else if (!strcmp(field, "np_global"))
     {
-        // np_global dimension not needed
+		// np_global dimension not needed
     }
     else
     {
@@ -125,6 +126,10 @@ void sim_erk_dims_get(void *config_, void *dims_, const char *field, int *value)
     {
         *value = 0;
     }
+    else if (!strcmp(field, "np")) 
+	{ 
+		*value = dims->np; 
+	}
     else
     {
         printf("\nerror: sim_erk_dims_get: dim type not available: %s\n", field);
@@ -160,7 +165,8 @@ void *sim_erk_model_assign(void *config, void *dims, void *raw_memory)
     model->expl_vde_for = NULL;
     model->expl_vde_adj = NULL;
     model->expl_ode_hes = NULL;
-
+	model->expl_vde_for_p = NULL;
+	
     return model;
 }
 
@@ -185,6 +191,10 @@ int sim_erk_model_set(void *model_, const char *field, void *value)
     else if (!strcmp(field, "expl_ode_hes") || !strcmp(field, "expl_ode_hess"))
     {
         model->expl_ode_hes = value;
+    }
+	else if (!strcmp(field, "expl_vde_forw_p"))
+    {
+        model->expl_vde_for_p = value; 
     }
     else
     {
@@ -284,6 +294,7 @@ void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->sens_forw = true;
     opts->sens_adj = false;
     opts->sens_hess = false;
+	opts->sens_forw_p = false;
     opts->cost_computation = false;
 
     opts->output_z = false;
@@ -411,9 +422,13 @@ acados_size_t sim_erk_workspace_calculate_size(void *config_, void *dims_, void 
 
     int nx = dims->nx;
     int nu = dims->nu;
-    int nf = opts->num_forw_sens;
-
-    int nX = nx * (1 + nf);  // (nx) for ODE and (nf*nx) for VDE
+    int nf = opts->num_forw_sens;                  // existing (Sx,Su) cols
+	if (!opts->sens_forw) nf = 0;
+	
+	int np   = dims->np;
+	int nf_p = (opts->sens_forw && opts->sens_forw_p && np > 0) ? np : 0;
+	
+    int nX = nx * (1 + nf + nf_p);  // x + [Sx,Su] + [S_p]
     int nhess = (nf + 1) * nf / 2;
     int num_steps = opts->num_steps;  // number of steps
 
@@ -457,11 +472,16 @@ static void *sim_erk_cast_workspace(void *config_, sim_erk_dims *dims, sim_opts 
 {
     int ns = opts->ns;
 
-    int nx = dims->nx;
-    int nu = dims->nu;
-    int nf = opts->num_forw_sens;
+	int nx = dims->nx;
+	int nu = dims->nu;
+	int nf = opts->num_forw_sens;
+	if (!opts->sens_forw) nf = 0;
 
-    int nX = nx * (1 + nf);  // (nx) for ODE and (nf*nx) for VDE
+	int np   = dims->np;
+	int nf_p = (opts->sens_forw && opts->sens_forw_p && np > 0) ? np : 0;
+
+	int nX = nx * (1 + nf + nf_p);
+
     int nhess = (nf + 1) * nf / 2;
     int num_steps = opts->num_steps;  // number of steps
 
@@ -550,6 +570,8 @@ size_t sim_erk_get_external_fun_workspace_requirement(void *config_, void *dims_
     size = size > tmp_size ? size : tmp_size;
     tmp_size = external_function_get_workspace_requirement_if_defined(model->expl_ode_hes);
     size = size > tmp_size ? size : tmp_size;
+    tmp_size = external_function_get_workspace_requirement_if_defined(model->expl_vde_for_p);
+    size = size > tmp_size ? size : tmp_size;
 
     return size;
 }
@@ -563,6 +585,7 @@ void sim_erk_set_external_fun_workspaces(void *config_, void *dims_, void *opts_
     external_function_set_fun_workspace_if_defined(model->expl_vde_for, workspace_);
     external_function_set_fun_workspace_if_defined(model->expl_vde_adj, workspace_);
     external_function_set_fun_workspace_if_defined(model->expl_ode_hes, workspace_);
+	external_function_set_fun_workspace_if_defined(model->expl_vde_for_p, workspace_);
 }
 
 
@@ -626,11 +649,27 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         exit(1);
     }
 
-    int nf = opts->num_forw_sens;
-    if (!opts->sens_forw) nf = 0;
+	int nf = opts->num_forw_sens;
+	if (!opts->sens_forw) nf = 0;
+
+	/* ------------------ parameter-sensitivity (S_p) support ------------------ */
+	/* parameter dimension for S_p uses only stagewise np */
+	int np   = dims->np;
+	int nf_p = (opts->sens_forw && opts->sens_forw_p && np > 0) ? np : 0;
+
+	/* layout:
+	 * forw_traj has length nX = nx * (1 + nf + nf_p)
+	 * [ x (nx) | S_forw (nx*nf) | S_p (nx*nf_p, optional) ]
+	 * rhs_forw_in additionally stores u at the end: [ ... | u (nu) ]
+	 */
+	const int off_x  = 0;
+	const int off_Sx = nx;          // only meaningful if sens_forw
+	const int off_Su = nx + nx*nx;  // only meaningful if sens_forw
+	const int off_Sp = nx + nx*nf;  // only meaningful if nf_p > 0
+	const int nX     = nx * (1 + nf + nf_p);
+	const int off_u  = nX;
 
     int nhess = (nf + 1) * nf / 2;
-    int nX = nx + nx * nf;
 
     double *x = in->x;
     double *u = in->u;
@@ -651,35 +690,33 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     double *adj_tmp = work->out_adj_tmp;
     double *adj_traj = work->adj_traj;
     double *rhs_adj_in = work->rhs_adj_in;
-
+	
     double *xn = out->xn;
     double *S_forw_out = out->S_forw;
     double *S_adj_out = out->S_adj;
     double *S_hess_out = out->S_hess;
 
-    ext_fun_arg_t ext_fun_type_in[5];
-    void *ext_fun_in[5];
+	ext_fun_arg_t ext_fun_type_in[5];
+    void *ext_fun_in[5];					
     ext_fun_arg_t ext_fun_type_out[3];
     void *ext_fun_out[3];
 
     ext_fun_arg_t expl_vde_type_in[4];
     void *expl_vde_in[4];
+	
     ext_fun_arg_t expl_vde_type_out[3];
     void *expl_vde_out[3];
-
-    int nx_squared_plus_nx = nx * nx + nx;
-    int nx_times_nu = nx * nu;
 
     if (opts->sens_forw)
     {  // simulation + forward sensitivities
         expl_vde_type_in[0] = COLMAJ;
-        expl_vde_in[0] = rhs_forw_in;  // x: nx
+        expl_vde_in[0] = rhs_forw_in + off_x;   // x: nx
         expl_vde_type_in[1] = COLMAJ;
-        expl_vde_in[1] = rhs_forw_in + nx;  // Sx: nx*nx
+        expl_vde_in[1] = rhs_forw_in + off_Sx;  // Sx: nx*nx
         expl_vde_type_in[2] = COLMAJ;
-        expl_vde_in[2] = rhs_forw_in + nx_squared_plus_nx;  // Su: nx*nu
+        expl_vde_in[2] = rhs_forw_in + off_Su;  // Su: nx*nu
         expl_vde_type_in[3] = COLMAJ;
-        expl_vde_in[3] = rhs_forw_in + nx_squared_plus_nx + nx_times_nu;  // u: nu
+        expl_vde_in[3] = rhs_forw_in + off_u;   // u: nu
 
         expl_vde_type_out[0] = COLMAJ;
         expl_vde_type_out[1] = COLMAJ;
@@ -688,9 +725,9 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     else
     {
         expl_vde_type_in[0] = COLMAJ;
-        expl_vde_in[0] = rhs_forw_in;  // x: nx
+        expl_vde_in[0] = rhs_forw_in + off_x;   // x: nx
         expl_vde_type_in[1] = COLMAJ;
-        expl_vde_in[1] = rhs_forw_in + nx;  // u: nu
+        expl_vde_in[1] = rhs_forw_in + off_u;   // u: nu
 
         expl_vde_type_out[0] = COLMAJ;
     }
@@ -704,12 +741,18 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
      ************************************************/
 
     // initialize integrator variables
-    for (i = 0; i < nx; i++) forw_traj[i] = x[i];  // x0
+    for (i = 0; i < nx; i++) forw_traj[off_x + i] = x[i];  // x0
     if (opts->sens_forw)
     {
-        for (i = 0; i < nx * nf; i++) forw_traj[nx + i] = S_forw_in[i];  // sensitivities
+        for (i = 0; i < nx * nf; i++) forw_traj[off_Sx + i] = S_forw_in[i];  // sensitivities
     }
-    for (i = 0; i < nu; i++) rhs_forw_in[nX + i] = u[i];  // controls
+    // initialize parameter sensitivities block: default to zeros (no warm-start)
+    if (nf_p > 0)
+    {
+        for (i = 0; i < nx * nf_p; i++) forw_traj[off_Sp + i] = 0.0;
+        // If you later add sim_in->S_p, copy it here instead of zeroing.
+    }	
+    for (i = 0; i < nu; i++) rhs_forw_in[off_u + i] = u[i];  // controls
 
     for (istep = 0; istep < num_steps; istep++)
     {
@@ -740,11 +783,37 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             if (opts->sens_forw)
             {  // simulation + forward sensitivities
                 // forward VDE evaluation
-                expl_vde_out[0] = K_traj + s * nX;  // fun: nx
-                expl_vde_out[1] = K_traj + s * nX + nx;  // Sx: nx*nx
-                expl_vde_out[2] = K_traj + s * nX + nx_squared_plus_nx;  // Su: nx*nu
+                expl_vde_out[0] = K_traj + s * nX + off_x;   // fun: nx
+                expl_vde_out[1] = K_traj + s * nX + off_Sx;  // Sx: nx*nx
+                expl_vde_out[2] = K_traj + s * nX + off_Su;  // Su: nx*nu
                 model->expl_vde_for->evaluate(model->expl_vde_for, expl_vde_type_in, expl_vde_in,
                                               expl_vde_type_out, expl_vde_out);
+											  
+                // optionally propagate S_p
+                if (nf_p > 0)
+				{
+					ext_fun_arg_t vdep_type_in[3]  = { COLMAJ, COLMAJ, COLMAJ };
+					void *vdep_in[3];
+					ext_fun_arg_t vdep_type_out[1] = { COLMAJ };
+					void *vdep_out[1];
+
+					vdep_in[0] = rhs_forw_in + off_x;   // x: nx
+					vdep_in[1] = rhs_forw_in + off_Sp;  // S_p: nx*np
+					vdep_in[2] = rhs_forw_in + off_u;   // u: nu
+
+					vdep_out[0] = K_traj + s * nX + off_Sp;  // vdeP: nx*np
+
+					if (model->expl_vde_for_p == 0) {
+						printf("sim ERK: expl_vde_for_p is not provided but sens_forw_p=true.\n");
+						exit(1);
+					}
+
+					model->expl_vde_for_p->evaluate(model->expl_vde_for_p,
+													vdep_type_in, vdep_in,
+													vdep_type_out, vdep_out);
+				}
+
+				
             }
             else
             {  // simulation only
@@ -753,7 +822,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     printf("sim ERK: expl_ode_fun is not provided. Exiting.\n");
                     exit(1);
                 }
-                expl_vde_out[0] = K_traj + s * nX;  // fun: nx
+                expl_vde_out[0] = K_traj + s * nX + off_x;  // fun: nx
                 model->expl_ode_fun->evaluate(model->expl_ode_fun, expl_vde_type_in, expl_vde_in,
                                               expl_vde_type_out, expl_vde_out);  // ODE evaluation
             }
@@ -767,12 +836,19 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     }
 
     // store trajectory
-    for (i = 0; i < nx; i++) xn[i] = forw_traj[i];
+    for (i = 0; i < nx; i++) xn[i] = forw_traj[off_x + i];
     // store forward sensitivities
     if (opts->sens_forw)
     {
-        for (i = 0; i < nx * nf; i++) S_forw_out[i] = forw_traj[nx + i];
+        for (i = 0; i < nx * nf; i++) S_forw_out[i] = forw_traj[off_Sx + i];
     }
+    // store parameter sensitivities
+    if (nf_p > 0)
+    {
+        for (i = 0; i < nx * nf_p; i++)
+            out->S_p[i] = forw_traj[off_Sp + i];
+    }
+
 
     /************************************************
      * adjoint sweep
@@ -850,7 +926,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     ext_fun_in[1] = rhs_adj_in + nx;  // lam: nx
                     ext_fun_type_in[2] = COLMAJ;
                     ext_fun_in[2] = rhs_adj_in + nx + nx;  // u: nu
-
+					
                     ext_fun_type_out[0] = COLMAJ;
                     ext_fun_out[0] = adj_traj + s * nAdj + 0;  // adj: nx+nu
 
@@ -866,15 +942,15 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 else
                 {
                     ext_fun_type_in[0] = COLMAJ;
-                    ext_fun_in[0] = rhs_adj_in + 0;  // x: nx
+                    ext_fun_in[0] = rhs_adj_in + off_x;   // x: nx
                     ext_fun_type_in[1] = COLMAJ;
-                    ext_fun_in[1] = rhs_adj_in + nx;  // Sx: nx*nx
+                    ext_fun_in[1] = rhs_adj_in + off_Sx;  // Sx: nx*nx
                     ext_fun_type_in[2] = COLMAJ;
-                    ext_fun_in[2] = rhs_adj_in + nx_squared_plus_nx;  // Su: nx*nu
+                    ext_fun_in[2] = rhs_adj_in + off_Su;  // Su: nx*nu
                     ext_fun_type_in[3] = COLMAJ;
-                    ext_fun_in[3] = rhs_adj_in + nx_squared_plus_nx + nx_times_nu;  // lam: nx
+                    ext_fun_in[3] = rhs_adj_in + nForw;   // lam: nx
                     ext_fun_type_in[4] = COLMAJ;
-                    ext_fun_in[4] = rhs_adj_in + nx_squared_plus_nx + nx_times_nu + nx;  // u: nu
+                    ext_fun_in[4] = rhs_adj_in + nForw + nx;  // u: nu
 
                     ext_fun_type_out[0] = COLMAJ;
                     ext_fun_out[0] = adj_traj + s * nAdj + 0;  // adj: nx+nu
@@ -906,9 +982,9 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             {
                 for (int i = j; i < nx + nu; i++)
                 {
-                    S_hess_out[i + (nf) *j] = adj_tmp[nx + nu + count_upper];
+                    S_hess_out[i + (nx+nu) *j] = adj_tmp[nx + nu + count_upper];
                     // copy to upper part
-                    S_hess_out[j + (nf) *i] = adj_tmp[nx + nu + count_upper];
+                    S_hess_out[j + (nx+nu) *i] = adj_tmp[nx + nu + count_upper];
                     count_upper++;
                 }
             }
