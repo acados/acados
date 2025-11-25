@@ -292,20 +292,21 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, m
 
     nx = x.size()[0]
     nu = u.size()[0]
+    np = casadi_length(p)
 
     symbol = model.get_casadi_symbol()
 
     # set up expressions
     Sx = symbol('Sx', nx, nx)
-    Sp = symbol('Sp', nx, nu)
+    Su = symbol('Su', nx, nu)
     lambdaX = symbol('lambdaX', nx, 1)
 
     vdeX = ca.jtimes(f_expl, x, Sx)
-    vdeP = ca.jacobian(f_expl, u) + ca.jtimes(f_expl, x, Sp)
+    vdeU = ca.jacobian(f_expl, u) + ca.jtimes(f_expl, x, Su)
     adj = ca.jtimes(f_expl, ca.vertcat(x, u), lambdaX, True)
 
     if generate_hess:
-        S_forw = ca.vertcat(ca.horzcat(Sx, Sp), ca.horzcat(ca.DM.zeros(nu,nx), ca.DM.eye(nu)))
+        S_forw = ca.vertcat(ca.horzcat(Sx, Su), ca.horzcat(ca.DM.zeros(nu,nx), ca.DM.eye(nu)))
         hess = ca.mtimes(ca.transpose(S_forw),ca.jtimes(adj, ca.vertcat(x,u), S_forw))
         hess2 = []
         for j in range(nx+nu):
@@ -317,14 +318,21 @@ def generate_c_code_explicit_ode(context: GenerateContext, model: AcadosModel, m
     context.add_function_definition(fun_name, [x, u, p], [f_expl], model_dir, 'dyn')
 
     fun_name = model_name + '_expl_vde_forw'
-    context.add_function_definition(fun_name, [x, Sx, Sp, u, p], [f_expl, vdeX, vdeP], model_dir, 'dyn')
+    context.add_function_definition(fun_name, [x, Sx, Su, u, p], [f_expl, vdeX, vdeU], model_dir, 'dyn')
 
     fun_name = model_name + '_expl_vde_adj'
     context.add_function_definition(fun_name, [x, lambdaX, u, p], [adj], model_dir, 'dyn')
 
     if generate_hess:
         fun_name = model_name + '_expl_ode_hess'
-        context.add_function_definition(fun_name, [x, Sx, Sp, lambdaX, u, p], [adj, hess2], model_dir, 'dyn')
+        context.add_function_definition(fun_name, [x, Sx, Su, lambdaX, u, p], [adj, hess2], model_dir, 'dyn')
+
+    # NEW: param-direction forward VDE
+    if np > 0:
+        Sp = symbol('Sp', nx, np)
+        vdeP = ca.jacobian(f_expl, p) + ca.jtimes(f_expl, x, Sp)   # f_p + A*Sp
+        fun_name = model_name + '_expl_vde_forw_p'
+        context.add_function_definition(fun_name, [x, Sp, u, p], [vdeP], model_dir, 'dyn')
 
     return
 
