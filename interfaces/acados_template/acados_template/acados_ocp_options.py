@@ -1830,6 +1830,8 @@ class AcadosOcpOptions:
     @sim_method_num_stages.setter
     def sim_method_num_stages(self, sim_method_num_stages):
 
+        # TODO why no checks?
+
         # if isinstance(sim_method_num_stages, int):
         #     self.__sim_method_num_stages = sim_method_num_stages
         # else:
@@ -1839,6 +1841,8 @@ class AcadosOcpOptions:
 
     @sim_method_num_steps.setter
     def sim_method_num_steps(self, sim_method_num_steps):
+
+        # TODO why no checks?
 
         # if isinstance(sim_method_num_steps, int):
         #     self.__sim_method_num_steps = sim_method_num_steps

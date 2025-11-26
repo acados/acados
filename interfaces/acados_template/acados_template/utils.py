@@ -202,6 +202,10 @@ def is_empty(x):
         raise TypeError("is_empty expects one of the following types: casadi.MX, casadi.SX, "
                         + "None, numpy array empty list, set. Got: " + str(type(x)))
 
+def is_scalar_integer(x):
+    """Check if x is a scalar integer (int or numpy integer type)"""
+    return np.isscalar(x) and isinstance(x, (int, np.integer))
+
 
 def casadi_length(x):
     if isinstance(x, (MX, SX, DM)):
@@ -370,6 +374,8 @@ def make_object_json_dumpable(input):
         return input.tolist()
     elif isinstance(input, (DM)):
         return input.full().tolist()
+    elif is_scalar_integer(input):
+        return int(input)
     else:
         raise TypeError(f"Cannot make input of type {type(input)} dumpable.")
 
