@@ -1898,9 +1898,61 @@ class AcadosOcp:
         return inner_jac.T @ outer_hess @ inner_jac
 
 
+    def _add_L2_penalty_stage(self, constr_expr: Union[ca.SX, ca.MX], violation_expr: Union[ca.SX, ca.MX], weight: float, residual_name: str, suffix: str):
+        """Add L2 penalty to cost stage identified by suffix ('', '_0', '_e')."""
+
+        yref_attr = f'yref{suffix}'
+        cost_y_expr_attr = f'cost_y_expr{suffix}'
+        cost_type_attr = f'cost_type{suffix}'
+        W_attr = f'W{suffix}'
+        cost_r_in_psi_attr = f'cost_r_in_psi_expr{suffix}'
+        cost_psi_attr = f'cost_psi_expr{suffix}'
+        cost_ext_attr = f'cost_expr_ext_cost{suffix}'
+
+        casadi_symbol = self.model.get_casadi_symbol()
+
+        # append zero reference
+        existing_yref = getattr(self.cost, yref_attr)
+        new_ref = np.zeros(1)
+        setattr(self.cost, yref_attr, np.concatenate((existing_yref, new_ref)))
+
+        # append violation expression to model cost_y_expr
+        existing_cost_y = getattr(self.model, cost_y_expr_attr)
+        setattr(self.model, cost_y_expr_attr, ca.vertcat(existing_cost_y, violation_expr))
+
+        cost_type = getattr(self.cost, cost_type_attr)
+
+        if cost_type == "NONLINEAR_LS":
+            current_W = getattr(self.cost, W_attr)
+            setattr(self.cost, W_attr, block_diag(current_W, weight))
+
+        elif cost_type == "CONVEX_OVER_NONLINEAR":
+            new_residual = casadi_symbol(residual_name, constr_expr.shape)
+            current_r = getattr(self.model, cost_r_in_psi_attr)
+            setattr(self.model, cost_r_in_psi_attr, ca.vertcat(current_r, new_residual))
+
+            current_psi = getattr(self.model, cost_psi_attr)
+            new_term = .5 * weight * new_residual**2
+            if not is_empty(current_psi):
+                setattr(self.model, cost_psi_attr, current_psi + new_term)
+            else:
+                setattr(self.model, cost_psi_attr, new_term)
+
+        elif cost_type == "EXTERNAL":
+            current_ext_cost = getattr(self.model, cost_ext_attr)
+            new_cost_term = .5 * weight * violation_expr**2
+            if not is_empty(current_ext_cost):
+                setattr(self.model, cost_ext_attr, current_ext_cost + new_cost_term)
+            else:
+                setattr(self.model, cost_ext_attr, new_cost_term)
+
+        else:
+            raise NotImplementedError(f"formulate_constraint_as_L2_penalty not implemented for cost_type {cost_type}.")
+
+
     def formulate_constraint_as_L2_penalty(
         self,
-        constr_expr: ca.SX,
+        constr_expr: Union[ca.SX, ca.MX],
         weight: float,
         upper_bound: Optional[float],
         lower_bound: Optional[float],
@@ -1911,60 +1963,28 @@ class AcadosOcp:
         Formulate a constraint as an L2 penalty and add it to the current cost.
         """
 
-        casadi_symbol = self.model.get_casadi_symbol()
-
         if upper_bound is None and lower_bound is None:
             raise ValueError("Either upper or lower bound must be provided.")
 
+        if upper_bound is not None and lower_bound is not None:
+            if upper_bound < lower_bound:
+                raise ValueError("Upper bound must be greater than lower bound.")
+
         # compute violation expression
         violation_expr = 0.0
-        y_ref_new = np.zeros(1)
         if upper_bound is not None:
             violation_expr = ca.fmax(violation_expr, (constr_expr - upper_bound))
         if lower_bound is not None:
             violation_expr = ca.fmax(violation_expr, (lower_bound - constr_expr))
 
-        # add penalty as cost
         if constraint_type == "path":
-            self.cost.yref = np.concatenate((self.cost.yref, y_ref_new))
-            self.model.cost_y_expr = ca.vertcat(self.model.cost_y_expr, violation_expr)
-            if self.cost.cost_type == "NONLINEAR_LS":
-                self.cost.W = block_diag(self.cost.W, weight)
-            elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
-                new_residual = casadi_symbol(residual_name, constr_expr.shape)
-                self.model.cost_r_in_psi_expr = ca.vertcat(self.model.cost_r_in_psi_expr, new_residual)
-                self.model.cost_psi_expr += .5 * weight * new_residual**2
-            elif self.cost.cost_type == "EXTERNAL":
-                self.model.cost_expr_ext_cost += .5 * weight * violation_expr**2
-            else:
-                raise NotImplementedError(f"formulate_constraint_as_L2_penalty not implemented for path cost with cost_type {self.cost.cost_type}.")
+            self._add_L2_penalty_stage(constr_expr, violation_expr, weight, residual_name, '')
         elif constraint_type == "initial":
-            self.cost.yref_0 = np.concatenate((self.cost.yref_0, y_ref_new))
-            self.model.cost_y_expr_0 = ca.vertcat(self.model.cost_y_expr_0, violation_expr)
-            if self.cost.cost_type_0 == "NONLINEAR_LS":
-                self.cost.W_0 = block_diag(self.cost.W_0, weight)
-            elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
-                new_residual = casadi_symbol(residual_name, constr_expr.shape)
-                self.model.cost_r_in_psi_expr_0 = ca.vertcat(self.model.cost_r_in_psi_expr_0, new_residual)
-                self.model.cost_psi_expr_0 += .5 * weight * new_residual**2
-            elif self.cost.cost_type_0 == "EXTERNAL":
-                self.model.cost_expr_ext_cost_0 += .5 * weight * violation_expr**2
-            else:
-                raise NotImplementedError(f"formulate_constraint_as_L2_penalty not implemented for initial cost with cost_type_0 {self.cost.cost_type_0}.")
+            self._add_L2_penalty_stage(constr_expr, violation_expr, weight, residual_name, '_0')
         elif constraint_type == "terminal":
-            self.cost.yref_e = np.concatenate((self.cost.yref_e, y_ref_new))
-            self.model.cost_y_expr_e = ca.vertcat(self.model.cost_y_expr_e, violation_expr)
-            if self.cost.cost_type_e == "NONLINEAR_LS":
-                self.cost.W_e = block_diag(self.cost.W_e, weight)
-            elif self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
-                new_residual = casadi_symbol(residual_name, constr_expr.shape)
-                self.model.cost_r_in_psi_expr_e = ca.vertcat(self.model.cost_r_in_psi_expr_e, new_residual)
-                self.model.cost_psi_expr_e += .5 * weight * new_residual**2
-            elif self.cost.cost_type_e == "EXTERNAL":
-                self.model.cost_expr_ext_cost_e += .5 * weight * violation_expr**2
-            else:
-                raise NotImplementedError(f"formulate_constraint_as_L2_penalty not implemented for terminal cost with cost_type_e {self.cost.cost_type_e}.")
-        return
+            self._add_L2_penalty_stage(constr_expr, violation_expr, weight, residual_name, '_e')
+        else:
+            raise ValueError(f"Unknown constraint_type '{constraint_type}'.")
 
 
     def formulate_constraint_as_Huber_penalty(
