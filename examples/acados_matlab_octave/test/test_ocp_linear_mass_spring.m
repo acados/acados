@@ -286,7 +286,7 @@ end
 % plot(1:N, u);
 % ylabel('u')
 % xlabel('sample')
-% 
+%
 % if is_octave()
 %     waitforbuttonpress;
 % end
