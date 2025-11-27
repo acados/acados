@@ -56,7 +56,7 @@ class AcadosSimOptions:
         self.__collocation_type = 'GAUSS_LEGENDRE'
         self.__Tsim = None
 
-        # TODO: no sim_method_ prefix for these options?
+        # NOTE: internal names have sim_method_ prefix for intercompatibility of sim and ocp templates
         # ints
         self.__sim_method_num_stages = 4
         self.__sim_method_num_steps = 1
