@@ -1991,12 +1991,12 @@ class AcadosOcp:
         self,
         constr_expr: Union[ca.SX, ca.MX],
         weight: float,
-        upper_bound: Optional[float]=None,
-        lower_bound: Optional[float]=None,
+        upper_bound: Optional[float] = None,
+        lower_bound: Optional[float] = None,
         residual_name: str = "new_residual",
         huber_delta: float = 1.0,
-        use_xgn = True,
-        min_hess = 0,
+        use_xgn: bool = True,
+        min_hess: float = 0.,
         constraint_type: str = "path",
     ) -> None:
         """
