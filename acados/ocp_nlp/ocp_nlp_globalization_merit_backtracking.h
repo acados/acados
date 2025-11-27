@@ -73,7 +73,6 @@ void ocp_nlp_globalization_merit_backtracking_opts_set(void *config, void *opts,
  * memory
  ************************************************/
 
-// TODO: remove stufF!
 typedef struct
 {
     double step_norm;
