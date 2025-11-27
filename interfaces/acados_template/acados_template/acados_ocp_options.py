@@ -1852,21 +1852,12 @@ class AcadosOcpOptions:
 
     @sim_method_num_stages.setter
     def sim_method_num_stages(self, sim_method_num_stages):
-
-        # if isinstance(sim_method_num_stages, int):
-        #     self.__sim_method_num_stages = sim_method_num_stages
-        # else:
-        #     raise ValueError('Invalid sim_method_num_stages value. sim_method_num_stages must be an integer.')
-
+        # NOTE: checks in make_consistent
         self.__sim_method_num_stages = sim_method_num_stages
 
     @sim_method_num_steps.setter
     def sim_method_num_steps(self, sim_method_num_steps):
-
-        # if isinstance(sim_method_num_steps, int):
-        #     self.__sim_method_num_steps = sim_method_num_steps
-        # else:
-        #     raise ValueError('Invalid sim_method_num_steps value. sim_method_num_steps must be an integer.')
+        # NOTE: checks in make_consistent
         self.__sim_method_num_steps = sim_method_num_steps
 
 

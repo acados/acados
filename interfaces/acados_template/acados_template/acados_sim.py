@@ -30,16 +30,16 @@
 
 import os, json
 import numpy as np
-import warnings
 from typing import Optional
 from copy import deepcopy
 from deprecated.sphinx import deprecated
 from .acados_model import AcadosModel
 from .acados_dims import AcadosSimDims
+from .acados_ocp import AcadosOcp
 from .builders import CMakeBuilder
 from .ros2.sim_node import AcadosSimRosOptions
 from .utils import (get_acados_path, get_shared_lib_ext, format_class_dict, check_casadi_version,
-                    make_object_json_dumpable, render_template)
+                    make_object_json_dumpable, render_template, is_scalar_integer)
 from .casadi_function_generation import (
                     GenerateContext,
                     AcadosCodegenOptions,
@@ -55,6 +55,8 @@ class AcadosSimOptions:
         self.__integrator_type = 'ERK'
         self.__collocation_type = 'GAUSS_LEGENDRE'
         self.__Tsim = None
+
+        # NOTE: internal names have sim_method_ prefix for intercompatibility of sim and ocp templates
         # ints
         self.__sim_method_num_stages = 4
         self.__sim_method_num_steps = 1
@@ -131,6 +133,7 @@ class AcadosSimOptions:
         return self.__output_z
 
     @property
+    # TODO: rename to jac_reuse
     def sim_method_jac_reuse(self):
         """Integer determining if jacobians are reused (0 or 1). Default: 0"""
         return self.__sim_method_jac_reuse
@@ -228,21 +231,21 @@ class AcadosSimOptions:
 
     @num_stages.setter
     def num_stages(self, num_stages):
-        if isinstance(num_stages, int):
+        if is_scalar_integer(num_stages):
             self.__sim_method_num_stages = num_stages
         else:
             raise ValueError('Invalid num_stages value. num_stages must be an integer.')
 
     @num_steps.setter
     def num_steps(self, num_steps):
-        if isinstance(num_steps, int):
+        if is_scalar_integer(num_steps):
             self.__sim_method_num_steps = num_steps
         else:
             raise TypeError('Invalid num_steps value. num_steps must be an integer.')
 
     @newton_iter.setter
     def newton_iter(self, newton_iter):
-        if isinstance(newton_iter, int):
+        if is_scalar_integer(newton_iter):
             self.__sim_method_newton_iter = newton_iter
         else:
             raise TypeError('Invalid newton_iter value. newton_iter must be an integer.')
@@ -256,41 +259,42 @@ class AcadosSimOptions:
 
     @sens_forw.setter
     def sens_forw(self, sens_forw):
-        if sens_forw in (True, False):
+        if isinstance(sens_forw, bool):
             self.__sens_forw = sens_forw
         else:
             raise ValueError('Invalid sens_forw value. sens_forw must be a Boolean.')
 
     @sens_adj.setter
     def sens_adj(self, sens_adj):
-        if sens_adj in (True, False):
+        if isinstance(sens_adj, bool):
             self.__sens_adj = sens_adj
         else:
             raise ValueError('Invalid sens_adj value. sens_adj must be a Boolean.')
 
     @sens_hess.setter
     def sens_hess(self, sens_hess):
-        if sens_hess in (True, False):
+        if isinstance(sens_hess, bool):
             self.__sens_hess = sens_hess
         else:
             raise ValueError('Invalid sens_hess value. sens_hess must be a Boolean.')
 
     @sens_algebraic.setter
     def sens_algebraic(self, sens_algebraic):
-        if sens_algebraic in (True, False):
+        if isinstance(sens_algebraic, bool):
             self.__sens_algebraic = sens_algebraic
         else:
             raise ValueError('Invalid sens_algebraic value. sens_algebraic must be a Boolean.')
 
     @output_z.setter
     def output_z(self, output_z):
-        if output_z in (True, False):
+        if isinstance(output_z, bool):
             self.__output_z = output_z
         else:
             raise ValueError('Invalid output_z value. output_z must be a Boolean.')
 
     @sim_method_jac_reuse.setter
     def sim_method_jac_reuse(self, sim_method_jac_reuse):
+        # TODO: use bool
         if sim_method_jac_reuse in (0, 1):
             self.__sim_method_jac_reuse = sim_method_jac_reuse
         else:
@@ -356,14 +360,14 @@ class AcadosSim:
         self.__parameter_values = np.array([])
         self.__problem_class = 'SIM'
         self.__json_file = "acados_sim.json"
-        
+
         self.__ros_opts: Optional[AcadosSimRosOptions] = None
 
     @property
     def parameter_values(self):
         """:math:`p` - initial values for parameter - can be updated"""
         return self.__parameter_values
-    
+
     @parameter_values.setter
     def parameter_values(self, parameter_values):
         if isinstance(parameter_values, np.ndarray):
@@ -371,7 +375,7 @@ class AcadosSim:
         else:
             raise ValueError('Invalid parameter_values value. ' +
                             f'Expected numpy array, got {type(parameter_values)}.')
-            
+
     @property
     def json_file(self):
         """Name of the json file where the problem description is stored."""
@@ -380,7 +384,7 @@ class AcadosSim:
     @json_file.setter
     def json_file(self, json_file):
         self.__json_file = json_file
-        
+
     @property
     def ros_opts(self) -> Optional[AcadosSimRosOptions]:
         """Options to configure ROS 2 nodes and topics."""
@@ -424,7 +428,7 @@ class AcadosSim:
         dir_name = os.path.dirname(self.json_file)
         if dir_name:
             os.makedirs(dir_name, exist_ok=True)
-            
+
         with open(self.json_file, 'w') as f:
             json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
 
@@ -434,7 +438,7 @@ class AcadosSim:
         acados_template_path = os.path.dirname(os.path.abspath(__file__))
         ros_template_glob = os.path.join(acados_template_path, 'ros2_templates', '**', '*')
 
-        # --- Interface Package --- 
+        # --- Interface Package ---
         ros_interface_dir = os.path.join('sim_interface_templates')
         interface_dir = os.path.join(self.ros_opts.generated_code_dir, f'{self.ros_opts.package_name}_interface')
         template_file = os.path.join(ros_interface_dir, 'README.in.md')
@@ -451,7 +455,7 @@ class AcadosSim:
         template_file = os.path.join(ros_interface_dir, 'ControlInput.in.msg')
         template_list.append((template_file, 'ControlInput.msg', msg_dir, ros_template_glob))
 
-        # --- Simulator Package --- 
+        # --- Simulator Package ---
         ros_pkg_dir = os.path.join('sim_node_templates')
         package_dir = os.path.join(self.ros_opts.generated_code_dir, self.ros_opts.package_name)
         template_file = os.path.join(ros_pkg_dir, 'README.in.md')
@@ -581,3 +585,31 @@ class AcadosSim:
 
         context.finalize()
         self.__external_function_files_model = context.get_external_function_file_list(ocp_specific=False)
+
+
+    @classmethod
+    def from_ocp(cls, ocp: AcadosOcp):
+        """
+        Create an AcadosSim object from an AcadosOcp object.
+        The AcadosSim object matches the integrator of the OCP on the first shooting node.
+
+        :param ocp: AcadosOcp
+        :return: AcadosSim
+        """
+        ocp.make_consistent()
+
+        sim = cls()
+        sim.model = deepcopy(ocp.model)
+
+        sim.solver_options.integrator_type = ocp.solver_options.integrator_type
+        sim.solver_options.collocation_type = ocp.solver_options.collocation_type
+        sim.solver_options.T = ocp.solver_options.time_steps[0]
+
+        sim.solver_options.num_stages = ocp.solver_options.sim_method_num_stages[0]
+        sim.solver_options.num_steps = ocp.solver_options.sim_method_num_steps[0]
+        sim.solver_options.newton_iter = ocp.solver_options.sim_method_newton_iter
+        sim.solver_options.newton_tol = ocp.solver_options.sim_method_newton_tol
+
+        sim.solver_options.sim_method_jac_reuse = ocp.solver_options.sim_method_jac_reuse[0]
+
+        return sim
