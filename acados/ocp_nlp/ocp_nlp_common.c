@@ -3788,6 +3788,10 @@ void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out *to)
     // int *nu = dims->nu;
     int *ni = dims->ni;
     int *nz = dims->nz;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp for nowait
+#endif
     for (int i = 0; i <= N; i++)
     {
         blasfeo_dveccp(nv[i], from->ux+i, 0, to->ux+i, 0);
@@ -3795,6 +3799,9 @@ void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out *to)
         blasfeo_dveccp(2*ni[i], from->lam+i, 0, to->lam+i, 0);
     }
 
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp for nowait
+#endif
     for (int i = 0; i < N; i++)
         blasfeo_dveccp(nx[i+1], from->pi+i, 0, to->pi+i, 0);
 
@@ -3819,15 +3826,18 @@ void ocp_nlp_get_cost_value_from_submodules(ocp_nlp_config *config, ocp_nlp_dims
 
 
 void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
-{
-    int N = dims->N;
+    ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+    {
+        int N = dims->N;
 
-    double* tmp_cost = NULL;
-    double total_cost = 0.0;
+        double* tmp_cost = NULL;
+        double total_cost = 0.0;
 
-    int cost_integration;
+        int cost_integration;
 
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for private(tmp_cost) private(cost_integration) reduction(+:total_cost)
+#endif
     for (int i = 0; i <= N; i++)
     {
         if (i < N)
@@ -3857,14 +3867,18 @@ void ocp_nlp_eval_constraints_common(ocp_nlp_config *config, ocp_nlp_dims *dims,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
     int N = dims->N;
+    struct blasfeo_dvec *ineq_fun;
 
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for private(ineq_fun)
+#endif
     for (int i = 0; i <= N; i++)
     {
         config->constraints[i]->compute_fun(config->constraints[i], dims->constraints[i],
                                             in->constraints[i], opts->constraints[i],
                                             mem->constraints[i], work->constraints[i]);
         // copy ineq function value into mem
-        struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
+        ineq_fun = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
         blasfeo_dveccp(2 * dims->ni[i], ineq_fun, 0, mem->ineq_fun + i, 0);
     }
 }
