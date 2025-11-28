@@ -33,13 +33,15 @@ import numpy as np
 from typing import Optional
 from copy import deepcopy
 from deprecated.sphinx import deprecated
+import warnings
+import casadi as ca
 from .acados_model import AcadosModel
 from .acados_dims import AcadosSimDims
 from .acados_ocp import AcadosOcp
 from .builders import CMakeBuilder
 from .ros2.sim_node import AcadosSimRosOptions
 from .utils import (get_acados_path, get_shared_lib_ext, format_class_dict, check_casadi_version,
-                    make_object_json_dumpable, render_template, is_scalar_integer)
+                    make_object_json_dumpable, render_template, is_scalar_integer, is_empty)
 from .casadi_function_generation import (
                     GenerateContext,
                     AcadosCodegenOptions,
@@ -600,6 +602,13 @@ class AcadosSim:
 
         sim = cls()
         sim.model = deepcopy(ocp.model)
+
+        if not is_empty(sim.model.p_global):
+            sim.model.p = ca.vertcat(sim.model.p, sim.model.p_global)
+            sim.model.p_global = []
+
+            warnings.warn('Model contained p_global. Appending p_global to p in the sim model.')
+
 
         sim.solver_options.integrator_type = ocp.solver_options.integrator_type
         sim.solver_options.collocation_type = ocp.solver_options.collocation_type

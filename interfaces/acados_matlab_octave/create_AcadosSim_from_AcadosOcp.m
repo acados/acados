@@ -42,7 +42,15 @@ function sim = create_AcadosSim_from_AcadosOcp(ocp)
         error('create_AcadosSim_from_AcadosOcp: AcadosOcp cannot have p_global.');
     end
     sim = AcadosSim();
-    sim.model = ocp.model;
+    sim.model = copy(ocp.model);
+
+    if ~sim.model.p_global.is_empty()
+        sim.model.p = [sim.model.p; sim.model.p_global];
+        sim.model.p_global = [];
+
+        warning('Model contained p_global. Appending p_global to p in the sim model.');
+    end
+
     % copy all relevant options
     sim.solver_options.integrator_type = ocp.solver_options.integrator_type;
     sim.solver_options.collocation_type = ocp.solver_options.collocation_type;
