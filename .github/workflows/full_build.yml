@@ -15,6 +15,28 @@ jobs:
 
 
 # ===== PYTHON TESTS =====
+  python_user_install_test:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - name: Install Python interface (user workflow)
+      shell: bash
+      run: ${{ github.workspace }}/.github/linux/install_python_user.sh
+
+    - name: Getting started examples
+      working-directory: ${{ github.workspace }}/examples/acados_python/getting_started
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/acadosenv/bin/activate
+        python minimal_example_closed_loop.py
+        python minimal_example_sim.py
+        python minimal_example_ocp.py
+
   python_basic_tests:
     needs: call_core_build
     runs-on: ubuntu-22.04
