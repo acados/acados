@@ -856,10 +856,10 @@ class AcadosOcpOptions:
 
     @sim_method_newton_tol.setter
     def sim_method_newton_tol(self, sim_method_newton_tol):
-        if isinstance(sim_method_newton_tol, float) and sim_method_newton_tol > 0:
+        if isinstance(sim_method_newton_tol, float) and sim_method_newton_tol >= 0:
             self.__sim_method_newton_tol = sim_method_newton_tol
         else:
-            raise ValueError('Invalid sim_method_newton_tol value. sim_method_newton_tol must be a positive float.')
+            raise ValueError('Invalid sim_method_newton_tol value. sim_method_newton_tol must be a nonnegative float.')
 
     @property
     def sim_method_jac_reuse(self):
