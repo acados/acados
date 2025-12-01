@@ -181,6 +181,8 @@ def plot_trajectories(
 
     if single_column:
         fig, axes = plt.subplots(ncols=1, nrows=nxpx+nxpu, figsize=figsize, sharex=True)
+        if nxpx+nxpu == 1:
+            axes = [axes]
     else:
         fig, axes = plt.subplots(ncols=2, nrows=nrows, figsize=figsize, sharex=True)
         axes = np.ravel(axes, order='F')
@@ -217,28 +219,32 @@ def plot_trajectories(
             axes[isubplot].set_ylim(top=x_max[i])
 
     for i in idxpu:
+        if single_column:
+            idx_subplot = i+nxpx
+        else:
+            idx_subplot = i+nrows
         for u_traj, time_traj, label, color, linestyle, alpha in zip(u_traj_list, time_traj_list, labels_list, color_list, linestyle_list, alpha_list):
             vals = u_traj[:, i]
-            axes[i+nrows].step(time_traj, np.append([vals[0]], vals), label=label, alpha=alpha, color=color, linestyle=linestyle)
+            axes[idx_subplot].step(time_traj, np.append([vals[0]], vals), label=label, alpha=alpha, color=color, linestyle=linestyle)
 
         if U_ref is not None:
-            axes[i+nrows].step(time_traj, np.append([U_ref[0, i]], U_ref[:, i]), alpha=0.8,
+            axes[idx_subplot].step(time_traj, np.append([U_ref[0, i]], U_ref[:, i]), alpha=0.8,
                                label="reference", linestyle="dotted", color="k")
 
-        axes[i+nrows].set_ylabel(u_labels[i])
-        axes[i+nrows].grid()
+        axes[idx_subplot].set_ylabel(u_labels[i])
+        axes[idx_subplot].grid()
 
         if i in idxbu:
-            axes[i+nrows].hlines(
+            axes[idx_subplot].hlines(
                 ubu[i], time_traj[0], time_traj[-1], linestyles="dashed", alpha=0.4, color="k"
             )
-            axes[i+nrows].hlines(
+            axes[idx_subplot].hlines(
                 lbu[i], time_traj[0], time_traj[-1], linestyles="dashed", alpha=0.4, color="k"
             )
-            axes[i+nrows].set_xlim(time_traj[0], time_traj[-1])
+            axes[idx_subplot].set_xlim(time_traj[0], time_traj[-1])
             bound_margin = 0.05
             u_lower = (1-bound_margin) * lbu[i] if lbu[i] > 0 else (1+bound_margin) * lbu[i]
-            axes[i+nrows].set_ylim(bottom=u_lower, top=(1+bound_margin) * ubu[i])
+            axes[idx_subplot].set_ylim(bottom=u_lower, top=(1+bound_margin) * ubu[i])
 
     axes[nxpx+nxpu-1].set_xlabel(time_label)
     if not single_column:
