@@ -241,7 +241,11 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
     ux = ca.vertcat(u, x)
 
     # generate jacobians
-    jac_ux = ca.jacobian(phi, ux)
+    if is_empty(model.disc_dyn_custom_jac_ux_expr):
+        jac_ux = ca.jacobian(phi, ux)
+    else:
+        jac_ux = model.disc_dyn_custom_jac_ux_expr
+
     # generate adjoint
     adj_ux = ca.jtimes(phi, ux, lam, True)
 
