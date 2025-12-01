@@ -1472,7 +1472,8 @@ class AcadosOcpSolver:
             - time_sim_la: CPU time for integrator contribution of linear algebra
             - time_qp: CPU time qp solution
             - time_qp_solver_call: CPU time inside qp solver (without converting the QP)
-            - time_qp_xcond: time_glob: CPU time globalization
+            - time_qp_xcond: Time for condensing
+            - time_glob: CPU time globalization
             - time_qpscaling: CPU time for QP scaling
             - time_solution_sensitivities: CPU time for previous call to eval_param_sens
             - time_solution_sens_lin: CPU time for linearization in eval_param_sens
