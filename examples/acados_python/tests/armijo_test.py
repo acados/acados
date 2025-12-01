@@ -82,7 +82,7 @@ def solve_armijo_problem_with_setting(setting):
 
     # discretization
     Tf = 1
-    N = 1
+    N = 0
     ocp.solver_options.N_horizon = N
     ocp.solver_options.tf = Tf
 
@@ -92,9 +92,9 @@ def solve_armijo_problem_with_setting(setting):
     ocp.model.cost_expr_ext_cost_custom_hess_e = ca.DM(1.0) # 2.0 is the actual hessian
 
     # constarints
-    ocp.constraints.idxbx = np.array([0])
-    ocp.constraints.lbx = np.array([-10.0])
-    ocp.constraints.ubx = np.array([10.0])
+    ocp.constraints.idxbx_e = np.array([0])
+    ocp.constraints.lbx_e = np.array([-10.0])
+    ocp.constraints.ubx_e = np.array([10.0])
 
     # options
     ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES' # 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
