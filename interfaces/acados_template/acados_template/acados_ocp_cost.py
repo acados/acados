@@ -124,12 +124,23 @@ class AcadosOcpCost:
         """
         return self.__cost_type_0
 
+    @cost_type_0.setter
+    def cost_type_0(self, cost_type_0):
+        if cost_type_0 in self.__cost_types:
+            self.__cost_type_0 = cost_type_0
+        else:
+            raise ValueError('Invalid cost_type_0 value.')
+
     @property
     def W_0(self):
         """:math:`W_0` - weight matrix at initial shooting node (0).
         Default: :code:`None`.
         """
         return self.__W_0
+
+    @W_0.setter
+    def W_0(self, W_0):
+        self.__W_0 = cast_to_2d_nparray_or_casadi_symbolic(W_0, "W_0")
 
     @property
     def Vx_0(self):
@@ -138,12 +149,20 @@ class AcadosOcpCost:
         """
         return self.__Vx_0
 
+    @Vx_0.setter
+    def Vx_0(self, Vx_0):
+        self.__Vx_0 = cast_to_2d_nparray(Vx_0, "Vx_0")
+
     @property
     def Vu_0(self):
         """:math:`V_u^0` - u matrix coefficient at initial shooting node (0).
         Default: :code:`None`.
         """
         return self.__Vu_0
+
+    @Vu_0.setter
+    def Vu_0(self, Vu_0):
+        self.__Vu_0 = cast_to_2d_nparray(Vu_0, "Vu_0")
 
     @property
     def Vz_0(self):
@@ -152,12 +171,20 @@ class AcadosOcpCost:
         """
         return self.__Vz_0
 
+    @Vz_0.setter
+    def Vz_0(self, Vz_0):
+        self.__Vz_0 = cast_to_2d_nparray(Vz_0, "Vz_0")
+
     @property
     def yref_0(self):
         r""":math:`y_\text{ref}^0` - reference at initial shooting node (0).
         Default: :code:`None`.
         """
         return self.__yref_0
+
+    @yref_0.setter
+    def yref_0(self, yref_0):
+        self.__yref_0 = cast_to_1d_nparray_or_casadi_symbolic(yref_0, "yref_0")
 
     @property
     def cost_ext_fun_type_0(self):
@@ -169,26 +196,6 @@ class AcadosOcpCost:
         """
         return self.__cost_ext_fun_type_0
 
-    @yref_0.setter
-    def yref_0(self, yref_0):
-        self.__yref_0 = cast_to_1d_nparray_or_casadi_symbolic(yref_0, "yref_0")
-
-    @W_0.setter
-    def W_0(self, W_0):
-        self.__W_0 = cast_to_2d_nparray_or_casadi_symbolic(W_0, "W_0")
-
-    @Vx_0.setter
-    def Vx_0(self, Vx_0):
-        self.__Vx_0 = cast_to_2d_nparray(Vx_0, "Vx_0")
-
-    @Vu_0.setter
-    def Vu_0(self, Vu_0):
-        self.__Vu_0 = cast_to_2d_nparray(Vu_0, "Vu_0")
-
-    @Vz_0.setter
-    def Vz_0(self, Vz_0):
-        self.__Vz_0 = cast_to_2d_nparray(Vz_0, "Vz_0")
-
     @cost_ext_fun_type_0.setter
     def cost_ext_fun_type_0(self, cost_ext_fun_type_0):
         if cost_ext_fun_type_0 in self.__cost_ext_fun_types:
@@ -197,7 +204,6 @@ class AcadosOcpCost:
             raise ValueError('Invalid cost_ext_fun_type_0 value. Possible values are:\n\n' \
                     + ',\n'.join(self.__cost_ext_fun_types) + '.\n\nYou have: ' + cost_ext_fun_type_0 + '.\n\n')
 
-    # Lagrange term
     @property
     def cost_type(self):
         """
@@ -207,12 +213,24 @@ class AcadosOcpCost:
         """
         return self.__cost_type
 
+    @cost_type.setter
+    def cost_type(self, cost_type):
+        if cost_type in self.__cost_types:
+            self.__cost_type = cost_type
+        else:
+            raise ValueError('Invalid cost_type value.')
+
     @property
     def W(self):
         """:math:`W` - weight matrix at intermediate shooting nodes (1 to N-1).
         Default: :code:`np.zeros((0,0))`.
         """
         return self.__W
+
+    @W.setter
+    def W(self, W):
+        self.__W = cast_to_2d_nparray_or_casadi_symbolic(W, "W")
+
 
     @property
     def Vx(self):
@@ -221,12 +239,20 @@ class AcadosOcpCost:
         """
         return self.__Vx
 
+    @Vx.setter
+    def Vx(self, Vx):
+        self.__Vx = cast_to_2d_nparray(Vx, "Vx")
+
     @property
     def Vu(self):
         """:math:`V_u` - u matrix coefficient at intermediate shooting nodes (1 to N-1).
         Default: :code:`np.zeros((0,0))`.
         """
         return self.__Vu
+
+    @Vu.setter
+    def Vu(self, Vu):
+        self.__Vu = cast_to_2d_nparray(Vu, "Vu")
 
     @property
     def Vz(self):
@@ -235,12 +261,20 @@ class AcadosOcpCost:
         """
         return self.__Vz
 
+    @Vz.setter
+    def Vz(self, Vz):
+        self.__Vz = cast_to_2d_nparray(Vz, "Vz")
+
     @property
     def yref(self):
         r""":math:`y_\text{ref}` - reference at intermediate shooting nodes (1 to N-1).
         Default: :code:`np.array([])`.
         """
         return self.__yref
+
+    @yref.setter
+    def yref(self, yref):
+        self.__yref = cast_to_1d_nparray_or_casadi_symbolic(yref, "yref")
 
     @property
     def Zl(self):
@@ -249,12 +283,20 @@ class AcadosOcpCost:
         """
         return self.__Zl
 
+    @Zl.setter
+    def Zl(self, Zl):
+        self.__Zl = cast_to_1d_nparray(Zl, "Zl")
+
     @property
     def Zu(self):
         """:math:`Z_u` - diagonal of Hessian wrt upper slack at intermediate shooting nodes (0 to N-1).
         Default: :code:`np.array([])`.
         """
         return self.__Zu
+
+    @Zu.setter
+    def Zu(self, Zu):
+        self.__Zu = cast_to_1d_nparray(Zu, "Zu")
 
     @property
     def zl(self):
@@ -263,12 +305,20 @@ class AcadosOcpCost:
         """
         return self.__zl
 
+    @zl.setter
+    def zl(self, zl):
+        self.__zl = cast_to_1d_nparray(zl, "zl")
+
     @property
     def zu(self):
         """:math:`z_u` - gradient wrt upper slack at intermediate shooting nodes (0 to N-1).
         Default: :code:`np.array([])`.
         """
         return self.__zu
+
+    @zu.setter
+    def zu(self, zu):
+        self.__zu = cast_to_1d_nparray(zu, "zu")
 
     @property
     def cost_ext_fun_type(self):
@@ -278,57 +328,6 @@ class AcadosOcpCost:
         """
         return self.__cost_ext_fun_type
 
-    @cost_type.setter
-    def cost_type(self, cost_type):
-        if cost_type in self.__cost_types:
-            self.__cost_type = cost_type
-        else:
-            raise ValueError('Invalid cost_type value.')
-
-    @cost_type_0.setter
-    def cost_type_0(self, cost_type_0):
-        if cost_type_0 in self.__cost_types:
-            self.__cost_type_0 = cost_type_0
-        else:
-            raise ValueError('Invalid cost_type_0 value.')
-
-    @W.setter
-    def W(self, W):
-        self.__W = cast_to_2d_nparray_or_casadi_symbolic(W, "W")
-
-
-    @Vx.setter
-    def Vx(self, Vx):
-        self.__Vx = cast_to_2d_nparray(Vx, "Vx")
-
-    @Vu.setter
-    def Vu(self, Vu):
-        self.__Vu = cast_to_2d_nparray(Vu, "Vu")
-
-    @Vz.setter
-    def Vz(self, Vz):
-        self.__Vz = cast_to_2d_nparray(Vz, "Vz")
-
-    @yref.setter
-    def yref(self, yref):
-        self.__yref = cast_to_1d_nparray_or_casadi_symbolic(yref, "yref")
-
-    @Zl.setter
-    def Zl(self, Zl):
-        self.__Zl = cast_to_1d_nparray(Zl, "Zl")
-
-    @Zu.setter
-    def Zu(self, Zu):
-        self.__Zu = cast_to_1d_nparray(Zu, "Zu")
-
-    @zl.setter
-    def zl(self, zl):
-        self.__zl = cast_to_1d_nparray(zl, "zl")
-
-    @zu.setter
-    def zu(self, zu):
-        self.__zu = cast_to_1d_nparray(zu, "zu")
-
     @cost_ext_fun_type.setter
     def cost_ext_fun_type(self, cost_ext_fun_type):
         if cost_ext_fun_type in self.__cost_ext_fun_types:
@@ -337,7 +336,6 @@ class AcadosOcpCost:
             raise ValueError('Invalid cost_ext_fun_type value. Possible values are:\n\n' \
                     + ',\n'.join(self.__cost_ext_fun_types) + '.\n\nYou have: ' + cost_ext_fun_type + '.\n\n')
 
-    # Mayer term
     @property
     def cost_type_e(self):
         """
@@ -347,12 +345,23 @@ class AcadosOcpCost:
         """
         return self.__cost_type_e
 
+    @cost_type_e.setter
+    def cost_type_e(self, cost_type_e):
+        if cost_type_e in self.__cost_types:
+            self.__cost_type_e = cost_type_e
+        else:
+            raise ValueError('Invalid cost_type_e value.')
+
     @property
     def W_e(self):
         """:math:`W_e` - weight matrix at terminal shooting node (N).
         Default: :code:`np.zeros((0,0))`.
         """
         return self.__W_e
+
+    @W_e.setter
+    def W_e(self, W_e):
+        self.__W_e = cast_to_2d_nparray_or_casadi_symbolic(W_e, "W_e")
 
     @property
     def Vx_e(self):
@@ -361,12 +370,20 @@ class AcadosOcpCost:
         """
         return self.__Vx_e
 
+    @Vx_e.setter
+    def Vx_e(self, Vx_e):
+        self.__Vx_e = cast_to_2d_nparray(Vx_e, "Vx_e")
+
     @property
     def yref_e(self):
         r""":math:`y_\text{ref}^e` - cost reference at terminal shooting node (N).
         Default: :code:`np.array([])`.
         """
         return self.__yref_e
+
+    @yref_e.setter
+    def yref_e(self, yref_e):
+        self.__yref_e = cast_to_1d_nparray_or_casadi_symbolic(yref_e, "yref_e")
 
     @property
     def Zl_e(self):
@@ -375,6 +392,10 @@ class AcadosOcpCost:
         """
         return self.__Zl_e
 
+    @Zl_e.setter
+    def Zl_e(self, Zl_e):
+        self.__Zl_e = cast_to_1d_nparray(Zl_e, "Zl_e")
+
     @property
     def Zu_e(self):
         """:math:`Z_u^e` - diagonal of Hessian wrt upper slack at terminal shooting node (N).
@@ -382,12 +403,20 @@ class AcadosOcpCost:
         """
         return self.__Zu_e
 
+    @Zu_e.setter
+    def Zu_e(self, Zu_e):
+        self.__Zu_e = cast_to_1d_nparray(Zu_e, "Zu_e")
+
     @property
     def zl_e(self):
         """:math:`z_l^e` - gradient wrt lower slack at terminal shooting node (N).
         Default: :code:`np.array([])`.
         """
         return self.__zl_e
+
+    @zl_e.setter
+    def zl_e(self, zl_e):
+        self.__zl_e = cast_to_1d_nparray(zl_e, "zl_e")
 
     @property
     def zu_e(self):
@@ -397,12 +426,20 @@ class AcadosOcpCost:
         return self.__zu_e
 
 
+    @zu_e.setter
+    def zu_e(self, zu_e):
+        self.__zu_e = cast_to_1d_nparray(zu_e, "zu_e")
+
     @property
     def Zl_0(self):
         """:math:`Z_l^0` - diagonal of Hessian wrt lower slack at initial node 0.
         Default: :code:`np.array([])`.
         """
         return self.__Zl_0
+
+    @Zl_0.setter
+    def Zl_0(self, Zl_0):
+        self.__Zl_0 = cast_to_1d_nparray(Zl_0, "Zl_0")
 
     @property
     def Zu_0(self):
@@ -411,12 +448,20 @@ class AcadosOcpCost:
         """
         return self.__Zu_0
 
+    @Zu_0.setter
+    def Zu_0(self, Zu_0):
+        self.__Zu_0 = cast_to_1d_nparray(Zu_0, "Zu_0")
+
     @property
     def zl_0(self):
         """:math:`z_l^0` - gradient wrt lower slack at initial node 0.
         Default: :code:`np.array([])`.
         """
         return self.__zl_0
+
+    @zl_0.setter
+    def zl_0(self, zl_0):
+        self.__zl_0 = cast_to_1d_nparray(zl_0, "zl_0")
 
     @property
     def zu_0(self):
@@ -425,6 +470,10 @@ class AcadosOcpCost:
         """
         return self.__zu_0
 
+    @zu_0.setter
+    def zu_0(self, zu_0):
+        self.__zu_0 = cast_to_1d_nparray(zu_0, "zu_0")
+
     @property
     def cost_ext_fun_type_e(self):
         """Type of external function for cost at terminal shooting node (N).
@@ -432,57 +481,6 @@ class AcadosOcpCost:
         Default: :code:`casadi`.
         """
         return self.__cost_ext_fun_type_e
-
-    @cost_type_e.setter
-    def cost_type_e(self, cost_type_e):
-        if cost_type_e in self.__cost_types:
-            self.__cost_type_e = cost_type_e
-        else:
-            raise ValueError('Invalid cost_type_e value.')
-
-    @W_e.setter
-    def W_e(self, W_e):
-        self.__W_e = cast_to_2d_nparray_or_casadi_symbolic(W_e, "W_e")
-
-    @Vx_e.setter
-    def Vx_e(self, Vx_e):
-        self.__Vx_e = cast_to_2d_nparray(Vx_e, "Vx_e")
-
-    @yref_e.setter
-    def yref_e(self, yref_e):
-        self.__yref_e = cast_to_1d_nparray_or_casadi_symbolic(yref_e, "yref_e")
-
-    @Zl_e.setter
-    def Zl_e(self, Zl_e):
-        self.__Zl_e = cast_to_1d_nparray(Zl_e, "Zl_e")
-
-    @Zu_e.setter
-    def Zu_e(self, Zu_e):
-        self.__Zu_e = cast_to_1d_nparray(Zu_e, "Zu_e")
-
-    @zl_e.setter
-    def zl_e(self, zl_e):
-        self.__zl_e = cast_to_1d_nparray(zl_e, "zl_e")
-
-    @zu_e.setter
-    def zu_e(self, zu_e):
-        self.__zu_e = cast_to_1d_nparray(zu_e, "zu_e")
-
-    @Zl_0.setter
-    def Zl_0(self, Zl_0):
-        self.__Zl_0 = cast_to_1d_nparray(Zl_0, "Zl_0")
-
-    @Zu_0.setter
-    def Zu_0(self, Zu_0):
-        self.__Zu_0 = cast_to_1d_nparray(Zu_0, "Zu_0")
-
-    @zl_0.setter
-    def zl_0(self, zl_0):
-        self.__zl_0 = cast_to_1d_nparray(zl_0, "zl_0")
-
-    @zu_0.setter
-    def zu_0(self, zu_0):
-        self.__zu_0 = cast_to_1d_nparray(zu_0, "zu_0")
 
     @cost_ext_fun_type_e.setter
     def cost_ext_fun_type_e(self, cost_ext_fun_type_e):
