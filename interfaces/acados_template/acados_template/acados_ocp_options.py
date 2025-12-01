@@ -29,7 +29,7 @@
 #
 
 import os
-import warnings
+import warnings, inspect
 
 from deprecated.sphinx import deprecated
 from .utils import check_if_nparray_and_flatten
@@ -2358,3 +2358,30 @@ class AcadosOcpOptions:
 
         if self.qpscaling_scale_constraints != "NO_CONSTRAINT_SCALING" or self.qpscaling_scale_objective != "NO_OBJECTIVE_SCALING":
             raise ValueError("Parametric sensitivities are only available if no scaling is applied to the QP.")
+
+
+    @classmethod
+    def from_dict(cls, dict):
+        """
+        Load all properties from a given dictionary (obtained from loading a generated json).
+        Values that correspond to the empty list are ignored.
+        """
+
+        options = cls()
+
+        # loop over all properties
+        for attr, _ in inspect.getmembers(type(options), lambda v: isinstance(v, property)):
+
+            value = dict.get(attr)
+
+            if value is None:
+                warnings.warn(f"Attribute {attr} not in dictionary.")
+            else:
+                try:
+                    # check whether value is not the empty list
+                    if not (isinstance(value, list) and not value):
+                        setattr(options, attr, value)
+                except Exception as e:
+                    Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))
+
+        return options

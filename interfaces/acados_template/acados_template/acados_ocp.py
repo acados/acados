@@ -2557,3 +2557,21 @@ class AcadosOcp:
             lam_traj=lam_traj,
         )
         return iterate
+
+
+    @classmethod
+    def from_dict(cls, dict: dict) -> 'AcadosOcp':
+
+        ocp = cls()
+
+        for field in ('constraints', 'cost', 'solver_options', 'model', 'dims'):
+            field_dict = dict.get(field)
+
+            if field_dict is not None:
+                setattr(ocp, field, type(getattr(ocp, field)).from_dict(field_dict))
+            else:
+                raise Exception(f"Failed to load OCP from json. Field {field} is not provided.")
+
+
+        # ocp.make_consistent()
+        return ocp
