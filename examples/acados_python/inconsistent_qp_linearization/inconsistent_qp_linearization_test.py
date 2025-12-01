@@ -65,7 +65,7 @@ def test_nominal_qp():
               'max_iter':1,
               'init_iterate': np.array([-0.001])}
 
-    N = 1
+    N = 0
     ocp, ocp_solver = create_solver(params)
     xinit = params['init_iterate']
 
@@ -88,7 +88,7 @@ def test_byrd_omojokun_qps():
               'max_iter':1,
               'init_iterate': np.array([-0.001])}
 
-    N = 1
+    N = 0
     ocp, ocp_solver = create_solver(params)
     xinit = params['init_iterate']
 
@@ -170,22 +170,22 @@ def create_solver(setting):
 
     # discretization
     Tf = 1
-    N = 1
+    N = 0
 
     # cost
-    ocp.cost.cost_type_0 = 'EXTERNAL'
-    ocp.model.cost_expr_ext_cost_0 = -model.x[0]
+    ocp.cost.cost_type_e = 'EXTERNAL'
+    ocp.model.cost_expr_ext_cost_e = -model.x[0]
 
     # constraints
-    ocp.model.con_h_expr_0 = x**2
-    ocp.constraints.lh_0 = np.array([4.0])
-    ocp.constraints.uh_0 = np.array([ACADOS_INFTY])
+    ocp.model.con_h_expr_e = x**2
+    ocp.constraints.lh_e = np.array([4.0])
+    ocp.constraints.uh_e = np.array([ACADOS_INFTY])
 
     # add bounds on x
     nx = 1
-    ocp.constraints.idxbx_0 = np.array(range(nx))
-    ocp.constraints.lbx_0 = -ACADOS_INFTY * np.ones((nx))
-    ocp.constraints.ubx_0 = 1 * np.ones((nx))
+    ocp.constraints.idxbx_e = np.array(range(nx))
+    ocp.constraints.lbx_e = -ACADOS_INFTY * np.ones((nx))
+    ocp.constraints.ubx_e = 1 * np.ones((nx))
 
     ocp.solver_options = create_solver_opts(N, Tf, nlp_solver_type, max_iter, search_direction_mode)
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
@@ -194,7 +194,7 @@ def create_solver(setting):
 
 def test_convergence_of_solver(setting):
 
-    N = 1
+    N = 0
     ocp, ocp_solver = create_solver(setting)
     xinit = setting['init_iterate']
 
