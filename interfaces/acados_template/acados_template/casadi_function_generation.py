@@ -244,8 +244,6 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
     jac_ux = ca.jacobian(phi, ux)
     # generate adjoint
     adj_ux = ca.jtimes(phi, ux, lam, True)
-    # generate hessian
-    hess_ux = ca.jacobian(adj_ux, ux, {"symmetric": is_casadi_SX(x)})
 
     # set up & generate ca.Functions
     fun_name = model_name + '_dyn_disc_phi_fun'
@@ -254,8 +252,11 @@ def generate_c_code_discrete_dynamics(context: GenerateContext, model: AcadosMod
     fun_name = model_name + '_dyn_disc_phi_fun_jac'
     context.add_function_definition(fun_name, [x, u, p], [phi, jac_ux.T], model_dir, 'dyn')
 
-    fun_name = model_name + '_dyn_disc_phi_fun_jac_hess'
-    context.add_function_definition(fun_name, [x, u, lam, p], [phi, jac_ux.T, hess_ux], model_dir, 'dyn')
+    # generate hessian
+    if opts.generate_hess:
+        hess_ux = ca.jacobian(adj_ux, ux, {"symmetric": is_casadi_SX(x)})
+        fun_name = model_name + '_dyn_disc_phi_fun_jac_hess'
+        context.add_function_definition(fun_name, [x, u, lam, p], [phi, jac_ux.T, hess_ux], model_dir, 'dyn')
 
     if opts.with_solution_sens_wrt_params:
         # generate jacobian of lagrange gradient wrt p
