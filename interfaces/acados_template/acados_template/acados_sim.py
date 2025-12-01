@@ -85,20 +85,50 @@ class AcadosSimOptions:
         """Integrator type. Default: 'ERK'."""
         return self.__integrator_type
 
+    @integrator_type.setter
+    def integrator_type(self, integrator_type):
+        integrator_types = ('ERK', 'IRK', 'GNSF')
+        if integrator_type in integrator_types:
+            self.__integrator_type = integrator_type
+        else:
+            raise ValueError('Invalid integrator_type value. Possible values are:\n\n' \
+                    + ',\n'.join(integrator_types) + '.\n\nYou have: ' + integrator_type + '.\n\n')
+
     @property
     def num_stages(self):
         """Number of stages in the integrator. Default: 4"""
         return self.__sim_method_num_stages
+
+    @num_stages.setter
+    def num_stages(self, num_stages):
+        if is_scalar_integer(num_stages):
+            self.__sim_method_num_stages = num_stages
+        else:
+            raise ValueError('Invalid num_stages value. num_stages must be an integer.')
 
     @property
     def num_steps(self):
         """Number of steps in the integrator. Default: 1"""
         return self.__sim_method_num_steps
 
+    @num_steps.setter
+    def num_steps(self, num_steps):
+        if is_scalar_integer(num_steps):
+            self.__sim_method_num_steps = num_steps
+        else:
+            raise TypeError('Invalid num_steps value. num_steps must be an integer.')
+
     @property
     def newton_iter(self):
         """Number of Newton iterations in simulation method. Default: 3"""
         return self.__sim_method_newton_iter
+
+    @newton_iter.setter
+    def newton_iter(self, newton_iter):
+        if is_scalar_integer(newton_iter):
+            self.__sim_method_newton_iter = newton_iter
+        else:
+            raise TypeError('Invalid newton_iter value. newton_iter must be an integer.')
 
     @property
     def newton_tol(self):
@@ -109,30 +139,72 @@ class AcadosSimOptions:
         """
         return self.__sim_method_newton_tol
 
+    @newton_tol.setter
+    def newton_tol(self, newton_tol):
+        if isinstance(newton_tol, float):
+            self.__sim_method_newton_tol = newton_tol
+        else:
+            raise TypeError('Invalid newton_tol value. newton_tol must be a float.')
+
     @property
     def sens_forw(self):
         """Boolean determining if forward sensitivities are computed. Default: True"""
         return self.__sens_forw
+
+    @sens_forw.setter
+    def sens_forw(self, sens_forw):
+        if isinstance(sens_forw, bool):
+            self.__sens_forw = sens_forw
+        else:
+            raise ValueError('Invalid sens_forw value. sens_forw must be a Boolean.')
 
     @property
     def sens_adj(self):
         """Boolean determining if adjoint sensitivities are computed. Default: False"""
         return self.__sens_adj
 
+    @sens_adj.setter
+    def sens_adj(self, sens_adj):
+        if isinstance(sens_adj, bool):
+            self.__sens_adj = sens_adj
+        else:
+            raise ValueError('Invalid sens_adj value. sens_adj must be a Boolean.')
+
     @property
     def sens_algebraic(self):
         """Boolean determining if sensitivities wrt algebraic variables are computed. Default: False"""
         return self.__sens_algebraic
+
+    @sens_algebraic.setter
+    def sens_algebraic(self, sens_algebraic):
+        if isinstance(sens_algebraic, bool):
+            self.__sens_algebraic = sens_algebraic
+        else:
+            raise ValueError('Invalid sens_algebraic value. sens_algebraic must be a Boolean.')
 
     @property
     def sens_hess(self):
         """Boolean determining if hessians are computed. Default: False"""
         return self.__sens_hess
 
+    @sens_hess.setter
+    def sens_hess(self, sens_hess):
+        if isinstance(sens_hess, bool):
+            self.__sens_hess = sens_hess
+        else:
+            raise ValueError('Invalid sens_hess value. sens_hess must be a Boolean.')
+
     @property
     def output_z(self):
         """Boolean determining if values for algebraic variables (corresponding to start of simulation interval) are computed. Default: True"""
         return self.__output_z
+
+    @output_z.setter
+    def output_z(self, output_z):
+        if isinstance(output_z, bool):
+            self.__output_z = output_z
+        else:
+            raise ValueError('Invalid output_z value. output_z must be a Boolean.')
 
     @property
     # TODO: rename to jac_reuse
@@ -140,10 +212,22 @@ class AcadosSimOptions:
         """Integer determining if jacobians are reused (0 or 1). Default: 0"""
         return self.__sim_method_jac_reuse
 
+    @sim_method_jac_reuse.setter
+    def sim_method_jac_reuse(self, sim_method_jac_reuse):
+        # TODO: use bool
+        if sim_method_jac_reuse in (0, 1):
+            self.__sim_method_jac_reuse = sim_method_jac_reuse
+        else:
+            raise ValueError('Invalid sim_method_jac_reuse value. sim_method_jac_reuse must be 0 or 1.')
+
     @property
     def T(self):
         """Time horizon"""
         return self.__Tsim
+
+    @T.setter
+    def T(self, T):
+        self.__Tsim = T
 
     @property
     def collocation_type(self):
@@ -158,6 +242,15 @@ class AcadosSimOptions:
         """
         return self.__collocation_type
 
+    @collocation_type.setter
+    def collocation_type(self, collocation_type):
+        collocation_types = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE')
+        if collocation_type in collocation_types:
+            self.__collocation_type = collocation_type
+        else:
+            raise ValueError('Invalid collocation_type value. Possible values are:\n\n' \
+                    + ',\n'.join(collocation_types) + '.\n\nYou have: ' + collocation_type + '.\n\n')
+
     @property
     def ext_fun_compile_flags(self):
         """
@@ -167,6 +260,13 @@ class AcadosSimOptions:
         return self.__ext_fun_compile_flags
 
 
+    @ext_fun_compile_flags.setter
+    def ext_fun_compile_flags(self, ext_fun_compile_flags):
+        if isinstance(ext_fun_compile_flags, str):
+            self.__ext_fun_compile_flags = ext_fun_compile_flags
+        else:
+            raise TypeError('Invalid ext_fun_compile_flags value, expected a string.\n')
+
     @property
     def ext_fun_expand_dyn(self):
         """
@@ -175,6 +275,13 @@ class AcadosSimOptions:
         """
         return self.__ext_fun_expand_dyn
 
+
+    @ext_fun_expand_dyn.setter
+    def ext_fun_expand_dyn(self, ext_fun_expand_dyn):
+        if isinstance(ext_fun_expand_dyn, bool):
+            self.__ext_fun_expand_dyn = ext_fun_expand_dyn
+        else:
+            raise TypeError('Invalid ext_fun_expand_dyn value, expected bool.\n')
 
     @property
     @deprecated(version="0.4.0", reason="Set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
@@ -186,6 +293,14 @@ class AcadosSimOptions:
         """
         return self.__num_threads_in_batch_solve
 
+    @num_threads_in_batch_solve.setter
+    @deprecated(version="0.4.0", reason="Set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
+    def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
+        if isinstance(num_threads_in_batch_solve, int) and num_threads_in_batch_solve > 0:
+            self.__num_threads_in_batch_solve = num_threads_in_batch_solve
+        else:
+            raise ValueError('Invalid num_threads_in_batch_solve value. num_threads_in_batch_solve must be a positive integer.')
+
     @property
     def with_batch_functionality(self):
         """
@@ -194,121 +309,6 @@ class AcadosSimOptions:
         Default: False.
         """
         return self.__with_batch_functionality
-
-    @ext_fun_compile_flags.setter
-    def ext_fun_compile_flags(self, ext_fun_compile_flags):
-        if isinstance(ext_fun_compile_flags, str):
-            self.__ext_fun_compile_flags = ext_fun_compile_flags
-        else:
-            raise TypeError('Invalid ext_fun_compile_flags value, expected a string.\n')
-
-    @ext_fun_expand_dyn.setter
-    def ext_fun_expand_dyn(self, ext_fun_expand_dyn):
-        if isinstance(ext_fun_expand_dyn, bool):
-            self.__ext_fun_expand_dyn = ext_fun_expand_dyn
-        else:
-            raise TypeError('Invalid ext_fun_expand_dyn value, expected bool.\n')
-
-    @integrator_type.setter
-    def integrator_type(self, integrator_type):
-        integrator_types = ('ERK', 'IRK', 'GNSF')
-        if integrator_type in integrator_types:
-            self.__integrator_type = integrator_type
-        else:
-            raise ValueError('Invalid integrator_type value. Possible values are:\n\n' \
-                    + ',\n'.join(integrator_types) + '.\n\nYou have: ' + integrator_type + '.\n\n')
-
-    @collocation_type.setter
-    def collocation_type(self, collocation_type):
-        collocation_types = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE')
-        if collocation_type in collocation_types:
-            self.__collocation_type = collocation_type
-        else:
-            raise ValueError('Invalid collocation_type value. Possible values are:\n\n' \
-                    + ',\n'.join(collocation_types) + '.\n\nYou have: ' + collocation_type + '.\n\n')
-
-    @T.setter
-    def T(self, T):
-        self.__Tsim = T
-
-    @num_stages.setter
-    def num_stages(self, num_stages):
-        if is_scalar_integer(num_stages):
-            self.__sim_method_num_stages = num_stages
-        else:
-            raise ValueError('Invalid num_stages value. num_stages must be an integer.')
-
-    @num_steps.setter
-    def num_steps(self, num_steps):
-        if is_scalar_integer(num_steps):
-            self.__sim_method_num_steps = num_steps
-        else:
-            raise TypeError('Invalid num_steps value. num_steps must be an integer.')
-
-    @newton_iter.setter
-    def newton_iter(self, newton_iter):
-        if is_scalar_integer(newton_iter):
-            self.__sim_method_newton_iter = newton_iter
-        else:
-            raise TypeError('Invalid newton_iter value. newton_iter must be an integer.')
-
-    @newton_tol.setter
-    def newton_tol(self, newton_tol):
-        if isinstance(newton_tol, float):
-            self.__sim_method_newton_tol = newton_tol
-        else:
-            raise TypeError('Invalid newton_tol value. newton_tol must be a float.')
-
-    @sens_forw.setter
-    def sens_forw(self, sens_forw):
-        if isinstance(sens_forw, bool):
-            self.__sens_forw = sens_forw
-        else:
-            raise ValueError('Invalid sens_forw value. sens_forw must be a Boolean.')
-
-    @sens_adj.setter
-    def sens_adj(self, sens_adj):
-        if isinstance(sens_adj, bool):
-            self.__sens_adj = sens_adj
-        else:
-            raise ValueError('Invalid sens_adj value. sens_adj must be a Boolean.')
-
-    @sens_hess.setter
-    def sens_hess(self, sens_hess):
-        if isinstance(sens_hess, bool):
-            self.__sens_hess = sens_hess
-        else:
-            raise ValueError('Invalid sens_hess value. sens_hess must be a Boolean.')
-
-    @sens_algebraic.setter
-    def sens_algebraic(self, sens_algebraic):
-        if isinstance(sens_algebraic, bool):
-            self.__sens_algebraic = sens_algebraic
-        else:
-            raise ValueError('Invalid sens_algebraic value. sens_algebraic must be a Boolean.')
-
-    @output_z.setter
-    def output_z(self, output_z):
-        if isinstance(output_z, bool):
-            self.__output_z = output_z
-        else:
-            raise ValueError('Invalid output_z value. output_z must be a Boolean.')
-
-    @sim_method_jac_reuse.setter
-    def sim_method_jac_reuse(self, sim_method_jac_reuse):
-        # TODO: use bool
-        if sim_method_jac_reuse in (0, 1):
-            self.__sim_method_jac_reuse = sim_method_jac_reuse
-        else:
-            raise ValueError('Invalid sim_method_jac_reuse value. sim_method_jac_reuse must be 0 or 1.')
-
-    @num_threads_in_batch_solve.setter
-    @deprecated(version="0.4.0", reason="Set the flag with_batch_functionality instead and pass the number of threads directly to the BatchSolver.")
-    def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
-        if isinstance(num_threads_in_batch_solve, int) and num_threads_in_batch_solve > 0:
-            self.__num_threads_in_batch_solve = num_threads_in_batch_solve
-        else:
-            raise ValueError('Invalid num_threads_in_batch_solve value. num_threads_in_batch_solve must be a positive integer.')
 
     @with_batch_functionality.setter
     def with_batch_functionality(self, with_batch_functionality):
