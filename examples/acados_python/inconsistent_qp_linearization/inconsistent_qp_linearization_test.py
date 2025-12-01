@@ -106,9 +106,13 @@ def test_byrd_omojokun_qps():
     # feasibility QP solution should be (d = -10, s = 3.98)
     # here should be a test of the bounds
 
-    # nominal QP solution should be d= -10
+    # nominal QP solution should be d= -10 with N = 1
+    # nominal QP solution should be d= -20 with N = 0 
     d = iter1.x_traj[0] - iter0.x_traj[0]
-    assert np.allclose(d, -10), f"Solution should be -10, got {d}"
+    if ocp.solver_options.N_horizon == 1:
+        assert np.allclose(d, -10), f"Solution should be -10, got {d}"
+    else:
+        assert np.allclose(d, -20), f"Solution should be -20, got {d}"
 
 
 def create_solver_opts(N=1,
@@ -163,7 +167,6 @@ def create_solver(setting):
     # dynamics: identity
     model.disc_dyn_expr = x
     model.x = x
-    model.u = SX.sym('u', 0, 0) # [] / None doesnt work
     model.p = []
     model.name = f'inconsistent_qp_linearization'
     ocp.model = model
