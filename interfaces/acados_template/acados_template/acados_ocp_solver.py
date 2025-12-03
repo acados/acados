@@ -1249,14 +1249,13 @@ class AcadosOcpSolver:
                     Lr = self.get_from_qp_in(i, 'Lr')
                     R_ric = Lr @ Lr.T
                     hess_block = R_ric + B_mat.T @ P_mat @ B_mat
+
+                    # P
+                    eigv = np.linalg.eigvals(P_mat)
+                    min_eig_P_global = min(min_eig_P_global, np.min(eigv))
+                    min_abs_eig_P_global = min(min_abs_eig_P_global, np.min(np.abs(eigv)))
                 else:
                     hess_block = None
-
-                # P
-                eigv = np.linalg.eigvals(P_mat)
-                min_eig_P_global = min(min_eig_P_global, np.min(eigv))
-                min_abs_eig_P_global = min(min_abs_eig_P_global, np.min(np.abs(eigv)))
-
             else:
                 raise ValueError("Wrong input given to function! Possible inputs are FULL_HESSIAN, PROJECTED_HESSIAN")
 
