@@ -225,14 +225,14 @@ class AcadosOcpOptions:
         QPDUNES status mapping:
         ::
 
-            QPDUNES status                         | acados status
+            QPDUNES status                          | acados status
             ---------------------------------------------------------------------
             QPDUNES_OK                              | ACADOS_SUCCESS       0
             QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND     | ACADOS_MAXITER       0
             QPDUNES_ERR_ITERATION_LIMIT_REACHED     | ACADOS_MAXITER       2
             QPDUNES_ERR_DIVISION_BY_ZERO            | ACADOS_QP_FAILURE    4
             QPDUNES_ERR_STAGE_QP_INFEASIBLE         | ACADOS_INFEASIBLE    9
-            ELSE                                     | ACADOS_UNKNOWN      -1
+            ELSE                                    | ACADOS_UNKNOWN      -1
         """
         return self.__qp_solver
 
