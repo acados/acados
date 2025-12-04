@@ -2167,8 +2167,6 @@ class AcadosOcpSolver:
     def get_iterate(self, iteration: int) -> AcadosOcpIterate:
         """
         Returns the solver iterate from a given iteration (use -1 for the final one).
-
-        Returns an ``AcadosOcpIterate`` object with all primal/dual trajectories.
         Raises ``ValueError`` for invalid iteration index or disabled ``store_iterates`` option.
         """
 
@@ -2221,7 +2219,7 @@ class AcadosOcpSolver:
 
     def get_iterates(self) -> AcadosOcpIterates:
         """
-        Return all stored NLP solver iterates from 0 to ``nlp_iter`` as an ``AcadosOcpIterates`` object.
+        Return all stored NLP solver iterates from 0 to ``nlp_iter``.
         """
         return AcadosOcpIterates(iterate_list=[self.get_iterate(n) for n in range(self.get_stats('nlp_iter')+1)])
 
