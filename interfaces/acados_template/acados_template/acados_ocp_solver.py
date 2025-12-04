@@ -945,7 +945,7 @@ class AcadosOcpSolver:
         Get the last solution of the solver.
 
         :param stage: integer corresponding to shooting node
-        :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'sens_u', 'sens_pi', 'sens_x', 'sens_lam', 'sens_sl', 'sens_su']
+        :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'sens_u', 'sens_pi', 'sens_x', 'sens_lam', 'sens_sl', 'sens_su', 'S_p']
 
         .. note:: regarding lam: \n
                 the inequalities are internally organized in the following order: \n
@@ -961,7 +961,8 @@ class AcadosOcpSolver:
         out_fields = ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su']
         in_fields = ['p']
         sens_fields = ['sens_u', 'sens_x', 'sens_pi', 'sens_lam', 'sens_sl', 'sens_su']
-        all_fields = out_fields + in_fields + sens_fields
+        all_fields = out_fields + in_fields + sens_fields + ['S_p']
+        
 
         if (field_ not in all_fields):
             raise ValueError(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): \'{field_}\' is an invalid argument.'
@@ -976,6 +977,26 @@ class AcadosOcpSolver:
         if stage_ == self.N and field_ == 'pi':
             raise KeyError(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): field \'{field_}\' does not exist at final stage {stage_}.')
 
+        if field_ == 'S_p':
+            if stage_ == self.N:
+                 raise ValueError(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): field \'{field_}\' not available at final stage.')
+            
+            field = field_.encode('utf-8')
+            
+            # 1. Get dimensions
+            # Rows = dim of x_{k+1} (stored in "pi" at stage k in acados memory structure)
+            nx1 = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, "pi".encode('utf-8'))
+            # Cols = dim of p_k
+            np_ = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, "p".encode('utf-8'))
+            
+            # 2. Create output buffer (Column-major / Fortran order is usually safer for matrix transfer from C)
+            out = np.zeros((nx1, np_), dtype=np.float64, order="F")
+            out_data = cast(out.ctypes.data, POINTER(c_double))
+            
+            # 3. Call specific getter
+            self.__acados_lib.ocp_nlp_get_at_stage(self.nlp_solver, stage_, field, out_data)
+            return out
+        
         field = field_.replace('sens_', '') if field_ in sens_fields else field_
         field = field.encode('utf-8')
 

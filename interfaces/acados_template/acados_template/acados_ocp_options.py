@@ -145,6 +145,7 @@ class AcadosOcpOptions:
         self.__store_iterates: bool = False
         self.__timeout_max_time = 0.
         self.__timeout_heuristic = 'LAST'
+        self.__sens_forw_p = False
 
         # TODO: move those out? they are more about generation than about the acados OCP solver.
         env = os.environ
@@ -1408,6 +1409,18 @@ class AcadosOcpOptions:
         else:
             raise ValueError('Invalid timeout_max_time value. Expected nonnegative float.')
 
+    @property
+    def sens_forw_p(self):
+        """Boolean determining if forward parameter sensitivities are computed in the integrator. Default: False"""
+        return self.__sens_forw_p
+
+    @sens_forw_p.setter
+    def sens_forw_p(self, sens_forw_p):
+        if isinstance(sens_forw_p, bool):
+            self.__sens_forw_p = sens_forw_p
+        else:
+            raise TypeError('Invalid sens_forw_p value. Expected bool.')
+    
     @property
     def timeout_heuristic(self):
         """
