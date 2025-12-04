@@ -145,7 +145,7 @@ class AcadosModel():
 
     @property
     def x(self):
-        """CasADi variable describing the state of the system;
+        """CasADi variable describing the state of the system.
         Default: :code:`[]`
         """
         return self.__x
@@ -156,7 +156,7 @@ class AcadosModel():
 
     @property
     def xdot(self):
-        """CasADi variable describing the derivative of the state wrt time;
+        """CasADi variable describing the derivative of the state w.r.t. time.
         Default: :code:`[]`
         """
         return self.__xdot
@@ -167,7 +167,7 @@ class AcadosModel():
 
     @property
     def u(self):
-        """CasADi variable describing the derivative of the state wrt time;
+        """CasADi variable describing the control input.
         Default: :code:`[]`
         """
         return self.__u
@@ -178,7 +178,7 @@ class AcadosModel():
 
     @property
     def z(self):
-        """CasADi variable describing the algebraic variables of the DAE;
+        """CasADi variable describing the algebraic variables of the DAE.
         Default: :code:`[]`
         """
         return self.__z
@@ -809,7 +809,7 @@ class AcadosModel():
 
     @property
     def t_label(self):
-        """Label for the time variable. Default: :code:'t'"""
+        """Label for the time variable. Default: :code:`'t'`"""
         return self.__t_label
 
     @t_label.setter
