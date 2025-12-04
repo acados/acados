@@ -752,6 +752,7 @@ static void compute_next_P_matrix(struct blasfeo_dmat* P_mat, struct blasfeo_dma
                         W_mat, 0, 0, P_next_mat, 0, 0);
 }
 
+
 /**
  * @brief Sets the initial uncertainty P_0.
  *
@@ -843,8 +844,8 @@ static void update_riccati_quad_matrices(ocp_nlp_solver *solver, ocp_nlp_memory 
     // extract dim
     ocp_nlp_dims* nlp_dims = solver->dims;
     int N = nlp_dims->N;
-	int nbu = {{ dims.nbu}};
-	int nbx = {{ dims.nbx}};
+    int nbu = {{ dims.nbu}};
+    int nbx = {{ dims.nbx}};
     int ng = {{ dims.ng }};
     int nh = {{ dims.nh }};
     int nx = {{ dims.nx }};
@@ -987,7 +988,7 @@ static void update_riccati_quad_matrices_terminal(ocp_nlp_solver *solver, ocp_nl
     // extract dim
     ocp_nlp_dims* nlp_dims = solver->dims;
     int N = nlp_dims->N;
-	int nbx_e = {{ dims.nbx_e}};
+    int nbx_e = {{ dims.nbx_e}};
     int ng_e = {{ dims.ng_e }};
     int nh_e = {{ dims.nh_e }};
     int nx = {{ dims.nx }};
@@ -1173,7 +1174,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     struct blasfeo_dmat *K_mat = &custom_mem->K_mat;
 
 {%- if zoro_description.feedback_optimization_mode != "CONSTANT_FEEDBACK" %}
-    K_mat = &custom_mem->uncertainty_matrix_buffer[0];
+    K_mat = &custom_mem->riccati_K_buffer[0]; // Bug fix?
 {%- endif %}
 
     /* First Stage */
@@ -1471,34 +1472,53 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
     int nx = {{ dims.nx }};
     int nw = {{ zoro_description.nw }};
 
-{%- if zoro_description.output_P_matrices or zoro_description.output_riccati_t or zoro_description.input_W_diag and not zoro_description.input_W_add_diag -%}
-    if (data_len != {{ zoro_description.data_size }})
+    int expected_len = {{ zoro_description.data_size }};
+    int streaming = 0;
+
+    if (expected_len > 0)
     {
-        printf("custom_update_zoro: data_length does not match expected one. Got %d, expected {{ zoro_description.data_size }}\n", data_len);
-        exit(1);
+        if (data == NULL || data_len == 0)
+        {
+            // not streaming -> use build-time matrices
+            streaming = 0;
+        }
+        else if (data_len != expected_len)
+        {
+            printf("[custom_update] ERROR: payload size %d != expected %d\n", data_len, expected_len);
+            return 1;
+        }
+        else
+        {
+            streaming = 1;
+        }
     }
-{%- endif %}
 
 {%- if zoro_description.input_P0_diag or zoro_description.input_P0 %}
-    if (data_len > 0)
+    if (streaming > 0)
     {
         reset_P0_matrix(nlp_dims, &custom_mem->uncertainty_matrix_buffer[0], data);
     }
 {%- endif %}
 
 {%- if zoro_description.input_W_diag %}
-    reset_process_noise_matrix(custom_mem, nlp_dims, &custom_mem->W_mat, data);
+    if (streaming > 0)
+    {
+        reset_process_noise_matrix(custom_mem, nlp_dims, &custom_mem->W_mat, data);
+    }
 {%- endif %}
 
 {%- if zoro_description.input_W_diag and not zoro_description.input_W_add_diag %}
-    // compute GWG with updated W
-    blasfeo_dgemm_nn(nx, nw, nw, 1.0, &custom_mem->unc_jac_G_mat, 0, 0,
-                        &custom_mem->W_mat, 0, 0, 0.0,
-                        &custom_mem->temp_GW_mat, 0, 0, &custom_mem->temp_GW_mat, 0, 0);
-    // GWG_mat = temp_GW_mat * unc_jac_G_mat^T
-    blasfeo_dgemm_nt(nx, nx, nw, 1.0, &custom_mem->temp_GW_mat, 0, 0,
-                        &custom_mem->unc_jac_G_mat, 0, 0, 0.0,
-                        &custom_mem->GWG_mat, 0, 0, &custom_mem->GWG_mat, 0, 0);
+    if (streaming > 0)
+    {
+        // compute GWG with updated W
+        blasfeo_dgemm_nn(nx, nw, nw, 1.0, &custom_mem->unc_jac_G_mat, 0, 0,
+                            &custom_mem->W_mat, 0, 0, 0.0,
+                            &custom_mem->temp_GW_mat, 0, 0, &custom_mem->temp_GW_mat, 0, 0);
+        // GWG_mat = temp_GW_mat * unc_jac_G_mat^T
+        blasfeo_dgemm_nt(nx, nx, nw, 1.0, &custom_mem->temp_GW_mat, 0, 0,
+                            &custom_mem->unc_jac_G_mat, 0, 0, 0.0,
+                            &custom_mem->GWG_mat, 0, 0, &custom_mem->GWG_mat, 0, 0);
+    }
 {%- endif %}
 
 {%- if zoro_description.feedback_optimization_mode != "CONSTANT_FEEDBACK" %}
@@ -1511,18 +1531,24 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
 
 
 {%- if zoro_description.output_P_matrices %}
-    for (int i = 0; i < N+1; ++i)
+    if (streaming > 0)
     {
-        blasfeo_unpack_dmat(nx, nx, &custom_mem->uncertainty_matrix_buffer[i], 0, 0,
-                    &data[custom_mem->offset_P_out + i * nx * nx], nx);
+        for (int i = 0; i < N+1; ++i)
+        {
+            blasfeo_unpack_dmat(nx, nx, &custom_mem->uncertainty_matrix_buffer[i], 0, 0,
+                        &data[custom_mem->offset_P_out + i * nx * nx], nx);
+        }
+        {%- if zoro_description.output_riccati_t %}
+            data[custom_mem->offset_P_out + (N+1) * nx * nx] = time_riccati;
+        {%- endif %}
     }
-    {%- if zoro_description.output_riccati_t %}
-        data[custom_mem->offset_P_out + (N+1) * nx * nx] = time_riccati;
-    {%- endif %}
 {%- else %}
+    if (streaming > 0)
+    {
     {%- if zoro_description.output_riccati_t %}
         data[custom_mem->offset_P_out] = time_riccati;
     {%- endif %}
+    }
 {%- endif %}
 
     return 1;
@@ -1535,6 +1561,49 @@ int custom_update_terminate_function({{ model.name }}_solver_capsule* capsule)
 
     free(mem->raw_memory);
     return 1;
+
+}
+
+/* Flatten all P_k (k = 0..N) from uncertainty_matrix_buffer into P_out.
+ * Layout: [P_0(:); P_1(:); ...; P_N(:)] in column-major blocks of size nx*nx.
+ * P_out_len must be at least (N+1)*nx*nx.
+ */
+int {{ model.name }}_acados_get_zoRO_P_matrices({{ model.name }}_solver_capsule* capsule, double *P_out, int P_out_len)
+{
+    if (capsule == NULL)
+    {
+        printf("[custom_update:get_P] ERROR: capsule is NULL\n");
+        return 1;
+    }
+
+    custom_memory *custom_mem = (custom_memory *) capsule->custom_update_memory;
+    if (custom_mem == NULL)
+    {
+        printf("[custom_update:get_P] ERROR: custom_update_memory is NULL\n");
+        return 1;
+    }
+
+    ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(capsule);
+    int N  = nlp_dims->N;
+    int nx = nlp_dims->nx[0];
+    int needed = (N + 1) * nx * nx;
+
+    if (P_out == NULL || P_out_len < needed)
+    {
+        printf("[custom_update:get_P] ERROR: output buffer too small (have %d, need %d)\n",
+               P_out_len, needed);
+        return 1;
+    }
+
+    double *dst = P_out;
+    for (int stage = 0; stage <= N; stage++)
+    {
+        struct blasfeo_dmat *P_stage = &custom_mem->uncertainty_matrix_buffer[stage];
+        blasfeo_unpack_dmat(nx, nx, P_stage, 0, 0, dst, nx);
+        dst += nx * nx;
+    }
+
+    return 0;
 }
 
 // useful prints for debugging

@@ -16,7 +16,8 @@
         "CPU_time_qp": 0,
         "CPU_time_lin": 0,
         "sqp_iter": 1,
-        "parameter_traj": 0
+        "parameter_traj": 0,
+        "zoRO_P_matrices": 0
     },
     "inputs": {
         "lbx_0": 1,
@@ -54,7 +55,8 @@
         "pi_init": 0,
         "slacks_init": 0,
         "rti_phase": 0,
-        "levenberg_marquardt": 0
+        "levenberg_marquardt": 0,
+        "zoRO_payload": 0
     },
     "samplingtime": "t0",
     "generate_simulink_block": 1,

@@ -980,7 +980,7 @@ class AcadosOcpSolver:
         out_fields = ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su']
         in_fields = ['p']
         sens_fields = ['sens_u', 'sens_x', 'sens_pi', 'sens_lam', 'sens_sl', 'sens_su']
-        all_fields = out_fields + in_fields + sens_fields + ['S_p']
+        all_fields = out_fields + in_fields + sens_fields + ['S_p', 'zoRO_Pk_mats']
 
 
         if (field_ not in all_fields):
@@ -996,6 +996,21 @@ class AcadosOcpSolver:
         if stage_ == self.N and field_ == 'pi':
             raise KeyError(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): field \'{field_}\' does not exist at final stage {stage_}.')
 
+        if field_ == "zoRO_Pk_mats":
+            field = field_.encode('utf-8')
+
+            # Get dimension nx at the current stage
+            nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, "x".encode('utf-8'))
+
+            # Allocate column-major array for BLASFEO compatibility
+            out = np.zeros((nx, nx), dtype=np.float64, order="F")
+            out_data = cast(out.ctypes.data, POINTER(c_double))
+
+            # Call the specific getter (ocp_nlp_get_at_stage)
+            self.__acados_lib.ocp_nlp_get_at_stage(self.nlp_solver, stage_, field, out_data)
+
+            return out
+
         if field_ == 'S_p':
             if stage_ == self.N:
                  raise ValueError(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): field \'{field_}\' not available at final stage.')
@@ -1007,8 +1022,7 @@ class AcadosOcpSolver:
             nx1 = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, "pi".encode('utf-8'))
             # Cols = dim of p_k
             np_ = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, "p".encode('utf-8'))
-
-            # 2. Create output buffer (Column-major / Fortran order is usually safer for matrix transfer from C)
+            # 2. Create output buffer
             out = np.zeros((nx1, np_), dtype=np.float64, order="F")
             out_data = cast(out.ctypes.data, POINTER(c_double))
 
