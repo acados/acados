@@ -60,16 +60,20 @@ def plot_convergence(residuals: list,
                      figsize: tuple = (4.5, 3.0),
                      fig_filename: str = None,
                      title: str = None,
+                     linestyle_list: Optional[List[str]] = None,
                      show_plot: bool = True):
     latexify_plot()
 
     assert len(residuals) == len(list_labels), f"Lists of data and labels do not have the same length, got {len(residuals)} and {len(list_labels)}"
 
+    if linestyle_list is None:
+        linestyle_list = len(residuals) * ['-', '--', '-.', ':']
+
     plt.figure(figsize=figsize)
     for i in range(len(residuals)):
         iters = np.arange(0, len(residuals[i]))
         data = np.array(residuals[i]).squeeze()
-        plt.semilogy(iters, data, label=list_labels[i])
+        plt.semilogy(iters, data, label=list_labels[i], linestyle=linestyle_list[i])
     plt.legend(loc='best')
     plt.xlabel("iteration number")
     plt.ylabel("KKT residual norm")
