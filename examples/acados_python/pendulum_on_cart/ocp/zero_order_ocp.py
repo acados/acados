@@ -185,8 +185,9 @@ def main(save_figures=False):
         show_plot=False,
         single_column=True,
         bbox_to_anchor=(.7, 0.),
-        figsize=(4, 4),
+        figsize=(3., 2.5),
         ncol_legend=1,
+        color_list=['C2', 'C3'],
         fig_filename=traj_fig_filename,
     )
 
@@ -196,7 +197,7 @@ def main(save_figures=False):
         kkt_norm_list[idx_plot_conv],
         labels[idx_plot_conv],
         show_plot=False,
-        figsize=(4, 4),
+        figsize=(2.8, 3.5),
         fig_filename=conv_fig_filename,
         )
     plt.show()
