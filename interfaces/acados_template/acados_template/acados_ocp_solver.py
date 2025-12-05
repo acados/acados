@@ -2164,6 +2164,10 @@ class AcadosOcpSolver:
         return out
 
     def get_iterate(self, iteration: int) -> AcadosOcpIterate:
+        """
+        Returns the solver iterate from a given iteration (use -1 for the final one).
+        Raises ``ValueError`` for invalid iteration index or disabled ``store_iterates`` option.
+        """
 
         nlp_iter = self.get_stats('nlp_iter')
         if iteration < -1 or iteration > nlp_iter:
@@ -2213,6 +2217,9 @@ class AcadosOcpSolver:
 
 
     def get_iterates(self) -> AcadosOcpIterates:
+        """
+        Return all stored NLP solver iterates from 0 to ``nlp_iter``.
+        """
         return AcadosOcpIterates(iterate_list=[self.get_iterate(n) for n in range(self.get_stats('nlp_iter')+1)])
 
 
