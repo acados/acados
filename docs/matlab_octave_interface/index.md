@@ -36,8 +36,8 @@ Afterwards, launch `MATLAB` or `Octave` from the same shell.
 If you want to run the examples in a different folder, please close the current shell and open a new one to repeat the procedure: this ensures the correct setting of the environment variables.
 
 ### Windows
-1. Open `MATLAB` and navigate into [`<acados_root>/interfaces/acados_matlab_octave`](https://github.com/acados/acados/blob/main/interfaces/acados_matlab_octave).
-2. Run [`acados_env_variables_windows`](https://github.com/acados/acados/blob/main/interfaces/acados_matlab_octave/acados_env_variables_windows.m) to export the environment variable `ACADOS_INSTALL_DIR`.
+1. Open `MATLAB` and navigate into [`<acados_root>/examples/acados_matlab_octave`](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave).
+2. Run [`acados_env_variables_windows`](https://github.com/acados/acados/blob/main/examples/acados_matlab_octave/acados_env_variables_windows.m) to export the environment variable `ACADOS_INSTALL_DIR`.
 3. Navigate into [`<acados_root>/examples/acados_matlab_octave/getting_started`](https://github.com/acados/acados/tree/main/examples/acados_matlab_octave/getting_started) and run one of the examples.
 
 
