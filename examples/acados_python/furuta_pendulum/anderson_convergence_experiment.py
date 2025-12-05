@@ -187,7 +187,7 @@ def main(
     plot_convergence(
         kkt_norm_list,
         labels,
-        figsize=(7.0, 4.0),
+        figsize=(4.0, 4.0),
         fig_filename=(
             f"convergence_{'slack' if with_abs_cost else ''}_{variant}_{tol}_furuta.png"
             if store_plots
@@ -226,6 +226,65 @@ def main(
         plt.show()
 
 
+
+def main_aa_paper_plots(
+    anderson_settings: list,
+    variant: str = "GAUSS_NEWTON",
+    store_plots: bool = False,
+    with_abs_cost: bool = True,
+    tol: float = 1e-8,
+):
+    # test with anderson acceleration
+    kkt_norm_list = []
+    contraction_rates_list = []
+    sol_list = []
+    labels = []
+    if variant == "GAUSS_NEWTON":
+        base_label = "GN"
+    elif variant == "EXACT":
+        base_label = "project exact Hessian"
+    else:
+        raise ValueError(f"Unknown variant: {variant}")
+
+    solver = create_solver(variant, tol, with_abs_cost)
+
+    initial_guess = solver.store_iterate_to_flat_obj()
+
+    for anderson_activation_threshold in anderson_settings:
+
+        sol, kkt_norms = test_solver(
+            solver, initial_guess, anderson_activation_threshold
+        )
+        # compute contraction rates
+        contraction_rates = kkt_norms[1:-1] / kkt_norms[0:-2]
+        # append results
+        kkt_norm_list.append(kkt_norms)
+        contraction_rates_list.append(contraction_rates)
+        sol_list.append(sol)
+        if anderson_activation_threshold <= 0.0:
+            label = base_label
+        elif anderson_activation_threshold == ACADOS_INFTY:
+            label = "AA(1)"
+        else:
+            label = f"AA(1) $\delta_" + r"{AA}=" + f"{anderson_activation_threshold}$"
+        labels.append(label)
+
+    # plot results
+    plot_convergence(
+        kkt_norm_list,
+        labels,
+        figsize=(4., 3.8) if tol < 1e-3 else (2.6, 3.8),
+        fig_filename=(
+            f"convergence_{'slack' if with_abs_cost else ''}_{variant}_{tol}_furuta.pdf"
+            if store_plots
+            else None
+        ),
+        ylim=(tol, 1e3),
+        show_legend=False if tol > 1e-3 else True,
+        show_y_label=False if tol > 1e-3 else True,
+        show_plot=False,
+    )
+
 if __name__ == "__main__":
     plot_trajectory = False
     store_plots = True
@@ -236,4 +295,7 @@ if __name__ == "__main__":
     main(anderson_settings, "EXACT", plot_trajectory=plot_trajectory, store_plots=store_plots)
     # Below case shows that AA with very loose tolerance can slow down convergence.
     main(anderson_settings, "EXACT", plot_trajectory=plot_trajectory, tol=1e-1, ignore_checks=True, store_plots=store_plots)
+
+    # main_aa_paper_plots(anderson_settings, "EXACT", store_plots=store_plots)
+    # main_aa_paper_plots(anderson_settings, "EXACT", tol=1e-1, store_plots=store_plots)
     plt.show()
