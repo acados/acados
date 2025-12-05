@@ -94,9 +94,9 @@ jobs:
         command: |
             cd ${{runner.workspace}}/acados/.github/windows
             setup_mingw
-            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave
+            cd ${{runner.workspace}}/acados/interfaces/acados_matlab_octave
             acados_env_variables_windows
-            cd getting_started
+            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/getting_started
             minimal_example_ocp
 
     - name: Run minimal Simulink example
@@ -106,9 +106,9 @@ jobs:
         command: |
             cd ${{runner.workspace}}/acados/.github/windows
             setup_mingw
-            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave
+            cd ${{runner.workspace}}/acados/interfaces/acados_matlab_octave
             acados_env_variables_windows
-            cd test
+            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
             simulink_test
 
     # - name: Run MATLAB tests with new CasADi
@@ -118,7 +118,7 @@ jobs:
     #     command: |
     #         cd ${{runner.workspace}}/acados/.github/windows
     #         setup_mingw
-    #         cd ${{runner.workspace}}/acados/examples/acados_matlab_octave
+    #         cd ${{runner.workspace}}/acados/interfaces/acados_matlab_octave
     #         acados_env_variables_windows
     #         cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/p_global_example
     #         main
@@ -130,7 +130,7 @@ jobs:
         command: |
             cd ${{runner.workspace}}/acados/.github/windows
             setup_mingw
-            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave
+            cd ${{runner.workspace}}/acados/interfaces/acados_matlab_octave
             acados_env_variables_windows
             cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/pendulum_on_cart_model
             main_slack_min_formulations
@@ -146,7 +146,7 @@ jobs:
     #     command: |
     #         cd ${{runner.workspace}}/acados/.github/windows
     #         setup_mingw
-    #         cd ${{runner.workspace}}/acados/examples/acados_matlab_octave
+    #         cd ${{runner.workspace}}/acados/interfaces/acados_matlab_octave
     #         acados_env_variables_windows
     #         cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/p_global_example
     #         simulink_test_p_global

@@ -101,13 +101,13 @@ function acados_install_windows(varargin)
 
     %% Download external dependencies
     % casadi
-    fprintf('Downloading casadi\n');
+    fprintf('Downloading CasADi...\n');
     addpath(fullfile(acadosPath, 'interfaces', 'acados_matlab_octave'));
     run('acados_env_variables_windows');
     check_acados_requirements(true);
 
     %% renderer
-    fprintf('Install the template renderer\n');
+    fprintf('Installing the template renderer...\n');
     acados_root_dir = getenv('ACADOS_INSTALL_DIR');
     %% check if t_renderer is available -> download if not
     t_renderer_location = fullfile(acados_root_dir, 'bin', 't_renderer.exe');
@@ -116,4 +116,5 @@ function acados_install_windows(varargin)
         set_up_t_renderer( t_renderer_location )
     end
 
+    fprintf('acados was installed successfully!\n');
 end
