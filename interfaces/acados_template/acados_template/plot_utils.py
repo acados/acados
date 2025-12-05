@@ -61,7 +61,13 @@ def plot_convergence(residuals: list,
                      fig_filename: str = None,
                      title: str = None,
                      linestyle_list: Optional[List[str]] = None,
-                     show_plot: bool = True):
+                     show_plot: bool = True,
+                     show_legend: bool = True,
+                     show_y_label: bool = True,
+                     legend_loc: str = 'best',
+                     legend_handlelength: float = 1.0,
+                     legend_handletextpad: float = 0.4,
+                     ):
     latexify_plot()
 
     assert len(residuals) == len(list_labels), f"Lists of data and labels do not have the same length, got {len(residuals)} and {len(list_labels)}"
@@ -74,9 +80,11 @@ def plot_convergence(residuals: list,
         iters = np.arange(0, len(residuals[i]))
         data = np.array(residuals[i]).squeeze()
         plt.semilogy(iters, data, label=list_labels[i], linestyle=linestyle_list[i])
-    plt.legend(loc='best')
+    if show_legend:
+        plt.legend(handlelength=legend_handlelength, handletextpad=legend_handletextpad, loc=legend_loc)
     plt.xlabel("iteration number")
-    plt.ylabel("KKT residual norm")
+    if show_y_label:
+        plt.ylabel("KKT residual norm")
     if ylim is not None:
         plt.ylim(ylim)
     if xlim is not None:
