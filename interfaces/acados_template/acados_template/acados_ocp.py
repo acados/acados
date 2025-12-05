@@ -1110,7 +1110,7 @@ class AcadosOcp:
             if opts.N_horizon > 0:
                 fields_to_check = ['lbx_0', 'ubx_0', 'lbx', 'ubx', 'lbx_e', 'ubx_e', 'lg', 'ug', 'lg_e', 'ug_e', 'lh', 'uh', 'lh_e', 'uh_e', 'lbu', 'ubu', 'lphi', 'uphi', 'lphi_e', 'uphi_e']
             else:
-                fields_to_check = ['lbx_0', 'ubx_0', 'lbx_e', 'ubx_e', 'lg_e', 'ug_e', 'lh_e', 'uh_e''lphi_e', 'uphi_e']
+                fields_to_check = ['lbx_0', 'ubx_0', 'lbx_e', 'ubx_e', 'lg_e', 'ug_e', 'lh_e', 'uh_e', 'lphi_e', 'uphi_e']
             for field in fields_to_check:
                 bound = getattr(constraints, field)
                 if any(bound >= ACADOS_INFTY) or any(bound <= -ACADOS_INFTY):

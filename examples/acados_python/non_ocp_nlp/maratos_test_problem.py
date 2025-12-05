@@ -91,7 +91,7 @@ def solve_maratos_problem_with_setting(setting):
     ocp.model.name = f'maratos_problem'
 
     # discretization
-    N = 1
+    N = 0
     ocp.solver_options.N_horizon = N
 
     if N == 0:
