@@ -2148,7 +2148,6 @@ class AcadosOcp:
         model = self.model
         cost = self.cost
         constraints = self.constraints
-        new_constraints = AcadosOcpConstraints()
 
         if keep_cost:
             # initial stage - if not set, copy fields from path constraints
@@ -2188,11 +2187,6 @@ class AcadosOcp:
             for i in range(casadi_length(constr_expr)):
                 self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper_bound[i], lower_bound=lower_bound[i])
 
-        model.con_h_expr = []
-        model.con_phi_expr = []
-        model.con_r_expr = []
-        model.con_r_in_phi = []
-
         # formulate **terminal** constraints as L2 penalties
         expr_bound_list_e = [
             (model.x[constraints.idxbx_e], constraints.lbx_e, constraints.ubx_e),
@@ -2208,11 +2202,6 @@ class AcadosOcp:
             for i in range(casadi_length(constr_expr)):
                 self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper_bound[i], lower_bound=lower_bound[i], constraint_type="terminal")
 
-        model.con_h_expr_e = []
-        model.con_phi_expr_e = []
-        model.con_r_expr_e = []
-        model.con_r_in_phi_e = []
-
         # Convert initial conditions to l2 penalty
         # Expressions for control constraints on u
         expr_bound_list_0 = [
@@ -2224,10 +2213,9 @@ class AcadosOcp:
         if (keep_x0 or parametric_x0) and not constraints.has_x0:
             raise NotImplementedError("translate_to_feasibility_problem: options keep_x0, parametric_x0 not defined for problems without x0 constraints.")
         if parametric_x0 and keep_x0:
-            raise NotImplementedError("translate_to_feasibility_problem: parametric_x0 and keep cannot both be True.")
-        if keep_x0:
-            new_constraints.x0 = constraints.lbx_0
-        elif parametric_x0:
+            raise NotImplementedError("translate_to_feasibility_problem: parametric_x0 and keep_x0 cannot both be True.")
+
+        if parametric_x0:
             symbol = model.get_casadi_symbol()
             param_x0 = symbol('param_x0', len(constraints.idxbx_0))
             new_params = constraints.lbx_0
@@ -2246,10 +2234,35 @@ class AcadosOcp:
             for i in range(casadi_length(constr_expr)):
                 self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper_bound[i], lower_bound=lower_bound[i], constraint_type="initial")
 
-        model.con_h_expr_0 = []
-        model.con_phi_expr_0 = []
-        model.con_r_expr_0 = []
-        model.con_r_in_phi_0 = []
+        self.remove_all_constraints(keep_x0=keep_x0)
+
+
+    def remove_all_constraints(self, keep_x0: bool = False) -> None:
+        """
+        Remove all constraints from the OCP optionally keeping the x0 constraint.
+        """
+        self.model.con_h_expr = []
+        self.model.con_phi_expr = []
+        self.model.con_r_expr = []
+        self.model.con_r_in_phi = []
+
+        self.model.con_h_expr_e = []
+        self.model.con_phi_expr_e = []
+        self.model.con_r_expr_e = []
+        self.model.con_r_in_phi_e = []
+
+        self.model.con_h_expr_0 = []
+        self.model.con_phi_expr_0 = []
+        self.model.con_r_expr_0 = []
+        self.model.con_r_in_phi_0 = []
+
+        new_constraints = AcadosOcpConstraints()
+
+        if keep_x0 and not self.constraints.has_x0:
+            raise NotImplementedError("translate_to_feasibility_problem: options keep_x0, parametric_x0 not defined for problems without x0 constraints.")
+
+        if keep_x0:
+            new_constraints.x0 = self.constraints.x0
 
         # delete constraint fromulation from constraints object
         self.constraints = new_constraints
