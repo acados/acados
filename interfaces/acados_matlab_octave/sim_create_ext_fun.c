@@ -46,7 +46,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     /* LHS */
     // field names of output struct
-    char *fieldnames[13];
+    char *fieldnames[14];
     fieldnames[0] = (char*)mxMalloc(50);
     fieldnames[1] = (char*)mxMalloc(50);
     fieldnames[2] = (char*)mxMalloc(50);
@@ -60,6 +60,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     fieldnames[10] = (char*)mxMalloc(50);
     fieldnames[11] = (char*)mxMalloc(50);
     fieldnames[12] = (char*)mxMalloc(50);
+	fieldnames[13] = (char*)mxMalloc(50); // dyn_expl_vde_forw_p
 
     memcpy(fieldnames[0],"dyn_expl_ode_fun",sizeof("dyn_expl_ode_fun"));
     memcpy(fieldnames[1],"dyn_expl_vde_forw",sizeof("dyn_expl_vde_forw"));
@@ -74,9 +75,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     memcpy(fieldnames[10],"dyn_gnsf_phi_fun",sizeof("dyn_gnsf_phi_fun"));
     memcpy(fieldnames[11],"dyn_gnsf_phi_fun_jac_y",sizeof("dyn_gnsf_phi_fun_jac_y"));
     memcpy(fieldnames[12],"dyn_gnsf_phi_jac_y_uhat",sizeof("dyn_gnsf_phi_jac_y_uhat"));
+	memcpy(fieldnames[13],"dyn_expl_vde_forw_p",sizeof("dyn_expl_vde_forw_p")); // param-direction VDE
 
     // create output struct
-    plhs[0] = mxCreateStructMatrix(1, 1, 13, (const char **) fieldnames);
+    plhs[0] = mxCreateStructMatrix(1, 1, 14, (const char **) fieldnames);
 
     mxFree( fieldnames[0] );
     mxFree( fieldnames[1] );
@@ -91,6 +93,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxFree( fieldnames[10] );
     mxFree( fieldnames[11] );
     mxFree( fieldnames[12] );
+	mxFree( fieldnames[13] ); // dyn_expl_vde_forw_p
 
 //    mxSetField(plhs[0], 0, "dyn_impl_dae_fun", NULL );
 
@@ -109,6 +112,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxSetField(plhs[0], 0, "dyn_gnsf_phi_fun", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
     mxSetField(plhs[0], 0, "dyn_gnsf_phi_fun_jac_y", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
     mxSetField(plhs[0], 0, "dyn_gnsf_phi_jac_y_uhat", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
+	mxSetField(plhs[0], 0, "dyn_expl_vde_forw_p", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL)); // param-direction VDE
 
     return;
 

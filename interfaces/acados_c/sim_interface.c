@@ -177,6 +177,11 @@ void sim_dims_get_from_attr(sim_config *config, void *dims, const char *field, i
         sim_dims_get(config, dims, "nu", &dims_out[1]);
         dims_out[1] += dims_out[0];
     }
+	else if (!strcmp(field, "S_p"))
+    {
+        sim_dims_get(config, dims, "nx", &dims_out[0]);
+        sim_dims_get(config, dims, "np", &dims_out[1]);
+    }
     else if (!strcmp(field, "S_hess"))
     {
         sim_dims_get(config, dims, "nx", &dims_out[0]);

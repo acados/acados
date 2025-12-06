@@ -85,7 +85,7 @@ cdef class AcadosSimSolverCython:
         self.__get_pointers_solver()
 
         self.gettable_vectors = ['x', 'u', 'z', 'S_adj']
-        self.gettable_matrices = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic']
+        self.gettable_matrices = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic', 'S_p']
         self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
 
     def __get_pointers_solver(self):
@@ -229,7 +229,7 @@ cdef class AcadosSimSolverCython:
             :param field: string in ['sens_forw', 'sens_adj', 'sens_hess']
             :param value: Boolean
         """
-        fields = ['sens_forw', 'sens_adj', 'sens_hess']
+        fields = ['sens_forw', 'sens_adj', 'sens_hess', 'sens_forw_p']
         if field_ not in fields:
             raise ValueError(f"field {field_} not supported. Supported values are {', '.join(fields)}.\n")
 

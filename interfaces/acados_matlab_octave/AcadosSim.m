@@ -129,6 +129,9 @@ classdef AcadosSim < handle
             if ~islogical(opts.sens_forw)
                 error('sens_forw should be a boolean.');
             end
+            if ~islogical(opts.sens_forw_p)
+                error('sens_forw_p should be a boolean.');
+            end
             if ~islogical(opts.sens_adj)
                 error('sens_adj should be a boolean.');
             end
