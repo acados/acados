@@ -49,7 +49,7 @@ from .ros2.ocp_node import AcadosOcpRosOptions
 
 from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
                     get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square, ns_from_idxs_rev,
-                    check_casadi_version, ACADOS_INFTY)
+                    check_casadi_version, cast_to_1d_nparray, ACADOS_INFTY)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
 from .zoro_description import ZoroDescription
@@ -131,13 +131,7 @@ class AcadosOcp:
 
     @parameter_values.setter
     def parameter_values(self, parameter_values):
-        if isinstance(parameter_values, np.ndarray):
-            if not is_column(parameter_values):
-                raise ValueError("parameter_values should be column vector.")
-            self.__parameter_values = parameter_values
-        else:
-            raise ValueError('Invalid parameter_values value. ' +
-                            f'Expected numpy array, got {type(parameter_values)}.')
+        self.__parameter_values = cast_to_1d_nparray(parameter_values, 'parameter_values')
 
     @property
     def p_global_values(self):
@@ -2564,14 +2558,16 @@ class AcadosOcp:
 
         ocp = cls()
 
-        for field in ('constraints', 'cost', 'solver_options', 'model', 'dims'):
-            field_dict = dict.get(field)
+        for field in dict.keys():
+            if field in ('constraints', 'cost', 'solver_options', 'model', 'dims'):
+                field_dict = dict.get(field)
 
-            if field_dict is not None:
-                setattr(ocp, field, type(getattr(ocp, field)).from_dict(field_dict))
+                if field_dict is not None:
+                    setattr(ocp, field, type(getattr(ocp, field)).from_dict(field_dict))
+                else:
+                    raise Exception(f"Failed to load OCP from json. Field {field} is not provided.")
             else:
-                raise Exception(f"Failed to load OCP from json. Field {field} is not provided.")
-
+                setattr(ocp, field, dict.get(field))
 
         # ocp.make_consistent()
         return ocp

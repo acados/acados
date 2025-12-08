@@ -2382,6 +2382,6 @@ class AcadosOcpOptions:
                     if not (isinstance(value, list) and not value):
                         setattr(options, attr, value)
                 except Exception as e:
-                    Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))
+                    ValueError("Failed to load attribute {attr} from dictionary:\n" + repr(e))
 
         return options
