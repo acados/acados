@@ -32,7 +32,7 @@ import os
 import warnings, inspect
 
 from deprecated.sphinx import deprecated
-from .utils import check_if_nparray_and_flatten
+from .utils import check_if_nparray_and_flatten, cast_to_1d_nparray, use_int_or_cast_to_1d_nparray
 
 INTEGRATOR_TYPES = ('ERK', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK')
 COLLOCATION_TYPES = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA')
@@ -858,8 +858,7 @@ class AcadosOcpOptions:
 
     @sim_method_num_stages.setter
     def sim_method_num_stages(self, sim_method_num_stages):
-        # NOTE: checks in make_consistent
-        self.__sim_method_num_stages = sim_method_num_stages
+        self.__sim_method_num_stages = use_int_or_cast_to_1d_nparray(sim_method_num_stages, 'sim_method_num_stages')
 
     @property
     def sim_method_num_steps(self):
@@ -872,9 +871,7 @@ class AcadosOcpOptions:
 
     @sim_method_num_steps.setter
     def sim_method_num_steps(self, sim_method_num_steps):
-        # NOTE: checks in make_consistent
-        self.__sim_method_num_steps = sim_method_num_steps
-
+        self.__sim_method_num_steps = use_int_or_cast_to_1d_nparray(sim_method_num_steps, 'sim_method_num_steps')
 
     @property
     def sim_method_newton_iter(self):
@@ -921,7 +918,7 @@ class AcadosOcpOptions:
 
     @sim_method_jac_reuse.setter
     def sim_method_jac_reuse(self, sim_method_jac_reuse):
-        self.__sim_method_jac_reuse = sim_method_jac_reuse
+        self.__sim_method_jac_reuse = use_int_or_cast_to_1d_nparray(sim_method_jac_reuse, 'sim_method_jac_reuse')
 
     @property
     def qp_solver_tol_stat(self):
