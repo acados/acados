@@ -142,14 +142,16 @@ class AcadosOcp:
 
     @p_global_values.setter
     def p_global_values(self, p_global_values):
-        if isinstance(p_global_values, np.ndarray):
-            if not is_column(p_global_values):
-                raise ValueError("p_global_values should be column vector.")
+        self.__p_global_values = cast_to_1d_nparray(p_global_values, 'p_global_values')
 
-            self.__p_global_values = p_global_values
-        else:
-            raise ValueError('Invalid p_global_values value. ' +
-                            f'Expected numpy array, got {type(p_global_values)}.')
+    @property
+    def name(self):
+        """Name of the OCP."""
+        return self.__name
+
+    @name.setter
+    def name(self, name):
+        self.__name = name
 
     @property
     def json_file(self):
