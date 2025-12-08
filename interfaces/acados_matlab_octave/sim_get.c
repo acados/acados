@@ -69,7 +69,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int nx; sim_dims_get(config, dims, "nx", &nx);
     int nu; sim_dims_get(config, dims, "nu", &nu);
     int nz; sim_dims_get(config, dims, "nz", &nz);
-
+    int np; sim_dims_get(config, dims, "np", &np);
 
     if (!strcmp(field, "xn") || !strcmp(field, "x"))
     {
@@ -119,6 +119,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *S_algebraic = mxGetPr( plhs[0] );
         sim_out_get(config, dims, out, "S_algebraic", S_algebraic);
     }
+    else if (!strcmp(field, "S_p")) 
+    {	// S_p: [nx x np] per-stage parameter sensitivity
+        plhs[0] = mxCreateNumericMatrix(nx, np, mxDOUBLE_CLASS, mxREAL);
+        double *Sp = mxGetPr( plhs[0] );
+        sim_out_get(config, dims, out, "S_p", Sp);
+    }
     else if (!strcmp(field, "time_tot"))
     {
         plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
@@ -140,7 +146,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else
     {
         MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field,
-             "xn, x, zn, z, S_forw, Sx, Su, S_hess, S_algebraic, time_tot, time_la, time_ad");
+             "xn, x, zn, z, S_forw, Sx, Su, S_p, S_hess, S_algebraic, time_tot, time_la, time_ad");
     }
 
     return;
