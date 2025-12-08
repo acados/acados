@@ -4,7 +4,7 @@ import numpy as np
 from acados_template import AcadosOcp, AcadosOcpSolver
 
 
-def test_render_json(json_file):
+def create_solver_from_json(json_file):
 
     # load json, store options in object
     with open(json_file, 'r') as f:
@@ -16,9 +16,13 @@ def test_render_json(json_file):
 
     ocp.render_templates()
 
-    # solver = AcadosOcpSolver(ocp)
+    solver = AcadosOcpSolver(ocp)
+    solver.solve()
+    solver.print_statistics()
+
+    print("create_solver_from_json passed.")
 
 
 if __name__ == "__main__":
     json_file = "acados_ocp.json"
-    test_render_json(json_file)
+    create_solver_from_json(json_file)
