@@ -703,6 +703,13 @@ class AcadosOcpOptions:
         """
         return self.__nlp_qp_tol_min_stat
 
+    @nlp_qp_tol_min_stat.setter
+    def nlp_qp_tol_min_stat(self, nlp_qp_tol_min_stat):
+        if isinstance(nlp_qp_tol_min_stat, float) and nlp_qp_tol_min_stat > 0:
+            self.__nlp_qp_tol_min_stat = nlp_qp_tol_min_stat
+        else:
+            raise ValueError('Invalid nlp_qp_tol_min_stat value. nlp_qp_tol_min_stat must be a positive float.')
+
     @property
     def nlp_qp_tol_min_eq(self):
         """
@@ -711,6 +718,13 @@ class AcadosOcpOptions:
         Default: 1e-10.
         """
         return self.__nlp_qp_tol_min_eq
+
+    @nlp_qp_tol_min_eq.setter
+    def nlp_qp_tol_min_eq(self, nlp_qp_tol_min_eq):
+        if isinstance(nlp_qp_tol_min_eq, float) and nlp_qp_tol_min_eq > 0:
+            self.__nlp_qp_tol_min_eq = nlp_qp_tol_min_eq
+        else:
+            raise ValueError('Invalid nlp_qp_tol_min_eq value. nlp_qp_tol_min_eq must be a positive float.')
 
     @property
     def nlp_qp_tol_min_ineq(self):
@@ -721,6 +735,13 @@ class AcadosOcpOptions:
         """
         return self.__nlp_qp_tol_min_ineq
 
+    @nlp_qp_tol_min_ineq.setter
+    def nlp_qp_tol_min_ineq(self, nlp_qp_tol_min_ineq):
+        if isinstance(nlp_qp_tol_min_ineq, float) and nlp_qp_tol_min_ineq > 0:
+            self.__nlp_qp_tol_min_ineq = nlp_qp_tol_min_ineq
+        else:
+            raise ValueError('Invalid nlp_qp_tol_min_ineq value. nlp_qp_tol_min_ineq must be a positive float.')
+
     @property
     def nlp_qp_tol_min_comp(self):
         """
@@ -729,6 +750,13 @@ class AcadosOcpOptions:
         Default: 1e-11.
         """
         return self.__nlp_qp_tol_min_comp
+
+    @nlp_qp_tol_min_comp.setter
+    def nlp_qp_tol_min_comp(self, nlp_qp_tol_min_comp):
+        if isinstance(nlp_qp_tol_min_comp, float) and nlp_qp_tol_min_comp > 0:
+            self.__nlp_qp_tol_min_comp = nlp_qp_tol_min_comp
+        else:
+            raise ValueError('Invalid nlp_qp_tol_min_comp value. nlp_qp_tol_min_comp must be a positive float.')
 
     @property
     @deprecated(version="0.4.0", reason="Use globalization_fixed_step_length instead.")
