@@ -40,7 +40,7 @@ def solve_problem_with_setting(setting):
 
     # discretization
     Tf = 1
-    N = 1
+    N = 0
     ocp.solver_options.N_horizon = N
     ocp.solver_options.tf = Tf
 

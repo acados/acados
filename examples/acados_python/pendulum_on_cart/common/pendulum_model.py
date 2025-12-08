@@ -89,7 +89,7 @@ def export_pendulum_ode_model() -> AcadosModel:
 
     # store meta information
     model.x_labels = ['$x$ [m]', r'$\theta$ [rad]', '$v$ [m]', r'$\dot{\theta}$ [rad/s]']
-    model.u_labels = ['$F$']
+    model.u_labels = ['$F$ [N]']
     model.t_label = '$t$ [s]'
 
     return model

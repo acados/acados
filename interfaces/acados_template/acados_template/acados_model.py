@@ -64,7 +64,9 @@ class AcadosModel():
         ## dynamics
         self.__f_impl_expr = []
         self.__f_expl_expr = []
+
         self.__disc_dyn_expr = []
+        self.__disc_dyn_custom_jac_ux_expr = []
 
         self.__dyn_ext_fun_type = 'casadi'
         self.__dyn_generic_source = None
@@ -145,7 +147,7 @@ class AcadosModel():
 
     @property
     def x(self):
-        """CasADi variable describing the state of the system;
+        """CasADi variable describing the state of the system.
         Default: :code:`[]`
         """
         return self.__x
@@ -156,7 +158,7 @@ class AcadosModel():
 
     @property
     def xdot(self):
-        """CasADi variable describing the derivative of the state wrt time;
+        """CasADi variable describing the derivative of the state w.r.t. time.
         Default: :code:`[]`
         """
         return self.__xdot
@@ -167,7 +169,7 @@ class AcadosModel():
 
     @property
     def u(self):
-        """CasADi variable describing the derivative of the state wrt time;
+        """CasADi variable describing the control input.
         Default: :code:`[]`
         """
         return self.__u
@@ -178,7 +180,7 @@ class AcadosModel():
 
     @property
     def z(self):
-        """CasADi variable describing the algebraic variables of the DAE;
+        """CasADi variable describing the algebraic variables of the DAE.
         Default: :code:`[]`
         """
         return self.__z
@@ -268,6 +270,21 @@ class AcadosModel():
     @disc_dyn_expr.setter
     def disc_dyn_expr(self, disc_dyn_expr):
         self.__disc_dyn_expr = disc_dyn_expr
+
+    @property
+    def disc_dyn_custom_jac_ux_expr(self):
+        r"""
+        Optional CasADi expression for an (approximate) Jacobian of disc_dyn_expr wrt [u, x].
+        Shape should be (nx_next, nu+nx).
+        Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.integrator_type` == 'DISCRETE'.
+        Use with care, this changes the solution of the OCP!
+        Default: :code:`[]`
+        """
+        return self.__disc_dyn_custom_jac_ux_expr
+
+    @disc_dyn_custom_jac_ux_expr.setter
+    def disc_dyn_custom_jac_ux_expr(self, disc_dyn_custom_jac_ux_expr):
+        self.__disc_dyn_custom_jac_ux_expr = disc_dyn_custom_jac_ux_expr
 
     @property
     def dyn_ext_fun_type(self):
@@ -809,7 +826,7 @@ class AcadosModel():
 
     @property
     def t_label(self):
-        """Label for the time variable. Default: :code:'t'"""
+        """Label for the time variable. Default: :code:`'t'`"""
         return self.__t_label
 
     @t_label.setter
@@ -890,6 +907,9 @@ class AcadosModel():
                 dims.nx_next = casadi_length(self.disc_dyn_expr)
             else:
                 dims.nx_next = casadi_length(self.x)
+            if not is_empty(self.disc_dyn_custom_jac_ux_expr):
+                if self.disc_dyn_custom_jac_ux_expr.shape != (dims.nx_next, dims.nu + dims.nx):
+                    raise ValueError(f"model.disc_dyn_custom_jac_ux_expr must have shape (nx_next, nu + nx) = ({dims.nx_next}, {dims.nu} + {dims.nx}), got {self.disc_dyn_custom_jac_ux_expr.shape}")
 
         if not is_empty(self.f_impl_expr):
             if casadi_length(self.f_impl_expr) != (dims.nx + dims.nz):

@@ -104,7 +104,7 @@ classdef AcadosOcp < handle
 
                     if isempty(cost.yref_0)
                         if initial_node_relevant
-                            warning(['yref_0 not defined provided.' 10 'Using zeros(ny_0,1) by default.']);
+                            warning(['yref_0 not provided.' 10 'Using zeros(ny_0,1) by default.']);
                         end
                         self.cost.yref_0 = zeros(ny,1);
                     end
@@ -120,7 +120,7 @@ classdef AcadosOcp < handle
                     ny = length(cost.W_0);
                     if isempty(cost.yref_0)
                         if initial_node_relevant
-                            warning(['yref_0 not defined provided.' 10 'Using zeros(ny_0,1) by default.']);
+                            warning(['yref_0 not provided.' 10 'Using zeros(ny_0,1) by default.']);
                         end
                         self.cost.yref_0 = zeros(ny,1);
                     end
@@ -157,7 +157,7 @@ classdef AcadosOcp < handle
                 end
                 if isempty(cost.yref_0)
                     if initial_node_relevant
-                        warning(['yref_0 not defined provided.' 10 'Using zeros(ny_0,1) by default.']);
+                        warning(['yref_0 not provided.' 10 'Using zeros(ny_0,1) by default.']);
                     end
                     self.cost.yref_0 = zeros(ny,1);
                 end
@@ -186,7 +186,7 @@ classdef AcadosOcp < handle
                     ny = length(cost.W);
                     if isempty(cost.yref)
                         if path_nodes_relevant
-                            warning(['yref not defined provided.' 10 'Using zeros(ny,1) by default.']);
+                            warning(['yref not provided.' 10 'Using zeros(ny,1) by default.']);
                         end
                         self.cost.yref = zeros(ny,1);
                     end
@@ -202,7 +202,7 @@ classdef AcadosOcp < handle
                     ny = length(cost.W);
                     if isempty(cost.yref)
                         if path_nodes_relevant
-                            warning(['yref not defined provided.' 10 'Using zeros(ny,1) by default.']);
+                            warning(['yref not provided.' 10 'Using zeros(ny,1) by default.']);
                         end
                         self.cost.yref = zeros(ny,1);
                     end
@@ -230,7 +230,7 @@ classdef AcadosOcp < handle
                 end
                 if isempty(cost.yref)
                     if path_nodes_relevant
-                        warning(['yref not defined provided.' 10 'Using zeros(ny,1) by default.']);
+                        warning(['yref not provided.' 10 'Using zeros(ny,1) by default.']);
                     end
                     self.cost.yref = zeros(ny,1);
                 end
@@ -256,7 +256,7 @@ classdef AcadosOcp < handle
                     ny_e = length(cost.W_e);
                     if isempty(cost.yref_e)
                         if terminal_node_relevant
-                            warning(['yref_e not defined provided.' 10 'Using zeros(ny_e,1) by default.']);
+                            warning(['yref_e not provided.' 10 'Using zeros(ny_e,1) by default.']);
                         end
                         self.cost.yref_e = zeros(ny_e,1);
                     end
@@ -277,7 +277,7 @@ classdef AcadosOcp < handle
                     ny_e = length(cost.W_e);
                     if isempty(cost.yref_e)
                         if terminal_node_relevant
-                            warning(['yref_e not defined provided.' 10 'Using zeros(ny_e,1) by default.']);
+                            warning(['yref_e not provided.' 10 'Using zeros(ny_e,1) by default.']);
                         end
                         self.cost.yref_e = zeros(ny_e,1);
                     end
@@ -305,7 +305,7 @@ classdef AcadosOcp < handle
                 end
                 if isempty(cost.yref_e)
                     if terminal_node_relevant
-                        warning(['yref_e not defined provided.' 10 'Using zeros(ny_e,1) by default.']);
+                        warning(['yref_e not provided.' 10 'Using zeros(ny_e,1) by default.']);
                     end
                     self.cost.yref_e = zeros(ny_e,1);
                 end

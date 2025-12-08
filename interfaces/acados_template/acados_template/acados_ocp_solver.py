@@ -1249,14 +1249,13 @@ class AcadosOcpSolver:
                     Lr = self.get_from_qp_in(i, 'Lr')
                     R_ric = Lr @ Lr.T
                     hess_block = R_ric + B_mat.T @ P_mat @ B_mat
+
+                    # P
+                    eigv = np.linalg.eigvals(P_mat)
+                    min_eig_P_global = min(min_eig_P_global, np.min(eigv))
+                    min_abs_eig_P_global = min(min_abs_eig_P_global, np.min(np.abs(eigv)))
                 else:
                     hess_block = None
-
-                # P
-                eigv = np.linalg.eigvals(P_mat)
-                min_eig_P_global = min(min_eig_P_global, np.min(eigv))
-                min_abs_eig_P_global = min(min_abs_eig_P_global, np.min(np.abs(eigv)))
-
             else:
                 raise ValueError("Wrong input given to function! Possible inputs are FULL_HESSIAN, PROJECTED_HESSIAN")
 
@@ -2165,6 +2164,10 @@ class AcadosOcpSolver:
         return out
 
     def get_iterate(self, iteration: int) -> AcadosOcpIterate:
+        """
+        Returns the solver iterate from a given iteration (use -1 for the final one).
+        Raises ``ValueError`` for invalid iteration index or disabled ``store_iterates`` option.
+        """
 
         nlp_iter = self.get_stats('nlp_iter')
         if iteration < -1 or iteration > nlp_iter:
@@ -2214,6 +2217,9 @@ class AcadosOcpSolver:
 
 
     def get_iterates(self) -> AcadosOcpIterates:
+        """
+        Return all stored NLP solver iterates from 0 to ``nlp_iter``.
+        """
         return AcadosOcpIterates(iterate_list=[self.get_iterate(n) for n in range(self.get_stats('nlp_iter')+1)])
 
 
