@@ -12,9 +12,7 @@ def create_solver_from_json(json_file):
     acados_ocp_json['json_file'] = os.path.abspath(json_file)
 
     warnings.filterwarnings("ignore", message=".*not in dictionary.*", category=UserWarning)
-    ocp = AcadosOcp().from_dict(acados_ocp_json)
-
-    ocp.render_templates()
+    ocp = AcadosOcp.from_dict(acados_ocp_json)
 
     solver = AcadosOcpSolver(ocp)
     solver.solve()
