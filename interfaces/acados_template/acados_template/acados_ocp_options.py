@@ -29,10 +29,10 @@
 #
 
 import os
-import warnings
+import warnings, inspect
 
 from deprecated.sphinx import deprecated
-from .utils import check_if_nparray_and_flatten
+from .utils import check_if_nparray_and_flatten, cast_to_1d_nparray, use_int_or_cast_to_1d_nparray
 
 INTEGRATOR_TYPES = ('ERK', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK')
 COLLOCATION_TYPES = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA')
@@ -724,6 +724,13 @@ class AcadosOcpOptions:
         """
         return self.__nlp_qp_tol_min_stat
 
+    @nlp_qp_tol_min_stat.setter
+    def nlp_qp_tol_min_stat(self, nlp_qp_tol_min_stat):
+        if isinstance(nlp_qp_tol_min_stat, float) and nlp_qp_tol_min_stat > 0:
+            self.__nlp_qp_tol_min_stat = nlp_qp_tol_min_stat
+        else:
+            raise ValueError('Invalid nlp_qp_tol_min_stat value. nlp_qp_tol_min_stat must be a positive float.')
+
     @property
     def nlp_qp_tol_min_eq(self):
         """
@@ -732,6 +739,13 @@ class AcadosOcpOptions:
         Default: 1e-10.
         """
         return self.__nlp_qp_tol_min_eq
+
+    @nlp_qp_tol_min_eq.setter
+    def nlp_qp_tol_min_eq(self, nlp_qp_tol_min_eq):
+        if isinstance(nlp_qp_tol_min_eq, float) and nlp_qp_tol_min_eq > 0:
+            self.__nlp_qp_tol_min_eq = nlp_qp_tol_min_eq
+        else:
+            raise ValueError('Invalid nlp_qp_tol_min_eq value. nlp_qp_tol_min_eq must be a positive float.')
 
     @property
     def nlp_qp_tol_min_ineq(self):
@@ -742,6 +756,13 @@ class AcadosOcpOptions:
         """
         return self.__nlp_qp_tol_min_ineq
 
+    @nlp_qp_tol_min_ineq.setter
+    def nlp_qp_tol_min_ineq(self, nlp_qp_tol_min_ineq):
+        if isinstance(nlp_qp_tol_min_ineq, float) and nlp_qp_tol_min_ineq > 0:
+            self.__nlp_qp_tol_min_ineq = nlp_qp_tol_min_ineq
+        else:
+            raise ValueError('Invalid nlp_qp_tol_min_ineq value. nlp_qp_tol_min_ineq must be a positive float.')
+
     @property
     def nlp_qp_tol_min_comp(self):
         """
@@ -750,6 +771,13 @@ class AcadosOcpOptions:
         Default: 1e-11.
         """
         return self.__nlp_qp_tol_min_comp
+
+    @nlp_qp_tol_min_comp.setter
+    def nlp_qp_tol_min_comp(self, nlp_qp_tol_min_comp):
+        if isinstance(nlp_qp_tol_min_comp, float) and nlp_qp_tol_min_comp > 0:
+            self.__nlp_qp_tol_min_comp = nlp_qp_tol_min_comp
+        else:
+            raise ValueError('Invalid nlp_qp_tol_min_comp value. nlp_qp_tol_min_comp must be a positive float.')
 
     @property
     @deprecated(version="0.4.0", reason="Use globalization_fixed_step_length instead.")
@@ -830,8 +858,7 @@ class AcadosOcpOptions:
 
     @sim_method_num_stages.setter
     def sim_method_num_stages(self, sim_method_num_stages):
-        # NOTE: checks in make_consistent
-        self.__sim_method_num_stages = sim_method_num_stages
+        self.__sim_method_num_stages = use_int_or_cast_to_1d_nparray(sim_method_num_stages, 'sim_method_num_stages')
 
     @property
     def sim_method_num_steps(self):
@@ -844,9 +871,7 @@ class AcadosOcpOptions:
 
     @sim_method_num_steps.setter
     def sim_method_num_steps(self, sim_method_num_steps):
-        # NOTE: checks in make_consistent
-        self.__sim_method_num_steps = sim_method_num_steps
-
+        self.__sim_method_num_steps = use_int_or_cast_to_1d_nparray(sim_method_num_steps, 'sim_method_num_steps')
 
     @property
     def sim_method_newton_iter(self):
@@ -877,10 +902,10 @@ class AcadosOcpOptions:
 
     @sim_method_newton_tol.setter
     def sim_method_newton_tol(self, sim_method_newton_tol):
-        if isinstance(sim_method_newton_tol, float) and sim_method_newton_tol > 0:
+        if isinstance(sim_method_newton_tol, float) and sim_method_newton_tol >= 0:
             self.__sim_method_newton_tol = sim_method_newton_tol
         else:
-            raise ValueError('Invalid sim_method_newton_tol value. sim_method_newton_tol must be a positive float.')
+            raise ValueError('Invalid sim_method_newton_tol value. sim_method_newton_tol must be a nonnegative float.')
 
     @property
     def sim_method_jac_reuse(self):
@@ -893,7 +918,7 @@ class AcadosOcpOptions:
 
     @sim_method_jac_reuse.setter
     def sim_method_jac_reuse(self, sim_method_jac_reuse):
-        self.__sim_method_jac_reuse = sim_method_jac_reuse
+        self.__sim_method_jac_reuse = use_int_or_cast_to_1d_nparray(sim_method_jac_reuse, 'sim_method_jac_reuse')
 
     @property
     def qp_solver_tol_stat(self):
@@ -2379,3 +2404,30 @@ class AcadosOcpOptions:
 
         if self.qpscaling_scale_constraints != "NO_CONSTRAINT_SCALING" or self.qpscaling_scale_objective != "NO_OBJECTIVE_SCALING":
             raise ValueError("Parametric sensitivities are only available if no scaling is applied to the QP.")
+
+
+    @classmethod
+    def from_dict(cls, dict):
+        """
+        Load all properties from a given dictionary (obtained from loading a generated json).
+        Values that correspond to the empty list are ignored.
+        """
+
+        options = cls()
+
+        # loop over all properties
+        for attr, _ in inspect.getmembers(type(options), lambda v: isinstance(v, property)):
+
+            value = dict.get(attr)
+
+            if value is None:
+                warnings.warn(f"Attribute {attr} not in dictionary.")
+            else:
+                try:
+                    # check whether value is not the empty list
+                    if not (isinstance(value, list) and not value):
+                        setattr(options, attr, value)
+                except Exception as e:
+                    ValueError("Failed to load attribute {attr} from dictionary:\n" + repr(e))
+
+        return options

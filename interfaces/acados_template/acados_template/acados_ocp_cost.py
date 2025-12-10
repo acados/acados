@@ -29,6 +29,7 @@
 #
 
 import numpy as np
+import warnings, inspect
 from .utils import cast_to_2d_nparray, cast_to_2d_nparray_or_casadi_symbolic, cast_to_1d_nparray_or_casadi_symbolic, cast_to_1d_nparray
 
 class AcadosOcpCost:
@@ -492,3 +493,30 @@ class AcadosOcpCost:
 
     def set(self, attr, value):
         setattr(self, attr, value)
+
+
+    @classmethod
+    def from_dict(cls, dict):
+        """
+        Load all properties from a given dictionary (obtained from loading a generated json).
+        Values that correspond to the empty list are ignored.
+        """
+
+        cost = cls()
+
+        # loop over all properties
+        for attr, _ in inspect.getmembers(type(cost), lambda v: isinstance(v, property)):
+
+            value = dict.get(attr)
+
+            if value is None:
+                warnings.warn(f"Attribute {attr} not in dictionary.")
+            else:
+                try:
+                    # check whether value is not the empty list
+                    if not (isinstance(value, list) and not value):
+                        setattr(cost, attr, value)
+                except Exception as e:
+                    Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))
+
+        return cost

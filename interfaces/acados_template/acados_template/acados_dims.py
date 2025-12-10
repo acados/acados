@@ -29,6 +29,7 @@
 #
 
 from deprecated.sphinx import deprecated
+import warnings, inspect
 
 def check_int_value(name, value, *, positive=False, nonnegative=False):
     if not isinstance(value, int):
@@ -599,3 +600,29 @@ class AcadosOcpDims:
     def N(self, N):
         check_int_value("N", N, nonnegative=True)
         self.__N = N
+
+    @classmethod
+    def from_dict(cls, dict):
+        """
+        Load all properties from a given dictionary (obtained from loading a generated json).
+        Values that correspond to the empty list are ignored.
+        """
+
+        dims = cls()
+
+        # loop over all properties
+        for attr, _ in inspect.getmembers(type(dims), lambda v: isinstance(v, property)):
+
+            value = dict.get(attr)
+
+            if value is None:
+                warnings.warn(f"Attribute {attr} not in dictionary.")
+            else:
+                try:
+                    # check whether value is not the empty list
+                    if not (isinstance(value, list) and not value):
+                        setattr(dims, attr, value)
+                except Exception as e:
+                    Exception("Failed to load attribute {attr} from dictionary:\n" + repr(e))
+
+        return dims

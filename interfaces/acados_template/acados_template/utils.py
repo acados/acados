@@ -524,6 +524,15 @@ def cast_to_1d_nparray(val, name) -> np.ndarray:
 
     return val
 
+def use_int_or_cast_to_1d_nparray(val, name) -> Union[int, np.ndarray]:
+    if isinstance(val, int):
+        return val
+    else:
+        try:
+            return cast_to_1d_nparray(val, name)
+        except:
+            raise TypeError(f"{name} must be an integer or array-like type, got {type(val)}.")
+
 
 def cast_to_1d_nparray_or_casadi_symbolic(val, name) -> np.ndarray:
     if isinstance(val, (SX, MX, DM)):
