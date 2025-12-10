@@ -2586,3 +2586,22 @@ class AcadosOcp:
 
         # ocp.make_consistent()
         return ocp
+
+
+    @classmethod
+    def from_json(cls, json_file: str) -> 'AcadosOcp':
+        """
+        Loads json file to dict and calls from_dict method.
+
+        NOTE: Loading an OCP from a json file and dumping it back to json might lead to small differences.
+        In particular, regarding paths and when not calling make_consistent before dumping to json.
+        """
+
+        # load json
+        with open(json_file, 'r') as f:
+            acados_ocp_json = json.load(f)
+        acados_ocp_json['json_file'] = os.path.abspath(json_file)
+
+        ocp = cls.from_dict(acados_ocp_json)
+
+        return ocp

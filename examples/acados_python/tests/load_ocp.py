@@ -6,13 +6,8 @@ from acados_template import AcadosOcp, AcadosOcpSolver
 
 def create_solver_from_json(json_file):
 
-    # load json, store options in object
-    with open(json_file, 'r') as f:
-        acados_ocp_json = json.load(f)
-    acados_ocp_json['json_file'] = os.path.abspath(json_file)
-
     warnings.filterwarnings("ignore", message=".*not in dictionary.*", category=UserWarning)
-    ocp = AcadosOcp.from_dict(acados_ocp_json)
+    ocp = AcadosOcp.from_json(json_file)
 
     solver = AcadosOcpSolver(ocp)
     solver.solve()
