@@ -37,8 +37,7 @@ from deprecated.sphinx import deprecated
 
 from casadi import MX, SX
 
-from acados_gnsf import AcadosGnsfModel
-
+from .gnsf import GnsfModel
 from .utils import is_empty, casadi_length
 from .acados_dims import AcadosOcpDims, AcadosSimDims
 
@@ -397,8 +396,8 @@ class AcadosModel():
 
     @gnsf_model.setter
     def gnsf_model(self, gnsf_model):
-        if not isinstance(gnsf_model, AcadosGnsfModel):
-            raise TypeError("gnsf_model must be of type AcadosGnsfModel")
+        if not isinstance(gnsf_model, GnsfModel):
+            raise TypeError("gnsf_model must be of type GnsfModel")
         self.__gnsf_model = gnsf_model
 
     @property
