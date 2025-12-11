@@ -379,11 +379,11 @@ static ocp_nlp_dims* {{ model.name }}_acados_create_setup_dimensions({{ model.na
 {%- if solver_options.N_horizon > 0 %}
 {%- if solver_options.integrator_type == "GNSF" -%}
     // GNSF specific dimensions
-    int gnsf_nx1 = {{ dims.gnsf_nx1 }};
-    int gnsf_nz1 = {{ dims.gnsf_nz1 }};
-    int gnsf_nout = {{ dims.gnsf_nout }};
-    int gnsf_ny = {{ dims.gnsf_ny }};
-    int gnsf_nuhat = {{ dims.gnsf_nuhat }};
+    int gnsf_nx1 = {{ model.gnsf_model.dims.nx1 }};
+    int gnsf_nz1 = {{ model.gnsf_model.dims.nz1 }};
+    int gnsf_nout = {{ model.gnsf_model.dims.nout }};
+    int gnsf_ny = {{ model.gnsf_model.dims.ny }};
+    int gnsf_nuhat = {{ model.gnsf_model.dims.nuhat }};
 
     for (int i = 0; i < N; i++)
     {

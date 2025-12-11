@@ -78,6 +78,9 @@ class GnsfModel():
 
     def __init__(self,
                  y: Union[ca.SX, ca.MX],
+                 x1: Union[ca.SX, ca.MX],
+                 z1: Union[ca.SX, ca.MX],
+                 x1dot: Union[ca.SX, ca.MX],
                  uhat: Union[ca.SX, ca.MX],
                  phi: Union[ca.SX, ca.MX],
                  f_LO: Union[ca.SX, ca.MX],
@@ -103,6 +106,9 @@ class GnsfModel():
         # symbolics and expressions
         self.__y = y
         self.__uhat = uhat
+        self.__x1 = x1
+        self.__z1 = z1
+        self.__x1dot = x1dot
         self.__phi = phi
         self.__f_LO = f_LO
 
@@ -127,7 +133,7 @@ class GnsfModel():
         self.__purely_linear = purely_linear
         self.__nontrivial_f_LO = nontrivial_f_LO
 
-        self._dims = None
+        self.__dims = None
 
         self._detect_dims()
         self._make_consistent()
@@ -141,6 +147,21 @@ class GnsfModel():
     def uhat(self):
         """GNSF: Symbolic expression for uhat in GNSF formulation."""
         return self.__uhat
+
+    @property
+    def x1(self):
+        """GNSF: Symbolic expression for x1 in GNSF formulation."""
+        return self.__x1
+
+    @property
+    def z1(self):
+        """GNSF: Symbolic expression for z1 in GNSF formulation."""
+        return self.__z1
+
+    @property
+    def x1dot(self):
+        """GNSF: Symbolic expression for x1dot in GNSF formulation."""
+        return self.__x1dot
 
     @property
     def phi(self):
@@ -236,6 +257,11 @@ class GnsfModel():
     def c_LO(self):
         """GNSF: Vector c_LO (linear output) in GNSF formulation."""
         return self.__c_LO
+    
+    @property
+    def dims(self):
+        """GNSF: Dimensions of GNSF model."""
+        return self.__dims
 
 
     def _detect_dims(self,):
@@ -479,7 +505,7 @@ def check_reformulation(model, gnsf, print_info):
 
 
 
-def detect_gnsf_structure(acados_ocp, transcribe_opts=None):
+def detect_gnsf_structure(model: AcadosModel, dims: Union[AcadosSimDims, AcadosOcpDims], transcribe_opts=None):
 
     ## Description
     # This function takes a CasADi implicit ODE or index-1 DAE model "model"
@@ -509,7 +535,7 @@ def detect_gnsf_structure(acados_ocp, transcribe_opts=None):
 
     # acados_root_dir = getenv('ACADOS_INSTALL_DIR')
 
-    if not is_empty(acados_ocp.model.p_global) and depends_on(acados_ocp.model.f_impl_expr, acados_ocp.model.p_global):
+    if not is_empty(model.p_global) and ca.depends_on(model.f_impl_expr, model.p_global):
         NotImplementedError("GNSF does not support global parameters")
 
     ## load transcribe_opts
@@ -541,14 +567,14 @@ def detect_gnsf_structure(acados_ocp, transcribe_opts=None):
 
     ## Reformulate implicit index-1 DAE into GNSF form
     # (Generalized nonlinear static feedback)
-    gnsf = determine_trivial_gnsf_transcription(acados_ocp, print_info)
-    gnsf = detect_affine_terms_reduce_nonlinearity(gnsf, acados_ocp, print_info)
+    gnsf = determine_trivial_gnsf_transcription(model, dims, print_info)
+    gnsf = detect_affine_terms_reduce_nonlinearity(gnsf, model, print_info)
 
     if detect_LOS:
-        gnsf = reformulate_with_LOS(acados_ocp, gnsf, print_info)
+        gnsf = reformulate_with_LOS(model, gnsf, print_info)
 
     if check_E_invertibility:
-        gnsf = reformulate_with_invertible_E_mat(gnsf, acados_ocp, print_info)
+        gnsf = reformulate_with_invertible_E_mat(gnsf, model, print_info)
 
     # detect purely linear model
     if gnsf["nx1"] == 0 and gnsf["nz1"] == 0 and gnsf["nontrivial_f_LO"] == 0:
@@ -556,36 +582,12 @@ def detect_gnsf_structure(acados_ocp, transcribe_opts=None):
     else:
         gnsf["purely_linear"] = 0
 
-    structure_detection_print_summary(gnsf, acados_ocp)
-    check_reformulation(acados_ocp.model, gnsf, print_info)
+    structure_detection_print_summary(gnsf, model)
+    check_reformulation(model, gnsf, print_info)
 
     ## copy relevant fields from gnsf to model
-    dummy = acados_ocp.model.x[0]
-    model_name = acados_ocp.model.name
-
-    get_matrices_fun = ca.Function(
-        f"{model_name}_gnsf_get_matrices_fun",
-        [dummy],
-        [
-            gnsf["A"],
-            gnsf["B"],
-            gnsf["C"],
-            gnsf["E"],
-            gnsf["L_x"],
-            gnsf["L_xdot"],
-            gnsf["L_z"],
-            gnsf["L_u"],
-            gnsf["A_LO"],
-            gnsf["c"],
-            gnsf["E_LO"],
-            gnsf["B_LO"],
-            gnsf["nontrivial_f_LO"],
-            gnsf["purely_linear"],
-            gnsf["ipiv_x"] + 1,
-            gnsf["ipiv_z"] + 1,
-            gnsf["c_LO"],
-        ],
-    )
+    dummy = model.x[0]
+    model_name = model.name
 
     phi = gnsf["phi_expr"]
     y = gnsf["y"]
@@ -596,23 +598,23 @@ def detect_gnsf_structure(acados_ocp, transcribe_opts=None):
     jac_phi_uhat = ca.jacobian(phi, uhat)
 
     phi_fun = ca.Function(f"{model_name}_gnsf_phi_fun", [y, uhat, p], [phi])
-    acados_ocp.model.phi_fun = phi_fun
-    acados_ocp.model.phi_fun_jac_y = ca.Function(
+    model.phi_fun = phi_fun
+    model.phi_fun_jac_y = ca.Function(
         f"{model_name}_gnsf_phi_fun_jac_y", [y, uhat, p], [phi, jac_phi_y]
     )
-    acados_ocp.model.phi_jac_y_uhat = ca.Function(
+    model.phi_jac_y_uhat = ca.Function(
         f"{model_name}_gnsf_phi_jac_y_uhat", [y, uhat, p], [jac_phi_y, jac_phi_uhat]
     )
 
-    x1 = acados_ocp.model.x[gnsf["idx_perm_x"][: gnsf["nx1"]]]
-    x1dot = acados_ocp.model.xdot[gnsf["idx_perm_x"][: gnsf["nx1"]]]
+    x1 = model.x[gnsf["idx_perm_x"][: gnsf["nx1"]]]
+    x1dot = model.xdot[gnsf["idx_perm_x"][: gnsf["nx1"]]]
     if gnsf["nz1"] > 0:
-        z1 = acados_ocp.model.z[gnsf["idx_perm_z"][: gnsf["nz1"]]]
+        z1 = model.z[gnsf["idx_perm_z"][: gnsf["nz1"]]]
     else:
         z1 = ca.SX.sym("z1", 0, 0)
     f_lo = gnsf["f_lo_expr"]
-    u = acados_ocp.model.u
-    acados_ocp.model.f_lo_fun_jac_x1k1uz = ca.Function(
+    u = model.u
+    model.f_lo_fun_jac_x1k1uz = ca.Function(
         f"{model_name}_gnsf_f_lo_fun_jac_x1k1uz",
         [x1, x1dot, z1, u, p],
         [
@@ -626,24 +628,49 @@ def detect_gnsf_structure(acados_ocp, transcribe_opts=None):
         ],
     )
 
-    acados_ocp.model.get_matrices_fun = get_matrices_fun
-
     size_gnsf_A = gnsf["A"].shape
-    acados_ocp.dims.gnsf_nx1 = size_gnsf_A[1]
-    acados_ocp.dims.gnsf_nz1 = size_gnsf_A[0] - size_gnsf_A[1]
-    acados_ocp.dims.gnsf_nuhat = max(phi_fun.size_in(1))
-    acados_ocp.dims.gnsf_ny = max(phi_fun.size_in(0))
-    acados_ocp.dims.gnsf_nout = max(phi_fun.size_out(0))
+    # acados_ocp.dims.gnsf_nx1 = size_gnsf_A[1]
+    # acados_ocp.dims.gnsf_nz1 = size_gnsf_A[0] - size_gnsf_A[1]
+    # acados_ocp.dims.gnsf_nuhat = max(phi_fun.size_in(1))
+    # acados_ocp.dims.gnsf_ny = max(phi_fun.size_in(0))
+    # acados_ocp.dims.gnsf_nout = max(phi_fun.size_out(0))
 
     # flags
-    acados_ocp.model.gnsf_nontrivial_f_LO = gnsf['nontrivial_f_LO']
-    acados_ocp.model.gnsf_purely_linear = gnsf['purely_linear']
+    model.gnsf_nontrivial_f_LO = gnsf['nontrivial_f_LO']
+    model.gnsf_purely_linear = gnsf['purely_linear']
 
-    return acados_ocp
+    model.gnsf_model = GnsfModel(
+        y=gnsf["y"],
+        uhat=gnsf["uhat"],
+        x1=x1,
+        z1=z1,
+        x1dot=x1dot,
+        phi=gnsf["phi_expr"],
+        f_LO=gnsf["f_lo_expr"],
+        A=gnsf["A"],
+        B=gnsf["B"],
+        C=gnsf["C"],
+        E=gnsf["E"],
+        L_x=gnsf["L_x"],
+        L_xdot=gnsf["L_xdot"],
+        L_u=gnsf["L_u"],
+        L_z=gnsf["L_z"],
+        A_LO=gnsf["A_LO"],
+        c=gnsf["c"],
+        E_LO=gnsf["E_LO"],
+        B_LO=gnsf["B_LO"],
+        c_LO=gnsf["c_LO"],
+        ipiv_x=idx_perm_to_ipiv(gnsf["idx_perm_x"]),
+        ipiv_z=idx_perm_to_ipiv(gnsf["idx_perm_z"]),
+        purely_linear=gnsf["purely_linear"],
+        nontrivial_f_LO=gnsf["nontrivial_f_LO"],
+    )
+
+    return
 
 
 
-def detect_affine_terms_reduce_nonlinearity(gnsf, acados_ocp, print_info):
+def detect_affine_terms_reduce_nonlinearity(gnsf, model: AcadosModel, print_info):
 
     ## Description
     # this function takes a gnsf structure with trivial model matrices (A, B,
@@ -654,7 +681,6 @@ def detect_affine_terms_reduce_nonlinearity(gnsf, acados_ocp, print_info):
     # NOTE: model is just taken as an argument to check equivalence of the
     # models within the function.
 
-    model = acados_ocp.model
     if print_info:
         print(" ")
         print("====================================================================")
@@ -696,14 +722,7 @@ def detect_affine_terms_reduce_nonlinearity(gnsf, acados_ocp, print_info):
             else:
                 gnsf["A"][ii, ix] = 0
                 if print_info:
-                    print(
-                        "phi(",
-                        str(ii),
-                        ") is nonlinear in x(",
-                        str(ix),
-                        ") = ",
-                        varname,
-                    )
+                    print(f"phi({ii}) is nonlinear in x({ix}) = {varname}")
                     print(fii)
                     print("-----------------------------------------------------")
     f_next = gnsf["phi_expr"] - gnsf["A"] @ x
@@ -968,14 +987,13 @@ def determine_input_nonlinearity_function(gnsf):
 
 
 
-def determine_trivial_gnsf_transcription(acados_ocp, print_info):
+def determine_trivial_gnsf_transcription(model: AcadosModel, dims: Union[AcadosSimDims, AcadosOcpDims], print_info):
     ## Description
     # this function takes a model of an implicit ODE/ index-1 DAE and sets up
     # an equivalent model in the GNSF structure, with empty linear output
     # system and trivial model matrices, i.e. A, B, E, c are zeros, and C is
     # eye. - no structure is exploited
 
-    model = acados_ocp.model
     # initial print
     print("*****************************************************************")
     print(" ")
@@ -990,7 +1008,7 @@ def determine_trivial_gnsf_transcription(acados_ocp, print_info):
 
     # x
     x = model.x
-    nx = acados_ocp.dims.nx
+    nx = dims.nx
     # check type
     if isinstance(x[0], ca.SX):
         isSX = True
@@ -1000,20 +1018,20 @@ def determine_trivial_gnsf_transcription(acados_ocp, print_info):
     # xdot
     xdot = model.xdot
     # u
-    nu = acados_ocp.dims.nu
+    nu = dims.nu
     if nu == 0:
         u = ca.SX.sym("u", 0, 0)
     else:
         u = model.u
 
-    nz = acados_ocp.dims.nz
+    nz = dims.nz
     if nz == 0:
         z = ca.SX.sym("z", 0, 0)
     else:
         z = model.z
 
     p = model.p
-    nparam = acados_ocp.dims.np
+    nparam = dims.np
 
     # avoid SX of size 0x1
     if casadi_length(u) == 0:
@@ -1120,12 +1138,8 @@ def reformulate_with_invertible_E_mat(gnsf, model, print_info):
         # print warning (always)
         print(f"the rank of E11 or E22 is not full after the reformulation")
         print("")
-        print(
-            f"the script will try to reformulate the model with an invertible matrix instead"
-        )
-        print(
-            f"NOTE: this feature is based on a heuristic, it should be used with care!!!"
-        )
+        print("the script will try to reformulate the model with an invertible matrix instead")
+        print("NOTE: this feature is based on a heuristic, it should be used with care!!!")
 
         ## load models
         xdot = gnsf["xdot"]
@@ -1143,9 +1157,8 @@ def reformulate_with_invertible_E_mat(gnsf, model, print_info):
             else:
                 ind = range(gnsf["nx1"], gnsf["nx1"] + gnsf["nz1"])
             mat = gnsf["E"][np.ix_(ind, ind)]
-            import pdb
+            breakpoint()
 
-            pdb.set_trace()
             while np.linalg.matrix_rank(mat) < len(ind):
                 # import pdb; pdb.set_trace()
                 if print_info:
@@ -1218,7 +1231,7 @@ def reformulate_with_invertible_E_mat(gnsf, model, print_info):
 
 
 
-def reformulate_with_LOS(acados_ocp, gnsf, print_info):
+def reformulate_with_LOS(model: AcadosModel, gnsf, print_info):
 
     ## Description:
     # This function takes an intitial transcription of the implicit ODE model
@@ -1227,9 +1240,6 @@ def reformulate_with_LOS(acados_ocp, gnsf, print_info):
     # Therefore it might be that the state vector and the implicit function
     # vector have to be reordered. This reordered model is part of the output,
     # namely reordered_model.
-
-    ## import CasADi and load models
-    model = acados_ocp.model
 
     # symbolics
     x = gnsf["x"]
@@ -1354,13 +1364,7 @@ def reformulate_with_LOS(acados_ocp, gnsf, print_info):
                 i_eq = I_eq[number_of_eq]
                 ## add 1 * [xdot,z](ii) to both sides of i_eq
                 if print_info:
-                    print(
-                        "adding 1 * ",
-                        var_name,
-                        " to both sides of equation ",
-                        i_eq,
-                        ".",
-                    )
+                    print(f"adding 1 * {var_name} to both sides of equation {i_eq}.")
                 gnsf["E"][i_eq, ii] = 1
                 i_phi = np.nonzero(gnsf["C"][i_eq, :])
                 if is_empty(i_phi):
@@ -1372,12 +1376,7 @@ def reformulate_with_LOS(acados_ocp, gnsf, print_info):
                         + gnsf["E"][i_eq, ii] / gnsf["C"][i_eq, i_phi] * xdot_z[ii]
                     )
                 if print_info:
-                    print(
-                        "detected equation ",
-                        i_eq,
-                        " to correspond to variable ",
-                        var_name,
-                    )
+                    print(f"detected equation {i_eq} to correspond to variable {var_name}")
             I_nsf_eq = set.union(I_nsf_eq, {i_eq})
             # remove i_eq from unsorted_dyn
             unsorted_dyn.remove(i_eq)
@@ -1579,13 +1578,12 @@ def reformulate_with_LOS(acados_ocp, gnsf, print_info):
 
 
 
-def structure_detection_print_summary(gnsf, acados_ocp):
+def structure_detection_print_summary(gnsf, model):
 
     ## Description
     # this function prints the most important info after determining a GNSF
     # reformulation of the implicit model "initial_model" into "gnsf", which is
     # equivalent to the "reordered_model".
-    model = acados_ocp.model
     # # GNSF
     # get dimensions
     nx = gnsf["nx"]
@@ -1603,12 +1601,7 @@ def structure_detection_print_summary(gnsf, acados_ocp):
     ny = gnsf["ny"]
     nuhat = gnsf["nuhat"]
 
-    #
-    f_impl_expr = model.f_impl_expr
     n_nodes_initial = ca.n_nodes(model.f_impl_expr)
-    # x_old = model.x
-    # f_impl_old = model.f_impl_expr
-
     x = gnsf["x"]
     z = gnsf["z"]
 
@@ -1620,41 +1613,26 @@ def structure_detection_print_summary(gnsf, acados_ocp):
         "*********************************************************************************************"
     )
     print(" ")
-    print(
-        "******************        SUCCESS: GNSF STRUCTURE DETECTION COMPLETE !!!      ***************"
-    )
+    print("******************        SUCCESS: GNSF STRUCTURE DETECTION COMPLETE !!!      **************")
     print(" ")
-    print(
-        "*********************************************************************************************"
-    )
+    print("*********************************************************************************************")
     print(" ")
-    print(
-        f"========================= STRUCTURE DETECTION SUMMARY ===================================="
+    print("=========== STRUCTURE DETECTION SUMMARY ======================"
     )
     print(" ")
     print("-------- Nonlinear Static Feedback type system --------")
     print(" ")
     print(" successfully transcribed dynamic system model into GNSF structure ")
     print(" ")
-    print(
-        "reduced dimension of nonlinearity phi from        ",
-        str(nx + nz),
-        " to ",
-        str(gnsf["n_out"]),
-    )
+    print(f"reduced dimension of nonlinearity phi from        {nx + nz} to {gnsf['n_out']}")
     print(" ")
-    print(
-        "reduced input dimension of nonlinearity phi from  ",
-        2 * nx + nz + nu,
-        " to ",
-        gnsf["ny"] + gnsf["nuhat"],
-    )
+    print(f"reduced input dimension of nonlinearity phi from {2 * nx + nz + nu} to {gnsf['ny'] + gnsf['nuhat']}")
     print(" ")
     print(f"reduced number of nodes in CasADi expression of nonlinearity phi from  {n_nodes_initial}  to  {ca.n_nodes(phi_current)}\n")
     print("----------- Linear Output System (LOS) ---------------")
     if nx2 + nz2 > 0:
         print(" ")
-        print(f"introduced Linear Output System of size           ", str(nx2 + nz2))
+        print(f"introduced Linear Output System of size           {nx2 + nz2}")
         print(" ")
         if nx2 > 0:
             print("consisting of the states:")
@@ -1672,9 +1650,7 @@ def structure_detection_print_summary(gnsf, acados_ocp):
             print(" ")
     if not all(gnsf["idx_perm_x"] == np.array(range(nx))):
         print(" ")
-        print(
-            "--------------------------------------------------------------------------------------------------"
-        )
+        print("----------------------------------------------------")
         print(
             "NOTE: permuted differential state vector x, such that x_gnsf = x(idx_perm_x) with idx_perm_x ="
         )
@@ -1682,33 +1658,21 @@ def structure_detection_print_summary(gnsf, acados_ocp):
         print(gnsf["idx_perm_x"])
     if nz != 0 and not all(gnsf["idx_perm_z"] == np.array(range(nz))):
         print(" ")
-        print(
-            "--------------------------------------------------------------------------------------------------"
-        )
-        print(
-            "NOTE: permuted algebraic state vector z, such that z_gnsf = z(idx_perm_z) with idx_perm_z ="
-        )
+        print("----------------------------------------------------")
+        print("NOTE: permuted algebraic state vector z, such that z_gnsf = z(idx_perm_z) with idx_perm_z =")
         print(" ")
         print(gnsf["idx_perm_z"])
     if not all(gnsf["idx_perm_f"] == np.array(range(nx + nz))):
         print(" ")
-        print(
-            "--------------------------------------------------------------------------------------------------"
-        )
-        print(
-            "NOTE: permuted rhs expression vector f, such that f_gnsf = f(idx_perm_f) with idx_perm_f ="
-        )
+        print("----------------------------------------------------")
+        print("NOTE: permuted rhs expression vector f, such that f_gnsf = f(idx_perm_f) with idx_perm_f =")
         print(" ")
         print(gnsf["idx_perm_f"])
     ## print GNSF dimensions
-    print(
-        "--------------------------------------------------------------------------------------------------------"
-    )
+    print("----------------------------------------------------")
     print(" ")
     print("The dimensions of the GNSF reformulated model read as:")
     print(" ")
-    # T_dim = table(nx, nu, nz, np, nx1, nz1, n_out, ny, nuhat)
-    # print( T_dim )
     print(f"nx    ", {nx})
     print(f"nu    ", {nu})
     print(f"nz    ", {nz})

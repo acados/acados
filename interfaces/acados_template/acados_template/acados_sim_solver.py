@@ -47,7 +47,7 @@ from .acados_ocp import AcadosOcp
 from .acados_sim import AcadosSim
 
 from .builders import CMakeBuilder
-from .gnsf.detect_gnsf_structure import detect_gnsf_structure
+from .gnsf import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
                     set_up_imported_gnsf_model, status_to_str,
                     verbose_system_call, acados_lib_is_compiled_with_openmp,
@@ -104,7 +104,7 @@ class AcadosSimSolver:
                 # user provided GNSF model
                 pass
             else:
-                detect_gnsf_structure(acados_sim)
+                detect_gnsf_structure(acados_sim.model, acados_sim.dims)
 
         # generate code for external functions
         acados_sim.generate_external_functions()

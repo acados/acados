@@ -348,11 +348,11 @@ ocp_nlp_dims* {{ name }}_acados_create_setup_dimensions({{ name }}_solver_capsul
 
   {%- if mocp_opts.integrator_type[jj] == "GNSF" -%}
     // GNSF specific dimensions
-    int gnsf_nx1 = {{ phases_dims[jj].gnsf_nx1 }};
-    int gnsf_nz1 = {{ phases_dims[jj].gnsf_nz1 }};
-    int gnsf_nout = {{ phases_dims[jj].gnsf_nout }};
-    int gnsf_ny = {{ phases_dims[jj].gnsf_ny }};
-    int gnsf_nuhat = {{ phases_dims[jj].gnsf_nuhat }};
+    int gnsf_nx1 = {{ model[jj].gnsf_model.dims.nx1 }};
+    int gnsf_nz1 = {{ model[jj].gnsf_model.dims.nz1 }};
+    int gnsf_nout = {{ model[jj].gnsf_model.dims.nout }};
+    int gnsf_ny = {{ model[jj].gnsf_model.dims.ny }};
+    int gnsf_nuhat = {{ model[jj].gnsf_model.dims.nuhat }};
 
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {

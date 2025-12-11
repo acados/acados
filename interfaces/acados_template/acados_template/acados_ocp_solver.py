@@ -52,7 +52,7 @@ from deprecated.sphinx import deprecated
 from .builders import CMakeBuilder
 from .acados_ocp import AcadosOcp
 from .acados_multiphase_ocp import AcadosMultiphaseOcp
-from .gnsf.detect_gnsf_structure import detect_gnsf_structure
+from .gnsf import detect_gnsf_structure
 from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
                     make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
                     acados_lib_is_compiled_with_openmp, set_directory, status_to_str)
@@ -125,7 +125,7 @@ class AcadosOcpSolver:
             if 'gnsf_model' in acados_ocp.__dict__:
                 set_up_imported_gnsf_model(acados_ocp)
             else:
-                detect_gnsf_structure(acados_ocp)
+                detect_gnsf_structure(acados_ocp.model, dims)
 
         if acados_ocp.solver_options.qp_solver in ['FULL_CONDENSING_QPOASES', 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP']:
             print(f"NOTE: The selected QP solver {acados_ocp.solver_options.qp_solver} does not support one-sided constraints yet.")

@@ -251,11 +251,11 @@ int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * cap
     sim_dims_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims, "nu", &nu);
     sim_dims_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims, "nz", &nz);
 {% if solver_options.integrator_type == "GNSF" %}
-    int gnsf_nx1 = {{ dims.gnsf_nx1 }};
-    int gnsf_nz1 = {{ dims.gnsf_nz1 }};
-    int gnsf_nout = {{ dims.gnsf_nout }};
-    int gnsf_ny = {{ dims.gnsf_ny }};
-    int gnsf_nuhat = {{ dims.gnsf_nuhat }};
+    int gnsf_nx1 = {{ model.gnsf_model.dims.nx1 }};
+    int gnsf_nz1 = {{ model.gnsf_model.dims.nz1 }};
+    int gnsf_nout = {{ model.gnsf_model.dims.nout }};
+    int gnsf_ny = {{ model.gnsf_model.dims.ny }};
+    int gnsf_nuhat = {{ model.gnsf_model.dims.nuhat }};
 
     sim_dims_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims, "nx1", &gnsf_nx1);
     sim_dims_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims, "nz1", &gnsf_nz1);
