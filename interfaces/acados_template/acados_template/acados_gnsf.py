@@ -127,6 +127,7 @@ class AcadosGnsfModel():
 
         self._dims = None
 
+        self._detect_dims()
         self._make_consistent()
 
     @property
@@ -235,30 +236,27 @@ class AcadosGnsfModel():
         return self.__c_LO
 
 
+    def _detect_dims(self,):
+        """
+        Detect dimensions of GNSF model.
+        """
+
+        nx1 = self.A.shape[1]
+        nz1 = self.A.shape[0] - nx1
+        nuhat = self.L_u.shape[0]
+        ny = self.L_x.shape[0]
+        nout = self.C.shape[1]
+
+        self.__dims = AcadosGnsfDims(nx1, nz1, nuhat, ny, nout)
+
 
     def _make_consistent(self,):
         """
-        Make GNSF model consistent with given dimensions.
-
-        Args:
-            dims: AcadosGnsfDims object
+        Make sure the GNSF model is consistent.
         """
 
         # sanity checks
-        # detect dims
-        nx1 = 0
-        nz1 = 0
-        nuhat = 0
-        ny = 0
-        nout = 0
 
-        self.__dims = AcadosGnsfDims(
-            nx1=nx1,
-            nz1=nz1,
-            nuhat=nuhat,
-            ny=ny,
-            nout=nout,
-        )
         pass
 
 
