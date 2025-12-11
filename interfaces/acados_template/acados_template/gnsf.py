@@ -164,7 +164,6 @@ class GnsfModel():
         Indicates whether the model contains no nonlinear φ(·) component.
     nontrivial_f_LO : bool
         Indicates whether f_LO contains a nontrivial nonlinear contribution.
-
     """
 
     def __init__(self,
@@ -190,10 +189,13 @@ class GnsfModel():
                  c_LO: np.ndarray,
                  ipiv_x: np.ndarray,
                  ipiv_z: np.ndarray,
-                # TODO: remove and detect below
                  purely_linear: bool,
                  nontrivial_f_LO: bool,
                  ):
+        # TODO: remove and detect: purely_linear, nontrivial_f_LO
+        # TODO: remove redundancy: x1dot, z1, x1 vs. ipiv_x and shape x1, z1, which can be deduced from L_x, L_z
+        # TODO: remove redundancy: y, uhat, which can be deduced from L_x, L_z, L_u (and x1, z1, u)
+        # TODO: change front end to use permutation indices instead of ipiv
 
         # symbolics and expressions
         self.__y = y
