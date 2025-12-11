@@ -37,6 +37,8 @@ from deprecated.sphinx import deprecated
 
 from casadi import MX, SX
 
+from acados_gnsf import AcadosGnsfModel
+
 from .utils import is_empty, casadi_length
 from .acados_dims import AcadosOcpDims, AcadosSimDims
 
@@ -81,6 +83,8 @@ class AcadosModel():
         # for GNSF models
         self.__gnsf_nontrivial_f_LO = 1
         self.__gnsf_purely_linear = 0
+
+        self.__gnsf_model = None
 
         ### for OCP only.
         # NOTE: These could be moved to cost / constraints
@@ -382,6 +386,20 @@ class AcadosModel():
     @dyn_impl_dae_fun.setter
     def dyn_impl_dae_fun(self, dyn_impl_dae_fun):
         self.__dyn_impl_dae_fun = dyn_impl_dae_fun
+
+    @property
+    def gnsf_model(self):
+        """
+        GNSF: AcadosModel object containing the GNSF representation of the dynamics.
+        Default: :code:`None`
+        """
+        return self.__gnsf_model
+
+    @gnsf_model.setter
+    def gnsf_model(self, gnsf_model):
+        if not isinstance(gnsf_model, AcadosGnsfModel):
+            raise TypeError("gnsf_model must be of type AcadosGnsfModel")
+        self.__gnsf_model = gnsf_model
 
     @property
     def gnsf_nontrivial_f_LO(self):
