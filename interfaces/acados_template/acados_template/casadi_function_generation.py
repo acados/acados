@@ -416,11 +416,9 @@ def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir
     context.add_function_definition(fun_name, [y, uhat, p], [gnsf.phi], model_dir, 'dyn')
 
     fun_name = model_name + '_gnsf_phi_fun_jac_y'
-    phi_fun_jac_y = model.phi_fun_jac_y
     context.add_function_definition(fun_name, [y, uhat, p], [gnsf.phi, jac_phi_y], model_dir, 'dyn')
 
     fun_name = model_name + '_gnsf_phi_jac_y_uhat'
-    phi_jac_y_uhat = model.phi_jac_y_uhat
     context.add_function_definition(fun_name, [y, uhat, p], [jac_phi_y, jac_phi_uhat], model_dir, 'dyn')
 
     fun_name = model_name + '_gnsf_f_lo_fun_jac_x1k1uz'
