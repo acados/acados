@@ -95,9 +95,6 @@ def check_reformulation(model, gnsf, print_info):
         "f_lo_fun", [x[range(nx1)], xdot[range(nx1)], z, u, p], [gnsf["f_lo_expr"]]
     )
 
-    # print(gnsf)
-    # print(gnsf["n_out"])
-
     for i_check in range(num_eval):
         # generate random values
         x0 = np.random.rand(nx, 1)
@@ -132,9 +129,7 @@ def check_reformulation(model, gnsf, print_info):
             )
             # gnsf_1 = (A @ x[I_x1] + B @ u + C_phi + c - E @ vertcat(xdot[I_x1], z[I_z1]))
         except:
-            import pdb
-
-            pdb.set_trace()
+            breakpoint()
 
         if nx2 > 0:  # eval LOS:
             gnsf_val2 = (
@@ -152,16 +147,14 @@ def check_reformulation(model, gnsf, print_info):
 
         if rel_error > TOL:
             print("transcription failed rel_error > TOL")
-            print("you are in debug mode now: import pdb; pdb.set_trace()")
             abs_error = gnsf_val - f_impl_val
             # T = table(f_impl_val, gnsf_val, abs_error)
             # print(T)
             print("abs_error:", abs_error)
             #         error('transcription failed rel_error > TOL')
             #         check = 0
-            import pdb
+            breakpoint()
 
-            pdb.set_trace()
     if print_info:
         print(" ")
         print("model reformulation checked: relative error <= TOL = ", str(TOL))
@@ -211,6 +204,5 @@ def check_reformulation(model, gnsf, print_info):
     #     gnsf_val = [gnsf_val1 gnsf_val2]
     #     gnsf_val = gnsf_val.simplify()
     #     dyn_expr_f = dyn_expr_f.simplify()
-    # import pdb; pdb.set_trace()
 
     return check

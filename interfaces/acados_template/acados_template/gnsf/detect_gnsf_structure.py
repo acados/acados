@@ -123,7 +123,6 @@ def detect_gnsf_structure(acados_ocp, transcribe_opts=None):
     check_reformulation(acados_ocp.model, gnsf, print_info)
 
     ## copy relevant fields from gnsf to model
-    acados_ocp.model.get_matrices_fun = Function()
     dummy = acados_ocp.model.x[0]
     model_name = acados_ocp.model.name
 

@@ -335,8 +335,6 @@ class AcadosModel():
     def dyn_disc_fun_jac(self, dyn_disc_fun_jac):
         self.__dyn_disc_fun_jac = dyn_disc_fun_jac
 
-
-
     @property
     def dyn_disc_fun(self):
         """

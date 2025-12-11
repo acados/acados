@@ -617,7 +617,6 @@ def idx_perm_to_ipiv(idx_perm):
     ipiv = np.zeros(n)
 
     print(n, idx_perm)
-    # import pdb; pdb.set_trace()
     for ii in range(n):
         idx0 = idx_perm[ii]
         for jj in range(ii,n):
