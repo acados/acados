@@ -115,28 +115,28 @@ def export_pendulum_ode_model_with_gnsf_def(sim) -> AcadosModel:
     model.name = model_name
 
     # GNSF definition with x1 as linear output state
-    E = np.eye(3)
-    A = np.zeros((3,3))
-    B = np.zeros((3,1))
-    C = np.eye(3)
-    phi = f_expl[1:]
-    y = ca.vertcat(theta, v1, dtheta)
+    E = np.eye(4)
+    A = np.zeros((4,4))
+    B = np.zeros((4,1))
+    C = np.eye(4)
+    phi = f_expl[:]
+    y = ca.vertcat(x1, theta, v1, dtheta)
     uhat = u
-    c = np.zeros((3,1))
-    E_LO = np.eye(1)
-    A_LO = np.zeros((1,1))
-    B_LO = np.zeros((1,1))
-    f_lo = f_expl[0:1]
-    c_LO = np.zeros((1,1))
+    c = np.zeros((4,1))
+    E_LO = np.eye(0)
+    A_LO = np.zeros((0,0))
+    B_LO = np.zeros((0,0))
+    f_lo = 0
+    c_LO = np.zeros((0,0))
 
     L_x = ca.jacobian(y, x)
     L_xdot = ca.jacobian(y, xdot)
-    L_z = ca.SX.zeros(3,0)
+    L_z = ca.SX.zeros(4,0)
     L_u = ca.jacobian(y, u)
 
-    nontrivial_f_LO = 1
+    nontrivial_f_LO = 0
     purely_linear = 0
-    idx_perm_x_1 = np.array([2, 3, 4, 1]) - 1
+    idx_perm_x_1 = np.array([0, 1, 2, 3])
     ipiv_x = idx_perm_to_ipiv(idx_perm_x_1)
     ipiv_z = np.array([])
 
@@ -181,8 +181,8 @@ def export_pendulum_ode_model_with_gnsf_def(sim) -> AcadosModel:
         f"{model_name}_gnsf_phi_jac_y_uhat", [y, uhat, p], [jac_phi_y, jac_phi_uhat]
     )
 
-    x1 = model.x[1:]
-    x1dot = model.xdot[1:]
+    x1 = model.x[:]
+    x1dot = model.xdot[:]
     z1 = ca.SX.sym("z1", 0, 0)
     model.f_lo_fun_jac_x1k1uz = ca.Function(
         f"{model_name}_gnsf_f_lo_fun_jac_x1k1uz",
@@ -200,7 +200,7 @@ def export_pendulum_ode_model_with_gnsf_def(sim) -> AcadosModel:
     model.get_matrices_fun = get_matrices_fun
 
     # TODO: detect
-    sim.dims.gnsf_nx1 = 3
+    sim.dims.gnsf_nx1 = 4
     sim.dims.gnsf_nz1 = 0
     sim.dims.gnsf_nuhat = max(phi_fun.size_in(1))
     sim.dims.gnsf_ny = max(phi_fun.size_in(0))
