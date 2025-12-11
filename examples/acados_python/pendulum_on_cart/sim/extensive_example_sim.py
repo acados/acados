@@ -33,132 +33,321 @@ import time
 
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosSim, AcadosSimSolver, acados_dae_model_json_dump, sim_get_default_cmake_builder
+from acados_template import AcadosSim, AcadosSimSolver, AcadosModel, acados_dae_model_json_dump, sim_get_default_cmake_builder
 from pendulum_model import export_pendulum_ode_model
 from utils import plot_pendulum
 import numpy as np
 
-sim = AcadosSim()
 
-# model
-model = export_pendulum_ode_model()
-sim.model = model
+import casadi as ca
+def idx_perm_to_ipiv(idx_perm):
+    n = len(idx_perm)
+    vec = list(range(n))
+    ipiv = np.zeros(n)
 
-Tf = 0.1
-nx = model.x.rows()
-nu = model.u.rows()
-N = 200
+    print(n, idx_perm)
+    for ii in range(n):
+        idx0 = idx_perm[ii]
+        for jj in range(ii,n):
+            if vec[jj]==idx0:
+                idx1 = jj
+                break
+        tmp = vec[ii]
+        vec[ii] = vec[idx1]
+        vec[idx1] = tmp
+        ipiv[ii] = idx1
 
-# set simulation time
-sim.solver_options.T = Tf
-# set options
-sim.solver_options.num_stages = 7
-sim.solver_options.num_steps = 3
-sim.solver_options.newton_iter = 10 # for implicit integrator
-sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
-sim.solver_options.integrator_type = "GNSF" # ERK, IRK, GNSF
-sim.solver_options.sens_forw = True
-sim.solver_options.sens_adj = True
-sim.solver_options.sens_hess = False
-sim.solver_options.sens_algebraic = False
-sim.solver_options.output_z = False
-sim.solver_options.sim_method_jac_reuse = False
+    ipiv = ipiv-1 # C 0-based indexing
+    return ipiv
 
 
-# if sim.solver_options.integrator_type == "GNSF":
-#     # Perform GNSF structure detection in Octave
-#     # export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/external/casadi-octave
-#     # export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/interfaces/acados_matlab_octave/
-#     # export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/interfaces/acados_matlab_octave/acados_template_mex/
+def export_pendulum_ode_model_with_gnsf_def(sim) -> AcadosModel:
 
-#     # acados_dae_model_json_dump(model)
-#     # status = os.system('octave convert_dae2gnsf.m')
-#     with open(model.name + '_gnsf_functions.json', 'r') as f:
-#         gnsf_dict = json.load(f)
-#     sim.gnsf_model = gnsf_dict
+    model_name = 'pendulum'
 
-DETECT_GNSF = True
-if sim.solver_options.integrator_type == "GNSF" and not DETECT_GNSF:
-    from acados_template import acados_dae_model_json_dump
-    import os
-    acados_dae_model_json_dump(model)
-    # Set up Octave to be able to run the following:
-    ## if using a virtual python env, the following lines can be added to the env/bin/activate script:
-    # export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/external/casadi-octave
-    # export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/interfaces/acados_matlab_octave/
-    # export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/interfaces/acados_matlab_octave/acados_template_mex/
-    # echo
-    # echo "OCTAVE_PATH=$OCTAVE_PATH"
-    # status = os.system(
-    #     "octave --eval \"convert_dae2gnsf({})\"".format("\'"+model.name+"_acados_dae.json\'")
-    # )
-    # if status == 0:
-    #     print("\nsuccessfully detected GNSF structure in Octave\n")
-    # else:
-    #     Exception("Failed to detect GNSF structure in Octave")
-    # load gnsf from json
-    with open(model.name + '_gnsf_functions.json', 'r') as f:
-        import json
-        gnsf_dict = json.load(f)
-    sim.gnsf_model = gnsf_dict
+    # constants
+    m_cart = 1. # mass of the cart [kg]
+    m = 0.1 # mass of the ball [kg]
+    g = 9.81 # gravity constant [m/s^2]
+    l = 0.8 # length of the rod [m]
 
-# create
-cmake_builder = sim_get_default_cmake_builder()
-acados_integrator = AcadosSimSolver(sim, cmake_builder=cmake_builder)
+    # set up states & controls
+    x1      = ca.SX.sym('x1')
+    theta   = ca.SX.sym('theta')
+    v1      = ca.SX.sym('v1')
+    dtheta  = ca.SX.sym('dtheta')
 
-simX = np.zeros((N+1, nx))
-x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
-u0 = np.array([0.0])
-acados_integrator.set("u", u0)
+    x = ca.vertcat(x1, theta, v1, dtheta)
 
-simX[0,:] = x0
+    F = ca.SX.sym('F')
+    u = ca.vertcat(F)
+
+    # xdot
+    x1_dot      = ca.SX.sym('x1_dot')
+    theta_dot   = ca.SX.sym('theta_dot')
+    v1_dot      = ca.SX.sym('v1_dot')
+    dtheta_dot  = ca.SX.sym('dtheta_dot')
+
+    xdot = ca.vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
+
+    # parameters
+    p = []
+
+    # dynamics
+    cos_theta = ca.cos(theta)
+    sin_theta = ca.sin(theta)
+    denominator = m_cart + m - m*cos_theta*cos_theta
+    f_expl = ca.vertcat(v1,
+                     dtheta,
+                     (-m*l*sin_theta*dtheta*dtheta + m*g*cos_theta*sin_theta+F)/denominator,
+                     (-m*l*cos_theta*sin_theta*dtheta*dtheta + F*cos_theta+(m_cart+m)*g*sin_theta)/(l*denominator)
+                     )
+
+    f_impl = xdot - f_expl
+    model = AcadosModel()
+    model.f_impl_expr = f_impl
+    model.f_expl_expr = f_expl
+    model.x = x
+    model.xdot = xdot
+    model.u = u
+    # model.z = z
+    model.p = p
+    model.name = model_name
+
+    # GNSF definition with x1 as linear output state
+    E = np.eye(3)
+    A = np.zeros((3,3))
+    B = np.zeros((3,1))
+    C = np.eye(3)
+    phi = f_expl[1:]
+    y = ca.vertcat(theta, v1, dtheta)
+    uhat = u
+    c = np.zeros((3,1))
+    E_LO = np.eye(1)
+    A_LO = np.zeros((1,1))
+    B_LO = np.zeros((1,1))
+    f_lo = f_expl[0:1]
+    c_LO = np.zeros((1,1))
+
+    L_x = ca.jacobian(y, x)
+    L_xdot = ca.jacobian(y, xdot)
+    L_z = ca.SX.zeros(3,0)
+    L_u = ca.jacobian(y, u)
+
+    nontrivial_f_LO = 1
+    purely_linear = 0
+    idx_perm_x_1 = np.array([2, 3, 4, 1]) - 1
+    ipiv_x = idx_perm_to_ipiv(idx_perm_x_1)
+    ipiv_z = np.array([])
 
 
-## Single test call
-t0 = time.time()
-acados_integrator.set("seed_adj", np.ones((nx, 1)))
-acados_integrator.set("x", x0)
-acados_integrator.set("u", u0)
-status = acados_integrator.solve()
-time_external = time.time() - t0
+    breakpoint()
 
-S_forw = acados_integrator.get("S_forw")
-Sx = acados_integrator.get("Sx")
-Su = acados_integrator.get("Su")
-S_hess = acados_integrator.get("S_hess")
-S_adj = acados_integrator.get("S_adj")
-print(f"\ntimings of last call to acados_integrator: with Python interface, set and get {time_external*1e3:.4f}ms")
+    dummy = x[0]
+    get_matrices_fun = ca.Function(
+        f"gnsf_get_matrices_fun",
+        [dummy],
+        [
+            A,
+            B,
+            C,
+            E,
+            L_x,
+            L_xdot,
+            L_z,
+            L_u,
+            A_LO,
+            c,
+            E_LO,
+            B_LO,
+            nontrivial_f_LO,
+            purely_linear,
+            ipiv_x + 1,
+            ipiv_z + 1,
+            c_LO,
+        ],
+    )
+
+    # store meta information
+    model.x_labels = ['$x$ [m]', r'$\theta$ [rad]', '$v$ [m]', r'$\dot{\theta}$ [rad/s]']
+    model.u_labels = ['$F$ [N]']
+    model.t_label = '$t$ [s]'
+    jac_phi_y = ca.jacobian(phi, y)
+    jac_phi_uhat = ca.jacobian(phi, uhat)
+
+    phi_fun = ca.Function(f"{model_name}_gnsf_phi_fun", [y, uhat, p], [phi])
+    model.phi_fun = phi_fun
+    model.phi_fun_jac_y = ca.Function(
+        f"{model_name}_gnsf_phi_fun_jac_y", [y, uhat, p], [phi, jac_phi_y]
+    )
+    model.phi_jac_y_uhat = ca.Function(
+        f"{model_name}_gnsf_phi_jac_y_uhat", [y, uhat, p], [jac_phi_y, jac_phi_uhat]
+    )
+
+    x1 = model.x[1:]
+    x1dot = model.xdot[1:]
+    z1 = ca.SX.sym("z1", 0, 0)
+    model.f_lo_fun_jac_x1k1uz = ca.Function(
+        f"{model_name}_gnsf_f_lo_fun_jac_x1k1uz",
+        [x1, x1dot, z1, u, p],
+        [
+            f_lo,
+            ca.horzcat(
+                ca.jacobian(f_lo, x1),
+                ca.jacobian(f_lo, x1dot),
+                ca.jacobian(f_lo, u),
+                ca.jacobian(f_lo, z1),
+            ),
+        ],
+    )
+    model.get_matrices_fun = get_matrices_fun
+
+    # TODO: detect
+    sim.dims.gnsf_nx1 = 3
+    sim.dims.gnsf_nz1 = 0
+    sim.dims.gnsf_nuhat = max(phi_fun.size_in(1))
+    sim.dims.gnsf_ny = max(phi_fun.size_in(0))
+    sim.dims.gnsf_nout = max(phi_fun.size_out(0))
+
+    return model
 
 
-# get timings (of last call)
-CPUtime = acados_integrator.get("CPUtime")
-LAtime = acados_integrator.get("LAtime")
-ADtime = acados_integrator.get("ADtime")
-print(f"\ntimings of last call to acados_integrator: overall CPU: {CPUtime*1e3:.4f} ms, linear algebra {LAtime*1e3:.4f} ms, external functions {ADtime*1e3:.4f} ms")
+def main(gnsf_definition_mode):
 
-print("S_forw, sensitivities of simulation result wrt x,u:\n", S_forw)
-print("Sx, sensitivities of simulation result wrt x:\n", Sx)
-print("Su, sensitivities of simulation result wrt u:\n", Su)
-print("S_adj, adjoint sensitivities:\n", S_adj)
-print("S_hess, second order sensitivities:\n", S_hess)
+    if gnsf_definition_mode not in ['user_provided', 'detected', 'imported']:
+        raise ValueError("gnsf_definition_mode must be one of 'user_provided', 'detected', 'imported'")
 
-# turn off sensitivity propagation when not needed
-acados_integrator.options_set('sens_forw', False)
-acados_integrator.options_set('sens_adj', False)
-acados_integrator.options_set('sens_hess', False)
+    sim = AcadosSim()
 
-# call in loop:
-for i in range(N):
-    # set initial state
-    acados_integrator.set("x", simX[i,:])
-    # solve
+    # model
+    model = export_pendulum_ode_model()
+    sim.model = model
+
+    Tf = 0.1
+    nx = model.x.rows()
+    nu = model.u.rows()
+    N = 200
+
+    # set simulation time
+    sim.solver_options.T = Tf
+    # set options
+    sim.solver_options.num_stages = 7
+    sim.solver_options.num_steps = 3
+    sim.solver_options.newton_iter = 10 # for implicit integrator
+    sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
+    sim.solver_options.integrator_type = "GNSF" # ERK, IRK, GNSF
+    sim.solver_options.sens_forw = True
+    sim.solver_options.sens_adj = True
+    sim.solver_options.sens_hess = False
+    sim.solver_options.sens_algebraic = False
+    sim.solver_options.output_z = False
+    sim.solver_options.sim_method_jac_reuse = False
+
+
+    # if sim.solver_options.integrator_type == "GNSF":
+    #     # Perform GNSF structure detection in Octave
+    #     # export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/external/casadi-octave
+    #     # export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/interfaces/acados_matlab_octave/
+    #     # export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/interfaces/acados_matlab_octave/acados_template_mex/
+
+    #     # acados_dae_model_json_dump(model)
+    #     # status = os.system('octave convert_dae2gnsf.m')
+    #     with open(model.name + '_gnsf_functions.json', 'r') as f:
+    #         gnsf_dict = json.load(f)
+    #     sim.gnsf_model = gnsf_dict
+
+    if sim.solver_options.integrator_type == "GNSF":
+        if gnsf_definition_mode == 'imported':
+            from acados_template import acados_dae_model_json_dump
+            import os
+            acados_dae_model_json_dump(model)
+            # Set up Octave to be able to run the following:
+            ## if using a virtual python env, the following lines can be added to the env/bin/activate script:
+            # export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/external/casadi-octave
+            # export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/interfaces/acados_matlab_octave/
+            # export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/interfaces/acados_matlab_octave/acados_template_mex/
+            # echo
+            # echo "OCTAVE_PATH=$OCTAVE_PATH"
+            # status = os.system(
+            #     "octave --eval \"convert_dae2gnsf({})\"".format("\'"+model.name+"_acados_dae.json\'")
+            # )
+            # if status == 0:
+            #     print("\nsuccessfully detected GNSF structure in Octave\n")
+            # else:
+            #     Exception("Failed to detect GNSF structure in Octave")
+            # load gnsf from json
+            with open(model.name + '_gnsf_functions.json', 'r') as f:
+                import json
+                gnsf_dict = json.load(f)
+            sim.gnsf_model = gnsf_dict
+            breakpoint()
+        elif gnsf_definition_mode == 'user_provided':
+            sim.model = export_pendulum_ode_model_with_gnsf_def(sim)
+        elif gnsf_definition_mode == 'detected':
+            pass
+
+    # create
+    cmake_builder = sim_get_default_cmake_builder()
+    acados_integrator = AcadosSimSolver(sim, cmake_builder=cmake_builder)
+
+    simX = np.zeros((N+1, nx))
+    x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
+    u0 = np.array([0.0])
+    acados_integrator.set("u", u0)
+
+    simX[0,:] = x0
+
+    ## Single test call
+    t0 = time.time()
+    acados_integrator.set("seed_adj", np.ones((nx, 1)))
+    acados_integrator.set("x", x0)
+    acados_integrator.set("u", u0)
     status = acados_integrator.solve()
-    # get solution
-    simX[i+1,:] = acados_integrator.get("x")
+    time_external = time.time() - t0
 
-if status != 0:
-    raise Exception(f'acados returned status {status}.')
+    S_forw = acados_integrator.get("S_forw")
+    Sx = acados_integrator.get("Sx")
+    Su = acados_integrator.get("Su")
+    S_hess = acados_integrator.get("S_hess")
+    S_adj = acados_integrator.get("S_adj")
+    print(f"\ntimings of last call to acados_integrator: with Python interface, set and get {time_external*1e3:.4f}ms")
 
 
-# plot results
-plot_pendulum(np.linspace(0, N*Tf, N+1), 10, np.zeros((N, nu)), simX, latexify=False)
+    # get timings (of last call)
+    CPUtime = acados_integrator.get("CPUtime")
+    LAtime = acados_integrator.get("LAtime")
+    ADtime = acados_integrator.get("ADtime")
+    print(f"\ntimings of last call to acados_integrator: overall CPU: {CPUtime*1e3:.4f} ms, linear algebra {LAtime*1e3:.4f} ms, external functions {ADtime*1e3:.4f} ms")
+
+    print("S_forw, sensitivities of simulation result wrt x,u:\n", S_forw)
+    print("Sx, sensitivities of simulation result wrt x:\n", Sx)
+    print("Su, sensitivities of simulation result wrt u:\n", Su)
+    print("S_adj, adjoint sensitivities:\n", S_adj)
+    print("S_hess, second order sensitivities:\n", S_hess)
+
+    # turn off sensitivity propagation when not needed
+    acados_integrator.options_set('sens_forw', False)
+    acados_integrator.options_set('sens_adj', False)
+    acados_integrator.options_set('sens_hess', False)
+
+    # call in loop:
+    for i in range(N):
+        # set initial state
+        acados_integrator.set("x", simX[i,:])
+        # solve
+        status = acados_integrator.solve()
+        # get solution
+        simX[i+1,:] = acados_integrator.get("x")
+
+    if status != 0:
+        raise Exception(f'acados returned status {status}.')
+
+
+    # plot results
+    plot_pendulum(np.linspace(0, N*Tf, N+1), 10, np.zeros((N, nu)), simX, latexify=False)
+
+
+if __name__ == '__main__':
+    # main(gnsf_definition_mode='imported')
+    main(gnsf_definition_mode='user_provided')
+    # main(gnsf_definition_mode='detected')
