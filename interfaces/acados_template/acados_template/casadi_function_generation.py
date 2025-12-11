@@ -451,8 +451,8 @@ def generate_c_code_gnsf(context: GenerateContext, model: AcadosModel, model_dir
             gnsf.B_LO,
             gnsf.nontrivial_f_LO,
             gnsf.purely_linear,
-            gnsf.ipiv_x + 1,
-            gnsf.ipiv_z + 1,
+            gnsf.ipiv_x,
+            gnsf.ipiv_z,
             gnsf.c_LO,
         ], model_dir, 'dyn')
 

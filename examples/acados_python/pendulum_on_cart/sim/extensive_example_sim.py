@@ -33,7 +33,7 @@ import time
 
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosSim, AcadosSimSolver, AcadosModel, acados_dae_model_json_dump, sim_get_default_cmake_builder, GnsfModel
+from acados_template import AcadosSim, AcadosSimSolver, AcadosModel, acados_dae_model_json_dump, sim_get_default_cmake_builder, GnsfModel, idx_perm_to_ipiv
 from pendulum_model import export_pendulum_ode_model
 from utils import plot_pendulum
 import numpy as np
@@ -41,24 +41,6 @@ import numpy as np
 
 import casadi as ca
 
-def idx_perm_to_ipiv(idx_perm):
-    n = len(idx_perm)
-    vec = list(range(n))
-    ipiv = np.zeros(n)
-
-    for ii in range(n):
-        idx0 = idx_perm[ii]
-        for jj in range(ii,n):
-            if vec[jj]==idx0:
-                idx1 = jj
-                break
-        tmp = vec[ii]
-        vec[ii] = vec[idx1]
-        vec[idx1] = tmp
-        ipiv[ii] = idx1
-
-    ipiv = ipiv-1 # C 0-based indexing
-    return ipiv
 
 
 def export_pendulum_ode_model_with_gnsf_def(sim) -> AcadosModel:

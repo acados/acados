@@ -35,8 +35,26 @@ import casadi as ca
 from typing import Tuple, Union, List
 import inspect, warnings
 
-from .utils import casadi_length, is_empty, print_casadi_expression, idx_perm_to_ipiv
+from .utils import casadi_length, is_empty, print_casadi_expression
 
+
+def idx_perm_to_ipiv(idx_perm):
+    n = len(idx_perm)
+    vec = list(range(n))
+    ipiv = np.zeros(n)
+
+    for ii in range(n):
+        idx0 = idx_perm[ii]
+        for jj in range(ii,n):
+            if vec[jj]==idx0:
+                idx1 = jj
+                break
+        tmp = vec[ii]
+        vec[ii] = vec[idx1]
+        vec[idx1] = tmp
+        ipiv[ii] = idx1
+
+    return ipiv
 
 class GnsfDims():
 
@@ -172,6 +190,7 @@ class GnsfModel():
                  c_LO: np.ndarray,
                  ipiv_x: np.ndarray,
                  ipiv_z: np.ndarray,
+                # TODO: remove and detect below
                  purely_linear: bool,
                  nontrivial_f_LO: bool,
                  ):
