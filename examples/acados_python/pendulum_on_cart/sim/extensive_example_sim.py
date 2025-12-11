@@ -40,12 +40,12 @@ import numpy as np
 
 
 import casadi as ca
+
 def idx_perm_to_ipiv(idx_perm):
     n = len(idx_perm)
     vec = list(range(n))
     ipiv = np.zeros(n)
 
-    print(n, idx_perm)
     for ii in range(n):
         idx0 = idx_perm[ii]
         for jj in range(ii,n):
@@ -139,9 +139,6 @@ def export_pendulum_ode_model_with_gnsf_def(sim) -> AcadosModel:
     idx_perm_x_1 = np.array([2, 3, 4, 1]) - 1
     ipiv_x = idx_perm_to_ipiv(idx_perm_x_1)
     ipiv_z = np.array([])
-
-
-    breakpoint()
 
     dummy = x[0]
     get_matrices_fun = ca.Function(
