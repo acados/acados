@@ -35,7 +35,7 @@ import casadi as ca
 from typing import Union
 
 
-class AcadosGnsfDims():
+class GnsfDims():
 
     def __init__(self, nx1: int, nz1: int, nuhat: int, ny: int, nout: int):
 
@@ -72,7 +72,7 @@ class AcadosGnsfDims():
 
 
 
-class AcadosGnsfModel():
+class GnsfModel():
 
     def __init__(self,
                  y: Union[ca.SX, ca.MX],
@@ -247,7 +247,7 @@ class AcadosGnsfModel():
         ny = self.L_x.shape[0]
         nout = self.C.shape[1]
 
-        self.__dims = AcadosGnsfDims(nx1, nz1, nuhat, ny, nout)
+        self.__dims = GnsfDims(nx1, nz1, nuhat, ny, nout)
 
 
     def _make_consistent(self,):
@@ -277,10 +277,10 @@ class AcadosGnsfModel():
 
     def to_dict(self):
         """
-        Convert AcadosGnsfModel to dictionary.
+        Convert GnsfModel to dictionary.
 
         Returns:
-            dict: dictionary representation of AcadosGnsfModel
+            dict: dictionary representation of GnsfModel
         """
 
         model_dict = {}
@@ -290,10 +290,10 @@ class AcadosGnsfModel():
     @classmethod
     def from_dict(cls, model_dict: dict):
         """
-        Create AcadosGnsfModel from dictionary.
+        Create GnsfModel from dictionary.
 
         Args:
-            model_dict: dictionary representation of AcadosGnsfModel
+            model_dict: dictionary representation of GnsfModel
         """
 
         gnsf_model = cls()
