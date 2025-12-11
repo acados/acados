@@ -124,8 +124,10 @@ class AcadosOcpSolver:
         if acados_ocp.solver_options.integrator_type == 'GNSF':
             if 'gnsf_model' in acados_ocp.__dict__:
                 set_up_imported_gnsf_model(acados_ocp)
+            elif acados_ocp.model.gnsf_model is not None:
+                pass
             else:
-                detect_gnsf_structure(acados_ocp.model, dims)
+                detect_gnsf_structure(acados_ocp.model, acados_ocp.dims)
 
         if acados_ocp.solver_options.qp_solver in ['FULL_CONDENSING_QPOASES', 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP']:
             print(f"NOTE: The selected QP solver {acados_ocp.solver_options.qp_solver} does not support one-sided constraints yet.")
